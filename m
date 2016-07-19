@@ -1,160 +1,134 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Tue, 19 Jul 2016 15:20:34 +0200
-Message-ID: <1468934434-29263-1-git-send-email-oneukum@suse.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 5/5] sd_zbc: Fix handling of ZBC read after write pointer
+Date: Tue, 19 Jul 2016 15:25:10 +0200
+Message-ID: <1468934710-93876-6-git-send-email-hare@suse.de>
+References: <1468934710-93876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60474 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60564 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753405AbcGSNZB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2016 09:25:01 -0400
+	id S1753503AbcGSNZP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jul 2016 09:25:15 -0400
+In-Reply-To: <1468934710-93876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, martin.petersen@oracle.com, ames.Bottomley@HansenPartnership.com, jthumshirn@suse.com, eich@suse.com
-Cc: Oliver Neukum <oneukum@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>
 
-Some SATA to USB bridges fail to cooperate with some
-drives resulting in no cache being present being reported
-to the host. That causes the host to skip sending
-a command to synchronize caches. That causes data loss
-when the drive is powered down.
+From: Damien Le Moal <damien.lemoal@hgst.com>
 
-Signed-off-by: Oliver Neukum <oneukum@suse.com>
+For read requests beyond a sequential write required
+zone write pointer, zero-out the request buffer and
+directly complete the command. For read requests
+straddling the write pointer position, limit the
+request size to the number of valid sectors. The
+remaining will be processed as a second request
+and the buffer zeroed out.
+
+Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
 ---
- Documentation/kernel-parameters.txt | 2 ++
- drivers/scsi/sd.c                   | 6 +++---
- drivers/usb/storage/scsiglue.c      | 4 ++++
- drivers/usb/storage/unusual_devs.h  | 7 +++++++
- drivers/usb/storage/usb.c           | 6 +++++-
- include/linux/usb_usual.h           | 2 ++
- include/scsi/scsi_device.h          | 1 +
- 7 files changed, 24 insertions(+), 4 deletions(-)
+ drivers/scsi/sd.c     |  4 ++--
+ drivers/scsi/sd.h     |  4 ++--
+ drivers/scsi/sd_zbc.c | 33 +++++++++++++++++++++++++++------
+ 3 files changed, 31 insertions(+), 10 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c8c682e 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				u = IGNORE_UAS (don't bind to the uas driver);
- 				w = NO_WP_DETECT (don't test whether the
- 					medium is write-protected).
-+				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
-+					even if the device claims no cache)
- 			Example: quirks=0419:aaf5:rl,0421:0433:rc
- 
- 	user_debug=	[KNL,ARM]
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 60bff78..3e8a6f1 100644
+index 3a9d96e..4b704b0 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -139,7 +139,7 @@ static void sd_set_flush_flag(struct scsi_disk *sdkp)
+@@ -881,7 +881,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+ 
+ 	if (sdkp->zoned == 1 || sdp->type == TYPE_ZBC) {
+ 		/* sd_zbc_setup_read_write uses block layer sector units */
+-		ret = sd_zbc_setup_read_write(sdkp, rq, sector, nr_sectors);
++		ret = sd_zbc_setup_read_write(sdkp, rq, sector, &nr_sectors);
+ 		if (ret != BLKPREP_OK)
+ 			return ret;
+ 	}
+@@ -1007,7 +1007,7 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
+ 
+ 	if (sdkp->zoned == 1 || sdp->type == TYPE_ZBC) {
+ 		/* sd_zbc_setup_read_write uses block layer sector units */
+-		ret = sd_zbc_setup_read_write(sdkp, rq, block, this_count);
++		ret = sd_zbc_setup_read_write(sdkp, rq, block, &this_count);
+ 		if (ret != BLKPREP_OK)
+ 			goto out;
+ 	}
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 5827b62..47f922f 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -293,7 +293,7 @@ extern void sd_zbc_reset_zones(struct scsi_disk *);
+ extern int sd_zbc_setup_discard(struct scsi_disk *, struct request *,
+ 				sector_t, unsigned int);
+ extern int sd_zbc_setup_read_write(struct scsi_disk *, struct request *,
+-				   sector_t, unsigned int);
++				   sector_t, unsigned int *);
+ extern void sd_zbc_update_zones(struct scsi_disk *, sector_t, int, bool);
+ extern void sd_zbc_refresh_zone_work(struct work_struct *);
+ 
+@@ -323,7 +323,7 @@ static inline int sd_zbc_setup_discard(struct scsi_disk *sdkp,
+ 
+ static inline int sd_zbc_setup_read_write(struct scsi_disk *sdkp,
+ 					  struct request *rq, sector_t sector,
+-					  unsigned int num_sectors)
++					  unsigned int *num_sectors)
  {
- 	bool wc = false, fua = false;
+ 	return BLKPREP_OK;
+ }
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 75cef62..0485c61 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -426,9 +426,10 @@ out:
+ }
  
--	if (sdkp->WCE) {
-+	if (sdkp->WCE || sdkp->device->always_sync) {
- 		wc = true;
- 		if (sdkp->DPOFUA)
- 			fua = true;
-@@ -3228,7 +3228,7 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return;
+ int sd_zbc_setup_read_write(struct scsi_disk *sdkp, struct request *rq,
+-			    sector_t sector, unsigned int num_sectors)
++			    sector_t sector, unsigned int *num_sectors)
+ {
+ 	struct blk_zone *zone;
++	unsigned int sectors = *num_sectors;
+ 	int ret = BLKPREP_OK;
+ 	unsigned long flags;
  
--	if (sdkp->WCE && sdkp->media_present) {
-+	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present)  {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		sd_sync_cache(sdkp);
- 	}
-@@ -3247,7 +3247,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
- 		return 0;
- 
--	if (sdkp->WCE && sdkp->media_present) {
-+	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		ret = sd_sync_cache(sdkp);
- 		if (ret) {
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 33eb923..43e76ae 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -296,6 +296,10 @@ static int slave_configure(struct scsi_device *sdev)
- 		if (us->fflags & US_FL_BROKEN_FUA)
- 			sdev->broken_fua = 1;
- 
-+		/* Some even totally fail to indicate a cache */
-+		if (us->fflags & US_FL_ALWAYS_SYNC)
-+			sdev->always_sync = 1;
-+
- 	} else {
- 
- 		/*
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index aa35392..af3c7ee 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_WP_DETECT),
- 
-+/* Reported by Egbert Eich <eich@suse.com> */
-+UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
-+		"Toshiba",
-+		"External USB 3.0",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_ALWAYS_SYNC),
-+
- /* Patch submitted by Philipp Friedrich <philipp@void.at> */
- UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
- 		"Kyocera",
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index ef2d8cd..19255f1 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
--			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
-+			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
-+			US_FL_ALWAYS_SYNC);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 		case 'w':
- 			f |= US_FL_NO_WP_DETECT;
- 			break;
-+		case 'y':
-+			f |= US_FL_ALWAYS_SYNC;
-+			break;
- 		/* Ignore unrecognized flag characters */
+@@ -478,12 +479,32 @@ int sd_zbc_setup_read_write(struct scsi_disk *sdkp, struct request *rq,
+ 			ret = BLKPREP_KILL;
+ 			goto out;
  		}
+-		zone->wp += num_sectors;
+-	} else if (blk_zone_is_smr(zone) && (zone->wp <= sector)) {
++		zone->wp += sectors;
++	} else if (zone->type == BLK_ZONE_TYPE_SEQWRITE_REQ &&
++		   zone->wp <= sector + sectors) {
++		if (zone->wp <= sector) {
++			/* Read beyond WP: clear request buffer */
++			struct req_iterator iter;
++			struct bio_vec bvec;
++			void *buf;
++			sd_zbc_debug(sdkp,
++				     "Read beyond wp %zu+%u/%zu\n",
++				     sector, sectors, zone->wp);
++			rq_for_each_segment(bvec, rq, iter) {
++				buf = bvec_kmap_irq(&bvec, &flags);
++				memset(buf, 0, bvec.bv_len);
++				flush_dcache_page(bvec.bv_page);
++				bvec_kunmap_irq(buf, &flags);
++			}
++			ret = BLKPREP_DONE;
++			goto out;
++		}
++		/* Read straddle WP position: limit request size */
++		*num_sectors = zone->wp - sector;
+ 		sd_zbc_debug(sdkp,
+-			     "Read beyond wp %zu/%zu\n",
+-			     sector, zone->wp);
+-		ret = BLKPREP_DONE;
++			     "Read straddle wp %zu+%u/%zu => %zu+%u\n",
++			     sector, sectors, zone->wp,
++			     sector, *num_sectors);
  	}
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 245f57d..0aae1b2 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -81,6 +81,8 @@
- 		/* Sets max_sectors to 240 */			\
- 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
- 		/* Cannot handle REPORT_LUNS */			\
-+	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
-+		/* lies about caching, so always sync */	\
  
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a6c346d..392d166 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -179,6 +179,7 @@ struct scsi_device {
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
-+	unsigned always_sync:1;		/* synchronize cache in every case*/
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+ out:
 -- 
-2.1.4
+1.8.5.6
 
