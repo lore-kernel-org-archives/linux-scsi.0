@@ -1,327 +1,162 @@
-From: Feng Li <lifeng1519@gmail.com>
-Subject: Re: [PATCH] iscsi-target: fix panic when add the second TCP
- connection to iSCSI session
-Date: Tue, 19 Jul 2016 10:10:08 +0800
-Message-ID: <CAEK8JBDJP29kvcbh3wzLPUy07+9bLrXSD7EKCMTHQ5BUi=cTng@mail.gmail.com>
-References: <20160711221544.42291-1-li.feng@oracle.com> <CAEK8JBCZstYOEHhjkSZmoy9ga5YfKQyde7UVqJhu0gsTmi1AiQ@mail.gmail.com>
- <CAEK8JBD8OJJ9YgFFSt9fni50iVffFbUwkFFUBNGGdS-75foZBA@mail.gmail.com>
- <E024F01B-DD5C-448D-9E71-163D802D677F@calsoftinc.com> <CAEK8JBDAqp+yRJC9=Qu3yhwzAX3GQjmYyPgt3pcw3qNJQ7e_RA@mail.gmail.com>
- <A58D6B93-9933-4B0B-BDF5-B10D5A8B620C@calsoftinc.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 1/2] lpfc: call lpfc_sli_validate_fcp_iocb() with the
+ hbalock held
+Date: Tue, 19 Jul 2016 09:43:12 +0200
+Message-ID: <20160719074312.2hg6lyblrjnioyul@c203.arch.suse.de>
+References: <1468850763-72179-1-git-send-email-jthumshirn@suse.de>
+ <1095600204.5575668.1468873737267.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <A58D6B93-9933-4B0B-BDF5-B10D5A8B620C@calsoftinc.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Sumit Rai <sumit.rai@calsoftinc.com>
-Cc: "nab@linux-iscsi.org" <nab@linux-iscsi.org>, agrover@redhat.com, "varun@chelsio.com" <varun@chelsio.com>, Herbert Xu <herbert@gondor.apana.org.au>, Roland Dreier <roland@purestorage.com>, Zhu Lingshan <lszhu@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org, linux-kernel <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51968 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752477AbcGSHnd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jul 2016 03:43:33 -0400
+Content-Disposition: inline
+In-Reply-To: <1095600204.5575668.1468873737267.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-Okay, thanks.
+On Mon, Jul 18, 2016 at 04:28:57PM -0400, Laurence Oberman wrote:
+>=20
+>=20
+> ----- Original Message -----
+> > From: "Johannes Thumshirn" <jthumshirn@suse.de>
+> > To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James Bott=
+omley" <jejb@linux.vnet.ibm.com>, "James Smart"
+> > <james.smart@avagotech.com>, "Dick Kennedy" <dick.kennedy@avagotech=
+=2Ecom>
+> > Cc: "Linux SCSI Mailinglist" <linux-scsi@vger.kernel.org>, "Johanne=
+s Thumshirn" <jthumshirn@suse.de>
+> > Sent: Monday, July 18, 2016 10:06:03 AM
+> > Subject: [PATCH 1/2] lpfc: call lpfc_sli_validate_fcp_iocb() with t=
+he hbalock held
+> >=20
+> > Call lpfc_sli_validate_fcp_iocb() with the hbalock held, as the poi=
+nter to
+> > iocbq is not guaranteed to still be valid after looking it up.
+> >=20
+> > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> > ---
+> >  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> >=20
+> > diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_=
+sli.c
+> > index 1a248a2..d58ec4c 100644
+> > --- a/drivers/scsi/lpfc/lpfc_sli.c
+> > +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> > @@ -9978,6 +9978,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, u=
+int16_t
+> > tgt_id, uint64_t lun_id,
+> >  	struct lpfc_iocbq *iocbq;
+> >  	int sum, i;
+> > =20
+> > +	spin_lock_irq(&phba->hbalock);
+> >  	for (i =3D 1, sum =3D 0; i <=3D phba->sli.last_iotag; i++) {
+> >  		iocbq =3D phba->sli.iocbq_lookup[i];
+> > =20
+> > @@ -9985,6 +9986,7 @@ lpfc_sli_sum_iocb(struct lpfc_vport *vport, u=
+int16_t
+> > tgt_id, uint64_t lun_id,
+> >  						ctx_cmd) =3D=3D 0)
+> >  			sum++;
+> >  	}
+> > +	spin_unlock_irq(&phba->hbalock);
+> > =20
+> >  	return sum;
+> >  }
+> > --
+> > 1.8.5.6
+> >=20
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scs=
+i" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> >=20
+> Hi Johannes
+>=20
+> The code looks correct, but I would get a review from James Smart or =
+Dick Kennedy at Emulex (now Broadcom :))
 
-Anyone could help review this patch and merge into upstream?
+Sure, that's why they're on Cc ;-).
 
-2016-07-18 20:40 GMT+08:00 Sumit Rai <sumit.rai@calsoftinc.com>:
-> Hi Feng,
->
-> As per my previous comment:
->>> Thanks for the patch Feng, I have tested this patch and below panic=
- has also disappeared.
-> patch applied successfully and the panic has disappeared, so your fix=
- works.
->
-> Regards,
-> Sumit Rai
->
->> On Jul 18, 2016, at 7:49 AM, Feng Li <lifeng1519@gmail.com> wrote:
->>
->> Hi Sumit,
->>
->> I have tested and the oops is disappeared.
->>
->> Could you double check if you have patched successfully?
->> This stack is still the same.
->>
->> The place is  0x00000000000001f8.
->>
->> gdb> p (int)&((struct iscsi_session*)0)->se_sess
->> $3 =3D 0x1f8
->>
->> 2016-07-14 17:59 GMT+08:00 Sumit Rai <sumit.rai@calsoftinc.com>:
->>> Thanks for the patch Feng, I have tested this patch and below panic=
- has also disappeared.
->>> (initially reported at http://article.gmane.org/gmane.linux.scsi.ta=
-rget.devel/12735).
->>>
->>> dmesg
->>> =3D=3D=3D=3D=3D
->>> [  862.784477] BUG: unable to handle kernel NULL pointer dereferenc=
-e at 00000000000001f8
->>> [  862.784486] IP: [<ffffffffc0604b44>] iscsi_target_login_thread+0=
-x724/0xfa0 [iscsi_target_mod]
->>> [  862.784570] PGD 0
->>> [  862.784572] Oops: 0000 [#1] SMP
->>> [  862.784575] Modules linked in: target_core_user uio tcm_fc libfc=
- ib_srpt tcm_usb_gadget
->>> libcomposite udc_core tcm_loop vhost_scsi vhost iscsi_target_mod tc=
-m_qla2xxx qla2xxx
->>> scsi_transport_fc target_core_file target_core_iblock target_core_p=
-scsi target_core_mod
->>> configfs pci_stub vboxpci(OE) vboxnetadp(OE) vboxnetflt(OE) vboxdrv=
-(OE)
->>> vmw_vsock_vmci_transport vsock vmhgfs(OE) coretemp kvm_intel kvm bi=
-nfmt_misc irqbypass
->>> crct10dif_pclmul crc32_pclmul aesni_intel vmw_balloon aes_x86_64 lr=
-w gf128mul glue_helper
->>> ablk_helper cryptd joydev input_leds serio_raw i2c_piix4 vmw_vmci s=
-hpchp 8250_fintek mac_hid
->>> ib_iser rdma_cm iw_cm ib_cm ib_sa ib_mad ib_core ib_addr iscsi_tcp =
-libiscsi_tcp libiscsi
->>> scsi_transport_iscsi parport_pc ppdev lp parport autofs4 hid_generi=
-c usbhid hid vmwgfx ttm psmouse
->>> drm_kms_helper syscopyarea
->>> [  862.784609]  sysfillrect sysimgblt mptspi mptscsih fb_sys_fops d=
-rm ahci libahci e1000 mptbase
->>> scsi_transport_spi pata_acpi floppy fjes
->>> [  862.784618] CPU: 0 PID: 9241 Comm: iscsi_np Tainted: G          =
- OE   4.4.0-24-generic #43-Ubuntu
->>> [  862.784620] Hardware name: VMware, Inc. VMware Virtual Platform/=
-440BX Desktop Reference Platform,
->>> BIOS 6.00 05/20/2014
->>> [  862.784622] task: ffff8800759d1b80 ti: ffff880075a00000 task.ti:=
- ffff880075a00000
->>> [  862.784624] RIP: 0010:[<ffffffffc0604b44>]  [<ffffffffc0604b44>]
->>> iscsi_target_login_thread+0x724/0xfa0 [iscsi_target_mod]
->>> [  862.784632] RSP: 0018:ffff880075a03e40  EFLAGS: 00010246
->>> [  862.784633] RAX: 0000000000000000 RBX: ffff880075a52800 RCX: 000=
-0000000037726
->>> [  862.784635] RDX: 0000000000037725 RSI: ffff88007b619fe0 RDI: fff=
-f880033bce800
->>> [  862.784636] RBP: ffff880075a03ec0 R08: 0000000000019fe0 R09: fff=
-fffffc06067c6
->>> [  862.784637] R10: ffffea0001d1d880 R11: 654d687475410032 R12: fff=
-f880074763140
->>> [  862.784638] R13: ffff880075a52820 R14: ffff880075a528d8 R15: fff=
-f880033bce800
->>> [  862.784640] FS:  0000000000000000(0000) GS:ffff88007b600000(0000=
-) knlGS:0000000000000000
->>> [  862.784641] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->>> [  862.784642] CR2: 00000000000001f8 CR3: 0000000072f8e000 CR4: 000=
-00000000406f0
->>> [  862.784716] Stack:
->>> [  862.784719]  ffff880075e87080 ffff88003526f358 ffff8800799cc420 =
-ffff880000000000
->>> [  862.784721]  ffff880079cd0100 ffff880075a52828 00ff88003526ee00 =
-ffff880075a528d8
->>> [  862.784723]  ffff8800759d1b80 ffff880075a52800 0000000058f0fa77 =
-ffff880075a0aac0
->>> [  862.784725] Call Trace:
->>> [  862.784736]  [<ffffffffc0604420>] ? iscsi_target_login_sess_out+=
-0x240/0x240 [iscsi_target_mod]
->>> [  862.784782]  [<ffffffff810a06a8>] kthread+0xd8/0xf0
->>> [  862.784786]  [<ffffffff810a05d0>] ? kthread_create_on_node+0x1e0=
-/0x1e0
->>> [  862.784789]  [<ffffffff81825f8f>] ret_from_fork+0x3f/0x70
->>> [  862.784791]  [<ffffffff810a05d0>] ? kthread_create_on_node+0x1e0=
-/0x1e0
->>> [  862.784792] Code: 00 00 4c 89 e2 4c 89 fe 48 89 df e8 c7 19 00 0=
-0 85 c0 0f 88 32 01 00 00 0f b6 45 b7 4c 89 ff 41 88 44 24 09
->>> 49 8b 87 48 05 00 00 <4c> 8b b0 f8 01 00 00 49 8b 87 10 05 00 00 ff=
- 90 98 00 00 00 41
->>> [  862.784811] RIP  [<ffffffffc0604b44>] iscsi_target_login_thread+=
-0x724/0xfa0 [iscsi_target_mod]
->>> [  862.784819]  RSP <ffff880075a03e40>
->>> [  862.784820] CR2: 00000000000001f8
->>> [  862.784823] ---[ end trace 7e41630f165c8027 ]---
->>>
->>> Regards,
->>> Sumit Rai
->>>> On Jul 12, 2016, at 8:46 AM, Feng Li <lifeng1519@gmail.com> wrote:
->>>>
->>>> Add lszhu@suse.com
->>>>
->>>> 2016-07-11 22:23 GMT+08:00 =E5=86=AF=E5=8A=9B <lifeng1519@gmail.co=
-m>:
->>>>> This problem exists at least from v3.16.
->>>>> The upstream kernel still exists this issue.
->>>>>
->>>>> I have tested my patch and the following panic is disappeared.
->>>>>
->>>>> Thanks,
->>>>> - Alex
->>>>>
->>>>> #dmesg
->>>>>
->>>>> [ 1160.788676] sd 16:0:0:0: [sde] Attached SCSI disk
->>>>> [ 1383.962626] target_core_get_fabric() failed for usb_gadget
->>>>> [ 1404.788910] TARGET_CORE[iSCSI]: Unsupported SCSI Opcode 0x1b,
->>>>> sending CHECK_CONDITION.
->>>>> [ 1404.858451] BUG: unable to handle kernel NULL pointer derefere=
-nce
->>>>> at 00000000000001f8
->>>>> [ 1404.858911] IP: [<ffffffffa05ee5d8>]
->>>>> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
->>>>> [ 1404.859746] PGD 230c29067 PUD 232060067 PMD 0
->>>>> [ 1404.859963] Oops: 0000 [#1] SMP
->>>>> [ 1404.860154] Modules linked in: crc32c_generic tcm_loop tcm_qla=
-2xxx
->>>>> qla2xxx iscsi_target_mod ib_srpt vhost_scsi vhost tcm_fc libfc
->>>>> scsi_transport_fc scsi_tgt target_core_file target_core_iblock
->>>>> target_core_pscsi target_core_mod configfs nbd
->>>>> vmw_vsock_vmci_transport vsock bridge stp llc vmhgfs(O) snd_ens13=
-71
->>>>> snd_rawmidi snd_seq_device snd_ac97_codec snd_pcm snd_timer snd
->>>>> vmw_balloon evdev soundcore ac97_bus gameport ppdev pcspkr sg psm=
-ouse
->>>>> serio_raw parport_pc vmwgfx parport battery ttm drm_kms_helper dr=
-m
->>>>> i2c_piix4 shpchp i2c_core vmw_vmci processor thermal_sys ac butto=
-n
->>>>> binfmt_misc md_mod ib_iser rdma_cm iw_cm ib_cm ib_sa ib_mad ib_co=
-re
->>>>> ib_addr iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi
->>>>> hid_generic usbhid hid ext4 crc16 mbcache jbd2 sd_mod crc_t10dif
->>>>> crct10dif_generic crct10dif_common ata_generic
->>>>> [ 1404.861278]  mptspi scsi_transport_spi mptscsih ata_piix uhci_=
-hcd
->>>>> ehci_pci ehci_hcd mptbase libata usbcore e1000 usb_common scsi_mo=
-d
->>>>> sunrpc dm_mirror dm_region_hash dm_log dm_mod autofs4
->>>>> [ 1404.861742] CPU: 2 PID: 1865 Comm: iscsi_np Tainted: G        =
-   O
->>>>> 3.16.0-4-amd64 #1 Debian 3.16.7-ckt25-1
->>>>> [ 1404.861868] Hardware name: VMware, Inc. VMware Virtual
->>>>> Platform/440BX Desktop Reference Platform, BIOS 6.00 07/02/2015
->>>>> [ 1404.862033] task: ffff880234c849a0 ti: ffff8800b9c20000 task.t=
-i:
->>>>> ffff8800b9c20000
->>>>> [ 1404.862114] RIP: 0010:[<ffffffffa05ee5d8>]  [<ffffffffa05ee5d8=
->]
->>>>> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
->>>>> [ 1404.862233] RSP: 0018:ffff8800b9c23e60  EFLAGS: 00010246
->>>>> [ 1404.862282] RAX: 0000000000000000 RBX: ffff88023125b800 RCX: f=
-fff8802b4d8d000
->>>>> [ 1404.862344] RDX: 000000000000002d RSI: 00000000fffffe01 RDI: f=
-fff880233ef1800
->>>>> [ 1404.862406] RBP: ffff8800b9651a00 R08: 00000000d5a073de R09: f=
-fff88023487e6c0
->>>>> [ 1404.862585] R10: 00000000ead0c2e5 R11: 00000000d039ef6a R12: f=
-fff88023125b854
->>>>> [ 1404.865580] R13: ffff88023125b908 R14: ffff880233ef1800 R15: f=
-fff880234c849a0
->>>>> [ 1404.867732] FS:  00007fba67e2fb80(0000) GS:ffff88023e640000(00=
-00)
->>>>> knlGS:0000000000000000
->>>>> [ 1404.869772] CS:  0010 DS: 0000 ES: 0000 CR0: 000000008005003b
->>>>> [ 1404.871850] CR2: 00000000000001f8 CR3: 0000000230ffa000 CR4: 0=
-0000000000007e0
->>>>> [ 1404.874271] Stack:
->>>>> [ 1404.877492]  ffff88023125b908 00ff880234c849a0 ffff88023125b85=
-8
->>>>> ffff88023481f400
->>>>> [ 1404.880162]  ffffffff81510d00 ffff880230768000 ffff8800b9c23fd=
-8
->>>>> 0000000000012f00
->>>>> [ 1404.883545]  ffff880234c849a0 ffff880233e9da40 ffff88023125b80=
-0
->>>>> ffffffffa05edeb0
->>>>> [ 1404.885865] Call Trace:
->>>>> [ 1404.888384]  [<ffffffff81510d00>] ? __schedule+0x250/0x700
->>>>> [ 1404.890619]  [<ffffffffa05edeb0>] ?
->>>>> iscsi_target_login_sess_out+0x240/0x240 [iscsi_target_mod]
->>>>> [ 1404.892668]  [<ffffffff8108809d>] ? kthread+0xbd/0xe0
->>>>> [ 1404.894646]  [<ffffffff81087fe0>] ? kthread_create_on_node+0x1=
-80/0x180
->>>>> [ 1404.896553]  [<ffffffff81514958>] ? ret_from_fork+0x58/0x90
->>>>> [ 1404.898556]  [<ffffffff81087fe0>] ? kthread_create_on_node+0x1=
-80/0x180
->>>>> [ 1404.900597] Code: 09 00 00 48 89 ea 4c 89 f6 48 89 df e8 52 1b=
- 00
->>>>> 00 85 c0 0f 88 82 02 00 00 0f b6 44 24 0f 4c 89 f7 88 45 09 49 8b=
- 86
->>>>> d8 04 00 00 <4c> 8b a8 f8 01 00 00 49 8b 86 a0 04 00 00 ff 90 98 =
-00 00
->>>>> 00 41
->>>>> [ 1404.906962] RIP  [<ffffffffa05ee5d8>]
->>>>> iscsi_target_login_thread+0x728/0x10b0 [iscsi_target_mod]
->>>>> [ 1404.908962]  RSP <ffff8800b9c23e60>
->>>>> [ 1404.910940] CR2: 00000000000001f8
->>>>> [ 1404.917670] ---[ end trace d29d8c681ab2bdfb ]---
->>>>> [ 1419.859690] iSCSI Login timeout on Network Portal 10.182.70.69=
-:3260
->>>>> [ 1479.832056] iSCSI Login timeout on Network Portal 10.182.70.68=
-:3260
->>>>> [ 1479.835739] iSCSI Login negotiation failed.
->>>>> [ 1549.332632] iSCSI Login timeout on Network Portal 10.182.70.68=
-:3260
->>>>> [ 1549.338432] iSCSI Login negotiation failed.
->>>>> [ 1564.358423] iSCSI Login timeout on Network Portal 10.182.70.68=
-:3260
->>>>> [ 1564.362443] iSCSI Login negotiation failed.
->>>>>
->>>>> 2016-07-12 6:15 GMT+08:00 Feng Li <li.feng@oracle.com>:
->>>>>> From: Feng Li <lifeng1519@gmail.com>
->>>>>>
->>>>>> In MC/S scenario, the conn->sess has been set NULL in
->>>>>> iscsi_login_non_zero_tsih_s1 when the second connection comes he=
-re,
->>>>>> then kernel panic.
->>>>>>
->>>>>> The conn->sess will be assigned in iscsi_login_non_zero_tsih_s2.=
- So
->>>>>> we should check whether it's NULL before calling.
->>>>>>
->>>>>> Signed-off-by: Feng Li <lifeng1519@gmail.com>
->>>>>> ---
->>>>>> drivers/target/iscsi/iscsi_target_login.c | 5 +++--
->>>>>> 1 file changed, 3 insertions(+), 2 deletions(-)
->>>>>>
->>>>>> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers=
-/target/iscsi/iscsi_target_login.c
->>>>>> index b5212f0..adf419f 100644
->>>>>> --- a/drivers/target/iscsi/iscsi_target_login.c
->>>>>> +++ b/drivers/target/iscsi/iscsi_target_login.c
->>>>>> @@ -1371,8 +1371,9 @@ static int __iscsi_target_login_thread(str=
-uct iscsi_np *np)
->>>>>>       }
->>>>>>       login->zero_tsih =3D zero_tsih;
->>>>>>
->>>>>> -       conn->sess->se_sess->sup_prot_ops =3D
->>>>>> -               conn->conn_transport->iscsit_get_sup_prot_ops(co=
-nn);
->>>>>> +       if (conn->sess)
->>>>>> +               conn->sess->se_sess->sup_prot_ops =3D
->>>>>> +                       conn->conn_transport->iscsit_get_sup_pro=
-t_ops(conn);
->>>>>>
->>>>>>       tpg =3D conn->tpg;
->>>>>>       if (!tpg) {
->>>>>> --
->>>>>> 2.9.0
->>>>>>
->>>>>
->>>>>
->>>>>
->>>>> --
->>>>> Thanks and Best Regards,
->>>>> Feng Li(Alex)
->>>>
->>>>
->>>>
->>>> --
->>>> Thanks and Best Regards,
->>>> Feng Li(Alex)
->>>
->>
->>
->>
->> --
->> Thanks and Best Regards,
->> Feng Li(Alex)
->
+> Have you experienced an issue already due to this, can you share the =
+stack trace of the issue if you have it.
+
+We have had an issue at a customer's side. It's actually pretty hard to
+trigger (it involves two separated SANs and several FC switches in betw=
+een and
+link bounces) but the core dumps show that in lpfc_sli_validate_fcp_ioc=
+b() the
+iocbq address in invalid. It actually _is_ a valid kernel pointer and _=
+was_ a
+valid 'struct lpfc_iocbq' but isn't anymore. So we suggest a use-after-=
+free.
+This patch is running OK withing one of our partner's QA sites for 3 we=
+eks now
+(we've been chasing it since October).
+
+c.f this part of our partner's analysis:
+crash> bt
+PID: 62174  TASK: ffff880285fe40c0  CPU: 0   COMMAND: "kworker/0:1"
+ #0 [ffff88027dfb7bc0] crash_kexec at ffffffff8008e4ca
+ #1 [ffff88027dfb7c90] oops_end at ffffffff804129a8
+ #2 [ffff88027dfb7cb0] general_protection at ffffffff80411d28
+    [exception RIP: lpfc_sli_validate_fcp_iocb+148]
+    RIP: ffffffffa0683114  RSP: ffff88027dfb7d60  RFLAGS: 00010246
+    RAX: 2e362e322f6e6f68  RBX: 0000000000000000  RCX: 0000000000000000
+    RDX: 0000000000000000  RSI: ffff8803c2417678  RDI: ffff88027d5a1a70
+    RBP: ffff8803d8c28000   R8: 0000000000000001   R9: 0000000000000000
+    R10: ffffffffa06f7898  R11: 0000000000000000  R12: 0000000000001340
+    R13: ffff8803c2ac2000  R14: ffff8803c2417678  R15: 0000000000000000
+    ORIG_RAX: ffffffffffffffff  CS: e030  SS: e02b
+ #3 [ffff88027dfb7d68] lpfc_sli_abort_iocb at ffffffffa06831bb [lpfc]
+ #4 [ffff88027dfb7dc8] fc_terminate_rport_io at ffffffffa0502aea [scsi_=
+transport_fc]
+ #5 [ffff88027dfb7de8] fc_timeout_deleted_rport at ffffffffa050338c [sc=
+si_transport_fc]
+ #6 [ffff88027dfb7e28] process_one_work at ffffffff80062ea8
+ #7 [ffff88027dfb7e78] worker_thread at ffffffff800668aa
+ #8 [ffff88027dfb7ee8] kthread at ffffffff8006a506
+ #9 [ffff88027dfb7f48] kernel_thread_helper at ffffffff8041a244
 
 
+crash> dis lpfc_sli_validate_fcp_iocb
+=2E..
+0xffffffffa068310f <lpfc_sli_validate_fcp_iocb+143>:    nop
+0xffffffffa0683110 <lpfc_sli_validate_fcp_iocb+144>:    mov    -0x58(%r=
+di),%rax
+0xffffffffa0683114 <lpfc_sli_validate_fcp_iocb+148>:    mov    (%rax),%=
+rax
+0xffffffffa0683117 <lpfc_sli_validate_fcp_iocb+151>:    test   %rax,%ra=
+x
+=2E..
+
+%RDI - 0x58  =3D=3D 0xFFFF88027D5A1A18
+
+crash>  rd 0xFFFF88027D5A1A18 20
+ffff88027d5a1a18:  2e362e322f6e6f68 32356266650a0d39   hon/2.6.9..efb52
+ffff88027d5a1a28:  2f6563697665642f 2f302f7375623278   /device/x2bus/0/
+ffff88027d5a1a38:  00646e656b636162 ffff88027aaa0000   backend....z....
+ffff88027d5a1a48:  0000002143ee2000 ffff88027aaa1f40   . .C!...@..z....
+
+>=20
+> Reviewed-by Laurence Oberman <loberman@redhat.com>
 
 --=20
-Thanks and Best Regards,
-=46eng Li(Alex)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
