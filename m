@@ -1,47 +1,72 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/6] Support for zoned block devices
-Date: Tue, 19 Jul 2016 15:20:33 +0200
-Message-ID: <1468934439-93579-1-git-send-email-hare@suse.de>
+Subject: [PATCH 5/6] block: Introduce BLKPREP_DONE
+Date: Tue, 19 Jul 2016 15:20:38 +0200
+Message-ID: <1468934439-93579-6-git-send-email-hare@suse.de>
+References: <1468934439-93579-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59837 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59826 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753452AbcGSNUn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753408AbcGSNUn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 19 Jul 2016 09:20:43 -0400
+In-Reply-To: <1468934439-93579-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>
 
-Hi Jens,
+Add a new blkprep return code BLKPREP_DONE to signal completion
+without I/O error.
 
-this patchset adds support for zoned block devices to the block layer.
-Support for it is selected with the new 'BLK_DEV_ZONED' config option.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ block/blk-core.c        | 6 +++++-
+ drivers/scsi/scsi_lib.c | 1 +
+ include/linux/blkdev.h  | 1 +
+ 3 files changed, 7 insertions(+), 1 deletion(-)
 
-Patch has been made over Tejuns 'libata/for-4.8' repository.
-
-As usual, comments and reviews are welcome.
-
-Hannes Reinecke (6):
-  blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-  block: update chunk_sectors in blk_stack_limits()
-  block: Implement support for zoned block devices
-  block: Add 'zoned' sysfs queue attribute
-  block: Introduce BLKPREP_DONE
-  block: Add 'BLK_MQ_RQ_QUEUE_DONE' return value
-
- block/Kconfig           |  9 +++++++
- block/Makefile          |  1 +
- block/blk-core.c        | 11 +++++++-
- block/blk-mq.c          |  1 +
- block/blk-settings.c    |  4 +++
- block/blk-sysfs.c       | 57 ++++++++++++++++++++++++++++++++++++++++
- block/blk-zoned.c       | 70 +++++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/scsi_lib.c |  4 +++
- include/linux/blk-mq.h  |  1 +
- include/linux/blkdev.h  | 48 +++++++++++++++++++++++++++++++++
- 10 files changed, 205 insertions(+), 1 deletion(-)
- create mode 100644 block/blk-zoned.c
-
+diff --git a/block/blk-core.c b/block/blk-core.c
+index e273194..4bcf30a 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2462,9 +2462,13 @@ struct request *blk_peek_request(struct request_queue *q)
+ 
+ 			rq = NULL;
+ 			break;
+-		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID) {
++		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID ||
++			   ret == BLKPREP_DONE) {
+ 			int err = (ret == BLKPREP_INVALID) ? -EREMOTEIO : -EIO;
+ 
++			if (ret == BLKPREP_DONE)
++				err = 0;
++
+ 			rq->cmd_flags |= REQ_QUIET;
+ 			/*
+ 			 * Mark this request as started so we don't trigger
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index b2e332a..f112926 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1257,6 +1257,7 @@ scsi_prep_return(struct request_queue *q, struct request *req, int ret)
+ 	case BLKPREP_KILL:
+ 	case BLKPREP_INVALID:
+ 		req->errors = DID_NO_CONNECT << 16;
++	case BLKPREP_DONE:
+ 		/* release the command and kill it */
+ 		if (req->special) {
+ 			struct scsi_cmnd *cmd = req->special;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index d5e3d8b..c351444 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -736,6 +736,7 @@ enum {
+ 	BLKPREP_KILL,		/* fatal error, kill, return -EIO */
+ 	BLKPREP_DEFER,		/* leave on queue */
+ 	BLKPREP_INVALID,	/* invalid command, kill, return -EREMOTEIO */
++	BLKPREP_DONE,		/* complete w/o error */
+ };
+ 
+ extern unsigned long blk_max_low_pfn, blk_max_pfn;
 -- 
 1.8.5.6
 
