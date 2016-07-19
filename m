@@ -1,46 +1,193 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 0/5] Add support for ZBC host-managed devices
-Date: Tue, 19 Jul 2016 15:25:05 +0200
-Message-ID: <1468934710-93876-1-git-send-email-hare@suse.de>
+Subject: [PATCH 2/5] sd: Implement new RESET_WP provisioning mode
+Date: Tue, 19 Jul 2016 15:25:07 +0200
+Message-ID: <1468934710-93876-3-git-send-email-hare@suse.de>
+References: <1468934710-93876-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60524 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60542 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753758AbcGSNZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1753767AbcGSNZN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Tue, 19 Jul 2016 09:25:13 -0400
+In-Reply-To: <1468934710-93876-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>
 
-Hi James,
+We can map the RESET WRITE POINTER command onto a 'discard'
+request.
 
-this patchset adds support for ZBC host-managed devices to sd.
-Support for it is selected with the new 'SCSI_ZBC' config option.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/scsi/sd.c | 65 ++++++++++++++++++++++++++++++++++++++++++++-----------
+ drivers/scsi/sd.h |  1 +
+ 2 files changed, 53 insertions(+), 13 deletions(-)
 
-Patch has been made over Tejuns 'libata/for-4.8' repository.
-It relies on the patchset "Support for zoned block devices" posted
-earlier.
-
-As usual, comments and reviews are welcome.
-
-Damien Le Moal (2):
-  sd: Limit messages for ZBC disks capacity change
-  sd_zbc: Fix handling of ZBC read after write pointer
-
-Hannes Reinecke (3):
-  sd: configure ZBC devices
-  sd: Implement new RESET_WP provisioning mode
-  sd: Implement support for ZBC devices
-
- drivers/scsi/Kconfig      |   8 +
- drivers/scsi/Makefile     |   1 +
- drivers/scsi/sd.c         | 201 +++++++++++++++--
- drivers/scsi/sd.h         |  67 ++++++
- drivers/scsi/sd_zbc.c     | 559 ++++++++++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_proto.h |  17 ++
- 6 files changed, 832 insertions(+), 21 deletions(-)
- create mode 100644 drivers/scsi/sd_zbc.c
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 249ea81..52dda83 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -369,6 +369,7 @@ static const char *lbp_mode[] = {
+ 	[SD_LBP_WS16]		= "writesame_16",
+ 	[SD_LBP_WS10]		= "writesame_10",
+ 	[SD_LBP_ZERO]		= "writesame_zero",
++	[SD_ZBC_RESET_WP]	= "reset_wp",
+ 	[SD_LBP_DISABLE]	= "disabled",
+ };
+ 
+@@ -391,6 +392,13 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
+ 	if (!capable(CAP_SYS_ADMIN))
+ 		return -EACCES;
+ 
++	if (sdkp->zoned == 1) {
++		if (!strncmp(buf, lbp_mode[SD_ZBC_RESET_WP], 20)) {
++			sd_config_discard(sdkp, SD_ZBC_RESET_WP);
++			return count;
++		}
++		return -EINVAL;
++	}
+ 	if (sdp->type != TYPE_DISK)
+ 		return -EINVAL;
+ 
+@@ -683,6 +691,11 @@ static void sd_config_discard(struct scsi_disk *sdkp, unsigned int mode)
+ 		q->limits.discard_zeroes_data = sdkp->lbprz;
+ 		break;
+ 
++	case SD_ZBC_RESET_WP:
++		max_blocks = sdkp->unmap_granularity;
++		q->limits.discard_zeroes_data = 1;
++		break;
++
+ 	case SD_LBP_ZERO:
+ 		max_blocks = min_not_zero(sdkp->max_ws_blocks,
+ 					  (u32)SD_MAX_WS10_BLOCKS);
+@@ -711,16 +724,20 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	unsigned int nr_sectors = blk_rq_sectors(rq);
+ 	unsigned int nr_bytes = blk_rq_bytes(rq);
+ 	unsigned int len;
+-	int ret;
++	int ret = 0;
+ 	char *buf;
+-	struct page *page;
++	struct page *page = NULL;
+ 
+ 	sector >>= ilog2(sdp->sector_size) - 9;
+ 	nr_sectors >>= ilog2(sdp->sector_size) - 9;
+ 
+-	page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
+-	if (!page)
+-		return BLKPREP_DEFER;
++	if (sdkp->provisioning_mode != SD_ZBC_RESET_WP) {
++		page = alloc_page(GFP_ATOMIC | __GFP_ZERO);
++		if (!page)
++			return BLKPREP_DEFER;
++	}
++
++	rq->completion_data = page;
+ 
+ 	switch (sdkp->provisioning_mode) {
+ 	case SD_LBP_UNMAP:
+@@ -760,12 +777,21 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 		len = sdkp->device->sector_size;
+ 		break;
+ 
++	case SD_ZBC_RESET_WP:
++		cmd->cmd_len = 16;
++		cmd->cmnd[0] = ZBC_OUT;
++		cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
++		put_unaligned_be64(sector, &cmd->cmnd[2]);
++		/* Reset Write Pointer doesn't have a payload */
++		len = 0;
++		cmd->sc_data_direction = DMA_NONE;
++		break;
++
+ 	default:
+ 		ret = BLKPREP_INVALID;
+ 		goto out;
+ 	}
+ 
+-	rq->completion_data = page;
+ 	rq->timeout = SD_TIMEOUT;
+ 
+ 	cmd->transfersize = len;
+@@ -779,13 +805,17 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	 * discarded on disk. This allows us to report completion on the full
+ 	 * amount of blocks described by the request.
+ 	 */
+-	blk_add_request_payload(rq, page, 0, len);
+-	ret = scsi_init_io(cmd);
++	if (len) {
++		blk_add_request_payload(rq, page, 0, len);
++		ret = scsi_init_io(cmd);
++	}
+ 	rq->__data_len = nr_bytes;
+ 
+ out:
+-	if (ret != BLKPREP_OK)
++	if (page && ret != BLKPREP_OK) {
++		rq->completion_data = NULL;
+ 		__free_page(page);
++	}
+ 	return ret;
+ }
+ 
+@@ -1151,7 +1181,8 @@ static void sd_uninit_command(struct scsi_cmnd *SCpnt)
+ {
+ 	struct request *rq = SCpnt->request;
+ 
+-	if (rq->cmd_flags & REQ_DISCARD)
++	if (rq->cmd_flags & REQ_DISCARD &&
++	    rq->completion_data)
+ 		__free_page(rq->completion_data);
+ 
+ 	if (SCpnt->cmnd != rq->cmd) {
+@@ -1768,6 +1799,7 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 	int sense_deferred = 0;
+ 	unsigned char op = SCpnt->cmnd[0];
+ 	unsigned char unmap = SCpnt->cmnd[1] & 8;
++	unsigned char sa = SCpnt->cmnd[1] & 0xf;
+ 
+ 	if (req->cmd_flags & REQ_DISCARD || req->cmd_flags & REQ_WRITE_SAME) {
+ 		if (!result) {
+@@ -1819,6 +1851,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			case UNMAP:
+ 				sd_config_discard(sdkp, SD_LBP_DISABLE);
+ 				break;
++			case ZBC_OUT:
++				if (sa == ZO_RESET_WRITE_POINTER)
++					sd_config_discard(sdkp, SD_LBP_DISABLE);
++				break;
+ 			case WRITE_SAME_16:
+ 			case WRITE_SAME:
+ 				if (unmap)
+@@ -2113,9 +2149,12 @@ static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
+ 	}
+ 	/* Read the zone length from the first zone descriptor */
+ 	desc = &buffer[64];
+-	zone_len = logical_to_sectors(sdkp->device,
+-				      get_unaligned_be64(&desc[8]));
+-	blk_queue_chunk_sectors(sdkp->disk->queue, zone_len);
++	zone_len = get_unaligned_be64(&desc[8]);
++	sdkp->unmap_alignment = zone_len;
++	sdkp->unmap_granularity = zone_len;
++	blk_queue_chunk_sectors(sdkp->disk->queue,
++				logical_to_sectors(sdkp->device, zone_len));
++	sd_config_discard(sdkp, SD_ZBC_RESET_WP);
+ }
+ 
+ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 74ec357..4439693 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -56,6 +56,7 @@ enum {
+ 	SD_LBP_WS16,		/* Use WRITE SAME(16) with UNMAP bit */
+ 	SD_LBP_WS10,		/* Use WRITE SAME(10) with UNMAP bit */
+ 	SD_LBP_ZERO,		/* Use WRITE SAME(10) with zero payload */
++	SD_ZBC_RESET_WP,	/* Use RESET WRITE POINTER */
+ 	SD_LBP_DISABLE,		/* Discard disabled due to failed cmd */
+ };
+ 
 -- 
 1.8.5.6
 
