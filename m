@@ -1,43 +1,40 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 2/2] fcoe: implement FIP VLAN responder
-Date: Tue, 19 Jul 2016 14:04:29 +0200
-Message-ID: <20160719120429.adbig5bhcpg6edz5@c203.arch.suse.de>
-References: <1468928980-40549-1-git-send-email-hare@suse.de>
- <1468928980-40549-2-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52631 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753179AbcGSMEc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2016 08:04:32 -0400
-Content-Disposition: inline
-In-Reply-To: <1468928980-40549-2-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] tcm_fc: set and unset FCP_SPPF_TARG_FCN
+Date: Tue, 19 Jul 2016 15:01:55 +0200
+Message-ID: <1468933315-72922-1-git-send-email-hare@suse.de>
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@daterainc.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jth@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Jul 19, 2016 at 01:49:40PM +0200, Hannes Reinecke wrote:
-> When running in VN2VN mode there is no central instance which
-> would send out any FIP VLAN discovery notifications. So this
-> patch adds a new sysfs attribute 'fip_vlan_responder' which
-> will activate a FIP VLAN discovery responder.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+When registering and unregistering as an target port we should
+be setting the FC-4 service params correctly.
 
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/target/tcm_fc/tfc_sess.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
---=20
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+index f5186a7..6ffbb60 100644
+--- a/drivers/target/tcm_fc/tfc_sess.c
++++ b/drivers/target/tcm_fc/tfc_sess.c
+@@ -91,6 +91,7 @@ static void ft_tport_delete(struct ft_tport *tport)
+ 
+ 	ft_sess_delete_all(tport);
+ 	lport = tport->lport;
++	lport->service_params &= ~FCP_SPPF_TARG_FCN;
+ 	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
+ 	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
+ 
+@@ -110,6 +111,7 @@ void ft_lport_add(struct fc_lport *lport, void *arg)
+ {
+ 	mutex_lock(&ft_lport_lock);
+ 	ft_tport_get(lport);
++	lport->service_params |= FCP_SPPF_TARG_FCN;
+ 	mutex_unlock(&ft_lport_lock);
+ }
+ 
+-- 
+1.8.5.6
