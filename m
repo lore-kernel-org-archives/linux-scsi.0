@@ -1,73 +1,71 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH] libata-scsi: fix read-only bits checking in ata_mselect_*()
-Date: Wed, 20 Jul 2016 06:50:14 +0800
-Message-ID: <578eaead.0198620a.7cf53.28c1@mx.google.com>
-References: <578e979d.d40c620a.f5800.0924@mx.google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <578e979d.d40c620a.f5800.0924@mx.google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org, hare@suse.de
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Dave Chinner <david@fromorbit.com>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Date: Wed, 20 Jul 2016 08:58:51 +1000
+Message-ID: <20160719225851.GF16044@dastard>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
+ <20160717000003.GW1922@dastard>
+ <20160718060215.GB16044@dastard>
+ <24d2f83f-5281-ab3c-9e91-985a4b8e2f8b@fb.com>
+ <53af895c-7ddb-1e50-6c90-d4d59f5c7a2f@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <53af895c-7ddb-1e50-6c90-d4d59f5c7a2f@fb.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+On Tue, Jul 19, 2016 at 02:22:47PM -0700, Calvin Owens wrote:
+> On 07/18/2016 07:05 PM, Calvin Owens wrote:
+> >On 07/17/2016 11:02 PM, Dave Chinner wrote:
+> >>On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
+> >>>On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+> >>>>Hello all,
+> >>>>
+> >>>>I've found a nasty source of slab corruption. Based on seeing similar symptoms
+> >>>>on boxes at Facebook, I suspect it's been around since at least 3.10.
+> >>>>
+> >>>>It only reproduces under memory pressure so far as I can tell: the issue seems
+> >>>>to be that XFS reclaims pages from buffers that are still in use by
+> >>>>scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+> >>>>with XFS.
+> >>[....]
+> >>>But this indicates that the page is under writeback at this point,
+> >>>so that tends to indicate that the above freeing was incorrect.
+> >>>
+> >>>Hmmm - it's clear we've got direct reclaim involved here, and the
+> >>>suspicion of a dirty page that has had it's bufferheads cleared.
+> >>>Are there any other warnings in the log from XFS prior to kasan
+> >>>throwing the error?
+> >>
+> >>Can you try the patch below?
+> >
+> >Thanks for getting this out so quickly :)
+> >
+> >So far so good: I booted Linus' tree as of this morning and reproduced the ASAN
+> >splat. After applying your patch I haven't triggered it.
+> >
+> >I'm a bit wary since it was hard to trigger reliably in the first place... so I
+> >lined up a few dozen boxes to run the test case overnight. I'll confirm in the
+> >morning (-0700) they look good.
+> 
+> All right, my testcase ran 2099 times overnight without triggering anything.
+> 
+> For the overnight tests, I booted the boxes with "mem=" to artificially limit RAM,
+> which makes my repro *much* more reliable (I feel silly for not thinking of that
+> in the first place). With that setup, I hit the ASAN splat 21 times in 98 runs on
+> vanilla 4.7-rc7. So I'm sold.
+> 
+> Tested-by: Calvin Owens <calvinowens@fb.com>
 
-Commit 7780081c1f04 ("libata-scsi: Set information sense field for
-invalid parameter") changed how ata_mselect_*() make sure read-only
-bits are not modified. The new implementation introduced a bug that
-the read-only bits in the byte that has a changeable bit will not
-be checked.
+Thanks for testing, Calvin. I'll update the patch and get it
+reviewed and committed.
 
-Added the necessary check, with comments explaining the heuristic.
+Cheers,
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 06afe63..005d186 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3617,8 +3617,18 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
- 	 */
- 	ata_msense_caching(dev->id, mpage, false);
- 	for (i = 0; i < CACHE_MPAGE_LEN - 2; i++) {
--		if (i == 0)
--			continue;
-+		/* Check the first byte */
-+		if (i == 0) {
-+			/* except the WCE bit */
-+			if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
-+				continue;
-+			} else {
-+				*fp = i;
-+				return -EINVAL;
-+			}
-+		}
-+
-+		/* Check the remaining bytes */
- 		if (mpage[i + 2] != buf[i]) {
- 			*fp = i;
- 			return -EINVAL;
-@@ -3672,8 +3682,18 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 	 */
- 	ata_msense_control(dev, mpage, false);
- 	for (i = 0; i < CONTROL_MPAGE_LEN - 2; i++) {
--		if (i == 0)
--			continue;
-+		/* Check the first byte */
-+		if (i == 0) {
-+			/* except the D_SENSE bit */
-+			if (mpage[i + 2] & 0xfb != buf[i] & 0xfb) {
-+				continue;
-+			} else {
-+				*fp = i;
-+				return -EINVAL;
-+			}
-+		}
-+
-+		/* Check the remaining bytes */
- 		if (mpage[2 + i] != buf[i]) {
- 			*fp = i;
- 			return -EINVAL;
+Dave.
 -- 
-2.9.0
-
+Dave Chinner
+david@fromorbit.com
