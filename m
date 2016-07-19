@@ -1,95 +1,57 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Mon, 18 Jul 2016 18:15:22 -0400
-Message-ID: <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com> <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Date: Mon, 18 Jul 2016 19:05:44 -0700
+Message-ID: <24d2f83f-5281-ab3c-9e91-985a4b8e2f8b@fb.com>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
+ <20160717000003.GW1922@dastard> <20160718060215.GB16044@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?B?QXJ2ZSBIasO4bm5ldsOlZw==?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:1170 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1752060AbcGSCF6 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 18 Jul 2016 22:05:58 -0400
+In-Reply-To: <20160718060215.GB16044@dastard>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 
-On Mon, Jul 18, 2016 at 4:27 PM, Tomas Winkler <tomas.winkler@intel.com> wrote:
-> The user space API is achieved via two synchronous IOCTL.
-> Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
-> by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD where
-> the whole RPMB sequence including RESULT_READ is supplied by the caller.
-> The latter is intended for  easier adjusting  of the  applications that
-> use MMC_IOC_MULTI_CMD ioctl.
+On 07/17/2016 11:02 PM, Dave Chinner wrote:
+> On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
+>> On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+>>> Hello all,
+>>>
+>>> I've found a nasty source of slab corruption. Based on seeing similar symptoms
+>>> on boxes at Facebook, I suspect it's been around since at least 3.10.
+>>>
+>>> It only reproduces under memory pressure so far as I can tell: the issue seems
+>>> to be that XFS reclaims pages from buffers that are still in use by
+>>> scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+>>> with XFS.
+> [....]
+>> But this indicates that the page is under writeback at this point,
+>> so that tends to indicate that the above freeing was incorrect.
+>>
+>> Hmmm - it's clear we've got direct reclaim involved here, and the
+>> suspicion of a dirty page that has had it's bufferheads cleared.
+>> Are there any other warnings in the log from XFS prior to kasan
+>> throwing the error?
 >
-> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> ---
+> Can you try the patch below?
 
-[...]
+Thanks for getting this out so quickly :)
 
-> diff --git a/drivers/char/rpmb/Kconfig b/drivers/char/rpmb/Kconfig
-> index c5e6e909efce..6794be9fcc5e 100644
-> --- a/drivers/char/rpmb/Kconfig
-> +++ b/drivers/char/rpmb/Kconfig
-> @@ -6,3 +6,10 @@ config RPMB
->           access RPMB partition.
->
->           If unsure, select N.
-> +
-> +config RPMB_INTF_DEV
-> +       bool "RPMB character device interface /dev/rpmbN"
+So far so good: I booted Linus' tree as of this morning and reproduced the ASAN
+splat. After applying your patch I haven't triggered it.
 
-A bool Kconfig should ideally....
-
-> +       depends on RPMB
-> +       help
-> +         Say yes here if you want to access RPMB from user space
-> +         via character device interface /dev/rpmb%d
-> diff --git a/drivers/char/rpmb/Makefile b/drivers/char/rpmb/Makefile
-> index 812b3ed264c0..b5dc087b1299 100644
-> --- a/drivers/char/rpmb/Makefile
-> +++ b/drivers/char/rpmb/Makefile
-> @@ -1,4 +1,5 @@
->  obj-$(CONFIG_RPMB) += rpmb.o
->  rpmb-objs += core.o
-> +rpmb-$(CONFIG_RPMB_INTF_DEV) += cdev.o
->
->  ccflags-y += -D__CHECK_ENDIAN__
-> diff --git a/drivers/char/rpmb/cdev.c b/drivers/char/rpmb/cdev.c
-> new file mode 100644
-> index 000000000000..f3ad3444f76d
-> --- /dev/null
-> +++ b/drivers/char/rpmb/cdev.c
-> @@ -0,0 +1,269 @@
-> +/*
-> + * Copyright (C) 2015-2016 Intel Corp. All rights reserved
-> + *
-> + * This program is free software; you can redistribute it and/or modify
-> + * it under the terms of the GNU General Public License as published by
-> + * the Free Software Foundation; version 2 of the License.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
-> + * General Public License for more details.
-> + */
-> +
-> +#define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
-> +
-> +#include <linux/module.h>
-
-....not use module.h or any MODULE_ macros from within it.
+I'm a bit wary since it was hard to trigger reliably in the first place... so I
+lined up a few dozen boxes to run the test case overnight. I'll confirm in the
+morning (-0700) they look good.
 
 Thanks,
-Paul.
---
+Calvin
 
-> +#include <linux/fs.h>
-> +#include <linux/uaccess.h>
-> +#include <linux/compat.h>
-> +#include <linux/slab.h>
-> +#include <linux/capability.h>
-> +
-> +#include <linux/rpmb.h>
-> +
-> +#include "rpmb-cdev.h"
-> +
-> +static dev_t rpmb_devt;
+> -Dave.
