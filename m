@@ -1,924 +1,567 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/5] sd: Implement support for ZBC devices
-Date: Tue, 19 Jul 2016 15:25:08 +0200
-Message-ID: <1468934710-93876-4-git-send-email-hare@suse.de>
-References: <1468934710-93876-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60550 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753773AbcGSNZO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 19 Jul 2016 09:25:14 -0400
-In-Reply-To: <1468934710-93876-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: kbuild test robot <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Subject: [target:master 1/2] drivers/target/target_core_transport.o: warning:
+ objtool: __transport_wait_for_tasks()+0x22: function has unreachable
+ instruction
+Date: Tue, 19 Jul 2016 21:43:35 +0800
+Message-ID: <201607192134.PEDWBapu%fengguang.wu@intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/mixed; boundary="rwEMma7ioTxnRzrJ"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: kbuild-all-JC7UmRfGjtg@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>
 
-Implement ZBC support functions to read in the zone information
-and setup the zone tree.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+--rwEMma7ioTxnRzrJ
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
+head:   39993fc9aebdf68a25134b140447b335a2418a76
+commit: 15ce22fa491aa3bab7acd89ac40a9fc27aeed915 [1/2] target: Fix for hang of Ordered task in TCM
+config: x86_64-randconfig-a0-07191719 (attached as .config)
+compiler: gcc-4.4 (Debian 4.4.7-8) 4.4.7
+reproduce:
+        git checkout 15ce22fa491aa3bab7acd89ac40a9fc27aeed915
+        # save the attached .config to linux build tree
+        make ARCH=x86_64 
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/target/target_core_transport.o: warning: objtool: __transport_wait_for_tasks()+0x22: function has unreachable instruction
+
 ---
- drivers/scsi/Kconfig  |   8 +
- drivers/scsi/Makefile |   1 +
- drivers/scsi/sd.c     | 129 ++++++------
- drivers/scsi/sd.h     |  54 +++++
- drivers/scsi/sd_zbc.c | 538 ++++++++++++++++++++++++++++++++++++++++++++++++++
- 5 files changed, 670 insertions(+), 60 deletions(-)
- create mode 100644 drivers/scsi/sd_zbc.c
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 98e5d51..4b9a882 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -202,6 +202,14 @@ config SCSI_ENCLOSURE
- 	  it has an enclosure device.  Selecting this option will just allow
- 	  certain enclosure conditions to be reported and is not required.
- 
-+config SCSI_ZBC
-+	bool "SCSI ZBC (zoned block commands) Support"
-+	depends on SCSI && BLK_DEV_ZONED
-+	help
-+	  Enable support for ZBC (zoned block commands) devices.
-+
-+	  If unsure say N.
-+
- config SCSI_CONSTANTS
- 	bool "Verbose SCSI error reporting (kernel size += 36K)"
- 	depends on SCSI
-diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index 862ab4e..49bde97 100644
---- a/drivers/scsi/Makefile
-+++ b/drivers/scsi/Makefile
-@@ -178,6 +178,7 @@ hv_storvsc-y			:= storvsc_drv.o
- 
- sd_mod-objs	:= sd.o
- sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
-+sd_mod-$(CONFIG_SCSI_ZBC) += sd_zbc.o
- 
- sr_mod-objs	:= sr.o sr_ioctl.o sr_vendor.o
- ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 52dda83..f7b6132 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -92,6 +92,7 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
- MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
-+MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
- 
- #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
- #define SD_MINORS	16
-@@ -162,7 +163,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
- 	static const char temp[] = "temporary ";
- 	int len;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		/* no cache control on RBC devices; theoretically they
- 		 * can do it, but there's probably so many exceptions
- 		 * it's not worth the risk */
-@@ -261,7 +262,7 @@ allow_restart_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return -EINVAL;
- 
- 	sdp->allow_restart = simple_strtoul(buf, NULL, 10);
-@@ -392,7 +393,7 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdkp->zoned == 1) {
-+	if (sdkp->zoned == 1 || sdp->type == TYPE_ZBC) {
- 		if (!strncmp(buf, lbp_mode[SD_ZBC_RESET_WP], 20)) {
- 			sd_config_discard(sdkp, SD_ZBC_RESET_WP);
- 			return count;
-@@ -466,7 +467,7 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
- 	if (!capable(CAP_SYS_ADMIN))
- 		return -EACCES;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return -EINVAL;
- 
- 	err = kstrtoul(buf, 10, &max);
-@@ -778,6 +779,11 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
- 		break;
- 
- 	case SD_ZBC_RESET_WP:
-+		/* sd_zbc_setup_discard uses block layer sector units */
-+		ret = sd_zbc_setup_discard(sdkp, rq, blk_rq_pos(rq),
-+					   blk_rq_sectors(rq));
-+		if (ret != BLKPREP_OK)
-+			goto out;
- 		cmd->cmd_len = 16;
- 		cmd->cmnd[0] = ZBC_OUT;
- 		cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
-@@ -873,6 +879,13 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 
- 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
- 
-+	if (sdkp->zoned == 1 || sdp->type == TYPE_ZBC) {
-+		/* sd_zbc_setup_read_write uses block layer sector units */
-+		ret = sd_zbc_setup_read_write(sdkp, rq, sector, nr_sectors);
-+		if (ret != BLKPREP_OK)
-+			return ret;
-+	}
-+
- 	sector >>= ilog2(sdp->sector_size) - 9;
- 	nr_sectors >>= ilog2(sdp->sector_size) - 9;
- 
-@@ -992,6 +1005,13 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt, "block=%llu\n",
- 					(unsigned long long)block));
- 
-+	if (sdkp->zoned == 1 || sdp->type == TYPE_ZBC) {
-+		/* sd_zbc_setup_read_write uses block layer sector units */
-+		ret = sd_zbc_setup_read_write(sdkp, rq, block, this_count);
-+		if (ret != BLKPREP_OK)
-+			goto out;
-+	}
-+
- 	/*
- 	 * If we have a 1K hardware sectorsize, prevent access to single
- 	 * 512 byte sectors.  In theory we could handle this - in fact
-@@ -1806,6 +1826,13 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 			good_bytes = blk_rq_bytes(req);
- 			scsi_set_resid(SCpnt, 0);
- 		} else {
-+#ifdef CONFIG_SCSI_ZBC
-+			if (op == ZBC_OUT)
-+				/* RESET WRITE POINTER failed */
-+				sd_zbc_update_zones(sdkp,
-+						    blk_rq_pos(req),
-+						    512, true);
-+#endif
- 			good_bytes = 0;
- 			scsi_set_resid(SCpnt, blk_rq_bytes(req));
- 		}
-@@ -1869,6 +1896,26 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 				}
- 			}
- 		}
-+		if (sshdr.asc == 0x21) {
-+			/*
-+			 * ZBC: read beyond the write pointer position.
-+			 * Clear out error and return the buffer as-is.
-+			 */
-+			if (sshdr.ascq == 0x06) {
-+				good_bytes = blk_rq_bytes(req);
-+				scsi_set_resid(SCpnt, 0);
-+			}
-+#ifdef CONFIG_SCSI_ZBC
-+			/*
-+			 * ZBC: Unaligned write command.
-+			 * Write did not start a write pointer position.
-+			 */
-+			if (sshdr.ascq == 0x04)
-+				sd_zbc_update_zones(sdkp,
-+						    blk_rq_pos(req),
-+						    512, true);
-+#endif
-+		}
- 		break;
- 	default:
- 		break;
-@@ -2008,58 +2055,6 @@ sd_spinup_disk(struct scsi_disk *sdkp)
- 	}
- }
- 
--/**
-- * sd_zbc_report_zones - Issue a REPORT ZONES scsi command
-- * @sdkp: SCSI disk to which the command should be send
-- * @buffer: response buffer
-- * @bufflen: length of @buffer
-- * @start_sector: logical sector for the zone information should be reported
-- * @option: option for report zones command
-- * @partial: flag to set 'partial' bit for report zones command
-- */
--static int
--sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buffer,
--		    int bufflen, sector_t start_sector,
--		    enum zbc_zone_reporting_options option, bool partial)
--{
--	struct scsi_device *sdp = sdkp->device;
--	const int timeout = sdp->request_queue->rq_timeout
--		* SD_FLUSH_TIMEOUT_MULTIPLIER;
--	struct scsi_sense_hdr sshdr;
--	sector_t start_lba = sectors_to_logical(sdkp->device, start_sector);
--	unsigned char cmd[16];
--	int result;
--
--	if (!scsi_device_online(sdp)) {
--		sd_printk(KERN_INFO, sdkp, "device not online\n");
--		return -ENODEV;
--	}
--
--	sd_printk(KERN_INFO, sdkp, "REPORT ZONES lba %zu len %d\n",
--		  start_lba, bufflen);
--
--	memset(cmd, 0, 16);
--	cmd[0] = ZBC_IN;
--	cmd[1] = ZI_REPORT_ZONES;
--	put_unaligned_be64(start_lba, &cmd[2]);
--	put_unaligned_be32(bufflen, &cmd[10]);
--	cmd[14] = (partial ? ZBC_REPORT_ZONE_PARTIAL : 0) | option;
--	memset(buffer, 0, bufflen);
--
--	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
--				  buffer, bufflen, &sshdr,
--				  timeout, SD_MAX_RETRIES, NULL);
--
--	if (result) {
--		sd_printk(KERN_NOTICE, sdkp,
--			  "REPORT ZONES lba %zu failed with %d/%d\n",
--			  start_lba, host_byte(result), driver_byte(result));
--
--		return -EIO;
--	}
--	return 0;
--}
--
- /*
-  * Determine whether disk supports Data Integrity Field.
-  */
-@@ -2109,8 +2104,11 @@ static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
- 	u8 same;
- 	u64 zone_len, lba;
- 
--	if (sdkp->zoned != 1)
--		/* Device managed, no special handling required */
-+	if (sdkp->zoned != 1 && sdkp->device->type != TYPE_ZBC)
-+		/*
-+		 * Device managed or normal SCSI disk,
-+		 * no special handling required
-+		 */
- 		return;
- 
- 	retval = sd_zbc_report_zones(sdkp, buffer, SD_BUF_SIZE,
-@@ -2155,6 +2153,8 @@ static void sd_read_zones(struct scsi_disk *sdkp, unsigned char *buffer)
- 	blk_queue_chunk_sectors(sdkp->disk->queue,
- 				logical_to_sectors(sdkp->device, zone_len));
- 	sd_config_discard(sdkp, SD_ZBC_RESET_WP);
-+
-+	sd_zbc_setup(sdkp, buffer, SD_BUF_SIZE);
- }
- 
- static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
-@@ -2750,7 +2750,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
- 	struct scsi_mode_data data;
- 	struct scsi_sense_hdr sshdr;
- 
--	if (sdp->type != TYPE_DISK)
-+	if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
- 		return;
- 
- 	if (sdkp->protection_type == 0)
-@@ -3180,9 +3180,16 @@ static int sd_probe(struct device *dev)
- 
- 	scsi_autopm_get_device(sdp);
- 	error = -ENODEV;
--	if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
-+	if (sdp->type != TYPE_DISK &&
-+	    sdp->type != TYPE_ZBC &&
-+	    sdp->type != TYPE_MOD &&
-+	    sdp->type != TYPE_RBC)
- 		goto out;
- 
-+#ifndef CONFIG_SCSI_ZBC
-+	if (sdp->type == TYPE_ZBC)
-+		goto out;
-+#endif
- 	SCSI_LOG_HLQUEUE(3, sdev_printk(KERN_INFO, sdp,
- 					"sd_probe\n"));
- 
-@@ -3286,6 +3293,8 @@ static int sd_remove(struct device *dev)
- 	del_gendisk(sdkp->disk);
- 	sd_shutdown(dev);
- 
-+	sd_zbc_remove(sdkp);
-+
- 	blk_register_region(devt, SD_MINORS, NULL,
- 			    sd_default_probe, NULL, NULL);
- 
-diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-index 4439693..5827b62 100644
---- a/drivers/scsi/sd.h
-+++ b/drivers/scsi/sd.h
-@@ -65,6 +65,12 @@ struct scsi_disk {
- 	struct scsi_device *device;
- 	struct device	dev;
- 	struct gendisk	*disk;
-+#ifdef CONFIG_SCSI_ZBC
-+	struct workqueue_struct *zone_work_q;
-+	unsigned long	zone_flags;
-+#define SD_ZBC_ZONE_RESET 1
-+#define SD_ZBC_ZONE_INIT  2
-+#endif
- 	atomic_t	openers;
- 	sector_t	capacity;	/* size in logical blocks */
- 	u32		max_xfer_blocks;
-@@ -277,4 +283,52 @@ static inline void sd_dif_complete(struct scsi_cmnd *cmd, unsigned int a)
- 
- #endif /* CONFIG_BLK_DEV_INTEGRITY */
- 
-+#ifdef CONFIG_SCSI_ZBC
-+
-+extern int sd_zbc_report_zones(struct scsi_disk *, unsigned char *, int,
-+			       sector_t, enum zbc_zone_reporting_options, bool);
-+extern int sd_zbc_setup(struct scsi_disk *, char *, int);
-+extern void sd_zbc_remove(struct scsi_disk *);
-+extern void sd_zbc_reset_zones(struct scsi_disk *);
-+extern int sd_zbc_setup_discard(struct scsi_disk *, struct request *,
-+				sector_t, unsigned int);
-+extern int sd_zbc_setup_read_write(struct scsi_disk *, struct request *,
-+				   sector_t, unsigned int);
-+extern void sd_zbc_update_zones(struct scsi_disk *, sector_t, int, bool);
-+extern void sd_zbc_refresh_zone_work(struct work_struct *);
-+
-+#else /* CONFIG_SCSI_ZBC */
-+
-+static inline int sd_zbc_report_zones(struct scsi_disk *sdkp,
-+				      unsigned char *buf, int buf_len,
-+				      sector_t start_sector,
-+				      enum zbc_zone_reporting_options option,
-+				      bool partial)
-+{
-+	return -EOPNOTSUPP;
-+}
-+
-+static inline int sd_zbc_setup(struct scsi_disk *sdkp,
-+			       unsigned char *buf, int buf_len)
-+{
-+	return 0;
-+}
-+
-+static inline int sd_zbc_setup_discard(struct scsi_disk *sdkp,
-+				       struct request *rq, sector_t sector,
-+				       unsigned int num_sectors)
-+{
-+	return BLKPREP_OK;
-+}
-+
-+static inline int sd_zbc_setup_read_write(struct scsi_disk *sdkp,
-+					  struct request *rq, sector_t sector,
-+					  unsigned int num_sectors)
-+{
-+	return BLKPREP_OK;
-+}
-+
-+static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
-+#endif /* CONFIG_SCSI_ZBC */
-+
- #endif /* _SCSI_DISK_H */
-diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-new file mode 100644
-index 0000000..75cef62
---- /dev/null
-+++ b/drivers/scsi/sd_zbc.c
-@@ -0,0 +1,538 @@
-+/*
-+ * sd_zbc.c - SCSI Zoned Block commands
-+ *
-+ * Copyright (C) 2014-2015 SUSE Linux GmbH
-+ * Written by: Hannes Reinecke <hare@suse.de>
-+ *
-+ * This program is free software; you can redistribute it and/or
-+ * modify it under the terms of the GNU General Public License version
-+ * 2 as published by the Free Software Foundation.
-+ *
-+ * This program is distributed in the hope that it will be useful, but
-+ * WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-+ * General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-+ * USA.
-+ *
-+ */
-+
-+#include <linux/blkdev.h>
-+#include <linux/rbtree.h>
-+
-+#include <asm/unaligned.h>
-+
-+#include <scsi/scsi.h>
-+#include <scsi/scsi_cmnd.h>
-+#include <scsi/scsi_dbg.h>
-+#include <scsi/scsi_device.h>
-+#include <scsi/scsi_driver.h>
-+#include <scsi/scsi_host.h>
-+#include <scsi/scsi_eh.h>
-+
-+#include "sd.h"
-+#include "scsi_priv.h"
-+
-+enum zbc_zone_cond {
-+	ZBC_ZONE_COND_NO_WP,
-+	ZBC_ZONE_COND_EMPTY,
-+	ZBC_ZONE_COND_IMPLICIT_OPEN,
-+	ZBC_ZONE_COND_EXPLICIT_OPEN,
-+	ZBC_ZONE_COND_CLOSED,
-+	ZBC_ZONE_COND_READONLY = 0xd,
-+	ZBC_ZONE_COND_FULL,
-+	ZBC_ZONE_COND_OFFLINE,
-+};
-+
-+#define SD_ZBC_BUF_SIZE 524288
-+
-+#define sd_zbc_debug(sdkp, fmt, args...)				\
-+	pr_debug("%s %s [%s]: " fmt,					\
-+		 dev_driver_string(&(sdkp)->device->sdev_gendev),	\
-+		 dev_name(&(sdkp)->device->sdev_gendev),		\
-+		 (sdkp)->disk->disk_name, ## args)
-+
-+#define sd_zbc_debug_ratelimit(sdkp, fmt, args...)		\
-+	do {							\
-+		if (printk_ratelimit())				\
-+			sd_zbc_debug(sdkp, fmt, ## args);	\
-+	} while( 0 )
-+
-+struct zbc_update_work {
-+	struct work_struct zone_work;
-+	struct scsi_disk *sdkp;
-+	sector_t	zone_sector;
-+	int		zone_buflen;
-+	char		zone_buf[0];
-+};
-+
-+struct blk_zone *zbc_desc_to_zone(struct scsi_disk *sdkp, unsigned char *rec)
-+{
-+	struct blk_zone *zone;
-+	enum zbc_zone_cond zone_cond;
-+	sector_t wp = (sector_t)-1;
-+
-+	zone = kzalloc(sizeof(struct blk_zone), GFP_KERNEL);
-+	if (!zone)
-+		return NULL;
-+
-+	spin_lock_init(&zone->lock);
-+	zone->type = rec[0] & 0xf;
-+	zone_cond = (rec[1] >> 4) & 0xf;
-+	zone->len = logical_to_sectors(sdkp->device,
-+				       get_unaligned_be64(&rec[8]));
-+	zone->start = logical_to_sectors(sdkp->device,
-+					 get_unaligned_be64(&rec[16]));
-+
-+	if (blk_zone_is_smr(zone)) {
-+		wp = logical_to_sectors(sdkp->device,
-+					get_unaligned_be64(&rec[24]));
-+		if (zone_cond == ZBC_ZONE_COND_READONLY) {
-+			zone->state = BLK_ZONE_READONLY;
-+		} else if (zone_cond == ZBC_ZONE_COND_OFFLINE) {
-+			zone->state = BLK_ZONE_OFFLINE;
-+		} else {
-+			zone->state = BLK_ZONE_OPEN;
-+		}
-+	} else
-+		zone->state = BLK_ZONE_NO_WP;
-+
-+	zone->wp = wp;
-+	/*
-+	 * Fixup block zone state
-+	 */
-+	if (zone_cond == ZBC_ZONE_COND_EMPTY &&
-+	    zone->wp != zone->start) {
-+		sd_zbc_debug(sdkp,
-+			     "zone %zu state EMPTY wp %zu: adjust wp\n",
-+			     zone->start, zone->wp);
-+		zone->wp = zone->start;
-+	}
-+	if (zone_cond == ZBC_ZONE_COND_FULL &&
-+	    zone->wp != zone->start + zone->len) {
-+		sd_zbc_debug(sdkp,
-+			     "zone %zu state FULL wp %zu: adjust wp\n",
-+			     zone->start, zone->wp);
-+		zone->wp = zone->start + zone->len;
-+	}
-+
-+	return zone;
-+}
-+
-+sector_t zbc_parse_zones(struct scsi_disk *sdkp, unsigned char *buf,
-+			 unsigned int buf_len)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+	unsigned char *rec = buf;
-+	int rec_no = 0;
-+	unsigned int list_length;
-+	sector_t next_sector = -1;
-+	u8 same;
-+
-+	/* Parse REPORT ZONES header */
-+	list_length = get_unaligned_be32(&buf[0]);
-+	same = buf[4] & 0xf;
-+	rec = buf + 64;
-+	list_length += 64;
-+
-+	if (list_length < buf_len)
-+		buf_len = list_length;
-+
-+	while (rec < buf + buf_len) {
-+		struct blk_zone *this, *old;
-+		unsigned long flags;
-+
-+		this = zbc_desc_to_zone(sdkp, rec);
-+		if (!this)
-+			break;
-+
-+		next_sector = this->start + this->len;
-+		old = blk_insert_zone(q, this);
-+		if (old) {
-+			spin_lock_irqsave(&old->lock, flags);
-+			if (blk_zone_is_smr(old)) {
-+				old->wp = this->wp;
-+				old->state = this->state;
-+			}
-+			spin_unlock_irqrestore(&old->lock, flags);
-+			kfree(this);
-+		}
-+		rec += 64;
-+		rec_no++;
-+	}
-+
-+	sd_zbc_debug(sdkp,
-+		     "Inserted %d zones, next sector %zu len %d\n",
-+		     rec_no, next_sector, list_length);
-+
-+	return next_sector;
-+}
-+
-+void sd_zbc_refresh_zone_work(struct work_struct *work)
-+{
-+	struct zbc_update_work *zbc_work =
-+		container_of(work, struct zbc_update_work, zone_work);
-+	struct scsi_disk *sdkp = zbc_work->sdkp;
-+	struct request_queue *q = sdkp->disk->queue;
-+	unsigned int zone_buflen;
-+	int ret;
-+	sector_t last_sector;
-+	sector_t capacity = logical_to_sectors(sdkp->device, sdkp->capacity);
-+
-+	zone_buflen = zbc_work->zone_buflen;
-+	ret = sd_zbc_report_zones(sdkp, zbc_work->zone_buf, zone_buflen,
-+				  zbc_work->zone_sector,
-+				  ZBC_ZONE_REPORTING_OPTION_ALL, true);
-+	if (ret)
-+		goto done_free;
-+
-+	last_sector = zbc_parse_zones(sdkp, zbc_work->zone_buf, zone_buflen);
-+	if (last_sector != -1 && last_sector < capacity) {
-+		if (test_bit(SD_ZBC_ZONE_RESET, &sdkp->zone_flags)) {
-+			sd_zbc_debug(sdkp,
-+				     "zones in reset, cancelling refresh\n");
-+			ret = -EAGAIN;
-+			goto done_free;
-+		}
-+
-+		zbc_work->zone_sector = last_sector;
-+		queue_work(sdkp->zone_work_q, &zbc_work->zone_work);
-+		/* Kick request queue to be on the safe side */
-+		goto done_start_queue;
-+	}
-+done_free:
-+	kfree(zbc_work);
-+	if (test_and_clear_bit(SD_ZBC_ZONE_INIT, &sdkp->zone_flags) && ret) {
-+		sd_zbc_debug(sdkp,
-+			     "Cancelling zone initialisation\n");
-+	}
-+done_start_queue:
-+	if (q->mq_ops)
-+		blk_mq_start_hw_queues(q);
-+	else {
-+		unsigned long flags;
-+
-+		spin_lock_irqsave(q->queue_lock, flags);
-+		blk_start_queue(q);
-+		spin_unlock_irqrestore(q->queue_lock, flags);
-+	}
-+}
-+
-+/**
-+ * sd_zbc_update_zones - Update zone information for @sector
-+ * @sdkp: SCSI disk for which the zone information needs to be updated
-+ * @sector: sector to be updated
-+ * @bufsize: buffersize to be allocated
-+ * @update: true if existing zones should be updated
-+ */
-+void sd_zbc_update_zones(struct scsi_disk *sdkp, sector_t sector, int bufsize,
-+			 bool update)
-+{
-+	struct request_queue *q = sdkp->disk->queue;
-+	struct zbc_update_work *zbc_work;
-+	struct blk_zone *zone;
-+	struct rb_node *node;
-+	int zone_num = 0, zone_busy = 0, num_rec;
-+	sector_t next_sector = sector;
-+
-+	if (test_bit(SD_ZBC_ZONE_RESET, &sdkp->zone_flags)) {
-+		sd_zbc_debug(sdkp,
-+			     "zones in reset, not starting update\n");
-+		return;
-+	}
-+
-+retry:
-+	zbc_work = kzalloc(sizeof(struct zbc_update_work) + bufsize,
-+			   update ? GFP_NOWAIT : GFP_KERNEL);
-+	if (!zbc_work) {
-+		if (bufsize > 512) {
-+			sd_zbc_debug(sdkp,
-+				     "retry with buffer size %d\n", bufsize);
-+			bufsize = bufsize >> 1;
-+			goto retry;
-+		}
-+		sd_zbc_debug(sdkp,
-+			     "failed to allocate %d bytes\n", bufsize);
-+		if (!update)
-+			clear_bit(SD_ZBC_ZONE_INIT, &sdkp->zone_flags);
-+		return;
-+	}
-+	zbc_work->zone_sector = sector;
-+	zbc_work->zone_buflen = bufsize;
-+	zbc_work->sdkp = sdkp;
-+	INIT_WORK(&zbc_work->zone_work, sd_zbc_refresh_zone_work);
-+	num_rec = (bufsize / 64) - 1;
-+
-+	/*
-+	 * Mark zones under update as BUSY
-+	 */
-+	if (update) {
-+		for (node = rb_first(&q->zones); node; node = rb_next(node)) {
-+			unsigned long flags;
-+
-+			zone = rb_entry(node, struct blk_zone, node);
-+			if (num_rec == 0)
-+				break;
-+			if (zone->start != next_sector)
-+				continue;
-+			next_sector += zone->len;
-+			num_rec--;
-+
-+			spin_lock_irqsave(&zone->lock, flags);
-+			if (blk_zone_is_smr(zone)) {
-+				if (zone->state == BLK_ZONE_BUSY) {
-+					zone_busy++;
-+				} else {
-+					zone->state = BLK_ZONE_BUSY;
-+					zone->wp = zone->start;
-+				}
-+				zone_num++;
-+			}
-+			spin_unlock_irqrestore(&zone->lock, flags);
-+		}
-+		if (zone_num && (zone_num == zone_busy)) {
-+			sd_zbc_debug(sdkp,
-+				     "zone update for %zu in progress\n",
-+				     sector);
-+			kfree(zbc_work);
-+			return;
-+		}
-+	}
-+
-+	if (!queue_work(sdkp->zone_work_q, &zbc_work->zone_work)) {
-+		sd_zbc_debug(sdkp,
-+			     "zone update already queued?\n");
-+		kfree(zbc_work);
-+	}
-+}
-+
-+/**
-+ * sd_zbc_report_zones - Issue a REPORT ZONES scsi command
-+ * @sdkp: SCSI disk to which the command should be send
-+ * @buffer: response buffer
-+ * @bufflen: length of @buffer
-+ * @start_sector: logical sector for the zone information should be reported
-+ * @option: reporting option to be used
-+ * @partial: flag to set the 'partial' bit for report zones command
-+ */
-+int sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buffer,
-+			int bufflen, sector_t start_sector,
-+			enum zbc_zone_reporting_options option, bool partial)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	const int timeout = sdp->request_queue->rq_timeout
-+			* SD_FLUSH_TIMEOUT_MULTIPLIER;
-+	struct scsi_sense_hdr sshdr;
-+	sector_t start_lba = sectors_to_logical(sdkp->device, start_sector);
-+	unsigned char cmd[16];
-+	int result;
-+
-+	if (!scsi_device_online(sdp))
-+		return -ENODEV;
-+
-+	sd_zbc_debug(sdkp, "REPORT ZONES lba %zu len %d\n",
-+		     start_lba, bufflen);
-+
-+	memset(cmd, 0, 16);
-+	cmd[0] = ZBC_IN;
-+	cmd[1] = ZI_REPORT_ZONES;
-+	put_unaligned_be64(start_lba, &cmd[2]);
-+	put_unaligned_be32(bufflen, &cmd[10]);
-+	cmd[14] = (partial ? ZBC_REPORT_ZONE_PARTIAL : 0) | option;
-+	memset(buffer, 0, bufflen);
-+
-+	result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-+				buffer, bufflen, &sshdr,
-+				timeout, SD_MAX_RETRIES, NULL);
-+
-+	if (result) {
-+		sd_zbc_debug(sdkp,
-+			     "REPORT ZONES lba %zu failed with %d/%d\n",
-+			     start_lba, host_byte(result), driver_byte(result));
-+		return -EIO;
-+	}
-+
-+	return 0;
-+}
-+
-+int sd_zbc_setup_discard(struct scsi_disk *sdkp, struct request *rq,
-+			 sector_t sector, unsigned int num_sectors)
-+{
-+	struct blk_zone *zone;
-+	int ret = BLKPREP_OK;
-+	unsigned long flags;
-+
-+	zone = blk_lookup_zone(rq->q, sector);
-+	if (!zone)
-+		return BLKPREP_KILL;
-+
-+	spin_lock_irqsave(&zone->lock, flags);
-+
-+	if (zone->state == BLK_ZONE_UNKNOWN ||
-+	    zone->state == BLK_ZONE_BUSY) {
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "Discarding zone %zu state %x, deferring\n",
-+				       zone->start, zone->state);
-+		ret = BLKPREP_DEFER;
-+		goto out;
-+	}
-+	if (zone->state == BLK_ZONE_OFFLINE) {
-+		/* let the drive fail the command */
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "Discarding offline zone %zu\n",
-+				       zone->start);
-+		goto out;
-+	}
-+
-+	if (!blk_zone_is_smr(zone)) {
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "Discarding %s zone %zu\n",
-+				       blk_zone_is_cmr(zone) ? "CMR" : "unknown",
-+				       zone->start);
-+		ret = BLKPREP_DONE;
-+		goto out;
-+	}
-+	if (blk_zone_is_empty(zone)) {
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "Discarding empty zone %zu\n",
-+				       zone->start);
-+		ret = BLKPREP_DONE;
-+		goto out;
-+	}
-+
-+	if (zone->start != sector ||
-+	    zone->len < num_sectors) {
-+		sd_printk(KERN_ERR, sdkp,
-+			  "Misaligned RESET WP, start %zu/%zu "
-+			  "len %zu/%u\n",
-+			  zone->start, sector, zone->len, num_sectors);
-+		ret = BLKPREP_KILL;
-+		goto out;
-+	}
-+
-+	/*
-+	 * Opportunistic setting, will be fixed up with
-+	 * zone update if RESET WRITE POINTER fails.
-+	 */
-+	zone->wp = zone->start;
-+
-+out:
-+	spin_unlock_irqrestore(&zone->lock, flags);
-+
-+	return ret;
-+}
-+
-+int sd_zbc_setup_read_write(struct scsi_disk *sdkp, struct request *rq,
-+			    sector_t sector, unsigned int num_sectors)
-+{
-+	struct blk_zone *zone;
-+	int ret = BLKPREP_OK;
-+	unsigned long flags;
-+
-+	zone = blk_lookup_zone(sdkp->disk->queue, sector);
-+	if (!zone) {
-+		/* Might happen during zone initialization */
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "zone for sector %zu not found, skipping\n",
-+				       sector);
-+		return BLKPREP_OK;
-+	}
-+
-+	spin_lock_irqsave(&zone->lock, flags);
-+
-+	if (zone->state == BLK_ZONE_UNKNOWN ||
-+	    zone->state == BLK_ZONE_BUSY) {
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "zone %zu state %x, deferring\n",
-+				       zone->start, zone->state);
-+		ret = BLKPREP_DEFER;
-+		goto out;
-+	}
-+	if (zone->state == BLK_ZONE_OFFLINE) {
-+		/* let the drive fail the command */
-+		sd_zbc_debug_ratelimit(sdkp,
-+				       "zone %zu offline\n",
-+				       zone->start);
-+		goto out;
-+	}
-+
-+	if (rq->cmd_flags & (REQ_WRITE | REQ_WRITE_SAME)) {
-+		if (zone->type != BLK_ZONE_TYPE_SEQWRITE_REQ)
-+			goto out;
-+		if (zone->state == BLK_ZONE_READONLY)
-+			goto out;
-+		if (blk_zone_is_full(zone)) {
-+			sd_zbc_debug(sdkp,
-+				     "Write to full zone %zu/%zu\n",
-+				     sector, zone->wp);
-+			ret = BLKPREP_KILL;
-+			goto out;
-+		}
-+		if (zone->wp != sector) {
-+			sd_zbc_debug(sdkp,
-+				     "Misaligned write %zu/%zu\n",
-+				     sector, zone->wp);
-+			ret = BLKPREP_KILL;
-+			goto out;
-+		}
-+		zone->wp += num_sectors;
-+	} else if (blk_zone_is_smr(zone) && (zone->wp <= sector)) {
-+		sd_zbc_debug(sdkp,
-+			     "Read beyond wp %zu/%zu\n",
-+			     sector, zone->wp);
-+		ret = BLKPREP_DONE;
-+	}
-+
-+out:
-+	spin_unlock_irqrestore(&zone->lock, flags);
-+
-+	return ret;
-+}
-+
-+int sd_zbc_setup(struct scsi_disk *sdkp, char *buf, int buf_len)
-+{
-+	sector_t capacity = logical_to_sectors(sdkp->device, sdkp->capacity);
-+	sector_t last_sector;
-+
-+	if (test_and_set_bit(SD_ZBC_ZONE_INIT, &sdkp->zone_flags)) {
-+		sdev_printk(KERN_WARNING, sdkp->device,
-+			    "zone initialisation already running\n");
-+		return 0;
-+	}
-+
-+	if (!sdkp->zone_work_q) {
-+		char wq_name[32];
-+
-+		sprintf(wq_name, "zbc_wq_%s", sdkp->disk->disk_name);
-+		sdkp->zone_work_q = create_singlethread_workqueue(wq_name);
-+		if (!sdkp->zone_work_q) {
-+			sdev_printk(KERN_WARNING, sdkp->device,
-+				    "create zoned disk workqueue failed\n");
-+			return -ENOMEM;
-+		}
-+	} else if (!test_and_set_bit(SD_ZBC_ZONE_RESET, &sdkp->zone_flags)) {
-+		drain_workqueue(sdkp->zone_work_q);
-+		clear_bit(SD_ZBC_ZONE_RESET, &sdkp->zone_flags);
-+	}
-+
-+	last_sector = zbc_parse_zones(sdkp, buf, buf_len);
-+	if (last_sector != -1 && last_sector < capacity) {
-+		sd_zbc_update_zones(sdkp, last_sector, SD_ZBC_BUF_SIZE, false);
-+	} else
-+		clear_bit(SD_ZBC_ZONE_INIT, &sdkp->zone_flags);
-+
-+	return 0;
-+}
-+
-+void sd_zbc_remove(struct scsi_disk *sdkp)
-+{
-+	if (sdkp->zone_work_q) {
-+		if (!test_and_set_bit(SD_ZBC_ZONE_RESET, &sdkp->zone_flags))
-+			drain_workqueue(sdkp->zone_work_q);
-+		clear_bit(SD_ZBC_ZONE_INIT, &sdkp->zone_flags);
-+		destroy_workqueue(sdkp->zone_work_q);
-+	}
-+}
--- 
-1.8.5.6
+--rwEMma7ioTxnRzrJ
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename=".config.gz"
+Content-Transfer-Encoding: base64
 
+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
+
+--rwEMma7ioTxnRzrJ--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
