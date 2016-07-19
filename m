@@ -1,82 +1,74 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH v4] libata-scsi: minor cleanup in ata_mselect_*()
-Date: Wed, 20 Jul 2016 05:11:50 +0800
-Message-ID: <578e979d.d40c620a.f5800.0924@mx.google.com>
-References: <578e9008.4500420a.2d828.d131@mx.google.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <578e9008.4500420a.2d828.d131@mx.google.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tj@kernel.org, sergei.shtylyov@cogentembedded.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [BUG] Slab corruption during XFS writeback under memory pressure
+Date: Tue, 19 Jul 2016 14:22:47 -0700
+Message-ID: <53af895c-7ddb-1e50-6c90-d4d59f5c7a2f@fb.com>
+References: <28f77d74-5ab4-d913-2921-df90da53f393@fb.com>
+ <20160717000003.GW1922@dastard> <20160718060215.GB16044@dastard>
+ <24d2f83f-5281-ab3c-9e91-985a4b8e2f8b@fb.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:50538 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1751892AbcGSVXP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 19 Jul 2016 17:23:15 -0400
+In-Reply-To: <24d2f83f-5281-ab3c-9e91-985a4b8e2f8b@fb.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: linux-block@vger.kernel.org, kernel-team@fb.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, xfs@oss.sgi.com
 
-From: Tom Yan <tom.ty89@gmail.com>
+On 07/18/2016 07:05 PM, Calvin Owens wrote:
+> On 07/17/2016 11:02 PM, Dave Chinner wrote:
+>> On Sun, Jul 17, 2016 at 10:00:03AM +1000, Dave Chinner wrote:
+>>> On Fri, Jul 15, 2016 at 05:18:02PM -0700, Calvin Owens wrote:
+>>>> Hello all,
+>>>>
+>>>> I've found a nasty source of slab corruption. Based on seeing similar symptoms
+>>>> on boxes at Facebook, I suspect it's been around since at least 3.10.
+>>>>
+>>>> It only reproduces under memory pressure so far as I can tell: the issue seems
+>>>> to be that XFS reclaims pages from buffers that are still in use by
+>>>> scsi/block. I'm not sure which side the bug lies on, but I've only observed it
+>>>> with XFS.
+>> [....]
+>>> But this indicates that the page is under writeback at this point,
+>>> so that tends to indicate that the above freeing was incorrect.
+>>>
+>>> Hmmm - it's clear we've got direct reclaim involved here, and the
+>>> suspicion of a dirty page that has had it's bufferheads cleared.
+>>> Are there any other warnings in the log from XFS prior to kasan
+>>> throwing the error?
+>>
+>> Can you try the patch below?
+>
+> Thanks for getting this out so quickly :)
+>
+> So far so good: I booted Linus' tree as of this morning and reproduced the ASAN
+> splat. After applying your patch I haven't triggered it.
+>
+> I'm a bit wary since it was hard to trigger reliably in the first place... so I
+> lined up a few dozen boxes to run the test case overnight. I'll confirm in the
+> morning (-0700) they look good.
 
-1. Removed a repeated bit masking in ata_mselect_control()
-2. Moved `wce`/`d_sense` assignment below the page validity checks
-3. Added/Removed empty lines where appropriate
+All right, my testcase ran 2099 times overnight without triggering anything.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+For the overnight tests, I booted the boxes with "mem=" to artificially limit RAM,
+which makes my repro *much* more reliable (I feel silly for not thinking of that
+in the first place). With that setup, I hit the ASAN splat 21 times in 98 runs on
+vanilla 4.7-rc7. So I'm sold.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index b00521b..06afe63 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3604,7 +3604,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
- 	 * The first two bytes of def_cache_mpage are a header, so offsets
- 	 * in mpage are off by 2 compared to buf.  Same for len.
- 	 */
--
- 	if (len != CACHE_MPAGE_LEN - 2) {
- 		if (len < CACHE_MPAGE_LEN - 2)
- 			*fp = len;
-@@ -3613,8 +3612,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
- 		return -EINVAL;
- 	}
- 
--	wce = buf[0] & (1 << 2);
--
- 	/*
- 	 * Check that read-only bits are not modified.
- 	 */
-@@ -3628,6 +3625,8 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
- 		}
- 	}
- 
-+	wce = buf[0] & (1 << 2);
-+
- 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
- 	tf->protocol = ATA_PROT_NODATA;
- 	tf->nsect = 0;
-@@ -3660,7 +3659,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 	 * The first two bytes of def_control_mpage are a header, so offsets
- 	 * in mpage are off by 2 compared to buf.  Same for len.
- 	 */
--
- 	if (len != CONTROL_MPAGE_LEN - 2) {
- 		if (len < CONTROL_MPAGE_LEN - 2)
- 			*fp = len;
-@@ -3669,8 +3667,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 		return -EINVAL;
- 	}
- 
--	d_sense = buf[0] & (1 << 2);
--
- 	/*
- 	 * Check that read-only bits are not modified.
- 	 */
-@@ -3683,7 +3679,10 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 			return -EINVAL;
- 		}
- 	}
--	if (d_sense & (1 << 2))
-+
-+	d_sense = buf[0] & (1 << 2);
-+
-+	if (d_sense)
- 		dev->flags |= ATA_DFLAG_D_SENSE;
- 	else
- 		dev->flags &= ~ATA_DFLAG_D_SENSE;
--- 
-2.9.0
+Tested-by: Calvin Owens <calvinowens@fb.com>
+
+Again, really appreciate the quick response :)
+
+Thanks,
+Calvin
+
+> Thanks,
+> Calvin
+>
+>> -Dave.
 
