@@ -1,8 +1,8 @@
 From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH v2 1/3] xen-scsiback: Delete an unnecessary check before
- the function call "kfree"
-Date: Wed, 20 Jul 2016 13:44:15 +0200
-Message-ID: <51b41b85-c9d1-818c-f5a6-f9b04e8a7caf@suse.com>
+Subject: Re: [PATCH v2 3/3] xen-scsiback: Pass a failure indication as a
+ constant
+Date: Wed, 20 Jul 2016 13:44:37 +0200
+Message-ID: <a295159a-b292-fdbd-6aac-5b37b49f094b@suse.com>
 References: <5307CAA2.8060406@users.sourceforge.net>
  <530C5E18.1020800@users.sourceforge.net>
  <alpine.DEB.2.10.1402251014170.2080@hadrien>
@@ -21,25 +21,27 @@ References: <5307CAA2.8060406@users.sourceforge.net>
  <18256bfc-c6f9-8802-8d7d-55766f0b3624@users.sourceforge.net>
  <85b948e0-bf37-dff0-6792-77b5dacef9a0@suse.com>
  <6863b12b-9095-aaf3-6140-80968e0071e2@users.sourceforge.net>
- <62e64277-a6bc-9d9d-d80e-f3e515e7bcb3@users.sourceforge.net>
+ <b025aa24-63c9-4b2e-5035-9da278f968e5@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <62e64277-a6bc-9d9d-d80e-f3e515e7bcb3@users.sourceforge.net>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:44430 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752827AbcGTLoj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2016 07:44:39 -0400
+In-Reply-To: <b025aa24-63c9-4b2e-5035-9da278f968e5@users.sourceforge.net>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: SF Markus Elfring <elfring@users.sourceforge.net>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
 Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
-List-Id: linux-scsi@vger.kernel.org
 
-On 20/07/16 13:30, SF Markus Elfring wrote:
+On 20/07/16 13:36, SF Markus Elfring wrote:
 > From: Markus Elfring <elfring@users.sourceforge.net>
-> Date: Tue, 19 Jul 2016 15:42:19 +0200
+> Date: Wed, 20 Jul 2016 13:12:33 +0200
 > 
-> The kfree() function tests whether its argument is NULL and then
-> returns immediately. Thus the test around the call is not needed.
-> 
-> This issue was detected by using the Coccinelle software.
+> Pass the constant "FAILED" in a function call directly instead of
+> using an intialisation for a local variable.
 > 
 > Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 
