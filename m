@@ -1,54 +1,49 @@
-From: Fengguang Wu <fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Subject: Re: [kbuild-all] [target:master 1/2]
- drivers/target/target_core_transport.o: warning: objtool:
- __transport_wait_for_tasks()+0x22: function has unreachable instruction
-Date: Wed, 20 Jul 2016 09:13:23 +0800
-Message-ID: <20160720011323.GQ17027@wfg-t540p.sh.intel.com>
-References: <201607192134.PEDWBapu%fengguang.wu@intel.com>
+From: Damien Le Moal <damien.lemoal@hgst.com>
+Subject: Re: [PATCH 1/3] block: add flag for single-threaded submission
+Date: Wed, 20 Jul 2016 10:13:25 +0900
+Message-ID: <df86ecc5-92d0-776c-3438-22b1089ae258@hgst.com>
+References: <1468936978-9124-1-git-send-email-hare@suse.de>
+ <1468936978-9124-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <201607192134.PEDWBapu%fengguang.wu-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Nicholas Bellinger <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, kbuild-all-JC7UmRfGjtg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="windows-1252"; format="flowed"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:54716 "EHLO
+	esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753111AbcGTBNk convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2016 21:13:40 -0400
+In-Reply-To: <1468936978-9124-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Mike Snitzer <snitzer@redhat.com>
+Cc: dm-devel-redhat.com@suse.de, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
 
-Hi Nicholas,
 
-Sorry please ignore this one -- it looks like false warning from old
-gcc 4.4 and 4.6 -- we just enabled old compiler tests which triggered
-10k these warnings..
-
-Thanks,
-Fengguang
-
-On Tue, Jul 19, 2016 at 09:43:35PM +0800, kbuild test robot wrote:
->tree:   https://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
->head:   39993fc9aebdf68a25134b140447b335a2418a76
->commit: 15ce22fa491aa3bab7acd89ac40a9fc27aeed915 [1/2] target: Fix for hang of Ordered task in TCM
->config: x86_64-randconfig-a0-07191719 (attached as .config)
->compiler: gcc-4.4 (Debian 4.4.7-8) 4.4.7
->reproduce:
->        git checkout 15ce22fa491aa3bab7acd89ac40a9fc27aeed915
->        # save the attached .config to linux build tree
->        make ARCH=x86_64
+On 7/19/16 23:02, Hannes Reinecke wrote:
+> Some devices (most notably SMR drives) support only
+> one I/O stream eg for ensuring ordered I/O submission.
+> This patch adds a new block queue flag
+> 'BLK_QUEUE_SINGLE' to support these devices.
 >
->All warnings (new ones prefixed by >>):
->
->>> drivers/target/target_core_transport.o: warning: objtool: __transport_wait_for_tasks()+0x22: function has unreachable instruction
->
->---
->0-DAY kernel test infrastructure                Open Source Technology Center
->https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
+> ---
+>  block/blk-core.c       | 2 ++
+>  include/linux/blkdev.h | 2 ++
+>  2 files changed, 4 insertions(+)
 
+Reviewed-by: Damien Le Moal <damien.lemoal@hgst.com>
+Tested-by: Damien Le Moal <damien.lemoal@hgst.com>
 
->_______________________________________________
->kbuild-all mailing list
->kbuild-all-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org
->https://lists.01.org/mailman/listinfo/kbuild-all
+-- 
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Group, HGST Research,
+HGST, a Western Digital brand
+Damien.LeMoal@hgst.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.hgst.com
+Western Digital Corporation (and its subsidiaries) E-mail Confidentiality Notice & Disclaimer:
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This e-mail and any files transmitted with it may contain confidential or legally privileged information of WDC and/or its affiliates, and are intended solely for the use of the individual or entity to which they are addressed. If you are not the intended recipient, any disclosure, copying, distribution or any action taken or omitted to be taken in reliance on it, is prohibited. If you have received this e-mail in error, please notify the sender immediately and delete the e-mail in its entirety from your system.
+
