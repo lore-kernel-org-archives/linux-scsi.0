@@ -1,51 +1,32 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Wed, 20 Jul 2016 09:02:49 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54297958@hasmsx108.ger.corp.intel.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
- <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
- <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Gortmaker, Paul (Wind River)" <paul.gortmaker@windriver.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Michael Ellerman <patch-notifications@ellerman.id.au>
+Subject: Re: [v2] cxl: remove dead Kconfig options
+Date: Wed, 20 Jul 2016 19:10:22 +1000 (AEST)
+Message-ID: <3rvWMz2vPGz9t0t@ozlabs.org>
+References: <1468817577-1843-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from ozlabs.org ([103.22.144.67]:34089 "EHLO ozlabs.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752902AbcGTJKZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2016 05:10:25 -0400
+In-Reply-To: <1468817577-1843-1-git-send-email-andrew.donnellan@au1.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Donnellan <andrew.donnellan@au1.ibm.com>, linuxppc-dev@lists.ozlabs.org
+Cc: clombard@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, mrochs@linux.vnet.ibm.com, fbarrat@linux.vnet.ibm.com, manoj@linux.vnet.ibm.com, imunsie@au1.ibm.com
 
-PiANCj4gT24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgNDoyNyBQTSwgVG9tYXMgV2lua2xlciA8dG9t
-YXMud2lua2xlckBpbnRlbC5jb20+DQo+IHdyb3RlOg0KPiA+IFRoZSB1c2VyIHNwYWNlIEFQSSBp
-cyBhY2hpZXZlZCB2aWEgdHdvIHN5bmNocm9ub3VzIElPQ1RMLg0KPiA+IFNpbXBsaWZpZWQgb25l
-LCBSUE1CX0lPQ19SRVFfQ01ELCB3ZXJlIHJlYWQgcmVzdWx0IGN5Y2xlcyBpcw0KPiBwZXJmb3Jt
-ZWQNCj4gPiBieSB0aGUgZnJhbWV3b3JrIG9uIGJlaGFsZiB0aGUgdXNlciBhbmQgc2Vjb25kLCBS
-UE1CX0lPQ19TRVFfQ01EDQo+IHdoZXJlDQo+ID4gdGhlIHdob2xlIFJQTUIgc2VxdWVuY2UgaW5j
-bHVkaW5nIFJFU1VMVF9SRUFEIGlzIHN1cHBsaWVkIGJ5IHRoZSBjYWxsZXIuDQo+ID4gVGhlIGxh
-dHRlciBpcyBpbnRlbmRlZCBmb3IgIGVhc2llciBhZGp1c3RpbmcgIG9mIHRoZSAgYXBwbGljYXRp
-b25zDQo+ID4gdGhhdCB1c2UgTU1DX0lPQ19NVUxUSV9DTUQgaW9jdGwuDQo+ID4NCj4gPiBTaWdu
-ZWQtb2ZmLWJ5OiBUb21hcyBXaW5rbGVyIDx0b21hcy53aW5rbGVyQGludGVsLmNvbT4NCj4gPiAt
-LS0NCj4gDQo+IFsuLi5dDQo+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2NoYXIvcnBtYi9L
-Y29uZmlnIGIvZHJpdmVycy9jaGFyL3JwbWIvS2NvbmZpZw0KPiA+IGluZGV4IGM1ZTZlOTA5ZWZj
-ZS4uNjc5NGJlOWZjYzVlIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL0tjb25m
-aWcNCj4gPiArKysgYi9kcml2ZXJzL2NoYXIvcnBtYi9LY29uZmlnDQo+ID4gQEAgLTYsMyArNiwx
-MCBAQCBjb25maWcgUlBNQg0KPiA+ICAgICAgICAgICBhY2Nlc3MgUlBNQiBwYXJ0aXRpb24uDQo+
-ID4NCj4gPiAgICAgICAgICAgSWYgdW5zdXJlLCBzZWxlY3QgTi4NCj4gPiArDQo+ID4gK2NvbmZp
-ZyBSUE1CX0lOVEZfREVWDQo+ID4gKyAgICAgICBib29sICJSUE1CIGNoYXJhY3RlciBkZXZpY2Ug
-aW50ZXJmYWNlIC9kZXYvcnBtYk4iDQo+IA0KPiBBIGJvb2wgS2NvbmZpZyBzaG91bGQgaWRlYWxs
-eS4uLi4NCj4gDQo+ID4gKyAgICAgICBkZXBlbmRzIG9uIFJQTUINCj4gPiArICAgICAgIGhlbHAN
-Cj4gPiArICAgICAgICAgU2F5IHllcyBoZXJlIGlmIHlvdSB3YW50IHRvIGFjY2VzcyBSUE1CIGZy
-b20gdXNlciBzcGFjZQ0KPiA+ICsgICAgICAgICB2aWEgY2hhcmFjdGVyIGRldmljZSBpbnRlcmZh
-Y2UgL2Rldi9ycG1iJWQNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZp
-bGUgYi9kcml2ZXJzL2NoYXIvcnBtYi9NYWtlZmlsZQ0KPiA+IGluZGV4IDgxMmIzZWQyNjRjMC4u
-YjVkYzA4N2IxMjk5IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL01ha2VmaWxl
-DQo+ID4gKysrIGIvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZpbGUNCj4gPiBAQCAtMSw0ICsxLDUg
-QEANCj4gPiAgb2JqLSQoQ09ORklHX1JQTUIpICs9IHJwbWIubw0KPiA+ICBycG1iLW9ianMgKz0g
-Y29yZS5vDQo+ID4gK3JwbWItJChDT05GSUdfUlBNQl9JTlRGX0RFVikgKz0gY2Rldi5vDQoNClRo
-aXMgaXMgbm90IGEgYnVpbHRpbiwgdGhpcyBpcyBhbiBvcHRpb25hbCBwYXJ0IG9mIHRoZSBtb2R1
-bGUgDQoNCj4gPiArI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KPiANCj4gLi4uLm5vdCB1c2Ug
-bW9kdWxlLmggb3IgYW55IE1PRFVMRV8gbWFjcm9zIGZyb20gd2l0aGluIGl0Lg0KDQpDYW4gYmUg
-ZHJvcHBlZCBpbiB0aGlzIGNhc2UgYXMgbm8gbWFjcm9zIGFyZSB1c2VkLCANCmJ1dCB0aGUgcGF0
-dGVybiBLY29uZmlnIGJvb2wgLT4gbm8gaW5jbHVkZSBtb2R1bGUuaCAgeW91IGFyZSBmb2xsb3dp
-bmcgaGFzIGZhbHNlIHBvc2l0aXZlIGNhc2VzLg0KDQpUaGFua3MNClRvbWFzDQoNCg==
+On Mon, 2016-18-07 at 04:52:57 UTC, Andrew Donnellan wrote:
+> Remove the CXL_KERNEL_API and CXL_EEH Kconfig options, as they were only
+> needed to coordinate the merging of the cxlflash driver. Also remove the
+> stub implementation of cxl_perst_reloads_same_image() in cxlflash which is
+> only used if CXL_EEH isn't defined (i.e. never).
+> 
+> Suggested-by: Ian Munsie <imunsie@au1.ibm.com>
+> Signed-off-by: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+> Acked-by: Ian Munsie <imunsie@au1.ibm.com>
+> Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+
+Applied to powerpc next, thanks.
+
+https://git.kernel.org/powerpc/c/1e44727a0b220f6ead12fefcff
+
+cheers
