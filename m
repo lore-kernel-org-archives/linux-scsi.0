@@ -1,11 +1,9 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH v2 3/3] xen-scsiback: Pass a failure indication
-	as a constant
-Date: Wed, 20 Jul 2016 13:36:38 +0200
-Message-ID: <b025aa24-63c9-4b2e-5035-9da278f968e5@users.sourceforge.net>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH v2 1/3] xen-scsiback: Delete an unnecessary check before
+ the function call "kfree"
+Date: Wed, 20 Jul 2016 13:44:15 +0200
+Message-ID: <51b41b85-c9d1-818c-f5a6-f9b04e8a7caf@suse.com>
 References: <5307CAA2.8060406@users.sourceforge.net>
- <530B5FB6.6010207@users.sourceforge.net>
- <alpine.DEB.2.10.1402241710370.2074@hadrien>
  <530C5E18.1020800@users.sourceforge.net>
  <alpine.DEB.2.10.1402251014170.2080@hadrien>
  <530CD2C4.4050903@users.sourceforge.net>
@@ -23,42 +21,31 @@ References: <5307CAA2.8060406@users.sourceforge.net>
  <18256bfc-c6f9-8802-8d7d-55766f0b3624@users.sourceforge.net>
  <85b948e0-bf37-dff0-6792-77b5dacef9a0@suse.com>
  <6863b12b-9095-aaf3-6140-80968e0071e2@users.sourceforge.net>
+ <62e64277-a6bc-9d9d-d80e-f3e515e7bcb3@users.sourceforge.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-In-Reply-To: <6863b12b-9095-aaf3-6140-80968e0071e2@users.sourceforge.net>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, =?UTF-8?B?SsO8cmdlbiBHcm/Dnw==?= <jgross@suse.com>, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Cc: Julia Lawall <julia.lawall@lip6.fr>, kernel-janitors@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <62e64277-a6bc-9d9d-d80e-f3e515e7bcb3@users.sourceforge.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>, xen-devel@lists.xenproject.org, linux-scsi@vger.kernel.org, David Vrabel <david.vrabel@citrix.com>, Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-RnJvbTogTWFya3VzIEVsZnJpbmcgPGVsZnJpbmdAdXNlcnMuc291cmNlZm9yZ2UubmV0PgpEYXRl
-OiBXZWQsIDIwIEp1bCAyMDE2IDEzOjEyOjMzICswMjAwCgpQYXNzIHRoZSBjb25zdGFudCAiRkFJ
-TEVEIiBpbiBhIGZ1bmN0aW9uIGNhbGwgZGlyZWN0bHkgaW5zdGVhZCBvZgp1c2luZyBhbiBpbnRp
-YWxpc2F0aW9uIGZvciBhIGxvY2FsIHZhcmlhYmxlLgoKU2lnbmVkLW9mZi1ieTogTWFya3VzIEVs
-ZnJpbmcgPGVsZnJpbmdAdXNlcnMuc291cmNlZm9yZ2UubmV0PgotLS0KdjI6IFJlYmFzZWQgb24g
-c291cmNlIGZpbGVzIGZyb20gIkxpbnV4IG5leHQtMjAxNjA3MTkiCgogZHJpdmVycy94ZW4veGVu
-LXNjc2liYWNrLmMgfCA0ICsrLS0KIDEgZmlsZSBjaGFuZ2VkLCAyIGluc2VydGlvbnMoKyksIDIg
-ZGVsZXRpb25zKC0pCgpkaWZmIC0tZ2l0IGEvZHJpdmVycy94ZW4veGVuLXNjc2liYWNrLmMgYi9k
-cml2ZXJzL3hlbi94ZW4tc2NzaWJhY2suYwppbmRleCBlYjI3NGRmLi5mYTA4ZWM2IDEwMDY0NAot
-LS0gYS9kcml2ZXJzL3hlbi94ZW4tc2NzaWJhY2suYworKysgYi9kcml2ZXJzL3hlbi94ZW4tc2Nz
-aWJhY2suYwpAQCAtNjAxLDcgKzYwMSw3IEBAIHN0YXRpYyB2b2lkIHNjc2liYWNrX2RldmljZV9h
-Y3Rpb24oc3RydWN0IHZzY3NpYmtfcGVuZCAqcGVuZGluZ19yZXEsCiAJc3RydWN0IHNlX2NtZCAq
-c2VfY21kID0gJnBlbmRpbmdfcmVxLT5zZV9jbWQ7CiAJc3RydWN0IHNjc2liYWNrX3RtciAqdG1y
-OwogCXU2NCB1bnBhY2tlZF9sdW4gPSBwZW5kaW5nX3JlcS0+djJwLT5sdW47Ci0JaW50IHJjLCBl
-cnIgPSBGQUlMRUQ7CisJaW50IHJjLCBlcnI7CiAKIAl0bXIgPSBremFsbG9jKHNpemVvZihzdHJ1
-Y3Qgc2NzaWJhY2tfdG1yKSwgR0ZQX0tFUk5FTCk7CiAJaWYgKCF0bXIpCkBAIC02MjgsNyArNjI4
-LDcgQEAgcHV0X2NtZDoKIAl0YXJnZXRfcHV0X3Nlc3NfY21kKHNlX2NtZCk7CiBmcmVlX3RtcjoK
-IAlrZnJlZSh0bXIpOwotCXNjc2liYWNrX2RvX3Jlc3Bfd2l0aF9zZW5zZShOVUxMLCBlcnIsIDAs
-IHBlbmRpbmdfcmVxKTsKKwlzY3NpYmFja19kb19yZXNwX3dpdGhfc2Vuc2UoTlVMTCwgRkFJTEVE
-LCAwLCBwZW5kaW5nX3JlcSk7CiB9CiAKIC8qCi0tIAoyLjkuMgoKCl9fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fClhlbi1kZXZlbCBtYWlsaW5nIGxpc3QKWGVu
-LWRldmVsQGxpc3RzLnhlbi5vcmcKaHR0cHM6Ly9saXN0cy54ZW4ub3JnL3hlbi1kZXZlbAo=
+On 20/07/16 13:30, SF Markus Elfring wrote:
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Tue, 19 Jul 2016 15:42:19 +0200
+> 
+> The kfree() function tests whether its argument is NULL and then
+> returns immediately. Thus the test around the call is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+
+Even if already given, here it is again:
+
+Reviewed-by: Juergen Gross <jgross@suse.com>
+
+
+Juergen
