@@ -1,108 +1,102 @@
-From: Paul Gortmaker <paul.gortmaker@windriver.com>
-Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Wed, 20 Jul 2016 10:21:31 -0400
-Message-ID: <20160720142131.GS21225@windriver.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
- <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
- <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
- <5B8DA87D05A7694D9FA63FD143655C1B54297958@hasmsx108.ger.corp.intel.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Wed, 20 Jul 2016 10:27:28 -0400
+Message-ID: <20160720142727.GA57399@redhat.com>
+References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
+ <20160720140815.GA19045@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-mmc-owner@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:46787 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753212AbcGTO1a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 20 Jul 2016 10:27:30 -0400
 Content-Disposition: inline
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B54297958@hasmsx108.ger.corp.intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+In-Reply-To: <20160720140815.GA19045@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-[RE: [PATCH v5 4/8] char: rpmb: provide a user space interface] On 20/07/2016 (Wed 09:02) Winkler, Tomas wrote:
+On Wed, Jul 20 2016 at 10:08am -0400,
+Mike Snitzer <snitzer@redhat.com> wrote:
 
-> > 
-> > On Mon, Jul 18, 2016 at 4:27 PM, Tomas Winkler <tomas.winkler@intel.com>
-> > wrote:
-> > > The user space API is achieved via two synchronous IOCTL.
-> > > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is
-> > performed
-> > > by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
-> > where
-> > > the whole RPMB sequence including RESULT_READ is supplied by the caller.
-> > > The latter is intended for  easier adjusting  of the  applications
-> > > that use MMC_IOC_MULTI_CMD ioctl.
-> > >
-> > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> > > ---
-> > 
-> > [...]
-> > 
-> > > diff --git a/drivers/char/rpmb/Kconfig b/drivers/char/rpmb/Kconfig
-> > > index c5e6e909efce..6794be9fcc5e 100644
-> > > --- a/drivers/char/rpmb/Kconfig
-> > > +++ b/drivers/char/rpmb/Kconfig
-> > > @@ -6,3 +6,10 @@ config RPMB
-> > >           access RPMB partition.
-> > >
-> > >           If unsure, select N.
-> > > +
-> > > +config RPMB_INTF_DEV
-> > > +       bool "RPMB character device interface /dev/rpmbN"
-> > 
-> > A bool Kconfig should ideally....
-> > 
-> > > +       depends on RPMB
-> > > +       help
-> > > +         Say yes here if you want to access RPMB from user space
-> > > +         via character device interface /dev/rpmb%d
-> > > diff --git a/drivers/char/rpmb/Makefile b/drivers/char/rpmb/Makefile
-> > > index 812b3ed264c0..b5dc087b1299 100644
-> > > --- a/drivers/char/rpmb/Makefile
-> > > +++ b/drivers/char/rpmb/Makefile
-> > > @@ -1,4 +1,5 @@
-> > >  obj-$(CONFIG_RPMB) += rpmb.o
-> > >  rpmb-objs += core.o
-> > > +rpmb-$(CONFIG_RPMB_INTF_DEV) += cdev.o
+> On Tue, Jul 19 2016 at  6:57pm -0400,
+> Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 > 
-> This is not a builtin, this is an optional part of the module 
-
-Object files that are not stand-alone, but linked into a larger object
-to create a module generally still don't need module.h if they
-themselves specifically aren't registering the module or similar.
-
-The exception is a module that doesn't actively do anything but export
-symbols (i.e. a library).  Then somewhere in it there needs to be a
-MODULE_LICENSE so that the kernel can audit GPL and taint etc.
-
-> 
-> > > +#include <linux/module.h>
+> > Hello Mike,
 > > 
-> > ....not use module.h or any MODULE_ macros from within it.
+> > If I run a fio data integrity test against kernel v4.7-rc7 then I
+> > see often that fio reports I/O errors if a path is removed despite
+> > queue_if_no_path having been set in /etc/multipath.conf. Further
+> > analysis showed that this happens because during SCSI device removal
+> > a SCSI device enters state SDEV_CANCEL before the block layer queue
+> > is marked as "dying". In that state I/O requests submitted to that
+> > SCSI device are failed with -EIO. The behavior for
+> > end_clone_request() in drivers/md/dm.c for such requests is as
+...
+> > - With multiqueue support enabled, pass the "error" argument to
+> >   dm_complete_request().
 > 
-> Can be dropped in this case as no macros are used, 
-> but the pattern Kconfig bool -> no include module.h  you are following has false positive cases.
-
-Yes, of course there are other things, like the exception table
-searches, and symbol_get / symbol_put, macros defining string
-lengths, etc... and I try to watch for those via inspection and
-build testing. 
-
-However the majority bool->module.h are there for two reasons:
-
-1) in core code we had to use module.h in the past when export.h
-   did not exist.
-
-2) in driver code that largely capitalizes on copying from other
-   drivers without explicitly considering modularity.
-
-...and it is worth our while to clean both up, I think.
-
-If you can think of specific false positives that I might not be
-aware of, please don't hesitate to call them out.
-
-Thanks,
-Paul.
---
-
+> The error arg is passed to dm_complete_request() regardless of queue
+> type but it is only immediately used by the blk-mq API (via
+> blk_mq_complete_request).
 > 
-> Thanks
-> Tomas
+> > Shouldn't end_clone_request() requeue failed requests in both cases
+> > instead of passing the I/O error to the submitter only if multiqueue
+> > is enabled?
 > 
+> Pretty sure you'll find it is _not_ blk-mq that is passing the error
+> up.  (But if I'm proven wrong that will be welcomed news).
+>
+> The error passed to dm_complete_request() is always used to set
+> tio->error which is later used by dm_done().  DM core handles errors
+> later via softirq in dm_done() -- where the error is passed into the
+> target_type's rq_end_io hook.
+> 
+> So in DM multipath you'll see do_end_io() we do finally act on the error
+> we got from the lower layer.  And if the error is -EIO, noretry_error()
+> will return true and -EIO will be returned up the IO stack.
+
+For some reason I thought -EIO was considered not retryable.  That's
+obviously wrong (e.g. noretry_error() doesn't seize on -EIO).
+
+> In the end we're relying on SCSI to properly categorize the underlying
+> faults as retryable vs not -- via SCSI's differentiated IO errors.
+> 
+> Unfortunately I'm not seeing anything that DM multipath can do
+> differently here.  -EIO is _always_ propagated up.
+> 
+> It is strange that all the dm-mq testing that has been done didn't ever
+> catch this.  The mptest testsuite is a baseline for validating DM
+> multipath (and request-based DM core) changes.  But I've also had Red
+> Hat's QE hammer dm-mq with heavy IO (in terms of the "dt" utility) on a
+> larger NetApp testbed in the face of regular controller faults.
+> 
+> Must be this scenario of SDEV_CANCEL is a race that is relatively
+> unique/rare to your testbed?
+> 
+> This raises the question: should SCSI be returning something other than
+> -EIO for this case?  E.g. an error that is retryable?
+
+So it must be that blk-mq is somehow returning -EIO earlier based on
+rq->errors that is established during blk_mq_complete_request().
+
+Please try this patch (not happy with it since it assumes all
+request-based DM targets will handle IO errors -- which is fine for now
+since DM multipath is the only one).  Could be you've already tried
+this?  Does it fix your problem?
+
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index 7a96618..347ff25 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -414,7 +414,7 @@ static void dm_complete_request(struct request *rq, int error)
+ 	if (!rq->q->mq_ops)
+ 		blk_complete_request(rq);
+ 	else
+-		blk_mq_complete_request(rq, error);
++		blk_mq_complete_request(rq, 0);
+ }
+ 
+ /*
