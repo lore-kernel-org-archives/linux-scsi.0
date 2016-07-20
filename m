@@ -1,83 +1,65 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [net-next v2 0/6] common library for Chelsio drivers
-Date: Wed, 20 Jul 2016 14:13:55 -0700
-Message-ID: <1469049235.13881.13.camel@haakon3.risingtidesystems.com>
-References: <cover.1468689125.git.varun@chelsio.com>
+Subject: Re: [PATCH v3 5/7] iscsi-target: replace
+ iscsi_initiatorname_tolower() with strtolower()
+Date: Wed, 20 Jul 2016 14:16:05 -0700
+Message-ID: <1469049365.13881.15.camel@haakon3.risingtidesystems.com>
+References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
+	 <1468017794-4818-6-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:55960 "EHLO
-	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753531AbcGTVN5 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2016 17:13:57 -0400
-In-Reply-To: <cover.1468689125.git.varun@chelsio.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1468017794-4818-6-git-send-email-mmayer@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Markus Mayer <mmayer@broadcom.com>
+Cc: Roland Dreier <roland@purestorage.com>, Varun Prakash <varun@chelsio.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Varun Prakash <varun@chelsio.com>
-Cc: davem@davemloft.net, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com
 
-Hi Varun & Co,
+On Fri, 2016-07-08 at 15:43 -0700, Markus Mayer wrote:
+> After introducing generic strtolower(), iscsi_initiatorname_tolower() is
+> no longer needed.
+> 
+> Signed-off-by: Markus Mayer <mmayer@broadcom.com>
+> ---
+>  drivers/target/iscsi/iscsi_target_nego.c | 17 +----------------
+>  1 file changed, 1 insertion(+), 16 deletions(-)
+> 
+> diff --git a/drivers/target/iscsi/iscsi_target_nego.c b/drivers/target/iscsi/iscsi_target_nego.c
+> index 89d34bd..fa20638 100644
+> --- a/drivers/target/iscsi/iscsi_target_nego.c
+> +++ b/drivers/target/iscsi/iscsi_target_nego.c
+> @@ -987,21 +987,6 @@ static int iscsi_target_do_login(struct iscsi_conn *conn, struct iscsi_login *lo
+>  	return 0;
+>  }
+>  
+> -static void iscsi_initiatorname_tolower(
+> -	char *param_buf)
+> -{
+> -	char *c;
+> -	u32 iqn_size = strlen(param_buf), i;
+> -
+> -	for (i = 0; i < iqn_size; i++) {
+> -		c = &param_buf[i];
+> -		if (!isupper(*c))
+> -			continue;
+> -
+> -		*c = tolower(*c);
+> -	}
+> -}
+> -
+>  /*
+>   * Processes the first Login Request..
+>   */
+> @@ -1075,7 +1060,7 @@ int iscsi_target_locate_portal(
+>  	 * RFC-3720 3.2.6.1. section c) that says that iSCSI IQNs
+>  	 * are NOT case sensitive.
+>  	 */
+> -	iscsi_initiatorname_tolower(i_buf);
+> +	strtolower(i_buf);
+>  
+>  	if (!s_buf) {
+>  		if (!login->leading_connection)
 
-On Sat, 2016-07-16 at 22:49 +0530, Varun Prakash wrote:
-> Hi,
-> 
->  This patch series adds common library module(libcxgb.ko)
->  for Chelsio drivers to remove duplicate code.
-> 
->  This series moves common iSCSI DDP Page Pod manager
->  code from cxgb4.ko to libcxgb.ko, earlier this code
->  was used by only cxgbit.ko now it is used by
->  three Chelsio iSCSI drivers cxgb3i, cxgb4i, cxgbit.
-> 
->  In future this module will have common connection
->  management and hardware specific code that can
->  be shared by multiple Chelsio drivers(cxgb4,
->  csiostor, iw_cxgb4, cxgb4i, cxgbit).
-> 
->  Please review.
-> 
->  Thanks
-> 
-> -v2
-> - updated CONFIG_CHELSIO_LIB to an invisible option
-> - changed libcxgb.ko module license from GPL to Dual BSD/GPL
-> 
-> Varun Prakash (6):
->   libcxgb: add library module for Chelsio drivers
->   cxgb3i,cxgb4i,libcxgbi: remove iSCSI DDP support
->   cxgb4i,libcxgbi: add iSCSI DDP support
->   cxgb3i: add iSCSI DDP support
->   libcxgb: export ppm release and tagmask set api
->   cxgb3i,cxgb4i: fix symbol not declared sparse warning
-> 
->  drivers/net/ethernet/chelsio/Kconfig               |  16 +-
->  drivers/net/ethernet/chelsio/Makefile              |   1 +
->  drivers/net/ethernet/chelsio/cxgb4/Makefile        |   1 -
->  drivers/net/ethernet/chelsio/libcxgb/Makefile      |   3 +
->  .../{cxgb4/cxgb4_ppm.c => libcxgb/libcxgb_ppm.c}   |  57 +-
->  .../{cxgb4/cxgb4_ppm.h => libcxgb/libcxgb_ppm.h}   |  38 +-
->  drivers/scsi/cxgbi/Makefile                        |   2 +
->  drivers/scsi/cxgbi/cxgb3i/Kbuild                   |   1 +
->  drivers/scsi/cxgbi/cxgb3i/Kconfig                  |   1 +
->  drivers/scsi/cxgbi/cxgb3i/cxgb3i.c                 | 164 +++--
->  drivers/scsi/cxgbi/cxgb4i/Kbuild                   |   1 +
->  drivers/scsi/cxgbi/cxgb4i/Kconfig                  |   1 +
->  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c                 | 203 +++---
->  drivers/scsi/cxgbi/libcxgbi.c                      | 734 +++++++--------------
->  drivers/scsi/cxgbi/libcxgbi.h                      | 188 +-----
->  drivers/target/iscsi/cxgbit/Kconfig                |   2 +-
->  drivers/target/iscsi/cxgbit/Makefile               |   1 +
->  drivers/target/iscsi/cxgbit/cxgbit.h               |   2 +-
->  drivers/target/iscsi/cxgbit/cxgbit_main.c          |   2 +
->  19 files changed, 552 insertions(+), 866 deletions(-)
->  create mode 100644 drivers/net/ethernet/chelsio/libcxgb/Makefile
->  rename drivers/net/ethernet/chelsio/{cxgb4/cxgb4_ppm.c => libcxgb/libcxgb_ppm.c} (85%)
->  rename drivers/net/ethernet/chelsio/{cxgb4/cxgb4_ppm.h => libcxgb/libcxgb_ppm.h} (84%)
-> 
+Applied to target-pending/for-next.
 
-AFAICT this has not been picked up by DaveM for net-next code, so I've
-included it in target-pending/for-next.
-
-DaveM, if you'd prefer to pick it up, I'm happy to drop it.
-
+Thanks Markus.
