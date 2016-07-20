@@ -1,78 +1,51 @@
-From: Dmitry Monakhov <dmonakhov@openvz.org>
-Subject: HDD Unrecovered readerror issue
-Date: Wed, 20 Jul 2016 12:01:56 +0300
-Message-ID: <87twfkn0mz.fsf@openvz.org>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v5 4/8] char: rpmb: provide a user space interface
+Date: Wed, 20 Jul 2016 09:02:49 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B54297958@hasmsx108.ger.corp.intel.com>
+References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
+ <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+ <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: multipart/signed; boundary="=-=-=";
-	micalg=pgp-sha512; protocol="application/pgp-signature"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f48.google.com ([209.85.215.48]:33846 "EHLO
-	mail-lf0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753175AbcGTJCD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2016 05:02:03 -0400
-Received: by mail-lf0-f48.google.com with SMTP id l69so33515821lfg.1
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Jul 2016 02:02:02 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAP=VYLqZCXjWUohLZ35Kvrx7B8z7cbEFzDt4ugaUosrh2ca+8g@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Gortmaker, Paul (Wind River)" <paul.gortmaker@windriver.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, LKML <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
---=-=-=
-Content-Type: text/plain
-
-
-Drive:WDC WD1003FZEX-00MK2A0
-I have got this in logs:
-
-ata1.00: failed command: READ FPDMA QUEUED
-ata1.00: cmd 60/a0:a0:f0:c0:c5/00:00:04:00:00/40 tag 20 ncq 81920 in res 41/40:00:88:c1:c5/00:00:04:00:00/00 Emask 0x409 (media error)
-ata1.00: status: { DRDY ERR }
-ata1.00: error: { UNC }
-ata1.00: configured for UDMA/133
-sd 0:0:0:0: [sda] FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
-sd 0:0:0:0: [sda] Sense Key : Medium Error[current] [descriptor]
-sd 0:0:0:0: [sda] Add. Sense: Unrecovered readerror - auto reallocate failed
-sd 0:0:0:0: [sda] CDB: Read(10) 28 00 04 c5 c0 f0 00 00 a0 00
-blk_update_request: I/O error, dev sda, sector 80069000
-ata1: EH complete
-
-I can reproduce this easily
-#xfs_io -c "pread $((80069000/2))k 4k" -d  /dev/sda
-pread64: Input/output error
-##Got EIO
-##Smartctl also detect this
-#smartctl -t short /dev/sda
-#smartctl -l selftest /dev/sda
-....
-Short offline       Completed: read failure       90%      4682 80069000
-
-But once I rewrite this block, problem goes away.
-#xfs_io -c "pwrite -S 0x0 $((80069000/2))k 4k" -d  /dev/sda
-
-Now I can read it w/o any errors and smartctl is happy
-#smartctl -t short /dev/sda
-#smartctl -l selftest /dev/sda
-Num  Test_Description    Status                  Remaining
-LifeTime(hours)  LBA_of_first_error
-# 1  Short offline       Completed without error       00%      4683 -
-
-So my disk is not dead right? Why the hell HDD fail read from very beginning
-Is this because HDD firmware detect internal crcXX sum corruption?
-How this can happen? Is this because of power failure?
-AFAIK standard guarantees that sector will be updated atomically.
-But it happens! Please guide me how to fix such problems in general.
-
---=-=-=
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1
-
-iQEcBAEBCgAGBQJXjz4EAAoJELhyPTmIL6kBnxkH/2CIx9o6tVK6NQjtdJyMF7Sr
-8wlBINrbdkSsbwZ2KdN9WYaC464ezKLE4cZQMXeNMMNkErZwD/BMCl7vAWTauSlK
-DYz3ADJqfYhf+Z7cqECojg6/1ED2eupHrm76e0I6eNhESC4BA2iukC9peNI6/Pjy
-G/cu/5fLpKtLC6Snkqy9gtKYK/imsbc0i6MRw/bXM8zBVvXjXEhvd/fEaVBHYAJ7
-/Qfcu3YKCggdpMqIGflZvfifczDY+dEeBDZce35kKPeF6pv+vccqXnV76n+DRRZ6
-92QBost7UihcvtuEqommFKJlihqjpCvHu+dOB66b6Lhr6stEFWN0ZZf6EW2O36c=
-=pwNH
------END PGP SIGNATURE-----
---=-=-=--
+PiANCj4gT24gTW9uLCBKdWwgMTgsIDIwMTYgYXQgNDoyNyBQTSwgVG9tYXMgV2lua2xlciA8dG9t
+YXMud2lua2xlckBpbnRlbC5jb20+DQo+IHdyb3RlOg0KPiA+IFRoZSB1c2VyIHNwYWNlIEFQSSBp
+cyBhY2hpZXZlZCB2aWEgdHdvIHN5bmNocm9ub3VzIElPQ1RMLg0KPiA+IFNpbXBsaWZpZWQgb25l
+LCBSUE1CX0lPQ19SRVFfQ01ELCB3ZXJlIHJlYWQgcmVzdWx0IGN5Y2xlcyBpcw0KPiBwZXJmb3Jt
+ZWQNCj4gPiBieSB0aGUgZnJhbWV3b3JrIG9uIGJlaGFsZiB0aGUgdXNlciBhbmQgc2Vjb25kLCBS
+UE1CX0lPQ19TRVFfQ01EDQo+IHdoZXJlDQo+ID4gdGhlIHdob2xlIFJQTUIgc2VxdWVuY2UgaW5j
+bHVkaW5nIFJFU1VMVF9SRUFEIGlzIHN1cHBsaWVkIGJ5IHRoZSBjYWxsZXIuDQo+ID4gVGhlIGxh
+dHRlciBpcyBpbnRlbmRlZCBmb3IgIGVhc2llciBhZGp1c3RpbmcgIG9mIHRoZSAgYXBwbGljYXRp
+b25zDQo+ID4gdGhhdCB1c2UgTU1DX0lPQ19NVUxUSV9DTUQgaW9jdGwuDQo+ID4NCj4gPiBTaWdu
+ZWQtb2ZmLWJ5OiBUb21hcyBXaW5rbGVyIDx0b21hcy53aW5rbGVyQGludGVsLmNvbT4NCj4gPiAt
+LS0NCj4gDQo+IFsuLi5dDQo+IA0KPiA+IGRpZmYgLS1naXQgYS9kcml2ZXJzL2NoYXIvcnBtYi9L
+Y29uZmlnIGIvZHJpdmVycy9jaGFyL3JwbWIvS2NvbmZpZw0KPiA+IGluZGV4IGM1ZTZlOTA5ZWZj
+ZS4uNjc5NGJlOWZjYzVlIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL0tjb25m
+aWcNCj4gPiArKysgYi9kcml2ZXJzL2NoYXIvcnBtYi9LY29uZmlnDQo+ID4gQEAgLTYsMyArNiwx
+MCBAQCBjb25maWcgUlBNQg0KPiA+ICAgICAgICAgICBhY2Nlc3MgUlBNQiBwYXJ0aXRpb24uDQo+
+ID4NCj4gPiAgICAgICAgICAgSWYgdW5zdXJlLCBzZWxlY3QgTi4NCj4gPiArDQo+ID4gK2NvbmZp
+ZyBSUE1CX0lOVEZfREVWDQo+ID4gKyAgICAgICBib29sICJSUE1CIGNoYXJhY3RlciBkZXZpY2Ug
+aW50ZXJmYWNlIC9kZXYvcnBtYk4iDQo+IA0KPiBBIGJvb2wgS2NvbmZpZyBzaG91bGQgaWRlYWxs
+eS4uLi4NCj4gDQo+ID4gKyAgICAgICBkZXBlbmRzIG9uIFJQTUINCj4gPiArICAgICAgIGhlbHAN
+Cj4gPiArICAgICAgICAgU2F5IHllcyBoZXJlIGlmIHlvdSB3YW50IHRvIGFjY2VzcyBSUE1CIGZy
+b20gdXNlciBzcGFjZQ0KPiA+ICsgICAgICAgICB2aWEgY2hhcmFjdGVyIGRldmljZSBpbnRlcmZh
+Y2UgL2Rldi9ycG1iJWQNCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZp
+bGUgYi9kcml2ZXJzL2NoYXIvcnBtYi9NYWtlZmlsZQ0KPiA+IGluZGV4IDgxMmIzZWQyNjRjMC4u
+YjVkYzA4N2IxMjk5IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvY2hhci9ycG1iL01ha2VmaWxl
+DQo+ID4gKysrIGIvZHJpdmVycy9jaGFyL3JwbWIvTWFrZWZpbGUNCj4gPiBAQCAtMSw0ICsxLDUg
+QEANCj4gPiAgb2JqLSQoQ09ORklHX1JQTUIpICs9IHJwbWIubw0KPiA+ICBycG1iLW9ianMgKz0g
+Y29yZS5vDQo+ID4gK3JwbWItJChDT05GSUdfUlBNQl9JTlRGX0RFVikgKz0gY2Rldi5vDQoNClRo
+aXMgaXMgbm90IGEgYnVpbHRpbiwgdGhpcyBpcyBhbiBvcHRpb25hbCBwYXJ0IG9mIHRoZSBtb2R1
+bGUgDQoNCj4gPiArI2luY2x1ZGUgPGxpbnV4L21vZHVsZS5oPg0KPiANCj4gLi4uLm5vdCB1c2Ug
+bW9kdWxlLmggb3IgYW55IE1PRFVMRV8gbWFjcm9zIGZyb20gd2l0aGluIGl0Lg0KDQpDYW4gYmUg
+ZHJvcHBlZCBpbiB0aGlzIGNhc2UgYXMgbm8gbWFjcm9zIGFyZSB1c2VkLCANCmJ1dCB0aGUgcGF0
+dGVybiBLY29uZmlnIGJvb2wgLT4gbm8gaW5jbHVkZSBtb2R1bGUuaCAgeW91IGFyZSBmb2xsb3dp
+bmcgaGFzIGZhbHNlIHBvc2l0aXZlIGNhc2VzLg0KDQpUaGFua3MNClRvbWFzDQoNCg==
