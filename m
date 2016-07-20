@@ -1,47 +1,48 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH v9] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Wed, 20 Jul 2016 15:26:54 -0500
-Message-ID: <826BCCF5-C1E3-4419-9EAB-D0A1253BAA29@linux.vnet.ibm.com>
-References: <1464274721-36453-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1467151535-1443-1-git-send-email-mikecyr@linux.vnet.ibm.com>
- <1469045731.13881.4.camel@haakon3.risingtidesystems.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH] tcm_fc: set and unset FCP_SPPF_TARG_FCN
+Date: Wed, 20 Jul 2016 13:27:44 -0700
+Message-ID: <1469046464.13881.8.camel@haakon3.risingtidesystems.com>
+References: <1468933315-72922-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: QUOTED-PRINTABLE
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1469045731.13881.4.camel@haakon3.risingtidesystems.com>
+In-Reply-To: <1468933315-72922-1-git-send-email-hare@suse.de>
 Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Michael Cyr <mikecyr@linux.vnet.ibm.com>
-Cc: joe@perches.com, hch@infradead.org, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Nicholas A. Bellinger" <nab@daterainc.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Nic,=20
+On Tue, 2016-07-19 at 15:01 +0200, Hannes Reinecke wrote:
+> When registering and unregistering as an target port we should
+> be setting the FC-4 service params correctly.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/target/tcm_fc/tfc_sess.c | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/target/tcm_fc/tfc_sess.c b/drivers/target/tcm_fc/tfc_sess.c
+> index f5186a7..6ffbb60 100644
+> --- a/drivers/target/tcm_fc/tfc_sess.c
+> +++ b/drivers/target/tcm_fc/tfc_sess.c
+> @@ -91,6 +91,7 @@ static void ft_tport_delete(struct ft_tport *tport)
+>  
+>  	ft_sess_delete_all(tport);
+>  	lport = tport->lport;
+> +	lport->service_params &= ~FCP_SPPF_TARG_FCN;
+>  	BUG_ON(tport != lport->prov[FC_TYPE_FCP]);
+>  	RCU_INIT_POINTER(lport->prov[FC_TYPE_FCP], NULL);
+>  
+> @@ -110,6 +111,7 @@ void ft_lport_add(struct fc_lport *lport, void *arg)
+>  {
+>  	mutex_lock(&ft_lport_lock);
+>  	ft_tport_get(lport);
+> +	lport->service_params |= FCP_SPPF_TARG_FCN;
+>  	mutex_unlock(&ft_lport_lock);
+>  }
+>  
 
-< SNIP >
+Applied to target-pending/for-next.
 
-    > Note the deletion of drivers/scsi/libsrp.c + include/scsi/libsrp.=
-h has
-    > been dropped from the above commit, as it looks like they where c=
-hanges
-    > specific to your local tree.
-   =20
-    > Please have a quick look, and let me know if anything doesn't loo=
-k
-    > right.
-
-So the deletion is from James suggesting that I revert the deletion of =
-libsrp to make
-It clear that the code used to exist in the kernel and that im bringing=
- it back for this driver.
-Thus yeah you are right to not include it since those files don=E2=80=99=
-t exist currently.
-
--Bryant
-   =20
-    --
-    To unsubscribe from this list: send the line "unsubscribe target-de=
-vel" in
-    the body of a message to majordomo@vger.kernel.org
-    More majordomo info at  http://vger.kernel.org/majordomo-info.html
-   =20
-   =20
+Thanks Hannes.
