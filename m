@@ -1,40 +1,32 @@
 From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: Re: [PATCH 1/5] sd: configure ZBC devices
-Date: Wed, 20 Jul 2016 09:46:32 +0900
-Message-ID: <8000ae17-07f4-3a11-4ca2-bf6acb27ffdb@hgst.com>
-References: <1468934710-93876-1-git-send-email-hare@suse.de>
- <1468934710-93876-2-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/6] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+Date: Wed, 20 Jul 2016 10:02:52 +0900
+Message-ID: <1413b8ac-1b6b-2b7f-b0ec-5ab5b0e412b4@hgst.com>
+References: <1468934439-93579-1-git-send-email-hare@suse.de>
+ <1468934439-93579-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"; format="flowed"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11826 "EHLO
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:57956 "EHLO
 	esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752338AbcGTA4N convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2016 20:56:13 -0400
-In-Reply-To: <1468934710-93876-2-git-send-email-hare@suse.de>
+	with ESMTP id S1752338AbcGTBDE convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 19 Jul 2016 21:03:04 -0400
+In-Reply-To: <1468934439-93579-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@fb.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-On 7/19/16 22:25, Hannes Reinecke wrote:
-> For ZBC devices I/O must not cross zone boundaries, so setup
-> the 'chunk_sectors' block queue setting to the zone size.
-> This is only valid for REPORT ZONES SAME type 2 or 3;
-> for other types the zone sizes might be different
-> for individual zones. So issue a warning if the type is
-> found to be different.
-> Also the capacity might be different from the announced
-> capacity, so adjust it as needed.
+On 7/19/16 22:20, Hannes Reinecke wrote:
+> The queue limits already have a 'chunk_sectors' setting, so
+> we should be presenting it via sysfs.
 >
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.de>
 > ---
->  drivers/scsi/sd.c         | 120 ++++++++++++++++++++++++++++++++++++++++++++--
->  drivers/scsi/sd.h         |  12 +++++
->  include/scsi/scsi_proto.h |  17 +++++++
->  3 files changed, 144 insertions(+), 5 deletions(-)
+>  block/blk-sysfs.c | 11 +++++++++++
+>  1 file changed, 11 insertions(+)
 
 Reviewed-by: Damien Le Moal <damien.lemoal@hgst.com>
 Tested-by: Damien Le Moal <damien.lemoal@hgst.com>
