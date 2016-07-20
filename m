@@ -1,148 +1,221 @@
-From: Markus Mayer <mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
-Subject: Re: [PATCH v3 0/7] lib: string: add functions to
-	case-convert strings
-Date: Wed, 20 Jul 2016 13:28:16 -0700
-Message-ID: <20160720202816.GA18480@lbrmn-mmayer.ric.broadcom.com>
-References: <1468017794-4818-1-git-send-email-mmayer@broadcom.com>
- <9b88baed-a067-fcfd-d087-66e36f3060d7@mellanox.com>
- <CAGt4E5t0TGMxiUfV5Mx+EGyAYAmTOCEJe4QxjpjujvZfPwvYuQ@mail.gmail.com>
- <20160713225236.GA30571@lbrmn-mmayer.ric.broadcom.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: Re [PATCH RFC]: LIO seems to use SCSI Allocation Length instead
+ of SPDTL for calculating ResidualCount
+Date: Wed, 20 Jul 2016 14:07:02 -0700
+Message-ID: <1469048822.13881.10.camel@haakon3.risingtidesystems.com>
+References: <C4B98CC8-8D72-4AF2-B662-C63DE0E7F0D7@calsoftinc.com>
+	 <9FBEB2CB-389F-41AC-8A95-DADD1A62AB88@calsoftinc.com>
+	 <20160703135311.GA9339@srai-VirtualBox>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160713225236.GA30571-opzSsqMRwNylyEujtbL6/5Ym1tgvmhRUMm0uRHvK7Nw@public.gmane.org>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/nouveau>
-List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
- <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
-Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
-Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
-To: Chris Metcalf <cmetcalf-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>
-Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, Linux Kernel <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: QUOTED-PRINTABLE
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:58831 "EHLO
+	linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1755087AbcGTVHF (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 20 Jul 2016 17:07:05 -0400
+In-Reply-To: <20160703135311.GA9339@srai-VirtualBox>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sumit Rai <sumitrai96@gmail.com>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, ajaynair59@gmail.com, sumit.rai@calsoftinc.com
 
-T24gV2VkLCBKdWwgMTMsIDIwMTYgYXQgMDM6NTI6MzhQTSAtMDcwMCwgTWFya3VzIE1heWVyIHdy
-b3RlOgo+IE9uIFNhdCwgSnVsIDA5LCAyMDE2IGF0IDA5OjExOjA1UE0gLTA3MDAsIE1hcmt1cyBN
-YXllciB3cm90ZToKPj4gT24gOSBKdWx5IDIwMTYgYXQgMjA6MTMsIENocmlzIE1ldGNhbGYgPGNt
-ZXRjYWxmQG1lbGxhbm94LmNvbT4gd3JvdGU6Cj4+PiBPbiA3LzgvMjAxNiA2OjQzIFBNLCBNYXJr
-dXMgTWF5ZXIgd3JvdGU6Cj4+Pj4KPj4+PiBUaGlzIHNlcmllcyBpbnRyb2R1Y2VzIGEgZmFtaWx5
-IG9mIGdlbmVyaWMgc3RyaW5nIGNhc2UgY29udmVyc2lvbgo+Pj4+IGZ1bmN0aW9ucy4gVGhpcyBr
-aW5kIG9mIGZ1bmN0aW9uYWxpdHkgaXMgbmVlZGVkIGluIHNldmVyYWwgcGxhY2VzIGluCj4+Pj4g
-dGhlIGtlcm5lbC4gUmlnaHQgbm93LCBldmVyeWJvZHkgc2VlbXMgdG8gYmUgaW1wbGVtZW50aW5n
-IHRoZWlyIG93bgo+Pj4+IGNvcHkgb2YgdGhpcyBmdW5jdGlvbmFsaXR5Lgo+Pj4+Cj4+Pj4gQmFz
-ZWQgb24gdGhlIGRpc2N1c3Npb24gb2YgdGhlIHByZXZpb3VzIHZlcnNpb24gb2YgdGhpcyBzZXJp
-ZXNbMV0gYW5kCj4+Pj4gdGhlIHVzZSBjYXNlcyBmb3VuZCBpbiB0aGUga2VybmVsLCBpdCBkb2Vz
-IGxvb2sgbGlrZSBoYXZpbmcgc2V2ZXJhbAo+Pj4+IGZsYXZvdXJzIG9mIGNhc2UgY29udmVyc2lv
-biBmdW5jdGlvbnMgaXMgYmVuZWZpY2lhbC4gVGhlIHVzZSBjYXNlcyBmYWxsCj4+Pj4gaW50byB0
-aHJlZSBjYXRlZ29yaWVzOgo+Pj4+ICAgICAgLSBjb3B5aW5nIGEgc3RyaW5nIGFuZCBjb252ZXJ0
-aW5nIHRoZSBjYXNlIHdoaWxlIHNwZWNpZnlpbmcgYQo+Pj4+ICAgICAgICBtYXhpbXVtIGxlbmd0
-aCB0byBtaW1pYyBzdHJsY3B5KCkKPj4+PiAgICAgIC0gY29weWluZyBhIHN0cmluZyBhbmQgY29u
-dmVydGluZyB0aGUgY2FzZSB3aXRob3V0IHNwZWNpZnlpbmcgYQo+Pj4+ICAgICAgICBsZW5ndGgg
-dG8gbWltaWMgc3RyY3B5KCkKPj4+PiAgICAgIC0gY29udmVydGluZyB0aGUgY2FzZSBvZiBhIHN0
-cmluZyBpbi1wbGFjZSAoaS5lLiBtb2RpZnlpbmcgdGhlCj4+Pj4gICAgICAgIHN0cmluZyB0aGF0
-IHdhcyBwYXNzZWQgaW4pCj4+Pj4KPj4+PiBDb25zZXF1ZW50bHksIEkgYW0gcHJvcG9zaW5nIHRo
-ZXNlIG5ldyBmdW5jdGlvbnM6Cj4+Pj4gICAgICB2b2lkIHN0cmxjcHl0b3VwcGVyKGNoYXIgKmRz
-dCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKPj4+PiAgICAgIHZvaWQgc3RybGNweXRv
-bG93ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+Pj4+ICAgICAg
-dm9pZCBzdHJjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKPj4+PiAgICAg
-IHZvaWQgc3RyY3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYyk7Cj4+Pj4gICAg
-ICB2b2lkIHN0cnRvdXBwZXIoY2hhciAqcyk7Cj4+Pj4gICAgICB2b2lkIHN0cnRvbG93ZXIoY2hh
-ciAqcyk7Cj4+Pgo+Pj4KPj4+IFlvdSBtYXkgd2FudCB0byByZWFkIHRoZSBhcnRpY2xlIGhlcmU6
-Cj4+Pgo+Pj4gaHR0cHM6Ly9sd24ubmV0L0FydGljbGVzLzY1OTIxNC8KPj4gCj4+IEknbGwgcmVh
-ZCB0aGF0LiBUaGFua3MuCj4gCj4gSXQgZG9lc24ndCBsb29rIGxpa2UgdGhlcmUgaXMgZ29pbmcg
-dG8gYmUgdGhlIGRhbmdlciBvZiAibWFzcyBjaGFuZ2VzIi4gCj4gU28gZmFyLCBJIGhhdmUgdHdv
-IEFDS3MgKG9uZSB3aGVyZSB0aGUgc2VtYW50aWNzIGRvZXNuJ3QgY2hhbmdlLAo+IGJlY2F1c2Ug
-aXQncyB1c2luZyBzdHJ0b2xvd2VyKCkpIGFuZCB0aGUgb3RoZXIgaW4gYSBkcml2ZXIgaW4gc3Rh
-Z2luZy4KPiAKPiBCdXQgSSB1bmRlcnN0YW5kIHRoZSBjb25jZXJuIGFuZCB3aWxsIGtlZXAgYW4g
-ZXllIG91dCBpZiB0aGVyZSBhcmUKPiBvdGhlciBBQ0tzLgo+ICAKPj4+IGFuZCBmb2xsb3cgdXAg
-c29tZSBvZiB0aGUgZGlzY3Vzc2lvbiB0aHJlYWRzIG9uIExLTUwgYWJvdXQgdGhlIGJlc3QKPj4+
-IHNlbWFudGljcyB0byBhZHZlcnRpc2UgZm9yIHRoZSBzdHJsY3B5L3N0cnNjcHkgdmFyaWFudHMu
-ICBJdCBtaWdodAo+Pj4gYmUgaGVscGZ1bCB0byByZXR1cm4gc29tZSBraW5kIG9mIG92ZXJmbG93
-L3RydW5jYXRpb24gZXJyb3IgZnJvbQo+Pj4geW91ciBjb3B5IGZ1bmN0aW9ucyBzbyBwZW9wbGUg
-Y2FuIGVycm9yLWNoZWNrIHRoZSByZXN1bHQuCj4+IAo+PiBJIGFtIGluY2xpbmVkIHRvIGFncmVl
-LiBIb3dldmVyLCBldmVyeWJvZHkgaGFzIGJlZW4gdGVsbGluZyBtZSB0aGF0Cj4+IHRoZXNlIGZ1
-bmN0aW9ucyBzaG91bGQgYmUgdm9pZC4gT3JpZ2luYWxseSB0aGV5IHdlcmVuJ3QuCj4gCj4gV2hh
-dCBhYm91dCBzb21ldGhpbmcgbGlrZSB0aGlzPyAgSXQgbWlnaHQgYWxzbyB3b3JrIHRvIGtlZXAg
-dGhlIGZvdXIKPiBzdGF0aWMgaW5saW5lIGZ1bmN0aW9ucyBhcyAidm9pZCIgKHNpbmNlIHRoZXkg
-d29uJ3QgZXZlciByZXR1cm4gRTJCSUcKPiBhbnl3YXkpIGFuZCBqdXN0IGhhdmUgc3RybGNweXRv
-KiByZXR1cm4gYW4gaW50ZWdlciAoc2luY2UgdGhhdCdzIHdoZXJlCj4gdGhlIGJ1ZmZlciBjb3Vs
-ZCBiZSB0b28gc21hbGwpLgo+IAo+IFJhc211cywgd2hhdCdzIHlvdXIgdGFrZT8gCgpQaW5nLiBB
-bnkgdGhvdWdodHMgb24gdGhpcyBwcm9wb3NhbD8gRG9lcyBpdCBtYWtlIHNlbnNlIGZvciBtZSB0
-byBzZW50IG91dCBhCm5ldyByZXZpc2lvbiBvZiB0aGUgcGF0Y2ggc2V0IGluY29ycG9yYXRpbmcg
-dGhlc2UgY2hhbmdlcyAtLSBhdCBsZWFzdCBmb3IKdGhlIHN0cmxjcHl0byogZnVuY3Rpb25zPwoK
-VGhhbmtzLAotTWFya3VzCiAKPiBkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9zdHJpbmcuaCBi
-L2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPiBpbmRleCBhZTgyZDEzLi42Y2M4NWRjIDEwMDY0NAo+
-IC0tLSBhL2luY2x1ZGUvbGludXgvc3RyaW5nLmgKPiArKysgYi9pbmNsdWRlL2xpbnV4L3N0cmlu
-Zy5oCj4gQEAgLTExNiw4ICsxMTYsOCBAQCBleHRlcm4gdm9pZCAqIG1lbWNocihjb25zdCB2b2lk
-ICosaW50LF9fa2VybmVsX3NpemVfdCk7Cj4gICNlbmRpZgo+ICB2b2lkICptZW1jaHJfaW52KGNv
-bnN0IHZvaWQgKnMsIGludCBjLCBzaXplX3Qgbik7Cj4gIGNoYXIgKnN0cnJlcGxhY2UoY2hhciAq
-cywgY2hhciBvbGQsIGNoYXIgbmV3KTsKPiAtZXh0ZXJuIHZvaWQgc3RybGNweXRvdXBwZXIoY2hh
-ciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVfdCBsZW4pOwo+IC1leHRlcm4gdm9pZCBzdHJs
-Y3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYywgc2l6ZV90IGxlbik7Cj4gK2V4
-dGVybiBpbnQgc3RybGNweXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNpemVf
-dCBsZW4pOwo+ICtleHRlcm4gaW50IHN0cmxjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29uc3QgY2hh
-ciAqc3JjLCBzaXplX3QgbGVuKTsKPiAgCj4gIGV4dGVybiB2b2lkIGtmcmVlX2NvbnN0KGNvbnN0
-IHZvaWQgKngpOwo+ICAKPiBAQCAtMTc1LDM4ICsxNzUsNDYgQEAgc3RhdGljIGlubGluZSBjb25z
-dCBjaGFyICprYmFzZW5hbWUoY29uc3QgY2hhciAqcGF0aCkKPiAgICogc3RyY3B5dG91cHBlciAt
-IENvcHkgc3RyaW5nIGFuZCBjb252ZXJ0IHRvIHVwcGVyY2FzZS4KPiAgICogQGRzdDogVGhlIGJ1
-ZmZlciB0byBzdG9yZSB0aGUgcmVzdWx0Lgo+ICAgKiBAc3JjOiBUaGUgc3RyaW5nIHRvIGNvbnZl
-cnQgdG8gdXBwZXJjYXNlLgo+ICsgKgo+ICsgKiBSZXR1cm5zIHRoZSBudW1iZXIgb2YgY2hhcmFj
-dGVycyBjb3BpZWQuCj4gICAqLwo+IC1zdGF0aWMgaW5saW5lIHZvaWQgc3RyY3B5dG91cHBlcihj
-aGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYykKPiArc3RhdGljIGlubGluZSBpbnQgc3RyY3B5dG91
-cHBlcihjaGFyICpkc3QsIGNvbnN0IGNoYXIgKnNyYykKPiAgewo+IC0Jc3RybGNweXRvdXBwZXIo
-ZHN0LCBzcmMsIH4oc2l6ZV90KTApOwo+ICsJcmV0dXJuIHN0cmxjcHl0b3VwcGVyKGRzdCwgc3Jj
-LCB+KHNpemVfdCkwKTsKPiAgfQo+ICAKPiAgLyoqCj4gICAqIHN0cmNweXRvbG93ZXIgLSBDb3B5
-IHN0cmluZyBhbmQgY29udmVydCB0byBsb3dlcmNhc2UuCj4gICAqIEBkc3Q6IFRoZSBidWZmZXIg
-dG8gc3RvcmUgdGhlIHJlc3VsdC4KPiAgICogQHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRv
-IGxvd2VyY2FzZS4KPiArICoKPiArICogUmV0dXJucyB0aGUgbnVtYmVyIG9mIGNoYXJhY3RlcnMg
-Y29waWVkLgo+ICAgKi8KPiAtc3RhdGljIGlubGluZSB2b2lkIHN0cmNweXRvbG93ZXIoY2hhciAq
-ZHN0LCBjb25zdCBjaGFyICpzcmMpCj4gK3N0YXRpYyBpbmxpbmUgaW50IHN0cmNweXRvbG93ZXIo
-Y2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMpCj4gIHsKPiAtCXN0cmxjcHl0b2xvd2VyKGRzdCwg
-c3JjLCB+KHNpemVfdCkwKTsKPiArCXJldHVybiBzdHJsY3B5dG9sb3dlcihkc3QsIHNyYywgfihz
-aXplX3QpMCk7Cj4gIH0KPiAgCj4gIC8qKgo+ICAgKiBzdHJ0b3VwcGVyIC0gQ29udmVydCBzdHJp
-bmcgdG8gdXBwZXJjYXNlLgo+ICAgKiBAczogVGhlIHN0cmluZyB0byBvcGVyYXRlIG9uLgo+ICsg
-Kgo+ICsgKiBSZXR1cm5zIHRoZSBudW1iZXIgb2YgY2hhcmFjdGVycyBjb3BpZWQuCj4gICAqLwo+
-IC1zdGF0aWMgaW5saW5lIHZvaWQgc3RydG91cHBlcihjaGFyICpzKQo+ICtzdGF0aWMgaW5saW5l
-IGludCBzdHJ0b3VwcGVyKGNoYXIgKnMpCj4gIHsKPiAtCXN0cmxjcHl0b3VwcGVyKHMsIHMsIH4o
-c2l6ZV90KTApOwo+ICsJcmV0dXJuIHN0cmxjcHl0b3VwcGVyKHMsIHMsIH4oc2l6ZV90KTApOwo+
-ICB9Cj4gIAo+ICAvKioKPiAgICogc3RydG9sb3dlciAtIENvbnZlcnQgc3RyaW5nIHRvIGxvd2Vy
-Y2FzZS4KPiAgICogQHM6IFRoZSBzdHJpbmcgdG8gb3BlcmF0ZSBvbi4KPiArICoKPiArICogUmV0
-dXJucyB0aGUgbnVtYmVyIG9mIGNoYXJhY3RlcnMgY29waWVkLgo+ICAgKi8KPiAtc3RhdGljIGlu
-bGluZSB2b2lkIHN0cnRvbG93ZXIoY2hhciAqcykKPiArc3RhdGljIGlubGluZSBpbnQgc3RydG9s
-b3dlcihjaGFyICpzKQo+ICB7Cj4gLQlzdHJsY3B5dG9sb3dlcihzLCBzLCB+KHNpemVfdCkwKTsK
-PiArCXJldHVybiBzdHJsY3B5dG9sb3dlcihzLCBzLCB+KHNpemVfdCkwKTsKPiAgfQo+ICAKPiAg
-I2VuZGlmIC8qIF9MSU5VWF9TVFJJTkdfSF8gKi8KPiBkaWZmIC0tZ2l0IGEvbGliL3N0cmluZy5j
-IGIvbGliL3N0cmluZy5jCj4gaW5kZXggNzkwM2UxMC4uZDM2ZDVmYjIgMTAwNjQ0Cj4gLS0tIGEv
-bGliL3N0cmluZy5jCj4gKysrIGIvbGliL3N0cmluZy5jCj4gQEAgLTk1OCwxNyArOTU4LDIxIEBA
-IEVYUE9SVF9TWU1CT0woc3RycmVwbGFjZSk7Cj4gICAqIEBkc3Q6IFRoZSBidWZmZXIgdG8gc3Rv
-cmUgdGhlIHJlc3VsdC4KPiAgICogQHNyYzogVGhlIHN0cmluZyB0byBjb252ZXJ0IHRvIHVwcGVy
-Y2FzZS4KPiAgICogQGxlbjogTWF4aW11bSBzdHJpbmcgbGVuZ3RoLiBNYXkgYmUgU0laRV9NQVgg
-dG8gc2V0IG5vIGxpbWl0Lgo+ICsgKgo+ICsgKiBSZXR1cm5zIHRoZSBudW1iZXIgb2YgY2hhcmFj
-dGVycyBjb3BpZWQgb3IgLUUyQklHIGlmIEBkc3Qgd2Fzbid0IGJpZyBlbm91Z2guCj4gICAqLwo+
-IC12b2lkIHN0cmxjcHl0b3VwcGVyKGNoYXIgKmRzdCwgY29uc3QgY2hhciAqc3JjLCBzaXplX3Qg
-bGVuKQo+ICtpbnQgc3RybGNweXRvdXBwZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMsIHNp
-emVfdCBsZW4pCj4gIHsKPiAgCXNpemVfdCBpOwo+ICAKPiAgCWlmICghbGVuKQo+IC0JCXJldHVy
-bjsKPiArCQlyZXR1cm4gLUUyQklHOwo+ICAKPiAgCWZvciAoaSA9IDA7IGkgPCBsZW4gJiYgc3Jj
-W2ldOyArK2kpCj4gIAkJZHN0W2ldID0gdG91cHBlcihzcmNbaV0pOwo+ICAJZHN0W2kgPCBsZW4g
-PyBpIDogaSAtIDFdID0gJ1wwJzsKPiArCj4gKwlyZXR1cm4gKGkgPCBsZW4pID8gaSA6IC1FMkJJ
-RzsKPiAgfQo+ICBFWFBPUlRfU1lNQk9MKHN0cmxjcHl0b3VwcGVyKTsKPiAgCj4gQEAgLTk3Nywx
-NiArOTgxLDIwIEBAIEVYUE9SVF9TWU1CT0woc3RybGNweXRvdXBwZXIpOwo+ICAgKiBAZHN0OiBU
-aGUgYnVmZmVyIHRvIHN0b3JlIHRoZSByZXN1bHQuCj4gICAqIEBzcmM6IFRoZSBzdHJpbmcgdG8g
-Y29udmVydCB0byBsb3dlcmNhc2UuCj4gICAqIEBsZW46IE1heGltdW0gc3RyaW5nIGxlbmd0aC4g
-TWF5IGJlIFNJWkVfTUFYIHRvIHNldCBubyBsaW1pdC4KPiArICoKPiArICogUmV0dXJucyB0aGUg
-bnVtYmVyIG9mIGNoYXJhY3RlcnMgY29waWVkIG9yIC1FMkJJRyBpZiBAZHN0IHdhc24ndCBiaWcg
-ZW5vdWdoLgo+ICAgKi8KPiAtdm9pZCBzdHJsY3B5dG9sb3dlcihjaGFyICpkc3QsIGNvbnN0IGNo
-YXIgKnNyYywgc2l6ZV90IGxlbikKPiAraW50IHN0cmxjcHl0b2xvd2VyKGNoYXIgKmRzdCwgY29u
-c3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKQo+ICB7Cj4gIAlzaXplX3QgaTsKPiAgCj4gIAlpZiAo
-IWxlbikKPiAtCQlyZXR1cm47Cj4gKwkJcmV0dXJuIC1FMkJJRzsKPiAgCj4gIAlmb3IgKGkgPSAw
-OyBpIDwgbGVuICYmIHNyY1tpXTsgKytpKQo+ICAJCWRzdFtpXSA9IHRvbG93ZXIoc3JjW2ldKTsK
-PiAgCWRzdFtpIDwgbGVuID8gaSA6IGkgLSAxXSA9ICdcMCc7Cj4gKwo+ICsJcmV0dXJuIChpIDwg
-bGVuKSA/IGkgOiAtRTJCSUc7Cj4gIH0KPiAgRVhQT1JUX1NZTUJPTChzdHJsY3B5dG9sb3dlcik7
-Cl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fCk5vdXZlYXUg
-bWFpbGluZyBsaXN0Ck5vdXZlYXVAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBzOi8vbGlzdHMu
-ZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vbm91dmVhdQo=
+Hi Sumit,
+
+Apologies for the delayed response.  Comments below..
+
+On Sun, 2016-07-03 at 19:24 +0530, Sumit Rai wrote:
+> > From: Sumit Rai <sumit.rai@calsoftinc.com>
+> > Subject: LIO seems to use SCSI Allocation Length instead of SPDTL f=
+or calculating ResidualCount
+> > Date: June 22, 2016 at 7:43:50 PM GMT+5:30
+> > To: target-devel@vger.kernel.org
+> >=20
+> > We are trying to test if LIO target sets ResidualCount correctly in=
+ case of ResidualOverflow for Data-In by following the below Steps:
+> > 1. Send SCSI Inquiry command to iSCSI target, if there are no excep=
+tions in the response (and no residual overflow) we are able to determi=
+ne how many bytes the target SCSI layer on target side attempted to tra=
+nsfer to target iSCSI layer. On the initiator side when response is rec=
+eived: in the absence of any exceptions or residual overflow we assume =
+all the data was successfully transferred and is equal to iSCSI DataSeg=
+mentLength. We will use this value as SPDTL for SCSI Inquiry command.
+> >=20
+> > Note: SPDTL is detailed in RFC 7143 11.4.5.2 (and you may also refe=
+r to discussion on T10 mailing list: http://www.t10.org/pipermail/t10/2=
+014-June/017367.html).
+> >=20
+> > 2. Send out the same SCSI inquiry command as in Step 1. but set iSC=
+SI EDTL to a value lower than SPDTL.
+> >=20
+> > Assumption: Since we are not making any changes to iSCSI target LU =
+configuration in our setup b/w Step 1. and 2, we assume amount of Inqui=
+ry Data target generates will be same of 1. and 2. since inquiry comman=
+d is the same. During our testing we find this assumption to be true.
+> >=20
+> > Expected Result:
+> > Since in Step 2, SPDTL > EDTL, iSCSI target is expected to set Resi=
+dualOverflow flag and ResidualCount to SPDTL - EDTL.
+> > In the attached PCAP text file, frame no. 11 (SCSI Inquiry Req.) an=
+d 12 (Inquiry Response) are for Step 1. As explained, SPDTL =3D 0x24 or=
+ 36D.
+> > Frame no. 14 is for (SCSI Inq. Req.) Step 2. EDTL =3D 0x08.
+> > Hence, expected ResidualCount =3D 0x1C (28D) i.e. 0x24 (36D) - 0x08=
+ (8D)
+> >=20
+> > Observed Result:
+> > iSCSI target sets the Residual Overflow flag correctly but value of=
+ ResidualCount doesn=E2=80=99t match expected value.
+> > Target is setting, ResidualCount to 0x3f8 (1016D) as seen in frame =
+no 16. In the frame no. 14, in the SCSI Inquiry CDB allocation length (=
+SPC 5r01 Section 4.2.5.6) was set to 0x0400 (1024D) and target seems to=
+ be using this value to calculate ResidualCount i.e. 0x0400 (1024D) - 0=
+x08.
+> > To further verify this we  changed the allocation length value in S=
+CSI Inquiry CDB to 0x0200 (512D) bytes instead, we get ResidualCount of=
+ 0x1f8 (504D).
+> >=20
+> > Allocation Length is the maximum value of the SPDTL and not substit=
+ute for it, hence it shouldn=E2=80=99t be used to calculate ResidualCou=
+nt except for cases where SPDTL > Allocation Length and Data is truncat=
+ed (in that case both Alloc Len and SPDTL are same). (SPC 5r01 Section =
+4.2.5.6).
+> >=20
+> > LIO Version: Datera Inc. iSCSI Target v4.1.0
+> > Linux Kernel: 4.4.0-22-generic
+> >=20
+> > RFC 7143:
+> >=20
+> > 11.4.5.2.  Residuals Concepts Overview
+> >=20
+> >=20
+> >   "SCSI-Presented Data Transfer Length (SPDTL)" is the term this
+> >   document uses (see=20
+> > Section 2.2
+> > for definition) to represent the
+> >   aggregate data length that the target SCSI layer attempts to tran=
+sfer
+> >   using the local iSCSI layer for a task.  "Expected Data Transfer
+> >=20
+> >   Length (EDTL)" is the iSCSI term that represents the length of da=
+ta
+> >   that the iSCSI layer expects to transfer for a task.  EDTL is
+> >   specified in the SCSI Command PDU.
+> >=20
+> >   When SPDTL =3D EDTL for a task, the target iSCSI layer completes =
+the
+> >   task with no residuals.  Whenever SPDTL differs from EDTL for a t=
+ask,
+> >   that task is said to have a residual.
+> >=20
+> >   If SPDTL > EDTL for a task, iSCSI Overflow MUST be signaled in th=
+e
+> >   SCSI Response PDU as specified in=20
+> > Section 11.4.5.1
+> > .  The Residual
+> >   Count MUST be set to the numerical value of (SPDTL - EDTL).
+> >=20
+> >   If SPDTL < EDTL for a task, iSCSI Underflow MUST be signaled in t=
+he
+> >   SCSI Response PDU as specified in=20
+> > Section 11.4.5.1
+> > .  The Residual
+> >   Count MUST be set to the numerical value of (EDTL - SPDTL).
+> >=20
+> >   Note that the Overflow and Underflow scenarios are independent of
+> >   Data-In and Data-Out.  Either scenario is logically possible in
+> >=20
+> >=20
+> > SPC 5r01
+> > 4.2.5.6 Allocation length
+> >=20
+> > The ALLOCATION LENGTH field specifies the maximum number of bytes o=
+r blocks that an application client has allocated in the Data-In Buffer=
+=2E The ALLOCATION LENGTH field specifies bytes unless a different requ=
+irement is stated in the command definition.
+> >=20
+> > An allocation length of zero specifies that no data shall be transf=
+erred. This condition shall not be considered an error.
+> >=20
+> > The device server shall terminate transfers to the Data-In Buffer w=
+hen the number of bytes or blocks specified by the ALLOCATION LENGTH fi=
+eld have been transferred or when all available data have been transfer=
+red, whichever is less. The allocation length is used to limit the maxi=
+mum amount of variable length data (e.g., mode data, log data, diagnost=
+ic data) returned to an application client. If the information being tr=
+ansferred to the Data-In Buffer includes fields containing counts of th=
+e number of bytes in some or all of the data (e.g., a PARAMETER DATA LE=
+NGTH field, a PAGE LENGTH field, a DESCRIPTOR LENGTH field, an AVAILABL=
+E DATA field), then the contents of these fields shall not be altered t=
+o reflect the truncation, if any, that results from an insufficient ALL=
+OCATION LENGTH value, unless the standard that describes the Data-In Bu=
+ffer format states otherwise.
+> >=20
+> > If the amount of information that is available to be transferred ex=
+ceeds the maximum value that the ALLOCATION LENGTH field in combination=
+ with other fields in the CDB is capable of specifying, then no data sh=
+all be transferred and the command shall be terminated with CHECK CONDI=
+TION status, with the sense key set to ILLEGAL REQUEST, and the additio=
+nal sense code set to INVALID FIELD IN CDB.=20
+>=20
+> I havn't received any comments on this issue, I guess the maintainer(=
+s) are occpied with
+> other high priority issues, so I tried to fix the issue. I have succe=
+ssfully tested
+> the patch and it calculates the residual count as expected. I would a=
+ppreciate it if someone
+> can do a review of the below patch:
+>=20
+> --- linux/drivers/target/target_core_transport.c.orig	2016-07-03 18:0=
+9:28.949281611 +0530
+> +++ linux/drivers/target/target_core_transport.c	2016-07-03 18:10:44.=
+007293696 +0530
+> @@ -754,7 +754,15 @@ EXPORT_SYMBOL(target_complete_cmd);
+> =20
+>  void target_complete_cmd_with_length(struct se_cmd *cmd, u8 scsi_sta=
+tus, int length)
+>  {
+> -	if (scsi_status =3D=3D SAM_STAT_GOOD && length < cmd->data_length) =
+{
+> +	if (scsi_status !=3D SAM_STAT_GOOD) {
+> +		return;
+> +	}
+> +
+> +	/*
+> +	 * Calculate new residual count based upon length of SCSI data
+> +	 * transferred.
+> +	 */
+> +	if (length < cmd->data_length) {
+>  		if (cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
+>  			cmd->residual_count +=3D cmd->data_length - length;
+>  		} else {
+> @@ -763,6 +771,12 @@ void target_complete_cmd_with_length(str
+>  		}
+> =20
+>  		cmd->data_length =3D length;
+> +	} else if (length > cmd->data_length) {
+> +		cmd->se_cmd_flags |=3D SCF_OVERFLOW_BIT;
+> +		cmd->residual_count =3D length - cmd->data_length;
+> +	} else {
+> +		cmd->se_cmd_flags &=3D ~(SCF_OVERFLOW_BIT | SCF_UNDERFLOW_BIT);
+> +		cmd->residual_count =3D 0;
+>  	}
+> =20
+>  	target_complete_cmd(cmd, scsi_status);
+> Signed-off-by: Sumit Rai <sumitrai96@gmail.com>
+>=20
+> Thanks to Ajay Nair in assisting with this patch.
+>=20
+
+Applied to target-pending/for-next here.
+
+https://git.kernel.org/cgit/linux/kernel/git/nab/target-pending.git/com=
+mit/?h=3Dfor-next&id=3D577d8f97b4f911881dfebe4c619b6eb9f087f042
+
+Thanks Sumit + Ajay for tracking this down.
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
