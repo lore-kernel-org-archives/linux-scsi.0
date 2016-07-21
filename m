@@ -1,29 +1,31 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 6/6] block: Add 'BLK_MQ_RQ_QUEUE_DONE' return value
-Date: Thu, 21 Jul 2016 08:00:43 +0200
-Message-ID: <24e83314-a4fa-76de-04ee-43b7b50cbbd2@suse.de>
-References: <1468934439-93579-1-git-send-email-hare@suse.de>
- <1468934439-93579-7-git-send-email-hare@suse.de>
- <20160721055351.GA14568@infradead.org>
+Subject: Re: [PATCH 1/3] block: add flag for single-threaded submission
+Date: Thu, 21 Jul 2016 08:01:17 +0200
+Message-ID: <2cef3971-54cc-73d6-dbff-acd1379d19d5@suse.de>
+References: <1468936978-9124-1-git-send-email-hare@suse.de>
+ <1468936978-9124-2-git-send-email-hare@suse.de>
+ <20160721055431.GB14568@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20160721055351.GA14568@infradead.org>
+In-Reply-To: <20160721055431.GB14568@infradead.org>
 Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel-redhat.com@suse.de, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/21/2016 07:53 AM, Christoph Hellwig wrote:
-> On Tue, Jul 19, 2016 at 03:20:39PM +0200, Hannes Reinecke wrote:
->> Add a return value BLK_MQ_RQ_QUEUE_DONE to terminate a request
->> without error.
+On 07/21/2016 07:54 AM, Christoph Hellwig wrote:
+> On Tue, Jul 19, 2016 at 04:02:56PM +0200, Hannes Reinecke wrote:
+>> Some devices (most notably SMR drives) support only
+>> one I/O stream eg for ensuring ordered I/O submission.
+>> This patch adds a new block queue flag
+>> 'BLK_QUEUE_SINGLE' to support these devices.
 >=20
-> NAK.  You can just do a blk_mq_end_request on the request and return
-> 0 from ->queue_rq.
+> We'll need a blk-mq implementation of this flag as well before it can
+> be merged.
 >=20
-Okay, will be doing so.
+Yes, indeed. Will be fixed for the next round of submissions.
 
 Cheers,
 
