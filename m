@@ -1,136 +1,315 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 13/28] be2iscsi: Remove alloc_mcc_tag & beiscsi_pci_soft_reset
-Date: Thu, 21 Jul 2016 14:37:50 +0530
-Message-ID: <1469092085-14311-14-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 14/28] be2iscsi: Remove isr_lock and dead code
+Date: Thu, 21 Jul 2016 14:37:51 +0530
+Message-ID: <1469092085-14311-15-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f52.google.com ([74.125.82.52]:35725 "EHLO
-	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbcGUJJH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:07 -0400
-Received: by mail-wm0-f52.google.com with SMTP id f65so14850174wmi.0
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:07 -0700 (PDT)
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:37373 "EHLO
+	mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751814AbcGUJJK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:10 -0400
+Received: by mail-wm0-f47.google.com with SMTP id i5so16928859wmg.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:09 -0700 (PDT)
 In-Reply-To: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-alloc_mcc_tag was replaced with alloc_mcc_wrb and is no more used.
-beiscsi_pci_soft_reset is not used at all and won't be needed.
+todo_mcc_cq is not needed as only MCC work is queued.
+todo_cq is not used at all.
+Rename functions to be consistent.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 76 -----------------------------------------
- drivers/scsi/be2iscsi/be_cmds.h |  1 -
- 2 files changed, 77 deletions(-)
+ drivers/scsi/be2iscsi/be.h      |   2 +-
+ drivers/scsi/be2iscsi/be_main.c | 132 +++++++++++++++-------------------------
+ drivers/scsi/be2iscsi/be_main.h |   2 -
+ 3 files changed, 49 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 59b8e2d..4032962 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -21,60 +21,6 @@
- #include "be.h"
- #include "be_mgmt.h"
+diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
+index ee5ace8..621291a 100644
+--- a/drivers/scsi/be2iscsi/be.h
++++ b/drivers/scsi/be2iscsi/be.h
+@@ -100,7 +100,7 @@ struct be_eq_obj {
+ 	struct be_queue_info q;
+ 	struct beiscsi_hba *phba;
+ 	struct be_queue_info *cq;
+-	struct work_struct work_cqs; /* Work Item */
++	struct work_struct mcc_work; /* Work Item */
+ 	struct irq_poll	iopoll;
+ };
  
--int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
--{
--	u32 sreset;
--	u8 *pci_reset_offset = 0;
--	u8 *pci_online0_offset = 0;
--	u8 *pci_online1_offset = 0;
--	u32 pconline0 = 0;
--	u32 pconline1 = 0;
--	u32 i;
--
--	pci_reset_offset = (u8 *)phba->pci_va + BE2_SOFT_RESET;
--	pci_online0_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE0;
--	pci_online1_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE1;
--	sreset = readl((void *)pci_reset_offset);
--	sreset |= BE2_SET_RESET;
--	writel(sreset, (void *)pci_reset_offset);
--
--	i = 0;
--	while (sreset & BE2_SET_RESET) {
--		if (i > 64)
--			break;
--		msleep(100);
--		sreset = readl((void *)pci_reset_offset);
--		i++;
--	}
--
--	if (sreset & BE2_SET_RESET) {
--		printk(KERN_ERR DRV_NAME
--		       " Soft Reset  did not deassert\n");
--		return -EIO;
--	}
--	pconline1 = BE2_MPU_IRAM_ONLINE;
--	writel(pconline0, (void *)pci_online0_offset);
--	writel(pconline1, (void *)pci_online1_offset);
--
--	sreset |= BE2_SET_RESET;
--	writel(sreset, (void *)pci_reset_offset);
--
--	i = 0;
--	while (sreset & BE2_SET_RESET) {
--		if (i > 64)
--			break;
--		msleep(1);
--		sreset = readl((void *)pci_reset_offset);
--		i++;
--	}
--	if (sreset & BE2_SET_RESET) {
--		printk(KERN_ERR DRV_NAME
--		       " MPU Online Soft Reset did not deassert\n");
--		return -EIO;
--	}
--	return 0;
--}
--
- int be_chk_reset_complete(struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 27504a0..408fbdb 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -832,12 +832,11 @@ static void hwi_ring_eq_db(struct beiscsi_hba *phba,
+ static irqreturn_t be_isr_mcc(int irq, void *dev_id)
  {
- 	unsigned int num_loop;
-@@ -104,28 +50,6 @@ int be_chk_reset_complete(struct beiscsi_hba *phba)
- 	return 0;
+ 	struct beiscsi_hba *phba;
+-	struct be_eq_entry *eqe = NULL;
++	struct be_eq_entry *eqe;
+ 	struct be_queue_info *eq;
+ 	struct be_queue_info *mcc;
+-	unsigned int num_eq_processed;
++	unsigned int mcc_events;
+ 	struct be_eq_obj *pbe_eq;
+-	unsigned long flags;
+ 
+ 	pbe_eq = dev_id;
+ 	eq = &pbe_eq->q;
+@@ -845,27 +844,23 @@ static irqreturn_t be_isr_mcc(int irq, void *dev_id)
+ 	mcc = &phba->ctrl.mcc_obj.cq;
+ 	eqe = queue_tail_node(eq);
+ 
+-	num_eq_processed = 0;
+-
++	mcc_events = 0;
+ 	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
+ 				& EQE_VALID_MASK) {
+ 		if (((eqe->dw[offsetof(struct amap_eq_entry,
+ 		     resource_id) / 32] &
+ 		     EQE_RESID_MASK) >> 16) == mcc->id) {
+-			spin_lock_irqsave(&phba->isr_lock, flags);
+-			pbe_eq->todo_mcc_cq = true;
+-			spin_unlock_irqrestore(&phba->isr_lock, flags);
++			mcc_events++;
+ 		}
+ 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+ 		queue_tail_inc(eq);
+ 		eqe = queue_tail_node(eq);
+-		num_eq_processed++;
+ 	}
+-	if (pbe_eq->todo_mcc_cq)
+-		queue_work(phba->wq, &pbe_eq->work_cqs);
+-	if (num_eq_processed)
+-		hwi_ring_eq_db(phba, eq->id, 1,	num_eq_processed, 1, 1);
+ 
++	if (mcc_events) {
++		queue_work(phba->wq, &pbe_eq->mcc_work);
++		hwi_ring_eq_db(phba, eq->id, 1,	mcc_events, 1, 1);
++	}
+ 	return IRQ_HANDLED;
  }
  
--unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
--{
--	unsigned int tag = 0;
+@@ -884,7 +879,6 @@ static irqreturn_t be_isr_msix(int irq, void *dev_id)
+ 	eq = &pbe_eq->q;
+ 
+ 	phba = pbe_eq->phba;
 -
--	spin_lock(&phba->ctrl.mcc_lock);
--	if (phba->ctrl.mcc_tag_available) {
--		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
--		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
--		phba->ctrl.mcc_tag_status[tag] = 0;
--		phba->ctrl.ptag_state[tag].tag_state = 0;
--	}
--	if (tag) {
--		phba->ctrl.mcc_tag_available--;
--		if (phba->ctrl.mcc_alloc_index == (MAX_MCC_CMD - 1))
--			phba->ctrl.mcc_alloc_index = 0;
+ 	/* disable interrupt till iopoll completes */
+ 	hwi_ring_eq_db(phba, eq->id, 1,	0, 0, 1);
+ 	irq_poll_sched(&pbe_eq->iopoll);
+@@ -902,14 +896,13 @@ static irqreturn_t be_isr(int irq, void *dev_id)
+ 	struct beiscsi_hba *phba;
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct hwi_context_memory *phwi_context;
+-	struct be_eq_entry *eqe = NULL;
++	struct be_eq_entry *eqe;
+ 	struct be_queue_info *eq;
+ 	struct be_queue_info *mcc;
+-	unsigned long flags, index;
+-	unsigned int num_mcceq_processed, num_ioeq_processed;
++	unsigned int mcc_events, io_events;
+ 	struct be_ctrl_info *ctrl;
+ 	struct be_eq_obj *pbe_eq;
+-	int isr;
++	int isr, rearm;
+ 
+ 	phba = dev_id;
+ 	ctrl = &phba->ctrl;
+@@ -924,44 +917,35 @@ static irqreturn_t be_isr(int irq, void *dev_id)
+ 
+ 	eq = &phwi_context->be_eq[0].q;
+ 	mcc = &phba->ctrl.mcc_obj.cq;
+-	index = 0;
+ 	eqe = queue_tail_node(eq);
+ 
+-	num_ioeq_processed = 0;
+-	num_mcceq_processed = 0;
++	io_events = 0;
++	mcc_events = 0;
+ 	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
+ 				& EQE_VALID_MASK) {
+ 		if (((eqe->dw[offsetof(struct amap_eq_entry,
+-		     resource_id) / 32] &
+-		     EQE_RESID_MASK) >> 16) == mcc->id) {
+-			spin_lock_irqsave(&phba->isr_lock, flags);
+-			pbe_eq->todo_mcc_cq = true;
+-			spin_unlock_irqrestore(&phba->isr_lock, flags);
+-			num_mcceq_processed++;
+-		} else {
+-			irq_poll_sched(&pbe_eq->iopoll);
+-			num_ioeq_processed++;
+-		}
++		      resource_id) / 32] & EQE_RESID_MASK) >> 16) == mcc->id)
++			mcc_events++;
++		else
++			io_events++;
+ 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+ 		queue_tail_inc(eq);
+ 		eqe = queue_tail_node(eq);
+ 	}
+-	if (num_ioeq_processed || num_mcceq_processed) {
+-		if (pbe_eq->todo_mcc_cq)
+-			queue_work(phba->wq, &pbe_eq->work_cqs);
+-
+-		if ((num_mcceq_processed) && (!num_ioeq_processed))
+-			hwi_ring_eq_db(phba, eq->id, 0,
+-				      (num_ioeq_processed +
+-				       num_mcceq_processed) , 1, 1);
 -		else
--			phba->ctrl.mcc_alloc_index++;
+-			hwi_ring_eq_db(phba, eq->id, 0,
+-				       (num_ioeq_processed +
+-					num_mcceq_processed), 0, 1);
+-
+-		return IRQ_HANDLED;
+-	} else
++	if (!io_events && !mcc_events)
+ 		return IRQ_NONE;
++
++	/* no need to rearm if interrupt is only for IOs */
++	rearm = 0;
++	if (mcc_events) {
++		queue_work(phba->wq, &pbe_eq->mcc_work);
++		/* rearm for MCCQ */
++		rearm = 1;
++	}
++	if (io_events)
++		irq_poll_sched(&pbe_eq->iopoll);
++	hwi_ring_eq_db(phba, eq->id, 0, (io_events + mcc_events), rearm, 1);
++	return IRQ_HANDLED;
+ }
+ 
+ 
+@@ -2064,6 +2048,18 @@ void beiscsi_process_mcc_cq(struct beiscsi_hba *phba)
+ 		hwi_ring_cq_db(phba, mcc_cq->id, num_processed, 1);
+ }
+ 
++static void beiscsi_mcc_work(struct work_struct *work)
++{
++	struct be_eq_obj *pbe_eq;
++	struct beiscsi_hba *phba;
++
++	pbe_eq = container_of(work, struct be_eq_obj, mcc_work);
++	phba = pbe_eq->phba;
++	beiscsi_process_mcc_cq(phba);
++	/* rearm EQ for further interrupts */
++	hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
++}
++
+ /**
+  * beiscsi_process_cq()- Process the Completion Queue
+  * @pbe_eq: Event Q on which the Completion has come
+@@ -2253,46 +2249,15 @@ proc_next_cqe:
+ 	return total;
+ }
+ 
+-void beiscsi_process_all_cqs(struct work_struct *work)
+-{
+-	unsigned long flags;
+-	struct hwi_controller *phwi_ctrlr;
+-	struct hwi_context_memory *phwi_context;
+-	struct beiscsi_hba *phba;
+-	struct be_eq_obj *pbe_eq =
+-	    container_of(work, struct be_eq_obj, work_cqs);
+-
+-	phba = pbe_eq->phba;
+-	phwi_ctrlr = phba->phwi_ctrlr;
+-	phwi_context = phwi_ctrlr->phwi_ctxt;
+-
+-	if (pbe_eq->todo_mcc_cq) {
+-		spin_lock_irqsave(&phba->isr_lock, flags);
+-		pbe_eq->todo_mcc_cq = false;
+-		spin_unlock_irqrestore(&phba->isr_lock, flags);
+-		beiscsi_process_mcc_cq(phba);
 -	}
--	spin_unlock(&phba->ctrl.mcc_lock);
--	return tag;
+-
+-	if (pbe_eq->todo_cq) {
+-		spin_lock_irqsave(&phba->isr_lock, flags);
+-		pbe_eq->todo_cq = false;
+-		spin_unlock_irqrestore(&phba->isr_lock, flags);
+-		beiscsi_process_cq(pbe_eq, BE2_MAX_NUM_CQ_PROC);
+-	}
+-
+-	/* rearm EQ for further interrupts */
+-	hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
 -}
 -
- struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
- 				 unsigned int *ref_tag)
+ static int be_iopoll(struct irq_poll *iop, int budget)
  {
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index a4bc83c..c50b74a 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -1376,7 +1376,6 @@ struct be_cmd_get_port_name {
- 						 * the cxn
- 						 */
+-	unsigned int ret, num_eq_processed;
++	unsigned int ret, io_events;
+ 	struct beiscsi_hba *phba;
+ 	struct be_eq_obj *pbe_eq;
+ 	struct be_eq_entry *eqe = NULL;
+ 	struct be_queue_info *eq;
  
--int beiscsi_pci_soft_reset(struct beiscsi_hba *phba);
- int be_chk_reset_complete(struct beiscsi_hba *phba);
+-	num_eq_processed = 0;
++	io_events = 0;
+ 	pbe_eq = container_of(iop, struct be_eq_obj, iopoll);
+ 	phba = pbe_eq->phba;
+ 	eq = &pbe_eq->q;
+@@ -2303,10 +2268,10 @@ static int be_iopoll(struct irq_poll *iop, int budget)
+ 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
+ 		queue_tail_inc(eq);
+ 		eqe = queue_tail_node(eq);
+-		num_eq_processed++;
++		io_events++;
+ 	}
  
- void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
+-	hwi_ring_eq_db(phba, eq->id, 1, num_eq_processed, 0, 1);
++	hwi_ring_eq_db(phba, eq->id, 1, io_events, 0, 1);
+ 
+ 	ret = beiscsi_process_cq(pbe_eq, budget);
+ 	pbe_eq->cq_count += ret;
+@@ -5587,7 +5552,7 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
+ 	i = (phba->msix_enabled) ? i : 0;
+ 	/* Work item for MCC handling */
+ 	pbe_eq = &phwi_context->be_eq[i];
+-	INIT_WORK(&pbe_eq->work_cqs, beiscsi_process_all_cqs);
++	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
+ 
+ 	ret = beiscsi_init_irqs(phba);
+ 	if (ret < 0) {
+@@ -5691,7 +5656,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 
+ 	spin_lock_init(&phba->io_sgl_lock);
+ 	spin_lock_init(&phba->mgmt_sgl_lock);
+-	spin_lock_init(&phba->isr_lock);
+ 	spin_lock_init(&phba->async_pdu_lock);
+ 	ret = mgmt_get_fw_config(&phba->ctrl, phba);
+ 	if (ret != 0) {
+@@ -5763,7 +5727,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	i = (phba->msix_enabled) ? i : 0;
+ 	/* Work item for MCC handling */
+ 	pbe_eq = &phwi_context->be_eq[i];
+-	INIT_WORK(&pbe_eq->work_cqs, beiscsi_process_all_cqs);
++	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
+ 
+ 	ret = beiscsi_init_irqs(phba);
+ 	if (ret < 0) {
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 30a4606..90cdc10 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -378,7 +378,6 @@ struct beiscsi_hba {
+ 	struct sgl_handle **eh_sgl_hndl_base;
+ 	spinlock_t io_sgl_lock;
+ 	spinlock_t mgmt_sgl_lock;
+-	spinlock_t isr_lock;
+ 	spinlock_t async_pdu_lock;
+ 	unsigned int age;
+ 	struct list_head hba_queue;
+@@ -845,7 +844,6 @@ struct wrb_handle *alloc_wrb_handle(struct beiscsi_hba *phba, unsigned int cid,
+ void
+ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle);
+ 
+-void beiscsi_process_all_cqs(struct work_struct *work);
+ void beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
+ 				     struct iscsi_task *task);
+ 
 -- 
 1.9.1
 
