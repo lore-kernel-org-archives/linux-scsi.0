@@ -1,24 +1,58 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/3] block: add flag for single-threaded submission
-Date: Wed, 20 Jul 2016 22:54:31 -0700
-Message-ID: <20160721055431.GB14568@infradead.org>
-References: <1468936978-9124-1-git-send-email-hare@suse.de>
- <1468936978-9124-2-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 5/6] block: Introduce BLKPREP_DONE
+Date: Wed, 20 Jul 2016 22:58:57 -0700
+Message-ID: <20160721055857.GC14568@infradead.org>
+References: <1468934439-93579-1-git-send-email-hare@suse.de>
+ <1468934439-93579-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1468936978-9124-2-git-send-email-hare@suse.de>
+In-Reply-To: <1468934439-93579-6-git-send-email-hare@suse.de>
 Sender: linux-block-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel-redhat.com@suse.de, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2016 at 04:02:56PM +0200, Hannes Reinecke wrote:
-> Some devices (most notably SMR drives) support only
-> one I/O stream eg for ensuring ordered I/O submission.
-> This patch adds a new block queue flag
-> 'BLK_QUEUE_SINGLE' to support these devices.
+> +++ b/block/blk-core.c
+> @@ -2462,9 +2462,13 @@ struct request *blk_peek_request(struct request_queue *q)
+>  
+>  			rq = NULL;
+>  			break;
+> -		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID) {
+> +		} else if (ret == BLKPREP_KILL || ret == BLKPREP_INVALID ||
+> +			   ret == BLKPREP_DONE) {
+>  			int err = (ret == BLKPREP_INVALID) ? -EREMOTEIO : -EIO;
+>  
+> +			if (ret == BLKPREP_DONE)
+> +				err = 0;
+> +
 
-We'll need a blk-mq implementation of this flag as well before it can
-be merged.
+Please just use a proper switch statement for the return values.
+
+static void blk_prep_end_request(struct request *req, int error)
+{
+	rq->cmd_flags |= REQ_QUIET;
+	blk_start_request(rq);
+	__blk_end_request_all(rq, error);
+}
+
+struct request *blk_peek_request(struct request_queue *q)
+{
+
+	...
+
+
+	switch (ret) {
+	...
+	case BLKPREP_KILL:
+		blk_prep_end_request(rq, -EIO);
+		break;
+	case BLKPREP_INVALID:
+		blk_prep_end_request(rq, -EREMOTEIO);
+		break;
+	case BLKPREP_DONE:
+		blk_prep_end_request(rq, 0);
+		break;
+	...
+}
