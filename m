@@ -1,81 +1,173 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH resend 3/5] libata-scsi: fix overflow in mode page copy
-Date: Fri, 22 Jul 2016 05:39:27 +0800
-Message-ID: <CAGnHSEkj2kXNUyQa=MxmLsTJT3P9xrQjpjoMLYiz6xKPB896EA@mail.gmail.com>
-References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
- <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
- <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com> <20160721211714.GE23759@htj.duckdns.org>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH] lpfc: fix oops in lpfc_sli4_scmd_to_wqidx_distr() from
+ lpfc_send_taskmgmt()
+Date: Thu, 21 Jul 2016 14:39:47 -0700
+Message-ID: <ad6f9e85-8b8c-32d4-2984-8ecf0d5e532b@broadcom.com>
+References: <1465341188-32620-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <20160721211714.GE23759@htj.duckdns.org>
-Sender: linux-next-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Hannes Reinecke <hare@suse.de>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:34689 "EHLO
+	mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1754602AbcGUVjt (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 17:39:49 -0400
+Received: by mail-pf0-f182.google.com with SMTP id p64so34107069pfb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 14:39:48 -0700 (PDT)
+In-Reply-To: <1465341188-32620-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Cc: dick.kennedy@broadcom.com, James Smart <james.smart@broadcom.com>
 
-Well, I mean this is happening when ata_mselect_*() calls ata_msense_*():
+Looks good.
 
-[tom@localhost ~]$ cat test.c
-#include <stdio.h>
-#include <string.h>
+Signed-off-by:   James Smart   <james.smart@broadcom.com>
 
-typedef unsigned char u8;
+-- james
 
-int main() {
-  u8 a[2] = { 0xff, 0xff };
-  char b[2];
-  memcpy(b, a, 2);
 
-  for (int i=0; i<2; i++) {
-    printf("%d\n", a[i]);
-  }
 
-  for (int i=0; i<2; i++) {
-    printf("%d\n", b[i]);
-  }
-}
 
-[tom@localhost ~]$ cc test.c
-
-[tom@localhost ~]$ ./a.out
-255
-255
--1
--1
-
-Let me know how I should polish the description for this.
-
-On 22 July 2016 at 05:17, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
+On 6/7/2016 4:13 PM, Mauricio Faria de Oliveira wrote:
+> The lpfc_sli4_scmd_to_wqidx_distr() function expects the scsi_cmnd
+> 'lpfc_cmd->pCmd' not to be null, and point to the midlayer command.
 >
-> On Fri, Jul 22, 2016 at 02:41:52AM +0800, tom.ty89@gmail.com wrote:
->> From: Tom Yan <tom.ty89@gmail.com>
->>
->> ata_mselect_*() would initialize a char array for storing a copy of
->> the current mode page. However, if char was actually signed char,
->> overflow could occur.
+> That's not true in the .eh_(device|target|bus)_reset_handler path,
+> because lpfc_send_taskmgmt() sends commands not from the midlayer,
+> so does not set 'lpfc_cmd->pCmd'.
 >
-> Do you mean sign extension?
+> That is true in the .queuecommand path because lpfc_queuecommand()
+> stores the scsi_cmnd from midlayer in lpfc_cmd->pCmd; and lpfc_cmd
+> is stored by lpfc_scsi_prep_cmnd() in piocbq->context1 -- which is
+> passed to lpfc_sli4_scmd_to_wqidx_distr() as lpfc_cmd parameter.
 >
->> For example, `0xff` from def_control_mpage[] would be "truncated"
->> to `-1`. This prevented ata_mselect_control() from working at all,
->> since when it did the read-only bits check, there would always be
->> a mismatch.
+> This problem can be hit on SCSI EH, and immediately with sg_reset.
+> These 2 test-cases demonstrate the problem/fix with next-20160601.
 >
-> Heh, the description doesn't really make sense.  Are you talking about
-> something like the following?
+> Test-case 1) sg_reset
 >
->         char ar[N];
->         int i;
+>      # strace sg_reset --device /dev/sdm
+>      <...>
+>      open("/dev/sdm", O_RDWR|O_NONBLOCK)     = 3
+>      ioctl(3, SG_SCSI_RESET, 0x3fffde6d0994 <unfinished ...>
+>      +++ killed by SIGSEGV +++
+>      Segmentation fault
 >
->         i = ar[x];
->         if (i == 0xff)
->                 asdf;
+>      # dmesg
+>      Unable to handle kernel paging request for data at address 0x00000000
+>      Faulting instruction address: 0xd00000001c88442c
+>      Oops: Kernel access of bad area, sig: 11 [#1]
+>      <...>
+>      CPU: 104 PID: 16333 Comm: sg_reset Tainted: G        W       4.7.0-rc1-next-20160601-00004-g95b89dc #6
+>      <...>
+>      NIP [d00000001c88442c] lpfc_sli4_scmd_to_wqidx_distr+0xc/0xd0 [lpfc]
+>      LR [d00000001c826fe8] lpfc_sli_calc_ring.part.27+0x98/0xd0 [lpfc]
+>      Call Trace:
+>      [c000003c9ec876f0] [c000003c9ec87770] 0xc000003c9ec87770 (unreliable)
+>      [c000003c9ec87720] [d00000001c82e004] lpfc_sli_issue_iocb+0xd4/0x260 [lpfc]
+>      [c000003c9ec87780] [d00000001c831a3c] lpfc_sli_issue_iocb_wait+0x15c/0x5b0 [lpfc]
+>      [c000003c9ec87880] [d00000001c87f27c] lpfc_send_taskmgmt+0x24c/0x650 [lpfc]
+>      [c000003c9ec87950] [d00000001c87fd7c] lpfc_device_reset_handler+0x10c/0x200 [lpfc]
+>      [c000003c9ec87a10] [c000000000610694] scsi_try_bus_device_reset+0x44/0xc0
+>      [c000003c9ec87a40] [c0000000006113e8] scsi_ioctl_reset+0x198/0x2c0
+>      [c000003c9ec87bf0] [c00000000060fe5c] scsi_ioctl+0x13c/0x4b0
+>      [c000003c9ec87c80] [c0000000006629b0] sd_ioctl+0xf0/0x120
+>      [c000003c9ec87cd0] [c00000000046e4f8] blkdev_ioctl+0x248/0xb70
+>      [c000003c9ec87d30] [c0000000002a1f60] block_ioctl+0x70/0x90
+>      [c000003c9ec87d50] [c00000000026d334] do_vfs_ioctl+0xc4/0x890
+>      [c000003c9ec87de0] [c00000000026db60] SyS_ioctl+0x60/0xc0
+>      [c000003c9ec87e30] [c000000000009120] system_call+0x38/0x108
+>      Instruction dump:
+>      <...>
 >
-> If so, the description isn't quite right.
+>      With fix:
 >
-> Thanks.
+>      # strace sg_reset --device /dev/sdm
+>      <...>
+>      open("/dev/sdm", O_RDWR|O_NONBLOCK)     = 3
+>      ioctl(3, SG_SCSI_RESET, 0x3fffe103c554) = 0
+>      close(3)                                = 0
+>      exit_group(0)                           = ?
+>      +++ exited with 0 +++
 >
-> --
-> tejun
+>      # dmesg
+>      [  424.658649] lpfc 0006:01:00.4: 4:(0):0713 SCSI layer issued Device Reset (1, 0) return x2002
+>
+> Test-case 2) SCSI EH
+>
+>      Using this debug patch to wire an SCSI EH trigger, for lpfc_scsi_cmd_iocb_cmpl():
+>      -       cmd->scsi_done(cmd);
+>      +       if ((phba->pport ? phba->pport->cfg_log_verbose : phba->cfg_log_verbose) == 0x32100000)
+>      +               printk(KERN_ALERT "lpfc: skip scsi_done()\n");
+>      +       else
+>      +               cmd->scsi_done(cmd);
+>
+>      # echo 0x32100000 > /sys/class/scsi_host/host11/lpfc_log_verbose
+>
+>      # dd if=/dev/sdm of=/dev/null iflag=direct &
+>      <...>
+>
+>      After a while:
+>
+>      # dmesg
+>      lpfc 0006:01:00.4: 4:(0):3053 lpfc_log_verbose changed from 0 (x0) to 839909376 (x32100000)
+>      lpfc: skip scsi_done()
+>      <...>
+>      Unable to handle kernel paging request for data at address 0x00000000
+>      Faulting instruction address: 0xd0000000199e448c
+>      Oops: Kernel access of bad area, sig: 11 [#1]
+>      <...>
+>      CPU: 96 PID: 28556 Comm: scsi_eh_11 Tainted: G        W       4.7.0-rc1-next-20160601-00004-g95b89dc #6
+>      <...>
+>      NIP [d0000000199e448c] lpfc_sli4_scmd_to_wqidx_distr+0xc/0xd0 [lpfc]
+>      LR [d000000019986fe8] lpfc_sli_calc_ring.part.27+0x98/0xd0 [lpfc]
+>      Call Trace:
+>      [c000000ff0d0b890] [c000000ff0d0b900] 0xc000000ff0d0b900 (unreliable)
+>      [c000000ff0d0b8c0] [d00000001998e004] lpfc_sli_issue_iocb+0xd4/0x260 [lpfc]
+>      [c000000ff0d0b920] [d000000019991a3c] lpfc_sli_issue_iocb_wait+0x15c/0x5b0 [lpfc]
+>      [c000000ff0d0ba20] [d0000000199df27c] lpfc_send_taskmgmt+0x24c/0x650 [lpfc]
+>      [c000000ff0d0baf0] [d0000000199dfd7c] lpfc_device_reset_handler+0x10c/0x200 [lpfc]
+>      [c000000ff0d0bbb0] [c000000000610694] scsi_try_bus_device_reset+0x44/0xc0
+>      [c000000ff0d0bbe0] [c0000000006126cc] scsi_eh_ready_devs+0x49c/0x9c0
+>      [c000000ff0d0bcb0] [c000000000614160] scsi_error_handler+0x580/0x680
+>      [c000000ff0d0bd80] [c0000000000ae848] kthread+0x108/0x130
+>      [c000000ff0d0be30] [c0000000000094a8] ret_from_kernel_thread+0x5c/0xb4
+>      Instruction dump:
+>      <...>
+>
+>      With fix:
+>
+>      # dmesg
+>      lpfc 0006:01:00.4: 4:(0):3053 lpfc_log_verbose changed from 0 (x0) to 839909376 (x32100000)
+>      lpfc: skip scsi_done()
+>      <...>
+>      lpfc 0006:01:00.4: 4:(0):0713 SCSI layer issued Device Reset (0, 0) return x2002
+>      <...>
+>      lpfc 0006:01:00.4: 4:(0):0723 SCSI layer issued Target Reset (1, 0) return x2002
+>      <...>
+>      lpfc 0006:01:00.4: 4:(0):0714 SCSI layer issued Bus Reset Data: x2002
+>      <...>
+>      lpfc 0006:01:00.4: 4:(0):3172 SCSI layer issued Host Reset Data:
+>      <...>
+>
+> Fixes: 8b0dff14164d ("lpfc: Add support for using block multi-queue")
+> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+> ---
+>   drivers/scsi/lpfc/lpfc_scsi.c | 2 +-
+>   1 file changed, 1 insertion(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index 3bd0be6..c7e5695 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -3874,7 +3874,7 @@ int lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba,
+>   	uint32_t tag;
+>   	uint16_t hwq;
+>   
+> -	if (shost_use_blk_mq(cmnd->device->host)) {
+> +	if (cmnd && shost_use_blk_mq(cmnd->device->host)) {
+>   		tag = blk_mq_unique_tag(cmnd->request);
+>   		hwq = blk_mq_unique_tag_to_hwq(tag);
+>   
+
