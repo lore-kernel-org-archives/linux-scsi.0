@@ -1,336 +1,136 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 12/28] be2iscsi: Check all zeroes IP before issuing IOCTL
-Date: Thu, 21 Jul 2016 14:37:49 +0530
-Message-ID: <1469092085-14311-13-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 13/28] be2iscsi: Remove alloc_mcc_tag & beiscsi_pci_soft_reset
+Date: Thu, 21 Jul 2016 14:37:50 +0530
+Message-ID: <1469092085-14311-14-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:38374 "EHLO
-	mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751779AbcGUJJF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:05 -0400
-Received: by mail-wm0-f50.google.com with SMTP id o80so16903544wme.1
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:04 -0700 (PDT)
+Received: from mail-wm0-f52.google.com ([74.125.82.52]:35725 "EHLO
+	mail-wm0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751779AbcGUJJH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:07 -0400
+Received: by mail-wm0-f52.google.com with SMTP id f65so14850174wmi.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:07 -0700 (PDT)
 In-Reply-To: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Redefine FW IP types.
-Before issuing IOCTL to clear IP, check if IP is all zeroes.
-All zeroes IP implies IP is not set in FW so FW fails that IOCTL.
+alloc_mcc_tag was replaced with alloc_mcc_wrb and is no more used.
+beiscsi_pci_soft_reset is not used at all and won't be needed.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.h  |  8 +++++
- drivers/scsi/be2iscsi/be_iscsi.c | 27 ++++++++-------
- drivers/scsi/be2iscsi/be_iscsi.h |  7 ----
- drivers/scsi/be2iscsi/be_main.c  |  2 +-
- drivers/scsi/be2iscsi/be_mgmt.c  | 72 +++++++++++++++++++++++++---------------
- 5 files changed, 69 insertions(+), 47 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 76 -----------------------------------------
+ drivers/scsi/be2iscsi/be_cmds.h |  1 -
+ 2 files changed, 77 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index deeb951..a4bc83c 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -365,6 +365,14 @@ struct ip_addr_format {
- 	u16 size_of_structure;
- 	u8 reserved;
- 	u8 ip_type;
-+#define BEISCSI_IP_TYPE_V4		0x1
-+#define BEISCSI_IP_TYPE_STATIC_V4	0x3
-+#define BEISCSI_IP_TYPE_DHCP_V4		0x5
-+/* type v4 values < type v6 values */
-+#define BEISCSI_IP_TYPE_V6		0x10
-+#define BEISCSI_IP_TYPE_ROUTABLE_V6	0x30
-+#define BEISCSI_IP_TYPE_LINK_LOCAL_V6	0x50
-+#define BEISCSI_IP_TYPE_AUTO_V6		0x90
- 	u8 addr[16];
- 	u32 rsvd0;
- } __packed;
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index fa415c4..faa37f6 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -279,12 +279,12 @@ void beiscsi_iface_create_default(struct beiscsi_hba *phba)
- {
- 	struct be_cmd_get_if_info_resp *if_info;
- 
--	if (!beiscsi_if_get_info(phba, BE2_IPV4, &if_info)) {
-+	if (!beiscsi_if_get_info(phba, BEISCSI_IP_TYPE_V4, &if_info)) {
- 		beiscsi_iface_create_ipv4(phba);
- 		kfree(if_info);
- 	}
- 
--	if (!beiscsi_if_get_info(phba, BE2_IPV6, &if_info)) {
-+	if (!beiscsi_if_get_info(phba, BEISCSI_IP_TYPE_V6, &if_info)) {
- 		beiscsi_iface_create_ipv6(phba);
- 		kfree(if_info);
- 	}
-@@ -358,14 +358,15 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_GW:
- 		gw = info->value;
--		ret = beiscsi_if_set_gw(phba, BE2_IPV4, gw);
-+		ret = beiscsi_if_set_gw(phba, BEISCSI_IP_TYPE_V4, gw);
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
- 		if (info->value[0] == ISCSI_BOOTPROTO_DHCP)
--			ret = beiscsi_if_en_dhcp(phba, BE2_IPV4);
-+			ret = beiscsi_if_en_dhcp(phba, BEISCSI_IP_TYPE_V4);
- 		else if (info->value[0] == ISCSI_BOOTPROTO_STATIC)
- 			/* release DHCP IP address */
--			ret = beiscsi_if_en_static(phba, BE2_IPV4, NULL, NULL);
-+			ret = beiscsi_if_en_static(phba, BEISCSI_IP_TYPE_V4,
-+						   NULL, NULL);
- 		else
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
- 				    "BS_%d : Invalid BOOTPROTO: %d\n",
-@@ -378,7 +379,8 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
- 			info = nla_data(nla);
- 			subnet = info->value;
- 		}
--		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
-+		ret = beiscsi_if_en_static(phba, BEISCSI_IP_TYPE_V4,
-+					   ip, subnet);
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_SUBNET:
- 		/*
-@@ -391,7 +393,8 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
- 			info = nla_data(nla);
- 			ip = info->value;
- 		}
--		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
-+		ret = beiscsi_if_en_static(phba, BEISCSI_IP_TYPE_V4,
-+					   ip, subnet);
- 		break;
- 	}
- 
-@@ -416,7 +419,7 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
- 		}
- 		break;
- 	case ISCSI_NET_PARAM_IPV6_ADDR:
--		ret = beiscsi_if_en_static(phba, BE2_IPV6,
-+		ret = beiscsi_if_en_static(phba, BEISCSI_IP_TYPE_V6,
- 					   iface_param->value, NULL);
- 		break;
- 	}
-@@ -511,10 +514,10 @@ static int __beiscsi_iface_get_param(struct beiscsi_hba *phba,
- 				     int param, char *buf)
- {
- 	struct be_cmd_get_if_info_resp *if_info;
--	int len, ip_type = BE2_IPV4;
-+	int len, ip_type = BEISCSI_IP_TYPE_V4;
- 
- 	if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
--		ip_type = BE2_IPV6;
-+		ip_type = BEISCSI_IP_TYPE_V6;
- 
- 	len = beiscsi_if_get_info(phba, ip_type, &if_info);
- 	if (len)
-@@ -602,7 +605,7 @@ int beiscsi_iface_get_param(struct iscsi_iface *iface,
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_GW:
- 		memset(&gateway, 0, sizeof(gateway));
--		len = beiscsi_if_get_gw(phba, BE2_IPV4, &gateway);
-+		len = beiscsi_if_get_gw(phba, BEISCSI_IP_TYPE_V4, &gateway);
- 		if (!len)
- 			len = sprintf(buf, "%pI4\n", &gateway.ip_addr.addr);
- 		break;
-@@ -635,7 +638,7 @@ int beiscsi_ep_get_param(struct iscsi_endpoint *ep,
- 		len = sprintf(buf, "%hu\n", beiscsi_ep->dst_tcpport);
- 		break;
- 	case ISCSI_PARAM_CONN_ADDRESS:
--		if (beiscsi_ep->ip_type == BE2_IPV4)
-+		if (beiscsi_ep->ip_type == BEISCSI_IP_TYPE_V4)
- 			len = sprintf(buf, "%pI4\n", &beiscsi_ep->dst_addr);
- 		else
- 			len = sprintf(buf, "%pI6\n", &beiscsi_ep->dst6_addr);
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
-index 5928ba9..0089e67 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.h
-+++ b/drivers/scsi/be2iscsi/be_iscsi.h
-@@ -23,13 +23,6 @@
- #include "be_main.h"
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 59b8e2d..4032962 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -21,60 +21,6 @@
+ #include "be.h"
  #include "be_mgmt.h"
  
--#define BE2_IPV4  0x1
--#define BE2_IPV6  0x10
--#define BE2_DHCP_V4 0x05
+-int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
+-{
+-	u32 sreset;
+-	u8 *pci_reset_offset = 0;
+-	u8 *pci_online0_offset = 0;
+-	u8 *pci_online1_offset = 0;
+-	u32 pconline0 = 0;
+-	u32 pconline1 = 0;
+-	u32 i;
 -
--#define NON_BLOCKING 0x0
--#define BLOCKING 0x1
+-	pci_reset_offset = (u8 *)phba->pci_va + BE2_SOFT_RESET;
+-	pci_online0_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE0;
+-	pci_online1_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE1;
+-	sreset = readl((void *)pci_reset_offset);
+-	sreset |= BE2_SET_RESET;
+-	writel(sreset, (void *)pci_reset_offset);
 -
- void beiscsi_iface_create_default(struct beiscsi_hba *phba);
- 
- void beiscsi_iface_destroy_default(struct beiscsi_hba *phba);
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 92287ad..27504a0 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -389,7 +389,7 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
- 			    (char *)&boot_sess->target_name);
- 		break;
- 	case ISCSI_BOOT_TGT_IP_ADDR:
--		if (boot_conn->dest_ipaddr.ip_type == 0x1)
-+		if (boot_conn->dest_ipaddr.ip_type == BEISCSI_IP_TYPE_V4)
- 			rc = sprintf(buf, "%pI4\n",
- 				(char *)&boot_conn->dest_ipaddr.addr);
- 		else
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 8d05add..8069ef0 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -844,7 +844,7 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 			   nonemb_cmd->size);
- 	if (dst_addr->sa_family == PF_INET) {
- 		__be32 s_addr = daddr_in->sin_addr.s_addr;
--		req->ip_address.ip_type = BE2_IPV4;
-+		req->ip_address.ip_type = BEISCSI_IP_TYPE_V4;
- 		req->ip_address.addr[0] = s_addr & 0x000000ff;
- 		req->ip_address.addr[1] = (s_addr & 0x0000ff00) >> 8;
- 		req->ip_address.addr[2] = (s_addr & 0x00ff0000) >> 16;
-@@ -852,17 +852,17 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 		req->tcp_port = ntohs(daddr_in->sin_port);
- 		beiscsi_ep->dst_addr = daddr_in->sin_addr.s_addr;
- 		beiscsi_ep->dst_tcpport = ntohs(daddr_in->sin_port);
--		beiscsi_ep->ip_type = BE2_IPV4;
-+		beiscsi_ep->ip_type = BEISCSI_IP_TYPE_V4;
- 	} else {
- 		/* else its PF_INET6 family */
--		req->ip_address.ip_type = BE2_IPV6;
-+		req->ip_address.ip_type = BEISCSI_IP_TYPE_V6;
- 		memcpy(&req->ip_address.addr,
- 		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
- 		req->tcp_port = ntohs(daddr_in6->sin6_port);
- 		beiscsi_ep->dst_tcpport = ntohs(daddr_in6->sin6_port);
- 		memcpy(&beiscsi_ep->dst6_addr,
- 		       &daddr_in6->sin6_addr.in6_u.u6_addr8, 16);
--		beiscsi_ep->ip_type = BE2_IPV6;
-+		beiscsi_ep->ip_type = BEISCSI_IP_TYPE_V6;
- 	}
- 	req->cid = cid;
- 	i = phba->nxt_cqid++;
-@@ -1008,6 +1008,16 @@ unsigned int beiscsi_if_get_handle(struct beiscsi_hba *phba)
- 	return status;
- }
- 
-+static inline bool beiscsi_if_zero_ip(u8 *ip, u32 ip_type)
-+{
-+	u32 len;
-+
-+	len = (ip_type < BEISCSI_IP_TYPE_V6) ? IP_V4_LEN : IP_V6_LEN;
-+	while (len && !ip[len - 1])
-+		len--;
-+	return (len == 0);
-+}
-+
- static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
- 			     u32 action, u32 ip_type, u8 *gw)
+-	i = 0;
+-	while (sreset & BE2_SET_RESET) {
+-		if (i > 64)
+-			break;
+-		msleep(100);
+-		sreset = readl((void *)pci_reset_offset);
+-		i++;
+-	}
+-
+-	if (sreset & BE2_SET_RESET) {
+-		printk(KERN_ERR DRV_NAME
+-		       " Soft Reset  did not deassert\n");
+-		return -EIO;
+-	}
+-	pconline1 = BE2_MPU_IRAM_ONLINE;
+-	writel(pconline0, (void *)pci_online0_offset);
+-	writel(pconline1, (void *)pci_online1_offset);
+-
+-	sreset |= BE2_SET_RESET;
+-	writel(sreset, (void *)pci_reset_offset);
+-
+-	i = 0;
+-	while (sreset & BE2_SET_RESET) {
+-		if (i > 64)
+-			break;
+-		msleep(1);
+-		sreset = readl((void *)pci_reset_offset);
+-		i++;
+-	}
+-	if (sreset & BE2_SET_RESET) {
+-		printk(KERN_ERR DRV_NAME
+-		       " MPU Online Soft Reset did not deassert\n");
+-		return -EIO;
+-	}
+-	return 0;
+-}
+-
+ int be_chk_reset_complete(struct beiscsi_hba *phba)
  {
-@@ -1025,7 +1035,7 @@ static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
- 	req->action = action;
- 	req->ip_addr.ip_type = ip_type;
- 	memcpy(req->ip_addr.addr, gw,
--	       (ip_type == BE2_IPV4) ? IP_V4_LEN : IP_V6_LEN);
-+	       (ip_type < BEISCSI_IP_TYPE_V6) ? IP_V4_LEN : IP_V6_LEN);
- 	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+ 	unsigned int num_loop;
+@@ -104,28 +50,6 @@ int be_chk_reset_complete(struct beiscsi_hba *phba)
+ 	return 0;
  }
  
-@@ -1042,12 +1052,14 @@ int beiscsi_if_set_gw(struct beiscsi_hba *phba, u32 ip_type, u8 *gw)
- 		return rt_val;
- 	}
+-unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+-{
+-	unsigned int tag = 0;
+-
+-	spin_lock(&phba->ctrl.mcc_lock);
+-	if (phba->ctrl.mcc_tag_available) {
+-		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+-		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
+-		phba->ctrl.mcc_tag_status[tag] = 0;
+-		phba->ctrl.ptag_state[tag].tag_state = 0;
+-	}
+-	if (tag) {
+-		phba->ctrl.mcc_tag_available--;
+-		if (phba->ctrl.mcc_alloc_index == (MAX_MCC_CMD - 1))
+-			phba->ctrl.mcc_alloc_index = 0;
+-		else
+-			phba->ctrl.mcc_alloc_index++;
+-	}
+-	spin_unlock(&phba->ctrl.mcc_lock);
+-	return tag;
+-}
+-
+ struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
+ 				 unsigned int *ref_tag)
+ {
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index a4bc83c..c50b74a 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -1376,7 +1376,6 @@ struct be_cmd_get_port_name {
+ 						 * the cxn
+ 						 */
  
--	rt_val = beiscsi_if_mod_gw(phba, IP_ACTION_DEL, ip_type,
--				   gw_resp.ip_addr.addr);
--	if (rt_val) {
--		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
--				"BG_%d : Failed to clear Gateway Addr Set\n");
--		return rt_val;
-+	if (!beiscsi_if_zero_ip(gw_resp.ip_addr.addr, ip_type)) {
-+		rt_val = beiscsi_if_mod_gw(phba, IP_ACTION_DEL, ip_type,
-+					   gw_resp.ip_addr.addr);
-+		if (rt_val) {
-+			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
-+				    "BG_%d : Failed to clear Gateway Addr Set\n");
-+			return rt_val;
-+		}
- 	}
+-int beiscsi_pci_soft_reset(struct beiscsi_hba *phba);
+ int be_chk_reset_complete(struct beiscsi_hba *phba);
  
- 	rt_val = beiscsi_if_mod_gw(phba, IP_ACTION_ADD, ip_type, gw);
-@@ -1138,7 +1150,7 @@ beiscsi_if_set_ip(struct beiscsi_hba *phba, u8 *ip,
- 	req->ip_params.ip_record.ip_addr.size_of_structure =
- 		sizeof(struct be_ip_addr_subnet_format);
- 	req->ip_params.ip_record.ip_addr.ip_type = ip_type;
--	ip_len = ip_type == BE2_IPV4 ? IP_V4_LEN : IP_V6_LEN;
-+	ip_len = (ip_type < BEISCSI_IP_TYPE_V6) ? IP_V4_LEN : IP_V6_LEN;
- 	memcpy(req->ip_params.ip_record.ip_addr.addr, ip, ip_len);
- 	if (subnet)
- 		memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
-@@ -1190,10 +1202,12 @@ int beiscsi_if_en_static(struct beiscsi_hba *phba, u32 ip_type,
- 		}
- 	}
- 
--	/* first delete any old IP set */
--	rc = beiscsi_if_clr_ip(phba, if_info);
--	if (rc)
--		goto exit;
-+	/* first delete any IP set */
-+	if (!beiscsi_if_zero_ip(if_info->ip_addr.addr, ip_type)) {
-+		rc = beiscsi_if_clr_ip(phba, if_info);
-+		if (rc)
-+			goto exit;
-+	}
- 
- 	/* if ip == NULL then this is called just to release DHCP IP */
- 	if (ip)
-@@ -1222,10 +1236,12 @@ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
- 		goto exit;
- 	}
- 
--	/* first delete any old static IP set */
--	rc = beiscsi_if_clr_ip(phba, if_info);
--	if (rc)
--		goto exit;
-+	/* first delete any IP set */
-+	if (!beiscsi_if_zero_ip(if_info->ip_addr.addr, ip_type)) {
-+		rc = beiscsi_if_clr_ip(phba, if_info);
-+		if (rc)
-+			goto exit;
-+	}
- 
- 	/* delete gateway settings if mode change is to DHCP */
- 	memset(&gw_resp, 0, sizeof(gw_resp));
-@@ -1237,12 +1253,14 @@ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
- 		goto exit;
- 	}
- 	gw = (u8 *)&gw_resp.ip_addr.addr;
--	rc = beiscsi_if_mod_gw(phba, IP_ACTION_DEL,
--			       if_info->ip_addr.ip_type, gw);
--	if (rc) {
--		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
--				"BG_%d : Failed to clear Gateway Addr Set\n");
--		goto exit;
-+	if (!beiscsi_if_zero_ip(gw, if_info->ip_addr.ip_type)) {
-+		rc = beiscsi_if_mod_gw(phba, IP_ACTION_DEL,
-+				       if_info->ip_addr.ip_type, gw);
-+		if (rc) {
-+			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
-+				    "BG_%d : Failed to clear Gateway Addr Set\n");
-+			goto exit;
-+		}
- 	}
- 
- 	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
-@@ -1252,7 +1270,7 @@ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
- 		goto exit;
- 
- 	dhcpreq = nonemb_cmd.va;
--	dhcpreq->flags = BLOCKING;
-+	dhcpreq->flags = 1; /* 1 - blocking; 0 - non-blocking */
- 	dhcpreq->retry_count = 1;
- 	dhcpreq->interface_hndl = phba->interface_handle;
- 	dhcpreq->ip_type = ip_type;
+ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
 -- 
 1.9.1
 
