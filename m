@@ -1,26 +1,24 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/6] block: Add 'BLK_MQ_RQ_QUEUE_DONE' return value
-Date: Wed, 20 Jul 2016 22:53:51 -0700
-Message-ID: <20160721055351.GA14568@infradead.org>
-References: <1468934439-93579-1-git-send-email-hare@suse.de>
- <1468934439-93579-7-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/3] block: add flag for single-threaded submission
+Date: Wed, 20 Jul 2016 22:54:31 -0700
+Message-ID: <20160721055431.GB14568@infradead.org>
+References: <1468936978-9124-1-git-send-email-hare@suse.de>
+ <1468936978-9124-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:44527 "EHLO
-	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750810AbcGUFxx (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 01:53:53 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1468934439-93579-7-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <1468936978-9124-2-git-send-email-hare@suse.de>
+Sender: linux-block-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel-redhat.com@suse.de, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Jens Axboe <axboe@fb.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jul 19, 2016 at 03:20:39PM +0200, Hannes Reinecke wrote:
-> Add a return value BLK_MQ_RQ_QUEUE_DONE to terminate a request
-> without error.
+On Tue, Jul 19, 2016 at 04:02:56PM +0200, Hannes Reinecke wrote:
+> Some devices (most notably SMR drives) support only
+> one I/O stream eg for ensuring ordered I/O submission.
+> This patch adds a new block queue flag
+> 'BLK_QUEUE_SINGLE' to support these devices.
 
-NAK.  You can just do a blk_mq_end_request on the request and return
-0 from ->queue_rq.
+We'll need a blk-mq implementation of this flag as well before it can
+be merged.
