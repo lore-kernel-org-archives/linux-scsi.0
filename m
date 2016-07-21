@@ -1,63 +1,80 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: [net-next v3 6/6] cxgb3i,cxgb4i: fix symbol not declared sparse warning
-Date: Thu, 21 Jul 2016 22:57:19 +0530
-Message-ID: <957b51f9fdd742e50ffcf954bf44422b6edab7dc.1469121308.git.varun@chelsio.com>
-References: <cover.1469121308.git.varun@chelsio.com>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <cover.1469121308.git.varun@chelsio.com>
-In-Reply-To: <cover.1469121308.git.varun@chelsio.com>
-References: <cover.1469121308.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
-To: davem@davemloft.net
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com, varun@chelsio.com
+From: tom.ty89@gmail.com
+Subject: [PATCH resend 1/5] libata-scsi: minor cleanup in ata_mselect_*()
+Date: Fri, 22 Jul 2016 02:41:50 +0800
+Message-ID: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org, hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de
+Cc: sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Fix following sparse warnings
-warning: symbol 'cxgb3i_ofld_init' was not declared. Should it be static?
-warning: symbol 'cxgb4i_cplhandlers' was not declared. Should it be static?
-warning: symbol 'cxgb4i_ofld_init' was not declared. Should it be static?
+From: Tom Yan <tom.ty89@gmail.com>
 
-Signed-off-by: Varun Prakash <varun@chelsio.com>
-Reviewed-by: Steve Wise <swise@opengridcomputing.com>
----
- drivers/scsi/cxgbi/cxgb3i/cxgb3i.c | 2 +-
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+1. Removed a repeated bit masking in ata_mselect_control()
+2. Moved `wce`/`d_sense` assignment below the page validity checks
+3. Added/Removed empty lines where appropriate
 
-diff --git a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-index 61f16a2..33e8346 100644
---- a/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-+++ b/drivers/scsi/cxgbi/cxgb3i/cxgb3i.c
-@@ -1028,7 +1028,7 @@ cxgb3_cpl_handler_func cxgb3i_cpl_handlers[NUM_CPL_CMDS] = {
-  * cxgb3i_ofld_init - allocate and initialize resources for each adapter found
-  * @cdev:	cxgbi adapter
-  */
--int cxgb3i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb3i_ofld_init(struct cxgbi_device *cdev)
- {
- 	struct t3cdev *t3dev = (struct t3cdev *)cdev->lldev;
- 	struct adap_ports port;
-diff --git a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-index 521f9e4..e4ba2d2 100644
---- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-+++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
-@@ -1503,7 +1503,7 @@ rel_resource_without_clip:
- 	return -EINVAL;
- }
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2bdb5da..eb5e8ff 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3618,7 +3618,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_cache_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+-
+ 	if (len != CACHE_MPAGE_LEN - 2) {
+ 		if (len < CACHE_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3627,8 +3626,6 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
  
--cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
-+static cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_ACT_ESTABLISH] = do_act_establish,
- 	[CPL_ACT_OPEN_RPL] = do_act_open_rpl,
- 	[CPL_PEER_CLOSE] = do_peer_close,
-@@ -1519,7 +1519,7 @@ cxgb4i_cplhandler_func cxgb4i_cplhandlers[NUM_CPL_CMDS] = {
- 	[CPL_RX_DATA] = do_rx_data,
- };
+-	wce = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3642,6 +3639,8 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
+ 		}
+ 	}
  
--int cxgb4i_ofld_init(struct cxgbi_device *cdev)
-+static int cxgb4i_ofld_init(struct cxgbi_device *cdev)
- {
- 	int rc;
++	wce = buf[0] & (1 << 2);
++
+ 	tf->flags |= ATA_TFLAG_DEVICE | ATA_TFLAG_ISADDR;
+ 	tf->protocol = ATA_PROT_NODATA;
+ 	tf->nsect = 0;
+@@ -3674,7 +3673,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 	 * The first two bytes of def_control_mpage are a header, so offsets
+ 	 * in mpage are off by 2 compared to buf.  Same for len.
+ 	 */
+-
+ 	if (len != CONTROL_MPAGE_LEN - 2) {
+ 		if (len < CONTROL_MPAGE_LEN - 2)
+ 			*fp = len;
+@@ -3683,8 +3681,6 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 		return -EINVAL;
+ 	}
  
+-	d_sense = buf[0] & (1 << 2);
+-
+ 	/*
+ 	 * Check that read-only bits are not modified.
+ 	 */
+@@ -3697,7 +3693,10 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
+ 			return -EINVAL;
+ 		}
+ 	}
+-	if (d_sense & (1 << 2))
++
++	d_sense = buf[0] & (1 << 2);
++
++	if (d_sense)
+ 		dev->flags |= ATA_DFLAG_D_SENSE;
+ 	else
+ 		dev->flags &= ~ATA_DFLAG_D_SENSE;
 -- 
-2.0.2
+2.9.0
+
