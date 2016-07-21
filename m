@@ -1,588 +1,325 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 20/28] be2iscsi: Fix POST check and reset sequence
-Date: Thu, 21 Jul 2016 14:37:57 +0530
-Message-ID: <1469092085-14311-21-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 21/28] be2iscsi: Add V1 of EPFW cleanup IOCTL
+Date: Thu, 21 Jul 2016 14:37:58 +0530
+Message-ID: <1469092085-14311-22-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f54.google.com ([74.125.82.54]:38699 "EHLO
-	mail-wm0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751876AbcGUJJ3 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:29 -0400
-Received: by mail-wm0-f54.google.com with SMTP id o80so16918103wme.1
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:28 -0700 (PDT)
+Received: from mail-wm0-f53.google.com ([74.125.82.53]:37650 "EHLO
+	mail-wm0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751867AbcGUJJb (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 21 Jul 2016 05:09:31 -0400
+Received: by mail-wm0-f53.google.com with SMTP id i5so16940794wmg.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Jul 2016 02:09:31 -0700 (PDT)
 In-Reply-To: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-SLIPORT FUNCTION_RESET does not reset the chip.
-So POST status needs to be checked before issuing FUNCTION_RESET.
-The completion of FUNCTION_RESET is indicated in BMBX Rdy bit.
+mgmt_epfw_cleanup does not implement v1 of OPCODE_COMMON_ISCSI_CLEANUP
+IOCTL for SkyHawk.
 
-be_cmd_fw_initialize too needs to be done before issuing any cmd to FW.
-be_cmd_fw_initialize is renamed as beiscsi_cmd_special_wrb.
-Rearrange and rename few functions in init and cleanup path.
+Replace use of MCCQ with BMBX for issuing the IOCTL.
+Remove be_mcc_compl_poll which is no longer needed.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 250 +++++++++++++++++++---------------------
- drivers/scsi/be2iscsi/be_cmds.h |  38 +++---
- drivers/scsi/be2iscsi/be_main.c |  64 ++++------
- drivers/scsi/be2iscsi/be_main.h |   8 --
- 4 files changed, 164 insertions(+), 196 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 96 +++++++++++++++++++++--------------------
+ drivers/scsi/be2iscsi/be_cmds.h | 15 +++++--
+ drivers/scsi/be2iscsi/be_main.c | 27 ++++++------
+ drivers/scsi/be2iscsi/be_mgmt.c | 42 ------------------
+ drivers/scsi/be2iscsi/be_mgmt.h |  1 -
+ 5 files changed, 73 insertions(+), 108 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 1ebb6ce..771670c 100644
+index 771670c..6f3cd82 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.c
 +++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -21,35 +21,6 @@
- #include "be.h"
- #include "be_mgmt.h"
- 
--int be_chk_reset_complete(struct beiscsi_hba *phba)
--{
--	unsigned int num_loop;
--	u8 *mpu_sem = 0;
--	u32 status;
--
--	num_loop = 1000;
--	mpu_sem = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
--	msleep(5000);
--
--	while (num_loop) {
--		status = readl((void *)mpu_sem);
--
--		if ((status & 0x80000000) || (status & 0x0000FFFF) == 0xC000)
--			break;
--		msleep(60);
--		num_loop--;
--	}
--
--	if ((status & 0x80000000) || (!num_loop)) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BC_%d : Failed in be_chk_reset_complete"
--			    "status = 0x%x\n", status);
--		return -EIO;
--	}
--
--	return 0;
--}
--
- struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
- 				 unsigned int *ref_tag)
- {
-@@ -769,87 +740,6 @@ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
- 	return status;
+@@ -478,53 +478,6 @@ int beiscsi_process_mcc_compl(struct be_ctrl_info *ctrl,
+ 	return 0;
  }
  
--/**
-- * be_cmd_fw_initialize()- Initialize FW
-- * @ctrl: Pointer to function control structure
+-/*
+- * be_mcc_compl_poll()- Wait for MBX completion
+- * @phba: driver private structure
 - *
-- * Send FW initialize pattern for the function.
+- * Wait till no more pending mcc requests are present
 - *
 - * return
 - * Success: 0
-- * Failure: Non-Zero value
-- **/
--int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
--{
--	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
--	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
--	int status;
--	u8 *endian_check;
--
--	mutex_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
--
--	endian_check = (u8 *) wrb;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0x12;
--	*endian_check++ = 0x34;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0x56;
--	*endian_check++ = 0x78;
--	*endian_check++ = 0xFF;
--	be_dws_cpu_to_le(wrb, sizeof(*wrb));
--
--	status = be_mbox_notify(ctrl);
--	if (status)
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BC_%d : be_cmd_fw_initialize Failed\n");
--
--	mutex_unlock(&ctrl->mbox_lock);
--	return status;
--}
--
--/**
-- * be_cmd_fw_uninit()- Uinitialize FW
-- * @ctrl: Pointer to function control structure
+- * Failure: Non-Zero
 - *
-- * Send FW uninitialize pattern for the function
-- *
-- * return
-- * Success: 0
-- * Failure: Non-Zero value
 - **/
--int be_cmd_fw_uninit(struct be_ctrl_info *ctrl)
--{
--	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
--	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
--	int status;
--	u8 *endian_check;
--
--	mutex_lock(&ctrl->mbox_lock);
--	memset(wrb, 0, sizeof(*wrb));
--
--	endian_check = (u8 *) wrb;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0xAA;
--	*endian_check++ = 0xBB;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0xFF;
--	*endian_check++ = 0xCC;
--	*endian_check++ = 0xDD;
--	*endian_check = 0xFF;
--
--	be_dws_cpu_to_le(wrb, sizeof(*wrb));
--
--	status = be_mbox_notify(ctrl);
--	if (status)
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BC_%d : be_cmd_fw_uninit Failed\n");
--
--	mutex_unlock(&ctrl->mbox_lock);
--	return status;
--}
--
- int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
- 			  struct be_queue_info *cq, struct be_queue_info *eq,
- 			  bool sol_evts, bool no_delay, int coalesce_wm)
-@@ -1293,25 +1183,6 @@ error:
- 	return status;
- }
- 
--int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
+-int be_mcc_compl_poll(struct beiscsi_hba *phba, unsigned int tag)
 -{
 -	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
--	struct be_post_sgl_pages_req *req = embedded_payload(wrb);
--	int status;
+-	int i;
 -
--	mutex_lock(&ctrl->mbox_lock);
+-	if (!test_bit(MCC_TAG_STATE_RUNNING,
+-		      &ctrl->ptag_state[tag].tag_state)) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-			    "BC_%d: tag %u state not running\n", tag);
+-		return 0;
+-	}
+-	for (i = 0; i < mcc_timeout; i++) {
+-		if (beiscsi_hba_in_error(phba))
+-			return -EIO;
 -
--	req = embedded_payload(wrb);
--	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
--	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
--			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
--	status = be_mbox_notify(ctrl);
+-		beiscsi_process_mcc_cq(phba);
+-		/* after polling, wrb and tag need to be released */
+-		if (!test_bit(MCC_TAG_STATE_RUNNING,
+-			      &ctrl->ptag_state[tag].tag_state)) {
+-			free_mcc_wrb(ctrl, tag);
+-			break;
+-		}
+-		udelay(100);
+-	}
 -
--	mutex_unlock(&ctrl->mbox_lock);
--	return status;
+-	if (i < mcc_timeout)
+-		return 0;
+-
+-	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX,
+-		    "BC_%d : FW Timed Out\n");
+-	set_bit(BEISCSI_HBA_FW_TIMEOUT, &phba->state);
+-	beiscsi_ue_detect(phba);
+-	return -EBUSY;
 -}
 -
- /**
-  * be_cmd_set_vlan()- Configure VLAN paramters on the adapter
-  * @phba: device priv structure instance
-@@ -1653,3 +1524,124 @@ int beiscsi_set_uer_feature(struct beiscsi_hba *phba)
- 	mutex_unlock(&ctrl->mbox_lock);
- 	return ret;
+ void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag)
+ {
+ 	struct be_queue_info *mccq = &phba->ctrl.mcc_obj.q;
+@@ -1645,3 +1598,52 @@ int beiscsi_init_sliport(struct beiscsi_hba *phba)
+ 	/* indicate driver is loading */
+ 	return beiscsi_cmd_special_wrb(&phba->ctrl, 1);
  }
 +
-+static u32 beiscsi_get_post_stage(struct beiscsi_hba *phba)
-+{
-+	u32 sem;
-+
-+	if (is_chip_be2_be3r(phba))
-+		sem = ioread32(phba->csr_va + SLIPORT_SEMAPHORE_OFFSET_BEx);
-+	else
-+		pci_read_config_dword(phba->pcidev,
-+				      SLIPORT_SEMAPHORE_OFFSET_SH, &sem);
-+	return sem;
-+}
-+
-+int beiscsi_check_fw_rdy(struct beiscsi_hba *phba)
-+{
-+	u32 loop, post, rdy = 0;
-+
-+	loop = 1000;
-+	while (loop--) {
-+		post = beiscsi_get_post_stage(phba);
-+		if (post & POST_ERROR_BIT)
-+			break;
-+		if ((post & POST_STAGE_MASK) == POST_STAGE_ARMFW_RDY) {
-+			rdy = 1;
-+			break;
-+		}
-+		msleep(60);
-+	}
-+
-+	if (!rdy) {
-+		__beiscsi_log(phba, KERN_ERR,
-+			      "BC_%d : FW not ready 0x%x\n", post);
-+	}
-+
-+	return rdy;
-+}
-+
-+static int beiscsi_cmd_function_reset(struct beiscsi_hba  *phba)
++/**
++ * beiscsi_cmd_iscsi_cleanup()- Inform FW to cleanup EP data structures.
++ * @phba: pointer to dev priv structure
++ * @ulp: ULP number.
++ *
++ * return
++ *	Success: 0
++ *	Failure: Non-Zero Value
++ **/
++int beiscsi_cmd_iscsi_cleanup(struct beiscsi_hba *phba, unsigned short ulp)
 +{
 +	struct be_ctrl_info *ctrl = &phba->ctrl;
-+	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
-+	struct be_post_sgl_pages_req *req = embedded_payload(wrb);
++	struct iscsi_cleanup_req_v1 *req_v1;
++	struct iscsi_cleanup_req *req;
++	struct be_mcc_wrb *wrb;
 +	int status;
 +
 +	mutex_lock(&ctrl->mbox_lock);
-+
++	wrb = wrb_from_mbox(&ctrl->mbox_mem);
 +	req = embedded_payload(wrb);
 +	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-+	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
-+			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
-+	status = be_mbox_notify(ctrl);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
++			   OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
 +
-+	mutex_unlock(&ctrl->mbox_lock);
-+	return status;
-+}
-+
-+int beiscsi_cmd_special_wrb(struct be_ctrl_info *ctrl, u32 load)
-+{
-+	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
-+	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
-+	u8 *endian_check;
-+	int status;
-+
-+	mutex_lock(&ctrl->mbox_lock);
-+	memset(wrb, 0, sizeof(*wrb));
-+
-+	endian_check = (u8 *) wrb;
-+	if (load) {
-+		/* to start communicating */
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0x12;
-+		*endian_check++ = 0x34;
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0x56;
-+		*endian_check++ = 0x78;
-+		*endian_check++ = 0xFF;
++       /**
++	* TODO: Check with FW folks the chute value to be set.
++	* For now, use the ULP_MASK as the chute value.
++	*/
++	if (is_chip_be2_be3r(phba)) {
++		req->chute = (1 << ulp);
++		req->hdr_ring_id = HWI_GET_DEF_HDRQ_ID(phba, ulp);
++		req->data_ring_id = HWI_GET_DEF_BUFQ_ID(phba, ulp);
 +	} else {
-+		/* to stop communicating */
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0xAA;
-+		*endian_check++ = 0xBB;
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0xFF;
-+		*endian_check++ = 0xCC;
-+		*endian_check++ = 0xDD;
-+		*endian_check = 0xFF;
++		req_v1 = (struct iscsi_cleanup_req_v1 *)req;
++		req_v1->hdr.version = 1;
++		req_v1->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba,
++								      ulp));
++		req_v1->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba,
++								       ulp));
 +	}
-+	be_dws_cpu_to_le(wrb, sizeof(*wrb));
 +
 +	status = be_mbox_notify(ctrl);
 +	if (status)
-+		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
-+			    "BC_%d : special WRB message failed\n");
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
++			    "BG_%d : %s failed %d\n", __func__, ulp);
 +	mutex_unlock(&ctrl->mbox_lock);
 +	return status;
 +}
-+
-+int beiscsi_init_sliport(struct beiscsi_hba *phba)
-+{
-+	int status;
-+
-+	/* check POST stage before talking to FW */
-+	status = beiscsi_check_fw_rdy(phba);
-+	if (!status)
-+		return -EIO;
-+
-+	/*
-+	 * SLI COMMON_FUNCTION_RESET completion is indicated by BMBX RDY bit.
-+	 * It should clean up any stale info in FW for this fn.
-+	 */
-+	status = beiscsi_cmd_function_reset(phba);
-+	if (status) {
-+		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-+			    "BC_%d : SLI Function Reset failed\n");
-+		return status;
-+	}
-+
-+	/* indicate driver is loading */
-+	return beiscsi_cmd_special_wrb(&phba->ctrl, 1);
-+}
 diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index c9823b0..47b7197 100644
+index 47b7197..cf42399 100644
 --- a/drivers/scsi/be2iscsi/be_cmds.h
 +++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -98,11 +98,23 @@ struct be_mcc_compl {
- #define MPU_MAILBOX_DB_RDY_MASK	0x1	/* bit 0 */
- #define MPU_MAILBOX_DB_HI_MASK	0x2	/* bit 1 */
+@@ -768,6 +768,8 @@ int beiscsi_check_fw_rdy(struct beiscsi_hba *phba);
  
--/********** MPU semphore ******************/
--#define MPU_EP_SEMAPHORE_OFFSET 0xac
--#define EP_SEMAPHORE_POST_STAGE_MASK 0x0000FFFF
--#define EP_SEMAPHORE_POST_ERR_MASK 0x1
--#define EP_SEMAPHORE_POST_ERR_SHIFT 31
-+/********** MPU semphore: used for SH & BE ******************/
-+#define SLIPORT_SOFTRESET_OFFSET		0x5c	/* CSR BAR offset */
-+#define SLIPORT_SEMAPHORE_OFFSET_BEx		0xac	/* CSR BAR offset */
-+#define SLIPORT_SEMAPHORE_OFFSET_SH		0x94	/* PCI-CFG offset */
-+#define POST_STAGE_MASK				0x0000FFFF
-+#define POST_ERROR_BIT				0x80000000
-+#define POST_ERR_RECOVERY_CODE_MASK		0xF000
-+
-+/* Soft Reset register masks */
-+#define SLIPORT_SOFTRESET_SR_MASK		0x00000080	/* SR bit */
-+
-+/* MPU semphore POST stage values */
-+#define POST_STAGE_AWAITING_HOST_RDY	0x1 /* FW awaiting goahead from host */
-+#define POST_STAGE_HOST_RDY		0x2 /* Host has given go-ahed to FW */
-+#define POST_STAGE_BE_RESET		0x3 /* Host wants to reset chip */
-+#define POST_STAGE_ARMFW_RDY		0xC000 /* FW is done with POST */
-+#define POST_STAGE_RECOVERABLE_ERR	0xE000 /* Recoverable err detected */
+ int beiscsi_init_sliport(struct beiscsi_hba *phba);
  
- /********** MCC door bell ************/
- #define DB_MCCQ_OFFSET 0x140
-@@ -110,9 +122,6 @@ struct be_mcc_compl {
- /* Number of entries posted */
- #define DB_MCCQ_NUM_POSTED_SHIFT 16		/* bits 16 - 29 */
- 
--/* MPU semphore POST stage values */
--#define POST_STAGE_ARMFW_RDY		0xc000	/* FW is done with POST */
--
- /**
-  * When the async bit of mcc_compl is set, the last 4 bytes of
-  * mcc_compl is interpreted as follows:
-@@ -753,6 +762,12 @@ struct be_cmd_set_features {
- 	} param;
- } __packed;
- 
-+int beiscsi_cmd_special_wrb(struct be_ctrl_info *ctrl, u32 load);
-+
-+int beiscsi_check_fw_rdy(struct beiscsi_hba *phba);
-+
-+int beiscsi_init_sliport(struct beiscsi_hba *phba);
++int beiscsi_cmd_iscsi_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num);
 +
  int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
  			  struct be_queue_info *eq, int eq_delay);
  
-@@ -784,9 +799,6 @@ int __beiscsi_mcc_compl_status(struct beiscsi_hba *phba,
+@@ -782,8 +784,6 @@ int beiscsi_cmd_mccq_create(struct beiscsi_hba *phba,
+ 			struct be_queue_info *mccq,
+ 			struct be_queue_info *cq);
+ 
+-int be_poll_mcc(struct be_ctrl_info *ctrl);
+-
+ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
+ 
+ void free_mcc_wrb(struct be_ctrl_info *ctrl, unsigned int tag);
+@@ -798,9 +798,7 @@ int __beiscsi_mcc_compl_status(struct beiscsi_hba *phba,
+ 			       unsigned int tag,
  			       struct be_mcc_wrb **wrb,
  			       struct be_dma_mem *mbx_cmd_mem);
- /*ISCSI Functuions */
--int be_cmd_fw_initialize(struct be_ctrl_info *ctrl);
--int be_cmd_fw_uninit(struct be_ctrl_info *ctrl);
--
+-/*ISCSI Functuions */
  struct be_mcc_wrb *wrb_from_mbox(struct be_dma_mem *mbox_mem);
- int be_mcc_compl_poll(struct beiscsi_hba *phba, unsigned int tag);
+-int be_mcc_compl_poll(struct beiscsi_hba *phba, unsigned int tag);
  void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag);
-@@ -812,8 +824,6 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
- 				struct be_dma_mem *q_mem, u32 page_offset,
- 				u32 num_pages);
+ struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
+ 				 unsigned int *ref_tag);
+@@ -1063,7 +1061,16 @@ struct iscsi_cleanup_req {
+ 	u16 chute;
+ 	u8 hdr_ring_id;
+ 	u8 data_ring_id;
++} __packed;
  
--int beiscsi_cmd_reset_function(struct beiscsi_hba *phba);
--
- int be_cmd_wrbq_create(struct be_ctrl_info *ctrl, struct be_dma_mem *q_mem,
- 		       struct be_queue_info *wrbq,
- 		       struct hwi_wrb_context *pwrb_context,
-@@ -1422,8 +1432,6 @@ struct be_cmd_get_port_name {
- 						 * the cxn
- 						 */
++struct iscsi_cleanup_req_v1 {
++	struct be_cmd_req_hdr hdr;
++	u16 chute;
++	u16 rsvd1;
++	u16 hdr_ring_id;
++	u16 rsvd2;
++	u16 data_ring_id;
++	u16 rsvd3;
+ } __packed;
  
--int be_chk_reset_complete(struct beiscsi_hba *phba);
--
- void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
- 			bool embedded, u8 sge_cnt);
- 
+ struct eq_delay {
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 65fa7c6..6b995ec 100644
+index 6b995ec..0a48d59 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -3553,7 +3553,7 @@ static void be_mcc_queues_destroy(struct beiscsi_hba *phba)
- 	}
+@@ -3258,7 +3258,6 @@ beiscsi_create_def_hdr(struct beiscsi_hba *phba,
+ 		    "BM_%d : iscsi hdr def pdu id for ULP : %d is %d\n",
+ 		    ulp_num,
+ 		    phwi_context->be_def_hdrq[ulp_num].id);
+-	hwi_post_async_buffers(phba, BEISCSI_DEFQ_HDR, ulp_num);
+ 	return 0;
  }
  
--static void hwi_cleanup(struct beiscsi_hba *phba)
-+static void hwi_cleanup_port(struct beiscsi_hba *phba)
- {
- 	struct be_queue_info *q;
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
-@@ -3612,7 +3612,8 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
- 			beiscsi_cmd_q_destroy(ctrl, q, QTYPE_EQ);
+@@ -3313,11 +3312,9 @@ beiscsi_create_def_data(struct beiscsi_hba *phba,
+ 		    ulp_num,
+ 		    phwi_context->be_def_dataq[ulp_num].id);
+ 
+-	hwi_post_async_buffers(phba, BEISCSI_DEFQ_DATA, ulp_num);
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+ 		    "BM_%d : DEFAULT PDU DATA RING CREATED"
+ 		    "on ULP : %d\n", ulp_num);
+-
+ 	return 0;
+ }
+ 
+@@ -3766,6 +3763,15 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ 					    ulp_num);
+ 				goto error;
+ 			}
++			/**
++			 * Now that the default PDU rings have been created,
++			 * let EP know about it.
++			 * Call beiscsi_cmd_iscsi_cleanup before posting?
++			 */
++			hwi_post_async_buffers(phba, BEISCSI_DEFQ_HDR,
++					       ulp_num);
++			hwi_post_async_buffers(phba, BEISCSI_DEFQ_DATA,
++					       ulp_num);
  		}
  	}
--	be_cmd_fw_uninit(ctrl);
-+	/* last communication, indicate driver is unloading */
-+	beiscsi_cmd_special_wrb(&phba->ctrl, 0);
- }
  
- static int be_mcc_queues_create(struct beiscsi_hba *phba,
-@@ -3709,8 +3710,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 	phwi_context->max_eqd = 128;
- 	phwi_context->min_eqd = 0;
- 	phwi_context->cur_eqd = 0;
--	be_cmd_fw_initialize(&phba->ctrl);
--	/* set optic state to unknown */
-+	/* set port optic state to unknown */
- 	phba->optic_state = 0xff;
+@@ -4244,19 +4250,12 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
  
- 	status = beiscsi_create_eqs(phba, phwi_context);
-@@ -3816,7 +3816,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- error:
- 	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
- 		    "BM_%d : hwi_init_port failed");
--	hwi_cleanup(phba);
-+	hwi_cleanup_port(phba);
- 	return status;
- }
- 
-@@ -4205,7 +4205,7 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
- 	return ret;
- 
- do_cleanup_ctrlr:
--	hwi_cleanup(phba);
-+	hwi_cleanup_port(phba);
- 	return ret;
- }
- 
-@@ -4242,7 +4242,7 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
- 	}
- }
- 
--static void beiscsi_clean_port(struct beiscsi_hba *phba)
-+static void beiscsi_cleanup_port(struct beiscsi_hba *phba)
+ static void beiscsi_cleanup_port(struct beiscsi_hba *phba)
  {
- 	int mgmt_status, ulp_num;
+-	int mgmt_status, ulp_num;
  	struct ulp_cid_info *ptr_cid_info = NULL;
-@@ -4259,7 +4259,7 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
- 	}
++	int ulp_num;
+ 
+-	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++) {
+-		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported)) {
+-			mgmt_status = mgmt_epfw_cleanup(phba, ulp_num);
+-			if (mgmt_status)
+-				beiscsi_log(phba, KERN_WARNING,
+-					    BEISCSI_LOG_INIT,
+-					    "BM_%d : mgmt_epfw_cleanup FAILED"
+-					    " for ULP_%d\n", ulp_num);
+-		}
+-	}
++	for (ulp_num = 0; ulp_num < BEISCSI_ULP_COUNT; ulp_num++)
++		if (test_bit(ulp_num, (void *)&phba->fw_config.ulp_supported))
++			beiscsi_cmd_iscsi_cleanup(phba, ulp_num);
  
  	hwi_purge_eq(phba);
--	hwi_cleanup(phba);
-+	hwi_cleanup_port(phba);
- 	kfree(phba->io_sgl_hndl_base);
- 	kfree(phba->eh_sgl_hndl_base);
- 	kfree(phba->ep_array);
-@@ -5020,12 +5020,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba)
- 	/* PCI_ERR is set then check if driver is not unloading */
- 	if (test_bit(BEISCSI_HBA_RUNNING, &phba->state) &&
- 	    test_bit(BEISCSI_HBA_PCI_ERR, &phba->state)) {
--		hwi_cleanup(phba);
-+		hwi_cleanup_port(phba);
- 		return;
- 	}
+ 	hwi_cleanup_port(phba);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 706a817..a844299 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -256,48 +256,6 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
+ 	return tag;
+ }
  
- 	destroy_workqueue(phba->wq);
--	beiscsi_clean_port(phba);
-+	beiscsi_cleanup_port(phba);
- 	beiscsi_free_mem(phba);
- 
- 	beiscsi_unmap_pci_function(phba);
-@@ -5470,9 +5470,8 @@ static pci_ers_result_t beiscsi_eeh_reset(struct pci_dev *pdev)
- 	pci_set_power_state(pdev, PCI_D0);
- 	pci_restore_state(pdev);
- 
--	/* Wait for the CHIP Reset to complete */
--	status = be_chk_reset_complete(phba);
--	if (!status) {
-+	status = beiscsi_check_fw_rdy(phba);
-+	if (status) {
- 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
- 			    "BM_%d : EEH Reset Completed\n");
- 	} else {
-@@ -5487,7 +5486,7 @@ static pci_ers_result_t beiscsi_eeh_reset(struct pci_dev *pdev)
- 
- static void beiscsi_eeh_resume(struct pci_dev *pdev)
- {
--	int ret = 0, i;
-+	int ret, i;
- 	struct be_eq_obj *pbe_eq;
- 	struct beiscsi_hba *phba = NULL;
- 	struct hwi_controller *phwi_ctrlr;
-@@ -5507,19 +5506,9 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
- 			phba->num_cpus = 1;
- 	}
- 
--	ret = beiscsi_cmd_reset_function(phba);
--	if (ret) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Reset Failed\n");
--		goto ret_err;
+-/**
+- * mgmt_epfw_cleanup()- Inform FW to cleanup data structures.
+- * @phba: pointer to dev priv structure
+- * @ulp_num: ULP number.
+- *
+- * return
+- *	Success: 0
+- *	Failure: Non-Zero Value
+- **/
+-int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short ulp_num)
+-{
+-	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb;
+-	struct iscsi_cleanup_req *req;
+-	unsigned int tag;
+-	int status;
+-
+-	mutex_lock(&ctrl->mbox_lock);
+-	wrb = alloc_mcc_wrb(phba, &tag);
+-	if (!wrb) {
+-		mutex_unlock(&ctrl->mbox_lock);
+-		return -EBUSY;
 -	}
 -
--	ret = be_chk_reset_complete(phba);
--	if (ret) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to get out of reset.\n");
-+	ret = beiscsi_init_sliport(phba);
-+	if (ret)
- 		goto ret_err;
--	}
- 
- 	beiscsi_get_params(phba);
- 	phba->shost->max_id = phba->params.cxns_per_ctrl;
-@@ -5636,28 +5625,15 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	ret = be_ctrl_init(phba, pcidev);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : beiscsi_dev_probe-"
--			    "Failed in be_ctrl_init\n");
-+			    "BM_%d : be_ctrl_init failed\n");
- 		goto hba_free;
- 	}
- 
--	set_bit(BEISCSI_HBA_RUNNING, &phba->state);
--	/*
--	 * FUNCTION_RESET should clean up any stale info in FW for this fn
--	 */
--	ret = beiscsi_cmd_reset_function(phba);
--	if (ret) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Reset Failed\n");
--		goto hba_free;
--	}
--	ret = be_chk_reset_complete(phba);
--	if (ret) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to get out of reset.\n");
-+	ret = beiscsi_init_sliport(phba);
-+	if (ret)
- 		goto hba_free;
--	}
- 
-+	set_bit(BEISCSI_HBA_RUNNING, &phba->state);
- 	spin_lock_init(&phba->io_sgl_lock);
- 	spin_lock_init(&phba->mgmt_sgl_lock);
- 	spin_lock_init(&phba->async_pdu_lock);
-@@ -5781,7 +5757,7 @@ free_blkenbld:
- 		irq_poll_disable(&pbe_eq->iopoll);
- 	}
- free_twq:
--	beiscsi_clean_port(phba);
-+	beiscsi_cleanup_port(phba);
- 	beiscsi_free_mem(phba);
- free_port:
- 	pci_free_consistent(phba->pcidev,
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 0a5de01..4cdb34c 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -82,14 +82,6 @@
- #define BEISCSI_MAX_FRAGS_INIT	192
- #define BE_NUM_MSIX_ENTRIES	1
- 
--#define MPU_EP_CONTROL          0
--#define MPU_EP_SEMAPHORE        0xac
--#define BE2_SOFT_RESET          0x5c
--#define BE2_PCI_ONLINE0         0xb0
--#define BE2_PCI_ONLINE1         0xb4
--#define BE2_SET_RESET           0x80
--#define BE2_MPU_IRAM_ONLINE     0x00000080
+-	req = embedded_payload(wrb);
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+-	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
+-			   OPCODE_COMMON_ISCSI_CLEANUP, sizeof(*req));
 -
- #define BE_SENSE_INFO_SIZE		258
- #define BE_ISCSI_PDU_HEADER_SIZE	64
- #define BE_MIN_MEM_SIZE			16384
+-	req->chute = (1 << ulp_num);
+-	req->hdr_ring_id = cpu_to_le16(HWI_GET_DEF_HDRQ_ID(phba, ulp_num));
+-	req->data_ring_id = cpu_to_le16(HWI_GET_DEF_BUFQ_ID(phba, ulp_num));
+-
+-	be_mcc_notify(phba, tag);
+-	status = be_mcc_compl_poll(phba, tag);
+-	if (status)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+-			    "BG_%d : mgmt_epfw_cleanup , FAILED\n");
+-	mutex_unlock(&ctrl->mbox_lock);
+-	return status;
+-}
+-
+ unsigned int  mgmt_invalidate_icds(struct beiscsi_hba *phba,
+ 				struct invalidate_command_table *inv_tbl,
+ 				unsigned int num_invalidate, unsigned int cid,
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index f8d2778..dab128f 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -96,7 +96,6 @@ struct mcc_wrb {
+ 	struct mcc_wrb_payload payload;
+ };
+ 
+-int mgmt_epfw_cleanup(struct beiscsi_hba *phba, unsigned short chute);
+ int mgmt_open_connection(struct beiscsi_hba *phba,
+ 			 struct sockaddr *dst_addr,
+ 			 struct beiscsi_endpoint *beiscsi_ep,
 -- 
 1.9.1
 
