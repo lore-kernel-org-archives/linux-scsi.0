@@ -1,48 +1,30 @@
-From: tom.ty89@gmail.com
-Subject: [PATCH resend v3 3/5] libata-scsi: use u8 array to store mode page copy
-Date: Sat, 23 Jul 2016 02:34:08 +0800
-Message-ID: <57926727.840e420a.d7fc9.38dd@mx.google.com>
-References: <CAGnHSEmTC06_NKrBDVyFkLSqx4qDRy+OhXvpcySk6HHYLSRsuw@mail.gmail.com>
-Return-path: <linux-next-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEmTC06_NKrBDVyFkLSqx4qDRy+OhXvpcySk6HHYLSRsuw@mail.gmail.com>
-Sender: linux-next-owner@vger.kernel.org
-To: tj@kernel.org, hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de
-Cc: sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] lpfc: fix oops in lpfc_sli4_scmd_to_wqidx_distr() from lpfc_send_taskmgmt()
+Date: Fri, 22 Jul 2016 16:18:03 -0400
+Message-ID: <yq1fur1bf5w.fsf@sermon.lab.mkp.net>
+References: <1465341188-32620-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:25897 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563AbcGVUSL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 22 Jul 2016 16:18:11 -0400
+In-Reply-To: <1465341188-32620-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+	(Mauricio Faria de Oliveira's message of "Tue, 7 Jun 2016 20:13:08
+	-0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, james.smart@broadcom.com, dick.kennedy@broadcom.com
 
-From: Tom Yan <tom.ty89@gmail.com>
+>>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
 
-ata_mselect_*() would initialize a char array for storing a copy of
-the current mode page. However, char could be signed char. In that
-case, bytes larger than 127 would be converted to negative number.
+Mauricio> The lpfc_sli4_scmd_to_wqidx_distr() function expects the
+Mauricio> scsi_cmnd 'lpfc_cmd->pCmd' not to be null, and point to the
+Mauricio> midlayer command.
 
-For example, 0xff from def_control_mpage[] would become -1. This
-prevented ata_mselect_control() from working at all, since when it
-did the read-only bits check, there would always be a mismatch.
+Applied to 4.8/scsi-queue.
 
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
-
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 4a4e6f1..5cfcb4b 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3610,7 +3610,7 @@ static int ata_mselect_caching(struct ata_queued_cmd *qc,
- {
- 	struct ata_taskfile *tf = &qc->tf;
- 	struct ata_device *dev = qc->dev;
--	char mpage[CACHE_MPAGE_LEN];
-+	u8 mpage[CACHE_MPAGE_LEN];
- 	u8 wce, mask;
- 	int i;
- 
-@@ -3668,7 +3668,7 @@ static int ata_mselect_control(struct ata_queued_cmd *qc,
- 			       const u8 *buf, int len, u16 *fp)
- {
- 	struct ata_device *dev = qc->dev;
--	char mpage[CONTROL_MPAGE_LEN];
-+	u8 mpage[CONTROL_MPAGE_LEN];
- 	u8 d_sense, mask;
- 	int i;
- 
 -- 
-2.9.0
+Martin K. Petersen	Oracle Linux Engineering
