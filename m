@@ -1,74 +1,71 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/6] block: Add 'zoned' sysfs queue attribute
-Date: Sun, 24 Jul 2016 09:10:04 +0200
-Message-ID: <13b63331-f920-0904-b8f7-c3a2ea8270d6@suse.de>
-References: <1468934439-93579-1-git-send-email-hare@suse.de>
- <1468934439-93579-5-git-send-email-hare@suse.de>
- <yq1wpkd9zbc.fsf@sermon.lab.mkp.net>
- <f39f2a46-75ab-a770-025f-6807c2f14413@suse.de>
- <1dc7f9d7-5a91-b160-7031-8d69ede5567b@sandisk.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: Re: [PATCH] SCSI-aic94xx: Delete unnecessary checks before the
+ function call "kmem_cache_destroy"
+Date: Sun, 24 Jul 2016 13:51:56 +0200
+Message-ID: <4962c98f-b21b-8a28-7c35-9df9cb28c857@users.sourceforge.net>
+References: <5307CAA2.8060406@users.sourceforge.net>
+ <alpine.DEB.2.02.1402212321410.2043@localhost6.localdomain6>
+ <530A086E.8010901@users.sourceforge.net>
+ <alpine.DEB.2.02.1402231635510.1985@localhost6.localdomain6>
+ <530A72AA.3000601@users.sourceforge.net>
+ <alpine.DEB.2.02.1402240658210.2090@localhost6.localdomain6>
+ <530B5FB6.6010207@users.sourceforge.net>
+ <alpine.DEB.2.10.1402241710370.2074@hadrien>
+ <530C5E18.1020800@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251014170.2080@hadrien>
+ <530CD2C4.4050903@users.sourceforge.net>
+ <alpine.DEB.2.10.1402251840450.7035@hadrien>
+ <530CF8FF.8080600@users.sourceforge.net>
+ <alpine.DEB.2.02.1402252117150.2047@localhost6.localdomain6>
+ <530DD06F.4090703@users.sourceforge.net>
+ <alpine.DEB.2.02.1402262129250.2221@localhost6.localdomain6>
+ <5317A59D.4@users.sourceforge.net> <564AD586.5040606@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: QUOTED-PRINTABLE
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1dc7f9d7-5a91-b160-7031-8d69ede5567b@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Damien Le Moal <damien.lemoal@hgst.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <564AD586.5040606@users.sourceforge.net>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Dan Williams <dan.j.williams@intel.com>, Hannes Reinecke <hare@suse.de>, Jack Wang <jinpu.wang@profitbricks.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-On 07/24/2016 12:13 AM, Bart Van Assche wrote:
-> On 07/23/16 05:43, Hannes Reinecke wrote:
->> On 07/22/2016 10:45 PM, Martin K. Petersen wrote:
->>>>>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
->>>
->>> Hannes> Add a sysfs queue attribute 'zoned' to display the zone lay=
-out
->>> Hannes> for zoned devices.
->>>
->>> Not quite one value per file :(
->>>
->> Yes.
->> But I wanted to display the zone layout in a concise way allowing
->> user-space programs to determine the zone layout without having to
->> issue a 'REPORT ZONES' command themselves.
->> I found it slightly pointless to add one sysfs entry per zone,
->> and at the same time a simple 'zone_size' attribute wouldn't cover a=
-ll
->> possibilities.
->>
->> However, as SMR drives seem to stabilise around having a fixed zone =
-size
->> (with a possible exemption of the last zone to cover left-overs)
->> I'd be fine a replace this with a single 'zone_size' attribute which
->> could be set to eg '-1' for drives which indeed would implement vari=
-able
->> zone sizes.
->=20
-> It's not that hard to convert the information exported by
-> queue_zoned_show() from a single sysfs attribute into one directory p=
-er
-> zone. Doing so would make it much easier for scripts to parse that
-> information and would also avoid that the zone information has to be
-> truncated because not all of it fits into a single page.
->=20
-But this is precisely what I've tried to avoid.
-Creating one file or directory per zone would mean we'll end up with
-rough 20k files/directories.
-Which I found rather excessive.
+> From: Markus Elfring <elfring@users.sourceforge.net>
+> Date: Tue, 17 Nov 2015 08:14:52 +0100
+> 
+> The kmem_cache_destroy() function tests whether its argument is NULL
+> and then returns immediately. Thus the test around the calls is not needed.
+> 
+> This issue was detected by using the Coccinelle software.
+> 
+> Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+> ---
+>  drivers/scsi/aic94xx/aic94xx_init.c | 7 ++-----
+>  1 file changed, 2 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+> index 662b232..ab93049 100644
+> --- a/drivers/scsi/aic94xx/aic94xx_init.c
+> +++ b/drivers/scsi/aic94xx/aic94xx_init.c
+> @@ -660,12 +660,9 @@ Err:
+>  
+>  static void asd_destroy_global_caches(void)
+>  {
+> -	if (asd_dma_token_cache)
+> -		kmem_cache_destroy(asd_dma_token_cache);
+> +	kmem_cache_destroy(asd_dma_token_cache);
+>  	asd_dma_token_cache = NULL;
+> -
+> -	if (asd_ascb_cache)
+> -		kmem_cache_destroy(asd_ascb_cache);
+> +	kmem_cache_destroy(asd_ascb_cache);
+>  	asd_ascb_cache = NULL;
+>  }
+>  
+> 
 
-Of course, it that is not a concern that I can easily convert it.
+How do you think about to integrate this update suggestion
+into another source code repository?
 
-Cheers,
-
-Hannes
---=20
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
---
-To unsubscribe from this list: send the line "unsubscribe linux-block" =
-in
-the body of a message to majordomo@vger.kernel.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Regards,
+Markus
