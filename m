@@ -1,7 +1,7 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
 Subject: Re: [PATCH 4/6] block: Add 'zoned' sysfs queue attribute
-Date: Sun, 24 Jul 2016 06:51:52 -0700
-Message-ID: <65e6de30-4811-969b-6c9e-312104e1ae6a@sandisk.com>
+Date: Sun, 24 Jul 2016 23:16:47 +0000
+Message-ID: <94DE32E6-4D08-44D6-B8CA-566FA1BDEBFB@hgst.com>
 References: <1468934439-93579-1-git-send-email-hare@suse.de>
  <1468934439-93579-5-git-send-email-hare@suse.de>
  <yq1wpkd9zbc.fsf@sermon.lab.mkp.net>
@@ -10,72 +10,47 @@ References: <1468934439-93579-1-git-send-email-hare@suse.de>
  <13b63331-f920-0904-b8f7-c3a2ea8270d6@suse.de>
  <836c9ee7-3d1e-7336-342c-ce0efee12422@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0084.outbound.protection.outlook.com ([104.47.38.84]:35872
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751891AbcGXNwE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 24 Jul 2016 09:52:04 -0400
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <836c9ee7-3d1e-7336-342c-ce0efee12422@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Language: en-US
+Content-ID: <64C63B485E2AEC48AD6D1E82ACB37DA9@namprd04.prod.outlook.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Damien Le Moal <Damien.LeMoal@hgst.com>
 
-On 07/24/16 06:37, Bart Van Assche wrote:
-> On 07/24/16 00:10, Hannes Reinecke wrote:
->> On 07/24/2016 12:13 AM, Bart Van Assche wrote:
->>> On 07/23/16 05:43, Hannes Reinecke wrote:
->>>> On 07/22/2016 10:45 PM, Martin K. Petersen wrote:
->>>>>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
->>>>>
->>>>> Hannes> Add a sysfs queue attribute 'zoned' to display the zone layout
->>>>> Hannes> for zoned devices.
->>>>>
->>>>> Not quite one value per file :(
->>>>>
->>>> Yes.
->>>> But I wanted to display the zone layout in a concise way allowing
->>>> user-space programs to determine the zone layout without having to
->>>> issue a 'REPORT ZONES' command themselves.
->>>> I found it slightly pointless to add one sysfs entry per zone,
->>>> and at the same time a simple 'zone_size' attribute wouldn't cover all
->>>> possibilities.
->>>>
->>>> However, as SMR drives seem to stabilise around having a fixed zone size
->>>> (with a possible exemption of the last zone to cover left-overs)
->>>> I'd be fine a replace this with a single 'zone_size' attribute which
->>>> could be set to eg '-1' for drives which indeed would implement variable
->>>> zone sizes.
->>>
->>> It's not that hard to convert the information exported by
->>> queue_zoned_show() from a single sysfs attribute into one directory per
->>> zone. Doing so would make it much easier for scripts to parse that
->>> information and would also avoid that the zone information has to be
->>> truncated because not all of it fits into a single page.
->>>
->> But this is precisely what I've tried to avoid.
->> Creating one file or directory per zone would mean we'll end up with
->> rough 20k files/directories.
->> Which I found rather excessive.
->>
->> Of course, it that is not a concern that I can easily convert it.
->
-> If there are 10K zones and since queue_zoned_show() is limited to one
-> page then only a very small fraction of the zone information will be
-> available through sysfs. I remember from your presentations that reading
-> the zone information is slow. Is 10K zones a typical value or a worst
-> case value?
+Bart,
 
-(replying to my own e-mail)
 
-Something I should have asked before: is the zone information intended 
-for end users or rather for software developers? In the latter case, 
-have you considered to use debugfs instead of sysfs to export this 
-information? From Documentation/filesystems/debugfs.txt: "Unlike /proc, 
-which is only meant for information about a process, or sysfs, which has 
-strict one-value-per-file rules, debugfs has no rules at all."
+> On Jul 24, 2016, at 22:37, Bart Van Assche <bart.vanassche@sandisk.com> wrote:
+> 
+> If there are 10K zones and since queue_zoned_show() is limited to one page then only a very small fraction of the zone information will be available through sysfs. I remember from your presentations that reading the zone information is slow. Is 10K zones a typical value or a worst case value?
 
-Bart.
+Our 10 TB drive with 256 MB zones has 37256 zones. A drive with the same capacity
+and 128 MB zones will double that (there are some out there with 128 MB zones).
+And higher capacities are coming. So 100K+ zones is not unrealistic in the very
+near future.
+
+I think that what Hannes proposed, i.e. to have the zoned file only specify the
+zone size (so only one value), is OK as long as we also add an ioctl to get the
+detailed zone information, which would be much faster for applications than using
+something like libzbc which will be sending SG_IOs to retrieve the zone information
+from the disk.
+
+Best regards.
+
+------------------------
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Group, HGST Research,
+HGST, a Western Digital brand
+Damien.LeMoal@hgst.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa, 
+Kanagawa, 252-0888 Japan
+www.hgst.com 
+Western Digital Corporation (and its subsidiaries) E-mail Confidentiality Notice & Disclaimer:
+
+This e-mail and any files transmitted with it may contain confidential or legally privileged information of WDC and/or its affiliates, and are intended solely for the use of the individual or entity to which they are addressed. If you are not the intended recipient, any disclosure, copying, distribution or any action taken or omitted to be taken in reliance on it, is prohibited. If you have received this e-mail in error, please notify the sender immediately and delete the e-mail in its entirety from your system.
+
