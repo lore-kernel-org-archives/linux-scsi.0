@@ -1,41 +1,61 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [net-next v3 0/6] common library for Chelsio drivers.
-Date: Mon, 25 Jul 2016 10:31:40 -0700 (PDT)
-Message-ID: <20160725.103140.102549831819762477.davem@davemloft.net>
-References: <cover.1469121308.git.varun@chelsio.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Mon, 25 Jul 2016 13:53:44 -0400
+Message-ID: <20160725175344.GA23000@redhat.com>
+References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
+ <20160720140815.GA19045@redhat.com>
+ <20160720142727.GA57399@redhat.com>
+ <1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
+ <20160720183321.GA20223@redhat.com>
+ <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <cover.1469121308.git.varun@chelsio.com>
-Sender: target-devel-owner@vger.kernel.org
-To: varun@chelsio.com
-Cc: netdev@vger.kernel.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, nab@linux-iscsi.org, gerlitz.or@gmail.com, swise@opengridcomputing.com, james.bottomley@hansenpartnership.com, indranil@chelsio.com, hariprasad@chelsio.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:41156 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752176AbcGYRxq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2016 13:53:46 -0400
+Content-Disposition: inline
+In-Reply-To: <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi@vger.kernel.org
 
-From: Varun Prakash <varun@chelsio.com>
-Date: Thu, 21 Jul 2016 22:57:13 +0530
+On Thu, Jul 21 2016 at  4:58pm -0400,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-> Hi,
+> On 07/20/2016 11:33 AM, Mike Snitzer wrote:
+> >Would be interesting to know the error returned from map_request()'s
+> >ti->type->clone_and_map_rq().  Really should just be DM_MAPIO_REQUEUE.
+> >But the stack you've provided shows map_request calling
+> >dm_complete_request(), which implies dm_kill_unmapped_request() is being
+> >called due to ti->type->clone_and_map_rq() returning < 0.
 > 
->  This patch series adds common library module(libcxgb.ko)
->  for Chelsio drivers to remove duplicate code.
+> Hello Mike,
 > 
->  This series moves common iSCSI DDP Page Pod manager
->  code from cxgb4.ko to libcxgb.ko, earlier this code
->  was used by only cxgbit.ko now it is used by
->  three Chelsio iSCSI drivers cxgb3i, cxgb4i, cxgbit.
+> Apparently certain requests fail with -EIO because DM_DEV_SUSPEND
+> ioctls are being submitted to the same multipath target. As you know
+> DM_DEV_SUSPEND changes QUEUE_IF_NO_PATH from 1 into 0. A WARN_ON()
+> statement that I added in driver dm-mpath statement learned me that
+> multipathd is submitting these DM_DEV_SUSPEND ioctls. In the output
+> of strace -fp$(pidof multipathd) I found the following:
 > 
->  In future this module will have common connection
->  management and hardware specific code that can
->  be shared by multiple Chelsio drivers(cxgb4,
->  csiostor, iw_cxgb4, cxgb4i, cxgbit).
+> [pid 13927] ioctl(5, DM_TABLE_STATUS, 0x7fa1000483f0) = 0
+> [pid 13927] write(1, "mpathbe: failed to setup multipa"..., 35) = 35
+> [pid 13927] write(1, "dm-0: uev_add_map failed\n", 25) = 25
+> [pid 13927] write(1, "uevent trigger error\n", 21) = 21
+> [pid 13927] write(1, "sdh: remove path (uevent)\n", 26) = 26
+> [pid 13927] ioctl(5, DM_TABLE_LOAD, 0x7fa1000483f0) = 0
+> [pid 13927] ioctl(5, DM_DEV_SUSPEND, 0x7fa1000483f0) = 0
 > 
->  Please review.
-> 
->  Thanks
-> 
-> -v3
-> - removed unused module init and exit functions.
+> I'm still analyzing these and other messages.
 
-Series applied.
+The various ioctls you're seeing is just multipathd responding to the
+failures.  Part of reloading a table (with revised path info, etc) is to
+suspend and then resume the device that is being updated.
+
+But I'm not actually sure on the historic reasoning of why
+queue_if_no_path is disabled (and active setting saved) on suspend.
+
+I'll think about this further but maybe others recall why?
