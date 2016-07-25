@@ -1,35 +1,28 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] nvme-fabrics: patch target code in prep for FC transport
- support
-Date: Mon, 25 Jul 2016 10:46:07 +0200
-Message-ID: <20160725084607.zwpnwgedysivtzva@c203.arch.suse.de>
-References: <5792b917.3oKKdzw3zzjpaClb%james.smart@broadcom.com>
+Subject: Re: [PATCH] nvme-fabrics: set sqe.command_id in core, not transports
+Date: Mon, 25 Jul 2016 10:52:21 +0200
+Message-ID: <20160725085221.7whke6ggh34lw72g@c203.arch.suse.de>
+References: <5792b918.ManFlYqqCmUKB4ry%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58020 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:58732 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751718AbcGYIqJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2016 04:46:09 -0400
+	id S1751589AbcGYIwY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2016 04:52:24 -0400
 Content-Disposition: inline
-In-Reply-To: <5792b917.3oKKdzw3zzjpaClb%james.smart@broadcom.com>
+In-Reply-To: <5792b918.ManFlYqqCmUKB4ry%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On Fri, Jul 22, 2016 at 05:23:51PM -0700, James Smart wrote:
+On Fri, Jul 22, 2016 at 05:23:52PM -0700, James Smart wrote:
 >=20
-> Patch nvme-fabrics target code in prep for FC transport support:
-> - Add FC transport type decoding
-> - Add FC address family decoding
+> set sqe.command_id in core, not transports
 >=20
 > Patch is cut against the linux-nvme for-4.8/drivers branch
->=20
-> Note: this patch had been posted to the prior nvme fabrics repository=
- but
-> not merged before being brought over to linux-nvme.
 >=20
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 
