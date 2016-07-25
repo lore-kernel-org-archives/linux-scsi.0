@@ -1,33 +1,46 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 6/6] fcoe: Use default VLAN for FIP VLAN discovery
-Date: Mon, 25 Jul 2016 09:32:15 +0200
-Message-ID: <20160725073215.iqh5cyojk7oj3gec@c203.arch.suse.de>
+Subject: Re: [PATCH 0/6] fcoe: VN2VN target mode fixes
+Date: Mon, 25 Jul 2016 09:34:45 +0200
+Message-ID: <20160725073445.uwn777ntd6elrgtt@c203.arch.suse.de>
 References: <1467620963-67047-1-git-send-email-hare@suse.de>
- <1467620963-67047-7-git-send-email-hare@suse.de>
+ <yq1furdm0iy.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53149 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53311 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752611AbcGYHcQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2016 03:32:16 -0400
+	id S1752379AbcGYHer (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2016 03:34:47 -0400
 Content-Disposition: inline
-In-Reply-To: <1467620963-67047-7-git-send-email-hare@suse.de>
+In-Reply-To: <yq1furdm0iy.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-On Mon, Jul 04, 2016 at 10:29:23AM +0200, Hannes Reinecke wrote:
-> FC-BB-6 states:
-> FIP protocols shall be performed on a per-VLAN basis. It is
-> recommended to use the FIP VLAN discovery protocol on the
-> default VLAN.
+On Wed, Jul 13, 2016 at 10:11:33PM -0400, Martin K . Petersen wrote:
+> >>>>> "Hannes" =3D=3D Hannes Reinecke <hare@suse.de> writes:
 >=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Hannes> Hi all, When setting up a VN2VN FCoE target there is no real
+> Hannes> need to run fcoeadm, especially if DCB is disabled.  So this
+> Hannes> patchset implements a VIP VLAN responder which can be enabled=
+ by
+> Hannes> writing to the sysfs attribute 'fip_vlan_responder'.
+> Hannes> Additionally there are some fixes for VN2VN mode, most notabl=
+y
+> Hannes> the multicast address update when changing modes.
+>=20
+> Applied patches 1-4 to 4.8/scsi-queue.
 
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+Hi Martin,
+
+I've now Acked patches 5 and 6 as well, Hannes' answers clarified my co=
+ncerns.
+Can you pick 'em up for 4.8 as well?
+
+Thanks,
+	Johannes
 
 --=20
 Johannes Thumshirn                                          Storage
