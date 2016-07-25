@@ -1,42 +1,43 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] fcoe: Use kfree_skb() instead of kfree()
-Date: Mon, 25 Jul 2016 07:00:33 +0000
-Message-ID: <1469430033-8422-1-git-send-email-weiyj.lk@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 5/6] fcoe: implement FIP VLAN responder
+Date: Mon, 25 Jul 2016 09:31:38 +0200
+Message-ID: <20160725073138.4oe2mpvevid3i4it@c203.arch.suse.de>
+References: <1467620963-67047-1-git-send-email-hare@suse.de>
+ <1467620963-67047-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:33904 "EHLO
-	mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751154AbcGYHAp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 25 Jul 2016 03:00:45 -0400
-Received: by mail-pf0-f194.google.com with SMTP id g202so11436176pfb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2016 00:00:44 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:53114 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751127AbcGYHbo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2016 03:31:44 -0400
+Content-Disposition: inline
+In-Reply-To: <1467620963-67047-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Use kfree_skb() instead of kfree() to free sk_buff.
+On Mon, Jul 04, 2016 at 10:29:22AM +0200, Hannes Reinecke wrote:
+> When running in VN2VN mode there is no central instance which
+> would send out any FIP VLAN discovery notifications. So this
+> patch adds a new sysfs attribute 'fip_vlan_responder' which
+> will activate a FIP VLAN discovery responder.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
----
- drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Johannes Thumshirn <jth@kernel.org>
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index a569c65..dcf3653 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2923,7 +2923,7 @@ static int fcoe_ctlr_vlan_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 	mutex_unlock(&fip->ctlr_mutex);
- 
- drop:
--	kfree(skb);
-+	kfree_skb(skb);
- 	return rc;
- }
- 
-
-
-
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+the body of a message to majordomo@vger.kernel.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
