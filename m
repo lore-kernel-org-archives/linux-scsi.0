@@ -1,33 +1,33 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 5/6] fcoe: implement FIP VLAN responder
-Date: Mon, 25 Jul 2016 09:31:38 +0200
-Message-ID: <20160725073138.4oe2mpvevid3i4it@c203.arch.suse.de>
+Subject: Re: [PATCH 6/6] fcoe: Use default VLAN for FIP VLAN discovery
+Date: Mon, 25 Jul 2016 09:32:15 +0200
+Message-ID: <20160725073215.iqh5cyojk7oj3gec@c203.arch.suse.de>
 References: <1467620963-67047-1-git-send-email-hare@suse.de>
- <1467620963-67047-6-git-send-email-hare@suse.de>
+ <1467620963-67047-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53114 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53149 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751127AbcGYHbo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2016 03:31:44 -0400
+	id S1752611AbcGYHcQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 25 Jul 2016 03:32:16 -0400
 Content-Disposition: inline
-In-Reply-To: <1467620963-67047-6-git-send-email-hare@suse.de>
+In-Reply-To: <1467620963-67047-7-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, Jul 04, 2016 at 10:29:22AM +0200, Hannes Reinecke wrote:
-> When running in VN2VN mode there is no central instance which
-> would send out any FIP VLAN discovery notifications. So this
-> patch adds a new sysfs attribute 'fip_vlan_responder' which
-> will activate a FIP VLAN discovery responder.
+On Mon, Jul 04, 2016 at 10:29:23AM +0200, Hannes Reinecke wrote:
+> FC-BB-6 states:
+> FIP protocols shall be performed on a per-VLAN basis. It is
+> recommended to use the FIP VLAN discovery protocol on the
+> default VLAN.
 >=20
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Reviewed-by: Johannes Thumshirn <jth@kernel.org>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 
 --=20
 Johannes Thumshirn                                          Storage
