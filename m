@@ -1,287 +1,32 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 148721] New: ++@@++@@++@18OO-750-6584 Webr00t antivirus
- technical support phone number
-Date: Mon, 25 Jul 2016 17:56:11 +0000
-Message-ID: <bug-148721-11613@https.bugzilla.kernel.org/>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
+ Control mode page
+Date: Mon, 25 Jul 2016 14:30:55 -0400
+Message-ID: <20160725183055.GD19588@mtj.duckdns.org>
+References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
+ <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
+ <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
+ <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
+ <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
+ <20160721212600.GF23759@htj.duckdns.org>
+ <CAGnHSEnSQcxcaJopGnVusC9Q41qHKkdr4QQDmymFSxVEH6zvPQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:35560 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753085AbcGYR4P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2016 13:56:15 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id 6101D205E4
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2016 17:56:13 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-	by mail.kernel.org (Postfix) with ESMTP id BC899203E5
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Jul 2016 17:56:11 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGnHSEnSQcxcaJopGnVusC9Q41qHKkdr4QQDmymFSxVEH6zvPQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Hannes Reinecke <hare@suse.de>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=148721
+On Fri, Jul 22, 2016 at 05:50:18AM +0800, Tom Yan wrote:
+> As I've mentioned in the comment/message, there is no ATA command
+> needed to be sent to the device, since it only toggles a bit in
+> dev->flags. See that there is no ata_taskfile constructed in
+> ata_mselect_control().
 
-            Bug ID: 148721
-           Summary: ++@@++@@++@18OO-750-6584 Webr00t antivirus technical
-                    support phone number
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: ++@@++@@++@18OO-750-6584 Webr00t antivirus technical
-                    support phone number
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: AHA152X
-          Assignee: scsi_drivers-aha152x@kernel-bugs.osdl.org
-          Reporter: ankurcoe10@gmail.com
-        Regression: No
-
-++@@++@@++@1800-750-6584 WebrOOt antivirus technical support phone number
-
-+.+.+.1800-750-6584 WebrOOt antivirus technical support phone number
-+1800-750-6584 Webroot antivirus technical support phone number
-+1800-750-6584 Webroot antivirus technical support phone number
-Call us 1-800-750-6584 and get fix all issues related Webroot antivirus
-Technical Support For Webroot antivirus Issue : 1800-750-6584 Webroot antivirus
-+1800-750-6584 Customer Support Number, Webroot antivirus Technical Helpline
-Number USA, Webroot antivirus support phone number united states +1800-750-6584
-Webroot antivirus +1800-750-6584 Customer Support , Webroot antivirus technical
-Support phone number USA, Webroot antivirus support phone number united states
-+1800-750-6584 Webroot antivirus +1800-750-6584 Customer Support Number Webroot
-antivirus technical Support phone number USA, Webroot antivirus support phone
-number united states +1800-750-6584 +1800-750-6584 Webroot antivirus tech
-support number , .Webroot antivirus technical support phone numberWebroot
-antivirus Toll Free - 1800-750-6584 Webroot antivirus 360 Technical Support
-Number, Webroot antivirus help desk phone number Just Call, +1800-750-6584 for
-all type help related Webroot antivirus Issue support telephone number,Webroot
-antivirus support phone number,Webroot antivirus support phone number,Webroot
-antivirus help phone number, Webroot antivirus technical support number.Webroot
-antivirus support number, Webroot antivirus phone number, Webroot antivirus
-tech support number, Webroot antivirus customer support number, Webroot
-antivirus customer support phone number, Webroot antivirus 360 customer service
-phone number, Webroot antivirus customer service phone number, Webroot
-antivirus support phone number Webroot antivirus help number-Webroot antivirus
-Helpline Number; Webroot antivirus help phone number-Webroot antivirus Helpline
-Number, Webroot antivirus Tech Support Toll free Number, Webroot antivirus
-Support Telephone Number, Webroot antivirus 360 Tech Support Telephone number,
-Webroot antivirus Tech Support contact number, Webroot antivirus support
-contact number, Webroot antivirus technical support contact number, Webroot
-antivirus help desk phone number.Webroot antivirus support phone number. Just
-Call-1800-750-6584-: Webroot antivirus password cusaztomer support phone
-number. Webroot antivirus technical support, Webroot antivirus Customer Service
-Phone Number, Webroot antivirus Customer Service Number, Webroot antivirus
-Customer Support Phone Number, Webroot antivirus Customer Support Number,
-Webroot antivirus Customer Service Helpline Number, Webroot antivirus Customer
-Care Number, Webroot antivirus support team phone number. Webroot antivirus
-customer support phone number. Call,@(+1800-750-6584)@-: Webroot antivirus help
-number-Webroot antivirus Helpline Number; Webroot antivirus help phone number,
-Webroot antivirus Helpline Number, Webroot antivirus Tech Support Toll free
-Number, Webroot antivirus Support Telephone Number, Webroot antivirus Tech
-Support Telephone number, Webroot antivirus Tech Support contact number,
-Webroot antivirus support contact number, Webroot antivirus technical support
-contact number, Webroot antivirus support phone number, Webroot antivirus
-support phone number. Webroot antivirus customer support phone number.. Webroot
-antivirus technical support phone number. Webroot antivirus +1800-750-6584
-Customer Support Number Webroot antivirus technical Support phone number USA,
-Webroot antivirus support phone number united states +1800-750-6584
-+1800-750-6584@@@ Webroot antivirus tech support number , .Webroot antivirus
-technical support phone numberWebroot antivirus Toll Free - 1800-750-6584
-Webroot antivirus Technical Support Number, Webroot antivirus help desk phone
-number Just Call, +1800-750-6584 for all type help related Webroot antivirus
-Issue support telephone number,Webroot antivirus support phone number,Webroot
-antivirus support phone number,Webroot antivirus help phone number, Webroot
-antivirus technical support number.Webroot antivirus support number, Webroot
-antivirus phone number, Webroot antivirus tech support number, Webroot
-antivirus customer support number, Webroot antivirus customer support phone
-number, Webroot antivirus customer service phone number, Webroot antivirus
-customer service phone number, Webroot antivirus support phone number Webroot
-antivirus help number-Webroot antivirus Helpline Number; Webroot antivirus help
-phone number-Webroot antivirus Helpline Number, Webroot antivirus Tech Support
-Toll free Number, Webroot antivirus Support Telephone Number, Webroot antivirus
-Tech Support Telephone number, Webroot antivirus Tech Support contact number,
-Webroot antivirus support contact number, Webroot antivirus technical support
-contact number, Webroot antivirus help desk phone number.Webroot antivirus 360
-tech support phone number. Webroot customer service number Webroot customer
-service phone number Webroot contact number Webroot phone number Webroot number
-au Webroot support number aus Webroot antivirus phone number Webroot support
-phone number Webroot tech support number Webroot security phone number Webroot
-telephone number Webroot phone number Webroot phone number customer service usa
-Webroot customer support phone number Webroot antivirus customer service number
-Webroot antivirus customer service phone number phone number for Webroot
-Webroot contact number Webroot antivirus contact number Webroot customer
-service number Webroot antivirus support phone number Webroot support phone
-number aus Webroot customer support number au Webroot security contact number
-canada Webroot customer service phone number usa Webroot 800 number Webroot
-technical support phone number Webroot antivirus contact phone number Webroot
-technical support number Webroot antivirus support number Webroot tech support
-phone number Webroot contact phone number Webroot customer support phone number
-Webroot phone number support phone number for Webroot antivirus customer
-service phone number for Webroot security Webroot help number phone number for
-Webroot antivirus Webroot help phone number phone number for Webroot customer
-service Webroot security customer service phone number Webroot security phone
-number customer service Webroot contact number for customer service Webroot
-antivirus telephone number Webroot contact phone number Webroot antivirus phone
-support number Webroot technical support phone number Webroot security
-telephone number contact number for Webroot Webroot 1800 number Webroot help
-phone number Webroot support number Webroot telephone number Webroot customer
-care number Webroot security contact phone number Webroot antivirus technical
-support phone number Webroot tech support phone number phone number for Webroot
-support Webroot toll free number Webroot antivirus tech support number Webroot
-account contact number Webroot phone number customer service Webroot antivirus
-tech support phone number Webroot antivirus help phone number Webroot telephone
-number customer service Webroot antivirus phone number customer service Webroot
-support telephone number Webroot tech support number Webroot security support
-phone number Webroot helpline number telephone number for Webroot customer
-service Webroot antivirus customer support phone number Webroot support
-telephone number phone number for Webroot customer support Webroot number
-Webroot customer service telephone number Webroot internet security customer
-service phone number Webroot antivirus customer support number contact number
-for Webroot Webroot internet security phone number customer service telephone
-number for Webroot phone number for Webroot internet security contact number
-for Webroot antivirus Webroot account phone number phone number for Webroot
-Webroot antivirus telephone number customer service Webroot.com phone number
-Webroot support contact number Webroot phone support number customer service
-number for Webroot antivirus Webroot com support phone number Webroot internet
-security phone number Webroot phone number support Webroot phone number
-customer support Webroot contact support number Webroot internet security
-customer service number Webroot antivirus help number contact Webroot antivirus
-customer service phone number Webroot customer support number Webroot service
-number Webroot customer service telephone number telephone number for Webroot
-antivirus customer service Webroot hotline number Webroot security help phone
-number Webroot antivirus toll free number Webroot account customer service
-phone number phone number for Webroot antivirus support Webroot symantec phone
-number Webroot.com customer service phone number Webroot 800 phone number
-Webroot phone support number customer service number for Webroot symantec
-Webroot customer service phone number Webroot internet security support phone
-number Webroot helpline phone number Webroot security customer services phone
-number Webroot customer care phone number Webroot 1800 support number Webroot
-virus contact number phone number for Webroot symantec Webroot antivirus
-support telephone number Webroot symantec support phone number Webroot internet
-security contact phone number Webroot virus phone number Webroot internet
-security help phone number Webroot renewal phone number telephone number for
-Webroot security Webroot 1-800 number Webroot antivirus 800 number Webroot
-internet security contact number phone number Webroot antivirus contact number
-for Webroot security Webroot antivirus customer service telephone number
-Webroot help desk phone number Webroot antivirus customer care number Webroot
-security customer service number phone number to Webroot antivirus Webroot
-virus customer service phone number contact phone number for Webroot internet
-security customer service Webroot antivirus phone number Webroot toll free
-number Webroot customer service toll free number Webroot utilities customer
-service phone number phone number for Webroot by symantec Webroot antivirus
-1800 number Webroot internet security tech support phone number Webroot
-antivirus customer support telephone number Webroot by symantec phone number
-Webroot internet security telephone number Webroot help desk number Webroot
-customer service phone number usa Webroot contact number Webroot security
-number Webroot renewal contact number Webroot symantec customer service phone
-number Webroot antivirus helpline number Webroot protection phone number
-Webroot computer security phone number telephone number for Webroot antivirus
-Webroot symantec contact number telephone number for Webroot internet security
-Webroot customer service number usa Webroot antivirus number Webroot software
-phone number Webroot phone number Webroot software contact number Webroot
-contact number Webroot antivirus contact number Webroot internet contact number
-Webroot internet security support number Webroot internet phone number Webroot
-symantec telephone number Webroot contact number Webroot technical support
-number usa Webroot contact number Webroot antivirus customer service phone
-number usa Webroot internet security contact number Webroot customer service
-phone number canada Webroot anti virus phone number Webroot phone number
-Webroot phone number Webroot customer service number Webroot customer service
-phone number Webroot telephone number Webroot tech support number usa Webroot
-security contact number Webroot antivirus toll free number contact number for
-Webroot internet security Webroot antivirus phone number customer service us
-Webroot customer service phone number Webroot toll free number Webroot support
-phone number usa Webroot sales phone number Webroot customer service phone
-number usa Webroot phone number canada Webroot phone number customer services
-Webroot helpline number Webroot antivirus contact number canada Webroot phone
-number Webroot antivirus customer service phone number us what is the phone
-number for Webroot customer service Webroot contact number Webroot customer
-service phone number Webroot support phone number usa Webroot toll free number
-usa Webroot contact phone number Webroot antivirus phone number Webroot
-antivirus customer service phone number Webroot support phone number Webroot
-support phone number canada Webroot technical support phone number canada
-Webroot abrasives phone number Webroot security phone contact number Webroot
-internet security customer service phone number Webroot telephone number
-Webroot canada phone number Webroot security telephone number Webroot antivirus
-contact number us Webroot phone number Webroot phone number Webroot antivirus
-customer care number Webroot customer service phone number canada Webroot
-internet security number Webroot software customer service number Webroot
-internet security telephone number Webroot anti virus contact number Webroot
-virus protection phone number Webroot virus protection contact number Webroot
-antivirus phone number Webroot antivirus help desk phone number Webroot tech
-support phone number us Webroot helpline phone number Webroot internet security
-contact phone number Webroot customer care number usa Webroot antivirus contact
-number Webroot customer support phone number canada Webroot department number
-Webroot antivirus contact number Webroot antivirus customer service phone
-number canada Webroot customer support number usa number for Webroot antivirus
-Webroot support number Webroot support number Webroot contact number Webroot
-symantec phone number Webroot contact number Webroot contact number canada
-Webroot antivirus toll free number usa Webroot internet security contact phone
-number Webroot contact number usa Webroot antivirus canada contact phone number
-Webroot support number usa Webroot support phone number Webroot customer care
-number Webroot contact phone number Webroot number Webroot internet security
-toll free number phone number for Webroot antivirus Webroot cinema phone number
-Webroot support number canada Webroot number Webroot support number Calling
-Webroot Support(+(1-800-750-6584)))customer service phone number,Webroot
-antivirus tech support number Webroot customer service number 1800-750-6584
-Webroot call center 1800-750-6584 Webroot customer service email address
-1800-750-6584 Webroot customer care no 1800-750-6584 Webroot antivirus
-technical support phone number 1800-750-6584 Webroot antivirus tech support
-phone number 1800-750-6584 Webroot antivirus customer service phone number
-1800-750-6584 Webroot technical support phone number 1800-750-6584 symantec
-technical support phone number 1800-750-6584 Webroot technical support phone
-number 1800-750-6584 Webroot customer service telephone number 1800-750-6584
-?Webroot antivirus phone number 1800-750-6584 Webroot antivirus customer
-service phone number 1800-750-6584 Webroot antivirus customer service helpdesk
-Webroot antivirus phone number 1800-750-6584 Webroot phone number cancel
-subscription 1800-750-6584 Webroot technical support phone number 1800-750-6584
-Webroot 800 phone number 1800-750-6584 Webroot toll free customer care number
-sbi toll free customer care number Webroot toll free customer care number toll
-free customer care number Webroot toll free customer care number icici toll
-free customer care number flipkart toll free customer care number vodafone toll
-free customer care number Webroot technical support phone number Webroot
-technical support number Webroot technical support number symantec technical
-support number Webroot antivirus technical support number Webroot locations
-Webroot online support Webroot helpdesk phone number Webroot customer care
-Webroot tech support phone number Webroot tech support phone number Webroot
-antivirus tech support phone number Webroot locations Webroot helpdesk phone
-number service Webroot com Webroot login Webroot technical support phone number
-Webroot customer service Webroot helpdesk phone number Webroot support
-telephone number Webroot support phone number Webroot antivirus support phone
-number Webroot support phone number Webroot locations Webroot customer service
-Webroot customer care Webroot helpdesk phone number Webroot customer support
-phone number Webroot customer support phone number Webroot antivirus customer
-support phone number Webroot antivirus customer service phone number Webroot
-antivirus technical support phone number Webroot antivirus tech support phone
-number Webroot antivirus phone number Webroot security center phone number
-Webroot support telephone number Webroot technical support phone number
-symantec technical support phone number Webroot tech support phone number apple
-technical support phone number usa microsoft technical support phone number usa
-Webroot technical support phone number usa Webroot technical support phone
-number usa lenovo technical support phone number usa epson technical support
-phone number usa Webroot technical support phone number call Webroot support
-chat with Webroot support Webroot customer support Webroot antivirus customer
-service number Webroot address Webroot call center Webroot helpline Webroot
-helpdesk Webroot support site Webroot telephone number for customer support
-Webroot customer service contact number Webroot customer care Webroot toll free
-number Webroot security contact number contact Webroot Webroot headquarters
-Webroot customer service chat Webroot customer service telephone number Webroot
-helpdesk phone number Webroot customer support Webroot customer service Webroot
-login Webroot locations Webroot customer service number Webroot locations
-Webroot customer service email address Webroot support site Webroot technical
-support phone number Webroot technical support live chat Webroot technical
-support email address Webroot technical support number Webroot technical
-support number symantec technical support number Webroot antivirus technical
-support number Webroot customer support phone number Webroot customer support
-number Webroot customer support number Webroot antivirus customer support
-number Webroot locations Webroot helpdesk phone number Webroot support phone
-number Webroot customer service helpdesk Webroot technical support phone number
-Webroot tech support phone number Webroot tech support number Webroot tech
-support number
+But ata_mselect_caching() contructs a tf?
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+tejun
