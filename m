@@ -1,51 +1,75 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: [PATCH 1/1] ipr: Wait to do async scan until scsi host is initialized
-Date: Tue, 26 Jul 2016 11:07:36 -0300
-Message-ID: <87d1m0o5lj.fsf@linux.vnet.ibm.com>
-References: <20160715194804.89BFD2803D@b01ledav001.gho.pok.ibm.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Tue, 26 Jul 2016 15:51:52 -0700
+Message-ID: <577bc6d5-9c78-b6d3-10f7-10626c0da516@sandisk.com>
+References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
+ <20160720140815.GA19045@redhat.com> <20160720142727.GA57399@redhat.com>
+ <1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
+ <20160720183321.GA20223@redhat.com>
+ <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
+ <20160725175344.GA23000@redhat.com> <20160725212325.GA23961@redhat.com>
+ <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
+ <20160726011607.GA77078@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:48252 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1755802AbcGZOHn (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 26 Jul 2016 10:07:43 -0400
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6QE3wEW091521
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2016 10:07:43 -0400
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24dsrngvex-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2016 10:07:42 -0400
-Received: from localhost
-	by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-	Tue, 26 Jul 2016 11:07:40 -0300
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-	by d24dlp01.br.ibm.com (Postfix) with ESMTP id DC8D2352006E
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2016 10:07:18 -0400 (EDT)
-Received: from d24av04.br.ibm.com (d24av04.br.ibm.com [9.8.31.97])
-	by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u6QE7bx94931638
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2016 11:07:37 -0300
-Received: from d24av04.br.ibm.com (localhost [127.0.0.1])
-	by d24av04.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u6QE7bTh011536
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Jul 2016 11:07:37 -0300
-In-Reply-To: <20160715194804.89BFD2803D@b01ledav001.gho.pok.ibm.com> (Brian
-	King's message of "Fri, 15 Jul 2016 14:48:03 -0500")
+Received: from mail-by2nam01on0055.outbound.protection.outlook.com ([104.47.34.55]:10608
+	"EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1754393AbcGZWwE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 26 Jul 2016 18:52:04 -0400
+In-Reply-To: <20160726011607.GA77078@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+On 07/25/2016 06:15 PM, Mike Snitzer wrote:
+> Please try this patch to see if it fixes your issue, thanks.
+> 
+> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> index 52baf8a..287caa7 100644
+> --- a/drivers/md/dm-mpath.c
+> +++ b/drivers/md/dm-mpath.c
+> @@ -433,10 +433,17 @@ failed:
+>   */
+>  static int must_push_back(struct multipath *m)
+>  {
+> -	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
+> -		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
+> -		  test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
+> -		 dm_noflush_suspending(m->ti)));
+> +	bool r;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&m->lock, flags);
+> +	r = (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
+> +	     ((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
+> +	       test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
+> +	      dm_noflush_suspending(m->ti)));
+> +	spin_unlock_irqrestore(&m->lock, flags);
+> +
+> +	return r;
+>  }
+>  
+>  /*
+ 
+Hello Mike,
 
-> When performing an async scan, make sure the kthread doing scanning
-> doesn't start before the scsi host is fully initialized.
->
+Thank you for having made this patch available. Unfortunately even
+with this patch applied I still see fio reporting I/O errors and the
+following text still appears in the system log immediately before the
+I/O errors are reported (due to debug statements I added in the device
+mapper; mpath 254:0 and mpathbe refer to the same dm device):
 
-Reviewed-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Jul 26 15:40:37 ion-dev-ib-ini kernel: mpath 254:0: queue_if_no_path 0 -> 1
+Jul 26 15:40:37 ion-dev-ib-ini kernel: executing DM ioctl DEV_SUSPEND on mpathbe
+Jul 26 15:40:37 ion-dev-ib-ini kernel: mpath 254:0: queue_if_no_path 1 -> 0
 
--- 
-Gabriel Krisman Bertazi
+BTW, I have not yet been able to determine which user space code
+triggers the DEV_SUSPEND ioctl. A condlog() call I had added just
+above dm_simplecmd_flush(DM_DEVICE_SUSPEND, mapname, 0) call in
+multipathd did not produce any output.
 
+Bart.
