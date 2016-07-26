@@ -1,93 +1,102 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Mon, 25 Jul 2016 21:16:07 -0400
-Message-ID: <20160726011607.GA77078@redhat.com>
-References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
- <20160720140815.GA19045@redhat.com>
- <20160720142727.GA57399@redhat.com>
- <1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
- <20160720183321.GA20223@redhat.com>
- <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
- <20160725175344.GA23000@redhat.com>
- <20160725212325.GA23961@redhat.com>
- <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA controller
+ hardware v1.1
+Date: Tue, 26 Jul 2016 14:50:57 +0530
+Message-ID: <1469524857-3720-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41297 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753755AbcGZBPu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 25 Jul 2016 21:15:50 -0400
-Content-Disposition: inline
-In-Reply-To: <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: devicetree@vger.kernel.org, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, ddutile@redhat.com, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 25 2016 at  6:00P -0400,
-Bart Van Assche <bart.vanassche@sandisk.com> wrote:
+This patch enables NCQ support for APM X-Gene SATA controller
+hardware v1.1 that was broken with hardware v1.0.
 
-> On 07/25/2016 02:23 PM, Mike Snitzer wrote:
-> >So I'd be curious to know if your debugging has enabled you to identify
-> >exactly where in the dm-mapth.c code the -EIO return is being
-> >established.  do_end_io() is the likely candidate -- but again the
-> >__must_push_back() check should prevent it and DM_ENDIO_REQUEUE should
-> >be returned.
-> 
-> Hello Mike,
-> 
-> Thanks for looking further into this. The pr_info() statement that I had
-> added in the following code block in __multipath_map() fired what told me
-> that the following code block triggered the -EIO return:
-> 
-> 	if (!pgpath) {
-> 		if (!must_push_back(m))
-> 			r = -EIO;	/* Failed */
-> 		pr_info("%s(): (a) returning %d\n", __func__, r);
-> 		return r;
-> 	}
-> 
-> From the system log:
-> 
-> kernel: mpath 254:0: queue_if_no_path 1 -> 0
-> kernel: __multipath_map(): (a) returning -5
-> 
-> The code that I had added in queue_if_no_path() is as follows:
-> 
-> 	old = test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
->         [ ... ]
-> 	pr_info("mpath %s: queue_if_no_path %d -> %d\n",
-> 		dm_device_name(dm_table_get_md(m->ti->table)), old,
-> 		queue_if_no_path);
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+---
+ drivers/ata/ahci_xgene.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-Hi Bart,
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 73b19b2..8b88be9 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -87,6 +87,7 @@
 
-Please try this patch to see if it fixes your issue, thanks.
+ enum xgene_ahci_version {
+ 	XGENE_AHCI_V1 = 1,
++	XGENE_AHCI_V1_1,
+ 	XGENE_AHCI_V2,
+ };
 
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 52baf8a..287caa7 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -433,10 +433,17 @@ failed:
-  */
- static int must_push_back(struct multipath *m)
- {
--	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
--		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
--		  test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
--		 dm_noflush_suspending(m->ti)));
-+	bool r;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&m->lock, flags);
-+	r = (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
-+	     ((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
-+	       test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
-+	      dm_noflush_suspending(m->ti)));
-+	spin_unlock_irqrestore(&m->lock, flags);
-+
-+	return r;
- }
- 
- /*
+@@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ #ifdef CONFIG_ACPI
+ static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+ 	{ "APMC0D0D", XGENE_AHCI_V1},
++	{ "APMC0D67", XGENE_AHCI_V1_1},
+ 	{ "APMC0D32", XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+
+ static const struct of_device_id xgene_ahci_of_match[] = {
+ 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
++	{.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
+ 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	const struct of_device_id *of_devid;
+ 	enum xgene_ahci_version version = XGENE_AHCI_V1;
+-	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
+-					      &xgene_ahci_v2_port_info };
++	const struct ata_port_info *ppi;
+ 	int rc;
+
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
+ 					__func__);
+ 				version = XGENE_AHCI_V1;
+-			} else if (info->valid & ACPI_VALID_CID) {
+-				version = XGENE_AHCI_V2;
+ 			}
+ 		}
+ 	}
+@@ -858,18 +858,20 @@ skip_clk_phy:
+
+ 	switch (version) {
+ 	case XGENE_AHCI_V1:
++		ppi = &xgene_ahci_v1_port_info;
+ 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
+ 		break;
+ 	case XGENE_AHCI_V2:
++		ppi = &xgene_ahci_v2_port_info;
+ 		hpriv->flags |= AHCI_HFLAG_YES_FBS;
+ 		hpriv->irq_handler = xgene_ahci_irq_intr;
+ 		break;
+ 	default:
++		ppi = &xgene_ahci_v1_port_info;
+ 		break;
+ 	}
+
+-	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
+-				     &ahci_platform_sht);
++	rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+
+--
+1.7.1
