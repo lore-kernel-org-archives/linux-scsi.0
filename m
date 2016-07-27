@@ -1,85 +1,36 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Wed, 27 Jul 2016 16:09:40 -0400
-Message-ID: <20160727200939.GA82654@redhat.com>
-References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
- <20160720140815.GA19045@redhat.com>
- <20160720142727.GA57399@redhat.com>
- <1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
- <20160720183321.GA20223@redhat.com>
- <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
- <20160725175344.GA23000@redhat.com>
- <20160725212325.GA23961@redhat.com>
- <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
- <20160726011607.GA77078@redhat.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
+ Control mode page
+Date: Thu, 28 Jul 2016 05:00:00 +0800
+Message-ID: <CAGnHSEnPM8tOs-hUk--Hb_bdgZVH+3UO4Pk+CFS-cQ4_gW8kww@mail.gmail.com>
+References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
+ <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
+ <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
+ <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
+ <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
+ <20160721212600.GF23759@htj.duckdns.org> <CAGnHSEnSQcxcaJopGnVusC9Q41qHKkdr4QQDmymFSxVEH6zvPQ@mail.gmail.com>
+ <20160725183055.GD19588@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:44470 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756830AbcG0UJQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2016 16:09:16 -0400
-Content-Disposition: inline
-In-Reply-To: <20160726011607.GA77078@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160725183055.GD19588@mtj.duckdns.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Arnd Bergmann <arnd@arndb.de>, Stephen Rothwell <sfr@canb.auug.org.au>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Mon, Jul 25 2016 at  9:16pm -0400,
-Mike Snitzer <snitzer@redhat.com> wrote:
- 
-> Hi Bart,
-> 
-> Please try this patch to see if it fixes your issue, thanks.
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 52baf8a..287caa7 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -433,10 +433,17 @@ failed:
->   */
->  static int must_push_back(struct multipath *m)
->  {
-> -	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
-> -		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
-> -		  test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
-> -		 dm_noflush_suspending(m->ti)));
-> +	bool r;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&m->lock, flags);
-> +	r = (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
-> +	     ((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
-> +	       test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
-> +	      dm_noflush_suspending(m->ti)));
-> +	spin_unlock_irqrestore(&m->lock, flags);
-> +
-> +	return r;
->  }
->  
->  /*
+Yes, because it touches an actual ATA drive setting, while D_SENSE is
+merely a "software setting" stored in dev->flags to make the kernel
+response differently when build sense data.
 
-In addition to the above patch, please apply this patch and retest your
-4.7 kernel:
-
-diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-index 287caa7..16583c1 100644
---- a/drivers/md/dm-mpath.c
-+++ b/drivers/md/dm-mpath.c
-@@ -1416,12 +1416,14 @@ static void multipath_postsuspend(struct dm_target *ti)
- static void multipath_resume(struct dm_target *ti)
- {
- 	struct multipath *m = ti->private;
-+	unsigned long flags;
- 
-+	spin_lock_irqsave(&m->lock, flags);
- 	if (test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags))
- 		set_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
- 	else
- 		clear_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
--	smp_mb__after_atomic();
-+	spin_unlock_irqrestore(&m->lock, flags);
- }
- 
- /*
+On 26 July 2016 at 02:30, Tejun Heo <tj@kernel.org> wrote:
+> On Fri, Jul 22, 2016 at 05:50:18AM +0800, Tom Yan wrote:
+>> As I've mentioned in the comment/message, there is no ATA command
+>> needed to be sent to the device, since it only toggles a bit in
+>> dev->flags. See that there is no ata_taskfile constructed in
+>> ata_mselect_control().
+>
+> But ata_mselect_caching() contructs a tf?
+>
+> --
+> tejun
