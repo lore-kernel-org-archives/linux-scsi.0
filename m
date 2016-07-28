@@ -1,88 +1,95 @@
-From: Calvin Owens <calvinowens@fb.com>
-Subject: [PATCH] mpt3sas: Ensure the connector_name string is NUL-terminated
-Date: Wed, 27 Jul 2016 21:45:51 -0700
-Message-ID: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Thu, 28 Jul 2016 09:33:46 -0400
+Message-ID: <20160728133346.GA12272@redhat.com>
+References: <20160720142727.GA57399@redhat.com>
+ <1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
+ <20160720183321.GA20223@redhat.com>
+ <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
+ <20160725175344.GA23000@redhat.com>
+ <20160725212325.GA23961@redhat.com>
+ <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
+ <20160726011607.GA77078@redhat.com>
+ <20160727200939.GA82654@redhat.com>
+ <dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:44143 "EHLO
-	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1750946AbcG1EqG (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 28 Jul 2016 00:46:06 -0400
-Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
-	by m0089730.ppops.net (8.16.0.11/8.16.0.11) with SMTP id u6S4k4nU032026
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2016 21:46:04 -0700
-Received: from mail.thefacebook.com ([199.201.64.23])
-	by m0089730.ppops.net with ESMTP id 24exkkngdg-1
-	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2016 21:46:04 -0700
-Received: from facebook.com (2401:db00:11:d0be:face:0:1b:0)	by
- mx-out.facebook.com (10.103.99.99) with ESMTP	id
- 2fc00c76547e11e68c730002c9dfb610-101f9af0 for <linux-scsi@vger.kernel.org>;
-	Wed, 27 Jul 2016 21:46:02 -0700
+Received: from mx1.redhat.com ([209.132.183.28]:55490 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1757264AbcG1Nds (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2016 09:33:48 -0400
+Content-Disposition: inline
+In-Reply-To: <dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Calvin Owens <calvinowens@fb.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-We blindly trust the hardware to give us NUL-terminated strings, which
-is a bad idea because it doesn't always do that. For example:
+On Wed, Jul 27 2016 at  7:05pm -0400,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-  [  481.184784] mpt3sas_cm0: 	enclosure level(0x0000), connector name(     \x3)
+> On 07/27/2016 01:09 PM, Mike Snitzer wrote:
+> > In addition to the above patch, please apply this patch and retest your
+> >4.7 kernel:
+> >
+> >diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> >index 287caa7..16583c1 100644
+> >--- a/drivers/md/dm-mpath.c
+> >+++ b/drivers/md/dm-mpath.c
+> >@@ -1416,12 +1416,14 @@ static void multipath_postsuspend(struct dm_target *ti)
+> > static void multipath_resume(struct dm_target *ti)
+> > {
+> > 	struct multipath *m = ti->private;
+> >+	unsigned long flags;
+> >
+> >+	spin_lock_irqsave(&m->lock, flags);
+> > 	if (test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags))
+> > 		set_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
+> > 	else
+> > 		clear_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
+> >-	smp_mb__after_atomic();
+> >+	spin_unlock_irqrestore(&m->lock, flags);
+> > }
+> >
+> > /*
+> 
+> Hello Mike,
+> 
+> Thanks again for having made this patch available. I will test it as
+> soon as I have the time. BTW, in the meantime I ran a few tests with
+> DM_MQ_DEFAULT=n since until now I ran all tests with
+> DM_MQ_DEFAULT=y. The result of these tests is as follows:
+> * v4.6.0, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=y: first simulated
+> path removal triggers I/O errors.
+> * v4.6.4, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=n: test passes more
+> than 100 iterations.
 
-In this case, connector_name is four spaces. We got lucky here because
-the 2nd byte beyond our character array happens to be a NUL. Fix this
-by explicitly writing '\0' to the end of the string to ensure we don't
-run off the edge of the world in printk().
+I think this may point to an SRP issue then.  Is the synthetic "cable
+pull" (by writing to /sys/class/srp_remote_ports/port-*/delete)
+representitive of what actually happens if a cable is physically pulled?
 
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++++----
- 2 files changed, 7 insertions(+), 5 deletions(-)
+Or is yur synthetic method hitting the device way harder than would
+happen with an actual production fault?
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 892c9be..eb7f5b0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -478,7 +478,7 @@ struct _sas_device {
- 	u8	pfa_led_on;
- 	u8	pend_sas_rphy_add;
- 	u8	enclosure_level;
--	u8	connector_name[4];
-+	u8	connector_name[5];
- 	struct kref refcount;
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index cd91a68..acabe48 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5380,8 +5380,9 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 			sas_device->enclosure_level =
- 				le16_to_cpu(sas_device_pg0.EnclosureLevel);
--			memcpy(&sas_device->connector_name[0],
--				&sas_device_pg0.ConnectorName[0], 4);
-+			memcpy(sas_device->connector_name,
-+				sas_device_pg0.ConnectorName, 4);
-+			sas_device->connector_name[4] = '\0';
- 		} else {
- 			sas_device->enclosure_level = 0;
- 			sas_device->connector_name[0] = '\0';
-@@ -5508,8 +5509,9 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- 	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 		sas_device->enclosure_level =
- 			le16_to_cpu(sas_device_pg0.EnclosureLevel);
--		memcpy(&sas_device->connector_name[0],
--			&sas_device_pg0.ConnectorName[0], 4);
-+		memcpy(sas_device->connector_name,
-+			sas_device_pg0.ConnectorName, 4);
-+		sas_device->connector_name[4] = '\0';
- 	} else {
- 		sas_device->enclosure_level = 0;
- 		sas_device->connector_name[0] = '\0';
--- 
-2.8.0.rc2
+Again, there hasn't been any report of failures (EIO or otherwise) with
+extensive scsi-mq and dm-mq testing on a larger FC testbed.
 
+> I have not yet run any tests with kernel v4.5.x because in the test
+> I ran the ib_srp and ib_srpt drivers are loaded on the same system
+> and because I need five v4.7 LIO patches to run this test pass but
+> unfortunately these patches do not apply cleanly on the v4.5.x code
+> base.
+> 
+> Please let me know if you need more information.
+
+Can the target core be made to use SRP in loopback (local test machine)
+mode?  The mptest harness currently defaults to using tcmloop.  Would be
+great if I could somehow exercise the SRP code without needing a
+fullblown IB setup.
+
+But if there isn't a way to achieve that test coverage I can
+probably/hopefully get access to a subset of a larger IB/SRP testbed.
+
+Please advise, thanks.
+Mike
