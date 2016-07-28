@@ -1,91 +1,88 @@
 From: Calvin Owens <calvinowens@fb.com>
-Subject: Re: [PATCH] ses: Fix racy cleanup of /sys in remove_dev()
-Date: Wed, 27 Jul 2016 18:04:12 -0700
-Message-ID: <617c5fc1-ecc5-c825-ecb9-eeae2b637dfd@fb.com>
-References: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
- <5750B821.7010600@fb.com>
- <20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
+Subject: [PATCH] mpt3sas: Ensure the connector_name string is NUL-terminated
+Date: Wed, 27 Jul 2016 21:45:51 -0700
+Message-ID: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:45704 "EHLO
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:44143 "EHLO
 	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1758277AbcG1BEZ (ORCPT
+	by vger.kernel.org with ESMTP id S1750946AbcG1EqG (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 27 Jul 2016 21:04:25 -0400
-In-Reply-To: <20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
+	Thu, 28 Jul 2016 00:46:06 -0400
+Received: from pps.filterd (m0089730.ppops.net [127.0.0.1])
+	by m0089730.ppops.net (8.16.0.11/8.16.0.11) with SMTP id u6S4k4nU032026
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2016 21:46:04 -0700
+Received: from mail.thefacebook.com ([199.201.64.23])
+	by m0089730.ppops.net with ESMTP id 24exkkngdg-1
+	(version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Jul 2016 21:46:04 -0700
+Received: from facebook.com (2401:db00:11:d0be:face:0:1b:0)	by
+ mx-out.facebook.com (10.103.99.99) with ESMTP	id
+ 2fc00c76547e11e68c730002c9dfb610-101f9af0 for <linux-scsi@vger.kernel.org>;
+	Wed, 27 Jul 2016 21:46:02 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com, Calvin Owens <calvinowens@fb.com>
 
-On 06/15/2016 01:24 PM, Calvin Owens wrote:
-> On Thursday 06/02 at 15:50 -0700, Calvin Owens wrote:
->> On 05/13/2016 01:28 PM, Calvin Owens wrote:
->>> Currently we free the resources backing the enclosure device before we
->>> call device_unregister(). This is racy: during rmmod of low-level SCSI
->>> drivers that hook into enclosure, we end up with a small window of time
->>> during which writing to /sys can OOPS. Example trace with mpt3sas:
->>
->> Ping?
->
-> Any thoughts? Squinting at this more it still seems racy, but a narrow race
-> is surely better than just blatantly freeing everything while the file is
-> still exposed in /sys? Is there a better way you'd prefer I accomplish this?
->
-> (I have boxes that OOPS all the time from monitoring code reading the /sys
-> files, with this patch I haven't seen a single one.)
->
-> Thanks,
-> Calvin
+We blindly trust the hardware to give us NUL-terminated strings, which
+is a bad idea because it doesn't always do that. For example:
 
-Ping? Thoughts, comments?
+  [  481.184784] mpt3sas_cm0: 	enclosure level(0x0000), connector name(     \x3)
 
->>>    general protection fault: 0000 [#1] SMP KASAN
->>>    Modules linked in: mpt3sas(-) <...>
->>>    RIP: [<ffffffffa0388a98>] ses_get_page2_descriptor.isra.6+0x38/0x220 [ses]
->>>    Call Trace:
->>>     [<ffffffffa0389d14>] ses_set_fault+0xf4/0x400 [ses]
->>>     [<ffffffffa0361069>] set_component_fault+0xa9/0xf0 [enclosure]
->>>     [<ffffffff8205bffc>] dev_attr_store+0x3c/0x70
->>>     [<ffffffff81677df5>] sysfs_kf_write+0x115/0x180
->>>     [<ffffffff81675725>] kernfs_fop_write+0x275/0x3a0
->>>     [<ffffffff8151f810>] __vfs_write+0xe0/0x3e0
->>>     [<ffffffff8152281f>] vfs_write+0x13f/0x4a0
->>>     [<ffffffff81526731>] SyS_write+0x111/0x230
->>>     [<ffffffff828b401b>] entry_SYSCALL_64_fastpath+0x13/0x94
->>>
->>> Fortunately the solution is extremely simple: call device_unregister()
->>> before we free the resources, and the race no longer exists. The driver
->>> core holds a reference over ->remove_dev(), so AFAICT this is safe.
->>>
->>> Signed-off-by: Calvin Owens <calvinowens@fb.com>
->>> ---
->>>   drivers/scsi/ses.c | 3 ++-
->>>   1 file changed, 2 insertions(+), 1 deletion(-)
->>>
->>> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
->>> index 53ef1cb..0e8601a 100644
->>> --- a/drivers/scsi/ses.c
->>> +++ b/drivers/scsi/ses.c
->>> @@ -778,6 +778,8 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
->>>   	if (!edev)
->>>   		return;
->>>
->>> +	enclosure_unregister(edev);
->>> +
->>>   	ses_dev = edev->scratch;
->>>   	edev->scratch = NULL;
->>>
->>> @@ -789,7 +791,6 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
->>>   	kfree(edev->component[0].scratch);
->>>
->>>   	put_device(&edev->edev);
->>> -	enclosure_unregister(edev);
->>>   }
->>>
->>>   static void ses_intf_remove(struct device *cdev,
->>>
->>
+In this case, connector_name is four spaces. We got lucky here because
+the 2nd byte beyond our character array happens to be a NUL. Fix this
+by explicitly writing '\0' to the end of the string to ensure we don't
+run off the edge of the world in printk().
+
+Signed-off-by: Calvin Owens <calvinowens@fb.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++++----
+ 2 files changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 892c9be..eb7f5b0 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -478,7 +478,7 @@ struct _sas_device {
+ 	u8	pfa_led_on;
+ 	u8	pend_sas_rphy_add;
+ 	u8	enclosure_level;
+-	u8	connector_name[4];
++	u8	connector_name[5];
+ 	struct kref refcount;
+ };
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index cd91a68..acabe48 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5380,8 +5380,9 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
+ 		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 			sas_device->enclosure_level =
+ 				le16_to_cpu(sas_device_pg0.EnclosureLevel);
+-			memcpy(&sas_device->connector_name[0],
+-				&sas_device_pg0.ConnectorName[0], 4);
++			memcpy(sas_device->connector_name,
++				sas_device_pg0.ConnectorName, 4);
++			sas_device->connector_name[4] = '\0';
+ 		} else {
+ 			sas_device->enclosure_level = 0;
+ 			sas_device->connector_name[0] = '\0';
+@@ -5508,8 +5509,9 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 		sas_device->enclosure_level =
+ 			le16_to_cpu(sas_device_pg0.EnclosureLevel);
+-		memcpy(&sas_device->connector_name[0],
+-			&sas_device_pg0.ConnectorName[0], 4);
++		memcpy(sas_device->connector_name,
++			sas_device_pg0.ConnectorName, 4);
++		sas_device->connector_name[4] = '\0';
+ 	} else {
+ 		sas_device->enclosure_level = 0;
+ 		sas_device->connector_name[0] = '\0';
+-- 
+2.8.0.rc2
 
