@@ -1,74 +1,91 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Wed, 27 Jul 2016 16:05:56 -0700
-Message-ID: <dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
-References: <4ed669ed-beae-76a8-b806-a284565b327a@sandisk.com>
-	<20160720140815.GA19045@redhat.com> <20160720142727.GA57399@redhat.com>
-	<1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
-	<20160720183321.GA20223@redhat.com>
-	<84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
-	<20160725175344.GA23000@redhat.com> <20160725212325.GA23961@redhat.com>
-	<1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
-	<20160726011607.GA77078@redhat.com> <20160727200939.GA82654@redhat.com>
+From: Calvin Owens <calvinowens@fb.com>
+Subject: Re: [PATCH] ses: Fix racy cleanup of /sys in remove_dev()
+Date: Wed, 27 Jul 2016 18:04:12 -0700
+Message-ID: <617c5fc1-ecc5-c825-ecb9-eeae2b637dfd@fb.com>
+References: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
+ <5750B821.7010600@fb.com>
+ <20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20160727200939.GA82654@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:45704 "EHLO
+	mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S1758277AbcG1BEZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 27 Jul 2016 21:04:25 -0400
+In-Reply-To: <20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 07/27/2016 01:09 PM, Mike Snitzer wrote:
->  In addition to the above patch, please apply this patch and retest your
-> 4.7 kernel:
+On 06/15/2016 01:24 PM, Calvin Owens wrote:
+> On Thursday 06/02 at 15:50 -0700, Calvin Owens wrote:
+>> On 05/13/2016 01:28 PM, Calvin Owens wrote:
+>>> Currently we free the resources backing the enclosure device before we
+>>> call device_unregister(). This is racy: during rmmod of low-level SCSI
+>>> drivers that hook into enclosure, we end up with a small window of time
+>>> during which writing to /sys can OOPS. Example trace with mpt3sas:
+>>
+>> Ping?
 >
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 287caa7..16583c1 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1416,12 +1416,14 @@ static void multipath_postsuspend(struct dm_target *ti)
->  static void multipath_resume(struct dm_target *ti)
->  {
->  	struct multipath *m = ti->private;
-> +	unsigned long flags;
+> Any thoughts? Squinting at this more it still seems racy, but a narrow race
+> is surely better than just blatantly freeing everything while the file is
+> still exposed in /sys? Is there a better way you'd prefer I accomplish this?
 >
-> +	spin_lock_irqsave(&m->lock, flags);
->  	if (test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags))
->  		set_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
->  	else
->  		clear_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
-> -	smp_mb__after_atomic();
-> +	spin_unlock_irqrestore(&m->lock, flags);
->  }
+> (I have boxes that OOPS all the time from monitoring code reading the /sys
+> files, with this patch I haven't seen a single one.)
 >
->  /*
+> Thanks,
+> Calvin
 
-Hello Mike,
+Ping? Thoughts, comments?
 
-Thanks again for having made this patch available. I will test it as 
-soon as I have the time. BTW, in the meantime I ran a few tests with 
-DM_MQ_DEFAULT=n since until now I ran all tests with DM_MQ_DEFAULT=y. 
-The result of these tests is as follows:
-* v4.6.0, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=y: first simulated path 
-removal triggers I/O errors.
-* v4.6.4, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=n: test passes more than 
-100 iterations.
+>>>    general protection fault: 0000 [#1] SMP KASAN
+>>>    Modules linked in: mpt3sas(-) <...>
+>>>    RIP: [<ffffffffa0388a98>] ses_get_page2_descriptor.isra.6+0x38/0x220 [ses]
+>>>    Call Trace:
+>>>     [<ffffffffa0389d14>] ses_set_fault+0xf4/0x400 [ses]
+>>>     [<ffffffffa0361069>] set_component_fault+0xa9/0xf0 [enclosure]
+>>>     [<ffffffff8205bffc>] dev_attr_store+0x3c/0x70
+>>>     [<ffffffff81677df5>] sysfs_kf_write+0x115/0x180
+>>>     [<ffffffff81675725>] kernfs_fop_write+0x275/0x3a0
+>>>     [<ffffffff8151f810>] __vfs_write+0xe0/0x3e0
+>>>     [<ffffffff8152281f>] vfs_write+0x13f/0x4a0
+>>>     [<ffffffff81526731>] SyS_write+0x111/0x230
+>>>     [<ffffffff828b401b>] entry_SYSCALL_64_fastpath+0x13/0x94
+>>>
+>>> Fortunately the solution is extremely simple: call device_unregister()
+>>> before we free the resources, and the race no longer exists. The driver
+>>> core holds a reference over ->remove_dev(), so AFAICT this is safe.
+>>>
+>>> Signed-off-by: Calvin Owens <calvinowens@fb.com>
+>>> ---
+>>>   drivers/scsi/ses.c | 3 ++-
+>>>   1 file changed, 2 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
+>>> index 53ef1cb..0e8601a 100644
+>>> --- a/drivers/scsi/ses.c
+>>> +++ b/drivers/scsi/ses.c
+>>> @@ -778,6 +778,8 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
+>>>   	if (!edev)
+>>>   		return;
+>>>
+>>> +	enclosure_unregister(edev);
+>>> +
+>>>   	ses_dev = edev->scratch;
+>>>   	edev->scratch = NULL;
+>>>
+>>> @@ -789,7 +791,6 @@ static void ses_intf_remove_enclosure(struct scsi_device *sdev)
+>>>   	kfree(edev->component[0].scratch);
+>>>
+>>>   	put_device(&edev->edev);
+>>> -	enclosure_unregister(edev);
+>>>   }
+>>>
+>>>   static void ses_intf_remove(struct device *cdev,
+>>>
+>>
 
-I have not yet run any tests with kernel v4.5.x because in the test I 
-ran the ib_srp and ib_srpt drivers are loaded on the same system and 
-because I need five v4.7 LIO patches to run this test pass but 
-unfortunately these patches do not apply cleanly on the v4.5.x code base.
-
-Please let me know if you need more information.
-
-Bart.
