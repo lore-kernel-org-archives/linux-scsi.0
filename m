@@ -1,101 +1,83 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
+From: Mike Snitzer <snitzer@redhat.com>
 Subject: Re: dm-mq and end_clone_request()
-Date: Thu, 28 Jul 2016 08:23:47 -0700
-Message-ID: <67c286b3-d3c9-9074-2c1a-e90383511fc6@sandisk.com>
-References: <20160720142727.GA57399@redhat.com>
-	<1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
-	<20160720183321.GA20223@redhat.com>
-	<84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
-	<20160725175344.GA23000@redhat.com> <20160725212325.GA23961@redhat.com>
-	<1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
-	<20160726011607.GA77078@redhat.com> <20160727200939.GA82654@redhat.com>
-	<dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
-	<20160728133346.GA12272@redhat.com>
+Date: Thu, 28 Jul 2016 11:40:22 -0400
+Message-ID: <20160728154022.GA12911@redhat.com>
+References: <20160720183321.GA20223@redhat.com>
+ <84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
+ <20160725175344.GA23000@redhat.com>
+ <20160725212325.GA23961@redhat.com>
+ <1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
+ <20160726011607.GA77078@redhat.com>
+ <20160727200939.GA82654@redhat.com>
+ <dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
+ <20160728133346.GA12272@redhat.com>
+ <67c286b3-d3c9-9074-2c1a-e90383511fc6@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20160728133346.GA12272@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:55406 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S932526AbcG1PkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 28 Jul 2016 11:40:24 -0400
+Content-Disposition: inline
+In-Reply-To: <67c286b3-d3c9-9074-2c1a-e90383511fc6@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/28/2016 06:33 AM, Mike Snitzer wrote:
-> On Wed, Jul 27 2016 at  7:05pm -0400,
-> Bart Van Assche <bart.vanassche@sandisk.com> wrote:
->> Thanks again for having made this patch available. I will test it as
->> soon as I have the time. BTW, in the meantime I ran a few tests with
->> DM_MQ_DEFAULT=n since until now I ran all tests with
->> DM_MQ_DEFAULT=y. The result of these tests is as follows:
->> * v4.6.0, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=y: first simulated
->> path removal triggers I/O errors.
->> * v4.6.4, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=n: test passes more
->> than 100 iterations.
->
-> I think this may point to an SRP issue then.  Is the synthetic "cable
-> pull" (by writing to /sys/class/srp_remote_ports/port-*/delete)
-> representitive of what actually happens if a cable is physically pulled?
->
-> Or is your synthetic method hitting the device way harder than would
-> happen with an actual production fault?
->
-> Again, there hasn't been any report of failures (EIO or otherwise) with
-> extensive scsi-mq and dm-mq testing on a larger FC testbed.
+On Thu, Jul 28 2016 at 11:23am -0400,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-Hello Mike,
+> On 07/28/2016 06:33 AM, Mike Snitzer wrote:
+> >On Wed, Jul 27 2016 at  7:05pm -0400,
+> >Bart Van Assche <bart.vanassche@sandisk.com> wrote:
+> >>Thanks again for having made this patch available. I will test it as
+> >>soon as I have the time. BTW, in the meantime I ran a few tests with
+> >>DM_MQ_DEFAULT=n since until now I ran all tests with
+> >>DM_MQ_DEFAULT=y. The result of these tests is as follows:
+> >>* v4.6.0, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=y: first simulated
+> >>path removal triggers I/O errors.
+> >>* v4.6.4, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=n: test passes more
+> >>than 100 iterations.
+> >
+> >I think this may point to an SRP issue then.  Is the synthetic "cable
+> >pull" (by writing to /sys/class/srp_remote_ports/port-*/delete)
+> >representitive of what actually happens if a cable is physically pulled?
+> >
+> >Or is your synthetic method hitting the device way harder than would
+> >happen with an actual production fault?
+> >
+> >Again, there hasn't been any report of failures (EIO or otherwise) with
+> >extensive scsi-mq and dm-mq testing on a larger FC testbed.
+> 
+> Hello Mike,
+> 
+> Sorry but I disagree that the ib_srp driver would be causing the EIO
+> errors because:
+> * All tests, including the tests that pass, were run with
+>   CONFIG_SCSI_MQ_DEFAULT=y in the kernel config. The same code paths
+>   were triggered in the ib_srp driver by all the tests
+>   (CONFIG_DM_MQ_DEFAULT=y and CONFIG_DM_MQ_DEFAULT=n).
+> * In my previous e-mails I have shown that the EIO error code is
+>   generated by the dm-mpath driver after all (SRP) paths have gone. So
+>   how could the ib_srp driver be involved?
+> 
+> There is an important difference between the SCSI FC drivers and
+> ib_srp: after dev_loss_tmo expires FC drivers call
+> scsi_remove_target() while the SRP transport layer triggers a call
+> of scsi_remove_host().
+> 
+> Both writing into /sys/class/srp_remote_ports/*/delete and pulling a
+> cable make the ib_srp driver call scsi_remove_host(). The only
+> difference is the timing. With the former method it is more likely
+> that the time between submitting I/O and calling scsi_remove_host()
+> is small.
 
-Sorry but I disagree that the ib_srp driver would be causing the EIO 
-errors because:
-* All tests, including the tests that pass, were run with
-   CONFIG_SCSI_MQ_DEFAULT=y in the kernel config. The same code paths
-   were triggered in the ib_srp driver by all the tests
-   (CONFIG_DM_MQ_DEFAULT=y and CONFIG_DM_MQ_DEFAULT=n).
-* In my previous e-mails I have shown that the EIO error code is
-   generated by the dm-mpath driver after all (SRP) paths have gone. So
-   how could the ib_srp driver be involved?
+Reality is I just need a testbed to reproduce.  This back and forth
+isn't really helping us converge on _why_ must_push_back() is returning
+false for your case.  I need to know what exactly is causing that method
+to return false in your case.
 
-There is an important difference between the SCSI FC drivers and ib_srp: 
-after dev_loss_tmo expires FC drivers call scsi_remove_target() while 
-the SRP transport layer triggers a call of scsi_remove_host().
-
-Both writing into /sys/class/srp_remote_ports/*/delete and pulling a
-cable make the ib_srp driver call scsi_remove_host(). The only 
-difference is the timing. With the former method it is more likely that 
-the time between submitting I/O and calling scsi_remove_host() is small.
-
->> I have not yet run any tests with kernel v4.5.x because in the test
->> I ran the ib_srp and ib_srpt drivers are loaded on the same system
->> and because I need five v4.7 LIO patches to run this test pass but
->> unfortunately these patches do not apply cleanly on the v4.5.x code
->> base.
->>
->> Please let me know if you need more information.
->
-> Can the target core be made to use SRP in loopback (local test machine)
-> mode?  The mptest harness currently defaults to using tcmloop.  Would be
-> great if I could somehow exercise the SRP code without needing a
-> fullblown IB setup.
->
-> But if there isn't a way to achieve that test coverage I can
-> probably/hopefully get access to a subset of a larger IB/SRP testbed.
-
-All InfiniBand HCAs that I have encountered so far support loopback as 
-long as at least one HCA port is up (either connected to a switch or 
-connected to another HCA port and opensm is running against one of these 
-two ports).
-
-The scripts I used to test the ib_srp driver are available at 
-https://github.com/bvanassche/srp-test.
-
-Thanks,
-
-Bart.
+As is, hard to see why blk-mq vs .request_fn interface for DM mpath
+device would cause must_push_back() to return false vs true.
