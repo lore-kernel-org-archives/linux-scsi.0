@@ -1,61 +1,101 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH] lpfc: Fix possible NULL pointer dereference
-Date: Thu, 28 Jul 2016 07:58:38 -0700
-Message-ID: <f76e1ffb-1642-1e7f-ccc8-a45c8fc13aa9@broadcom.com>
-References: <1465995608-53252-1-git-send-email-jthumshirn@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Thu, 28 Jul 2016 08:23:47 -0700
+Message-ID: <67c286b3-d3c9-9074-2c1a-e90383511fc6@sandisk.com>
+References: <20160720142727.GA57399@redhat.com>
+	<1ca6d31d-f175-9daa-9ddd-17d653851ceb@sandisk.com>
+	<20160720183321.GA20223@redhat.com>
+	<84d9dc64-0c10-ed1a-7bc1-e656874853a5@sandisk.com>
+	<20160725175344.GA23000@redhat.com> <20160725212325.GA23961@redhat.com>
+	<1490356d-2c0e-d94a-7a88-5e8bc89953ef@sandisk.com>
+	<20160726011607.GA77078@redhat.com> <20160727200939.GA82654@redhat.com>
+	<dd513a39-eb62-cc3c-d214-e4eca5e65a4e@sandisk.com>
+	<20160728133346.GA12272@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"; Format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:34201 "EHLO
-	mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932377AbcG1O6m (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2016 10:58:42 -0400
-Received: by mail-qk0-f177.google.com with SMTP id o67so64889664qke.1
-        for <linux-scsi@vger.kernel.org>; Thu, 28 Jul 2016 07:58:42 -0700 (PDT)
-In-Reply-To: <1465995608-53252-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <20160728133346.GA12272@redhat.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: device-mapper development <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 
-This patch is good. Thanks
-
--- james
-
-Signed-off-by: James Smart  <james.smart@broadcom.com>
-
-
-On 6/15/2016 6:00 AM, Johannes Thumshirn wrote:
-> Check for the existance of pciob->vport before accessing it.
+On 07/28/2016 06:33 AM, Mike Snitzer wrote:
+> On Wed, Jul 27 2016 at  7:05pm -0400,
+> Bart Van Assche <bart.vanassche@sandisk.com> wrote:
+>> Thanks again for having made this patch available. I will test it as
+>> soon as I have the time. BTW, in the meantime I ran a few tests with
+>> DM_MQ_DEFAULT=n since until now I ran all tests with
+>> DM_MQ_DEFAULT=y. The result of these tests is as follows:
+>> * v4.6.0, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=y: first simulated
+>> path removal triggers I/O errors.
+>> * v4.6.4, v4.6.5 and v4.7.0 with DM_MQ_DEFAULT=n: test passes more
+>> than 100 iterations.
 >
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/lpfc/lpfc_sli.c | 13 ++++---------
->   1 file changed, 4 insertions(+), 9 deletions(-)
+> I think this may point to an SRP issue then.  Is the synthetic "cable
+> pull" (by writing to /sys/class/srp_remote_ports/port-*/delete)
+> representitive of what actually happens if a cable is physically pulled?
 >
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 70edf21..134078f 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -1329,15 +1329,10 @@ lpfc_sli_ringtxcmpl_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
->   	if ((unlikely(pring->ringno == LPFC_ELS_RING)) &&
->   	   (piocb->iocb.ulpCommand != CMD_ABORT_XRI_CN) &&
->   	   (piocb->iocb.ulpCommand != CMD_CLOSE_XRI_CN) &&
-> -	 (!(piocb->vport->load_flag & FC_UNLOADING))) {
-> -		if (!piocb->vport)
-> -			BUG();
-> -		else
-> -			mod_timer(&piocb->vport->els_tmofunc,
-> -				jiffies +
-> -				msecs_to_jiffies(1000 * (phba->fc_ratov << 1)));
-> -	}
-> -
-> +	    piocb->vport && !(piocb->vport->load_flag & FC_UNLOADING))
-> +		mod_timer(&piocb->vport->els_tmofunc,
-> +			  jiffies +
-> +			  msecs_to_jiffies(1000 * (phba->fc_ratov << 1)));
->   
->   	return 0;
->   }
+> Or is your synthetic method hitting the device way harder than would
+> happen with an actual production fault?
+>
+> Again, there hasn't been any report of failures (EIO or otherwise) with
+> extensive scsi-mq and dm-mq testing on a larger FC testbed.
 
+Hello Mike,
+
+Sorry but I disagree that the ib_srp driver would be causing the EIO 
+errors because:
+* All tests, including the tests that pass, were run with
+   CONFIG_SCSI_MQ_DEFAULT=y in the kernel config. The same code paths
+   were triggered in the ib_srp driver by all the tests
+   (CONFIG_DM_MQ_DEFAULT=y and CONFIG_DM_MQ_DEFAULT=n).
+* In my previous e-mails I have shown that the EIO error code is
+   generated by the dm-mpath driver after all (SRP) paths have gone. So
+   how could the ib_srp driver be involved?
+
+There is an important difference between the SCSI FC drivers and ib_srp: 
+after dev_loss_tmo expires FC drivers call scsi_remove_target() while 
+the SRP transport layer triggers a call of scsi_remove_host().
+
+Both writing into /sys/class/srp_remote_ports/*/delete and pulling a
+cable make the ib_srp driver call scsi_remove_host(). The only 
+difference is the timing. With the former method it is more likely that 
+the time between submitting I/O and calling scsi_remove_host() is small.
+
+>> I have not yet run any tests with kernel v4.5.x because in the test
+>> I ran the ib_srp and ib_srpt drivers are loaded on the same system
+>> and because I need five v4.7 LIO patches to run this test pass but
+>> unfortunately these patches do not apply cleanly on the v4.5.x code
+>> base.
+>>
+>> Please let me know if you need more information.
+>
+> Can the target core be made to use SRP in loopback (local test machine)
+> mode?  The mptest harness currently defaults to using tcmloop.  Would be
+> great if I could somehow exercise the SRP code without needing a
+> fullblown IB setup.
+>
+> But if there isn't a way to achieve that test coverage I can
+> probably/hopefully get access to a subset of a larger IB/SRP testbed.
+
+All InfiniBand HCAs that I have encountered so far support loopback as 
+long as at least one HCA port is up (either connected to a switch or 
+connected to another HCA port and opensm is running against one of these 
+two ports).
+
+The scripts I used to test the ib_srp driver are available at 
+https://github.com/bvanassche/srp-test.
+
+Thanks,
+
+Bart.
