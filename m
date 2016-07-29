@@ -1,28 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/3] nvme-fabrics: rework nvmf_get_address() for variable
- options
-Date: Fri, 29 Jul 2016 10:53:44 +0200
-Message-ID: <20160729085344.gn5znmczwyxqauum@c203.arch.suse.de>
-References: <579a9c99.RE/wCYn5/6zl6dPY%james.smart@broadcom.com>
+Subject: Re: [PATCH 2/3] nvme-fabrics: revise host transport option
+ descriptions
+Date: Fri, 29 Jul 2016 10:54:18 +0200
+Message-ID: <20160729085418.s7p77m63sqcfisz7@c203.arch.suse.de>
+References: <579a9c9a.hlvHI7SZaXIxRR5X%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: QUOTED-PRINTABLE
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47879 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47902 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750806AbcG2Ixq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2016 04:53:46 -0400
+	id S1752323AbcG2IyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2016 04:54:19 -0400
 Content-Disposition: inline
-In-Reply-To: <579a9c99.RE/wCYn5/6zl6dPY%james.smart@broadcom.com>
+In-Reply-To: <579a9c9a.hlvHI7SZaXIxRR5X%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On Thu, Jul 28, 2016 at 05:00:25PM -0700, James Smart wrote:
+On Thu, Jul 28, 2016 at 05:00:26PM -0700, James Smart wrote:
 >=20
-> Revise nvmf_get_address() string to account for not all options being
-> present.
+> Revise some of the comments so not so ethernet-network centric
 >=20
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 
