@@ -1,38 +1,36 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH -next] ipr: Fix error return code in ipr_probe_ioa()
-Date: Fri, 29 Jul 2016 14:53:06 -0500
-Message-ID: <579BB422.4040906@linux.vnet.ibm.com>
-References: <1469808045-1821-1-git-send-email-weiyj.lk@gmail.com>
+From: J Freyensee <james_p_freyensee@linux.intel.com>
+Subject: Re: [PATCH 1/5] nvme-fabrics: Add FC transport FC-NVME definitions
+Date: Fri, 29 Jul 2016 15:10:24 -0700
+Message-ID: <1469830224.12212.45.camel@linux.intel.com>
+References: <5792b91b.a6nfpeRWWVF/YKnV%james.smart@broadcom.com>
+	 <20160725085614.kznrxuhbs2y34meg@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:5326 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1751482AbcG2TxL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 29 Jul 2016 15:53:11 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u6TJmodO012125
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2016 15:53:10 -0400
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24fmh2ta5k-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2016 15:53:10 -0400
-Received: from localhost
-	by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-	Fri, 29 Jul 2016 13:53:09 -0600
-In-Reply-To: <1469808045-1821-1-git-send-email-weiyj.lk@gmail.com>
+Received: from mga11.intel.com ([192.55.52.93]:42504 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751451AbcG2WK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 29 Jul 2016 18:10:27 -0400
+In-Reply-To: <20160725085614.kznrxuhbs2y34meg@c203.arch.suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 
-Acked-by: Brian King <brking@linux.vnet.ibm.com>
+On Mon, 2016-07-25 at 10:56 +0200, Johannes Thumshirn wrote:
+> On Fri, Jul 22, 2016 at 05:23:55PM -0700, James Smart wrote:
+> > 
+> > nvme-fabrics: Add FC transport FC-NVME definitions:
+> > - Formats for Cmd, Data, Rsp IUs
+> > - Formats FC-4 LS definitions
+> > 
+> > 
+> > Signed-off-by: James Smart <james.smart@broadcom.com>
+> 
+> Acked-by: Johannes Thumshirn <jth@kernel.org>
 
--- 
-Brian King
-Power Linux I/O
-IBM Linux Technology Center
 
+Acked-by: Jay Freyensee <james_p_freyensee@linux.intel.com>
+
+> 
