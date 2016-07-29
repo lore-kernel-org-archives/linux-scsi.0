@@ -1,49 +1,40 @@
 From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] fcoe: add missing destroy_workqueue() on error in fcoe_init()
-Date: Fri, 29 Jul 2016 15:54:48 +0000
-Message-ID: <1469807688-32470-1-git-send-email-weiyj.lk@gmail.com>
+Subject: [PATCH -next] ipr: Fix error return code in ipr_probe_ioa()
+Date: Fri, 29 Jul 2016 16:00:45 +0000
+Message-ID: <1469808045-1821-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ISO-8859-1
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f67.google.com ([209.85.220.67]:34581 "EHLO
-	mail-pa0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751563AbcG2Pyy (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2016 11:54:54 -0400
-Received: by mail-pa0-f67.google.com with SMTP id hh10so5443144pac.1
-        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2016 08:54:54 -0700 (PDT)
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:33278 "EHLO
+	mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751563AbcG2QAv (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 29 Jul 2016 12:00:51 -0400
+Received: by mail-pf0-f193.google.com with SMTP id i6so5671795pfe.0
+        for <linux-scsi@vger.kernel.org>; Fri, 29 Jul 2016 09:00:51 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org
+To: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Wei Yongjun <weiyj.lk@gmail.com>, linux-scsi@vger.kernel.org
 
-Add the missing destroy_workqueue() before return from fcoe_init()
-in the fcoe transport register failed error handling case.
+Fix to return error code -ENOMEM from the workqueue alloc error
+handling case instead of 0, as done elsewhere in this function.
 
 Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
 ---
- drivers/scsi/fcoe/fcoe.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/ipr.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 197dc62..9bd41a3 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2495,7 +2495,7 @@ static int __init fcoe_init(void)
- 	if (rc) {
- 		printk(KERN_ERR "failed to register an fcoe transport, check "
- 			"if libfcoe is loaded\n");
--		return rc;
-+		goto out_destroy;
- 	}
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 95e4834..bf85974 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -10219,6 +10219,7 @@ static int ipr_probe_ioa(struct pci_dev *pdev,
  
- 	mutex_lock(&fcoe_config_mutex);
-@@ -2518,6 +2518,7 @@ static int __init fcoe_init(void)
- 
- out_free:
- 	mutex_unlock(&fcoe_config_mutex);
-+out_destroy:
- 	destroy_workqueue(fcoe_wq);
- 	return rc;
- }
+ 		if (!ioa_cfg->reset_work_q) {
+ 			dev_err(&pdev->dev, "Couldn't register reset workqueue\n");
++			rc = -ENOMEM;
+ 			goto out_free_irq;
+ 		}
+ 	} else
 
