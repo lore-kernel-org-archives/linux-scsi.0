@@ -1,24 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] lpfc: Fix possible NULL pointer dereference
-Date: Thu, 28 Jul 2016 21:21:47 -0400
-Message-ID: <yq1twf92q8k.fsf@sermon.lab.mkp.net>
-References: <1465995608-53252-1-git-send-email-jthumshirn@suse.de>
-	<f76e1ffb-1642-1e7f-ccc8-a45c8fc13aa9@broadcom.com>
+Subject: Re: [PATCH] ses: Fix racy cleanup of /sys in remove_dev()
+Date: Thu, 28 Jul 2016 21:23:26 -0400
+Message-ID: <yq1popx2q5t.fsf@sermon.lab.mkp.net>
+References: <4912ec551a8ec01181cc3e7ad1e01d3d36758810.1463170976.git.calvinowens@fb.com>
+	<5750B821.7010600@fb.com>
+	<20160615202416.GA52103@calvinowens-mba.dhcp.thefacebook.com>
+	<617c5fc1-ecc5-c825-ecb9-eeae2b637dfd@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <f76e1ffb-1642-1e7f-ccc8-a45c8fc13aa9@broadcom.com> (James
-	Smart's message of "Thu, 28 Jul 2016 07:58:38 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:38288 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752143AbcG2BXg (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 28 Jul 2016 21:23:36 -0400
+In-Reply-To: <617c5fc1-ecc5-c825-ecb9-eeae2b637dfd@fb.com> (Calvin Owens's
+	message of "Wed, 27 Jul 2016 18:04:12 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Calvin Owens <calvinowens@fb.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "James" == James Smart <james.smart@broadcom.com> writes:
+>>>>> "Calvin" == Calvin Owens <calvinowens@fb.com> writes:
 
-James> This patch is good.
+>> Any thoughts? Squinting at this more it still seems racy, but a
+>> narrow race is surely better than just blatantly freeing everything
+>> while the file is still exposed in /sys? Is there a better way you'd
+>> prefer I accomplish this?
+>> 
+>> (I have boxes that OOPS all the time from monitoring code reading the
+>> /sys files, with this patch I haven't seen a single one.)
 
-Johannes: You were going to tweak a few things and resubmit. Please do.
+Calvin> Ping? Thoughts, comments?
+
+James: This is your puppy...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
