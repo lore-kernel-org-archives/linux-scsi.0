@@ -1,94 +1,134 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v6 0/2] Block layer support ZAC/ZBC commands
-Date: Mon, 1 Aug 2016 12:07:41 -0500
-Message-ID: <CAJVOszCAb4o5LWpJL8Yd66n9jPvy+EMQX2Xfr6awZCxfGJf_CA@mail.gmail.com>
-References: <1469818955-20568-1-git-send-email-shaun@tancheff.com> <20160801094116.GB14677@lst.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Mon, 1 Aug 2016 13:59:48 -0400
+Message-ID: <20160801175948.GA6685@redhat.com>
+References: <20160720183321.GA20223@redhat.com>
+ <317679447.7168375.1469729769593.JavaMail.zimbra@redhat.com>
+ <6880321d-e14f-169b-d100-6e460dd9bd09@sandisk.com>
+ <1110327939.7305916.1469819453678.JavaMail.zimbra@redhat.com>
+ <a5c1a149-b1a2-b5a4-2207-bdaf32db3cbd@sandisk.com>
+ <757522831.7667712.1470059860543.JavaMail.zimbra@redhat.com>
+ <536022978.7668211.1470060125271.JavaMail.zimbra@redhat.com>
+ <931235537.7668834.1470060339483.JavaMail.zimbra@redhat.com>
+ <1264951811.7684268.1470065187014.JavaMail.zimbra@redhat.com>
+ <17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:12291 "EHLO
-	mx0a-000cda01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1754160AbcHARIm convert rfc822-to-8bit
-	(ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 1 Aug 2016 13:08:42 -0400
-Received: from pps.filterd (m0075032.ppops.net [127.0.0.1])
-	by mx0b-00003501.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u71H6nu7045402
-	for <linux-scsi@vger.kernel.org>; Mon, 1 Aug 2016 13:08:01 -0400
-Received: from mail-ua0-f200.google.com (mail-ua0-f200.google.com [209.85.217.200])
-	by mx0b-00003501.pphosted.com with ESMTP id 24j7jqryge-23
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2016 13:08:01 -0400
-Received: by mail-ua0-f200.google.com with SMTP id n59so177385193uan.1
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Aug 2016 10:08:01 -0700 (PDT)
-In-Reply-To: <20160801094116.GB14677@lst.de>
+Received: from mx1.redhat.com ([209.132.183.28]:46508 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1754214AbcHAR7u (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Aug 2016 13:59:50 -0400
+Content-Disposition: inline
+In-Reply-To: <17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Shaun Tancheff <shaun@tancheff.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.de>, Damien Le Moal <damien.lemoal@hgst.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Laurence Oberman <loberman@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-On Mon, Aug 1, 2016 at 4:41 AM, Christoph Hellwig <hch@lst.de> wrote:
->
-> Can you please integrate this with Hannes series so that it uses
-> his cache of the zone information?
+With this debug patch ontop of v4.7:
 
-Adding Hannes and Damien to Cc.
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 52baf8a..22baf29 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -433,10 +433,22 @@ failed:
+  */
+ static int must_push_back(struct multipath *m)
+ {
++	bool queue_if_no_path = test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags);
++	bool suspend_active = (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
++			       test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags));
++	bool suspending = (suspend_active && dm_noflush_suspending(m->ti));
++
++#if 0
+ 	return (test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) ||
+ 		((test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags) !=
+ 		  test_bit(MPATHF_SAVED_QUEUE_IF_NO_PATH, &m->flags)) &&
+ 		 dm_noflush_suspending(m->ti)));
++#else
++	if (!queue_if_no_path || !suspending)
++		DMERR_LIMIT("%s: queue_if_no_path=%d suspend_active=%d suspending=%d",
++			    __func__, queue_if_no_path, suspend_active, suspending);
++	return (queue_if_no_path || suspending);
++#endif
+ }
+ 
+ /*
+@@ -459,7 +471,7 @@ static int __multipath_map(struct dm_target *ti, struct request *clone,
+ 		pgpath = choose_pgpath(m, nr_bytes);
+ 
+ 	if (!pgpath) {
+-		if (!must_push_back(m))
++		if (WARN_ON_ONCE(!must_push_back(m)))
+ 			r = -EIO;	/* Failed */
+ 		return r;
+ 	} else if (test_bit(MPATHF_QUEUE_IO, &m->flags) ||
+@@ -1347,7 +1359,7 @@ static int do_end_io(struct multipath *m, struct request *clone,
+ 
+ 	if (!atomic_read(&m->nr_valid_paths)) {
+ 		if (!test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags)) {
+-			if (!must_push_back(m))
++			if (WARN_ON_ONCE(!must_push_back(m)))
+ 				r = -EIO;
+ 		} else {
+ 			if (error == -EBADE)
 
-Christoph,
+I got:
 
-I can make a patch the marshal Hannes' RB-Tree into to a block report, that is
-quite simple. I can even have the open/close/reset zone commands update the
-RB-Tree .. the non-private parts anyway. I would prefer to do this around the
-CONFIG_SD_ZBC support, offering the existing type of patch for setups that do
-not need the RB-Tree to function with zoned media.
+Aug  1 13:41:48 client kernel: blk_update_request: I/O error, dev sdbf, sector 34376
+Aug  1 13:41:48 client kernel: blk_update_request: I/O error, dev sdbf, sector 183608
+Aug  1 13:41:48 client kernel: device-mapper: multipath: Failing path 67:144.
+Aug  1 13:41:48 client kernel: blk_update_request: I/O error, dev sdbf, sector 237352
+Aug  1 13:41:48 client kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=1
+Aug  1 13:41:48 client kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=1
+Aug  1 13:41:48 client kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=1
+Aug  1 13:41:48 client kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=1
+Aug  1 13:41:48 client kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=0
+Aug  1 13:41:48 client kernel: ------------[ cut here ]------------
+Aug  1 13:41:48 client kernel: WARNING: CPU: 10 PID: 6445 at drivers/md/dm-mpath.c:474 __multipath_map.isra.11+0xb7/0x240 [dm_multipath]
+Aug  1 13:41:48 client kernel: Modules linked in: dm_round_robin(O) xt_CHECKSUM ipt_MASQUERADE nf_nat_masquerade_ipv4 tun ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw iptable_filter rpcrdma ib_isert iscsi_target_mod target_core_mod ib_iser libiscsi scsi_transport_iscsi ib_srp scsi_transport_srp ib_ipoib rdma_ucm ib_ucm ib_uverbs ib_umad rdma_cm ib_cm iw_cm intel_powerclamp coretemp kvm_intel kvm irqbypass crct10dif_pclmul crc32_pclmul ghash_c
+ lmulni_intel aesni_intel glue_helper
+Aug  1 13:41:48 client kernel: lrw gf128mul ablk_helper cryptd ipmi_ssif iTCO_wdt iTCO_vendor_support sg ipmi_si hpilo pcspkr ipmi_msghandler acpi_power_meter hpwdt lpc_ich shpchp i7core_edac mfd_core edac_core pcc_cpufreq acpi_cpufreq nfsd auth_rpcgss nfs_acl lockd grace sunrpc dm_multipath(O) ip_tables xfs libcrc32c mlx5_ib ib_core sd_mod radeon i2c_algo_bit drm_kms_helper syscopyarea sysfillrect mlx5_core sysimgblt fb_sys_fops ttm drm crc32c_intel serio_raw bnx2 hpsa i2c_core ptp pps_core scsi_transport_sas dm_mod(O) [last unloaded: dm_log]
+Aug  1 13:41:48 client kernel: CPU: 10 PID: 6445 Comm: kworker/10:1H Tainted: G          IO    4.7.0.snitm #1
+Aug  1 13:41:48 client kernel: Hardware name: HP ProLiant DL380 G7, BIOS P67 08/16/2015
+Aug  1 13:41:48 client kernel: Workqueue: kblockd blk_mq_requeue_work
+Aug  1 13:41:48 client kernel: 0000000000000286 000000008737cd27 ffff880607ecfbb8 ffffffff8134259f
+Aug  1 13:41:48 client kernel: 0000000000000000 0000000000000000 ffff880607ecfbf8 ffffffff81088fb1
+Aug  1 13:41:48 client kernel: 000001da00000000 ffff880bd0393100 0000000000000000 0000000000000000
+Aug  1 13:41:48 client kernel: Call Trace:
+Aug  1 13:41:48 client kernel: [<ffffffff8134259f>] dump_stack+0x63/0x84
+Aug  1 13:41:48 client kernel: [<ffffffff81088fb1>] __warn+0xd1/0xf0
+Aug  1 13:41:48 client kernel: [<ffffffff810890ed>] warn_slowpath_null+0x1d/0x20
+Aug  1 13:41:48 client kernel: [<ffffffffa0104e27>] __multipath_map.isra.11+0xb7/0x240 [dm_multipath]
+Aug  1 13:41:48 client kernel: [<ffffffffa0104fca>] multipath_clone_and_map+0x1a/0x20 [dm_multipath]
+Aug  1 13:41:48 client kernel: [<ffffffffa0002242>] map_request+0xd2/0x240 [dm_mod]
+Aug  1 13:41:48 client kernel: [<ffffffffa000407e>] dm_mq_queue_rq+0x7e/0x110 [dm_mod]
+Aug  1 13:41:48 client kernel: [<ffffffff81320d32>] __blk_mq_run_hw_queue+0x1f2/0x370
+Aug  1 13:41:48 client kernel: [<ffffffff81320b25>] blk_mq_run_hw_queue+0x95/0xb0
+Aug  1 13:41:48 client kernel: [<ffffffff81322438>] ? blk_mq_insert_request+0x88/0xc0
+Aug  1 13:41:48 client kernel: [<ffffffff81321ba5>] blk_mq_start_hw_queue+0x15/0x20
+Aug  1 13:41:48 client kernel: [<ffffffff81321be2>] blk_mq_start_hw_queues+0x32/0x50
+Aug  1 13:41:48 client kernel: [<ffffffff813229e5>] blk_mq_requeue_work+0x115/0x140
+Aug  1 13:41:48 client kernel: [<ffffffff810a1e72>] process_one_work+0x152/0x400
+Aug  1 13:41:48 client kernel: [<ffffffff810a2765>] worker_thread+0x125/0x4b0
+Aug  1 13:41:48 client kernel: [<ffffffff810a2640>] ? rescuer_thread+0x380/0x380
+Aug  1 13:41:48 client kernel: [<ffffffff810a8298>] kthread+0xd8/0xf0
+Aug  1 13:41:48 client kernel: [<ffffffff816ba17f>] ret_from_fork+0x1f/0x40
+Aug  1 13:41:48 client kernel: [<ffffffff810a81c0>] ? kthread_park+0x60/0x60
+Aug  1 13:41:48 client kernel: ---[ end trace 1be159facc3adabe ]---
+Aug  1 13:41:48 client kernel: blk_update_request: I/O error, dev dm-28, sector 267144
+Aug  1 13:41:48 client multipathd: 360001ff0b035d0000000001a8d8a001b: load table [0 62277025792 multipath 1 queue_if_no_path 0 0 0]
+Aug  1 13:41:48 client multipathd: 360001ff0b035d0000000001a8d8a001b: Entering recovery mode: max_retries=12
 
-I do still have concerns with the approach which I have shared in smaller
-forums but perhaps I have to bring them to this group.
+This says to me that must_push_back is returning false because
+dm_noflush_suspending() is false.  When this happens -EIO will escape up
+the IO stack.
 
-First is the memory consumption. This isn't really much of a concern for large
-servers with few drives but I think the embedded NAS market will grumble as
-well as the large data pods trying to stuff 300+ drives in a chassis.
+And this confirms that must_push_back() calling dm_noflush_suspending()
+is quite suspect given queue_if_no_path was configured: we should
+_always_ pushback if no paths are available.
 
-As of now the RB-Tree needs to hold ~30000 zones.
-sizeof() reports struct blk_zone to use 120 bytes on x86_64. This yields
-around 3.5 MB per zoned drive attached.
-Which is fine if it is really needed, but most of it is fixed information
-and it can be significantly condensed (I have proposed 8 bytes per zone held
-in an array as more than adequate). Worse is that the crucial piece of
-information, the current wp needed for scheduling the next write, is mostly
-out of date because it is updated only after the write completes and zones
-being actively written to must work off of the last location / size that was
-submitted, not completed. The work around is for that tracking to be handled
-in the private_data member. I am not saying that updating the wp on
-completing a write isn’t important, I am saying that the bi_end_io hook is
-the existing hook that works just fine.
-
-This all tails into domain responsability. With the RB-Tree doing half of the
-work and the ‘responsible’ domain handling the active path via private_data
-why have the split at all? It seems to be a double work to have second object
-tracking the first so that I/O scheduling can function.
-
-Finally is the error handling path when the RB-Tree encounters and error it
-attempts to requery the drive topology virtually guaranteeing that the
-private_data is now out-of-sync with the RB-Tree. Again this is something
-that can be better encapsulated in the bi_end_io to be informed of the
-failed I/O and schedule the appropriate recovery (including re-querying the
-zone information of the affected zone(s)).
-
-Anyway those are my concerns and why I am still reluctant to drop this line of
-support. I have incorporated Hannes changes at various points. Hence the
-SCT Write Same to attempt to work around some of the flaws in mapping
-discard to reset write pointer.
-
-Thanks and Regards,
-Shaun
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_majordomo-2Dinfo.html&d=CwIBAg&c=IGDlg0lD0b-nebmJJ0Kp8A&r=Wg5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3WVYGOrWzA&m=0ZPyN4vfYZXSmuCmIm3wpExF1K28PYO9KmgcqDsfQBg&s=aiguzw5_op7woZCZ5Qi7c36b16SxiWTJXshN0dG3Xyo&e=
-
-
-
--- 
-Shaun Tancheff
+I'll dig deeper on really understanding _why_ must_push_back() is coded
+like it is.  There is a deep historic reason but hell if I can recall
+what it is...
