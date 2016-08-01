@@ -1,106 +1,63 @@
-From: Greg Edwards <gedwards@fireweed.org>
-Subject: [PATCH] mpt3sas: Fix resume on WarpDrive flash cards
-Date: Sat, 30 Jul 2016 10:06:26 -0600
-Message-ID: <1469894786-27917-1-git-send-email-gedwards@fireweed.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH V4 1/2] smartpqi: initial commit of Microsemi smartpqi
+ driver
+Date: Mon, 1 Aug 2016 09:13:00 +0200
+Message-ID: <69c8edfa-6b40-2976-f73f-155abacb06cc@suse.de>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+ <146706366077.29152.2433812429429846745.stgit@brunhilda>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f68.google.com ([209.85.214.68]:34076 "EHLO
-	mail-it0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751177AbcG3QHF (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 30 Jul 2016 12:07:05 -0400
-Received: by mail-it0-f68.google.com with SMTP id u186so9099397ita.1
-        for <linux-scsi@vger.kernel.org>; Sat, 30 Jul 2016 09:07:03 -0700 (PDT)
+Received: from mx2.suse.de ([195.135.220.15]:60014 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1752016AbcHAHNC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 1 Aug 2016 03:13:02 -0400
+In-Reply-To: <146706366077.29152.2433812429429846745.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Greg Edwards <gedwards@fireweed.org>
+To: Don Brace <don.brace@microsemi.com>, jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-mpt3sas crashes on resume after suspend with WarpDrive flash cards.  The
-reply_post_host_index array is not set back up after the resume, and we
-deference a stale pointer in _base_interrupt().
+On 06/27/2016 11:41 PM, Don Brace wrote:
+> From: Kevin Barnett <kevin.barnett@microsemi.com>
+>
+> This initial commit contains WIP of Microsemi's smartpqi module.
+>
+> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Signed-off-by: Don Brace <don.brace@microsemi.com>
+> ---
+>  MAINTAINERS                                    |   11
+>  drivers/scsi/Kconfig                           |    1
+>  drivers/scsi/Makefile                          |    1
+>  drivers/scsi/smartpqi/Kconfig                  |   50
+>  drivers/scsi/smartpqi/Makefile                 |    3
+>  drivers/scsi/smartpqi/smartpqi.h               | 1133 ++++
+>  drivers/scsi/smartpqi/smartpqi_init.c          | 6306 ++++++++++++++++++++++++
+>  drivers/scsi/smartpqi/smartpqi_sas_transport.c |  350 +
+>  drivers/scsi/smartpqi/smartpqi_sis.c           |  394 +
+>  drivers/scsi/smartpqi/smartpqi_sis.h           |   32
+>  10 files changed, 8281 insertions(+)
+>  create mode 100644 drivers/scsi/smartpqi/Kconfig
+>  create mode 100644 drivers/scsi/smartpqi/Makefile
+>  create mode 100644 drivers/scsi/smartpqi/smartpqi.h
+>  create mode 100644 drivers/scsi/smartpqi/smartpqi_init.c
+>  create mode 100644 drivers/scsi/smartpqi/smartpqi_sas_transport.c
+>  create mode 100644 drivers/scsi/smartpqi/smartpqi_sis.c
+>  create mode 100644 drivers/scsi/smartpqi/smartpqi_sis.h
+>
+Despite 'pragma(pack)' still being present:
 
-[   47.309711] BUG: unable to handle kernel paging request at ffffc90001f8006c
-[   47.318289] IP: [<ffffffffc00863ef>] _base_interrupt+0x49f/0xa30 [mpt3sas]
-[   47.326749] PGD 41ccaa067 PUD 41ccab067 PMD 3466c067 PTE 0
-[   47.333848] Oops: 0002 [#1] SMP
-...
-[   47.452708] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.7.0 #6
-[   47.460506] Hardware name: Dell Inc. OptiPlex 990/06D7TR, BIOS A18 09/24/2013
-[   47.469629] task: ffffffff81c0d500 ti: ffffffff81c00000 task.ti: ffffffff81c00000
-[   47.479112] RIP: 0010:[<ffffffffc00863ef>]  [<ffffffffc00863ef>] _base_interrupt+0x49f/0xa30 [mpt3sas]
-[   47.490466] RSP: 0018:ffff88041d203e30  EFLAGS: 00010002
-[   47.497801] RAX: 0000000000000001 RBX: ffff880033f4c000 RCX: 0000000000000001
-[   47.506973] RDX: ffffc90001f8006c RSI: 0000000000000082 RDI: 0000000000000082
-[   47.516141] RBP: ffff88041d203eb0 R08: ffff8804118e2820 R09: 0000000000000001
-[   47.525300] R10: 0000000000000001 R11: 00000000100c0000 R12: 0000000000000000
-[   47.534457] R13: ffff880412c487e0 R14: ffff88041a8987d8 R15: 0000000000000001
-[   47.543632] FS:  0000000000000000(0000) GS:ffff88041d200000(0000) knlGS:0000000000000000
-[   47.553796] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   47.561632] CR2: ffffc90001f8006c CR3: 0000000001c06000 CR4: 00000000000406f0
-[   47.570883] Stack:
-[   47.575015]  000000001d211228 ffff88041d2100c0 ffff8800c47d8130 0000000000000100
-[   47.584625]  ffff8804100c0000 100c000000000000 ffff88041a8992a0 ffff88041a8987f8
-[   47.594230]  ffff88041d203e00 ffffffff81111e55 000000000000038c ffff880414ad4280
-[   47.603862] Call Trace:
-[   47.608474]  <IRQ>
-[   47.610413]  [<ffffffff81111e55>] ? call_timer_fn+0x35/0x120
-[   47.620539]  [<ffffffff81100a1f>] handle_irq_event_percpu+0x7f/0x1c0
-[   47.629061]  [<ffffffff81100b8c>] handle_irq_event+0x2c/0x50
-[   47.636859]  [<ffffffff81103fff>] handle_edge_irq+0x6f/0x130
-[   47.644654]  [<ffffffff8102fbf3>] handle_irq+0x73/0x120
-[   47.652011]  [<ffffffff810c6ada>] ? atomic_notifier_call_chain+0x1a/0x20
-[   47.660854]  [<ffffffff817e374b>] do_IRQ+0x4b/0xd0
-[   47.667777]  [<ffffffff817e160c>] common_interrupt+0x8c/0x8c
-[   47.675635]  <EOI>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Move the reply_post_host_index array setup into
-mpt3sas_base_map_resources(), which is also in the resume path.
+Cheers,
 
-Cc: stable@vger.kernel.org
-Signed-off-by: Greg Edwards <gedwards@fireweed.org>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 751f13e..750f82c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2188,6 +2188,17 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 	} else
- 		ioc->msix96_vector = 0;
- 
-+	if (ioc->is_warpdrive) {
-+		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
-+		    &ioc->chip->ReplyPostHostIndex;
-+
-+		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
-+			ioc->reply_post_host_index[i] =
-+			(resource_size_t __iomem *)
-+			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
-+			* 4)));
-+	}
-+
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
- 		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
- 		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
-@@ -5280,17 +5291,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	if (r)
- 		goto out_free_resources;
- 
--	if (ioc->is_warpdrive) {
--		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
--		    &ioc->chip->ReplyPostHostIndex;
--
--		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
--			ioc->reply_post_host_index[i] =
--			(resource_size_t __iomem *)
--			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 + ((i - 1)
--			* 4)));
--	}
--
- 	pci_set_drvdata(ioc->pdev, ioc->shost);
- 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
- 	if (r)
+Hannes
 -- 
-2.7.4
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
