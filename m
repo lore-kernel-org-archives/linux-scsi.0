@@ -1,48 +1,67 @@
-From: Baole Ni <baolex.ni@intel.com>
-Subject: [PATCH 0908/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:57:05 +0800
-Message-ID: <20160802115705.10501-1-baolex.ni@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: linux@armlinux.org.uk, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, heiko.carstens@de.ibm.com, dwmw2@infradead.org, m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com, kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: baolex.ni@intel.com, chuansheng.liu@intel.com, linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] dm-mpath: always return reservation conflict
+Date: Tue,  2 Aug 2016 14:36:32 +0200
+Message-ID: <1470141392-25479-2-git-send-email-hch@lst.de>
+References: <1470141392-25479-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:40259 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S934219AbcHBMgk (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2016 08:36:40 -0400
+In-Reply-To: <1470141392-25479-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
+Cc: hare@suse.com, Hannes Reinecke <hare@suse.de>
 
-I find that the developers often just specified the numeric value
-when calling a macro which is defined with a parameter for access permission.
-As we know, these numeric value for access permission have had the corresponding macro,
-and that using macro can improve the robustness and readability of the code,
-thus, I suggest replacing the numeric parameter with the macro.
+From: Hannes Reinecke <hare@suse.de>
 
-Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
-Signed-off-by: Baole Ni <baolex.ni@intel.com>
+If dm-mpath encounters an reservation conflict it should not fail the
+path (as communication with the target is not affected) but should
+rather retry on another path. However, in doing so we might be inducing
+a ping-pong between paths, with no guarantee of any forward progress.
+
+And arguably a reservation conflict is an unexpected error, so we should
+be passing it upwards to allow the application to take appropriate steps.
+
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Christoph Hellwig <hch@lst.de>
+Tested-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/arm/fas216.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/md/dm-mpath.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/arm/fas216.c b/drivers/scsi/arm/fas216.c
-index 2438879..ae09134 100644
---- a/drivers/scsi/arm/fas216.c
-+++ b/drivers/scsi/arm/fas216.c
-@@ -96,7 +96,7 @@
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 7eac080..8d2f916 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -1555,16 +1555,22 @@ static int do_end_io(struct multipath *m, struct request *clone,
+ 	if (noretry_error(error))
+ 		return error;
  
- static int level_mask = LOG_ERROR;
+-	if (mpio->pgpath)
++	/*
++	 * EBADE signals an reservation conflict.
++	 * We shouldn't fail the path here as we can communicate with
++	 * the target. We should failover to the next path, but in
++	 * doing so we might be causing a ping-pong between paths.
++	 * So just return the reservation conflict error.
++	 */
++	if (error == -EBADE)
++		r = error;
++	else if (mpio->pgpath)
+ 		fail_path(mpio->pgpath);
  
--module_param(level_mask, int, 0644);
-+module_param(level_mask, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 	if (!atomic_read(&m->nr_valid_paths)) {
+ 		if (!test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags)) {
+ 			if (!must_push_back_rq(m))
+ 				r = -EIO;
+-		} else {
+-			if (error == -EBADE)
+-				r = error;
+ 		}
+ 	}
  
- #ifndef MODULE
- static int __init fas216_log_setup(char *str)
 -- 
-2.9.2
+2.1.4
+
