@@ -1,154 +1,330 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Mon, 1 Aug 2016 15:41:31 -0700
-Message-ID: <8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
-References: <6880321d-e14f-169b-d100-6e460dd9bd09@sandisk.com>
-	<1110327939.7305916.1469819453678.JavaMail.zimbra@redhat.com>
-	<a5c1a149-b1a2-b5a4-2207-bdaf32db3cbd@sandisk.com>
-	<757522831.7667712.1470059860543.JavaMail.zimbra@redhat.com>
-	<536022978.7668211.1470060125271.JavaMail.zimbra@redhat.com>
-	<931235537.7668834.1470060339483.JavaMail.zimbra@redhat.com>
-	<1264951811.7684268.1470065187014.JavaMail.zimbra@redhat.com>
-	<17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
-	<20160801175948.GA6685@redhat.com>
-	<f9e71e1d-54ca-40fe-a5ea-ae2863c94ff9@sandisk.com>
-	<20160801204628.GA94704@redhat.com>
+From: J Freyensee <james_p_freyensee@linux.intel.com>
+Subject: Re: [PATCH 4/5] nvme-fabrics: Add target FC transport support
+Date: Mon, 01 Aug 2016 21:37:50 -0700
+Message-ID: <1470112670.6134.88.camel@linux.intel.com>
+References: <5792b91e.51+4Ind0/2MxGqHU%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <20160801204628.GA94704@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga09.intel.com ([134.134.136.24]:47143 "EHLO mga09.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750851AbcHBEi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2016 00:38:56 -0400
+In-Reply-To: <5792b91e.51+4Ind0/2MxGqHU%james.smart@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On 08/01/2016 01:46 PM, Mike Snitzer wrote:
-> Please retry both variant (CONFIG_DM_MQ_DEFAULT=y first) with this patch
-> applied.  Interested to see if things look better for you (WARN_ON_ONCEs
-> added just to see if we hit the corresponding suspend/stopped state
-> while mapping requests -- if so this speaks to an inherently racy
-> problem that will need further investigation for a proper fix but
-> results from this should let us know if we're closer).
+On Fri, 2016-07-22 at 17:23 -0700, James Smart wrote:
+
+A few comments.
+
+> Add nvme-fabrics target FC transport support
 > 
-> diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-> index 1b2f962..0e0f6e0 100644
-> --- a/drivers/md/dm.c
-> +++ b/drivers/md/dm.c
-> @@ -2007,6 +2007,9 @@ static int map_request(struct dm_rq_target_io *tio, struct request *rq,
->  	struct dm_target *ti = tio->ti;
->  	struct request *clone = NULL;
->  
-> +	if (WARN_ON_ONCE(unlikely(dm_suspended_md(md))))
-> +		return DM_MAPIO_REQUEUE;
+> Implements the FC-NVME T11 definition of how nvme fabric capsules are
+> performed on an FC fabric. Utilizes a lower-layer API to FC host
+> adapters
+> to send/receive FC-4 LS operations and perform the FCP transactions
+> necessary
+> to perform and FCP IO request for NVME.
+> 
+> The T11 definitions for FC-4 Link Services are implemented which
+> create
+> NVMeOF connections.  Implements the hooks with nvmet layer to pass
+> NVME
+> commands to it for processing and posting of data/response base to
+> the
+> host via the differernt connections.
+> 
+> 
+snip
+.
+.
+.
+
+> +static void
+> +nvmet_fc_free_target_queue(struct nvmet_fc_tgt_queue *queue)
+> +{
+> +	struct nvmet_fc_tgtport *tgtport = queue->assoc->tgtport;
+> +	unsigned long flags;
 > +
->  	if (tio->clone) {
->  		clone = tio->clone;
->  		r = ti->type->map_rq(ti, clone, &tio->info);
-> @@ -2722,6 +2725,9 @@ static int dm_mq_queue_rq(struct blk_mq_hw_ctx *hctx,
->  		dm_put_live_table(md, srcu_idx);
->  	}
->  
-> +	if (WARN_ON_ONCE(unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state))))
-> +		return BLK_MQ_RQ_QUEUE_BUSY;
+> +	/*
+> +	 * beware: nvmet layer hangs waiting for a completion if
+> +	 * connect command failed
+> +	 */
+> +	flush_workqueue(queue->work_q);
+> +	if (queue->connected)
+> +		nvmet_sq_destroy(&queue->nvme_sq);
+
+I was wondering if there is any way for this fc target layer to fake
+send an NVMe completion to the nvmet layer to prevent a nvmet layer
+hang (because I'm assuming the nvmet layer hangs because it never
+receives a connect completion upon failure here), then send a signal to
+tear down the sq.
+
+Or alternatively call nvmet_ctrl_fatal_error() if connect fails as a
+trial/alternative to having the nvmet layer hang?
+
+
+> +	spin_lock_irqsave(&tgtport->lock, flags);
+> +	queue->assoc->queues[queue->qid] = NULL;
+> +	spin_unlock_irqrestore(&tgtport->lock, flags);
+> +	nvmet_fc_destroy_fcp_iodlist(tgtport, queue);
+> +	destroy_workqueue(queue->work_q);
+> +	kfree(queue);
+> +}
 > +
->  	if (ti->type->busy && ti->type->busy(ti))
->  		return BLK_MQ_RQ_QUEUE_BUSY;
+> +static struct nvmet_fc_tgt_queue *
+> +nvmet_fc_find_target_queue(struct nvmet_fc_tgtport *tgtport,
+> +				u64 connection_id)
+> +{
+> +	struct nvmet_fc_tgt_assoc *assoc;
+> +	u64 association_id =
+> nvmet_fc_getassociationid(connection_id);
+> +	u16 qid = nvmet_fc_getqueueid(connection_id);
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&tgtport->lock, flags);
+> +	list_for_each_entry(assoc, &tgtport->assoc_list, a_list) {
+> +		if (association_id == assoc->association_id) {
+> +			spin_unlock_irqrestore(&tgtport->lock,
+> flags);
+> +			return assoc->queues[qid];
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&tgtport->lock, flags);
+> +	return NULL;
+> +}
 
-Hello Mike,
+snip
+.
+.
 
-The test results with this patch and also the three other patches that
-have been posted in the context of this e-mail thread applied on top of
-kernel v4.7 are as follows:
-
-(1) CONFIG_DM_MQ_DEFAULT=y and fio running on top of XFS:
-
->From the system log:
-
-[ ... ]
-mpath 254:0: queue_if_no_path 0 -> 1
-executing DM ioctl DEV_SUSPEND on mpathbe
-mpath 254:0: queue_if_no_path 1 -> 0
-__multipath_map(): (a) returning -5
-map_request(): clone_and_map_rq() returned -5
-dm_complete_request: error = -5
-dm_softirq_done: dm-0 tio->error = -5
-blk_update_request: I/O error (-5), dev dm-0, sector 311960
-[ ... ]
-
-After this test finished, "dmsetup remove_all" failed and the following
-message appeared in the system log: "device-mapper: ioctl: remove_all
-left 1 open device(s)".
-
-Note: when I reran this test after a reboot "dmsetup remove_all" succeeded.
-
-
-(2) CONFIG_DM_MQ_DEFAULT=y and fio running on top of ext4:
-
->From the system log:
-[ ... ]
-[  146.023067] WARNING: CPU: 2 PID: 482 at drivers/md/dm.c:2748 dm_mq_queue_rq+0xc1/0x150 [dm_mod]
-[  146.026073] Workqueue: kblockd blk_mq_run_work_fn
-[  146.026083] Call Trace:
-[  146.026087]  [<ffffffff81320047>] dump_stack+0x68/0xa1
-[  146.026090]  [<ffffffff81061c46>] __warn+0xc6/0xe0
-[  146.026092]  [<ffffffff81061d18>] warn_slowpath_null+0x18/0x20
-[  146.026098]  [<ffffffffa0286791>] dm_mq_queue_rq+0xc1/0x150 [dm_mod]
-[  146.026100]  [<ffffffff81306f7a>] __blk_mq_run_hw_queue+0x1da/0x350
-[  146.026102]  [<ffffffff813076c0>] blk_mq_run_work_fn+0x10/0x20
-[  146.026105]  [<ffffffff8107efe9>] process_one_work+0x1f9/0x6a0
-[  146.026109]  [<ffffffff8107f4d9>] worker_thread+0x49/0x490
-[  146.026116]  [<ffffffff81085cda>] kthread+0xea/0x100
-[  146.026119]  [<ffffffff81624fbf>] ret_from_fork+0x1f/0x40
-[ ... ]
-[  146.269194] mpath 254:1: queue_if_no_path 0 -> 1
-[  146.276502] executing DM ioctl DEV_SUSPEND on mpathbf
-[  146.276556] mpath 254:1: queue_if_no_path 1 -> 0
-[  146.276560] __multipath_map(): (a) returning -5
-[  146.276561] map_request(): clone_and_map_rq() returned -5
-[  146.276562] dm_complete_request: error = -5
-[  146.276563] dm_softirq_done: dm-1 tio->error = -5
-[  146.276566] blk_update_request: I/O error (-5), dev dm-1, sector 2097144
-[ ... ]
-
-After this test finished running "dmsetup remove_all" and unloading ib_srp
-succeeded.
+> +
+> +/**
+> + * nvme_fc_register_targetport - transport entry point called by an
+> + *                              LLDD to register the existence of a
+> local
+> + *                              NVME subystem FC port.
+> + * @pinfo:     pointer to information about the port to be
+> registered
+> + * @template:  LLDD entrypoints and operational parameters for the
+> port
+> + * @dev:       physical hardware device node port corresponds to.
+> Will be
+> + *             used for DMA mappings
+> + * @tgtport_p:   pointer to a local port pointer. Upon success, the
 
 
-(3) CONFIG_DM_MQ_DEFAULT=n and fio running on top of XFS:
+looks like the variable tgtport_p does not exist (or it's now called
+portptr)?
 
-The first run of this test passed. During the second run fio reported
-an I/O error. From the system log:
+> routine
+> + *             will allocate a nvme_fc_local_port structure and
+> place its
+> + *             address in the local port pointer. Upon failure,
+> local port
+> + *             pointer will be set to 0.
 
-[ ... ]
-[ 1290.010886] mpath 254:0: queue_if_no_path 0 -> 1
-[ 1290.026905] executing DM ioctl DEV_SUSPEND on mpathbe
-[ 1290.026960] mpath 254:0: queue_if_no_path 1 -> 0
-[ 1290.027001] __multipath_map(): (a) returning -5
-[ 1290.027002] map_request(): clone_and_map_rq() returned -5
-[ 1290.027003] dm_complete_request: error = -5
-[ ... ]
-
-
-(4) CONFIG_DM_MQ_DEFAULT=n and fio running on top of ext4:
-
-The first two runs of this test passed. After the second run "dmsetup
-remove_all" failed and the following error message appeared in the system
-log: "device-mapper: ioctl: remove_all left 1 open device(s)". The following
-kernel thread might be the one that was holding open /dev/dm-0:
-
-# ps aux | grep dio/
-root      5306  0.0  0.0      0     0 ?        S<   15:24   0:00 [dio/dm-0]
+And I think the description is wrong, looks like the code does the more
+correct thing, set *portptr = NULL, not 0.
 
 
-Please let me know if you need more information.
+snip.
+.
+.
+.
+> +/*
+> + * Actual processing routine for received FC-NVME LS Requests from
+> the LLD
+> + */
+> +void
+> +nvmet_fc_handle_ls_rqst(struct nvmet_fc_tgtport *tgtport,
+> +			struct nvmet_fc_ls_iod *iod)
+> +{
+> +	struct fcnvme_ls_rqst_w0 *w0 =
+> +			(struct fcnvme_ls_rqst_w0 *)iod->rqstbuf;
+> +
+> +	iod->lsreq->nvmet_fc_private = iod;
+> +	iod->lsreq->rspbuf = iod->rspbuf;
+> +	iod->lsreq->rspdma = iod->rspdma;
+> +	iod->lsreq->done = nvmet_fc_xmt_ls_rsp_done;
+> +	/* Be preventative. handlers will later set to valid length
+> */
+> +	iod->lsreq->rsplen = 0;
+> +
+> +	iod->assoc = NULL;
+> +
+> +	/*
+> +	 * handlers:
+> +	 *   parse request input, set up nvmet req (cmd, rsp, 
+>  execute)
+> +	 *   and format the LS response
+> +	 * if non-zero returned, then no futher action taken on the
+> LS
+> +	 * if zero:
+> +	 *   valid to call nvmet layer if execute routine set
+> +	 *   iod->rspbuf contains ls response
+> +	 */
+> +	switch (w0->ls_cmd) {
+> +	case FCNVME_LS_CREATE_ASSOCIATION:
+> +		/* Creates Association and initial Admin
+> Queue/Connection */
+> +		nvmet_fc_ls_create_association(tgtport, iod);
+> +		break;
+> +	case FCNVME_LS_CREATE_CONNECTION:
+> +		/* Creates an IO Queue/Connection */
+> +		nvmet_fc_ls_create_connection(tgtport, iod);
+> +		break;
+> +	case FCNVME_LS_DISCONNECT:
+> +		/* Terminate a Queue/Connection or the Association
+> */
+> +		nvmet_fc_ls_disconnect(tgtport, iod);
+> +		break;
+> +	default:
+> +		iod->lsreq->rsplen = nvmet_fc_format_rjt(iod
+> ->rspbuf,
+> +				NVME_FC_MAX_LS_BUFFER_SIZE, w0
+> ->ls_cmd,
+> +				LSRJT_REASON_INVALID_ELS_CODE,
+> +				LSRJT_EXPL_NO_EXPLANATION, 0);
+> +	}
+> +
+> +	nvmet_fc_xmt_ls_rsp(tgtport, iod);
+> +}
 
-Bart.
+All the functions in the case() (nvmet_fc_ls_disconnect(),
+nvmet_fc_ls_create_association(), etc)  have internal return values
+(errors and certain values), I'm curious why you wouldn't want to
+bubble up those values through the function calling chain?  Especially
+since there is a comment in the function above that says "if non-zero
+returned, then no futher action taken on the LS".
+
+snip
+.
+.
+
+> +
+> +/**
+> + * nvmet_fc_rcv_fcp_req - transport entry point called by an LLDD
+> + *                       upon the reception of a NVME FCP CMD IU.
+> + *
+> + * Pass a FC-NVME FCP CMD IU received from the FC link to the nvmet
+> -fc
+> + * layer for processing.
+> + *
+> + * The nvmet-fc layer will copy cmd payload to an internal structure
+> for
+> + * processing.  As such, upon completion of the routine, the LLDD
+> may
+> + * immediately free/reuse the CMD IU buffer passed in the call.
+> + *
+> + * If this routine returns error, the lldd should abort the
+> exchange.
+> + *
+> + * @tgtport:    pointer to the (registered) target port the FCP CMD
+> IU
+> + *              was receive on.
+
+misspelling between this variable name and 'target_port'.
+
+> + * @fcpreq:     pointer to a fcpreq request structure to be used to
+> reference
+> + *              the exchange corresponding to the FCP Exchange.
+> + * @cmdiubuf:   pointer to the buffer containing the FCP CMD IU
+> + * @cmdiubuf_len: length, in bytes, of the received FCP CMD IU
+> + */
+> +int
+> +nvmet_fc_rcv_fcp_req(struct nvmet_fc_target_port *target_port,
+> +			struct nvmefc_tgt_fcp_req *fcpreq,
+> +			void *cmdiubuf, u32 cmdiubuf_len)
+> +{
+> +	struct nvmet_fc_tgtport *tgtport = container_of(target_port,
+> +			struct nvmet_fc_tgtport, fc_target_port);
+> +	struct nvme_fc_cmd_iu *cmdiu = cmdiubuf;
+> +	struct nvmet_fc_tgt_queue *queue;
+> +	struct nvmet_fc_fcp_iod *fod;
+> +
+> +
+> +	/* validate iu, so the connection id can be used to find the
+> queue */
+> +	if ((cmdiubuf_len != sizeof(*cmdiu)) ||
+> +			(cmdiu->scsi_id != NVME_CMD_SCSI_ID) ||
+> +			(cmdiu->fc_id != NVME_CMD_FC_ID) ||
+> +			(be16_to_cpu(cmdiu->iu_len) !=
+> (sizeof(*cmdiu)/4)))
+> +		return -EIO;
+> +
+> +	queue = nvmet_fc_find_target_queue(tgtport,
+> +				be64_to_cpu(cmdiu->connection_id));
+> +	if (!queue)
+> +		return -ENOTCONN;
+> +
+> +	fod = nvmet_fc_alloc_fcp_iod(tgtport, queue);
+> +	if (!fod)
+> +		return -ENOENT;
+> +
+> +	fcpreq->nvmet_fc_private = fod;
+> +	fod->fcpreq = fcpreq;
+> +	memcpy(&fod->cmdiubuf, cmdiubuf, cmdiubuf_len);
+> +
+> +	queue_work(fod->queue->work_q, &fod->work);
+> +
+> +	return 0;
+> +}
+> +EXPORT_SYMBOL_GPL(nvmet_fc_rcv_fcp_req);
+
+snip
+.
+.
+> +
+> +static int __init nvmet_fc_init_module(void)
+> +{
+> +	/* ensure NVMET_NR_QUEUES is a power of 2 - required for our
+> masks */
+> +	if (!is_power_of_2((unsigned long)NVMET_NR_QUEUES)) {
+> +		pr_err("%s: NVMET_NR_QUEUES required to be power of
+> 2\n",
+> +				__func__);
+
+If this is so important that NVMET_NR_QUEUES always be a power of two
+for this FC driver, I'd have the function print out the value in the
+error message for easier diagnosis.
+
+And why mask the sign of NVMET_NR_QUEUES?  Yes, it would have to be a
+really careless programmer error that would be caught very quick if the
+#define became negative, but masking out the sign of a #define value
+that seems to be pretty important for FC transport functionality makes
+me a tad nervous.
+
+> +		return(-EINVAL);
+
+nitpick, about the only 'return' line using parenthesis in the whole
+file.
+
+> +	}
+> +
+> +	return nvmet_register_transport(&nvmet_fc_tgt_fcp_ops);
+
+> +}
+> +
+> +static void __exit nvmet_fc_exit_module(void)
+> +{
+> +	nvmet_unregister_transport(&nvmet_fc_tgt_fcp_ops);
+> +
+> +	__nvmet_fc_free_tgtports();
+> +}
+> +
+> +module_init(nvmet_fc_init_module);
+> +module_exit(nvmet_fc_exit_module);
+> +
+> +MODULE_LICENSE("GPL v2");
+> +
+> +
+
+Good stuff James,
+J
+
+
+> +
