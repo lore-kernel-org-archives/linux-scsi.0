@@ -1,39 +1,42 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH 0082/1285] Replace numeric parameter like 0444 with macro
-Date: Tue, 02 Aug 2016 10:42:49 -0400
-Message-ID: <1470148969.2485.20.camel@HansenPartnership.com>
-References: <20160802103914.19225-1-baolex.ni@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Baole Ni <baolex.ni@intel.com>
+Subject: [PATCH 0916/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:57:45 +0800
+Message-ID: <20160802115745.11053-1-baolex.ni@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:56110 "EHLO
-	bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S965647AbcHBOzg (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2016 10:55:36 -0400
-In-Reply-To: <20160802103914.19225-1-baolex.ni@intel.com>
+Received: from mga11.intel.com ([192.55.52.93]:37590 "EHLO mga11.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S935083AbcHBMgL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:36:11 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baole Ni <baolex.ni@intel.com>, don.brace@microsemi.com, len.brown@intel.com, pavel@ucw.cz, gregkh@linuxfoundation.org, hpa@zytor.com, x86@kernel.org
-Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com
+To: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com, kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
 
-On Tue, 2016-08-02 at 18:39 +0800, Baole Ni wrote:
-> I find that the developers often just specified the numeric value
-> when calling a macro which is defined with a parameter for access 
-> permission. As we know, these numeric value for access permission 
-> have had the corresponding macro, and that using macro can improve 
-> the robustness and readability of the code, thus, I suggest replacing
-> the numeric parameter with the macro.
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Please stop ... can't you see that sending out over a thousand emails
-with a single change in each is basically spam, especially for those of
-us who got our INBOXes filled by virtue of being on the direct cc.  You
-don't need the thousand emails to achieve agreement over whether we
-should do this, and if we decide to do it, Linus would far rather run a
-simple script over the kernel as it is in an -rc state.  Could you
-please begin a discussion by posting the suggestion and the script.
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks,
-
-James
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6bff13e..6b46f0a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -296,7 +296,7 @@ _scsih_set_debug_level(const char *val, struct kernel_param *kp)
+ 	return 0;
+ }
+ module_param_call(logging_level, _scsih_set_debug_level, param_get_int,
+-	&logging_level, 0644);
++	&logging_level, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ 
+ /**
+  * _scsih_srch_boot_sas_address - search based on sas_address
+-- 
+2.9.2
 
