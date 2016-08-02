@@ -1,28 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] ipr: Fix error return code in ipr_probe_ioa()
-Date: Tue, 02 Aug 2016 01:19:41 -0400
-Message-ID: <yq1r3a7n3wy.fsf@sermon.lab.mkp.net>
-References: <1469808045-1821-1-git-send-email-weiyj.lk@gmail.com>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH -next] fcoe: Use kfree_skb() instead of
+	kfree()
+Date: Tue, 2 Aug 2016 09:54:32 +0200
+Message-ID: <20160802075432.dfa7u3pltcxykwwi@c203.arch.suse.de>
+References: <1469430033-8422-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25086 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933567AbcHBFTr (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2016 01:19:47 -0400
-In-Reply-To: <1469808045-1821-1-git-send-email-weiyj.lk@gmail.com> (Wei
-	Yongjun's message of "Fri, 29 Jul 2016 16:00:45 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1469430033-8422-1-git-send-email-weiyj.lk-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Wei Yongjun <weiyj.lk-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Brian King <brking@us.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Wei" == Wei Yongjun <weiyj.lk@gmail.com> writes:
+On Mon, Jul 25, 2016 at 07:00:33AM +0000, Wei Yongjun wrote:
+> Use kfree_skb() instead of kfree() to free sk_buff.
+> =
 
-Wei> Fix to return error code -ENOMEM from the workqueue alloc error
-Wei> handling case instead of 0, as done elsewhere in this function.
+> Signed-off-by: Wei Yongjun <weiyj.lk-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 
-Applied to 4.8/scsi-queue.
+Acked-by: Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+-- =
+
+Johannes Thumshirn                                          Storage
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
