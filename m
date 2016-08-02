@@ -1,38 +1,42 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Tue, 2 Aug 2016 09:49:08 +0200
-Message-ID: <20160802074908.paqpsy4ucku22oj5@c203.arch.suse.de>
-References: <1468311876-4132-1-git-send-email-oneukum@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1468311876-4132-1-git-send-email-oneukum-IBi9RG/b67k@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Cc: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, gregKH-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org
+From: Baole Ni <baolex.ni@intel.com>
+Subject: [PATCH 0082/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 18:39:14 +0800
+Message-ID: <20160802103914.19225-1-baolex.ni@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga03.intel.com ([134.134.136.65]:63608 "EHLO mga03.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753779AbcHBLSr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2016 07:18:47 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: don.brace@microsemi.com, len.brown@intel.com, pavel@ucw.cz, gregkh@linuxfoundation.org, hpa@zytor.com, x86@kernel.org
+Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
 
-On Tue, Jul 12, 2016 at 10:24:36AM +0200, Oliver Neukum wrote:
-> Some SATA to USB bridges fail to cooperate with some
-> drives resulting in no cache being present being reported
-> to the host. That causes the host to skip sending
-> a command to synchronize caches. That causes data loss
-> when the drive is powered down.
-> 
-> Signed-off-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+I find that the developers often just specified the numeric value
+when calling a macro which is defined with a parameter for access permission.
+As we know, these numeric value for access permission have had the corresponding macro,
+and that using macro can improve the robustness and readability of the code,
+thus, I suggest replacing the numeric parameter with the macro.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
+Signed-off-by: Baole Ni <baolex.ni@intel.com>
+---
+ drivers/block/cciss.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index 63c2064..05dc1bd 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -67,7 +67,7 @@ MODULE_SUPPORTED_DEVICE("HP Smart Array Controllers");
+ MODULE_VERSION("3.6.26");
+ MODULE_LICENSE("GPL");
+ static int cciss_tape_cmds = 6;
+-module_param(cciss_tape_cmds, int, 0644);
++module_param(cciss_tape_cmds, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(cciss_tape_cmds,
+ 	"number of commands to allocate for tape devices (default: 6)");
+ static int cciss_simple_mode;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+2.9.2
+
