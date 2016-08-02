@@ -1,29 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PING / RESEND] handling reservation conflicts in
-	dm-mpath
-Date: Tue,  2 Aug 2016 14:36:31 +0200
-Message-ID: <1470141392-25479-1-git-send-email-hch@lst.de>
+From: Baole Ni <baolex.ni@intel.com>
+Subject: [PATCH 1035/1285] Replace numeric parameter like 0444
+	with macro
+Date: Tue,  2 Aug 2016 20:10:27 +0800
+Message-ID: <20160802121027.19110-1-baolex.ni@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: hare@suse.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xen.org>
+List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xen.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
+To: jgross@suse.com, boris.ostrovsky@oracle.com, david.vrabel@citrix.com, tomi.valkeinen@ti.com, m.chehab@samsung.com, gregkh@linuxfoundation.org, m.szyprowski@samsung.com, kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: linux-scsi@vger.kernel.org, oneukum@suse.com, linux-kernel@vger.kernel.org, baolex.ni@intel.com, paul.gortmaker@windriver.com, xen-devel@lists.xenproject.org, chuansheng.liu@intel.com
 List-Id: linux-scsi@vger.kernel.org
 
-Hannes sent this patch a bit more than a year ago, but it got silently
-dropped.  When using the pNFS SCSI layout we can easily hit a
-failover "livelock" without it as the reservation conflicts on a
-newly detected device that doesn't have layouts yet, or after a fency
-will keep failing over from one path to another for no reason at all.
-
-Any chance to get it into mainline now?
+SSBmaW5kIHRoYXQgdGhlIGRldmVsb3BlcnMgb2Z0ZW4ganVzdCBzcGVjaWZpZWQgdGhlIG51bWVy
+aWMgdmFsdWUKd2hlbiBjYWxsaW5nIGEgbWFjcm8gd2hpY2ggaXMgZGVmaW5lZCB3aXRoIGEgcGFy
+YW1ldGVyIGZvciBhY2Nlc3MgcGVybWlzc2lvbi4KQXMgd2Uga25vdywgdGhlc2UgbnVtZXJpYyB2
+YWx1ZSBmb3IgYWNjZXNzIHBlcm1pc3Npb24gaGF2ZSBoYWQgdGhlIGNvcnJlc3BvbmRpbmcgbWFj
+cm8sCmFuZCB0aGF0IHVzaW5nIG1hY3JvIGNhbiBpbXByb3ZlIHRoZSByb2J1c3RuZXNzIGFuZCBy
+ZWFkYWJpbGl0eSBvZiB0aGUgY29kZSwKdGh1cywgSSBzdWdnZXN0IHJlcGxhY2luZyB0aGUgbnVt
+ZXJpYyBwYXJhbWV0ZXIgd2l0aCB0aGUgbWFjcm8uCgpTaWduZWQtb2ZmLWJ5OiBDaHVhbnNoZW5n
+IExpdSA8Y2h1YW5zaGVuZy5saXVAaW50ZWwuY29tPgpTaWduZWQtb2ZmLWJ5OiBCYW9sZSBOaSA8
+YmFvbGV4Lm5pQGludGVsLmNvbT4KLS0tCiBkcml2ZXJzL3hlbi94ZW4tc2NzaWJhY2suYyB8IDQg
+KystLQogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkKCmRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3hlbi94ZW4tc2NzaWJhY2suYyBiL2RyaXZlcnMveGVuL3hlbi1z
+Y3NpYmFjay5jCmluZGV4IGQ2OTUwZTAuLmE5ZmQ0NWEgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMveGVu
+L3hlbi1zY3NpYmFjay5jCisrKyBiL2RyaXZlcnMveGVuL3hlbi1zY3NpYmFjay5jCkBAIC0xODUs
+MTAgKzE4NSwxMCBAQCBzdHJ1Y3Qgc2NzaWJhY2tfdHBnIHsKICNkZWZpbmUgU0NTSUJBQ0tfSU5W
+QUxJRF9IQU5ETEUgKH4wKQogCiBzdGF0aWMgYm9vbCBsb2dfcHJpbnRfc3RhdDsKLW1vZHVsZV9w
+YXJhbShsb2dfcHJpbnRfc3RhdCwgYm9vbCwgMDY0NCk7Cittb2R1bGVfcGFyYW0obG9nX3ByaW50
+X3N0YXQsIGJvb2wsIFNfSVJVU1IgfCBTX0lXVVNSIHwgU19JUkdSUCB8IFNfSVJPVEgpOwogCiBz
+dGF0aWMgaW50IHNjc2liYWNrX21heF9idWZmZXJfcGFnZXMgPSAxMDI0OwotbW9kdWxlX3BhcmFt
+X25hbWVkKG1heF9idWZmZXJfcGFnZXMsIHNjc2liYWNrX21heF9idWZmZXJfcGFnZXMsIGludCwg
+MDY0NCk7Cittb2R1bGVfcGFyYW1fbmFtZWQobWF4X2J1ZmZlcl9wYWdlcywgc2NzaWJhY2tfbWF4
+X2J1ZmZlcl9wYWdlcywgaW50LCBTX0lSVVNSIHwgU19JV1VTUiB8IFNfSVJHUlAgfCBTX0lST1RI
+KTsKIE1PRFVMRV9QQVJNX0RFU0MobWF4X2J1ZmZlcl9wYWdlcywKICJNYXhpbXVtIG51bWJlciBv
+ZiBmcmVlIHBhZ2VzIHRvIGtlZXAgaW4gYmFja2VuZCBidWZmZXIiKTsKIAotLSAKMi45LjIKCgpf
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwg
+bWFpbGluZyBsaXN0Clhlbi1kZXZlbEBsaXN0cy54ZW4ub3JnCmh0dHBzOi8vbGlzdHMueGVuLm9y
+Zy94ZW4tZGV2ZWwK
