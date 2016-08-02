@@ -1,91 +1,84 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: [RFC PATCH] blk-mq: Prevent round-robin from scheduling dead cpus
-Date: Tue,  2 Aug 2016 13:19:31 -0300
-Message-ID: <1470154771-22774-1-git-send-email-krisman@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:21510 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S935399AbcHBQTo (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 2 Aug 2016 12:19:44 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u72GImcD133439
-	for <linux-scsi@vger.kernel.org>; Tue, 2 Aug 2016 12:19:42 -0400
-Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24jq3rwcwe-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 02 Aug 2016 12:19:41 -0400
-Received: from localhost
-	by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-	Tue, 2 Aug 2016 13:19:39 -0300
-Sender: linux-scsi-owner@vger.kernel.org
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Tue, 2 Aug 2016 13:45:34 -0400
+Message-ID: <20160802174533.GA18714@redhat.com>
+References: <a5c1a149-b1a2-b5a4-2207-bdaf32db3cbd@sandisk.com>
+	<757522831.7667712.1470059860543.JavaMail.zimbra@redhat.com>
+	<536022978.7668211.1470060125271.JavaMail.zimbra@redhat.com>
+	<931235537.7668834.1470060339483.JavaMail.zimbra@redhat.com>
+	<1264951811.7684268.1470065187014.JavaMail.zimbra@redhat.com>
+	<17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
+	<20160801175948.GA6685@redhat.com>
+	<f9e71e1d-54ca-40fe-a5ea-ae2863c94ff9@sandisk.com>
+	<20160801204628.GA94704@redhat.com>
+	<8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Hi,
+On Mon, Aug 01 2016 at  6:41pm -0400,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-I'm not completely sure I got the cause for this one completely right.
-Still, it does looks like the correct fix and a good improvement in the
-overall, so I'm making it an RFC for now to gather some feedback.
+> On 08/01/2016 01:46 PM, Mike Snitzer wrote:
+> > Please retry both variant (CONFIG_DM_MQ_DEFAULT=y first) with this patch
+> > applied.  Interested to see if things look better for you (WARN_ON_ONCEs
+> > added just to see if we hit the corresponding suspend/stopped state
+> > while mapping requests -- if so this speaks to an inherently racy
+> > problem that will need further investigation for a proper fix but
+> > results from this should let us know if we're closer).
+> > 
+> > diff --git a/drivers/md/dm.c b/drivers/md/dm.c
+> > index 1b2f962..0e0f6e0 100644
+> > --- a/drivers/md/dm.c
+> > +++ b/drivers/md/dm.c
+> > @@ -2007,6 +2007,9 @@ static int map_request(struct dm_rq_target_io *tio, struct request *rq,
+> >  	struct dm_target *ti = tio->ti;
+> >  	struct request *clone = NULL;
+> >  
+> > +	if (WARN_ON_ONCE(unlikely(dm_suspended_md(md))))
+> > +		return DM_MAPIO_REQUEUE;
+> > +
+> >  	if (tio->clone) {
+> >  		clone = tio->clone;
+> >  		r = ti->type->map_rq(ti, clone, &tio->info);
+> > @@ -2722,6 +2725,9 @@ static int dm_mq_queue_rq(struct blk_mq_hw_ctx *hctx,
+> >  		dm_put_live_table(md, srcu_idx);
+> >  	}
+> >  
+> > +	if (WARN_ON_ONCE(unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state))))
+> > +		return BLK_MQ_RQ_QUEUE_BUSY;
+> > +
+> >  	if (ti->type->busy && ti->type->busy(ti))
+> >  		return BLK_MQ_RQ_QUEUE_BUSY;
+> 
+> Hello Mike,
+> 
+> The test results with this patch and also the three other patches that
+> have been posted in the context of this e-mail thread applied on top of
+> kernel v4.7 are as follows:
 
-Let me hear your thoughts.
+Hi Bart,
 
--- >8 --
+Please do these same tests against a v4.7 kernel with the 4 patches from
+this branch applied (no need for your other debug patches):
+https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/log/?h=dm-4.7-mpath-fixes
 
-When notifying blk-mq about CPU removals while running IO, we risk
-racing the hctx->cpumask update with blk_mq_hctx_next_cpu, and end up
-scheduling a dead cpu to execute hctx->run_{,delayed_}work.  As a
-result, kblockd_schedule_delayed_work_on() may schedule another cpu
-outside of hctx->cpumask, which triggers the following warning at
-__blk_mq_run_hw_queue:
+I've had good results with my blk-mq SRP based testing.
 
-WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
-
-This patch makes the issue much more unlikely to happen, as it makes
-blk_mq_hctx_next_cpu aware of dead cpus, and triggers the round-robin
-code, despite of remaining batch processing time.  Thus, in case we
-offline a cpu in the middle of its batch processing time, we no longer
-waste time scheduling it here, and just move through to the next cpu in
-the mask.
-
-The warning may still be triggered, though, since this is not the only
-case that may cause the queue to schedule on a dead cpu.  But this fixes
-the common case, which is the remaining batch processing time of a
-sudden dead cpu, which makes the issue much more unlikely to happen.
-
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: linux-block@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
----
- block/blk-mq.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c27bb37..a2cb64c 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -858,7 +858,8 @@ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
- 	if (hctx->queue->nr_hw_queues == 1)
- 		return WORK_CPU_UNBOUND;
- 
--	if (--hctx->next_cpu_batch <= 0) {
-+	if (--hctx->next_cpu_batch <= 0 ||
-+	    !cpumask_test_cpu(hctx->next_cpu, cpu_online_mask)) {
- 		int cpu = hctx->next_cpu, next_cpu;
- 
- 		next_cpu = cpumask_next(hctx->next_cpu, hctx->cpumask);
-@@ -868,7 +869,8 @@ static int blk_mq_hctx_next_cpu(struct blk_mq_hw_ctx *hctx)
- 		hctx->next_cpu = next_cpu;
- 		hctx->next_cpu_batch = BLK_MQ_CPU_WORK_BATCH;
- 
--		return cpu;
-+		return (cpumask_test_cpu(cpu, cpu_online_mask)) ?
-+			cpu : blk_mq_hctx_next_cpu(hctx);
- 	}
- 
- 	return hctx->next_cpu;
--- 
-2.7.4
-
+Thanks,
+Mike
