@@ -1,16 +1,16 @@
 From: Baole Ni <baolex.ni@intel.com>
-Subject: [PATCH 0906/1285] Replace numeric parameter like 0444 with macro
-Date: Tue,  2 Aug 2016 19:56:56 +0800
-Message-ID: <20160802115656.10369-1-baolex.ni@intel.com>
+Subject: [PATCH 0917/1285] Replace numeric parameter like 0444 with macro
+Date: Tue,  2 Aug 2016 19:57:50 +0800
+Message-ID: <20160802115750.11121-1-baolex.ni@intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga11.intel.com ([192.55.52.93]:37590 "EHLO mga11.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:41070 "EHLO mga09.intel.com"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S934856AbcHBMf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Aug 2016 08:35:56 -0400
+	id S935054AbcHBMfw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2016 08:35:52 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: hare@suse.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, heiko.carstens@de.ibm.com, dwmw2@infradead.org, m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com, kyungmin.park@samsung.com, k.kozlowski@samsung.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
+To: osst@riede.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, m.chehab@samsung.com, pawel@osciak.com, m.szyprowski@samsung.com, kyungmin.park@samsung.com, k.kozlowski@samsung.com
+Cc: osst-users@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, chuansheng.liu@intel.com, baolex.ni@intel.com
 
 I find that the developers often just specified the numeric value
 when calling a macro which is defined with a parameter for access permission.
@@ -21,22 +21,30 @@ thus, I suggest replacing the numeric parameter with the macro.
 Signed-off-by: Chuansheng Liu <chuansheng.liu@intel.com>
 Signed-off-by: Baole Ni <baolex.ni@intel.com>
 ---
- drivers/scsi/aic7xxx/aic7xxx_osm.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/osst.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-index fc6a831..0fbbd81 100644
---- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
-@@ -330,7 +330,7 @@ MODULE_AUTHOR("Maintainer: Hannes Reinecke <hare@suse.de>");
- MODULE_DESCRIPTION("Adaptec AIC77XX/78XX SCSI Host Bus Adapter driver");
- MODULE_LICENSE("Dual BSD/GPL");
- MODULE_VERSION(AIC7XXX_DRIVER_VERSION);
--module_param(aic7xxx, charp, 0444);
-+module_param(aic7xxx, charp, S_IRUSR | S_IRGRP | S_IROTH);
- MODULE_PARM_DESC(aic7xxx,
- "period-delimited options string:\n"
- "	verbose			Enable verbose/diagnostic logging\n"
+diff --git a/drivers/scsi/osst.c b/drivers/scsi/osst.c
+index 5033223..d74363e 100644
+--- a/drivers/scsi/osst.c
++++ b/drivers/scsi/osst.c
+@@ -91,13 +91,13 @@ MODULE_LICENSE("GPL");
+ MODULE_ALIAS_CHARDEV_MAJOR(OSST_MAJOR);
+ MODULE_ALIAS_SCSI_DEVICE(TYPE_TAPE);
+ 
+-module_param(max_dev, int, 0444);
++module_param(max_dev, int, S_IRUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(max_dev, "Maximum number of OnStream Tape Drives to attach (4)");
+ 
+-module_param(write_threshold_kbs, int, 0644);
++module_param(write_threshold_kbs, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(write_threshold_kbs, "Asynchronous write threshold (KB; 32)");
+ 
+-module_param(max_sg_segs, int, 0644);
++module_param(max_sg_segs, int, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+ MODULE_PARM_DESC(max_sg_segs, "Maximum number of scatter/gather segments to use (9)");
+ #else
+ static struct osst_dev_parm {
 -- 
 2.9.2
 
