@@ -1,43 +1,54 @@
 From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] qla2xxx: small cleanup in qla2x00_wait_for_hba_ready()
-Date: Wed, 3 Aug 2016 21:42:32 +0300
-Message-ID: <20160803184232.GA775@mwanda>
+Subject: [bug report] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
+Date: Wed, 3 Aug 2016 22:01:45 +0300
+Message-ID: <20160803190145.GD775@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:33643 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1757182AbcHCTDK (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 15:03:10 -0400
 Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, Sawan Chandak <sawan.chandak@qlogic.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bryantly@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-The "if (test_bit(UNLOADING..." line was indented one tab more than it
-should have been.  There was an extra parenthesis around the
-qla2x00_reset_active() function call.  I lined up the conditions a bit
-so that it shows how they group together.
+Hello Bryant G. Ly,
 
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+The patch 88a678bbc34c: "ibmvscsis: Initial commit of IBM VSCSI Tgt
+Driver" from Jun 28, 2016, leads to the following static checker
+warning:
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2674f4c..1dd8650 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -899,12 +899,12 @@ qla2x00_wait_for_hba_ready(scsi_qla_host_t *vha)
- 	struct qla_hw_data *ha = vha->hw;
- 	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
- 
--	while (((qla2x00_reset_active(vha)) || ha->dpc_active ||
--	    ha->flags.mbox_busy) ||
--		test_bit(FX00_RESET_RECOVERY, &vha->dpc_flags) ||
--		test_bit(FX00_TARGET_SCAN, &vha->dpc_flags)) {
--			if (test_bit(UNLOADING, &base_vha->dpc_flags))
--				break;
-+	while ((qla2x00_reset_active(vha) || ha->dpc_active ||
-+		ha->flags.mbox_busy) ||
-+	       test_bit(FX00_RESET_RECOVERY, &vha->dpc_flags) ||
-+	       test_bit(FX00_TARGET_SCAN, &vha->dpc_flags)) {
-+		if (test_bit(UNLOADING, &base_vha->dpc_flags))
-+			break;
- 		msleep(1000);
- 	}
- }
+	drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1981 ibmvscsis_srp_login()
+	warn: suspicious bitop condition
+
+drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+  1967          iport = (struct port_id *)req->initiator_port_id;
+  1968          tport = (struct port_id *)req->target_port_id;
+  1969          fmt = (struct format_code *)&req->req_buf_fmt;
+  1970          if (be32_to_cpu(req->req_it_iu_len) > SRP_MAX_IU_LEN)
+  1971                  reason = SRP_LOGIN_REJ_REQ_IT_IU_LENGTH_TOO_LARGE;
+  1972          else if (be32_to_cpu(req->req_it_iu_len) < 64)
+  1973                  reason = SRP_LOGIN_REJ_UNABLE_ESTABLISH_CHANNEL;
+  1974          else if ((be64_to_cpu(iport->id_extension) > (MAX_NUM_PORTS - 1)) ||
+  1975                   (be64_to_cpu(tport->id_extension) > (MAX_NUM_PORTS - 1)))
+  1976                  reason = SRP_LOGIN_REJ_UNABLE_ASSOCIATE_CHANNEL;
+  1977          else if (req->req_flags & SRP_MULTICHAN_MULTI)
+  1978                  reason = SRP_LOGIN_REJ_MULTI_CHANNEL_UNSUPPORTED;
+  1979          else if (fmt->buffers & (~SUPPORTED_FORMATS))
+  1980                  reason = SRP_LOGIN_REJ_UNSUPPORTED_DESCRIPTOR_FMT;
+  1981          else if ((fmt->buffers | SUPPORTED_FORMATS) == 0)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+SUPPORTED_FORMATS is 1 << 1 so it's never zero.
+
+  1982                  reason = SRP_LOGIN_REJ_UNSUPPORTED_DESCRIPTOR_FMT;
+  1983  
+  1984          if (vscsi->state == SRP_PROCESSING)
+  1985                  reason = SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED;
+  1986  
+
+
+regards,
+dan carpenter
