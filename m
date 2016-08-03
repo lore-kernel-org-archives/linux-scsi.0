@@ -1,87 +1,356 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Tue, 2 Aug 2016 17:19:11 -0700
-Message-ID: <1a460c29-1530-d3e1-25ba-736d86aff12e@sandisk.com>
-References: <a5c1a149-b1a2-b5a4-2207-bdaf32db3cbd@sandisk.com>
- <757522831.7667712.1470059860543.JavaMail.zimbra@redhat.com>
- <536022978.7668211.1470060125271.JavaMail.zimbra@redhat.com>
- <931235537.7668834.1470060339483.JavaMail.zimbra@redhat.com>
- <1264951811.7684268.1470065187014.JavaMail.zimbra@redhat.com>
- <17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
- <20160801175948.GA6685@redhat.com>
- <f9e71e1d-54ca-40fe-a5ea-ae2863c94ff9@sandisk.com>
- <20160801204628.GA94704@redhat.com>
- <8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
- <20160802174533.GA18714@redhat.com>
+From: J Freyensee <james_p_freyensee@linux.intel.com>
+Subject: Re: [PATCH 5/5] nvme-fabrics: Add FC LLDD loopback driver to test
+ FC host and target transport
+Date: Tue, 02 Aug 2016 17:15:44 -0700
+Message-ID: <1470183344.3928.54.camel@linux.intel.com>
+References: <5792b91f.Lb5BdNQrSWnmgOYG%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0043.outbound.protection.outlook.com ([104.47.41.43]:38352
-	"EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753725AbcHCATV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 2 Aug 2016 20:19:21 -0400
-In-Reply-To: <20160802174533.GA18714@redhat.com>
+Received: from mga04.intel.com ([192.55.52.120]:8369 "EHLO mga04.intel.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1753725AbcHCAUG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Tue, 2 Aug 2016 20:20:06 -0400
+In-Reply-To: <5792b91f.Lb5BdNQrSWnmgOYG%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: James Smart <james.smart@broadcom.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On 08/02/2016 10:45 AM, Mike Snitzer wrote:
-> Please do these same tests against a v4.7 kernel with the 4 patches from
-> this branch applied (no need for your other debug patches):
-> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/log/?h=dm-4.7-mpath-fixes
+On Fri, 2016-07-22 at 17:23 -0700, James Smart wrote:
+
+A couple comments.
+
+> Add FC LLDD loopback driver to test FC host and target transport
+> within
+> nvme-fabrics
 > 
-> I've had good results with my blk-mq SRP based testing.
+> To aid in the development and testing of the lower-level api of the
+> FC
+> transport, this loopback driver has been created to act as if it were
+> a
+> FC hba driver supporting both the host interfaces as well as the
+> target
+> interfaces with the nvme FC transport.
+> 
+> 
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> 
+> ---
 
-Hello Mike,
+snip...
 
-Thanks again for having made these patches available. The results of my
-tests are as follows:
+>  +int
+> +fcloop_fcp_op(struct nvmet_fc_target_port *tgtport,
+> +			struct nvmefc_tgt_fcp_req *tgt_fcpreq)
+> +{
+> +	struct fcloop_fcpreq *tfcp_req =
+> +		container_of(tgt_fcpreq, struct fcloop_fcpreq,
+> tgt_fcp_req);
+> +	struct nvmefc_fcp_req *fcpreq = tfcp_req->fcpreq;
+> +	u32 rsplen = 0, xfrlen = 0;
+> +	int fcp_err = 0;
+> +	u8 op = tgt_fcpreq->op;
+> +
+> +	switch (op) {
+> +	case NVMET_FCOP_WRITEDATA:
+> +		xfrlen = tgt_fcpreq->transfer_length;
+> +		fcloop_fcp_copy_data(op, tgt_fcpreq->sg, fcpreq
+> ->first_sgl,
+> +					tgt_fcpreq->offset, xfrlen);
+> +		fcpreq->transferred_length += xfrlen;
+> +		break;
+> +
+> +	case NVMET_FCOP_READDATA:
+> +	case NVMET_FCOP_READDATA_RSP:
+> +		xfrlen = tgt_fcpreq->transfer_length;
+> +		fcloop_fcp_copy_data(op, tgt_fcpreq->sg, fcpreq
+> ->first_sgl,
+> +					tgt_fcpreq->offset, xfrlen);
+> +		fcpreq->transferred_length += xfrlen;
+> +		if (op == NVMET_FCOP_READDATA)
+> +			break;
+> +
+> +		/* Fall-Thru to RSP handling */
+> +
+> +	case NVMET_FCOP_RSP:
+> +		rsplen = ((fcpreq->rsplen < tgt_fcpreq->rsplen) ?
+> +				fcpreq->rsplen : tgt_fcpreq
+> ->rsplen);
+> +		memcpy(fcpreq->rspaddr, tgt_fcpreq->rspaddr,
+> rsplen);
+> +		if (rsplen < tgt_fcpreq->rsplen)
+> +			fcp_err = -E2BIG;
+> +		fcpreq->rcv_rsplen = rsplen;
+> +		fcpreq->status = 0;
+> +		tfcp_req->status = 0;
+> +		break;
+> +
+> +	case NVMET_FCOP_ABORT:
+> +		tfcp_req->status = NVME_SC_FC_TRANSPORT_ABORTED;
+> +		break;
+> +
+> +	default:
+> +		fcp_err = -EINVAL;
+> +		break;
+> +	}
+> +
+> +	tgt_fcpreq->transferred_length = xfrlen;
+> +	tgt_fcpreq->fcp_error = fcp_err;
+> +	tgt_fcpreq->done(tgt_fcpreq);
+> +
+> +	if ((!fcp_err) && (op == NVMET_FCOP_RSP ||
+> +			op == NVMET_FCOP_READDATA_RSP ||
+> +			op == NVMET_FCOP_ABORT))
+> +		schedule_work(&tfcp_req->work);
+> +
+> +	return 0;
 
-(1) CONFIG_DM_MQ_DEFAULT=y, fio running on top of xfs
+if this function returns an 'int', why would it always return 0 and not
+the fcp_err values (if there is an error)?
 
-The first simulated cable pull caused the following messages to appear:
+> +}
+> +
+> +void
+> +fcloop_ls_abort(struct nvme_fc_local_port *localport,
+> +			struct nvme_fc_remote_port *remoteport,
+> +				struct nvmefc_ls_req *lsreq)
+> +{
+> +}
+> +
+> +void
+> +fcloop_fcp_abort(struct nvme_fc_local_port *localport,
+> +			struct nvme_fc_remote_port *remoteport,
+> +			void *hw_queue_handle,
+> +			struct nvmefc_fcp_req *fcpreq)
+> +{
+> +}
+> +
+> +
+> +struct nvme_fc_port_template fctemplate = {
+> +	.create_queue	= fcloop_create_queue,
+> +	.delete_queue	= fcloop_delete_queue,
+> +	.ls_req		= fcloop_ls_req,
+> +	.fcp_io		= fcloop_fcp_req,
+> +	.ls_abort	= fcloop_ls_abort,
+> +	.fcp_abort	= fcloop_fcp_abort,
+> +
+> +	.max_hw_queues	= 1,
+> +	.max_sgl_segments = 256,
+> +	.max_dif_sgl_segments = 256,
+> +	.dma_boundary = 0xFFFFFFFF,
 
-[  428.716566] mpath 254:1: queue_if_no_path 1 -> 0
-[  428.729671] __multipath_map(): (a) returning -5
-[  428.729730] map_request(): clone_and_map_rq() returned -5
-[  428.729788] dm_complete_request: error = -5
-[  428.729846] dm_softirq_done: dm-1 tio->error = -5
-[  428.729904] blk_update_request: 880 callbacks suppressed
-[  428.729970] blk_update_request: I/O error (-5), dev dm-1, sector 2097024
+Between here and "struct nvmet_fc_target_template tgttemplate" they are
+assigning the same magic values to the same variable names, so why not
+have these values as #defines for a tad easier maintainability?
 
-(2) CONFIG_DM_MQ_DEFAULT=y, fio running on top of ext4
+> +	/* sizes of additional private data for data structures */
+> +	.local_priv_sz	= sizeof(struct fcloop_lport),
+> +	.remote_priv_sz	= sizeof(struct fcloop_rport),
+> +	.lsrqst_priv_sz = sizeof(struct fcloop_lsreq),
+> +	.fcprqst_priv_sz = sizeof(struct fcloop_fcpreq),
+> +};
+> +
+> +struct nvmet_fc_target_template tgttemplate = {
+> +	.xmt_ls_rsp	= fcloop_xmt_ls_rsp,
+> +	.fcp_op		= fcloop_fcp_op,
+> +
+> +	.max_hw_queues	= 1,
+> +	.max_sgl_segments = 256,
+> +	.max_dif_sgl_segments = 256,
+> +	.dma_boundary = 0xFFFFFFFF,
+> +
 
-The first simulated cable pull caused the following messages to appear:
+see above comment.
 
-[  162.894737] mpath 254:0: queue_if_no_path 0 -> 1
-[  162.903155] executing DM ioctl DEV_SUSPEND on mpathbe
-[  162.903207] mpath 254:0: queue_if_no_path 1 -> 0
-[  162.903255] device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=0
-[  162.903256] __multipath_map(): (a) returning -5
-[  162.903257] map_request(): clone_and_map_rq() returned -5
-[  162.903258] dm_complete_request: error = -5
-[  162.903259] dm_softirq_done: dm-0 tio->error = -5
-[  162.903261] blk_update_request: I/O error (-5), dev dm-0, sector 263424
-[  162.903284] Buffer I/O error on dev dm-0, logical block 32928, lost sync page write
+> +	/* optional features */
+> +	.target_features = NVMET_FCTGTFEAT_READDATA_RSP,
+> +
+> +	/* sizes of additional private data for data structures */
+> +	.target_priv_sz = sizeof(struct fcloop_tgtport),
+> +};
+> +
+> +static ssize_t
+> +fcloop_create_local_port(struct device *dev, struct device_attribute
+> *attr,
+> +		const char *buf, size_t count)
+> +{
+> +	struct nvme_fc_port_info pinfo;
+> +	struct fcloop_ctrl_options *opts;
+> +	struct nvme_fc_local_port *localport;
+> +	struct fcloop_lport *lport;
+> +	int ret;
+> +
+> +	opts = kzalloc(sizeof(*opts), GFP_KERNEL);
+> +	if (!opts)
+> +		return -ENOMEM;
+> +
+> +	ret = fcloop_parse_options(opts, buf);
+> +	if (ret)
+> +		goto out_free_opts;
+> +
+> +	/* everything there ? */
+> +	if ((opts->mask & LPORT_OPTS) != LPORT_OPTS) {
+> +		ret = -EINVAL;
+> +		goto out_free_opts;
+> +	}
+> +
+> +	pinfo.fabric_name = opts->fabric;
+> +	pinfo.node_name = opts->wwnn;
+> +	pinfo.port_name = opts->wwpn;
+> +	pinfo.port_role = opts->roles;
+> +	pinfo.port_id = opts->fcaddr;
+> +
+> +	ret = nvme_fc_register_localport(&pinfo, &fctemplate, NULL,
+> &localport);
+> +	if (!ret) {
+> +		/* success */
+> +		lport = localport->private;
+> +		lport->localport = localport;
+> +		INIT_LIST_HEAD(&lport->list);
+> +		INIT_LIST_HEAD(&lport->rport_list);
+> +		list_add_tail(&lport->list, &fcloop_lports);
+> +
+> +		/* mark all of the input buffer consumed */
+> +		ret = count;
+> +	}
+> +
+> +out_free_opts:
+> +	kfree(opts);
+> +	return ret;
+> +}
+> +
+> +static int __delete_local_port(struct fcloop_lport *lport)
+> +{
+> +	int ret;
+> +
+> +	if (!list_empty(&lport->rport_list))
+> +		return -EBUSY;
+> +
+> +	list_del(&lport->list);
+> +
 
-(3) CONFIG_DM_MQ_DEFAULT=n, fio running on top of xfs
+Is a mutex or locking mechanism not needed here for this list?
 
-This test passed once but on the second run fio reported "bad magic header" after
-a large number of iterations. I'm still analyzing the logs.
+> +	ret = nvme_fc_unregister_localport(lport->localport);
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t
+> +fcloop_delete_local_port(struct device *dev, struct device_attribute
+> *attr,
+> +		const char *buf, size_t count)
+> +{
+> +	struct fcloop_lport *lport, *lnext;
+> +	u64 fabric, portname;
+> +	int ret;
+> +
+> +	ret = fcloop_parse_nm_options(dev, &fabric, &portname, buf);
+> +	if (ret)
+> +		return ret;
+> +
+> +	list_for_each_entry_safe(lport, lnext, &fcloop_lports, list)
+> {
+> +		if ((lport->localport->fabric_name == fabric) &&
+> +		    (lport->localport->port_name == portname)) {
+> +			break;
+> +		}
+> +	}
+> +	if (is_end_of_list(lport, &fcloop_lports, list))
+> +		return -ENOENT;
+> +
+> +	ret = __delete_local_port(lport);
+> +
+> +	if (!ret)
+> +		return count;
+> +
+> +	return ret;
+> +}
+> +
+> +static ssize_t
+> +fcloop_create_remote_port(struct device *dev, struct
+> device_attribute *attr,
+> +		const char *buf, size_t count)
+> +{
+> +	struct fcloop_ctrl_options *opts;
+> +	struct fcloop_lport *lport, *lnext;
+> +	struct nvme_fc_remote_port *remoteport;
+> +	struct fcloop_rport *rport;
+> +	struct nvme_fc_port_info pinfo;
+> +	struct nvmet_fc_port_info tinfo;
+> +	int ret;
+> +
+> +	opts = kzalloc(sizeof(*opts), GFP_KERNEL);
+> +	if (!opts)
+> +		return -ENOMEM;
+> +
+> +	ret = fcloop_parse_options(opts, buf);
+> +	if (ret)
+> +		goto out_free_opts;
+> +
+> +	/* everything there ? */
+> +	if ((opts->mask & RPORT_OPTS) != RPORT_OPTS) {
+> +		ret = -EINVAL;
+> +		goto out_free_opts;
+> +	}
+> +
+> +	pinfo.fabric_name = tinfo.fabric_name = opts->fabric;
+> +	pinfo.node_name = tinfo.node_name = opts->wwnn;
+> +	pinfo.port_name = tinfo.port_name = opts->wwpn;
+> +	pinfo.port_role = opts->roles;
+> +	pinfo.port_id = tinfo.port_id = opts->fcaddr;
+> +
+> +	list_for_each_entry_safe(lport, lnext, &fcloop_lports, list)
+> {
+> +		if (lport->localport->fabric_name == opts->fabric)
+> +			break;
+> +	}
+> +	if (is_end_of_list(lport, &fcloop_lports, list)) {
+> +		ret = -ENOENT;
+> +		goto out_free_opts;
+> +	}
+> +
+> +	ret = nvme_fc_register_remoteport(lport->localport, &pinfo,
+> +					&remoteport);
+> +	if (ret)
+> +		goto out_free_opts;
+> +
+> +	/* success */
+> +	rport = remoteport->private;
+> +	rport->remoteport = remoteport;
+> +	INIT_LIST_HEAD(&rport->list);
+> +	list_add_tail(&rport->list, &lport->rport_list);
 
-(4) CONFIG_DM_MQ_DEFAULT=n, fio running on top of ext4
+is there not a mutex or locking mechanism needed when manipulating this
+list?
 
-Ran this test three times. The first two runs passed but during the third run
-fio reported again I/O errors and I found the following in the kernel log:
+> +
+> +	/* tie into nvme target side */
+> +	ret = nvmet_fc_register_targetport(&tinfo, &tgttemplate,
+> NULL,
+> +					&rport->targetport);
+> +	if (ret) {
+> +		list_del(&rport->list);
+> +		(void)nvme_fc_unregister_remoteport(remoteport);
+> +	} else {
+> +		struct fcloop_tgtport *tport;
+> +
+> +		tport = rport->targetport->private;
+> +		tport->rport = rport;
+> +		tport->lport = lport;
+> +		tport->tgtport = rport->targetport;
+> +
+> +		/* mark all of the input buffer consumed */
+> +		ret = count;
+> +	}
+> +
+> +out_free_opts:
+> +	kfree(opts);
+> +	return ret;
+> +}
+> +
 
-[  954.048860] __multipath_map(): (a) returning -5
-[  954.048861] map_request(): clone_and_map_rq() returned -5
-[  954.048862] dm_complete_request: error = -5
-[  954.048870] dm_softirq_done: dm-0 tio->error = -5
-[  954.048873] blk_update_request: 15 callbacks suppressed
-[  954.048874] blk_update_request: I/O error (-5), dev dm-0, sector 159976
+Thanks,
+J
 
-Bart.
