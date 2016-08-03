@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/22] libfc: don't advance state machine for incoming FLOGI
-Date: Wed,  3 Aug 2016 15:13:18 +0200
-Message-ID: <1470230002-37737-19-git-send-email-hare@suse.de>
+Subject: [PATCH 16/22] fc: add missing ELS explanation values
+Date: Wed,  3 Aug 2016 15:13:16 +0200
+Message-ID: <1470230002-37737-17-git-send-email-hare@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40154 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40149 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752165AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1755974AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 3 Aug 2016 09:13:36 -0400
 In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,58 +14,52 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When we receive an FLOGI but have already sent our own we should
-not advance the state machine but rather wait for our FLOGI to
-return before continuing with PLOGI.
+Add missing ELS RJT explanation values from FC-LS3.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_rport.c | 18 ++++++++++++------
- 1 file changed, 12 insertions(+), 6 deletions(-)
+ include/uapi/scsi/fc/fc_els.h | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 3edcc27..6a25771 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -753,6 +753,7 @@ static void fc_rport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
+index 481abbd..989965f 100644
+--- a/include/uapi/scsi/fc/fc_els.h
++++ b/include/uapi/scsi/fc/fc_els.h
+@@ -203,18 +203,33 @@ enum fc_els_rjt_explan {
+ 	ELS_EXPL_NONE =		0x00,	/* No additional explanation */
+ 	ELS_EXPL_SPP_OPT_ERR =	0x01,	/* service parameter error - options */
+ 	ELS_EXPL_SPP_ICTL_ERR =	0x03,	/* service parm error - initiator ctl */
++	ELS_EXPL_SPP_RCTL_ERR = 0x05,	/* service parm error - recipient ctl */
++	ELS_EXPL_SPP_RDF_ERR =	0x07,	/* service parm error - receive data field size */
++	ELS_EXPL_SPP_SEQ_ERR =	0x09,	/* service parm error - concurrrent seq */
++	ELS_EXPL_SPP_CRED_ERR =	0x0b,	/* service parm error - credit */
++	ELS_EXPL_PORT_NAME =	0x0d,	/* invalid n_port/f_port name */
++	ELS_EXPL_NODE_NAME =	0x0e,	/* invalid node/fabric name */
++	ELS_EXPL_CSP =		0x0f,	/* invalid common service parameters */
+ 	ELS_EXPL_AH =		0x11,	/* invalid association header */
+ 	ELS_EXPL_AH_REQ =	0x13,	/* association_header required */
+ 	ELS_EXPL_SID =		0x15,	/* invalid originator S_ID */
+ 	ELS_EXPL_OXID_RXID =	0x17,	/* invalid OX_ID-RX_ID combination */
+ 	ELS_EXPL_INPROG =	0x19,	/* Request already in progress */
+ 	ELS_EXPL_PLOGI_REQD =	0x1e,	/* N_Port login required */
++	ELS_EXPL_PORT_ID =	0x1f,	/* invalid N_Port ID */
+ 	ELS_EXPL_INSUF_RES =	0x29,	/* insufficient resources */
+ 	ELS_EXPL_UNAB_DATA =	0x2a,	/* unable to supply requested data */
+ 	ELS_EXPL_UNSUPR =	0x2c,	/* Request not supported */
+ 	ELS_EXPL_INV_LEN =	0x2d,	/* Invalid payload length */
++	ELS_EXPL_INV_PORT =	0x44,	/* Invalid Port/Node name */
++	ELS_EXPL_LOGIN_EXT =	0x46,	/* Login extension not supported */
++	ELS_EXPL_AUTH =		0x48,	/* Authentification required */
++	ELS_EXPL_VAL_SCAN =	0x50,	/* Periodic scan value not allowed */
++	ELS_EXPL_INV_SCAN =	0x51,	/* Periodic scanning not supported */
++	ELS_EXPL_RES =		0x52,	/* No resources assigned */
++	ELS_EXPL_INV_MAC =	0x60,	/* MAC addressing not supported */
++	ELS_EXPL_VAL_MAC =	0x61,	/* Proposed MAC address incorrectly formed */
+ 	ELS_EXPL_NOT_NEIGHBOR = 0x62,	/* VN2VN_Port not in neighbor set */
+-	/* TBD - above definitions incomplete */
+ };
  
- 	flogi = fc_frame_payload_get(fp, sizeof(*flogi));
- 	if (!flogi) {
-+		FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
- 		err = -FC_EX_ALLOC_ERR;
- 		goto bad;
- 	}
-@@ -772,7 +773,6 @@ put:
- 	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	return;
- bad:
--	FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
- 	fc_rport_error_retry(rdata, err);
- 	goto out;
- }
-@@ -918,11 +918,17 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 	fc_fill_reply_hdr(fp, rx_fp, FC_RCTL_ELS_REP, 0);
- 	lport->tt.frame_send(lport, fp);
- 
--	if (rdata->ids.port_name < lport->wwpn)
--		fc_rport_enter_plogi(rdata);
--	else
--		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
--
-+	/*
-+	 * Do not proceed with the state machine if our
-+	 * FLOGI has crossed with an FLOGI from the
-+	 * remote port; wait for the FLOGI response instead.
-+	 */
-+	if (rdata->rp_state != RPORT_ST_FLOGI) {
-+		if (rdata->ids.port_name < lport->wwpn)
-+			fc_rport_enter_plogi(rdata);
-+		else
-+			fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
-+	}
- 	mutex_unlock(&rdata->rp_mutex);
- 	kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	fc_frame_free(rx_fp);
+ /*
 -- 
 1.8.5.6
 
