@@ -1,50 +1,39 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] usb: storage: fix runtime pm issue in usb_stor_probe2
-Date: Wed, 3 Aug 2016 17:25:22 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1608031656060.2040-100000@iolanthe.rowland.org>
-References: <0c83d917-678d-d4fc-3225-f2e8355f6280@gmail.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 0/2] ibmvfc: FC-TAPE Support
+Date: Wed,  3 Aug 2016 16:36:51 -0500
+Message-ID: <1470260213-19087-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56404 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S1758478AbcHCVbp (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 17:31:45 -0400
-In-Reply-To: <0c83d917-678d-d4fc-3225-f2e8355f6280@gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:10495 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+	by vger.kernel.org with ESMTP id S1755188AbcHCVhP (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 17:37:15 -0400
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u73LYCmY005340
+	for <linux-scsi@vger.kernel.org>; Wed, 3 Aug 2016 17:37:04 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24kkagn5gs-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2016 17:37:04 -0400
+Received: from localhost
+	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+	Wed, 3 Aug 2016 17:37:03 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: james.bottomley@hansenpartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, mpe@ellerman.id.au, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-On Wed, 3 Aug 2016, Heiner Kallweit wrote:
+This patchset introduces optional FC-TAPE/FC Class 3 Error Recovery to the
+ibmvfc client driver.
 
-> Since commit 71723f95463d "PM / runtime: print error when activating a
-> child to unactive parent" I see the following error message:
-> 
-> scsi host2: usb-storage 1-3:1.0
-> scsi host2: runtime PM trying to activate child device host2 but parent
-> 	    (1-3:1.0) is not active
-> 
-> Digging into it it seems to be related to the problem described in the
-> commit message for cd998ded5c12 "i2c: designware: Prevent runtime
-> suspend during adapter registration" as scsi_add_host also calls
-> device_add and after the call to device_add the parent device is
-> suspended.
-> 
-> Fix this by using the approach from the mentioned commit and getting
-> the runtime pm reference before calling scsi_add_host.
+Tyrel Datwyler (2):
+  ibmvfc: Set READ FCP_XFER_READY DISABLED bit in PRLI
+  ibmvfc: add FC Class 3 Error Recovery support
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
+ drivers/scsi/ibmvscsi/ibmvfc.c | 11 +++++++++++
+ drivers/scsi/ibmvscsi/ibmvfc.h |  1 +
+ 2 files changed, 12 insertions(+)
 
-There's nothing wrong with this patch; it's a worthwhile thing to do 
-because it can prevent an unnecessary runtime-suspend/resume cycle.
-
-Still, it looks like the real problem here may lie in
-drivers/scsi/hosts.c.  Commit bc4f24014de5 ("[SCSI] implement runtime
-Power Management") added a call to pm_runtime_set_active() in
-scsi_add_host_with_dma() _after_ device_add() instead of _before_.
-
-If that were changed, this problem would not have occurred.
-
-Alan Stern
+-- 
+2.7.4
 
