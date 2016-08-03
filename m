@@ -1,36 +1,77 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 03/22] fcoe: FIP debugging
-Date: Wed, 3 Aug 2016 10:36:26 -0700
-Message-ID: <cbf099ce-5b8d-7426-52c2-a7882105eb80@sandisk.com>
-References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-4-git-send-email-hare@suse.de>
+From: Heiner Kallweit <hkallweit1@gmail.com>
+Subject: [PATCH] scsi: core: configure runtime pm before calling device_add in
+ scsi_add_host_with_dma
+Date: Wed, 3 Aug 2016 21:49:03 +0200
+Message-ID: <792dc1a9-2280-d1a2-c088-cfdd28c67df3@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0068.outbound.protection.outlook.com ([104.47.41.68]:28928
-	"EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1758086AbcHCTOZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2016 15:14:25 -0400
-In-Reply-To: <1470230002-37737-4-git-send-email-hare@suse.de>
+Received: from mail-wm0-f67.google.com ([74.125.82.67]:33258 "EHLO
+	mail-wm0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753171AbcHCTuh (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 15:50:37 -0400
+Received: by mail-wm0-f67.google.com with SMTP id o80so37851380wme.0
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Aug 2016 12:49:19 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 08/03/2016 06:13 AM, Hannes Reinecke wrote:
-> @@ -2407,15 +2411,21 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
->  		 */
->  		if (fip->lp->wwpn > rdata->ids.port_name &&
->  		    !(frport->flags & FIP_FL_REC_OR_P2P)) {
-> +			LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
-> +					"port_id collision\n");
->  			fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
->  					  frport->enode_mac, 0);
+Runtime PM should be configured already once we call device_add. See also
+the description in this mail thread
+https://lists.linuxfoundation.org/pipermail/linux-pm/2009-November/023198.html
+or the order of calls e.g. in usb_new_device.
 
-Some users search through the kernel source tree for error and debug 
-messages. For these users it is easier if the entire message occurs on a 
-single line. Otherwise this patch looks fine to me.
+The changed order also helps to avoid scenarios where runtime pm for
+&shost->shost_gendev is activated whilst the parent is suspended,
+resulting in error message "runtime PM trying to activate child device
+hostx but parent yyy is not active".
 
-Bart.
+In addition properly reverse the runtime pm calls in the error path.
+
+Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
+---
+ drivers/scsi/hosts.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index ba9af4a..9ab94ad 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -246,10 +246,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 
+ 	shost->dma_dev = dma_dev;
+ 
+-	error = device_add(&shost->shost_gendev);
+-	if (error)
+-		goto out_destroy_freelist;
+-
+ 	/*
+ 	 * Increase usage count temporarily here so that calling
+ 	 * scsi_autopm_put_host() will trigger runtime idle if there is
+@@ -260,6 +256,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 	pm_runtime_enable(&shost->shost_gendev);
+ 	device_enable_async_suspend(&shost->shost_gendev);
+ 
++	error = device_add(&shost->shost_gendev);
++	if (error)
++		goto out_destroy_freelist;
++
+ 	scsi_host_set_state(shost, SHOST_RUNNING);
+ 	get_device(shost->shost_gendev.parent);
+ 
+@@ -309,6 +309,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+  out_del_gendev:
+ 	device_del(&shost->shost_gendev);
+  out_destroy_freelist:
++	device_disable_async_suspend(&shost->shost_gendev);
++	pm_runtime_disable(&shost->shost_gendev);
++	pm_runtime_set_suspended(&shost->shost_gendev);
++	pm_runtime_put_noidle(&shost->shost_gendev);
+ 	scsi_destroy_command_freelist(shost);
+  out_destroy_tags:
+ 	if (shost_use_blk_mq(shost))
+-- 
+2.9.2
+
