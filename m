@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/22] libfc: reset timeout on queue full
-Date: Wed,  3 Aug 2016 15:13:21 +0200
-Message-ID: <1470230002-37737-22-git-send-email-hare@suse.de>
+Subject: [PATCH 22/22] fcoe: set default TC priority
+Date: Wed,  3 Aug 2016 15:13:22 +0200
+Message-ID: <1470230002-37737-23-git-send-email-hare@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40098 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40162 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753035AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1756040AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 3 Aug 2016 09:13:36 -0400
 In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,78 +14,44 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When we're receiving a timeout we should be checking for queue
-full status; if there are still some packets pending we should
-be resetting the counter to ensure we're not missing out any
-packets which are still queued.
+If DCB is not enabled or compiled in we still should be setting
+a sane default priority. So put FCoE frames in priority class
+'interactive' and FIP frames in priority class 'besteffort'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_fcp.c | 21 ++++++++++++++++++---
- include/scsi/libfc.h        |  3 ++-
- 2 files changed, 20 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe.c | 9 +++++++--
+ 1 file changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 7aa28a6..dfa1e12 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -254,8 +254,10 @@ static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index c907661..f8ec94a 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2168,6 +2168,8 @@ static bool fcoe_match(struct net_device *netdev)
   */
- static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
  {
--	if (!(fsp->state & FC_SRB_COMPL))
-+	if (!(fsp->state & FC_SRB_COMPL)) {
- 		mod_timer(&fsp->timer, jiffies + delay);
-+		fsp->timer_delay = delay;
-+	}
++	int ctrl_prio = TC_PRIO_BESTEFFORT;
++	int fcoe_prio = TC_PRIO_INTERACTIVE;
+ #ifdef CONFIG_DCB
+ 	int dcbx;
+ 	u8 fup, up;
+@@ -2194,10 +2196,13 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ 			fup = dcb_getapp(netdev, &app);
+ 		}
+ 
+-		fcoe->priority = ffs(up) ? ffs(up) - 1 : 0;
+-		ctlr->priority = ffs(fup) ? ffs(fup) - 1 : fcoe->priority;
++		fcoe_prio = ffs(up) ? ffs(up) - 1 : 0;
++		ctlr_prio = ffs(fup) ? ffs(fup) - 1 : fcoe_prio;
++		prio_set = true;
+ 	}
+ #endif
++	fcoe->priority = fcoe_prio;
++	ctlr->priority = ctlr_prio;
  }
  
- static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
-@@ -931,6 +933,12 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 			 * Wait a at least one jiffy to see if it is delivered.
- 			 * If this expires without data, we may do SRR.
- 			 */
-+			if (fsp->lp->qfull) {
-+				FC_FCP_DBG(fsp, "tgt %6.6x data underrun, "
-+					   "retry due to queue busy\n",
-+					   fsp->rport->port_id);
-+				return;
-+			}
- 			FC_FCP_DBG(fsp, "tgt %6.6x xfer len %zx data underrun "
- 				   "len %x, data len %x\n",
- 				   fsp->rport->port_id,
-@@ -1431,8 +1439,15 @@ static void fc_fcp_timeout(unsigned long data)
- 	if (fsp->cdb_cmd.fc_tm_flags)
- 		goto unlock;
- 
--	FC_FCP_DBG(fsp, "fcp timeout, flags %x state %x\n",
--		   rpriv->flags, fsp->state);
-+	if (fsp->lp->qfull) {
-+		FC_FCP_DBG(fsp, "fcp timeout, resetting timer delay %d\n",
-+			   fsp->timer_delay);
-+		setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
-+		fc_fcp_timer_set(fsp, fsp->timer_delay);
-+		goto unlock;
-+	}
-+	FC_FCP_DBG(fsp, "fcp timeout, delay %d flags %x state %x\n",
-+		   fsp->timer_delay, rpriv->flags, fsp->state);
- 	fsp->state |= FC_SRB_FCP_PROCESSING_TMO;
- 
- 	if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index dc42d80..1fcbc9f 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -355,7 +355,8 @@ struct fc_fcp_pkt {
- 
- 	/* Timeout/error related information */
- 	struct timer_list timer;
--	int	          wait_for_comp;
-+	int		  wait_for_comp;
-+	int		  timer_delay;
- 	u32		  recov_retry;
- 	struct fc_seq	  *recov_seq;
- 	struct completion tm_done;
+ enum fcoe_create_link_state {
 -- 
 1.8.5.6
 
