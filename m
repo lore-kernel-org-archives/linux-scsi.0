@@ -1,74 +1,50 @@
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: [PATCH] usb: storage: fix runtime pm issue in usb_stor_probe2
-Date: Wed, 3 Aug 2016 21:46:47 +0200
-Message-ID: <0c83d917-678d-d4fc-3225-f2e8355f6280@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] usb: storage: fix runtime pm issue in usb_stor_probe2
+Date: Wed, 3 Aug 2016 17:25:22 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1608031656060.2040-100000@iolanthe.rowland.org>
+References: <0c83d917-678d-d4fc-3225-f2e8355f6280@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33249 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752682AbcHCTuh (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 15:50:37 -0400
+Received: from iolanthe.rowland.org ([192.131.102.54]:56404 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S1758478AbcHCVbp (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 17:31:45 -0400
+In-Reply-To: <0c83d917-678d-d4fc-3225-f2e8355f6280@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Linux USB Mailing List <linux-usb@vger.kernel.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Heiner Kallweit <hkallweit1@gmail.com>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Linux USB Mailing List <linux-usb@vger.kernel.org>, SCSI development list <linux-scsi@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Since commit 71723f95463d "PM / runtime: print error when activating a
-child to unactive parent" I see the following error message:
+On Wed, 3 Aug 2016, Heiner Kallweit wrote:
 
-scsi host2: usb-storage 1-3:1.0
-scsi host2: runtime PM trying to activate child device host2 but parent
-	    (1-3:1.0) is not active
+> Since commit 71723f95463d "PM / runtime: print error when activating a
+> child to unactive parent" I see the following error message:
+> 
+> scsi host2: usb-storage 1-3:1.0
+> scsi host2: runtime PM trying to activate child device host2 but parent
+> 	    (1-3:1.0) is not active
+> 
+> Digging into it it seems to be related to the problem described in the
+> commit message for cd998ded5c12 "i2c: designware: Prevent runtime
+> suspend during adapter registration" as scsi_add_host also calls
+> device_add and after the call to device_add the parent device is
+> suspended.
+> 
+> Fix this by using the approach from the mentioned commit and getting
+> the runtime pm reference before calling scsi_add_host.
 
-Digging into it it seems to be related to the problem described in the
-commit message for cd998ded5c12 "i2c: designware: Prevent runtime
-suspend during adapter registration" as scsi_add_host also calls
-device_add and after the call to device_add the parent device is
-suspended.
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
-Fix this by using the approach from the mentioned commit and getting
-the runtime pm reference before calling scsi_add_host.
+There's nothing wrong with this patch; it's a worthwhile thing to do 
+because it can prevent an unnecessary runtime-suspend/resume cycle.
 
-Signed-off-by: Heiner Kallweit <hkallweit1@gmail.com>
----
- drivers/usb/storage/usb.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
+Still, it looks like the real problem here may lie in
+drivers/scsi/hosts.c.  Commit bc4f24014de5 ("[SCSI] implement runtime
+Power Management") added a call to pm_runtime_set_active() in
+scsi_add_host_with_dma() _after_ device_add() instead of _before_.
 
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index ef2d8cd..8c5f011 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -1070,17 +1070,17 @@ int usb_stor_probe2(struct us_data *us)
- 	result = usb_stor_acquire_resources(us);
- 	if (result)
- 		goto BadDevice;
-+	usb_autopm_get_interface_no_resume(us->pusb_intf);
- 	snprintf(us->scsi_name, sizeof(us->scsi_name), "usb-storage %s",
- 					dev_name(&us->pusb_intf->dev));
- 	result = scsi_add_host(us_to_host(us), dev);
- 	if (result) {
- 		dev_warn(dev,
- 				"Unable to add the scsi host\n");
--		goto BadDevice;
-+		goto HostAddErr;
- 	}
- 
- 	/* Submit the delayed_work for SCSI-device scanning */
--	usb_autopm_get_interface_no_resume(us->pusb_intf);
- 	set_bit(US_FLIDX_SCAN_PENDING, &us->dflags);
- 
- 	if (delay_use > 0)
-@@ -1090,6 +1090,8 @@ int usb_stor_probe2(struct us_data *us)
- 	return 0;
- 
- 	/* We come here if there are any problems */
-+HostAddErr:
-+	usb_autopm_put_interface_no_suspend(us->pusb_intf);
- BadDevice:
- 	usb_stor_dbg(us, "storage_probe() failed\n");
- 	release_everything(us);
--- 
-2.9.2
+If that were changed, this problem would not have occurred.
+
+Alan Stern
 
