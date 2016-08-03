@@ -1,44 +1,137 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 05/22] libfc: Do not attempt to login if the port is already started
-Date: Wed,  3 Aug 2016 15:13:05 +0200
-Message-ID: <1470230002-37737-6-git-send-email-hare@suse.de>
+Subject: [PATCH 04/22] libfc: spurious I/O error under high load
+Date: Wed,  3 Aug 2016 15:13:04 +0200
+Message-ID: <1470230002-37737-5-git-send-email-hare@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40030 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40033 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753408AbcHCNNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1752165AbcHCNNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Wed, 3 Aug 2016 09:13:31 -0400
 In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>
 
-When the port is already started we don't need to login; that
-will only confuse the state machine.
+If a command times out libfc is sending an REC, which also
+might fail (due to frames being lost or something).
+If no data has been transferred we can simply retry
+the command, but the current code sets a state of FC_ERROR,
+which then is being translated into DID_ERROR, resulting
+in an I/O error.
+So to handle this properly we need to set a separate
+state FC_TRANS_RESET and mapping it onto DID_SOFT_RETRY.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/libfc/fc_rport.c | 6 ++++++
- 1 file changed, 6 insertions(+)
+ drivers/scsi/libfc/fc_fcp.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index afc1f9b..8dd656e 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -418,6 +418,12 @@ static int fc_rport_login(struct fc_rport_priv *rdata)
- {
- 	mutex_lock(&rdata->rp_mutex);
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index bd4bdbf..289c481 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -122,6 +122,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *, struct fc_frame *);
+ #define FC_HRD_ERROR		9
+ #define FC_CRC_ERROR		10
+ #define FC_TIMED_OUT		11
++#define FC_TRANS_RESET		12
  
-+	if (rdata->flags & FC_RP_STARTED) {
-+		FC_RPORT_DBG(rdata, "port already started\n");
-+		mutex_unlock(&rdata->rp_mutex);
-+		return 0;
-+	}
-+
- 	rdata->flags |= FC_RP_STARTED;
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_READY:
+ /*
+  * Error recovery timeout values.
+@@ -283,7 +284,7 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+  * fc_io_compl() will notify the SCSI-ml that the I/O is done.
+  * The SCSI-ml will retry the command.
+  */
+-static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
++static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp, int status_code)
+ {
+ 	if (fsp->seq_ptr) {
+ 		fsp->lp->tt.exch_done(fsp->seq_ptr);
+@@ -292,7 +293,7 @@ static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
+ 
+ 	fsp->state &= ~FC_SRB_ABORT_PENDING;
+ 	fsp->io_status = 0;
+-	fsp->status_code = FC_ERROR;
++	fsp->status_code = status_code;
+ 	fc_fcp_complete_locked(fsp);
+ }
+ 
+@@ -1209,7 +1210,7 @@ static void fc_fcp_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		return;
+ 
+ 	if (error == -FC_EX_CLOSED) {
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		goto unlock;
+ 	}
+ 
+@@ -1522,9 +1523,9 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 		case ELS_RJT_LOGIC:
+ 		case ELS_RJT_UNAB:
+ 			FC_FCP_DBG(fsp, "device %x REC reject "
+-				   "reason %d expl %d\n",
++				   "reason %x expl %x xfer_len %zx\n",
+ 				   fsp->rport->port_id, rjt->er_reason,
+-				   rjt->er_explan);
++				   rjt->er_explan, fsp->xfer_len);
+ 			/*
+ 			 * If no data transfer, the command frame got dropped
+ 			 * so we just retry.  If data was transferred, we
+@@ -1533,10 +1534,11 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 			 */
+ 			if (rjt->er_explan == ELS_EXPL_OXID_RXID &&
+ 			    fsp->xfer_len == 0) {
+-				fc_fcp_retry_cmd(fsp);
++				fsp->state |= FC_SRB_ABORTED;
++				fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
+ 				break;
+ 			}
+-			fc_fcp_recovery(fsp, FC_ERROR);
++			fc_fcp_recovery(fsp, FC_TRANS_RESET);
+ 			break;
+ 		}
+ 	} else if (opcode == ELS_LS_ACC) {
+@@ -1632,7 +1634,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	case -FC_EX_CLOSED:
+ 		FC_FCP_DBG(fsp, "REC %p fid %6.6x exchange closed\n",
+ 			   fsp, fsp->rport->port_id);
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		break;
+ 
+ 	default:
+@@ -1731,7 +1733,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	fc_fcp_pkt_hold(fsp);		/* hold for outstanding SRR */
+ 	return;
+ retry:
+-	fc_fcp_retry_cmd(fsp);
++	fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
+ }
+ 
+ /**
+@@ -1803,7 +1805,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		FC_FCP_DBG(fsp, "SRR error, exchange closed\n");
+ 		/* fall through */
+ 	default:
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		break;
+ 	}
+ 	fc_fcp_unlock_pkt(fsp);
+@@ -2016,6 +2018,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			   "due to FC_CMD_RESET\n");
+ 		sc_cmd->result = (DID_RESET << 16);
+ 		break;
++	case FC_TRANS_RESET:
++		FC_FCP_DBG(fsp, "Returning DID_SOFT_ERROR to scsi-ml "
++			   "due to FC_TRANS_RESET\n");
++		sc_cmd->result = (DID_SOFT_ERROR << 16);
++		break;
+ 	case FC_HRD_ERROR:
+ 		FC_FCP_DBG(fsp, "Returning DID_NO_CONNECT to scsi-ml "
+ 			   "due to FC_HRD_ERROR\n");
 -- 
 1.8.5.6
 
