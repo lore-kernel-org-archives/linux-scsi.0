@@ -1,42 +1,58 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/22] libfc: Do not drop out-of-order frames
-Date: Wed,  3 Aug 2016 15:13:20 +0200
-Message-ID: <1470230002-37737-21-git-send-email-hare@suse.de>
+Subject: [PATCH 11/22] fcoe: inhibit writing invalid values into the 'enabled' attribute
+Date: Wed,  3 Aug 2016 15:13:11 +0200
+Message-ID: <1470230002-37737-12-git-send-email-hare@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40161 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40135 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1756013AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2016 09:13:36 -0400
+	id S1755880AbcHCNNf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Aug 2016 09:13:35 -0400
 In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When receiving packets from the network we cannot guarantee any
-frame ordering, so we should be receiving all valid frames and
-let the upper layers deal with it.
+The 'enabled' sysfs attribute only accepts the values '0' and '1',
+so we should error out any other values.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_exch.c | 3 ---
- 1 file changed, 3 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 26a43b3..3e9275f 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1578,9 +1578,6 @@ static void fc_exch_recv_seq_resp(struct fc_exch_mgr *mp, struct fc_frame *fp)
- 	if (fc_sof_is_init(sof)) {
- 		sp->ssb_stat |= SSB_ST_RESP;
- 		sp->id = fh->fh_seq_id;
--	} else if (sp->id != fh->fh_seq_id) {
--		atomic_inc(&mp->stats.seq_not_found);
--		goto rel;
- 	}
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 9e6baac..9cf3d56 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -335,16 +335,24 @@ static ssize_t store_ctlr_enabled(struct device *dev,
+ 				  const char *buf, size_t count)
+ {
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
++	bool enabled;
+ 	int rc;
  
- 	f_ctl = ntoh24(fh->fh_f_ctl);
++	if (*buf == '1')
++		enabled = true;
++	else if (*buf == '0')
++		enabled = false;
++	else
++		return -EINVAL;
++
+ 	switch (ctlr->enabled) {
+ 	case FCOE_CTLR_ENABLED:
+-		if (*buf == '1')
++		if (enabled)
+ 			return count;
+ 		ctlr->enabled = FCOE_CTLR_DISABLED;
+ 		break;
+ 	case FCOE_CTLR_DISABLED:
+-		if (*buf == '0')
++		if (!enabled)
+ 			return count;
+ 		ctlr->enabled = FCOE_CTLR_ENABLED;
+ 		break;
 -- 
 1.8.5.6
 
