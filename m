@@ -1,54 +1,82 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
-Date: Wed, 3 Aug 2016 22:01:45 +0300
-Message-ID: <20160803190145.GD775@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33643 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1757182AbcHCTDK (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 3 Aug 2016 15:03:10 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH 0/2] Bio flags use zone cache when available.
+Date: Wed,  3 Aug 2016 14:06:43 -0500
+Message-ID: <1470251205-4916-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Josh Bingaman <josh.bingaman@seagate.com>, Hannes Reinecke <hare@suse.de>, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
-To: bryantly@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
 
-Hello Bryant G. Ly,
+Hi,
 
-The patch 88a678bbc34c: "ibmvscsis: Initial commit of IBM VSCSI Tgt
-Driver" from Jun 28, 2016, leads to the following static checker
-warning:
+As per Christoph's request this patch incorporates Hannes' cache of zone
+information.
 
-	drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c:1981 ibmvscsis_srp_login()
-	warn: suspicious bitop condition
+The approach is to provide the same blkreport format as would be done 
+when BLK_DEV_ZONED is not enabled via an ioctl.
+Reset WP, Open, and Close zone will update the zone cache.
 
-drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-  1967          iport = (struct port_id *)req->initiator_port_id;
-  1968          tport = (struct port_id *)req->target_port_id;
-  1969          fmt = (struct format_code *)&req->req_buf_fmt;
-  1970          if (be32_to_cpu(req->req_it_iu_len) > SRP_MAX_IU_LEN)
-  1971                  reason = SRP_LOGIN_REJ_REQ_IT_IU_LENGTH_TOO_LARGE;
-  1972          else if (be32_to_cpu(req->req_it_iu_len) < 64)
-  1973                  reason = SRP_LOGIN_REJ_UNABLE_ESTABLISH_CHANNEL;
-  1974          else if ((be64_to_cpu(iport->id_extension) > (MAX_NUM_PORTS - 1)) ||
-  1975                   (be64_to_cpu(tport->id_extension) > (MAX_NUM_PORTS - 1)))
-  1976                  reason = SRP_LOGIN_REJ_UNABLE_ASSOCIATE_CHANNEL;
-  1977          else if (req->req_flags & SRP_MULTICHAN_MULTI)
-  1978                  reason = SRP_LOGIN_REJ_MULTI_CHANNEL_UNSUPPORTED;
-  1979          else if (fmt->buffers & (~SUPPORTED_FORMATS))
-  1980                  reason = SRP_LOGIN_REJ_UNSUPPORTED_DESCRIPTOR_FMT;
-  1981          else if ((fmt->buffers | SUPPORTED_FORMATS) == 0)
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-SUPPORTED_FORMATS is 1 << 1 so it's never zero.
+Using blkdev_issue_zone_report() from within the kernel the report
+will still come directly from the media. I am considering an option
+for the ioctl to force pulling the zone report from the media when
+BLK_DEV_ZONED is enabled and using the resulting information to
+refresh the zone cache. It is not clear that this is useful so I
+have not included that in this patch.
 
-  1982                  reason = SRP_LOGIN_REJ_UNSUPPORTED_DESCRIPTOR_FMT;
-  1983  
-  1984          if (vscsi->state == SRP_PROCESSING)
-  1985                  reason = SRP_LOGIN_REJ_CHANNEL_LIMIT_REACHED;
-  1986  
+The follow-on patch just enables the zone cache to be populated
+using a Seagate's HostAware drive.
+
+This series is based off of Linus current tip post (f38d2e5313f0af..)
+and builds on top of the previous series of block layer support:
+    Add ioctl to issue ZBC/ZAC commands via block layer
+    Add bio/request flags to issue ZBC/ZAC commands
+
+as well as the series post by Hannes'
+    sd_zbc: Fix handling of ZBC read after write pointer
+    sd: Limit messages for ZBC disks capacity change
+    sd: Implement support for ZBC devices
+    sd: Implement new RESET_WP provisioning mode
+    sd: configure ZBC devices
+...    
+
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: Damien Le Moal <damien.lemoal@hgst.com>
+
+Shaun Tancheff (2):
+  bio/zbc support for zone cache
+  Enable support for Seagate HostAware drives (testing).
+
+ block/blk-lib.c        |   3 +-
+ block/blk-zoned.c      | 190 +++++++++++++++++++++++++++++++++++++++++++++++++
+ block/ioctl.c          |  39 +++++++---
+ drivers/scsi/sd.c      |  22 +++---
+ drivers/scsi/sd.h      |  20 ++++--
+ drivers/scsi/sd_zbc.c  | 150 ++++++++++++++++++++++++++++++++------
+ include/linux/blkdev.h |  14 +++-
+ 7 files changed, 389 insertions(+), 49 deletions(-)
+
+-- 
+2.8.1
 
 
-regards,
-dan carpenter
+
+
+    sd_zbc: Fix handling of ZBC read after write pointer
+    sd: Limit messages for ZBC disks capacity change
+    sd: Implement support for ZBC devices
+    sd: Implement new RESET_WP provisioning mode
+    sd: configure ZBC devices
+    block: Add 'BLK_MQ_RQ_QUEUE_DONE' return value
+    block: Introduce BLKPREP_DONE
+    block: Add 'zoned' sysfs queue attribute
+    block: Implement support for zoned block devices
+    block: update chunk_sectors in blk_stack_limits()
+    blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+    sd: configure ZBC devices
+    block: Add 'BLK_MQ_RQ_QUEUE_DONE' return value
+    block: Introduce BLKPREP_DONE
+    block: Add 'zoned' sysfs queue attribute
+    block: Implement support for zoned block devices
+    block: update chunk_sectors in blk_stack_limits()
+    blk-sysfs: Add 'chunk_sectors' to sysfs attributes
