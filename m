@@ -1,437 +1,214 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/22] libfc: Revisit kref handling
-Date: Wed,  3 Aug 2016 15:13:01 +0200
-Message-ID: <1470230002-37737-2-git-send-email-hare@suse.de>
+Subject: [PATCH 03/22] fcoe: FIP debugging
+Date: Wed,  3 Aug 2016 15:13:03 +0200
+Message-ID: <1470230002-37737-4-git-send-email-hare@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40031 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40092 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1753380AbcHCNNb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2016 09:13:31 -0400
+	id S1753253AbcHCNNd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 3 Aug 2016 09:13:33 -0400
 In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The kref handling in fc_rport is a mess. This patch updates
-the kref handling according to the following rules:
-
-- Take a reference whenever scheduling a workqueue
-- Take a reference whenever an ELS command is send
-- Drop the reference at the end of the workqueue function
-- Drop the reference at the end of handling ELS replies
-- Take a reference when allocating an rport
-- Drop the reference when removing an rport
+Add additional statements for debugging FIP frames.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_rport.c | 134 ++++++++++++++++++++++++++++++++----------
- 1 file changed, 103 insertions(+), 31 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c | 51 ++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 93f5961..6a98bb8 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -44,6 +44,17 @@
-  * path this potential over-use of the mutex is acceptable.
-  */
- 
-+/*
-+ * RPORT REFERENCE COUNTING
-+ *
-+ * A rport reference should be taken when:
-+ * - a workqueue item is scheduled
-+ * - an ELS request is send
-+ * The reference should be dropped when:
-+ * - the workqueue function has finished
-+ * - the ELS response is handled
-+ */
-+
- #include <linux/kernel.h>
- #include <linux/spinlock.h>
- #include <linux/interrupt.h>
-@@ -242,6 +253,8 @@ static void fc_rport_state_enter(struct fc_rport_priv *rdata,
- /**
-  * fc_rport_work() - Handler for remote port events in the rport_event_queue
-  * @work: Handle to the remote port being dequeued
-+ *
-+ * Reference counting: drops kref on return
-  */
- static void fc_rport_work(struct work_struct *work)
- {
-@@ -272,8 +285,10 @@ static void fc_rport_work(struct work_struct *work)
- 		kref_get(&rdata->kref);
- 		mutex_unlock(&rdata->rp_mutex);
- 
--		if (!rport)
-+		if (!rport) {
-+			FC_RPORT_DBG(rdata, "No rport!\n");
- 			rport = fc_remote_port_add(lport->host, 0, &ids);
-+		}
- 		if (!rport) {
- 			FC_RPORT_DBG(rdata, "Failed to add the rport\n");
- 			lport->tt.rport_logoff(rdata);
-@@ -329,7 +344,8 @@ static void fc_rport_work(struct work_struct *work)
- 			FC_RPORT_DBG(rdata, "lld callback ev %d\n", event);
- 			rdata->lld_event_callback(lport, rdata, event);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index a569c65..1d0bec6 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -801,6 +801,8 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 	return -EINPROGRESS;
+ drop:
+ 	kfree_skb(skb);
++	LIBFCOE_FIP_DBG(fip, "drop els_send op %u d_id %x\n",
++			op, ntoh24(fh->fh_d_id));
+ 	return -EINVAL;
+ }
+ EXPORT_SYMBOL(fcoe_ctlr_els_send);
+@@ -2393,6 +2395,8 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
+ 	switch (fip->state) {
+ 	case FIP_ST_VNMP_CLAIM:
+ 	case FIP_ST_VNMP_UP:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: send reply, state %x\n",
++				fip->state);
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
+ 				  frport->enode_mac, 0);
+ 		break;
+@@ -2407,15 +2411,21 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
+ 		 */
+ 		if (fip->lp->wwpn > rdata->ids.port_name &&
+ 		    !(frport->flags & FIP_FL_REC_OR_P2P)) {
++			LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
++					"port_id collision\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
+ 					  frport->enode_mac, 0);
+ 			break;
  		}
--		cancel_delayed_work_sync(&rdata->retry_work);
-+		if (cancel_delayed_work_sync(&rdata->retry_work))
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
- 
- 		/*
- 		 * Reset any outstanding exchanges before freeing rport.
-@@ -381,6 +397,7 @@ static void fc_rport_work(struct work_struct *work)
- 		mutex_unlock(&rdata->rp_mutex);
+ 		/* fall through */
+ 	case FIP_ST_VNMP_START:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
++				"restart VN2VN negotiation\n");
+ 		fcoe_ctlr_vn_restart(fip);
+ 		break;
+ 	default:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: ignore state %x\n",
++				fip->state);
  		break;
  	}
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
  }
+@@ -2437,9 +2447,12 @@ static void fcoe_ctlr_vn_probe_reply(struct fcoe_ctlr *fip,
+ 	case FIP_ST_VNMP_PROBE1:
+ 	case FIP_ST_VNMP_PROBE2:
+ 	case FIP_ST_VNMP_CLAIM:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_reply: restart state %x\n",
++				fip->state);
+ 		fcoe_ctlr_vn_restart(fip);
+ 		break;
+ 	case FIP_ST_VNMP_UP:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_reply: send claim notify\n");
+ 		fcoe_ctlr_vn_send_claim(fip);
+ 		break;
+ 	default:
+@@ -2478,15 +2491,18 @@ static void fcoe_ctlr_vn_add(struct fcoe_ctlr *fip, struct fc_rport_priv *new)
  
- /**
-@@ -431,10 +448,14 @@ static int fc_rport_login(struct fc_rport_priv *rdata)
-  * Set the new event so that the old pending event will not occur.
-  * Since we have the mutex, even if fc_rport_work() is already started,
-  * it'll see the new event.
-+ *
-+ * Reference counting: does not modify kref
-  */
- static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
- 				  enum fc_rport_event event)
- {
-+	struct fc_lport *lport = rdata->local_port;
-+
- 	if (rdata->rp_state == RPORT_ST_DELETE)
- 		return;
+ 	ids = &rdata->ids;
+ 	if ((ids->port_name != -1 && ids->port_name != new->ids.port_name) ||
+-	    (ids->node_name != -1 && ids->node_name != new->ids.node_name))
++	    (ids->node_name != -1 && ids->node_name != new->ids.node_name)) {
++		LIBFCOE_FIP_DBG(fip, "vn_add rport logoff %6.6x\n", port_id);
+ 		lport->tt.rport_logoff(rdata);
++	}
+ 	ids->port_name = new->ids.port_name;
+ 	ids->node_name = new->ids.node_name;
+ 	mutex_unlock(&lport->disc.disc_mutex);
  
-@@ -442,8 +463,11 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
- 
- 	fc_rport_state_enter(rdata, RPORT_ST_DELETE);
- 
--	if (rdata->event == RPORT_EV_NONE)
--		queue_work(rport_event_queue, &rdata->event_work);
-+	kref_get(&rdata->kref);
-+	if (rdata->event == RPORT_EV_NONE &&
-+	    !queue_work(rport_event_queue, &rdata->event_work))
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+
- 	rdata->event = event;
+ 	frport = fcoe_ctlr_rport(rdata);
+-	LIBFCOE_FIP_DBG(fip, "vn_add rport %6.6x %s\n",
+-			port_id, frport->fcoe_len ? "old" : "new");
++	LIBFCOE_FIP_DBG(fip, "vn_add rport %6.6x %s state %d\n",
++			port_id, frport->fcoe_len ? "old" : "new",
++			rdata->rp_state);
+ 	*frport = *fcoe_ctlr_rport(new);
+ 	frport->time = 0;
  }
+@@ -2529,6 +2545,7 @@ static void fcoe_ctlr_vn_claim_notify(struct fcoe_ctlr *fip,
+ 	struct fcoe_rport *frport = fcoe_ctlr_rport(new);
  
-@@ -484,15 +508,22 @@ out:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: schedules workqueue, does not modify kref
-  */
- static void fc_rport_enter_ready(struct fc_rport_priv *rdata)
- {
-+	struct fc_lport *lport = rdata->local_port;
-+
- 	fc_rport_state_enter(rdata, RPORT_ST_READY);
- 
- 	FC_RPORT_DBG(rdata, "Port is Ready\n");
- 
--	if (rdata->event == RPORT_EV_NONE)
--		queue_work(rport_event_queue, &rdata->event_work);
-+	kref_get(&rdata->kref);
-+	if (rdata->event == RPORT_EV_NONE &&
-+	    !queue_work(rport_event_queue, &rdata->event_work))
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+
- 	rdata->event = RPORT_EV_READY;
- }
- 
-@@ -503,13 +534,17 @@ static void fc_rport_enter_ready(struct fc_rport_priv *rdata)
-  * Locking Note: Called without the rport lock held. This
-  * function will hold the rport lock, call an _enter_*
-  * function and then unlock the rport.
-+ *
-+ * Reference counting: Drops kref on return.
-  */
- static void fc_rport_timeout(struct work_struct *work)
- {
- 	struct fc_rport_priv *rdata =
- 		container_of(work, struct fc_rport_priv, retry_work.work);
-+	struct fc_lport *lport = rdata->local_port;
- 
- 	mutex_lock(&rdata->rp_mutex);
-+	FC_RPORT_DBG(rdata, "Port timeout, state %s\n", fc_rport_state(rdata));
- 
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_FLOGI:
-@@ -535,6 +570,7 @@ static void fc_rport_timeout(struct work_struct *work)
- 	}
- 
- 	mutex_unlock(&rdata->rp_mutex);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
- /**
-@@ -544,6 +580,8 @@ static void fc_rport_timeout(struct work_struct *work)
-  *
-  * Locking Note: The rport lock is expected to be held before
-  * calling this routine
-+ *
-+ * Reference counting: does not modify kref
-  */
- static void fc_rport_error(struct fc_rport_priv *rdata, struct fc_frame *fp)
- {
-@@ -582,11 +620,14 @@ static void fc_rport_error(struct fc_rport_priv *rdata, struct fc_frame *fp)
-  *
-  * Locking Note: The rport lock is expected to be held before
-  * calling this routine
-+ *
-+ * Reference counting: increments kref when scheduling retry_work
-  */
- static void fc_rport_error_retry(struct fc_rport_priv *rdata,
- 				 struct fc_frame *fp)
- {
- 	unsigned long delay = msecs_to_jiffies(FC_DEF_E_D_TOV);
-+	struct fc_lport *lport = rdata->local_port;
- 
- 	/* make sure this isn't an FC_EX_CLOSED error, never retry those */
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
-@@ -599,7 +640,9 @@ static void fc_rport_error_retry(struct fc_rport_priv *rdata,
- 		/* no additional delay on exchange timeouts */
- 		if (PTR_ERR(fp) == -FC_EX_TIMEOUT)
- 			delay = 0;
--		schedule_delayed_work(&rdata->retry_work, delay);
-+		kref_get(&rdata->kref);
-+		if (!schedule_delayed_work(&rdata->retry_work, delay))
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 	if (frport->flags & FIP_FL_REC_OR_P2P) {
++		LIBFCOE_FIP_DBG(fip, "send probe req for P2P/REC\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
  		return;
  	}
- 
-@@ -720,6 +763,8 @@ bad:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_flogi(struct fc_rport_priv *rdata)
- {
-@@ -738,18 +783,21 @@ static void fc_rport_enter_flogi(struct fc_rport_priv *rdata)
- 	if (!fp)
- 		return fc_rport_error_retry(rdata, fp);
- 
-+	kref_get(&rdata->kref);
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_FLOGI,
- 				  fc_rport_flogi_resp, rdata,
--				  2 * lport->r_a_tov))
-+				  2 * lport->r_a_tov)) {
- 		fc_rport_error_retry(rdata, NULL);
--	else
--		kref_get(&rdata->kref);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+	}
- }
- 
- /**
-  * fc_rport_recv_flogi_req() - Handle Fabric Login (FLOGI) request in p-mp mode
-  * @lport: The local port that received the PLOGI request
-  * @rx_fp: The PLOGI request frame
-+ *
-+ * Reference counting: drops kref on return
-  */
- static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 				    struct fc_frame *rx_fp)
-@@ -804,8 +852,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- 		 * RPORT wouldn;t have created and 'rport_lookup' would have
- 		 * failed anyway in that case.
- 		 */
--		if (lport->point_to_multipoint)
--			break;
-+		break;
- 	case RPORT_ST_DELETE:
- 		mutex_unlock(&rdata->rp_mutex);
- 		rjt_data.reason = ELS_RJT_FIP;
-@@ -949,6 +996,8 @@ fc_rport_compatible_roles(struct fc_lport *lport, struct fc_rport_priv *rdata)
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
- {
-@@ -975,12 +1024,13 @@ static void fc_rport_enter_plogi(struct fc_rport_priv *rdata)
+@@ -2536,25 +2553,37 @@ static void fcoe_ctlr_vn_claim_notify(struct fcoe_ctlr *fip,
+ 	case FIP_ST_VNMP_START:
+ 	case FIP_ST_VNMP_PROBE1:
+ 	case FIP_ST_VNMP_PROBE2:
+-		if (new->ids.port_id == fip->port_id)
++		if (new->ids.port_id == fip->port_id) {
++			LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++					"restart, state %d\n",
++					fip->state);
+ 			fcoe_ctlr_vn_restart(fip);
++		}
+ 		break;
+ 	case FIP_ST_VNMP_CLAIM:
+ 	case FIP_ST_VNMP_UP:
+ 		if (new->ids.port_id == fip->port_id) {
+ 			if (new->ids.port_name > fip->lp->wwpn) {
++				LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++						"restart, port_id collision\n");
+ 				fcoe_ctlr_vn_restart(fip);
+ 				break;
+ 			}
++			LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++					"send claim notify\n");
+ 			fcoe_ctlr_vn_send_claim(fip);
+ 			break;
+ 		}
++		LIBFCOE_FIP_DBG(fip, "vn_claim_notify: send reply to %x\n",
++				new->ids.port_id);
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_CLAIM_REP, frport->enode_mac,
+ 				  min((u32)frport->fcoe_len,
+ 				      fcoe_ctlr_fcoe_size(fip)));
+ 		fcoe_ctlr_vn_add(fip, new);
+ 		break;
+ 	default:
++		LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++				"ignoring claim from %x\n", new->ids.port_id);
+ 		break;
  	}
- 	rdata->e_d_tov = lport->e_d_tov;
- 
-+	kref_get(&rdata->kref);
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_PLOGI,
- 				  fc_rport_plogi_resp, rdata,
--				  2 * lport->r_a_tov))
-+				  2 * lport->r_a_tov)) {
- 		fc_rport_error_retry(rdata, NULL);
--	else
--		kref_get(&rdata->kref);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+	}
  }
+@@ -2591,6 +2620,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
  
- /**
-@@ -1088,6 +1138,8 @@ err:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
- {
-@@ -1131,11 +1183,12 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
- 		       fc_host_port_id(lport->host), FC_TYPE_ELS,
- 		       FC_FC_FIRST_SEQ | FC_FC_END_SEQ | FC_FC_SEQ_INIT, 0);
- 
-+	kref_get(&rdata->kref);
- 	if (!lport->tt.exch_seq_send(lport, fp, fc_rport_prli_resp,
--				    NULL, rdata, 2 * lport->r_a_tov))
-+				     NULL, rdata, 2 * lport->r_a_tov)) {
- 		fc_rport_error_retry(rdata, NULL);
--	else
--		kref_get(&rdata->kref);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+	}
- }
- 
- /**
-@@ -1210,6 +1263,8 @@ err:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
- {
-@@ -1227,12 +1282,13 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
+ 	frport = fcoe_ctlr_rport(new);
+ 	if (frport->flags & FIP_FL_REC_OR_P2P) {
++		LIBFCOE_FIP_DBG(fip, "p2p beacon while in vn2vn mode\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
  		return;
  	}
- 
-+	kref_get(&rdata->kref);
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_RTV,
- 				  fc_rport_rtv_resp, rdata,
--				  2 * lport->r_a_tov))
-+				  2 * lport->r_a_tov)) {
- 		fc_rport_error_retry(rdata, NULL);
--	else
--		kref_get(&rdata->kref);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+	}
- }
- 
- /**
-@@ -1242,15 +1298,16 @@ static void fc_rport_enter_rtv(struct fc_rport_priv *rdata)
-  * @lport_arg: The local port
-  */
- static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
--			       void *lport_arg)
-+			       void *rdata_arg)
- {
--	struct fc_lport *lport = lport_arg;
-+	struct fc_rport_priv *rdata = rdata_arg;
-+	struct fc_lport *lport = rdata->local_port;
- 
- 	FC_RPORT_ID_DBG(lport, fc_seq_exch(sp)->did,
- 			"Received a LOGO %s\n", fc_els_resp_type(fp));
--	if (IS_ERR(fp))
--		return;
--	fc_frame_free(fp);
-+	if (!IS_ERR(fp))
-+		fc_frame_free(fp);
-+	kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
- /**
-@@ -1259,6 +1316,8 @@ static void fc_rport_logo_resp(struct fc_seq *sp, struct fc_frame *fp,
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_logo(struct fc_rport_priv *rdata)
- {
-@@ -1271,8 +1330,10 @@ static void fc_rport_enter_logo(struct fc_rport_priv *rdata)
- 	fp = fc_frame_alloc(lport, sizeof(struct fc_els_logo));
- 	if (!fp)
- 		return;
--	(void)lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_LOGO,
--				   fc_rport_logo_resp, lport, 0);
-+	kref_get(&rdata->kref);
-+	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_LOGO,
-+				  fc_rport_logo_resp, rdata, 0))
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
- /**
-@@ -1339,6 +1400,8 @@ err:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this routine.
-+ *
-+ * Reference counting: increments kref when sending ELS
-  */
- static void fc_rport_enter_adisc(struct fc_rport_priv *rdata)
- {
-@@ -1355,12 +1418,13 @@ static void fc_rport_enter_adisc(struct fc_rport_priv *rdata)
- 		fc_rport_error_retry(rdata, fp);
- 		return;
- 	}
-+	kref_get(&rdata->kref);
- 	if (!lport->tt.elsct_send(lport, rdata->ids.port_id, fp, ELS_ADISC,
- 				  fc_rport_adisc_resp, rdata,
--				  2 * lport->r_a_tov))
-+				  2 * lport->r_a_tov)) {
- 		fc_rport_error_retry(rdata, NULL);
--	else
--		kref_get(&rdata->kref);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
-+	}
- }
- 
- /**
-@@ -1474,6 +1538,8 @@ out:
-  * The ELS opcode has already been validated by the caller.
-  *
-  * Locking Note: Called with the lport lock held.
-+ *
-+ * Reference counting: does not modify kref
-  */
- static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- {
-@@ -1541,6 +1607,8 @@ reject:
-  * @fp:	   The request frame
-  *
-  * Locking Note: Called with the lport lock held.
-+ *
-+ * Reference counting: does not modify kref
-  */
- static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
- {
-@@ -1585,6 +1653,8 @@ static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
-  * @rx_fp: The PLOGI request frame
-  *
-  * Locking Note: The rport lock is held before calling this function.
-+ *
-+ * Reference counting: increments kref on return
-  */
- static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 				    struct fc_frame *rx_fp)
-@@ -1899,6 +1969,8 @@ drop:
-  *
-  * Locking Note: The rport lock is expected to be held before calling
-  * this function.
-+ *
-+ * Reference counting: drops kref on return
-  */
- static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- {
+@@ -2599,8 +2629,14 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
+ 		if (rdata->ids.node_name == new->ids.node_name &&
+ 		    rdata->ids.port_name == new->ids.port_name) {
+ 			frport = fcoe_ctlr_rport(rdata);
+-			if (!frport->time && fip->state == FIP_ST_VNMP_UP)
++			LIBFCOE_FIP_DBG(fip, "beacon from rport %x\n",
++					rdata->ids.port_id);
++			if (!frport->time && fip->state == FIP_ST_VNMP_UP) {
++				LIBFCOE_FIP_DBG(fip, "beacon expired "
++						"for rport %x\n",
++						rdata->ids.port_id);
+ 				lport->tt.rport_login(rdata);
++			}
+ 			frport->time = jiffies;
+ 		}
+ 		kref_put(&rdata->kref, lport->tt.rport_destroy);
+@@ -3015,11 +3051,13 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 	switch (fip->state) {
+ 	case FIP_ST_VNMP_START:
+ 		fcoe_ctlr_set_state(fip, FIP_ST_VNMP_PROBE1);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send 1st probe request\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_PROBE_WAIT);
+ 		break;
+ 	case FIP_ST_VNMP_PROBE1:
+ 		fcoe_ctlr_set_state(fip, FIP_ST_VNMP_PROBE2);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send 2nd probe request\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		break;
+@@ -3030,6 +3068,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 		hton24(mac + 3, new_port_id);
+ 		fcoe_ctlr_map_dest(fip);
+ 		fip->update_mac(fip->lp, mac);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send claim notify\n");
+ 		fcoe_ctlr_vn_send_claim(fip);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		break;
+@@ -3041,6 +3080,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 		next_time = fip->sol_time + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		if (time_after_eq(jiffies, next_time)) {
+ 			fcoe_ctlr_set_state(fip, FIP_ST_VNMP_UP);
++			LIBFCOE_FIP_DBG(fip, "vn_timeout: send vn2vn beacon\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_BEACON,
+ 					  fcoe_all_vn2vn, 0);
+ 			next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+@@ -3051,6 +3091,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 	case FIP_ST_VNMP_UP:
+ 		next_time = fcoe_ctlr_vn_age(fip);
+ 		if (time_after_eq(jiffies, fip->port_ka_time)) {
++			LIBFCOE_FIP_DBG(fip, "vn_timeout: send vn2vn beacon\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_BEACON,
+ 					  fcoe_all_vn2vn, 0);
+ 			fip->port_ka_time = jiffies +
 -- 
 1.8.5.6
 
