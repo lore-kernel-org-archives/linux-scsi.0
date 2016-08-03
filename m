@@ -1,50 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/22] libfc: do not overwrite DID_TIME_OUT status
-Date: Wed,  3 Aug 2016 15:13:13 +0200
-Message-ID: <1470230002-37737-14-git-send-email-hare@suse.de>
-References: <1470230002-37737-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40147 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1755942AbcHCNNg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2016 09:13:36 -0400
-In-Reply-To: <1470230002-37737-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] mpt3sas: Don't spam logs if logging level is 0
+Date: Wed,  3 Aug 2016 15:00:18 +0200
+Message-ID: <1470229218-22040-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When a command is aborted it might already have the DID_TIME_OUT
-status set, so we shouldn't be overwriting that.
+In _scsih_io_done() we test if the ioc->logging_level does _not_ have the
+MPT_DEBUG_REPLY bit set and if it hasn't we print the debug messages. This
+unfortunately is the wrong way around.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Note, the actual bug is older than af0094115 but this commit removed the
+CONFIG_SCSI_MPT3SAS_LOGGING Kconfig option which hid the bug.
+
+Fixes: af0094115 'mpt2sas, mpt3sas: Remove SCSI_MPTXSAS_LOGGING entry from Kconfig'
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/libfc/fc_fcp.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index ceb4a65..7aa28a6 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -2029,9 +2029,15 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
- 		sc_cmd->result = (DID_ERROR << 16) | fsp->cdb_status;
- 		break;
- 	case FC_CMD_ABORTED:
--		FC_FCP_DBG(fsp, "Returning DID_ERROR to scsi-ml "
--			  "due to FC_CMD_ABORTED\n");
--		sc_cmd->result = (DID_ERROR << 16) | fsp->io_status;
-+		if (host_byte(sc_cmd->result) == DID_TIME_OUT)
-+			FC_FCP_DBG(fsp, "Returning DID_TIME_OUT to scsi-ml "
-+				   "due to FC_CMD_ABORTED\n");
-+		else {
-+			FC_FCP_DBG(fsp, "Returning DID_ERROR to scsi-ml "
-+				   "due to FC_CMD_ABORTED\n");
-+			set_host_byte(sc_cmd, DID_ERROR);
-+		}
-+		sc_cmd->result |= fsp->io_status;
- 		break;
- 	case FC_CMD_RESET:
- 		FC_FCP_DBG(fsp, "Returning DID_RESET to scsi-ml "
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 4a1cc85..a138690 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4693,7 +4693,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 			    le16_to_cpu(mpi_reply->DevHandle));
+ 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
+ 
+-		if (!(ioc->logging_level & MPT_DEBUG_REPLY) &&
++		if ((ioc->logging_level & MPT_DEBUG_REPLY) &&
+ 		     ((scmd->sense_buffer[2] == UNIT_ATTENTION) ||
+ 		     (scmd->sense_buffer[2] == MEDIUM_ERROR) ||
+ 		     (scmd->sense_buffer[2] == HARDWARE_ERROR)))
 -- 
 1.8.5.6
-
