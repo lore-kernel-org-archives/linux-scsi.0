@@ -1,48 +1,85 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
-Date: Thu, 4 Aug 2016 08:46:22 -0700
-Message-ID: <20160804154622.GB15656@infradead.org>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
-	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
-	<CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: dm-mq and end_clone_request()
+Date: Thu, 4 Aug 2016 12:10:47 -0400
+Message-ID: <20160804161047.GC6989@redhat.com>
+References: <1264951811.7684268.1470065187014.JavaMail.zimbra@redhat.com>
+ <17da3ab0-233a-2cec-f921-bfd42c953ccc@sandisk.com>
+ <20160801175948.GA6685@redhat.com>
+ <f9e71e1d-54ca-40fe-a5ea-ae2863c94ff9@sandisk.com>
+ <20160801204628.GA94704@redhat.com>
+ <8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
+ <20160802174533.GA18714@redhat.com>
+ <1a460c29-1530-d3e1-25ba-736d86aff12e@sandisk.com>
+ <20160803004013.GA19956@redhat.com>
+ <eb1af921-d874-1f6a-c5d0-12d3cae04256@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58166 "EHLO mx1.redhat.com"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758802AbcHDQLJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 12:11:09 -0400
 Content-Disposition: inline
-In-Reply-To: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Shaun Tancheff <shaun.tancheff@seagate.com>
-Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-block@vger.kernel.org, linux-bcache@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, linux-raid@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, linux-btrfs@vger.kernel.org, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, ocfs2-devel@oss.oracle.com
+In-Reply-To: <eb1af921-d874-1f6a-c5d0-12d3cae04256@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Wed, Aug 03, 2016 at 07:30:29PM -0500, Shaun Tancheff wrote:
-> I think the translation in loop.c is suspicious here:
-> 
->     "if use DIO && not (a flush_flag or discard_flag)"
-> should translate to:
->     "if use DIO && not ((a flush_flag) || op == discard)"
-> 
-> But in the patch I read:
->     "if use DIO && ((not a flush_flag) || op == discard)
-> 
-> Which would have DIO && discards follow the AIO path?
+On Wed, Aug 03 2016 at 12:55pm -0400,
+Bart Van Assche <bart.vanassche@sandisk.com> wrote:
 
-Indeed.  Sorry for missing out on your patch, I just sent a fix
-in reply to Dave's other report earlier which is pretty similar to
-yours.
+> On 08/02/2016 05:40 PM, Mike Snitzer wrote:
+> >But I asked you to run the v4.7 kernel patches I
+> >pointed to _without_ any of your debug patches.
+> 
+> I need several patches to fix bugs that are not related to the
+> device mapper, e.g. "sched: Avoid that __wait_on_bit_lock() hangs"
+> (https://lkml.org/lkml/2016/8/3/289).
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+OK, but you have way more changes than seem needed.  In particular the
+blk-mq error handling changes look suspect.
+
+I'm also not sure what REQ_FAIL_IF_NO_PATH is all about (vaguely recall
+seeing it before; and suggesting you use SCSI's more traditional
+differentiated IO errors).
+
+Anyway, at this point you're having us test too many changes that aren't
+yet upstream:
+
+$ git diff bart/srp-initiator-for-next dm/dm-4.7-mpath-fixes -- drivers block include kernel | diffstat
+ block/bio-integrity.c                   |    1
+ block/blk-cgroup.c                      |    4
+ block/blk-core.c                        |   16 ---
+ block/blk-mq.c                          |   16 ---
+ block/partition-generic.c               |    3
+ drivers/acpi/acpica/nswalk.c            |    1
+ drivers/infiniband/core/rw.c            |   24 +++--
+ drivers/infiniband/core/verbs.c         |    9 --
+ drivers/infiniband/hw/hfi1/Kconfig      |    1
+ drivers/infiniband/hw/mlx4/qp.c         |    6 -
+ drivers/infiniband/sw/rdmavt/Kconfig    |    1
+ drivers/infiniband/ulp/isert/ib_isert.c |    2
+ drivers/infiniband/ulp/isert/ib_isert.h |    1
+ drivers/infiniband/ulp/srp/ib_srp.c     |  131 --------------------------------
+ drivers/infiniband/ulp/srp/ib_srp.h     |    5 -
+ drivers/infiniband/ulp/srpt/ib_srpt.c   |   10 +-
+ drivers/infiniband/ulp/srpt/ib_srpt.h   |    6 -
+ drivers/md/dm-crypt.c                   |    4
+ drivers/md/dm-ioctl.c                   |   77 +++++++++---------
+ drivers/md/dm-mpath.c                   |   32 -------
+ drivers/md/dm.c                         |   22 -----
+ drivers/scsi/scsi_lib.c                 |   36 +-------
+ drivers/scsi/scsi_priv.h                |    2
+ drivers/scsi/scsi_scan.c                |    2
+ drivers/scsi/scsi_sysfs.c               |   48 -----------
+ drivers/scsi/sd.c                       |    6 -
+ drivers/scsi/sg.c                       |    3
+ include/linux/blk-mq.h                  |    3
+ include/linux/blk_types.h               |    5 -
+ include/linux/blkdev.h                  |    1
+ include/linux/dmar.h                    |    2
+ include/rdma/ib_verbs.h                 |    6 -
+ include/scsi/scsi_device.h              |    2
+ kernel/sched/wait.c                     |    2
+ 34 files changed, 106 insertions(+), 384 deletions(-)
