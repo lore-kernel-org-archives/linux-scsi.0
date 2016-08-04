@@ -1,106 +1,92 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH 37/45] drivers: use req op accessor
-Date: Wed, 3 Aug 2016 19:30:29 -0500
-Message-ID: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
-References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
-	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
-	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
-	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target updates for v4.8-rc1
+Date: Wed, 03 Aug 2016 21:34:13 -0700
+Message-ID: <1470285253.7145.40.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <xfs-bounces@oss.sgi.com>
-In-Reply-To: <87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
-List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
-List-Archive: <http://oss.sgi.com/pipermail/xfs>
-List-Post: <mailto:xfs@oss.sgi.com>
-List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
-List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
-	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
-Errors-To: xfs-bounces@oss.sgi.com
-Sender: xfs-bounces@oss.sgi.com
-To: Mike Christie <mchristi@redhat.com>
-Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-btrfs@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Aug 3, 2016 at 6:47 PM, Mike Christie <mchristi@redhat.com> wrote:
-> On 08/03/2016 05:33 PM, Ross Zwisler wrote:
->> On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
->>> From: Mike Christie <mchristi@redhat.com>
->>>
->>> The req operation REQ_OP is separated from the rq_flag_bits
->>> definition. This converts the block layer drivers to
->>> use req_op to get the op from the request struct.
->>>
->>> Signed-off-by: Mike Christie <mchristi@redhat.com>
->>> ---
->>>  drivers/block/loop.c              |  6 +++---
->>>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
->>>  drivers/block/nbd.c               |  2 +-
->>>  drivers/block/rbd.c               |  4 ++--
->>>  drivers/block/xen-blkfront.c      |  8 +++++---
->>>  drivers/ide/ide-floppy.c          |  2 +-
->>>  drivers/md/dm.c                   |  2 +-
->>>  drivers/mmc/card/block.c          |  7 +++----
->>>  drivers/mmc/card/queue.c          |  6 ++----
->>
->> Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
->> and bisected to this commit:
->>
->> commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
->> Author: Mike Christie <mchristi@redhat.com>
->> Date:   Sun Jun 5 14:32:17 2016 -0500
->> drivers: use req op accessor
->>
->> Here are the steps to reproduce the deadlock with a BRD ramdisk:
->>
->> mkfs.xfs -f /dev/ram0
->> mount -o dax /dev/ram0 /mnt/scratch
->
-> When using ramdisks, we need the attached patch like in your other bug
-> report. I think it will fix some hangs people are seeing.
->
-> I do not think that it should cause the failure to run issue you saw
-> when doing generic/008 and ext2.
->
+Hello Linus,
 
-I think the translation in loop.c is suspicious here:
+Here are the target-pending updates for v4.8-rc1.  Please go ahead and
+pull from:
 
-    "if use DIO && not (a flush_flag or discard_flag)"
-should translate to:
-    "if use DIO && not ((a flush_flag) || op == discard)"
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git for-next
 
-But in the patch I read:
-    "if use DIO && ((not a flush_flag) || op == discard)
+The most notable item is IBM virtual SCSI target driver, that was
+originally ported to target-core back in 2010 by Tomo-san, and has been
+brought forward to v4.x code by Bryant Ly, Michael Cyr and Co. over the
+last months.
 
-Which would have DIO && discards follow the AIO path?
+Also included are two ORDERED task related bug-fixes Bryant + Michael
+found along the way using ibmvscsis with AIX guests, plus a few
+miscellaneous target-core + iscsi-target bug-fixes with associated
+stable tags.
 
-So I would humbly suggest something like the following
-    (on top of commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34):
-[Please excuse the messed up patch format ... gmail eats tabs]
+Thank you,
 
-diff --git a/drivers/block/loop.c b/drivers/block/loop.c
-index b9b737c..0754d83 100644
---- a/drivers/block/loop.c
-+++ b/drivers/block/loop.c
-@@ -1659,8 +1659,9 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
-        if (lo->lo_state != Lo_bound)
-                return -EIO;
+--nab
 
--       if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
--           req_op(cmd->rq) == REQ_OP_DISCARD))
-+       if (lo->use_dio && !(
-+           (cmd->rq->cmd_flags & REQ_FLUSH) ||
-+            req_op(cmd->rq) == REQ_OP_DISCARD))
-                cmd->use_aio = true;
-        else
-                cmd->use_aio = false;
+Bryant G. Ly (1):
+  ibmvscsis: Initial commit of IBM VSCSI Tgt Driver
 
--- 
-Shaun Tancheff
+Colin Ian King (1):
+  target: fix spelling mistake: "limitiation" -> "limitation"
 
-_______________________________________________
-xfs mailing list
-xfs@oss.sgi.com
-http://oss.sgi.com/mailman/listinfo/xfs
+Feng Li (1):
+  iscsi-target: Fix panic when adding second TCP connection to iSCSI
+    session
+
+Hannes Reinecke (1):
+  tcm_fc: set and unset FCP_SPPF_TARG_FCN
+
+Mike Christie (1):
+  target: Fix max_unmap_lba_count calc overflow
+
+Nicholas Bellinger (4):
+  target: Fix missing complete during ABORT_TASK + CMD_T_FABRIC_STOP
+  target: Fix race between iscsi-target connection shutdown + ABORT_TASK
+  target: Fix ordered task target_setup_cmd_from_cdb exception hang
+  target: Fix ordered task CHECK_CONDITION early exception handling
+
+Sumit Rai (1):
+  target: Fix residual overflow handling in
+    target_complete_cmd_with_length
+
+ MAINTAINERS                               |   10 +-
+ drivers/scsi/Kconfig                      |   17 +
+ drivers/scsi/Makefile                     |    1 +
+ drivers/scsi/ibmvscsi/ibmvfc.h            |    2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.h          |    2 +-
+ drivers/scsi/ibmvscsi/viosrp.h            |  225 --
+ drivers/scsi/ibmvscsi_tgt/Makefile        |    3 +
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c  | 4087 +++++++++++++++++++++++++++++
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h  |  346 +++
+ drivers/scsi/ibmvscsi_tgt/libsrp.c        |  427 +++
+ drivers/scsi/ibmvscsi_tgt/libsrp.h        |  123 +
+ drivers/target/iscsi/iscsi_target.c       |   22 +-
+ drivers/target/iscsi/iscsi_target_login.c |    5 +-
+ drivers/target/target_core_device.c       |    8 +-
+ drivers/target/target_core_file.c         |    5 +-
+ drivers/target/target_core_iblock.c       |    3 +-
+ drivers/target/target_core_internal.h     |    1 +
+ drivers/target/target_core_sbc.c          |    2 +-
+ drivers/target/target_core_transport.c    |   94 +-
+ drivers/target/tcm_fc/tfc_sess.c          |    2 +
+ include/scsi/viosrp.h                     |  220 ++
+ include/target/target_core_backend.h      |    2 +-
+ include/target/target_core_base.h         |    1 +
+ include/target/target_core_fabric.h       |    1 -
+ 24 files changed, 5326 insertions(+), 283 deletions(-)
+ delete mode 100644 drivers/scsi/ibmvscsi/viosrp.h
+ create mode 100644 drivers/scsi/ibmvscsi_tgt/Makefile
+ create mode 100644 drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+ create mode 100644 drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h
+ create mode 100644 drivers/scsi/ibmvscsi_tgt/libsrp.c
+ create mode 100644 drivers/scsi/ibmvscsi_tgt/libsrp.h
+ create mode 100644 include/scsi/viosrp.h
