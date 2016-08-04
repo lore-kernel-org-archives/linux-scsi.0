@@ -1,35 +1,61 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] fcoe: use kfree_skb() to free an skb
-Date: Thu, 4 Aug 2016 08:27:56 +0300
-Message-ID: <20160804052756.GH775@mwanda>
+From: Heiner Kallweit <hkallweit1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH] usb: storage: fix runtime pm issue in usb_stor_probe2
+Date: Thu, 4 Aug 2016 07:34:03 +0200
+Message-ID: <b3ef758f-f519-3d90-3d9b-9abf8e6d7f7b@gmail.com>
+References: <Pine.LNX.4.44L0.1608031656060.2040-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36312 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751120AbcHDF2O (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2016 01:28:14 -0400
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1608031656060.2040-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux USB Mailing List <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-This should be doing kfree_skb() instead of kfree().
+Am 03.08.2016 um 23:25 schrieb Alan Stern:
+> On Wed, 3 Aug 2016, Heiner Kallweit wrote:
+> 
+>> Since commit 71723f95463d "PM / runtime: print error when activating a
+>> child to unactive parent" I see the following error message:
+>>
+>> scsi host2: usb-storage 1-3:1.0
+>> scsi host2: runtime PM trying to activate child device host2 but parent
+>> 	    (1-3:1.0) is not active
+>>
+>> Digging into it it seems to be related to the problem described in the
+>> commit message for cd998ded5c12 "i2c: designware: Prevent runtime
+>> suspend during adapter registration" as scsi_add_host also calls
+>> device_add and after the call to device_add the parent device is
+>> suspended.
+>>
+>> Fix this by using the approach from the mentioned commit and getting
+>> the runtime pm reference before calling scsi_add_host.
+> 
+> Acked-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> 
+> There's nothing wrong with this patch; it's a worthwhile thing to do 
+> because it can prevent an unnecessary runtime-suspend/resume cycle.
+> 
+> Still, it looks like the real problem here may lie in
+> drivers/scsi/hosts.c.  Commit bc4f24014de5 ("[SCSI] implement runtime
+> Power Management") added a call to pm_runtime_set_active() in
+> scsi_add_host_with_dma() _after_ device_add() instead of _before_.
+> 
+> If that were changed, this problem would not have occurred.
+> 
+In parallel to this patch I sent another one to address exactly the
+ordering issue in scsi_add_host_with_dma you mention.
+The other patch went to Martin and the SCSI mailing list only, sorry.
+I'll forward it to you for review.
 
-Fixes: 9a6cf881df02 ('fcoe: implement FIP VLAN responder')
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Heiner
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index a569c65..dcf3653 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2923,7 +2923,7 @@ static int fcoe_ctlr_vlan_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
- 	mutex_unlock(&fip->ctlr_mutex);
- 
- drop:
--	kfree(skb);
-+	kfree_skb(skb);
- 	return rc;
- }
- 
+> Alan Stern
+> 
+> 
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
