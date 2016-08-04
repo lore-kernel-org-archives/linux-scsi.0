@@ -1,61 +1,99 @@
-From: Heiner Kallweit <hkallweit1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: [PATCH] usb: storage: fix runtime pm issue in usb_stor_probe2
-Date: Thu, 4 Aug 2016 07:34:03 +0200
-Message-ID: <b3ef758f-f519-3d90-3d9b-9abf8e6d7f7b@gmail.com>
-References: <Pine.LNX.4.44L0.1608031656060.2040-100000@iolanthe.rowland.org>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
+Date: Thu, 4 Aug 2016 00:47:03 -0500
+Message-ID: <57A2D6D7.8040807@redhat.com>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+ <1465155145-10812-38-git-send-email-mchristi@redhat.com>
+ <CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
+ <87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+ <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1608031656060.2040-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Linux USB Mailing List <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-bcache-owner@vger.kernel.org>
+In-Reply-To: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+Sender: linux-bcache-owner@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Ross Zwisler <zwisler@gmail.com>, Ross Zwisler <ross.zwisler@linux.intel.com>, Dave Chinner <david@fromorbit.com>, Jens Axboe <axboe@fb.com>, linux-f2fs-devel@lists.sourceforge.net, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, drbd-dev@lists.linbit.com, philipp.reisner@linbit.com, lars.ellenberg@linbit.com, linux-raid@vger.kernel.org, dm-devel@redhat.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-mtd@lists.infradead.org, target-devel@vger.kernel.org, linux-btrfs@vger.kernel.org, osd-dev@open-osd.org, XFS Developers <xfs@oss.sgi.com>, ocfs2-devel@oss.oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-Am 03.08.2016 um 23:25 schrieb Alan Stern:
-> On Wed, 3 Aug 2016, Heiner Kallweit wrote:
-> 
->> Since commit 71723f95463d "PM / runtime: print error when activating a
->> child to unactive parent" I see the following error message:
+On 08/03/2016 07:30 PM, Shaun Tancheff wrote:
+> On Wed, Aug 3, 2016 at 6:47 PM, Mike Christie <mchristi@redhat.com> wrote:
+>> On 08/03/2016 05:33 PM, Ross Zwisler wrote:
+>>> On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
+>>>> From: Mike Christie <mchristi@redhat.com>
+>>>>
+>>>> The req operation REQ_OP is separated from the rq_flag_bits
+>>>> definition. This converts the block layer drivers to
+>>>> use req_op to get the op from the request struct.
+>>>>
+>>>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>>>> ---
+>>>>  drivers/block/loop.c              |  6 +++---
+>>>>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
+>>>>  drivers/block/nbd.c               |  2 +-
+>>>>  drivers/block/rbd.c               |  4 ++--
+>>>>  drivers/block/xen-blkfront.c      |  8 +++++---
+>>>>  drivers/ide/ide-floppy.c          |  2 +-
+>>>>  drivers/md/dm.c                   |  2 +-
+>>>>  drivers/mmc/card/block.c          |  7 +++----
+>>>>  drivers/mmc/card/queue.c          |  6 ++----
+>>>
+>>> Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
+>>> and bisected to this commit:
+>>>
+>>> commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
+>>> Author: Mike Christie <mchristi@redhat.com>
+>>> Date:   Sun Jun 5 14:32:17 2016 -0500
+>>> drivers: use req op accessor
+>>>
+>>> Here are the steps to reproduce the deadlock with a BRD ramdisk:
+>>>
+>>> mkfs.xfs -f /dev/ram0
+>>> mount -o dax /dev/ram0 /mnt/scratch
 >>
->> scsi host2: usb-storage 1-3:1.0
->> scsi host2: runtime PM trying to activate child device host2 but parent
->> 	    (1-3:1.0) is not active
+>> When using ramdisks, we need the attached patch like in your other bug
+>> report. I think it will fix some hangs people are seeing.
 >>
->> Digging into it it seems to be related to the problem described in the
->> commit message for cd998ded5c12 "i2c: designware: Prevent runtime
->> suspend during adapter registration" as scsi_add_host also calls
->> device_add and after the call to device_add the parent device is
->> suspended.
+>> I do not think that it should cause the failure to run issue you saw
+>> when doing generic/008 and ext2.
 >>
->> Fix this by using the approach from the mentioned commit and getting
->> the runtime pm reference before calling scsi_add_host.
 > 
-> Acked-by: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+> I think the translation in loop.c is suspicious here:
 > 
-> There's nothing wrong with this patch; it's a worthwhile thing to do 
-> because it can prevent an unnecessary runtime-suspend/resume cycle.
+>     "if use DIO && not (a flush_flag or discard_flag)"
+> should translate to:
+>     "if use DIO && not ((a flush_flag) || op == discard)"
 > 
-> Still, it looks like the real problem here may lie in
-> drivers/scsi/hosts.c.  Commit bc4f24014de5 ("[SCSI] implement runtime
-> Power Management") added a call to pm_runtime_set_active() in
-> scsi_add_host_with_dma() _after_ device_add() instead of _before_.
+> But in the patch I read:
+>     "if use DIO && ((not a flush_flag) || op == discard)
 > 
-> If that were changed, this problem would not have occurred.
+> Which would have DIO && discards follow the AIO path?
 > 
-In parallel to this patch I sent another one to address exactly the
-ordering issue in scsi_add_host_with_dma you mention.
-The other patch went to Martin and the SCSI mailing list only, sorry.
-I'll forward it to you for review.
+> So I would humbly suggest something like the following
+>     (on top of commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34):
+> [Please excuse the messed up patch format ... gmail eats tabs]
+> 
+> diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+> index b9b737c..0754d83 100644
+> --- a/drivers/block/loop.c
+> +++ b/drivers/block/loop.c
+> @@ -1659,8 +1659,9 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+>         if (lo->lo_state != Lo_bound)
+>                 return -EIO;
+> 
+> -       if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
+> -           req_op(cmd->rq) == REQ_OP_DISCARD))
+> +       if (lo->use_dio && !(
+> +           (cmd->rq->cmd_flags & REQ_FLUSH) ||
+> +            req_op(cmd->rq) == REQ_OP_DISCARD))
+>                 cmd->use_aio = true;
+>         else
+>                 cmd->use_aio = false;
+> 
 
-Heiner
+You are right. The translation was bad and your code above is correct.
 
-> Alan Stern
-> 
-> 
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+I think we need my patch in the other mail though too, because for the
+rw_page user case if WB_SYNC_ALL is set, then the IO gets sent down as a
+read instead of a write.
