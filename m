@@ -1,60 +1,106 @@
-From: <nelcastellodicarta@gmail.com>
-Subject: RE: linux-scsi
-Date: Wed, 3 Aug 2016 19:54:50 -0400
-Message-ID: <000101d1ee14$b2d98586$c0a80001@hinet.net>
-Reply-To: <linux-scsi@vger.kernel.org>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCH 37/45] drivers: use req op accessor
+Date: Wed, 3 Aug 2016 19:30:29 -0500
+Message-ID: <CAJVOszAd9Eu88P2=QoNVArd0jwDH7KRe=OB82tCNMpjfv9B4KA@mail.gmail.com>
+References: <1465155145-10812-1-git-send-email-mchristi@redhat.com>
+	<1465155145-10812-38-git-send-email-mchristi@redhat.com>
+	<CAOxpaSUMsgfTYsL0bL6VCnwxz7bpgpKO-ZfC5J8dFG9PN-hzvg@mail.gmail.com>
+	<87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="ldzntfcjax_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 125-231-27-158.dynamic.hinet.net ([125.231.27.158]:37245 "HELO
-	hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1755089AbcHCXyu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 3 Aug 2016 19:54:50 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <xfs-bounces@oss.sgi.com>
+In-Reply-To: <87fbe31f-27b3-ff7a-e381-34fc1aad337e@redhat.com>
+List-Unsubscribe: <http://oss.sgi.com/mailman/options/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=unsubscribe>
+List-Archive: <http://oss.sgi.com/pipermail/xfs>
+List-Post: <mailto:xfs@oss.sgi.com>
+List-Help: <mailto:xfs-request@oss.sgi.com?subject=help>
+List-Subscribe: <http://oss.sgi.com/mailman/listinfo/xfs>,
+	<mailto:xfs-request@oss.sgi.com?subject=subscribe>
+Errors-To: xfs-bounces@oss.sgi.com
+Sender: xfs-bounces@oss.sgi.com
+To: Mike Christie <mchristi@redhat.com>
+Cc: philipp.reisner@linbit.com, dm-devel@redhat.com, target-devel@vger.kernel.org, linux-mtd@lists.infradead.org, drbd-dev@lists.linbit.com, linux-scsi@vger.kernel.org, Ross Zwisler <ross.zwisler@linux.intel.com>, linux-ext4 <linux-ext4@vger.kernel.org>, konrad.wilk@oracle.com, XFS Developers <xfs@oss.sgi.com>, linux-raid@vger.kernel.org, linux-bcache@vger.kernel.org, linux-block@vger.kernel.org, osd-dev@open-osd.org, Ross Zwisler <zwisler@gmail.com>, Jens Axboe <axboe@fb.com>, LKML <linux-kernel@vger.kernel.org>, linux-f2fs-devel@lists.sourceforge.net, ocfs2-devel@oss.oracle.com, linux-fsdevel <linux-fsdevel@vger.kernel.org>, lars.ellenberg@linbit.com, linux-btrfs@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
+On Wed, Aug 3, 2016 at 6:47 PM, Mike Christie <mchristi@redhat.com> wrote:
+> On 08/03/2016 05:33 PM, Ross Zwisler wrote:
+>> On Sun, Jun 5, 2016 at 1:32 PM,  <mchristi@redhat.com> wrote:
+>>> From: Mike Christie <mchristi@redhat.com>
+>>>
+>>> The req operation REQ_OP is separated from the rq_flag_bits
+>>> definition. This converts the block layer drivers to
+>>> use req_op to get the op from the request struct.
+>>>
+>>> Signed-off-by: Mike Christie <mchristi@redhat.com>
+>>> ---
+>>>  drivers/block/loop.c              |  6 +++---
+>>>  drivers/block/mtip32xx/mtip32xx.c |  2 +-
+>>>  drivers/block/nbd.c               |  2 +-
+>>>  drivers/block/rbd.c               |  4 ++--
+>>>  drivers/block/xen-blkfront.c      |  8 +++++---
+>>>  drivers/ide/ide-floppy.c          |  2 +-
+>>>  drivers/md/dm.c                   |  2 +-
+>>>  drivers/mmc/card/block.c          |  7 +++----
+>>>  drivers/mmc/card/queue.c          |  6 ++----
+>>
+>> Dave Chinner reported a deadlock with XFS + DAX, which I reproduced
+>> and bisected to this commit:
+>>
+>> commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34
+>> Author: Mike Christie <mchristi@redhat.com>
+>> Date:   Sun Jun 5 14:32:17 2016 -0500
+>> drivers: use req op accessor
+>>
+>> Here are the steps to reproduce the deadlock with a BRD ramdisk:
+>>
+>> mkfs.xfs -f /dev/ram0
+>> mount -o dax /dev/ram0 /mnt/scratch
+>
+> When using ramdisks, we need the attached patch like in your other bug
+> report. I think it will fix some hangs people are seeing.
+>
+> I do not think that it should cause the failure to run issue you saw
+> when doing generic/008 and ext2.
+>
+
+I think the translation in loop.c is suspicious here:
+
+    "if use DIO && not (a flush_flag or discard_flag)"
+should translate to:
+    "if use DIO && not ((a flush_flag) || op == discard)"
+
+But in the patch I read:
+    "if use DIO && ((not a flush_flag) || op == discard)
+
+Which would have DIO && discards follow the AIO path?
+
+So I would humbly suggest something like the following
+    (on top of commit c2df40dfb8c015211ec55f4b1dd0587f875c7b34):
+[Please excuse the messed up patch format ... gmail eats tabs]
+
+diff --git a/drivers/block/loop.c b/drivers/block/loop.c
+index b9b737c..0754d83 100644
+--- a/drivers/block/loop.c
++++ b/drivers/block/loop.c
+@@ -1659,8 +1659,9 @@ static int loop_queue_rq(struct blk_mq_hw_ctx *hctx,
+        if (lo->lo_state != Lo_bound)
+                return -EIO;
+
+-       if (lo->use_dio && (!(cmd->rq->cmd_flags & REQ_FLUSH) ||
+-           req_op(cmd->rq) == REQ_OP_DISCARD))
++       if (lo->use_dio && !(
++           (cmd->rq->cmd_flags & REQ_FLUSH) ||
++            req_op(cmd->rq) == REQ_OP_DISCARD))
+                cmd->use_aio = true;
+        else
+                cmd->use_aio = false;
+
+-- 
+Shaun Tancheff
+
+_______________________________________________
+xfs mailing list
+xfs@oss.sgi.com
+http://oss.sgi.com/mailman/listinfo/xfs
