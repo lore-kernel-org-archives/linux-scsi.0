@@ -1,58 +1,24 @@
-From: <armiksanaye@gmail.com>
-Subject: RE: linux-scsi
-Date: Thu, 4 Aug 2016 18:05:04 -0400
-Message-ID: <000101d1eece$651c299c$c0a80001@ip.skylogicnet.com>
-Reply-To: <linux-scsi@vger.kernel.org>
+From: "BertPhil" <info@hitmedia.cz>
+Subject: =?iso-8859-1?Q?-Zpr=E1va_pro_v=E1s-?=
+Date: Thu, 4 Aug 2016 15:11:07 -0000
+Message-ID: <321461270f0cd32e9b764804571463a3.squirrel__30861.9293304675$1470348354$gmane$org@40.85.176.90>
+Reply-To: philpbrt@gmail.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="eryzatne_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain;charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 95-210-119-84.ip.skylogicnet.com ([95.210.119.84]:36011 "HELO
-	ip.skylogicnet.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-	with SMTP id S934376AbcHDWFE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2016 18:05:04 -0400
-Content-Disposition: attachment
+Received: from [40.85.176.90] ([40.85.176.90]:41967 "EHLO mail.vps.com"
+	rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+	id S934391AbcHDWE6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 18:04:58 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
 
-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
-BgAAAAABAAEAVgAAAFYIAAAAAA==
+
+
+
+Jsem zastupujicí investicní zajem ze strany Dubaj, pro ktere hledáme vasi
+ucast. Odpoved na e-mailu nize v pripade zajmu.
+E-mail: philpbrt@gmail.com
+
+
