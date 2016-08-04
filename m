@@ -1,30 +1,31 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 03/22] fcoe: FIP debugging
-Date: Thu, 4 Aug 2016 13:09:55 +0200
-Message-ID: <20160804110955.k6hy6szw4gexmfau@c203.arch.suse.de>
+Subject: Re: [PATCH 05/22] libfc: Do not attempt to login if the port is
+ already started
+Date: Thu, 4 Aug 2016 13:18:57 +0200
+Message-ID: <20160804111857.4u3tme5c4vhi4a5w@c203.arch.suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-4-git-send-email-hare@suse.de>
+ <1470230002-37737-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46139 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46795 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1754195AbcHDLnq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2016 07:43:46 -0400
+	id S1750862AbcHDLzS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 07:55:18 -0400
 Content-Disposition: inline
-In-Reply-To: <1470230002-37737-4-git-send-email-hare@suse.de>
+In-Reply-To: <1470230002-37737-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
 
-On Wed, Aug 03, 2016 at 03:13:03PM +0200, Hannes Reinecke wrote:
-> Add additional statements for debugging FIP frames.
+On Wed, Aug 03, 2016 at 03:13:05PM +0200, Hannes Reinecke wrote:
+> When the port is already started we don't need to login; that
+> will only confuse the state machine.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-With Bart's comment addressed:
 Acked-by: Johannes Thumshirn <jth@kernel.org>
 
 -- 
