@@ -1,76 +1,45 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 11/22] fcoe: inhibit writing invalid values into the
- 'enabled' attribute
-Date: Thu, 4 Aug 2016 08:02:10 +0200
-Message-ID: <53bb5684-a5ae-9dc5-37bf-267799046f5e@suse.de>
+Subject: Re: [PATCH 03/22] fcoe: FIP debugging
+Date: Thu, 4 Aug 2016 08:07:58 +0200
+Message-ID: <caca3a91-69ad-7e95-8b12-f9fe2bcf09ff@suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-12-git-send-email-hare@suse.de>
- <7fe5e2ef-23b8-4055-1599-70b5bbcdbb85@sandisk.com>
+ <1470230002-37737-4-git-send-email-hare@suse.de>
+ <cbf099ce-5b8d-7426-52c2-a7882105eb80@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49270 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49404 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751198AbcHDGCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2016 02:02:13 -0400
-In-Reply-To: <7fe5e2ef-23b8-4055-1599-70b5bbcdbb85@sandisk.com>
+	id S1750710AbcHDGJU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 02:09:20 -0400
+In-Reply-To: <cbf099ce-5b8d-7426-52c2-a7882105eb80@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
 
-On 08/03/2016 07:25 PM, Bart Van Assche wrote:
+On 08/03/2016 07:36 PM, Bart Van Assche wrote:
 > On 08/03/2016 06:13 AM, Hannes Reinecke wrote:
->> The 'enabled' sysfs attribute only accepts the values '0' and '1',
->> so we should error out any other values.
->>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/fcoe/fcoe_sysfs.c | 12 ++++++++++--
->>  1 file changed, 10 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c
->> b/drivers/scsi/fcoe/fcoe_sysfs.c
->> index 9e6baac..9cf3d56 100644
->> --- a/drivers/scsi/fcoe/fcoe_sysfs.c
->> +++ b/drivers/scsi/fcoe/fcoe_sysfs.c
->> @@ -335,16 +335,24 @@ static ssize_t store_ctlr_enabled(struct device
->> *dev,
->>                    const char *buf, size_t count)
->>  {
->>      struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
->> +    bool enabled;
->>      int rc;
->>
->> +    if (*buf == '1')
->> +        enabled = true;
->> +    else if (*buf == '0')
->> +        enabled = false;
->> +    else
->> +        return -EINVAL;
->> +
->>      switch (ctlr->enabled) {
->>      case FCOE_CTLR_ENABLED:
->> -        if (*buf == '1')
->> +        if (enabled)
->>              return count;
->>          ctlr->enabled = FCOE_CTLR_DISABLED;
->>          break;
->>      case FCOE_CTLR_DISABLED:
->> -        if (*buf == '0')
->> +        if (!enabled)
->>              return count;
->>          ctlr->enabled = FCOE_CTLR_ENABLED;
->>          break;
+>> @@ -2407,15 +2411,21 @@ static void fcoe_ctlr_vn_probe_req(struct
+>> fcoe_ctlr *fip,
+>>           */
+>>          if (fip->lp->wwpn > rdata->ids.port_name &&
+>>              !(frport->flags & FIP_FL_REC_OR_P2P)) {
+>> +            LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
+>> +                    "port_id collision\n");
+>>              fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
+>>                        frport->enode_mac, 0);
 > 
-> Hello Hannes,
+> Some users search through the kernel source tree for error and debug
+> messages. For these users it is easier if the entire message occurs on a
+> single line. Otherwise this patch looks fine to me.
 > 
-> Please use kstrtoint() or similar such that strings like "01" are parsed
-> correctly.
-> 
-Yeah, I'll be redoing them; the store and show methods in that entire
-file could do with an overall simplification.
+Multiline logging messages; I know.
+I have the constant urge to fold everything on 80 chars.
+And even checkpatch seems to be unsure whether logging messages
+extending beyond 80 chars should be allowed or not.
+But okay, one line it is.
 
 Cheers,
 
