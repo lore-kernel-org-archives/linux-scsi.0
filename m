@@ -1,31 +1,31 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 13/22] libfc: do not overwrite DID_TIME_OUT status
-Date: Thu, 4 Aug 2016 15:30:41 +0200
-Message-ID: <20160804133041.ylr5sjx34qww4qhp@c203.arch.suse.de>
+Subject: Re: [PATCH 15/22] libfc: frame alloc failure messages
+Date: Thu, 4 Aug 2016 15:45:40 +0200
+Message-ID: <20160804134540.fi7i2gpmgwsiuehb@c203.arch.suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-14-git-send-email-hare@suse.de>
+ <1470230002-37737-16-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56676 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:56885 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933754AbcHDNnl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2016 09:43:41 -0400
+	id S933647AbcHDNpl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 09:45:41 -0400
 Content-Disposition: inline
-In-Reply-To: <1470230002-37737-14-git-send-email-hare@suse.de>
+In-Reply-To: <1470230002-37737-16-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-On Wed, Aug 03, 2016 at 03:13:13PM +0200, Hannes Reinecke wrote:
-> When a command is aborted it might already have the DID_TIME_OUT
-> status set, so we shouldn't be overwriting that.
+On Wed, Aug 03, 2016 at 03:13:15PM +0200, Hannes Reinecke wrote:
+> ---
+>  drivers/scsi/libfc/fc_exch.c | 41 +++++++++++++++++++++++++++++++++--------
+>  1 file changed, 33 insertions(+), 8 deletions(-)
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+Missing Signed-off-by...
 
 -- 
 Johannes Thumshirn                                          Storage
