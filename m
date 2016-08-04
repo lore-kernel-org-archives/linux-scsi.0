@@ -1,71 +1,45 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [patch] fcoe: use kfree_skb() to free an skb
-Date: Thu, 4 Aug 2016 10:12:28 +0200
-Message-ID: <20160804081228.ie7yuhi37bjlatrw@c203.arch.suse.de>
-References: <20160804052756.GH775@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20160804052756.GH775@mwanda>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] aacraid: prevent out-of-bounds access due to changing fip header sizes
+Date: Thu,  4 Aug 2016 10:36:04 +0200
+Message-ID: <1470299764-96617-1-git-send-email-jthumshirn@suse.de>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Pengfei Wang <wpengfeinudt@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Aug 04, 2016 at 08:27:56AM +0300, Dan Carpenter wrote:
-> This should be doing kfree_skb() instead of kfree().
-> =
+In aacraid's ioctl_send_fib() we do two fetches from userspace, one the
+get the fib header's size and one for the fib itself. Later we use the
+size field from the second fetch to further process the fib. If for some
+reason the size from the second fetch is different than from the first
+fix, we may encounter an out-of-bounds access in aac_fib_send(). This was
+reported in https://bugzilla.kernel.org/show_bug.cgi?id=116751 and was
+assigned CVE-2016-6480.
 
-> Fixes: 9a6cf881df02 ('fcoe: implement FIP VLAN responder')
-> Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-> =
+Reported-by: Pengfei Wang <wpengfeinudt@gmail.com>
+Fixes: 7c00ffa31 '[SCSI] 2.6 aacraid: Variable FIB size (updated patch)'
+Cc: stable@vger.kernel.org
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/aacraid/commctrl.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-> index a569c65..dcf3653 100644
-> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
-> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-> @@ -2923,7 +2923,7 @@ static int fcoe_ctlr_vlan_recv(struct fcoe_ctlr *fi=
-p, struct sk_buff *skb)
->  	mutex_unlock(&fip->ctlr_mutex);
->  =
-
->  drop:
-> -	kfree(skb);
-> +	kfree_skb(skb);
->  	return rc;
->  }
->  =
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-Hi Dan,
-
-This was already sent by Wei Yongjun and is
-https://patchwork.kernel.org/patch/9245273/. Should be queued in Martin's t=
-ree
-already.
-
-Thanks,
-	Johannes
-
--- =
-
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 4b3bb52..2d4acd1 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -118,6 +118,12 @@ static int ioctl_send_fib(struct aac_dev * dev, void __user *arg)
+ 		goto cleanup;
+ 	}
+ 
++	if (size != le16_to_cpu(kfib->header.Size)
++			+ sizeof(struct aac_fibhdr)) {
++		retval = -EINVAL;
++		goto cleanup;
++	}
++
+ 	if (kfib->header.Command == cpu_to_le16(TakeABreakPt)) {
+ 		aac_adapter_interrupt(dev);
+ 		/*
+-- 
+1.8.5.6
