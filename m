@@ -1,51 +1,58 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: [PATCH] scsi: fix upper bounds check of sense key in scsi_sense_key_string()
-Date: Thu,  4 Aug 2016 16:32:17 -0500
-Message-ID: <1470346337-20034-1-git-send-email-tyreld@linux.vnet.ibm.com>
+From: <armiksanaye@gmail.com>
+Subject: RE: linux-scsi
+Date: Thu, 4 Aug 2016 18:05:04 -0400
+Message-ID: <000101d1eece$651c299c$c0a80001@ip.skylogicnet.com>
+Reply-To: <linux-scsi@vger.kernel.org>
+Mime-Version: 1.0
+Content-Type: application/zip; name="eryzatne_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:39038 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S965798AbcHDVdC (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2016 17:33:02 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u74LTkdD022548
-	for <linux-scsi@vger.kernel.org>; Thu, 4 Aug 2016 17:32:28 -0400
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24kkam8db3-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2016 17:32:27 -0400
-Received: from localhost
-	by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-	Thu, 4 Aug 2016 17:32:27 -0400
+Received: from 95-210-119-84.ip.skylogicnet.com ([95.210.119.84]:36011 "HELO
+	ip.skylogicnet.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with SMTP id S934376AbcHDWFE (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2016 18:05:04 -0400
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-Commit 655ee63cf371 added a "Completed" sense string with key 0xF to
-snstext[], but failed to updated the upper bounds check of the sense key in
-scsi_sense_key_string().
-
-Fixes: 655ee63cf371 ("[SCSI] scsi constants: command, sense key + additional sense strings")
-Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
----
- drivers/scsi/constants.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-index 83458f7..70d8dc4 100644
---- a/drivers/scsi/constants.c
-+++ b/drivers/scsi/constants.c
-@@ -362,7 +362,7 @@ static const char * const snstext[] = {
- /* Get sense key string or NULL if not available */
- const char *
- scsi_sense_key_string(unsigned char key) {
--	if (key <= 0xE)
-+	if (key <= 0xF)
- 		return snstext[key];
- 	return NULL;
- }
--- 
-2.7.4
-
+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
+BgAAAAABAAEAVgAAAFYIAAAAAA==
