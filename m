@@ -1,56 +1,71 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/22] libfc: additional debugging messages
-Date: Thu, 4 Aug 2016 08:05:44 +0200
-Message-ID: <7181a9bf-df0a-6aee-8984-b370e68fda44@suse.de>
-References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-3-git-send-email-hare@suse.de>
- <e65a6f9e-e81f-5daf-a766-cc6abb7f6beb@sandisk.com>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [patch] fcoe: use kfree_skb() to free an skb
+Date: Thu, 4 Aug 2016 10:12:28 +0200
+Message-ID: <20160804081228.ie7yuhi37bjlatrw@c203.arch.suse.de>
+References: <20160804052756.GH775@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49786 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750808AbcHDGYN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2016 02:24:13 -0400
-In-Reply-To: <e65a6f9e-e81f-5daf-a766-cc6abb7f6beb@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <20160804052756.GH775@mwanda>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, kernel-janitors-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
 
-On 08/03/2016 07:33 PM, Bart Van Assche wrote:
-> On 08/03/2016 06:13 AM, Hannes Reinecke wrote:
->> @@ -1121,8 +1124,10 @@ static void fc_rport_prli_resp(struct fc_seq
->> *sp, struct fc_frame *fp,
->>          fc_rport_enter_rtv(rdata);
->>
->>      } else {
->> -        FC_RPORT_DBG(rdata, "Bad ELS response for PRLI command\n");
->> -        fc_rport_error_retry(rdata, fp);
->> +        rjt = fc_frame_payload_get(fp, sizeof (*rjt));
->> +        FC_RPORT_DBG(rdata, "PRLI ELS rejected, reason %x expl %x\n",
->> +                 rjt->er_reason, rjt->er_explan);
->> +        fc_rport_error_retry(rdata, NULL);
->>      }
-> 
-> Shouldn't the type of the frame be checked in this code instead of
-> assuming that it's a reject?
-> 
-I've asked me the same question, but as it stands FC-LS only allows for
-two frame types (LS_ACC or LS_RJT).
-And it's (more-or-less) consistent usage throughout libfc.
-But yeah, for safety one really should check for LS_ACC and LS_RJT and
-throw an error for any other type.
-However, that should be done throughout libfc, and would warrant a
-different patch.
+On Thu, Aug 04, 2016 at 08:27:56AM +0300, Dan Carpenter wrote:
+> This should be doing kfree_skb() instead of kfree().
+> =
 
-Cheers,
+> Fixes: 9a6cf881df02 ('fcoe: implement FIP VLAN responder')
+> Signed-off-by: Dan Carpenter <dan.carpenter-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+> =
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+> diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+> index a569c65..dcf3653 100644
+> --- a/drivers/scsi/fcoe/fcoe_ctlr.c
+> +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+> @@ -2923,7 +2923,7 @@ static int fcoe_ctlr_vlan_recv(struct fcoe_ctlr *fi=
+p, struct sk_buff *skb)
+>  	mutex_unlock(&fip->ctlr_mutex);
+>  =
+
+>  drop:
+> -	kfree(skb);
+> +	kfree_skb(skb);
+>  	return rc;
+>  }
+>  =
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Hi Dan,
+
+This was already sent by Wei Yongjun and is
+https://patchwork.kernel.org/patch/9245273/. Should be queued in Martin's t=
+ree
+already.
+
+Thanks,
+	Johannes
+
+-- =
+
+Johannes Thumshirn                                          Storage
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
