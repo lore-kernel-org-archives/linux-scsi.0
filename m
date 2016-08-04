@@ -1,49 +1,93 @@
-From: Potnuri Bharat Teja <bharat@chelsio.com>
-Subject: IB/isert: Return value of iser target transport handlers ignored by
- iscsi target
-Date: Thu, 4 Aug 2016 16:05:07 +0530
-Message-ID: <20160804103506.GA29543@t5fpga-b1.asicdesigners.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 01/22] libfc: Revisit kref handling
+Date: Thu, 4 Aug 2016 12:59:23 +0200
+Message-ID: <20160804105923.xlsm67targ7rwhxt@c203.arch.suse.de>
+References: <1470230002-37737-1-git-send-email-hare@suse.de>
+ <1470230002-37737-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:39726 "EHLO
-	stargate3.asicdesigners.com" rhost-flags-OK-OK-OK-FAIL)
-	by vger.kernel.org with ESMTP id S1757192AbcHDKjE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 4 Aug 2016 06:39:04 -0400
+Received: from mx2.suse.de ([195.135.220.15]:42767 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1758559AbcHDK7Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 06:59:25 -0400
 Content-Disposition: inline
+In-Reply-To: <1470230002-37737-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sagi@grimberg.me, nab@linux-iscsi.org
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, swise@opengridcomputing.com, varun@chelsio.com, rajur@chelsio.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
 
-Hi,
-In iSER target during iwarp connection tear-down due to ping timeouts, the rdma
-queues are set to error state and subsequent queued iscsi session commands posted 
-shall fail with corresponding errno returned by ib_post_send/recv. 
-At this stage iser target handlers (Ex: isert_put_datain())
-return the error to iscsci target, but these errors are 
-not being handled by the iscsi target handlers(Ex: lio_queue_status()).
+On Wed, Aug 03, 2016 at 03:13:01PM +0200, Hannes Reinecke wrote:
+> The kref handling in fc_rport is a mess. This patch updates
+> the kref handling according to the following rules:
+> 
+> - Take a reference whenever scheduling a workqueue
+> - Take a reference whenever an ELS command is send
+> - Drop the reference at the end of the workqueue function
+> - Drop the reference at the end of handling ELS replies
+> - Take a reference when allocating an rport
+> - Drop the reference when removing an rport
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/libfc/fc_rport.c | 134 ++++++++++++++++++++++++++++++++----------
+>  1 file changed, 103 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index 93f5961..6a98bb8 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -44,6 +44,17 @@
+>   * path this potential over-use of the mutex is acceptable.
+>   */
+>  
+> +/*
+> + * RPORT REFERENCE COUNTING
+> + *
+> + * A rport reference should be taken when:
+> + * - a workqueue item is scheduled
+> + * - an ELS request is send
+> + * The reference should be dropped when:
+> + * - the workqueue function has finished
+> + * - the ELS response is handled
+> + */
 
--> While closing the session in case of ping timeouts, isert_close_connection()-> 
-isert_wait_conn()->isert_wait4cmds() checks for the queued session commands 
-and waits infinitely for command completion 'cmd_wait_comp' in target_wait_for_sess_cmds().
-'cmd_wait_comp' will be never complete as the kref on the session command is 
-not derefed, due to which target_release_cmd_kref() is not called by kref_put().
-Due to this, the older session is not cleared causing the next login negotiation to fail
-as the older session is still active(Older SID exists).
+Please sync with the rules in the commit message.
 
-[Query 1] If the return value of ib_post_send/recv() are handled to deref the
-corresponding queued session commands, the wait on cmd_wait_comp will be
-complete and clears off the session successfully. Is this the rightway to
-do it here?
+> +
+>  #include <linux/kernel.h>
+>  #include <linux/spinlock.h>
+>  #include <linux/interrupt.h>
+> @@ -242,6 +253,8 @@ static void fc_rport_state_enter(struct fc_rport_priv *rdata,
+>  /**
+>   * fc_rport_work() - Handler for remote port events in the rport_event_queue
+>   * @work: Handle to the remote port being dequeued
+> + *
+> + * Reference counting: drops kref on return
+>   */
+>  static void fc_rport_work(struct work_struct *work)
+>  {
+> @@ -272,8 +285,10 @@ static void fc_rport_work(struct work_struct *work)
+>  		kref_get(&rdata->kref);
+>  		mutex_unlock(&rdata->rp_mutex);
+>  
+> -		if (!rport)
+> +		if (!rport) {
+> +			FC_RPORT_DBG(rdata, "No rport!\n");
 
-[Query 2] An extra deref is done in case of transport_status CMD_T_TAS 
-in target_wait_for_sess_cmds(), can similar 
-implementation be done for transport state CMD_T_FABRIC_STOP?
+If you're re-sending the series, this and the other added debug statements
+might be better suited in '[PATCH 02/22] libfc: additional debugging messages'.
 
-Can someone shed some light on these aspects.
-Thanks in advance.
+Otherwise
 
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 
-Thanks,
-Bharat.
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
