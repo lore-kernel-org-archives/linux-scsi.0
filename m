@@ -1,29 +1,28 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 18/22] libfc: don't advance state machine for incoming
- FLOGI
-Date: Thu, 4 Aug 2016 15:59:49 +0200
-Message-ID: <20160804135949.stcwkclsgwkdynkf@c203.arch.suse.de>
+Subject: Re: [PATCH 20/22] libfc: Do not drop out-of-order frames
+Date: Thu, 4 Aug 2016 16:03:35 +0200
+Message-ID: <20160804140335.fybyaiwwb5jqv3gx@c203.arch.suse.de>
 References: <1470230002-37737-1-git-send-email-hare@suse.de>
- <1470230002-37737-19-git-send-email-hare@suse.de>
+ <1470230002-37737-21-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58800 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59606 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S933885AbcHDN75 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 4 Aug 2016 09:59:57 -0400
+	id S933337AbcHDODg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 4 Aug 2016 10:03:36 -0400
 Content-Disposition: inline
-In-Reply-To: <1470230002-37737-19-git-send-email-hare@suse.de>
+In-Reply-To: <1470230002-37737-21-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, Hannes Reinecke <hare@suse.com>
 
-On Wed, Aug 03, 2016 at 03:13:18PM +0200, Hannes Reinecke wrote:
-> When we receive an FLOGI but have already sent our own we should
-> not advance the state machine but rather wait for our FLOGI to
-> return before continuing with PLOGI.
+On Wed, Aug 03, 2016 at 03:13:20PM +0200, Hannes Reinecke wrote:
+> When receiving packets from the network we cannot guarantee any
+> frame ordering, so we should be receiving all valid frames and
+> let the upper layers deal with it.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 
