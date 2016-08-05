@@ -1,61 +1,37 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
-Date: Fri, 5 Aug 2016 13:38:44 -0500
-Message-ID: <57A4DD34.4080000@redhat.com>
-References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1469092085-14311-3-git-send-email-jitendra.bhivare@broadcom.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Fri, 5 Aug 2016 11:40:31 -0700
+Message-ID: <0b4f017e-2fb2-393c-5f27-05548a497d0e@sandisk.com>
+References: <20160801175948.GA6685@redhat.com>
+ <f9e71e1d-54ca-40fe-a5ea-ae2863c94ff9@sandisk.com>
+ <20160801204628.GA94704@redhat.com>
+ <8e265fcc-8021-830e-ffcb-23a8a28ec247@sandisk.com>
+ <20160802174533.GA18714@redhat.com>
+ <1a460c29-1530-d3e1-25ba-736d86aff12e@sandisk.com>
+ <20160803004013.GA19956@redhat.com>
+ <eb1af921-d874-1f6a-c5d0-12d3cae04256@sandisk.com>
+ <20160804161047.GC6989@redhat.com>
+ <4d60017e-818c-5630-549e-bf280abcf1c3@sandisk.com>
+ <20160804235850.GB13132@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52706 "EHLO mx1.redhat.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S937329AbcHESiq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2016 14:38:46 -0400
-In-Reply-To: <1469092085-14311-3-git-send-email-jitendra.bhivare@broadcom.com>
+Received: from mail-cys01nam02on0046.outbound.protection.outlook.com ([104.47.37.46]:25967
+	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1946726AbcHESki (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 5 Aug 2016 14:40:38 -0400
+In-Reply-To: <20160804235850.GB13132@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, Laurence Oberman <loberman@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/21/2016 04:07 AM, Jitendra Bhivare wrote:
-> Kernel panic - not syncing: Watchdog detected hard LOCKUP on cpu 21
-> Pid: 13242, comm: flush-8:80 Tainted: G        W  -- ------------
-> 2.6.32-573.el6.x86_64 #1
-> Call Trace:
-> <NMI>  [<ffffffff81537a84>] ? panic+0xa7/0x16f
-> [<ffffffff810149c9>] ? sched_clock+0x9/0x10
-> [<ffffffff810ed4bd>] ? watchdog_overflow_callback+0xcd/0xd0
-> [<ffffffff81124037>] ? __perf_event_overflow+0xa7/0x240
-> [<ffffffff8101dc54>] ? x86_perf_event_set_period+0xf4/0x180
-> [<ffffffff81124684>] ? perf_event_overflow+0x14/0x20
-> [<ffffffff81024a02>] ? intel_pmu_handle_irq+0x202/0x3f0
-> [<ffffffff8153cd89>] ? perf_event_nmi_handler+0x39/0xb0
-> [<ffffffff8153e845>] ? notifier_call_chain+0x55/0x80
-> [<ffffffff81389ba0>] ? scsi_done+0x0/0x60
-> [<ffffffff8153e8aa>] ? atomic_notifier_call_chain+0x1a/0x20
-> [<ffffffff810a788e>] ? notify_die+0x2e/0x30
-> [<ffffffff8153c503>] ? do_nmi+0x1c3/0x350
-> [<ffffffff8153bdc0>] ? nmi+0x20/0x30
-> [<ffffffff81389ba0>] ? scsi_done+0x0/0x60
-> [<ffffffff81389ba0>] ? scsi_done+0x0/0x60
-> [<ffffffff8153b62e>] ? _spin_lock+0x1e/0x30
-> <<EOE>>  [<ffffffffa00e2eaf>] ? iscsi_queuecommand+0x7f/0x4e0 [libiscsi]
-> [<ffffffff81389df5>] ? scsi_dispatch_cmd+0xe5/0x310
-> [<ffffffff813927be>] ? scsi_request_fn+0x5be/0x750
-> [<ffffffff81089bad>] ? del_timer+0x7d/0xe0
-> [<ffffffff81273542>] ? __generic_unplug_device+0x32/0x40
-> [<ffffffff8126e823>] ? elv_insert+0xd3/0x190
-> [<ffffffff8126e920>] ? __elv_add_request+0x40/0x90
-> 
-> In beiscsi_alloc_pdu, _bh versions of spin_lock are being used for
-> protecting SGLs and WRBs. _bh versions are needed as the function gets
-> invoked in process context and BLOCK_IOPOLL softirq.
-> 
-> In spin_unlock_bh, after releasing the lock and enabling BH, do_softirq
-> is called which executes till last SOFTIRQ.
-> 
-> beiscsi_alloc_pdu is called under session lock. Through block layer,
-> iSCSI stack in some cases send IOs with interrupts disabled. In such paths,
+On 08/04/2016 04:58 PM, Mike Snitzer wrote:
+> I've staged another fix, Laurence is seeing success with this added:
+> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.8&id=d50a6450104c237db1dc75314d17b78c990a8c05
 
+Thanks Mike. I have started testing that fix this morning.
 
-What path is this? Is this with mq enabled or disabled?
+Bart.
