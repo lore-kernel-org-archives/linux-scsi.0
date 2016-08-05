@@ -1,76 +1,87 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/28] be2iscsi: driver update 11.2.0.0
-Date: Fri, 5 Aug 2016 18:42:09 +0200
-Message-ID: <7bd1dcad-e0bc-d31d-2ddc-2336d1b9f516@suse.de>
-References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
+From: David Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH] aacraid: prevent out-of-bounds access due to changing
+ fip header sizes
+Date: Fri, 5 Aug 2016 16:58:57 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A15FA6047@avsrvexchmbx1.microsemi.net>
+References: <1470299764-96617-1-git-send-email-jthumshirn@suse.de>
+ <423FD6710FB8FB4F8728F93591889F9A15FA5D6A@avsrvexchmbx1.microsemi.net>
+ <20160805080555.6yq4lnvs2i3up2z3@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58787 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759895AbcHEQmM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2016 12:42:12 -0400
-In-Reply-To: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20160805080555.6yq4lnvs2i3up2z3@c203.arch.suse.de>
+Content-Language: en-US
+Sender: stable-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Pengfei Wang <wpengfeinudt@gmail.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: mchristi@redhat.com
 
-On 07/21/2016 11:07 AM, Jitendra Bhivare wrote:
-> This patch is generated against for-next branch.
->
-> Jitendra Bhivare (28):
->   be2iscsi: Fix to use correct configuration values
->   be2iscsi: Replace _bh with _irqsave/irqrestore
->   be2iscsi: Replace _bh version for mcc_lock spinlock
->   be2iscsi: Reduce driver load/unload time
->   be2iscsi: Set and return right iface v4/v6 states
->   be2iscsi: Fix gateway APIs to support IPv4 & IPv6
->   be2iscsi: Fix release of DHCP IP in static mode
->   be2iscsi: Move VLAN code to common iface_set_param
->   be2iscsi: Update iface handle before any set param
->   be2iscsi: Rename iface get/set/create/destroy APIs
->   be2iscsi: Handle only NET_PARAM in iface_get_param
->   be2iscsi: Check all zeroes IP before issuing IOCTL
->   be2iscsi: Remove alloc_mcc_tag & beiscsi_pci_soft_reset
->   be2iscsi: Remove isr_lock and dead code
->   be2iscsi: Fix checks for HBA in error state
->   be2iscsi: Fix to make boot discovery non-blocking
->   be2iscsi: Fix to add timer for UE detection
->   be2iscsi: Add IOCTL to check UER supported
->   be2iscsi: Move functions to right files
->   be2iscsi: Fix POST check and reset sequence
->   be2iscsi: Add V1 of EPFW cleanup IOCTL
->   be2iscsi: Add TPE recovery feature
->   be2iscsi: Fail the sessions immediately after TPE
->   be2iscsi: Add FUNCTION_RESET during driver unload
->   be2iscsi: Fix async PDU handling path
->   be2iscsi: Update copyright information
->   be2iscsi: Update the driver version
->   MAINTAINERS: Update be2iscsi contact info
->
->  MAINTAINERS                      |   10 +-
->  drivers/scsi/be2iscsi/be.h       |   15 +-
->  drivers/scsi/be2iscsi/be_cmds.c  | 1096 +++++++++++------
->  drivers/scsi/be2iscsi/be_cmds.h  |  142 ++-
->  drivers/scsi/be2iscsi/be_iscsi.c |  408 +++----
->  drivers/scsi/be2iscsi/be_iscsi.h |   25 +-
->  drivers/scsi/be2iscsi/be_main.c  | 2476 +++++++++++++++++++-------------------
->  drivers/scsi/be2iscsi/be_main.h  |  220 ++--
->  drivers/scsi/be2iscsi/be_mgmt.c  | 1490 +++++++++--------------
->  drivers/scsi/be2iscsi/be_mgmt.h  |   51 +-
->  10 files changed, 3052 insertions(+), 2881 deletions(-)
->
-For the entire patchset:
+[snip]
+> > >                 goto cleanup;
+> > >         }
+> > >
+> > > +       if (size != le16_to_cpu(kfib->header.Size)
+> > > +                       + sizeof(struct aac_fibhdr)) {
+> > > +               retval = -EINVAL;
+> > > +               goto cleanup;
+> > > +       }
+> > > +
+> > >         if (kfib->header.Command == cpu_to_le16(TakeABreakPt)) {
+> > >                 aac_adapter_interrupt(dev);
+> > >                 /*
+> > > --
+> > > 1.8.5.6
+> > >
+> >
+> > NAK, size is the MAX((header.size+hdr), sender_size). I will send a patch
+> tomorrow which will insure that neither of those values is larger than size on the
+> second fetch.
+> >
+> > Thanks, -Dave
+> 
+> 
+> OK, not sure if I understood you correctly, did you mean something like that:
+> 
+> diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+> index b381b37..a671b54 100644
+> --- a/drivers/scsi/aacraid/commctrl.c
+> +++ b/drivers/scsi/aacraid/commctrl.c
+> @@ -118,6 +118,10 @@ static int ioctl_send_fib(struct aac_dev * dev, void
+> __user *arg)
+>                 goto cleanup;
+>         }
+> 
+> +       size = max((le16_to_cpu(kfib->header.Size)
+> +                      + sizeof(struct aac_fibhdr)),
+> +                     le16_to_cpu(kfib->header.SenderSize));
+> +
+>         if (kfib->header.Command == cpu_to_le16(TakeABreakPt)) {
+>                 aac_adapter_interrupt(dev);
+>                 /*
+> @@ -127,7 +131,7 @@ static int ioctl_send_fib(struct aac_dev * dev, void
+> __user *arg)
+>                 kfib->header.XferState = 0;
+>         } else {
+>                 retval = aac_fib_send(le16_to_cpu(kfib->header.Command), fibptr,
+> -                               le16_to_cpu(kfib->header.Size) , FsaNormal,
+> +                               size , FsaNormal,
+>                                 1, 1, NULL, NULL);
+>                 if (retval) {
+>                         goto cleanup;
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hi Johannes,
 
-Cheers,
+The max that I was referring to was earlier in the function;
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+	 */
+	size = le16_to_cpu(kfib->header.Size) + sizeof(struct aac_fibhdr);
+	if (size < le16_to_cpu(kfib->header.SenderSize))
+		size = le16_to_cpu(kfib->header.SenderSize);
+
+Usually, SenderSize is the amount of space available for return data, while Size if the command size. 
+Your original patch would have caused an error if the application was expecting any return data, larger than
+The space of the command. For example, a container command is about 50 bytes, while arcconf would set
+SenderSize to 512-sizeof(struct aac_fibhdr). I think you will get a better idea with the patch I'll send today.
+
+Thanks, -Dave
