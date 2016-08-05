@@ -1,97 +1,72 @@
 From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: [PATCH] mpt3sas: Ensure the connector_name string is NUL-terminated
-Date: Fri, 5 Aug 2016 12:18:05 +0530
-Message-ID: <866595a5d5bb579de68d0c3f06bdc43c@mail.gmail.com>
-References: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
+Subject: RE: [PATCH] mpt3sas: Don't spam logs if logging level is 0
+Date: Fri, 5 Aug 2016 12:18:43 +0530
+Message-ID: <a3b55ef3291030b37cffda26a4470b70@mail.gmail.com>
+References: <1470229218-22040-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:34572 "EHLO
+	mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1030399AbcHEGtS (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2016 02:49:18 -0400
+Received: by mail-qk0-f178.google.com with SMTP id p186so129255688qkd.1
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Aug 2016 23:48:44 -0700 (PDT)
+In-Reply-To: <1470229218-22040-1-git-send-email-jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
 Hi,
  Please consider this patch as Acked-by: Chaitra P B
 <chaitra.basappa@broadcom.com>
 
-
 Thanks,
  Chaitra
 
 -----Original Message-----
-From: Calvin Owens [mailto:calvinowens@fb.com]
-Sent: Thursday, July 28, 2016 10:16 AM
-To: Sathya Prakash; Chaitra P B; Suganath Prabu Subramani; James E.J.
-Bottomley; Martin K. Petersen
-Cc: MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; kernel-team@fb.com; Calvin Owens
-Subject: [PATCH] mpt3sas: Ensure the connector_name string is
-NUL-terminated
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of Johannes Thumshirn
+Sent: Wednesday, August 03, 2016 6:30 PM
+To: Martin K . Petersen; James Bottomley
+Cc: Linux SCSI Mailinglist; Linux Kernel Mailinglist; Sreekanth Reddy;
+Johannes Thumshirn
+Subject: [PATCH] mpt3sas: Don't spam logs if logging level is 0
 
-We blindly trust the hardware to give us NUL-terminated strings, which is
-a bad idea because it doesn't always do that. For example:
+In _scsih_io_done() we test if the ioc->logging_level does _not_ have the
+MPT_DEBUG_REPLY bit set and if it hasn't we print the debug messages. This
+unfortunately is the wrong way around.
 
-  [  481.184784] mpt3sas_cm0: 	enclosure level(0x0000), connector name(
-\x3)
+Note, the actual bug is older than af0094115 but this commit removed the
+CONFIG_SCSI_MPT3SAS_LOGGING Kconfig option which hid the bug.
 
-In this case, connector_name is four spaces. We got lucky here because the
-2nd byte beyond our character array happens to be a NUL. Fix this by
-explicitly writing '\0' to the end of the string to ensure we don't run
-off the edge of the world in printk().
-
-Signed-off-by: Calvin Owens <calvinowens@fb.com>
+Fixes: af0094115 'mpt2sas, mpt3sas: Remove SCSI_MPTXSAS_LOGGING entry from
+Kconfig'
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  2 +-
-drivers/scsi/mpt3sas/mpt3sas_scsih.c | 10 ++++++----
- 2 files changed, 7 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h
-b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 892c9be..eb7f5b0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -478,7 +478,7 @@ struct _sas_device {
- 	u8	pfa_led_on;
- 	u8	pend_sas_rphy_add;
- 	u8	enclosure_level;
--	u8	connector_name[4];
-+	u8	connector_name[5];
- 	struct kref refcount;
- };
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index cd91a68..acabe48 100644
+index 4a1cc85..a138690 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5380,8 +5380,9 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 			sas_device->enclosure_level =
+@@ -4693,7 +4693,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16
+smid, u8 msix_index, u32 reply)
+ 			    le16_to_cpu(mpi_reply->DevHandle));
+ 		mpt3sas_trigger_scsi(ioc, data.skey, data.asc, data.ascq);
 
-le16_to_cpu(sas_device_pg0.EnclosureLevel);
--			memcpy(&sas_device->connector_name[0],
--				&sas_device_pg0.ConnectorName[0], 4);
-+			memcpy(sas_device->connector_name,
-+				sas_device_pg0.ConnectorName, 4);
-+			sas_device->connector_name[4] = '\0';
- 		} else {
- 			sas_device->enclosure_level = 0;
- 			sas_device->connector_name[0] = '\0'; @@ -5508,8
-+5509,9 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8
-phy_num,
- 	if (sas_device_pg0.Flags &
-MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 		sas_device->enclosure_level =
- 			le16_to_cpu(sas_device_pg0.EnclosureLevel);
--		memcpy(&sas_device->connector_name[0],
--			&sas_device_pg0.ConnectorName[0], 4);
-+		memcpy(sas_device->connector_name,
-+			sas_device_pg0.ConnectorName, 4);
-+		sas_device->connector_name[4] = '\0';
- 	} else {
- 		sas_device->enclosure_level = 0;
- 		sas_device->connector_name[0] = '\0';
+-		if (!(ioc->logging_level & MPT_DEBUG_REPLY) &&
++		if ((ioc->logging_level & MPT_DEBUG_REPLY) &&
+ 		     ((scmd->sense_buffer[2] == UNIT_ATTENTION) ||
+ 		     (scmd->sense_buffer[2] == MEDIUM_ERROR) ||
+ 		     (scmd->sense_buffer[2] == HARDWARE_ERROR)))
 --
-2.8.0.rc2
+1.8.5.6
+
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
