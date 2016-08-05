@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 3/4] libfc: reset exchange manager during LOGO handling
-Date: Fri,  5 Aug 2016 14:55:02 +0200
-Message-ID: <1470401703-87045-4-git-send-email-hare@suse.de>
+Subject: [PATCH 2/4] libfc: send LOGO for PLOGI failure
+Date: Fri,  5 Aug 2016 14:55:01 +0200
+Message-ID: <1470401703-87045-3-git-send-email-hare@suse.de>
 References: <1470401703-87045-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45364 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45358 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759678AbcHEMzR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	id S1759668AbcHEMzR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
 	Fri, 5 Aug 2016 08:55:17 -0400
 In-Reply-To: <1470401703-87045-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,55 +14,44 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-FC-LS mandates that we should invalidate all sequences before
-sending a LOGO. And we should set the event to RPORT_EV_STOP
-when a LOGO request has been received to signal that all
-exchanges are terminated.
+When running in point-to-multipoint mode PLOGI is done after
+FLOGI completed. So when the PLOGI fails we should be sending
+a LOGO to the remote port.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_rport.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
+ drivers/scsi/libfc/fc_rport.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index bfad971..05fccd3 100644
+index 0ea0d4f..bfad971 100644
 --- a/drivers/scsi/libfc/fc_rport.c
 +++ b/drivers/scsi/libfc/fc_rport.c
-@@ -489,6 +489,9 @@ static void fc_rport_enter_delete(struct fc_rport_priv *rdata,
+@@ -593,15 +593,23 @@ static void fc_rport_timeout(struct work_struct *work)
   */
- static int fc_rport_logoff(struct fc_rport_priv *rdata)
+ static void fc_rport_error(struct fc_rport_priv *rdata, int err)
  {
 +	struct fc_lport *lport = rdata->local_port;
-+	u32 port_id = rdata->ids.port_id;
 +
- 	mutex_lock(&rdata->rp_mutex);
+ 	FC_RPORT_DBG(rdata, "Error %d in state %s, retries %d\n",
+ 		     -err, fc_rport_state(rdata), rdata->retries);
  
- 	FC_RPORT_DBG(rdata, "Remove port\n");
-@@ -498,6 +501,15 @@ static int fc_rport_logoff(struct fc_rport_priv *rdata)
- 		FC_RPORT_DBG(rdata, "Port in Delete state, not removing\n");
- 		goto out;
- 	}
-+	/*
-+	 * FC-LS states:
-+	 * To explicitly Logout, the initiating Nx_Port shall terminate
-+	 * other open Sequences that it initiated with the destination
-+	 * Nx_Port prior to performing Logout.
-+	 */
-+	lport->tt.exch_mgr_reset(lport, 0, port_id);
-+	lport->tt.exch_mgr_reset(lport, port_id, 0);
-+
- 	fc_rport_enter_logo(rdata);
- 
- 	/*
-@@ -2082,7 +2094,7 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 		FC_RPORT_DBG(rdata, "Received LOGO request while in state %s\n",
- 			     fc_rport_state(rdata));
- 
--		fc_rport_enter_delete(rdata, RPORT_EV_LOGO);
-+		fc_rport_enter_delete(rdata, RPORT_EV_STOP);
- 		mutex_unlock(&rdata->rp_mutex);
- 		kref_put(&rdata->kref, rdata->local_port->tt.rport_destroy);
- 	} else
+ 	switch (rdata->rp_state) {
+ 	case RPORT_ST_FLOGI:
+-	case RPORT_ST_PLOGI:
+ 		rdata->flags &= ~FC_RP_STARTED;
+ 		fc_rport_enter_delete(rdata, RPORT_EV_FAILED);
+ 		break;
++	case RPORT_ST_PLOGI:
++		if (lport->point_to_multipoint) {
++			rdata->flags &= ~FC_RP_STARTED;
++			fc_rport_enter_delete(rdata, RPORT_EV_FAILED);
++		} else
++			fc_rport_enter_logo(rdata);
++		break;
+ 	case RPORT_ST_RTV:
+ 		fc_rport_enter_ready(rdata);
+ 		break;
 -- 
 1.8.5.6
 
