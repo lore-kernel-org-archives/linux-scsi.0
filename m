@@ -1,57 +1,60 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/4] libfc: send LOGO for PLOGI failure
-Date: Fri,  5 Aug 2016 14:55:01 +0200
-Message-ID: <1470401703-87045-3-git-send-email-hare@suse.de>
-References: <1470401703-87045-1-git-send-email-hare@suse.de>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+ driver
+Date: Fri, 5 Aug 2016 14:19:20 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+ <yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45358 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1759668AbcHEMzR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 5 Aug 2016 08:55:17 -0400
-In-Reply-To: <1470401703-87045-1-git-send-email-hare@suse.de>
+Received: from mail-sn1nam01on0068.outbound.protection.outlook.com ([104.47.32.68]:39664
+	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1422677AbcHEOwx convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 5 Aug 2016 10:52:53 -0400
+In-Reply-To: <yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When running in point-to-multipoint mode PLOGI is done after
-FLOGI completed. So when the PLOGI fails we should be sending
-a LOGO to the remote port.
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Thursday, August 04, 2016 8:25 PM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
+> hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benesh;
+> elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+> driver
+> 
+> EXTERNAL EMAIL
+> 
+> 
+> >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+> 
+> Don,
+> 
+> Don> This driver is based on Linus's tree This initial commit contains
+> Don> WIP of Microsemi's smartpqi module.
+> 
+> Is your interface related to T10 PQI?
+> 
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/libfc/fc_rport.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+We follow it pretty closely with some exceptions:
+ - Our memory BARS includes both the aacraid SIS and PQI interfaces
+- We have our own config table defined.
+- We are using our own error data buffer schema
+- We are not yet supporting fencing and some other features.
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 0ea0d4f..bfad971 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -593,15 +593,23 @@ static void fc_rport_timeout(struct work_struct *work)
-  */
- static void fc_rport_error(struct fc_rport_priv *rdata, int err)
- {
-+	struct fc_lport *lport = rdata->local_port;
-+
- 	FC_RPORT_DBG(rdata, "Error %d in state %s, retries %d\n",
- 		     -err, fc_rport_state(rdata), rdata->retries);
- 
- 	switch (rdata->rp_state) {
- 	case RPORT_ST_FLOGI:
--	case RPORT_ST_PLOGI:
- 		rdata->flags &= ~FC_RP_STARTED;
- 		fc_rport_enter_delete(rdata, RPORT_EV_FAILED);
- 		break;
-+	case RPORT_ST_PLOGI:
-+		if (lport->point_to_multipoint) {
-+			rdata->flags &= ~FC_RP_STARTED;
-+			fc_rport_enter_delete(rdata, RPORT_EV_FAILED);
-+		} else
-+			fc_rport_enter_logo(rdata);
-+		break;
- 	case RPORT_ST_RTV:
- 		fc_rport_enter_ready(rdata);
- 		break;
--- 
-1.8.5.6
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
 
