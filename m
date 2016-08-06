@@ -1,107 +1,91 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 151661] New: Adaptec 3805 prints "AAC: Host adapter dead -1"
- every 10 seconds but works fine anyway
-Date: Sat, 06 Aug 2016 21:47:02 +0000
-Message-ID: <bug-151661-11613@https.bugzilla.kernel.org/>
+From: Tomas Vondra <tomas@pgaddict.com>
+Subject: Re: Dirty/Writeback fields in /proc/meminfo affected by 20d74bf29c
+Date: Sun, 7 Aug 2016 00:15:08 +0200
+Message-ID: <d3da059b-9930-38d4-76f8-79f66f8713e4@pgaddict.com>
+References: <80b21fe4-ee8b-314c-ee3e-c09386bf368d@pgaddict.com>
+ <20160804135533.153ecbdc199e03f359c98e75@linux-foundation.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53658 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751724AbcHFVrH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Aug 2016 17:47:07 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id CCE7D201D3
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Aug 2016 21:47:05 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 285EF201F2
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Aug 2016 21:47:03 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20160804135533.153ecbdc199e03f359c98e75@linux-foundation.org>
+Sender: owner-linux-mm@kvack.org
+To: Andrew Morton <akpm@linux-foundation.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-
-https://bugzilla.kernel.org/show_bug.cgi?id=151661
-
-            Bug ID: 151661
-           Summary: Adaptec 3805 prints "AAC: Host adapter dead -1" every
-                    10 seconds but works fine anyway
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 4.6.5, 4.7.0
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: AACRAID
-          Assignee: scsi_drivers-aacraid@kernel-bugs.osdl.org
-          Reporter: bugzie@grubelek.pl
-        Regression: No
-
-Created attachment 227821
-  --> https://bugzilla.kernel.org/attachment.cgi?id=227821&action=edit
-dmesg (before igfx_off)
-
-(I've already posted this on vfio-users and linux-scsi mailing list, so I'm
-just copying decription with some minor changes)
-
-Hi,
-
-I have some issues with Adaptec 3805 and found that it could be related to
-iommu as described here [1]. I've tried various (iommu=pt etc.) but nothing
-seems to change the behaviour of the controller. Also tried the patch [2] from
-Alex Williamson on top of 4.6.5. Controller seems to work fine (random r/w) for
-some hours under Windows 7 (that's on different machine, AMD Phenom) or (on the
-same machine - that is: Intel i5-2400 with Intel DQ67SW motherboard) with
-Clonezilla.
-
-I did some further digging and added intel_iommu=igfx_off (found at some thread
-with some other hardware mentioning Sandy Bridge) and it seems to work - just
-transfered 300 gigabytes^W^Wover 1 TB of data to a testing array. On the other
-hand it still fills logs with those over and over every 10 seconds:
-AAC: Host adapter dead -1
-
-I've also tried various Live Linux 64-bit distros:
-1/2. Arch Bang (4.6.4-1-ARCH) and Ubuntu 16.04.1 (4.4.0-31-generic
-#50-Ubuntu) - prints errors every 10 seconds (afair didnt test if it
-works as I expected it doesnt)
-3. Ubuntu 14.04 (4.4.0-15-generic #31-Ubuntu) - doesnt print errors,
-works
 
 
---below info from before intel_iommu=igfx_off--
-I could read the array (dd if=controller of=/dev/null), but not write. With dd
-write, trying to make fs or partition or whatever it ended with messages
-similar to this:
-DMAR: DRHD: handling fault status reg 3
-DMAR: DMAR:[DMA Write] Request device [03:01.0] fault addr ffbb5000
-DMAR:[fault reason 02] Present bit in context entry is clear
+On 08/04/2016 10:55 PM, Andrew Morton wrote:
+> On Mon, 1 Aug 2016 04:36:28 +0200 Tomas Vondra <tomas@pgaddict.com> wrote:
+>
+>> Hi,
+>>
+>> While investigating a strange OOM issue on the 3.18.x branch (which
+>> turned out to be already fixed by 52c84a95), I've noticed a strange
+>> difference in Dirty/Writeback fields in /proc/meminfo depending on
+>> kernel version. I'm wondering whether this is expected ...
+>>
+>> I've bisected the change to 20d74bf29c, added in 3.18.22 (upstream
+>> commit 4f258a46):
+>>
+>>      sd: Fix maximum I/O size for BLOCK_PC requests
+>>
+>> With /etc/sysctl.conf containing
+>>
+>>      vm.dirty_background_bytes = 67108864
+>>      vm.dirty_bytes = 1073741824
+>>
+>> a simple "dd" example writing 10GB file
+>>
+>>      dd if=/dev/zero of=ssd.test.file bs=1M count=10240
+>>
+>> results in about this on 3.18.21:
+>>
+>>      Dirty:            740856 kB
+>>      Writeback:         12400 kB
+>>
+>> but on 3.18.22:
+>>
+>>      Dirty:             49244 kB
+>>      Writeback:        656396 kB
+>>
+>> I.e. it seems to revert the relationship. I haven't identified any
+>> performance impact, and apparently for random writes the behavior did
+>> not change at all (or at least I haven't managed to reproduce it).
+>>
+>> But it's unclear to me why setting a maximum I/O size should affect
+>> this, and perhaps it has impact that I don't see.
+>
+> So what appears to be happening here is that background writeback is
+> cutting in earlier - the amount of pending writeback ("Dirty") is
+> reduced while the amount of active writeback ("Writeback") is
+> correspondingly increased.
+>
+> 4f258a46 had the effect of permitting larger requests into the
+> request queue. It's unclear to me why larger requests would cause
+> background writeback to cut in earlier - the writeback code doesn't
+> even care about individual request sizes, it only cares about
+> aggregate pagecache state.
+>
 
-grub:
-kernel /boot/vmlinuz root=*cut* enable_mtrr_cleanup intel_iommu=on rw
-vfio-pci.ids=1002:9460,1002:aa30,8086:1c26
-vfio_iommu_type1.allow_unsafe_interrupts=1
+Right. Not a kernel expert here, but that's mostly my thinking.
 
-(vfio-pci.ids are GPU, GPU audio and USB for passthru to Windows VM)
+> Less Dirty and more Writeback isn't necessarily a bad thing at all,
+> but I don't like mysteries. cc linux-mm to see if anyone else can
+> spot-the-difference.
+>
 
-dmesg attached
+I'm not sure if the change has positive or negative impact (or perhaps 
+no actual impact), but as a database guy (PostgreSQL) I'm interested in 
+this, as the interaction between the database write activity and kernel 
+matters to us a lot. So I'm wondering if this change might trigger the 
+writeback sooner, etc.
 
-~ # lspci -nnvs 03:0e.0
-03:0e.0 RAID bus controller [0104]: Adaptec AAC-RAID [9005:0285]
-        Subsystem: Adaptec 3805 [9005:02bc]
-        Flags: bus master, stepping, 66MHz, medium devsel, latency 32, IRQ 18
-        Memory at fb800000 (64-bit, non-prefetchable) [size=2M]
-        Expansion ROM at fba00000 [disabled] [size=256K]
-        Capabilities: [c0] Power Management version 2
-        Capabilities: [d0] MSI: Enable- Count=1/2 Maskable- 64bit+
-        Capabilities: [e0] PCI-X non-bridge device
-        Kernel driver in use: aacraid
+regards
+Tomas
 
-[1] https://www.redhat.com/archives/vfio-users/2016-July/msg00046.html
-[2] https://www.redhat.com/archives/vfio-users/2016-July/msg00063.html
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
