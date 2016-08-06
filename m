@@ -1,86 +1,51 @@
-From: Yinghai Lu <yinghai@kernel.org>
-Subject: [PATCH] megaraid_sas: Fix probing cards without io port
-Date: Fri,  5 Aug 2016 23:37:34 -0700
-Message-ID: <20160806063734.31083-1-yinghai@kernel.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Yinghai Lu <yinghai@kernel.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Sat, 06 Aug 2016 19:57:37 +0000
+Message-ID: <bug-151631-11613-X2EL1D2SSx@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:47324 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1750980AbcHFUGL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Aug 2016 16:06:11 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id CC9E820829
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Aug 2016 19:57:39 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id A3AF820827
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Aug 2016 19:57:37 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Found one megaraid_sas HBA probe fails,
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-[  187.235190] scsi host2: Avago SAS based MegaRAID driver
-[  191.112365] megaraid_sas 0000:89:00.0: BAR 0: can't reserve [io  0x0000-0x00ff]
-[  191.120548] megaraid_sas 0000:89:00.0: IO memory region busy!
+--- Comment #2 from icanrealizeum <icanrealizeum+bugzillakernelorg@gmail.com> ---
+Created attachment 227801
+  --> https://bugzilla.kernel.org/attachment.cgi?id=227801&action=edit
+for systemd, /usr/lib/systemd/system-shutdown/debug.sh
 
-and the card has resource like,
-[  125.097714] pci 0000:89:00.0: [1000:005d] type 00 class 0x010400
-[  125.104446] pci 0000:89:00.0: reg 0x10: [io  0x0000-0x00ff]
-[  125.110686] pci 0000:89:00.0: reg 0x14: [mem 0xce400000-0xce40ffff 64bit]
-[  125.118286] pci 0000:89:00.0: reg 0x1c: [mem 0xce300000-0xce3fffff 64bit]
-[  125.125891] pci 0000:89:00.0: reg 0x30: [mem 0xce200000-0xce2fffff pref]
+Found workaround, thanks to this article:
+https://unix.stackexchange.com/questions/55281/how-to-stop-waking-all-attached-drives-on-reboot-deactivating-swap/55417#55417
 
-that does not io port resource allocated from BIOS, and kernel can not assign
-one as io port shortage.
+If I put the following in aforementioned debug.sh file then reboot is
+instant(after the SCSI bug, of course):
 
-The driver is only looking for MEM, and should not fail.
+#THIS:
+#turn off drive cache
+hdparm -W0 /dev/sda
+#^^^^^^^^^^^^^^^^^^^^^^
 
-It turns out megasas_init_fw() etc are using bar index as mask.
-index 1 is used as mask 1, so that pci_request_selected_regions()
-is trying to request BAR0 instead of BAR1.
+#this was already here before:
+#flush drive cache:
+hdparm -F /dev/sda
+hdparm -f /dev/sda
 
-Fix all related reference.
-
-Fixes: b6d5d8808b4c ("megaraid_sas: Use lowest memory bar for SR-IOV VF support")
-Signed-off-by: Yinghai Lu <yinghai@kernel.org>
-
----
- drivers/scsi/megaraid/megaraid_sas_base.c   |    6 +++---
- drivers/scsi/megaraid/megaraid_sas_fusion.c |    2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5037,7 +5037,7 @@ static int megasas_init_fw(struct megasa
- 	/* Find first memory bar */
- 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
- 	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
--	if (pci_request_selected_regions(instance->pdev, instance->bar,
-+	if (pci_request_selected_regions(instance->pdev, 1<<instance->bar,
- 					 "megasas: LSI")) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "IO memory region busy!\n");
- 		return -EBUSY;
-@@ -5339,7 +5339,7 @@ fail_ready_state:
- 	iounmap(instance->reg_set);
- 
-       fail_ioremap:
--	pci_release_selected_regions(instance->pdev, instance->bar);
-+	pci_release_selected_regions(instance->pdev, 1<<instance->bar);
- 
- 	return -EINVAL;
- }
-@@ -5360,7 +5360,7 @@ static void megasas_release_mfi(struct m
- 
- 	iounmap(instance->reg_set);
- 
--	pci_release_selected_regions(instance->pdev, instance->bar);
-+	pci_release_selected_regions(instance->pdev, 1<<instance->bar);
- }
- 
- /**
-Index: linux-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c
-===================================================================
---- linux-2.6.orig/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ linux-2.6/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2603,7 +2603,7 @@ megasas_release_fusion(struct megasas_in
- 
- 	iounmap(instance->reg_set);
- 
--	pci_release_selected_regions(instance->pdev, instance->bar);
-+	pci_release_selected_regions(instance->pdev, 1<<instance->bar);
- }
- 
- /**
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
