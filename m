@@ -1,37 +1,55 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
-Date: Sun, 7 Aug 2016 22:10:17 +0800
-Message-ID: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Sun, 07 Aug 2016 15:06:22 +0000
+Message-ID: <bug-151631-11613-WS1PfScFU3@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-ide@vger.kernel.org, Tejun Heo <tj@kernel.org>, dmilburn@redhat.com
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:50636 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751758AbcHGPG0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Aug 2016 11:06:26 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 6478920263
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2016 15:06:24 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+	by mail.kernel.org (Postfix) with ESMTP id 4D7962022A
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2016 15:06:22 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-So the (not so) recent bump of BLK_DEF_MAX_SECTORS from 1024 to 2560
-(commit d2be537c3ba3) seemed to have caused trouble to some of the ATA
-devices, which were then worked around with ATA_HORKAGE_MAX_SEC_1024.
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-However, I am suspecting that the bump of BLK_DEF_MAX_SECTORS is not
-the "real" cause of the trouble, but the fact that AHCI_MAX_SG has
-been set to a weird value of 168 (with a comment "hardware max is
-64K", which neither seem to make any sense).
+icanrealizeum <icanrealizeum+bugzillakernelorg@gmail.com> changed:
 
-AHCI_MAX_SG is used to set the sg_tablesize (i.e. max_segments,
-apparently), which is apparently used to derive the actual "request
-size" (that is, if it is lower than max_sectors(_kb), it will be the
-limiting factor instead).
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+         Regression|No                          |Yes
 
-For example, no matter if the drive has max_sectors set to 2560, or to
-65535 (by adding it as the Optimal Transfer Length to libata's SATL,
-which is also max_hw_sectors that is set from ATA_MAX_SECTORS_LBA48),
-"avgrq-sz" in `iostat` will be capped at 1344 (168 * 8).
+--- Comment #4 from icanrealizeum <icanrealizeum+bugzillakernelorg@gmail.com> ---
+I have worked around this issue(for me) by adding a few lines in debug.sh like:
 
-However, if I change AHCI_MAX_SG to 128 (which is also the
-sg_tablesize set in libata.h from LIBATA_MAX_PRD), "avgrq-sz" in
-`iostat` will be capped at 1024 (128 * 8), which should make
-ATA_HORKAGE_MAX_SEC_1024 unnecessary.
+if test "$1" == "poweroff"; then
+ hdparm -Y /dev/sda
+ echo o > /proc/sysrq-trigger ; sleep 5
+fi
 
-So why has AHCI_MAX_SG been set to 168 anyway?
+that puts drive to sleep and triggers shutdown via sysrq
+
+Seems to have worked just fine: no drive issues on startup anymore, as I've
+mentioned before with having to ctrl+alt+del once to get BIOS to detect drive;
+and no extra delays.
+
+Also the above require a kernel patch:
+//sd_start_stop_device(sdkp, 0);
+commenting out that call in sd_shutdown function in file: drivers/scsi/sd.c
+or else it will fail like in comment #3
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
