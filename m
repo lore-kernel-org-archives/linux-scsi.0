@@ -1,78 +1,63 @@
-From: Bart Van Assche <bvanassche@acm.org>
-Subject: Re: [PATCH 00/22] FCoE VN2VN fixes
-Date: Sat, 6 Aug 2016 17:12:33 -0700
-Message-ID: <51f8558c-2e3f-7274-ba3f-4ea29eb42624@acm.org>
-References: <1470230002-37737-1-git-send-email-hare@suse.de>
-	<3fbe8456-182a-d7da-068d-28866aef5314@sandisk.com>
-	<46f7c046-3ed7-d087-6fcf-2f92d8167fde@suse.de>
-	<a0c55b8f-7ab3-28f5-a95c-aa83fd94c88a@sandisk.com>
-	<9c092661-141b-f6bc-a8dc-872faaf128b4@suse.de>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v5 4/8] char: rpmb: provide a user space interface
+Date: Sun, 7 Aug 2016 09:44:03 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
+References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
+ <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+ <20160805200823.GB7999@amd>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sf2.bxl.stone.is ([5.134.1.43]:52989 "EHLO sf2.bxl.stone.is"
-	rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1751110AbcHGBJT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sat, 6 Aug 2016 21:09:19 -0400
-In-Reply-To: <9c092661-141b-f6bc-a8dc-872faaf128b4@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7BIT
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <20160805200823.GB7999@amd>
+Content-Language: en-US
+Sender: linux-mmc-owner@vger.kernel.org
+To: Pavel Machek <pavel@ucw.cz>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-On 08/05/16 09:16, Hannes Reinecke wrote:
-> On 08/05/2016 05:33 PM, Bart Van Assche wrote:
->> On 08/05/2016 12:43 AM, Hannes Reinecke wrote:
->>> On 08/04/2016 04:59 PM, Bart Van Assche wrote:
->>>> On 08/03/16 06:13, Hannes Reinecke wrote:
->>>>> As usual, comments and reviews are welcome.
->>>>
->>>> Great work :-) Have you been testing these patches against the LIO FCoE
->>>> target driver? In that case you might need to port the following patch
->>>> to LIO, a patch that fixes a subtle data corruption issue:
->>>> https://sourceforge.net/p/scst/svn/4969.
->>>>
->>> Indeed I have. With this patchset I've managed to run FCoE over virtio
->>> with LIO running on the host. Quite cool, methinks :-)
->>>
->>> And indeed, your patch seem to be helping with the issues I've seen
->>> (mysterious out-of-order frames and wireshark complaining about invalid
->>> frames).
->>> Still a bit hackish, though. Can't we move the data destructor into the
->>> skb itself and not free the data in the target core?
->>
->> Hello Hannes,
->>
->> Several LIO drivers already support sending data asynchronously to the
->> initiator, e.g. the ib_srpt and qla2x00t drivers. These drivers avoid
->> that struct se_cmd and its data buffer are freed before sending finished
->> by passing the TARGET_SCF_ACK_KREF flag to target_submit_cmd_map_sgls()
->> and by calling target_put_sess_cmd() after the data transfer has
->> finished. Since the tcm_fc driver already specifies TARGET_SCF_ACK_KREF
->> when submitting commands to the LIO core I think what's needed to make
->> use_sg=1 safe in the tcm_fc driver is for use_sg=1 to move the
->> target_put_sess_cmd() call from ft_queue_status() into a callback
->> function that is called when transmitting data has finished. Maybe the
->> SKBTX_DEV_ZEROCOPY flag can be used to make the network stack invoke an
->> appropriate callback function. See e.g. xenvif_zerocopy_callback() in
->> the xen-netback driver.
->>
-> Well, Johannes and me looked into that a bit closer; there actually _is_
-> a destructor callback in the sk_buff, so in theory we could hook into
-> that. However, I'm not sure if that's working as intended; the FCoE
-> stack does a lot of skb_clone(), and my setup even more so (tcm_fc over
-> vlan over veth over bridge over tap into the guest).
-> So it's anyones guess at which point of the chain the original data will
-> be freed. And whether the 'netdev' point still points to tcm_fcs netdev ...
-> Debugging continues.
+> 
+> On Mon 2016-07-18 23:27:49, Tomas Winkler wrote:
+> > The user space API is achieved via two synchronous IOCTL.
+> 
+> IOCTLs?
 
-Hi Hannes,
+Will fix
+ 
+> > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is
+> performed
+> > by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
+> where
+> > the whole RPMB sequence including RESULT_READ is supplied by the caller.
+> > The latter is intended for  easier adjusting  of the  applications
+> > that use MMC_IOC_MULTI_CMD ioctl.
+> 
+> Why "  "?
+Not sure I there is enough clue in your question. 
+> 
+> >
+> > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> 
+> > +
+> > +static long rpmb_ioctl(struct file *fp, unsigned int cmd, unsigned
+> > +long arg) {
+> > +	return __rpmb_ioctl(fp, cmd, (void __user *)arg); }
+> > +
+> > +#ifdef CONFIG_COMPAT
+> > +static long rpmb_compat_ioctl(struct file *fp, unsigned int cmd,
+> > +			      unsigned long arg)
+> > +{
+> > +	return	__rpmb_ioctl(fp, cmd, compat_ptr(arg));
+> > +}
+> > +#endif /* CONFIG_COMPAT */
+> 
+> Description of the ioctl is missing, 
+Will add. 
 
-Does it really matter that the FCoE skb's get cloned? skb_clone() 
-increases skb_shinfo(skb)->dataref. skb_release_data() only calls the 
-skb destructor if skb_shinfo(skb)->dataref reaches zero. I think this 
-means even if an skb gets cloned that the destructor is only called 
-after the skb data has been sent.
+and it should certainly be designed in a way
+> that it does not need compat support.
 
-Bart.
+The compat_ioctl handler just casts the compat_ptr, I believe this should be done unless the ioctl is globaly registered in fs/compat_ioctl.c, but I might be wrong.
+Tomas
+
+
