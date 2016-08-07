@@ -1,91 +1,44 @@
-From: Tomas Vondra <tomas@pgaddict.com>
-Subject: Re: Dirty/Writeback fields in /proc/meminfo affected by 20d74bf29c
-Date: Sun, 7 Aug 2016 00:15:08 +0200
-Message-ID: <d3da059b-9930-38d4-76f8-79f66f8713e4@pgaddict.com>
-References: <80b21fe4-ee8b-314c-ee3e-c09386bf368d@pgaddict.com>
- <20160804135533.153ecbdc199e03f359c98e75@linux-foundation.org>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Sun, 07 Aug 2016 00:29:48 +0000
+Message-ID: <bug-151631-11613-qbaktU4wLc@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20160804135533.153ecbdc199e03f359c98e75@linux-foundation.org>
-Sender: owner-linux-mm@kvack.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-mm@kvack.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:58698 "EHLO mail.kernel.org"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751010AbcHGA3w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sat, 6 Aug 2016 20:29:52 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+	by mail.kernel.org (Postfix) with ESMTP id 8184A20256
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2016 00:29:50 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+	by mail.kernel.org (Postfix) with ESMTP id 7D1DF20259
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Aug 2016 00:29:48 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-On 08/04/2016 10:55 PM, Andrew Morton wrote:
-> On Mon, 1 Aug 2016 04:36:28 +0200 Tomas Vondra <tomas@pgaddict.com> wrote:
->
->> Hi,
->>
->> While investigating a strange OOM issue on the 3.18.x branch (which
->> turned out to be already fixed by 52c84a95), I've noticed a strange
->> difference in Dirty/Writeback fields in /proc/meminfo depending on
->> kernel version. I'm wondering whether this is expected ...
->>
->> I've bisected the change to 20d74bf29c, added in 3.18.22 (upstream
->> commit 4f258a46):
->>
->>      sd: Fix maximum I/O size for BLOCK_PC requests
->>
->> With /etc/sysctl.conf containing
->>
->>      vm.dirty_background_bytes = 67108864
->>      vm.dirty_bytes = 1073741824
->>
->> a simple "dd" example writing 10GB file
->>
->>      dd if=/dev/zero of=ssd.test.file bs=1M count=10240
->>
->> results in about this on 3.18.21:
->>
->>      Dirty:            740856 kB
->>      Writeback:         12400 kB
->>
->> but on 3.18.22:
->>
->>      Dirty:             49244 kB
->>      Writeback:        656396 kB
->>
->> I.e. it seems to revert the relationship. I haven't identified any
->> performance impact, and apparently for random writes the behavior did
->> not change at all (or at least I haven't managed to reproduce it).
->>
->> But it's unclear to me why setting a maximum I/O size should affect
->> this, and perhaps it has impact that I don't see.
->
-> So what appears to be happening here is that background writeback is
-> cutting in earlier - the amount of pending writeback ("Dirty") is
-> reduced while the amount of active writeback ("Writeback") is
-> correspondingly increased.
->
-> 4f258a46 had the effect of permitting larger requests into the
-> request queue. It's unclear to me why larger requests would cause
-> background writeback to cut in earlier - the writeback code doesn't
-> even care about individual request sizes, it only cares about
-> aggregate pagecache state.
->
+--- Comment #3 from icanrealizeum <icanrealizeum+bugzillakernelorg@gmail.com> ---
+Ok, now that the cache error doesn't happen and reboot works, I've tested
+shutdown and it now fails at the "Stopping disk" part, which means this line:
+sd_start_stop_device(sdkp, 0);
 
-Right. Not a kernel expert here, but that's mostly my thinking.
+ata4.00: failed command: STANDBY IMMEDIATE
 
-> Less Dirty and more Writeback isn't necessarily a bad thing at all,
-> but I don't like mysteries. cc linux-mm to see if anyone else can
-> spot-the-difference.
->
+screenshot: https://i.imgur.com/2yvAMSR.jpg
 
-I'm not sure if the change has positive or negative impact (or perhaps 
-no actual impact), but as a database guy (PostgreSQL) I'm interested in 
-this, as the interaction between the database write activity and kernel 
-matters to us a lot. So I'm wondering if this change might trigger the 
-writeback sooner, etc.
+So now we know that it did in fact not safely shutdown the drive before, when I
+thought it's just the drive cache flushing that failed. So the drive is doing
+recovery, internally, upon laptop poweron which is why it doesn't identify
+itself in time but only on next ctrl+alt+del boot. (see comment #1)
 
-regards
-Tomas
-
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
