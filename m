@@ -1,157 +1,56 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: IB/isert: Return value of iser target transport handlers ignored
- by iscsi target
-Date: Sun, 7 Aug 2016 20:09:08 +0300
-Message-ID: <8f3ad0ed-a17d-571a-7e1a-eb61caa263c9@grimberg.me>
-References: <20160804103506.GA29543@t5fpga-b1.asicdesigners.com>
+From: <nelcastellodicarta@gmail.com>
+Subject: RE: linux-scsi
+Date: Sun, 7 Aug 2016 17:54:27 -0400
+Message-ID: <000101d1f128$8a06989e$c0a80001@ctinets.com>
+Reply-To: <linux-scsi@vger.kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20160804103506.GA29543@t5fpga-b1.asicdesigners.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Potnuri Bharat Teja <bharat@chelsio.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
-Cc: linux-scsi@vger.kernel.org, swise@opengridcomputing.com, varun@chelsio.com, rajur@chelsio.com
+Content-Type: application/zip; name="kbsvx.linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 203080246010.static.ctinets.com ([203.80.246.10]:39848 "HELO
+	ctinets.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+	id S1751485AbcHGVy1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Aug 2016 17:54:27 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-> Hi,
-
-Hi Baharat,
-
-> In iSER target during iwarp connection tear-down due to ping timeouts, the rdma
-> queues are set to error state and subsequent queued iscsi session commands posted
-> shall fail with corresponding errno returned by ib_post_send/recv.
-> At this stage iser target handlers (Ex: isert_put_datain())
-> return the error to iscsci target, but these errors are
-> not being handled by the iscsi target handlers(Ex: lio_queue_status()).
-
-Indeed looks like lio_queue_data_in() assumes that
-->iscsit_queue_data_in() cannot fail. This either mean
-that isert_put_data_in() should take care of
-the extra put in this case, or the iscsi should correctly
-handle a queue_full condition (because we should not be hitting
-this in the normal IO flow).
-
-Does this (untested) patch help?
---
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c 
-b/drivers/infiniband/ulp/isert/ib_isert.c
-index a990c04208c9..ff5dfc0f7c50 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-@@ -1810,6 +1810,7 @@ isert_put_response(struct iscsi_conn *conn, struct 
-iscsi_cmd *cmd)
-         struct ib_send_wr *send_wr = &isert_cmd->tx_desc.send_wr;
-         struct iscsi_scsi_rsp *hdr = (struct iscsi_scsi_rsp *)
-                                 &isert_cmd->tx_desc.iscsi_header;
-+       int ret;
-
-         isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
-         iscsit_build_rsp_pdu(cmd, conn, true, hdr);
-@@ -1848,7 +1849,10 @@ isert_put_response(struct iscsi_conn *conn, 
-struct iscsi_cmd *cmd)
-
-         isert_dbg("Posting SCSI Response\n");
-
--       return isert_post_response(isert_conn, isert_cmd);
-+       ret = isert_post_response(isert_conn, isert_cmd);
-+       if (ret)
-+               target_put_sess_cmd(&cmd->se_cmd);
-+       return 0;
-  }
-
-  static void
-@@ -2128,7 +2132,7 @@ isert_put_datain(struct iscsi_conn *conn, struct 
-iscsi_cmd *cmd)
-         struct isert_conn *isert_conn = conn->context;
-         struct ib_cqe *cqe = NULL;
-         struct ib_send_wr *chain_wr = NULL;
--       int rc;
-+       int ret;
-
-         isert_dbg("Cmd: %p RDMA_WRITE data_length: %u\n",
-                  isert_cmd, se_cmd->data_length);
-@@ -2148,34 +2152,41 @@ isert_put_datain(struct iscsi_conn *conn, struct 
-iscsi_cmd *cmd)
-                 isert_init_send_wr(isert_conn, isert_cmd,
-                                    &isert_cmd->tx_desc.send_wr);
-
--               rc = isert_post_recv(isert_conn, isert_cmd->rx_desc);
--               if (rc) {
--                       isert_err("ib_post_recv failed with %d\n", rc);
--                       return rc;
-+               ret = isert_post_recv(isert_conn, isert_cmd->rx_desc);
-+               if (ret) {
-+                       isert_err("ib_post_recv failed with %d\n", ret);
-+                       goto out;
-                 }
-
-                 chain_wr = &isert_cmd->tx_desc.send_wr;
-         }
-
--       isert_rdma_rw_ctx_post(isert_cmd, isert_conn, cqe, chain_wr);
-+       ret = isert_rdma_rw_ctx_post(isert_cmd, isert_conn, cqe, chain_wr);
-         isert_dbg("Cmd: %p posted RDMA_WRITE for iSER Data READ\n", 
-isert_cmd);
--       return 1;
-+out:
-+       if (ret)
-+               target_put_sess_cmd(&cmd->se_cmd);
-+       return 0;
-  }
-
-  static int
-  isert_get_dataout(struct iscsi_conn *conn, struct iscsi_cmd *cmd, bool 
-recovery)
-  {
-         struct isert_cmd *isert_cmd = iscsit_priv_cmd(cmd);
-+       int ret;
-
-         isert_dbg("Cmd: %p RDMA_READ data_length: %u write_data_done: 
-%u\n",
-                  isert_cmd, cmd->se_cmd.data_length, cmd->write_data_done);
-
-         isert_cmd->tx_desc.tx_cqe.done = isert_rdma_read_done;
--       isert_rdma_rw_ctx_post(isert_cmd, conn->context,
-+       ret = isert_rdma_rw_ctx_post(isert_cmd, conn->context,
-                         &isert_cmd->tx_desc.tx_cqe, NULL);
-
-         isert_dbg("Cmd: %p posted RDMA_READ memory for ISER Data WRITE\n",
-                  isert_cmd);+out:
-+       if (ret)
-+               target_put_sess_cmd(&cmd->se_cmd);
-         return 0;
-  }
-
---
-
->
-> -> While closing the session in case of ping timeouts, isert_close_connection()->
-> isert_wait_conn()->isert_wait4cmds() checks for the queued session commands
-> and waits infinitely for command completion 'cmd_wait_comp' in target_wait_for_sess_cmds().
-> 'cmd_wait_comp' will be never complete as the kref on the session command is
-> not derefed, due to which target_release_cmd_kref() is not called by kref_put().
-> Due to this, the older session is not cleared causing the next login negotiation to fail
-> as the older session is still active(Older SID exists).
-
-Makes sense...
-
-> [Query 1] If the return value of ib_post_send/recv() are handled to deref the
-> corresponding queued session commands, the wait on cmd_wait_comp will be
-> complete and clears off the session successfully. Is this the rightway to
-> do it here?
-
-I think that given that ->iscsit_queue_data_in() and
-->iscsit_queue_status() are never expected to fail we probably
-should take care of it in isert...
-
-Nic, any input on the iscsit side?
-
->
-> [Query 2] An extra deref is done in case of transport_status CMD_T_TAS
-> in target_wait_for_sess_cmds(), can similar
-> implementation be done for transport state CMD_T_FABRIC_STOP?
-
-I think that can work also given that target_sess_cmd_list_set_waiting()
-is indeed set when we are starting teardown. Not sure how this will
-affect other transports though...
+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
+AAEAAQBWAAAA4AcAAAAA
