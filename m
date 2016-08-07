@@ -1,56 +1,51 @@
-From: <nelcastellodicarta@gmail.com>
-Subject: RE: linux-scsi
-Date: Sun, 7 Aug 2016 17:54:27 -0400
-Message-ID: <000101d1f128$8a06989e$c0a80001@ctinets.com>
-Reply-To: <linux-scsi@vger.kernel.org>
+From: Bart Van Assche <bvanassche@acm.org>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Sun, 7 Aug 2016 15:31:11 -0700
+Message-ID: <ae1a211d-9351-e5fa-e3cb-0a9ba5be9dcd@acm.org>
+References: <20160801175948.GA6685@redhat.com>
+	<eb1af921-d874-1f6a-c5d0-12d3cae04256@sandisk.com>
+	<20160804161047.GC6989@redhat.com>
+	<4d60017e-818c-5630-549e-bf280abcf1c3@sandisk.com>
+	<20160804235850.GB13132@redhat.com>
+	<1649218.8261013.1470359248073.JavaMail.zimbra@redhat.com>
+	<1931660518.8323360.1470397410683.JavaMail.zimbra@redhat.com>
+	<73e2aeda-140d-72ab-d295-57f35139ae55@sandisk.com>
+	<1616390775.11191.1470494853559.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="kbsvx.linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 203080246010.static.ctinets.com ([203.80.246.10]:39848 "HELO
-	ctinets.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-	id S1751485AbcHGVy1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Sun, 7 Aug 2016 17:54:27 -0400
-Content-Disposition: attachment
+Received: from sf1.bxl.stone.is ([87.238.167.36]:48995 "EHLO sf1.bxl.stone.is"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751579AbcHGXRV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Sun, 7 Aug 2016 19:17:21 -0400
+In-Reply-To: <1616390775.11191.1470494853559.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-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
-AAEAAQBWAAAA4AcAAAAA
+On 08/06/16 07:47, Laurence Oberman wrote:
+> [66813.933246] Workqueue: srp_remove srp_remove_work [ib_srp]
+> [ ... ]
+> [66815.152051]  [<ffffffff814ac790>] scsi_forget_host+0x60/0x70
+> [66815.183939]  [<ffffffff814a0137>] scsi_remove_host+0x77/0x110
+> [66815.216152]  [<ffffffffa0677be0>] srp_remove_work+0x90/0x200 [ib_srp]
+> [66815.253221]  [<ffffffff810a2e72>] process_one_work+0x152/0x400
+> [66815.286221]  [<ffffffff810a3765>] worker_thread+0x125/0x4b0
+> [66815.317313]  [<ffffffff810a3640>] ? rescuer_thread+0x380/0x380
+> [66815.349770]  [<ffffffff810a9298>] kthread+0xd8/0xf0
+> [66815.376082]  [<ffffffff816c6b3f>] ret_from_fork+0x1f/0x40
+> [66815.404767]  [<ffffffff810a91c0>] ? kthread_park+0x60/0x60
+
+Hello Laurence,
+
+This is a callstack I have not yet encountered myself during any test. 
+Please provide the output of the following commands:
+$ gdb /lib/modules/$(uname -r)/build/vmlinux
+(gdb) list *(scsi_forget_host+0x60)
+
+Thanks,
+
+Bart.
+
