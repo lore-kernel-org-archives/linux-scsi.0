@@ -1,162 +1,80 @@
-From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Mon,  8 Aug 2016 13:55:09 +0200
-Message-ID: <1470657309-9564-1-git-send-email-oneukum@suse.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Mon, 8 Aug 2016 08:45:59 -0400 (EDT)
+Message-ID: <1978328717.106590.1470660359078.JavaMail.zimbra@redhat.com>
+References: <20160801175948.GA6685@redhat.com> <4d60017e-818c-5630-549e-bf280abcf1c3@sandisk.com> <20160804235850.GB13132@redhat.com> <1649218.8261013.1470359248073.JavaMail.zimbra@redhat.com> <1931660518.8323360.1470397410683.JavaMail.zimbra@redhat.com> <73e2aeda-140d-72ab-d295-57f35139ae55@sandisk.com> <1616390775.11191.1470494853559.JavaMail.zimbra@redhat.com> <ae1a211d-9351-e5fa-e3cb-0a9ba5be9dcd@acm.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:44473 "EHLO
+	mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752054AbcHHMqZ (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 08:46:25 -0400
+In-Reply-To: <ae1a211d-9351-e5fa-e3cb-0a9ba5be9dcd@acm.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
 
-Some SATA to USB bridges fail to cooperate with some
-drives resulting in no cache being present being reported
-to the host. That causes the host to skip sending
-a command to synchronize caches. That causes data loss
-when the drive is powered down.
 
-Signed-off-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Tested-by: Egbert Eich <eich-IBi9RG/b67k@public.gmane.org>
----
- Documentation/kernel-parameters.txt | 2 ++
- drivers/scsi/sd.c                   | 6 +++---
- drivers/usb/storage/scsiglue.c      | 4 ++++
- drivers/usb/storage/unusual_devs.h  | 7 +++++++
- drivers/usb/storage/usb.c           | 6 +++++-
- include/linux/usb_usual.h           | 2 ++
- include/scsi/scsi_device.h          | 1 +
- 7 files changed, 24 insertions(+), 4 deletions(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c8c682e 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				u = IGNORE_UAS (don't bind to the uas driver);
- 				w = NO_WP_DETECT (don't test whether the
- 					medium is write-protected).
-+				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
-+					even if the device claims no cache)
- 			Example: quirks=0419:aaf5:rl,0421:0433:rc
- 
- 	user_debug=	[KNL,ARM]
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 60bff78..3e8a6f1 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -139,7 +139,7 @@ static void sd_set_flush_flag(struct scsi_disk *sdkp)
- {
- 	bool wc = false, fua = false;
- 
--	if (sdkp->WCE) {
-+	if (sdkp->WCE || sdkp->device->always_sync) {
- 		wc = true;
- 		if (sdkp->DPOFUA)
- 			fua = true;
-@@ -3228,7 +3228,7 @@ static void sd_shutdown(struct device *dev)
- 	if (pm_runtime_suspended(dev))
- 		return;
- 
--	if (sdkp->WCE && sdkp->media_present) {
-+	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present)  {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		sd_sync_cache(sdkp);
- 	}
-@@ -3247,7 +3247,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
- 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
- 		return 0;
- 
--	if (sdkp->WCE && sdkp->media_present) {
-+	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present) {
- 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
- 		ret = sd_sync_cache(sdkp);
- 		if (ret) {
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 33eb923..43e76ae 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -296,6 +296,10 @@ static int slave_configure(struct scsi_device *sdev)
- 		if (us->fflags & US_FL_BROKEN_FUA)
- 			sdev->broken_fua = 1;
- 
-+		/* Some even totally fail to indicate a cache */
-+		if (us->fflags & US_FL_ALWAYS_SYNC)
-+			sdev->always_sync = 1;
-+
- 	} else {
- 
- 		/*
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index aa35392..af3c7ee 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_WP_DETECT),
- 
-+/* Reported by Egbert Eich <eich-IBi9RG/b67k@public.gmane.org> */
-+UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
-+		"Toshiba",
-+		"External USB 3.0",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_ALWAYS_SYNC),
-+
- /* Patch submitted by Philipp Friedrich <philipp-Tz8qtarvew8@public.gmane.org> */
- UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
- 		"Kyocera",
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index ef2d8cd..19255f1 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
--			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
-+			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
-+			US_FL_ALWAYS_SYNC);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 		case 'w':
- 			f |= US_FL_NO_WP_DETECT;
- 			break;
-+		case 'y':
-+			f |= US_FL_ALWAYS_SYNC;
-+			break;
- 		/* Ignore unrecognized flag characters */
- 		}
- 	}
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 245f57d..0aae1b2 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -81,6 +81,8 @@
- 		/* Sets max_sectors to 240 */			\
- 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
- 		/* Cannot handle REPORT_LUNS */			\
-+	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
-+		/* lies about caching, so always sync */	\
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a6c346d..392d166 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -179,6 +179,7 @@ struct scsi_device {
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
-+	unsigned always_sync:1;		/* synchronize cache in every case*/
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
--- 
-2.1.4
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+----- Original Message -----
+> From: "Bart Van Assche" <bvanassche@acm.org>
+> To: "Laurence Oberman" <loberman@redhat.com>
+> Cc: "Mike Snitzer" <snitzer@redhat.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org
+> Sent: Sunday, August 7, 2016 6:31:11 PM
+> Subject: Re: [dm-devel] dm-mq and end_clone_request()
+> 
+> On 08/06/16 07:47, Laurence Oberman wrote:
+> > [66813.933246] Workqueue: srp_remove srp_remove_work [ib_srp]
+> > [ ... ]
+> > [66815.152051]  [<ffffffff814ac790>] scsi_forget_host+0x60/0x70
+> > [66815.183939]  [<ffffffff814a0137>] scsi_remove_host+0x77/0x110
+> > [66815.216152]  [<ffffffffa0677be0>] srp_remove_work+0x90/0x200 [ib_srp]
+> > [66815.253221]  [<ffffffff810a2e72>] process_one_work+0x152/0x400
+> > [66815.286221]  [<ffffffff810a3765>] worker_thread+0x125/0x4b0
+> > [66815.317313]  [<ffffffff810a3640>] ? rescuer_thread+0x380/0x380
+> > [66815.349770]  [<ffffffff810a9298>] kthread+0xd8/0xf0
+> > [66815.376082]  [<ffffffff816c6b3f>] ret_from_fork+0x1f/0x40
+> > [66815.404767]  [<ffffffff810a91c0>] ? kthread_park+0x60/0x60
+> 
+> Hello Laurence,
+> 
+> This is a callstack I have not yet encountered myself during any test.
+> Please provide the output of the following commands:
+> $ gdb /lib/modules/$(uname -r)/build/vmlinux
+> (gdb) list *(scsi_forget_host+0x60)
+> 
+> Thanks,
+> 
+> Bart.
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+[loberman@jumptest1 linux]$ gdb vmlinux
+GNU gdb (GDB) Red Hat Enterprise Linux 7.6.1-80.el7
+Copyright (C) 2013 Free Software Foundation, Inc.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>
+This is free software: you are free to change and redistribute it.
+There is NO WARRANTY, to the extent permitted by law.  Type "show copying"
+and "show warranty" for details.
+This GDB was configured as "x86_64-redhat-linux-gnu".
+For bug reporting instructions, please see:
+<http://www.gnu.org/software/gdb/bugs/>...
+Reading symbols from /home/loberman/bart/linux/vmlinux...done.
+(gdb) list *(scsi_forget_host+0x60)
+0xffffffff814ac790 is in scsi_forget_host (drivers/scsi/scsi_scan.c:1895).
+1890		list_for_each_entry(sdev, &shost->__devices, siblings) {
+1891			if (sdev->sdev_state == SDEV_DEL)
+1892				continue;
+1893			spin_unlock_irqrestore(shost->host_lock, flags);
+1894			__scsi_remove_device(sdev);
+1895			goto restart;
+1896		}
+1897		spin_unlock_irqrestore(shost->host_lock, flags);
+1898	}
+1899	
