@@ -1,91 +1,162 @@
-From: Julian Calaby <julian.calaby@gmail.com>
-Subject: Re: QLogicPTI Hangs on SPARC64
-Date: Mon, 8 Aug 2016 19:15:29 +1000
-Message-ID: <CAGRGNgVc3q8=57wsEdhVVUVSXwrjGLsoJuKYi3hsQs6LW4qZjw@mail.gmail.com>
-References: <1470630185.2253.21.camel@triadic.us>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f41.google.com ([209.85.214.41]:38166 "EHLO
-	mail-it0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751951AbcHHJPv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 05:15:51 -0400
-In-Reply-To: <1470630185.2253.21.camel@triadic.us>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+Subject: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Mon,  8 Aug 2016 13:55:09 +0200
+Message-ID: <1470657309-9564-1-git-send-email-oneukum@suse.com>
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alex McWhirter <alexmcwhirter@triadic.us>, linux-scsi <linux-scsi@vger.kernel.org>
-Cc: sparclinux <sparclinux@vger.kernel.org>, "David S. Miller" <davem@davemloft.net>
 
-Hi Alex,
+Some SATA to USB bridges fail to cooperate with some
+drives resulting in no cache being present being reported
+to the host. That causes the host to skip sending
+a command to synchronize caches. That causes data loss
+when the drive is powered down.
 
-On Mon, Aug 8, 2016 at 2:23 PM, Alex McWhirter <alexmcwhirter@triadic.us> wrote:
-> This is a bug i've been playing with for a while now, but i think i've
-> narrowed it down about as far as i can without additional help. I
-> belive we are hitting this bit of code, as i have seen the message
-> before in previous panics.
+Signed-off-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Tested-by: Egbert Eich <eich-IBi9RG/b67k@public.gmane.org>
+---
+ Documentation/kernel-parameters.txt | 2 ++
+ drivers/scsi/sd.c                   | 6 +++---
+ drivers/usb/storage/scsiglue.c      | 4 ++++
+ drivers/usb/storage/unusual_devs.h  | 7 +++++++
+ drivers/usb/storage/usb.c           | 6 +++++-
+ include/linux/usb_usual.h           | 2 ++
+ include/scsi/scsi_device.h          | 1 +
+ 7 files changed, 24 insertions(+), 4 deletions(-)
 
-You might get more help from the linux-scsi list (CC'd)
-
->
-> toss_command:
->         printk(KERN_EMERG "qlogicpti%d: request queue overflow\n",
->                qpti->qpti_id);
->
->         /* Unfortunately, unless you use the new EH code, which
->          * we don't, the midlayer will ignore the return value,
->          * which is insane.  We pick up the pieces like this.
->          */
->         Cmnd->result = DID_BUS_BUSY;
->         done(Cmnd);
->         return 1;
->
-> Correct me if i'm wrong, but i don't how we're pickuping up any peices
-> here. Something went wrong and SCSI requests built up to an
-> unmanageable point and we just say the bus is busy? Granted i'm not
-> really sure how you would pick up any peices in that case unless you
-> set the bus busy before the queue were to overflow and just try to wait
-> it out.
->
-> Take a look at the iostat information below. iostat was configured to
-> refresh every second, the bottom was cut off during the panic.
->
-> iostat log > http://pastebin.com/ea96AucT
->
-> From this you can see that sdc was the first drive to stop responding.
-> it's r/s and w/s drop to zero but the util% stays at 100. Shortly
-> after, the request queue overflows and sets the whole bus to busy which
-> can be seen in the last portion of the log (which didn't finish as the
-> system panic'd). All of the disks on that bus have subsequently
-> followed suite with sdc because the bus is essnstially screeching to a
-> halt.
->
-> Below you will find the kernel panic.
->
-> kernel panic > http://pastebin.com/n9agfz1z
->
-> Again, correct me if i'm wrong, but it would seem that any pointers
-> pointing towards the request queue are now invalid as the queue has
-> overflown.
->
-> Below is just some conjecture on my part.
->
-> Should the correct behaviour here not be to fail the disk that is
-> holding up the rest of the bus? From what i see, it is quite likely sdc
-> is bad so i will be replacing it, however having the whole system panic
-> because of a bad disk seems counter intuitive. I realise this is quite
-> an old driver, and may have been written before we had ways of dealing
-> with these types of issues. Or perhaps even, it's a a hardware
-> limitation that prevents up from pinpointing what is acutally no longer
-> responding on the bus?
-> --
-> To unsubscribe from this list: send the line "unsubscribe sparclinux" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 82b42c9..c8c682e 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				u = IGNORE_UAS (don't bind to the uas driver);
+ 				w = NO_WP_DETECT (don't test whether the
+ 					medium is write-protected).
++				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
++					even if the device claims no cache)
+ 			Example: quirks=0419:aaf5:rl,0421:0433:rc
+ 
+ 	user_debug=	[KNL,ARM]
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 60bff78..3e8a6f1 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -139,7 +139,7 @@ static void sd_set_flush_flag(struct scsi_disk *sdkp)
+ {
+ 	bool wc = false, fua = false;
+ 
+-	if (sdkp->WCE) {
++	if (sdkp->WCE || sdkp->device->always_sync) {
+ 		wc = true;
+ 		if (sdkp->DPOFUA)
+ 			fua = true;
+@@ -3228,7 +3228,7 @@ static void sd_shutdown(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return;
+ 
+-	if (sdkp->WCE && sdkp->media_present) {
++	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present)  {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
+ 	}
+@@ -3247,7 +3247,7 @@ static int sd_suspend_common(struct device *dev, bool ignore_stop_errors)
+ 	if (!sdkp)	/* E.g.: runtime suspend following sd_remove() */
+ 		return 0;
+ 
+-	if (sdkp->WCE && sdkp->media_present) {
++	if ((sdkp->WCE || sdkp->device->always_sync) && sdkp->media_present) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		ret = sd_sync_cache(sdkp);
+ 		if (ret) {
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 33eb923..43e76ae 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -296,6 +296,10 @@ static int slave_configure(struct scsi_device *sdev)
+ 		if (us->fflags & US_FL_BROKEN_FUA)
+ 			sdev->broken_fua = 1;
+ 
++		/* Some even totally fail to indicate a cache */
++		if (us->fflags & US_FL_ALWAYS_SYNC)
++			sdev->always_sync = 1;
++
+ 	} else {
+ 
+ 		/*
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index aa35392..af3c7ee 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_WP_DETECT),
+ 
++/* Reported by Egbert Eich <eich-IBi9RG/b67k@public.gmane.org> */
++UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
++		"Toshiba",
++		"External USB 3.0",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_ALWAYS_SYNC),
++
+ /* Patch submitted by Philipp Friedrich <philipp-Tz8qtarvew8@public.gmane.org> */
+ UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
+ 		"Kyocera",
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index ef2d8cd..19255f1 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+ 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
+ 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
+ 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
+-			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
++			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
++			US_FL_ALWAYS_SYNC);
+ 
+ 	p = quirks;
+ 	while (*p) {
+@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+ 		case 'w':
+ 			f |= US_FL_NO_WP_DETECT;
+ 			break;
++		case 'y':
++			f |= US_FL_ALWAYS_SYNC;
++			break;
+ 		/* Ignore unrecognized flag characters */
+ 		}
+ 	}
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index 245f57d..0aae1b2 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -81,6 +81,8 @@
+ 		/* Sets max_sectors to 240 */			\
+ 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
+ 		/* Cannot handle REPORT_LUNS */			\
++	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
++		/* lies about caching, so always sync */	\
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index a6c346d..392d166 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -179,6 +179,7 @@ struct scsi_device {
+ 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
+ 	unsigned is_visible:1;	/* is the device visible in sysfs */
+ 	unsigned wce_default_on:1;	/* Cache is ON by default */
++	unsigned always_sync:1;		/* synchronize cache in every case*/
+ 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
+ 	unsigned broken_fua:1;		/* Don't set FUA bit */
+ 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
 -- 
-Julian Calaby
+2.1.4
 
-Email: julian.calaby@gmail.com
-Profile: http://www.google.com/profiles/julian.calaby/
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
