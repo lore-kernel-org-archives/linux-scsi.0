@@ -1,114 +1,96 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: linux-4.8-rc1/drivers/scsi/sd.c:317: pointless test ?
-Date: Mon, 8 Aug 2016 16:17:26 -0400 (EDT)
-Message-ID: <1029353111.181631.1470687446200.JavaMail.zimbra@redhat.com>
-References: <CAMzoamaVuMxuXO8F3pxeR671eKAH-BZyxVDqU2F8jujHepK+5w@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Mon, 8 Aug 2016 15:39:07 -0700
+Message-ID: <077d2708-3360-d8d7-fb3c-d3a73a1e03ee@sandisk.com>
+References: <20160801175948.GA6685@redhat.com>
+ <4d60017e-818c-5630-549e-bf280abcf1c3@sandisk.com>
+ <20160804235850.GB13132@redhat.com>
+ <1649218.8261013.1470359248073.JavaMail.zimbra@redhat.com>
+ <1931660518.8323360.1470397410683.JavaMail.zimbra@redhat.com>
+ <73e2aeda-140d-72ab-d295-57f35139ae55@sandisk.com>
+ <1616390775.11191.1470494853559.JavaMail.zimbra@redhat.com>
+ <SN1PR0201MB1870C587B123A8F84A49C1BD811B0@SN1PR0201MB1870.namprd02.prod.outlook.com>
+ <551419047.135340.1470669997660.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx3-phx2.redhat.com ([209.132.183.24]:34968 "EHLO
-	mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751987AbcHHUSb (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 16:18:31 -0400
-In-Reply-To: <CAMzoamaVuMxuXO8F3pxeR671eKAH-BZyxVDqU2F8jujHepK+5w@mail.gmail.com>
+Received: from mail-by2nam01on0086.outbound.protection.outlook.com ([104.47.34.86]:27456
+	"EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1750938AbcHHWjT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 8 Aug 2016 18:39:19 -0400
+In-Reply-To: <551419047.135340.1470669997660.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: David Binderman <linuxdev.baldrick@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, martin petersen <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, dcb314@hotmail.com
+To: Laurence Oberman <loberman@redhat.com>
+Cc: dm-devel@redhat.com, Mike Snitzer <snitzer@redhat.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-
-
------ Original Message -----
-> From: "David Binderman" <linuxdev.baldrick@gmail.com>
-> To: jejb@linux.vnet.ibm.com, "martin petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Linux
-> Kernel Mailing List" <linux-kernel@vger.kernel.org>, dcb314@hotmail.com
-> Sent: Monday, August 8, 2016 9:46:53 AM
-> Subject: linux-4.8-rc1/drivers/scsi/sd.c:317: pointless test ?
+On 08/08/2016 08:26 AM, Laurence Oberman wrote:
+> I will test this as well.
+> I have lost my DDN array today (sadly:)) but I have two systems
+> back to back again using ramdisk on the one to serve LUNS.
 > 
-> Hello there,
-> 
-> linux-4.8-rc1/drivers/scsi/sd.c:317]: (style) Unsigned variable 'val'
-> can't be negative so it is unnecessary to test it.
-> 
-> Source code is
-> 
->     if (val >= 0 && val <= SD_DIF_TYPE3_PROTECTION)
-> 
-> but
-> 
->    unsigned int val;
-> 
-> Suggest new code
-> 
->     if (val <= SD_DIF_TYPE3_PROTECTION)
-> 
-> Regards
-> 
-> David Binderman
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> If I pull from  https://github.com/bvanassche/linux again, and
+> switch branch to srp-initiator-for-next, will I get all Mikes
+> latest patches from last week + this. I guess I can just check
+> myself, but might as well just ask.
 
-Hello
+Hello Laurence,
 
-Declaring val as unsigned does not prevent it from being assigned a negative integer.
-This means there is a possibility it could be negative.
-However looking at the code it seems that we are converting char *buf (string) to an int to set val here.
-Also the kernel code shows we cannot have a - sign anyway so I expect your suggestion should be fine to change this.
+Sorry but I do not yet have a fix available for the scsi_forget_host()
+crash you reported in an earlier e-mail. But Mike's latest patches
+including the patch below are now available at
+https://github.com/bvanassche/linux in the srp-initiator-for-next
+branch. Further feedback is welcome.
 
-static ssize_t
-protection_type_store(struct device *dev, struct device_attribute *attr,
-                      const char *buf, size_t count)
-{
-        struct scsi_disk *sdkp = to_scsi_disk(dev);
-        unsigned int val;
-        int err;
+Thanks,
 
-        if (!capable(CAP_SYS_ADMIN))
-                return -EACCES;
+Bart.
 
-        err = kstrtouint(buf, 10, &val);   *****
+[PATCH] Check invariants at runtime
 
-        if (err)
-                return err;
+Warn if sdev->sdev_state != SDEV_DEL when __scsi_remove_device()
+returns. Check whether all __scsi_remove_device() callers hold the
+scan_mutex.
+---
+ drivers/scsi/scsi_sysfs.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-        if (val >= 0 && val <= SD_DIF_TYPE3_PROTECTION)
-                sdkp->protection_type = val;
-Reviewed-by
-Laurence Oberman <loberman@redhat.com>
-        return count;
-}
-
-/**
- * kstrtouint - convert a string to an unsigned int
- * @s: The start of the string. The string must be null-terminated, and may also
- *  include a single newline before its terminating null. The first character
- *  may also be a plus sign, but not a minus sign.
- * @base: The number base to use. The maximum supported base is 16. If base is
- *  given as 0, then the base of the string is automatically detected with the
- *  conventional semantics - If it begins with 0x the number will be parsed as a
- *  hexadecimal (case insensitive), if it otherwise begins with 0, it will be
- *  parsed as an octal number. Otherwise it will be parsed as a decimal.
- * @res: Where to write the result of the conversion on success.
- *
- * Returns 0 on success, -ERANGE on overflow and -EINVAL on parsing error.
- * Used as a replacement for the obsolete simple_strtoull. Return code must
- * be checked.
- */
-int kstrtouint(const char *s, unsigned int base, unsigned int *res)
-{
-        unsigned long long tmp;
-        int rv;
-
-        rv = kstrtoull(s, base, &tmp);
-        if (rv < 0)
-                return rv;
-        if (tmp != (unsigned long long)(unsigned int)tmp)
-                return -ERANGE;
-        *res = tmp;
-        return 0;
-}
-
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index 82209ad4..a21e321 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -1312,6 +1312,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ {
+ 	struct device *dev = &sdev->sdev_gendev, *sdp = NULL;
+ 
++	lockdep_assert_held(&sdev->host->scan_mutex);
++
+ 	/*
+ 	 * This cleanup path is not reentrant and while it is impossible
+ 	 * to get a new reference with scsi_device_get() someone can still
+@@ -1321,8 +1323,11 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 		return;
+ 
+ 	if (sdev->is_visible) {
+-		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0)
++		if (scsi_device_set_state(sdev, SDEV_CANCEL) != 0) {
++			WARN_ONCE(sdev->sdev_state != SDEV_DEL,
++				  "sdev state %d\n", sdev->sdev_state);
+ 			return;
++		}
+ 
+ 		bsg_unregister_queue(sdev->request_queue);
+ 		sdp = scsi_get_ulpdev(dev);
+@@ -1339,6 +1344,8 @@ void __scsi_remove_device(struct scsi_device *sdev)
+ 	 * device.
+ 	 */
+ 	scsi_device_set_state(sdev, SDEV_DEL);
++	WARN_ONCE(sdev->sdev_state != SDEV_DEL, "sdev state %d\n",
++		  sdev->sdev_state);
+ 	blk_cleanup_queue(sdev->request_queue);
+ 	cancel_work_sync(&sdev->requeue_work);
+ 
+-- 
+2.9.2
