@@ -1,67 +1,48 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
- driver
-Date: Tue, 9 Aug 2016 15:37:31 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
- <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48
+ devices
+Date: Tue, 9 Aug 2016 19:50:57 +0300
+Message-ID: <6d86e101-bfa4-71a5-5c3c-0f35e3fdfc20@cogentembedded.com>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+ <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0057.outbound.protection.outlook.com ([104.47.32.57]:50616
-	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752007AbcHIQMA convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 12:12:00 -0400
-In-Reply-To: <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: tom.ty89@gmail.com, tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Monday, August 08, 2016 8:05 PM
-> To: Don Brace
-> Cc: Martin K. Petersen; jejb@linux.vnet.ibm.com; Viswas G; Mahesh
-> Rajashekhara; hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley;
-> Scott Benesh; elliott@hpe.com; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
-> driver
-> 
-> EXTERNAL EMAIL
-> 
-> 
-> >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
-> 
-> >> Is your interface related to T10 PQI?
-> 
-> Don> We follow it pretty closely with some exceptions: - Our memory BARS
-> Don> includes both the aacraid SIS and PQI interfaces - We have our own
-> Don> config table defined.  - We are using our own error data buffer
-> Don> schema - We are not yet supporting fencing and some other features.
-> 
-> OK. I was just wondering whether it would make sense to have a libpqi
-> with all the spec-compliant pieces and put the "smart" in a dedicated
-> Microsemi driver.
-> 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Hello.
 
-We would prefer not to do this at this time. We do not know of any other PQI drivers that
-could take advantage of a PQI library. However we may end up doing this in the future.
+On 08/09/2016 05:45 PM, tom.ty89@gmail.com wrote:
 
-We hope that this is OK for now.
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> Currently block layer limit max_hw_sectors is set to
+> ATA_MAX_SECTORS_LBA48 (65535), for devices with LBA48 support.
+>
+> However, block layer limit max_sectors (which is the effective
+> one; also adjustable, upper-bounded by max_hw_sectors) is set to
+> BLK_DEF_MAX_SECTORS (currently 2560) by the scsi disk driver,
+> since libata's SATL does not report an Optimal Transfer Length.
+>
+> This does not make much sense, especially when the current
+> BLK_DEF_MAX_SECTORS appears to be unsafe for some ATA devices
+> (see ATA_HORKAGE_MAX_SEC_1024). Truth is, the current value
+> appears to be arbitrary anyway. See commit d2be537c3ba3
+> ("block: bump BLK_DEF_MAX_SECTORS to 2560").
+>
+> Therefore, avoid setting dev->max_sectors when it is strictly
+> necessary. Leave it as 0 otherwise, so that both block layer
 
-Thanks,
-Don Brace
+    Hmm, avoid it if it's strictly necessary?
 
-ESC - Smart Storage
-Microsemi Corporation
+> limits will remain as SCSI_DEFAULT_MAX_SECTORS (currently 1024).
 
+    You forgot to sign off on the patch.
 
+MBR, Sergei
 
