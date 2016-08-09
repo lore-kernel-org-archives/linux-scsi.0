@@ -1,41 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
-Date: Mon, 08 Aug 2016 21:05:19 -0400
-Message-ID: <yq1popivjjk.fsf@sermon.lab.mkp.net>
-References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
-	<1469092085-14311-3-git-send-email-jitendra.bhivare@broadcom.com>
-	<57A4DD34.4080000@redhat.com>
+Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
+Date: Mon, 08 Aug 2016 21:04:42 -0400
+Message-ID: <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37545 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:37546 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751433AbcHIBF2 (ORCPT
+	with ESMTP id S1751651AbcHIBF2 (ORCPT
 	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 21:05:28 -0400
-In-Reply-To: <57A4DD34.4080000@redhat.com> (Mike Christie's message of "Fri, 5
-	Aug 2016 13:38:44 -0500")
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+	(Don Brace's message of "Fri, 5 Aug 2016 14:19:20 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>
-Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Mike" == Mike Christie <mchristi@redhat.com> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
->> In beiscsi_alloc_pdu, _bh versions of spin_lock are being used for
->> protecting SGLs and WRBs. _bh versions are needed as the function
->> gets invoked in process context and BLOCK_IOPOLL softirq.
->> 
->> In spin_unlock_bh, after releasing the lock and enabling BH,
->> do_softirq is called which executes till last SOFTIRQ.
->> 
->> beiscsi_alloc_pdu is called under session lock. Through block layer,
->> iSCSI stack in some cases send IOs with interrupts disabled. In such
->> paths,
+>> Is your interface related to T10 PQI?
 
+Don> We follow it pretty closely with some exceptions: - Our memory BARS
+Don> includes both the aacraid SIS and PQI interfaces - We have our own
+Don> config table defined.  - We are using our own error data buffer
+Don> schema - We are not yet supporting fencing and some other features.
 
-Mike> What path is this? Is this with mq enabled or disabled?
-
-Jitendra?
+OK. I was just wondering whether it would make sense to have a libpqi
+with all the spec-compliant pieces and put the "smart" in a dedicated
+Microsemi driver.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
