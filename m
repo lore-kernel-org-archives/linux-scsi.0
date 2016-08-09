@@ -1,24 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] mpt3sas: Don't spam logs if logging level is 0
-Date: Mon, 08 Aug 2016 21:28:02 -0400
-Message-ID: <yq11t1yvihp.fsf@sermon.lab.mkp.net>
-References: <1470229218-22040-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [patch] qla2xxx: small cleanup in qla2x00_wait_for_hba_ready()
+Date: Mon, 08 Aug 2016 21:29:15 -0400
+Message-ID: <yq1wpjqu3v8.fsf@sermon.lab.mkp.net>
+References: <20160803184232.GA775@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1470229218-22040-1-git-send-email-jthumshirn@suse.de> (Johannes
-	Thumshirn's message of "Wed, 3 Aug 2016 15:00:18 +0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20160803184232.GA775@mwanda> (Dan Carpenter's message of "Wed, 3
+	Aug 2016 21:42:32 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: qla2xxx-upstream@qlogic.com, Sawan Chandak <sawan.chandak@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Johannes> In _scsih_io_done() we test if the ioc->logging_level does
-Johannes> _not_ have the MPT_DEBUG_REPLY bit set and if it hasn't we
-Johannes> print the debug messages. This unfortunately is the wrong way
-Johannes> around.
+Dan> The "if (test_bit(UNLOADING..." line was indented one tab more than
+Dan> it should have been.  There was an extra parenthesis around the
+Dan> qla2x00_reset_active() function call.  I lined up the conditions a
+Dan> bit so that it shows how they group together.
 
 Applied to 4.9/scsi-queue.
 
