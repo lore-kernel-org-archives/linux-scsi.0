@@ -1,38 +1,56 @@
 From: tom.ty89@gmail.com
-Subject: [PATCH v2 1/2] libata-scsi: set max_hw_sectors again only when dev->max_sectors is set
-Date: Tue,  9 Aug 2016 22:45:46 +0800
-Message-ID: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
-Return-path: <linux-ide-owner@vger.kernel.org>
-Sender: linux-ide-owner@vger.kernel.org
+Subject: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
+Date: Tue,  9 Aug 2016 22:45:47 +0800
+Message-ID: <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f195.google.com ([209.85.192.195]:34438 "EHLO
+	mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752269AbcHIOp5 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 10:45:57 -0400
+In-Reply-To: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: tj@kernel.org
 Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Tom Yan <tom.ty89@gmail.com>
 
-When the request queue is initialized (see __scsi_init_queue() in
-scsi_lib.c), the block layer limit max_hw_sectors is set to
-shost->max_sectors, which will be set to the "machine infinity"
-SCSI_DEFAULT_MAX_SECTORS (currently 1024) if sht->max_sectors is
-not set (see scsi_host_alloc() in hosts.c).
+Currently block layer limit max_hw_sectors is set to
+ATA_MAX_SECTORS_LBA48 (65535), for devices with LBA48 support.
 
-Therefore, if dev->max_sectors is not set (or, initialized to 0),
-we do not call blk_queue_max_hw_sectors() again with that.
+However, block layer limit max_sectors (which is the effective
+one; also adjustable, upper-bounded by max_hw_sectors) is set to
+BLK_DEF_MAX_SECTORS (currently 2560) by the scsi disk driver,
+since libata's SATL does not report an Optimal Transfer Length.
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2bdb5da..6fee950 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -1205,7 +1205,8 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
- 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+This does not make much sense, especially when the current
+BLK_DEF_MAX_SECTORS appears to be unsafe for some ATA devices
+(see ATA_HORKAGE_MAX_SEC_1024). Truth is, the current value
+appears to be arbitrary anyway. See commit d2be537c3ba3
+("block: bump BLK_DEF_MAX_SECTORS to 2560").
+
+Therefore, avoid setting dev->max_sectors when it is strictly
+necessary. Leave it as 0 otherwise, so that both block layer
+limits will remain as SCSI_DEFAULT_MAX_SECTORS (currently 1024).
+
+diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+index 0749f71..07259d8 100644
+--- a/drivers/ata/libata-core.c
++++ b/drivers/ata/libata-core.c
+@@ -2610,10 +2610,8 @@ int ata_dev_configure(struct ata_device *dev)
+ 				     dma_dir_string);
+ 	}
  
- 	/* configure max sectors */
--	blk_queue_max_hw_sectors(q, dev->max_sectors);
-+	if (dev->max_sectors)
-+		blk_queue_max_hw_sectors(q, dev->max_sectors);
+-	/* determine max_sectors */
+-	dev->max_sectors = ATA_MAX_SECTORS;
+-	if (dev->flags & ATA_DFLAG_LBA48)
+-		dev->max_sectors = ATA_MAX_SECTORS_LBA48;
++	if (!(dev->flags & ATA_DFLAG_LBA48))
++		dev->max_sectors = ATA_MAX_SECTORS;
  
- 	if (dev->class == ATA_DEV_ATAPI) {
- 		void *buf;
+ 	/* Limit PATA drive on SATA cable bridge transfers to udma5,
+ 	   200 sectors */
 -- 
 2.9.2
 
