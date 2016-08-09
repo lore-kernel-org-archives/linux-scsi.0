@@ -1,37 +1,38 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Tue, 9 Aug 2016 10:02:09 -0400 (EDT)
-Message-ID: <Pine.LNX.4.44L0.1608090945350.1919-100000@iolanthe.rowland.org>
-References: <yq1k2fqu2ke.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:51872 "HELO
-	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with SMTP id S932681AbcHIOCL (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 10:02:11 -0400
-In-Reply-To: <yq1k2fqu2ke.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: tom.ty89@gmail.com
+Subject: [PATCH v2 1/2] libata-scsi: set max_hw_sectors again only when dev->max_sectors is set
+Date: Tue,  9 Aug 2016 22:45:46 +0800
+Message-ID: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+Return-path: <linux-ide-owner@vger.kernel.org>
+Sender: linux-ide-owner@vger.kernel.org
+To: tj@kernel.org
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Oliver Neukum <oneukum@suse.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, jejb@linux.vnet.ibm.com
 
-On Mon, 8 Aug 2016, Martin K. Petersen wrote:
+From: Tom Yan <tom.ty89@gmail.com>
 
-> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
-> 
-> Oliver> Some SATA to USB bridges fail to cooperate with some drives
-> Oliver> resulting in no cache being present being reported to the
-> Oliver> host. That causes the host to skip sending a command to
-> Oliver> synchronize caches. That causes data loss when the drive is
-> Oliver> powered down.
-> 
-> Alan?
+When the request queue is initialized (see __scsi_init_queue() in
+scsi_lib.c), the block layer limit max_hw_sectors is set to
+shost->max_sectors, which will be set to the "machine infinity"
+SCSI_DEFAULT_MAX_SECTORS (currently 1024) if sht->max_sectors is
+not set (see scsi_host_alloc() in hosts.c).
 
-Oliver originally submitted this at least a month ago.  I don't see any 
-changes since then, so:
+Therefore, if dev->max_sectors is not set (or, initialized to 0),
+we do not call blk_queue_max_hw_sectors() again with that.
 
-Acked-by: Alan Stern <stern@rowland.harvard.edu>
-
-Alan Stern
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 2bdb5da..6fee950 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1205,7 +1205,8 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+ 		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+ 
+ 	/* configure max sectors */
+-	blk_queue_max_hw_sectors(q, dev->max_sectors);
++	if (dev->max_sectors)
++		blk_queue_max_hw_sectors(q, dev->max_sectors);
+ 
+ 	if (dev->class == ATA_DEV_ATAPI) {
+ 		void *buf;
+-- 
+2.9.2
 
