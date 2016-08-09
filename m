@@ -1,41 +1,37 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] aic94xx: Add missing error code assignment before test
-Date: Tue,  9 Aug 2016 13:30:02 +0200
-Message-ID: <1470742202-11100-1-git-send-email-christophe.jaillet@wanadoo.fr>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Tue, 9 Aug 2016 10:02:09 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1608090945350.1919-100000@iolanthe.rowland.org>
+References: <yq1k2fqu2ke.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from iolanthe.rowland.org ([192.131.102.54]:51872 "HELO
+	iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with SMTP id S932681AbcHIOCL (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 10:02:11 -0400
+In-Reply-To: <yq1k2fqu2ke.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Oliver Neukum <oneukum@suse.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, jejb@linux.vnet.ibm.com
 
-It is likely that checking the result of 'pci_write_config_dword' is
-expected here.
+On Mon, 8 Aug 2016, Martin K. Petersen wrote:
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/aic94xx/aic94xx_hwi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
+> 
+> Oliver> Some SATA to USB bridges fail to cooperate with some drives
+> Oliver> resulting in no cache being present being reported to the
+> Oliver> host. That causes the host to skip sending a command to
+> Oliver> synchronize caches. That causes data loss when the drive is
+> Oliver> powered down.
+> 
+> Alan?
 
-diff --git a/drivers/scsi/aic94xx/aic94xx_hwi.c b/drivers/scsi/aic94xx/aic94xx_hwi.c
-index 0fdc98b..7c713f7 100644
---- a/drivers/scsi/aic94xx/aic94xx_hwi.c
-+++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
-@@ -632,7 +632,7 @@ int asd_init_hw(struct asd_ha_struct *asd_ha)
- 			   pci_name(asd_ha->pcidev));
- 		return err;
- 	}
--	pci_write_config_dword(asd_ha->pcidev, PCIC_HSTPCIX_CNTRL,
-+	err = pci_write_config_dword(asd_ha->pcidev, PCIC_HSTPCIX_CNTRL,
- 					v | SC_TMR_DIS);
- 	if (err) {
- 		asd_printk("couldn't disable split completion timer of %s\n",
--- 
-2.7.4
+Oliver originally submitted this at least a month ago.  I don't see any 
+changes since then, so:
 
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
 
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+Alan Stern
+
