@@ -1,36 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
-Date: Mon, 08 Aug 2016 21:04:42 -0400
-Message-ID: <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+Subject: Re: [PATCH] mpt3sas: Ensure the connector_name string is NUL-terminated
+Date: Mon, 08 Aug 2016 21:10:20 -0400
+Message-ID: <yq1invavjb7.fsf@sermon.lab.mkp.net>
+References: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37546 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:38758 "EHLO
 	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751651AbcHIBF2 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 21:05:28 -0400
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
-	(Don Brace's message of "Fri, 5 Aug 2016 14:19:20 +0000")
+	with ESMTP id S1751433AbcHIBKd (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Mon, 8 Aug 2016 21:10:33 -0400
+In-Reply-To: <8b53a29b3ec90c9a7030e8fa3e1555ad5802dce9.1469680625.git.calvinowens@fb.com>
+	(Calvin Owens's message of "Wed, 27 Jul 2016 21:45:51 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Calvin Owens <calvinowens@fb.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "Calvin" == Calvin Owens <calvinowens@fb.com> writes:
 
->> Is your interface related to T10 PQI?
+Calvin> We blindly trust the hardware to give us NUL-terminated strings,
+Calvin> which is a bad idea because it doesn't always do that. For
+Calvin> example:
 
-Don> We follow it pretty closely with some exceptions: - Our memory BARS
-Don> includes both the aacraid SIS and PQI interfaces - We have our own
-Don> config table defined.  - We are using our own error data buffer
-Don> schema - We are not yet supporting fencing and some other features.
+Calvin>   [ 481.184784] mpt3sas_cm0: enclosure level(0x0000), connector
+Calvin> name( \x3)
 
-OK. I was just wondering whether it would make sense to have a libpqi
-with all the spec-compliant pieces and put the "smart" in a dedicated
-Microsemi driver.
+Calvin> In this case, connector_name is four spaces. We got lucky here
+Calvin> because the 2nd byte beyond our character array happens to be a
+Calvin> NUL. Fix this by explicitly writing '\0' to the end of the
+Calvin> string to ensure we don't run off the edge of the world in
+Calvin> printk().
+
+Applied to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
