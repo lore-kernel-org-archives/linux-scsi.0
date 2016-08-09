@@ -1,58 +1,36 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] scsi: fix upper bounds check of sense key in
- scsi_sense_key_string()
-Date: Tue, 9 Aug 2016 13:08:15 -0700
-Message-ID: <998bca14-1871-0b9e-a748-68dd39a0b634@sandisk.com>
-References: <1470346337-20034-1-git-send-email-tyreld@linux.vnet.ibm.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH resend v3 3/5] libata-scsi: use u8 array to store mode
+ page copy
+Date: Tue, 9 Aug 2016 16:13:49 -0400
+Message-ID: <20160809201349.GA25053@mtj.duckdns.org>
+References: <CAGnHSEmTC06_NKrBDVyFkLSqx4qDRy+OhXvpcySk6HHYLSRsuw@mail.gmail.com>
+ <57926727.840e420a.d7fc9.38dd@mx.google.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:45224
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1750804AbcHIUI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 9 Aug 2016 16:08:26 -0400
-In-Reply-To: <1470346337-20034-1-git-send-email-tyreld@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <57926727.840e420a.d7fc9.38dd@mx.google.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de, sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On 08/04/2016 02:32 PM, Tyrel Datwyler wrote:
-> Commit 655ee63cf371 added a "Completed" sense string with key 0xF to
-> snstext[], but failed to updated the upper bounds check of the sense key in
-> scsi_sense_key_string().
->
-> Fixes: 655ee63cf371 ("[SCSI] scsi constants: command, sense key + additional sense strings")
-> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/constants.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
-> index 83458f7..70d8dc4 100644
-> --- a/drivers/scsi/constants.c
-> +++ b/drivers/scsi/constants.c
-> @@ -362,7 +362,7 @@ static const char * const snstext[] = {
->  /* Get sense key string or NULL if not available */
->  const char *
->  scsi_sense_key_string(unsigned char key) {
-> -	if (key <= 0xE)
-> +	if (key <= 0xF)
->  		return snstext[key];
->  	return NULL;
->  }
+On Sat, Jul 23, 2016 at 02:34:08AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+> 
+> ata_mselect_*() would initialize a char array for storing a copy of
+> the current mode page. However, char could be signed char. In that
+> case, bytes larger than 127 would be converted to negative number.
+> 
+> For example, 0xff from def_control_mpage[] would become -1. This
+> prevented ata_mselect_control() from working at all, since when it
+> did the read-only bits check, there would always be a mismatch.
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-Hello Tyrel,
+Applied to libata/for-4.9.
 
-Please move the opening brace ("{") to a line of its own.
+Thanks.
 
-If you change "<= 0xF" into "< ARRAY_SIZE(snstext)" then you are welcome 
-to add:
-
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
-
-Thanks,
-
-Bart.
+-- 
+tejun
