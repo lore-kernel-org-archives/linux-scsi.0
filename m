@@ -1,79 +1,67 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: dm-mq and end_clone_request()
-Date: Tue, 9 Aug 2016 08:51:00 -0700
-Message-ID: <2aaad6b7-bfa4-b965-53bf-4420fe01d3e5@sandisk.com>
-References: <20160801175948.GA6685@redhat.com>
-	<1931660518.8323360.1470397410683.JavaMail.zimbra@redhat.com>
-	<73e2aeda-140d-72ab-d295-57f35139ae55@sandisk.com>
-	<1616390775.11191.1470494853559.JavaMail.zimbra@redhat.com>
-	<SN1PR0201MB1870C587B123A8F84A49C1BD811B0@SN1PR0201MB1870.namprd02.prod.outlook.com>
-	<551419047.135340.1470669997660.JavaMail.zimbra@redhat.com>
-	<077d2708-3360-d8d7-fb3c-d3a73a1e03ee@sandisk.com>
-	<1345038259.188657.1470696767844.JavaMail.zimbra@redhat.com>
-	<1771573384.192110.1470701350622.JavaMail.zimbra@redhat.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+ driver
+Date: Tue, 9 Aug 2016 15:37:31 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+ <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1771573384.192110.1470701350622.JavaMail.zimbra@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Laurence Oberman <loberman@redhat.com>
-Cc: "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0057.outbound.protection.outlook.com ([104.47.32.57]:50616
+	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752007AbcHIQMA convert rfc822-to-8bit (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 12:12:00 -0400
+In-Reply-To: <yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/08/2016 05:09 PM, Laurence Oberman wrote:
-> So now back to a 10 LUN dual path (ramdisk backed) two-server
-> configuration I am unable to reproduce the dm issue.
-> Recovery is very fast with the servers connected back to back.
-> This is using your kernel and this multipath.conf
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Monday, August 08, 2016 8:05 PM
+> To: Don Brace
+> Cc: Martin K. Petersen; jejb@linux.vnet.ibm.com; Viswas G; Mahesh
+> Rajashekhara; hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley;
+> Scott Benesh; elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+> driver
 > 
-> [ ... ]
+> EXTERNAL EMAIL
 > 
-> Mikes patches have definitely stabilized this issue for me on this
-> configuration.
 > 
-> I will see if I can move to a larger target server that has more
-> memory and allocate more mpath devices. I feel this issue in large
-> configurations is now rooted in multipath not bringing back maps
-> sometimes even when the actual paths are back via srp_daemon.
-> I am still tracking that down.
+> >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 > 
-> If you recall, last week I caused some of our own issues by
-> forgetting I had a no_path_retry 12 hiding in my multipath.conf.
-> Since removing that and spending most of the weekend testing on
-> the DDN array (had to give that back today), most of my issues
-> were either the sporadic host delete race or multipath not
-> re-instantiating paths.
+> >> Is your interface related to T10 PQI?
 > 
-> I dont know if this helps, but since applying your latest patch I
-> have not seen the host delete race.
+> Don> We follow it pretty closely with some exceptions: - Our memory BARS
+> Don> includes both the aacraid SIS and PQI interfaces - We have our own
+> Don> config table defined.  - We are using our own error data buffer
+> Don> schema - We are not yet supporting fencing and some other features.
+> 
+> OK. I was just wondering whether it would make sense to have a libpqi
+> with all the spec-compliant pieces and put the "smart" in a dedicated
+> Microsemi driver.
+> 
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Hello Laurence,
+We would prefer not to do this at this time. We do not know of any other PQI drivers that
+could take advantage of a PQI library. However we may end up doing this in the future.
 
-My latest SCSI core patch adds additional instrumentation to the SCSI
-core but does not change the behavior of the SCSI core. So it cannot
-fix the scsi_forget_host() crash you had reported.
+We hope that this is OK for now.
 
-On my setup, with the kernel code from the srp-initiator-for-next
-branch and with CONFIG_DM_MQ_DEFAULT=n, I still see that when I run the
-srp-test software that fio reports I/O errors every now and then. What
-I see in syslog seems to indicate that these I/O errors are generated
-by dm-mpath:
+Thanks,
+Don Brace
 
-Aug  9 08:45:39 ion-dev-ib-ini kernel: mpath 254:1: queue_if_no_path 1 -> 0
-Aug  9 08:45:39 ion-dev-ib-ini kernel: must_push_back: 107 callbacks suppressed
-Aug  9 08:45:39 ion-dev-ib-ini kernel: device-mapper: multipath: must_push_back: queue_if_no_path=0 suspend_active=1 suspending=0
-Aug  9 08:45:39 ion-dev-ib-ini kernel: __multipath_map(): (a) returning -5
-Aug  9 08:45:39 ion-dev-ib-ini kernel: map_request(): clone_and_map_rq() returned -5
-Aug  9 08:45:39 ion-dev-ib-ini kernel: dm_complete_request: error = -5
-Aug  9 08:45:39 ion-dev-ib-ini kernel: dm_softirq_done: dm-1 tio->error = -5
+ESC - Smart Storage
+Microsemi Corporation
 
-Bart.
+
+
