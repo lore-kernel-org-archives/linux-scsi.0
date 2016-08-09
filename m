@@ -1,45 +1,106 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: Fix probing cards without io port
-Date: Mon, 08 Aug 2016 22:03:06 -0400
-Message-ID: <yq1bn12u2at.fsf@sermon.lab.mkp.net>
-References: <20160806063734.31083-1-yinghai@kernel.org>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH v3 03/13] iscsi-target: add void (*iscsit_get_rx_pdu)()
+Date: Mon, 8 Aug 2016 20:19:41 -0700
+Message-ID: <684b7d66-ee8b-a2fd-c949-1e449df1e8a1@redhat.com>
+References: <cover.1461088672.git.varun@chelsio.com>
+ <f993801e40717417bb752ddeb20765b25b092584.1461088672.git.varun@chelsio.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160806063734.31083-1-yinghai@kernel.org> (Yinghai Lu's message
-	of "Fri, 5 Aug 2016 23:37:34 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Yinghai Lu <yinghai@kernel.org>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <f993801e40717417bb752ddeb20765b25b092584.1461088672.git.varun@chelsio.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Varun Prakash <varun@chelsio.com>, target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Cc: nab@linux-iscsi.org, swise@opengridcomputing.com, kxie@chelsio.com, indranil@chelsio.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Yinghai" == Yinghai Lu <yinghai@kernel.org> writes:
+Hi Varun,
 
-> Found one megaraid_sas HBA probe fails,
-> 
-> [  187.235190] scsi host2: Avago SAS based MegaRAID driver
-> [  191.112365] megaraid_sas 0000:89:00.0: BAR 0: can't reserve [io  0x0000-0x00ff]
-> [  191.120548] megaraid_sas 0000:89:00.0: IO memory region busy!
+On 04/19/2016 11:30 AM, Varun Prakash wrote:
+> Add void (*iscsit_get_rx_pdu)() to
+> struct iscsit_transport, iscsi-target
+> uses this callback to receive and
+> process Rx iSCSI PDUs.
+>
+> cxgbit.ko needs this callback to
+> reuse iscsi-target Rx thread.
+>
+> Signed-off-by: Varun Prakash <varun@chelsio.com>
+> Acked-by: Sagi Grimberg <sagi@grimberg.me>
+> ---
+>  drivers/infiniband/ulp/isert/ib_isert.c | 10 ++++++++++
+>  drivers/target/iscsi/iscsi_target.c     | 10 ++--------
+>  include/target/iscsi/iscsi_transport.h  |  1 +
+>  3 files changed, 13 insertions(+), 8 deletions(-)
+>
+> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+> index 411e446..9118d7c 100644
+> --- a/drivers/infiniband/ulp/isert/ib_isert.c
+> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
+> @@ -3273,6 +3273,15 @@ static void isert_free_conn(struct iscsi_conn *conn)
+>  	isert_put_conn(isert_conn);
+>  }
+>
+> +static void isert_get_rx_pdu(struct iscsi_conn *conn)
+> +{
+> +	struct completion comp;
+> +
+> +	init_completion(&comp);
+> +
+> +	wait_for_completion_interruptible(&comp);
+> +}
+> +
 
-> and the card has resource like,
-> [  125.097714] pci 0000:89:00.0: [1000:005d] type 00 class 0x010400
-> [  125.104446] pci 0000:89:00.0: reg 0x10: [io  0x0000-0x00ff]
-> [  125.110686] pci 0000:89:00.0: reg 0x14: [mem 0xce400000-0xce40ffff 64bit]
-> [  125.118286] pci 0000:89:00.0: reg 0x1c: [mem 0xce300000-0xce3fffff 64bit]
-> [  125.125891] pci 0000:89:00.0: reg 0x30: [mem 0xce200000-0xce2fffff pref]
+Does this mean that the iser rx thread just does nothing and waits to 
+receive a signal to exit?
 
-> that does not io port resource allocated from BIOS, and kernel can not assign
-> one as io port shortage.
-> 
-> The driver is only looking for MEM, and should not fail.
+If we don't set *iscsit_get_rx_pdu for iser, so the thread exits 
+immediately from iscsi_target_rx_thread, would that be an ok change?
 
-> It turns out megasas_init_fw() etc are using bar index as mask.
-> index 1 is used as mask 1, so that pci_request_selected_regions()
-> is trying to request BAR0 instead of BAR1.
+Thanks -- Regards -- Andy
 
-> Fix all related reference.
-
-Kashyap? Sumit?
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+>  static struct iscsit_transport iser_target_transport = {
+>  	.name			= "IB/iSER",
+>  	.transport_type		= ISCSI_INFINIBAND,
+> @@ -3291,6 +3300,7 @@ static struct iscsit_transport iser_target_transport = {
+>  	.iscsit_queue_data_in	= isert_put_datain,
+>  	.iscsit_queue_status	= isert_put_response,
+>  	.iscsit_aborted_task	= isert_aborted_task,
+> +	.iscsit_get_rx_pdu	= isert_get_rx_pdu,
+>  	.iscsit_get_sup_prot_ops = isert_get_sup_prot_ops,
+>  };
+>
+> diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+> index 0724c83..9fa9f0b 100644
+> --- a/drivers/target/iscsi/iscsi_target.c
+> +++ b/drivers/target/iscsi/iscsi_target.c
+> @@ -3951,14 +3951,8 @@ int iscsi_target_rx_thread(void *arg)
+>  	if (rc < 0 || iscsi_target_check_conn_state(conn))
+>  		return 0;
+>
+> -	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND) {
+> -		struct completion comp;
+> -
+> -		init_completion(&comp);
+> -		rc = wait_for_completion_interruptible(&comp);
+> -		if (rc < 0)
+> -			goto transport_err;
+> -
+> +	if (conn->conn_transport->iscsit_get_rx_pdu) {
+> +		conn->conn_transport->iscsit_get_rx_pdu(conn);
+>  		goto transport_err;
+>  	}
+>
+> diff --git a/include/target/iscsi/iscsi_transport.h b/include/target/iscsi/iscsi_transport.h
+> index 3b0053e..ccc68a0 100644
+> --- a/include/target/iscsi/iscsi_transport.h
+> +++ b/include/target/iscsi/iscsi_transport.h
+> @@ -25,6 +25,7 @@ struct iscsit_transport {
+>  	int (*iscsit_xmit_pdu)(struct iscsi_conn *, struct iscsi_cmd *,
+>  			       struct iscsi_datain_req *, const void *, u32);
+>  	void (*iscsit_release_cmd)(struct iscsi_conn *, struct iscsi_cmd *);
+> +	void (*iscsit_get_rx_pdu)(struct iscsi_conn *);
+>  	enum target_prot_op (*iscsit_get_sup_prot_ops)(struct iscsi_conn *);
+>  };
+>
+>
