@@ -1,34 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] mpt3sas: Fix warnings exposed by W=1
-Date: Mon, 08 Aug 2016 21:16:10 -0400
-Message-ID: <yq160ravj1h.fsf@sermon.lab.mkp.net>
-References: <7afa9136f4edf40e29fddf4fcfbc9694724472f2.1469766027.git.calvinowens@fb.com>
-	<094fdbf57487af4f395238c0525b2a560c8f68f0.1469766027.git.calvinowens@fb.com>
+Subject: Re: [PATCH] mpt3sas: Don't spam logs if logging level is 0
+Date: Mon, 08 Aug 2016 21:28:02 -0400
+Message-ID: <yq11t1yvihp.fsf@sermon.lab.mkp.net>
+References: <1470229218-22040-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <094fdbf57487af4f395238c0525b2a560c8f68f0.1469766027.git.calvinowens@fb.com>
-	(Calvin Owens's message of "Thu, 28 Jul 2016 21:38:22 -0700")
+In-Reply-To: <1470229218-22040-1-git-send-email-jthumshirn@suse.de> (Johannes
+	Thumshirn's message of "Wed, 3 Aug 2016 15:00:18 +0200")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Calvin Owens <calvinowens@fb.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-team@fb.com
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Calvin" == Calvin Owens <calvinowens@fb.com> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Calvin> Trivial non-functional changes for a couple annoying things: 1)
-Calvin> Functions local to files are not declared static, which is
-Calvin> frustrating when reading the code because it's non-obvious at
-Calvin> first glance what's actually called from other files.
-
-Calvin>   2) Set-but-unused variables abound, presumably to mask
-Calvin> -Wunused-result errors in the past. None of these are flagged
-Calvin> today though (with one exception noted below), so remove them.
-
-Calvin> Fixing (2) exposed the fact that we improperly ignore the return
-Calvin> value of scsi_device_reprobe() in _scsih_reprobe_lun(). Fixing
-Calvin> the calling code to deal with the potential error is
-Calvin> non-trivial, so for now just WARN().
+Johannes> In _scsih_io_done() we test if the ioc->logging_level does
+Johannes> _not_ have the MPT_DEBUG_REPLY bit set and if it hasn't we
+Johannes> print the debug messages. This unfortunately is the wrong way
+Johannes> around.
 
 Applied to 4.9/scsi-queue.
 
