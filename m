@@ -1,37 +1,89 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/8] hisi_sas: fail tmf task prep when port detached
-Date: Wed, 10 Aug 2016 21:20:03 +0800
-Message-ID: <1470835205-65684-7-git-send-email-john.garry@huawei.com>
-References: <1470835205-65684-1-git-send-email-john.garry@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1470835205-65684-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: [PATCH 01/10] zfcp: fix fc_host port_type with NPIV
+Date: Wed, 10 Aug 2016 18:30:44 +0200
+Message-ID: <1470846653-90691-2-git-send-email-maier@linux.vnet.ibm.com>
+References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 30+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-When the port is detached we cannot execute a TMF,
-as there can be no device attached to the port.
+For an NPIV-enabled FCP device, zfcp can erroneously show
+"NPort (fabric via point-to-point)" instead of "NPIV VPORT"
+for the port_type sysfs attribute of the corresponding
+fc_host.
+s390-tools that can be affected are dbginfo.sh and ziomon.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+zfcp_fsf_exchange_config_evaluate() ignores
+fsf_qtcb_bottom_config.connection_features indicating NPIV
+and only sets fc_host_port_type to FC_PORTTYPE_NPORT if
+fsf_qtcb_bottom_config.fc_topology is FSF_TOPO_FABRIC.
+
+Only the independent zfcp_fsf_exchange_port_evaluate()
+evaluates connection_features to overwrite fc_host_port_type
+to FC_PORTTYPE_NPIV in case of NPIV.
+Code was introduced with upstream kernel 2.6.30
+commit 0282985da5923fa6365adcc1a1586ae0c13c1617
+("[SCSI] zfcp: Report fc_host_port_type as NPIV").
+
+This works during FCP device recovery (such as set online)
+because it performs FSF_QTCB_EXCHANGE_CONFIG_DATA followed by
+FSF_QTCB_EXCHANGE_PORT_DATA in sequence.
+
+However, the zfcp-specific scsi host sysfs attributes
+"requests", "megabytes", or "seconds_active" trigger only
+zfcp_fsf_exchange_config_evaluate() resetting fc_host
+port_type to FC_PORTTYPE_NPORT despite NPIV.
+
+The zfcp-specific scsi host sysfs attribute "utilization"
+triggers only zfcp_fsf_exchange_port_evaluate() correcting
+the fc_host port_type again in case of NPIV.
+
+Evaluate fsf_qtcb_bottom_config.connection_features
+in zfcp_fsf_exchange_config_evaluate() where it belongs to.
+
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: 0282985da592 ("[SCSI] zfcp: Report fc_host_port_type as NPIV")
+Cc: <stable@vger.kernel.org> #2.6.30+
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/s390/scsi/zfcp_fsf.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 6c82e07..af92b137 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -204,7 +204,7 @@ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
- 		return rc;
- 	}
- 	port = device->port->lldd_port;
--	if (port && !port->port_attached && !tmf) {
-+	if (port && !port->port_attached) {
- 		if (sas_protocol_ata(task->task_proto)) {
- 			struct task_status_struct *ts = &task->task_status;
+diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
+index 522a633c866a..84353f45cfe6 100644
+--- a/drivers/s390/scsi/zfcp_fsf.c
++++ b/drivers/s390/scsi/zfcp_fsf.c
+@@ -3,7 +3,7 @@
+  *
+  * Implementation of FSF commands.
+  *
+- * Copyright IBM Corp. 2002, 2013
++ * Copyright IBM Corp. 2002, 2015
+  */
  
+ #define KMSG_COMPONENT "zfcp"
+@@ -508,7 +508,10 @@ static int zfcp_fsf_exchange_config_evaluate(struct zfcp_fsf_req *req)
+ 		fc_host_port_type(shost) = FC_PORTTYPE_PTP;
+ 		break;
+ 	case FSF_TOPO_FABRIC:
+-		fc_host_port_type(shost) = FC_PORTTYPE_NPORT;
++		if (bottom->connection_features & FSF_FEATURE_NPIV_MODE)
++			fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
++		else
++			fc_host_port_type(shost) = FC_PORTTYPE_NPORT;
+ 		break;
+ 	case FSF_TOPO_AL:
+ 		fc_host_port_type(shost) = FC_PORTTYPE_NLPORT;
+@@ -613,7 +616,6 @@ static void zfcp_fsf_exchange_port_evaluate(struct zfcp_fsf_req *req)
+ 
+ 	if (adapter->connection_features & FSF_FEATURE_NPIV_MODE) {
+ 		fc_host_permanent_port_name(shost) = bottom->wwpn;
+-		fc_host_port_type(shost) = FC_PORTTYPE_NPIV;
+ 	} else
+ 		fc_host_permanent_port_name(shost) = fc_host_port_name(shost);
+ 	fc_host_maxframe_size(shost) = bottom->maximum_frame_size;
 -- 
-1.9.1
+2.6.6
