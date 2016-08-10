@@ -1,68 +1,57 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v6 0/2] Block layer support ZAC/ZBC commands
-Date: Tue, 9 Aug 2016 22:26:27 -0500
-Message-ID: <CAJVOszB4dfEFM+XxvDy4+7ue6au_RzjuOB-SSvYTh96H-UjZ1Q@mail.gmail.com>
-References: <1469818955-20568-1-git-send-email-shaun@tancheff.com>
- <20160801094116.GB14677@lst.de> <CAJVOszCAb4o5LWpJL8Yd66n9jPvy+EMQX2Xfr6awZCxfGJf_CA@mail.gmail.com>
- <6a4a27ac-009d-9825-bf77-0529da77cc36@suse.de> <C7B51F39-AC67-4D96-B1DE-45C70F99134D@hgst.com>
- <CAJVOszDt5HfSKTk_8a3AkqjjAXV_9RaA2TxeqgY5Gp90w89-Lg@mail.gmail.com> <2370d779-3f9b-28a2-7596-42b7b6a89c21@suse.de>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
+ Control mode page
+Date: Tue, 9 Aug 2016 23:38:38 -0400
+Message-ID: <20160810033838.GB25053@mtj.duckdns.org>
+References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
+ <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
+ <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
+ <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
+ <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <2370d779-3f9b-28a2-7596-42b7b6a89c21@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Damien Le Moal <Damien.LeMoal@hgst.com>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Josh Bingaman <josh.bingaman@seagate.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de, sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Aug 9, 2016 at 1:47 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 08/05/2016 10:35 PM, Shaun Tancheff wrote:
->> On Tue, Aug 2, 2016 at 8:29 PM, Damien Le Moal <Damien.LeMoal@hgst.com> wrote:
->>>> On Aug 2, 2016, at 23:35, Hannes Reinecke <hare@suse.de> wrote:
->>>> On 08/01/2016 07:07 PM, Shaun Tancheff wrote:
->>>>> On Mon, Aug 1, 2016 at 4:41 AM, Christoph Hellwig <hch@lst.de> wrote:
+On Fri, Jul 22, 2016 at 02:41:54AM +0800, tom.ty89@gmail.com wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+> 
+> scsi_done() was called repeatedly and apparently because of that,
+> the kernel would call trace when we touch the Control mode page:
+> 
+> Call Trace:
+>  [<ffffffff812ea0d2>] dump_stack+0x63/0x81
+>  [<ffffffff81079cfb>] __warn+0xcb/0xf0
+>  [<ffffffff81079e2d>] warn_slowpath_null+0x1d/0x20
+>  [<ffffffffa00f51b0>] ata_eh_finish+0xe0/0xf0 [libata]
+>  [<ffffffffa00fb830>] sata_pmp_error_handler+0x640/0xa50 [libata]
+>  [<ffffffffa00470ed>] ahci_error_handler+0x1d/0x70 [libahci]
+>  [<ffffffffa00f55f0>] ata_scsi_port_error_handler+0x430/0x770 [libata]
+>  [<ffffffffa00eff8d>] ? ata_scsi_cmd_error_handler+0xdd/0x160 [libata]
+>  [<ffffffffa00f59d7>] ata_scsi_error+0xa7/0xf0 [libata]
+>  [<ffffffffa00913ba>] scsi_error_handler+0xaa/0x560 [scsi_mod]
+>  [<ffffffffa0091310>] ? scsi_eh_get_sense+0x180/0x180 [scsi_mod]
+>  [<ffffffff81098eb8>] kthread+0xd8/0xf0
+>  [<ffffffff815d913f>] ret_from_fork+0x1f/0x40
+>  [<ffffffff81098de0>] ? kthread_worker_fn+0x170/0x170
+> ---[ end trace 8b7501047e928a17 ]---
+> 
+> Removed the unnecessary code and let ata_scsi_translate() do the job.
+> 
+> Also, since ata_mselect_control() has no ATA command to send to the
+> device, ata_scsi_mode_select_xlat() should return 1 for it, so that
+> ata_scsi_translate() will finish early to avoid ata_qc_issue().
+> 
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
 
-[trim]
->> Also the zone report is 'slow' in that there is an overhead for the
->> report itself but
->> the number of zones per query can be quite large so 4 or 5 I/Os that
->> run into the
->> hundreds if milliseconds to cache the entire drive isn't really unworkable for
->> something that is used infrequently.
->>
-> No, surely not.
-> But one of the _big_ advantages for the RB tree is blkdev_discard().
-> Without the RB tree any mkfs program will issue a 'discard' for every
-> sector. We will be able to coalesce those into one discard per zone, but
-> we still need to issue one for _every_ zone.
-> Which is (as indicated) really slow, and easily takes several minutes.
-> With the RB tree we can short-circuit discards to empty zones, and speed
-> up processing time dramatically.
-> Sure we could be moving the logic into mkfs and friends, but that would
-> require us to change the programs and agree on a library (libzbc?) which
-> should be handling that.
+Applied to libata/for-4.9.
 
-Adding an additional library dependency seems overkill for a program
-that is already doing ioctls and raw block I/O ... but I would leave that
-up to each file system. As it sits issuing the ioctl and walking the array
-of data returned [see blkreport.c] is already quite trivial.
+Thanks.
 
-I believe the goal here is for F2FS, and perhaps NILFS? to "just
-work" with the DISCARD to Reset WP and zone cache in place.
-
-Still quite skeptical about other common file systems
-"just working" without their respective mkfs et. al. being
-zone aware and handling the topology of the media at mkfs time.
-Perhaps there is something I am unaware of?
-
-[trim]
-
->> I can add finish zone ... but I really can't think of a use for it, myself.
->>
-> Which is not the point. The standard defines this, so clearly someone
-> found it a reasonable addendum. So let's add this for completeness.
-
-Agreed and queued for the next version.
-
-Regards,
-Shaun
+-- 
+tejun
