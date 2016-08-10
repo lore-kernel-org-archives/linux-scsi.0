@@ -1,120 +1,148 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 08/10] zfcp: fix D_ID field with actual value on tracing SAN responses
-Date: Wed, 10 Aug 2016 18:30:51 +0200
-Message-ID: <1470846653-90691-9-git-send-email-maier@linux.vnet.ibm.com>
+Subject: [PATCH 03/10] zfcp: close window with unblocked rport during rport gone
+Date: Wed, 10 Aug 2016 18:30:46 +0200
+Message-ID: <1470846653-90691-4-git-send-email-maier@linux.vnet.ibm.com>
 References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59027 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S1753566AbcHJSbS (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2016 14:31:18 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7AGY8nU142867
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Aug 2016 12:35:49 -0400
-Received: from e06smtp06.uk.ibm.com (e06smtp06.uk.ibm.com [195.75.94.102])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24qm9tq4gy-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Aug 2016 12:35:49 -0400
-Received: from localhost
-	by e06smtp06.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
-	Wed, 10 Aug 2016 17:35:47 +0100
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 38+" <stable@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 32+" <stable@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-With commit 2c55b750a884b86dea8b4cc5f15e1484cc47a25c
-("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
-we lost the N_Port-ID where an ELS response comes from.
-With commit 7c7dc196814b9e1d5cc254dc579a5fa78ae524f7
-("[SCSI] zfcp: Simplify handling of ct and els requests")
-we lost the N_Port-ID where a CT response comes from.
-It's especially useful if the request SAN trace record
-with D_ID was already lost due to trace buffer wrap.
+On a successful end of reopen port forced,
+zfcp_erp_strategy_followup_success() re-uses the port erp_action
+and the subsequent zfcp_erp_action_cleanup() now
+sees ZFCP_ERP_SUCCEEDED with
+erp_action->action==ZFCP_ERP_ACTION_REOPEN_PORT
+instead of ZFCP_ERP_ACTION_REOPEN_PORT_FORCED
+but must not perform zfcp_scsi_schedule_rport_register().
 
-GS uses an open WKA port handle and ELS just a D_ID, and
-only for ELS we could get D_ID from QTCB bottom via zfcp_fsf_req.
-To cover both cases, add a new field to zfcp_fsf_ct_els
-and fill it in on request to use in SAN response trace.
-Strictly speaking the D_ID on SAN response is the FC frame's S_ID.
-We don't need a field for the other end which is always us.
+We can detect this because the fresh port reopen erp_action
+is in its very first step ZFCP_ERP_STEP_UNINITIALIZED.
+
+Otherwise this opens a time window with unblocked rport
+(until the followup port reopen recovery would block it again).
+If a scsi_cmnd timeout occurs during this time window
+fc_timed_out() cannot work as desired and such command
+would indeed time out and trigger scsi_eh. This prevents
+a clean and timely path failover.
+This should not happen if the path issue can be recovered
+on FC transport layer such as path issues involving RSCNs.
+
+Also, unnecessary and repeated DID_IMM_RETRY for pending and
+undesired new requests occur because internally zfcp still
+has its zfcp_port blocked.
+
+As follow-on errors with scsi_eh, it can cause,
+in the worst case, permanently lost paths due to one of:
+sd <scsidev>: [<scsidisk>] Medium access timeout failure. Offlining disk!
+sd <scsidev>: Device offlined - not ready after error recovery
+
+For fix validation and to aid future debugging with other recoveries
+we now also trace (un)blocking of rports.
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Fixes: 2c55b750a884 ("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
-Fixes: 7c7dc196814b ("[SCSI] zfcp: Simplify handling of ct and els requests")
-Cc: <stable@vger.kernel.org> #2.6.38+
+Fixes: 5767620c383a ("[SCSI] zfcp: Do not unblock rport from REOPEN_PORT_FORCED")
+Fixes: a2fa0aede07c ("[SCSI] zfcp: Block FC transport rports early on errors")
+Fixes: 5f852be9e11d ("[SCSI] zfcp: Fix deadlock between zfcp ERP and SCSI")
+Fixes: 338151e06608 ("[SCSI] zfcp: make use of fc_remote_port_delete when target port is unavailable")
+Fixes: 3859f6a248cb ("[PATCH] zfcp: add rports to enable scsi_add_device to work again")
+Cc: <stable@vger.kernel.org> #2.6.32+
 Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_dbf.c | 2 +-
- drivers/s390/scsi/zfcp_fsf.c | 2 ++
- drivers/s390/scsi/zfcp_fsf.h | 4 +++-
- 3 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.h  |  7 ++++++-
+ drivers/s390/scsi/zfcp_erp.c  | 12 +++++++++---
+ drivers/s390/scsi/zfcp_scsi.c |  8 +++++++-
+ 3 files changed, 22 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index ceb934c93232..968897f5e1c6 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -407,7 +407,7 @@ void zfcp_dbf_san_res(char *tag, struct zfcp_fsf_req *fsf)
+diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
+index 0be3d48681ae..7901deb4ba89 100644
+--- a/drivers/s390/scsi/zfcp_dbf.h
++++ b/drivers/s390/scsi/zfcp_dbf.h
+@@ -2,7 +2,7 @@
+  * zfcp device driver
+  * debug feature declarations
+  *
+- * Copyright IBM Corp. 2008, 2010
++ * Copyright IBM Corp. 2008, 2015
+  */
  
- 	length = (u16)(ct_els->resp->length + FC_CT_HDR_LEN);
- 	zfcp_dbf_san(tag, dbf, sg_virt(ct_els->resp), ZFCP_DBF_SAN_RES, length,
--		     fsf->req_id, 0);
-+		     fsf->req_id, ct_els->d_id);
- }
+ #ifndef ZFCP_DBF_H
+@@ -17,6 +17,11 @@
  
+ #define ZFCP_DBF_INVALID_LUN	0xFFFFFFFFFFFFFFFFull
+ 
++enum zfcp_dbf_pseudo_erp_act_type {
++	ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD = 0xff,
++	ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL = 0xfe,
++};
++
  /**
-diff --git a/drivers/s390/scsi/zfcp_fsf.c b/drivers/s390/scsi/zfcp_fsf.c
-index f56906f09bb3..75f820ca17b7 100644
---- a/drivers/s390/scsi/zfcp_fsf.c
-+++ b/drivers/s390/scsi/zfcp_fsf.c
-@@ -1079,6 +1079,7 @@ int zfcp_fsf_send_ct(struct zfcp_fc_wka_port *wka_port,
- 
- 	req->handler = zfcp_fsf_send_ct_handler;
- 	req->qtcb->header.port_handle = wka_port->handle;
-+	ct->d_id = wka_port->d_id;
- 	req->data = ct;
- 
- 	zfcp_dbf_san_req("fssct_1", req, wka_port->d_id);
-@@ -1175,6 +1176,7 @@ int zfcp_fsf_send_els(struct zfcp_adapter *adapter, u32 d_id,
- 
- 	hton24(req->qtcb->bottom.support.d_id, d_id);
- 	req->handler = zfcp_fsf_send_els_handler;
-+	els->d_id = d_id;
- 	req->data = els;
- 
- 	zfcp_dbf_san_req("fssels1", req, d_id);
-diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
-index 57ae3ae1046d..be1c04b334c5 100644
---- a/drivers/s390/scsi/zfcp_fsf.h
-+++ b/drivers/s390/scsi/zfcp_fsf.h
+  * struct zfcp_dbf_rec_trigger - trace record for triggered recovery action
+  * @ready: number of ready recovery actions
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index 3fb410977014..a59d678125bd 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
 @@ -3,7 +3,7 @@
   *
-  * Interface to the FSF support functions.
+  * Error Recovery Procedures (ERP).
   *
 - * Copyright IBM Corp. 2002, 2010
 + * Copyright IBM Corp. 2002, 2015
   */
  
- #ifndef FSF_H
-@@ -436,6 +436,7 @@ struct zfcp_blk_drv_data {
-  * @handler_data: data passed to handler function
-  * @port: Optional pointer to port for zfcp internal ELS (only test link ADISC)
-  * @status: used to pass error status to calling function
-+ * @d_id: Destination ID of either open WKA port for CT or of D_ID for ELS
-  */
- struct zfcp_fsf_ct_els {
- 	struct scatterlist *req;
-@@ -444,6 +445,7 @@ struct zfcp_fsf_ct_els {
- 	void *handler_data;
- 	struct zfcp_port *port;
- 	int status;
-+	u32 d_id;
- };
+ #define KMSG_COMPONENT "zfcp"
+@@ -1217,8 +1217,14 @@ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
+ 		break;
  
- #endif				/* FSF_H */
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT:
+-		if (result == ZFCP_ERP_SUCCEEDED)
+-			zfcp_scsi_schedule_rport_register(port);
++		/* This switch case might also happen after a forced reopen
++		 * was successfully done and thus overwritten with a new
++		 * non-forced reopen at `ersfs_2'. In this case, we must not
++		 * do the clean-up of the non-forced version.
++		 */
++		if (act->step != ZFCP_ERP_STEP_UNINITIALIZED)
++			if (result == ZFCP_ERP_SUCCEEDED)
++				zfcp_scsi_schedule_rport_register(port);
+ 		/* fall through */
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
+ 		put_device(&port->dev);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index b3c6ff49103b..9069f98a1817 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -3,7 +3,7 @@
+  *
+  * Interface to Linux SCSI midlayer.
+  *
+- * Copyright IBM Corp. 2002, 2013
++ * Copyright IBM Corp. 2002, 2015
+  */
+ 
+ #define KMSG_COMPONENT "zfcp"
+@@ -556,6 +556,9 @@ static void zfcp_scsi_rport_register(struct zfcp_port *port)
+ 	ids.port_id = port->d_id;
+ 	ids.roles = FC_RPORT_ROLE_FCP_TARGET;
+ 
++	zfcp_dbf_rec_trig("scpaddy", port->adapter, port, NULL,
++			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD,
++			  ZFCP_PSEUDO_ERP_ACTION_RPORT_ADD);
+ 	rport = fc_remote_port_add(port->adapter->scsi_host, 0, &ids);
+ 	if (!rport) {
+ 		dev_err(&port->adapter->ccw_device->dev,
+@@ -577,6 +580,9 @@ static void zfcp_scsi_rport_block(struct zfcp_port *port)
+ 	struct fc_rport *rport = port->rport;
+ 
+ 	if (rport) {
++		zfcp_dbf_rec_trig("scpdely", port->adapter, port, NULL,
++				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL,
++				  ZFCP_PSEUDO_ERP_ACTION_RPORT_DEL);
+ 		fc_remote_port_delete(rport);
+ 		port->rport = NULL;
+ 	}
 -- 
 2.6.6
-
