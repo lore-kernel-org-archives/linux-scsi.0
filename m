@@ -1,64 +1,101 @@
-From: David Milburn <dmilburn@redhat.com>
-Subject: Re: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
-Date: Wed, 10 Aug 2016 10:41:55 -0500
-Message-ID: <57AB4B43.2010705@redhat.com>
-References: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com> <20160810032613.GA25053@mtj.duckdns.org> <CAGnHSEkp8EyCU+roKgwzVo2HcpQEGdrLv65h3Z+uD=4YTUn9qQ@mail.gmail.com> <20160810151447.GI25053@mtj.duckdns.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160810151447.GI25053@mtj.duckdns.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: Tom Yan <tom.ty89@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: [PATCH 09/10] zfcp: fix payload trace length for SAN request&response
+Date: Wed, 10 Aug 2016 18:30:52 +0200
+Message-ID: <1470846653-90691-10-git-send-email-maier@linux.vnet.ibm.com>
+References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:41268 "EHLO
+	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+	by vger.kernel.org with ESMTP id S933033AbcHJSOH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>);
+	Wed, 10 Aug 2016 14:14:07 -0400
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7AGXxN3117571
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Aug 2016 12:35:50 -0400
+Received: from e06smtp07.uk.ibm.com (e06smtp07.uk.ibm.com [195.75.94.103])
+	by mx0a-001b2d01.pphosted.com with ESMTP id 24qm9sxu3r-1
+	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Aug 2016 12:35:50 -0400
+Received: from localhost
+	by e06smtp07.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+	for <linux-scsi@vger.kernel.org> from <maier@linux.vnet.ibm.com>;
+	Wed, 10 Aug 2016 17:35:48 +0100
+In-Reply-To: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 38+" <stable@vger.kernel.org>
 
-Hi,
+commit 2c55b750a884b86dea8b4cc5f15e1484cc47a25c
+("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+started to add FC_CT_HDR_LEN which made zfcp dump random data
+out of bounds for RSPN GS responses because u.rspn.rsp
+is the largest and last field in the union of struct zfcp_fc_req.
+Other request/response types only happened to stay within bounds
+due to the padding of the union or
+due to the trace capping of u.gspn.rsp to ZFCP_DBF_SAN_MAX_PAYLOAD.
 
-On 08/10/2016 10:14 AM, Tejun Heo wrote:
-> Hello, Tom.
->
-> On Wed, Aug 10, 2016 at 06:04:10PM +0800, Tom Yan wrote:
->> On 10 August 2016 at 11:26, Tejun Heo <tj@kernel.org> wrote:
->>> Hmmm.. why not?  The hardware limit is 64k and the driver is using a
->>
->> Is that referring to the maximum number of entries allowed in the
->> PRDT, Physical Region Descriptor Table (which is, more precisely,
->> 65535)?
->
-> Yeap.
->
->>> Not necessarily.  A single sg entry can point to an area larger than
->>> PAGE_SIZE.
->>
->> You mean the 4MB limit of "Data Byte Count" in "DW3: Description
->> Information" of the PRDT? Is that what max_segment_size (which is set
->> to a general fallback of 65536:
->> http://lxr.free-electrons.com/ident?i=dma_get_max_seg_size) is about
->> in this case?
->
-> Ah, ahci isn't setting the hardware limit properly but yeah that's the
-> maximum segment size.
->
->> And my point was, it will be a multiple of 168 anyway, if 1344 is just
->> an example.
->>
->>> As written above, that probably makes the ahci command table size
->>> nicely aligned.
->>
->> I think that's what bothers me ultimately, cause I don't see how 168
->> makes it (more) nicely aligned (or even, aligned to what?).
->
-> Hmmm... Looked at the sizes and they don't seem to align to anything
-> meaningful.  No idea.
+Timestamp      : ...
+Area           : SAN
+Subarea        : 00
+Level          : 1
+Exception      : -
+CPU id         : ..
+Caller         : ...
+Record id      : 2
+Tag            : fsscth2
+Request id     : 0x...
+Destination ID : 0x00fffffc
+Payload short  : 01000000 fc020000 80020000 00000000
+                 xxxxxxxx xxxxxxxx xxxxxxxx xxxxxxxx <===
+                 00000000 00000000 00000000 00000000
+Payload length : 32                                  <===
 
-The 168 makes AHCI_CMD_TBL_SZ equal to 2816
+struct zfcp_fc_req {
+    [0] struct zfcp_fsf_ct_els ct_els;
+   [56] struct scatterlist sg_req;
+   [96] struct scatterlist sg_rsp;
+        union {
+            struct {req; rsp;} adisc;    SIZE: 28+28=   56
+            struct {req; rsp;} gid_pn;   SIZE: 24+20=   44
+            struct {rspsg; req;} gpn_ft; SIZE: 40*4+20=180
+            struct {req; rsp;} gspn;     SIZE: 20+273= 293
+            struct {req; rsp;} rspn;     SIZE: 277+16= 293
+  [136] } u;
+}
+SIZE: 432
 
-AHCI_CMD_TBL_SZ = AHCI_CMD_TBL_HDR_SZ + (AHCI_MAX_SG * 16)
-AHCI_CMD_TBL_SZ = 128 + (168 * 16)
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+Fixes: 2c55b750a884 ("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+Cc: <stable@vger.kernel.org> #2.6.38+
+Reviewed-by: Alexey Ishchuk <aishchuk@linux.vnet.ibm.com>
+Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+---
+ drivers/s390/scsi/zfcp_dbf.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-I think if you add in AHCI_CMD_SLOT_SZ (1024) and AHCI_RX_FIS_SZ (256)
-the DMA is 4K aligned, I think that is where the 168 came from.
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index 968897f5e1c6..d8c0bfb40366 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -389,7 +389,7 @@ void zfcp_dbf_san_req(char *tag, struct zfcp_fsf_req *fsf, u32 d_id)
+ 	struct zfcp_fsf_ct_els *ct_els = fsf->data;
+ 	u16 length;
+ 
+-	length = (u16)(ct_els->req->length + FC_CT_HDR_LEN);
++	length = (u16)(ct_els->req->length);
+ 	zfcp_dbf_san(tag, dbf, sg_virt(ct_els->req), ZFCP_DBF_SAN_REQ, length,
+ 		     fsf->req_id, d_id);
+ }
+@@ -405,7 +405,7 @@ void zfcp_dbf_san_res(char *tag, struct zfcp_fsf_req *fsf)
+ 	struct zfcp_fsf_ct_els *ct_els = fsf->data;
+ 	u16 length;
+ 
+-	length = (u16)(ct_els->resp->length + FC_CT_HDR_LEN);
++	length = (u16)(ct_els->resp->length);
+ 	zfcp_dbf_san(tag, dbf, sg_virt(ct_els->resp), ZFCP_DBF_SAN_RES, length,
+ 		     fsf->req_id, ct_els->d_id);
+ }
+-- 
+2.6.6
 
-Thanks,
-David
