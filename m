@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/8] hisi_sas: add v2 hw slot complete internal abort support
-Date: Wed, 10 Aug 2016 21:20:02 +0800
-Message-ID: <1470835205-65684-6-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/8] hisi_sas: add internal abort core code
+Date: Wed, 10 Aug 2016 21:19:58 +0800
+Message-ID: <1470835205-65684-2-git-send-email-john.garry@huawei.com>
 References: <1470835205-65684-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,75 +12,227 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add code in slot_complete_v2_hw() to deal with the
-slots which have completed due to internal abort.
+Add core code for internal abort functionality.
 
-The status codes have the following meaning:
-- STAT_IO_ABORTED: the IO has been aborted due to
-internal abort, whether by device or individual
-abort command
-- STAT_IO_COMPLETE: internal abort command has
-completed successfully for device or individual
-abort command
-- STAT_IO_NO_DEVICE: internal abort command has
-completed for device but cannot find any IO
-- STAT_IO_NOT_VALID: internal abort command has
-completed for single command but could not
-find the command
+The internal abort features allows the host controller
+to abort commands which are still active in the
+controller but have not yet been sent to the slave
+device.
+
+Typically a command only spends a relatively
+short time in the controller when compared to the
+amount of the time after it is sent to the slave
+device.
+Two modes of internal abort are supported:
+- device
+- individual command
+
+For device, when the internal abort is issued all
+commands in the host for that device are aborted.
+For a single command, only that command is aborted
+if it is still in the host.
+
+In HW the internal abort command is executed
+similar to any other sort of command, like SSP.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas.h      |   3 +
+ drivers/scsi/hisi_sas/hisi_sas_main.c | 154 ++++++++++++++++++++++++++++++++++
+ 2 files changed, 157 insertions(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fec1675..bf9b693 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -227,6 +227,13 @@
- #define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
- #define CMPLT_HDR_ERX_OFF		12
- #define CMPLT_HDR_ERX_MSK		(0x1 << CMPLT_HDR_ERX_OFF)
-+#define CMPLT_HDR_ABORT_STAT_OFF	13
-+#define CMPLT_HDR_ABORT_STAT_MSK	(0x7 << CMPLT_HDR_ABORT_STAT_OFF)
-+/* abort_stat */
-+#define STAT_IO_NOT_VALID		0x1
-+#define STAT_IO_NO_DEVICE		0x2
-+#define STAT_IO_COMPLETE		0x3
-+#define STAT_IO_ABORTED			0x4
- /* dw1 */
- #define CMPLT_HDR_IPTT_OFF		0
- #define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
-@@ -1569,6 +1576,30 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
- 		goto out;
- 	}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 4731d32..4ae864d 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -146,6 +146,9 @@ struct hisi_sas_hw {
+ 			struct hisi_sas_slot *slot);
+ 	int (*prep_stp)(struct hisi_hba *hisi_hba,
+ 			struct hisi_sas_slot *slot);
++	int (*prep_abort)(struct hisi_hba *hisi_hba,
++			  struct hisi_sas_slot *slot,
++			  int device_id, int abort_flag, int tag_to_abort);
+ 	int (*slot_complete)(struct hisi_hba *hisi_hba,
+ 			     struct hisi_sas_slot *slot, int abort);
+ 	void (*phy_enable)(struct hisi_hba *hisi_hba, int phy_no);
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 18dd5ea..d30ece2 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -17,6 +17,10 @@
  
-+	/* Use SAS+TMF status codes */
-+	switch ((complete_hdr->dw0 & CMPLT_HDR_ABORT_STAT_MSK)
-+			>> CMPLT_HDR_ABORT_STAT_OFF) {
-+	case STAT_IO_ABORTED:
-+		/* this io has been aborted by abort command */
-+		ts->stat = SAS_ABORTED_TASK;
-+		goto out;
-+	case STAT_IO_COMPLETE:
-+		/* internal abort command complete */
-+		ts->stat = TMF_RESP_FUNC_COMPLETE;
-+		goto out;
-+	case STAT_IO_NO_DEVICE:
-+		ts->stat = TMF_RESP_FUNC_COMPLETE;
-+		goto out;
-+	case STAT_IO_NOT_VALID:
-+		/* abort single io, controller don't find
-+		 * the io need to abort
-+		 */
-+		ts->stat = TMF_RESP_FUNC_FAILED;
-+		goto out;
-+	default:
-+		break;
+ static int hisi_sas_debug_issue_ssp_tmf(struct domain_device *device,
+ 				u8 *lun, struct hisi_sas_tmf_task *tmf);
++static int
++hisi_sas_internal_task_abort(struct hisi_hba *hisi_hba,
++			     struct domain_device *device,
++			     int abort_flag, int tag);
+ 
+ static struct hisi_hba *dev_to_hisi_hba(struct domain_device *device)
+ {
+@@ -116,6 +120,14 @@ static int hisi_sas_task_prep_ata(struct hisi_hba *hisi_hba,
+ 	return hisi_hba->hw->prep_stp(hisi_hba, slot);
+ }
+ 
++static int hisi_sas_task_prep_abort(struct hisi_hba *hisi_hba,
++		struct hisi_sas_slot *slot,
++		int device_id, int abort_flag, int tag_to_abort)
++{
++	return hisi_hba->hw->prep_abort(hisi_hba, slot,
++			device_id, abort_flag, tag_to_abort);
++}
++
+ /*
+  * This function will issue an abort TMF regardless of whether the
+  * task is in the sdev or not. Then it will do the task complete
+@@ -954,6 +966,148 @@ static int hisi_sas_query_task(struct sas_task *task)
+ 	return rc;
+ }
+ 
++static int
++hisi_sas_internal_abort_task_exec(struct hisi_hba *hisi_hba, u64 device_id,
++				  struct sas_task *task, int abort_flag,
++				  int task_tag)
++{
++	struct domain_device *device = task->dev;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct device *dev = &hisi_hba->pdev->dev;
++	struct hisi_sas_port *port;
++	struct hisi_sas_slot *slot;
++	struct hisi_sas_cmd_hdr *cmd_hdr_base;
++	int dlvry_queue_slot, dlvry_queue, n_elem = 0, rc, slot_idx;
++
++	if (!device->port)
++		return -1;
++
++	port = device->port->lldd_port;
++
++	/* simply get a slot and send abort command */
++	rc = hisi_sas_slot_index_alloc(hisi_hba, &slot_idx);
++	if (rc)
++		goto err_out;
++	rc = hisi_hba->hw->get_free_slot(hisi_hba, &dlvry_queue,
++					 &dlvry_queue_slot);
++	if (rc)
++		goto err_out_tag;
++
++	slot = &hisi_hba->slot_info[slot_idx];
++	memset(slot, 0, sizeof(struct hisi_sas_slot));
++
++	slot->idx = slot_idx;
++	slot->n_elem = n_elem;
++	slot->dlvry_queue = dlvry_queue;
++	slot->dlvry_queue_slot = dlvry_queue_slot;
++	cmd_hdr_base = hisi_hba->cmd_hdr[dlvry_queue];
++	slot->cmd_hdr = &cmd_hdr_base[dlvry_queue_slot];
++	slot->task = task;
++	slot->port = port;
++	task->lldd_task = slot;
++
++	memset(slot->cmd_hdr, 0, sizeof(struct hisi_sas_cmd_hdr));
++
++	rc = hisi_sas_task_prep_abort(hisi_hba, slot, device_id,
++				      abort_flag, task_tag);
++	if (rc)
++		goto err_out_tag;
++
++	/* Port structure is static for the HBA, so
++	*  even if the port is deformed it is ok
++	*  to reference.
++	*/
++	list_add_tail(&slot->entry, &port->list);
++	spin_lock(&task->task_state_lock);
++	task->task_state_flags |= SAS_TASK_AT_INITIATOR;
++	spin_unlock(&task->task_state_lock);
++
++	hisi_hba->slot_prep = slot;
++
++	sas_dev->running_req++;
++	/* send abort command to our chip */
++	hisi_hba->hw->start_delivery(hisi_hba);
++
++	return 0;
++
++err_out_tag:
++	hisi_sas_slot_index_free(hisi_hba, slot_idx);
++err_out:
++	dev_err(dev, "internal abort task prep: failed[%d]!\n", rc);
++
++	return rc;
++}
++
++static int
++hisi_sas_internal_task_abort(struct hisi_hba *hisi_hba,
++			     struct domain_device *device,
++			     int abort_flag, int tag)
++{
++	struct sas_task *task;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
++	struct device *dev = &hisi_hba->pdev->dev;
++	int res;
++	unsigned long flags;
++
++	if (!hisi_hba->hw->prep_abort)
++		return -EOPNOTSUPP;
++
++	task = sas_alloc_slow_task(GFP_KERNEL);
++	if (!task)
++		return -ENOMEM;
++
++	task->dev = device;
++	task->task_proto = device->tproto;
++	task->task_done = hisi_sas_task_done;
++	task->slow_task->timer.data = (unsigned long)task;
++	task->slow_task->timer.function = hisi_sas_tmf_timedout;
++	task->slow_task->timer.expires = jiffies + 20*HZ;
++	add_timer(&task->slow_task->timer);
++
++	/* Lock as we are alloc'ing a slot, which cannot be interrupted */
++	spin_lock_irqsave(&hisi_hba->lock, flags);
++	res = hisi_sas_internal_abort_task_exec(hisi_hba, sas_dev->device_id,
++						task, abort_flag, tag);
++	spin_unlock_irqrestore(&hisi_hba->lock, flags);
++	if (res) {
++		del_timer(&task->slow_task->timer);
++		dev_err(dev, "internal task abort: executing internal task failed: %d\n",
++			res);
++		goto exit;
++	}
++	wait_for_completion(&task->slow_task->completion);
++	res = TMF_RESP_FUNC_FAILED;
++
++	if (task->task_status.resp == SAS_TASK_COMPLETE &&
++		task->task_status.stat == TMF_RESP_FUNC_COMPLETE) {
++		res = TMF_RESP_FUNC_COMPLETE;
++		goto exit;
 +	}
 +
- 	if ((complete_hdr->dw0 & CMPLT_HDR_ERX_MSK) &&
- 		(!(complete_hdr->dw0 & CMPLT_HDR_RSPNS_XFRD_MSK))) {
- 
++	/* TMF timed out, return direct. */
++	if ((task->task_state_flags & SAS_TASK_STATE_ABORTED)) {
++		if (!(task->task_state_flags & SAS_TASK_STATE_DONE)) {
++			dev_err(dev, "internal task abort: timeout.\n");
++			if (task->lldd_task) {
++				struct hisi_sas_slot *slot = task->lldd_task;
++
++				hisi_sas_slot_task_free(hisi_hba, task, slot);
++			}
++		}
++	}
++
++exit:
++	dev_info(dev, "internal task abort: task to dev %016llx task=%p "
++		"resp: 0x%x sts 0x%x\n",
++		SAS_ADDR(device->sas_addr),
++		task,
++		task->task_status.resp, /* 0 is complete, -1 is undelivered */
++		task->task_status.stat);
++	sas_free_task(task);
++
++	return res;
++}
++
+ static void hisi_sas_port_formed(struct asd_sas_phy *sas_phy)
+ {
+ 	hisi_sas_port_notify_formed(sas_phy);
 -- 
 1.9.1
