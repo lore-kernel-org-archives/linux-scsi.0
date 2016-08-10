@@ -1,57 +1,155 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH resend 5/5] libata-scsi: fix MODE SELECT translation for
- Control mode page
-Date: Tue, 9 Aug 2016 23:38:38 -0400
-Message-ID: <20160810033838.GB25053@mtj.duckdns.org>
-References: <af84a796696f2f366d330595d1a818e8daeb86d8.1469126217.git.tom.ty89@gmail.com>
- <b2ae6752649bc02641d38fee75ee35a59e8466d8.1469126217.git.tom.ty89@gmail.com>
- <fc2946598c92137f65636b0fd7e50dc71a089fa1.1469126217.git.tom.ty89@gmail.com>
- <14bd98eb08ddf86be28f558817bed3cd27c397cd.1469126217.git.tom.ty89@gmail.com>
- <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCH v6 0/2] Block layer support ZAC/ZBC commands
+Date: Tue, 9 Aug 2016 22:58:19 -0500
+Message-ID: <CAJVOszDavBDA0hZTox-nNtPHCz-tWecOJCJ5R25u+AV6Wq3xwQ@mail.gmail.com>
+References: <1469818955-20568-1-git-send-email-shaun@tancheff.com>
+ <20160801094116.GB14677@lst.de> <CAJVOszCAb4o5LWpJL8Yd66n9jPvy+EMQX2Xfr6awZCxfGJf_CA@mail.gmail.com>
+ <6a4a27ac-009d-9825-bf77-0529da77cc36@suse.de> <C7B51F39-AC67-4D96-B1DE-45C70F99134D@hgst.com>
+ <CAJVOszDt5HfSKTk_8a3AkqjjAXV_9RaA2TxeqgY5Gp90w89-Lg@mail.gmail.com>
+ <2370d779-3f9b-28a2-7596-42b7b6a89c21@suse.de> <D3D5E748-ADB9-4376-8969-623A8A815E36@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <2ed3f3aba21a4b815e9497e6aeba497280f9f333.1469126217.git.tom.ty89@gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: hare@suse.de, sergei.shtylyov@cogentembedded.com, arnd@arndb.de, sfr@canb.auug.org.au, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-next@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <D3D5E748-ADB9-4376-8969-623A8A815E36@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <Damien.LeMoal@hgst.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Josh Bingaman <josh.bingaman@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jul 22, 2016 at 02:41:54AM +0800, tom.ty89@gmail.com wrote:
-> From: Tom Yan <tom.ty89@gmail.com>
-> 
-> scsi_done() was called repeatedly and apparently because of that,
-> the kernel would call trace when we touch the Control mode page:
-> 
-> Call Trace:
->  [<ffffffff812ea0d2>] dump_stack+0x63/0x81
->  [<ffffffff81079cfb>] __warn+0xcb/0xf0
->  [<ffffffff81079e2d>] warn_slowpath_null+0x1d/0x20
->  [<ffffffffa00f51b0>] ata_eh_finish+0xe0/0xf0 [libata]
->  [<ffffffffa00fb830>] sata_pmp_error_handler+0x640/0xa50 [libata]
->  [<ffffffffa00470ed>] ahci_error_handler+0x1d/0x70 [libahci]
->  [<ffffffffa00f55f0>] ata_scsi_port_error_handler+0x430/0x770 [libata]
->  [<ffffffffa00eff8d>] ? ata_scsi_cmd_error_handler+0xdd/0x160 [libata]
->  [<ffffffffa00f59d7>] ata_scsi_error+0xa7/0xf0 [libata]
->  [<ffffffffa00913ba>] scsi_error_handler+0xaa/0x560 [scsi_mod]
->  [<ffffffffa0091310>] ? scsi_eh_get_sense+0x180/0x180 [scsi_mod]
->  [<ffffffff81098eb8>] kthread+0xd8/0xf0
->  [<ffffffff815d913f>] ret_from_fork+0x1f/0x40
->  [<ffffffff81098de0>] ? kthread_worker_fn+0x170/0x170
-> ---[ end trace 8b7501047e928a17 ]---
-> 
-> Removed the unnecessary code and let ata_scsi_translate() do the job.
-> 
-> Also, since ata_mselect_control() has no ATA command to send to the
-> device, ata_scsi_mode_select_xlat() should return 1 for it, so that
-> ata_scsi_translate() will finish early to avoid ata_qc_issue().
-> 
-> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+On Tue, Aug 9, 2016 at 3:09 AM, Damien Le Moal <Damien.LeMoal@hgst.com> wrote:
+>> On Aug 9, 2016, at 15:47, Hannes Reinecke <hare@suse.de> wrote:
 
-Applied to libata/for-4.9.
+[trim]
 
-Thanks.
+>>> Since disk type == 0 for everything that isn't HM so I would prefer the
+>>> sysfs 'zoned' file just report if the drive is HA or HM.
+>>>
+>> Okay. So let's put in the 'zoned' attribute the device type:
+>> 'host-managed', 'host-aware', or 'device managed'.
+>
+> I hacked your patches and simply put a "0" or "1" in the sysfs zoned file.
+> Any drive that has ZBC/ZAC command support gets a "1", "0" for everything
+> else. This means that drive managed models are not exposed as zoned block
+> devices. For HM vs HA differentiation, an application can look at the
+> device type file since it is already present.
+>
+> We could indeed set the "zoned" file to the device type, but HM drives and
+> regular drives will both have "0" in it, so no differentiation possible.
+> The other choice could be the "zoned" bits defined by ZBC, but these
+> do not define a value for host managed drives, and the drive managed value
+> being not "0" could be confusing too. So I settled for a simple 0/1 boolean.
+
+This seems good to me.
+
+>>>> 2) Add ioctls for zone management:
+>>>> Report zones (get information from RB tree), reset zone (simple wrapper
+>>>> to ioctl for block discard), open zone, close zone and finish zone. That
+>>>> will allow mkfs like tools to get zone information without having to parse
+>>>> thousands of sysfs files (and can also be integrated in libzbc block backend
+>>>> driver for a unified interface with the direct SG_IO path for kernels without
+>>>> the ZBC code enabled).
+>>>
+>>> I can add finish zone ... but I really can't think of a use for it, myself.
+>>>
+>> Which is not the point. The standard defines this, so clearly someone
+>> found it a reasonable addendum. So let's add this for completeness.
+
+Agreed.
+
+> Done: I hacked Shaun ioctl code and added finish zone too. The
+> difference with Shaun initial code is that the ioctl are propagated down to
+> the driver (__blkdev_driver_ioctl -> sd_ioctl) so that there is no need for
+> BIO request definition for the zone operations. So a lot less code added.
+
+The purpose of the BIO flags is not to enable the ioctls so much as
+the other way round. Creating BIO op's is to enable issuing ZBC
+commands from device mapper targets and file systems without some
+heinous ioctl hacks.
+Making the resulting block layer interfaces available via ioctls is just a
+reasonable way to exercise the code ... or that was my intent.
+
+> The ioctls do not mimic exactly the ZBC standard. For instance, there is no
+> reporting options for report zones, nor is the "all" bit supported for open,
+> close or finish zone commands. But the information provided on zones is complete
+> and maps to the standard definitions.
+
+For the reporting options I have planned to reuse the stream_id in
+struct bio when that is formalized. There are certainly other places in
+struct bio to stuff a few extra bits ...
+
+As far as the all bit ... this is being handled by all the zone action
+commands. Just pass a sector of ~0ul and it's handled in sd.c by
+sd_setup_zone_action_cmnd().
+
+Apologies as apparently my documentation here is lacking :-(
+
+> I also added a reset_wp ioctl for completeness, but this one simply calls
+> blkdev_issue_discard internally, so it is in fact equivalent to the BLKDISCARD
+> ioctl call with a range exactly aligned on a zone.
+
+I'm confused as my patch set includes a Reset WP (BLKRESETZONE) that
+creates a REQ_OP_ZONE_RESET .. same as open and close. My
+expectation being that BLKDISCARD doesn't really need yet another alias.
+
+[trim]
+
+> Did that too. The blk_zone struct is now exactly 64B. I removed the per zone
+
+Thanks .. being a cache line is harder to whinge about...
+
+> spinlock and replaced it with a flag so that zones can still be locked
+> independently using wait_on_bit_lock & friends (I added the functions
+> blk_zone_lock, blk_zone_trylock and blk_zone_unlock to do that). This per zone
+> locking comes in handy to implement the ioctls code without stalling the command
+> queue for read, writes and discard on different zones.
+>
+> I however kept the zone length in the structure. The reason for doing so is that
+> this allows supporting drives with non-constant zone sizes, albeit with a more
+> limited interface since in such case the device chunk_sectors is not set (that
+> is how a user or application can detect that the zones are not constant size).
+> For these drives, the block layer may happily merge BIOs across zone boundaries
+> and the discard code will not split and align calls on the zones. But upper layers
+> (an FS or a device mapper) can still do all this by themselves if they want/can
+> support non-constant zone sizes.
+>
+> The only exception is drives like the Seagate one with only the last zone of a
+> different size. This case is handled exactly as if all zones are the same size
+> simply because any operation on the last smaller zone will naturally align as
+> the checks of operation size against the drive capacity will do the right things.
+>
+> The ioctls work for all cases (drive with constant zone size or not). This is again
+> to allow supporting eventual weird drives at application level. I integrated all
+> these ioctl into libzbc block device backend driver and everything is fine. Can't
+> tell the difference with direct-to-drive SG_IO accesses. But unlike these, the zone
+> ioctls keep the zone information RB-tree cache up to date.
+>
+>>
+>> I will be updating my patchset accordingly.
+>
+> I need to cleanup my code and rebase on top of 4.8-rc1. Let me do this and I will send
+> everything for review. If you have any comment on the above, please let me know and
+> I will be happy to incorporate changes.
+>
+> Best regards.
+>
+>
+> ------------------------
+> Damien Le Moal, Ph.D.
+> Sr. Manager, System Software Group, HGST Research,
+> HGST, a Western Digital brand
+> Damien.LeMoal@hgst.com
+> (+81) 0466-98-3593 (ext. 513593)
+> 1 kirihara-cho, Fujisawa,
+> Kanagawa, 252-0888 Japan
+> www.hgst.com
+>
+> Western Digital Corporation (and its subsidiaries) E-mail Confidentiality Notice & Disclaimer:
+>
+> This e-mail and any files transmitted with it may contain confidential or legally privileged information of WDC and/or its affiliates, and are intended solely for the use of the individual or entity to which they are addressed. If you are not the intended recipient, any disclosure, copying, distribution or any action taken or omitted to be taken in reliance on it, is prohibited. If you have received this e-mail in error, please notify the sender immediately and delete the e-mail in its entirety from your system.
+>
+
+
 
 -- 
-tejun
+Shaun Tancheff
