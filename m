@@ -1,50 +1,61 @@
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
-Subject: [PATCH 6/6] cxlflash: Update documentation
-Date: Tue,  9 Aug 2016 18:40:13 -0500
-Message-ID: <1470786013-9390-1-git-send-email-mrochs@linux.vnet.ibm.com>
-References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39259 "EHLO
-	mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-	by vger.kernel.org with ESMTP id S932614AbcHIXkY (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 9 Aug 2016 19:40:24 -0400
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u79Ncwxh120141
-	for <linux-scsi@vger.kernel.org>; Tue, 9 Aug 2016 19:40:24 -0400
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-	by mx0a-001b2d01.pphosted.com with ESMTP id 24qm9sjgxa-1
-	(version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 09 Aug 2016 19:40:23 -0400
-Received: from localhost
-	by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-	for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
-	Tue, 9 Aug 2016 19:40:22 -0400
-In-Reply-To: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Regarding AHCI_MAX_SG and (ATA_HORKAGE_MAX_SEC_1024)
+Date: Tue, 9 Aug 2016 23:26:13 -0400
+Message-ID: <20160810032613.GA25053@mtj.duckdns.org>
+References: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAGnHSEnsfmO8ydLZGBmEXgRCYTZfy+sR3knCWfBhCz6_vLZMEw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: linux-ide@vger.kernel.org, dmilburn@redhat.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-Update the block library link in the API documentation.
+Hello, Tom.
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
- Documentation/powerpc/cxlflash.txt | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Sun, Aug 07, 2016 at 10:10:17PM +0800, Tom Yan wrote:
+> So the (not so) recent bump of BLK_DEF_MAX_SECTORS from 1024 to 2560
+> (commit d2be537c3ba3) seemed to have caused trouble to some of the ATA
+> devices, which were then worked around with ATA_HORKAGE_MAX_SEC_1024.
+> 
+> However, I am suspecting that the bump of BLK_DEF_MAX_SECTORS is not
+> the "real" cause of the trouble, but the fact that AHCI_MAX_SG has
+> been set to a weird value of 168 (with a comment "hardware max is
+> 64K", which neither seem to make any sense).
 
-diff --git a/Documentation/powerpc/cxlflash.txt b/Documentation/powerpc/cxlflash.txt
-index f4c1190..6d9a2ed 100644
---- a/Documentation/powerpc/cxlflash.txt
-+++ b/Documentation/powerpc/cxlflash.txt
-@@ -121,7 +121,7 @@ Block library API
-     below.
- 
-     The block library can be found on GitHub:
--    http://www.github.com/mikehollinger/ibmcapikv
-+    http://github.com/open-power/capiflash
- 
- 
- CXL Flash Driver IOCTLs
+Hmmm.. why not?  The hardware limit is 64k and the driver is using a
+lower limit of 168 most likely because it doesn't make noticeable
+difference beyond certain point and it determines the size of
+contiguous memory which has to be allocated for the command table.
+Each sg entry is 16 bytes.  Pushing it to the hardware limit would
+require an order 9 allocation for each port.
+
+> AHCI_MAX_SG is used to set the sg_tablesize (i.e. max_segments,
+> apparently), which is apparently used to derive the actual "request
+> size" (that is, if it is lower than max_sectors(_kb), it will be the
+> limiting factor instead).
+>
+> For example, no matter if the drive has max_sectors set to 2560, or to
+> 65535 (by adding it as the Optimal Transfer Length to libata's SATL,
+> which is also max_hw_sectors that is set from ATA_MAX_SECTORS_LBA48),
+> "avgrq-sz" in `iostat` will be capped at 1344 (168 * 8).
+
+Not necessarily.  A single sg entry can point to an area larger than
+PAGE_SIZE.
+
+> However, if I change AHCI_MAX_SG to 128 (which is also the
+> sg_tablesize set in libata.h from LIBATA_MAX_PRD), "avgrq-sz" in
+> `iostat` will be capped at 1024 (128 * 8), which should make
+> ATA_HORKAGE_MAX_SEC_1024 unnecessary.
+> 
+> So why has AHCI_MAX_SG been set to 168 anyway?
+
+As written above, that probably makes the ahci command table size
+nicely aligned.
+
+Thanks.
+
 -- 
-2.1.0
-
+tejun
