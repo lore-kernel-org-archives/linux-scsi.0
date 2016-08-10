@@ -1,95 +1,98 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Wed, 10 Aug 2016 16:32:39 +0800
-Message-ID: <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
- <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com> <20160810041042.GH25053@mtj.duckdns.org>
+From: Markus Mayer <mmayer-dY08KVG/lbpWk0Htik3J/w@public.gmane.org>
+Subject: [PATCH v5 0/7] lib: string: add functions to case-convert
+	strings
+Date: Wed, 10 Aug 2016 14:04:50 -0700
+Message-ID: <1470863097-21138-1-git-send-email-mmayer@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f195.google.com ([209.85.220.195]:33081 "EHLO
-	mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S933023AbcHJVEE (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2016 17:04:04 -0400
-In-Reply-To: <20160810041042.GH25053@mtj.duckdns.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/nouveau>
+List-Post: <mailto:nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+List-Help: <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/nouveau>,
+ <mailto:nouveau-request-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org?subject=subscribe>
+Errors-To: nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org
+Sender: "Nouveau" <nouveau-bounces-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org>
+To: Andrew Morton <akpm-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Al Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Rasmus Villemoes <linux-qQsb+v5E8BnlAoU/VqSP6n9LOBIZ5rWg@public.gmane.org>, Chris Metcalf <cmetcalf-d5a29ZRxExrQT0dZR+AlfA@public.gmane.org>, Kees Cook <keescook-F7+t8E8rja9g9hUCZPvPmw@public.gmane.org>
+Cc: devel-gWbeCf7V1WCQmaza687I9mD2FQJk+8+b@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pm-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nouveau-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, speakup-UPO/6gOIxNZglr+F8WMZYdi2O/JbrIOy@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, dri-devel-PD4FTy7X32lNgt0PjOBp9y5qC8QIuHrW@public.gmane.org, linux-acpi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-I have to admit that libata may not be the right place to deal with my
-concern over the current BLK_DEF_MAX_SECTORS, which seems non-sensical
-to me. In the original commit message:
-
-(d2be537c3ba3, "block: bump BLK_DEF_MAX_SECTORS to 2560")
-"A value of 2560 (1280k) will accommodate a 10-data-disk stripe write
-with chunk size 128k...a value of 1280 does not show a big performance
-difference from 512, but will hopefully help software RAID setups
-using SATA disks, as reported by Christoph."
-
-So I have no idea at all why the bump was allowed. What so special
-about "10-data-disk stripe write with chunk size 128k", that we would
-want to make a block layer general default base on that?
-
-The macro appeared to be used by the aoeblk driver only. Yet since a
-later commit (ca369d51b3e1, "block/sd: Fix device-imposed transfer
-length limits"), the scsi disk driver will use it to set the effective
-max_sectors(_kb) for devices that does not report Optimal Transfer
-Length in the Block Limit VPD (which is the case of libata's SATL).
-
-So the consequence is, ATA drives with max_hw_sectors(_kb) (i.e.
-dev->max_sectors set in libata-core.c) set to higher than
-BLK_DEF_MAX_SECTORS will end up having it as the effective
-max_sectors. Not only the value is non-sensical, but also the logic.
-(Btw, ATA_HORKAGE_MAX_SEC_LBA48 will sort of become ineffective
-because of this.)
-
-Now let's just come back to libata. I've thought of reporting
-dev->max_sectors as Optimal Transfer Length in the SATL. However, I am
-not sure if it is a safe thing to do, because we set it as high as
-65535 for devices with LBA48 devices. Does such a high max_sectors
-ever make sense in libata's case?
-
-That's why I took the approach of the USB Attached SCSI driver. That
-is, we only explicitly set max_hw_sectors in cases that is strictly
-necessary (e.g. no LBA48 support, horkages). Otherwise we'll leave
-request queue as-is.
-
-I've also thought of reporting dev->max_sectors as Optimal Transfer
-Length but cap it at 1024, so that users will still be allowed to bump
-max_sectors_kb up to 32767 kb, but we'll always start at 512 kb or
-less. But this approach have a side-effect that I find ugly, that is
-the block layer limit "io_opt" could be set to a value that is not
-max_hw_sectors(_kb). I have also no idea about the consequence of
-having io_opt set.
-
-On 10 August 2016 at 12:10, Tejun Heo <tj@kernel.org> wrote:
-> Hello,
->
-> On Tue, Aug 09, 2016 at 10:45:47PM +0800, tom.ty89@gmail.com wrote:
->> From: Tom Yan <tom.ty89@gmail.com>
->>
->> Currently block layer limit max_hw_sectors is set to
->> ATA_MAX_SECTORS_LBA48 (65535), for devices with LBA48 support.
->>
->> However, block layer limit max_sectors (which is the effective
->> one; also adjustable, upper-bounded by max_hw_sectors) is set to
->> BLK_DEF_MAX_SECTORS (currently 2560) by the scsi disk driver,
->> since libata's SATL does not report an Optimal Transfer Length.
->>
->> This does not make much sense, especially when the current
->> BLK_DEF_MAX_SECTORS appears to be unsafe for some ATA devices
->> (see ATA_HORKAGE_MAX_SEC_1024). Truth is, the current value
->> appears to be arbitrary anyway. See commit d2be537c3ba3
->> ("block: bump BLK_DEF_MAX_SECTORS to 2560").
->>
->> Therefore, avoid setting dev->max_sectors when it is strictly
->> necessary. Leave it as 0 otherwise, so that both block layer
->> limits will remain as SCSI_DEFAULT_MAX_SECTORS (currently 1024).
->
-> These changes feel rather gratuitous.  What's the upside here?
->
-> Thanks.
->
-> --
-> tejun
+VGhpcyBzZXJpZXMgaW50cm9kdWNlcyBhIGZhbWlseSBvZiBnZW5lcmljIHN0cmluZyBjYXNlIGNv
+bnZlcnNpb24KZnVuY3Rpb25zLiBUaGlzIGtpbmQgb2YgZnVuY3Rpb25hbGl0eSBpcyBuZWVkZWQg
+aW4gc2V2ZXJhbCBwbGFjZXMgaW4KdGhlIGtlcm5lbC4gUmlnaHQgbm93LCBldmVyeWJvZHkgc2Vl
+bXMgdG8gYmUgaW1wbGVtZW50aW5nIHRoZWlyIG93bgpjb3B5IG9mIHRoaXMgZnVuY3Rpb25hbGl0
+eS4KCkJhc2VkIG9uIHRoZSBkaXNjdXNzaW9uIG9mIHRoZSBwcmV2aW91cyB2ZXJzaW9uIG9mIHRo
+aXMgc2VyaWVzWzFdIGFuZAp0aGUgdXNlIGNhc2VzIGZvdW5kIGluIHRoZSBrZXJuZWwsIGl0IGRv
+ZXMgbG9vayBsaWtlIGhhdmluZyBzZXZlcmFsCmZsYXZvdXJzIG9mIGNhc2UgY29udmVyc2lvbiBm
+dW5jdGlvbnMgaXMgYmVuZWZpY2lhbC4gVGhlIHVzZSBjYXNlcyBmYWxsCmludG8gdGhyZWUgY2F0
+ZWdvcmllczoKICAgIC0gY29weWluZyBhIHN0cmluZyBhbmQgY29udmVydGluZyB0aGUgY2FzZSB3
+aGlsZSBzcGVjaWZ5aW5nIGEKICAgICAgbWF4aW11bSBsZW5ndGggdG8gbWltaWMgc3RybGNweSgp
+CiAgICAtIGNvcHlpbmcgYSBzdHJpbmcgYW5kIGNvbnZlcnRpbmcgdGhlIGNhc2Ugd2l0aG91dCBz
+cGVjaWZ5aW5nIGEKICAgICAgbGVuZ3RoIHRvIG1pbWljIHN0cmNweSgpCiAgICAtIGNvbnZlcnRp
+bmcgdGhlIGNhc2Ugb2YgYSBzdHJpbmcgaW4tcGxhY2UgKGkuZS4gbW9kaWZ5aW5nIHRoZQogICAg
+ICBzdHJpbmcgdGhhdCB3YXMgcGFzc2VkIGluKQoKQ29uc2VxdWVudGx5LCBJIGFtIHByb3Bvc2lu
+ZyB0aGVzZSBuZXcgZnVuY3Rpb25zOgogICAgaW50IHN0cmxjcHl0b3VwcGVyKGNoYXIgKmRzdCwg
+Y29uc3QgY2hhciAqc3JjLCBzaXplX3QgbGVuKTsKICAgIGludCBzdHJsY3B5dG9sb3dlcihjaGFy
+ICpkc3QsIGNvbnN0IGNoYXIgKnNyYywgc2l6ZV90IGxlbik7CiAgICB2b2lkIHN0cmNweXRvdXBw
+ZXIoY2hhciAqZHN0LCBjb25zdCBjaGFyICpzcmMpOwogICAgdm9pZCBzdHJjcHl0b2xvd2VyKGNo
+YXIgKmRzdCwgY29uc3QgY2hhciAqc3JjKTsKICAgIHZvaWQgc3RydG91cHBlcihjaGFyICpzKTsK
+ICAgIHZvaWQgc3RydG9sb3dlcihjaGFyICpzKTsKClNldmVyYWwgZHJpdmVycyBhcmUgYmVpbmcg
+bW9kaWZpZWQgdG8gbWFrZSB1c2Ugb2YgdGhlIGZ1bmN0aW9ucyBhYm92ZS4KQW5vdGhlciBkcml2
+ZXIgdGhhdCBhbHNvIG1ha2VzIHVzZSBvZiB0aGlzIGZ1bmN0aW9uYWxpdHkgd2lsbCBiZQpzdWJt
+aXR0ZWQgdXBzdHJlYW0gc2hvcnRseSwgd2hpY2ggcHJvbXB0ZWQgdGhpcyB3aG9sZSBleGVyY2lz
+ZS4KClRoZSBjaGFuZ2VzIG1hZGUgaGVyZSBoYXZlIGJlZW4gY29tcGlsZS10ZXN0ZWQsIGJ1dCBu
+b3QgdHJpZWQgb3V0LCBkdWUKdG8gbGFjayBvZiByZXF1aXJlZCBoYXJkd2FyZS4KCkNoYW5nZXMg
+c2luY2UgdjQ6CiAgLSByZWJhc2VkIG9uIDQuOC1yYzE7IHRoaXMgb25seSBhZmZlY3RzIHBhdGNo
+IDYvNyAoZ2sxMDQpIGFuZCBvbmx5IHRoZQogICAgcGF0Y2ggY29udGV4dCwgbm90IHRoZSBwYXRj
+aCBpdHNlbGYKICAtIGFkZGVkIGFuIEFDSyB0byBwYXRjaCA0LzcgKHNwZWFrdXApCiAgLSBhZGRl
+ZCBhbiBBQ0sgdG8gcGF0Y2ggNy83IChwb3dlcl9zdXBwbHkpCgpDaGFuZ2VzIHNpbmNlIHYzOgog
+IC0gc3RybGNweXRvdXBwZXIoKSBhbmQgc3RybGNweXRvbG93ZXIoKSByZXR1cm4gbGVuZ3RoIG9m
+IGRlc3RpbmF0aW9uCiAgICBvciAtRTJCSUcgKHNlZSBbMl0pCiAgLSB3ZSB1c2UgfihzaXplX3Qp
+MCBpbnN0ZWFkIG9mIC0xIHRvIGNvcHkgc3RyaW5ncyBvZiBhcmJpdHJhcnkgbGVuZ3RoCiAgICBp
+biBzdHJjcHl0byooKSBhbmQgc3RydG8qKCkKICAtIEEgZmV3IEFDS3MgYWRkZWQKCkNoYW5nZXMg
+c2luY2UgdjI6CiAgLSB1c2Ugc3RybGNweSgpIHNlbWFudGljcyBub3Qgc3RybmNweSgpIHNlbWFu
+dGljcywgaS5lLiBndWFyYW50ZWUKICAgIE5VTEwgdGVybWluYXRpb24KICAtIGFzIGEgcmVzdWx0
+IHN0cm5jcHl0bzx1cHBlcnxsb3dlcj4gYXJlIG5vdyBjYWxsZWQKICAgIHN0cmxjcHl0bzx1cHBl
+cnxsb3dlcj4KICAtIG1ha2UgZnVuY3Rpb25zIHZvaWQKICAtIHVzZSBsZW4gPT0gLTEgKFNJWkVf
+TUFYKSBhcyBuby1saW1pdCBpbmRpY2F0b3IgcmF0aGVyIHRoZW4gbGVuID09IDAKICAtIGNoYW5n
+ZSBQQVRDSCAyLzcgdG8gbWF0Y2ggc3RybGNweSgpIHNlbWFudGljcwogIC0gY2hhbmdlIFBBVENI
+IDQvNyB0byBtYXRjaCBzdHJsY3B5KCkgc2VtYW50aWNzCgpDaGFuZ2VzIHNpbmNlIHYxOgogIC0g
+ZXhwYW5kZWQgc3RydG9sb3dlcigpIGludG8gYSBmYW1pbHkgb2YgZnVuY3Rpb25zIHRoYXQgY292
+ZXIgdXNlCiAgICBjYXNlcyB3aGVuIGEgbGVuZ3RoIGFyZ3VtZW50IGlzIG9yIGlzbid0IHJlcXVp
+cmVkIGFuZCB0aGF0IHN1cHBvcnQKICAgIGNvcHlpbmcgdGhlIHN0cmluZyBpbnRvIGEgbmV3IGJ1
+ZmZlciBvciBjaGFuZ2luZyBpdCBpbi1wbGFjZSAKICAtIGNoYW5nZWQgdGhlIGZ1bmN0aW9uIHNl
+bWFudGljcyB0byByZXR1cm4gYSBwb2ludGVyIHRvIHRoZQogICAgdGVybWluYXRpbmcgJ1wwJyBj
+aGFyYWN0ZXIgb2YgdGhlIG1vZGlmaWVkIHN0cmluZwogIC0gYWRkZWQgc3RydG91cHBlcigpIGZ1
+bmN0aW9uYWxpdHkgbWlycm9yaW5nIHRoZSBhYm92ZQogIC0gZHJvcHBlZCB0aGUgQUNQSUNBIHBh
+dGNoLCBzaW5jZSB0aGF0IGNvZGUgaXMgT1MgaW5kZXBlbmRlbnQgYW5kCiAgICBjYW4ndCByZWx5
+IG9uIGEgTGludXggbGlicmFyeSBmdW5jdGlvbiAoc2VlIFszXSkKICAtIEFkZGVkIHR3byBuZXcg
+cGF0Y2hlcyByZXBsYWNpbmcgc3RydG91cHBlcigpIGltcGxlbWVudGF0aW9ucwoKWzFdIGh0dHBz
+Oi8vbGttbC5vcmcvbGttbC8yMDE2LzYvMzAvNzI3ClsyXSBodHRwczovL2xrbWwub3JnL2xrbWwv
+MjAxNi83LzEwLzQKWzNdIGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE2LzcvMS85CgpNYXJrdXMg
+TWF5ZXIgKDcpOgogIGxpYjogc3RyaW5nOiBhZGQgZnVuY3Rpb25zIHRvIGNhc2UtY29udmVydCBz
+dHJpbmdzCiAgZHJtL25vdXZlYXUvY29yZTogbWFrZSB1c2Ugb2YgbmV3IHN0cmxjcHl0b2xvd2Vy
+KCkgZnVuY3Rpb24KICBBQ1BJIC8gZGV2aWNlX3N5c2ZzOiBtYWtlIHVzZSBvZiBuZXcgc3RydG9s
+b3dlcigpIGZ1bmN0aW9uCiAgc3RhZ2luZzogc3BlYWt1cDogcmVwbGFjZSBzcGtfc3RybHdyKCkg
+d2l0aCBzdHJsY3B5dG9sb3dlcigpCiAgaXNjc2ktdGFyZ2V0OiByZXBsYWNlIGlzY3NpX2luaXRp
+YXRvcm5hbWVfdG9sb3dlcigpIHdpdGggc3RydG9sb3dlcigpCiAgZHJtL25vdXZlYXUvZmlmby9n
+azEwNDogbWFrZSB1c2Ugb2YgbmV3IHN0cmNweXRvdXBwZXIoKSBmdW5jdGlvbgogIHBvd2VyX3N1
+cHBseTogbWFrZSB1c2Ugb2YgbmV3IHN0cmNweXRvdXBwZXIoKSBmdW5jdGlvbgoKIGRyaXZlcnMv
+YWNwaS9kZXZpY2Vfc3lzZnMuYyAgICAgICAgICAgICAgICAgICAgICB8ICA0ICstLQogZHJpdmVy
+cy9ncHUvZHJtL25vdXZlYXUvbnZrbS9jb3JlL2Zpcm13YXJlLmMgICAgIHwgIDkgKy0tLS0KIGRy
+aXZlcnMvZ3B1L2RybS9ub3V2ZWF1L252a20vZW5naW5lL2ZpZm8vZ2sxMDQuYyB8ICA1ICstLQog
+ZHJpdmVycy9wb3dlci9wb3dlcl9zdXBwbHlfc3lzZnMuYyAgICAgICAgICAgICAgIHwgMTMgKysr
+LS0tLQogZHJpdmVycy9zdGFnaW5nL3NwZWFrdXAva29iamVjdHMuYyAgICAgICAgICAgICAgIHwg
+IDMgKy0KIGRyaXZlcnMvc3RhZ2luZy9zcGVha3VwL21haW4uYyAgICAgICAgICAgICAgICAgICB8
+ICAzICstCiBkcml2ZXJzL3N0YWdpbmcvc3BlYWt1cC9zcGVha3VwLmggICAgICAgICAgICAgICAg
+fCAgMSAtCiBkcml2ZXJzL3N0YWdpbmcvc3BlYWt1cC92YXJoYW5kbGVycy5jICAgICAgICAgICAg
+fCAxMiAtLS0tLS0tCiBkcml2ZXJzL3RhcmdldC9pc2NzaS9pc2NzaV90YXJnZXRfbmVnby5jICAg
+ICAgICAgfCAxNyArLS0tLS0tLS0KIGluY2x1ZGUvbGludXgvc3RyaW5nLmggICAgICAgICAgICAg
+ICAgICAgICAgICAgICB8IDQwICsrKysrKysrKysrKysrKysrKysrKwogbGliL3N0cmluZy5jICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHwgNDYgKysrKysrKysrKysrKysrKysr
+KysrKysrCiAxMSBmaWxlcyBjaGFuZ2VkLCA5OCBpbnNlcnRpb25zKCspLCA1NSBkZWxldGlvbnMo
+LSkKCi0tIAoyLjcuNAoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX18KTm91dmVhdSBtYWlsaW5nIGxpc3QKTm91dmVhdUBsaXN0cy5mcmVlZGVza3RvcC5vcmcK
+aHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9ub3V2ZWF1Cg==
