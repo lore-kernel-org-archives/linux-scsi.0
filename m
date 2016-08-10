@@ -1,77 +1,95 @@
-From: Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
-Subject: RE: [PATCH 0/5] bfa: fix W=1 build warnings
-Date: Wed, 10 Aug 2016 05:28:02 +0000
-Message-ID: <MWHPR11MB1901695069BD8CDA17D8AF19901D0@MWHPR11MB1901.namprd11.prod.outlook.com>
-References: <20160802152250.1964074-1-arnd@arndb.de>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Wed, 10 Aug 2016 17:38:16 -0400 (EDT)
+Message-ID: <609737535.572896.1470865096150.JavaMail.zimbra@redhat.com>
+References: <20160801175948.GA6685@redhat.com> <077d2708-3360-d8d7-fb3c-d3a73a1e03ee@sandisk.com> <1345038259.188657.1470696767844.JavaMail.zimbra@redhat.com> <1771573384.192110.1470701350622.JavaMail.zimbra@redhat.com> <2aaad6b7-bfa4-b965-53bf-4420fe01d3e5@sandisk.com> <1494059467.386778.1470762767417.JavaMail.zimbra@redhat.com> <ad12fd05-f931-30a5-2efd-3d8a171a73cb@sandisk.com> <967089395.387512.1470763275007.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160802152250.1964074-1-arnd@arndb.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Baoyou Xie <baoyou.xie@linaro.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx6-phx2.redhat.com ([209.132.183.39]:41610 "EHLO
+	mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751124AbcHJViW (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2016 17:38:22 -0400
+In-Reply-To: <967089395.387512.1470763275007.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Hi,
-    Thanks for the patches. Changes look fine to me, other than a minor change in patch-1 and the build issue due to the removal of bfa_isr_disable()declaration.
 
-Thanks,
-Sudarsana
 
------Original Message-----
-From: Arnd Bergmann [mailto:arnd@arndb.de] 
-Sent: 02 August 2016 20:53
-To: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>; Sudarsana Kalluru <Sudarsana.Kalluru@qlogic.com>
-Cc: James E . J . Bottomley <jejb@linux.vnet.ibm.com>; Martin K . Petersen <martin.petersen@oracle.com>; linux-scsi <linux-scsi@vger.kernel.org>; linux-kernel <linux-kernel@vger.kernel.org>; Baoyou Xie <baoyou.xie@linaro.org>; Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH 0/5] bfa: fix W=1 build warnings
+----- Original Message -----
+> From: "Laurence Oberman" <loberman@redhat.com>
+> To: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer" <snitzer@redhat.com>, "Johannes Thumshirn"
+> <jthumshirn@suse.de>
+> Sent: Tuesday, August 9, 2016 1:21:15 PM
+> Subject: Re: [dm-devel] dm-mq and end_clone_request()
+> 
+> 
+> 
+> ----- Original Message -----
+> > From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> > To: "Laurence Oberman" <loberman@redhat.com>
+> > Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer"
+> > <snitzer@redhat.com>, "Johannes Thumshirn"
+> > <jthumshirn@suse.de>
+> > Sent: Tuesday, August 9, 2016 1:16:52 PM
+> > Subject: Re: [dm-devel] dm-mq and end_clone_request()
+> > 
+> > On 08/09/2016 10:12 AM, Laurence Oberman wrote:
+> > > I was talking about this patch
+> > >
+> > > --- a/drivers/scsi/scsi_scan.c
+> > > +++ b/drivers/scsi/scsi_scan.c
+> > > @@ -1890,10 +1890,11 @@ void scsi_forget_host(struct Scsi_Host *shost)
+> > >   restart:
+> > >          spin_lock_irqsave(shost->host_lock, flags);
+> > >          list_for_each_entry(sdev, &shost->__devices, siblings) {
+> > > -                if (sdev->sdev_state == SDEV_DEL)
+> > > +                if (sdev->sdev_state == SDEV_DEL ||
+> > > scsi_device_get(sdev)
+> > > < 0)
+> > >                          continue;
+> > >                  spin_unlock_irqrestore(shost->host_lock, flags);
+> > >                  __scsi_remove_device(sdev);
+> > > +                scsi_device_put(sdev);
+> > >                  goto restart;
+> > >          }
+> > >          spin_unlock_irqrestore(shost->host_lock, flags);
+> > 
+> > Hello Laurence,
+> > 
+> > Did you run your tests with that patch applied? If so, it would help if
+> > you could rerun your tests without that patch. If the above patch makes
+> > a difference it means that it can happen that __scsi_remove_device()
+> > does not change the device state into SDEV_DEL. That's a bug and we need
+> > to know whether or not __scsi_remove_device() behaves correctly.
+> > 
+> > Thanks,
+> > 
+> > Bart.
+> > 
+> Yes Sir, I ran all yesterdays tests on your kernel with that patch applied.
+> Of course it may well just be luck/coincidence that the host delete race is
+> no longer happening
+> so I agree we need to re-run the tests so I will revert and re-run.
+> I will probably only get back to you tomorrow with the results.
+> 
+> Thanks
+> Laurence
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Hello Bart
 
-I tried to build an allmodconfig kernel with W=1, and the bfa driver stuck out for having the most warnings in one file, so I decided to send patches for all of these and make the driver build cleanly with the extra warnings enabled.
+I only just got time now to revert that patch and build a kernel.
+Will test this tonight and let you know if I am back to seeing panics sporadically without the patch.
+As already mentioned, this is a different configuration to what I had when I was able to reproduce the panic.
+This means the lack of hitting this stack trace and panic may turn out to have nothing to do with the patch I applied.
 
-As most warnings were for functions that lacked a 'static', I marked them that way, and also used a script to look for further functions that have a declaration but can also be static.
-
-Overall, this saves around 10% of the size of the driver
-module:
-
-   text	   data	    bss	    dec	    hex	filename
- 232027	   3012	    976	 236015	  399ef	drivers/scsi/bfa/bfa-before.o
- 221851	   2996	    908	 225755	  371db	drivers/scsi/bfa/bfa-after.o
-
-	Arnd
-
-Arnd Bergmann (5):
-  bfa: mark symbols static where possible
-  bfa: remove unused variables
-  bfa: rename some global variables
-  bfa: remove unused functions from fbbuild.c
-  bfa: remove more unused functions
-
- drivers/scsi/bfa/bfa.h           |  17 --
- drivers/scsi/bfa/bfa_core.c      |  54 +---
- drivers/scsi/bfa/bfa_fcbuild.c   | 609 +--------------------------------------
- drivers/scsi/bfa/bfa_fcbuild.h   |  90 ------
- drivers/scsi/bfa/bfa_fcpim.c     |  81 +++---
- drivers/scsi/bfa/bfa_fcpim.h     |  26 --
- drivers/scsi/bfa/bfa_fcs.c       |  31 +-
- drivers/scsi/bfa/bfa_fcs.h       |  54 ----
- drivers/scsi/bfa/bfa_fcs_lport.c | 211 +++-----------  drivers/scsi/bfa/bfa_fcs_rport.c |  48 +--
- drivers/scsi/bfa/bfa_ioc.c       |  83 ++----
- drivers/scsi/bfa/bfa_ioc.h       |  25 --
- drivers/scsi/bfa/bfa_ioc_cb.c    |   3 +-
- drivers/scsi/bfa/bfa_ioc_ct.c    |  12 +-
- drivers/scsi/bfa/bfa_plog.h      |   8 -
- drivers/scsi/bfa/bfa_port.c      |   6 +-
- drivers/scsi/bfa/bfa_port.h      |   1 -
- drivers/scsi/bfa/bfa_svc.c       |  95 ++----
- drivers/scsi/bfa/bfa_svc.h       |  17 --
- drivers/scsi/bfa/bfad.c          | 128 ++++----
- drivers/scsi/bfa/bfad_attr.c     |   9 +-
- drivers/scsi/bfa/bfad_bsg.c      | 224 +++++++-------
- drivers/scsi/bfa/bfad_drv.h      |  49 +---
- drivers/scsi/bfa/bfad_im.c       |  29 +-
- drivers/scsi/bfa/bfad_im.h       |  10 -
- 25 files changed, 395 insertions(+), 1525 deletions(-)
-
---
-2.9.0
+Thanks
+Laurence 
