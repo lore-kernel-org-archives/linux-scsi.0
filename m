@@ -1,39 +1,54 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ipr: Fix sync scsi scan
-Date: Wed, 10 Aug 2016 22:57:50 -0400
-Message-ID: <yq11t1wrp01.fsf@sermon.lab.mkp.net>
-References: <1470439261.2337.63.camel@HansenPartnership.com>
-	<87popjshn6.fsf@concordia.ellerman.id.au>
-	<11d0860f-b8dd-61a4-ac32-3ce6da208d74@linux.vnet.ibm.com>
-	<87vazaqw5k.fsf@concordia.ellerman.id.au>
+Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
+Date: Wed, 10 Aug 2016 23:37:25 -0400
+Message-ID: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+	<10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+	<20160810041042.GH25053@mtj.duckdns.org>
+	<CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <87vazaqw5k.fsf@concordia.ellerman.id.au> (Michael Ellerman's
-	message of "Tue, 09 Aug 2016 16:44:07 +1000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Ellerman <mpe@ellerman.id.au>
-Cc: Brian King <brking@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "aneesh.kumar@linux.vnet.ibm.com" <aneesh.kumar@linux.vnet.ibm.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
+	(Tom Yan's message of "Wed, 10 Aug 2016 16:32:39 +0800")
+Sender: linux-block-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Michael" == Michael Ellerman <mpe@ellerman.id.au> writes:
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
->> Sorry about that. I fixed up async scan and managed to break sync
->> scan...
->> 
->> This patch fixes it on my box. Does it fix the issue for you as well?
+Tom,
 
-Michael> Yes, thanks!
+Tom> Now let's just come back to libata. I've thought of reporting dev->
+Tom> max_sectors as Optimal Transfer Length in the SATL. However, I am
+Tom> not sure if it is a safe thing to do, because we set it as high as
+Tom> 65535 for devices with LBA48 devices. Does such a high max_sectors
+Tom> ever make sense in libata's case?
 
-Michael> If you like here's a:
+I don't agree with conflating the optimal transfer size and the maximum
+supported ditto. Submitting the largest possible I/O to a device does
+not guarantee that you get the best overall performance.
 
-Michael> Tested-by: Michael Ellerman <mpe@ellerman.id.au>
+ - max_hw_sectors is gated by controller DMA constraints.
 
-Michael> It would be good if we can we get that to Linus sooner rather
-Michael> than later.
+ - max_dev_sectors is set for devices that explicitly report a transfer
+   length limit.
 
-Brian: This was a wee bit short of a real patch submission but I hand
-applied it to 4.8/scsi-fixes.
+ - max_sectors, the soft limit for filesystem read/write requests,
+   should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
+   requests transfers to be aligned multiples of a different value
+   (typically the internal stripe size in large arrays).
+
+The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
+common workloads unless otherwise instructed by the storage device.
+
+We can have a discussion about what the right value for
+BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
+be the case that permitting large transfers significantly impacted
+interactive I/O performance. And finding a sweet spot that works for a
+wide variety of hardware, interconnects and workloads is obviously
+non-trivial.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
