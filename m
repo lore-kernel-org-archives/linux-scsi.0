@@ -1,46 +1,90 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain address.
-Date: Thu, 11 Aug 2016 09:59:12 +0200
-Message-ID: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+From: tom.ty89@gmail.com
+Subject: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
+Date: Thu, 11 Aug 2016 16:26:39 +0800
+Message-ID: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: tj@kernel.org, shaun.tancheff@seagate.com, shaun@tancheff.com, martin.petersen@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Since commit 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
-enclosures') ses_match_to_enclosure() is calling sas_get_address(),
-which is coming from commit bcf508c13385 ('scsi_transport_sas: add
-function to get SAS endpoint address'). sas_get_address() itself calls
-sas_sdev_to_rdev() which BUG_ON()s if a given scsi_device's rphy is
-not a SAS_END_DEVICE.
+From: Tom Yan <tom.ty89@gmail.com>
 
-As SAS Enclosure is a SAS expander device, we really shouldn't tie the
-lookup of a SAS address to the SAS End Device but the sas_rphy, which
-holds the address information.
+Currently we advertise Maximum Write Same Length based on the
+maximum number of sectors that one-block TRIM payload can cover.
+The field are used to derived discard_max_bytes and
+write_same_max_bytes limits in the block layer, which currently can
+at max be 0xffffffff (32-bit).
 
-Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS enclosures')
-Cc: stable@vger.kernel.org # v4.5+
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_transport_sas.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+However, with a AF 4Kn drive, the derived limits would be 65535 *
+64 * 4096 = 0x3fffc0000 (34-bit). Therefore, we now devide
+ATA_MAX_TRIM_RNUM with (logical sector size / 512), so that the
+derived limits will not overflow.
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 3f0ff07..6b6d7b0 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -390,9 +390,9 @@ EXPORT_SYMBOL(sas_remove_host);
-  */
- u64 sas_get_address(struct scsi_device *sdev)
+The limits are now also consistent among drives with different
+logical sector sizes. (Although that may or may not be what we
+want ultimately when the SCSI / block layer allows larger
+representation in the future.)
+
+Although 4Kn ATA SSDs may not be a thing on the market yet, this
+patch is necessary for forthcoming SCT Write Same translation
+support, which could be available on traditional HDDs where 4Kn is
+already a thing. Also it should not change the current behavior on
+drives with 512-byte logical sectors.
+
+Note: this patch is not about AF 512e drives.
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index be9c76c..dcadcaf 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -2295,6 +2295,7 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
+ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
  {
--	struct sas_end_device *rdev = sas_sdev_to_rdev(sdev);
-+	struct sas_rphy *rphy = target_to_rphy(sdev->sdev_target);
+ 	u16 min_io_sectors;
++	u32 sector_size;
  
--	return rdev->rphy.identify.sas_address;
-+	return rphy->identify.sas_address;
- }
- EXPORT_SYMBOL(sas_get_address);
+ 	rbuf[1] = 0xb0;
+ 	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
+@@ -2309,17 +2310,27 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+ 	min_io_sectors = 1 << ata_id_log2_per_physical_sector(args->id);
+ 	put_unaligned_be16(min_io_sectors, &rbuf[6]);
+ 
+-	/*
+-	 * Optimal unmap granularity.
+-	 *
+-	 * The ATA spec doesn't even know about a granularity or alignment
+-	 * for the TRIM command.  We can leave away most of the unmap related
+-	 * VPD page entries, but we have specifify a granularity to signal
+-	 * that we support some form of unmap - in thise case via WRITE SAME
+-	 * with the unmap bit set.
+-	 */
++	sector_size = ata_id_logical_sector_size(args->id);
+ 	if (ata_id_has_trim(args->id)) {
+-		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM, &rbuf[36]);
++		/*
++		 * Maximum write same length.
++		 *
++		 * Avoid overflow in discard_max_bytes and write_same_max_bytes
++		 * with AF 4Kn drives. Also make them consistent among drives
++		 * with different logical sector sizes.
++		 */
++		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM /
++				   (sector_size / 512), &rbuf[36]);
++
++		/*
++		 * Optimal unmap granularity.
++		 *
++		 * The ATA spec doesn't even know about a granularity or alignment
++		 * for the TRIM command.  We can leave away most of the unmap related
++		 * VPD page entries, but we have specifify a granularity to signal
++		 * that we support some form of unmap - in thise case via WRITE SAME
++		 * with the unmap bit set.
++		 */
+ 		put_unaligned_be32(1, &rbuf[28]);
+ 	}
  
 -- 
-1.8.5.6
+2.9.2
+
