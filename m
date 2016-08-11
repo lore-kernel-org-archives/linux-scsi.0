@@ -1,142 +1,67 @@
-From: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Subject: RE: [PATCH] mpt3sas: Fix resume on WarpDrive flash cards
-Date: Thu, 11 Aug 2016 15:39:26 +0530
-Message-ID: <b8dec47e2e0e473a676216ae4e42ccd3@mail.gmail.com>
-References: <1469894786-27917-1-git-send-email-gedwards@fireweed.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/10] zfcp: fix fc_host port_type with NPIV
+Date: Thu, 11 Aug 2016 13:19:22 +0200
+Message-ID: <68b6196f-4c93-2062-c796-95034a6fe981@suse.de>
+References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
+ <1470846653-90691-2-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1469894786-27917-1-git-send-email-gedwards@fireweed.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Greg Edwards <gedwards@fireweed.org>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1470846653-90691-2-git-send-email-maier@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "#2 . 6 . 30+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
- Please consider this patch as Acked-by: Chaitra P B
-<chaitra.basappa@broadcom.com>
+On 08/10/2016 06:30 PM, Steffen Maier wrote:
+> For an NPIV-enabled FCP device, zfcp can erroneously show
+> "NPort (fabric via point-to-point)" instead of "NPIV VPORT"
+> for the port_type sysfs attribute of the corresponding
+> fc_host.
+> s390-tools that can be affected are dbginfo.sh and ziomon.
+> 
+> zfcp_fsf_exchange_config_evaluate() ignores
+> fsf_qtcb_bottom_config.connection_features indicating NPIV
+> and only sets fc_host_port_type to FC_PORTTYPE_NPORT if
+> fsf_qtcb_bottom_config.fc_topology is FSF_TOPO_FABRIC.
+> 
+> Only the independent zfcp_fsf_exchange_port_evaluate()
+> evaluates connection_features to overwrite fc_host_port_type
+> to FC_PORTTYPE_NPIV in case of NPIV.
+> Code was introduced with upstream kernel 2.6.30
+> commit 0282985da5923fa6365adcc1a1586ae0c13c1617
+> ("[SCSI] zfcp: Report fc_host_port_type as NPIV").
+> 
+> This works during FCP device recovery (such as set online)
+> because it performs FSF_QTCB_EXCHANGE_CONFIG_DATA followed by
+> FSF_QTCB_EXCHANGE_PORT_DATA in sequence.
+> 
+> However, the zfcp-specific scsi host sysfs attributes
+> "requests", "megabytes", or "seconds_active" trigger only
+> zfcp_fsf_exchange_config_evaluate() resetting fc_host
+> port_type to FC_PORTTYPE_NPORT despite NPIV.
+> 
+> The zfcp-specific scsi host sysfs attribute "utilization"
+> triggers only zfcp_fsf_exchange_port_evaluate() correcting
+> the fc_host port_type again in case of NPIV.
+> 
+> Evaluate fsf_qtcb_bottom_config.connection_features
+> in zfcp_fsf_exchange_config_evaluate() where it belongs to.
+> 
+> Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+> Fixes: 0282985da592 ("[SCSI] zfcp: Report fc_host_port_type as NPIV")
+> Cc: <stable@vger.kernel.org> #2.6.30+
+> Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+> ---
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Thanks,
- Chaitra
+Cheers,
 
------Original Message-----
-From: Greg Edwards [mailto:gedwards@fireweed.org]
-Sent: Saturday, July 30, 2016 9:36 PM
-To: Sathya Prakash; Chaitra P B; Suganath Prabu Subramani; James E.J.
-Bottomley; Martin K. Petersen
-Cc: MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
-linux-kernel@vger.kernel.org; Greg Edwards
-Subject: [PATCH] mpt3sas: Fix resume on WarpDrive flash cards
-
-mpt3sas crashes on resume after suspend with WarpDrive flash cards.  The
-reply_post_host_index array is not set back up after the resume, and we
-deference a stale pointer in _base_interrupt().
-
-[   47.309711] BUG: unable to handle kernel paging request at
-ffffc90001f8006c
-[   47.318289] IP: [<ffffffffc00863ef>] _base_interrupt+0x49f/0xa30
-[mpt3sas]
-[   47.326749] PGD 41ccaa067 PUD 41ccab067 PMD 3466c067 PTE 0
-[   47.333848] Oops: 0002 [#1] SMP
-...
-[   47.452708] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.7.0 #6
-[   47.460506] Hardware name: Dell Inc. OptiPlex 990/06D7TR, BIOS A18
-09/24/2013
-[   47.469629] task: ffffffff81c0d500 ti: ffffffff81c00000 task.ti:
-ffffffff81c00000
-[   47.479112] RIP: 0010:[<ffffffffc00863ef>]  [<ffffffffc00863ef>]
-_base_interrupt+0x49f/0xa30 [mpt3sas]
-[   47.490466] RSP: 0018:ffff88041d203e30  EFLAGS: 00010002
-[   47.497801] RAX: 0000000000000001 RBX: ffff880033f4c000 RCX:
-0000000000000001
-[   47.506973] RDX: ffffc90001f8006c RSI: 0000000000000082 RDI:
-0000000000000082
-[   47.516141] RBP: ffff88041d203eb0 R08: ffff8804118e2820 R09:
-0000000000000001
-[   47.525300] R10: 0000000000000001 R11: 00000000100c0000 R12:
-0000000000000000
-[   47.534457] R13: ffff880412c487e0 R14: ffff88041a8987d8 R15:
-0000000000000001
-[   47.543632] FS:  0000000000000000(0000) GS:ffff88041d200000(0000)
-knlGS:0000000000000000
-[   47.553796] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[   47.561632] CR2: ffffc90001f8006c CR3: 0000000001c06000 CR4:
-00000000000406f0
-[   47.570883] Stack:
-[   47.575015]  000000001d211228 ffff88041d2100c0 ffff8800c47d8130
-0000000000000100
-[   47.584625]  ffff8804100c0000 100c000000000000 ffff88041a8992a0
-ffff88041a8987f8
-[   47.594230]  ffff88041d203e00 ffffffff81111e55 000000000000038c
-ffff880414ad4280
-[   47.603862] Call Trace:
-[   47.608474]  <IRQ>
-[   47.610413]  [<ffffffff81111e55>] ? call_timer_fn+0x35/0x120
-[   47.620539]  [<ffffffff81100a1f>] handle_irq_event_percpu+0x7f/0x1c0
-[   47.629061]  [<ffffffff81100b8c>] handle_irq_event+0x2c/0x50
-[   47.636859]  [<ffffffff81103fff>] handle_edge_irq+0x6f/0x130
-[   47.644654]  [<ffffffff8102fbf3>] handle_irq+0x73/0x120
-[   47.652011]  [<ffffffff810c6ada>] ?
-atomic_notifier_call_chain+0x1a/0x20
-[   47.660854]  [<ffffffff817e374b>] do_IRQ+0x4b/0xd0
-[   47.667777]  [<ffffffff817e160c>] common_interrupt+0x8c/0x8c
-[   47.675635]  <EOI>
-
-Move the reply_post_host_index array setup into
-mpt3sas_base_map_resources(), which is also in the resume path.
-
-Cc: stable@vger.kernel.org
-Signed-off-by: Greg Edwards <gedwards@fireweed.org>
----
- drivers/scsi/mpt3sas/mpt3sas_base.c | 22 +++++++++++-----------
- 1 file changed, 11 insertions(+), 11 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
-b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 751f13e..750f82c 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2188,6 +2188,17 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER
-*ioc)
- 	} else
- 		ioc->msix96_vector = 0;
-
-+	if (ioc->is_warpdrive) {
-+		ioc->reply_post_host_index[0] = (resource_size_t __iomem
-*)
-+		    &ioc->chip->ReplyPostHostIndex;
-+
-+		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
-+			ioc->reply_post_host_index[i] =
-+			(resource_size_t __iomem *)
-+			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 +
-((i - 1)
-+			* 4)));
-+	}
-+
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
- 		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
- 		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X
-enabled" :
-@@ -5280,17 +5291,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
- 	if (r)
- 		goto out_free_resources;
-
--	if (ioc->is_warpdrive) {
--		ioc->reply_post_host_index[0] = (resource_size_t __iomem
-*)
--		    &ioc->chip->ReplyPostHostIndex;
--
--		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
--			ioc->reply_post_host_index[i] =
--			(resource_size_t __iomem *)
--			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 +
-((i - 1)
--			* 4)));
--	}
--
- 	pci_set_drvdata(ioc->pdev, ioc->shost);
- 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
- 	if (r)
---
-2.7.4
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
