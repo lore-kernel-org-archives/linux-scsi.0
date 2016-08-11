@@ -1,90 +1,142 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Thu, 11 Aug 2016 17:30:59 +0800
-Message-ID: <CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
- <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
- <20160810041042.GH25053@mtj.duckdns.org> <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
- <yq1twesq8lm.fsf@sermon.lab.mkp.net>
+From: Chaitra Basappa <chaitra.basappa@broadcom.com>
+Subject: RE: [PATCH] mpt3sas: Fix resume on WarpDrive flash cards
+Date: Thu, 11 Aug 2016 15:39:26 +0530
+Message-ID: <b8dec47e2e0e473a676216ae4e42ccd3@mail.gmail.com>
+References: <1469894786-27917-1-git-send-email-gedwards@fireweed.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1469894786-27917-1-git-send-email-gedwards@fireweed.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Edwards <gedwards@fireweed.org>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11 August 2016 at 11:37, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
->
-> I don't agree with conflating the optimal transfer size and the maximum
-> supported ditto. Submitting the largest possible I/O to a device does
-> not guarantee that you get the best overall performance.
->
->  - max_hw_sectors is gated by controller DMA constraints.
->
->  - max_dev_sectors is set for devices that explicitly report a transfer
->    length limit.
->
->  - max_sectors, the soft limit for filesystem read/write requests,
->    should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
->    requests transfers to be aligned multiples of a different value
->    (typically the internal stripe size in large arrays).
+Hi,
+ Please consider this patch as Acked-by: Chaitra P B
+<chaitra.basappa@broadcom.com>
 
-Shouldn't we use Maximum Transfer Length to derive max_sectors (and
-get rid of the almost useless max_dev_sectors)? Honestly it looks
-pretty non-sensical to me that the SCSI disk driver uses Optimal
-Transfer Length for max_sectors. Also in libata's case, this make
-setting the effective max_sectors (e.g. see ATA_HORKAGE_MAX_SEC_LBA48)
-impossible if we do not want to touch io_opt.
+Thanks,
+ Chaitra
 
-It would look to me that our block layer simply have a flawed design
-if we really need to derive both io_opt and max_sectors from the same
-field.
+-----Original Message-----
+From: Greg Edwards [mailto:gedwards@fireweed.org]
+Sent: Saturday, July 30, 2016 9:36 PM
+To: Sathya Prakash; Chaitra P B; Suganath Prabu Subramani; James E.J.
+Bottomley; Martin K. Petersen
+Cc: MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org;
+linux-kernel@vger.kernel.org; Greg Edwards
+Subject: [PATCH] mpt3sas: Fix resume on WarpDrive flash cards
 
->
-> The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
-> common workloads unless otherwise instructed by the storage device.
->
-> We can have a discussion about what the right value for
-> BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
-> be the case that permitting large transfers significantly impacted
-> interactive I/O performance. And finding a sweet spot that works for a
-> wide variety of hardware, interconnects and workloads is obviously
-> non-trivial.
->
+mpt3sas crashes on resume after suspend with WarpDrive flash cards.  The
+reply_post_host_index array is not set back up after the resume, and we
+deference a stale pointer in _base_interrupt().
 
-If BLK_DEF_MAX_SECTORS is supposed to be used as a fallback, then it
-should be a safe value, especially when max_sectors_kb can be adjusted
-through sysfs.
+[   47.309711] BUG: unable to handle kernel paging request at
+ffffc90001f8006c
+[   47.318289] IP: [<ffffffffc00863ef>] _base_interrupt+0x49f/0xa30
+[mpt3sas]
+[   47.326749] PGD 41ccaa067 PUD 41ccab067 PMD 3466c067 PTE 0
+[   47.333848] Oops: 0002 [#1] SMP
+...
+[   47.452708] CPU: 0 PID: 0 Comm: swapper/0 Not tainted 4.7.0 #6
+[   47.460506] Hardware name: Dell Inc. OptiPlex 990/06D7TR, BIOS A18
+09/24/2013
+[   47.469629] task: ffffffff81c0d500 ti: ffffffff81c00000 task.ti:
+ffffffff81c00000
+[   47.479112] RIP: 0010:[<ffffffffc00863ef>]  [<ffffffffc00863ef>]
+_base_interrupt+0x49f/0xa30 [mpt3sas]
+[   47.490466] RSP: 0018:ffff88041d203e30  EFLAGS: 00010002
+[   47.497801] RAX: 0000000000000001 RBX: ffff880033f4c000 RCX:
+0000000000000001
+[   47.506973] RDX: ffffc90001f8006c RSI: 0000000000000082 RDI:
+0000000000000082
+[   47.516141] RBP: ffff88041d203eb0 R08: ffff8804118e2820 R09:
+0000000000000001
+[   47.525300] R10: 0000000000000001 R11: 00000000100c0000 R12:
+0000000000000000
+[   47.534457] R13: ffff880412c487e0 R14: ffff88041a8987d8 R15:
+0000000000000001
+[   47.543632] FS:  0000000000000000(0000) GS:ffff88041d200000(0000)
+knlGS:0000000000000000
+[   47.553796] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[   47.561632] CR2: ffffc90001f8006c CR3: 0000000001c06000 CR4:
+00000000000406f0
+[   47.570883] Stack:
+[   47.575015]  000000001d211228 ffff88041d2100c0 ffff8800c47d8130
+0000000000000100
+[   47.584625]  ffff8804100c0000 100c000000000000 ffff88041a8992a0
+ffff88041a8987f8
+[   47.594230]  ffff88041d203e00 ffffffff81111e55 000000000000038c
+ffff880414ad4280
+[   47.603862] Call Trace:
+[   47.608474]  <IRQ>
+[   47.610413]  [<ffffffff81111e55>] ? call_timer_fn+0x35/0x120
+[   47.620539]  [<ffffffff81100a1f>] handle_irq_event_percpu+0x7f/0x1c0
+[   47.629061]  [<ffffffff81100b8c>] handle_irq_event+0x2c/0x50
+[   47.636859]  [<ffffffff81103fff>] handle_edge_irq+0x6f/0x130
+[   47.644654]  [<ffffffff8102fbf3>] handle_irq+0x73/0x120
+[   47.652011]  [<ffffffff810c6ada>] ?
+atomic_notifier_call_chain+0x1a/0x20
+[   47.660854]  [<ffffffff817e374b>] do_IRQ+0x4b/0xd0
+[   47.667777]  [<ffffffff817e160c>] common_interrupt+0x8c/0x8c
+[   47.675635]  <EOI>
 
-But the biggest problem isn't on bumping it, but the value picked is
-totally irrational for a general default. I mean, given that it was
-1024 (512k), try to double it? Fine. Try to quadruple it? Alright.
-We'll need to deal with some alignment / boundary issue (like the
-typical 65535 vs 65536 case)? Okay let's do it. But what's the sense
-in picking a random RAID configuartion as the base to decide the
-default? Also, if max_sectors need to concern about the number of
-disks used and chunk sizes in a RAID configuartion, it should be
-calculated in the device-mapper layer or a specific driver or so.
-Changing a block layer default won't help anyway. Say 2560 will
-accomodate a 10-disk 128k-chunk RAID. What about a 12-disk 128k-chunk
-RAID then? Why not just decide the value base on an 8-disk 128k-chunk
-RAID, which HAPPENED to be a double of 1024 as well?
+Move the reply_post_host_index array setup into
+mpt3sas_base_map_resources(), which is also in the resume path.
 
-It does not make sense that the SCSI disk driver uses it as the
-fallback either. SCSI host templates that does not have max_sectors
-set (as well as some specific driver) will use
-SCSI_DEFAULT_MAX_SECTORS as the fallback, for such hosts
-max_hw_sectors will be 1024, where the current BLK_DEF_MAX_SECTORS
-cannot apply as max_sectors anyway. So we should use also
-SCSI_DEFAULT_MAX_SECTORS in the SCSI disk driver as fallback for
-max_sectors. If the value is considered to low even as a safe
-fallback, then it should be bumped appropriately. (Or we might want to
-replace it with BLK_DEF_MAX_SECTORS everywhere in the SCSI layer, that
-said, after the value is fixed.)
+Cc: stable@vger.kernel.org
+Signed-off-by: Greg Edwards <gedwards@fireweed.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 22 +++++++++++-----------
+ 1 file changed, 11 insertions(+), 11 deletions(-)
 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c
+b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 751f13e..750f82c 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -2188,6 +2188,17 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER
+*ioc)
+ 	} else
+ 		ioc->msix96_vector = 0;
+
++	if (ioc->is_warpdrive) {
++		ioc->reply_post_host_index[0] = (resource_size_t __iomem
+*)
++		    &ioc->chip->ReplyPostHostIndex;
++
++		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
++			ioc->reply_post_host_index[i] =
++			(resource_size_t __iomem *)
++			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 +
+((i - 1)
++			* 4)));
++	}
++
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
+ 		pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
+ 		    reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X
+enabled" :
+@@ -5280,17 +5291,6 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 	if (r)
+ 		goto out_free_resources;
+
+-	if (ioc->is_warpdrive) {
+-		ioc->reply_post_host_index[0] = (resource_size_t __iomem
+*)
+-		    &ioc->chip->ReplyPostHostIndex;
+-
+-		for (i = 1; i < ioc->cpu_msix_table_sz; i++)
+-			ioc->reply_post_host_index[i] =
+-			(resource_size_t __iomem *)
+-			((u8 __iomem *)&ioc->chip->Doorbell + (0x4000 +
+((i - 1)
+-			* 4)));
+-	}
+-
+ 	pci_set_drvdata(ioc->pdev, ioc->shost);
+ 	r = _base_get_ioc_facts(ioc, CAN_SLEEP);
+ 	if (r)
+--
+2.7.4
