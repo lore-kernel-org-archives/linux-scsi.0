@@ -1,61 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/10] zfcp: restore tracing of handle for port and LUN
- with HBA records
-Date: Thu, 11 Aug 2016 13:23:23 +0200
-Message-ID: <315328c1-cbce-f97a-a035-17aea2643b56@suse.de>
+Subject: Re: [PATCH 08/10] zfcp: fix D_ID field with actual value on tracing
+ SAN responses
+Date: Thu, 11 Aug 2016 13:24:11 +0200
+Message-ID: <a2c7603d-8766-ffde-792e-32e09613e51a@suse.de>
 References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
- <1470846653-90691-8-git-send-email-maier@linux.vnet.ibm.com>
+ <1470846653-90691-9-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1470846653-90691-8-git-send-email-maier@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:32939 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751790AbcHKLYN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 11 Aug 2016 07:24:13 -0400
+In-Reply-To: <1470846653-90691-9-git-send-email-maier@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Steffen Maier <maier@linux.vnet.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "#2 . 6 . 38+" <stable@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 On 08/10/2016 06:30 PM, Steffen Maier wrote:
-> This information was lost with
-> commit a54ca0f62f953898b05549391ac2a8a4dad6482b
-> ("[SCSI] zfcp: Redesign of the debug tracing for HBA records.")
-> but is required to debug e.g. invalid handle situations.
+> With commit 2c55b750a884b86dea8b4cc5f15e1484cc47a25c
+> ("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+> we lost the N_Port-ID where an ELS response comes from.
+> With commit 7c7dc196814b9e1d5cc254dc579a5fa78ae524f7
+> ("[SCSI] zfcp: Simplify handling of ct and els requests")
+> we lost the N_Port-ID where a CT response comes from.
+> It's especially useful if the request SAN trace record
+> with D_ID was already lost due to trace buffer wrap.
+> 
+> GS uses an open WKA port handle and ELS just a D_ID, and
+> only for ELS we could get D_ID from QTCB bottom via zfcp_fsf_req.
+> To cover both cases, add a new field to zfcp_fsf_ct_els
+> and fill it in on request to use in SAN response trace.
+> Strictly speaking the D_ID on SAN response is the FC frame's S_ID.
+> We don't need a field for the other end which is always us.
 > 
 > Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-> Fixes: a54ca0f62f95 ("[SCSI] zfcp: Redesign of the debug tracing for HBA records.")
+> Fixes: 2c55b750a884 ("[SCSI] zfcp: Redesign of the debug tracing for SAN records.")
+> Fixes: 7c7dc196814b ("[SCSI] zfcp: Simplify handling of ct and els requests")
 > Cc: <stable@vger.kernel.org> #2.6.38+
 > Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 > ---
->  drivers/s390/scsi/zfcp_dbf.c | 2 ++
->  drivers/s390/scsi/zfcp_dbf.h | 2 ++
->  2 files changed, 4 insertions(+)
-> 
-> diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-> index df68a4df8cdb..ceb934c93232 100644
-> --- a/drivers/s390/scsi/zfcp_dbf.c
-> +++ b/drivers/s390/scsi/zfcp_dbf.c
-> @@ -85,6 +85,8 @@ void zfcp_dbf_hba_fsf_res(char *tag, int level, struct zfcp_fsf_req *req)
->  	rec->u.res.req_issued = req->issued;
->  	rec->u.res.prot_status = q_pref->prot_status;
->  	rec->u.res.fsf_status = q_head->fsf_status;
-> +	rec->u.res.port_handle = q_head->port_handle;
-> +	rec->u.res.lun_handle = q_head->lun_handle;
->  
->  	memcpy(rec->u.res.prot_status_qual, &q_pref->prot_status_qual,
->  	       FSF_PROT_STATUS_QUAL_SIZE);
-> diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-> index c879b54046ee..6ee46f1f9e43 100644
-> --- a/drivers/s390/scsi/zfcp_dbf.h
-> +++ b/drivers/s390/scsi/zfcp_dbf.h
-> @@ -131,6 +131,8 @@ struct zfcp_dbf_hba_res {
->  	u8  prot_status_qual[FSF_PROT_STATUS_QUAL_SIZE];
->  	u32 fsf_status;
->  	u8  fsf_status_qual[FSF_STATUS_QUALIFIER_SIZE];
-> +	u32 port_handle;
-> +	u32 lun_handle;
->  } __packed;
->  
->  /**
+>  drivers/s390/scsi/zfcp_dbf.c | 2 +-
+>  drivers/s390/scsi/zfcp_fsf.c | 2 ++
+>  drivers/s390/scsi/zfcp_fsf.h | 4 +++-
+>  3 files changed, 6 insertions(+), 2 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
