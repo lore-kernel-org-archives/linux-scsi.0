@@ -1,90 +1,90 @@
-From: tom.ty89@gmail.com
-Subject: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
-Date: Thu, 11 Aug 2016 16:26:39 +0800
-Message-ID: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
+Date: Thu, 11 Aug 2016 17:30:59 +0800
+Message-ID: <CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+ <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+ <20160810041042.GH25053@mtj.duckdns.org> <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
+ <yq1twesq8lm.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
 Sender: linux-block-owner@vger.kernel.org
-To: tj@kernel.org, shaun.tancheff@seagate.com, shaun@tancheff.com, martin.petersen@oracle.com
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Tom Yan <tom.ty89@gmail.com>
+On 11 August 2016 at 11:37, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+>
+> I don't agree with conflating the optimal transfer size and the maximum
+> supported ditto. Submitting the largest possible I/O to a device does
+> not guarantee that you get the best overall performance.
+>
+>  - max_hw_sectors is gated by controller DMA constraints.
+>
+>  - max_dev_sectors is set for devices that explicitly report a transfer
+>    length limit.
+>
+>  - max_sectors, the soft limit for filesystem read/write requests,
+>    should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
+>    requests transfers to be aligned multiples of a different value
+>    (typically the internal stripe size in large arrays).
 
-Currently we advertise Maximum Write Same Length based on the
-maximum number of sectors that one-block TRIM payload can cover.
-The field are used to derived discard_max_bytes and
-write_same_max_bytes limits in the block layer, which currently can
-at max be 0xffffffff (32-bit).
+Shouldn't we use Maximum Transfer Length to derive max_sectors (and
+get rid of the almost useless max_dev_sectors)? Honestly it looks
+pretty non-sensical to me that the SCSI disk driver uses Optimal
+Transfer Length for max_sectors. Also in libata's case, this make
+setting the effective max_sectors (e.g. see ATA_HORKAGE_MAX_SEC_LBA48)
+impossible if we do not want to touch io_opt.
 
-However, with a AF 4Kn drive, the derived limits would be 65535 *
-64 * 4096 = 0x3fffc0000 (34-bit). Therefore, we now devide
-ATA_MAX_TRIM_RNUM with (logical sector size / 512), so that the
-derived limits will not overflow.
+It would look to me that our block layer simply have a flawed design
+if we really need to derive both io_opt and max_sectors from the same
+field.
 
-The limits are now also consistent among drives with different
-logical sector sizes. (Although that may or may not be what we
-want ultimately when the SCSI / block layer allows larger
-representation in the future.)
+>
+> The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
+> common workloads unless otherwise instructed by the storage device.
+>
+> We can have a discussion about what the right value for
+> BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
+> be the case that permitting large transfers significantly impacted
+> interactive I/O performance. And finding a sweet spot that works for a
+> wide variety of hardware, interconnects and workloads is obviously
+> non-trivial.
+>
 
-Although 4Kn ATA SSDs may not be a thing on the market yet, this
-patch is necessary for forthcoming SCT Write Same translation
-support, which could be available on traditional HDDs where 4Kn is
-already a thing. Also it should not change the current behavior on
-drives with 512-byte logical sectors.
+If BLK_DEF_MAX_SECTORS is supposed to be used as a fallback, then it
+should be a safe value, especially when max_sectors_kb can be adjusted
+through sysfs.
 
-Note: this patch is not about AF 512e drives.
-Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+But the biggest problem isn't on bumping it, but the value picked is
+totally irrational for a general default. I mean, given that it was
+1024 (512k), try to double it? Fine. Try to quadruple it? Alright.
+We'll need to deal with some alignment / boundary issue (like the
+typical 65535 vs 65536 case)? Okay let's do it. But what's the sense
+in picking a random RAID configuartion as the base to decide the
+default? Also, if max_sectors need to concern about the number of
+disks used and chunk sizes in a RAID configuartion, it should be
+calculated in the device-mapper layer or a specific driver or so.
+Changing a block layer default won't help anyway. Say 2560 will
+accomodate a 10-disk 128k-chunk RAID. What about a 12-disk 128k-chunk
+RAID then? Why not just decide the value base on an 8-disk 128k-chunk
+RAID, which HAPPENED to be a double of 1024 as well?
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index be9c76c..dcadcaf 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -2295,6 +2295,7 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
- static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- {
- 	u16 min_io_sectors;
-+	u32 sector_size;
- 
- 	rbuf[1] = 0xb0;
- 	rbuf[3] = 0x3c;		/* required VPD size with unmap support */
-@@ -2309,17 +2310,27 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
- 	min_io_sectors = 1 << ata_id_log2_per_physical_sector(args->id);
- 	put_unaligned_be16(min_io_sectors, &rbuf[6]);
- 
--	/*
--	 * Optimal unmap granularity.
--	 *
--	 * The ATA spec doesn't even know about a granularity or alignment
--	 * for the TRIM command.  We can leave away most of the unmap related
--	 * VPD page entries, but we have specifify a granularity to signal
--	 * that we support some form of unmap - in thise case via WRITE SAME
--	 * with the unmap bit set.
--	 */
-+	sector_size = ata_id_logical_sector_size(args->id);
- 	if (ata_id_has_trim(args->id)) {
--		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM, &rbuf[36]);
-+		/*
-+		 * Maximum write same length.
-+		 *
-+		 * Avoid overflow in discard_max_bytes and write_same_max_bytes
-+		 * with AF 4Kn drives. Also make them consistent among drives
-+		 * with different logical sector sizes.
-+		 */
-+		put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM /
-+				   (sector_size / 512), &rbuf[36]);
-+
-+		/*
-+		 * Optimal unmap granularity.
-+		 *
-+		 * The ATA spec doesn't even know about a granularity or alignment
-+		 * for the TRIM command.  We can leave away most of the unmap related
-+		 * VPD page entries, but we have specifify a granularity to signal
-+		 * that we support some form of unmap - in thise case via WRITE SAME
-+		 * with the unmap bit set.
-+		 */
- 		put_unaligned_be32(1, &rbuf[28]);
- 	}
- 
--- 
-2.9.2
+It does not make sense that the SCSI disk driver uses it as the
+fallback either. SCSI host templates that does not have max_sectors
+set (as well as some specific driver) will use
+SCSI_DEFAULT_MAX_SECTORS as the fallback, for such hosts
+max_hw_sectors will be 1024, where the current BLK_DEF_MAX_SECTORS
+cannot apply as max_sectors anyway. So we should use also
+SCSI_DEFAULT_MAX_SECTORS in the SCSI disk driver as fallback for
+max_sectors. If the value is considered to low even as a safe
+fallback, then it should be bumped appropriately. (Or we might want to
+replace it with BLK_DEF_MAX_SECTORS everywhere in the SCSI layer, that
+said, after the value is fixed.)
 
+> --
+> Martin K. Petersen      Oracle Linux Engineering
