@@ -1,54 +1,37 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Wed, 10 Aug 2016 23:37:25 -0400
-Message-ID: <yq1twesq8lm.fsf@sermon.lab.mkp.net>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
-	<10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
-	<20160810041042.GH25053@mtj.duckdns.org>
-	<CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
-	(Tom Yan's message of "Wed, 10 Aug 2016 16:32:39 +0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+From: Pranith Kumar <bobby.prani@gmail.com>
+Subject: [PATCH] scsi: Remove unnecessary comparison
+Date: Thu, 11 Aug 2016 01:08:25 -0400
+Message-ID: <20160811050825.8435-1-bobby.prani@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f195.google.com ([209.85.161.195]:33608 "EHLO
+	mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751143AbcHKFI2 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 01:08:28 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+val is an unsigned int which makes the comparison >=0
+unnecessary. This patch removes it.
 
-Tom,
+Signed-off-by: Pranith Kumar <bobby.prani@gmail.com>
+---
+ drivers/scsi/sd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Tom> Now let's just come back to libata. I've thought of reporting dev->
-Tom> max_sectors as Optimal Transfer Length in the SATL. However, I am
-Tom> not sure if it is a safe thing to do, because we set it as high as
-Tom> 65535 for devices with LBA48 devices. Does such a high max_sectors
-Tom> ever make sense in libata's case?
-
-I don't agree with conflating the optimal transfer size and the maximum
-supported ditto. Submitting the largest possible I/O to a device does
-not guarantee that you get the best overall performance.
-
- - max_hw_sectors is gated by controller DMA constraints.
-
- - max_dev_sectors is set for devices that explicitly report a transfer
-   length limit.
-
- - max_sectors, the soft limit for filesystem read/write requests,
-   should be left at BLK_DEF_MAX_SECTORS unless the device explicitly
-   requests transfers to be aligned multiples of a different value
-   (typically the internal stripe size in large arrays).
-
-The point of BLK_DEF_MAX_SECTORS is to offer a reasonable default for
-common workloads unless otherwise instructed by the storage device.
-
-We can have a discussion about what the right value for
-BLK_DEF_MAX_SECTORS should be. It has gone up over time but it used to
-be the case that permitting large transfers significantly impacted
-interactive I/O performance. And finding a sweet spot that works for a
-wide variety of hardware, interconnects and workloads is obviously
-non-trivial.
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d3e852a..7a919b2 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -314,7 +314,7 @@ protection_type_store(struct device *dev, struct device_attribute *attr,
+ 	if (err)
+ 		return err;
+ 
+-	if (val >= 0 && val <= SD_DIF_TYPE3_PROTECTION)
++	if (val <= SD_DIF_TYPE3_PROTECTION)
+ 		sdkp->protection_type = val;
+ 
+ 	return count;
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.9.2
+
