@@ -1,76 +1,82 @@
-From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Subject: Re: [PATCH] scsi: fix upper bounds check of sense key in
- scsi_sense_key_string()
-Date: Thu, 11 Aug 2016 14:21:47 -0700
-Message-ID: <57ACEC6B.7090301@gmail.com>
-References: <1470346337-20034-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <998bca14-1871-0b9e-a748-68dd39a0b634@sandisk.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 4/5] nvme-fabrics: Add target FC transport support
+Date: Thu, 11 Aug 2016 14:22:38 -0700
+Message-ID: <20160811212238.GG18013@infradead.org>
+References: <5792b91e.51+4Ind0/2MxGqHU%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f196.google.com ([209.85.216.196]:32830 "EHLO
-	mail-qt0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752237AbcHKVVv (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 17:21:51 -0400
-Received: by mail-qt0-f196.google.com with SMTP id j37so313355qta.0
-        for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2016 14:21:51 -0700 (PDT)
-In-Reply-To: <998bca14-1871-0b9e-a748-68dd39a0b634@sandisk.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:52628 "EHLO
+	bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932366AbcHKVWj (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 17:22:39 -0400
+Content-Disposition: inline
+In-Reply-To: <5792b91e.51+4Ind0/2MxGqHU%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On 08/09/2016 01:08 PM, Bart Van Assche wrote:
-> On 08/04/2016 02:32 PM, Tyrel Datwyler wrote:
->> Commit 655ee63cf371 added a "Completed" sense string with key 0xF to
->> snstext[], but failed to updated the upper bounds check of the sense key in
->> scsi_sense_key_string().
->>
->> Fixes: 655ee63cf371 ("[SCSI] scsi constants: command, sense key + additional sense strings")
->> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->> ---
->>  drivers/scsi/constants.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/constants.c b/drivers/scsi/constants.c
->> index 83458f7..70d8dc4 100644
->> --- a/drivers/scsi/constants.c
->> +++ b/drivers/scsi/constants.c
->> @@ -362,7 +362,7 @@ static const char * const snstext[] = {
->>  /* Get sense key string or NULL if not available */
->>  const char *
->>  scsi_sense_key_string(unsigned char key) {
->> -	if (key <= 0xE)
->> +	if (key <= 0xF)
->>  		return snstext[key];
->>  	return NULL;
->>  }
-> 
-> Hello Tyrel,
-> 
-> Please move the opening brace ("{") to a line of its own.
-> 
-> If you change "<= 0xF" into "< ARRAY_SIZE(snstext)" then you are welcome
+> +config NVME_TARGET_FC
+> +	tristate "NVMe over Fabrics FC target driver"
+> +	select NVME_TARGET
 
-This actually occurred to me as a better long term solution after I had
-already posted the patch.
+this should be a depends, NVME_TARGET is a user visible option.
 
-> to add:
-> 
-> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> +		/* TODO: better to use dma_map_page() ?*/
+> +		iod->rspdma = dma_map_single(tgtport->dev, iod->rspbuf,
+> +						NVME_FC_MAX_LS_BUFFER_SIZE,
+> +						DMA_TO_DEVICE);
+> +		if (dma_mapping_error(tgtport->dev, iod->rspdma))
+> +			goto out_fail;
 
-Thanks for your comments. I'll address and spin a version 2.
+Same comment as on the host side.
 
--Tyrel
+> +	queue->work_q = alloc_workqueue("ntfc%d.%d.%d", 0, 0,
+> +				assoc->tgtport->fc_target_port.port_num,
+> +				assoc->a_id, qid);
 
-> 
-> Thanks,
-> 
-> Bart.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Do we really need a workqueue per queue?
+
+> +static struct nvmet_fc_tgt_queue *
+> +nvmet_fc_find_target_queue(struct nvmet_fc_tgtport *tgtport,
+> +				u64 connection_id)
+> +{
+> +	struct nvmet_fc_tgt_assoc *assoc;
+> +	u64 association_id = nvmet_fc_getassociationid(connection_id);
+> +	u16 qid = nvmet_fc_getqueueid(connection_id);
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&tgtport->lock, flags);
+> +	list_for_each_entry(assoc, &tgtport->assoc_list, a_list) {
+> +		if (association_id == assoc->association_id) {
+> +			spin_unlock_irqrestore(&tgtport->lock, flags);
+> +			return assoc->queues[qid];
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&tgtport->lock, flags);
+> +	return NULL;
+
+No reference counting?
+
+> +static struct nvmet_fc_tgt_assoc *
+> +nvmet_fc_find_target_assoc(struct nvmet_fc_tgtport *tgtport,
+> +				u64 association_id)
+> +{
+> +	struct nvmet_fc_tgt_assoc *assoc;
+> +	struct nvmet_fc_tgt_assoc *ret = NULL;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(&tgtport->lock, flags);
+> +	list_for_each_entry(assoc, &tgtport->assoc_list, a_list) {
+> +		if (association_id == assoc->association_id) {
+> +			ret = assoc;
+> +			break;
+> +		}
+> +	}
+> +	spin_unlock_irqrestore(&tgtport->lock, flags);
+> +
+> +	return ret;
+
+Same here?
 
