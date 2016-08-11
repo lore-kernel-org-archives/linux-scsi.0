@@ -1,126 +1,127 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [dm-devel] dm-mq and end_clone_request()
-Date: Thu, 11 Aug 2016 12:51:47 -0400 (EDT)
-Message-ID: <532021645.703156.1470934307915.JavaMail.zimbra@redhat.com>
-References: <20160801175948.GA6685@redhat.com> <1345038259.188657.1470696767844.JavaMail.zimbra@redhat.com> <1771573384.192110.1470701350622.JavaMail.zimbra@redhat.com> <2aaad6b7-bfa4-b965-53bf-4420fe01d3e5@sandisk.com> <1494059467.386778.1470762767417.JavaMail.zimbra@redhat.com> <ad12fd05-f931-30a5-2efd-3d8a171a73cb@sandisk.com> <967089395.387512.1470763275007.JavaMail.zimbra@redhat.com> <609737535.572896.1470865096150.JavaMail.zimbra@redhat.com>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
+Date: Thu, 11 Aug 2016 12:04:34 -0500
+Message-ID: <CAJ48U8Wan45qaE2cSanyxdy5xppDwiFWZBRs-WDOyUuDgt4-zw@mail.gmail.com>
+References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:58573 "EHLO
-	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932550AbcHKQvw (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 12:51:52 -0400
-In-Reply-To: <609737535.572896.1470865096150.JavaMail.zimbra@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: tj@kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
+On Thu, Aug 11, 2016 at 3:26 AM,  <tom.ty89@gmail.com> wrote:
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> Currently we advertise Maximum Write Same Length based on the
+> maximum number of sectors that one-block TRIM payload can cover.
+> The field are used to derived discard_max_bytes and
+> write_same_max_bytes limits in the block layer, which currently can
+> at max be 0xffffffff (32-bit).
+>
+> However, with a AF 4Kn drive, the derived limits would be 65535 *
+> 64 * 4096 = 0x3fffc0000 (34-bit). Therefore, we now devide
+> ATA_MAX_TRIM_RNUM with (logical sector size / 512), so that the
+> derived limits will not overflow.
+>
+> The limits are now also consistent among drives with different
+> logical sector sizes. (Although that may or may not be what we
+> want ultimately when the SCSI / block layer allows larger
+> representation in the future.)
+>
+> Although 4Kn ATA SSDs may not be a thing on the market yet, this
+> patch is necessary for forthcoming SCT Write Same translation
+> support, which could be available on traditional HDDs where 4Kn is
+> already a thing. Also it should not change the current behavior on
+> drives with 512-byte logical sectors.
+>
+> Note: this patch is not about AF 512e drives.
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index be9c76c..dcadcaf 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -2295,6 +2295,7 @@ static unsigned int ata_scsiop_inq_89(struct ata_scsi_args *args, u8 *rbuf)
+>  static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+>  {
+>         u16 min_io_sectors;
+> +       u32 sector_size;
+>
+>         rbuf[1] = 0xb0;
+>         rbuf[3] = 0x3c;         /* required VPD size with unmap support */
+> @@ -2309,17 +2310,27 @@ static unsigned int ata_scsiop_inq_b0(struct ata_scsi_args *args, u8 *rbuf)
+>         min_io_sectors = 1 << ata_id_log2_per_physical_sector(args->id);
+>         put_unaligned_be16(min_io_sectors, &rbuf[6]);
+>
+> -       /*
+> -        * Optimal unmap granularity.
+> -        *
+> -        * The ATA spec doesn't even know about a granularity or alignment
+> -        * for the TRIM command.  We can leave away most of the unmap related
+> -        * VPD page entries, but we have specifify a granularity to signal
+> -        * that we support some form of unmap - in thise case via WRITE SAME
+> -        * with the unmap bit set.
+> -        */
+> +       sector_size = ata_id_logical_sector_size(args->id);
+>         if (ata_id_has_trim(args->id)) {
+> -               put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM, &rbuf[36]);
+> +               /*
+> +                * Maximum write same length.
+> +                *
+> +                * Avoid overflow in discard_max_bytes and write_same_max_bytes
+> +                * with AF 4Kn drives. Also make them consistent among drives
+> +                * with different logical sector sizes.
+> +                */
+> +               put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM /
+> +                                  (sector_size / 512), &rbuf[36]);
 
+I think the existing fixups in sd_setup_discard_cmnd() and
+sd_setup_write_same_cmnd()
+are 'doing the right thing'.
 
------ Original Message -----
-> From: "Laurence Oberman" <loberman@redhat.com>
-> To: "Bart Van Assche" <bart.vanassche@sandisk.com>
-> Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer" <snitzer@redhat.com>, "Johannes Thumshirn"
-> <jthumshirn@suse.de>
-> Sent: Wednesday, August 10, 2016 5:38:16 PM
-> Subject: Re: [dm-devel] dm-mq and end_clone_request()
-> 
-> 
-> 
-> ----- Original Message -----
-> > From: "Laurence Oberman" <loberman@redhat.com>
-> > To: "Bart Van Assche" <bart.vanassche@sandisk.com>
-> > Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer"
-> > <snitzer@redhat.com>, "Johannes Thumshirn"
-> > <jthumshirn@suse.de>
-> > Sent: Tuesday, August 9, 2016 1:21:15 PM
-> > Subject: Re: [dm-devel] dm-mq and end_clone_request()
-> > 
-> > 
-> > 
-> > ----- Original Message -----
-> > > From: "Bart Van Assche" <bart.vanassche@sandisk.com>
-> > > To: "Laurence Oberman" <loberman@redhat.com>
-> > > Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer"
-> > > <snitzer@redhat.com>, "Johannes Thumshirn"
-> > > <jthumshirn@suse.de>
-> > > Sent: Tuesday, August 9, 2016 1:16:52 PM
-> > > Subject: Re: [dm-devel] dm-mq and end_clone_request()
-> > > 
-> > > On 08/09/2016 10:12 AM, Laurence Oberman wrote:
-> > > > I was talking about this patch
-> > > >
-> > > > --- a/drivers/scsi/scsi_scan.c
-> > > > +++ b/drivers/scsi/scsi_scan.c
-> > > > @@ -1890,10 +1890,11 @@ void scsi_forget_host(struct Scsi_Host *shost)
-> > > >   restart:
-> > > >          spin_lock_irqsave(shost->host_lock, flags);
-> > > >          list_for_each_entry(sdev, &shost->__devices, siblings) {
-> > > > -                if (sdev->sdev_state == SDEV_DEL)
-> > > > +                if (sdev->sdev_state == SDEV_DEL ||
-> > > > scsi_device_get(sdev)
-> > > > < 0)
-> > > >                          continue;
-> > > >                  spin_unlock_irqrestore(shost->host_lock, flags);
-> > > >                  __scsi_remove_device(sdev);
-> > > > +                scsi_device_put(sdev);
-> > > >                  goto restart;
-> > > >          }
-> > > >          spin_unlock_irqrestore(shost->host_lock, flags);
-> > > 
-> > > Hello Laurence,
-> > > 
-> > > Did you run your tests with that patch applied? If so, it would help if
-> > > you could rerun your tests without that patch. If the above patch makes
-> > > a difference it means that it can happen that __scsi_remove_device()
-> > > does not change the device state into SDEV_DEL. That's a bug and we need
-> > > to know whether or not __scsi_remove_device() behaves correctly.
-> > > 
-> > > Thanks,
-> > > 
-> > > Bart.
-> > > 
-> > Yes Sir, I ran all yesterdays tests on your kernel with that patch applied.
-> > Of course it may well just be luck/coincidence that the host delete race is
-> > no longer happening
-> > so I agree we need to re-run the tests so I will revert and re-run.
-> > I will probably only get back to you tomorrow with the results.
-> > 
-> > Thanks
-> > Laurence
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> Hello Bart
-> 
-> I only just got time now to revert that patch and build a kernel.
-> Will test this tonight and let you know if I am back to seeing panics
-> sporadically without the patch.
-> As already mentioned, this is a different configuration to what I had when I
-> was able to reproduce the panic.
-> This means the lack of hitting this stack trace and panic may turn out to
-> have nothing to do with the patch I applied.
-> 
-> Thanks
-> Laurence
+If I understand the stack correctly:
+
+libata-scsi.c (and sd.c) both report a maximum in terms of 512 byte sectors.
+The upper layer stack works (mostly) on a mix of bytes and 512 byte sectors
+agnostic of the underlying hardware ... mostly. There are some bits in the
+files systems and block layer that are honoring the logical block size being
+larger 512 bytes as all I/O being generated are multiples of the logical block
+size as per block device's request_queue / queue_limits.
+
+So regardless of a 4Kn device being able to handle an 8x larger I/O as per
+the logical sector being bigger that's basically ignored, for convenience.
+
+In the scsi upper layer as the command are being setup the shift from
+512 to 'sector_size' is handled to the number of device sectors is
+matched up to the request:
+
+    sector >>= ilog2(sdp->sector_size) - 9;
+    nr_sectors >>= ilog2(sdp->sector_size) - 9;
+
+So if you correctly report number of logical sectors here you break
+the 'fix' in sd.c
+
+At least that is my understanding.
+
+> +
+> +               /*
+> +                * Optimal unmap granularity.
+> +                *
+> +                * The ATA spec doesn't even know about a granularity or alignment
+> +                * for the TRIM command.  We can leave away most of the unmap related
+> +                * VPD page entries, but we have specifify a granularity to signal
+> +                * that we support some form of unmap - in thise case via WRITE SAME
+> +                * with the unmap bit set.
+> +                */
+>                 put_unaligned_be32(1, &rbuf[28]);
+>         }
+>
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-Hello Bart
+> 2.9.2
+>
 
-I can no longer reproduce the stack even with the patch reverted so its behaving as you expected and the patch is as you already said, not valid.
-I ran about 30 fio tests with your kernel and multiple host deletions and and did experience only one hard fio error.
-My tests now produce the same results as you are seeing.
-
-The single fio errors was with many more executions of the test so its not easy to get these fio errors.
-
-Away from tomorrow on vacation for 10 days
-
-Thanks
-Laurence
+Regards,
+Shaun
