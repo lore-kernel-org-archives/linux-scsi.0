@@ -1,69 +1,44 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: runtime change of use_blk_mq ?
-Date: Wed, 10 Aug 2016 15:57:17 -0700
-Message-ID: <ea50fda5-d120-b9b2-0efe-73c55c8187a2@sandisk.com>
-References: <201608110049.44832.a.miskiewicz@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
+Date: Wed, 10 Aug 2016 22:25:57 -0400
+Message-ID: <yq1h9asrqh6.fsf@sermon.lab.mkp.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0059.outbound.protection.outlook.com ([104.47.37.59]:47584
-	"EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752521AbcHJW5a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 10 Aug 2016 18:57:30 -0400
-In-Reply-To: <201608110049.44832.a.miskiewicz@gmail.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:38916 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751367AbcHKC2m (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2016 22:28:42 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
+	(Don Brace's message of "Tue, 9 Aug 2016 15:37:31 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: arekm@maven.pl, linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/10/2016 03:49 PM, Arkadiusz Miskiewicz wrote:
-> Is runtime enabling/disabling of blk-mq  supported?
->
-> Doesn't seem to work here:
->
-> 4.1.30 (but the same thing on 4.6.3):
->
-> # zcat /proc/config.gz |grep _MQ_DEF
-> # CONFIG_SCSI_MQ_DEFAULT is not set
-> # CONFIG_DM_MQ_DEFAULT is not set
-> # cat  /sys/module/scsi_mod/parameters/use_blk_mq
-> N
-> # grep "" /sys/block/sd*/queue/scheduler
-> /sys/block/sda/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdb/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdc/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdd/queue/scheduler:noop [deadline] cfq
-> /sys/block/sde/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdf/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdg/queue/scheduler:noop [deadline] cfq
-> # echo Y > /sys/module/scsi_mod/parameters/use_blk_mq
-> # cat  /sys/module/scsi_mod/parameters/use_blk_mq
-> Y
-> # grep "" /sys/block/sd*/queue/scheduler
-> /sys/block/sda/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdb/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdc/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdd/queue/scheduler:noop [deadline] cfq
-> /sys/block/sde/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdf/queue/scheduler:noop [deadline] cfq
-> /sys/block/sdg/queue/scheduler:noop [deadline] cfq
->
-> so use_blk_mq is Y but queue/scheduler for existing devices still contains I/O
-> schedulers and shows deadline as active. Looks like blk-mq is not active.
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Hello Arkadiusz,
+Don,
 
- From drivers/scsi/hosts.c, scsi_host_alloc():
+>> OK. I was just wondering whether it would make sense to have a libpqi
+>> with all the spec-compliant pieces and put the "smart" in a dedicated
+>> Microsemi driver.
 
-shost->use_blk_mq = scsi_use_blk_mq && !shost->hostt->disable_blk_mq;
+Don> We would prefer not to do this at this time. We do not know of any
+Don> other PQI drivers that could take advantage of a PQI library.
+Don> However we may end up doing this in the future.
 
-In other words, if you want the change of 
-/sys/module/scsi_mod/parameters/use_blk_mq to become effective, you will 
-have to trigger SCSI host removal and re-add. For a boot drive this is 
-not possible. But when using a SCSI-over-network driver unloading and 
-reloading the appropriate SCSI LLD should be sufficient. Some SCSI LLD 
-drivers, e.g. ib_srp, allow to log out and relogin without unloading and 
-reloading the kernel driver.
+I understand. But we have been badly burned every single time we
+accepted code on the premise that it would get reworked later. 
 
-Bart.
+That said, I haven't seen much interest in T10 PQI outside of the
+HP/PMC/MS nexus so it's probably not too likely that another driver
+would come along.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
