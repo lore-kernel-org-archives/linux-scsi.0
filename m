@@ -1,45 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Wed, 10 Aug 2016 22:40:29 -0400
-Message-ID: <yq18tw4rpsy.fsf@sermon.lab.mkp.net>
-References: <1470657309-9564-1-git-send-email-oneukum@suse.com>
+Subject: Re: [PATCH] ipr: Fix sync scsi scan
+Date: Wed, 10 Aug 2016 22:57:50 -0400
+Message-ID: <yq11t1wrp01.fsf@sermon.lab.mkp.net>
+References: <1470439261.2337.63.camel@HansenPartnership.com>
+	<87popjshn6.fsf@concordia.ellerman.id.au>
+	<11d0860f-b8dd-61a4-ac32-3ce6da208d74@linux.vnet.ibm.com>
+	<87vazaqw5k.fsf@concordia.ellerman.id.au>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29233 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S932203AbcHKCli (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Wed, 10 Aug 2016 22:41:38 -0400
-In-Reply-To: <1470657309-9564-1-git-send-email-oneukum@suse.com> (Oliver
-	Neukum's message of "Mon, 8 Aug 2016 13:55:09 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87vazaqw5k.fsf@concordia.ellerman.id.au> (Michael Ellerman's
+	message of "Tue, 09 Aug 2016 16:44:07 +1000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Ellerman <mpe@ellerman.id.au>
+Cc: Brian King <brking@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "aneesh.kumar@linux.vnet.ibm.com" <aneesh.kumar@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Oliver Neukum <oneukum@suse.com>
-Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
->>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
+>>>>> "Michael" == Michael Ellerman <mpe@ellerman.id.au> writes:
 
-Oliver> Some SATA to USB bridges fail to cooperate with some drives
-Oliver> resulting in no cache being present being reported to the
-Oliver> host. That causes the host to skip sending a command to
-Oliver> synchronize caches. That causes data loss when the drive is
-Oliver> powered down.
+>> Sorry about that. I fixed up async scan and managed to break sync
+>> scan...
+>> 
+>> This patch fixes it on my box. Does it fix the issue for you as well?
 
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index a6c346d..392d166 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -179,6 +179,7 @@ struct scsi_device {
- 	unsigned try_rc_10_first:1;	/* Try READ_CAPACACITY_10 first */
- 	unsigned is_visible:1;	/* is the device visible in sysfs */
- 	unsigned wce_default_on:1;	/* Cache is ON by default */
-+	unsigned always_sync:1;		/* synchronize cache in every case*/
- 	unsigned no_dif:1;	/* T10 PI (DIF) should be disabled */
- 	unsigned broken_fua:1;		/* Don't set FUA bit */
- 	unsigned lun_in_cdb:1;		/* Store LUN bits in CDB[1] */
+Michael> Yes, thanks!
 
-I must be missing something. How is always_sync different from just
-setting wce_default_on?
+Michael> If you like here's a:
+
+Michael> Tested-by: Michael Ellerman <mpe@ellerman.id.au>
+
+Michael> It would be good if we can we get that to Linus sooner rather
+Michael> than later.
+
+Brian: This was a wee bit short of a real patch submission but I hand
+applied it to 4.8/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
