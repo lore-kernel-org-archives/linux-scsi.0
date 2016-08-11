@@ -1,79 +1,66 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/10] zfcp: fix ELS/GS request&response length for
- hardware data router
-Date: Thu, 11 Aug 2016 13:20:23 +0200
-Message-ID: <486ac2fb-b54c-f007-603c-ad0b7f099b09@suse.de>
+Subject: Re: [PATCH 03/10] zfcp: close window with unblocked rport during
+ rport gone
+Date: Thu, 11 Aug 2016 13:21:25 +0200
+Message-ID: <6ecb9f8d-1021-e8f9-7317-1389b47f4d42@suse.de>
 References: <1470846653-90691-1-git-send-email-maier@linux.vnet.ibm.com>
- <1470846653-90691-3-git-send-email-maier@linux.vnet.ibm.com>
+ <1470846653-90691-4-git-send-email-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1470846653-90691-3-git-send-email-maier@linux.vnet.ibm.com>
+In-Reply-To: <1470846653-90691-4-git-send-email-maier@linux.vnet.ibm.com>
 Sender: stable-owner@vger.kernel.org
 To: Steffen Maier <maier@linux.vnet.ibm.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "# 3 . 2+" <stable@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "#2 . 6 . 32+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
 On 08/10/2016 06:30 PM, Steffen Maier wrote:
-> In the hardware data router case, introduced with kernel 3.2
-> commit 86a9668a8d29 ("[SCSI] zfcp: support for hardware data router")
-> the ELS/GS request&response length needs to be initialized
-> as in the chained SBAL case.
+> On a successful end of reopen port forced,
+> zfcp_erp_strategy_followup_success() re-uses the port erp_action
+> and the subsequent zfcp_erp_action_cleanup() now
+> sees ZFCP_ERP_SUCCEEDED with
+> erp_action->action==ZFCP_ERP_ACTION_REOPEN_PORT
+> instead of ZFCP_ERP_ACTION_REOPEN_PORT_FORCED
+> but must not perform zfcp_scsi_schedule_rport_register().
 > 
-> Otherwise, the FCP channel rejects ELS requests with
-> FSF_REQUEST_SIZE_TOO_LARGE.
+> We can detect this because the fresh port reopen erp_action
+> is in its very first step ZFCP_ERP_STEP_UNINITIALIZED.
 > 
-> Such ELS requests can be issued by user space through BSG / HBA API,
-> or zfcp itself uses ADISC ELS for remote port link test on RSCN.
-> The latter can cause a short path outage due to
-> unnecessary remote target port recovery because the always
-> failing ADISC cannot detect extremely short path interruptions
-> beyond the local FCP channel.
+> Otherwise this opens a time window with unblocked rport
+> (until the followup port reopen recovery would block it again).
+> If a scsi_cmnd timeout occurs during this time window
+> fc_timed_out() cannot work as desired and such command
+> would indeed time out and trigger scsi_eh. This prevents
+> a clean and timely path failover.
+> This should not happen if the path issue can be recovered
+> on FC transport layer such as path issues involving RSCNs.
 > 
-> Below example is decoded with zfcpdbf from s390-tools:
+> Also, unnecessary and repeated DID_IMM_RETRY for pending and
+> undesired new requests occur because internally zfcp still
+> has its zfcp_port blocked.
 > 
-> Timestamp      : ...
-> Area           : SAN
-> Subarea        : 00
-> Level          : 1
-> Exception      : -
-> CPU id         : ..
-> Caller         : zfcp_dbf_san_req+0408
-> Record id      : 1
-> Tag            : fssels1
-> Request id     : 0x<reqid>
-> Destination ID : 0x00<target d_id>
-> Payload info   : 52000000 00000000 <our wwpn       >           [ADISC]
->                  <our wwnn       > 00<s_id> 00000000
->                  00000000 00000000 00000000 00000000
+> As follow-on errors with scsi_eh, it can cause,
+> in the worst case, permanently lost paths due to one of:
+> sd <scsidev>: [<scsidisk>] Medium access timeout failure. Offlining disk!
+> sd <scsidev>: Device offlined - not ready after error recovery
 > 
-> Timestamp      : ...
-> Area           : HBA
-> Subarea        : 00
-> Level          : 1
-> Exception      : -
-> CPU id         : ..
-> Caller         : zfcp_dbf_hba_fsf_res+0740
-> Record id      : 1
-> Tag            : fs_ferr
-> Request id     : 0x<reqid>
-> Request status : 0x00000010
-> FSF cmnd       : 0x0000000b               [FSF_QTCB_SEND_ELS]
-> FSF sequence no: 0x...
-> FSF issued     : ...
-> FSF stat       : 0x00000061		  [FSF_REQUEST_SIZE_TOO_LARGE]
-> FSF stat qual  : 00000000 00000000 00000000 00000000
-> Prot stat      : 0x00000100
-> Prot stat qual : 00000000 00000000 00000000 00000000
+> For fix validation and to aid future debugging with other recoveries
+> we now also trace (un)blocking of rports.
 > 
 > Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-> Fixes: 86a9668a8d29 ("[SCSI] zfcp: support for hardware data router")
-> Cc: <stable@vger.kernel.org> # 3.2+
+> Fixes: 5767620c383a ("[SCSI] zfcp: Do not unblock rport from REOPEN_PORT_FORCED")
+> Fixes: a2fa0aede07c ("[SCSI] zfcp: Block FC transport rports early on errors")
+> Fixes: 5f852be9e11d ("[SCSI] zfcp: Fix deadlock between zfcp ERP and SCSI")
+> Fixes: 338151e06608 ("[SCSI] zfcp: make use of fc_remote_port_delete when target port is unavailable")
+> Fixes: 3859f6a248cb ("[PATCH] zfcp: add rports to enable scsi_add_device to work again")
+> Cc: <stable@vger.kernel.org> #2.6.32+
 > Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 > ---
->  drivers/s390/scsi/zfcp_fsf.c | 4 ++++
->  1 file changed, 4 insertions(+)
+>  drivers/s390/scsi/zfcp_dbf.h  |  7 ++++++-
+>  drivers/s390/scsi/zfcp_erp.c  | 12 +++++++++---
+>  drivers/s390/scsi/zfcp_scsi.c |  8 +++++++-
+>  3 files changed, 22 insertions(+), 5 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
