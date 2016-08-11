@@ -1,152 +1,90 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 151991] New: HP Help Desk Number  1 (888) 990-8801
-Date: Thu, 11 Aug 2016 15:59:35 +0000
-Message-ID: <bug-151991-11613@https.bugzilla.kernel.org/>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain
+ address.
+Date: Thu, 11 Aug 2016 18:43:50 +0200
+Message-ID: <20160811164350.vakulxlr4xlsyrxn@c203.arch.suse.de>
+References: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
+ <1470928175.2334.9.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:60408 "EHLO mail.kernel.org"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S932267AbcHKP7i convert rfc822-to-8bit (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 11:59:38 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-	by mail.kernel.org (Postfix) with ESMTP id D7F0A2024D
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2016 15:59:36 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-	by mail.kernel.org (Postfix) with ESMTP id 786F3202FE
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Aug 2016 15:59:35 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <stable-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1470928175.2334.9.camel@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=151991
+On Thu, Aug 11, 2016 at 08:09:35AM -0700, James Bottomley wrote:
+> On Thu, 2016-08-11 at 09:59 +0200, Johannes Thumshirn wrote:
+> > Since commit 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
+> > enclosures') ses_match_to_enclosure() is calling sas_get_address(),
+> > which is coming from commit bcf508c13385 ('scsi_transport_sas: add
+> > function to get SAS endpoint address'). sas_get_address() itself 
+> > calls sas_sdev_to_rdev() which BUG_ON()s if a given scsi_device's 
+> > rphy is not a SAS_END_DEVICE.
+> 
+> Is the BUG_ON the problem?  you're supposed to gate this call with
+> is_sas_attached().
+> 
+> > As SAS Enclosure is a SAS expander device,
+> 
+> This isn't necessarily true.  There are several separated enclosure
+> chips even in the SAS world (although most of the new ones are
+> integrated).
 
-            Bug ID: 151991
-           Summary: HP Help Desk Number  1 (888) 990-8801
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: le
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: BUSLOGIC
-          Assignee: scsi_drivers-buslogic@kernel-bugs.osdl.org
-          Reporter: geo.johnnow@gmail.com
-        Regression: No
+Maybe change it to "As a SAS enclosure can be a SAS expander device, [..]"
 
-Live HP Printer Support                                                        
-                           (888) 990-8801                 
+> 
+> >  we really shouldn't tie the lookup of a SAS address to the SAS End
+> > Device but the sas_rphy, which holds the address information.
+> 
+> This is conceptually wrong.  A wide end device may have many rphys
+> forming a port.  In that case the end device address is likely to be
+> only one of the rphy addresses ... how do you know this code picks the
+> right one?
+> 
+> > Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
+> > enclosures')
+> > Cc: stable@vger.kernel.org # v4.5+
+> 
+> What's the actual bug being fixed here?
 
+This is the callchain I have:
 
+ses_init()
+`-> scsi_register_interface()
+    `-> class_interface_register()
+        `-> ses_intf_add()
+	    `-> ses_match_to_enclosure()
+	        `-> sas_get_address()
+		    `-> sas_sdev_to_rdev()
+                        `-> BUG_ON(rphy->identify.device_type != SAS_END_DEVICE);
+		  	    `-> KABOOM, Bug report, yelling release manager, etc..
 
+Unfortunately I do not have a SAS enclosure here so all I could do was
+read the spec and code and have the customer test the patch.
 
+But from my git archeology:
+Since 3f8d6f2a0 sas_match_to_enclosure() is calling
+sas_get_address(). Which in turn is calling sas_sdev_to_rdev() and so
+on...
+	
+The thing is, in sas_get_address() we want to get the address of a sas
+device, don't we?
+And looking at the UML diagram in the SAS spec, we see an enclosure as
+well as an end device do have a rphy attached to it, which in turn has
+a SAS address.
 
-Are you facing technical problems with your HP printer and looking for HP
-printer support phone number or HP printer support phone number or HP printer
-customer service telephone number or HP printer customer service phone number
-or HP printer customer service telephone number or HP printer customer service
-telephone number, don’t worry you are at the right place. You just need to
-connect with our HP printer technology expert through our toll free number
-(888) 990-8801.HP printer Support Phone Number 1(888) 990-8801, HP printer
-support. HP USA Customer Service Phone Number 1(888) 990-8801.
+So where is the point in fixing the SAS address retreival to end
+devices and not the rphy?
 
-When you dial our HP printer support telephone number you’ll be connected with
-one of our printer technology experts and s/he will help you to get rid of your
-technical problem with Hewlett Packard Printer. In case they’re unable to fix
-it they’ll be sharing a new HP printer support phone number of their senior
-level technicians. hp printer troubleshooting , hp help and support , contact
-hp printer support , hp support for printers , hp printer contact number , hp
-printer phone support , install hp printer , hp laptop support number , hp
-printer tech support phone number. We are provide best support for HP OfficeJet
-Pro 8600 support. We have expert technician and they can resolve your issue and
-we are providing hp tech support telephone number. Our more services are tech
-support for hp, hp phone number for printer support, hp wireless printer
-support phone number, hp printer fix ,hp printer setup , hp computer support
-number , hp printer support phone number usa , hp wireless printer support
-technical support for Hewlett Packard Printer. HP printer support,  They’ll
-help you with HP printer support phone number or HP printer  support phone
-number, HP printer  support phone number, HP printer customer service number,
-HP printer  support phone number, HP printer support phone number. HP USA
-Customer Service Phone Number 1(888) 990-8801
-
-We are provide best support for HP OfficeJet Pro 8600 support. We have expert
-technician and they can resolve your issue and we are providing hp tech support
-telephone number. Our more services are tech support for hp, hp phone number
-for printer support, hp wireless printer support phone number, hp printer fix.
-Our printer technology experts are good enough to assist you if you are
-searching on Google for HP printer support, hp printer help phone number, HP
-printer help, HP printer helpline, HP printer helpdesk, HP printer tech
-support, HP printer technical support number, support for Hewlett Packard
-Printer, hp printer tech support number , hp printer technical support number ,
-hp printer technical support phone number , hp printer troubleshooting , hp
-help and support , contact hp printer support , hp support for printers , hp
-printer contact number , hp printer phone support , install hp printer , hp
-laptop support number , hp printer tech support phone number , hp printer setup
-, hp computer support number , hp printer support phone number usa , hp
-wireless printer support technical support for hp Printer. HP printer support,
-HP printer help, hp printer help phone number,  HP printer helpline, HP printer
-helpdesk, support for Hewlett Packard Printer, HP printer problem, HP printer
-problems, HP printer problem, HP printer problems, HP printer issues, HP
-printer issues, HP printer number, HP printer number, HP technical support
-number. You don’t need to go and search on Google every time you need
-assistance. 
-HP USA Customer Service Phone Number 1(888) 990-8801, phone number for hp
-support,hp 800 number,phone number for hp printer support,hp support telephone
-number,hp help desk number,hp printers tech support phone number,hp printers
-support phone number,hp printer helpline phone number,hp laptop technical
-support number,hp phone number for tech support,hp troubleshooting phone
-number,hp help and support phone number,call hp tech support,hp printer service
-phone number
-We are basically provided a technical support for the hp and the phone number
-of the hp is 1(888) 990-8801. phone number for hp support,hp 800 number,phone
-number for hp printer support,hp support telephone number,hp help desk
-number,hp printers tech support phone number,hp printers support phone
-number,hp printer helpline phone number,hp laptop technical support number,hp
-phone number for tech support,hp troubleshooting phone number,hp help and
-support phone number,call hp tech support,hp printer service phone number, hp
-printer tech support number | hp printer technical support number | hp printer
-technical support phone number | hp printer troubleshooting | hp help and
-support | contact hp printer support | hp support for printers | hp printer
-contact number | hp printer phone support | install hp printer | hp laptop
-support number | hp printer tech support phone number | hp printer setup | hp
-computer support number | hp printer support phone number usa | hp wireless
-printer support
-We are provide best support for HP OfficeJet Pro 8600 support. We have expert
-technician and they can resolve your issue and we are providing hp tech support
-telephone number. Our more services are tech support for hp, hp phone number
-for printer support, hp wireless printer support phone number, hp printer fix.
-hp printer tech support number | hp printer technical support number | hp
-printer technical support phone number | hp printer troubleshooting | hp help
-and support | contact hp printer support | hp support for printers | hp printer
-contact number | hp printer phone support | install hp printer | hp laptop
-support number | hp printer tech support phone number | hp printer setup | hp
-computer support number | hp printer support phone number usa | hp wireless
-printer support
-HP printer setup, HP printer service with technical support number 1(888)
-990-8801, HP printer Support, HP printer help, how to fix HP printer problem,
-HP printer not working, HP printer configuration, HP printer Support Number 
-1(888) 990-8801, HP printer support, HP printer support, HP printer support, HP
-printer support, HP printer support, HP printer support, HP printer support, HP
-printer support, HP printer support 1(888) 990-8801, Contact on HP printer tech
-support phone number for HP printer technical help and HP printer suppor phone
-number 1(888) 990-8801.
-hp printer tech support number | hp printer technical support number | hp
-printer technical support phone number | hp printer troubleshooting | hp help
-and support | contact hp printer support | hp support for printers | hp printer
-contact number | hp printer phone support | install hp printer | hp laptop
-support number | hp printer tech support phone number | hp printer setup | hp
-computer support number | hp printer support phone number usa | hp wireless
-printer support |hp phone number for hp support,hp 800 number,phone number for
-hp printer support,hp support telephone number,hp help desk number,hp printers
-tech support phone number,hp printers support phone number,hp printer helpline
-phone number,hp laptop technical support number,hp phone number for tech
-support,hp troubleshooting phone number,hp help and support phone number,call
-hp tech support,hp printer service phone number.
-
+Johannes
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
+GF: Felix Imend�rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N�rnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
