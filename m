@@ -1,78 +1,65 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [dm-devel] [PATCH] dm-mpath: always return reservation conflict
-Date: Thu, 11 Aug 2016 20:38:32 +0200
-Message-ID: <20160811183832.GA27144@lst.de>
-References: <1470141392-25479-1-git-send-email-hch@lst.de> <1470141392-25479-2-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:42777 "EHLO newverein.lst.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750818AbcHKSie (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 11 Aug 2016 14:38:34 -0400
-Content-Disposition: inline
-In-Reply-To: <1470141392-25479-2-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH] Update WRITE_SAME timeout in sd_setup_discard_cmnd
+Date: Thu, 11 Aug 2016 15:12:38 -0500
+Message-ID: <1470946358-6744-1-git-send-email-shaun@tancheff.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Josh Bingaman <josh.bingaman@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
-To: dm-devel@redhat.com, linux-scsi@vger.kernel.org
-Cc: hare@suse.com
 
-ping?
+In sd_setup_discard_cmnd() there are a some discard
+methods that fall back to using WRITE_SAME. It
+appears that those paths using WRITE_SAME should
+also use the SD_WRITE_SAME_TIMEOUT instead of the
+default SD_TIMEOUT.
 
-On Tue, Aug 02, 2016 at 02:36:32PM +0200, Christoph Hellwig wrote:
-> From: Hannes Reinecke <hare@suse.de>
-> 
-> If dm-mpath encounters an reservation conflict it should not fail the
-> path (as communication with the target is not affected) but should
-> rather retry on another path. However, in doing so we might be inducing
-> a ping-pong between paths, with no guarantee of any forward progress.
-> 
-> And arguably a reservation conflict is an unexpected error, so we should
-> be passing it upwards to allow the application to take appropriate steps.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> Acked-by: Christoph Hellwig <hch@lst.de>
-> Tested-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/dm-mpath.c | 14 ++++++++++----
->  1 file changed, 10 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
-> index 7eac080..8d2f916 100644
-> --- a/drivers/md/dm-mpath.c
-> +++ b/drivers/md/dm-mpath.c
-> @@ -1555,16 +1555,22 @@ static int do_end_io(struct multipath *m, struct request *clone,
->  	if (noretry_error(error))
->  		return error;
->  
-> -	if (mpio->pgpath)
-> +	/*
-> +	 * EBADE signals an reservation conflict.
-> +	 * We shouldn't fail the path here as we can communicate with
-> +	 * the target. We should failover to the next path, but in
-> +	 * doing so we might be causing a ping-pong between paths.
-> +	 * So just return the reservation conflict error.
-> +	 */
-> +	if (error == -EBADE)
-> +		r = error;
-> +	else if (mpio->pgpath)
->  		fail_path(mpio->pgpath);
->  
->  	if (!atomic_read(&m->nr_valid_paths)) {
->  		if (!test_bit(MPATHF_QUEUE_IF_NO_PATH, &m->flags)) {
->  			if (!must_push_back_rq(m))
->  				r = -EIO;
-> -		} else {
-> -			if (error == -EBADE)
-> -				r = error;
->  		}
->  	}
->  
-> -- 
-> 2.1.4
-> 
-> --
-> dm-devel mailing list
-> dm-devel@redhat.com
-> https://www.redhat.com/mailman/listinfo/dm-devel
----end quoted text---
+Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+---
+I don't have a use case that breaks the current code.
+It just seems to me that setups for discard and
+write same should be consistent.
+---
+ drivers/scsi/sd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d3e852a..3c15f3a 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -722,6 +722,8 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	if (!page)
+ 		return BLKPREP_DEFER;
+ 
++	rq->timeout = SD_TIMEOUT;
++
+ 	switch (sdkp->provisioning_mode) {
+ 	case SD_LBP_UNMAP:
+ 		buf = page_address(page);
+@@ -746,6 +748,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 		put_unaligned_be32(nr_sectors, &cmd->cmnd[10]);
+ 
+ 		len = sdkp->device->sector_size;
++		rq->timeout = SD_WRITE_SAME_TIMEOUT;
+ 		break;
+ 
+ 	case SD_LBP_WS10:
+@@ -758,6 +761,7 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 		put_unaligned_be16(nr_sectors, &cmd->cmnd[7]);
+ 
+ 		len = sdkp->device->sector_size;
++		rq->timeout = SD_WRITE_SAME_TIMEOUT;
+ 		break;
+ 
+ 	default:
+@@ -766,8 +770,6 @@ static int sd_setup_discard_cmnd(struct scsi_cmnd *cmd)
+ 	}
+ 
+ 	rq->completion_data = page;
+-	rq->timeout = SD_TIMEOUT;
+-
+ 	cmd->transfersize = len;
+ 	cmd->allowed = SD_MAX_RETRIES;
+ 
+-- 
+2.8.1
