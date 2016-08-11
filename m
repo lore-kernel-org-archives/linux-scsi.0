@@ -1,90 +1,126 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain
- address.
-Date: Thu, 11 Aug 2016 18:43:50 +0200
-Message-ID: <20160811164350.vakulxlr4xlsyrxn@c203.arch.suse.de>
-References: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
- <1470928175.2334.9.camel@linux.vnet.ibm.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [dm-devel] dm-mq and end_clone_request()
+Date: Thu, 11 Aug 2016 12:51:47 -0400 (EDT)
+Message-ID: <532021645.703156.1470934307915.JavaMail.zimbra@redhat.com>
+References: <20160801175948.GA6685@redhat.com> <1345038259.188657.1470696767844.JavaMail.zimbra@redhat.com> <1771573384.192110.1470701350622.JavaMail.zimbra@redhat.com> <2aaad6b7-bfa4-b965-53bf-4420fe01d3e5@sandisk.com> <1494059467.386778.1470762767417.JavaMail.zimbra@redhat.com> <ad12fd05-f931-30a5-2efd-3d8a171a73cb@sandisk.com> <967089395.387512.1470763275007.JavaMail.zimbra@redhat.com> <609737535.572896.1470865096150.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1470928175.2334.9.camel@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:58573 "EHLO
+	mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S932550AbcHKQvw (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 12:51:52 -0400
+In-Reply-To: <609737535.572896.1470865096150.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Thu, Aug 11, 2016 at 08:09:35AM -0700, James Bottomley wrote:
-> On Thu, 2016-08-11 at 09:59 +0200, Johannes Thumshirn wrote:
-> > Since commit 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
-> > enclosures') ses_match_to_enclosure() is calling sas_get_address(),
-> > which is coming from commit bcf508c13385 ('scsi_transport_sas: add
-> > function to get SAS endpoint address'). sas_get_address() itself 
-> > calls sas_sdev_to_rdev() which BUG_ON()s if a given scsi_device's 
-> > rphy is not a SAS_END_DEVICE.
+
+
+----- Original Message -----
+> From: "Laurence Oberman" <loberman@redhat.com>
+> To: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer" <snitzer@redhat.com>, "Johannes Thumshirn"
+> <jthumshirn@suse.de>
+> Sent: Wednesday, August 10, 2016 5:38:16 PM
+> Subject: Re: [dm-devel] dm-mq and end_clone_request()
 > 
-> Is the BUG_ON the problem?  you're supposed to gate this call with
-> is_sas_attached().
 > 
-> > As SAS Enclosure is a SAS expander device,
 > 
-> This isn't necessarily true.  There are several separated enclosure
-> chips even in the SAS world (although most of the new ones are
-> integrated).
-
-Maybe change it to "As a SAS enclosure can be a SAS expander device, [..]"
-
+> ----- Original Message -----
+> > From: "Laurence Oberman" <loberman@redhat.com>
+> > To: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> > Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer"
+> > <snitzer@redhat.com>, "Johannes Thumshirn"
+> > <jthumshirn@suse.de>
+> > Sent: Tuesday, August 9, 2016 1:21:15 PM
+> > Subject: Re: [dm-devel] dm-mq and end_clone_request()
+> > 
+> > 
+> > 
+> > ----- Original Message -----
+> > > From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> > > To: "Laurence Oberman" <loberman@redhat.com>
+> > > Cc: dm-devel@redhat.com, linux-scsi@vger.kernel.org, "Mike Snitzer"
+> > > <snitzer@redhat.com>, "Johannes Thumshirn"
+> > > <jthumshirn@suse.de>
+> > > Sent: Tuesday, August 9, 2016 1:16:52 PM
+> > > Subject: Re: [dm-devel] dm-mq and end_clone_request()
+> > > 
+> > > On 08/09/2016 10:12 AM, Laurence Oberman wrote:
+> > > > I was talking about this patch
+> > > >
+> > > > --- a/drivers/scsi/scsi_scan.c
+> > > > +++ b/drivers/scsi/scsi_scan.c
+> > > > @@ -1890,10 +1890,11 @@ void scsi_forget_host(struct Scsi_Host *shost)
+> > > >   restart:
+> > > >          spin_lock_irqsave(shost->host_lock, flags);
+> > > >          list_for_each_entry(sdev, &shost->__devices, siblings) {
+> > > > -                if (sdev->sdev_state == SDEV_DEL)
+> > > > +                if (sdev->sdev_state == SDEV_DEL ||
+> > > > scsi_device_get(sdev)
+> > > > < 0)
+> > > >                          continue;
+> > > >                  spin_unlock_irqrestore(shost->host_lock, flags);
+> > > >                  __scsi_remove_device(sdev);
+> > > > +                scsi_device_put(sdev);
+> > > >                  goto restart;
+> > > >          }
+> > > >          spin_unlock_irqrestore(shost->host_lock, flags);
+> > > 
+> > > Hello Laurence,
+> > > 
+> > > Did you run your tests with that patch applied? If so, it would help if
+> > > you could rerun your tests without that patch. If the above patch makes
+> > > a difference it means that it can happen that __scsi_remove_device()
+> > > does not change the device state into SDEV_DEL. That's a bug and we need
+> > > to know whether or not __scsi_remove_device() behaves correctly.
+> > > 
+> > > Thanks,
+> > > 
+> > > Bart.
+> > > 
+> > Yes Sir, I ran all yesterdays tests on your kernel with that patch applied.
+> > Of course it may well just be luck/coincidence that the host delete race is
+> > no longer happening
+> > so I agree we need to re-run the tests so I will revert and re-run.
+> > I will probably only get back to you tomorrow with the results.
+> > 
+> > Thanks
+> > Laurence
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> > 
+> Hello Bart
 > 
-> >  we really shouldn't tie the lookup of a SAS address to the SAS End
-> > Device but the sas_rphy, which holds the address information.
+> I only just got time now to revert that patch and build a kernel.
+> Will test this tonight and let you know if I am back to seeing panics
+> sporadically without the patch.
+> As already mentioned, this is a different configuration to what I had when I
+> was able to reproduce the panic.
+> This means the lack of hitting this stack trace and panic may turn out to
+> have nothing to do with the patch I applied.
 > 
-> This is conceptually wrong.  A wide end device may have many rphys
-> forming a port.  In that case the end device address is likely to be
-> only one of the rphy addresses ... how do you know this code picks the
-> right one?
+> Thanks
+> Laurence
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 > 
-> > Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
-> > enclosures')
-> > Cc: stable@vger.kernel.org # v4.5+
-> 
-> What's the actual bug being fixed here?
+Hello Bart
 
-This is the callchain I have:
+I can no longer reproduce the stack even with the patch reverted so its behaving as you expected and the patch is as you already said, not valid.
+I ran about 30 fio tests with your kernel and multiple host deletions and and did experience only one hard fio error.
+My tests now produce the same results as you are seeing.
 
-ses_init()
-`-> scsi_register_interface()
-    `-> class_interface_register()
-        `-> ses_intf_add()
-	    `-> ses_match_to_enclosure()
-	        `-> sas_get_address()
-		    `-> sas_sdev_to_rdev()
-                        `-> BUG_ON(rphy->identify.device_type != SAS_END_DEVICE);
-		  	    `-> KABOOM, Bug report, yelling release manager, etc..
+The single fio errors was with many more executions of the test so its not easy to get these fio errors.
 
-Unfortunately I do not have a SAS enclosure here so all I could do was
-read the spec and code and have the customer test the patch.
+Away from tomorrow on vacation for 10 days
 
-But from my git archeology:
-Since 3f8d6f2a0 sas_match_to_enclosure() is calling
-sas_get_address(). Which in turn is calling sas_sdev_to_rdev() and so
-on...
-	
-The thing is, in sas_get_address() we want to get the address of a sas
-device, don't we?
-And looking at the UML diagram in the SAS spec, we see an enclosure as
-well as an end device do have a rphy attached to it, which in turn has
-a SAS address.
-
-So where is the point in fixing the SAS address retreival to end
-devices and not the rphy?
-
-Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Thanks
+Laurence
