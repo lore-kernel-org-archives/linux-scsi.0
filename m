@@ -1,40 +1,27 @@
-From: Pavel Andrianov <andrianov@ispras.ru>
-Subject: A potential race in drivers/scsi/megaraid.ko
-Date: Fri, 12 Aug 2016 13:44:18 +0300
-Message-ID: <d68c390c-1794-796d-cdb2-402f1214ca4c@ispras.ru>
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PATCH] scsi: bnx2i: convert to kworker
+Date: Fri, 12 Aug 2016 12:59:47 +0200
+Message-ID: <20160812105947.u7baej6w66v3p7wo@linutronix.de>
+References: <1467654037-17339-1-git-send-email-bigeasy@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@avagotech.com>
-Cc: Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Vaishali Thakkar <vaishali.thakkar@oracle.com>, ldv-project@linuxtesting.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:56933 "EHLO
+	Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbcHLLAi (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 07:00:38 -0400
+Content-Disposition: inline
+In-Reply-To: <1467654037-17339-1-git-send-email-bigeasy@linutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Cc: Johannes Thumshirn <jth@kernel.org>, rt@linutronix.de, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, QLogic-Storage-Upstream@qlogic.com
 
-Hi!
+On 2016-07-04 19:40:37 [+0200], To linux-scsi@vger.kernel.org wrote:
+> The driver creates its own per-CPU threads which are updated based on CPU
+> hotplug events. It is also possible to use kworkers and remove some of the
+> infrastructure get the same job done while saving a few lines of code.
 
-There is a potential data race in drivers/scsi/megaraid.ko
-Regards such case:
+ping
 
-Thread 1					Thread 2
-...						...
--> megaraid_probe_one				
-    -> request_irq    - now an interrupt may arise
-    -> mega_query_adapter
-      -> issue_scb_block
-			interrupt comes 	
-						-> megaraid_isr_iomapped
-						  -> mega_runpendq
-						    -> __mega_runpendq
-						      -> issue_skb
-
-In this case the structure 'mbox' is modified from two threads 
-simultaneously. Or, more correct, the first modification is interrupted 
-by the second one. Likely, the first thread should acquire the same 
-spinlock adapter->lock as the second one.
-
--- 
-Pavel Andrianov
-Linux Verification Center, ISPRAS
-web: http://linuxtesting.org
-e-mail: andrianov@ispras.ru
+Sebastian
