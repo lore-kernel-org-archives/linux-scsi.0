@@ -1,141 +1,122 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
-Date: Fri, 12 Aug 2016 13:25:30 +0530
-Message-ID: <6c0ae0e85a4ba32a23d70dd6ed99f179@mail.gmail.com>
-References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1469092085-14311-3-git-send-email-jitendra.bhivare@broadcom.com>
- <57A4DD34.4080000@redhat.com> <yq1popivjjk.fsf@sermon.lab.mkp.net>
- <2c0a32a2af7f12150da2818d0b0ec4d6@mail.gmail.com> <57AA1770.6010802@redhat.com>
- 7ab48eaa301e671c8338a2161edd2097@mail.gmail.com 8ca3e0c5ced55749a0e242ddc6930421@mail.gmail.com
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 02/14] lpfc: Fix sg_reset on SCSI device causing kernel
+ crash
+Date: Fri, 12 Aug 2016 10:28:08 +0200
+Message-ID: <20160812082808.ac66s2kp5ee2hh5y@c203.arch.suse.de>
+References: <57acc585.HP3iyAK6go/SCR18%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f175.google.com ([209.85.217.175]:35625 "EHLO
-	mail-ua0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752212AbcHLI0f (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 04:26:35 -0400
-Received: by mail-ua0-f175.google.com with SMTP id n59so31486642uan.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2016 01:26:34 -0700 (PDT)
-In-Reply-To: 8ca3e0c5ced55749a0e242ddc6930421@mail.gmail.com
+Received: from mx2.suse.de ([195.135.220.15]:60336 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751959AbcHLI2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 04:28:11 -0400
+Content-Disposition: inline
+In-Reply-To: <57acc585.HP3iyAK6go/SCR18%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
-> Sent: Thursday, August 11, 2016 11:12 AM
-> To: 'Mike Christie'; 'Martin K. Petersen'
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
->
->
->
-> > -----Original Message-----
-> > From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
-> > Sent: Wednesday, August 10, 2016 6:16 PM
-> > To: 'Mike Christie'; 'Martin K. Petersen'
-> > Cc: 'linux-scsi@vger.kernel.org'
-> > Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with
-> > _irqsave/irqrestore
-> >
-> > > -----Original Message-----
-> > > From: Mike Christie [mailto:mchristi@redhat.com]
-> > > Sent: Tuesday, August 09, 2016 11:19 PM
-> > > To: Jitendra Bhivare; Martin K. Petersen
-> > > Cc: linux-scsi@vger.kernel.org
-> > > Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with
-> > > _irqsave/irqrestore
-> > >
-> > > On 08/09/2016 03:29 AM, Jitendra Bhivare wrote:
-> > > >> -----Original Message-----
-> > > >> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> > > >> Sent: Tuesday, August 09, 2016 6:35 AM
-> > > >> To: Mike Christie
-> > > >> Cc: Jitendra Bhivare; linux-scsi@vger.kernel.org
-> > > >> Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with
-> > > > _irqsave/irqrestore
-> > > >>
-> > > >>>>>>> "Mike" == Mike Christie <mchristi@redhat.com> writes:
-> > > >>
-> > > >>>> In beiscsi_alloc_pdu, _bh versions of spin_lock are being used
-> > > >>>> for protecting SGLs and WRBs. _bh versions are needed as the
-> > > >>>> function gets invoked in process context and BLOCK_IOPOLL
-> > > >>>> softirq.
-> > > >>>>
-> > > >>>> In spin_unlock_bh, after releasing the lock and enabling BH,
-> > > >>>> do_softirq is called which executes till last SOFTIRQ.
-> > > >>>>
-> > > >>>> beiscsi_alloc_pdu is called under session lock. Through block
-> > > >>>> layer, iSCSI stack in some cases send IOs with interrupts
-> > > >>>> disabled.
-> > > >>>> In such paths,
-> > > >>
-> > > >>
-> > > >> Mike> What path is this? Is this with mq enabled or disabled?
-> > > >>
-> > > >> Jitendra?
-> > > >>
-> > > >> --
-> > > >> Martin K. Petersen	Oracle Linux Engineering
-> > > > [JB] Sorry for the delayed response, there was some issue with my
-> > > > mail client.
-> > > > There are paths block layer where IRQs are disabled with
-> > > > request_queue queue_lock.
-> > > > - blk_timeout_work : this triggers NOP-OUT thru'
-> > > > iscsi_eh_cmd_timed_out.
-> > > > - blk_execute_rq_nowait
-> > >
-> > > I am not sure I understand the problem/solution. Why does the patch
-> > > only need to modify be2iscsi's locking? Why wouldn't you need to
-> > > also change the libiscsi session lock locking? You don't need irqs
-> > > to be running right? You are just doing this so the locking calls
-> > > (irq vs bh) matches
-> > up?
-> > >
-> > > Don't you also need to fix the non-mq IO path. scsi_request_fn needs
-> > > a fix to use spin_lock_irqsave/spin_unlock_irqrestore because
-> > > blk_execute_rq_nowait already disables them right?
-> > >
-> > [JB] The issue is hard lockup seen on a CPU which is waiting for
-> > session lock taken by another CPU processing do_softirq. This
-> > do_softirq is getting called from be2iscsi spin_unlock_bh.
-> >
-> > The contention gets easily exposed with be2iscsi as it data structures
-> > are accessed in process context and IRQ_POLL softirq.
-> >
-> > iscsi_eh_cmd_timed_out gets saved because it is using base spin_lock
-> > version for session lock (frwd and back).
-> > iscsi_queuecommand is using _bh which is bit scary.
-> >
-> > Yes, that needs to be fixed too... and then this other path looks
-> > buggy too - blk_run_queue (takes queue_lock with irqsave)
-> > ->scsi_request_fn (unlocks it with
-> > _irq)
-> [JB] In this case, the other CPU executing do_softirq was too sending IO
-> under
-> session lock.
-> When be2iscsi does spin_unlock_bh after getting resources for the IO,
-> unlock_bh finds pending IRQ_POLL softirq.
->
-> The issue is more to do with driver using _unlock_bh.
-> It is causing a WARN_ON too in unlock_bh where ever used  for disabled
-> IRQs.
-[JB] My apologies. blk_execute_rq_nowait and the call trace shown is with
-older kernel.
-Only valid kernel trace with latest kernel is:
-[  180.957062]  <IRQ>  [<ffffffff81603f36>] dump_stack+0x19/0x1b
-[  180.957070]  [<ffffffff8106e28b>] warn_slowpath_common+0x6b/0xb0
-[  180.957072]  [<ffffffff8106e3da>] warn_slowpath_null+0x1a/0x20
-[  180.957073]  [<ffffffff81076d1a>] local_bh_enable_ip+0x7a/0xa0
-[  180.957077]  [<ffffffff8160b0eb>] _raw_spin_unlock_bh+0x1b/0x40
-[  180.957084]  [<ffffffffa037f753>] alloc_mgmt_sgl_handle+0x83/0xe0
-[be2iscsi]
-[  180.957089]  [<ffffffffa0388d9e>] beiscsi_alloc_pdu+0x21e/0x5d0
-[be2iscsi]
-[  180.957094]  [<ffffffffa01bec71>] __iscsi_conn_send_pdu+0x101/0x2e0
-[libiscsi]
-[  180.957099]  [<ffffffffa01bef78>] iscsi_send_nopout+0xb8/0x100 [libiscsi]
-[  180.957104]  [<ffffffffa01bfca4>] iscsi_eh_cmd_timed_out+0x2a4/0x2d0
-[libiscsi]
-[  180.957107]  [<ffffffff813f56de>] scsi_times_out+0x5e/0x320
+On Thu, Aug 11, 2016 at 11:35:49AM -0700, James Smart wrote:
+> 
+> Fix sg_reset on SCSI device causing kernel crash
+> 
+> Driver could reference stale node pointers in task mgmt call.
+> Changed to use resetting cmd and look up node pointer in task mgmt
+> function.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_scsi.c | 18 +++++++++++-------
+>  1 file changed, 11 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+> index d197aa1..c100477 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -4945,18 +4945,21 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
+>   *   0x2002 - Success.
+>   **/
+>  static int
+> -lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
+> -		    unsigned  tgt_id, uint64_t lun_id,
+> -		    uint8_t task_mgmt_cmd)
+> +lpfc_send_taskmgmt(struct lpfc_vport *vport, struct scsi_cmnd *cmnd,
+> +		   unsigned int tgt_id, uint64_t lun_id,
+> +		   uint8_t task_mgmt_cmd)
+>  {
+>  	struct lpfc_hba   *phba = vport->phba;
+>  	struct lpfc_scsi_buf *lpfc_cmd;
+>  	struct lpfc_iocbq *iocbq;
+>  	struct lpfc_iocbq *iocbqrsp;
+> -	struct lpfc_nodelist *pnode = rdata->pnode;
+> +	struct lpfc_rport_data *rdata;
+> +	struct lpfc_nodelist *pnode;
+>  	int ret;
+>  	int status;
+>  
+> +	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+
+	if (!rdata  || !rdata->pnode)
+		return FAILED;
+
+As you do it in lpfc_chk_tgt_mapped() and lpfc_device_reset_handler()?
+
+
+> +	pnode = rdata->pnode;
+>  	if (!pnode || !NLP_CHK_NODE_ACT(pnode))
+>  		return FAILED;
+>  
+> @@ -4965,6 +4968,7 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
+>  		return FAILED;
+>  	lpfc_cmd->timeout = phba->cfg_task_mgmt_tmo;
+>  	lpfc_cmd->rdata = rdata;
+> +	lpfc_cmd->pCmd = cmnd;
+>  
+>  	status = lpfc_scsi_prep_task_mgmt_cmd(vport, lpfc_cmd, lun_id,
+>  					   task_mgmt_cmd);
+> @@ -5171,7 +5175,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+>  	fc_host_post_vendor_event(shost, fc_get_event_number(),
+>  		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+>  
+> -	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
+> +	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+>  						FCP_LUN_RESET);
+>  
+>  	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+> @@ -5249,7 +5253,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+>  	fc_host_post_vendor_event(shost, fc_get_event_number(),
+>  		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+>  
+> -	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
+> +	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+>  					FCP_TARGET_RESET);
+>  
+>  	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+> @@ -5328,7 +5332,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+>  		if (!match)
+>  			continue;
+>  
+> -		status = lpfc_send_taskmgmt(vport, ndlp->rport->dd_data,
+> +		status = lpfc_send_taskmgmt(vport, cmnd,
+>  					i, 0, FCP_TARGET_RESET);
+>  
+>  		if (status != SUCCESS) {
+> -- 
+> 2.5.0
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
