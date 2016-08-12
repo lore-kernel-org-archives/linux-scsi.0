@@ -1,36 +1,46 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] ibmvfc: FC-TAPE Support
-Date: Thu, 11 Aug 2016 23:11:13 -0400
-Message-ID: <yq17fbmptpq.fsf@sermon.lab.mkp.net>
-References: <1470260213-19087-1-git-send-email-tyreld@linux.vnet.ibm.com>
-	<57ACE204.7000106@linux.vnet.ibm.com>
+Subject: Re: [RFC] sd: dynamically adjust SD_MAX_WS16_BLOCKS as per the actual logical block size
+Date: Thu, 11 Aug 2016 23:10:37 -0400
+Message-ID: <yq1bn0yptqq.fsf@sermon.lab.mkp.net>
+References: <b7f44789e0e68fa57d2e3cd059ac3a5bc6d53495.1470954520.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <57ACE204.7000106@linux.vnet.ibm.com> (Tyrel Datwyler's message
-	of "Thu, 11 Aug 2016 13:37:24 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, mpe@ellerman.id.au
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51199 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbcHLDLr (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Thu, 11 Aug 2016 23:11:47 -0400
+In-Reply-To: <b7f44789e0e68fa57d2e3cd059ac3a5bc6d53495.1470954520.git.tom.ty89@gmail.com>
+	(tom's message of "Fri, 12 Aug 2016 06:29:43 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tom.ty89@gmail.com
+Cc: martin.petersen@oracle.com, shaun@tancheff.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, shaun.tancheff@seagate.com
 
->>>>> "Tyrel" == Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
+>>>>> "Tom" == tom ty89 <tom.ty89@gmail.com> writes:
 
-Tyrel> On 08/03/2016 02:36 PM, Tyrel Datwyler wrote:
->> This patchset introduces optional FC-TAPE/FC Class 3 Error Recovery
->> to the ibmvfc client driver.
->> 
->> Tyrel Datwyler (2): ibmvfc: Set READ FCP_XFER_READY DISABLED bit in
->> PRLI ibmvfc: add FC Class 3 Error Recovery support
->> 
->> drivers/scsi/ibmvscsi/ibmvfc.c | 11 +++++++++++
->> drivers/scsi/ibmvscsi/ibmvfc.h | 1 + 2 files changed, 12
->> insertions(+)
->> 
+Tom,
 
-Tyrel> ping?
+Tom> However, SD_MAX_WS16_BLOCKS is used to check values that are, for
+Tom> example, orignated from Maximum Write Same Length field on the
+Tom> Block Limit VPD. Such field expresses the number of blocks in terms
+Tom> of the actual logical sector size of the specific drive instead of
+Tom> the block size that the block layer is based on (512).
 
--ENOREVIEWS
+I agree the SD_MAX_WS16_BLOCKS is ugly. I think it started out as a
+limit expressly set in block layer sector units and then when the
+discard code got expanded it got re-purposed into being something
+else. So let's get that cleaned up.
+
+However, the CDB transfer length limit is really not the main issue
+here, it's bi_size that we need to enforce.
+
+After contemplating a bit I think it would be cleanest to add
+BLK_MAX_BIO_SECTORS and clamp on that in blk_queue_max_foobar() like we
+do with some of the other queue limits. Move the enforcement to block
+where the actual limit originates rather than code around it in sd.
+
+Also, please use ilog2() instead of division for things like this.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
