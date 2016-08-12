@@ -1,48 +1,51 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] sd: check BLK_DEF_MAX_SECTORS against max_dev_sectors
-Date: Fri, 12 Aug 2016 17:37:36 -0400
-Message-ID: <yq11t1tmzxb.fsf@sermon.lab.mkp.net>
-References: <60518e90d462d4cbb1c528914eac64e2fe124717.1471011949.git.tom.ty89@gmail.com>
-	<974f3a0aa9e82caf067353fd7d7119c07d7e98c1.1471011949.git.tom.ty89@gmail.com>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
+Date: Fri, 12 Aug 2016 16:49:06 -0500
+Message-ID: <CAJVOszDDC39ge6d3h+uy1wtxMBv95_V1eWofumya_G5zg21OrQ@mail.gmail.com>
+References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+ <yq1r39upy7p.fsf@sermon.lab.mkp.net> <CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
+ <yq1lh01n1ul.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <974f3a0aa9e82caf067353fd7d7119c07d7e98c1.1471011949.git.tom.ty89@gmail.com>
-	(tom's message of "Fri, 12 Aug 2016 22:27:04 +0800")
-Sender: linux-ide-owner@vger.kernel.org
-To: tom.ty89@gmail.com
-Cc: tj@kernel.org, martin.petersen@oracle.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <yq1lh01n1ul.fsf@sermon.lab.mkp.net>
+Sender: linux-block-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tom Yan <tom.ty89@gmail.com>, Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == tom ty89 <tom.ty89@gmail.com> writes:
+On Fri, Aug 12, 2016 at 3:56 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+>
+> Tom,
+>
+>>> put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM / (sector_size / 512), &rbuf[36]);
+>
+> How many 8-byte ranges fit in a 4096-byte sector?
+>
+> Tom> So were you trying to pointing out something I am still missing, or
+> Tom> were you merely confirming I was right?
+>
+> I suggest you drop ATA_MAX_TRIM_RNUM and do:
+>
+> enum {
+>      ATA_TRIM_BLOCKS_PER_RANGE = 65535, /* 0xffff blocks per range desc. */
+>      ATA_TRIM_RANGE_SIZE_SHIFT = 3,     /* range descriptor is 8 bytes */
+> };
+>
+> put_unaligned_be64(ATA_TRIM_BLOCKS_PER_RANGE *
+>                    sector_size >> ATA_TRIM_RANGE_SIZE_SHIFT, &rbuf[36]);
+>
+> Might be worthwhile to create an ata_max_lba_range_blocks() wrapper.
 
-Tom,
+Ah, I think I am understanding now. When the sector size is 4K the
+minimum page sent with WRITE SAME will be 4K.
 
-Tom> The SCSI disk driver sets max_sectors to BLK_DEF_MAX_SECTORS when
-Tom> the device does not report Optimal Transfer Length. However, it
-Tom> checks only whether it is smaller than max_hw_sectors, but not
-Tom> max_dev_sectors.
-
-It would be pretty unusual for a device that is smart enough to report a
-transfer length limit to be constrained to 1 MB and change.
-
-@@ -2875,8 +2875,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	    logical_to_bytes(sdp, sdkp->opt_xfer_blocks) >= PAGE_SIZE) {
- 		q->limits.io_opt = logical_to_bytes(sdp, sdkp->opt_xfer_blocks);
- 		rw_max = logical_to_sectors(sdp, sdkp->opt_xfer_blocks);
--	} else
-+	} else {
- 		rw_max = BLK_DEF_MAX_SECTORS;
-+		/* Combine with device limits */
-+		rw_max = min(rw_max, q->limits.max_dev_sectors);
-+	}
- 
- 	/* Combine with controller limits */
- 	q->limits.max_sectors = min(rw_max, queue_max_hw_sectors(q));
-
-If you want to fix this please drop the braces and do:
-
-		rw_max = min(BLK_DEF_MAX_SECTORS, q->limits.max_dev_sectors);
+If so, we also need to fix the write_same SATL code that is working
+under the assumption of a 512 byte sector sector as the largest
+guaranteed amount of data in the associated sg pages.
+Keying off of sector_size should be straight forward there...
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Shaun Tancheff
