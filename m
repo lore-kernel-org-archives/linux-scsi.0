@@ -1,54 +1,73 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Fri, 12 Aug 2016 16:17:05 +0800
-Message-ID: <CAGnHSE=fMOs7Z40CWukaKQXeqgfFNvxEjno=FstFV1ayAEepfQ@mail.gmail.com>
-References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
- <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
- <20160810041042.GH25053@mtj.duckdns.org> <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
- <yq1twesq8lm.fsf@sermon.lab.mkp.net> <CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
- <yq1mvkipwx5.fsf@sermon.lab.mkp.net> <CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 01/14] lpfc: Double WQ element count to keep iops up
+Date: Fri, 12 Aug 2016 10:21:44 +0200
+Message-ID: <20160812082144.tguxs4wsglycg7yu@c203.arch.suse.de>
+References: <57acc584.71VgLPvkdT6sQCgh%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:35350 "EHLO
-	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752097AbcHLIRH (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 04:17:07 -0400
-In-Reply-To: <CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
+Received: from mx2.suse.de ([195.135.220.15]:59758 "EHLO mx2.suse.de"
+	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+	id S1751022AbcHLIWi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 04:22:38 -0400
+Content-Disposition: inline
+In-Reply-To: <57acc584.71VgLPvkdT6sQCgh%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 
-On 12 August 2016 at 13:18, Tom Yan <tom.ty89@gmail.com> wrote:
-> On 12 August 2016 at 10:01, Martin K. Petersen
-> <martin.petersen@oracle.com> wrote:
->>
->> Again, the point of max_hw_sectors and max_dev_sectors is to enforce the
->> hard limits of controller and device respectively. Nothing else.
->>
->
-> Sounds like libata-scsi is doing something wrong then. It should not
-> set max_hw_sectors to dev->max_sectors that is set by libata-core:
->
->> blk_queue_max_hw_sectors(q, dev->max_sectors);
+On Thu, Aug 11, 2016 at 11:35:48AM -0700, James Smart wrote:
+> 
+> Double WQ element count to keep iops up
+> 
+> On embedded io queues, use the default element count, which is twice the
+> size of the default large WQE element count.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index adf61b43..64b6313 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -7349,7 +7349,7 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+>  		if (phba->fcp_embed_io) {
+>  			qdesc = lpfc_sli4_queue_alloc(phba,
+>  						      LPFC_WQE128_SIZE,
+> -						      LPFC_WQE128_DEF_COUNT);
+> +						      phba->sli4_hba.wq_ecount);
+>  		} else {
+>  			qdesc = lpfc_sli4_queue_alloc(phba,
+>  						      phba->sli4_hba.wq_esize,
 
-Though we'll still have to "abuse" max_hw_sectors for ATAPI class
-devices, since neither the SATL or sr cares about VPD. The only
-devices that need ATA_HORKAGE_MAX_SEC_LBA48 are ATAPI devices as well.
 
->
-> but instead it should report it as Maximum Transfer Length and let sd
-> set it as max_dev_sectors:
->
->> put_unaligned_be32(dev->max_sectors, &rbuf[8]);
->
-> While max_hw_sectors will be left untouched (in the case of AHCI, for
-> example, since its SCSI host template does not have max_sectors set;
-> so max_hw_sectors will be SCSI_DEFAULT_MAX_SECTORS).
->
-> Although that means setting dev->max_sectors to a value larger than
-> 1024 will probably be a no-op, if that's really an issue, we should
-> have the host templates in libata updated.
->
-> Make sense?
+Hmm what about:
+
+u32 entry_size;
+
+[...]
+
+if (phba->fc_embed_io)
+	entry_size = LPFC_WQE128_DEF_SIZE;
+else
+	entry_size = phba->sli4_hba.wq_esize;
+
+qdesc = lpfc_sli4_queue_alloc(phba,
+			      entry_size,
+			      phba->sli4_hba.wq_ecount);
+
+
+Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
