@@ -1,395 +1,123 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH 2/2] be2iscsi: Fix some error messages
-Date: Fri, 12 Aug 2016 12:02:45 +0200
-Message-ID: <1470996165-31131-1-git-send-email-christophe.jaillet@wanadoo.fr>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain
+ address.
+Date: Fri, 12 Aug 2016 12:08:54 +0200
+Message-ID: <20160812100854.4cks5qxsommfwsjk@c203.arch.suse.de>
+References: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
+ <1470928175.2334.9.camel@linux.vnet.ibm.com>
+ <20160811164350.vakulxlr4xlsyrxn@c203.arch.suse.de>
+ <1470938407.2334.36.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1470938407.2334.36.camel@linux.vnet.ibm.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
-This fixes:
-   - missing spaces in string split on several lines
-   - extra spaces after ':'
-   - missing '\n' at the end of some messages
-   - too long lines
+On Thu, Aug 11, 2016 at 11:00:07AM -0700, James Bottomley wrote:
+> On Thu, 2016-08-11 at 18:43 +0200, Johannes Thumshirn wrote:
+> > On Thu, Aug 11, 2016 at 08:09:35AM -0700, James Bottomley wrote:
+> > > On Thu, 2016-08-11 at 09:59 +0200, Johannes Thumshirn wrote:
+> > > > Since commit 3f8d6f2a0 ('ses: fix discovery of SATA devices in
+> > > > SAS
+> > > > enclosures') ses_match_to_enclosure() is calling
+> > > > sas_get_address(),
+> > > > which is coming from commit bcf508c13385 ('scsi_transport_sas:
+> > > > add
+> > > > function to get SAS endpoint address'). sas_get_address() itself 
+> > > > calls sas_sdev_to_rdev() which BUG_ON()s if a given scsi_device's
+> > > > rphy is not a SAS_END_DEVICE.
+> > > 
+> > > Is the BUG_ON the problem?  you're supposed to gate this call with
+> > > is_sas_attached().
+> > > 
+> > > > As SAS Enclosure is a SAS expander device,
+> > > 
+> > > This isn't necessarily true.  There are several separated enclosure
+> > > chips even in the SAS world (although most of the new ones are
+> > > integrated).
+> > 
+> > Maybe change it to "As a SAS enclosure can be a SAS expander device,
+> > [..]"
+> > 
+> > > 
+> > > >  we really shouldn't tie the lookup of a SAS address to the SAS
+> > > > End
+> > > > Device but the sas_rphy, which holds the address information.
+> > > 
+> > > This is conceptually wrong.  A wide end device may have many rphys
+> > > forming a port.  In that case the end device address is likely to
+> > > be
+> > > only one of the rphy addresses ... how do you know this code picks
+> > > the
+> > > right one?
+> > > 
+> > > > Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
+> > > > enclosures')
+> > > > Cc: stable@vger.kernel.org # v4.5+
+> > > 
+> > > What's the actual bug being fixed here?
+> > 
+> > This is the callchain I have:
+> > 
+> > ses_init()
+> > `-> scsi_register_interface()
+> >     `-> class_interface_register()
+> >         `-> ses_intf_add()
+> > 	    `-> ses_match_to_enclosure()
+> > 	        `-> sas_get_address()
+> > 		    `-> sas_sdev_to_rdev()
+> >                         `-> BUG_ON(rphy->identify.device_type !=
+> > SAS_END_DEVICE);
+> > 		  	    `-> KABOOM, Bug report, yelling release
+> > manager, etc..
+> 
+> So what is at the end?  is_sas_attached() indicates the transport class
+> attached to something and that something generated an sdev ... that can
+> only happen I think if that something is an end device.
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
- drivers/scsi/be2iscsi/be_main.c | 83 +++++++++++++++++++++--------------------
- 1 file changed, 43 insertions(+), 40 deletions(-)
+sas_get_address() in ses_match_to_enclosure() _is_ guarded by
+is_sas_attached(), so it probably can not only happen if that
+something is an end device or the BUG_ON() wouldn't fire.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 89ae6390b697..415c21ec6a13 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
- 				&nonemb_cmd.dma);
- 	if (nonemb_cmd.va == NULL) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
--			    "BM_%d : Failed to allocate memory for"
-+			    "BM_%d : Failed to allocate memory for "
- 			    "mgmt_invalidate_icds\n");
- 		return FAILED;
- 	}
-@@ -278,7 +278,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
- 				   cid, &nonemb_cmd);
- 	if (!tag) {
- 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_EH,
--			    "BM_%d : mgmt_invalidate_icds could not be"
-+			    "BM_%d : mgmt_invalidate_icds could not be "
- 			    "submitted\n");
- 		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
- 				    nonemb_cmd.va, nonemb_cmd.dma);
-@@ -350,7 +350,7 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 				&nonemb_cmd.dma);
- 	if (nonemb_cmd.va == NULL) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
--			    "BM_%d : Failed to allocate memory for"
-+			    "BM_%d : Failed to allocate memory for "
- 			    "mgmt_invalidate_icds\n");
- 		return FAILED;
- 	}
-@@ -1010,7 +1010,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 					  &phwi_context->be_eq[i]);
- 			if (ret) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--					    "BM_%d : beiscsi_init_irqs-Failed to"
-+					    "BM_%d : beiscsi_init_irqs-Failed to "
- 					    "register msix for i = %d\n",
- 					    i);
- 				kfree(phba->msi_name[i]);
-@@ -1168,7 +1168,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		 * failed in xmit_task or alloc_pdu.
- 		 */
- 		 beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
--			     "BM_%d : Double Free in IO SGL io_sgl_free_index=%d,"
-+			     "BM_%d : Double Free in IO SGL io_sgl_free_index=%d, "
- 			     "value there=%p\n", phba->io_sgl_free_index,
- 			     phba->io_sgl_hndl_base
- 			     [phba->io_sgl_free_index]);
-@@ -1256,7 +1256,7 @@ free_wrb_handle(struct beiscsi_hba *phba, struct hwi_wrb_context *pwrb_context,
- 			       phba->params.wrbs_per_cxn);
- 	beiscsi_log(phba, KERN_INFO,
- 		    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--		    "BM_%d : FREE WRB: pwrb_handle=%p free_index=0x%x"
-+		    "BM_%d : FREE WRB: pwrb_handle=%p free_index=0x%x "
- 		    "wrb_handles_available=%d\n",
- 		    pwrb_handle, pwrb_context->free_index,
- 		    pwrb_context->wrb_handles_available);
-@@ -1293,7 +1293,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- {
- 	spin_lock_bh(&phba->mgmt_sgl_lock);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
--		    "BM_%d : In  free_mgmt_sgl_handle,"
-+		    "BM_%d : In  free_mgmt_sgl_handle, "
- 		    "eh_sgl_free_index=%d\n",
- 		    phba->eh_sgl_free_index);
- 
-@@ -1303,7 +1303,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		 * failed in xmit_task or alloc_pdu.
- 		 */
- 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
--			    "BM_%d : Double Free in eh SGL ,"
-+			    "BM_%d : Double Free in eh SGL, "
- 			    "eh_sgl_free_index=%d\n",
- 			    phba->eh_sgl_free_index);
- 		spin_unlock_bh(&phba->mgmt_sgl_lock);
-@@ -1604,7 +1604,7 @@ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
- 	default:
- 		beiscsi_log(phba, KERN_WARNING,
- 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
--			    "BM_%d : In hwi_complete_cmd, unknown type = %d"
-+			    "BM_%d : In hwi_complete_cmd, unknown type = %d "
- 			    "wrb_index 0x%x CID 0x%x\n", type,
- 			    csol_cqe.wrb_index,
- 			    csol_cqe.cid);
-@@ -2210,7 +2210,7 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
- 		case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--				    "BM_%d :  Dropping %s[%d] on DPDU ring on CID : %d\n",
-+				    "BM_%d : Dropping %s[%d] on DPDU ring on CID : %d\n",
- 				    cqe_desc[code], code, cid);
- 			spin_lock_bh(&phba->async_pdu_lock);
- 			hwi_flush_default_pdu_buffer(phba, beiscsi_conn,
-@@ -2243,7 +2243,7 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
- 		default:
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--				    "BM_%d : Invalid CQE Event Received Code : %d"
-+				    "BM_%d : Invalid CQE Event Received Code : %d "
- 				    "CID 0x%x...\n",
- 				    code, cid);
- 			break;
-@@ -3305,7 +3305,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 					    phwi_context->cur_eqd);
- 		if (ret) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--				    "BM_%d : beiscsi_cmd_eq_create"
-+				    "BM_%d : beiscsi_cmd_eq_create "
- 				    "Failed for EQ\n");
- 			goto create_eq_error;
- 		}
-@@ -3315,6 +3315,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 			    phwi_context->be_eq[i].q.id);
- 	}
- 	return 0;
-+
- create_eq_error:
- 	for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
- 		eq = &phwi_context->be_eq[i].q;
-@@ -3370,7 +3371,7 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
- 					    false, 0);
- 		if (ret) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--				    "BM_%d : beiscsi_cmd_eq_create"
-+				    "BM_%d : beiscsi_cmd_eq_create "
- 				    "Failed for ISCSI CQ\n");
- 			goto create_cq_error;
- 		}
-@@ -3432,7 +3433,8 @@ beiscsi_create_def_hdr(struct beiscsi_hba *phba,
- 					      BEISCSI_DEFQ_HDR, ulp_num);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : be_cmd_create_default_pdu_queue Failed DEFHDR on ULP : %d\n",
-+			    "BM_%d : be_cmd_create_default_pdu_queue Failed "
-+			    "DEFHDR on ULP : %d\n",
- 			    ulp_num);
- 
- 		return ret;
-@@ -3499,7 +3501,7 @@ beiscsi_create_def_data(struct beiscsi_hba *phba,
- 
- 	hwi_post_async_buffers(phba, BEISCSI_DEFQ_DATA, ulp_num);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--		    "BM_%d : DEFAULT PDU DATA RING CREATED"
-+		    "BM_%d : DEFAULT PDU DATA RING CREATED "
- 		    "on ULP : %d\n", ulp_num);
- 
- 	return 0;
-@@ -3527,13 +3529,13 @@ beiscsi_post_template_hdr(struct beiscsi_hba *phba)
- 
- 			if (status != 0) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--					    "BM_%d : Post Template HDR Failed for"
-+					    "BM_%d : Post Template HDR Failed for "
- 					    "ULP_%d\n", ulp_num);
- 				return status;
- 			}
- 
- 			beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--				    "BM_%d : Template HDR Pages Posted for"
-+				    "BM_%d : Template HDR Pages Posted for "
- 				    "ULP_%d\n", ulp_num);
- 		}
- 	}
-@@ -3694,7 +3696,7 @@ beiscsi_create_wrb_rings(struct beiscsi_hba *phba,
- 					    ulp_base_num);
- 		if (status != 0) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--				    "BM_%d : wrbq create failed.");
-+				    "BM_%d : wrbq create failed.\n");
- 			kfree(pwrb_arr);
- 			return status;
- 		}
-@@ -3999,7 +4001,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
- 
- error:
- 	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--		    "BM_%d : hwi_init_port failed");
-+		    "BM_%d : hwi_init_port failed\n");
- 	hwi_cleanup(phba);
- 	return status;
- }
-@@ -4013,7 +4015,7 @@ static int hwi_init_controller(struct beiscsi_hba *phba)
- 		phwi_ctrlr->phwi_ctxt = (struct hwi_context_memory *)phba->
- 		    init_mem[HWI_MEM_ADDN_CONTEXT].mem_array[0].virtual_address;
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--			    "BM_%d :  phwi_ctrlr->phwi_ctxt=%p\n",
-+			    "BM_%d : phwi_ctrlr->phwi_ctxt=%p\n",
- 			    phwi_ctrlr->phwi_ctxt);
- 	} else {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-@@ -4082,7 +4084,7 @@ static int beiscsi_init_controller(struct beiscsi_hba *phba)
- 	if (ret)
- 		goto free_init;
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--		    "BM_%d : Return success from beiscsi_init_controller");
-+		    "BM_%d : Return success from beiscsi_init_controller\n");
- 
- 	return 0;
- 
-@@ -4125,7 +4127,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
- 		}
- 	} else {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : HWI_MEM_SGLH is more than one element."
-+			    "BM_%d : HWI_MEM_SGLH is more than one element. "
- 			    "Failing to load\n");
- 		return -ENOMEM;
- 	}
-@@ -4153,7 +4155,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
- 		idx++;
- 	}
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
--		    "BM_%d : phba->io_sgl_hndl_avbl=%d"
-+		    "BM_%d : phba->io_sgl_hndl_avbl=%d "
- 		    "phba->eh_sgl_hndl_avbl=%d\n",
- 		    phba->io_sgl_hndl_avbl,
- 		    phba->eh_sgl_hndl_avbl);
-@@ -4212,7 +4214,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 
- 			if (!ptr_cid_info) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--					    "BM_%d : Failed to allocate memory"
-+					    "BM_%d : Failed to allocate memory "
- 					    "for ULP_CID_INFO for ULP : %d\n",
- 					    ulp_num);
- 				ret = -ENOMEM;
-@@ -4226,7 +4228,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 						  ulp_num), GFP_KERNEL);
- 			if (!ptr_cid_info->cid_array) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--					    "BM_%d : Failed to allocate memory"
-+					    "BM_%d : Failed to allocate memory "
- 					    "for CID_ARRAY for ULP : %d\n",
- 					    ulp_num);
- 				kfree(ptr_cid_info);
-@@ -4257,7 +4259,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
- 				   phba->params.cxns_per_ctrl, GFP_KERNEL);
- 	if (!phba->conn_table) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : Failed to allocate memory in"
-+			    "BM_%d : Failed to allocate memory in "
- 			    "hba_setup_cid_tbls\n");
- 
- 		kfree(phba->ep_array);
-@@ -4397,7 +4399,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
- 	if (nonemb_cmd.va == NULL) {
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
--			    "BM_%d : Failed to allocate memory for"
-+			    "BM_%d : Failed to allocate memory for "
- 			    "beiscsi_get_session_info\n");
- 
- 		return -ENOMEM;
-@@ -4418,7 +4420,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR,
- 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
--			    "BM_%d : beiscsi_get_session_info Failed");
-+			    "BM_%d : beiscsi_get_session_info Failed\n");
- 
- 		if (ret != -EBUSY)
- 			goto boot_freemem;
-@@ -4509,14 +4511,14 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
- 	ret = beiscsi_init_controller(phba);
- 	if (ret < 0) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : beiscsi_dev_probe - Failed in"
-+			    "BM_%d : beiscsi_dev_probe - Failed in "
- 			    "beiscsi_init_controller\n");
- 		return ret;
- 	}
- 	ret = beiscsi_init_sgl_handle(phba);
- 	if (ret < 0) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : beiscsi_dev_probe - Failed in"
-+			    "BM_%d : beiscsi_dev_probe - Failed in "
- 			    "beiscsi_init_sgl_handle\n");
- 		goto do_cleanup_ctrlr;
- 	}
-@@ -4752,7 +4754,8 @@ beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
- 			       phba->params.wrbs_per_cxn);
- 	beiscsi_log(phba, KERN_INFO,
- 		    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--		    "BM_%d : put CONTEXT_UPDATE pwrb_handle=%p free_index=0x%x wrb_handles_available=%d\n",
-+		    "BM_%d : put CONTEXT_UPDATE pwrb_handle=%p "
-+		    "free_index=0x%x wrb_handles_available=%d\n",
- 		    pwrb_handle, pwrb_context->free_index,
- 		    pwrb_context->wrb_handles_available);
- }
-@@ -4806,7 +4809,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 		if (!io_task->psgl_handle) {
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--				    "BM_%d : Alloc of IO_SGL_ICD Failed"
-+				    "BM_%d : Alloc of IO_SGL_ICD Failed "
- 				    "for the CID : %d\n",
- 				    beiscsi_conn->beiscsi_conn_cid);
- 			goto free_hndls;
-@@ -4817,7 +4820,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 		if (!io_task->pwrb_handle) {
- 			beiscsi_log(phba, KERN_ERR,
- 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--				    "BM_%d : Alloc of WRB_HANDLE Failed"
-+				    "BM_%d : Alloc of WRB_HANDLE Failed "
- 				    "for the CID : %d\n",
- 				    beiscsi_conn->beiscsi_conn_cid);
- 			goto free_io_hndls;
-@@ -4833,7 +4836,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 					beiscsi_log(phba, KERN_ERR,
- 						    BEISCSI_LOG_IO |
- 						    BEISCSI_LOG_CONFIG,
--						    "BM_%d : Alloc of MGMT_SGL_ICD Failed"
-+						    "BM_%d : Alloc of MGMT_SGL_ICD Failed "
- 						    "for the CID : %d\n",
- 						    beiscsi_conn->
- 						    beiscsi_conn_cid);
-@@ -4851,7 +4854,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 					beiscsi_log(phba, KERN_ERR,
- 						    BEISCSI_LOG_IO |
- 						    BEISCSI_LOG_CONFIG,
--						    "BM_%d : Alloc of WRB_HANDLE Failed"
-+						    "BM_%d : Alloc of WRB_HANDLE Failed "
- 						    "for the CID : %d\n",
- 						    beiscsi_conn->
- 						    beiscsi_conn_cid);
-@@ -4872,7 +4875,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 				beiscsi_log(phba, KERN_ERR,
- 					    BEISCSI_LOG_IO |
- 					    BEISCSI_LOG_CONFIG,
--					    "BM_%d : Alloc of MGMT_SGL_ICD Failed"
-+					    "BM_%d : Alloc of MGMT_SGL_ICD Failed "
- 					    "for the CID : %d\n",
- 					    beiscsi_conn->
- 					    beiscsi_conn_cid);
-@@ -4885,7 +4888,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 			if (!io_task->pwrb_handle) {
- 				beiscsi_log(phba, KERN_ERR,
- 					    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
--					    "BM_%d : Alloc of WRB_HANDLE Failed"
-+					    "BM_%d : Alloc of WRB_HANDLE Failed "
- 					    "for the CID : %d\n",
- 					    beiscsi_conn->beiscsi_conn_cid);
- 				goto free_mgmt_hndls;
-@@ -5484,7 +5487,7 @@ static pci_ers_result_t beiscsi_eeh_err_detected(struct pci_dev *pdev,
- 
- 	if (state == pci_channel_io_perm_failure) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : EEH : State PERM Failure");
-+			    "BM_%d : EEH : State PERM Failure\n");
- 		return PCI_ERS_RESULT_DISCONNECT;
- 	}
- 
-@@ -5577,8 +5580,8 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
- 	ret = hwi_init_controller(phba);
- 	if (ret) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
--			    "BM_%d : beiscsi_eeh_resume -"
--			     "Failed to initialize beiscsi_hba.\n");
-+			    "BM_%d : beiscsi_eeh_resume - "
-+			    "Failed to initialize beiscsi_hba.\n");
- 		goto ret_err;
- 	}
- 
+> 
+> > Unfortunately I do not have a SAS enclosure here so all I could do 
+> > was read the spec and code and have the customer test the patch.
+> > 
+> > But from my git archeology:
+> > Since 3f8d6f2a0 sas_match_to_enclosure() is calling
+> > sas_get_address(). Which in turn is calling sas_sdev_to_rdev() and so
+> > on...
+> > 	
+> > The thing is, in sas_get_address() we want to get the address of a 
+> > sas device, don't we? And looking at the UML diagram in the SAS spec, 
+> > we see an enclosure as well as an end device do have a rphy attached 
+> > to it, which in turn has a SAS address.
+> 
+> Because, as I said in the previous reply, the rphy is only the sas
+> address for non-wide ports.  They phy layer is just above the physical
+> layer.  The end device sits at the application layer, which is four
+> layers above that. Whatever diagram you're looking at is probably
+> showing port layer connections.  The way the transport class works is
+> that each rphy, even when part of a formed wide port, is individually
+> addressable, so we can send SMP phy controls to it, but the device is
+> separately addressable by its own SAS address.
+
+Ok, we can't use the rphy because of wide-ports. We can't fix it to an
+end device either, as this makes some peoples systems unbootable. Now
+let's find a third option satisfying the needs of SAS wide-ports and
+my customers (and others running 4.5+ with a SAS enclosure).
+
+I'm digging...
+
 -- 
-2.7.4
-
-
----
-L'absence de virus dans ce courrier Ã©lectronique a Ã©tÃ© vÃ©rifiÃ©e par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
