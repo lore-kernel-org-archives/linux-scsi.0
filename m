@@ -1,26 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/14] lpfc: Code cleanup for lpfc_aer_support parameter
-Date: Fri, 12 Aug 2016 11:19:02 +0200
-Message-ID: <20160812091902.i37eb6oy3ggfijcn@c203.arch.suse.de>
-References: <57acc58a.jPfQwceLUxXOHCXu%james.smart@broadcom.com>
+Subject: Re: [PATCH 08/14] lpfc: Code cleanup for lpfc_topology parameter
+Date: Fri, 12 Aug 2016 11:19:52 +0200
+Message-ID: <20160812091952.4rzo32vbelu5gghq@c203.arch.suse.de>
+References: <57acc58b.H4BGalpVbm0V4422%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38433 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38643 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751230AbcHLJTD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:19:03 -0400
+	id S1751982AbcHLJU2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:20:28 -0400
 Content-Disposition: inline
-In-Reply-To: <57acc58a.jPfQwceLUxXOHCXu%james.smart@broadcom.com>
+In-Reply-To: <57acc58b.H4BGalpVbm0V4422%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Aug 11, 2016 at 11:35:54AM -0700, James Smart wrote:
+On Thu, Aug 11, 2016 at 11:35:55AM -0700, James Smart wrote:
 > 
-> Code cleanup for lpfc_aer_support parameter
+> Code cleanup for lpfc_topology parameter
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
