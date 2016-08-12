@@ -1,42 +1,42 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: Re: [PATCH 2/2] be2iscsi: Fix some error messages
-Date: Fri, 12 Aug 2016 22:30:29 +0200
-Message-ID: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
-References: <1470996165-31131-1-git-send-email-christophe.jaillet@wanadoo.fr>
- <alpine.DEB.2.10.1608121229310.2983@hadrien>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
+Date: Fri, 12 Aug 2016 16:56:02 -0400
+Message-ID: <yq1lh01n1ul.fsf@sermon.lab.mkp.net>
+References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+	<yq1r39upy7p.fsf@sermon.lab.mkp.net>
+	<CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <alpine.DEB.2.10.1608121229310.2983@hadrien>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Julia Lawall <julia.lawall@lip6.fr>
-Cc: jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
+	(Tom Yan's message of "Fri, 12 Aug 2016 13:02:42 +0800")
+Sender: linux-block-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Le 12/08/2016 à 12:30, Julia Lawall a écrit :
-> On Fri, 12 Aug 2016, Christophe JAILLET wrote:
->
->> This fixes:
->>     - missing spaces in string split on several lines
->>     - extra spaces after ':'
->>     - missing '\n' at the end of some messages
->>     - too long lines
-> I think that the strings should be concatenated, even if they go past 80
-> chars.  I'm surprised checkpatch didn't complain.
->
-> julia
+>>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
-checkpatch did complain.
-In this file, all logging messages were written with split lines when 
-too long, so I considered that it was better to keep it like that.
+Tom,
 
-I will resubmit if the patch gets some interest and if a maintainer ask 
-for concatenated messages.
+>> put_unaligned_be64(65535 * ATA_MAX_TRIM_RNUM / (sector_size / 512), &rbuf[36]);
 
-CJ
+How many 8-byte ranges fit in a 4096-byte sector?
 
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+Tom> So were you trying to pointing out something I am still missing, or
+Tom> were you merely confirming I was right?
 
+I suggest you drop ATA_MAX_TRIM_RNUM and do:
+
+enum {
+     ATA_TRIM_BLOCKS_PER_RANGE = 65535, /* 0xffff blocks per range desc. */
+     ATA_TRIM_RANGE_SIZE_SHIFT = 3,     /* range descriptor is 8 bytes */
+};
+
+put_unaligned_be64(ATA_TRIM_BLOCKS_PER_RANGE *
+		   sector_size >> ATA_TRIM_RANGE_SIZE_SHIFT, &rbuf[36]);
+
+Might be worthwhile to create an ata_max_lba_range_blocks() wrapper.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
