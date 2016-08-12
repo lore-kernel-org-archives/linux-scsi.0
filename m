@@ -1,68 +1,76 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain
- address.
-Date: Fri, 12 Aug 2016 07:34:35 -0700
-Message-ID: <1471012475.2407.6.camel@linux.vnet.ibm.com>
-References: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
-	 <1470928175.2334.9.camel@linux.vnet.ibm.com>
-	 <20160811164350.vakulxlr4xlsyrxn@c203.arch.suse.de>
-	 <1470938407.2334.36.camel@linux.vnet.ibm.com>
-	 <20160812100854.4cks5qxsommfwsjk@c203.arch.suse.de>
-	 <20160812131125.n7p47dcf7sinwg54@c203.arch.suse.de>
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH 1/2] libata-scsi: use dev->max_sectors from libata-core appropriately
+Date: Fri, 12 Aug 2016 22:36:23 +0800
+Message-ID: <CAGnHSEn36OgegFJHzojOPYiMzfiLe6eDgSofYHGgmtmdoUQbww@mail.gmail.com>
+References: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
+ <f7fcf6b0-8d12-c2ae-2c51-a9071fd89f7c@cogentembedded.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160812131125.n7p47dcf7sinwg54@c203.arch.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <f7fcf6b0-8d12-c2ae-2c51-a9071fd89f7c@cogentembedded.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Cc: Tejun Heo <tj@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, 2016-08-12 at 15:11 +0200, Johannes Thumshirn wrote:
-> On Fri, Aug 12, 2016 at 12:08:54PM +0200, Johannes Thumshirn wrote:
-> > Ok, we can't use the rphy because of wide-ports. We can't fix it to 
-> > an end device either, as this makes some peoples systems 
-> > unbootable. Now let's find a third option satisfying the needs of 
-> > SAS wide-ports and my customers (and others running 4.5+ with a SAS
-> > enclosure).
-> > 
-> > I'm digging...
-> 
-> 
-> To answer myself, Hannes suggested doing it like this:
-> 
-> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-> index 53ef1cb6..1d82053 100644
-> --- a/drivers/scsi/ses.c
-> +++ b/drivers/scsi/ses.c
-> @@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct
-> enclosure_device *edev,
-> 
->         ses_enclosure_data_process(edev, to_scsi_device(edev
-> ->edev.parent), 0);
-> 
-> -       if (is_sas_attached(sdev))
-> +       if (scsi_is_sas_rphy(&sdev->sdev_gendev))
->                 efd.addr = sas_get_address(sdev);
-> 
-> 		if (efd.addr) {
-> 
-> 
-> The reasoning behind this is, we only read the address if we have an
-> actual sas_rphy.
-> 
-> Would this be OK for you?
+On 12 August 2016 at 21:42, Sergei Shtylyov
+<sergei.shtylyov@cogentembedded.com> wrote:
+> On 08/12/2016 02:56 PM, tom.ty89@gmail.com wrote:
+>
+>> From: Tom Yan <tom.ty89@gmail.com>
+>>
+>> Currently we use dev->max_sectors to set max_hw_sectors, which
+>> is actually supposed to be a host controller limit (that get set
+>
+>
+>    Gets.
+>
+>
 
-Could you please debug the why? first before we start throwing patches
-around.  is_sas_attached(sdev) returns true if the sdev is the child of
-a SAS controller.  What is this thing you've found that has a sdev
-attached to a SAS controller but isn't and end device?
+Thanks, but I read too late. I'll try to bare in mind to correct that
+if I'll need to send a v3 or so.
 
-if is_sas_attached() passes but scsi_is_sas_rphy() doesn't you've got a
-device that is the child of a SAS host which has an rphy but which
-isn't an expander or end device.  That's pretty much the end of the
-list of things which can lie at the end of rphys since we lump the SATA
-possibilities in with end devices.
+>> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+>> index be9c76c..4e2d8e7 100644
+>> --- a/drivers/ata/libata-scsi.c
+>> +++ b/drivers/ata/libata-scsi.c
+>> @@ -1204,14 +1204,26 @@ static int ata_scsi_dev_config(struct scsi_device
+>> *sdev,
+>>         if (!ata_id_has_unload(dev->id))
+>>                 dev->flags |= ATA_DFLAG_NO_UNLOAD;
+>>
+>> -       /* configure max sectors */
+>> -       blk_queue_max_hw_sectors(q, dev->max_sectors);
+>> -
+>>         if (dev->class == ATA_DEV_ATAPI) {
+>>                 void *buf;
+>>
+>>                 sdev->sector_size = ATA_SECT_SIZE;
+>>
+>> +               /*
+>> +                * We are setting the limit here merely because CD/DVD
+>> device does not
+>> +                * have Block Limits VPD.
+>> +                *
+>> +                * Supposedly dev->max_sectors should be left shifted by
+>> +                * (ilog2(sdev->sector_size) - 9). But since ATAPI class
+>> device has a
+>> +                * static logical sector size of 512 (ATA_SECT_SIZE), the
+>> shift became
+>> +                * unnecessary.
+>> +                */
+>> +               q->limits.max_dev_sectors = dev->max_sectors;
+>> +               /* Make max_dev_sectors effective by adjusting max_sectors
+>> accordingly,
+>> +                  while leave max_hw_sectors, which is supposed to be
+>> host controller
+>> +                  limit, untouched. */
+>
+>
+>    Why 2 different comment styles? The previous comment's style is actually
+> preferred in the kernel.
+>
 
-James
+I just tried to follow the styles of the existing comments. Apparently
+the first style is used for multi-paragraph comments, while the other
+one is used for single-paragraph one.
