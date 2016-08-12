@@ -1,30 +1,42 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [RFC] sd: dynamically adjust SD_MAX_WS16_BLOCKS as per the actual logical block size
-Date: Fri, 12 Aug 2016 16:26:42 -0400
-Message-ID: <yq1shu9n37h.fsf@sermon.lab.mkp.net>
-References: <b7f44789e0e68fa57d2e3cd059ac3a5bc6d53495.1470954520.git.tom.ty89@gmail.com>
-	<yq1bn0yptqq.fsf@sermon.lab.mkp.net>
-	<CAGnHSEk1UG1CaX+2zv20ONxnM7XavGvW9kX2KSPy7R7ZoKL_pA@mail.gmail.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: Re: [PATCH 2/2] be2iscsi: Fix some error messages
+Date: Fri, 12 Aug 2016 22:30:29 +0200
+Message-ID: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
+References: <1470996165-31131-1-git-send-email-christophe.jaillet@wanadoo.fr>
+ <alpine.DEB.2.10.1608121229310.2983@hadrien>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEk1UG1CaX+2zv20ONxnM7XavGvW9kX2KSPy7R7ZoKL_pA@mail.gmail.com>
-	(Tom Yan's message of "Fri, 12 Aug 2016 12:52:57 +0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Shaun Tancheff <shaun.tancheff@seagate.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <alpine.DEB.2.10.1608121229310.2983@hadrien>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Julia Lawall <julia.lawall@lip6.fr>
+Cc: jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+Le 12/08/2016 à 12:30, Julia Lawall a écrit :
+> On Fri, 12 Aug 2016, Christophe JAILLET wrote:
+>
+>> This fixes:
+>>     - missing spaces in string split on several lines
+>>     - extra spaces after ':'
+>>     - missing '\n' at the end of some messages
+>>     - too long lines
+> I think that the strings should be concatenated, even if they go past 80
+> chars.  I'm surprised checkpatch didn't complain.
+>
+> julia
 
-Tom,
+checkpatch did complain.
+In this file, all logging messages were written with split lines when 
+too long, so I considered that it was better to keep it like that.
 
-Tom> I don't really follow. What would this BLK_MAX_BIO_SECTORS be? It
-Tom> doesn't appear to me that a static value is going to address the
-Tom> problem I am addressing in this patch.
+I will resubmit if the patch gets some interest and if a maintainer ask 
+for concatenated messages.
 
-0x7fffff, the maximum number of block layer sectors that can be
-expressed in a single bio.
+CJ
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
+
