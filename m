@@ -1,26 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 05/14] lpfc: Code clean up for lpfc_iocb_cnt parameter
-Date: Fri, 12 Aug 2016 11:15:57 +0200
-Message-ID: <20160812091557.4csoztoajxakxabi@c203.arch.suse.de>
-References: <57acc588.Himk6pXv+J4tzIXx%james.smart@broadcom.com>
+Subject: Re: [PATCH 06/14] lpfc: Code cleanup for lpfc_enable_rrq parameter
+Date: Fri, 12 Aug 2016 11:16:56 +0200
+Message-ID: <20160812091656.ggh3hsqmzzfgu7f4@c203.arch.suse.de>
+References: <57acc589.4lRyP2YikZRQN1SN%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38177 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38257 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751356AbcHLJP7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:15:59 -0400
+	id S1751636AbcHLJQ6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:16:58 -0400
 Content-Disposition: inline
-In-Reply-To: <57acc588.Himk6pXv+J4tzIXx%james.smart@broadcom.com>
+In-Reply-To: <57acc589.4lRyP2YikZRQN1SN%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Aug 11, 2016 at 11:35:52AM -0700, James Smart wrote:
+On Thu, Aug 11, 2016 at 11:35:53AM -0700, James Smart wrote:
 > 
-> Code clean up for lpfc_iocb_cnt parameter
+> Code cleanup for lpfc_enable_rrq parameter
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
