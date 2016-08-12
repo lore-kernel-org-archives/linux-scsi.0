@@ -1,37 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] Update WRITE_SAME timeout in sd_setup_discard_cmnd
-Date: Thu, 11 Aug 2016 22:08:33 -0400
-Message-ID: <yq1fuqapwm6.fsf@sermon.lab.mkp.net>
-References: <1470946358-6744-1-git-send-email-shaun@tancheff.com>
+Subject: Re: [PATCH 0/2] ibmvfc: FC-TAPE Support
+Date: Thu, 11 Aug 2016 23:11:13 -0400
+Message-ID: <yq17fbmptpq.fsf@sermon.lab.mkp.net>
+References: <1470260213-19087-1-git-send-email-tyreld@linux.vnet.ibm.com>
+	<57ACE204.7000106@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1470946358-6744-1-git-send-email-shaun@tancheff.com> (Shaun
-	Tancheff's message of "Thu, 11 Aug 2016 15:12:38 -0500")
+In-Reply-To: <57ACE204.7000106@linux.vnet.ibm.com> (Tyrel Datwyler's message
+	of "Thu, 11 Aug 2016 13:37:24 -0700")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Josh Bingaman <josh.bingaman@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, mpe@ellerman.id.au
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Shaun" == Shaun Tancheff <shaun@tancheff.com> writes:
+>>>>> "Tyrel" == Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
 
-Shaun,
+Tyrel> On 08/03/2016 02:36 PM, Tyrel Datwyler wrote:
+>> This patchset introduces optional FC-TAPE/FC Class 3 Error Recovery
+>> to the ibmvfc client driver.
+>> 
+>> Tyrel Datwyler (2): ibmvfc: Set READ FCP_XFER_READY DISABLED bit in
+>> PRLI ibmvfc: add FC Class 3 Error Recovery support
+>> 
+>> drivers/scsi/ibmvscsi/ibmvfc.c | 11 +++++++++++
+>> drivers/scsi/ibmvscsi/ibmvfc.h | 1 + 2 files changed, 12
+>> insertions(+)
+>> 
 
-Shaun> In sd_setup_discard_cmnd() there are a some discard methods that
-Shaun> fall back to using WRITE_SAME. It appears that those paths using
-Shaun> WRITE_SAME should also use the SD_WRITE_SAME_TIMEOUT instead of
-Shaun> the default SD_TIMEOUT.
+Tyrel> ping?
 
-The expectation is that the UNMAP variants update a translation table of
-some sort in close to constant time. Potentially with some head and tail
-zeroing on media. And should therefore easily fall within the 30s limit.
-
-But you have a point wrt. SD_LBP_ZERO. It was used for one particular
-type of array that did zero block detection (and thus didn't actually
-write anything either). I don't think anybody is using this mode of
-operation anymore since thin provisioning has been formalized in T10 for
-quite a while. But I'd be OK with a patch that uses
-SD_WRITE_SAME_TIMEOUT for that particular code path.
+-ENOREVIEWS
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
