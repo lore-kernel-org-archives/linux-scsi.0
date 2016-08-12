@@ -1,150 +1,93 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] SAS: use sas_rphy instead of sas_end_device to obtain
- address.
-Date: Fri, 12 Aug 2016 15:11:25 +0200
-Message-ID: <20160812131125.n7p47dcf7sinwg54@c203.arch.suse.de>
-References: <1470902352-96734-1-git-send-email-jthumshirn@suse.de>
- <1470928175.2334.9.camel@linux.vnet.ibm.com>
- <20160811164350.vakulxlr4xlsyrxn@c203.arch.suse.de>
- <1470938407.2334.36.camel@linux.vnet.ibm.com>
- <20160812100854.4cks5qxsommfwsjk@c203.arch.suse.de>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: [PATCH 1/2] libata-scsi: use dev->max_sectors from libata-core
+ appropriately
+Date: Fri, 12 Aug 2016 16:42:18 +0300
+Message-ID: <f7fcf6b0-8d12-c2ae-2c51-a9071fd89f7c@cogentembedded.com>
+References: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20160812100854.4cks5qxsommfwsjk@c203.arch.suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <911c68378b91bf275a4bbed5717b4639641d7029.1471002480.git.tom.ty89@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: tom.ty89@gmail.com, tj@kernel.org, martin.petersen@oracle.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Aug 12, 2016 at 12:08:54PM +0200, Johannes Thumshirn wrote:
-> On Thu, Aug 11, 2016 at 11:00:07AM -0700, James Bottomley wrote:
-> > On Thu, 2016-08-11 at 18:43 +0200, Johannes Thumshirn wrote:
-> > > On Thu, Aug 11, 2016 at 08:09:35AM -0700, James Bottomley wrote:
-> > > > On Thu, 2016-08-11 at 09:59 +0200, Johannes Thumshirn wrote:
-> > > > > Since commit 3f8d6f2a0 ('ses: fix discovery of SATA devices in
-> > > > > SAS
-> > > > > enclosures') ses_match_to_enclosure() is calling
-> > > > > sas_get_address(),
-> > > > > which is coming from commit bcf508c13385 ('scsi_transport_sas:
-> > > > > add
-> > > > > function to get SAS endpoint address'). sas_get_address() itself 
-> > > > > calls sas_sdev_to_rdev() which BUG_ON()s if a given scsi_device's
-> > > > > rphy is not a SAS_END_DEVICE.
-> > > > 
-> > > > Is the BUG_ON the problem?  you're supposed to gate this call with
-> > > > is_sas_attached().
-> > > > 
-> > > > > As SAS Enclosure is a SAS expander device,
-> > > > 
-> > > > This isn't necessarily true.  There are several separated enclosure
-> > > > chips even in the SAS world (although most of the new ones are
-> > > > integrated).
-> > > 
-> > > Maybe change it to "As a SAS enclosure can be a SAS expander device,
-> > > [..]"
-> > > 
-> > > > 
-> > > > >  we really shouldn't tie the lookup of a SAS address to the SAS
-> > > > > End
-> > > > > Device but the sas_rphy, which holds the address information.
-> > > > 
-> > > > This is conceptually wrong.  A wide end device may have many rphys
-> > > > forming a port.  In that case the end device address is likely to
-> > > > be
-> > > > only one of the rphy addresses ... how do you know this code picks
-> > > > the
-> > > > right one?
-> > > > 
-> > > > > Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
-> > > > > enclosures')
-> > > > > Cc: stable@vger.kernel.org # v4.5+
-> > > > 
-> > > > What's the actual bug being fixed here?
-> > > 
-> > > This is the callchain I have:
-> > > 
-> > > ses_init()
-> > > `-> scsi_register_interface()
-> > >     `-> class_interface_register()
-> > >         `-> ses_intf_add()
-> > > 	    `-> ses_match_to_enclosure()
-> > > 	        `-> sas_get_address()
-> > > 		    `-> sas_sdev_to_rdev()
-> > >                         `-> BUG_ON(rphy->identify.device_type !=
-> > > SAS_END_DEVICE);
-> > > 		  	    `-> KABOOM, Bug report, yelling release
-> > > manager, etc..
-> > 
-> > So what is at the end?  is_sas_attached() indicates the transport class
-> > attached to something and that something generated an sdev ... that can
-> > only happen I think if that something is an end device.
-> 
-> sas_get_address() in ses_match_to_enclosure() _is_ guarded by
-> is_sas_attached(), so it probably can not only happen if that
-> something is an end device or the BUG_ON() wouldn't fire.
-> 
-> > 
-> > > Unfortunately I do not have a SAS enclosure here so all I could do 
-> > > was read the spec and code and have the customer test the patch.
-> > > 
-> > > But from my git archeology:
-> > > Since 3f8d6f2a0 sas_match_to_enclosure() is calling
-> > > sas_get_address(). Which in turn is calling sas_sdev_to_rdev() and so
-> > > on...
-> > > 	
-> > > The thing is, in sas_get_address() we want to get the address of a 
-> > > sas device, don't we? And looking at the UML diagram in the SAS spec, 
-> > > we see an enclosure as well as an end device do have a rphy attached 
-> > > to it, which in turn has a SAS address.
-> > 
-> > Because, as I said in the previous reply, the rphy is only the sas
-> > address for non-wide ports.  They phy layer is just above the physical
-> > layer.  The end device sits at the application layer, which is four
-> > layers above that. Whatever diagram you're looking at is probably
-> > showing port layer connections.  The way the transport class works is
-> > that each rphy, even when part of a formed wide port, is individually
-> > addressable, so we can send SMP phy controls to it, but the device is
-> > separately addressable by its own SAS address.
-> 
-> Ok, we can't use the rphy because of wide-ports. We can't fix it to an
-> end device either, as this makes some peoples systems unbootable. Now
-> let's find a third option satisfying the needs of SAS wide-ports and
-> my customers (and others running 4.5+ with a SAS enclosure).
-> 
-> I'm digging...
+On 08/12/2016 02:56 PM, tom.ty89@gmail.com wrote:
 
+> From: Tom Yan <tom.ty89@gmail.com>
+>
+> Currently we use dev->max_sectors to set max_hw_sectors, which
+> is actually supposed to be a host controller limit (that get set
 
-To answer myself, Hannes suggested doing it like this:
+    Gets.
 
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 53ef1cb6..1d82053 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
+> by the host controller driver like ahci, and if not it would be
+> the fallback SCSI_DEFAULT_MAX_SECTORS).
+>
+> That means we have been doing the wrong thing. Therefore, use it
+> to set the correct request queue limit that is used to report
+> device limit: max_dev_sectors.
+>
+> For disk devices, it is reported through the Maximum Transfer Length
+> field on the Block Limits VPD to the SCSI disk driver, which will
+> then set and make use of max_dev_sectors.
+>
+> For cdrom devices, since they are not supposed to have any VPD, and
+> neither will the SCSI cdrom (sr) driver touch any of the max sectors
+> limits, we are hence setting the limit directly in libata-scsi.
+>
+> Note that when max_dev_sectors is larger than max_hw_sectors, it
+> does not have any effect. Therefore, setting dev->max_sectors to
+> ATA_MAX_SECTORS_LBA48 will only have some effect when the host
+> driver has set max_hw_sectors to a value that is as large as that.
+>
+> This should not matter for typical devices, since according to our
+> past experience, 1024 (the current SCSI_DEFAULT_MAX_SECTORS) is a
+> decent and safe value for max_sectors. ATA_MAX_SECTORS_LBA48 has
+> actually appeared to be too large for some devices.
+>
+> Also note that ATA_HORKAGE_MAX_SEC_LBA48 is not supposed to work
+> automatically anyway, even when max_hw_sectors is as high as 65535,
+> since the effective max_sectors will be set by the SCSI disk driver.
+>
+> Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+>
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index be9c76c..4e2d8e7 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -1204,14 +1204,26 @@ static int ata_scsi_dev_config(struct scsi_device *sdev,
+>  	if (!ata_id_has_unload(dev->id))
+>  		dev->flags |= ATA_DFLAG_NO_UNLOAD;
+>
+> -	/* configure max sectors */
+> -	blk_queue_max_hw_sectors(q, dev->max_sectors);
+> -
+>  	if (dev->class == ATA_DEV_ATAPI) {
+>  		void *buf;
+>
+>  		sdev->sector_size = ATA_SECT_SIZE;
+>
+> +		/*
+> +		 * We are setting the limit here merely because CD/DVD device does not
+> +		 * have Block Limits VPD.
+> +		 *
+> +		 * Supposedly dev->max_sectors should be left shifted by
+> +		 * (ilog2(sdev->sector_size) - 9). But since ATAPI class device has a
+> +		 * static logical sector size of 512 (ATA_SECT_SIZE), the shift became
+> +		 * unnecessary.
+> +		 */
+> +		q->limits.max_dev_sectors = dev->max_sectors;
+> +		/* Make max_dev_sectors effective by adjusting max_sectors accordingly,
+> +		   while leave max_hw_sectors, which is supposed to be host controller
+> +		   limit, untouched. */
 
-        ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
+    Why 2 different comment styles? The previous comment's style is actually 
+preferred in the kernel.
 
--       if (is_sas_attached(sdev))
-+       if (scsi_is_sas_rphy(&sdev->sdev_gendev))
-                efd.addr = sas_get_address(sdev);
+[...]
 
-		if (efd.addr) {
+MBR, Sergei
 
-
-The reasoning behind this is, we only read the address if we have an
-actual sas_rphy.
-
-Would this be OK for you?
-
-      Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
