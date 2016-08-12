@@ -1,155 +1,54 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
-Date: Fri, 12 Aug 2016 13:35:04 +0530
-Message-ID: <cc9b0ff3950338fd2c8345809c8b35f0@mail.gmail.com>
-References: <1469092085-14311-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1469092085-14311-3-git-send-email-jitendra.bhivare@broadcom.com>
- <57A4DD34.4080000@redhat.com> <yq1popivjjk.fsf@sermon.lab.mkp.net>
- <2c0a32a2af7f12150da2818d0b0ec4d6@mail.gmail.com> <57AA1770.6010802@redhat.com>
- 7ab48eaa301e671c8338a2161edd2097@mail.gmail.com 8ca3e0c5ced55749a0e242ddc6930421@mail.gmail.com
- 6c0ae0e85a4ba32a23d70dd6ed99f179@mail.gmail.com
+From: Tom Yan <tom.ty89@gmail.com>
+Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
+Date: Fri, 12 Aug 2016 16:17:05 +0800
+Message-ID: <CAGnHSE=fMOs7Z40CWukaKQXeqgfFNvxEjno=FstFV1ayAEepfQ@mail.gmail.com>
+References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
+ <10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
+ <20160810041042.GH25053@mtj.duckdns.org> <CAGnHSE=z78AjDC13XKk_WnkQcjFHWGcatciwoJJYW-97a0qWjQ@mail.gmail.com>
+ <yq1twesq8lm.fsf@sermon.lab.mkp.net> <CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
+ <yq1mvkipwx5.fsf@sermon.lab.mkp.net> <CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:35369 "EHLO
-	mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1750708AbcHLILD (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 04:11:03 -0400
-Received: by mail-ua0-f179.google.com with SMTP id n59so31034534uan.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2016 01:11:03 -0700 (PDT)
-In-Reply-To: 6c0ae0e85a4ba32a23d70dd6ed99f179@mail.gmail.com
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:35350 "EHLO
+	mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752097AbcHLIRH (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 04:17:07 -0400
+In-Reply-To: <CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 
-> -----Original Message-----
-> From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
-> Sent: Friday, August 12, 2016 1:26 PM
-> To: 'Mike Christie'; 'Martin K. Petersen'
-> Cc: 'linux-scsi@vger.kernel.org'
-> Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
+On 12 August 2016 at 13:18, Tom Yan <tom.ty89@gmail.com> wrote:
+> On 12 August 2016 at 10:01, Martin K. Petersen
+> <martin.petersen@oracle.com> wrote:
+>>
+>> Again, the point of max_hw_sectors and max_dev_sectors is to enforce the
+>> hard limits of controller and device respectively. Nothing else.
+>>
 >
+> Sounds like libata-scsi is doing something wrong then. It should not
+> set max_hw_sectors to dev->max_sectors that is set by libata-core:
 >
+>> blk_queue_max_hw_sectors(q, dev->max_sectors);
+
+Though we'll still have to "abuse" max_hw_sectors for ATAPI class
+devices, since neither the SATL or sr cares about VPD. The only
+devices that need ATA_HORKAGE_MAX_SEC_LBA48 are ATAPI devices as well.
+
 >
-> > -----Original Message-----
-> > From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
-> > Sent: Thursday, August 11, 2016 11:12 AM
-> > To: 'Mike Christie'; 'Martin K. Petersen'
-> > Cc: 'linux-scsi@vger.kernel.org'
-> > Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with
-> > _irqsave/irqrestore
-> >
-> >
-> >
-> > > -----Original Message-----
-> > > From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
-> > > Sent: Wednesday, August 10, 2016 6:16 PM
-> > > To: 'Mike Christie'; 'Martin K. Petersen'
-> > > Cc: 'linux-scsi@vger.kernel.org'
-> > > Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with
-> > > _irqsave/irqrestore
-> > >
-> > > > -----Original Message-----
-> > > > From: Mike Christie [mailto:mchristi@redhat.com]
-> > > > Sent: Tuesday, August 09, 2016 11:19 PM
-> > > > To: Jitendra Bhivare; Martin K. Petersen
-> > > > Cc: linux-scsi@vger.kernel.org
-> > > > Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with
-> > > > _irqsave/irqrestore
-> > > >
-> > > > On 08/09/2016 03:29 AM, Jitendra Bhivare wrote:
-> > > > >> -----Original Message-----
-> > > > >> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> > > > >> Sent: Tuesday, August 09, 2016 6:35 AM
-> > > > >> To: Mike Christie
-> > > > >> Cc: Jitendra Bhivare; linux-scsi@vger.kernel.org
-> > > > >> Subject: Re: [PATCH 02/28] be2iscsi: Replace _bh with
-> > > > > _irqsave/irqrestore
-> > > > >>
-> > > > >>>>>>> "Mike" == Mike Christie <mchristi@redhat.com> writes:
-> > > > >>
-> > > > >>>> In beiscsi_alloc_pdu, _bh versions of spin_lock are being
-> > > > >>>> used for protecting SGLs and WRBs. _bh versions are needed as
-> > > > >>>> the function gets invoked in process context and BLOCK_IOPOLL
-> softirq.
-> > > > >>>>
-> > > > >>>> In spin_unlock_bh, after releasing the lock and enabling BH,
-> > > > >>>> do_softirq is called which executes till last SOFTIRQ.
-> > > > >>>>
-> > > > >>>> beiscsi_alloc_pdu is called under session lock. Through block
-> > > > >>>> layer, iSCSI stack in some cases send IOs with interrupts
-> > > > >>>> disabled.
-> > > > >>>> In such paths,
-> > > > >>
-> > > > >>
-> > > > >> Mike> What path is this? Is this with mq enabled or disabled?
-> > > > >>
-> > > > >> Jitendra?
-> > > > >>
-> > > > >> --
-> > > > >> Martin K. Petersen	Oracle Linux Engineering
-> > > > > [JB] Sorry for the delayed response, there was some issue with
-> > > > > my mail client.
-> > > > > There are paths block layer where IRQs are disabled with
-> > > > > request_queue queue_lock.
-> > > > > - blk_timeout_work : this triggers NOP-OUT thru'
-> iscsi_eh_cmd_timed_out.
-> > > > > - blk_execute_rq_nowait
-> > > >
-> > > > I am not sure I understand the problem/solution. Why does the
-> > > > patch only need to modify be2iscsi's locking? Why wouldn't you
-> > > > need to also change the libiscsi session lock locking? You don't
-> > > > need irqs to be running right? You are just doing this so the
-> > > > locking calls (irq vs bh) matches
-> > > up?
-> > > >
-> > > > Don't you also need to fix the non-mq IO path. scsi_request_fn
-> > > > needs a fix to use spin_lock_irqsave/spin_unlock_irqrestore
-> > > > because blk_execute_rq_nowait already disables them right?
-> > > >
-> > > [JB] The issue is hard lockup seen on a CPU which is waiting for
-> > > session lock taken by another CPU processing do_softirq. This
-> > > do_softirq is getting called from be2iscsi spin_unlock_bh.
-> > >
-> > > The contention gets easily exposed with be2iscsi as it data
-> > > structures are accessed in process context and IRQ_POLL softirq.
-> > >
-> > > iscsi_eh_cmd_timed_out gets saved because it is using base spin_lock
-> > > version for session lock (frwd and back).
-> > > iscsi_queuecommand is using _bh which is bit scary.
-> > >
-> > > Yes, that needs to be fixed too... and then this other path looks
-> > > buggy too - blk_run_queue (takes queue_lock with irqsave)
-> > > ->scsi_request_fn (unlocks it with
-> > > _irq)
-> > [JB] In this case, the other CPU executing do_softirq was too sending
-> > IO under session lock.
-> > When be2iscsi does spin_unlock_bh after getting resources for the IO,
-> > unlock_bh finds pending IRQ_POLL softirq.
-> >
-> > The issue is more to do with driver using _unlock_bh.
-> > It is causing a WARN_ON too in unlock_bh where ever used  for disabled
-> > IRQs.
-> [JB] My apologies. blk_execute_rq_nowait and the call trace shown is with
-> older
-> kernel.
-> Only valid kernel trace with latest kernel is:
-> [  180.957062]  <IRQ>  [<ffffffff81603f36>] dump_stack+0x19/0x1b [
-> 180.957070]  [<ffffffff8106e28b>] warn_slowpath_common+0x6b/0xb0 [
-> 180.957072]  [<ffffffff8106e3da>] warn_slowpath_null+0x1a/0x20 [
-> 180.957073]  [<ffffffff81076d1a>] local_bh_enable_ip+0x7a/0xa0 [
-> 180.957077]  [<ffffffff8160b0eb>] _raw_spin_unlock_bh+0x1b/0x40 [
-> 180.957084]  [<ffffffffa037f753>] alloc_mgmt_sgl_handle+0x83/0xe0
-> [be2iscsi]
-> [  180.957089]  [<ffffffffa0388d9e>] beiscsi_alloc_pdu+0x21e/0x5d0
-> [be2iscsi] [
-> 180.957094]  [<ffffffffa01bec71>] __iscsi_conn_send_pdu+0x101/0x2e0
-> [libiscsi] [  180.957099]  [<ffffffffa01bef78>]
-> iscsi_send_nopout+0xb8/0x100
-> [libiscsi] [  180.957104]  [<ffffffffa01bfca4>]
-> iscsi_eh_cmd_timed_out+0x2a4/0x2d0
-> [libiscsi]
-> [  180.957107]  [<ffffffff813f56de>] scsi_times_out+0x5e/0x320
-[JB] The scenario of lockup explained, but likely a soft one, can still
-happen, hence the change.
+> but instead it should report it as Maximum Transfer Length and let sd
+> set it as max_dev_sectors:
+>
+>> put_unaligned_be32(dev->max_sectors, &rbuf[8]);
+>
+> While max_hw_sectors will be left untouched (in the case of AHCI, for
+> example, since its SCSI host template does not have max_sectors set;
+> so max_hw_sectors will be SCSI_DEFAULT_MAX_SECTORS).
+>
+> Although that means setting dev->max_sectors to a value larger than
+> 1024 will probably be a no-op, if that's really an issue, we should
+> have the host templates in libata updated.
+>
+> Make sense?
