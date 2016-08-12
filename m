@@ -1,7 +1,7 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: [PATCH v2 2/2] libata-core: do not set dev->max_sectors for LBA48 devices
-Date: Fri, 12 Aug 2016 17:06:34 -0400
-Message-ID: <yq1h9apn1d1.fsf@sermon.lab.mkp.net>
+Date: Fri, 12 Aug 2016 17:17:22 -0400
+Message-ID: <yq1d1ldn0v1.fsf@sermon.lab.mkp.net>
 References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gmail.com>
 	<10c4d38005e24bb477b5182d4fc17879139f14d9.1470753817.git.tom.ty89@gmail.com>
 	<20160810041042.GH25053@mtj.duckdns.org>
@@ -9,41 +9,49 @@ References: <5eceeb9ad825beb87db03b0989f746dfbe0cf3fe.1470753817.git.tom.ty89@gm
 	<yq1twesq8lm.fsf@sermon.lab.mkp.net>
 	<CAGnHSEn3pXR33Ju+mr0DYdE0G7kNhxNCbvocX1pZXvYfxx5+3A@mail.gmail.com>
 	<yq1mvkipwx5.fsf@sermon.lab.mkp.net>
-	<CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
+	<20160812101645.0a4a5e9f@lxorguk.ukuu.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSEm0mGPG_y2a7hmCzQkwYE23Srozrm6eSPX8a3Q9a0y+7A@mail.gmail.com>
-	(Tom Yan's message of "Fri, 12 Aug 2016 13:18:28 +0800")
+In-Reply-To: <20160812101645.0a4a5e9f@lxorguk.ukuu.org.uk> (One Thousand
+	Gnomes's message of "Fri, 12 Aug 2016 10:16:45 +0100")
 Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+To: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tom Yan <tom.ty89@gmail.com>, Tejun Heo <tj@kernel.org>, jmoyer@redhat.com, axboe@fb.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
+>>>>> "Alan" == One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk> writes:
 
-Tom,
+Alan,
 
-Tom> Sounds like libata-scsi is doing something wrong then. It should
-Tom> not set max_hw_sectors to dev->max_sectors that is set by
-Tom> libata-core:
+Alan> For older SCSI and especially ATA drives (and it wouldn't surprise
+Alan> me if it is true of modern ones) there are also huge latency
+Alan> tradeoffs.
 
-Tom> but instead it should report it as Maximum Transfer Length and let
-Tom> sd set it as max_dev_sectors:
+Absolutely.
 
-Well, it's mostly academic since there is a 1:1 mapping. It is important
-in SCSI where you have many devices with different properties hooked up
-to the same controller.
+Alan> Before you jump up and down about numbers what are the latency
+Alan> numbers like on classic ATA drives with that sized block I/O. You
+Alan> could easily up your RAID numbers while wrecking realtime and
+Alan> desktop performance.
 
-SCSI MTL is a recent addition. There wasn't much point in making a
-distinction between hw and dev outside of sd.c since it is the only
-device type that has a way to communicate a transfer limit.
+I was in no way advocating raising the default, quite the contrary.  We
+have several customer workloads that got negatively impacted when the
+limit was bumped.
 
-Tom> Although that means setting dev->max_sectors to a value larger than
-Tom> 1024 will probably be a no-op, if that's really an issue, we should
-Tom> have the host templates in libata updated.
+My point was that arguing about what the default should be without any
+data supporting the discussion is futile.
 
-I am still not sure exactly which problem it is you are trying to fix?
+Alan> At the ATA level we can detect both the presence of command
+Alan> queueing ability, and also whether the device is spinnning rust or
+Alan> not, so it may be smarter defaults could be done based upon
+Alan> whether the device is an SSD or not.
+
+Sure.
+
+However, modern SSDs actually trend towards smaller I/O sizes. NVMe is
+128K by default, I think. So a higher default wouldn't make any
+difference there.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
