@@ -1,26 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 03/14] lpfc: Set driver environment data on adapter
-Date: Fri, 12 Aug 2016 10:36:31 +0200
-Message-ID: <20160812083631.ukzwvhlsddb3evsn@c203.arch.suse.de>
-References: <57acc586.QP/MzTE9arrPa2Cj%james.smart@broadcom.com>
+Subject: Re: [PATCH 04/14] lpfc: Make lpfc_prot_mask and lpfc_prot_guard per
+ hba parameters
+Date: Fri, 12 Aug 2016 11:02:35 +0200
+Message-ID: <20160812090235.6u4swbjmswpiaiae@c203.arch.suse.de>
+References: <57acc587.BtVLtSZk4NlPS3Sz%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:32811 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:36237 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750935AbcHLIgd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2016 04:36:33 -0400
+	id S1751529AbcHLJDh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:03:37 -0400
 Content-Disposition: inline
-In-Reply-To: <57acc586.QP/MzTE9arrPa2Cj%james.smart@broadcom.com>
+In-Reply-To: <57acc587.BtVLtSZk4NlPS3Sz%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Aug 11, 2016 at 11:35:50AM -0700, James Smart wrote:
+On Thu, Aug 11, 2016 at 11:35:51AM -0700, James Smart wrote:
 > 
-> Set driver environment data on adapter
+> Make lpfc_prot_mask and lpfc_prot_guard per hba parameters
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
