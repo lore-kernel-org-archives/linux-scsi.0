@@ -1,33 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Fri, 12 Aug 2016 16:08:36 -0400
-Message-ID: <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
+Date: Fri, 12 Aug 2016 16:10:24 -0400
+Message-ID: <yq160r5oij3.fsf@sermon.lab.mkp.net>
 References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-	<146706367078.29152.14405582249219794335.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
+	<yq1h9asrqh6.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38666 "EHLO
-	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751254AbcHLUJP (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 16:09:15 -0400
-In-Reply-To: <146706367078.29152.14405582249219794335.stgit@brunhilda> (Don
-	Brace's message of "Mon, 27 Jun 2016 16:41:10 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:26176 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1751392AbcHLUK7 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Fri, 12 Aug 2016 16:10:59 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
+	(Don Brace's message of "Thu, 11 Aug 2016 21:13:48 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
 >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Don,
+Don> Great. So we are good to go?
 
-Don> Depends on smartpqi driver adoption
-
--    { 0x9005, 0x028f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 65 }, /* Adaptec PMC Series 9 */
-
-How are people that load aacraid in their initrd going to boot after
-this?
+I applied the driver to 4.9/scsi-queue. You'll need to come up with a
+migration approach for patch 2.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
