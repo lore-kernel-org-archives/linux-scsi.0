@@ -1,26 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 12/14] lpfc: Revise strings with full lpfc parameter name
-Date: Fri, 12 Aug 2016 11:29:00 +0200
-Message-ID: <20160812092859.g46tlilvf6kxvdnt@c203.arch.suse.de>
-References: <57acc58f.dg+1TtiJMN9LvPib%james.smart@broadcom.com>
+Subject: Re: [PATCH 09/14] lpfc: Code cleanup for lpfc_max_scsicmpl_time
+ parameter
+Date: Fri, 12 Aug 2016 11:21:01 +0200
+Message-ID: <20160812092101.ijkazqvcerwkch2t@c203.arch.suse.de>
+References: <57acc58c.Ov8VqcmTsa3qTBm7%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39324 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39779 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752194AbcHLJ3B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:29:01 -0400
+	id S1752098AbcHLJdo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:33:44 -0400
 Content-Disposition: inline
-In-Reply-To: <57acc58f.dg+1TtiJMN9LvPib%james.smart@broadcom.com>
+In-Reply-To: <57acc58c.Ov8VqcmTsa3qTBm7%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Aug 11, 2016 at 11:35:59AM -0700, James Smart wrote:
+On Thu, Aug 11, 2016 at 11:35:56AM -0700, James Smart wrote:
 > 
-> Revise strings with full lpfc parameter name
+> Code cleanup for lpfc_max_scsicmpl_time parameter
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
