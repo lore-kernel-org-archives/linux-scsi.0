@@ -1,16 +1,16 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH 05/14] lpfc: Code clean up for lpfc_iocb_cnt parameter
-Date: Fri, 12 Aug 2016 11:08:59 +0200
-Message-ID: <20160812090859.4nxdlucntak3mks3@c203.arch.suse.de>
+Date: Fri, 12 Aug 2016 11:15:57 +0200
+Message-ID: <20160812091557.4csoztoajxakxabi@c203.arch.suse.de>
 References: <57acc588.Himk6pXv+J4tzIXx%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37394 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38177 "EHLO mx2.suse.de"
 	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1751529AbcHLJJB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Fri, 12 Aug 2016 05:09:01 -0400
+	id S1751356AbcHLJP7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Fri, 12 Aug 2016 05:15:59 -0400
 Content-Disposition: inline
 In-Reply-To: <57acc588.Himk6pXv+J4tzIXx%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
