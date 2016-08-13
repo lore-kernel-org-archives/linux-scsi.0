@@ -1,400 +1,392 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: Time to make dynamically allocated devt the default for scsi disks?
-Date: Fri, 12 Aug 2016 21:57:41 -0700
-Message-ID: <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
-References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
- <1471047451.2407.95.camel@HansenPartnership.com> <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH 2/2 v2] be2iscsi: Fix some error messages
+Date: Sat, 13 Aug 2016 09:08:55 +0200
+Message-ID: <1471072135-1409-1-git-send-email-christophe.jaillet@wanadoo.fr>
+References: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a1141a480cd86010539ecd642
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f45.google.com ([209.85.218.45]:35351 "EHLO
-	mail-oi0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1751566AbcHME5n (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Aug 2016 00:57:43 -0400
-Received: by mail-oi0-f45.google.com with SMTP id 4so6710028oih.2
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Aug 2016 21:57:42 -0700 (PDT)
-In-Reply-To: <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
+Received: from smtp13.smtpout.orange.fr ([80.12.242.135]:21178 "EHLO
+	smtp.smtpout.orange.fr" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+	with ESMTP id S1752428AbcHMHJ4 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Aug 2016 03:09:56 -0400
+In-Reply-To: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
+To: jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 
---001a1141a480cd86010539ecd642
-Content-Type: text/plain; charset=UTF-8
+This fixes:
+   - missing spaces in string split on several lines
+   - extra spaces after ':'
+   - missing '\n' at the end of some messages
+   - turn a \\n to \n in 1 message (v2)
+   - concatenate strings on the same line to fix checkpatch warnings (v2)
 
-On Fri, Aug 12, 2016 at 5:29 PM, Dan Williams <dan.j.williams@intel.com> wrote:
-> On Fri, Aug 12, 2016 at 5:17 PM, James Bottomley
-> <James.Bottomley@hansenpartnership.com> wrote:
->> On Fri, 2016-08-12 at 14:29 -0700, Dan Williams wrote:
->>> Before spending effort trying to flush the destruction of old bdi
->>> instances before new ones are registered, is it rather time to
->>> complete the conversion of sd to only use dynamically allocated devt?
->>
->> Do we have to go that far?  Surely your fix is extensible: the only
->> reason it doesn't work for us is that the gendisk holds the parent
->> without a reference, so we can free the SCSI device before its child
->> gendisk (good job no-one actually uses gendisk->parent after we've
->> released it ...).  If we fix that it would mean SCSI can't release the
->> sdev until after the queue is dead and the bdi namespace released, so
->> isn't something like this the easy fix?
->>
->> James
->>
->> ---
->>
->> diff --git a/block/genhd.c b/block/genhd.c
->> index fcd6d4f..54ae4ae 100644
->> --- a/block/genhd.c
->> +++ b/block/genhd.c
->> @@ -514,7 +514,7 @@ static void register_disk(struct device *parent, struct gendisk *disk)
->>         struct hd_struct *part;
->>         int err;
->>
->> -       ddev->parent = parent;
->> +       ddev->parent = get_device(parent);
->>
->>         dev_set_name(ddev, "%s", disk->disk_name);
->>
->> @@ -1144,6 +1144,7 @@ static void disk_release(struct device *dev)
->>         hd_free_part(&disk->part0);
->>         if (disk->queue)
->>                 blk_put_queue(disk->queue);
->> +       put_device(dev->parent);
->>         kfree(disk);
->>  }
->>  struct class block_class = {
->
-> Looks ok at first glance to me.
->
-> We do hold a reference on the parent device, but it gets dropped at
-> device_unregister() time and this moves it out to the final put.
-> However, this does leave static devt block-device-drivers that
-> register a disk without a parent device susceptible to the race... I
-> think those exist given all the drivers still using add_disk() after
-> commit 52c44d93c26f "block: remove ->driverfs_dev".
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/be2iscsi/be_main.c | 79 ++++++++++++++++++++---------------------
+ 1 file changed, 39 insertions(+), 40 deletions(-)
 
-So I tried the attached and it makes the libnvdimm unit tests start
-crashing.  A couple crash logs attached.  Not yet sure what assumption
-is getting violated, but how about that conversion of scsi to use
-dynamic devt? ;-)
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 89ae6390b697..826c61b3ffcc 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 				&nonemb_cmd.dma);
+ 	if (nonemb_cmd.va == NULL) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
+-			    "BM_%d : Failed to allocate memory for"
++			    "BM_%d : Failed to allocate memory for "
+ 			    "mgmt_invalidate_icds\n");
+ 		return FAILED;
+ 	}
+@@ -278,7 +278,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+ 				   cid, &nonemb_cmd);
+ 	if (!tag) {
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_EH,
+-			    "BM_%d : mgmt_invalidate_icds could not be"
++			    "BM_%d : mgmt_invalidate_icds could not be "
+ 			    "submitted\n");
+ 		pci_free_consistent(phba->ctrl.pdev, nonemb_cmd.size,
+ 				    nonemb_cmd.va, nonemb_cmd.dma);
+@@ -350,7 +350,7 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
+ 				&nonemb_cmd.dma);
+ 	if (nonemb_cmd.va == NULL) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
+-			    "BM_%d : Failed to allocate memory for"
++			    "BM_%d : Failed to allocate memory for "
+ 			    "mgmt_invalidate_icds\n");
+ 		return FAILED;
+ 	}
+@@ -1010,7 +1010,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 					  &phwi_context->be_eq[i]);
+ 			if (ret) {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-					    "BM_%d : beiscsi_init_irqs-Failed to"
++					    "BM_%d : beiscsi_init_irqs-Failed to "
+ 					    "register msix for i = %d\n",
+ 					    i);
+ 				kfree(phba->msi_name[i]);
+@@ -1040,8 +1040,7 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ 				  "beiscsi", phba);
+ 		if (ret) {
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-				    "BM_%d : beiscsi_init_irqs-"
+-				    "Failed to register irq\\n");
++				    "BM_%d : beiscsi_init_irqs-Failed to register irq\n");
+ 			return ret;
+ 		}
+ 	}
+@@ -1168,7 +1167,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 		 * failed in xmit_task or alloc_pdu.
+ 		 */
+ 		 beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
+-			     "BM_%d : Double Free in IO SGL io_sgl_free_index=%d,"
++			     "BM_%d : Double Free in IO SGL io_sgl_free_index=%d, "
+ 			     "value there=%p\n", phba->io_sgl_free_index,
+ 			     phba->io_sgl_hndl_base
+ 			     [phba->io_sgl_free_index]);
+@@ -1256,7 +1255,7 @@ free_wrb_handle(struct beiscsi_hba *phba, struct hwi_wrb_context *pwrb_context,
+ 			       phba->params.wrbs_per_cxn);
+ 	beiscsi_log(phba, KERN_INFO,
+ 		    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-		    "BM_%d : FREE WRB: pwrb_handle=%p free_index=0x%x"
++		    "BM_%d : FREE WRB: pwrb_handle=%p free_index=0x%x "
+ 		    "wrb_handles_available=%d\n",
+ 		    pwrb_handle, pwrb_context->free_index,
+ 		    pwrb_context->wrb_handles_available);
+@@ -1293,7 +1292,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ {
+ 	spin_lock_bh(&phba->mgmt_sgl_lock);
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
+-		    "BM_%d : In  free_mgmt_sgl_handle,"
++		    "BM_%d : In  free_mgmt_sgl_handle, "
+ 		    "eh_sgl_free_index=%d\n",
+ 		    phba->eh_sgl_free_index);
+ 
+@@ -1303,7 +1302,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
+ 		 * failed in xmit_task or alloc_pdu.
+ 		 */
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-			    "BM_%d : Double Free in eh SGL ,"
++			    "BM_%d : Double Free in eh SGL, "
+ 			    "eh_sgl_free_index=%d\n",
+ 			    phba->eh_sgl_free_index);
+ 		spin_unlock_bh(&phba->mgmt_sgl_lock);
+@@ -1604,7 +1603,7 @@ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
+ 	default:
+ 		beiscsi_log(phba, KERN_WARNING,
+ 			    BEISCSI_LOG_CONFIG | BEISCSI_LOG_IO,
+-			    "BM_%d : In hwi_complete_cmd, unknown type = %d"
++			    "BM_%d : In hwi_complete_cmd, unknown type = %d "
+ 			    "wrb_index 0x%x CID 0x%x\n", type,
+ 			    csol_cqe.wrb_index,
+ 			    csol_cqe.cid);
+@@ -2210,7 +2209,7 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
+ 		case UNSOL_DATA_DIGEST_ERROR_NOTIFY:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d :  Dropping %s[%d] on DPDU ring on CID : %d\n",
++				    "BM_%d : Dropping %s[%d] on DPDU ring on CID : %d\n",
+ 				    cqe_desc[code], code, cid);
+ 			spin_lock_bh(&phba->async_pdu_lock);
+ 			hwi_flush_default_pdu_buffer(phba, beiscsi_conn,
+@@ -2243,7 +2242,7 @@ unsigned int beiscsi_process_cq(struct be_eq_obj *pbe_eq, int budget)
+ 		default:
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Invalid CQE Event Received Code : %d"
++				    "BM_%d : Invalid CQE Event Received Code : %d "
+ 				    "CID 0x%x...\n",
+ 				    code, cid);
+ 			break;
+@@ -3305,7 +3304,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 					    phwi_context->cur_eqd);
+ 		if (ret) {
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-				    "BM_%d : beiscsi_cmd_eq_create"
++				    "BM_%d : beiscsi_cmd_eq_create "
+ 				    "Failed for EQ\n");
+ 			goto create_eq_error;
+ 		}
+@@ -3315,6 +3314,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 			    phwi_context->be_eq[i].q.id);
+ 	}
+ 	return 0;
++
+ create_eq_error:
+ 	for (i = 0; i < (phba->num_cpus + eq_for_mcc); i++) {
+ 		eq = &phwi_context->be_eq[i].q;
+@@ -3370,7 +3370,7 @@ static int beiscsi_create_cqs(struct beiscsi_hba *phba,
+ 					    false, 0);
+ 		if (ret) {
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-				    "BM_%d : beiscsi_cmd_eq_create"
++				    "BM_%d : beiscsi_cmd_eq_create "
+ 				    "Failed for ISCSI CQ\n");
+ 			goto create_cq_error;
+ 		}
+@@ -3499,7 +3499,7 @@ beiscsi_create_def_data(struct beiscsi_hba *phba,
+ 
+ 	hwi_post_async_buffers(phba, BEISCSI_DEFQ_DATA, ulp_num);
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-		    "BM_%d : DEFAULT PDU DATA RING CREATED"
++		    "BM_%d : DEFAULT PDU DATA RING CREATED "
+ 		    "on ULP : %d\n", ulp_num);
+ 
+ 	return 0;
+@@ -3527,13 +3527,13 @@ beiscsi_post_template_hdr(struct beiscsi_hba *phba)
+ 
+ 			if (status != 0) {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-					    "BM_%d : Post Template HDR Failed for"
++					    "BM_%d : Post Template HDR Failed for "
+ 					    "ULP_%d\n", ulp_num);
+ 				return status;
+ 			}
+ 
+ 			beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-				    "BM_%d : Template HDR Pages Posted for"
++				    "BM_%d : Template HDR Pages Posted for "
+ 				    "ULP_%d\n", ulp_num);
+ 		}
+ 	}
+@@ -3694,7 +3694,7 @@ beiscsi_create_wrb_rings(struct beiscsi_hba *phba,
+ 					    ulp_base_num);
+ 		if (status != 0) {
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-				    "BM_%d : wrbq create failed.");
++				    "BM_%d : wrbq create failed.\n");
+ 			kfree(pwrb_arr);
+ 			return status;
+ 		}
+@@ -3999,7 +3999,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ 
+ error:
+ 	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-		    "BM_%d : hwi_init_port failed");
++		    "BM_%d : hwi_init_port failed\n");
+ 	hwi_cleanup(phba);
+ 	return status;
+ }
+@@ -4013,7 +4013,7 @@ static int hwi_init_controller(struct beiscsi_hba *phba)
+ 		phwi_ctrlr->phwi_ctxt = (struct hwi_context_memory *)phba->
+ 		    init_mem[HWI_MEM_ADDN_CONTEXT].mem_array[0].virtual_address;
+ 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-			    "BM_%d :  phwi_ctrlr->phwi_ctxt=%p\n",
++			    "BM_%d : phwi_ctrlr->phwi_ctxt=%p\n",
+ 			    phwi_ctrlr->phwi_ctxt);
+ 	} else {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+@@ -4082,7 +4082,7 @@ static int beiscsi_init_controller(struct beiscsi_hba *phba)
+ 	if (ret)
+ 		goto free_init;
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-		    "BM_%d : Return success from beiscsi_init_controller");
++		    "BM_%d : Return success from beiscsi_init_controller\n");
+ 
+ 	return 0;
+ 
+@@ -4125,7 +4125,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 		}
+ 	} else {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : HWI_MEM_SGLH is more than one element."
++			    "BM_%d : HWI_MEM_SGLH is more than one element. "
+ 			    "Failing to load\n");
+ 		return -ENOMEM;
+ 	}
+@@ -4153,7 +4153,7 @@ static int beiscsi_init_sgl_handle(struct beiscsi_hba *phba)
+ 		idx++;
+ 	}
+ 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
+-		    "BM_%d : phba->io_sgl_hndl_avbl=%d"
++		    "BM_%d : phba->io_sgl_hndl_avbl=%d "
+ 		    "phba->eh_sgl_hndl_avbl=%d\n",
+ 		    phba->io_sgl_hndl_avbl,
+ 		    phba->eh_sgl_hndl_avbl);
+@@ -4212,7 +4212,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 
+ 			if (!ptr_cid_info) {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-					    "BM_%d : Failed to allocate memory"
++					    "BM_%d : Failed to allocate memory "
+ 					    "for ULP_CID_INFO for ULP : %d\n",
+ 					    ulp_num);
+ 				ret = -ENOMEM;
+@@ -4226,7 +4226,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 						  ulp_num), GFP_KERNEL);
+ 			if (!ptr_cid_info->cid_array) {
+ 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-					    "BM_%d : Failed to allocate memory"
++					    "BM_%d : Failed to allocate memory "
+ 					    "for CID_ARRAY for ULP : %d\n",
+ 					    ulp_num);
+ 				kfree(ptr_cid_info);
+@@ -4257,7 +4257,7 @@ static int hba_setup_cid_tbls(struct beiscsi_hba *phba)
+ 				   phba->params.cxns_per_ctrl, GFP_KERNEL);
+ 	if (!phba->conn_table) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : Failed to allocate memory in"
++			    "BM_%d : Failed to allocate memory in "
+ 			    "hba_setup_cid_tbls\n");
+ 
+ 		kfree(phba->ep_array);
+@@ -4397,7 +4397,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	if (nonemb_cmd.va == NULL) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+-			    "BM_%d : Failed to allocate memory for"
++			    "BM_%d : Failed to allocate memory for "
+ 			    "beiscsi_get_session_info\n");
+ 
+ 		return -ENOMEM;
+@@ -4418,7 +4418,7 @@ static int beiscsi_get_boot_info(struct beiscsi_hba *phba)
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR,
+ 			    BEISCSI_LOG_INIT | BEISCSI_LOG_CONFIG,
+-			    "BM_%d : beiscsi_get_session_info Failed");
++			    "BM_%d : beiscsi_get_session_info Failed\n");
+ 
+ 		if (ret != -EBUSY)
+ 			goto boot_freemem;
+@@ -4509,14 +4509,14 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
+ 	ret = beiscsi_init_controller(phba);
+ 	if (ret < 0) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : beiscsi_dev_probe - Failed in"
++			    "BM_%d : beiscsi_dev_probe - Failed in "
+ 			    "beiscsi_init_controller\n");
+ 		return ret;
+ 	}
+ 	ret = beiscsi_init_sgl_handle(phba);
+ 	if (ret < 0) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : beiscsi_dev_probe - Failed in"
++			    "BM_%d : beiscsi_dev_probe - Failed in "
+ 			    "beiscsi_init_sgl_handle\n");
+ 		goto do_cleanup_ctrlr;
+ 	}
+@@ -4806,7 +4806,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		if (!io_task->psgl_handle) {
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Alloc of IO_SGL_ICD Failed"
++				    "BM_%d : Alloc of IO_SGL_ICD Failed "
+ 				    "for the CID : %d\n",
+ 				    beiscsi_conn->beiscsi_conn_cid);
+ 			goto free_hndls;
+@@ -4817,7 +4817,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 		if (!io_task->pwrb_handle) {
+ 			beiscsi_log(phba, KERN_ERR,
+ 				    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-				    "BM_%d : Alloc of WRB_HANDLE Failed"
++				    "BM_%d : Alloc of WRB_HANDLE Failed "
+ 				    "for the CID : %d\n",
+ 				    beiscsi_conn->beiscsi_conn_cid);
+ 			goto free_io_hndls;
+@@ -4833,7 +4833,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_IO |
+ 						    BEISCSI_LOG_CONFIG,
+-						    "BM_%d : Alloc of MGMT_SGL_ICD Failed"
++						    "BM_%d : Alloc of MGMT_SGL_ICD Failed "
+ 						    "for the CID : %d\n",
+ 						    beiscsi_conn->
+ 						    beiscsi_conn_cid);
+@@ -4851,7 +4851,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 					beiscsi_log(phba, KERN_ERR,
+ 						    BEISCSI_LOG_IO |
+ 						    BEISCSI_LOG_CONFIG,
+-						    "BM_%d : Alloc of WRB_HANDLE Failed"
++						    "BM_%d : Alloc of WRB_HANDLE Failed "
+ 						    "for the CID : %d\n",
+ 						    beiscsi_conn->
+ 						    beiscsi_conn_cid);
+@@ -4872,7 +4872,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 				beiscsi_log(phba, KERN_ERR,
+ 					    BEISCSI_LOG_IO |
+ 					    BEISCSI_LOG_CONFIG,
+-					    "BM_%d : Alloc of MGMT_SGL_ICD Failed"
++					    "BM_%d : Alloc of MGMT_SGL_ICD Failed "
+ 					    "for the CID : %d\n",
+ 					    beiscsi_conn->
+ 					    beiscsi_conn_cid);
+@@ -4885,7 +4885,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
+ 			if (!io_task->pwrb_handle) {
+ 				beiscsi_log(phba, KERN_ERR,
+ 					    BEISCSI_LOG_IO | BEISCSI_LOG_CONFIG,
+-					    "BM_%d : Alloc of WRB_HANDLE Failed"
++					    "BM_%d : Alloc of WRB_HANDLE Failed "
+ 					    "for the CID : %d\n",
+ 					    beiscsi_conn->beiscsi_conn_cid);
+ 				goto free_mgmt_hndls;
+@@ -5484,7 +5484,7 @@ static pci_ers_result_t beiscsi_eeh_err_detected(struct pci_dev *pdev,
+ 
+ 	if (state == pci_channel_io_perm_failure) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : EEH : State PERM Failure");
++			    "BM_%d : EEH : State PERM Failure\n");
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+@@ -5577,8 +5577,7 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
+ 	ret = hwi_init_controller(phba);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : beiscsi_eeh_resume -"
+-			     "Failed to initialize beiscsi_hba.\n");
++			    "BM_%d : beiscsi_eeh_resume - Failed to initialize beiscsi_hba.\n");
+ 		goto ret_err;
+ 	}
+ 
+-- 
+2.7.4
 
---001a1141a480cd86010539ecd642
-Content-Type: text/plain; charset=US-ASCII; name="crash2.txt"
-Content-Disposition: attachment; filename="crash2.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_irspc9860
 
-WyAgIDMwLjE0OTgxN10gPT09PT09PT09PT09PT09PT09PT09PT09PQ0KWyAgIDMwLjE1MDcyOV0g
-WyBCVUc6IGhlbGQgbG9jayBmcmVlZCEgXQ0KWyAgIDMwLjE1MTY0NF0gNC44LjAtcmMxKyAjMTkg
-VGFpbnRlZDogRyAgICAgICAgICAgTyAgIA0KWyAgIDMwLjE1MjcxN10gLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLQ0KWyAgIDMwLjE1MzYzNV0gbHQtbGlibmRjdGwvODYzIGlzIGZyZWVpbmcgbWVt
-b3J5IGZmZmY4ODAzMTBiN2UxMjgtZmZmZjg4MDMxMGI3ZTkyNywgd2l0aCBhIGxvY2sgc3RpbGwg
-aGVsZCB0aGVyZSENClsgICAzMC4xNTU3MTldICAoJmRldi0+bXV0ZXgpey4uLi4uLn0sIGF0OiBb
-PGZmZmZmZmZmODE1ZjkzMWQ+XSBkZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHgxZC8weDQwDQpbICAg
-MzAuMTU3OTI3XSA2IGxvY2tzIGhlbGQgYnkgbHQtbGlibmRjdGwvODYzOg0KWyAgIDMwLjE1ODkx
-N10gICMwOiAgKHNiX3dyaXRlcnMjNyl7LisuKy4rfSwgYXQ6IFs8ZmZmZmZmZmY4MTI4YzUzNz5d
-IF9fc2Jfc3RhcnRfd3JpdGUrMHhiNy8weGYwDQpbICAgMzAuMTYxMjY3XSAgIzE6ICAoJm9mLT5t
-dXRleCl7Ky4rLisufSwgYXQ6IFs8ZmZmZmZmZmY4MTMxYzE5MT5dIGtlcm5mc19mb3Bfd3JpdGUr
-MHgxMDEvMHgxYzANClsgICAzMC4xNjM1NDVdICAjMjogIChzX2FjdGl2ZSMzKXsrKysrLit9LCBh
-dDogWzxmZmZmZmZmZjgxMzFjMTk5Pl0ga2VybmZzX2ZvcF93cml0ZSsweDEwOS8weDFjMA0KWyAg
-IDMwLjE2NTg5M10gICMzOiAgKCZkZXYtPm11dGV4KXsuLi4uLi59LCBhdDogWzxmZmZmZmZmZjgx
-NWY3YTNmPl0gdW5iaW5kX3N0b3JlKzB4ZmYvMHgxNjANClsgICAzMC4xNjgxMjRdICAjNDogICgm
-ZGV2LT5tdXRleCl7Li4uLi4ufSwgYXQ6IFs8ZmZmZmZmZmY4MTVmOTMxZD5dIGRldmljZV9yZWxl
-YXNlX2RyaXZlcisweDFkLzB4NDANClsgICAzMC4xNzA0MzVdICAjNTogICgmZGV2LT5tdXRleCl7
-Li4uLi4ufSwgYXQ6IFs8ZmZmZmZmZmY4MTVmOTMxZD5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisw
-eDFkLzB4NDANClsgICAzMC4xNzI3NTVdIA0KWyAgIDMwLjE3Mjc1NV0gc3RhY2sgYmFja3RyYWNl
-Og0KWyAgIDMwLjE3NDE1Nl0gQ1BVOiAwIFBJRDogODYzIENvbW06IGx0LWxpYm5kY3RsIFRhaW50
-ZWQ6IEcgICAgICAgICAgIE8gICAgNC44LjAtcmMxKyAjMTkNClsgICAzMC4xNzU5ODhdIEhhcmR3
-YXJlIG5hbWU6IFFFTVUgU3RhbmRhcmQgUEMgKGk0NDBGWCArIFBJSVgsIDE5OTYpLCBCSU9TIHJl
-bC0xLjkuMS0wLWdiM2VmMzlmLXByZWJ1aWx0LnFlbXUtcHJvamVjdC5vcmcgMDQvMDEvMjAxNA0K
-WyAgIDMwLjE3ODI2MF0gIDAwMDAwMDAwMDAwMDAwODYgMDAwMDAwMDA5OWM4ZWNiYiBmZmZmODgw
-MzM5NDUzOGQwIGZmZmZmZmZmODE0YjRmMjMNClsgICAzMC4xODAzMjVdICBmZmZmODgwMzM4MGM0
-YTkwIGZmZmY4ODAzMTBiN2UxMjggZmZmZjg4MDMzOTQ1MzkwOCBmZmZmZmZmZjgxMTA3NjUzDQpb
-ICAgMzAuMTgyMzg5XSAgZmZmZjg4MDMxMGI3ZTEyOCAwMDAwMDAwMDAwMDAwMjgyIGZmZmY4ODAz
-M2IwMDI5NDAgZmZmZmVhMDAwYzQyZGUwMA0KWyAgIDMwLjE4NDQ1Nl0gQ2FsbCBUcmFjZToNClsg
-ICAzMC4xODUyMzJdICBbPGZmZmZmZmZmODE0YjRmMjM+XSBkdW1wX3N0YWNrKzB4ODUvMHhjMg0K
-WyAgIDMwLjE4NjMyOF0gIFs8ZmZmZmZmZmY4MTEwNzY1Mz5dIGRlYnVnX2NoZWNrX25vX2xvY2tz
-X2ZyZWVkKzB4MTUzLzB4MTYwDQpbICAgMzAuMTg3NjE2XSAgWzxmZmZmZmZmZmEwMDNmYjFlPl0g
-PyBuYW1lc3BhY2VfcG1lbV9yZWxlYXNlKzB4MmUvMHg0MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjE4
-OTM5MV0gIFs8ZmZmZmZmZmY4MTI1ZTAzOT5dIGtmcmVlKzB4YzkvMHgyNzANClsgICAzMC4xOTA0
-NDVdICBbPGZmZmZmZmZmYTAwM2ZiMWU+XSBuYW1lc3BhY2VfcG1lbV9yZWxlYXNlKzB4MmUvMHg0
-MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjE5MjE5N10gIFs8ZmZmZmZmZmY4MTVmNDA0Mj5dIGRldmlj
-ZV9yZWxlYXNlKzB4MzIvMHg5MA0KWyAgIDMwLjE5MzMzM10gIFs8ZmZmZmZmZmY4MTRiN2ExYT5d
-IGtvYmplY3RfcmVsZWFzZSsweDZhLzB4MTcwDQpbICAgMzAuMTk0NDk0XSAgWzxmZmZmZmZmZjgx
-NGI3OGU3Pl0ga29iamVjdF9wdXQrMHgyNy8weDUwDQpbICAgMzAuMTk1NjAyXSAgWzxmZmZmZmZm
-ZjgxNWY0Mzc3Pl0gcHV0X2RldmljZSsweDE3LzB4MjANClsgICAzMC4xOTY2OTZdICBbPGZmZmZm
-ZmZmODE0OTMyOTA+XSBkaXNrX3JlbGVhc2UrMHhjMC8weDEwMA0KWyAgIDMwLjE5NzgyOF0gIFs8
-ZmZmZmZmZmY4MTVmNDA0Mj5dIGRldmljZV9yZWxlYXNlKzB4MzIvMHg5MA0KWyAgIDMwLjE5ODk2
-Nl0gIFs8ZmZmZmZmZmY4MTRiN2ExYT5dIGtvYmplY3RfcmVsZWFzZSsweDZhLzB4MTcwDQpbICAg
-MzAuMjAwMTI2XSAgWzxmZmZmZmZmZjgxNGI3OGU3Pl0ga29iamVjdF9wdXQrMHgyNy8weDUwDQpb
-ICAgMzAuMjAxMjMwXSAgWzxmZmZmZmZmZjgxNWY0Mzc3Pl0gcHV0X2RldmljZSsweDE3LzB4MjAN
-ClsgICAzMC4yMDIzMjhdICBbPGZmZmZmZmZmODEyMTRlMGE+XSBiZGlfdW5yZWdpc3RlcisweDIw
-YS8weDI5MA0KWyAgIDMwLjIwMzQ4Ml0gIFs8ZmZmZmZmZmY4MTEwNzI4OT5dID8gdHJhY2VfaGFy
-ZGlycXNfb25fY2FsbGVyKzB4MTI5LzB4MWIwDQpbICAgMzAuMjA0NzY5XSAgWzxmZmZmZmZmZjgx
-NDdlMmFjPl0gYmxrX2NsZWFudXBfcXVldWUrMHgxOGMvMHgyODANClsgICAzMC4yMDU5NTddICBb
-PGZmZmZmZmZmYTAwYTExN2U+XSBwbWVtX3JlbGVhc2VfcXVldWUrMHhlLzB4MTAgW25kX3BtZW1d
-DQpbICAgMzAuMjA3MjI4XSAgWzxmZmZmZmZmZjgxNWZkNDlmPl0gZGV2bV9hY3Rpb25fcmVsZWFz
-ZSsweGYvMHgyMA0KWyAgIDMwLjIwODQwN10gIFs8ZmZmZmZmZmY4MTVmZGY3OT5dIHJlbGVhc2Vf
-bm9kZXMrMHgxMjkvMHgyMzANClsgICAzMC4yMDk1NTZdICBbPGZmZmZmZmZmODE1ZmUyZWM+XSBk
-ZXZyZXNfcmVsZWFzZV9hbGwrMHgzYy8weDYwDQpbICAgMzAuMjEwNzM2XSAgWzxmZmZmZmZmZjgx
-NWY5MjQ5Pl0gX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHhhOS8weDE2MA0KWyAgIDMwLjIxMTk3
-OV0gIFs8ZmZmZmZmZmY4MTVmOTMyNT5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1LzB4NDAN
-ClsgICAzMC4yMTMxODddICBbPGZmZmZmZmZmODE1Zjg4YTQ+XSBidXNfcmVtb3ZlX2RldmljZSsw
-eDExNC8weDE5MA0KWyAgIDMwLjIxNDM3N10gIFs8ZmZmZmZmZmY4MTVmNDk3OD5dIGRldmljZV9k
-ZWwrMHgxNDgvMHgyNzANClsgICAzMC4yMTU0OTBdICBbPGZmZmZmZmZmODE1ZjQzODA+XSA/IHB1
-dF9kZXZpY2UrMHgyMC8weDIwDQpbICAgMzAuMjE2NjA5XSAgWzxmZmZmZmZmZmEwMDNmNzcwPl0g
-PyBuZF9yZWdpb25fcmVtb3ZlKzB4ODAvMHg4MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjIxNzkxNF0g
-IFs8ZmZmZmZmZmY4MTVmNGFiYT5dIGRldmljZV91bnJlZ2lzdGVyKzB4MWEvMHg2MA0KWyAgIDMw
-LjIxOTA4NV0gIFs8ZmZmZmZmZmZhMDAzYjgyOD5dIG5kX2RldmljZV91bnJlZ2lzdGVyKzB4NDgv
-MHg1MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjIyMDQxMl0gIFs8ZmZmZmZmZmZhMDAzZjc4MD5dIGNo
-aWxkX3VucmVnaXN0ZXIrMHgxMC8weDIwIFtsaWJudmRpbW1dDQpbICAgMzAuMjIxNjk2XSAgWzxm
-ZmZmZmZmZjgxNWY0NDcwPl0gZGV2aWNlX2Zvcl9lYWNoX2NoaWxkKzB4NTAvMHg5MA0KWyAgIDMw
-LjIyMjkxMF0gIFs8ZmZmZmZmZmZhMDAzZjcxOD5dIG5kX3JlZ2lvbl9yZW1vdmUrMHgyOC8weDgw
-IFtsaWJudmRpbW1dDQpbICAgMzAuMjI0MTk1XSAgWzxmZmZmZmZmZmEwMDNiYmUxPl0gbnZkaW1t
-X2J1c19yZW1vdmUrMHg0MS8weGEwIFtsaWJudmRpbW1dDQpbICAgMzAuMjI1NDg4XSAgWzxmZmZm
-ZmZmZjgxNWY5MjQxPl0gX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHhhMS8weDE2MA0KWyAgIDMw
-LjIyNjcyN10gIFs8ZmZmZmZmZmY4MTVmOTMyNT5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1
-LzB4NDANClsgICAzMC4yMjc5NDddICBbPGZmZmZmZmZmODE1ZjdhNGY+XSB1bmJpbmRfc3RvcmUr
-MHgxMGYvMHgxNjANClsgICAzMC4yMjkwODFdICBbPGZmZmZmZmZmODE1ZjZmYTU+XSBkcnZfYXR0
-cl9zdG9yZSsweDI1LzB4MzANClsgICAzMC4yMzAyMTVdICBbPGZmZmZmZmZmODEzMWNlZTU+XSBz
-eXNmc19rZl93cml0ZSsweDQ1LzB4NjANClsgICAzMC4yMzEzNTJdICBbPGZmZmZmZmZmODEzMWMx
-YzU+XSBrZXJuZnNfZm9wX3dyaXRlKzB4MTM1LzB4MWMwDQpbICAgMzAuMjMyNTMwXSAgWzxmZmZm
-ZmZmZjgxMjg4OTc3Pl0gX192ZnNfd3JpdGUrMHgzNy8weDE2MA0KWyAgIDMwLjIzMzY0M10gIFs8
-ZmZmZmZmZmY4MTEwMmY0Nz5dID8gdXBkYXRlX2Zhc3RfY3RyKzB4MTcvMHgzMA0KWyAgIDMwLjIz
-NDgxNF0gIFs8ZmZmZmZmZmY4MTEwMmZkOT5dID8gcGVyY3B1X2Rvd25fcmVhZCsweDQ5LzB4OTAN
-ClsgICAzMC4yMzU5ODhdICBbPGZmZmZmZmZmODEyOGM1Mzc+XSA/IF9fc2Jfc3RhcnRfd3JpdGUr
-MHhiNy8weGYwDQpbICAgMzAuMjM3MTY5XSAgWzxmZmZmZmZmZjgxMjhjNTM3Pl0gPyBfX3NiX3N0
-YXJ0X3dyaXRlKzB4YjcvMHhmMA0KWyAgIDMwLjIzODM0NF0gIFs8ZmZmZmZmZmY4MTI4OTBkOD5d
-IHZmc193cml0ZSsweGI4LzB4MWIwDQpbICAgMzAuMjM5NDQ0XSAgWzxmZmZmZmZmZjgxMjhhNTY4
-Pl0gU3lTX3dyaXRlKzB4NTgvMHhjMA0KWyAgIDMwLjI0MDUzNF0gIFs8ZmZmZmZmZmY4MTk5ODM3
-Yz5dIGVudHJ5X1NZU0NBTExfNjRfZmFzdHBhdGgrMHgxZi8weGJkDQpbICAgMzAuNjkzNzczXSBC
-VUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVsIHBhZ2luZyByZXF1ZXN0IGF0IDAwMDAwMDAwNDAw
-NzAwODgNCg0KWy4uXQ0KDQoNClsgICAzMC42OTUyOTZdIElQOiBbPGZmZmZmZmZmODE5ODg2YWU+
-XSBrbGlzdF9wdXQrMHhlLzB4OTANClsgICAzMC42OTY1MDFdIFBHRCAzMzgzZTIwNjcgUFVEIDAg
-DQpbICAgMzAuNjk3NTMyXSBPb3BzOiAwMDAwIFsjMV0gU01QDQpbICAgMzAuNjk4NDAzXSBEdW1w
-aW5nIGZ0cmFjZSBidWZmZXI6DQpbICAgMzAuNjk5MzA2XSAgICAoZnRyYWNlIGJ1ZmZlciBlbXB0
-eSkNClsgICAzMC43MDAyMjhdIE1vZHVsZXMgbGlua2VkIGluOiBuZF9ibGsoTykgbmZpdF90ZXN0
-KE8pIGlwNnRfcnBmaWx0ZXIgaXA2dF9SRUpFQ1QgbmZfcmVqZWN0X2lwdjYgeHRfY29ubnRyYWNr
-IGVidGFibGVfbmF0IGVidGFibGVfYnJvdXRlIGJyaWRnZSBzdHAgbGxjIGlwNnRhYmxlX21hbmds
-ZSBpcDZ0YWJsZV9yYXcgaXA2dGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY2IG5mX2RlZnJhZ19p
-cHY2IG5mX25hdF9pcHY2IGlwNnRhYmxlX3NlY3VyaXR5IGlwdGFibGVfbWFuZ2xlIGlwdGFibGVf
-cmF3IGlwdGFibGVfbmF0IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19pcHY0IG5mX25hdF9p
-cHY0IG5mX25hdCBuZl9jb25udHJhY2sgaXB0YWJsZV9zZWN1cml0eSBlYnRhYmxlX2ZpbHRlciBl
-YnRhYmxlcyBpcDZ0YWJsZV9maWx0ZXIgaXA2X3RhYmxlcyBkYXhfcG1lbShPKSBuZF9wbWVtKE8p
-IG5kX2J0dChPKSBkYXgoTykgbmRfZTgyMChPKSBuZml0KE8pIHRwbV90aXMgbGlibnZkaW1tKE8p
-IHRwbV90aXNfY29yZSB0cG0gc2VyaW9fcmF3IG5maXRfdGVzdF9pb21hcChPKQ0KWyAgIDMwLjcx
-MjQ0OV0gQ1BVOiAwIFBJRDogODYzIENvbW06IGx0LWxpYm5kY3RsIFRhaW50ZWQ6IEcgICAgICAg
-ICAgIE8gICAgNC44LjAtcmMxKyAjMTkNClsgICAzMC43MTQzMjVdIEhhcmR3YXJlIG5hbWU6IFFF
-TVUgU3RhbmRhcmQgUEMgKGk0NDBGWCArIFBJSVgsIDE5OTYpLCBCSU9TIHJlbC0xLjkuMS0wLWdi
-M2VmMzlmLXByZWJ1aWx0LnFlbXUtcHJvamVjdC5vcmcgMDQvMDEvMjAxNA0KWyAgIDMwLjcxNjY1
-MF0gdGFzazogZmZmZjg4MDMzODBjNDI0MCB0YXNrLnN0YWNrOiBmZmZmODgwMzM5NDUwMDAwDQpb
-ICAgMzAuNzE3ODY4XSBSSVA6IDAwMTA6WzxmZmZmZmZmZjgxOTg4NmFlPl0gIFs8ZmZmZmZmZmY4
-MTk4ODZhZT5dIGtsaXN0X3B1dCsweGUvMHg5MA0KWyAgIDMwLjcxOTc3NF0gUlNQOiAwMDE4OmZm
-ZmY4ODAzMzk0NTNiNDAgIEVGTEFHUzogMDAwMTAyNDYNClsgICAzMC43MjA5MTddIFJBWDogMDAw
-MDAwMDAwMDAwMDAwMCBSQlg6IGZmZmY4ODAzMzgwYzQyNDAgUkNYOiBmZmZmODgwMzM4MGM0MjQw
-DQpbICAgMzAuNzIyMjc3XSBSRFg6IGZmZmZmZmZmODE5ODg3ZGQgUlNJOiAwMDAwMDAwMDAwMDAw
-MDAxIFJESTogMDAwMDAwMDA0MDA3MDA4OA0KWyAgIDMwLjcyMzY0N10gUkJQOiBmZmZmODgwMzM5
-NDUzYjYwIFIwODogZmZmZmZmZmY4MWY0ZWJhMCBSMDk6IDAwMDAwMDAwMDAwMDAwMDANClsgICAz
-MC43MjUwMjZdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6IDAwMDAwMDAwMDAwMDAwMDAgUjEy
-OiAwMDAwMDAwMDQwMDcwMDg4DQpbICAgMzAuNzI2Mzk1XSBSMTM6IGZmZmZmZmZmYTAwNGQzZTAg
-UjE0OiAwMDAwMDAwMDAwMDAwMDAxIFIxNTogZmZmZmZmZmZmZmZmZmZmMg0KWyAgIDMwLjcyNzc2
-M10gRlM6ICAwMDAwN2YyNTNlMTVmODQwKDAwMDApIEdTOmZmZmY4ODAzM2ZjMDAwMDAoMDAwMCkg
-a25sR1M6MDAwMDAwMDAwMDAwMDAwMA0KWyAgIDMwLjcyOTY0MV0gQ1M6ICAwMDEwIERTOiAwMDAw
-IEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KWyAgIDMwLjczMDg0Ml0gQ1IyOiAwMDAw
-MDAwMDQwMDcwMDg4IENSMzogMDAwMDAwMDMzOTVkMzAwMCBDUjQ6IDAwMDAwMDAwMDAwMDA2ZjAN
-ClsgICAzMC43MzIyMTJdIFN0YWNrOg0KWyAgIDMwLjczMjk0MV0gIGZmZmY4ODAzMzgwYzQyNDAg
-MDAwMDAwMDA0MDA3MDA4OCBmZmZmZmZmZmEwMDRkM2UwIGZmZmY4ODAzMTBiNzkwNTANClsgICAz
-MC43MzUwNDddICBmZmZmODgwMzM5NDUzYmM4IGZmZmZmZmZmODE5ODg3ZWEgZmZmZjg4MDMxMDRh
-YzAzOCBmZmZmODgwMzI0YmEyODQ4DQpbICAgMzAuNzM3MTU2XSAgZmZmZmZmZmY4MWY0ZWJhMCBm
-ZmZmZmZmZjgxZjRlYmEwIDAwMDAwMDAwNDAwNzAwODggZmZmZjg4MDMzODBjNDI0MA0KWyAgIDMw
-LjczOTI0OV0gQ2FsbCBUcmFjZToNClsgICAzMC43NDAwMjldICBbPGZmZmZmZmZmODE5ODg3ZWE+
-XSBrbGlzdF9yZW1vdmUrMHg3YS8weGUwDQpbICAgMzAuNzQxMTY2XSAgWzxmZmZmZmZmZjgxNWY5
-MjkxPl0gX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHhmMS8weDE2MA0KWyAgIDMwLjc0MjQzNF0g
-IFs8ZmZmZmZmZmY4MTVmOTMyNT5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1LzB4NDANClsg
-ICAzMC43NDM2NjhdICBbPGZmZmZmZmZmODE1Zjg4YTQ+XSBidXNfcmVtb3ZlX2RldmljZSsweDEx
-NC8weDE5MA0KWyAgIDMwLjc0NDg5Ml0gIFs8ZmZmZmZmZmY4MTVmNDk3OD5dIGRldmljZV9kZWwr
-MHgxNDgvMHgyNzANClsgICAzMC43NDYwMzhdICBbPGZmZmZmZmZmODE1ZjQzODA+XSA/IHB1dF9k
-ZXZpY2UrMHgyMC8weDIwDQpbICAgMzAuNzQ3MTg1XSAgWzxmZmZmZmZmZmEwMDNmNzcwPl0gPyBu
-ZF9yZWdpb25fcmVtb3ZlKzB4ODAvMHg4MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjc0ODUyMF0gIFs8
-ZmZmZmZmZmY4MTVmNGFiYT5dIGRldmljZV91bnJlZ2lzdGVyKzB4MWEvMHg2MA0KWyAgIDMwLjc0
-OTcxNV0gIFs8ZmZmZmZmZmZhMDAzYjgyOD5dIG5kX2RldmljZV91bnJlZ2lzdGVyKzB4NDgvMHg1
-MCBbbGlibnZkaW1tXQ0KWyAgIDMwLjc1MTA4OF0gIFs8ZmZmZmZmZmZhMDAzZjc4MD5dIGNoaWxk
-X3VucmVnaXN0ZXIrMHgxMC8weDIwIFtsaWJudmRpbW1dDQpbICAgMzAuNzUyNDAxXSAgWzxmZmZm
-ZmZmZjgxNWY0NDcwPl0gZGV2aWNlX2Zvcl9lYWNoX2NoaWxkKzB4NTAvMHg5MA0KWyAgIDMwLjc1
-MzY1MF0gIFs8ZmZmZmZmZmZhMDAzZjcxOD5dIG5kX3JlZ2lvbl9yZW1vdmUrMHgyOC8weDgwIFts
-aWJudmRpbW1dDQpbICAgMzAuNzU0OTc5XSAgWzxmZmZmZmZmZmEwMDNiYmUxPl0gbnZkaW1tX2J1
-c19yZW1vdmUrMHg0MS8weGEwIFtsaWJudmRpbW1dDQpbICAgMzAuNzU2MzA3XSAgWzxmZmZmZmZm
-ZjgxNWY5MjQxPl0gX19kZXZpY2VfcmVsZWFzZV9kcml2ZXIrMHhhMS8weDE2MA0KWyAgIDMwLjc1
-NzU4M10gIFs8ZmZmZmZmZmY4MTVmOTMyNT5dIGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1LzB4
-NDANClsgICAzMC43NTg4MjhdICBbPGZmZmZmZmZmODE1ZjdhNGY+XSB1bmJpbmRfc3RvcmUrMHgx
-MGYvMHgxNjANClsgICAzMC43NTk5ODZdICBbPGZmZmZmZmZmODE1ZjZmYTU+XSBkcnZfYXR0cl9z
-dG9yZSsweDI1LzB4MzANClsgICAzMC43NjExNDVdICBbPGZmZmZmZmZmODEzMWNlZTU+XSBzeXNm
-c19rZl93cml0ZSsweDQ1LzB4NjANClsgICAzMC43NjIyOTldICBbPGZmZmZmZmZmODEzMWMxYzU+
-XSBrZXJuZnNfZm9wX3dyaXRlKzB4MTM1LzB4MWMwDQpbICAgMzAuNzYzNTAyXSAgWzxmZmZmZmZm
-ZjgxMjg4OTc3Pl0gX192ZnNfd3JpdGUrMHgzNy8weDE2MA0KWyAgIDMwLjc2NDY0MV0gIFs8ZmZm
-ZmZmZmY4MTEwMmY0Nz5dID8gdXBkYXRlX2Zhc3RfY3RyKzB4MTcvMHgzMA0KWyAgIDMwLjc2NTg0
-NV0gIFs8ZmZmZmZmZmY4MTEwMmZkOT5dID8gcGVyY3B1X2Rvd25fcmVhZCsweDQ5LzB4OTANClsg
-ICAzMC43NjcwNTVdICBbPGZmZmZmZmZmODEyOGM1Mzc+XSA/IF9fc2Jfc3RhcnRfd3JpdGUrMHhi
-Ny8weGYwDQpbICAgMzAuNzY4MjY1XSAgWzxmZmZmZmZmZjgxMjhjNTM3Pl0gPyBfX3NiX3N0YXJ0
-X3dyaXRlKzB4YjcvMHhmMA0KWyAgIDMwLjc2OTQ3N10gIFs8ZmZmZmZmZmY4MTI4OTBkOD5dIHZm
-c193cml0ZSsweGI4LzB4MWIwDQpbICAgMzAuNzcwNTkyXSAgWzxmZmZmZmZmZjgxMjhhNTY4Pl0g
-U3lTX3dyaXRlKzB4NTgvMHhjMA0KWyAgIDMwLjc3MTY5N10gIFs8ZmZmZmZmZmY4MTk5ODM3Yz5d
-IGVudHJ5X1NZU0NBTExfNjRfZmFzdHBhdGgrMHgxZi8weGJkDQpbICAgMzAuNzcyOTc5XSBDb2Rl
-OiBmNSA1NSA1ZCAwMCAwMSBlOCBiMyA2ZSA3MiBmZiBlOSA2MyBmZiBmZiBmZiBlOCA2OSBmNSAw
-MCAwMCBlOSA3MiBmZiBmZiBmZiAwZiAxZiA0MCAwMCA1NSA0OCA4OSBlNSA0MSA1NiA0MSA1NSA0
-MSA1NCA1MyA0MSA4OSBmNiA8NGM+IDhiIDI3IDQ4IDg5IGZiIDQ5IDgzIGU0IGZlIDRjIDg5IGU3
-IDRkIDhiIDZjIDI0IDUwIGU4IDNiIGYyIA0KWyAgIDMwLjc4MTQzMF0gUklQICBbPGZmZmZmZmZm
-ODE5ODg2YWU+XSBrbGlzdF9wdXQrMHhlLzB4OTANClsgICAzMC43ODI2NDJdICBSU1AgPGZmZmY4
-ODAzMzk0NTNiNDA+DQpbICAgMzAuNzgzNTUwXSBDUjI6IDAwMDAwMDAwNDAwNzAwODgNClsgICAz
-MC43ODQ0OTVdIC0tLVsgZW5kIHRyYWNlIDBkY2VmZTkxODI4ZmJhNTIgXS0tLQ0KWyAgIDMwLjc4
-NjkxN10gS2VybmVsIHBhbmljIC0gbm90IHN5bmNpbmc6IEZhdGFsIGV4Y2VwdGlvbg0KWyAgIDMw
-Ljc4ODQwMF0gRHVtcGluZyBmdHJhY2UgYnVmZmVyOg0KWyAgIDMwLjc4OTMwNV0gICAgKGZ0cmFj
-ZSBidWZmZXIgZW1wdHkpDQpbICAgMzAuNzkwMjI1XSBLZXJuZWwgT2Zmc2V0OiBkaXNhYmxlZA0K
-WyAgIDMwLjc5MTEzN10gUmVib290aW5nIGluIDUgc2Vjb25kcy4uDQo=
---001a1141a480cd86010539ecd642
-Content-Type: text/plain; charset=US-ASCII; name="crash1.txt"
-Content-Disposition: attachment; filename="crash1.txt"
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_irspc9921
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
 
-WyAgIDM0LjI1NTk4Nl0gZ2VuZXJhbCBwcm90ZWN0aW9uIGZhdWx0OiAwMDAwIFsjMV0gU01QDQpb
-ICAgMzQuMjU3MDI2XSBEdW1waW5nIGZ0cmFjZSBidWZmZXI6DQpbICAgMzQuMjU3ODU5XSAgICAo
-ZnRyYWNlIGJ1ZmZlciBlbXB0eSkNClsgICAzNC4yNTg3MTNdIE1vZHVsZXMgbGlua2VkIGluOiBu
-ZF9ibGsoTykgbmZpdF90ZXN0KE8pIGlwNnRfcnBmaWx0ZXIgaXA2dF9SRUpFQ1QgbmZfcmVqZWN0
-X2lwdjYgeHRfY29ubnRyYWNrIGVidGFibGVfbmF0IGVidGFibGVfYnJvdXRlIGJyaWRnZSBzdHAg
-bGxjIGlwNnRhYmxlX25hdCBuZl9jb25udHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiBuZl9uYXRf
-aXB2NiBpcDZ0YWJsZV9tYW5nbGUgaXA2dGFibGVfc2VjdXJpdHkgaXA2dGFibGVfcmF3IGlwdGFi
-bGVfbmF0IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19pcHY0IG5mX25hdF9pcHY0IG5mX25h
-dCBuZl9jb25udHJhY2sgaXB0YWJsZV9tYW5nbGUgaXB0YWJsZV9zZWN1cml0eSBpcHRhYmxlX3Jh
-dyBlYnRhYmxlX2ZpbHRlciBlYnRhYmxlcyBpcDZ0YWJsZV9maWx0ZXIgaXA2X3RhYmxlcyBuZF9w
-bWVtKE8pIGRheF9wbWVtKE8pIGRheChPKSBuZF9idHQoTykgc2VyaW9fcmF3IG5kX2U4MjAoTykg
-bmZpdChPKSBsaWJudmRpbW0oTykgdHBtX3RpcyB0cG1fdGlzX2NvcmUgdHBtIG5maXRfdGVzdF9p
-b21hcChPKQ0KWyAgIDM0LjI2OTY4OF0gQ1BVOiAxIFBJRDogODcxIENvbW06IGx0LWxpYm5kY3Rs
-IFRhaW50ZWQ6IEcgICAgICAgICAgIE8gICAgNC44LjAtcmMxKyAjMTkNClsgICAzNC4yNzEzNjRd
-IEhhcmR3YXJlIG5hbWU6IFFFTVUgU3RhbmRhcmQgUEMgKGk0NDBGWCArIFBJSVgsIDE5OTYpLCBC
-SU9TIHJlbC0xLjkuMS0wLWdiM2VmMzlmLXByZWJ1aWx0LnFlbXUtcHJvamVjdC5vcmcgMDQvMDEv
-MjAxNA0KWyAgIDM0LjI3MzQ1MF0gdGFzazogZmZmZjg4MDMzOGI2NDI0MCB0YXNrLnN0YWNrOiBm
-ZmZmODgwMzM4YTgwMDAwDQpbICAgMzQuMjc0NTY0XSBSSVA6IDAwMTA6WzxmZmZmZmZmZjgxOTg4
-OGFlPl0gIFs8ZmZmZmZmZmY4MTk4ODhhZT5dIGtsaXN0X25leHQrMHg1ZS8weDEyMA0KWyAgIDM0
-LjI3NjMyN10gUlNQOiAwMDE4OmZmZmY4ODAzMzhhODNjOTAgIEVGTEFHUzogMDAwMTAyMTcNClsg
-ICAzNC4yNzczNzFdIFJBWDogZmZmZjg4MDMxMzM4NDI3OCBSQlg6IDZiNmI2YjZiNmI2YjZiNjMg
-UkNYOiBjMjQ4MmEzNmI0NWJjZDRkDQpbICAgMzQuMjc4NjE0XSBSRFg6IDAwMDAwMDAwMDAwMDAw
-MDEgUlNJOiAwMDAwMDAwMDgyZjc2NDljIFJESTogZmZmZjg4MDMxMzM4NDI0OA0KWyAgIDM0LjI3
-OTg2NF0gUkJQOiBmZmZmODgwMzM4YTgzY2I4IFIwODogMDAwMDAwMDAwMDAwMDAwMCBSMDk6IDAw
-MDAwMDAwMDAwMDAwMDANClsgICAzNC4yODExMTRdIFIxMDogMDAwMDAwMDAwMDAwMDAwMCBSMTE6
-IDAwMDAwMDAwMDAwMDM0MzYgUjEyOiBmZmZmODgwMzM4YTgzY2M4DQpbICAgMzQuMjgyMzU2XSBS
-MTM6IDAwMDAwMDAwMDAwMDAwMDAgUjE0OiBmZmZmODgwMzEzMzg0YTgwIFIxNTogMDAwMDAwMDAw
-MDAwMDAwMA0KWyAgIDM0LjI4MzU5M10gRlM6ICAwMDAwN2ZhMWE3ZTA2ODQwKDAwMDApIEdTOmZm
-ZmY4ODAzM2ZkMDAwMDAoMDAwMCkga25sR1M6MDAwMDAwMDAwMDAwMDAwMA0KWyAgIDM0LjI4NTMw
-Nl0gQ1M6ICAwMDEwIERTOiAwMDAwIEVTOiAwMDAwIENSMDogMDAwMDAwMDA4MDA1MDAzMw0KWyAg
-IDM0LjI4NjQwNF0gQ1IyOiAwMDAwNTYxZDVhZmM5MjA4IENSMzogMDAwMDAwMDMzODkxYzAwMCBD
-UjQ6IDAwMDAwMDAwMDAwMDA2ZTANClsgICAzNC4yODc2NTRdIFN0YWNrOg0KWyAgIDM0LjI4ODMz
-OV0gIDAwMDAwMDAwMDAwMDAwMDAgMDAwMDAwMDAwMDAwMDAwMCBmZmZmZmZmZmEwMDJlNzcwIGZm
-ZmZmZmZmYTAxN2QxMDANClsgICAzNC4yOTAyNThdICBmZmZmZmZmZmZmZmZmZmYyIGZmZmY4ODAz
-MzhhODNjZjggZmZmZmZmZmY4MTVmNDQ3YiBmZmZmODgwMzEzMzg0MjQ4DQpbICAgMzQuMzAxNTg4
-XSAgMDAwMDAwMDAwMDAwMDAwMCAwMDAwMDAwMDcwNzU3MTkwIGZmZmY4ODAzMTJjNDk4NjggZmZm
-Zjg4MDMxMmM0OTg2OA0KWyAgIDM0LjMwMzQ4OF0gQ2FsbCBUcmFjZToNClsgICAzNC4zMDQyMDhd
-ICBbPGZmZmZmZmZmYTAwMmU3NzA+XSA/IG5kX3JlZ2lvbl9yZW1vdmUrMHg4MC8weDgwIFtsaWJu
-dmRpbW1dDQpbICAgMzQuMzA1NDI4XSAgWzxmZmZmZmZmZjgxNWY0NDdiPl0gZGV2aWNlX2Zvcl9l
-YWNoX2NoaWxkKzB4NWIvMHg5MA0KWyAgIDM0LjMwNjU2Nl0gIFs8ZmZmZmZmZmZhMDAyZTcxOD5d
-IG5kX3JlZ2lvbl9yZW1vdmUrMHgyOC8weDgwIFtsaWJudmRpbW1dDQpbICAgMzQuMzA3Nzc2XSAg
-WzxmZmZmZmZmZmEwMDJhYmUxPl0gbnZkaW1tX2J1c19yZW1vdmUrMHg0MS8weGEwIFtsaWJudmRp
-bW1dDQpbICAgMzQuMzA4OTgzXSAgWzxmZmZmZmZmZjgxNWY5MjQxPl0gX19kZXZpY2VfcmVsZWFz
-ZV9kcml2ZXIrMHhhMS8weDE2MA0KWyAgIDM0LjMxMDE0OF0gIFs8ZmZmZmZmZmY4MTVmOTMyNT5d
-IGRldmljZV9yZWxlYXNlX2RyaXZlcisweDI1LzB4NDANClsgICAzNC4zMTEyNzNdICBbPGZmZmZm
-ZmZmODE1ZjdhNGY+XSB1bmJpbmRfc3RvcmUrMHgxMGYvMHgxNjANClsgICAzNC4zMTIzMzBdICBb
-PGZmZmZmZmZmODE1ZjZmYTU+XSBkcnZfYXR0cl9zdG9yZSsweDI1LzB4MzANClsgICAzNC4zMTMz
-OTFdICBbPGZmZmZmZmZmODEzMWNlZTU+XSBzeXNmc19rZl93cml0ZSsweDQ1LzB4NjANClsgICAz
-NC4zMTQ0NTFdICBbPGZmZmZmZmZmODEzMWMxYzU+XSBrZXJuZnNfZm9wX3dyaXRlKzB4MTM1LzB4
-MWMwDQpbICAgMzQuMzE1NTU3XSAgWzxmZmZmZmZmZjgxMjg4OTc3Pl0gX192ZnNfd3JpdGUrMHgz
-Ny8weDE2MA0KWyAgIDM0LjMxNjYxMF0gIFs8ZmZmZmZmZmY4MTEwMmY0Nz5dID8gdXBkYXRlX2Zh
-c3RfY3RyKzB4MTcvMHgzMA0KWyAgIDM0LjMxNzcwNF0gIFs8ZmZmZmZmZmY4MTEwMmZkOT5dID8g
-cGVyY3B1X2Rvd25fcmVhZCsweDQ5LzB4OTANClsgICAzNC4zMTg4MDVdICBbPGZmZmZmZmZmODEy
-OGM1Mzc+XSA/IF9fc2Jfc3RhcnRfd3JpdGUrMHhiNy8weGYwDQpbICAgMzQuMzE5OTA2XSAgWzxm
-ZmZmZmZmZjgxMjhjNTM3Pl0gPyBfX3NiX3N0YXJ0X3dyaXRlKzB4YjcvMHhmMA0KWyAgIDM0LjMy
-MTAxMF0gIFs8ZmZmZmZmZmY4MTI4OTBkOD5dIHZmc193cml0ZSsweGI4LzB4MWIwDQpbICAgMzQu
-MzIyMDI5XSAgWzxmZmZmZmZmZjgxMjhhNTY4Pl0gU3lTX3dyaXRlKzB4NTgvMHhjMA0KWyAgIDM0
-LjMyMzAzOV0gIFs8ZmZmZmZmZmY4MTk5ODM3Yz5dIGVudHJ5X1NZU0NBTExfNjRfZmFzdHBhdGgr
-MHgxZi8weGJkDQpbICAgMzQuMzI0MjA4XSBDb2RlOiA4ZCA1OCBmOCBmMCA0MSA4MyA2ZSAxOCAw
-MSA3NCA2MCA0OSA4YiAzYyAyNCA0NSAzMSBlZCA0OCA4ZCA0NyAzMCA0NSAzMSBmZiA0OSBjNyA0
-NCAyNCAwOCAwMCAwMCAwMCAwMCA0OCAzOSBjMyAwZiA4NCBiNCAwMCAwMCAwMCA8ZjY+IDAzIDAx
-IDc1IDcwIGI4IDAxIDAwIDAwIDAwIGYwIDBmIGMxIDQzIDE4IDgzIGMwIDAxIDgzIGY4IDAxIA0K
-WyAgIDM0LjMzMTY4NF0gUklQICBbPGZmZmZmZmZmODE5ODg4YWU+XSBrbGlzdF9uZXh0KzB4NWUv
-MHgxMjANClsgICAzNC4zMzI3OThdICBSU1AgPGZmZmY4ODAzMzhhODNjOTA+DQpbICAgMzQuMzMz
-NjU5XSAtLS1bIGVuZCB0cmFjZSBkYjY0MDIyYWFjYTQyNTM0IF0tLS0NCg==
---001a1141a480cd86010539ecd642
-Content-Type: application/octet-stream; name=patch
-Content-Disposition: attachment; filename=patch
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_irspc9972
-
-YmxvY2s6IGV4dGVuZCB0aGUgbGlmZXRpbWUgb2YgZGlzayBwYXJlbnQgZGV2aWNlcwoKRnJvbTog
-RGFuIFdpbGxpYW1zIDxkYW4uai53aWxsaWFtc0BpbnRlbC5jb20+CgpDb21taXQgZGYwOGMzMmNl
-M2JlICJibG9jazogZml4IGJkaSB2cyBnZW5kaXNrIGxpZmV0aW1lIG1pc21hdGNoIiBmaXhlZAp0
-aGUgY2FzZSB3aGVyZSB0aGUgYmRpIGlzIG5hbWVkIGZyb20gYSBnZW5kaXNrIHdpdGggYSBkeW5h
-bWljYWxseQphbGxvY2F0ZWQgZGV2dC4gIEhvd2V2ZXIgdGhpcyBsZWF2ZXMgdGhlIGJ1ZyBpbiBw
-bGFjZSBob2xlIGZvciBkcml2ZXJzCnVzaW5nIGEgc3RhdGljIGRldnQgbGlrZSBzZC4gIEphbWVz
-IG9ic2VydmVzIHRoYXQgZm9yIHNjc2kgd2UgY2FuCmFkZHJlc3MgdGhlIGlzc3VlIGJ5IGJ1aWxk
-aW5nIG9uIHRoZSBpbml0aWFsIGZpeCB0byBleHRlbmQgdGhlIGxpZmV0aW1lCm9mIHRoZSBkaXNr
-IGRldmljZSB1bnRpbCB0aGUgYmRpIGlzIHJlbGVhc2VkLiAgVGhpcyBlZmZlY3RpdmVseSBtYWtl
-cwp0aGUgbGlmZXRpbWUgb2YgYSBzdGF0aWNhbGx5IGFsbG9jYXRlZCBkZXZ0IGlkZW50aWNhbCB0
-byB0aGF0IG9mIGEKZHluYW1pY2FsbHkgYWxsb2NhdGVkIGRldnQuCgpIb3dldmVyLCB0aGlzIGxl
-YXZlcyBhIGhvbGUgZm9yIGJsb2NrIGRldmljZSBkcml2ZXJzIHRoYXQgdXNlIGEKc3RhdGljYWxs
-eSBhbGxvY2F0ZWQgZGV2dCwgYnV0IGRvIG5vdCBzcGVjaWZ5IGEgcGFyZW50IGRldmljZS4gVGhv
-c2UKZHJpdmVycyBpZiB0aGV5IGV4aXN0LCBzaG91bGQgbW92ZSB0byBkeW5hbWljYWxseSBhbGxv
-Y2F0ZWQgZGV2dCwgb3IKcmVnaXN0ZXIgYSBwYXJlbnQgZGV2aWNlIGlmIHRoZXkgYXJlIG9uIGEg
-aG90cGx1ZyBjYXBhYmxlIGJ1cy4KCkNjOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hl
-QHNhbmRpc2suY29tPgpDYzogSmVucyBBeGJvZSA8YXhib2VAZmIuY29tPgpDYzogIk1hcnRpbiBL
-LiBQZXRlcnNlbiIgPG1hcnRpbi5wZXRlcnNlbkBvcmFjbGUuY29tPiwKQ2M6IENocmlzdG9waCBI
-ZWxsd2lnIDxoY2hAbHN0LmRlPgpDYzogVGVqdW4gSGVvIDx0akBrZXJuZWwub3JnPgpDYzogRGF2
-ZSBIYW5zZW4gPGRhdmUuaGFuc2VuQGludGVsLmNvbT4sClN1Z2dlc3RlZC1ieTogSmFtZXMgQm90
-dG9tbGV5IDxKYW1lcy5Cb3R0b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tPgpTaWduZWQtb2Zm
-LWJ5OiBEYW4gV2lsbGlhbXMgPGRhbi5qLndpbGxpYW1zQGludGVsLmNvbT4KLS0tCiBibG9jay9n
-ZW5oZC5jICAgICAgICAgICAgICAgfCAgICA1ICsrKystCiBpbmNsdWRlL2xpbnV4L2JhY2tpbmct
-ZGV2LmggfCAgICAyICstCiBtbS9iYWNraW5nLWRldi5jICAgICAgICAgICAgfCAgIDEzICsrKysr
-KysrKysrLS0KIDMgZmlsZXMgY2hhbmdlZCwgMTYgaW5zZXJ0aW9ucygrKSwgNCBkZWxldGlvbnMo
-LSkKCmRpZmYgLS1naXQgYS9ibG9jay9nZW5oZC5jIGIvYmxvY2svZ2VuaGQuYwppbmRleCBmY2Q2
-ZDRmYWU2NTcuLjRjM2NhODQyNDUzNSAxMDA2NDQKLS0tIGEvYmxvY2svZ2VuaGQuYworKysgYi9i
-bG9jay9nZW5oZC5jCkBAIC02MTQsNyArNjE0LDcgQEAgdm9pZCBkZXZpY2VfYWRkX2Rpc2soc3Ry
-dWN0IGRldmljZSAqcGFyZW50LCBzdHJ1Y3QgZ2VuZGlzayAqZGlzaykKIAogCS8qIFJlZ2lzdGVy
-IEJESSBiZWZvcmUgcmVmZXJlbmNpbmcgaXQgZnJvbSBiZGV2ICovCiAJYmRpID0gJmRpc2stPnF1
-ZXVlLT5iYWNraW5nX2Rldl9pbmZvOwotCWJkaV9yZWdpc3Rlcl9vd25lcihiZGksIGRpc2tfdG9f
-ZGV2KGRpc2spKTsKKwliZGlfcmVnaXN0ZXJfZGlzayhiZGksIGRpc2spOwogCiAJYmxrX3JlZ2lz
-dGVyX3JlZ2lvbihkaXNrX2RldnQoZGlzayksIGRpc2stPm1pbm9ycywgTlVMTCwKIAkJCSAgICBl
-eGFjdF9tYXRjaCwgZXhhY3RfbG9jaywgZGlzayk7CkBAIC0xMTQ0LDYgKzExNDQsOSBAQCBzdGF0
-aWMgdm9pZCBkaXNrX3JlbGVhc2Uoc3RydWN0IGRldmljZSAqZGV2KQogCWhkX2ZyZWVfcGFydCgm
-ZGlzay0+cGFydDApOwogCWlmIChkaXNrLT5xdWV1ZSkKIAkJYmxrX3B1dF9xdWV1ZShkaXNrLT5x
-dWV1ZSk7CisKKwkvKiBzZWUgYmRpX3JlZ2lzdGVyX2Rpc2soKSAqLworCXB1dF9kZXZpY2UoZGV2
-LT5wYXJlbnQpOwogCWtmcmVlKGRpc2spOwogfQogc3RydWN0IGNsYXNzIGJsb2NrX2NsYXNzID0g
-ewpkaWZmIC0tZ2l0IGEvaW5jbHVkZS9saW51eC9iYWNraW5nLWRldi5oIGIvaW5jbHVkZS9saW51
-eC9iYWNraW5nLWRldi5oCmluZGV4IDQzYjkzYTk0N2U2MS4uZGY5ZTFhNzY2MTU3IDEwMDY0NAot
-LS0gYS9pbmNsdWRlL2xpbnV4L2JhY2tpbmctZGV2LmgKKysrIGIvaW5jbHVkZS9saW51eC9iYWNr
-aW5nLWRldi5oCkBAIC0yNCw3ICsyNCw3IEBAIF9fcHJpbnRmKDMsIDQpCiBpbnQgYmRpX3JlZ2lz
-dGVyKHN0cnVjdCBiYWNraW5nX2Rldl9pbmZvICpiZGksIHN0cnVjdCBkZXZpY2UgKnBhcmVudCwK
-IAkJY29uc3QgY2hhciAqZm10LCAuLi4pOwogaW50IGJkaV9yZWdpc3Rlcl9kZXYoc3RydWN0IGJh
-Y2tpbmdfZGV2X2luZm8gKmJkaSwgZGV2X3QgZGV2KTsKLWludCBiZGlfcmVnaXN0ZXJfb3duZXIo
-c3RydWN0IGJhY2tpbmdfZGV2X2luZm8gKmJkaSwgc3RydWN0IGRldmljZSAqb3duZXIpOworaW50
-IGJkaV9yZWdpc3Rlcl9kaXNrKHN0cnVjdCBiYWNraW5nX2Rldl9pbmZvICpiZGksIHN0cnVjdCBn
-ZW5kaXNrICpkaXNrKTsKIHZvaWQgYmRpX3VucmVnaXN0ZXIoc3RydWN0IGJhY2tpbmdfZGV2X2lu
-Zm8gKmJkaSk7CiAKIGludCBfX211c3RfY2hlY2sgYmRpX3NldHVwX2FuZF9yZWdpc3RlcihzdHJ1
-Y3QgYmFja2luZ19kZXZfaW5mbyAqLCBjaGFyICopOwpkaWZmIC0tZ2l0IGEvbW0vYmFja2luZy1k
-ZXYuYyBiL21tL2JhY2tpbmctZGV2LmMKaW5kZXggOGZkZTQ0M2YzNmQ3Li5iNjIxYzhlOGNkNjgg
-MTAwNjQ0Ci0tLSBhL21tL2JhY2tpbmctZGV2LmMKKysrIGIvbW0vYmFja2luZy1kZXYuYwpAQCAt
-ODI1LDggKzgyNSw5IEBAIGludCBiZGlfcmVnaXN0ZXJfZGV2KHN0cnVjdCBiYWNraW5nX2Rldl9p
-bmZvICpiZGksIGRldl90IGRldikKIH0KIEVYUE9SVF9TWU1CT0woYmRpX3JlZ2lzdGVyX2Rldik7
-CiAKLWludCBiZGlfcmVnaXN0ZXJfb3duZXIoc3RydWN0IGJhY2tpbmdfZGV2X2luZm8gKmJkaSwg
-c3RydWN0IGRldmljZSAqb3duZXIpCitpbnQgYmRpX3JlZ2lzdGVyX2Rpc2soc3RydWN0IGJhY2tp
-bmdfZGV2X2luZm8gKmJkaSwgc3RydWN0IGdlbmRpc2sgKmRpc2spCiB7CisJc3RydWN0IGRldmlj
-ZSAqb3duZXIgPSBkaXNrX3RvX2RldihkaXNrKTsKIAlpbnQgcmM7CiAKIAlyYyA9IGJkaV9yZWdp
-c3RlcihiZGksIE5VTEwsICIldToldSIsIE1BSk9SKG93bmVyLT5kZXZ0KSwKQEAgLTgzNSw5ICs4
-MzYsMTcgQEAgaW50IGJkaV9yZWdpc3Rlcl9vd25lcihzdHJ1Y3QgYmFja2luZ19kZXZfaW5mbyAq
-YmRpLCBzdHJ1Y3QgZGV2aWNlICpvd25lcikKIAkJcmV0dXJuIHJjOwogCWJkaS0+b3duZXIgPSBv
-d25lcjsKIAlnZXRfZGV2aWNlKG93bmVyKTsKKworCS8qCisJICogRm9yIHN0YXRpY2FsbHkgYWxs
-b2NhdGVkIGRldnQgZGlza3MsIGxpa2Ugc2NzaSwgdGhlIGRpc2sncworCSAqIHBhcmVudCBob2xk
-cyB0aGUgbGlmZXRpbWUgZm9yIHRoZSBkZXZ0LiAgUHJldmVudCB0aGUgcGFyZW50CisJICogZnJv
-bSByZWxlYXNpbmcgdGhlIGRldnQgZm9yIHJldXNlIHVudGlsIHRoZSBkaXNrIGlzIHJlbGVhc2Vk
-LgorCSAqLworCWdldF9kZXZpY2Uob3duZXItPnBhcmVudCk7CisKIAlyZXR1cm4gMDsKIH0KLUVY
-UE9SVF9TWU1CT0woYmRpX3JlZ2lzdGVyX293bmVyKTsKK0VYUE9SVF9TWU1CT0woYmRpX3JlZ2lz
-dGVyX2Rpc2spOwogCiAvKgogICogUmVtb3ZlIGJkaSBmcm9tIGJkaV9saXN0LCBhbmQgZW5zdXJl
-IHRoYXQgaXQgaXMgbm8gbG9uZ2VyIHZpc2libGUK
---001a1141a480cd86010539ecd642--
