@@ -1,74 +1,85 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 2/2 v3] be2iscsi: Fix some error messages
-Date: Sat, 13 Aug 2016 10:03:02 -0700
-Message-ID: <1471107782.3467.28.camel@perches.com>
-References: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
-	 <1471072824-1491-1-git-send-email-christophe.jaillet@wanadoo.fr>
-	 <1471088144.3467.11.camel@perches.com>
-	 <fdffed8e-d269-6519-437e-6f731dbb9c05@wanadoo.fr>
-	 <1471106498.3467.19.camel@perches.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: Time to make dynamically allocated devt the default for scsi
+ disks?
+Date: Sat, 13 Aug 2016 10:43:32 -0700
+Message-ID: <1471110212.2397.39.camel@HansenPartnership.com>
+References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
+	 <1471047451.2407.95.camel@HansenPartnership.com>
+	 <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
+	 <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
+	 <1471101800.2397.9.camel@HansenPartnership.com>
+	 <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1471106498.3467.19.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2016-08-13 at 09:41 -0700, Joe Perches wrote:
-> On Sat, 2016-08-13 at 14:31 +0200, Christophe JAILLET wrote:
-> > Le 13/08/2016 à 13:35, Joe Perches a écrit :
-> > > > @@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
-> > > >   				&nonemb_cmd.dma);
-> > > >   	if (nonemb_cmd.va == NULL) {
-> > > >   		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
-> > > > -			    "BM_%d : Failed to allocate memory for"
-> > > > +			    "BM_%d : Failed to allocate memory for "
-> > > >   			    "mgmt_invalidate_icds\n");
+On Sat, 2016-08-13 at 09:29 -0700, Dan Williams wrote:
+> On Sat, Aug 13, 2016 at 8:23 AM, James Bottomley
+> <James.Bottomley@hansenpartnership.com> wrote:
+> > It does?  The race is the fact that the parent can be removed 
+> > before the child meaning if the parent name is re-registered before 
+> > the child dies we get a duplicate name in bdi space.
+> 
+> No, the race is that the *name* of the parent isn't released until 
+> the child is both unregistered and put.  The device core is already
+> ensuring that the parent is not released until all descendants have
+> been removed.
 
-This is the first time I've looked at the beiscsi_log macro.
+We're both saying the same thing: the problem is that, with
+df08c32ce3be the bdi name lifetime is tied to the lifetime of the
+gendisk.  However, the parent of the gendisk currently is only tied to
+the visibility lifetime of the gendisk, not the final put lifetime, so
+it doesn't see this.
 
-It sure is odd and undesirable.
+> > 
+> > > So I tried the attached and it makes the libnvdimm unit tests 
+> > > start crashing.
+> > 
+> > Well, the attached is clearly buggy, isn't it?  You're trying to do 
+> > a get on the parent before the parent is actually set.
+> 
+> Ah, yes, thank you.  Fixed up v2 attached that passes my tests.
+> 
+> > Why don't you just try the incremental patch I sent instead of 
+> > trying to rework it?
+> 
+> I reworked it because it is the bdi that holds this extra dependency
+> on the disk's parent, not the disk itself.
 
-It's _very_ not nice to have a format string take an implied
-__LINE__ argument.
+Philosophically I don't like this approach.  The dependency goes 
 
-It'd be much more intelligible to take the first bit as a
-separate string, concatenate it in the macro with "_%d: "
-and __LINE__ (if that's really useful, I think it's not)
-and emit that as the format.
+bdi->gendisk->parent
 
-Something like:
+Making the bdi manage the parent lifetime is an unusual pattern. 
+ Making the parent stay around until the last reference to gendisk is
+put is the usual one.
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 30a4606..3f0fbbf 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -1084,11 +1084,12 @@ struct hwi_context_memory {
- #define __beiscsi_log(phba, level, fmt, arg...) \
- 	shost_printk(level, phba->shost, fmt, __LINE__, ##arg)
- 
--#define beiscsi_log(phba, level, mask, fmt, arg...) \
--do { \
--	uint32_t log_value = phba->attr_log_enable; \
--		if (((mask) & log_value) || (level[1] <= '3')) \
--			__beiscsi_log(phba, level, fmt, ##arg); \
--} while (0);
-+#define beiscsi_log(phba, level, mask, prefix, fmt, ...)		\
-+do {									\
-+	uint32_t log_value = phba->attr_log_enable;			\
-+	if (((mask) & log_value) || (level[1] <= '3'))			\
-+		__beiscsi_log(phba, level, prefix "_%d: " fmt,		\
-+			      ##__VA_ARGS__);				\
-+} while (0)
- 
- #endif
+> > >   A couple crash logs attached.  Not yet sure what assumption
+> > > is getting violated, but how about that conversion of scsi to use
+> > > dynamic devt? ;-)
+> > 
+> > It's completely orthogonal.  The problem is in hierarchy lifetimes:
+> > switching from static to dynamic allocation won't change that at 
+> > all.  You don't see this problem in nvme because the parent control
+> > device's lifetime belongs to the controller not the disk.  In SCSI 
+> > the parent is our representation of the SCSI device whose lifetime 
+> > is governed at the SCSI level and effectively represents the disk.
+> > 
+> 
+> No, it's only the name.  We could achieve the same by teaching the
+> block core to manage the "sd_index_ida" instead of the sd driver
+> itself, but the v2-patch attached works and does not introduce that
+> layering violation.
 
-So these beiscsi_log uses become something like:
+Um, so this patch doesn't fix the problem. It merely makes the lifetime
+rules correct so the problem can then be fixed at the scsi level.
 
-	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
-		    "BM", "Failed to allocate memory for mgmt_invalidate_icds\n");
+James
 
-and the format and its arguments match.
+
