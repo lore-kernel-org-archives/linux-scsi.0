@@ -1,54 +1,77 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 2/2 v3] be2iscsi: Fix some error messages
-Date: Sat, 13 Aug 2016 09:41:38 -0700
-Message-ID: <1471106498.3467.19.camel@perches.com>
-References: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
-	 <1471072824-1491-1-git-send-email-christophe.jaillet@wanadoo.fr>
-	 <1471088144.3467.11.camel@perches.com>
-	 <fdffed8e-d269-6519-437e-6f731dbb9c05@wanadoo.fr>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [PATCH v3 03/13] iscsi-target: add void (*iscsit_get_rx_pdu)()
+Date: Sat, 13 Aug 2016 22:26:02 +0530
+Message-ID: <20160813165600.GA2372@chelsio.com>
+References: <cover.1461088672.git.varun@chelsio.com>
+ <f993801e40717417bb752ddeb20765b25b092584.1461088672.git.varun@chelsio.com>
+ <684b7d66-ee8b-a2fd-c949-1e449df1e8a1@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <fdffed8e-d269-6519-437e-6f731dbb9c05@wanadoo.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from stargate.chelsio.com ([12.32.117.8]:57117 "EHLO
+	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752695AbcHMQ4V (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Aug 2016 12:56:21 -0400
+Content-Disposition: inline
+In-Reply-To: <684b7d66-ee8b-a2fd-c949-1e449df1e8a1@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, SWise OGC <swise@opengridcomputing.com>, "kxie@chelsio.com" <kxie@chelsio.com>, Indranil Choudhury <indranil@chelsio.com>
 
-On Sat, 2016-08-13 at 14:31 +0200, Christophe JAILLET wrote:
-> Le 13/08/2016 à 13:35, Joe Perches a écrit :
-> > > @@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
-> > >   				&nonemb_cmd.dma);
-> > >   	if (nonemb_cmd.va == NULL) {
-> > >   		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
-> > > -			    "BM_%d : Failed to allocate memory for"
-> > > +			    "BM_%d : Failed to allocate memory for "
-> > >   			    "mgmt_invalidate_icds\n");
-> > doesn't match commit log as no coalescing/concatenation
-> > is done.
-> > 
-> > There are many of these.
-> > 
-> I have *only* fixed the one reported by checkpatch and left the others 
-> unchanged.
+Hi Andy,
+
+On Tue, Aug 09, 2016 at 08:49:41AM +0530, Andy Grover wrote:
+> Hi Varun,
 > 
-> My initial proposal was to fix incorrect strings, without modifying too 
-> much the code. So I decided to do the minimum of changes.
+> On 04/19/2016 11:30 AM, Varun Prakash wrote:
+> > Add void (*iscsit_get_rx_pdu)() to
+> > struct iscsit_transport, iscsi-target
+> > uses this callback to receive and
+> > process Rx iSCSI PDUs.
+> >
+> > cxgbit.ko needs this callback to
+> > reuse iscsi-target Rx thread.
+> >
+> > Signed-off-by: Varun Prakash <varun@chelsio.com>
+> > Acked-by: Sagi Grimberg <sagi@grimberg.me>
+> > ---
+> >  drivers/infiniband/ulp/isert/ib_isert.c | 10 ++++++++++
+> >  drivers/target/iscsi/iscsi_target.c     | 10 ++--------
+> >  include/target/iscsi/iscsi_transport.h  |  1 +
+> >  3 files changed, 13 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
+> > index 411e446..9118d7c 100644
+> > --- a/drivers/infiniband/ulp/isert/ib_isert.c
+> > +++ b/drivers/infiniband/ulp/isert/ib_isert.c
+> > @@ -3273,6 +3273,15 @@ static void isert_free_conn(struct iscsi_conn *conn)
+> >  	isert_put_conn(isert_conn);
+> >  }
+> >
+> > +static void isert_get_rx_pdu(struct iscsi_conn *conn)
+> > +{
+> > +	struct completion comp;
+> > +
+> > +	init_completion(&comp);
+> > +
+> > +	wait_for_completion_interruptible(&comp);
+> > +}
+> > +
 > 
-> Should I resubmitted with:
->     - all strings *in the patch* concatenated?
->     - all strings *in the file*" concatenated?
+> Does this mean that the iser rx thread just does nothing and waits to 
+> receive a signal to exit?
 
-Hello Christophe
+Yes.
 
-You don't _have_ to do anything.
+> 
+> If we don't set *iscsit_get_rx_pdu for iser, so the thread exits 
+> immediately from iscsi_target_rx_thread, would that be an ok change?
 
-I think the commit message is misleading.
+I think it may need few more changes to remove Rx thread.
+Please see Nicholas's comment on this issue.
 
-You could submit another patch that does
-the equivalent of:
+https://www.spinics.net/lists/target-devel/msg12269.html
 
-$ ./scripts/checkpatch.pl --types=SPLIT_STRING --fix-inplace drivers/scsi/be2iscsi/be_main.c
-
-with the appropriate commit message
+Thanks
+Varun
