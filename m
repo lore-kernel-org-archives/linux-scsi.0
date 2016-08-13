@@ -1,77 +1,74 @@
-From: Varun Prakash <varun@chelsio.com>
-Subject: Re: [PATCH v3 03/13] iscsi-target: add void (*iscsit_get_rx_pdu)()
-Date: Sat, 13 Aug 2016 22:26:02 +0530
-Message-ID: <20160813165600.GA2372@chelsio.com>
-References: <cover.1461088672.git.varun@chelsio.com>
- <f993801e40717417bb752ddeb20765b25b092584.1461088672.git.varun@chelsio.com>
- <684b7d66-ee8b-a2fd-c949-1e449df1e8a1@redhat.com>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 2/2 v3] be2iscsi: Fix some error messages
+Date: Sat, 13 Aug 2016 10:03:02 -0700
+Message-ID: <1471107782.3467.28.camel@perches.com>
+References: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
+	 <1471072824-1491-1-git-send-email-christophe.jaillet@wanadoo.fr>
+	 <1471088144.3467.11.camel@perches.com>
+	 <fdffed8e-d269-6519-437e-6f731dbb9c05@wanadoo.fr>
+	 <1471106498.3467.19.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from stargate.chelsio.com ([12.32.117.8]:57117 "EHLO
-	stargate.chelsio.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752695AbcHMQ4V (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Sat, 13 Aug 2016 12:56:21 -0400
-Content-Disposition: inline
-In-Reply-To: <684b7d66-ee8b-a2fd-c949-1e449df1e8a1@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1471106498.3467.19.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, SWise OGC <swise@opengridcomputing.com>, "kxie@chelsio.com" <kxie@chelsio.com>, Indranil Choudhury <indranil@chelsio.com>
 
-Hi Andy,
+On Sat, 2016-08-13 at 09:41 -0700, Joe Perches wrote:
+> On Sat, 2016-08-13 at 14:31 +0200, Christophe JAILLET wrote:
+> > Le 13/08/2016 à 13:35, Joe Perches a écrit :
+> > > > @@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
+> > > >   				&nonemb_cmd.dma);
+> > > >   	if (nonemb_cmd.va == NULL) {
+> > > >   		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
+> > > > -			    "BM_%d : Failed to allocate memory for"
+> > > > +			    "BM_%d : Failed to allocate memory for "
+> > > >   			    "mgmt_invalidate_icds\n");
 
-On Tue, Aug 09, 2016 at 08:49:41AM +0530, Andy Grover wrote:
-> Hi Varun,
-> 
-> On 04/19/2016 11:30 AM, Varun Prakash wrote:
-> > Add void (*iscsit_get_rx_pdu)() to
-> > struct iscsit_transport, iscsi-target
-> > uses this callback to receive and
-> > process Rx iSCSI PDUs.
-> >
-> > cxgbit.ko needs this callback to
-> > reuse iscsi-target Rx thread.
-> >
-> > Signed-off-by: Varun Prakash <varun@chelsio.com>
-> > Acked-by: Sagi Grimberg <sagi@grimberg.me>
-> > ---
-> >  drivers/infiniband/ulp/isert/ib_isert.c | 10 ++++++++++
-> >  drivers/target/iscsi/iscsi_target.c     | 10 ++--------
-> >  include/target/iscsi/iscsi_transport.h  |  1 +
-> >  3 files changed, 13 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-> > index 411e446..9118d7c 100644
-> > --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> > +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> > @@ -3273,6 +3273,15 @@ static void isert_free_conn(struct iscsi_conn *conn)
-> >  	isert_put_conn(isert_conn);
-> >  }
-> >
-> > +static void isert_get_rx_pdu(struct iscsi_conn *conn)
-> > +{
-> > +	struct completion comp;
-> > +
-> > +	init_completion(&comp);
-> > +
-> > +	wait_for_completion_interruptible(&comp);
-> > +}
-> > +
-> 
-> Does this mean that the iser rx thread just does nothing and waits to 
-> receive a signal to exit?
+This is the first time I've looked at the beiscsi_log macro.
 
-Yes.
+It sure is odd and undesirable.
 
-> 
-> If we don't set *iscsit_get_rx_pdu for iser, so the thread exits 
-> immediately from iscsi_target_rx_thread, would that be an ok change?
+It's _very_ not nice to have a format string take an implied
+__LINE__ argument.
 
-I think it may need few more changes to remove Rx thread.
-Please see Nicholas's comment on this issue.
+It'd be much more intelligible to take the first bit as a
+separate string, concatenate it in the macro with "_%d: "
+and __LINE__ (if that's really useful, I think it's not)
+and emit that as the format.
 
-https://www.spinics.net/lists/target-devel/msg12269.html
+Something like:
 
-Thanks
-Varun
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 30a4606..3f0fbbf 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -1084,11 +1084,12 @@ struct hwi_context_memory {
+ #define __beiscsi_log(phba, level, fmt, arg...) \
+ 	shost_printk(level, phba->shost, fmt, __LINE__, ##arg)
+ 
+-#define beiscsi_log(phba, level, mask, fmt, arg...) \
+-do { \
+-	uint32_t log_value = phba->attr_log_enable; \
+-		if (((mask) & log_value) || (level[1] <= '3')) \
+-			__beiscsi_log(phba, level, fmt, ##arg); \
+-} while (0);
++#define beiscsi_log(phba, level, mask, prefix, fmt, ...)		\
++do {									\
++	uint32_t log_value = phba->attr_log_enable;			\
++	if (((mask) & log_value) || (level[1] <= '3'))			\
++		__beiscsi_log(phba, level, prefix "_%d: " fmt,		\
++			      ##__VA_ARGS__);				\
++} while (0)
+ 
+ #endif
+
+So these beiscsi_log uses become something like:
+
+	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
+		    "BM", "Failed to allocate memory for mgmt_invalidate_icds\n");
+
+and the format and its arguments match.
