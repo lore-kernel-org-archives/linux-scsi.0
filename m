@@ -1,61 +1,25 @@
-From: Deepa Dinamani <deepa.kernel@gmail.com>
-Subject: [PATCH v4 24/26] fnic: Use time64_t to represent trace
-	timestamps
-Date: Sat, 13 Aug 2016 15:48:36 -0700
-Message-ID: <1471128518-24075-25-git-send-email-deepa.kernel@gmail.com>
-References: <1471128518-24075-1-git-send-email-deepa.kernel@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <y2038-bounces@lists.linaro.org>
-In-Reply-To: <1471128518-24075-1-git-send-email-deepa.kernel@gmail.com>
-List-Unsubscribe: <https://lists.linaro.org/mailman/options/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=unsubscribe>
-List-Archive: <http://lists.linaro.org/pipermail/y2038/>
-List-Post: <mailto:y2038@lists.linaro.org>
-List-Help: <mailto:y2038-request@lists.linaro.org?subject=help>
-List-Subscribe: <https://lists.linaro.org/mailman/listinfo/y2038>,
- <mailto:y2038-request@lists.linaro.org?subject=subscribe>
-Errors-To: y2038-bounces@lists.linaro.org
-Sender: "Y2038" <y2038-bounces@lists.linaro.org>
-To: linux-fsdevel@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Suma Ramars <sramars@cisco.com>, tytso@mit.edu, "Martin K. Petersen" <martin.petersen@oracle.com>, arnd@arndb.de, y2038@lists.linaro.org, Hiral Patel <hiralpat@cisco.com>, viro@zeniv.linux.org.uk, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, tglx@linutronix.de, Brian Uchino <buchino@cisco.com>, torvalds@linux-foundation.org
+From: Joe Perches <joe@perches.com>
+Subject: [PATCH 0/2] be2iscsi: Logging neatening
+Date: Sat, 13 Aug 2016 13:42:38 -0700
+Message-ID: <cover.1471119911.git.joe@perches.com>
+References: <1471107782.3467.28.camel@perches.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1471107782.3467.28.camel@perches.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, linux-scsi@vger.kernel.org
+Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-dHJhY2UgdGltZXN0YW1wcyB1c2Ugc3RydWN0IHRpbWVzcGVjIGFuZCBDVVJSRU5UX1RJTUUgd2hp
-Y2gKYXJlIG5vdCB5MjAzOCBzYWZlLgpUaGVzZSB0aW1lc3RhbXBzIGFyZSBvbmx5IHBhcnQgb2Yg
-dGhlIHRyYWNlIGxvZyBvbiB0aGUgbWFjaGluZQphbmQgYXJlIG5vdCBzaGFyZWQgd2l0aCB0aGUg
-Zm5pYy4KUmVwbGFjZSB0aGVuIHdpdGggeTIwMzggc2FmZSBzdHJ1Y3QgdGltZXNwZWM2NCBhbmQK
-a3RpbWVfZ2V0X3JlYWxfdHM2NCgpLCByZXNwZWN0aXZlbHkuCgpTaWduZWQtb2ZmLWJ5OiBEZWVw
-YSBEaW5hbWFuaSA8ZGVlcGEua2VybmVsQGdtYWlsLmNvbT4KUmV2aWV3ZWQtYnk6IEFybmQgQmVy
-Z21hbm4gPGFybmRAYXJuZGIuZGU+CkNjOiBIaXJhbCBQYXRlbCA8aGlyYWxwYXRAY2lzY28uY29t
-PgpDYzogU3VtYSBSYW1hcnMgPHNyYW1hcnNAY2lzY28uY29tPgpDYzogQnJpYW4gVWNoaW5vIDxi
-dWNoaW5vQGNpc2NvLmNvbT4KQ2M6ICJKYW1lcyBFLkouIEJvdHRvbWxleSIgPGplamJAbGludXgu
-dm5ldC5pYm0uY29tPgpDYzogIk1hcnRpbiBLLiBQZXRlcnNlbiIgPG1hcnRpbi5wZXRlcnNlbkBv
-cmFjbGUuY29tPgpDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcKLS0tCiBkcml2ZXJzL3Nj
-c2kvZm5pYy9mbmljX3RyYWNlLmMgfCA0ICsrLS0KIGRyaXZlcnMvc2NzaS9mbmljL2ZuaWNfdHJh
-Y2UuaCB8IDIgKy0KIDIgZmlsZXMgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAzIGRlbGV0aW9u
-cygtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9mbmljL2ZuaWNfdHJhY2UuYyBiL2RyaXZl
-cnMvc2NzaS9mbmljL2ZuaWNfdHJhY2UuYwppbmRleCA0ZTE1YzRiLi41YTVmYTAxIDEwMDY0NAot
-LS0gYS9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmMKKysrIGIvZHJpdmVycy9zY3NpL2Zu
-aWMvZm5pY190cmFjZS5jCkBAIC02MTMsNyArNjEzLDcgQEAgaW50IGZuaWNfZmNfdHJhY2Vfc2V0
-X2RhdGEodTMyIGhvc3Rfbm8sIHU4IGZyYW1lX3R5cGUsCiAJCQlmY190cmFjZV9lbnRyaWVzLnJk
-X2lkeCA9IDA7CiAJfQogCi0JZmNfYnVmLT50aW1lX3N0YW1wID0gQ1VSUkVOVF9USU1FOworCWt0
-aW1lX2dldF9yZWFsX3RzNjQoJmZjX2J1Zi0+dGltZV9zdGFtcCk7CiAJZmNfYnVmLT5ob3N0X25v
-ID0gaG9zdF9ubzsKIAlmY19idWYtPmZyYW1lX3R5cGUgPSBmcmFtZV90eXBlOwogCkBAIC03NDAs
-NyArNzQwLDcgQEAgdm9pZCBjb3B5X2FuZF9mb3JtYXRfdHJhY2VfZGF0YShzdHJ1Y3QgZmNfdHJh
-Y2VfaGRyICp0ZGF0YSwKIAogCWxlbiA9ICpvcmlnX2xlbjsKIAotCXRpbWVfdG9fdG0odGRhdGEt
-PnRpbWVfc3RhbXAudHZfc2VjLCAwLCAmdG0pOworCXRpbWU2NF90b190bSh0ZGF0YS0+dGltZV9z
-dGFtcC50dl9zZWMsIDAsICZ0bSk7CiAKIAlmbXQgPSAiJTAyZDolMDJkOiUwNGxkICUwMmQ6JTAy
-ZDolMDJkLiUwOWx1IG5zJTh4ICAgICAgICVjJTh4XHQiOwogCWxlbiArPSBzbnByaW50Zihmbmlj
-X2RiZ2ZzX3BydC0+YnVmZmVyICsgbGVuLApkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL2ZuaWMv
-Zm5pY190cmFjZS5oIGIvZHJpdmVycy9zY3NpL2ZuaWMvZm5pY190cmFjZS5oCmluZGV4IGE4YWEw
-NTcuLmUzNzVkMGMgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvc2NzaS9mbmljL2ZuaWNfdHJhY2UuaAor
-KysgYi9kcml2ZXJzL3Njc2kvZm5pYy9mbmljX3RyYWNlLmgKQEAgLTcyLDcgKzcyLDcgQEAgc3Ry
-dWN0IGZuaWNfdHJhY2VfZGF0YSB7CiB0eXBlZGVmIHN0cnVjdCBmbmljX3RyYWNlX2RhdGEgZm5p
-Y190cmFjZV9kYXRhX3Q7CiAKIHN0cnVjdCBmY190cmFjZV9oZHIgewotCXN0cnVjdCB0aW1lc3Bl
-YyB0aW1lX3N0YW1wOworCXN0cnVjdCB0aW1lc3BlYzY0IHRpbWVfc3RhbXA7CiAJdTMyIGhvc3Rf
-bm87CiAJdTggZnJhbWVfdHlwZTsKIAl1OCBmcmFtZV9sZW47Ci0tIAoxLjkuMQoKX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KWTIwMzggbWFpbGluZyBsaXN0
-ClkyMDM4QGxpc3RzLmxpbmFyby5vcmcKaHR0cHM6Ly9saXN0cy5saW5hcm8ub3JnL21haWxtYW4v
-bGlzdGluZm8veTIwMzgK
+Joe Perches (2):
+  be2iscsi: Coalesce split strings and formats
+  be2iscsi: Use a standard logging style
+
+ drivers/scsi/be2iscsi/be_cmds.c  |  61 +++---
+ drivers/scsi/be2iscsi/be_iscsi.c | 115 ++++++-----
+ drivers/scsi/be2iscsi/be_main.c  | 398 +++++++++++++++++----------------------
+ drivers/scsi/be2iscsi/be_main.h  |  19 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  |  99 +++++-----
+ 5 files changed, 314 insertions(+), 378 deletions(-)
+
+-- 
+2.8.0.rc4.16.g56331f8
