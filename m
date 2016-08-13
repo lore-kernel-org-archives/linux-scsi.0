@@ -1,35 +1,33 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 2/2 v3] be2iscsi: Fix some error messages
-Date: Sat, 13 Aug 2016 04:35:44 -0700
-Message-ID: <1471088144.3467.11.camel@perches.com>
-References: <4cd24bc3-7953-479a-1dbe-2aac9299ce13@wanadoo.fr>
-	 <1471072824-1491-1-git-send-email-christophe.jaillet@wanadoo.fr>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: Time to make dynamically allocated devt the default for scsi
+ disks?
+Date: Sat, 13 Aug 2016 08:13:26 -0400
+Message-ID: <20160813121326.GQ2695@mtj.duckdns.org>
+References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1471072824-1491-1-git-send-email-christophe.jaillet@wanadoo.fr>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>, jayamohan.kallickal@avagotech.com, jejb@linux.vnet.ibm.com, ketan.mukadam@avagotech.com, sony.john@avagotech.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>
+Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Dave Hansen <dave.hansen@intel.com>, Jej B <James.Bottomley@hansenpartnership.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, 2016-08-13 at 09:20 +0200, Christophe JAILLET wrote:
-> This fixes:
-[]
->    - concatenate strings on the same line to fix checkpatch warnings
-[]
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-[]
-> @@ -268,7 +268,7 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
->  				&nonemb_cmd.dma);
->  	if (nonemb_cmd.va == NULL) {
->  		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_EH,
-> -			    "BM_%d : Failed to allocate memory for"
-> +			    "BM_%d : Failed to allocate memory for "
->  			    "mgmt_invalidate_icds\n");
+Hello, Dan.
 
-doesn't match commit log as no coalescing/concatenation
-is done.
+On Fri, Aug 12, 2016 at 02:29:30PM -0700, Dan Williams wrote:
+> Before spending effort trying to flush the destruction of old bdi
+> instances before new ones are registered, is it rather time to
+> complete the conversion of sd to only use dynamically allocated devt?
 
-There are many of these.
+I think that probably would be too disruptive to userland, both
+programs and humans, that has been seeing the 8:N numbers forever now.
+I haven't been following this particular issue but in general I think
+we should switch to the regular "a depdendee object is pinned till all
+the dependents are gone" pattern.
+
+Thanks.
+
+-- 
+tejun
