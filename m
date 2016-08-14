@@ -1,60 +1,40 @@
-From: Tom Yan <tom.ty89@gmail.com>
-Subject: Re: Regression - SATA disks behind USB ones on v4.8-rc1, breaking
- boot. [Re: Who reordered my disks (probably v4.8-rc1 problem)]
-Date: Sun, 14 Aug 2016 11:41:52 +0000
-Message-ID: <CAGnHSEn8fGEQuknE1xwF71a7HMFQazeWw9+Miwoz6avTa6igYA@mail.gmail.com>
-References: <20160813190340.GA29989@amd> <20160814092044.GA20392@amd>
- <CAGnHSEmtgGO5QjfamnN0VPOO2w-4GrZQvPnbkBVdtWBPTnLieA@mail.gmail.com>
- <20160814100102.GA31847@amd> <CAGnHSEm-Gww1-bmqZMz6guFDnByUuCFiCLhdrK_LETBH3qcb1Q@mail.gmail.com>
- <CAGnHSEnXo8VRm5Y6S6axpe-hG6an8ceujLajbZmxbGGDnCGh2w@mail.gmail.com> <20160814111034.GA10616@amd>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 0/2] be2iscsi: Logging neatening
+Date: Sun, 14 Aug 2016 14:34:49 +0000
+Message-ID: <BY2PR0201MB18626C631DE6E5D09121608181110@BY2PR0201MB1862.namprd02.prod.outlook.com>
+References: <1471107782.3467.28.camel@perches.com>
+ <cover.1471119911.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160814111034.GA10616@amd>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: linux-scsi@vger.kernel.org, kernel list <linux-kernel@vger.kernel.org>, james harvey <jamespharvey20@gmail.com>, regressions@leemhuis.info, hdegoede@redhat.com, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, gregkh@linuxfoundation.org, linux-usb@vger.kernel.org, Oliver Neukum <oliver@neukum.org>, Alan Stern <stern@rowland.harvard.edu>
+To: Joe Perches <joe@perches.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 14 August 2016 at 11:10, Pavel Machek <pavel@ucw.cz> wrote:
->
-> It is the case in v4.6. We had change hda->sda for SATA drives long
-> time ago, it was stable since that.
+On 08/13/16 13:42, Joe Perches wrote:
+> Joe Perches (2):
+>   be2iscsi: Coalesce split strings and formats
+>   be2iscsi: Use a standard logging style
 
-Not for me. It has been like forever (even if it wasn't the fact) that
-the disk order is not consistent among boots. Only that would
-logically make sense anyway. How do you think we can sanely make sure
-that the SCSI disk driver starts enumerating "SCSI disks" from
-usb-storage/uas only when all of those from libata probed? Wait for 1
-second? 1 minute? or 1 hour? It's an irrational thing to do no matter
-how long or how short it is.
+Hello Joe,
 
->
-> I'd rather not mess with initrd, and initrd was not required in the
-> past.
+As one can see in be_main.h the "level" argument of macro beiscsi_log() 
+is ignored for log levels KERN_EMERG, KERN_ALERT, KERN_CRIT and
+KERN_ERR. So for these log levels beiscsi_log() is a synonym of 
+shost_printk(). Have you considered to replace beiscsi_log() with 
+shost_printk() for these log levels and additionally to change 
+beiscsi_log() for the other log levels into pr_debug()? pr_debug() 
+statements namely already can be enabled and disabled at runtime. If the 
+BEISCSI_LOG_* log category would be embedded in the log text that would 
+allow to eliminate the phba->attr_log_enable structure member. 
+Additionally, pr_debug() has a facility for displaying the source file 
+name and the line number. That would allow to leave out __LINE__ from 
+be2iscsi log statements. I don't think it is useful to have that line 
+number in non-debug be2iscsi log statements.
 
-Well, that's your choice, use PARTUUID then.
+Thanks,
 
->
-> kernel-parameters.txt only mentions UUID= in connection with
-> resume. Is the documentation correct?
-
-That's `PARTUUID=`. See what PARTUUID is referring to in the linked
-comment below. (Note that when we say UUID instead of PARTUUID, we are
-usually referring to the filesystem UUID.)
-
-...
-
-resume= [SWSUSP]
-Specify the partition device for software suspend
-Format:
-{/dev/<dev> | PARTUUID=<uuid> | <int>:<int> | <hex>}
-
-...
-
-root= [KNL] Root filesystem
-See name_to_dev_t comment in init/do_mounts.c.
-
-...
-
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/tree/init/do_mounts.c?h=v4.8-rc1#n182
+Bart.
