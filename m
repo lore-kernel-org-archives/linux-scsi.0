@@ -1,66 +1,29 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
- driver
-Date: Mon, 15 Aug 2016 15:54:50 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
-	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
-	<yq1h9asrqh6.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
- <yq160r5oij3.fsf@sermon.lab.mkp.net>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 1/3] sas: provide stub implementations for
+ scsi_is_sas_phy and sas_get_address
+Date: Mon, 15 Aug 2016 10:09:55 -0700
+Message-ID: <1471280995.2428.10.camel@linux.vnet.ibm.com>
+References: <cover.1471273623.git.jthumshirn@suse.de>
+	 <f19d5eeb5cc16ce43d3932924105e77210f1daac.1471273623.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:50602
-	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1752812AbcHOQa2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2016 12:30:28 -0400
-In-Reply-To: <yq160r5oij3.fsf@sermon.lab.mkp.net>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <f19d5eeb5cc16ce43d3932924105e77210f1daac.1471273623.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Friday, August 12, 2016 3:10 PM
-> To: Don Brace
-> Cc: Martin K. Petersen; jejb@linux.vnet.ibm.com; Viswas G; Mahesh
-> Rajashekhara; hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley;
-> Scott Benesh; elliott@hpe.com; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
-> driver
-> 
-> EXTERNAL EMAIL
-> 
-> 
-> >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
-> 
-> Don> Great. So we are good to go?
-> 
-> I applied the driver to 4.9/scsi-queue. You'll need to come up with a
-> migration approach for patch 2.
-> 
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+On Mon, 2016-08-15 at 17:12 +0200, Johannes Thumshirn wrote:
+> +static inline u64 sas_get_address(struct scsi_device *sdev)
+> +{
+> +	return 0;
+> +}
 
-I am thinking that you mean users will need to have some kind of notification that newer kernels will require that the smartpqi driver be configured, especially if they are already booting from the aacraid driver.
+To be honest, we don't want this.  We do want the code to fail to
+compile if you ever use sas_get_address where you shouldn't because the
+code will be incorrect at that point.  If we could return an error,
+fine, but we just return the address.
 
-
-Can I submit a smartpqi/Kconfig patch to change the default value to 'y' and add you as a Suggested-by?
-
-We will of course need some documentation as you suggested.
-
-Thanks,
-Don Brace
-ESC - Smart Storage
-Microsemi Corporation
-
-
-
+James
