@@ -1,196 +1,59 @@
-From: kbuild test robot <lkp@intel.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
 Subject: Re: [PATCH 1/2] ses: use scsi_is_sas_rphy instead of is_sas_attached
-Date: Mon, 15 Aug 2016 22:11:20 +0800
-Message-ID: <201608152258.TcR75AwO%fengguang.wu@intel.com>
-References: <ac01dba641b71f6e61764422ba4a3fa38d636d14.1471251131.git.jthumshirn@suse.de>
+Date: Mon, 15 Aug 2016 07:25:53 -0700
+Message-ID: <1471271153.2428.5.camel@linux.vnet.ibm.com>
+References: <201608152258.TcR75AwO%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="ikeVEW9yuYc//A+q"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ac01dba641b71f6e61764422ba4a3fa38d636d14.1471251131.git.jthumshirn@suse.de>
+In-Reply-To: <201608152258.TcR75AwO%fengguang.wu@intel.com>
 Sender: linux-kernel-owner@vger.kernel.org
-Cc: kbuild-all@01.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+To: kbuild test robot <lkp@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: kbuild-all@01.org, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, 2016-08-15 at 22:11 +0800, kbuild test robot wrote:
+> Hi Johannes,
+> 
+> [auto build test ERROR on scsi/for-next]
+> [also build test ERROR on v4.8-rc2 next-20160815]
+> [if your patch is applied to the wrong git tree, please drop us a 
+> note to help improve the system]
 
---ikeVEW9yuYc//A+q
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+This is happening because scsi_is_sas_rphy wasn't designed to be used
+outside the SAS transport class, so it's failing when the ATTRs aren't
+defined.
 
-Hi Johannes,
+This is the way you fix it (needs to be a precursor patch to 1/2):
 
-[auto build test ERROR on scsi/for-next]
-[also build test ERROR on v4.8-rc2 next-20160815]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Johannes-Thumshirn/ses-use-scsi_is_sas_rphy-instead-of-is_sas_attached/20160815-165716
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-config: s390-zfcpdump_defconfig (attached as .config)
-compiler: s390x-linux-gnu-gcc (Debian 5.4.0-6) 5.4.0 20160609
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=s390 
-
-All errors (new ones prefixed by >>):
-
-   drivers/built-in.o: In function `ses_match_to_enclosure':
->> drivers/scsi/ses.c:590: undefined reference to `scsi_is_sas_rphy'
->> drivers/scsi/ses.c:591: undefined reference to `sas_get_address'
-
-vim +590 drivers/scsi/ses.c
-
-   584		struct efd efd = {
-   585			.addr = 0,
-   586		};
-   587	
-   588		ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
-   589	
- > 590		if (scsi_is_sas_rphy(&sdev->sdev_gendev))
- > 591			efd.addr = sas_get_address(sdev);
-   592	
-   593		if (efd.addr) {
-   594			efd.dev = &sdev->sdev_gendev;
+James
 
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---ikeVEW9yuYc//A+q
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
-
-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
-HypHCeQlaAAA
-
---ikeVEW9yuYc//A+q--
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 13c0b2b..0e1c50e 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -15,8 +15,13 @@ static inline int is_sas_attached(struct scsi_device *sdev)
+ {
+ 	return 0;
+ }
++static inline int scsi_is_sas_rphy(const struct device *)
++{
++	return 0;
++}
+ #else
+ extern int is_sas_attached(struct scsi_device *sdev);
++extern int scsi_is_sas_rphy(const struct device *);
+ #endif
+ 
+ static inline int sas_protocol_ata(enum sas_protocol proto)
+@@ -202,7 +207,6 @@ extern int sas_rphy_add(struct sas_rphy *);
+ extern void sas_rphy_remove(struct sas_rphy *);
+ extern void sas_rphy_delete(struct sas_rphy *);
+ extern void sas_rphy_unlink(struct sas_rphy *);
+-extern int scsi_is_sas_rphy(const struct device *);
+ 
+ struct sas_port *sas_port_alloc(struct device *, int);
+ struct sas_port *sas_port_alloc_num(struct device *);
