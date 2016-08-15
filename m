@@ -1,32 +1,41 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: Re: [PATCH] scsi: blacklist all RDAC devices for BLIST_NO_ULD_ATTACH
-Date: Mon, 15 Aug 2016 15:43:55 +0000
-Message-ID: <50F34540-489B-4554-818E-6024FD88263F@netapp.com>
-References: <1471042563-5084-1-git-send-email-xose.vazquez@gmail.com>
+From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
+Subject: Re: [GIT PULL] [PATCH v4 00/26] Delete CURRENT_TIME
+ and CURRENT_TIME_SEC macros
+Date: Mon, 15 Aug 2016 18:23:12 +0200
+Message-ID: <20160815162312.GA19794@kroah.com>
+References: <1471128518-24075-1-git-send-email-deepa.kernel@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx142.netapp.com ([216.240.21.19]:16587 "EHLO mx142.netapp.com"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1752713AbcHOPn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2016 11:43:57 -0400
-In-Reply-To: <1471042563-5084-1-git-send-email-xose.vazquez@gmail.com>
-Content-Language: en-US
-Content-ID: <509A4240691AA64B88A3227DFAD6CDE5@hq.netapp.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1471128518-24075-1-git-send-email-deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+List-Unsubscribe: <http://lists.lustre.org/options.cgi/lustre-devel-lustre.org>,
+	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.lustre.org/pipermail/lustre-devel-lustre.org/>
+List-Post: <mailto:lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+List-Help: <mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.lustre.org/listinfo.cgi/lustre-devel-lustre.org>,
+	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=subscribe>
+Errors-To: lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
+Sender: "lustre-devel" <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
+To: Deepa Dinamani <deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, dushistov-JGs/UdohzUI@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mfasheh-IBi9RG/b67k@public.gmane.org, sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, dsterba-IBi9RG/b67k@public.gmane.org, jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, sage-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jbacik-b10kYP2dOMg@public.gmane.org, hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ocfs2-devel-N0ozoZBvEnonbStXaT1jcA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-DQoNCk9uIDgvMTIvMTYsIDU6NTYgUE0sICJYb3NlIFZhenF1ZXogUGVyZXoiIDx4b3NlLnZhenF1
-ZXpAZ21haWwuY29tPiB3cm90ZToNCg0KICAgICJVbml2ZXJzYWwgWHBvcnQiIExVTiBpcyB1c2Vk
-IGZvciBpbi1iYW5kIHN0b3JhZ2UgYXJyYXkgbWFuYWdlbWVudC4NCiAgICANCiAgICBDYzogU2Vh
-biBTdGV3YXJ0IDxTZWFuLlN0ZXdhcnRAbmV0YXBwLmNvbT4NCiAgICBDYzogQ2hyaXN0b3BoZSBW
-YXJvcXVpIDxjaHJpc3RvcGhlLnZhcm9xdWlAb3BlbnN2Yy5jb20+DQogICAgQ2M6IEphbWVzIEUu
-Si4gQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT4NCiAgICBDYzogTWFydGluIEsu
-IFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4NCiAgICBDYzogU0NTSSBNTCA8
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc+DQogICAgQ2M6IGRldmljZS1tYXBwZXIgZGV2ZWxv
-cG1lbnQgPGRtLWRldmVsQHJlZGhhdC5jb20+DQogICAgU2lnbmVkLW9mZi1ieTogWG9zZSBWYXpx
-dWV6IFBlcmV6IDx4b3NlLnZhenF1ZXpAZ21haWwuY29tPg0KICAgIC0tLQ0KDQpBY2tlZC1ieTog
-U2VhbiBTdGV3YXJ0IDxTZWFuLlN0ZXdhcnRAbmV0YXBwLmNvbT4gDQoNCg==
+On Sat, Aug 13, 2016 at 03:48:12PM -0700, Deepa Dinamani wrote:
+> The series is aimed at getting rid of CURRENT_TIME and CURRENT_TIME_SEC macros.
+> The macros are not y2038 safe. There is no plan to transition them into being
+> y2038 safe.
+> ktime_get_* api's can be used in their place. And, these are y2038 safe.
+
+Who are you execting to pull this huge patch series?
+
+Why not just introduce the new api call, wait for that to be merged, and
+then push the individual patches through the different subsystems?
+After half of those get ignored, then provide a single set of patches
+that can go through Andrew or my trees.
+
+thanks,
+
+greg k-h
