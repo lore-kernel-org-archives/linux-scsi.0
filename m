@@ -1,57 +1,60 @@
-From: Heiner Kallweit <hkallweit1@gmail.com>
-Subject: Re: [Bug 153171] New: scsi host6: runtime PM trying to activate child
- device host6 but parent (2-2:1.0) is not active
-Date: Mon, 15 Aug 2016 22:04:16 +0200
-Message-ID: <87520866-b206-c938-6cda-e2f1c9f85f6b@gmail.com>
-References: <bug-153171-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Time to make dynamically allocated devt the default for scsi
+ disks?
+Date: Mon, 15 Aug 2016 13:11:59 -0700
+Message-ID: <27888438-c88d-d810-bcfc-1828dd61d593@sandisk.com>
+References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
+ <1471047451.2407.95.camel@HansenPartnership.com>
+ <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
+ <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
+ <1471101800.2397.9.camel@HansenPartnership.com>
+ <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
+ <1471110212.2397.39.camel@HansenPartnership.com>
+ <CAPcyv4gHq=RraHgcJGx_txk7YJHC8YQ3gCT4CHL0hvzsGpU1wg@mail.gmail.com>
+ <1471195252.2355.18.camel@HansenPartnership.com>
+ <CAPcyv4i4vyXc-qigqVo9oBL-7n9g4cbhK9Yt0o2F_bCPqMSF1Q@mail.gmail.com>
+ <CAPcyv4j_R9CZKFXuv1EDqUOMTnAutyQwk_+h1pzC3NKyR6aGVQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34784 "EHLO
-	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1752824AbcHOUEV (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Mon, 15 Aug 2016 16:04:21 -0400
-Received: by mail-wm0-f68.google.com with SMTP id q128so12860717wma.1
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Aug 2016 13:04:20 -0700 (PDT)
-In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
+Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:36241
+	"EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S932166AbcHOUMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2016 16:12:08 -0400
+In-Reply-To: <CAPcyv4j_R9CZKFXuv1EDqUOMTnAutyQwk_+h1pzC3NKyR6aGVQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: bugzilla-daemon@bugzilla.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
 
-Am 15.08.2016 um 21:55 schrieb bugzilla-daemon@bugzilla.kernel.org:
-> https://bugzilla.kernel.org/show_bug.cgi?id=153171
-> 
->             Bug ID: 153171
->            Summary: scsi host6: runtime PM trying to activate child device
->                     host6 but parent (2-2:1.0) is not active
->            Product: IO/Storage
->            Version: 2.5
->     Kernel Version: 4.8.0-040800rc2-lowlatency
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: SCSI
->           Assignee: linux-scsi@vger.kernel.org
->           Reporter: caravena@gmail.com
->         Regression: No
-> 
-> Created attachment 228931
->   --> https://bugzilla.kernel.org/attachment.cgi?id=228931&action=edit
-> dmesg_4.8.0-040800rc2-lowlatency
-> 
-> Mount USB Pendrive
-> 
-> dmesg:
-> [ 4630.693915] scsi host6: runtime PM trying to activate child device host6 but
-> parent (2-2:1.0) is not active
-> 
-This issue is fixed by patch scsi: "core: configure runtime pm before calling
-device_add in scsi_add_host_with_dma" I sent on Aug 3rd.
+On 08/14/2016 11:23 AM, Dan Williams wrote:
+> [ adding Bart back to the cc ]
+>
+> On Sun, Aug 14, 2016 at 11:08 AM, Dan Williams <dan.j.williams@intel.com> wrote:
+>> On Sun, Aug 14, 2016 at 10:20 AM, James Bottomley
+>> <James.Bottomley@hansenpartnership.com> wrote:
+> [..]
+>> I like it.  I still think the bdi registration code should be in
+>> charge of taking the extra reference on the disk device's parent to
+>> isolate / make clear why the extra reference is being acquired, but I
+>> won't lose sleep if Jens takes your smaller change.
+>>
+>> Thanks James!
+>
+> Bart, do you have a test configuration already set up for this case.
+> Can you give the 2 patches from James a try?
+>
+> https://patchwork.kernel.org/patch/9278201/
+> https://patchwork.kernel.org/patch/9279513/
 
-Regards, Heiner
+Hello Dan,
 
+The "sysfs: cannot create duplicate filename" issue is something I ran 
+into sporadically before I started using my patch that fixes this issue. 
+I have not yet found a systematic way to trigger this behavior. Anyway, 
+I will drop my patch and will start testing James' two patches. It will 
+take a few days to test these patches thoroughly.
+
+Bart.
