@@ -1,41 +1,66 @@
-From: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Subject: Re: [GIT PULL] [PATCH v4 00/26] Delete CURRENT_TIME
- and CURRENT_TIME_SEC macros
-Date: Mon, 15 Aug 2016 18:23:12 +0200
-Message-ID: <20160815162312.GA19794@kroah.com>
-References: <1471128518-24075-1-git-send-email-deepa.kernel@gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+ driver
+Date: Mon, 15 Aug 2016 15:54:50 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
+	<yq1h9asrqh6.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
+ <yq160r5oij3.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1471128518-24075-1-git-send-email-deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <http://lists.lustre.org/options.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.lustre.org/pipermail/lustre-devel-lustre.org/>
-List-Post: <mailto:lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-List-Help: <mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.lustre.org/listinfo.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=subscribe>
-Errors-To: lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
-Sender: "lustre-devel" <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-To: Deepa Dinamani <deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, dushistov-JGs/UdohzUI@public.gmane.org, arnd-r2nGTMty4D4@public.gmane.org, mfasheh-IBi9RG/b67k@public.gmane.org, sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, dsterba-IBi9RG/b67k@public.gmane.org, jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, sage-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jbacik-b10kYP2dOMg@public.gmane.org, hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, ocfs2-devel-N0ozoZBvEnonbStXaT1jcA@public.gmane.org
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:50602
+	"EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1752812AbcHOQa2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Mon, 15 Aug 2016 12:30:28 -0400
+In-Reply-To: <yq160r5oij3.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sat, Aug 13, 2016 at 03:48:12PM -0700, Deepa Dinamani wrote:
-> The series is aimed at getting rid of CURRENT_TIME and CURRENT_TIME_SEC macros.
-> The macros are not y2038 safe. There is no plan to transition them into being
-> y2038 safe.
-> ktime_get_* api's can be used in their place. And, these are y2038 safe.
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Friday, August 12, 2016 3:10 PM
+> To: Don Brace
+> Cc: Martin K. Petersen; jejb@linux.vnet.ibm.com; Viswas G; Mahesh
+> Rajashekhara; hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley;
+> Scott Benesh; elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi
+> driver
+> 
+> EXTERNAL EMAIL
+> 
+> 
+> >>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+> 
+> Don> Great. So we are good to go?
+> 
+> I applied the driver to 4.9/scsi-queue. You'll need to come up with a
+> migration approach for patch 2.
+> 
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Who are you execting to pull this huge patch series?
+I am thinking that you mean users will need to have some kind of notification that newer kernels will require that the smartpqi driver be configured, especially if they are already booting from the aacraid driver.
 
-Why not just introduce the new api call, wait for that to be merged, and
-then push the individual patches through the different subsystems?
-After half of those get ignored, then provide a single set of patches
-that can go through Andrew or my trees.
 
-thanks,
+Can I submit a smartpqi/Kconfig patch to change the default value to 'y' and add you as a Suggested-by?
 
-greg k-h
+We will of course need some documentation as you suggested.
+
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
+
+
