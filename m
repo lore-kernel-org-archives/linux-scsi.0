@@ -1,62 +1,127 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2 1/3] sas: provide stub implementations for scsi_is_sas_phy and sas_get_address
-Date: Mon, 15 Aug 2016 17:12:22 +0200
-Message-ID: <f19d5eeb5cc16ce43d3932924105e77210f1daac.1471273623.git.jthumshirn@suse.de>
-References: <cover.1471273623.git.jthumshirn@suse.de>
+Subject: [PATCH] fcoe: provide translation table between Ethernet and FC port speeds
+Date: Mon, 15 Aug 2016 17:24:09 +0200
+Message-ID: <1471274649-27113-1-git-send-email-jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1471273623.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1471273623.git.jthumshirn@suse.de>
-References: <cover.1471273623.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-Provide stub implementations for scsi_is_sas_phy and sas_get_address
-for kernel configurations which do not have CONFIG_SCSI_SAS_ATTRS
-defined.
+Provide a translation table between Ethernet and FC port speeds so odd
+speeds (from a Ethernet POV) like 8 Gbit are correctly mapped to sysfs
+and open-fcoe's fcoeadm.
 
-Reported-by: kbuild test robot <lkp@intel.com>
-Suggested-by: James Bottomley <jejb@linux.vnet.ibm.com>
+Before:
+    Description:      BCM57840 NetXtreme II 10/20-Gigabit Ethernet
+    Revision:         11
+    Manufacturer:     Broadcom Corporation
+    Serial Number:    6CC2173EA1D0
+
+    Driver:           bnx2x 1.712.30-0
+    Number of Ports:  1
+
+        Symbolic Name:     bnx2fc (QLogic BCM57840) v2.10.3 over eth2
+        OS Device Name:    host1
+        Node Name:         0x20006cc2173ea1d1
+        Port Name:         0x10006cc2173ea1d1
+        FabricName:        0x100000c0dd0ce717
+        Speed:             unknown
+        Supported Speed:   1 Gbit, 10 Gbit
+        MaxFrameSize:      2048 bytes
+        FC-ID (Port ID):   0x660702
+        State:             Online
+
+After:
+    Description:      BCM57840 NetXtreme II 10/20-Gigabit Ethernet
+    Revision:         11
+    Manufacturer:     Broadcom Corporation
+    Serial Number:    6CC2173EA1D0
+
+    Driver:           bnx2x 1.712.30-0
+    Number of Ports:  1
+
+        Symbolic Name:     bnx2fc (QLogic BCM57840) v2.10.3 over eth2
+        OS Device Name:    host1
+        Node Name:         0x20006cc2173ea1d1
+        Port Name:         0x10006cc2173ea1d1
+        FabricName:        0x100000c0dd0ce717
+        Speed:             8 Gbit
+        Supported Speed:   1 Gbit, 10 Gbit
+        MaxFrameSize:      2048 bytes
+        FC-ID (Port ID):   0x660701
+        State:             Online
+
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- include/scsi/scsi_transport_sas.h | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_transport.c | 48 ++++++++++++++++++++++++--------------
+ 1 file changed, 31 insertions(+), 17 deletions(-)
 
-diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 13c0b2b..0fc648e 100644
---- a/include/scsi/scsi_transport_sas.h
-+++ b/include/scsi/scsi_transport_sas.h
-@@ -15,8 +15,20 @@ static inline int is_sas_attached(struct scsi_device *sdev)
- {
- 	return 0;
- }
+diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+index 7028dd3..3e7f0e7 100644
+--- a/drivers/scsi/fcoe/fcoe_transport.c
++++ b/drivers/scsi/fcoe/fcoe_transport.c
+@@ -83,6 +83,36 @@ static struct notifier_block libfcoe_notifier = {
+ 	.notifier_call = libfcoe_device_notification,
+ };
+ 
++static const struct {
++	u32 fc_port_speed;
++	u32 eth_port_speed;
++} fcoe_port_speed_mapping[] = {
++	{ FC_PORTSPEED_1GBIT, SPEED_1000 },
++	{ FC_PORTSPEED_2GBIT, 2000 },
++	{ FC_PORTSPEED_4GBIT, 4000 },
++	{ FC_PORTSPEED_8GBIT, 8000 },
++	{ FC_PORTSPEED_10GBIT, SPEED_10000 },
++	{ FC_PORTSPEED_16GBIT, 16000 },
++	{ FC_PORTSPEED_20GBIT, SPEED_20000  },
++	{ FC_PORTSPEED_25GBIT, SPEED_25000  },
++	{ FC_PORTSPEED_32GBIT, 32000 },
++	{ FC_PORTSPEED_40GBIT, SPEED_40000  },
++	{ FC_PORTSPEED_50GBIT, SPEED_50000  },
++	{ FC_PORTSPEED_100GBIT, SPEED_100000 },
++};
 +
-+static inline int scsi_is_sas_phy(const struct device *sdev)
++static inline u32 eth2fc_speed(u32 eth_port_speed)
 +{
-+	return 0;
++	int i;
++
++	for (i = 0; i <= ARRAY_SIZE(fcoe_port_speed_mapping); i++) {
++		if (fcoe_port_speed_mapping[i].eth_port_speed == eth_port_speed)
++			return fcoe_port_speed_mapping[i].fc_port_speed;
++	}
++
++	return FC_PORTSPEED_UNKNOWN;
 +}
 +
-+static inline u64 sas_get_address(struct scsi_device *sdev)
-+{
-+	return 0;
-+}
- #else
- extern int is_sas_attached(struct scsi_device *sdev);
-+extern int scsi_is_sas_phy(const struct device *);
-+u64 sas_get_address(struct scsi_device *);
- #endif
+ /**
+  * fcoe_link_speed_update() - Update the supported and actual link speeds
+  * @lport: The local port to update speeds for
+@@ -126,23 +156,7 @@ int fcoe_link_speed_update(struct fc_lport *lport)
+ 			    SUPPORTED_40000baseLR4_Full))
+ 			lport->link_supported_speeds |= FC_PORTSPEED_40GBIT;
  
- static inline int sas_protocol_ata(enum sas_protocol proto)
-@@ -187,9 +199,7 @@ extern struct sas_phy *sas_phy_alloc(struct device *, int);
- extern void sas_phy_free(struct sas_phy *);
- extern int sas_phy_add(struct sas_phy *);
- extern void sas_phy_delete(struct sas_phy *);
--extern int scsi_is_sas_phy(const struct device *);
- 
--u64 sas_get_address(struct scsi_device *);
- unsigned int sas_tlr_supported(struct scsi_device *);
- unsigned int sas_is_tlr_enabled(struct scsi_device *);
- void sas_disable_tlr(struct scsi_device *);
+-		switch (ecmd.base.speed) {
+-		case SPEED_1000:
+-			lport->link_speed = FC_PORTSPEED_1GBIT;
+-			break;
+-		case SPEED_10000:
+-			lport->link_speed = FC_PORTSPEED_10GBIT;
+-			break;
+-		case SPEED_20000:
+-			lport->link_speed = FC_PORTSPEED_20GBIT;
+-			break;
+-		case SPEED_40000:
+-			lport->link_speed = FC_PORTSPEED_40GBIT;
+-			break;
+-		default:
+-			lport->link_speed = FC_PORTSPEED_UNKNOWN;
+-			break;
+-		}
++		lport->link_speed = eth2fc_speed(ecmd.base.speed);
+ 		return 0;
+ 	}
+ 	return -1;
 -- 
 1.8.5.6
