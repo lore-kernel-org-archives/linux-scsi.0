@@ -1,119 +1,89 @@
-From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Tue, 16 Aug 2016 14:05:12 +0200
-Message-ID: <1471349112-13876-1-git-send-email-oneukum@suse.com>
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, jthumshirn-IBi9RG/b67k@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
-Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH 1/5] multipath-tools: document how to add devices that need special flags in the SCSI subsystem
+Date: Tue, 16 Aug 2016 14:38:49 +0200
+Message-ID: <1471351133-7892-1-git-send-email-xose.vazquez@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:34968 "EHLO
+	mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1752223AbcHPMji (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2016 08:39:38 -0400
+Received: by mail-wm0-f68.google.com with SMTP id i5so16219644wmg.2
+        for <linux-scsi@vger.kernel.org>; Tue, 16 Aug 2016 05:39:19 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-Some SATA to USB bridges fail to cooperate with some
-drives resulting in no cache being present being reported
-to the host. That causes the host to skip sending
-a command to synchronize caches. That causes data loss
-when the drive is powered down.
+Full flags list at include/scsi/scsi_devinfo.h
 
-Signed-off-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+Arrays controllers included currently:
+
+ {"3PARdata", "VV", NULL, BLIST_REPORTLUN2},
+
+ {"DEC", "HSG80", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ {"HP", "A6189A", NULL, BLIST_SPARSELUN | BLIST_LARGELUN},
+ {"COMPAQ", "MSA1000", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ {"COMPAQ", "MSA1000 VOLUME", NULL, BLIST_SPARSELUN | BLIST_NOSTARTONADD},
+ {"COMPAQ", "HSV110", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ {"HP", "HSV100", NULL, BLIST_REPORTLUN2 | BLIST_NOSTARTONADD},
+ {"COMPAQ", "LOGICAL VOLUME", NULL, BLIST_FORCELUN | BLIST_MAX_512},
+
+ {"DDN", "SAN DataDirector", "*", BLIST_SPARSELUN},
+
+ {"DGC", "RAID", NULL, BLIST_SPARSELUN},
+ {"DGC", "DISK", NULL, BLIST_SPARSELUN},					<-- mising VDISK ??
+ {"EMC", "SYMMETRIX", NULL, BLIST_SPARSELUN | BLIST_LARGELUN | BLIST_FORCELUN},
+ {"EMC",  "Invista", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+
+ {"FSC", "CentricStor", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+
+ {"HITACHI", "OPEN-", "*", BLIST_REPORTLUN2},
+ {"HP", "OPEN-", "*", BLIST_REPORTLUN2},
+
+ {"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
+ {"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
+ {"HP", "DF400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ {"HP", "DF500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ {"HP", "DF600", "*", BLIST_SPARSELUN | BLIST_LARGELUN},			<-- bug, also apply: 627511e3e
+
+ {"IBM", "ProFibre 4000R", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+
+ {"NETAPP", "LUN C-Mode", NULL, BLIST_SYNC_ALUA},				<-- ontap
+
+ {"NETAPP", "INF-01-00", NULL, BLIST_SYNC_ALUA},				<-- rdac!!
+
+ {"SGI", "TP9100", "*", BLIST_REPORTLUN2},
+
+ {"Intel", "Multi-Flex", NULL, BLIST_NO_RSOC},
+
+ {"SGI", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ {"IBM", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ {"SUN", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+ {"DELL", "Universal Xport", "*", BLIST_NO_ULD_ATTACH},
+
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- Documentation/kernel-parameters.txt | 2 ++
- drivers/usb/storage/scsiglue.c      | 8 ++++++++
- drivers/usb/storage/unusual_devs.h  | 7 +++++++
- drivers/usb/storage/usb.c           | 6 +++++-
- include/linux/usb_usual.h           | 2 ++
- 5 files changed, 24 insertions(+), 1 deletion(-)
+ libmultipath/hwtable.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c8c682e 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				u = IGNORE_UAS (don't bind to the uas driver);
- 				w = NO_WP_DETECT (don't test whether the
- 					medium is write-protected).
-+				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
-+					even if the device claims no cache)
- 			Example: quirks=0419:aaf5:rl,0421:0433:rc
- 
- 	user_debug=	[KNL,ARM]
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 33eb923..8cd2926 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -296,6 +296,14 @@ static int slave_configure(struct scsi_device *sdev)
- 		if (us->fflags & US_FL_BROKEN_FUA)
- 			sdev->broken_fua = 1;
- 
-+		/* Some even totally fail to indicate a cache */
-+		if (us->fflags & US_FL_ALWAYS_SYNC) {
-+			/* don't read caching information */
-+			sdev->skip_ms_page_8 = 1;
-+			sdev->skip_ms_page_3f = 1;
-+			/* assume sync is needed */
-+			sdev->wce_default_on = 1;
-+		}
- 	} else {
- 
- 		/*
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index aa35392..af3c7ee 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_WP_DETECT),
- 
-+/* Reported by Egbert Eich <eich-IBi9RG/b67k@public.gmane.org> */
-+UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
-+		"Toshiba",
-+		"External USB 3.0",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_ALWAYS_SYNC),
-+
- /* Patch submitted by Philipp Friedrich <philipp-Tz8qtarvew8@public.gmane.org> */
- UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
- 		"Kyocera",
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index ef2d8cd..19255f1 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
--			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
-+			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
-+			US_FL_ALWAYS_SYNC);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 		case 'w':
- 			f |= US_FL_NO_WP_DETECT;
- 			break;
-+		case 'y':
-+			f |= US_FL_ALWAYS_SYNC;
-+			break;
- 		/* Ignore unrecognized flag characters */
- 		}
- 	}
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 245f57d..0aae1b2 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -81,6 +81,8 @@
- 		/* Sets max_sectors to 240 */			\
- 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
- 		/* Cannot handle REPORT_LUNS */			\
-+	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
-+		/* lies about caching, so always sync */	\
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
+diff --git a/libmultipath/hwtable.c b/libmultipath/hwtable.c
+index 1bc6f2c..4e1740a 100644
+--- a/libmultipath/hwtable.c
++++ b/libmultipath/hwtable.c
+@@ -22,6 +22,9 @@
+  *
+  * Devices with a proprietary handler must also be included in
+  * the kernel side. Currently at drivers/scsi/scsi_dh.c
++ *
++ * Moreover, if a device needs a special treatment by the SCSI
++ * subsystem it should be included in drivers/scsi/scsi_devinfo.c
+  */
+ static struct hwentry default_hw[] = {
+ 	/*
 -- 
-2.1.4
+2.7.4
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
