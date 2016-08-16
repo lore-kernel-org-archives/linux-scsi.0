@@ -1,60 +1,118 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: Time to make dynamically allocated devt the default for scsi
- disks?
-Date: Mon, 15 Aug 2016 13:11:59 -0700
-Message-ID: <27888438-c88d-d810-bcfc-1828dd61d593@sandisk.com>
-References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
- <1471047451.2407.95.camel@HansenPartnership.com>
- <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
- <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
- <1471101800.2397.9.camel@HansenPartnership.com>
- <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
- <1471110212.2397.39.camel@HansenPartnership.com>
- <CAPcyv4gHq=RraHgcJGx_txk7YJHC8YQ3gCT4CHL0hvzsGpU1wg@mail.gmail.com>
- <1471195252.2355.18.camel@HansenPartnership.com>
- <CAPcyv4i4vyXc-qigqVo9oBL-7n9g4cbhK9Yt0o2F_bCPqMSF1Q@mail.gmail.com>
- <CAPcyv4j_R9CZKFXuv1EDqUOMTnAutyQwk_+h1pzC3NKyR6aGVQ@mail.gmail.com>
+From: Damien Le Moal <Damien.LeMoal@hgst.com>
+Subject: Re: [PATCH v6 0/2] Block layer support ZAC/ZBC commands
+Date: Tue, 16 Aug 2016 04:00:37 +0000
+Message-ID: <D1D04A20-893C-4FB2-9822-0DC6309C58C8@hgst.com>
+References: <1469818955-20568-1-git-send-email-shaun@tancheff.com>
+ <20160801094116.GB14677@lst.de>
+ <CAJVOszCAb4o5LWpJL8Yd66n9jPvy+EMQX2Xfr6awZCxfGJf_CA@mail.gmail.com>
+ <6a4a27ac-009d-9825-bf77-0529da77cc36@suse.de>
+ <C7B51F39-AC67-4D96-B1DE-45C70F99134D@hgst.com>
+ <CAJVOszDt5HfSKTk_8a3AkqjjAXV_9RaA2TxeqgY5Gp90w89-Lg@mail.gmail.com>
+ <2370d779-3f9b-28a2-7596-42b7b6a89c21@suse.de>
+ <CAJVOszAHL55uOuD4MbCG0gWs3ko7tZVwtAeRBXxDhD-GuD2kGA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:36241
-	"EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S932166AbcHOUMI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Mon, 15 Aug 2016 16:12:08 -0400
-In-Reply-To: <CAPcyv4j_R9CZKFXuv1EDqUOMTnAutyQwk_+h1pzC3NKyR6aGVQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAJVOszAHL55uOuD4MbCG0gWs3ko7tZVwtAeRBXxDhD-GuD2kGA@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <C7DBCFB37E3280458E56E529D6246922@namprd04.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Shaun Tancheff <shaun.tancheff@seagate.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jeff Layton <jlayton@poochiereds.net>, "J . Bruce Fields" <bfields@fieldses.org>, Josh Bingaman <josh.bingaman@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
 
-On 08/14/2016 11:23 AM, Dan Williams wrote:
-> [ adding Bart back to the cc ]
->
-> On Sun, Aug 14, 2016 at 11:08 AM, Dan Williams <dan.j.williams@intel.com> wrote:
->> On Sun, Aug 14, 2016 at 10:20 AM, James Bottomley
->> <James.Bottomley@hansenpartnership.com> wrote:
-> [..]
->> I like it.  I still think the bdi registration code should be in
->> charge of taking the extra reference on the disk device's parent to
->> isolate / make clear why the extra reference is being acquired, but I
->> won't lose sleep if Jens takes your smaller change.
->>
->> Thanks James!
->
-> Bart, do you have a test configuration already set up for this case.
-> Can you give the 2 patches from James a try?
->
-> https://patchwork.kernel.org/patch/9278201/
-> https://patchwork.kernel.org/patch/9279513/
-
-Hello Dan,
-
-The "sysfs: cannot create duplicate filename" issue is something I ran 
-into sporadically before I started using my patch that fixes this issue. 
-I have not yet found a systematic way to trigger this behavior. Anyway, 
-I will drop my patch and will start testing James' two patches. It will 
-take a few days to test these patches thoroughly.
-
-Bart.
+DQpTaGF1biwNCg0KPiBPbiBBdWcgMTQsIDIwMTYsIGF0IDA5OjA5LCBTaGF1biBUYW5jaGVmZiA8
+c2hhdW4udGFuY2hlZmZAc2VhZ2F0ZS5jb20+IHdyb3RlOg0KW+KApl0NCj4+PiANCj4+IE5vLCBz
+dXJlbHkgbm90Lg0KPj4gQnV0IG9uZSBvZiB0aGUgX2JpZ18gYWR2YW50YWdlcyBmb3IgdGhlIFJC
+IHRyZWUgaXMgYmxrZGV2X2Rpc2NhcmQoKS4NCj4+IFdpdGhvdXQgdGhlIFJCIHRyZWUgYW55IG1r
+ZnMgcHJvZ3JhbSB3aWxsIGlzc3VlIGEgJ2Rpc2NhcmQnIGZvciBldmVyeQ0KPj4gc2VjdG9yLiBX
+ZSB3aWxsIGJlIGFibGUgdG8gY29hbGVzY2UgdGhvc2UgaW50byBvbmUgZGlzY2FyZCBwZXIgem9u
+ZSwgYnV0DQo+PiB3ZSBzdGlsbCBuZWVkIHRvIGlzc3VlIG9uZSBmb3IgX2V2ZXJ5XyB6b25lLg0K
+PiANCj4gSG93IGNhbiB5b3UgbWFrZSBjb2FsZXNjZSB3b3JrIHRyYW5zcGFyZW50bHkgaW4gdGhl
+DQo+IHNkIGxheWVyIF93aXRob3V0XyBrZWVwaW5nIHNvbWUgc29ydCBvZiBhIGRpc2NhcmQgY2Fj
+aGUgYWxvbmcNCj4gd2l0aCB0aGUgem9uZSBjYWNoZT8NCj4gDQo+IEN1cnJlbnRseSB0aGUgYmxv
+Y2sgbGF5ZXIncyBibGtkZXZfaXNzdWVfZGlzY2FyZCgpIGlzIGJyZWFraW5nDQo+IGxhcmdlIGRp
+c2NhcmQncyBpbnRvIG5pY2UgZ3JhbnVsYXIgYW5kIGFsaWduZWQgY2h1bmtzIGJ1dCBpdCBpcw0K
+PiBub3QgcHJldmVudGluZyBzbWFsbCBkaXNjYXJkcyBub3IgY29hbGVzY2luZyB0aGVtLg0KPiAN
+Cj4gSW4gdGhlIHNkIGxheWVyIHdvdWxkIHRoZXJlIGJlIHdheSB0byBwZXJzaXN0IG9yIHB1cmdl
+IGFuDQo+IG92ZXJseSBsYXJnZSBkaXNjYXJkIGNhY2hlPyBXaGF0IGFib3V0IGhvbm9yaW5nDQo+
+IGRpc2NhcmRfemVyb2VzX2RhdGE/IE9uY2UgdGhlIGRpc2NhcmQgaXMgY29tcGxldGVkIHdpdGgN
+Cj4gZGlzY2FyZF96ZXJvZXNfZGF0YSB5b3UgaGF2ZSB0byByZXR1cm4gemVyb2VzIHdoZW5ldmVy
+DQo+IGEgZGlzY2FyZGVkIHNlY3RvciBpcyByZWFkLiBJc24ndCB0aGF0IGEgbG9nIG1vcmUgdGhh
+biBqdXN0DQo+IHRyYWNraW5nIGEgd3JpdGUgcG9pbnRlcj8gQ291bGRuJ3QgYSB6b25lIGhhdmUg
+ZG96ZW5zIG9mIGhvbGVzPw0KDQpNeSB1bmRlcnN0YW5kaW5nIG9mIHRoZSBzdGFuZGFyZHMgcmVn
+YXJkaW5nIGRpc2NhcmQgaXMgdGhhdCBpdCBpcyBub3QNCm1hbmRhdG9yeSBhbmQgdGhhdCBpdCBp
+cyBhIGhpbnQgdG8gdGhlIGRyaXZlLiBUaGUgZHJpdmUgY2FuIGNvbXBsZXRlbHkNCmlnbm9yZSBp
+dCBpZiBpdCB0aGlua3MgdGhhdCBpcyBhIGJldHRlciBjaG9pY2UuIEkgbWF5IGJlIHdyb25nIG9u
+IHRoaXMNCnRob3VnaC4gTmVlZCB0byBjaGVjayBhZ2Fpbi4NCkZvciByZXNldCB3cml0ZSBwb2lu
+dGVyLCB0aGUgbWFwcGluZyB0byBkaXNjYXJkIHJlcXVpcmVzIHRoYXQgdGhlIGNhbGxzDQp0byBi
+bGtkZXZfaXNzdWVfZGlzY2FyZCBiZSB6b25lIGFsaWduZWQgZm9yIGFueXRoaW5nIHRvIGhhcHBl
+bi4gU3BlY2lmeQ0KbGVzcyB0aGFuIGEgem9uZSBhbmQgbm90aGluZyB3aWxsIGJlIGRvbmUuIFRo
+aXMgSSB0aGluayBwcmVzZXJ2ZSB0aGUNCmRpc2NhcmQgc2VtYW50aWMuDQoNCkFzIGZvciB0aGUg
+4oCcZGlzY2FyZF96ZXJvZXNfZGF0YeKAnSB0aGluZywgSSBhbHNvIHRoaW5rIHRoYXQgaXMgYSBk
+cml2ZQ0KZmVhdHVyZSBub3QgbWFuZGF0b3J5LiBEcml2ZXMgbWF5IGhhdmUgaXQgb3Igbm90LCB3
+aGljaCBpcyBjb25zaXN0ZW50DQp3aXRoIHRoZSBaQkMvWkFDIHN0YW5kYXJkcyByZWdhcmRpbmcg
+cmVhZGluZyBhZnRlciB3cml0ZSBwb2ludGVyIChub3RoaW5nDQpzYXlzIHRoYXQgemVyb3MgaGF2
+ZSB0byBiZSByZXR1cm5lZCkuIEluIGFueSBjYXNlLCBkaXNjYXJkIG9mIENNUiB6b25lcw0Kd2ls
+bCBiZSBhIG5vcCwgc28gZm9yIFNNUiBkcml2ZXMsIGRpc2NhcmRfemVyb2VzX2RhdGE9MCBtYXkg
+YmUgYSBiZXR0ZXINCmNob2ljZS4NCg0KPiANCj4+IFdoaWNoIGlzIChhcyBpbmRpY2F0ZWQpIHJl
+YWxseSBzbG93LCBhbmQgZWFzaWx5IHRha2VzIHNldmVyYWwgbWludXRlcy4NCj4+IFdpdGggdGhl
+IFJCIHRyZWUgd2UgY2FuIHNob3J0LWNpcmN1aXQgZGlzY2FyZHMgdG8gZW1wdHkgem9uZXMsIGFu
+ZCBzcGVlZA0KPj4gdXAgcHJvY2Vzc2luZyB0aW1lIGRyYW1hdGljYWxseS4NCj4+IFN1cmUgd2Ug
+Y291bGQgYmUgbW92aW5nIHRoZSBsb2dpYyBpbnRvIG1rZnMgYW5kIGZyaWVuZHMsIGJ1dCB0aGF0
+IHdvdWxkDQo+PiByZXF1aXJlIHVzIHRvIGNoYW5nZSB0aGUgcHJvZ3JhbXMgYW5kIGFncmVlIG9u
+IGEgbGlicmFyeSAobGliemJjPykgd2hpY2gNCj4+IHNob3VsZCBiZSBoYW5kbGluZyB0aGF0Lg0K
+PiANCj4gRjJGUydzIG1rZnMuZjJmcyBpcyBhbHJlYWR5IHJlYWRpbmcgdGhlIHpvbmUgdG9wb2xv
+Z3kgdmlhIFNHX0lPIC4uLg0KPiBzbyBJJ20gbm90IHN1cmUgeW91ciBhcmd1bWVudCBpcyB2YWxp
+ZCBoZXJlLg0KDQpUaGlzIGluaXRpYWwgU01SIHN1cHBvcnQgcGF0Y2ggaXMganVzdCB0aGF0OiBh
+IGZpcnN0IHRyeS4gSmFlZ2V1aw0KdXNlZCBTR19JTyAoaW4gZmFjdCBjb3B5LXBhc3RlIG9mIHBh
+cnRzIG9mIGxpYnpiYykgYmVjYXVzZSB0aGUgY3VycmVudA0KWkJDIHBhdGNoLXNldCBoYXMgbm8g
+aW9jdGwgQVBJIGZvciB6b25lIGluZm9ybWF0aW9uIG1hbmlwdWxhdGlvbi4gV2UNCndpbGwgZml4
+IHRoaXMgbWtmcy5mMmZzIG9uY2Ugd2UgYWdyZWUgb24gYW4gaW9jdGwgaW50ZXJmYWNlLg0KDQo+
+IA0KPiBbLi5dDQo+IA0KPj4+PiAzKSBUcnkgdG8gY29uZGVuc2UgdGhlIGJsa3pvbmUgZGF0YSBz
+dHJ1Y3R1cmUgdG8gc2F2ZSBtZW1vcnk6DQo+Pj4+IEkgdGhpbmsgdGhhdCB3ZSBjYW4gYXQgdGhl
+IHZlcnkgbGVhc3QgcmVtb3ZlIHRoZSB6b25lIGxlbmd0aCwgYW5kIGFsc28NCj4+Pj4gbWF5IGJl
+IHRoZSBwZXIgem9uZSBzcGlubG9jayB0b28gKGEgc2luZ2xlIHNwaW5sb2NrIGFuZCBwcm9wZXIg
+c3RhdGUgZmxhZ3MgY2FuDQo+Pj4+IGJlIHVzZWQpLg0KPj4+IA0KPj4+IEkgaGF2ZSBhIHZhcmlh
+bnQgdGhhdCBpcyBhbiBhcnJheSBvZiBkZXNjcmlwdG9ycyB0aGF0IHJvdWdobHkgbWltaWNzIHRo
+ZQ0KPj4+IGFwaSBmcm9tIGJsay16b25lZC5jIHRoYXQgSSBkaWQgYSBmZXcgbW9udGhzIGFnbyBh
+cyBhbiBleGFtcGxlLg0KPj4+IEkgc2hvdWxkIGJlIGFibGUgdG8gdXBkYXRlIHRoYXQgdG8gdGhl
+IGN1cnJlbnQga2VybmVsICsgcGF0Y2hlcy4NCj4+PiANCj4+IE9rYXkuIElmIHdlIHJlc3RyaWN0
+IHRoZSBpbi1rZXJuZWwgU01SIGRyaXZlIGhhbmRsaW5nIHRvIGRldmljZXMgd2l0aA0KPj4gaWRl
+bnRpY2FsIHpvbmUgc2l6ZXMgb2YgY291cnNlIHdlIGNhbiByZW1vdmUgdGhlIHpvbmUgbGVuZ3Ro
+Lg0KPj4gQW5kIHdlIGNhbiBkbyBhd2F5IHdpdGggdGhlIHBlci16b25lIHNwaW5sb2NrIGFuZCB1
+c2UgYSBnbG9iYWwgb25lIGluc3RlYWQuDQo+IA0KPiBJIGRvbid0IHRoaW5rIGRyb3BwaW5nIHRo
+ZSB6b25lIGxlbmd0aCBpcyBhIHJlYXNvbmFibGUgdGhpbmcgdG8gZG8uDQo+IA0KPiBXaGF0IEkg
+cHJvcG9zZSBpcyBhbiBhcnJheSBvZiBfZGVzY3JpcHRvcnNfIGl0IGRvZXNuJ3QgZHJvcCBfYW55
+Xw0KPiBvZiB0aGUgem9uZSBpbmZvcm1hdGlvbiB0aGF0IHlvdSBhcmUgaG9sZGluZyBpbiBhbiBS
+QiB0cmVlLCBpdCBpcw0KPiBqdXN0IGEgY29uZGVuc2VkIGZvcm1hdCB0aGF0IF9tb3N0bHlfIHBs
+dWdzIGludG8geW91ciBleGlzdGluZw0KPiBBUEkuDQoNCkkgZG8gbm90IGFncmVlLiBUaGUgU2Vh
+Z2F0ZSBkcml2ZSBhbHJlYWR5IGhhcyBvbmUgem9uZSAodGhlIGxhc3Qgb25lKQ0KdGhhdCBpcyBu
+b3QgdGhlIHNhbWUgbGVuZ3RoIGFzIHRoZSBvdGhlciB6b25lcy4gU3VyZSwgc2luY2UgaXQgaXMg
+dGhlDQpsYXN0IG9uZSwgd2UgY2FuIGhhZCDigJxpZiAobGFzdCB6b25lKeKAnSBhbGwgb3ZlciB0
+aGUgcGxhY2UgYW5kIG1ha2UgaXQNCndvcmsuIEJ1dCB0aGF0IGlzIHJlYWxseSB1Z2x5LiBLZWVw
+aW5nIHRoZSBsZW5ndGggZmllbGQgbWFrZXMgdGhlIGNvZGUNCmdlbmVyaWMgYW5kIGZvbGxvd2lu
+ZyB0aGUgc3RhbmRhcmQsIHdoaWNoIGhhcyBubyByZXN0cmljdGlvbiBvbiB0aGUNCnpvbmUgc2l6
+ZXMuIFdlIGNvdWxkIGRvIHNvbWUgbWVtb3J5IG9wdGltaXNhdGlvbiB1c2luZyBkaWZmZXJlbnQg
+dHlwZXMNCm9mIGJsa196b25lIHN0dXJjdHMsIHRoZSB0eXBlcyBtYXBwaW5nIHRvIHRoZSBTQU1F
+IHZhbHVlOiBkcml2ZXMgd2l0aA0KY29uc3RhbnQgem9uZSBzaXplIGNhbiB1c2UgYSBibGtfem9u
+ZSB0eXBlIHdpdGhvdXQgdGhlIGxlbmd0aCBmaWVsZCwNCm90aGVycyB1c2UgYSBkaWZmZXJlbnQg
+dHlwZSB0aGF0IGluY2x1ZGUgdGhlIGZpZWxkLiBBY2Nlc3NvciBmdW5jdGlvbnMNCmNhbiBoaWRl
+IHRoZSBkaWZmZXJlbnQgdHlwZXMgaW4gdGhlIHpvbmUgbWFuaXB1bGF0aW9uIGNvZGUuDQoNCkJl
+c3QgcmVnYXJkcy4NCg0KDQotLSANCkRhbWllbiBMZSBNb2FsLCBQaC5ELg0KU3IuIE1hbmFnZXIs
+IFN5c3RlbSBTb2Z0d2FyZSBHcm91cCwgSEdTVCBSZXNlYXJjaCwNCkhHU1QsIGEgV2VzdGVybiBE
+aWdpdGFsIGJyYW5kDQpEYW1pZW4uTGVNb2FsQGhnc3QuY29tDQooKzgxKSAwNDY2LTk4LTM1OTMg
+KGV4dC4gNTEzNTkzKQ0KMSBraXJpaGFyYS1jaG8sIEZ1amlzYXdhLCANCkthbmFnYXdhLCAyNTIt
+MDg4OCBKYXBhbg0Kd3d3Lmhnc3QuY29tDQoNCldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3JhdGlvbiAo
+YW5kIGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNlICYgRGlz
+Y2xhaW1lcjoKClRoaXMgZS1tYWlsIGFuZCBhbnkgZmlsZXMgdHJhbnNtaXR0ZWQgd2l0aCBpdCBt
+YXkgY29udGFpbiBjb25maWRlbnRpYWwgb3IgbGVnYWxseSBwcml2aWxlZ2VkIGluZm9ybWF0aW9u
+IG9mIFdEQyBhbmQvb3IgaXRzIGFmZmlsaWF0ZXMsIGFuZCBhcmUgaW50ZW5kZWQgc29sZWx5IGZv
+ciB0aGUgdXNlIG9mIHRoZSBpbmRpdmlkdWFsIG9yIGVudGl0eSB0byB3aGljaCB0aGV5IGFyZSBh
+ZGRyZXNzZWQuIElmIHlvdSBhcmUgbm90IHRoZSBpbnRlbmRlZCByZWNpcGllbnQsIGFueSBkaXNj
+bG9zdXJlLCBjb3B5aW5nLCBkaXN0cmlidXRpb24gb3IgYW55IGFjdGlvbiB0YWtlbiBvciBvbWl0
+dGVkIHRvIGJlIHRha2VuIGluIHJlbGlhbmNlIG9uIGl0LCBpcyBwcm9oaWJpdGVkLiBJZiB5b3Ug
+aGF2ZSByZWNlaXZlZCB0aGlzIGUtbWFpbCBpbiBlcnJvciwgcGxlYXNlIG5vdGlmeSB0aGUgc2Vu
+ZGVyIGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgdGhlIGUtbWFpbCBpbiBpdHMgZW50aXJldHkgZnJv
+bSB5b3VyIHN5c3RlbS4K
