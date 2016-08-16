@@ -1,39 +1,43 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 2/2] sd: check BLK_DEF_MAX_SECTORS against max_dev_sectors
-Date: Tue, 16 Aug 2016 00:10:15 -0400
-Message-ID: <yq1d1l9l5g8.fsf@sermon.lab.mkp.net>
-References: <60518e90d462d4cbb1c528914eac64e2fe124717.1471011949.git.tom.ty89@gmail.com>
-	<974f3a0aa9e82caf067353fd7d7119c07d7e98c1.1471011949.git.tom.ty89@gmail.com>
-	<yq11t1tmzxb.fsf@sermon.lab.mkp.net>
-	<CAGnHSE=yBrBCbyKMNKBpZHRX7YKR-TV-s5YybvTKW18_gcrAbw@mail.gmail.com>
+Subject: Re: [RFC] libata-scsi: make sure Maximum Write Same Length is not too large
+Date: Tue, 16 Aug 2016 00:15:15 -0400
+Message-ID: <yq18tvxl57w.fsf@sermon.lab.mkp.net>
+References: <833713246c1a70d85150289c1537797d6f7dd606.1470903899.git.tom.ty89@gmail.com>
+	<yq1r39upy7p.fsf@sermon.lab.mkp.net>
+	<CAGnHSE=E1Bj99EciXrDS31n4Q4VcRL0sDJ2t4ynx0bHgp5RNtw@mail.gmail.com>
+	<yq1lh01n1ul.fsf@sermon.lab.mkp.net>
+	<CAGnHSEnycyCRy=SHXs+fQx8mwaQwLtAKO1thH6yYscbBkL2+VQ@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CAGnHSE=yBrBCbyKMNKBpZHRX7YKR-TV-s5YybvTKW18_gcrAbw@mail.gmail.com>
-	(Tom Yan's message of "Sun, 14 Aug 2016 17:00:52 +0800")
-Sender: linux-block-owner@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:42783 "EHLO
+	userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1750729AbcHPEP1 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2016 00:15:27 -0400
+In-Reply-To: <CAGnHSEnycyCRy=SHXs+fQx8mwaQwLtAKO1thH6yYscbBkL2+VQ@mail.gmail.com>
+	(Tom Yan's message of "Sun, 14 Aug 2016 17:23:45 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tejun Heo <tj@kernel.org>, Shaun Tancheff <shaun.tancheff@seagate.com>, Shaun Tancheff <shaun@tancheff.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
 >>>>> "Tom" == Tom Yan <tom.ty89@gmail.com> writes:
 
 Tom,
 
->> It would be pretty unusual for a device that is smart enough to
->> report a transfer length limit to be constrained to 1 MB and change.
+Tom> The thing is, as of ACS-4, blocks that carry DSM/TRIM LBA Range
+Tom> Entries are always 512-byte.
 
-Tom> Well, it is done pretty much for libata's SATL.
+Lovely. And SAT conveniently ignores this entirely.
 
-But why?
+Tom> Honestly, I have no idea how that would work on a 4Kn SSD, if it is
+Tom> / will ever be a thing.
 
->> rw_max = min(BLK_DEF_MAX_SECTORS, q->limits.max_dev_sectors);
+Highly unlikely.
 
-Tom> That won't really work. min_t() would, though the line is gonna be
-Tom> a bit long; not sure if I can/should simply cast the type (unsigned
-Tom> int) to BLK_DEF_MAX_SECTORS. And which braces are you referring to?
-
-I'd rather have a split line than double lines with braces.
+But I guess you would have to report 8 512-byte ranges in the 4Kn
+case. And then rely on the patch we talked about to clamp the number of
+sectors based on the block layer limit.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
