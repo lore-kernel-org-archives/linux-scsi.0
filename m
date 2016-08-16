@@ -1,50 +1,117 @@
 From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Tue, 16 Aug 2016 12:28:17 +0200
-Message-ID: <1471343297.26909.0.camel@suse.com>
-References: <1470657309-9564-1-git-send-email-oneukum@suse.com>
-	 <yq18tw4rpsy.fsf@sermon.lab.mkp.net> <1471188464.4879.9.camel@suse.com>
-	 <yq14m6ll3uv.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Subject: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Tue, 16 Aug 2016 14:05:12 +0200
+Message-ID: <1471349112-13876-1-git-send-email-oneukum@suse.com>
 Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <yq14m6ll3uv.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
 Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, jthumshirn-IBi9RG/b67k@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org
+Cc: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2016-08-16 at 00:44 -0400, Martin K. Petersen wrote:
-> >>>>> "Oliver" == Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org> writes:
-> 
-> Oliver,
-> 
-> Oliver> wce_default_on controls the default if the device provides no
-> Oliver> indication. The problem here is that the indication the device
-> Oliver> provides must be overridden, as they are false.
-> 
-> Can't you just blacklist the mode select on the device in question?
-> 
-> Something like:
-> 
-> 	if (us->fflags & US_FL_ALWAYS_SYNC) {
-> 		sdev->skip_ms_page_3f = 1;
-> 		sdev->skip_ms_page_8 = 1;
-> 		sdev->wce_default_on = 1;
-> 	}
-> 
-> ?
+Some SATA to USB bridges fail to cooperate with some
+drives resulting in no cache being present being reported
+to the host. That causes the host to skip sending
+a command to synchronize caches. That causes data loss
+when the drive is powered down.
 
-Hi,
+Signed-off-by: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
+---
+ Documentation/kernel-parameters.txt | 2 ++
+ drivers/usb/storage/scsiglue.c      | 8 ++++++++
+ drivers/usb/storage/unusual_devs.h  | 7 +++++++
+ drivers/usb/storage/usb.c           | 6 +++++-
+ include/linux/usb_usual.h           | 2 ++
+ 5 files changed, 24 insertions(+), 1 deletion(-)
 
-this looks like a workable option. I am preparing a patch.
-
-	Regards
-		Oliver
-
-
-
+diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
+index 82b42c9..c8c682e 100644
+--- a/Documentation/kernel-parameters.txt
++++ b/Documentation/kernel-parameters.txt
+@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
+ 				u = IGNORE_UAS (don't bind to the uas driver);
+ 				w = NO_WP_DETECT (don't test whether the
+ 					medium is write-protected).
++				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
++					even if the device claims no cache)
+ 			Example: quirks=0419:aaf5:rl,0421:0433:rc
+ 
+ 	user_debug=	[KNL,ARM]
+diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
+index 33eb923..8cd2926 100644
+--- a/drivers/usb/storage/scsiglue.c
++++ b/drivers/usb/storage/scsiglue.c
+@@ -296,6 +296,14 @@ static int slave_configure(struct scsi_device *sdev)
+ 		if (us->fflags & US_FL_BROKEN_FUA)
+ 			sdev->broken_fua = 1;
+ 
++		/* Some even totally fail to indicate a cache */
++		if (us->fflags & US_FL_ALWAYS_SYNC) {
++			/* don't read caching information */
++			sdev->skip_ms_page_8 = 1;
++			sdev->skip_ms_page_3f = 1;
++			/* assume sync is needed */
++			sdev->wce_default_on = 1;
++		}
+ 	} else {
+ 
+ 		/*
+diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
+index aa35392..af3c7ee 100644
+--- a/drivers/usb/storage/unusual_devs.h
++++ b/drivers/usb/storage/unusual_devs.h
+@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
+ 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
+ 		US_FL_NO_WP_DETECT),
+ 
++/* Reported by Egbert Eich <eich-IBi9RG/b67k@public.gmane.org> */
++UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
++		"Toshiba",
++		"External USB 3.0",
++		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
++		US_FL_ALWAYS_SYNC),
++
+ /* Patch submitted by Philipp Friedrich <philipp-Tz8qtarvew8@public.gmane.org> */
+ UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
+ 		"Kyocera",
+diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
+index ef2d8cd..19255f1 100644
+--- a/drivers/usb/storage/usb.c
++++ b/drivers/usb/storage/usb.c
+@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+ 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
+ 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
+ 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
+-			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
++			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
++			US_FL_ALWAYS_SYNC);
+ 
+ 	p = quirks;
+ 	while (*p) {
+@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
+ 		case 'w':
+ 			f |= US_FL_NO_WP_DETECT;
+ 			break;
++		case 'y':
++			f |= US_FL_ALWAYS_SYNC;
++			break;
+ 		/* Ignore unrecognized flag characters */
+ 		}
+ 	}
+diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
+index 245f57d..0aae1b2 100644
+--- a/include/linux/usb_usual.h
++++ b/include/linux/usb_usual.h
+@@ -81,6 +81,8 @@
+ 		/* Sets max_sectors to 240 */			\
+ 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
+ 		/* Cannot handle REPORT_LUNS */			\
++	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
++		/* lies about caching, so always sync */	\
+ 
+ #define US_FLAG(name, value)	US_FL_##name = value ,
+ enum { US_DO_ALL_FLAGS };
+-- 
+2.1.4
 
 --
 To unsubscribe from this list: send the line "unsubscribe linux-usb" in
