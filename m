@@ -1,77 +1,46 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 0/2] be2iscsi: Logging neatening
-Date: Wed, 17 Aug 2016 01:19:39 +0000
-Message-ID: <SN1PR0201MB18700901B51BE24AE75EC18D81140@SN1PR0201MB1870.namprd02.prod.outlook.com>
-References: <1471107782.3467.28.camel@perches.com>
- <cover.1471119911.git.joe@perches.com>
- <BY2PR0201MB18626C631DE6E5D09121608181110@BY2PR0201MB1862.namprd02.prod.outlook.com>
- <1471191843.4075.39.camel@perches.com>
- <SN1PR0201MB187015BE4FF2DEF46741A2A481110@SN1PR0201MB1870.namprd02.prod.outlook.com>
- <1471195790.4075.45.camel@perches.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
+Date: Tue, 16 Aug 2016 22:28:22 -0400
+Message-ID: <yq1fuq4jfi1.fsf@sermon.lab.mkp.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
+	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
+	<yq1h9asrqh6.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
+	<yq160r5oij3.fsf@sermon.lab.mkp.net>
+	<4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0084.outbound.protection.outlook.com ([104.47.36.84]:27587
-	"EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1753071AbcHQBTz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Tue, 16 Aug 2016 21:19:55 -0400
-Content-Language: en-US
+Received: from aserp1040.oracle.com ([141.146.126.69]:29588 "EHLO
+	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+	with ESMTP id S1753071AbcHQC26 (ORCPT
+	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2016 22:28:58 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
+	(Don Brace's message of "Mon, 15 Aug 2016 15:54:50 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joe Perches <joe@perches.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Don Brace <don.brace@microsemi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 08/14/16 10:29, Joe Perches wrote:=0A=
-> On Sun, 2016-08-14 at 17:09 +0000, Bart Van Assche wrote:=0A=
->> My primary concern is how to enable and disable log messages from user=
-=0A=
->> space. Many drivers define their own logging macros and export a bitmask=
-=0A=
->> that allows to enable and disable logging messages per category. These=
-=0A=
->> bitmask control mechanisms are annoying because figuring out what bit=0A=
->> controls which message category requires a search through the driver=0A=
->> source code. I'd like to see all these custom logging macros disappear=
-=0A=
->> and being replaced by a single mechanism. The "dynamic debug" mechanism=
-=0A=
->> e.g. is in my opinion much easier to use than the different custom=0A=
->> logging mechanisms.=0A=
->=0A=
-> Dynamic debug doesn't have a bitmask function and=0A=
-> still requires looking through the code for lines=0A=
-> and format strings.=0A=
->=0A=
-> I think you are looking for a system wide equivalent=0A=
-> for the ethtool/netif_<level> mechanism.=0A=
->=0A=
-> Nothing like that exists currently.=0A=
->=0A=
-> Some code uses a bitmask/and, other code uses a=0A=
-> level/comparison.=0A=
->=0A=
-> Care to propose something?=0A=
-=0A=
-Hello Joe,=0A=
-=0A=
-As far as I can see all that the ethtool msglevel API implements is a =0A=
-mechanism to query and set the log level from user space. What various =0A=
-SCSI drivers implement is not a log level but a log mask mechanism. How =0A=
-about the following approach to associate a name with each bit in a log =0A=
-mask, to export these names to user space and to make it possible to =0A=
-enable/disable messages per log category:=0A=
-* Introduce a variant of pr_debug() that allows to specify a textual=0A=
-   representation of the log category (a short string without spaces).=0A=
-* Make the log category names available in=0A=
-   /sys/kernel/debug/dynamic_debug/...=0A=
-* Today dynamic debug allows to enable/disable log messages by=0A=
-   specifying the source file name, function name, line number, module=0A=
-   name and/or format string. My proposal is to make it also possible to=0A=
-   enable/disable log messages based on the log category name.=0A=
-=0A=
-Anyway, this is just a proposal. Anyone is welcome to come up with an =0A=
-alternative proposal.=0A=
-=0A=
-Bart.=0A=
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+
+Don,
+
+Don> I am thinking that you mean users will need to have some kind of
+Don> notification that newer kernels will require that the smartpqi
+Don> driver be configured, especially if they are already booting from
+Don> the aacraid driver.
+
+One issue is Kconfig. You need to make sure that make oldconfig will
+pull in smartpqi if aacraid was previously selected.
+
+The other issue is that the initrd needs to include the smartpqi
+module. Hopefully dracut will handle this correctly now. But please test
+that it is working correctly when transitioning from an old kernel with
+aacraid to a new kernel with smartpqi.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
