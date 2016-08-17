@@ -1,65 +1,111 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH 0/2] be2iscsi: Logging neatening
-Date: Tue, 16 Aug 2016 20:39:02 -0700
-Message-ID: <1471405142.4075.197.camel@perches.com>
-References: <1471107782.3467.28.camel@perches.com>
-	 <cover.1471119911.git.joe@perches.com>
-	 <BY2PR0201MB18626C631DE6E5D09121608181110@BY2PR0201MB1862.namprd02.prod.outlook.com>
-	 <1471191843.4075.39.camel@perches.com>
-	 <SN1PR0201MB187015BE4FF2DEF46741A2A481110@SN1PR0201MB1870.namprd02.prod.outlook.com>
-	 <1471195790.4075.45.camel@perches.com>
-	 <SN1PR0201MB18700901B51BE24AE75EC18D81140@SN1PR0201MB1870.namprd02.prod.outlook.com>
+From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Subject: RE: [PATCH] be2iscsi: Use a more current logging style
+Date: Wed, 17 Aug 2016 09:20:39 +0530
+Message-ID: <6716f28ca4aa8580e87f6ca68ba5199e@mail.gmail.com>
+References: <1471191843.4075.39.camel@perches.com>	 <e49903a4248d8f49e129ce795dd06fc4f2cd6331.1471200669.git.joe@perches.com>
+	 <b1256e4c70a33774e86263277a72c3a2@mail.gmail.com> <1471343225.4075.153.camel@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <SN1PR0201MB18700901B51BE24AE75EC18D81140@SN1PR0201MB1870.namprd02.prod.outlook.com>
+In-Reply-To: <1471343225.4075.153.camel@perches.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+To: Joe Perches <joe@perches.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, 2016-08-17 at 01:19 +0000, Bart Van Assche wrote:
-> On 08/14/16 10:29, Joe Perches wrote:
-> > On Sun, 2016-08-14 at 17:09 +0000, Bart Van Assche wrote:
-> > > My primary concern is how to enable and disable log messages from user
-> > > space.
-[]
-> > I think you are looking for a system wide equivalent
-> > for the ethtool/netif_ mechanism.
-> > 
-> > Nothing like that exists currently.
-> > 
-> > Some code uses a bitmask/and, other code uses a
-> > level/comparison.
-[]
-> As far as I can see all that the ethtool msglevel API implements is a 
-> mechanism to query and set the log level from user space. What various 
-> SCSI drivers implement is not a log level but a log mask mechanism. How 
-> about the following approach to associate a name with each bit in a log 
-> mask, to export these names to user space and to make it possible to 
-> enable/disable messages per log category:
-> * Introduce a variant of pr_debug() that allows to specify a textual
->    representation of the log category (a short string without spaces).
-> * Make the log category names available in
->    /sys/kernel/debug/dynamic_debug/...
-> * Today dynamic debug allows to enable/disable log messages by
->    specifying the source file name, function name, line number, module
->    name and/or format string. My proposal is to make it also possible to
->    enable/disable log messages based on the log category name.
+> -----Original Message-----
+> From: Joe Perches [mailto:joe@perches.com]
+> Sent: Tuesday, August 16, 2016 3:57 PM
+> To: Jitendra Bhivare; Christophe JAILLET; Jayamohan Kallickal; Ketan
+Mukadam
+> Cc: Bart Van Assche; James E.J. Bottomley; Martin K. Petersen; linux-
+> scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: [PATCH] be2iscsi: Use a more current logging style
+>
+> On Tue, 2016-08-16 at 11:32 +0530, Jitendra Bhivare wrote:
+> > Thanks Joe for taking this up. It has been pending for long time from
+> > our side.
+>
+> Thanks, not a problem, it took ~10 minutes.
+>
+> There was a bit of an issue about your reply though.
+>
+> First there was ~50 k of quoted stuff without any content
+>
+> > [ hundreds and hundreds of quoted lines ]
+>
+> and then this happened:
+>
+> > > diff --git a/drivers/scsi/be2iscsi/be_main.h
+> > b/drivers/scsi/be2iscsi/be_main.h
+> > >
+> > > index aa9c682..7cce6e3 100644
+> > > --- a/drivers/scsi/be2iscsi/be_main.h
+> > > +++ b/drivers/scsi/be2iscsi/be_main.h
+> > > @@ -1081,15 +1081,19 @@ struct hwi_context_memory {
+> > > =C2=A0#define BEISCSI_LOG_CONFIG	0x0020	/* CONFIG Code Path */
+> > > =C2=A0#define BEISCSI_LOG_ISCSI	0x0040	/* SCSI/iSCSI Protocol
+related
+> > Logs */
+> > >
+> > >
+> > > -#define __beiscsi_log(phba, level, fmt, ...)
+\
+> > > -	shost_printk(level, phba->shost, fmt, ##__VA_ARGS__)
+> > > -
+> > > -#define beiscsi_log(phba, level, mask, prefix, fmt, ...)		\
+> > > +#define beiscsi_printk(level, phba, mask, fmt, ...)
+\
+> > > =C2=A0do {
+> 	\
+> > > -	uint32_t log_value =3D phba->attr_log_enable;			\
+> > > -	if (((mask) & log_value) || (level[1] <=3D '3'))			\
+> > > -		__beiscsi_log(phba, level, prefix "_%d: " fmt,		\
+> > > -			=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0__LINE__, ##__VA_ARGS__);			\
+> > > +	if ((mask) & (phba)->attr_log_enable)				\
+> > > +		shost_printk(level, phba->shost,			\
+> > [JB] PCI dev_printk would be more useful with SCSI host_no included by
+> > default in the message.
+>
+> This is a good note that seems simple enough, but I almost missed this.
+>
+> Given the reply at the top and the _very_ long uncommented quoted block,
+I just
+> about assumed it was a useless block quote that you didn't bother to
+trim.
+>
+> Please make it easier to find your replies and notes by deleting
+irrelevant quoted
+> stuff.
+>
+> Also, I think I misread the code.
+>
+> The original code is <=3D '3' i.e.: show all KERN_ERR.
+> That is not correct in the new code.
+>
+> I don't know the code well and don't have a test bed with the hardware.
+>
+> Is it possible for a beiscsi_<level> message to be called before
+phba->pcidev is
+> set to a valid value in beiscsi_hba_alloc? =C2=A0 It appears the code is
+careful to only
+> use dev_<level> logging calls before probe.
+[JB] KERN_ERR messages need to be logged irrespective of the masks.
+I understand, that in some places, mask is unnecessarily passed.
+I had made sure to call __beiscsi_log in some places.
+Can we please keep it that way? So beiscsi_err calls dev_err directly or
+is replaced with dev_err.
 
-Many of these logging mechanisms are not just debug
-facilities.
+It's safe to assume pcidev will be valid for all beiscsi_log calls.
+Will test your change on my setup before ack'ing.
 
-Perhaps a dynamic_debug control would be inappropriate.
+Actually, we too wanted to get rid of BC_/BM_... line# way and replace
+with
+ABCD =3D error identifier.
+A <category>
+B <subcategory>
+CD <error code>
 
-There have also been various custom scsi log level
-facilities like the blogic_msg for the very old
-BusLogic blogic_msg.
-
-These functions also sometimes write into some
-device-specific buffer.
-
-Perhaps the largest problem, if this is to be scsi only
-rather than system wide, is finding out what and how
-the various bits in a mask should be used.
+But that will be substantial change with some testing requirements. For
+now, this looks good.
