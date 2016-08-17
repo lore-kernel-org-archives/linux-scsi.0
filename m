@@ -1,36 +1,53 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3 0/3] Fix panic when a SES device is attached to a hpsa logical volume.
-Date: Wed, 17 Aug 2016 10:40:01 +0200
-Message-ID: <cover.1471423022.git.jthumshirn@suse.de>
+Subject: [PATCH v3 1/3] sas: provide stub implementation for scsi_is_sas_rphy
+Date: Wed, 17 Aug 2016 10:40:02 +0200
+Message-ID: <9ff63d3df2286ad79b32bea6be0b3fb94cf67a53.1471423022.git.jthumshirn@suse.de>
+References: <cover.1471423022.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1471423022.git.jthumshirn@suse.de>
+In-Reply-To: <cover.1471423022.git.jthumshirn@suse.de>
+References: <cover.1471423022.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
 
-The first patch provides stub implementations for scsi_is_sas_phy()
-and sas_get_address() for the case that CONFIG_SCSI_SAS_ATTRS is not
-defined.
+Provide a stub implementation for scsi_is_sas_rphy for kernel
+configurations which do not have CONFIG_SCSI_SAS_ATTRS defined.
 
-The second patch implements the actual fix in ses.c by changing the
-is_sas_attached() call to scsi_is_sas_rphy().
+Reported-by: kbuild test robot <lkp@intel.com>
+Suggested-by: James Bottomley <jejb@linux.vnet.ibm.com>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ include/scsi/scsi_transport_sas.h | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
 
-The third and last patch removes is_sas_attached() as it doesn't have
-any more consumers left.
-
-Changes from v2:
-* Fix phy vs. rphy typo in patch 1/3.
-  Verified with config from http://www.spinics.net/lists/linux-scsi/msg99067.html
-
-Johannes Thumshirn (3):
-  sas: provide stub implementation for scsi_is_sas_rphy
-  ses: use scsi_is_sas_rphy instead of is_sas_attached
-  sas: remove is_sas_attached()
-
- drivers/scsi/scsi_transport_sas.c | 16 ----------------
- drivers/scsi/ses.c                |  2 +-
- include/scsi/scsi_transport_sas.h |  5 ++---
- 3 files changed, 3 insertions(+), 20 deletions(-)
-
+diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
+index 13c0b2b..8d0d2fb 100644
+--- a/include/scsi/scsi_transport_sas.h
++++ b/include/scsi/scsi_transport_sas.h
+@@ -15,8 +15,14 @@ static inline int is_sas_attached(struct scsi_device *sdev)
+ {
+ 	return 0;
+ }
++
++static inline int scsi_is_sas_rphy(const struct device *sdev)
++{
++	return 0;
++}
+ #else
+ extern int is_sas_attached(struct scsi_device *sdev);
++extern int scsi_is_sas_rphy(const struct device *);
+ #endif
+ 
+ static inline int sas_protocol_ata(enum sas_protocol proto)
+@@ -187,7 +193,6 @@ extern struct sas_phy *sas_phy_alloc(struct device *, int);
+ extern void sas_phy_free(struct sas_phy *);
+ extern int sas_phy_add(struct sas_phy *);
+ extern void sas_phy_delete(struct sas_phy *);
+-extern int scsi_is_sas_phy(const struct device *);
+ 
+ u64 sas_get_address(struct scsi_device *);
+ unsigned int sas_tlr_supported(struct scsi_device *);
 -- 
 1.8.5.6
