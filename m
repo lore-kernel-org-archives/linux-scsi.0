@@ -1,58 +1,73 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v4 1/3] sas: provide stub implementation for scsi_is_sas_rphy
-Date: Wed, 17 Aug 2016 11:46:16 +0200
-Message-ID: <edbb4203c20358efe87d68cd9697d3e3cb8d0cca.1471426748.git.jthumshirn@suse.de>
+Subject: [PATCH v4 3/3] sas: remove is_sas_attached()
+Date: Wed, 17 Aug 2016 11:46:18 +0200
+Message-ID: <09a25a2b6dee403cea29eea94c0d5562a6e63811.1471426748.git.jthumshirn@suse.de>
 References: <cover.1471426748.git.jthumshirn@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47375 "EHLO mx2.suse.de"
-	rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-	id S1750799AbcHQJqV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Wed, 17 Aug 2016 05:46:21 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1471426748.git.jthumshirn@suse.de>
 In-Reply-To: <cover.1471426748.git.jthumshirn@suse.de>
 References: <cover.1471426748.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+List-Id: linux-scsi@vger.kernel.org
 
-Provide a stub implementation for scsi_is_sas_rphy for kernel
-configurations which do not have CONFIG_SCSI_SAS_ATTRS defined.
+As there are no more users of is_sas_attached() left, remove it.
 
-Reported-by: kbuild test robot <lkp@intel.com>
-Suggested-by: James Bottomley <jejb@linux.vnet.ibm.com>
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- include/scsi/scsi_transport_sas.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_transport_sas.c | 16 ----------------
+ include/scsi/scsi_transport_sas.h |  6 ------
+ 2 files changed, 22 deletions(-)
 
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 3f0ff07..60b651b 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -341,22 +341,6 @@ static int do_sas_phy_delete(struct device *dev, void *data)
+ }
+ 
+ /**
+- * is_sas_attached - check if device is SAS attached
+- * @sdev: scsi device to check
+- *
+- * returns true if the device is SAS attached
+- */
+-int is_sas_attached(struct scsi_device *sdev)
+-{
+-	struct Scsi_Host *shost = sdev->host;
+-
+-	return shost->transportt->host_attrs.ac.class ==
+-		&sas_host_class.class;
+-}
+-EXPORT_SYMBOL(is_sas_attached);
+-
+-
+-/**
+  * sas_remove_children  -  tear down a devices SAS data structures
+  * @dev:	device belonging to the sas object
+  *
 diff --git a/include/scsi/scsi_transport_sas.h b/include/scsi/scsi_transport_sas.h
-index 13c0b2b..31ae074 100644
+index 31ae074..73d8709 100644
 --- a/include/scsi/scsi_transport_sas.h
 +++ b/include/scsi/scsi_transport_sas.h
-@@ -15,8 +15,14 @@ static inline int is_sas_attached(struct scsi_device *sdev)
+@@ -11,17 +11,11 @@ struct sas_rphy;
+ struct request;
+ 
+ #if !IS_ENABLED(CONFIG_SCSI_SAS_ATTRS)
+-static inline int is_sas_attached(struct scsi_device *sdev)
+-{
+-	return 0;
+-}
+-
+ static inline int scsi_is_sas_rphy(const struct device *sdev)
  {
  	return 0;
  }
-+
-+static inline int scsi_is_sas_rphy(const struct device *sdev)
-+{
-+	return 0;
-+}
  #else
- extern int is_sas_attached(struct scsi_device *sdev);
-+extern int scsi_is_sas_rphy(const struct device *);
+-extern int is_sas_attached(struct scsi_device *sdev);
+ extern int scsi_is_sas_rphy(const struct device *);
  #endif
  
- static inline int sas_protocol_ata(enum sas_protocol proto)
-@@ -202,7 +208,6 @@ extern int sas_rphy_add(struct sas_rphy *);
- extern void sas_rphy_remove(struct sas_rphy *);
- extern void sas_rphy_delete(struct sas_rphy *);
- extern void sas_rphy_unlink(struct sas_rphy *);
--extern int scsi_is_sas_rphy(const struct device *);
- 
- struct sas_port *sas_port_alloc(struct device *, int);
- struct sas_port *sas_port_alloc_num(struct device *);
 -- 
 1.8.5.6
-
