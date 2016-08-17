@@ -1,46 +1,65 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 0/2] smartpqi: initial commit of Microsemi smartpqi driver
-Date: Tue, 16 Aug 2016 22:28:22 -0400
-Message-ID: <yq1fuq4jfi1.fsf@sermon.lab.mkp.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-	<yq1lh0cknxb.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D19163937F2@avsrvexchmbx1.microsemi.net>
-	<yq1tweuvjkl.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D1916394167@avsrvexchmbx1.microsemi.net>
-	<yq1h9asrqh6.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D1916394A22@avsrvexchmbx1.microsemi.net>
-	<yq160r5oij3.fsf@sermon.lab.mkp.net>
-	<4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH 0/2] be2iscsi: Logging neatening
+Date: Tue, 16 Aug 2016 20:39:02 -0700
+Message-ID: <1471405142.4075.197.camel@perches.com>
+References: <1471107782.3467.28.camel@perches.com>
+	 <cover.1471119911.git.joe@perches.com>
+	 <BY2PR0201MB18626C631DE6E5D09121608181110@BY2PR0201MB1862.namprd02.prod.outlook.com>
+	 <1471191843.4075.39.camel@perches.com>
+	 <SN1PR0201MB187015BE4FF2DEF46741A2A481110@SN1PR0201MB1870.namprd02.prod.outlook.com>
+	 <1471195790.4075.45.camel@perches.com>
+	 <SN1PR0201MB18700901B51BE24AE75EC18D81140@SN1PR0201MB1870.namprd02.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:29588 "EHLO
-	aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-	with ESMTP id S1753071AbcHQC26 (ORCPT
-	<rfc822;linux-scsi@vger.kernel.org>); Tue, 16 Aug 2016 22:28:58 -0400
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D19163952C1@avsrvexchmbx1.microsemi.net>
-	(Don Brace's message of "Mon, 15 Aug 2016 15:54:50 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <SN1PR0201MB18700901B51BE24AE75EC18D81140@SN1PR0201MB1870.namprd02.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, Christophe JAILLET <christophe.jaillet@wanadoo.fr>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Jayamohan Kallickal <jayamohan.kallickal@avagotech.com>, Ketan Mukadam <ketan.mukadam@avagotech.com>, John Soni Jose <sony.john@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+On Wed, 2016-08-17 at 01:19 +0000, Bart Van Assche wrote:
+> On 08/14/16 10:29, Joe Perches wrote:
+> > On Sun, 2016-08-14 at 17:09 +0000, Bart Van Assche wrote:
+> > > My primary concern is how to enable and disable log messages from user
+> > > space.
+[]
+> > I think you are looking for a system wide equivalent
+> > for the ethtool/netif_ mechanism.
+> > 
+> > Nothing like that exists currently.
+> > 
+> > Some code uses a bitmask/and, other code uses a
+> > level/comparison.
+[]
+> As far as I can see all that the ethtool msglevel API implements is a 
+> mechanism to query and set the log level from user space. What various 
+> SCSI drivers implement is not a log level but a log mask mechanism. How 
+> about the following approach to associate a name with each bit in a log 
+> mask, to export these names to user space and to make it possible to 
+> enable/disable messages per log category:
+> * Introduce a variant of pr_debug() that allows to specify a textual
+>    representation of the log category (a short string without spaces).
+> * Make the log category names available in
+>    /sys/kernel/debug/dynamic_debug/...
+> * Today dynamic debug allows to enable/disable log messages by
+>    specifying the source file name, function name, line number, module
+>    name and/or format string. My proposal is to make it also possible to
+>    enable/disable log messages based on the log category name.
 
-Don,
+Many of these logging mechanisms are not just debug
+facilities.
 
-Don> I am thinking that you mean users will need to have some kind of
-Don> notification that newer kernels will require that the smartpqi
-Don> driver be configured, especially if they are already booting from
-Don> the aacraid driver.
+Perhaps a dynamic_debug control would be inappropriate.
 
-One issue is Kconfig. You need to make sure that make oldconfig will
-pull in smartpqi if aacraid was previously selected.
+There have also been various custom scsi log level
+facilities like the blogic_msg for the very old
+BusLogic blogic_msg.
 
-The other issue is that the initrd needs to include the smartpqi
-module. Hopefully dracut will handle this correctly now. But please test
-that it is working correctly when transitioning from an old kernel with
-aacraid to a new kernel with smartpqi.
+These functions also sometimes write into some
+device-specific buffer.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Perhaps the largest problem, if this is to be scsi only
+rather than system wide, is finding out what and how
+the various bits in a mask should be used.
