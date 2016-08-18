@@ -1,41 +1,25 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 3/6] cxlflash: Add kref to context
-Date: Thu, 18 Aug 2016 13:38:41 -0500
-Message-ID: <7f1b0544-9ae9-e45e-c476-e46c0fb077d4@linux.vnet.ibm.com>
-References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1470785982-9233-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH v4 2/3] ses: use scsi_is_sas_rphy instead of
+ is_sas_attached
+Date: Thu, 18 Aug 2016 09:08:42 -0700
+Message-ID: <1471536522.2389.27.camel@linux.vnet.ibm.com>
+References: <cover.1471426748.git.jthumshirn@suse.de>
+	 <34f1f359e3a7c5ca573c3ca52b110c13666fc22e.1471426748.git.jthumshirn@suse.de>
+	 <1471534911.2389.25.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1470785982-9233-1-git-send-email-mrochs@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>
-Cc: Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1471534911.2389.25.camel@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+And please fix your scripts or just use the standard ones:
 
-On 8/9/2016 6:39 PM, Matthew R. Ochs wrote:
-> Currently, context user references are tracked via the list of LUNs
-> that have attached to the context. While convenient, this is not
-> intuitive without a deep study of the code and is inconsistent with
-> the existing reference tracking patterns within the kernel. This design
-> choice can lead to future bug injection.
->
-> To improve code comprehension and better protect against future bugs, add
-> explicit reference counting to contexts and migrate the context removal
-> code to the kref release handler.
->
-> Inspired-by: Al Viro <viro@zeniv.linux.org.uk>
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Cc: stable@vger.kernel.org, #@suse.de, v4.5+@suse.de,
+  
+I'm tired of getting two bounces every time I reply to this thread.
+
+James
