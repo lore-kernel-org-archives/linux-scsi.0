@@ -1,53 +1,41 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [PATCH 01/22] libfc: Revisit kref handling
-Date: Thu, 18 Aug 2016 10:43:50 -0400
-Message-ID: <alpine.OSX.2.00.1608181039030.529@administrators-macbook-pro.local>
-References: <1470230002-37737-1-git-send-email-hare@suse.de> <1470230002-37737-2-git-send-email-hare@suse.de>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/6] cxlflash: Add kref to context
+Date: Thu, 18 Aug 2016 13:38:41 -0500
+Message-ID: <7f1b0544-9ae9-e45e-c476-e46c0fb077d4@linux.vnet.ibm.com>
+References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1470785982-9233-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0136.outbound.protection.outlook.com ([104.47.38.136]:49950
-	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-	id S1767811AbcHROpx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-	Thu, 18 Aug 2016 10:45:53 -0400
-In-Reply-To: <1470230002-37737-2-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1470785982-9233-1-git-send-email-mrochs@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 
+Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-
-On Wed, 3 Aug 2016, 1:13pm -0000, Hannes Reinecke wrote:
-
-> The kref handling in fc_rport is a mess. This patch updates
-> the kref handling according to the following rules:
-> 
-> - Take a reference whenever scheduling a workqueue
-> - Take a reference whenever an ELS command is send
-> - Drop the reference at the end of the workqueue function
-> - Drop the reference at the end of handling ELS replies
-> - Take a reference when allocating an rport
-> - Drop the reference when removing an rport
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/libfc/fc_rport.c | 134 ++++++++++++++++++++++++++++++++----------
->  1 file changed, 103 insertions(+), 31 deletions(-)
-> 
-> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-> index 93f5961..6a98bb8 100644
-> --- a/drivers/scsi/libfc/fc_rport.c
-> +++ b/drivers/scsi/libfc/fc_rport.c
-> @@ -44,6 +44,17 @@
->   * path this potential over-use of the mutex is acceptable.
->   */
->  
-
-<-- snip -->
-
-Yes, this took quite a few iterations to get right but your rules make 
-sense.  I've tested with this patch and it successfully passed.
-
-Tested-by: Chad Dupuis <chad.dupuis@qlogic.com>
+On 8/9/2016 6:39 PM, Matthew R. Ochs wrote:
+> Currently, context user references are tracked via the list of LUNs
+> that have attached to the context. While convenient, this is not
+> intuitive without a deep study of the code and is inconsistent with
+> the existing reference tracking patterns within the kernel. This design
+> choice can lead to future bug injection.
+>
+> To improve code comprehension and better protect against future bugs, add
+> explicit reference counting to contexts and migrate the context removal
+> code to the kref release handler.
+>
+> Inspired-by: Al Viro <viro@zeniv.linux.org.uk>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
