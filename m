@@ -1,55 +1,50 @@
-From: Chad Dupuis <chad.dupuis@qlogic.com>
-Subject: Re: [RFC PATCH 0/4] libfc: Do not send ABTS when resetting
- exchanges
-Date: Thu, 18 Aug 2016 10:38:13 -0400
-Message-ID: <alpine.OSX.2.00.1608181036200.529@administrators-macbook-pro.local>
-References: <1470401703-87045-1-git-send-email-hare@suse.de>
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: Observing Softlockup's while running heavy IOs
+Date: Thu, 18 Aug 2016 21:08:18 +0000
+Message-ID: <DF4PR84MB01696549697831B4CEC4A3FDAB150@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0119.outbound.protection.outlook.com ([104.47.36.119]:52544
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753696AbcHSBA5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Aug 2016 21:00:57 -0400
-In-Reply-To: <1470401703-87045-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, chad.dupuis@qlogic.com
 
-
-On Fri, 5 Aug 2016, 12:54pm -0000, Hannes Reinecke wrote:
-
-> Hi all,
-> 
-> here's a patchset to fixup an issue reported by QLogic: when running
-> against a certain target the libfc stack would get in an infinite loop
-> sending ABTS when trying to reset a connection.
-> The problem is that the libfc stack is sending ABTS for any open exchanges
-> when removing an rport, totally ignorant of the fact that in most cases
-> we are already logged out of the said remote port.
-> This patchset alters the handling slightly so that we will only ever reset
-> open exchanges after we have either logged out of the port or an implicit
-> logout can be assumed.
-> With that we don't need to send ABTS any more during rport reset.
-> 
-> As usual, comments and reviews are welcome.
-> 
-> Hannes Reinecke (4):
->   libfc: Issue PRLI after a PRLO has been received
->   libfc: send LOGO for PLOGI failure
->   libfc: reset exchange manager during LOGO handling
->   libfc: do not send ABTS when resetting exchanges
-> 
->  drivers/scsi/libfc/fc_exch.c  |  1 -
->  drivers/scsi/libfc/fc_rport.c | 26 +++++++++++++++++++++++---
->  2 files changed, 23 insertions(+), 4 deletions(-)
-> 
-> 
-
-Hannes, thanks for posting this.  I've been working witih a customer of 
-ours and have successfully tested this patch set.
-
-Reviewed-by: Chad Dupuis <chad.dupuis@qlogic.com>
-Tested-by: Chad Dupuis <chad.dupuis@qlogic.com>
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
+bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3duZXJAdmdlci5r
+ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgU3JlZWthbnRoIFJlZGR5DQo+IFNlbnQ6IFRodXJzZGF5
+LCBBdWd1c3QgMTgsIDIwMTYgMTI6NTYgQU0NCj4gU3ViamVjdDogT2JzZXJ2aW5nIFNvZnRsb2Nr
+dXAncyB3aGlsZSBydW5uaW5nIGhlYXZ5IElPcw0KPiANCj4gUHJvYmxlbSBzdGF0ZW1lbnQ6DQo+
+IE9ic2VydmluZyBzb2Z0bG9ja3VwcyB3aGlsZSBydW5uaW5nIGhlYXZ5IElPcyBvbiA4IFNTRCBk
+cml2ZXMNCj4gY29ubmVjdGVkIGJlaGluZCBvdXIgTFNJIFNBUyAzMDA0IEhCQS4NCj4gDQouLi4N
+Cj4gT2JzZXJ2aW5nIGEgbG9vcCBpbiB0aGUgSU8gcGF0aCwgaS5lIG9ubHkgb25lIENQVSBpcyBi
+dXN5IHdpdGgNCj4gcHJvY2Vzc2luZyB0aGUgaW50ZXJydXB0cyBhbmQgb3RoZXIgQ1BVcyAoaW4g
+dGhlIGFmZmluaXR5X2hpbnQgbWFzaykNCj4gYXJlIGJ1c3kgd2l0aCBzZW5kaW5nIHRoZSBJT3Mg
+KHRoZXNlIENQVXMgYXJlIG5vdCB5ZXQgYWxsIHJlY2VpdmluZw0KPiBhbnkgaW50ZXJydXB0cyku
+IEZvciBleGFtcGxlLCBvbmx5IENQVTYgaXMgYnVzeSB3aXRoIHByb2Nlc3NpbmcgdGhlDQo+IGlu
+dGVycnVwdHMgZnJvbSBJUlEgMjE5IGFuZCByZW1haW5pbmcgQ1BVcyBpLmUgQ1BVIDcsOCw5LDEw
+ICYgMTEgYXJlDQo+IGp1c3QgYnVzeSB3aXRoIHB1bXBpbmcgdGhlIElPcyBhbmQgdGhleSBuZXZl
+ciBwcm9jZXNzZWQgYW55IElPDQo+IGludGVycnVwdHMgZnJvbSBJUlEgMjE5LiBTbyB3ZSBhcmUg
+b2JzZXJ2aW5nIHNvZnRsb2NrdXBzIGR1ZSB0bw0KPiBleGlzdGVuY2UgdGhpcyBsb29wIGluIHRo
+ZSBJTyBQYXRoLg0KPiANCj4gV2UgbWF5IG5vdCBvYnNlcnZlIHRoZXNlIHNvZnRsb2NrdXBzIGlm
+IGlycWJhbGFuY2VyIG1pZ2h0IGhhdmUNCj4gYmFsYW5jZWQgdGhlIGludGVycnVwdHMgYW1vbmcg
+dGhlIENQVXMgZW5hYmxlZCBpbiB0aGUgcGFydGljdWxhcg0KPiBpcnEncw0KPiBhZmZpbml0eV9o
+aW50IG1hc2suIHNvIHRoYXQgYWxsIHRoZSBDUFVzIGFyZSBlcXVhbHkgYnVzeSB3aXRoIHNlbmQN
+Cj4gSU9zDQo+IGFuZCBwcm9jZXNzaW5nIHRoZSBpbnRlcnJ1cHRzLiBJIGFtIG5vdCBzdXJlIGhv
+dyBpcnFiYWxhbmNlciBiYWxhbmNlDQo+IHRoZSBsb2FkIGFtb25nIHRoZSBDUFVzLCBidXQgaGVy
+ZSBJIHNlZSBvbmx5IG9uZSBDUFUgZnJvbSBpcnEncw0KPiBhZmZpbml0eV9oaW50IG1hc2sgaXMg
+YnVzeSB3aXRoIGludGVycnVwdHMgYW5kIHJlbWFpbmluZyBDUFVzIHdvbid0DQo+IHJlY2VpdmUg
+YW55IGludGVycnVwdHMgZnJvbSB0aGlzIElSUS4NCj4gDQo+IFBsZWFzZSBoZWxwIG1lIHdpdGgg
+YW55IHN1Z2dlc3Rpb25zL3JlY29tZW5kYXRpb25zIHRvIHNsb3ZlL2xpbWl0DQo+IHRoZXNlIGtp
+bmQgb2Ygc29mdGxvY2t1cHMuIEFsc28gcGxlYXNlIGxldCBtZSBrbm93biBpZiBJIGhhdmUgbWlz
+c2VkDQo+IGFueSBzZXR0aW5nIGluIHRoZSBpcnFiYWxhbmNlLg0KPiANCg0KVGhlIENQVXMgbmVl
+ZCB0byBiZSBmb3JjZWQgdG8gc2VsZi10aHJvdHRsZSBieSBwcm9jZXNzaW5nIGludGVycnVwdHMg
+Zm9yIA0KdGhlaXIgb3duIHN1Ym1pc3Npb25zLCB3aGljaCByZWR1Y2VzIHRoZSB0aW1lIHRoZXkg
+Y2FuIHN1Ym1pdCBtb3JlIElPcy4NCg0KU2VlIGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE0Lzkv
+OS85MzEgZm9yIGRpc2N1c3Npb24gb2YgdGhpcw0KcHJvYmxlbSB3aGVuIGJsay1tcSB3YXMgYWRk
+ZWQuDQoNCg0KLS0tDQpSb2JlcnQgRWxsaW90dCwgSFBFIFBlcnNpc3RlbnQgTWVtb3J5DQoNCg0K
+DQo=
