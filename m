@@ -1,217 +1,70 @@
-From: Potnuri Bharat Teja <bharat@chelsio.com>
-Subject: Re: IB/isert: Return value of iser target transport handlers ignored
- by iscsi target
-Date: Thu, 18 Aug 2016 17:33:02 +0530
-Message-ID: <20160818120249.GA29925@chelsio.com>
-References: <20160804103506.GA29543@t5fpga-b1.asicdesigners.com>
- <8f3ad0ed-a17d-571a-7e1a-eb61caa263c9@grimberg.me>
+From: Manoj Kumar <manoj@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/6] cxlflash: Cache owning adapter within context
+Date: Thu, 18 Aug 2016 09:38:46 -0500
+Message-ID: <fbe021d3-3d7b-022b-c532-c14cdf993a3d@linux.vnet.ibm.com>
+References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1470785970-9192-1-git-send-email-mrochs@linux.vnet.ibm.com>
+Reply-To: manoj@linux.vnet.ibm.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8f3ad0ed-a17d-571a-7e1a-eb61caa263c9@grimberg.me>
-Sender: target-devel-owner@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, linux-scsi@vger.kernel.org, swise@opengridcomputing.com, varun@chelsio.com, rajur@chelsio.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1470785970-9192-1-git-send-email-mrochs@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sunday, August 08/07/16, 2016 at 20:09:08 +0300, Sagi Grimberg wrote:
-> >Hi,
-> 
-> Hi Baharat,
-> 
-> >In iSER target during iwarp connection tear-down due to ping timeouts, the rdma
-> >queues are set to error state and subsequent queued iscsi session commands posted
-> >shall fail with corresponding errno returned by ib_post_send/recv.
-> >At this stage iser target handlers (Ex: isert_put_datain())
-> >return the error to iscsci target, but these errors are
-> >not being handled by the iscsi target handlers(Ex: lio_queue_status()).
-> 
-> Indeed looks like lio_queue_data_in() assumes that
-> ->iscsit_queue_data_in() cannot fail. This either mean
-> that isert_put_data_in() should take care of
-> the extra put in this case, or the iscsi should correctly
-> handle a queue_full condition (because we should not be hitting
-> this in the normal IO flow).
-> 
-> Does this (untested) patch help?
-> --
-> diff --git a/drivers/infiniband/ulp/isert/ib_isert.c
-> b/drivers/infiniband/ulp/isert/ib_isert.c
-> index a990c04208c9..ff5dfc0f7c50 100644
-> --- a/drivers/infiniband/ulp/isert/ib_isert.c
-> +++ b/drivers/infiniband/ulp/isert/ib_isert.c
-> @@ -1810,6 +1810,7 @@ isert_put_response(struct iscsi_conn *conn, struct
-> iscsi_cmd *cmd)
->         struct ib_send_wr *send_wr = &isert_cmd->tx_desc.send_wr;
->         struct iscsi_scsi_rsp *hdr = (struct iscsi_scsi_rsp *)
->                                 &isert_cmd->tx_desc.iscsi_header;
-> +       int ret;
-> 
->         isert_create_send_desc(isert_conn, isert_cmd, &isert_cmd->tx_desc);
->         iscsit_build_rsp_pdu(cmd, conn, true, hdr);
-> @@ -1848,7 +1849,10 @@ isert_put_response(struct iscsi_conn *conn, struct
-> iscsi_cmd *cmd)
-> 
->         isert_dbg("Posting SCSI Response\n");
-> 
-> -       return isert_post_response(isert_conn, isert_cmd);
-> +       ret = isert_post_response(isert_conn, isert_cmd);
-> +       if (ret)
-> +               target_put_sess_cmd(&cmd->se_cmd);
-> +       return 0;
->  }
-> 
->  static void
-> @@ -2128,7 +2132,7 @@ isert_put_datain(struct iscsi_conn *conn, struct
-> iscsi_cmd *cmd)
->         struct isert_conn *isert_conn = conn->context;
->         struct ib_cqe *cqe = NULL;
->         struct ib_send_wr *chain_wr = NULL;
-> -       int rc;
-> +       int ret;
-> 
->         isert_dbg("Cmd: %p RDMA_WRITE data_length: %u\n",
->                  isert_cmd, se_cmd->data_length);
-> @@ -2148,34 +2152,41 @@ isert_put_datain(struct iscsi_conn *conn, struct
-> iscsi_cmd *cmd)
->                 isert_init_send_wr(isert_conn, isert_cmd,
->                                    &isert_cmd->tx_desc.send_wr);
-> 
-> -               rc = isert_post_recv(isert_conn, isert_cmd->rx_desc);
-> -               if (rc) {
-> -                       isert_err("ib_post_recv failed with %d\n", rc);
-> -                       return rc;
-> +               ret = isert_post_recv(isert_conn, isert_cmd->rx_desc);
-> +               if (ret) {
-> +                       isert_err("ib_post_recv failed with %d\n", ret);
-> +                       goto out;
->                 }
-> 
->                 chain_wr = &isert_cmd->tx_desc.send_wr;
->         }
-> 
-> -       isert_rdma_rw_ctx_post(isert_cmd, isert_conn, cqe, chain_wr);
-> +       ret = isert_rdma_rw_ctx_post(isert_cmd, isert_conn, cqe, chain_wr);
->         isert_dbg("Cmd: %p posted RDMA_WRITE for iSER Data READ\n",
-> isert_cmd);
-> -       return 1;
-> +out:
-> +       if (ret)
-> +               target_put_sess_cmd(&cmd->se_cmd);
-> +       return 0;
->  }
-> 
->  static int
->  isert_get_dataout(struct iscsi_conn *conn, struct iscsi_cmd *cmd, bool
-> recovery)
->  {
->         struct isert_cmd *isert_cmd = iscsit_priv_cmd(cmd);
-> +       int ret;
-> 
->         isert_dbg("Cmd: %p RDMA_READ data_length: %u write_data_done: %u\n",
->                  isert_cmd, cmd->se_cmd.data_length, cmd->write_data_done);
-> 
->         isert_cmd->tx_desc.tx_cqe.done = isert_rdma_read_done;
-> -       isert_rdma_rw_ctx_post(isert_cmd, conn->context,
-> +       ret = isert_rdma_rw_ctx_post(isert_cmd, conn->context,
->                         &isert_cmd->tx_desc.tx_cqe, NULL);
-> 
->         isert_dbg("Cmd: %p posted RDMA_READ memory for ISER Data WRITE\n",
->                  isert_cmd);+out:
-> +       if (ret)
-> +               target_put_sess_cmd(&cmd->se_cmd);
->         return 0;
->  }
-> 
-> --
+Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
+
+On 8/9/2016 6:39 PM, Matthew R. Ochs wrote:
+> The context removal routine requires access to the owning adapter
+> structure to reset the context within the AFU as part of the tear
+> down sequence. In order to support kref adoption, the owning adapter
+> must be accessible from the release handler. As the kref framework
+> only provides the kref reference as the sole parameter, another means
+> is needed to derive the owning adapter.
 >
-Hi Sagi,
-We found another issue in cq poll mechanism within iwarp module,
-masking the above failure, so had to fix it first. Now I am able to
-reproduce the actual stall due to pending underefed commands in command
-list.
-The above patch doesn't hold good for all cases and I see the same stall
-waiting for completion event. Debugging further there are few more post
-commands like isert_put_nopin(), which are also needed to be modified to
-handle the post send failures.
-I tried with few more changes in addition to the above change to handle
-all possible post send/recv failures during ping timeout. Here is the  
-snippet of change I tried:
-
-diff --git a/drivers/infiniband/ulp/isert/ib_isert.c b/drivers/infiniband/ulp/isert/ib_isert.c
-index ba6be06..a96f16c 100644
---- a/drivers/infiniband/ulp/isert/ib_isert.c
-+++ b/drivers/infiniband/ulp/isert/ib_isert.c
-static void
-@@ -1892,6 +1897,7 @@ isert_put_nopin(struct iscsi_cmd *cmd, struct
-iscsi_conn *conn,
-        struct isert_cmd *isert_cmd = iscsit_priv_cmd(cmd);
-        struct isert_conn *isert_conn = conn->context;
-        struct ib_send_wr *send_wr =
-			 &isert_cmd->tx_desc.send_wr;
-+       int ret;
-
-	isert_create_send_desc(isert_conn,
-				 isert_cmd, &isert_cmd->tx_desc);
-	iscsit_build_nopin_rsp(cmd, conn, (struct iscsi_nopin *)
-@@ -1902,7 +1908,11 @@
-	isert_put_nopin(struct iscsi_cmd *cmd, struct
-					 iscsi_conn *conn,
-
-	isert_dbg("conn %p Posting NOPIN Response\n", isert_conn);
-
--       return isert_post_response(isert_conn, isert_cmd);
-+       ret = isert_post_response(isert_conn, isert_cmd);
-+       if (ret)
-+		 target_put_sess_cmd(&cmd->se_cmd);
-+
-+       return ret;
-}
-
-Similar change in all function calls of switch case of
-isert_response_queue().
-
-Yet that doesnt solve it all. With all above changes I see random
-crashes due to null pointer dereference. I believe these crashes are due
-to some race between isert threads.
-
-I am currently dubugging those failures to see if our changes are proper
-fix for the issue.
-
-Will update with more details.
-
-> >
-> >-> While closing the session in case of ping timeouts, isert_close_connection()->
-> >isert_wait_conn()->isert_wait4cmds() checks for the queued session commands
-> >and waits infinitely for command completion 'cmd_wait_comp' in target_wait_for_sess_cmds().
-> >'cmd_wait_comp' will be never complete as the kref on the session command is
-> >not derefed, due to which target_release_cmd_kref() is not called by kref_put().
-> >Due to this, the older session is not cleared causing the next login negotiation to fail
-> >as the older session is still active(Older SID exists).
-> 
-> Makes sense...
-> 
-> >[Query 1] If the return value of ib_post_send/recv() are handled to deref the
-> >corresponding queued session commands, the wait on cmd_wait_comp will be
-> >complete and clears off the session successfully. Is this the rightway to
-> >do it here?
-> 
-> I think that given that ->iscsit_queue_data_in() and
-> ->iscsit_queue_status() are never expected to fail we probably
-> should take care of it in isert...
-> 
-> Nic, any input on the iscsit side?
-It is the same on the iscsit side too, Most of the code doesnt expect
-for return value or failures.
-> 
-> >
-> >[Query 2] An extra deref is done in case of transport_status CMD_T_TAS
-> >in target_wait_for_sess_cmds(), can similar
-> >implementation be done for transport state CMD_T_FABRIC_STOP?
-> 
-> I think that can work also given that target_sess_cmd_list_set_waiting()
-> is indeed set when we are starting teardown. Not sure how this will
-> affect other transports though...
-Thanks,
-Bharat.
+> As a remedy, the owning adapter reference is saved off within the
+> context during initialization.
+>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/cxlflash/superpipe.c | 1 +
+>  drivers/scsi/cxlflash/superpipe.h | 1 +
+>  2 files changed, 2 insertions(+)
+>
+> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+> index ab5c893..640c3a2 100644
+> --- a/drivers/scsi/cxlflash/superpipe.c
+> +++ b/drivers/scsi/cxlflash/superpipe.c
+> @@ -804,6 +804,7 @@ static void init_context(struct ctx_info *ctxi, struct cxlflash_cfg *cfg,
+>  	ctxi->lfd = adap_fd;
+>  	ctxi->pid = current->tgid; /* tgid = pid */
+>  	ctxi->ctx = ctx;
+> +	ctxi->cfg = cfg;
+>  	ctxi->file = file;
+>  	ctxi->initialized = true;
+>  	mutex_init(&ctxi->mutex);
+> diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
+> index 5f9a091..61404f2 100644
+> --- a/drivers/scsi/cxlflash/superpipe.h
+> +++ b/drivers/scsi/cxlflash/superpipe.h
+> @@ -107,6 +107,7 @@ struct ctx_info {
+>  	bool err_recovery_active;
+>  	struct mutex mutex; /* Context protection */
+>  	struct cxl_context *ctx;
+> +	struct cxlflash_cfg *cfg;
+>  	struct list_head luns;	/* LUNs attached to this context */
+>  	const struct vm_operations_struct *cxl_mmap_vmops;
+>  	struct file *file;
+>
