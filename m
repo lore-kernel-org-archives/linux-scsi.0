@@ -1,55 +1,55 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4 2/3] ses: use scsi_is_sas_rphy instead of
- is_sas_attached
-Date: Thu, 18 Aug 2016 08:41:51 -0700
-Message-ID: <1471534911.2389.25.camel@linux.vnet.ibm.com>
-References: <cover.1471426748.git.jthumshirn@suse.de>
-         <34f1f359e3a7c5ca573c3ca52b110c13666fc22e.1471426748.git.jthumshirn@suse.de>
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [RFC PATCH 0/4] libfc: Do not send ABTS when resetting
+ exchanges
+Date: Thu, 18 Aug 2016 10:38:13 -0400
+Message-ID: <alpine.OSX.2.00.1608181036200.529@administrators-macbook-pro.local>
+References: <1470401703-87045-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34720 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752752AbcHSA4U (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Aug 2016 20:56:20 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7IFd3Lu082445
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2016 11:42:03 -0400
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 24wbwy5wj1-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 18 Aug 2016 11:42:03 -0400
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Thu, 18 Aug 2016 09:42:01 -0600
-In-Reply-To: <34f1f359e3a7c5ca573c3ca52b110c13666fc22e.1471426748.git.jthumshirn@suse.de>
+Received: from mail-sn1nam02on0119.outbound.protection.outlook.com ([104.47.36.119]:52544
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753696AbcHSBA5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 18 Aug 2016 21:00:57 -0400
+In-Reply-To: <1470401703-87045-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org, #@suse.de, v4.5+@suse.de
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, chad.dupuis@qlogic.com
 
-On Wed, 2016-08-17 at 11:46 +0200, Johannes Thumshirn wrote:
-> Use scsi_is_sas_rphy() instead of is_sas_attached() to decide whether
-> we should obtain the SAS address from a scsi device or not. This will
-> prevent us from tripping on the BUG_ON() in sas_sdev_to_rdev() if the
-> rphy isn't attached to the SAS transport class, like it is with 
-> hpsa's logical devices.
 
-For the entire series:
+On Fri, 5 Aug 2016, 12:54pm -0000, Hannes Reinecke wrote:
 
-Reviewed-by: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+> Hi all,
+> 
+> here's a patchset to fixup an issue reported by QLogic: when running
+> against a certain target the libfc stack would get in an infinite loop
+> sending ABTS when trying to reset a connection.
+> The problem is that the libfc stack is sending ABTS for any open exchanges
+> when removing an rport, totally ignorant of the fact that in most cases
+> we are already logged out of the said remote port.
+> This patchset alters the handling slightly so that we will only ever reset
+> open exchanges after we have either logged out of the port or an implicit
+> logout can be assumed.
+> With that we don't need to send ABTS any more during rport reset.
+> 
+> As usual, comments and reviews are welcome.
+> 
+> Hannes Reinecke (4):
+>   libfc: Issue PRLI after a PRLO has been received
+>   libfc: send LOGO for PLOGI failure
+>   libfc: reset exchange manager during LOGO handling
+>   libfc: do not send ABTS when resetting exchanges
+> 
+>  drivers/scsi/libfc/fc_exch.c  |  1 -
+>  drivers/scsi/libfc/fc_rport.c | 26 +++++++++++++++++++++++---
+>  2 files changed, 23 insertions(+), 4 deletions(-)
+> 
+> 
 
-> Fixes: 3f8d6f2a0 ('ses: fix discovery of SATA devices in SAS
-> enclosures')
-> Cc: stable@vger.kernel.org # v4.5+
+Hannes, thanks for posting this.  I've been working witih a customer of 
+ours and have successfully tested this patch set.
 
-Except that we can't tag this for stable because without 1/3 it will
-induce a compile failure within stable.  This means you're going to
-have to do the stable process manually and submit both patches to
-stable and explain the dependency, once they're upstream.
-
-James
-
+Reviewed-by: Chad Dupuis <chad.dupuis@qlogic.com>
+Tested-by: Chad Dupuis <chad.dupuis@qlogic.com>
