@@ -1,41 +1,59 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v4 2/3] ses: use scsi_is_sas_rphy instead of
- is_sas_attached
-Date: Fri, 19 Aug 2016 08:53:09 +0200
-Message-ID: <20160819065309.h7jkkxbiopgikl6w@c203.arch.suse.de>
-References: <cover.1471426748.git.jthumshirn@suse.de>
- <34f1f359e3a7c5ca573c3ca52b110c13666fc22e.1471426748.git.jthumshirn@suse.de>
- <1471534911.2389.25.camel@linux.vnet.ibm.com>
- <1471536522.2389.27.camel@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1471536522.2389.27.camel@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, stable@vger.kernel.org
+From: Chao Fan <vidos.fan@gmail.com>
+Subject: [PATCH] Remove the unnecessary semicolons
+Date: Thu, 18 Aug 2016 23:04:34 +0800
+Message-ID: <1471532674-7263-1-git-send-email-vidos.fan@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pa0-f66.google.com ([209.85.220.66]:35701 "EHLO
+        mail-pa0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753454AbcHSHsI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 03:48:08 -0400
+Received: by mail-pa0-f66.google.com with SMTP id cf3so3042758pad.2
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 00:48:08 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Vidos Fan <vidos.fan@gmail.com>
 
-On Thu, Aug 18, 2016 at 09:08:42AM -0700, James Bottomley wrote:
-> And please fix your scripts or just use the standard ones:
+From: Vidos Fan <vidos.fan@gmail.com>
 
-Hmmm, I'm not using a script at all but pure git send-email. I'll have
-a look into it.
+At the end of funcions, semicolons are unnecessary. So drop them.
 
-> 
-> Cc: stable@vger.kernel.org, #@suse.de, v4.5+@suse.de,
->   
-> I'm tired of getting two bounces every time I reply to this thread.
-> 
-> James
-> 
+Signed-off-by: Vidos Fan <vidos.fan@gmail.com>
+---
+ drivers/scsi/virtio_scsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 7dbbb29..9632a0c 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -241,7 +241,7 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
+ 
+ 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
+-};
++}
+ 
+ static void virtscsi_poll_requests(struct virtio_scsi *vscsi)
+ {
+@@ -267,7 +267,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 
+ 	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
+-};
++}
+ 
+ static void virtscsi_handle_event(struct work_struct *work);
+ 
+@@ -413,7 +413,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 
+ 	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
+-};
++}
+ 
+ /**
+  * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.4
+
