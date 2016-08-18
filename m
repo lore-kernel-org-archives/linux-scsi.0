@@ -1,8 +1,7 @@
 From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 3/5] block-cciss: Delete unnecessary initialisations in
- cciss_bigpassthru()
-Date: Thu, 18 Aug 2016 12:00:09 +0200
-Message-ID: <d47750ca-25d1-af09-690a-5f215bb845b4@users.sourceforge.net>
+Subject: [PATCH 5/5] block-cciss: Replace three kzalloc() calls by kcalloc()
+Date: Thu, 18 Aug 2016 12:03:28 +0200
+Message-ID: <8f32c3e7-bfb6-f88b-4894-338b94a0d1da@users.sourceforge.net>
 References: <566ABCD9.1060404@users.sourceforge.net>
  <686a1f95-a76c-2624-50e1-9d0e59948e64@users.sourceforge.net>
 Mime-Version: 1.0
@@ -16,34 +15,53 @@ Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia 
 List-Id: linux-scsi@vger.kernel.org
 
 From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Wed, 17 Aug 2016 22:55:51 +0200
+Date: Thu, 18 Aug 2016 11:26:18 +0200
 
-Three local variables will be set to an appropriate value a bit later.
-Thus omit the explicit initialisation at the beginning.
+* The script "checkpatch.pl" can point information out like the following.
+
+  WARNING: Prefer kcalloc over kzalloc with multiply
+
+  Thus fix the affected source code places.
+
+* Replace the specification of data structures by pointer dereferences
+  to make the corresponding size determination a bit safer according to
+  the Linux coding style convention.
 
 Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
 ---
- drivers/block/cciss.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/block/cciss.c | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
-index 43ac632..10e1b0a 100644
+index b08bfb7..3502a3a 100644
 --- a/drivers/block/cciss.c
 +++ b/drivers/block/cciss.c
-@@ -1572,11 +1572,11 @@ static int cciss_bigpassthru(ctlr_info_t *h, void __user *argp)
- {
- 	BIG_IOCTL_Command_struct *ioc;
- 	CommandList_struct *c;
--	unsigned char **buff = NULL;
--	int *buff_size = NULL;
-+	unsigned char **buff;
-+	int *buff_size;
- 	u64bit temp64;
- 	BYTE sg_used = 0;
--	int status = 0;
-+	int status;
+@@ -1604,12 +1604,12 @@ static int cciss_bigpassthru(ctlr_info_t *h, void __user *argp)
+ 		status = -EINVAL;
+ 		goto free_ioc;
+ 	}
+-	buff_size = kmalloc(MAXSGENTRIES * sizeof(int), GFP_KERNEL);
++	buff_size = kcalloc(MAXSGENTRIES, sizeof(*buff_size), GFP_KERNEL);
+ 	if (!buff_size) {
+ 		status = -ENOMEM;
+ 		goto free_ioc;
+ 	}
+-	buff = kzalloc(MAXSGENTRIES * sizeof(char *), GFP_KERNEL);
++	buff = kcalloc(MAXSGENTRIES, sizeof(*buff), GFP_KERNEL);
+ 	if (!buff) {
+ 		status = -ENOMEM;
+ 		goto free_size;
+@@ -4838,8 +4838,9 @@ static int cciss_allocate_scatterlists(ctlr_info_t *h)
  	int i;
- 	DECLARE_COMPLETION_ONSTACK(wait);
- 	__u32 left;
+ 
+ 	/* zero it, so that on free we need not know how many were alloc'ed */
+-	h->scatter_list = kzalloc(h->max_commands *
+-				sizeof(struct scatterlist *), GFP_KERNEL);
++	h->scatter_list = kcalloc(h->max_commands,
++				  sizeof(*h->scatter_list),
++				  GFP_KERNEL);
+ 	if (!h->scatter_list)
+ 		return -ENOMEM;
+ 
 -- 
 2.9.3
