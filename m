@@ -1,70 +1,53 @@
-From: Manoj Kumar <manoj@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/6] cxlflash: Cache owning adapter within context
-Date: Thu, 18 Aug 2016 09:38:46 -0500
-Message-ID: <fbe021d3-3d7b-022b-c532-c14cdf993a3d@linux.vnet.ibm.com>
-References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
- <1470785970-9192-1-git-send-email-mrochs@linux.vnet.ibm.com>
-Reply-To: manoj@linux.vnet.ibm.com
+From: Chad Dupuis <chad.dupuis@qlogic.com>
+Subject: Re: [PATCH 01/22] libfc: Revisit kref handling
+Date: Thu, 18 Aug 2016 10:43:50 -0400
+Message-ID: <alpine.OSX.2.00.1608181039030.529@administrators-macbook-pro.local>
+References: <1470230002-37737-1-git-send-email-hare@suse.de> <1470230002-37737-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1470785970-9192-1-git-send-email-mrochs@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>
-Cc: Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0136.outbound.protection.outlook.com ([104.47.38.136]:49950
+	"EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+	rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+	id S1767811AbcHROpx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+	Thu, 18 Aug 2016 10:45:53 -0400
+In-Reply-To: <1470230002-37737-2-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Hannes Reinecke <hare@suse.com>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-Acked-by: Manoj N. Kumar <manoj@linux.vnet.ibm.com>
 
-On 8/9/2016 6:39 PM, Matthew R. Ochs wrote:
-> The context removal routine requires access to the owning adapter
-> structure to reset the context within the AFU as part of the tear
-> down sequence. In order to support kref adoption, the owning adapter
-> must be accessible from the release handler. As the kref framework
-> only provides the kref reference as the sole parameter, another means
-> is needed to derive the owning adapter.
->
-> As a remedy, the owning adapter reference is saved off within the
-> context during initialization.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+
+On Wed, 3 Aug 2016, 1:13pm -0000, Hannes Reinecke wrote:
+
+> The kref handling in fc_rport is a mess. This patch updates
+> the kref handling according to the following rules:
+> 
+> - Take a reference whenever scheduling a workqueue
+> - Take a reference whenever an ELS command is send
+> - Drop the reference at the end of the workqueue function
+> - Drop the reference at the end of handling ELS replies
+> - Take a reference when allocating an rport
+> - Drop the reference when removing an rport
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/scsi/cxlflash/superpipe.c | 1 +
->  drivers/scsi/cxlflash/superpipe.h | 1 +
->  2 files changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-> index ab5c893..640c3a2 100644
-> --- a/drivers/scsi/cxlflash/superpipe.c
-> +++ b/drivers/scsi/cxlflash/superpipe.c
-> @@ -804,6 +804,7 @@ static void init_context(struct ctx_info *ctxi, struct cxlflash_cfg *cfg,
->  	ctxi->lfd = adap_fd;
->  	ctxi->pid = current->tgid; /* tgid = pid */
->  	ctxi->ctx = ctx;
-> +	ctxi->cfg = cfg;
->  	ctxi->file = file;
->  	ctxi->initialized = true;
->  	mutex_init(&ctxi->mutex);
-> diff --git a/drivers/scsi/cxlflash/superpipe.h b/drivers/scsi/cxlflash/superpipe.h
-> index 5f9a091..61404f2 100644
-> --- a/drivers/scsi/cxlflash/superpipe.h
-> +++ b/drivers/scsi/cxlflash/superpipe.h
-> @@ -107,6 +107,7 @@ struct ctx_info {
->  	bool err_recovery_active;
->  	struct mutex mutex; /* Context protection */
->  	struct cxl_context *ctx;
-> +	struct cxlflash_cfg *cfg;
->  	struct list_head luns;	/* LUNs attached to this context */
->  	const struct vm_operations_struct *cxl_mmap_vmops;
->  	struct file *file;
->
+>  drivers/scsi/libfc/fc_rport.c | 134 ++++++++++++++++++++++++++++++++----------
+>  1 file changed, 103 insertions(+), 31 deletions(-)
+> 
+> diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+> index 93f5961..6a98bb8 100644
+> --- a/drivers/scsi/libfc/fc_rport.c
+> +++ b/drivers/scsi/libfc/fc_rport.c
+> @@ -44,6 +44,17 @@
+>   * path this potential over-use of the mutex is acceptable.
+>   */
+>  
+
+<-- snip -->
+
+Yes, this took quite a few iterations to get right but your rules make 
+sense.  I've tested with this patch and it successfully passed.
+
+Tested-by: Chad Dupuis <chad.dupuis@qlogic.com>
