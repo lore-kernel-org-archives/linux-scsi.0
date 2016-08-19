@@ -1,151 +1,48 @@
-From: Lee Duncan <lduncan@suse.com>
-Subject: Re: [PATCH v2] fcoe: provide translation table between Ethernet and
- FC port speeds
-Date: Fri, 19 Aug 2016 17:36:28 -0700
-Message-ID: <abf83fb9-f283-6fc4-72ae-0fe27d829c61@suse.com>
-References: <1471613617-21291-1-git-send-email-jthumshirn@suse.de>
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: Observing Softlockup's while running heavy IOs
+Date: Fri, 19 Aug 2016 21:27:52 +0000
+Message-ID: <DF4PR84MB01695445B0BE8A046742942DAB160@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+ <DF4PR84MB01696549697831B4CEC4A3FDAB150@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+ <CAK=zhgrOQ_LAbM3RKfq_MtveygqU3vPtChCB9Jdf6AUfFnr0HQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47570 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755529AbcHTAo4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 19 Aug 2016 20:44:56 -0400
-In-Reply-To: <1471613617-21291-1-git-send-email-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgrOQ_LAbM3RKfq_MtveygqU3vPtChCB9Jdf6AUfFnr0HQ@mail.gmail.com>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-On 08/19/2016 06:33 AM, Johannes Thumshirn wrote:
-> Provide a translation table between Ethernet and FC port speeds so odd
-> speeds (from a Ethernet POV) like 8 Gbit are correctly mapped to sysfs
-> and open-fcoe's fcoeadm.
-> 
-> Before:
->     Description:      BCM57840 NetXtreme II 10/20-Gigabit Ethernet
->     Revision:         11
->     Manufacturer:     Broadcom Corporation
->     Serial Number:    6CC2173EA1D0
-> 
->     Driver:           bnx2x 1.712.30-0
->     Number of Ports:  1
-> 
->         Symbolic Name:     bnx2fc (QLogic BCM57840) v2.10.3 over eth2
->         OS Device Name:    host1
->         Node Name:         0x20006cc2173ea1d1
->         Port Name:         0x10006cc2173ea1d1
->         FabricName:        0x100000c0dd0ce717
->         Speed:             unknown
->         Supported Speed:   1 Gbit, 10 Gbit
->         MaxFrameSize:      2048 bytes
->         FC-ID (Port ID):   0x660702
->         State:             Online
-> 
-> After:
->     Description:      BCM57840 NetXtreme II 10/20-Gigabit Ethernet
->     Revision:         11
->     Manufacturer:     Broadcom Corporation
->     Serial Number:    6CC2173EA1D0
-> 
->     Driver:           bnx2x 1.712.30-0
->     Number of Ports:  1
-> 
->         Symbolic Name:     bnx2fc (QLogic BCM57840) v2.10.3 over eth2
->         OS Device Name:    host1
->         Node Name:         0x20006cc2173ea1d1
->         Port Name:         0x10006cc2173ea1d1
->         FabricName:        0x100000c0dd0ce717
->         Speed:             8 Gbit
->         Supported Speed:   1 Gbit, 10 Gbit
->         MaxFrameSize:      2048 bytes
->         FC-ID (Port ID):   0x660701
->         State:             Online
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
-> 
-> Changes to v1:
-> * Add definitions for non-native Ethernet speeds
-> 
->  drivers/scsi/fcoe/fcoe_transport.c | 53 ++++++++++++++++++++++++++------------
->  1 file changed, 36 insertions(+), 17 deletions(-)
-> 
-> diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
-> index 7028dd3..c164eec 100644
-> --- a/drivers/scsi/fcoe/fcoe_transport.c
-> +++ b/drivers/scsi/fcoe/fcoe_transport.c
-> @@ -83,6 +83,41 @@ static struct notifier_block libfcoe_notifier = {
->  	.notifier_call = libfcoe_device_notification,
->  };
->  
-> +static const struct {
-> +	u32 fc_port_speed;
-> +#define SPEED_2000	2000
-> +#define SPEED_4000	4000
-> +#define SPEED_8000	8000
-> +#define SPEED_16000	16000
-> +#define SPEED_32000	32000
-> +	u32 eth_port_speed;
-> +} fcoe_port_speed_mapping[] = {
-> +	{ FC_PORTSPEED_1GBIT,   SPEED_1000   },
-> +	{ FC_PORTSPEED_2GBIT,   SPEED_2000   },
-> +	{ FC_PORTSPEED_4GBIT,   SPEED_4000   },
-> +	{ FC_PORTSPEED_8GBIT,   SPEED_8000   },
-> +	{ FC_PORTSPEED_10GBIT,  SPEED_10000  },
-> +	{ FC_PORTSPEED_16GBIT,  SPEED_16000  },
-> +	{ FC_PORTSPEED_20GBIT,  SPEED_20000  },
-> +	{ FC_PORTSPEED_25GBIT,  SPEED_25000  },
-> +	{ FC_PORTSPEED_32GBIT,  SPEED_32000  },
-> +	{ FC_PORTSPEED_40GBIT,  SPEED_40000  },
-> +	{ FC_PORTSPEED_50GBIT,  SPEED_50000  },
-> +	{ FC_PORTSPEED_100GBIT, SPEED_100000 },
-> +};
-> +
-> +static inline u32 eth2fc_speed(u32 eth_port_speed)
-> +{
-> +	int i;
-> +
-> +	for (i = 0; i <= ARRAY_SIZE(fcoe_port_speed_mapping); i++) {
-> +		if (fcoe_port_speed_mapping[i].eth_port_speed == eth_port_speed)
-> +			return fcoe_port_speed_mapping[i].fc_port_speed;
-> +	}
-> +
-> +	return FC_PORTSPEED_UNKNOWN;
-> +}
-> +
->  /**
->   * fcoe_link_speed_update() - Update the supported and actual link speeds
->   * @lport: The local port to update speeds for
-> @@ -126,23 +161,7 @@ int fcoe_link_speed_update(struct fc_lport *lport)
->  			    SUPPORTED_40000baseLR4_Full))
->  			lport->link_supported_speeds |= FC_PORTSPEED_40GBIT;
->  
-> -		switch (ecmd.base.speed) {
-> -		case SPEED_1000:
-> -			lport->link_speed = FC_PORTSPEED_1GBIT;
-> -			break;
-> -		case SPEED_10000:
-> -			lport->link_speed = FC_PORTSPEED_10GBIT;
-> -			break;
-> -		case SPEED_20000:
-> -			lport->link_speed = FC_PORTSPEED_20GBIT;
-> -			break;
-> -		case SPEED_40000:
-> -			lport->link_speed = FC_PORTSPEED_40GBIT;
-> -			break;
-> -		default:
-> -			lport->link_speed = FC_PORTSPEED_UNKNOWN;
-> -			break;
-> -		}Reviewed-by: Lee Duncan <lduncan@suse.com>
-> +		lport->link_speed = eth2fc_speed(ecmd.base.speed);
->  		return 0;
->  	}
->  	return -1;
-> 
-
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-
--- 
-Lee Duncan
-
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogU3JlZWthbnRoIFJlZGR5
+IFttYWlsdG86c3JlZWthbnRoLnJlZGR5QGJyb2FkY29tLmNvbV0NCj4gU2VudDogRnJpZGF5LCBB
+dWd1c3QgMTksIDIwMTYgNjo0NSBBTQ0KPiBUbzogRWxsaW90dCwgUm9iZXJ0IChQZXJzaXN0ZW50
+IE1lbW9yeSkgPGVsbGlvdHRAaHBlLmNvbT4NCj4gU3ViamVjdDogUmU6IE9ic2VydmluZyBTb2Z0
+bG9ja3VwJ3Mgd2hpbGUgcnVubmluZyBoZWF2eSBJT3MNCj4gDQouLi4NCj4gWWVzIEkgYW0gYWxz
+byBvYnNlcnZpbmcgdGhhdCBhbGwgdGhlIGludGVycnVwdHMgYXJlIHJvdXRlZCB0byBvbmUNCj4g
+Q1BVLiAgQnV0IHN0aWxsIEkgb2JzZXJ2aW5nIHNvZnRsb2NrdXBzIChzb21ldGltZSBoYXJkbG9j
+a3VwcykNCj4gZXZlbiB3aGVuIEkgc2V0IHJxX2FmZmluaXR5IHRvIDIuDQoNClRoYXQnbGwgZW5z
+dXJlIHRoZSBibG9jayBsYXllcidzIGNvbXBsZXRpb24gaGFuZGxpbmcgaXMgZG9uZSB0aGVyZSwN
+CmJ1dCBub3QgeW91ciBkcml2ZXIncyBpbnRlcnJ1cHQgaGFuZGxlciAod2hpY2ggcHJlY2VkZXMg
+dGhlIGJsb2NrDQpsYXllciBjb21wbGV0aW9uIGhhbmRsaW5nKS4NCg0KIA0KPiBJcyB0aGVpciBh
+bnkgd2F5IHRvIHJvdXRlIHRoZSBpbnRlcnJ1cHRzIHRoZSBzYW1lIENQVXMgd2hpY2ggaGFzDQo+
+IHN1Ym1pdHRlZCB0aGUgY29ycmVzcG9uZGluZyBJT3M/DQo+IG9yDQo+IElzIHRoZWlyIGFueSB3
+YXkvb3B0aW9uIGluIHRoZSBpcnFiYWxhbmNlL2tlcm5lbCB3aGljaCBjYW4gcm91dGUNCj4gaW50
+ZXJydXB0cyB0byBDUFVzIChlbmFibGVkIGluIGFmZmluaXR5X2hpbnQpIGluIHJvdW5kIHJvYmlu
+IG1hbm5lcg0KPiBhZnRlciBzcGVjaWZpYyB0aW1lIHBlcmlvZC4NCg0KRW5zdXJlIHlvdXIgZHJp
+dmVyIGNyZWF0ZXMgb25lIE1TSVggaW50ZXJydXB0IHBlciBDUFUgY29yZSwgdXNlcw0KdGhhdCBp
+bnRlcnJ1cHQgZm9yIGFsbCBzdWJtaXNzaW9ucyBmcm9tIHRoYXQgY29yZSwgYW5kIHJlcG9ydHMN
+CnRoYXQgaXQgd291bGQgbGlrZSB0aGF0IGludGVycnVwdCB0byBiZSBzZXJ2aWNlZCBieSB0aGF0
+IGNvcmUNCmluIC9wcm9jL2lycS9ubm4vYWZmaW5pdHlfaGludC4gIA0KDQpFdmVuIHdpdGggaHlw
+ZXJ0aHJlYWRpbmcsIHRoaXMgbmVlZHMgdG8gYmUgYmFzZWQgb24gdGhlIGxvZ2ljYWwNCkNQVSBj
+b3Jlcywgbm90IGp1c3QgdGhlIHBoeXNpY2FsIGNvcmUgb3IgdGhlIHBoeXNpY2FsIHNvY2tldC4N
+CllvdSBjYW4gc3dhbXAgYSBsb2dpY2FsIENQVSBjb3JlIGFzIGVhc2lseSBhcyBhIHBoeXNpY2Fs
+IENQVSBjb3JlLg0KDQpUaGVuLCBwcm92aWRlIGFuIGlycWJhbGFuY2UgcG9saWN5IHNjcmlwdCB0
+aGF0IGhvbm9ycyB0aGUNCmFmZmluaXR5X2hpbnQgZm9yIHlvdXIgZHJpdmVyLCBvciB0dXJuIG9m
+ZiBpcnFiYWxhbmNlIGFuZA0KbWFudWFsbHkgc2V0IC9wcm9jL2lycS9ubm4vc21wX2FmZmluaXR5
+IHRvIG1hdGNoIHRoZQ0KYWZmaW5pdHlfaGludC4gIA0KDQpTb21lIHZlcnNpb25zIG9mIGlycWJh
+bGFuY2UgaG9ub3IgdGhlIGhpbnRzOyBzb21lIHB1cnBvc2VseQ0KZG9uJ3QgYW5kIG5lZWQgdG8g
+YmUgb3ZlcnJpZGRlbiB3aXRoIGEgcG9saWN5IHNjcmlwdC4NCg0KDQotLS0NClJvYmVydCBFbGxp
+b3R0LCBIUEUgUGVyc2lzdGVudCBNZW1vcnkNCg0KDQo=
