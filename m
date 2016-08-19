@@ -1,355 +1,589 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 08/29] be2iscsi: Update iface handle before any set param
-Date: Fri, 19 Aug 2016 15:20:05 +0530
-Message-ID: <1471600226-22055-9-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 19/29] be2iscsi: Fix POST check and reset sequence
+Date: Fri, 19 Aug 2016 15:20:16 +0530
+Message-ID: <1471600226-22055-20-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f44.google.com ([74.125.82.44]:38207 "EHLO
-        mail-wm0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753813AbcHSJvK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:10 -0400
-Received: by mail-wm0-f44.google.com with SMTP id o80so32595947wme.1
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:09 -0700 (PDT)
+Received: from mail-wm0-f42.google.com ([74.125.82.42]:38682 "EHLO
+        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753616AbcHSJvo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:44 -0400
+Received: by mail-wm0-f42.google.com with SMTP id o80so32616829wme.1
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:44 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Move mgmt_get_all_if_id before any set param operation.
-Rename mgmt_get_all_if_id to beiscsi_if_get_handle.
+SLIPORT FUNCTION_RESET does not reset the chip.
+So POST status needs to be checked before issuing FUNCTION_RESET.
+The completion of FUNCTION_RESET is indicated in BMBX Rdy bit.
+
+be_cmd_fw_initialize too needs to be done before issuing any cmd to FW.
+be_cmd_fw_initialize is renamed as beiscsi_cmd_special_wrb.
+Rearrange and rename few functions in init and cleanup path.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c | 29 +++++++-------
- drivers/scsi/be2iscsi/be_main.c  | 30 +++------------
- drivers/scsi/be2iscsi/be_mgmt.c  | 81 ++++++++++++++++++++--------------------
- drivers/scsi/be2iscsi/be_mgmt.h  |  2 +-
- 4 files changed, 61 insertions(+), 81 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 250 +++++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_cmds.h |  38 +++---
+ drivers/scsi/be2iscsi/be_main.c |  64 ++++------
+ drivers/scsi/be2iscsi/be_main.h |   8 --
+ 4 files changed, 164 insertions(+), 196 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index b725536..1418d6b 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -319,17 +319,8 @@ beiscsi_iface_config_vlan(struct Scsi_Host *shost,
- 			  struct iscsi_iface_param_info *iface_param)
- {
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
--	int ret;
--
--	/* Get the Interface Handle */
--	ret = mgmt_get_all_if_id(phba);
--	if (ret) {
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
--			    "BS_%d : Getting Interface Handle Failed\n");
--		return ret;
--	}
-+	int ret = -EPERM;
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 1ebb6ce..771670c 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -21,35 +21,6 @@
+ #include "be.h"
+ #include "be_mgmt.h"
  
--	ret = -EPERM;
- 	switch (iface_param->param) {
- 	case ISCSI_NET_PARAM_VLAN_ENABLED:
- 		ret = 0;
-@@ -440,7 +431,7 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	struct nlattr *attrib;
- 	uint32_t rm_len = dt_len;
--	int ret = 0 ;
-+	int ret;
- 
- 	if (phba->state & BE_ADAPTER_PCI_ERR) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
-@@ -448,6 +439,14 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
- 		return -EBUSY;
- 	}
- 
-+	/* update interface_handle */
-+	ret = beiscsi_if_get_handle(phba);
-+	if (ret) {
-+		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
-+			    "BS_%d : Getting Interface Handle Failed\n");
-+		return ret;
-+	}
-+
- 	nla_for_each_attr(attrib, data, dt_len, rm_len) {
- 		iface_param = nla_data(attrib);
- 
-@@ -573,7 +572,7 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
- 	struct Scsi_Host *shost = iscsi_iface_to_shost(iface);
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	struct be_cmd_get_def_gateway_resp gateway;
--	int len = -ENOSYS;
-+	int len = -EPERM;
- 
- 	if (phba->state & BE_ADAPTER_PCI_ERR) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
-@@ -605,8 +604,6 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
- 		if (!len)
- 			len = sprintf(buf, "%pI4\n", &gateway.ip_addr.addr);
- 		break;
--	default:
--		len = -ENOSYS;
- 	}
- 
- 	return len;
-@@ -624,7 +621,7 @@ int beiscsi_ep_get_param(struct iscsi_endpoint *ep,
- 			   enum iscsi_param param, char *buf)
- {
- 	struct beiscsi_endpoint *beiscsi_ep = ep->dd_data;
--	int len = 0;
-+	int len;
- 
- 	beiscsi_log(beiscsi_ep->phba, KERN_INFO,
- 		    BEISCSI_LOG_CONFIG,
-@@ -642,7 +639,7 @@ int beiscsi_ep_get_param(struct iscsi_endpoint *ep,
- 			len = sprintf(buf, "%pI6\n", &beiscsi_ep->dst6_addr);
- 		break;
- 	default:
--		return -ENOSYS;
-+		len = -EPERM;
- 	}
- 	return len;
- }
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index f05e773..01052d3 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -380,7 +380,7 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
- 	struct mgmt_session_info *boot_sess = &phba->boot_sess;
- 	struct mgmt_conn_info *boot_conn = &boot_sess->conn_list[0];
- 	char *str = buf;
--	int rc;
-+	int rc = -EPERM;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_TGT_NAME:
-@@ -434,9 +434,6 @@ static ssize_t beiscsi_show_boot_tgt_info(void *data, int type, char *buf)
- 	case ISCSI_BOOT_TGT_NIC_ASSOC:
- 		rc = sprintf(str, "0\n");
- 		break;
--	default:
--		rc = -ENOSYS;
--		break;
- 	}
- 	return rc;
- }
-@@ -445,15 +442,12 @@ static ssize_t beiscsi_show_boot_ini_info(void *data, int type, char *buf)
- {
- 	struct beiscsi_hba *phba = data;
- 	char *str = buf;
--	int rc;
-+	int rc = -EPERM;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_INI_INITIATOR_NAME:
- 		rc = sprintf(str, "%s\n", phba->boot_sess.initiator_iscsiname);
- 		break;
--	default:
--		rc = -ENOSYS;
--		break;
- 	}
- 	return rc;
- }
-@@ -462,7 +456,7 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
- {
- 	struct beiscsi_hba *phba = data;
- 	char *str = buf;
--	int rc;
-+	int rc = -EPERM;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_ETH_FLAGS:
-@@ -474,9 +468,6 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
- 	case ISCSI_BOOT_ETH_MAC:
- 		rc  = beiscsi_get_macaddr(str, phba);
- 		break;
--	default:
--		rc = -ENOSYS;
--		break;
- 	}
- 	return rc;
- }
-@@ -484,7 +475,7 @@ static ssize_t beiscsi_show_boot_eth_info(void *data, int type, char *buf)
- 
- static umode_t beiscsi_tgt_get_attr_visibility(void *data, int type)
- {
--	umode_t rc;
-+	umode_t rc = 0;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_TGT_NAME:
-@@ -498,24 +489,18 @@ static umode_t beiscsi_tgt_get_attr_visibility(void *data, int type)
- 	case ISCSI_BOOT_TGT_FLAGS:
- 		rc = S_IRUGO;
- 		break;
--	default:
--		rc = 0;
--		break;
- 	}
- 	return rc;
- }
- 
- static umode_t beiscsi_ini_get_attr_visibility(void *data, int type)
- {
--	umode_t rc;
-+	umode_t rc = 0;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_INI_INITIATOR_NAME:
- 		rc = S_IRUGO;
- 		break;
--	default:
--		rc = 0;
--		break;
- 	}
- 	return rc;
- }
-@@ -523,7 +508,7 @@ static umode_t beiscsi_ini_get_attr_visibility(void *data, int type)
- 
- static umode_t beiscsi_eth_get_attr_visibility(void *data, int type)
- {
--	umode_t rc;
-+	umode_t rc = 0;
- 
- 	switch (type) {
- 	case ISCSI_BOOT_ETH_FLAGS:
-@@ -531,9 +516,6 @@ static umode_t beiscsi_eth_get_attr_visibility(void *data, int type)
- 	case ISCSI_BOOT_ETH_INDEX:
- 		rc = S_IRUGO;
- 		break;
--	default:
--		rc = 0;
--		break;
- 	}
- 	return rc;
- }
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 5643cf1..fa95525 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -609,7 +609,7 @@ unsigned int mgmt_vendor_specific_fw_cmd(struct be_ctrl_info *ctrl,
- 			    bsg_req->rqst_data.h_vendor.vendor_cmd[0]);
- 
- 		mutex_unlock(&ctrl->mbox_lock);
--		return -ENOSYS;
-+		return -EPERM;
- 	}
- 
- 	wrb = alloc_mcc_wrb(phba, &tag);
-@@ -892,44 +892,6 @@ int mgmt_open_connection(struct beiscsi_hba *phba,
- 	return tag;
- }
- 
--unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba)
+-int be_chk_reset_complete(struct beiscsi_hba *phba)
 -{
--	struct be_ctrl_info *ctrl = &phba->ctrl;
--	struct be_mcc_wrb *wrb;
--	struct be_cmd_get_all_if_id_req *req;
--	struct be_cmd_get_all_if_id_req *pbe_allid;
--	unsigned int tag;
--	int status = 0;
+-	unsigned int num_loop;
+-	u8 *mpu_sem = 0;
+-	u32 status;
 -
--	if (mutex_lock_interruptible(&ctrl->mbox_lock))
--		return -EINTR;
--	wrb = alloc_mcc_wrb(phba, &tag);
--	if (!wrb) {
--		mutex_unlock(&ctrl->mbox_lock);
--		return -ENOMEM;
+-	num_loop = 1000;
+-	mpu_sem = (u8 *)phba->csr_va + MPU_EP_SEMAPHORE;
+-	msleep(5000);
+-
+-	while (num_loop) {
+-		status = readl((void *)mpu_sem);
+-
+-		if ((status & 0x80000000) || (status & 0x0000FFFF) == 0xC000)
+-			break;
+-		msleep(60);
+-		num_loop--;
 -	}
 -
--	req = embedded_payload(wrb);
--	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
--	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
--			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
--			   sizeof(*req));
--	be_mcc_notify(phba, tag);
+-	if ((status & 0x80000000) || (!num_loop)) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BC_%d : Failed in be_chk_reset_complete"
+-			    "status = 0x%x\n", status);
+-		return -EIO;
+-	}
+-
+-	return 0;
+-}
+-
+ struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
+ 				 unsigned int *ref_tag)
+ {
+@@ -769,87 +740,6 @@ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 	return status;
+ }
+ 
+-/**
+- * be_cmd_fw_initialize()- Initialize FW
+- * @ctrl: Pointer to function control structure
+- *
+- * Send FW initialize pattern for the function.
+- *
+- * return
+- * Success: 0
+- * Failure: Non-Zero value
+- **/
+-int be_cmd_fw_initialize(struct be_ctrl_info *ctrl)
+-{
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+-	int status;
+-	u8 *endian_check;
+-
+-	mutex_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+-
+-	endian_check = (u8 *) wrb;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0x12;
+-	*endian_check++ = 0x34;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0x56;
+-	*endian_check++ = 0x78;
+-	*endian_check++ = 0xFF;
+-	be_dws_cpu_to_le(wrb, sizeof(*wrb));
+-
+-	status = be_mbox_notify(ctrl);
+-	if (status)
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BC_%d : be_cmd_fw_initialize Failed\n");
+-
 -	mutex_unlock(&ctrl->mbox_lock);
--
--	status = beiscsi_mccq_compl_wait(phba, tag, &wrb, NULL);
--	if (status) {
--		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
--			    "BG_%d : Failed in mgmt_get_all_if_id\n");
--		return -EBUSY;
--	}
--
--	pbe_allid = embedded_payload(wrb);
--	phba->interface_handle = pbe_allid->if_hndl_list[0];
--
 -	return status;
 -}
 -
- /*
-  * mgmt_exec_nonemb_cmd()- Execute Non Embedded MBX Cmd
-  * @phba: Driver priv structure
-@@ -1007,6 +969,45 @@ static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
- 	return 0;
+-/**
+- * be_cmd_fw_uninit()- Uinitialize FW
+- * @ctrl: Pointer to function control structure
+- *
+- * Send FW uninitialize pattern for the function
+- *
+- * return
+- * Success: 0
+- * Failure: Non-Zero value
+- **/
+-int be_cmd_fw_uninit(struct be_ctrl_info *ctrl)
+-{
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
+-	int status;
+-	u8 *endian_check;
+-
+-	mutex_lock(&ctrl->mbox_lock);
+-	memset(wrb, 0, sizeof(*wrb));
+-
+-	endian_check = (u8 *) wrb;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0xAA;
+-	*endian_check++ = 0xBB;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0xFF;
+-	*endian_check++ = 0xCC;
+-	*endian_check++ = 0xDD;
+-	*endian_check = 0xFF;
+-
+-	be_dws_cpu_to_le(wrb, sizeof(*wrb));
+-
+-	status = be_mbox_notify(ctrl);
+-	if (status)
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BC_%d : be_cmd_fw_uninit Failed\n");
+-
+-	mutex_unlock(&ctrl->mbox_lock);
+-	return status;
+-}
+-
+ int beiscsi_cmd_cq_create(struct be_ctrl_info *ctrl,
+ 			  struct be_queue_info *cq, struct be_queue_info *eq,
+ 			  bool sol_evts, bool no_delay, int coalesce_wm)
+@@ -1293,25 +1183,6 @@ error:
+ 	return status;
  }
  
-+unsigned int beiscsi_if_get_handle(struct beiscsi_hba *phba)
+-int beiscsi_cmd_reset_function(struct beiscsi_hba  *phba)
+-{
+-	struct be_ctrl_info *ctrl = &phba->ctrl;
+-	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
+-	struct be_post_sgl_pages_req *req = embedded_payload(wrb);
+-	int status;
+-
+-	mutex_lock(&ctrl->mbox_lock);
+-
+-	req = embedded_payload(wrb);
+-	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
+-	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
+-			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
+-	status = be_mbox_notify(ctrl);
+-
+-	mutex_unlock(&ctrl->mbox_lock);
+-	return status;
+-}
+-
+ /**
+  * be_cmd_set_vlan()- Configure VLAN paramters on the adapter
+  * @phba: device priv structure instance
+@@ -1653,3 +1524,124 @@ int beiscsi_set_uer_feature(struct beiscsi_hba *phba)
+ 	mutex_unlock(&ctrl->mbox_lock);
+ 	return ret;
+ }
++
++static u32 beiscsi_get_post_stage(struct beiscsi_hba *phba)
++{
++	u32 sem;
++
++	if (is_chip_be2_be3r(phba))
++		sem = ioread32(phba->csr_va + SLIPORT_SEMAPHORE_OFFSET_BEx);
++	else
++		pci_read_config_dword(phba->pcidev,
++				      SLIPORT_SEMAPHORE_OFFSET_SH, &sem);
++	return sem;
++}
++
++int beiscsi_check_fw_rdy(struct beiscsi_hba *phba)
++{
++	u32 loop, post, rdy = 0;
++
++	loop = 1000;
++	while (loop--) {
++		post = beiscsi_get_post_stage(phba);
++		if (post & POST_ERROR_BIT)
++			break;
++		if ((post & POST_STAGE_MASK) == POST_STAGE_ARMFW_RDY) {
++			rdy = 1;
++			break;
++		}
++		msleep(60);
++	}
++
++	if (!rdy) {
++		__beiscsi_log(phba, KERN_ERR,
++			      "BC_%d : FW not ready 0x%x\n", post);
++	}
++
++	return rdy;
++}
++
++static int beiscsi_cmd_function_reset(struct beiscsi_hba  *phba)
 +{
 +	struct be_ctrl_info *ctrl = &phba->ctrl;
-+	struct be_mcc_wrb *wrb;
-+	struct be_cmd_get_all_if_id_req *req;
-+	struct be_cmd_get_all_if_id_req *pbe_allid;
-+	unsigned int tag;
-+	int status = 0;
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct be_post_sgl_pages_req *req = embedded_payload(wrb);
++	int status;
 +
-+	if (mutex_lock_interruptible(&ctrl->mbox_lock))
-+		return -EINTR;
-+	wrb = alloc_mcc_wrb(phba, &tag);
-+	if (!wrb) {
-+		mutex_unlock(&ctrl->mbox_lock);
-+		return -ENOMEM;
-+	}
++	mutex_lock(&ctrl->mbox_lock);
 +
 +	req = embedded_payload(wrb);
 +	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
-+	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_ISCSI,
-+			   OPCODE_COMMON_ISCSI_NTWK_GET_ALL_IF_ID,
-+			   sizeof(*req));
-+	be_mcc_notify(phba, tag);
++	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
++			   OPCODE_COMMON_FUNCTION_RESET, sizeof(*req));
++	status = be_mbox_notify(ctrl);
++
 +	mutex_unlock(&ctrl->mbox_lock);
-+
-+	status = beiscsi_mccq_compl_wait(phba, tag, &wrb, NULL);
-+	if (status) {
-+		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
-+			    "BG_%d : %s failed: %d\n", __func__, status);
-+		return -EBUSY;
-+	}
-+
-+	pbe_allid = embedded_payload(wrb);
-+	/* we now support only one interface per function */
-+	phba->interface_handle = pbe_allid->if_hndl_list[0];
-+
 +	return status;
 +}
 +
- static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
- 			     u32 action, u32 ip_type, u8 *gw)
++int beiscsi_cmd_special_wrb(struct be_ctrl_info *ctrl, u32 load)
++{
++	struct be_mcc_wrb *wrb = wrb_from_mbox(&ctrl->mbox_mem);
++	struct beiscsi_hba *phba = pci_get_drvdata(ctrl->pdev);
++	u8 *endian_check;
++	int status;
++
++	mutex_lock(&ctrl->mbox_lock);
++	memset(wrb, 0, sizeof(*wrb));
++
++	endian_check = (u8 *) wrb;
++	if (load) {
++		/* to start communicating */
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0x12;
++		*endian_check++ = 0x34;
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0x56;
++		*endian_check++ = 0x78;
++		*endian_check++ = 0xFF;
++	} else {
++		/* to stop communicating */
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0xAA;
++		*endian_check++ = 0xBB;
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0xFF;
++		*endian_check++ = 0xCC;
++		*endian_check++ = 0xDD;
++		*endian_check = 0xFF;
++	}
++	be_dws_cpu_to_le(wrb, sizeof(*wrb));
++
++	status = be_mbox_notify(ctrl);
++	if (status)
++		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
++			    "BC_%d : special WRB message failed\n");
++	mutex_unlock(&ctrl->mbox_lock);
++	return status;
++}
++
++int beiscsi_init_sliport(struct beiscsi_hba *phba)
++{
++	int status;
++
++	/* check POST stage before talking to FW */
++	status = beiscsi_check_fw_rdy(phba);
++	if (!status)
++		return -EIO;
++
++	/*
++	 * SLI COMMON_FUNCTION_RESET completion is indicated by BMBX RDY bit.
++	 * It should clean up any stale info in FW for this fn.
++	 */
++	status = beiscsi_cmd_function_reset(phba);
++	if (status) {
++		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
++			    "BC_%d : SLI Function Reset failed\n");
++		return status;
++	}
++
++	/* indicate driver is loading */
++	return beiscsi_cmd_special_wrb(&phba->ctrl, 1);
++}
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index c9823b0..47b7197 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -98,11 +98,23 @@ struct be_mcc_compl {
+ #define MPU_MAILBOX_DB_RDY_MASK	0x1	/* bit 0 */
+ #define MPU_MAILBOX_DB_HI_MASK	0x2	/* bit 1 */
+ 
+-/********** MPU semphore ******************/
+-#define MPU_EP_SEMAPHORE_OFFSET 0xac
+-#define EP_SEMAPHORE_POST_STAGE_MASK 0x0000FFFF
+-#define EP_SEMAPHORE_POST_ERR_MASK 0x1
+-#define EP_SEMAPHORE_POST_ERR_SHIFT 31
++/********** MPU semphore: used for SH & BE ******************/
++#define SLIPORT_SOFTRESET_OFFSET		0x5c	/* CSR BAR offset */
++#define SLIPORT_SEMAPHORE_OFFSET_BEx		0xac	/* CSR BAR offset */
++#define SLIPORT_SEMAPHORE_OFFSET_SH		0x94	/* PCI-CFG offset */
++#define POST_STAGE_MASK				0x0000FFFF
++#define POST_ERROR_BIT				0x80000000
++#define POST_ERR_RECOVERY_CODE_MASK		0xF000
++
++/* Soft Reset register masks */
++#define SLIPORT_SOFTRESET_SR_MASK		0x00000080	/* SR bit */
++
++/* MPU semphore POST stage values */
++#define POST_STAGE_AWAITING_HOST_RDY	0x1 /* FW awaiting goahead from host */
++#define POST_STAGE_HOST_RDY		0x2 /* Host has given go-ahed to FW */
++#define POST_STAGE_BE_RESET		0x3 /* Host wants to reset chip */
++#define POST_STAGE_ARMFW_RDY		0xC000 /* FW is done with POST */
++#define POST_STAGE_RECOVERABLE_ERR	0xE000 /* Recoverable err detected */
+ 
+ /********** MCC door bell ************/
+ #define DB_MCCQ_OFFSET 0x140
+@@ -110,9 +122,6 @@ struct be_mcc_compl {
+ /* Number of entries posted */
+ #define DB_MCCQ_NUM_POSTED_SHIFT 16		/* bits 16 - 29 */
+ 
+-/* MPU semphore POST stage values */
+-#define POST_STAGE_ARMFW_RDY		0xc000	/* FW is done with POST */
+-
+ /**
+  * When the async bit of mcc_compl is set, the last 4 bytes of
+  * mcc_compl is interpreted as follows:
+@@ -753,6 +762,12 @@ struct be_cmd_set_features {
+ 	} param;
+ } __packed;
+ 
++int beiscsi_cmd_special_wrb(struct be_ctrl_info *ctrl, u32 load);
++
++int beiscsi_check_fw_rdy(struct beiscsi_hba *phba);
++
++int beiscsi_init_sliport(struct beiscsi_hba *phba);
++
+ int beiscsi_cmd_eq_create(struct be_ctrl_info *ctrl,
+ 			  struct be_queue_info *eq, int eq_delay);
+ 
+@@ -784,9 +799,6 @@ int __beiscsi_mcc_compl_status(struct beiscsi_hba *phba,
+ 			       struct be_mcc_wrb **wrb,
+ 			       struct be_dma_mem *mbx_cmd_mem);
+ /*ISCSI Functuions */
+-int be_cmd_fw_initialize(struct be_ctrl_info *ctrl);
+-int be_cmd_fw_uninit(struct be_ctrl_info *ctrl);
+-
+ struct be_mcc_wrb *wrb_from_mbox(struct be_dma_mem *mbox_mem);
+ int be_mcc_compl_poll(struct beiscsi_hba *phba, unsigned int tag);
+ void be_mcc_notify(struct beiscsi_hba *phba, unsigned int tag);
+@@ -812,8 +824,6 @@ int be_cmd_iscsi_post_sgl_pages(struct be_ctrl_info *ctrl,
+ 				struct be_dma_mem *q_mem, u32 page_offset,
+ 				u32 num_pages);
+ 
+-int beiscsi_cmd_reset_function(struct beiscsi_hba *phba);
+-
+ int be_cmd_wrbq_create(struct be_ctrl_info *ctrl, struct be_dma_mem *q_mem,
+ 		       struct be_queue_info *wrbq,
+ 		       struct hwi_wrb_context *pwrb_context,
+@@ -1422,8 +1432,6 @@ struct be_cmd_get_port_name {
+ 						 * the cxn
+ 						 */
+ 
+-int be_chk_reset_complete(struct beiscsi_hba *phba);
+-
+ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
+ 			bool embedded, u8 sge_cnt);
+ 
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index 77ecd6c..b4e6fc2 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3544,7 +3544,7 @@ static void be_mcc_queues_destroy(struct beiscsi_hba *phba)
+ 	}
+ }
+ 
+-static void hwi_cleanup(struct beiscsi_hba *phba)
++static void hwi_cleanup_port(struct beiscsi_hba *phba)
  {
-@@ -1306,7 +1307,7 @@ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
- 	uint32_t ioctl_size = sizeof(struct be_cmd_get_if_info_resp);
- 	int rc;
+ 	struct be_queue_info *q;
+ 	struct be_ctrl_info *ctrl = &phba->ctrl;
+@@ -3603,7 +3603,8 @@ static void hwi_cleanup(struct beiscsi_hba *phba)
+ 			beiscsi_cmd_q_destroy(ctrl, q, QTYPE_EQ);
+ 		}
+ 	}
+-	be_cmd_fw_uninit(ctrl);
++	/* last communication, indicate driver is unloading */
++	beiscsi_cmd_special_wrb(&phba->ctrl, 0);
+ }
  
--	rc = mgmt_get_all_if_id(phba);
-+	rc = beiscsi_if_get_handle(phba);
- 	if (rc)
- 		return rc;
+ static int be_mcc_queues_create(struct beiscsi_hba *phba,
+@@ -3700,8 +3701,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ 	phwi_context->max_eqd = 128;
+ 	phwi_context->min_eqd = 0;
+ 	phwi_context->cur_eqd = 0;
+-	be_cmd_fw_initialize(&phba->ctrl);
+-	/* set optic state to unknown */
++	/* set port optic state to unknown */
+ 	phba->optic_state = 0xff;
  
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 7637b9e..8ae6a24 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.h
-+++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -306,7 +306,7 @@ int beiscsi_if_set_gw(struct beiscsi_hba *phba, u32 ip_type, u8 *gw);
- int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
- 			      unsigned int *s_handle);
+ 	status = beiscsi_create_eqs(phba, phwi_context);
+@@ -3807,7 +3807,7 @@ static int hwi_init_port(struct beiscsi_hba *phba)
+ error:
+ 	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+ 		    "BM_%d : hwi_init_port failed");
+-	hwi_cleanup(phba);
++	hwi_cleanup_port(phba);
+ 	return status;
+ }
  
--unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba);
-+unsigned int beiscsi_if_get_handle(struct beiscsi_hba *phba);
+@@ -4196,7 +4196,7 @@ static int beiscsi_init_port(struct beiscsi_hba *phba)
+ 	return ret;
  
- int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
+ do_cleanup_ctrlr:
+-	hwi_cleanup(phba);
++	hwi_cleanup_port(phba);
+ 	return ret;
+ }
  
+@@ -4233,7 +4233,7 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
+ 	}
+ }
+ 
+-static void beiscsi_clean_port(struct beiscsi_hba *phba)
++static void beiscsi_cleanup_port(struct beiscsi_hba *phba)
+ {
+ 	int mgmt_status, ulp_num;
+ 	struct ulp_cid_info *ptr_cid_info = NULL;
+@@ -4250,7 +4250,7 @@ static void beiscsi_clean_port(struct beiscsi_hba *phba)
+ 	}
+ 
+ 	hwi_purge_eq(phba);
+-	hwi_cleanup(phba);
++	hwi_cleanup_port(phba);
+ 	kfree(phba->io_sgl_hndl_base);
+ 	kfree(phba->eh_sgl_hndl_base);
+ 	kfree(phba->ep_array);
+@@ -5011,12 +5011,12 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba)
+ 	/* PCI_ERR is set then check if driver is not unloading */
+ 	if (test_bit(BEISCSI_HBA_RUNNING, &phba->state) &&
+ 	    test_bit(BEISCSI_HBA_PCI_ERR, &phba->state)) {
+-		hwi_cleanup(phba);
++		hwi_cleanup_port(phba);
+ 		return;
+ 	}
+ 
+ 	destroy_workqueue(phba->wq);
+-	beiscsi_clean_port(phba);
++	beiscsi_cleanup_port(phba);
+ 	beiscsi_free_mem(phba);
+ 
+ 	beiscsi_unmap_pci_function(phba);
+@@ -5461,9 +5461,8 @@ static pci_ers_result_t beiscsi_eeh_reset(struct pci_dev *pdev)
+ 	pci_set_power_state(pdev, PCI_D0);
+ 	pci_restore_state(pdev);
+ 
+-	/* Wait for the CHIP Reset to complete */
+-	status = be_chk_reset_complete(phba);
+-	if (!status) {
++	status = beiscsi_check_fw_rdy(phba);
++	if (status) {
+ 		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_INIT,
+ 			    "BM_%d : EEH Reset Completed\n");
+ 	} else {
+@@ -5478,7 +5477,7 @@ static pci_ers_result_t beiscsi_eeh_reset(struct pci_dev *pdev)
+ 
+ static void beiscsi_eeh_resume(struct pci_dev *pdev)
+ {
+-	int ret = 0, i;
++	int ret, i;
+ 	struct be_eq_obj *pbe_eq;
+ 	struct beiscsi_hba *phba = NULL;
+ 	struct hwi_controller *phwi_ctrlr;
+@@ -5498,19 +5497,9 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
+ 			phba->num_cpus = 1;
+ 	}
+ 
+-	ret = beiscsi_cmd_reset_function(phba);
+-	if (ret) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : Reset Failed\n");
+-		goto ret_err;
+-	}
+-
+-	ret = be_chk_reset_complete(phba);
+-	if (ret) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : Failed to get out of reset.\n");
++	ret = beiscsi_init_sliport(phba);
++	if (ret)
+ 		goto ret_err;
+-	}
+ 
+ 	beiscsi_get_params(phba);
+ 	phba->shost->max_id = phba->params.cxns_per_ctrl;
+@@ -5627,28 +5616,15 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 	ret = be_ctrl_init(phba, pcidev);
+ 	if (ret) {
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : beiscsi_dev_probe-"
+-			    "Failed in be_ctrl_init\n");
++			    "BM_%d : be_ctrl_init failed\n");
+ 		goto hba_free;
+ 	}
+ 
+-	set_bit(BEISCSI_HBA_RUNNING, &phba->state);
+-	/*
+-	 * FUNCTION_RESET should clean up any stale info in FW for this fn
+-	 */
+-	ret = beiscsi_cmd_reset_function(phba);
+-	if (ret) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : Reset Failed\n");
+-		goto hba_free;
+-	}
+-	ret = be_chk_reset_complete(phba);
+-	if (ret) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
+-			    "BM_%d : Failed to get out of reset.\n");
++	ret = beiscsi_init_sliport(phba);
++	if (ret)
+ 		goto hba_free;
+-	}
+ 
++	set_bit(BEISCSI_HBA_RUNNING, &phba->state);
+ 	spin_lock_init(&phba->io_sgl_lock);
+ 	spin_lock_init(&phba->mgmt_sgl_lock);
+ 	spin_lock_init(&phba->async_pdu_lock);
+@@ -5772,7 +5748,7 @@ free_blkenbld:
+ 		irq_poll_disable(&pbe_eq->iopoll);
+ 	}
+ free_twq:
+-	beiscsi_clean_port(phba);
++	beiscsi_cleanup_port(phba);
+ 	beiscsi_free_mem(phba);
+ free_port:
+ 	pci_free_consistent(phba->pcidev,
+diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
+index 0a5de01..4cdb34c 100644
+--- a/drivers/scsi/be2iscsi/be_main.h
++++ b/drivers/scsi/be2iscsi/be_main.h
+@@ -82,14 +82,6 @@
+ #define BEISCSI_MAX_FRAGS_INIT	192
+ #define BE_NUM_MSIX_ENTRIES	1
+ 
+-#define MPU_EP_CONTROL          0
+-#define MPU_EP_SEMAPHORE        0xac
+-#define BE2_SOFT_RESET          0x5c
+-#define BE2_PCI_ONLINE0         0xb0
+-#define BE2_PCI_ONLINE1         0xb4
+-#define BE2_SET_RESET           0x80
+-#define BE2_MPU_IRAM_ONLINE     0x00000080
+-
+ #define BE_SENSE_INFO_SIZE		258
+ #define BE_ISCSI_PDU_HEADER_SIZE	64
+ #define BE_MIN_MEM_SIZE			16384
 -- 
 1.9.1
 
