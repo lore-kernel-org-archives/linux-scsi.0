@@ -1,102 +1,56 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 04/29] be2iscsi: Set and return right iface v4/v6 states
-Date: Fri, 19 Aug 2016 15:20:01 +0530
-Message-ID: <1471600226-22055-5-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 03/29] be2iscsi: Reduce driver load/unload time
+Date: Fri, 19 Aug 2016 15:20:00 +0530
+Message-ID: <1471600226-22055-4-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f50.google.com ([74.125.82.50]:38051 "EHLO
-        mail-wm0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753571AbcHSJvK (ORCPT
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:37596 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753410AbcHSJvK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:10 -0400
-Received: by mail-wm0-f50.google.com with SMTP id o80so32588748wme.1
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:50:57 -0700 (PDT)
+Received: by mail-wm0-f41.google.com with SMTP id i5so32719510wmg.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:50:54 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-ipv4_iface and ipv6_iface fields need to be set to NULL when destroyed.
-Before creation these are checked. Use these to report correct states.
+Driver takes significant time to load 1m:20s and unload 40s.
+
+Checkpatch script threw warning:
+WARNING: msleep < 20ms can sleep for up to 20ms; see
+Documentation/timers/timers-howto.txt
+
+To eliminate this warning msleep(1) was replaced with msleep(20) before
+submitting.
+
+msleep(20) in init and uninit path for creation and destroying of number
+of WRBQs, CQs, and EQs is adding to load/unload time.
+
+Replace msleep with schedule_timeout_uninterruptible of 1ms as its
+enough in most cases.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c | 31 +++++++++++++++++++++----------
- 1 file changed, 21 insertions(+), 10 deletions(-)
+ drivers/scsi/be2iscsi/be_cmds.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index ab696ec..eab0f4f 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -292,10 +292,14 @@ void beiscsi_create_def_ifaces(struct beiscsi_hba *phba)
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 0ef3d5a..59b8e2d 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -655,7 +655,8 @@ static int be_mbox_db_ready_poll(struct be_ctrl_info *ctrl)
  
- void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
- {
--	if (phba->ipv6_iface)
-+	if (phba->ipv6_iface) {
- 		iscsi_destroy_iface(phba->ipv6_iface);
--	if (phba->ipv4_iface)
-+		phba->ipv6_iface = NULL;
-+	}
-+	if (phba->ipv4_iface) {
- 		iscsi_destroy_iface(phba->ipv4_iface);
-+		phba->ipv4_iface = NULL;
-+	}
- }
+ 		if (time_after(jiffies, timeout))
+ 			break;
+-		msleep(20);
++		/* 1ms sleep is enough in most cases */
++		schedule_timeout_uninterruptible(msecs_to_jiffies(1));
+ 	} while (!ready);
  
- static int
-@@ -406,6 +410,14 @@ beiscsi_set_ipv4(struct Scsi_Host *shost,
- 
- 	/* Check the param */
- 	switch (iface_param->param) {
-+	case ISCSI_NET_PARAM_IFACE_ENABLE:
-+		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
-+			ret = beiscsi_create_ipv4_iface(phba);
-+		else {
-+			iscsi_destroy_iface(phba->ipv4_iface);
-+			phba->ipv4_iface = NULL;
-+		}
-+		break;
- 	case ISCSI_NET_PARAM_IPV4_GW:
- 		ret = mgmt_set_gateway(phba, iface_param);
- 		break;
-@@ -421,12 +433,6 @@ beiscsi_set_ipv4(struct Scsi_Host *shost,
- 				    "BS_%d : Invalid BOOTPROTO: %d\n",
- 				    iface_param->value[0]);
- 		break;
--	case ISCSI_NET_PARAM_IFACE_ENABLE:
--		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
--			ret = beiscsi_create_ipv4_iface(phba);
--		else
--			iscsi_destroy_iface(phba->ipv4_iface);
--		break;
- 	case ISCSI_NET_PARAM_IPV4_SUBNET:
- 	case ISCSI_NET_PARAM_IPV4_ADDR:
- 		ret = beiscsi_set_static_ip(shost, iface_param,
-@@ -459,7 +465,7 @@ beiscsi_set_ipv6(struct Scsi_Host *shost,
- 			ret = beiscsi_create_ipv6_iface(phba);
- 		else {
- 			iscsi_destroy_iface(phba->ipv6_iface);
--			ret = 0;
-+			phba->ipv6_iface = NULL;
- 		}
- 		break;
- 	case ISCSI_NET_PARAM_IPV6_ADDR:
-@@ -620,7 +626,12 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
- 		len = be2iscsi_get_if_param(phba, iface, param, buf);
- 		break;
- 	case ISCSI_NET_PARAM_IFACE_ENABLE:
--		len = sprintf(buf, "enable\n");
-+		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
-+			len = sprintf(buf, "%s\n",
-+				      phba->ipv4_iface ? "enable" : "disable");
-+		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
-+			len = sprintf(buf, "%s\n",
-+				      phba->ipv6_iface ? "enable" : "disable");
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_GW:
- 		memset(&gateway, 0, sizeof(gateway));
+ 	beiscsi_log(phba, KERN_ERR,
 -- 
 1.9.1
 
