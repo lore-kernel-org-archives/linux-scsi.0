@@ -1,312 +1,243 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 07/29] be2iscsi: Move VLAN code to common iface_set_param
-Date: Fri, 19 Aug 2016 15:20:04 +0530
-Message-ID: <1471600226-22055-8-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 05/29] be2iscsi: Fix gateway APIs to support IPv4 & IPv6
+Date: Fri, 19 Aug 2016 15:20:02 +0530
+Message-ID: <1471600226-22055-6-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35162 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753637AbcHSJvK (ORCPT
+Received: from mail-wm0-f48.google.com ([74.125.82.48]:37681 "EHLO
+        mail-wm0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753585AbcHSJvK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:10 -0400
-Received: by mail-wm0-f47.google.com with SMTP id f65so27470235wmi.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:07 -0700 (PDT)
+Received: by mail-wm0-f48.google.com with SMTP id i5so32723463wmg.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:00 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-VLAN tag is L2 construct, move VLAN code out from configuring IP.
-Rearrange and rename the APIs to make it consistent.
-Replace ENOSYS with EPERM.
+Gateway APIs assume IP type as IPv4. Modify it to be generic to allow
+clearing of IPv6 gateway set using BIOS.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c | 89 ++++++++++++++++++++--------------------
- drivers/scsi/be2iscsi/be_mgmt.c  | 75 +++++++++++++++++----------------
- drivers/scsi/be2iscsi/be_mgmt.h  |  2 +-
- 3 files changed, 84 insertions(+), 82 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c |   4 +-
+ drivers/scsi/be2iscsi/be_mgmt.c  | 124 ++++++++++++++++++---------------------
+ drivers/scsi/be2iscsi/be_mgmt.h  |   7 +--
+ 3 files changed, 62 insertions(+), 73 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 7e17a8d..b725536 100644
+index eab0f4f..3ebfeff 100644
 --- a/drivers/scsi/be2iscsi/be_iscsi.c
 +++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -315,8 +315,8 @@ void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
-  *	Failure: Non-Zero Value
-  **/
- static int
--beiscsi_set_vlan_tag(struct Scsi_Host *shost,
--		      struct iscsi_iface_param_info *iface_param)
-+beiscsi_iface_config_vlan(struct Scsi_Host *shost,
-+			  struct iscsi_iface_param_info *iface_param)
- {
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	int ret;
-@@ -329,20 +329,17 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
- 		return ret;
- 	}
- 
-+	ret = -EPERM;
- 	switch (iface_param->param) {
- 	case ISCSI_NET_PARAM_VLAN_ENABLED:
-+		ret = 0;
- 		if (iface_param->value[0] != ISCSI_VLAN_ENABLE)
--			ret = mgmt_set_vlan(phba, BEISCSI_VLAN_DISABLE);
-+			ret = beiscsi_if_set_vlan(phba, BEISCSI_VLAN_DISABLE);
- 		break;
- 	case ISCSI_NET_PARAM_VLAN_TAG:
--		ret = mgmt_set_vlan(phba,
--				    *((uint16_t *)iface_param->value));
-+		ret = beiscsi_if_set_vlan(phba,
-+					  *((uint16_t *)iface_param->value));
- 		break;
--	default:
--		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
--			    "BS_%d : Unknown Param Type : %d\n",
--			    iface_param->param);
--		return -ENOSYS;
- 	}
- 	return ret;
- }
-@@ -356,7 +353,7 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
- 	u8 *ip = NULL, *subnet = NULL, *gw;
- 	struct nlattr *nla;
--	int ret = 0;
-+	int ret = -EPERM;
- 
- 	/* Check the param */
- 	switch (info->param) {
-@@ -405,14 +402,6 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
+@@ -419,7 +419,7 @@ beiscsi_set_ipv4(struct Scsi_Host *shost,
  		}
- 		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
  		break;
--	case ISCSI_NET_PARAM_VLAN_ENABLED:
--	case ISCSI_NET_PARAM_VLAN_TAG:
--		ret = beiscsi_set_vlan_tag(shost, info);
--		break;
--	default:
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
--			    "BS_%d : Param %d not supported\n",
--			    info->param);
- 	}
- 
- 	return ret;
-@@ -424,7 +413,7 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
- 			  void *data, uint32_t dt_len)
- {
- 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
--	int ret = 0;
-+	int ret = -EPERM;
- 
- 	switch (iface_param->param) {
- 	case ISCSI_NET_PARAM_IFACE_ENABLE:
-@@ -439,14 +428,6 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
- 		ret = beiscsi_if_en_static(phba, BE2_IPV6,
- 					   iface_param->value, NULL);
+ 	case ISCSI_NET_PARAM_IPV4_GW:
+-		ret = mgmt_set_gateway(phba, iface_param);
++		ret = beiscsi_if_set_gw(phba, BE2_IPV4, iface_param->value);
  		break;
--	case ISCSI_NET_PARAM_VLAN_ENABLED:
--	case ISCSI_NET_PARAM_VLAN_TAG:
--		ret = beiscsi_set_vlan_tag(shost, iface_param);
--		break;
--	default:
--		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
--			    "BS_%d : Param %d not supported\n",
--			    iface_param->param);
- 	}
- 
- 	return ret;
-@@ -485,24 +466,42 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
- 			return -EINVAL;
- 		}
- 
--		switch (iface_param->iface_type) {
--		case ISCSI_IFACE_TYPE_IPV4:
--			ret = beiscsi_iface_config_ipv4(shost, iface_param,
--							data, dt_len);
--			break;
--		case ISCSI_IFACE_TYPE_IPV6:
--			ret = beiscsi_iface_config_ipv6(shost, iface_param,
--							data, dt_len);
-+		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
-+			    "BS_%d : %s.0 set param %d",
-+			    (iface_param->iface_type == ISCSI_IFACE_TYPE_IPV4) ?
-+			    "ipv4" : "ipv6", iface_param->param);
-+
-+		ret = -EPERM;
-+		switch (iface_param->param) {
-+		case ISCSI_NET_PARAM_VLAN_ENABLED:
-+		case ISCSI_NET_PARAM_VLAN_TAG:
-+			ret = beiscsi_iface_config_vlan(shost, iface_param);
- 			break;
- 		default:
--			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
--				    "BS_%d : Invalid iface type :%d passed\n",
--				    iface_param->iface_type);
--			break;
-+			switch (iface_param->iface_type) {
-+			case ISCSI_IFACE_TYPE_IPV4:
-+				ret = beiscsi_iface_config_ipv4(shost,
-+								iface_param,
-+								data, dt_len);
-+				break;
-+			case ISCSI_IFACE_TYPE_IPV6:
-+				ret = beiscsi_iface_config_ipv6(shost,
-+								iface_param,
-+								data, dt_len);
-+				break;
-+			}
- 		}
- 
-+		if (ret == -EPERM) {
-+			__beiscsi_log(phba, KERN_ERR,
-+				      "BS_%d : %s.0 set param %d not permitted",
-+				      (iface_param->iface_type ==
-+				       ISCSI_IFACE_TYPE_IPV4) ? "ipv4" : "ipv6",
-+				      iface_param->param);
-+			ret = 0;
-+		}
- 		if (ret)
--			return ret;
-+			break;
- 	}
- 
- 	return ret;
-@@ -548,16 +547,16 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
- 			len = -EINVAL;
- 		else
- 			len = sprintf(buf, "%d\n",
--				     (if_info->vlan_priority &
--				     ISCSI_MAX_VLAN_ID));
-+				      (if_info->vlan_priority &
-+				       ISCSI_MAX_VLAN_ID));
+ 	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
+ 		if (iface_param->value[0] == ISCSI_BOOTPROTO_DHCP)
+@@ -635,7 +635,7 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
  		break;
- 	case ISCSI_NET_PARAM_VLAN_PRIORITY:
- 		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
- 			len = -EINVAL;
- 		else
- 			len = sprintf(buf, "%d\n",
--				     ((if_info->vlan_priority >> 13) &
--				     ISCSI_MAX_VLAN_PRIORITY));
-+				      ((if_info->vlan_priority >> 13) &
-+				       ISCSI_MAX_VLAN_PRIORITY));
+ 	case ISCSI_NET_PARAM_IPV4_GW:
+ 		memset(&gateway, 0, sizeof(gateway));
+-		len = mgmt_get_gateway(phba, BE2_IPV4, &gateway);
++		len = beiscsi_if_get_gw(phba, BE2_IPV4, &gateway);
+ 		if (!len)
+ 			len = sprintf(buf, "%pI4\n", &gateway.ip_addr.addr);
  		break;
- 	default:
- 		WARN_ON(1);
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 2a5d65e..5643cf1 100644
+index 83926e2..9ef9f76 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1001,6 +1001,9 @@ static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
- 	}
- 	cmd->size = size;
- 	be_cmd_hdr_prepare(cmd->va, CMD_SUBSYSTEM_ISCSI, iscsi_cmd, size);
-+	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
-+		    "BG_%d : subsystem iSCSI cmd %d size %d\n",
-+		    iscsi_cmd, size);
- 	return 0;
- }
- 
-@@ -1259,6 +1262,42 @@ exit:
+@@ -1059,14 +1059,13 @@ mgmt_static_ip_modify(struct beiscsi_hba *phba,
  	return rc;
  }
  
-+/**
-+ * beiscsi_if_set_vlan()- Issue and wait for CMD completion
-+ * @phba: device private structure instance
-+ * @vlan_tag: VLAN tag
-+ *
-+ * Issue the MBX Cmd and wait for the completion of the
-+ * command.
-+ *
-+ * returns
-+ *	Success: 0
-+ *	Failure: Non-Xero Value
-+ **/
-+int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag)
+-static int mgmt_modify_gateway(struct beiscsi_hba *phba, uint8_t *gt_addr,
+-			       uint32_t gtway_action, uint32_t param_len)
++static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
++			     u32 action, u32 ip_type, u8 *gw)
+ {
+ 	struct be_cmd_set_def_gateway_req *req;
+ 	struct be_dma_mem nonemb_cmd;
+ 	int rt_val;
+ 
+-
+ 	rt_val = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+ 				OPCODE_COMMON_ISCSI_NTWK_MODIFY_DEFAULT_GATEWAY,
+ 				sizeof(*req));
+@@ -1074,12 +1073,60 @@ static int mgmt_modify_gateway(struct beiscsi_hba *phba, uint8_t *gt_addr,
+ 		return rt_val;
+ 
+ 	req = nonemb_cmd.va;
+-	req->action = gtway_action;
+-	req->ip_addr.ip_type = BE2_IPV4;
++	req->action = action;
++	req->ip_addr.ip_type = ip_type;
++	memcpy(req->ip_addr.addr, gw,
++	       (ip_type == BE2_IPV4) ? IP_V4_LEN : IP_V6_LEN);
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++}
+ 
+-	memcpy(req->ip_addr.addr, gt_addr, sizeof(req->ip_addr.addr));
++int beiscsi_if_set_gw(struct beiscsi_hba *phba, u32 ip_type, u8 *gw)
 +{
-+	int rc;
-+	unsigned int tag;
-+
-+	tag = be_cmd_set_vlan(phba, vlan_tag);
-+	if (!tag) {
-+		beiscsi_log(phba, KERN_ERR,
-+			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
-+			    "BG_%d : VLAN Setting Failed\n");
-+		return -EBUSY;
++	struct be_cmd_get_def_gateway_resp gw_resp;
++	int rt_val;
+ 
+-	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++	memset(&gw_resp, 0, sizeof(gw_resp));
++	rt_val = beiscsi_if_get_gw(phba, ip_type, &gw_resp);
++	if (rt_val) {
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++			    "BG_%d : Failed to Get Gateway Addr\n");
++		return rt_val;
 +	}
 +
-+	rc = beiscsi_mccq_compl_wait(phba, tag, NULL, NULL);
-+	if (rc) {
-+		beiscsi_log(phba, KERN_ERR,
-+			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
-+			    "BS_%d : VLAN MBX Cmd Failed\n");
-+		return rc;
++	rt_val = beiscsi_if_mod_gw(phba, IP_ACTION_DEL, ip_type,
++				   gw_resp.ip_addr.addr);
++	if (rt_val) {
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++				"BG_%d : Failed to clear Gateway Addr Set\n");
++		return rt_val;
 +	}
-+	return rc;
++
++	rt_val = beiscsi_if_mod_gw(phba, IP_ACTION_ADD, ip_type, gw);
++	if (rt_val)
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++			    "BG_%d : Failed to Set Gateway Addr\n");
++
++	return rt_val;
 +}
 +
++int beiscsi_if_get_gw(struct beiscsi_hba *phba, u32 ip_type,
++		      struct be_cmd_get_def_gateway_resp *resp)
++{
++	struct be_cmd_get_def_gateway_req *req;
++	struct be_dma_mem nonemb_cmd;
++	int rc;
 +
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY,
++				 sizeof(*resp));
++	if (rc)
++		return rc;
++
++	req = nonemb_cmd.va;
++	req->ip_type = ip_type;
++
++	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, resp,
++				    sizeof(*resp));
+ }
+ 
+ int mgmt_set_ip(struct beiscsi_hba *phba,
+@@ -1156,7 +1203,7 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 	/* Delete the Gateway settings if mode change is to DHCP */
+ 	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
+ 		memset(&gtway_addr_set, 0, sizeof(gtway_addr_set));
+-		rc = mgmt_get_gateway(phba, BE2_IPV4, &gtway_addr_set);
++		rc = beiscsi_if_get_gw(phba, BE2_IPV4, &gtway_addr_set);
+ 		if (rc) {
+ 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+ 				    "BG_%d : Failed to Get Gateway Addr\n");
+@@ -1165,8 +1212,8 @@ int mgmt_set_ip(struct beiscsi_hba *phba,
+ 
+ 		if (gtway_addr_set.ip_addr.addr[0]) {
+ 			gtway_addr = (uint8_t *)&gtway_addr_set.ip_addr.addr;
+-			rc = mgmt_modify_gateway(phba, gtway_addr,
+-						 IP_ACTION_DEL, IP_V4_LEN);
++			rc = beiscsi_if_mod_gw(phba, IP_ACTION_DEL,
++					       ip_type, gtway_addr);
+ 
+ 			if (rc) {
+ 				beiscsi_log(phba, KERN_WARNING,
+@@ -1202,63 +1249,6 @@ exit:
+ 	return rc;
+ }
+ 
+-int mgmt_set_gateway(struct beiscsi_hba *phba,
+-		     struct iscsi_iface_param_info *gateway_param)
+-{
+-	struct be_cmd_get_def_gateway_resp gtway_addr_set;
+-	uint8_t *gtway_addr;
+-	int rt_val;
+-
+-	memset(&gtway_addr_set, 0, sizeof(gtway_addr_set));
+-	rt_val = mgmt_get_gateway(phba, BE2_IPV4, &gtway_addr_set);
+-	if (rt_val) {
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-			    "BG_%d : Failed to Get Gateway Addr\n");
+-		return rt_val;
+-	}
+-
+-	if (gtway_addr_set.ip_addr.addr[0]) {
+-		gtway_addr = (uint8_t *)&gtway_addr_set.ip_addr.addr;
+-		rt_val = mgmt_modify_gateway(phba, gtway_addr, IP_ACTION_DEL,
+-					     gateway_param->len);
+-		if (rt_val) {
+-			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-				    "BG_%d : Failed to clear Gateway Addr Set\n");
+-			return rt_val;
+-		}
+-	}
+-
+-	gtway_addr = (uint8_t *)&gateway_param->value;
+-	rt_val = mgmt_modify_gateway(phba, gtway_addr, IP_ACTION_ADD,
+-				     gateway_param->len);
+-
+-	if (rt_val)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-			    "BG_%d : Failed to Set Gateway Addr\n");
+-
+-	return rt_val;
+-}
+-
+-int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
+-		     struct be_cmd_get_def_gateway_resp *gateway)
+-{
+-	struct be_cmd_get_def_gateway_req *req;
+-	struct be_dma_mem nonemb_cmd;
+-	int rc;
+-
+-	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+-				 OPCODE_COMMON_ISCSI_NTWK_GET_DEFAULT_GATEWAY,
+-				 sizeof(*gateway));
+-	if (rc)
+-		return rc;
+-
+-	req = nonemb_cmd.va;
+-	req->ip_type = ip_type;
+-
+-	return mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, gateway,
+-				    sizeof(*gateway));
+-}
+-
  int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
  		     struct be_cmd_get_if_info_resp **if_info)
  {
-@@ -1448,42 +1487,6 @@ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
- }
- 
- /**
-- * mgmt_set_vlan()- Issue and wait for CMD completion
-- * @phba: device private structure instance
-- * @vlan_tag: VLAN tag
-- *
-- * Issue the MBX Cmd and wait for the completion of the
-- * command.
-- *
-- * returns
-- *	Success: 0
-- *	Failure: Non-Xero Value
-- **/
--int mgmt_set_vlan(struct beiscsi_hba *phba,
--		   uint16_t vlan_tag)
--{
--	int rc;
--	unsigned int tag;
--
--	tag = be_cmd_set_vlan(phba, vlan_tag);
--	if (!tag) {
--		beiscsi_log(phba, KERN_ERR,
--			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
--			    "BG_%d : VLAN Setting Failed\n");
--		return -EBUSY;
--	}
--
--	rc = beiscsi_mccq_compl_wait(phba, tag, NULL, NULL);
--	if (rc) {
--		beiscsi_log(phba, KERN_ERR,
--			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
--			    "BS_%d : VLAN MBX Cmd Failed\n");
--		return rc;
--	}
--	return rc;
--}
--
--/**
-  * beiscsi_drvr_ver_disp()- Display the driver Name and Version
-  * @dev: ptr to device not used.
-  * @attr: device attribute, not used.
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
-index 71a9609..7637b9e 100644
+index f3a48a0..fd9b68f 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.h
 +++ b/drivers/scsi/be2iscsi/be_mgmt.h
-@@ -308,7 +308,7 @@ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+@@ -298,11 +298,10 @@ int mgmt_get_nic_conf(struct beiscsi_hba *phba,
+ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+ 		     struct be_cmd_get_if_info_resp **if_info);
  
- unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba);
+-int mgmt_get_gateway(struct beiscsi_hba *phba, int ip_type,
+-		     struct be_cmd_get_def_gateway_resp *gateway);
++int beiscsi_if_get_gw(struct beiscsi_hba *phba, u32 ip_type,
++		      struct be_cmd_get_def_gateway_resp *resp);
  
--int mgmt_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
-+int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
+-int mgmt_set_gateway(struct beiscsi_hba *phba,
+-		     struct iscsi_iface_param_info *gateway_param);
++int beiscsi_if_set_gw(struct beiscsi_hba *phba, u32 ip_type, u8 *gw);
  
- ssize_t beiscsi_drvr_ver_disp(struct device *dev,
- 			       struct device_attribute *attr, char *buf);
+ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+ 			      unsigned int *s_handle);
 -- 
 1.9.1
 
