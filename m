@@ -1,316 +1,279 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 13/29] be2iscsi: Remove isr_lock and dead code
-Date: Fri, 19 Aug 2016 15:20:10 +0530
-Message-ID: <1471600226-22055-14-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 09/29] be2iscsi: Rename iface get/set/create/destroy APIs
+Date: Fri, 19 Aug 2016 15:20:06 +0530
+Message-ID: <1471600226-22055-10-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:36990 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754274AbcHSJvZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:25 -0400
-Received: by mail-wm0-f42.google.com with SMTP id i5so32738318wmg.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:25 -0700 (PDT)
+Received: from mail-wm0-f41.google.com ([74.125.82.41]:35233 "EHLO
+        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752067AbcHSJvN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:13 -0400
+Received: by mail-wm0-f41.google.com with SMTP id f65so27473242wmi.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:12 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-todo_mcc_cq is not needed as only MCC work is queued.
-todo_cq is not used at all.
-Rename functions to be consistent.
+Rename mgmt_get_if_info to be consistent with APIs name.
+Rename create/destroy APIs to indicate IFACE operations.
+Remove legacy be2iscsi and use beiscsi.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be.h      |   2 +-
- drivers/scsi/be2iscsi/be_main.c | 132 +++++++++++++++-------------------------
- drivers/scsi/be2iscsi/be_main.h |   2 -
- 3 files changed, 49 insertions(+), 87 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c | 42 ++++++++++++++++++++--------------------
+ drivers/scsi/be2iscsi/be_iscsi.h | 10 +++++-----
+ drivers/scsi/be2iscsi/be_main.c  | 10 +++++-----
+ drivers/scsi/be2iscsi/be_mgmt.c  |  8 ++++----
+ drivers/scsi/be2iscsi/be_mgmt.h  |  4 ++--
+ 5 files changed, 37 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index ee5ace8..621291a 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -100,7 +100,7 @@ struct be_eq_obj {
- 	struct be_queue_info q;
- 	struct beiscsi_hba *phba;
- 	struct be_queue_info *cq;
--	struct work_struct work_cqs; /* Work Item */
-+	struct work_struct mcc_work; /* Work Item */
- 	struct irq_poll	iopoll;
- };
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 1418d6b..1fe273d 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -237,7 +237,7 @@ int beiscsi_conn_bind(struct iscsi_cls_session *cls_session,
+ 	return beiscsi_bindconn_cid(phba, beiscsi_conn, beiscsi_ep->ep_cid);
+ }
  
+-static int beiscsi_create_ipv4_iface(struct beiscsi_hba *phba)
++static int beiscsi_iface_create_ipv4(struct beiscsi_hba *phba)
+ {
+ 	if (phba->ipv4_iface)
+ 		return 0;
+@@ -256,7 +256,7 @@ static int beiscsi_create_ipv4_iface(struct beiscsi_hba *phba)
+ 	return 0;
+ }
+ 
+-static int beiscsi_create_ipv6_iface(struct beiscsi_hba *phba)
++static int beiscsi_iface_create_ipv6(struct beiscsi_hba *phba)
+ {
+ 	if (phba->ipv6_iface)
+ 		return 0;
+@@ -275,22 +275,22 @@ static int beiscsi_create_ipv6_iface(struct beiscsi_hba *phba)
+ 	return 0;
+ }
+ 
+-void beiscsi_create_def_ifaces(struct beiscsi_hba *phba)
++void beiscsi_iface_create_default(struct beiscsi_hba *phba)
+ {
+ 	struct be_cmd_get_if_info_resp *if_info;
+ 
+-	if (!mgmt_get_if_info(phba, BE2_IPV4, &if_info)) {
+-		beiscsi_create_ipv4_iface(phba);
++	if (!beiscsi_if_get_info(phba, BE2_IPV4, &if_info)) {
++		beiscsi_iface_create_ipv4(phba);
+ 		kfree(if_info);
+ 	}
+ 
+-	if (!mgmt_get_if_info(phba, BE2_IPV6, &if_info)) {
+-		beiscsi_create_ipv6_iface(phba);
++	if (!beiscsi_if_get_info(phba, BE2_IPV6, &if_info)) {
++		beiscsi_iface_create_ipv6(phba);
+ 		kfree(if_info);
+ 	}
+ }
+ 
+-void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
++void beiscsi_iface_destroy_default(struct beiscsi_hba *phba)
+ {
+ 	if (phba->ipv6_iface) {
+ 		iscsi_destroy_iface(phba->ipv6_iface);
+@@ -350,7 +350,7 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
+ 	switch (info->param) {
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+ 		if (info->value[0] == ISCSI_IFACE_ENABLE)
+-			ret = beiscsi_create_ipv4_iface(phba);
++			ret = beiscsi_iface_create_ipv4(phba);
+ 		else {
+ 			iscsi_destroy_iface(phba->ipv4_iface);
+ 			phba->ipv4_iface = NULL;
+@@ -409,7 +409,7 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
+ 	switch (iface_param->param) {
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+ 		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
+-			ret = beiscsi_create_ipv6_iface(phba);
++			ret = beiscsi_iface_create_ipv6(phba);
+ 		else {
+ 			iscsi_destroy_iface(phba->ipv6_iface);
+ 			phba->ipv6_iface = NULL;
+@@ -424,8 +424,8 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
+ 	return ret;
+ }
+ 
+-int be2iscsi_iface_set_param(struct Scsi_Host *shost,
+-		void *data, uint32_t dt_len)
++int beiscsi_iface_set_param(struct Scsi_Host *shost,
++			    void *data, uint32_t dt_len)
+ {
+ 	struct iscsi_iface_param_info *iface_param = NULL;
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+@@ -506,9 +506,9 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
+ 	return ret;
+ }
+ 
+-static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+-		struct iscsi_iface *iface, int param,
+-		char *buf)
++static int __beiscsi_iface_get_param(struct beiscsi_hba *phba,
++				     struct iscsi_iface *iface,
++				     int param, char *buf)
+ {
+ 	struct be_cmd_get_if_info_resp *if_info;
+ 	int len, ip_type = BE2_IPV4;
+@@ -516,7 +516,7 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 	if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
+ 		ip_type = BE2_IPV6;
+ 
+-	len = mgmt_get_if_info(phba, ip_type, &if_info);
++	len = beiscsi_if_get_info(phba, ip_type, &if_info);
+ 	if (len)
+ 		return len;
+ 
+@@ -565,9 +565,9 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 	return len;
+ }
+ 
+-int be2iscsi_iface_get_param(struct iscsi_iface *iface,
+-		enum iscsi_param_type param_type,
+-		int param, char *buf)
++int beiscsi_iface_get_param(struct iscsi_iface *iface,
++			    enum iscsi_param_type param_type,
++			    int param, char *buf)
+ {
+ 	struct Scsi_Host *shost = iscsi_iface_to_shost(iface);
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+@@ -588,7 +588,7 @@ int be2iscsi_iface_get_param(struct iscsi_iface *iface,
+ 	case ISCSI_NET_PARAM_VLAN_ENABLED:
+ 	case ISCSI_NET_PARAM_VLAN_ID:
+ 	case ISCSI_NET_PARAM_VLAN_PRIORITY:
+-		len = be2iscsi_get_if_param(phba, iface, param, buf);
++		len = __beiscsi_iface_get_param(phba, iface, param, buf);
+ 		break;
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+ 		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
+@@ -1360,7 +1360,7 @@ free_ep:
+ 	iscsi_destroy_endpoint(beiscsi_ep->openiscsi_ep);
+ }
+ 
+-umode_t be2iscsi_attr_is_visible(int param_type, int param)
++umode_t beiscsi_attr_is_visible(int param_type, int param)
+ {
+ 	switch (param_type) {
+ 	case ISCSI_NET_PARAM:
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.h b/drivers/scsi/be2iscsi/be_iscsi.h
+index 0c84e1c..5928ba9 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.h
++++ b/drivers/scsi/be2iscsi/be_iscsi.h
+@@ -30,18 +30,18 @@
+ #define NON_BLOCKING 0x0
+ #define BLOCKING 0x1
+ 
+-void beiscsi_create_def_ifaces(struct beiscsi_hba *phba);
++void beiscsi_iface_create_default(struct beiscsi_hba *phba);
+ 
+-void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba);
++void beiscsi_iface_destroy_default(struct beiscsi_hba *phba);
+ 
+-int be2iscsi_iface_get_param(struct iscsi_iface *iface,
++int beiscsi_iface_get_param(struct iscsi_iface *iface,
+ 			     enum iscsi_param_type param_type,
+ 			     int param, char *buf);
+ 
+-int be2iscsi_iface_set_param(struct Scsi_Host *shost,
++int beiscsi_iface_set_param(struct Scsi_Host *shost,
+ 			     void *data, uint32_t count);
+ 
+-umode_t be2iscsi_attr_is_visible(int param_type, int param);
++umode_t beiscsi_attr_is_visible(int param_type, int param);
+ 
+ void beiscsi_offload_connection(struct beiscsi_conn *beiscsi_conn,
+ 				struct beiscsi_offload_params *params);
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 0fbb80d..6179c4e 100644
+index 01052d3..71c91314 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -832,12 +832,11 @@ static void hwi_ring_eq_db(struct beiscsi_hba *phba,
- static irqreturn_t be_isr_mcc(int irq, void *dev_id)
+@@ -5327,7 +5327,7 @@ static void beiscsi_remove(struct pci_dev *pcidev)
+ 		return;
+ 	}
+ 
+-	beiscsi_destroy_def_ifaces(phba);
++	beiscsi_iface_destroy_default(phba);
+ 	iscsi_boot_destroy_kset(phba->boot_kset);
+ 	iscsi_host_remove(phba->shost);
+ 	beiscsi_quiesce(phba, BEISCSI_CLEAN_UNLOAD);
+@@ -5777,7 +5777,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
+ 			    "BM_%d : Could not set up "
+ 			    "iSCSI boot info.\n");
+ 
+-	beiscsi_create_def_ifaces(phba);
++	beiscsi_iface_create_default(phba);
+ 	schedule_delayed_work(&phba->beiscsi_hw_check_task,
+ 			      msecs_to_jiffies(1000));
+ 
+@@ -5828,9 +5828,9 @@ struct iscsi_transport beiscsi_iscsi_transport = {
+ 	.create_conn = beiscsi_conn_create,
+ 	.bind_conn = beiscsi_conn_bind,
+ 	.destroy_conn = iscsi_conn_teardown,
+-	.attr_is_visible = be2iscsi_attr_is_visible,
+-	.set_iface_param = be2iscsi_iface_set_param,
+-	.get_iface_param = be2iscsi_iface_get_param,
++	.attr_is_visible = beiscsi_attr_is_visible,
++	.set_iface_param = beiscsi_iface_set_param,
++	.get_iface_param = beiscsi_iface_get_param,
+ 	.set_param = beiscsi_set_param,
+ 	.get_conn_param = iscsi_conn_get_param,
+ 	.get_session_param = iscsi_session_get_param,
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index fa95525..8d05add 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1167,7 +1167,7 @@ int beiscsi_if_en_static(struct beiscsi_hba *phba, u32 ip_type,
+ 	struct be_dma_mem nonemb_cmd;
+ 	int rc;
+ 
+-	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++	rc = beiscsi_if_get_info(phba, ip_type, &if_info);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1212,7 +1212,7 @@ int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
+ 	u8 *gw;
+ 	int rc;
+ 
+-	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++	rc = beiscsi_if_get_info(phba, ip_type, &if_info);
+ 	if (rc)
+ 		return rc;
+ 
+@@ -1299,8 +1299,8 @@ int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag)
+ }
+ 
+ 
+-int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+-		     struct be_cmd_get_if_info_resp **if_info)
++int beiscsi_if_get_info(struct beiscsi_hba *phba, int ip_type,
++			struct be_cmd_get_if_info_resp **if_info)
  {
- 	struct beiscsi_hba *phba;
--	struct be_eq_entry *eqe = NULL;
-+	struct be_eq_entry *eqe;
- 	struct be_queue_info *eq;
- 	struct be_queue_info *mcc;
--	unsigned int num_eq_processed;
-+	unsigned int mcc_events;
- 	struct be_eq_obj *pbe_eq;
--	unsigned long flags;
+ 	struct be_cmd_get_if_info_req *req;
+ 	struct be_dma_mem nonemb_cmd;
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 8ae6a24..294b740 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -295,8 +295,8 @@ unsigned int mgmt_get_session_info(struct beiscsi_hba *phba,
+ int mgmt_get_nic_conf(struct beiscsi_hba *phba,
+ 		      struct be_cmd_get_nic_conf_resp *mac);
  
- 	pbe_eq = dev_id;
- 	eq = &pbe_eq->q;
-@@ -845,27 +844,23 @@ static irqreturn_t be_isr_mcc(int irq, void *dev_id)
- 	mcc = &phba->ctrl.mcc_obj.cq;
- 	eqe = queue_tail_node(eq);
+-int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+-		     struct be_cmd_get_if_info_resp **if_info);
++int beiscsi_if_get_info(struct beiscsi_hba *phba, int ip_type,
++			struct be_cmd_get_if_info_resp **if_info);
  
--	num_eq_processed = 0;
--
-+	mcc_events = 0;
- 	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
- 				& EQE_VALID_MASK) {
- 		if (((eqe->dw[offsetof(struct amap_eq_entry,
- 		     resource_id) / 32] &
- 		     EQE_RESID_MASK) >> 16) == mcc->id) {
--			spin_lock_irqsave(&phba->isr_lock, flags);
--			pbe_eq->todo_mcc_cq = true;
--			spin_unlock_irqrestore(&phba->isr_lock, flags);
-+			mcc_events++;
- 		}
- 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
- 		queue_tail_inc(eq);
- 		eqe = queue_tail_node(eq);
--		num_eq_processed++;
- 	}
--	if (pbe_eq->todo_mcc_cq)
--		queue_work(phba->wq, &pbe_eq->work_cqs);
--	if (num_eq_processed)
--		hwi_ring_eq_db(phba, eq->id, 1,	num_eq_processed, 1, 1);
- 
-+	if (mcc_events) {
-+		queue_work(phba->wq, &pbe_eq->mcc_work);
-+		hwi_ring_eq_db(phba, eq->id, 1,	mcc_events, 1, 1);
-+	}
- 	return IRQ_HANDLED;
- }
- 
-@@ -884,7 +879,6 @@ static irqreturn_t be_isr_msix(int irq, void *dev_id)
- 	eq = &pbe_eq->q;
- 
- 	phba = pbe_eq->phba;
--
- 	/* disable interrupt till iopoll completes */
- 	hwi_ring_eq_db(phba, eq->id, 1,	0, 0, 1);
- 	irq_poll_sched(&pbe_eq->iopoll);
-@@ -902,14 +896,13 @@ static irqreturn_t be_isr(int irq, void *dev_id)
- 	struct beiscsi_hba *phba;
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_context_memory *phwi_context;
--	struct be_eq_entry *eqe = NULL;
-+	struct be_eq_entry *eqe;
- 	struct be_queue_info *eq;
- 	struct be_queue_info *mcc;
--	unsigned long flags, index;
--	unsigned int num_mcceq_processed, num_ioeq_processed;
-+	unsigned int mcc_events, io_events;
- 	struct be_ctrl_info *ctrl;
- 	struct be_eq_obj *pbe_eq;
--	int isr;
-+	int isr, rearm;
- 
- 	phba = dev_id;
- 	ctrl = &phba->ctrl;
-@@ -924,44 +917,35 @@ static irqreturn_t be_isr(int irq, void *dev_id)
- 
- 	eq = &phwi_context->be_eq[0].q;
- 	mcc = &phba->ctrl.mcc_obj.cq;
--	index = 0;
- 	eqe = queue_tail_node(eq);
- 
--	num_ioeq_processed = 0;
--	num_mcceq_processed = 0;
-+	io_events = 0;
-+	mcc_events = 0;
- 	while (eqe->dw[offsetof(struct amap_eq_entry, valid) / 32]
- 				& EQE_VALID_MASK) {
- 		if (((eqe->dw[offsetof(struct amap_eq_entry,
--		     resource_id) / 32] &
--		     EQE_RESID_MASK) >> 16) == mcc->id) {
--			spin_lock_irqsave(&phba->isr_lock, flags);
--			pbe_eq->todo_mcc_cq = true;
--			spin_unlock_irqrestore(&phba->isr_lock, flags);
--			num_mcceq_processed++;
--		} else {
--			irq_poll_sched(&pbe_eq->iopoll);
--			num_ioeq_processed++;
--		}
-+		      resource_id) / 32] & EQE_RESID_MASK) >> 16) == mcc->id)
-+			mcc_events++;
-+		else
-+			io_events++;
- 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
- 		queue_tail_inc(eq);
- 		eqe = queue_tail_node(eq);
- 	}
--	if (num_ioeq_processed || num_mcceq_processed) {
--		if (pbe_eq->todo_mcc_cq)
--			queue_work(phba->wq, &pbe_eq->work_cqs);
--
--		if ((num_mcceq_processed) && (!num_ioeq_processed))
--			hwi_ring_eq_db(phba, eq->id, 0,
--				      (num_ioeq_processed +
--				       num_mcceq_processed) , 1, 1);
--		else
--			hwi_ring_eq_db(phba, eq->id, 0,
--				       (num_ioeq_processed +
--					num_mcceq_processed), 0, 1);
--
--		return IRQ_HANDLED;
--	} else
-+	if (!io_events && !mcc_events)
- 		return IRQ_NONE;
-+
-+	/* no need to rearm if interrupt is only for IOs */
-+	rearm = 0;
-+	if (mcc_events) {
-+		queue_work(phba->wq, &pbe_eq->mcc_work);
-+		/* rearm for MCCQ */
-+		rearm = 1;
-+	}
-+	if (io_events)
-+		irq_poll_sched(&pbe_eq->iopoll);
-+	hwi_ring_eq_db(phba, eq->id, 0, (io_events + mcc_events), rearm, 1);
-+	return IRQ_HANDLED;
- }
- 
- 
-@@ -2055,6 +2039,18 @@ void beiscsi_process_mcc_cq(struct beiscsi_hba *phba)
- 		hwi_ring_cq_db(phba, mcc_cq->id, num_processed, 1);
- }
- 
-+static void beiscsi_mcc_work(struct work_struct *work)
-+{
-+	struct be_eq_obj *pbe_eq;
-+	struct beiscsi_hba *phba;
-+
-+	pbe_eq = container_of(work, struct be_eq_obj, mcc_work);
-+	phba = pbe_eq->phba;
-+	beiscsi_process_mcc_cq(phba);
-+	/* rearm EQ for further interrupts */
-+	hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
-+}
-+
- /**
-  * beiscsi_process_cq()- Process the Completion Queue
-  * @pbe_eq: Event Q on which the Completion has come
-@@ -2244,46 +2240,15 @@ proc_next_cqe:
- 	return total;
- }
- 
--void beiscsi_process_all_cqs(struct work_struct *work)
--{
--	unsigned long flags;
--	struct hwi_controller *phwi_ctrlr;
--	struct hwi_context_memory *phwi_context;
--	struct beiscsi_hba *phba;
--	struct be_eq_obj *pbe_eq =
--	    container_of(work, struct be_eq_obj, work_cqs);
--
--	phba = pbe_eq->phba;
--	phwi_ctrlr = phba->phwi_ctrlr;
--	phwi_context = phwi_ctrlr->phwi_ctxt;
--
--	if (pbe_eq->todo_mcc_cq) {
--		spin_lock_irqsave(&phba->isr_lock, flags);
--		pbe_eq->todo_mcc_cq = false;
--		spin_unlock_irqrestore(&phba->isr_lock, flags);
--		beiscsi_process_mcc_cq(phba);
--	}
--
--	if (pbe_eq->todo_cq) {
--		spin_lock_irqsave(&phba->isr_lock, flags);
--		pbe_eq->todo_cq = false;
--		spin_unlock_irqrestore(&phba->isr_lock, flags);
--		beiscsi_process_cq(pbe_eq, BE2_MAX_NUM_CQ_PROC);
--	}
--
--	/* rearm EQ for further interrupts */
--	hwi_ring_eq_db(phba, pbe_eq->q.id, 0, 0, 1, 1);
--}
--
- static int be_iopoll(struct irq_poll *iop, int budget)
- {
--	unsigned int ret, num_eq_processed;
-+	unsigned int ret, io_events;
- 	struct beiscsi_hba *phba;
- 	struct be_eq_obj *pbe_eq;
- 	struct be_eq_entry *eqe = NULL;
- 	struct be_queue_info *eq;
- 
--	num_eq_processed = 0;
-+	io_events = 0;
- 	pbe_eq = container_of(iop, struct be_eq_obj, iopoll);
- 	phba = pbe_eq->phba;
- 	eq = &pbe_eq->q;
-@@ -2294,10 +2259,10 @@ static int be_iopoll(struct irq_poll *iop, int budget)
- 		AMAP_SET_BITS(struct amap_eq_entry, valid, eqe, 0);
- 		queue_tail_inc(eq);
- 		eqe = queue_tail_node(eq);
--		num_eq_processed++;
-+		io_events++;
- 	}
- 
--	hwi_ring_eq_db(phba, eq->id, 1, num_eq_processed, 0, 1);
-+	hwi_ring_eq_db(phba, eq->id, 1, io_events, 0, 1);
- 
- 	ret = beiscsi_process_cq(pbe_eq, budget);
- 	pbe_eq->cq_count += ret;
-@@ -5578,7 +5543,7 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
- 	i = (phba->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
- 	pbe_eq = &phwi_context->be_eq[i];
--	INIT_WORK(&pbe_eq->work_cqs, beiscsi_process_all_cqs);
-+	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
- 
- 	ret = beiscsi_init_irqs(phba);
- 	if (ret < 0) {
-@@ -5682,7 +5647,6 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 
- 	spin_lock_init(&phba->io_sgl_lock);
- 	spin_lock_init(&phba->mgmt_sgl_lock);
--	spin_lock_init(&phba->isr_lock);
- 	spin_lock_init(&phba->async_pdu_lock);
- 	ret = mgmt_get_fw_config(&phba->ctrl, phba);
- 	if (ret != 0) {
-@@ -5754,7 +5718,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	i = (phba->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
- 	pbe_eq = &phwi_context->be_eq[i];
--	INIT_WORK(&pbe_eq->work_cqs, beiscsi_process_all_cqs);
-+	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
- 
- 	ret = beiscsi_init_irqs(phba);
- 	if (ret < 0) {
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 30a4606..90cdc10 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -378,7 +378,6 @@ struct beiscsi_hba {
- 	struct sgl_handle **eh_sgl_hndl_base;
- 	spinlock_t io_sgl_lock;
- 	spinlock_t mgmt_sgl_lock;
--	spinlock_t isr_lock;
- 	spinlock_t async_pdu_lock;
- 	unsigned int age;
- 	struct list_head hba_queue;
-@@ -845,7 +844,6 @@ struct wrb_handle *alloc_wrb_handle(struct beiscsi_hba *phba, unsigned int cid,
- void
- free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle);
- 
--void beiscsi_process_all_cqs(struct work_struct *work);
- void beiscsi_free_mgmt_task_handles(struct beiscsi_conn *beiscsi_conn,
- 				     struct iscsi_task *task);
- 
+ int beiscsi_if_get_gw(struct beiscsi_hba *phba, u32 ip_type,
+ 		      struct be_cmd_get_def_gateway_resp *resp);
 -- 
 1.9.1
 
