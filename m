@@ -1,158 +1,55 @@
-From: Vasundhara Gurunath <vasundhara.gurunath@hpe.com>
-Subject: [PATCH] scsi:Prevent deletion of SCSI block device in use
-Date: Fri, 19 Aug 2016 16:06:51 +0530
-Message-ID: <1471603011-13590-1-git-send-email-vasundhara.gurunath@hpe.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] fcoe: provide translation table between Ethernet and FC
+ port speeds
+Date: Fri, 19 Aug 2016 13:30:06 +0200
+Message-ID: <20160819113006.4mbt3tnwbwn4hmmt@c203.arch.suse.de>
+References: <1471274649-27113-1-git-send-email-jthumshirn@suse.de>
+ <7044694b-7991-8daa-55bd-faa603c1f6f8@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <7044694b-7991-8daa-55bd-faa603c1f6f8@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jasminder.kaur@hpe.com, paulose.kuriakose.arackal@hpe.com, Vasundhara Gurunath <vasundhara.gurunath@hpe.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-SCSI block device can be removed, using write to sysfs delete file as below:
-echo 1 > /sys/block/sdX/device/delete
-If the device is in use by applications, or part of system configuration
-such as boot device, removal can result in application disruptions or
-system down time.
+On Fri, Aug 19, 2016 at 10:37:04AM +0200, Hannes Reinecke wrote:
+> On 08/15/2016 05:24 PM, Johannes Thumshirn wrote:
 
-An additional write option ? is added to SCSI sysfs interface as below,
-in order to prevent accidental deletion of devices in use.
-echo ? > /sys/block/sdX/device/delete
+[...]
 
-In the absence of any usage, this option proceeds with device deletion.
-If the device is open, deletion is prevented, and active Open and IO
-counts at the time of deletion is logged. Information logged during latest
-delete attempt can be obtained by issuing a read to the delete file as below:
-cat  /sys/block/sdX/device/delete
+> >  
+> > +static const struct {
+> > +	u32 fc_port_speed;
+> > +	u32 eth_port_speed;
+> > +} fcoe_port_speed_mapping[] = {
+> > +	{ FC_PORTSPEED_1GBIT, SPEED_1000 },
+> > +	{ FC_PORTSPEED_2GBIT, 2000 },
+> > +	{ FC_PORTSPEED_4GBIT, 4000 },
+> > +	{ FC_PORTSPEED_8GBIT, 8000 },
+> > +	{ FC_PORTSPEED_10GBIT, SPEED_10000 },
+> > +	{ FC_PORTSPEED_16GBIT, 16000 },
+> > +	{ FC_PORTSPEED_20GBIT, SPEED_20000  },
+> > +	{ FC_PORTSPEED_25GBIT, SPEED_25000  },
+> > +	{ FC_PORTSPEED_32GBIT, 32000 },
+> > +	{ FC_PORTSPEED_40GBIT, SPEED_40000  },
+> > +	{ FC_PORTSPEED_50GBIT, SPEED_50000  },
+> > +	{ FC_PORTSPEED_100GBIT, SPEED_100000 },
+> > +};
+> > +
+> Hmm. Why not 'SPEED_2000' etc?
+> 
+> This looks a bit weird, mixing values with defines ...
 
-Signed-off-by: Vasundhara Gurunath <vasundhara.gurunath@hpe.com>
----
- drivers/scsi/scsi_sysfs.c  | 51 +++++++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/sd.c          |  5 ++++-
- include/scsi/scsi_device.h |  2 ++
- 3 files changed, 56 insertions(+), 2 deletions(-)
+I'll add defines for the non Ethernet native speeds privately to this file.
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 0734927..716b22a 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -12,6 +12,9 @@
- #include <linux/blkdev.h>
- #include <linux/device.h>
- #include <linux/pm_runtime.h>
-+#include <linux/time.h>
-+#include <linux/timer.h>
-+
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_device.h>
-@@ -457,6 +460,9 @@ static void scsi_device_dev_release_usercontext(struct work_struct *work)
- 	kfree(sdev->vpd_pg83);
- 	kfree(sdev->vpd_pg80);
- 	kfree(sdev->inquiry);
-+	if (sdev->delete_msg_buf != NULL)
-+		kfree(sdev->delete_msg_buf);
-+
- 	kfree(sdev);
- 
- 	if (parent)
-@@ -709,11 +715,54 @@ static ssize_t
- sdev_store_delete(struct device *dev, struct device_attribute *attr,
- 		  const char *buf, size_t count)
- {
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct timeval tv;
-+	struct tm tms;
-+
-+	if (buf[0] == '?')  {
-+		if (sdev->usage_count) {
-+			/*
-+			 * Buffer to hold I/O statistics on delete attempt.
-+			 */
-+			if (sdev->delete_msg_buf == NULL) {
-+				sdev->delete_msg_buf =
-+				kmalloc(128, GFP_KERNEL);
-+				memset(sdev->delete_msg_buf, 0, 128);
-+			}
-+			do_gettimeofday(&tv);
-+			time_to_tm(tv.tv_sec, 0, &tms);
-+			sprintf(sdev->delete_msg_buf,
-+				"Last delete attempt: %d:%d:%d %02d:%02d\n"
-+				"Open Count : %d\n"
-+				"IO Active Count : %d\n"
-+				"IO Done Count : %d\n",
-+				tms.tm_mday, tms.tm_mon + 1,
-+				tms.tm_year + 1900,
-+				tms.tm_hour, tms.tm_min,
-+				sdev->usage_count,
-+				sdev->iorequest_cnt.counter,
-+				sdev->iodone_cnt.counter);
-+
-+				return count;
-+			}
-+		}
-+
- 	if (device_remove_file_self(dev, attr))
- 		scsi_remove_device(to_scsi_device(dev));
- 	return count;
- };
--static DEVICE_ATTR(delete, S_IWUSR, NULL, sdev_store_delete);
-+
-+static ssize_t sdev_show_delete(struct device *dev,
-+		struct device_attribute *attr, char *buf) {
-+
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	if (sdev->delete_msg_buf != NULL)
-+		return sprintf(buf, "%s", sdev->delete_msg_buf);
-+	else
-+		return 0;
-+}
-+static DEVICE_ATTR(delete, S_IRUGO | S_IWUSR, sdev_show_delete,
-+			 sdev_store_delete);
- 
- static ssize_t
- store_state_field(struct device *dev, struct device_attribute *attr,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index d3e852a..d5cf25c 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1235,6 +1235,7 @@ static int sd_open(struct block_device *bdev, fmode_t mode)
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_PREVENT);
- 	}
-+	sdev->usage_count = sdkp->openers.counter;
- 
- 	return 0;
- 
-@@ -1267,7 +1268,7 @@ static void sd_release(struct gendisk *disk, fmode_t mode)
- 		if (scsi_block_when_processing_errors(sdev))
- 			scsi_set_medium_removal(sdev, SCSI_REMOVAL_ALLOW);
- 	}
--
-+	sdev->usage_count = sdkp->openers.counter;
- 	/*
- 	 * XXX and what if there are packets in flight and this close()
- 	 * XXX is followed by a "rmmod sd_mod"?
-@@ -3082,6 +3083,8 @@ static int sd_probe(struct device *dev)
- 	atomic_set(&sdkp->openers, 0);
- 	atomic_set(&sdkp->device->ioerr_cnt, 0);
- 
-+	sdp->usage_count = sdkp->openers.counter;
-+
- 	if (!sdp->request_queue->rq_timeout) {
- 		if (sdp->type != TYPE_MOD)
- 			blk_queue_rq_timeout(sdp->request_queue, SD_TIMEOUT);
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 8a95631..ab79675 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -208,6 +208,8 @@ struct scsi_device {
- 
- 	unsigned char		access_state;
- 	enum scsi_device_state sdev_state;
-+	char                    *delete_msg_buf;
-+	int                     usage_count;
- 	unsigned long		sdev_data[0];
- } __attribute__((aligned(sizeof(unsigned long))));
- 
 -- 
-1.8.3.1
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
