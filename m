@@ -1,47 +1,137 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 10/29] be2iscsi: Handle only NET_PARAM in iface_get_param
-Date: Fri, 19 Aug 2016 15:20:07 +0530
-Message-ID: <1471600226-22055-11-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 12/29] be2iscsi: Remove alloc_mcc_tag & beiscsi_pci_soft_reset
+Date: Fri, 19 Aug 2016 15:20:09 +0530
+Message-ID: <1471600226-22055-13-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38281 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753571AbcHSJvQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:16 -0400
-Received: by mail-wm0-f42.google.com with SMTP id o80so32599378wme.1
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:15 -0700 (PDT)
+Received: from mail-wm0-f49.google.com ([74.125.82.49]:33199 "EHLO
+        mail-wm0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750850AbcHSJvW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:22 -0400
+Received: by mail-wm0-f49.google.com with SMTP id d196so7879755wmd.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:21 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Wrong settings displayed for iface:
-iface.header_digest = 192.168.197.22
-iface.data_digest = 255.255.255.0
-iface.immediate_data = 192.168.197.1
-
-Process ISCSI_NET_PARAM only in beiscsi_iface_get_param.
+alloc_mcc_tag was replaced with alloc_mcc_wrb and is no more used.
+beiscsi_pci_soft_reset is not used at all and won't be needed.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_iscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/be2iscsi/be_cmds.c | 76 -----------------------------------------
+ drivers/scsi/be2iscsi/be_cmds.h |  1 -
+ 2 files changed, 77 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 1fe273d..fa415c4 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -574,6 +574,8 @@ int beiscsi_iface_get_param(struct iscsi_iface *iface,
- 	struct be_cmd_get_def_gateway_resp gateway;
- 	int len = -EPERM;
+diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
+index 59b8e2d..4032962 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.c
++++ b/drivers/scsi/be2iscsi/be_cmds.c
+@@ -21,60 +21,6 @@
+ #include "be.h"
+ #include "be_mgmt.h"
  
-+	if (param_type != ISCSI_NET_PARAM)
-+		return 0;
- 	if (phba->state & BE_ADAPTER_PCI_ERR) {
- 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
- 			    "BS_%d : In PCI_ERROR Recovery\n");
+-int beiscsi_pci_soft_reset(struct beiscsi_hba *phba)
+-{
+-	u32 sreset;
+-	u8 *pci_reset_offset = 0;
+-	u8 *pci_online0_offset = 0;
+-	u8 *pci_online1_offset = 0;
+-	u32 pconline0 = 0;
+-	u32 pconline1 = 0;
+-	u32 i;
+-
+-	pci_reset_offset = (u8 *)phba->pci_va + BE2_SOFT_RESET;
+-	pci_online0_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE0;
+-	pci_online1_offset = (u8 *)phba->pci_va + BE2_PCI_ONLINE1;
+-	sreset = readl((void *)pci_reset_offset);
+-	sreset |= BE2_SET_RESET;
+-	writel(sreset, (void *)pci_reset_offset);
+-
+-	i = 0;
+-	while (sreset & BE2_SET_RESET) {
+-		if (i > 64)
+-			break;
+-		msleep(100);
+-		sreset = readl((void *)pci_reset_offset);
+-		i++;
+-	}
+-
+-	if (sreset & BE2_SET_RESET) {
+-		printk(KERN_ERR DRV_NAME
+-		       " Soft Reset  did not deassert\n");
+-		return -EIO;
+-	}
+-	pconline1 = BE2_MPU_IRAM_ONLINE;
+-	writel(pconline0, (void *)pci_online0_offset);
+-	writel(pconline1, (void *)pci_online1_offset);
+-
+-	sreset |= BE2_SET_RESET;
+-	writel(sreset, (void *)pci_reset_offset);
+-
+-	i = 0;
+-	while (sreset & BE2_SET_RESET) {
+-		if (i > 64)
+-			break;
+-		msleep(1);
+-		sreset = readl((void *)pci_reset_offset);
+-		i++;
+-	}
+-	if (sreset & BE2_SET_RESET) {
+-		printk(KERN_ERR DRV_NAME
+-		       " MPU Online Soft Reset did not deassert\n");
+-		return -EIO;
+-	}
+-	return 0;
+-}
+-
+ int be_chk_reset_complete(struct beiscsi_hba *phba)
+ {
+ 	unsigned int num_loop;
+@@ -104,28 +50,6 @@ int be_chk_reset_complete(struct beiscsi_hba *phba)
+ 	return 0;
+ }
+ 
+-unsigned int alloc_mcc_tag(struct beiscsi_hba *phba)
+-{
+-	unsigned int tag = 0;
+-
+-	spin_lock(&phba->ctrl.mcc_lock);
+-	if (phba->ctrl.mcc_tag_available) {
+-		tag = phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index];
+-		phba->ctrl.mcc_tag[phba->ctrl.mcc_alloc_index] = 0;
+-		phba->ctrl.mcc_tag_status[tag] = 0;
+-		phba->ctrl.ptag_state[tag].tag_state = 0;
+-	}
+-	if (tag) {
+-		phba->ctrl.mcc_tag_available--;
+-		if (phba->ctrl.mcc_alloc_index == (MAX_MCC_CMD - 1))
+-			phba->ctrl.mcc_alloc_index = 0;
+-		else
+-			phba->ctrl.mcc_alloc_index++;
+-	}
+-	spin_unlock(&phba->ctrl.mcc_lock);
+-	return tag;
+-}
+-
+ struct be_mcc_wrb *alloc_mcc_wrb(struct beiscsi_hba *phba,
+ 				 unsigned int *ref_tag)
+ {
+diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
+index a4bc83c..c50b74a 100644
+--- a/drivers/scsi/be2iscsi/be_cmds.h
++++ b/drivers/scsi/be2iscsi/be_cmds.h
+@@ -1376,7 +1376,6 @@ struct be_cmd_get_port_name {
+ 						 * the cxn
+ 						 */
+ 
+-int beiscsi_pci_soft_reset(struct beiscsi_hba *phba);
+ int be_chk_reset_complete(struct beiscsi_hba *phba);
+ 
+ void be_wrb_hdr_prepare(struct be_mcc_wrb *wrb, int payload_len,
 -- 
 1.9.1
 
