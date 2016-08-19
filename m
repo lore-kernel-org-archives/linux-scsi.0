@@ -1,50 +1,59 @@
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: Observing Softlockup's while running heavy IOs
-Date: Thu, 18 Aug 2016 21:08:18 +0000
-Message-ID: <DF4PR84MB01696549697831B4CEC4A3FDAB150@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
-References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+From: Zhou Jie <zhoujie2011@cn.fujitsu.com>
+Subject: [PATCH] Remove the unnecessary semicolons
+Date: Fri, 19 Aug 2016 10:03:09 +0800
+Message-ID: <1471572189-21257-1-git-send-email-zhoujie2011@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from cn.fujitsu.com ([59.151.112.132]:58490 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1753665AbcHSCHF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2016 22:07:05 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: mst@redhat.com, rusty@rustcorp.com.au, pbonzini@redhat.com, stefanha@linux.vnet.ibm.com, Zhou Jie <zhoujie2011@cn.fujitsu.com>, Chao Fan <fanc.fnst@cn.fujitsu.com>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgta2VybmVsLW93
-bmVyQHZnZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LWtlcm5lbC0NCj4gb3duZXJAdmdlci5r
-ZXJuZWwub3JnXSBPbiBCZWhhbGYgT2YgU3JlZWthbnRoIFJlZGR5DQo+IFNlbnQ6IFRodXJzZGF5
-LCBBdWd1c3QgMTgsIDIwMTYgMTI6NTYgQU0NCj4gU3ViamVjdDogT2JzZXJ2aW5nIFNvZnRsb2Nr
-dXAncyB3aGlsZSBydW5uaW5nIGhlYXZ5IElPcw0KPiANCj4gUHJvYmxlbSBzdGF0ZW1lbnQ6DQo+
-IE9ic2VydmluZyBzb2Z0bG9ja3VwcyB3aGlsZSBydW5uaW5nIGhlYXZ5IElPcyBvbiA4IFNTRCBk
-cml2ZXMNCj4gY29ubmVjdGVkIGJlaGluZCBvdXIgTFNJIFNBUyAzMDA0IEhCQS4NCj4gDQouLi4N
-Cj4gT2JzZXJ2aW5nIGEgbG9vcCBpbiB0aGUgSU8gcGF0aCwgaS5lIG9ubHkgb25lIENQVSBpcyBi
-dXN5IHdpdGgNCj4gcHJvY2Vzc2luZyB0aGUgaW50ZXJydXB0cyBhbmQgb3RoZXIgQ1BVcyAoaW4g
-dGhlIGFmZmluaXR5X2hpbnQgbWFzaykNCj4gYXJlIGJ1c3kgd2l0aCBzZW5kaW5nIHRoZSBJT3Mg
-KHRoZXNlIENQVXMgYXJlIG5vdCB5ZXQgYWxsIHJlY2VpdmluZw0KPiBhbnkgaW50ZXJydXB0cyku
-IEZvciBleGFtcGxlLCBvbmx5IENQVTYgaXMgYnVzeSB3aXRoIHByb2Nlc3NpbmcgdGhlDQo+IGlu
-dGVycnVwdHMgZnJvbSBJUlEgMjE5IGFuZCByZW1haW5pbmcgQ1BVcyBpLmUgQ1BVIDcsOCw5LDEw
-ICYgMTEgYXJlDQo+IGp1c3QgYnVzeSB3aXRoIHB1bXBpbmcgdGhlIElPcyBhbmQgdGhleSBuZXZl
-ciBwcm9jZXNzZWQgYW55IElPDQo+IGludGVycnVwdHMgZnJvbSBJUlEgMjE5LiBTbyB3ZSBhcmUg
-b2JzZXJ2aW5nIHNvZnRsb2NrdXBzIGR1ZSB0bw0KPiBleGlzdGVuY2UgdGhpcyBsb29wIGluIHRo
-ZSBJTyBQYXRoLg0KPiANCj4gV2UgbWF5IG5vdCBvYnNlcnZlIHRoZXNlIHNvZnRsb2NrdXBzIGlm
-IGlycWJhbGFuY2VyIG1pZ2h0IGhhdmUNCj4gYmFsYW5jZWQgdGhlIGludGVycnVwdHMgYW1vbmcg
-dGhlIENQVXMgZW5hYmxlZCBpbiB0aGUgcGFydGljdWxhcg0KPiBpcnEncw0KPiBhZmZpbml0eV9o
-aW50IG1hc2suIHNvIHRoYXQgYWxsIHRoZSBDUFVzIGFyZSBlcXVhbHkgYnVzeSB3aXRoIHNlbmQN
-Cj4gSU9zDQo+IGFuZCBwcm9jZXNzaW5nIHRoZSBpbnRlcnJ1cHRzLiBJIGFtIG5vdCBzdXJlIGhv
-dyBpcnFiYWxhbmNlciBiYWxhbmNlDQo+IHRoZSBsb2FkIGFtb25nIHRoZSBDUFVzLCBidXQgaGVy
-ZSBJIHNlZSBvbmx5IG9uZSBDUFUgZnJvbSBpcnEncw0KPiBhZmZpbml0eV9oaW50IG1hc2sgaXMg
-YnVzeSB3aXRoIGludGVycnVwdHMgYW5kIHJlbWFpbmluZyBDUFVzIHdvbid0DQo+IHJlY2VpdmUg
-YW55IGludGVycnVwdHMgZnJvbSB0aGlzIElSUS4NCj4gDQo+IFBsZWFzZSBoZWxwIG1lIHdpdGgg
-YW55IHN1Z2dlc3Rpb25zL3JlY29tZW5kYXRpb25zIHRvIHNsb3ZlL2xpbWl0DQo+IHRoZXNlIGtp
-bmQgb2Ygc29mdGxvY2t1cHMuIEFsc28gcGxlYXNlIGxldCBtZSBrbm93biBpZiBJIGhhdmUgbWlz
-c2VkDQo+IGFueSBzZXR0aW5nIGluIHRoZSBpcnFiYWxhbmNlLg0KPiANCg0KVGhlIENQVXMgbmVl
-ZCB0byBiZSBmb3JjZWQgdG8gc2VsZi10aHJvdHRsZSBieSBwcm9jZXNzaW5nIGludGVycnVwdHMg
-Zm9yIA0KdGhlaXIgb3duIHN1Ym1pc3Npb25zLCB3aGljaCByZWR1Y2VzIHRoZSB0aW1lIHRoZXkg
-Y2FuIHN1Ym1pdCBtb3JlIElPcy4NCg0KU2VlIGh0dHBzOi8vbGttbC5vcmcvbGttbC8yMDE0Lzkv
-OS85MzEgZm9yIGRpc2N1c3Npb24gb2YgdGhpcw0KcHJvYmxlbSB3aGVuIGJsay1tcSB3YXMgYWRk
-ZWQuDQoNCg0KLS0tDQpSb2JlcnQgRWxsaW90dCwgSFBFIFBlcnNpc3RlbnQgTWVtb3J5DQoNCg0K
-DQo=
+At the end of funcions, semicolons are unnecessary. So drop them.
+
+Signed-off-by: Chao Fan <fanc.fnst@cn.fujitsu.com>
+---
+ drivers/scsi/virtio_scsi.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index 7dbbb29..9632a0c 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -241,7 +241,7 @@ static void virtscsi_req_done(struct virtqueue *vq)
+ 	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
+ 
+ 	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
+-};
++}
+ 
+ static void virtscsi_poll_requests(struct virtio_scsi *vscsi)
+ {
+@@ -267,7 +267,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 
+ 	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
+-};
++}
+ 
+ static void virtscsi_handle_event(struct work_struct *work);
+ 
+@@ -413,7 +413,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
+ 	struct virtio_scsi *vscsi = shost_priv(sh);
+ 
+ 	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
+-};
++}
+ 
+ /**
+  * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
+-- 
+2.5.5
+
+
+
