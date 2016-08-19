@@ -1,71 +1,42 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: Observing Softlockup's while running heavy IOs
-Date: Thu, 18 Aug 2016 14:59:59 +0000
-Message-ID: <SN1PR0201MB1870C7DFF1595905BDAE985F81150@SN1PR0201MB1870.namprd02.prod.outlook.com>
-References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 0/6] cxlflash: Improvements and cleanup
+Date: Thu, 18 Aug 2016 22:43:22 -0400
+Message-ID: <yq1y43th41h.fsf@sermon.lab.mkp.net>
+References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="_002_SN1PR0201MB1870C7DFF1595905BDAE985F81150SN1PR0201MB1870_"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0082.outbound.protection.outlook.com ([104.47.33.82]:3433
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753788AbcHSCjr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Aug 2016 22:39:47 -0400
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ (Matthew R. Ochs's message of "Tue, 9 Aug 2016 18:38:08 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 
---_002_SN1PR0201MB1870C7DFF1595905BDAE985F81150SN1PR0201MB1870_
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+>>>>> "Matthew" == Matthew R Ochs <mrochs@linux.vnet.ibm.com> writes:
 
-On 08/17/16 22:55, Sreekanth Reddy wrote:=0A=
-> Observing softlockups while running heavy IOs on 8 SSD drives=0A=
-> connected behind our LSI SAS 3004 HBA.=0A=
-=0A=
-Hello Sreekanth,=0A=
-=0A=
-This means that more than 23s was spent before the scheduler was =0A=
-invoked, probably due to a loop. Can you give the attached (untested) =0A=
-patch a try to see whether it is the loop in __blk_mq_run_hw_queue()?=0A=
-=0A=
-Thanks,=0A=
-=0A=
-Bart.=0A=
-=0A=
+Matthew> This patch set contains various code improvements and cleanups
+Matthew> that were inspired by Al Viro upon reviewing the cxlflash
+Matthew> driver. The core improvement is that the driver will no longer
+Matthew> cache the adapter file descriptor associated with a
+Matthew> context. This results in a user API change that is documented
+Matthew> alongside the modifications.
 
---_002_SN1PR0201MB1870C7DFF1595905BDAE985F81150SN1PR0201MB1870_
-Content-Type: text/x-patch;
-	name="0001-block-Measure-__blk_mq_run_hw_queue-execution-time.patch"
-Content-Description: 0001-block-Measure-__blk_mq_run_hw_queue-execution-time.patch
-Content-Disposition: attachment;
-	filename="0001-block-Measure-__blk_mq_run_hw_queue-execution-time.patch";
-	size=1132; creation-date="Thu, 18 Aug 2016 14:59:58 GMT";
-	modification-date="Thu, 18 Aug 2016 14:59:58 GMT"
-Content-Transfer-Encoding: base64
+Applied patches 1-3 to 4.9/scsi-queue. The remainder await reviews.
 
-RnJvbSA0ZGE5NGYyZWMzN2VlNWQxYjRhNWYxY2UyODg2YmRhZmQ1Y2QzOTRjIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRp
-c2suY29tPgpEYXRlOiBUaHUsIDE4IEF1ZyAyMDE2IDA3OjUxOjQ5IC0wNzAwClN1YmplY3Q6IFtQ
-QVRDSF0gYmxvY2s6IE1lYXN1cmUgX19ibGtfbXFfcnVuX2h3X3F1ZXVlKCkgZXhlY3V0aW9uIHRp
-bWUKCk5vdGU6IHRoZSAibWF4X2VsYXBzZWQiIHZhcmlhYmxlIGNhbiBiZSBtb2RpZmllZCBieSBt
-dWx0aXBsZSB0aHJlYWRzCmNvbmN1cnJlbnRseS4KLS0tCiBibG9jay9ibGstbXEuYyB8IDEwICsr
-KysrKysrKysKIDEgZmlsZSBjaGFuZ2VkLCAxMCBpbnNlcnRpb25zKCspCgpkaWZmIC0tZ2l0IGEv
-YmxvY2svYmxrLW1xLmMgYi9ibG9jay9ibGstbXEuYwppbmRleCBlOTMxYTBlLi42ZDA5NjFjIDEw
-MDY0NAotLS0gYS9ibG9jay9ibGstbXEuYworKysgYi9ibG9jay9ibGstbXEuYwpAQCAtNzkyLDYg
-Kzc5Miw5IEBAIHN0YXRpYyB2b2lkIF9fYmxrX21xX3J1bl9od19xdWV1ZShzdHJ1Y3QgYmxrX21x
-X2h3X2N0eCAqaGN0eCkKIAlMSVNUX0hFQUQoZHJpdmVyX2xpc3QpOwogCXN0cnVjdCBsaXN0X2hl
-YWQgKmRwdHI7CiAJaW50IHF1ZXVlZDsKKwlzdGF0aWMgbG9uZyBtYXhfZWxhcHNlZCA9IC0xOwor
-CXVuc2lnbmVkIGxvbmcgc3RhcnQgPSBqaWZmaWVzOworCWxvbmcgZWxhcHNlZDsKIAogCVdBUk5f
-T04oIWNwdW1hc2tfdGVzdF9jcHUocmF3X3NtcF9wcm9jZXNzb3JfaWQoKSwgaGN0eC0+Y3B1bWFz
-aykpOwogCkBAIC04ODksNiArODkyLDEzIEBAIHN0YXRpYyB2b2lkIF9fYmxrX21xX3J1bl9od19x
-dWV1ZShzdHJ1Y3QgYmxrX21xX2h3X2N0eCAqaGN0eCkKIAkJICoqLwogCQlibGtfbXFfcnVuX2h3
-X3F1ZXVlKGhjdHgsIHRydWUpOwogCX0KKworCWVsYXBzZWQgPSBqaWZmaWVzIC0gc3RhcnQ7CisJ
-aWYgKGVsYXBzZWQgPiBtYXhfZWxhcHNlZCkgeworCQltYXhfZWxhcHNlZCA9IGVsYXBzZWQ7CisJ
-CXByX2luZm8oIiVzKCkgZmluaXNoZWQgYWZ0ZXIgJWQgbXNcbiIsIF9fZnVuY19fLAorCQkJamlm
-Zmllc190b19tc2VjcyhlbGFwc2VkKSk7CisJfQogfQogCiAvKgotLSAKMi45LjIKCg==
+Matthew> The series is based upon 4.8-rc1, intended for 4.9, and is
+Matthew> bisectable.
 
---_002_SN1PR0201MB1870C7DFF1595905BDAE985F81150SN1PR0201MB1870_--
+Thanks for making that explicit. Makes my life easier!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
