@@ -1,321 +1,589 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 16/29] be2iscsi: Fix to add timer for UE detection
-Date: Fri, 19 Aug 2016 15:20:13 +0530
-Message-ID: <1471600226-22055-17-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 06/29] be2iscsi: Fix release of DHCP IP in static mode
+Date: Fri, 19 Aug 2016 15:20:03 +0530
+Message-ID: <1471600226-22055-7-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f42.google.com ([74.125.82.42]:38552 "EHLO
-        mail-wm0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754330AbcHSJvf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:35 -0400
-Received: by mail-wm0-f42.google.com with SMTP id o80so32611255wme.1
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:35 -0700 (PDT)
+Received: from mail-wm0-f45.google.com ([74.125.82.45]:37727 "EHLO
+        mail-wm0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753616AbcHSJvK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:10 -0400
+Received: by mail-wm0-f45.google.com with SMTP id i5so32725665wmg.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:04 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-UE detection in health check is done in a work scheduled in global wq.
-UE caused due to transient parity errors are recoverable and reported
-within 1s. If this check for TPE gets delayed, PF0 might initiate
-soft-reset and then status of UE recoverable is lost.
+If BOOTPROTO is changed to static, the DHCP IP address should be released.
+All cases are being handled mgmt_set_ip and mgmt_static_ip_modify.
 
-Handle UE detection in timer routine. Move out EQ delay update work
-from health check. Make the IOCTL for EQ delay update non-blocking
-as the completion status is ignored.
+Rearrange IFACE APIs to:
+beiscsi_if_clr_ip
+beiscsi_if_set_ip
+beiscsi_if_en_static
+beiscsi_if_en_dhcp
+
+This simplifies release of DHCP IP when BOOTPROTO is set to static.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be.h      |  9 +++--
- drivers/scsi/be2iscsi/be_cmds.c |  7 ++++
- drivers/scsi/be2iscsi/be_cmds.h |  2 +-
- drivers/scsi/be2iscsi/be_main.c | 90 ++++++++++++++++++++++-------------------
- drivers/scsi/be2iscsi/be_main.h |  7 +++-
- drivers/scsi/be2iscsi/be_mgmt.c | 11 +++--
- 6 files changed, 75 insertions(+), 51 deletions(-)
+ drivers/scsi/be2iscsi/be_iscsi.c | 125 ++++++-----------
+ drivers/scsi/be2iscsi/be_mgmt.c  | 292 ++++++++++++++++++++-------------------
+ drivers/scsi/be2iscsi/be_mgmt.h  |   8 +-
+ 3 files changed, 201 insertions(+), 224 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be.h b/drivers/scsi/be2iscsi/be.h
-index 454002d..bb4042c 100644
---- a/drivers/scsi/be2iscsi/be.h
-+++ b/drivers/scsi/be2iscsi/be.h
-@@ -89,7 +89,7 @@ struct be_aic_obj {		/* Adaptive interrupt coalescing (AIC) info */
- 	u32 max_eqd;		/* in usecs */
- 	u32 prev_eqd;		/* in usecs */
- 	u32 et_eqd;		/* configured val when aic is off */
--	ulong jiffs;
-+	ulong jiffies;
- 	u64 eq_prev;		/* Used to calculate eqe */
- };
- 
-@@ -111,9 +111,10 @@ struct be_mcc_obj {
- 
- struct beiscsi_mcc_tag_state {
- 	unsigned long tag_state;
--#define MCC_TAG_STATE_RUNNING	1
--#define MCC_TAG_STATE_TIMEOUT	2
--#define MCC_TAG_STATE_ASYNC	3
-+#define MCC_TAG_STATE_RUNNING	0
-+#define MCC_TAG_STATE_TIMEOUT	1
-+#define MCC_TAG_STATE_ASYNC	2
-+#define MCC_TAG_STATE_IGNORE	3
- 	void (*cbfn)(struct beiscsi_hba *, unsigned int);
- 	struct be_dma_mem tag_mem_state;
- };
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 27d10ce..7cb009e 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -515,6 +515,13 @@ int beiscsi_process_mcc_compl(struct be_ctrl_info *ctrl,
- 		return 0;
- 	}
- 
-+	if (test_bit(MCC_TAG_STATE_IGNORE, &ctrl->ptag_state[tag].tag_state)) {
-+		/* just check completion status and free wrb */
-+		__beiscsi_mcc_compl_status(phba, tag, NULL, NULL);
-+		free_mcc_wrb(ctrl, tag);
-+		return 0;
-+	}
-+
- 	wake_up_interruptible(&ctrl->mcc_wait[tag]);
- 	return 0;
- }
-diff --git a/drivers/scsi/be2iscsi/be_cmds.h b/drivers/scsi/be2iscsi/be_cmds.h
-index 0510b67..6fb9673 100644
---- a/drivers/scsi/be2iscsi/be_cmds.h
-+++ b/drivers/scsi/be2iscsi/be_cmds.h
-@@ -743,7 +743,7 @@ unsigned int be_cmd_get_initname(struct beiscsi_hba *phba);
- 
- void free_mcc_wrb(struct be_ctrl_info *ctrl, unsigned int tag);
- 
--int be_cmd_modify_eq_delay(struct beiscsi_hba *phba, struct be_set_eqd *,
-+int beiscsi_modify_eq_delay(struct beiscsi_hba *phba, struct be_set_eqd *,
- 			    int num);
- int beiscsi_mccq_compl_wait(struct beiscsi_hba *phba,
- 			    unsigned int tag,
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index eb4ce17..3dd4f9d 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -4999,8 +4999,9 @@ static void beiscsi_quiesce(struct beiscsi_hba *phba)
- 		if (phba->pcidev->irq)
- 			free_irq(phba->pcidev->irq, phba);
- 	pci_disable_msix(phba->pcidev);
--	cancel_delayed_work_sync(&phba->beiscsi_hw_check_task);
-+	cancel_delayed_work_sync(&phba->eqd_update);
- 	cancel_work_sync(&phba->boot_work);
-+	del_timer_sync(&phba->hw_check);
- 
- 	for (i = 0; i < phba->num_cpus; i++) {
- 		pbe_eq = &phwi_context->be_eq[i];
-@@ -5339,18 +5340,32 @@ static void beiscsi_boot_work(struct work_struct *work)
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 3ebfeff..7e17a8d 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -302,58 +302,6 @@ void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
  	}
  }
  
--static void be_eqd_update(struct beiscsi_hba *phba)
-+static void beiscsi_hw_health_check(unsigned long ptr)
- {
-+	struct beiscsi_hba *phba;
-+
-+	phba = (struct beiscsi_hba *)ptr;
-+	beiscsi_ue_detect(phba);
-+	if (test_bit(BEISCSI_HBA_IN_UE, &phba->state))
-+		return;
-+
-+	mod_timer(&phba->hw_check,
-+		  jiffies + msecs_to_jiffies(BEISCSI_UE_DETECT_INTERVAL));
-+}
-+
-+static void beiscsi_eqd_update_work(struct work_struct *work)
-+{
-+	struct hwi_context_memory *phwi_context;
- 	struct be_set_eqd set_eqd[MAX_CPUS];
--	struct be_aic_obj *aic;
--	struct be_eq_obj *pbe_eq;
- 	struct hwi_controller *phwi_ctrlr;
--	struct hwi_context_memory *phwi_context;
-+	struct be_eq_obj *pbe_eq;
-+	struct beiscsi_hba *phba;
-+	unsigned int pps, delta;
-+	struct be_aic_obj *aic;
- 	int eqd, i, num = 0;
--	ulong now;
--	u32 pps, delta;
--	unsigned int tag;
-+	unsigned long now;
- 
-+	phba = container_of(work, struct beiscsi_hba, eqd_update.work);
- 	if (beiscsi_hba_in_error(phba))
- 		return;
- 
-@@ -5361,13 +5376,13 @@ static void be_eqd_update(struct beiscsi_hba *phba)
- 		aic = &phba->aic_obj[i];
- 		pbe_eq = &phwi_context->be_eq[i];
- 		now = jiffies;
--		if (!aic->jiffs || time_before(now, aic->jiffs) ||
-+		if (!aic->jiffies || time_before(now, aic->jiffies) ||
- 		    pbe_eq->cq_count < aic->eq_prev) {
--			aic->jiffs = now;
-+			aic->jiffies = now;
- 			aic->eq_prev = pbe_eq->cq_count;
- 			continue;
- 		}
--		delta = jiffies_to_msecs(now - aic->jiffs);
-+		delta = jiffies_to_msecs(now - aic->jiffies);
- 		pps = (((u32)(pbe_eq->cq_count - aic->eq_prev) * 1000) / delta);
- 		eqd = (pps / 1500) << 2;
- 
-@@ -5376,7 +5391,7 @@ static void be_eqd_update(struct beiscsi_hba *phba)
- 		eqd = min_t(u32, eqd, phwi_context->max_eqd);
- 		eqd = max_t(u32, eqd, phwi_context->min_eqd);
- 
--		aic->jiffs = now;
-+		aic->jiffies = now;
- 		aic->eq_prev = pbe_eq->cq_count;
- 
- 		if (eqd != aic->prev_eqd) {
-@@ -5386,32 +5401,12 @@ static void be_eqd_update(struct beiscsi_hba *phba)
- 			num++;
- 		}
- 	}
--	if (num) {
--		tag = be_cmd_modify_eq_delay(phba, set_eqd, num);
--		if (tag)
--			beiscsi_mccq_compl_wait(phba, tag, NULL, NULL);
--	}
--}
-+	if (num)
-+		/* completion of this is ignored */
-+		beiscsi_modify_eq_delay(phba, set_eqd, num);
- 
--/*
-- * beiscsi_hw_health_check()- Check adapter health
-- * @work: work item to check HW health
-- *
-- * Check if adapter in an unrecoverable state or not.
-- **/
--static void
--beiscsi_hw_health_check(struct work_struct *work)
+-static int
+-beiscsi_set_static_ip(struct Scsi_Host *shost,
+-		struct iscsi_iface_param_info *iface_param,
+-		void *data, uint32_t dt_len)
 -{
--	struct beiscsi_hba *phba =
--		container_of(work, struct beiscsi_hba,
--			     beiscsi_hw_check_task.work);
+-	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+-	struct iscsi_iface_param_info *iface_ip = NULL;
+-	struct iscsi_iface_param_info *iface_subnet = NULL;
+-	struct nlattr *nla;
+-	int ret;
 -
--	be_eqd_update(phba);
 -
--	beiscsi_ue_detect(phba);
+-	switch (iface_param->param) {
+-	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
+-		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_ADDR);
+-		if (nla)
+-			iface_ip = nla_data(nla);
 -
--	schedule_delayed_work(&phba->beiscsi_hw_check_task,
--			      msecs_to_jiffies(1000));
-+	schedule_delayed_work(&phba->eqd_update,
-+			      msecs_to_jiffies(BEISCSI_EQD_UPDATE_INTERVAL));
+-		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_SUBNET);
+-		if (nla)
+-			iface_subnet = nla_data(nla);
+-		break;
+-	case ISCSI_NET_PARAM_IPV4_ADDR:
+-		iface_ip = iface_param;
+-		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_SUBNET);
+-		if (nla)
+-			iface_subnet = nla_data(nla);
+-		break;
+-	case ISCSI_NET_PARAM_IPV4_SUBNET:
+-		iface_subnet = iface_param;
+-		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_ADDR);
+-		if (nla)
+-			iface_ip = nla_data(nla);
+-		break;
+-	default:
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : Unsupported param %d\n",
+-			    iface_param->param);
+-	}
+-
+-	if (!iface_ip || !iface_subnet) {
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : IP and Subnet Mask required\n");
+-		return -EINVAL;
+-	}
+-
+-	ret = mgmt_set_ip(phba, iface_ip, iface_subnet,
+-			ISCSI_BOOTPROTO_STATIC);
+-
+-	return ret;
+-}
+-
+ /**
+  * beiscsi_set_vlan_tag()- Set the VLAN TAG
+  * @shost: Scsi Host for the driver instance
+@@ -401,17 +349,19 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
+ 
+ 
+ static int
+-beiscsi_set_ipv4(struct Scsi_Host *shost,
+-		struct iscsi_iface_param_info *iface_param,
+-		void *data, uint32_t dt_len)
++beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
++			  struct iscsi_iface_param_info *info,
++			  void *data, uint32_t dt_len)
+ {
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
++	u8 *ip = NULL, *subnet = NULL, *gw;
++	struct nlattr *nla;
+ 	int ret = 0;
+ 
+ 	/* Check the param */
+-	switch (iface_param->param) {
++	switch (info->param) {
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+-		if (iface_param->value[0] == ISCSI_IFACE_ENABLE)
++		if (info->value[0] == ISCSI_IFACE_ENABLE)
+ 			ret = beiscsi_create_ipv4_iface(phba);
+ 		else {
+ 			iscsi_destroy_iface(phba->ipv4_iface);
+@@ -419,42 +369,59 @@ beiscsi_set_ipv4(struct Scsi_Host *shost,
+ 		}
+ 		break;
+ 	case ISCSI_NET_PARAM_IPV4_GW:
+-		ret = beiscsi_if_set_gw(phba, BE2_IPV4, iface_param->value);
++		gw = info->value;
++		ret = beiscsi_if_set_gw(phba, BE2_IPV4, gw);
+ 		break;
+ 	case ISCSI_NET_PARAM_IPV4_BOOTPROTO:
+-		if (iface_param->value[0] == ISCSI_BOOTPROTO_DHCP)
+-			ret = mgmt_set_ip(phba, iface_param,
+-					NULL, ISCSI_BOOTPROTO_DHCP);
+-		else if (iface_param->value[0] == ISCSI_BOOTPROTO_STATIC)
+-			ret = beiscsi_set_static_ip(shost, iface_param,
+-						    data, dt_len);
++		if (info->value[0] == ISCSI_BOOTPROTO_DHCP)
++			ret = beiscsi_if_en_dhcp(phba, BE2_IPV4);
++		else if (info->value[0] == ISCSI_BOOTPROTO_STATIC)
++			/* release DHCP IP address */
++			ret = beiscsi_if_en_static(phba, BE2_IPV4, NULL, NULL);
+ 		else
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 				    "BS_%d : Invalid BOOTPROTO: %d\n",
+-				    iface_param->value[0]);
++				    info->value[0]);
+ 		break;
+-	case ISCSI_NET_PARAM_IPV4_SUBNET:
+ 	case ISCSI_NET_PARAM_IPV4_ADDR:
+-		ret = beiscsi_set_static_ip(shost, iface_param,
+-					    data, dt_len);
++		ip = info->value;
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_SUBNET);
++		if (nla) {
++			info = nla_data(nla);
++			subnet = info->value;
++		}
++		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
++		break;
++	case ISCSI_NET_PARAM_IPV4_SUBNET:
++		/*
++		 * OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR ioctl needs IP
++		 * and subnet both. Find IP to be applied for this subnet.
++		 */
++		subnet = info->value;
++		nla = nla_find(data, dt_len, ISCSI_NET_PARAM_IPV4_ADDR);
++		if (nla) {
++			info = nla_data(nla);
++			ip = info->value;
++		}
++		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_ENABLED:
+ 	case ISCSI_NET_PARAM_VLAN_TAG:
+-		ret = beiscsi_set_vlan_tag(shost, iface_param);
++		ret = beiscsi_set_vlan_tag(shost, info);
+ 		break;
+ 	default:
+ 		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+ 			    "BS_%d : Param %d not supported\n",
+-			    iface_param->param);
++			    info->param);
+ 	}
+ 
+ 	return ret;
  }
  
+ static int
+-beiscsi_set_ipv6(struct Scsi_Host *shost,
+-		struct iscsi_iface_param_info *iface_param,
+-		void *data, uint32_t dt_len)
++beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
++			  struct iscsi_iface_param_info *iface_param,
++			  void *data, uint32_t dt_len)
+ {
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	int ret = 0;
+@@ -469,8 +436,8 @@ beiscsi_set_ipv6(struct Scsi_Host *shost,
+ 		}
+ 		break;
+ 	case ISCSI_NET_PARAM_IPV6_ADDR:
+-		ret = mgmt_set_ip(phba, iface_param, NULL,
+-				  ISCSI_BOOTPROTO_STATIC);
++		ret = beiscsi_if_en_static(phba, BE2_IPV6,
++					   iface_param->value, NULL);
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_ENABLED:
+ 	case ISCSI_NET_PARAM_VLAN_TAG:
+@@ -520,12 +487,12 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
  
-@@ -5560,6 +5555,11 @@ static void beiscsi_eeh_resume(struct pci_dev *pdev)
- 	hwi_enable_intr(phba);
- 	clear_bit(BEISCSI_HBA_PCI_ERR, &phba->state);
- 
-+	/* start hw_check timer and eqd_update work */
-+	schedule_delayed_work(&phba->eqd_update,
-+			      msecs_to_jiffies(BEISCSI_EQD_UPDATE_INTERVAL));
-+	mod_timer(&phba->hw_check,
-+		  jiffies + msecs_to_jiffies(BEISCSI_UE_DETECT_INTERVAL));
- 	return;
- ret_err:
- 	beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-@@ -5707,8 +5707,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 		goto free_twq;
- 	}
- 
--	INIT_DELAYED_WORK(&phba->beiscsi_hw_check_task,
--			  beiscsi_hw_health_check);
-+	INIT_DELAYED_WORK(&phba->eqd_update, beiscsi_eqd_update_work);
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
-@@ -5749,8 +5748,17 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	}
- 
- 	beiscsi_iface_create_default(phba);
--	schedule_delayed_work(&phba->beiscsi_hw_check_task,
--			      msecs_to_jiffies(1000));
-+	schedule_delayed_work(&phba->eqd_update,
-+			      msecs_to_jiffies(BEISCSI_EQD_UPDATE_INTERVAL));
-+	/**
-+	 * Start UE detection here. UE before this will cause stall in probe
-+	 * and eventually fail the probe.
-+	 */
-+	init_timer(&phba->hw_check);
-+	phba->hw_check.function = beiscsi_hw_health_check;
-+	phba->hw_check.data = (unsigned long)phba;
-+	mod_timer(&phba->hw_check,
-+		  jiffies + msecs_to_jiffies(BEISCSI_UE_DETECT_INTERVAL));
- 
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 		    "\n\n\n BM_%d : SUCCESS - DRIVER LOADED\n\n\n");
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 780c3fc..0d34ac6 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -414,7 +414,12 @@ struct beiscsi_hba {
- 				 (1 << BEISCSI_HBA_IN_UE))
- 
- 	u8 optic_state;
--	struct delayed_work beiscsi_hw_check_task;
-+	struct delayed_work eqd_update;
-+	/* update EQ delay timer every 1000ms */
-+#define BEISCSI_EQD_UPDATE_INTERVAL	1000
-+	struct timer_list hw_check;
-+	/* check for UE every 1000ms */
-+#define BEISCSI_UE_DETECT_INTERVAL	1000
- 
- 	bool mac_addr_set;
- 	u8 mac_address[ETH_ALEN];
+ 		switch (iface_param->iface_type) {
+ 		case ISCSI_IFACE_TYPE_IPV4:
+-			ret = beiscsi_set_ipv4(shost, iface_param,
+-					       data, dt_len);
++			ret = beiscsi_iface_config_ipv4(shost, iface_param,
++							data, dt_len);
+ 			break;
+ 		case ISCSI_IFACE_TYPE_IPV6:
+-			ret = beiscsi_set_ipv6(shost, iface_param,
+-					       data, dt_len);
++			ret = beiscsi_iface_config_ipv6(shost, iface_param,
++							data, dt_len);
+ 			break;
+ 		default:
+ 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
 diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index 756e7ae..60a1163 100644
+index 9ef9f76..2a5d65e 100644
 --- a/drivers/scsi/be2iscsi/be_mgmt.c
 +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -97,7 +97,7 @@ static const char * const desc_ue_status_hi[] = {
- };
- 
- /*
-- * beiscsi_ue_detec()- Detect Unrecoverable Error on adapter
-+ * beiscsi_ue_detect()- Detect Unrecoverable Error on adapter
-  * @phba: Driver priv structure
-  *
-  * Read registers linked to UE and check for the UE status
-@@ -152,8 +152,9 @@ void beiscsi_ue_detect(struct beiscsi_hba *phba)
- 	}
+@@ -1004,61 +1004,6 @@ static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
+ 	return 0;
  }
  
--int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
--		 struct be_set_eqd *set_eqd, int num)
-+int beiscsi_modify_eq_delay(struct beiscsi_hba *phba,
-+			    struct be_set_eqd *set_eqd,
-+			    int num)
+-static int
+-mgmt_static_ip_modify(struct beiscsi_hba *phba,
+-		      struct be_cmd_get_if_info_resp *if_info,
+-		      struct iscsi_iface_param_info *ip_param,
+-		      struct iscsi_iface_param_info *subnet_param,
+-		      uint32_t ip_action)
+-{
+-	struct be_cmd_set_ip_addr_req *req;
+-	struct be_dma_mem nonemb_cmd;
+-	uint32_t ip_type;
+-	int rc;
+-
+-	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+-				 OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR,
+-				 sizeof(*req));
+-	if (rc)
+-		return rc;
+-
+-	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
+-		BE2_IPV6 : BE2_IPV4 ;
+-
+-	req = nonemb_cmd.va;
+-	req->ip_params.record_entry_count = 1;
+-	req->ip_params.ip_record.action = ip_action;
+-	req->ip_params.ip_record.interface_hndl =
+-		phba->interface_handle;
+-	req->ip_params.ip_record.ip_addr.size_of_structure =
+-		sizeof(struct be_ip_addr_subnet_format);
+-	req->ip_params.ip_record.ip_addr.ip_type = ip_type;
+-
+-	if (ip_action == IP_ACTION_ADD) {
+-		memcpy(req->ip_params.ip_record.ip_addr.addr, ip_param->value,
+-		       sizeof(req->ip_params.ip_record.ip_addr.addr));
+-
+-		if (subnet_param)
+-			memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
+-			       subnet_param->value,
+-			       sizeof(req->ip_params.ip_record.ip_addr.subnet_mask));
+-	} else {
+-		memcpy(req->ip_params.ip_record.ip_addr.addr,
+-		       if_info->ip_addr.addr,
+-		       sizeof(req->ip_params.ip_record.ip_addr.addr));
+-
+-		memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
+-		       if_info->ip_addr.subnet_mask,
+-		       sizeof(req->ip_params.ip_record.ip_addr.subnet_mask));
+-	}
+-
+-	rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+-	if (rc < 0)
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-			    "BG_%d : Failed to Modify existing IP Address\n");
+-	return rc;
+-}
+-
+ static int beiscsi_if_mod_gw(struct beiscsi_hba *phba,
+ 			     u32 action, u32 ip_type, u8 *gw)
  {
- 	struct be_ctrl_info *ctrl = &phba->ctrl;
- 	struct be_mcc_wrb *wrb;
-@@ -171,7 +172,7 @@ int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
- 	req = embedded_payload(wrb);
- 	be_wrb_hdr_prepare(wrb, sizeof(*req), true, 0);
- 	be_cmd_hdr_prepare(&req->hdr, CMD_SUBSYSTEM_COMMON,
--		OPCODE_COMMON_MODIFY_EQ_DELAY, sizeof(*req));
-+			   OPCODE_COMMON_MODIFY_EQ_DELAY, sizeof(*req));
+@@ -1129,120 +1074,185 @@ int beiscsi_if_get_gw(struct beiscsi_hba *phba, u32 ip_type,
+ 				    sizeof(*resp));
+ }
  
- 	req->num_eq = cpu_to_le32(num);
- 	for (i = 0; i < num; i++) {
-@@ -181,6 +182,8 @@ int be_cmd_modify_eq_delay(struct beiscsi_hba *phba,
- 				cpu_to_le32(set_eqd[i].delay_multiplier);
+-int mgmt_set_ip(struct beiscsi_hba *phba,
+-		struct iscsi_iface_param_info *ip_param,
+-		struct iscsi_iface_param_info *subnet_param,
+-		uint32_t boot_proto)
++static int
++beiscsi_if_clr_ip(struct beiscsi_hba *phba,
++		  struct be_cmd_get_if_info_resp *if_info)
+ {
+-	struct be_cmd_get_def_gateway_resp gtway_addr_set;
+-	struct be_cmd_get_if_info_resp *if_info;
+-	struct be_cmd_set_dhcp_req *dhcpreq;
+-	struct be_cmd_rel_dhcp_req *reldhcp;
++	struct be_cmd_set_ip_addr_req *req;
+ 	struct be_dma_mem nonemb_cmd;
+-	uint8_t *gtway_addr;
+-	uint32_t ip_type;
+ 	int rc;
+ 
+-	rc = mgmt_get_all_if_id(phba);
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR,
++				 sizeof(*req));
+ 	if (rc)
+ 		return rc;
+ 
+-	ip_type = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
+-		BE2_IPV6 : BE2_IPV4 ;
++	req = nonemb_cmd.va;
++	req->ip_params.record_entry_count = 1;
++	req->ip_params.ip_record.action = IP_ACTION_DEL;
++	req->ip_params.ip_record.interface_hndl =
++		phba->interface_handle;
++	req->ip_params.ip_record.ip_addr.size_of_structure =
++		sizeof(struct be_ip_addr_subnet_format);
++	req->ip_params.ip_record.ip_addr.ip_type = if_info->ip_addr.ip_type;
++	memcpy(req->ip_params.ip_record.ip_addr.addr,
++	       if_info->ip_addr.addr,
++	       sizeof(if_info->ip_addr.addr));
++	memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
++	       if_info->ip_addr.subnet_mask,
++	       sizeof(if_info->ip_addr.subnet_mask));
++	rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++	if (rc < 0 || req->ip_params.ip_record.status) {
++		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
++			    "BG_%d : failed to clear IP: rc %d status %d\n",
++			    rc, req->ip_params.ip_record.status);
++	}
++	return rc;
++}
+ 
+-	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++static int
++beiscsi_if_set_ip(struct beiscsi_hba *phba, u8 *ip,
++		  u8 *subnet, u32 ip_type)
++{
++	struct be_cmd_set_ip_addr_req *req;
++	struct be_dma_mem nonemb_cmd;
++	uint32_t ip_len;
++	int rc;
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				 OPCODE_COMMON_ISCSI_NTWK_MODIFY_IP_ADDR,
++				 sizeof(*req));
+ 	if (rc)
+ 		return rc;
+ 
+-	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
+-		if (if_info->dhcp_state) {
+-			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-				    "BG_%d : DHCP Already Enabled\n");
+-			goto exit;
+-		}
+-		/* The ip_param->len is 1 in DHCP case. Setting
+-		   proper IP len as this it is used while
+-		   freeing the Static IP.
+-		 */
+-		ip_param->len = (ip_param->param == ISCSI_NET_PARAM_IPV6_ADDR) ?
+-				IP_V6_LEN : IP_V4_LEN;
+-
+-	} else {
+-		if (if_info->dhcp_state) {
+-
+-			memset(if_info, 0, sizeof(*if_info));
+-			rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+-				OPCODE_COMMON_ISCSI_NTWK_REL_STATELESS_IP_ADDR,
+-				sizeof(*reldhcp));
++	req = nonemb_cmd.va;
++	req->ip_params.record_entry_count = 1;
++	req->ip_params.ip_record.action = IP_ACTION_ADD;
++	req->ip_params.ip_record.interface_hndl =
++		phba->interface_handle;
++	req->ip_params.ip_record.ip_addr.size_of_structure =
++		sizeof(struct be_ip_addr_subnet_format);
++	req->ip_params.ip_record.ip_addr.ip_type = ip_type;
++	ip_len = ip_type == BE2_IPV4 ? IP_V4_LEN : IP_V6_LEN;
++	memcpy(req->ip_params.ip_record.ip_addr.addr, ip, ip_len);
++	if (subnet)
++		memcpy(req->ip_params.ip_record.ip_addr.subnet_mask,
++		       subnet, ip_len);
+ 
+-			if (rc)
+-				goto exit;
++	rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++	/**
++	 * In some cases, host needs to look into individual record status
++	 * even though FW reported success for that IOCTL.
++	 */
++	if (rc < 0 || req->ip_params.ip_record.status) {
++		__beiscsi_log(phba, KERN_ERR,
++			    "BG_%d : failed to set IP: rc %d status %d\n",
++			    rc, req->ip_params.ip_record.status);
++		if (req->ip_params.ip_record.status)
++			rc = -EINVAL;
++	}
++	return rc;
++}
+ 
+-			reldhcp = nonemb_cmd.va;
+-			reldhcp->interface_hndl = phba->interface_handle;
+-			reldhcp->ip_type = ip_type;
++int beiscsi_if_en_static(struct beiscsi_hba *phba, u32 ip_type,
++			 u8 *ip, u8 *subnet)
++{
++	struct be_cmd_get_if_info_resp *if_info;
++	struct be_cmd_rel_dhcp_req *reldhcp;
++	struct be_dma_mem nonemb_cmd;
++	int rc;
+ 
+-			rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+-			if (rc < 0) {
+-				beiscsi_log(phba, KERN_WARNING,
+-					    BEISCSI_LOG_CONFIG,
+-					    "BG_%d : Failed to Delete existing dhcp\n");
+-				goto exit;
+-			}
+-		}
+-	}
++	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++	if (rc)
++		return rc;
+ 
+-	/* Delete the Static IP Set */
+-	if (if_info->ip_addr.addr[0]) {
+-		rc = mgmt_static_ip_modify(phba, if_info, ip_param, NULL,
+-					   IP_ACTION_DEL);
++	if (if_info->dhcp_state) {
++		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++				OPCODE_COMMON_ISCSI_NTWK_REL_STATELESS_IP_ADDR,
++				sizeof(*reldhcp));
+ 		if (rc)
+ 			goto exit;
+-	}
+ 
+-	/* Delete the Gateway settings if mode change is to DHCP */
+-	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
+-		memset(&gtway_addr_set, 0, sizeof(gtway_addr_set));
+-		rc = beiscsi_if_get_gw(phba, BE2_IPV4, &gtway_addr_set);
+-		if (rc) {
++		reldhcp = nonemb_cmd.va;
++		reldhcp->interface_hndl = phba->interface_handle;
++		reldhcp->ip_type = ip_type;
++		rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
++		if (rc < 0) {
+ 			beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-				    "BG_%d : Failed to Get Gateway Addr\n");
++				    "BG_%d : failed to release existing DHCP: %d\n",
++				    rc);
+ 			goto exit;
+ 		}
++	}
+ 
+-		if (gtway_addr_set.ip_addr.addr[0]) {
+-			gtway_addr = (uint8_t *)&gtway_addr_set.ip_addr.addr;
+-			rc = beiscsi_if_mod_gw(phba, IP_ACTION_DEL,
+-					       ip_type, gtway_addr);
++	/* first delete any old IP set */
++	rc = beiscsi_if_clr_ip(phba, if_info);
++	if (rc)
++		goto exit;
+ 
+-			if (rc) {
+-				beiscsi_log(phba, KERN_WARNING,
+-					    BEISCSI_LOG_CONFIG,
+-					    "BG_%d : Failed to clear Gateway Addr Set\n");
+-				goto exit;
+-			}
+-		}
++	/* if ip == NULL then this is called just to release DHCP IP */
++	if (ip)
++		rc = beiscsi_if_set_ip(phba, ip, subnet, ip_type);
++exit:
++	kfree(if_info);
++	return rc;
++}
++
++int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type)
++{
++	struct be_cmd_get_def_gateway_resp gw_resp;
++	struct be_cmd_get_if_info_resp *if_info;
++	struct be_cmd_set_dhcp_req *dhcpreq;
++	struct be_dma_mem nonemb_cmd;
++	u8 *gw;
++	int rc;
++
++	rc = mgmt_get_if_info(phba, ip_type, &if_info);
++	if (rc)
++		return rc;
++
++	if (if_info->dhcp_state) {
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++				"BG_%d : DHCP Already Enabled\n");
++		goto exit;
  	}
  
-+	/* ignore the completion of this mbox command */
-+	set_bit(MCC_TAG_STATE_IGNORE, &ctrl->ptag_state[tag].tag_state);
- 	be_mcc_notify(phba, tag);
- 	mutex_unlock(&ctrl->mbox_lock);
- 	return tag;
+-	/* Set Adapter to DHCP/Static Mode */
+-	if (boot_proto == ISCSI_BOOTPROTO_DHCP) {
+-		rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
++	/* first delete any old static IP set */
++	rc = beiscsi_if_clr_ip(phba, if_info);
++	if (rc)
++		goto exit;
++
++	/* delete gateway settings if mode change is to DHCP */
++	memset(&gw_resp, 0, sizeof(gw_resp));
++	/* use ip_type provided in if_info */
++	rc = beiscsi_if_get_gw(phba, if_info->ip_addr.ip_type, &gw_resp);
++	if (rc) {
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++			    "BG_%d : Failed to Get Gateway Addr\n");
++		goto exit;
++	}
++	gw = (u8 *)&gw_resp.ip_addr.addr;
++	rc = beiscsi_if_mod_gw(phba, IP_ACTION_DEL,
++			       if_info->ip_addr.ip_type, gw);
++	if (rc) {
++		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
++				"BG_%d : Failed to clear Gateway Addr Set\n");
++		goto exit;
++	}
++
++	rc = mgmt_alloc_cmd_data(phba, &nonemb_cmd,
+ 			OPCODE_COMMON_ISCSI_NTWK_CONFIG_STATELESS_IP_ADDR,
+ 			sizeof(*dhcpreq));
+-		if (rc)
+-			goto exit;
+-
+-		dhcpreq = nonemb_cmd.va;
+-		dhcpreq->flags = BLOCKING;
+-		dhcpreq->retry_count = 1;
+-		dhcpreq->interface_hndl = phba->interface_handle;
+-		dhcpreq->ip_type = BE2_DHCP_V4;
++	if (rc)
++		goto exit;
+ 
+-		rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+-	} else {
+-		rc = mgmt_static_ip_modify(phba, if_info, ip_param,
+-					     subnet_param, IP_ACTION_ADD);
+-	}
++	dhcpreq = nonemb_cmd.va;
++	dhcpreq->flags = BLOCKING;
++	dhcpreq->retry_count = 1;
++	dhcpreq->interface_hndl = phba->interface_handle;
++	dhcpreq->ip_type = ip_type;
++	rc = mgmt_exec_nonemb_cmd(phba, &nonemb_cmd, NULL, 0);
+ 
+ exit:
+ 	kfree(if_info);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index fd9b68f..71a9609 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -277,10 +277,10 @@ unsigned int mgmt_invalidate_connection(struct beiscsi_hba *phba,
+ 					 unsigned short issue_reset,
+ 					 unsigned short savecfg_flag);
+ 
+-int mgmt_set_ip(struct beiscsi_hba *phba,
+-		struct iscsi_iface_param_info *ip_param,
+-		struct iscsi_iface_param_info *subnet_param,
+-		uint32_t boot_proto);
++int beiscsi_if_en_dhcp(struct beiscsi_hba *phba, u32 ip_type);
++
++int beiscsi_if_en_static(struct beiscsi_hba *phba, u32 ip_type,
++			 u8 *ip, u8 *subnet);
+ 
+ unsigned int mgmt_get_boot_target(struct beiscsi_hba *phba);
+ 
 -- 
 1.9.1
 
