@@ -1,35 +1,37 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 0/3] Fix panic when a SES device is attached to a hpsa logical volume.
-Date: Thu, 18 Aug 2016 22:24:11 -0400
-Message-ID: <yq17fbdijhw.fsf@sermon.lab.mkp.net>
-References: <cover.1471426748.git.jthumshirn@suse.de>
+Subject: Re: [RFC PATCH 0/4] libfc: Do not send ABTS when resetting exchanges
+Date: Thu, 18 Aug 2016 22:36:22 -0400
+Message-ID: <yq137m1iixl.fsf@sermon.lab.mkp.net>
+References: <1470401703-87045-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37704 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:40665 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754461AbcHSCYW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2016 22:24:22 -0400
-In-Reply-To: <cover.1471426748.git.jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Wed, 17 Aug 2016 11:46:15 +0200")
+        with ESMTP id S1754838AbcHSCgp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2016 22:36:45 -0400
+In-Reply-To: <1470401703-87045-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Fri, 5 Aug 2016 14:54:59 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Chad Dupuis <chad.dupuis@qlogic.com>, linux-scsi@vger.kernel.org
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Johannes> The first patch provides stub implementations for
-Johannes> scsi_is_sas_phy() and sas_get_address() for the case that
-Johannes> CONFIG_SCSI_SAS_ATTRS is not defined.
+Hannes> Hi all, here's a patchset to fixup an issue reported by QLogic:
+Hannes> when running against a certain target the libfc stack would get
+Hannes> in an infinite loop sending ABTS when trying to reset a
+Hannes> connection.  The problem is that the libfc stack is sending ABTS
+Hannes> for any open exchanges when removing an rport, totally ignorant
+Hannes> of the fact that in most cases we are already logged out of the
+Hannes> said remote port.  This patchset alters the handling slightly so
+Hannes> that we will only ever reset open exchanges after we have either
+Hannes> logged out of the port or an implicit logout can be assumed.
+Hannes> With that we don't need to send ABTS any more during rport
+Hannes> reset.
 
-Johannes> The second patch implements the actual fix in ses.c by
-Johannes> changing the is_sas_attached() call to scsi_is_sas_rphy().
-
-Johannes> The third and last patch removes is_sas_attached() as it
-Johannes> doesn't have any more consumers left.
-
-Applied to 4.8/scsi-fixes.
+Applied to 4.9/scsi-queue. I had to do patch 2 by hand. Please check.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
