@@ -1,56 +1,312 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 03/29] be2iscsi: Reduce driver load/unload time
-Date: Fri, 19 Aug 2016 15:20:00 +0530
-Message-ID: <1471600226-22055-4-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 07/29] be2iscsi: Move VLAN code to common iface_set_param
+Date: Fri, 19 Aug 2016 15:20:04 +0530
+Message-ID: <1471600226-22055-8-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f41.google.com ([74.125.82.41]:37596 "EHLO
-        mail-wm0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753410AbcHSJvK (ORCPT
+Received: from mail-wm0-f47.google.com ([74.125.82.47]:35162 "EHLO
+        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753637AbcHSJvK (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Fri, 19 Aug 2016 05:51:10 -0400
-Received: by mail-wm0-f41.google.com with SMTP id i5so32719510wmg.0
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:50:54 -0700 (PDT)
+Received: by mail-wm0-f47.google.com with SMTP id f65so27470235wmi.0
+        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:51:07 -0700 (PDT)
 In-Reply-To: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: mchristi@redhat.com, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-Driver takes significant time to load 1m:20s and unload 40s.
-
-Checkpatch script threw warning:
-WARNING: msleep < 20ms can sleep for up to 20ms; see
-Documentation/timers/timers-howto.txt
-
-To eliminate this warning msleep(1) was replaced with msleep(20) before
-submitting.
-
-msleep(20) in init and uninit path for creation and destroying of number
-of WRBQs, CQs, and EQs is adding to load/unload time.
-
-Replace msleep with schedule_timeout_uninterruptible of 1ms as its
-enough in most cases.
+VLAN tag is L2 construct, move VLAN code out from configuring IP.
+Rearrange and rename the APIs to make it consistent.
+Replace ENOSYS with EPERM.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/be2iscsi/be_cmds.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/be2iscsi/be_iscsi.c | 89 ++++++++++++++++++++--------------------
+ drivers/scsi/be2iscsi/be_mgmt.c  | 75 +++++++++++++++++----------------
+ drivers/scsi/be2iscsi/be_mgmt.h  |  2 +-
+ 3 files changed, 84 insertions(+), 82 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_cmds.c b/drivers/scsi/be2iscsi/be_cmds.c
-index 0ef3d5a..59b8e2d 100644
---- a/drivers/scsi/be2iscsi/be_cmds.c
-+++ b/drivers/scsi/be2iscsi/be_cmds.c
-@@ -655,7 +655,8 @@ static int be_mbox_db_ready_poll(struct be_ctrl_info *ctrl)
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 7e17a8d..b725536 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -315,8 +315,8 @@ void beiscsi_destroy_def_ifaces(struct beiscsi_hba *phba)
+  *	Failure: Non-Zero Value
+  **/
+ static int
+-beiscsi_set_vlan_tag(struct Scsi_Host *shost,
+-		      struct iscsi_iface_param_info *iface_param)
++beiscsi_iface_config_vlan(struct Scsi_Host *shost,
++			  struct iscsi_iface_param_info *iface_param)
+ {
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	int ret;
+@@ -329,20 +329,17 @@ beiscsi_set_vlan_tag(struct Scsi_Host *shost,
+ 		return ret;
+ 	}
  
- 		if (time_after(jiffies, timeout))
++	ret = -EPERM;
+ 	switch (iface_param->param) {
+ 	case ISCSI_NET_PARAM_VLAN_ENABLED:
++		ret = 0;
+ 		if (iface_param->value[0] != ISCSI_VLAN_ENABLE)
+-			ret = mgmt_set_vlan(phba, BEISCSI_VLAN_DISABLE);
++			ret = beiscsi_if_set_vlan(phba, BEISCSI_VLAN_DISABLE);
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_TAG:
+-		ret = mgmt_set_vlan(phba,
+-				    *((uint16_t *)iface_param->value));
++		ret = beiscsi_if_set_vlan(phba,
++					  *((uint16_t *)iface_param->value));
+ 		break;
+-	default:
+-		beiscsi_log(phba, KERN_WARNING, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : Unknown Param Type : %d\n",
+-			    iface_param->param);
+-		return -ENOSYS;
+ 	}
+ 	return ret;
+ }
+@@ -356,7 +353,7 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+ 	u8 *ip = NULL, *subnet = NULL, *gw;
+ 	struct nlattr *nla;
+-	int ret = 0;
++	int ret = -EPERM;
+ 
+ 	/* Check the param */
+ 	switch (info->param) {
+@@ -405,14 +402,6 @@ beiscsi_iface_config_ipv4(struct Scsi_Host *shost,
+ 		}
+ 		ret = beiscsi_if_en_static(phba, BE2_IPV4, ip, subnet);
+ 		break;
+-	case ISCSI_NET_PARAM_VLAN_ENABLED:
+-	case ISCSI_NET_PARAM_VLAN_TAG:
+-		ret = beiscsi_set_vlan_tag(shost, info);
+-		break;
+-	default:
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : Param %d not supported\n",
+-			    info->param);
+ 	}
+ 
+ 	return ret;
+@@ -424,7 +413,7 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
+ 			  void *data, uint32_t dt_len)
+ {
+ 	struct beiscsi_hba *phba = iscsi_host_priv(shost);
+-	int ret = 0;
++	int ret = -EPERM;
+ 
+ 	switch (iface_param->param) {
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+@@ -439,14 +428,6 @@ beiscsi_iface_config_ipv6(struct Scsi_Host *shost,
+ 		ret = beiscsi_if_en_static(phba, BE2_IPV6,
+ 					   iface_param->value, NULL);
+ 		break;
+-	case ISCSI_NET_PARAM_VLAN_ENABLED:
+-	case ISCSI_NET_PARAM_VLAN_TAG:
+-		ret = beiscsi_set_vlan_tag(shost, iface_param);
+-		break;
+-	default:
+-		beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-			    "BS_%d : Param %d not supported\n",
+-			    iface_param->param);
+ 	}
+ 
+ 	return ret;
+@@ -485,24 +466,42 @@ int be2iscsi_iface_set_param(struct Scsi_Host *shost,
+ 			return -EINVAL;
+ 		}
+ 
+-		switch (iface_param->iface_type) {
+-		case ISCSI_IFACE_TYPE_IPV4:
+-			ret = beiscsi_iface_config_ipv4(shost, iface_param,
+-							data, dt_len);
+-			break;
+-		case ISCSI_IFACE_TYPE_IPV6:
+-			ret = beiscsi_iface_config_ipv6(shost, iface_param,
+-							data, dt_len);
++		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
++			    "BS_%d : %s.0 set param %d",
++			    (iface_param->iface_type == ISCSI_IFACE_TYPE_IPV4) ?
++			    "ipv4" : "ipv6", iface_param->param);
++
++		ret = -EPERM;
++		switch (iface_param->param) {
++		case ISCSI_NET_PARAM_VLAN_ENABLED:
++		case ISCSI_NET_PARAM_VLAN_TAG:
++			ret = beiscsi_iface_config_vlan(shost, iface_param);
  			break;
--		msleep(20);
-+		/* 1ms sleep is enough in most cases */
-+		schedule_timeout_uninterruptible(msecs_to_jiffies(1));
- 	} while (!ready);
+ 		default:
+-			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_CONFIG,
+-				    "BS_%d : Invalid iface type :%d passed\n",
+-				    iface_param->iface_type);
+-			break;
++			switch (iface_param->iface_type) {
++			case ISCSI_IFACE_TYPE_IPV4:
++				ret = beiscsi_iface_config_ipv4(shost,
++								iface_param,
++								data, dt_len);
++				break;
++			case ISCSI_IFACE_TYPE_IPV6:
++				ret = beiscsi_iface_config_ipv6(shost,
++								iface_param,
++								data, dt_len);
++				break;
++			}
+ 		}
  
- 	beiscsi_log(phba, KERN_ERR,
++		if (ret == -EPERM) {
++			__beiscsi_log(phba, KERN_ERR,
++				      "BS_%d : %s.0 set param %d not permitted",
++				      (iface_param->iface_type ==
++				       ISCSI_IFACE_TYPE_IPV4) ? "ipv4" : "ipv6",
++				      iface_param->param);
++			ret = 0;
++		}
+ 		if (ret)
+-			return ret;
++			break;
+ 	}
+ 
+ 	return ret;
+@@ -548,16 +547,16 @@ static int be2iscsi_get_if_param(struct beiscsi_hba *phba,
+ 			len = -EINVAL;
+ 		else
+ 			len = sprintf(buf, "%d\n",
+-				     (if_info->vlan_priority &
+-				     ISCSI_MAX_VLAN_ID));
++				      (if_info->vlan_priority &
++				       ISCSI_MAX_VLAN_ID));
+ 		break;
+ 	case ISCSI_NET_PARAM_VLAN_PRIORITY:
+ 		if (if_info->vlan_priority == BEISCSI_VLAN_DISABLE)
+ 			len = -EINVAL;
+ 		else
+ 			len = sprintf(buf, "%d\n",
+-				     ((if_info->vlan_priority >> 13) &
+-				     ISCSI_MAX_VLAN_PRIORITY));
++				      ((if_info->vlan_priority >> 13) &
++				       ISCSI_MAX_VLAN_PRIORITY));
+ 		break;
+ 	default:
+ 		WARN_ON(1);
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
+index 2a5d65e..5643cf1 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.c
++++ b/drivers/scsi/be2iscsi/be_mgmt.c
+@@ -1001,6 +1001,9 @@ static int mgmt_alloc_cmd_data(struct beiscsi_hba *phba, struct be_dma_mem *cmd,
+ 	}
+ 	cmd->size = size;
+ 	be_cmd_hdr_prepare(cmd->va, CMD_SUBSYSTEM_ISCSI, iscsi_cmd, size);
++	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
++		    "BG_%d : subsystem iSCSI cmd %d size %d\n",
++		    iscsi_cmd, size);
+ 	return 0;
+ }
+ 
+@@ -1259,6 +1262,42 @@ exit:
+ 	return rc;
+ }
+ 
++/**
++ * beiscsi_if_set_vlan()- Issue and wait for CMD completion
++ * @phba: device private structure instance
++ * @vlan_tag: VLAN tag
++ *
++ * Issue the MBX Cmd and wait for the completion of the
++ * command.
++ *
++ * returns
++ *	Success: 0
++ *	Failure: Non-Xero Value
++ **/
++int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag)
++{
++	int rc;
++	unsigned int tag;
++
++	tag = be_cmd_set_vlan(phba, vlan_tag);
++	if (!tag) {
++		beiscsi_log(phba, KERN_ERR,
++			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
++			    "BG_%d : VLAN Setting Failed\n");
++		return -EBUSY;
++	}
++
++	rc = beiscsi_mccq_compl_wait(phba, tag, NULL, NULL);
++	if (rc) {
++		beiscsi_log(phba, KERN_ERR,
++			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
++			    "BS_%d : VLAN MBX Cmd Failed\n");
++		return rc;
++	}
++	return rc;
++}
++
++
+ int mgmt_get_if_info(struct beiscsi_hba *phba, int ip_type,
+ 		     struct be_cmd_get_if_info_resp **if_info)
+ {
+@@ -1448,42 +1487,6 @@ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+ }
+ 
+ /**
+- * mgmt_set_vlan()- Issue and wait for CMD completion
+- * @phba: device private structure instance
+- * @vlan_tag: VLAN tag
+- *
+- * Issue the MBX Cmd and wait for the completion of the
+- * command.
+- *
+- * returns
+- *	Success: 0
+- *	Failure: Non-Xero Value
+- **/
+-int mgmt_set_vlan(struct beiscsi_hba *phba,
+-		   uint16_t vlan_tag)
+-{
+-	int rc;
+-	unsigned int tag;
+-
+-	tag = be_cmd_set_vlan(phba, vlan_tag);
+-	if (!tag) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
+-			    "BG_%d : VLAN Setting Failed\n");
+-		return -EBUSY;
+-	}
+-
+-	rc = beiscsi_mccq_compl_wait(phba, tag, NULL, NULL);
+-	if (rc) {
+-		beiscsi_log(phba, KERN_ERR,
+-			    (BEISCSI_LOG_CONFIG | BEISCSI_LOG_MBOX),
+-			    "BS_%d : VLAN MBX Cmd Failed\n");
+-		return rc;
+-	}
+-	return rc;
+-}
+-
+-/**
+  * beiscsi_drvr_ver_disp()- Display the driver Name and Version
+  * @dev: ptr to device not used.
+  * @attr: device attribute, not used.
+diff --git a/drivers/scsi/be2iscsi/be_mgmt.h b/drivers/scsi/be2iscsi/be_mgmt.h
+index 71a9609..7637b9e 100644
+--- a/drivers/scsi/be2iscsi/be_mgmt.h
++++ b/drivers/scsi/be2iscsi/be_mgmt.h
+@@ -308,7 +308,7 @@ int be_mgmt_get_boot_shandle(struct beiscsi_hba *phba,
+ 
+ unsigned int mgmt_get_all_if_id(struct beiscsi_hba *phba);
+ 
+-int mgmt_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
++int beiscsi_if_set_vlan(struct beiscsi_hba *phba, uint16_t vlan_tag);
+ 
+ ssize_t beiscsi_drvr_ver_disp(struct device *dev,
+ 			       struct device_attribute *attr, char *buf);
 -- 
 1.9.1
 
