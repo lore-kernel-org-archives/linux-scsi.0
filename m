@@ -1,39 +1,31 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 153171] scsi host6: runtime PM trying to activate child device
- host6 but parent (2-2:1.0) is not active
-Date: Fri, 19 Aug 2016 02:17:59 +0000
-Message-ID: <bug-153171-11613-KSqW9Rozqx@https.bugzilla.kernel.org/>
-References: <bug-153171-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Thu, 18 Aug 2016 22:19:02 -0400
+Message-ID: <yq1bn0pijqh.fsf@sermon.lab.mkp.net>
+References: <1471349112-13876-1-git-send-email-oneukum@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55684 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753571AbcHSCSD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 18 Aug 2016 22:18:03 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id D5A412026F
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:18:01 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id A6ECA20270
-        for <linux-scsi@vger.kernel.org>; Fri, 19 Aug 2016 02:17:59 +0000 (UTC)
-In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
+Received: from userp1040.oracle.com ([156.151.31.81]:36660 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753820AbcHSCTY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 18 Aug 2016 22:19:24 -0400
+In-Reply-To: <1471349112-13876-1-git-send-email-oneukum@suse.com> (Oliver
+        Neukum's message of "Tue, 16 Aug 2016 14:05:12 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Oliver Neukum <oneukum@suse.com>
+Cc: linux-usb@vger.kernel.org, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, jthumshirn@suse.com, mdharm-usb@one-eyed-alien.net, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 
-https://bugzilla.kernel.org/show_bug.cgi?id=153171
+>>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
 
---- Comment #2 from Martin K. Petersen <martin.petersen@oracle.com> ---
->>>>> "Heiner" == Heiner Kallweit <hkallweit1@gmail.com> writes:
+Oliver> Some SATA to USB bridges fail to cooperate with some drives
+Oliver> resulting in no cache being present being reported to the
+Oliver> host. That causes the host to skip sending a command to
+Oliver> synchronize caches. That causes data loss when the drive is
+Oliver> powered down.
 
-Heiner> This issue is fixed by patch scsi: "core: configure runtime pm
-Heiner> before calling device_add in scsi_add_host_with_dma" I sent on
-Heiner> Aug 3rd.
-
-Severely lacking in the reviews department, though :(
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Martin K. Petersen	Oracle Linux Engineering
