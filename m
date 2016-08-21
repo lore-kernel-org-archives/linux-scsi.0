@@ -1,47 +1,50 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: [PATCH 7/7] aacraid: Apply another recommendation from
- "checkpatch.pl"
-Date: Sun, 21 Aug 2016 09:29:24 +0200
-Message-ID: <03ee5f77-5866-1186-b160-bb5141848865@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] megaraid_sas: Fix the search of first memory bar
+Date: Sun, 21 Aug 2016 10:28:25 +0200
+Message-ID: <1471768105-14730-1-git-send-email-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, aacraid@microsemi.com, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
+To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Markus Elfring <elfring@users.sourceforge.net>
-Date: Sun, 21 Aug 2016 08:23:25 +0200
+The 2nd parameter of 'find_first_bit' is the number of bits to search.
+In this case, we are passing 'sizeof(unsigned long)' which is likely to
+be 4.
 
-The script "checkpatch.pl" can point out that assignments should usually
-not be performed within condition checks.
-Thus move the assignment for the variable "srbfib" to a separate statement.
+It is likely that the number of bits in a long was expected here, so use
+BITS_PER_LONG instead.
 
-Signed-off-by: Markus Elfring <elfring@users.sourceforge.net>
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 ---
- drivers/scsi/aacraid/commctrl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Other options are possible:
+  - 'bar_list' being a 'unsigned long', use __ffs to reduce code verbosity
+  - PCI_NUM_RESOURCES, which is the maximum number of bits that can be set
+    by 'pci_select_bars()'
+---
+ drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index d2029db..7e6c76d 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -499,9 +499,9 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 	/*
- 	 *	Allocate and initialize a Fib then setup a SRB command
- 	 */
--	if (!(srbfib = aac_fib_alloc(dev))) {
-+	srbfib = aac_fib_alloc(dev);
-+	if (!srbfib)
- 		return -ENOMEM;
--	}
- 	aac_fib_init(srbfib);
- 	/* raw_srb FIB is not FastResponseCapable */
- 	srbfib->hw_fib_va->header.XferState &= ~cpu_to_le32(FastResponseCapable);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index c1ed25adb17e..7d3de811d33c 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5036,7 +5036,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 
+ 	/* Find first memory bar */
+ 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
+-	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
++	instance->bar = find_first_bit(&bar_list, BITS_PER_LONG);
+ 	if (pci_request_selected_regions(instance->pdev, 1<<instance->bar,
+ 					 "megasas: LSI")) {
+ 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "IO memory region busy!\n");
 -- 
-2.9.3
+2.7.4
+
+
+---
+L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
+https://www.avast.com/antivirus
