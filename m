@@ -1,50 +1,29 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] megaraid_sas: Fix the search of first memory bar
-Date: Sun, 21 Aug 2016 10:28:25 +0200
-Message-ID: <1471768105-14730-1-git-send-email-christophe.jaillet@wanadoo.fr>
+From: "Bussiness Alert. X" <geyjon.geroquiah@jollibee.com.ph>
+Subject: GOOD NEWS.
+Date: Sun, 21 Aug 2016 15:48:42 +0800
+Message-ID: <20160821074819.5B2F9124C4B@smtp.jollibee.com.ph>
+Reply-To: hans.kkresic@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 9.168.28.61.unassigned.static.eastern-tele.com ([61.28.168.9]:17301
+        "EHLO smtp.jollibee.com.ph" rhost-flags-OK-FAIL-OK-OK)
+        by vger.kernel.org with ESMTP id S1751789AbcHUIrD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 21 Aug 2016 04:47:03 -0400
+Received: from RDP.daihatsu-units.com (unknown [175.139.252.237])
+        (Authenticated sender: geyjon.geroquiah@jollibee.com.ph)
+        by smtp.jollibee.com.ph (Postfix) with ESMTP id 5B2F9124C4B
+        for <linux-scsi@vger.kernel.org>; Sun, 21 Aug 2016 15:48:19 +0800 (PHT)
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The 2nd parameter of 'find_first_bit' is the number of bits to search.
-In this case, we are passing 'sizeof(unsigned long)' which is likely to
-be 4.
+Dear Sir/Ma
+By this email I am checking the possibility of going into confidentiality partnership with you to facilitate and provide  guidance for investment of funds from overseas.
+I run oil and gas businesses in Gabon and Angola, and currently have access to high-net-worth individuals who are  interested in accessing the foreign economic opportunities through private investments in real estate or other businesses.
+Please contact me for details:hans.kkresic@gmail.com
 
-It is likely that the number of bits in a long was expected here, so use
-BITS_PER_LONG instead.
-
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-Other options are possible:
-  - 'bar_list' being a 'unsigned long', use __ffs to reduce code verbosity
-  - PCI_NUM_RESOURCES, which is the maximum number of bits that can be set
-    by 'pci_select_bars()'
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index c1ed25adb17e..7d3de811d33c 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5036,7 +5036,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 
- 	/* Find first memory bar */
- 	bar_list = pci_select_bars(instance->pdev, IORESOURCE_MEM);
--	instance->bar = find_first_bit(&bar_list, sizeof(unsigned long));
-+	instance->bar = find_first_bit(&bar_list, BITS_PER_LONG);
- 	if (pci_request_selected_regions(instance->pdev, 1<<instance->bar,
- 					 "megasas: LSI")) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "IO memory region busy!\n");
--- 
-2.7.4
-
-
----
-L'absence de virus dans ce courrier électronique a été vérifiée par le logiciel antivirus Avast.
-https://www.avast.com/antivirus
+Hans Kresic.
