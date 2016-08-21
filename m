@@ -1,36 +1,35 @@
-From: Shawn Lin <shawn.lin@rock-chips.com>
-Subject: [PATCH] scsi: don't reinitialize adapter's req_table
-Date: Sun, 21 Aug 2016 10:39:24 +0800
-Message-ID: <1471747164-31441-1-git-send-email-shawn.lin@rock-chips.com>
+From: SF Markus Elfring <elfring@users.sourceforge.net>
+Subject: [PATCH 0/7] aacraid: Fine-tuning for a few functions
+Date: Sun, 21 Aug 2016 09:14:04 +0200
+Message-ID: <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <566ABCD9.1060404@users.sourceforge.net>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Bradley Grove <linuxdrivers@attotech.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Shawn Lin <shawn.lin@rock-chips.com>
+To: linux-scsi@vger.kernel.org, aacraid@microsemi.com, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-req_table is allocate by kzalloc, so we don't need to
-zero it again anyway.
+From: Markus Elfring <elfring@users.sourceforge.net>
+Date: Sun, 21 Aug 2016 09:03:21 +0200
 
-Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
----
+Several update suggestions were taken into account
+from static source code analysis.
 
- drivers/scsi/esas2r/esas2r_init.c | 4 ----
- 1 file changed, 4 deletions(-)
+Markus Elfring (7):
+  Use memdup_user() rather than duplicating its implementation
+  One function call less in aac_send_raw_srb() after error detection
+  Delete unnecessary initialisations in aac_send_raw_srb()
+  Delete unnecessary braces
+  Add spaces after control flow keywords
+  Improve determination of a few sizes
+  Apply another recommendation from "checkpatch.pl"
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index 78ce4d61..d6e53ae 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -963,10 +963,6 @@ bool esas2r_init_adapter_struct(struct esas2r_adapter *a,
- 
- 	/* initialize the allocated memory */
- 	if (test_bit(AF_FIRST_INIT, &a->flags)) {
--		memset(a->req_table, 0,
--		       (num_requests + num_ae_requests +
--			1) * sizeof(struct esas2r_request *));
--
- 		esas2r_targ_db_initialize(a);
- 
- 		/* prime parts of the inbound list */
+ drivers/scsi/aacraid/commctrl.c | 140 +++++++++++++++++++---------------------
+ 1 file changed, 67 insertions(+), 73 deletions(-)
+
 -- 
-2.3.7
+2.9.3
