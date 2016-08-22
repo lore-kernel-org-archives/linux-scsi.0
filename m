@@ -1,7 +1,7 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/6] target: fix hang in target_wait_for_sess_cmds()
-Date: Mon, 22 Aug 2016 10:54:06 +0200
-Message-ID: <1471856051-87398-2-git-send-email-hare@suse.de>
+Subject: [PATCH 2/6] target: fix potential race window in target_sess_cmd_list_waiting()
+Date: Mon, 22 Aug 2016 10:54:07 +0200
+Message-ID: <1471856051-87398-3-git-send-email-hare@suse.de>
 References: <1471856051-87398-1-git-send-email-hare@suse.de>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1471856051-87398-1-git-send-email-hare@suse.de>
@@ -10,96 +10,60 @@ To: Nic Bellinger <nab@linux-iscsi.org>
 Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When shutting down a session I'm seeing this hung_task message:
-
-INFO: task kworker/u128:0:6 blocked for more than 480 seconds.
-      Tainted: G            E   N  4.4.17-default+ #241
-"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-kworker/u128:0  D ffff880237615c00     0     6      2 0x00000000
- Workqueue: fc_rport_eq fc_rport_work [libfc]
- ffff88017edd7c48 ffffffff81c11500 ffff88017edd0180 ffff88017edd8000
- ffff88035b6860a8 ffff88017edd0180 ffff88036461eac0 0000000000000000
- ffff88017edd7c60 ffffffff815db4d5 7fffffffffffffff ffff88017edd7d10
-Call Trace:
- [<ffffffff815db4d5>] schedule+0x35/0x80
- [<ffffffff815dde17>] schedule_timeout+0x237/0x2d0
- [<ffffffff815dc6e3>] wait_for_completion+0xa3/0x110
- [<ffffffffa0869fb5>] target_wait_for_sess_cmds+0x45/0x190 [target_core_mod]
- [<ffffffffa03953b4>] ft_close_sess+0x24/0x30 [tcm_fc]
- [<ffffffffa03955ba>] ft_prlo+0x8a/0x95 [tcm_fc]
- [<ffffffffa066fc28>] fc_rport_work+0x3b8/0x7c0 [libfc]
- [<ffffffff810939ee>] process_one_work+0x14e/0x410
- [<ffffffff81094246>] worker_thread+0x116/0x490
-
-Looking at the code it looks as if there is some confusion about
-when to call 'wait_for_completion(&cmd->cmd_wait_comp).
-The problem is that there are _two_ sections where the code
-waits for 'cmd_wait_comp' completion, but the completion
-is only called with 'complete', not 'complete_all'.
-So we cannot have both waiting for it, doing so will lead
-to a stuck wait_for_completion.
+target_sess_cmd_list_waiting() might hit on a condition where
+the kref for the command is already 0, but the destructor has
+not been called yet (or is stuck in waiting for a spin lock).
+Rather than leaving the command on the list we should explicitly
+remove it to avoid race issues later on.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/target/target_core_transport.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/target/target_core_transport.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 6094a6b..2e1a6d8 100644
+index 2e1a6d8..ce136f0 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
-@@ -2522,7 +2522,7 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
- 	 * the remaining calls to target_put_sess_cmd(), and not the
- 	 * callers of this function.
+@@ -2547,8 +2547,8 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
+ 	 * fabric acknowledgement that requires two target_put_sess_cmd()
+ 	 * invocations before se_cmd descriptor release.
  	 */
--	if (aborted) {
-+	if (aborted && !cmd->cmd_wait_set) {
- 		pr_debug("Detected CMD_T_ABORTED for ITT: %llu\n", cmd->tag);
- 		wait_for_completion(&cmd->cmd_wait_comp);
- 		cmd->se_tfo->release_cmd(cmd);
-@@ -2642,9 +2642,11 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
- 	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list) {
+-	if (ack_kref)
+-		kref_get(&se_cmd->cmd_kref);
++	if (ack_kref && !kref_get_unless_zero(&se_cmd->cmd_kref))
++		return -EINVAL;
+ 
+ 	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
+ 	if (se_sess->sess_tearing_down) {
+@@ -2627,7 +2627,7 @@ EXPORT_SYMBOL(target_put_sess_cmd);
+  */
+ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+ {
+-	struct se_cmd *se_cmd;
++	struct se_cmd *se_cmd, *tmp_cmd;
+ 	unsigned long flags;
+ 	int rc;
+ 
+@@ -2639,7 +2639,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+ 	se_sess->sess_tearing_down = 1;
+ 	list_splice_init(&se_sess->sess_cmd_list, &se_sess->sess_wait_list);
+ 
+-	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list) {
++	list_for_each_entry_safe(se_cmd, tmp_cmd,
++				 &se_sess->sess_wait_list, se_cmd_list) {
  		rc = kref_get_unless_zero(&se_cmd->cmd_kref);
  		if (rc) {
--			se_cmd->cmd_wait_set = 1;
  			spin_lock(&se_cmd->t_state_lock);
--			se_cmd->transport_state |= CMD_T_FABRIC_STOP;
-+			if (!(se_cmd->transport_state & CMD_T_FABRIC_STOP)) {
-+				se_cmd->cmd_wait_set = 1;
-+				se_cmd->transport_state |= CMD_T_FABRIC_STOP;
-+			}
+@@ -2648,7 +2649,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+ 				se_cmd->transport_state |= CMD_T_FABRIC_STOP;
+ 			}
  			spin_unlock(&se_cmd->t_state_lock);
- 		}
- 	}
-@@ -2664,24 +2666,26 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
- 
- 	list_for_each_entry_safe(se_cmd, tmp_cmd,
- 				&se_sess->sess_wait_list, se_cmd_list) {
-+		int cmd_wait;
- 		pr_debug("Waiting for se_cmd: %p t_state: %d, fabric state:"
- 			" %d\n", se_cmd, se_cmd->t_state,
- 			se_cmd->se_tfo->get_cmd_state(se_cmd));
- 
- 		spin_lock_irqsave(&se_cmd->t_state_lock, flags);
- 		tas = (se_cmd->transport_state & CMD_T_TAS);
-+		cmd_wait = se_cmd->cmd_wait_set;
- 		spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
--
- 		if (!target_put_sess_cmd(se_cmd)) {
- 			if (tas)
- 				target_put_sess_cmd(se_cmd);
- 		}
--
-+		if (!cmd_wait)
-+			continue;
- 		wait_for_completion(&se_cmd->cmd_wait_comp);
- 		pr_debug("After cmd_wait_comp: se_cmd: %p t_state: %d"
- 			" fabric state: %d\n", se_cmd, se_cmd->t_state,
- 			se_cmd->se_tfo->get_cmd_state(se_cmd));
--
-+		se_cmd->cmd_wait_set = 0;
- 		se_cmd->se_tfo->release_cmd(se_cmd);
+-		}
++		} else
++			list_del_init(&se_cmd->se_cmd_list);
  	}
  
+ 	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
 -- 
 1.8.5.6
