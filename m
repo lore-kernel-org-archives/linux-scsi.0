@@ -1,51 +1,33 @@
-From: SF Markus Elfring <elfring@users.sourceforge.net>
-Subject: Re: [PATCH 1/7] aacraid: Use memdup_user() rather than duplicating
- its implementation
-Date: Mon, 22 Aug 2016 22:23:57 +0200
-Message-ID: <b61d1eef-35c6-5e8c-a342-db312e27cb1f@users.sourceforge.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
- <23c56a66-74a6-6033-f209-ac3e4ba83e61@users.sourceforge.net>
- <423FD6710FB8FB4F8728F93591889F9A15FA8E64@avsrvexchmbx1.microsemi.net>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
+Date: Mon, 22 Aug 2016 15:32:45 -0500
+Message-ID: <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
+References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
+ <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com> <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <423FD6710FB8FB4F8728F93591889F9A15FA8E64@avsrvexchmbx1.microsemi.net>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Carroll <david.carroll@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-Reply-To: <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Shaun Tancheff <shaun@tancheff.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->> @@ -526,15 +526,9 @@ static int aac_send_raw_srb(struct aac_dev* dev, void
->> __user * arg)
->>                 goto cleanup;
->>         }
->>
->> -       user_srbcmd = kmalloc(fibsize, GFP_KERNEL);
->> -       if (!user_srbcmd) {
->> -               dprintk((KERN_DEBUG"aacraid: Could not make a copy of the srb\n"));
->> -               rcode = -ENOMEM;
->> -               goto cleanup;
->> -       }
->> -       if(copy_from_user(user_srbcmd, user_srb,fibsize)){
->> -               dprintk((KERN_DEBUG"aacraid: Could not copy srb from user\n"));
->> -               rcode = -EFAULT;
->> +       user_srbcmd = memdup_user(user_srb, fibsize);
->> +       if (IS_ERR(user_srbcmd)) {
->> +               rcode = PTR_ERR(user_srbcmd);
->>                 goto cleanup;
->>         }
->>
->> --
-> 
-> Hi Markus,
-> 
-> Patch 2/7 should precede Patch 1/7, as falling into kfree() would not look pretty.
+On Mon, Aug 22, 2016 at 3:07 PM, Tom Yan <tom.ty89@gmail.com> wrote:
+> I don't see how that's possible. count / n_block will always be
+> smaller than 65535 * ATA_MAX_TRIM_RNUM(64) = 4194240. Not to mention
+> that isn't even a "buffer limit" anyway. By SG_IO do you mean like
+> SCSI Write Same commands that issued with sg_write_same or so? If
+> that's the case, that's what exactly commit 5c79097a28c2
+> ("libata-scsi: reject WRITE SAME (16) with n_block that exceeds
+> limit") is for.
 
-Do you eventually prefer that this source code adjustment should be combined with
-the update suggestion "[2/7] aacraid: One function call less in aac_send_raw_srb()
-after error detection" in a single update step?
+Ah, I see. You are guarding the only user of ata_set_lba_range_entries().
+Still if you are going to do that you have to alert any new user that they
+must have an appropriately sized buffer to be overwriting.
+
+Better to move it out of ata.h then the limit the scope of accidental
+misuse?
 
 Regards,
-Markus
+Shaun
