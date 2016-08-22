@@ -1,128 +1,81 @@
 From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH 5/5] nvme-fabrics: Add FC LLDD loopback driver to test FC
- host and target transport
-Date: Mon, 22 Aug 2016 10:14:25 -0700
-Message-ID: <15eab2d7-b42f-27f1-f934-369db6911c47@broadcom.com>
-References: <5792b91f.Lb5BdNQrSWnmgOYG%james.smart@broadcom.com>
- <1470183344.3928.54.camel@linux.intel.com>
+Subject: Re: [PATCH 3/5] nvme-fabrics: Add host FC transport support
+Date: Mon, 22 Aug 2016 10:24:39 -0700
+Message-ID: <892d8974-2fc9-7fac-fda5-b7c628b17906@broadcom.com>
+References: <5792b91d.bp8ih+rK5Jet+Cpn%james.smart@broadcom.com>
+ <20160811211652.GF18013@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f51.google.com ([209.85.220.51]:34366 "EHLO
-        mail-pa0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751774AbcHVRO1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2016 13:14:27 -0400
-Received: by mail-pa0-f51.google.com with SMTP id fi15so39450913pac.1
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2016 10:14:27 -0700 (PDT)
-In-Reply-To: <1470183344.3928.54.camel@linux.intel.com>
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:33936 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932233AbcHVRYl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2016 13:24:41 -0400
+Received: by mail-pf0-f179.google.com with SMTP id p64so34356604pfb.1
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Aug 2016 10:24:41 -0700 (PDT)
+In-Reply-To: <20160811211652.GF18013@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: J Freyensee <james_p_freyensee@linux.intel.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
 
+> Are you going to send a FC support patch for nvme-cli as well?
 
-On 8/2/2016 5:15 PM, J Freyensee wrote:
->
->>   +int
->> +fcloop_fcp_op(struct nvmet_fc_target_port *tgtport,
->> +			struct nvmefc_tgt_fcp_req *tgt_fcpreq)
->> +{
->> +	...
->> +
->> +	return 0;
-> if this function returns an 'int', why would it always return 0 and not
-> the fcp_err values (if there is an error)?
-
-I'll look at it. The reason it's carried in the tgt_fcpreq is that a 
-real LLDD would likely return from the fcp_op, and report an error later 
-on. I'll see if things should be reorg'd.
+I will, but concentrating on core support for now. I expect a fair 
+number of things need to be done in the cli.
 
 
 >
->> +struct nvme_fc_port_template fctemplate = {
->> +	.create_queue	= fcloop_create_queue,
->> +	.delete_queue	= fcloop_delete_queue,
->> +	.ls_req		= fcloop_ls_req,
->> +	.fcp_io		= fcloop_fcp_req,
->> +	.ls_abort	= fcloop_ls_abort,
->> +	.fcp_abort	= fcloop_fcp_abort,
->> +
->> +	.max_hw_queues	= 1,
->> +	.max_sgl_segments = 256,
->> +	.max_dif_sgl_segments = 256,
->> +	.dma_boundary = 0xFFFFFFFF,
-> Between here and "struct nvmet_fc_target_template tgttemplate" they are
-> assigning the same magic values to the same variable names, so why not
-> have these values as #defines for a tad easier maintainability?
+>> +	assoc_rqst->assoc_cmd.ersp_ratio = cpu_to_be16(ersp_ratio);
+>> +	assoc_rqst->assoc_cmd.sqsize = cpu_to_be16(qsize);
+>> +	/* TODO:
+>> +	 * assoc_rqst->assoc_cmd.cntlid = cpu_to_be16(?);
+>> +	 * strncpy(assoc_rqst->assoc_cmd.hostid, ?,
+>> +	 *	min(FCNVME_ASSOC_HOSTID_LEN, NVMF_NQN_SIZE));
+>> +	 * strncpy(assoc_rqst->assoc_cmd.hostnqn, ?,
+>> +	 *	min(FCNVME_ASSOC_HOSTNQN_LEN, NVMF_NQN_SIZE];
+>> +	 */
+> What is the problem with filling all these out based on the information
+> in the nvme_host structure?
 
-sure.
+Well, I want to get them from the same place that the fabrics routines 
+do when they build a capsule. So they should come from the opts struct. 
+It's missing the controller id, so I'll need to address that.
 
 
 >
->> +static ssize_t
->> +fcloop_create_local_port(struct device *dev, struct device_attribute
->> *attr,
->> +		const char *buf, size_t count)
->> +{
->> +	struct nvme_fc_port_info pinfo;
->> +	struct fcloop_ctrl_options *opts;
->> +	struct nvme_fc_local_port *localport;
->> +	struct fcloop_lport *lport;
->> +	int ret;
->> +
->> +	opts = kzalloc(sizeof(*opts), GFP_KERNEL);
->> +	if (!opts)
->> +		return -ENOMEM;
->> +
->> +	ret = fcloop_parse_options(opts, buf);
->> +	if (ret)
->> +		goto out_free_opts;
->> +
->> +	/* everything there ? */
->> +	if ((opts->mask & LPORT_OPTS) != LPORT_OPTS) {
->> +		ret = -EINVAL;
->> +		goto out_free_opts;
->> +	}
->> +
->> +	pinfo.fabric_name = opts->fabric;
->> +	pinfo.node_name = opts->wwnn;
->> +	pinfo.port_name = opts->wwpn;
->> +	pinfo.port_role = opts->roles;
->> +	pinfo.port_id = opts->fcaddr;
->> +
->> +	ret = nvme_fc_register_localport(&pinfo, &fctemplate, NULL,
->> &localport);
->> +	if (!ret) {
->> +		/* success */
->> +		lport = localport->private;
->> +		lport->localport = localport;
->> +		INIT_LIST_HEAD(&lport->list);
->> +		INIT_LIST_HEAD(&lport->rport_list);
->> +		list_add_tail(&lport->list, &fcloop_lports);
->> +
->> +		/* mark all of the input buffer consumed */
->> +		ret = count;
->> +	}
->> +
->> +out_free_opts:
->> +	kfree(opts);
->> +	return ret;
->> +}
->> +
->> +static int __delete_local_port(struct fcloop_lport *lport)
->> +{
->> +	int ret;
->> +
->> +	if (!list_empty(&lport->rport_list))
->> +		return -EBUSY;
->> +
->> +	list_del(&lport->list);
->> +
-> Is a mutex or locking mechanism not needed here for this list?
+> This probably needs to be moved, similar to the patch Sagi just
+> did for RDMA.  In general it might be a good idea to look at the
+> various recent RDMA changes and check if they need to be brought over.
 
-Yeah - could probably use. As it was mainly a test tool with a 
-controlled sequence, I think I ignored it.
+yeah - I typically do a resync every time I repost.
+
+
+>
+>> +	/*
+>> +	 * TODO: blk_integrity_rq(rq)  for DIX
+>> +	 */
+> We'll hopefully be able to just move the DIX handling to common code.
+> Any help appreciated..
+
+Yes and no....    and likely a separate discussion.  If DIF is passed, 
+you should involve the host port to validate on egress as well has what 
+the target controller will do. Although it brings up some headaches if 
+the host detects an error (e.g. protocol requires target to be part of 
+it).  If DIF is inserted, the question will be whether you want to 
+insert DIF at the egress point of the host port or do you pass it over 
+the fabric w/o dif and have the tgt controller insert it.  I assume 
+we'll need to talk more.
+
+>
+> This seems to miss reference counting on the lport and rport structure.
+yes - an area of weakness right now.
+
+> It would be good to sort this out before merging. 
+
+I'll make a pass at it.
 
 -- james
 
