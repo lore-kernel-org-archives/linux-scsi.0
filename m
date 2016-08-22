@@ -1,63 +1,84 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] Migrate zone cache from RB-Tree to arrays of
- descriptors
-Date: Mon, 22 Aug 2016 09:11:58 +0200
-Message-ID: <ad5c983d-ae7c-bd5b-edef-b56552c3038b@suse.de>
-References: <20160822043402.8855-1-shaun@tancheff.com>
- <20160822043402.8855-3-shaun@tancheff.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 1/8] hisi_sas: add internal abort core code
+Date: Mon, 22 Aug 2016 08:50:12 +0100
+Message-ID: <d2cb2b38-47c2-b5fd-8fe8-986b60e516ef@huawei.com>
+References: <1470835205-65684-1-git-send-email-john.garry@huawei.com>
+ <1470835205-65684-2-git-send-email-john.garry@huawei.com>
+ <7a5a91f3-51bc-52ff-ded4-418133a67b4b@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42721 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750974AbcHVHMC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Aug 2016 03:12:02 -0400
-In-Reply-To: <20160822043402.8855-3-shaun@tancheff.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <7a5a91f3-51bc-52ff-ded4-418133a67b4b@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: zhangfei <zhangfei.gao@linaro.org>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Jens Axboe <axboe@kernel.dk>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Dan Williams <dan.j.williams@intel.com>, Sagi Grimberg <sagig@mellanox.com>, Mike Christie <mchristi@redhat.com>, Ming Lei <ming.lei@canonical.com>, Josh Bingaman <josh.bingaman@seagate.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 
-On 08/22/2016 06:34 AM, Shaun Tancheff wrote:
-> Currently the RB-Tree zone cache is fast and flexible. It does
-> use a rather largish amount of ram. This model reduces the ram
-> required from 120 bytes per zone to 16 bytes per zone with a
-> moderate transformation of the blk_zone_lookup() api.
-> 
-> This model is predicated on the belief that most variations
-> on zoned media will follow a pattern of using collections of same
-> sized zones on a single device. Similar to the pattern of erase
-> blocks on flash devices being progressivly larger 16K, 64K, ...
-> 
-> The goal is to be able to build a descriptor which is both memory
-> efficient, performant, and flexible.
-> 
-> Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> ---
->  block/blk-core.c       |    2 +-
->  block/blk-sysfs.c      |   31 +-
->  block/blk-zoned.c      |  103 +++--
->  drivers/scsi/sd.c      |    5 +-
->  drivers/scsi/sd.h      |    4 +-
->  drivers/scsi/sd_zbc.c  | 1025 +++++++++++++++++++++++++++---------------------
->  include/linux/blkdev.h |   82 +++-
->  7 files changed, 716 insertions(+), 536 deletions(-)
-> 
-Have you measure the performance impact here?
-The main idea behind using an RB-tree is that each single element will
-fit in the CPU cache; using an array will prevent that.
-So we will increase the number of cache flushes, and most likely a
-performance penalty, too.
-Hence I'd rather like to see a performance measurement here before going
-down that road.
+On 21/08/2016 01:44, zhangfei wrote:
+>
+>
+> On 2016å¹´08æœˆ10æ—¥ 21:19, John Garry wrote:
+>> Add core code for internal abort functionality.
+>>
+>> The internal abort features allows the host controller
+>> to abort commands which are still active in the
+>> controller but have not yet been sent to the slave
+>> device.
+>>
+>> Typically a command only spends a relatively
+>> short time in the controller when compared to the
+>> amount of the time after it is sent to the slave
+>> device.
+>> Two modes of internal abort are supported:
+>> - device
+>> - individual command
+>>
+>> For device, when the internal abort is issued all
+>> commands in the host for that device are aborted.
+>> For a single command, only that command is aborted
+>> if it is still in the host.
+>>
+>> In HW the internal abort command is executed
+>> similar to any other sort of command, like SSP.
+>>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>> ---
+>>   drivers/scsi/hisi_sas/hisi_sas.h      |   3 +
+>>   drivers/scsi/hisi_sas/hisi_sas_main.c | 154
+>> ++++++++++++++++++++++++++++++++++
+>>   2 files changed, 157 insertions(+)
+>>
+>> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h
+>> b/drivers/scsi/hisi_sas/hisi_sas.h
+>> index 4731d32..4ae864d 100644
+>> --- a/drivers/scsi/hisi_sas/hisi_sas.h
+>> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
+>> @@ -146,6 +146,9 @@ struct hisi_sas_hw {
+>>               struct hisi_sas_slot *slot);
+>>       int (*prep_stp)(struct hisi_hba *hisi_hba,
+>>               struct hisi_sas_slot *slot);
+>> +    int (*prep_abort)(struct hisi_hba *hisi_hba,
+>> +              struct hisi_sas_slot *slot,
+>> +              int device_id, int abort_flag, int tag_to_abort);
+>
+> How about add comments to abort_flag and tag_to_abort.
+> As a result, not sure why differently calling in hisi_sas_abort_task
+> hisi_sas_internal_task_abort(hisi_hba, device, 1, tag);
+> hisi_sas_internal_task_abort(hisi_hba, device, 0, tag);
+>
+> Thanks
+>
+>
+> .
+>
 
-Cheers,
+OK, I can do.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+I will add a MACRO for the abort flag, whether device abort or single IO 
+abort modes.
+
+I will also mention for device abort mode that the tag is unused.
+
+Thanks,
+John
