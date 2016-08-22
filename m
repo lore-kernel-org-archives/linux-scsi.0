@@ -1,52 +1,80 @@
-From: David Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH 1/7] aacraid: Use memdup_user() rather than duplicating
- its implementation
-Date: Mon, 22 Aug 2016 18:00:28 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A15FA8E64@avsrvexchmbx1.microsemi.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
- <23c56a66-74a6-6033-f209-ac3e4ba83e61@users.sourceforge.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: tom.ty89@gmail.com
+Subject: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
+Date: Tue, 23 Aug 2016 02:55:40 +0800
+Message-ID: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0062.outbound.protection.outlook.com ([104.47.33.62]:14109
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750892AbcHVSfM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 22 Aug 2016 14:35:12 -0400
-In-Reply-To: <23c56a66-74a6-6033-f209-ac3e4ba83e61@users.sourceforge.net>
-Content-Language: en-US
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:34187 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753549AbcHVSzt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 22 Aug 2016 14:55:49 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+To: tj@kernel.org, martin.petersen@oracle.com, shaun.tancheff@seagate.com, shaun@tancheff.com
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, Tom Yan <tom.ty89@gmail.com>
 
-PiBGcm9tOiBNYXJrdXMgRWxmcmluZyA8ZWxmcmluZ0B1c2Vycy5zb3VyY2Vmb3JnZS5uZXQ+DQo+
-IERhdGU6IFNhdCwgMjAgQXVnIDIwMTYgMjA6MDU6MjQgKzAyMDANCj4gDQo+IFJldXNlIGV4aXN0
-aW5nIGZ1bmN0aW9uYWxpdHkgZnJvbSBtZW1kdXBfdXNlcigpIGluc3RlYWQgb2Yga2VlcGluZyBk
-dXBsaWNhdGUNCj4gc291cmNlIGNvZGUuDQo+IA0KPiBUaGlzIGlzc3VlIHdhcyBkZXRlY3RlZCBi
-eSB1c2luZyB0aGUgQ29jY2luZWxsZSBzb2Z0d2FyZS4NCj4gDQo+IFNpZ25lZC1vZmYtYnk6IE1h
-cmt1cyBFbGZyaW5nIDxlbGZyaW5nQHVzZXJzLnNvdXJjZWZvcmdlLm5ldD4NCj4gLS0tDQo+ICBk
-cml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jIHwgMTIgKysrLS0tLS0tLS0tDQo+ICAxIGZp
-bGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCA5IGRlbGV0aW9ucygtKQ0KPiANCj4gZGlmZiAt
-LWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMgYi9kcml2ZXJzL3Njc2kvYWFj
-cmFpZC9jb21tY3RybC5jDQo+IGluZGV4IDU2NDhiNzEuLjFhZjMwODQgMTAwNjQ0DQo+IC0tLSBh
-L2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMNCj4gKysrIGIvZHJpdmVycy9zY3NpL2Fh
-Y3JhaWQvY29tbWN0cmwuYw0KPiBAQCAtNTI2LDE1ICs1MjYsOSBAQCBzdGF0aWMgaW50IGFhY19z
-ZW5kX3Jhd19zcmIoc3RydWN0IGFhY19kZXYqIGRldiwgdm9pZA0KPiBfX3VzZXIgKiBhcmcpDQo+
-ICAgICAgICAgICAgICAgICBnb3RvIGNsZWFudXA7DQo+ICAgICAgICAgfQ0KPiANCj4gLSAgICAg
-ICB1c2VyX3NyYmNtZCA9IGttYWxsb2MoZmlic2l6ZSwgR0ZQX0tFUk5FTCk7DQo+IC0gICAgICAg
-aWYgKCF1c2VyX3NyYmNtZCkgew0KPiAtICAgICAgICAgICAgICAgZHByaW50aygoS0VSTl9ERUJV
-RyJhYWNyYWlkOiBDb3VsZCBub3QgbWFrZSBhIGNvcHkgb2YgdGhlIHNyYlxuIikpOw0KPiAtICAg
-ICAgICAgICAgICAgcmNvZGUgPSAtRU5PTUVNOw0KPiAtICAgICAgICAgICAgICAgZ290byBjbGVh
-bnVwOw0KPiAtICAgICAgIH0NCj4gLSAgICAgICBpZihjb3B5X2Zyb21fdXNlcih1c2VyX3NyYmNt
-ZCwgdXNlcl9zcmIsZmlic2l6ZSkpew0KPiAtICAgICAgICAgICAgICAgZHByaW50aygoS0VSTl9E
-RUJVRyJhYWNyYWlkOiBDb3VsZCBub3QgY29weSBzcmIgZnJvbSB1c2VyXG4iKSk7DQo+IC0gICAg
-ICAgICAgICAgICByY29kZSA9IC1FRkFVTFQ7DQo+ICsgICAgICAgdXNlcl9zcmJjbWQgPSBtZW1k
-dXBfdXNlcih1c2VyX3NyYiwgZmlic2l6ZSk7DQo+ICsgICAgICAgaWYgKElTX0VSUih1c2VyX3Ny
-YmNtZCkpIHsNCj4gKyAgICAgICAgICAgICAgIHJjb2RlID0gUFRSX0VSUih1c2VyX3NyYmNtZCk7
-DQo+ICAgICAgICAgICAgICAgICBnb3RvIGNsZWFudXA7DQo+ICAgICAgICAgfQ0KPiANCj4gLS0N
-Cg0KSGkgTWFya3VzLA0KDQpQYXRjaCAyLzcgc2hvdWxkIHByZWNlZGUgUGF0Y2ggMS83LCBhcyBm
-YWxsaW5nIGludG8ga2ZyZWUoKSB3b3VsZCBub3QgbG9vayBwcmV0dHkuDQoNClRoYW5rcywgLURh
-dmUNCg==
+From: Tom Yan <tom.ty89@gmail.com>
+
+In commit 5c79097a28c2 ("libata-scsi: reject WRITE SAME (16) with
+n_block that exceeds limit"), it is made sure that
+ata_set_lba_range_entries() will never be called with a request
+size (n_block) that is larger than the number of blocks that a
+512-byte block TRIM payload can describe (65535 * 64 = 4194240),
+in addition to acknowlegding the SCSI/block layer with the same
+limit by advertising it as the Maximum Write Same Length.
+
+Therefore, it is unnecessary to hard code the same limit in
+ata_set_lba_range_entries() itself, which would only cost extra
+maintenance effort. Such effort can be noticed in, for example,
+commit 2983860c7668 ("libata-scsi: avoid repeated calculation of
+number of TRIM ranges").
+
+Signed-off-by: Tom Yan <tom.ty89@gmail.com>
+
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index be9c76c..9b74ecb 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -3322,7 +3322,7 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
+ 	buf = page_address(sg_page(scsi_sglist(scmd)));
+ 
+ 	if (n_block <= 65535 * ATA_MAX_TRIM_RNUM) {
+-		size = ata_set_lba_range_entries(buf, ATA_MAX_TRIM_RNUM, block, n_block);
++		size = ata_set_lba_range_entries(buf, block, n_block);
+ 	} else {
+ 		fp = 2;
+ 		goto invalid_fld;
+diff --git a/include/linux/ata.h b/include/linux/ata.h
+index adbc812..5e2e9ad 100644
+--- a/include/linux/ata.h
++++ b/include/linux/ata.h
+@@ -1077,19 +1077,19 @@ static inline void ata_id_to_hd_driveid(u16 *id)
+  * TO NV CACHE PINNED SET.
+  */
+ static inline unsigned ata_set_lba_range_entries(void *_buffer,
+-		unsigned num, u64 sector, unsigned long count)
++		u64 sector, unsigned long count)
+ {
+ 	__le64 *buffer = _buffer;
+ 	unsigned i = 0, used_bytes;
+ 
+-	while (i < num) {
+-		u64 entry = sector |
+-			((u64)(count > 0xffff ? 0xffff : count) << 48);
++	while (count > 0) {
++		u64 range, entry;
++
++		range = count > 0xffff ? 0xffff : count;
++	        entry = sector | (range << 48);
+ 		buffer[i++] = __cpu_to_le64(entry);
+-		if (count <= 0xffff)
+-			break;
+-		count -= 0xffff;
+-		sector += 0xffff;
++		count -= range;
++		sector += range;
+ 	}
+ 
+ 	used_bytes = ALIGN(i * 8, 512);
+-- 
+2.9.3
+
