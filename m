@@ -1,47 +1,30 @@
-From: Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>
-Subject: Re: [GIT PULL] [PATCH v4 00/26] Delete CURRENT_TIME
-	and CURRENT_TIME_SEC macros
-Date: Tue, 23 Aug 2016 16:51:39 +0200
-Message-ID: <2295046.g7jOF3qsLW@wuerfel>
-References: <1471128518-24075-1-git-send-email-deepa.kernel@gmail.com>
-	<20160815162312.GA19794@kroah.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 5/6] target/tcm_fc: Update debugging statements to match
+ libfc usage
+Date: Tue, 23 Aug 2016 11:07:00 -0700
+Message-ID: <62b84b56-63be-dfbb-5bda-97aad34d60d6@sandisk.com>
+References: <1471856051-87398-1-git-send-email-hare@suse.de>
+ <1471856051-87398-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-In-Reply-To: <20160815162312.GA19794-U8xfFu+wG4EAvxtiuMwx3w@public.gmane.org>
-List-Unsubscribe: <http://lists.lustre.org/options.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.lustre.org/pipermail/lustre-devel-lustre.org/>
-List-Post: <mailto:lustre-devel-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-List-Help: <mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.lustre.org/listinfo.cgi/lustre-devel-lustre.org>,
-	<mailto:lustre-devel-request-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org?subject=subscribe>
-Errors-To: lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org
-Sender: "lustre-devel" <lustre-devel-bounces-aLEFhgZF4x6X6Mz3xDxJMA@public.gmane.org>
-To: Greg KH <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>
-Cc: shaggy-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jfs-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org, adrian.hunter-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, clm-b10kYP2dOMg@public.gmane.org, adilger.kernel-m1MBpc4rdrD3fQ9qLvQP4Q@public.gmane.org, Deepa Dinamani <deepa.kernel-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, buchino-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, tglx-hfZtesqFncYOwBW4kG4KsQ@public.gmane.org, zyan-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, paul-r2n+y4ga6xFZroRs9YW3xA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, y2038-cunTk1MwBs8s++Sfvej+rw@public.gmane.org, idryomov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, linux-ext4-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, cm224.lee-Sze3O3UU22JBDgjK7y7TUQ@public.gmane.org, dushistov-JGs/UdohzUI@public.gmane.org, mfasheh-IBi9RG/b67k@public.gmane.org, sramars-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, john.stultz-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org, dsterba-IBi9RG/b67k@public.gmane.org, jaegeuk-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, ceph-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, elder-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, tytso-3s7WtUTddSA@public.gmane.org, sage-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dedekind1-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jbacik-b10kYP2dOMg@public.gmane.org, hiralpat-FYB4Gu1CFyUAvxtiuMwx3w@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, eparis-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, linux-f2fs-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, sfrench-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org, linux-audit-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0052.outbound.protection.outlook.com ([104.47.40.52]:41952
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752298AbcHWSHl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 23 Aug 2016 14:07:41 -0400
+In-Reply-To: <1471856051-87398-6-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Nic Bellinger <nab@linux-iscsi.org>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.com>
 
-On Monday, August 15, 2016 6:23:12 PM CEST Greg KH wrote:
-> On Sat, Aug 13, 2016 at 03:48:12PM -0700, Deepa Dinamani wrote:
-> > The series is aimed at getting rid of CURRENT_TIME and CURRENT_TIME_SEC macros.
-> > The macros are not y2038 safe. There is no plan to transition them into being
-> > y2038 safe.
-> > ktime_get_* api's can be used in their place. And, these are y2038 safe.
-> 
-> Who are you execting to pull this huge patch series?
+On 08/22/2016 01:54 AM, Hannes Reinecke wrote:
+> +	char *reason = "no session created";
 
-Dave Chinner suggested to have Al Viro pick up the whole series.
+Please use const char* instead of char* in the above declaration.
 
-> Why not just introduce the new api call, wait for that to be merged, and
-> then push the individual patches through the different subsystems?
-> After half of those get ignored, then provide a single set of patches
-> that can go through Andrew or my trees.
+Thanks,
 
-That was the original approach for v4.7, but (along with requesting
-a number of reworks that Deepa incorporated), Linus preferred doing
-the API change done in one chunk, see
-https://patchwork.kernel.org/patch/9134249/
-
-	Arnd
+Bart.
