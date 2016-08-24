@@ -1,173 +1,117 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Oops when completing request on the wrong queue
-Date: Wed, 24 Aug 2016 12:34:42 -0600
-Message-ID: <49a954e6-2f96-8a63-ce15-2c82c1a1d36d@kernel.dk>
-References: <87a8gltgks.fsf@linux.vnet.ibm.com>
- <871t1kq455.fsf@linux.vnet.ibm.com>
- <bb6f8757-4c3d-8f49-8aff-aa0fdb8bae89@kernel.dk>
- <8fc9ae38-9488-ef52-f620-08499edebffa@kernel.dk>
- <87shu0hfye.fsf@linux.vnet.ibm.com> <87a8g39pg4.fsf@linux.vnet.ibm.com>
- <43693064-dd37-92ce-7753-2a8edb43eab5@kernel.dk>
- <164a4c63-065b-b766-36f3-bcef4aa46a38@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f42.google.com ([209.85.214.42]:37113 "EHLO
-        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753762AbcHXSmS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2016 14:42:18 -0400
-Received: by mail-it0-f42.google.com with SMTP id f6so49961372ith.0
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 11:41:29 -0700 (PDT)
-In-Reply-To: <164a4c63-065b-b766-36f3-bcef4aa46a38@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v8 0/2 RESEND] Block layer support ZAC/ZBC commands
+Date: Wed, 24 Aug 2016 15:22:50 -0500
+Message-ID: <20160824202250.30271-1-shaun@tancheff.com>
+References: <20160822042010.32416-1-shaun@tancheff.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20160822042010.32416-1-shaun@tancheff.com>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Shaun Tancheff <shaun@tancheff.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, Hannes Reinecke <hare@suse.de>, Josh Bingaman <josh.bingaman@seagate.com>, "David S . Miller" <davem@davemloft.net>, Geert Uytterhoeven <geert@linux-m68k.org>, Andrew Morton <akpm@linux-foundation.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Mauro Carvalho Chehab <mchehab@kernel.org>, Guenter Roeck <linux@roeck-us.net>, Ming Lei <ming.lei@canonical.com>, Mike Christie <michaelc@cs.wisc.edu>, Keith Busch <keith.busch@intel.com>, Mike Snitzer <snitzer@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>, linux-nvme@lists.infradead.org, Brian King <brking@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 08/23/2016 03:14 PM, Jens Axboe wrote:
-> On 08/23/2016 03:11 PM, Jens Axboe wrote:
->> On 08/23/2016 02:54 PM, Gabriel Krisman Bertazi wrote:
->>> Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com> writes:
->>>
->>>>> Can you share what you ran to online/offline CPUs? I can't reproduce
->>>>> this here.
->>>>
->>>> I was using the ppc64_cpu tool, which shouldn't do nothing more than
->>>> write to sysfs.  but I just reproduced it with the script below.
->>>>
->>>> Note that this is ppc64le.  I don't have a x86 in hand to attempt to
->>>> reproduce right now, but I'll look for one and see how it goes.
->>>
->>> Hi,
->>>
->>> Any luck on reproducing it?  We were initially reproducing with a
->>> proprietary stress test, but I gave a try to a generated fio jobfile
->>> associated with the SMT script I shared earlier and I could reproduce
->>> the crash consistently in less than 10 minutes of execution.  this was
->>> still ppc64le, though.  I couldn't get my hands on nvme on x86 yet.
->>
->> Nope, I have not been able to reproduce it. How long does the CPU
->> offline/online actions take on ppc64? It's pretty slow on x86, which may
->> hide the issue. I took out the various printk's associated with bringing
->> a CPU off/online, as well as IRQ breaking parts, but didn't help in
->> reproducing it.
->>
->>> The job file I used, as well as the smt.sh script, in case you want to
->>> give it a try:
->>>
->>> jobfile: http://krisman.be/k/nvmejob.fio
->>> smt.sh:  http://krisman.be/k/smt.sh
->>>
->>> Still, the trigger seems to be consistently a heavy load of IO
->>> associated with CPU addition/removal.
->>
->> My workload looks similar to yours, in that it's high depth and with a
->> lot of jobs to keep most CPUs loaded. My bash script is different than
->> yours, I'll try that and see if it helps here.
->
-> Actually, I take that back. You're not using O_DIRECT, hence all your
-> jobs are running at QD=1, not the 256 specified. That looks odd, but
-> I'll try, maybe it'll hit something different.
+(RESENDING to include f2fs, fs-devel and dm-devel)
 
-Can you try this patch? It's not perfect, but I'll be interested if it
-makes a difference for you.
+Hi Jens,
 
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 758a9b5..41def54 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -810,11 +810,11 @@ static void __blk_mq_run_hw_queue(struct 
-blk_mq_hw_ctx *hctx)
-  	struct list_head *dptr;
-  	int queued;
+This series is based on linus' v4.8-rc2 branch.
 
--	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
--
-  	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
-  		return;
+As Host Aware drives are becoming available we would like to be able
+to make use of such drives. This series is also intended to be
+suitable for use by Host Managed drives.
 
-+	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
-+
-  	hctx->run++;
+ZBC [and ZAC] drives add new commands for discovering and working
+with Zones.
 
-  	/*
-@@ -1075,15 +1075,11 @@ static void __blk_mq_insert_request(struct 
-blk_mq_hw_ctx *hctx,
-  }
+Part one of this series expands the bio/request reserved op size from
+3 to 4 bits and then adds op codes for each of the ZBC commands:
+   Report zones, close zone, finish zone, open zone and reset zone.
 
-  void blk_mq_insert_request(struct request *rq, bool at_head, bool 
-run_queue,
--		bool async)
-+			   bool async)
-  {
-+	struct blk_mq_ctx *ctx = rq->mq_ctx;
-  	struct request_queue *q = rq->q;
-  	struct blk_mq_hw_ctx *hctx;
--	struct blk_mq_ctx *ctx = rq->mq_ctx, *current_ctx;
--
--	current_ctx = blk_mq_get_ctx(q);
--	if (!cpu_online(ctx->cpu))
--		rq->mq_ctx = ctx = current_ctx;
+Part two of this series deals with integrating these new bio/request
+op's with Hannes' zone cache.
 
-  	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+This extends the ZBC support up to the block layer allowing direct
+control by file systems or device mapper targets. Also by deferring
+the zone handling to the authoritative subsystem there is an overall
+lower memory usage for holding the active zone information as well
+as clarifying responsible party for maintaining the write pointer
+for each active zone.
 
-@@ -1093,8 +1089,6 @@ void blk_mq_insert_request(struct request *rq, 
-bool at_head, bool run_queue,
+By way of example a DM target may have several writes in progress. To sector
+(or lba) for those writes will each depend on the previous write. While the
+drive's write pointer will be updated as writes are completed the DM target
+will be maintaining both where the next write should be scheduled from and
+where the write pointer is based on writes completed w/o errors.
 
-  	if (run_queue)
-  		blk_mq_run_hw_queue(hctx, async);
--
--	blk_mq_put_ctx(current_ctx);
-  }
+Knowing the drive zone topology enables DM targets and file systems to
+extend their block allocation schemes and issue write pointer resets (or
+discards) that are zone aligned.
 
-  static void blk_mq_insert_requests(struct request_queue *q,
-@@ -1105,14 +1099,9 @@ static void blk_mq_insert_requests(struct 
-request_queue *q,
+A perhaps non-obvious approach is that a conventional drive will
+returns a zone report descriptor with a single large conventional zone.
+This is intended to allow a collection of zoned and non-zoned media to
+be stitched together to provide a file system with a zoned device with
+conventional space mapped to where it is useful.
 
-  {
-  	struct blk_mq_hw_ctx *hctx;
--	struct blk_mq_ctx *current_ctx;
+Patches for util-linux can be found here:
+    git@github.com:stancheff/util-linux.git v2.28.1+biof
 
-  	trace_block_unplug(q, depth, !from_schedule);
+    https://github.com/stancheff/util-linux/tree/v2.28.1%2Bbiof
 
--	current_ctx = blk_mq_get_ctx(q);
--
--	if (!cpu_online(ctx->cpu))
--		ctx = current_ctx;
-  	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+This patch is available here:
+    https://github.com/stancheff/linux/tree/v4.8-rc2%2Bbiof.v8
 
-  	/*
-@@ -1125,14 +1114,12 @@ static void blk_mq_insert_requests(struct 
-request_queue *q,
+    git@github.com:stancheff/linux.git v4.8-rc2+biof.v8
 
-  		rq = list_first_entry(list, struct request, queuelist);
-  		list_del_init(&rq->queuelist);
--		rq->mq_ctx = ctx;
-  		__blk_mq_insert_req_list(hctx, ctx, rq, false);
-  	}
-  	blk_mq_hctx_mark_pending(hctx, ctx);
-  	spin_unlock(&ctx->lock);
+v8:
+ - Changed zone report to default to reading from zone cache.
+ - Changed ioctl for zone commands to support forcing a query or command
+   to be sent to media.
+ - Fixed report zones copy to user to work when HARDENED_USERCOPY is enabled
+v7:
+ - Initial support for Hannes' zone cache.
+v6:
+ - Fix page alloc to include DMA flag for ioctl.
+v5:
+ - In sd_setup_zone_action_cmnd, remove unused vars and fix switch indent
+ - In blk-lib fix documentation
+v4:
+ - Rebase on linux-next tag next-20160617.
+ - Change bio flags to bio op's
+ - Dropped ata16 hackery
+V3:
+ - Rebase on Mike Cristie's separate bio operations
+ - Update blkzoned_api.h to include report zones PARTIAL bit.
+ - Use zoned report reserved bit for ata-passthrough flag.
 
-  	blk_mq_run_hw_queue(hctx, from_schedule);
--	blk_mq_put_ctx(current_ctx);
-  }
+V2:
+ - Changed bi_rw to op_flags clarify sepeartion of bio op from flags.
+ - Fixed memory leak in blkdev_issue_zone_report failing to put_bio().
+ - Documented opt in blkdev_issue_zone_report.
+ - Moved include/uapi/linux/fs.h changes to patch 3
+ - Fixed commit message for first patch in series.
 
-  static int plug_ctx_cmp(void *priv, struct list_head *a, struct 
-list_head *b)
-@@ -1692,6 +1679,11 @@ static int blk_mq_hctx_cpu_offline(struct 
-blk_mq_hw_ctx *hctx, int cpu)
-  	while (!list_empty(&tmp)) {
-  		struct request *rq;
 
-+		/*
-+		 * FIXME: we can't just move the req here. We'd have to
-+		 * pull off the bio chain and add it to a new request
-+		 * on the target hw queue
-+		 */
-  		rq = list_first_entry(&tmp, struct request, queuelist);
-  		rq->mq_ctx = ctx;
-  		list_move_tail(&rq->queuelist, &ctx->rq_list);
+Shaun Tancheff (2):
+  Add bio/request flags to issue ZBC/ZAC commands
+  Add ioctl to issue ZBC/ZAC commands via block layer
+
+ MAINTAINERS                       |   9 ++
+ block/blk-lib.c                   |  94 +++++++++++++++++
+ block/ioctl.c                     | 149 +++++++++++++++++++++++++++
+ drivers/scsi/sd.c                 | 121 ++++++++++++++++++++++
+ drivers/scsi/sd.h                 |   1 +
+ include/linux/bio.h               |   8 +-
+ include/linux/blk_types.h         |   7 +-
+ include/linux/blkdev.h            |   1 +
+ include/linux/blkzoned_api.h      |  25 +++++
+ include/uapi/linux/Kbuild         |   1 +
+ include/uapi/linux/blkzoned_api.h | 210 ++++++++++++++++++++++++++++++++++++++
+ include/uapi/linux/fs.h           |   1 +
+ 12 files changed, 625 insertions(+), 2 deletions(-)
+ create mode 100644 include/linux/blkzoned_api.h
+ create mode 100644 include/uapi/linux/blkzoned_api.h
 
 -- 
-Jens Axboe
+2.9.3
+
