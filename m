@@ -1,43 +1,46 @@
-From: Masanari Iida <standby24x7@gmail.com>
-Subject: Re: linux-next: Tree for Jun 6 (scsi_debug.c)
-Date: Wed, 24 Aug 2016 08:22:40 +0900
-Message-ID: <CALLJCT0r7FfL=rLARTV9-YB-x10d1w0hYMOO6BC-dv8zGC4VLA@mail.gmail.com>
-References: <20160606142058.44b82e38@canb.auug.org.au> <57563B40.4090801@infradead.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 4/6] cxlflash: Transition to application close model
+Date: Tue, 23 Aug 2016 22:25:17 -0400
+Message-ID: <yq1d1kyewdu.fsf@sermon.lab.mkp.net>
+References: <1470785888-9112-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ <1470785992-9274-1-git-send-email-mrochs@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <57563B40.4090801@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Randy Dunlap <rdunlap@infradead.org>
-Cc: Stephen Rothwell <sfr@canb.auug.org.au>, linux-next <linux-next@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1470785992-9274-1-git-send-email-mrochs@linux.vnet.ibm.com>
+ (Matthew R. Ochs's message of "Tue, 9 Aug 2016 18:39:52 -0500")
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>, Al Viro <viro@zeniv.linux.org.uk>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This one still exist on linus's tree (as of  v4.8-rc3).
+>>>>> "Matthew" == Matthew R Ochs <mrochs@linux.vnet.ibm.com> writes:
 
-CALL    scripts/checksyscalls.sh
-  CHK     kernel/config_data.h
-  Building modules, stage 2.
-  MODPOST 720 modules
-ERROR: "ip_compute_csum" [drivers/scsi/scsi_debug.ko] undefined!
-scripts/Makefile.modpost:91: recipe for target '__modpost' failed
-make[1]: *** [__modpost] Error 1
-Makefile:1178: recipe for target 'modules' failed
-make: *** [modules] Error 2
+Matthew> Caching the adapter file descriptor and performing a close on
+Matthew> behalf of an application is a poor design. This is due to the
+Matthew> fact that once a file descriptor in installed, it is free to be
+Matthew> altered without the knowledge of the cxlflash driver. This can
+Matthew> lead to inconsistencies between the application and
+Matthew> kernel. Furthermore, the nature of the former design is more
+Matthew> exploitable and thus should be abandoned.
 
-Masanari
+Matthew> To support applications performing a close on the adapter file
+Matthew> that is associated with a context, a new flag is introduced to
+Matthew> the user API to indicate to applications that they are
+Matthew> responsible for the close following the cleanup (detach) of a
+Matthew> context. The documentation is also updated to reflect this
+Matthew> change in behavior.
 
-On Tue, Jun 7, 2016 at 12:10 PM, Randy Dunlap <rdunlap@infradead.org> wrote:
-> On 06/05/16 21:20, Stephen Rothwell wrote:
->> Hi all,
->>
->> Changes since 20160603:
->
-> on x86_64:
->
-> ERROR: "ip_compute_csum" [drivers/scsi/scsi_debug.ko] undefined!
->
-> CONFIG_GENERIC_CSUM doesn't seem to exist for x86, so lib/checksum.o is not built.
->
->
-> --
-> ~Randy
+Applied patches 4 through 6 to 4.9/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
