@@ -1,315 +1,173 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCHv2] ipr: Add asynchronous error notification
-Date: Wed, 24 Aug 2016 12:56:51 -0500
-Message-ID: <a7eec861-46e1-4d82-1361-ae9b9a04cf3d@linux.vnet.ibm.com>
-References: <1469795977-6345-1-git-send-email-halves@linux.vnet.ibm.com>
- <yq1twehh3ty.fsf@sermon.lab.mkp.net>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: Oops when completing request on the wrong queue
+Date: Wed, 24 Aug 2016 12:34:42 -0600
+Message-ID: <49a954e6-2f96-8a63-ce15-2c82c1a1d36d@kernel.dk>
+References: <87a8gltgks.fsf@linux.vnet.ibm.com>
+ <871t1kq455.fsf@linux.vnet.ibm.com>
+ <bb6f8757-4c3d-8f49-8aff-aa0fdb8bae89@kernel.dk>
+ <8fc9ae38-9488-ef52-f620-08499edebffa@kernel.dk>
+ <87shu0hfye.fsf@linux.vnet.ibm.com> <87a8g39pg4.fsf@linux.vnet.ibm.com>
+ <43693064-dd37-92ce-7753-2a8edb43eab5@kernel.dk>
+ <164a4c63-065b-b766-36f3-bcef4aa46a38@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42670 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753148AbcHXR45 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 24 Aug 2016 13:56:57 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7OHsbIc130888
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 13:56:57 -0400
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 250qp4vtr3-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 13:56:56 -0400
-Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-        Wed, 24 Aug 2016 11:56:56 -0600
-In-Reply-To: <yq1twehh3ty.fsf@sermon.lab.mkp.net>
+Received: from mail-it0-f42.google.com ([209.85.214.42]:37113 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753762AbcHXSmS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 24 Aug 2016 14:42:18 -0400
+Received: by mail-it0-f42.google.com with SMTP id f6so49961372ith.0
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 11:41:29 -0700 (PDT)
+In-Reply-To: <164a4c63-065b-b766-36f3-bcef4aa46a38@kernel.dk>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Heitor Ricardo Alves de Siqueira <halves@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, Heitor Ricardo Alves de Siqueira <hrasiq@gmail.com>, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>, linux-nvme@lists.infradead.org, Brian King <brking@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Looks pretty good. I noticed one issue in an error path where you
-weren't removing the new sysfs file. Here is a fixed version.
+On 08/23/2016 03:14 PM, Jens Axboe wrote:
+> On 08/23/2016 03:11 PM, Jens Axboe wrote:
+>> On 08/23/2016 02:54 PM, Gabriel Krisman Bertazi wrote:
+>>> Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com> writes:
+>>>
+>>>>> Can you share what you ran to online/offline CPUs? I can't reproduce
+>>>>> this here.
+>>>>
+>>>> I was using the ppc64_cpu tool, which shouldn't do nothing more than
+>>>> write to sysfs.  but I just reproduced it with the script below.
+>>>>
+>>>> Note that this is ppc64le.  I don't have a x86 in hand to attempt to
+>>>> reproduce right now, but I'll look for one and see how it goes.
+>>>
+>>> Hi,
+>>>
+>>> Any luck on reproducing it?  We were initially reproducing with a
+>>> proprietary stress test, but I gave a try to a generated fio jobfile
+>>> associated with the SMT script I shared earlier and I could reproduce
+>>> the crash consistently in less than 10 minutes of execution.  this was
+>>> still ppc64le, though.  I couldn't get my hands on nvme on x86 yet.
+>>
+>> Nope, I have not been able to reproduce it. How long does the CPU
+>> offline/online actions take on ppc64? It's pretty slow on x86, which may
+>> hide the issue. I took out the various printk's associated with bringing
+>> a CPU off/online, as well as IRQ breaking parts, but didn't help in
+>> reproducing it.
+>>
+>>> The job file I used, as well as the smt.sh script, in case you want to
+>>> give it a try:
+>>>
+>>> jobfile: http://krisman.be/k/nvmejob.fio
+>>> smt.sh:  http://krisman.be/k/smt.sh
+>>>
+>>> Still, the trigger seems to be consistently a heavy load of IO
+>>> associated with CPU addition/removal.
+>>
+>> My workload looks similar to yours, in that it's high depth and with a
+>> lot of jobs to keep most CPUs loaded. My bash script is different than
+>> yours, I'll try that and see if it helps here.
+>
+> Actually, I take that back. You're not using O_DIRECT, hence all your
+> jobs are running at QD=1, not the 256 specified. That looks odd, but
+> I'll try, maybe it'll hit something different.
 
-8<
+Can you try this patch? It's not perfect, but I'll be interested if it
+makes a difference for you.
 
-This patch implements functions for pushing HCAM (host controlled
-asynchronous messages) error buffers to userspace through sysfs attributes.
-Reads to the "async_err_log" attribute will result in a single HCAM buffer
-being copied to userspace; one can process the next HCAM buffer by writing
-any string to the same attribute.
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 758a9b5..41def54 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -810,11 +810,11 @@ static void __blk_mq_run_hw_queue(struct 
+blk_mq_hw_ctx *hctx)
+  	struct list_head *dptr;
+  	int queued;
 
-A new list was added to the ioa_cfg structure to store the HCAM buffers for
-later reporting. We also send a KOBJ_CHANGE event whenever a new HCAM
-buffer is made available to userspace.
+-	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
+-
+  	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+  		return;
 
-Signed-off-by: Heitor Ricardo Alves de Siqueira <halves@linux.vnet.ibm.com>
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
++	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask));
++
+  	hctx->run++;
 
- drivers/scsi/ipr.c |  125 +++++++++++++++++++++++++++++++++++++++++++++++------
- drivers/scsi/ipr.h |    7 ++
- 2 files changed, 118 insertions(+), 14 deletions(-)
+  	/*
+@@ -1075,15 +1075,11 @@ static void __blk_mq_insert_request(struct 
+blk_mq_hw_ctx *hctx,
+  }
 
-diff -puN drivers/scsi/ipr.c~ipr_async_err_notify drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_async_err_notify	2016-08-23 12:13:59.265295961 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2016-08-24 12:44:07.769414624 -0500
-@@ -1473,7 +1473,7 @@ static void ipr_process_ccn(struct ipr_c
- 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
- 
--	list_del(&hostrcb->queue);
-+	list_del_init(&hostrcb->queue);
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
- 
- 	if (ioasc) {
-@@ -2552,6 +2552,23 @@ static void ipr_handle_log_data(struct i
- 	}
- }
- 
-+static struct ipr_hostrcb *ipr_get_free_hostrcb(struct ipr_ioa_cfg *ioa)
-+{
-+	struct ipr_hostrcb *hostrcb;
-+
-+	hostrcb = list_first_entry_or_null(&ioa->hostrcb_free_q,
-+					struct ipr_hostrcb, queue);
-+
-+	if (unlikely(!hostrcb)) {
-+		dev_info(&ioa->pdev->dev, "Reclaiming async error buffers.");
-+		hostrcb = list_first_entry_or_null(&ioa->hostrcb_report_q,
-+						struct ipr_hostrcb, queue);
-+	}
-+
-+	list_del_init(&hostrcb->queue);
-+	return hostrcb;
-+}
-+
- /**
-  * ipr_process_error - Op done function for an adapter error log.
-  * @ipr_cmd:	ipr command struct
-@@ -2569,13 +2586,14 @@ static void ipr_process_error(struct ipr
- 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
- 	u32 fd_ioasc;
-+	char *envp[] = { "ASYNC_ERR_LOG=1", NULL};
- 
- 	if (ioa_cfg->sis64)
- 		fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error64.fd_ioasc);
- 	else
- 		fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error.fd_ioasc);
- 
--	list_del(&hostrcb->queue);
-+	list_del_init(&hostrcb->queue);
- 	list_add_tail(&ipr_cmd->queue, &ipr_cmd->hrrq->hrrq_free_q);
- 
- 	if (!ioasc) {
-@@ -2588,6 +2606,10 @@ static void ipr_process_error(struct ipr
- 			"Host RCB failed with IOASC: 0x%08X\n", ioasc);
- 	}
- 
-+	list_add_tail(&hostrcb->queue, &ioa_cfg->hostrcb_report_q);
-+	hostrcb = ipr_get_free_hostrcb(ioa_cfg);
-+	kobject_uevent_env(&ioa_cfg->host->shost_dev.kobj, KOBJ_CHANGE, envp);
-+
- 	ipr_send_hcam(ioa_cfg, IPR_HCAM_CDB_OP_CODE_LOG_DATA, hostrcb);
- }
- 
-@@ -4095,6 +4117,64 @@ static struct device_attribute ipr_ioa_f
- 	.show = ipr_show_fw_type
- };
- 
-+static ssize_t ipr_read_async_err_log(struct file *filep, struct kobject *kobj,
-+				struct bin_attribute *bin_attr, char *buf,
-+				loff_t off, size_t count)
-+{
-+	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
-+	struct ipr_hostrcb *hostrcb;
-+	unsigned long lock_flags = 0;
-+	int ret;
-+
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+	hostrcb = list_first_entry_or_null(&ioa_cfg->hostrcb_report_q,
-+					struct ipr_hostrcb, queue);
-+	if (!hostrcb) {
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+		return 0;
-+	}
-+	ret = memory_read_from_buffer(buf, count, &off, &hostrcb->hcam,
-+				sizeof(hostrcb->hcam));
-+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	return ret;
-+}
-+
-+static ssize_t ipr_next_async_err_log(struct file *filep, struct kobject *kobj,
-+				struct bin_attribute *bin_attr, char *buf,
-+				loff_t off, size_t count)
-+{
-+	struct device *cdev = container_of(kobj, struct device, kobj);
-+	struct Scsi_Host *shost = class_to_shost(cdev);
-+	struct ipr_ioa_cfg *ioa_cfg = (struct ipr_ioa_cfg *)shost->hostdata;
-+	struct ipr_hostrcb *hostrcb;
-+	unsigned long lock_flags = 0;
-+
-+	spin_lock_irqsave(ioa_cfg->host->host_lock, lock_flags);
-+	hostrcb = list_first_entry_or_null(&ioa_cfg->hostrcb_report_q,
-+					struct ipr_hostrcb, queue);
-+	if (!hostrcb) {
-+		spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+		return count;
-+	}
-+
-+	/* Reclaim hostrcb before exit */
-+	list_move_tail(&hostrcb->queue, &ioa_cfg->hostrcb_free_q);
-+	spin_unlock_irqrestore(ioa_cfg->host->host_lock, lock_flags);
-+	return count;
-+}
-+
-+static struct bin_attribute ipr_ioa_async_err_log = {
-+	.attr = {
-+		.name =		"async_err_log",
-+		.mode =		S_IRUGO | S_IWUSR,
-+	},
-+	.size = 0,
-+	.read = ipr_read_async_err_log,
-+	.write = ipr_next_async_err_log
-+};
-+
- static struct device_attribute *ipr_ioa_attrs[] = {
- 	&ipr_fw_version_attr,
- 	&ipr_log_level_attr,
-@@ -7026,8 +7106,7 @@ static int ipr_ioa_reset_done(struct ipr
- {
- 	struct ipr_ioa_cfg *ioa_cfg = ipr_cmd->ioa_cfg;
- 	struct ipr_resource_entry *res;
--	struct ipr_hostrcb *hostrcb, *temp;
--	int i = 0, j;
-+	int j;
- 
- 	ENTER;
- 	ioa_cfg->in_reset_reload = 0;
-@@ -7048,12 +7127,16 @@ static int ipr_ioa_reset_done(struct ipr
- 	}
- 	schedule_work(&ioa_cfg->work_q);
- 
--	list_for_each_entry_safe(hostrcb, temp, &ioa_cfg->hostrcb_free_q, queue) {
--		list_del(&hostrcb->queue);
--		if (i++ < IPR_NUM_LOG_HCAMS)
--			ipr_send_hcam(ioa_cfg, IPR_HCAM_CDB_OP_CODE_LOG_DATA, hostrcb);
-+	for (j = 0; j < IPR_NUM_HCAMS; j++) {
-+		list_del_init(&ioa_cfg->hostrcb[j]->queue);
-+		if (j < IPR_NUM_LOG_HCAMS)
-+			ipr_send_hcam(ioa_cfg,
-+				IPR_HCAM_CDB_OP_CODE_LOG_DATA,
-+				ioa_cfg->hostrcb[j]);
- 		else
--			ipr_send_hcam(ioa_cfg, IPR_HCAM_CDB_OP_CODE_CONFIG_CHANGE, hostrcb);
-+			ipr_send_hcam(ioa_cfg,
-+				IPR_HCAM_CDB_OP_CODE_CONFIG_CHANGE,
-+				ioa_cfg->hostrcb[j]);
- 	}
- 
- 	scsi_report_bus_reset(ioa_cfg->host, IPR_VSET_BUS);
-@@ -8335,7 +8418,7 @@ static void ipr_get_unit_check_buffer(st
- 
- 	hostrcb = list_entry(ioa_cfg->hostrcb_free_q.next,
- 			     struct ipr_hostrcb, queue);
--	list_del(&hostrcb->queue);
-+	list_del_init(&hostrcb->queue);
- 	memset(&hostrcb->hcam, 0, sizeof(hostrcb->hcam));
- 
- 	rc = ipr_get_ldump_data_section(ioa_cfg,
-@@ -9332,7 +9415,7 @@ static void ipr_free_mem(struct ipr_ioa_
- 	dma_free_coherent(&ioa_cfg->pdev->dev, ioa_cfg->cfg_table_size,
- 			  ioa_cfg->u.cfg_table, ioa_cfg->cfg_table_dma);
- 
--	for (i = 0; i < IPR_NUM_HCAMS; i++) {
-+	for (i = 0; i < IPR_MAX_HCAMS; i++) {
- 		dma_free_coherent(&ioa_cfg->pdev->dev,
- 				  sizeof(struct ipr_hostrcb),
- 				  ioa_cfg->hostrcb[i],
-@@ -9572,7 +9655,7 @@ static int ipr_alloc_mem(struct ipr_ioa_
- 	if (!ioa_cfg->u.cfg_table)
- 		goto out_free_host_rrq;
- 
--	for (i = 0; i < IPR_NUM_HCAMS; i++) {
-+	for (i = 0; i < IPR_MAX_HCAMS; i++) {
- 		ioa_cfg->hostrcb[i] = dma_alloc_coherent(&pdev->dev,
- 							 sizeof(struct ipr_hostrcb),
- 							 &ioa_cfg->hostrcb_dma[i],
-@@ -9714,6 +9797,7 @@ static void ipr_init_ioa_cfg(struct ipr_
- 
- 	INIT_LIST_HEAD(&ioa_cfg->hostrcb_free_q);
- 	INIT_LIST_HEAD(&ioa_cfg->hostrcb_pending_q);
-+	INIT_LIST_HEAD(&ioa_cfg->hostrcb_report_q);
- 	INIT_LIST_HEAD(&ioa_cfg->free_res_q);
- 	INIT_LIST_HEAD(&ioa_cfg->used_res_q);
- 	INIT_WORK(&ioa_cfg->work_q, ipr_worker_thread);
-@@ -10352,6 +10436,8 @@ static void ipr_remove(struct pci_dev *p
- 			      &ipr_trace_attr);
- 	ipr_remove_dump_file(&ioa_cfg->host->shost_dev.kobj,
- 			     &ipr_dump_attr);
-+	sysfs_remove_bin_file(&ioa_cfg->host->shost_dev.kobj,
-+			&ipr_ioa_async_err_log);
- 	scsi_remove_host(ioa_cfg->host);
- 
- 	__ipr_remove(pdev);
-@@ -10400,10 +10486,25 @@ static int ipr_probe(struct pci_dev *pde
- 		return rc;
- 	}
- 
-+	rc = sysfs_create_bin_file(&ioa_cfg->host->shost_dev.kobj,
-+			&ipr_ioa_async_err_log);
-+
-+	if (rc) {
-+		ipr_remove_dump_file(&ioa_cfg->host->shost_dev.kobj,
-+				&ipr_dump_attr);
-+		ipr_remove_trace_file(&ioa_cfg->host->shost_dev.kobj,
-+				&ipr_trace_attr);
-+		scsi_remove_host(ioa_cfg->host);
-+		__ipr_remove(pdev);
-+		return rc;
-+	}
-+
- 	rc = ipr_create_dump_file(&ioa_cfg->host->shost_dev.kobj,
- 				   &ipr_dump_attr);
- 
- 	if (rc) {
-+		sysfs_remove_bin_file(&ioa_cfg->host->shost_dev.kobj,
-+				      &ipr_ioa_async_err_log);
- 		ipr_remove_trace_file(&ioa_cfg->host->shost_dev.kobj,
- 				      &ipr_trace_attr);
- 		scsi_remove_host(ioa_cfg->host);
-diff -puN drivers/scsi/ipr.h~ipr_async_err_notify drivers/scsi/ipr.h
---- linux-2.6.git/drivers/scsi/ipr.h~ipr_async_err_notify	2016-08-23 12:13:59.269295927 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.h	2016-08-24 12:42:36.377726203 -0500
-@@ -154,7 +154,9 @@
- #define IPR_DEFAULT_MAX_ERROR_DUMP			984
- #define IPR_NUM_LOG_HCAMS				2
- #define IPR_NUM_CFG_CHG_HCAMS				2
-+#define IPR_NUM_HCAM_QUEUE				12
- #define IPR_NUM_HCAMS	(IPR_NUM_LOG_HCAMS + IPR_NUM_CFG_CHG_HCAMS)
-+#define IPR_MAX_HCAMS	(IPR_NUM_HCAMS + IPR_NUM_HCAM_QUEUE)
- 
- #define IPR_MAX_SIS64_TARGETS_PER_BUS			1024
- #define IPR_MAX_SIS64_LUNS_PER_TARGET			0xffffffff
-@@ -1532,10 +1534,11 @@ struct ipr_ioa_cfg {
- 
- 	char ipr_hcam_label[8];
- #define IPR_HCAM_LABEL			"hcams"
--	struct ipr_hostrcb *hostrcb[IPR_NUM_HCAMS];
--	dma_addr_t hostrcb_dma[IPR_NUM_HCAMS];
-+	struct ipr_hostrcb *hostrcb[IPR_MAX_HCAMS];
-+	dma_addr_t hostrcb_dma[IPR_MAX_HCAMS];
- 	struct list_head hostrcb_free_q;
- 	struct list_head hostrcb_pending_q;
-+	struct list_head hostrcb_report_q;
- 
- 	struct ipr_hrr_queue hrrq[IPR_MAX_HRRQ_NUM];
- 	u32 hrrq_num;
-_
+  void blk_mq_insert_request(struct request *rq, bool at_head, bool 
+run_queue,
+-		bool async)
++			   bool async)
+  {
++	struct blk_mq_ctx *ctx = rq->mq_ctx;
+  	struct request_queue *q = rq->q;
+  	struct blk_mq_hw_ctx *hctx;
+-	struct blk_mq_ctx *ctx = rq->mq_ctx, *current_ctx;
+-
+-	current_ctx = blk_mq_get_ctx(q);
+-	if (!cpu_online(ctx->cpu))
+-		rq->mq_ctx = ctx = current_ctx;
 
+  	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+
+@@ -1093,8 +1089,6 @@ void blk_mq_insert_request(struct request *rq, 
+bool at_head, bool run_queue,
+
+  	if (run_queue)
+  		blk_mq_run_hw_queue(hctx, async);
+-
+-	blk_mq_put_ctx(current_ctx);
+  }
+
+  static void blk_mq_insert_requests(struct request_queue *q,
+@@ -1105,14 +1099,9 @@ static void blk_mq_insert_requests(struct 
+request_queue *q,
+
+  {
+  	struct blk_mq_hw_ctx *hctx;
+-	struct blk_mq_ctx *current_ctx;
+
+  	trace_block_unplug(q, depth, !from_schedule);
+
+-	current_ctx = blk_mq_get_ctx(q);
+-
+-	if (!cpu_online(ctx->cpu))
+-		ctx = current_ctx;
+  	hctx = q->mq_ops->map_queue(q, ctx->cpu);
+
+  	/*
+@@ -1125,14 +1114,12 @@ static void blk_mq_insert_requests(struct 
+request_queue *q,
+
+  		rq = list_first_entry(list, struct request, queuelist);
+  		list_del_init(&rq->queuelist);
+-		rq->mq_ctx = ctx;
+  		__blk_mq_insert_req_list(hctx, ctx, rq, false);
+  	}
+  	blk_mq_hctx_mark_pending(hctx, ctx);
+  	spin_unlock(&ctx->lock);
+
+  	blk_mq_run_hw_queue(hctx, from_schedule);
+-	blk_mq_put_ctx(current_ctx);
+  }
+
+  static int plug_ctx_cmp(void *priv, struct list_head *a, struct 
+list_head *b)
+@@ -1692,6 +1679,11 @@ static int blk_mq_hctx_cpu_offline(struct 
+blk_mq_hw_ctx *hctx, int cpu)
+  	while (!list_empty(&tmp)) {
+  		struct request *rq;
+
++		/*
++		 * FIXME: we can't just move the req here. We'd have to
++		 * pull off the bio chain and add it to a new request
++		 * on the target hw queue
++		 */
+  		rq = list_first_entry(&tmp, struct request, queuelist);
+  		rq->mq_ctx = ctx;
+  		list_move_tail(&rq->queuelist, &ctx->rq_list);
+
+-- 
+Jens Axboe
