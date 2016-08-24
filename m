@@ -1,48 +1,32 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 1/8] hisi_sas: add internal abort main code
-Date: Wed, 24 Aug 2016 14:41:33 +0200
-Message-ID: <2bc83181-1cd8-ff92-4961-62a21e73a6e7@suse.de>
+Subject: Re: [PATCH v2 3/8] hisi_sas: add internal abort to
+ hisi_sas_abort_task()
+Date: Wed, 24 Aug 2016 14:42:25 +0200
+Message-ID: <47c2bc90-e36e-3ad1-22e1-516308a7e905@suse.de>
 References: <1472036754-156813-1-git-send-email-john.garry@huawei.com>
- <1472036754-156813-2-git-send-email-john.garry@huawei.com>
+ <1472036754-156813-4-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1472036754-156813-2-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1472036754-156813-4-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On 08/24/2016 01:05 PM, John Garry wrote:
-> Add main code for internal abort functionality.
+> Execute an internal abort for executing a task abort.
+> This is for case of the command still being present
+> in host when abort is executed.
 > 
-> The internal abort features allows the host controller
-> to abort commands which are still active in the
-> controller but have not yet been sent to the slave
-> device.
-> 
-> Typically a command only spends a relatively
-> short time in the controller when compared to the
-> amount of the time after it is sent to the slave
-> device.
-> Two modes of internal abort are supported:
-> - device
-> - individual command
-> 
-> For device, when the internal abort is issued all
-> commands in the host for that device are aborted.
-> For a single command, only that command is aborted
-> if it is still in the host.
-> 
-> In HW the internal abort command is executed
-> similar to any other sort of command, like SSP.
+> For a SATA internal abort, we set abort for all tasks
+> associated with the device.
 > 
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/scsi/hisi_sas/hisi_sas.h      |   8 ++
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 163 ++++++++++++++++++++++++++++++++++
->  2 files changed, 171 insertions(+)
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 16 ++++++++++------
+>  1 file changed, 10 insertions(+), 6 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
