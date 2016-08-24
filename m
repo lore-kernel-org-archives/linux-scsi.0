@@ -1,86 +1,42 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 5/8] hisi_sas: add v2 hw slot complete internal abort support
-Date: Wed, 24 Aug 2016 19:05:51 +0800
-Message-ID: <1472036754-156813-6-git-send-email-john.garry@huawei.com>
-References: <1472036754-156813-1-git-send-email-john.garry@huawei.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 153171] scsi host6: runtime PM trying to activate child device
+ host6 but parent (2-2:1.0) is not active
+Date: Wed, 24 Aug 2016 12:33:37 +0000
+Message-ID: <bug-153171-11613-qLFDBxWi94@https.bugzilla.kernel.org/>
+References: <bug-153171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1472036754-156813-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:38948 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750999AbcHXMdk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 24 Aug 2016 08:33:40 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 5B74B2038A
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 12:33:39 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 49E5920384
+        for <linux-scsi@vger.kernel.org>; Wed, 24 Aug 2016 12:33:37 +0000 (UTC)
+In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Add code in slot_complete_v2_hw() to deal with the
-slots which have completed due to internal abort.
+https://bugzilla.kernel.org/show_bug.cgi?id=153171
 
-The status codes have the following meaning:
-- STAT_IO_ABORTED: the IO has been aborted due to
-internal abort, whether by device or individual
-abort command
-- STAT_IO_COMPLETE: internal abort command has
-completed successfully for device or individual
-abort command
-- STAT_IO_NO_DEVICE: internal abort command has
-completed for device but cannot find any IO
-- STAT_IO_NOT_VALID: internal abort command has
-completed for single command but could not
-find the command
+Chris Bainbridge <chris.bainbridge@gmail.com> changed:
 
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |chris.bainbridge@gmail.com
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index fec1675..bf9b693 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -227,6 +227,13 @@
- #define CMPLT_HDR_RSPNS_XFRD_MSK	(0x1 << CMPLT_HDR_RSPNS_XFRD_OFF)
- #define CMPLT_HDR_ERX_OFF		12
- #define CMPLT_HDR_ERX_MSK		(0x1 << CMPLT_HDR_ERX_OFF)
-+#define CMPLT_HDR_ABORT_STAT_OFF	13
-+#define CMPLT_HDR_ABORT_STAT_MSK	(0x7 << CMPLT_HDR_ABORT_STAT_OFF)
-+/* abort_stat */
-+#define STAT_IO_NOT_VALID		0x1
-+#define STAT_IO_NO_DEVICE		0x2
-+#define STAT_IO_COMPLETE		0x3
-+#define STAT_IO_ABORTED			0x4
- /* dw1 */
- #define CMPLT_HDR_IPTT_OFF		0
- #define CMPLT_HDR_IPTT_MSK		(0xffff << CMPLT_HDR_IPTT_OFF)
-@@ -1569,6 +1576,30 @@ slot_complete_v2_hw(struct hisi_hba *hisi_hba, struct hisi_sas_slot *slot,
- 		goto out;
- 	}
- 
-+	/* Use SAS+TMF status codes */
-+	switch ((complete_hdr->dw0 & CMPLT_HDR_ABORT_STAT_MSK)
-+			>> CMPLT_HDR_ABORT_STAT_OFF) {
-+	case STAT_IO_ABORTED:
-+		/* this io has been aborted by abort command */
-+		ts->stat = SAS_ABORTED_TASK;
-+		goto out;
-+	case STAT_IO_COMPLETE:
-+		/* internal abort command complete */
-+		ts->stat = TMF_RESP_FUNC_COMPLETE;
-+		goto out;
-+	case STAT_IO_NO_DEVICE:
-+		ts->stat = TMF_RESP_FUNC_COMPLETE;
-+		goto out;
-+	case STAT_IO_NOT_VALID:
-+		/* abort single io, controller don't find
-+		 * the io need to abort
-+		 */
-+		ts->stat = TMF_RESP_FUNC_FAILED;
-+		goto out;
-+	default:
-+		break;
-+	}
-+
- 	if ((complete_hdr->dw0 & CMPLT_HDR_ERX_MSK) &&
- 		(!(complete_hdr->dw0 & CMPLT_HDR_RSPNS_XFRD_MSK))) {
- 
+--- Comment #3 from Chris Bainbridge <chris.bainbridge@gmail.com> ---
+Error message present in 4.8.0-rc3
+Error message disappears after applying fix
+https://patchwork.kernel.org/patch/9262149/ 
+Would be good to merge the fix before 4.9.0 is released
+
 -- 
-1.9.1
+You are receiving this mail because:
+You are the assignee for the bug.
