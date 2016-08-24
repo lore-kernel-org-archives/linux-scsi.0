@@ -1,27 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] fcoe: provide translation table between Ethernet and FC port speeds
-Date: Tue, 23 Aug 2016 22:28:32 -0400
-Message-ID: <yq18tvmew8f.fsf@sermon.lab.mkp.net>
-References: <1471613617-21291-1-git-send-email-jthumshirn@suse.de>
+Subject: Re: [PATCH] megaraid_sas: Use memdup_user() rather than duplicating its implementation
+Date: Tue, 23 Aug 2016 22:47:47 -0400
+Message-ID: <yq1zio2dgrw.fsf@sermon.lab.mkp.net>
+References: <566ABCD9.1060404@users.sourceforge.net>
+        <606e0b0c-370f-cff5-607b-0c8ae480e9c1@users.sourceforge.net>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16730 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753563AbcHXC3T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 23 Aug 2016 22:29:19 -0400
-In-Reply-To: <1471613617-21291-1-git-send-email-jthumshirn@suse.de> (Johannes
-        Thumshirn's message of "Fri, 19 Aug 2016 15:33:37 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <606e0b0c-370f-cff5-607b-0c8ae480e9c1@users.sourceforge.net> (SF
+        Markus Elfring's message of "Sun, 21 Aug 2016 10:48:48 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: SF Markus Elfring <elfring@users.sourceforge.net>
+Cc: linux-scsi@vger.kernel.org, megaraidlinux.pdl@avagotech.com, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, Kashyap Desai <kashyap.desai@avagotech.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, LKML <linux-kernel@vger.kernel.org>, kernel-janitors@vger.kernel.org, Julia Lawall <julia.lawall@lip6.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "SF" == SF Markus Elfring <elfring@users.sourceforge.net> writes:
 
-Johannes> Provide a translation table between Ethernet and FC port
-Johannes> speeds so odd speeds (from a Ethernet POV) like 8 Gbit are
-Johannes> correctly mapped to sysfs and open-fcoe's fcoeadm.
+SF> Reuse existing functionality from memdup_user() instead of keeping
+SF> duplicate source code.
 
 Applied to 4.9/scsi-queue.
 
