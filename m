@@ -1,31 +1,37 @@
-From: David Carroll <david.carroll@microsemi.com>
-Subject: RE: [PATCH 1/7] aacraid: Use memdup_user() rather than duplicating
- its implementation
-Date: Wed, 24 Aug 2016 23:01:20 +0000
-Message-ID: <423FD6710FB8FB4F8728F93591889F9A15FA96FC@avsrvexchmbx1.microsemi.net>
-References: <566ABCD9.1060404@users.sourceforge.net>
- <40d8607f-3934-c31f-3791-ef6a67d65d45@users.sourceforge.net>
- <23c56a66-74a6-6033-f209-ac3e4ba83e61@users.sourceforge.net>
- <423FD6710FB8FB4F8728F93591889F9A15FA8E64@avsrvexchmbx1.microsemi.net>
- <b61d1eef-35c6-5e8c-a342-db312e27cb1f@users.sourceforge.net>
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: Re: [PATCH] ata: do not hard code limit in ata_set_lba_range_entries()
+Date: Thu, 25 Aug 2016 03:42:42 -0500
+Message-ID: <CAJ48U8Vojc=kzSbjjmM9y7DE0tCUk_GqdY_kLf+NY07VfefvDQ@mail.gmail.com>
+References: <e35afc461c9a79f568f2bcd4ef2cd1e07fb50082.1471890326.git.tom.ty89@gmail.com>
+ <CAJ48U8UsFFD=fb6WQEVAam9-9RajVjLNrgiKmXCXvkCFOg2JnQ@mail.gmail.com>
+ <CAGnHSE=Laj5kpFNJ-EqdN-NTUQJyOmwYtjWM7iLqGxDRqMSoxA@mail.gmail.com>
+ <CAJVOszC2sp0=GA02ZB00s46F84XfU7DvzNSravyhbjxY651ozQ@mail.gmail.com>
+ <CAGnHSEm18o-8ZRhyFnyQ22rUm+gJLWwJyxoA-iSJnkM3k4oHHQ@mail.gmail.com>
+ <CAJ48U8XDb7S2WPSDBtn+VUoRb70u6SmgbPFhm-NC2jx6CmE2mw@mail.gmail.com>
+ <CAGnHSEn470B0ecDdMSY29W4Or3jD_NPoUAku_09o=X9Tn6vSpw@mail.gmail.com>
+ <CAJVOszB7cyUcE+A_EUw0OnvdO3iGFW9sG45R2Ng1Ea_Q7YxaQA@mail.gmail.com>
+ <CAGnHSE=Lsb-L-nd8OHQpVPDe1JkURjnXoA26ZQ7bH1GBEPAAtA@mail.gmail.com>
+ <CAGnHSEmZdVy2Xp_wK8n+89mD18NPAqcy5UBhhDEy5RAAC7c+vA@mail.gmail.com>
+ <CAJVOszBcuNouJk28nr1smPYJfEhE_9LjD0UgOiG31ApgrXzGJg@mail.gmail.com> <CAGnHSEn3d7s3Tw9MT9Vos+0QBRnnj_gqKorcC56SzOxkK5NN-w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b61d1eef-35c6-5e8c-a342-db312e27cb1f@users.sourceforge.net>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: SF Markus Elfring <elfring@users.sourceforge.net>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E. J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: LKML <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Julia Lawall <julia.lawall@lip6.fr>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f42.google.com ([209.85.214.42]:37583 "EHLO
+        mail-it0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933608AbcHYInk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2016 04:43:40 -0400
+In-Reply-To: <CAGnHSEn3d7s3Tw9MT9Vos+0QBRnnj_gqKorcC56SzOxkK5NN-w@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tom Yan <tom.ty89@gmail.com>
+Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Tejun Heo <tj@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
 
-PiA+DQo+ID4gSGkgTWFya3VzLA0KPiA+DQo+ID4gUGF0Y2ggMi83IHNob3VsZCBwcmVjZWRlIFBh
-dGNoIDEvNywgYXMgZmFsbGluZyBpbnRvIGtmcmVlKCkgd291bGQgbm90IGxvb2sNCj4gcHJldHR5
-Lg0KPiANCj4gRG8geW91IGV2ZW50dWFsbHkgcHJlZmVyIHRoYXQgdGhpcyBzb3VyY2UgY29kZSBh
-ZGp1c3RtZW50IHNob3VsZCBiZSBjb21iaW5lZA0KPiB3aXRoIHRoZSB1cGRhdGUgc3VnZ2VzdGlv
-biAiWzIvN10gYWFjcmFpZDogT25lIGZ1bmN0aW9uIGNhbGwgbGVzcyBpbg0KPiBhYWNfc2VuZF9y
-YXdfc3JiKCkgYWZ0ZXIgZXJyb3IgZGV0ZWN0aW9uIiBpbiBhIHNpbmdsZSB1cGRhdGUgc3RlcD8N
-Cj4gDQoNCkhpIE1hcmt1cywNCg0KTXkgcHJpbWFyeSBvYmplY3RpdmUgaW4gdGhpcyB3b3VsZCBi
-ZSB0aGUgYWJpbGl0eSB0byBiaXNlY3QgLi4uIFRoZSBzZWNvbmRhcnkgd291bGQgYmUgb25lIGlz
-c3VlL3BhdGNoLiBJIHRoaW5rIG15IHByZWZlcmVuY2Ugd291bGQgYmUgdG8gc3dhcCBwYXRjaGVz
-IDEgYW5kIDIuDQoNClRoYW5rcywgLURhdmUNCg==
+Tom,
+
+In my opinion this patch you submitted is simply making the code less
+safe against a buffer overflow without a sufficiently good reason.
+
+In future please comment on other patches as replies to those patches.
+Mixing them together is just confusing.
+
+--Shaun
