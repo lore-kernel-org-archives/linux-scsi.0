@@ -1,54 +1,52 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: [PATCHv2] ipr: Add asynchronous error notification
-Date: Thu, 25 Aug 2016 12:29:04 -0300
-Message-ID: <87zio098an.fsf@linux.vnet.ibm.com>
-References: <1469795977-6345-1-git-send-email-halves@linux.vnet.ibm.com>
-        <yq1twehh3ty.fsf@sermon.lab.mkp.net>
-        <a7eec861-46e1-4d82-1361-ae9b9a04cf3d@linux.vnet.ibm.com>
+From: Bradley Grove <bgrove@attotech.com>
+Subject: Re: [PATCH] scsi: don't reinitialize adapter's req_table
+Date: Thu, 25 Aug 2016 14:45:31 -0400
+Message-ID: <a4341156-ffcb-cacc-595e-6887ed72830c@attotech.com>
+References: <1471747164-31441-1-git-send-email-shawn.lin@rock-chips.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:61002 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1758781AbcHYP3M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 25 Aug 2016 11:29:12 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7PFQ4Vf063147
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2016 11:29:11 -0400
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 2512h98e6b-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2016 11:29:11 -0400
-Received: from localhost
-        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-        Thu, 25 Aug 2016 12:29:09 -0300
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.13.184.25])
-        by d24dlp02.br.ibm.com (Postfix) with ESMTP id 348101DC0051
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2016 11:28:57 -0400 (EDT)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u7PFT6LM4063676
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2016 12:29:06 -0300
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-        by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u7PFT5Rv030855
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Aug 2016 12:29:06 -0300
-In-Reply-To: <a7eec861-46e1-4d82-1361-ae9b9a04cf3d@linux.vnet.ibm.com> (Brian
-        King's message of "Wed, 24 Aug 2016 12:56:51 -0500")
+Received: from sw.attotech.com ([208.69.85.34]:40535 "EHLO
+        NOTESERV1.attotech.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751667AbcHYTDi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2016 15:03:38 -0400
+In-Reply-To: <1471747164-31441-1-git-send-email-shawn.lin@rock-chips.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Heitor Ricardo Alves de Siqueira <halves@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Heitor Ricardo Alves de Siqueira <hrasiq@gmail.com>
+To: Shawn Lin <shawn.lin@rock-chips.com>, Bradley Grove <linuxdrivers@attotech.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+Acked-by: Bradley Grove <bgrove@attotech.com>
 
-> Looks pretty good. I noticed one issue in an error path where you
-> weren't removing the new sysfs file. Here is a fixed version.
+On 08/20/2016 10:39 PM, Shawn Lin wrote:
+> req_table is allocate by kzalloc, so we don't need to
+> zero it again anyway.
+>
+> Signed-off-by: Shawn Lin <shawn.lin@rock-chips.com>
+> ---
+>
+>  drivers/scsi/esas2r/esas2r_init.c | 4 ----
+>  1 file changed, 4 deletions(-)
+>
+> diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
+> index 78ce4d61..d6e53ae 100644
+> --- a/drivers/scsi/esas2r/esas2r_init.c
+> +++ b/drivers/scsi/esas2r/esas2r_init.c
+> @@ -963,10 +963,6 @@ bool esas2r_init_adapter_struct(struct esas2r_adapter *a,
+>
+>  	/* initialize the allocated memory */
+>  	if (test_bit(AF_FIRST_INIT, &a->flags)) {
+> -		memset(a->req_table, 0,
+> -		       (num_requests + num_ae_requests +
+> -			1) * sizeof(struct esas2r_request *));
+> -
+>  		esas2r_targ_db_initialize(a);
+>
+>  		/* prime parts of the inbound list */
 >
 
-The modifications look good to me.
 
 
--- 
-Gabriel Krisman Bertazi
 
+This electronic transmission and any attachments hereto are intended only for the use of the individual or entity to which it is addressed and may contain confidential information belonging to ATTO Technology, Inc. If you have reason to believe that you are not the intended recipient, you are hereby notified that any disclosure, copying, distribution or the taking of any action in reliance on the contents of this electronic transmission is strictly prohibited. If you have reason to believe that you have received this transmission in error, please notify ATTO immediately by return e-mail and delete and destroy this communication.   
