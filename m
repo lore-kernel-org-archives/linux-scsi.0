@@ -1,148 +1,115 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 30/30] fcoe: make R_A_TOV and E_D_TOV configurable
-Date: Fri, 26 Aug 2016 14:01:53 +0200
-Message-ID: <1472212913-39810-31-git-send-email-hare@suse.de>
+Subject: [PATCH 17/30] libfc: sanitize E_D_TOV and R_A_TOV setting
+Date: Fri, 26 Aug 2016 14:01:40 +0200
+Message-ID: <1472212913-39810-18-git-send-email-hare@suse.de>
 References: <1472212913-39810-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35226 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35193 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752420AbcHZMCO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 08:02:14 -0400
+        id S1752300AbcHZMCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 08:02:12 -0400
 In-Reply-To: <1472212913-39810-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The user might want to modify the values for R_A_TOV and E_D_TOV,
-so add new module parameters 'e_d_tov' and 'r_a_tov' for the
-'fcoe' modules and allow to modify them via sysfs attributes.
+When setting the FCP timeout we need to ensure a lower boundary
+for E_D_TOV and R_A_TOV, otherwise we'd be getting spurious I/O
+issues due to the fcp timer firing too early.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe.c       | 12 +++++--
- drivers/scsi/fcoe/fcoe_sysfs.c | 71 ++++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 81 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c   | 9 +++++----
+ drivers/scsi/libfc/fc_lport.c | 8 +++++---
+ drivers/scsi/libfc/fc_rport.c | 6 ++++--
+ 3 files changed, 14 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 706de91..cf4adaa 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -63,6 +63,14 @@ unsigned int fcoe_debug_logging;
- module_param_named(debug_logging, fcoe_debug_logging, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(debug_logging, "a bit mask of logging levels");
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index abddfe2..1cb2c59 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -1139,8 +1139,11 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
+ static inline unsigned int get_fsp_rec_tov(struct fc_fcp_pkt *fsp)
+ {
+ 	struct fc_rport_libfc_priv *rpriv = fsp->rport->dd_data;
++	unsigned int e_d_tov = FC_DEF_E_D_TOV;
  
-+unsigned int fcoe_e_d_tov = 2 * 1000;
-+module_param_named(e_d_tov, fcoe_e_d_tov, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(e_d_tov, "E_D_TOV in ms, default 2000");
-+
-+unsigned int fcoe_r_a_tov = 2 * 2 * 1000;
-+module_param_named(r_a_tov, fcoe_r_a_tov, int, S_IRUGO|S_IWUSR);
-+MODULE_PARM_DESC(r_a_tov, "R_A_TOV in ms, default 4000");
-+
- static DEFINE_MUTEX(fcoe_config_mutex);
+-	return msecs_to_jiffies(rpriv->e_d_tov) + HZ;
++	if (rpriv && rpriv->e_d_tov > e_d_tov)
++		e_d_tov = rpriv->e_d_tov;
++	return msecs_to_jiffies(e_d_tov) + HZ;
+ }
  
- static struct workqueue_struct *fcoe_wq;
-@@ -634,8 +642,8 @@ static int fcoe_lport_config(struct fc_lport *lport)
- 	lport->qfull = 0;
- 	lport->max_retry_count = 3;
- 	lport->max_rport_retry_count = 3;
--	lport->e_d_tov = 2 * 1000;	/* FC-FS default */
--	lport->r_a_tov = 2 * 2 * 1000;
-+	lport->e_d_tov = fcoe_e_d_tov;
-+	lport->r_a_tov = fcoe_r_a_tov;
- 	lport->service_params = (FCP_SPPF_INIT_FCN | FCP_SPPF_RD_XRDY_DIS |
- 				 FCP_SPPF_RETRY | FCP_SPPF_CONF_COMPL);
- 	lport->does_npiv = 1;
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 5bfa2b1..9cf3d56 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -432,6 +432,75 @@ static FCOE_DEVICE_ATTR(ctlr, fip_vlan_responder, S_IRUGO | S_IWUSR,
- 			store_ctlr_fip_resp);
+ /**
+@@ -1696,7 +1699,6 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	struct fc_seq *seq;
+ 	struct fcp_srr *srr;
+ 	struct fc_frame *fp;
+-	unsigned int rec_tov;
  
- static ssize_t
-+fcoe_ctlr_var_store(u32 *var, const char *buf, size_t count)
-+{
-+	int err;
-+	unsigned long v;
-+
-+	err = kstrtoul(buf, 10, &v);
-+	if (err || v > UINT_MAX)
-+		return -EINVAL;
-+
-+	*var = v;
-+
-+	return count;
-+}
-+
-+static ssize_t store_ctlr_r_a_tov(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+
-+	if (ctlr_dev->enabled == FCOE_CTLR_ENABLED)
-+		return -EBUSY;
-+	if (ctlr_dev->enabled == FCOE_CTLR_DISABLED)
-+		return fcoe_ctlr_var_store(&ctlr->lp->r_a_tov, buf, count);
-+	return -ENOTSUPP;
-+}
-+
-+static ssize_t show_ctlr_r_a_tov(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+
-+	return sprintf(buf, "%d\n", ctlr->lp->r_a_tov);
-+}
-+
-+static FCOE_DEVICE_ATTR(ctlr, r_a_tov, S_IRUGO | S_IWUSR,
-+			show_ctlr_r_a_tov, store_ctlr_r_a_tov);
-+
-+static ssize_t store_ctlr_e_d_tov(struct device *dev,
-+				  struct device_attribute *attr,
-+				  const char *buf, size_t count)
-+{
-+	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+
-+	if (ctlr_dev->enabled == FCOE_CTLR_ENABLED)
-+		return -EBUSY;
-+	if (ctlr_dev->enabled == FCOE_CTLR_DISABLED)
-+		return fcoe_ctlr_var_store(&ctlr->lp->e_d_tov, buf, count);
-+	return -ENOTSUPP;
-+}
-+
-+static ssize_t show_ctlr_e_d_tov(struct device *dev,
-+				 struct device_attribute *attr,
-+				 char *buf)
-+{
-+	struct fcoe_ctlr_device *ctlr_dev = dev_to_ctlr(dev);
-+	struct fcoe_ctlr *ctlr = fcoe_ctlr_device_priv(ctlr_dev);
-+
-+	return sprintf(buf, "%d\n", ctlr->lp->e_d_tov);
-+}
-+
-+static FCOE_DEVICE_ATTR(ctlr, e_d_tov, S_IRUGO | S_IWUSR,
-+			show_ctlr_e_d_tov, store_ctlr_e_d_tov);
-+
-+static ssize_t
- store_private_fcoe_ctlr_fcf_dev_loss_tmo(struct device *dev,
- 					 struct device_attribute *attr,
- 					 const char *buf, size_t count)
-@@ -515,6 +584,8 @@ static struct attribute_group fcoe_ctlr_lesb_attr_group = {
- static struct attribute *fcoe_ctlr_attrs[] = {
- 	&device_attr_fcoe_ctlr_fip_vlan_responder.attr,
- 	&device_attr_fcoe_ctlr_fcf_dev_loss_tmo.attr,
-+	&device_attr_fcoe_ctlr_r_a_tov.attr,
-+	&device_attr_fcoe_ctlr_e_d_tov.attr,
- 	&device_attr_fcoe_ctlr_enabled.attr,
- 	&device_attr_fcoe_ctlr_mode.attr,
- 	NULL,
+ 	rport = fsp->rport;
+ 	rpriv = rport->dd_data;
+@@ -1720,10 +1722,9 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 		       rpriv->local_port->port_id, FC_TYPE_FCP,
+ 		       FC_FCTL_REQ, 0);
+ 
+-	rec_tov = get_fsp_rec_tov(fsp);
+ 	seq = lport->tt.exch_seq_send(lport, fp, fc_fcp_srr_resp,
+ 				      fc_fcp_pkt_destroy,
+-				      fsp, jiffies_to_msecs(rec_tov));
++				      fsp, get_fsp_rec_tov(fsp));
+ 	if (!seq)
+ 		goto retry;
+ 
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 04ce7cf..ccf773a 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1772,7 +1772,7 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 	if ((csp_flags & FC_SP_FT_FPORT) == 0) {
+ 		if (e_d_tov > lport->e_d_tov)
+ 			lport->e_d_tov = e_d_tov;
+-		lport->r_a_tov = 2 * e_d_tov;
++		lport->r_a_tov = 2 * lport->e_d_tov;
+ 		fc_lport_set_port_id(lport, did, fp);
+ 		printk(KERN_INFO "host%d: libfc: "
+ 		       "Port (%6.6x) entered "
+@@ -1784,8 +1784,10 @@ void fc_lport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 				   get_unaligned_be64(
+ 					   &flp->fl_wwnn));
+ 	} else {
+-		lport->e_d_tov = e_d_tov;
+-		lport->r_a_tov = r_a_tov;
++		if (e_d_tov > lport->e_d_tov)
++			lport->e_d_tov = e_d_tov;
++		if (r_a_tov > lport->r_a_tov)
++			lport->r_a_tov = r_a_tov;
+ 		fc_host_fabric_name(lport->host) =
+ 			get_unaligned_be64(&flp->fl_wwnn);
+ 		fc_lport_set_port_id(lport, did, fp);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 68d4c92..5a9c871 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -1328,13 +1328,15 @@ static void fc_rport_rtv_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			tov = ntohl(rtv->rtv_r_a_tov);
+ 			if (tov == 0)
+ 				tov = 1;
+-			rdata->r_a_tov = tov;
++			if (tov > rdata->r_a_tov)
++				rdata->r_a_tov = tov;
+ 			tov = ntohl(rtv->rtv_e_d_tov);
+ 			if (toq & FC_ELS_RTV_EDRES)
+ 				tov /= 1000000;
+ 			if (tov == 0)
+ 				tov = 1;
+-			rdata->e_d_tov = tov;
++			if (tov > rdata->e_d_tov)
++				rdata->e_d_tov = tov;
+ 		}
+ 	}
+ 
 -- 
 1.8.5.6
 
