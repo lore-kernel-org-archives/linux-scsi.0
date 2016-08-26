@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 12/17] smartpqi: scsi queuecommand cleanup
-Date: Fri, 26 Aug 2016 11:45:18 -0500
-Message-ID: <147222991813.31214.5881699044497945526.stgit@brunhilda>
+Subject: [PATCH 10/17] smartpqi: minor function reformating
+Date: Fri, 26 Aug 2016 11:45:06 -0500
+Message-ID: <147222990607.31214.690487833623546424.stgit@brunhilda>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:27694
+Received: from mail-sn1nam01on0088.outbound.protection.outlook.com ([104.47.32.88]:13920
         "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753566AbcHZQpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 12:45:54 -0400
+        id S1752456AbcHZQps (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 12:45:48 -0400
 In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,40 +20,28 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-minor cleanup of scsi queue command function
+reformatted pqi_num_elements_free() to match the rest of the driver
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |    8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index a8b8671..87eb603 100644
+index 52c752f..2759c90 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -4514,7 +4514,7 @@ static int pqi_aio_submit_io(struct pqi_ctrl_info *ctrl_info,
+@@ -2576,8 +2576,7 @@ static unsigned int pqi_process_io_intr(struct pqi_ctrl_info *ctrl_info,
  }
  
- static int pqi_scsi_queue_command(struct Scsi_Host *shost,
--				struct scsi_cmnd *scmd)
-+	struct scsi_cmnd *scmd)
+ static inline unsigned int pqi_num_elements_free(unsigned int pi,
+-						unsigned int ci,
+-						unsigned int elements_in_queue)
++	unsigned int ci, unsigned int elements_in_queue)
  {
- 	int rc;
- 	struct pqi_ctrl_info *ctrl_info;
-@@ -4532,6 +4532,12 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
- 		return 0;
- 	}
+ 	unsigned int num_elements_used;
  
-+	/*
-+	 * This is necessary because the SML doesn't zero out this field during
-+	 * error recovery.
-+	 */
-+	scmd->result = 0;
-+
- 	hwq = blk_mq_unique_tag_to_hwq(blk_mq_unique_tag(scmd->request));
- 	if (hwq >= ctrl_info->num_queue_groups)
- 		hwq = 0;
 
