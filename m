@@ -1,75 +1,56 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 00/17] smartpqi updates
-Date: Fri, 26 Aug 2016 11:44:05 -0500
-Message-ID: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+Subject: [PATCH 13/17] smartpqi: remove timeout for cache flush operations
+Date: Fri, 26 Aug 2016 11:45:24 -0500
+Message-ID: <147222992420.31214.16768734205314588696.stgit@brunhilda>
+References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:37417
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0085.outbound.protection.outlook.com ([104.47.38.85]:61701
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752839AbcHZRB5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 13:01:57 -0400
+        id S1752840AbcHZRCH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 13:02:07 -0400
+In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-These changes are based on Linus's tree
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-The changes are:
- - simplify aio processing
- - simplify tmf macro names
- - remove workaround for spanning
- - add message for offlined drives
- - enhance reset logic
- - make some functions in-line
- - add support for kdump
- - correct issue with offlined controller
- - change timeout for events
- - reformat function to match svn version
- - correct update time scheduling
- - minor queuecommand cleanup
- - remove timeout on cache flush operation
- - update smartpqi/Kconfig
-   - Martin K. Peterson's review
- - updated MAINTAINERS for smartpqi.txt addition
- - add Documentation/scsi/smartpqi.txt
-   - Martin K. Peterson's review
- - bump driver version
+Some cache flush operations can take longer than the
+timeout value. Best to not impose a time limit to
+handle all cases.
 
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
+ drivers/scsi/smartpqi/smartpqi_init.c |    3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Kevin Barnett (17):
-      smartpqi: change aio sg processing
-      smartpqi: change tmf macro names
-      smartpqi: simplify spanning
-      smartpqi: enhance drive offline informational message
-      smartpqi: enhance reset logic
-      smartpqi: change commonly used function to inline
-      smartpqi: add kdump support
-      smartpqi: correct controller offline issue
-      smartpqi: correct event acknowledgment timeout issue
-      smartpqi: minor function reformating
-      smartpqi: minor tweaks to update time support
-      smartpqi: scsi queuecommand cleanup
-      smartpqi: remove timeout for cache flush operations
-      smartpqi: update Kconfig
-      smartpqi: update maintainers
-      smartpqi: add smartpqi.txt
-      smartqi: bump driver version
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 87eb603..e7d7e99 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -407,7 +407,6 @@ static int pqi_identify_physical_device(struct pqi_ctrl_info *ctrl_info,
+ }
+ 
+ #define SA_CACHE_FLUSH_BUFFER_LENGTH	4
+-#define PQI_FLUSH_CACHE_TIMEOUT		(30 * 1000)
+ 
+ static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info)
+ {
+@@ -434,7 +433,7 @@ static int pqi_flush_cache(struct pqi_ctrl_info *ctrl_info)
+ 		goto out;
+ 
+ 	rc = pqi_submit_raid_request_synchronous(ctrl_info, &request.header,
+-		0, NULL, PQI_FLUSH_CACHE_TIMEOUT);
++		0, NULL, NO_TIMEOUT);
+ 
+ 	pqi_pci_unmap(ctrl_info->pci_dev, request.sg_descriptors, 1,
+ 		pci_direction);
 
-
- Documentation/scsi/smartpqi.txt       |   80 ++++++++
- MAINTAINERS                           |    1 
- drivers/scsi/smartpqi/Kconfig         |    8 +
- drivers/scsi/smartpqi/smartpqi.h      |   35 ++--
- drivers/scsi/smartpqi/smartpqi_init.c |  316 ++++++++++++++++-----------------
- drivers/scsi/smartpqi/smartpqi_sis.c  |   10 +
- drivers/scsi/smartpqi/smartpqi_sis.h  |    2 
- 7 files changed, 274 insertions(+), 178 deletions(-)
- create mode 100644 Documentation/scsi/smartpqi.txt
-
---
-Signature
