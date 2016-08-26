@@ -1,28 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: core: configure runtime pm before calling device_add in scsi_add_host_with_dma
-Date: Thu, 25 Aug 2016 23:17:53 -0400
-Message-ID: <yq1vayo9q1q.fsf@sermon.lab.mkp.net>
-References: <792dc1a9-2280-d1a2-c088-cfdd28c67df3@gmail.com>
+Subject: Re: [PATCH] aic94xx: Add missing error code assignment before test
+Date: Thu, 25 Aug 2016 23:24:19 -0400
+Message-ID: <yq1r39c9pr0.fsf@sermon.lab.mkp.net>
+References: <1470742202-11100-1-git-send-email-christophe.jaillet@wanadoo.fr>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:32841 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755775AbcHZDT3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2016 23:19:29 -0400
-In-Reply-To: <792dc1a9-2280-d1a2-c088-cfdd28c67df3@gmail.com> (Heiner
-        Kallweit's message of "Wed, 3 Aug 2016 21:49:03 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1470742202-11100-1-git-send-email-christophe.jaillet@wanadoo.fr>
+        (Christophe JAILLET's message of "Tue, 9 Aug 2016 13:30:02 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Heiner Kallweit <hkallweit1@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Heiner" == Heiner Kallweit <hkallweit1@gmail.com> writes:
+>>>>> "Christophe" == Christophe JAILLET <christophe.jaillet@wanadoo.fr> writes:
 
-Heiner> Runtime PM should be configured already once we call
-Heiner> device_add. See also the description in this mail thread
-Heiner> https://lists.linuxfoundation.org/pipermail/linux-pm/2009-November/023198.html
-Heiner> or the order of calls e.g. in usb_new_device.
+Christophe> It is likely that checking the result of
+Christophe> 'pci_write_config_dword' is expected here.
 
 Applied to 4.9/scsi-queue.
 
