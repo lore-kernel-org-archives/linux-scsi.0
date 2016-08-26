@@ -1,155 +1,137 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/30] libfc: Rework PRLI handling
-Date: Fri, 26 Aug 2016 14:01:37 +0200
-Message-ID: <1472212913-39810-15-git-send-email-hare@suse.de>
+Subject: [PATCH 03/30] libfc: spurious I/O error under high load
+Date: Fri, 26 Aug 2016 14:01:26 +0200
+Message-ID: <1472212913-39810-4-git-send-email-hare@suse.de>
 References: <1472212913-39810-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35116 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35133 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751758AbcHZMCL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 08:02:11 -0400
+        id S1751997AbcHZMCJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 08:02:09 -0400
 In-Reply-To: <1472212913-39810-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>
 
-PRLI is only required if the port is acting as an initiator; ports
-which support target functionality only do not need to send PRLI.
-At the same time the PRLI state is only used if the port initiated
-a PRLI transfer; if we received a PRLI request we should _not_
-change the state as this would cause our PRLI response to be dropped.
-And when we receive a PRLI response we need to check if an image
-pair has been established; if not the remote port cannot act as a
-target for us and we need to disable target functionality.
+If a command times out libfc is sending an REC, which also
+might fail (due to frames being lost or something).
+If no data has been transferred we can simply retry
+the command, but the current code sets a state of FC_ERROR,
+which then is being translated into DID_ERROR, resulting
+in an I/O error.
+So to handle this properly we need to set a separate
+state FC_TRANS_RESET and mapping it onto DID_SOFT_RETRY.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/libfc/fc_rport.c | 62 +++++++++++++++++++++++++++++--------------
- 1 file changed, 42 insertions(+), 20 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 27 +++++++++++++++++----------
+ 1 file changed, 17 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index a76f29d..69c93c7 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1120,7 +1120,7 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	u32 roles = FC_RPORT_ROLE_UNKNOWN;
- 	u32 fcp_parm = 0;
- 	u8 op;
--	u8 resp_code = 0;
-+	enum fc_els_spp_resp resp_code;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index bd4bdbf..289c481 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -122,6 +122,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *, struct fc_frame *);
+ #define FC_HRD_ERROR		9
+ #define FC_CRC_ERROR		10
+ #define FC_TIMED_OUT		11
++#define FC_TRANS_RESET		12
  
- 	mutex_lock(&rdata->rp_mutex);
+ /*
+  * Error recovery timeout values.
+@@ -283,7 +284,7 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+  * fc_io_compl() will notify the SCSI-ml that the I/O is done.
+  * The SCSI-ml will retry the command.
+  */
+-static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
++static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp, int status_code)
+ {
+ 	if (fsp->seq_ptr) {
+ 		fsp->lp->tt.exch_done(fsp->seq_ptr);
+@@ -292,7 +293,7 @@ static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
  
-@@ -1149,8 +1149,8 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			goto out;
+ 	fsp->state &= ~FC_SRB_ABORT_PENDING;
+ 	fsp->io_status = 0;
+-	fsp->status_code = FC_ERROR;
++	fsp->status_code = status_code;
+ 	fc_fcp_complete_locked(fsp);
+ }
  
- 		resp_code = (pp->spp.spp_flags & FC_SPP_RESP_MASK);
--		FC_RPORT_DBG(rdata, "PRLI spp_flags = 0x%x\n",
--			     pp->spp.spp_flags);
-+		FC_RPORT_DBG(rdata, "PRLI spp_flags = 0x%x spp_type 0x%x\n",
-+			     pp->spp.spp_flags, pp->spp.spp_type);
- 		rdata->spp_type = pp->spp.spp_type;
- 		if (resp_code != FC_SPP_RESP_ACK) {
- 			if (resp_code == FC_SPP_RESP_CONF)
-@@ -1168,13 +1168,28 @@ static void fc_rport_prli_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		if (fcp_parm & FCP_SPPF_CONF_COMPL)
- 			rdata->flags |= FC_RP_FLAGS_CONF_REQ;
- 
--		prov = fc_passive_prov[FC_TYPE_FCP];
-+		/*
-+		 * Call prli provider if we should act as a target
-+		 */
-+		prov = fc_passive_prov[rdata->spp_type];
- 		if (prov) {
- 			memset(&temp_spp, 0, sizeof(temp_spp));
--			prov->prli(rdata, pp->prli.prli_spp_len,
--				   &pp->spp, &temp_spp);
-+			resp_code = prov->prli(rdata, pp->prli.prli_spp_len,
-+					       &pp->spp, &temp_spp);
-+		} else {
-+			memcpy(&temp_spp, &pp->spp, sizeof(temp_spp));
-+		}
-+		/*
-+		 * Check if the image pair could be established
-+		 */
-+		if (rdata->spp_type != FC_TYPE_FCP ||
-+		    resp_code != FC_SPP_RESP_ACK ||
-+		    !(temp_spp.spp_flags & FC_SPP_EST_IMG_PAIR)) {
-+			/*
-+			 * Nope; we can't use this port as a target.
-+			 */
-+			fcp_parm &= ~FCP_SPPF_TARG_FCN;
- 		}
--
- 		rdata->supported_classes = FC_COS_CLASS3;
- 		if (fcp_parm & FCP_SPPF_INIT_FCN)
- 			roles |= FC_RPORT_ROLE_FCP_INITIATOR;
-@@ -1226,6 +1241,15 @@ static void fc_rport_enter_prli(struct fc_rport_priv *rdata)
+@@ -1209,7 +1210,7 @@ static void fc_fcp_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
  		return;
+ 
+ 	if (error == -FC_EX_CLOSED) {
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		goto unlock;
  	}
  
-+	/*
-+	 * And if the local port does not support the initiator function
-+	 * there's no need to send a PRLI, either.
-+	 */
-+	if (!(lport->service_params & FCP_SPPF_INIT_FCN)) {
-+		    fc_rport_enter_ready(rdata);
-+		    return;
-+	}
-+
- 	FC_RPORT_DBG(rdata, "Port entered PRLI state from %s state\n",
- 		     fc_rport_state(rdata));
- 
-@@ -1913,7 +1937,6 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	unsigned int len;
- 	unsigned int plen;
- 	enum fc_els_spp_resp resp;
--	enum fc_els_spp_resp passive;
- 	struct fc_seq_els_data rjt_data;
- 	struct fc4_prov *prov;
- 
-@@ -1963,15 +1986,21 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 		resp = 0;
- 
- 		if (rspp->spp_type < FC_FC4_PROV_SIZE) {
-+			enum fc_els_spp_resp active = 0, passive = 0;
-+
- 			prov = fc_active_prov[rspp->spp_type];
- 			if (prov)
--				resp = prov->prli(rdata, plen, rspp, spp);
-+				active = prov->prli(rdata, plen, rspp, spp);
- 			prov = fc_passive_prov[rspp->spp_type];
--			if (prov) {
-+			if (prov)
- 				passive = prov->prli(rdata, plen, rspp, spp);
--				if (!resp || passive == FC_SPP_RESP_ACK)
--					resp = passive;
--			}
-+			if (!active || passive == FC_SPP_RESP_ACK)
-+				resp = passive;
-+			else
-+				resp = active;
-+			FC_RPORT_DBG(rdata, "PRLI rspp type %x "
-+				     "active %x passive %x\n",
-+				     rspp->spp_type, active, passive);
+@@ -1522,9 +1523,9 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 		case ELS_RJT_LOGIC:
+ 		case ELS_RJT_UNAB:
+ 			FC_FCP_DBG(fsp, "device %x REC reject "
+-				   "reason %d expl %d\n",
++				   "reason %x expl %x xfer_len %zx\n",
+ 				   fsp->rport->port_id, rjt->er_reason,
+-				   rjt->er_explan);
++				   rjt->er_explan, fsp->xfer_len);
+ 			/*
+ 			 * If no data transfer, the command frame got dropped
+ 			 * so we just retry.  If data was transferred, we
+@@ -1533,10 +1534,11 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 			 */
+ 			if (rjt->er_explan == ELS_EXPL_OXID_RXID &&
+ 			    fsp->xfer_len == 0) {
+-				fc_fcp_retry_cmd(fsp);
++				fsp->state |= FC_SRB_ABORTED;
++				fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
+ 				break;
+ 			}
+-			fc_fcp_recovery(fsp, FC_ERROR);
++			fc_fcp_recovery(fsp, FC_TRANS_RESET);
+ 			break;
  		}
- 		if (!resp) {
- 			if (spp->spp_flags & FC_SPP_EST_IMG_PAIR)
-@@ -1992,13 +2021,6 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	fc_fill_reply_hdr(fp, rx_fp, FC_RCTL_ELS_REP, 0);
- 	lport->tt.frame_send(lport, fp);
+ 	} else if (opcode == ELS_LS_ACC) {
+@@ -1632,7 +1634,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	case -FC_EX_CLOSED:
+ 		FC_FCP_DBG(fsp, "REC %p fid %6.6x exchange closed\n",
+ 			   fsp, fsp->rport->port_id);
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		break;
  
--	switch (rdata->rp_state) {
--	case RPORT_ST_PRLI:
--		fc_rport_enter_ready(rdata);
--		break;
--	default:
--		break;
--	}
- 	goto drop;
+ 	default:
+@@ -1731,7 +1733,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	fc_fcp_pkt_hold(fsp);		/* hold for outstanding SRR */
+ 	return;
+ retry:
+-	fc_fcp_retry_cmd(fsp);
++	fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
+ }
  
- reject_len:
+ /**
+@@ -1803,7 +1805,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		FC_FCP_DBG(fsp, "SRR error, exchange closed\n");
+ 		/* fall through */
+ 	default:
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		break;
+ 	}
+ 	fc_fcp_unlock_pkt(fsp);
+@@ -2016,6 +2018,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			   "due to FC_CMD_RESET\n");
+ 		sc_cmd->result = (DID_RESET << 16);
+ 		break;
++	case FC_TRANS_RESET:
++		FC_FCP_DBG(fsp, "Returning DID_SOFT_ERROR to scsi-ml "
++			   "due to FC_TRANS_RESET\n");
++		sc_cmd->result = (DID_SOFT_ERROR << 16);
++		break;
+ 	case FC_HRD_ERROR:
+ 		FC_FCP_DBG(fsp, "Returning DID_NO_CONNECT to scsi-ml "
+ 			   "due to FC_HRD_ERROR\n");
 -- 
 1.8.5.6
 
