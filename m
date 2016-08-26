@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 03/17] smartpqi: simplify spanning
-Date: Fri, 26 Aug 2016 11:44:24 -0500
-Message-ID: <147222986403.31214.11170219064850871397.stgit@brunhilda>
+Subject: [PATCH 08/17] smartpqi: correct controller offline issue
+Date: Fri, 26 Aug 2016 11:44:54 -0500
+Message-ID: <147222989409.31214.3810017071620268818.stgit@brunhilda>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0083.outbound.protection.outlook.com ([104.47.36.83]:26448
+Received: from mail-sn1nam02on0042.outbound.protection.outlook.com ([104.47.36.42]:11040
         "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754435AbcHZRAD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 13:00:03 -0400
+        id S1754438AbcHZRAK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 13:00:10 -0400
 In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,70 +20,44 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-Removed the workaround for the transition to spanning.
+Fixed a bug where the driver would not free all of the
+controller resources if the controller ever went offline.
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   38 +++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |   15 +++++----------
+ 1 file changed, 5 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 6eab38e..9922e31 100644
+index 67661de..6dda9f5 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3663,6 +3663,18 @@ static int pqi_validate_device_capability(struct pqi_ctrl_info *ctrl_info)
- 		return -EINVAL;
- 	}
+@@ -5609,19 +5609,14 @@ static void pqi_free_ctrl_resources(struct pqi_ctrl_info *ctrl_info)
  
-+	if (!ctrl_info->inbound_spanning_supported) {
-+		dev_err(&ctrl_info->pci_dev->dev,
-+			"the controller does not support inbound spanning\n");
-+		return -EINVAL;
-+	}
-+
-+	if (ctrl_info->outbound_spanning_supported) {
-+		dev_err(&ctrl_info->pci_dev->dev,
-+			"the controller supports outbound spanning but this driver does not\n");
-+		return -EINVAL;
-+	}
-+
- 	return 0;
- }
+ static void pqi_remove_ctrl(struct pqi_ctrl_info *ctrl_info)
+ {
+-	int rc;
++	cancel_delayed_work_sync(&ctrl_info->rescan_work);
++	cancel_delayed_work_sync(&ctrl_info->update_time_work);
++	pqi_remove_all_scsi_devices(ctrl_info);
++	pqi_unregister_scsi(ctrl_info);
  
-@@ -4138,24 +4150,14 @@ static void pqi_calculate_queue_resources(struct pqi_ctrl_info *ctrl_info)
- 
- 	ctrl_info->num_queue_groups = num_queue_groups;
- 
--	if (ctrl_info->max_inbound_iu_length_per_firmware == 256 &&
--		ctrl_info->outbound_spanning_supported) {
--		/*
--		 * TEMPHACK
--		 * This is older f/w that doesn't actually support spanning.
--		 */
--		ctrl_info->max_inbound_iu_length =
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
--	} else {
--		/*
--		 * Make sure that the max. inbound IU length is an even multiple
--		 * of our inbound element length.
--		 */
--		ctrl_info->max_inbound_iu_length =
--			(ctrl_info->max_inbound_iu_length_per_firmware /
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
+-	if (ctrl_info->controller_online) {
+-		cancel_delayed_work_sync(&ctrl_info->rescan_work);
+-		cancel_delayed_work_sync(&ctrl_info->update_time_work);
+-		pqi_remove_all_scsi_devices(ctrl_info);
+-		pqi_unregister_scsi(ctrl_info);
+-		ctrl_info->controller_online = false;
 -	}
-+	/*
-+	 * Make sure that the max. inbound IU length is an even multiple
-+	 * of our inbound element length.
-+	 */
-+	ctrl_info->max_inbound_iu_length =
-+		(ctrl_info->max_inbound_iu_length_per_firmware /
-+		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
-+		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
- 
- 	num_elements_per_iq =
- 		(ctrl_info->max_inbound_iu_length /
+ 	if (ctrl_info->pqi_mode_enabled) {
+ 		sis_disable_msix(ctrl_info);
+-		rc = pqi_reset(ctrl_info);
+-		if (rc == 0)
++		if (pqi_reset(ctrl_info) == 0)
+ 			sis_reenable_sis_mode(ctrl_info);
+ 	}
+ 	pqi_free_ctrl_resources(ctrl_info);
 
