@@ -1,28 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] ibmvfc: FC-TAPE Support
-Date: Thu, 25 Aug 2016 23:26:59 -0400
-Message-ID: <yq1mvk09pmk.fsf@sermon.lab.mkp.net>
-References: <1470260213-19087-1-git-send-email-tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: sg: Avoid overflow when USER_HZ > HZ
+Date: Thu, 25 Aug 2016 23:27:49 -0400
+Message-ID: <yq1inuo9pl6.fsf@sermon.lab.mkp.net>
+References: <20160819164357.26121-1-paul.burton@imgtec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34869 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755253AbcHZD1T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2016 23:27:19 -0400
-In-Reply-To: <1470260213-19087-1-git-send-email-tyreld@linux.vnet.ibm.com>
-        (Tyrel Datwyler's message of "Wed, 3 Aug 2016 16:36:51 -0500")
+Received: from userp1040.oracle.com ([156.151.31.81]:19158 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751397AbcHZD3U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 25 Aug 2016 23:29:20 -0400
+In-Reply-To: <20160819164357.26121-1-paul.burton@imgtec.com> (Paul Burton's
+        message of "Fri, 19 Aug 2016 17:43:56 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linux-kernel@vger.kernel.org, mpe@ellerman.id.au
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>
 
->>>>> "Tyrel" == Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
+>>>>> "Paul" == Paul Burton <paul.burton@imgtec.com> writes:
 
-Tyrel> This patchset introduces optional FC-TAPE/FC Class 3 Error
-Tyrel> Recovery to the ibmvfc client driver.
+Paul> Calculating the maximum timeout that a user can set via the
+Paul> SG_SET_TIMEOUT ioctl involves multiplying INT_MAX by
+Paul> USER_HZ/HZ. If USER_HZ is larger than HZ then this results in an
+Paul> overflow when performed as a 32 bit integer calculation, resulting
+Paul> in compiler warnings such as the following:
 
-Applied to 4.9/scsi-queue.
+Doug: Please review.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
