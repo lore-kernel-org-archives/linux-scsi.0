@@ -1,82 +1,171 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 00/30] FCoE VN2VN fixes
-Date: Fri, 26 Aug 2016 15:48:43 +0200
-Message-ID: <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de>
-References: <1472212913-39810-1-git-send-email-hare@suse.de>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 07/17] smartpqi: add kdump support
+Date: Fri, 26 Aug 2016 11:44:48 -0500
+Message-ID: <147222988802.31214.4229839409507089355.stgit@brunhilda>
+References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48766 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753039AbcHZNsp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 09:48:45 -0400
-Content-Disposition: inline
-In-Reply-To: <1472212913-39810-1-git-send-email-hare@suse.de>
+Received: from mail-dm3nam03on0068.outbound.protection.outlook.com ([104.47.41.68]:35744
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753566AbcHZQpq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 12:45:46 -0400
+In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>
+To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Aug 26, 2016 at 02:01:23PM +0200, Hannes Reinecke wrote:
-> Hi all,
-> 
-> here's a patchset to get VN2VN running on non-DCB fabrics.
-> With it it's possible to run FCoE VN2VN over virtio, allowing
-> for a fully virtualized FC testbed. Which would make it ideal
-> to integrate into Mike's mptest test suite.
-> It also irons out some generic issues with the libfc stack,
-> like another round for kref handling updates and handling PRLI correctly.
-> (The PRLI problems even have a workaround in iPXE, so it's time to do
-> something about it ...)
-> 
-> As usual, comments and reviews are welcome.
-> 
-> Hannes Reinecke (29):
->   libfc: Revisit kref handling
->   libfc: additional debugging messages
->   libfc: spurious I/O error under high load
->   libfc: Do not login if the port is already started
->   libfc: use configured lport R_A_TOV when sending
->   libfc: use configured e_d_tov for remote port state
->   libfc: do not overwrite DID_TIME_OUT status
->   libfc: use error code for fc_rport_error()
->   libfc: Send LS_RJT responses on frame allocation
->   libfc: don't advance state machine for incoming FLOGI
->   libfc: Fixup disc_mutex handling
->   libfc: Do not drop down to FLOGI for fc_rport_login()
->   libfc: Implement RTV responder
->   libfc: Rework PRLI handling
->   libfc: Return LS_RJT_BUSY for PRLI in status PLOGI
->   libfc: Clarify ramp-down messages
->   libfc: sanitize E_D_TOV and R_A_TOV setting
->   libfc: safeguard against invalid exchange index
->   libfc: quarantine timed out xids
->   libfc: don't fail sequence abort for completed
->   libfc: Do not drop out-of-order frames
->   libfc: reset timeout on queue full
->   libfc: wait for E_D_TOV when out-of-order sequence is received
->   fcoe: set default TC priority
->   fcoe: inhibit writing invalid values into the 'enabled'
->   fcoe: correct sending FIP VLAN packets on VLAN 0
->   fcoe: FIP debugging
->   fcoe: filter out frames from invalid vlans
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-I _think_ I already reviewed them (at least I do have a deja-vu when I
-read 'Revisit kref handling')
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/smartpqi/smartpqi.h      |   13 +++++++++---
+ drivers/scsi/smartpqi/smartpqi_init.c |   35 +++++++++++++++++++++++++++++++++
+ drivers/scsi/smartpqi/smartpqi_sis.c  |   10 +++++++++
+ drivers/scsi/smartpqi/smartpqi_sis.h  |    2 ++
+ 4 files changed, 57 insertions(+), 3 deletions(-)
 
-> 
-> Wei Yongjun (1):
->   fcoe: Use kfree_skb() instead of kfree()
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index 053be6b..5f965ad 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -79,11 +79,13 @@ struct pqi_ctrl_registers {
+ 	__le32	sis_ctrl_to_host_doorbell;		/* 9Ch */
+ 	u8	reserved3[0xa0 - (0x9c + sizeof(__le32))];
+ 	__le32	sis_ctrl_to_host_doorbell_clear;	/* A0h */
+-	u8	reserved4[0xbc - (0xa0 + sizeof(__le32))];
++	u8	reserved4[0xb0 - (0xa0 + sizeof(__le32))];
++	__le32	sis_driver_scratch;			/* B0h */
++	u8	reserved5[0xbc - (0xb0 + sizeof(__le32))];
+ 	__le32	sis_firmware_status;			/* BCh */
+-	u8	reserved5[0x1000 - (0xbc + sizeof(__le32))];
++	u8	reserved6[0x1000 - (0xbc + sizeof(__le32))];
+ 	__le32	sis_mailbox[8];				/* 1000h */
+-	u8	reserved6[0x4000 - (0x1000 + (sizeof(__le32) * 8))];
++	u8	reserved7[0x4000 - (0x1000 + (sizeof(__le32) * 8))];
+ 	/*
+ 	 * The PQI spec states that the PQI registers should be at
+ 	 * offset 0 from the PCIe BAR 0.  However, we can't map
+@@ -963,6 +965,11 @@ struct pqi_ctrl_info {
+ 	struct semaphore lun_reset_sem;
+ };
+ 
++enum pqi_ctrl_mode {
++	UNKNOWN,
++	PQI_MODE
++};
++
+ /*
+  * assume worst case: SATA queue depth of 31 minus 4 internal firmware commands
+  */
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 2656124..67661de 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -153,6 +153,18 @@ static inline bool pqi_is_hba_lunid(u8 *scsi3addr)
+ 	return pqi_scsi3addr_equal(scsi3addr, RAID_CTLR_LUNID);
+ }
+ 
++static inline enum pqi_ctrl_mode pqi_get_ctrl_mode(
++	struct pqi_ctrl_info *ctrl_info)
++{
++	return sis_read_driver_scratch(ctrl_info);
++}
++
++static inline void pqi_save_ctrl_mode(struct pqi_ctrl_info *ctrl_info,
++	enum pqi_ctrl_mode mode)
++{
++	sis_write_driver_scratch(ctrl_info, mode);
++}
++
+ #define PQI_RESCAN_WORK_INTERVAL	(10 * HZ)
+ 
+ static inline void pqi_schedule_rescan_worker(struct pqi_ctrl_info *ctrl_info)
+@@ -5266,10 +5278,30 @@ out:
+ 	return rc;
+ }
+ 
++static int pqi_kdump_init(struct pqi_ctrl_info *ctrl_info)
++{
++	if (!sis_is_firmware_running(ctrl_info))
++		return -ENXIO;
++
++	if (pqi_get_ctrl_mode(ctrl_info) == PQI_MODE) {
++		sis_disable_msix(ctrl_info);
++		if (pqi_reset(ctrl_info) == 0)
++			sis_reenable_sis_mode(ctrl_info);
++	}
++
++	return 0;
++}
++
+ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ {
+ 	int rc;
+ 
++	if (reset_devices) {
++		rc = pqi_kdump_init(ctrl_info);
++		if (rc)
++			return rc;
++	}
++
+ 	/*
+ 	 * When the controller comes out of reset, it is always running
+ 	 * in legacy SIS mode.  This is so that it can be compatible
+@@ -5343,6 +5375,7 @@ static int pqi_ctrl_init(struct pqi_ctrl_info *ctrl_info)
+ 
+ 	/* From here on, we are running in PQI mode. */
+ 	ctrl_info->pqi_mode_enabled = true;
++	pqi_save_ctrl_mode(ctrl_info, PQI_MODE);
+ 
+ 	rc = pqi_alloc_admin_queues(ctrl_info);
+ 	if (rc) {
+@@ -5879,6 +5912,8 @@ static void __attribute__((unused)) verify_structures(void)
+ 	BUILD_BUG_ON(offsetof(struct pqi_ctrl_registers,
+ 		sis_ctrl_to_host_doorbell_clear) != 0xa0);
+ 	BUILD_BUG_ON(offsetof(struct pqi_ctrl_registers,
++		sis_driver_scratch) != 0xb0);
++	BUILD_BUG_ON(offsetof(struct pqi_ctrl_registers,
+ 		sis_firmware_status) != 0xbc);
+ 	BUILD_BUG_ON(offsetof(struct pqi_ctrl_registers,
+ 		sis_mailbox) != 0x1000);
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.c b/drivers/scsi/smartpqi/smartpqi_sis.c
+index 5d416a8..71408f9 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.c
++++ b/drivers/scsi/smartpqi/smartpqi_sis.c
+@@ -376,6 +376,16 @@ int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info)
+ 	return rc;
+ }
+ 
++void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value)
++{
++	writel(value, &ctrl_info->registers->sis_driver_scratch);
++}
++
++u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info)
++{
++	return readl(&ctrl_info->registers->sis_driver_scratch);
++}
++
+ static void __attribute__((unused)) verify_structures(void)
+ {
+ 	BUILD_BUG_ON(offsetof(struct sis_base_struct,
+diff --git a/drivers/scsi/smartpqi/smartpqi_sis.h b/drivers/scsi/smartpqi/smartpqi_sis.h
+index d2ff8d5..bd6e7b0 100644
+--- a/drivers/scsi/smartpqi/smartpqi_sis.h
++++ b/drivers/scsi/smartpqi/smartpqi_sis.h
+@@ -28,5 +28,7 @@ void sis_enable_msix(struct pqi_ctrl_info *ctrl_info);
+ void sis_disable_msix(struct pqi_ctrl_info *ctrl_info);
+ void sis_soft_reset(struct pqi_ctrl_info *ctrl_info);
+ int sis_reenable_sis_mode(struct pqi_ctrl_info *ctrl_info);
++void sis_write_driver_scratch(struct pqi_ctrl_info *ctrl_info, u32 value);
++u32 sis_read_driver_scratch(struct pqi_ctrl_info *ctrl_info);
+ 
+ #endif	/* _SMARTPQI_SIS_H */
 
-This one is already in Linus' tree as commit
-ea0a95d7f162bfa1c9df74471f0064f71cdf80ea.
-
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
