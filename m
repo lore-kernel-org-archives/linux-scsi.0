@@ -1,107 +1,214 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/30] libfc: don't fail sequence abort for completed
-Date: Fri, 26 Aug 2016 14:01:43 +0200
-Message-ID: <1472212913-39810-21-git-send-email-hare@suse.de>
+Subject: [PATCH 28/30] fcoe: FIP debugging
+Date: Fri, 26 Aug 2016 14:01:51 +0200
+Message-ID: <1472212913-39810-29-git-send-email-hare@suse.de>
 References: <1472212913-39810-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35119 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35178 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752303AbcHZMCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 08:02:12 -0400
+        id S1752379AbcHZMCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 08:02:13 -0400
 In-Reply-To: <1472212913-39810-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-If a sequence should be aborted the exchange might already
-be completed (eg if the response is still queued in the rx
-queue), so this shouldn't considered as an error.
+Add additional statements for debugging FIP frames.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_fcp.c | 40 ++++++++++++++++++++++++++++++----------
- 1 file changed, 30 insertions(+), 10 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c | 51 ++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 46 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 8694e87..63c821b 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -258,6 +258,17 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
- 		mod_timer(&fsp->timer, jiffies + delay);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 1dd8a7c..8be27ea 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -801,6 +801,8 @@ int fcoe_ctlr_els_send(struct fcoe_ctlr *fip, struct fc_lport *lport,
+ 	return -EINPROGRESS;
+ drop:
+ 	kfree_skb(skb);
++	LIBFCOE_FIP_DBG(fip, "drop els_send op %u d_id %x\n",
++			op, ntoh24(fh->fh_d_id));
+ 	return -EINVAL;
  }
- 
-+static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
-+{
-+	fsp->state |= FC_SRB_ABORTED;
-+	fsp->state &= ~FC_SRB_ABORT_PENDING;
-+
-+	if (fsp->wait_for_comp)
-+		complete(&fsp->tm_done);
-+	else
-+		fc_fcp_complete_locked(fsp);
-+}
-+
- /**
-  * fc_fcp_send_abort() - Send an abort for exchanges associated with a
-  *			 fcp_pkt
-@@ -265,6 +276,8 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
-  */
- static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
- {
-+	int rc;
-+
- 	if (!fsp->seq_ptr)
- 		return -EINVAL;
- 
-@@ -272,7 +285,16 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
- 	put_cpu();
- 
- 	fsp->state |= FC_SRB_ABORT_PENDING;
--	return fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
-+	rc = fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
-+	/*
-+	 * ->seq_exch_abort() might return -ENXIO if
-+	 * the sequence is already completed
-+	 */
-+	if (rc == -ENXIO) {
-+		fc_fcp_abort_done(fsp);
-+		rc = 0;
-+	}
-+	return rc;
- }
- 
- /**
-@@ -729,15 +751,8 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 		ba_done = 0;
+ EXPORT_SYMBOL(fcoe_ctlr_els_send);
+@@ -2399,6 +2401,8 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
+ 	switch (fip->state) {
+ 	case FIP_ST_VNMP_CLAIM:
+ 	case FIP_ST_VNMP_UP:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: send reply, state %x\n",
++				fip->state);
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
+ 				  frport->enode_mac, 0);
+ 		break;
+@@ -2413,15 +2417,21 @@ static void fcoe_ctlr_vn_probe_req(struct fcoe_ctlr *fip,
+ 		 */
+ 		if (fip->lp->wwpn > rdata->ids.port_name &&
+ 		    !(frport->flags & FIP_FL_REC_OR_P2P)) {
++			LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
++					"port_id collision\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REP,
+ 					  frport->enode_mac, 0);
+ 			break;
+ 		}
+ 		/* fall through */
+ 	case FIP_ST_VNMP_START:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: "
++				"restart VN2VN negotiation\n");
+ 		fcoe_ctlr_vn_restart(fip);
+ 		break;
+ 	default:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_req: ignore state %x\n",
++				fip->state);
+ 		break;
  	}
- 
--	if (ba_done) {
--		fsp->state |= FC_SRB_ABORTED;
--		fsp->state &= ~FC_SRB_ABORT_PENDING;
--
--		if (fsp->wait_for_comp)
--			complete(&fsp->tm_done);
--		else
--			fc_fcp_complete_locked(fsp);
--	}
-+	if (ba_done)
-+		fc_fcp_abort_done(fsp);
  }
+@@ -2443,9 +2453,12 @@ static void fcoe_ctlr_vn_probe_reply(struct fcoe_ctlr *fip,
+ 	case FIP_ST_VNMP_PROBE1:
+ 	case FIP_ST_VNMP_PROBE2:
+ 	case FIP_ST_VNMP_CLAIM:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_reply: restart state %x\n",
++				fip->state);
+ 		fcoe_ctlr_vn_restart(fip);
+ 		break;
+ 	case FIP_ST_VNMP_UP:
++		LIBFCOE_FIP_DBG(fip, "vn_probe_reply: send claim notify\n");
+ 		fcoe_ctlr_vn_send_claim(fip);
+ 		break;
+ 	default:
+@@ -2484,15 +2497,18 @@ static void fcoe_ctlr_vn_add(struct fcoe_ctlr *fip, struct fc_rport_priv *new)
  
- /**
-@@ -1246,6 +1261,11 @@ static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
- 		return FAILED;
- 	}
- 
-+	if (fsp->state & FC_SRB_ABORTED) {
-+		FC_FCP_DBG(fsp, "target abort cmd  completed\n");
-+		return SUCCESS;
+ 	ids = &rdata->ids;
+ 	if ((ids->port_name != -1 && ids->port_name != new->ids.port_name) ||
+-	    (ids->node_name != -1 && ids->node_name != new->ids.node_name))
++	    (ids->node_name != -1 && ids->node_name != new->ids.node_name)) {
++		LIBFCOE_FIP_DBG(fip, "vn_add rport logoff %6.6x\n", port_id);
+ 		lport->tt.rport_logoff(rdata);
 +	}
-+
- 	init_completion(&fsp->tm_done);
- 	fsp->wait_for_comp = 1;
+ 	ids->port_name = new->ids.port_name;
+ 	ids->node_name = new->ids.node_name;
+ 	mutex_unlock(&lport->disc.disc_mutex);
  
+ 	frport = fcoe_ctlr_rport(rdata);
+-	LIBFCOE_FIP_DBG(fip, "vn_add rport %6.6x %s\n",
+-			port_id, frport->fcoe_len ? "old" : "new");
++	LIBFCOE_FIP_DBG(fip, "vn_add rport %6.6x %s state %d\n",
++			port_id, frport->fcoe_len ? "old" : "new",
++			rdata->rp_state);
+ 	*frport = *fcoe_ctlr_rport(new);
+ 	frport->time = 0;
+ }
+@@ -2535,6 +2551,7 @@ static void fcoe_ctlr_vn_claim_notify(struct fcoe_ctlr *fip,
+ 	struct fcoe_rport *frport = fcoe_ctlr_rport(new);
+ 
+ 	if (frport->flags & FIP_FL_REC_OR_P2P) {
++		LIBFCOE_FIP_DBG(fip, "send probe req for P2P/REC\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		return;
+ 	}
+@@ -2542,25 +2559,37 @@ static void fcoe_ctlr_vn_claim_notify(struct fcoe_ctlr *fip,
+ 	case FIP_ST_VNMP_START:
+ 	case FIP_ST_VNMP_PROBE1:
+ 	case FIP_ST_VNMP_PROBE2:
+-		if (new->ids.port_id == fip->port_id)
++		if (new->ids.port_id == fip->port_id) {
++			LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++					"restart, state %d\n",
++					fip->state);
+ 			fcoe_ctlr_vn_restart(fip);
++		}
+ 		break;
+ 	case FIP_ST_VNMP_CLAIM:
+ 	case FIP_ST_VNMP_UP:
+ 		if (new->ids.port_id == fip->port_id) {
+ 			if (new->ids.port_name > fip->lp->wwpn) {
++				LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++						"restart, port_id collision\n");
+ 				fcoe_ctlr_vn_restart(fip);
+ 				break;
+ 			}
++			LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++					"send claim notify\n");
+ 			fcoe_ctlr_vn_send_claim(fip);
+ 			break;
+ 		}
++		LIBFCOE_FIP_DBG(fip, "vn_claim_notify: send reply to %x\n",
++				new->ids.port_id);
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_CLAIM_REP, frport->enode_mac,
+ 				  min((u32)frport->fcoe_len,
+ 				      fcoe_ctlr_fcoe_size(fip)));
+ 		fcoe_ctlr_vn_add(fip, new);
+ 		break;
+ 	default:
++		LIBFCOE_FIP_DBG(fip, "vn_claim_notify: "
++				"ignoring claim from %x\n", new->ids.port_id);
+ 		break;
+ 	}
+ }
+@@ -2597,6 +2626,7 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
+ 
+ 	frport = fcoe_ctlr_rport(new);
+ 	if (frport->flags & FIP_FL_REC_OR_P2P) {
++		LIBFCOE_FIP_DBG(fip, "p2p beacon while in vn2vn mode\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		return;
+ 	}
+@@ -2605,8 +2635,14 @@ static void fcoe_ctlr_vn_beacon(struct fcoe_ctlr *fip,
+ 		if (rdata->ids.node_name == new->ids.node_name &&
+ 		    rdata->ids.port_name == new->ids.port_name) {
+ 			frport = fcoe_ctlr_rport(rdata);
+-			if (!frport->time && fip->state == FIP_ST_VNMP_UP)
++			LIBFCOE_FIP_DBG(fip, "beacon from rport %x\n",
++					rdata->ids.port_id);
++			if (!frport->time && fip->state == FIP_ST_VNMP_UP) {
++				LIBFCOE_FIP_DBG(fip, "beacon expired "
++						"for rport %x\n",
++						rdata->ids.port_id);
+ 				lport->tt.rport_login(rdata);
++			}
+ 			frport->time = jiffies;
+ 		}
+ 		kref_put(&rdata->kref, lport->tt.rport_destroy);
+@@ -3031,11 +3067,13 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 	switch (fip->state) {
+ 	case FIP_ST_VNMP_START:
+ 		fcoe_ctlr_set_state(fip, FIP_ST_VNMP_PROBE1);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send 1st probe request\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_PROBE_WAIT);
+ 		break;
+ 	case FIP_ST_VNMP_PROBE1:
+ 		fcoe_ctlr_set_state(fip, FIP_ST_VNMP_PROBE2);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send 2nd probe request\n");
+ 		fcoe_ctlr_vn_send(fip, FIP_SC_VN_PROBE_REQ, fcoe_all_vn2vn, 0);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		break;
+@@ -3046,6 +3084,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 		hton24(mac + 3, new_port_id);
+ 		fcoe_ctlr_map_dest(fip);
+ 		fip->update_mac(fip->lp, mac);
++		LIBFCOE_FIP_DBG(fip, "vn_timeout: send claim notify\n");
+ 		fcoe_ctlr_vn_send_claim(fip);
+ 		next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		break;
+@@ -3057,6 +3096,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 		next_time = fip->sol_time + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+ 		if (time_after_eq(jiffies, next_time)) {
+ 			fcoe_ctlr_set_state(fip, FIP_ST_VNMP_UP);
++			LIBFCOE_FIP_DBG(fip, "vn_timeout: send vn2vn beacon\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_BEACON,
+ 					  fcoe_all_vn2vn, 0);
+ 			next_time = jiffies + msecs_to_jiffies(FIP_VN_ANN_WAIT);
+@@ -3067,6 +3107,7 @@ static void fcoe_ctlr_vn_timeout(struct fcoe_ctlr *fip)
+ 	case FIP_ST_VNMP_UP:
+ 		next_time = fcoe_ctlr_vn_age(fip);
+ 		if (time_after_eq(jiffies, fip->port_ka_time)) {
++			LIBFCOE_FIP_DBG(fip, "vn_timeout: send vn2vn beacon\n");
+ 			fcoe_ctlr_vn_send(fip, FIP_SC_VN_BEACON,
+ 					  fcoe_all_vn2vn, 0);
+ 			fip->port_ka_time = jiffies +
 -- 
 1.8.5.6
 
