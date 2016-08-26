@@ -1,60 +1,46 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 11/17] smartpqi: minor tweaks to update time support
-Date: Fri, 26 Aug 2016 11:45:12 -0500
-Message-ID: <147222991200.31214.16478440159265351246.stgit@brunhilda>
-References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH -next] ibmvscsis: Use list_move_tail instead of
+ list_del/list_add_tail
+Date: Fri, 26 Aug 2016 10:50:16 -0500
+Message-ID: <452DE6AD-C452-4480-983A-A755860C60D7@linux.vnet.ibm.com>
+References: <1469196226-17333-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain;
+        charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0050.outbound.protection.outlook.com ([104.47.36.50]:11936
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752408AbcHZRB7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 13:01:59 -0400
-In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46031 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752985AbcHZRB4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 13:01:56 -0400
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7QFn4xS093738
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2016 11:50:21 -0400
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25231th8y4-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Aug 2016 11:50:20 -0400
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
+        Fri, 26 Aug 2016 09:50:19 -0600
+In-Reply-To: <1469196226-17333-1-git-send-email-weiyj.lk@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
-Cc: linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 
-From: Kevin Barnett <kevin.barnett@microsemi.com>
+On 7/22/16, 9:03 AM, "Wei Yongjun" <target-devel-owner@vger.kernel.org on behalf of weiyj.lk@gmail.com> wrote:
 
-minor tweaks to update time support
+    Using list_move_tail() instead of list_del() + list_add_tail().
+    
+    Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+    ---
+     drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 +--
+     1 file changed, 1 insertion(+), 2 deletions(-)
+    
 
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/smartpqi/smartpqi_init.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+Looks good to me.
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 2759c90..a8b8671 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -588,10 +588,6 @@ static void pqi_update_time_worker(struct work_struct *work)
- 	ctrl_info = container_of(to_delayed_work(work), struct pqi_ctrl_info,
- 		update_time_work);
- 
--	if (!ctrl_info) {
--		printk("%s: NULL controller pointer.\n", __func__);
--		return;
--	}
- 	rc = pqi_write_current_time_to_host_wellness(ctrl_info);
- 	if (rc)
- 		dev_warn(&ctrl_info->pci_dev->dev,
-@@ -602,9 +598,9 @@ static void pqi_update_time_worker(struct work_struct *work)
- }
- 
- static inline void pqi_schedule_update_time_worker(
--			struct pqi_ctrl_info *ctrl_info)
-+	struct pqi_ctrl_info *ctrl_info)
- {
--	schedule_delayed_work(&ctrl_info->update_time_work, 120);
-+	schedule_delayed_work(&ctrl_info->update_time_work, 0);
- }
- 
- static int pqi_report_luns(struct pqi_ctrl_info *ctrl_info, u8 cmd,
 
