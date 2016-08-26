@@ -1,32 +1,31 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 2/3] be2iscsi: Remove redundant iscsi_wrb desc memset
-Date: Fri, 26 Aug 2016 15:27:15 +0200
-Message-ID: <20160826132715.3f4o6kudmkwillaf@c203.arch.suse.de>
+Subject: Re: [PATCH v2 3/3] be2iscsi: Add missing unlock for mbox_lock
+Date: Fri, 26 Aug 2016 15:28:32 +0200
+Message-ID: <20160826132832.4mnnu337d77atrfq@c203.arch.suse.de>
 References: <1472204348-5960-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1472204348-5960-3-git-send-email-jitendra.bhivare@broadcom.com>
+ <1472204348-5960-4-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46081 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46247 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751085AbcHZN1R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 09:27:17 -0400
+        id S1751668AbcHZN2e (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 09:28:34 -0400
 Content-Disposition: inline
-In-Reply-To: <1472204348-5960-3-git-send-email-jitendra.bhivare@broadcom.com>
+In-Reply-To: <1472204348-5960-4-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 Cc: christophe.jaillet@wanadoo.fr, julia.lawall@lip6.fr, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Fri, Aug 26, 2016 at 03:09:07PM +0530, Jitendra Bhivare wrote:
-> alloc_wrb_handle already does memset zero of iscsi_wrb descriptor so
-> remove redundant memset in WRB submission paths.
-> 
-> Add pwrb_handle NULL check before memsett'ing pwrb.
+On Fri, Aug 26, 2016 at 03:09:08PM +0530, Jitendra Bhivare wrote:
+> Julia pointed out beiscsi_boot_get_sinfo does not unlock
+> mbox_lock on nonemb_cmd memory allocation failure.
 > 
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 > ---
+
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
