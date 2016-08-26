@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 02/17] smartpqi: change tmf macro names
-Date: Fri, 26 Aug 2016 11:44:17 -0500
-Message-ID: <147222985732.31214.709885780957441730.stgit@brunhilda>
+Subject: [PATCH 16/17] smartpqi: add smartpqi.txt
+Date: Fri, 26 Aug 2016 11:45:43 -0500
+Message-ID: <147222994345.31214.15253908733296553779.stgit@brunhilda>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0066.outbound.protection.outlook.com ([104.47.40.66]:51997
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0067.outbound.protection.outlook.com ([104.47.38.67]:4800
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752857AbcHZRB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 13:01:56 -0400
+        id S1754823AbcHZRCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 13:02:12 -0400
 In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,47 +20,98 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-small change to make code look cleaner
-
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |    6 ++----
- drivers/scsi/smartpqi/smartpqi_init.c |    4 ++--
- 2 files changed, 4 insertions(+), 6 deletions(-)
+ Documentation/scsi/smartpqi.txt |   80 +++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 80 insertions(+)
+ create mode 100644 Documentation/scsi/smartpqi.txt
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index ea49005..dbcdb03 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -545,10 +545,8 @@ typedef u32 pqi_index_t;
- #define SOP_TASK_ATTRIBUTE_ORDERED		2
- #define SOP_TASK_ATTRIBUTE_ACA			4
- 
--#define SOP_TASK_MANAGEMENT_FUNCTION_COMPLETE	0x0
--#define SOP_TASK_MANAGEMENT_FUNCTION_REJECTED	0x4
--#define SOP_TASK_MANAGEMENT_FUNCTION_FAILED	0x5
--#define SOP_TASK_MANAGEMENT_FUNCTION_SUCCEEDED	0x8
-+#define SOP_TMF_COMPLETE		0x0
-+#define SOP_TMF_FUNCTION_SUCCEEDED	0x8
- 
- /* additional CDB bytes usage field codes */
- #define SOP_ADDITIONAL_CDB_BYTES_0	0	/* 16-byte CDB */
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 418f636..6eab38e 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2469,8 +2469,8 @@ static int pqi_interpret_task_management_response(
- 	int rc;
- 
- 	switch (response->response_code) {
--	case SOP_TASK_MANAGEMENT_FUNCTION_COMPLETE:
--	case SOP_TASK_MANAGEMENT_FUNCTION_SUCCEEDED:
-+	case SOP_TMF_COMPLETE:
-+	case SOP_TMF_FUNCTION_SUCCEEDED:
- 		rc = 0;
- 		break;
- 	default:
+diff --git a/Documentation/scsi/smartpqi.txt b/Documentation/scsi/smartpqi.txt
+new file mode 100644
+index 0000000..ab377d9
+--- /dev/null
++++ b/Documentation/scsi/smartpqi.txt
+@@ -0,0 +1,80 @@
++
++SMARTPQI - Microsemi Smart PQI Driver
++-----------------------------------------
++
++This file describes the smartpqi SCSI driver for Microsemi
++(http://www.microsemi.com) PQI controllers. The smartpqi driver
++is the next generation SCSI driver for Microsemi Corp. The smartpqi
++driver is the first SCSI driver to implement the PQI queuing model.
++
++The smartpqi driver will replace the aacraid driver for Adaptec Series 9
++controllers. Customers running an older kernel (Pre-4.9) using an Adaptec
++Series 9 controller will have to configure the smartpqi driver or their
++volumes will not be added to the OS.
++
++For Microsemi smartpqi controller support, enable the smartpqi driver
++when configuring the kernel.
++
++For more information on the PQI Queuing Interface, please see:
++http://www.t10.org/drafts.htm
++http://www.t10.org/members/w_pqi2.htm
++
++Supported devices:
++------------------
++<Controller names to be added as they become publically available.>
++
++smartpqi specific entries in /sys
++-----------------------------
++
++  smartpqi host attributes:
++  -------------------------
++  /sys/class/scsi_host/host*/rescan
++  /sys/class/scsi_host/host*/version
++
++  The host rescan attribute is a write only attribute. Writing to this
++  attribute will trigger the driver to scan for new, changed, or removed
++  devices and notify the SCSI mid-layer of any changes detected.
++
++  The version attribute is read-only and will return the driver version
++  and the controller firmware version.
++  For example:
++              driver: 0.9.13-370
++              firmware: 0.01-522
++
++  smartpqi sas device attributes
++  ------------------------------
++  HBA devices are added to the SAS transport layer. These attributes are
++  automatically added by the SAS transport layer.
++
++  /sys/class/sas_device/end_device-X:X/sas_address
++  /sys/class/sas_device/end_device-X:X/enclosure_identifier
++  /sys/class/sas_device/end_device-X:X/scsi_target_id
++
++smartpqi specific ioctls:
++-------------------------
++
++  For compatibility with applications written for the cciss protocol.
++
++  CCISS_DEREGDISK
++  CCISS_REGNEWDISK
++  CCISS_REGNEWD
++
++  The above three ioctls all do exactly the same thing, which is to cause the driver
++  to rescan for new devices.  This does exactly the same thing as writing to the
++  smartpqi specific host "rescan" attribute.
++
++  CCISS_GETPCIINFO
++
++	Returns PCI domain, bus, device and function and "board ID" (PCI subsystem ID).
++
++  CCISS_GETDRIVVER
++
++	Returns driver version in three bytes encoded as:
++	(DRIVER_MAJOR << 28) | (DRIVER_MINOR << 24) | (DRIVER_RELEASE << 16) | DRIVER_REVISION;
++
++  CCISS_PASSTHRU
++
++	Allows "BMIC" and "CISS" commands to be passed through to the Smart Storage Array.
++	These are used extensively by the SSA Array Configuration Utility, SNMP storage
++	agents, etc.
++
 
