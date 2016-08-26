@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 09/17] smartpqi: correct event acknowledgment timeout issue
-Date: Fri, 26 Aug 2016 11:45:00 -0500
-Message-ID: <147222990010.31214.2025743657616417732.stgit@brunhilda>
+Subject: [PATCH 06/17] smartpqi: change commonly used function to inline
+Date: Fri, 26 Aug 2016 11:44:42 -0500
+Message-ID: <147222988202.31214.8351871414119128313.stgit@brunhilda>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:60672
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0085.outbound.protection.outlook.com ([104.47.40.85]:15352
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751223AbcHZRTQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 13:19:16 -0400
+        id S1751321AbcHZRUL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 13:20:11 -0400
 In-Reply-To: <147222977996.31214.8588187948847476082.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,79 +20,27 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-the driver no longer waits for the firmware to consume
-the event ack IU.
+A tiny tweak to convert a small, commonly used function to inline.
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi.h      |   14 +++++++-------
- drivers/scsi/smartpqi/smartpqi_init.c |   20 --------------------
- 2 files changed, 7 insertions(+), 27 deletions(-)
+ drivers/scsi/smartpqi/smartpqi_init.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
-index 5f965ad..07b6444 100644
---- a/drivers/scsi/smartpqi/smartpqi.h
-+++ b/drivers/scsi/smartpqi/smartpqi.h
-@@ -634,13 +634,6 @@ struct pqi_encryption_info {
- 
- #define RAID_MAP_MAX_ENTRIES		1024
- 
--#define PQI_RESERVED_IO_SLOTS_LUN_RESET			1
--#define PQI_RESERVED_IO_SLOTS_EVENT_ACK			1
--#define PQI_RESERVED_IO_SLOTS_SYNCHRONOUS_REQUESTS	3
--#define PQI_RESERVED_IO_SLOTS				\
--	(PQI_RESERVED_IO_SLOTS_LUN_RESET + PQI_RESERVED_IO_SLOTS_EVENT_ACK + \
--	PQI_RESERVED_IO_SLOTS_SYNCHRONOUS_REQUESTS)
--
- #define PQI_PHYSICAL_DEVICE_BUS		0
- #define PQI_RAID_VOLUME_BUS		1
- #define PQI_HBA_BUS			2
-@@ -884,6 +877,13 @@ struct pqi_event {
- 	__le32	additional_event_id;
- };
- 
-+#define PQI_RESERVED_IO_SLOTS_LUN_RESET			1
-+#define PQI_RESERVED_IO_SLOTS_EVENT_ACK			PQI_NUM_SUPPORTED_EVENTS
-+#define PQI_RESERVED_IO_SLOTS_SYNCHRONOUS_REQUESTS	3
-+#define PQI_RESERVED_IO_SLOTS				\
-+	(PQI_RESERVED_IO_SLOTS_LUN_RESET + PQI_RESERVED_IO_SLOTS_EVENT_ACK + \
-+	PQI_RESERVED_IO_SLOTS_SYNCHRONOUS_REQUESTS)
-+
- struct pqi_ctrl_info {
- 	unsigned int	ctrl_id;
- 	struct pci_dev	*pci_dev;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 6dda9f5..52c752f 100644
+index dbc8b40..2656124 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -2642,26 +2642,6 @@ static void pqi_start_event_ack(struct pqi_ctrl_info *ctrl_info,
- 	writel(iq_pi, queue_group->iq_pi[RAID_PATH]);
- 
- 	spin_unlock_irqrestore(&queue_group->submit_lock[RAID_PATH], flags);
--
--	/*
--	 * We have to special-case this type of request because the firmware
--	 * does not generate an interrupt when this type of request completes.
--	 * Therefore, we have to poll until we see that the firmware has
--	 * consumed the request before we move on.
--	 */
--
--	timeout = (PQI_EVENT_ACK_TIMEOUT * HZ) + jiffies;
--
--	while (1) {
--		if (*queue_group->iq_ci[RAID_PATH] == iq_pi)
--			break;
--		if (time_after(jiffies, timeout)) {
--			dev_err(&ctrl_info->pci_dev->dev,
--				"completing event acknowledge timed out\n");
--			break;
--		}
--		usleep_range(1000, 2000);
--	}
+@@ -316,7 +316,7 @@ static struct pqi_io_request *pqi_alloc_io_request(
+ 	return io_request;
  }
  
- static void pqi_acknowledge_event(struct pqi_ctrl_info *ctrl_info,
+-static void pqi_free_io_request(struct pqi_io_request *io_request)
++static inline void pqi_free_io_request(struct pqi_io_request *io_request)
+ {
+ 	atomic_dec(&io_request->refcount);
+ }
 
