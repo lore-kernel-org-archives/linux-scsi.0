@@ -1,56 +1,107 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 25/30] fcoe: set default TC priority
-Date: Fri, 26 Aug 2016 14:01:48 +0200
-Message-ID: <1472212913-39810-26-git-send-email-hare@suse.de>
+Subject: [PATCH 20/30] libfc: don't fail sequence abort for completed
+Date: Fri, 26 Aug 2016 14:01:43 +0200
+Message-ID: <1472212913-39810-21-git-send-email-hare@suse.de>
 References: <1472212913-39810-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35220 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:35119 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752401AbcHZMCN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 26 Aug 2016 08:02:13 -0400
+        id S1752303AbcHZMCM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 26 Aug 2016 08:02:12 -0400
 In-Reply-To: <1472212913-39810-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-If DCB is not enabled or compiled in we still should be setting
-a sane default priority. So put FCoE frames in priority class
-'interactive' and FIP frames in priority class 'besteffort'.
+If a sequence should be aborted the exchange might already
+be completed (eg if the response is still queued in the rx
+queue), so this shouldn't considered as an error.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 40 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 30 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 9bd41a3..81e7f99 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2160,6 +2160,8 @@ static bool fcoe_match(struct net_device *netdev)
-  */
- static void fcoe_dcb_create(struct fcoe_interface *fcoe)
- {
-+	int ctlr_prio = TC_PRIO_BESTEFFORT;
-+	int fcoe_prio = TC_PRIO_INTERACTIVE;
- #ifdef CONFIG_DCB
- 	int dcbx;
- 	u8 fup, up;
-@@ -2186,10 +2188,12 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
- 			fup = dcb_getapp(netdev, &app);
- 		}
- 
--		fcoe->priority = ffs(up) ? ffs(up) - 1 : 0;
--		ctlr->priority = ffs(fup) ? ffs(fup) - 1 : fcoe->priority;
-+		fcoe_prio = ffs(up) ? ffs(up) - 1 : 0;
-+		ctlr_prio = ffs(fup) ? ffs(fup) - 1 : fcoe_prio;
- 	}
- #endif
-+	fcoe->priority = fcoe_prio;
-+	ctlr->priority = ctlr_prio;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 8694e87..63c821b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -258,6 +258,17 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+ 		mod_timer(&fsp->timer, jiffies + delay);
  }
  
- enum fcoe_create_link_state {
++static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
++{
++	fsp->state |= FC_SRB_ABORTED;
++	fsp->state &= ~FC_SRB_ABORT_PENDING;
++
++	if (fsp->wait_for_comp)
++		complete(&fsp->tm_done);
++	else
++		fc_fcp_complete_locked(fsp);
++}
++
+ /**
+  * fc_fcp_send_abort() - Send an abort for exchanges associated with a
+  *			 fcp_pkt
+@@ -265,6 +276,8 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+  */
+ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ {
++	int rc;
++
+ 	if (!fsp->seq_ptr)
+ 		return -EINVAL;
+ 
+@@ -272,7 +285,16 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ 	put_cpu();
+ 
+ 	fsp->state |= FC_SRB_ABORT_PENDING;
+-	return fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
++	rc = fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
++	/*
++	 * ->seq_exch_abort() might return -ENXIO if
++	 * the sequence is already completed
++	 */
++	if (rc == -ENXIO) {
++		fc_fcp_abort_done(fsp);
++		rc = 0;
++	}
++	return rc;
+ }
+ 
+ /**
+@@ -729,15 +751,8 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		ba_done = 0;
+ 	}
+ 
+-	if (ba_done) {
+-		fsp->state |= FC_SRB_ABORTED;
+-		fsp->state &= ~FC_SRB_ABORT_PENDING;
+-
+-		if (fsp->wait_for_comp)
+-			complete(&fsp->tm_done);
+-		else
+-			fc_fcp_complete_locked(fsp);
+-	}
++	if (ba_done)
++		fc_fcp_abort_done(fsp);
+ }
+ 
+ /**
+@@ -1246,6 +1261,11 @@ static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
+ 		return FAILED;
+ 	}
+ 
++	if (fsp->state & FC_SRB_ABORTED) {
++		FC_FCP_DBG(fsp, "target abort cmd  completed\n");
++		return SUCCESS;
++	}
++
+ 	init_completion(&fsp->tm_done);
+ 	fsp->wait_for_comp = 1;
+ 
 -- 
 1.8.5.6
 
