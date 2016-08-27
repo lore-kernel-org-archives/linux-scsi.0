@@ -1,494 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 154781] New: California 1 844 414 4868 QuickBooks Tech Support
- Phone Number Sacramento Intuit QUickBooks Support NumberLos Angeles, San
- Diego, San Jose, San Francisco, Fresno
-Date: Sat, 27 Aug 2016 15:54:20 +0000
-Message-ID: <bug-154781-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: Baoyou Xie <baoyou.xie@linaro.org>
+Subject: [PATCH] scsi: move function declarationes to scsi_priv.h
+Date: Sun, 28 Aug 2016 00:59:57 +0800
+Message-ID: <1472317197-7865-1-git-send-email-baoyou.xie@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41618 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753958AbcH0Py1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 27 Aug 2016 11:54:27 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 04E5F203A1
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Aug 2016 15:54:24 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id D96F420394
-        for <linux-scsi@vger.kernel.org>; Sat, 27 Aug 2016 15:54:20 +0000 (UTC)
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:36349 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752054AbcH0RAh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 27 Aug 2016 13:00:37 -0400
+Received: by mail-pf0-f182.google.com with SMTP id h186so38132995pfg.3
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Aug 2016 10:00:37 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
 
-https://bugzilla.kernel.org/show_bug.cgi?id=154781
+We get 2 warnings about global functions without a declaration
+in the scsi driver when building with W=1:
+drivers/scsi/scsi_lib.c:467:6: warning: no previous prototype for 'scsi_requeue_run_queue' [-Wmissing-prototypes]
+drivers/scsi/scsi_lib.c:2609:6: warning: no previous prototype for 'scsi_evt_thread' [-Wmissing-prototypes]
 
-            Bug ID: 154781
-           Summary: California 1 844 414 4868 QuickBooks Tech Support
-                    Phone Number Sacramento Intuit QUickBooks Support
-                    NumberLos Angeles, San Diego, San Jose, San Francisco,
-                    Fresno
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: 5.0
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: AHA152X
-          Assignee: scsi_drivers-aha152x@kernel-bugs.osdl.org
-          Reporter: usacanadatollfree@gmail.com
-        Regression: No
+in fact, both functiones are declared in drivers/scsi/scsi_scan.c
+but need to move the declarationes into scsi_priv.h.
 
-Created attachment 230711
-  --> https://bugzilla.kernel.org/attachment.cgi?id=230711&action=edit
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+---
+ drivers/scsi/scsi_priv.h | 2 ++
+ drivers/scsi/scsi_scan.c | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
-California 1 844 414 4868 QuickBooks Tech Support Phone Number Sacramento
-Intuit QUickBooks Support NumberLos Angeles, San Diego, San Jose, San
-Francisco, Fresno
- Fast N Perfect Intuit [@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1 844~414~4868Fast N Perfect Intuit
-[@844@@414@@4868}]} support phone number 1 844~414~4868
-[{[{[@844@@414@@4868}]}Intuit Phone Number 1
-844~414~4868?}?}?}?}Calif<o>rnia?}?}?}?}     
- mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact
-Number 1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-mamamamamama {[{[{[@844@@414@@4868}]}]}] Intuit Quickbooks Sales contact Number
-1 844~414~4868
-**CALL @1.844.414.4868to get wonder solutions for all your Intuit QuickBooks
-technical issues** Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks Toll Free number 1 844~414~4868 Call
-1.844.414.4868 Toll free Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, Microsoft customer
-service phone number 1 844~414~4868 Intuit QuickBooks helpline  number 1
-844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit QuickBooks technical
-support phone number 1 844~414~4868 | window 10 tech support number 1
-844~414~4868, customer service helpline number 1 844~414~4868 Intuit QuickBooks
-helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free ] Intuit
-QuickBooks technical support phone number 1 844~414~4868 | window 10 tech
-support number 1 844~414~4868, customer service helpline number 1 844~414~4868
-Intuit QuickBooks helpline number 1 844~414~4868 [Call 1.844.414.4868 Toll free
-] Intuit QuickBooks technical support phone number 1 844~414~4868 | window 10
-tech support number 1 844~414~4868, customer service helpline number 1
-844~414~4868 Intuit QuickBooks helpline number 1 844~414~4868 [Call
-1.844.414.4868 Toll free ] Intuit QuickBooks technical support phone number 1
-844~414~4868 | window 10 tech support number 1 844~414~4868, customer service
-helpline number 1 844~414~4868 1.844.414.4868
-QuickBooks Support Number 1 844~414~4868 | QuickBooks Support Phone Number 1
-844~414~4868 | QuickBooks Phone Support | QuickBooks Canada 2014 | QuickBooks
-Canada 2015 | Download Canadian QuickBooks | Canadian QuickBooks | Canadian
-QuickBooks Help | QuickBooks Canada Download | QuickBooks Canada | QuickBooks
-Canada Support | QuickBooks Support Canada | QuickBooks 2008 Support |
-QuickBooks 2009 Support | QuickBooks 2011 Support | QuickBooks 2013 Support |
-QuickBooks 2014 Support | QuickBooks Tech Support | QuickBooks 2015 Help |
-QuickBooks 2015 Support | QuickBooks.com Help and Support | QuickBooks.com
-Support | QuickBooks Help and Phone Support | Help QuickBooks Intuit.com |
-Support QuickBooks Intuit.com | QuickBooks Enterprise Canada Phone Help and
-Support Number 1 844~414~4868 | QuickBooks Enterprise Technical Support Phone
-Number 1 844~414~4868 | QuickBooks Enterprise Technical Phone Support |
-QuickBooks Enterprise Help and Support | QuickBooks Premier Help and Support |
-QuickBooks Technical Support | QuickBooks Technical Support Phone Number 1
-844~414~4868 | QuickBooks Help Support | Storify QuickBooks Support Links |
-QuickBooks Point of Sale (POS)
-
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 57a4b99..ff3cde3 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -85,12 +85,14 @@ extern void scsi_device_unbusy(struct scsi_device *sdev);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
++extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern int scsi_init_queue(void);
+ extern void scsi_exit_queue(void);
++extern void scsi_evt_thread(struct work_struct *work);
+ struct request_queue;
+ struct request;
+ extern struct kmem_cache *scsi_sdb_cache;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e0a78f5..212e98d 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -217,8 +217,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	struct scsi_device *sdev;
+ 	int display_failure_msg = 1, ret;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	extern void scsi_evt_thread(struct work_struct *work);
+-	extern void scsi_requeue_run_queue(struct work_struct *work);
+ 
+ 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
+ 		       GFP_ATOMIC);
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+2.7.4
+
