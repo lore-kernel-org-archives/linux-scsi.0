@@ -1,66 +1,49 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 2/3] scsi/ncr5380: Avoid a compiler warning
-Date: Sat, 27 Aug 2016 12:30:00 +1000
-Message-ID: <20160827022959.211730285@telegraphics.com.au>
+Subject: [PATCH 1/3] documentation/scsi: Remove nodisconnect parameter
+Date: Sat, 27 Aug 2016 12:29:59 +1000
+Message-ID: <20160827022959.119870978@telegraphics.com.au>
 References: <20160827022958.983743612@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-warning-declared-inline-after-called
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline; filename=cleanup-nodisconnect
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Jonathan Corbet <corbet@lwn.net>, linux-doc@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-With commit 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
-some versions of gcc now warn:
+The driver that used the 'nodisconnect' parameter was removed in
+commit 565bae6a4a8f ("[SCSI] 53c7xx: kill driver"). Related documentation
+was cleaned up in commit f37a7238d379 ("[SCSI] 53c7xx: fix removal
+fallout"), except for the remaining two mentions that are removed here.
 
-In file included from drivers/scsi/mac_scsi.c:335:
-drivers/scsi/NCR5380.h:295: warning: `NCR5380_poll_politely' declared inline after being called
-drivers/scsi/NCR5380.h:295: warning: previous declaration of `NCR5380_poll_politely' was here
-
-Avoid this by defining NCR5380_poll_politely() in NCR5380.h.
-
-Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
 ---
- drivers/scsi/NCR5380.c |    7 -------
- drivers/scsi/NCR5380.h |    8 +++++++-
- 2 files changed, 7 insertions(+), 8 deletions(-)
+ Documentation/kernel-parameters.txt    |    2 --
+ Documentation/scsi/scsi-parameters.txt |    2 --
+ 2 files changed, 4 deletions(-)
 
-Index: linux/drivers/scsi/NCR5380.c
+Index: linux/Documentation/kernel-parameters.txt
 ===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-08-27 12:29:57.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.c	2016-08-27 12:29:57.000000000 +1000
-@@ -230,13 +230,6 @@ static int NCR5380_poll_politely2(struct
- 	return -ETIMEDOUT;
- }
+--- linux.orig/Documentation/kernel-parameters.txt	2016-08-27 12:29:57.000000000 +1000
++++ linux/Documentation/kernel-parameters.txt	2016-08-27 12:29:57.000000000 +1000
+@@ -2543,8 +2543,6 @@ bytes respectively. Such letter suffixes
  
--static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
--                                        int reg, int bit, int val, int wait)
--{
--	return NCR5380_poll_politely2(instance, reg, bit, val,
--	                                        reg, bit, val, wait);
--}
+ 	nodelayacct	[KNL] Disable per-task delay accounting
+ 
+-	nodisconnect	[HW,SCSI,M68K] Disables SCSI disconnects.
 -
- #if NDEBUG
- static struct {
- 	unsigned char mask;
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2016-08-27 12:29:57.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.h	2016-08-27 12:29:57.000000000 +1000
-@@ -292,8 +292,14 @@ static void NCR5380_reselect(struct Scsi
- static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *, struct scsi_cmnd *);
- static int NCR5380_transfer_dma(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
- static int NCR5380_transfer_pio(struct Scsi_Host *instance, unsigned char *phase, int *count, unsigned char **data);
--static int NCR5380_poll_politely(struct Scsi_Host *, int, int, int, int);
- static int NCR5380_poll_politely2(struct Scsi_Host *, int, int, int, int, int, int, int);
+ 	nodsp		[SH] Disable hardware DSP at boot time.
  
-+static inline int NCR5380_poll_politely(struct Scsi_Host *instance,
-+                                        int reg, int bit, int val, int wait)
-+{
-+	return NCR5380_poll_politely2(instance, reg, bit, val,
-+	                                        reg, bit, val, wait);
-+}
-+
- #endif				/* __KERNEL__ */
- #endif				/* NCR5380_H */
+ 	noefi		Disable EFI runtime services support.
+Index: linux/Documentation/scsi/scsi-parameters.txt
+===================================================================
+--- linux.orig/Documentation/scsi/scsi-parameters.txt	2016-08-27 12:29:57.000000000 +1000
++++ linux/Documentation/scsi/scsi-parameters.txt	2016-08-27 12:29:57.000000000 +1000
+@@ -79,8 +79,6 @@ parameters may be changed at runtime by
+ 
+ 	ncr53c8xx=	[HW,SCSI]
+ 
+-	nodisconnect	[HW,SCSI,M68K] Disables SCSI disconnects.
+-
+ 	osst=		[HW,SCSI] SCSI Tape Driver
+ 			Format: <buffer_size>,<write_threshold>
+ 			See also Documentation/scsi/st.txt.
