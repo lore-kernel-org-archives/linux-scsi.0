@@ -1,38 +1,34 @@
-From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH] scsi: ufs: add missing declaration in ufshcd.h
-Date: Sun, 28 Aug 2016 16:01:22 +0800
-Message-ID: <1472371282-14691-1-git-send-email-baoyou.xie@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH 1/3] documentation/scsi: Remove nodisconnect parameter
+Date: Sun, 28 Aug 2016 10:07:13 +0200
+Message-ID: <CAMuHMdUTwL8HoPk=YEuYYucEiUgpNJ_Hho8Duo0MOiTbP8WE+w@mail.gmail.com>
+References: <20160827022958.983743612@telegraphics.com.au> <20160827022959.119870978@telegraphics.com.au>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20160827022959.119870978@telegraphics.com.au>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-We get 1 warning about global functions without a declaration
-in the scsi ufshcd driver when building with W=1:
-drivers/scsi/ufs/ufshcd.c:1991:5: warning: no previous prototype for 'ufshcd_query_descriptor_retry' [-Wmissing-prototypes]
+On Sat, Aug 27, 2016 at 4:29 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> The driver that used the 'nodisconnect' parameter was removed in
+> commit 565bae6a4a8f ("[SCSI] 53c7xx: kill driver"). Related documentation
+> was cleaned up in commit f37a7238d379 ("[SCSI] 53c7xx: fix removal
+> fallout"), except for the remaining two mentions that are removed here.
+>
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-in fact, this function is implemented in ufshcd.c and exported
-but need to be declared in header file.
+Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
----
- drivers/scsi/ufs/ufshcd.h | 3 +++
- 1 file changed, 3 insertions(+)
+Gr{oetje,eeting}s,
 
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 430bef1..2f696ea 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -713,6 +713,9 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, int desc_index, u8 *buf,
- /* Expose Query-Request API */
- int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 	enum flag_idn idn, bool *flag_res);
-+int ufshcd_query_descriptor_retry(struct ufs_hba *hba,
-+	enum query_opcode opcode, enum desc_idn idn, u8 index,
-+	u8 selector, u8 *desc_buf, int *buf_len);
- int ufshcd_hold(struct ufs_hba *hba, bool async);
- void ufshcd_release(struct ufs_hba *hba);
- u32 ufshcd_get_local_unipro_ver(struct ufs_hba *hba);
--- 
-2.7.4
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
