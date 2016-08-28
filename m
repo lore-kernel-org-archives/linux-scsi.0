@@ -1,52 +1,44 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] qla2xxx: fix spelling mistake "retyring" -> "retrying"
-Date: Sun, 28 Aug 2016 12:24:48 +0100
-Message-ID: <20160828112448.10785-1-colin.king@canonical.com>
+From: Himanshu Madhani <himanshu.madhani@qlogic.com>
+Subject: Re: [PATCH] qla2xxx: fix spelling mistake "retyring" -> "retrying"
+Date: Sun, 28 Aug 2016 16:38:37 +0000
+Message-ID: <714F7E17-5CF1-4410-9E89-30A5D435CAD8@qlogic.com>
+References: <20160828112448.10785-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160828112448.10785-1-colin.king@canonical.com>
+Content-Language: en-US
+Content-ID: <8089D1D8CF6C324290531109FAB32F17@namprd11.prod.outlook.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, Dept-Eng QLA2xxx Upstream <qla2xxx-upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
-
-Trivial fix to spelling mistakes in ql_dbg messages.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 1dd8650..ace65db 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4694,7 +4694,7 @@ retry_unlock:
- 			qla83xx_wait_logic();
- 			retry++;
- 			ql_dbg(ql_dbg_p3p, base_vha, 0xb064,
--			    "Failed to release IDC lock, retyring=%d\n", retry);
-+			    "Failed to release IDC lock, retrying=%d\n", retry);
- 			goto retry_unlock;
- 		}
- 	} else if (retry < 10) {
-@@ -4702,7 +4702,7 @@ retry_unlock:
- 		qla83xx_wait_logic();
- 		retry++;
- 		ql_dbg(ql_dbg_p3p, base_vha, 0xb065,
--		    "Failed to read drv-lockid, retyring=%d\n", retry);
-+		    "Failed to read drv-lockid, retrying=%d\n", retry);
- 		goto retry_unlock;
- 	}
- 
-@@ -4718,7 +4718,7 @@ retry_unlock2:
- 			qla83xx_wait_logic();
- 			retry++;
- 			ql_dbg(ql_dbg_p3p, base_vha, 0xb066,
--			    "Failed to release IDC lock, retyring=%d\n", retry);
-+			    "Failed to release IDC lock, retrying=%d\n", retry);
- 			goto retry_unlock2;
- 		}
- 	}
--- 
-2.9.3
+DQpPbiA4LzI4LzE2LCA0OjI0IEFNLCAiQ29saW4gS2luZyIgPGNvbGluLmtpbmdAY2Fub25pY2Fs
+LmNvbT4gd3JvdGU6DQoNCj5Gcm9tOiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmlj
+YWwuY29tPg0KPg0KPlRyaXZpYWwgZml4IHRvIHNwZWxsaW5nIG1pc3Rha2VzIGluIHFsX2RiZyBt
+ZXNzYWdlcy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBDb2xpbiBJYW4gS2luZyA8Y29saW4ua2luZ0Bj
+YW5vbmljYWwuY29tPg0KPi0tLQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYyB8IDYg
+KysrLS0tDQo+IDEgZmlsZSBjaGFuZ2VkLCAzIGluc2VydGlvbnMoKyksIDMgZGVsZXRpb25zKC0p
+DQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jIGIvZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMNCj5pbmRleCAxZGQ4NjUwLi5hY2U2NWRiIDEwMDY0NA0K
+Pi0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+KysrIGIvZHJpdmVycy9zY3Np
+L3FsYTJ4eHgvcWxhX29zLmMNCj5AQCAtNDY5NCw3ICs0Njk0LDcgQEAgcmV0cnlfdW5sb2NrOg0K
+PiAJCQlxbGE4M3h4X3dhaXRfbG9naWMoKTsNCj4gCQkJcmV0cnkrKzsNCj4gCQkJcWxfZGJnKHFs
+X2RiZ19wM3AsIGJhc2VfdmhhLCAweGIwNjQsDQo+LQkJCSAgICAiRmFpbGVkIHRvIHJlbGVhc2Ug
+SURDIGxvY2ssIHJldHlyaW5nPSVkXG4iLCByZXRyeSk7DQo+KwkJCSAgICAiRmFpbGVkIHRvIHJl
+bGVhc2UgSURDIGxvY2ssIHJldHJ5aW5nPSVkXG4iLCByZXRyeSk7DQo+IAkJCWdvdG8gcmV0cnlf
+dW5sb2NrOw0KPiAJCX0NCj4gCX0gZWxzZSBpZiAocmV0cnkgPCAxMCkgew0KPkBAIC00NzAyLDcg
+KzQ3MDIsNyBAQCByZXRyeV91bmxvY2s6DQo+IAkJcWxhODN4eF93YWl0X2xvZ2ljKCk7DQo+IAkJ
+cmV0cnkrKzsNCj4gCQlxbF9kYmcocWxfZGJnX3AzcCwgYmFzZV92aGEsIDB4YjA2NSwNCj4tCQkg
+ICAgIkZhaWxlZCB0byByZWFkIGRydi1sb2NraWQsIHJldHlyaW5nPSVkXG4iLCByZXRyeSk7DQo+
+KwkJICAgICJGYWlsZWQgdG8gcmVhZCBkcnYtbG9ja2lkLCByZXRyeWluZz0lZFxuIiwgcmV0cnkp
+Ow0KPiAJCWdvdG8gcmV0cnlfdW5sb2NrOw0KPiAJfQ0KPiANCj5AQCAtNDcxOCw3ICs0NzE4LDcg
+QEAgcmV0cnlfdW5sb2NrMjoNCj4gCQkJcWxhODN4eF93YWl0X2xvZ2ljKCk7DQo+IAkJCXJldHJ5
+Kys7DQo+IAkJCXFsX2RiZyhxbF9kYmdfcDNwLCBiYXNlX3ZoYSwgMHhiMDY2LA0KPi0JCQkgICAg
+IkZhaWxlZCB0byByZWxlYXNlIElEQyBsb2NrLCByZXR5cmluZz0lZFxuIiwgcmV0cnkpOw0KPisJ
+CQkgICAgIkZhaWxlZCB0byByZWxlYXNlIElEQyBsb2NrLCByZXRyeWluZz0lZFxuIiwgcmV0cnkp
+Ow0KPiAJCQlnb3RvIHJldHJ5X3VubG9jazI7DQo+IAkJfQ0KPiAJfQ0KPi0tIA0KPjIuOS4zDQo+
+DQoNClRoYW5rcyBDb2xpbi4gTG9va3MgR29vZC4gDQoNCkFja2VkLWJ5OiBIaW1hbnNodSBNYWRo
+YW5pIDxoaW1hbnNodS5tYWRoYW5pQHFsb2dpYy5jb20+DQoNCj4NCg==
