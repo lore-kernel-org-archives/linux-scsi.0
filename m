@@ -1,26 +1,31 @@
 From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 1/3] documentation/scsi: Remove nodisconnect parameter
-Date: Sun, 28 Aug 2016 10:07:13 +0200
-Message-ID: <CAMuHMdUTwL8HoPk=YEuYYucEiUgpNJ_Hho8Duo0MOiTbP8WE+w@mail.gmail.com>
-References: <20160827022958.983743612@telegraphics.com.au> <20160827022959.119870978@telegraphics.com.au>
+Subject: Re: [PATCH 2/3] scsi/ncr5380: Avoid a compiler warning
+Date: Sun, 28 Aug 2016 10:08:08 +0200
+Message-ID: <CAMuHMdVQBeHoH12bvyni0XnyahyrrKTtkZv4ogR0nTaRow5GNg@mail.gmail.com>
+References: <20160827022958.983743612@telegraphics.com.au> <20160827022959.211730285@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160827022959.119870978@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160827022959.211730285@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Jonathan Corbet <corbet@lwn.net>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Aug 27, 2016 at 4:29 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> The driver that used the 'nodisconnect' parameter was removed in
-> commit 565bae6a4a8f ("[SCSI] 53c7xx: kill driver"). Related documentation
-> was cleaned up in commit f37a7238d379 ("[SCSI] 53c7xx: fix removal
-> fallout"), except for the remaining two mentions that are removed here.
+On Sat, Aug 27, 2016 at 4:30 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
+> With commit 3a0f64bfa907 ("mac_scsi: Fix pseudo DMA implementation")
+> some versions of gcc now warn:
 >
+> In file included from drivers/scsi/mac_scsi.c:335:
+> drivers/scsi/NCR5380.h:295: warning: `NCR5380_poll_politely' declared inline after being called
+> drivers/scsi/NCR5380.h:295: warning: previous declaration of `NCR5380_poll_politely' was here
+>
+> Avoid this by defining NCR5380_poll_politely() in NCR5380.h.
+>
+> Suggested-by: Geert Uytterhoeven <geert@linux-m68k.org>
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 
-Reviewed-by: Geert Uytterhoeven <geert@linux-m68k.org>
+Tested-by: Geert Uytterhoeven <geert@linux-m68k.org>
 
 Gr{oetje,eeting}s,
 
