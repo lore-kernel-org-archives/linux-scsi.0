@@ -1,62 +1,52 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 3/3] scsi/ncr5380: Improve interrupt latency during PIO tranfers
-Date: Sun, 28 Aug 2016 10:08:45 +0200
-Message-ID: <CAMuHMdUwLAJJUO6L9gKYU4w_RO4s38xzjpRehnNBJPQ7s1+MkA@mail.gmail.com>
-References: <20160827022958.983743612@telegraphics.com.au> <20160827022959.303563262@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160827022959.303563262@telegraphics.com.au>
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitzmic@gmail.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] qla2xxx: fix spelling mistake "retyring" -> "retrying"
+Date: Sun, 28 Aug 2016 12:24:48 +0100
+Message-ID: <20160828112448.10785-1-colin.king@canonical.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Finn,
+From: Colin Ian King <colin.king@canonical.com>
 
-On Sat, Aug 27, 2016 at 4:30 AM, Finn Thain <fthain@telegraphics.com.au> wrote:
-> Large PIO transfers are broken up into chunks to try to avoid disabling
-> local IRQs for long periods. But IRQs are still disabled for too long
-> and this causes SCC FIFO overruns during serial port transfers. This
-> patch fixes the problem by halving the PIO chunk size.
->
-> Testing with mac_scsi shows that the extra NCR5380_main() loop iterations
-> have negligible performance impact on SCSI transfers (about 1% slower).
-> On a faster system (using the dmx3191d module) transfers showed no
-> measurable change.
->
-> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
->
-> ---
->  drivers/scsi/NCR5380.c |    6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
->
-> Index: linux/drivers/scsi/NCR5380.c
-> ===================================================================
-> --- linux.orig/drivers/scsi/NCR5380.c   2016-08-27 12:29:57.000000000 +1000
-> +++ linux/drivers/scsi/NCR5380.c        2016-08-27 12:29:58.000000000 +1000
-> @@ -1847,11 +1847,11 @@ static void NCR5380_information_transfer
->                                                 /* XXX - need to source or sink data here, as appropriate */
->                                         }
->                                 } else {
-> -                                       /* Break up transfer into 3 ms chunks,
-> -                                        * presuming 6 accesses per handshake.
-> +                                       /* Transfer a small chunk so that the
-> +                                        * irq mode lock is not held too long.
->                                          */
->                                         transfersize = min((unsigned long)cmd->SCp.this_residual,
-> -                                                          hostdata->accesses_per_ms / 2);
-> +                                                          hostdata->accesses_per_ms >> 2);
+Trivial fix to spelling mistakes in ql_dbg messages.
 
-I think it's easier to read if you use "/ 4".
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1dd8650..ace65db 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -4694,7 +4694,7 @@ retry_unlock:
+ 			qla83xx_wait_logic();
+ 			retry++;
+ 			ql_dbg(ql_dbg_p3p, base_vha, 0xb064,
+-			    "Failed to release IDC lock, retyring=%d\n", retry);
++			    "Failed to release IDC lock, retrying=%d\n", retry);
+ 			goto retry_unlock;
+ 		}
+ 	} else if (retry < 10) {
+@@ -4702,7 +4702,7 @@ retry_unlock:
+ 		qla83xx_wait_logic();
+ 		retry++;
+ 		ql_dbg(ql_dbg_p3p, base_vha, 0xb065,
+-		    "Failed to read drv-lockid, retyring=%d\n", retry);
++		    "Failed to read drv-lockid, retrying=%d\n", retry);
+ 		goto retry_unlock;
+ 	}
+ 
+@@ -4718,7 +4718,7 @@ retry_unlock2:
+ 			qla83xx_wait_logic();
+ 			retry++;
+ 			ql_dbg(ql_dbg_p3p, base_vha, 0xb066,
+-			    "Failed to release IDC lock, retyring=%d\n", retry);
++			    "Failed to release IDC lock, retrying=%d\n", retry);
+ 			goto retry_unlock2;
+ 		}
+ 	}
+-- 
+2.9.3
