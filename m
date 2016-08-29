@@ -1,39 +1,79 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH -next] ibmvscsis: Use list_move_tail instead of
- list_del/list_add_tail
-Date: Mon, 29 Aug 2016 12:16:22 -0700
-Message-ID: <57C48A06.4000806@linux.vnet.ibm.com>
-References: <1469196226-17333-1-git-send-email-weiyj.lk@gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 06/17] smartpqi: change commonly used function to inline
+Date: Mon, 29 Aug 2016 20:32:06 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1916398BF7@avsrvexchmbx1.microsemi.net>
+References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+ <147222988202.31214.8351871414119128313.stgit@brunhilda>
+ <20160829090652.wxjff23nxbsbmcxn@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:36872 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751983AbcH2TQa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Aug 2016 15:16:30 -0400
-Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7TJDrAl083199
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Aug 2016 15:16:29 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 253r8t6ef1-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 29 Aug 2016 15:16:29 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
-        Mon, 29 Aug 2016 15:16:28 -0400
-In-Reply-To: <1469196226-17333-1-git-send-email-weiyj.lk@gmail.com>
+Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:48768
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751223AbcH2UcL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 16:32:11 -0400
+In-Reply-To: <20160829090652.wxjff23nxbsbmcxn@c203.arch.suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, "Bryant G . Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 07/22/2016 07:03 AM, Wei Yongjun wrote:
-> Using list_move_tail() instead of list_del() + list_add_tail().
-> 
-> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Monday, August 29, 2016 4:07 AM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
+> hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benes=
+h;
+> elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 06/17] smartpqi: change commonly used function to
+> inline
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On Fri, Aug 26, 2016 at 11:44:42AM -0500, Don Brace wrote:
+> > From: Kevin Barnett <kevin.barnett@microsemi.com>
+> >
+> > A tiny tweak to convert a small, commonly used function to inline.
+> >
+> > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+> > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> > Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> > Signed-off-by: Don Brace <don.brace@microsemi.com>
+> > ---
+> >  drivers/scsi/smartpqi/smartpqi_init.c |    2 +-
+> >  1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/smartpqi/smartpqi_init.c
+> b/drivers/scsi/smartpqi/smartpqi_init.c
+> > index dbc8b40..2656124 100644
+> > --- a/drivers/scsi/smartpqi/smartpqi_init.c
+> > +++ b/drivers/scsi/smartpqi/smartpqi_init.c
+> > @@ -316,7 +316,7 @@ static struct pqi_io_request *pqi_alloc_io_request(
+> >       return io_request;
+> >  }
+> >
+> > -static void pqi_free_io_request(struct pqi_io_request *io_request)
+> > +static inline void pqi_free_io_request(struct pqi_io_request *io_reque=
+st)
+> >  {
+> >       atomic_dec(&io_request->refcount);
+> >  }
+> >
+>=20
+> Did you check whether the compiler does this for you already?
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+You are correct, it does. I will redact this patch.
 
+>=20
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
