@@ -1,20 +1,20 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 15/17] smartpqi: update maintainers
-Date: Mon, 29 Aug 2016 20:57:19 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D1916398C2C@avsrvexchmbx1.microsemi.net>
+Subject: RE: [PATCH 11/17] smartpqi: minor tweaks to update time support
+Date: Mon, 29 Aug 2016 20:29:20 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1916398BE9@avsrvexchmbx1.microsemi.net>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222993662.31214.1739657681215763725.stgit@brunhilda>
- <20160829094225.xlrpzjto22ushvn7@c203.arch.suse.de>
+ <147222991200.31214.16478440159265351246.stgit@brunhilda>
+ <20160829093338.3juwfp6xcjzib26h@c203.arch.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="iso-8859-1"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0040.outbound.protection.outlook.com ([104.47.33.40]:61034
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0040.outbound.protection.outlook.com ([104.47.32.40]:28598
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755583AbcH2U5X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Aug 2016 16:57:23 -0400
-In-Reply-To: <20160829094225.xlrpzjto22ushvn7@c203.arch.suse.de>
+        id S1753436AbcH2VCs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 17:02:48 -0400
+In-Reply-To: <20160829093338.3juwfp6xcjzib26h@c203.arch.suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -23,46 +23,44 @@ Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@micr
 
 > -----Original Message-----
 > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Monday, August 29, 2016 4:42 AM
+> Sent: Monday, August 29, 2016 4:34 AM
 > To: Don Brace
 > Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
 > hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benes=
 h;
 > elliott@hpe.com; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 15/17] smartpqi: update maintainers
+> Subject: Re: [PATCH 11/17] smartpqi: minor tweaks to update time support
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> On Fri, Aug 26, 2016 at 11:45:36AM -0500, Don Brace wrote:
-> > From: Kevin Barnett <kevin.barnett@microsemi.com>
+
+
 > >
-> > added Documentation/scsi/smartpqi.txt
-> >
-> > Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-> > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-> > Signed-off-by: Don Brace <don.brace@microsemi.com>
-> > ---
-> >  MAINTAINERS |    1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/MAINTAINERS b/MAINTAINERS
-> > index f50fe50..d980685 100644
-> > --- a/MAINTAINERS
-> > +++ b/MAINTAINERS
-> > @@ -5447,6 +5447,7 @@ F:      drivers/scsi/smartpqi/Kconfig
-> >  F:   drivers/scsi/smartpqi/Makefile
-> >  F:   include/linux/cciss*.h
-> >  F:   include/uapi/linux/cciss*.h
-> > +F:   Documentation/scsi/smartpqi.txt
+> >  static inline void pqi_schedule_update_time_worker(
+> > -                     struct pqi_ctrl_info *ctrl_info)
+> > +     struct pqi_ctrl_info *ctrl_info)
+> >  {
+> > -     schedule_delayed_work(&ctrl_info->update_time_work, 120);
+> > +     schedule_delayed_work(&ctrl_info->update_time_work, 0);
+> >  }
 >=20
-> This should be foldet into the next patch where you actually add the
-> documentation ;-).
-
-I squash smartpqi-add-smartpqi.txt and smartpqi-update-maintainers
-
-Thanks,
-Don
+> Why are you using schedule_delayed_work() if you have a timeout of 0?
+> From __queue_delayed_work():
+> 1513         /*
+> 1514          * If @delay is 0, queue @dwork->work immediately.  This is =
+for
+> 1515          * both optimization and correctness.  The earliest @timer c=
+an
+> 1516          * expire is on the closest next tick and delayed_work users=
+ depend
+> 1517          * on that there's no such delay when @delay is 0.
+> 1518          */
+> 1519         if (!delay) {
+> 1520                 __queue_work(cpu, wq, &dwork->work);
+> 1521                 return;
+> 1522         }
+>=20
 >=20
 > --
 > Johannes Thumshirn                                          Storage
@@ -71,3 +69,12 @@ Don
 > GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
 > HRB 21284 (AG N=FCrnberg)
 > Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
+The reason is that we want it run immediately (or close to immediately).
+
+The code could be restructured to avoid calling this function with a 0, but=
+ it would result in more code and no benefit.
+
+Kevin
+
+
