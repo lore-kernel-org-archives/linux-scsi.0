@@ -1,37 +1,34 @@
-From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH] [SCSI] qla4xxx: mark symbols static where possible
-Date: Mon, 29 Aug 2016 18:46:51 +0800
-Message-ID: <1472467611-8574-1-git-send-email-baoyou.xie@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@linaro.org, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi: move function declarationes to scsi_priv.h
+Date: Mon, 29 Aug 2016 08:58:57 -0700
+Message-ID: <204f29e4-f582-5961-b62c-b0bf9de67b86@sandisk.com>
+References: <1472317197-7865-1-git-send-email-baoyou.xie@linaro.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0043.outbound.protection.outlook.com ([104.47.38.43]:23424
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753937AbcH2P7U (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 11:59:20 -0400
+In-Reply-To: <1472317197-7865-1-git-send-email-baoyou.xie@linaro.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Baoyou Xie <baoyou.xie@linaro.org>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@linaro.org, xie.baoyou@zte.com.cn
 
-We get 1 warning when build kernel with W=1:
-drivers/scsi/qla4xxx/ql4_nx.c:1846:10: warning: no previous prototype for 'ql4_84xx_ipmdio_rd_reg' [-Wmissing-prototypes]
+On 08/27/2016 09:59 AM, Baoyou Xie wrote:
+> We get 2 warnings about global functions without a declaration
+> in the scsi driver when building with W=1:
+> drivers/scsi/scsi_lib.c:467:6: warning: no previous prototype for 'scsi_requeue_run_queue' [-Wmissing-prototypes]
+> drivers/scsi/scsi_lib.c:2609:6: warning: no previous prototype for 'scsi_evt_thread' [-Wmissing-prototypes]
+>
+> in fact, both functiones are declared in drivers/scsi/scsi_scan.c
+> but need to move the declarationes into scsi_priv.h.
 
-In fact, this function is only used in the file in which it is
-declared and don't need a declaration, but can be made static.
-so this patch marks this function with 'static'.
+Please fix the spelling in the patch title and description (functiones 
+-> functions and declarationes -> declarations). Anyway:
 
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
----
- drivers/scsi/qla4xxx/ql4_nx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
 
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index ae87d6c..06ddd13 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -1843,7 +1843,7 @@ static uint32_t ql4_84xx_poll_wait_for_ready(struct scsi_qla_host *ha,
- 	return rval;
- }
- 
--uint32_t ql4_84xx_ipmdio_rd_reg(struct scsi_qla_host *ha, uint32_t addr1,
-+static uint32_t ql4_84xx_ipmdio_rd_reg(struct scsi_qla_host *ha, uint32_t addr1,
- 				uint32_t addr3, uint32_t mask, uint32_t addr,
- 				uint32_t *data_ptr)
- {
--- 
-2.7.4
