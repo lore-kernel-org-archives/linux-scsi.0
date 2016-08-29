@@ -1,33 +1,33 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 16/17] smartpqi: add smartpqi.txt
-Date: Mon, 29 Aug 2016 11:45:51 +0200
-Message-ID: <20160829094551.bmghflbkqksljbhx@c203.arch.suse.de>
+Subject: Re: [PATCH 17/17] smartqi: bump driver version
+Date: Mon, 29 Aug 2016 11:46:42 +0200
+Message-ID: <20160829094642.dnyc4gqyfvttsynk@c203.arch.suse.de>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222994345.31214.15253908733296553779.stgit@brunhilda>
+ <147222994931.31214.11947039267239534307.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34223 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34331 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750828AbcH2Jpx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Aug 2016 05:45:53 -0400
+        id S1756473AbcH2Jqn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 05:46:43 -0400
 Content-Disposition: inline
-In-Reply-To: <147222994345.31214.15253908733296553779.stgit@brunhilda>
+In-Reply-To: <147222994931.31214.11947039267239534307.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On Fri, Aug 26, 2016 at 11:45:43AM -0500, Don Brace wrote:
+On Fri, Aug 26, 2016 at 11:45:49AM -0500, Don Brace wrote:
 > From: Kevin Barnett <kevin.barnett@microsemi.com>
 > 
-> Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 > Signed-off-by: Don Brace <don.brace@microsemi.com>
 > ---
 
-With the MAINTAINERS update patch folded in
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
