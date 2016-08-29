@@ -1,32 +1,37 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/17] smartpqi: add kdump support
-Date: Mon, 29 Aug 2016 11:11:51 +0200
-Message-ID: <20160829091150.gexqdgcclldsdtw7@c203.arch.suse.de>
+Subject: Re: [PATCH 08/17] smartpqi: correct controller offline issue
+Date: Mon, 29 Aug 2016 11:19:18 +0200
+Message-ID: <20160829091918.udlvhlwxbvd6gpfe@c203.arch.suse.de>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222988802.31214.4229839409507089355.stgit@brunhilda>
+ <147222989409.31214.3810017071620268818.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58381 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59405 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756681AbcH2JLw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 29 Aug 2016 05:11:52 -0400
+        id S1756473AbcH2JTU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 05:19:20 -0400
 Content-Disposition: inline
-In-Reply-To: <147222988802.31214.4229839409507089355.stgit@brunhilda>
+In-Reply-To: <147222989409.31214.3810017071620268818.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
-On Fri, Aug 26, 2016 at 11:44:48AM -0500, Don Brace wrote:
+On Fri, Aug 26, 2016 at 11:44:54AM -0500, Don Brace wrote:
 > From: Kevin Barnett <kevin.barnett@microsemi.com>
+> 
+> Fixed a bug where the driver would not free all of the
+> controller resources if the controller ever went offline.
 > 
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 > Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 > Signed-off-by: Don Brace <don.brace@microsemi.com>
 > ---
+
+Fixes: 6c223761e 'smartpqi: initial commit of Microsemi smartpqi driver' ?
 
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
