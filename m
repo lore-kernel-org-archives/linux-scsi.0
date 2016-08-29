@@ -1,50 +1,92 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: Oops when completing request on the wrong queue
-Date: Mon, 29 Aug 2016 15:06:21 -0300
-Message-ID: <87d1krzbz6.fsf@linux.vnet.ibm.com>
-References: <87a8gltgks.fsf@linux.vnet.ibm.com>
-        <871t1kq455.fsf@linux.vnet.ibm.com>
-        <bb6f8757-4c3d-8f49-8aff-aa0fdb8bae89@kernel.dk>
-        <8fc9ae38-9488-ef52-f620-08499edebffa@kernel.dk>
-        <87shu0hfye.fsf@linux.vnet.ibm.com>
-        <87a8g39pg4.fsf@linux.vnet.ibm.com>
-        <43693064-dd37-92ce-7753-2a8edb43eab5@kernel.dk>
-        <164a4c63-065b-b766-36f3-bcef4aa46a38@kernel.dk>
-        <49a954e6-2f96-8a63-ce15-2c82c1a1d36d@kernel.dk>
-        <dbe42007-8109-2e21-d0f3-0778007cd152@kernel.dk>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Time to make dynamically allocated devt the default for scsi
+ disks?
+Date: Mon, 29 Aug 2016 11:16:47 -0700
+Message-ID: <cf141c9f-2bda-060a-0a7d-86638c2f5818@sandisk.com>
+References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
+ <1471047451.2407.95.camel@HansenPartnership.com>
+ <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
+ <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
+ <1471101800.2397.9.camel@HansenPartnership.com>
+ <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
+ <1471110212.2397.39.camel@HansenPartnership.com>
+ <CAPcyv4gHq=RraHgcJGx_txk7YJHC8YQ3gCT4CHL0hvzsGpU1wg@mail.gmail.com>
+ <1471195252.2355.18.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <dbe42007-8109-2e21-d0f3-0778007cd152@kernel.dk> (Jens Axboe's
-        message of "Wed, 24 Aug 2016 14:36:38 -0600")
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Keith Busch <keith.busch@intel.com>, Christoph Hellwig <hch@lst.de>, linux-nvme@lists.infradead.org, Brian King <brking@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0074.outbound.protection.outlook.com ([104.47.33.74]:39280
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750786AbcH2SQ5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 29 Aug 2016 14:16:57 -0400
+In-Reply-To: <1471195252.2355.18.camel@HansenPartnership.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
 
-Jens Axboe <axboe@kernel.dk> writes:
->> Can you try this patch? It's not perfect, but I'll be interested if it
->> makes a difference for you.
->
-
-Hi Jens,
-
-Sorry for the delay.  I just got back to this and have been running your
-patch on top of 4.8 without a crash for over 1 hour.  I wanna give it
-more time to make sure it's running properly, though.
-
-Let me get back to you after a few more rounds of test.
-
-> This one should handle the WARN_ON() for running the hw queue on the
-> wrong CPU as well.
-
-On the workaround you added to prevent WARN_ON, we surely need to
-prevent blk_mq_hctx_next_cpu from scheduling dead cpus in the first
-place, right..  How do you feel about the following RFC?  I know it's
-not a complete fix, but it feels like a good improvement to me.
-
-http://www.spinics.net/lists/linux-scsi/msg98608.html
-
--- 
-Gabriel Krisman Bertazi
-
+T24gMDgvMTQvMjAxNiAxMDoyMSBBTSwgSmFtZXMgQm90dG9tbGV5IHdyb3RlOg0KPiBkaWZm
+IC0tZ2l0IGEvZHJpdmVycy9zY3NpL3NkLmMgYi9kcml2ZXJzL3Njc2kvc2QuYw0KPiBpbmRl
+eCBkM2U4NTJhLi4yMjI3NzFkIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJzL3Njc2kvc2QuYw0K
+PiArKysgYi9kcml2ZXJzL3Njc2kvc2QuYw0KPiBAQCAtMzAwMCw3ICszMDAwLDEzIEBAIHN0
+YXRpYyB2b2lkIHNkX3Byb2JlX2FzeW5jKHZvaWQgKmRhdGEsIGFzeW5jX2Nvb2tpZV90IGNv
+b2tpZSkNCj4gIAl9DQo+ICANCj4gIAlibGtfcG1fcnVudGltZV9pbml0KHNkcC0+cmVxdWVz
+dF9xdWV1ZSwgZGV2KTsNCj4gLQlkZXZpY2VfYWRkX2Rpc2soZGV2LCBnZCk7DQo+ICsJLyoN
+Cj4gKwkgKiBwcmV2aW91c2x5IHRoZSBwYXJlbnQgb2YgdGhlIGdlbmRpc2sgd2FzIHRoZSBz
+Y3NpIGRldmljZS4gIEl0DQo+ICsJICogd2FzIG1vdmVkIHRvIGZpeCBsaWZldGltZSBydWxl
+cywgc28gbm93IHdlIGluc3RhbGwgYSBzeW1saW5rDQo+ICsJICogdG8gdGhlIG5ldyBsb2Nh
+dGlvbiBvZiB0aGUgYmxvY2sgY2xhc3MgZGlyZWN0b3J5DQo+ICsJICovDQo+ICsJZGV2aWNl
+X2FkZF9kaXNrKCZzZGtwLT5kZXYsIGdkKTsNCj4gKwlXQVJOX09OKHN5c2ZzX2FkZF9saW5r
+X3RvX2dyb3VwKCZkZXYtPmtvYmosICJibG9jayIsICZzZGtwLT5kZXYua29iaiwgImJsb2Nr
+IikpOw0KPiAgCWlmIChzZGtwLT5jYXBhY2l0eSkNCj4gIAkJc2RfZGlmX2NvbmZpZ19ob3N0
+KHNka3ApOw0KPiAgDQo+IEBAIC0zMTQyLDYgKzMxNDgsNyBAQCBzdGF0aWMgaW50IHNkX3Jl
+bW92ZShzdHJ1Y3QgZGV2aWNlICpkZXYpDQo+ICANCj4gIAlhc3luY19zeW5jaHJvbml6ZV9m
+dWxsX2RvbWFpbigmc2NzaV9zZF9wbV9kb21haW4pOw0KPiAgCWFzeW5jX3N5bmNocm9uaXpl
+X2Z1bGxfZG9tYWluKCZzY3NpX3NkX3Byb2JlX2RvbWFpbik7DQo+ICsJc3lzZnNfcmVtb3Zl
+X2xpbmsoJmRldi0+a29iaiwgImJsb2NrIik7DQo+ICAJZGV2aWNlX2RlbCgmc2RrcC0+ZGV2
+KTsNCj4gIAlkZWxfZ2VuZGlzayhzZGtwLT5kaXNrKTsNCj4gIAlzZF9zaHV0ZG93bihkZXYp
+Ow0KDQpIZWxsbyBKYW1lcywNCg0KU29ycnkgdGhhdCBpdCB0b29rIHNvIGxvbmcgYmVmb3Jl
+IEkgY291bGQgdGVzdCB0aGlzIHBhdGNoIGFuZA0KdGhlIHByZXZpb3VzIHBhdGNoIHRoYXQg
+d2FzIHBvc3RlZCBpbiB0aGlzIGUtbWFpbCB0aHJlYWQuIEJ1dCBJDQpkaWQgc28gZWFybGll
+ciB0aGlzIG1vcm5pbmcuIFdoYXQgSSBzZWUgaXMgdGhhdCB0aGUgZm9sbG93aW5nDQp3YXJu
+aW5nIG1lc3NhZ2UgaXMgcmVwb3J0ZWQgZnJlcXVlbnRseToNCg0KV0FSTklORzogQ1BVOiAx
+IFBJRDogMTM2IGF0IGRyaXZlcnMvc2NzaS9zZC5jOjMwMDkgc2RfcHJvYmVfYXN5bmMrMHgx
+Y2UvMHgxZTANCk1vZHVsZXMgbGlua2VkIGluOiBpYl9zcnAgbGliY3JjMzJjIHNjc2lfdHJh
+bnNwb3J0X3NycCB0YXJnZXRfY29yZV9wc2NzaSB0YXJnZXRfY29yZV9maWxlIGliX3NycHQg
+dGFyZ2V0X2NvcmVfaWJsb2NrIHRhcmdldF9jb3JlX21vZCBicmQgZG1fbXVsdGlwYXRoIHNj
+c2lfZGhfcmRhYyBzY3NpX2RoX2VtYyBzY3NpX2RoX2FsdWEgbmV0Y29uc29sZSB4dF9DSEVD
+S1NVTSBpcHRhYmxlX21hbmdsZSBpcHRfTUFTUVVFUkFERSBuZl9uYXRfbWFzcXVlcmFkZV9p
+cHY0IGlwdGFibGVfbmF0IG5mX25hdF9pcHY0IG5mX25hdCBuZl9jb25udHJhY2tfaXB2NCBu
+Zl9kZWZyYWdfaXB2NCB4dF9jb25udHJhY2sgbmZfY29ubnRyYWNrIGlwdF9SRUpFQ1QgeHRf
+dGNwdWRwIHR1biBlYnRhYmxlX2ZpbHRlciBlYnRhYmxlcyBpcDZ0YWJsZV9maWx0ZXIgaXA2
+X3RhYmxlcyBpcHRhYmxlX2ZpbHRlciBpcF90YWJsZXMgeF90YWJsZXMgYWZfcGFja2V0IGJy
+aWRnZSBzdHAgbGxjIGlzY3NpX2liZnQgaXNjc2lfYm9vdF9zeXNmcyBpYl9pcG9pYiByZG1h
+X3VjbSBpYl91Y20gaWJfdXZlcmJzIGliX3VtYWQgbXNyIHJkbWFfY20gY29uZmlnZnMgaWJf
+Y20gaXdfY20gbWx4NF9pYiBpYl9jb3JlIHNiX2VkYWMgZWRhY19jb3JlIHg4Nl9wa2dfdGVt
+cF90aGVybWFsIGludGVsX3Bvd2VyY2xhbXAgY29yZXRlbXAga3ZtX2ludGVsIGt2bSBkbV9t
+b2QgaXJxYnlwYXNzIGlwbWlfc3NpZiBjcmN0MTBkaWZfcGNsbXVsIGlwbWlfZGV2aW50ZiBj
+cmMzMl9wY2xtdWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCBhZXNuaV9pbnRlbCBpVENPX3dkdCBh
+ZXNfeDg2XzY0IGxydyBpVENPX3ZlbmRvcl9zdXBwb3J0IGRjZGJhcyBnZjEyOG11bCB0ZzMg
+bWx4NF9jb3JlIGdsdWVfaGVscGVyIGFibGtfaGVscGVyIHB0cCBjcnlwdGQgZmplcyBpcG1p
+X3NpIHBjc3BrciBwcHNfY29yZSBsaWJwaHkgaXBtaV9tc2doYW5kbGVyIG1laV9tZSB0cG1f
+dGlzIHRwbV90aXNfY29yZSBtZWkgdHBtIGxwY19pY2ggc2hwY2hwIG1mZF9jb3JlIHdtaSBi
+dXR0b24gaGlkX2dlbmVyaWMgdXNiaGlkIG1nYWcyMDAgaTJjX2FsZ29fYml0IGRybV9rbXNf
+aGVscGVyIHN5c2NvcHlhcmVhIHN5c2ZpbGxyZWN0IHN5c2ltZ2JsdCBmYl9zeXNfZm9wcyB0
+dG0gZHJtIHNyX21vZCBjZHJvbSBjcmMzMmNfaW50ZWwgZWhjaV9wY2kgZWhjaV9oY2QgdXNi
+Y29yZSB1c2JfY29tbW9uIHNnIFtsYXN0IHVubG9hZGVkOiBzY3NpX3RyYW5zcG9ydF9zcnBd
+DQpDUFU6IDEgUElEOiAxMzYgQ29tbToga3dvcmtlci91NjQ6OCBUYWludGVkOiBHICAgICAg
+ICBXICAgICAgIDQuOC4wLXJjNC1kYmcrICMyDQpIYXJkd2FyZSBuYW1lOiBEZWxsIEluYy4g
+UG93ZXJFZGdlIFI0MzAvMDNYS0RWLCBCSU9TIDEuMC4yIDExLzE3LzIwMTQNCldvcmtxdWV1
+ZTogZXZlbnRzX3VuYm91bmQgYXN5bmNfcnVuX2VudHJ5X2ZuDQpDYWxsIFRyYWNlOg0KIFs8
+ZmZmZmZmZmY4MTMyNDdjNT5dIGR1bXBfc3RhY2srMHg2OC8weDkzDQogWzxmZmZmZmZmZjgx
+MDYyZjk2Pl0gX193YXJuKzB4YzYvMHhlMA0KIFs8ZmZmZmZmZmY4MTA2MzA2OD5dIHdhcm5f
+c2xvd3BhdGhfbnVsbCsweDE4LzB4MjANCiBbPGZmZmZmZmZmODE0ODE0NWU+XSBzZF9wcm9i
+ZV9hc3luYysweDFjZS8weDFlMA0KIFs8ZmZmZmZmZmY4MTA4OWQ2ND5dIGFzeW5jX3J1bl9l
+bnRyeV9mbisweDM0LzB4MTQwDQogWzxmZmZmZmZmZjgxMDgwMzU1Pl0gcHJvY2Vzc19vbmVf
+d29yaysweDFmNS8weDY5MA0KIFs8ZmZmZmZmZmY4MTA4MDgzOT5dIHdvcmtlcl90aHJlYWQr
+MHg0OS8weDQ5MA0KIFs8ZmZmZmZmZmY4MTA4NzAxYT5dIGt0aHJlYWQrMHhlYS8weDEwMA0K
+IFs8ZmZmZmZmZmY4MTYyZDNiZj5dIHJldF9mcm9tX2ZvcmsrMHgxZi8weDQwDQoNClRoZSB0
+ZXN0IEkgcmFuIGlzIGF2YWlsYWJsZSBhdCBodHRwczovL2dpdGh1Yi5jb20vYnZhbmFzc2No
+ZS9zcnAtdGVzdC4NCg0KQmFydC4NCg0K
