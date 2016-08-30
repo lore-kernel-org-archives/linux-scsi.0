@@ -1,68 +1,66 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/17] smartpqi: change aio sg processing
-Date: Tue, 30 Aug 2016 09:23:01 +0200
-Message-ID: <20160830072301.kwqdbjcr2aisvtwv@c203.arch.suse.de>
-References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222985137.31214.834009335820995162.stgit@brunhilda>
- <20160829085427.jq6sakyherfhtqgh@c203.arch.suse.de>
- <4993A297653ECB4581FA5C3C31323D1916398CA4@avsrvexchmbx1.microsemi.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Baoyou Xie <baoyou.xie@linaro.org>
+Subject: [PATCH v2] scsi: move function declarations to scsi_priv.h
+Date: Tue, 30 Aug 2016 19:26:00 +0800
+Message-ID: <1472556360-22313-1-git-send-email-baoyou.xie@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41536 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753163AbcH3HXC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Aug 2016 03:23:02 -0400
-Content-Disposition: inline
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D1916398CA4@avsrvexchmbx1.microsemi.net>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:34835 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755452AbcH3L0f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 07:26:35 -0400
+Received: by mail-pf0-f176.google.com with SMTP id x72so7158199pfd.2
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2016 04:26:35 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
 
-On Mon, Aug 29, 2016 at 09:44:36PM +0000, Don Brace wrote:
-> > -----Original Message-----
-> > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+We get 2 warnings about global functions without a declaration
+in the scsi driver when building with W=1:
+drivers/scsi/scsi_lib.c:467:6: warning: no previous prototype for 'scsi_requeue_run_queue' [-Wmissing-prototypes]
+drivers/scsi/scsi_lib.c:2609:6: warning: no previous prototype for 'scsi_evt_thread' [-Wmissing-prototypes]
 
-[...]
+in fact, both functions are declared in drivers/scsi/scsi_scan.c
+but need to move them into scsi_priv.h.
 
-> > > +     while (1) {
-> > 
-> > Is there any compelling reason why you didn't use scsi_for_each_sg()
-> > here? I don't see a reason for the while (1) construct.
-> > 
-> The PQI chaining makes using scsi_for_each_sg a little more difficult to
-> maintain. We would prefer to leave the code as is.
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+---
+ drivers/scsi/scsi_priv.h | 2 ++
+ drivers/scsi/scsi_scan.c | 2 --
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-Hmmm OK. The only other thing that springs to my mind is this:
-
-     for (i = 0; i <= sg_count; i++) {
-     	 pqi_set_sg_descriptor(sg_descriptor, sg);
-	 if (!chained)
-	    num_sg_in_iu++;
-	 if (i == sg_count)
-	    break;
-
-which isn't neccesserily better to read...
-
-> 
-> > 
-> > > +             pqi_set_sg_descriptor(sg_descriptor, sg);
-> > > +             if (!chained)
-> > > +                     num_sg_in_iu++;
-> > > +             i++;
-> > > +             if (i == sg_count)
-> > > +                     break;
-
-I guess we'll have to live with it then.
-
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 57a4b99..ff3cde3 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -85,12 +85,14 @@ extern void scsi_device_unbusy(struct scsi_device *sdev);
+ extern void scsi_queue_insert(struct scsi_cmnd *cmd, int reason);
+ extern void scsi_io_completion(struct scsi_cmnd *, unsigned int);
+ extern void scsi_run_host_queues(struct Scsi_Host *shost);
++extern void scsi_requeue_run_queue(struct work_struct *work);
+ extern struct request_queue *scsi_alloc_queue(struct scsi_device *sdev);
+ extern struct request_queue *scsi_mq_alloc_queue(struct scsi_device *sdev);
+ extern int scsi_mq_setup_tags(struct Scsi_Host *shost);
+ extern void scsi_mq_destroy_tags(struct Scsi_Host *shost);
+ extern int scsi_init_queue(void);
+ extern void scsi_exit_queue(void);
++extern void scsi_evt_thread(struct work_struct *work);
+ struct request_queue;
+ struct request;
+ extern struct kmem_cache *scsi_sdb_cache;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index e0a78f5..212e98d 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -217,8 +217,6 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	struct scsi_device *sdev;
+ 	int display_failure_msg = 1, ret;
+ 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
+-	extern void scsi_evt_thread(struct work_struct *work);
+-	extern void scsi_requeue_run_queue(struct work_struct *work);
+ 
+ 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
+ 		       GFP_ATOMIC);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.4
+
