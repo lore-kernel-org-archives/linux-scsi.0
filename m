@@ -1,36 +1,158 @@
-From: =?UTF-8?B?5bei566A6L2m?= <demo@demo.igenus.cn>
-Subject: Check out Sharon Barber's site!
-Date: Tue, 30 Aug 2016 09:26:38 +0000
-Message-ID: <b107fd9cc3a1cdf256189f0939c30127@sharonbarber.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] tcm_qla2xxx Add SCSI command jammer/discard capability
+ to the tcm_qla2xxx module - enhancements
+Date: Tue, 30 Aug 2016 17:31:28 -0400 (EDT)
+Message-ID: <1665961856.3556154.1472592688632.JavaMail.zimbra@redhat.com>
+References: <2049960802.3555391.1472592259703.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iad1-shared-relay2.dreamhost.com ([208.113.157.41]:47106 "EHLO
-        iad1-shared-relay2.dreamhost.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751515AbcH3V2t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Aug 2016 17:28:49 -0400
-Received: from iad1-shared-relay1.dreamhost.com (iad1-shared-relay1.dreamhost.com [208.113.157.50])
-        by iad1-shared-relay2.dreamhost.com (Postfix) with ESMTP id 503615D2067
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2016 02:26:40 -0700 (PDT)
-Received: from lowndes.dreamhost.com (lowndes.dreamhost.com [208.113.197.82])
-        by iad1-shared-relay1.dreamhost.com (Postfix) with ESMTP id CCF83B40094
-        for <linux-scsi@vger.kernel.org>; Tue, 30 Aug 2016 02:26:38 -0700 (PDT)
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:54857 "EHLO
+        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751608AbcH3Vbc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 17:31:32 -0400
+In-Reply-To: <2049960802.3555391.1472592259703.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?566h5q+V6ZuN?= <linux-scsi@vger.kernel.org>
+To: himanshu madhani <himanshu.madhani@qlogic.com>, nab@linux-iscsi.org, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-From: 巢简车 <demo@demo.igenus.cn>
-Subject: [your-subject]
 
-Message Body:
-【澳门金沙集团】国际足球联盟(FIFA)官方合作品牌，我们提供英超、意甲、德甲、西甲、法甲五大联赛等投注盘口！
-官网开户网址：http://www.834516.com/?linux-scsi@vger.kernel.org投注精彩赛事，营造辉煌人生！
-日结现金返水1.0%，提供最全面赛前及滚球投注服务，每周超过5000场各类体育赛事，总能为您营造最好的赔率！
-------------------------------------------
-                    只要你一直在我身边，不伤不死就不是诅咒，而是神恩浩荡
 
---
-This mail is sent via contact form on Sharon Barber http://sharonbarber.com
+----- Original Message -----
+> From: "Laurence Oberman" <loberman@redhat.com>
+> To: "himanshu madhani" <himanshu.madhani@qlogic.com>, nab@linux-iscsi.org, "Linux SCSI Mailinglist"
+> <linux-scsi@vger.kernel.org>
+> Sent: Tuesday, August 30, 2016 5:24:19 PM
+> Subject: [PATCH] tcm_qla2xxx Add SCSI command jammer/discard capability to the tcm_qla2xxx module - enhancements
+> 
+> Hello Himanshu and Nicholas,
+> 
+> Enhancements to the tcm_debug code.
+> Added the possibility of blocking only specific SCSI data movement commands
+> but allowing TUR'S to pass.
+> This has been helpful for debugging many driver/array interoperabilty issues.
+> 
+> Two Patches, The first is to the driver code, second is updating the
+> documentation.
+> 
+> Tested by: Laurence Oberman <loberman@redhat.com>
+> Signed-off-by: Laurence Oberman <loberman@redhat.com>
+> 
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c | 7 +++++++
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.h | 1 +
+>  2 files changed, 8 insertions(+)
+> 
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> index 6643f6f..d620a77 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+> @@ -473,6 +473,10 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha,
+> struct qla_tgt_cmd *cmd,
+>  		/* return, and dont run target_submit_cmd,discarding command */
+>  		return 0;
+>  	}
+> +	if (unlikely(tpg->tpg_attrib.jam_host && tpg->tpg_attrib.jam_data &&
+> (cdb[0]==0x08 || cdb[0]==0x0A || cdb[0]==0x28 || cdb[0]==0x2A))) {
+> +                /* return, and dont run target_submit_cmd,discarding command
+> if not TUR*/
+> +                return 0;
+> +        }
+>  #endif
+>  
+>  	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+> @@ -827,6 +831,7 @@ DEF_QLA_TPG_ATTRIB(prod_mode_write_protect);
+>  DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
+>  #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+>  DEF_QLA_TPG_ATTRIB(jam_host);
+> +DEF_QLA_TPG_ATTRIB(jam_data);
+>  #endif
+>  
+>  static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
+> @@ -837,6 +842,7 @@ static struct configfs_attribute
+> *tcm_qla2xxx_tpg_attrib_attrs[] = {
+>  	&tcm_qla2xxx_tpg_attrib_attr_demo_mode_login_only,
+>  #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+>  	&tcm_qla2xxx_tpg_attrib_attr_jam_host,
+> +	&tcm_qla2xxx_tpg_attrib_attr_jam_data,
+>  #endif
+>  	NULL,
+>  };
+> @@ -1011,6 +1017,7 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
+>  	tpg->tpg_attrib.cache_dynamic_acls = 1;
+>  	tpg->tpg_attrib.demo_mode_login_only = 1;
+>  	tpg->tpg_attrib.jam_host = 0;
+> +	tpg->tpg_attrib.jam_data = 0;
+>  
+>  	ret = core_tpg_register(wwn, &tpg->se_tpg, SCSI_PROTOCOL_FCP);
+>  	if (ret < 0) {
+> diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+> b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+> index 37e026a..789bdeb 100644
+> --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+> +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+> @@ -35,6 +35,7 @@ struct tcm_qla2xxx_tpg_attrib {
+>  	int demo_mode_login_only;
+>  	int fabric_prot_type;
+>  	int jam_host;
+> +	int jam_data;
+>  };
+>  
+>  struct tcm_qla2xxx_tpg {
+> --
+> 2.5.5
+> 
+> 
+> 
+>  Documentation/scsi/tcm_qla2xxx.txt | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+> 
+> diff --git a/Documentation/scsi/tcm_qla2xxx.txt
+> b/Documentation/scsi/tcm_qla2xxx.txt
+> index c3a670a..4a8706c 100644
+> --- a/Documentation/scsi/tcm_qla2xxx.txt
+> +++ b/Documentation/scsi/tcm_qla2xxx.txt
+> @@ -20,3 +20,19 @@ echo 1 >
+> /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib
+>  
+>  Disable jamming on host 4
+>  echo 0 >
+>  /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
+> +
+> +New feature added with  a new attribute called jam_data.
+> +
+> +Setting a boolean of 1 for jam_data as well as setting the boolean of 1 for
+> jam_host will
+> + allow the dropping of data-only SCSI commands but allow TUR commands to
+> pass.
+> +
+> +This has proven very useful for testing Low Level driver response.
+> +
+> +Enable host 4 for only data commands to be jammed
+> +echo 1 >
+> /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
+> +echo 1 >
+> /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
+> +
+> +Disable jamming on host 4
+> +echo 0 >
+> /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
+> +echo 0 >
+> /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
+> +
+> --
+> 2.5.5
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
+Oops
+Replying to my own message
+I need to send a V2 of this patch, apologies, just realized match on first check of jam_host so 2nd check wont be met.
+When testing only had 2nd check in code and only just saw it.
+
+Back shortly
