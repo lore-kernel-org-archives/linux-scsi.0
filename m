@@ -1,57 +1,120 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: Time to make dynamically allocated devt the default for scsi
- disks?
-Date: Tue, 30 Aug 2016 13:53:55 -0700
-Message-ID: <d314f49b-36a2-5c83-6096-0ccd0a7012e2@sandisk.com>
-References: <CAPcyv4jK8W52ss2FhJDa=95B_1q8Szv4AmH0f7p_jzyfEXv0Ag@mail.gmail.com>
- <1471047451.2407.95.camel@HansenPartnership.com>
- <CAPcyv4jqEaBY1atyrjG3G4PYOzaoLvAMfHgK1PD0Si=MRRwAuw@mail.gmail.com>
- <CAPcyv4i=85fCAm1A5Zh2+nYSw7vwXOD=i-B0g4m2eJ+XkEW3tw@mail.gmail.com>
- <1471101800.2397.9.camel@HansenPartnership.com>
- <CAPcyv4gDw49gZBO=Y+K9krgth68OUHcs8urGDNXiZzLNa6kotg@mail.gmail.com>
- <1471110212.2397.39.camel@HansenPartnership.com>
- <CAPcyv4gHq=RraHgcJGx_txk7YJHC8YQ3gCT4CHL0hvzsGpU1wg@mail.gmail.com>
- <1471195252.2355.18.camel@HansenPartnership.com>
- <cf141c9f-2bda-060a-0a7d-86638c2f5818@sandisk.com>
- <CAPcyv4hzda80kqNtyTUHL7_mpoiDzLvQaj5OQL9OxePU3BKjEw@mail.gmail.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: [PATCH] tcm_qla2xxx Add SCSI command jammer/discard capability to
+ the tcm_qla2xxx module - enhancements
+Date: Tue, 30 Aug 2016 17:24:19 -0400 (EDT)
+Message-ID: <2049960802.3555391.1472592259703.JavaMail.zimbra@redhat.com>
+References: <1282069955.3554059.1472591770771.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0081.outbound.protection.outlook.com ([104.47.42.81]:47263
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750980AbcH3UyS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 30 Aug 2016 16:54:18 -0400
-In-Reply-To: <CAPcyv4hzda80kqNtyTUHL7_mpoiDzLvQaj5OQL9OxePU3BKjEw@mail.gmail.com>
+Received: from mx3-phx2.redhat.com ([209.132.183.24]:54606 "EHLO
+        mx3-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751515AbcH3VYY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 17:24:24 -0400
+In-Reply-To: <1282069955.3554059.1472591770771.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Tejun Heo <tj@kernel.org>, Dave Hansen <dave.hansen@intel.com>
+To: himanshu madhani <himanshu.madhani@qlogic.com>, nab@linux-iscsi.org, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-On 08/30/2016 01:43 PM, Dan Williams wrote:
-> I tried running this, but it seems I'm failing to configure my test
-> environment correctly [1], but I'm worried that this "re-parenting the
-> scsi-disk" approach, even if the above warning is addressed, may not
-> be backwards compatible.  We now have an ordering difference where the
-> link to the "block" attribute group is established after the disk's
-> KOBJ_ADD event which seems in the same class of problems that Fam
-> Zheng's patchset [2] is trying to solve.
->
-> Bart, if you can help me get the test case running I can take a look
-> at finishing off the disk_devt approach I proposed earlier.
->
-> [1]: https://gist.github.com/djbw/1c72526c90d1ea8fe2a05dcfbfc73dda
-> [2]: https://lkml.org/lkml/2016/8/17/63
+Hello Himanshu and Nicholas,
 
-Hello Dan,
+Enhancements to the tcm_debug code.
+Added the possibility of blocking only specific SCSI data movement commands but allowing TUR'S to pass.
+This has been helpful for debugging many driver/array interoperabilty issues.
 
-Today running the srp-test software is only possible on a system 
-equipped with at least one InfiniBand port. Since the soft-RoCE driver 
-has been accepted in kernel v4.8 (drivers/infiniband/sw/rxe) it should 
-be possible to modify the srp-test software such that it runs on any 
-system equipped with at least one Ethernet port. However, that will 
-require adding RoCE (RDMA over Ethernet) support to the ib_srp and 
-ib_srpt drivers.
+Two Patches, The first is to the driver code, second is updating the documentation.
 
-Bart.
+Tested by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 7 +++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h | 1 +
+ 2 files changed, 8 insertions(+)
+
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 6643f6f..d620a77 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -473,6 +473,10 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 		/* return, and dont run target_submit_cmd,discarding command */
+ 		return 0;
+ 	}
++	if (unlikely(tpg->tpg_attrib.jam_host && tpg->tpg_attrib.jam_data && (cdb[0]==0x08 || cdb[0]==0x0A || cdb[0]==0x28 || cdb[0]==0x2A))) {
++                /* return, and dont run target_submit_cmd,discarding command if not TUR*/
++                return 0;
++        }
+ #endif
+ 
+ 	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+@@ -827,6 +831,7 @@ DEF_QLA_TPG_ATTRIB(prod_mode_write_protect);
+ DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
+ #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+ DEF_QLA_TPG_ATTRIB(jam_host);
++DEF_QLA_TPG_ATTRIB(jam_data);
+ #endif
+ 
+ static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
+@@ -837,6 +842,7 @@ static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
+ 	&tcm_qla2xxx_tpg_attrib_attr_demo_mode_login_only,
+ #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+ 	&tcm_qla2xxx_tpg_attrib_attr_jam_host,
++	&tcm_qla2xxx_tpg_attrib_attr_jam_data,
+ #endif
+ 	NULL,
+ };
+@@ -1011,6 +1017,7 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
+ 	tpg->tpg_attrib.cache_dynamic_acls = 1;
+ 	tpg->tpg_attrib.demo_mode_login_only = 1;
+ 	tpg->tpg_attrib.jam_host = 0;
++	tpg->tpg_attrib.jam_data = 0;
+ 
+ 	ret = core_tpg_register(wwn, &tpg->se_tpg, SCSI_PROTOCOL_FCP);
+ 	if (ret < 0) {
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 37e026a..789bdeb 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -35,6 +35,7 @@ struct tcm_qla2xxx_tpg_attrib {
+ 	int demo_mode_login_only;
+ 	int fabric_prot_type;
+ 	int jam_host;
++	int jam_data;
+ };
+ 
+ struct tcm_qla2xxx_tpg {
+-- 
+2.5.5
+
+
+
+ Documentation/scsi/tcm_qla2xxx.txt | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/Documentation/scsi/tcm_qla2xxx.txt b/Documentation/scsi/tcm_qla2xxx.txt
+index c3a670a..4a8706c 100644
+--- a/Documentation/scsi/tcm_qla2xxx.txt
++++ b/Documentation/scsi/tcm_qla2xxx.txt
+@@ -20,3 +20,19 @@ echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib
+ 
+ Disable jamming on host 4
+ echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++
++New feature added with  a new attribute called jam_data.
++
++Setting a boolean of 1 for jam_data as well as setting the boolean of 1 for jam_host will
++ allow the dropping of data-only SCSI commands but allow TUR commands to pass.
++
++This has proven very useful for testing Low Level driver response.
++
++Enable host 4 for only data commands to be jammed
++echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
++
++Disable jamming on host 4
++echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
++
+-- 
+2.5.5
+
