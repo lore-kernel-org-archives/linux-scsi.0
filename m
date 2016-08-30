@@ -1,44 +1,50 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] bfa: do not dereference port before it is null checked
-Date: Tue, 30 Aug 2016 17:36:16 +0100
-Message-ID: <20160830163616.11410-1-colin.king@canonical.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+From: Andy Grover <agrover@redhat.com>
+Subject: Should queue_max_hw_sectors() always be <= max_dev_sectors?
+Date: Tue, 30 Aug 2016 09:54:05 -0700
+Message-ID: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+Hi Martin, (you're the last person to touch this? :)
 
-port is deferenced before it is null sanity checked, hence
-we potentially have a null pointer dereference bug. Instead,
-initialise trl_enabled from port->fcs->bfa after we are sure
-port is not null.
+If I create a local SCSI device using LIO's loopback fabric, and backed 
+by a file, /sys/block/sda/queue/max_hw_sectors_kb reports 32767. This 
+reflects the loopback scsi_host_template reporting 65536 max_sectors, 
+but that's the "controller" -- the actual device reports via the Block 
+Limits VPD of supporting a max size of 16384 512-byte blocks.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/bfa/bfa_fcs_lport.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+Therefore, using max_hw_sectors_kb will give a wrong impression for what 
+the max data size that can be issued to the device is -- 32767KiB 
+instead of 8192KiB. Should max_hw_sectors_kb be reported as the lesser 
+of max_hw_sectors and max_dev_sectors? Something like:
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_lport.c b/drivers/scsi/bfa/bfa_fcs_lport.c
-index 7733ad5..bdf39e7 100644
---- a/drivers/scsi/bfa/bfa_fcs_lport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_lport.c
-@@ -5827,13 +5827,13 @@ bfa_fcs_lport_get_rport_max_speed(bfa_fcs_lport_t *port)
- 	bfa_port_speed_t max_speed = 0;
- 	struct bfa_port_attr_s port_attr;
- 	bfa_port_speed_t port_speed, rport_speed;
--	bfa_boolean_t trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
--
-+	bfa_boolean_t trl_enabled;
- 
- 	if (port == NULL)
- 		return 0;
- 
- 	fcs = port->fcs;
-+	trl_enabled = bfa_fcport_is_ratelim(port->fcs->bfa);
- 
- 	/* Get Physical port's current speed */
- 	bfa_fcport_get_attr(port->fcs->bfa, &port_attr);
--- 
-2.9.3
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -1196,7 +1196,7 @@ static inline unsigned int 
+queue_max_sectors(struct request_queue *q)
+
+  static inline unsigned int queue_max_hw_sectors(struct request_queue *q)
+  {
+-       return q->limits.max_hw_sectors;
++       return min_not_zero(q->limits.max_hw_sectors, 
+q->limits.max_dev_sectors);
+  }
+
+...because limits.max_hw_sectors internally seems to be just the 
+controller limit, but what users of queue_max_hw_sectors (including 
+sysfs) really want is the lesser of limits.max_hw_sectors and 
+limits.max_dev_sectors.
+
+BTW the docs say:
+
+max_hw_sectors_kb (RO)
+----------------------
+This is the maximum number of kilobytes supported in a single data transfer.
+
+Thanks -- Regards -- Andy
