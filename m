@@ -1,18 +1,19 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 03/17] smartpqi: simplify spanning
-Date: Wed, 31 Aug 2016 14:59:16 +0200
-Message-ID: <b620ec4f-9163-7c0f-a85b-7665dd811abc@redhat.com>
+Subject: Re: [PATCH 04/17] smartpqi: enhance drive offline informational
+ message
+Date: Wed, 31 Aug 2016 15:00:38 +0200
+Message-ID: <32f5d95c-daf2-a501-0b6f-2f7d9efbc48f@redhat.com>
 References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222986403.31214.11170219064850871397.stgit@brunhilda>
+ <147222987005.31214.15421477679512221805.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:37922 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:50434 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934260AbcHaM7w (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 08:59:52 -0400
-In-Reply-To: <147222986403.31214.11170219064850871397.stgit@brunhilda>
+        id S934196AbcHaNAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 09:00:53 -0400
+In-Reply-To: <147222987005.31214.15421477679512221805.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Don Brace <don.brace@microsemi.com>, jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
@@ -21,79 +22,40 @@ Cc: linux-scsi@vger.kernel.org
 On 26.8.2016 18:44, Don Brace wrote:
 > From: Kevin Barnett <kevin.barnett@microsemi.com>
 >
-> Removed the workaround for the transition to spanning.
+> Made a couple of error messages more verbose.
 >
 > Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 > Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
 > Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 > Signed-off-by: Don Brace <don.brace@microsemi.com>
+
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
 > ---
->  drivers/scsi/smartpqi/smartpqi_init.c |   38 +++++++++++++++++----------------
->  1 file changed, 20 insertions(+), 18 deletions(-)
+>  drivers/scsi/smartpqi/smartpqi_init.c |    5 +++++
+>  1 file changed, 5 insertions(+)
 >
 > diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-> index 6eab38e..9922e31 100644
+> index 9922e31..198a7c2 100644
 > --- a/drivers/scsi/smartpqi/smartpqi_init.c
 > +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-> @@ -3663,6 +3663,18 @@ static int pqi_validate_device_capability(struct pqi_ctrl_info *ctrl_info)
->  		return -EINVAL;
+> @@ -2298,11 +2298,16 @@ static inline void pqi_aio_path_disabled(struct pqi_io_request *io_request)
+>  static inline void pqi_take_device_offline(struct scsi_device *sdev)
+>  {
+>  	struct pqi_ctrl_info *ctrl_info;
+> +	struct pqi_scsi_dev *device;
+>  
+>  	if (scsi_device_online(sdev)) {
+>  		scsi_device_set_state(sdev, SDEV_OFFLINE);
+>  		ctrl_info = shost_to_hba(sdev->host);
+>  		schedule_delayed_work(&ctrl_info->rescan_work, 0);
+> +		device = sdev->hostdata;
+> +		dev_err(&ctrl_info->pci_dev->dev, "offlined scsi %d:%d:%d:%d\n",
+> +			ctrl_info->scsi_host->host_no, device->bus,
+> +			device->target, device->lun);
 >  	}
->  
-> +	if (!ctrl_info->inbound_spanning_supported) {
-> +		dev_err(&ctrl_info->pci_dev->dev,
-> +			"the controller does not support inbound spanning\n");
-> +		return -EINVAL;
-> +	}
-> +
-> +	if (ctrl_info->outbound_spanning_supported) {
-> +		dev_err(&ctrl_info->pci_dev->dev,
-> +			"the controller supports outbound spanning but this driver does not\n");
-> +		return -EINVAL;
-> +	}
-> +
->  	return 0;
 >  }
-
-This looks like you are dropping support for a probably older firmware devices,
-is that necessary - can't you continue a keep the support with something similar to that
-'TEMPHACk' below ?
-
-Tomas
-
 >  
-> @@ -4138,24 +4150,14 @@ static void pqi_calculate_queue_resources(struct pqi_ctrl_info *ctrl_info)
->  
->  	ctrl_info->num_queue_groups = num_queue_groups;
->  
-> -	if (ctrl_info->max_inbound_iu_length_per_firmware == 256 &&
-> -		ctrl_info->outbound_spanning_supported) {
-> -		/*
-> -		 * TEMPHACK
-> -		 * This is older f/w that doesn't actually support spanning.
-> -		 */
-> -		ctrl_info->max_inbound_iu_length =
-> -			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
-> -	} else {
-> -		/*
-> -		 * Make sure that the max. inbound IU length is an even multiple
-> -		 * of our inbound element length.
-> -		 */
-> -		ctrl_info->max_inbound_iu_length =
-> -			(ctrl_info->max_inbound_iu_length_per_firmware /
-> -			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
-> -			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
-> -	}
-> +	/*
-> +	 * Make sure that the max. inbound IU length is an even multiple
-> +	 * of our inbound element length.
-> +	 */
-> +	ctrl_info->max_inbound_iu_length =
-> +		(ctrl_info->max_inbound_iu_length_per_firmware /
-> +		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
-> +		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
->  
->  	num_elements_per_iq =
->  		(ctrl_info->max_inbound_iu_length /
 >
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
