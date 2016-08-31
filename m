@@ -1,82 +1,71 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 11/17] smartpqi: minor tweaks to update time support
-Date: Wed, 31 Aug 2016 09:33:21 +0200
-Message-ID: <20160831073321.zxy4tp57vlxszfda@c203.arch.suse.de>
-References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
- <147222991200.31214.16478440159265351246.stgit@brunhilda>
- <20160829093338.3juwfp6xcjzib26h@c203.arch.suse.de>
- <4993A297653ECB4581FA5C3C31323D1916398BE9@avsrvexchmbx1.microsemi.net>
- <20160830071735.mobvb4v4y45tn5mt@c203.arch.suse.de>
- <4993A297653ECB4581FA5C3C31323D1916398EE9@avsrvexchmbx1.microsemi.net>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
+Date: Wed, 31 Aug 2016 12:49:55 +0200
+Message-ID: <20160831104955.GA10180@kroah.com>
+References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
+ <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
+ <20160805200823.GB7999@amd>
+ <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54894 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932789AbcHaHdY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 03:33:24 -0400
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-mmc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D1916398EE9@avsrvexchmbx1.microsemi.net>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
+Sender: linux-mmc-owner@vger.kernel.org
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: Pavel Machek <pavel@ucw.cz>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 03:26:15PM +0000, Don Brace wrote:
-> > -----Original Message-----
-> > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> > Sent: Tuesday, August 30, 2016 2:18 AM
-> > To: Don Brace
-> > Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
-> > hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benesh;
-> > elliott@hpe.com; linux-scsi@vger.kernel.org
-> > Subject: Re: [PATCH 11/17] smartpqi: minor tweaks to update time support
+On Sun, Aug 07, 2016 at 09:44:03AM +0000, Winkler, Tomas wrote:
 > > 
-> > EXTERNAL EMAIL
+> > On Mon 2016-07-18 23:27:49, Tomas Winkler wrote:
+> > > The user space API is achieved via two synchronous IOCTL.
 > > 
+> > IOCTLs?
+> 
+> Will fix
+>  
+> > > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is
+> > performed
+> > > by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
+> > where
+> > > the whole RPMB sequence including RESULT_READ is supplied by the caller.
+> > > The latter is intended for  easier adjusting  of the  applications
+> > > that use MMC_IOC_MULTI_CMD ioctl.
 > > 
-> > On Mon, Aug 29, 2016 at 08:29:20PM +0000, Don Brace wrote:
-> > > > -----Original Message-----
-> > > > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> > 
-> > [...]
+> > Why "  "?
+> Not sure I there is enough clue in your question. 
 > > 
 > > >
-> > > The reason is that we want it run immediately (or close to immediately).
-> > >
-> > > The code could be restructured to avoid calling this function with a 0, but it
-> > would result in more code and no benefit.
+> > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 > > 
-> > OK, now I'm not sure if we talked past each other. I didn't mean
-> > "don't call schedule_delayed_work() with a delay of 0" but "why aren't
-> > you using schedule_work() instead". But maybe it's just too early in
-> > the morning and I didn't have enough coffee yet.
+> > > +
+> > > +static long rpmb_ioctl(struct file *fp, unsigned int cmd, unsigned
+> > > +long arg) {
+> > > +	return __rpmb_ioctl(fp, cmd, (void __user *)arg); }
+> > > +
+> > > +#ifdef CONFIG_COMPAT
+> > > +static long rpmb_compat_ioctl(struct file *fp, unsigned int cmd,
+> > > +			      unsigned long arg)
+> > > +{
+> > > +	return	__rpmb_ioctl(fp, cmd, compat_ptr(arg));
+> > > +}
+> > > +#endif /* CONFIG_COMPAT */
+> > 
+> > Description of the ioctl is missing, 
+> Will add. 
 > 
-> Because the two functions take different work structures as arguments:
+> and it should certainly be designed in a way
+> > that it does not need compat support.
 > 
-> static inline bool schedule_delayed_work(struct delayed_work *dwork,
-> 					 unsigned long delay)
-> 
-> static inline bool schedule_work(struct work_struct *work)
+> The compat_ioctl handler just casts the compat_ptr, I believe this
+> should be done unless the ioctl is globaly registered in
+> fs/compat_ioctl.c, but I might be wrong.
 
-If that's the only concern, schedule_work(&dwork->work);
+You shouldn't need a compat ioctl for anything new that is added, unless
+your api is really messed up.  Please test to be sure, and not use a
+compat ioctl at all, it isn't that hard to do.
 
-Anyway, that's probably just cosmetics.
+thanks,
 
-With or without schedule_work()
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
-But I bet someone comes up with a coccinelle spatch to change this
-pattern some day.
-
-Byte,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+greg k-h
