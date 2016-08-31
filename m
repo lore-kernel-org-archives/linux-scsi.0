@@ -1,29 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] ibmvscsis: Use list_move_tail instead of list_del/list_add_tail
-Date: Wed, 31 Aug 2016 00:19:08 -0400
-Message-ID: <yq14m617epv.fsf@sermon.lab.mkp.net>
-References: <1469196226-17333-1-git-send-email-weiyj.lk@gmail.com>
-        <57C48A06.4000806@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/3] Small fixes and cleanup
+Date: Wed, 31 Aug 2016 00:26:22 -0400
+Message-ID: <yq1zint5ztd.fsf@sermon.lab.mkp.net>
+References: <20160827022958.983743612@telegraphics.com.au>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <57C48A06.4000806@linux.vnet.ibm.com> (Tyrel Datwyler's message
-        of "Mon, 29 Aug 2016 12:16:22 -0700")
-Sender: target-devel-owner@vger.kernel.org
-To: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Cc: Wei Yongjun <weiyj.lk@gmail.com>, "Bryant G . Ly" <bryantly@linux.vnet.ibm.com>, Michael Cyr <mikecyr@linux.vnet.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <20160827022958.983743612@telegraphics.com.au> (Finn Thain's
+        message of "Sat, 27 Aug 2016 12:29:58 +1000")
+Sender: linux-m68k-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Tyrel" == Tyrel Datwyler <tyreld@linux.vnet.ibm.com> writes:
+>>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
 
-Tyrel> On 07/22/2016 07:03 AM, Wei Yongjun wrote:
->> Using list_move_tail() instead of list_del() + list_add_tail().
->> 
->> Signed-off-by: Wei Yongjun <weiyj.lk@gmail.com>
+Finn> Miscellaneous small patches for an interrupt latency issue, a
+Finn> compiler warning and a documentation cleanup.
 
-Tyrel> Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-
-Applied to 4.9/scsi-queue.
+Applied patches 1 and 2 to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
