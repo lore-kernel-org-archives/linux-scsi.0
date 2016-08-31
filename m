@@ -1,52 +1,78 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 00/30] FCoE VN2VN fixes
-Date: Wed, 31 Aug 2016 09:25:58 +0200
-Message-ID: <20160831072558.rxhvouwz6srggj5a@c203.arch.suse.de>
-References: <1472212913-39810-1-git-send-email-hare@suse.de>
- <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de>
- <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH 11/17] smartpqi: minor tweaks to update time support
+Date: Wed, 31 Aug 2016 09:33:21 +0200
+Message-ID: <20160831073321.zxy4tp57vlxszfda@c203.arch.suse.de>
+References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+ <147222991200.31214.16478440159265351246.stgit@brunhilda>
+ <20160829093338.3juwfp6xcjzib26h@c203.arch.suse.de>
+ <4993A297653ECB4581FA5C3C31323D1916398BE9@avsrvexchmbx1.microsemi.net>
+ <20160830071735.mobvb4v4y45tn5mt@c203.arch.suse.de>
+ <4993A297653ECB4581FA5C3C31323D1916398EE9@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54470 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54894 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751299AbcHaH0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 03:26:01 -0400
+        id S932789AbcHaHdY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 03:33:24 -0400
 Content-Disposition: inline
-In-Reply-To: <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D1916398EE9@avsrvexchmbx1.microsemi.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>
+To: Don Brace <don.brace@microsemi.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Aug 30, 2016 at 10:46:17PM -0400, Martin K . Petersen wrote:
-> >>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+On Tue, Aug 30, 2016 at 03:26:15PM +0000, Don Brace wrote:
+> > -----Original Message-----
+> > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> > Sent: Tuesday, August 30, 2016 2:18 AM
+> > To: Don Brace
+> > Cc: jejb@linux.vnet.ibm.com; Viswas G; Mahesh Rajashekhara;
+> > hch@infradead.org; Scott Teel; Kevin Barnett; Justin Lindley; Scott Benesh;
+> > elliott@hpe.com; linux-scsi@vger.kernel.org
+> > Subject: Re: [PATCH 11/17] smartpqi: minor tweaks to update time support
+> > 
+> > EXTERNAL EMAIL
+> > 
+> > 
+> > On Mon, Aug 29, 2016 at 08:29:20PM +0000, Don Brace wrote:
+> > > > -----Original Message-----
+> > > > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> > 
+> > [...]
+> > 
+> > >
+> > > The reason is that we want it run immediately (or close to immediately).
+> > >
+> > > The code could be restructured to avoid calling this function with a 0, but it
+> > would result in more code and no benefit.
+> > 
+> > OK, now I'm not sure if we talked past each other. I didn't mean
+> > "don't call schedule_delayed_work() with a delay of 0" but "why aren't
+> > you using schedule_work() instead". But maybe it's just too early in
+> > the morning and I didn't have enough coffee yet.
 > 
-> Hannes,
+> Because the two functions take different work structures as arguments:
 > 
-> Johannes> I _think_ I already reviewed them (at least I do have a
-> Johannes> deja-vu when I read 'Revisit kref handling')
+> static inline bool schedule_delayed_work(struct delayed_work *dwork,
+> 					 unsigned long delay)
 > 
-> In v1 of the series patches 7, 11, 15 and 22 needed changes, everything
-> else had been reviewed. 15 appears to have been dropped ("libfc: frame
-> alloc failure messages"). Whereas 7, 11 and 15 have emerged as patches
-> 25, 26 and 29 in the new series.
-> 
-> Anyway. You can't expect me, nor reviewers to keep track of all this
-> shuffling. Especially not in a series with 30 patches. Please maintain a
-> changelog when you repost and apply tags for patches you haven't
-> tweaked.
-> 
-> I am happy to apply a partial series as long as nothing breaks. I have
-> done a few where I have committed up to the first patch that had
-> comments.
+> static inline bool schedule_work(struct work_struct *work)
 
-Hannes is currently on vacation. I think it's the save if we wait for
-him to return so he can make a proper v2 (or v3) of this series.
+If that's the only concern, schedule_work(&dwork->work);
 
-Thanks,
+Anyway, that's probably just cosmetics.
+
+With or without schedule_work()
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+But I bet someone comes up with a coccinelle spatch to change this
+pattern some day.
+
+Byte,
 	Johannes
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
