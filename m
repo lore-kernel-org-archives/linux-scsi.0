@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 03/15] smartpqi: simplify spanning
-Date: Wed, 31 Aug 2016 14:54:23 -0500
-Message-ID: <147267326299.22907.17733382615248734291.stgit@brunhilda>
+Subject: [PATCH V2 05/15] smartpqi: enhance reset logic
+Date: Wed, 31 Aug 2016 14:54:35 -0500
+Message-ID: <147267327518.22907.13551605734403073330.stgit@brunhilda>
 References: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:13532
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0048.outbound.protection.outlook.com ([104.47.40.48]:25953
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752879AbcHaTyc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 15:54:32 -0400
+        id S1753196AbcHaTyk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 15:54:40 -0400
 In-Reply-To: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,7 +20,7 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-Removed the workaround for the transition to spanning.
+Eliminated timeout from LUN reset logic.
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
@@ -29,63 +29,188 @@ Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   38 +++++++++++++++++----------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |    2 -
+ drivers/scsi/smartpqi/smartpqi_init.c |  101 +++++++++++----------------------
+ 2 files changed, 35 insertions(+), 68 deletions(-)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index dbcdb03..053be6b 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -370,7 +370,6 @@ struct pqi_task_management_request {
+ };
+ 
+ #define SOP_TASK_MANAGEMENT_LUN_RESET	0x8
+-#define PQI_ABORT_TIMEOUT_MSECS		(20 * 1000)
+ 
+ struct pqi_task_management_response {
+ 	struct pqi_iu_header header;
+@@ -762,7 +761,6 @@ struct pqi_scsi_dev {
+ 
+ 	struct pqi_sas_port *sas_port;
+ 	struct scsi_device *sdev;
+-	bool	reset_in_progress;
+ 
+ 	struct list_head scsi_device_list_entry;
+ 	struct list_head new_device_list_entry;
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 6eab38e..9922e31 100644
+index 198a7c2..dbc8b40 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -3663,6 +3663,18 @@ static int pqi_validate_device_capability(struct pqi_ctrl_info *ctrl_info)
- 		return -EINVAL;
- 	}
+@@ -4537,13 +4537,6 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
+ 	bool raid_bypassed;
  
-+	if (!ctrl_info->inbound_spanning_supported) {
-+		dev_err(&ctrl_info->pci_dev->dev,
-+			"the controller does not support inbound spanning\n");
-+		return -EINVAL;
-+	}
-+
-+	if (ctrl_info->outbound_spanning_supported) {
-+		dev_err(&ctrl_info->pci_dev->dev,
-+			"the controller supports outbound spanning but this driver does not\n");
-+		return -EINVAL;
-+	}
-+
- 	return 0;
+ 	device = scmd->device->hostdata;
+-
+-	if (device->reset_in_progress) {
+-		set_host_byte(scmd, DID_RESET);
+-		pqi_scsi_done(scmd);
+-		return 0;
+-	}
+-
+ 	ctrl_info = shost_to_hba(shost);
+ 
+ 	if (pqi_ctrl_offline(ctrl_info)) {
+@@ -4585,61 +4578,47 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
+ 	return rc;
  }
  
-@@ -4138,24 +4150,14 @@ static void pqi_calculate_queue_resources(struct pqi_ctrl_info *ctrl_info)
+-static inline void pqi_complete_queued_requests_queue_group(
+-	struct pqi_queue_group *queue_group,
+-	struct pqi_scsi_dev *device_in_reset)
++static void pqi_lun_reset_complete(struct pqi_io_request *io_request,
++	void *context)
+ {
+-	unsigned int path;
+-	unsigned long flags;
+-	struct pqi_io_request *io_request;
+-	struct pqi_io_request *next;
+-	struct scsi_cmnd *scmd;
+-	struct pqi_scsi_dev *device;
++	struct completion *waiting = context;
  
- 	ctrl_info->num_queue_groups = num_queue_groups;
+-	for (path = 0; path < 2; path++) {
+-		spin_lock_irqsave(&queue_group->submit_lock[path], flags);
++	complete(waiting);
++}
  
--	if (ctrl_info->max_inbound_iu_length_per_firmware == 256 &&
--		ctrl_info->outbound_spanning_supported) {
--		/*
--		 * TEMPHACK
--		 * This is older f/w that doesn't actually support spanning.
--		 */
--		ctrl_info->max_inbound_iu_length =
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
--	} else {
--		/*
--		 * Make sure that the max. inbound IU length is an even multiple
--		 * of our inbound element length.
--		 */
--		ctrl_info->max_inbound_iu_length =
--			(ctrl_info->max_inbound_iu_length_per_firmware /
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
--			PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
+-		list_for_each_entry_safe(io_request, next,
+-			&queue_group->request_list[path],
+-			request_list_entry) {
+-			scmd = io_request->scmd;
+-			if (!scmd)
+-				continue;
+-			device = scmd->device->hostdata;
+-			if (device == device_in_reset) {
+-				set_host_byte(scmd, DID_RESET);
+-				pqi_scsi_done(scmd);
+-				list_del(&io_request->
+-					request_list_entry);
+-			}
++#define PQI_LUN_RESET_TIMEOUT_SECS	10
++
++static int pqi_wait_for_lun_reset_completion(struct pqi_ctrl_info *ctrl_info,
++	struct pqi_scsi_dev *device, struct completion *wait)
++{
++	int rc;
++	unsigned int wait_secs = 0;
++
++	while (1) {
++		if (wait_for_completion_io_timeout(wait,
++			PQI_LUN_RESET_TIMEOUT_SECS * HZ)) {
++			rc = 0;
++			break;
+ 		}
+ 
+-		spin_unlock_irqrestore(&queue_group->submit_lock[path], flags);
 -	}
-+	/*
-+	 * Make sure that the max. inbound IU length is an even multiple
-+	 * of our inbound element length.
-+	 */
-+	ctrl_info->max_inbound_iu_length =
-+		(ctrl_info->max_inbound_iu_length_per_firmware /
-+		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH) *
-+		PQI_OPERATIONAL_IQ_ELEMENT_LENGTH;
+-}
++		pqi_check_ctrl_health(ctrl_info);
++		if (pqi_ctrl_offline(ctrl_info)) {
++			rc = -ETIMEDOUT;
++			break;
++		}
  
- 	num_elements_per_iq =
- 		(ctrl_info->max_inbound_iu_length /
+-static void pqi_complete_queued_requests(struct pqi_ctrl_info *ctrl_info,
+-	struct pqi_scsi_dev *device_in_reset)
+-{
+-	unsigned int i;
+-	struct pqi_queue_group *queue_group;
++		wait_secs += PQI_LUN_RESET_TIMEOUT_SECS;
+ 
+-	for (i = 0; i < ctrl_info->num_queue_groups; i++) {
+-		queue_group = &ctrl_info->queue_groups[i];
+-		pqi_complete_queued_requests_queue_group(queue_group,
+-			device_in_reset);
++		dev_err(&ctrl_info->pci_dev->dev,
++			"resetting scsi %d:%d:%d:%d - waiting %u seconds\n",
++			ctrl_info->scsi_host->host_no, device->bus,
++			device->target, device->lun, wait_secs);
+ 	}
+-}
+ 
+-static void pqi_reset_lun_complete(struct pqi_io_request *io_request,
+-	void *context)
+-{
+-	struct completion *waiting = context;
+-
+-	complete(waiting);
++	return rc;
+ }
+ 
+-static int pqi_reset_lun(struct pqi_ctrl_info *ctrl_info,
++static int pqi_lun_reset(struct pqi_ctrl_info *ctrl_info,
+ 	struct pqi_scsi_dev *device)
+ {
+ 	int rc;
+@@ -4650,7 +4629,7 @@ static int pqi_reset_lun(struct pqi_ctrl_info *ctrl_info,
+ 	down(&ctrl_info->lun_reset_sem);
+ 
+ 	io_request = pqi_alloc_io_request(ctrl_info);
+-	io_request->io_complete_callback = pqi_reset_lun_complete;
++	io_request->io_complete_callback = pqi_lun_reset_complete;
+ 	io_request->context = &wait;
+ 
+ 	request = io_request->iu;
+@@ -4668,12 +4647,9 @@ static int pqi_reset_lun(struct pqi_ctrl_info *ctrl_info,
+ 		&ctrl_info->queue_groups[PQI_DEFAULT_QUEUE_GROUP], RAID_PATH,
+ 		io_request);
+ 
+-	if (!wait_for_completion_io_timeout(&wait,
+-		msecs_to_jiffies(PQI_ABORT_TIMEOUT_MSECS))) {
+-		rc = -ETIMEDOUT;
+-	} else {
++	rc = pqi_wait_for_lun_reset_completion(ctrl_info, device, &wait);
++	if (rc == 0)
+ 		rc = io_request->status;
+-	}
+ 
+ 	pqi_free_io_request(io_request);
+ 	up(&ctrl_info->lun_reset_sem);
+@@ -4692,15 +4668,9 @@ static int pqi_device_reset(struct pqi_ctrl_info *ctrl_info,
+ 	if (pqi_ctrl_offline(ctrl_info))
+ 		return FAILED;
+ 
+-	device->reset_in_progress = true;
+-	pqi_complete_queued_requests(ctrl_info, device);
+-	rc = pqi_reset_lun(ctrl_info, device);
+-	device->reset_in_progress = false;
+-
+-	if (rc)
+-		return FAILED;
++	rc = pqi_lun_reset(ctrl_info, device);
+ 
+-	return SUCCESS;
++	return rc == 0 ? SUCCESS : FAILED;
+ }
+ 
+ static int pqi_eh_device_reset_handler(struct scsi_cmnd *scmd)
+@@ -4710,7 +4680,6 @@ static int pqi_eh_device_reset_handler(struct scsi_cmnd *scmd)
+ 	struct pqi_scsi_dev *device;
+ 
+ 	ctrl_info = shost_to_hba(scmd->device->host);
+-
+ 	device = scmd->device->hostdata;
+ 
+ 	dev_err(&ctrl_info->pci_dev->dev,
 
