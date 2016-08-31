@@ -1,17 +1,17 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 01/15] smartpqi: change aio sg processing
-Date: Wed, 31 Aug 2016 14:54:11 -0500
-Message-ID: <147267325114.22907.14642734273280565648.stgit@brunhilda>
+Subject: [PATCH V2 02/15] smartpqi: change tmf macro names
+Date: Wed, 31 Aug 2016 14:54:17 -0500
+Message-ID: <147267325701.22907.17034286428969566564.stgit@brunhilda>
 References: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0066.outbound.protection.outlook.com ([104.47.33.66]:32040
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0057.outbound.protection.outlook.com ([104.47.41.57]:7424
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753196AbcHaTyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 15:54:19 -0400
+        id S1752879AbcHaTy0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 15:54:26 -0400
 In-Reply-To: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,7 +20,7 @@ Cc: linux-scsi@vger.kernel.org
 
 From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-Take advantage of controller improvements.
+small change to make code look cleaner
 
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
@@ -29,99 +29,40 @@ Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/smartpqi/smartpqi_init.c |   68 +++++++++++++++++++--------------
- 1 file changed, 39 insertions(+), 29 deletions(-)
+ drivers/scsi/smartpqi/smartpqi.h      |    6 ++----
+ drivers/scsi/smartpqi/smartpqi_init.c |    4 ++--
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/smartpqi/smartpqi.h b/drivers/scsi/smartpqi/smartpqi.h
+index ea49005..dbcdb03 100644
+--- a/drivers/scsi/smartpqi/smartpqi.h
++++ b/drivers/scsi/smartpqi/smartpqi.h
+@@ -545,10 +545,8 @@ typedef u32 pqi_index_t;
+ #define SOP_TASK_ATTRIBUTE_ORDERED		2
+ #define SOP_TASK_ATTRIBUTE_ACA			4
+ 
+-#define SOP_TASK_MANAGEMENT_FUNCTION_COMPLETE	0x0
+-#define SOP_TASK_MANAGEMENT_FUNCTION_REJECTED	0x4
+-#define SOP_TASK_MANAGEMENT_FUNCTION_FAILED	0x5
+-#define SOP_TASK_MANAGEMENT_FUNCTION_SUCCEEDED	0x8
++#define SOP_TMF_COMPLETE		0x0
++#define SOP_TMF_FUNCTION_SUCCEEDED	0x8
+ 
+ /* additional CDB bytes usage field codes */
+ #define SOP_ADDITIONAL_CDB_BYTES_0	0	/* 16-byte CDB */
 diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 906f1aa..418f636 100644
+index 418f636..6eab38e 100644
 --- a/drivers/scsi/smartpqi/smartpqi_init.c
 +++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -4263,48 +4263,58 @@ static int pqi_build_aio_sg_list(struct pqi_ctrl_info *ctrl_info,
- 	int i;
- 	u16 iu_length;
- 	int sg_count;
--	unsigned int num_sg_in_iu = 0;
-+	bool chained;
-+	unsigned int num_sg_in_iu;
-+	unsigned int max_sg_per_iu;
- 	struct scatterlist *sg;
- 	struct pqi_sg_descriptor *sg_descriptor;
+@@ -2469,8 +2469,8 @@ static int pqi_interpret_task_management_response(
+ 	int rc;
  
- 	sg_count = scsi_dma_map(scmd);
- 	if (sg_count < 0)
- 		return sg_count;
-+
-+	iu_length = offsetof(struct pqi_aio_path_request, sg_descriptors) -
-+		PQI_REQUEST_HEADER_LENGTH;
-+	num_sg_in_iu = 0;
-+
- 	if (sg_count == 0)
- 		goto out;
- 
--	if (sg_count <= ctrl_info->max_sg_per_iu) {
--		sg_descriptor = &request->sg_descriptors[0];
--		scsi_for_each_sg(scmd, sg, sg_count, i) {
--			pqi_set_sg_descriptor(sg_descriptor, sg);
--			sg_descriptor++;
--		}
--		put_unaligned_le32(CISS_SG_LAST,
--			&request->sg_descriptors[sg_count - 1].flags);
--		num_sg_in_iu = sg_count;
--	} else {
--		sg_descriptor = &request->sg_descriptors[0];
--		put_unaligned_le64((u64)io_request->sg_chain_buffer_dma_handle,
--			&sg_descriptor->address);
--		put_unaligned_le32(sg_count * sizeof(*sg_descriptor),
--			&sg_descriptor->length);
--		put_unaligned_le32(CISS_SG_CHAIN, &sg_descriptor->flags);
--
--		sg_descriptor = io_request->sg_chain_buffer;
--		scsi_for_each_sg(scmd, sg, sg_count, i) {
--			pqi_set_sg_descriptor(sg_descriptor, sg);
--			sg_descriptor++;
-+	sg = scsi_sglist(scmd);
-+	sg_descriptor = request->sg_descriptors;
-+	max_sg_per_iu = ctrl_info->max_sg_per_iu - 1;
-+	chained = false;
-+	i = 0;
-+
-+	while (1) {
-+		pqi_set_sg_descriptor(sg_descriptor, sg);
-+		if (!chained)
-+			num_sg_in_iu++;
-+		i++;
-+		if (i == sg_count)
-+			break;
-+		sg_descriptor++;
-+		if (i == max_sg_per_iu) {
-+			put_unaligned_le64(
-+				(u64)io_request->sg_chain_buffer_dma_handle,
-+				&sg_descriptor->address);
-+			put_unaligned_le32((sg_count - num_sg_in_iu)
-+				* sizeof(*sg_descriptor),
-+				&sg_descriptor->length);
-+			put_unaligned_le32(CISS_SG_CHAIN,
-+				&sg_descriptor->flags);
-+			chained = true;
-+			num_sg_in_iu++;
-+			sg_descriptor = io_request->sg_chain_buffer;
- 		}
--		put_unaligned_le32(CISS_SG_LAST,
--			&io_request->sg_chain_buffer[sg_count - 1].flags);
--		num_sg_in_iu = 1;
--		request->partial = 1;
-+		sg = sg_next(sg);
- 	}
- 
--out:
--	iu_length = offsetof(struct pqi_aio_path_request, sg_descriptors) -
--		PQI_REQUEST_HEADER_LENGTH;
-+	put_unaligned_le32(CISS_SG_LAST, &sg_descriptor->flags);
-+	request->partial = chained;
- 	iu_length += num_sg_in_iu * sizeof(*sg_descriptor);
-+
-+out:
- 	put_unaligned_le16(iu_length, &request->header.iu_length);
- 	request->num_sg_descriptors = num_sg_in_iu;
- 
+ 	switch (response->response_code) {
+-	case SOP_TASK_MANAGEMENT_FUNCTION_COMPLETE:
+-	case SOP_TASK_MANAGEMENT_FUNCTION_SUCCEEDED:
++	case SOP_TMF_COMPLETE:
++	case SOP_TMF_FUNCTION_SUCCEEDED:
+ 		rc = 0;
+ 		break;
+ 	default:
 
