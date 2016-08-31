@@ -1,70 +1,60 @@
 From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Wed, 31 Aug 2016 12:49:55 +0200
-Message-ID: <20160831104955.GA10180@kroah.com>
+Subject: Re: [PATCH v5 2/8] char: rpmb: add sysfs-class ABI documentation
+Date: Wed, 31 Aug 2016 12:53:33 +0200
+Message-ID: <20160831105333.GB10180@kroah.com>
 References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
- <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
- <20160805200823.GB7999@amd>
- <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
+ <1468873673-21776-3-git-send-email-tomas.winkler@intel.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-mmc-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
+In-Reply-To: <1468873673-21776-3-git-send-email-tomas.winkler@intel.com>
 Sender: linux-mmc-owner@vger.kernel.org
-To: "Winkler, Tomas" <tomas.winkler@intel.com>
-Cc: Pavel Machek <pavel@ucw.cz>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Tomas Winkler <tomas.winkler@intel.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Sun, Aug 07, 2016 at 09:44:03AM +0000, Winkler, Tomas wrote:
-> > 
-> > On Mon 2016-07-18 23:27:49, Tomas Winkler wrote:
-> > > The user space API is achieved via two synchronous IOCTL.
-> > 
-> > IOCTLs?
+On Mon, Jul 18, 2016 at 11:27:47PM +0300, Tomas Winkler wrote:
+> Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+> ---
+> V2: resend
+> V3: add more verbose description
+> V4: resend
+> V5: adjust date and kernel version
 > 
-> Will fix
->  
-> > > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is
-> > performed
-> > > by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
-> > where
-> > > the whole RPMB sequence including RESULT_READ is supplied by the caller.
-> > > The latter is intended for  easier adjusting  of the  applications
-> > > that use MMC_IOC_MULTI_CMD ioctl.
-> > 
-> > Why "  "?
-> Not sure I there is enough clue in your question. 
-> > 
-> > >
-> > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> > 
-> > > +
-> > > +static long rpmb_ioctl(struct file *fp, unsigned int cmd, unsigned
-> > > +long arg) {
-> > > +	return __rpmb_ioctl(fp, cmd, (void __user *)arg); }
-> > > +
-> > > +#ifdef CONFIG_COMPAT
-> > > +static long rpmb_compat_ioctl(struct file *fp, unsigned int cmd,
-> > > +			      unsigned long arg)
-> > > +{
-> > > +	return	__rpmb_ioctl(fp, cmd, compat_ptr(arg));
-> > > +}
-> > > +#endif /* CONFIG_COMPAT */
-> > 
-> > Description of the ioctl is missing, 
-> Will add. 
+>  Documentation/ABI/testing/sysfs-class-rpmb | 20 ++++++++++++++++++++
+>  MAINTAINERS                                |  1 +
+>  2 files changed, 21 insertions(+)
+>  create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
 > 
-> and it should certainly be designed in a way
-> > that it does not need compat support.
-> 
-> The compat_ioctl handler just casts the compat_ptr, I believe this
-> should be done unless the ioctl is globaly registered in
-> fs/compat_ioctl.c, but I might be wrong.
+> diff --git a/Documentation/ABI/testing/sysfs-class-rpmb b/Documentation/ABI/testing/sysfs-class-rpmb
+> new file mode 100644
+> index 000000000000..3ffcd2d1f683
+> --- /dev/null
+> +++ b/Documentation/ABI/testing/sysfs-class-rpmb
+> @@ -0,0 +1,20 @@
+> +What:		/sys/class/rpmb/
+> +Date:		Aug 2016
+> +KernelVersion:  4.8
+> +Contact:	Tomas Winkler <tomas.winkler@intel.com>
+> +Description:
+> +		The rpmb/ class sub-directory belongs to RPMB device class.
+> +
+> +		Few storage technologies such is EMMC, UFS, and NVMe support
+> +		Replay Protected Memory Block (RPMB) hardware partition with
+> +		common protocol and frame layout.
+> +		Such a partition provides authenticated and replay protected access,
+> +		hence suitable as a secure storage.
+> +
+> +What:		/sys/class/rpmb/rpmbN/
+> +Date:		Aug 2016
+> +KernelVersion:	4.8
+> +Contact:	Tomas Winkler <tomas.winkler@intel.com>
+> +Description:
+> +		The /sys/class/rpmb/rpmbN directory is created for
+> +		each RPMB registered device
 
-You shouldn't need a compat ioctl for anything new that is added, unless
-your api is really messed up.  Please test to be sure, and not use a
-compat ioctl at all, it isn't that hard to do.
+So you have no sysfs files?  If not, why have a sysfs class at all?
 
 thanks,
 
