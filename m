@@ -1,35 +1,73 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: move function declarations to scsi_priv.h
-Date: Wed, 31 Aug 2016 00:29:06 -0400
-Message-ID: <yq1vayh5zot.fsf@sermon.lab.mkp.net>
-References: <1472556360-22313-1-git-send-email-baoyou.xie@linaro.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23971 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbcHaE3X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2016 00:29:23 -0400
-In-Reply-To: <1472556360-22313-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
-        Xie's message of "Tue, 30 Aug 2016 19:26:00 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH v2 3/3] scsi/ncr5380: Improve interrupt latency during PIO tranfers
+Date: Wed, 31 Aug 2016 14:44:56 +1000
+Message-ID: <20160831044453.413698369@telegraphics.com.au>
+References: <20160827022959.303563262@telegraphics.com.au>
+Return-path: <linux-m68k-owner@vger.kernel.org>
+Content-Disposition: inline; filename=ncr5380-pio-timing
+Sender: linux-m68k-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
 
->>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
+Large PIO transfers are broken up into chunks to try to avoid disabling
+local IRQs for long periods. But IRQs are still disabled for too long
+and this causes SCC FIFO overruns during serial port transfers.
 
-Baoyou> We get 2 warnings about global functions without a declaration
-Baoyou> in the scsi driver when building with W=1:
-Baoyou> drivers/scsi/scsi_lib.c:467:6: warning: no previous prototype
-Baoyou> for 'scsi_requeue_run_queue' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/scsi_lib.c:2609:6: warning: no previous prototype
-Baoyou> for 'scsi_evt_thread' [-Wmissing-prototypes]
+This patch reduces the PIO chunk size to reduce interrupt latency to
+something on the order of milliseconds, at the expense of additional CPU
+overhead from extra iterations of the NCR5380_main() loop.
 
-Baoyou> in fact, both functions are declared in drivers/scsi/scsi_scan.c
-Baoyou> but need to move them into scsi_priv.h.
+That CPU overhead is a problem for slow machines (e.g. mac_scsi on 25 MHz
+68030) but these machines generally use PDMA not PIO. This patch doesn't
+make the overhead any worse on my Mac LC III (because it only gets about
+510 accesses per ms).
 
-Applied to 4.9/scsi-queue.
+This patch decreases disk performance by a fraction of one percent for
+dmx3191d on my 333 MHz PowerPC 750. Other affected hardware (such as
+g_NCR5380 on x86) was not tested but 5380 ISA cards generally use PDMA
+and not PIO.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+
+---
+Changed since v1:
+- PIO transfer chunk size is now hard-coded for simplicity.
+
+---
+ drivers/scsi/NCR5380.c |    8 ++++----
+ drivers/scsi/NCR5380.h |    2 ++
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+Index: linux/drivers/scsi/NCR5380.c
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.c	2016-08-31 14:44:51.000000000 +1000
++++ linux/drivers/scsi/NCR5380.c	2016-08-31 14:44:52.000000000 +1000
+@@ -1849,11 +1849,11 @@ static void NCR5380_information_transfer
+ 						/* XXX - need to source or sink data here, as appropriate */
+ 					}
+ 				} else {
+-					/* Break up transfer into 3 ms chunks,
+-					 * presuming 6 accesses per handshake.
++					/* Transfer a small chunk so that the
++					 * irq mode lock is not held too long.
+ 					 */
+-					transfersize = min((unsigned long)cmd->SCp.this_residual,
+-					                   hostdata->accesses_per_ms / 2);
++					transfersize = min(cmd->SCp.this_residual,
++					                   NCR5380_PIO_CHUNK_SIZE);
+ 					len = transfersize;
+ 					NCR5380_transfer_pio(instance, &phase, &len,
+ 					                     (unsigned char **)&cmd->SCp.ptr);
+Index: linux/drivers/scsi/NCR5380.h
+===================================================================
+--- linux.orig/drivers/scsi/NCR5380.h	2016-08-31 14:44:51.000000000 +1000
++++ linux/drivers/scsi/NCR5380.h	2016-08-31 14:44:52.000000000 +1000
+@@ -250,6 +250,8 @@ struct NCR5380_cmd {
+ 
+ #define NCR5380_CMD_SIZE		(sizeof(struct NCR5380_cmd))
+ 
++#define NCR5380_PIO_CHUNK_SIZE		256
++
+ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
+ {
+ 	return ((struct scsi_cmnd *)ncmd_ptr) - 1;
