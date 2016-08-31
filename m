@@ -1,53 +1,43 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Should queue_max_hw_sectors() always be <= max_dev_sectors?
-Date: Tue, 30 Aug 2016 20:36:02 -0600
-Message-ID: <74ef47ec-4aee-bdba-b000-cc0b46cf815a@kernel.dk>
-References: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
- <yq1y43d7kgm.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 00/30] FCoE VN2VN fixes
+Date: Tue, 30 Aug 2016 22:46:17 -0400
+Message-ID: <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
+References: <1472212913-39810-1-git-send-email-hare@suse.de>
+        <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <yq1y43d7kgm.fsf@sermon.lab.mkp.net>
-Sender: target-devel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Grover <agrover@redhat.com>
-Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:35288 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752194AbcHaCrg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 22:47:36 -0400
+In-Reply-To: <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de> (Johannes
+        Thumshirn's message of "Fri, 26 Aug 2016 15:48:43 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>
 
-On 08/30/2016 08:15 PM, Martin K. Petersen wrote:
->>>>>> "Andy" == Andy Grover <agrover@redhat.com> writes:
->
-> Hey Andy,
->
-> Andy> ...because limits.max_hw_sectors internally seems to be just the
-> Andy> controller limit, but what users of queue_max_hw_sectors
-> Andy> (including sysfs) really want is the lesser of
-> Andy> limits.max_hw_sectors and limits.max_dev_sectors.
->
-> max_dev_sectors is a limit reported by the target device for
-> READ/WRITE/VERIFY requests. Whereas max_hw_sectors describes the DMA
-> constraints of the controller.
->
-> It is a requirement for SG_IO, firmware updates, tape drives, etc. that
-> the controller limits are reported correctly since they do I/Os that are
-> much bigger than typical filesystem requests. When we tried to conflate
-> the two things broke in interesting ways.
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-That's crazy. If max_hw_sectors_kb is expected to be the DMA constraint,
-then it makes no sense to name it 'sectors'. We currently have the one
-exported constraints, and making it anything but the 'this is the
-maximum IO size we can support' would be nonsensical.
+Hannes,
 
-> I can't remember why the max_dev_sectors sysfs export patch didn't go
-> in. But instead (or in addition) we could entertain having a
-> max_rw_sectors_kb file that reflects the biggest READ/WRITE/VERIFY
-> request the device can consume if that's the information you're after?
+Johannes> I _think_ I already reviewed them (at least I do have a
+Johannes> deja-vu when I read 'Revisit kref handling')
 
-Which, coincidentally, is what that file already is for most other
-devices. It'd make more sense to bring SCSI into this realm, instead of
-imposing this weird world view on others. We export max_segments and
-max_segments_size, which are basically a window into what the DMA engine
-can do.
+In v1 of the series patches 7, 11, 15 and 22 needed changes, everything
+else had been reviewed. 15 appears to have been dropped ("libfc: frame
+alloc failure messages"). Whereas 7, 11 and 15 have emerged as patches
+25, 26 and 29 in the new series.
+
+Anyway. You can't expect me, nor reviewers to keep track of all this
+shuffling. Especially not in a series with 30 patches. Please maintain a
+changelog when you repost and apply tags for patches you haven't
+tweaked.
+
+I am happy to apply a partial series as long as nothing breaks. I have
+done a few where I have committed up to the first patch that had
+comments.
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
