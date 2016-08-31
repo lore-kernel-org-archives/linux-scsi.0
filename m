@@ -1,40 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: Should queue_max_hw_sectors() always be <= max_dev_sectors?
-Date: Tue, 30 Aug 2016 22:15:05 -0400
-Message-ID: <yq1y43d7kgm.fsf@sermon.lab.mkp.net>
-References: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: sg: Avoid overflow when USER_HZ > HZ
+Date: Tue, 30 Aug 2016 22:19:40 -0400
+Message-ID: <yq1twe17k8z.fsf@sermon.lab.mkp.net>
+References: <20160819164357.26121-1-paul.burton@imgtec.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com> (Andy Grover's
-        message of "Tue, 30 Aug 2016 09:54:05 -0700")
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:50581 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752054AbcHaCTx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 22:19:53 -0400
+In-Reply-To: <20160819164357.26121-1-paul.burton@imgtec.com> (Paul Burton's
+        message of "Fri, 19 Aug 2016 17:43:56 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paul Burton <paul.burton@imgtec.com>
+Cc: linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>
 
->>>>> "Andy" == Andy Grover <agrover@redhat.com> writes:
+>>>>> "Paul" == Paul Burton <paul.burton@imgtec.com> writes:
 
-Hey Andy,
+Paul> Calculating the maximum timeout that a user can set via the
+Paul> SG_SET_TIMEOUT ioctl involves multiplying INT_MAX by
+Paul> USER_HZ/HZ. If USER_HZ is larger than HZ then this results in an
+Paul> overflow when performed as a 32 bit integer calculation, resulting
+Paul> in compiler warnings such as the following:
 
-Andy> ...because limits.max_hw_sectors internally seems to be just the
-Andy> controller limit, but what users of queue_max_hw_sectors
-Andy> (including sysfs) really want is the lesser of
-Andy> limits.max_hw_sectors and limits.max_dev_sectors.
-
-max_dev_sectors is a limit reported by the target device for
-READ/WRITE/VERIFY requests. Whereas max_hw_sectors describes the DMA
-constraints of the controller.
-
-It is a requirement for SG_IO, firmware updates, tape drives, etc. that
-the controller limits are reported correctly since they do I/Os that are
-much bigger than typical filesystem requests. When we tried to conflate
-the two things broke in interesting ways.
-
-I can't remember why the max_dev_sectors sysfs export patch didn't go
-in. But instead (or in addition) we could entertain having a
-max_rw_sectors_kb file that reflects the biggest READ/WRITE/VERIFY
-request the device can consume if that's the information you're after?
+Applied to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
