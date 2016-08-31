@@ -1,84 +1,127 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2 00/15] smartpqi update
-Date: Wed, 31 Aug 2016 14:54:05 -0500
-Message-ID: <147267306072.22907.15779110113022168473.stgit@brunhilda>
+Subject: [PATCH V2 01/15] smartpqi: change aio sg processing
+Date: Wed, 31 Aug 2016 14:54:11 -0500
+Message-ID: <147267325114.22907.14642734273280565648.stgit@brunhilda>
+References: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0044.outbound.protection.outlook.com ([104.47.33.44]:57321
+Received: from mail-bn3nam01on0066.outbound.protection.outlook.com ([104.47.33.66]:32040
         "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752273AbcHaTyL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 15:54:11 -0400
+        id S1753196AbcHaTyT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 15:54:19 -0400
+In-Reply-To: <147267306072.22907.15779110113022168473.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
-These changes are based on Linus's tree
+From: Kevin Barnett <kevin.barnett@microsemi.com>
 
-The changes are:
- - simplify aio processing
- - simplify tmf macro names
- - remove workaround for spanning
- - add message for offlined drives
- - enhance reset logic
- - add support for kdump
- - correct issue with offlined controller
- - change timeout for events
- - reformat function to match svn version
- - correct update time scheduling
- - minor queuecommand cleanup
- - remove timeout on cache flush operation
- - update smartpqi/Kconfig
-   - Martin K. Peterson's review
- - add Documentation/scsi/smartpqi.txt
-   - Martin K. Peterson's review
- - bump driver version
+Take advantage of controller improvements.
 
-Changes since V1:
- - squashed smartpqi-add-smartpqi.txt and
-   smartpqi-update-maintainers
-   as per Johannes Thumshirn <jthumshirn@suse.de> review.
- - enhanced patch description for
-   smartpqi-correct-controller-offline-issue
-   as per Johannes Thumshirn <jthumshirn@suse.de> review.
- - redacted patch smartpqi-change-function-to-inline
-   as per Johannes Thumshirn <jthumshirn@suse.de> review.
-   - The compiler in-lines small functions automatically.
-
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
+ drivers/scsi/smartpqi/smartpqi_init.c |   68 +++++++++++++++++++--------------
+ 1 file changed, 39 insertions(+), 29 deletions(-)
 
-Don Brace (1):
-      smartpqi: add smartpqi.txt
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 906f1aa..418f636 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -4263,48 +4263,58 @@ static int pqi_build_aio_sg_list(struct pqi_ctrl_info *ctrl_info,
+ 	int i;
+ 	u16 iu_length;
+ 	int sg_count;
+-	unsigned int num_sg_in_iu = 0;
++	bool chained;
++	unsigned int num_sg_in_iu;
++	unsigned int max_sg_per_iu;
+ 	struct scatterlist *sg;
+ 	struct pqi_sg_descriptor *sg_descriptor;
+ 
+ 	sg_count = scsi_dma_map(scmd);
+ 	if (sg_count < 0)
+ 		return sg_count;
++
++	iu_length = offsetof(struct pqi_aio_path_request, sg_descriptors) -
++		PQI_REQUEST_HEADER_LENGTH;
++	num_sg_in_iu = 0;
++
+ 	if (sg_count == 0)
+ 		goto out;
+ 
+-	if (sg_count <= ctrl_info->max_sg_per_iu) {
+-		sg_descriptor = &request->sg_descriptors[0];
+-		scsi_for_each_sg(scmd, sg, sg_count, i) {
+-			pqi_set_sg_descriptor(sg_descriptor, sg);
+-			sg_descriptor++;
+-		}
+-		put_unaligned_le32(CISS_SG_LAST,
+-			&request->sg_descriptors[sg_count - 1].flags);
+-		num_sg_in_iu = sg_count;
+-	} else {
+-		sg_descriptor = &request->sg_descriptors[0];
+-		put_unaligned_le64((u64)io_request->sg_chain_buffer_dma_handle,
+-			&sg_descriptor->address);
+-		put_unaligned_le32(sg_count * sizeof(*sg_descriptor),
+-			&sg_descriptor->length);
+-		put_unaligned_le32(CISS_SG_CHAIN, &sg_descriptor->flags);
+-
+-		sg_descriptor = io_request->sg_chain_buffer;
+-		scsi_for_each_sg(scmd, sg, sg_count, i) {
+-			pqi_set_sg_descriptor(sg_descriptor, sg);
+-			sg_descriptor++;
++	sg = scsi_sglist(scmd);
++	sg_descriptor = request->sg_descriptors;
++	max_sg_per_iu = ctrl_info->max_sg_per_iu - 1;
++	chained = false;
++	i = 0;
++
++	while (1) {
++		pqi_set_sg_descriptor(sg_descriptor, sg);
++		if (!chained)
++			num_sg_in_iu++;
++		i++;
++		if (i == sg_count)
++			break;
++		sg_descriptor++;
++		if (i == max_sg_per_iu) {
++			put_unaligned_le64(
++				(u64)io_request->sg_chain_buffer_dma_handle,
++				&sg_descriptor->address);
++			put_unaligned_le32((sg_count - num_sg_in_iu)
++				* sizeof(*sg_descriptor),
++				&sg_descriptor->length);
++			put_unaligned_le32(CISS_SG_CHAIN,
++				&sg_descriptor->flags);
++			chained = true;
++			num_sg_in_iu++;
++			sg_descriptor = io_request->sg_chain_buffer;
+ 		}
+-		put_unaligned_le32(CISS_SG_LAST,
+-			&io_request->sg_chain_buffer[sg_count - 1].flags);
+-		num_sg_in_iu = 1;
+-		request->partial = 1;
++		sg = sg_next(sg);
+ 	}
+ 
+-out:
+-	iu_length = offsetof(struct pqi_aio_path_request, sg_descriptors) -
+-		PQI_REQUEST_HEADER_LENGTH;
++	put_unaligned_le32(CISS_SG_LAST, &sg_descriptor->flags);
++	request->partial = chained;
+ 	iu_length += num_sg_in_iu * sizeof(*sg_descriptor);
++
++out:
+ 	put_unaligned_le16(iu_length, &request->header.iu_length);
+ 	request->num_sg_descriptors = num_sg_in_iu;
+ 
 
-Kevin Barnett (14):
-      smartpqi: change aio sg processing
-      smartpqi: change tmf macro names
-      smartpqi: simplify spanning
-      smartpqi: enhance drive offline informational message
-      smartpqi: enhance reset logic
-      smartpqi: add kdump support
-      smartpqi: correct controller offline issue
-      smartpqi: correct event acknowledgment timeout issue
-      smartpqi: minor function reformating
-      smartpqi: minor tweaks to update time support
-      smartpqi: scsi queuecommand cleanup
-      smartpqi: remove timeout for cache flush operations
-      smartpqi: update Kconfig
-      smartqi: bump driver version
-
-
- Documentation/scsi/smartpqi.txt       |   80 ++++++++
- MAINTAINERS                           |    1 
- drivers/scsi/smartpqi/Kconfig         |    8 +
- drivers/scsi/smartpqi/smartpqi.h      |   35 ++--
- drivers/scsi/smartpqi/smartpqi_init.c |  314 ++++++++++++++++-----------------
- drivers/scsi/smartpqi/smartpqi_sis.c  |   10 +
- drivers/scsi/smartpqi/smartpqi_sis.h  |    2 
- 7 files changed, 273 insertions(+), 177 deletions(-)
- create mode 100644 Documentation/scsi/smartpqi.txt
-
---
-Signature
