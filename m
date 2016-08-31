@@ -1,73 +1,56 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v2 3/3] scsi/ncr5380: Improve interrupt latency during PIO tranfers
-Date: Wed, 31 Aug 2016 14:44:56 +1000
-Message-ID: <20160831044453.413698369@telegraphics.com.au>
-References: <20160827022959.303563262@telegraphics.com.au>
-Return-path: <linux-m68k-owner@vger.kernel.org>
-Content-Disposition: inline; filename=ncr5380-pio-timing
-Sender: linux-m68k-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 00/30] FCoE VN2VN fixes
+Date: Wed, 31 Aug 2016 09:25:58 +0200
+Message-ID: <20160831072558.rxhvouwz6srggj5a@c203.arch.suse.de>
+References: <1472212913-39810-1-git-send-email-hare@suse.de>
+ <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de>
+ <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:54470 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751299AbcHaH0B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 03:26:01 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>
 
-Large PIO transfers are broken up into chunks to try to avoid disabling
-local IRQs for long periods. But IRQs are still disabled for too long
-and this causes SCC FIFO overruns during serial port transfers.
+On Tue, Aug 30, 2016 at 10:46:17PM -0400, Martin K . Petersen wrote:
+> >>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+> 
+> Hannes,
+> 
+> Johannes> I _think_ I already reviewed them (at least I do have a
+> Johannes> deja-vu when I read 'Revisit kref handling')
+> 
+> In v1 of the series patches 7, 11, 15 and 22 needed changes, everything
+> else had been reviewed. 15 appears to have been dropped ("libfc: frame
+> alloc failure messages"). Whereas 7, 11 and 15 have emerged as patches
+> 25, 26 and 29 in the new series.
+> 
+> Anyway. You can't expect me, nor reviewers to keep track of all this
+> shuffling. Especially not in a series with 30 patches. Please maintain a
+> changelog when you repost and apply tags for patches you haven't
+> tweaked.
+> 
+> I am happy to apply a partial series as long as nothing breaks. I have
+> done a few where I have committed up to the first patch that had
+> comments.
 
-This patch reduces the PIO chunk size to reduce interrupt latency to
-something on the order of milliseconds, at the expense of additional CPU
-overhead from extra iterations of the NCR5380_main() loop.
+Hannes is currently on vacation. I think it's the save if we wait for
+him to return so he can make a proper v2 (or v3) of this series.
 
-That CPU overhead is a problem for slow machines (e.g. mac_scsi on 25 MHz
-68030) but these machines generally use PDMA not PIO. This patch doesn't
-make the overhead any worse on my Mac LC III (because it only gets about
-510 accesses per ms).
-
-This patch decreases disk performance by a fraction of one percent for
-dmx3191d on my 333 MHz PowerPC 750. Other affected hardware (such as
-g_NCR5380 on x86) was not tested but 5380 ISA cards generally use PDMA
-and not PIO.
-
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
-Changed since v1:
-- PIO transfer chunk size is now hard-coded for simplicity.
-
----
- drivers/scsi/NCR5380.c |    8 ++++----
- drivers/scsi/NCR5380.h |    2 ++
- 2 files changed, 6 insertions(+), 4 deletions(-)
-
-Index: linux/drivers/scsi/NCR5380.c
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.c	2016-08-31 14:44:51.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.c	2016-08-31 14:44:52.000000000 +1000
-@@ -1849,11 +1849,11 @@ static void NCR5380_information_transfer
- 						/* XXX - need to source or sink data here, as appropriate */
- 					}
- 				} else {
--					/* Break up transfer into 3 ms chunks,
--					 * presuming 6 accesses per handshake.
-+					/* Transfer a small chunk so that the
-+					 * irq mode lock is not held too long.
- 					 */
--					transfersize = min((unsigned long)cmd->SCp.this_residual,
--					                   hostdata->accesses_per_ms / 2);
-+					transfersize = min(cmd->SCp.this_residual,
-+					                   NCR5380_PIO_CHUNK_SIZE);
- 					len = transfersize;
- 					NCR5380_transfer_pio(instance, &phase, &len,
- 					                     (unsigned char **)&cmd->SCp.ptr);
-Index: linux/drivers/scsi/NCR5380.h
-===================================================================
---- linux.orig/drivers/scsi/NCR5380.h	2016-08-31 14:44:51.000000000 +1000
-+++ linux/drivers/scsi/NCR5380.h	2016-08-31 14:44:52.000000000 +1000
-@@ -250,6 +250,8 @@ struct NCR5380_cmd {
- 
- #define NCR5380_CMD_SIZE		(sizeof(struct NCR5380_cmd))
- 
-+#define NCR5380_PIO_CHUNK_SIZE		256
-+
- static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
- {
- 	return ((struct scsi_cmnd *)ncmd_ptr) - 1;
+Thanks,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
