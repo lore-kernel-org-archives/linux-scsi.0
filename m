@@ -1,43 +1,82 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/30] FCoE VN2VN fixes
-Date: Tue, 30 Aug 2016 22:46:17 -0400
-Message-ID: <yq1d1kp7j0m.fsf@sermon.lab.mkp.net>
-References: <1472212913-39810-1-git-send-email-hare@suse.de>
-        <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de>
+Subject: Re: Should queue_max_hw_sectors() always be <= max_dev_sectors?
+Date: Wed, 31 Aug 2016 00:11:36 -0400
+Message-ID: <yq18tvd7f2f.fsf@sermon.lab.mkp.net>
+References: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
+        <yq1y43d7kgm.fsf@sermon.lab.mkp.net>
+        <74ef47ec-4aee-bdba-b000-cc0b46cf815a@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35288 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752194AbcHaCrg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 30 Aug 2016 22:47:36 -0400
-In-Reply-To: <20160826134843.ogmj24w36mgpvyqn@c203.arch.suse.de> (Johannes
-        Thumshirn's message of "Fri, 26 Aug 2016 15:48:43 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <74ef47ec-4aee-bdba-b000-cc0b46cf815a@kernel.dk> (Jens Axboe's
+        message of "Tue, 30 Aug 2016 20:36:02 -0600")
+Sender: target-devel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Andy Grover <agrover@redhat.com>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Martin Wilck <martin.wilck@suse.com>
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
 
-Hannes,
+Jens,
 
-Johannes> I _think_ I already reviewed them (at least I do have a
-Johannes> deja-vu when I read 'Revisit kref handling')
+>> It is a requirement for SG_IO, firmware updates, tape drives,
+>> etc. that the controller limits are reported correctly since they do
+>> I/Os that are much bigger than typical filesystem requests. When we
+>> tried to conflate the two things broke in interesting ways.
 
-In v1 of the series patches 7, 11, 15 and 22 needed changes, everything
-else had been reviewed. 15 appears to have been dropped ("libfc: frame
-alloc failure messages"). Whereas 7, 11 and 15 have emerged as patches
-25, 26 and 29 in the new series.
+Jens> That's crazy. If max_hw_sectors_kb is expected to be the DMA
+Jens> constraint, then it makes no sense to name it 'sectors'.
 
-Anyway. You can't expect me, nor reviewers to keep track of all this
-shuffling. Especially not in a series with 30 patches. Please maintain a
-changelog when you repost and apply tags for patches you haven't
-tweaked.
+I don't believe I named it :)
 
-I am happy to apply a partial series as long as nothing breaks. I have
-done a few where I have committed up to the first patch that had
-comments.
+It's the maximum DMA transfer size supported by the controller. Some
+controllers have limitations above and beyond their scatter-gather
+capabilities.
+
+You could argue that they should use max_dev_sectors since the limit is
+probably more of a firmware virtual disk thing than a DMA engine
+constraint. But max_dev_sectors and the matching SCSI transfer size cap
+are both very new to the game.
+
+Jens> We currently have the one exported constraints, and making it
+Jens> anything but the 'this is the maximum IO size we can support'
+Jens> would be nonsensical.
+
+That implies that the value is the same for all types of I/O which is
+not the case. Hasn't been for a long time. See discard, write same,
+etc. blk_rq_get_max_sectors() is passed a struct request because the
+answer depends on what type of request and which operation it is.
+
+With max_hw_sectors_kb we're not so lucky. We could assume read/write
+but it would break existing apps that check it for SG_IO or to set tape
+block size. And they do exist.
+
+Jens> Which, coincidentally, is what that file already is for most other
+Jens> devices.
+
+Because none of the other protocols happen to have device limits.
+
+Jens> It'd make more sense to bring SCSI into this realm, instead of
+Jens> imposing this weird world view on others.
+
+Hey, I didn't invent the SCSI device constraint. I think it sucks. But
+it is a hard limit and we absolutely have to enforce it. And we can't
+lower the hw limit willy-nilly because it breaks non-REQ_TYPE_FS
+requests.
+
+As a result, max_dev_sectors is only used by sd and it's only used to
+gate max_sectors_kb for filesystem requests. I would have happily kept
+it internal to SCSI but users need to be able to set max_sectors_kb
+through sysfs. And consequently I need to be able to clamp on it there.
+
+I'm happy to clean things up if you have a better idea how to enforce
+the device limit without breaking existing apps. It's possible that with
+the arbitrary bio size changes some of the original pain points have
+gone away. Will take a look.
+
+But implementation aesthetics aside, Andy's problem still
+persists. Because at least in the context of SCSI the answer to his
+question is "it depends" :(
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
