@@ -1,42 +1,34 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH 2/2] fusion: mptbase: Remove deprecated
- create_singlethread_workqueue
-Date: Wed, 31 Aug 2016 10:25:44 -0400
-Message-ID: <20160831142544.GN12660@htj.duckdns.org>
-References: <cover.1472583639.git.bhaktipriya96@gmail.com>
- <05a0e321c521d102e5a908bb4173e684e8a16c9a.1472583639.git.bhaktipriya96@gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 09/17] smartpqi: correct event acknowledgment timeout
+ issue
+Date: Wed, 31 Aug 2016 16:43:38 +0200
+Message-ID: <68eabf6e-618d-8a14-8636-6443d72fdf77@redhat.com>
+References: <147222977996.31214.8588187948847476082.stgit@brunhilda>
+ <147222990010.31214.2025743657616417732.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f195.google.com ([209.85.161.195]:35085 "EHLO
-        mail-yw0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934976AbcHaOZp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 31 Aug 2016 10:25:45 -0400
-Content-Disposition: inline
-In-Reply-To: <05a0e321c521d102e5a908bb4173e684e8a16c9a.1472583639.git.bhaktipriya96@gmail.com>
+Received: from mx1.redhat.com ([209.132.183.28]:58376 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935144AbcHaOnl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 31 Aug 2016 10:43:41 -0400
+In-Reply-To: <147222990010.31214.2025743657616417732.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, jejb@linux.vnet.ibm.com, Viswas.G@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Kevin.Barnett@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Wed, Aug 31, 2016 at 12:33:25AM +0530, Bhaktipriya Shridhar wrote:
-> The workqueues "ioc->reset_work_q" and "ioc->fw_event_q" queue a single
-> work item &ioc->fault_reset_work and &fw_event->work, respectively and
-> hence don't require ordering. Hence, they have been converted to use
-> alloc_workqueue().
-> 
-> The WQ_MEM_RECLAIM flag has been set to ensure forward progress under
-> memory pressure since the workqueue belongs to a storage driver which is
-> being used on a memory reclaim path.
-> 
-> Since there are fixed number of work items, explicit concurrency
-> limit is unnecessary here.
-> 
-> Signed-off-by: Bhaktipriya Shridhar <bhaktipriya96@gmail.com>
+On 26.8.2016 18:45, Don Brace wrote:
+> From: Kevin Barnett <kevin.barnett@microsemi.com>
+>
+> the driver no longer waits for the firmware to consume
+> the event ack IU.
+>
+> Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+> Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+> Signed-off-by: Kevin Barnett <kevin.barnett@microsemi.com>
+> Signed-off-by: Don Brace <don.brace@microsemi.com>
 
-Acked-by: Tejun Heo <tj@kernel.org>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Thanks.
-
--- 
-tejun
