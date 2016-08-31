@@ -1,53 +1,107 @@
 From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH v1 1/3] Ibmvscsis: Properly deregister target sessions
-Date: Wed, 31 Aug 2016 11:28:59 -0500
-Message-ID: <1472660941-23856-2-git-send-email-bryantly@linux.vnet.ibm.com>
+Subject: [PATCH v1 2/3] Ibmvscsis: Code cleanup of print statements
+Date: Wed, 31 Aug 2016 11:29:00 -0500
+Message-ID: <1472660941-23856-3-git-send-email-bryantly@linux.vnet.ibm.com>
 References: <1472660941-23856-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:59862 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935724AbcHaQ3M (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 12:29:12 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.11/8.16.0.11) with SMTP id u7VGMfY0098585
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2016 12:29:11 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 255p3whan7-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 31 Aug 2016 12:29:11 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Wed, 31 Aug 2016 12:29:10 -0400
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1472660941-23856-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: nab@linux-iscsi.org, dan.carpenter@oracle.com
 Cc: mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-
-The driver currently doesn't properly deregisters target sessions
-completely, so this will address that.
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
 Signed-off-by: Michael Cyr <mikecyr@linux.vnet.ibm.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 ++
- 1 file changed, 2 insertions(+)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 26 ++------------------------
+ 1 file changed, 2 insertions(+), 24 deletions(-)
 
 diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index b29fef9..a515cdd 100644
+index a515cdd..d4c67b9 100644
 --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1934,6 +1934,8 @@ static int ibmvscsis_drop_nexus(struct ibmvscsis_tport *tport)
- 	/*
- 	 * Release the SCSI I_T Nexus to the emulated ibmvscsis Target Port
- 	 */
-+	target_wait_for_sess_cmds(se_sess);
-+	transport_deregister_session_configfs(se_sess);
- 	transport_deregister_session(se_sess);
- 	tport->ibmv_nexus = NULL;
- 	kfree(nexus);
+@@ -1606,8 +1606,6 @@ static void ibmvscsis_send_messages(struct scsi_info *vscsi)
+ 
+ 	if (!(vscsi->flags & RESPONSE_Q_DOWN)) {
+ 		list_for_each_entry_safe(cmd, nxt, &vscsi->waiting_rsp, list) {
+-			pr_debug("send_messages cmd %p\n", cmd);
+-
+ 			iue = cmd->iue;
+ 
+ 			crq->valid = VALID_CMD_RESP_EL;
+@@ -2556,10 +2554,6 @@ static void ibmvscsis_parse_cmd(struct scsi_info *vscsi,
+ 
+ 	srp->lun.scsi_lun[0] &= 0x3f;
+ 
+-	pr_debug("calling submit_cmd, se_cmd %p, lun 0x%llx, cdb 0x%x, attr:%d\n",
+-		 &cmd->se_cmd, scsilun_to_int(&srp->lun), (int)srp->cdb[0],
+-		 attr);
+-
+ 	rc = target_submit_cmd(&cmd->se_cmd, nexus->se_sess, srp->cdb,
+ 			       cmd->sense_buf, scsilun_to_int(&srp->lun),
+ 			       data_len, attr, dir, 0);
+@@ -3144,8 +3138,6 @@ static int ibmvscsis_rdma(struct ibmvscsis_cmd *cmd, struct scatterlist *sg,
+ 	long tx_len;
+ 	long rc = 0;
+ 
+-	pr_debug("rdma: dir %d, bytes 0x%x\n", dir, bytes);
+-
+ 	if (bytes == 0)
+ 		return 0;
+ 
+@@ -3197,9 +3189,6 @@ static int ibmvscsis_rdma(struct ibmvscsis_cmd *cmd, struct scatterlist *sg,
+ 			/* write to client */
+ 			struct srp_cmd *srp = (struct srp_cmd *)iue->sbuf->buf;
+ 
+-			if (!READ_CMD(srp->cdb))
+-				print_hex_dump_bytes(" data:", DUMP_PREFIX_NONE,
+-						     sg_virt(sgp), buf_len);
+ 			/* The h_copy_rdma will cause phyp, running in another
+ 			 * partition, to read memory, so we need to make sure
+ 			 * the data has been written out, hence these syncs.
+@@ -3324,12 +3313,9 @@ cmd_work:
+ 				rc = ibmvscsis_trans_event(vscsi, crq);
+ 			} else if (vscsi->flags & TRANS_EVENT) {
+ 				/*
+-				 * if a tranport event has occurred leave
++				 * if a transport event has occurred leave
+ 				 * everything but transport events on the queue
+-				 */
+-				pr_debug("handle_crq, ignoring\n");
+-
+-				/*
++				 *
+ 				 * need to decrement the queue index so we can
+ 				 * look at the elment again
+ 				 */
+@@ -3695,8 +3681,6 @@ static void ibmvscsis_release_cmd(struct se_cmd *se_cmd)
+ 						 se_cmd);
+ 	struct scsi_info *vscsi = cmd->adapter;
+ 
+-	pr_debug("release_cmd %p, flags %d\n", se_cmd, cmd->flags);
+-
+ 	spin_lock_bh(&vscsi->intr_lock);
+ 	/* Remove from active_q */
+ 	list_del(&cmd->list);
+@@ -3717,9 +3701,6 @@ static int ibmvscsis_write_pending(struct se_cmd *se_cmd)
+ 	struct iu_entry *iue = cmd->iue;
+ 	int rc;
+ 
+-	pr_debug("write_pending, se_cmd %p, length 0x%x\n",
+-		 se_cmd, se_cmd->data_length);
+-
+ 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma,
+ 			       1, 1);
+ 	if (rc) {
+@@ -3758,9 +3739,6 @@ static int ibmvscsis_queue_data_in(struct se_cmd *se_cmd)
+ 	uint len = 0;
+ 	int rc;
+ 
+-	pr_debug("queue_data_in, se_cmd %p, length 0x%x\n",
+-		 se_cmd, se_cmd->data_length);
+-
+ 	rc = srp_transfer_data(cmd, &vio_iu(iue)->srp.cmd, ibmvscsis_rdma, 1,
+ 			       1);
+ 	if (rc) {
 -- 
 2.5.4 (Apple Git-61)
-
