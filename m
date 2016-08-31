@@ -1,52 +1,40 @@
-From: Jens Axboe <axboe@kernel.dk>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
 Subject: Re: Should queue_max_hw_sectors() always be <= max_dev_sectors?
-Date: Tue, 30 Aug 2016 20:11:41 -0600
-Message-ID: <357f906e-cf04-5421-7cf3-d72a7e9700ed@kernel.dk>
+Date: Tue, 30 Aug 2016 22:15:05 -0400
+Message-ID: <yq1y43d7kgm.fsf@sermon.lab.mkp.net>
 References: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <202d350b-0e59-1a10-4b65-3563f0afa084@redhat.com> (Andy Grover's
+        message of "Tue, 30 Aug 2016 09:54:05 -0700")
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, target-devel <target-devel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 08/30/2016 10:54 AM, Andy Grover wrote:
-> Hi Martin, (you're the last person to touch this? :)
->
-> If I create a local SCSI device using LIO's loopback fabric, and backed
-> by a file, /sys/block/sda/queue/max_hw_sectors_kb reports 32767. This
-> reflects the loopback scsi_host_template reporting 65536 max_sectors,
-> but that's the "controller" -- the actual device reports via the Block
-> Limits VPD of supporting a max size of 16384 512-byte blocks.
->
-> Therefore, using max_hw_sectors_kb will give a wrong impression for what
-> the max data size that can be issued to the device is -- 32767KiB
-> instead of 8192KiB. Should max_hw_sectors_kb be reported as the lesser
-> of max_hw_sectors and max_dev_sectors? Something like:
->
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -1196,7 +1196,7 @@ static inline unsigned int
-> queue_max_sectors(struct request_queue *q)
->
->  static inline unsigned int queue_max_hw_sectors(struct request_queue *q)
->  {
-> -       return q->limits.max_hw_sectors;
-> +       return min_not_zero(q->limits.max_hw_sectors,
-> q->limits.max_dev_sectors);
->  }
->
-> ...because limits.max_hw_sectors internally seems to be just the
-> controller limit, but what users of queue_max_hw_sectors (including
-> sysfs) really want is the lesser of limits.max_hw_sectors and
-> limits.max_dev_sectors.
+>>>>> "Andy" == Andy Grover <agrover@redhat.com> writes:
 
-It should be the maximum supported to the device, which is the minimum
-of any limitations in that path. So I'd say your change is correct.
+Hey Andy,
 
+Andy> ...because limits.max_hw_sectors internally seems to be just the
+Andy> controller limit, but what users of queue_max_hw_sectors
+Andy> (including sysfs) really want is the lesser of
+Andy> limits.max_hw_sectors and limits.max_dev_sectors.
+
+max_dev_sectors is a limit reported by the target device for
+READ/WRITE/VERIFY requests. Whereas max_hw_sectors describes the DMA
+constraints of the controller.
+
+It is a requirement for SG_IO, firmware updates, tape drives, etc. that
+the controller limits are reported correctly since they do I/Os that are
+much bigger than typical filesystem requests. When we tried to conflate
+the two things broke in interesting ways.
+
+I can't remember why the max_dev_sectors sysfs export patch didn't go
+in. But instead (or in addition) we could entertain having a
+max_rw_sectors_kb file that reflects the biggest READ/WRITE/VERIFY
+request the device can consume if that's the information you're after?
 
 -- 
-Jens Axboe
+Martin K. Petersen	Oracle Linux Engineering
