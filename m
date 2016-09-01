@@ -1,46 +1,78 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: Block-level access
-Date: Thu, 1 Sep 2016 15:16:06 -0700
-Message-ID: <6705ed02-0f22-83d0-159a-c9c4a111a933@sandisk.com>
-References: <CAGA4w7nO+mrRwY-Rg0i_O8zBcrNeSS0KurLXN34duR2JJqvEmA@mail.gmail.com>
- <CAGA4w7=eM9+sHMNaCXx5tXCEEyeJp0wb7ZqpAiuW35u+PEiSBw@mail.gmail.com>
+Subject: Re: Observing Softlockup's while running heavy IOs
+Date: Thu, 1 Sep 2016 16:04:45 -0700
+Message-ID: <3eab5081-dff4-c7a5-f089-18877bbd6346@sandisk.com>
+References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+ <DF4PR84MB01696549697831B4CEC4A3FDAB150@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+ <CAK=zhgrOQ_LAbM3RKfq_MtveygqU3vPtChCB9Jdf6AUfFnr0HQ@mail.gmail.com>
+ <6b7930ca-092c-a03c-d745-b49153aa174c@sandisk.com>
+ <CAK=zhgq__41_y6pgQc5-Rg+RyUUqB80qS=mJ6cYqaQbtf=5N5g@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0044.outbound.protection.outlook.com ([104.47.41.44]:59704
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751150AbcIAWQQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Sep 2016 18:16:16 -0400
-In-Reply-To: <CAGA4w7=eM9+sHMNaCXx5tXCEEyeJp0wb7ZqpAiuW35u+PEiSBw@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAK=zhgq__41_y6pgQc5-Rg+RyUUqB80qS=mJ6cYqaQbtf=5N5g@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Alex Austin <aaustin@oceantechonline.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-On 09/01/2016 02:48 PM, Alex Austin wrote:
-> CC'ing linux-scsi and linux-block.
+On 09/01/2016 03:31 AM, Sreekanth Reddy wrote:
+> I reduced the ISR workload by one third in-order to reduce the time
+> that is spent per CPU in interrupt context, even then I am observing
+> softlockups.
 >
-> Also, please CC me in replies.
+> As I mentioned before only same single CPU in the set of CPUs(enabled
+> in affinity_hint) is busy with handling the interrupts from
+> corresponding IRQx. I have done below experiment in driver to limit
+> these softlockups/hardlockups. But I am not sure whether it is
+> reasonable to do this in driver,
 >
-> On Thu, Sep 1, 2016 at 4:43 PM, Alex Austin <aaustin@oceantechonline.com> wrote:
->> Hello,
->> What is the most performant way to directly interface with an attached hard
->> drive? I've so far used read()/write() on /dev/sd_ but I find error handling
->> exceedingly difficult, as I don't always even get errors reported, even if the
->> open() call includes O_DIRECT. I've also used ioctl(SG_IO), but find that it's
->> extremely slow due to the lack of queuing support in the API. Is there a
->> mid-level API that will get me decent error handling while allowing command
->> queuing, or do I just need to make multiple threads all doing separate SG_IO
->> ioctls?
+> Experiment:
+> If the CPUx is continuously busy with handling the remote CPUs
+> (enabled in the corresponding IRQ's affinity_hint) IO works by 1/4th
+> of the HBA queue depth in the same ISR context then enable a flag
+> called 'change_smp_affinity' for this IRQ. Also created a thread with
+> will poll for this flag for every IRQ's (enabled by driver) for every
+> second. If this thread see that this flag is enabled for any IRQ then
+> it will write next CPU number from the CPUs enabled in the IRQ's
+> affinity_hint to the IRQ's smp_affinity procfs attribute using
+> 'call_usermodehelper()' API.
+>
+> This to make sure that interrupts are not processed by same single CPU
+> all the time and to make the other CPUs to handle the interrupts if
+> the current CPU is continuously busy with handling the other CPUs IO
+> interrupts.
+>
+> For example consider a system which has 8 logical CPUs and one MSIx
+> vector enabled (called IRQ 120) in driver, HBA queue depth as 8K.
+> then IRQ's procfs attributes will be
+> IRQ# 120, affinity_hint=0xff, smp_affinity=0x00
+>
+> After starting heavy IOs, we will observe that only CPU0 will be busy
+> with handling the interrupts. This experiment driver will change the
+> smp_affinity to next CPU number i.e. 0x01 (using cmd 'echo 0x01 >
+> /proc/irq/120/smp_affinity', driver issue's this cmd using
+> call_usermodehelper() API) if it observes that CPU0 is continuously
+> processing more than 2K of IOs replies of other CPUs i.e from CPU1 to
+> CPU7.
+>
+> Whether doing this kind of stuff in driver is ok?
 
-What the most efficient way is to interface is with a hard drive depends 
-on the I/O pattern. Are you aware that buffered I/O performs read-ahead? 
-Have you already tried to tune the read-ahead setting (blockdev --getra 
-/ blockdev --setra)?
+Hello Sreekanth,
 
-BTW, if you need an example of how to queue SG_IO, you are welcome to 
-have a look at the fio source code. You will probably be interested in 
-the bsg API. See e.g. https://lwn.net/Articles/174469/.
+To me this sounds like something that should be implemented in the I/O 
+chipset on the motherboard. If you have a look at the Intel Software 
+Developer Manuals then you will see that logical destination mode 
+supports round-robin interrupt delivery. However, the Linux kernel 
+selects physical destination mode on systems with more than eight 
+logical CPUs (see also arch/x86/kernel/apic/apic_flat_64.c).
+
+I'm not sure the maintainers of the interrupt subsystem would welcome 
+code that emulates round-robin interrupt delivery. So your best option 
+is probably to minimize the amount of work that is done in interrupt 
+context and to move as much work as possible out of interrupt context in 
+such a way that it can be spread over multiple CPU cores, e.g. by using 
+queue_work_on().
 
 Bart.
