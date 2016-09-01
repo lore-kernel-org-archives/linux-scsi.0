@@ -1,78 +1,41 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Thu, 1 Sep 2016 20:05:26 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B542C5B6F@hasmsx108.ger.corp.intel.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
- <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
- <20160805200823.GB7999@amd>
- <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
- <20160831104955.GA10180@kroah.com>
+From: Alex Austin <aaustin@oceantechonline.com>
+Subject: Re: Block-level access
+Date: Thu, 1 Sep 2016 16:48:28 -0500
+Message-ID: <CAGA4w7=eM9+sHMNaCXx5tXCEEyeJp0wb7ZqpAiuW35u+PEiSBw@mail.gmail.com>
+References: <CAGA4w7nO+mrRwY-Rg0i_O8zBcrNeSS0KurLXN34duR2JJqvEmA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <20160831104955.GA10180@kroah.com>
-Content-Language: en-US
-Sender: linux-mmc-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Pavel Machek <pavel@ucw.cz>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAGA4w7nO+mrRwY-Rg0i_O8zBcrNeSS0KurLXN34duR2JJqvEmA@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+CC'ing linux-scsi and linux-block.
 
-> 
-> On Sun, Aug 07, 2016 at 09:44:03AM +0000, Winkler, Tomas wrote:
-> > >
-> > > On Mon 2016-07-18 23:27:49, Tomas Winkler wrote:
-> > > > The user space API is achieved via two synchronous IOCTL.
-> > >
-> > > IOCTLs?
-> >
-> > Will fix
-> >
-> > > > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is
-> > > performed
-> > > > by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
-> > > where
-> > > > the whole RPMB sequence including RESULT_READ is supplied by the
-> caller.
-> > > > The latter is intended for  easier adjusting  of the  applications
-> > > > that use MMC_IOC_MULTI_CMD ioctl.
-> > >
-> > > Why "  "?
-> > Not sure I there is enough clue in your question.
-> > >
-> > > >
-> > > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> > >
-> > > > +
-> > > > +static long rpmb_ioctl(struct file *fp, unsigned int cmd,
-> > > > +unsigned long arg) {
-> > > > +	return __rpmb_ioctl(fp, cmd, (void __user *)arg); }
-> > > > +
-> > > > +#ifdef CONFIG_COMPAT
-> > > > +static long rpmb_compat_ioctl(struct file *fp, unsigned int cmd,
-> > > > +			      unsigned long arg)
-> > > > +{
-> > > > +	return	__rpmb_ioctl(fp, cmd, compat_ptr(arg));
-> > > > +}
-> > > > +#endif /* CONFIG_COMPAT */
-> > >
-> > > Description of the ioctl is missing,
-> > Will add.
-> >
-> > and it should certainly be designed in a way
-> > > that it does not need compat support.
-> >
-> > The compat_ioctl handler just casts the compat_ptr, I believe this
-> > should be done unless the ioctl is globaly registered in
-> > fs/compat_ioctl.c, but I might be wrong.
-> 
-> You shouldn't need a compat ioctl for anything new that is added, unless
-> your api is really messed up.  Please test to be sure, and not use a compat
-> ioctl at all, it isn't that hard to do.
+Also, please CC me in replies.
 
-compat_ioctl is called anyhow when CONFIG_COMPAT is set, there is no way around it, or I'm missing something?
-Actually there is no more than that for the COMPAT support in this code.
+On Thu, Sep 1, 2016 at 4:43 PM, Alex Austin <aaustin@oceantechonline.com> wrote:
+> Hello,
+> What is the most performant way to directly interface with an attached hard
+> drive? I've so far used read()/write() on /dev/sd_ but I find error handling
+> exceedingly difficult, as I don't always even get errors reported, even if the
+> open() call includes O_DIRECT. I've also used ioctl(SG_IO), but find that it's
+> extremely slow due to the lack of queuing support in the API. Is there a
+> mid-level API that will get me decent error handling while allowing command
+> queuing, or do I just need to make multiple threads all doing separate SG_IO
+> ioctls?
+>
+> Thank you,
+> - Alex Austin
+>
+> --
+> Intelligence is knowing that a tomato is a fruit; wisdom is knowing that it
+> doesn't go in a fruit salad; charisma is selling a tomato-based fruit salad.
 
-Thanks
-Tomas
+
+
+-- 
+Intelligence is knowing that a tomoato is a fruit; wisdom is knowing
+that it doesn't go in a fruit salad; charisma is selling a
+tomato-based fruit salad.
