@@ -1,19 +1,21 @@
-From: Mrs Julie Leach <info@kundl.at>
-Subject: Greetings
-Date: Thu, 01 Sep 2016 02:39:47 +0200
-Message-ID: <20160901004006.301521C5B37@smtp2.mynet.at>
-Reply-To: julieleach865@outlook.com
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 1/2] wd719x: Remove last declaration using
+ DEFINE_PCI_DEVICE_TABLE
+Date: Thu, 1 Sep 2016 01:00:40 +0000
+Message-ID: <BLUPR02MB1683393811D77C9639F708F081E20@BLUPR02MB1683.namprd02.prod.outlook.com>
+References: <cover.1472660229.git.joe@perches.com>
+ <95c5e4100c3cd4eda643624f5b70e8d7abceb86c.1472660229.git.joe@perches.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.mynet.at ([83.218.160.49]:59427 "EHLO smtp2.mynet.at"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754803AbcIAAra (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 31 Aug 2016 20:47:30 -0400
-Content-Description: Mail message body
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: Joe Perches <joe@perches.com>, Andrew Morton <akpm@linux-foundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <info@kundl.at>
 
-You are a recipient to Mrs Julie Leach Donation of $3 million USD. Contact ( julieleach86@outlook.com ) for claims.
+On 08/31/16 09:19, Joe Perches wrote:=0A=
+> Convert it to the preferred const struct pci_device_id instead.=0A=
+=0A=
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>=0A=
