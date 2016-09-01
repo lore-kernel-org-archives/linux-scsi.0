@@ -1,96 +1,38 @@
-From: Himanshu Madhani <himanshu.madhani@qlogic.com>
-Subject: Re: [PATCH] tcm_qla2xxx Add SCSI command jammer/discard capability to
- the tcm_qla2xxx module - enhancements V2 (corrected)
-Date: Thu, 1 Sep 2016 16:36:54 +0000
-Message-ID: <F88403DE-65C0-418F-9A85-E069C0326740@qlogic.com>
-References: <2049960802.3555391.1472592259703.JavaMail.zimbra@redhat.com>
- <1665961856.3556154.1472592688632.JavaMail.zimbra@redhat.com>
- <780950097.3558132.1472593776609.JavaMail.zimbra@redhat.com>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH v5 5/8] char: rpmb: add RPMB simulation device
+Date: Thu, 1 Sep 2016 22:45:47 +0200
+Message-ID: <20160901204547.GA5960@kroah.com>
+References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
+ <1468873673-21776-6-git-send-email-tomas.winkler@intel.com>
+ <20160831105845.GE10180@kroah.com>
+ <5B8DA87D05A7694D9FA63FD143655C1B542C5B98@hasmsx108.ger.corp.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0139.outbound.protection.outlook.com ([104.47.32.139]:27296
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751167AbcIAQha (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Sep 2016 12:37:30 -0400
-In-Reply-To: <780950097.3558132.1472593776609.JavaMail.zimbra@redhat.com>
-Content-Language: en-US
-Content-ID: <B04D872C1B88ED48A42A671A9E0C201B@namprd11.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5B8DA87D05A7694D9FA63FD143655C1B542C5B98@hasmsx108.ger.corp.intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Winkler, Tomas" <tomas.winkler@intel.com>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, linux-scsi <linux-scsi@vger.kernel.org>
 
-T24gOC8zMC8xNiwgMjo0OSBQTSwgIkxhdXJlbmNlIE9iZXJtYW4iIDxsb2Jlcm1hbkByZWRoYXQu
-Y29tPiB3cm90ZToNCg0KDQoNCj5IZWxsbyBIaW1hbnNodSBhbmQgTmljaG9sYXMsDQo+DQo+RW5o
-YW5jZW1lbnRzIHRvIHRoZSB0Y21fZGVidWcgY29kZS4NCj5UaGlzIGlzIHBhdGNoIFYyIChmaW5h
-bCkgYXMgVjEgaGFkIGlzc3Vlcy4NCj4NCj5BZGRlZCB0aGUgcG9zc2liaWxpdHkgb2YgYmxvY2tp
-bmcgb25seSBzcGVjaWZpYyBTQ1NJIGRhdGEgbW92ZW1lbnQgY29tbWFuZHMNCj5idXQgYWxsb3dp
-bmcgVFVSJ1MgdG8gcGFzcy4NCj5UaGlzIGhhcyBiZWVuIGhlbHBmdWwgZm9yIGRlYnVnZ2luZyBt
-YW55IGRyaXZlci9hcnJheSBpbnRlcm9wZXJhYmlsdHkNCj5pc3N1ZXMuDQo+DQo+Rm9sZGVkIGRv
-Y3VtZW50YXRpb24gYW5kIGNvZGUgaW50byBzaW5nbGUgcGF0Y2ggbm93DQo+DQo+VGVzdGVkIGJ5
-OiBMYXVyZW5jZSBPYmVybWFuIDxsb2Jlcm1hbkByZWRoYXQuY29tPg0KPlNpZ25lZC1vZmYtYnk6
-IExhdXJlbmNlIE9iZXJtYW4gPGxvYmVybWFuQHJlZGhhdC5jb20+DQo+DQo+IERvY3VtZW50YXRp
-b24vc2NzaS90Y21fcWxhMnh4eC50eHQgfCAxNiArKysrKysrKysrKysrKysrDQo+IGRyaXZlcnMv
-c2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMgfCAgNyArKysrKysrDQo+IGRyaXZlcnMvc2NzaS9x
-bGEyeHh4L3RjbV9xbGEyeHh4LmggfCAgMSArDQo+IDMgZmlsZXMgY2hhbmdlZCwgMjQgaW5zZXJ0
-aW9ucygrKQ0KPg0KPmRpZmYgLS1naXQgYS9Eb2N1bWVudGF0aW9uL3Njc2kvdGNtX3FsYTJ4eHgu
-dHh0IGIvRG9jdW1lbnRhdGlvbi9zY3NpL3RjbV9xbGEyeHh4LnR4dA0KPmluZGV4IGMzYTY3MGEu
-LjhkMjZkMjkgMTAwNjQ0DQo+LS0tIGEvRG9jdW1lbnRhdGlvbi9zY3NpL3RjbV9xbGEyeHh4LnR4
-dA0KPisrKyBiL0RvY3VtZW50YXRpb24vc2NzaS90Y21fcWxhMnh4eC50eHQNCj5AQCAtMjAsMyAr
-MjAsMTkgQEAgZWNobyAxID4gL3N5cy9rZXJuZWwvY29uZmlnL3RhcmdldC9xbGEyeHh4LzIxOjAw
-OjAwOjI0OmZmOjI3OjhmOmFlL3RwZ3RfMS9hdHRyaWINCj4gDQo+IERpc2FibGUgamFtbWluZyBv
-biBob3N0IDQNCj4gZWNobyAwID4gL3N5cy9rZXJuZWwvY29uZmlnL3RhcmdldC9xbGEyeHh4LzIx
-OjAwOjAwOjI0OmZmOjI3OjhmOmFlL3RwZ3RfMS9hdHRyaWIvamFtX2hvc3QNCj4rDQo+K05ldyBm
-ZWF0dXJlIGFkZGVkIHdpdGggYSBuZXcgYXR0cmlidXRlIGNhbGxlZCBqYW1fZGF0YS4NCj4rDQo+
-K1NldHRpbmcgYSBib29sZWFuIG9mIDEgZm9yIGphbV9kYXRhIHdpbGwgYWxsb3cgdGhlIGFsbG93
-IHRoZSBkcm9wcGluZyBvZiBkYXRhLW9ubHkgU0NTSSANCj4rIGNvbW1hbmRzIGJ1dCBhbGxvdyBU
-VVIgY29tbWFuZHMgdG8gcGFzcy4NCj4rTm90ZSB0aGF0IGZvciB0aGlzIHRvIHdvcmsgamFtX2hv
-c3QgbmVlZHMgdG8gYmUgc2V0IHRvIDANCj4rDQo+K1RoaXMgaGFzIHByb3ZlbiB2ZXJ5IHVzZWZ1
-bCBmb3IgdGVzdGluZyBMb3cgTGV2ZWwgZHJpdmVyIHJlc3BvbnNlLg0KPisNCj4rRW5hYmxlIGhv
-c3QgNCBmb3Igb25seSBkYXRhIGNvbW1hbmRzIHRvIGJlIGphbW1lZA0KPitlY2hvIDAgPiAvc3lz
-L2tlcm5lbC9jb25maWcvdGFyZ2V0L3FsYTJ4eHgvMjE6MDA6MDA6MjQ6ZmY6Mjc6OGY6YWUvdHBn
-dF8xL2F0dHJpYi9qYW1faG9zdA0KPitlY2hvIDEgPiAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0
-L3FsYTJ4eHgvMjE6MDA6MDA6MjQ6ZmY6Mjc6OGY6YWUvdHBndF8xL2F0dHJpYi9qYW1fZGF0YQ0K
-PisNCj4rRGlzYWJsZSBqYW1taW5nIG9uIGhvc3QgNA0KPitlY2hvIDAgPiAvc3lzL2tlcm5lbC9j
-b25maWcvdGFyZ2V0L3FsYTJ4eHgvMjE6MDA6MDA6MjQ6ZmY6Mjc6OGY6YWUvdHBndF8xL2F0dHJp
-Yi9qYW1faG9zdA0KPitlY2hvIDAgPiAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0L3FsYTJ4eHgv
-MjE6MDA6MDA6MjQ6ZmY6Mjc6OGY6YWUvdHBndF8xL2F0dHJpYi9qYW1fZGF0YQ0KPg0KPmRpZmYg
-LS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jIGIvZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvdGNtX3FsYTJ4eHguYw0KPmluZGV4IDY2NDNmNmYuLjFjYjNmMDIgMTAwNjQ0DQo+
-LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYw0KPisrKyBiL2RyaXZlcnMv
-c2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMNCj5AQCAtNDczLDYgKzQ3MywxMCBAQCBzdGF0aWMg
-aW50IHRjbV9xbGEyeHh4X2hhbmRsZV9jbWQoc2NzaV9xbGFfaG9zdF90ICp2aGEsIHN0cnVjdCBx
-bGFfdGd0X2NtZCAqY21kLA0KPiAJCS8qIHJldHVybiwgYW5kIGRvbnQgcnVuIHRhcmdldF9zdWJt
-aXRfY21kLGRpc2NhcmRpbmcgY29tbWFuZCAqLw0KPiAJCXJldHVybiAwOw0KPiAJfQ0KPisJaWYg
-KHVubGlrZWx5KHRwZy0+dHBnX2F0dHJpYi5qYW1fZGF0YSAmJiAoY2RiWzBdPT0weDA4IHx8IGNk
-YlswXT09MHgwQSB8fCBjZGJbMF09PTB4MjggfHwgY2RiWzBdPT0weDJBKSkpIHsNCj4rICAgICAg
-ICAgICAgICAgIC8qIHJldHVybiwgYW5kIGRvbnQgcnVuIHRhcmdldF9zdWJtaXRfY21kLGRpc2Nh
-cmRpbmcgY29tbWFuZCBpZiBub3QgVFVSKi8NCj4rICAgICAgICAgICAgICAgIHJldHVybiAwOw0K
-PisgICAgICAgIH0NCj4gI2VuZGlmDQo+IA0KPiAJY21kLT52aGEtPnRndF9jb3VudGVycy5xbGFf
-Y29yZV9zYnRfY21kKys7DQo+QEAgLTgyNyw2ICs4MzEsNyBAQCBERUZfUUxBX1RQR19BVFRSSUIo
-cHJvZF9tb2RlX3dyaXRlX3Byb3RlY3QpOw0KPiBERUZfUUxBX1RQR19BVFRSSUIoZGVtb19tb2Rl
-X2xvZ2luX29ubHkpOw0KPiAjaWZkZWYgQ09ORklHX1RDTV9RTEEyWFhYX0RFQlVHDQo+IERFRl9R
-TEFfVFBHX0FUVFJJQihqYW1faG9zdCk7DQo+K0RFRl9RTEFfVFBHX0FUVFJJQihqYW1fZGF0YSk7
-DQo+ICNlbmRpZg0KPiANCj4gc3RhdGljIHN0cnVjdCBjb25maWdmc19hdHRyaWJ1dGUgKnRjbV9x
-bGEyeHh4X3RwZ19hdHRyaWJfYXR0cnNbXSA9IHsNCj5AQCAtODM3LDYgKzg0Miw3IEBAIHN0YXRp
-YyBzdHJ1Y3QgY29uZmlnZnNfYXR0cmlidXRlICp0Y21fcWxhMnh4eF90cGdfYXR0cmliX2F0dHJz
-W10gPSB7DQo+IAkmdGNtX3FsYTJ4eHhfdHBnX2F0dHJpYl9hdHRyX2RlbW9fbW9kZV9sb2dpbl9v
-bmx5LA0KPiAjaWZkZWYgQ09ORklHX1RDTV9RTEEyWFhYX0RFQlVHDQo+IAkmdGNtX3FsYTJ4eHhf
-dHBnX2F0dHJpYl9hdHRyX2phbV9ob3N0LA0KPisJJnRjbV9xbGEyeHh4X3RwZ19hdHRyaWJfYXR0
-cl9qYW1fZGF0YSwNCj4gI2VuZGlmDQo+IAlOVUxMLA0KPiB9Ow0KPkBAIC0xMDExLDYgKzEwMTcs
-NyBAQCBzdGF0aWMgc3RydWN0IHNlX3BvcnRhbF9ncm91cCAqdGNtX3FsYTJ4eHhfbWFrZV90cGco
-DQo+IAl0cGctPnRwZ19hdHRyaWIuY2FjaGVfZHluYW1pY19hY2xzID0gMTsNCj4gCXRwZy0+dHBn
-X2F0dHJpYi5kZW1vX21vZGVfbG9naW5fb25seSA9IDE7DQo+IAl0cGctPnRwZ19hdHRyaWIuamFt
-X2hvc3QgPSAwOw0KPisJdHBnLT50cGdfYXR0cmliLmphbV9kYXRhID0gMDsNCj4gDQo+IAlyZXQg
-PSBjb3JlX3RwZ19yZWdpc3Rlcih3d24sICZ0cGctPnNlX3RwZywgU0NTSV9QUk9UT0NPTF9GQ1Ap
-Ow0KPiAJaWYgKHJldCA8IDApIHsNCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgv
-dGNtX3FsYTJ4eHguaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmgNCj5pbmRl
-eCAzN2UwMjZhLi43ODliZGViIDEwMDY0NA0KPi0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3Rj
-bV9xbGEyeHh4LmgNCj4rKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5oDQo+
-QEAgLTM1LDYgKzM1LDcgQEAgc3RydWN0IHRjbV9xbGEyeHh4X3RwZ19hdHRyaWIgew0KPiAJaW50
-IGRlbW9fbW9kZV9sb2dpbl9vbmx5Ow0KPiAJaW50IGZhYnJpY19wcm90X3R5cGU7DQo+IAlpbnQg
-amFtX2hvc3Q7DQo+KwlpbnQgamFtX2RhdGE7DQo+IH07DQo+IA0KPiBzdHJ1Y3QgdGNtX3FsYTJ4
-eHhfdHBnIHsNCj4tLSANCj4yLjUuNQ0KDQpMb29rcyBva2F5LiANCg0KQWNrZWQtQnk6IEhpbWFu
-c2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAcWxvZ2ljLmNvbT4NCj4NCg==
+On Thu, Sep 01, 2016 at 08:25:28PM +0000, Winkler, Tomas wrote:
+> > On Mon, Jul 18, 2016 at 11:27:50PM +0300, Tomas Winkler wrote:
+> > > This is a simple platform device used for testing the RPMB subsystem.
+> > > +static struct platform_device *rpmb_sim_pdev;
+> > 
+> > A platform device?  Ick, no please don't abuse that interface for this type of
+> > thing.  Make it a real device if you have one, and put it in the proper place.  If
+> > it's a "virtual" device, great, use that.  But don't make something up like this
+> > please.
+> 
+> This is a virtual device (simulation), nothing behind it just a chunk of memory.
+> Is this there any information missing to make it clearer? 
+
+Don't make it a platform device, make it a "virtual" device, don't abuse
+the platform device/driver interface for something that isn't really a
+platform device.
+
+thanks,
+
+greg k-h
