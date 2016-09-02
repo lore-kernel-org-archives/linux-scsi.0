@@ -1,98 +1,100 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 2/6] cxlflash: Remove the device cleanly in the system shutdown path
-Date: Fri,  2 Sep 2016 15:39:16 -0500
-Message-ID: <1472848756-64998-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 3/6] cxlflash: Fix to avoid EEH and host reset collisions
+Date: Fri,  2 Sep 2016 15:39:30 -0500
+Message-ID: <1472848770-65034-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46489 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752936AbcIBUjc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2016 16:39:32 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u82KXTLm052620
-        for <linux-scsi@vger.kernel.org>; Fri, 2 Sep 2016 16:39:31 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 25753qh4gc-1
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:59265 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753912AbcIBUjo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2016 16:39:44 -0400
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u82KXFXT143880
+        for <linux-scsi@vger.kernel.org>; Fri, 2 Sep 2016 16:39:44 -0400
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 257639xqtc-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Sep 2016 16:39:31 -0400
+        for <linux-scsi@vger.kernel.org>; Fri, 02 Sep 2016 16:39:44 -0400
 Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Fri, 2 Sep 2016 14:39:30 -0600
+        Fri, 2 Sep 2016 14:39:43 -0600
 In-Reply-To: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-Commit 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL Flash
-cards") was recently introduced to notify the AFU when a system is going
-down. Due to the position of the cxlflash driver in the device stack,
-cxlflash devices are _always_ removed during a reboot/shutdown. This can
-lead to a crash if the cxlflash shutdown hook is invoked _after_ the
-shutdown hook for the owning virtual PHB. Furthermore, the current
-implementation of shutdown/remove hooks for cxlflash are not tolerant to
-being invoked when the device is not enabled. This can also lead to a
-crash in situations where the remove hook is invoked after the device has
-been removed via the vPHBs shutdown hook. An example of this scenario
-would be an EEH reset failure while a reboot/shutdown is in progress.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-To solve both problems, the shutdown hook for cxlflash is updated to
-simply remove the device. This path already includes the AFU notification
-and thus this solution will continue to perform the original intent. At
-the same time, the remove hook is updated to protect against being
-called when the device is not enabled.
+The EEH reset handler is ignorant to the current state of the
+driver when processing a frozen event and initiating a device
+reset. This can be an issue if an EEH event occurs while a user
+or stack initiated reset is executing. More specifically, if an
+EEH occurs while the SCSI host reset handler is active, the reset
+initiated by the EEH thread will likely collide with the host reset
+thread. This can leave the device in an inconsistent state, or worse,
+cause a system crash.
 
-Fixes: 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL Flash
-cards")
-Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+As a remedy, the EEH handler is updated to evaluate the device state
+and take appropriate action (proceed, wait, or disconnect host). The
+host reset handler is also updated to handle situations where an EEH
+occurred during a host reset. In such situations, the host reset handler
+will delay reporting back a success to give the EEH reset an opportunity
+to complete.
+
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 18 ++++++------------
- 1 file changed, 6 insertions(+), 12 deletions(-)
+ drivers/scsi/cxlflash/main.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index b063c41..4c2559a 100644
+index 4c2559a..4ef5235 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -823,17 +823,6 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
- }
- 
- /**
-- * cxlflash_shutdown() - shutdown handler
-- * @pdev:	PCI device associated with the host.
-- */
--static void cxlflash_shutdown(struct pci_dev *pdev)
--{
--	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
--
--	notify_shutdown(cfg, false);
--}
--
--/**
-  * cxlflash_remove() - PCI entry point to tear down host
-  * @pdev:	PCI device associated with the host.
+@@ -2042,6 +2042,11 @@ retry:
+  * cxlflash_eh_host_reset_handler() - reset the host adapter
+  * @scp:	SCSI command from stack identifying host.
   *
-@@ -844,6 +833,11 @@ static void cxlflash_remove(struct pci_dev *pdev)
- 	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
- 	ulong lock_flags;
++ * Following a reset, the state is evaluated again in case an EEH occurred
++ * during the reset. In such a scenario, the host reset will either yield
++ * until the EEH recovery is complete or return success or failure based
++ * upon the current device state.
++ *
+  * Return:
+  *	SUCCESS as defined in scsi/scsi.h
+  *	FAILED as defined in scsi/scsi.h
+@@ -2074,7 +2079,8 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 		} else
+ 			cfg->state = STATE_NORMAL;
+ 		wake_up_all(&cfg->reset_waitq);
+-		break;
++		ssleep(1);
++		/* fall through */
+ 	case STATE_RESET:
+ 		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
+ 		if (cfg->state == STATE_NORMAL)
+@@ -2590,6 +2596,9 @@ out_remove:
+  * @pdev:	PCI device struct.
+  * @state:	PCI channel state.
+  *
++ * When an EEH occurs during an active reset, wait until the reset is
++ * complete and then take action based upon the device state.
++ *
+  * Return: PCI_ERS_RESULT_NEED_RESET or PCI_ERS_RESULT_DISCONNECT
+  */
+ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+@@ -2603,6 +2612,10 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
  
-+	if (!pci_is_enabled(pdev)) {
-+		pr_debug("%s: Device is disabled\n", __func__);
-+		return;
-+	}
+ 	switch (state) {
+ 	case pci_channel_io_frozen:
++		wait_event(cfg->reset_waitq, cfg->state != STATE_RESET);
++		if (cfg->state == STATE_FAILTERM)
++			return PCI_ERS_RESULT_DISCONNECT;
 +
- 	/* If a Task Management Function is active, wait for it to complete
- 	 * before continuing with remove.
- 	 */
-@@ -2685,7 +2679,7 @@ static struct pci_driver cxlflash_driver = {
- 	.id_table = cxlflash_pci_table,
- 	.probe = cxlflash_probe,
- 	.remove = cxlflash_remove,
--	.shutdown = cxlflash_shutdown,
-+	.shutdown = cxlflash_remove,
- 	.err_handler = &cxlflash_err_handler,
- };
- 
+ 		cfg->state = STATE_RESET;
+ 		scsi_block_requests(cfg->host);
+ 		drain_ioctls(cfg);
 -- 
 2.1.0
 
