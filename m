@@ -1,38 +1,69 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: add missing header dependencies for tc-dwc-g210
-Date: Fri, 02 Sep 2016 07:08:10 -0400
-Message-ID: <yq1zinqsgo5.fsf@sermon.lab.mkp.net>
-References: <1472465940-18570-1-git-send-email-baoyou.xie@linaro.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Need some pointers to debug a target hang
+Date: Fri, 2 Sep 2016 16:14:19 +0200
+Message-ID: <20160902141419.h23stppulnyfrnkz@c203.arch.suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:32168 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753594AbcIBLKI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Sep 2016 07:10:08 -0400
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id u82BA1Bp018508
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Fri, 2 Sep 2016 11:10:02 GMT
-In-Reply-To: <1472465940-18570-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
-        Xie's message of "Mon, 29 Aug 2016 18:19:00 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: target-devel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: Joao.Pinto@synopsys.com, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@linaro.org, xie.baoyou@zte.com.cn
 
->>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
+Hi Nick et al,
 
-Baoyou> We get 2 warnings when build kernel with W=1:
-Baoyou> drivers/scsi/ufs/tc-dwc-g210.c:261:5: warning: no previous
-Baoyou> prototype for 'tc_dwc_g210_config_40_bit' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/ufs/tc-dwc-g210.c:293:5: warning: no previous
-Baoyou> prototype for 'tc_dwc_g210_config_20_bit' [-Wmissing-prototypes]
+I'm having a "interesting" problem with the kernel's iSCSI target and
+could use a debug hint.
 
-Baoyou> In fact, these functions are declared in ufs/tc-dwc-g210.h, so
-Baoyou> this patch add missing header dependencies
+My target uses an iblock backstore on a dm-linear target. When I now
+get I/O form the initiator (I used a simple dd if=/dev/sda
+of=/dev/null) and call 'dmsetup suspend $backstore' it'll take about
+15 seconds for the iscsi_ttx kernel thread to disapear, the iscsi_trx
+and iscsi_np threads are hanging in 'D'.
 
-Applied to 4.9/scsi-queue.
+>From iscsi_trx's stack I see it's waiting in
+__transport_wait_for_tasks(). The last thing I see in dmesg is the
+'ABORT_TASK: Found referenced %s task_tag: %llu' printk but the
+'ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: %llu" printk
+is missing from core_tmr_abort_task(). As there's a
+transport_wait_for_tasks() call in between I _think_ it is stuck in
+aborting this one task and none of the
+complete(se_cmd->t_transport_stop_comp) callers is called. What
+puzzels me a bit is that right after transport_wait_for_tasks() in
+core_tmr_abort_task() there's a call to transport_cmd_finish_abort()
+which in turn calls transport_cmd_check_stop_to_fabric() ->
+transport_cmd_check_stop() ->
+complete_all(&cmd->t_transport_stop_comp).
+
+Doing 
+
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -2739,7 +2739,7 @@ __transport_wait_for_tasks(struct se_cmd
+ 
+        spin_unlock_irqrestore(&cmd->t_state_lock, *flags);
+ 
+-       wait_for_completion(&cmd->t_transport_stop_comp);
++       wait_for_completion_interruptible(&cmd->t_transport_stop_comp, 5 * HZ);
+ 
+        spin_lock_irqsave(&cmd->t_state_lock, *flags);
+        cmd->transport_state &= ~(CMD_T_ACTIVE | CMD_T_STOP);
+
+"resolves" the bug, but I don't think this is correct.
+
+This is all easily reproducible with v4.8-rc4 in qemu (for instance).
+
+Any advice is aprechiated.
+
+Thanks in advance,
+       Johannes
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
