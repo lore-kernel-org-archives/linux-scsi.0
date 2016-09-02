@@ -1,32 +1,45 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] wd719x: Remove last declaration using DEFINE_PCI_DEVICE_TABLE
-Date: Fri, 02 Sep 2016 14:05:06 -0400
-Message-ID: <yq14m5y2n59.fsf@sermon.lab.mkp.net>
-References: <cover.1472660229.git.joe@perches.com>
-        <95c5e4100c3cd4eda643624f5b70e8d7abceb86c.1472660229.git.joe@perches.com>
-        <yq1lgzatwq2.fsf@sermon.lab.mkp.net>
-        <20160902101654.4f7e8fd484bfab95444dfe35@linux-foundation.org>
-Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160902101654.4f7e8fd484bfab95444dfe35@linux-foundation.org>
-        (Andrew Morton's message of "Fri, 2 Sep 2016 10:16:54 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Joe Perches <joe@perches.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 0/6] cxlflash: Miscellaneous fixes
+Date: Fri,  2 Sep 2016 15:36:52 -0500
+Message-ID: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Christophe Lombard <clombard@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Andrew" == Andrew Morton <akpm@linux-foundation.org> writes:
+This patch set contains miscellaneous fixes in the device cleanup and
+EEH recovery paths. One of the patches simplifies the WWPN assignment
+routine.
 
-Andrew> That creates an ordering dependency between the scsi tree and
-Andrew> -mm's "treewide: remove references to the now unnecessary
-Andrew> DEFINE_PCI_DEVICE_TABLE".
+There are a couple of fixes that resolve regressions introduced by
+Commit 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL Flash
+cards") and Commit 888baf069f49 ("scsi: cxlflash: Add kref to context")
 
-Andrew> So an ack would be preferred, please.
+This series is based upon mkp's 4.9/scsi-queue and is bisectable.
 
-OK. I was assuming that a subsequent patch would remove the macro.
+Matthew R. Ochs (4):
+  cxlflash: Fix to avoid EEH and host reset collisions
+  cxlflash: Improve EEH recovery time
+  cxlflash: Refactor WWPN setup
+  cxlflash: Fix context reference tracking on detach
 
-I'll just drop the patch then.
+Uma Krishnan (2):
+  cxlflash: Scan host only after the port is ready for I/O
+  cxlflash: Remove the device cleanly in the system shutdown path
+
+ drivers/scsi/cxlflash/main.c      | 81 +++++++++++++++++----------------------
+ drivers/scsi/cxlflash/superpipe.c |  3 +-
+ 2 files changed, 37 insertions(+), 47 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.1.0
