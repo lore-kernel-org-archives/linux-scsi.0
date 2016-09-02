@@ -1,69 +1,66 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Need some pointers to debug a target hang
-Date: Fri, 2 Sep 2016 16:14:19 +0200
-Message-ID: <20160902141419.h23stppulnyfrnkz@c203.arch.suse.de>
+From: Alex Austin <aaustin@oceantechonline.com>
+Subject: Re: Block-level access
+Date: Fri, 2 Sep 2016 09:24:38 -0500
+Message-ID: <CAGA4w7kD6KK-bW=HjQTOCgyG1thtz7WKm=nTv__2xZSYzZKvvA@mail.gmail.com>
+References: <CAGA4w7nO+mrRwY-Rg0i_O8zBcrNeSS0KurLXN34duR2JJqvEmA@mail.gmail.com>
+ <CAGA4w7=eM9+sHMNaCXx5tXCEEyeJp0wb7ZqpAiuW35u+PEiSBw@mail.gmail.com> <6705ed02-0f22-83d0-159a-c9c4a111a933@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <6705ed02-0f22-83d0-159a-c9c4a111a933@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Nick et al,
+My access is almost purely sequential and primarily writing, so read-ahead
+doesn't help me. What's problematic with pread/pwrite is the lack of error
+channel from media errors.
 
-I'm having a "interesting" problem with the kernel's iSCSI target and
-could use a debug hint.
+BSG looks very interesting. I'll look further into that today.
 
-My target uses an iblock backstore on a dm-linear target. When I now
-get I/O form the initiator (I used a simple dd if=/dev/sda
-of=/dev/null) and call 'dmsetup suspend $backstore' it'll take about
-15 seconds for the iscsi_ttx kernel thread to disapear, the iscsi_trx
-and iscsi_np threads are hanging in 'D'.
+On Thu, Sep 1, 2016 at 5:16 PM, Bart Van Assche
+<bart.vanassche@sandisk.com> wrote:
+> On 09/01/2016 02:48 PM, Alex Austin wrote:
+>>
+>> CC'ing linux-scsi and linux-block.
+>>
+>> Also, please CC me in replies.
+>>
+>> On Thu, Sep 1, 2016 at 4:43 PM, Alex Austin <aaustin@oceantechonline.com>
+>> wrote:
+>>>
+>>> Hello,
+>>> What is the most performant way to directly interface with an attached
+>>> hard
+>>> drive? I've so far used read()/write() on /dev/sd_ but I find error
+>>> handling
+>>> exceedingly difficult, as I don't always even get errors reported, even
+>>> if the
+>>> open() call includes O_DIRECT. I've also used ioctl(SG_IO), but find that
+>>> it's
+>>> extremely slow due to the lack of queuing support in the API. Is there a
+>>> mid-level API that will get me decent error handling while allowing
+>>> command
+>>> queuing, or do I just need to make multiple threads all doing separate
+>>> SG_IO
+>>> ioctls?
+>
+>
+> What the most efficient way is to interface is with a hard drive depends on
+> the I/O pattern. Are you aware that buffered I/O performs read-ahead? Have
+> you already tried to tune the read-ahead setting (blockdev --getra /
+> blockdev --setra)?
+>
+> BTW, if you need an example of how to queue SG_IO, you are welcome to have a
+> look at the fio source code. You will probably be interested in the bsg API.
+> See e.g. https://lwn.net/Articles/174469/.
+>
+> Bart.
 
->From iscsi_trx's stack I see it's waiting in
-__transport_wait_for_tasks(). The last thing I see in dmesg is the
-'ABORT_TASK: Found referenced %s task_tag: %llu' printk but the
-'ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: %llu" printk
-is missing from core_tmr_abort_task(). As there's a
-transport_wait_for_tasks() call in between I _think_ it is stuck in
-aborting this one task and none of the
-complete(se_cmd->t_transport_stop_comp) callers is called. What
-puzzels me a bit is that right after transport_wait_for_tasks() in
-core_tmr_abort_task() there's a call to transport_cmd_finish_abort()
-which in turn calls transport_cmd_check_stop_to_fabric() ->
-transport_cmd_check_stop() ->
-complete_all(&cmd->t_transport_stop_comp).
 
-Doing 
-
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2739,7 +2739,7 @@ __transport_wait_for_tasks(struct se_cmd
- 
-        spin_unlock_irqrestore(&cmd->t_state_lock, *flags);
- 
--       wait_for_completion(&cmd->t_transport_stop_comp);
-+       wait_for_completion_interruptible(&cmd->t_transport_stop_comp, 5 * HZ);
- 
-        spin_lock_irqsave(&cmd->t_state_lock, *flags);
-        cmd->transport_state &= ~(CMD_T_ACTIVE | CMD_T_STOP);
-
-"resolves" the bug, but I don't think this is correct.
-
-This is all easily reproducible with v4.8-rc4 in qemu (for instance).
-
-Any advice is aprechiated.
-
-Thanks in advance,
-       Johannes
 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Intelligence is knowing that a tomoato is a fruit; wisdom is knowing
+that it doesn't go in a fruit salad; charisma is selling a
+tomato-based fruit salad.
