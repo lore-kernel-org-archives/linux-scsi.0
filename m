@@ -1,60 +1,64 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] iscsi-target: fix spelling mistake "Unsolicitied" -> "Unsolicited"
-Date: Fri,  2 Sep 2016 15:30:34 +0100
-Message-ID: <20160902143034.28990-1-colin.king@canonical.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V2 00/15] smartpqi update
+Date: Fri, 2 Sep 2016 14:59:08 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1916399E05@avsrvexchmbx1.microsemi.net>
+References: <147267306072.22907.15779110113022168473.stgit@brunhilda>
+ <yq1poomtwyr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A . Bellinger" <nab@linux-iscsi.org>, Varun Prakash <varun@chelsio.com>, Sagi Grimberg <sagi@grimberg.me>, Bart Van Assche <bart.vanassche@sandisk.com>, Herbert Xu <herbert@gondor.apana.org.au>, Feng Li <lifeng1519@gmail.com>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0040.outbound.protection.outlook.com ([104.47.33.40]:16985
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932111AbcIBO7Y (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Sep 2016 10:59:24 -0400
+In-Reply-To: <yq1poomtwyr.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
+Thank you for doing the tweaking.
 
-Trivial fix to spelling mistakes in pr_debug message and comments
+I notice that the MAINTAINERS file got updated with the Documentation/scsi/=
+smartpqi.txt, but smartpqi.txt was not added.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/target/iscsi/iscsi_target.c       | 2 +-
- drivers/target/iscsi/iscsi_target_login.c | 4 ++--
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Wondering what I need to do to resolve this.
 
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 39b928c..1aaf1f3 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -2982,7 +2982,7 @@ iscsit_build_nopin_rsp(struct iscsi_cmd *cmd, struct iscsi_conn *conn,
- 
- 	pr_debug("Built NOPIN %s Response ITT: 0x%08x, TTT: 0x%08x,"
- 		" StatSN: 0x%08x, Length %u\n", (nopout_response) ?
--		"Solicitied" : "Unsolicitied", cmd->init_task_tag,
-+		"Solicited" : "Unsolicited", cmd->init_task_tag,
- 		cmd->targ_xfer_tag, cmd->stat_sn, cmd->buf_ptr_size);
- }
- EXPORT_SYMBOL(iscsit_build_nopin_rsp);
-diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/iscsi/iscsi_target_login.c
-index e1b4caf..78b0d5e 100644
---- a/drivers/target/iscsi/iscsi_target_login.c
-+++ b/drivers/target/iscsi/iscsi_target_login.c
-@@ -434,7 +434,7 @@ static int iscsi_login_zero_tsih_s2(
- 
- 		/*
- 		 * Make MaxRecvDataSegmentLength PAGE_SIZE aligned for
--		 * Immediate Data + Unsolicitied Data-OUT if necessary..
-+		 * Immediate Data + Unsolicited Data-OUT if necessary..
- 		 */
- 		param = iscsi_find_param_from_key("MaxRecvDataSegmentLength",
- 						  conn->param_list);
-@@ -646,7 +646,7 @@ static void iscsi_post_login_start_timers(struct iscsi_conn *conn)
- {
- 	struct iscsi_session *sess = conn->sess;
- 	/*
--	 * FIXME: Unsolicitied NopIN support for ISER
-+	 * FIXME: Unsolicited NopIN support for ISER
- 	 */
- 	if (conn->conn_transport->transport_type == ISCSI_INFINIBAND)
- 		return;
--- 
-2.9.3
+
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
+
+
+
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Friday, September 02, 2016 5:31 AM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; John Hall; Kevin Barnett; Mahesh
+> Rajashekhara; hch@infradead.org; Scott Teel; Viswas G; Justin Lindley; Sc=
+ott
+> Benesh; elliott@hpe.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH V2 00/15] smartpqi update
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> >>>>> "Don" =3D=3D Don Brace <don.brace@microsemi.com> writes:
+>=20
+> Don,
+>=20
+> Don> These changes are based on Linus's tree The changes are:
+>=20
+> Please make sure you submit patches against my tree. Had to tweak a few
+> things by hand.
+>=20
+> Applied series to 4.9/scsi-queue.
+>=20
+> --
+> Martin K. Petersen      Oracle Linux Engineering
