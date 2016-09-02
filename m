@@ -1,24 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] wd719x: Remove last declaration using DEFINE_PCI_DEVICE_TABLE
-Date: Fri, 02 Sep 2016 06:36:05 -0400
-Message-ID: <yq1lgzatwq2.fsf@sermon.lab.mkp.net>
-References: <cover.1472660229.git.joe@perches.com>
-        <95c5e4100c3cd4eda643624f5b70e8d7abceb86c.1472660229.git.joe@perches.com>
+Subject: Re: [PATCH v1 0/3] Ibmvscsis fixes and code cleanup
+Date: Fri, 02 Sep 2016 06:53:51 -0400
+Message-ID: <yq1h99ytvwg.fsf@sermon.lab.mkp.net>
+References: <1472660941-23856-1-git-send-email-bryantly@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <95c5e4100c3cd4eda643624f5b70e8d7abceb86c.1472660229.git.joe@perches.com>
-        (Joe Perches's message of "Wed, 31 Aug 2016 09:19:28 -0700")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1472660941-23856-1-git-send-email-bryantly@linux.vnet.ibm.com>
+        (Bryant G. Ly's message of "Wed, 31 Aug 2016 11:28:58 -0500")
+Sender: target-devel-owner@vger.kernel.org
+To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Cc: nab@linux-iscsi.org, dan.carpenter@oracle.com, mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Joe" == Joe Perches <joe@perches.com> writes:
+>>>>> "Bryant" == Bryant G Ly <bryantly@linux.vnet.ibm.com> writes:
 
-Joe> Convert it to the preferred const struct pci_device_id instead.
+Bryant,
+
+Bryant> Here are some small fixes and cleanups for Ibmvscsis Target
+Bryant> Driver.  The only one of significance is the first one where
+Bryant> there is a possibility of a kernel crash due to inproper
+Bryant> deregister of target session since we didn't sync up work and
+Bryant> didn't deregister_configfs.
 
 Applied to 4.9/scsi-queue.
+
+I did patch 2 by hand. It didn't apply to neither my tree, nor Nic's.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
