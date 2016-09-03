@@ -1,37 +1,59 @@
-From: "Xiao" <info@rublix.ch>
-Subject: Ahoj....
-Date: Fri, 2 Sep 2016 17:38:26 -0000
-Message-ID: <d3b7a0b19202da7d661e5494057c4854.squirrel__28079.0640310899$1472865843$gmane$org@52.187.45.86>
-Reply-To: xiasn113@gmail.com
-Mime-Version: 1.0
-Content-Type: text/plain;charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [52.187.45.86] ([52.187.45.86]:48361 "EHLO mail.bali.com"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751271AbcICBXi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Sep 2016 21:23:38 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] lpcf: Simplify code
+Date: Sat,  3 Sep 2016 09:04:49 +0200
+Message-ID: <1472886289-29756-1-git-send-email-christophe.jaillet@wanadoo.fr>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: james.smart@avagotech.com, dick.kennedy@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
+Calling 'list_splice' followed by 'INIT_LIST_HEAD' is equivalent to
+'list_splice_init'.
 
+This has been spotted with the following coccinelle script:
+/////
+@@
+expression y,z;
+@@
 
+-   list_splice(y,z);
+-   INIT_LIST_HEAD(y);
++   list_splice_init(y,z);
 
-Ahoj....,
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c | 10 ++++------
+ 1 file changed, 4 insertions(+), 6 deletions(-)
 
-Jsem zastupující investicní zájem ze strany Thajska mají zájem
-zahranicních investic zahrnující velký objem finan&#269;ních
-prostredk&#367;, pro které se snazíme svou úcast jako v zámo&#345;í
-zástupce zvládnout investice. Muj klient, který je rodák z Thajska, má
-nejaké peníze ze svých obchodních úspor chce investovat na základ&#283;
-kvalifikovaných zahranicních partnerství. Pokud máte pocit naklon&#283;ni
-vyzádaná roli, uvedte o rychlou odezvu, takze já vám muze poskytnout dalsi
-podrobnosti spolupráce.
-
-Mejte vsak na pameti, ze se jedná o legitimní transakce a tesím se na vase
-rychlé odpovedi na muj soukromý e-mail níze:
-
-Pozdravy,
-dngsn113@gmail.com
-Barr. Xiaodong Su
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d197aa176dee..90c26d27fd1f 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -978,9 +978,8 @@ lpfc_get_scsi_buf_s3(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 			 list);
+ 	if (!lpfc_cmd) {
+ 		spin_lock(&phba->scsi_buf_list_put_lock);
+-		list_splice(&phba->lpfc_scsi_buf_list_put,
+-			    &phba->lpfc_scsi_buf_list_get);
+-		INIT_LIST_HEAD(&phba->lpfc_scsi_buf_list_put);
++		list_splice_init(&phba->lpfc_scsi_buf_list_put,
++				 &phba->lpfc_scsi_buf_list_get);
+ 		list_remove_head(scsi_buf_list_get, lpfc_cmd,
+ 				 struct lpfc_scsi_buf, list);
+ 		spin_unlock(&phba->scsi_buf_list_put_lock);
+@@ -1018,9 +1017,8 @@ lpfc_get_scsi_buf_s4(struct lpfc_hba *phba, struct lpfc_nodelist *ndlp)
+ 	}
+ 	if (!found) {
+ 		spin_lock(&phba->scsi_buf_list_put_lock);
+-		list_splice(&phba->lpfc_scsi_buf_list_put,
+-			    &phba->lpfc_scsi_buf_list_get);
+-		INIT_LIST_HEAD(&phba->lpfc_scsi_buf_list_put);
++		list_splice_init(&phba->lpfc_scsi_buf_list_put,
++				 &phba->lpfc_scsi_buf_list_get);
+ 		spin_unlock(&phba->scsi_buf_list_put_lock);
+ 		list_for_each_entry_safe(lpfc_cmd, lpfc_cmd_next,
+ 					 &phba->lpfc_scsi_buf_list_get, list) {
+-- 
+2.7.4
 
