@@ -1,7 +1,7 @@
 From: Arnd Bergmann <arnd@arndb.de>
 Subject: Re: [PATCH] [SCSI] aacraid: mark aac_src_select_comm() static
-Date: Mon, 05 Sep 2016 13:49:00 +0200
-Message-ID: <5934610.AtTCaH4afZ@wuerfel>
+Date: Mon, 05 Sep 2016 13:50:17 +0200
+Message-ID: <29596889.mEYM5UttnR@wuerfel>
 References: <1472971630-4765-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,7 +21,6 @@ On Sunday, September 4, 2016 2:47:10 PM CEST Baoyou Xie wrote:
 > declared and don't need a declaration, but can be made static.
 > so this patch marks this function with 'static'.
 > 
-> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 > 
 
 Acked-by: Arnd Bergmann <arnd@arndb.de>
