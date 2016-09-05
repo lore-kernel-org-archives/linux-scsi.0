@@ -1,27 +1,26 @@
 From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH] lpfc: mark symbols static where possible
-Date: Mon, 05 Sep 2016 13:14:26 +0200
-Message-ID: <5736452.ArzUdR1RZm@wuerfel>
-References: <1472972847-5174-1-git-send-email-baoyou.xie@linaro.org>
+Subject: Re: [PATCH] [SCSI] bnx2fc: mark symbols static where possible
+Date: Mon, 05 Sep 2016 13:17:23 +0200
+Message-ID: <5444175.V8HzkfLa1x@wuerfel>
+References: <1472971941-4882-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7Bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.187]:51688 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752268AbcIELTi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2016 07:19:38 -0400
-In-Reply-To: <1472972847-5174-1-git-send-email-baoyou.xie@linaro.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1472971941-4882-1-git-send-email-baoyou.xie@linaro.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: james.smart@avagotech.com, dick.kennedy@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xie.baoyou@zte.com.cn
+Cc: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xie.baoyou@zte.com.cn
+List-Id: linux-scsi@vger.kernel.org
 
-On Sunday, September 4, 2016 3:07:27 PM CEST Baoyou Xie wrote:
+On Sunday, September 4, 2016 2:52:21 PM CEST Baoyou Xie wrote:
 > We get a few warnings when building kernel with W=1:
-> drivers/scsi/lpfc/lpfc_sli.c:5693:1: warning: no previous prototype for 'lpfc_set_features' [-Wmissing-prototypes]
-> drivers/scsi/lpfc/lpfc_sli.c:8972:1: warning: no previous prototype for 'lpfc_sli_calc_ring' [-Wmissing-prototypes]
-> drivers/scsi/lpfc/lpfc_mbox.c:2264:1: warning: no previous prototype for 'lpfc_mbx_cmpl_rdp_link_stat' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_els.c:257:6: warning: no previous prototype for 'bnx2fc_srr_compl' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_els.c:367:6: warning: no previous prototype for 'bnx2fc_rec_compl' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:628:5: warning: no previous prototype for 'bnx2fc_percpu_io_thread' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_fcoe.c:1413:26: warning: no previous prototype for 'bnx2fc_interface_create' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_hwi.c:997:21: warning: no previous prototype for 'bnx2fc_alloc_work' [-Wmissing-prototypes]
+> drivers/scsi/bnx2fc/bnx2fc_io.c:1082:5: warning: no previous prototype for 'bnx2fc_abts_cleanup' [-Wmissing-prototypes]
 > ....
 > 
 > In fact, these functions are only used in the file in which they are
