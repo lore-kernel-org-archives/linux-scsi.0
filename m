@@ -1,90 +1,118 @@
-From: <junplzen@cmkos.cz>
-Subject: linux-scsin
-Date: Mon, 05 Sep 2016 10:35:59 0000
-Message-ID: <000101d20761$4ac27a50$c0a80001@static-106-203-78-212.thenetworkfactory.nl>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
+Subject: Re: [PATCH 2/6] cxlflash: Remove the device cleanly in the system
+ shutdown path
+Date: Mon, 5 Sep 2016 17:12:37 +1000
+Message-ID: <609a0eff-d4e4-03ea-739f-770fc24860ef@au1.ibm.com>
+References: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1472848756-64998-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="ryqlinux-scsia.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static-106-203-78-212.thenetworkfactory.nl ([212.78.203.106]:47626
-        "HELO static-106-203-78-212.thenetworkfactory.nl"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
-        id S1750908AbcIEEgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Sep 2016 00:36:03 -0400
-Content-Disposition: attachment
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:35482 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755003AbcIEHNE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Sep 2016 03:13:04 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8572srb075420
+        for <linux-scsi@vger.kernel.org>; Mon, 5 Sep 2016 03:13:03 -0400
+Received: from e23smtp03.au.ibm.com (e23smtp03.au.ibm.com [202.81.31.145])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 258bwbnsw9-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 05 Sep 2016 03:13:03 -0400
+Received: from localhost
+        by e23smtp03.au.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <andrew.donnellan@au1.ibm.com>;
+        Mon, 5 Sep 2016 17:12:59 +1000
+Received: from d23relay09.au.ibm.com (d23relay09.au.ibm.com [9.185.63.181])
+        by d23dlp01.au.ibm.com (Postfix) with ESMTP id 96B082CE805A
+        for <linux-scsi@vger.kernel.org>; Mon,  5 Sep 2016 17:12:39 +1000 (EST)
+Received: from d23av02.au.ibm.com (d23av02.au.ibm.com [9.190.235.138])
+        by d23relay09.au.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u857CdNJ4325732
+        for <linux-scsi@vger.kernel.org>; Mon, 5 Sep 2016 17:12:39 +1000
+Received: from d23av02.au.ibm.com (localhost [127.0.0.1])
+        by d23av02.au.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u857CcwG014278
+        for <linux-scsi@vger.kernel.org>; Mon, 5 Sep 2016 17:12:39 +1000
+In-Reply-To: <1472848756-64998-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-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
-AE6FaAfSAVBLBQYAAAAAAQABAFoAAAB8DwAAAAA=
+On 03/09/16 06:39, Uma Krishnan wrote:
+> Commit 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL Flash
+> cards") was recently introduced to notify the AFU when a system is going
+> down. Due to the position of the cxlflash driver in the device stack,
+> cxlflash devices are _always_ removed during a reboot/shutdown. This can
+> lead to a crash if the cxlflash shutdown hook is invoked _after_ the
+> shutdown hook for the owning virtual PHB. Furthermore, the current
+> implementation of shutdown/remove hooks for cxlflash are not tolerant to
+> being invoked when the device is not enabled. This can also lead to a
+> crash in situations where the remove hook is invoked after the device has
+> been removed via the vPHBs shutdown hook. An example of this scenario
+> would be an EEH reset failure while a reboot/shutdown is in progress.
+>
+> To solve both problems, the shutdown hook for cxlflash is updated to
+> simply remove the device. This path already includes the AFU notification
+> and thus this solution will continue to perform the original intent. At
+> the same time, the remove hook is updated to protect against being
+> called when the device is not enabled.
+>
+> Fixes: 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL Flash
+> cards")
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/cxlflash/main.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
+>
+> diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+> index b063c41..4c2559a 100644
+> --- a/drivers/scsi/cxlflash/main.c
+> +++ b/drivers/scsi/cxlflash/main.c
+> @@ -823,17 +823,6 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
+>  }
+>
+>  /**
+> - * cxlflash_shutdown() - shutdown handler
+> - * @pdev:	PCI device associated with the host.
+> - */
+> -static void cxlflash_shutdown(struct pci_dev *pdev)
+> -{
+> -	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
+> -
+> -	notify_shutdown(cfg, false);
+
+You can get rid of the second parameter to notify_shutdown() now.
+
+> -}
+> -
+> -/**
+>   * cxlflash_remove() - PCI entry point to tear down host
+>   * @pdev:	PCI device associated with the host.
+>   *
+> @@ -844,6 +833,11 @@ static void cxlflash_remove(struct pci_dev *pdev)
+>  	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
+>  	ulong lock_flags;
+>
+> +	if (!pci_is_enabled(pdev)) {
+> +		pr_debug("%s: Device is disabled\n", __func__);
+> +		return;
+> +	}
+> +
+>  	/* If a Task Management Function is active, wait for it to complete
+>  	 * before continuing with remove.
+>  	 */
+> @@ -2685,7 +2679,7 @@ static struct pci_driver cxlflash_driver = {
+>  	.id_table = cxlflash_pci_table,
+>  	.probe = cxlflash_probe,
+>  	.remove = cxlflash_remove,
+> -	.shutdown = cxlflash_shutdown,
+> +	.shutdown = cxlflash_remove,
+
+What's the justification for using cxlflash_remove() as the shutdown 
+hook, rather than just not having a shutdown hook at all?
+
+-- 
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
+
