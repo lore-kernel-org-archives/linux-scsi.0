@@ -1,313 +1,78 @@
-From: Masahiro Yamada <yamada.masahiro@socionext.com>
-Subject: [PATCH] scsi: squash lines for simple wrapper functions
-Date: Wed,  7 Sep 2016 07:38:58 +0900
-Message-ID: <1473201538-17637-1-git-send-email-yamada.masahiro@socionext.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: Masahiro Yamada <yamada.masahiro@socionext.com>, Boaz Harrosh <ooo@electrozaur.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Hannes Reinicke <hare@suse.de>, Uday Lingala <uday.lingala@avagotech.com>, lindar_liu@usish.com, Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, MPT-FusionLinux.pdl@broadcom.com, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Hannes Reinecke <hare@suse.com>, Jack Wang <jinpu.wang@profitbricks.com>, James Smart <james.smart@avagotech.com>, Ching Huang <ching2048@areca.com.tw>, Benny Halevy <bhalevy@primarydata.com>, megaraidlinux.pdl@avagotech.com, Doug Gilbert <dgilbert@interlog.com>, Sathya Prakash <sathya.prakash@broadcom.co>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH] [SCSI] bfa: mark symbols static where possible
+Date: Wed, 07 Sep 2016 00:48:48 +0200
+Message-ID: <6338093.Kb8EpNm1ao@wuerfel>
+References: <201609070649.nsmY4rum%fengguang.wu@intel.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.135]:54966 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934842AbcIFWsw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Sep 2016 18:48:52 -0400
+In-Reply-To: <201609070649.nsmY4rum%fengguang.wu@intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kbuild test robot <lkp@intel.com>
+Cc: Baoyou Xie <baoyou.xie@linaro.org>, kbuild-all@01.org, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, xie.baoyou@zte.com.cn
 
-Remove unneeded variables and assignments.
+On Wednesday, September 7, 2016 6:15:34 AM CEST kbuild test robot wrote:
+>    drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_handler':
+> >> drivers/scsi/bfa/bfad_bsg.c:3130: warning: the frame size of 2896 bytes is larger than 2048 bytes
 
-Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
----
+This needs to be investigated, 2896 bytes is clearly too much.
+If we mark all functions called by bfad_iocmd_handler as "noinline",
+this should go away, but I wonder if there are only a few functions
+that each have a lot of stack usage, or if there are tons of functions
+that each take a bit of stack with none sticking out in particular.
 
- drivers/scsi/aic7xxx/aic79xx_osm.c  |  6 +-----
- drivers/scsi/arcmsr/arcmsr_hba.c    |  4 +---
- drivers/scsi/esas2r/esas2r_ioctl.c  | 20 ++++++++------------
- drivers/scsi/lpfc/lpfc_attr.c       |  8 ++------
- drivers/scsi/lpfc/lpfc_ct.c         |  6 +-----
- drivers/scsi/lpfc/lpfc_scsi.c       |  5 +----
- drivers/scsi/lpfc/lpfc_sli.c        |  5 +----
- drivers/scsi/megaraid/megaraid_mm.c |  6 +-----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c  | 30 ++++++++++--------------------
- drivers/scsi/osd/osd_initiator.c    |  5 +----
- drivers/scsi/pm8001/pm8001_ctl.c    | 10 ++--------
- drivers/scsi/sg.c                   | 10 +++-------
- 12 files changed, 32 insertions(+), 83 deletions(-)
+Building this file prior to the patch with arm-linux-gnueabi-gcc-6.1.1,
+I get
 
-diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
-index 2588b8f..1169e85 100644
---- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-@@ -767,11 +767,7 @@ ahd_linux_biosparam(struct scsi_device *sdev, struct block_device *bdev,
- static int
- ahd_linux_abort(struct scsi_cmnd *cmd)
- {
--	int error;
--	
--	error = ahd_linux_queue_abort_cmd(cmd);
--
--	return error;
-+	return ahd_linux_queue_abort_cmd(cmd);
+$ make drivers/scsi/bfa/bfad_bsg.o EXTRA_CFLAGS=-Wframe-larger-than=50
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_ioc_get_info':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:116:1: error: the frame size of 384 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- /*
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 7640498..f1c86f5 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -3946,9 +3946,7 @@ sleep:
- static int arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
- 		struct CommandControlBlock *ccb)
- {
--	int rtn;
--	rtn = arcmsr_polling_ccbdone(acb, ccb);
--	return rtn;
-+	return arcmsr_polling_ccbdone(acb, ccb);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_port_get_attr':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:324:1: error: the frame size of 352 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- static int arcmsr_abort(struct scsi_cmnd *cmd)
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 3e84834..12c6284 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -373,18 +373,14 @@ static bool csmi_ioctl_tunnel(struct esas2r_adapter *a,
- 
- static bool check_lun(struct scsi_lun lun)
- {
--	bool result;
--
--	result = ((lun.scsi_lun[7] == 0) &&
--		  (lun.scsi_lun[6] == 0) &&
--		  (lun.scsi_lun[5] == 0) &&
--		  (lun.scsi_lun[4] == 0) &&
--		  (lun.scsi_lun[3] == 0) &&
--		  (lun.scsi_lun[2] == 0) &&
--/* Byte 1 is intentionally skipped */
--		  (lun.scsi_lun[0] == 0));
--
--	return result;
-+	return (lun.scsi_lun[7] == 0) &&
-+	       (lun.scsi_lun[6] == 0) &&
-+	       (lun.scsi_lun[5] == 0) &&
-+	       (lun.scsi_lun[4] == 0) &&
-+	       (lun.scsi_lun[3] == 0) &&
-+	       (lun.scsi_lun[2] == 0) &&
-+		/* Byte 1 is intentionally skipped */
-+	       (lun.scsi_lun[0] == 0);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_pcifn_bw':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:1286:1: error: the frame size of 56 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- static int csmi_ioctl_callback(struct esas2r_adapter *a,
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index f101990..79cb019 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2625,12 +2625,8 @@ lpfc_oas_lun_state_change(struct lpfc_hba *phba, uint8_t vpt_wwpn[],
- 			  uint8_t tgt_wwpn[], uint64_t lun,
- 			  uint32_t oas_state, uint8_t pri)
- {
--
--	int rc;
--
--	rc = lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
--				    oas_state, pri);
--	return rc;
-+	return lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
-+				      oas_state, pri);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_cee_attr':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:1418:1: error: the frame size of 56 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- /**
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 63e48d4..383943d 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -188,12 +188,8 @@ lpfc_ct_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- int
- lpfc_ct_handle_unsol_abort(struct lpfc_hba *phba, struct hbq_dmabuf *dmabuf)
- {
--	int handled;
--
- 	/* CT upper level goes through BSG */
--	handled = lpfc_bsg_ct_unsol_abort(phba, dmabuf);
--
--	return handled;
-+	return lpfc_bsg_ct_unsol_abort(phba, dmabuf);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_cee_get_stats':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:1455:1: error: the frame size of 56 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- static void
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index d197aa1..59188b6 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -2857,10 +2857,7 @@ lpfc_bg_crc(uint8_t *data, int count)
- static uint16_t
- lpfc_bg_csum(uint8_t *data, int count)
- {
--	uint16_t ret;
--
--	ret = ip_compute_csum(data, count);
--	return ret;
-+	return ip_compute_csum(data, count);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_diag_fwping':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:1709:1: error: the frame size of 56 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- /*
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7080ce2..633b64d 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -624,10 +624,7 @@ __lpfc_clear_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
- struct lpfc_sglq *
- __lpfc_get_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
- {
--	struct lpfc_sglq *sglq;
--
--	sglq =  phba->sli4_hba.lpfc_sglq_active_list[xritag];
--	return sglq;
-+	return phba->sli4_hba.lpfc_sglq_active_list[xritag];
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_qos_get_stats':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:2475:1: error: the frame size of 88 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- 
- /**
-diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/megaraid_mm.c
-index 4cf9ed9..2c1df98 100644
---- a/drivers/scsi/megaraid/megaraid_mm.c
-+++ b/drivers/scsi/megaraid/megaraid_mm.c
-@@ -1242,11 +1242,7 @@ static long
- mraid_mm_compat_ioctl(struct file *filep, unsigned int cmd,
- 		      unsigned long arg)
- {
--	int err;
--
--	err = mraid_mm_ioctl(filep, cmd, arg);
--
--	return err;
-+	return mraid_mm_ioctl(filep, cmd, arg);
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_qos_reset_stats':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:2506:1: error: the frame size of 88 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
  }
- #endif
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 7d00f09..dc0e8e7 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2355,15 +2355,13 @@ out_unlock_pciaccess:
- long
- _ctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- {
--	long ret;
--
--	/* pass MPI25_VERSION | MPI26_VERSION value,
-+	/*
-+	 * pass MPI25_VERSION | MPI26_VERSION value,
- 	 * to indicate that this ioctl cmd
- 	 * came from mpt3ctl ioctl device.
- 	 */
--	ret = _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
--		MPI25_VERSION | MPI26_VERSION);
--	return ret;
-+	return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
-+			       MPI25_VERSION | MPI26_VERSION);
- }
- 
- /**
-@@ -2375,13 +2373,11 @@ _ctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- long
- _ctl_mpt2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- {
--	long ret;
--
--	/* pass MPI2_VERSION value, to indicate that this ioctl cmd
-+	/*
-+	 * pass MPI2_VERSION value, to indicate that this ioctl cmd
- 	 * came from mpt2ctl ioctl device.
- 	 */
--	ret = _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VERSION);
--	return ret;
-+	return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VERSION);
- }
- #ifdef CONFIG_COMPAT
- /**
-@@ -2395,11 +2391,8 @@ _ctl_mpt2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
- long
- _ctl_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
- {
--	long ret;
--
--	ret = _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
--		MPI25_VERSION | MPI26_VERSION);
--	return ret;
-+	return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
-+			       MPI25_VERSION | MPI26_VERSION);
- }
- 
- /**
-@@ -2413,10 +2406,7 @@ _ctl_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
- long
- _ctl_mpt2_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
- {
--	long ret;
--
--	ret = _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VERSION);
--	return ret;
-+	return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VERSION);
- }
- #endif
- 
-diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_initiator.c
-index 2f2a991..86d7092 100644
---- a/drivers/scsi/osd/osd_initiator.c
-+++ b/drivers/scsi/osd/osd_initiator.c
-@@ -396,11 +396,8 @@ EXPORT_SYMBOL(osd_dev_fini);
- 
- static struct osd_request *_osd_request_alloc(gfp_t gfp)
- {
--	struct osd_request *or;
--
- 	/* TODO: Use mempool with one saved request */
--	or = kzalloc(sizeof(*or), gfp);
--	return or;
-+	return kzalloc(sizeof(struct osd_request), gfp);
- }
- 
- static void _osd_request_free(struct osd_request *or)
-diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm8001_ctl.c
-index be8269c..5bf3cb0 100644
---- a/drivers/scsi/pm8001/pm8001_ctl.c
-+++ b/drivers/scsi/pm8001/pm8001_ctl.c
-@@ -456,10 +456,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_log_show, NULL);
- static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
--	ssize_t count;
--
--	count = pm80xx_get_fatal_dump(cdev, attr, buf);
--	return count;
-+	return pm80xx_get_fatal_dump(cdev, attr, buf);
- }
- 
- static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
-@@ -474,10 +471,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
- static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
- 	struct device_attribute *attr, char *buf)
- {
--	ssize_t count;
--
--	count = pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
--	return count;
-+	return pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
- }
- 
- static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index ae7d9bd..181dad0 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1129,13 +1129,9 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
- 		return -ENXIO;
- 
- 	sdev = sdp->device;
--	if (sdev->host->hostt->compat_ioctl) { 
--		int ret;
--
--		ret = sdev->host->hostt->compat_ioctl(sdev, cmd_in, (void __user *)arg);
--
--		return ret;
--	}
-+	if (sdev->host->hostt->compat_ioctl)
-+		return sdev->host->hostt->compat_ioctl(sdev, cmd_in,
-+						       (void __user *)arg);
- 	
- 	return -ENOIOCTLCMD;
- }
--- 
-1.9.1
+ ^
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c: In function 'bfad_iocmd_handler':
+/git/arm-soc/drivers/scsi/bfa/bfad_bsg.c:3130:1: error: the frame size of 96 bytes is larger than 50 bytes [-Werror=frame-larger-than=]
+
+
+The two functions with the most stack usage have a "struct bfa_port_attr_s" and
+"struct bfa_lport_attr_s" on the stack respectively. Those are noticeable but
+not huge.
+
+>    drivers/scsi/bfa/bfad_bsg.o: warning: objtool: bfad_fcxp_free_mem()+0xd5: function has unreachable instruction
+
+No idea what happened here.
+
+	Arnd
