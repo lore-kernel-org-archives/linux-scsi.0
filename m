@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 14/15] hisi_sas: add missing SATA pending device type to v2 hw
-Date: Tue, 6 Sep 2016 23:36:24 +0800
-Message-ID: <1473176185-217808-15-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 10/15] hisi_sas: fix HBA SAS addr endianness for v2 hw
+Date: Tue, 6 Sep 2016 23:36:20 +0800
+Message-ID: <1473176185-217808-11-git-send-email-john.garry@huawei.com>
 References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,29 +12,44 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-In setup_itct_v2_hw(), SATA device type SAS_SATA_PENDING
-is missing, so add it.
+The endianness for the SAS address in the TX_ID_DWORD
+registers is set incorrectly.
+We see errors like this in the boot log:
+[    7.583284] sas: target proto 0x0 at 50000d1108e7923f:0x1f not handled
 
-Note: The HiSi SAS controller does not support SATA PM,
-      so do not handle SAS_SATA_PM_PORT or SAS_SATA_PM.
+This is due to the host SAS addr not matching the PHY SAS
+addr in the expander host-attached phy discovery responses.
+
+To fix, we byte swap the SAS addr from BE to LE (which is
+the endianness of the SAS controller).
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 5925b93..735ebff 100644
+index ae44443..ce84211 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -594,6 +594,7 @@ static void setup_itct_v2_hw(struct hisi_hba *hisi_hba,
- 		qw0 = HISI_SAS_DEV_TYPE_SSP << ITCT_HDR_DEV_TYPE_OFF;
- 		break;
- 	case SAS_SATA_DEV:
-+	case SAS_SATA_PENDING:
- 		if (parent_dev && DEV_IS_EXPANDER(parent_dev->dev_type))
- 			qw0 = HISI_SAS_DEV_TYPE_STP << ITCT_HDR_DEV_TYPE_OFF;
- 		else
+@@ -562,13 +562,13 @@ static void config_id_frame_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD0,
+ 			__swab32(identify_buffer[0]));
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD1,
+-			identify_buffer[2]);
++			__swab32(identify_buffer[1]));
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD2,
+-			identify_buffer[1]);
++			__swab32(identify_buffer[2]));
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD3,
+-			identify_buffer[4]);
++			__swab32(identify_buffer[3]));
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD4,
+-			identify_buffer[3]);
++			__swab32(identify_buffer[4]));
+ 	hisi_sas_phy_write32(hisi_hba, phy_no, TX_ID_DWORD5,
+ 			__swab32(identify_buffer[5]));
+ }
 -- 
 1.9.1
