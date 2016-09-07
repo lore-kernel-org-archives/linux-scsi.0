@@ -1,92 +1,358 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/3] storvsc: use tagged SRB requests if supported by the
- device
-Date: Wed, 7 Sep 2016 09:46:45 +0200
-Message-ID: <20160907074645.6ecwmq7pmf6mb4pg@c203.arch.suse.de>
-References: <1473197143-16760-1-git-send-email-longli@exchange.microsoft.com>
- <1473197143-16760-2-git-send-email-longli@exchange.microsoft.com>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: [PATCH] scsi: squash lines for simple wrapper functions
+Date: Wed, 7 Sep 2016 09:52:56 +0200
+Message-ID: <CAMGffEmPjfgp+J9ih=_zJepq8X5=N1q_k9Qu_K3jESUtejSU=g@mail.gmail.com>
+References: <1473201538-17637-1-git-send-email-yamada.masahiro@socionext.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: quoted-printable
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1473197143-16760-2-git-send-email-longli@exchange.microsoft.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Long Li <longli@exchange.microsoft.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Haiyang Zhang <haiyangz@microsoft.com>, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1473201538-17637-1-git-send-email-yamada.masahiro@socionext.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Masahiro Yamada <yamada.masahiro@socionext.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Hannes Reinicke <hare@suse.de>, Uday Lingala <uday.lingala@avagotech.com>, lindar_liu <lindar_liu@usish.com>, Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, MPT-FusionLinux.pdl@broadcom.com, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Hannes Reinecke <hare@suse.com>, James Smart <james.smart@avagotech.com>, Ching Huang <ching2048@areca.com.tw>, Benny Halevy <bhalevy@primarydata.com>, megaraidlinux.pdl@avagotech.com, Doug Gilbert <dgilbert@inter>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Sep 06, 2016 at 02:25:41PM -0700, Long Li wrote:
-> From: Long Li <longli@microsoft.com>
-> =
-
-> Properly set SRB flags when hosting device supports tagged queuing. This =
-patch improves the performance on Fiber Channel disks.
-
-ENOSIGNEDOFF and please use checkpatch.pl on the patch. =
-
-
-> =
-
+On Wed, Sep 7, 2016 at 12:38 AM, Masahiro Yamada
+<yamada.masahiro@socionext.com> wrote:
+> Remove unneeded variables and assignments.
+>
+> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
 > ---
->  drivers/scsi/storvsc_drv.c | 8 ++++++++
->  1 file changed, 8 insertions(+)
-> =
-
-> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> index 8ccfc9e..a8f3e4c 100644
-> --- a/drivers/scsi/storvsc_drv.c
-> +++ b/drivers/scsi/storvsc_drv.c
-> @@ -136,6 +136,8 @@ struct hv_fc_wwn_packet {
->  #define SRB_FLAGS_PORT_DRIVER_RESERVED		0x0F000000
->  #define SRB_FLAGS_CLASS_DRIVER_RESERVED		0xF0000000
->  =
-
-> +#define SP_UNTAGGED			((unsigned char) ~0)
-> +#define SRB_SIMPLE_TAG_REQUEST		0x20
->  =
-
+>
+>  drivers/scsi/aic7xxx/aic79xx_osm.c  |  6 +-----
+>  drivers/scsi/arcmsr/arcmsr_hba.c    |  4 +---
+>  drivers/scsi/esas2r/esas2r_ioctl.c  | 20 ++++++++------------
+>  drivers/scsi/lpfc/lpfc_attr.c       |  8 ++------
+>  drivers/scsi/lpfc/lpfc_ct.c         |  6 +-----
+>  drivers/scsi/lpfc/lpfc_scsi.c       |  5 +----
+>  drivers/scsi/lpfc/lpfc_sli.c        |  5 +----
+>  drivers/scsi/megaraid/megaraid_mm.c |  6 +-----
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c  | 30 ++++++++++--------------------
+>  drivers/scsi/osd/osd_initiator.c    |  5 +----
+>  drivers/scsi/pm8001/pm8001_ctl.c    | 10 ++--------
+>  drivers/scsi/sg.c                   | 10 +++-------
+>  12 files changed, 32 insertions(+), 83 deletions(-)
+>
+> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/ai=
+c79xx_osm.c
+> index 2588b8f..1169e85 100644
+> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
+> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+> @@ -767,11 +767,7 @@ ahd_linux_biosparam(struct scsi_device *sdev, struct=
+ block_device *bdev,
+>  static int
+>  ahd_linux_abort(struct scsi_cmnd *cmd)
+>  {
+> -       int error;
+> -
+> -       error =3D ahd_linux_queue_abort_cmd(cmd);
+> -
+> -       return error;
+> +       return ahd_linux_queue_abort_cmd(cmd);
+>  }
+>
 >  /*
->   * Platform neutral description of a scsi request -
-> @@ -1451,6 +1453,12 @@ static int storvsc_queuecommand(struct Scsi_Host *=
-host, struct scsi_cmnd *scmnd)
->  	vm_srb->win8_extension.srb_flags |=3D
->  		SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
->  =
-
-> +	if(scmnd->device->tagged_supported) {
-> +		vm_srb->win8_extension.srb_flags |=3D (SRB_FLAGS_QUEUE_ACTION_ENABLE |=
- SRB_FLAGS_NO_QUEUE_FREEZE);
-> +		vm_srb->win8_extension.queue_tag =3D SP_UNTAGGED;
-> +		vm_srb->win8_extension.queue_action =3D SRB_SIMPLE_TAG_REQUEST;
-> +	}
-> +
->  	/* Build the SRB */
->  	switch (scmnd->sc_data_direction) {
->  	case DMA_TO_DEVICE:
-> -- =
-
-> 1.8.5.6
-> =
-
+> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
+r_hba.c
+> index 7640498..f1c86f5 100644
+> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
+> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+> @@ -3946,9 +3946,7 @@ sleep:
+>  static int arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
+>                 struct CommandControlBlock *ccb)
+>  {
+> -       int rtn;
+> -       rtn =3D arcmsr_polling_ccbdone(acb, ccb);
+> -       return rtn;
+> +       return arcmsr_polling_ccbdone(acb, ccb);
+>  }
+>
+>  static int arcmsr_abort(struct scsi_cmnd *cmd)
+> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esa=
+s2r_ioctl.c
+> index 3e84834..12c6284 100644
+> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
+> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> @@ -373,18 +373,14 @@ static bool csmi_ioctl_tunnel(struct esas2r_adapter=
+ *a,
+>
+>  static bool check_lun(struct scsi_lun lun)
+>  {
+> -       bool result;
+> -
+> -       result =3D ((lun.scsi_lun[7] =3D=3D 0) &&
+> -                 (lun.scsi_lun[6] =3D=3D 0) &&
+> -                 (lun.scsi_lun[5] =3D=3D 0) &&
+> -                 (lun.scsi_lun[4] =3D=3D 0) &&
+> -                 (lun.scsi_lun[3] =3D=3D 0) &&
+> -                 (lun.scsi_lun[2] =3D=3D 0) &&
+> -/* Byte 1 is intentionally skipped */
+> -                 (lun.scsi_lun[0] =3D=3D 0));
+> -
+> -       return result;
+> +       return (lun.scsi_lun[7] =3D=3D 0) &&
+> +              (lun.scsi_lun[6] =3D=3D 0) &&
+> +              (lun.scsi_lun[5] =3D=3D 0) &&
+> +              (lun.scsi_lun[4] =3D=3D 0) &&
+> +              (lun.scsi_lun[3] =3D=3D 0) &&
+> +              (lun.scsi_lun[2] =3D=3D 0) &&
+> +               /* Byte 1 is intentionally skipped */
+> +              (lun.scsi_lun[0] =3D=3D 0);
+>  }
+>
+>  static int csmi_ioctl_callback(struct esas2r_adapter *a,
+> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.=
+c
+> index f101990..79cb019 100644
+> --- a/drivers/scsi/lpfc/lpfc_attr.c
+> +++ b/drivers/scsi/lpfc/lpfc_attr.c
+> @@ -2625,12 +2625,8 @@ lpfc_oas_lun_state_change(struct lpfc_hba *phba, u=
+int8_t vpt_wwpn[],
+>                           uint8_t tgt_wwpn[], uint64_t lun,
+>                           uint32_t oas_state, uint8_t pri)
+>  {
+> -
+> -       int rc;
+> -
+> -       rc =3D lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
+> -                                   oas_state, pri);
+> -       return rc;
+> +       return lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
+> +                                     oas_state, pri);
+>  }
+>
+>  /**
+> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
+> index 63e48d4..383943d 100644
+> --- a/drivers/scsi/lpfc/lpfc_ct.c
+> +++ b/drivers/scsi/lpfc/lpfc_ct.c
+> @@ -188,12 +188,8 @@ lpfc_ct_unsol_event(struct lpfc_hba *phba, struct lp=
+fc_sli_ring *pring,
+>  int
+>  lpfc_ct_handle_unsol_abort(struct lpfc_hba *phba, struct hbq_dmabuf *dma=
+buf)
+>  {
+> -       int handled;
+> -
+>         /* CT upper level goes through BSG */
+> -       handled =3D lpfc_bsg_ct_unsol_abort(phba, dmabuf);
+> -
+> -       return handled;
+> +       return lpfc_bsg_ct_unsol_abort(phba, dmabuf);
+>  }
+>
+>  static void
+> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.=
+c
+> index d197aa1..59188b6 100644
+> --- a/drivers/scsi/lpfc/lpfc_scsi.c
+> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
+> @@ -2857,10 +2857,7 @@ lpfc_bg_crc(uint8_t *data, int count)
+>  static uint16_t
+>  lpfc_bg_csum(uint8_t *data, int count)
+>  {
+> -       uint16_t ret;
+> -
+> -       ret =3D ip_compute_csum(data, count);
+> -       return ret;
+> +       return ip_compute_csum(data, count);
+>  }
+>
+>  /*
+> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+> index 7080ce2..633b64d 100644
+> --- a/drivers/scsi/lpfc/lpfc_sli.c
+> +++ b/drivers/scsi/lpfc/lpfc_sli.c
+> @@ -624,10 +624,7 @@ __lpfc_clear_active_sglq(struct lpfc_hba *phba, uint=
+16_t xritag)
+>  struct lpfc_sglq *
+>  __lpfc_get_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
+>  {
+> -       struct lpfc_sglq *sglq;
+> -
+> -       sglq =3D  phba->sli4_hba.lpfc_sglq_active_list[xritag];
+> -       return sglq;
+> +       return phba->sli4_hba.lpfc_sglq_active_list[xritag];
+>  }
+>
+>  /**
+> diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/=
+megaraid_mm.c
+> index 4cf9ed9..2c1df98 100644
+> --- a/drivers/scsi/megaraid/megaraid_mm.c
+> +++ b/drivers/scsi/megaraid/megaraid_mm.c
+> @@ -1242,11 +1242,7 @@ static long
+>  mraid_mm_compat_ioctl(struct file *filep, unsigned int cmd,
+>                       unsigned long arg)
+>  {
+> -       int err;
+> -
+> -       err =3D mraid_mm_ioctl(filep, cmd, arg);
+> -
+> -       return err;
+> +       return mraid_mm_ioctl(filep, cmd, arg);
+>  }
+>  #endif
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mp=
+t3sas_ctl.c
+> index 7d00f09..dc0e8e7 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -2355,15 +2355,13 @@ out_unlock_pciaccess:
+>  long
+>  _ctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>  {
+> -       long ret;
+> -
+> -       /* pass MPI25_VERSION | MPI26_VERSION value,
+> +       /*
+> +        * pass MPI25_VERSION | MPI26_VERSION value,
+>          * to indicate that this ioctl cmd
+>          * came from mpt3ctl ioctl device.
+>          */
+> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
+> -               MPI25_VERSION | MPI26_VERSION);
+> -       return ret;
+> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
+> +                              MPI25_VERSION | MPI26_VERSION);
+>  }
+>
+>  /**
+> @@ -2375,13 +2373,11 @@ _ctl_ioctl(struct file *file, unsigned int cmd, u=
+nsigned long arg)
+>  long
+>  _ctl_mpt2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
+>  {
+> -       long ret;
+> -
+> -       /* pass MPI2_VERSION value, to indicate that this ioctl cmd
+> +       /*
+> +        * pass MPI2_VERSION value, to indicate that this ioctl cmd
+>          * came from mpt2ctl ioctl device.
+>          */
+> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VE=
+RSION);
+> -       return ret;
+> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VER=
+SION);
+>  }
+>  #ifdef CONFIG_COMPAT
+>  /**
+> @@ -2395,11 +2391,8 @@ _ctl_mpt2_ioctl(struct file *file, unsigned int cm=
+d, unsigned long arg)
+>  long
+>  _ctl_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
+>  {
+> -       long ret;
+> -
+> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
+> -               MPI25_VERSION | MPI26_VERSION);
+> -       return ret;
+> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
+> +                              MPI25_VERSION | MPI26_VERSION);
+>  }
+>
+>  /**
+> @@ -2413,10 +2406,7 @@ _ctl_ioctl_compat(struct file *file, unsigned cmd,=
+ unsigned long arg)
+>  long
+>  _ctl_mpt2_ioctl_compat(struct file *file, unsigned cmd, unsigned long ar=
+g)
+>  {
+> -       long ret;
+> -
+> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VE=
+RSION);
+> -       return ret;
+> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VER=
+SION);
+>  }
+>  #endif
+>
+> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_init=
+iator.c
+> index 2f2a991..86d7092 100644
+> --- a/drivers/scsi/osd/osd_initiator.c
+> +++ b/drivers/scsi/osd/osd_initiator.c
+> @@ -396,11 +396,8 @@ EXPORT_SYMBOL(osd_dev_fini);
+>
+>  static struct osd_request *_osd_request_alloc(gfp_t gfp)
+>  {
+> -       struct osd_request *or;
+> -
+>         /* TODO: Use mempool with one saved request */
+> -       or =3D kzalloc(sizeof(*or), gfp);
+> -       return or;
+> +       return kzalloc(sizeof(struct osd_request), gfp);
+>  }
+>
+>  static void _osd_request_free(struct osd_request *or)
+> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm800=
+1_ctl.c
+> index be8269c..5bf3cb0 100644
+> --- a/drivers/scsi/pm8001/pm8001_ctl.c
+> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
+> @@ -456,10 +456,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_=
+log_show, NULL);
+>  static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
+>         struct device_attribute *attr, char *buf)
+>  {
+> -       ssize_t count;
+> -
+> -       count =3D pm80xx_get_fatal_dump(cdev, attr, buf);
+> -       return count;
+> +       return pm80xx_get_fatal_dump(cdev, attr, buf);
+>  }
+>
+>  static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
+> @@ -474,10 +471,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fa=
+tal_log_show, NULL);
+>  static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
+>         struct device_attribute *attr, char *buf)
+>  {
+> -       ssize_t count;
+> -
+> -       count =3D pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
+> -       return count;
+> +       return pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
+>  }
+>
+>  static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index ae7d9bd..181dad0 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1129,13 +1129,9 @@ static long sg_compat_ioctl(struct file *filp, uns=
+igned int cmd_in, unsigned lon
+>                 return -ENXIO;
+>
+>         sdev =3D sdp->device;
+> -       if (sdev->host->hostt->compat_ioctl) {
+> -               int ret;
+> -
+> -               ret =3D sdev->host->hostt->compat_ioctl(sdev, cmd_in, (vo=
+id __user *)arg);
+> -
+> -               return ret;
+> -       }
+> +       if (sdev->host->hostt->compat_ioctl)
+> +               return sdev->host->hostt->compat_ioctl(sdev, cmd_in,
+> +                                                      (void __user *)arg=
+);
+>
+>         return -ENOIOCTLCMD;
+>  }
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 1.9.1
+>
+Looks good to me!
 
--- =
+Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--=20
+Mit freundlichen Gr=C3=BC=C3=9Fen,
+Best Regards,
+
+Jack Wang
