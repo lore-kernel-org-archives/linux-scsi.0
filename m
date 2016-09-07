@@ -1,358 +1,207 @@
-From: Jinpu Wang <jinpu.wang@profitbricks.com>
-Subject: Re: [PATCH] scsi: squash lines for simple wrapper functions
-Date: Wed, 7 Sep 2016 09:52:56 +0200
-Message-ID: <CAMGffEmPjfgp+J9ih=_zJepq8X5=N1q_k9Qu_K3jESUtejSU=g@mail.gmail.com>
-References: <1473201538-17637-1-git-send-email-yamada.masahiro@socionext.com>
+From: Neil Horman <nhorman@tuxdriver.com>
+Subject: Re: Observing Softlockup's while running heavy IOs
+Date: Wed, 7 Sep 2016 09:24:43 -0400
+Message-ID: <20160907132443.GA21945@hmsreliant.think-freely.org>
+References: <CAK=zhgqkByFSYRYcY75+55kP0ysHbgpk1L9=qxAfLdoFfsa6sQ@mail.gmail.com>
+ <DF4PR84MB01696549697831B4CEC4A3FDAB150@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+ <CAK=zhgrOQ_LAbM3RKfq_MtveygqU3vPtChCB9Jdf6AUfFnr0HQ@mail.gmail.com>
+ <6b7930ca-092c-a03c-d745-b49153aa174c@sandisk.com>
+ <CAK=zhgq__41_y6pgQc5-Rg+RyUUqB80qS=mJ6cYqaQbtf=5N5g@mail.gmail.com>
+ <3eab5081-dff4-c7a5-f089-18877bbd6346@sandisk.com>
+ <CAK=zhgrLL22stCfwKdpJkN=PkxPVxL=K9RgpP1USEbg_xx5TEg@mail.gmail.com>
+ <20160906150642.GA22651@hmsreliant.think-freely.org>
+ <CAK=zhgquwfpSLNHQr4nV=K3Hr4XduCFEOtgst-4kvO2SeufuiQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1473201538-17637-1-git-send-email-yamada.masahiro@socionext.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Masahiro Yamada <yamada.masahiro@socionext.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Boaz Harrosh <ooo@electrozaur.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Hannes Reinicke <hare@suse.de>, Uday Lingala <uday.lingala@avagotech.com>, lindar_liu <lindar_liu@usish.com>, Tomas Henzl <thenzl@redhat.com>, Sumit Saxena <sumit.saxena@avagotech.com>, MPT-FusionLinux.pdl@broadcom.com, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Dick Kennedy <dick.kennedy@avagotech.com>, Hannes Reinecke <hare@suse.com>, James Smart <james.smart@avagotech.com>, Ching Huang <ching2048@areca.com.tw>, Benny Halevy <bhalevy@primarydata.com>, megaraidlinux.pdl@avagotech.com, Doug Gilbert <dgilbert@inter>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from charlotte.tuxdriver.com ([70.61.120.58]:59113 "EHLO
+        smtp.tuxdriver.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751952AbcIGNZC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Sep 2016 09:25:02 -0400
+Content-Disposition: inline
+In-Reply-To: <CAK=zhgquwfpSLNHQr4nV=K3Hr4XduCFEOtgst-4kvO2SeufuiQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "irqbalance@lists.infradead.org" <irqbalance@lists.infradead.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 
-On Wed, Sep 7, 2016 at 12:38 AM, Masahiro Yamada
-<yamada.masahiro@socionext.com> wrote:
-> Remove unneeded variables and assignments.
->
-> Signed-off-by: Masahiro Yamada <yamada.masahiro@socionext.com>
-> ---
->
->  drivers/scsi/aic7xxx/aic79xx_osm.c  |  6 +-----
->  drivers/scsi/arcmsr/arcmsr_hba.c    |  4 +---
->  drivers/scsi/esas2r/esas2r_ioctl.c  | 20 ++++++++------------
->  drivers/scsi/lpfc/lpfc_attr.c       |  8 ++------
->  drivers/scsi/lpfc/lpfc_ct.c         |  6 +-----
->  drivers/scsi/lpfc/lpfc_scsi.c       |  5 +----
->  drivers/scsi/lpfc/lpfc_sli.c        |  5 +----
->  drivers/scsi/megaraid/megaraid_mm.c |  6 +-----
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c  | 30 ++++++++++--------------------
->  drivers/scsi/osd/osd_initiator.c    |  5 +----
->  drivers/scsi/pm8001/pm8001_ctl.c    | 10 ++--------
->  drivers/scsi/sg.c                   | 10 +++-------
->  12 files changed, 32 insertions(+), 83 deletions(-)
->
-> diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/ai=
-c79xx_osm.c
-> index 2588b8f..1169e85 100644
-> --- a/drivers/scsi/aic7xxx/aic79xx_osm.c
-> +++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
-> @@ -767,11 +767,7 @@ ahd_linux_biosparam(struct scsi_device *sdev, struct=
- block_device *bdev,
->  static int
->  ahd_linux_abort(struct scsi_cmnd *cmd)
->  {
-> -       int error;
-> -
-> -       error =3D ahd_linux_queue_abort_cmd(cmd);
-> -
-> -       return error;
-> +       return ahd_linux_queue_abort_cmd(cmd);
->  }
->
->  /*
-> diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcms=
-r_hba.c
-> index 7640498..f1c86f5 100644
-> --- a/drivers/scsi/arcmsr/arcmsr_hba.c
-> +++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-> @@ -3946,9 +3946,7 @@ sleep:
->  static int arcmsr_abort_one_cmd(struct AdapterControlBlock *acb,
->                 struct CommandControlBlock *ccb)
->  {
-> -       int rtn;
-> -       rtn =3D arcmsr_polling_ccbdone(acb, ccb);
-> -       return rtn;
-> +       return arcmsr_polling_ccbdone(acb, ccb);
->  }
->
->  static int arcmsr_abort(struct scsi_cmnd *cmd)
-> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esa=
-s2r_ioctl.c
-> index 3e84834..12c6284 100644
-> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
-> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-> @@ -373,18 +373,14 @@ static bool csmi_ioctl_tunnel(struct esas2r_adapter=
- *a,
->
->  static bool check_lun(struct scsi_lun lun)
->  {
-> -       bool result;
-> -
-> -       result =3D ((lun.scsi_lun[7] =3D=3D 0) &&
-> -                 (lun.scsi_lun[6] =3D=3D 0) &&
-> -                 (lun.scsi_lun[5] =3D=3D 0) &&
-> -                 (lun.scsi_lun[4] =3D=3D 0) &&
-> -                 (lun.scsi_lun[3] =3D=3D 0) &&
-> -                 (lun.scsi_lun[2] =3D=3D 0) &&
-> -/* Byte 1 is intentionally skipped */
-> -                 (lun.scsi_lun[0] =3D=3D 0));
-> -
-> -       return result;
-> +       return (lun.scsi_lun[7] =3D=3D 0) &&
-> +              (lun.scsi_lun[6] =3D=3D 0) &&
-> +              (lun.scsi_lun[5] =3D=3D 0) &&
-> +              (lun.scsi_lun[4] =3D=3D 0) &&
-> +              (lun.scsi_lun[3] =3D=3D 0) &&
-> +              (lun.scsi_lun[2] =3D=3D 0) &&
-> +               /* Byte 1 is intentionally skipped */
-> +              (lun.scsi_lun[0] =3D=3D 0);
->  }
->
->  static int csmi_ioctl_callback(struct esas2r_adapter *a,
-> diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.=
-c
-> index f101990..79cb019 100644
-> --- a/drivers/scsi/lpfc/lpfc_attr.c
-> +++ b/drivers/scsi/lpfc/lpfc_attr.c
-> @@ -2625,12 +2625,8 @@ lpfc_oas_lun_state_change(struct lpfc_hba *phba, u=
-int8_t vpt_wwpn[],
->                           uint8_t tgt_wwpn[], uint64_t lun,
->                           uint32_t oas_state, uint8_t pri)
->  {
-> -
-> -       int rc;
-> -
-> -       rc =3D lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
-> -                                   oas_state, pri);
-> -       return rc;
-> +       return lpfc_oas_lun_state_set(phba, vpt_wwpn, tgt_wwpn, lun,
-> +                                     oas_state, pri);
->  }
->
->  /**
-> diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-> index 63e48d4..383943d 100644
-> --- a/drivers/scsi/lpfc/lpfc_ct.c
-> +++ b/drivers/scsi/lpfc/lpfc_ct.c
-> @@ -188,12 +188,8 @@ lpfc_ct_unsol_event(struct lpfc_hba *phba, struct lp=
-fc_sli_ring *pring,
->  int
->  lpfc_ct_handle_unsol_abort(struct lpfc_hba *phba, struct hbq_dmabuf *dma=
-buf)
->  {
-> -       int handled;
-> -
->         /* CT upper level goes through BSG */
-> -       handled =3D lpfc_bsg_ct_unsol_abort(phba, dmabuf);
-> -
-> -       return handled;
-> +       return lpfc_bsg_ct_unsol_abort(phba, dmabuf);
->  }
->
->  static void
-> diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.=
-c
-> index d197aa1..59188b6 100644
-> --- a/drivers/scsi/lpfc/lpfc_scsi.c
-> +++ b/drivers/scsi/lpfc/lpfc_scsi.c
-> @@ -2857,10 +2857,7 @@ lpfc_bg_crc(uint8_t *data, int count)
->  static uint16_t
->  lpfc_bg_csum(uint8_t *data, int count)
->  {
-> -       uint16_t ret;
-> -
-> -       ret =3D ip_compute_csum(data, count);
-> -       return ret;
-> +       return ip_compute_csum(data, count);
->  }
->
->  /*
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 7080ce2..633b64d 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -624,10 +624,7 @@ __lpfc_clear_active_sglq(struct lpfc_hba *phba, uint=
-16_t xritag)
->  struct lpfc_sglq *
->  __lpfc_get_active_sglq(struct lpfc_hba *phba, uint16_t xritag)
->  {
-> -       struct lpfc_sglq *sglq;
-> -
-> -       sglq =3D  phba->sli4_hba.lpfc_sglq_active_list[xritag];
-> -       return sglq;
-> +       return phba->sli4_hba.lpfc_sglq_active_list[xritag];
->  }
->
->  /**
-> diff --git a/drivers/scsi/megaraid/megaraid_mm.c b/drivers/scsi/megaraid/=
-megaraid_mm.c
-> index 4cf9ed9..2c1df98 100644
-> --- a/drivers/scsi/megaraid/megaraid_mm.c
-> +++ b/drivers/scsi/megaraid/megaraid_mm.c
-> @@ -1242,11 +1242,7 @@ static long
->  mraid_mm_compat_ioctl(struct file *filep, unsigned int cmd,
->                       unsigned long arg)
->  {
-> -       int err;
-> -
-> -       err =3D mraid_mm_ioctl(filep, cmd, arg);
-> -
-> -       return err;
-> +       return mraid_mm_ioctl(filep, cmd, arg);
->  }
->  #endif
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mp=
-t3sas_ctl.c
-> index 7d00f09..dc0e8e7 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-> @@ -2355,15 +2355,13 @@ out_unlock_pciaccess:
->  long
->  _ctl_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->  {
-> -       long ret;
-> -
-> -       /* pass MPI25_VERSION | MPI26_VERSION value,
-> +       /*
-> +        * pass MPI25_VERSION | MPI26_VERSION value,
->          * to indicate that this ioctl cmd
->          * came from mpt3ctl ioctl device.
->          */
-> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
-> -               MPI25_VERSION | MPI26_VERSION);
-> -       return ret;
-> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0,
-> +                              MPI25_VERSION | MPI26_VERSION);
->  }
->
->  /**
-> @@ -2375,13 +2373,11 @@ _ctl_ioctl(struct file *file, unsigned int cmd, u=
-nsigned long arg)
->  long
->  _ctl_mpt2_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
->  {
-> -       long ret;
-> -
-> -       /* pass MPI2_VERSION value, to indicate that this ioctl cmd
-> +       /*
-> +        * pass MPI2_VERSION value, to indicate that this ioctl cmd
->          * came from mpt2ctl ioctl device.
->          */
-> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VE=
-RSION);
-> -       return ret;
-> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 0, MPI2_VER=
-SION);
->  }
->  #ifdef CONFIG_COMPAT
->  /**
-> @@ -2395,11 +2391,8 @@ _ctl_mpt2_ioctl(struct file *file, unsigned int cm=
-d, unsigned long arg)
->  long
->  _ctl_ioctl_compat(struct file *file, unsigned cmd, unsigned long arg)
->  {
-> -       long ret;
-> -
-> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
-> -               MPI25_VERSION | MPI26_VERSION);
-> -       return ret;
-> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1,
-> +                              MPI25_VERSION | MPI26_VERSION);
->  }
->
->  /**
-> @@ -2413,10 +2406,7 @@ _ctl_ioctl_compat(struct file *file, unsigned cmd,=
- unsigned long arg)
->  long
->  _ctl_mpt2_ioctl_compat(struct file *file, unsigned cmd, unsigned long ar=
-g)
->  {
-> -       long ret;
-> -
-> -       ret =3D _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VE=
-RSION);
-> -       return ret;
-> +       return _ctl_ioctl_main(file, cmd, (void __user *)arg, 1, MPI2_VER=
-SION);
->  }
->  #endif
->
-> diff --git a/drivers/scsi/osd/osd_initiator.c b/drivers/scsi/osd/osd_init=
-iator.c
-> index 2f2a991..86d7092 100644
-> --- a/drivers/scsi/osd/osd_initiator.c
-> +++ b/drivers/scsi/osd/osd_initiator.c
-> @@ -396,11 +396,8 @@ EXPORT_SYMBOL(osd_dev_fini);
->
->  static struct osd_request *_osd_request_alloc(gfp_t gfp)
->  {
-> -       struct osd_request *or;
-> -
->         /* TODO: Use mempool with one saved request */
-> -       or =3D kzalloc(sizeof(*or), gfp);
-> -       return or;
-> +       return kzalloc(sizeof(struct osd_request), gfp);
->  }
->
->  static void _osd_request_free(struct osd_request *or)
-> diff --git a/drivers/scsi/pm8001/pm8001_ctl.c b/drivers/scsi/pm8001/pm800=
-1_ctl.c
-> index be8269c..5bf3cb0 100644
-> --- a/drivers/scsi/pm8001/pm8001_ctl.c
-> +++ b/drivers/scsi/pm8001/pm8001_ctl.c
-> @@ -456,10 +456,7 @@ static DEVICE_ATTR(iop_log, S_IRUGO, pm8001_ctl_iop_=
-log_show, NULL);
->  static ssize_t pm8001_ctl_fatal_log_show(struct device *cdev,
->         struct device_attribute *attr, char *buf)
->  {
-> -       ssize_t count;
-> -
-> -       count =3D pm80xx_get_fatal_dump(cdev, attr, buf);
-> -       return count;
-> +       return pm80xx_get_fatal_dump(cdev, attr, buf);
->  }
->
->  static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fatal_log_show, NULL);
-> @@ -474,10 +471,7 @@ static DEVICE_ATTR(fatal_log, S_IRUGO, pm8001_ctl_fa=
-tal_log_show, NULL);
->  static ssize_t pm8001_ctl_gsm_log_show(struct device *cdev,
->         struct device_attribute *attr, char *buf)
->  {
-> -       ssize_t count;
-> -
-> -       count =3D pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
-> -       return count;
-> +       return pm8001_get_gsm_dump(cdev, SYSFS_OFFSET, buf);
->  }
->
->  static DEVICE_ATTR(gsm_log, S_IRUGO, pm8001_ctl_gsm_log_show, NULL);
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index ae7d9bd..181dad0 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1129,13 +1129,9 @@ static long sg_compat_ioctl(struct file *filp, uns=
-igned int cmd_in, unsigned lon
->                 return -ENXIO;
->
->         sdev =3D sdp->device;
-> -       if (sdev->host->hostt->compat_ioctl) {
-> -               int ret;
-> -
-> -               ret =3D sdev->host->hostt->compat_ioctl(sdev, cmd_in, (vo=
-id __user *)arg);
-> -
-> -               return ret;
-> -       }
-> +       if (sdev->host->hostt->compat_ioctl)
-> +               return sdev->host->hostt->compat_ioctl(sdev, cmd_in,
-> +                                                      (void __user *)arg=
-);
->
->         return -ENOIOCTLCMD;
->  }
-> --
-> 1.9.1
->
-Looks good to me!
+On Wed, Sep 07, 2016 at 11:30:04AM +0530, Sreekanth Reddy wrote:
+> On Tue, Sep 6, 2016 at 8:36 PM, Neil Horman <nhorman@tuxdriver.com> wrote:
+> > On Tue, Sep 06, 2016 at 04:52:37PM +0530, Sreekanth Reddy wrote:
+> >> On Fri, Sep 2, 2016 at 4:34 AM, Bart Van Assche
+> >> <bart.vanassche@sandisk.com> wrote:
+> >> > On 09/01/2016 03:31 AM, Sreekanth Reddy wrote:
+> >> >>
+> >> >> I reduced the ISR workload by one third in-order to reduce the time
+> >> >> that is spent per CPU in interrupt context, even then I am observing
+> >> >> softlockups.
+> >> >>
+> >> >> As I mentioned before only same single CPU in the set of CPUs(enabled
+> >> >> in affinity_hint) is busy with handling the interrupts from
+> >> >> corresponding IRQx. I have done below experiment in driver to limit
+> >> >> these softlockups/hardlockups. But I am not sure whether it is
+> >> >> reasonable to do this in driver,
+> >> >>
+> >> >> Experiment:
+> >> >> If the CPUx is continuously busy with handling the remote CPUs
+> >> >> (enabled in the corresponding IRQ's affinity_hint) IO works by 1/4th
+> >> >> of the HBA queue depth in the same ISR context then enable a flag
+> >> >> called 'change_smp_affinity' for this IRQ. Also created a thread with
+> >> >> will poll for this flag for every IRQ's (enabled by driver) for every
+> >> >> second. If this thread see that this flag is enabled for any IRQ then
+> >> >> it will write next CPU number from the CPUs enabled in the IRQ's
+> >> >> affinity_hint to the IRQ's smp_affinity procfs attribute using
+> >> >> 'call_usermodehelper()' API.
+> >> >>
+> >> >> This to make sure that interrupts are not processed by same single CPU
+> >> >> all the time and to make the other CPUs to handle the interrupts if
+> >> >> the current CPU is continuously busy with handling the other CPUs IO
+> >> >> interrupts.
+> >> >>
+> >> >> For example consider a system which has 8 logical CPUs and one MSIx
+> >> >> vector enabled (called IRQ 120) in driver, HBA queue depth as 8K.
+> >> >> then IRQ's procfs attributes will be
+> >> >> IRQ# 120, affinity_hint=0xff, smp_affinity=0x00
+> >> >>
+> >> >> After starting heavy IOs, we will observe that only CPU0 will be busy
+> >> >> with handling the interrupts. This experiment driver will change the
+> >> >> smp_affinity to next CPU number i.e. 0x01 (using cmd 'echo 0x01 >
+> >> >> /proc/irq/120/smp_affinity', driver issue's this cmd using
+> >> >> call_usermodehelper() API) if it observes that CPU0 is continuously
+> >> >> processing more than 2K of IOs replies of other CPUs i.e from CPU1 to
+> >> >> CPU7.
+> >> >>
+> >> >> Whether doing this kind of stuff in driver is ok?
+> >> >
+> >> >
+> >> > Hello Sreekanth,
+> >> >
+> >> > To me this sounds like something that should be implemented in the I/O
+> >> > chipset on the motherboard. If you have a look at the Intel Software
+> >> > Developer Manuals then you will see that logical destination mode supports
+> >> > round-robin interrupt delivery. However, the Linux kernel selects physical
+> >> > destination mode on systems with more than eight logical CPUs (see also
+> >> > arch/x86/kernel/apic/apic_flat_64.c).
+> >> >
+> >> > I'm not sure the maintainers of the interrupt subsystem would welcome code
+> >> > that emulates round-robin interrupt delivery. So your best option is
+> >> > probably to minimize the amount of work that is done in interrupt context
+> >> > and to move as much work as possible out of interrupt context in such a way
+> >> > that it can be spread over multiple CPU cores, e.g. by using
+> >> > queue_work_on().
+> >> >
+> >> > Bart.
+> >>
+> >> Bart,
+> >>
+> >> Thanks a lot for providing lot of inputs and valuable information on this issue.
+> >>
+> >> Today I got one more observation. i.e. I am not observing any lockups
+> >> if I use 1.0.4-6 versioned irqbalance.
+> >> Since this versioned irqbalance is able to shift the load to other CPU
+> >> when one CPU is heavily loaded.
+> >>
+> >
+> > This isn't happening because irqbalance is no longer able to shift load between
+> > cpus, its happening because of commit 996ee2cf7a4d10454de68ac4978adb5cf22850f8.
+> > irqs with higher interrupt volumes sould be balanced to a specific cpu core,
+> > rather than to a cache domain to maximize cpu-local cache hit rates.  Prior to
+> > that change we balanced to a cache domain and your workload didn't have to
+> > serialize multiple interrupts to a single core.  My suggestion to you is to use
+> > the --policyscript option to make your storage irqs get balanced to the cache
+> > level, rather than the core level.  That should return the behavior to what you
+> > want.
+> >
+> > Neil
+> 
+> Hi Neil,
+> 
+> Thanks for reply.
+> 
+> Today I tried with setting balance_level to 'cache' for mpt3sas driver
+> IRQ's using below policy script and used 1.0.9 versioned irqbalance,
+> ----------------------------------------------------------------------------------------------
+> #!/bin/bash
+> # Header
+> # Linux Shell Scripting for Irq Balance Policy select for mpt3sas driver
+> #
+> 
+> # Command Line Args
+>  #IRQ_PATH    -> PATH
+>  #IRQ_NUMBER     -> IRQ Number
+> declare -r IRQ_PATH=$1
+> declare -r IRQ_NUMBER=$2
+> 
+> if [ -d /proc/irq/$IRQ_NUMBER ]; then
+>         mpt3sas_irq=(`ls /proc/irq/$IRQ_NUMBER/ | grep mpt3sas | wc -l`)
+>         if [ $mpt3sas_irq == 1 ]; then
+>             echo "hintpolicy=subset"
+>             echo "balance_level=cache"
+>     fi
+> fi
+> -----------------------------------------------------------------------------------------------
+> 
+> But still I don't see any load shift happening between the CPUs and
+> still observing hardlockups.
+> 
+> Here I have attached the irqbalance logs.
+> 
+> Thanks,
+> Sreekanth
 
-Reviewed-by: Jack Wang <jinpu.wang@profitbricks.com>
+Hey there-
+	So, looking at your logs, your script is working correctly:
+Package 0:  numa_node is 0 cpu mask is 0003f03f (load 0)
+        Cache domain 0:  numa_node is 0 cpu mask is 00001001  (load 0)
+                CPU number 0  numa_node is 0 (load 0)
+                  Interrupt 150 node_num is 0 (storage/1)
+                  Interrupt 174 node_num is 0 (storage/1)
+                  Interrupt 198 node_num is 0 (storage/1)
+                  Interrupt 126 node_num is 0 (storage/1)
+                  Interrupt 102 node_num is 0 (ethernet/1)
+                  Interrupt 77 node_num is 0 (ethernet/1)
+                CPU number 12  numa_node is 0 (load 0)
+                  Interrupt 138 node_num is 0 (storage/1)
+                  Interrupt 162 node_num is 0 (storage/1)
+                  Interrupt 186 node_num is 0 (storage/1)
+                  Interrupt 114 node_num is 0 (storage/1)
+                  Interrupt 90 node_num is 0 (ethernet/1)
+                  Interrupt 65 node_num is 0 (ethernet/1)
+          Interrupt 51 node_num is -1 (storage/1)
+          Interrupt 31 node_num is 0 (legacy/1)
+...
+Package 1:  numa_node is 0 cpu mask is 00fc0fc0 (load 0)
+        Cache domain 6:  numa_node is 0 cpu mask is 00040040  (load 0)
+                CPU number 6  numa_node is 0 (load 0)
+                  Interrupt 149 node_num is 0 (storage/1)
+                  Interrupt 173 node_num is 0 (storage/1)
+                  Interrupt 197 node_num is 0 (storage/1)
+                  Interrupt 125 node_num is 0 (storage/1)
+                  Interrupt 101 node_num is 0 (ethernet/1)
+                  Interrupt 76 node_num is 0 (ethernet/1)
+                CPU number 18  numa_node is 0 (load 0)
+                  Interrupt 137 node_num is 0 (storage/1)
+                  Interrupt 161 node_num is 0 (storage/1)
+                  Interrupt 185 node_num is 0 (storage/1)
+                  Interrupt 113 node_num is 0 (storage/1)
+                  Interrupt 89 node_num is 0 (ethernet/1)
+                  Interrupt 64 node_num is 0 (ethernet/1)
+          Interrupt 50 node_num is -1 (storage/1)
 
---=20
-Mit freundlichen Gr=C3=BC=C3=9Fen,
-Best Regards,
 
-Jack Wang
+irqbalance correctly decided to balance irqs 50 and 51 to the cache level, which
+is good. The only other thing I would check though is the affinity_hint those
+irqs are exporting.  With an affinity hint set to subset, if the exported hint
+only intersects the cache domain cpu set at one cpu, you will still only get
+affinity for that one cpu.  You may want to consider changing the hintpolicy for
+those interrupts to ignore, to ensure that you have affinity for two cpus.
+
+Beyond that though, the kernel is in control of irq delivery.  Normally the
+configured hardware delivery policy is to select the highest priority cpu that
+isn't already servicing an interrupt (to maximize cache hit rates).  If the irq
+rate is sufficiently slow however, it will always hit the same cpu, because it
+isn't blocked by another interrupt.
+
+Best
+Neil
+
