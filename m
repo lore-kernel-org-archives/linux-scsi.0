@@ -1,75 +1,83 @@
-From: James Bottomley <James.Bottomley@Hansenpartnership.com>
-Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Thu, 08 Sep 2016 18:38:02 -0400
-Message-ID: <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda> <146706367078.29152.14405582249219794335.stgit@brunhilda> <yq1a8ghoim3.fsf@sermon.lab.mkp.net> <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net> <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net> <1473359114.2781.38.camel@linux.vnet.ibm.com> <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH][SCSI] scsi: ufs: get a TM service response from the correct
+ offset
+Date: Fri, 09 Sep 2016 08:22:22 +0900
+Message-ID: <000401d20a27$da459040$8ed0b0c0$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain;
- charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:58558 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753174AbcIHWk5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2016 18:40:57 -0400
-In-Reply-To: <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
+Received: from mailout2.samsung.com ([203.254.224.25]:38425 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752746AbcIHXWZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Sep 2016 19:22:25 -0400
+Received: from epcpsbgr2.samsung.com
+ (u142.gpu120.samsung.co.kr [203.254.230.142])
+ by mailout2.samsung.com (Oracle Communications Messaging Server 7.0.5.31.0
+ 64bit (built May  5 2014))
+ with ESMTP id <0OD701R68KXBRT20@mailout2.samsung.com> for
+ linux-scsi@vger.kernel.org; Fri, 09 Sep 2016 08:22:23 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: vinholikatti@gmail.com, linux-scsi@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, =?UTF-8?B?7LaU7ZeM6rSR?= <hg.chu@samsung.com>
 
-On September 8, 2016 2:33:52 PM EDT, Scott Benesh <scott.benesh@microsemi.com> wrote:
->> 
->> On Thu, 2016-09-08 at 18:15 +0000, Don Brace wrote:
->> > > > -    { 0x9005, 0x028f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 65 }, /*
->> > > > Adaptec PMC
->> > > > Series 9 */
->> > > >
->> > > > How are people that load aacraid in their initrd going to boot
->> > > > after this?
->> > > >
->> > > > --
->> > > > Martin K. Petersen      Oracle Linux Engineering
->> > >
->> > > I updated smartpqi/Kconfig and added
->Documentation/scsi/smartpqi.txt
->> > > to inform users of the need to configure the smartpqi driver
->moving
->> > > forward for aacraid Series 9 controllers.
->> > >
->> > > Hope this helps.
->> 
->> That's not going to be enough: this ID has been in the aacriad driver
->since
->> 2011.  That means anyone who finally gets hold of one of these new
->cards
->> but uses a distro that doesn't have the new smartpqi driver will be
->attached
->> via the aacraid one.
->> 
->
->That's ok because for previous distros the new controller will work
->with the previous aacraid driver, although with non-optimal
->performance.
+From: Kiwoong Kim <kwmad.kim@samsung.com>
 
-Not after this change hits. Then systems that only have aacraid in the initrd will fail to boot.
+When any UFS host controller receives a TM(Task Management)
+response from a UFS device,
+UFS driver has been recognize like receiving a message of
+"Task Management Function Complete"(00h) in all cases, so far.
+That means there is no pending task for a tag of the TM request
+sent before in the UFS device.
+That's because the byte offset 6 in TM response which has been used
+to get a TM service response so far
+represents just whether or not a TM transmission passes.
 
->What we want to do is sync up at 4.9 so going forward only the new
->smartpqi driver will attach to these new controllers.
+Regarding UFS spec, the correct byte offset to
+get TM service response is 15, not 6.
 
-So you have a plan in place with the distros to migrate the initrd images? Without being told, some will only install the modules the previous initrd  was configured for.
+I tested that UFS driver responds properly for the TM response
+>From a UFS device with an reference board with exynos8890, as follow:
+No pending task -> Task Management Function Complete (00h)
+Pending task -> Task Management Function Succeeded (08h)
 
-James
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Signed-off-by: HeonGwang Chu <hg.chu@samsung.com>
+Tested-by: : Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufs.h    |    1 +
+ drivers/scsi/ufs/ufshcd.c |    4 ++--
+ 2 files changed, 3 insertions(+), 2 deletions(-)
 
->Scott
->
->> Given that the life times of enterprise distributions is two years
->and you're
->> releasing this smartpqi soon, the overlap is unavoidable.
->> 
->> James
->> 
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 42c459a..89c121e 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -295,6 +295,7 @@ enum {
+        MASK_QUERY_DATA_SEG_LEN         = 0xFFFF,
+        MASK_RSP_UPIU_DATA_SEG_LEN      = 0xFFFF,
+        MASK_RSP_EXCEPTION_EVENT        = 0x10000,
++       MASK_TM_SERVICE_RESP            = 0xFF,
+ };
 
+ /* Task management service response */
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e8a706b..c641cd3 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -3013,8 +3013,8 @@ static int ufshcd_task_req_compl(struct ufs_hba *hba, u32 index, u8 *resp)
+        if (ocs_value == OCS_SUCCESS) {
+                task_rsp_upiup = (struct utp_upiu_task_rsp *)
+                                task_req_descp[index].task_rsp_upiu;
+-               task_result = be32_to_cpu(task_rsp_upiup->header.dword_1);
+-               task_result = ((task_result & MASK_TASK_RESPONSE) >> 8);
++               task_result = be32_to_cpu(task_rsp_upiup->output_param1);
++               task_result = task_result & MASK_TM_SERVICE_RESP;
+                if (resp)
+                        *resp = (u8)task_result;
+        } else {
+--
+1.7.9.5
 
--- 
-Sent from my Android device with K-9 Mail. Please excuse my brevity.
