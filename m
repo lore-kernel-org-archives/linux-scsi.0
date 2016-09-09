@@ -1,34 +1,48 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] cxlflash: Miscellaneous fixes
-Date: Fri, 09 Sep 2016 07:35:58 -0400
-Message-ID: <yq1inu5fgpt.fsf@sermon.lab.mkp.net>
-References: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Greg KH <greg@kroah.com>
+Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Fri, 9 Sep 2016 13:46:09 +0200
+Message-ID: <20160909114609.GA23702@kroah.com>
+References: <1471349112-13876-1-git-send-email-oneukum@suse.com>
+ <yq1bn0pijqh.fsf@sermon.lab.mkp.net>
+ <1473331428.32073.0.camel@suse.com>
+ <yq1zinhfh5y.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:51622 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754485AbcIILgP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:36:15 -0400
-In-Reply-To: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        (Uma Krishnan's message of "Fri, 2 Sep 2016 15:36:52 -0500")
+Received: from out4-smtp.messagingengine.com ([66.111.4.28]:45368 "EHLO
+        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753715AbcIILqE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:46:04 -0400
+Content-Disposition: inline
+In-Reply-To: <yq1zinhfh5y.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Oliver Neukum <oneukum@suse.com>, jejb@linux.vnet.ibm.com, usb-storage@lists.one-eyed-alien.net, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, Johannes Thumshirn <JThumshirn@suse.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+On Fri, Sep 09, 2016 at 07:26:17AM -0400, Martin K. Petersen wrote:
+> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
+> 
+> Oliver> On Thu, 2016-08-18 at 22:19 -0400, Martin K. Petersen wrote:
+> >> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
+> >> 
+> Oliver> Some SATA to USB bridges fail to cooperate with some drives
+> Oliver> resulting in no cache being present being reported to the
+> Oliver> host. That causes the host to skip sending a command to
+> Oliver> synchronize caches. That causes data loss when the drive is
+> Oliver> powered down.
+> >> 
+> >> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> >> 
+> 
+> Oliver> may I ask about the fate of this patch? Has it been lost?
+> Oliver> Should I resubmit? Are any further changes necessary?
+> 
+> I'm OK with the change but it needs to go through the USB tree.
 
-Uma> This patch set contains miscellaneous fixes in the device cleanup
-Uma> and EEH recovery paths. One of the patches simplifies the WWPN
-Uma> assignment routine.
+Ugh, ok, this is gone from my queue, Oliver, can you resend it and I'll
+queue it up?
 
-Uma> There are a couple of fixes that resolve regressions introduced by
-Uma> Commit 704c4b0ddc03 ("cxlflash: Shutdown notify support for CXL
-Uma> Flash cards") and Commit 888baf069f49 ("scsi: cxlflash: Add kref to
-Uma> context")
+thanks,
 
-Applied patches 1 and 2 to 4.9/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+greg k-h
