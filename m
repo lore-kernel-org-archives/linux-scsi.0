@@ -1,120 +1,143 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH 5/5] hpsa: check for null devices in ioaccel submission patch
-Date: Fri, 9 Sep 2016 16:30:42 -0500
-Message-ID: <147345664240.19269.1463288670424335492.stgit@brunhilda>
+Subject: [PATCH 3/5] hpsa: check for vpd support before sending
+Date: Fri, 9 Sep 2016 16:30:29 -0500
+Message-ID: <147345662985.19269.15459802044850867924.stgit@brunhilda>
 References: <147345640313.19269.15042173861496542431.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0046.outbound.protection.outlook.com ([104.47.38.46]:18560
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0056.outbound.protection.outlook.com ([104.47.37.56]:23392
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752040AbcIIVbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Sep 2016 17:31:05 -0400
+        id S1754877AbcIIVpN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Sep 2016 17:45:13 -0400
 In-Reply-To: <147345640313.19269.15042173861496542431.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
 Cc: linux-scsi@vger.kernel.org
 
+From: Scott Teel <scott.teel@microsemi.com>
+
+Before using vendor-specific VPD pages for getting
+raid_level and device_id, check for page support.
+If page isn't supported, don't try to use it.
+Also, pay attention to return status on
+hpsa_get_device_id.
+
 Reviewed-by: Scott Benesh <scott.benest@microsemi.com>
 Reviewed-by: Scott Teel <scott.teel@microsemi.com>
 Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
 Signed-off-by: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/hpsa.c |   31 +++++++++++++++++++++++++++++++
- 1 file changed, 31 insertions(+)
+ drivers/scsi/hpsa.c     |   44 ++++++++++++++++++++++++++++++++++----------
+ drivers/scsi/hpsa_cmd.h |    1 +
+ 2 files changed, 35 insertions(+), 10 deletions(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 06f5e1c..e4b3241 100644
+index 97f50c7..6a5b7df 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -2499,6 +2499,10 @@ static void complete_scsi_command(struct CommandList *cp)
- 	}
- 
- 	dev = cmd->device->hostdata;
-+	if (!dev) {
-+		cmd->result = DID_NO_CONNECT << 16;
-+		return hpsa_cmd_free_and_done(h, cp, cmd);
-+	}
- 	c2 = &h->ioaccel2_cmd_pool[cp->cmdindex];
- 
- 	scsi_dma_unmap(cmd); /* undo the DMA mappings */
-@@ -4686,6 +4690,9 @@ static int hpsa_scsi_ioaccel_direct_map(struct ctlr_info *h,
- 	struct scsi_cmnd *cmd = c->scsi_cmd;
- 	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
- 
-+	if (!dev)
-+		return -1;
+@@ -293,6 +293,8 @@ static int detect_controller_lockup(struct ctlr_info *h);
+ static void hpsa_disable_rld_caching(struct ctlr_info *h);
+ static inline int hpsa_scsi_do_report_phys_luns(struct ctlr_info *h,
+ 	struct ReportExtendedLUNdata *buf, int bufsize);
++static bool hpsa_vpd_page_supported(struct ctlr_info *h,
++	unsigned char scsi3addr[], u8 page);
+ static int hpsa_luns_changed(struct ctlr_info *h);
+ static bool hpsa_cmd_dev_match(struct ctlr_info *h, struct CommandList *c,
+ 			       struct hpsa_scsi_dev_t *dev,
+@@ -3088,11 +3090,19 @@ static void hpsa_get_raid_level(struct ctlr_info *h,
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return;
+-	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0xC1, buf, 64);
 +
- 	c->phys_disk = dev;
- 
- 	return hpsa_scsi_ioaccel_queue_command(h, c, dev->ioaccel_handle,
-@@ -4762,6 +4769,12 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	u32 len;
- 	u32 total_len = 0;
- 
-+	if (!cmd->device)
-+		return -1;
++	if (!hpsa_vpd_page_supported(h, scsi3addr,
++		HPSA_VPD_LV_DEVICE_GEOMETRY))
++		goto exit;
 +
-+	if (!cmd->device->hostdata)
-+		return -1;
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE |
++		HPSA_VPD_LV_DEVICE_GEOMETRY, buf, 64);
 +
- 	BUG_ON(scsi_sg_count(cmd) > h->maxsgentries);
+ 	if (rc == 0)
+ 		*raid_level = buf[8];
+ 	if (*raid_level > RAID_UNKNOWN)
+ 		*raid_level = RAID_UNKNOWN;
++exit:
+ 	kfree(buf);
+ 	return;
+ }
+@@ -3450,7 +3460,7 @@ static void hpsa_get_sas_address(struct ctlr_info *h, unsigned char *scsi3addr,
+ }
  
- 	if (fixup_ioaccel_cdb(cdb, &cdb_len)) {
-@@ -4870,6 +4883,12 @@ static int hpsa_scsi_ioaccel_queue_command(struct ctlr_info *h,
- 	struct CommandList *c, u32 ioaccel_handle, u8 *cdb, int cdb_len,
- 	u8 *scsi3addr, struct hpsa_scsi_dev_t *phys_disk)
+ /* Get a device id from inquiry page 0x83 */
+-static int hpsa_vpd_page_supported(struct ctlr_info *h,
++static bool hpsa_vpd_page_supported(struct ctlr_info *h,
+ 	unsigned char scsi3addr[], u8 page)
  {
-+	if (!c->scsi_cmd->device)
-+		return -1;
-+
-+	if (!c->scsi_cmd->device->hostdata)
-+		return -1;
-+
- 	/* Try to honor the device's queue depth */
- 	if (atomic_inc_return(&phys_disk->ioaccel_cmds_out) >
- 					phys_disk->queue_depth) {
-@@ -4950,6 +4969,9 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
- #endif
- 	int offload_to_mirror;
+ 	int rc;
+@@ -3539,18 +3549,25 @@ static int hpsa_get_device_id(struct ctlr_info *h, unsigned char *scsi3addr,
+ 	int rc;
+ 	unsigned char *buf;
  
-+	if (!dev)
-+		return -1;
+-	if (buflen > 16)
+-		buflen = 16;
++	/* Does controller have VPD for device id? */
++	if (!hpsa_vpd_page_supported(h, scsi3addr, HPSA_VPD_LV_DEVICE_ID))
++		return 1; /* not supported */
 +
- 	/* check for valid opcode, get LBA and block count */
- 	switch (cmd->cmnd[0]) {
- 	case WRITE_6:
-@@ -5362,6 +5384,9 @@ static int hpsa_ioaccel_submit(struct ctlr_info *h,
- 	struct hpsa_scsi_dev_t *dev = cmd->device->hostdata;
- 	int rc = IO_ACCEL_INELIGIBLE;
- 
-+	if (!dev)
-+		return SCSI_MLQUEUE_HOST_BUSY;
+ 	buf = kzalloc(64, GFP_KERNEL);
+ 	if (!buf)
+ 		return -ENOMEM;
+-	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE | 0x83, buf, 64);
+-	if (rc == 0)
+-		memcpy(device_id, &buf[index], buflen);
 +
- 	cmd->host_scribble = (unsigned char *) c;
++	rc = hpsa_scsi_do_inquiry(h, scsi3addr, VPD_PAGE |
++					HPSA_VPD_LV_DEVICE_ID, buf, 64);
++	if (rc == 0) {
++		if (buflen > 16)
++			buflen = 16;
++		memcpy(device_id, &buf[8], buflen);
++	}
  
- 	if (dev->offload_enabled) {
-@@ -5900,6 +5925,9 @@ static void setup_ioaccel2_abort_cmd(struct CommandList *c, struct ctlr_info *h,
- 	struct scsi_cmnd *scmd = command_to_abort->scsi_cmd;
- 	struct hpsa_scsi_dev_t *dev = scmd->device->hostdata;
+ 	kfree(buf);
  
-+	if (!dev)
-+		return;
-+
- 	/*
- 	 * We're overlaying struct hpsa_tmf_struct on top of something which
- 	 * was allocated as a struct io_accel2_cmd, so we better be sure it
-@@ -6020,6 +6048,9 @@ static int hpsa_send_abort_ioaccel2(struct ctlr_info *h,
- 	struct io_accel2_cmd *c2;
+-	return rc != 0;
++	return rc; /*0 - got id,  otherwise, didn't */
+ }
  
- 	dev = abort->scsi_cmd->device->hostdata;
-+	if (!dev)
-+		return -1;
-+
- 	if (!dev->offload_enabled && !dev->hba_ioaccel_enabled)
- 		return -1;
+ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
+@@ -3821,8 +3838,15 @@ static int hpsa_update_device_info(struct ctlr_info *h,
+ 		sizeof(this_device->model));
+ 	memset(this_device->device_id, 0,
+ 		sizeof(this_device->device_id));
+-	hpsa_get_device_id(h, scsi3addr, this_device->device_id, 8,
+-		sizeof(this_device->device_id));
++	if (hpsa_get_device_id(h, scsi3addr, this_device->device_id, 8,
++		sizeof(this_device->device_id)))
++		dev_err(&h->pdev->dev,
++			"hpsa%d: %s: can't get device id for host %d:C0:T%d:L%d\t%s\t%.16s\n",
++			h->ctlr, __func__,
++			h->scsi_host->host_no,
++			this_device->target, this_device->lun,
++			scsi_device_type(this_device->devtype),
++			this_device->model);
  
+ 	if ((this_device->devtype == TYPE_DISK ||
+ 		this_device->devtype == TYPE_ZBC) &&
+diff --git a/drivers/scsi/hpsa_cmd.h b/drivers/scsi/hpsa_cmd.h
+index a5be153..a584cdf 100644
+--- a/drivers/scsi/hpsa_cmd.h
++++ b/drivers/scsi/hpsa_cmd.h
+@@ -157,6 +157,7 @@
+ 
+ /* VPD Inquiry types */
+ #define HPSA_VPD_SUPPORTED_PAGES        0x00
++#define HPSA_VPD_LV_DEVICE_ID           0x83
+ #define HPSA_VPD_LV_DEVICE_GEOMETRY     0xC1
+ #define HPSA_VPD_LV_IOACCEL_STATUS      0xC2
+ #define HPSA_VPD_LV_STATUS		0xC3
 
