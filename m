@@ -1,29 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][SCSI] ufs: fix a wrong string in power mode change
-Date: Fri, 09 Sep 2016 07:22:59 -0400
-Message-ID: <yq14m5pgvvw.fsf@sermon.lab.mkp.net>
-References: <003001d209a5$9afb9b00$d0f2d100$@samsung.com>
+From: Mr Joe Ike <ms970029@gmail.com>
+Subject: From:Mr Joe Ike
+Date: Fri, 9 Sep 2016 12:26:14 +0100
+Message-ID: <CANpC6ecB5_=_yctT=G=ARr0DMgXJnB42CZM-AV6uUU5TYR8TWw@mail.gmail.com>
+Reply-To: mrjoeike1@yahoo.com.hk
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39739 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754074AbcIILXI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:23:08 -0400
-In-Reply-To: <003001d209a5$9afb9b00$d0f2d100$@samsung.com> (Kiwoong Kim's
-        message of "Thu, 08 Sep 2016 16:50:02 +0900")
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:35504 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752186AbcIIL0P (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:26:15 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n24so3908276pfb.2
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Sep 2016 04:26:15 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, =?utf-8?B?7LaU?= =?utf-8?B?7ZeM6rSR?= <hg.chu@samsung.com>
 
->>>>> "Kiwoong" == Kiwoong Kim <kwmad.kim@samsung.com> writes:
+From:Mr Joe Ike
+Block 10 Flat 5
+Victoria Island
+Lagos-Nigeria
 
-Kiwoong> From: Kiwoong Kim <kwmad.kim@samsung.com> I modified a string
-Kiwoong> as described in UFS spec as follow: umpcrs -> upmcrs
+This is to inform you that your funds of US$15 Million has been
+approved for immediate delivery to you. For the purpose of
+clarification,you are advised to reconfirm your Full Names,Direct
+Telephone Numbers,Physical Address with Zip Code so that there will be
+no error during the delivery of the funds to you in your country of
+residence.
 
-Applied to 4.9/scsi-queue by hand. Please make sure patches are against
-the current scsi-queue tree.
+Your quick response will be highly appreciated.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Yours Faithfully,
+Mr Joe Ike
+
+Reply to :  mrjoeike1@yahoo.com.hk
