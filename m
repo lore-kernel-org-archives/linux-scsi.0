@@ -1,48 +1,55 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Fri, 9 Sep 2016 13:46:09 +0200
-Message-ID: <20160909114609.GA23702@kroah.com>
-References: <1471349112-13876-1-git-send-email-oneukum@suse.com>
- <yq1bn0pijqh.fsf@sermon.lab.mkp.net>
- <1473331428.32073.0.camel@suse.com>
- <yq1zinhfh5y.fsf@sermon.lab.mkp.net>
+From: Geert Uytterhoeven <geert@linux-m68k.org>
+Subject: Re: [PATCH v2 3/3] scsi/ncr5380: Improve interrupt latency during PIO tranfers
+Date: Fri, 9 Sep 2016 14:00:18 +0200
+Message-ID: <CAMuHMdUVtX8ngof4RPstxvR7qSF+uBTTRmKTXKQ8jnBFAvnvbg@mail.gmail.com>
+References: <20160827022959.303563262@telegraphics.com.au> <20160831044453.413698369@telegraphics.com.au>
+ <yq1r38tfh1l.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:45368 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753715AbcIILqE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:46:04 -0400
-Content-Disposition: inline
-In-Reply-To: <yq1zinhfh5y.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1r38tfh1l.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Oliver Neukum <oneukum@suse.com>, jejb@linux.vnet.ibm.com, usb-storage@lists.one-eyed-alien.net, mdharm-usb@one-eyed-alien.net, stern@rowland.harvard.edu, Johannes Thumshirn <JThumshirn@suse.com>, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
+Cc: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, scsi <linux-scsi@vger.kernel.org>, Linux/m68k <linux-m68k@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Michael Schmitz <schmitzmic@gmail.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Sep 09, 2016 at 07:26:17AM -0400, Martin K. Petersen wrote:
-> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
-> 
-> Oliver> On Thu, 2016-08-18 at 22:19 -0400, Martin K. Petersen wrote:
-> >> >>>>> "Oliver" == Oliver Neukum <oneukum@suse.com> writes:
-> >> 
-> Oliver> Some SATA to USB bridges fail to cooperate with some drives
-> Oliver> resulting in no cache being present being reported to the
-> Oliver> host. That causes the host to skip sending a command to
-> Oliver> synchronize caches. That causes data loss when the drive is
-> Oliver> powered down.
-> >> 
-> >> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> >> 
-> 
-> Oliver> may I ask about the fate of this patch? Has it been lost?
-> Oliver> Should I resubmit? Are any further changes necessary?
-> 
-> I'm OK with the change but it needs to go through the USB tree.
+On Fri, Sep 9, 2016 at 1:28 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+>
+> Finn> Large PIO transfers are broken up into chunks to try to avoid
+> Finn> disabling local IRQs for long periods. But IRQs are still disabled
+> Finn> for too long and this causes SCC FIFO overruns during serial port
+> Finn> transfers.
+>
+> Finn> This patch reduces the PIO chunk size to reduce interrupt latency
+> Finn> to something on the order of milliseconds, at the expense of
+> Finn> additional CPU overhead from extra iterations of the
+> Finn> NCR5380_main() loop.
+>
+> Finn> That CPU overhead is a problem for slow machines (e.g. mac_scsi on
+> Finn> 25 MHz
+> Finn> 68030) but these machines generally use PDMA not PIO. This patch
+> Finn>        doesn't
+> Finn> make the overhead any worse on my Mac LC III (because it only gets
+> Finn> about 510 accesses per ms).
+>
+> Finn> This patch decreases disk performance by a fraction of one percent
+> Finn> for dmx3191d on my 333 MHz PowerPC 750. Other affected hardware
+> Finn> (such as g_NCR5380 on x86) was not tested but 5380 ISA cards
+> Finn> generally use PDMA and not PIO.
+>
+> Geert?
 
-Ugh, ok, this is gone from my queue, Oliver, can you resend it and I'll
-queue it up?
+No comments from my side.
 
-thanks,
+Gr{oetje,eeting}s,
 
-greg k-h
+                        Geert
+
+--
+Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
+
+In personal conversations with technical people, I call myself a hacker. But
+when I'm talking to journalists I just say "programmer" or something like that.
+                                -- Linus Torvalds
