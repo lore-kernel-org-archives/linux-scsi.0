@@ -1,44 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/3] scsi/ncr5380: Improve interrupt latency during PIO tranfers
-Date: Fri, 09 Sep 2016 07:28:54 -0400
-Message-ID: <yq1r38tfh1l.fsf@sermon.lab.mkp.net>
-References: <20160827022959.303563262@telegraphics.com.au>
-        <20160831044453.413698369@telegraphics.com.au>
+Subject: Re: [PATCH -next] scsi: ibmvfc: fix typo in parameter description
+Date: Fri, 09 Sep 2016 07:30:41 -0400
+Message-ID: <yq1mvjhfgym.fsf@sermon.lab.mkp.net>
+References: <1473347081-25953-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <20160831044453.413698369@telegraphics.com.au> (Finn Thain's
-        message of "Wed, 31 Aug 2016 14:44:56 +1000")
-Sender: linux-m68k-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Geert Uytterhoeven <geert@linux-m68k.org>, linux-scsi@vger.kernel.org, linux-m68k@vger.kernel.org, linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:43353 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753285AbcIILbP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:31:15 -0400
+In-Reply-To: <1473347081-25953-1-git-send-email-weiyj.lk@gmail.com> (Wei
+        Yongjun's message of "Thu, 8 Sep 2016 15:04:41 +0000")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org
 
->>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+>>>>> "Wei" == Wei Yongjun <weiyj.lk@gmail.com> writes:
 
-Finn> Large PIO transfers are broken up into chunks to try to avoid
-Finn> disabling local IRQs for long periods. But IRQs are still disabled
-Finn> for too long and this causes SCC FIFO overruns during serial port
-Finn> transfers.
+Wei> From: Wei Yongjun <weiyongjun1@huawei.com> Fix typo in parameter
+Wei> description.
 
-Finn> This patch reduces the PIO chunk size to reduce interrupt latency
-Finn> to something on the order of milliseconds, at the expense of
-Finn> additional CPU overhead from extra iterations of the
-Finn> NCR5380_main() loop.
-
-Finn> That CPU overhead is a problem for slow machines (e.g. mac_scsi on
-Finn> 25 MHz
-Finn> 68030) but these machines generally use PDMA not PIO. This patch
-Finn>        doesn't
-Finn> make the overhead any worse on my Mac LC III (because it only gets
-Finn> about 510 accesses per ms).
-
-Finn> This patch decreases disk performance by a fraction of one percent
-Finn> for dmx3191d on my 333 MHz PowerPC 750. Other affected hardware
-Finn> (such as g_NCR5380 on x86) was not tested but 5380 ISA cards
-Finn> generally use PDMA and not PIO.
-
-Geert?
+Applied to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
