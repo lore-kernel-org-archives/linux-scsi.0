@@ -1,45 +1,56 @@
-From: Shaun Tancheff <shaun@tancheff.com>
-Subject: [PATCH] Some drives failing on SCT Write Same
-Date: Fri,  9 Sep 2016 11:44:19 -0500
-Message-ID: <20160909164419.12978-1-shaun@tancheff.com>
-References: <CAJ48U8VJDSzQWuNgG1mnBG_6FvSx5Arc=n6YsH-vxKrt=skWqw@mail.gmail.com>
+From: David Carroll <david.carroll@microsemi.com>
+Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
+Date: Fri, 9 Sep 2016 17:11:58 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A15FACC27@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+        <146706367078.29152.14405582249219794335.stgit@brunhilda>
+ <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
+ <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36023 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751332AbcIIQod (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 12:44:33 -0400
-In-Reply-To: <CAJ48U8VJDSzQWuNgG1mnBG_6FvSx5Arc=n6YsH-vxKrt=skWqw@mail.gmail.com>
+Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:46336
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750938AbcIIRM0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Sep 2016 13:12:26 -0400
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tj@kernel.org
-Cc: Shaun Tancheff <shaun@tancheff.com>, Mike Krinkin <krinkin.m.u@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, shaun.tancheff@seagate.com
+To: Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
 
-Restrict support SCT Write Same to devices which also support ZAC where 
-support is required.
 
-Reported-by: Mike Krinkin <krinkin.m.u@gmail.com>
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
----
- drivers/ata/libata-scsi.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> >
+> >
+> > >>>>> "Don" =3D=3D Don Brace <don.brace@microsemi.com> writes:
+> >
+> > Don,
+> >
+> > Don> Depends on smartpqi driver adoption
+> >
+> > -    { 0x9005, 0x028f, PCI_ANY_ID, PCI_ANY_ID, 0, 0, 65 }, /* Adaptec P=
+MC
+> > Series 9 */
+> >
+> > How are people that load aacraid in their initrd going to boot after
+> > this?
+> >
+> > --
+> > Martin K. Petersen      Oracle Linux Engineering
+>=20
+> I updated smartpqi/Kconfig and added Documentation/scsi/smartpqi.txt to
+> inform users of the need to configure the smartpqi driver moving forward =
+for
+> aacraid Series 9 controllers.
+>=20
+> Hope this helps.
+>=20
+> Thanks,
+> Don Brace
+> ESC - Smart Storage
+> Microsemi Corporation
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 2f5487f..9cceb4a 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -3562,9 +3562,9 @@ static unsigned int ata_scsiop_maint_in(struct ata_scsi_args *args, u8 *rbuf)
- 		supported = 3;
- 		break;
- 	case WRITE_SAME_16:
--		if (ata_id_sct_write_same(dev->id))
--			supported = 3;
--		break;
-+		if (!ata_id_sct_write_same(dev->id))
-+			break;
-+		/* fallthrough: if SCT ... only enable for ZBC */
- 	case ZBC_IN:
- 	case ZBC_OUT:
- 		if (ata_id_zoned_cap(dev->id) ||
--- 
-2.9.3
-
+Acked-by: Dave Carroll <david.carroll@microsemi.com>
