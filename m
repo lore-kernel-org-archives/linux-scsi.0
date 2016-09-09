@@ -1,33 +1,60 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] Some drives failing on SCT Write Same
-Date: Fri, 9 Sep 2016 15:24:28 -0400
-Message-ID: <20160909192428.GA25988@htj.duckdns.org>
-References: <CAJ48U8VJDSzQWuNgG1mnBG_6FvSx5Arc=n6YsH-vxKrt=skWqw@mail.gmail.com>
- <20160909164419.12978-1-shaun@tancheff.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH 1/5] hpsa: determine device external status earlier
+Date: Fri, 9 Sep 2016 16:30:17 -0500
+Message-ID: <147345661717.19269.9073717000556201167.stgit@brunhilda>
+References: <147345640313.19269.15042173861496542431.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-yw0-f196.google.com ([209.85.161.196]:35691 "EHLO
-        mail-yw0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752299AbcIITYb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 15:24:31 -0400
-Content-Disposition: inline
-In-Reply-To: <20160909164419.12978-1-shaun@tancheff.com>
+Received: from mail-sn1nam01on0088.outbound.protection.outlook.com ([104.47.32.88]:29424
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752040AbcIIVa3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Sep 2016 17:30:29 -0400
+In-Reply-To: <147345640313.19269.15042173861496542431.stgit@brunhilda>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shaun Tancheff <shaun@tancheff.com>
-Cc: Mike Krinkin <krinkin.m.u@gmail.com>, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, hch@lst.de, shaun.tancheff@seagate.com
+To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On Fri, Sep 09, 2016 at 11:44:19AM -0500, Shaun Tancheff wrote:
-> Restrict support SCT Write Same to devices which also support ZAC where 
-> support is required.
-> 
-> Reported-by: Mike Krinkin <krinkin.m.u@gmail.com>
-> Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+currently we are checking for external status before
+we are determining if a device is an external device.
 
-Applied to libata/for-4.9.
+Reviewed-by: Scott Benesh <scott.benest@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/hpsa.c |   10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-Thanks.
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 030d002..332ff1a 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4270,6 +4270,11 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 		lunaddrbytes = figure_lunaddrbytes(h, raid_ctlr_position,
+ 			i, nphysicals, nlogicals, physdev_list, logdev_list);
+ 
++		/* Determine if this is a lun from an external target array */
++		tmpdevice->external =
++			figure_external_status(h, raid_ctlr_position, i,
++						nphysicals, nlocal_logicals);
++
+ 		/*
+ 		 * Skip over some devices such as a spare.
+ 		 */
+@@ -4295,11 +4300,6 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 			continue;
+ 		}
+ 
+-		/* Determine if this is a lun from an external target array */
+-		tmpdevice->external =
+-			figure_external_status(h, raid_ctlr_position, i,
+-						nphysicals, nlocal_logicals);
+-
+ 		figure_bus_target_lun(h, lunaddrbytes, tmpdevice);
+ 		hpsa_update_device_supports_aborts(h, tmpdevice, lunaddrbytes);
+ 		this_device = currentsd[ncurrent];
 
--- 
-tejun
