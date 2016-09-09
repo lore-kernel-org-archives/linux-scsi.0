@@ -1,42 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Fri, 09 Sep 2016 07:26:17 -0400
-Message-ID: <yq1zinhfh5y.fsf@sermon.lab.mkp.net>
-References: <1471349112-13876-1-git-send-email-oneukum@suse.com>
-        <yq1bn0pijqh.fsf@sermon.lab.mkp.net>
-        <1473331428.32073.0.camel@suse.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
+Date: Fri, 09 Sep 2016 07:28:10 -0400
+Message-ID: <yq1vay5fh2t.fsf@sermon.lab.mkp.net>
+References: <20160817101003.30055-1-bigeasy@linutronix.de>
+        <20160908123943.f7n3lurs7ovs5pup@c203.arch.suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1473331428.32073.0.camel-IBi9RG/b67k@public.gmane.org> (Oliver Neukum's message of
-        "Thu, 08 Sep 2016 12:43:48 +0200")
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Cc: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, usb-storage-ijkIwGHArpdIPJnuZ7Njw4oP9KaGy4wf@public.gmane.org, mdharm-usb-JGfshJpz5UybPZpvUQj5UqxOck334EZe@public.gmane.org, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, Johannes Thumshirn <JThumshirn-IBi9RG/b67k@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48114 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753830AbcIIL2k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Sep 2016 07:28:40 -0400
+In-Reply-To: <20160908123943.f7n3lurs7ovs5pup@c203.arch.suse.de> (Johannes
+        Thumshirn's message of "Thu, 8 Sep 2016 14:39:43 +0200")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, rt@linutronix.de, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, QLogic-Storage-Upstream@qlogic.com, Christoph Hellwig <hch@lst.de>, Chad Dupuis <chad.dupuis@qlogic.com>
 
->>>>> "Oliver" == Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Oliver> On Thu, 2016-08-18 at 22:19 -0400, Martin K. Petersen wrote:
->> >>>>> "Oliver" == Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org> writes:
->> 
-Oliver> Some SATA to USB bridges fail to cooperate with some drives
-Oliver> resulting in no cache being present being reported to the
-Oliver> host. That causes the host to skip sending a command to
-Oliver> synchronize caches. That causes data loss when the drive is
-Oliver> powered down.
->> 
->> Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
->> 
+>> On Wed, Aug 17, 2016 at 12:09:59PM +0200, Sebastian Andrzej Siewior wrote:
+>> The driver creates its own per-CPU threads which are updated based on
+>> CPU hotplug events. It is also possible to use kworkers and remove
+>> some of the infrastructure get the same job done while saving a few
+>> lines of code.
 
-Oliver> may I ask about the fate of this patch? Has it been lost?
-Oliver> Should I resubmit? Are any further changes necessary?
+Johannes> I'm sorry it took so long but for the whole series: Tested-by:
+Johannes> Johannes Thumshirn <jth@kernel.org> Acked-by: Johannes
+Johannes> Thumshirn <jth@kernel.org>
 
-I'm OK with the change but it needs to go through the USB tree.
+Johannes> Testing was conducted by booting from a QLogic BCM57840 CNA.
+
+Chad?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
