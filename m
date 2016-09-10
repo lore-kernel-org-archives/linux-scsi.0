@@ -1,40 +1,46 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 3/5] hpsa: check for vpd support before sending
-Date: Sat, 10 Sep 2016 11:05:47 +0800
-Message-ID: <201609101123.03n9exm4%fengguang.wu@intel.com>
-References: <147345662985.19269.15459802044850867924.stgit@brunhilda>
+From: Wei Yongjun <weiyj.lk@gmail.com>
+Subject: [PATCH -next] [SCSI] mpt fusion: fix error return code in mptfc_probe()
+Date: Sat, 10 Sep 2016 16:06:36 +0000
+Message-ID: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga04.intel.com ([192.55.52.120]:4185 "EHLO mga04.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752626AbcIJDGc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Sep 2016 23:06:32 -0400
-Content-Disposition: inline
-In-Reply-To: <147345662985.19269.15459802044850867924.stgit@brunhilda>
+Received: from mail-pa0-f65.google.com ([209.85.220.65]:35085 "EHLO
+        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755145AbcIJQGp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Sep 2016 12:06:45 -0400
+Received: by mail-pa0-f65.google.com with SMTP id pp5so5365477pac.2
+        for <linux-scsi@vger.kernel.org>; Sat, 10 Sep 2016 09:06:45 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: kbuild-all@01.org, jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Wei Yongjun <weiyongjun1@huawei.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
-Hi Scott,
+From: Wei Yongjun <weiyongjun1@huawei.com>
 
-[auto build test WARNING on scsi/for-next]
-[also build test WARNING on v4.8-rc5 next-20160909]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-[Suggest to use git(>=2.9.0) format-patch --base=<commit> (or --base=auto for convenience) to record what (public, well-known) commit your patch series was built on]
-[Check https://git-scm.com/docs/git-format-patch for more information]
+Fix to return error code -ENOMEM from the workqueue alloc error
+handling case instead of 0, as done elsewhere in this function.
 
-url:    https://github.com/0day-ci/linux/commits/Don-Brace/hpsa-determine-device-external-status-earlier/20160910-054751
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-
-
-coccinelle warnings: (new ones prefixed by >>)
-
->> drivers/scsi/hpsa.c:3473:9-10: WARNING: return of 0/1 in function 'hpsa_vpd_page_supported' with return type bool
-
-Please review and possibly fold the followup patch.
-
+Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/message/fusion/mptfc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
+index 129e132..add6a3a 100644
+--- a/drivers/message/fusion/mptfc.c
++++ b/drivers/message/fusion/mptfc.c
+@@ -1326,8 +1326,10 @@ mptfc_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	ioc->fc_rescan_work_q =
+ 		alloc_ordered_workqueue(ioc->fc_rescan_work_q_name,
+ 					WQ_MEM_RECLAIM);
+-	if (!ioc->fc_rescan_work_q)
++	if (!ioc->fc_rescan_work_q) {
++		error = -ENOMEM;
+ 		goto out_mptfc_probe;
++	}
+ 
+ 	/*
+ 	 *  Pre-fetch FC port WWN and stuff...
+
