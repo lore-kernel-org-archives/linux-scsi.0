@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
-Date: Sun, 11 Sep 2016 15:31:28 +0200
-Message-ID: <1473600688-24043-7-git-send-email-hch@lst.de>
+Subject: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
+Date: Sun, 11 Sep 2016 15:31:26 +0200
+Message-ID: <1473600688-24043-5-git-send-email-hch@lst.de>
 References: <1473600688-24043-1-git-send-email-hch@lst.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
@@ -12,58 +12,100 @@ List-Id: linux-scsi@vger.kernel.org
 
 Simply the interrupt setup by using the new PCI layer helpers.
 
-Despite using pci_enable_msi_range, this driver was only requesting a
-single MSI vector anyway.
-
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/media/pci/cobalt/cobalt-driver.c | 8 ++------
- drivers/media/pci/cobalt/cobalt-driver.h | 2 --
- 2 files changed, 2 insertions(+), 8 deletions(-)
+ drivers/vfio/pci/vfio_pci_intrs.c   | 45 +++++++++----------------------------
+ drivers/vfio/pci/vfio_pci_private.h |  1 -
+ 2 files changed, 10 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/media/pci/cobalt/cobalt-driver.c b/drivers/media/pci/cobalt/cobalt-driver.c
-index 476f7f0..5a0a9e4 100644
---- a/drivers/media/pci/cobalt/cobalt-driver.c
-+++ b/drivers/media/pci/cobalt/cobalt-driver.c
-@@ -307,9 +307,7 @@ static void cobalt_pci_iounmap(struct cobalt *cobalt, struct pci_dev *pci_dev)
- static void cobalt_free_msi(struct cobalt *cobalt, struct pci_dev *pci_dev)
+diff --git a/drivers/vfio/pci/vfio_pci_intrs.c b/drivers/vfio/pci/vfio_pci_intrs.c
+index 152b438..a1d283e 100644
+--- a/drivers/vfio/pci/vfio_pci_intrs.c
++++ b/drivers/vfio/pci/vfio_pci_intrs.c
+@@ -250,6 +250,7 @@ static irqreturn_t vfio_msihandler(int irq, void *arg)
+ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
  {
- 	free_irq(pci_dev->irq, (void *)cobalt);
+ 	struct pci_dev *pdev = vdev->pdev;
++	unsigned int flag = msix ? PCI_IRQ_MSIX : PCI_IRQ_MSI;
+ 	int ret;
+ 
+ 	if (!is_irq_none(vdev))
+@@ -259,35 +260,13 @@ static int vfio_msi_enable(struct vfio_pci_device *vdev, int nvec, bool msix)
+ 	if (!vdev->ctx)
+ 		return -ENOMEM;
+ 
+-	if (msix) {
+-		int i;
 -
--	if (cobalt->msi_enabled)
--		pci_disable_msi(pci_dev);
-+	pci_free_irq_vectors(pci_dev);
- }
- 
- static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
-@@ -386,14 +384,12 @@ static int cobalt_setup_pci(struct cobalt *cobalt, struct pci_dev *pci_dev,
- 	   from being generated. */
- 	cobalt_set_interrupt(cobalt, false);
- 
--	if (pci_enable_msi_range(pci_dev, 1, 1) < 1) {
-+	if (pci_alloc_irq_vectors(pci_dev, 1, 1, PCI_IRQ_MSI) < 1) {
- 		cobalt_err("Could not enable MSI\n");
--		cobalt->msi_enabled = false;
- 		ret = -EIO;
- 		goto err_release;
+-		vdev->msix = kzalloc(nvec * sizeof(struct msix_entry),
+-				     GFP_KERNEL);
+-		if (!vdev->msix) {
+-			kfree(vdev->ctx);
+-			return -ENOMEM;
+-		}
+-
+-		for (i = 0; i < nvec; i++)
+-			vdev->msix[i].entry = i;
+-
+-		ret = pci_enable_msix_range(pdev, vdev->msix, 1, nvec);
+-		if (ret < nvec) {
+-			if (ret > 0)
+-				pci_disable_msix(pdev);
+-			kfree(vdev->msix);
+-			kfree(vdev->ctx);
+-			return ret;
+-		}
+-	} else {
+-		ret = pci_enable_msi_range(pdev, 1, nvec);
+-		if (ret < nvec) {
+-			if (ret > 0)
+-				pci_disable_msi(pdev);
+-			kfree(vdev->ctx);
+-			return ret;
+-		}
++	/* return the number of supported vectors if we can't get all: */
++	ret = pci_alloc_irq_vectors(pdev, 1, nvec, flag);
++	if (ret < nvec) {
++		if (ret > 0)
++			pci_free_irq_vectors(pdev);
++		kfree(vdev->ctx);
++		return ret;
  	}
- 	msi_config_show(cobalt, pci_dev);
--	cobalt->msi_enabled = true;
  
- 	/* Register IRQ */
- 	if (request_irq(pci_dev->irq, cobalt_irq_handler, IRQF_SHARED,
-diff --git a/drivers/media/pci/cobalt/cobalt-driver.h b/drivers/media/pci/cobalt/cobalt-driver.h
-index ed00dc9..00f773e 100644
---- a/drivers/media/pci/cobalt/cobalt-driver.h
-+++ b/drivers/media/pci/cobalt/cobalt-driver.h
-@@ -287,8 +287,6 @@ struct cobalt {
- 	u32 irq_none;
- 	u32 irq_full_fifo;
+ 	vdev->num_ctx = nvec;
+@@ -315,7 +294,7 @@ static int vfio_msi_set_vector_signal(struct vfio_pci_device *vdev,
+ 	if (vector < 0 || vector >= vdev->num_ctx)
+ 		return -EINVAL;
  
--	bool msi_enabled;
--
- 	/* omnitek dma */
- 	int dma_channels;
- 	int first_fifo_channel;
+-	irq = msix ? vdev->msix[vector].vector : pdev->irq + vector;
++	irq = pci_irq_vector(pdev, vector);
+ 
+ 	if (vdev->ctx[vector].trigger) {
+ 		free_irq(irq, vdev->ctx[vector].trigger);
+@@ -408,11 +387,7 @@ static void vfio_msi_disable(struct vfio_pci_device *vdev, bool msix)
+ 
+ 	vfio_msi_set_block(vdev, 0, vdev->num_ctx, NULL, msix);
+ 
+-	if (msix) {
+-		pci_disable_msix(vdev->pdev);
+-		kfree(vdev->msix);
+-	} else
+-		pci_disable_msi(pdev);
++	pci_free_irq_vectors(pdev);
+ 
+ 	vdev->irq_type = VFIO_PCI_NUM_IRQS;
+ 	vdev->num_ctx = 0;
+diff --git a/drivers/vfio/pci/vfio_pci_private.h b/drivers/vfio/pci/vfio_pci_private.h
+index 2128de8..f561ac1 100644
+--- a/drivers/vfio/pci/vfio_pci_private.h
++++ b/drivers/vfio/pci/vfio_pci_private.h
+@@ -72,7 +72,6 @@ struct vfio_pci_device {
+ 	struct perm_bits	*msi_perm;
+ 	spinlock_t		irqlock;
+ 	struct mutex		igate;
+-	struct msix_entry	*msix;
+ 	struct vfio_pci_irq_ctx	*ctx;
+ 	int			num_ctx;
+ 	int			irq_type;
 -- 
 2.1.4
