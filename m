@@ -1,48 +1,70 @@
-From: Julia Lawall <Julia.Lawall@lip6.fr>
-Subject: [PATCH 22/26] esas2r: constify local structures
-Date: Sun, 11 Sep 2016 15:06:04 +0200
-Message-ID: <1473599168-30561-23-git-send-email-Julia.Lawall@lip6.fr>
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Bradley Grove <linuxdrivers@attotech.com>
-Cc: joe@perches.com, kernel-janitors@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 5/6] genwqe: use pci_irq_allocate_vectors
+Date: Sun, 11 Sep 2016 15:31:27 +0200
+Message-ID: <1473600688-24043-6-git-send-email-hch@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1473600688-24043-1-git-send-email-hch@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com
+Cc: kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-For structure types defined in the same file or local header files, find
-top-level static structure declarations that have the following
-properties:
-1. Never reassigned.
-2. Address never taken
-3. Not passed to a top-level macro call
-4. No pointer or array-typed field passed to a function or stored in a
-variable.
-Declare structures having all of these properties as const.
+Simply the interrupt setup by using the new PCI layer helpers.
 
-Done using Coccinelle.
-Based on a suggestion by Joe Perches <joe@perches.com>.
+One odd thing about this driver is that it looks like it could request
+multiple MSI vectors, but it will then only ever use a single one.
 
-Signed-off-by: Julia Lawall <Julia.Lawall@lip6.fr>
-
+Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
-The semantic patch seems too long for a commit log, but is in the cover
-letter.
+ drivers/misc/genwqe/card_base.h  |  1 -
+ drivers/misc/genwqe/card_utils.c | 12 ++----------
+ 2 files changed, 2 insertions(+), 11 deletions(-)
 
- drivers/scsi/esas2r/esas2r_flash.c |    2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/esas2r/esas2r_flash.c b/drivers/scsi/esas2r/esas2r_flash.c
-index 7bd376d..f8414b5 100644
---- a/drivers/scsi/esas2r/esas2r_flash.c
-+++ b/drivers/scsi/esas2r/esas2r_flash.c
-@@ -54,7 +54,7 @@
+diff --git a/drivers/misc/genwqe/card_base.h b/drivers/misc/genwqe/card_base.h
+index cb851c1..5813b5f 100644
+--- a/drivers/misc/genwqe/card_base.h
++++ b/drivers/misc/genwqe/card_base.h
+@@ -41,7 +41,6 @@
+ #include "genwqe_driver.h"
  
- #define ESAS2R_FS_DRVR_VER 2
+ #define GENWQE_MSI_IRQS			4  /* Just one supported, no MSIx */
+-#define GENWQE_FLAG_MSI_ENABLED		(1 << 0)
  
--static struct esas2r_sas_nvram default_sas_nvram = {
-+static const struct esas2r_sas_nvram default_sas_nvram = {
- 	{ 'E',	'S',  'A',  'S'			     }, /* signature          */
- 	SASNVR_VERSION,                                 /* version            */
- 	0,                                              /* checksum           */
-
+ #define GENWQE_MAX_VFS			15 /* maximum 15 VFs are possible */
+ #define GENWQE_MAX_FUNCS		16 /* 1 PF and 15 VFs */
+diff --git a/drivers/misc/genwqe/card_utils.c b/drivers/misc/genwqe/card_utils.c
+index 222367c..da424c2 100644
+--- a/drivers/misc/genwqe/card_utils.c
++++ b/drivers/misc/genwqe/card_utils.c
+@@ -730,13 +730,10 @@ int genwqe_read_softreset(struct genwqe_dev *cd)
+ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
+ {
+ 	int rc;
+-	struct pci_dev *pci_dev = cd->pci_dev;
+ 
+-	rc = pci_enable_msi_range(pci_dev, 1, count);
++	rc = pci_alloc_irq_vectors(cd->pci_dev, 1, count, PCI_IRQ_MSI);
+ 	if (rc < 0)
+ 		return rc;
+-
+-	cd->flags |= GENWQE_FLAG_MSI_ENABLED;
+ 	return 0;
+ }
+ 
+@@ -746,12 +743,7 @@ int genwqe_set_interrupt_capability(struct genwqe_dev *cd, int count)
+  */
+ void genwqe_reset_interrupt_capability(struct genwqe_dev *cd)
+ {
+-	struct pci_dev *pci_dev = cd->pci_dev;
+-
+-	if (cd->flags & GENWQE_FLAG_MSI_ENABLED) {
+-		pci_disable_msi(pci_dev);
+-		cd->flags &= ~GENWQE_FLAG_MSI_ENABLED;
+-	}
++	pci_free_irq_vectors(cd->pci_dev);
+ }
+ 
+ /**
+-- 
+2.1.4
