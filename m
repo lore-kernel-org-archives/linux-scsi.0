@@ -1,46 +1,44 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] [SCSI] mpt fusion: fix error return code in mptfc_probe()
-Date: Sat, 10 Sep 2016 16:06:36 +0000
-Message-ID: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 153171] scsi host6: runtime PM trying to activate child device
+ host6 but parent (2-2:1.0) is not active
+Date: Sun, 11 Sep 2016 11:43:06 +0000
+Message-ID: <bug-153171-11613-wQSU06hnAZ@https.bugzilla.kernel.org/>
+References: <bug-153171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:35085 "EHLO
-        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755145AbcIJQGp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 10 Sep 2016 12:06:45 -0400
-Received: by mail-pa0-f65.google.com with SMTP id pp5so5365477pac.2
-        for <linux-scsi@vger.kernel.org>; Sat, 10 Sep 2016 09:06:45 -0700 (PDT)
+Received: from mail.kernel.org ([198.145.29.136]:54690 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752638AbcIKLnL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 11 Sep 2016 07:43:11 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 4838020377
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Sep 2016 11:43:09 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 716ED20384
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Sep 2016 11:43:06 +0000 (UTC)
+In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=153171
 
-Fix to return error code -ENOMEM from the workqueue alloc error
-handling case instead of 0, as done elsewhere in this function.
+Thorsten Leemhuis <regressions@leemhuis.info> changed:
 
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/message/fusion/mptfc.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |regressions@leemhuis.info
 
-diff --git a/drivers/message/fusion/mptfc.c b/drivers/message/fusion/mptfc.c
-index 129e132..add6a3a 100644
---- a/drivers/message/fusion/mptfc.c
-+++ b/drivers/message/fusion/mptfc.c
-@@ -1326,8 +1326,10 @@ mptfc_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	ioc->fc_rescan_work_q =
- 		alloc_ordered_workqueue(ioc->fc_rescan_work_q_name,
- 					WQ_MEM_RECLAIM);
--	if (!ioc->fc_rescan_work_q)
-+	if (!ioc->fc_rescan_work_q) {
-+		error = -ENOMEM;
- 		goto out_mptfc_probe;
-+	}
- 
- 	/*
- 	 *  Pre-fetch FC port WWN and stuff...
+--- Comment #4 from Thorsten Leemhuis <regressions@leemhuis.info> ---
+(In reply to Martin K. Petersen from comment #2)
+> Severely lacking in the reviews department, though :(
+Martin, the reporter considers this a regression, but according to
+https://patchwork.kernel.org/patch/9262149/ you applied the fix to
+4.9/scsi-queue – and it's not in mainline yet afaics. Was that an accident or
+do you think this is not serious enough and thus better dealt with in 4.9?
 
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
