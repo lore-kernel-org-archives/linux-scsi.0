@@ -1,69 +1,72 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 00/26] constify local structures
-Date: Mon, 12 Sep 2016 15:57:40 +0200
-Message-ID: <CAMuHMdXuvrY987eTOmV+Ltaev=LrsDGuuE0+mmjJB7cAr+19ug@mail.gmail.com>
-References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr>
- <20160911172105.GB5493@intel.com> <alpine.DEB.2.10.1609121051050.3049@hadrien>
- <20160912131625.GD957@intel.com> <877fah5j35.fsf@linux.intel.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH] scsi: do not print 'reservation conflict' for TEST UNIT
+ READY
+Date: Mon, 12 Sep 2016 11:02:51 -0400 (EDT)
+Message-ID: <707905092.5648961.1473692571304.JavaMail.zimbra@redhat.com>
+References: <1473668453-115818-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-acpi-owner@vger.kernel.org>
-In-Reply-To: <877fah5j35.fsf@linux.intel.com>
-Sender: linux-acpi-owner@vger.kernel.org
-To: Felipe Balbi <felipe.balbi@linux.intel.com>
-Cc: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, Julia Lawall <julia.lawall@lip6.fr>, Linux-Renesas <linux-renesas-soc@vger.kernel.org>, Joe Perches <joe@perches.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, Linux PM list <linux-pm@vger.kernel.org>, platform-driver-x86@vger.kernel.org, Linux Media Mailing List <linux-media@vger.kernel.org>, linux-can@vger.kernel.org, Tatyana Nikolova <tatyana.e.nikolova@intel.com>, Shiraz Saleem <shiraz.saleem@intel.com>, Mustafa Ismail <mustafa.ismail@intel.com>, Chien Tin Tung <chien.tin.tung@intel.com>, linux-rdma <linux-rdma@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, driverdevel <devel@driverdev.osuosl.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx4-phx2.redhat.com ([209.132.183.25]:45993 "EHLO
+        mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760075AbcILPDG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2016 11:03:06 -0400
+In-Reply-To: <1473668453-115818-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Mon, Sep 12, 2016 at 3:43 PM, Felipe Balbi
-<felipe.balbi@linux.intel.com> wrote:
-> Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
->> On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
->>> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
->>> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
->>> > > Constify local structures.
->>> > >
->>> > > The semantic patch that makes this change is as follows:
->>> > > (http://coccinelle.lip6.fr/)
->>> >
->>> > Just my two cents but:
->>> >
->>> > 1. You *can* use a static analysis too to find bugs or other issues.
->>> > 2. However, you should manually do the commits and proper commit
->>> >    messages to subsystems based on your findings. And I generally think
->>> >    that if one contributes code one should also at least smoke test changes
->>> >    somehow.
->>> >
->>> > I don't know if I'm alone with my opinion. I just think that one should
->>> > also do the analysis part and not blindly create and submit patches.
->>>
->>> All of the patches are compile tested.  And the individual patches are
->>
->> Compile-testing is not testing. If you are not able to test a commit,
->> you should explain why.
->
-> Dude, Julia has been doing semantic patching for years already and
-> nobody has raised any concerns so far. There's already an expectation
-> that Coccinelle *works* and Julia's sematic patches are sound.
 
-+1
 
-> Besides, adding 'const' is something that causes virtually no functional
-> changes to the point that build-testing is really all you need. Any
-> problems caused by adding 'const' to a definition will be seen by build
-> errors or warnings.
-
-Unfortunately in this particular case they could lead to failures that can only
-be detected at runtime, when failing o write to a read-only piece of memory,
-due to the casting away of the constness of the pointers later.
-Fortunately this was detected during code review (doh...).
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+----- Original Message -----
+> From: "Hannes Reinecke" <hare@suse.de>
+> To: "Martin K. Petersen" <martin.petersen@oracle.com>
+> Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <james.bottomley@hansenpartnership.com>,
+> linux-scsi@vger.kernel.org, "Hannes Reinecke" <hare@suse.de>, "Hannes Reinecke" <hare@suse.com>
+> Sent: Monday, September 12, 2016 4:20:53 AM
+> Subject: [PATCH] scsi: do not print 'reservation conflict' for TEST UNIT READY
+> 
+> SPC-2 and SPC-3 (or later) differ in the handling of reservation
+> conflict for TEST UNIT READY. SPC-2 will return 'reservation conflict',
+> whereas SPC-3 will return GOOD status.
+> On a mixed system with both SPC-2 and SPC-3 targets one will
+> see lots of 'reservation conflict' messages from the SPC-2 system but
+> no messages from the SPC-3 system when eg multipath path checkers.
+> These messages might confuse the unsuspecting user although in fact
+> they just signal normal operation.
+> So we should not be printing out 'reservation conflict' for
+> TEST UNIT READY responses.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/scsi_error.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> index 106a6ad..3040fe5 100644
+> --- a/drivers/scsi/scsi_error.c
+> +++ b/drivers/scsi/scsi_error.c
+> @@ -1923,8 +1923,9 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
+>  		return SUCCESS;
+>  
+>  	case RESERVATION_CONFLICT:
+> -		sdev_printk(KERN_INFO, scmd->device,
+> -			    "reservation conflict\n");
+> +		if (scmd->cmnd[0] != TEST_UNIT_READY)
+> +			sdev_printk(KERN_INFO, scmd->device,
+> +				    "reservation conflict\n");
+>  		set_host_byte(scmd, DID_NEXUS_FAILURE);
+>  		return SUCCESS; /* causes immediate i/o error */
+>  	default:
+> --
+> 1.8.5.6
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Looks good to me.
+Reviewed-by Laurence Oberman <loberman@redhat.com>
