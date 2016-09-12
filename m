@@ -1,40 +1,45 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 156321] mpt3sas timeout with xen, works only with
- mpt3sas.msix_disable=1 (SAS3008 card)
-Date: Mon, 12 Sep 2016 07:59:55 +0000
-Message-ID: <bug-156321-11613-0rFQO8dauM@https.bugzilla.kernel.org/>
-References: <bug-156321-11613@https.bugzilla.kernel.org/>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: status of NCR5380-based ISA drivers
+Date: Mon, 12 Sep 2016 20:08:53 +1200
+Message-ID: <06105882-bf9c-fd1b-6d32-8a815aa3aafe@gmail.com>
+References: <20160911171249.GA7554@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:48644 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756982AbcILIAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Sep 2016 04:00:01 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id E88EB20373
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2016 07:59:59 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 2BB4F2040F
-        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2016 07:59:56 +0000 (UTC)
-In-Reply-To: <bug-156321-11613@https.bugzilla.kernel.org/>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:36108 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756825AbcILIJA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2016 04:09:00 -0400
+Received: by mail-pf0-f176.google.com with SMTP id 128so50087389pfb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2016 01:09:00 -0700 (PDT)
+In-Reply-To: <20160911171249.GA7554@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, Finn Thain <fthain@telegraphics.com.au>, Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=156321
+Christoph,
 
---- Comment #3 from Sreekanth Reddy <sreekanth.reddy@broadcom.com> ---
-Hi John,
+I test the atari_scsi front end - haven't got any ISA cards handy.
+Probably no ISA slots on my PC main board either ...
 
-Recently our FW team has fixed this type of issue in the Firmware. Maybe this
-fix went in the Phase13 FW. So you may need to wait to some more time until
-this Phase13 FW is available for outside.
+Cheers,
 
-Thanks,
-Sreekanth
+	Michael
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Am 12.09.2016 um 05:12 schrieb Christoph Hellwig:
+> Hi all,
+> 
+> you seem to the currently active NCR580 cabal.  Which frontends to NCR5380
+> do you test at the moment, or could you test?
+> 
+> NCR5380-based ISA drivers make up a significant part of those drivers still
+> using scsi_module.c after it's 15 year deprecation period, and I'd like to
+> either move them to this century or to the dust bin.
+> 
+> The drivers in question are: dtc, g_NCR5380, pas16 and t128.
+> 
+> Thanks,
+> 	Christoph
+> 
