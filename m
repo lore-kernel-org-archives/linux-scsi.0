@@ -1,31 +1,27 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: dtc, pas16 and t128 removal, was Re: status of NCR5380-based
- ISA drivers
-Date: Mon, 12 Sep 2016 10:29:24 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1609121024070.22548@nippy.intranet>
-References: <20160911171249.GA7554@infradead.org> <alpine.LNX.2.00.1609120927530.21469@nippy.intranet>
+From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+Subject: Use of schedule() function while holding a lock in ql4_nx.c
+Date: Mon, 12 Sep 2016 10:49:03 +0530
+Message-ID: <57D63AC7.9010507@oracle.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:49466 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932252AbcILA3Y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Sep 2016 20:29:24 -0400
-In-Reply-To: <alpine.LNX.2.00.1609120927530.21469@nippy.intranet>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org
 
+Hello,
 
-On Mon, 12 Sep 2016, I wrote:
+I was wondering about the call to schedule in function qla4_82xx_crb_win_lock for driver
+drivers/scsi/qla4xxx/ql4_nx.c. It is called in 2 functions [qla4_82xx_rd_32 and
+qla4_82xx_wr_32] while holding a write_lock_irqsave. Normally we avoid using sleeping
+functions while holding a lock.
 
-> 
-> BTW, DTC3x80 support (NCR 53C406 chip I believe) should be easy to do in 
-> g_NCR5380, which already supports the DTC3181E card.
-> 
+Is there some reason that I am overlooking? Why it is OK in this case? Are we using
+schedule() here intentionally?
 
-Sorry, I should have written DTC406 chip, which is "supposedly compatible 
-with the NCR 53C400" but is nothing like a NCR 53C406.
+Thank you.
+
 
 -- 
+Vaishali
