@@ -1,120 +1,89 @@
-From: Oliver Neukum <oneukum@suse.com>
-Subject: [PATCH] scsi: introduce a quirk for false cache reporting
-Date: Mon, 12 Sep 2016 15:19:41 +0200
-Message-ID: <1473686381-17259-1-git-send-email-oneukum@suse.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44766 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758759AbcILN1G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Sep 2016 09:27:06 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Felipe Balbi <felipe.balbi@linux.intel.com>
+Subject: Re: [PATCH 00/26] constify local structures
+Date: Mon, 12 Sep 2016 16:43:58 +0300
+Message-ID: <877fah5j35.fsf@linux.intel.com>
+References: <1473599168-30561-1-git-send-email-Julia.Lawall@lip6.fr> <20160911172105.GB5493@intel.com> <alpine.DEB.2.10.1609121051050.3049@hadrien> <20160912131625.GD957@intel.com>
+Mime-Version: 1.0
+Content-Type: multipart/signed; boundary="=-=-=";
+        micalg=pgp-sha256; protocol="application/pgp-signature"
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20160912131625.GD957@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com>, Julia Lawall <julia.lawall@lip6.fr>
+Cc: linux-renesas-soc@vger.kernel.org, joe@perches.com, kernel-janitors@vger.kernel.org, Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>, linux-pm@vger.kernel.org, platform-driver-x86@vger.kernel.org, linux-media@vger.kernel.org, linux-can@vger.kernel.org, Tatyana Nikolova <tatyana.e.nikolova@intel.com>, Shiraz Saleem <shiraz.saleem@intel.com>, Mustafa Ismail <mustafa.ismail@intel.com>, Chien Tin Tung <chien.tin.tung@intel.com>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, devel@driverdev.osuosl.org, alsa-devel@alsa-project.org, linux-kernel@vger.kernel.org, linux-fbdev@vger.kernel.org, linux-wireless@vger.kernel.org, Jason Gunthorpe <jgunthorpe@obsidianresearch.com>, tpmdd-devel@lists.sourceforge.net, linux-scsi@vger.kernel.org, linux-spi@vger.kernel.orgl
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, gregKH@linuxfoundation.org
-Cc: Oliver Neukum <oneukum@suse.com>
 
-Some SATA to USB bridges fail to cooperate with some
-drives resulting in no cache being present being reported
-to the host. That causes the host to skip sending
-a command to synchronize caches. That causes data loss
-when the drive is powered down.
+--=-=-=
+Content-Type: text/plain
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: Oliver Neukum <oneukum@suse.com>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
----
- Documentation/kernel-parameters.txt | 2 ++
- drivers/usb/storage/scsiglue.c      | 8 ++++++++
- drivers/usb/storage/unusual_devs.h  | 7 +++++++
- drivers/usb/storage/usb.c           | 6 +++++-
- include/linux/usb_usual.h           | 2 ++
- 5 files changed, 24 insertions(+), 1 deletion(-)
 
-diff --git a/Documentation/kernel-parameters.txt b/Documentation/kernel-parameters.txt
-index 82b42c9..c8c682e 100644
---- a/Documentation/kernel-parameters.txt
-+++ b/Documentation/kernel-parameters.txt
-@@ -4182,6 +4182,8 @@ bytes respectively. Such letter suffixes can also be entirely omitted.
- 				u = IGNORE_UAS (don't bind to the uas driver);
- 				w = NO_WP_DETECT (don't test whether the
- 					medium is write-protected).
-+				y = ALWAYS_SYNC (issue a SYNCHRONIZE_CACHE
-+					even if the device claims no cache)
- 			Example: quirks=0419:aaf5:rl,0421:0433:rc
- 
- 	user_debug=	[KNL,ARM]
-diff --git a/drivers/usb/storage/scsiglue.c b/drivers/usb/storage/scsiglue.c
-index 33eb923..8cd2926 100644
---- a/drivers/usb/storage/scsiglue.c
-+++ b/drivers/usb/storage/scsiglue.c
-@@ -296,6 +296,14 @@ static int slave_configure(struct scsi_device *sdev)
- 		if (us->fflags & US_FL_BROKEN_FUA)
- 			sdev->broken_fua = 1;
- 
-+		/* Some even totally fail to indicate a cache */
-+		if (us->fflags & US_FL_ALWAYS_SYNC) {
-+			/* don't read caching information */
-+			sdev->skip_ms_page_8 = 1;
-+			sdev->skip_ms_page_3f = 1;
-+			/* assume sync is needed */
-+			sdev->wce_default_on = 1;
-+		}
- 	} else {
- 
- 		/*
-diff --git a/drivers/usb/storage/unusual_devs.h b/drivers/usb/storage/unusual_devs.h
-index aa35392..af3c7ee 100644
---- a/drivers/usb/storage/unusual_devs.h
-+++ b/drivers/usb/storage/unusual_devs.h
-@@ -338,6 +338,13 @@ UNUSUAL_DEV(  0x046b, 0xff40, 0x0100, 0x0100,
- 		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
- 		US_FL_NO_WP_DETECT),
- 
-+/* Reported by Egbert Eich <eich@suse.com> */
-+UNUSUAL_DEV(  0x0480, 0xd010, 0x0100, 0x9999,
-+		"Toshiba",
-+		"External USB 3.0",
-+		USB_SC_DEVICE, USB_PR_DEVICE, NULL,
-+		US_FL_ALWAYS_SYNC),
-+
- /* Patch submitted by Philipp Friedrich <philipp@void.at> */
- UNUSUAL_DEV(  0x0482, 0x0100, 0x0100, 0x0100,
- 		"Kyocera",
-diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-index ef2d8cd..19255f1 100644
---- a/drivers/usb/storage/usb.c
-+++ b/drivers/usb/storage/usb.c
-@@ -498,7 +498,8 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 			US_FL_NO_READ_DISC_INFO | US_FL_NO_READ_CAPACITY_16 |
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
--			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS);
-+			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
-+			US_FL_ALWAYS_SYNC);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -581,6 +582,9 @@ void usb_stor_adjust_quirks(struct usb_device *udev, unsigned long *fflags)
- 		case 'w':
- 			f |= US_FL_NO_WP_DETECT;
- 			break;
-+		case 'y':
-+			f |= US_FL_ALWAYS_SYNC;
-+			break;
- 		/* Ignore unrecognized flag characters */
- 		}
- 	}
-diff --git a/include/linux/usb_usual.h b/include/linux/usb_usual.h
-index 245f57d..0aae1b2 100644
---- a/include/linux/usb_usual.h
-+++ b/include/linux/usb_usual.h
-@@ -81,6 +81,8 @@
- 		/* Sets max_sectors to 240 */			\
- 	US_FLAG(NO_REPORT_LUNS,	0x10000000)			\
- 		/* Cannot handle REPORT_LUNS */			\
-+	US_FLAG(ALWAYS_SYNC, 0x20000000)			\
-+		/* lies about caching, so always sync */	\
- 
- #define US_FLAG(name, value)	US_FL_##name = value ,
- enum { US_DO_ALL_FLAGS };
--- 
-2.1.4
+Hi,
 
+Jarkko Sakkinen <jarkko.sakkinen@linux.intel.com> writes:
+> On Mon, Sep 12, 2016 at 10:54:07AM +0200, Julia Lawall wrote:
+>>=20
+>>=20
+>> On Sun, 11 Sep 2016, Jarkko Sakkinen wrote:
+>>=20
+>> > On Sun, Sep 11, 2016 at 03:05:42PM +0200, Julia Lawall wrote:
+>> > > Constify local structures.
+>> > >
+>> > > The semantic patch that makes this change is as follows:
+>> > > (http://coccinelle.lip6.fr/)
+>> >
+>> > Just my two cents but:
+>> >
+>> > 1. You *can* use a static analysis too to find bugs or other issues.
+>> > 2. However, you should manually do the commits and proper commit
+>> >    messages to subsystems based on your findings. And I generally think
+>> >    that if one contributes code one should also at least smoke test ch=
+anges
+>> >    somehow.
+>> >
+>> > I don't know if I'm alone with my opinion. I just think that one should
+>> > also do the analysis part and not blindly create and submit patches.
+>>=20
+>> All of the patches are compile tested.  And the individual patches are
+>
+> Compile-testing is not testing. If you are not able to test a commit,
+> you should explain why.
+
+Dude, Julia has been doing semantic patching for years already and
+nobody has raised any concerns so far. There's already an expectation
+that Coccinelle *works* and Julia's sematic patches are sound.
+
+Besides, adding 'const' is something that causes virtually no functional
+changes to the point that build-testing is really all you need. Any
+problems caused by adding 'const' to a definition will be seen by build
+errors or warnings.
+
+Really, just stop with the pointless discussion and go read a bit about
+Coccinelle and what semantic patches are giving you. The work done by
+Julia and her peers are INRIA have measurable benefits.
+
+You're really making a thunderstorm in a glass of water.
+
+=2D-=20
+balbi
+
+--=-=-=
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQIcBAEBCAAGBQJX1rEeAAoJEMy+uJnhGpkGoEAQAJuttoDMSYPwtz/VwCtE7bUk
+aXQ+cEoH0/iubhhEjft1l3lvO/wFT9jhKieX1Q8qZQtvbIQAhlPcBsF0n5Nj0U1b
+jF3w2wGm4i9Li6Njgy6GFnIRLkvWFdTj/y9VpFi/qhcarubD1XWn1rmeCz6z8s9w
+uJ19WNX7htXt2iWA5vqAewHen7xufj7nuIZLfU8E227g5N+ePuVNjRwc6zFoD0ZV
+iGAIinF/NU+r62zSUxZEUsO1UBxPHITIEFJgO8yOXebQ1iN05oqE/I9yIfQF5Jgw
+YU0XIH1tO7hCrFmhJkU9moQeRoRPdvXAV1yAslK+PqzaafW6Z5apOKS1IVeF0peb
+Z1T6Mhf1D8n0zU2KeShU9Ycygz1C+QBMWaLPlSPYVbHBW8RwGiDJP8H9eDBLH++J
+BjuieYb0HsZYy+8P2PAZOIi0EyyT51p1WfldSYyyI/MH9uTuk/ifdwBESdlkZdBt
+3PVZRhRjxSuVC9n4pj+b+CmO02G1WE7hS+EvGMEicP7oCOYIh93VPldGE2Aaltwe
+dedqi7JY2WvfDE1kVKjHsIpyraUrN8/kc6OpGuUXsoeyVmAIbrCXLAJpKS43Aw9r
+UU7dmuGvrRr8oBxytzoFA7FB8fTzmlTPPurzhOdrSvYvRQGYvOMgz2F9C/BBkimU
+wx96Gkyu+FMi4THwN7uU
+=p41K
+-----END PGP SIGNATURE-----
+--=-=-=--
