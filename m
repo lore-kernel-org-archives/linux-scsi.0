@@ -1,72 +1,39 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] scsi: do not print 'reservation conflict' for TEST UNIT
- READY
-Date: Mon, 12 Sep 2016 11:02:51 -0400 (EDT)
-Message-ID: <707905092.5648961.1473692571304.JavaMail.zimbra@redhat.com>
-References: <1473668453-115818-1-git-send-email-hare@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: [PATCH] scsi: introduce a quirk for false cache reporting
+Date: Mon, 12 Sep 2016 14:13:08 -0400 (EDT)
+Message-ID: <Pine.LNX.4.44L0.1609121412160.20106-100000@netrider.rowland.org>
+References: <1473686381-17259-1-git-send-email-oneukum@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:45993 "EHLO
-        mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760075AbcILPDG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2016 11:03:06 -0400
-In-Reply-To: <1473668453-115818-1-git-send-email-hare@suse.de>
+Received: from netrider.rowland.org ([192.131.102.5]:34617 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1754058AbcILSNK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Sep 2016 14:13:10 -0400
+In-Reply-To: <1473686381-17259-1-git-send-email-oneukum@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Oliver Neukum <oneukum@suse.com>
+Cc: linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net, gregKH@linuxfoundation.org
 
+On Mon, 12 Sep 2016, Oliver Neukum wrote:
 
-
------ Original Message -----
-> From: "Hannes Reinecke" <hare@suse.de>
-> To: "Martin K. Petersen" <martin.petersen@oracle.com>
-> Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <james.bottomley@hansenpartnership.com>,
-> linux-scsi@vger.kernel.org, "Hannes Reinecke" <hare@suse.de>, "Hannes Reinecke" <hare@suse.com>
-> Sent: Monday, September 12, 2016 4:20:53 AM
-> Subject: [PATCH] scsi: do not print 'reservation conflict' for TEST UNIT READY
+> Some SATA to USB bridges fail to cooperate with some
+> drives resulting in no cache being present being reported
+> to the host. That causes the host to skip sending
+> a command to synchronize caches. That causes data loss
+> when the drive is powered down.
 > 
-> SPC-2 and SPC-3 (or later) differ in the handling of reservation
-> conflict for TEST UNIT READY. SPC-2 will return 'reservation conflict',
-> whereas SPC-3 will return GOOD status.
-> On a mixed system with both SPC-2 and SPC-3 targets one will
-> see lots of 'reservation conflict' messages from the SPC-2 system but
-> no messages from the SPC-3 system when eg multipath path checkers.
-> These messages might confuse the unsuspecting user although in fact
-> they just signal normal operation.
-> So we should not be printing out 'reservation conflict' for
-> TEST UNIT READY responses.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Oliver Neukum <oneukum@suse.com>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+Acked-by: Alan Stern <stern@rowland.harvard.edu>
+
 > ---
->  drivers/scsi/scsi_error.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 106a6ad..3040fe5 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -1923,8 +1923,9 @@ int scsi_decide_disposition(struct scsi_cmnd *scmd)
->  		return SUCCESS;
->  
->  	case RESERVATION_CONFLICT:
-> -		sdev_printk(KERN_INFO, scmd->device,
-> -			    "reservation conflict\n");
-> +		if (scmd->cmnd[0] != TEST_UNIT_READY)
-> +			sdev_printk(KERN_INFO, scmd->device,
-> +				    "reservation conflict\n");
->  		set_host_byte(scmd, DID_NEXUS_FAILURE);
->  		return SUCCESS; /* causes immediate i/o error */
->  	default:
-> --
-> 1.8.5.6
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-Looks good to me.
-Reviewed-by Laurence Oberman <loberman@redhat.com>
+>  Documentation/kernel-parameters.txt | 2 ++
+>  drivers/usb/storage/scsiglue.c      | 8 ++++++++
+>  drivers/usb/storage/unusual_devs.h  | 7 +++++++
+>  drivers/usb/storage/usb.c           | 6 +++++-
+>  include/linux/usb_usual.h           | 2 ++
+>  5 files changed, 24 insertions(+), 1 deletion(-)
+
