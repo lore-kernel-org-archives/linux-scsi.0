@@ -1,27 +1,40 @@
-From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
-Subject: Use of schedule() function while holding a lock in ql4_nx.c
-Date: Mon, 12 Sep 2016 10:49:03 +0530
-Message-ID: <57D63AC7.9010507@oracle.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 156321] mpt3sas timeout with xen, works only with
+ mpt3sas.msix_disable=1 (SAS3008 card)
+Date: Mon, 12 Sep 2016 07:59:55 +0000
+Message-ID: <bug-156321-11613-0rFQO8dauM@https.bugzilla.kernel.org/>
+References: <bug-156321-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:48644 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756982AbcILIAB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Sep 2016 04:00:01 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id E88EB20373
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2016 07:59:59 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 2BB4F2040F
+        for <linux-scsi@vger.kernel.org>; Mon, 12 Sep 2016 07:59:56 +0000 (UTC)
+In-Reply-To: <bug-156321-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hello,
+https://bugzilla.kernel.org/show_bug.cgi?id=156321
 
-I was wondering about the call to schedule in function qla4_82xx_crb_win_lock for driver
-drivers/scsi/qla4xxx/ql4_nx.c. It is called in 2 functions [qla4_82xx_rd_32 and
-qla4_82xx_wr_32] while holding a write_lock_irqsave. Normally we avoid using sleeping
-functions while holding a lock.
+--- Comment #3 from Sreekanth Reddy <sreekanth.reddy@broadcom.com> ---
+Hi John,
 
-Is there some reason that I am overlooking? Why it is OK in this case? Are we using
-schedule() here intentionally?
+Recently our FW team has fixed this type of issue in the Firmware. Maybe this
+fix went in the Phase13 FW. So you may need to wait to some more time until
+this Phase13 FW is available for outside.
 
-Thank you.
-
+Thanks,
+Sreekanth
 
 -- 
-Vaishali
+You are receiving this mail because:
+You are watching the assignee of the bug.
