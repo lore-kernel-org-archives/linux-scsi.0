@@ -1,7 +1,7 @@
 From: Daniel Wagner <wagi@monom.org>
-Subject: [PATCH 1/3] csiostor: fix completion usage
-Date: Tue, 13 Sep 2016 10:58:48 +0200
-Message-ID: <1473757130-14751-2-git-send-email-wagi@monom.org>
+Subject: [PATCH 2/3] sym53c8xx_2: use complete() instead complete_all()
+Date: Tue, 13 Sep 2016 10:58:49 +0200
+Message-ID: <1473757130-14751-3-git-send-email-wagi@monom.org>
 References: <1473757130-14751-1-git-send-email-wagi@monom.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1473757130-14751-1-git-send-email-wagi@monom.org>
@@ -12,12 +12,6 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Daniel Wagner <daniel.wagner@bmw-carit.de>
 
-The (re)initialzing of the completion object should be done before we
-trigger the transfer. Doing this after triggering the hardware opens up
-a race window. Without the timeout we would problaly even deadlock. Use
-also reinit_completion because we initalize the whole data structure in
-csio_scscim_init().
-
 There is only one waiter for the completion, therefore there is no need
 to use complete_all(). Let's make that clear by using complete() instead
 of complete_all().
@@ -26,47 +20,32 @@ The usage pattern of the completion is:
 
 waiter context                          waker context
 
-csio_eh_abort_handler()
-  reinit_completion()
-  wait_for_completion_timeout()
+sym_eh_handler()
+  struct completion eh_done
+  init_completion(eh_done)
+  pci_channel_offline()
+  wait_for_completion_timeout(eh_done)
 
-                                        csio_scsi_err_handler()
-                                          complete()
+                                        sym2_io_resume()
+                                          complete(eh_done)
 
 Signed-off-by: Daniel Wagner <daniel.wagner@bmw-carit.de>
 ---
- drivers/scsi/csiostor/csio_scsi.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/sym53c8xx_2/sym_glue.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/csiostor/csio_scsi.c b/drivers/scsi/csiostor/csio_scsi.c
-index c2a6f9f..89a52b9 100644
---- a/drivers/scsi/csiostor/csio_scsi.c
-+++ b/drivers/scsi/csiostor/csio_scsi.c
-@@ -1721,7 +1721,7 @@ csio_scsi_err_handler(struct csio_hw *hw, struct csio_ioreq *req)
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 5d00e51..d32e3ba 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -1874,7 +1874,7 @@ static void sym2_io_resume(struct pci_dev *pdev)
  
- 	/* Wake up waiting threads */
- 	csio_scsi_cmnd(req) = NULL;
--	complete_all(&req->cmplobj);
-+	complete(&req->cmplobj);
+ 	spin_lock_irq(shost->host_lock);
+ 	if (sym_data->io_reset)
+-		complete_all(sym_data->io_reset);
++		complete(sym_data->io_reset);
+ 	spin_unlock_irq(shost->host_lock);
  }
  
- /*
-@@ -1945,6 +1945,7 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
- 	ready = csio_is_lnode_ready(ln);
- 	tmo = CSIO_SCSI_ABRT_TMO_MS;
- 
-+	reinit_completion(&ioreq->cmplobj);
- 	spin_lock_irq(&hw->lock);
- 	rv = csio_do_abrt_cls(hw, ioreq, (ready ? SCSI_ABORT : SCSI_CLOSE));
- 	spin_unlock_irq(&hw->lock);
-@@ -1964,8 +1965,6 @@ csio_eh_abort_handler(struct scsi_cmnd *cmnd)
- 		goto inval_scmnd;
- 	}
- 
--	/* Wait for completion */
--	init_completion(&ioreq->cmplobj);
- 	wait_for_completion_timeout(&ioreq->cmplobj, msecs_to_jiffies(tmo));
- 
- 	/* FW didnt respond to abort within our timeout */
 -- 
 2.7.4
