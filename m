@@ -1,42 +1,54 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
-Date: Tue, 13 Sep 2016 09:28:14 -0400
-Message-ID: <alpine.OSX.2.00.1609130927440.483@administrators-macbook-pro.local>
-References: <20160817101003.30055-1-bigeasy@linutronix.de> <20160908123943.f7n3lurs7ovs5pup@c203.arch.suse.de> <yq1vay5fh2t.fsf@sermon.lab.mkp.net>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi:Prevent deletion of SCSI block device in use
+Date: Tue, 13 Sep 2016 14:25:50 -0400
+Message-ID: <1473791150.4648.32.camel@localhost.localdomain>
+References: <1473784685-2194-1-git-send-email-vasundhara.gurunath@hpe.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0065.outbound.protection.outlook.com ([104.47.36.65]:53806
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755164AbcIMSB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 13 Sep 2016 14:01:56 -0400
-In-Reply-To: <yq1vay5fh2t.fsf@sermon.lab.mkp.net>
+Received: from mx1.redhat.com ([209.132.183.28]:50374 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752337AbcIMSZw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:25:52 -0400
+In-Reply-To: <1473784685-2194-1-git-send-email-vasundhara.gurunath@hpe.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, rt@linutronix.de, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, QLogic-Storage-Upstream@qlogic.com, Christoph Hellwig <hch@lst.de>, Chad Dupuis <chad.dupuis@qlogic.com>
+To: "Gurunath, Vasundhara" <vasundhara.gurunath@hpe.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, paulose.kuriakose.arackal@hpe.com, jasminder.kaur@hpe.com
+
+On Tue, 2016-09-13 at 22:08 +0530, Gurunath, Vasundhara wrote:
+> From: "Gurunath, Vasundhara" <vasundhara.gurunath@hpe.com>
+> 
+> SCSI block device can be removed, using write to sysfs
+> delete file as below:
+> echo 1 > /sys/block/sdX/device/delete
+> If the device is in use by applications, or part of
+> system configuration such as boot device, removal can
+> result in application disruptions or system down time.
+> 
+> An additional write option ? is added to SCSI sysfs
+> interface as below, in order to prevent accidental
+> deletion of devices in use.
+> echo ? > /sys/block/sdX/device/delete
+> 
+> In the absence of any usage, this option proceeds with
+> device deletion.  If the device is open, deletion is
+> prevented, and active Open and IO counts at the time of
+> deletion is logged. Information logged during latest
+> delete attempt can be obtained by issuing a read to the
+> delete file as below:
+> cat  /sys/block/sdX/device/delete
+> 
+
+This looks like debugging code added to find some culprit
+who deleted a device they weren't supposed to, and make it
+more difficult for them.
+
+I don't think we'd want this in normal usage.
+
+-Ewan
 
 
-On Fri, 9 Sep 2016, 11:28am -0000, Martin K. Petersen wrote:
 
-> >>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
-> 
-> >> On Wed, Aug 17, 2016 at 12:09:59PM +0200, Sebastian Andrzej Siewior
-> wrote:
-> >> The driver creates its own per-CPU threads which are updated based on
-> >> CPU hotplug events. It is also possible to use kworkers and remove
-> >> some of the infrastructure get the same job done while saving a few
-> >> lines of code.
-> 
-> Johannes> I'm sorry it took so long but for the whole series: Tested-by:
-> Johannes> Johannes Thumshirn <jth@kernel.org> Acked-by: Johannes
-> Johannes> Thumshirn <jth@kernel.org>
-> 
-> Johannes> Testing was conducted by booting from a QLogic BCM57840 CNA.
-> 
-> Chad?
-> 
-
-We're regression testing the patches now.  Please hold off on applying 
-them. 
