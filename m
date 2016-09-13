@@ -1,30 +1,42 @@
-From: Henrique de Moraes Holschuh <hmh@hmh.eng.br>
-Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
-Date: Tue, 13 Sep 2016 14:45:14 -0300
-Message-ID: <20160913174514.GA3484@khazad-dum.debian.net>
-References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
+Date: Tue, 13 Sep 2016 09:28:14 -0400
+Message-ID: <alpine.OSX.2.00.1609130927440.483@administrators-macbook-pro.local>
+References: <20160817101003.30055-1-bigeasy@linutronix.de> <20160908123943.f7n3lurs7ovs5pup@c203.arch.suse.de> <yq1vay5fh2t.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0065.outbound.protection.outlook.com ([104.47.36.65]:53806
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755164AbcIMSB4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Sep 2016 14:01:56 -0400
+In-Reply-To: <yq1vay5fh2t.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, rt@linutronix.de, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, QLogic-Storage-Upstream@qlogic.com, Christoph Hellwig <hch@lst.de>, Chad Dupuis <chad.dupuis@qlogic.com>
 
-On Mon, 12 Sep 2016, Jason A. Donenfeld wrote:
-> I was wondering if it'd be possible to have the uas driver -- or
-> perhaps somewhere else in the stack -- fall back to using
-> ATA-passthrough-TRIM for UNMAP, so that discard can work properly.
-> AFAIK, the Windows drivers do exactly this.
+
+On Fri, 9 Sep 2016, 11:28am -0000, Martin K. Petersen wrote:
+
+> >>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 > 
-> If the answer is, "yes we want this! but we don't have the man power,"
-> please tell me where I can start looking, so that I can submit the
-> patch myself.
+> >> On Wed, Aug 17, 2016 at 12:09:59PM +0200, Sebastian Andrzej Siewior
+> wrote:
+> >> The driver creates its own per-CPU threads which are updated based on
+> >> CPU hotplug events. It is also possible to use kworkers and remove
+> >> some of the infrastructure get the same job done while saving a few
+> >> lines of code.
+> 
+> Johannes> I'm sorry it took so long but for the whole series: Tested-by:
+> Johannes> Johannes Thumshirn <jth@kernel.org> Acked-by: Johannes
+> Johannes> Thumshirn <jth@kernel.org>
+> 
+> Johannes> Testing was conducted by booting from a QLogic BCM57840 CNA.
+> 
+> Chad?
+> 
 
-Whomever implements this, please add a "chicken bit" to allow the user
-to disable it if the enclosure misbehaves.
-
--- 
-  Henrique Holschuh
+We're regression testing the patches now.  Please hold off on applying 
+them. 
