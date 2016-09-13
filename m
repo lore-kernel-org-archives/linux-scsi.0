@@ -1,84 +1,52 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v6 2/9] rpmb: enable emmc specific read data fixup
-Date: Tue, 13 Sep 2016 16:22:57 +0300
-Message-ID: <1473772984-17562-3-git-send-email-tomas.winkler@intel.com>
-References: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: do not print 'reservation conflict' for TEST UNIT
+ READY
+Date: Tue, 13 Sep 2016 07:04:56 -0700
+Message-ID: <1473775496.2214.6.camel@HansenPartnership.com>
+References: <1473668453-115818-1-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59868 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751567AbcIMOFA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 13 Sep 2016 10:05:00 -0400
+In-Reply-To: <1473668453-115818-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-For eMMC the block count of the RPMB read operation is not indicated in
-the original RPMB Data Read Request packet.
-This might be different then the implementation of other protocol
-standards.
-This patch implements a fixup for this behavior.
+On Mon, 2016-09-12 at 10:20 +0200, Hannes Reinecke wrote:
+> SPC-2 and SPC-3 (or later) differ in the handling of reservation
+> conflict for TEST UNIT READY. SPC-2 will return 'reservation 
+> conflict', whereas SPC-3 will return GOOD status.
+> On a mixed system with both SPC-2 and SPC-3 targets one will
+> see lots of 'reservation conflict' messages from the SPC-2 system but
+> no messages from the SPC-3 system when eg multipath path checkers.
+> These messages might confuse the unsuspecting user although in fact
+> they just signal normal operation.
 
+I don't agree with this: a SCSI-2 device will not get properly
+configured if it's reserved by something else, so you get other strange
+artifacts of this condition.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
-V6: new in the series
+> So we should not be printing out 'reservation conflict' for
+> TEST UNIT READY responses.
 
- drivers/char/rpmb/core.c | 36 +++++++++++++++++++++++++++++++++---
- 1 file changed, 33 insertions(+), 3 deletions(-)
+This doesn't sound like a good rationale to me.  The way I see it, if
+this message is actually useful, people would like to see it when they
+get a reservation conflict.  That does mean even when SCSI-2
+reservations give one where SCSI-3 would not.  The other reason is that
+it tells you why your device didn't get configured properly: both Test
+Unit Ready and Read Capacity get conflicts with SCSI-2, whereas they do
+with SPC-3+ devices (trying to forget SPC-2).
 
-diff --git a/drivers/char/rpmb/core.c b/drivers/char/rpmb/core.c
-index ff10cbb7b644..8cfbbb721538 100644
---- a/drivers/char/rpmb/core.c
-+++ b/drivers/char/rpmb/core.c
-@@ -117,6 +117,35 @@ static int rpmb_request_verify(struct rpmb_dev *rdev, struct rpmb_data *rpmbd)
- }
- 
- /**
-+ * rpmb_cmd_fixup - fixup rpmb command
-+ *
-+ * @rdev: rpmb device
-+ * @cmds: rpmb command list
-+ * @ncmds: number of commands
-+ *
-+ */
-+static void rpmb_cmd_fixup(struct rpmb_dev *rdev,
-+			   struct rpmb_cmd *cmds, u32 ncmds)
-+{
-+	int i;
-+
-+	if (rdev->ops->type != RPMB_TYPE_EMMC)
-+		return;
-+
-+	/* Fixup RPMB_READ_DATA specific to eMMC
-+	 * The block count of the RPMB read operation is not indicated
-+	 * in the original RPMB Data Read Request packet.
-+	 * This is different then implementation for other protocol
-+	 * standards.
-+	 */
-+	for (i = 0; i < ncmds; i++)
-+		if (cmds->frames->req_resp == cpu_to_be16(RPMB_READ_DATA)) {
-+			dev_dbg(&rdev->dev, "Fixing up READ_DATA frame to block_count=0\n");
-+			cmds->frames->block_count = 0;
-+		}
-+}
-+
-+/**
-  * rpmb_cmd_seq - send RPMB command sequence
-  *
-  * @rdev: rpmb device
-@@ -136,10 +165,11 @@ int rpmb_cmd_seq(struct rpmb_dev *rdev, struct rpmb_cmd *cmds, u32 ncmds)
- 		return -EINVAL;
- 
- 	mutex_lock(&rdev->lock);
--	if (rdev->ops && rdev->ops->cmd_seq)
-+	err = -EOPNOTSUPP;
-+	if (rdev->ops && rdev->ops->cmd_seq) {
-+		rpmb_cmd_fixup(rdev, cmds, ncmds);
- 		err = rdev->ops->cmd_seq(rdev->dev.parent, cmds, ncmds);
--	else
--		err = -EOPNOTSUPP;
-+	}
- 	mutex_unlock(&rdev->lock);
- 	return err;
- }
--- 
-2.7.4
+You could argue that the entire message needs removing, since it's
+reporting stuff that mostly only shows when systems using reservations
+correctly are in operation.
+
+James
 
