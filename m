@@ -1,26 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/6] cxlflash: Fix to avoid EEH and host reset collisions
-Date: Wed, 14 Sep 2016 12:48:44 -0400
-Message-ID: <yq1sht2mnpv.fsf@sermon.lab.mkp.net>
-References: <1472848612-64888-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        <1472848770-65034-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/15] hisi_sas misc fixes and minor optimisations
+Date: Wed, 14 Sep 2016 12:54:58 -0400
+Message-ID: <yq1oa3qmnfh.fsf@sermon.lab.mkp.net>
+References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20887 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751168AbcINQs5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 12:48:57 -0400
-In-Reply-To: <1472848770-65034-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        (Uma Krishnan's message of "Fri, 2 Sep 2016 15:39:30 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:30626 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760668AbcINQz3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 12:55:29 -0400
+In-Reply-To: <1473176185-217808-1-git-send-email-john.garry@huawei.com> (John
+        Garry's message of "Tue, 6 Sep 2016 23:36:10 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 
-Applied patches 3 through 6 to 4.9/scsi-queue.
+John> This patchset introdcues some minor bug fixes and optimisations
+John> for v1+v2 hw.
+
+John> No new functional features are introduced in this patchset.
+
+Applied to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
