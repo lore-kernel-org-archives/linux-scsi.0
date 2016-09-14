@@ -1,56 +1,35 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 08/15] hisi_sas: fix a potential warning for sata disk
- ejection
-Date: Wed, 14 Sep 2016 14:48:14 +0200
-Message-ID: <f7e6dc4d-a712-494e-6957-44ee157d75ed@suse.de>
+Subject: Re: [PATCH 09/15] hisi_sas: set dma mask before allocate DMA memory
+Date: Wed, 14 Sep 2016 14:48:44 +0200
+Message-ID: <478faffb-00d9-265b-ef42-1901944ddb8e@suse.de>
 References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
- <1473176185-217808-9-git-send-email-john.garry@huawei.com>
+ <1473176185-217808-10-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1473176185-217808-9-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:54829 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756311AbcINMsu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Sep 2016 08:48:50 -0400
+In-Reply-To: <1473176185-217808-10-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 09/06/2016 05:36 PM, John Garry wrote:
-> If hisi_sas_task_prep() fails for a SATA device due to PHY
-> down, we return a failure to libata and also call task_done(),
-> which will cause ata_qc_complete() to be called twice:
-> - first call from hisi_sas_task_prep(), which will clear flag
->   ATA_QCFLAG_ACTIVE
-> - ata_qc_complete() called from libata
-> The warning call trace is as follows:
-> 
-> [  117.070206] [<ffff0000084f59b0>] __ata_qc_complete+0xf4/0x11c
-> [  117.070208] [<ffff0000084f5b58>] ata_qc_complete+0x180/0x200
-> [  117.070210] [<ffff0000084f5dd0>] ata_qc_issue+0x110/0x354
-> [  117.070212] [<ffff0000084f6254>] ata_exec_internal_sg+0x240/0x4d0
-> [  117.070214] [<ffff0000084f6544>] ata_exec_internal+0x60/0xa0
-> [  117.070217] [<ffff000008501580>] ata_read_log_page+0x188/0x1b4
-> [  117.070218] [<ffff0000085017dc>] ata_eh_analyze_ncq_error+0xa8/0x274
-> [  117.070220] [<ffff000008501a3c>] ata_eh_link_autopsy+0x94/0x8c8
-> [  117.070222] [<ffff0000085022a4>] ata_eh_autopsy+0x34/0xe8
-> [  117.070223] [<ffff00000850540c>] ata_do_eh+0x28/0xc0
-> [  117.070225] [<ffff0000085054e0>] ata_std_error_handler+0x3c/0x84
-> [  117.070227] [<ffff000008505140>] ata_scsi_port_error_handler+0x480/0x674
-> [  117.070230] [<ffff0000084e3020>] async_sas_ata_eh+0x44/0x78
-> [  117.070231] [<ffff0000080d6b8c>] async_run_entry_fn+0x40/0x104
-> [  117.070234] [<ffff0000080ce518>] process_one_work+0x128/0x2f0
-> [  117.070235] [<ffff0000080ce738>] worker_thread+0x58/0x434
-> [  117.070237] [<ffff0000080d416c>] kthread+0xd4/0xe8
-> [  117.070240] [<ffff000008084e10>] ret_from_fork+0x10/0x40
-> 
-> The issue is resolved by simply returning a failure status
-> code to the upper layer.
+> The device DMA mask was being set after the bulk of the
+> DMA allocations in the driver init, so potentially
+> DMA allocates fail.
+> To resolve, relocate before allocating the DMA memory when
+> initialising the driver.
 > 
 > Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 > Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/scsi/hisi_sas/hisi_sas_main.c | 26 ++++++--------------------
->  1 file changed, 6 insertions(+), 20 deletions(-)
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 13 ++++++-------
+>  1 file changed, 6 insertions(+), 7 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
