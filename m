@@ -1,43 +1,34 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi: megaraid_sas: add in missing white space in error
- message text
-Date: Wed, 14 Sep 2016 15:23:00 +0200
-Message-ID: <5a21833c-2e85-2092-f9a8-b3d023b03485@suse.de>
-References: <20160912124212.32132-1-colin.king@canonical.com>
+Subject: Re: [PATCH v2 25/29] be2iscsi: Fix bad WRB index error
+Date: Wed, 14 Sep 2016 15:25:26 +0200
+Message-ID: <b2c2f980-e896-d8d6-b846-b9ac8662aa13@suse.de>
+References: <1471600226-22055-1-git-send-email-jitendra.bhivare@broadcom.com>
+ <1471600226-22055-26-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20160912124212.32132-1-colin.king@canonical.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:59295 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755879AbcINNZa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Sep 2016 09:25:30 -0400
+In-Reply-To: <1471600226-22055-26-git-send-email-jitendra.bhivare@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: mchristi@redhat.com
 
-On 09/12/2016 02:42 PM, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
+On 08/19/2016 11:50 AM, Jitendra Bhivare wrote:
+> In very rare scenario, connection gets killed after throwing this error:
+> scsi host0: BM_2312 : Event CXN_KILLED_BAD_WRB_INDEX_ERROR[15]... CID : 4
+> connection1:0: detected conn error (1011)
 > 
-> A dev_printk message spans two lines and the literal string is missing
-> a white space between words. Add the white space.
+> memset ISCSI_WRB descriptor to zero for all allocations of WRB handle.
 > 
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_base.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 2d62d71..c236c4d 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -5782,7 +5782,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
->  					     &instance->consumer_h);
->  
->  		if (!instance->producer || !instance->consumer) {
-> -			dev_printk(KERN_DEBUG, &pdev->dev, "Failed to allocate"
-> +			dev_printk(KERN_DEBUG, &pdev->dev, "Failed to allocate "
->  			       "memory for producer, consumer\n");
->  			goto fail_alloc_dma_buf;
->  		}
+>  drivers/scsi/be2iscsi/be_main.c | 18 ++++++------------
+>  1 file changed, 6 insertions(+), 12 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
@@ -47,5 +38,5 @@ Hannes
 -- 
 Dr. Hannes Reinecke		      zSeries & Storage
 hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
-GF: J. Hawn, J. Guild, F. ImendÃ¶rffer, HRB 16746 (AG NÃ¼rnberg)
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
