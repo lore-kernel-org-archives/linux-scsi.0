@@ -1,50 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/15] hisi_sas: keep CHL_INT2 masked for v2 HW
-Date: Wed, 14 Sep 2016 13:48:03 +0200
-Message-ID: <5885219f-71c7-418d-f502-57022aaa1587@suse.de>
-References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
- <1473176185-217808-4-git-send-email-john.garry@huawei.com>
+Subject: Re: [RFC][PATCH v1 1/2] libsas: Alloc dynamic work to avoid missing
+ sas events
+Date: Wed, 14 Sep 2016 13:52:55 +0200
+Message-ID: <691d9b9b-050f-5313-3ab4-74bdf9259f27@suse.de>
+References: <1473733835-26950-1-git-send-email-wangyijing@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1473176185-217808-4-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49637 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1756249AbcINLxB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Sep 2016 07:53:01 -0400
+In-Reply-To: <1473733835-26950-1-git-send-email-wangyijing@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Yijing Wang <wangyijing@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: Tejun Heo <tj@kernel.org>, Qilin Chen <chenqilin2@huawei.com>, Wei Fang <fangwei1@huawei.com>, Yousong He <heyousong@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 09/06/2016 05:36 PM, John Garry wrote:
-> None of the CHL_INT2 interrupts are serviced
-> in the channel irq ISR, so leave the interrupt
-> source masked.
-> The interrupt mask is initially set in
-> init_reg_v2_hw().
+On 09/13/2016 04:30 AM, Yijing Wang wrote:
+> Now libsas hotplug work is static, LLDD driver queue
+> the hotplug work into shost->work_q. If LLDD driver
+> burst post lots hotplug event to libsas, the hotplug
+> events may pending in the workqueue like
 > 
-> Signed-off-by: John Garry <john.garry@huawei.com>
+> shost->workq
+> tail | PHYE_LOSS_OF_SIGNAL  | PORTE_BYTES_DMAED | head
+> 
+> In this case, if a new PORTE_BYTES_DMAED event coming,
+> it would be lost, because we can not queue a work which
+> is already pending in the workqueue, also libsas has a
+> pending bit to avoid queue the same event.
+> 
+> The lost hotplug event make something confusing, e.g.
+> we have sas disks connected hardware, but we can not
+> found them in kernel.
+> 
+> This patch remove the static defined hotplug work,
+> and use dynamic work to avoid missing hotplug events.
+> 
+> Signed-off-by: Yijing Wang <wangyijing@huawei.com>
+> Signed-off-by: Yousong He <heyousong@huawei.com>
+> Signed-off-by: Qilin Chen <chenqilin2@huawei.com>
 > ---
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 6 ------
->  1 file changed, 6 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index e0c124b..25e7c58 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -965,14 +965,8 @@ static void start_phys_v2_hw(unsigned long data)
->  
->  static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
->  {
-> -	int i;
->  	struct timer_list *timer = &hisi_hba->timer;
->  
-> -	for (i = 0; i < hisi_hba->n_phy; i++) {
-> -		hisi_sas_phy_write32(hisi_hba, i, CHL_INT2_MSK, 0x6a);
-> -		hisi_sas_phy_read32(hisi_hba, i, CHL_INT2_MSK);
-> -	}
-> -
->  	setup_timer(timer, start_phys_v2_hw, (unsigned long)hisi_hba);
->  	mod_timer(timer, jiffies + HZ);
->  }
+>  drivers/scsi/libsas/sas_event.c    |   61 ++++++++++++++++++++---------------
+>  drivers/scsi/libsas/sas_init.c     |    5 +--
+>  drivers/scsi/libsas/sas_internal.h |    3 ++
+>  drivers/scsi/libsas/sas_phy.c      |   50 ++++++++---------------------
+>  drivers/scsi/libsas/sas_port.c     |   23 ++++++++------
+>  include/scsi/libsas.h              |    8 -----
+>  6 files changed, 66 insertions(+), 84 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
