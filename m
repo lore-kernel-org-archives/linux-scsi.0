@@ -1,28 +1,48 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH -next] [SCSI] mpt fusion: fix error return code in mptfc_probe()
-Date: Wed, 14 Sep 2016 14:27:12 -0400
-Message-ID: <yq1lgyul4lb.fsf@sermon.lab.mkp.net>
-References: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com>
+Subject: Re: [PATCH 3/3] sd: move DIF protection types to t10-pi.h
+Date: Wed, 14 Sep 2016 14:34:35 -0400
+Message-ID: <yq1h99il490.fsf@sermon.lab.mkp.net>
+References: <1473615341-27203-1-git-send-email-hch@lst.de>
+        <1473615341-27203-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31326 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753801AbcINS1Z (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 14:27:25 -0400
-In-Reply-To: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com> (Wei
-        Yongjun's message of "Sat, 10 Sep 2016 16:06:36 +0000")
+Received: from aserp1040.oracle.com ([141.146.126.69]:40288 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932517AbcINSen (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 14:34:43 -0400
+In-Reply-To: <1473615341-27203-4-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Sun, 11 Sep 2016 19:35:41 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Wei Yongjun <weiyongjun1@huawei.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "Wei" == Wei Yongjun <weiyj.lk@gmail.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Wei> Fix to return error code -ENOMEM from the workqueue alloc error
-Wei> handling case instead of 0, as done elsewhere in this function.
+Christoph> These should go together with the rest of the T10 protection
+Christoph> information defintions.
 
-Applied to 4.9/scsi-queue.
+Series looks good in general. However, now that you introduced t10-pi.h
+it seems a bit odd to perpetuate the obsolete "DIF" terminology.
+
++enum t10_dif_type {
++	T10_DIF_TYPE0_PROTECTION = 0x0,
++	T10_DIF_TYPE1_PROTECTION = 0x1,
++	T10_DIF_TYPE2_PROTECTION = 0x2,
++	T10_DIF_TYPE3_PROTECTION = 0x3,
++};
+
+How about?
+
+enum t10_pi_type {
+	T10_PI_TYPE0_PROTECTION = 0x0,
+	T10_PI_TYPE1_PROTECTION = 0x1,
+	T10_PI_TYPE2_PROTECTION = 0x2,
+	T10_PI_TYPE3_PROTECTION = 0x3,
+};
+
+I don't mind fixing that up when I apply. Any objections?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
