@@ -1,48 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/3] sd: move DIF protection types to t10-pi.h
-Date: Wed, 14 Sep 2016 14:34:35 -0400
-Message-ID: <yq1h99il490.fsf@sermon.lab.mkp.net>
-References: <1473615341-27203-1-git-send-email-hch@lst.de>
-        <1473615341-27203-4-git-send-email-hch@lst.de>
+Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
+Date: Wed, 14 Sep 2016 14:37:38 -0400
+Message-ID: <yq1d1k6l43x.fsf@sermon.lab.mkp.net>
+References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:40288 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932517AbcINSen (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 14:34:43 -0400
-In-Reply-To: <1473615341-27203-4-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Sun, 11 Sep 2016 19:35:41 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
+        (Jason A. Donenfeld's message of "Mon, 12 Sep 2016 20:50:22 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Jason" == Jason A Donenfeld <Jason@zx2c4.com> writes:
 
-Christoph> These should go together with the rest of the T10 protection
-Christoph> information defintions.
+Jason,
 
-Series looks good in general. However, now that you introduced t10-pi.h
-it seems a bit odd to perpetuate the obsolete "DIF" terminology.
+Jason> These USB enclosures do not support SCSI UNMAP. However, they do
+Jason> support ATA-passthrough, and `hdparm -I` shows that TRIM is
+Jason> supported.
 
-+enum t10_dif_type {
-+	T10_DIF_TYPE0_PROTECTION = 0x0,
-+	T10_DIF_TYPE1_PROTECTION = 0x1,
-+	T10_DIF_TYPE2_PROTECTION = 0x2,
-+	T10_DIF_TYPE3_PROTECTION = 0x3,
-+};
-
-How about?
-
-enum t10_pi_type {
-	T10_PI_TYPE0_PROTECTION = 0x0,
-	T10_PI_TYPE1_PROTECTION = 0x1,
-	T10_PI_TYPE2_PROTECTION = 0x2,
-	T10_PI_TYPE3_PROTECTION = 0x3,
-};
-
-I don't mind fixing that up when I apply. Any objections?
+How do they signal that they support the passthrough?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
