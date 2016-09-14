@@ -1,38 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 151661] Adaptec 3405 3805 prints "AAC: Host adapter dead -1"
- every 10 seconds but works fine anyway
-Date: Wed, 14 Sep 2016 10:22:09 +0000
-Message-ID: <bug-151661-11613-Kl3wolPMbA@https.bugzilla.kernel.org/>
-References: <bug-151661-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/15] hisi_sas: save completion queue read pointer
+Date: Wed, 14 Sep 2016 13:46:32 +0200
+Message-ID: <b0871288-f2b4-1f73-85bb-28f7b6ad250c@suse.de>
+References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
+ <1473176185-217808-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:46998 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758398AbcINKWO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 14 Sep 2016 06:22:14 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 5198D20451
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2016 10:22:13 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 1F9582047D
-        for <linux-scsi@vger.kernel.org>; Wed, 14 Sep 2016 10:22:10 +0000 (UTC)
-In-Reply-To: <bug-151661-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1473176185-217808-2-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=151661
+On 09/06/2016 05:36 PM, John Garry wrote:
+> Optimise by saving an avoidable read in the cq
+> interrupt.
+> The queue read pointer will only be updated
+> by software, so don't bother re-reading
+> what was already written in the previous interrupt.
+> 
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas.h       | 1 +
+>  drivers/scsi/hisi_sas/hisi_sas_v1_hw.c | 6 ++----
+>  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 5 ++---
+>  3 files changed, 5 insertions(+), 7 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
---- Comment #16 from HE - IT Services <he001@fitmsg.net> ---
-(In reply to Matthias from comment #14)
-> you can find it in:
-> drivers/scsi/aacraid/commsup.c
-> in my 4.7.3 it is in Line 1700
+Cheers,
 
-Thanks Matthias.
-
+Hannes
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
