@@ -1,30 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/5] hpsa updates
-Date: Wed, 14 Sep 2016 14:22:39 -0400
-Message-ID: <yq1poo6l4sw.fsf@sermon.lab.mkp.net>
-References: <147345640313.19269.15042173861496542431.stgit@brunhilda>
+Subject: Re: [PATCH -next] [SCSI] mpt fusion: fix error return code in mptfc_probe()
+Date: Wed, 14 Sep 2016 14:27:12 -0400
+Message-ID: <yq1lgyul4lb.fsf@sermon.lab.mkp.net>
+References: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:25391 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753970AbcINSXS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 14:23:18 -0400
-In-Reply-To: <147345640313.19269.15042173861496542431.stgit@brunhilda> (Don
-        Brace's message of "Fri, 9 Sep 2016 16:30:11 -0500")
+Received: from userp1040.oracle.com ([156.151.31.81]:31326 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753801AbcINS1Z (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Sep 2016 14:27:25 -0400
+In-Reply-To: <1473523596-6768-1-git-send-email-weiyj.lk@gmail.com> (Wei
+        Yongjun's message of "Sat, 10 Sep 2016 16:06:36 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Wei Yongjun <weiyongjun1@huawei.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "Wei" == Wei Yongjun <weiyj.lk@gmail.com> writes:
 
-Don> The following changes are based on Linus's tree:
-Don>  - correct minor bug created when adding hpsa_skip_device
-Don>  - add check for null devices do to configuration changes
-Don>  - add check for null devices in ioaccel path
-Don>  - add check for vpd support
-Don>  - stop sending bmic commands to externals
+Wei> Fix to return error code -ENOMEM from the workqueue alloc error
+Wei> handling case instead of 0, as done elsewhere in this function.
 
 Applied to 4.9/scsi-queue.
 
