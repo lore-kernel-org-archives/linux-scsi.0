@@ -1,45 +1,56 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/15] hisi_sas: fix phy8 linkrate calculation in
- phy_up_v2_hw()
-Date: Wed, 14 Sep 2016 14:47:24 +0200
-Message-ID: <70901278-d9c9-fb66-d92a-22c8ba57fd08@suse.de>
+Subject: Re: [PATCH 08/15] hisi_sas: fix a potential warning for sata disk
+ ejection
+Date: Wed, 14 Sep 2016 14:48:14 +0200
+Message-ID: <f7e6dc4d-a712-494e-6957-44ee157d75ed@suse.de>
 References: <1473176185-217808-1-git-send-email-john.garry@huawei.com>
- <1473176185-217808-8-git-send-email-john.garry@huawei.com>
+ <1473176185-217808-9-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1473176185-217808-8-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1473176185-217808-9-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
 On 09/06/2016 05:36 PM, John Garry wrote:
-> In function phy_up_v2_hw(), we needlessly recalculate the
-> phy linkrate for all phys, and the calculation is incorrect
-> for phy8, so remove this code.
+> If hisi_sas_task_prep() fails for a SATA device due to PHY
+> down, we return a failure to libata and also call task_done(),
+> which will cause ata_qc_complete() to be called twice:
+> - first call from hisi_sas_task_prep(), which will clear flag
+>   ATA_QCFLAG_ACTIVE
+> - ata_qc_complete() called from libata
+> The warning call trace is as follows:
 > 
-> Signed-off-by: John Garry <john.garry@huawei.com>
+> [  117.070206] [<ffff0000084f59b0>] __ata_qc_complete+0xf4/0x11c
+> [  117.070208] [<ffff0000084f5b58>] ata_qc_complete+0x180/0x200
+> [  117.070210] [<ffff0000084f5dd0>] ata_qc_issue+0x110/0x354
+> [  117.070212] [<ffff0000084f6254>] ata_exec_internal_sg+0x240/0x4d0
+> [  117.070214] [<ffff0000084f6544>] ata_exec_internal+0x60/0xa0
+> [  117.070217] [<ffff000008501580>] ata_read_log_page+0x188/0x1b4
+> [  117.070218] [<ffff0000085017dc>] ata_eh_analyze_ncq_error+0xa8/0x274
+> [  117.070220] [<ffff000008501a3c>] ata_eh_link_autopsy+0x94/0x8c8
+> [  117.070222] [<ffff0000085022a4>] ata_eh_autopsy+0x34/0xe8
+> [  117.070223] [<ffff00000850540c>] ata_do_eh+0x28/0xc0
+> [  117.070225] [<ffff0000085054e0>] ata_std_error_handler+0x3c/0x84
+> [  117.070227] [<ffff000008505140>] ata_scsi_port_error_handler+0x480/0x674
+> [  117.070230] [<ffff0000084e3020>] async_sas_ata_eh+0x44/0x78
+> [  117.070231] [<ffff0000080d6b8c>] async_run_entry_fn+0x40/0x104
+> [  117.070234] [<ffff0000080ce518>] process_one_work+0x128/0x2f0
+> [  117.070235] [<ffff0000080ce738>] worker_thread+0x58/0x434
+> [  117.070237] [<ffff0000080d416c>] kthread+0xd4/0xe8
+> [  117.070240] [<ffff000008084e10>] ret_from_fork+0x10/0x40
+> 
+> The issue is resolved by simply returning a failure status
+> code to the upper layer.
+> 
 > Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
 > ---
->  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 3 ---
->  1 file changed, 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index aca2b80..ae44443 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -1876,9 +1876,6 @@ static int phy_up_v2_hw(int phy_no, struct hisi_hba *hisi_hba)
->  		frame_rcvd[i] = __swab32(idaf);
->  	}
->  
-> -	/* Get the linkrates */
-> -	link_rate = hisi_sas_read32(hisi_hba, PHY_CONN_RATE);
-> -	link_rate = (link_rate >> (phy_no * 4)) & 0xf;
->  	sas_phy->linkrate = link_rate;
->  	hard_phy_linkrate = hisi_sas_phy_read32(hisi_hba, phy_no,
->  						HARD_PHY_LINKRATE);
+>  drivers/scsi/hisi_sas/hisi_sas_main.c | 26 ++++++--------------------
+>  1 file changed, 6 insertions(+), 20 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
