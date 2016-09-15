@@ -1,63 +1,50 @@
-From: Paolo Bonzini <pbonzini@redhat.com>
-Subject: Re: [PATCH] Remove the unnecessary semicolons
-Date: Thu, 15 Sep 2016 12:11:50 +0200
-Message-ID: <66b617df-f7a3-e2d0-07da-8d9b03771570@redhat.com>
-References: <1471572189-21257-1-git-send-email-zhoujie2011@cn.fujitsu.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
+Date: Thu, 15 Sep 2016 15:01:42 +0300
+Message-ID: <20160915120142.GA2349@mwanda>
+References: <CAFkTriJHaO0-O0AXKWSZW6bXT_2m+VqRdwshFsgeq1=Bjfn_OQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:36718 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753312AbcIOKLy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 06:11:54 -0400
-In-Reply-To: <1471572189-21257-1-git-send-email-zhoujie2011@cn.fujitsu.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46311 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1763064AbcIOMCF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 08:02:05 -0400
+Content-Disposition: inline
+In-Reply-To: <CAFkTriJHaO0-O0AXKWSZW6bXT_2m+VqRdwshFsgeq1=Bjfn_OQ@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhou Jie <zhoujie2011@cn.fujitsu.com>, linux-scsi@vger.kernel.org
-Cc: mst@redhat.com, rusty@rustcorp.com.au, stefanha@linux.vnet.ibm.com, Chao Fan <fanc.fnst@cn.fujitsu.com>, kernel-janitors@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Marco Grassi <marco.gra@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinicke <hare@suse.de>, Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
+We need to put an upper bound on "user_len" so the memcpy() doesn't
+overflow.
 
+Reported-by: Marco Grassi <marco.gra@gmail.com>
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-On 19/08/2016 04:03, Zhou Jie wrote:
-> At the end of funcions, semicolons are unnecessary. So drop them.
-> 
-> Signed-off-by: Chao Fan <fanc.fnst@cn.fujitsu.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index 7dbbb29..9632a0c 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -241,7 +241,7 @@ static void virtscsi_req_done(struct virtqueue *vq)
->  	struct virtio_scsi_vq *req_vq = &vscsi->req_vqs[index];
->  
->  	virtscsi_vq_done(vscsi, req_vq, virtscsi_complete_cmd);
-> -};
-> +}
->  
->  static void virtscsi_poll_requests(struct virtio_scsi *vscsi)
->  {
-> @@ -267,7 +267,7 @@ static void virtscsi_ctrl_done(struct virtqueue *vq)
->  	struct virtio_scsi *vscsi = shost_priv(sh);
->  
->  	virtscsi_vq_done(vscsi, &vscsi->ctrl_vq, virtscsi_complete_free);
-> -};
-> +}
->  
->  static void virtscsi_handle_event(struct work_struct *work);
->  
-> @@ -413,7 +413,7 @@ static void virtscsi_event_done(struct virtqueue *vq)
->  	struct virtio_scsi *vscsi = shost_priv(sh);
->  
->  	virtscsi_vq_done(vscsi, &vscsi->event_vq, virtscsi_complete_event);
-> -};
-> +}
->  
->  /**
->   * virtscsi_add_cmd - add a virtio_scsi_cmd to a virtqueue
-> 
-
-Acked-by: Paolo Bonzini <pbonzini@redhat.com>
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 7640498..73ddd45 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2388,7 +2388,8 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 	}
+ 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
+ 		unsigned char *ver_addr;
+-		int32_t user_len, cnt2end;
++		uint32_t user_len;
++		int32_t cnt2end;
+ 		uint8_t *pQbuffer, *ptmpuserbuffer;
+ 		ver_addr = kmalloc(ARCMSR_API_DATA_BUFLEN, GFP_ATOMIC);
+ 		if (!ver_addr) {
+@@ -2397,6 +2398,10 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
+ 		}
+ 		ptmpuserbuffer = ver_addr;
+ 		user_len = pcmdmessagefld->cmdmessage.Length;
++		if (user_len > ARCMSR_API_DATA_BUFLEN) {
++			retvalue = ARCMSR_MESSAGE_FAIL;
++			goto message_out;
++		}
+ 		memcpy(ptmpuserbuffer,
+ 			pcmdmessagefld->messagedatabuffer, user_len);
+ 		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
