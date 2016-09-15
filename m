@@ -1,52 +1,52 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch v2] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
-Date: Thu, 15 Sep 2016 16:44:56 +0300
-Message-ID: <20160915134456.GA30277@mwanda>
-References: <ff1f18b9-8e5b-93d8-1292-c74529676066@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+Subject: [PATCH] [SCSI] wd719x: Avoid calling request_firmware under spinlock
+Date: Thu, 15 Sep 2016 19:18:31 +0530
+Message-ID: <1473947311-9573-1-git-send-email-vaishali.thakkar@oracle.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16575 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754732AbcIONp1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 09:45:27 -0400
-Content-Disposition: inline
-In-Reply-To: <ff1f18b9-8e5b-93d8-1292-c74529676066@redhat.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:17084 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757592AbcIONth (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 09:49:37 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, Hannes Reinicke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, security@kernel.org
+To: jejb@linux.vnet.ibm.com
+Cc: linux-kernel@vger.kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Vaishali Thakkar <vaishali.thakkar@oracle.com>
 
-We need to put an upper bound on "user_len" so the memcpy() doesn't
-overflow.
+It is preferrable to use request_firmware where sleeping is
+allowed. Using it under spinlock can cause blocking. Here,
+the function wd719x_chip_init calls request_firmware while
+holding a spinlock. So, let's access it outside the spinlock.
 
-Reported-by: Marco Grassi <marco.gra@gmail.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Coccinelle is used to detect the issue.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 7640498..110eca9 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2388,7 +2388,8 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 	}
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
- 		unsigned char *ver_addr;
--		int32_t user_len, cnt2end;
-+		uint32_t user_len;
-+		int32_t cnt2end;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
- 		ver_addr = kmalloc(ARCMSR_API_DATA_BUFLEN, GFP_ATOMIC);
- 		if (!ver_addr) {
-@@ -2397,6 +2398,11 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 		}
- 		ptmpuserbuffer = ver_addr;
- 		user_len = pcmdmessagefld->cmdmessage.Length;
-+		if (user_len > ARCMSR_API_DATA_BUFLEN) {
-+			retvalue = ARCMSR_MESSAGE_FAIL;
-+			kfree(ver_addr);
-+			goto message_out;
-+		}
- 		memcpy(ptmpuserbuffer,
- 			pcmdmessagefld->messagedatabuffer, user_len);
- 		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
+Signed-off-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
+---
+Please note that the patch is compile-tested only. And this change
+may require driver testing.
+---
+ drivers/scsi/wd719x.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index e3da1a2..b8e57f3 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -518,13 +518,14 @@ static int wd719x_host_reset(struct scsi_cmnd *cmd)
+ 	int result;
+ 
+ 	dev_info(&wd->pdev->dev, "host reset requested\n");
+-	spin_lock_irqsave(wd->sh->host_lock, flags);
++
+ 	/* Try to reinit the RISC */
+ 	if (wd719x_chip_init(wd) == 0)
+ 		result = SUCCESS;
+ 	else
+ 		result = FAILED;
+ 
++	spin_lock_irqsave(wd->sh->host_lock, flags);
+ 	/* flush all SCBs */
+ 	list_for_each_entry_safe(scb, tmp, &wd->active_scbs, list) {
+ 		struct scsi_cmnd *tmp_cmd = scb->cmd;
+-- 
+2.1.4
+
