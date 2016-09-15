@@ -1,39 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
 Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
-Date: Thu, 15 Sep 2016 12:07:20 -0400
-Message-ID: <yq1twdhb0zr.fsf@sermon.lab.mkp.net>
+Date: Thu, 15 Sep 2016 22:52:34 +0200
+Message-ID: <CAHmME9qq5vSC+hZckCystU6cdRPihO492U2B2-pozbwg=3_5nw@mail.gmail.com>
 References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
-        <yq1d1k6l43x.fsf@sermon.lab.mkp.net>
-        <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
+ <yq1d1k6l43x.fsf@sermon.lab.mkp.net> <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
+ <yq1twdhb0zr.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16738 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750909AbcIOQH0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 12:07:26 -0400
-In-Reply-To: <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
-        (Jason A. Donenfeld's message of "Thu, 15 Sep 2016 17:41:25 +0200")
+Received: from frisell.zx2c4.com ([192.95.5.64]:51889 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751570AbcIOUwn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 15 Sep 2016 16:52:43 -0400
+In-Reply-To: <yq1twdhb0zr.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
->>>>> "Jason" == Jason A Donenfeld <Jason@zx2c4.com> writes:
+Hi Martin,
 
-Jason,
+On Thu, Sep 15, 2016 at 6:07 PM, Martin K. Petersen
+> But how do they signal that ATA passthrough is possible? Is there an ATA
+> Information VPD page? Is REPORT SUPPORTED OPERATION CODES supported?
+>
+> We need really solid discovery data before we can entertain enabling
+> something like this.
 
->> How do they signal that they support the passthrough?
+`sg_opcodes` said invalid request, so I think there isn't REPORT
+SUPPORTED OPERATION CODES, and `sg_vpd -p ai` came up illegal too.
 
-Jason> Through the usual SCSI ATA-passthrough interface, "SAT" (SCSI-ATA
-Jason> Command Translation) -- ATA PASS THROUGH SCSI (16) and ATA PASS
-Jason> THROUGH SCSI (12).
+However, sg_sat_identify worked reliably, which means a solid way of
+probing this would be to send IDENTIFY DEVICE ATA via SG_ATA_16 or
+SG_ATA_12.
 
-But how do they signal that ATA passthrough is possible? Is there an ATA
-Information VPD page? Is REPORT SUPPORTED OPERATION CODES supported?
+Let me know and I can give you access to the hardware if you're curious.
 
-We need really solid discovery data before we can entertain enabling
-something like this.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Regards,
+Jason
