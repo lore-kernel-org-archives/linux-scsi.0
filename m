@@ -1,52 +1,31 @@
-From: Vaishali Thakkar <vaishali.thakkar@oracle.com>
-Subject: [PATCH] [SCSI] wd719x: Avoid calling request_firmware under spinlock
-Date: Thu, 15 Sep 2016 19:18:31 +0530
-Message-ID: <1473947311-9573-1-git-send-email-vaishali.thakkar@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 3/3] sd: move DIF protection types to t10-pi.h
+Date: Thu, 15 Sep 2016 09:54:31 -0400
+Message-ID: <yq1k2edz2so.fsf@sermon.lab.mkp.net>
+References: <1473615341-27203-1-git-send-email-hch@lst.de>
+        <1473615341-27203-4-git-send-email-hch@lst.de>
+        <yq1h99il490.fsf@sermon.lab.mkp.net> <20160915051056.GC6188@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:17084 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757592AbcIONth (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 09:49:37 -0400
+Received: from aserp1040.oracle.com ([141.146.126.69]:27668 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753383AbcIONyi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 09:54:38 -0400
+In-Reply-To: <20160915051056.GC6188@lst.de> (Christoph Hellwig's message of
+        "Thu, 15 Sep 2016 07:10:56 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com
-Cc: linux-kernel@vger.kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Vaishali Thakkar <vaishali.thakkar@oracle.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-It is preferrable to use request_firmware where sleeping is
-allowed. Using it under spinlock can cause blocking. Here,
-the function wd719x_chip_init calls request_firmware while
-holding a spinlock. So, let's access it outside the spinlock.
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Coccinelle is used to detect the issue.
+>> I don't mind fixing that up when I apply. Any objections?
 
-Signed-off-by: Vaishali Thakkar <vaishali.thakkar@oracle.com>
----
-Please note that the patch is compile-tested only. And this change
-may require driver testing.
----
- drivers/scsi/wd719x.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Christoph> Sure, go ahead!
 
-diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
-index e3da1a2..b8e57f3 100644
---- a/drivers/scsi/wd719x.c
-+++ b/drivers/scsi/wd719x.c
-@@ -518,13 +518,14 @@ static int wd719x_host_reset(struct scsi_cmnd *cmd)
- 	int result;
- 
- 	dev_info(&wd->pdev->dev, "host reset requested\n");
--	spin_lock_irqsave(wd->sh->host_lock, flags);
-+
- 	/* Try to reinit the RISC */
- 	if (wd719x_chip_init(wd) == 0)
- 		result = SUCCESS;
- 	else
- 		result = FAILED;
- 
-+	spin_lock_irqsave(wd->sh->host_lock, flags);
- 	/* flush all SCBs */
- 	list_for_each_entry_safe(scb, tmp, &wd->active_scbs, list) {
- 		struct scsi_cmnd *tmp_cmd = scb->cmd;
+Applied to 4.9/scsi-queue.
+
 -- 
-2.1.4
-
+Martin K. Petersen	Oracle Linux Engineering
