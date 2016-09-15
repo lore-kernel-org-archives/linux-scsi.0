@@ -1,50 +1,43 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
-Date: Thu, 15 Sep 2016 15:01:42 +0300
-Message-ID: <20160915120142.GA2349@mwanda>
-References: <CAFkTriJHaO0-O0AXKWSZW6bXT_2m+VqRdwshFsgeq1=Bjfn_OQ@mail.gmail.com>
+From: Michael Opdenacker <michael.opdenacker@free-electrons.com>
+Subject: Re: [PATCH] scsi: replace broken specification URL
+Date: Thu, 15 Sep 2016 14:33:57 +0200
+Message-ID: <7884d730-1d65-73c0-b94d-196bda3211d5@free-electrons.com>
+References: <1467442596-31310-1-git-send-email-michael.opdenacker@free-electrons.com>
+ <1467470971.2400.7.camel@HansenPartnership.com>
+ <c7b4c63e-af53-401c-3854-d3edea258e53@free-electrons.com>
+ <yq1k2eemn6w.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:46311 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763064AbcIOMCF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 15 Sep 2016 08:02:05 -0400
-Content-Disposition: inline
-In-Reply-To: <CAFkTriJHaO0-O0AXKWSZW6bXT_2m+VqRdwshFsgeq1=Bjfn_OQ@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1k2eemn6w.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Michael Opdenacker <michael.opdenacker@free-electrons.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Marco Grassi <marco.gra@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Ching Huang <ching2048@areca.com.tw>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinicke <hare@suse.de>, Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, security@kernel.org
 
-We need to put an upper bound on "user_len" so the memcpy() doesn't
-overflow.
+Hi Martin,
 
-Reported-by: Marco Grassi <marco.gra@gmail.com>
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+On 14/09/2016 19:00, Martin K. Petersen wrote:
+>
+> Michael> So, should we only that the cam-r12b document can be found from
+> Michael> http://www.t10.org/t10docs.htm (registration required)?, and
+> Michael> tell that a copy can be found on
+> Michael> http://www.csit-sun.pub.ro/~cpop/Documentatie_SMP/Standarde_magistrale/SCSI/?
+>
+> As inconvenient as the T10/ANSI restrictions are, we should not be
+> linking to illegitimate spec repositories.
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index 7640498..73ddd45 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -2388,7 +2388,8 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 	}
- 	case ARCMSR_MESSAGE_WRITE_WQBUFFER: {
- 		unsigned char *ver_addr;
--		int32_t user_len, cnt2end;
-+		uint32_t user_len;
-+		int32_t cnt2end;
- 		uint8_t *pQbuffer, *ptmpuserbuffer;
- 		ver_addr = kmalloc(ARCMSR_API_DATA_BUFLEN, GFP_ATOMIC);
- 		if (!ver_addr) {
-@@ -2397,6 +2398,10 @@ static int arcmsr_iop_message_xfer(struct AdapterControlBlock *acb,
- 		}
- 		ptmpuserbuffer = ver_addr;
- 		user_len = pcmdmessagefld->cmdmessage.Length;
-+		if (user_len > ARCMSR_API_DATA_BUFLEN) {
-+			retvalue = ARCMSR_MESSAGE_FAIL;
-+			goto message_out;
-+		}
- 		memcpy(ptmpuserbuffer,
- 			pcmdmessagefld->messagedatabuffer, user_len);
- 		spin_lock_irqsave(&acb->wqbuffer_lock, flags);
+I agree with you. The documents do not allow copy without permission, so 
+the copies we found are illegitimate indeed.
+
+Now I know what patch to send, to get rid of the broken link :)
+
+Thanks,
+
+Michael.
+
+-- 
+Michael Opdenacker, CEO, Free Electrons
+Embedded Linux and Kernel engineering
+http://free-electrons.com
