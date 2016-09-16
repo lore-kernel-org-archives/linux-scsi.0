@@ -1,42 +1,60 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH] In the ioaccel path, the calculation of the starting
-Date: Fri, 16 Sep 2016 20:01:16 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D193B054B2E@avsrvexchmbx1.microsemi.net>
-References: <147405576722.22073.13600876343999401194.stgit@brunhilda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0068.outbound.protection.outlook.com ([104.47.37.68]:10811
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965229AbcIPUR2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Sep 2016 16:17:28 -0400
-In-Reply-To: <147405576722.22073.13600876343999401194.stgit@brunhilda>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [RESEND] [PATCH 1/1] ses: Retry UNIT ATTENTION for receive diagnostics
+Date: Fri, 16 Sep 2016 16:06:06 -0500
+Message-ID: <20160916210607.054BF124047@b01ledav002.gho.pok.ibm.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@infradead.org" <hch@infradead.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIERvbiBCcmFjZQ0KPiBTZW50OiBGcmlkYXksIFNlcHRlbWJlciAxNiwg
-MjAxNiAyOjU2IFBNDQo+IFRvOiBqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbTsgSm9obiBIYWxsOyBL
-ZXZpbiBCYXJuZXR0OyBNYWhlc2gNCj4gUmFqYXNoZWtoYXJhOyBoY2hAaW5mcmFkZWFkLm9yZzsg
-U2NvdHQgVGVlbDsgVmlzd2FzIEc7IEp1c3RpbiBMaW5kbGV5OyBTY290dA0KPiBCZW5lc2g7IGVs
-bGlvdHRAaHBlLmNvbQ0KPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVj
-dDogW1BBVENIXSBJbiB0aGUgaW9hY2NlbCBwYXRoLCB0aGUgY2FsY3VsYXRpb24gb2YgdGhlIHN0
-YXJ0aW5nDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+IEZyb206IGtldmluIEJhcm5l
-dHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT4NCj4gDQo+IExCQSBmb3IgUkVBRCg2KS9X
-UklURSg2KSBTQ1NJIGNvbW1hbmRzIGRvZXMgbm90IHRha2UNCj4gaW50byBhY2NvdW50IHRoZSBt
-b3N0IHNpZ25pZmljYW50IDUgYml0cyBvZiB0aGUNCj4gTEJBOiBpdCBvbmx5IHVzZXMgdGhlIGxl
-YXN0IHNpZ25pZmljYW50IDE2IGJpdHMgb2YNCj4gdGhlIHN0YXJ0aW5nIExCQS4NCj4gDQo+IFJl
-cG9ydGVkLWJ5OiBNYWhlc2ggUmFqYXNoZWtoYXJhDQo+IDxtYWhlc2gucmFqYXNoZWtoYXJhQG1p
-Y3Jvc2VtaS5jb20+DQo+IFNpZ25lZC1vZmYtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5l
-dHRAbWljcm9zZW1pLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogRG9uIEJyYWNlIDxkb24uYnJhY2VA
-bWljcm9zZW1pLmNvbT4NCj4gLS0tDQpTb3JyeSBmb3Jnb3QgdGl0bGUsIHJlc2VuZGluZyBhcyBW
-MQ0KDQo+IC0tDQo+IFRvIHVuc3Vic2NyaWJlIGZyb20gdGhpcyBsaXN0OiBzZW5kIHRoZSBsaW5l
-ICJ1bnN1YnNjcmliZSBsaW51eC1zY3NpIiBpbg0KPiB0aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8g
-bWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZw0KPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCg==
+
+If the ses driver receives a UNIT ATTENTION when issuing
+a receive diagnostics while probing a SES device, it
+fails to attach with messages such as:
+
+scsi 1:0:7:0: Failed to get diagnostic page 0x8000002
+scsi 1:0:7:0: Failed to bind enclosure -19
+
+Fix this by eating unit attentions for these commands.
+
+Cc: <stable@vger.kernel.org>
+Suggested-by: Wen Xiong <wenxiong@linux.vnet.ibm.com>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ses.c |   13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
+
+diff -puN drivers/scsi/ses.c~ses_rcv_diag_retry drivers/scsi/ses.c
+--- linux-2.6.git/drivers/scsi/ses.c~ses_rcv_diag_retry	2016-08-25 18:28:18.720565322 -0500
++++ linux-2.6.git-bjking1/drivers/scsi/ses.c	2016-08-25 18:28:29.687496342 -0500
+@@ -86,7 +86,7 @@ static void init_device_slot_control(uns
+ static int ses_recv_diag(struct scsi_device *sdev, int page_code,
+ 			 void *buf, int bufflen)
+ {
+-	int ret;
++	int ret, retries = SES_RETRIES;
+ 	unsigned char cmd[] = {
+ 		RECEIVE_DIAGNOSTIC,
+ 		1,		/* Set PCV bit */
+@@ -96,11 +96,14 @@ static int ses_recv_diag(struct scsi_dev
+ 		0
+ 	};
+ 	unsigned char recv_page_code;
++	struct scsi_sense_hdr sshdr;
+ 
+-	ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
+-				NULL, SES_TIMEOUT, SES_RETRIES, NULL);
+-	if (unlikely(!ret))
+-		return ret;
++	do {
++		memset(&sshdr, 0, sizeof(sshdr));
++		ret =  scsi_execute_req(sdev, cmd, DMA_FROM_DEVICE, buf, bufflen,
++					&sshdr, SES_TIMEOUT, retries, NULL);
++	} while (scsi_sense_valid(&sshdr) &&
++		 sshdr.sense_key == UNIT_ATTENTION && --retries);
+ 
+ 	recv_page_code = ((unsigned char *)buf)[0];
+ 
+_
