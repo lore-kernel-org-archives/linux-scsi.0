@@ -1,38 +1,72 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH v1] Ibmvscsis: Fixed unused variable
-Date: Fri, 16 Sep 2016 12:47:52 -0700
-Message-ID: <080fb34b-a584-29a8-1304-1956ddbf86fa@linux.vnet.ibm.com>
-References: <1474035956-91228-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH] hpsa: correct scsi 6byte lba calculation
+Date: Fri, 16 Sep 2016 14:54:23 -0500
+Message-ID: <147405566295.22004.7072671003857458219.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1474035956-91228-1-git-send-email-bryantly@linux.vnet.ibm.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, nab@linux-iscsi.org, martin.petersen@oracle.com
-Cc: mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, brking@linux.vnet.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0075.outbound.protection.outlook.com ([104.47.40.75]:13376
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933663AbcIPTz1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Sep 2016 15:55:27 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com
+Cc: linux-scsi@vger.kernel.org
 
-On 09/16/2016 07:25 AM, Bryant G. Ly wrote:
-> Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
 
-Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Missing 5 bits of byte 1 in the LBA issued by SML
 
-> ---
->  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 --
->  1 file changed, 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> index b29fef9..f8ba2a0 100644
-> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> @@ -3193,8 +3193,6 @@ static int ibmvscsis_rdma(struct ibmvscsis_cmd *cmd, struct scatterlist *sg,
->  					 server_ioba);
->  		} else {
->  			/* write to client */
-> -			struct srp_cmd *srp = (struct srp_cmd *)iue->sbuf->buf;
-> -
->  			if (!READ_CMD(srp->cdb))
->  				print_hex_dump_bytes(" data:", DUMP_PREFIX_NONE,
->  						     sg_virt(sgp), buf_len);
-> 
+Reported-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Signed-off-by: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/hpsa.c |   14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 71c08684..2bfebd9 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -4602,7 +4602,9 @@ static int fixup_ioaccel_cdb(u8 *cdb, int *cdb_len)
+ 	case READ_6:
+ 	case READ_12:
+ 		if (*cdb_len == 6) {
+-			block = get_unaligned_be16(&cdb[2]);
++			block = (((cdb[1] & 0x1F) << 16) |
++				(cdb[2] << 8) |
++				cdb[3]);
+ 			block_cnt = cdb[4];
+ 			if (block_cnt == 0)
+ 				block_cnt = 256;
+@@ -4762,9 +4764,11 @@ static void set_encrypt_ioaccel2(struct ctlr_info *h,
+ 	 */
+ 	switch (cmd->cmnd[0]) {
+ 	/* Required? 6-byte cdbs eliminated by fixup_ioaccel_cdb */
+-	case WRITE_6:
+ 	case READ_6:
+-		first_block = get_unaligned_be16(&cmd->cmnd[2]);
++	case WRITE_6:
++		first_block = (((cmd->cmnd[1] & 0x1F) << 16) |
++				(cmd->cmnd[2] << 8) |
++				cmd->cmnd[3]);
+ 		break;
+ 	case WRITE_10:
+ 	case READ_10:
+@@ -5014,7 +5018,9 @@ static int hpsa_scsi_ioaccel_raid_map(struct ctlr_info *h,
+ 	case WRITE_6:
+ 		is_write = 1;
+ 	case READ_6:
+-		first_block = get_unaligned_be16(&cmd->cmnd[2]);
++		first_block = (((cmd->cmnd[1] & 0x1F) << 16) |
++				(cmd->cmnd[2] << 8) |
++				cmd->cmnd[3]);
+ 		block_cnt = cmd->cmnd[4];
+ 		if (block_cnt == 0)
+ 			block_cnt = 256;
+
