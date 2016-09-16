@@ -1,57 +1,58 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 2/2] ipr: Remove redundant messages at adapter init time
-Date: Fri, 16 Sep 2016 16:51:37 -0500
-Message-ID: <20160916215137.7DE02B204E@b01ledav03.gho.pok.ibm.com>
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] ipr: Don't log unnecessary 9084 error details
+Date: Fri, 16 Sep 2016 19:00:23 -0300
+Message-ID: <87k2ebpkso.fsf@linux.vnet.ibm.com>
+References: <20160916215136.9E5F8124047@b01ledav002.gho.pok.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:60633 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42625 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1754783AbcIPVvm (ORCPT
+        by vger.kernel.org with ESMTP id S1750945AbcIPWAa (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Sep 2016 17:51:42 -0400
+        Fri, 16 Sep 2016 18:00:30 -0400
 Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8GLltYl111270
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 17:51:41 -0400
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25gqe4b6kk-1
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8GLvPD4127312
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:30 -0400
+Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25gqe4bd7c-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 17:51:41 -0400
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:29 -0400
 Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-        Fri, 16 Sep 2016 15:51:40 -0600
+        by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
+        Fri, 16 Sep 2016 19:00:27 -0300
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.18.232.225])
+        by d24dlp01.br.ibm.com (Postfix) with ESMTP id C7005352005C
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:01 -0400 (EDT)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8GM0Ops32178422
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 19:00:24 -0300
+Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
+        by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8GM0OYJ025311
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 19:00:24 -0300
+In-Reply-To: <20160916215136.9E5F8124047@b01ledav002.gho.pok.ibm.com> (Brian
+        King's message of "Fri, 16 Sep 2016 16:51:36 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+
+Brian King <brking@linux.vnet.ibm.com> writes:
+
+> A 9084 error gets logged by the ipr adapter when adapter raw mode
+> gets enabled. A bunch of unformatted hex data also gets logged
+> for this error, which is of little use, so let's avoid logging
+> it by default in order to avoid the log getting polluted with
+> useless data.
+>
+
+Thanks, Brian.
+
+Reviewed-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
 
 
-Whenever multiple HRRQs are enabled, which is the default
-setting now, we end up seeing the following message logged
-prior to initialization of each HRRQ:
 
-Starting IOA initialization sequence
-
-This results in 16 of these messages on most adapters, which
-serves little purpose. Change to just log this once.
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |    3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_hrrq_message drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_hrrq_message	2016-08-30 20:53:06.909099536 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2016-08-30 20:53:06.915099497 -0500
-@@ -8049,7 +8049,8 @@ static int ipr_ioafp_identify_hrrq(struc
- 
- 	ENTER;
- 	ipr_cmd->job_step = ipr_ioafp_std_inquiry;
--	dev_info(&ioa_cfg->pdev->dev, "Starting IOA initialization sequence.\n");
-+	if (ioa_cfg->identify_hrrq_index == 0)
-+		dev_info(&ioa_cfg->pdev->dev, "Starting IOA initialization sequence.\n");
- 
- 	if (ioa_cfg->identify_hrrq_index < ioa_cfg->hrrq_num) {
- 		hrrq = &ioa_cfg->hrrq[ioa_cfg->identify_hrrq_index];
-_
+-- 
+Gabriel Krisman Bertazi
 
