@@ -1,56 +1,75 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
-Date: Fri, 16 Sep 2016 13:16:35 +0200
-Message-ID: <5af202ea-a632-28c2-515f-c361e27de5da@suse.de>
-References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
- <yq1d1k6l43x.fsf@sermon.lab.mkp.net>
- <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
- <yq1twdhb0zr.fsf@sermon.lab.mkp.net>
- <CAHmME9qq5vSC+hZckCystU6cdRPihO492U2B2-pozbwg=3_5nw@mail.gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 157751] New: ---18009190992---)}}}--Quickbooks  Enterprise
+ technical support phone number,Quickbooks  Support phone number
+Date: Fri, 16 Sep 2016 11:17:00 +0000
+Message-ID: <bug-157751-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33463 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:36646 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759269AbcIPLQl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Sep 2016 07:16:41 -0400
-In-Reply-To: <CAHmME9qq5vSC+hZckCystU6cdRPihO492U2B2-pozbwg=3_5nw@mail.gmail.com>
+        id S933641AbcIPLRD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Sep 2016 07:17:03 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id A54B3205D3
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 11:17:01 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 5769F205C6
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 11:17:00 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Jason A. Donenfeld" <Jason@zx2c4.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-On 09/15/2016 10:52 PM, Jason A. Donenfeld wrote:
-> Hi Martin,
-> 
-> On Thu, Sep 15, 2016 at 6:07 PM, Martin K. Petersen
->> But how do they signal that ATA passthrough is possible? Is there an ATA
->> Information VPD page? Is REPORT SUPPORTED OPERATION CODES supported?
->>
->> We need really solid discovery data before we can entertain enabling
->> something like this.
-> 
-> `sg_opcodes` said invalid request, so I think there isn't REPORT
-> SUPPORTED OPERATION CODES, and `sg_vpd -p ai` came up illegal too.
-> 
-> However, sg_sat_identify worked reliably, which means a solid way of
-> probing this would be to send IDENTIFY DEVICE ATA via SG_ATA_16 or
-> SG_ATA_12.
-> 
-> Let me know and I can give you access to the hardware if you're curious.
-> 
-Sadly, that's not sufficient.
-linux is not the only provider of an SATL (mpt3sas being the most
-prominent other one).
-And while they might support ATA_12/ATA_16, there is no indication that
-you can pass DSM TRIM that way.
+https://bugzilla.kernel.org/show_bug.cgi?id=157751
 
-Cheers,
+            Bug ID: 157751
+           Summary: ---18009190992---)}}}--Quickbooks  Enterprise
+                    technical support phone number,Quickbooks  Support
+                    phone number
+           Product: IO/Storage
+           Version: 2.5
+    Kernel Version: Quickbooks  Support phone number
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: mhmjhmhmmmnbmnmnmnmbmm@mail.com
+        Regression: No
 
-Hannes
+Quickbooks Enterprise technical s.u.p.p.o.r.t h.e.l.p desk P.h.o.n.e NUMBER
+1800 919 0992 Call 1-800-919-0992 Quickbooks technical s.u.p.p.o.r.t NUMBER
+1800 919 0992 Quickbooks toll free NUMBER 1800 919 0992 Call 1-800-919-0992
+Quickbooks Enterprise customer s.u.p.p.o.r.t P.h.o.n.e NUMBER 1800 919 0992
+Call 1-800-919-0992 Quickbooks Enterprise c.u.s.t.o.m.e.r s.e.r.v.i.c.e
+P.h.o.n.e NUMBER 1800 919 0992 Quickbooks P.h.o.n.e NUMBER 1800 919 0992
+Quickbooks for Quickbooks Enterprise c.u.s.t.o.m.e.r s.e.r.v.i.c.e contact
+Quickbooks Enterprise c.u.s.t.o.m.e.r s.e.r.v.i.c.e P.h.o.n.e NUMBER 1800 919
+0992 Call 1-800-919-0992 Quickbooks security s.u.p.p.o.r.t P.h.o.n.e NUMBER
+1800 919 0992 Call 1-800-919-0992 Quickbooks internet security s.u.p.p.o.r.t
+P.h.o.n.e NUMBER 1800 919 0992 Quickbooks P.h.o.n.e NUMBER 1800 919 0992
+Quickbooks for Quickbooks security Quickbooks internet security P.h.o.n.e
+NUMBER 1800 919 0992 Quickbooks in canada Quickbooks Enterprise contact
+P.h.o.n.e NUMBER 1800 919 0992 Quickbooks in canada Quickbooks security contact
+P.h.o.n.e NUMBER 1800 919 0992 Call 1-800-919-0992 Quickbooks Enterprise
+h.e.l.p desk P.h.o.n.e NUMBER 1800 919 0992 
+
+https://www.facebook.com/Quickbooks-1800-919-0992-Enterprise-Support-Phone-Number-1776222839321546/
+
+Quickbooks in canada Quickbooks Enterprise tech s.u.p.p.o.r.t P.h.o.n.e NUMBER
+1800 919 0992 Quickbooks free in canada Quickbooks Enterprise s.u.p.p.o.r.t
+P.h.o.n.e NUMBER 1800 919 0992 Call 1-800-919-0992 Quickbooks Enterprise
+P.h.o.n.e NUMBER 1800 919 0992 Quickbooks s.u.p.p.o.r.t for technical issue in
+canada P.h.o.n.e NUMBER 1800 919 0992 Quickbooks for Quickbooks Enterprise
+technical s.u.p.p.o.r.t Quickbooks Enterprise c.u.s.t.o.m.e.r s.e.r.v.i.c.e
+teleP.h.o.n.e NUMBER 1800 919 0992 Call 1-800-919-0992 Quickbooks Enterprise
+toll free customer care NUMBER 1800 919 0992 Call 1-800-919-0992 Quickbooks
+internet security h.e.l.p
+
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+You are receiving this mail because:
+You are the assignee for the bug.
