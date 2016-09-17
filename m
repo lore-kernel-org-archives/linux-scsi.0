@@ -1,155 +1,111 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
-Date: Fri, 16 Sep 2016 22:14:56 -0700
-Message-ID: <1474089296.2353.101.camel@HansenPartnership.com>
-References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
-         <yq1d1k6l43x.fsf@sermon.lab.mkp.net>
-         <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
-         <yq1twdhb0zr.fsf@sermon.lab.mkp.net>
-         <CAHmME9qq5vSC+hZckCystU6cdRPihO492U2B2-pozbwg=3_5nw@mail.gmail.com>
-         <5af202ea-a632-28c2-515f-c361e27de5da@suse.de>
-         <c2c154db-67fe-dcaa-a46a-48a53e15d1cf@gmail.com>
-         <1474042904.2353.52.camel@HansenPartnership.com>
-         <add395b3-80df-0402-d8b7-d2fb79d9aebf@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 162031] New: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical
+ support Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
+Date: Sat, 17 Sep 2016 09:17:56 +0000
+Message-ID: <bug-162031-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <add395b3-80df-0402-d8b7-d2fb79d9aebf@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>, Hannes Reinecke <hare@suse.de>, "Jason A. Donenfeld" <Jason@zx2c4.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:37970 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754949AbcIQJSB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 17 Sep 2016 05:18:01 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id ADA15206B6
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 09:17:59 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 4EB4820697
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 09:17:57 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, 2016-09-16 at 13:06 -0400, Austin S. Hemmelgarn wrote:
-> On 2016-09-16 12:21, James Bottomley wrote:
-> > On Fri, 2016-09-16 at 11:53 -0400, Austin S. Hemmelgarn wrote:
-> > > On 2016-09-16 07:16, Hannes Reinecke wrote:
-> > > > On 09/15/2016 10:52 PM, Jason A. Donenfeld wrote:
-> > > > > Hi Martin,
-> > > > > 
-> > > > > On Thu, Sep 15, 2016 at 6:07 PM, Martin K. Petersen
-> > > > > > But how do they signal that ATA passthrough is possible? Is
-> > > > > > there an ATA Information VPD page? Is REPORT SUPPORTED
-> > > > > > OPERATION CODES supported?
-> > > > > > 
-> > > > > > We need really solid discovery data before we can entertain
-> > > > > > enabling something like this.
-> > > > > 
-> > > > > `sg_opcodes` said invalid request, so I think there isn't REPORT
-> > > > > SUPPORTED OPERATION CODES, and `sg_vpd -p ai` came up illegal
-> > > > > too.
-> > > > > 
-> > > > > However, sg_sat_identify worked reliably, which means a solid way
-> > > > > of probing this would be to send IDENTIFY DEVICE ATA via
-> > > > > SG_ATA_16 or SG_ATA_12.
-> > > > > 
-> > > > > Let me know and I can give you access to the hardware if you're
-> > > > > curious.
-> > > > > 
-> > > > Sadly, that's not sufficient.
-> > > > linux is not the only provider of an SATL (mpt3sas being the most
-> > > > prominent other one).
-> > > > And while they might support ATA_12/ATA_16, there is no indication
-> > > > that you can pass DSM TRIM that way.
-> > > So it's better to not support it at all than to support it on
-> > > hardware we can reliably identify?
-> > > 
-> > > I get that having feature parity is a good thing, but the discussion
-> > > isn't about providing support for all SATL devices, it's specifically
-> > > about UAS connected SATL devices.  Last I checked, mpt3sas doesn't do
-> > > anything with UAS, which means it's kind of irrelevant WRT supporting
-> > > this for UAS devices.
-> > 
-> > We're getting a bit off topic on mptsas and it's eccentric SATL.
-> > 
-> > The point is, you're asking for UAS devices which each have an internal
-> > SATL which you say potentially doesn't support discard.  The three
-> > problems we have are
-> > 
-> >    1. How do we identify if the UAS SATL doesn't support discard.  If it
-> >       does, we really don't want to cause further SATL related issues by
-> >       bypassing it, so we need a way of telling this.
-> >    2. If the SATL doesn't support discard, will it reliably support the
-> >       ATA_12 or ATA_16 pass through (and which one) .. we need a way of
-> >       checking this because there are known SATLs that don't do pass
-> >       through.
-> >    3. How do we actually configure it?  Presumably if the SATL doesn't
-> >       support discard, it also doesn't give us the useful mode page
-> >       indications we use to configure TRIM, so we're going to have to do
-> >       some pass through discovery as well.
-> I assume by 'discard' here you're referring to SCSI UNMAP, as 
-> anything that supports ATA_12 or ATA_16 pass through correctly will 
-> support ATA TRIM/DISCARD on drives that support it.
+https://bugzilla.kernel.org/show_bug.cgi?id=162031
 
-discard is the block layer terminology it's mapped per transport to
-UNMAP or WRITE SAME on SCSI and TRIM on ATA.
+            Bug ID: 162031
+           Summary: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical support
+                    Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical support
+                    Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
+          Hardware: All
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: AIC94XX
+          Assignee: scsi_drivers-aic94xx@kernel-bugs.osdl.org
+          Reporter: 6yh6tytrytyy@mail.com
+        Regression: No
 
->   If that's the case, then:
-> 1. If SCSI UNMAP fails, it doesn't support UNMAP.  This is of course 
-> non-trivial to verify safely (we pretty much have to assume it is 
-> supported if we have no clear indication it isn't, and then switch 
-> based on what happens the first time we try to use it).
+Created attachment 236921
+  --> https://bugzilla.kernel.org/attachment.cgi?id=236921&action=edit
+Quickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tec
 
-It's not quite that simple: to get us to configure discard in the first
-place, you have to indicate support in READ CAPACITY (16): the LBPME
-bit.  The chances are your UAS SATL isn't setting this.
+Quickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
+number Phone Number, Quickbooks Help Desk Phone Number, Quickbooks customer
+care number, Quickbooks customer care phone number, Quickbooks phone number,
+Quickbooks customer care number, Quickbooks customer service phone number,
+Quickbooks customer care, Quickbooks Customer Customer service Phone Number,
+Quickbooks Customer Customer service Number, Quickbooks Customer care Phone
+Number, Quickbooks Customer care Number, Quickbooks Customer Customer service
+Helpline Number, Quickbooks Customer Care Number, Quickbooks customer service
+team phone number, Quickbooks help number-Quickbooks Helpline Number;
+Quickbooks help phone number, Quickbooks Helpline Number, Quickbooks Customer
+care Toll free Number, Quickbooks Customer service Telephone Number, Quickbooks
+Customer care Telephone number, Quickbooks Customer care contact number,
+Quickbooks customer service phone number, Quickbooks customer care contact
+number, quickbooks customer service phone number, quickbooks payroll customer
+service phone
+number.https://www.facebook.com/Quickbooks-1800-919-0992-Enterprise-Support-Phone-Number-1776222839321546/
+Quickbooks Customer customer service phone number 1800-919-0992 quickbooks
+technical help telephone number, quickbooks technical help contact number,
+quickbooks customer care contact number, quickbooks contact number, quickbooks
+contact phone number, quickbooks contact telephone number, quickbooks 24 hour
+contact number, Quickbooks Customer care contact number, Quickbooks Customer
+Customer service contact number, quickbooks official number, quickbooks
+official contact number, quickbooks 800 contact number, quickbooks toll free
+number, 800 number for quickbooks customer service, quickbooks 24/7 customer
+service phone number Quickbooks customer service phone number,Quickbooks
+customer service phone number,Quickbooks help phone number, Quickbooks customer
+care number.Quickbooks customer service number, Quickbooks phone number,
+Quickbooks customer care number, Quickbooks Customer care number, Quickbooks
+Customer care phone number, Quickbooks Tech service phone number, Quickbooks
+payroll customer service phone number, Quickbooks customer service phone
+number. Help@Call 1-800-919-0992/.quickbooks 24/7 customer service phone
+number,quickbooks telephone number for customer service? call
+1800-919-0992@./quickbooks contact number, quickbooks contact phone number,
+quickbooks contact telephone number,,telephone number for quickbooks online
+customer service,quickbooks official customer service number,quickbooks
+official number,quickbooks payroll official phone number,,,phone number for
+quickbooks payroll customer service,,quickbooks 24/7 customer service phone
+number,,quickbooks customer service number,quickbooks telephone number for
+customer service quickbooks phone number, quickbooks customer service phone
+number, quickbooks customer care number, quickbooks customer care number,
+california@dail **))@1800.919~0992(((@USA Quickbooks Customer care Phone
+Number..,, Quickbooks Tech Customer care phone Number..,..USA@JEETôßPππu◙ 1 800
+919 0992 Quickbooks Customer service PHONE Number..,Ω»Γ╚╚☻☻ô US 1800-919-0992
+quickbooks technical help telePHONE Number..,, ╚╚☻☻ôquickbooks technical help
+contact Number..,, ╚╚☻☻ôquickbooks customer care contact Number..,, quickbooks
+contact Number..,, quickbooks contact PHONE Number..,, quickbooks contact
+telePHONE Number..,, quickbooks 24 hour contact Number..,, Quickbooks Customer
+care contact Number..,, quickbooks customer care number Quickbooks customer
+service 1 800 919 0992 team phone numberGet Instant Help Usa & Canada at 1 800
+919 0992 Quickbooks Customer care phone number , Quickbooks Customer Customer
+service number , Quickbooks customer care number, Quickbooks customer care
+number, Quickbooks customer care number , Quickbooks customer care phoe number
+, Quickbooks helpdesk customer service phone number, Quickbooks helpdesk
+customer service number, Quickbooks helpdesk number, Quickbooks customer
+service help number, Quickbooks customer service help number
 
-> 2. Unless there are SATL's out there that write garbage to the device 
-> or die when sent an ATA_12 or ATA_16 pass through command
-
-
-Yes, there are; the problems with USB devices that fail to speak
-standard versions of SCSI are legion.
-
-> encapsulating an ATA DEVICE IDENTIFY command, this isn't an issue. 
->  Even if such SATL's exist, they can easily be blacklisted.
-> 3. This isn't hard, a SATL which actually supports ATA pass through 
-> will almost always pass through the mode page unmodified.
-
-You mean the ATA Information VPD page?  Yes, that's feasible because we
-already queried the supported VPD pages, so we can tell if this one's
-there.
-
-> On the note of UAS SATL's, all of them that I've seen fall into one 
-> of four categories:
-> 1. Supports one or both of ATA_12 or ATA_16 pass through, and 
-> supports passing through ATA TRIM/DISCARD, but not SCSI UNMAP.
-> 2. Supports one of ATA_12 or ATA_16 pass through, and does not 
-> support passing through ATA TRIM/DISCARD or translating SCSI UNMAP. 
->  All devices I've seen that fit this will modify the ATA DEVICE 
-> IDENTIFY data so it doesn't report DISCARD support, or will simply 
-> return an error for DISCARD requests.  I haven't seen any like this 
-> that were manufactured after UAS became standardized.
-> 3. Supports neither ATA_12 or ATA_16 pass through, and doesn't 
-> support UNMAP.
-> 4. Like type 1, except it supports both pass through commands, and 
-> also properly translates SCSI UNMAP commands (I've only ever seen one 
-> of these, have no idea what chipset it had, and it was insanely
-> expensive (upside of 300 USD)).
-> All we really can do anything about is category 1.  Category 4 works 
-> with the current drivers, and we can't properly support it on 
-> category 2 or 3.
-
-Right, but you need to make sure it continues to work.
-
->   All three devices I have right now are in category 1, I know a
- 
-> number of other people in a similar situation, and it sounds like 
-> Jason has at least one such device as well.  Given that Windows does 
-> this (I've confirmed this with a hardware USB analyzer I borrowed 
-> from a friend), and that I've not seen anything since the UAS spec 
-> was actually released that falls into category 2 (and if I understand 
-> the spec correctly, such a device is actually not compliant with it 
-> anyway), think it's probably safe to do this in Linux and just base 
-> the check on:
-> 1. UAS (not some other SCSI transport) without UNMAP support.
-> 2. Supports ATA_12 or ATA_16 pass through.
-> 3. ATA DEVICE IDENTIFY via SAT indicates that the device supports 
-> DISCARD/TRIM.
-> Then we'd be matching behavior on Windows, and should probably be 
-> relatively safe.
-
-OK, well I think we've all expressed the concerns, let's see the patch.
-
-James
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
