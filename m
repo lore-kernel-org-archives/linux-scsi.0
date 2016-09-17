@@ -1,48 +1,51 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 162031] New: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical
- support Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
-Date: Sat, 17 Sep 2016 09:17:56 +0000
-Message-ID: <bug-162031-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 162451] New: QuickBooks support team phone
+ number..1.8.0.0.9.1.9.0.9.9.2. Call, QuickBooks tech support phone number,
+ Intuit QuickBooks
+Date: Sat, 17 Sep 2016 10:17:44 +0000
+Message-ID: <bug-162451-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37970 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41458 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754949AbcIQJSB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 17 Sep 2016 05:18:01 -0400
+        id S1757237AbcIQKRs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 17 Sep 2016 06:17:48 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id ADA15206B6
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 09:17:59 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 4EB4820697
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 09:17:57 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 4B148206D0
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 10:17:46 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 03AE3206BA
+        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 10:17:45 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=162031
+https://bugzilla.kernel.org/show_bug.cgi?id=162451
 
-            Bug ID: 162031
-           Summary: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical support
-                    Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
+            Bug ID: 162451
+           Summary: QuickBooks support team phone
+                    number..1.8.0.0.9.1.9.0.9.9.2. Call, QuickBooks tech
+                    support phone number, Intuit QuickBooks
            Product: SCSI Drivers
            Version: 2.5
-    Kernel Version: 1.8.0.0.9.1.9.0.9.9.2.@* QuickBooks technical support
-                    Canada@* .1.8.0.0.9.1.9.0.9.9.2.@*
+    Kernel Version: QuickBooks support team phone
+                    number..1.8.0.0.9.1.9.0.9.9.2. Call, QuickBooks tech
+                    support phone number, Intuit QuickBooks
           Hardware: All
                 OS: Linux
               Tree: Mainline
             Status: NEW
           Severity: normal
           Priority: P1
-         Component: AIC94XX
-          Assignee: scsi_drivers-aic94xx@kernel-bugs.osdl.org
+         Component: AHA152X
+          Assignee: scsi_drivers-aha152x@kernel-bugs.osdl.org
           Reporter: 6yh6tytrytyy@mail.com
         Regression: No
 
-Created attachment 236921
-  --> https://bugzilla.kernel.org/attachment.cgi?id=236921&action=edit
+Created attachment 237091
+  --> https://bugzilla.kernel.org/attachment.cgi?id=237091&action=edit
 Quickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
 numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tech support phone
 numberQuickbooks> support++ 1+800+919+0992@ Quickbooks tec
@@ -91,20 +94,22 @@ number,,quickbooks customer service number,quickbooks telephone number for
 customer service quickbooks phone number, quickbooks customer service phone
 number, quickbooks customer care number, quickbooks customer care number,
 california@dail **))@1800.919~0992(((@USA Quickbooks Customer care Phone
-Number..,, Quickbooks Tech Customer care phone Number..,..USA@JEETôßPππu◙ 1 800
-919 0992 Quickbooks Customer service PHONE Number..,Ω»Γ╚╚☻☻ô US 1800-919-0992
-quickbooks technical help telePHONE Number..,, ╚╚☻☻ôquickbooks technical help
-contact Number..,, ╚╚☻☻ôquickbooks customer care contact Number..,, quickbooks
-contact Number..,, quickbooks contact PHONE Number..,, quickbooks contact
-telePHONE Number..,, quickbooks 24 hour contact Number..,, Quickbooks Customer
-care contact Number..,, quickbooks customer care number Quickbooks customer
-service 1 800 919 0992 team phone numberGet Instant Help Usa & Canada at 1 800
-919 0992 Quickbooks Customer care phone number , Quickbooks Customer Customer
-service number , Quickbooks customer care number, Quickbooks customer care
-number, Quickbooks customer care number , Quickbooks customer care phoe number
-, Quickbooks helpdesk customer service phone number, Quickbooks helpdesk
-customer service number, Quickbooks helpdesk number, Quickbooks customer
-service help number, Quickbooks customer service help number
+Number..,, Quickbooks Tech Customer care phone
+Number..,..USA@JEETôßPππu◙https://www.youtube.com/watch?v=JnPtCk_CNs81 800 919
+0992 Quickbooks Customer service PHONE Number..,Ω»Γ╚╚☻☻ô US 1800-919-0992
+quickbooks technical helphttps://www.youtube.com/watch?v=FJm_ifZdWK8 telePHONE
+Number..,, ╚╚☻☻ôquickbooks technical help contact Number..,, ╚╚☻☻ôquickbooks
+customer care contact Number..,, quickbooks contact Number..,, quickbooks
+contact PHONE Number..,, quickbooks contact telePHONE Number..,, quickbooks 24
+hour contact Number..,, Quickbooks Customer care contact Number..,, quickbooks
+customer care number Quickbooks customer service 1 800 919 0992 team phone
+numberGet Instant Help Usa & Canada at 1 800 919 0992 Quickbooks Customer care
+phone number , Quickbooks Customer Customer service number , Quickbooks
+customer care number, Quickbooks customer care number, Quickbooks customer care
+number , Quickbooks customer care phoe number , Quickbooks helpdesk customer
+service phone number, Quickbooks helpdesk customer service number, Quickbooks
+helpdesk number, Quickbooks customer service help number, Quickbooks customer
+service help number
 
 -- 
 You are receiving this mail because:
