@@ -1,58 +1,37 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: [PATCH 2/2] ipr: Remove redundant messages at adapter init time
-Date: Fri, 16 Sep 2016 19:00:47 -0300
-Message-ID: <87fuozpks0.fsf@linux.vnet.ibm.com>
-References: <20160916215137.7DE02B204E@b01ledav03.gho.pok.ibm.com>
+From: "Jason A. Donenfeld" <Jason@zx2c4.com>
+Subject: Re: TRIM/UNMAP/DISCARD via ATA Passthrough
+Date: Sat, 17 Sep 2016 03:24:12 +0200
+Message-ID: <CAHmME9rJVUWwwzV6GCs_jESgBPe7XPOsehVZ0kgV0a71R9jjYg@mail.gmail.com>
+References: <CAHmME9q4TV4EVAK-4X8Fx9x_YYT3fh4zbtQgjnFR4ut7dTUUfA@mail.gmail.com>
+ <yq1d1k6l43x.fsf@sermon.lab.mkp.net> <CAHmME9pX1sSdFLfsgBqunh=5ttmPg5-vAzvTEfD1Xt4NBk6JzA@mail.gmail.com>
+ <yq1twdhb0zr.fsf@sermon.lab.mkp.net> <CAHmME9qq5vSC+hZckCystU6cdRPihO492U2B2-pozbwg=3_5nw@mail.gmail.com>
+ <5af202ea-a632-28c2-515f-c361e27de5da@suse.de> <c2c154db-67fe-dcaa-a46a-48a53e15d1cf@gmail.com>
+ <1474042904.2353.52.camel@HansenPartnership.com> <add395b3-80df-0402-d8b7-d2fb79d9aebf@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43299 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750945AbcIPWAy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 16 Sep 2016 18:00:54 -0400
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8GLvOj5127230
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:53 -0400
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 25gqe4bdnh-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:53 -0400
-Received: from localhost
-        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-        Fri, 16 Sep 2016 19:00:51 -0300
-Received: from d24relay04.br.ibm.com (d24relay04.br.ibm.com [9.18.232.146])
-        by d24dlp02.br.ibm.com (Postfix) with ESMTP id 01F131DC006E
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 18:00:49 -0400 (EDT)
-Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u8GM0mqq39190652
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 19:00:48 -0300
-Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
-        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u8GM0mnO018756
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Sep 2016 19:00:48 -0300
-In-Reply-To: <20160916215137.7DE02B204E@b01ledav03.gho.pok.ibm.com> (Brian
-        King's message of "Fri, 16 Sep 2016 16:51:37 -0500")
+Received: from frisell.zx2c4.com ([192.95.5.64]:58156 "EHLO frisell.zx2c4.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753252AbcIQBYX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 16 Sep 2016 21:24:23 -0400
+In-Reply-To: <add395b3-80df-0402-d8b7-d2fb79d9aebf@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, wenxiong@linux.vnet.ibm.com
+To: "Austin S. Hemmelgarn" <ahferroin7@gmail.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+On Fri, Sep 16, 2016 at 7:06 PM, Austin S. Hemmelgarn
+<ahferroin7@gmail.com> wrote:
+> 1. UAS (not some other SCSI transport) without UNMAP support.
+> 2. Supports ATA_12 or ATA_16 pass through.
+> 3. ATA DEVICE IDENTIFY via SAT indicates that the device supports
+> DISCARD/TRIM.
+> Then we'd be matching behavior on Windows, and should probably be relativ=
+ely
+> safe.
 
-> Whenever multiple HRRQs are enabled, which is the default
-> setting now, we end up seeing the following message logged
-> prior to initialization of each HRRQ:
->
-> Starting IOA initialization sequence
->
-> This results in 16 of these messages on most adapters, which
-> serves little purpose. Change to just log this once.
-
-
-Reviewed-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-
-
--- 
-Gabriel Krisman Bertazi
-
+This very clearly seems like a sensible plan. It's nice to learn that
+someone with a USB sniffer (and not just a d=C3=A9sassembler :P) confirms
+this is what Windows is doing. I see no reason for Linux not to do the
+same. Are there any remaining objections to this plan?
