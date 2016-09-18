@@ -1,38 +1,86 @@
-From: tang.junhui@zte.com.cn
-Subject: [PATCH] scsi_dh_alua: fix meory leak in alua_rtpg()
-Date: Sun, 18 Sep 2016 18:05:11 +0800
-Message-ID: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
+From: Baoyou Xie <baoyou.xie@linaro.org>
+Subject: [PATCH] megaraid_sas: clean function declarations in megaraid_sas_base.c up
+Date: Sun, 18 Sep 2016 20:07:59 +0800
+Message-ID: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5.zte.com.cn ([63.217.80.70]:54703 "EHLO mx5.zte.com.cn"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753976AbcIRKF7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 18 Sep 2016 06:05:59 -0400
+Received: from mail-pa0-f50.google.com ([209.85.220.50]:33275 "EHLO
+        mail-pa0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752031AbcIRMIM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Sep 2016 08:08:12 -0400
+Received: by mail-pa0-f50.google.com with SMTP id hm5so7431292pac.0
+        for <linux-scsi@vger.kernel.org>; Sun, 18 Sep 2016 05:08:12 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn, "tang.junhui" <tang.junhui@zte.com.cn>
+To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
 
-From: "tang.junhui" <tang.junhui@zte.com.cn>
+We get a few warnings when building kernel with W=1:
+drivers/scsi/megaraid/megaraid_sas_fusion.c:281:1: warning: no previous prototype for 'megasas_free_cmds_fusion' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fusion.c:714:1: warning: no previous prototype for 'megasas_ioc_init_fusion' [-Wmissing-prototypes]
+....
 
-buff should be freed before returning with SCSI_DH_RETRY in alua_rtpg().
+In fact, these functions are declared in
+drivers/scsi/megaraid/megaraid_sas_base.c, but should
+be declared in a header file, thus can be recognized in other file.
 
-Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
+So this patch adds the declarations into
+drivers/scsi/megaraid/megaraid_sas_fusion.h.
+
+Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 13 -------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  9 +++++++++
+ 2 files changed, 9 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 752b5c9..241829e 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -583,6 +583,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
- 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
- 				    ALUA_DH_NAME);
- 			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-+			kfree(buff);
- 			return err;
- 		}
- 		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 2d62d71..b73b6f3 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -189,25 +189,12 @@ u32
+ megasas_build_and_issue_cmd(struct megasas_instance *instance,
+ 			    struct scsi_cmnd *scmd);
+ static void megasas_complete_cmd_dpc(unsigned long instance_addr);
+-void
+-megasas_release_fusion(struct megasas_instance *instance);
+-int
+-megasas_ioc_init_fusion(struct megasas_instance *instance);
+-void
+-megasas_free_cmds_fusion(struct megasas_instance *instance);
+-u8
+-megasas_get_map_info(struct megasas_instance *instance);
+-int
+-megasas_sync_map_info(struct megasas_instance *instance);
+ int
+ wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
+ 	int seconds);
+-void megasas_reset_reply_desc(struct megasas_instance *instance);
+ void megasas_fusion_ocr_wq(struct work_struct *work);
+ static int megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
+ 					 int initial);
+-int megasas_check_mpio_paths(struct megasas_instance *instance,
+-			     struct scsi_cmnd *scmd);
+ 
+ int
+ megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 80eaee2..3fe730a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -991,5 +991,14 @@ union desc_value {
+ 	} u;
+ };
+ 
++void megasas_free_cmds_fusion(struct megasas_instance *instance);
++int megasas_ioc_init_fusion(struct megasas_instance *instance);
++u8 megasas_get_map_info(struct megasas_instance *instance);
++int megasas_sync_map_info(struct megasas_instance *instance);
++void megasas_release_fusion(struct megasas_instance *instance);
++void megasas_reset_reply_desc(struct megasas_instance *instance);
++int megasas_check_mpio_paths(struct megasas_instance *instance,
++			      struct scsi_cmnd *scmd);
++void megasas_fusion_ocr_wq(struct work_struct *work);
+ 
+ #endif /* _MEGARAID_SAS_FUSION_H_ */
 -- 
-2.8.1.windows.1
+2.7.4
 
