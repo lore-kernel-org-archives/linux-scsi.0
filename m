@@ -1,40 +1,38 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 163801] QuickBooks Toll Free, Intuit@(1-800-919-0992)QuickBooks
- Tech Support Phone Number provides online solution for all USA/CANADA
- clients. For any help of query call 1 800 919 0992 to get all QuickBooks
- account solution. @@Call, 1-800-919-0992 for all type he
-Date: Sat, 17 Sep 2016 20:45:32 +0000
-Message-ID: <bug-163801-11613-akFZt3ZFdc@https.bugzilla.kernel.org/>
-References: <bug-163801-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+From: tang.junhui@zte.com.cn
+Subject: [PATCH] scsi_dh_alua: fix meory leak in alua_rtpg()
+Date: Sun, 18 Sep 2016 18:05:11 +0800
+Message-ID: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:53958 "EHLO mail.kernel.org"
+Received: from mx5.zte.com.cn ([63.217.80.70]:54703 "EHLO mx5.zte.com.cn"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754687AbcIQUqW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 17 Sep 2016 16:46:22 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 1B1EC20788
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 20:46:19 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 2783920789
-        for <linux-scsi@vger.kernel.org>; Sat, 17 Sep 2016 20:46:07 +0000 (UTC)
-In-Reply-To: <bug-163801-11613@https.bugzilla.kernel.org/>
+        id S1753976AbcIRKF7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 18 Sep 2016 06:05:59 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn, "tang.junhui" <tang.junhui@zte.com.cn>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=163801
+From: "tang.junhui" <tang.junhui@zte.com.cn>
 
-Spam Script <spamscript@kernel.org> changed:
+buff should be freed before returning with SCSI_DH_RETRY in alua_rtpg().
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-              Group|                            |Junk
-         Resolution|---                         |INVALID
+Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
+---
+ drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
+ 1 file changed, 1 insertion(+)
 
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index 752b5c9..241829e 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -583,6 +583,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+ 			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
+ 				    ALUA_DH_NAME);
+ 			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
++			kfree(buff);
+ 			return err;
+ 		}
+ 		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+2.8.1.windows.1
+
