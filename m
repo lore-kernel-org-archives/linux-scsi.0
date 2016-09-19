@@ -1,146 +1,62 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 171181] New: +++++++[1-877^778^8714]]]]]]QUICKBOOKS support
- PHONE NUMBER QuickBooks phone number usa
-Date: Mon, 19 Sep 2016 10:17:46 +0000
-Message-ID: <bug-171181-11613@https.bugzilla.kernel.org/>
+From: "Gurunath, Vasundhara (STSD)" <vasundhara.gurunath@hpe.com>
+Subject: [PATCH] scsi:Prevent deletion of SCSI block device in use
+Date: Mon, 19 Sep 2016 09:11:43 +0000
+Message-ID: <CS1PR84MB002353535902FE5F0DD2B01DE1F40@CS1PR84MB0023.NAMPRD84.PROD.OUTLOOK.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41522 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752711AbcISKRu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Sep 2016 06:17:50 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 6873E20622
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 10:17:48 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 713F920621
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 10:17:46 +0000 (UTC)
+Received: from mail-bn3nam01on0137.outbound.protection.outlook.com ([104.47.33.137]:36549
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755368AbcISLpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Sep 2016 07:45:11 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Arackal, Paulose Kuriakose (STSD)" <paulose.kuriakose.arackal@hpe.com>, "Kaur, Jasminder (STSD)" <jasminder.kaur@hpe.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=171181
-
-            Bug ID: 171181
-           Summary: +++++++[1-877^778^8714]]]]]]QUICKBOOKS support PHONE
-                    NUMBER QuickBooks phone number usa
-           Product: SCSI Drivers
-           Version: 2.5
-    Kernel Version: +++++++[1-877^778^8714]]]]]]QUICKBOOKS support PHONE
-                    NUMBER QuickBooks phone number usa
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: ADVANSYS
-          Assignee: scsi_drivers-advansys@kernel-bugs.osdl.org
-          Reporter: rr309250@gmail.com
-        Regression: No
-
-♥l!vE~~SuPpoRT@@ !!!!1 877 778 8714!!!!!! Quickbooks support PhoNE number
-!!!!!!1(877)778 8714 !!!!!!Quickbooks SuPpoRT PhoNE number
-
-Quickbooks SuPpoRT 1-877-778-8714 Quickbooks SuPpoRT PhoNE number
-USA@JEETôßPppu? 1 877 778 8714 Quickbooks SuPpoRT PhoNENumber..,O»G!!!!??ô US
-1-877-778-8714 quickbooks help TELEPhoNE Number..,, !!!!??ôquickbooks help
-Number..,, !!!!??ôquickbooks SuPpoRT Number..,, quickbooks Number..,,
-quickbooks PhoNE Number..,, quickbooks TELEPhoNENumber.. 1-877-778-8714 ,,
-quickbooks 24 hour Number..,, quickbooks customer SuPpoRT Number..,, QuickBooks
-tech SuPpoRT PhoNEnumber, Intuit QuickBooks Tech SuPpoRT PhoNE Number,
-QuickBooks Help Desk PhoNE Number, QuickBooks tech SuPpoRT number, QuickBooks
-SuPpoRT PhoNE number, QuickBooks1-877-778-8714 PhoNE number, QuickBooks
-1-877-778-8714 SuPpoRT number, QuickBooks SuPpoRT PhoNE number. It is very
-popular toll free number which vide by QuickBooks SuPpoRT, QuickBooks Customer
-PhoNE Number, QuickBooks Customer Number, 1-877-778-8714 QuickBooks Customer
-SuPpoRT PhoNE Number, QuickBooks Customer SuPpoRT Number, 
-QuickBooks Customer Number, QuickBooks Customer Number, QuickBooks SuPpoRT team
-PhoNE number. Call, QuickBooks tech SuPpoRT PhoNE number, Intuit QuickBooks
-Tech SuPpoRT 1-877-778-8714 PhoNE Number, QuickBooks Help Desk PhoNE Number,
-QuickBooks tech SuPpoRT number, QuickBooks SuPpoRT PhoNE number, QuickBooks
-PhoNE number, QuickBooks SuPpoRT number, QuickBooks SuPpoRT PhoNE number,
-QuickBooks SuPpoRT, QuickBooks Customer PhoNE Number, QuickBooks Customer
-Number, QuickBooks Customer SuPpoRT PhoNE Number, QuickBooks Customer SuPpoRT
-Number, QuickBooks Customer Number, QuickBooks Customer Number, QuickBooks
-SuPpoRT team PhoNE number, QuickBooks help number-QuickBooks Number; QuickBooks
-help PhoNE number, QuickBooks Number, QuickBooks Tech SuPpoRT Toll free Number,
-QuickBooks SuPpoRT TELEPhoNE Number, QuickBooks Tech SuPpoRT TELEPhoNE number,
-QuickBooks Tech SuPpoRT number, QuickBooks SuPpoRT number, QuickBooks SuPpoRT
-number, quickbooks 24/7 SuPpoRT PhoNE number,quickbooks TELEPhoNE number
-Quickbooks Customer Service Helpline?????for SuPpoRT? call 1877 -778-8714/
-Number, Quickbooks Customer Care Number, Quickbooks SuPpoRT team PhoNE number
-Quickbooks PhoNE????, number, Quickbooks technical SuPpoRT number, Quickbooks
-SuPpoRT PhoNE number, Quickbooks technical SuPpoRT, Quickbooks Customer Service
-PhoNE Number, Quickbooks Customer Service Number, Quickbooks Customer SuPpoRT
-PhoNE Number, Quickbooks Customer SuPpoRT NumberCall, 1-877 -778-8714 for all
-type help by Quickbooks tech SuPpoRT PhoNE???, number, Intuit Quickbooks Tech
-SuPpoRT PhoNE Number, Quickbooks Help Desk PhoNE Number, Quickbooks tech
-SuPpoRT number, Quickbooks technical SuPpoRT PhoNE number Quickbooks Tech
-SuPpoRT PhoNE??,Number QuickBooks help?(1-877 -778-8714)?vides online solution
-for all USA/CANADA clients For any help of query call 1 877 -778-8714 to get
-all Quickbooks account solution number-QuickBooks Helpline Number; QuickBooks
-help PhoNE number-QuickBooks HelplineNumber, QuickBooks HELP DESK Toll free
-Number, QuickBooks SuPpoRT TELEPhoNE Number, QuickBooks HELP DESK TELEPhoNE
-number, QuickBooks HELP DESK contact number, QuickBooks SuPpoRT contact number,
-QuickBooks technical SuPpoRT contact number Helpline TECH ))1-877 -778-8714((
-Quickbooks technical SuPpoRT PhoNE number 1-877 -778-8714 Quickbooks PhoNE
-number 1877 -778-8714 QB SuPpoRT ON ((1-877 -778-8714)) Quickbooks PhoNE NUMBER
-AND Quickbooks SuPpoRT PhoNE NUMBER QuickBooks Customer Service
-Helpline?????Quickbooks Toll Free, Intuit Number, QuickBooks Customer Care
-Number, QuickBooks SuPpoRT team PhoNE number QuickBooks PhoNE????, number,
-QuickBooks technical SuPpoRT number, QuickBooks SuPpoRT PhoNE number,
-QuickBooks technical SuPpoRT, QuickBooks Customer Service PhoNE Number,
-QuickBooks Customer Service Number, QuickBooks Customer SuPpoRT PhoNE Number,
-QuickBooks Customer SuPpoRT NumberCall, 1-877 -778-8714 for all type help by
-QuickBooks HELP DESK PhoNE???, number, Intuit QuickBooks HELP DESK PhoNE
-Number, QuickBooks Help Desk PhoNE Number, QuickBooks HELP DESK number,
-QuickBooks technical SuPpoRT PhoNEnumber QuickBooks HELP DESK PhoNE??, Number
-(1-877 -778-8714)?vides online solution for all USA/CANADA clients For any help
-of query call 1 877 778 8714 to get all QuickBooks account solution (QuickBooks
-technical SuPpoRT PhoNE? number QuickBooks PhoNE number QB SuPpoRT ON ((1-877
--778-8714)) QUICKBOOKS PhoNE NUMBER AND QUICKBOOKS SuPpoRT PhoNE NUMBER 1877
-7788714 Quickbooks SuPpoRT PhoNE?QuickBooks Toll Free, Intuit (1-877 -778-8714)
-number usa/ca 1877 7788714 Quickbooks SuPpoRT PhoNE number Quickbooks
-help???usa Intuit number- Quickbooks Helpline Number; Quickbooks help PhoNE
-number- Quickbooks HelplineNumber, Quickbooks Tech SuPpoRT Toll free Number,
-Quickbooks SuPpoRT TELEPhoNE Number, Quickbooks Tech SuPpoRT TELEPhoNE number,
-Quickbooks Tech SuPpoRT contact number, Quickbooks SuPpoRT contact number,
-Quickbooks technical SuPpoRT contact number Call, Quickbooks tech SuPpoRT PhoNE
-number, Quickbooks Tech SuPpoRT PhoNENumber, Quickbooks Help Desk PhoNE Number,
-Quickbooks tech SuPpoRT number, Quickbooks technical SuPpoRT PhoNE number,
-Quickbooks PhoNE number, Quickbooks technical SuPpoRT number, Quickbooks
-SuPpoRT PhoNE numberIt is very popular toll free number which vide by
-Quickbooks technical SuPpoRT, Quickbooks Customer Service PhoNENumber,
-Quickbooks Customer Service Number, Quickbooks Customer SuPpoRT PhoNE Number,
-Quickbooks Customer SuPpoRT Number, Quickbooks Customer Service Helpline
-Number, Quickbooks Customer Care Number, Quickbooks SuPpoRT team PhoNE number
-Call, Quickbooks tech SuPpoRT PhoNE number, Quickbooks Tech SuPpoRT PhoNE
-Number, Quickbooks Help Desk PhoNE Number, Quickbooks tech SuPpoRT number,
-Quickbooks technical SuPpoRT PhoNE number, Quickbooks PhoNE number, Quickbooks
-technical SuPpoRT number, Quickbooks SuPpoRT PhoNE number, Quickbooks technical
-SuPpoRT, Quickbooks Customer Service PhoNE Number, Quickbooks Customer Service
-Number, Quickbooks Customer SuPpoRT PhoNE Number, Quickbooks Customer SuPpoRT
-Number, Quickbooks Customer Service Helpline Number, Quickbooks Customer Care
-Number Quickbooks Customer Service Helpline?????,CALL Number, Quickbooks
-Customer Care Number, Quickbooks SuPpoRT team PhoNE numberQuickbooks PhoNE????,
-number, Quickbooks technicaquickbooks contact number, quickbooks contact PhoNE
-number, quickbooks contact TELEPhoNE number,,TELEPhoNE number for quickbooks
-online SuPpoRT,quickbooks official SuPpoRT number,quickbooks official
-number,quickbooks official PhoNE number,,,PhoNE number for quickbooks
-SuPpoRT,,quickbooks 24/7 SuPpoRT PhoNE number,,quickbooks SuPpoRT
-number,quickbooks TELEPhoNE number for SuPpoRT QB SuPpoRT ON ((1-877
--778-8714)) QUICKBOOKS PhoNE NUMBER AND QUICKBOOKS SuPpoRT PhoNE NUMBER Online
-SuPpoRT For (((1-877 -778-8714)!!! QuickBooks ((Technical)) SuPpoRT PhoNE
-number,, QuickBooks HELP DESK PhoNE number Online SuPpoRT For (((1-877
--778-8714)!!! QuickBooks ((Technical)) SuPpoRT PhoNE number,, QuickBooks HELP
-DESK PhoNE number Helpline TECH ))1-877 -778-8714( Quickbooks help number-
-Quickbooks Helpline Number; Quickbooks help PhoNE number- Quickbooks Helpline
-Number, Quickbooks Tech SuPpoRT Toll free Number, Quickbooks SuPpoRT TELEPhoNE
-Number, Quickbooks Tech Support phone number..........................
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+DQpKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPiB3cm90ZTogDQoNCj4+
+IEZyb206ICJHdXJ1bmF0aCwgVmFzdW5kaGFyYSIgPHZhc3VuZGhhcmEuZ3VydW5hdGhAaHBlLmNv
+bT4NCj4+DQo+PiBTQ1NJIGJsb2NrIGRldmljZSBjYW4gYmUgcmVtb3ZlZCwgdXNpbmcgd3JpdGUg
+dG8gc3lzZnMgZGVsZXRlIGZpbGUgYXMNCj4+IGJlbG93Og0KPj4gZWNobyAxID4gL3N5cy9ibG9j
+ay9zZFgvZGV2aWNlL2RlbGV0ZSBJZiB0aGUgZGV2aWNlIGlzIGluIHVzZSBieSANCj4+IGFwcGxp
+Y2F0aW9ucywgb3IgcGFydCBvZiBzeXN0ZW0gY29uZmlndXJhdGlvbiBzdWNoIGFzIGJvb3QgZGV2
+aWNlLCANCj4+IHJlbW92YWwgY2FuIHJlc3VsdCBpbiBhcHBsaWNhdGlvbiBkaXNydXB0aW9ucyBv
+ciBzeXN0ZW0gZG93biB0aW1lLg0KPiA+DQo+PiBBbiBhZGRpdGlvbmFsIHdyaXRlIG9wdGlvbiA/
+IGlzIGFkZGVkIHRvIFNDU0kgc3lzZnMgaW50ZXJmYWNlIGFzIA0KPj4gYmVsb3csIGluIG9yZGVy
+IHRvIHByZXZlbnQgYWNjaWRlbnRhbCBkZWxldGlvbiBvZiBkZXZpY2VzIGluIHVzZS4NCj4+IGVj
+aG8gPyA+IC9zeXMvYmxvY2svc2RYL2RldmljZS9kZWxldGUNCj4+DQo+PiBJbiB0aGUgYWJzZW5j
+ZSBvZiBhbnkgdXNhZ2UsIHRoaXMgb3B0aW9uIHByb2NlZWRzIHdpdGggZGV2aWNlIA0KPj4gZGVs
+ZXRpb24uICBJZiB0aGUgZGV2aWNlIGlzIG9wZW4sIGRlbGV0aW9uIGlzIHByZXZlbnRlZCwgYW5k
+IGFjdGl2ZSANCj4+IE9wZW4gYW5kIElPIGNvdW50cyBhdCB0aGUgdGltZSBvZiBkZWxldGlvbiBp
+cyBsb2dnZWQuIEluZm9ybWF0aW9uIA0KPj4gbG9nZ2VkIGR1cmluZyBsYXRlc3QgZGVsZXRlIGF0
+dGVtcHQgY2FuIGJlIG9idGFpbmVkIGJ5IGlzc3VpbmcgYSByZWFkIA0KPj4gdG8gdGhlIGRlbGV0
+ZSBmaWxlIGFzIGJlbG93Og0KPj4gY2F0ICAvc3lzL2Jsb2NrL3NkWC9kZXZpY2UvZGVsZXRlDQoN
+Cj5PSywgc28gSSdtIG5vdCB0b28ga2VlbiBvbiB0aGlzIGJlY2F1c2Ugb3VyIGVudGlyZSBzeXN0
+ZW0gaXMgKGZpbmFsbHkpIGRlc2lnbmVkIHRvIGJlIGhvdCBwbHVnLCBzbyBlY2hvaW5nIDEgdG8g
+ZGVsZXRlIHNpbXVsYXRlcyBhIGhvdHBsdWcgZXZlbnQsIGFuZCB0aGV5ID5jYW4gY29tZSBpbiBh
+dCBhbnkgdGltZS4NCg0KPkNhbiB5b3UgZWxhYm9yYXRlIG9uIHdoeSB0aGlzIGlzIG5lY2Vzc2Fy
+eT8gIFJpZ2h0IGF0IHRoZSBtb21lbnQsIG9ubHkgDQo+cm9vdCBpcyBhbGxvd2VkIHRvIHdyaXRl
+IHRvIHRoaXMgZmlsZSBhbmQgY2F1c2UgYSBkZWxldGlvbiAuLi4gcGx1cyB0aGUgZmlsZSBpcyBw
+cmV0dHkgPmhhcmQgdG8gZmluZCwgYnVyaWVkIGFzIGl0IGlzIGluIHN5c2ZzOyAgU28gSSB3b3Vs
+ZCBoYXZlIHRob3VnaHQgaXQgd2FzIHByZXR0eSBzYWZlIGZyb20gYWNjaWRlbnRhbCBtaXN1c2U7
+IHdoeSBkb2VzIGl0IG5lZWQgYWRkaXRpb25hbCBwcm90ZWN0aW9uPw0KDQpTb21lIG9mIHRoZSBy
+ZXF1ZXN0cyB3ZSBnb3QgZm9yIHN1Y2ggY2hlY2tzIHdlcmUgZnJvbSB1c2UgY2FzZXMgb24gbGFy
+Z2Ugc3lzdGVtIGNvbmZpZ3VyYXRpb25zIHdpdGggc2V2ZXJhbCBMVU5zLg0KVGhlIG5ldyBjaGFu
+Z2VzIGRvIG5vdCBkaXN0dXJiIGV4aXN0aW5nIGludGVyZmFjZXMuIFdyaXRlcyB0byB0aGUgImRl
+bGV0ZSIgc3lzZnMgZmlsZSBzdWNoIGFzIGEgIjEiLCBhcyBhZHZlcnRpc2VkIGluIHNvbWUgZGlz
+dHJpYnV0aW9ucyBsaWtlIFJlZEhhdCB0b2RheSwgd2lsbCBjb250aW51ZSB0byBkZWxldGUgdGhl
+IExVTi4gSG93ZXZlciB3ZSB0aG91Z2h0IGFuIG9wdGlvbiB0byBjaGVjayB1c2FnZXMgZHVyaW5n
+IGRlbGV0ZSBjYW4gY29tcGxlbWVudCBleGlzdGluZyBpbnRlcmZhY2VzLiANCiANClRoZSBuZXcg
+Y2hhbmdlcyBnZXQgYWN0aXZhdGVkIG9ubHkgd2hlbiBvbmUgd2FudHMgdG8gcmVjZWl2ZSBhbGVy
+dHMgb24gYW55IGxpbmdlcmluZyB1c2FnZXMsIGFuZCB3cml0ZXMgYSAiPyIgdG8gZGVsZXRlIHRo
+ZSBMVU4uDQpBIGRlbGV0ZSBzY3JpcHQgY2FuIHdyaXRlICI/IiB0byBzeXNmcyBkZWxldGUgZmls
+ZXMgaW4gYnVsaywgd2hpbGUgbW9zdCBMVU5zIGdldCByZW1vdmVkIGluIHRoZSBmaXJzdCBhdHRl
+bXB0LCB0aGUgdXNhZ2VzIGNhbiBiZSBpbnZlc3RpZ2F0ZWQgaWYgYW55IExVTnMgcmVtYWluIHdp
+dGggYWN0aXZlIHVzYWdlIGNvdW50cy4gDQoNCkhvcGVmdWxseSBvdmVyaGVhZCBvZiB0aGVzZSBj
+aGFuZ2VzIGlzIG1pbmltYWwsIGl0IGlzIGZldyBhZGRpdGlvbmFsIGNoZWNrcyBvbiB1c2FnZSBj
+b3VudHMgYW5kIHRoZSBsb2cuDQpOZXcgY2hhbmdlcyBnZXQgYWN0aXZlIG9ubHkgaW4gZGVsZXRl
+IGNvbnRleHQgYW5kIGRvZXNuJ3QgZ2V0IGludG8gSS9PIHBhdGhzLg0KDQotVmFzdW5kaGFyYQ0K
+DQoNCg==
