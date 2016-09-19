@@ -1,13 +1,13 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 6/7] t128: remove from tree
-Date: Mon, 19 Sep 2016 08:50:52 -0700
-Message-ID: <1474300253-31351-7-git-send-email-hch@lst.de>
+Subject: [PATCH 5/7] pas16: remove from tree
+Date: Mon, 19 Sep 2016 08:50:51 -0700
+Message-ID: <1474300253-31351-6-git-send-email-hch@lst.de>
 References: <1474300253-31351-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41283 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:40772 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751229AbcISPva (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:51:30 -0400
+        with ESMTP id S1751952AbcISPvP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:51:15 -0400
 In-Reply-To: <1474300253-31351-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -22,198 +22,355 @@ Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
  Documentation/scsi/scsi-parameters.txt |   3 -
  MAINTAINERS                            |   1 -
- drivers/scsi/Kconfig                   |  17 --
+ drivers/scsi/Kconfig                   |  14 -
  drivers/scsi/Makefile                  |   1 -
- drivers/scsi/t128.c                    | 407 ---------------------------------
- drivers/scsi/t128.h                    |  97 --------
- 6 files changed, 526 deletions(-)
- delete mode 100644 drivers/scsi/t128.c
- delete mode 100644 drivers/scsi/t128.h
+ drivers/scsi/pas16.c                   | 565 ---------------------------------
+ drivers/scsi/pas16.h                   | 121 -------
+ 6 files changed, 705 deletions(-)
+ delete mode 100644 drivers/scsi/pas16.c
+ delete mode 100644 drivers/scsi/pas16.h
 
 diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
-index fe77b5a..00a03c0 100644
+index 083bd93..fe77b5a 100644
 --- a/Documentation/scsi/scsi-parameters.txt
 +++ b/Documentation/scsi/scsi-parameters.txt
-@@ -113,9 +113,6 @@ parameters may be changed at runtime by the command
- 	sym53c416=	[HW,SCSI]
- 			See header of drivers/scsi/sym53c416.c.
+@@ -80,9 +80,6 @@ parameters may be changed at runtime by the command
+ 			Format: <buffer_size>,<write_threshold>
+ 			See also Documentation/scsi/st.txt.
  
--	t128=		[HW,SCSI]
--			See header of drivers/scsi/t128.c.
+-	pas16=		[HW,SCSI]
+-			See header of drivers/scsi/pas16.c.
 -
- 	tmscsim=	[HW,SCSI]
- 			See comment before function dc390_setup() in
- 			drivers/scsi/tmscsim.c.
+ 	scsi_debug_*=	[SCSI]
+ 			See drivers/scsi/scsi_debug.c.
+ 
 diff --git a/MAINTAINERS b/MAINTAINERS
-index 2a0c056..e4ec1b8 100644
+index 6ca763f..2a0c056 100644
 --- a/MAINTAINERS
 +++ b/MAINTAINERS
-@@ -8054,7 +8054,6 @@ F:	drivers/scsi/g_NCR5380_mmio.c
+@@ -8052,7 +8052,6 @@ F:	drivers/scsi/dtc.*
+ F:	drivers/scsi/g_NCR5380.*
+ F:	drivers/scsi/g_NCR5380_mmio.c
  F:	drivers/scsi/mac_scsi.*
+-F:	drivers/scsi/pas16.*
  F:	drivers/scsi/sun3_scsi.*
  F:	drivers/scsi/sun3_scsi_vme.c
--F:	drivers/scsi/t128.*
- 
- NCR DUAL 700 SCSI DRIVER (MICROCHANNEL)
- M:	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+ F:	drivers/scsi/t128.*
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index ee83d95..a38e37c 100644
+index 6978531..ee83d95 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -1345,23 +1345,6 @@ config SCSI_AM53C974
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called am53c974.
+@@ -1225,20 +1225,6 @@ config SCSI_NCR53C8XX_NO_DISCONNECT
+ 	  not allow targets to disconnect is not reasonable if there is more
+ 	  than 1 device on a SCSI bus. The normal answer therefore is N.
  
--config SCSI_T128
--	tristate "Trantor T128/T128F/T228 SCSI support"
+-config SCSI_PAS16
+-	tristate "PAS16 SCSI support"
 -	depends on ISA && SCSI
 -	select SCSI_SPI_ATTRS
--	select CHECK_SIGNATURE
 -	---help---
--	  This is support for a SCSI host adapter. It is explained in section
--	  3.11 of the SCSI-HOWTO, available from
+-	  This is support for a SCSI host adapter.  It is explained in section
+-	  3.10 of the SCSI-HOWTO, available from
 -	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
 -	  of the box, you may have to change some settings in
--	  <file:drivers/scsi/t128.h>.  Note that Trantor was purchased by
--	  Adaptec, and some former Trantor products are being sold under the
--	  Adaptec name.
+-	  <file:drivers/scsi/pas16.h>.
 -
 -	  To compile this driver as a module, choose M here: the
--	  module will be called t128.
+-	  module will be called pas16.
 -
- config SCSI_NSP32
- 	tristate "Workbit NinjaSCSI-32Bi/UDE support"
- 	depends on PCI && SCSI && !64BIT
+ config SCSI_QLOGIC_FAS
+ 	tristate "Qlogic FAS SCSI support"
+ 	depends on ISA && SCSI
 diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index be3108c..392609a 100644
+index 921cf07..be3108c 100644
 --- a/drivers/scsi/Makefile
 +++ b/drivers/scsi/Makefile
 @@ -87,7 +87,6 @@ obj-$(CONFIG_SCSI_QLA_ISCSI)	+= libiscsi.o qla4xxx/
  obj-$(CONFIG_SCSI_LPFC)		+= lpfc/
  obj-$(CONFIG_SCSI_BFA_FC)	+= bfa/
  obj-$(CONFIG_SCSI_CHELSIO_FCOE)	+= csiostor/
--obj-$(CONFIG_SCSI_T128)		+= t128.o
+-obj-$(CONFIG_SCSI_PAS16)	+= pas16.o
+ obj-$(CONFIG_SCSI_T128)		+= t128.o
  obj-$(CONFIG_SCSI_DMX3191D)	+= dmx3191d.o
  obj-$(CONFIG_SCSI_HPSA)		+= hpsa.o
- obj-$(CONFIG_SCSI_SMARTPQI)	+= smartpqi/
-diff --git a/drivers/scsi/t128.c b/drivers/scsi/t128.c
+diff --git a/drivers/scsi/pas16.c b/drivers/scsi/pas16.c
 deleted file mode 100644
-index 8a8608a..0000000
---- a/drivers/scsi/t128.c
+index 2f689ae..0000000
+--- a/drivers/scsi/pas16.c
 +++ /dev/null
-@@ -1,407 +0,0 @@
+@@ -1,565 +0,0 @@
 -/*
-- * Trantor T128/T128F/T228 driver
-- *	Note : architecturally, the T100 and T130 are different and won't 
-- * 	work
+- * This driver adapted from Drew Eckhardt's Trantor T128 driver
 - *
 - * Copyright 1993, Drew Eckhardt
 - *	Visionary Computing
 - *	(Unix and Linux consulting and custom programming)
 - *	drew@colorado.edu
-- *      +1 (303) 440-4894
+- *      +1 (303) 666-5836
+- *
+- *  ( Based on T128 - DISTRIBUTION RELEASE 3. ) 
+- *
+- * Modified to work with the Pro Audio Spectrum/Studio 16
+- * by John Weidman.
+- *
 - *
 - * For more information, please consult 
 - *
-- * Trantor Systems, Ltd.
-- * T128/T128F/T228 SCSI Host Adapter
-- * Hardware Specifications
-- * 
-- * Trantor Systems, Ltd. 
-- * 5415 Randall Place
-- * Fremont, CA 94538
-- * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- * Media Vision
+- * (510) 770-8600
+- * (800) 348-7116
 - */
 -
 -/*
 - * The card is detected and initialized in one of several ways : 
-- * 1.  Autoprobe (default) - since the board is memory mapped, 
-- *     a BIOS signature is scanned for to locate the registers.
-- *     An interrupt is triggered to autoprobe for the interrupt
-- *     line.
+- * 1.  Autoprobe (default) - There are many different models of
+- *     the Pro Audio Spectrum/Studio 16, and I only have one of
+- *     them, so this may require a little tweaking.  An interrupt
+- *     is triggered to autoprobe for the interrupt line.  Note:
+- *     with the newer model boards, the interrupt is set via
+- *     software after reset using the default_irq for the
+- *     current board number.
 - *
-- * 2.  With command line overrides - t128=address,irq may be 
+- * 2.  With command line overrides - pas16=port,irq may be 
 - *     used on the LILO command line to override the defaults.
 - *
-- * 3.  With the T128_OVERRIDE compile time define.  This is 
+- * 3.  With the PAS16_OVERRIDE compile time define.  This is 
 - *     specified as an array of address, irq tuples.  Ie, for
-- *     one board at the default 0xcc000 address, IRQ5, I could say 
-- *     -DT128_OVERRIDE={{0xcc000, 5}}
+- *     one board at the default 0x388 address, IRQ10, I could say 
+- *     -DPAS16_OVERRIDE={{0x388, 10}}
+- *     NOTE:  Untested.
 - *	
+- * 4.  When included as a module, with arguments passed on the command line:
+- *         pas16_irq=xx		the interrupt
+- *         pas16_addr=xx	the port
+- *     e.g. "modprobe pas16 pas16_addr=0x388 pas16_irq=5"
+- *
 - *     Note that if the override methods are used, place holders must
 - *     be specified for other boards in the system.
-- * 
-- * T128/T128F jumper/dipswitch settings (note : on my sample, the switches 
-- * were epoxy'd shut, meaning I couldn't change the 0xcc000 base address) :
 - *
-- * T128    Sw7 Sw8 Sw6 = 0ws Sw5 = boot 
-- * T128F   Sw6 Sw7 Sw5 = 0ws Sw4 = boot Sw8 = floppy disable
-- * cc000   off off      
-- * c8000   off on
-- * dc000   on  off
-- * d8000   on  on
 - *
-- * 
-- * Interrupts 
-- * There is a 12 pin jumper block, jp1, numbered as follows : 
-- *   T128 (JP1)  	 T128F (J5)
-- * 2 4 6 8 10 12	11 9  7 5 3 1
-- * 1 3 5 7 9  11	12 10 8 6 4 2
+- * Configuration notes :
+- *   The current driver does not support interrupt sharing with the
+- *   sound portion of the card.  If you use the same irq for the
+- *   scsi port and sound you will have problems.  Either use
+- *   a different irq for the scsi port or don't use interrupts
+- *   for the scsi port.
 - *
-- * 3   2-4
-- * 5   1-3
-- * 7   3-5
-- * T128F only 
-- * 10 8-10
-- * 12 7-9
-- * 14 10-12
-- * 15 9-11
+- *   If you have problems with your card not being recognized, use
+- *   the LILO command line override.  Try to get it recognized without
+- *   interrupts.  Ie, for a board at the default 0x388 base port,
+- *   boot: linux pas16=0x388,0
+- *
+- *   NO_IRQ (0) should be specified for no interrupt,
+- *   IRQ_AUTO (254) to autoprobe for an IRQ line if overridden
+- *   on the command line.
 - */
 - 
--#include <linux/io.h>
+-#include <linux/module.h>
+-
+-#include <asm/io.h>
+-#include <asm/dma.h>
 -#include <linux/blkdev.h>
 -#include <linux/interrupt.h>
 -#include <linux/init.h>
--#include <linux/module.h>
 -
 -#include <scsi/scsi_host.h>
--#include "t128.h"
+-#include "pas16.h"
 -#include "NCR5380.h"
 -
+-
+-static unsigned short pas16_addr;
+-static int pas16_irq;
+- 
+-
+-static const int scsi_irq_translate[] =
+-	{ 0,  0,  1,  2,  3,  4,  5,  6, 0,  0,  7,  8,  9,  0, 10, 11 };
+-
+-/* The default_irqs array contains values used to set the irq into the
+- * board via software (as must be done on newer model boards without
+- * irq jumpers on the board).  The first value in the array will be
+- * assigned to logical board 0, the next to board 1, etc.
+- */
+-static int default_irqs[] __initdata =
+-	{  PAS16_DEFAULT_BOARD_1_IRQ,
+-	   PAS16_DEFAULT_BOARD_2_IRQ,
+-	   PAS16_DEFAULT_BOARD_3_IRQ,
+-	   PAS16_DEFAULT_BOARD_4_IRQ
+-	};
+-
 -static struct override {
--    unsigned long address;
--    int irq;
+-    unsigned short io_port;
+-    int  irq;
 -} overrides
--#ifdef T128_OVERRIDE
--    [] __initdata = T128_OVERRIDE;
+-#ifdef PAS16_OVERRIDE
+-    [] __initdata = PAS16_OVERRIDE;
 -#else
--    [4] __initdata = {{0, IRQ_AUTO}, {0, IRQ_AUTO},
--        {0 ,IRQ_AUTO}, {0, IRQ_AUTO}};
+-    [4] __initdata = {{0,IRQ_AUTO}, {0,IRQ_AUTO}, {0,IRQ_AUTO},
+-	{0,IRQ_AUTO}};
 -#endif
 -
 -#define NO_OVERRIDES ARRAY_SIZE(overrides)
 -
 -static struct base {
--    unsigned int address;
+-    unsigned short io_port;
 -    int noauto;
--} bases[] __initdata = {
--    { 0xcc000, 0}, { 0xc8000, 0}, { 0xdc000, 0}, { 0xd8000, 0}
--};
+-} bases[] __initdata =
+-	{ {PAS16_DEFAULT_BASE_1, 0},
+-	  {PAS16_DEFAULT_BASE_2, 0},
+-	  {PAS16_DEFAULT_BASE_3, 0},
+-	  {PAS16_DEFAULT_BASE_4, 0}
+-	};
 -
 -#define NO_BASES ARRAY_SIZE(bases)
 -
--static struct signature {
--    const char *string;
--    int offset;
--} signatures[] __initdata = {
--{"TSROM: SCSI BIOS, Version 1.12", 0x36},
--};
+-static const unsigned short  pas16_offset[ 8 ] =
+-    {
+-	0x1c00,    /* OUTPUT_DATA_REG */
+-	0x1c01,    /* INITIATOR_COMMAND_REG */
+-	0x1c02,    /* MODE_REG */
+-	0x1c03,    /* TARGET_COMMAND_REG */
+-	0x3c00,    /* STATUS_REG ro, SELECT_ENABLE_REG wo */
+-	0x3c01,    /* BUS_AND_STATUS_REG ro, START_DMA_SEND_REG wo */
+-	0x3c02,    /* INPUT_DATA_REGISTER ro, (N/A on PAS16 ?)
+-		    * START_DMA_TARGET_RECEIVE_REG wo
+-		    */
+-	0x3c03,    /* RESET_PARITY_INTERRUPT_REG ro,
+-		    * START_DMA_INITIATOR_RECEIVE_REG wo
+-		    */
+-    };
 -
--#define NO_SIGNATURES ARRAY_SIZE(signatures)
+-
+-/*
+- * Function : enable_board( int  board_num, unsigned short port )
+- *
+- * Purpose :  set address in new model board
+- *
+- * Inputs : board_num - logical board number 0-3, port - base address
+- *
+- */
+-
+-static void __init
+-	enable_board( int  board_num,  unsigned short port )
+-{
+-    outb( 0xbc + board_num, MASTER_ADDRESS_PTR );
+-    outb( port >> 2, MASTER_ADDRESS_PTR );
+-}
+-
+-
+-
+-/*
+- * Function : init_board( unsigned short port, int irq )
+- *
+- * Purpose :  Set the board up to handle the SCSI interface
+- *
+- * Inputs : port - base address of the board,
+- *	    irq - irq to assign to the SCSI port
+- *	    force_irq - set it even if it conflicts with sound driver
+- *
+- */
+-
+-static void __init 
+-	init_board( unsigned short io_port, int irq, int force_irq )
+-{
+-	unsigned int	tmp;
+-	unsigned int	pas_irq_code;
+-
+-	/* Initialize the SCSI part of the board */
+-
+-	outb( 0x30, io_port + P_TIMEOUT_COUNTER_REG );  /* Timeout counter */
+-	outb( 0x01, io_port + P_TIMEOUT_STATUS_REG_OFFSET );   /* Reset TC */
+-	outb( 0x01, io_port + WAIT_STATE );   /* 1 Wait state */
+-
+-	inb(io_port + pas16_offset[RESET_PARITY_INTERRUPT_REG]);
+-
+-	/* Set the SCSI interrupt pointer without mucking up the sound
+-	 * interrupt pointer in the same byte.
+-	 */
+-	pas_irq_code = ( irq < 16 ) ? scsi_irq_translate[irq] : 0;
+-	tmp = inb( io_port + IO_CONFIG_3 );
+-
+-	if( (( tmp & 0x0f ) == pas_irq_code) && pas_irq_code > 0 
+-	    && !force_irq )
+-	{
+-	    printk( "pas16: WARNING: Can't use same irq as sound "
+-		    "driver -- interrupts disabled\n" );
+-	    /* Set up the drive parameters, disable 5380 interrupts */
+-	    outb( 0x4d, io_port + SYS_CONFIG_4 );
+-	}
+-	else
+-	{
+-	    tmp = (  tmp & 0x0f ) | ( pas_irq_code << 4 );
+-	    outb( tmp, io_port + IO_CONFIG_3 );
+-
+-	    /* Set up the drive parameters and enable 5380 interrupts */
+-	    outb( 0x6d, io_port + SYS_CONFIG_4 );
+-	}
+-}
+-
+-
+-/*
+- * Function : pas16_hw_detect( unsigned short board_num )
+- *
+- * Purpose : determine if a pas16 board is present
+- * 
+- * Inputs : board_num - logical board number ( 0 - 3 )
+- *
+- * Returns : 0 if board not found, 1 if found.
+- */
+-
+-static int __init 
+-     pas16_hw_detect( unsigned short  board_num )
+-{
+-    unsigned char	board_rev, tmp;
+-    unsigned short	io_port = bases[ board_num ].io_port;
+-
+-    /* See if we can find a PAS16 board at the address associated
+-     * with this logical board number.
+-     */
+-
+-    /* First, attempt to take a newer model board out of reset and
+-     * give it a base address.  This shouldn't affect older boards.
+-     */
+-    enable_board( board_num, io_port );
+-
+-    /* Now see if it looks like a PAS16 board */
+-    board_rev = inb( io_port + PCB_CONFIG );
+-
+-    if( board_rev == 0xff )
+-	return 0;
+-
+-    tmp = board_rev ^ 0xe0;
+-
+-    outb( tmp, io_port + PCB_CONFIG );
+-    tmp = inb( io_port + PCB_CONFIG );
+-    outb( board_rev, io_port + PCB_CONFIG );
+-
+-    if( board_rev != tmp ) 	/* Not a PAS-16 */
+-	return 0;
+-
+-    if( ( inb( io_port + OPERATION_MODE_1 ) & 0x03 ) != 0x03 ) 
+-	return 0;  	/* return if no SCSI interface found */
+-
+-    /* Mediavision has some new model boards that return ID bits
+-     * that indicate a SCSI interface, but they're not (LMS).  We'll
+-     * put in an additional test to try to weed them out.
+-     */
+-
+-	outb(0x01, io_port + WAIT_STATE);             /* 1 Wait state */
+-	outb(0x20, io_port + pas16_offset[MODE_REG]); /* Is it really SCSI? */
+-	if (inb(io_port + pas16_offset[MODE_REG]) != 0x20) /* Write to a reg. */
+-		return 0;                                  /* and try to read */
+-	outb(0x00, io_port + pas16_offset[MODE_REG]);      /* it back. */
+-	if (inb(io_port + pas16_offset[MODE_REG]) != 0x00)
+-		return 0;
+-
+-    return 1;
+-}
+-
 -
 -#ifndef MODULE
 -/*
-- * Function : t128_setup(char *str, int *ints)
+- * Function : pas16_setup(char *str, int *ints)
 - *
 - * Purpose : LILO command line initialization of the overrides array,
 - * 
@@ -222,7 +379,7 @@ index 8a8608a..0000000
 - *
 - */
 -
--static int __init t128_setup(char *str)
+-static int __init pas16_setup(char *str)
 -{
 -	static int commandline_current;
 -    int i;
@@ -230,14 +387,14 @@ index 8a8608a..0000000
 -
 -    get_options(str, ARRAY_SIZE(ints), ints);
 -    if (ints[0] != 2) 
--	printk("t128_setup : usage t128=address,irq\n");
+-	printk("pas16_setup : usage pas16=io_port,irq\n");
 -    else 
 -	if (commandline_current < NO_OVERRIDES) {
--	    overrides[commandline_current].address = ints[1];
+-	    overrides[commandline_current].io_port = (unsigned short) ints[1];
 -	    overrides[commandline_current].irq = ints[2];
 -	    for (i = 0; i < NO_BASES; ++i)
--		if (bases[i].address == ints[1]) {
--		    bases[i].noauto = 1;
+-		if (bases[i].io_port == (unsigned short) ints[1]) {
+- 		    bases[i].noauto = 1;
 -		    break;
 -		}
 -	    ++commandline_current;
@@ -245,13 +402,13 @@ index 8a8608a..0000000
 -    return 1;
 -}
 -
--__setup("t128=", t128_setup);
+-__setup("pas16=", pas16_setup);
 -#endif
 -
 -/* 
-- * Function : int t128_detect(struct scsi_host_template * tpnt)
+- * Function : int pas16_detect(struct scsi_host_template * tpnt)
 - *
-- * Purpose : detects and initializes T128,T128F, or T228 controllers
+- * Purpose : detects and initializes PAS16 controllers
 - *	that were autoprobed, overridden on the LILO command line, 
 - *	or specified at compile time.
 - *
@@ -261,55 +418,62 @@ index 8a8608a..0000000
 - *
 - */
 -
--static int __init t128_detect(struct scsi_host_template *tpnt)
+-static int __init pas16_detect(struct scsi_host_template *tpnt)
 -{
--	static int current_override, current_base;
+-	static int current_override;
+-	static unsigned short current_base;
 -    struct Scsi_Host *instance;
--    unsigned long base;
--    void __iomem *p;
--    int sig, count;
+-    unsigned short io_port;
+-    int  count;
+-
+-    if (pas16_addr != 0) {
+-	overrides[0].io_port = pas16_addr;
+-	/*
+-	*  This is how we avoid seeing more than
+-	*  one host adapter at the same I/O port.
+-	*  Cribbed shamelessly from pas16_setup().
+-	*/
+-	for (count = 0; count < NO_BASES; ++count)
+-	    if (bases[count].io_port == pas16_addr) {
+- 		    bases[count].noauto = 1;
+-		    break;
+-	}
+-    }
+-    if (pas16_irq != 0)
+-	overrides[0].irq = pas16_irq;
 -
 -    for (count = 0; current_override < NO_OVERRIDES; ++current_override) {
--	base = 0;
--	p = NULL;
+-	io_port = 0;
 -
--	if (overrides[current_override].address) {
--	    base = overrides[current_override].address;
--	    p = ioremap(bases[current_base].address, 0x2000);
--	    if (!p)
--		base = 0;
--	} else 
--	    for (; !base && (current_base < NO_BASES); ++current_base) {
--		dprintk(NDEBUG_INIT, "t128: probing address 0x%08x\n",
--		        bases[current_base].address);
--		if (bases[current_base].noauto)
--			continue;
--		p = ioremap(bases[current_base].address, 0x2000);
--		if (!p)
--			continue;
--		for (sig = 0; sig < NO_SIGNATURES; ++sig) 
--		    if (check_signature(p + signatures[sig].offset,
--					signatures[sig].string,
--					strlen(signatures[sig].string))) {
--			base = bases[current_base].address;
--			dprintk(NDEBUG_INIT, "t128: detected board\n");
--			goto found;
--		    }
--		iounmap(p);
--	    }
+-	if (overrides[current_override].io_port)
+-	{
+-	    io_port = overrides[current_override].io_port;
+-	    enable_board( current_override, io_port );
+-	    init_board( io_port, overrides[current_override].irq, 1 );
+-	}
+-	else
+-	    for (; !io_port && (current_base < NO_BASES); ++current_base) {
+-		dprintk(NDEBUG_INIT, "pas16: probing io_port 0x%04x\n",
+-		        (unsigned int)bases[current_base].io_port);
+-		if ( !bases[current_base].noauto &&
+-		     pas16_hw_detect( current_base ) ){
+-			io_port = bases[current_base].io_port;
+-			init_board( io_port, default_irqs[ current_base ], 0 ); 
+-			dprintk(NDEBUG_INIT, "pas16: detected board\n");
+-		}
+-    }
 -
--	dprintk(NDEBUG_INIT, "t128: base = 0x%08x\n", (unsigned int)base);
+-	dprintk(NDEBUG_INIT, "pas16: io_port = 0x%04x\n",
+-	        (unsigned int)io_port);
 -
--	if (!base)
+-	if (!io_port)
 -	    break;
 -
--found:
 -	instance = scsi_register (tpnt, sizeof(struct NCR5380_hostdata));
 -	if(instance == NULL)
--		goto out_unmap;
--
--	instance->base = base;
--	((struct NCR5380_hostdata *)instance->hostdata)->base = p;
+-		goto out;
+-		
+-	instance->io_port = io_port;
 -
 -	if (NCR5380_init(instance, FLAG_DMA_FIXUP | FLAG_LATE_DMA_SETUP))
 -		goto out_unregister;
@@ -319,15 +483,15 @@ index 8a8608a..0000000
 -	if (overrides[current_override].irq != IRQ_AUTO)
 -	    instance->irq = overrides[current_override].irq;
 -	else 
--	    instance->irq = NCR5380_probe_irq(instance, T128_IRQS);
+-	    instance->irq = NCR5380_probe_irq(instance, PAS16_IRQS);
 -
 -	/* Compatibility with documented NCR5380 kernel parameters */
 -	if (instance->irq == 255)
 -		instance->irq = NO_IRQ;
 -
 -	if (instance->irq != NO_IRQ)
--	    if (request_irq(instance->irq, t128_intr, 0, "t128",
--			    instance)) {
+-	    if (request_irq(instance->irq, pas16_intr, 0,
+-			    "pas16", instance)) {
 -		printk("scsi%d : IRQ%d not free, interrupts disabled\n", 
 -		    instance->host_no, instance->irq);
 -		instance->irq = NO_IRQ;
@@ -336,9 +500,12 @@ index 8a8608a..0000000
 -	if (instance->irq == NO_IRQ) {
 -	    printk("scsi%d : interrupts not enabled. for better interactive performance,\n", instance->host_no);
 -	    printk("scsi%d : please jumper the board for a free IRQ.\n", instance->host_no);
+-	    /* Disable 5380 interrupts, leave drive params the same */
+-	    outb( 0x4d, io_port + SYS_CONFIG_4 );
+-	    outb( (inb(io_port + IO_CONFIG_3) & 0x0f), io_port + IO_CONFIG_3 );
 -	}
 -
--	dprintk(NDEBUG_INIT, "scsi%d: irq = %d\n",
+-	dprintk(NDEBUG_INIT, "scsi%d : irq = %d\n",
 -	        instance->host_no, instance->irq);
 -
 -	++current_override;
@@ -348,25 +515,12 @@ index 8a8608a..0000000
 -
 -out_unregister:
 -	scsi_unregister(instance);
--out_unmap:
--	iounmap(p);
+-out:
 -	return count;
 -}
 -
--static int t128_release(struct Scsi_Host *shost)
--{
--	struct NCR5380_hostdata *hostdata = shost_priv(shost);
--
--	if (shost->irq != NO_IRQ)
--		free_irq(shost->irq, shost);
--	NCR5380_exit(shost);
--	scsi_unregister(shost);
--	iounmap(hostdata->base);
--	return 0;
--}
--
 -/*
-- * Function : int t128_biosparam(Disk * disk, struct block_device *dev, int *ip)
+- * Function : int pas16_biosparam(Disk *disk, struct block_device *dev, int *ip)
 - *
 - * Purpose : Generates a BIOS / DOS compatible H-C-S mapping for 
 - *	the specified device / size.
@@ -385,17 +539,26 @@ index 8a8608a..0000000
 - * and matching the H_C_S coordinates to what DOS uses.
 - */
 -
--static int t128_biosparam(struct scsi_device *sdev, struct block_device *bdev,
--                          sector_t capacity, int *ip)
+-static int pas16_biosparam(struct scsi_device *sdev, struct block_device *dev,
+-                           sector_t capacity, int *ip)
 -{
+-  int size = capacity;
 -  ip[0] = 64;
 -  ip[1] = 32;
--  ip[2] = capacity >> 11;
+-  ip[2] = size >> 11;		/* I think I have it as /(32*64) */
+-  if( ip[2] > 1024 ) {		/* yes, >, not >= */
+-	ip[0]=255;
+-	ip[1]=63;
+-	ip[2]=size/(63*255);
+-	if( ip[2] > 1023 )	/* yes >1023... */
+-		ip[2] = 1023;
+-  }
+-
 -  return 0;
 -}
 -
 -/*
-- * Function : int t128_pread (struct Scsi_Host *instance,
+- * Function : int pas16_pread (struct Scsi_Host *instance,
 - *	unsigned char *dst, int len)
 - *
 - * Purpose : Fast 5380 pseudo-dma read function, transfers len bytes to 
@@ -407,41 +570,31 @@ index 8a8608a..0000000
 - * 	timeout.
 - */
 -
--static inline int t128_pread(struct Scsi_Host *instance,
--                             unsigned char *dst, int len)
+-static inline int pas16_pread(struct Scsi_Host *instance,
+-                              unsigned char *dst, int len)
 -{
--	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	void __iomem *reg, *base = hostdata->base;
--    unsigned char *d = dst;
+-    register unsigned char  *d = dst;
+-    register unsigned short reg = (unsigned short) (instance->io_port + 
+-	P_DATA_REG_OFFSET);
 -    register int i = len;
+-    int ii = 0;
 -
--    reg = base + T_DATA_REG_OFFSET;
+-    while ( !(inb(instance->io_port + P_STATUS_REG_OFFSET) & P_ST_RDY) )
+-	 ++ii;
 -
--#if 0
--    for (; i; --i) {
--	while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
--#else
--    while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
--    for (; i; --i) {
--#endif
--	*d++ = readb(reg);
--    }
+-    insb( reg, d, i );
 -
--    if (readb(base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
--	unsigned char tmp;
--	void __iomem *foo = base + T_CONTROL_REG_OFFSET;
--	tmp = readb(foo);
--	writeb(tmp | T_CR_CT, foo);
--	writeb(tmp, foo);
+-    if ( inb(instance->io_port + P_TIMEOUT_STATUS_REG_OFFSET) & P_TS_TIM) {
+-	outb( P_TS_CT, instance->io_port + P_TIMEOUT_STATUS_REG_OFFSET);
 -	printk("scsi%d : watchdog timer fired in NCR5380_pread()\n",
 -	    instance->host_no);
 -	return -1;
--    } else
--	return 0;
+-    }
+-    return 0;
 -}
 -
 -/*
-- * Function : int t128_pwrite (struct Scsi_Host *instance,
+- * Function : int pas16_pwrite (struct Scsi_Host *instance,
 - *	unsigned char *src, int len)
 - *
 - * Purpose : Fast 5380 pseudo-dma write function, transfers len bytes from
@@ -453,53 +606,49 @@ index 8a8608a..0000000
 - * 	timeout.
 - */
 -
--static inline int t128_pwrite(struct Scsi_Host *instance,
--                              unsigned char *src, int len)
+-static inline int pas16_pwrite(struct Scsi_Host *instance,
+-                               unsigned char *src, int len)
 -{
--	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	void __iomem *reg, *base = hostdata->base;
--    unsigned char *s = src;
+-    register unsigned char *s = src;
+-    register unsigned short reg = (instance->io_port + P_DATA_REG_OFFSET);
 -    register int i = len;
+-    int ii = 0;
 -
--    reg = base + T_DATA_REG_OFFSET;
+-    while ( !((inb(instance->io_port + P_STATUS_REG_OFFSET)) & P_ST_RDY) )
+-	 ++ii;
+- 
+-    outsb( reg, s, i );
 -
--#if 0
--    for (; i; --i) {
--	while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
--#else
--    while (!(readb(base+T_STATUS_REG_OFFSET) & T_ST_RDY)) barrier();
--    for (; i; --i) {
--#endif
--	writeb(*s++, reg);
--    }
--
--    if (readb(base + T_STATUS_REG_OFFSET) & T_ST_TIM) {
--	unsigned char tmp;
--	void __iomem *foo = base + T_CONTROL_REG_OFFSET;
--	tmp = readb(foo);
--	writeb(tmp | T_CR_CT, foo);
--	writeb(tmp, foo);
+-    if (inb(instance->io_port + P_TIMEOUT_STATUS_REG_OFFSET) & P_TS_TIM) {
+-	outb( P_TS_CT, instance->io_port + P_TIMEOUT_STATUS_REG_OFFSET);
 -	printk("scsi%d : watchdog timer fired in NCR5380_pwrite()\n",
 -	    instance->host_no);
 -	return -1;
--    } else 
--	return 0;
+-    }
+-    return 0;
 -}
--
--MODULE_LICENSE("GPL");
 -
 -#include "NCR5380.c"
 -
+-static int pas16_release(struct Scsi_Host *shost)
+-{
+-	if (shost->irq != NO_IRQ)
+-		free_irq(shost->irq, shost);
+-	NCR5380_exit(shost);
+-	scsi_unregister(shost);
+-	return 0;
+-}
+-
 -static struct scsi_host_template driver_template = {
--	.name			= "Trantor T128/T128F/T228",
--	.detect			= t128_detect,
--	.release		= t128_release,
--	.proc_name		= "t128",
--	.info			= t128_info,
--	.queuecommand		= t128_queue_command,
--	.eh_abort_handler	= t128_abort,
--	.eh_bus_reset_handler	= t128_bus_reset,
--	.bios_param		= t128_biosparam,
+-	.name			= "Pro Audio Spectrum-16 SCSI",
+-	.detect			= pas16_detect,
+-	.release		= pas16_release,
+-	.proc_name		= "pas16",
+-	.info			= pas16_info,
+-	.queuecommand		= pas16_queue_command,
+-	.eh_abort_handler	= pas16_abort,
+-	.eh_bus_reset_handler	= pas16_bus_reset,
+-	.bios_param		= pas16_biosparam,
 -	.can_queue		= 32,
 -	.this_id		= 7,
 -	.sg_tablesize		= SG_ALL,
@@ -509,109 +658,139 @@ index 8a8608a..0000000
 -	.max_sectors		= 128,
 -};
 -#include "scsi_module.c"
-diff --git a/drivers/scsi/t128.h b/drivers/scsi/t128.h
+-
+-#ifdef MODULE
+-module_param(pas16_addr, ushort, 0);
+-module_param(pas16_irq, int, 0);
+-#endif
+-MODULE_LICENSE("GPL");
+diff --git a/drivers/scsi/pas16.h b/drivers/scsi/pas16.h
 deleted file mode 100644
-index c95bcd8..0000000
---- a/drivers/scsi/t128.h
+index 9fe7f33..0000000
+--- a/drivers/scsi/pas16.h
 +++ /dev/null
-@@ -1,97 +0,0 @@
+@@ -1,121 +0,0 @@
 -/*
-- * Trantor T128/T128F/T228 defines
-- *	Note : architecturally, the T100 and T128 are different and won't work
+- * This driver adapted from Drew Eckhardt's Trantor T128 driver
 - *
 - * Copyright 1993, Drew Eckhardt
 - *	Visionary Computing
 - *	(Unix and Linux consulting and custom programming)
 - *	drew@colorado.edu
-- *      +1 (303) 440-4894
+- *      +1 (303) 666-5836
 - *
-- * For more information, please consult
+- *  ( Based on T128 - DISTRIBUTION RELEASE 3. ) 
 - *
-- * Trantor Systems, Ltd.
-- * T128/T128F/T228 SCSI Host Adapter
-- * Hardware Specifications
+- * Modified to work with the Pro Audio Spectrum/Studio 16
+- * by John Weidman.
 - *
-- * Trantor Systems, Ltd.
-- * 5415 Randall Place
-- * Fremont, CA 94538
-- * 1+ (415) 770-1400, FAX 1+ (415) 770-9910
+- *
+- * For more information, please consult 
+- *
+- * Media Vision
+- * (510) 770-8600
+- * (800) 348-7116
 - */
 -
--#ifndef T128_H
--#define T128_H
+-
+-#ifndef PAS16_H
+-#define PAS16_H
+-
+-#define PAS16_DEFAULT_BASE_1  0x388
+-#define PAS16_DEFAULT_BASE_2  0x384
+-#define PAS16_DEFAULT_BASE_3  0x38c
+-#define PAS16_DEFAULT_BASE_4  0x288
+-
+-#define PAS16_DEFAULT_BOARD_1_IRQ 10
+-#define PAS16_DEFAULT_BOARD_2_IRQ 12
+-#define PAS16_DEFAULT_BOARD_3_IRQ 14
+-#define PAS16_DEFAULT_BOARD_4_IRQ 15
+-
 -
 -/*
-- * The trantor boards are memory mapped. They use an NCR5380 or
-- * equivalent (my sample board had part second sourced from ZILOG).
-- * NCR's recommended "Pseudo-DMA" architecture is used, where
-- * a PAL drives the DMA signals on the 5380 allowing fast, blind
-- * transfers with proper handshaking.
+- * The Pro Audio Spectrum boards are I/O mapped. They use a Zilog 5380
+- * SCSI controller, which is the equivalent of NCR's 5380.  "Pseudo-DMA"
+- * architecture is used, where a PAL drives the DMA signals on the 5380
+- * allowing fast, blind transfers with proper handshaking. 
 - */
 -
--/*
-- * Note : a boot switch is provided for the purpose of informing the
-- * firmware to boot or not boot from attached SCSI devices.  So, I imagine
-- * there are fewer people who've yanked the ROM like they do on the Seagate
-- * to make bootup faster, and I'll probably use this for autodetection.
+-
+-/* The Time-out Counter register is used to safe-guard against a stuck
+- * bus (in the case of RDY driven handshake) or a stuck byte (if 16-Bit
+- * DMA conversion is used).  The counter uses a 28.224MHz clock
+- * divided by 14 as its clock source.  In the case of a stuck byte in
+- * the holding register, an interrupt is generated (and mixed with the
+- * one with the drive) using the CD-ROM interrupt pointer.
 - */
--#define T_ROM_OFFSET		0
+- 
+-#define P_TIMEOUT_COUNTER_REG	0x4000
+-#define P_TC_DISABLE	0x80	/* Set to 0 to enable timeout int. */
+-				/* Bits D6-D0 contain timeout count */
+-
+-
+-#define P_TIMEOUT_STATUS_REG_OFFSET	0x4001
+-#define P_TS_TIM		0x80	/* check timeout status */
+-					/* Bits D6-D4 N/U */
+-#define P_TS_ARM_DRQ_INT	0x08	/* Arm DRQ Int.  When set high,
+-					 * the next rising edge will
+-					 * cause a CD-ROM interrupt.
+-					 * When set low, the interrupt
+-					 * will be cleared.  There is
+-					 * no status available for
+-					 * this interrupt.
+-					 */
+-#define P_TS_ENABLE_TO_ERR_INTERRUPT	/* Enable timeout error int. */
+-#define P_TS_ENABLE_WAIT		/* Enable Wait */
+-
+-#define P_TS_CT			0x01	/* clear timeout. Note: writing
+-					 * to this register clears the
+-					 * timeout error int. or status
+-					 */
+-
 -
 -/*
-- * Note : my sample board *WAS NOT* populated with the SRAM, so this
-- * can't be used for autodetection without a ROM present.
-- */
--#define T_RAM_OFFSET		0x1800
--
--/*
-- * All of the registers are allocated 32 bytes of address space, except
-- * for the data register (read/write to/from the 5380 in pseudo-DMA mode)
+- * The data register reads/writes to/from the 5380 in pseudo-DMA mode
 - */ 
--#define T_CONTROL_REG_OFFSET	0x1c00	/* rw */
--#define T_CR_INT		0x10	/* Enable interrupts */
--#define T_CR_CT			0x02	/* Reset watchdog timer */
 -
--#define T_STATUS_REG_OFFSET	0x1c20	/* ro */
--#define T_ST_BOOT		0x80	/* Boot switch */
--#define T_ST_S3			0x40	/* User settable switches, */
--#define T_ST_S2			0x20	/* read 0 when switch is on, 1 off */
--#define T_ST_S1			0x10
--#define T_ST_PS2		0x08	/* Set for Microchannel 228 */
--#define T_ST_RDY		0x04	/* 5380 DRQ */
--#define T_ST_TIM		0x02	/* indicates 40us watchdog timer fired */
--#define T_ST_ZERO		0x01	/* Always zero */
+-#define P_DATA_REG_OFFSET	0x5c00	/* rw */
 -
--#define T_5380_OFFSET		0x1d00	/* 8 registers here, see NCR5380.h */
+-#define P_STATUS_REG_OFFSET	0x5c01	/* ro */
+-#define P_ST_RDY		0x80	/* 5380 DDRQ Status */
 -
--#define T_DATA_REG_OFFSET	0x1e00	/* rw 512 bytes long */
+-#define P_IRQ_STATUS		0x5c03
+-#define P_IS_IRQ		0x80	/* DIRQ status */
 -
--#define NCR5380_implementation_fields \
--    void __iomem *base
+-#define PCB_CONFIG 0x803
+-#define MASTER_ADDRESS_PTR 0x9a01  /* Fixed position - no relo */
+-#define SYS_CONFIG_4 0x8003
+-#define WAIT_STATE 0xbc00
+-#define OPERATION_MODE_1 0xec03
+-#define IO_CONFIG_3 0xf002
 -
--#define T128_address(reg) \
--	(((struct NCR5380_hostdata *)shost_priv(instance))->base + T_5380_OFFSET + ((reg) * 0x20))
+-#define NCR5380_implementation_fields /* none */
 -
--#define NCR5380_read(reg) readb(T128_address(reg))
--#define NCR5380_write(reg, value) writeb((value),(T128_address(reg)))
+-#define PAS16_io_port(reg) (instance->io_port + pas16_offset[(reg)])
+-
+-#define NCR5380_read(reg) ( inb(PAS16_io_port(reg)) )
+-#define NCR5380_write(reg, value) ( outb((value),PAS16_io_port(reg)) )
 -
 -#define NCR5380_dma_xfer_len(instance, cmd, phase)	(cmd->transfersize)
--#define NCR5380_dma_recv_setup		t128_pread
--#define NCR5380_dma_send_setup		t128_pwrite
+-#define NCR5380_dma_recv_setup		pas16_pread
+-#define NCR5380_dma_send_setup		pas16_pwrite
 -#define NCR5380_dma_residual(instance)	(0)
 -
--#define NCR5380_intr t128_intr
--#define NCR5380_queue_command t128_queue_command
--#define NCR5380_abort t128_abort
--#define NCR5380_bus_reset t128_bus_reset
--#define NCR5380_info t128_info
+-#define NCR5380_intr pas16_intr
+-#define NCR5380_queue_command pas16_queue_command
+-#define NCR5380_abort pas16_abort
+-#define NCR5380_bus_reset pas16_bus_reset
+-#define NCR5380_info pas16_info
 -
--#define NCR5380_io_delay(x)		udelay(x)
--
--/* 15 14 12 10 7 5 3
+-/* 15 14 12 10 7 5 3 
 -   1101 0100 1010 1000 */
+-   
+-#define PAS16_IRQS 0xd4a8 
 -
--#define T128_IRQS 0xc4a8
--
--#endif /* T128_H */
+-#endif /* PAS16_H */
 -- 
 2.1.4
 
