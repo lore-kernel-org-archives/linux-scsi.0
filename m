@@ -1,53 +1,48 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 171001] New: Quickbooks Support 1-800-919-0992 Quickbooks
- Support phone number USA@=?UTF-8?Q?JEET=C3=B4=C3=9FPppu?=? 1 800 919 0992
- Quickbooks Support
- PHONENumber..,=?UTF-8?Q?O=C2=BBG=2B=2B?=??=?UTF-8?Q?=C3=B4=20US=201=2D800=2D919=2D0992=20quickbooks=20Payroll=20help=20telePHONE=20Number?=..,, ++??=?UTF-8?Q?=C3=B4quickbooks=20Payroll=20help=20Payroll=20Number?=..,, ++??=?UTF-8?Q?=C3=B4?=
-Date: Mon, 19 Sep 2016 09:59:13 +0000
-Message-ID: <bug-171001-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 171141] New: 18009190992+++****Quickbooks Enterprise Customer
+ Support Number##
+Date: Mon, 19 Sep 2016 10:15:37 +0000
+Message-ID: <bug-171141-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:38186 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:41270 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752821AbcISJ7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Sep 2016 05:59:17 -0400
+        id S1754274AbcISKPl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Sep 2016 06:15:41 -0400
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 31B26205FE
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:59:15 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id E2FFD2061D
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:59:13 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 931C620635
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 10:15:39 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 3A4432061D
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 10:15:38 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=171001
+https://bugzilla.kernel.org/show_bug.cgi?id=171141
 
-            Bug ID: 171001
-           Summary: Quickbooks Support 1-800-919-0992 Quickbooks Support
-                    phone number USA@JEETôßPppu? 1 800 919 0992 Quickbooks
-                    Support PHONENumber..,O»G++??ô US 1-800-919-0992
-                    quickbooks Payroll help telePHONE Number..,,
-                    ++??ôquickbooks Payroll help Payroll Number..,, ++??ô
+            Bug ID: 171141
+           Summary: 18009190992+++****Quickbooks Enterprise Customer
+                    Support Number##
            Product: SCSI Drivers
            Version: 2.5
-    Kernel Version: [1-800^919^0992]]]]]]QUICKBOOKS Enterprise support
-                    PHONE NUMBER QuickBooks phone number usa
+    Kernel Version: 18009190992+++****Quickbooks Enterprise Customer
+                    Support Number##
           Hardware: All
                 OS: Linux
               Tree: Mainline
             Status: NEW
           Severity: normal
           Priority: P1
-         Component: BUSLOGIC
-          Assignee: scsi_drivers-buslogic@kernel-bugs.osdl.org
+         Component: AHA152X
+          Assignee: scsi_drivers-aha152x@kernel-bugs.osdl.org
           Reporter: nissha07@mail.com
         Regression: No
 
-Created attachment 238851
-  --> https://bugzilla.kernel.org/attachment.cgi?id=238851&action=edit
+Created attachment 238921
+  --> https://bugzilla.kernel.org/attachment.cgi?id=238921&action=edit
 Quickbooks Support 1-800-919-0992 Quickbooks Support phone number
 USA@JEETôßPppu? 1 800 919 0992 Quickbooks Support PHONENumber..,O»G++??ô US
 1-800-919-0992 quickbooks Payroll help telePHONE Number..,
