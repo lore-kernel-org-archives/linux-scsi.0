@@ -1,64 +1,44 @@
 From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: [PATCH 2/9] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-Date: Tue, 20 Sep 2016 06:27:27 +0900
-Message-ID: <1474320454-5264-3-git-send-email-damien.lemoal@hgst.com>
+Subject: [PATCH 3/9] block: update chunk_sectors in blk_stack_limits()
+Date: Tue, 20 Sep 2016 06:27:28 +0900
+Message-ID: <1474320454-5264-4-git-send-email-damien.lemoal@hgst.com>
 References: <1474320454-5264-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:34625 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932329AbcISV2g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 17:28:36 -0400
 In-Reply-To: <1474320454-5264-1-git-send-email-damien.lemoal@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
-Cc: martin.petersen@oracle.com, axboe@kernel.dk, hare@suse.de, shaun.tancheff@seagate.com, Damien Le Moal <damien.lemoal@hgst.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Cc: martin.petersen@oracle.com, axboe@kernel.dk, hare@suse.de, shaun.tancheff@seagate.com, Hannes Reinecke <hare@suse.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
 From: Hannes Reinecke <hare@suse.de>
 
-The queue limits already have a 'chunk_sectors' setting, so
-we should be presenting it via sysfs.
-
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
 ---
- block/blk-sysfs.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ block/blk-settings.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 31ecff9..15e5baf 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -130,6 +130,11 @@ static ssize_t queue_physical_block_size_show(struct request_queue *q, char *pag
- 	return queue_var_show(queue_physical_block_size(q), page);
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index b1d5b7f..55369a6 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -631,6 +631,10 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
+ 			t->discard_granularity;
+ 	}
+ 
++	if (b->chunk_sectors)
++		t->chunk_sectors = min_not_zero(t->chunk_sectors,
++						b->chunk_sectors);
++
+ 	return ret;
  }
- 
-+static ssize_t queue_chunk_sectors_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->limits.chunk_sectors, page);
-+}
-+
- static ssize_t queue_io_min_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show(queue_io_min(q), page);
-@@ -455,6 +460,11 @@ static struct queue_sysfs_entry queue_physical_block_size_entry = {
- 	.show = queue_physical_block_size_show,
- };
- 
-+static struct queue_sysfs_entry queue_chunk_sectors_entry = {
-+	.attr = {.name = "chunk_sectors", .mode = S_IRUGO },
-+	.show = queue_chunk_sectors_show,
-+};
-+
- static struct queue_sysfs_entry queue_io_min_entry = {
- 	.attr = {.name = "minimum_io_size", .mode = S_IRUGO },
- 	.show = queue_io_min_show,
-@@ -555,6 +565,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_hw_sector_size_entry.attr,
- 	&queue_logical_block_size_entry.attr,
- 	&queue_physical_block_size_entry.attr,
-+	&queue_chunk_sectors_entry.attr,
- 	&queue_io_min_entry.attr,
- 	&queue_io_opt_entry.attr,
- 	&queue_discard_granularity_entry.attr,
+ EXPORT_SYMBOL(blk_stack_limits);
 -- 
 2.7.4
 
