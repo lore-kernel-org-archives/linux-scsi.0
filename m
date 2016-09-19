@@ -1,34 +1,43 @@
-From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
-Subject: Re: [PATCH 1/1] ibmvfc: Fix I/O hang when port is not mapped
-Date: Mon, 19 Sep 2016 09:14:48 -0700
-Message-ID: <d37a6e14-9585-1db7-8ab6-ebf2ce7aae44@gmail.com>
-References: <20160919135919.689C528041@b01ledav001.gho.pok.ibm.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [RESEND] [PATCH 1/1] ses: Retry UNIT ATTENTION for receive
+ diagnostics
+Date: Mon, 19 Sep 2016 09:20:34 -0700
+Message-ID: <1474302034.2398.4.camel@HansenPartnership.com>
+References: <20160916210607.054BF124047@b01ledav002.gho.pok.ibm.com>
+         <yq1eg4fann1.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f175.google.com ([209.85.216.175]:35918 "EHLO
-        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751015AbcISQOw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 12:14:52 -0400
-Received: by mail-qt0-f175.google.com with SMTP id l91so73880056qte.3
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:14:52 -0700 (PDT)
-In-Reply-To: <20160919135919.689C528041@b01ledav001.gho.pok.ibm.com>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49128 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751672AbcISQUj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Sep 2016 12:20:39 -0400
+In-Reply-To: <yq1eg4fann1.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>, James.Bottomley@HansenPartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, tyreld@linux.vnet.ibm.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Brian King <brking@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, stable@vger.kernel.org
 
-On 09/19/2016 06:59 AM, Brian King wrote:
-> If a VFC port gets unmapped in the VIOS, it may not respond with a CRQ init
-> complete following H_REG_CRQ. If this occurs, we can end up having called
-> scsi_block_requests and not a resulting unblock until the init complete
-> happens, which may never occur, and we end up hanging I/O requests.
-> This patch ensures the host action stay set to IBMVFC_HOST_ACTION_TGT_DEL so
-> we move all rports into devloss state and unblock unless we receive an
-> init complete. 
+On Mon, 2016-09-19 at 11:57 -0400, Martin K. Petersen wrote:
+> > > > > > "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
 > 
-> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+> Brian> If the ses driver receives a UNIT ATTENTION when issuing a
+> Brian> receive diagnostics while probing a SES device, it fails to
+> Brian> attach with messages such as:
+> 
+> Brian> scsi 1:0:7:0: Failed to get diagnostic page 0x8000002 scsi
+> Brian> 1:0:7:0: Failed to bind enclosure -19
+> 
+> Brian> Fix this by eating unit attentions for these commands.
+> 
+> James?
 
-Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+It seems to me that UA handling should be a part of scsi_execute_req
+(and scsi_execute) ... that is unless anyone can find a caller that
+would actually be interested.  I've been looking but haven't found one
+so far.
+
+James
 
