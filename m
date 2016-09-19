@@ -1,13 +1,13 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 1/7] wd7000: remove from tree
-Date: Mon, 19 Sep 2016 08:50:47 -0700
-Message-ID: <1474300253-31351-2-git-send-email-hch@lst.de>
+Subject: [PATCH 3/7] ultrastor: remove from tree
+Date: Mon, 19 Sep 2016 08:50:49 -0700
+Message-ID: <1474300253-31351-4-git-send-email-hch@lst.de>
 References: <1474300253-31351-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:40348 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:40480 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751569AbcISPvB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:51:01 -0400
+        with ESMTP id S1751569AbcISPvF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:51:05 -0400
 In-Reply-To: <1474300253-31351-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,1740 +20,1356 @@ the git tree.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- Documentation/scsi/scsi-parameters.txt |    3 -
- MAINTAINERS                            |    6 -
- drivers/scsi/Kconfig                   |   12 -
- drivers/scsi/Makefile                  |    1 -
- drivers/scsi/wd7000.c                  | 1657 --------------------------------
- 5 files changed, 1679 deletions(-)
- delete mode 100644 drivers/scsi/wd7000.c
+ drivers/scsi/Kconfig     |   17 -
+ drivers/scsi/Makefile    |    1 -
+ drivers/scsi/ultrastor.c | 1210 ----------------------------------------------
+ drivers/scsi/ultrastor.h |   80 ---
+ 4 files changed, 1308 deletions(-)
+ delete mode 100644 drivers/scsi/ultrastor.c
+ delete mode 100644 drivers/scsi/ultrastor.h
 
-diff --git a/Documentation/scsi/scsi-parameters.txt b/Documentation/scsi/scsi-parameters.txt
-index d5ae6ce..5a5c608 100644
---- a/Documentation/scsi/scsi-parameters.txt
-+++ b/Documentation/scsi/scsi-parameters.txt
-@@ -131,6 +131,3 @@ parameters may be changed at runtime by the command
- 
- 	wd33c93=	[HW,SCSI]
- 			See header of drivers/scsi/wd33c93.c.
--
--	wd7000=		[HW,SCSI]
--			See header of drivers/scsi/wd7000.c.
-diff --git a/MAINTAINERS b/MAINTAINERS
-index dd4966d..fdcce6b 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -12699,12 +12699,6 @@ F:	drivers/watchdog/
- F:	include/linux/watchdog.h
- F:	include/uapi/linux/watchdog.h
- 
--WD7000 SCSI DRIVER
--M:	Miroslav Zagorac <zaga@fly.cc.fer.hr>
--L:	linux-scsi@vger.kernel.org
--S:	Maintained
--F:	drivers/scsi/wd7000.c
--
- WIIMOTE HID DRIVER
- M:	David Herrmann <dh.herrmann@googlemail.com>
- L:	linux-input@vger.kernel.org
 diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 75de1dc..15c6e9f 100644
+index 543005b..57cf77f 100644
 --- a/drivers/scsi/Kconfig
 +++ b/drivers/scsi/Kconfig
-@@ -396,18 +396,6 @@ config SCSI_3W_SAS
- 	  Please read the comments at the top of
- 	  <file:drivers/scsi/3w-sas.c>.
+@@ -1425,23 +1425,6 @@ config SCSI_U14_34F_MAX_TAGS
+ 	  by the driver for each probed SCSI device is reported at boot time.
+ 	  This is equivalent to the "u14-34f=mq:8" boot option.
  
--config SCSI_7000FASST
--	tristate "7000FASST SCSI support"
--	depends on ISA && SCSI && ISA_DMA_API
--	select CHECK_SIGNATURE
--	help
--	  This driver supports the Western Digital 7000 SCSI host adapter
--	  family.  Some information is in the source:
--	  <file:drivers/scsi/wd7000.c>.
+-config SCSI_ULTRASTOR
+-	tristate "UltraStor SCSI support"
+-	depends on X86 && ISA && SCSI && ISA_DMA_API
+-	---help---
+-	  This is support for the UltraStor 14F, 24F and 34F SCSI-2 host
+-	  adapter family.  This driver is explained in section 3.12 of the
+-	  SCSI-HOWTO, available from
+-	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
+-	  of the box, you may have to change some settings in
+-	  <file:drivers/scsi/ultrastor.h>.
+-
+-	  Note that there is also another driver for the same hardware:
+-	  "UltraStor 14F/34F support", above.
 -
 -	  To compile this driver as a module, choose M here: the
--	  module will be called wd7000.
+-	  module will be called ultrastor.
 -
- config SCSI_ACARD
- 	tristate "ACARD SCSI support"
- 	depends on PCI && SCSI
+ config SCSI_NSP32
+ 	tristate "Workbit NinjaSCSI-32Bi/UDE support"
+ 	depends on PCI && SCSI && !64BIT
 diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-index fc0d9b8..d870cc5 100644
+index 07bf799..2e7d9ef 100644
 --- a/drivers/scsi/Makefile
 +++ b/drivers/scsi/Makefile
-@@ -99,7 +99,6 @@ obj-$(CONFIG_SCSI_DTC3280)	+= dtc.o
- obj-$(CONFIG_SCSI_SYM53C8XX_2)	+= sym53c8xx_2/
- obj-$(CONFIG_SCSI_ZALON)	+= zalon7xx.o
- obj-$(CONFIG_SCSI_EATA_PIO)	+= eata_pio.o
--obj-$(CONFIG_SCSI_7000FASST)	+= wd7000.o
- obj-$(CONFIG_SCSI_EATA)		+= eata.o
- obj-$(CONFIG_SCSI_DC395x)	+= dc395x.o
- obj-$(CONFIG_SCSI_AM53C974)	+= esp_scsi.o	am53c974.o
-diff --git a/drivers/scsi/wd7000.c b/drivers/scsi/wd7000.c
+@@ -63,7 +63,6 @@ obj-$(CONFIG_SCSI_BUSLOGIC)	+= BusLogic.o
+ obj-$(CONFIG_SCSI_DPT_I2O)	+= dpt_i2o.o
+ obj-$(CONFIG_SCSI_U14_34F)	+= u14-34f.o
+ obj-$(CONFIG_SCSI_ARCMSR)	+= arcmsr/
+-obj-$(CONFIG_SCSI_ULTRASTOR)	+= ultrastor.o
+ obj-$(CONFIG_SCSI_AHA152X)	+= aha152x.o
+ obj-$(CONFIG_SCSI_AHA1542)	+= aha1542.o
+ obj-$(CONFIG_SCSI_AHA1740)	+= aha1740.o
+diff --git a/drivers/scsi/ultrastor.c b/drivers/scsi/ultrastor.c
 deleted file mode 100644
-index 409f959..0000000
---- a/drivers/scsi/wd7000.c
+index 14e0c40..0000000
+--- a/drivers/scsi/ultrastor.c
 +++ /dev/null
-@@ -1,1657 +0,0 @@
--/* $Id: $
-- *  linux/drivers/scsi/wd7000.c
+@@ -1,1210 +0,0 @@
+-/*
+- *	ultrastor.c	Copyright (C) 1992 David B. Gentzel
+- *	Low-level SCSI driver for UltraStor 14F, 24F, and 34F
+- *	by David B. Gentzel, Whitfield Software Services, Carnegie, PA
+- *	    (gentzel@nova.enet.dec.com)
+- *  scatter/gather added by Scott Taylor (n217cg@tamuts.tamu.edu)
+- *  24F and multiple command support by John F. Carr (jfc@athena.mit.edu)
+- *    John's work modified by Caleb Epstein (cae@jpmorgan.com) and 
+- *    Eric Youngdale (ericy@cais.com).
+- *	Thanks to UltraStor for providing the necessary documentation
 - *
-- *  Copyright (C) 1992  Thomas Wuensche
-- *	closely related to the aha1542 driver from Tommy Thorn
-- *	( as close as different hardware allows on a lowlevel-driver :-) )
-- *
-- *  Revised (and renamed) by John Boyd <boyd@cis.ohio-state.edu> to
-- *  accommodate Eric Youngdale's modifications to scsi.c.  Nov 1992.
-- *
-- *  Additional changes to support scatter/gather.  Dec. 1992.  tw/jb
-- *
-- *  No longer tries to reset SCSI bus at boot (it wasn't working anyway).
-- *  Rewritten to support multiple host adapters.
-- *  Miscellaneous cleanup.
-- *  So far, still doesn't do reset or abort correctly, since I have no idea
-- *  how to do them with this board (8^(.                      Jan 1994 jb
-- *
-- * This driver now supports both of the two standard configurations (per
-- * the 3.36 Owner's Manual, my latest reference) by the same method as
-- * before; namely, by looking for a BIOS signature.  Thus, the location of
-- * the BIOS signature determines the board configuration.  Until I have
-- * time to do something more flexible, users should stick to one of the
-- * following:
-- *
-- * Standard configuration for single-adapter systems:
-- *    - BIOS at CE00h
-- *    - I/O base address 350h
-- *    - IRQ level 15
-- *    - DMA channel 6
-- * Standard configuration for a second adapter in a system:
-- *    - BIOS at C800h
-- *    - I/O base address 330h
-- *    - IRQ level 11
-- *    - DMA channel 5
-- *
-- * Anyone who can recompile the kernel is welcome to add others as need
-- * arises, but unpredictable results may occur if there are conflicts.
-- * In any event, if there are multiple adapters in a system, they MUST
-- * use different I/O bases, IRQ levels, and DMA channels, since they will be
-- * indistinguishable (and in direct conflict) otherwise.
-- *
-- *   As a point of information, the NO_OP command toggles the CMD_RDY bit
-- * of the status port, and this fact could be used as a test for the I/O
-- * base address (or more generally, board detection).  There is an interrupt
-- * status port, so IRQ probing could also be done.  I suppose the full
-- * DMA diagnostic could be used to detect the DMA channel being used.  I
-- * haven't done any of this, though, because I think there's too much of
-- * a chance that such explorations could be destructive, if some other
-- * board's resources are used inadvertently.  So, call me a wimp, but I
-- * don't want to try it.  The only kind of exploration I trust is memory
-- * exploration, since it's more certain that reading memory won't be
-- * destructive.
-- *
-- * More to my liking would be a LILO boot command line specification, such
-- * as is used by the aha152x driver (and possibly others).  I'll look into
-- * it, as I have time...
-- *
-- *   I get mail occasionally from people who either are using or are
-- * considering using a WD7000 with Linux.  There is a variety of
-- * nomenclature describing WD7000's.  To the best of my knowledge, the
-- * following is a brief summary (from an old WD doc - I don't work for
-- * them or anything like that):
-- *
-- * WD7000-FASST2: This is a WD7000 board with the real-mode SST ROM BIOS
-- *        installed.  Last I heard, the BIOS was actually done by Columbia
-- *        Data Products.  The BIOS is only used by this driver (and thus
-- *        by Linux) to identify the board; none of it can be executed under
-- *        Linux.
-- *
-- * WD7000-ASC: This is the original adapter board, with or without BIOS.
-- *        The board uses a WD33C93 or WD33C93A SBIC, which in turn is
-- *        controlled by an onboard Z80 processor.  The board interface
-- *        visible to the host CPU is defined effectively by the Z80's
-- *        firmware, and it is this firmware's revision level that is
-- *        determined and reported by this driver.  (The version of the
-- *        on-board BIOS is of no interest whatsoever.)  The host CPU has
-- *        no access to the SBIC; hence the fact that it is a WD33C93 is
-- *        also of no interest to this driver.
-- *
-- * WD7000-AX:
-- * WD7000-MX:
-- * WD7000-EX: These are newer versions of the WD7000-ASC.  The -ASC is
-- *        largely built from discrete components; these boards use more
-- *        integration.  The -AX is an ISA bus board (like the -ASC),
-- *        the -MX is an MCA (i.e., PS/2) bus board), and the -EX is an
-- *        EISA bus board.
-- *
-- *  At the time of my documentation, the -?X boards were "future" products,
-- *  and were not yet available.  However, I vaguely recall that Thomas
-- *  Wuensche had an -AX, so I believe at least it is supported by this
-- *  driver.  I have no personal knowledge of either -MX or -EX boards.
-- *
-- *  P.S. Just recently, I've discovered (directly from WD and Future
-- *  Domain) that all but the WD7000-EX have been out of production for
-- *  two years now.  FD has production rights to the 7000-EX, and are
-- *  producing it under a new name, and with a new BIOS.  If anyone has
-- *  one of the FD boards, it would be nice to come up with a signature
-- *  for it.
-- *                                                           J.B. Jan 1994.
-- *
-- *
-- *  Revisions by Miroslav Zagorac <zaga@fly.cc.fer.hr>
-- *
-- *  08/24/1996.
-- *
-- *  Enhancement for wd7000_detect function has been made, so you don't have
-- *  to enter BIOS ROM address in initialisation data (see struct Config).
-- *  We cannot detect IRQ, DMA and I/O base address for now, so we have to
-- *  enter them as arguments while wd_7000 is detected. If someone has IRQ,
-- *  DMA or I/O base address set to some other value, he can enter them in
-- *  configuration without any problem. Also I wrote a function wd7000_setup,
-- *  so now you can enter WD-7000 definition as kernel arguments,
-- *  as in lilo.conf:
-- *
-- *     append="wd7000=IRQ,DMA,IO"
-- *
-- *  PS: If card BIOS ROM is disabled, function wd7000_detect now will recognize
-- *      adapter, unlike the old one. Anyway, BIOS ROM from WD7000 adapter is
-- *      useless for Linux. B^)
-- *
-- *
-- *  09/06/1996.
-- *
-- *  Autodetecting of I/O base address from wd7000_detect function is removed,
-- *  some little bugs removed, etc...
-- *
-- *  Thanks to Roger Scott for driver debugging.
-- *
-- *  06/07/1997
-- *
-- *  Added support for /proc file system (/proc/scsi/wd7000/[0...] files).
-- *  Now, driver can handle hard disks with capacity >1GB.
-- *
-- *  01/15/1998
-- *
-- *  Added support for BUS_ON and BUS_OFF parameters in config line.
-- *  Miscellaneous cleanup.
-- *
-- *  03/01/1998
-- *
-- *  WD7000 driver now work on kernels >= 2.1.x
-- *
-- *
-- * 12/31/2001 - Arnaldo Carvalho de Melo <acme@conectiva.com.br>
-- *
-- * use host->host_lock, not io_request_lock, cleanups
-- *
-- * 2002/10/04 - Alan Cox <alan@lxorguk.ukuu.org.uk>
-- *
-- * Use dev_id for interrupts, kill __func__ pasting
-- * Add a lock for the scb pool, clean up all other cli/sti usage stuff
-- * Use the adapter lock for the other places we had the cli's
-- *
-- * 2002/10/06 - Alan Cox <alan@lxorguk.ukuu.org.uk>
-- *
-- * Switch to new style error handling
-- * Clean up delay to udelay, and yielding sleeps
-- * Make host reset actually reset the card
-- * Make everything static
-- *
-- * 2003/02/12 - Christoph Hellwig <hch@infradead.org>
-- *
-- * Cleaned up host template definition
-- * Removed now obsolete wd7000.h
+- *  This is an old driver, for the 14F and 34F you should be using the
+- *  u14-34f driver instead.
 - */
 -
--#include <linux/delay.h>
+-/*
+- * TODO:
+- *	1. Find out why scatter/gather is limited to 16 requests per command.
+- *         This is fixed, at least on the 24F, as of version 1.12 - CAE.
+- *	2. Look at command linking (mscp.command_link and
+- *	   mscp.command_link_id).  (Does not work with many disks, 
+- *				and no performance increase.  ERY).
+- *	3. Allow multiple adapters.
+- */
+-
+-/*
+- * NOTES:
+- *    The UltraStor 14F, 24F, and 34F are a family of intelligent, high
+- *    performance SCSI-2 host adapters.  They all support command queueing
+- *    and scatter/gather I/O.  Some of them can also emulate the standard
+- *    WD1003 interface for use with OS's which don't support SCSI.  Here
+- *    is the scoop on the various models:
+- *	14F - ISA first-party DMA HA with floppy support and WD1003 emulation.
+- *	14N - ISA HA with floppy support.  I think that this is a non-DMA
+- *	      HA.  Nothing further known.
+- *	24F - EISA Bus Master HA with floppy support and WD1003 emulation.
+- *	34F - VL-Bus Bus Master HA with floppy support (no WD1003 emulation).
+- *
+- *    The 14F, 24F, and 34F are supported by this driver.
+- *
+- *    Places flagged with a triple question-mark are things which are either
+- *    unfinished, questionable, or wrong.
+- */
+-
+-/* Changes from version 1.11 alpha to 1.12
+- *
+- * Increased the size of the scatter-gather list to 33 entries for
+- * the 24F adapter (it was 16).  I don't have the specs for the 14F
+- * or the 34F, so they may support larger s-g lists as well.
+- *
+- * Caleb Epstein <cae@jpmorgan.com>
+- */
+-
+-/* Changes from version 1.9 to 1.11
+- *
+- * Patches to bring this driver up to speed with the default kernel
+- * driver which supports only the 14F and 34F adapters.  This version
+- * should compile cleanly into 0.99.13, 0.99.12 and probably 0.99.11.
+- *
+- * Fixes from Eric Youngdale to fix a few possible race conditions and
+- * several problems with bit testing operations (insufficient
+- * parentheses).
+- *
+- * Removed the ultrastor_abort() and ultrastor_reset() functions
+- * (enclosed them in #if 0 / #endif).  These functions, at least on
+- * the 24F, cause the SCSI bus to do odd things and generally lead to
+- * kernel panics and machine hangs.  This is like the Adaptec code.
+- *
+- * Use check/snarf_region for 14f, 34f to avoid I/O space address conflicts.
+- */
+-
+-/* Changes from version 1.8 to version 1.9
+- *
+- *  0.99.11 patches (cae@jpmorgan.com) */
+-
+-/* Changes from version 1.7 to version 1.8
+- *
+- * Better error reporting.
+- */
+-
+-/* Changes from version 1.6 to version 1.7
+- *
+- * Removed CSIR command code.
+- *
+- * Better race condition avoidance (xchgb function added).
+- *
+- * Set ICM and OGM status to zero at probe (24F)
+- *
+- * reset sends soft reset to UltraStor adapter
+- *
+- * reset adapter if adapter interrupts with an invalid MSCP address
+- *
+- * handle aborted command interrupt (24F)
+- *
+- */
+-
+-/* Changes from version 1.5 to version 1.6:
+- *
+- * Read MSCP address from ICM _before_ clearing the interrupt flag.
+- * This fixes a race condition.
+- */
+-
+-/* Changes from version 1.4 to version 1.5:
+- *
+- * Abort now calls done when multiple commands are enabled.
+- *
+- * Clear busy when aborted command finishes, not when abort is called.
+- *
+- * More debugging messages for aborts.
+- */
+-
+-/* Changes from version 1.3 to version 1.4:
+- *
+- * Enable automatic request of sense data on error (requires newer version
+- * of scsi.c to be useful).
+- *
+- * Fix PORT_OVERRIDE for 14F.
+- *
+- * Fix abort and reset to work properly (config.aborted wasn't cleared
+- * after it was tested, so after a command abort no further commands would
+- * work).
+- *
+- * Boot time test to enable SCSI bus reset (defaults to not allowing reset).
+- *
+- * Fix test for OGM busy -- the busy bit is in different places on the 24F.
+- *
+- * Release ICM slot by clearing first byte on 24F.
+- */
+-
 -#include <linux/module.h>
+-#include <linux/blkdev.h>
 -#include <linux/interrupt.h>
--#include <linux/kernel.h>
--#include <linux/types.h>
+-#include <linux/stddef.h>
 -#include <linux/string.h>
--#include <linux/spinlock.h>
+-#include <linux/kernel.h>
 -#include <linux/ioport.h>
 -#include <linux/proc_fs.h>
--#include <linux/blkdev.h>
--#include <linux/init.h>
+-#include <linux/spinlock.h>
 -#include <linux/stat.h>
--#include <linux/io.h>
+-#include <linux/bitops.h>
+-#include <linux/delay.h>
 -
+-#include <asm/io.h>
 -#include <asm/dma.h>
 -
--#include <scsi/scsi.h>
--#include <scsi/scsi_cmnd.h>
--#include <scsi/scsi_device.h>
+-#define ULTRASTOR_PRIVATE	/* Get the private stuff from ultrastor.h */
+-#include "scsi.h"
 -#include <scsi/scsi_host.h>
--#include <scsi/scsicam.h>
+-#include "ultrastor.h"
 -
+-#define FALSE 0
+-#define TRUE 1
 -
--#undef  WD7000_DEBUG		/* general debug                */
--#ifdef WD7000_DEBUG
--#define dprintk printk
--#else
--#define dprintk	no_printk
+-#ifndef ULTRASTOR_DEBUG
+-#define ULTRASTOR_DEBUG (UD_ABORT|UD_CSIR|UD_RESET)
 -#endif
 -
--/*
-- *  Mailbox structure sizes.
-- *  I prefer to keep the number of ICMBs much larger than the number of
-- *  OGMBs.  OGMBs are used very quickly by the driver to start one or
-- *  more commands, while ICMBs are used by the host adapter per command.
-- */
--#define OGMB_CNT	16
--#define ICMB_CNT	32
+-#define VERSION "1.12"
 -
--/*
-- *  Scb's are shared by all active adapters.  So, if they all become busy,
-- *  callers may be made to wait in alloc_scbs for them to free.  That can
-- *  be avoided by setting MAX_SCBS to NUM_CONFIG * WD7000_Q.  If you'd
-- *  rather conserve memory, use a smaller number (> 0, of course) - things
-- *  will should still work OK.
-- */
--#define MAX_SCBS        32
--
--/*
-- *  In this version, sg_tablesize now defaults to WD7000_SG, and will
-- *  be set to SG_NONE for older boards.  This is the reverse of the
-- *  previous default, and was changed so that the driver-level
-- *  scsi_host_template would reflect the driver's support for scatter/
-- *  gather.
-- *
-- *  Also, it has been reported that boards at Revision 6 support scatter/
-- *  gather, so the new definition of an "older" board has been changed
-- *  accordingly.
-- */
--#define WD7000_Q	16
--#define WD7000_SG	16
+-#define PACKED		__attribute__((packed))
+-#define ALIGNED(x)	__attribute__((aligned(x)))
 -
 -
--/*
-- *  WD7000-specific mailbox structure
-- *
-- */
--typedef volatile struct mailbox {
--	unchar status;
--	unchar scbptr[3];	/* SCSI-style - MSB first (big endian) */
--} Mailbox;
+-/* The 14F uses an array of 4-byte ints for its scatter/gather list.
+-   The data can be unaligned, but need not be.  It's easier to give
+-   the list normal alignment since it doesn't need to fit into a
+-   packed structure.  */
 -
--/*
-- *  This structure should contain all per-adapter global data.  I.e., any
-- *  new global per-adapter data should put in here.
-- */
--typedef struct adapter {
--	struct Scsi_Host *sh;	/* Pointer to Scsi_Host structure    */
--	int iobase;		/* This adapter's I/O base address   */
--	int irq;		/* This adapter's IRQ level          */
--	int dma;		/* This adapter's DMA channel        */
--	int int_counter;	/* This adapter's interrupt counter  */
--	int bus_on;		/* This adapter's BUS_ON time        */
--	int bus_off;		/* This adapter's BUS_OFF time       */
--	struct {		/* This adapter's mailboxes          */
--		Mailbox ogmb[OGMB_CNT];	/* Outgoing mailboxes                */
--		Mailbox icmb[ICMB_CNT];	/* Incoming mailboxes                */
--	} mb;
--	int next_ogmb;		/* to reduce contention at mailboxes */
--	unchar control;		/* shadows CONTROL port value        */
--	unchar rev1, rev2;	/* filled in by wd7000_revision      */
--} Adapter;
--
--/*
-- * (linear) base address for ROM BIOS
-- */
--static const long wd7000_biosaddr[] = {
--	0xc0000, 0xc2000, 0xc4000, 0xc6000, 0xc8000, 0xca000, 0xcc000, 0xce000,
--	0xd0000, 0xd2000, 0xd4000, 0xd6000, 0xd8000, 0xda000, 0xdc000, 0xde000
--};
--#define NUM_ADDRS ARRAY_SIZE(wd7000_biosaddr)
--
--static const unsigned short wd7000_iobase[] = {
--	0x0300, 0x0308, 0x0310, 0x0318, 0x0320, 0x0328, 0x0330, 0x0338,
--	0x0340, 0x0348, 0x0350, 0x0358, 0x0360, 0x0368, 0x0370, 0x0378,
--	0x0380, 0x0388, 0x0390, 0x0398, 0x03a0, 0x03a8, 0x03b0, 0x03b8,
--	0x03c0, 0x03c8, 0x03d0, 0x03d8, 0x03e0, 0x03e8, 0x03f0, 0x03f8
--};
--#define NUM_IOPORTS ARRAY_SIZE(wd7000_iobase)
--
--static const short wd7000_irq[] = { 3, 4, 5, 7, 9, 10, 11, 12, 14, 15 };
--#define NUM_IRQS ARRAY_SIZE(wd7000_irq)
--
--static const short wd7000_dma[] = { 5, 6, 7 };
--#define NUM_DMAS ARRAY_SIZE(wd7000_dma)
--
--/*
-- * The following is set up by wd7000_detect, and used thereafter for
-- * proc and other global ookups
-- */
--
--#define UNITS	8
--static struct Scsi_Host *wd7000_host[UNITS];
--
--#define BUS_ON    64		/* x 125ns = 8000ns (BIOS default) */
--#define BUS_OFF   15		/* x 125ns = 1875ns (BIOS default) */
--
--/*
-- *  Standard Adapter Configurations - used by wd7000_detect
-- */
 -typedef struct {
--	short irq;		/* IRQ level                                  */
--	short dma;		/* DMA channel                                */
--	unsigned iobase;	/* I/O base address                           */
--	short bus_on;		/* Time that WD7000 spends on the AT-bus when */
--	/* transferring data. BIOS default is 8000ns. */
--	short bus_off;		/* Time that WD7000 spends OFF THE BUS after  */
--	/* while it is transferring data.             */
--	/* BIOS default is 1875ns                     */
--} Config;
+-  u32 address;
+-  u32 num_bytes;
+-} ultrastor_sg_list;
 -
--/*
-- * Add here your configuration...
-- */
--static Config configs[] = {
--	{15, 6, 0x350, BUS_ON, BUS_OFF},	/* defaults for single adapter */
--	{11, 5, 0x320, BUS_ON, BUS_OFF},	/* defaults for second adapter */
--	{7, 6, 0x350, BUS_ON, BUS_OFF},	/* My configuration (Zaga)     */
--	{-1, -1, 0x0, BUS_ON, BUS_OFF}	/* Empty slot                  */
+-
+-/* MailBox SCSI Command Packet.  Basic command structure for communicating
+-   with controller. */
+-struct mscp {
+-  unsigned char opcode: 3;		/* type of command */
+-  unsigned char xdir: 2;		/* data transfer direction */
+-  unsigned char dcn: 1;		/* disable disconnect */
+-  unsigned char ca: 1;		/* use cache (if available) */
+-  unsigned char sg: 1;		/* scatter/gather operation */
+-  unsigned char target_id: 3;		/* target SCSI id */
+-  unsigned char ch_no: 2;		/* SCSI channel (always 0 for 14f) */
+-  unsigned char lun: 3;		/* logical unit number */
+-  unsigned int transfer_data PACKED;	/* transfer data pointer */
+-  unsigned int transfer_data_length PACKED;	/* length in bytes */
+-  unsigned int command_link PACKED;	/* for linking command chains */
+-  unsigned char scsi_command_link_id;	/* identifies command in chain */
+-  unsigned char number_of_sg_list;	/* (if sg is set) 8 bytes per list */
+-  unsigned char length_of_sense_byte;
+-  unsigned char length_of_scsi_cdbs;	/* 6, 10, or 12 */
+-  unsigned char scsi_cdbs[12];	/* SCSI commands */
+-  unsigned char adapter_status;	/* non-zero indicates HA error */
+-  unsigned char target_status;	/* non-zero indicates target error */
+-  u32 sense_data PACKED;
+-  /* The following fields are for software only.  They are included in
+-     the MSCP structure because they are associated with SCSI requests.  */
+-  void (*done) (struct scsi_cmnd *);
+-  struct scsi_cmnd *SCint;
+-  ultrastor_sg_list sglist[ULTRASTOR_24F_MAX_SG]; /* use larger size for 24F */
 -};
--#define NUM_CONFIGS ARRAY_SIZE(configs)
 -
--/*
-- *  The following list defines strings to look for in the BIOS that identify
-- *  it as the WD7000-FASST2 SST BIOS.  I suspect that something should be
-- *  added for the Future Domain version.
-- */
--typedef struct signature {
--	const char *sig;	/* String to look for            */
--	unsigned long ofs;	/* offset from BIOS base address */
--	unsigned len;		/* length of string              */
--} Signature;
 -
--static const Signature signatures[] = {
--	{"SSTBIOS", 0x0000d, 7}	/* "SSTBIOS" @ offset 0x0000d */
+-/* Port addresses (relative to the base address) */
+-#define U14F_PRODUCT_ID(port) ((port) + 0x4)
+-#define CONFIG(port) ((port) + 0x6)
+-
+-/* Port addresses relative to the doorbell base address.  */
+-#define LCL_DOORBELL_MASK(port) ((port) + 0x0)
+-#define LCL_DOORBELL_INTR(port) ((port) + 0x1)
+-#define SYS_DOORBELL_MASK(port) ((port) + 0x2)
+-#define SYS_DOORBELL_INTR(port) ((port) + 0x3)
+-
+-
+-/* Used to store configuration info read from config i/o registers.  Most of
+-   this is not used yet, but might as well save it.
+-   
+-   This structure also holds port addresses that are not at the same offset
+-   on the 14F and 24F.
+-   
+-   This structure holds all data that must be duplicated to support multiple
+-   adapters.  */
+-
+-static struct ultrastor_config
+-{
+-  unsigned short port_address;		/* base address of card */
+-  unsigned short doorbell_address;	/* base address of doorbell CSRs */
+-  unsigned short ogm_address;		/* base address of OGM */
+-  unsigned short icm_address;		/* base address of ICM */
+-  const void *bios_segment;
+-  unsigned char interrupt: 4;
+-  unsigned char dma_channel: 3;
+-  unsigned char bios_drive_number: 1;
+-  unsigned char heads;
+-  unsigned char sectors;
+-  unsigned char ha_scsi_id: 3;
+-  unsigned char subversion: 4;
+-  unsigned char revision;
+-  /* The slot number is used to distinguish the 24F (slot != 0) from
+-     the 14F and 34F (slot == 0). */
+-  unsigned char slot;
+-
+-#ifdef PRINT_U24F_VERSION
+-  volatile int csir_done;
+-#endif
+-
+-  /* A pool of MSCP structures for this adapter, and a bitmask of
+-     busy structures.  (If ULTRASTOR_14F_MAX_CMDS == 1, a 1 byte
+-     busy flag is used instead.)  */
+-
+-#if ULTRASTOR_MAX_CMDS == 1
+-  unsigned char mscp_busy;
+-#else
+-  unsigned long mscp_free;
+-#endif
+-  volatile unsigned char aborted[ULTRASTOR_MAX_CMDS];
+-  struct mscp mscp[ULTRASTOR_MAX_CMDS];
+-} config = {0};
+-
+-/* Set this to 1 to reset the SCSI bus on error.  */
+-static int ultrastor_bus_reset;
+-
+-
+-/* Allowed BIOS base addresses (NULL indicates reserved) */
+-static const void *const bios_segment_table[8] = {
+-  NULL,	     (void *)0xC4000, (void *)0xC8000, (void *)0xCC000,
+-  (void *)0xD0000, (void *)0xD4000, (void *)0xD8000, (void *)0xDC000,
 -};
--#define NUM_SIGNATURES ARRAY_SIZE(signatures)
 -
+-/* Allowed IRQs for 14f */
+-static const unsigned char interrupt_table_14f[4] = { 15, 14, 11, 10 };
 -
--/*
-- *  I/O Port Offsets and Bit Definitions
-- *  4 addresses are used.  Those not defined here are reserved.
-- */
--#define ASC_STAT        0	/* Status,  Read          */
--#define ASC_COMMAND     0	/* Command, Write         */
--#define ASC_INTR_STAT   1	/* Interrupt Status, Read */
--#define ASC_INTR_ACK    1	/* Acknowledge, Write     */
--#define ASC_CONTROL     2	/* Control, Write         */
+-/* Allowed DMA channels for 14f (0 indicates reserved) */
+-static const unsigned char dma_channel_table_14f[4] = { 5, 6, 7, 0 };
 -
--/*
-- * ASC Status Port
-- */
--#define INT_IM		0x80	/* Interrupt Image Flag           */
--#define CMD_RDY		0x40	/* Command Port Ready             */
--#define CMD_REJ		0x20	/* Command Port Byte Rejected     */
--#define ASC_INIT        0x10	/* ASC Initialized Flag           */
--#define ASC_STATMASK    0xf0	/* The lower 4 Bytes are reserved */
+-/* Head/sector mappings allowed by 14f */
+-static const struct {
+-  unsigned char heads;
+-  unsigned char sectors;
+-} mapping_table[4] = { { 16, 63 }, { 64, 32 }, { 64, 63 }, { 64, 32 } };
 -
--/*
-- * COMMAND opcodes
-- *
-- *  Unfortunately, I have no idea how to properly use some of these commands,
-- *  as the OEM manual does not make it clear.  I have not been able to use
-- *  enable/disable unsolicited interrupts or the reset commands with any
-- *  discernible effect whatsoever.  I think they may be related to certain
-- *  ICB commands, but again, the OEM manual doesn't make that clear.
-- */
--#define NO_OP             0	/* NO-OP toggles CMD_RDY bit in ASC_STAT  */
--#define INITIALIZATION    1	/* initialization (10 bytes)              */
--#define DISABLE_UNS_INTR  2	/* disable unsolicited interrupts         */
--#define ENABLE_UNS_INTR   3	/* enable unsolicited interrupts          */
--#define INTR_ON_FREE_OGMB 4	/* interrupt on free OGMB                 */
--#define SOFT_RESET        5	/* SCSI bus soft reset                    */
--#define HARD_RESET_ACK    6	/* SCSI bus hard reset acknowledge        */
--#define START_OGMB        0x80	/* start command in OGMB (n)              */
--#define SCAN_OGMBS        0xc0	/* start multiple commands, signature (n) */
--				/*    where (n) = lower 6 bits            */
--/*
-- * For INITIALIZATION:
-- */
--typedef struct initCmd {
--	unchar op;		/* command opcode (= 1)                    */
--	unchar ID;		/* Adapter's SCSI ID                       */
--	unchar bus_on;		/* Bus on time, x 125ns (see below)        */
--	unchar bus_off;		/* Bus off time, ""         ""             */
--	unchar rsvd;		/* Reserved                                */
--	unchar mailboxes[3];	/* Address of Mailboxes, MSB first         */
--	unchar ogmbs;		/* Number of outgoing MBs, max 64, 0,1 = 1 */
--	unchar icmbs;		/* Number of incoming MBs,   ""       ""   */
--} InitCmd;
--
--/*
-- * Interrupt Status Port - also returns diagnostic codes at ASC reset
-- *
-- * if msb is zero, the lower bits are diagnostic status
-- * Diagnostics:
-- * 01   No diagnostic error occurred
-- * 02   RAM failure
-- * 03   FIFO R/W failed
-- * 04   SBIC register read/write failed
-- * 05   Initialization D-FF failed
-- * 06   Host IRQ D-FF failed
-- * 07   ROM checksum error
-- * Interrupt status (bitwise):
-- * 10NNNNNN   outgoing mailbox NNNNNN is free
-- * 11NNNNNN   incoming mailbox NNNNNN needs service
-- */
--#define MB_INTR    0xC0		/* Mailbox Service possible/required */
--#define IMB_INTR   0x40		/* 1 Incoming / 0 Outgoing           */
--#define MB_MASK    0x3f		/* mask for mailbox number           */
--
--/*
-- * CONTROL port bits
-- */
--#define INT_EN     0x08		/* Interrupt Enable */
--#define DMA_EN     0x04		/* DMA Enable       */
--#define SCSI_RES   0x02		/* SCSI Reset       */
--#define ASC_RES    0x01		/* ASC Reset        */
--
--/*
-- * Driver data structures:
-- *   - mb and scbs are required for interfacing with the host adapter.
-- *     An SCB has extra fields not visible to the adapter; mb's
-- *     _cannot_ do this, since the adapter assumes they are contiguous in
-- *     memory, 4 bytes each, with ICMBs following OGMBs, and uses this fact
-- *     to access them.
-- *   - An icb is for host-only (non-SCSI) commands.  ICBs are 16 bytes each;
-- *     the additional bytes are used only by the driver.
-- *   - For now, a pool of SCBs are kept in global storage by this driver,
-- *     and are allocated and freed as needed.
-- *
-- *  The 7000-FASST2 marks OGMBs empty as soon as it has _started_ a command,
-- *  not when it has finished.  Since the SCB must be around for completion,
-- *  problems arise when SCBs correspond to OGMBs, which may be reallocated
-- *  earlier (or delayed unnecessarily until a command completes).
-- *  Mailboxes are used as transient data structures, simply for
-- *  carrying SCB addresses to/from the 7000-FASST2.
-- *
-- *  Note also since SCBs are not "permanently" associated with mailboxes,
-- *  there is no need to keep a global list of scsi_cmnd pointers indexed
-- *  by OGMB.   Again, SCBs reference their scsi_cmnds directly, so mailbox
-- *  indices need not be involved.
-- */
--
--/*
-- *  WD7000-specific scatter/gather element structure
-- */
--typedef struct sgb {
--	unchar len[3];
--	unchar ptr[3];		/* Also SCSI-style - MSB first */
--} Sgb;
--
--typedef struct scb {		/* Command Control Block 5.4.1               */
--	unchar op;		/* Command Control Block Operation Code      */
--	unchar idlun;		/* op=0,2:Target Id, op=1:Initiator Id       */
--	/* Outbound data transfer, length is checked */
--	/* Inbound data transfer, length is checked  */
--	/* Logical Unit Number                       */
--	unchar cdb[12];		/* SCSI Command Block                        */
--	volatile unchar status;	/* SCSI Return Status                        */
--	volatile unchar vue;	/* Vendor Unique Error Code                  */
--	unchar maxlen[3];	/* Maximum Data Transfer Length              */
--	unchar dataptr[3];	/* SCSI Data Block Pointer                   */
--	unchar linkptr[3];	/* Next Command Link Pointer                 */
--	unchar direc;		/* Transfer Direction                        */
--	unchar reserved2[6];	/* SCSI Command Descriptor Block             */
--	/* end of hardware SCB                       */
--	struct scsi_cmnd *SCpnt;/* scsi_cmnd using this SCB                  */
--	Sgb sgb[WD7000_SG];	/* Scatter/gather list for this SCB          */
--	Adapter *host;		/* host adapter                              */
--	struct scb *next;	/* for lists of scbs                         */
--} Scb;
--
--/*
-- *  This driver is written to allow host-only commands to be executed.
-- *  These use a 16-byte block called an ICB.  The format is extended by the
-- *  driver to 18 bytes, to support the status returned in the ICMB and
-- *  an execution phase code.
-- *
-- *  There are other formats besides these; these are the ones I've tried
-- *  to use.  Formats for some of the defined ICB opcodes are not defined
-- *  (notably, get/set unsolicited interrupt status) in my copy of the OEM
-- *  manual, and others are ambiguous/hard to follow.
-- */
--#define ICB_OP_MASK           0x80	/* distinguishes scbs from icbs        */
--#define ICB_OP_OPEN_RBUF      0x80	/* open receive buffer                 */
--#define ICB_OP_RECV_CMD       0x81	/* receive command from initiator      */
--#define ICB_OP_RECV_DATA      0x82	/* receive data from initiator         */
--#define ICB_OP_RECV_SDATA     0x83	/* receive data with status from init. */
--#define ICB_OP_SEND_DATA      0x84	/* send data with status to initiator  */
--#define ICB_OP_SEND_STAT      0x86	/* send command status to initiator    */
--					/* 0x87 is reserved                    */
--#define ICB_OP_READ_INIT      0x88	/* read initialization bytes           */
--#define ICB_OP_READ_ID        0x89	/* read adapter's SCSI ID              */
--#define ICB_OP_SET_UMASK      0x8A	/* set unsolicited interrupt mask      */
--#define ICB_OP_GET_UMASK      0x8B	/* read unsolicited interrupt mask     */
--#define ICB_OP_GET_REVISION   0x8C	/* read firmware revision level        */
--#define ICB_OP_DIAGNOSTICS    0x8D	/* execute diagnostics                 */
--#define ICB_OP_SET_EPARMS     0x8E	/* set execution parameters            */
--#define ICB_OP_GET_EPARMS     0x8F	/* read execution parameters           */
--
--typedef struct icbRecvCmd {
--	unchar op;
--	unchar IDlun;		/* Initiator SCSI ID/lun     */
--	unchar len[3];		/* command buffer length     */
--	unchar ptr[3];		/* command buffer address    */
--	unchar rsvd[7];		/* reserved                  */
--	volatile unchar vue;	/* vendor-unique error code  */
--	volatile unchar status;	/* returned (icmb) status    */
--	volatile unchar phase;	/* used by interrupt handler */
--} IcbRecvCmd;
--
--typedef struct icbSendStat {
--	unchar op;
--	unchar IDlun;		/* Target SCSI ID/lun                  */
--	unchar stat;		/* (outgoing) completion status byte 1 */
--	unchar rsvd[12];	/* reserved                            */
--	volatile unchar vue;	/* vendor-unique error code            */
--	volatile unchar status;	/* returned (icmb) status              */
--	volatile unchar phase;	/* used by interrupt handler           */
--} IcbSendStat;
--
--typedef struct icbRevLvl {
--	unchar op;
--	volatile unchar primary;	/* primary revision level (returned)   */
--	volatile unchar secondary;	/* secondary revision level (returned) */
--	unchar rsvd[12];	/* reserved                            */
--	volatile unchar vue;	/* vendor-unique error code            */
--	volatile unchar status;	/* returned (icmb) status              */
--	volatile unchar phase;	/* used by interrupt handler           */
--} IcbRevLvl;
--
--typedef struct icbUnsMask {	/* I'm totally guessing here */
--	unchar op;
--	volatile unchar mask[14];	/* mask bits                 */
--#if 0
--	unchar rsvd[12];	/* reserved                  */
--#endif
--	volatile unchar vue;	/* vendor-unique error code  */
--	volatile unchar status;	/* returned (icmb) status    */
--	volatile unchar phase;	/* used by interrupt handler */
--} IcbUnsMask;
--
--typedef struct icbDiag {
--	unchar op;
--	unchar type;		/* diagnostics type code (0-3) */
--	unchar len[3];		/* buffer length               */
--	unchar ptr[3];		/* buffer address              */
--	unchar rsvd[7];		/* reserved                    */
--	volatile unchar vue;	/* vendor-unique error code    */
--	volatile unchar status;	/* returned (icmb) status      */
--	volatile unchar phase;	/* used by interrupt handler   */
--} IcbDiag;
--
--#define ICB_DIAG_POWERUP   0	/* Power-up diags only       */
--#define ICB_DIAG_WALKING   1	/* walking 1's pattern       */
--#define ICB_DIAG_DMA       2	/* DMA - system memory diags */
--#define ICB_DIAG_FULL      3	/* do both 1 & 2             */
--
--typedef struct icbParms {
--	unchar op;
--	unchar rsvd1;		/* reserved                  */
--	unchar len[3];		/* parms buffer length       */
--	unchar ptr[3];		/* parms buffer address      */
--	unchar idx[2];		/* index (MSB-LSB)           */
--	unchar rsvd2[5];	/* reserved                  */
--	volatile unchar vue;	/* vendor-unique error code  */
--	volatile unchar status;	/* returned (icmb) status    */
--	volatile unchar phase;	/* used by interrupt handler */
--} IcbParms;
--
--typedef struct icbAny {
--	unchar op;
--	unchar data[14];	/* format-specific data      */
--	volatile unchar vue;	/* vendor-unique error code  */
--	volatile unchar status;	/* returned (icmb) status    */
--	volatile unchar phase;	/* used by interrupt handler */
--} IcbAny;
--
--typedef union icb {
--	unchar op;		/* ICB opcode                     */
--	IcbRecvCmd recv_cmd;	/* format for receive command     */
--	IcbSendStat send_stat;	/* format for send status         */
--	IcbRevLvl rev_lvl;	/* format for get revision level  */
--	IcbDiag diag;		/* format for execute diagnostics */
--	IcbParms eparms;	/* format for get/set exec parms  */
--	IcbAny icb;		/* generic format                 */
--	unchar data[18];
--} Icb;
--
--#ifdef MODULE
--static char *wd7000;
--module_param(wd7000, charp, 0);
+-#ifndef PORT_OVERRIDE
+-/* ??? A probe of address 0x310 screws up NE2000 cards */
+-static const unsigned short ultrastor_ports_14f[] = {
+-  0x330, 0x340, /*0x310,*/ 0x230, 0x240, 0x210, 0x130, 0x140,
+-};
 -#endif
 -
--/*
-- *  Driver SCB structure pool.
-- *
-- *  The SCBs declared here are shared by all host adapters; hence, this
-- *  structure is not part of the Adapter structure.
-- */
--static Scb scbs[MAX_SCBS];
--static Scb *scbfree;		/* free list         */
--static int freescbs = MAX_SCBS;	/* free list counter */
--static spinlock_t scbpool_lock;	/* guards the scb free list and count */
+-static void ultrastor_interrupt(void *);
+-static irqreturn_t do_ultrastor_interrupt(int, void *);
+-static inline void build_sg_list(struct mscp *, struct scsi_cmnd *SCpnt);
 -
--/*
-- *  END of data/declarations - code follows.
-- */
--static void __init setup_error(char *mesg, int *ints)
+-
+-/* Always called with host lock held */
+-
+-static inline int find_and_clear_bit_16(unsigned long *field)
 -{
--	if (ints[0] == 3)
--		printk(KERN_ERR "wd7000_setup: \"wd7000=%d,%d,0x%x\" -> %s\n", ints[1], ints[2], ints[3], mesg);
--	else if (ints[0] == 4)
--		printk(KERN_ERR "wd7000_setup: \"wd7000=%d,%d,0x%x,%d\" -> %s\n", ints[1], ints[2], ints[3], ints[4], mesg);
--	else
--		printk(KERN_ERR "wd7000_setup: \"wd7000=%d,%d,0x%x,%d,%d\" -> %s\n", ints[1], ints[2], ints[3], ints[4], ints[5], mesg);
+-  int rv;
+-
+-  if (*field == 0)
+-    panic("No free mscp");
+-
+-  asm volatile (
+-	"xorl %0,%0\n\t"
+-	"0: bsfw %1,%w0\n\t"
+-	"btr %0,%1\n\t"
+-	"jnc 0b"
+-	: "=&r" (rv), "+m" (*field) :);
+-
+-  return rv;
 -}
 -
+-/* This has been re-implemented with the help of Richard Earnshaw,
+-   <rwe@pegasus.esprit.ec.org> and works with gcc-2.5.8 and gcc-2.6.0.
+-   The instability noted by jfc below appears to be a bug in
+-   gcc-2.5.x when compiling w/o optimization.  --Caleb
 -
--/*
-- * Note: You can now set these options from the kernel's "command line".
-- * The syntax is:
-- *
-- *     wd7000=<IRQ>,<DMA>,<IO>[,<BUS_ON>[,<BUS_OFF>]]
-- *
-- * , where BUS_ON and BUS_OFF are in nanoseconds. BIOS default values
-- * are 8000ns for BUS_ON and 1875ns for BUS_OFF.
-- * eg:
-- *     wd7000=7,6,0x350
-- *
-- * will configure the driver for a WD-7000 controller
-- * using IRQ 15 with a DMA channel 6, at IO base address 0x350.
-- */
--static int __init wd7000_setup(char *str)
+-   This asm is fragile: it doesn't work without the casts and it may
+-   not work without optimization.  Maybe I should add a swap builtin
+-   to gcc.  --jfc  */
+-static inline unsigned char xchgb(unsigned char reg,
+-				  volatile unsigned char *mem)
 -{
--	static short wd7000_card_num;	/* .bss will zero this */
--	short i;
--	int ints[6];
--
--	(void) get_options(str, ARRAY_SIZE(ints), ints);
--
--	if (wd7000_card_num >= NUM_CONFIGS) {
--		printk(KERN_ERR "%s: Too many \"wd7000=\" configurations in " "command line!\n", __func__);
--		return 0;
--	}
--
--	if ((ints[0] < 3) || (ints[0] > 5)) {
--		printk(KERN_ERR "%s: Error in command line!  " "Usage: wd7000=<IRQ>,<DMA>,IO>[,<BUS_ON>" "[,<BUS_OFF>]]\n", __func__);
--	} else {
--		for (i = 0; i < NUM_IRQS; i++)
--			if (ints[1] == wd7000_irq[i])
--				break;
--
--		if (i == NUM_IRQS) {
--			setup_error("invalid IRQ.", ints);
--			return 0;
--		} else
--			configs[wd7000_card_num].irq = ints[1];
--
--		for (i = 0; i < NUM_DMAS; i++)
--			if (ints[2] == wd7000_dma[i])
--				break;
--
--		if (i == NUM_DMAS) {
--			setup_error("invalid DMA channel.", ints);
--			return 0;
--		} else
--			configs[wd7000_card_num].dma = ints[2];
--
--		for (i = 0; i < NUM_IOPORTS; i++)
--			if (ints[3] == wd7000_iobase[i])
--				break;
--
--		if (i == NUM_IOPORTS) {
--			setup_error("invalid I/O base address.", ints);
--			return 0;
--		} else
--			configs[wd7000_card_num].iobase = ints[3];
--
--		if (ints[0] > 3) {
--			if ((ints[4] < 500) || (ints[4] > 31875)) {
--				setup_error("BUS_ON value is out of range (500" " to 31875 nanoseconds)!", ints);
--				configs[wd7000_card_num].bus_on = BUS_ON;
--			} else
--				configs[wd7000_card_num].bus_on = ints[4] / 125;
--		} else
--			configs[wd7000_card_num].bus_on = BUS_ON;
--
--		if (ints[0] > 4) {
--			if ((ints[5] < 500) || (ints[5] > 31875)) {
--				setup_error("BUS_OFF value is out of range (500" " to 31875 nanoseconds)!", ints);
--				configs[wd7000_card_num].bus_off = BUS_OFF;
--			} else
--				configs[wd7000_card_num].bus_off = ints[5] / 125;
--		} else
--			configs[wd7000_card_num].bus_off = BUS_OFF;
--
--		if (wd7000_card_num) {
--			for (i = 0; i < (wd7000_card_num - 1); i++) {
--				int j = i + 1;
--
--				for (; j < wd7000_card_num; j++)
--					if (configs[i].irq == configs[j].irq) {
--						setup_error("duplicated IRQ!", ints);
--						return 0;
--					}
--				if (configs[i].dma == configs[j].dma) {
--					setup_error("duplicated DMA " "channel!", ints);
--					return 0;
--				}
--				if (configs[i].iobase == configs[j].iobase) {
--					setup_error("duplicated I/O " "base address!", ints);
--					return 0;
--				}
--			}
--		}
--
--		dprintk(KERN_DEBUG "wd7000_setup: IRQ=%d, DMA=%d, I/O=0x%x, "
--			"BUS_ON=%dns, BUS_OFF=%dns\n", configs[wd7000_card_num].irq, configs[wd7000_card_num].dma, configs[wd7000_card_num].iobase, configs[wd7000_card_num].bus_on * 125, configs[wd7000_card_num].bus_off * 125);
--
--		wd7000_card_num++;
--	}
--	return 1;
+-  __asm__ ("xchgb %0,%1" : "=q" (reg), "=m" (*mem) : "0" (reg));
+-  return reg;
 -}
 -
--__setup("wd7000=", wd7000_setup);
+-#if ULTRASTOR_DEBUG & (UD_COMMAND | UD_ABORT)
 -
--static inline void any2scsi(unchar * scsi, int any)
+-/* Always called with the host lock held */
+-static void log_ultrastor_abort(struct ultrastor_config *config,
+-				int command)
 -{
--	*scsi++ = (unsigned)any >> 16;
--	*scsi++ = (unsigned)any >> 8;
--	*scsi++ = any;
--}
+-  static char fmt[80] = "abort %d (%x); MSCP free pool: %x;";
+-  int i;
 -
--static inline int scsi2int(unchar * scsi)
--{
--	return (scsi[0] << 16) | (scsi[1] << 8) | scsi[2];
--}
--
--static inline void wd7000_enable_intr(Adapter * host)
--{
--	host->control |= INT_EN;
--	outb(host->control, host->iobase + ASC_CONTROL);
--}
--
--
--static inline void wd7000_enable_dma(Adapter * host)
--{
--	unsigned long flags;
--	host->control |= DMA_EN;
--	outb(host->control, host->iobase + ASC_CONTROL);
--
--	flags = claim_dma_lock();
--	set_dma_mode(host->dma, DMA_MODE_CASCADE);
--	enable_dma(host->dma);
--	release_dma_lock(flags);
+-  for (i = 0; i < ULTRASTOR_MAX_CMDS; i++)
+-    {
+-      fmt[20 + i*2] = ' ';
+-      if (! (config->mscp_free & (1 << i)))
+-	fmt[21 + i*2] = '0' + config->mscp[i].target_id;
+-      else
+-	fmt[21 + i*2] = '-';
+-    }
+-  fmt[20 + ULTRASTOR_MAX_CMDS * 2] = '\n';
+-  fmt[21 + ULTRASTOR_MAX_CMDS * 2] = 0;
+-  printk(fmt, command, &config->mscp[command], config->mscp_free);
 -
 -}
--
--
--#define WAITnexttimeout 200	/* 2 seconds */
--
--static inline short WAIT(unsigned port, unsigned mask, unsigned allof, unsigned noneof)
--{
--	unsigned WAITbits;
--	unsigned long WAITtimeout = jiffies + WAITnexttimeout;
--
--	while (time_before_eq(jiffies, WAITtimeout)) {
--		WAITbits = inb(port) & mask;
--
--		if (((WAITbits & allof) == allof) && ((WAITbits & noneof) == 0))
--			return (0);
--	}
--
--	return (1);
--}
--
--
--static inline int command_out(Adapter * host, unchar * cmd, int len)
--{
--	if (!WAIT(host->iobase + ASC_STAT, ASC_STATMASK, CMD_RDY, 0)) {
--		while (len--) {
--			do {
--				outb(*cmd, host->iobase + ASC_COMMAND);
--				WAIT(host->iobase + ASC_STAT, ASC_STATMASK, CMD_RDY, 0);
--			} while (inb(host->iobase + ASC_STAT) & CMD_REJ);
--
--			cmd++;
--		}
--
--		return (1);
--	}
--
--	printk(KERN_WARNING "wd7000 command_out: WAIT failed(%d)\n", len + 1);
--
--	return (0);
--}
--
--
--/*
-- *  This version of alloc_scbs is in preparation for supporting multiple
-- *  commands per lun and command chaining, by queueing pending commands.
-- *  We will need to allocate Scbs in blocks since they will wait to be
-- *  executed so there is the possibility of deadlock otherwise.
-- *  Also, to keep larger requests from being starved by smaller requests,
-- *  we limit access to this routine with an internal busy flag, so that
-- *  the satisfiability of a request is not dependent on the size of the
-- *  request.
-- */
--static inline Scb *alloc_scbs(struct Scsi_Host *host, int needed)
--{
--	Scb *scb, *p = NULL;
--	unsigned long flags;
--	unsigned long timeout = jiffies + WAITnexttimeout;
--	unsigned long now;
--	int i;
--
--	if (needed <= 0)
--		return (NULL);	/* sanity check */
--
--	spin_unlock_irq(host->host_lock);
--
--      retry:
--	while (freescbs < needed) {
--		timeout = jiffies + WAITnexttimeout;
--		do {
--			/* FIXME: can we actually just yield here ?? */
--			for (now = jiffies; now == jiffies;)
--				cpu_relax();	/* wait a jiffy */
--		} while (freescbs < needed && time_before_eq(jiffies, timeout));
--		/*
--		 *  If we get here with enough free Scbs, we can take them.
--		 *  Otherwise, we timed out and didn't get enough.
--		 */
--		if (freescbs < needed) {
--			printk(KERN_ERR "wd7000: can't get enough free SCBs.\n");
--			return (NULL);
--		}
--	}
--
--	/* Take the lock, then check we didn't get beaten, if so try again */
--	spin_lock_irqsave(&scbpool_lock, flags);
--	if (freescbs < needed) {
--		spin_unlock_irqrestore(&scbpool_lock, flags);
--		goto retry;
--	}
--
--	scb = scbfree;
--	freescbs -= needed;
--	for (i = 0; i < needed; i++) {
--		p = scbfree;
--		scbfree = p->next;
--	}
--	p->next = NULL;
--
--	spin_unlock_irqrestore(&scbpool_lock, flags);
--
--	spin_lock_irq(host->host_lock);
--	return (scb);
--}
--
--
--static inline void free_scb(Scb * scb)
--{
--	unsigned long flags;
--
--	spin_lock_irqsave(&scbpool_lock, flags);
--
--	memset(scb, 0, sizeof(Scb));
--	scb->next = scbfree;
--	scbfree = scb;
--	freescbs++;
--
--	spin_unlock_irqrestore(&scbpool_lock, flags);
--}
--
--
--static inline void init_scbs(void)
--{
--	int i;
--
--	spin_lock_init(&scbpool_lock);
--
--	/* This is only ever called before the SCB pool is active */
--
--	scbfree = &(scbs[0]);
--	memset(scbs, 0, sizeof(scbs));
--	for (i = 0; i < MAX_SCBS - 1; i++) {
--		scbs[i].next = &(scbs[i + 1]);
--		scbs[i].SCpnt = NULL;
--	}
--	scbs[MAX_SCBS - 1].next = NULL;
--	scbs[MAX_SCBS - 1].SCpnt = NULL;
--}
--
--
--static int mail_out(Adapter * host, Scb * scbptr)
--/*
-- *  Note: this can also be used for ICBs; just cast to the parm type.
-- */
--{
--	int i, ogmb;
--	unsigned long flags;
--	unchar start_ogmb;
--	Mailbox *ogmbs = host->mb.ogmb;
--	int *next_ogmb = &(host->next_ogmb);
--
--	dprintk("wd7000_mail_out: 0x%06lx", (long) scbptr);
--
--	/* We first look for a free outgoing mailbox */
--	spin_lock_irqsave(host->sh->host_lock, flags);
--	ogmb = *next_ogmb;
--	for (i = 0; i < OGMB_CNT; i++) {
--		if (ogmbs[ogmb].status == 0) {
--			dprintk(" using OGMB 0x%x", ogmb);
--			ogmbs[ogmb].status = 1;
--			any2scsi((unchar *) ogmbs[ogmb].scbptr, (int) scbptr);
--
--			*next_ogmb = (ogmb + 1) % OGMB_CNT;
--			break;
--		} else
--			ogmb = (ogmb + 1) % OGMB_CNT;
--	}
--	spin_unlock_irqrestore(host->sh->host_lock, flags);
--
--	dprintk(", scb is 0x%06lx", (long) scbptr);
--
--	if (i >= OGMB_CNT) {
--		/*
--		 *  Alternatively, we might issue the "interrupt on free OGMB",
--		 *  and sleep, but it must be ensured that it isn't the init
--		 *  task running.  Instead, this version assumes that the caller
--		 *  will be persistent, and try again.  Since it's the adapter
--		 *  that marks OGMB's free, waiting even with interrupts off
--		 *  should work, since they are freed very quickly in most cases.
--		 */
--		dprintk(", no free OGMBs.\n");
--		return (0);
--	}
--
--	wd7000_enable_intr(host);
--
--	start_ogmb = START_OGMB | ogmb;
--	command_out(host, &start_ogmb, 1);
--
--	dprintk(", awaiting interrupt.\n");
--
--	return (1);
--}
--
--
--static int make_code(unsigned hosterr, unsigned scsierr)
--{
--#ifdef WD7000_DEBUG
--	int in_error = hosterr;
 -#endif
 -
--	switch ((hosterr >> 8) & 0xff) {
--	case 0:		/* Reserved */
--		hosterr = DID_ERROR;
--		break;
--	case 1:		/* Command Complete, no errors */
--		hosterr = DID_OK;
--		break;
--	case 2:		/* Command complete, error logged in scb status (scsierr) */
--		hosterr = DID_OK;
--		break;
--	case 4:		/* Command failed to complete - timeout */
--		hosterr = DID_TIME_OUT;
--		break;
--	case 5:		/* Command terminated; Bus reset by external device */
--		hosterr = DID_RESET;
--		break;
--	case 6:		/* Unexpected Command Received w/ host as target */
--		hosterr = DID_BAD_TARGET;
--		break;
--	case 80:		/* Unexpected Reselection */
--	case 81:		/* Unexpected Selection */
--		hosterr = DID_BAD_INTR;
--		break;
--	case 82:		/* Abort Command Message  */
--		hosterr = DID_ABORT;
--		break;
--	case 83:		/* SCSI Bus Software Reset */
--	case 84:		/* SCSI Bus Hardware Reset */
--		hosterr = DID_RESET;
--		break;
--	default:		/* Reserved */
--		hosterr = DID_ERROR;
--	}
--#ifdef WD7000_DEBUG
--	if (scsierr || hosterr)
--		dprintk("\nSCSI command error: SCSI 0x%02x host 0x%04x return %d\n", scsierr, in_error, hosterr);
--#endif
--	return (scsierr | (hosterr << 16));
--}
--
--#define wd7000_intr_ack(host)   outb (0, host->iobase + ASC_INTR_ACK)
--
--
--static irqreturn_t wd7000_intr(int irq, void *dev_id)
+-static int ultrastor_14f_detect(struct scsi_host_template * tpnt)
 -{
--	Adapter *host = (Adapter *) dev_id;
--	int flag, icmb, errstatus, icmb_status;
--	int host_error, scsi_error;
--	Scb *scb;	/* for SCSI commands */
--	IcbAny *icb;	/* for host commands */
--	struct scsi_cmnd *SCpnt;
--	Mailbox *icmbs = host->mb.icmb;
--	unsigned long flags;
+-    size_t i;
+-    unsigned char in_byte, version_byte = 0;
+-    struct config_1 {
+-      unsigned char bios_segment: 3;
+-      unsigned char removable_disks_as_fixed: 1;
+-      unsigned char interrupt: 2;
+-    unsigned char dma_channel: 2;
+-    } config_1;
+-    struct config_2 {
+-      unsigned char ha_scsi_id: 3;
+-      unsigned char mapping_mode: 2;
+-      unsigned char bios_drive_number: 1;
+-      unsigned char tfr_port: 2;
+-    } config_2;
 -
--	spin_lock_irqsave(host->sh->host_lock, flags);
--	host->int_counter++;
--
--	dprintk("wd7000_intr: irq = %d, host = 0x%06lx\n", irq, (long) host);
--
--	flag = inb(host->iobase + ASC_INTR_STAT);
--
--	dprintk("wd7000_intr: intr stat = 0x%02x\n", flag);
--
--	if (!(inb(host->iobase + ASC_STAT) & INT_IM)) {
--		/* NB: these are _very_ possible if IRQ 15 is being used, since
--		 * it's the "garbage collector" on the 2nd 8259 PIC.  Specifically,
--		 * any interrupt signal into the 8259 which can't be identified
--		 * comes out as 7 from the 8259, which is 15 to the host.  Thus, it
--		 * is a good thing the WD7000 has an interrupt status port, so we
--		 * can sort these out.  Otherwise, electrical noise and other such
--		 * problems would be indistinguishable from valid interrupts...
--		 */
--		dprintk("wd7000_intr: phantom interrupt...\n");
--		goto ack;
--	}
--
--	if (!(flag & MB_INTR))
--		goto ack;
--
--	/* The interrupt is for a mailbox */
--	if (!(flag & IMB_INTR)) {
--		dprintk("wd7000_intr: free outgoing mailbox\n");
--		/*
--		 * If sleep_on() and the "interrupt on free OGMB" command are
--		 * used in mail_out(), wake_up() should correspondingly be called
--		 * here.  For now, we don't need to do anything special.
--		 */
--		goto ack;
--	}
--
--	/* The interrupt is for an incoming mailbox */
--	icmb = flag & MB_MASK;
--	icmb_status = icmbs[icmb].status;
--	if (icmb_status & 0x80) {	/* unsolicited - result in ICMB */
--		dprintk("wd7000_intr: unsolicited interrupt 0x%02x\n", icmb_status);
--		goto ack;
--	}
--
--	/* Aaaargh! (Zaga) */
--	scb = isa_bus_to_virt(scsi2int((unchar *) icmbs[icmb].scbptr));
--	icmbs[icmb].status = 0;
--	if (scb->op & ICB_OP_MASK) {	/* an SCB is done */
--		icb = (IcbAny *) scb;
--		icb->status = icmb_status;
--		icb->phase = 0;
--		goto ack;
--	}
--
--	SCpnt = scb->SCpnt;
--	if (--(SCpnt->SCp.phase) <= 0) {	/* all scbs are done */
--		host_error = scb->vue | (icmb_status << 8);
--		scsi_error = scb->status;
--		errstatus = make_code(host_error, scsi_error);
--		SCpnt->result = errstatus;
--
--		free_scb(scb);
--
--		SCpnt->scsi_done(SCpnt);
--	}
--
-- ack:
--	dprintk("wd7000_intr: return from interrupt handler\n");
--	wd7000_intr_ack(host);
--
--	spin_unlock_irqrestore(host->sh->host_lock, flags);
--	return IRQ_HANDLED;
--}
--
--static int wd7000_queuecommand_lck(struct scsi_cmnd *SCpnt,
--		void (*done)(struct scsi_cmnd *))
--{
--	Scb *scb;
--	Sgb *sgb;
--	unchar *cdb = (unchar *) SCpnt->cmnd;
--	unchar idlun;
--	short cdblen;
--	int nseg;
--	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
--
--	cdblen = SCpnt->cmd_len;
--	idlun = ((SCpnt->device->id << 5) & 0xe0) | (SCpnt->device->lun & 7);
--	SCpnt->scsi_done = done;
--	SCpnt->SCp.phase = 1;
--	scb = alloc_scbs(SCpnt->device->host, 1);
--	scb->idlun = idlun;
--	memcpy(scb->cdb, cdb, cdblen);
--	scb->direc = 0x40;	/* Disable direction check */
--
--	scb->SCpnt = SCpnt;	/* so we can find stuff later */
--	SCpnt->host_scribble = (unchar *) scb;
--	scb->host = host;
--
--	nseg = scsi_sg_count(SCpnt);
--	if (nseg > 1) {
--		struct scatterlist *sg;
--		unsigned i;
--
--		dprintk("Using scatter/gather with %d elements.\n", nseg);
--
--		sgb = scb->sgb;
--		scb->op = 1;
--		any2scsi(scb->dataptr, (int) sgb);
--		any2scsi(scb->maxlen, nseg * sizeof(Sgb));
--
--		scsi_for_each_sg(SCpnt, sg, nseg, i) {
--			any2scsi(sgb[i].ptr, isa_page_to_bus(sg_page(sg)) + sg->offset);
--			any2scsi(sgb[i].len, sg->length);
--		}
--	} else {
--		scb->op = 0;
--		if (nseg) {
--			struct scatterlist *sg = scsi_sglist(SCpnt);
--			any2scsi(scb->dataptr, isa_page_to_bus(sg_page(sg)) + sg->offset);
--		}
--		any2scsi(scb->maxlen, scsi_bufflen(SCpnt));
--	}
--
--	/* FIXME: drop lock and yield here ? */
--
--	while (!mail_out(host, scb))
--		cpu_relax();	/* keep trying */
--
--	return 0;
--}
--
--static DEF_SCSI_QCMD(wd7000_queuecommand)
--
--static int wd7000_diagnostics(Adapter * host, int code)
--{
--	static IcbDiag icb = { ICB_OP_DIAGNOSTICS };
--	static unchar buf[256];
--	unsigned long timeout;
--
--	icb.type = code;
--	any2scsi(icb.len, sizeof(buf));
--	any2scsi(icb.ptr, (int) &buf);
--	icb.phase = 1;
--	/*
--	 * This routine is only called at init, so there should be OGMBs
--	 * available.  I'm assuming so here.  If this is going to
--	 * fail, I can just let the timeout catch the failure.
--	 */
--	mail_out(host, (struct scb *) &icb);
--	timeout = jiffies + WAITnexttimeout;	/* wait up to 2 seconds */
--	while (icb.phase && time_before(jiffies, timeout)) {
--		cpu_relax();	/* wait for completion */
--		barrier();
--	}
--
--	if (icb.phase) {
--		printk("wd7000_diagnostics: timed out.\n");
--		return (0);
--	}
--	if (make_code(icb.vue | (icb.status << 8), 0)) {
--		printk("wd7000_diagnostics: failed (0x%02x,0x%02x)\n", icb.vue, icb.status);
--		return (0);
--	}
--
--	return (1);
--}
--
--
--static int wd7000_adapter_reset(Adapter * host)
--{
--	InitCmd init_cmd = {
--		INITIALIZATION,
--		7,
--		host->bus_on,
--		host->bus_off,
--		0,
--		{0, 0, 0},
--		OGMB_CNT,
--		ICMB_CNT
--	};
--	int diag;
--	/*
--	 *  Reset the adapter - only.  The SCSI bus was initialized at power-up,
--	 *  and we need to do this just so we control the mailboxes, etc.
--	 */
--	outb(ASC_RES, host->iobase + ASC_CONTROL);
--	udelay(40);		/* reset pulse: this is 40us, only need 25us */
--	outb(0, host->iobase + ASC_CONTROL);
--	host->control = 0;	/* this must always shadow ASC_CONTROL */
--
--	if (WAIT(host->iobase + ASC_STAT, ASC_STATMASK, CMD_RDY, 0)) {
--		printk(KERN_ERR "wd7000_init: WAIT timed out.\n");
--		return -1;	/* -1 = not ok */
--	}
--
--	if ((diag = inb(host->iobase + ASC_INTR_STAT)) != 1) {
--		printk("wd7000_init: ");
--
--		switch (diag) {
--		case 2:
--			printk(KERN_ERR "RAM failure.\n");
--			break;
--		case 3:
--			printk(KERN_ERR "FIFO R/W failed\n");
--			break;
--		case 4:
--			printk(KERN_ERR "SBIC register R/W failed\n");
--			break;
--		case 5:
--			printk(KERN_ERR "Initialization D-FF failed.\n");
--			break;
--		case 6:
--			printk(KERN_ERR "Host IRQ D-FF failed.\n");
--			break;
--		case 7:
--			printk(KERN_ERR "ROM checksum error.\n");
--			break;
--		default:
--			printk(KERN_ERR "diagnostic code 0x%02Xh received.\n", diag);
--		}
--		return -1;
--	}
--	/* Clear mailboxes */
--	memset(&(host->mb), 0, sizeof(host->mb));
--
--	/* Execute init command */
--	any2scsi((unchar *) & (init_cmd.mailboxes), (int) &(host->mb));
--	if (!command_out(host, (unchar *) & init_cmd, sizeof(init_cmd))) {
--		printk(KERN_ERR "wd7000_adapter_reset: adapter initialization failed.\n");
--		return -1;
--	}
--
--	if (WAIT(host->iobase + ASC_STAT, ASC_STATMASK, ASC_INIT, 0)) {
--		printk("wd7000_adapter_reset: WAIT timed out.\n");
--		return -1;
--	}
--	return 0;
--}
--
--static int wd7000_init(Adapter * host)
--{
--	if (wd7000_adapter_reset(host) == -1)
--		return 0;
--
--
--	if (request_irq(host->irq, wd7000_intr, 0, "wd7000", host)) {
--		printk("wd7000_init: can't get IRQ %d.\n", host->irq);
--		return (0);
--	}
--	if (request_dma(host->dma, "wd7000")) {
--		printk("wd7000_init: can't get DMA channel %d.\n", host->dma);
--		free_irq(host->irq, host);
--		return (0);
--	}
--	wd7000_enable_dma(host);
--	wd7000_enable_intr(host);
--
--	if (!wd7000_diagnostics(host, ICB_DIAG_FULL)) {
--		free_dma(host->dma);
--		free_irq(host->irq, NULL);
--		return (0);
--	}
--
--	return (1);
--}
--
--
--static void wd7000_revision(Adapter * host)
--{
--	static IcbRevLvl icb = { ICB_OP_GET_REVISION };
--
--	icb.phase = 1;
--	/*
--	 * Like diagnostics, this is only done at init time, in fact, from
--	 * wd7000_detect, so there should be OGMBs available.  If it fails,
--	 * the only damage will be that the revision will show up as 0.0,
--	 * which in turn means that scatter/gather will be disabled.
--	 */
--	mail_out(host, (struct scb *) &icb);
--	while (icb.phase) {
--		cpu_relax();	/* wait for completion */
--		barrier();
--	}
--	host->rev1 = icb.primary;
--	host->rev2 = icb.secondary;
--}
--
--
--static int wd7000_set_info(struct Scsi_Host *host, char *buffer, int length)
--{
--	dprintk("Buffer = <%.*s>, length = %d\n", length, buffer, length);
--
--	/*
--	 * Currently this is a no-op
--	 */
--	dprintk("Sorry, this function is currently out of order...\n");
--	return (length);
--}
--
--
--static int wd7000_show_info(struct seq_file *m, struct Scsi_Host *host)
--{
--	Adapter *adapter = (Adapter *)host->hostdata;
--	unsigned long flags;
--#ifdef WD7000_DEBUG
--	Mailbox *ogmbs, *icmbs;
--	short count;
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-    printk("US14F: detect: called\n");
 -#endif
 -
--	spin_lock_irqsave(host->host_lock, flags);
--	seq_printf(m, "Host scsi%d: Western Digital WD-7000 (rev %d.%d)\n", host->host_no, adapter->rev1, adapter->rev2);
--	seq_printf(m, "  IO base:      0x%x\n", adapter->iobase);
--	seq_printf(m, "  IRQ:          %d\n", adapter->irq);
--	seq_printf(m, "  DMA channel:  %d\n", adapter->dma);
--	seq_printf(m, "  Interrupts:   %d\n", adapter->int_counter);
--	seq_printf(m, "  BUS_ON time:  %d nanoseconds\n", adapter->bus_on * 125);
--	seq_printf(m, "  BUS_OFF time: %d nanoseconds\n", adapter->bus_off * 125);
+-    /* If a 24F has already been configured, don't look for a 14F.  */
+-    if (config.bios_segment)
+-	return FALSE;
 -
--#ifdef WD7000_DEBUG
--	ogmbs = adapter->mb.ogmb;
--	icmbs = adapter->mb.icmb;
--
--	seq_printf(m, "\nControl port value: 0x%x\n", adapter->control);
--	seq_puts(m, "Incoming mailbox:\n");
--	seq_printf(m, "  size: %d\n", ICMB_CNT);
--	seq_puts(m, "  queued messages: ");
--
--	for (i = count = 0; i < ICMB_CNT; i++)
--		if (icmbs[i].status) {
--			count++;
--			seq_printf(m, "0x%x ", i);
--		}
--
--	seq_puts(m, count ? "\n" : "none\n");
--
--	seq_puts(m, "Outgoing mailbox:\n");
--	seq_printf(m, "  size: %d\n", OGMB_CNT);
--	seq_printf(m, "  next message: 0x%x\n", adapter->next_ogmb);
--	seq_puts(m, "  queued messages: ");
--
--	for (i = count = 0; i < OGMB_CNT; i++)
--		if (ogmbs[i].status) {
--			count++;
--			seq_printf(m, "0x%x ", i);
--		}
--
--	seq_puts(m, count ? "\n" : "none\n");
+-#ifdef PORT_OVERRIDE
+-    if(!request_region(PORT_OVERRIDE, 0xc, "ultrastor")) {
+-      printk("Ultrastor I/O space already in use\n");
+-      return FALSE;
+-    };
+-    config.port_address = PORT_OVERRIDE;
+-#else
+-    for (i = 0; i < ARRAY_SIZE(ultrastor_ports_14f); i++) {
+-      if(!request_region(ultrastor_ports_14f[i], 0x0c, "ultrastor")) continue;
+-      config.port_address = ultrastor_ports_14f[i];
 -#endif
 -
--	spin_unlock_irqrestore(host->host_lock, flags);
--
--	return 0;
--}
--
--
--/*
-- *  Returns the number of adapters this driver is supporting.
-- *
-- *  The source for hosts.c says to wait to call scsi_register until 100%
-- *  sure about an adapter.  We need to do it a little sooner here; we
-- *  need the storage set up by scsi_register before wd7000_init, and
-- *  changing the location of an Adapter structure is more trouble than
-- *  calling scsi_unregister.
-- *
-- */
--
--static __init int wd7000_detect(struct scsi_host_template *tpnt)
--{
--	short present = 0, biosaddr_ptr, sig_ptr, i, pass;
--	short biosptr[NUM_CONFIGS];
--	unsigned iobase;
--	Adapter *host = NULL;
--	struct Scsi_Host *sh;
--	int unit = 0;
--
--	dprintk("wd7000_detect: started\n");
--
--#ifdef MODULE
--	if (wd7000)
--		wd7000_setup(wd7000);
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-	printk("US14F: detect: testing port address %03X\n", config.port_address);
 -#endif
 -
--	for (i = 0; i < UNITS; wd7000_host[i++] = NULL);
--	for (i = 0; i < NUM_CONFIGS; biosptr[i++] = -1);
--
--	tpnt->proc_name = "wd7000";
--	tpnt->show_info = &wd7000_show_info;
--	tpnt->write_info = wd7000_set_info;
--
--	/*
--	 * Set up SCB free list, which is shared by all adapters
--	 */
--	init_scbs();
--
--	for (pass = 0; pass < NUM_CONFIGS; pass++) {
--		/*
--		 * First, search for BIOS SIGNATURE...
--		 */
--		for (biosaddr_ptr = 0; biosaddr_ptr < NUM_ADDRS; biosaddr_ptr++)
--			for (sig_ptr = 0; sig_ptr < NUM_SIGNATURES; sig_ptr++) {
--				for (i = 0; i < pass; i++)
--					if (biosptr[i] == biosaddr_ptr)
--						break;
--
--				if (i == pass) {
--					void __iomem *biosaddr = ioremap(wd7000_biosaddr[biosaddr_ptr] + signatures[sig_ptr].ofs,
--								 signatures[sig_ptr].len);
--					short bios_match = 1;
--
--					if (biosaddr)
--						bios_match = check_signature(biosaddr, signatures[sig_ptr].sig, signatures[sig_ptr].len);
--
--					iounmap(biosaddr);
--
--					if (bios_match)
--						goto bios_matched;
--				}
--			}
--
--	      bios_matched:
--		/*
--		 * BIOS SIGNATURE has been found.
--		 */
--#ifdef WD7000_DEBUG
--		dprintk("wd7000_detect: pass %d\n", pass + 1);
--
--		if (biosaddr_ptr == NUM_ADDRS)
--			dprintk("WD-7000 SST BIOS not detected...\n");
--		else
--			dprintk("WD-7000 SST BIOS detected at 0x%lx: checking...\n", wd7000_biosaddr[biosaddr_ptr]);
+-	in_byte = inb(U14F_PRODUCT_ID(config.port_address));
+-	if (in_byte != US14F_PRODUCT_ID_0) {
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-# ifdef PORT_OVERRIDE
+-	    printk("US14F: detect: wrong product ID 0 - %02X\n", in_byte);
+-# else
+-	    printk("US14F: detect: no adapter at port %03X\n", config.port_address);
+-# endif
+-#endif
+-#ifdef PORT_OVERRIDE
+-	    goto out_release_port;
+-#else
+-	    release_region(config.port_address, 0x0c);
+-	    continue;
+-#endif
+-	}
+-	in_byte = inb(U14F_PRODUCT_ID(config.port_address) + 1);
+-	/* Only upper nibble is significant for Product ID 1 */
+-	if ((in_byte & 0xF0) != US14F_PRODUCT_ID_1) {
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-# ifdef PORT_OVERRIDE
+-	    printk("US14F: detect: wrong product ID 1 - %02X\n", in_byte);
+-# else
+-	    printk("US14F: detect: no adapter at port %03X\n", config.port_address);
+-# endif
+-#endif
+-#ifdef PORT_OVERRIDE
+-	    goto out_release_port;
+-#else
+-	    release_region(config.port_address, 0x0c);
+-	    continue;
+-#endif
+-	}
+-	version_byte = in_byte;
+-#ifndef PORT_OVERRIDE
+-	break;
+-    }
+-    if (i == ARRAY_SIZE(ultrastor_ports_14f)) {
+-# if (ULTRASTOR_DEBUG & UD_DETECT)
+-	printk("US14F: detect: no port address found!\n");
+-# endif
+-	/* all ports probed already released - we can just go straight out */
+-	return FALSE;
+-    }
 -#endif
 -
--		if (configs[pass].irq < 0)
--			continue;
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-    printk("US14F: detect: adapter found at port address %03X\n",
+-	   config.port_address);
+-#endif
 -
--		if (unit == UNITS)
--			continue;
+-    /* Set local doorbell mask to disallow bus reset unless
+-       ultrastor_bus_reset is true.  */
+-    outb(ultrastor_bus_reset ? 0xc2 : 0x82, LCL_DOORBELL_MASK(config.port_address));
 -
--		iobase = configs[pass].iobase;
+-    /* All above tests passed, must be the right thing.  Get some useful
+-       info. */
 -
--		dprintk("wd7000_detect: check IO 0x%x region...\n", iobase);
+-    /* Register the I/O space that we use */
 -
--		if (request_region(iobase, 4, "wd7000")) {
+-    *(char *)&config_1 = inb(CONFIG(config.port_address + 0));
+-    *(char *)&config_2 = inb(CONFIG(config.port_address + 1));
+-    config.bios_segment = bios_segment_table[config_1.bios_segment];
+-    config.doorbell_address = config.port_address;
+-    config.ogm_address = config.port_address + 0x8;
+-    config.icm_address = config.port_address + 0xC;
+-    config.interrupt = interrupt_table_14f[config_1.interrupt];
+-    config.ha_scsi_id = config_2.ha_scsi_id;
+-    config.heads = mapping_table[config_2.mapping_mode].heads;
+-    config.sectors = mapping_table[config_2.mapping_mode].sectors;
+-    config.bios_drive_number = config_2.bios_drive_number;
+-    config.subversion = (version_byte & 0x0F);
+-    if (config.subversion == U34F)
+-	config.dma_channel = 0;
+-    else
+-	config.dma_channel = dma_channel_table_14f[config_1.dma_channel];
 -
--			dprintk("wd7000_detect: ASC reset (IO 0x%x) ...", iobase);
--			/*
--			 * ASC reset...
--			 */
--			outb(ASC_RES, iobase + ASC_CONTROL);
--			msleep(10);
--			outb(0, iobase + ASC_CONTROL);
+-    if (!config.bios_segment) {
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-	printk("US14F: detect: not detected.\n");
+-#endif
+-	goto out_release_port;
+-    }
 -
--			if (WAIT(iobase + ASC_STAT, ASC_STATMASK, CMD_RDY, 0)) {
--				dprintk("failed!\n");
--				goto err_release;
--			} else
--				dprintk("ok!\n");
--
--			if (inb(iobase + ASC_INTR_STAT) == 1) {
--				/*
--				 *  We register here, to get a pointer to the extra space,
--				 *  which we'll use as the Adapter structure (host) for
--				 *  this adapter.  It is located just after the registered
--				 *  Scsi_Host structure (sh), and is located by the empty
--				 *  array hostdata.
--				 */
--				sh = scsi_register(tpnt, sizeof(Adapter));
--				if (sh == NULL)
--					goto err_release;
--
--				host = (Adapter *) sh->hostdata;
--
--				dprintk("wd7000_detect: adapter allocated at 0x%x\n", (int) host);
--				memset(host, 0, sizeof(Adapter));
--
--				host->irq = configs[pass].irq;
--				host->dma = configs[pass].dma;
--				host->iobase = iobase;
--				host->int_counter = 0;
--				host->bus_on = configs[pass].bus_on;
--				host->bus_off = configs[pass].bus_off;
--				host->sh = wd7000_host[unit] = sh;
--				unit++;
--
--				dprintk("wd7000_detect: Trying init WD-7000 card at IO " "0x%x, IRQ %d, DMA %d...\n", host->iobase, host->irq, host->dma);
--
--				if (!wd7000_init(host))	/* Initialization failed */
--					goto err_unregister;
--
--				/*
--				 *  OK from here - we'll use this adapter/configuration.
--				 */
--				wd7000_revision(host);	/* important for scatter/gather */
--
--				/*
--				 *  For boards before rev 6.0, scatter/gather isn't supported.
--				 */
--				if (host->rev1 < 6)
--					sh->sg_tablesize = 1;
--
--				present++;	/* count it */
--
--				if (biosaddr_ptr != NUM_ADDRS)
--					biosptr[pass] = biosaddr_ptr;
--
--				printk(KERN_INFO "Western Digital WD-7000 (rev %d.%d) ", host->rev1, host->rev2);
--				printk("using IO 0x%x, IRQ %d, DMA %d.\n", host->iobase, host->irq, host->dma);
--				printk("  BUS_ON time: %dns, BUS_OFF time: %dns\n", host->bus_on * 125, host->bus_off * 125);
--			}
--		} else
--			dprintk("wd7000_detect: IO 0x%x region already allocated!\n", iobase);
--
--		continue;
--
--	      err_unregister:
--		scsi_unregister(sh);
--	      err_release:
--		release_region(iobase, 4);
--
+-    /* Final consistency check, verify previous info. */
+-    if (config.subversion != U34F)
+-	if (!config.dma_channel || !(config_2.tfr_port & 0x2)) {
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-	    printk("US14F: detect: consistency check failed\n");
+-#endif
+-           goto out_release_port;
 -	}
 -
--	if (!present)
--		printk("Failed initialization of WD-7000 SCSI card!\n");
+-    /* If we were TRULY paranoid, we could issue a host adapter inquiry
+-       command here and verify the data returned.  But frankly, I'm
+-       exhausted! */
 -
--	return (present);
+-    /* Finally!  Now I'm satisfied... */
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-    printk("US14F: detect: detect succeeded\n"
+-	   "  Port address: %03X\n"
+-	   "  BIOS segment: %05X\n"
+-	   "  Interrupt: %u\n"
+-	   "  DMA channel: %u\n"
+-	   "  H/A SCSI ID: %u\n"
+-	   "  Subversion: %u\n",
+-	   config.port_address, config.bios_segment, config.interrupt,
+-	   config.dma_channel, config.ha_scsi_id, config.subversion);
+-#endif
+-    tpnt->this_id = config.ha_scsi_id;
+-    tpnt->unchecked_isa_dma = (config.subversion != U34F);
+-
+-#if ULTRASTOR_MAX_CMDS > 1
+-    config.mscp_free = ~0;
+-#endif
+-
+-    /*
+-     * Brrr, &config.mscp[0].SCint->host) it is something magical....
+-     * XXX and FIXME
+-     */
+-    if (request_irq(config.interrupt, do_ultrastor_interrupt, 0, "Ultrastor", &config.mscp[0].SCint->device->host)) {
+-	printk("Unable to allocate IRQ%u for UltraStor controller.\n",
+-	       config.interrupt);
+-	goto out_release_port;
+-    }
+-    if (config.dma_channel && request_dma(config.dma_channel,"Ultrastor")) {
+-	printk("Unable to allocate DMA channel %u for UltraStor controller.\n",
+-	       config.dma_channel);
+-	free_irq(config.interrupt, NULL);
+-	goto out_release_port;
+-    }
+-    tpnt->sg_tablesize = ULTRASTOR_14F_MAX_SG;
+-    printk("UltraStor driver version" VERSION ".  Using %d SG lists.\n",
+-	   ULTRASTOR_14F_MAX_SG);
+-
+-    return TRUE;
+-out_release_port:
+-    release_region(config.port_address, 0x0c);
+-    return FALSE;
 -}
 -
--static int wd7000_release(struct Scsi_Host *shost)
+-static int ultrastor_24f_detect(struct scsi_host_template * tpnt)
+-{
+-  int i;
+-  struct Scsi_Host * shpnt = NULL;
+-
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-  printk("US24F: detect");
+-#endif
+-
+-  /* probe each EISA slot at slot address C80 */
+-  for (i = 1; i < 15; i++)
+-    {
+-      unsigned char config_1, config_2;
+-      unsigned short addr = (i << 12) | ULTRASTOR_24F_PORT;
+-
+-      if (inb(addr) != US24F_PRODUCT_ID_0 &&
+-	  inb(addr+1) != US24F_PRODUCT_ID_1 &&
+-	  inb(addr+2) != US24F_PRODUCT_ID_2)
+-	continue;
+-
+-      config.revision = inb(addr+3);
+-      config.slot = i;
+-      if (! (inb(addr+4) & 1))
+-	{
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-	  printk("U24F: found disabled card in slot %u\n", i);
+-#endif
+-	  continue;
+-	}
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-      printk("U24F: found card in slot %u\n", i);
+-#endif
+-      config_1 = inb(addr + 5);
+-      config.bios_segment = bios_segment_table[config_1 & 7];
+-      switch(config_1 >> 4)
+-	{
+-	case 1:
+-	  config.interrupt = 15;
+-	  break;
+-	case 2:
+-	  config.interrupt = 14;
+-	  break;
+-	case 4:
+-	  config.interrupt = 11;
+-	  break;
+-	case 8:
+-	  config.interrupt = 10;
+-	  break;
+-	default:
+-	  printk("U24F: invalid IRQ\n");
+-	  return FALSE;
+-	}
+-
+-      /* BIOS addr set */
+-      /* base port set */
+-      config.port_address = addr;
+-      config.doorbell_address = addr + 12;
+-      config.ogm_address = addr + 0x17;
+-      config.icm_address = addr + 0x1C;
+-      config_2 = inb(addr + 7);
+-      config.ha_scsi_id = config_2 & 7;
+-      config.heads = mapping_table[(config_2 >> 3) & 3].heads;
+-      config.sectors = mapping_table[(config_2 >> 3) & 3].sectors;
+-#if (ULTRASTOR_DEBUG & UD_DETECT)
+-      printk("US24F: detect: detect succeeded\n"
+-	     "  Port address: %03X\n"
+-	     "  BIOS segment: %05X\n"
+-	     "  Interrupt: %u\n"
+-	     "  H/A SCSI ID: %u\n",
+-	     config.port_address, config.bios_segment,
+-	     config.interrupt, config.ha_scsi_id);
+-#endif
+-      tpnt->this_id = config.ha_scsi_id;
+-      tpnt->unchecked_isa_dma = 0;
+-      tpnt->sg_tablesize = ULTRASTOR_24F_MAX_SG;
+-
+-      shpnt = scsi_register(tpnt, 0);
+-      if (!shpnt) {
+-             printk(KERN_WARNING "(ultrastor:) Could not register scsi device. Aborting registration.\n");
+-             free_irq(config.interrupt, do_ultrastor_interrupt);
+-             return FALSE;
+-      }
+-      
+-      if (request_irq(config.interrupt, do_ultrastor_interrupt, 0, "Ultrastor", shpnt))
+-	{
+-	  printk("Unable to allocate IRQ%u for UltraStor controller.\n",
+-		 config.interrupt);
+-	  return FALSE;
+-	}
+-
+-      shpnt->irq = config.interrupt;
+-      shpnt->dma_channel = config.dma_channel;
+-      shpnt->io_port = config.port_address;
+-
+-#if ULTRASTOR_MAX_CMDS > 1
+-      config.mscp_free = ~0;
+-#endif
+-      /* Mark ICM and OGM free */
+-      outb(0, addr + 0x16);
+-      outb(0, addr + 0x1B);
+-
+-      /* Set local doorbell mask to disallow bus reset unless
+-	 ultrastor_bus_reset is true.  */
+-      outb(ultrastor_bus_reset ? 0xc2 : 0x82, LCL_DOORBELL_MASK(addr+12));
+-      outb(0x02, SYS_DOORBELL_MASK(addr+12));
+-      printk("UltraStor driver version " VERSION ".  Using %d SG lists.\n",
+-	     tpnt->sg_tablesize);
+-      return TRUE;
+-    }
+-  return FALSE;
+-}
+-
+-static int ultrastor_detect(struct scsi_host_template * tpnt)
+-{
+-	tpnt->proc_name = "ultrastor";
+-	return ultrastor_14f_detect(tpnt) || ultrastor_24f_detect(tpnt);
+-}
+-
+-static int ultrastor_release(struct Scsi_Host *shost)
 -{
 -	if (shost->irq)
 -		free_irq(shost->irq, NULL);
+-	if (shost->dma_channel != 0xff)
+-		free_dma(shost->dma_channel);
 -	if (shost->io_port && shost->n_io_port)
 -		release_region(shost->io_port, shost->n_io_port);
 -	scsi_unregister(shost);
 -	return 0;
 -}
 -
--#if 0
--/*
-- *  I have absolutely NO idea how to do an abort with the WD7000...
-- */
--static int wd7000_abort(Scsi_Cmnd * SCpnt)
+-static const char *ultrastor_info(struct Scsi_Host * shpnt)
 -{
--	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+-    static char buf[64];
 -
--	if (inb(host->iobase + ASC_STAT) & INT_IM) {
--		printk("wd7000_abort: lost interrupt\n");
--		wd7000_intr_handle(host->irq, NULL, NULL);
--		return FAILED;
--	}
--	return FAILED;
+-    if (config.slot)
+-      sprintf(buf, "UltraStor 24F SCSI @ Slot %u IRQ%u",
+-	      config.slot, config.interrupt);
+-    else if (config.subversion)
+-      sprintf(buf, "UltraStor 34F SCSI @ Port %03X BIOS %05X IRQ%u",
+-	      config.port_address, (int)config.bios_segment,
+-	      config.interrupt);
+-    else
+-      sprintf(buf, "UltraStor 14F SCSI @ Port %03X BIOS %05X IRQ%u DMA%u",
+-	      config.port_address, (int)config.bios_segment,
+-	      config.interrupt, config.dma_channel);
+-    return buf;
 -}
+-
+-static inline void build_sg_list(struct mscp *mscp, struct scsi_cmnd *SCpnt)
+-{
+-	struct scatterlist *sg;
+-	long transfer_length = 0;
+-	int i, max;
+-
+-	max = scsi_sg_count(SCpnt);
+-	scsi_for_each_sg(SCpnt, sg, max, i) {
+-		mscp->sglist[i].address = isa_page_to_bus(sg_page(sg)) + sg->offset;
+-		mscp->sglist[i].num_bytes = sg->length;
+-		transfer_length += sg->length;
+-	}
+-	mscp->number_of_sg_list = max;
+-	mscp->transfer_data = isa_virt_to_bus(mscp->sglist);
+-	/* ??? May not be necessary.  Docs are unclear as to whether transfer
+-	   length field is ignored or whether it should be set to the total
+-	   number of bytes of the transfer.  */
+-	mscp->transfer_data_length = transfer_length;
+-}
+-
+-static int ultrastor_queuecommand_lck(struct scsi_cmnd *SCpnt,
+-				void (*done) (struct scsi_cmnd *))
+-{
+-    struct mscp *my_mscp;
+-#if ULTRASTOR_MAX_CMDS > 1
+-    int mscp_index;
+-#endif
+-    unsigned int status;
+-
+-    /* Next test is for debugging; "can't happen" */
+-    if ((config.mscp_free & ((1U << ULTRASTOR_MAX_CMDS) - 1)) == 0)
+-	panic("ultrastor_queuecommand: no free MSCP\n");
+-    mscp_index = find_and_clear_bit_16(&config.mscp_free);
+-
+-    /* Has the command been aborted?  */
+-    if (xchgb(0xff, &config.aborted[mscp_index]) != 0)
+-      {
+-	status = DID_ABORT << 16;
+-	goto aborted;
+-      }
+-
+-    my_mscp = &config.mscp[mscp_index];
+-
+-    *(unsigned char *)my_mscp = OP_SCSI | (DTD_SCSI << 3);
+-
+-    /* Tape drives don't work properly if the cache is used.  The SCSI
+-       READ command for a tape doesn't have a block offset, and the adapter
+-       incorrectly assumes that all reads from the tape read the same
+-       blocks.  Results will depend on read buffer size and other disk
+-       activity. 
+-
+-       ???  Which other device types should never use the cache?   */
+-    my_mscp->ca = SCpnt->device->type != TYPE_TAPE;
+-    my_mscp->target_id = SCpnt->device->id;
+-    my_mscp->ch_no = 0;
+-    my_mscp->lun = SCpnt->device->lun;
+-    if (scsi_sg_count(SCpnt)) {
+-	/* Set scatter/gather flag in SCSI command packet */
+-	my_mscp->sg = TRUE;
+-	build_sg_list(my_mscp, SCpnt);
+-    } else {
+-	/* Unset scatter/gather flag in SCSI command packet */
+-	my_mscp->sg = FALSE;
+-	my_mscp->transfer_data = isa_virt_to_bus(scsi_sglist(SCpnt));
+-	my_mscp->transfer_data_length = scsi_bufflen(SCpnt);
+-    }
+-    my_mscp->command_link = 0;		/*???*/
+-    my_mscp->scsi_command_link_id = 0;	/*???*/
+-    my_mscp->length_of_sense_byte = SCSI_SENSE_BUFFERSIZE;
+-    my_mscp->length_of_scsi_cdbs = SCpnt->cmd_len;
+-    memcpy(my_mscp->scsi_cdbs, SCpnt->cmnd, my_mscp->length_of_scsi_cdbs);
+-    my_mscp->adapter_status = 0;
+-    my_mscp->target_status = 0;
+-    my_mscp->sense_data = isa_virt_to_bus(&SCpnt->sense_buffer);
+-    my_mscp->done = done;
+-    my_mscp->SCint = SCpnt;
+-    SCpnt->host_scribble = (unsigned char *)my_mscp;
+-
+-    /* Find free OGM slot.  On 24F, look for OGM status byte == 0.
+-       On 14F and 34F, wait for local interrupt pending flag to clear. 
+-       
+-       FIXME: now we are using new_eh we should punt here and let the
+-       midlayer sort it out */
+-
+-retry:
+-    if (config.slot)
+-	while (inb(config.ogm_address - 1) != 0 && config.aborted[mscp_index] == 0xff)
+-		barrier();
+-
+-    /* else??? */
+-
+-    while ((inb(LCL_DOORBELL_INTR(config.doorbell_address)) & (config.slot ? 2 : 1))  && config.aborted[mscp_index] == 0xff)
+-    	barrier();
+-
+-    /* To avoid race conditions, keep the code to write to the adapter
+-       atomic.  This simplifies the abort code.  Right now the
+-       scsi mid layer has the host_lock already held
+-     */
+-
+-    if (inb(LCL_DOORBELL_INTR(config.doorbell_address)) & (config.slot ? 2 : 1))
+-      goto retry;
+-
+-    status = xchgb(0, &config.aborted[mscp_index]);
+-    if (status != 0xff) {
+-
+-#if ULTRASTOR_DEBUG & (UD_COMMAND | UD_ABORT)
+-	printk("USx4F: queuecommand: aborted\n");
+-#if ULTRASTOR_MAX_CMDS > 1
+-	log_ultrastor_abort(&config, mscp_index);
+-#endif
+-#endif
+-	status <<= 16;
+-
+-      aborted:
+-	set_bit(mscp_index, &config.mscp_free);
+-	/* If the driver queues commands, call the done proc here.  Otherwise
+-	   return an error.  */
+-#if ULTRASTOR_MAX_CMDS > 1
+-	SCpnt->result = status;
+-	done(SCpnt);
+-	return 0;
+-#else
+-	return status;
+-#endif
+-    }
+-
+-    /* Store pointer in OGM address bytes */
+-    outl(isa_virt_to_bus(my_mscp), config.ogm_address);
+-
+-    /* Issue OGM interrupt */
+-    if (config.slot) {
+-	/* Write OGM command register on 24F */
+-	outb(1, config.ogm_address - 1);
+-	outb(0x2, LCL_DOORBELL_INTR(config.doorbell_address));
+-    } else {
+-	outb(0x1, LCL_DOORBELL_INTR(config.doorbell_address));
+-    }
+-
+-#if (ULTRASTOR_DEBUG & UD_COMMAND)
+-    printk("USx4F: queuecommand: returning\n");
 -#endif
 -
--/*
-- *  Last resort. Reinitialize the board.
+-    return 0;
+-}
+-
+-static DEF_SCSI_QCMD(ultrastor_queuecommand)
+-
+-/* This code must deal with 2 cases:
+-
+-   1. The command has not been written to the OGM.  In this case, set
+-   the abort flag and return.
+-
+-   2. The command has been written to the OGM and is stuck somewhere in
+-   the adapter.
+-
+-   2a.  On a 24F, ask the adapter to abort the command.  It will interrupt
+-   when it does.
+-
+-   2b.  Call the command's done procedure.
+-
 - */
 -
--static int wd7000_host_reset(struct scsi_cmnd *SCpnt)
+-static int ultrastor_abort(struct scsi_cmnd *SCpnt)
 -{
--	Adapter *host = (Adapter *) SCpnt->device->host->hostdata;
+-#if ULTRASTOR_DEBUG & UD_ABORT
+-    char out[108];
+-    unsigned char icm_status = 0, ogm_status = 0;
+-    unsigned int icm_addr = 0, ogm_addr = 0;
+-#endif
+-    unsigned int mscp_index;
+-    unsigned char old_aborted;
+-    unsigned long flags;
+-    void (*done)(struct scsi_cmnd *);
+-    struct Scsi_Host *host = SCpnt->device->host;
 -
--	spin_lock_irq(SCpnt->device->host->host_lock);
+-    if(config.slot) 
+-      return FAILED;  /* Do not attempt an abort for the 24f */
+-      
+-    /* Simple consistency checking */
+-    if(!SCpnt->host_scribble)
+-      return FAILED;
 -
--	if (wd7000_adapter_reset(host) < 0) {
--		spin_unlock_irq(SCpnt->device->host->host_lock);
--		return FAILED;
--	}
+-    mscp_index = ((struct mscp *)SCpnt->host_scribble) - config.mscp;
+-    if (mscp_index >= ULTRASTOR_MAX_CMDS)
+-	panic("Ux4F aborting invalid MSCP");
 -
--	wd7000_enable_intr(host);
+-#if ULTRASTOR_DEBUG & UD_ABORT
+-    if (config.slot)
+-      {
+-	int port0 = (config.slot << 12) | 0xc80;
+-	int i;
+-	unsigned long flags;
+-	
+-	spin_lock_irqsave(host->host_lock, flags);
+-	strcpy(out, "OGM %d:%x ICM %d:%x ports:  ");
+-	for (i = 0; i < 16; i++)
+-	  {
+-	    unsigned char p = inb(port0 + i);
+-	    out[28 + i * 3] = "0123456789abcdef"[p >> 4];
+-	    out[29 + i * 3] = "0123456789abcdef"[p & 15];
+-	    out[30 + i * 3] = ' ';
+-	  }
+-	out[28 + i * 3] = '\n';
+-	out[29 + i * 3] = 0;
+-	ogm_status = inb(port0 + 22);
+-	ogm_addr = (unsigned int)isa_bus_to_virt(inl(port0 + 23));
+-	icm_status = inb(port0 + 27);
+-	icm_addr = (unsigned int)isa_bus_to_virt(inl(port0 + 28));
+-	spin_unlock_irqrestore(host->host_lock, flags);
+-      }
 -
--	spin_unlock_irq(SCpnt->device->host->host_lock);
+-    /* First check to see if an interrupt is pending.  I suspect the SiS
+-       chipset loses interrupts.  (I also suspect is mangles data, but
+-       one bug at a time... */
+-    if (config.slot ? inb(config.icm_address - 1) == 2 :
+-	(inb(SYS_DOORBELL_INTR(config.doorbell_address)) & 1))
+-      {
+-	printk("Ux4F: abort while completed command pending\n");
+-	
+-	spin_lock_irqsave(host->host_lock, flags);
+-	/* FIXME: Ewww... need to think about passing host around properly */
+-	ultrastor_interrupt(NULL);
+-	spin_unlock_irqrestore(host->host_lock, flags);
 -	return SUCCESS;
+-      }
+-#endif
+-
+-    old_aborted = xchgb(DID_ABORT, &config.aborted[mscp_index]);
+-
+-    /* aborted == 0xff is the signal that queuecommand has not yet sent
+-       the command.  It will notice the new abort flag and fail.  */
+-    if (old_aborted == 0xff)
+-	return SUCCESS;
+-
+-    /* On 24F, send an abort MSCP request.  The adapter will interrupt
+-       and the interrupt handler will call done.  */
+-    if (config.slot && inb(config.ogm_address - 1) == 0)
+-      {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(host->host_lock, flags);
+-	outl(isa_virt_to_bus(&config.mscp[mscp_index]), config.ogm_address);
+-	udelay(8);
+-	outb(0x80, config.ogm_address - 1);
+-	outb(0x2, LCL_DOORBELL_INTR(config.doorbell_address));
+-#if ULTRASTOR_DEBUG & UD_ABORT
+-	log_ultrastor_abort(&config, mscp_index);
+-	printk(out, ogm_status, ogm_addr, icm_status, icm_addr);
+-#endif
+-	spin_unlock_irqrestore(host->host_lock, flags);
+-	/* FIXME: add a wait for the abort to complete */
+-	return SUCCESS;
+-      }
+-
+-#if ULTRASTOR_DEBUG & UD_ABORT
+-    log_ultrastor_abort(&config, mscp_index);
+-#endif
+-
+-    /* Can't request a graceful abort.  Either this is not a 24F or
+-       the OGM is busy.  Don't free the command -- the adapter might
+-       still be using it.  Setting SCint = 0 causes the interrupt
+-       handler to ignore the command.  */
+-
+-    /* FIXME - devices that implement soft resets will still be running
+-       the command after a bus reset.  We would probably rather leave
+-       the command in the queue.  The upper level code will automatically
+-       leave the command in the active state instead of requeueing it. ERY */
+-
+-#if ULTRASTOR_DEBUG & UD_ABORT
+-    if (config.mscp[mscp_index].SCint != SCpnt)
+-	printk("abort: command mismatch, %p != %p\n",
+-	       config.mscp[mscp_index].SCint, SCpnt);
+-#endif
+-    if (config.mscp[mscp_index].SCint == NULL)
+-	return FAILED;
+-
+-    if (config.mscp[mscp_index].SCint != SCpnt) panic("Bad abort");
+-    config.mscp[mscp_index].SCint = NULL;
+-    done = config.mscp[mscp_index].done;
+-    config.mscp[mscp_index].done = NULL;
+-    SCpnt->result = DID_ABORT << 16;
+-    
+-    /* Take the host lock to guard against scsi layer re-entry */
+-    done(SCpnt);
+-
+-    /* Need to set a timeout here in case command never completes.  */
+-    return SUCCESS;
 -}
 -
--/*
-- *  This was borrowed directly from aha1542.c. (Zaga)
-- */
--
--static int wd7000_biosparam(struct scsi_device *sdev,
--		struct block_device *bdev, sector_t capacity, int *ip)
+-static int ultrastor_host_reset(struct scsi_cmnd * SCpnt)
 -{
--	char b[BDEVNAME_SIZE];
+-    unsigned long flags;
+-    int i;
+-    struct Scsi_Host *host = SCpnt->device->host;
+-    
+-#if (ULTRASTOR_DEBUG & UD_RESET)
+-    printk("US14F: reset: called\n");
+-#endif
 -
--	dprintk("wd7000_biosparam: dev=%s, size=%llu, ",
--		bdevname(bdev, b), (u64)capacity);
--	(void)b;	/* unused var warning? */
+-    if(config.slot)
+-    	return FAILED;
 -
--	/*
--	 * try default translation
--	 */
--	ip[0] = 64;
--	ip[1] = 32;
--	ip[2] = capacity >> 11;
+-    spin_lock_irqsave(host->host_lock, flags);
+-    /* Reset the adapter and SCSI bus.  The SCSI bus reset can be
+-       inhibited by clearing ultrastor_bus_reset before probe.  */
+-    outb(0xc0, LCL_DOORBELL_INTR(config.doorbell_address));
+-    if (config.slot)
+-      {
+-	outb(0, config.ogm_address - 1);
+-	outb(0, config.icm_address - 1);
+-      }
 -
--	/*
--	 * for disks >1GB do some guessing
--	 */
--	if (ip[2] >= 1024) {
--		int info[3];
+-#if ULTRASTOR_MAX_CMDS == 1
+-    if (config.mscp_busy && config.mscp->done && config.mscp->SCint)
+-      {
+-	config.mscp->SCint->result = DID_RESET << 16;
+-	config.mscp->done(config.mscp->SCint);
+-      }
+-    config.mscp->SCint = 0;
+-#else
+-    for (i = 0; i < ULTRASTOR_MAX_CMDS; i++)
+-      {
+-	if (! (config.mscp_free & (1 << i)) &&
+-	    config.mscp[i].done && config.mscp[i].SCint)
+-	  {
+-	    config.mscp[i].SCint->result = DID_RESET << 16;
+-	    config.mscp[i].done(config.mscp[i].SCint);
+-	    config.mscp[i].done = NULL;
+-	  }
+-	config.mscp[i].SCint = NULL;
+-      }
+-#endif
 -
--		/*
--		 * try to figure out the geometry from the partition table
--		 */
--		if ((scsicam_bios_param(bdev, capacity, info) < 0) || !(((info[0] == 64) && (info[1] == 32)) || ((info[0] == 255) && (info[1] == 63)))) {
--			printk("wd7000_biosparam: unable to verify geometry for disk with >1GB.\n" "                  using extended translation.\n");
+-    /* FIXME - if the device implements soft resets, then the command
+-       will still be running.  ERY  
+-       
+-       Even bigger deal with new_eh! 
+-     */
 -
--			ip[0] = 255;
--			ip[1] = 63;
--			ip[2] = (unsigned long) capacity / (255 * 63);
--		} else {
--			ip[0] = info[0];
--			ip[1] = info[1];
--			ip[2] = info[2];
+-    memset((unsigned char *)config.aborted, 0, sizeof config.aborted);
+-#if ULTRASTOR_MAX_CMDS == 1
+-    config.mscp_busy = 0;
+-#else
+-    config.mscp_free = ~0;
+-#endif
 -
--			if (info[0] == 255)
--				printk(KERN_INFO "%s: current partition table is " "using extended translation.\n", __func__);
--		}
--	}
+-    spin_unlock_irqrestore(host->host_lock, flags);
+-    return SUCCESS;
 -
--	dprintk("bios geometry: head=%d, sec=%d, cyl=%d\n", ip[0], ip[1], ip[2]);
--	dprintk("WARNING: check, if the bios geometry is correct.\n");
--
--	return (0);
 -}
 -
--MODULE_AUTHOR("Thomas Wuensche, John Boyd, Miroslav Zagorac");
--MODULE_DESCRIPTION("Driver for the WD7000 series ISA controllers");
+-int ultrastor_biosparam(struct scsi_device *sdev, struct block_device *bdev,
+-		sector_t capacity, int * dkinfo)
+-{
+-    int size = capacity;
+-    unsigned int s = config.heads * config.sectors;
+-
+-    dkinfo[0] = config.heads;
+-    dkinfo[1] = config.sectors;
+-    dkinfo[2] = size / s;	/* Ignore partial cylinders */
+-#if 0
+-    if (dkinfo[2] > 1024)
+-	dkinfo[2] = 1024;
+-#endif
+-    return 0;
+-}
+-
+-static void ultrastor_interrupt(void *dev_id)
+-{
+-    unsigned int status;
+-#if ULTRASTOR_MAX_CMDS > 1
+-    unsigned int mscp_index;
+-#endif
+-    struct mscp *mscp;
+-    void (*done) (struct scsi_cmnd *);
+-    struct scsi_cmnd *SCtmp;
+-
+-#if ULTRASTOR_MAX_CMDS == 1
+-    mscp = &config.mscp[0];
+-#else
+-    mscp = (struct mscp *)isa_bus_to_virt(inl(config.icm_address));
+-    mscp_index = mscp - config.mscp;
+-    if (mscp_index >= ULTRASTOR_MAX_CMDS) {
+-	printk("Ux4F interrupt: bad MSCP address %x\n", (unsigned int) mscp);
+-	/* A command has been lost.  Reset and report an error
+-	   for all commands.  */
+-	ultrastor_host_reset(dev_id);
+-	return;
+-    }
+-#endif
+-
+-    /* Clean ICM slot (set ICMINT bit to 0) */
+-    if (config.slot) {
+-	unsigned char icm_status = inb(config.icm_address - 1);
+-#if ULTRASTOR_DEBUG & (UD_INTERRUPT|UD_ERROR|UD_ABORT)
+-	if (icm_status != 1 && icm_status != 2)
+-	    printk("US24F: ICM status %x for MSCP %d (%x)\n", icm_status,
+-		   mscp_index, (unsigned int) mscp);
+-#endif
+-	/* The manual says clear interrupt then write 0 to ICM status.
+-	   This seems backwards, but I'll do it anyway.  --jfc */
+-	outb(2, SYS_DOORBELL_INTR(config.doorbell_address));
+-	outb(0, config.icm_address - 1);
+-	if (icm_status == 4) {
+-	    printk("UltraStor abort command failed\n");
+-	    return;
+-	}
+-	if (icm_status == 3) {
+-	    void (*done)(struct scsi_cmnd *) = mscp->done;
+-	    if (done) {
+-		mscp->done = NULL;
+-		mscp->SCint->result = DID_ABORT << 16;
+-		done(mscp->SCint);
+-	    }
+-	    return;
+-	}
+-    } else {
+-	outb(1, SYS_DOORBELL_INTR(config.doorbell_address));
+-    }
+-
+-    SCtmp = mscp->SCint;
+-    mscp->SCint = NULL;
+-
+-    if (!SCtmp)
+-      {
+-#if ULTRASTOR_DEBUG & (UD_ABORT|UD_INTERRUPT)
+-	printk("MSCP %d (%x): no command\n", mscp_index, (unsigned int) mscp);
+-#endif	
+-#if ULTRASTOR_MAX_CMDS == 1
+-	config.mscp_busy = FALSE;
+-#else
+-	set_bit(mscp_index, &config.mscp_free);
+-#endif
+-	config.aborted[mscp_index] = 0;
+-	return;
+-      }
+-
+-    /* Save done locally and zero before calling.  This is needed as
+-       once we call done, we may get another command queued before this
+-       interrupt service routine can return. */
+-    done = mscp->done;
+-    mscp->done = NULL;
+-
+-    /* Let the higher levels know that we're done */
+-    switch (mscp->adapter_status)
+-      {
+-      case 0:
+-	status = DID_OK << 16;
+-	break;
+-      case 0x01:	/* invalid command */
+-      case 0x02:	/* invalid parameters */
+-      case 0x03:	/* invalid data list */
+-      default:
+-	status = DID_ERROR << 16;
+-	break;
+-      case 0x84:	/* SCSI bus abort */
+-	status = DID_ABORT << 16;
+-	break;
+-      case 0x91:
+-	status = DID_TIME_OUT << 16;
+-	break;
+-      }
+-
+-    SCtmp->result = status | mscp->target_status;
+-
+-    SCtmp->host_scribble = NULL;
+-
+-    /* Free up mscp block for next command */
+-#if ULTRASTOR_MAX_CMDS == 1
+-    config.mscp_busy = FALSE;
+-#else
+-    set_bit(mscp_index, &config.mscp_free);
+-#endif
+-
+-#if ULTRASTOR_DEBUG & (UD_ABORT|UD_INTERRUPT)
+-    if (config.aborted[mscp_index])
+-	printk("Ux4 interrupt: MSCP %d (%x) aborted = %d\n",
+-	       mscp_index, (unsigned int) mscp, config.aborted[mscp_index]);
+-#endif
+-    config.aborted[mscp_index] = 0;
+-
+-    if (done)
+-	done(SCtmp);
+-    else
+-	printk("US14F: interrupt: unexpected interrupt\n");
+-
+-    if (config.slot ? inb(config.icm_address - 1) :
+-       (inb(SYS_DOORBELL_INTR(config.doorbell_address)) & 1))
+-#if (ULTRASTOR_DEBUG & UD_MULTI_CMD)
+-      printk("Ux4F: multiple commands completed\n");
+-#else
+-      ;
+-#endif
+-
+-#if (ULTRASTOR_DEBUG & UD_INTERRUPT)
+-    printk("USx4F: interrupt: returning\n");
+-#endif
+-}
+-
+-static irqreturn_t do_ultrastor_interrupt(int irq, void *dev_id)
+-{
+-    unsigned long flags;
+-    struct Scsi_Host *dev = dev_id;
+-    
+-    spin_lock_irqsave(dev->host_lock, flags);
+-    ultrastor_interrupt(dev_id);
+-    spin_unlock_irqrestore(dev->host_lock, flags);
+-    return IRQ_HANDLED;
+-}
+-
 -MODULE_LICENSE("GPL");
 -
 -static struct scsi_host_template driver_template = {
--	.proc_name		= "wd7000",
--	.show_info		= wd7000_show_info,
--	.write_info		= wd7000_set_info,
--	.name			= "Western Digital WD-7000",
--	.detect			= wd7000_detect,
--	.release		= wd7000_release,
--	.queuecommand		= wd7000_queuecommand,
--	.eh_host_reset_handler	= wd7000_host_reset,
--	.bios_param		= wd7000_biosparam,
--	.can_queue		= WD7000_Q,
--	.this_id		= 7,
--	.sg_tablesize		= WD7000_SG,
--	.unchecked_isa_dma	= 1,
--	.use_clustering		= ENABLE_CLUSTERING,
+-	.name              = "UltraStor 14F/24F/34F",
+-	.detect            = ultrastor_detect,
+-	.release	   = ultrastor_release,
+-	.info              = ultrastor_info,
+-	.queuecommand      = ultrastor_queuecommand,
+-	.eh_abort_handler  = ultrastor_abort,
+-	.eh_host_reset_handler  = ultrastor_host_reset,	
+-	.bios_param        = ultrastor_biosparam,
+-	.can_queue         = ULTRASTOR_MAX_CMDS,
+-	.sg_tablesize      = ULTRASTOR_14F_MAX_SG,
+-	.cmd_per_lun       = ULTRASTOR_MAX_CMDS_PER_LUN,
+-	.unchecked_isa_dma = 1,
+-	.use_clustering    = ENABLE_CLUSTERING,
 -};
--
 -#include "scsi_module.c"
+diff --git a/drivers/scsi/ultrastor.h b/drivers/scsi/ultrastor.h
+deleted file mode 100644
+index 165c18b..0000000
+--- a/drivers/scsi/ultrastor.h
++++ /dev/null
+@@ -1,80 +0,0 @@
+-/*
+- *	ultrastor.c	(C) 1991 David B. Gentzel
+- *	Low-level scsi driver for UltraStor 14F
+- *	by David B. Gentzel, Whitfield Software Services, Carnegie, PA
+- *	    (gentzel@nova.enet.dec.com)
+- *  scatter/gather added by Scott Taylor (n217cg@tamuts.tamu.edu)
+- *  24F support by John F. Carr (jfc@athena.mit.edu)
+- *    John's work modified by Caleb Epstein (cae@jpmorgan.com) and 
+- *    Eric Youngdale (eric@tantalus.nrl.navy.mil).
+- *	Thanks to UltraStor for providing the necessary documentation
+- */
+-
+-#ifndef _ULTRASTOR_H
+-#define _ULTRASTOR_H
+-
+-static int ultrastor_detect(struct scsi_host_template *);
+-static const char *ultrastor_info(struct Scsi_Host *shpnt);
+-static int ultrastor_queuecommand(struct Scsi_Host *, struct scsi_cmnd *);
+-static int ultrastor_abort(struct scsi_cmnd *);
+-static int ultrastor_host_reset(struct scsi_cmnd *);
+-static int ultrastor_biosparam(struct scsi_device *, struct block_device *,
+-				sector_t, int *);
+-
+-
+-#define ULTRASTOR_14F_MAX_SG 16
+-#define ULTRASTOR_24F_MAX_SG 33
+-
+-#define ULTRASTOR_MAX_CMDS_PER_LUN 5
+-#define ULTRASTOR_MAX_CMDS 16
+-
+-#define ULTRASTOR_24F_PORT 0xC80
+-
+-
+-#ifdef ULTRASTOR_PRIVATE
+-
+-#define UD_ABORT	0x0001
+-#define UD_COMMAND	0x0002
+-#define UD_DETECT	0x0004
+-#define UD_INTERRUPT	0x0008
+-#define UD_RESET	0x0010
+-#define UD_MULTI_CMD	0x0020
+-#define UD_CSIR		0x0040
+-#define UD_ERROR	0x0080
+-
+-/* #define PORT_OVERRIDE 0x330 */
+-
+-/* Values for the PRODUCT_ID ports for the 14F */
+-#define US14F_PRODUCT_ID_0 0x56
+-#define US14F_PRODUCT_ID_1 0x40		/* NOTE: Only upper nibble is used */
+-
+-#define US24F_PRODUCT_ID_0 0x56
+-#define US24F_PRODUCT_ID_1 0x63
+-#define US24F_PRODUCT_ID_2 0x02
+-
+-/* Subversion values */
+-#define U14F 0
+-#define U34F 1
+-
+-/* MSCP field values */
+-
+-/* Opcode */
+-#define OP_HOST_ADAPTER 0x1
+-#define OP_SCSI 0x2
+-#define OP_RESET 0x4
+-
+-/* Date Transfer Direction */
+-#define DTD_SCSI 0x0
+-#define DTD_IN 0x1
+-#define DTD_OUT 0x2
+-#define DTD_NONE 0x3
+-
+-/* Host Adapter command subcodes */
+-#define HA_CMD_INQUIRY 0x1
+-#define HA_CMD_SELF_DIAG 0x2
+-#define HA_CMD_READ_BUFF 0x3
+-#define HA_CMD_WRITE_BUFF 0x4
+-
+-#endif
+-
+-#endif
 -- 
 2.1.4
 
