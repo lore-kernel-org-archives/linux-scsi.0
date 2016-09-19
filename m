@@ -1,36 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: clean function declarations in megaraid_sas_base.c up
-Date: Mon, 19 Sep 2016 12:00:21 -0400
-Message-ID: <yq11t0fanhm.fsf@sermon.lab.mkp.net>
-References: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org>
+From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+Subject: Re: [PATCH 1/1] ibmvfc: Fix I/O hang when port is not mapped
+Date: Mon, 19 Sep 2016 09:14:48 -0700
+Message-ID: <d37a6e14-9585-1db7-8ab6-ebf2ce7aae44@gmail.com>
+References: <20160919135919.689C528041@b01ledav001.gho.pok.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
-        Xie's message of "Sun, 18 Sep 2016 20:07:59 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f175.google.com ([209.85.216.175]:35918 "EHLO
+        mail-qt0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751015AbcISQOw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 12:14:52 -0400
+Received: by mail-qt0-f175.google.com with SMTP id l91so73880056qte.3
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:14:52 -0700 (PDT)
+In-Reply-To: <20160919135919.689C528041@b01ledav001.gho.pok.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>, James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, tyreld@linux.vnet.ibm.com
 
->>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
+On 09/19/2016 06:59 AM, Brian King wrote:
+> If a VFC port gets unmapped in the VIOS, it may not respond with a CRQ init
+> complete following H_REG_CRQ. If this occurs, we can end up having called
+> scsi_block_requests and not a resulting unblock until the init complete
+> happens, which may never occur, and we end up hanging I/O requests.
+> This patch ensures the host action stay set to IBMVFC_HOST_ACTION_TGT_DEL so
+> we move all rports into devloss state and unblock unless we receive an
+> init complete. 
+> 
+> Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
 
-Baoyou> We get a few warnings when building kernel with W=1:
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:281:1: warning: no
-Baoyou> previous prototype for 'megasas_free_cmds_fusion'
-Baoyou> [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:714:1: warning: no
-Baoyou> previous prototype for 'megasas_ioc_init_fusion'
-Baoyou> [-Wmissing-prototypes] ....
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-Baoyou> In fact, these functions are declared in
-Baoyou> drivers/scsi/megaraid/megaraid_sas_base.c, but should be
-Baoyou> declared in a header file, thus can be recognized in other file.
-
-Baoyou> So this patch adds the declarations into
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.h.
-
-Applied to 4.9/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
