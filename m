@@ -1,32 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] ipr: Remove redundant messages at adapter init time
-Date: Mon, 19 Sep 2016 11:59:01 -0400
-Message-ID: <yq160pranju.fsf@sermon.lab.mkp.net>
-References: <20160916215137.7DE02B204E@b01ledav03.gho.pok.ibm.com>
+Subject: Re: [PATCH] megaraid_sas: clean function declarations in megaraid_sas_base.c up
+Date: Mon, 19 Sep 2016 12:00:21 -0400
+Message-ID: <yq11t0fanhm.fsf@sermon.lab.mkp.net>
+References: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32217 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752524AbcISP7X (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:59:23 -0400
-In-Reply-To: <20160916215137.7DE02B204E@b01ledav03.gho.pok.ibm.com> (Brian
-        King's message of "Fri, 16 Sep 2016 16:51:37 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
+        Xie's message of "Sun, 18 Sep 2016 20:07:59 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
 
->>>>> "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
+>>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
 
-Brian> Whenever multiple HRRQs are enabled, which is the default setting
-Brian> now, we end up seeing the following message logged prior to
-Brian> initialization of each HRRQ:
+Baoyou> We get a few warnings when building kernel with W=1:
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:281:1: warning: no
+Baoyou> previous prototype for 'megasas_free_cmds_fusion'
+Baoyou> [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:714:1: warning: no
+Baoyou> previous prototype for 'megasas_ioc_init_fusion'
+Baoyou> [-Wmissing-prototypes] ....
 
-Brian> Starting IOA initialization sequence
+Baoyou> In fact, these functions are declared in
+Baoyou> drivers/scsi/megaraid/megaraid_sas_base.c, but should be
+Baoyou> declared in a header file, thus can be recognized in other file.
 
-Brian> This results in 16 of these messages on most adapters, which
-Brian> serves little purpose. Change to just log this once.
+Baoyou> So this patch adds the declarations into
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.h.
 
 Applied to 4.9/scsi-queue.
 
