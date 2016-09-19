@@ -1,71 +1,101 @@
-From: "Winkler, Tomas" <tomas.winkler@intel.com>
-Subject: RE: [PATCH v6 0/9] Replay Protected Memory Block (RPMB) subsystem
-Date: Mon, 19 Sep 2016 12:17:48 +0000
-Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B542EB180@hasmsx108.ger.corp.intel.com>
-References: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi:Prevent deletion of SCSI block device in use
+Date: Mon, 19 Sep 2016 05:55:51 -0700
+Message-ID: <1474289751.2426.3.camel@linux.vnet.ibm.com>
+References: <CS1PR84MB002353535902FE5F0DD2B01DE1F40@CS1PR84MB0023.NAMPRD84.PROD.OUTLOOK.COM>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
-Content-Language: en-US
-Sender: linux-mmc-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Avri Altman <avri.altman@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49159 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1755172AbcISM4E (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Sep 2016 08:56:04 -0400
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8JCmRLd101203
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 08:56:03 -0400
+Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 25gyyvd6rp-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 08:56:03 -0400
+Received: from localhost
+        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Mon, 19 Sep 2016 06:56:02 -0600
+In-Reply-To: <CS1PR84MB002353535902FE5F0DD2B01DE1F40@CS1PR84MB0023.NAMPRD84.PROD.OUTLOOK.COM>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Gurunath, Vasundhara (STSD)" <vasundhara.gurunath@hpe.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Arackal, Paulose Kuriakose (STSD)" <paulose.kuriakose.arackal@hpe.com>, "Kaur, Jasminder (STSD)" <jasminder.kaur@hpe.com>
 
-\
-> Subject: [PATCH v6 0/9] Replay Protected Memory Block (RPMB) subsystem
+On Mon, 2016-09-19 at 09:11 +0000, Gurunath, Vasundhara (STSD) wrote:
+> James Bottomley <jejb@linux.vnet.ibm.com> wrote: 
 > 
+> > > From: "Gurunath, Vasundhara" <vasundhara.gurunath@hpe.com>
+> > > 
+> > > SCSI block device can be removed, using write to sysfs delete
+> > > file as
+> > > below:
+> > > echo 1 > /sys/block/sdX/device/delete If the device is in use by 
+> > > applications, or part of system configuration such as boot
+> > > device, 
+> > > removal can result in application disruptions or system down
+> > > time.
+> > > 
+> > > An additional write option ? is added to SCSI sysfs interface as 
+> > > below, in order to prevent accidental deletion of devices in use.
+> > > echo ? > /sys/block/sdX/device/delete
+> > > 
+> > > In the absence of any usage, this option proceeds with device 
+> > > deletion.  If the device is open, deletion is prevented, and
+> > > active 
+> > > Open and IO counts at the time of deletion is logged. Information
+> > > logged during latest delete attempt can be obtained by issuing a
+> > > read 
+> > > to the delete file as below:
+> > > cat  /sys/block/sdX/device/delete
 > 
-> Few storage technologies such is EMMC, UFS, and NVMe support RPMB
-> hardware partition with common protocol and frame layout.
-> The RPMB partition cannot be accessed via standard block layer, but by a set
-> of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
-> PROGRAM_KEY.
-> Such a partition provides authenticated and replay protected access, hence
-> suitable as a secure storage.
+> > OK, so I'm not too keen on this because our entire system is
+> > (finally) designed to be hot plug, so echoing 1 to delete simulates
+> > a hotplug event, and they >can come in at any time.
 > 
-> The RPMB layer aims to provide in-kernel API for Trusted Execution
-> Environment (TEE) devices that are capable to securely compute block frame
-> signature. In case a TEE device wish to store a replay protected data, it
-> creates an RPMB frame with requested data and computes HMAC of the
-> frame, then it requests the storage device via RPMB layer to store the data.
+> > Can you elaborate on why this is necessary?  Right at the moment,
+> > only 
+> > root is allowed to write to this file and cause a deletion ... plus
+> > the file is pretty >hard to find, buried as it is in sysfs;  So I
+> > would have thought it was pretty safe from accidental misuse; why
+> > does it need additional protection?
 > 
-> The layer provides two APIs, for rpmb_req_cmd() for issuing one of RPMB
-> specific commands and rpmb_seq_cmd() for issuing of raw RPMB protocol
-> frames,  which is close to the functionality provided by emmc multi ioctl
-> interface.
-> 
-> A TEE driver can claim the RPMB interface, for example, via
-> class_interface_register ().
-> 
-> A storage device registers its RPMB hardware (eMMC) partition or RPMB W-
-> LUN (UFS) with the RPMB layer providing an implementation for
-> rpmb_seq_cmd() handler. The interface enables sending sequence of RPMB
-> standard frames.
-> 
-> A parallel user space API is provided via /dev/rpmbX character device with
-> two IOCTL commands.
-> Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
-> by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
-> where the whole RPMB sequence, including RESULT_READ is supplied by the
-> caller.
-> The latter is intended for easier adjusting of the applications that use
-> MMC_IOC_MULTI_CMD ioctl, such as
-> https://android.googlesource.com/trusty/app/storage/
-> 
-> There is a also sample tool under tools/rpmb/ directory that exercises these
-> interfaces and a simulation device that implements the device part.
-> 
-> The code is also available from:
-> 
-> https://github.com/tomasbw/linux-mei.git rpmb
-> 
+> Some of the requests we got for such checks were from use cases on
+> large system configurations with several LUNs.
 
-Greg, can you please check if this series has addressed all your comments. 
-Are there are any more items that preventing it from merging?
+People ask for a lot of strange stuff, but unpeel this one further and
+tell us why they're asking ... what's the use case they're running into
+that makes them need something like this?
 
-Thanks
-Tomas
+> The new changes do not disturb existing interfaces. Writes to the
+> "delete" sysfs file such as a "1", as advertised in some
+> distributions like RedHat today, will continue to delete the LUN.
+> However we thought an option to check usages during delete can
+> complement existing interfaces. 
+>  
+> The new changes get activated only when one wants to receive alerts
+> on any lingering usages, and writes a "?" to delete the LUN.
+> A delete script can write "?" to sysfs delete files in bulk, while
+> most LUNs get removed in the first attempt, the usages can be
+> investigated if any LUNs remain with active usage counts. 
+> 
+> Hopefully overhead of these changes is minimal, it is few additional
+> checks on usage counts and the log.
+> New changes get active only in delete context and doesn't get into 
+> I/O paths.
+
+But that's effectively "because we can".  We can do a lot of stuff that
+adds what you call minimal overhead (although the cumulative addition
+would be significant), so the rule is we do stuff which is necessary or
+useful, which is why the question about use cases.
+
+James
+
 
