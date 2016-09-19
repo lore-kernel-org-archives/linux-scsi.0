@@ -1,104 +1,54 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH] megaraid_sas: clean function declarations in
- megaraid_sas_base.c up
-Date: Mon, 19 Sep 2016 19:20:44 +0530
-Message-ID: <eb5f597c4bfdc507ce74d43a6ecf6f17@mail.gmail.com>
-References: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: [PATCH 1/1] ibmvfc: Fix I/O hang when port is not mapped
+Date: Mon, 19 Sep 2016 08:59:19 -0500
+Message-ID: <20160919135919.689C528041@b01ledav001.gho.pok.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f46.google.com ([209.85.218.46]:35219 "EHLO
-        mail-oi0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758069AbcISNuq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 09:50:46 -0400
-Received: by mail-oi0-f46.google.com with SMTP id w11so196605453oia.2
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 06:50:46 -0700 (PDT)
-In-Reply-To: <1474200479-32042-1-git-send-email-baoyou.xie@linaro.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:43191 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S938762AbcISN7a (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Sep 2016 09:59:30 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8JDwkTB140894
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:59:25 -0400
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 25hr4j9chv-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Sep 2016 09:59:25 -0400
+Received: from localhost
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
+        Mon, 19 Sep 2016 09:59:23 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>, kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
+To: James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
->-----Original Message-----
->From: Baoyou Xie [mailto:baoyou.xie@linaro.org]
->Sent: Sunday, September 18, 2016 5:38 PM
->To: kashyap.desai@avagotech.com; sumit.saxena@avagotech.com;
->uday.lingala@avagotech.com; jejb@linux.vnet.ibm.com;
->martin.petersen@oracle.com
->Cc: megaraidlinux.pdl@avagotech.com; linux-scsi@vger.kernel.org; linux-
->kernel@vger.kernel.org; arnd@arndb.de; baoyou.xie@linaro.org;
->xie.baoyou@zte.com.cn
->Subject: [PATCH] megaraid_sas: clean function declarations in
->megaraid_sas_base.c up
->
->We get a few warnings when building kernel with W=1:
->drivers/scsi/megaraid/megaraid_sas_fusion.c:281:1: warning: no previous
->prototype for 'megasas_free_cmds_fusion' [-Wmissing-prototypes]
->drivers/scsi/megaraid/megaraid_sas_fusion.c:714:1: warning: no previous
->prototype for 'megasas_ioc_init_fusion' [-Wmissing-prototypes] ....
->
->In fact, these functions are declared in
->drivers/scsi/megaraid/megaraid_sas_base.c, but should be declared in a
-header
->file, thus can be recognized in other file.
->
->So this patch adds the declarations into
->drivers/scsi/megaraid/megaraid_sas_fusion.h.
->
->Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
->---
-> drivers/scsi/megaraid/megaraid_sas_base.c   | 13 -------------
-> drivers/scsi/megaraid/megaraid_sas_fusion.h |  9 +++++++++
-> 2 files changed, 9 insertions(+), 13 deletions(-)
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index 2d62d71..b73b6f3 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -189,25 +189,12 @@ u32
-> megasas_build_and_issue_cmd(struct megasas_instance *instance,
-> 			    struct scsi_cmnd *scmd);
-> static void megasas_complete_cmd_dpc(unsigned long instance_addr); -void
--
->megasas_release_fusion(struct megasas_instance *instance); -int -
->megasas_ioc_init_fusion(struct megasas_instance *instance); -void -
->megasas_free_cmds_fusion(struct megasas_instance *instance);
->-u8
->-megasas_get_map_info(struct megasas_instance *instance); -int -
->megasas_sync_map_info(struct megasas_instance *instance);  int
->wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
-> 	int seconds);
->-void megasas_reset_reply_desc(struct megasas_instance *instance);  void
->megasas_fusion_ocr_wq(struct work_struct *work);  static int
->megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
-> 					 int initial);
->-int megasas_check_mpio_paths(struct megasas_instance *instance,
->-			     struct scsi_cmnd *scmd);
->
-> int
-> megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd
->*cmd) diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
->b/drivers/scsi/megaraid/megaraid_sas_fusion.h
->index 80eaee2..3fe730a 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
->+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
->@@ -991,5 +991,14 @@ union desc_value {
-> 	} u;
-> };
->
->+void megasas_free_cmds_fusion(struct megasas_instance *instance); int
->+megasas_ioc_init_fusion(struct megasas_instance *instance);
->+u8 megasas_get_map_info(struct megasas_instance *instance); int
->+megasas_sync_map_info(struct megasas_instance *instance); void
->+megasas_release_fusion(struct megasas_instance *instance); void
->+megasas_reset_reply_desc(struct megasas_instance *instance); int
->+megasas_check_mpio_paths(struct megasas_instance *instance,
->+			      struct scsi_cmnd *scmd);
->+void megasas_fusion_ocr_wq(struct work_struct *work);
->
-> #endif /* _MEGARAID_SAS_FUSION_H_ */
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
->--
->2.7.4
+If a VFC port gets unmapped in the VIOS, it may not respond with a CRQ init
+complete following H_REG_CRQ. If this occurs, we can end up having called
+scsi_block_requests and not a resulting unblock until the init complete
+happens, which may never occur, and we end up hanging I/O requests.
+This patch ensures the host action stay set to IBMVFC_HOST_ACTION_TGT_DEL so
+we move all rports into devloss state and unblock unless we receive an
+init complete. 
+
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
+
+ drivers/scsi/ibmvscsi/ibmvfc.c |    1 -
+ 1 file changed, 1 deletion(-)
+
+diff -puN drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_unmap_hang_fix drivers/scsi/ibmvscsi/ibmvfc.c
+--- linux-2.6.git/drivers/scsi/ibmvscsi/ibmvfc.c~ibmvfc_unmap_hang_fix	2016-09-09 15:46:36.452011778 -0500
++++ linux-2.6.git-bjking1/drivers/scsi/ibmvscsi/ibmvfc.c	2016-09-09 15:47:07.026632886 -0500
+@@ -717,7 +717,6 @@ static int ibmvfc_reset_crq(struct ibmvf
+ 	spin_lock_irqsave(vhost->host->host_lock, flags);
+ 	vhost->state = IBMVFC_NO_CRQ;
+ 	vhost->logged_in = 0;
+-	ibmvfc_set_host_action(vhost, IBMVFC_HOST_ACTION_NONE);
+ 
+ 	/* Clean out the queue */
+ 	memset(crq->msgs, 0, PAGE_SIZE);
+_
+
