@@ -1,62 +1,71 @@
-From: "Gurunath, Vasundhara (STSD)" <vasundhara.gurunath@hpe.com>
-Subject: [PATCH] scsi:Prevent deletion of SCSI block device in use
-Date: Mon, 19 Sep 2016 09:11:43 +0000
-Message-ID: <CS1PR84MB002353535902FE5F0DD2B01DE1F40@CS1PR84MB0023.NAMPRD84.PROD.OUTLOOK.COM>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v6 0/9] Replay Protected Memory Block (RPMB) subsystem
+Date: Mon, 19 Sep 2016 12:17:48 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B542EB180@hasmsx108.ger.corp.intel.com>
+References: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0137.outbound.protection.outlook.com ([104.47.33.137]:36549
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755368AbcISLpL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 19 Sep 2016 07:45:11 -0400
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <1473772984-17562-1-git-send-email-tomas.winkler@intel.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: linux-mmc-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Avri Altman <avri.altman@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Arackal, Paulose Kuriakose (STSD)" <paulose.kuriakose.arackal@hpe.com>, "Kaur, Jasminder (STSD)" <jasminder.kaur@hpe.com>
 
-DQpKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPiB3cm90ZTogDQoNCj4+
-IEZyb206ICJHdXJ1bmF0aCwgVmFzdW5kaGFyYSIgPHZhc3VuZGhhcmEuZ3VydW5hdGhAaHBlLmNv
-bT4NCj4+DQo+PiBTQ1NJIGJsb2NrIGRldmljZSBjYW4gYmUgcmVtb3ZlZCwgdXNpbmcgd3JpdGUg
-dG8gc3lzZnMgZGVsZXRlIGZpbGUgYXMNCj4+IGJlbG93Og0KPj4gZWNobyAxID4gL3N5cy9ibG9j
-ay9zZFgvZGV2aWNlL2RlbGV0ZSBJZiB0aGUgZGV2aWNlIGlzIGluIHVzZSBieSANCj4+IGFwcGxp
-Y2F0aW9ucywgb3IgcGFydCBvZiBzeXN0ZW0gY29uZmlndXJhdGlvbiBzdWNoIGFzIGJvb3QgZGV2
-aWNlLCANCj4+IHJlbW92YWwgY2FuIHJlc3VsdCBpbiBhcHBsaWNhdGlvbiBkaXNydXB0aW9ucyBv
-ciBzeXN0ZW0gZG93biB0aW1lLg0KPiA+DQo+PiBBbiBhZGRpdGlvbmFsIHdyaXRlIG9wdGlvbiA/
-IGlzIGFkZGVkIHRvIFNDU0kgc3lzZnMgaW50ZXJmYWNlIGFzIA0KPj4gYmVsb3csIGluIG9yZGVy
-IHRvIHByZXZlbnQgYWNjaWRlbnRhbCBkZWxldGlvbiBvZiBkZXZpY2VzIGluIHVzZS4NCj4+IGVj
-aG8gPyA+IC9zeXMvYmxvY2svc2RYL2RldmljZS9kZWxldGUNCj4+DQo+PiBJbiB0aGUgYWJzZW5j
-ZSBvZiBhbnkgdXNhZ2UsIHRoaXMgb3B0aW9uIHByb2NlZWRzIHdpdGggZGV2aWNlIA0KPj4gZGVs
-ZXRpb24uICBJZiB0aGUgZGV2aWNlIGlzIG9wZW4sIGRlbGV0aW9uIGlzIHByZXZlbnRlZCwgYW5k
-IGFjdGl2ZSANCj4+IE9wZW4gYW5kIElPIGNvdW50cyBhdCB0aGUgdGltZSBvZiBkZWxldGlvbiBp
-cyBsb2dnZWQuIEluZm9ybWF0aW9uIA0KPj4gbG9nZ2VkIGR1cmluZyBsYXRlc3QgZGVsZXRlIGF0
-dGVtcHQgY2FuIGJlIG9idGFpbmVkIGJ5IGlzc3VpbmcgYSByZWFkIA0KPj4gdG8gdGhlIGRlbGV0
-ZSBmaWxlIGFzIGJlbG93Og0KPj4gY2F0ICAvc3lzL2Jsb2NrL3NkWC9kZXZpY2UvZGVsZXRlDQoN
-Cj5PSywgc28gSSdtIG5vdCB0b28ga2VlbiBvbiB0aGlzIGJlY2F1c2Ugb3VyIGVudGlyZSBzeXN0
-ZW0gaXMgKGZpbmFsbHkpIGRlc2lnbmVkIHRvIGJlIGhvdCBwbHVnLCBzbyBlY2hvaW5nIDEgdG8g
-ZGVsZXRlIHNpbXVsYXRlcyBhIGhvdHBsdWcgZXZlbnQsIGFuZCB0aGV5ID5jYW4gY29tZSBpbiBh
-dCBhbnkgdGltZS4NCg0KPkNhbiB5b3UgZWxhYm9yYXRlIG9uIHdoeSB0aGlzIGlzIG5lY2Vzc2Fy
-eT8gIFJpZ2h0IGF0IHRoZSBtb21lbnQsIG9ubHkgDQo+cm9vdCBpcyBhbGxvd2VkIHRvIHdyaXRl
-IHRvIHRoaXMgZmlsZSBhbmQgY2F1c2UgYSBkZWxldGlvbiAuLi4gcGx1cyB0aGUgZmlsZSBpcyBw
-cmV0dHkgPmhhcmQgdG8gZmluZCwgYnVyaWVkIGFzIGl0IGlzIGluIHN5c2ZzOyAgU28gSSB3b3Vs
-ZCBoYXZlIHRob3VnaHQgaXQgd2FzIHByZXR0eSBzYWZlIGZyb20gYWNjaWRlbnRhbCBtaXN1c2U7
-IHdoeSBkb2VzIGl0IG5lZWQgYWRkaXRpb25hbCBwcm90ZWN0aW9uPw0KDQpTb21lIG9mIHRoZSBy
-ZXF1ZXN0cyB3ZSBnb3QgZm9yIHN1Y2ggY2hlY2tzIHdlcmUgZnJvbSB1c2UgY2FzZXMgb24gbGFy
-Z2Ugc3lzdGVtIGNvbmZpZ3VyYXRpb25zIHdpdGggc2V2ZXJhbCBMVU5zLg0KVGhlIG5ldyBjaGFu
-Z2VzIGRvIG5vdCBkaXN0dXJiIGV4aXN0aW5nIGludGVyZmFjZXMuIFdyaXRlcyB0byB0aGUgImRl
-bGV0ZSIgc3lzZnMgZmlsZSBzdWNoIGFzIGEgIjEiLCBhcyBhZHZlcnRpc2VkIGluIHNvbWUgZGlz
-dHJpYnV0aW9ucyBsaWtlIFJlZEhhdCB0b2RheSwgd2lsbCBjb250aW51ZSB0byBkZWxldGUgdGhl
-IExVTi4gSG93ZXZlciB3ZSB0aG91Z2h0IGFuIG9wdGlvbiB0byBjaGVjayB1c2FnZXMgZHVyaW5n
-IGRlbGV0ZSBjYW4gY29tcGxlbWVudCBleGlzdGluZyBpbnRlcmZhY2VzLiANCiANClRoZSBuZXcg
-Y2hhbmdlcyBnZXQgYWN0aXZhdGVkIG9ubHkgd2hlbiBvbmUgd2FudHMgdG8gcmVjZWl2ZSBhbGVy
-dHMgb24gYW55IGxpbmdlcmluZyB1c2FnZXMsIGFuZCB3cml0ZXMgYSAiPyIgdG8gZGVsZXRlIHRo
-ZSBMVU4uDQpBIGRlbGV0ZSBzY3JpcHQgY2FuIHdyaXRlICI/IiB0byBzeXNmcyBkZWxldGUgZmls
-ZXMgaW4gYnVsaywgd2hpbGUgbW9zdCBMVU5zIGdldCByZW1vdmVkIGluIHRoZSBmaXJzdCBhdHRl
-bXB0LCB0aGUgdXNhZ2VzIGNhbiBiZSBpbnZlc3RpZ2F0ZWQgaWYgYW55IExVTnMgcmVtYWluIHdp
-dGggYWN0aXZlIHVzYWdlIGNvdW50cy4gDQoNCkhvcGVmdWxseSBvdmVyaGVhZCBvZiB0aGVzZSBj
-aGFuZ2VzIGlzIG1pbmltYWwsIGl0IGlzIGZldyBhZGRpdGlvbmFsIGNoZWNrcyBvbiB1c2FnZSBj
-b3VudHMgYW5kIHRoZSBsb2cuDQpOZXcgY2hhbmdlcyBnZXQgYWN0aXZlIG9ubHkgaW4gZGVsZXRl
-IGNvbnRleHQgYW5kIGRvZXNuJ3QgZ2V0IGludG8gSS9PIHBhdGhzLg0KDQotVmFzdW5kaGFyYQ0K
-DQoNCg==
+\
+> Subject: [PATCH v6 0/9] Replay Protected Memory Block (RPMB) subsystem
+> 
+> 
+> Few storage technologies such is EMMC, UFS, and NVMe support RPMB
+> hardware partition with common protocol and frame layout.
+> The RPMB partition cannot be accessed via standard block layer, but by a set
+> of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+> PROGRAM_KEY.
+> Such a partition provides authenticated and replay protected access, hence
+> suitable as a secure storage.
+> 
+> The RPMB layer aims to provide in-kernel API for Trusted Execution
+> Environment (TEE) devices that are capable to securely compute block frame
+> signature. In case a TEE device wish to store a replay protected data, it
+> creates an RPMB frame with requested data and computes HMAC of the
+> frame, then it requests the storage device via RPMB layer to store the data.
+> 
+> The layer provides two APIs, for rpmb_req_cmd() for issuing one of RPMB
+> specific commands and rpmb_seq_cmd() for issuing of raw RPMB protocol
+> frames,  which is close to the functionality provided by emmc multi ioctl
+> interface.
+> 
+> A TEE driver can claim the RPMB interface, for example, via
+> class_interface_register ().
+> 
+> A storage device registers its RPMB hardware (eMMC) partition or RPMB W-
+> LUN (UFS) with the RPMB layer providing an implementation for
+> rpmb_seq_cmd() handler. The interface enables sending sequence of RPMB
+> standard frames.
+> 
+> A parallel user space API is provided via /dev/rpmbX character device with
+> two IOCTL commands.
+> Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
+> by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD
+> where the whole RPMB sequence, including RESULT_READ is supplied by the
+> caller.
+> The latter is intended for easier adjusting of the applications that use
+> MMC_IOC_MULTI_CMD ioctl, such as
+> https://android.googlesource.com/trusty/app/storage/
+> 
+> There is a also sample tool under tools/rpmb/ directory that exercises these
+> interfaces and a simulation device that implements the device part.
+> 
+> The code is also available from:
+> 
+> https://github.com/tomasbw/linux-mei.git rpmb
+> 
+
+Greg, can you please check if this series has addressed all your comments. 
+Are there are any more items that preventing it from merging?
+
+Thanks
+Tomas
+
