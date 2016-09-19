@@ -1,19 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] Ibmvscsis: Fixed unused variable
-Date: Mon, 19 Sep 2016 11:52:56 -0400
-Message-ID: <yq1r38fantz.fsf@sermon.lab.mkp.net>
-References: <1474035956-91228-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH] hpsa: correct scsi 6byte lba calculation
+Date: Mon, 19 Sep 2016 11:55:07 -0400
+Message-ID: <yq1mvj3anqc.fsf@sermon.lab.mkp.net>
+References: <147405566295.22004.7072671003857458219.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1474035956-91228-1-git-send-email-bryantly@linux.vnet.ibm.com>
-        (Bryant G. Ly's message of "Fri, 16 Sep 2016 09:25:56 -0500")
-Sender: target-devel-owner@vger.kernel.org
-To: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Cc: nab@linux-iscsi.org, martin.petersen@oracle.com, mikecyr@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28661 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751008AbcISPz5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Sep 2016 11:55:57 -0400
+In-Reply-To: <147405566295.22004.7072671003857458219.stgit@brunhilda> (Don
+        Brace's message of "Fri, 16 Sep 2016 14:54:23 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, linux-scsi@vger.kernel.org
 
->>>>> "Bryant" == Bryant G Ly <bryantly@linux.vnet.ibm.com> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+
+Don> From: Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>
+Don> Missing 5 bits of byte 1 in the LBA issued by SML
 
 Applied to 4.9/scsi-queue.
 
