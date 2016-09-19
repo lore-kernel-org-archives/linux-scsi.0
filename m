@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: [PATCH 1/9] block: Add 'zoned' queue limit
-Date: Tue, 20 Sep 2016 06:27:26 +0900
-Message-ID: <1474320454-5264-2-git-send-email-damien.lemoal@hgst.com>
+Subject: [PATCH 2/9] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+Date: Tue, 20 Sep 2016 06:27:27 +0900
+Message-ID: <1474320454-5264-3-git-send-email-damien.lemoal@hgst.com>
 References: <1474320454-5264-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,138 +12,53 @@ To: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 Cc: martin.petersen@oracle.com, axboe@kernel.dk, hare@suse.de, shaun.tancheff@seagate.com, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the zoned queue limit to indicate the zoning model of a block
-device. Defined values are 0 (BLK_ZONED_NONE) for regular block
-devices, 1 (BLK_ZONED_HA) for host-aware zone block devices and 2
-(BLK_ZONED_HM) for host-managed zone block devices. The drive managed
-model is not defined here since these block devices do not provide any
-command for accessing zone information. The helper functions
-blk_queue_zoned and bdev_zoned return the zoned limit which can in turn
-be used as a boolean to test if a block device is zoned.
+From: Hannes Reinecke <hare@suse.de>
 
-The zoned attribute is also exported as a string to applications via
-sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as "host-aware" and
-BLK_ZONED_HM as "host-managed".
+The queue limits already have a 'chunk_sectors' setting, so
+we should be presenting it via sysfs.
 
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
 ---
- block/blk-settings.c   |  1 +
- block/blk-sysfs.c      | 18 ++++++++++++++++++
- include/linux/blkdev.h | 25 +++++++++++++++++++++++++
- 3 files changed, 44 insertions(+)
+ block/blk-sysfs.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f679ae1..b1d5b7f 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -107,6 +107,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->io_opt = 0;
- 	lim->misaligned = 0;
- 	lim->cluster = 1;
-+	lim->zoned = BLK_ZONED_NONE;
- }
- EXPORT_SYMBOL(blk_set_default_limits);
- 
 diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index f87a7e7..31ecff9 100644
+index 31ecff9..15e5baf 100644
 --- a/block/blk-sysfs.c
 +++ b/block/blk-sysfs.c
-@@ -257,6 +257,18 @@ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
- QUEUE_SYSFS_BIT_FNS(iostats, IO_STAT, 0);
- #undef QUEUE_SYSFS_BIT_FNS
- 
-+static ssize_t queue_zoned_show(struct request_queue *q, char *page)
-+{
-+	switch (blk_queue_zoned(q)) {
-+	case BLK_ZONED_HA:
-+		return sprintf(page, "host-aware\n");
-+	case BLK_ZONED_HM:
-+		return sprintf(page, "host-managed\n");
-+	default:
-+		return sprintf(page, "none\n");
-+	}
-+}
-+
- static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show((blk_queue_nomerges(q) << 1) |
-@@ -485,6 +497,11 @@ static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.store = queue_store_nonrot,
- };
- 
-+static struct queue_sysfs_entry queue_zoned_entry = {
-+	.attr = {.name = "zoned", .mode = S_IRUGO },
-+	.show = queue_zoned_show,
-+};
-+
- static struct queue_sysfs_entry queue_nomerges_entry = {
- 	.attr = {.name = "nomerges", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nomerges_show,
-@@ -546,6 +563,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_write_same_max_entry.attr,
- 	&queue_nonrot_entry.attr,
-+	&queue_zoned_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index e79055c..1c74b19 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -261,6 +261,15 @@ struct blk_queue_tag {
- #define BLK_SCSI_MAX_CMDS	(256)
- #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
- 
-+/*
-+ * Zoned block device models (zoned limit).
-+ */
-+enum blk_zoned_model {
-+	BLK_ZONED_NONE,	/* Regular block device */
-+	BLK_ZONED_HA, 	/* Host-aware zoned block device */
-+	BLK_ZONED_HM,	/* Host-managed zoned block device */
-+};
-+
- struct queue_limits {
- 	unsigned long		bounce_pfn;
- 	unsigned long		seg_boundary_mask;
-@@ -290,6 +299,7 @@ struct queue_limits {
- 	unsigned char		cluster;
- 	unsigned char		discard_zeroes_data;
- 	unsigned char		raid_partial_stripes_expensive;
-+	unsigned char		zoned;
- };
- 
- struct request_queue {
-@@ -627,6 +637,11 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
- 	return q->limits.cluster;
+@@ -130,6 +130,11 @@ static ssize_t queue_physical_block_size_show(struct request_queue *q, char *pag
+ 	return queue_var_show(queue_physical_block_size(q), page);
  }
  
-+static inline unsigned int blk_queue_zoned(struct request_queue *q)
++static ssize_t queue_chunk_sectors_show(struct request_queue *q, char *page)
 +{
-+	return q->limits.zoned;
++	return queue_var_show(q->limits.chunk_sectors, page);
 +}
 +
- /*
-  * We regard a request as sync, if either a read or a sync write
-  */
-@@ -1354,6 +1369,16 @@ static inline unsigned int bdev_write_same(struct block_device *bdev)
- 	return 0;
- }
- 
-+static inline unsigned int bdev_zoned(struct block_device *bdev)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (q)
-+		return blk_queue_zoned(q);
-+
-+	return 0;
-+}
-+
- static inline int queue_dma_alignment(struct request_queue *q)
+ static ssize_t queue_io_min_show(struct request_queue *q, char *page)
  {
- 	return q ? q->dma_alignment : 511;
+ 	return queue_var_show(queue_io_min(q), page);
+@@ -455,6 +460,11 @@ static struct queue_sysfs_entry queue_physical_block_size_entry = {
+ 	.show = queue_physical_block_size_show,
+ };
+ 
++static struct queue_sysfs_entry queue_chunk_sectors_entry = {
++	.attr = {.name = "chunk_sectors", .mode = S_IRUGO },
++	.show = queue_chunk_sectors_show,
++};
++
+ static struct queue_sysfs_entry queue_io_min_entry = {
+ 	.attr = {.name = "minimum_io_size", .mode = S_IRUGO },
+ 	.show = queue_io_min_show,
+@@ -555,6 +565,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_hw_sector_size_entry.attr,
+ 	&queue_logical_block_size_entry.attr,
+ 	&queue_physical_block_size_entry.attr,
++	&queue_chunk_sectors_entry.attr,
+ 	&queue_io_min_entry.attr,
+ 	&queue_io_opt_entry.attr,
+ 	&queue_discard_granularity_entry.attr,
 -- 
 2.7.4
 
