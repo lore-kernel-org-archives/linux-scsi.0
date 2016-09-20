@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 2/3] hisi_sas: add device tree support for hip07
-Date: Tue, 20 Sep 2016 18:48:59 +0800
-Message-ID: <1474368540-186535-3-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 1/3] devicetree: bindings: scsi: hisi_sas hip07 support
+Date: Tue, 20 Sep 2016 18:48:58 +0800
+Message-ID: <1474368540-186535-2-git-send-email-john.garry@huawei.com>
 References: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,35 +12,38 @@ To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, devicetree@vger.kernel.
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Chipset hip07 incorporates v2 hw.
+Add support for hip07 chipset to bindings.
+
+Chipset hip07 has v2 hw.
+
+The sas-v2 quirk amt is expanded to cover hip07.
 
 Signed-off-by: John Garry <john.garry@huawei.com>
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 9825a3f..c1e3aa7 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -777,7 +777,8 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 	/* Global registers init */
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+index bf2411f..e604527 100644
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+@@ -6,6 +6,7 @@ Main node required properties:
+   - compatible : value should be as follows:
+ 	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
+ 	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
++	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
+   - sas-addr : array of 8 bytes for host SAS address
+   - reg : Address and length of the SAS register
+   - hisilicon,sas-syscon: phandle of syscon used for sas control
+@@ -47,7 +48,7 @@ Main node required properties:
+ 			increasing order.
  
- 	/* Deal with am-max-transmissions quirk */
--	if (device_property_present(dev, "hip06-sas-v2-quirk-amt")) {
-+	if (device_property_present(dev, "hip06-sas-v2-quirk-amt") ||
-+	    device_property_present(dev, "hip07-sas-v2-quirk-amt")) {
- 		hisi_sas_write32(hisi_hba, AM_CFG_MAX_TRANS, 0x2020);
- 		hisi_sas_write32(hisi_hba, AM_CFG_SINGLE_PORT_MAX_TRANS,
- 				 0x2020);
-@@ -2319,6 +2320,7 @@ static int hisi_sas_v2_remove(struct platform_device *pdev)
+ Optional main node properties:
+- - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
++ - hip06/7-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+ 			    "am-max-transmissions" limitation.
  
- static const struct of_device_id sas_v2_of_match[] = {
- 	{ .compatible = "hisilicon,hip06-sas-v2",},
-+	{ .compatible = "hisilicon,hip07-sas-v2",},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, sas_v2_of_match);
+ Example:
 -- 
 1.9.1
