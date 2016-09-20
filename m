@@ -1,42 +1,104 @@
 From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 0/3] hisi_sas add hip07 support
-Date: Tue, 20 Sep 2016 18:48:57 +0800
-Message-ID: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 3/3] hisi_sas: add v2 hw support for different refclk
+Date: Tue, 20 Sep 2016 18:49:00 +0800
+Message-ID: <1474368540-186535-4-git-send-email-john.garry@huawei.com>
+References: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1474368540-186535-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
 Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 To: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hare-IBi9RG/b67k@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hare-IBi9RG/b67k@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patchset introduces support for hip07 SoC.
+Some hip06 D03 and hip07 D05 boards have different
+reference clock frequencies for the SAS controller.
 
-The hip07 SoC has the same v2 hw as in hip06.
+Register PHY_CTRL needs to be programmed differently
+according to this frequency, so add support for this.
 
-Support for different reference clock is required
-as some SAS registers need be programmed
-differently, depending on the refclock rate.
+The default register setting in PHY_CTRL is for 50MHz,
+so only update this register when the refclk frequency
+is 66MHz.
 
-Related patchset:
-- https://patchwork.ozlabs.org/patch/665172/
-  Once 4.9-rc1 is released, the D03 dts can be
-  updated for the refclock.
-  Note: there will be only 1 D03 dts, UEFI will update
-  	the refclock rate for that board in the fdt at
-  	boot time.
+The register cannot be set according to hip06 or hip07
+as some variants of hip06 D03 board are 50MHz and some
+are 66MHz (early editions). All hip07 D05 are 50MHz.
 
-John Garry (3):
-  devicetree: bindings: scsi: hisi_sas add hip07 support
-  hisi_sas: add device tree support for hip07
-  hisi_sas: add v2 hw support for different refclk
+For ACPI we expect the _RST handler to set the correct
+value for PHY_CTRL (we take an alternate approach for
+DT and ACPI as ACPI does not support fixed-clock device
+type).
 
- Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 3 ++-
- drivers/scsi/hisi_sas/hisi_sas.h                         | 2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c                    | 7 +++++++
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c                   | 8 ++++++--
- 4 files changed, 17 insertions(+), 3 deletions(-)
+Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Signed-off-by: Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+---
+ drivers/scsi/hisi_sas/hisi_sas.h       | 2 ++
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 7 +++++++
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 4 +++-
+ 3 files changed, 12 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
+index 72c9852..64046c5 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas.h
++++ b/drivers/scsi/hisi_sas/hisi_sas.h
+@@ -13,6 +13,7 @@
+ #define _HISI_SAS_H_
+ 
+ #include <linux/acpi.h>
++#include <linux/clk.h>
+ #include <linux/dmapool.h>
+ #include <linux/mfd/syscon.h>
+ #include <linux/module.h>
+@@ -183,6 +184,7 @@ struct hisi_hba {
+ 	u32 ctrl_reset_reg;
+ 	u32 ctrl_reset_sts_reg;
+ 	u32 ctrl_clock_ena_reg;
++	u32 refclk_frequency_mhz;
+ 	u8 sas_addr[SAS_ADDR_SIZE];
+ 
+ 	int n_phy;
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 2f872f7..0bc3165 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1396,6 +1396,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 	struct hisi_hba *hisi_hba;
+ 	struct device *dev = &pdev->dev;
+ 	struct device_node *np = pdev->dev.of_node;
++	struct clk *refclk;
+ 
+ 	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+ 	if (!shost)
+@@ -1432,6 +1433,12 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+ 			goto err_out;
+ 	}
+ 
++	refclk = devm_clk_get(&pdev->dev, NULL);
++	if (IS_ERR(refclk))
++		dev_info(dev, "no ref clk property\n");
++	else
++		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
++
+ 	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
+ 		goto err_out;
+ 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index c1e3aa7..7014d99 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -837,7 +837,9 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT_COAL_EN, 0x0);
+ 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
+-		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199B694);
++		if (hisi_hba->refclk_frequency_mhz == 66)
++			hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199B694);
++		/* else, do nothing -> leave it how you found it */
+ 	}
+ 
+ 	for (i = 0; i < hisi_hba->queue_count; i++) {
 -- 
 1.9.1
 
