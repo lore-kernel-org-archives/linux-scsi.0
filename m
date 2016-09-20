@@ -1,108 +1,46 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH 3/3] hisi_sas: add v2 hw support for different refclk
-Date: Tue, 20 Sep 2016 18:49:00 +0800
-Message-ID: <1474368540-186535-4-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH 2/3] hisi_sas: add device tree support for hip07
+Date: Tue, 20 Sep 2016 18:48:59 +0800
+Message-ID: <1474368540-186535-3-git-send-email-john.garry@huawei.com>
 References: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1474368540-186535-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hare-IBi9RG/b67k@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, devicetree@vger.kernel.org, mark.rutland@arm.com, robh+dt@kernel.org
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hare@suse.com, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Some hip06 D03 and hip07 D05 boards have different
-reference clock frequencies for the SAS controller.
+Chipset hip07 incorporates v2 hw.
 
-Register PHY_CTRL needs to be programmed differently
-according to this frequency, so add support for this.
-
-The default register setting in PHY_CTRL is for 50MHz,
-so only update this register when the refclk frequency
-is 66MHz.
-
-The register cannot be set according to hip06 or hip07
-as some variants of hip06 D03 board are 50MHz and some
-are 66MHz (early editions). All hip07 D05 are 50MHz.
-
-For ACPI we expect the _RST handler to set the correct
-value for PHY_CTRL (we take an alternate approach for
-DT and ACPI as ACPI does not support fixed-clock device
-type).
-
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas.h       | 2 ++
- drivers/scsi/hisi_sas/hisi_sas_main.c  | 7 +++++++
  drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 4 +++-
- 3 files changed, 12 insertions(+), 1 deletion(-)
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-index 72c9852..64046c5 100644
---- a/drivers/scsi/hisi_sas/hisi_sas.h
-+++ b/drivers/scsi/hisi_sas/hisi_sas.h
-@@ -13,6 +13,7 @@
- #define _HISI_SAS_H_
- 
- #include <linux/acpi.h>
-+#include <linux/clk.h>
- #include <linux/dmapool.h>
- #include <linux/mfd/syscon.h>
- #include <linux/module.h>
-@@ -183,6 +184,7 @@ struct hisi_hba {
- 	u32 ctrl_reset_reg;
- 	u32 ctrl_reset_sts_reg;
- 	u32 ctrl_clock_ena_reg;
-+	u32 refclk_frequency_mhz;
- 	u8 sas_addr[SAS_ADDR_SIZE];
- 
- 	int n_phy;
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index 2f872f7..0bc3165 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1396,6 +1396,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 	struct hisi_hba *hisi_hba;
- 	struct device *dev = &pdev->dev;
- 	struct device_node *np = pdev->dev.of_node;
-+	struct clk *refclk;
- 
- 	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
- 	if (!shost)
-@@ -1432,6 +1433,12 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
- 			goto err_out;
- 	}
- 
-+	refclk = devm_clk_get(&pdev->dev, NULL);
-+	if (IS_ERR(refclk))
-+		dev_info(dev, "no ref clk property\n");
-+	else
-+		hisi_hba->refclk_frequency_mhz = clk_get_rate(refclk) / 1000000;
-+
- 	if (device_property_read_u32(dev, "phy-count", &hisi_hba->n_phy))
- 		goto err_out;
- 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index c1e3aa7..7014d99 100644
+index 9825a3f..c1e3aa7 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -837,7 +837,9 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
- 		hisi_sas_phy_write32(hisi_hba, i, SL_RX_BCAST_CHK_MSK, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, CHL_INT_COAL_EN, 0x0);
- 		hisi_sas_phy_write32(hisi_hba, i, PHYCTRL_OOB_RESTART_MSK, 0x0);
--		hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199B694);
-+		if (hisi_hba->refclk_frequency_mhz == 66)
-+			hisi_sas_phy_write32(hisi_hba, i, PHY_CTRL, 0x199B694);
-+		/* else, do nothing -> leave it how you found it */
- 	}
+@@ -777,7 +777,8 @@ static void init_reg_v2_hw(struct hisi_hba *hisi_hba)
+ 	/* Global registers init */
  
- 	for (i = 0; i < hisi_hba->queue_count; i++) {
+ 	/* Deal with am-max-transmissions quirk */
+-	if (device_property_present(dev, "hip06-sas-v2-quirk-amt")) {
++	if (device_property_present(dev, "hip06-sas-v2-quirk-amt") ||
++	    device_property_present(dev, "hip07-sas-v2-quirk-amt")) {
+ 		hisi_sas_write32(hisi_hba, AM_CFG_MAX_TRANS, 0x2020);
+ 		hisi_sas_write32(hisi_hba, AM_CFG_SINGLE_PORT_MAX_TRANS,
+ 				 0x2020);
+@@ -2319,6 +2320,7 @@ static int hisi_sas_v2_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id sas_v2_of_match[] = {
+ 	{ .compatible = "hisilicon,hip06-sas-v2",},
++	{ .compatible = "hisilicon,hip07-sas-v2",},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, sas_v2_of_match);
 -- 
 1.9.1
-
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
