@@ -1,53 +1,68 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH] MAINTAINERS: Abandon pas16, dtc and t128 ISA card SCSI host
- adapter drivers
-Date: Thu, 22 Sep 2016 14:41:20 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1609221355070.18177@nippy.intranet>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH next] scsi: fcoe: fix off by one in eth2fc_speed()
+Date: Thu, 22 Sep 2016 12:48:33 +0200
+Message-ID: <20160922104833.lyjkysd7lwww7xco@linux-x5ow.site>
+References: <1471613617-21291-1-git-send-email-jthumshirn@suse.de>
+ <20160921205407.6304-1-vincent.stehle@laposte.net>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:38615 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933276AbcIVKse (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Sep 2016 06:48:34 -0400
+Content-Disposition: inline
+In-Reply-To: <20160921205407.6304-1-vincent.stehle@laposte.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vincent =?iso-8859-1?Q?Stehl=E9?= <vincent.stehle@laposte.net>
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
+On Wed, Sep 21, 2016 at 10:54:07PM +0200, Vincent Stehlé wrote:
+> This should be "< ARRAY_SIZE()" instead of "<= ARRAY_SIZE()".
+> 
+> Fixes: 0b924e5505a568e7 ("scsi: fcoe: provide translation table between Ethernet and FC port speeds")
+> Signed-off-by: Vincent Stehlé <vincent.stehle@laposte.net>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+> ---
+> 
+> Hi,
+> 
+> I saw that in Linux next-20160921.
+> 
+> Best regards,
+> 
+> Vincent.
+> 
+>  drivers/scsi/fcoe/fcoe_transport.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/fcoe/fcoe_transport.c b/drivers/scsi/fcoe/fcoe_transport.c
+> index c164eec..375c536 100644
+> --- a/drivers/scsi/fcoe/fcoe_transport.c
+> +++ b/drivers/scsi/fcoe/fcoe_transport.c
+> @@ -110,7 +110,7 @@ static inline u32 eth2fc_speed(u32 eth_port_speed)
+>  {
+>  	int i;
+>  
+> -	for (i = 0; i <= ARRAY_SIZE(fcoe_port_speed_mapping); i++) {
+> +	for (i = 0; i < ARRAY_SIZE(fcoe_port_speed_mapping); i++) {
+>  		if (fcoe_port_speed_mapping[i].eth_port_speed == eth_port_speed)
+>  			return fcoe_port_speed_mapping[i].fc_port_speed;
+>  	}
+> -- 
+> 2.9.3
+> 
 
-I don't intend to modernize these three drivers, so as to avoid the 
-deprecated scsi_register() API. I don't have the relevant hardware.
+Good catch,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Cc: Michael Schmitz <schmitzmic@gmail.com>
-References: https://lkml.kernel.org/r/20160911171249.GA7554@infradead.org
-Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-
----
-
-Whilst I suspect that these 3 drivers have no users, I don't think my own 
-lack of hardware and interest is itself any reason for me to remove the 
-drivers themselves. I'll leave that to the SCSI subsystem maintainers, as 
-they intend to remove the scsi_register() API.
-
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 8c20323..e09df13 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -7821,20 +7821,16 @@ M:	Michael Schmitz <schmitzmic@gmail.com>
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
- F:	Documentation/scsi/g_NCR5380.txt
--F:	Documentation/scsi/dtc3x80.txt
- F:	drivers/scsi/NCR5380.*
- F:	drivers/scsi/arm/cumana_1.c
- F:	drivers/scsi/arm/oak.c
- F:	drivers/scsi/atari_scsi.*
- F:	drivers/scsi/dmx3191d.c
--F:	drivers/scsi/dtc.*
- F:	drivers/scsi/g_NCR5380.*
- F:	drivers/scsi/g_NCR5380_mmio.c
- F:	drivers/scsi/mac_scsi.*
--F:	drivers/scsi/pas16.*
- F:	drivers/scsi/sun3_scsi.*
- F:	drivers/scsi/sun3_scsi_vme.c
--F:	drivers/scsi/t128.*
- 
- NCR DUAL 700 SCSI DRIVER (MICROCHANNEL)
- M:	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
