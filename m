@@ -1,60 +1,64 @@
-From: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Subject: Re: [PATCH 1/3] devicetree: bindings: scsi: hisi_sas hip07 support
-Date: Fri, 23 Sep 2016 13:36:41 -0500
-Message-ID: <20160923183641.GA27636@rob-hp-laptop>
-References: <1474368540-186535-1-git-send-email-john.garry@huawei.com>
- <1474368540-186535-2-git-send-email-john.garry@huawei.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 172831] New: Adaptec ASR7805 in RAID (Expose RAW) mode recreate
+ block devices and broke MDRAID
+Date: Fri, 23 Sep 2016 23:44:04 +0000
+Message-ID: <bug-172831-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1474368540-186535-2-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Cc: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org, linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, zhangfei.gao-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hare-IBi9RG/b67k@public.gmane.org, Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:35616 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1759017AbcIWXoI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Sep 2016 19:44:08 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id D06C0203B7
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2016 23:44:06 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id AF150203A9
+        for <linux-scsi@vger.kernel.org>; Fri, 23 Sep 2016 23:44:04 +0000 (UTC)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Sep 20, 2016 at 06:48:58PM +0800, John Garry wrote:
-> Add support for hip07 chipset to bindings.
-> 
-> Chipset hip07 has v2 hw.
-> 
-> The sas-v2 quirk amt is expanded to cover hip07.
-> 
-> Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
-> ---
->  Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> index bf2411f..e604527 100644
-> --- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> +++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
-> @@ -6,6 +6,7 @@ Main node required properties:
->    - compatible : value should be as follows:
->  	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
->  	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
-> +	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
->    - sas-addr : array of 8 bytes for host SAS address
->    - reg : Address and length of the SAS register
->    - hisilicon,sas-syscon: phandle of syscon used for sas control
-> @@ -47,7 +48,7 @@ Main node required properties:
->  			increasing order.
->  
->  Optional main node properties:
-> - - hip06-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
-> + - hip06/7-sas-v2-quirk-amt : when set, indicates that the v2 controller has the
+https://bugzilla.kernel.org/show_bug.cgi?id=172831
 
-Just use the existing property name for hip07.
+            Bug ID: 172831
+           Summary: Adaptec ASR7805 in RAID (Expose RAW) mode recreate
+                    block devices and broke MDRAID
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.7.4-1.el7.elrepo.x86_64
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: high
+          Priority: P1
+         Component: AACRAID
+          Assignee: scsi_drivers-aacraid@kernel-bugs.osdl.org
+          Reporter: v.badalyan@open-bs.ru
+        Regression: No
 
->  			    "am-max-transmissions" limitation.
->  
->  Example:
-> -- 
-> 1.9.1
-> 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+1. Have 2 x Adaptec ASR7805 in RAID (Expose RAW) mode
+2. Have 8 SSD in Raw (Pass Through) mode
+3. Have Centos 7
+4. Create linux software raid 10
+5. After reboot:
+
+a) mdadm in boot time found and create raid10 device.
+b) raid10 device is started
+c) block devices recreated after 1-2 secs (and gets other names!)
+d) raid10 marked as degraded. 1-2 disks say is Offline (old data)
+
+Becouse it is not system volume i simple do hot fix in rc.local:
+
+mdadm -S /dev/md*
+mdadm -As
+mount -o discard /dev/md/0_0 /mnt/SSD
+
+dmesg, ./arcconf GETCONFIG 1 and 2, dmidecode in attach!
+
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
