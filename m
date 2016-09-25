@@ -1,24 +1,24 @@
 From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH] lpfc: mark symbols static where possible
-Date: Sun, 25 Sep 2016 13:44:55 +0800
-Message-ID: <1474782295-25644-1-git-send-email-baoyou.xie@linaro.org>
+Subject: [PATCH] [SCSI] mvsas: mark symbols static where possible
+Date: Sun, 25 Sep 2016 13:48:50 +0800
+Message-ID: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@avagotech.com, dick.kennedy@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Wilfried.Weissmann@gmx.at, hare@suse.de, jthumshirn@suse.de, tj@kernel.org, davispuh@gmail.com, luisbg@osg.samsung.com
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
 List-Id: linux-scsi@vger.kernel.org
 
 We get a few warnings when building kernel with W=1:
-drivers/scsi/lpfc/lpfc_sli.c:5693:1: warning: no previous prototype for 'lpfc_set_features' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_sli.c:8972:1: warning: no previous prototype for 'lpfc_sli_calc_ring' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4621:1: warning: no previous prototype for 'lpfc_rdp_res_link_service' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4633:1: warning: no previous prototype for 'lpfc_rdp_res_sfp_desc' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4698:1: warning: no previous prototype for 'lpfc_rdp_res_link_error' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4727:1: warning: no previous prototype for 'lpfc_rdp_res_bbc_desc' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4752:1: warning: no previous prototype for 'lpfc_rdp_res_oed_temp_desc' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4780:1: warning: no previous prototype for 'lpfc_rdp_res_oed_voltage_desc' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4809:1: warning: no previous prototype for 'lpfc_rdp_res_oed_txbias_desc' [-Wmissing-prototypes]
-drivers/scsi/lpfc/lpfc_els.c:4838:1: warning: no previous prototype for 'lpfc_rdp_res_oed_txpower_desc' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:77:18: warning: no previous prototype for 'mvs_find_dev_mvi' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:105:5: warning: no previous prototype for 'mvs_find_dev_phyno' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1161:20: warning: no previous prototype for 'mvs_alloc_dev' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1178:6: warning: no previous prototype for 'mvs_free_dev' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1188:5: warning: no previous prototype for 'mvs_dev_found_notify' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1244:6: warning: no previous prototype for 'mvs_dev_gone_notify' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1614:6: warning: no previous prototype for 'mvs_set_sense' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_sas.c:1653:6: warning: no previous prototype for 'mvs_fill_ssp_resp_iu' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_64xx.c:139:6: warning: no previous prototype for 'mvs_64xx_clear_srs_irq' [-Wmissing-prototypes]
+drivers/scsi/mvsas/mv_64xx.c:566:6: warning: no previous prototype for 'mvs_64xx_make_prd' [-Wmissing-prototypes]
 ....
 
 In fact, these functions are only used in the file in which they are
@@ -27,585 +27,288 @@ so this patch marks these functions with 'static'.
 
 Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 ---
- drivers/scsi/lpfc/lpfc_ct.c   | 82 +++++++++++++++++++++----------------------
- drivers/scsi/lpfc/lpfc_els.c  | 34 +++++++++---------
- drivers/scsi/lpfc/lpfc_mbox.c |  4 +--
- drivers/scsi/lpfc/lpfc_sli.c  |  4 +--
- 4 files changed, 62 insertions(+), 62 deletions(-)
+ drivers/scsi/mvsas/mv_64xx.c | 19 ++++++++++---------
+ drivers/scsi/mvsas/mv_94xx.c | 41 +++++++++++++++++++++--------------------
+ drivers/scsi/mvsas/mv_sas.c  | 16 ++++++++--------
+ 3 files changed, 39 insertions(+), 37 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 63e48d4..4ac03b1 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -1535,7 +1535,7 @@ lpfc_fdmi_num_disc_check(struct lpfc_vport *vport)
- }
- 
- /* Routines for all individual HBA attributes */
--int
-+static int
- lpfc_fdmi_hba_attr_wwnn(struct lpfc_vport *vport, struct lpfc_fdmi_attr_def *ad)
- {
- 	struct lpfc_fdmi_attr_entry *ae;
-@@ -1551,7 +1551,7 @@ lpfc_fdmi_hba_attr_wwnn(struct lpfc_vport *vport, struct lpfc_fdmi_attr_def *ad)
- 	ad->AttrType = cpu_to_be16(RHBA_NODENAME);
- 	return size;
- }
--int
-+static int
- lpfc_fdmi_hba_attr_manufacturer(struct lpfc_vport *vport,
- 				struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1573,7 +1573,7 @@ lpfc_fdmi_hba_attr_manufacturer(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_sn(struct lpfc_vport *vport, struct lpfc_fdmi_attr_def *ad)
- {
- 	struct lpfc_hba *phba = vport->phba;
-@@ -1594,7 +1594,7 @@ lpfc_fdmi_hba_attr_sn(struct lpfc_vport *vport, struct lpfc_fdmi_attr_def *ad)
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_model(struct lpfc_vport *vport,
- 			 struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1615,7 +1615,7 @@ lpfc_fdmi_hba_attr_model(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_description(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1637,7 +1637,7 @@ lpfc_fdmi_hba_attr_description(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_hdw_ver(struct lpfc_vport *vport,
- 			   struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1669,7 +1669,7 @@ lpfc_fdmi_hba_attr_hdw_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_drvr_ver(struct lpfc_vport *vport,
- 			    struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1690,7 +1690,7 @@ lpfc_fdmi_hba_attr_drvr_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_rom_ver(struct lpfc_vport *vport,
- 			   struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1715,7 +1715,7 @@ lpfc_fdmi_hba_attr_rom_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_fmw_ver(struct lpfc_vport *vport,
- 			   struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1736,7 +1736,7 @@ lpfc_fdmi_hba_attr_fmw_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_os_ver(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1759,7 +1759,7 @@ lpfc_fdmi_hba_attr_os_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_ct_len(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1775,7 +1775,7 @@ lpfc_fdmi_hba_attr_ct_len(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_symbolic_name(struct lpfc_vport *vport,
- 				 struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1794,7 +1794,7 @@ lpfc_fdmi_hba_attr_symbolic_name(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_vendor_info(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1811,7 +1811,7 @@ lpfc_fdmi_hba_attr_vendor_info(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_num_ports(struct lpfc_vport *vport,
- 			     struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1828,7 +1828,7 @@ lpfc_fdmi_hba_attr_num_ports(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_fabric_wwnn(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1846,7 +1846,7 @@ lpfc_fdmi_hba_attr_fabric_wwnn(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_bios_ver(struct lpfc_vport *vport,
- 			    struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1867,7 +1867,7 @@ lpfc_fdmi_hba_attr_bios_ver(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_bios_state(struct lpfc_vport *vport,
- 			      struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1884,7 +1884,7 @@ lpfc_fdmi_hba_attr_bios_state(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_hba_attr_vendor_id(struct lpfc_vport *vport,
- 			     struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1906,7 +1906,7 @@ lpfc_fdmi_hba_attr_vendor_id(struct lpfc_vport *vport,
- }
- 
- /* Routines for all individual PORT attributes */
--int
-+static int
- lpfc_fdmi_port_attr_fc4type(struct lpfc_vport *vport,
- 			    struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1925,7 +1925,7 @@ lpfc_fdmi_port_attr_fc4type(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_support_speed(struct lpfc_vport *vport,
- 				  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -1975,7 +1975,7 @@ lpfc_fdmi_port_attr_support_speed(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_speed(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2039,7 +2039,7 @@ lpfc_fdmi_port_attr_speed(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_max_frame(struct lpfc_vport *vport,
- 			      struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2059,7 +2059,7 @@ lpfc_fdmi_port_attr_max_frame(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_os_devname(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2081,7 +2081,7 @@ lpfc_fdmi_port_attr_os_devname(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_host_name(struct lpfc_vport *vport,
- 			      struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2102,7 +2102,7 @@ lpfc_fdmi_port_attr_host_name(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_wwnn(struct lpfc_vport *vport,
- 			 struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2120,7 +2120,7 @@ lpfc_fdmi_port_attr_wwnn(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_wwpn(struct lpfc_vport *vport,
- 			 struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2138,7 +2138,7 @@ lpfc_fdmi_port_attr_wwpn(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_symbolic_name(struct lpfc_vport *vport,
- 				  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2156,7 +2156,7 @@ lpfc_fdmi_port_attr_symbolic_name(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_port_type(struct lpfc_vport *vport,
- 			      struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2175,7 +2175,7 @@ lpfc_fdmi_port_attr_port_type(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_class(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2190,7 +2190,7 @@ lpfc_fdmi_port_attr_class(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_fabric_wwpn(struct lpfc_vport *vport,
- 				struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2208,7 +2208,7 @@ lpfc_fdmi_port_attr_fabric_wwpn(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_active_fc4type(struct lpfc_vport *vport,
- 				   struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2227,7 +2227,7 @@ lpfc_fdmi_port_attr_active_fc4type(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_port_state(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2243,7 +2243,7 @@ lpfc_fdmi_port_attr_port_state(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_num_disc(struct lpfc_vport *vport,
- 			     struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2259,7 +2259,7 @@ lpfc_fdmi_port_attr_num_disc(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_port_attr_nportid(struct lpfc_vport *vport,
- 			    struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2274,7 +2274,7 @@ lpfc_fdmi_port_attr_nportid(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_service(struct lpfc_vport *vport,
- 			     struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2295,7 +2295,7 @@ lpfc_fdmi_smart_attr_service(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_guid(struct lpfc_vport *vport,
- 			  struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2316,7 +2316,7 @@ lpfc_fdmi_smart_attr_guid(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_version(struct lpfc_vport *vport,
- 			     struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2337,7 +2337,7 @@ lpfc_fdmi_smart_attr_version(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_model(struct lpfc_vport *vport,
- 			   struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2358,7 +2358,7 @@ lpfc_fdmi_smart_attr_model(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_port_info(struct lpfc_vport *vport,
- 			       struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2378,7 +2378,7 @@ lpfc_fdmi_smart_attr_port_info(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_qos(struct lpfc_vport *vport,
- 			 struct lpfc_fdmi_attr_def *ad)
- {
-@@ -2393,7 +2393,7 @@ lpfc_fdmi_smart_attr_qos(struct lpfc_vport *vport,
- 	return size;
- }
- 
--int
-+static int
- lpfc_fdmi_smart_attr_security(struct lpfc_vport *vport,
- 			      struct lpfc_fdmi_attr_def *ad)
- {
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index c0af32f..b7d54bf 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -4617,7 +4617,7 @@ lpfc_els_disc_plogi(struct lpfc_vport *vport)
- 	return sentplogi;
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_link_service(struct fc_rdp_link_service_desc *desc,
- 		uint32_t word0)
- {
-@@ -4629,7 +4629,7 @@ lpfc_rdp_res_link_service(struct fc_rdp_link_service_desc *desc,
- 	return sizeof(struct fc_rdp_link_service_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_sfp_desc(struct fc_rdp_sfp_desc *desc,
- 		uint8_t *page_a0, uint8_t *page_a2)
- {
-@@ -4694,7 +4694,7 @@ lpfc_rdp_res_sfp_desc(struct fc_rdp_sfp_desc *desc,
- 	return sizeof(struct fc_rdp_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_link_error(struct fc_rdp_link_error_status_desc *desc,
- 		READ_LNK_VAR *stat)
- {
-@@ -4723,7 +4723,7 @@ lpfc_rdp_res_link_error(struct fc_rdp_link_error_status_desc *desc,
- 	return sizeof(struct fc_rdp_link_error_status_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_bbc_desc(struct fc_rdp_bbc_desc *desc, READ_LNK_VAR *stat,
- 		      struct lpfc_vport *vport)
- {
-@@ -4748,7 +4748,7 @@ lpfc_rdp_res_bbc_desc(struct fc_rdp_bbc_desc *desc, READ_LNK_VAR *stat,
- 	return sizeof(struct fc_rdp_bbc_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_oed_temp_desc(struct lpfc_hba *phba,
- 			   struct fc_rdp_oed_sfp_desc *desc, uint8_t *page_a2)
- {
-@@ -4776,7 +4776,7 @@ lpfc_rdp_res_oed_temp_desc(struct lpfc_hba *phba,
- 	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_oed_voltage_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4805,7 +4805,7 @@ lpfc_rdp_res_oed_voltage_desc(struct lpfc_hba *phba,
- 	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_oed_txbias_desc(struct lpfc_hba *phba,
- 			     struct fc_rdp_oed_sfp_desc *desc,
- 			     uint8_t *page_a2)
-@@ -4834,7 +4834,7 @@ lpfc_rdp_res_oed_txbias_desc(struct lpfc_hba *phba,
- 	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_oed_txpower_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4864,7 +4864,7 @@ lpfc_rdp_res_oed_txpower_desc(struct lpfc_hba *phba,
- }
- 
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_oed_rxpower_desc(struct lpfc_hba *phba,
- 			      struct fc_rdp_oed_sfp_desc *desc,
- 			      uint8_t *page_a2)
-@@ -4893,7 +4893,7 @@ lpfc_rdp_res_oed_rxpower_desc(struct lpfc_hba *phba,
- 	return sizeof(struct fc_rdp_oed_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_opd_desc(struct fc_rdp_opd_sfp_desc *desc,
- 		      uint8_t *page_a0, struct lpfc_vport *vport)
- {
-@@ -4907,7 +4907,7 @@ lpfc_rdp_res_opd_desc(struct fc_rdp_opd_sfp_desc *desc,
- 	return sizeof(struct fc_rdp_opd_sfp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_fec_desc(struct fc_fec_rdp_desc *desc, READ_LNK_VAR *stat)
- {
- 	if (bf_get(lpfc_read_link_stat_gec2, stat) == 0)
-@@ -4924,7 +4924,7 @@ lpfc_rdp_res_fec_desc(struct fc_fec_rdp_desc *desc, READ_LNK_VAR *stat)
- 	return sizeof(struct fc_fec_rdp_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
- {
- 	uint16_t rdp_cap = 0;
-@@ -4986,7 +4986,7 @@ lpfc_rdp_res_speed(struct fc_rdp_port_speed_desc *desc, struct lpfc_hba *phba)
- 	return sizeof(struct fc_rdp_port_speed_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_diag_port_names(struct fc_rdp_port_name_desc *desc,
- 		struct lpfc_hba *phba)
- {
-@@ -5003,7 +5003,7 @@ lpfc_rdp_res_diag_port_names(struct fc_rdp_port_name_desc *desc,
- 	return sizeof(struct fc_rdp_port_name_desc);
- }
- 
--uint32_t
-+static uint32_t
- lpfc_rdp_res_attach_port_names(struct fc_rdp_port_name_desc *desc,
- 		struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
- {
-@@ -5027,7 +5027,7 @@ lpfc_rdp_res_attach_port_names(struct fc_rdp_port_name_desc *desc,
- 	return sizeof(struct fc_rdp_port_name_desc);
- }
- 
--void
-+static void
- lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 		int status)
- {
-@@ -5165,7 +5165,7 @@ lpfc_els_rdp_cmpl(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context,
- 	kfree(rdp_context);
- }
- 
--int
-+static int
- lpfc_get_rdp_info(struct lpfc_hba *phba, struct lpfc_rdp_context *rdp_context)
- {
- 	LPFC_MBOXQ_t *mbox = NULL;
-@@ -7995,7 +7995,7 @@ lpfc_els_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
+index 8bb0699..b757d38 100644
+--- a/drivers/scsi/mvsas/mv_64xx.c
++++ b/drivers/scsi/mvsas/mv_64xx.c
+@@ -136,7 +136,8 @@ static void mvs_64xx_phy_reset(struct mvs_info *mvi, u32 phy_id, int hard)
  	}
  }
  
--void
+-void mvs_64xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
 +static void
- lpfc_start_fdmi(struct lpfc_vport *vport)
++mvs_64xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
  {
- 	struct lpfc_hba *phba = vport->phba;
-diff --git a/drivers/scsi/lpfc/lpfc_mbox.c b/drivers/scsi/lpfc/lpfc_mbox.c
-index 12dbe99..b234c50 100644
---- a/drivers/scsi/lpfc/lpfc_mbox.c
-+++ b/drivers/scsi/lpfc/lpfc_mbox.c
-@@ -2260,7 +2260,7 @@ lpfc_sli4_dump_cfg_rg23(struct lpfc_hba *phba, struct lpfcMboxq *mbox)
+ 	void __iomem *regs = mvi->regs;
+ 	u32 tmp;
+@@ -563,7 +564,7 @@ static u8 mvs_64xx_assign_reg_set(struct mvs_info *mvi, u8 *tfs)
+ 	return MVS_ID_NOT_MAPPED;
+ }
+ 
+-void mvs_64xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
++static void mvs_64xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
+ {
+ 	int i;
+ 	struct scatterlist *sg;
+@@ -633,7 +634,7 @@ static void mvs_64xx_phy_work_around(struct mvs_info *mvi, int i)
+ 	mvs_write_port_vsr_data(mvi, i, tmp);
+ }
+ 
+-void mvs_64xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
++static void mvs_64xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
+ 			struct sas_phy_linkrates *rates)
+ {
+ 	u32 lrmin = 0, lrmax = 0;
+@@ -668,20 +669,20 @@ static void mvs_64xx_clear_active_cmds(struct mvs_info *mvi)
+ }
+ 
+ 
+-u32 mvs_64xx_spi_read_data(struct mvs_info *mvi)
++static u32 mvs_64xx_spi_read_data(struct mvs_info *mvi)
+ {
+ 	void __iomem *regs = mvi->regs_ex;
+ 	return ior32(SPI_DATA_REG_64XX);
+ }
+ 
+-void mvs_64xx_spi_write_data(struct mvs_info *mvi, u32 data)
++static void mvs_64xx_spi_write_data(struct mvs_info *mvi, u32 data)
+ {
+ 	void __iomem *regs = mvi->regs_ex;
+ 	 iow32(SPI_DATA_REG_64XX, data);
+ }
+ 
+ 
+-int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
++static int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
+ 			u32      *dwCmd,
+ 			u8       cmd,
+ 			u8       read,
+@@ -705,7 +706,7 @@ int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
+ }
+ 
+ 
+-int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
++static int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
+ {
+ 	void __iomem *regs = mvi->regs_ex;
+ 	int     retry;
+@@ -720,7 +721,7 @@ int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
  	return 0;
  }
  
--void
-+static void
- lpfc_mbx_cmpl_rdp_link_stat(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
+-int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
++static int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
  {
- 	MAILBOX_t *mb;
-@@ -2281,7 +2281,7 @@ lpfc_mbx_cmpl_rdp_link_stat(struct lpfc_hba *phba, LPFC_MBOXQ_t *mboxq)
- 	rdp_context->cmpl(phba, rdp_context, rc);
+ 	void __iomem *regs = mvi->regs_ex;
+ 	u32 i, dwTmp;
+@@ -735,7 +736,7 @@ int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+ 	return -1;
  }
  
--void
-+static void
- lpfc_mbx_cmpl_rdp_page_a2(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+-void mvs_64xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
++static void mvs_64xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
+ 				int buf_len, int from, void *prd)
  {
- 	struct lpfc_dmabuf *mp = (struct lpfc_dmabuf *) mbox->context1;
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7080ce2..c532605 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5689,7 +5689,7 @@ lpfc_sli4_dealloc_extent(struct lpfc_hba *phba, uint16_t type)
- 	return rc;
+ 	int i;
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index f6fc4a7..4c57d9a 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -48,8 +48,8 @@ static void mvs_94xx_detect_porttype(struct mvs_info *mvi, int i)
+ 	}
  }
  
--void
+-void set_phy_tuning(struct mvs_info *mvi, int phy_id,
+-			struct phy_tuning phy_tuning)
++static void set_phy_tuning(struct mvs_info *mvi, int phy_id,
++			   struct phy_tuning phy_tuning)
+ {
+ 	u32 tmp, setting_0 = 0, setting_1 = 0;
+ 	u8 i;
+@@ -110,8 +110,8 @@ void set_phy_tuning(struct mvs_info *mvi, int phy_id,
+ 	}
+ }
+ 
+-void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
+-				struct ffe_control ffe)
++static void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
++			       struct ffe_control ffe)
+ {
+ 	u32 tmp;
+ 
+@@ -177,7 +177,7 @@ void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
+ }
+ 
+ /*Notice: this function must be called when phy is disabled*/
+-void set_phy_rate(struct mvs_info *mvi, int phy_id, u8 rate)
++static void set_phy_rate(struct mvs_info *mvi, int phy_id, u8 rate)
+ {
+ 	union reg_phy_cfg phy_cfg, phy_cfg_tmp;
+ 	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_MODE2);
+@@ -679,7 +679,8 @@ static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
+ 	}
+ }
+ 
+-void mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
 +static void
- lpfc_set_features(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox,
- 		  uint32_t feature)
++mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
  {
-@@ -8968,7 +8968,7 @@ lpfc_sli_api_table_setup(struct lpfc_hba *phba, uint8_t dev_grp)
-  * Since ABORTS must go on the same WQ of the command they are
-  * aborting, we use command's fcp_wqidx.
-  */
--int
-+static int
- lpfc_sli_calc_ring(struct lpfc_hba *phba, uint32_t ring_number,
- 		    struct lpfc_iocbq *piocb)
+ 	void __iomem *regs = mvi->regs;
+ 	u32 tmp;
+@@ -906,8 +907,8 @@ static void mvs_94xx_fix_phy_info(struct mvs_info *mvi, int i,
+ 
+ }
+ 
+-void mvs_94xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
+-			struct sas_phy_linkrates *rates)
++static void mvs_94xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
++				       struct sas_phy_linkrates *rates)
  {
+ 	u32 lrmax = 0;
+ 	u32 tmp;
+@@ -936,25 +937,25 @@ static void mvs_94xx_clear_active_cmds(struct mvs_info *mvi)
+ }
+ 
+ 
+-u32 mvs_94xx_spi_read_data(struct mvs_info *mvi)
++static u32 mvs_94xx_spi_read_data(struct mvs_info *mvi)
+ {
+ 	void __iomem *regs = mvi->regs_ex - 0x10200;
+ 	return mr32(SPI_RD_DATA_REG_94XX);
+ }
+ 
+-void mvs_94xx_spi_write_data(struct mvs_info *mvi, u32 data)
++static void mvs_94xx_spi_write_data(struct mvs_info *mvi, u32 data)
+ {
+ 	void __iomem *regs = mvi->regs_ex - 0x10200;
+ 	 mw32(SPI_RD_DATA_REG_94XX, data);
+ }
+ 
+ 
+-int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
+-				u32      *dwCmd,
+-				u8       cmd,
+-				u8       read,
+-				u8       length,
+-				u32      addr
++static int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
++				 u32      *dwCmd,
++				 u8       cmd,
++				 u8       read,
++				 u8       length,
++				 u32      addr
+ 				)
+ {
+ 	void __iomem *regs = mvi->regs_ex - 0x10200;
+@@ -974,7 +975,7 @@ int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
+ }
+ 
+ 
+-int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
++static int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
+ {
+ 	void __iomem *regs = mvi->regs_ex - 0x10200;
+ 	mw32(SPI_CTRL_REG_94XX, cmd | SPI_CTRL_SpiStart_94XX);
+@@ -982,7 +983,7 @@ int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
+ 	return 0;
+ }
+ 
+-int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
++static int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+ {
+ 	void __iomem *regs = mvi->regs_ex - 0x10200;
+ 	u32   i, dwTmp;
+@@ -997,8 +998,8 @@ int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+ 	return -1;
+ }
+ 
+-void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
+-				int buf_len, int from, void *prd)
++static void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
++			     int buf_len, int from, void *prd)
+ {
+ 	int i;
+ 	struct mvs_prd *buf_prd = prd;
+diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+index 5b9fcff..86eb199 100644
+--- a/drivers/scsi/mvsas/mv_sas.c
++++ b/drivers/scsi/mvsas/mv_sas.c
+@@ -74,7 +74,7 @@ void mvs_tag_init(struct mvs_info *mvi)
+ 		mvs_tag_clear(mvi, i);
+ }
+ 
+-struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
++static struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
+ {
+ 	unsigned long i = 0, j = 0, hi = 0;
+ 	struct sas_ha_struct *sha = dev->port->ha;
+@@ -102,7 +102,7 @@ struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
+ 
+ }
+ 
+-int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
++static int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
+ {
+ 	unsigned long i = 0, j = 0, n = 0, num = 0;
+ 	struct mvs_device *mvi_dev = (struct mvs_device *)dev->lldd_dev;
+@@ -1158,7 +1158,7 @@ void mvs_port_deformed(struct asd_sas_phy *sas_phy)
+ 	mvs_port_notify_deformed(sas_phy, 1);
+ }
+ 
+-struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
++static struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
+ {
+ 	u32 dev;
+ 	for (dev = 0; dev < MVS_MAX_DEVICES; dev++) {
+@@ -1175,7 +1175,7 @@ struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
+ 	return NULL;
+ }
+ 
+-void mvs_free_dev(struct mvs_device *mvi_dev)
++static void mvs_free_dev(struct mvs_device *mvi_dev)
+ {
+ 	u32 id = mvi_dev->device_id;
+ 	memset(mvi_dev, 0, sizeof(*mvi_dev));
+@@ -1185,7 +1185,7 @@ void mvs_free_dev(struct mvs_device *mvi_dev)
+ 	mvi_dev->taskfileset = MVS_ID_NOT_MAPPED;
+ }
+ 
+-int mvs_dev_found_notify(struct domain_device *dev, int lock)
++static int mvs_dev_found_notify(struct domain_device *dev, int lock)
+ {
+ 	unsigned long flags = 0;
+ 	int res = 0;
+@@ -1241,7 +1241,7 @@ int mvs_dev_found(struct domain_device *dev)
+ 	return mvs_dev_found_notify(dev, 1);
+ }
+ 
+-void mvs_dev_gone_notify(struct domain_device *dev)
++static void mvs_dev_gone_notify(struct domain_device *dev)
+ {
+ 	unsigned long flags = 0;
+ 	struct mvs_device *mvi_dev = dev->lldd_dev;
+@@ -1611,7 +1611,7 @@ static int mvs_sata_done(struct mvs_info *mvi, struct sas_task *task,
+ 	return stat;
+ }
+ 
+-void mvs_set_sense(u8 *buffer, int len, int d_sense,
++static void mvs_set_sense(u8 *buffer, int len, int d_sense,
+ 		int key, int asc, int ascq)
+ {
+ 	memset(buffer, 0, len);
+@@ -1650,7 +1650,7 @@ void mvs_set_sense(u8 *buffer, int len, int d_sense,
+ 	return;
+ }
+ 
+-void mvs_fill_ssp_resp_iu(struct ssp_response_iu *iu,
++static void mvs_fill_ssp_resp_iu(struct ssp_response_iu *iu,
+ 				u8 key, u8 asc, u8 asc_q)
+ {
+ 	iu->datapres = 2;
 -- 
 2.7.4
