@@ -1,89 +1,91 @@
-From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH 3/3] megaraid_sas: clean function declarations in megaraid_sas_base.c up
-Date: Sun, 25 Sep 2016 13:54:35 +0800
-Message-ID: <1474782875-15708-1-git-send-email-baoyou.xie@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+Subject: [PATCH] Fix few small typos in lpfc_scsi.c
+Date: Sun, 25 Sep 2016 21:28:41 +0530
+Message-ID: <33fbff46-9dad-9ae7-e08e-5fc0ec2c890f@redhat.com>
+Reply-To: mgandhi@redhat.com
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, james.smart@avagotech.com, dick.kennedy@avagotech.com
 List-Id: linux-scsi@vger.kernel.org
 
-We get 8 warnings when building kernel with W=1:
-drivers/scsi/megaraid/megaraid_sas_fusion.c:281:1: warning: no previous prototype for 'megasas_free_cmds_fusion' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:714:1: warning: no previous prototype for 'megasas_ioc_init_fusion' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1038:1: warning: no previous prototype for 'megasas_get_map_info' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1061:1: warning: no previous prototype for 'megasas_sync_map_info' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:2599:1: warning: no previous prototype for 'megasas_release_fusion' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:2833:7: warning: no previous prototype for 'megasas_reset_reply_desc' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3354:5: warning: no previous prototype for 'megasas_check_mpio_paths' [-Wmissing-prototypes]
-drivers/scsi/megaraid/megaraid_sas_fusion.c:3664:6: warning: no previous prototype for 'megasas_fusion_ocr_wq' [-Wmissing-prototypes]
+This patch does a cleanup and fixes few small typos in lpfc_scsi.c
 
-In fact, these functions are declared in
-drivers/scsi/megaraid/megaraid_sas_base.c, but should be
-declared in a header file. thus can be recognized in other file.
-
-So this patch moves the declarations into
-drivers/scsi/megaraid/megaraid_sas.h.
-
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      | 15 ++++++++++++++-
- drivers/scsi/megaraid/megaraid_sas_base.c | 14 --------------
- 2 files changed, 14 insertions(+), 15 deletions(-)
+ 
+ drivers/scsi/lpfc/lpfc_scsi.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index d1a6ea5..aad81c6 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2398,5 +2398,18 @@ void megasas_sriov_heartbeat_handler(unsigned long instance_addr);
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d197aa1..ca56f28 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -607,7 +607,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *phba,
+ }
  
- void megasas_free_cmds(struct megasas_instance *instance);
- int megasas_alloc_cmds(struct megasas_instance *instance);
--
-+void
-+megasas_free_cmds_fusion(struct megasas_instance *instance);
-+int
-+megasas_ioc_init_fusion(struct megasas_instance *instance);
-+u8
-+megasas_get_map_info(struct megasas_instance *instance);
-+int
-+megasas_sync_map_info(struct megasas_instance *instance);
-+void
-+megasas_release_fusion(struct megasas_instance *instance);
-+void megasas_reset_reply_desc(struct megasas_instance *instance);
-+int megasas_check_mpio_paths(struct megasas_instance *instance,
-+			     struct scsi_cmnd *scmd);
-+void megasas_fusion_ocr_wq(struct work_struct *work);
- #endif				/*LSI_MEGARAID_SAS_H */
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 1b033da..73f4e27 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -189,25 +189,11 @@ u32
- megasas_build_and_issue_cmd(struct megasas_instance *instance,
- 			    struct scsi_cmnd *scmd);
- static void megasas_complete_cmd_dpc(unsigned long instance_addr);
--void
--megasas_release_fusion(struct megasas_instance *instance);
--int
--megasas_ioc_init_fusion(struct megasas_instance *instance);
--void
--megasas_free_cmds_fusion(struct megasas_instance *instance);
--u8
--megasas_get_map_info(struct megasas_instance *instance);
--int
--megasas_sync_map_info(struct megasas_instance *instance);
- int
- wait_and_poll(struct megasas_instance *instance, struct megasas_cmd *cmd,
- 	int seconds);
--void megasas_reset_reply_desc(struct megasas_instance *instance);
--void megasas_fusion_ocr_wq(struct work_struct *work);
- static int megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
- 					 int initial);
--int megasas_check_mpio_paths(struct megasas_instance *instance,
--			     struct scsi_cmnd *scmd);
+ /**
+- * lpfc_sli4_post_scsi_sgl_list - Psot blocks of scsi buffer sgls from a list
++ * lpfc_sli4_post_scsi_sgl_list - Post blocks of scsi buffer sgls from a list
+  * @phba: pointer to lpfc hba data structure.
+  * @post_sblist: pointer to the scsi buffer list.
+  *
+@@ -736,7 +736,7 @@ lpfc_sli4_post_scsi_sgl_list(struct lpfc_hba *phba,
+ }
  
- static int
- megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
--- 
-2.7.4
+ /**
+- * lpfc_sli4_repost_scsi_sgl_list - Repsot all the allocated scsi buffer sgls
++ * lpfc_sli4_repost_scsi_sgl_list - Repost all the allocated scsi buffer sgls
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine walks the list of scsi buffers that have been allocated and
+@@ -857,7 +857,7 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *vport, int num_to_alloc)
+ 				psb->data, psb->dma_handle);
+ 			kfree(psb);
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-					"3368 Failed to allocated IOTAG for"
++					"3368 Failed to allocate IOTAG for"
+ 					" XRI:0x%x\n", lxri);
+ 			lpfc_sli4_free_xri(phba, lxri);
+ 			break;
+@@ -1136,7 +1136,7 @@ lpfc_release_scsi_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb)
+  *
+  * This routine does the pci dma mapping for scatter-gather list of scsi cmnd
+  * field of @lpfc_cmd for device with SLI-3 interface spec. This routine scans
+- * through sg elements and format the bdea. This routine also initializes all
++ * through sg elements and format the bde. This routine also initializes all
+  * IOCB fields which are dependent on scsi command request buffer.
+  *
+  * Return codes:
+@@ -1269,13 +1269,16 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 
+-/* Return if if error injection is detected by Initiator */
++/* Return BG_ERR_INIT if error injection is detected by Initiator */
+ #define BG_ERR_INIT	0x1
+-/* Return if if error injection is detected by Target */
++/* Return BG_ERR_TGT if error injection is detected by Target */
+ #define BG_ERR_TGT	0x2
+-/* Return if if swapping CSUM<-->CRC is required for error injection */
++/* Return BG_ERR_SWAP if swapping CSUM<-->CRC is required for error injection */
+ #define BG_ERR_SWAP	0x10
+-/* Return if disabling Guard/Ref/App checking is required for error injection */
++/**
++ * Return BG_ERR_CHECK if disabling Guard/Ref/App checking is required for
++ * error injection
++ **/
+ #define BG_ERR_CHECK	0x20
+ 
+ /**
+@@ -4822,7 +4825,7 @@ wait_for_cmpl:
+ 		ret = FAILED;
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+ 				 "0748 abort handler timed out waiting "
+-				 "for abortng I/O (xri:x%x) to complete: "
++				 "for aborting I/O (xri:x%x) to complete: "
+ 				 "ret %#x, ID %d, LUN %llu\n",
+ 				 iocb->sli4_xritag, ret,
+ 				 cmnd->device->id, cmnd->device->lun);
