@@ -1,91 +1,103 @@
-From: "Milan P. Gandhi" <mgandhi@redhat.com>
-Subject: [PATCH] Fix few small typos in lpfc_scsi.c
-Date: Sun, 25 Sep 2016 21:28:41 +0530
-Message-ID: <33fbff46-9dad-9ae7-e08e-5fc0ec2c890f@redhat.com>
-Reply-To: mgandhi@redhat.com
+From: james.smart@broadcom.com (James Smart)
+Subject: [PATCH v4] add u64 number parser
+Date: Sun, 25 Sep 2016 09:14:07 -0700
+Message-ID: <57e7f7cf.3jEpECHRn0rNlj8v%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, james.smart@avagotech.com, dick.kennedy@avagotech.com
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch does a cleanup and fixes few small typos in lpfc_scsi.c
+add u64 number parser
 
-Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+Reverted back to version 2 of the patch.  This adds the interface
+using existing logic. Comments from the prior reviewers to move to
+kasprintf were rejected by Linus.
+
+Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- 
- drivers/scsi/lpfc/lpfc_scsi.c | 21 ++++++++++++---------
- 1 file changed, 12 insertions(+), 9 deletions(-)
+ include/linux/parser.h |  1 +
+ lib/parser.c           | 47 +++++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 48 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index d197aa1..ca56f28 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -607,7 +607,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *phba,
+diff --git a/include/linux/parser.h b/include/linux/parser.h
+index 39d5b79..884c1e6 100644
+--- a/include/linux/parser.h
++++ b/include/linux/parser.h
+@@ -27,6 +27,7 @@ typedef struct {
+ 
+ int match_token(char *, const match_table_t table, substring_t args[]);
+ int match_int(substring_t *, int *result);
++int match_u64(substring_t *, u64 *result);
+ int match_octal(substring_t *, int *result);
+ int match_hex(substring_t *, int *result);
+ bool match_wildcard(const char *pattern, const char *str);
+diff --git a/lib/parser.c b/lib/parser.c
+index b6d1163..3278958 100644
+--- a/lib/parser.c
++++ b/lib/parser.c
+@@ -152,6 +152,36 @@ static int match_number(substring_t *s, int *result, int base)
  }
  
  /**
-- * lpfc_sli4_post_scsi_sgl_list - Psot blocks of scsi buffer sgls from a list
-+ * lpfc_sli4_post_scsi_sgl_list - Post blocks of scsi buffer sgls from a list
-  * @phba: pointer to lpfc hba data structure.
-  * @post_sblist: pointer to the scsi buffer list.
-  *
-@@ -736,7 +736,7 @@ lpfc_sli4_post_scsi_sgl_list(struct lpfc_hba *phba,
- }
- 
- /**
-- * lpfc_sli4_repost_scsi_sgl_list - Repsot all the allocated scsi buffer sgls
-+ * lpfc_sli4_repost_scsi_sgl_list - Repost all the allocated scsi buffer sgls
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine walks the list of scsi buffers that have been allocated and
-@@ -857,7 +857,7 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *vport, int num_to_alloc)
- 				psb->data, psb->dma_handle);
- 			kfree(psb);
- 			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
--					"3368 Failed to allocated IOTAG for"
-+					"3368 Failed to allocate IOTAG for"
- 					" XRI:0x%x\n", lxri);
- 			lpfc_sli4_free_xri(phba, lxri);
- 			break;
-@@ -1136,7 +1136,7 @@ lpfc_release_scsi_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb)
-  *
-  * This routine does the pci dma mapping for scatter-gather list of scsi cmnd
-  * field of @lpfc_cmd for device with SLI-3 interface spec. This routine scans
-- * through sg elements and format the bdea. This routine also initializes all
-+ * through sg elements and format the bde. This routine also initializes all
-  * IOCB fields which are dependent on scsi command request buffer.
-  *
-  * Return codes:
-@@ -1269,13 +1269,16 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
- 
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 
--/* Return if if error injection is detected by Initiator */
-+/* Return BG_ERR_INIT if error injection is detected by Initiator */
- #define BG_ERR_INIT	0x1
--/* Return if if error injection is detected by Target */
-+/* Return BG_ERR_TGT if error injection is detected by Target */
- #define BG_ERR_TGT	0x2
--/* Return if if swapping CSUM<-->CRC is required for error injection */
-+/* Return BG_ERR_SWAP if swapping CSUM<-->CRC is required for error injection */
- #define BG_ERR_SWAP	0x10
--/* Return if disabling Guard/Ref/App checking is required for error injection */
++ * match_u64int: scan a number in the given base from a substring_t
++ * @s: substring to be scanned
++ * @result: resulting u64 on success
++ * @base: base to use when converting string
++ *
++ * Description: Given a &substring_t and a base, attempts to parse the substring
++ * as a number in that base. On success, sets @result to the integer represented
++ * by the string and returns 0. Returns -ENOMEM, -EINVAL, or -ERANGE on failure.
++ */
++static int match_u64int(substring_t *s, u64 *result, int base)
++{
++	char *buf;
++	int ret;
++	u64 val;
++	size_t len = s->to - s->from;
++
++	buf = kmalloc(len + 1, GFP_KERNEL);
++	if (!buf)
++		return -ENOMEM;
++	memcpy(buf, s->from, len);
++	buf[len] = '\0';
++
++	ret = kstrtoull(buf, base, &val);
++	if (!ret)
++		*result = val;
++	kfree(buf);
++	return ret;
++}
++
 +/**
-+ * Return BG_ERR_CHECK if disabling Guard/Ref/App checking is required for
-+ * error injection
-+ **/
- #define BG_ERR_CHECK	0x20
+  * match_int: - scan a decimal representation of an integer from a substring_t
+  * @s: substring_t to be scanned
+  * @result: resulting integer on success
+@@ -167,6 +197,23 @@ int match_int(substring_t *s, int *result)
+ EXPORT_SYMBOL(match_int);
  
  /**
-@@ -4822,7 +4825,7 @@ wait_for_cmpl:
- 		ret = FAILED;
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
- 				 "0748 abort handler timed out waiting "
--				 "for abortng I/O (xri:x%x) to complete: "
-+				 "for aborting I/O (xri:x%x) to complete: "
- 				 "ret %#x, ID %d, LUN %llu\n",
- 				 iocb->sli4_xritag, ret,
- 				 cmnd->device->id, cmnd->device->lun);
++ * match_u64: - scan a decimal representation of a u64 from
++ *                  a substring_t
++ * @s: substring_t to be scanned
++ * @result: resulting unsigned long long on success
++ *
++ * Description: Attempts to parse the &substring_t @s as a long decimal
++ * integer. On success, sets @result to the integer represented by the
++ * string and returns 0.
++ * Returns -ENOMEM, -EINVAL, or -ERANGE on failure.
++ */
++int match_u64(substring_t *s, u64 *result)
++{
++	return match_u64int(s, result, 0);
++}
++EXPORT_SYMBOL(match_u64);
++
++/**
+  * match_octal: - scan an octal representation of an integer from a substring_t
+  * @s: substring_t to be scanned
+  * @result: resulting integer on success
+-- 
+2.5.0
