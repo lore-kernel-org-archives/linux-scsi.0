@@ -1,24 +1,30 @@
 From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH] [SCSI] mvsas: mark symbols static where possible
-Date: Sun, 25 Sep 2016 13:48:50 +0800
-Message-ID: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Wilfried.Weissmann@gmx.at, hare@suse.de, jthumshirn@suse.de, tj@kernel.org, davispuh@gmail.com, luisbg@osg.samsung.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
+Subject: [PATCH 1/3] megaraid_sas: mark symbols static where possible
+Date: Sun, 25 Sep 2016 13:51:12 +0800
+Message-ID: <1474782672-32146-1-git-send-email-baoyou.xie@linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:36785 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751100AbcIYFv3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Sep 2016 01:51:29 -0400
+Received: by mail-pf0-f175.google.com with SMTP id q2so54708108pfj.3
+        for <linux-scsi@vger.kernel.org>; Sat, 24 Sep 2016 22:51:29 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn
 
 We get a few warnings when building kernel with W=1:
-drivers/scsi/mvsas/mv_sas.c:77:18: warning: no previous prototype for 'mvs_find_dev_mvi' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:105:5: warning: no previous prototype for 'mvs_find_dev_phyno' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1161:20: warning: no previous prototype for 'mvs_alloc_dev' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1178:6: warning: no previous prototype for 'mvs_free_dev' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1188:5: warning: no previous prototype for 'mvs_dev_found_notify' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1244:6: warning: no previous prototype for 'mvs_dev_gone_notify' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1614:6: warning: no previous prototype for 'mvs_set_sense' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_sas.c:1653:6: warning: no previous prototype for 'mvs_fill_ssp_resp_iu' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_64xx.c:139:6: warning: no previous prototype for 'mvs_64xx_clear_srs_irq' [-Wmissing-prototypes]
-drivers/scsi/mvsas/mv_64xx.c:566:6: warning: no previous prototype for 'mvs_64xx_make_prd' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:94:5: warning: no previous prototype for 'mega_mod64' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:112:5: warning: no previous prototype for 'mega_div64_32' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:177:6: warning: no previous prototype for 'MR_PopulateDrvRaidMap' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:315:5: warning: no previous prototype for 'MR_GetSpanBlock' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:451:5: warning: no previous prototype for 'mr_spanset_get_span_block' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:692:4: warning: no previous prototype for 'get_arm' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:815:4: warning: no previous prototype for 'MR_GetPhyParams' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fp.c:1293:4: warning: no previous prototype for 'megasas_get_best_arm_pd' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fusion.c:106:1: warning: no previous prototype for 'megasas_enable_intr_fusion' [-Wmissing-prototypes]
+drivers/scsi/megaraid/megaraid_sas_fusion.c:127:1: warning: no previous prototype for 'megasas_disable_intr_fusion' [-Wmissing-prototypes]
 ....
 
 In fact, these functions are only used in the file in which they are
@@ -27,288 +33,349 @@ so this patch marks these functions with 'static'.
 
 Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 ---
- drivers/scsi/mvsas/mv_64xx.c | 19 ++++++++++---------
- drivers/scsi/mvsas/mv_94xx.c | 41 +++++++++++++++++++++--------------------
- drivers/scsi/mvsas/mv_sas.c  | 16 ++++++++--------
- 3 files changed, 39 insertions(+), 37 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  6 ++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     | 30 ++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 52 +++++++++++++++--------------
+ 3 files changed, 48 insertions(+), 40 deletions(-)
 
-diff --git a/drivers/scsi/mvsas/mv_64xx.c b/drivers/scsi/mvsas/mv_64xx.c
-index 8bb0699..b757d38 100644
---- a/drivers/scsi/mvsas/mv_64xx.c
-+++ b/drivers/scsi/mvsas/mv_64xx.c
-@@ -136,7 +136,8 @@ static void mvs_64xx_phy_reset(struct mvs_info *mvi, u32 phy_id, int hard)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index c236c4d..1b033da 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -209,7 +209,7 @@ static int megasas_get_ld_vf_affiliation(struct megasas_instance *instance,
+ int megasas_check_mpio_paths(struct megasas_instance *instance,
+ 			     struct scsi_cmnd *scmd);
+ 
+-int
++static int
+ megasas_issue_dcmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ {
+ 	instance->instancet->fire_cmd(instance,
+@@ -2057,7 +2057,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance);
+ static void
+ process_fw_state_change_wq(struct work_struct *work);
+ 
+-void megasas_do_ocr(struct megasas_instance *instance)
++static void megasas_do_ocr(struct megasas_instance *instance)
+ {
+ 	if ((instance->pdev->device == PCI_DEVICE_ID_LSI_SAS1064R) ||
+ 	(instance->pdev->device == PCI_DEVICE_ID_DELL_PERC5) ||
+@@ -3981,7 +3981,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+  * Return 0 for only Fusion adapter, if driver load/unload is not in progress
+  * or FW is not under OCR.
+  */
+-inline int
++static inline int
+ dcmd_timeout_ocr_possible(struct megasas_instance *instance) {
+ 
+ 	if (!instance->ctrl_context)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index e413113..d22bb59 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -91,7 +91,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ static u64 get_row_from_strip(struct megasas_instance *instance, u32 ld,
+ 	u64 strip, struct MR_DRV_RAID_MAP_ALL *map);
+ 
+-u32 mega_mod64(u64 dividend, u32 divisor)
++static u32 mega_mod64(u64 dividend, u32 divisor)
+ {
+ 	u64 d;
+ 	u32 remainder;
+@@ -109,7 +109,7 @@ u32 mega_mod64(u64 dividend, u32 divisor)
+  *
+  * @return quotient
+  **/
+-u64 mega_div64_32(uint64_t dividend, uint32_t divisor)
++static u64 mega_div64_32(uint64_t dividend, uint32_t divisor)
+ {
+ 	u32 remainder;
+ 	u64 d;
+@@ -174,7 +174,7 @@ static struct MR_LD_SPAN *MR_LdSpanPtrGet(u32 ld, u32 span,
+ /*
+  * This function will Populate Driver Map using firmware raid map
+  */
+-void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
++static void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ {
+ 	struct fusion_context *fusion = instance->ctrl_context;
+ 	struct MR_FW_RAID_MAP_ALL     *fw_map_old    = NULL;
+@@ -312,8 +312,8 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
+ 	return 1;
+ }
+ 
+-u32 MR_GetSpanBlock(u32 ld, u64 row, u64 *span_blk,
+-		    struct MR_DRV_RAID_MAP_ALL *map)
++static u32 MR_GetSpanBlock(u32 ld, u64 row, u64 *span_blk,
++			   struct MR_DRV_RAID_MAP_ALL *map)
+ {
+ 	struct MR_SPAN_BLOCK_INFO *pSpanBlock = MR_LdSpanInfoGet(ld, map);
+ 	struct MR_QUAD_ELEMENT    *quad;
+@@ -448,8 +448,10 @@ static int getSpanInfo(struct MR_DRV_RAID_MAP_ALL *map,
+ *    div_error	   - Devide error code.
+ */
+ 
+-u32 mr_spanset_get_span_block(struct megasas_instance *instance,
+-		u32 ld, u64 row, u64 *span_blk, struct MR_DRV_RAID_MAP_ALL *map)
++static u32
++mr_spanset_get_span_block(struct megasas_instance *instance,
++			  u32 ld, u64 row, u64 *span_blk,
++			  struct MR_DRV_RAID_MAP_ALL *map)
+ {
+ 	struct fusion_context *fusion = instance->ctrl_context;
+ 	struct MR_LD_RAID         *raid = MR_LdRaidGet(ld, map);
+@@ -689,8 +691,9 @@ static u32 get_arm_from_strip(struct megasas_instance *instance,
+ }
+ 
+ /* This Function will return Phys arm */
+-u8 get_arm(struct megasas_instance *instance, u32 ld, u8 span, u64 stripe,
+-		struct MR_DRV_RAID_MAP_ALL *map)
++static u8
++get_arm(struct megasas_instance *instance, u32 ld, u8 span, u64 stripe,
++	struct MR_DRV_RAID_MAP_ALL *map)
+ {
+ 	struct MR_LD_RAID  *raid = MR_LdRaidGet(ld, map);
+ 	/* Need to check correct default value */
+@@ -812,7 +815,8 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ *    span          - Span number
+ *    block         - Absolute Block number in the physical disk
+ */
+-u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
++static u8
++MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 		u16 stripRef, struct IO_REQUEST_INFO *io_info,
+ 		struct RAID_CONTEXT *pRAID_Context,
+ 		struct MR_DRV_RAID_MAP_ALL *map)
+@@ -1290,8 +1294,10 @@ void mr_update_load_balance_params(struct MR_DRV_RAID_MAP_ALL *drv_map,
  	}
  }
  
--void mvs_64xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
+-u8 megasas_get_best_arm_pd(struct megasas_instance *instance,
+-	struct LD_LOAD_BALANCE_INFO *lbInfo, struct IO_REQUEST_INFO *io_info)
++static u8
++megasas_get_best_arm_pd(struct megasas_instance *instance,
++			struct LD_LOAD_BALANCE_INFO *lbInfo,
++			struct IO_REQUEST_INFO *io_info)
+ {
+ 	struct fusion_context *fusion;
+ 	struct MR_LD_RAID  *raid;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 52d8bbf..e7b77e1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -102,7 +102,7 @@ static void megasas_free_reply_fusion(struct megasas_instance *instance);
+  * megasas_enable_intr_fusion -	Enables interrupts
+  * @regs:			MFI register set
+  */
+-void
 +static void
-+mvs_64xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
+ megasas_enable_intr_fusion(struct megasas_instance *instance)
  {
- 	void __iomem *regs = mvi->regs;
- 	u32 tmp;
-@@ -563,7 +564,7 @@ static u8 mvs_64xx_assign_reg_set(struct mvs_info *mvi, u8 *tfs)
- 	return MVS_ID_NOT_MAPPED;
- }
- 
--void mvs_64xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
-+static void mvs_64xx_make_prd(struct scatterlist *scatter, int nr, void *prd)
+ 	struct megasas_register_set __iomem *regs;
+@@ -123,7 +123,7 @@ megasas_enable_intr_fusion(struct megasas_instance *instance)
+  * megasas_disable_intr_fusion - Disables interrupt
+  * @regs:			 MFI register set
+  */
+-void
++static void
+ megasas_disable_intr_fusion(struct megasas_instance *instance)
  {
- 	int i;
- 	struct scatterlist *sg;
-@@ -633,7 +634,7 @@ static void mvs_64xx_phy_work_around(struct mvs_info *mvi, int i)
- 	mvs_write_port_vsr_data(mvi, i, tmp);
- }
- 
--void mvs_64xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
-+static void mvs_64xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
- 			struct sas_phy_linkrates *rates)
+ 	u32 mask = 0xFFFFFFFF;
+@@ -163,8 +163,8 @@ megasas_clear_intr_fusion(struct megasas_register_set __iomem *regs)
+  *
+  * Returns a blk_tag indexed mpt frame
+  */
+-inline struct megasas_cmd_fusion *megasas_get_cmd_fusion(struct megasas_instance
+-						  *instance, u32 blk_tag)
++static inline struct megasas_cmd_fusion *
++megasas_get_cmd_fusion(struct megasas_instance *instance, u32 blk_tag)
  {
- 	u32 lrmin = 0, lrmax = 0;
-@@ -668,20 +669,20 @@ static void mvs_64xx_clear_active_cmds(struct mvs_info *mvi)
- }
+ 	struct fusion_context *fusion;
  
- 
--u32 mvs_64xx_spi_read_data(struct mvs_info *mvi)
-+static u32 mvs_64xx_spi_read_data(struct mvs_info *mvi)
- {
- 	void __iomem *regs = mvi->regs_ex;
- 	return ior32(SPI_DATA_REG_64XX);
- }
- 
--void mvs_64xx_spi_write_data(struct mvs_info *mvi, u32 data)
-+static void mvs_64xx_spi_write_data(struct mvs_info *mvi, u32 data)
- {
- 	void __iomem *regs = mvi->regs_ex;
- 	 iow32(SPI_DATA_REG_64XX, data);
- }
- 
- 
--int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
-+static int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
- 			u32      *dwCmd,
- 			u8       cmd,
- 			u8       read,
-@@ -705,7 +706,7 @@ int mvs_64xx_spi_buildcmd(struct mvs_info *mvi,
- }
- 
- 
--int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
-+static int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
- {
- 	void __iomem *regs = mvi->regs_ex;
- 	int     retry;
-@@ -720,7 +721,7 @@ int mvs_64xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
+@@ -384,7 +384,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
  	return 0;
  }
  
--int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
-+static int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+-int
++static int
+ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
  {
- 	void __iomem *regs = mvi->regs_ex;
- 	u32 i, dwTmp;
-@@ -735,7 +736,7 @@ int mvs_64xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
- 	return -1;
- }
- 
--void mvs_64xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
-+static void mvs_64xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
- 				int buf_len, int from, void *prd)
- {
- 	int i;
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index f6fc4a7..4c57d9a 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -48,8 +48,8 @@ static void mvs_94xx_detect_porttype(struct mvs_info *mvi, int i)
+ 	u32 max_cmd, i;
+@@ -418,7 +418,7 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
  	}
+ 	return 0;
  }
- 
--void set_phy_tuning(struct mvs_info *mvi, int phy_id,
--			struct phy_tuning phy_tuning)
-+static void set_phy_tuning(struct mvs_info *mvi, int phy_id,
-+			   struct phy_tuning phy_tuning)
+-int
++static int
+ megasas_alloc_request_fusion(struct megasas_instance *instance)
  {
- 	u32 tmp, setting_0 = 0, setting_1 = 0;
- 	u8 i;
-@@ -110,8 +110,8 @@ void set_phy_tuning(struct mvs_info *mvi, int phy_id,
- 	}
- }
- 
--void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
--				struct ffe_control ffe)
-+static void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
-+			       struct ffe_control ffe)
- {
- 	u32 tmp;
- 
-@@ -177,7 +177,7 @@ void set_phy_ffe_tuning(struct mvs_info *mvi, int phy_id,
- }
- 
- /*Notice: this function must be called when phy is disabled*/
--void set_phy_rate(struct mvs_info *mvi, int phy_id, u8 rate)
-+static void set_phy_rate(struct mvs_info *mvi, int phy_id, u8 rate)
- {
- 	union reg_phy_cfg phy_cfg, phy_cfg_tmp;
- 	mvs_write_port_vsr_addr(mvi, phy_id, VSR_PHY_MODE2);
-@@ -679,7 +679,8 @@ static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
- 	}
- }
- 
--void mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
-+static void
-+mvs_94xx_clear_srs_irq(struct mvs_info *mvi, u8 reg_set, u8 clear_all)
- {
- 	void __iomem *regs = mvi->regs;
- 	u32 tmp;
-@@ -906,8 +907,8 @@ static void mvs_94xx_fix_phy_info(struct mvs_info *mvi, int i,
- 
- }
- 
--void mvs_94xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
--			struct sas_phy_linkrates *rates)
-+static void mvs_94xx_phy_set_link_rate(struct mvs_info *mvi, u32 phy_id,
-+				       struct sas_phy_linkrates *rates)
- {
- 	u32 lrmax = 0;
- 	u32 tmp;
-@@ -936,25 +937,25 @@ static void mvs_94xx_clear_active_cmds(struct mvs_info *mvi)
- }
- 
- 
--u32 mvs_94xx_spi_read_data(struct mvs_info *mvi)
-+static u32 mvs_94xx_spi_read_data(struct mvs_info *mvi)
- {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
- 	return mr32(SPI_RD_DATA_REG_94XX);
- }
- 
--void mvs_94xx_spi_write_data(struct mvs_info *mvi, u32 data)
-+static void mvs_94xx_spi_write_data(struct mvs_info *mvi, u32 data)
- {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
- 	 mw32(SPI_RD_DATA_REG_94XX, data);
- }
- 
- 
--int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
--				u32      *dwCmd,
--				u8       cmd,
--				u8       read,
--				u8       length,
--				u32      addr
-+static int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
-+				 u32      *dwCmd,
-+				 u8       cmd,
-+				 u8       read,
-+				 u8       length,
-+				 u32      addr
- 				)
- {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
-@@ -974,7 +975,7 @@ int mvs_94xx_spi_buildcmd(struct mvs_info *mvi,
- }
- 
- 
--int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
-+static int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
- {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
- 	mw32(SPI_CTRL_REG_94XX, cmd | SPI_CTRL_SpiStart_94XX);
-@@ -982,7 +983,7 @@ int mvs_94xx_spi_issuecmd(struct mvs_info *mvi, u32 cmd)
+ 	struct fusion_context *fusion;
+@@ -456,7 +456,7 @@ megasas_alloc_request_fusion(struct megasas_instance *instance)
  	return 0;
  }
  
--int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
-+static int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
+-int
++static int
+ megasas_alloc_reply_fusion(struct megasas_instance *instance)
  {
- 	void __iomem *regs = mvi->regs_ex - 0x10200;
- 	u32   i, dwTmp;
-@@ -997,8 +998,8 @@ int mvs_94xx_spi_waitdataready(struct mvs_info *mvi, u32 timeout)
- 	return -1;
+ 	int i, count;
+@@ -498,7 +498,7 @@ megasas_alloc_reply_fusion(struct megasas_instance *instance)
+ 	return 0;
  }
  
--void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
--				int buf_len, int from, void *prd)
-+static void mvs_94xx_fix_dma(struct mvs_info *mvi, u32 phy_mask,
-+			     int buf_len, int from, void *prd)
+-int
++static int
+ megasas_alloc_rdpq_fusion(struct megasas_instance *instance)
+ {
+ 	int i, j, count;
+@@ -606,7 +606,7 @@ megasas_free_reply_fusion(struct megasas_instance *instance) {
+  * and is used as SMID of the cmd.
+  * SMID value range is from 1 to max_fw_cmds.
+  */
+-int
++static int
+ megasas_alloc_cmds_fusion(struct megasas_instance *instance)
  {
  	int i;
- 	struct mvs_prd *buf_prd = prd;
-diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-index 5b9fcff..86eb199 100644
---- a/drivers/scsi/mvsas/mv_sas.c
-+++ b/drivers/scsi/mvsas/mv_sas.c
-@@ -74,7 +74,7 @@ void mvs_tag_init(struct mvs_info *mvi)
- 		mvs_tag_clear(mvi, i);
+@@ -1210,7 +1210,7 @@ megasas_display_intel_branding(struct megasas_instance *instance)
+  *
+  * This is the main function for initializing firmware.
+  */
+-u32
++static u32
+ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ {
+ 	struct megasas_register_set __iomem *reg_set;
+@@ -1382,7 +1382,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+  * @ext_status :	ext status of cmd returned by FW
+  */
+ 
+-void
++static void
+ map_cmd_status(struct megasas_cmd_fusion *cmd, u8 status, u8 ext_status)
+ {
+ 
+@@ -1514,7 +1514,7 @@ megasas_make_sgl_fusion(struct megasas_instance *instance,
+  *
+  * Used to set the PD LBA in CDB for FP IOs
+  */
+-void
++static void
+ megasas_set_pd_lba(struct MPI2_RAID_SCSI_IO_REQUEST *io_request, u8 cdb_len,
+ 		   struct IO_REQUEST_INFO *io_info, struct scsi_cmnd *scp,
+ 		   struct MR_DRV_RAID_MAP_ALL *local_map_ptr, u32 ref_tag)
+@@ -1691,7 +1691,7 @@ megasas_set_pd_lba(struct MPI2_RAID_SCSI_IO_REQUEST *io_request, u8 cdb_len,
+  * Prepares the io_request and chain elements (sg_frame) for IO
+  * The IO can be for PD (Fast Path) or LD
+  */
+-void
++static void
+ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			  struct scsi_cmnd *scp,
+ 			  struct megasas_cmd_fusion *cmd)
+@@ -2056,7 +2056,7 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+  * Invokes helper functions to prepare request frames
+  * and sets flags appropriate for IO/Non-IO cmd
+  */
+-int
++static int
+ megasas_build_io_fusion(struct megasas_instance *instance,
+ 			struct scsi_cmnd *scp,
+ 			struct megasas_cmd_fusion *cmd)
+@@ -2144,7 +2144,7 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 	return 0;
  }
  
--struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
-+static struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
+-union MEGASAS_REQUEST_DESCRIPTOR_UNION *
++static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+ megasas_get_request_descriptor(struct megasas_instance *instance, u16 index)
  {
- 	unsigned long i = 0, j = 0, hi = 0;
- 	struct sas_ha_struct *sha = dev->port->ha;
-@@ -102,7 +102,7 @@ struct mvs_info *mvs_find_dev_mvi(struct domain_device *dev)
- 
+ 	u8 *p;
+@@ -2229,7 +2229,7 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
+  * @instance:			Adapter soft state
+  * Completes all commands that is in reply descriptor queue
+  */
+-int
++static int
+ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ {
+ 	union MPI2_REPLY_DESCRIPTORS_UNION *desc;
+@@ -2405,7 +2405,7 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+  *
+  * Tasklet to complete cmds
+  */
+-void
++static void
+ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
+ {
+ 	struct megasas_instance *instance =
+@@ -2430,7 +2430,7 @@ megasas_complete_cmd_dpc_fusion(unsigned long instance_addr)
+ /**
+  * megasas_isr_fusion - isr entry point
+  */
+-irqreturn_t megasas_isr_fusion(int irq, void *devp)
++static irqreturn_t megasas_isr_fusion(int irq, void *devp)
+ {
+ 	struct megasas_irq_context *irq_context = devp;
+ 	struct megasas_instance *instance = irq_context->instance;
+@@ -2481,7 +2481,7 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
+  * mfi_cmd:			megasas_cmd pointer
+  *
+  */
+-u8
++static u8
+ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+ 			struct megasas_cmd *mfi_cmd)
+ {
+@@ -2541,7 +2541,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+  * @cmd:			mfi cmd to build
+  *
+  */
+-union MEGASAS_REQUEST_DESCRIPTOR_UNION *
++static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+ {
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+@@ -2574,7 +2574,7 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+  * @cmd:			mfi cmd pointer
+  *
+  */
+-int
++static int
+ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+ 			  struct megasas_cmd *cmd)
+ {
+@@ -2748,8 +2748,9 @@ megasas_check_reset_fusion(struct megasas_instance *instance,
  }
  
--int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
-+static int mvs_find_dev_phyno(struct domain_device *dev, int *phyno)
+ /* This function waits for outstanding commands on fusion to complete */
+-int megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
+-					int reason, int *convert)
++static int
++megasas_wait_for_outstanding_fusion(struct megasas_instance *instance,
++				    int reason, int *convert)
  {
- 	unsigned long i = 0, j = 0, n = 0, num = 0;
- 	struct mvs_device *mvi_dev = (struct mvs_device *)dev->lldd_dev;
-@@ -1158,7 +1158,7 @@ void mvs_port_deformed(struct asd_sas_phy *sas_phy)
- 	mvs_port_notify_deformed(sas_phy, 1);
+ 	int i, outstanding, retval = 0, hb_seconds_missed = 0;
+ 	u32 fw_state;
+@@ -2849,7 +2850,7 @@ void  megasas_reset_reply_desc(struct megasas_instance *instance)
+  * megasas_refire_mgmt_cmd :	Re-fire management commands
+  * @instance:				Controller's soft instance
+ */
+-void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
++static void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ {
+ 	int j;
+ 	struct megasas_cmd_fusion *cmd_fusion;
+@@ -3332,7 +3333,8 @@ int megasas_reset_target_fusion(struct scsi_cmnd *scmd)
  }
  
--struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
-+static struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
+ /*SRIOV get other instance in cluster if any*/
+-struct megasas_instance *megasas_get_peer_instance(struct megasas_instance *instance)
++static struct megasas_instance *
++megasas_get_peer_instance(struct megasas_instance *instance)
  {
- 	u32 dev;
- 	for (dev = 0; dev < MVS_MAX_DEVICES; dev++) {
-@@ -1175,7 +1175,7 @@ struct mvs_device *mvs_alloc_dev(struct mvs_info *mvi)
- 	return NULL;
- }
+ 	int i;
  
--void mvs_free_dev(struct mvs_device *mvi_dev)
-+static void mvs_free_dev(struct mvs_device *mvi_dev)
- {
- 	u32 id = mvi_dev->device_id;
- 	memset(mvi_dev, 0, sizeof(*mvi_dev));
-@@ -1185,7 +1185,7 @@ void mvs_free_dev(struct mvs_device *mvi_dev)
- 	mvi_dev->taskfileset = MVS_ID_NOT_MAPPED;
- }
- 
--int mvs_dev_found_notify(struct domain_device *dev, int lock)
-+static int mvs_dev_found_notify(struct domain_device *dev, int lock)
- {
- 	unsigned long flags = 0;
- 	int res = 0;
-@@ -1241,7 +1241,7 @@ int mvs_dev_found(struct domain_device *dev)
- 	return mvs_dev_found_notify(dev, 1);
- }
- 
--void mvs_dev_gone_notify(struct domain_device *dev)
-+static void mvs_dev_gone_notify(struct domain_device *dev)
- {
- 	unsigned long flags = 0;
- 	struct mvs_device *mvi_dev = dev->lldd_dev;
-@@ -1611,7 +1611,7 @@ static int mvs_sata_done(struct mvs_info *mvi, struct sas_task *task,
- 	return stat;
- }
- 
--void mvs_set_sense(u8 *buffer, int len, int d_sense,
-+static void mvs_set_sense(u8 *buffer, int len, int d_sense,
- 		int key, int asc, int ascq)
- {
- 	memset(buffer, 0, len);
-@@ -1650,7 +1650,7 @@ void mvs_set_sense(u8 *buffer, int len, int d_sense,
- 	return;
- }
- 
--void mvs_fill_ssp_resp_iu(struct ssp_response_iu *iu,
-+static void mvs_fill_ssp_resp_iu(struct ssp_response_iu *iu,
- 				u8 key, u8 asc, u8 asc_q)
- {
- 	iu->datapres = 2;
 -- 
 2.7.4
+
