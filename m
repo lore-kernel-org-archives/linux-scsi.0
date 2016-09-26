@@ -1,83 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [dm-devel] dm-mpath: always return reservation conflict
-Date: Mon, 26 Sep 2016 12:06:24 -0700
-Message-ID: <1474916784.2765.64.camel@HansenPartnership.com>
-References: <1470141392-25479-1-git-send-email-hch@lst.de>
-         <1470141392-25479-2-git-send-email-hch@lst.de>
-         <20160811183832.GA27144@lst.de> <20160815130829.GA14829@redhat.com>
-         <20160815134039.GA5569@redhat.com> <20160926165230.GA5787@infradead.org>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
+Subject: Re: UFS API in the kernel
+Date: Mon, 26 Sep 2016 14:22:59 -0500
+Message-ID: <CAJVOszALc04xgNujHi2YdCGpTXNWDoyLVwYT2uSYy6faDLqmYA@mail.gmail.com>
+References: <c6a8636a-98e6-61d0-ff4b-350fb3869699@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:37586 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S941581AbcIZTG2 (ORCPT
+Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:47436 "EHLO
+        mx0a-000cda01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S965069AbcIZTXZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Sep 2016 15:06:28 -0400
-In-Reply-To: <20160926165230.GA5787@infradead.org>
+        Mon, 26 Sep 2016 15:23:25 -0400
+Received: from pps.filterd (m0075028.ppops.net [127.0.0.1])
+        by mx0b-00003501.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8QJMZXm027366
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 15:23:24 -0400
+Received: from mail-yb0-f200.google.com (mail-yb0-f200.google.com [209.85.213.200])
+        by mx0b-00003501.pphosted.com with ESMTP id 25q42g9y1n-3
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 15:23:19 -0400
+Received: by mail-yb0-f200.google.com with SMTP id 2so317617427ybv.3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 12:23:19 -0700 (PDT)
+In-Reply-To: <c6a8636a-98e6-61d0-ff4b-350fb3869699@synopsys.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Joao Pinto <Joao.Pinto@synopsys.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Mon, 2016-09-26 at 09:52 -0700, Christoph Hellwig wrote:
-> Getting back to this after Hannes recovered from his vacation
-> and I had a chat with him..
-> 
-> On Mon, Aug 15, 2016 at 09:40:39AM -0400, Mike Snitzer wrote:
-> > Seems we still need a more sophisticated approach.  But I'm left
-> > wondering: if we didn't do it would anything notice?  Sadly, the
-> > same
-> > big question from the original thread from a year ago:
-> 
-> Yes.  I have a customer looking to push the pNFS SCSI layout into
-> a product, and the major show stopper right now is that we can
-> trivially get into failver loops without this (or and equivalent)
-> fix.
-> 
-> A year ago SCSI layout was still work in progress in the IETF,
-> people use the similar block layout instead that doesn't use
-> PRs and we also didn't have the in-kernel PR API, so you effectively
-> couldn't use PRs with multipathing.
-> 
-> > https://patchwork.kernel.org/patch/6797111/
-> > 
-> > > So this is throw-away for now (and I'll get Hannes' patch applied
-> > > for
-> > > 4.8-rc3, with the tweak of returning -EBADE immediately):
-> > 
-> > Unfortunately, I'm _not_ staging Hannes' patch until I have James
-> > Bottomley's Ack (given his original issues with the patch haven't
-> > been
-> > explained away AFAICT).
-> 
-> I've added James to the Cc.  His argument was that the old behavior
-> could be implemented to use some non-standard use of reservations
-> without a specific example.  I don't really think his example even
-> is practical - once we use dm-mpath it exclusively claims the 
-> underling block devices, so any sort of selective reservations would 
-> have had to happen before even starting dm-multipath.
+On Thu, Sep 22, 2016 at 10:21 AM, Joao Pinto <Joao.Pinto@synopsys.com> wrot=
+e:
+> Hi!
+>
+> I am designing an application that has the goal to be an utility for Unip=
+ro and
+> UFS testing purposes. This application is going to run on top of a recent=
+ Linux
+> Kernel containing the new UFS stack (including the new DWC drivers).
+>
+> I am considering doing the following:
+> a) Create a new config item called CONFIG_UFS_CHARDEV which is going to c=
+reate a
+> char device responsible to make some IOCTL available for user-space appli=
+cations
+> b) Create a linux/ufs.h header file that contains data structures declara=
+tions
+> that will be needed in user-space applications
 
-Well, now that you've made me reread the thread from 14 months ago that
-wasn't quite my objection.  The objection hinged on the fact that
-anything that uses path specific reservations would now fail instead of
-retrying on a different path.  I thought the IBM SVC did this and
-Hannes implied he'd be able to check this ... did anyone check?  If
-we've checked and there's no issue with the SVC, then I don't have any
-other objections.
+I am not very familiar with UFS devices, that said you should have an
+sgX chardev being created already so you can handle SG_IO requests.
+There also appear to be some sysfs entries being created.
 
->   So a dynamic SAN controller would have to tear down and rebuild the
-> dm-multipath setup at all the time.
+So between sg and sysfs you should be able to handle any user-space
+out of band requests without resorting to making a new chardev.
 
-That was the job of the SVC: it sat in the middle of the SAN and
-controlled which node saw what storage.
+Adding more sysfs entries, if you need them, should be fine.
 
-https://www.ibm.com/support/knowledgecenter/STPVGU/com.ibm.storage.svc.console.720.doc/svc_svcovr_1bcfiq.html
+You may find it easier to expand on the existing interfaces than to
+get consensus on a new driver and ioctls.
 
-The SVC can issue its own reservations in those circumstances.  What
-I'm not at all clear on is whether they'll interact badly with the dm
--mp reservations.
+Hope this helps,
+Shaun
 
-James
+> Could you please advise me about what the correct approach should be to m=
+ake it
+> as standard as possible and usable in the future?
+>
+> Thank you very much for your help!
+>
+> regards,
+> Joao
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  https://urldefense.proofpoint.com/v2/url?u=3Dhttp=
+-3A__vger.kernel.org_majordomo-2Dinfo.html&d=3DDQICaQ&c=3DIGDlg0lD0b-nebmJJ=
+0Kp8A&r=3DWg5NqlNlVTT7Ugl8V50qIHLe856QW0qfG3WVYGOrWzA&m=3DvJFB6pCywWtdvkgHz=
+9Vc0jQz0xzeyZlr-7eCWYu88nM&s=3DyiQLPFpqmMrbqLZz1Jb3aNqOje2dRMLJHEzUDobwcXc&=
+e=3D
 
+
+
+--=20
+Shaun Tancheff
