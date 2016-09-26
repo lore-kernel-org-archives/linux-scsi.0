@@ -1,95 +1,52 @@
-From: Baoyou Xie <baoyou.xie@linaro.org>
-Subject: [PATCH] scsi: be2iscsi: mark symbols static where possible
-Date: Mon, 26 Sep 2016 20:00:59 +0800
-Message-ID: <1474891259-20031-1-git-send-email-baoyou.xie@linaro.org>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [patch v2] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
+Date: Mon, 26 Sep 2016 15:29:49 +0200
+Message-ID: <fb69655d-ddee-7961-0ad4-1a66f64d8c60@redhat.com>
+References: <20160915134456.GA30277@mwanda>
+ <yq17fadz2l6.fsf@sermon.lab.mkp.net>
+ <20160923112226.rteir5ivjou64ffh@pd.tnic>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f42.google.com ([209.85.220.42]:34881 "EHLO
-        mail-pa0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965898AbcIZMBT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 08:01:19 -0400
-Received: by mail-pa0-f42.google.com with SMTP id oz2so62480604pac.2
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 05:01:19 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:60044 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S935875AbcIZN36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Sep 2016 09:29:58 -0400
+In-Reply-To: <20160923112226.rteir5ivjou64ffh@pd.tnic>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, baoyou.xie@linaro.org, xie.baoyou@zte.com.cn, han.fei@zte.com.cn, tang.qiang007@zte.com.cn
+To: Borislav Petkov <bp@alien8.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ching Huang <ching2048@areca.com.tw>, Hannes Reinicke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, security@kernel.org
 
-We get 6 warnings when building kernel with W=1:
-drivers/scsi/be2iscsi/be_main.c:65:1: warning: no previous prototype for 'beiscsi_log_enable_disp' [-Wmissing-prototypes]
-drivers/scsi/be2iscsi/be_main.c:78:1: warning: no previous prototype for 'beiscsi_log_enable_change' [-Wmissing-prototypes]
-drivers/scsi/be2iscsi/be_main.c:97:1: warning: no previous prototype for 'beiscsi_log_enable_store' [-Wmissing-prototypes]
-drivers/scsi/be2iscsi/be_main.c:116:1: warning: no previous prototype for 'beiscsi_log_enable_init' [-Wmissing-prototypes]
-drivers/scsi/be2iscsi/be_main.c:4587:5: warning: no previous prototype for 'beiscsi_iotask_v2' [-Wmissing-prototypes]
-drivers/scsi/be2iscsi/be_main.c:4976:6: warning: no previous prototype for 'beiscsi_hba_attrs_init' [-Wmissing-prototypes]
+On 23.9.2016 13:22, Borislav Petkov wrote:
+> On Thu, Sep 15, 2016 at 09:59:01AM -0400, Martin K. Petersen wrote:
+>>>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>> Dan> We need to put an upper bound on "user_len" so the memcpy() doesn't
+>> Dan> overflow.
+>>
+>> Applied to 4.9/scsi-queue.
+> Yap, Tomas said the kfree was missing on the error path but can we
+> simplify this further by doing the user_len check first so that the
+> kfree() is not even needed?
+>
+> Patch ontop:
+>
+> ---
+> From: Borislav Petkov <bp@suse.de>
+> Date: Fri, 23 Sep 2016 13:04:51 +0200
+> Subject: [PATCH] scsi: arcmsr: Simplify user_len checking
+>
+> Do the user_len check first and then the ver_addr allocation so that
+> we can save us the kfree() on the error path when user_len is >
+> ARCMSR_API_DATA_BUFLEN.
+>
+> Signed-off-by: Borislav Petkov <bp@suse.de>
+> Cc: Marco Grassi <marco.gra@gmail.com>
+> Cc: Dan Carpenter <dan.carpenter@oracle.com>
+> Cc: Tomas Henzl <thenzl@redhat.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
 
-In fact, these functions are only used in the file in which they are
-declared and don't need a declaration, but can be made static.
-
-So this patch marks these functions with 'static'.
-
-Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
----
- drivers/scsi/be2iscsi/be_main.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 6a6906f..68138a6 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -61,7 +61,7 @@ MODULE_PARM_DESC(be_max_phys_size,
- 		"memory that can be allocated. Range is 16 - 128");
- 
- #define beiscsi_disp_param(_name)\
--ssize_t	\
-+static ssize_t	\
- beiscsi_##_name##_disp(struct device *dev,\
- 			struct device_attribute *attrib, char *buf)	\
- {	\
-@@ -74,7 +74,7 @@ beiscsi_##_name##_disp(struct device *dev,\
- }
- 
- #define beiscsi_change_param(_name, _minval, _maxval, _defaval)\
--int \
-+static int \
- beiscsi_##_name##_change(struct beiscsi_hba *phba, uint32_t val)\
- {\
- 	if (val >= _minval && val <= _maxval) {\
-@@ -93,7 +93,7 @@ beiscsi_##_name##_change(struct beiscsi_hba *phba, uint32_t val)\
- }
- 
- #define beiscsi_store_param(_name)  \
--ssize_t \
-+static ssize_t \
- beiscsi_##_name##_store(struct device *dev,\
- 			 struct device_attribute *attr, const char *buf,\
- 			 size_t count) \
-@@ -112,7 +112,7 @@ beiscsi_##_name##_store(struct device *dev,\
- }
- 
- #define beiscsi_init_param(_name, _minval, _maxval, _defval) \
--int \
-+static int \
- beiscsi_##_name##_init(struct beiscsi_hba *phba, uint32_t val) \
- { \
- 	if (val >= _minval && val <= _maxval) {\
-@@ -4584,7 +4584,7 @@ static int beiscsi_alloc_pdu(struct iscsi_task *task, uint8_t opcode)
- 	io_task->cmd_bhs = NULL;
- 	return -ENOMEM;
- }
--int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
-+static int beiscsi_iotask_v2(struct iscsi_task *task, struct scatterlist *sg,
- 		       unsigned int num_sg, unsigned int xferlen,
- 		       unsigned int writedir)
- {
-@@ -4973,7 +4973,7 @@ static int beiscsi_bsg_request(struct bsg_job *job)
- 	return rc;
- }
- 
--void beiscsi_hba_attrs_init(struct beiscsi_hba *phba)
-+static void beiscsi_hba_attrs_init(struct beiscsi_hba *phba)
- {
- 	/* Set the logging parameter */
- 	beiscsi_log_enable_init(phba, beiscsi_log_enable);
--- 
-2.7.4
+Looks good,
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
