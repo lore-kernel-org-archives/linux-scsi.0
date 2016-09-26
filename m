@@ -1,67 +1,169 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 3/9] [RFC] nvme: Use BLK_MQ_S_STOPPED instead of
- QUEUE_FLAG_STOPPED in blk-mq code
-Date: Mon, 26 Sep 2016 11:27:09 -0700
-Message-ID: <fbe7645f-dd98-6325-ef46-e0f1bde2fa3a@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 4/9] block: Move blk_freeze_queue() and blk_unfreeze_queue()
+ code
+Date: Mon, 26 Sep 2016 11:27:28 -0700
+Message-ID: <f990694e-76ea-f6b1-10a4-c23b9a738b39@sandisk.com>
 References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <7948dbb8-6333-dc62-2673-4da35b4dfdbc-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Make nvme_requeue_req() check BLK_MQ_S_STOPPED instead of
-QUEUE_FLAG_STOPPED. Remove the QUEUE_FLAG_STOPPED manipulations
-that became superfluous because of this change. Untested.
+Move the blk_freeze_queue() and blk_unfreeze_queue() implementations
+from block/blk-mq.c to block/blk-core.c. Drop "_mq" from the name of
+the functions that have been moved.
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
 ---
- drivers/nvme/host/core.c | 7 +------
- 1 file changed, 1 insertion(+), 6 deletions(-)
+ block/blk-core.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
+ block/blk-mq.c   | 41 +++--------------------------------------
+ block/blk.h      |  3 +++
+ 3 files changed, 51 insertions(+), 38 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index bd2156c..057f1fa 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -205,7 +205,7 @@ void nvme_requeue_req(struct request *req)
- 
- 	blk_mq_requeue_request(req);
- 	spin_lock_irqsave(req->q->queue_lock, flags);
--	if (!blk_queue_stopped(req->q))
-+	if (!blk_mq_queue_stopped(req->q))
- 		blk_mq_kick_requeue_list(req->q);
- 	spin_unlock_irqrestore(req->q->queue_lock, flags);
+diff --git a/block/blk-core.c b/block/blk-core.c
+index b75d688..8cc8006 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -682,6 +682,51 @@ static void blk_queue_usage_counter_release(struct percpu_ref *ref)
+ 	wake_up_all(&q->mq_freeze_wq);
  }
-@@ -2082,10 +2082,6 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
  
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list) {
--		spin_lock_irq(ns->queue->queue_lock);
--		queue_flag_set(QUEUE_FLAG_STOPPED, ns->queue);
--		spin_unlock_irq(ns->queue->queue_lock);
++void blk_freeze_queue_start(struct request_queue *q)
++{
++	int freeze_depth;
++
++	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
++	if (freeze_depth == 1) {
++		percpu_ref_kill(&q->q_usage_counter);
++		blk_mq_run_hw_queues(q, false);
++	}
++}
++
++void blk_freeze_queue_wait(struct request_queue *q)
++{
++	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
++}
++
++/*
++ * Guarantee no request is in use, so we can change any data structure of
++ * the queue afterward.
++ */
++void blk_freeze_queue(struct request_queue *q)
++{
++	/*
++	 * In the !blk_mq case we are only calling this to kill the
++	 * q_usage_counter, otherwise this increases the freeze depth
++	 * and waits for it to return to zero.  For this reason there is
++	 * no blk_unfreeze_queue(), and blk_freeze_queue() is not
++	 * exported to drivers as the only user for unfreeze is blk_mq.
++	 */
++	blk_freeze_queue_start(q);
++	blk_freeze_queue_wait(q);
++}
++
++void blk_unfreeze_queue(struct request_queue *q)
++{
++	int freeze_depth;
++
++	freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
++	WARN_ON_ONCE(freeze_depth < 0);
++	if (!freeze_depth) {
++		percpu_ref_reinit(&q->q_usage_counter);
++		wake_up_all(&q->mq_freeze_wq);
++	}
++}
++
+ static void blk_rq_timed_out_timer(unsigned long data)
+ {
+ 	struct request_queue *q = (struct request_queue *)data;
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 98d4812..50b26df 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -60,38 +60,10 @@ static void blk_mq_hctx_clear_pending(struct blk_mq_hw_ctx *hctx,
+ 
+ void blk_mq_freeze_queue_start(struct request_queue *q)
+ {
+-	int freeze_depth;
 -
- 		blk_mq_cancel_requeue_work(ns->queue);
- 		blk_mq_stop_hw_queues(ns->queue);
- 	}
-@@ -2099,7 +2095,6 @@ void nvme_start_queues(struct nvme_ctrl *ctrl)
+-	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+-	if (freeze_depth == 1) {
+-		percpu_ref_kill(&q->q_usage_counter);
+-		blk_mq_run_hw_queues(q, false);
+-	}
++	blk_freeze_queue_start(q);
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_start);
  
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list) {
--		queue_flag_clear_unlocked(QUEUE_FLAG_STOPPED, ns->queue);
- 		blk_mq_start_stopped_hw_queues(ns->queue, true);
- 		blk_mq_kick_requeue_list(ns->queue);
- 	}
+-static void blk_mq_freeze_queue_wait(struct request_queue *q)
+-{
+-	wait_event(q->mq_freeze_wq, percpu_ref_is_zero(&q->q_usage_counter));
+-}
+-
+-/*
+- * Guarantee no request is in use, so we can change any data structure of
+- * the queue afterward.
+- */
+-void blk_freeze_queue(struct request_queue *q)
+-{
+-	/*
+-	 * In the !blk_mq case we are only calling this to kill the
+-	 * q_usage_counter, otherwise this increases the freeze depth
+-	 * and waits for it to return to zero.  For this reason there is
+-	 * no blk_unfreeze_queue(), and blk_freeze_queue() is not
+-	 * exported to drivers as the only user for unfreeze is blk_mq.
+-	 */
+-	blk_mq_freeze_queue_start(q);
+-	blk_mq_freeze_queue_wait(q);
+-}
+-
+ void blk_mq_freeze_queue(struct request_queue *q)
+ {
+ 	/*
+@@ -104,14 +76,7 @@ EXPORT_SYMBOL_GPL(blk_mq_freeze_queue);
+ 
+ void blk_mq_unfreeze_queue(struct request_queue *q)
+ {
+-	int freeze_depth;
+-
+-	freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
+-	WARN_ON_ONCE(freeze_depth < 0);
+-	if (!freeze_depth) {
+-		percpu_ref_reinit(&q->q_usage_counter);
+-		wake_up_all(&q->mq_freeze_wq);
+-	}
++	blk_unfreeze_queue(q);
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_unfreeze_queue);
+ 
+@@ -2177,7 +2142,7 @@ static int blk_mq_queue_reinit_notify(struct notifier_block *nb,
+ 	list_for_each_entry(q, &all_q_list, all_q_node)
+ 		blk_mq_freeze_queue_start(q);
+ 	list_for_each_entry(q, &all_q_list, all_q_node) {
+-		blk_mq_freeze_queue_wait(q);
++		blk_freeze_queue_wait(q);
+ 
+ 		/*
+ 		 * timeout handler can't touch hw queue during the
+diff --git a/block/blk.h b/block/blk.h
+index c37492f..12f7366 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -71,6 +71,9 @@ void __blk_queue_free_tags(struct request_queue *q);
+ bool __blk_end_bidi_request(struct request *rq, int error,
+ 			    unsigned int nr_bytes, unsigned int bidi_bytes);
+ void blk_freeze_queue(struct request_queue *q);
++void blk_freeze_queue_start(struct request_queue *q);
++void blk_freeze_queue_wait(struct request_queue *q);
++void blk_unfreeze_queue(struct request_queue *q);
+ 
+ static inline void blk_queue_enter_live(struct request_queue *q)
+ {
 -- 
 2.10.0
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
