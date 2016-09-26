@@ -1,37 +1,78 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 0/9] Introduce blk_quiesce_queue() and blk_resume_queue()
-Date: Mon, 26 Sep 2016 11:25:54 -0700
-Message-ID: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH 1/9] blk-mq: Introduce blk_mq_queue_stopped()
+Date: Mon, 26 Sep 2016 11:26:26 -0700
+Message-ID: <b2210943-62b2-959a-569a-a404da03bcae@sandisk.com>
+References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <7948dbb8-6333-dc62-2673-4da35b4dfdbc-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello Jens,
+The function blk_queue_stopped() allows to test whether or not a
+traditional request queue has been stopped. Introduce a helper
+function that allows block drivers to query easily whether or not
+one or more hardware contexts of a blk-mq queue have been stopped.
 
-Multiple block drivers need the functionality to stop a request queue 
-and to wait until all ongoing request_fn() / queue_rq() calls have 
-finished without waiting until all outstanding requests have finished. 
-Hence this patch series that introduces the blk_quiesce_queue() and 
-blk_resume_queue() functions. The dm-mq, SRP and nvme patches in this 
-patch series are three examples of where these functions are useful. 
-These patches apply on top of the September 21 version of your 
-for-4.9/block branch. The individual patches in this series are:
+Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+---
+ block/blk-mq.c         | 20 ++++++++++++++++++++
+ include/linux/blk-mq.h |  1 +
+ 2 files changed, 21 insertions(+)
 
-0001-blk-mq-Introduce-blk_mq_queue_stopped.patch
-0002-dm-Fix-a-race-condition-related-to-stopping-and-star.patch
-0003-RFC-nvme-Use-BLK_MQ_S_STOPPED-instead-of-QUEUE_FLAG_.patch
-0004-block-Move-blk_freeze_queue-and-blk_unfreeze_queue-c.patch
-0005-block-Extend-blk_freeze_queue_start-to-the-non-blk-m.patch
-0006-block-Rename-mq_freeze_wq-and-mq_freeze_depth.patch
-0007-blk-mq-Introduce-blk_quiesce_queue-and-blk_resume_qu.patch
-0008-SRP-transport-Port-srp_wait_for_queuecommand-to-scsi.patch
-0009-RFC-nvme-Fix-a-race-condition.patch
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index e9ebe98..98d4812 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -938,6 +938,26 @@ void blk_mq_run_hw_queues(struct request_queue *q, bool async)
+ }
+ EXPORT_SYMBOL(blk_mq_run_hw_queues);
+ 
++/**
++ * blk_mq_queue_stopped() - check whether one or more hctxs have been stopped
++ * @q: request queue.
++ *
++ * The caller is responsible for serializing this function against
++ * blk_mq_{start,stop}_hw_queue().
++ */
++bool blk_mq_queue_stopped(struct request_queue *q)
++{
++	struct blk_mq_hw_ctx *hctx;
++	int i;
++
++	queue_for_each_hw_ctx(q, hctx, i)
++		if (test_bit(BLK_MQ_S_STOPPED, &hctx->state))
++			return true;
++
++	return false;
++}
++EXPORT_SYMBOL(blk_mq_queue_stopped);
++
+ void blk_mq_stop_hw_queue(struct blk_mq_hw_ctx *hctx)
+ {
+ 	cancel_work(&hctx->run_work);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 5daa0ef..368c460d 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -233,6 +233,7 @@ void blk_mq_delay_kick_requeue_list(struct request_queue *q, unsigned long msecs
+ void blk_mq_abort_requeue_list(struct request_queue *q);
+ void blk_mq_complete_request(struct request *rq, int error);
+ 
++bool blk_mq_queue_stopped(struct request_queue *q);
+ void blk_mq_stop_hw_queue(struct blk_mq_hw_ctx *hctx);
+ void blk_mq_start_hw_queue(struct blk_mq_hw_ctx *hctx);
+ void blk_mq_stop_hw_queues(struct request_queue *q);
+-- 
+2.10.0
 
-Thanks,
-
-Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
