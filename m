@@ -1,49 +1,47 @@
-From: Iago Abal <mail@iagoabal.eu>
-Subject: Potential double spin_lock_irqsave BUG in Linux 4.8's drivers/scsi/megaraid/megaraid_mbox.c
-Date: Mon, 26 Sep 2016 16:20:25 +0200
-Message-ID: <CAGbDTvr8_az+uJA1_5giN3hHSL_B-tt-_+b3e350jc3Jn9xd4A@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Kyuho Choi <chlrbgh0@gmail.com>
+Subject: [PATCH] scsi: ufs: enable no vccq quirk for skhynix device
+Date: Mon, 26 Sep 2016 23:58:25 +0900
+Message-ID: <1474901905-21551-1-git-send-email-kyuho.choi@sk.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:33848 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034290AbcIZOVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 10:21:07 -0400
-Received: by mail-wm0-f68.google.com with SMTP id l132so14330609wmf.1
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 07:21:06 -0700 (PDT)
+Received: from mail-pf0-f194.google.com ([209.85.192.194]:36582 "EHLO
+        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034251AbcIZO6b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 10:58:31 -0400
+Received: by mail-pf0-f194.google.com with SMTP id n24so9244541pfb.3
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 07:58:31 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com
-Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Kyuho Choi <kyuho.choi@sk.com>
 
-Hi,
+This patch enable no vccq quirk for SKHynix devices.
+SKHynix ufs device don't need vccq vrail for device operation.
 
-Using a static bug finder (EBA - https://github.com/models-team/eba) I
-may have found a double spin_lock_irqsave bug in Linux 4.8's
-drivers/scsi/megaraid/megaraid_mbox.c.
+Signed-off-by: Kyuho Choi <kyuho.choi@sk.com>
+---
+ drivers/scsi/ufs/ufs_quirks.h | 2 ++
+ 1 file changed, 2 insertions(+)
 
-The forward trace is as follows:
+diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
+index ee4ab85..22f881e 100644
+--- a/drivers/scsi/ufs/ufs_quirks.h
++++ b/drivers/scsi/ufs/ufs_quirks.h
+@@ -25,6 +25,7 @@
+ 
+ #define UFS_VENDOR_TOSHIBA     0x198
+ #define UFS_VENDOR_SAMSUNG     0x1CE
++#define UFS_VENDOR_SKHYNIX     0x1AD
+ 
+ /**
+  * ufs_device_info - ufs device details
+@@ -145,6 +146,7 @@ static struct ufs_dev_fix ufs_fixups[] = {
+ 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
+ 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
+ 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
++	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
+ 
+ 	END_FIX
+ };
+-- 
+2.7.4
 
-1. Starting in function `megaraid_reset_handler' at 2571;
-   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L2571)
-2. take `&adapter->pend_list_lock' for the first time at 2602:
-
-       spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-
-3. enter the `list_for_each_entry_safe' loop at 2603;
-4. if (scb->sno >= MBOX_MAX_SCSI_CMDS) evaluates to `true' at 2606;
-5. call `megaraid_mbox_mm_done' passing `adapter' at 2616 (go to line 3752);
-   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L3752)
-6. if (raw_mbox[0] == FC_DEL_LOGDRV && raw_mbox[2] == OP_DEL_LOGDRV)
-evaluates to `true' at 3778;
-7. call `megaraid_mbox_runpendq' at 3782 (go to line 1886);
-   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L1886)
-8. take `&adapter->pend_list_lock' for the second time at 1892:
-
-       spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-
-If that's a bug then I am willing to help with a patch.
-
-Thank you for your time,
-
--- iago
