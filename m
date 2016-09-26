@@ -1,52 +1,51 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [patch v2] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
-Date: Mon, 26 Sep 2016 15:29:49 +0200
-Message-ID: <fb69655d-ddee-7961-0ad4-1a66f64d8c60@redhat.com>
-References: <20160915134456.GA30277@mwanda>
- <yq17fadz2l6.fsf@sermon.lab.mkp.net>
- <20160923112226.rteir5ivjou64ffh@pd.tnic>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] [SCSI] mvsas: mark symbols static where possible
+Date: Mon, 26 Sep 2016 16:12:07 +0200
+Message-ID: <20160926141207.p6rqtolckvzdtsx2@linux-x5ow.site>
+References: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:60044 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:36897 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935875AbcIZN36 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Sep 2016 09:29:58 -0400
-In-Reply-To: <20160923112226.rteir5ivjou64ffh@pd.tnic>
+        id S965676AbcIZOMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Sep 2016 10:12:21 -0400
+Content-Disposition: inline
+In-Reply-To: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ching Huang <ching2048@areca.com.tw>, Hannes Reinicke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, security@kernel.org
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Wilfried.Weissmann@gmx.at, hare@suse.de, tj@kernel.org, davispuh@gmail.com, luisbg@osg.samsung.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
 
-On 23.9.2016 13:22, Borislav Petkov wrote:
-> On Thu, Sep 15, 2016 at 09:59:01AM -0400, Martin K. Petersen wrote:
->>>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
->> Dan> We need to put an upper bound on "user_len" so the memcpy() doesn't
->> Dan> overflow.
->>
->> Applied to 4.9/scsi-queue.
-> Yap, Tomas said the kfree was missing on the error path but can we
-> simplify this further by doing the user_len check first so that the
-> kfree() is not even needed?
->
-> Patch ontop:
->
+On Sun, Sep 25, 2016 at 01:48:50PM +0800, Baoyou Xie wrote:
+> We get a few warnings when building kernel with W=1:
+> drivers/scsi/mvsas/mv_sas.c:77:18: warning: no previous prototype for 'mvs_find_dev_mvi' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:105:5: warning: no previous prototype for 'mvs_find_dev_phyno' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1161:20: warning: no previous prototype for 'mvs_alloc_dev' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1178:6: warning: no previous prototype for 'mvs_free_dev' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1188:5: warning: no previous prototype for 'mvs_dev_found_notify' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1244:6: warning: no previous prototype for 'mvs_dev_gone_notify' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1614:6: warning: no previous prototype for 'mvs_set_sense' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_sas.c:1653:6: warning: no previous prototype for 'mvs_fill_ssp_resp_iu' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_64xx.c:139:6: warning: no previous prototype for 'mvs_64xx_clear_srs_irq' [-Wmissing-prototypes]
+> drivers/scsi/mvsas/mv_64xx.c:566:6: warning: no previous prototype for 'mvs_64xx_make_prd' [-Wmissing-prototypes]
+> ....
+> 
+> In fact, these functions are only used in the file in which they are
+> declared and don't need a declaration, but can be made static.
+> so this patch marks these functions with 'static'.
+> 
+> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
 > ---
-> From: Borislav Petkov <bp@suse.de>
-> Date: Fri, 23 Sep 2016 13:04:51 +0200
-> Subject: [PATCH] scsi: arcmsr: Simplify user_len checking
->
-> Do the user_len check first and then the ver_addr allocation so that
-> we can save us the kfree() on the error path when user_len is >
-> ARCMSR_API_DATA_BUFLEN.
->
-> Signed-off-by: Borislav Petkov <bp@suse.de>
-> Cc: Marco Grassi <marco.gra@gmail.com>
-> Cc: Dan Carpenter <dan.carpenter@oracle.com>
-> Cc: Tomas Henzl <thenzl@redhat.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
 
 Looks good,
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
