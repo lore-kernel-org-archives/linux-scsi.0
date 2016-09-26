@@ -1,55 +1,38 @@
-From: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-Subject: [PATCHv2] MAINTAINERS: Update open-iscsi maintainers
-Date: Mon, 26 Sep 2016 15:25:30 -0700
-Message-ID: <1474928730-4947-1-git-send-email-lduncan@suse.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH 0/9] Introduce blk_quiesce_queue() and blk_resume_queue()
+Date: Mon, 26 Sep 2016 15:26:37 -0700
+Message-ID: <8c5fb60c-0bb5-e405-eaba-576b5f8bd244@sandisk.com>
+References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
+ <20160926183308.GA13309@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBD54HHNYIIIJTQNGX4CRUBHJASWTU-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-Cc: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Christie <mnc-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20160926183308.GA13309-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Chris Leech and I are taking over as open-iscsi maintainers.
+On 09/26/2016 11:33 AM, Mike Snitzer wrote:
+> How much testing has this series seen?  Did you run it against the
+> mptest testsuite? https://github.com/snitm/mptest
 
-Changes since v1:
- * Updated URL to open-iscsi.com
- * Removed git repository, since code in tree
----
- MAINTAINERS | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Hello Mike,
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 01bff8ea28d8..81384a2562e7 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -6448,10 +6448,10 @@ S:	Maintained
- F:	drivers/firmware/iscsi_ibft*
- 
- ISCSI
--M:	Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>
-+M:	Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
-+M:	Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
- L:	open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
--W:	www.open-iscsi.org
--T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mnc/linux-2.6-iscsi.git
-+W:	www.open-iscsi.com
- S:	Maintained
- F:	drivers/scsi/*iscsi*
- F:	include/scsi/*iscsi*
--- 
-2.1.4
+The output of mptest with MULTIPATH_BACKEND_MODULE="scsidebug":
+# ./runtest
+[ ... ]
+SUCCESS
+** summary **
+PASSED:  test_00_no_failure test_01_sdev_offline test_02_sdev_delete 
+test_03_dm_failpath test_04_dm_switchpg
+FAILED:
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+I think this is the output we were hoping to see :-)
+
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
