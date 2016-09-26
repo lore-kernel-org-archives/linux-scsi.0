@@ -1,51 +1,49 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] [SCSI] mvsas: mark symbols static where possible
-Date: Mon, 26 Sep 2016 16:12:07 +0200
-Message-ID: <20160926141207.p6rqtolckvzdtsx2@linux-x5ow.site>
-References: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
+From: Iago Abal <mail@iagoabal.eu>
+Subject: Potential double spin_lock_irqsave BUG in Linux 4.8's drivers/scsi/megaraid/megaraid_mbox.c
+Date: Mon, 26 Sep 2016 16:20:25 +0200
+Message-ID: <CAGbDTvr8_az+uJA1_5giN3hHSL_B-tt-_+b3e350jc3Jn9xd4A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36897 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S965676AbcIZOMV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 26 Sep 2016 10:12:21 -0400
-Content-Disposition: inline
-In-Reply-To: <1474782530-17964-1-git-send-email-baoyou.xie@linaro.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33848 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1034290AbcIZOVH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 10:21:07 -0400
+Received: by mail-wm0-f68.google.com with SMTP id l132so14330609wmf.1
+        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 07:21:06 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, Wilfried.Weissmann@gmx.at, hare@suse.de, tj@kernel.org, davispuh@gmail.com, luisbg@osg.samsung.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
+To: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com
+Cc: megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org
 
-On Sun, Sep 25, 2016 at 01:48:50PM +0800, Baoyou Xie wrote:
-> We get a few warnings when building kernel with W=1:
-> drivers/scsi/mvsas/mv_sas.c:77:18: warning: no previous prototype for 'mvs_find_dev_mvi' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:105:5: warning: no previous prototype for 'mvs_find_dev_phyno' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1161:20: warning: no previous prototype for 'mvs_alloc_dev' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1178:6: warning: no previous prototype for 'mvs_free_dev' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1188:5: warning: no previous prototype for 'mvs_dev_found_notify' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1244:6: warning: no previous prototype for 'mvs_dev_gone_notify' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1614:6: warning: no previous prototype for 'mvs_set_sense' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_sas.c:1653:6: warning: no previous prototype for 'mvs_fill_ssp_resp_iu' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_64xx.c:139:6: warning: no previous prototype for 'mvs_64xx_clear_srs_irq' [-Wmissing-prototypes]
-> drivers/scsi/mvsas/mv_64xx.c:566:6: warning: no previous prototype for 'mvs_64xx_make_prd' [-Wmissing-prototypes]
-> ....
-> 
-> In fact, these functions are only used in the file in which they are
-> declared and don't need a declaration, but can be made static.
-> so this patch marks these functions with 'static'.
-> 
-> Signed-off-by: Baoyou Xie <baoyou.xie@linaro.org>
-> ---
+Hi,
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Using a static bug finder (EBA - https://github.com/models-team/eba) I
+may have found a double spin_lock_irqsave bug in Linux 4.8's
+drivers/scsi/megaraid/megaraid_mbox.c.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+The forward trace is as follows:
+
+1. Starting in function `megaraid_reset_handler' at 2571;
+   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L2571)
+2. take `&adapter->pend_list_lock' for the first time at 2602:
+
+       spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
+
+3. enter the `list_for_each_entry_safe' loop at 2603;
+4. if (scb->sno >= MBOX_MAX_SCSI_CMDS) evaluates to `true' at 2606;
+5. call `megaraid_mbox_mm_done' passing `adapter' at 2616 (go to line 3752);
+   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L3752)
+6. if (raw_mbox[0] == FC_DEL_LOGDRV && raw_mbox[2] == OP_DEL_LOGDRV)
+evaluates to `true' at 3778;
+7. call `megaraid_mbox_runpendq' at 3782 (go to line 1886);
+   (see https://github.com/torvalds/linux/blob/v4.8-rc8/drivers/scsi/megaraid/megaraid_mbox.c#L1886)
+8. take `&adapter->pend_list_lock' for the second time at 1892:
+
+       spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
+
+If that's a bug then I am willing to help with a patch.
+
+Thank you for your time,
+
+-- iago
