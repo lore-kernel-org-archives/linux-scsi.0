@@ -1,47 +1,31 @@
-From: Kyuho Choi <chlrbgh0@gmail.com>
-Subject: [PATCH] scsi: ufs: enable no vccq quirk for skhynix device
-Date: Mon, 26 Sep 2016 23:58:25 +0900
-Message-ID: <1474901905-21551-1-git-send-email-kyuho.choi@sk.com>
+From: Theodore Ts'o <tytso@mit.edu>
+Subject: UAS driver seems to be reporting a 4k sector size for a 512 byte
+ sector device?
+Date: Mon, 26 Sep 2016 12:19:26 -0400
+Message-ID: <20160926161926.cmayrily476v3wa7@thunk.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:36582 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034251AbcIZO6b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 10:58:31 -0400
-Received: by mail-pf0-f194.google.com with SMTP id n24so9244541pfb.3
-        for <linux-scsi@vger.kernel.org>; Mon, 26 Sep 2016 07:58:31 -0700 (PDT)
+Received: from imap.thunk.org ([74.207.234.97]:33682 "EHLO imap.thunk.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750754AbcIZQUa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 26 Sep 2016 12:20:30 -0400
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Kyuho Choi <kyuho.choi@sk.com>
+To: linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-This patch enable no vccq quirk for SKHynix devices.
-SKHynix ufs device don't need vccq vrail for device operation.
+Hi, I have a Samsung 850 Pro SSD which is currently in a USB 3.0 / UAS
+external enclosure.  The Samsung SSD uses a 512 byte physical and logical
+sector size, and when it is accessed via the usb-storage device, this
+is what I get.
 
-Signed-off-by: Kyuho Choi <kyuho.choi@sk.com>
----
- drivers/scsi/ufs/ufs_quirks.h | 2 ++
- 1 file changed, 2 insertions(+)
+In a vain hope that I could get discard working, I built a kernel that
+included the uas driver, and discovered that when I accessed the drive
+using the uas driver, it showed up as a 4k physical sector device, and
+this caused device-mapper to complain that the dm-crypt partition was
+misaligned.
 
-diff --git a/drivers/scsi/ufs/ufs_quirks.h b/drivers/scsi/ufs/ufs_quirks.h
-index ee4ab85..22f881e 100644
---- a/drivers/scsi/ufs/ufs_quirks.h
-+++ b/drivers/scsi/ufs/ufs_quirks.h
-@@ -25,6 +25,7 @@
- 
- #define UFS_VENDOR_TOSHIBA     0x198
- #define UFS_VENDOR_SAMSUNG     0x1CE
-+#define UFS_VENDOR_SKHYNIX     0x1AD
- 
- /**
-  * ufs_device_info - ufs device details
-@@ -145,6 +146,7 @@ static struct ufs_dev_fix ufs_fixups[] = {
- 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
- 	UFS_FIX(UFS_VENDOR_TOSHIBA, "THGLF2G9D8KBADG",
- 		UFS_DEVICE_QUIRK_PA_TACTIVATE),
-+	UFS_FIX(UFS_VENDOR_SKHYNIX, UFS_ANY_MODEL, UFS_DEVICE_NO_VCCQ),
- 
- 	END_FIX
- };
--- 
-2.7.4
+Is this a problem with the hardware, or with the UAS driver?
 
+						- Ted
