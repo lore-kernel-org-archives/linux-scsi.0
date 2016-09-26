@@ -1,29 +1,52 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: UAS driver seems to be reporting a 4k sector size for a 512 byte
- sector device?
-Date: Mon, 26 Sep 2016 09:25:11 -0700
-Message-ID: <20160926162511.GA1949@infradead.org>
-References: <20160926161926.cmayrily476v3wa7@thunk.org>
+Subject: Re: [PATCH v2 7/7] blk-zoned: implement ioctls
+Date: Mon, 26 Sep 2016 09:37:52 -0700
+Message-ID: <20160926163752.GA13876@infradead.org>
+References: <1474888483-29762-1-git-send-email-damien.lemoal@hgst.com>
+ <1474888483-29762-8-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:33484 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1423062AbcIZQZM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 12:25:12 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20160926161926.cmayrily476v3wa7@thunk.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1474888483-29762-8-git-send-email-damien.lemoal@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@hgst.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
-On Mon, Sep 26, 2016 at 12:19:26PM -0400, Theodore Ts'o wrote:
-> Is this a problem with the hardware, or with the UAS driver?
+> +	zones = kzalloc(sizeof(struct blk_zone) * rep.nr_zones,
+> +			GFP_KERNEL);
+> +	if (!zones)
+> +		return -ENOMEM;
 
-UAS is just SCSI transport, and doesn't touch the content of command,
-so it's a very unlikely culprit.  The SCSI layer intreprets it, but I
-don't really think it's doing any of this either..  Your bridge most
-likely always reports 4k sectors when using UAS for some reason.
+This should use kcalloc to get us underflow checking for the user
+controlled allocation size.
 
-To verify this call sg_readcap on the device node for both the
-usb-storage and uas mode.
+> +	if (copy_to_user(argp, &rep, sizeof(struct blk_zone_report))) {
+> +		ret = -EFAULT;
+> +		goto out;
+> +	}
+> +
+> +	if (rep.nr_zones) {
+> +		if (copy_to_user(argp + sizeof(struct blk_zone_report), zones,
+> +				 sizeof(struct blk_zone) * rep.nr_zones))
+> +			ret = -EFAULT;
+> +	}
+
+We could actually do this with a single big copy_to_user.  Not that
+it really matters, though..
+
+> -/*
+> - * Zone type.
+> - */
+> -enum blk_zone_type {
+> -	BLK_ZONE_TYPE_UNKNOWN,
+> -	BLK_ZONE_TYPE_CONVENTIONAL,
+> -	BLK_ZONE_TYPE_SEQWRITE_REQ,
+> -	BLK_ZONE_TYPE_SEQWRITE_PREF,
+> -};
+
+Please don't move this code around after it was added just two
+patches earlier.  I'd say just split adding the new blkzoned.h
+uapi header into a patch of it's own and add that before the
+core block code.
