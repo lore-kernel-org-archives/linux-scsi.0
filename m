@@ -1,67 +1,64 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 4/9] block: Move blk_freeze_queue() and
- blk_unfreeze_queue() code
-Date: Tue, 27 Sep 2016 09:52:13 +0200
-Message-ID: <20160927075213.rkpulkbrbndm2wwr@linux-x5ow.site>
-References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
- <f990694e-76ea-f6b1-10a4-c23b9a738b39@sandisk.com>
- <ffad7b3c-e7f5-56d7-0a75-574e65ac5b31@suse.de>
+From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
+Date: Tue, 27 Sep 2016 15:48:31 +0530
+Message-ID: <81c4d1740abeeaa19157383d09606ab6@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <ffad7b3c-e7f5-56d7-0a75-574e65ac5b31-l3A5Bk7waGM@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vk0-f43.google.com ([209.85.213.43]:36227 "EHLO
+        mail-vk0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754079AbcI0KSf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 06:18:35 -0400
+Received: by mail-vk0-f43.google.com with SMTP id d8so8514715vka.3
+        for <linux-scsi@vger.kernel.org>; Tue, 27 Sep 2016 03:18:35 -0700 (PDT)
+References: 817c1848a40a874cd5748f414d87665f@mail.gmail.com
+In-Reply-To: 817c1848a40a874cd5748f414d87665f@mail.gmail.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: cleech@redhat.com, lduncan@suse.com
+Cc: linux-scsi@vger.kernel.org, Mike Christie <mchristi@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-On Tue, Sep 27, 2016 at 08:26:19AM +0200, Hannes Reinecke wrote:
-> On 09/26/2016 08:27 PM, Bart Van Assche wrote:
-> > Move the blk_freeze_queue() and blk_unfreeze_queue() implementations
-> > from block/blk-mq.c to block/blk-core.c. Drop "_mq" from the name of
-> > the functions that have been moved.
-> > 
-> > Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-> > ---
-> >  block/blk-core.c | 45 +++++++++++++++++++++++++++++++++++++++++++++
-> >  block/blk-mq.c   | 41 +++--------------------------------------
-> >  block/blk.h      |  3 +++
-> >  3 files changed, 51 insertions(+), 38 deletions(-)
-> > 
-> > diff --git a/block/blk-core.c b/block/blk-core.c
-> > index b75d688..8cc8006 100644
-> > --- a/block/blk-core.c
-> > +++ b/block/blk-core.c
-> > @@ -682,6 +682,51 @@ static void blk_queue_usage_counter_release(struct percpu_ref *ref)
-> >  	wake_up_all(&q->mq_freeze_wq);
-> >  }
-> >  
-> > +void blk_freeze_queue_start(struct request_queue *q)
-> > +{
-> > +	int freeze_depth;
-> > +
-> > +	freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
-> > +	if (freeze_depth == 1) {
-> > +		percpu_ref_kill(&q->q_usage_counter);
-> > +		blk_mq_run_hw_queues(q, false);
-> > +	}
-> > +}
-> > +
-> As you dropped the 'mq_' prefix, maybe you should rename the counter to
-> 'freeze_depth', to?
+> -----Original Message-----
+> From: Jitendra Bhivare [mailto:jitendra.bhivare@broadcom.com]
+> Sent: Friday, September 23, 2016 8:38 PM
+> To: 'Mike Christie'; 'Martin K. Petersen'
+> Cc: 'linux-scsi@vger.kernel.org'
+> Subject: RE: [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
+>
+> Hi Mike,
+>
+> I could reproduce hard lockup using for-next kernel only in
+> iscsi_eh_cmd_timeout path due to spin_lock_irqsave taken in
+> blk_timeout_work
+> Please refer stack trace below.
+>
+> The _bh version used for frwd_lock and back_lock does not seem to be
+> causing
+> any issue similar to seen with be2iscsi after replacing _bh versions in
+> be2iscsi.
+>
+> I am testing it further, to confirm in all possible scenarios... NOPs,
+> error
+> recovery, resets and reconnects.
+> On my setup, I affined all EQ interrupts on a single CPU.
+> Along with heavy IO, few of the invocations of fio were pinned to run on
+> same
+> CPU.
+>
+> Any call to unlock_bh with another spin_lock already held, invoking
+> do_softirq,
+> might cause deadlock if bottom half used by driver calls function which
+> needs
+> that another spin_lock.
+> Is there a code which prevents this issue?
+>
+The only place, I think, libiscsi can have issues is__iscsi_complete_pdu
+which should be protected under _bh version for frwd and back locks.
+If the function is executed in process context there is a good chance the
+base version of spin_lock used for frwd/back locks could cause deadlocks
+when lld uses _bh version in alloc_pdu path
+(__iscsi_complete_pdu->iscsi_send_nopout... alloc_pdu).
 
-See PATCH 6/9
+Thanks,
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+JB
