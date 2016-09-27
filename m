@@ -1,121 +1,510 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [dm-devel] dm-mpath: always return reservation conflict
-Date: Tue, 27 Sep 2016 11:50:49 -0700
-Message-ID: <1475002249.2716.31.camel@HansenPartnership.com>
-References: <1470141392-25479-1-git-send-email-hch@lst.de>
-         <1470141392-25479-2-git-send-email-hch@lst.de>
-         <20160811183832.GA27144@lst.de> <20160815130829.GA14829@redhat.com>
-         <20160815134039.GA5569@redhat.com> <20160926165230.GA5787@infradead.org>
-         <1474916784.2765.64.camel@HansenPartnership.com>
-         <9f7ee494-1432-90ad-55e2-dbd223cd7bf3@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:45736 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932747AbcI0Suw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Sep 2016 14:50:52 -0400
-In-Reply-To: <9f7ee494-1432-90ad-55e2-dbd223cd7bf3@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Shaun Tancheff <shaun@tancheff.com>
+Subject: [PATCH v3 5/7] block: Implement support for zoned block devices
+Date: Tue, 27 Sep 2016 13:51:10 -0500
+Message-ID: <20160927185110.18508-1-shaun@tancheff.com>
+References: <1474888483-29762-6-git-send-email-damien.lemoal@hgst.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1474888483-29762-6-git-send-email-damien.lemoal@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Damien Le Moal <damien.lemoal@hgst.com>, shaun.tancheff@seagate.com, shaun@tancheff.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Mike Snitzer <snitzer@redhat.com>
-Cc: dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, 2016-09-27 at 08:34 +0200, Hannes Reinecke wrote:
-> On 09/26/2016 09:06 PM, James Bottomley wrote:
-> > On Mon, 2016-09-26 at 09:52 -0700, Christoph Hellwig wrote:
-> > > Getting back to this after Hannes recovered from his vacation
-> > > and I had a chat with him..
-> > > 
-> > > On Mon, Aug 15, 2016 at 09:40:39AM -0400, Mike Snitzer wrote:
-> > > > Seems we still need a more sophisticated approach.  But I'm 
-> > > > left wondering: if we didn't do it would anything notice? 
-> > > >  Sadly, the same big question from the original thread from a
-> > > > year ago:
-> > > 
-> > > Yes.  I have a customer looking to push the pNFS SCSI layout into
-> > > a product, and the major show stopper right now is that we can
-> > > trivially get into failver loops without this (or and equivalent)
-> > > fix.
-> > > 
-> > > A year ago SCSI layout was still work in progress in the IETF,
-> > > people use the similar block layout instead that doesn't use
-> > > PRs and we also didn't have the in-kernel PR API, so you 
-> > > effectively couldn't use PRs with multipathing.
-> > > 
-> > > > https://patchwork.kernel.org/patch/6797111/
-> > > > 
-> > > > > So this is throw-away for now (and I'll get Hannes' patch 
-> > > > > applied for 4.8-rc3, with the tweak of returning -EBADE
-> > > > > immediately):
-> > > > 
-> > > > Unfortunately, I'm _not_ staging Hannes' patch until I have 
-> > > > James Bottomley's Ack (given his original issues with the patch
-> > > > haven't been explained away AFAICT).
-> > > 
-> > > I've added James to the Cc.  His argument was that the old 
-> > > behavior could be implemented to use some non-standard use of 
-> > > reservations without a specific example.  I don't really think 
-> > > his example even is practical - once we use dm-mpath it 
-> > > exclusively claims the underling block devices, so any sort of 
-> > > selective reservations would have had to happen before even
-> > > starting dm-multipath.
-> > 
-> > Well, now that you've made me reread the thread from 14 months ago 
-> > that wasn't quite my objection.  The objection hinged on the fact 
-> > that anything that uses path specific reservations would now fail
-> > instead of retrying on a different path.  I thought the IBM SVC did 
-> > this and Hannes implied he'd be able to check this ... did anyone 
-> > check?  If we've checked and there's no issue with the SVC, then I 
-> > don't have any other objections.
-> > 
-> > >   So a dynamic SAN controller would have to tear down and rebuild 
-> > > the dm-multipath setup at all the time.
-> > 
-> > That was the job of the SVC: it sat in the middle of the SAN and
-> > controlled which node saw what storage.
-> > 
-> > https://www.ibm.com/support/knowledgecenter/STPVGU/com.ibm.storage.
-> > svc.console.720.doc/svc_svcovr_1bcfiq.html
-> > 
-> > The SVC can issue its own reservations in those circumstances. 
-> >  What I'm not at all clear on is whether they'll interact badly 
-> > with the dm-mp reservations.
-> > 
-> In the end SVC is (for us) just another storage array.
-> If and what SVC does in the background is of no interest to us.
+From: Hannes Reinecke <hare@suse.de>
 
-How can that be true?  It sits *on* the san and manages devices, it
-doesn't sit between the initators and the devices.  It applies
-reservations to devices under management, but every node usually sees
-everything else, so devices under SVC management are visible to all
-initators unless you zone them off.
+Implement zoned block device zone information reporting and reset.
+Zone information are reported as struct blk_zone. This implementation
+does not differentiate between host-aware and host-managed device
+models and is valid for both. Two functions are provided:
+blkdev_report_zones for discovering the zone configuration of a
+zoned block device, and blkdev_reset_zones for resetting the write
+pointer of sequential zones. The helper function blk_queue_zone_size
+and bdev_zone_size are also provided for, as the name suggest,
+obtaining the zone size (in 512B sectors) of the zones of the device.
 
-The last SVC manual I saw included a procedure for manually releasing
-stuck SVC reservations from an initator, which illustrates the
-expectation.
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 
-> OTOH I'd be very surprised if the SVC would be allowing us to see
-> remnants of its internal working (like persistent reservation 
-> errors); in doing so third-party applications would be able to see 
-> and possibly modify these persistent reservations and the SVC would 
-> find itself in a very fragile operating scenario.
+[Damien: * Removed the zone cache
+         * Implement report zones operation based on earlier proposal
+           by Shaun Tancheff <shaun.tancheff@seagate.com>]
+Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+---
 
-Because unless you zone the fibre, that's precisely what you do see.
+Changes from v2:
+ - Added EXPORT_SYMBOL_GPL() per Damien
+ - Added uapi blkzoned.h earlier and put shared enums/struct directly
+   into blkzoned.h
 
-> Also interactions with GPFS (which uses it's own set of reservations)
-> will become very tricky.
-> 
-> So I sincerely doubt we'll ever see SVC-originated persistent
-> reservations errors.
-> 
-> And as a side-note, this particular patch is included in SLES since
-> 2011. With no noticeable side-effect.
+ block/Kconfig                 |   8 ++
+ block/Makefile                |   1 +
+ block/blk-zoned.c             | 242 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blkdev.h        |  30 ++++++
+ include/uapi/linux/Kbuild     |   1 +
+ include/uapi/linux/blkzoned.h | 103 ++++++++++++++++++
+ 6 files changed, 385 insertions(+)
+ create mode 100644 block/blk-zoned.c
+ create mode 100644 include/uapi/linux/blkzoned.h
 
-OK, so can you actually say that someone has tested this scenario?  If
-not, do you have the capacity to test it?
-
-James
+diff --git a/block/Kconfig b/block/Kconfig
+index 1d4d624..6b0ad08 100644
+--- a/block/Kconfig
++++ b/block/Kconfig
+@@ -89,6 +89,14 @@ config BLK_DEV_INTEGRITY
+ 	T10/SCSI Data Integrity Field or the T13/ATA External Path
+ 	Protection.  If in doubt, say N.
+ 
++config BLK_DEV_ZONED
++	bool "Zoned block device support"
++	---help---
++	Block layer zoned block device support. This option enables
++	support for ZAC/ZBC host-managed and host-aware zoned block devices.
++
++	Say yes here if you have a ZAC or ZBC storage device.
++
+ config BLK_DEV_THROTTLING
+ 	bool "Block layer bio throttling support"
+ 	depends on BLK_CGROUP=y
+diff --git a/block/Makefile b/block/Makefile
+index 36acdd7..9371bc7 100644
+--- a/block/Makefile
++++ b/block/Makefile
+@@ -22,4 +22,5 @@ obj-$(CONFIG_IOSCHED_CFQ)	+= cfq-iosched.o
+ obj-$(CONFIG_BLOCK_COMPAT)	+= compat_ioctl.o
+ obj-$(CONFIG_BLK_CMDLINE_PARSER)	+= cmdline-parser.o
+ obj-$(CONFIG_BLK_DEV_INTEGRITY) += bio-integrity.o blk-integrity.o t10-pi.o
++obj-$(CONFIG_BLK_DEV_ZONED)	+= blk-zoned.o
+ obj-$(CONFIG_BLK_MQ_PCI)	+= blk-mq-pci.o
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+new file mode 100644
+index 0000000..bc4159d
+--- /dev/null
++++ b/block/blk-zoned.c
+@@ -0,0 +1,242 @@
++/*
++ * Zoned block device handling
++ *
++ * Copyright (c) 2015, Hannes Reinecke
++ * Copyright (c) 2015, SUSE Linux GmbH
++ *
++ * Copyright (c) 2016, Damien Le Moal
++ * Copyright (c) 2016, Western Digital
++ */
++
++#include <linux/kernel.h>
++#include <linux/module.h>
++#include <linux/rbtree.h>
++#include <linux/blkdev.h>
++
++static inline sector_t blk_zone_start(struct request_queue *q,
++				      sector_t sector)
++{
++	sector_t zone_mask = blk_queue_zone_size(q) - 1;
++
++	return sector & ~zone_mask;
++}
++
++static inline void blkdev_report_to_zone(struct block_device *bdev,
++					 void *rep,
++					 struct blk_zone *zone)
++{
++	sector_t offset = get_start_sect(bdev);
++
++	memcpy(zone, rep, sizeof(struct blk_zone));
++	zone->start -= offset;
++	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
++		zone->wp = zone->start + zone->len;
++	else
++		zone->wp -= offset;
++}
++
++/**
++ * blkdev_report_zones - Get zones information
++ * @bdev:	Target block device
++ * @sector:	Sector from which to report zones
++ * @zones:      Array of zone structures where to return the zones information
++ * @nr_zones:   Number of zone structures in the zone array
++ * @gfp_mask:	Memory allocation flags (for bio_alloc)
++ *
++ * Description:
++ *    Get zone information starting from the zone containing @sector.
++ *    The number of zone information reported may be less than the number
++ *    requested by @nr_zones. The number of zones actually reported is
++ *    returned in @nr_zones.
++ */
++int blkdev_report_zones(struct block_device *bdev,
++			sector_t sector,
++			struct blk_zone *zones,
++			unsigned int *nr_zones,
++			gfp_t gfp_mask)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++	struct blk_zone_report_hdr *hdr;
++	unsigned int nrz = *nr_zones;
++	struct page *page;
++	unsigned int nr_rep;
++	size_t rep_bytes;
++	unsigned int nr_pages;
++	struct bio *bio;
++	struct bio_vec *bv;
++	unsigned int i, nz;
++	unsigned int ofst;
++	void *addr;
++	int ret = 0;
++
++	if (!q)
++		return -ENXIO;
++
++	if (!blk_queue_is_zoned(q))
++		return -EOPNOTSUPP;
++
++	if (!nrz)
++		return 0;
++
++	if (sector > bdev->bd_part->nr_sects) {
++		*nr_zones = 0;
++		return 0;
++	}
++
++	/*
++	 * The zone report has a header. So make room for it in the
++	 * payload. Also make sure that the report fits in a single BIO
++	 * that will not be split down the stack.
++	 */
++	rep_bytes = sizeof(struct blk_zone_report_hdr) +
++		sizeof(struct blk_zone) * nrz;
++	rep_bytes = (rep_bytes + PAGE_SIZE - 1) & PAGE_MASK;
++	if (rep_bytes > (queue_max_sectors(q) << 9))
++		rep_bytes = queue_max_sectors(q) << 9;
++
++	nr_pages = min_t(unsigned int, BIO_MAX_PAGES,
++			 rep_bytes >> PAGE_SHIFT);
++	nr_pages = min_t(unsigned int, nr_pages,
++			 queue_max_segments(q));
++
++	bio = bio_alloc(gfp_mask, nr_pages);
++	if (!bio)
++		return -ENOMEM;
++
++	bio->bi_bdev = bdev;
++	bio->bi_iter.bi_sector = blk_zone_start(q, sector);
++	bio_set_op_attrs(bio, REQ_OP_ZONE_REPORT, 0);
++
++	for (i = 0; i < nr_pages; i++) {
++		page = alloc_page(gfp_mask);
++		if (!page) {
++			ret = -ENOMEM;
++			goto out;
++		}
++		if (!bio_add_page(bio, page, PAGE_SIZE, 0)) {
++			__free_page(page);
++			break;
++		}
++	}
++
++	if (i == 0)
++		ret = -ENOMEM;
++	else
++		ret = submit_bio_wait(bio);
++	if (ret)
++		goto out;
++
++	/*
++	 * Process the report resukt: skip the header and go through the
++	 * reported zones to fixup and fixup the zone information for
++	 * partitions. At the same time, return the zone information into
++	 * the zone array.
++	 */
++	nz = 0;
++	nr_rep = 0;
++	bio_for_each_segment_all(bv, bio, i) {
++
++		if (!bv->bv_page)
++			break;
++
++		addr = kmap_atomic(bv->bv_page);
++
++		/* Get header in the first page */
++		ofst = 0;
++		if (!nr_rep) {
++			hdr = (struct blk_zone_report_hdr *) addr;
++			nr_rep = hdr->nr_zones;
++			ofst = sizeof(struct blk_zone_report_hdr);
++		}
++
++		/* Fixup and report zones */
++		while (ofst < bv->bv_len &&
++		       nz < min_t(unsigned int, nr_rep, nrz)) {
++			blkdev_report_to_zone(bdev, addr + ofst, &zones[nz]);
++			ofst += sizeof(struct blk_zone);
++			nz++;
++		}
++
++		kunmap_atomic(addr);
++
++		if (!nr_rep)
++			break;
++
++	}
++
++out:
++	bio_for_each_segment_all(bv, bio, i)
++		__free_page(bv->bv_page);
++	bio_put(bio);
++
++	if (ret == 0)
++		*nr_zones = nz;
++
++	return ret;
++}
++EXPORT_SYMBOL_GPL(blkdev_report_zones);
++
++/**
++ * blkdev_reset_zones - Reset zones write pointer
++ * @bdev:       Target block device
++ * @sector:     Start sector of the first zone to reset
++ * @nr_sectors: Number of sectors, at least the length of one zone
++ * @gfp_mask:   Memory allocation flags (for bio_alloc)
++ *
++ * Description:
++ *    Reset the write pointer of the zones contained in the range
++ *    @sector..@sector+@nr_sectors. Specifying the entire disk sector range
++ *    is valid, but the specified range should not contain conventional zones.
++ */
++int blkdev_reset_zones(struct block_device *bdev,
++		       sector_t sector, sector_t nr_sectors,
++		       gfp_t gfp_mask)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++	sector_t zone_sectors;
++	sector_t end_sector = sector + nr_sectors;
++	struct bio *bio;
++	int ret;
++
++	if (!q)
++		return -ENXIO;
++
++	if (!blk_queue_is_zoned(q))
++		return -EOPNOTSUPP;
++
++	if (end_sector > bdev->bd_part->nr_sects)
++		/* Out of range */
++		return -EINVAL;
++
++	/* Check alignement (handle eventual smaller last zone) */
++	zone_sectors = blk_queue_zone_size(q);
++	if (sector & (zone_sectors - 1))
++		return -EINVAL;
++
++	if ((nr_sectors & (zone_sectors - 1)) &&
++	    end_sector != bdev->bd_part->nr_sects)
++		return -EINVAL;
++
++	while (sector < end_sector) {
++
++		bio = bio_alloc(gfp_mask, 0);
++		bio->bi_iter.bi_sector = sector;
++		bio->bi_bdev = bdev;
++		bio_set_op_attrs(bio, REQ_OP_ZONE_RESET, 0);
++
++		ret = submit_bio_wait(bio);
++		bio_put(bio);
++
++		if (ret)
++			return ret;
++
++		sector += zone_sectors;
++
++		/* This may take a while, so be nice to others */
++		cond_resched();
++
++	}
++
++	return 0;
++}
++EXPORT_SYMBOL_GPL(blkdev_reset_zones);
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index f19e16b..6316972 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -24,6 +24,7 @@
+ #include <linux/rcupdate.h>
+ #include <linux/percpu-refcount.h>
+ #include <linux/scatterlist.h>
++#include <linux/blkzoned.h>
+ 
+ struct module;
+ struct scsi_ioctl_command;
+@@ -302,6 +303,20 @@ struct queue_limits {
+ 	enum blk_zoned_model	zoned;
+ };
+ 
++#ifdef CONFIG_BLK_DEV_ZONED
++
++struct blk_zone_report_hdr {
++	unsigned int	nr_zones;
++	u8		padding[60];
++};
++
++extern int blkdev_report_zones(struct block_device *,
++				sector_t, struct blk_zone *,
++				unsigned int *, gfp_t);
++extern int blkdev_reset_zones(struct block_device *, sector_t,
++				sector_t, gfp_t);
++#endif /* CONFIG_BLK_DEV_ZONED */
++
+ struct request_queue {
+ 	/*
+ 	 * Together with queue_head for cacheline sharing
+@@ -654,6 +669,11 @@ static inline bool blk_queue_is_zoned(struct request_queue *q)
+ 	}
+ }
+ 
++static inline unsigned int blk_queue_zone_size(struct request_queue *q)
++{
++	return blk_queue_is_zoned(q) ? q->limits.chunk_sectors : 0;
++}
++
+ /*
+  * We regard a request as sync, if either a read or a sync write
+  */
+@@ -1401,6 +1421,16 @@ static inline bool bdev_is_zoned(struct block_device *bdev)
+ 	return false;
+ }
+ 
++static inline unsigned int bdev_zone_size(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_zone_size(q);
++
++	return 0;
++}
++
+ static inline int queue_dma_alignment(struct request_queue *q)
+ {
+ 	return q ? q->dma_alignment : 511;
+diff --git a/include/uapi/linux/Kbuild b/include/uapi/linux/Kbuild
+index dd60439..92466a6 100644
+--- a/include/uapi/linux/Kbuild
++++ b/include/uapi/linux/Kbuild
+@@ -70,6 +70,7 @@ header-y += bfs_fs.h
+ header-y += binfmts.h
+ header-y += blkpg.h
+ header-y += blktrace_api.h
++header-y += blkzoned.h
+ header-y += bpf_common.h
+ header-y += bpf_perf_event.h
+ header-y += bpf.h
+diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
+new file mode 100644
+index 0000000..a381721
+--- /dev/null
++++ b/include/uapi/linux/blkzoned.h
+@@ -0,0 +1,103 @@
++/*
++ * Zoned block devices handling.
++ *
++ * Copyright (C) 2015 Seagate Technology PLC
++ *
++ * Written by: Shaun Tancheff <shaun.tancheff@seagate.com>
++ *
++ * Modified by: Damien Le Moal <damien.lemoal@hgst.com>
++ * Copyright (C) 2016 Western Digital
++ *
++ * This file is licensed under  the terms of the GNU General Public
++ * License version 2. This program is licensed "as is" without any
++ * warranty of any kind, whether express or implied.
++ */
++#ifndef _UAPI_BLKZONED_H
++#define _UAPI_BLKZONED_H
++
++#include <linux/types.h>
++
++/**
++ * enum blk_zone_type - Types of zones allowed in a zoned device.
++ *
++ * @BLK_ZONE_TYPE_CONVENTIONAL: The zone has no write pointer and can be writen
++ *                              randomly. Zone reset has no effect on the zone.
++ * @BLK_ZONE_TYPE_SEQWRITE_REQ: The zone must be written sequentially
++ * @BLK_ZONE_TYPE_SEQWRITE_PREF: The zone can be written non-sequentially
++ *
++ * Any other value not defined is reserved and must be considered as invalid.
++ */
++enum blk_zone_type {
++	BLK_ZONE_TYPE_CONVENTIONAL	= 0x1,
++	BLK_ZONE_TYPE_SEQWRITE_REQ	= 0x2,
++	BLK_ZONE_TYPE_SEQWRITE_PREF	= 0x3,
++};
++
++/**
++ * enum blk_zone_cond - Condition [state] of a zone in a zoned device.
++ *
++ * @BLK_ZONE_COND_NOT_WP: The zone has no write pointer, it is conventional.
++ * @BLK_ZONE_COND_EMPTY: The zone is empty.
++ * @BLK_ZONE_COND_IMP_OPEN: The zone is open, but not explicitly opened.
++ * @BLK_ZONE_COND_EXP_OPEN: The zones was explicitly opened by an
++ *                          OPEN ZONE command.
++ * @BLK_ZONE_COND_CLOSED: The zone was [explicitly] closed after writing.
++ * @BLK_ZONE_COND_FULL: The zone is marked as full, possibly by a zone
++ *                      FINISH ZONE command.
++ * @BLK_ZONE_COND_READONLY: The zone is read-only.
++ * @BLK_ZONE_COND_OFFLINE: The zone is offline (sectors cannot be read/written).
++ *
++ * The Zone Condition state machine in the ZBC/ZAC standards maps the above
++ * deinitions as:
++ *   - ZC1: Empty         | BLK_ZONE_EMPTY
++ *   - ZC2: Implicit Open | BLK_ZONE_COND_IMP_OPEN
++ *   - ZC3: Explicit Open | BLK_ZONE_COND_EXP_OPEN
++ *   - ZC4: Closed        | BLK_ZONE_CLOSED
++ *   - ZC5: Full          | BLK_ZONE_FULL
++ *   - ZC6: Read Only     | BLK_ZONE_READONLY
++ *   - ZC7: Offline       | BLK_ZONE_OFFLINE
++ *
++ * Conditions 0x5 to 0xC are reserved by the current ZBC/ZAC spec and should
++ * be considered invalid.
++ */
++enum blk_zone_cond {
++	BLK_ZONE_COND_NOT_WP	= 0x0,
++	BLK_ZONE_COND_EMPTY	= 0x1,
++	BLK_ZONE_COND_IMP_OPEN	= 0x2,
++	BLK_ZONE_COND_EXP_OPEN	= 0x3,
++	BLK_ZONE_COND_CLOSED	= 0x4,
++	BLK_ZONE_COND_READONLY	= 0xD,
++	BLK_ZONE_COND_FULL	= 0xE,
++	BLK_ZONE_COND_OFFLINE	= 0xF,
++};
++
++/**
++ * struct blk_zone - Zone descriptor for BLKREPORTZONE ioctl.
++ *
++ * @start: Zone start in 512 B sector units
++ * @len: Zone length in 512 B sector units
++ * @wp: Zone write pointer location in 512 B sector units
++ * @type: see enum blk_zone_type for possible values
++ * @cond: see enum blk_zone_cond for possible values
++ * @non_seq: Flag indicating that the zone is using non-sequential resources
++ *           (for host-aware zoned block devices only).
++ * @reset: Flag indicating that a zone reset is recommended.
++ * @reserved: Padding to 64 B to match the ZBC/ZAC defined zone descriptor size.
++ *
++ * start, len and wp use the regular 512 B sector unit, regardless of the
++ * device logical block size. The overall structure size is 64 B to match the
++ * ZBC/ZAC defined zone descriptor and allow support for future additional
++ * zone information.
++ */
++struct blk_zone {
++	__u64	start;		/* Zone start sector */
++	__u64	len;		/* Zone length in number of sectors */
++	__u64	wp;		/* Zone write pointer position */
++	__u8	type;		/* Zone type */
++	__u8	cond;		/* Zone condition */
++	__u8	non_seq;	/* Non-sequential write resources active */
++	__u8	reset;		/* Reset write pointer recommended */
++	__u8	reserved[36];
++};
++
++#endif /* _UAPI_BLKZONED_H */
+-- 
+2.9.3
 
