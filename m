@@ -1,24 +1,53 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCHv2] MAINTAINERS: Update open-iscsi maintainers
-Date: Mon, 26 Sep 2016 18:18:23 -0700
-Message-ID: <20160927011823.GA25480@infradead.org>
-References: <1474928730-4947-1-git-send-email-lduncan@suse.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 1/3] megaraid_sas: mark symbols static where possible
+Date: Mon, 26 Sep 2016 21:19:05 -0400
+Message-ID: <yq1a8eu2l86.fsf@sermon.lab.mkp.net>
+References: <1474782672-32146-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41204 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754174AbcI0BSZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:18:25 -0400
-Content-Disposition: inline
-In-Reply-To: <1474928730-4947-1-git-send-email-lduncan@suse.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:34360 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756070AbcI0BTS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:19:18 -0400
+In-Reply-To: <1474782672-32146-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
+        Xie's message of "Sun, 25 Sep 2016 13:51:12 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, Chris Leech <cleech@redhat.com>, Mike Christie <mnc@redhat.com>
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
 
-On Mon, Sep 26, 2016 at 03:25:30PM -0700, Lee Duncan wrote:
-> Chris Leech and I are taking over as open-iscsi maintainers.
+>>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
 
-Can we get rid of the horribly unusable googlegroups list and just
-move everything to linux-scsi while we're at it?
+Baoyou> We get a few warnings when building kernel with W=1:
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:94:5: warning: no
+Baoyou> previous prototype for 'mega_mod64' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:112:5: warning: no
+Baoyou> previous prototype for 'mega_div64_32' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:177:6: warning: no
+Baoyou> previous prototype for 'MR_PopulateDrvRaidMap'
+Baoyou> [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:315:5: warning: no
+Baoyou> previous prototype for 'MR_GetSpanBlock' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:451:5: warning: no
+Baoyou> previous prototype for 'mr_spanset_get_span_block'
+Baoyou> [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:692:4: warning: no
+Baoyou> previous prototype for 'get_arm' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:815:4: warning: no
+Baoyou> previous prototype for 'MR_GetPhyParams' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:1293:4: warning: no
+Baoyou> previous prototype for 'megasas_get_best_arm_pd'
+Baoyou> [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:106:1: warning: no
+Baoyou> previous prototype for 'megasas_enable_intr_fusion'
+Baoyou> [-Wmissing-prototypes]
+Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:127:1: warning: no
+Baoyou> previous prototype for 'megasas_disable_intr_fusion'
+Baoyou> [-Wmissing-prototypes] ....
+
+Does not apply. Please make sure your patches are against my for-next
+branch.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
