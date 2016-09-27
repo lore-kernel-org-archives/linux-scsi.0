@@ -1,40 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: UAS driver seems to be reporting a 4k sector size for a 512 byte sector device?
-Date: Mon, 26 Sep 2016 21:24:24 -0400
-Message-ID: <yq160pi2kzb.fsf@sermon.lab.mkp.net>
-References: <20160926161926.cmayrily476v3wa7@thunk.org>
-        <20160926162511.GA1949@infradead.org>
-        <20160926215247.nplawebmdmyarldo@thunk.org>
+From: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCHv2] MAINTAINERS: Update open-iscsi maintainers
+Date: Mon, 26 Sep 2016 21:26:22 -0400
+Message-ID: <yq11t062kw1.fsf@sermon.lab.mkp.net>
+References: <1474928730-4947-1-git-send-email-lduncan@suse.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:35681 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932482AbcI0BZA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:25:00 -0400
-In-Reply-To: <20160926215247.nplawebmdmyarldo@thunk.org> (Theodore Ts'o's
-        message of "Mon, 26 Sep 2016 17:52:47 -0400")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDVIJONZ3YDRBREVU67QKGQEDAP7K5A-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <1474928730-4947-1-git-send-email-lduncan-IBi9RG/b67k@public.gmane.org> (Lee Duncan's
+	message of "Mon, 26 Sep 2016 15:25:30 -0700")
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Christie <mnc-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Theodore Ts'o <tytso@mit.edu>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net
 
->>>>> "Ted" == Theodore Ts'o <tytso@mit.edu> writes:
+>>>>> "Lee" == Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org> writes:
 
-Ted,
+Lee,
 
-Ted> sg_readcap doesn't report the physical sector size, just the
-Ted> logical block size:
+Lee> Chris Leech and I are taking over as open-iscsi maintainers.
 
-Ted> # sg_readcap /dev/sdd
-Ted> Read Capacity results:
-Ted>    Last logical block address=4000797359 (0xee7752af), Number of
-Ted>    blocks=4000797360 Logical block length=512 bytes
-Ted> Hence:
-Ted>    Device size: 2048408248320 bytes, 1953514.3 MiB, 2048.41 GB
+Do you want me to queue the MAINTAINER update?
 
-You need to run sg_readcap with the -l option to get to the physical
-block size exponent. Please let us know if that makes a difference.
+Lee>  * Removed git repository, since code in tree
+
+Is it your plan to go through the SCSI tree?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
