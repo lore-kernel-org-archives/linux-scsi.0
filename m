@@ -1,53 +1,96 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/3] megaraid_sas: mark symbols static where possible
-Date: Mon, 26 Sep 2016 21:19:05 -0400
-Message-ID: <yq1a8eu2l86.fsf@sermon.lab.mkp.net>
-References: <1474782672-32146-1-git-send-email-baoyou.xie@linaro.org>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: UFS API in the kernel
+Date: Tue, 27 Sep 2016 10:10:51 +0900
+Message-ID: <009f01d2185b$fcf71ef0$f6e55cd0$@samsung.com>
+References: <c6a8636a-98e6-61d0-ff4b-350fb3869699@synopsys.com>
+ <CGME20160926192330epcas2p4efa9f5e69c8591b6858a3eeb6290c986@epcas2p4.samsung.com>
+ <CAJVOszALc04xgNujHi2YdCGpTXNWDoyLVwYT2uSYy6faDLqmYA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34360 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756070AbcI0BTS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:19:18 -0400
-In-Reply-To: <1474782672-32146-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
-        Xie's message of "Sun, 25 Sep 2016 13:51:12 +0800")
+Received: from mailout1.samsung.com ([203.254.224.24]:38636 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756216AbcI0BUx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:20:53 -0400
+In-reply-to: <CAJVOszALc04xgNujHi2YdCGpTXNWDoyLVwYT2uSYy6faDLqmYA@mail.gmail.com>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Baoyou Xie <baoyou.xie@linaro.org>
-Cc: kashyap.desai@avagotech.com, sumit.saxena@avagotech.com, uday.lingala@avagotech.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
+To: 'Shaun Tancheff' <shaun.tancheff@seagate.com>, 'Joao Pinto' <Joao.Pinto@synopsys.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
+Hi.
 
-Baoyou> We get a few warnings when building kernel with W=1:
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:94:5: warning: no
-Baoyou> previous prototype for 'mega_mod64' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:112:5: warning: no
-Baoyou> previous prototype for 'mega_div64_32' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:177:6: warning: no
-Baoyou> previous prototype for 'MR_PopulateDrvRaidMap'
-Baoyou> [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:315:5: warning: no
-Baoyou> previous prototype for 'MR_GetSpanBlock' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:451:5: warning: no
-Baoyou> previous prototype for 'mr_spanset_get_span_block'
-Baoyou> [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:692:4: warning: no
-Baoyou> previous prototype for 'get_arm' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:815:4: warning: no
-Baoyou> previous prototype for 'MR_GetPhyParams' [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fp.c:1293:4: warning: no
-Baoyou> previous prototype for 'megasas_get_best_arm_pd'
-Baoyou> [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:106:1: warning: no
-Baoyou> previous prototype for 'megasas_enable_intr_fusion'
-Baoyou> [-Wmissing-prototypes]
-Baoyou> drivers/scsi/megaraid/megaraid_sas_fusion.c:127:1: warning: no
-Baoyou> previous prototype for 'megasas_disable_intr_fusion'
-Baoyou> [-Wmissing-prototypes] ....
+If you want to declare some things for user interface,
+is it be better to put those thing include/uapi/linux/ than include/linux?
 
-Does not apply. Please make sure your patches are against my for-next
-branch.
+Agreed with Mr. Pinto's opinion with respect to implementing additional ioctls.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Regards.
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Shaun Tancheff
+> Sent: Tuesday, September 27, 2016 4:23 AM
+> To: Joao Pinto
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+> Subject: Re: UFS API in the kernel
+> 
+> On Thu, Sep 22, 2016 at 10:21 AM, Joao Pinto <Joao.Pinto@synopsys.com>
+> wrote:
+> > Hi!
+> >
+> > I am designing an application that has the goal to be an utility for
+> > Unipro and UFS testing purposes. This application is going to run on
+> > top of a recent Linux Kernel containing the new UFS stack (including the
+> new DWC drivers).
+> >
+> > I am considering doing the following:
+> > a) Create a new config item called CONFIG_UFS_CHARDEV which is going
+> > to create a char device responsible to make some IOCTL available for
+> > user-space applications
+> > b) Create a linux/ufs.h header file that contains data structures
+> > declarations that will be needed in user-space applications
+> 
+> I am not very familiar with UFS devices, that said you should have an sgX
+> chardev being created already so you can handle SG_IO requests.
+> There also appear to be some sysfs entries being created.
+> 
+> So between sg and sysfs you should be able to handle any user-space out of
+> band requests without resorting to making a new chardev.
+> 
+> Adding more sysfs entries, if you need them, should be fine.
+> 
+> You may find it easier to expand on the existing interfaces than to get
+> consensus on a new driver and ioctls.
+> 
+> Hope this helps,
+> Shaun
+> 
+> > Could you please advise me about what the correct approach should be
+> > to make it as standard as possible and usable in the future?
+> >
+> > Thank you very much for your help!
+> >
+> > regards,
+> > Joao
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> > in the body of a message to majordomo@vger.kernel.org More majordomo
+> > info at
+> > https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_ma
+> > jordomo-2Dinfo.html&d=DQICaQ&c=IGDlg0lD0b-nebmJJ0Kp8A&r=Wg5NqlNlVTT7Ug
+> > l8V50qIHLe856QW0qfG3WVYGOrWzA&m=vJFB6pCywWtdvkgHz9Vc0jQz0xzeyZlr-7eCWY
+> > u88nM&s=yiQLPFpqmMrbqLZz1Jb3aNqOje2dRMLJHEzUDobwcXc&e=
+> 
+> 
+> 
+> --
+> Shaun Tancheff
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
+
