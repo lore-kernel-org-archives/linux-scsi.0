@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch v2] arcmsr: buffer overflow in arcmsr_iop_message_xfer()
-Date: Mon, 26 Sep 2016 21:08:51 -0400
-Message-ID: <yq1mviu2lp8.fsf@sermon.lab.mkp.net>
-References: <20160915134456.GA30277@mwanda>
-        <yq17fadz2l6.fsf@sermon.lab.mkp.net>
-        <20160923112226.rteir5ivjou64ffh@pd.tnic>
+Subject: Re: [PATCH] pm8001: mark symbols static where possible
+Date: Mon, 26 Sep 2016 21:12:24 -0400
+Message-ID: <yq1inti2ljb.fsf@sermon.lab.mkp.net>
+References: <1474638862-22595-1-git-send-email-baoyou.xie@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26944 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:27897 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755488AbcI0BJl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:09:41 -0400
-In-Reply-To: <20160923112226.rteir5ivjou64ffh@pd.tnic> (Borislav Petkov's
-        message of "Fri, 23 Sep 2016 13:22:26 +0200")
+        with ESMTP id S1754904AbcI0BNE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 21:13:04 -0400
+In-Reply-To: <1474638862-22595-1-git-send-email-baoyou.xie@linaro.org> (Baoyou
+        Xie's message of "Fri, 23 Sep 2016 21:54:22 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Borislav Petkov <bp@alien8.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Carpenter <dan.carpenter@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ching Huang <ching2048@areca.com.tw>, Hannes Reinicke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org, security@kernel.org
+To: Baoyou Xie <baoyou.xie@linaro.org>
+Cc: jinpu.wang@profitbricks.com, lindar_liu@usish.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, pmchba@pmcs.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, arnd@arndb.de, xie.baoyou@zte.com.cn
 
->>>>> "Borislav" == Borislav Petkov <bp@alien8.de> writes:
+>>>>> "Baoyou" == Baoyou Xie <baoyou.xie@linaro.org> writes:
 
-Borislav> Yap, Tomas said the kfree was missing on the error path but
-Borislav> can we simplify this further by doing the user_len check first
-Borislav> so that the kfree() is not even needed?
+Baoyou> We get 2 warnings when building kernel with W=1:
+Baoyou> drivers/scsi/pm8001/pm8001_sas.c:530:23: warning: no previous
+Baoyou> prototype for 'pm8001_alloc_dev' [-Wmissing-prototypes]
+Baoyou> drivers/scsi/pm8001/pm8001_hwi.c:4495:5: warning: no previous
+Baoyou> prototype for 'pm8001_chip_phy_stop_req' [-Wmissing-prototypes]
 
 Applied to 4.9/scsi-queue.
 
