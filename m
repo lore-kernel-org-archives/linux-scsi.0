@@ -1,28 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: remove old and unmaintained ISA driver
-Date: Mon, 26 Sep 2016 20:52:32 -0400
-Message-ID: <yq1zimu2mgf.fsf@sermon.lab.mkp.net>
-References: <1474300253-31351-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH next] scsi: fcoe: fix off by one in eth2fc_speed()
+Date: Mon, 26 Sep 2016 20:55:31 -0400
+Message-ID: <yq1vaxi2mbg.fsf@sermon.lab.mkp.net>
+References: <1471613617-21291-1-git-send-email-jthumshirn@suse.de>
+        <20160921205407.6304-1-vincent.stehle@laposte.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26369 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756735AbcI0Awy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 20:52:54 -0400
-In-Reply-To: <1474300253-31351-1-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Mon, 19 Sep 2016 08:50:46 -0700")
+Received: from userp1040.oracle.com ([156.151.31.81]:22434 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754852AbcI0A4L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Sep 2016 20:56:11 -0400
+In-Reply-To: <20160921205407.6304-1-vincent.stehle@laposte.net> ("Vincent
+        =?utf-8?Q?Stehl=C3=A9=22's?= message of "Wed, 21 Sep 2016 22:54:07 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, schmitzmic@gmail.com, linux@rainbow-software.org, fthain@telegraphics.com.au
+To: Vincent =?utf-8?Q?Stehl=C3=A9?= <vincent.stehle@laposte.net>
+Cc: linux-scsi@vger.kernel.org, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Vincent" == Vincent Stehlé <vincent.stehle@laposte.net> writes:
 
-Christoph> Per discussion in last year and last week there are a few old
-Christoph> ISA SCSI drivers that haven't seen any work since the dawn of
-Christoph> git, and most likely no users.  Drop them to speed up killing
-Christoph> off the scsi_module.c infrastruture.
+Vincent> This should be "< ARRAY_SIZE()" instead of "<= ARRAY_SIZE()".
 
 Applied to 4.9/scsi-queue.
 
