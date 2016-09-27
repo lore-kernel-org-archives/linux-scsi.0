@@ -1,61 +1,57 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 5/9] block: Extend blk_freeze_queue_start() to the
- non-blk-mq path
-Date: Tue, 27 Sep 2016 07:42:57 -0700
-Message-ID: <a8e8796e-7266-4c8a-a4eb-31cedf73ec8a@sandisk.com>
-References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
- <7c8af8d2-2ac9-2767-5e5f-8de72eba3814@sandisk.com>
- <CACVXFVO=GFp=ArC_FT+xPSmL84m01fX6bzReBQ8DeLQ4fUD5cQ@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [Question] Calling request_firmware under the spinlocks in file
+ advansys.c
+Date: Tue, 27 Sep 2016 17:16:11 +0200
+Message-ID: <8ec2185d-203e-71fa-c274-65faf338820f@suse.de>
+References: <57D7C470.5070505@oracle.com> <57EA5769.1080807@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CACVXFVO=GFp=ArC_FT+xPSmL84m01fX6bzReBQ8DeLQ4fUD5cQ-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <57EA5769.1080807@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Vaishali Thakkar <vaishali.thakkar@oracle.com>, Matthew Wilcox <matthew@wil.cx>, Hannes Reinecke <hare@suse.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/27/16 06:22, Ming Lei wrote:
-> On Tue, Sep 27, 2016 at 2:27 AM, Bart Van Assche
-> <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org> wrote:
->> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
->> ---
->>  block/blk-core.c | 15 ++++++---------
->>  1 file changed, 6 insertions(+), 9 deletions(-)
+On 09/27/2016 01:26 PM, Vaishali Thakkar wrote:
+> 
+> 
+> On Tuesday 13 September 2016 02:48 PM, Vaishali Thakkar wrote:
+>> Hi,
 >>
->> diff --git a/block/blk-core.c b/block/blk-core.c
->> index 8cc8006..5ecc7ab 100644
->> --- a/block/blk-core.c
->> +++ b/block/blk-core.c
->> @@ -689,7 +689,10 @@ void blk_freeze_queue_start(struct request_queue *q)
->>         freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
->>         if (freeze_depth == 1) {
->>                 percpu_ref_kill(&q->q_usage_counter);
->> -               blk_mq_run_hw_queues(q, false);
->> +               if (q->mq_ops)
->> +                       blk_mq_run_hw_queues(q, false);
->> +               else if (q->request_fn)
->> +                       blk_run_queue(q);
->
-> Just wondering if you have a non-blk-mq drivers which need this change,
-> cause we only hold .q_usage_counter for sync bio.
+>> In the file drivers/scsi/advansys.c we are calling function AdvISR at 2 instances
+>> [in the function advansys_reset and advansys_interrupt] while holding spinlock.
+>> Function AdvISR eventually calls request_firmware following this sequence of
+>> routines: 
+>>
+>> AdvISR -> adv_async_callback -> AdvResetChipAndSB -> AdvInitAsc3550Driver ->
+>> request_firmware
+>>
+>> According to the definition of request_firmware it should be called from user
+>> context where sleeping is allowed. And usually sleeping under the spin lock is
+>> not allowed. Is it really necessary to call AdvISR under spinlocks here? Are
+>> we taking care of sleeping related concern of request_firmware or am I
+>> overlooking something here?
+> 
+> Hi,
+> 
+> Any comments on this?
+> 
+AdvISR is the main interrupt handling routine, for which we definitely
+will want to have interupts disabled. Plus the SCSI parallel drivers
+(ab-) use the interrupt routine to do all sorts of things, and are
+thereby well versed to keep interrupts disabled for an extented amount
+of time.
+However, we don't really have a good way of handling a request firmware
+here; we probably would need to implement a workqueue to handle this
+properly ...
 
-Hello Ming Lei,
+Cheers,
 
-Patch 8/9 calls blk_quiesce_queue() and blk_resume_queue() from a code 
-path that is used in both blk-mq and non-blk-mq mode. Although it 
-wouldn't be hard to modify that patch such that it only uses these two 
-functions in blk-mq mode, that wouldn't be very elegant.
-
-Jens, regarding non-blk-mq mode and q_usage_counter: do you prefer that 
-I rework patch 8/9 such that blk_quiesce_queue() and blk_resume_queue() 
-are only used in blk-mq mode or are you OK with adding a 
-blk_queue_enter() call in get_request() and a blk_queue_exit() call to 
-__blk_put_request()?
-
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
