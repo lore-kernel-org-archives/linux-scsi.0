@@ -1,163 +1,78 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 3/3] g_NCR5380: Stop using scsi_module.c
-Date: Tue, 27 Sep 2016 14:55:17 +0200
-Message-ID: <201609271455.17930.linux@rainbow-software.org>
-References: <1474743545-4731-1-git-send-email-linux@rainbow-software.org> <1474743545-4731-4-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1609261132001.4881@nippy.intranet>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 5/9] block: Extend blk_freeze_queue_start() to the
+ non-blk-mq path
+Date: Tue, 27 Sep 2016 21:22:05 +0800
+Message-ID: <CACVXFVO=GFp=ArC_FT+xPSmL84m01fX6bzReBQ8DeLQ4fUD5cQ@mail.gmail.com>
+References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com> <7c8af8d2-2ac9-2767-5e5f-8de72eba3814@sandisk.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp-1b.atlantis.sk ([80.94.52.26]:56732 "EHLO
-        smtp-1b.atlantis.sk" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751088AbcI0MzZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 08:55:25 -0400
-In-Reply-To: <alpine.LNX.2.00.1609261132001.4881@nippy.intranet>
-Content-Disposition: inline
+Received: from mail-pf0-f193.google.com ([209.85.192.193]:34105 "EHLO
+        mail-pf0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751939AbcI0NWG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 09:22:06 -0400
+In-Reply-To: <7c8af8d2-2ac9-2767-5e5f-8de72eba3814@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On Monday 26 September 2016, Finn Thain wrote:
-
-[...]
-
-> Instead of this:
-> > +	if (scsi_add_host(instance, pdev)) {
-> > +		free_irq(irq, instance);
-> > +		goto out_unregister;
-> > +	}
-> > +	scsi_scan_host(instance);
-> > +	return instance;
+On Tue, Sep 27, 2016 at 2:27 AM, Bart Van Assche
+<bart.vanassche@sandisk.com> wrote:
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
+>  block/blk-core.c | 15 ++++++---------
+>  1 file changed, 6 insertions(+), 9 deletions(-)
 >
-> please use the following (note the missing NCR5380_exit() call):
->
-> +	if (scsi_add_host(instance, pdev))
-> +		goto out_free_irq;
-> +	scsi_scan_host(instance);
-> +	return(instance);
-> +
-> +out_free_irq:
-> +	if (instance->irq != NO_IRQ)
-> +		free_irq(instance->irq, instance);
-> +	NCR5380_exit(instance);
->
-> >  out_unregister:
-> > -	scsi_unregister(instance);
-> > +	scsi_host_put(instance);
-> >  out_release:
-> >  #ifndef SCSI_G_NCR5380_MEM
-> > -	release_region(card.NCR5380_map_name, region_size);
-> > +	release_region(base, region_size);
-> >  #else
-> >  	iounmap(iomem);
-> >  	release_mem_region(base, iomem_size);
-> >  #endif
-> > -	return 0;
-> > +	return NULL;
-> >  }
-> >
-> > -/**
-> > - *	generic_NCR5380_release_resources	-	free resources
-> > - *	@instance: host adapter to clean up
-> > - *
-> > - *	Free the generic interface resources from this adapter.
-> > - *
-> > - *	Locks: none
-> > - */
-> > -
-> > -static int generic_NCR5380_release_resources(struct Scsi_Host *instance)
-> > +static void generic_NCR5380_release_resources(struct Scsi_Host
-> > *instance) {
-> > +	scsi_remove_host(instance);
-> >  	if (instance->irq != NO_IRQ)
-> >  		free_irq(instance->irq, instance);
-> >  	NCR5380_exit(instance);
-> > @@ -364,7 +304,7 @@ static int generic_NCR5380_release_resources(struct
-> > Scsi_Host *instance) release_mem_region(instance->base,
-> > hostdata->iomem_size);
-> >  	}
-> >  #endif
-> > -	return 0;
-> > +	scsi_host_put(instance);
->
-> The sequence of operations here should be the same as the error path
-> above.
+> diff --git a/block/blk-core.c b/block/blk-core.c
+> index 8cc8006..5ecc7ab 100644
+> --- a/block/blk-core.c
+> +++ b/block/blk-core.c
+> @@ -689,7 +689,10 @@ void blk_freeze_queue_start(struct request_queue *q)
+>         freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+>         if (freeze_depth == 1) {
+>                 percpu_ref_kill(&q->q_usage_counter);
+> -               blk_mq_run_hw_queues(q, false);
+> +               if (q->mq_ops)
+> +                       blk_mq_run_hw_queues(q, false);
+> +               else if (q->request_fn)
+> +                       blk_run_queue(q);
 
-I put scsi_host_put() call at the end because the release_mem_region code (in 
-the MMIO case) dereferences the hostdata pointer. I don't think it's safe to 
-do after scsi_host_put().
+Just wondering if you have a non-blk-mq drivers which need this change,
+cause we only hold .q_usage_counter for sync bio.
 
-[...]
-
-> > +static int pnp_registered;
-> > +#endif /* !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP) */
-> > +
-> > +static int __init generic_NCR5380_init(void)
-> > +{
-> > +	int ret = 0;
-> > +
-> > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > +	ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
-> > +	if (!ret)
-> > +		pnp_registered = 1;
-> >  #endif
-> > +	ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
-> > +	if (!ret)
-> > +		isa_registered = 1;
-> > +
-> > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > +	if (pnp_registered)
-> > +		ret = 0;
-> > +#endif
-> > +	if (isa_registered)
-> > +		ret = 0;
-> > +
-> > +	return ret;
-> > +}
-> > +
-> > +static void __exit generic_NCR5380_exit(void)
-> > +{
-> > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > +	if (pnp_registered)
-> > +		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
-> > +#endif
-> > +	if (isa_registered)
-> > +		isa_unregister_driver(&generic_NCR5380_isa_driver);
-> > +}
-> > +
+>         }
+>  }
 >
-> I find that hard to follow. This should be equivalent and simpler:
+> @@ -700,17 +703,11 @@ void blk_freeze_queue_wait(struct request_queue *q)
 >
-> static int __init generic_NCR5380_init(void)
-> {
-> 	isa_ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
-> #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> 	pnp_ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
-> 	return pnp_ret ? isa_ret : 0;
-> #endif
-> 	return isa_ret;
-> }
+>  /*
+>   * Guarantee no request is in use, so we can change any data structure of
+> - * the queue afterward.
+> + * the queue afterward. Increases q->mq_freeze_depth and waits until
+> + * q->q_usage_counter drops to zero.
+>   */
+>  void blk_freeze_queue(struct request_queue *q)
+>  {
+> -       /*
+> -        * In the !blk_mq case we are only calling this to kill the
+> -        * q_usage_counter, otherwise this increases the freeze depth
+> -        * and waits for it to return to zero.  For this reason there is
+> -        * no blk_unfreeze_queue(), and blk_freeze_queue() is not
+> -        * exported to drivers as the only user for unfreeze is blk_mq.
+> -        */
+>         blk_freeze_queue_start(q);
+>         blk_freeze_queue_wait(q);
+>  }
+> --
+> 2.10.0
 >
-> static void __exit generic_NCR5380_exit(void)
-> {
-> 	if (!isa_ret)
-> 		isa_unregister_driver(&generic_NCR5380_isa_driver);
-> #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> 	if (!pnp_ret)
-> 		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
-> #endif
-> }
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-Doesn't make it any better, IMHO. Good that it's shorter but not cleaner - 
-especially this:
-> 	return pnp_ret ? isa_ret : 0;
 
-Also looking at the _exit function, meaning of isa_ret and pnp_ret is not 
-obvious there.
-
-Maybe we should have a module_isa_pnp_driver() macro.
 
 -- 
-Ondrej Zary
+Ming Lei
