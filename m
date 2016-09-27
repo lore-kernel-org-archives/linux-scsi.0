@@ -1,38 +1,54 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 5/9] block: Extend blk_freeze_queue_start() to the
- non-blk-mq path
-Date: Tue, 27 Sep 2016 08:55:42 -0700
-Message-ID: <d15c920e-8333-b970-4e8c-4a3fbf148bb4@sandisk.com>
-References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
- <7c8af8d2-2ac9-2767-5e5f-8de72eba3814@sandisk.com>
- <CACVXFVO=GFp=ArC_FT+xPSmL84m01fX6bzReBQ8DeLQ4fUD5cQ@mail.gmail.com>
- <a8e8796e-7266-4c8a-a4eb-31cedf73ec8a@sandisk.com>
+From: Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>
+Subject: Re: [PATCHv2] MAINTAINERS: Update open-iscsi maintainers
+Date: Tue, 27 Sep 2016 09:16:16 -0700
+Message-ID: <ed4c81bb-be4e-ed09-0147-e360265687a8@suse.com>
+References: <1474928730-4947-1-git-send-email-lduncan@suse.com>
+ <yq11t062kw1.fsf@sermon.lab.mkp.net>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <a8e8796e-7266-4c8a-a4eb-31cedf73ec8a-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBD54HHNYIIIP7NVKX4CRUBDXZBWV4-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <yq11t062kw1.fsf-+q57XtR/GgMb6DWv4sQWN6xOck334EZe@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Mike Christie <mnc-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 09/27/2016 07:42 AM, Bart Van Assche wrote:
-> Jens, regarding non-blk-mq mode and q_usage_counter: do you prefer that
-> I rework patch 8/9 such that blk_quiesce_queue() and blk_resume_queue()
-> are only used in blk-mq mode or are you OK with adding a
-> blk_queue_enter() call in get_request() and a blk_queue_exit() call to
-> __blk_put_request()?
+Hello Martin:
 
-(replying to my own e-mail)
+On 09/26/2016 06:26 PM, Martin K. Petersen wrote:
+>>>>>> "Lee" == Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org> writes:
+> 
+> Lee,
+> 
+> Lee> Chris Leech and I are taking over as open-iscsi maintainers.
+> 
+> Do you want me to queue the MAINTAINER update?
 
-Although it is easy to make q_usage_counter count non-blk-mq requests, 
-extending the blk_quiesce_queue() waiting mechanism to the non-blk-mq 
-path is non-trivial. To limit the number of changes in this patch series 
-I will drop the non-blk-mq changes from this patch series.
+Yes, that would be great. Thank you.
 
-Bart.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Lee>  * Removed git repository, since code in tree
+> 
+> Is it your plan to go through the SCSI tree?
+> 
+
+Yes, the iscsi initiator kernel code updates have been going through the
+Linux SCSI mailing list and repository for a while, now. The open-iscsi
+kernel code git repository currently mentioned in the MAINTAINERS file
+no longer exists.
+-- 
+Lee Duncan
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
