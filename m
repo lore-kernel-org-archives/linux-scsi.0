@@ -1,68 +1,59 @@
 From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: [PATCH v3 2/7] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-Date: Wed, 28 Sep 2016 10:22:32 +0900
-Message-ID: <1475025757-6340-3-git-send-email-damien.lemoal@hgst.com>
+Subject: [PATCH v3 4/7] block: Define zoned block device operations
+Date: Wed, 28 Sep 2016 10:22:34 +0900
+Message-ID: <1475025757-6340-5-git-send-email-damien.lemoal@hgst.com>
 References: <1475025757-6340-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:31916 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933226AbcI1BW5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 21:22:57 -0400
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1475025757-6340-1-git-send-email-damien.lemoal@hgst.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+List-Id: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+From: Shaun Tancheff <shaun.tancheff@seagate.com>
 
-The queue limits already have a 'chunk_sectors' setting, so
-we should be presenting it via sysfs.
+Define REQ_OP_ZONE_REPORT and REQ_OP_ZONE_RESET for handling zones of
+host-managed and host-aware zoned block devices. With with these two
+new operations, the total number of operations defined reaches 8 and
+still fits with the 3 bits definition of REQ_OP_BITS.
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
 ---
- block/blk-sysfs.c | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ block/blk-core.c          | 4 ++++
+ include/linux/blk_types.h | 2 ++
+ 2 files changed, 6 insertions(+)
 
-diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index ff9cd9c..488c2e2 100644
---- a/block/blk-sysfs.c
-+++ b/block/blk-sysfs.c
-@@ -130,6 +130,11 @@ static ssize_t queue_physical_block_size_show(struct request_queue *q, char *pag
- 	return queue_var_show(queue_physical_block_size(q), page);
- }
- 
-+static ssize_t queue_chunk_sectors_show(struct request_queue *q, char *page)
-+{
-+	return queue_var_show(q->limits.chunk_sectors, page);
-+}
-+
- static ssize_t queue_io_min_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show(queue_io_min(q), page);
-@@ -455,6 +460,11 @@ static struct queue_sysfs_entry queue_physical_block_size_entry = {
- 	.show = queue_physical_block_size_show,
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 14d7c07..e4eda5d 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1941,6 +1941,10 @@ generic_make_request_checks(struct bio *bio)
+ 	case REQ_OP_WRITE_SAME:
+ 		if (!bdev_write_same(bio->bi_bdev))
+ 			goto not_supported;
++	case REQ_OP_ZONE_REPORT:
++	case REQ_OP_ZONE_RESET:
++		if (!bdev_is_zoned(bio->bi_bdev))
++			goto not_supported;
+ 		break;
+ 	default:
+ 		break;
+diff --git a/include/linux/blk_types.h b/include/linux/blk_types.h
+index cd395ec..dd50dce 100644
+--- a/include/linux/blk_types.h
++++ b/include/linux/blk_types.h
+@@ -243,6 +243,8 @@ enum req_op {
+ 	REQ_OP_SECURE_ERASE,	/* request to securely erase sectors */
+ 	REQ_OP_WRITE_SAME,	/* write same block many times */
+ 	REQ_OP_FLUSH,		/* request for cache flush */
++	REQ_OP_ZONE_REPORT,	/* Get zone information */
++	REQ_OP_ZONE_RESET,	/* Reset a zone write pointer */
  };
  
-+static struct queue_sysfs_entry queue_chunk_sectors_entry = {
-+	.attr = {.name = "chunk_sectors", .mode = S_IRUGO },
-+	.show = queue_chunk_sectors_show,
-+};
-+
- static struct queue_sysfs_entry queue_io_min_entry = {
- 	.attr = {.name = "minimum_io_size", .mode = S_IRUGO },
- 	.show = queue_io_min_show,
-@@ -555,6 +565,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_hw_sector_size_entry.attr,
- 	&queue_logical_block_size_entry.attr,
- 	&queue_physical_block_size_entry.attr,
-+	&queue_chunk_sectors_entry.attr,
- 	&queue_io_min_entry.attr,
- 	&queue_io_opt_entry.attr,
- 	&queue_discard_granularity_entry.attr,
+ #define REQ_OP_BITS 3
 -- 
 2.7.4
 
