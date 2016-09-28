@@ -1,124 +1,131 @@
-From: subhashj@codeaurora.org
-Subject: Re: UFS API in the kernel
-Date: Tue, 27 Sep 2016 16:05:18 -0700
-Message-ID: <7275e74a9689721ea612fbc6eca555be@codeaurora.org>
-References: <c6a8636a-98e6-61d0-ff4b-350fb3869699@synopsys.com>
- <CGME20160926192330epcas2p4efa9f5e69c8591b6858a3eeb6290c986@epcas2p4.samsung.com>
- <CAJVOszALc04xgNujHi2YdCGpTXNWDoyLVwYT2uSYy6faDLqmYA@mail.gmail.com>
- <009f01d2185b$fcf71ef0$f6e55cd0$@samsung.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 3/3] g_NCR5380: Stop using scsi_module.c
+Date: Wed, 28 Sep 2016 10:06:03 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1609280954090.358@nippy.intranet>
+References: <1474743545-4731-1-git-send-email-linux@rainbow-software.org> <1474743545-4731-4-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1609261132001.4881@nippy.intranet> <201609271455.17930.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <009f01d2185b$fcf71ef0$f6e55cd0$@samsung.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: 'Shaun Tancheff' <shaun.tancheff@seagate.com>, 'Joao Pinto' <Joao.Pinto@synopsys.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:35126 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932342AbcI1AFs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 20:05:48 -0400
+In-Reply-To: <201609271455.17930.linux@rainbow-software.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hi Joao,
 
+On Tue, 27 Sep 2016, Ondrej Zary wrote:
 
-On 2016-09-26 18:10, Kiwoong Kim wrote:
-> Hi.
+> On Monday 26 September 2016, Finn Thain wrote:
 > 
-> If you want to declare some things for user interface,
-> is it be better to put those thing include/uapi/linux/ than 
-> include/linux?
+> [...]
 > 
-> Agreed with Mr. Pinto's opinion with respect to implementing additional 
-> ioctls.
+> > > @@ -364,7 +304,7 @@ static int generic_NCR5380_release_resources(struct
+> > > Scsi_Host *instance) release_mem_region(instance->base,
+> > > hostdata->iomem_size);
+> > >  	}
+> > >  #endif
+> > > -	return 0;
+> > > +	scsi_host_put(instance);
+> >
+> > The sequence of operations here should be the same as the error path
+> > above.
+> 
+> I put scsi_host_put() call at the end because the release_mem_region 
+> code (in the MMIO case) dereferences the hostdata pointer. I don't think 
+> it's safe to do after scsi_host_put().
 
-Yes, "scsi_host_template" allows the LLD's to export their ioctl 
-callback and then you can use the sg interface to issue UFS specific 
-ioctls. We had implemented similar ioctl for our use, here is the 
-reference code: 
-https://source.codeaurora.org/quic/la/kernel/msm-3.18/tree/drivers/scsi/ufs/ufshcd.c?h=LA.HB.1.1.1.c2#n6791. 
-This was mainly done to  export the UFS query request interface to user 
-space. Declarations where exported under include/uapi/scsi/ufs/ . If you 
-want to build upon this already existing functionality, i can post the 
-formal patch on mailing list.
+It's funny you say that, I already fixed a few of those use-after-free 
+bugs in the other 5380 drivers. To avoid the bug, you'd need to use a 
+temporary variable, like the fixes I did elsewhere.
 
-Regards,
-Subhash
-
+Don't worry about changing it, this part of the driver gets revisited in 
+my existing patch queue anyway.
 
 > 
-> Regards.
+> [...]
 > 
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Shaun Tancheff
->> Sent: Tuesday, September 27, 2016 4:23 AM
->> To: Joao Pinto
->> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
->> Subject: Re: UFS API in the kernel
->> 
->> On Thu, Sep 22, 2016 at 10:21 AM, Joao Pinto <Joao.Pinto@synopsys.com>
->> wrote:
->> > Hi!
->> >
->> > I am designing an application that has the goal to be an utility for
->> > Unipro and UFS testing purposes. This application is going to run on
->> > top of a recent Linux Kernel containing the new UFS stack (including the
->> new DWC drivers).
->> >
->> > I am considering doing the following:
->> > a) Create a new config item called CONFIG_UFS_CHARDEV which is going
->> > to create a char device responsible to make some IOCTL available for
->> > user-space applications
->> > b) Create a linux/ufs.h header file that contains data structures
->> > declarations that will be needed in user-space applications
->> 
->> I am not very familiar with UFS devices, that said you should have an 
->> sgX
->> chardev being created already so you can handle SG_IO requests.
->> There also appear to be some sysfs entries being created.
->> 
->> So between sg and sysfs you should be able to handle any user-space 
->> out of
->> band requests without resorting to making a new chardev.
->> 
->> Adding more sysfs entries, if you need them, should be fine.
->> 
->> You may find it easier to expand on the existing interfaces than to 
->> get
->> consensus on a new driver and ioctls.
->> 
->> Hope this helps,
->> Shaun
->> 
->> > Could you please advise me about what the correct approach should be
->> > to make it as standard as possible and usable in the future?
->> >
->> > Thank you very much for your help!
->> >
->> > regards,
->> > Joao
->> > --
->> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
->> > in the body of a message to majordomo@vger.kernel.org More majordomo
->> > info at
->> > https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_ma
->> > jordomo-2Dinfo.html&d=DQICaQ&c=IGDlg0lD0b-nebmJJ0Kp8A&r=Wg5NqlNlVTT7Ug
->> > l8V50qIHLe856QW0qfG3WVYGOrWzA&m=vJFB6pCywWtdvkgHz9Vc0jQz0xzeyZlr-7eCWY
->> > u88nM&s=yiQLPFpqmMrbqLZz1Jb3aNqOje2dRMLJHEzUDobwcXc&e=
->> 
->> 
->> 
->> --
->> Shaun Tancheff
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
->> in
->> the body of a message to majordomo@vger.kernel.org More majordomo info 
->> at
->> http://vger.kernel.org/majordomo-info.html
+> > > +static int pnp_registered;
+> > > +#endif /* !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP) */
+> > > +
+> > > +static int __init generic_NCR5380_init(void)
+> > > +{
+> > > +	int ret = 0;
+> > > +
+> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
+> > > +	ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
+> > > +	if (!ret)
+> > > +		pnp_registered = 1;
+> > >  #endif
+> > > +	ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
+> > > +	if (!ret)
+> > > +		isa_registered = 1;
+> > > +
+> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
+> > > +	if (pnp_registered)
+> > > +		ret = 0;
+> > > +#endif
+> > > +	if (isa_registered)
+> > > +		ret = 0;
+> > > +
+> > > +	return ret;
+> > > +}
+> > > +
+> > > +static void __exit generic_NCR5380_exit(void)
+> > > +{
+> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
+> > > +	if (pnp_registered)
+> > > +		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
+> > > +#endif
+> > > +	if (isa_registered)
+> > > +		isa_unregister_driver(&generic_NCR5380_isa_driver);
+> > > +}
+> > > +
+> >
+> > I find that hard to follow. This should be equivalent and simpler:
+> >
+> > static int __init generic_NCR5380_init(void)
+> > {
+> > 	isa_ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
+> > #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
+> > 	pnp_ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
+> > 	return pnp_ret ? isa_ret : 0;
+> > #endif
+> > 	return isa_ret;
+> > }
+> >
+> > static void __exit generic_NCR5380_exit(void)
+> > {
+> > 	if (!isa_ret)
+> > 		isa_unregister_driver(&generic_NCR5380_isa_driver);
+> > #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
+> > 	if (!pnp_ret)
+> > 		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
+> > #endif
+> > }
+> 
+> Doesn't make it any better, IMHO. Good that it's shorter but not cleaner - 
+> especially this:
+> > 	return pnp_ret ? isa_ret : 0;
+
+The problem with that line is that pnp_ret is always discarded, same as in 
+your version. I think my version makes that clear, which is what matters 
+to me.
+
+> 
+> Also looking at the _exit function, meaning of isa_ret and pnp_ret is not 
+> obvious there.
+> 
+> Maybe we should have a module_isa_pnp_driver() macro.
 > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+FWIW I would hope that the hypothetical definition of this 
+`module_isa_pnp_driver' macro would have the same properties as my 
+version: shorter, uses no temporaries and uses one less #ifdef, and is 
+generally easier for me to read.
+
+-- 
