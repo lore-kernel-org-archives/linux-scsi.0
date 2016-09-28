@@ -1,258 +1,138 @@
-From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: [PATCH v4 7/7] blk-zoned: implement ioctls
-Date: Wed, 28 Sep 2016 17:45:39 +0900
-Message-ID: <1475052339-10202-8-git-send-email-damien.lemoal@hgst.com>
-References: <1475052339-10202-1-git-send-email-damien.lemoal@hgst.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Re: UFS API in the kernel
+Date: Wed, 28 Sep 2016 10:19:50 +0100
+Message-ID: <875b9e3c-b413-97c2-3731-b8977e7618fd@synopsys.com>
+References: <c6a8636a-98e6-61d0-ff4b-350fb3869699@synopsys.com>
+ <CGME20160926192330epcas2p4efa9f5e69c8591b6858a3eeb6290c986@epcas2p4.samsung.com>
+ <CAJVOszALc04xgNujHi2YdCGpTXNWDoyLVwYT2uSYy6faDLqmYA@mail.gmail.com>
+ <009f01d2185b$fcf71ef0$f6e55cd0$@samsung.com>
+ <7275e74a9689721ea612fbc6eca555be@codeaurora.org>
+ <99ac538d-5123-a58b-247d-160176f63a3d@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1475052339-10202-1-git-send-email-damien.lemoal@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <99ac538d-5123-a58b-247d-160176f63a3d@synopsys.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: subhashj@codeaurora.org, Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: 'Shaun Tancheff' <shaun.tancheff@seagate.com>, 'Joao Pinto' <Joao.Pinto@synopsys.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Shaun Tancheff <shaun@tancheff.com>
 
-Adds the new BLKREPORTZONE and BLKRESETZONE ioctls for respectively
-obtaining the zone configuration of a zoned block device and resetting
-the write pointer of sequential zones of a zoned block device.
+Hi again!
+Could you also send me an example of how you are using the IOCTL from your user
+app (send/receive data)? I already have my implemented but you use a different
+mechanism (I have checked your structures in uapi/scsi/ufs/) and I have to port
+it! Thanks!
 
-The BLKREPORTZONE ioctl maps directly to a single call of the function
-blkdev_report_zones. The zone information result is passed as an array
-of struct blk_zone identical to the structure used internally for
-processing the REQ_OP_ZONE_REPORT operation.  The BLKRESETZONE ioctl
-maps to a single call of the blkdev_reset_zones function.
 
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
----
- block/blk-zoned.c             | 93 +++++++++++++++++++++++++++++++++++++++++++
- block/ioctl.c                 |  4 ++
- include/linux/blkdev.h        | 21 ++++++++++
- include/uapi/linux/blkzoned.h | 40 +++++++++++++++++++
- include/uapi/linux/fs.h       |  4 ++
- 5 files changed, 162 insertions(+)
-
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 1603573..667f95d 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -255,3 +255,96 @@ int blkdev_reset_zones(struct block_device *bdev,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(blkdev_reset_zones);
-+
-+/**
-+ * BLKREPORTZONE ioctl processing.
-+ * Called from blkdev_ioctl.
-+ */
-+int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+			      unsigned int cmd, unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct request_queue *q;
-+	struct blk_zone_report rep;
-+	struct blk_zone *zones;
-+	int ret;
-+
-+	if (!argp)
-+		return -EINVAL;
-+
-+	q = bdev_get_queue(bdev);
-+	if (!q)
-+		return -ENXIO;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -ENOTTY;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (copy_from_user(&rep, argp, sizeof(struct blk_zone_report)))
-+		return -EFAULT;
-+
-+	if (!rep.nr_zones)
-+		return -EINVAL;
-+
-+	zones = kcalloc(rep.nr_zones, sizeof(struct blk_zone), GFP_KERNEL);
-+	if (!zones)
-+		return -ENOMEM;
-+
-+	ret = blkdev_report_zones(bdev, rep.sector,
-+				  zones, &rep.nr_zones,
-+				  GFP_KERNEL);
-+	if (ret)
-+		goto out;
-+
-+	if (copy_to_user(argp, &rep, sizeof(struct blk_zone_report))) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+
-+	if (rep.nr_zones) {
-+		if (copy_to_user(argp + sizeof(struct blk_zone_report), zones,
-+				 sizeof(struct blk_zone) * rep.nr_zones))
-+			ret = -EFAULT;
-+	}
-+
-+ out:
-+	kfree(zones);
-+
-+	return ret;
-+}
-+
-+/**
-+ * BLKRESETZONE ioctl processing.
-+ * Called from blkdev_ioctl.
-+ */
-+int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+			     unsigned int cmd, unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct request_queue *q;
-+	struct blk_zone_range zrange;
-+
-+	if (!argp)
-+		return -EINVAL;
-+
-+	q = bdev_get_queue(bdev);
-+	if (!q)
-+		return -ENXIO;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -ENOTTY;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	if (copy_from_user(&zrange, argp, sizeof(struct blk_zone_range)))
-+		return -EFAULT;
-+
-+	return blkdev_reset_zones(bdev, zrange.sector, zrange.nr_sectors,
-+				  GFP_KERNEL);
-+}
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..448f78a 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -513,6 +513,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 				BLKDEV_DISCARD_SECURE);
- 	case BLKZEROOUT:
- 		return blk_ioctl_zeroout(bdev, mode, arg);
-+	case BLKREPORTZONE:
-+		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
-+	case BLKRESETZONE:
-+		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
- 	case HDIO_GETGEO:
- 		return blkdev_getgeo(bdev, argp);
- 	case BLKRAGET:
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 252043f..90097dd 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -316,6 +316,27 @@ extern int blkdev_report_zones(struct block_device *bdev,
- extern int blkdev_reset_zones(struct block_device *bdev, sector_t sectors,
- 			      sector_t nr_sectors, gfp_t gfp_mask);
- 
-+extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+				     unsigned int cmd, unsigned long arg);
-+extern int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+				    unsigned int cmd, unsigned long arg);
-+
-+#else /* CONFIG_BLK_DEV_ZONED */
-+
-+static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
-+					    fmode_t mode, unsigned int cmd,
-+					    unsigned long arg)
-+{
-+	return -ENOTTY;
-+}
-+
-+static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
-+					   fmode_t mode, unsigned int cmd,
-+					   unsigned long arg)
-+{
-+	return -ENOTTY;
-+}
-+
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- struct request_queue {
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index a381721..40d1d7b 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -16,6 +16,7 @@
- #define _UAPI_BLKZONED_H
- 
- #include <linux/types.h>
-+#include <linux/ioctl.h>
- 
- /**
-  * enum blk_zone_type - Types of zones allowed in a zoned device.
-@@ -100,4 +101,43 @@ struct blk_zone {
- 	__u8	reserved[36];
- };
- 
-+/**
-+ * struct blk_zone_report - BLKREPORTZONE ioctl request/reply
-+ *
-+ * @sector: starting sector of report
-+ * @nr_zones: IN maximum / OUT actual
-+ * @reserved: padding to 16 byte alignment
-+ * @zones: Space to hold @nr_zones @zones entries on reply.
-+ *
-+ * The array of at most @nr_zones must follow this structure in memory.
-+ */
-+struct blk_zone_report {
-+	__u64		sector;
-+	__u32		nr_zones;
-+	__u8		reserved[4];
-+	struct blk_zone zones[0];
-+} __packed;
-+
-+/**
-+ * struct blk_zone_range - BLKRESETZONE ioctl request
-+ * @sector: starting sector of the first zone to issue reset write pointer
-+ * @nr_sectors: Total number of sectors of 1 or more zones to reset
-+ */
-+struct blk_zone_range {
-+	__u64		sector;
-+	__u64		nr_sectors;
-+};
-+
-+/**
-+ * Zoned block device ioctl's:
-+ *
-+ * @BLKREPORTZONE: Get zone information. Takes a zone report as argument.
-+ *                 The zone report will start from the zone containing the
-+ *                 sector specified in the report request structure.
-+ * @BLKRESETZONE: Reset the write pointer of the zones in the specified
-+ *                sector range. The sector range must be zone aligned.
-+ */
-+#define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
-+#define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
-+
- #endif /* _UAPI_BLKZONED_H */
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 3b00f7c..e0fc7f0 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -222,6 +222,10 @@ struct fsxattr {
- #define BLKSECDISCARD _IO(0x12,125)
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
-+/*
-+ * A jump here: 130-131 are reserved for zoned block devices
-+ * (see uapi/linux/blkzoned.h)
-+ */
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
--- 
-2.7.4
-
+On 9/28/2016 10:06 AM, Joao Pinto wrote:
+> 
+> Hi Subhash,
+> 
+> On 9/28/2016 12:05 AM, subhashj@codeaurora.org wrote:
+>> Hi Joao,
+>>
+>>
+>> On 2016-09-26 18:10, Kiwoong Kim wrote:
+>>> Hi.
+>>>
+>>> If you want to declare some things for user interface,
+>>> is it be better to put those thing include/uapi/linux/ than include/linux?
+>>>
+>>> Agreed with Mr. Pinto's opinion with respect to implementing additional ioctls.
+>>
+>> Yes, "scsi_host_template" allows the LLD's to export their ioctl callback and
+>> then you can use the sg interface to issue UFS specific ioctls. We had
+>> implemented similar ioctl for our use, here is the reference code:
+>> https://source.codeaurora.org/quic/la/kernel/msm-3.18/tree/drivers/scsi/ufs/ufshcd.c?h=LA.HB.1.1.1.c2#n6791.
+>> This was mainly done to  export the UFS query request interface to user space.
+>> Declarations where exported under include/uapi/scsi/ufs/ . If you want to build
+>> upon this already existing functionality, i can post the formal patch on mailing
+>> list.
+> 
+> Yes, of course I have interest on building on top of what you have done already.
+> Did yu submit this patch to the kernel already? Could you please send me the
+> patch and kernel version to apply?
+> 
+> Thanks,
+> Joao
+> 
+>>
+>> Regards,
+>> Subhash
+>>
+>>
+>>>
+>>> Regards.
+>>>
+>>>> -----Original Message-----
+>>>> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>>>> owner@vger.kernel.org] On Behalf Of Shaun Tancheff
+>>>> Sent: Tuesday, September 27, 2016 4:23 AM
+>>>> To: Joao Pinto
+>>>> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org
+>>>> Subject: Re: UFS API in the kernel
+>>>>
+>>>> On Thu, Sep 22, 2016 at 10:21 AM, Joao Pinto <Joao.Pinto@synopsys.com>
+>>>> wrote:
+>>>>> Hi!
+>>>>>
+>>>>> I am designing an application that has the goal to be an utility for
+>>>>> Unipro and UFS testing purposes. This application is going to run on
+>>>>> top of a recent Linux Kernel containing the new UFS stack (including the
+>>>> new DWC drivers).
+>>>>>
+>>>>> I am considering doing the following:
+>>>>> a) Create a new config item called CONFIG_UFS_CHARDEV which is going
+>>>>> to create a char device responsible to make some IOCTL available for
+>>>>> user-space applications
+>>>>> b) Create a linux/ufs.h header file that contains data structures
+>>>>> declarations that will be needed in user-space applications
+>>>>
+>>>> I am not very familiar with UFS devices, that said you should have an sgX
+>>>> chardev being created already so you can handle SG_IO requests.
+>>>> There also appear to be some sysfs entries being created.
+>>>>
+>>>> So between sg and sysfs you should be able to handle any user-space out of
+>>>> band requests without resorting to making a new chardev.
+>>>>
+>>>> Adding more sysfs entries, if you need them, should be fine.
+>>>>
+>>>> You may find it easier to expand on the existing interfaces than to get
+>>>> consensus on a new driver and ioctls.
+>>>>
+>>>> Hope this helps,
+>>>> Shaun
+>>>>
+>>>>> Could you please advise me about what the correct approach should be
+>>>>> to make it as standard as possible and usable in the future?
+>>>>>
+>>>>> Thank you very much for your help!
+>>>>>
+>>>>> regards,
+>>>>> Joao
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+>>>>> in the body of a message to majordomo@vger.kernel.org More majordomo
+>>>>> info at
+>>>>> https://urldefense.proofpoint.com/v2/url?u=http-3A__vger.kernel.org_ma
+>>>>> jordomo-2Dinfo.html&d=DQICaQ&c=IGDlg0lD0b-nebmJJ0Kp8A&r=Wg5NqlNlVTT7Ug
+>>>>> l8V50qIHLe856QW0qfG3WVYGOrWzA&m=vJFB6pCywWtdvkgHz9Vc0jQz0xzeyZlr-7eCWY
+>>>>> u88nM&s=yiQLPFpqmMrbqLZz1Jb3aNqOje2dRMLJHEzUDobwcXc&e=
+>>>>
+>>>>
+>>>>
+>>>> -- 
+>>>> Shaun Tancheff
+>>>> -- 
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org More majordomo info at
+>>>> http://vger.kernel.org/majordomo-info.html
+>>>
+>>>
+>>> -- 
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
