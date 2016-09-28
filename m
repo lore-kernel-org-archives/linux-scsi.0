@@ -1,52 +1,32 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v4 3/7] block: update chunk_sectors in blk_stack_limits()
-Date: Wed, 28 Sep 2016 20:33:26 -0500
-Message-ID: <CAJVOszBXrjXautAZer=AWYbLnB69eHNHRy_EC87w-RLPW-Cr2g@mail.gmail.com>
-References: <1475052339-10202-1-git-send-email-damien.lemoal@hgst.com> <1475052339-10202-4-git-send-email-damien.lemoal@hgst.com>
+From: K May <info@abweb.cz>
+Subject: Zprava pro vas!!
+Date: Wed, 28 Sep 2016 16:01:07 -0700
+Message-ID: <1dc74c003cb18df290bcd965abd308de__20401.4345574707$1475112895$gmane$org@localhost>
+Reply-To: kmaylng13@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1475052339-10202-4-git-send-email-damien.lemoal@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@hgst.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Hannes Reinecke <hare@suse.com>
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from [51.140.179.190] ([51.140.179.190]:48320 "EHLO mail.vps.com"
+        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753956AbcI2Bee (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Sep 2016 21:34:34 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 28, 2016 at 3:45 AM, Damien Le Moal <damien.lemoal@hgst.com> wrote:
-> From: Hannes Reinecke <hare@suse.de>
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
-> ---
->  block/blk-settings.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index b1d5b7f..55369a6 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -631,6 +631,10 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->                         t->discard_granularity;
->         }
->
-> +       if (b->chunk_sectors)
-> +               t->chunk_sectors = min_not_zero(t->chunk_sectors,
-> +                                               b->chunk_sectors);
-> +
->         return ret;
->  }
->  EXPORT_SYMBOL(blk_stack_limits);
-> --
-> 2.7.4
 
-Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ahoj.....
 
--- 
-Shaun Tancheff
+Dobry vecer a jak se mas? Jen rychly jedno, je tu oficialni prilezitosti 
+bych chtel diskutovat s vami soukrome.
+ 
+Ocenil bych vasi rychlou reakci tady na mem osobnim soukromeho e-mailu 
+nize pro dalsí komunikaci.
+
+S pratelským pozdravem,
+Paní Ko May Leung
+email: kmaylng13@gmail.com
+Místopredseda, Managing Director
+a výkonný reditel Chong Hing Bank Limited
