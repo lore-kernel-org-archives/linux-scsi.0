@@ -1,107 +1,99 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 4/3] g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio
-Date: Wed, 28 Sep 2016 10:49:33 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1609281035200.844@nippy.intranet>
-References: <1474743545-4731-1-git-send-email-linux@rainbow-software.org> <1474832360-23261-1-git-send-email-linux@rainbow-software.org>
+From: Damien Le Moal <damien.lemoal@hgst.com>
+Subject: [PATCH v3 0/7] ZBC / Zoned block device support
+Date: Wed, 28 Sep 2016 10:22:30 +0900
+Message-ID: <1475025757-6340-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1474832360-23261-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:50948 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754610AbcI1BWx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 21:22:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
+This series introduces support for zoned block devices. It integrates
+earlier submissions by Hannes Reinecke and Shaun Tancheff. Compared to the
+previous series version, the code was significantly simplified by limiting
+support to zoned devices satisfying the following conditions:
+1) All zones of the device are the same size, with the exception of an
+   eventual last smaller runt zone.
+2) For host-managed disks, reads must be unrestricted (read commands do not
+   fail due to zone or write pointer alignement constraints).
+Zoned disks that do not satisfy these 2 conditions are ignored.
 
-On Sun, 25 Sep 2016, Ondrej Zary wrote:
+These 2 conditions allowed dropping the zone information cache implemented
+in the previous version. This simplifies the code and also reduces the memory
+consumption at run time. Support for zoned devices now only require one bit
+per zone (less than 8KB in total). This bit field is used to write-lock
+zones and prevent the concurrent execution of multiple write commands in
+the same zone. This avoids write ordering problems at dispatch time, for
+both the simple queue and scsi-mq settings.
 
-> Merge the PIO and MMIO code (with the help of ioport_map) in g_NCR5380 and
-> delete g_NCR5380_mmio.
-> 
-> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> ---
->  drivers/scsi/Kconfig          |   32 ++---
->  drivers/scsi/g_NCR5380.c      |  257 +++++++++++++++++++----------------------
->  drivers/scsi/g_NCR5380.h      |   33 ++----
->  drivers/scsi/g_NCR5380_mmio.c |   10 --
->  4 files changed, 135 insertions(+), 197 deletions(-)
->  delete mode 100644 drivers/scsi/g_NCR5380_mmio.c
-> 
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 7d1b431..fd1bca1 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -780,40 +780,22 @@ config SCSI_ISCI
->  	  control unit found in the Intel(R) C600 series chipset.
->  
->  config SCSI_GENERIC_NCR5380
-> -	tristate "Generic NCR5380/53c400 SCSI PIO support"
-> +	tristate "Generic NCR5380/53c400 SCSI"
->  	depends on ISA && SCSI
->  	select SCSI_SPI_ATTRS
->  	---help---
-> -	  This is a driver for the old NCR 53c80 series of SCSI controllers
-> -	  on boards using PIO. Most boards such as the Trantor T130 fit this
-> -	  category, along with a large number of ISA 8bit controllers shipped
-> -	  for free with SCSI scanners. If you have a PAS16, T128 or DMX3191
-> -	  you should select the specific driver for that card rather than
-> -	  generic 5380 support.
-> +	  This is a driver for the old NCR 53c80 series of SCSI controllers.
-> +	  Most boards such as the Trantor T130 fit this category, along with
-> +	  a large number of ISA 8bit controllers shipped for free with SCSI
-> +	  scanners. If you have a PAS16, T128 or DMX3191 you should select the
-> +	  specific driver for that card rather than generic 5380 support.
+The new operations introduced to suport zone manipulation was reduced to
+only the two main ZBC/ZAC defined commands: REPORT ZONES (REQ_OP_ZONE_REPORT)
+and RESET WRITE POINTER (REQ_OP_ZONE_RESET). This brings the total number of
+operations defined to 8, which fits in the 3 bits (REQ_OP_BITS) reserved for
+operation code in bio->bi_opf and req->cmd_flags.
 
-The pas16 and t128 drivers were removed (see 4.9/scsi-queue). The DMX3191 
-isn't an ISA card, so it isn't relevant.
+Most of the ZBC specific code is kept out of sd.c and implemented in the
+new file sd_zbc.c. Similarly, at the block layer, most of the zoned block
+device code is implemented in the new blk-zoned.c.
 
->  
->  	  It is explained in section 3.8 of the SCSI-HOWTO, available from
-> -	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
-> -	  of the box, you may have to change some settings in
-> -	  <file:drivers/scsi/g_NCR5380.h>.
-> +	  <http://www.tldp.org/docs.html#howto>.
+For host-managed zoned block devices, the sequential write constraint of
+write pointer zones is exposed to the user. Users of the disk (applications,
+file systems or device mappers) must sequentially write to zones. This means
+that for raw block device accesses from applications, buffered writes are
+unreliable and direct I/Os must be used (or buffered writes with O_SYNC).
 
-I didn't find anything useful at that url.
+Access to zone manipulation operations is also provided to applications
+through a set of new ioctls. This allows applications operating on raw
+block devices (e.g. mkfs.xxx) to discover a device zone layout and
+manipulate zone state.
 
-Therefore, please change the help text as follows:
+Changes from v2:
+* Use kcalloc to allocate zone information array for ioctl
+* Use kcalloc to allocate zone information array for ioctl
+* Export GPL the functions blkdev_report_zones and blkdev_reset_zones
+* Shuffled uapi definitions from patch 7 into patch 5
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 98e5d51..928d937 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -780,21 +780,14 @@ config SCSI_ISCI
- 	  control unit found in the Intel(R) C600 series chipset.
- 
- config SCSI_GENERIC_NCR5380
--	tristate "Generic NCR5380/53c400 SCSI PIO support"
-+	tristate "Generic NCR5380/53C400 ISA card SCSI controller support"
- 	depends on ISA && SCSI
- 	select SCSI_SPI_ATTRS
- 	---help---
--	  This is a driver for the old NCR 53c80 series of SCSI controllers
--	  on boards using PIO. Most boards such as the Trantor T130 fit this
--	  category, along with a large number of ISA 8bit controllers shipped
--	  for free with SCSI scanners. If you have a PAS16, T128 or DMX3191
--	  you should select the specific driver for that card rather than
--	  generic 5380 support.
--
--	  It is explained in section 3.8 of the SCSI-HOWTO, available from
--	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
--	  of the box, you may have to change some settings in
--	  <file:drivers/scsi/g_NCR5380.h>.
-+	  This is a driver for old ISA card SCSI controllers based on the
-+	  NCR 5380, 53C80, 53C400 and 53C400A, and compatible DTC devices.
-+	  Most boards such as the Trantor T130 fit this category, along
-+	  with various 8-bit and 16-bit ISA cards bundled with SCSI scanners.
- 
- 	  To compile this driver as a module, choose M here: the
- 	  module will be called g_NCR5380.
+Damien Le Moal (1):
+  block: Add 'zoned' queue limit
 
+Hannes Reinecke (4):
+  blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+  block: update chunk_sectors in blk_stack_limits()
+  block: Implement support for zoned block devices
+  sd: Implement support for ZBC devices
 
-The rest of the patch looks good (aside from the missing module alias that 
-Chrisoph mentioned).
+Shaun Tancheff (2):
+  block: Define zoned block device operations
+  blk-zoned: implement ioctls
 
-Thanks.
+ block/Kconfig                 |   8 +
+ block/Makefile                |   1 +
+ block/blk-core.c              |   4 +
+ block/blk-settings.c          |   5 +
+ block/blk-sysfs.c             |  29 +++
+ block/blk-zoned.c             | 350 +++++++++++++++++++++++++
+ block/ioctl.c                 |   4 +
+ drivers/scsi/Makefile         |   1 +
+ drivers/scsi/sd.c             |  97 ++++++-
+ drivers/scsi/sd.h             |  67 +++++
+ drivers/scsi/sd_zbc.c         | 586 ++++++++++++++++++++++++++++++++++++++++++
+ include/linux/blk_types.h     |   2 +
+ include/linux/blkdev.h        |  99 +++++++
+ include/scsi/scsi_proto.h     |  17 ++
+ include/uapi/linux/Kbuild     |   1 +
+ include/uapi/linux/blkzoned.h | 143 +++++++++++
+ include/uapi/linux/fs.h       |   4 +
+ 17 files changed, 1404 insertions(+), 14 deletions(-)
+ create mode 100644 block/blk-zoned.c
+ create mode 100644 drivers/scsi/sd_zbc.c
+ create mode 100644 include/uapi/linux/blkzoned.h
 
 -- 
+2.7.4
+
