@@ -1,62 +1,80 @@
-From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: Re: [PATCH v3 5/7] block: Implement support for zoned block devices
-Date: Wed, 28 Sep 2016 13:21:36 +0900
-Message-ID: <6d9a2682-33f8-be5a-1f7d-d118663b0986@hgst.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 6/7] sd: Implement support for ZBC devices
+Date: Wed, 28 Sep 2016 01:01:04 -0400
+Message-ID: <yq18tuczkhb.fsf@sermon.lab.mkp.net>
 References: <1475025757-6340-1-git-send-email-damien.lemoal@hgst.com>
- <1475025757-6340-6-git-send-email-damien.lemoal@hgst.com>
- <yq1d1joznjh.fsf@sermon.lab.mkp.net>
+        <1475025757-6340-7-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:9896 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750765AbcI1EVr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Sep 2016 00:21:47 -0400
-In-Reply-To: <yq1d1joznjh.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1475025757-6340-7-git-send-email-damien.lemoal@hgst.com> (Damien
+        Le Moal's message of "Wed, 28 Sep 2016 10:22:36 +0900")
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@hgst.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 
+>>>>> "Damien" == Damien Le Moal <damien.lemoal@hgst.com> writes:
 
-Martin,
+Damien,
 
-On 9/28/16 12:54, Martin K. Petersen wrote:
->>>>>> "Damien" == Damien Le Moal <damien.lemoal@hgst.com> writes:
-> 
-> Purely cosmetic: Looks like whitespace is a bit funky (spaces instead of
-> tabs several places). Also a few typos.
-> 
-> + * blkdev_report_zones - Get zones information
-> + * @bdev:	Target block device
-> + * @sector:	Sector from which to report zones
-> + * @zones:      Array of zone structures where to return the zones information
-> + * @nr_zones:   Number of zone structures in the zone array
-> + * @gfp_mask:	Memory allocation flags (for bio_alloc)
-> 
-> Tabs and spaces: Together at last! ^^^^^
-> 
-> +	/*
-> +	 * Process the report resukt: skip the header and go through the
-> 
-> result
-> 
-> +	/* Check alignement (handle eventual smaller last zone) */
-> 
-> alignment
+The new stuff looks much cleaner. Thanks for doing that!
 
-Thanks for all the comments. Should I send a fixed-up series or just
-send correction patches later ?
+This hunk has an unintended side effect:
 
-Best regards.
+@@ -2836,14 +2896,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 * react badly if we do.
+ 	 */
+ 	if (sdkp->media_present) {
+-		sd_read_capacity(sdkp, buffer);
+-
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+ 			sd_read_block_limits(sdkp);
+ 			sd_read_block_characteristics(sdkp);
+ 		}
+ 
++		sd_read_capacity(sdkp, buffer);
++
+ 		sd_read_write_protect_flag(sdkp, buffer);
+ 		sd_read_cache_type(sdkp, buffer);
+ 		sd_read_app_tag_own(sdkp, buffer);
+
+LMBPE from READ CAPACITY(16) will not be set when calling
+sd_read_block_provisioning() and thus we bail early (we catch it second
+time around). You may want to split that vpd conditional to shuffle the
+block_characteristics on top. Or even better: Split the capacity/block
+size printing code from sd_read_capacity() into a separate function and
+do:
+
+	if (sdkp->media_present) {
+		sd_read_capacity(sdkp, buffer);
+
+		if (sd_try_extended_inquiry(sdp)) {
+			sd_read_block_provisioning(sdkp);
+			sd_read_block_limits(sdkp);
+			sd_read_block_characteristics(sdkp);
+		}
+
++               sd_print_capacity(sdkp);
+
+		sd_read_write_protect_flag(sdkp, buffer);
+		sd_read_cache_type(sdkp, buffer);
+		sd_read_app_tag_own(sdkp, buffer);
+		sd_read_write_same(sdkp, buffer);
+	}
+
+Typo:
+
+static int sd_zbc_read_zoned_charateristics(struct scsi_disk *sdkp,
+                             ^^^^^^^^^^^^^^
+
+My second comment is that I don't particularly like the notion of values
+being stored and passed in units of block layer sectors in struct
+scsi_disk and sd*.  As a rule of thumb I prefer SCSI stuff to be counted
+in logical blocks and block layer stuff in 512b sectors. You may want to
+entertain having a sectors_to_zone() wrapper to facilitate that
+conversion.
 
 -- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Group, HGST Research,
-HGST, a Western Digital brand
-Damien.LeMoal@hgst.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa, 
-Kanagawa, 252-0888 Japan
-www.hgst.com
+Martin K. Petersen	Oracle Linux Engineering
