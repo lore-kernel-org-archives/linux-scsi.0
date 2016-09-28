@@ -1,131 +1,107 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 3/3] g_NCR5380: Stop using scsi_module.c
-Date: Wed, 28 Sep 2016 10:06:03 +1000 (AEST)
-Message-ID: <alpine.LNX.2.00.1609280954090.358@nippy.intranet>
-References: <1474743545-4731-1-git-send-email-linux@rainbow-software.org> <1474743545-4731-4-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1609261132001.4881@nippy.intranet> <201609271455.17930.linux@rainbow-software.org>
+Subject: Re: [PATCH 4/3] g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio
+Date: Wed, 28 Sep 2016 10:49:33 +1000 (AEST)
+Message-ID: <alpine.LNX.2.00.1609281035200.844@nippy.intranet>
+References: <1474743545-4731-1-git-send-email-linux@rainbow-software.org> <1474832360-23261-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:35126 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932342AbcI1AFs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Sep 2016 20:05:48 -0400
-In-Reply-To: <201609271455.17930.linux@rainbow-software.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1474832360-23261-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Ondrej Zary <linux@rainbow-software.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
 
-On Tue, 27 Sep 2016, Ondrej Zary wrote:
+On Sun, 25 Sep 2016, Ondrej Zary wrote:
 
-> On Monday 26 September 2016, Finn Thain wrote:
+> Merge the PIO and MMIO code (with the help of ioport_map) in g_NCR5380 and
+> delete g_NCR5380_mmio.
 > 
-> [...]
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> ---
+>  drivers/scsi/Kconfig          |   32 ++---
+>  drivers/scsi/g_NCR5380.c      |  257 +++++++++++++++++++----------------------
+>  drivers/scsi/g_NCR5380.h      |   33 ++----
+>  drivers/scsi/g_NCR5380_mmio.c |   10 --
+>  4 files changed, 135 insertions(+), 197 deletions(-)
+>  delete mode 100644 drivers/scsi/g_NCR5380_mmio.c
 > 
-> > > @@ -364,7 +304,7 @@ static int generic_NCR5380_release_resources(struct
-> > > Scsi_Host *instance) release_mem_region(instance->base,
-> > > hostdata->iomem_size);
-> > >  	}
-> > >  #endif
-> > > -	return 0;
-> > > +	scsi_host_put(instance);
-> >
-> > The sequence of operations here should be the same as the error path
-> > above.
-> 
-> I put scsi_host_put() call at the end because the release_mem_region 
-> code (in the MMIO case) dereferences the hostdata pointer. I don't think 
-> it's safe to do after scsi_host_put().
+> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+> index 7d1b431..fd1bca1 100644
+> --- a/drivers/scsi/Kconfig
+> +++ b/drivers/scsi/Kconfig
+> @@ -780,40 +780,22 @@ config SCSI_ISCI
+>  	  control unit found in the Intel(R) C600 series chipset.
+>  
+>  config SCSI_GENERIC_NCR5380
+> -	tristate "Generic NCR5380/53c400 SCSI PIO support"
+> +	tristate "Generic NCR5380/53c400 SCSI"
+>  	depends on ISA && SCSI
+>  	select SCSI_SPI_ATTRS
+>  	---help---
+> -	  This is a driver for the old NCR 53c80 series of SCSI controllers
+> -	  on boards using PIO. Most boards such as the Trantor T130 fit this
+> -	  category, along with a large number of ISA 8bit controllers shipped
+> -	  for free with SCSI scanners. If you have a PAS16, T128 or DMX3191
+> -	  you should select the specific driver for that card rather than
+> -	  generic 5380 support.
+> +	  This is a driver for the old NCR 53c80 series of SCSI controllers.
+> +	  Most boards such as the Trantor T130 fit this category, along with
+> +	  a large number of ISA 8bit controllers shipped for free with SCSI
+> +	  scanners. If you have a PAS16, T128 or DMX3191 you should select the
+> +	  specific driver for that card rather than generic 5380 support.
 
-It's funny you say that, I already fixed a few of those use-after-free 
-bugs in the other 5380 drivers. To avoid the bug, you'd need to use a 
-temporary variable, like the fixes I did elsewhere.
+The pas16 and t128 drivers were removed (see 4.9/scsi-queue). The DMX3191 
+isn't an ISA card, so it isn't relevant.
 
-Don't worry about changing it, this part of the driver gets revisited in 
-my existing patch queue anyway.
+>  
+>  	  It is explained in section 3.8 of the SCSI-HOWTO, available from
+> -	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
+> -	  of the box, you may have to change some settings in
+> -	  <file:drivers/scsi/g_NCR5380.h>.
+> +	  <http://www.tldp.org/docs.html#howto>.
 
-> 
-> [...]
-> 
-> > > +static int pnp_registered;
-> > > +#endif /* !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP) */
-> > > +
-> > > +static int __init generic_NCR5380_init(void)
-> > > +{
-> > > +	int ret = 0;
-> > > +
-> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > > +	ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
-> > > +	if (!ret)
-> > > +		pnp_registered = 1;
-> > >  #endif
-> > > +	ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
-> > > +	if (!ret)
-> > > +		isa_registered = 1;
-> > > +
-> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > > +	if (pnp_registered)
-> > > +		ret = 0;
-> > > +#endif
-> > > +	if (isa_registered)
-> > > +		ret = 0;
-> > > +
-> > > +	return ret;
-> > > +}
-> > > +
-> > > +static void __exit generic_NCR5380_exit(void)
-> > > +{
-> > > +#if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > > +	if (pnp_registered)
-> > > +		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
-> > > +#endif
-> > > +	if (isa_registered)
-> > > +		isa_unregister_driver(&generic_NCR5380_isa_driver);
-> > > +}
-> > > +
-> >
-> > I find that hard to follow. This should be equivalent and simpler:
-> >
-> > static int __init generic_NCR5380_init(void)
-> > {
-> > 	isa_ret = isa_register_driver(&generic_NCR5380_isa_driver, MAX_CARDS);
-> > #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > 	pnp_ret = pnp_register_driver(&generic_NCR5380_pnp_driver);
-> > 	return pnp_ret ? isa_ret : 0;
-> > #endif
-> > 	return isa_ret;
-> > }
-> >
-> > static void __exit generic_NCR5380_exit(void)
-> > {
-> > 	if (!isa_ret)
-> > 		isa_unregister_driver(&generic_NCR5380_isa_driver);
-> > #if !defined(SCSI_G_NCR5380_MEM) && defined(CONFIG_PNP)
-> > 	if (!pnp_ret)
-> > 		pnp_unregister_driver(&generic_NCR5380_pnp_driver);
-> > #endif
-> > }
-> 
-> Doesn't make it any better, IMHO. Good that it's shorter but not cleaner - 
-> especially this:
-> > 	return pnp_ret ? isa_ret : 0;
+I didn't find anything useful at that url.
 
-The problem with that line is that pnp_ret is always discarded, same as in 
-your version. I think my version makes that clear, which is what matters 
-to me.
+Therefore, please change the help text as follows:
 
-> 
-> Also looking at the _exit function, meaning of isa_ret and pnp_ret is not 
-> obvious there.
-> 
-> Maybe we should have a module_isa_pnp_driver() macro.
-> 
-> 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 98e5d51..928d937 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -780,21 +780,14 @@ config SCSI_ISCI
+ 	  control unit found in the Intel(R) C600 series chipset.
+ 
+ config SCSI_GENERIC_NCR5380
+-	tristate "Generic NCR5380/53c400 SCSI PIO support"
++	tristate "Generic NCR5380/53C400 ISA card SCSI controller support"
+ 	depends on ISA && SCSI
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+-	  This is a driver for the old NCR 53c80 series of SCSI controllers
+-	  on boards using PIO. Most boards such as the Trantor T130 fit this
+-	  category, along with a large number of ISA 8bit controllers shipped
+-	  for free with SCSI scanners. If you have a PAS16, T128 or DMX3191
+-	  you should select the specific driver for that card rather than
+-	  generic 5380 support.
+-
+-	  It is explained in section 3.8 of the SCSI-HOWTO, available from
+-	  <http://www.tldp.org/docs.html#howto>.  If it doesn't work out
+-	  of the box, you may have to change some settings in
+-	  <file:drivers/scsi/g_NCR5380.h>.
++	  This is a driver for old ISA card SCSI controllers based on the
++	  NCR 5380, 53C80, 53C400 and 53C400A, and compatible DTC devices.
++	  Most boards such as the Trantor T130 fit this category, along
++	  with various 8-bit and 16-bit ISA cards bundled with SCSI scanners.
+ 
+ 	  To compile this driver as a module, choose M here: the
+ 	  module will be called g_NCR5380.
 
-FWIW I would hope that the hypothetical definition of this 
-`module_isa_pnp_driver' macro would have the same properties as my 
-version: shorter, uses no temporaries and uses one less #ifdef, and is 
-generally easier for me to read.
+
+The rest of the patch looks good (aside from the missing module alias that 
+Chrisoph mentioned).
+
+Thanks.
 
 -- 
