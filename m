@@ -1,53 +1,29 @@
-From: Mike Christie <mchristi@redhat.com>
-Subject: Re: [PATCHv2] MAINTAINERS: Update open-iscsi maintainers
-Date: Tue, 27 Sep 2016 22:05:26 -0500
-Message-ID: <57EB3376.4040802@redhat.com>
-References: <1474928730-4947-1-git-send-email-lduncan@suse.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 1/7] block: Add 'zoned' queue limit
+Date: Tue, 27 Sep 2016 23:42:00 -0400
+Message-ID: <yq1twd0zo53.fsf@sermon.lab.mkp.net>
+References: <1475025757-6340-1-git-send-email-damien.lemoal@hgst.com>
+        <1475025757-6340-2-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51544 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756059AbcI1DF2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 27 Sep 2016 23:05:28 -0400
-In-Reply-To: <1474928730-4947-1-git-send-email-lduncan@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1475025757-6340-2-git-send-email-damien.lemoal@hgst.com> (Damien
+        Le Moal's message of "Wed, 28 Sep 2016 10:22:31 +0900")
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@hgst.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: open-iscsi@googlegroups.com, Chris Leech <cleech@redhat.com>, Mike Christie <mnc@redhat.com>
 
-On 09/26/2016 05:25 PM, Lee Duncan wrote:
-> Chris Leech and I are taking over as open-iscsi maintainers.
-> 
-> Changes since v1:
->  * Updated URL to open-iscsi.com
->  * Removed git repository, since code in tree
-> ---
->  MAINTAINERS | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
-> 
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index 01bff8ea28d8..81384a2562e7 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -6448,10 +6448,10 @@ S:	Maintained
->  F:	drivers/firmware/iscsi_ibft*
->  
->  ISCSI
-> -M:	Mike Christie <michaelc@cs.wisc.edu>
-> +M:	Lee Duncan <lduncan@suse.com>
-> +M:	Chris Leech <cleech@redhat.com>
->  L:	open-iscsi@googlegroups.com
-> -W:	www.open-iscsi.org
-> -T:	git git://git.kernel.org/pub/scm/linux/kernel/git/mnc/linux-2.6-iscsi.git
-> +W:	www.open-iscsi.com
->  S:	Maintained
->  F:	drivers/scsi/*iscsi*
->  F:	include/scsi/*iscsi*
-> 
+>>>>> "Damien" == Damien Le Moal <damien.lemoal@hgst.com> writes:
 
-After over 10 years, I will get to take a vacation where I do not have
-to think about iSCSI :)
+Damien> The zoned attribute is also exported as a string to applications
+Damien> via sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as
+Damien> "host-aware" and BLK_ZONED_HM as "host-managed".
 
-Reviewed-by: Mike Christie <mchristi@redhat.com>
+Looks good. However, you should add the zoned attribute to
+Documentation/ABI/testing/sysfs-block.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
