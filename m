@@ -1,1169 +1,1151 @@
-From: Shaun Tancheff <shaun.tancheff@seagate.com>
-Subject: Re: [PATCH v4 6/7] sd: Implement support for ZBC devices
-Date: Wed, 28 Sep 2016 20:35:54 -0500
-Message-ID: <CAJVOszCGXCu8rQ-JtopAcENkREG4A8a_QDcveisO_hBqRMDsZQ@mail.gmail.com>
-References: <1475052339-10202-1-git-send-email-damien.lemoal@hgst.com> <1475052339-10202-7-git-send-email-damien.lemoal@hgst.com>
+From: Angela Kinto <bothajulie1@gmail.com>
+Subject: (unknown)
+Date: Thu, 29 Sep 2016 05:20:05 +0000 (UTC)
+Message-ID: <1278152917.2441089.1475126405803@mail.yahoo.com>
+References: <1249740555.16389143.1471515189580.JavaMail.yahoo.ref@mail.yahoo.com> <1249740555.16389143.1471515189580.JavaMail.yahoo@mail.yahoo.com> <920606908.15987381.1471515219455.JavaMail.yahoo@mail.yahoo.com> <1537974742.16091686.1471515235032.JavaMail.yahoo@mail.yahoo.com> <1098530886.16525442.1471515254067.JavaMail.yahoo@mail.yahoo.com> <1941288625.1334916.1472025179862@mail.yahoo.com> <2067670013.1311432.1472025201570@mail.yahoo.com> <1608414605.1354778.1472025217268@mail.yahoo.com> <809896355.1350684.1472025233420@mail.yahoo.com> <1537554030.1334943.1472030228112@mail.yahoo.com> <1779128036.1357193.1472030247201@mail.yahoo.com> <1342487109.1384941.1472030265072@mail.yahoo.com> <1335801283.1403397.1472030282221@mail.yahoo.com> <1632432391.1884441.1472102118146@mail.yahoo.com> <13219
+ 29354.1952850.1472102132113@mail.yahoo.com> <221207557.1983879.1472102146083@mail.yahoo.com> <1829923172.1911287.1472105995071@mail.yahoo.com> <430643673.2023200.1472106012334@mail.yahoo.com> <1772856888.559356.1472106027905@mail.yahoo.com> <470168642.1916363.1472106041783@mail.yahoo.com> <942860137.1948573.1472106061321@mail.yahoo.com> <328042143.1931761.1472112659654@mail.yahoo.com> <1976779095.1936539.1472112680303@mail.yahoo.com> <2038854300.1965384.1472112697396@mail.yahoo.com> <203915767.2003724.1472112719018@mail.yahoo.com> <1929780500.1923467.1472112742262@mail.yahoo.com> <621246011.2010640.1472117286429@mail.yahoo.com> <194128057.2124348.1472117313038@mail.yahoo.com> <1930805042.2030511.1472117346902@mail.yahoo.com> <816947323.2010235.1472117372093@mail.yahoo.com> <1223800539.19
+ 35237.1472117389238@mail.yahoo.com> <1605417192.31350.1472187165089@mail.yahoo.com> <1519840238.26352.1472187186428@mail.yahoo.com> <1096966040.34497.1472187203002@mail.yahoo.com> <1176299802.43210.1472187218371@mail.yahoo.com> <1145424213.48927.1472187232490@mail.yahoo.com> <315585985.63900.1472196007133@mail.yahoo.com> <1369907991.84416.1472196020751@mail.yahoo.com> <1692090006.59593.1472196052067@mail.yahoo.com> <291225058.84294.1472196068404@mail.yahoo.com> <841947568.62568.1472196085133@mail.yahoo.com> <703085992.104994.1472200924073@mail.yahoo.com> <1738813606.80866.1472200940271@mail.yahoo.com> <1775047595.85116.1472200959473@mail.yahoo.com> <1553994021.82768.1472200999267@mail.yahoo.com> <603777037.111400.1472204562353@mail.yahoo.com> <1681180499.110256.1472204593205@mail.yahoo.c
+ om> <308936477.98347.1472204625927@mail.yahoo.com> <947888928.562179.1472279131640@mail.yahoo.com> <1077632171.560841.1472279148757@mail.yahoo.com> <1727892514.582284.1472279168805@mail.yahoo.com> <807733506.560811.1472279185459@mail.yahoo.com> <1829342731.586404.1472279200847@mail.yahoo.com> <1929565899.571736.1472289675967@mail.yahoo.com> <1341948909.567943.1472289703270@mail.yahoo.com> <1168187996.584432.1472289718801@mail.yahoo.com> <33608004.570956.1472289741584@mail.yahoo.com> <708478022.215689.1472799838163@mail.yahoo.com> <1967477873.198576.1472799857165@mail.yahoo.com> <763921077.227783.1472799873452@mail.yahoo.com> <1090688665.206675.1472799890277@mail.yahoo.com> <2129545986.226127.1472799909633@mail.yahoo.com> <272763708.247613.1472804760727@mail.yahoo.com> <1779747759.205910.
+ 1472804784264@mail.yahoo.com> <62467449.237331.1472804810999@mail.yahoo.com> <971894486.246656.1472808943466@mail.yahoo.com> <1969985331.222893.1472808958827@mail.yahoo.com> <2146019452.252192.1472808972644@mail.yahoo.com> <106985900.229797.1472808991310@mail.yahoo.com> <564994722.692847.1472880528414@mail.yahoo.com> <777232982.692063.1472880555365@mail.yahoo.com> <1501060496.707218.1472880582226@mail.yahoo.com> <1324346780.696863.1472880621214@mail.yahoo.com> <1931137568.747704.1472889905209@mail.yahoo.com> <1639543181.687684.1472889922698@mail.yahoo.com> <1994710530.696256.1472889982338@mail.yahoo.com> <2021258317.714163.1472890095759@mail.yahoo.com> <2119783902.967363.1472974164580@mail.yahoo.com> <1424346352.1001634.1472974180415@mail.yahoo.com> <688515462.1018862.1472974194027@mail.
+ yahoo.cSubject: Miss Angela. Kindly read my attached letter and reply. Pp
+Reply-To: Angela Kinto <angelakinto1993@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed;
+        boundary="----=_Part_2441088_1848414538.1475126405803"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00003501.pphosted.com ([67.231.152.68]:51371 "EHLO
-        mx0a-000cda01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S932223AbcI2BgR (ORCPT
+Received: from nm48-vm7.bullet.mail.ne1.yahoo.com ([98.138.121.119]:36430 "EHLO
+        nm48-vm7.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751038AbcI2F2Z (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Sep 2016 21:36:17 -0400
-Received: from pps.filterd (m0075028.ppops.net [127.0.0.1])
-        by mx0b-00003501.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u8T1Yrwc005102
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2016 21:36:16 -0400
-Received: from mail-yw0-f199.google.com (mail-yw0-f199.google.com [209.85.161.199])
-        by mx0b-00003501.pphosted.com with ESMTP id 25rryh89aj-26
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2016 21:36:15 -0400
-Received: by mail-yw0-f199.google.com with SMTP id g18so14525665ywb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Sep 2016 18:36:15 -0700 (PDT)
-In-Reply-To: <1475052339-10202-7-git-send-email-damien.lemoal@hgst.com>
+        Thu, 29 Sep 2016 01:28:25 -0400
+In-Reply-To: <530744527.2590518.1475126328411@mail.yahoo.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@hgst.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 
-On Wed, Sep 28, 2016 at 3:45 AM, Damien Le Moal <damien.lemoal@hgst.com> wrote:
-> From: Hannes Reinecke <hare@suse.de>
->
-> Implement ZBC support functions to setup zoned disks, both
-> host-managed and host-aware models. Only zoned disks that satisfy
-> the following conditions are supported:
-> 1) All zones are the same size, with the exception of an eventual
->    last smaller runt zone.
-> 2) For host-managed disks, reads are unrestricted (reads are not
->    failed due to zone or write pointer alignement constraints).
-> Zoned disks that do not satisfy these 2 conditions are setup with
-> a capacity of 0 to prevent their use.
->
-> The function sd_zbc_read_zones, called from sd_revalidate_disk,
-> checks that the device satisfies the above two constraints. This
-> function may also change the disk capacity previously set by
-> sd_read_capacity for devices reporting only the capacity of
-> conventional zones at the beginning of the LBA range (i.e. devices
-> reporting rc_basis set to 0).
->
-> The capacity message output was moved out of sd_read_capacity into
-> a new function sd_print_capacity to include this eventual capacity
-> change by sd_zbc_read_zones. This new function also includes a call
-> to sd_zbc_print_zones to display the number of zones and zone size
-> of the device.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
->
-> [Damien: * Removed zone cache support
->          * Removed mapping of discard to reset write pointer command
->          * Modified sd_zbc_read_zones to include checks that the
->            device satisfies the kernel constraints
->          * Implemeted REPORT ZONES setup and post-processing based
->            on code from Shaun Tancheff <shaun.tancheff@seagate.com>]
-> Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
-> ---
->  drivers/scsi/Makefile     |   1 +
->  drivers/scsi/sd.c         | 143 ++++++++---
->  drivers/scsi/sd.h         |  70 ++++++
->  drivers/scsi/sd_zbc.c     | 624 ++++++++++++++++++++++++++++++++++++++++++++++
->  include/scsi/scsi_proto.h |  17 ++
->  5 files changed, 822 insertions(+), 33 deletions(-)
->  create mode 100644 drivers/scsi/sd_zbc.c
->
-> diff --git a/drivers/scsi/Makefile b/drivers/scsi/Makefile
-> index fc0d9b8..350513c 100644
-> --- a/drivers/scsi/Makefile
-> +++ b/drivers/scsi/Makefile
-> @@ -180,6 +180,7 @@ hv_storvsc-y                        := storvsc_drv.o
->
->  sd_mod-objs    := sd.o
->  sd_mod-$(CONFIG_BLK_DEV_INTEGRITY) += sd_dif.o
-> +sd_mod-$(CONFIG_BLK_DEV_ZONED) += sd_zbc.o
->
->  sr_mod-objs    := sr.o sr_ioctl.o sr_vendor.o
->  ncr53c8xx-flags-$(CONFIG_SCSI_ZALON) \
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 51e5629..4d63260 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -93,6 +93,7 @@ MODULE_ALIAS_BLOCKDEV_MAJOR(SCSI_DISK15_MAJOR);
->  MODULE_ALIAS_SCSI_DEVICE(TYPE_DISK);
->  MODULE_ALIAS_SCSI_DEVICE(TYPE_MOD);
->  MODULE_ALIAS_SCSI_DEVICE(TYPE_RBC);
-> +MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
->
->  #if !defined(CONFIG_DEBUG_BLOCK_EXT_DEVT)
->  #define SD_MINORS      16
-> @@ -163,7 +164,7 @@ cache_type_store(struct device *dev, struct device_attribute *attr,
->         static const char temp[] = "temporary ";
->         int len;
->
-> -       if (sdp->type != TYPE_DISK)
-> +       if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
->                 /* no cache control on RBC devices; theoretically they
->                  * can do it, but there's probably so many exceptions
->                  * it's not worth the risk */
-> @@ -262,7 +263,7 @@ allow_restart_store(struct device *dev, struct device_attribute *attr,
->         if (!capable(CAP_SYS_ADMIN))
->                 return -EACCES;
->
-> -       if (sdp->type != TYPE_DISK)
-> +       if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
->                 return -EINVAL;
->
->         sdp->allow_restart = simple_strtoul(buf, NULL, 10);
-> @@ -392,6 +393,11 @@ provisioning_mode_store(struct device *dev, struct device_attribute *attr,
->         if (!capable(CAP_SYS_ADMIN))
->                 return -EACCES;
->
-> +       if (sd_is_zoned(sdkp)) {
-> +               sd_config_discard(sdkp, SD_LBP_DISABLE);
-> +               return count;
-> +       }
-> +
->         if (sdp->type != TYPE_DISK)
->                 return -EINVAL;
->
-> @@ -459,7 +465,7 @@ max_write_same_blocks_store(struct device *dev, struct device_attribute *attr,
->         if (!capable(CAP_SYS_ADMIN))
->                 return -EACCES;
->
-> -       if (sdp->type != TYPE_DISK)
-> +       if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
->                 return -EINVAL;
->
->         err = kstrtoul(buf, 10, &max);
-> @@ -844,6 +850,13 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
->
->         BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
->
-> +       if (sd_is_zoned(sdkp)) {
-> +               /* sd_zbc_setup_read_write uses block layer sector units */
-> +               ret = sd_zbc_setup_read_write(sdkp, rq, sector, nr_sectors);
-> +               if (ret != BLKPREP_OK)
-> +                       return ret;
-> +       }
-> +
->         sector >>= ilog2(sdp->sector_size) - 9;
->         nr_sectors >>= ilog2(sdp->sector_size) - 9;
->
-> @@ -963,6 +976,13 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
->         SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt, "block=%llu\n",
->                                         (unsigned long long)block));
->
-> +       if (sd_is_zoned(sdkp)) {
-> +               /* sd_zbc_setup_read_write uses block layer sector units */
-> +               ret = sd_zbc_setup_read_write(sdkp, rq, block, this_count);
-> +               if (ret != BLKPREP_OK)
-> +                       goto out;
-> +       }
-> +
->         /*
->          * If we have a 1K hardware sectorsize, prevent access to single
->          * 512 byte sectors.  In theory we could handle this - in fact
-> @@ -1149,6 +1169,10 @@ static int sd_init_command(struct scsi_cmnd *cmd)
->         case REQ_OP_READ:
->         case REQ_OP_WRITE:
->                 return sd_setup_read_write_cmnd(cmd);
-> +       case REQ_OP_ZONE_REPORT:
-> +               return sd_zbc_setup_report_cmnd(cmd);
-> +       case REQ_OP_ZONE_RESET:
-> +               return sd_zbc_setup_reset_cmnd(cmd);
->         default:
->                 BUG();
->         }
-> @@ -1780,7 +1804,10 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->         unsigned char op = SCpnt->cmnd[0];
->         unsigned char unmap = SCpnt->cmnd[1] & 8;
->
-> -       if (req_op(req) == REQ_OP_DISCARD || req_op(req) == REQ_OP_WRITE_SAME) {
-> +       switch (req_op(req)) {
-> +       case REQ_OP_DISCARD:
-> +       case REQ_OP_WRITE_SAME:
-> +       case REQ_OP_ZONE_RESET:
->                 if (!result) {
->                         good_bytes = blk_rq_bytes(req);
->                         scsi_set_resid(SCpnt, 0);
-> @@ -1788,6 +1815,17 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->                         good_bytes = 0;
->                         scsi_set_resid(SCpnt, blk_rq_bytes(req));
->                 }
-> +               break;
-> +       case REQ_OP_ZONE_REPORT:
-> +               if (!result) {
-> +                       good_bytes = scsi_bufflen(SCpnt)
-> +                               - scsi_get_resid(SCpnt);
-> +                       scsi_set_resid(SCpnt, 0);
-> +               } else {
-> +                       good_bytes = 0;
-> +                       scsi_set_resid(SCpnt, blk_rq_bytes(req));
-> +               }
-> +               break;
->         }
->
->         if (result) {
-> @@ -1848,7 +1886,11 @@ static int sd_done(struct scsi_cmnd *SCpnt)
->         default:
->                 break;
->         }
-> +
->   out:
-> +       if (sd_is_zoned(sdkp))
-> +               sd_zbc_complete(SCpnt, good_bytes, &sshdr);
-> +
->         SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
->                                            "sd_done: completed %d of %d bytes\n",
->                                            good_bytes, scsi_bufflen(SCpnt)));
-> @@ -1983,7 +2025,6 @@ sd_spinup_disk(struct scsi_disk *sdkp)
->         }
->  }
->
-> -
->  /*
->   * Determine whether disk supports Data Integrity Field.
->   */
-> @@ -2133,6 +2174,9 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->         /* Logical blocks per physical block exponent */
->         sdkp->physical_block_size = (1 << (buffer[13] & 0xf)) * sector_size;
->
-> +       /* RC basis */
-> +       sdkp->rc_basis = (buffer[12] >> 4) & 0x3;
-> +
->         /* Lowest aligned logical block */
->         alignment = ((buffer[14] & 0x3f) << 8 | buffer[15]) * sector_size;
->         blk_queue_alignment_offset(sdp->request_queue, alignment);
-> @@ -2242,7 +2286,6 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
->  {
->         int sector_size;
->         struct scsi_device *sdp = sdkp->device;
-> -       sector_t old_capacity = sdkp->capacity;
->
->         if (sd_try_rc16_first(sdp)) {
->                 sector_size = read_capacity_16(sdkp, sdp, buffer);
-> @@ -2323,35 +2366,44 @@ sd_read_capacity(struct scsi_disk *sdkp, unsigned char *buffer)
->                 sector_size = 512;
->         }
->         blk_queue_logical_block_size(sdp->request_queue, sector_size);
-> +       blk_queue_physical_block_size(sdp->request_queue,
-> +                                     sdkp->physical_block_size);
-> +       sdkp->device->sector_size = sector_size;
->
-> -       {
-> -               char cap_str_2[10], cap_str_10[10];
-> +       if (sdkp->capacity > 0xffffffff)
-> +               sdp->use_16_for_rw = 1;
->
-> -               string_get_size(sdkp->capacity, sector_size,
-> -                               STRING_UNITS_2, cap_str_2, sizeof(cap_str_2));
-> -               string_get_size(sdkp->capacity, sector_size,
-> -                               STRING_UNITS_10, cap_str_10,
-> -                               sizeof(cap_str_10));
-> +}
->
-> -               if (sdkp->first_scan || old_capacity != sdkp->capacity) {
-> -                       sd_printk(KERN_NOTICE, sdkp,
-> -                                 "%llu %d-byte logical blocks: (%s/%s)\n",
-> -                                 (unsigned long long)sdkp->capacity,
-> -                                 sector_size, cap_str_10, cap_str_2);
-> +/*
-> + * Print disk capacity
-> + */
-> +static void
-> +sd_print_capacity(struct scsi_disk *sdkp,
-> +                 sector_t old_capacity)
-> +{
-> +       int sector_size = sdkp->device->sector_size;
-> +       char cap_str_2[10], cap_str_10[10];
->
-> -                       if (sdkp->physical_block_size != sector_size)
-> -                               sd_printk(KERN_NOTICE, sdkp,
-> -                                         "%u-byte physical blocks\n",
-> -                                         sdkp->physical_block_size);
-> -               }
-> -       }
-> +       string_get_size(sdkp->capacity, sector_size,
-> +                       STRING_UNITS_2, cap_str_2, sizeof(cap_str_2));
-> +       string_get_size(sdkp->capacity, sector_size,
-> +                       STRING_UNITS_10, cap_str_10,
-> +                       sizeof(cap_str_10));
->
-> -       if (sdkp->capacity > 0xffffffff)
-> -               sdp->use_16_for_rw = 1;
-> +       if (sdkp->first_scan || old_capacity != sdkp->capacity) {
-> +               sd_printk(KERN_NOTICE, sdkp,
-> +                         "%llu %d-byte logical blocks: (%s/%s)\n",
-> +                         (unsigned long long)sdkp->capacity,
-> +                         sector_size, cap_str_10, cap_str_2);
->
-> -       blk_queue_physical_block_size(sdp->request_queue,
-> -                                     sdkp->physical_block_size);
-> -       sdkp->device->sector_size = sector_size;
-> +               if (sdkp->physical_block_size != sector_size)
-> +                       sd_printk(KERN_NOTICE, sdkp,
-> +                                 "%u-byte physical blocks\n",
-> +                                 sdkp->physical_block_size);
-> +
-> +               sd_zbc_print_zones(sdkp);
-> +       }
->  }
->
->  /* called with buffer of length 512 */
-> @@ -2613,7 +2665,7 @@ static void sd_read_app_tag_own(struct scsi_disk *sdkp, unsigned char *buffer)
->         struct scsi_mode_data data;
->         struct scsi_sense_hdr sshdr;
->
-> -       if (sdp->type != TYPE_DISK)
-> +       if (sdp->type != TYPE_DISK && sdp->type != TYPE_ZBC)
->                 return;
->
->         if (sdkp->protection_type == 0)
-> @@ -2720,6 +2772,7 @@ static void sd_read_block_limits(struct scsi_disk *sdkp)
->   */
->  static void sd_read_block_characteristics(struct scsi_disk *sdkp)
->  {
-> +       struct request_queue *q = sdkp->disk->queue;
->         unsigned char *buffer;
->         u16 rot;
->         const int vpd_len = 64;
-> @@ -2734,10 +2787,21 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
->         rot = get_unaligned_be16(&buffer[4]);
->
->         if (rot == 1) {
-> -               queue_flag_set_unlocked(QUEUE_FLAG_NONROT, sdkp->disk->queue);
-> -               queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, sdkp->disk->queue);
-> +               queue_flag_set_unlocked(QUEUE_FLAG_NONROT, q);
-> +               queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, q);
->         }
->
-> +       sdkp->zoned = (buffer[8] >> 4) & 3;
-> +       if (sdkp->zoned == 1)
-> +               q->limits.zoned = BLK_ZONED_HA;
-> +       else if (sdkp->device->type == TYPE_ZBC)
-> +               q->limits.zoned = BLK_ZONED_HM;
-> +       else
-> +               q->limits.zoned = BLK_ZONED_NONE;
-> +       if (blk_queue_is_zoned(q) && sdkp->first_scan)
-> +               sd_printk(KERN_NOTICE, sdkp, "Host-%s zoned block device\n",
-> +                     q->limits.zoned == BLK_ZONED_HM ? "managed" : "aware");
-> +
->   out:
->         kfree(buffer);
->  }
-> @@ -2809,6 +2873,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->         struct scsi_disk *sdkp = scsi_disk(disk);
->         struct scsi_device *sdp = sdkp->device;
->         struct request_queue *q = sdkp->disk->queue;
-> +       sector_t old_capacity = sdkp->capacity;
->         unsigned char *buffer;
->         unsigned int dev_max, rw_max;
->
-> @@ -2842,8 +2907,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
->                         sd_read_block_provisioning(sdkp);
->                         sd_read_block_limits(sdkp);
->                         sd_read_block_characteristics(sdkp);
-> +                       sd_zbc_read_zones(sdkp, buffer);
->                 }
->
-> +               sd_print_capacity(sdkp, old_capacity);
-> +
->                 sd_read_write_protect_flag(sdkp, buffer);
->                 sd_read_cache_type(sdkp, buffer);
->                 sd_read_app_tag_own(sdkp, buffer);
-> @@ -3041,9 +3109,16 @@ static int sd_probe(struct device *dev)
->
->         scsi_autopm_get_device(sdp);
->         error = -ENODEV;
-> -       if (sdp->type != TYPE_DISK && sdp->type != TYPE_MOD && sdp->type != TYPE_RBC)
-> +       if (sdp->type != TYPE_DISK &&
-> +           sdp->type != TYPE_ZBC &&
-> +           sdp->type != TYPE_MOD &&
-> +           sdp->type != TYPE_RBC)
->                 goto out;
->
-> +#ifndef CONFIG_BLK_DEV_ZONED
-> +       if (sdp->type == TYPE_ZBC)
-> +               goto out;
-> +#endif
->         SCSI_LOG_HLQUEUE(3, sdev_printk(KERN_INFO, sdp,
->                                         "sd_probe\n"));
->
-> @@ -3147,6 +3222,8 @@ static int sd_remove(struct device *dev)
->         del_gendisk(sdkp->disk);
->         sd_shutdown(dev);
->
-> +       sd_zbc_remove(sdkp);
-> +
->         blk_register_region(devt, SD_MINORS, NULL,
->                             sd_default_probe, NULL, NULL);
->
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index c8d9863..6bd4226 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -64,6 +64,15 @@ struct scsi_disk {
->         struct scsi_device *device;
->         struct device   dev;
->         struct gendisk  *disk;
-> +#ifdef CONFIG_BLK_DEV_ZONED
-> +       unsigned int    nr_zones;
-> +       unsigned int    zone_blocks;
-> +       unsigned int    zone_shift;
-> +       unsigned long   *zones_wlock;
-> +       unsigned int    zones_optimal_open;
-> +       unsigned int    zones_optimal_nonseq;
-> +       unsigned int    zones_max_open;
-> +#endif
->         atomic_t        openers;
->         sector_t        capacity;       /* size in logical blocks */
->         u32             max_xfer_blocks;
-> @@ -94,6 +103,9 @@ struct scsi_disk {
->         unsigned        lbpvpd : 1;
->         unsigned        ws10 : 1;
->         unsigned        ws16 : 1;
-> +       unsigned        rc_basis: 2;
-> +       unsigned        zoned: 2;
-> +       unsigned        urswrz : 1;
->  };
->  #define to_scsi_disk(obj) container_of(obj,struct scsi_disk,dev)
->
-> @@ -156,6 +168,11 @@ static inline unsigned int logical_to_bytes(struct scsi_device *sdev, sector_t b
->         return blocks * sdev->sector_size;
->  }
->
-> +static inline sector_t sectors_to_logical(struct scsi_device *sdev, sector_t sector)
-> +{
-> +       return sector >> (ilog2(sdev->sector_size) - 9);
-> +}
-> +
->  /*
->   * Look up the DIX operation based on whether the command is read or
->   * write and whether dix and dif are enabled.
-> @@ -239,4 +256,57 @@ static inline void sd_dif_complete(struct scsi_cmnd *cmd, unsigned int a)
->
->  #endif /* CONFIG_BLK_DEV_INTEGRITY */
->
-> +static inline int sd_is_zoned(struct scsi_disk *sdkp)
-> +{
-> +       return sdkp->zoned == 1 || sdkp->device->type == TYPE_ZBC;
-> +}
-> +
-> +#ifdef CONFIG_BLK_DEV_ZONED
-> +
-> +extern int sd_zbc_read_zones(struct scsi_disk *sdkp, unsigned char *buffer);
-> +extern void sd_zbc_remove(struct scsi_disk *sdkp);
-> +extern void sd_zbc_print_zones(struct scsi_disk *sdkp);
-> +extern int sd_zbc_setup_read_write(struct scsi_disk *sdkp, struct request *rq,
-> +                                  sector_t sector, unsigned int nr_sectors);
-> +extern int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd);
-> +extern int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd);
-> +extern void sd_zbc_complete(struct scsi_cmnd *cmd, unsigned int good_bytes,
-> +                           struct scsi_sense_hdr *sshdr);
-> +
-> +#else /* CONFIG_BLK_DEV_ZONED */
-> +
-> +static inline int sd_zbc_read_zones(struct scsi_disk *sdkp,
-> +                                   unsigned char *buf)
-> +{
-> +       return 0;
-> +}
-> +
-> +static inline void sd_zbc_remove(struct scsi_disk *sdkp) {}
-> +
-> +static inline void sd_zbc_print_zones(struct scsi_disk *sdkp) {}
-> +
-> +static inline int sd_zbc_setup_read_write(struct scsi_disk *sdkp,
-> +                                         struct request *rq, sector_t sector,
-> +                                         unsigned int num_sectors)
-> +{
-> +       /* Let the drive fail requests */
-> +       return BLKPREP_OK;
-> +}
-> +
-> +static inline int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
-> +{
-> +       return BLKPREP_KILL;
-> +}
-> +
-> +static inline int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
-> +{
-> +       return BLKPREP_KILL;
-> +}
-> +
-> +static inline void sd_zbc_complete(struct scsi_cmnd *cmd,
-> +                                  unsigned int good_bytes,
-> +                                  struct scsi_sense_hdr *sshdr) {}
-> +
-> +#endif /* CONFIG_BLK_DEV_ZONED */
-> +
->  #endif /* _SCSI_DISK_H */
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> new file mode 100644
-> index 0000000..a4da0ed
-> --- /dev/null
-> +++ b/drivers/scsi/sd_zbc.c
-> @@ -0,0 +1,624 @@
-> +/*
-> + * SCSI Zoned Block commands
-> + *
-> + * Copyright (C) 2014-2015 SUSE Linux GmbH
-> + * Written by: Hannes Reinecke <hare@suse.de>
-> + * Modified by: Damien Le Moal <damien.lemoal@hgst.com>
-> + * Modified by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> + *
-> + * This program is free software; you can redistribute it and/or
-> + * modify it under the terms of the GNU General Public License version
-> + * 2 as published by the Free Software Foundation.
-> + *
-> + * This program is distributed in the hope that it will be useful, but
-> + * WITHOUT ANY WARRANTY; without even the implied warranty of
-> + * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-> + * General Public License for more details.
-> + *
-> + * You should have received a copy of the GNU General Public License
-> + * along with this program; see the file COPYING.  If not, write to
-> + * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139,
-> + * USA.
-> + *
-> + */
-> +
-> +#include <linux/blkdev.h>
-> +
-> +#include <asm/unaligned.h>
-> +
-> +#include <scsi/scsi.h>
-> +#include <scsi/scsi_cmnd.h>
-> +#include <scsi/scsi_dbg.h>
-> +#include <scsi/scsi_device.h>
-> +#include <scsi/scsi_driver.h>
-> +#include <scsi/scsi_host.h>
-> +#include <scsi/scsi_eh.h>
-> +
-> +#include "sd.h"
-> +#include "scsi_priv.h"
-> +
-> +enum zbc_zone_type {
-> +       ZBC_ZONE_TYPE_CONV = 0x1,
-> +       ZBC_ZONE_TYPE_SEQWRITE_REQ,
-> +       ZBC_ZONE_TYPE_SEQWRITE_PREF,
-> +       ZBC_ZONE_TYPE_RESERVED,
-> +};
-> +
-> +enum zbc_zone_cond {
-> +       ZBC_ZONE_COND_NO_WP,
-> +       ZBC_ZONE_COND_EMPTY,
-> +       ZBC_ZONE_COND_IMP_OPEN,
-> +       ZBC_ZONE_COND_EXP_OPEN,
-> +       ZBC_ZONE_COND_CLOSED,
-> +       ZBC_ZONE_COND_READONLY = 0xd,
-> +       ZBC_ZONE_COND_FULL,
-> +       ZBC_ZONE_COND_OFFLINE,
-> +};
-> +
-> +/**
-> + * Convert a zone descriptor to a zone struct.
-> + */
-> +static void sd_zbc_parse_report(struct scsi_disk *sdkp,
-> +                               u8 *buf,
-> +                               struct blk_zone *zone)
-> +{
-> +       struct scsi_device *sdp = sdkp->device;
-> +
-> +       memset(zone, 0, sizeof(struct blk_zone));
-> +
-> +       zone->type = buf[0] & 0x0f;
-> +       zone->cond = (buf[1] >> 4) & 0xf;
-> +       if (buf[1] & 0x01)
-> +               zone->reset = 1;
-> +       if (buf[1] & 0x02)
-> +               zone->non_seq = 1;
-> +
-> +       zone->len = logical_to_sectors(sdp, get_unaligned_be64(&buf[8]));
-> +       zone->start = logical_to_sectors(sdp, get_unaligned_be64(&buf[16]));
-> +       zone->wp = logical_to_sectors(sdp, get_unaligned_be64(&buf[24]));
-> +       if (zone->type != ZBC_ZONE_TYPE_CONV &&
-> +           zone->cond == ZBC_ZONE_COND_FULL)
-> +               zone->wp = zone->start + zone->len;
-> +}
-> +
-> +/**
-> + * Issue a REPORT ZONES scsi command.
-> + */
-> +static int sd_zbc_report_zones(struct scsi_disk *sdkp, unsigned char *buf,
-> +                              unsigned int buflen, sector_t lba)
-> +{
-> +       struct scsi_device *sdp = sdkp->device;
-> +       const int timeout = sdp->request_queue->rq_timeout;
-> +       struct scsi_sense_hdr sshdr;
-> +       unsigned char cmd[16];
-> +       unsigned int rep_len;
-> +       int result;
-> +
-> +       memset(cmd, 0, 16);
-> +       cmd[0] = ZBC_IN;
-> +       cmd[1] = ZI_REPORT_ZONES;
-> +       put_unaligned_be64(lba, &cmd[2]);
-> +       put_unaligned_be32(buflen, &cmd[10]);
-> +       memset(buf, 0, buflen);
-> +
-> +       result = scsi_execute_req(sdp, cmd, DMA_FROM_DEVICE,
-> +                                 buf, buflen, &sshdr,
-> +                                 timeout, SD_MAX_RETRIES, NULL);
-> +       if (result) {
-> +               sd_printk(KERN_ERR, sdkp,
-> +                         "REPORT ZONES lba %llu failed with %d/%d\n",
-> +                         (unsigned long long)lba,
-> +                         host_byte(result), driver_byte(result));
-> +               return -EIO;
-> +       }
-> +
-> +       rep_len = get_unaligned_be32(&buf[0]);
-> +       if (rep_len < 64) {
-> +               sd_printk(KERN_ERR, sdkp,
-> +                         "REPORT ZONES report invalid length %u\n",
-> +                         rep_len);
-> +               return -EIO;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +int sd_zbc_setup_report_cmnd(struct scsi_cmnd *cmd)
-> +{
-> +       struct request *rq = cmd->request;
-> +       struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +       sector_t lba, sector = blk_rq_pos(rq);
-> +       unsigned int nr_bytes = blk_rq_bytes(rq);
-> +       int ret;
-> +
-> +       WARN_ON(nr_bytes == 0);
-> +
-> +       if (!sd_is_zoned(sdkp))
-> +               /* Not a zoned device */
-> +               return BLKPREP_KILL;
-> +
-> +       ret = scsi_init_io(cmd);
-> +       if (ret != BLKPREP_OK)
-> +               return ret;
-> +
-> +       cmd->cmd_len = 16;
-> +       memset(cmd->cmnd, 0, cmd->cmd_len);
-> +       cmd->cmnd[0] = ZBC_IN;
-> +       cmd->cmnd[1] = ZI_REPORT_ZONES;
-> +       lba = sectors_to_logical(sdkp->device, sector);
-> +       put_unaligned_be64(lba, &cmd->cmnd[2]);
-> +       put_unaligned_be32(nr_bytes, &cmd->cmnd[10]);
-> +       /* Do partial report for speeding things up */
-> +       cmd->cmnd[14] = ZBC_REPORT_ZONE_PARTIAL;
-> +
-> +       cmd->sc_data_direction = DMA_FROM_DEVICE;
-> +       cmd->sdb.length = nr_bytes;
-> +       cmd->transfersize = sdkp->device->sector_size;
-> +       cmd->allowed = 0;
-> +
-> +       /*
-> +        * Report may return less bytes than requested. Make sure
-> +        * to report completion on the entire initial request.
-> +        */
-> +       rq->__data_len = nr_bytes;
-> +
-> +       return BLKPREP_OK;
-> +}
-> +
-> +static void sd_zbc_report_zones_complete(struct scsi_cmnd *scmd,
-> +                                        unsigned int good_bytes)
-> +{
-> +       struct request *rq = scmd->request;
-> +       struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +       struct sg_mapping_iter miter;
-> +       struct blk_zone_report_hdr hdr;
-> +       struct blk_zone zone;
-> +       unsigned int offset, bytes = 0;
-> +       unsigned long flags;
-> +       u8 *buf;
-> +
-> +       if (good_bytes < 64)
-> +               return;
-> +
-> +       memset(&hdr, 0, sizeof(struct blk_zone_report_hdr));
-> +
-> +       sg_miter_start(&miter, scsi_sglist(scmd), scsi_sg_count(scmd),
-> +                      SG_MITER_TO_SG | SG_MITER_ATOMIC);
-> +
-> +       local_irq_save(flags);
-> +       while (sg_miter_next(&miter) && bytes < good_bytes) {
-> +
-> +               buf = miter.addr;
-> +               offset = 0;
-> +
-> +               if (bytes == 0) {
-> +                       /* Set the report header */
-> +                       hdr.nr_zones = min_t(unsigned int,
-> +                                        (good_bytes - 64) / 64,
-> +                                        get_unaligned_be32(&buf[0]) / 64);
-> +                       memcpy(buf, &hdr, sizeof(struct blk_zone_report_hdr));
-> +                       offset += 64;
-> +                       bytes += 64;
-> +               }
-> +
-> +               /* Parse zone descriptors */
-> +               while (offset < miter.length && hdr.nr_zones) {
-> +                       WARN_ON(offset > miter.length);
-> +                       buf = miter.addr + offset;
-> +                       sd_zbc_parse_report(sdkp, buf, &zone);
-> +                       memcpy(buf, &zone, sizeof(struct blk_zone));
-> +                       offset += 64;
-> +                       bytes += 64;
-> +                       hdr.nr_zones--;
-> +               }
-> +
-> +               if (!hdr.nr_zones)
-> +                       break;
-> +
-> +       }
-> +       sg_miter_stop(&miter);
-> +       local_irq_restore(flags);
-> +}
-> +
-> +static inline sector_t sd_zbc_zone_sectors(struct scsi_disk *sdkp)
-> +{
-> +       return logical_to_sectors(sdkp->device, sdkp->zone_blocks);
-> +}
-> +
-> +static inline unsigned int sd_zbc_zone_no(struct scsi_disk *sdkp,
-> +                                         sector_t sector)
-> +{
-> +       return sectors_to_logical(sdkp->device, sector) >> sdkp->zone_shift;
-> +}
-> +
-> +int sd_zbc_setup_reset_cmnd(struct scsi_cmnd *cmd)
-> +{
-> +       struct request *rq = cmd->request;
-> +       struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +       sector_t sector = blk_rq_pos(rq);
-> +       sector_t block = sectors_to_logical(sdkp->device, sector);
-> +
-> +       if (!sd_is_zoned(sdkp))
-> +               /* Not a zoned device */
-> +               return BLKPREP_KILL;
-> +
-> +       if (sdkp->device->changed)
-> +               return BLKPREP_KILL;
-> +
-> +       if (sector & (sd_zbc_zone_sectors(sdkp) - 1))
-> +               /* Unaligned request */
-> +               return BLKPREP_KILL;
-> +
-> +       /* Do not allow concurrent reset and writes */
-> +       if (!test_and_set_bit(sd_zbc_zone_no(sdkp, sector),
-> +                             sdkp->zones_wlock))
-> +               return BLKPREP_DEFER;
-> +
-> +       cmd->cmd_len = 16;
-> +       memset(cmd->cmnd, 0, cmd->cmd_len);
-> +       cmd->cmnd[0] = ZBC_OUT;
-> +       cmd->cmnd[1] = ZO_RESET_WRITE_POINTER;
-> +       put_unaligned_be64(block, &cmd->cmnd[2]);
-> +
-> +       rq->timeout = SD_TIMEOUT;
-> +       cmd->sc_data_direction = DMA_NONE;
-> +       cmd->transfersize = 0;
-> +       cmd->allowed = 0;
-> +
-> +       return BLKPREP_OK;
-> +}
-> +
-> +int sd_zbc_setup_read_write(struct scsi_disk *sdkp, struct request *rq,
-> +                           sector_t sector, unsigned int nr_sectors)
-> +{
-> +       sector_t zone_sectors = sd_zbc_zone_sectors(sdkp);
-> +       sector_t zone_ofst = sector & (zone_sectors - 1);
-> +
-> +       /*
-> +        * Note: alignment of the read/write on logical blocks
-> +        * is done after this function returns in sd_setup_read_write.
-> +        */
-> +
-> +       /* Do not allow zone boundaries crossing */
-> +       if (zone_ofst + nr_sectors > zone_sectors)
-> +               return BLKPREP_KILL;
-> +
-> +       /*
-> +        * Do not issue more than one write at a time per
-> +        * zone. This solves write ordering problems due to
-> +        * the unlocking of the request queue in the dispatch
-> +        * path in the non scsi-mq case. For scsi-mq, this
-> +        * also avoids potential write reordering when multiple
-> +        * threads running on different CPUs write to the same
-> +        * zone (with a synchronized sequential pattern).
-> +        */
-> +       if (req_op(rq) == REQ_OP_WRITE ||
-> +           req_op(rq) == REQ_OP_WRITE_SAME) {
-> +               if (!test_and_set_bit(sd_zbc_zone_no(sdkp, sector),
-> +                                     sdkp->zones_wlock))
-> +                       return BLKPREP_DEFER;
-> +       }
-> +
-> +       return BLKPREP_OK;
-> +}
-> +
-> +void sd_zbc_complete(struct scsi_cmnd *cmd,
-> +                    unsigned int good_bytes,
-> +                    struct scsi_sense_hdr *sshdr)
-> +{
-> +       int result = cmd->result;
-> +       struct request *rq = cmd->request;
-> +       struct scsi_disk *sdkp = scsi_disk(rq->rq_disk);
-> +
-> +       switch (req_op(rq)) {
-> +       case REQ_OP_WRITE:
-> +       case REQ_OP_WRITE_SAME:
-> +
-> +               if (result &&
-> +                   sshdr->sense_key == ILLEGAL_REQUEST &&
-> +                   sshdr->asc == 0x21)
-> +                       /*
-> +                        * It is unlikely that retrying write requests failed
-> +                        * with any kind of alignement error will result in
-> +                        * success. So don't.
-> +                        */
-> +                       cmd->allowed = 0;
-> +
-> +               /* Fallthru */
-> +
-> +       case REQ_OP_ZONE_RESET:
-> +
-> +               /* Unlock the zone */
-> +               clear_bit_unlock(sd_zbc_zone_no(sdkp, blk_rq_pos(rq)),
-> +                                sdkp->zones_wlock);
-> +               smp_mb__after_atomic();
-> +
-> +               if (result &&
-> +                   sshdr->sense_key == ILLEGAL_REQUEST &&
-> +                   sshdr->asc == 0x24)
-> +                       /*
-> +                        * INVALID FIELD IN CDB error: Reset of a conventional
-> +                        * zone was attempted. Nothing to worry about,
-> +                        * so be quiet about the error.
-> +                        */
-> +                       rq->cmd_flags |= REQ_QUIET;
-> +
-> +               break;
-> +
-> +       case REQ_OP_ZONE_REPORT:
-> +
-> +               if (!result)
-> +                       sd_zbc_report_zones_complete(cmd, good_bytes);
-> +               break;
-> +
-> +       }
-> +}
-> +
-> +/**
-> + * Read zoned block device characteristics (VPD page B6).
-> + */
-> +static int sd_zbc_read_zoned_characteristics(struct scsi_disk *sdkp,
-> +                                            unsigned char *buf)
-> +{
-> +
-> +       if (scsi_get_vpd_page(sdkp->device, 0xb6, buf, 64)) {
-> +               sd_printk(KERN_NOTICE, sdkp,
-> +                         "Unconstrained-read check failed\n");
-> +               return -ENODEV;
-> +       }
-> +
-> +       if (sdkp->device->type != TYPE_ZBC) {
-> +               /* Host-aware */
-> +               sdkp->urswrz = 1;
-> +               sdkp->zones_optimal_open = get_unaligned_be64(&buf[8]);
-> +               sdkp->zones_optimal_nonseq = get_unaligned_be64(&buf[12]);
-> +               sdkp->zones_max_open = 0;
-> +       } else {
-> +               /* Host-managed */
-> +               sdkp->urswrz = buf[4] & 1;
-> +               sdkp->zones_optimal_open = 0;
-> +               sdkp->zones_optimal_nonseq = 0;
-> +               sdkp->zones_max_open = get_unaligned_be64(&buf[16]);
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +/**
-> + * Check reported capacity.
-> + */
-> +static int sd_zbc_check_capacity(struct scsi_disk *sdkp,
-> +                                unsigned char *buf)
-> +{
-> +       sector_t lba;
-> +       int ret;
-> +
-> +       if (sdkp->rc_basis != 0)
-> +               return 0;
-> +
-> +       /* Do a report zone to get the maximum LBA to check capacity */
-> +       ret = sd_zbc_report_zones(sdkp, buf, SD_BUF_SIZE, 0);
-> +       if (ret)
-> +               return ret;
-> +
-> +       /* The max_lba field is the capacity of this device */
-> +       lba = get_unaligned_be64(&buf[8]);
-> +       if (lba + 1 == sdkp->capacity)
-> +               return 0;
-> +
-> +       if (sdkp->first_scan)
-> +               sd_printk(KERN_WARNING, sdkp,
-> +                         "Changing capacity from %zu to max LBA+1 %llu\n",
-> +                         sdkp->capacity,
-> +                         (unsigned long long)lba + 1);
-> +       sdkp->capacity = lba + 1;
-> +
-> +       return 0;
-> +}
-> +
-> +#define SD_ZBC_BUF_SIZE 131072
-> +
-> +static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
-> +{
-> +       u64 zone_blocks;
-> +       sector_t block = 0;
-> +       unsigned char *buf;
-> +       unsigned char *rec;
-> +       unsigned int buf_len;
-> +       unsigned int list_length;
-> +       int ret;
-> +       u8 same;
-> +
-> +       sdkp->zone_blocks = 0;
-> +
-> +       /* Get a buffer */
-> +       buf = kmalloc(SD_ZBC_BUF_SIZE, GFP_KERNEL);
-> +       if (!buf)
-> +               return -ENOMEM;
-> +
-> +       /* Do a report zone to get the same field */
-> +       ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
-> +       if (ret)
-> +               goto out;
-> +
-> +       same = buf[4] & 0x0f;
-> +       if (same > 0) {
-> +               rec = &buf[64];
-> +               zone_blocks = get_unaligned_be64(&rec[8]);
-> +               goto out;
-> +       }
-> +
-> +       /*
-> +        * Check the size of all zones: all zones must be of
-> +        * equal size, except the last zone which can be smaller
-> +        * than other zones.
-> +        */
-> +       do {
-> +
-> +               /* Parse REPORT ZONES header */
-> +               list_length = get_unaligned_be32(&buf[0]) + 64;
-> +               rec = buf + 64;
-> +               if (list_length < SD_ZBC_BUF_SIZE)
-> +                       buf_len = list_length;
-> +               else
-> +                       buf_len = SD_ZBC_BUF_SIZE;
-> +
-> +               /* Parse zone descriptors */
-> +               while (rec < buf + buf_len) {
-> +                       zone_blocks = get_unaligned_be64(&rec[8]);
-> +                       if (sdkp->zone_blocks == 0) {
-> +                               sdkp->zone_blocks = zone_blocks;
-> +                       } else if (zone_blocks != sdkp->zone_blocks &&
-> +                                  (block + zone_blocks < sdkp->capacity
-> +                                   || zone_blocks > sdkp->zone_blocks)) {
-> +                               zone_blocks = 0;
-> +                               goto out;
-> +                       }
-> +                       block += zone_blocks;
-> +                       rec += 64;
-> +               }
-> +
-> +               if (block < sdkp->capacity) {
-> +                       ret = sd_zbc_report_zones(sdkp, buf,
-> +                                                 SD_ZBC_BUF_SIZE, block);
-> +                       if (ret)
-> +                               return ret;
-> +               }
-> +
-> +       } while (block < sdkp->capacity);
-> +
-> +       zone_blocks = sdkp->zone_blocks;
-> +
-> +out:
-> +       kfree(buf);
-> +
-> +       if (!zone_blocks) {
-> +               if (sdkp->first_scan)
-> +                       sd_printk(KERN_NOTICE, sdkp,
-> +                                 "Devices with non constant zone "
-> +                                 "size are not supported\n");
-> +               return -ENODEV;
-> +       }
-> +
-> +       if (!is_power_of_2(zone_blocks)) {
-> +               if (sdkp->first_scan)
-> +                       sd_printk(KERN_NOTICE, sdkp,
-> +                                 "Devices with non power of 2 zone "
-> +                                 "size are not supported\n");
-> +               return -ENODEV;
-> +       }
-> +
-> +       if (logical_to_sectors(sdkp->device, zone_blocks) > UINT_MAX) {
-> +               if (sdkp->first_scan)
-> +                       sd_printk(KERN_NOTICE, sdkp,
-> +                                 "Zone size too large\n");
-> +               return -ENODEV;
-> +       }
-> +
-> +       sdkp->zone_blocks = zone_blocks;
-> +
-> +       return 0;
-> +}
-> +
-> +static int sd_zbc_setup(struct scsi_disk *sdkp)
-> +{
-> +
-> +       /* chunk_sectors indicates the zone size */
-> +       blk_queue_chunk_sectors(sdkp->disk->queue,
-> +                       logical_to_sectors(sdkp->device, sdkp->zone_blocks));
-> +       sdkp->zone_shift = ilog2(sdkp->zone_blocks);
-> +       sdkp->nr_zones = sdkp->capacity >> sdkp->zone_shift;
-> +       if (sdkp->capacity & (sdkp->zone_blocks - 1))
-> +               sdkp->nr_zones++;
-> +
-> +       if (!sdkp->zones_wlock) {
-> +               sdkp->zones_wlock = kzalloc(BITS_TO_LONGS(sdkp->nr_zones),
-> +                                           GFP_KERNEL);
-> +               if (!sdkp->zones_wlock)
-> +                       return -ENOMEM;
-> +       }
-> +
-> +       return 0;
-> +}
-> +
-> +int sd_zbc_read_zones(struct scsi_disk *sdkp,
-> +                     unsigned char *buf)
-> +{
-> +       sector_t capacity;
-> +       int ret = 0;
-> +
-> +       if (!sd_is_zoned(sdkp))
-> +               /*
-> +                * Device managed or normal SCSI disk,
-> +                * no special handling required
-> +                */
-> +               return 0;
-> +
-> +
-> +       /* Get zoned block device characteristics */
-> +       ret = sd_zbc_read_zoned_characteristics(sdkp, buf);
-> +       if (ret)
-> +               goto err;
-> +
-> +       /*
-> +        * Check for unconstrained reads: host-managed devices with
-> +        * constrained reads (drives failing read after write pointer)
-> +        * are not supported.
-> +        */
-> +       if (!sdkp->urswrz) {
-> +               if (sdkp->first_scan)
-> +                       sd_printk(KERN_NOTICE, sdkp,
-> +                         "constrained reads devices are not supported\n");
-> +               ret = -ENODEV;
-> +               goto err;
-> +       }
-> +
-> +       /* Check capacity */
-> +       ret = sd_zbc_check_capacity(sdkp, buf);
-> +       if (ret)
-> +               goto err;
-> +       capacity = logical_to_sectors(sdkp->device, sdkp->capacity);
-> +
-> +       /*
-> +        * Check zone size: only devices with a constant zone size (except
-> +        * an eventual last runt zone) that is a power of 2 are supported.
-> +        */
-> +       ret = sd_zbc_check_zone_size(sdkp);
-> +       if (ret)
-> +               goto err;
-> +
-> +       /* The drive satisfies the kernel restrictions: set it up */
-> +       ret = sd_zbc_setup(sdkp);
-> +       if (ret)
-> +               goto err;
-> +
-> +       return 0;
-> +
-> +err:
-> +       sdkp->capacity = 0;
-> +
-> +       return ret;
-> +}
-> +
-> +void sd_zbc_remove(struct scsi_disk *sdkp)
-> +{
-> +       kfree(sdkp->zones_wlock);
-> +       sdkp->zones_wlock = NULL;
-> +}
-> +
-> +void sd_zbc_print_zones(struct scsi_disk *sdkp)
-> +{
-> +       if (!sd_is_zoned(sdkp) || !sdkp->capacity)
-> +               return;
-> +
-> +       if (sdkp->capacity & (sdkp->zone_blocks - 1))
-> +               sd_printk(KERN_NOTICE, sdkp,
-> +                         "%u zones of %u logical blocks + 1 runt zone\n",
-> +                         sdkp->nr_zones - 1,
-> +                         sdkp->zone_blocks);
-> +       else
-> +               sd_printk(KERN_NOTICE, sdkp,
-> +                         "%u zones of %u logical blocks\n",
-> +                         sdkp->nr_zones,
-> +                         sdkp->zone_blocks);
-> +}
-> diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-> index d1defd1..6ba66e0 100644
-> --- a/include/scsi/scsi_proto.h
-> +++ b/include/scsi/scsi_proto.h
-> @@ -299,4 +299,21 @@ struct scsi_lun {
->  #define SCSI_ACCESS_STATE_MASK        0x0f
->  #define SCSI_ACCESS_STATE_PREFERRED   0x80
->
-> +/* Reporting options for REPORT ZONES */
-> +enum zbc_zone_reporting_options {
-> +       ZBC_ZONE_REPORTING_OPTION_ALL = 0,
-> +       ZBC_ZONE_REPORTING_OPTION_EMPTY,
-> +       ZBC_ZONE_REPORTING_OPTION_IMPLICIT_OPEN,
-> +       ZBC_ZONE_REPORTING_OPTION_EXPLICIT_OPEN,
-> +       ZBC_ZONE_REPORTING_OPTION_CLOSED,
-> +       ZBC_ZONE_REPORTING_OPTION_FULL,
-> +       ZBC_ZONE_REPORTING_OPTION_READONLY,
-> +       ZBC_ZONE_REPORTING_OPTION_OFFLINE,
-> +       ZBC_ZONE_REPORTING_OPTION_NEED_RESET_WP = 0x10,
-> +       ZBC_ZONE_REPORTING_OPTION_NON_SEQWRITE,
-> +       ZBC_ZONE_REPORTING_OPTION_NON_WP = 0x3f,
-> +};
-> +
-> +#define ZBC_REPORT_ZONE_PARTIAL 0x80
-> +
->  #endif /* _SCSI_PROTO_H_ */
-> --
-> 2.7.4
-
-Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-block" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+------=_Part_2441088_1848414538.1475126405803
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
 
 
--- 
-Shaun Tancheff
+------=_Part_2441088_1848414538.1475126405803
+Content-Type: application/msword
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment;
+	filename*0="From Miss Angela. Kindly read my attached letter and
+        ";
+	filename*1="
+                                                            ";
+	filename*2="
+                                                            ";
+	filename*3="
+                                                            ";
+	filename*4="
+                                                            ";
+	filename*5="
+                                                            ";
+	filename*6="
+                                                            ";
+	filename*7="
+                                                            ";
+	filename*8="
+                                                            ";
+	filename*9="
+                                                            ";
+	filename*10="
+                                                            ";
+	filename*11="
+                                                            ";
+	filename*12="
+                                                            ";
+	filename*13="
+                                                            ";
+	filename*14="
+                                                            ";
+	filename*15="
+                                                            ";
+	filename*16="
+                                                            ";
+	filename*17="
+                                                            ";
+	filename*18="
+                                                            ";
+	filename*19="
+                                                            ";
+	filename*20="
+                                                            ";
+	filename*21="
+                                                            ";
+	filename*22="
+                                                            ";
+	filename*23="
+                                                            ";
+	filename*24="
+                                                            ";
+	filename*25="
+                                                            ";
+	filename*26="
+                                                            ";
+	filename*27="
+                                                            ";
+	filename*28="
+                                                            ";
+	filename*29="
+                                                            ";
+	filename*30="
+                                                            ";
+	filename*31="
+                                                            ";
+	filename*32="
+                                                            ";
+	filename*33="
+                                                            ";
+	filename*34="
+                                                            ";
+	filename*35="
+                                                            ";
+	filename*36="
+                                                            ";
+	filename*37="
+                                                            ";
+	filename*38="
+                                                            ";
+	filename*39="
+                                                            ";
+	filename*40="
+                                                            ";
+	filename*41="
+                                                            ";
+	filename*42="
+                                                            ";
+	filename*43="
+                                                            ";
+	filename*44="
+                                                            ";
+	filename*45="
+                                                            ";
+	filename*46="
+                                                            ";
+	filename*47="
+                                                            ";
+	filename*48="
+                                                            ";
+	filename*49="
+                                                            ";
+	filename*50="
+                                                            ";
+	filename*51="
+                                                            ";
+	filename*52="
+                                                            ";
+	filename*53="
+                                                            ";
+	filename*54="
+                                                            ";
+	filename*55="
+                                                            ";
+	filename*56="
+                                                            ";
+	filename*57="
+                                                            ";
+	filename*58="
+                                                            ";
+	filename*59="
+                                                            ";
+	filename*60="
+                                                            ";
+	filename*61="
+                                                            ";
+	filename*62="
+                                                            ";
+	filename*63="
+                                                            ";
+	filename*64="
+                                                            ";
+	filename*65="
+                                                            ";
+	filename*66="
+                                                            ";
+	filename*67="
+                                                            ";
+	filename*68="
+                                                            ";
+	filename*69="
+                                                            ";
+	filename*70="
+                                                            ";
+	filename*71="
+                                                            ";
+	filename*72="
+                                                            ";
+	filename*73="
+                                                            ";
+	filename*74="
+                                                            ";
+	filename*75="
+                                                            ";
+	filename*76="
+                                                            ";
+	filename*77="
+                                                            ";
+	filename*78="
+                                                            ";
+	filename*79="
+                                                            ";
+	filename*80="
+                                                            ";
+	filename*81="
+                                                            ";
+	filename*82="
+                                                            ";
+	filename*83="
+                                                            ";
+	filename*84="
+                                                            ";
+	filename*85="
+                                                            ";
+	filename*86="
+                                                            ";
+	filename*87="
+                                                            ";
+	filename*88="
+                                                            ";
+	filename*89="
+                                                            ";
+	filename*90="
+                                                            ";
+	filename*91="
+                                                            ";
+	filename*92="
+                                                            ";
+	filename*93="
+                                                            ";
+	filename*94="
+                                                            ";
+	filename*95="
+                                                            ";
+	filename*96="
+                                                            ";
+	filename*97="
+                                                            ";
+	filename*98="
+                                                            ";
+	filename*99="
+                                                            ";
+	filename*100="
+                                                            ";
+	filename*101="
+                                                            ";
+	filename*102="
+                                                            ";
+	filename*103="
+                                                            ";
+	filename*104="
+                                                            ";
+	filename*105="
+                                                            ";
+	filename*106="
+                                                            ";
+	filename*107="
+                                                            ";
+	filename*108="
+                                                            ";
+	filename*109="
+                                                            ";
+	filename*110="
+                                                            ";
+	filename*111="
+                                                            ";
+	filename*112="
+                                                            ";
+	filename*113="
+                                                            ";
+	filename*114="
+                                                            ";
+	filename*115="
+                                                            ";
+	filename*116="
+                                                            ";
+	filename*117="
+                                                            ";
+	filename*118="
+                                                            ";
+	filename*119="
+                                                            ";
+	filename*120="
+                                                            ";
+	filename*121="
+                                                            ";
+	filename*122="
+                                                            ";
+	filename*123="
+                                                            ";
+	filename*124="
+                                                            ";
+	filename*125="
+                                                            ";
+	filename*126="
+                                                            ";
+	filename*127="
+                                                            ";
+	filename*128="
+                                                            ";
+	filename*129="
+                                                            ";
+	filename*130="
+                                                            ";
+	filename*131="
+                                                            ";
+	filename*132="
+                                                            ";
+	filename*133="
+                                                            ";
+	filename*134="
+                                                            ";
+	filename*135="
+                                                            ";
+	filename*136="
+                                                            ";
+	filename*137="
+                                                            ";
+	filename*138="
+                                                            ";
+	filename*139="
+                                                            ";
+	filename*140="
+                                                            ";
+	filename*141="
+                                                            ";
+	filename*142="
+                                                            ";
+	filename*143="
+                                                            ";
+	filename*144="
+                                                            ";
+	filename*145="
+                                                            ";
+	filename*146="
+                                                            ";
+	filename*147="
+                                                            ";
+	filename*148="
+                                                            ";
+	filename*149="
+                                                            ";
+	filename*150="
+                                                            ";
+	filename*151="
+                                                            ";
+	filename*152="
+                                                            ";
+	filename*153="
+                                                            ";
+	filename*154="
+                                                            ";
+	filename*155="
+                                                            ";
+	filename*156="
+                                                            ";
+	filename*157="
+                                                            ";
+	filename*158="
+                                                            ";
+	filename*159="
+                                                            ";
+	filename*160="
+                                                            ";
+	filename*161="
+                                                            ";
+	filename*162="
+                                                            ";
+	filename*163="
+                                                            ";
+	filename*164="
+                                                            ";
+	filename*165="
+                                                            ";
+	filename*166="
+                                                            ";
+	filename*167="
+                                                            ";
+	filename*168="
+                                                            ";
+	filename*169="
+                                                            ";
+	filename*170="
+                                                            ";
+	filename*171="
+                                                            ";
+	filename*172="
+                                                            ";
+	filename*173="
+                                                            ";
+	filename*174="
+                                                            ";
+	filename*175="
+                                                            ";
+	filename*176="
+                                                            ";
+	filename*177="
+                                                            ";
+	filename*178="
+                                                            ";
+	filename*179="
+                                                            ";
+	filename*180="
+                                                            ";
+	filename*181="
+                                                            ";
+	filename*182="
+                                                            ";
+	filename*183="
+                                                            ";
+	filename*184="
+                                                            ";
+	filename*185="
+                                                            ";
+	filename*186="
+                                                            ";
+	filename*187="
+                                                            ";
+	filename*188="
+                                                            ";
+	filename*189="
+                                                            ";
+	filename*190="
+                                                            ";
+	filename*191="
+                                                            ";
+	filename*192="
+                                                            ";
+	filename*193="
+                                                            ";
+	filename*194="
+                                                            ";
+	filename*195="
+                                                            ";
+	filename*196="
+                                                            ";
+	filename*197="
+                                                            ";
+	filename*198="
+                                                            ";
+	filename*199="
+                                                            ";
+	filename*200="
+                                                            ";
+	filename*201="
+                                                            ";
+	filename*202="
+                                                            ";
+	filename*203="
+                                                            ";
+	filename*204="
+                                                            ";
+	filename*205="
+                                                            ";
+	filename*206="
+                                                            ";
+	filename*207="
+                                                            ";
+	filename*208="
+                                                            ";
+	filename*209="
+                                                            ";
+	filename*210="
+                                                            ";
+	filename*211="
+                                                            ";
+	filename*212="
+                                                            ";
+	filename*213="
+                                                            ";
+	filename*214="
+                                                            ";
+	filename*215="
+                                                            ";
+	filename*216="
+                                                            ";
+	filename*217="
+                                                            ";
+	filename*218="
+                                                            ";
+	filename*219="
+                                                            ";
+	filename*220="
+                                                            ";
+	filename*221="
+                                                            ";
+	filename*222="
+                                                            ";
+	filename*223="
+                                                            ";
+	filename*224="
+                                                            ";
+	filename*225="
+                                                            ";
+	filename*226="
+                                                            ";
+	filename*227="
+                                                            ";
+	filename*228="
+                                                            ";
+	filename*229="
+                                                            ";
+	filename*230="
+                                                            ";
+	filename*231="
+                                                            ";
+	filename*232="
+                                                            ";
+	filename*233="
+                                                            ";
+	filename*234="
+                                                            ";
+	filename*235="
+                                                            ";
+	filename*236="
+                                                            ";
+	filename*237="
+                                                            ";
+	filename*238="
+                                                            ";
+	filename*239="
+                                                            ";
+	filename*240="
+                                                            ";
+	filename*241="
+                                                            ";
+	filename*242="
+                                                            ";
+	filename*243="
+                                                            ";
+	filename*244="
+                                                            ";
+	filename*245="
+                                                            ";
+	filename*246="
+                                                            ";
+	filename*247="
+                                                            ";
+	filename*248="
+                                                            ";
+	filename*249="
+                                                            ";
+	filename*250="
+                                                            ";
+	filename*251="
+                                                    reply.  ";
+	filename*252="
+                                                            ";
+	filename*253="
+                                                            ";
+	filename*254="
+                                                            ";
+	filename*255="
+                                                            ";
+	filename*256="
+                                                            ";
+	filename*257="
+                                                            ";
+	filename*258="
+                                                            ";
+	filename*259="
+                                                            ";
+	filename*260="
+                                                            ";
+	filename*261="
+                                                            ";
+	filename*262="
+                                                            ";
+	filename*263="
+                                                            ";
+	filename*264="
+                                                            ";
+	filename*265="
+                                                            ";
+	filename*266="
+                                                            ";
+	filename*267="
+                                                            ";
+	filename*268="
+                                                            ";
+	filename*269="
+                                                            ";
+	filename*270="
+                                                            ";
+	filename*271="
+                                                            ";
+	filename*272="
+                                                            ";
+	filename*273="
+                                                            ";
+	filename*274="
+                                                            ";
+	filename*275="
+                                                            ";
+	filename*276="
+                                                            ";
+	filename*277="
+                                                            ";
+	filename*278="
+                                                            ";
+	filename*279="
+                                                            ";
+	filename*280="
+                                                            ";
+	filename*281="
+                                                            ";
+	filename*282="                                            P.doc"
+Content-ID: <a7512f72-f3bd-f8cb-f664-732c8b9f5ee0@yahoo.com>
+
+0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAAAAAABAAAAOAAAAAAAAAAA
+EAAAOgAAAAEAAAD+////AAAAADcAAAD/////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////s
+pcEAW4AJBAAA8BK/AAAAAAAAEAAAAAAACAAApRcAAA4AYmpiaqz6rPoAAAAAAAAAAAAAAAAAAAAA
+AAAJBBYALiAAAM6QAQDOkAEApQ8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD//w8AAAAA
+AAAAAAD//w8AAAAAAAAAAAD//w8AAAAAAAAAAAAAAAAAAAAAALcAAAAAAPYFAAAAAAAA9gUAADkT
+AAAAAAAAORMAAAAAAAA5EwAAAAAAADkTAAAAAAAAORMAABQAAAAAAAAAAAAAAP////8AAAAATRMA
+AAAAAABNEwAAAAAAAE0TAAAAAAAATRMAABwAAABpEwAADAAAAE0TAAAAAAAAyRUAADIBAAB1EwAA
+AAAAAHUTAAAAAAAAdRMAAAAAAAB1EwAAAAAAAHUTAAAAAAAAUBQAAAAAAABQFAAAAAAAAFAUAAAA
+AAAASBUAAAIAAABKFQAAAAAAAEoVAAAAAAAAShUAAAAAAABKFQAAAAAAAEoVAAAAAAAAShUAACQA
+AAD7FgAAogIAAJ0ZAABqAAAAbhUAABUAAAAAAAAAAAAAAAAAAAAAAAAAORMAAAAAAABQFAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAABQFAAAAAAAAFAUAAAAAAAAUBQAAAAAAABQFAAAAAAAAG4VAAAAAAAA
+AAAAAAAAAAA5EwAAAAAAADkTAAAAAAAAdRMAAAAAAAAAAAAAAAAAAHUTAADbAAAAgxUAABYAAADg
+FAAAAAAAAOAUAAAAAAAA4BQAAAAAAABQFAAALgAAADkTAAAAAAAAdRMAAAAAAAA5EwAAAAAAAHUT
+AAAAAAAASBUAAAAAAAAAAAAAAAAAAOAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAUBQAAAAAAABIFQAAAAAAAAAAAAAAAAAA4BQAAAAAAAAAAAAA
+AAAAAOAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA4BQAAAAAAAB1EwAAAAAAAP////8AAAAAwEyGxzf5
+0QEAAAAAAAAAAE0TAAAAAAAAfhQAABYAAADgFAAAAAAAAAAAAAAAAAAANBUAABQAAACZFQAAMAAA
+AMkVAAAAAAAA4BQAAAAAAAAHGgAAAAAAAJQUAABMAAAABxoAAAAAAADgFAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADg
+FAAAFAAAAAcaAAAAAAAAAAAAAAAAAAA5EwAAAAAAAPQUAABAAAAAUBQAAAAAAABQFAAAAAAAAOAU
+AAAAAAAAUBQAAAAAAABQFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAUBQA
+AAAAAABQFAAAAAAAAFAUAAAAAAAAbhUAAAAAAABuFQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAA4BQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFAUAAAA
+AAAAUBQAAAAAAABQFAAAAAAAAMkVAAAAAAAAUBQAAAAAAABQFAAAAAAAAFAUAAAAAAAAUBQAAAAA
+AAAAAAAAAAAAAP////8AAAAA/////wAAAAD/////AAAAAAAAAAAAAAAA/////wAAAAD/////AAAA
+AP////8AAAAA/////wAAAAD/////AAAAAP////8AAAAA/////wAAAAD/////AAAAAP////8AAAAA
+/////wAAAAD/////AAAAAP////8AAAAA/////wAAAAD/////AAAAAAcaAAAAAAAAUBQAAAAAAABQ
+FAAAAAAAAFAUAAAAAAAAUBQAAAAAAABQFAAAAAAAAFAUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABQFAAAAAAAAFAUAAAAAAAAUBQA
+AAAAAAD2BQAACQwAAP8RAAA6AQAABQASAQAACRwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEhlbGxv
+IERlYXIsoAsLV2l0aCByZXNwZWN0IGFuZCBodW1ibGUgc3VibWlzc2lvbiwgSSBiZWcgdG8gc3Rh
+dGUgdGhlIGZvbGxvd2luZyBmZXcgbGluZXMgZm9yIHlvdXIga2luZCBjb25zaWRlcmF0aW9uLCBJ
+IGhvcGUgeW91IHdpbGwgc3BhcmUgc29tZSBvZiB5b3VyIHZhbHVhYmxlIG1pbnV0ZXMgdG8gcmVh
+ZCB0aGUgZm9sbG93aW5nIGFwcGVhbCB3aXRoIHN5bXBhdGhldGljIG1pbmQuIEkgbXVzdCBjb25m
+ZXNzIHRoYXQgaXQgaXMgd2l0aCBncmVhdCBob3BlIHRoYXQgSSB3cml0ZSB0byB5b3UgdGhpcyBt
+YWlsLCB3aGljaCBJIGtub3cgYW5kIGJlbGlldmUgYnkgZmFpdGggdGhhdCBpdCBtdXN0IHN1cmVs
+eSBmaW5kIHlvdSBpbiBnb29kIGNvbmRpdGlvbiBvZiBoZWFsdGguIE15IG5hbWUgaXMgTWlzcyBB
+bmdlbGEgTGlzYSBLaW50bywgSSBhbSAyMyB5ZWFycyBvbGQuoAsLSSdtIGZyb20gTGliZXJpYSBh
+bmQgcHJlc2VudGx5IEkgYW0gcmVzaWRpbmcgaW4gdGhlIHJlZnVnZWUgY2FtcCBoZXJlIGluIFNv
+dXRoIEFmcmljYSBhcyBhIHJlc3VsdCBvZiB0aGUgY2l2aWwgd2FyIGluIG15IGNvdW50cnkuIEkg
+d2FzIGEgZmlyc3QgeWVhciBzdHVkZW50IG9mIGxhdyBhdCB0aGUgdW5pdmVyc2l0eSBiZWZvcmUg
+dGhlIGluY2lkZW50IHRoYXQgbGVkIG1lIGludG8gdGhpcyBzaXR1YXRpb24gb2YgYmVlbiBpbiBy
+ZWZ1Z2VlIGNhbXAgaW4gU291dGggQWZyaWNhLiBJJ20gYSB2ZXJ5IHNpbXBsZSwgaG9uZXN0LCBy
+ZXNwZWN0ZnVsLCBDYXJpbmcsIHNpbmNlcmUgYW5kIGJlYXV0aWZ1bCBnaXJsLqALC015IGxhdGUg
+ZmF0aGVyIERyLiBNdXJ2ZWUgS2ludG8gd2FzIHRoZSBNYW5hZ2luZyBEaXJlY3RvciBvZiBSYWlu
+Ym93IEdvbGQgYW5kIERpYW1vbmQgTWluZSBDb21wYW55LCBhbHNvIGEgc3VjY2Vzc2Z1bCBleHBv
+cnRlciBvZiBDb2NvYSBkdXJpbmcgaGlzIGxpZmUgdGltZS4gSSBhbSB0aGUgb25seSBkYXVnaHRl
+ciBvZiBteSBwYXJlbnQuIEl0IGlzIHNhZCB0aGF0IHRoZSByZWJlbHMgYXR0YWNrZWQgbXkgaG91
+c2Ugb25lIGVhcmx5IG1vcm5pbmcga2lsbGluZyBteSBtb3RoZXIgYW5kIG15IGZhdGhlci4gRXF1
+YWxseSBteSBtb3RoZXIgd2FzIGEgc2VuaW9yIGxlY3R1cmVyIGF0IHRoZSB1bml2ZXJzaXR5IGJl
+Zm9yZSBoZXIgdW50aW1lbHkgZGVhdGguIEkgZG9uJ3QgaGF2ZSBhbnkgcmVsYXRpdmUgbm93IHdo
+b20gSSBjYW4gZ28gdG8sIGFsbCBteSByZWxhdGl2ZXMgcmFuIGF3YXkgaW4gdGhlIG1pZGRsZSBv
+ZiB0aGUgd2FyLqALSSBhbSB0aGUgb25seSBzdXJ2aXZvciBpbiBteSBmYW1pbHkgYmVjYXVzZSBJ
+IGFtIHRoZSBvbmx5IGNoaWxkIG9mIG15IHBhcmVudC4gQWZ0ZXIgdGhlIHJlY2VudCBjcmlzaXMg
+dGhhdCByZXN1bHRlZCB0byB0aGUgZGVhdGggb2YgbXkgcGFyZW50LCBJIHdhcyB0YWtlbiB0byBT
+b3V0aCBBZnJpY2EgZm9yIHNhZmV0eSBieSBSZWQgQ3Jvc3MgdW5kZXIgQ2F0aG9saWMgQ2FyaXRh
+cyBhcyBhbiBhc3lsdW0sIHdoaWNoIGlzIGhvdyBJIGNhbWUgdG8gdGhlIENhbXAuIEFzIGEgcmVm
+dWdlZSBoZXJlIEkgZG9uJ3QgaGF2ZSBhbnkgcmlnaHQgb3IgcHJpdmlsZWdlIHRvIGFueXRoaW5n
+IGJlIGl0IG1vbmV5IG9yIHdoYXRldmVyIGJlY2F1c2UgaXQgaXMgYWdhaW5zdCB0aGUgbGF3IG9m
+IHRoaXMgY291bnRyeS6gCwtQbGVhc2UgbGlzdGVuIHRvIHRoaXMgY2FyZWZ1bGx5LCBJIGhhdmUg
+bXkgbGF0ZSBmYXRoZXIncyBGdW5kIERlcG9zaXQgc2xlZXAgYW5kIERlcG9zaXQgQWdyZWVtZW50
+IGFuZCBkZWF0aCBjZXJ0aWZpY2F0ZSBoZXJlIHdpdGggbWUsIGJlY2F1c2Ugd2hlbiBoZSB3YXMg
+YWxpdmUgaGUgZGVwb3NpdGVkIHNvbWUgYW1vdW50IG9mIG1vbmV5IGluIGEgc2VjdXJpdHkgY29t
+cGFueSBpbiBTb3V0aCBBZnJpY2Egd2hpY2ggaGUgdXNlZCBteSBuYW1lIGFzIHRoZSBuZXh0IG9m
+IGtpbiwgdGhlIGFtb3VudCBpbiBxdWVzdGlvbiBpcyBGb3VydGVlbiBNaWxsaW9uIFVuaXRlZCBT
+dGF0ZXMgRG9sbGFycyAoVVMkMTQsIDAwMCwgMDAwLCAwMCkuIEFscmVhZHkgSSBoYXZlIGluZm9y
+bWVkIHRoaXMgc2VjdXJpdHkgY29tcGFueSBhYm91dCBteSBpbnRlbnRpb24gdG8gY2xhaW0gbXkg
+bGF0ZSBmYXRoZXIncyBkZXBvc2l0LiBUaGUgc2VjdXJpdHkgY29tcGFueSB0b2xkIG1lIHRvIGxv
+b2sgZm9yIGEgZm9yZWlnbiBwYXJ0bmVyIHdobyB3aWxsIGFzc2lzdCBtZSBpbiB0cmFuc2ZlcnJp
+bmcgdGhlIGZ1bmRzIGR1ZSB0byBteSByZWZ1Z2VlIHN0YXR1cyBoZXJlLCBhcyBhIHJlZnVnZWUg
+SSBhbSBub3QgYWxsb3dlZCB0aGUgcmlnaHQgb2YgY2xhaW0gdG8gdGhlIG1vbmV5IGJ1dCB0aHJv
+dWdoIGFuIGFwcG9pbnRlZCByZXByZXNlbnRhdGl2ZSBhcyB0aGUgdW5pdGVkIHJlZnVnZWUgbGF3
+IGdvdmVybmluZyByZWZ1Z2VlIGFsbCBvdmVyIHRoZSB3b3JsZCBzdGF0ZXMuoAsLTm93IEkgd2Fu
+dCBhbiBob25lc3QgcGFydG5lciBvdmVyc2VhcyB3aG8gd2lsbCBhc3Npc3QgbWUgaW4gdHJhbnNm
+ZXJyaW5nIHRoaXMgbW9uZXkuIEkga2VwdCB0aGlzIHNlY3JldCB0byBwZW9wbGUgaW4gdGhlIGNh
+bXAgaGVyZTsgeW91IGFyZSB0aGUgb25seSBwZXJzb24gdGhhdCBJIGFtIHRlbGxpbmcgdGhpcy4g
+U28gSSB3aWxsIGxpa2UgeW91IHRvIGhlbHAgbWUgdG8gdHJhbnNmZXIgdGhpcyBtb25leSB0byB5
+b3VyIGFjY291bnQgYW5kIGZyb20gaXQgeW91IGNhbiBzZW5kIHNvbWUgbW9uZXkgZm9yIG1lIHRv
+IGdldCBteSB0cmF2ZWxpbmcgZG9jdW1lbnRzIGFuZCBhaXIgdGlja2V0IHRvIGNvbWUgYW5kIHJl
+c2lkZSBwZXJtYW5lbnRseSBpbiB5b3VyIGNvdW50cnkgdGlsbCBzdWNoIGEgdGltZSB0aGF0IGl0
+IHdpbGwgYmUgY29udmVuaWVudCBmb3IgbWUgdG8gcmV0dXJuIGJhY2sgaG9tZSBpZiBJIHNvIGRl
+c2lyZS6gIFRoaXMgaXMgYmVjYXVzZSBJIGhhdmUgc3VmZmVyZWQgYSBsb3Qgb2Ygc2V0YmFja3Mg
+YXMgYSByZXN1bHQgb2YgaW5jZXNzYW50IHBvbGl0aWNhbCBjcmlzaXMgaW4gTGliZXJpYS6gC1Ro
+ZSBkZWF0aCBvZiBteSBmYXRoZXIgYWN0dWFsbHkgYnJvdWdodCBzb3Jyb3cgdG8gbXkgbGlmZS4g
+SSBhbHNvIHdhbnQgdG8gaW52ZXN0IHRoaXMgZnVuZCB1bmRlciB5b3VyIGNhcmUgaW4gYW55IGJ1
+c2luZXNzIG9mIHlvdXIgY2hvaWNlIHNpbmNlIEknbSBzdGlsbCB5b3VuZyB0byBtYW5hZ2UgaXQu
+IEkgYW0gaW4gYSBzaW5jZXJlIGRlc2lyZSBvZiB5b3VyIGh1bWJsZSBhc3Npc3RhbmNlIGluIHRo
+aXMgcmVnYXJkcy4gWW91ciBzdWdnZXN0aW9ucyBhbmQgaWRlYXMgd2lsbCBiZSBoaWdobHkgcmVn
+YXJkZWQuoAsLTm93IHBlcm1pdCBtZSB0byBhc2sgdGhlc2UgZmV3IHF1ZXN0aW9uczogMS4gQ2Fu
+IHlvdSBob25lc3RseSBoZWxwIG1lIGZyb20geW91ciBoZWFydD8gMi4gQ2FuIEkgY29tcGxldGVs
+eSB0cnVzdCB5b3U/IDMuIFdoYXQgcGVyY2VudGFnZSBvZiB0aGUgdG90YWwgYW1vdW50IGluIHF1
+ZXN0aW9uIHdpbGwgYmUgZ29vZCBmb3IgeW91IGFmdGVyIHRoZSBmdW5kIGhhcyBiZWluZyB0cmFu
+c2ZlcnJlZCB0byB5b3VyIGFjY291bnQgYW5kIEkgY29tZSBvdmVyIHRvIG1lZXQgeW91PyBQbGVh
+c2UsIGNvbnNpZGVyIHRoaXMgYW5kIGdldCBiYWNrIHRvIG1lIGFzIHNvb24gYXMgcG9zc2libGUu
+oAtJbW1lZGlhdGVseSBJIGNvbmZpcm0geW91ciB3aWxsaW5nbmVzcywgSSB3aWxsIHNlbmQgdG8g
+eW91IG15IFBpY3R1cmVzIGFuZCBhbHNvIGluZm9ybSB5b3UgbW9yZSBkZXRhaWxzIGludm9sdmVk
+IGluIHRoaXMgbWF0dGVyLiBJbiBzdW1tYXJ5LCBJIHdpbGwgbGlrZSB5b3UgdG8ga2VlcCBpdCB0
+byB5b3Vyc2VsZiBhbmQgZG9uJ3QgdGVsbCBpdCB0byBhbnlvbmUgZm9yIEkgYW0gYWZyYWlkIG9m
+IGxvc2luZyBteSBsaWZlIGFuZCB0aGUgbW9uZXkuIFJlcGx5IHRvIG15IHByaXZhdGUgZW1haWwg
+YWRkcmVzczqgICBhbmdlbGFraW50bzE5OTNAZ21haWwuY29tIA2gS2luZCBSZWdhcmRzLKALTWlz
+cyBBbmdlbGEuDQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACAAACwgAAAwIAAAO
+CAAAuAkAALkJAAC7CQAAGAsAABkLAAAbCwAA9QwAAPYMAAD3DAAAiA4AAIkOAACLDgAAtw8AAN4P
+AADfDwAA8g8AAIwRAACNEQAAjxEAAM4TAADPEwAA0BMAAPUUAAD2FAAA+BQAAEUWAABGFgAARxYA
+AGoXAABrFwAA4MCrjcCrjcCrjcCrjcCrjW+Nb43Aq43Aq43Aq43Aq43AAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA6FWjKMrkAFmjKMrkAQioBQ0oU
+AE9KAwBRSgMAXkoDAGFKFABmSAABcGgAAAAAccoKAAAA/////wAAAAA6FWg0BSsAFmgDB5YAQioB
+Q0oUAE9KAwBRSgMAXkoDAGFKFABmSAABcGgAAAAAccoKAAAA/////wAAAAApFWg0BSsAFmgDB5YA
+QioBQ0oUAE9KAwBRSgMAXkoDAGFKFABwaAAAAAA+FWg0BSsAFmgDB5YAMEoPAEIqAUNKFABPSgMA
+UUoDAF5KAwBhShQAZkgAAXBoAAAAAHHKCgAAAP////8AAAAAPRVoNAUrABZoAweWADUIgUIqAUNK
+FABPSgMAUUoDAF5KAwBhShQAZkgAAXBoAAAAAHHKCgAAAP////8AAAAAIQAIAACIFwAApRcAAPIA
+AAAAAAAAAAAAAADyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAADAAADoQU+w+EFPtdhBT7XoQU+2dkAweWAAACaxcAAGwXAABtFwAAhhcA
+AIcXAACIFwAAiRcAAJYXAACXFwAAmBcAAODCoYN4WDpYJQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAApFWg0BSsAFmgDB5YAQioBQ0oUAE9KAwBRSgMAXkoDAGFKFABwaAAAAAA6FWg0BSsAFmgDB5YA
+QioBQ0oUAE9KAwBRSgMAXkoDAGFKFABmSAABcGgAAAAAccoKAAAA/////wAAAAA+FWg0BSsAFmgD
+B5YAMEoPAEIqAUNKFABPSgMAUUoDAF5KAwBhShQAZkgAAXBoAAAAAHHKCgAAAP////8AAAAAFBVo
+NAUrABZoMgUSAENKFABhShQAADsWaBJPFAAwSg8ANQiBQioKQ0oSAE9KAwBRSgMAXkoDAGFKEgBm
+SAABcGgAcMAAccoKAAAA/////wAAAEEVaBJPFAAWaBJPFAAwSg8ANQiBQioKQ0oSAE9KAwBRSgMA
+XkoDAGFKEgBmSAABcGgAcMAAccoKAAAA/////wAAADsWaBJPFAAwSg8ANQiBQioDQ0oUAE9KAwBR
+SgMAXkoDAGFKFABmSAABcGgAsPAAccoKAAAA/////wAAAD4VaDQFKwAWaDQFKwAwSg8AQioBQ0oU
+AE9KAwBRSgMAXkoDAGFKFABmSAABcGgAAAAAccoKAAAA/////wAAAAmYFwAApBcAAKUXAADg1QAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAUFWg0BSsAFmgDB5YAQ0oUAGFKFAAAPRVoNAUrABZoAweWADUIgUIqAUNKFABP
+SgMAUUoDAF5KAwBhShQAZkgAAXBoAAAAAHHKCgAAAP////8AAAAAAiwAMZBoAR+w0C8gsOA9IbAI
+ByKwCAcjkKAFJJCgBSWwAAAXsNACGLDQAgyQ0AIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAF4EEQASAAEACwEPAAcAAAAAAAAAAAAEAAgA
+AAAIAAAADgAAAA4AAAAOAAAADgAAAA4AAAAOAAAADgAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAOAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+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
+aGVtZS90aGVtZS9fcmVscy90aGVtZU1hbmFnZXIueG1sLnJlbHOEj00KwjAUhPeCdwhvb9O6EJEm
+3YjQrdQDhOQ1DTY/JFHs7Q2uLAguh2G+mWm7l53JE2My3jFoqhoIOumVcZrBbbjsjkBSFk6J2Ttk
+sGCCjm837RVnkUsoTSYkUiguMZhyDidKk5zQilT5gK44o49W5CKjpkHIu9BI93V9oPGbAXzFJL1i
+EHvVABmWUJr/s/04GolnLx8WXf5RQXPZhQUoosbM4CObqkwEylu6usTfAAAA//8DAFBLAQItABQA
+BgAIAAAAIQCCirwT+gAAABwCAAATAAAAAAAAAAAAAAAAAAAAAABbQ29udGVudF9UeXBlc10ueG1s
+UEsBAi0AFAAGAAgAAAAhAKXWp+fAAAAANgEAAAsAAAAAAAAAAAAAAAAAKwEAAF9yZWxzLy5yZWxz
+UEsBAi0AFAAGAAgAAAAhAGt5lhaDAAAAigAAABwAAAAAAAAAAAAAAAAAFAIAAHRoZW1lL3RoZW1l
+L3RoZW1lTWFuYWdlci54bWxQSwECLQAUAAYACAAAACEAlrWt4pYGAABQGwAAFgAAAAAAAAAAAAAA
+AADRAgAAdGhlbWUvdGhlbWUvdGhlbWUxLnhtbFBLAQItABQABgAIAAAAIQAN0ZCftgAAABsBAAAn
+AAAAAAAAAAAAAAAAAJsJAAB0aGVtZS90aGVtZS9fcmVscy90aGVtZU1hbmFnZXIueG1sLnJlbHNQ
+SwUGAAAAAAUABQBdAQAAlgoAAAAAPD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgi
+IHN0YW5kYWxvbmU9InllcyI/Pg0KPGE6Y2xyTWFwIHhtbG5zOmE9Imh0dHA6Ly9zY2hlbWFzLm9w
+ZW54bWxmb3JtYXRzLm9yZy9kcmF3aW5nbWwvMjAwNi9tYWluIiBiZzE9Imx0MSIgdHgxPSJkazEi
+IGJnMj0ibHQyIiB0eDI9ImRrMiIgYWNjZW50MT0iYWNjZW50MSIgYWNjZW50Mj0iYWNjZW50MiIg
+YWNjZW50Mz0iYWNjZW50MyIgYWNjZW50ND0iYWNjZW50NCIgYWNjZW50NT0iYWNjZW50NSIgYWNj
+ZW50Nj0iYWNjZW50NiIgaGxpbms9ImhsaW5rIiBmb2xIbGluaz0iZm9sSGxpbmsiLz4AAAAApQ8A
+ABEAACAAAAAA/////wAIAABrFwAAmBcAAKUXAAAMAAAADgAAAA8AAAAACAAApRcAAA0AAAAPAADw
+OAAAAAAABvAYAAAAAggAAAIAAAABAAAAAQAAAAEAAAACAAAAQAAe8RAAAAD//wAAAAD/AICAgAD3
+AAAQAA8AAvCSAAAAEAAI8AgAAAABAAAAAQQAAA8AA/AwAAAADwAE8CgAAAABAAnwEAAAAAAAAAAA
+AAAAAAAAAAAAAAACAArwCAAAAAAEAAAFAAAADwAE8EIAAAASAArwCAAAAAEEAAAADgAAUwAL8B4A
+AAC/AQAAEADLAQAAAAD/AQAACAAEAwkAAAA/AwEAAQAAABHwBAAAAAEAAAAAAAAAnwEAAKQBAAAu
+AwAANAMAADUDAAA6AwAApw8AAAcAHAAHABwABwAcAAcAAAAAAEgPAACIDwAApw8AAAcABAAHAAAA
+AAAAAAAAtwcAAN4HAADfBwAA8gcAAGsPAACIDwAAiQ8AAIkPAACkDwAApA8AAKcPAAAEAAMABAAD
+AAQAAwAEAAMABAADAAQABwABABNm8lkAAAAAAAAAAAABAgACAAoAAAAEAAAACAAAAOUAAAAAAAAA
+CQAAADIFEgASTxQANAUrALgKZQC1T4UA/ReTAAMHlgCVbLIAyjK5AAN3+gAAAAAApQ8AAKcPAAAA
+AAAAAQAAAP9AA4ABAIcPAACHDwAAAJiiAigBKAGHDwAAAAAAAIcPAAAAAAAAAhAAAAAAAAAApQ8A
+AIgAABAAQAAA//8BAAAABwBVAG4AawBuAG8AdwBuAP//AQAIAAAAAAAAAAAAAAD//wEAAAAAAP//
+AAACAP//AAAAAP//AAACAP//AAAAAAUAAABHHpABAAACAgYDBQQFAgME/yoA4EF4AMAJAAAAAAAA
+AP8BAAAAAAAAVABpAG0AZQBzACAATgBlAHcAIABSAG8AbQBhAG4AAAA1HpABAgAFBQECAQcGAgUH
+AAAAAAAAABAAAAAAAAAAAAAAAIAAAAAAUwB5AG0AYgBvAGwAAAAzLpABAAACCwYEAgICAgIE/yoA
+4EN4AMAJAAAAAAAAAP8BAAAAAAAAQQByAGkAYQBsAAAAOS6QAQAAAgsFAgQCBAICA/8iAOF/5ADA
+KQAAAAAAAADfAQAAAAAAAFMAZQBnAG8AZQAgAFUASQAAAEEekAEAAAIEBQMFBAYDAgTvAgCg6yAA
+QgAAAAAAAAAAnwEAAAAAAABDAGEAbQBiAHIAaQBhACAATQBhAHQAaAAAACIABABxCIwYAPDQAgAA
+aAEAAAAAA5NIhwOTSIcAAAAAAgABAAAAVQIAAFANAAABAAcAAAAEAAMQHAAAAFUCAABQDQAAAQAH
+AAAAHAAAAAAAAAAhAwDwEAAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIB6AFtAC0AIGBcjQA
+AAAAAAAAAAAAAAAAAJ4PAACeDwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAyg1EA8BAACAD8/QEAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAISFgAAAAACfD/DwEIAT8AAOQEAAD///9/////f////3////9/////f///
+/3////9/AweWAAAEAAAyAAAAAAAAAAAAAAAAAAAAAAAAAAAAIQQAAAAAAAAAAAAAAAAAAAAAAAAQ
+HAAABAAAAAAAAAAAAHgAAAB4AAAAAAAAAAAAAACgBQAA//8SAAAAAAAAAAsASABlAGwAbABvACAA
+RABlAGEAcgAsAAAAAAAAABEATQBBAE4AQwBIAEUAUwBUAEUAUgAgAFUATgBJAFQARQBEAAQAVQBz
+AGUAcgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAD+/wAABgECAAAAAAAAAAAAAAAAAAAAAAABAAAA4IWf8vlPaBCrkQgA
+Kyez2TAAAABAAQAADgAAAAEAAAB4AAAAAgAAAIAAAAAEAAAAlAAAAAcAAACwAAAACAAAAMAAAAAJ
+AAAA0AAAABIAAADcAAAACgAAAPwAAAAMAAAACAEAAA0AAAAUAQAADgAAACABAAAPAAAAKAEAABAA
+AAAwAQAAEwAAADgBAAACAAAA5AQAAB4AAAAMAAAASGVsbG8gRGVhciwAHgAAABQAAABNQU5DSEVT
+VEVSIFVOSVRFRAAAAB4AAAAIAAAATm9ybWFsAAAeAAAACAAAAFVzZXIAAAAAHgAAAAQAAAAyAAAA
+HgAAABgAAABNaWNyb3NvZnQgT2ZmaWNlIFdvcmQAAABAAAAAAEbDIwAAAABAAAAAAKJ4szf50QFA
+AAAAAKJ4szf50QEDAAAAAQAAAAMAAABVAgAAAwAAAFANAAADAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAA/v8AAAYBAgAAAAAAAAAAAAAAAAAAAAAAAQAAAALVzdWcLhsQk5cIACss+a4wAAAA
+9AAAAAwAAAABAAAAaAAAAA8AAABwAAAABQAAAHwAAAAGAAAAhAAAABEAAACMAAAAFwAAAJQAAAAL
+AAAAnAAAABAAAACkAAAAEwAAAKwAAAAWAAAAtAAAAA0AAAC8AAAADAAAANQAAAACAAAA5AQAAB4A
+AAAEAAAAAAAAAAMAAAAcAAAAAwAAAAcAAAADAAAAng8AAAMAAAAAAAwACwAAAAAAAAALAAAAAAAA
+AAsAAAAAAAAACwAAAAAAAAAeEAAAAQAAAAwAAABIZWxsbyBEZWFyLAAMEAAAAgAAAB4AAAAGAAAA
+VGl0bGUAAwAAAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAEAAAACAAAAAwAAAAQAAAAFAAAABgAAAAcAAAAIAAAACQAAAAoAAAALAAAADAAAAA0AAAAOAAAA
+DwAAABAAAAD+////EgAAABMAAAAUAAAAFQAAABYAAAAXAAAAGAAAAP7///8aAAAAGwAAABwAAAAd
+AAAAHgAAAB8AAAAgAAAAIQAAACIAAAAjAAAAJAAAACUAAAAmAAAA/v///ygAAAApAAAAKgAAACsA
+AAAsAAAALQAAAC4AAAD+////MAAAADEAAAAyAAAAMwAAADQAAAA1AAAANgAAAP7////9////OQAA
+AP7////+/////v//////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+UgBvAG8AdAAgAEUAbgB0AHIAeQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAABYABQH//////////wMAAAAGCQIAAAAAAMAAAAAAAABGAAAAAAAAAAAAAAAAAHGaxzf5
+0QE7AAAAgAAAAAAAAABEAGEAdABhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAACgACAf///////////////wAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAABEAAAAAEAAAAAAAADEAVABhAGIAbABlAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAAIBAQAAAAYAAAD/////AAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAGQAAAAcaAAAAAAAAVwBvAHIAZABEAG8AYwB1
+AG0AZQBuAHQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABoAAgECAAAA
+BQAAAP////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAALiAAAAAAAAAF
+AFMAdQBtAG0AYQByAHkASQBuAGYAbwByAG0AYQB0AGkAbwBuAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAKAACAf///////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+ACcAAAAAEAAAAAAAAAUARABvAGMAdQBtAGUAbgB0AFMAdQBtAG0AYQByAHkASQBuAGYAbwByAG0A
+YQB0AGkAbwBuAAAAAAAAAAAAAAA4AAIBBAAAAP//////////AAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAALwAAAAAQAAAAAAAAAQBDAG8AbQBwAE8AYgBqAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABIAAgD///////////////8AAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAeQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAP//////
+/////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEA
+AAD+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////AQD+
+/wMKAAD/////BgkCAAAAAADAAAAAAAAARicAAABNaWNyb3NvZnQgT2ZmaWNlIFdvcmQgOTctMjAw
+MyBEb2N1bWVudAAKAAAATVNXb3JkRG9jABAAAABXb3JkLkRvY3VtZW50LjgA9DmycQAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+
+------=_Part_2441088_1848414538.1475126405803--
