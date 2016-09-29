@@ -1,27 +1,28 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/6] ipr: use pci_irq_allocate_vectors
-Date: Thu, 29 Sep 2016 17:32:37 +0200
-Message-ID: <20160929153237.GA32512@lst.de>
-References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-3-git-send-email-hch@lst.de> <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
+Subject: Re: dm-mpath: always return reservation conflict
+Date: Thu, 29 Sep 2016 17:35:03 +0200
+Message-ID: <20160929153502.GC32512@lst.de>
+References: <1470141392-25479-1-git-send-email-hch@lst.de> <1470141392-25479-2-git-send-email-hch@lst.de> <20160811183832.GA27144@lst.de> <20160815130829.GA14829@redhat.com> <20160815134039.GA5569@redhat.com> <20160926165230.GA5787@infradead.org> <1474916784.2765.64.camel@HansenPartnership.com> <9f7ee494-1432-90ad-55e2-dbd223cd7bf3@suse.de> <1475002249.2716.31.camel@HansenPartnership.com> <20160929150132.GA31965@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:37895 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751710AbcI2PfF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Sep 2016 11:35:05 -0400
 Content-Disposition: inline
-In-Reply-To: <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20160929150132.GA31965@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Thu, Sep 29, 2016 at 09:01:44AM -0500, Brian King wrote:
-> Thanks Christoph. Very nice. As I was reviewing the patch, I noticed
-> the additional PCI_IRQ_AFFINITY flag, which is currently not being set
-> in this patch. Is the intention to set that globally by default, or
-> should I follow up with a one liner to add that to the ipr driver
-> in the next patch set I send out?
+On Thu, Sep 29, 2016 at 11:01:33AM -0400, Mike Snitzer wrote:
+> I've elected to just take this change for 4.9.  Please see:
+> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.git/commit/?h=dm-4.9&id=8ff232c1a819c2e98d85974a3bff0b7b8e2970ed
 
-Hi Brian,
+Thanks Mike.
 
-PCI_IRQ_AFFINITY seems useful for ipr, especially if you also increase
-the number of vectors above the current default 2.  And yes, please
-make it a separate patch.
+If any problems show up I will send you an incremental patch that limits
+this behavior to devices where we created reservations using the kernel
+pr_ops API.
