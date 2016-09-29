@@ -1,8 +1,7 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v2 6/7] SRP transport: Port srp_wait_for_queuecommand() to
- scsi-mq
-Date: Wed, 28 Sep 2016 17:01:22 -0700
-Message-ID: <bedf4b45-00b0-6844-047d-f1e05bb1092f@sandisk.com>
+Subject: [PATCH v2 7/7] [RFC] nvme: Fix a race condition
+Date: Wed, 28 Sep 2016 17:01:45 -0700
+Message-ID: <ff412bfb-548c-c4fc-5180-78ede8a19ef2@sandisk.com>
 References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,69 +13,59 @@ To: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Ensure that if scsi-mq is enabled that srp_wait_for_queuecommand()
-waits until ongoing shost->hostt->queuecommand() calls have finished.
+Avoid that nvme_queue_rq() is still running when nvme_stop_queues()
+returns. Untested.
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Doug Ledford <dledford@redhat.com>
+Cc: Keith Busch <keith.busch@intel.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Sagi Grimberg <sagi@grimberg.me>
 ---
- drivers/scsi/scsi_transport_srp.c | 24 ++++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+ drivers/nvme/host/core.c | 20 ++++++++++++--------
+ 1 file changed, 12 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index e3cd3ec..f1d580e 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -25,6 +25,7 @@
- #include <linux/slab.h>
- #include <linux/string.h>
- #include <linux/delay.h>
-+#include <linux/blk-mq.h>
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index d791fba..98f1f29 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -201,13 +201,9 @@ fail:
  
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -405,8 +406,6 @@ static void srp_reconnect_work(struct work_struct *work)
- /**
-  * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
-  * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
-- *
-- * To do: add support for scsi-mq in this function.
-  */
- static int scsi_request_fn_active(struct Scsi_Host *shost)
+ void nvme_requeue_req(struct request *req)
  {
-@@ -425,11 +424,28 @@ static int scsi_request_fn_active(struct Scsi_Host *shost)
- 	return request_fn_active;
+-	unsigned long flags;
+-
+ 	blk_mq_requeue_request(req);
+-	spin_lock_irqsave(req->q->queue_lock, flags);
+-	if (!blk_mq_queue_stopped(req->q))
+-		blk_mq_kick_requeue_list(req->q);
+-	spin_unlock_irqrestore(req->q->queue_lock, flags);
++	WARN_ON_ONCE(blk_mq_queue_stopped(req->q));
++	blk_mq_kick_requeue_list(req->q);
  }
+ EXPORT_SYMBOL_GPL(nvme_requeue_req);
  
-+static void srp_mq_wait_for_queuecommand(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev;
+@@ -2077,11 +2073,19 @@ EXPORT_SYMBOL_GPL(nvme_kill_queues);
+ void nvme_stop_queues(struct nvme_ctrl *ctrl)
+ {
+ 	struct nvme_ns *ns;
 +	struct request_queue *q;
-+
-+	shost_for_each_device(sdev, shost) {
-+		q = sdev->request_queue;
-+
-+		blk_mq_quiesce_queue(q);
-+		blk_mq_resume_queue(q);
-+	}
-+}
-+
- /* Wait until ongoing shost->hostt->queuecommand() calls have finished. */
- static void srp_wait_for_queuecommand(struct Scsi_Host *shost)
- {
--	while (scsi_request_fn_active(shost))
--		msleep(20);
-+	if (shost->use_blk_mq) {
-+		srp_mq_wait_for_queuecommand(shost);
-+	} else {
-+		while (scsi_request_fn_active(shost))
-+			msleep(20);
-+	}
- }
  
- static void __rport_fail_io_fast(struct srp_rport *rport)
+ 	mutex_lock(&ctrl->namespaces_mutex);
+ 	list_for_each_entry(ns, &ctrl->namespaces, list) {
+-		blk_mq_cancel_requeue_work(ns->queue);
+-		blk_mq_stop_hw_queues(ns->queue);
++		q = ns->queue;
++		blk_mq_quiesce_queue(q);
++		blk_mq_cancel_requeue_work(q);
++		blk_mq_stop_hw_queues(q);
++		/*
++		 * Note: blk_mq_resume_queue() does not affect the value
++		 * of the BLK_MQ_S_STOPPED bit.
++		 */
++		blk_mq_resume_queue(q);
+ 	}
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+ }
 -- 
 2.10.0
 
