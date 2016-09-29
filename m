@@ -1,57 +1,27 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [PATCH 0/2] libfc/fcoe Fixes
-Date: Thu, 29 Sep 2016 08:45:31 -0400
-Message-ID: <alpine.OSX.2.00.1609290844450.361@administrators-macbook-pro.local>
-References: <1475083849-13478-1-git-send-email-chad.dupuis@cavium.com> <0d7d74ff-7b38-5515-6652-6ea174dfb14a@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 2/6] ipr: use pci_irq_allocate_vectors
+Date: Thu, 29 Sep 2016 17:32:37 +0200
+Message-ID: <20160929153237.GA32512@lst.de>
+References: <1473600688-24043-1-git-send-email-hch@lst.de> <1473600688-24043-3-git-send-email-hch@lst.de> <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0087.outbound.protection.outlook.com ([104.47.33.87]:41834
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754412AbcI2PS1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Sep 2016 11:18:27 -0400
-In-Reply-To: <0d7d74ff-7b38-5515-6652-6ea174dfb14a@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-pci-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <200e5b3f-8555-9cd3-7940-0ec0f2867b95@linux.vnet.ibm.com>
+Sender: linux-pci-owner@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@lst.de>, hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 
+On Thu, Sep 29, 2016 at 09:01:44AM -0500, Brian King wrote:
+> Thanks Christoph. Very nice. As I was reviewing the patch, I noticed
+> the additional PCI_IRQ_AFFINITY flag, which is currently not being set
+> in this patch. Is the intention to set that globally by default, or
+> should I follow up with a one liner to add that to the ipr driver
+> in the next patch set I send out?
 
+Hi Brian,
 
-On Thu, 29 Sep 2016, 8:06am -0000, Hannes Reinecke wrote:
-
-> Hi Chad,
-> 
-> On 09/28/2016 07:30 PM, Chad Dupuis wrote:
-> > 
-> > During testing we fixed a deadlock we found in libfc while logging off from the
-> > fabric if an ELS command was still outstanding.  Also we wanted to make clear
-> > virtual link handling a little more robust when the fcoe_ctlr is not logged
-> > into the fabric.
-> > 
-> > Please apply at your earliest convenience.
-> > 
-> > Thanks,
-> > Chad
-> > 
-> > Chad Dupuis (2):
-> >   fcoe: Harden CVL handling when we have not logged into the fabric.
-> >   libfc: Do not take rdata->rp_mutex when processing a -FC_EX_CLOSED ELS
-> >     response.
-> > 
-> >  drivers/scsi/fcoe/fcoe_ctlr.c | 35 ++++++++++++++++++++++++++++++++---
-> >  drivers/scsi/libfc/fc_rport.c | 32 ++++++++++++++++++++++++--------
-> >  2 files changed, 56 insertions(+), 11 deletions(-)
-> > 
-> I'm currently preparing a larger FCoE patchset (for my VN2VN fixes),
-> which also includes the second patch.
-> Should I take the first one, too, and submit it in one bunch or do you
-> prefer to keep both separate?
-> 
-> Cheers,
-> 
-> Hannes
-> 
-
-I'm fine either way to be honest...whatever is easier for Martin.
+PCI_IRQ_AFFINITY seems useful for ipr, especially if you also increase
+the number of vectors above the current default 2.  And yes, please
+make it a separate patch.
