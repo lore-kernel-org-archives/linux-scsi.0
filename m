@@ -1,128 +1,336 @@
-From: Florian Fainelli <f.fainelli@gmail.com>
-Subject: mpt2sas_cm0: unable to map adapter memory! or resource not found
-Date: Thu, 29 Sep 2016 14:02:40 -0700
-Message-ID: <be712b49-a000-4f6c-d332-146b6b605569@gmail.com>
+From: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and blk_resume_queue()
+Date: Fri, 30 Sep 2016 05:51:56 +0800
+Message-ID: <CACVXFVOO4P3RsnWci8XHdFoYBhNPq0KqjWJddsie-92+31bpEg@mail.gmail.com>
+References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com> <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pa0-f65.google.com ([209.85.220.65]:33373 "EHLO
-        mail-pa0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933330AbcI2VCn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2016 17:02:43 -0400
-Received: by mail-pa0-f65.google.com with SMTP id oz2so3867329pac.0
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Sep 2016 14:02:43 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <a9eb4e95-6d77-e527-c42a-fd2e6f104bed-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: MPT-FusionLinux.pdl@broadcom.com, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sathya.prakash@broadcom.com, linux-scsi@vger.kernel.org
 
-Hi all,
+On Thu, Sep 29, 2016 at 7:59 AM, Bart Van Assche
+<bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org> wrote:
+> blk_quiesce_queue() prevents that new queue_rq() invocations
 
-Trying to get a LSI SAS 9200-8e adapter to work on an old Dell SC1435
-server, mpt3sas returns the following:
+blk_mq_quiesce_queue()
 
-[ 1442.404496] mpt3sas version 12.100.00.00 loaded
-[ 1442.408820] mpt2sas_cm0: 64 BIT PCI BUS DMA ADDRESSING SUPPORTED,
-total mem (33011820 kB)
-[ 1442.408829] mpt2sas_cm0: unable to map adapter memory!  or resource
-not found
-[ 1442.415740] mpt2sas_cm0: failure at
-/build/linux-R0TiM8/linux-4.4.0/drivers/scsi/mpt3sas/mpt3sas_scsih.c:8800/_scsih_probe()!
+> occur and waits until ongoing invocations have finished. This
+> function does *not* wait until all outstanding requests have
 
-This is Ubuntu 16.04, but 4.8 returns essentially the same error.
+I guess it still may wait finally since this way may exhaust tag space
+easily, :-)
 
-Here is the verbose lspci output for this adapter, the Region 1/3
-ignored seems a little worrying here, but I am not sure what I could try
-to force the BIOS/Linux to try to re-assign these regions differently?
+> finished (this means invocation of request.end_io()).
+> blk_resume_queue() resumes normal I/O processing.
+>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Cc: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+> Cc: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+> ---
+>  block/blk-mq.c         | 137 ++++++++++++++++++++++++++++++++++++++++++++-----
+>  include/linux/blk-mq.h |   2 +
+>  include/linux/blkdev.h |   5 ++
+>  3 files changed, 131 insertions(+), 13 deletions(-)
+>
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index d8c45de..f5c71ad 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -58,15 +58,23 @@ static void blk_mq_hctx_clear_pending(struct blk_mq_hw_ctx *hctx,
+>         sbitmap_clear_bit(&hctx->ctx_map, ctx->index_hw);
+>  }
+>
+> -void blk_mq_freeze_queue_start(struct request_queue *q)
+> +static bool __blk_mq_freeze_queue_start(struct request_queue *q,
+> +                                       bool kill_percpu_ref)
+>  {
+>         int freeze_depth;
+>
+>         freeze_depth = atomic_inc_return(&q->mq_freeze_depth);
+>         if (freeze_depth == 1) {
+> -               percpu_ref_kill(&q->q_usage_counter);
+> +               if (kill_percpu_ref)
+> +                       percpu_ref_kill(&q->q_usage_counter);
+>                 blk_mq_run_hw_queues(q, false);
+>         }
+> +       return freeze_depth == 1;
+> +}
+> +
+> +void blk_mq_freeze_queue_start(struct request_queue *q)
+> +{
+> +       __blk_mq_freeze_queue_start(q, true);
+>  }
+>  EXPORT_SYMBOL_GPL(blk_mq_freeze_queue_start);
+>
+> @@ -102,19 +110,90 @@ void blk_mq_freeze_queue(struct request_queue *q)
+>  }
+>  EXPORT_SYMBOL_GPL(blk_mq_freeze_queue);
+>
+> -void blk_mq_unfreeze_queue(struct request_queue *q)
+> +static bool __blk_mq_unfreeze_queue(struct request_queue *q,
+> +                                   bool reinit_percpu_ref)
+>  {
+>         int freeze_depth;
+>
+>         freeze_depth = atomic_dec_return(&q->mq_freeze_depth);
+>         WARN_ON_ONCE(freeze_depth < 0);
+>         if (!freeze_depth) {
+> -               percpu_ref_reinit(&q->q_usage_counter);
+> +               if (reinit_percpu_ref)
+> +                       percpu_ref_reinit(&q->q_usage_counter);
+>                 wake_up_all(&q->mq_freeze_wq);
+>         }
+> +       return freeze_depth == 0;
+> +}
+> +
+> +void blk_mq_unfreeze_queue(struct request_queue *q)
+> +{
+> +       __blk_mq_unfreeze_queue(q, true);
+>  }
+>  EXPORT_SYMBOL_GPL(blk_mq_unfreeze_queue);
+>
+> +/**
+> + * blk_mq_quiesce_queue() - wait until all pending queue_rq calls have finished
+> + *
+> + * Prevent that new I/O requests are queued and wait until all pending
+> + * queue_rq() calls have finished. Must not be called if the queue has already
+> + * been frozen. Additionally, freezing the queue after having quiesced the
+> + * queue and before resuming the queue is not allowed.
+> + *
+> + * Note: this function does not prevent that the struct request end_io()
+> + * callback function is invoked.
+> + */
+> +void blk_mq_quiesce_queue(struct request_queue *q)
+> +{
+> +       struct blk_mq_hw_ctx *hctx;
+> +       unsigned int i;
+> +       bool res, rcu = false;
+> +
+> +       spin_lock_irq(q->queue_lock);
+> +       WARN_ON_ONCE(blk_queue_quiescing(q));
+> +       queue_flag_set(QUEUE_FLAG_QUIESCING, q);
+> +       spin_unlock_irq(q->queue_lock);
+> +
+> +       res = __blk_mq_freeze_queue_start(q, false);
 
-Thanks!
+Looks the implementation is a bit tricky and complicated, if the percpu
+usage counter isn't killed, it isn't necessary to touch .mq_freeze_depth
+since you use QUEUE_FLAG_QUIESCING to set/get this status of
+the queue.
 
-06:00.0 Serial Attached SCSI controller: LSI Logic / Symbios Logic
-SAS2008 PCI-Express Fusion-MPT SAS-2 [Falcon] (rev 03)
-        Subsystem: LSI Logic / Symbios Logic SAS2008 PCI-Express
-Fusion-MPT SAS-2 [Falcon]
-        Control: I/O+ Mem+ BusMaster- SpecCycle- MemWINV- VGASnoop-
-ParErr- Stepping- SERR- FastB2B- DisINTx-
-        Status: Cap+ 66MHz- UDF- FastB2B- ParErr- DEVSEL=fast >TAbort-
-<TAbort- <MAbort- >SERR- <PERR- INTx-
-        Interrupt: pin A routed to IRQ 22
-        Region 0: I/O ports at dc00 [size=256]
-        Region 1: Memory at <ignored> (64-bit, non-prefetchable)
-        Region 3: Memory at <ignored> (64-bit, non-prefetchable)
-        Expansion ROM at <ignored> [disabled]
-        Capabilities: [50] Power Management version 3
-                Flags: PMEClk- DSI- D1+ D2+ AuxCurrent=0mA
-PME(D0-,D1-,D2-,D3hot-,D3cold-)
-                Status: D0 NoSoftRst+ PME-Enable- DSel=0 DScale=0 PME-
-        Capabilities: [68] Express (v2) Endpoint, MSI 00
-                DevCap: MaxPayload 4096 bytes, PhantFunc 0, Latency L0s
-<64ns, L1 <1us
-                        ExtTag+ AttnBtn- AttnInd- PwrInd- RBE+ FLReset+
-                DevCtl: Report errors: Correctable- Non-Fatal- Fatal+
-Unsupported-
-                        RlxdOrd+ ExtTag- PhantFunc- AuxPwr- NoSnoop+
-FLReset-
-                        MaxPayload 512 bytes, MaxReadReq 512 bytes
-                DevSta: CorrErr- UncorrErr- FatalErr- UnsuppReq- AuxPwr-
-TransPend-
-                LnkCap: Port #0, Speed 5GT/s, Width x8, ASPM L0s, Exit
-Latency L0s <64ns, L1 <1us
-                        ClockPM- Surprise- LLActRep- BwNot- ASPMOptComp-
-                LnkCtl: ASPM Disabled; RCB 64 bytes Disabled- CommClk-
-                        ExtSynch- ClockPM- AutWidDis- BWInt- AutBWInt-
-                LnkSta: Speed 2.5GT/s, Width x8, TrErr- Train- SlotClk+
-DLActive- BWMgmt- ABWMgmt-
-                DevCap2: Completion Timeout: Range BC, TimeoutDis+,
-LTR-, OBFF Not Supported
-                DevCtl2: Completion Timeout: 50us to 50ms, TimeoutDis-,
-LTR-, OBFF Disabled
-                LnkCtl2: Target Link Speed: 5GT/s, EnterCompliance-
-SpeedDis-
-                         Transmit Margin: Normal Operating Range,
-EnterModifiedCompliance- ComplianceSOS-
-                         Compliance De-emphasis: -6dB
-                LnkSta2: Current De-emphasis Level: -6dB,
-EqualizationComplete-, EqualizationPhase1-
-                         EqualizationPhase2-, EqualizationPhase3-,
-LinkEqualizationRequest-
-        Capabilities: [d0] Vital Product Data
-                Unknown small resource type 00, will not decode more.
-        Capabilities: [a8] MSI: Enable- Count=1/1 Maskable- 64bit+
-                Address: 0000000000000000  Data: 0000
-        Capabilities: [c0] MSI-X: Enable- Count=15 Masked-
-                Vector table: BAR=1 offset=00002000
-                PBA: BAR=1 offset=00003800
-        Capabilities: [100 v1] Advanced Error Reporting
-                UESta:  DLP- SDES- TLP- FCP- CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF- MalfTLP- ECRC- UnsupReq- ACSViol-
-                UEMsk:  DLP- SDES- TLP- FCP- CmpltTO+ CmpltAbrt+
-UnxCmplt+ RxOF- MalfTLP- ECRC- UnsupReq+ ACSViol-
-                UESvrt: DLP+ SDES+ TLP+ FCP+ CmpltTO- CmpltAbrt-
-UnxCmplt- RxOF+ MalfTLP+ ECRC+ UnsupReq- ACSViol-
-                CESta:  RxErr- BadTLP- BadDLLP- Rollover- Timeout-
-NonFatalErr-
-                CEMsk:  RxErr+ BadTLP+ BadDLLP+ Rollover+ Timeout+
-NonFatalErr+
-                AERCap: First Error Pointer: 00, GenCap+ CGenEn- ChkCap+
-ChkEn-
-        Capabilities: [138 v1] Power Budgeting <?>
-        Capabilities: [150 v1] Single Root I/O Virtualization (SR-IOV)
-                IOVCap: Migration-, Interrupt Message Number: 000
-                IOVCtl: Enable- Migration- Interrupt- MSE- ARIHierarchy-
-                IOVSta: Migration-
-                Initial VFs: 16, Total VFs: 16, Number of VFs: 0,
-Function Dependency Link: 00
-                VF offset: 1, stride: 1, Device ID: 0072
-                Supported Page Size: 00000553, System Page Size: 00000001
-                Region 0: Memory at 00000000efe80000 (64-bit,
-non-prefetchable)
-                Region 2: Memory at 0000000000000000 (64-bit,
-non-prefetchable)
-                VF Migration: offset: 00000000, BIR: 0
-        Capabilities: [190 v1] Alternative Routing-ID Interpretation (ARI)
-                ARICap: MFVC- ACS-, Next Function: 0
-                ARICtl: MFVC- ACS-, Function Group: 0
-        Kernel modules: mpt3sas
+Then using synchronize_rcu() and rcu_read_lock()/rcu_read_unlock()
+with the flag of QUIESCING may be enough to wait for completing
+of ongoing invocations of .queue_rq() and avoid to run new .queue_rq,
+right?
+
+> +       WARN_ON_ONCE(!res);
+> +       queue_for_each_hw_ctx(q, hctx, i) {
+> +               if (hctx->flags & BLK_MQ_F_BLOCKING) {
+> +                       mutex_lock(&hctx->queue_rq_mutex);
+> +                       mutex_unlock(&hctx->queue_rq_mutex);
+
+Could you explain a bit why all BLOCKING is treated so special? And
+that flag just means the hw queue always need to schedule asynchronously,
+and of couse even though the flag isn't set, it still may be run
+asynchronously too. So looks it should be enough to just use RCU.
+
+> +               } else {
+> +                       rcu = true;
+> +               }
+> +       }
+> +       if (rcu)
+> +               synchronize_rcu();
+> +
+> +       spin_lock_irq(q->queue_lock);
+> +       WARN_ON_ONCE(!blk_queue_quiescing(q));
+> +       queue_flag_clear(QUEUE_FLAG_QUIESCING, q);
+> +       spin_unlock_irq(q->queue_lock);
+> +}
+> +EXPORT_SYMBOL_GPL(blk_mq_quiesce_queue);
+> +
+> +/**
+> + * blk_mq_resume_queue() - resume request processing
+> + *
+> + * Resume blk_queue_enter() calls that have been suspended by
+> + * blk_mq_quiesce_queue().
+> + *
+> + * The caller is responsible for serializing blk_mq_quiesce_queue() and
+> + * blk_mq_resume_queue().
+> + */
+> +void blk_mq_resume_queue(struct request_queue *q)
+> +{
+> +       bool res;
+> +
+> +       res = __blk_mq_unfreeze_queue(q, false);
+> +       WARN_ON_ONCE(!res);
+> +       WARN_ON_ONCE(blk_queue_quiescing(q));
+> +
+> +       blk_mq_run_hw_queues(q, false);
+> +}
+> +EXPORT_SYMBOL_GPL(blk_mq_resume_queue);
+> +
+>  void blk_mq_wake_waiters(struct request_queue *q)
+>  {
+>         struct blk_mq_hw_ctx *hctx;
+> @@ -488,6 +567,9 @@ static void blk_mq_requeue_work(struct work_struct *work)
+>         struct request *rq, *next;
+>         unsigned long flags;
+>
+> +       if (blk_queue_quiescing(q))
+> +               return;
+> +
+>         spin_lock_irqsave(&q->requeue_lock, flags);
+>         list_splice_init(&q->requeue_list, &rq_list);
+>         spin_unlock_irqrestore(&q->requeue_lock, flags);
+> @@ -782,7 +864,7 @@ static inline unsigned int queued_to_index(unsigned int queued)
+>   * of IO. In particular, we'd like FIFO behaviour on handling existing
+>   * items on the hctx->dispatch list. Ignore that for now.
+>   */
+> -static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+> +static void blk_mq_process_rq_list(struct blk_mq_hw_ctx *hctx)
+>  {
+>         struct request_queue *q = hctx->queue;
+>         struct request *rq;
+> @@ -791,9 +873,6 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+>         struct list_head *dptr;
+>         int queued;
+>
+> -       if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+> -               return;
+> -
+>         WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask) &&
+>                 cpu_online(hctx->next_cpu));
+>
+> @@ -883,7 +962,24 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+>                  *
+>                  * blk_mq_run_hw_queue() already checks the STOPPED bit
+>                  **/
+> -               blk_mq_run_hw_queue(hctx, true);
+> +               if (!blk_queue_quiescing(q))
+> +                       blk_mq_run_hw_queue(hctx, true);
+> +       }
+> +}
+> +
+> +static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+> +{
+> +       if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+> +               return;
+> +
+> +       if (hctx->flags & BLK_MQ_F_BLOCKING) {
+> +               mutex_lock(&hctx->queue_rq_mutex);
+> +               blk_mq_process_rq_list(hctx);
+> +               mutex_unlock(&hctx->queue_rq_mutex);
+> +       } else {
+> +               rcu_read_lock();
+> +               blk_mq_process_rq_list(hctx);
+> +               rcu_read_unlock();
+>         }
+>  }
+>
+> @@ -1341,7 +1437,7 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+>                 blk_mq_bio_to_request(rq, bio);
+>
+>                 /*
+> -                * We do limited pluging. If the bio can be merged, do that.
+> +                * We do limited plugging. If the bio can be merged, do that.
+>                  * Otherwise the existing request in the plug list will be
+>                  * issued. So the plug list will have one request at most
+>                  */
+> @@ -1361,9 +1457,23 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+>                 blk_mq_put_ctx(data.ctx);
+>                 if (!old_rq)
+>                         goto done;
+> -               if (!blk_mq_direct_issue_request(old_rq, &cookie))
+> -                       goto done;
+> -               blk_mq_insert_request(old_rq, false, true, true);
+> +
+> +               if (data.hctx->flags & BLK_MQ_F_BLOCKING) {
+> +                       mutex_lock(&data.hctx->queue_rq_mutex);
+> +                       if (blk_queue_quiescing(q) ||
+> +                           blk_mq_direct_issue_request(old_rq, &cookie) != 0)
+> +                               blk_mq_insert_request(old_rq, false, true,
+> +                                                     true);
+> +                       mutex_unlock(&data.hctx->queue_rq_mutex);
+> +               } else {
+> +                       rcu_read_lock();
+> +                       if (blk_queue_quiescing(q) ||
+> +                           blk_mq_direct_issue_request(old_rq, &cookie) != 0)
+> +                               blk_mq_insert_request(old_rq, false, true,
+> +                                                     true);
+> +                       rcu_read_unlock();
+> +               }
+> +
+>                 goto done;
+>         }
+>
+> @@ -1702,6 +1812,7 @@ static int blk_mq_init_hctx(struct request_queue *q,
+>         INIT_DELAYED_WORK(&hctx->delay_work, blk_mq_delay_work_fn);
+>         spin_lock_init(&hctx->lock);
+>         INIT_LIST_HEAD(&hctx->dispatch);
+> +       mutex_init(&hctx->queue_rq_mutex);
+>         hctx->queue = q;
+>         hctx->queue_num = hctx_idx;
+>         hctx->flags = set->flags & ~BLK_MQ_F_TAG_SHARED;
+> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+> index 368c460d..4b970f1 100644
+> --- a/include/linux/blk-mq.h
+> +++ b/include/linux/blk-mq.h
+> @@ -41,6 +41,8 @@ struct blk_mq_hw_ctx {
+>
+>         struct blk_mq_tags      *tags;
+>
+> +       struct mutex            queue_rq_mutex;
+> +
+>         unsigned long           queued;
+>         unsigned long           run;
+>  #define BLK_MQ_MAX_DISPATCH_ORDER      7
+> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+> index c47c358..d365cdf 100644
+> --- a/include/linux/blkdev.h
+> +++ b/include/linux/blkdev.h
+> @@ -505,6 +505,7 @@ struct request_queue {
+>  #define QUEUE_FLAG_FUA        24       /* device supports FUA writes */
+>  #define QUEUE_FLAG_FLUSH_NQ    25      /* flush not queueuable */
+>  #define QUEUE_FLAG_DAX         26      /* device supports DAX */
+> +#define QUEUE_FLAG_QUIESCING   27
+>
+>  #define QUEUE_FLAG_DEFAULT     ((1 << QUEUE_FLAG_IO_STAT) |            \
+>                                  (1 << QUEUE_FLAG_STACKABLE)    |       \
+> @@ -595,6 +596,8 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+>  #define blk_queue_secure_erase(q) \
+>         (test_bit(QUEUE_FLAG_SECERASE, &(q)->queue_flags))
+>  #define blk_queue_dax(q)       test_bit(QUEUE_FLAG_DAX, &(q)->queue_flags)
+> +#define blk_queue_quiescing(q) test_bit(QUEUE_FLAG_QUIESCING,  \
+> +                                        &(q)->queue_flags)
+>
+>  #define blk_noretry_request(rq) \
+>         ((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+> @@ -824,6 +827,8 @@ extern void __blk_run_queue(struct request_queue *q);
+>  extern void __blk_run_queue_uncond(struct request_queue *q);
+>  extern void blk_run_queue(struct request_queue *);
+>  extern void blk_run_queue_async(struct request_queue *q);
+> +extern void blk_mq_quiesce_queue(struct request_queue *q);
+> +extern void blk_mq_resume_queue(struct request_queue *q);
+>  extern int blk_rq_map_user(struct request_queue *, struct request *,
+>                            struct rq_map_data *, void __user *, unsigned long,
+>                            gfp_t);
+> --
+> 2.10.0
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-block" in
+> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+
 
 -- 
-Florian
+Ming Lei
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
