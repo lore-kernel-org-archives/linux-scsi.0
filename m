@@ -1,37 +1,47 @@
-From: Alex Williamson <alex.williamson@redhat.com>
-Subject: Re: [PATCH 4/6] vfio_pci: use pci_irq_allocate_vectors
-Date: Thu, 29 Sep 2016 13:27:35 -0600
-Message-ID: <20160929132735.25f20db7@t450s.home>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-        <1473600688-24043-5-git-send-email-hch@lst.de>
-        <20160929132101.248d79c0@t450s.home>
-        <20160929192404.GA4964@lst.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi_dh_alua: fix meory leak in alua_rtpg()
+Date: Thu, 29 Sep 2016 13:20:02 -0700
+Message-ID: <34d91218-a0a4-85aa-2771-025504fb267b@sandisk.com>
+References: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20160929192404.GA4964@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0085.outbound.protection.outlook.com ([104.47.40.85]:39231
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755742AbcI2UUQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Sep 2016 16:20:16 -0400
+In-Reply-To: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: tang.junhui@zte.com.cn, Hannes Reinecke <hare@suse.de>
+Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
 
-On Thu, 29 Sep 2016 21:24:04 +0200
-Christoph Hellwig <hch@lst.de> wrote:
+On 09/18/2016 03:05 AM, tang.junhui@zte.com.cn wrote:
+> From: "tang.junhui" <tang.junhui@zte.com.cn>
+>
+> buff should be freed before returning with SCSI_DH_RETRY in alua_rtpg().
+>
+> Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 752b5c9..241829e 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -583,6 +583,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
+>  			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
+>  				    ALUA_DH_NAME);
+>  			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
+> +			kfree(buff);
+>  			return err;
+>  		}
+>  		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
+>
 
-> On Thu, Sep 29, 2016 at 01:21:01PM -0600, Alex Williamson wrote:
-> > Sorry for the delay, slipped by me.  Overall a really nice cleanup.
-> > One tiny nit, the commit log mis-names the function as
-> > pci_irq_allocate_vectors instead of pci_alloc_irq_vectors.  With that,
-> > 
-> > Acked-by: Alex Williamson <alex.williamson@redhat.com>
-> > 
-> > Let me know if you're wanting me to pull this through my tree, I'm
-> > assuming not.  Thanks,  
-> 
-> Please pull in through your tree.  If you can also just fix up that
-> type that'd be even better.
+That's a good catch, but please cc stable for this patch. Anyway:
 
-Will do.  Thanks,
-
-Alex
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
