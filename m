@@ -1,62 +1,47 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: Fix a reference counting bug
-Date: Thu, 29 Sep 2016 07:46:57 +0200
-Message-ID: <afae74e6-6bb6-aa3f-01c4-6c0b5558772d@suse.de>
-References: <dbb073e5-817b-c2bd-26b1-b12752a9d82b@sandisk.com>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and
+ blk_resume_queue()
+Date: Thu, 29 Sep 2016 07:52:01 +0200
+Message-ID: <6bc9d7e6-3db0-6bc5-b7cf-668278367303@suse.de>
+References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
+ <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55004 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751568AbcI2Fq7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Sep 2016 01:46:59 -0400
-In-Reply-To: <dbb073e5-817b-c2bd-26b1-b12752a9d82b@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <a9eb4e95-6d77-e527-c42a-fd2e6f104bed-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 09/29/2016 01:45 AM, Bart Van Assche wrote:
-> The code at the end of alua_rtpg_work() is as follows:
+On 09/29/2016 01:59 AM, Bart Van Assche wrote:
+> blk_quiesce_queue() prevents that new queue_rq() invocations
+> occur and waits until ongoing invocations have finished. This
+> function does *not* wait until all outstanding requests have
+> finished (this means invocation of request.end_io()).
+> blk_resume_queue() resumes normal I/O processing.
 > 
-> 	scsi_device_put(sdev);
-> 	kref_put(&pg->kref, release_port_group);
-> 
-> Make sure that all code that queues the work item associated
-> with alua_rtpg_work() holds both references.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Hannes Reinecke <hare@suse.com>
-> Cc: <stable@vger.kernel.org>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Cc: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+> Cc: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 > ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
->  1 file changed, 1 insertion(+)
+>  block/blk-mq.c         | 137 ++++++++++++++++++++++++++++++++++++++++++++-----
+>  include/linux/blk-mq.h |   2 +
+>  include/linux/blkdev.h |   5 ++
+>  3 files changed, 131 insertions(+), 13 deletions(-)
 > 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 752b5c9..f7099e2 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -889,6 +889,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  		/* Do not queue if the worker is already running */
->  		if (!(pg->flags & ALUA_PG_RUNNING)) {
->  			kref_get(&pg->kref);
-> +			scsi_device_get(sdev);
->  			start_queue = 1;
->  		}
->  	}
-> 
-Nack.
-
-The scsi device reference tracks ->rtpg_sdev, not the queue item.
-So we only need to take the scsi device reference if we're assigning a
-new value to ->rtpg_sdev, which we are not.
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
