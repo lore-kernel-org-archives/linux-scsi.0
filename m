@@ -1,26 +1,35 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v5 4/7] block: Define zoned block device operations
-Date: Fri, 30 Sep 2016 09:20:20 +0200
-Message-ID: <ac02bb6f-50e7-ce56-8f61-3f7da82e173d@suse.de>
+Subject: Re: [PATCH v5 7/7] blk-zoned: implement ioctls
+Date: Fri, 30 Sep 2016 09:21:03 +0200
+Message-ID: <c2d83405-faba-fe10-56a6-5298357ed492@suse.de>
 References: <1475208699-27310-1-git-send-email-damien.lemoal@hgst.com>
- <1475208699-27310-5-git-send-email-damien.lemoal@hgst.com>
+ <1475208699-27310-8-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1475208699-27310-5-git-send-email-damien.lemoal@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56338 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933265AbcI3HVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Sep 2016 03:21:08 -0400
+In-Reply-To: <1475208699-27310-8-git-send-email-damien.lemoal@hgst.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Damien Le Moal <damien.lemoal@hgst.com>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
-List-Id: linux-scsi@vger.kernel.org
 
 On 09/30/2016 06:11 AM, Damien Le Moal wrote:
-> From: Shaun Tancheff <shaun.tancheff@seagate.com>
+> From: Shaun Tancheff <shaun@tancheff.com>
 >
-> Define REQ_OP_ZONE_REPORT and REQ_OP_ZONE_RESET for handling zones of
-> host-managed and host-aware zoned block devices. With with these two
-> new operations, the total number of operations defined reaches 8 and
-> still fits with the 3 bits definition of REQ_OP_BITS.
+> Adds the new BLKREPORTZONE and BLKRESETZONE ioctls for respectively
+> obtaining the zone configuration of a zoned block device and resetting
+> the write pointer of sequential zones of a zoned block device.
+>
+> The BLKREPORTZONE ioctl maps directly to a single call of the function
+> blkdev_report_zones. The zone information result is passed as an array
+> of struct blk_zone identical to the structure used internally for
+> processing the REQ_OP_ZONE_REPORT operation.  The BLKRESETZONE ioctl
+> maps to a single call of the blkdev_reset_zones function.
 >
 > Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 > Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
