@@ -1,33 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] libfc/fcoe Fixes
-Date: Thu, 29 Sep 2016 21:40:38 -0400
-Message-ID: <yq14m4yw4fd.fsf@sermon.lab.mkp.net>
-References: <1475083849-13478-1-git-send-email-chad.dupuis@cavium.com>
-        <0d7d74ff-7b38-5515-6652-6ea174dfb14a@suse.de>
+Subject: Re: [PATCH v2 0/3] g_NCR5380: Modernization
+Date: Thu, 29 Sep 2016 21:53:37 -0400
+Message-ID: <yq1vaxeup9a.fsf@sermon.lab.mkp.net>
+References: <1475002825-18132-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16962 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934990AbcI3Bky (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2016 21:40:54 -0400
-In-Reply-To: <0d7d74ff-7b38-5515-6652-6ea174dfb14a@suse.de> (Hannes Reinecke's
-        message of "Thu, 29 Sep 2016 10:06:53 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1475002825-18132-1-git-send-email-linux@rainbow-software.org>
+        (Ondrej Zary's message of "Tue, 27 Sep 2016 21:00:22 +0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Chad Dupuis <chad.dupuis@cavium.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Ondrej" == Ondrej Zary <linux@rainbow-software.org> writes:
 
-Hannes> I'm currently preparing a larger FCoE patchset (for my VN2VN
-Hannes> fixes), which also includes the second patch.  Should I take the
-Hannes> first one, too, and submit it in one bunch or do you prefer to
-Hannes> keep both separate?
+Ondrej> This small patch series removes deprecated code from g_NCR5380
+Ondrej> driver and converts it from scsi_module.c to scsi_add_host().
 
-Well, 4.9 is right around the corner so I'm guessing your patchset will
-be aimed at 4.10. But assuming we get some quick reviews for Chad's
-patches we could squeeze those in.
+Applied to 4.9/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
