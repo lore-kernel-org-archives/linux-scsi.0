@@ -1,7 +1,7 @@
 From: Damien Le Moal <damien.lemoal@hgst.com>
-Subject: [PATCH v5 1/7] block: Add 'zoned' queue limit
-Date: Fri, 30 Sep 2016 13:11:33 +0900
-Message-ID: <1475208699-27310-2-git-send-email-damien.lemoal@hgst.com>
+Subject: [PATCH v5 2/7] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+Date: Fri, 30 Sep 2016 13:11:34 +0900
+Message-ID: <1475208699-27310-3-git-send-email-damien.lemoal@hgst.com>
 References: <1475208699-27310-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,21 +12,14 @@ To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add the zoned queue limit to indicate the zoning model of a block device.
-Defined values are 0 (BLK_ZONED_NONE) for regular block devices,
-1 (BLK_ZONED_HA) for host-aware zone block devices and 2 (BLK_ZONED_HM)
-for host-managed zone block devices. The standards defined drive managed
-model is not defined here since these block devices do not provide any
-command for accessing zone information. Drive managed model devices will
-be reported as BLK_ZONED_NONE.
+From: Hannes Reinecke <hare@suse.de>
 
-The helper functions blk_queue_zoned_model and bdev_zoned_model return
-the zoned limit and the functions blk_queue_is_zoned and bdev_is_zoned
-return a boolean for callers to test if a block device is zoned.
+The queue limits already have a 'chunk_sectors' setting, so
+we should be presenting it via sysfs.
 
-The zoned attribute is also exported as a string to applications via
-sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as "host-aware" and
-BLK_ZONED_HM as "host-managed".
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+
+[Damien: Updated Documentation/ABI/testing/sysfs-block]
 
 Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
@@ -35,170 +28,67 @@ Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 
 ---
- Documentation/ABI/testing/sysfs-block | 16 ++++++++++++
- block/blk-settings.c                  |  1 +
- block/blk-sysfs.c                     | 18 ++++++++++++++
- include/linux/blkdev.h                | 47 +++++++++++++++++++++++++++++++++++
- 4 files changed, 82 insertions(+)
+ Documentation/ABI/testing/sysfs-block | 13 +++++++++++++
+ block/blk-sysfs.c                     | 11 +++++++++++
+ 2 files changed, 24 insertions(+)
 
 diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
-index 71d184d..75a5055 100644
+index 75a5055..ee2d5cd 100644
 --- a/Documentation/ABI/testing/sysfs-block
 +++ b/Documentation/ABI/testing/sysfs-block
-@@ -235,3 +235,19 @@ Description:
- 		write_same_max_bytes is 0, write same is not supported
- 		by the device.
- 
-+What:		/sys/block/<disk>/queue/zoned
+@@ -251,3 +251,16 @@ Description:
+ 		since drive-managed zoned block devices do not support
+ 		zone commands, they will be treated as regular block
+ 		devices and zoned will report "none".
++
++What:		/sys/block/<disk>/queue/chunk_sectors
 +Date:		September 2016
-+Contact:	Damien Le Moal <damien.lemoal@hgst.com>
++Contact:	Hannes Reinecke <hare@suse.com>
 +Description:
-+		zoned indicates if the device is a zoned block device
-+		and the zone model of the device if it is indeed zoned.
-+		The possible values indicated by zoned are "none" for
-+		regular block devices and "host-aware" or "host-managed"
-+		for zoned block devices. The characteristics of
-+		host-aware and host-managed zoned block devices are
-+		described in the ZBC (Zoned Block Commands) and ZAC
-+		(Zoned Device ATA Command Set) standards. These standards
-+		also define the "drive-managed" zone model. However,
-+		since drive-managed zoned block devices do not support
-+		zone commands, they will be treated as regular block
-+		devices and zoned will report "none".
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index f679ae1..b1d5b7f 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -107,6 +107,7 @@ void blk_set_default_limits(struct queue_limits *lim)
- 	lim->io_opt = 0;
- 	lim->misaligned = 0;
- 	lim->cluster = 1;
-+	lim->zoned = BLK_ZONED_NONE;
- }
- EXPORT_SYMBOL(blk_set_default_limits);
- 
++		chunk_sectors has different meaning depending on the type
++		of the disk. For a RAID device (dm-raid), chunk_sectors
++		indicates the size in 512B sectors of the RAID volume
++		stripe segment. For a zoned block device, either
++		host-aware or host-managed, chunk_sectors indicates the
++		size of 512B sectors of the zones of the device, with
++		the eventual exception of the last zone of the device
++		which may be smaller.
 diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
-index 9cc8d7c..ff9cd9c 100644
+index ff9cd9c..488c2e2 100644
 --- a/block/blk-sysfs.c
 +++ b/block/blk-sysfs.c
-@@ -257,6 +257,18 @@ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
- QUEUE_SYSFS_BIT_FNS(iostats, IO_STAT, 0);
- #undef QUEUE_SYSFS_BIT_FNS
- 
-+static ssize_t queue_zoned_show(struct request_queue *q, char *page)
-+{
-+	switch (blk_queue_zoned_model(q)) {
-+	case BLK_ZONED_HA:
-+		return sprintf(page, "host-aware\n");
-+	case BLK_ZONED_HM:
-+		return sprintf(page, "host-managed\n");
-+	default:
-+		return sprintf(page, "none\n");
-+	}
-+}
-+
- static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
- {
- 	return queue_var_show((blk_queue_nomerges(q) << 1) |
-@@ -485,6 +497,11 @@ static struct queue_sysfs_entry queue_nonrot_entry = {
- 	.store = queue_store_nonrot,
- };
- 
-+static struct queue_sysfs_entry queue_zoned_entry = {
-+	.attr = {.name = "zoned", .mode = S_IRUGO },
-+	.show = queue_zoned_show,
-+};
-+
- static struct queue_sysfs_entry queue_nomerges_entry = {
- 	.attr = {.name = "nomerges", .mode = S_IRUGO | S_IWUSR },
- 	.show = queue_nomerges_show,
-@@ -546,6 +563,7 @@ static struct attribute *default_attrs[] = {
- 	&queue_discard_zeroes_data_entry.attr,
- 	&queue_write_same_max_entry.attr,
- 	&queue_nonrot_entry.attr,
-+	&queue_zoned_entry.attr,
- 	&queue_nomerges_entry.attr,
- 	&queue_rq_affinity_entry.attr,
- 	&queue_iostats_entry.attr,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index c47c358..f19e16b 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -261,6 +261,15 @@ struct blk_queue_tag {
- #define BLK_SCSI_MAX_CMDS	(256)
- #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
- 
-+/*
-+ * Zoned block device models (zoned limit).
-+ */
-+enum blk_zoned_model {
-+	BLK_ZONED_NONE,	/* Regular block device */
-+	BLK_ZONED_HA,	/* Host-aware zoned block device */
-+	BLK_ZONED_HM,	/* Host-managed zoned block device */
-+};
-+
- struct queue_limits {
- 	unsigned long		bounce_pfn;
- 	unsigned long		seg_boundary_mask;
-@@ -290,6 +299,7 @@ struct queue_limits {
- 	unsigned char		cluster;
- 	unsigned char		discard_zeroes_data;
- 	unsigned char		raid_partial_stripes_expensive;
-+	enum blk_zoned_model	zoned;
- };
- 
- struct request_queue {
-@@ -627,6 +637,23 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
- 	return q->limits.cluster;
+@@ -130,6 +130,11 @@ static ssize_t queue_physical_block_size_show(struct request_queue *q, char *pag
+ 	return queue_var_show(queue_physical_block_size(q), page);
  }
  
-+static inline enum blk_zoned_model
-+blk_queue_zoned_model(struct request_queue *q)
++static ssize_t queue_chunk_sectors_show(struct request_queue *q, char *page)
 +{
-+	return q->limits.zoned;
++	return queue_var_show(q->limits.chunk_sectors, page);
 +}
 +
-+static inline bool blk_queue_is_zoned(struct request_queue *q)
-+{
-+	switch (blk_queue_zoned_model(q)) {
-+	case BLK_ZONED_HA:
-+	case BLK_ZONED_HM:
-+		return true;
-+	default:
-+		return false;
-+	}
-+}
-+
- /*
-  * We regard a request as sync, if either a read or a sync write
-  */
-@@ -1354,6 +1381,26 @@ static inline unsigned int bdev_write_same(struct block_device *bdev)
- 	return 0;
- }
- 
-+static inline enum blk_zoned_model bdev_zoned_model(struct block_device *bdev)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (q)
-+		return blk_queue_zoned_model(q);
-+
-+	return BLK_ZONED_NONE;
-+}
-+
-+static inline bool bdev_is_zoned(struct block_device *bdev)
-+{
-+	struct request_queue *q = bdev_get_queue(bdev);
-+
-+	if (q)
-+		return blk_queue_is_zoned(q);
-+
-+	return false;
-+}
-+
- static inline int queue_dma_alignment(struct request_queue *q)
+ static ssize_t queue_io_min_show(struct request_queue *q, char *page)
  {
- 	return q ? q->dma_alignment : 511;
+ 	return queue_var_show(queue_io_min(q), page);
+@@ -455,6 +460,11 @@ static struct queue_sysfs_entry queue_physical_block_size_entry = {
+ 	.show = queue_physical_block_size_show,
+ };
+ 
++static struct queue_sysfs_entry queue_chunk_sectors_entry = {
++	.attr = {.name = "chunk_sectors", .mode = S_IRUGO },
++	.show = queue_chunk_sectors_show,
++};
++
+ static struct queue_sysfs_entry queue_io_min_entry = {
+ 	.attr = {.name = "minimum_io_size", .mode = S_IRUGO },
+ 	.show = queue_io_min_show,
+@@ -555,6 +565,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_hw_sector_size_entry.attr,
+ 	&queue_logical_block_size_entry.attr,
+ 	&queue_physical_block_size_entry.attr,
++	&queue_chunk_sectors_entry.attr,
+ 	&queue_io_min_entry.attr,
+ 	&queue_io_opt_entry.attr,
+ 	&queue_discard_granularity_entry.attr,
 -- 
 2.7.4
 
