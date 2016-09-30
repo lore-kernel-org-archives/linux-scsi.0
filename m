@@ -1,51 +1,51 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 0/7] libfc: sanitize kref and state machine fixes
-Date: Fri, 30 Sep 2016 11:01:13 +0200
-Message-ID: <1475226080-60365-1-git-send-email-hare@suse.de>
+Subject: [PATCHv2 4/7] libfc: Do not drop down to FLOGI for fc_rport_login()
+Date: Fri, 30 Sep 2016 11:01:17 +0200
+Message-ID: <1475226080-60365-5-git-send-email-hare@suse.de>
+References: <1475226080-60365-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34036 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34050 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753021AbcI3JBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Sep 2016 05:01:31 -0400
+        id S932295AbcI3JBd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Sep 2016 05:01:33 -0400
+In-Reply-To: <1475226080-60365-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Hi all,
+When fc_rport_login() is called while the rport is not
+in RPORT_ST_INIT, RPORT_ST_READY, or RPORT_ST_DELETE
+login is already in progress and there's no need to
+drop down to FLOGI; doing so will only confuse the
+other side.
 
-here is the first round of patch to fixup libfc and FCoE.
-It consists of a rewrite of the libfc rport kref handling
-(or, to be precise, is _implements_ rport kref handling)
-and updates the 'disc_mutex' handling to match the new
-kref usage.
-There are also some state machine fixes to handle FLOGI
-better and a fix from Chad to harden FCoE login.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
+---
+ drivers/scsi/libfc/fc_rport.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-As usual, comments and reviews are welcome.
-
-Changes to v1:
-- Fixup typo in fc_lport.c
-- Add review tags where applicable
-
-Chad Dupuis (2):
-  libfc: Do not take rdata->rp_mutex when processing a -FC_EX_CLOSED ELS
-    response.
-  fcoe: Harden CVL handling when we have not logged into the fabric.
-
-Hannes Reinecke (5):
-  libfc: Revisit kref handling
-  libfc: Fixup disc_mutex handling
-  libfc: Do not drop down to FLOGI for fc_rport_login()
-  libfc: Do not login if the port is already started
-  libfc: don't advance state machine for incoming FLOGI
-
- drivers/scsi/fcoe/fcoe_ctlr.c |  72 ++++++++++++---
- drivers/scsi/libfc/fc_disc.c  |  38 +++++---
- drivers/scsi/libfc/fc_lport.c |   9 +-
- drivers/scsi/libfc/fc_rport.c | 197 ++++++++++++++++++++++++++++++++----------
- 4 files changed, 245 insertions(+), 71 deletions(-)
-
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index ff33ae6..4e4087a 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -427,10 +427,14 @@ static int fc_rport_login(struct fc_rport_priv *rdata)
+ 	case RPORT_ST_DELETE:
+ 		FC_RPORT_DBG(rdata, "Restart deleted port\n");
+ 		break;
+-	default:
++	case RPORT_ST_INIT:
+ 		FC_RPORT_DBG(rdata, "Login to port\n");
+ 		fc_rport_enter_flogi(rdata);
+ 		break;
++	default:
++		FC_RPORT_DBG(rdata, "Login in progress, state %s\n",
++			     fc_rport_state(rdata));
++		break;
+ 	}
+ 	mutex_unlock(&rdata->rp_mutex);
+ 
 -- 
 1.8.5.6
 
