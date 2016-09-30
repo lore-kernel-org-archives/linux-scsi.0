@@ -1,48 +1,144 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 7/7] fcoe: Harden CVL handling when we have not logged
- into the fabric.
-Date: Fri, 30 Sep 2016 09:27:40 +0200
-Message-ID: <20160930072740.plxlhxjuyqdjtwtg@linux-x5ow.site>
-References: <1475219054-31241-1-git-send-email-hare@suse.de>
- <1475219054-31241-8-git-send-email-hare@suse.de>
+From: Wei Fang <fangwei1@huawei.com>
+Subject: [PATCH] scsi: fix ata_port_wait_eh() hang caused by missing to wake up eh thread
+Date: Fri, 30 Sep 2016 16:02:01 +0800
+Message-ID: <1475222521-32449-1-git-send-email-fangwei1@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56573 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932110AbcI3H1m (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Sep 2016 03:27:42 -0400
-Content-Disposition: inline
-In-Reply-To: <1475219054-31241-8-git-send-email-hare@suse.de>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:41207 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751176AbcI3H75 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2016 03:59:57 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
 
-On Fri, Sep 30, 2016 at 09:04:14AM +0200, Hannes Reinecke wrote:
-> From: Chad Dupuis <chad.dupuis@cavium.com>
-> 
-> If we haven't logged into the fabric yet we want to be a little more nuanced
-> with our CVL handling than what we've been:
-> 
-> - If the FCF has been selected, check the source MAC to make sure the frame is
-> from the FCF we've selected.
-> - If a FCF is selected and the CVL is from the FCF but we have not logged in
-> yet, then reset everything and go back to solicitation.
-> 
-> Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/fcoe/fcoe_ctlr.c | 35 ++++++++++++++++++++++++++++++++---
->  1 file changed, 32 insertions(+), 3 deletions(-)
+->host_eh_schedule and ->shost_state may be accessed simultaneously as
+bellow:
 
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+1.In ata port probe path:
+ata_std_sched_eh()
+	scsi_schedule_eh()
+		...
+		spin_lock_irqsave(shost->host_lock, flags);
+		if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
+		    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
+			shost->host_eh_scheduled++
+			scsi_eh_wakeup()
+		}
+		spin_unlock_irqrestore(shost->host_lock, flags);
+		...
 
+2.In IO complete path:
+scsi_device_unbusy()
+	...
+	atomic_dec(&shost->host_busy)
+	if (unlikely(scsi_host_in_recovery(shost) &&
+		(shost->host_failed || shost->host_eh_scheduled))) {
+		spin_lock_irqsave(shost->host_lock, flags);
+		scsi_eh_wakeup(shost);
+		spin_unlock_irqrestore(shost->host_lock, flags);
+	}
+	...
+
+In the IO complete path, ->host_eh_schedule and ->shost_state are
+accessed without ->host_lock, and obsoleted data may be got after
+scsi_eh_wakeup() has been called in scsi_schedule_eh().
+
+It's the case that causes the problem:
+* One IO hasn't finished when scsi_schedule_eh() has been called
+  in ata port probe path
+* scsi_eh_wakeup() has been called in scsi_schedule_eh() without
+  waking up eh thread
+* this IO completes and scsi_device_unbusy() is called
+* obsoleted ->host_eh_schedule and ->shost_state are got, and eh
+  thread can't been woken up in this path
+
+Eh thread won't been woken up ever in this case, and a hung task
+will happen:
+
+INFO: task kworker/u64:0:6 blocked for more than 120 seconds.
+...
+Call trace:
+[<ffff800000086b04>] __switch_to+0x78/0x90
+[<ffff800000bf95bc>] __schedule+0x244/0x79c
+[<ffff800000bf9b54>] schedule+0x40/0x98
+[<ffff8000006cc990>] ata_port_wait_eh+0x8c/0x110
+[<ffff80000064f764>] sas_ata_wait_eh+0x3c/0x44
+[<ffff80000064f7e0>] sas_probe_sata_device+0x74/0xf8
+[<ffff800000648320>] sas_add_device+0xac/0x1ac
+[<ffff8000000d9458>] process_one_work+0x164/0x428
+[<ffff8000000d9860>] worker_thread+0x144/0x4a8
+[<ffff8000000dfbb0>] kthread+0xfc/0x110
+
+After that, the host is in recovery state, and any IOs to this
+host will be blocked.
+
+Fix this by accessing ->host_eh_schedule and ->shost_state in
+->host_lock.
+
+Signed-off-by: Wei Fang <fangwei1@huawei.com>
+---
+ drivers/scsi/scsi_lib.c | 22 ++++++++++++++--------
+ 1 file changed, 14 insertions(+), 8 deletions(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2cca9cf..5a72e1d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -272,23 +272,27 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
+ 		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+ }
+ 
++static void __scsi_eh_wakeup(struct Scsi_Host *shost)
++{
++	unsigned long flags;
++
++	spin_lock_irqsave(shost->host_lock, flags);
++	if (unlikely(scsi_host_in_recovery(shost) &&
++		     (shost->host_failed || shost->host_eh_scheduled)))
++		scsi_eh_wakeup(shost);
++	spin_unlock_irqrestore(shost->host_lock, flags);
++}
++
+ void scsi_device_unbusy(struct scsi_device *sdev)
+ {
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct scsi_target *starget = scsi_target(sdev);
+-	unsigned long flags;
+ 
+ 	atomic_dec(&shost->host_busy);
+ 	if (starget->can_queue > 0)
+ 		atomic_dec(&starget->target_busy);
+ 
+-	if (unlikely(scsi_host_in_recovery(shost) &&
+-		     (shost->host_failed || shost->host_eh_scheduled))) {
+-		spin_lock_irqsave(shost->host_lock, flags);
+-		scsi_eh_wakeup(shost);
+-		spin_unlock_irqrestore(shost->host_lock, flags);
+-	}
+-
++	__scsi_eh_wakeup(shost);
+ 	atomic_dec(&sdev->device_busy);
+ }
+ 
+@@ -1457,6 +1461,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
+ 	spin_unlock_irq(shost->host_lock);
+ out_dec:
+ 	atomic_dec(&shost->host_busy);
++	__scsi_eh_wakeup(shost);
+ 	return 0;
+ }
+ 
+@@ -1931,6 +1936,7 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 
+ out_dec_host_busy:
+ 	atomic_dec(&shost->host_busy);
++	__scsi_eh_wakeup(shost);
+ out_dec_target_busy:
+ 	if (scsi_target(sdev)->can_queue > 0)
+ 		atomic_dec(&scsi_target(sdev)->target_busy);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.9.3
+
