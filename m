@@ -1,55 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: fix meory leak in alua_rtpg()
-Date: Fri, 30 Sep 2016 08:30:26 +0200
-Message-ID: <b203ec37-64d1-c771-09ac-3ff3c3ee784d@suse.de>
-References: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH 4/7] libfc: Do not drop down to FLOGI for fc_rport_login()
+Date: Fri, 30 Sep 2016 09:04:11 +0200
+Message-ID: <1475219054-31241-5-git-send-email-hare@suse.de>
+References: <1475219054-31241-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54263 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55649 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964848AbcI3Gad (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Sep 2016 02:30:33 -0400
-In-Reply-To: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
+        id S1753807AbcI3HE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Sep 2016 03:04:27 -0400
+In-Reply-To: <1475219054-31241-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tang.junhui@zte.com.cn
-Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 09/18/2016 12:05 PM, tang.junhui@zte.com.cn wrote:
-> From: "tang.junhui" <tang.junhui@zte.com.cn>
->
-> buff should be freed before returning with SCSI_DH_RETRY in alua_rtpg().
->
-> Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 752b5c9..241829e 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -583,6 +583,7 @@ static int alua_rtpg(struct scsi_device *sdev, struct alua_port_group *pg)
->  			sdev_printk(KERN_ERR, sdev, "%s: rtpg retry\n",
->  				    ALUA_DH_NAME);
->  			scsi_print_sense_hdr(sdev, ALUA_DH_NAME, &sense_hdr);
-> +			kfree(buff);
->  			return err;
->  		}
->  		sdev_printk(KERN_ERR, sdev, "%s: rtpg failed\n",
->
-Correct.
+When fc_rport_login() is called while the rport is not
+in RPORT_ST_INIT, RPORT_ST_READY, or RPORT_ST_DELETE
+login is already in progress and there's no need to
+drop down to FLOGI; doing so will only confuse the
+other side.
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/libfc/fc_rport.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index ff33ae6..4e4087a 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -427,10 +427,14 @@ static int fc_rport_login(struct fc_rport_priv *rdata)
+ 	case RPORT_ST_DELETE:
+ 		FC_RPORT_DBG(rdata, "Restart deleted port\n");
+ 		break;
+-	default:
++	case RPORT_ST_INIT:
+ 		FC_RPORT_DBG(rdata, "Login to port\n");
+ 		fc_rport_enter_flogi(rdata);
+ 		break;
++	default:
++		FC_RPORT_DBG(rdata, "Login in progress, state %s\n",
++			     fc_rport_state(rdata));
++		break;
+ 	}
+ 	mutex_unlock(&rdata->rp_mutex);
+ 
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
+
