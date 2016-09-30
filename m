@@ -1,61 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4 6/7] sd: Implement support for ZBC devices
-Date: Thu, 29 Sep 2016 22:37:37 -0400
-Message-ID: <yq1wphut8ni.fsf@sermon.lab.mkp.net>
-References: <1475052339-10202-1-git-send-email-damien.lemoal@hgst.com>
-        <1475052339-10202-7-git-send-email-damien.lemoal@hgst.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: =?UTF-8?B?UmU6IOetlOWkjTogUmU6IFtQQVRDSF0gc2NzaV9kaF9hbHVhOiBmaXgg?=
+ =?UTF-8?Q?meory_leak_in_alua=5frtpg=28=29?=
+Date: Thu, 29 Sep 2016 20:10:23 -0700
+Message-ID: <ef152915-74e0-c3ec-2b6d-d444f97f7a93@sandisk.com>
+References: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
+ <34d91218-a0a4-85aa-2771-025504fb267b@sandisk.com>
+ <OF43B9D452.88594DE1-ON4825803E.00040F00-4825803E.0007D1CA@zte.com.cn>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1475052339-10202-7-git-send-email-damien.lemoal@hgst.com>
-        (Damien Le Moal's message of "Wed, 28 Sep 2016 17:45:38 +0900")
-Sender: linux-block-owner@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@hgst.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0056.outbound.protection.outlook.com ([104.47.37.56]:25501
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752787AbcI3DKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Sep 2016 23:10:36 -0400
+In-Reply-To: <OF43B9D452.88594DE1-ON4825803E.00040F00-4825803E.0007D1CA@zte.com.cn>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "tang.junhui@zte.com.cn" <tang.junhui@zte.com.cn>
+Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "zhang.kai16@zte.com.cn" <zhang.kai16@zte.com.cn>
 
->>>>> "Damien" == Damien Le Moal <damien.lemoal@hgst.com> writes:
+On 09/29/16 18:25, tang.junhui@zte.com.cn wrote:
+> Thank you for your review and reminding, I will resend this patchto
+> stable@vger.kernel.org.
 
-Damien,
+Hello Tang Junhui,
 
-Almost there! And A-OK on the read capacity changes.
+Please have a look at Documentation/SubmittingPatches. Patches should 
+not be sent directly to stable@vger.kernel.org but instead the line "Cc: 
+stable@vger.kernel.org" should be added to a patch. And since Hannes 
+wrote this code I would appreciate it if Hannes could comment on this 
+patch before it is reposted ...
 
-However:
+Thanks,
 
-@@ -844,6 +850,13 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
- 
- 	BUG_ON(bio_offset(bio) || bio_iovec(bio).bv_len != sdp->sector_size);
- 
-+	if (sd_is_zoned(sdkp)) {
-+		/* sd_zbc_setup_read_write uses block layer sector units */
-
-That comment really says: "I am doing confusing stuff that doesn't
-follow the normal calling convention in the driver". Plus it's another
-case of using block layer sectors where they shouldn't be.
-
-Please just pass the scsi_cmnd to sd_zbc_set_read_write() like it's done
-for sd_zbc_setup_reset_cmnd() and the regular sd_setup_* calls. And then
-no commentary is necessary...
-
-+		ret = sd_zbc_setup_read_write(sdkp, rq, sector, nr_sectors);
-+		if (ret != BLKPREP_OK)
-+			return ret;
-+	}
-+
-
-@@ -963,6 +976,13 @@ static int sd_setup_read_write_cmnd(struct scsi_cmnd *SCpnt)
- 	SCSI_LOG_HLQUEUE(2, scmd_printk(KERN_INFO, SCpnt, "block=%llu\n",
- 					(unsigned long long)block));
- 
-+	if (sd_is_zoned(sdkp)) {
-+		/* sd_zbc_setup_read_write uses block layer sector units */
-+		ret = sd_zbc_setup_read_write(sdkp, rq, block, this_count);
-+		if (ret != BLKPREP_OK)
-+			goto out;
-+	}
-+
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
