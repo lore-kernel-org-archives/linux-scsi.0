@@ -1,144 +1,75 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: [PATCH] scsi: fix ata_port_wait_eh() hang caused by missing to wake up eh thread
-Date: Fri, 30 Sep 2016 16:02:01 +0800
-Message-ID: <1475222521-32449-1-git-send-email-fangwei1@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 6/7] libfc: don't advance state machine for incoming FLOGI
+Date: Fri, 30 Sep 2016 11:01:19 +0200
+Message-ID: <1475226080-60365-7-git-send-email-hare@suse.de>
+References: <1475226080-60365-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:41207 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751176AbcI3H75 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Sep 2016 03:59:57 -0400
+Received: from mx2.suse.de ([195.135.220.15]:34039 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752998AbcI3JBb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Sep 2016 05:01:31 -0400
+In-Reply-To: <1475226080-60365-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Wei Fang <fangwei1@huawei.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-->host_eh_schedule and ->shost_state may be accessed simultaneously as
-bellow:
+When we receive an FLOGI but have already sent our own we should
+not advance the state machine but rather wait for our FLOGI to
+return before continuing with PLOGI.
 
-1.In ata port probe path:
-ata_std_sched_eh()
-	scsi_schedule_eh()
-		...
-		spin_lock_irqsave(shost->host_lock, flags);
-		if (scsi_host_set_state(shost, SHOST_RECOVERY) == 0 ||
-		    scsi_host_set_state(shost, SHOST_CANCEL_RECOVERY) == 0) {
-			shost->host_eh_scheduled++
-			scsi_eh_wakeup()
-		}
-		spin_unlock_irqrestore(shost->host_lock, flags);
-		...
-
-2.In IO complete path:
-scsi_device_unbusy()
-	...
-	atomic_dec(&shost->host_busy)
-	if (unlikely(scsi_host_in_recovery(shost) &&
-		(shost->host_failed || shost->host_eh_scheduled))) {
-		spin_lock_irqsave(shost->host_lock, flags);
-		scsi_eh_wakeup(shost);
-		spin_unlock_irqrestore(shost->host_lock, flags);
-	}
-	...
-
-In the IO complete path, ->host_eh_schedule and ->shost_state are
-accessed without ->host_lock, and obsoleted data may be got after
-scsi_eh_wakeup() has been called in scsi_schedule_eh().
-
-It's the case that causes the problem:
-* One IO hasn't finished when scsi_schedule_eh() has been called
-  in ata port probe path
-* scsi_eh_wakeup() has been called in scsi_schedule_eh() without
-  waking up eh thread
-* this IO completes and scsi_device_unbusy() is called
-* obsoleted ->host_eh_schedule and ->shost_state are got, and eh
-  thread can't been woken up in this path
-
-Eh thread won't been woken up ever in this case, and a hung task
-will happen:
-
-INFO: task kworker/u64:0:6 blocked for more than 120 seconds.
-...
-Call trace:
-[<ffff800000086b04>] __switch_to+0x78/0x90
-[<ffff800000bf95bc>] __schedule+0x244/0x79c
-[<ffff800000bf9b54>] schedule+0x40/0x98
-[<ffff8000006cc990>] ata_port_wait_eh+0x8c/0x110
-[<ffff80000064f764>] sas_ata_wait_eh+0x3c/0x44
-[<ffff80000064f7e0>] sas_probe_sata_device+0x74/0xf8
-[<ffff800000648320>] sas_add_device+0xac/0x1ac
-[<ffff8000000d9458>] process_one_work+0x164/0x428
-[<ffff8000000d9860>] worker_thread+0x144/0x4a8
-[<ffff8000000dfbb0>] kthread+0xfc/0x110
-
-After that, the host is in recovery state, and any IOs to this
-host will be blocked.
-
-Fix this by accessing ->host_eh_schedule and ->shost_state in
-->host_lock.
-
-Signed-off-by: Wei Fang <fangwei1@huawei.com>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/scsi_lib.c | 22 ++++++++++++++--------
- 1 file changed, 14 insertions(+), 8 deletions(-)
+ drivers/scsi/libfc/fc_rport.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2cca9cf..5a72e1d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -272,23 +272,27 @@ static void scsi_init_cmd_errh(struct scsi_cmnd *cmd)
- 		cmd->cmd_len = scsi_command_size(cmd->cmnd);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index 72a7183..4b9bb6d 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -765,8 +765,10 @@ static void fc_rport_flogi_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		goto bad;
+ 
+ 	flogi = fc_frame_payload_get(fp, sizeof(*flogi));
+-	if (!flogi)
++	if (!flogi) {
++		FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
+ 		goto bad;
++	}
+ 	r_a_tov = ntohl(flogi->fl_csp.sp_r_a_tov);
+ 	if (r_a_tov > rdata->r_a_tov)
+ 		rdata->r_a_tov = r_a_tov;
+@@ -783,7 +785,6 @@ put:
+ 	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ 	return;
+ bad:
+-	FC_RPORT_DBG(rdata, "Bad FLOGI response\n");
+ 	fc_rport_error_retry(rdata, fp);
+ 	goto out;
  }
+@@ -925,10 +926,17 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ 	fc_fill_reply_hdr(fp, rx_fp, FC_RCTL_ELS_REP, 0);
+ 	lport->tt.frame_send(lport, fp);
  
-+static void __scsi_eh_wakeup(struct Scsi_Host *shost)
-+{
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(shost->host_lock, flags);
-+	if (unlikely(scsi_host_in_recovery(shost) &&
-+		     (shost->host_failed || shost->host_eh_scheduled)))
-+		scsi_eh_wakeup(shost);
-+	spin_unlock_irqrestore(shost->host_lock, flags);
-+}
-+
- void scsi_device_unbusy(struct scsi_device *sdev)
- {
- 	struct Scsi_Host *shost = sdev->host;
- 	struct scsi_target *starget = scsi_target(sdev);
--	unsigned long flags;
- 
- 	atomic_dec(&shost->host_busy);
- 	if (starget->can_queue > 0)
- 		atomic_dec(&starget->target_busy);
- 
--	if (unlikely(scsi_host_in_recovery(shost) &&
--		     (shost->host_failed || shost->host_eh_scheduled))) {
--		spin_lock_irqsave(shost->host_lock, flags);
--		scsi_eh_wakeup(shost);
--		spin_unlock_irqrestore(shost->host_lock, flags);
--	}
--
-+	__scsi_eh_wakeup(shost);
- 	atomic_dec(&sdev->device_busy);
- }
- 
-@@ -1457,6 +1461,7 @@ static inline int scsi_host_queue_ready(struct request_queue *q,
- 	spin_unlock_irq(shost->host_lock);
- out_dec:
- 	atomic_dec(&shost->host_busy);
-+	__scsi_eh_wakeup(shost);
- 	return 0;
- }
- 
-@@ -1931,6 +1936,7 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- 
- out_dec_host_busy:
- 	atomic_dec(&shost->host_busy);
-+	__scsi_eh_wakeup(shost);
- out_dec_target_busy:
- 	if (scsi_target(sdev)->can_queue > 0)
- 		atomic_dec(&scsi_target(sdev)->target_busy);
+-	if (rdata->ids.port_name < lport->wwpn)
+-		fc_rport_enter_plogi(rdata);
+-	else
+-		fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
++	/*
++	 * Do not proceed with the state machine if our
++	 * FLOGI has crossed with an FLOGI from the
++	 * remote port; wait for the FLOGI response instead.
++	 */
++	if (rdata->rp_state != RPORT_ST_FLOGI) {
++		if (rdata->ids.port_name < lport->wwpn)
++			fc_rport_enter_plogi(rdata);
++		else
++			fc_rport_state_enter(rdata, RPORT_ST_PLOGI_WAIT);
++	}
+ out:
+ 	mutex_unlock(&rdata->rp_mutex);
+ 	kref_put(&rdata->kref, lport->tt.rport_destroy);
 -- 
-1.9.3
+1.8.5.6
 
