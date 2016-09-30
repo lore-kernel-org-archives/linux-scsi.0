@@ -1,76 +1,32 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH -next] scsi: ufs: fix error return code in ufshcd_init()
-Date: Fri, 30 Sep 2016 10:19:51 +0900
-Message-ID: <003e01d21ab8$be0b6c50$3a2244f0$@samsung.com>
-References: <1475074182-13038-1-git-send-email-weiyj.lk@gmail.com>
- <CGME20160928224948epcas2p3b072781efb2cee0ba67f2a6bc30fbb59@epcas2p3.samsung.com>
- <ce37f469faab393f53a9896e3b603843@codeaurora.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2] UFS: Date Segment only need for WRITE DESCRIPTOR
+Date: Thu, 29 Sep 2016 21:36:24 -0400
+Message-ID: <yq1d1jmw4mf.fsf@sermon.lab.mkp.net>
+References: <20160825093919.5936-1-zangleigang@hisilicon.com>
+        <9e470819d1cfcead5966e37c00f53967@codeaurora.org>
+        <CGME20160928051454epcas2p3ad585ef9c23a18aacfdaabea15afbf6e@epcas2p3.samsung.com>
+        <yq1intgy5at.fsf@sermon.lab.mkp.net>
+        <007b01d2194a$4f3567a0$eda036e0$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:57472 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935413AbcI3BTy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2016 21:19:54 -0400
-In-reply-to: <ce37f469faab393f53a9896e3b603843@codeaurora.org>
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <007b01d2194a$4f3567a0$eda036e0$@samsung.com> (Kiwoong Kim's
+        message of "Wed, 28 Sep 2016 14:36:49 +0900")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, subhashj@codeaurora.org, 'Zang Leigang' <zangleigang@hisilicon.com>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: subhashj@codeaurora.org, 'Wei Yongjun' <weiyj.lk@gmail.com>
-Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Wei Yongjun' <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-Reviewed-by: Kiwoong Kim <kwmad.kim@samsung.com>
+>>>>> "Kiwoong" == Kiwoong Kim <kwmad.kim@samsung.com> writes:
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of subhashj@codeaurora.org
-> Sent: Thursday, September 29, 2016 7:50 AM
-> To: Wei Yongjun
-> Cc: Vinayak Holikatti; James E.J. Bottomley; Martin K. Petersen; Wei
-> Yongjun; linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org
-> Subject: Re: [PATCH -next] scsi: ufs: fix error return code in
-> ufshcd_init()
-> 
-> Looks good to me.
-> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-> 
-> On 2016-09-28 07:49, Wei Yongjun wrote:
-> > From: Wei Yongjun <weiyongjun1@huawei.com>
-> >
-> > Fix to return a negative error code from the error handling case
-> > instead of 0, as done elsewhere in this function.
-> >
-> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 1 +
-> >  1 file changed, 1 insertion(+)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 37f3c51..6aebb7e 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -6500,6 +6500,7 @@ int ufshcd_init(struct ufs_hba *hba, void
-> > __iomem *mmio_base, unsigned int irq)
-> >  		if (IS_ERR(hba->devfreq)) {
-> >  			dev_err(hba->dev, "Unable to register with
-> devfreq %ld\n",
-> >  					PTR_ERR(hba->devfreq));
-> > +			err = PTR_ERR(hba->devfreq);
-> >  			goto out_remove_scsi_host;
-> >  		}
-> >  		/* Suspend devfreq until the UFS device is detected */
-> >
-> >
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> > in
-> > the body of a message to majordomo@vger.kernel.org More majordomo info
-> > at  http://vger.kernel.org/majordomo-info.html
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+Kiwoong> I think that the patch is correct.  UFS spec says "The Data
+Kiwoong> Segment area is empty" for Read Descriptor.  I have been using
+Kiwoong> similar code with it and it works.  That have been already
+Kiwoong> applied in Android kernel.
 
+That's fine. Just checking.
 
+Applied to 4.9/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
