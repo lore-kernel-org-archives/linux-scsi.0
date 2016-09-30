@@ -1,38 +1,204 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: =?UTF-8?B?UmU6IOetlOWkjTogUmU6IFtQQVRDSF0gc2NzaV9kaF9hbHVhOiBmaXgg?=
- =?UTF-8?Q?meory_leak_in_alua=5frtpg=28=29?=
-Date: Thu, 29 Sep 2016 20:10:23 -0700
-Message-ID: <ef152915-74e0-c3ec-2b6d-d444f97f7a93@sandisk.com>
-References: <1474193111-6396-1-git-send-email-tang.junhui@zte.com.cn>
- <34d91218-a0a4-85aa-2771-025504fb267b@sandisk.com>
- <OF43B9D452.88594DE1-ON4825803E.00040F00-4825803E.0007D1CA@zte.com.cn>
+From: Damien Le Moal <damien.lemoal@hgst.com>
+Subject: [PATCH v5 1/7] block: Add 'zoned' queue limit
+Date: Fri, 30 Sep 2016 13:11:33 +0900
+Message-ID: <1475208699-27310-2-git-send-email-damien.lemoal@hgst.com>
+References: <1475208699-27310-1-git-send-email-damien.lemoal@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0056.outbound.protection.outlook.com ([104.47.37.56]:25501
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752787AbcI3DKg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Sep 2016 23:10:36 -0400
-In-Reply-To: <OF43B9D452.88594DE1-ON4825803E.00040F00-4825803E.0007D1CA@zte.com.cn>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1475208699-27310-1-git-send-email-damien.lemoal@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "tang.junhui@zte.com.cn" <tang.junhui@zte.com.cn>
-Cc: Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "zhang.kai16@zte.com.cn" <zhang.kai16@zte.com.cn>
 
-On 09/29/16 18:25, tang.junhui@zte.com.cn wrote:
-> Thank you for your review and reminding, I will resend this patchto
-> stable@vger.kernel.org.
+Add the zoned queue limit to indicate the zoning model of a block device.
+Defined values are 0 (BLK_ZONED_NONE) for regular block devices,
+1 (BLK_ZONED_HA) for host-aware zone block devices and 2 (BLK_ZONED_HM)
+for host-managed zone block devices. The standards defined drive managed
+model is not defined here since these block devices do not provide any
+command for accessing zone information. Drive managed model devices will
+be reported as BLK_ZONED_NONE.
 
-Hello Tang Junhui,
+The helper functions blk_queue_zoned_model and bdev_zoned_model return
+the zoned limit and the functions blk_queue_is_zoned and bdev_is_zoned
+return a boolean for callers to test if a block device is zoned.
 
-Please have a look at Documentation/SubmittingPatches. Patches should 
-not be sent directly to stable@vger.kernel.org but instead the line "Cc: 
-stable@vger.kernel.org" should be added to a patch. And since Hannes 
-wrote this code I would appreciate it if Hannes could comment on this 
-patch before it is reposted ...
+The zoned attribute is also exported as a string to applications via
+sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as "host-aware" and
+BLK_ZONED_HM as "host-managed".
 
-Thanks,
+Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
 
-Bart.
+---
+ Documentation/ABI/testing/sysfs-block | 16 ++++++++++++
+ block/blk-settings.c                  |  1 +
+ block/blk-sysfs.c                     | 18 ++++++++++++++
+ include/linux/blkdev.h                | 47 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 82 insertions(+)
+
+diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+index 71d184d..75a5055 100644
+--- a/Documentation/ABI/testing/sysfs-block
++++ b/Documentation/ABI/testing/sysfs-block
+@@ -235,3 +235,19 @@ Description:
+ 		write_same_max_bytes is 0, write same is not supported
+ 		by the device.
+ 
++What:		/sys/block/<disk>/queue/zoned
++Date:		September 2016
++Contact:	Damien Le Moal <damien.lemoal@hgst.com>
++Description:
++		zoned indicates if the device is a zoned block device
++		and the zone model of the device if it is indeed zoned.
++		The possible values indicated by zoned are "none" for
++		regular block devices and "host-aware" or "host-managed"
++		for zoned block devices. The characteristics of
++		host-aware and host-managed zoned block devices are
++		described in the ZBC (Zoned Block Commands) and ZAC
++		(Zoned Device ATA Command Set) standards. These standards
++		also define the "drive-managed" zone model. However,
++		since drive-managed zoned block devices do not support
++		zone commands, they will be treated as regular block
++		devices and zoned will report "none".
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index f679ae1..b1d5b7f 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -107,6 +107,7 @@ void blk_set_default_limits(struct queue_limits *lim)
+ 	lim->io_opt = 0;
+ 	lim->misaligned = 0;
+ 	lim->cluster = 1;
++	lim->zoned = BLK_ZONED_NONE;
+ }
+ EXPORT_SYMBOL(blk_set_default_limits);
+ 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index 9cc8d7c..ff9cd9c 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -257,6 +257,18 @@ QUEUE_SYSFS_BIT_FNS(random, ADD_RANDOM, 0);
+ QUEUE_SYSFS_BIT_FNS(iostats, IO_STAT, 0);
+ #undef QUEUE_SYSFS_BIT_FNS
+ 
++static ssize_t queue_zoned_show(struct request_queue *q, char *page)
++{
++	switch (blk_queue_zoned_model(q)) {
++	case BLK_ZONED_HA:
++		return sprintf(page, "host-aware\n");
++	case BLK_ZONED_HM:
++		return sprintf(page, "host-managed\n");
++	default:
++		return sprintf(page, "none\n");
++	}
++}
++
+ static ssize_t queue_nomerges_show(struct request_queue *q, char *page)
+ {
+ 	return queue_var_show((blk_queue_nomerges(q) << 1) |
+@@ -485,6 +497,11 @@ static struct queue_sysfs_entry queue_nonrot_entry = {
+ 	.store = queue_store_nonrot,
+ };
+ 
++static struct queue_sysfs_entry queue_zoned_entry = {
++	.attr = {.name = "zoned", .mode = S_IRUGO },
++	.show = queue_zoned_show,
++};
++
+ static struct queue_sysfs_entry queue_nomerges_entry = {
+ 	.attr = {.name = "nomerges", .mode = S_IRUGO | S_IWUSR },
+ 	.show = queue_nomerges_show,
+@@ -546,6 +563,7 @@ static struct attribute *default_attrs[] = {
+ 	&queue_discard_zeroes_data_entry.attr,
+ 	&queue_write_same_max_entry.attr,
+ 	&queue_nonrot_entry.attr,
++	&queue_zoned_entry.attr,
+ 	&queue_nomerges_entry.attr,
+ 	&queue_rq_affinity_entry.attr,
+ 	&queue_iostats_entry.attr,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c47c358..f19e16b 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -261,6 +261,15 @@ struct blk_queue_tag {
+ #define BLK_SCSI_MAX_CMDS	(256)
+ #define BLK_SCSI_CMD_PER_LONG	(BLK_SCSI_MAX_CMDS / (sizeof(long) * 8))
+ 
++/*
++ * Zoned block device models (zoned limit).
++ */
++enum blk_zoned_model {
++	BLK_ZONED_NONE,	/* Regular block device */
++	BLK_ZONED_HA,	/* Host-aware zoned block device */
++	BLK_ZONED_HM,	/* Host-managed zoned block device */
++};
++
+ struct queue_limits {
+ 	unsigned long		bounce_pfn;
+ 	unsigned long		seg_boundary_mask;
+@@ -290,6 +299,7 @@ struct queue_limits {
+ 	unsigned char		cluster;
+ 	unsigned char		discard_zeroes_data;
+ 	unsigned char		raid_partial_stripes_expensive;
++	enum blk_zoned_model	zoned;
+ };
+ 
+ struct request_queue {
+@@ -627,6 +637,23 @@ static inline unsigned int blk_queue_cluster(struct request_queue *q)
+ 	return q->limits.cluster;
+ }
+ 
++static inline enum blk_zoned_model
++blk_queue_zoned_model(struct request_queue *q)
++{
++	return q->limits.zoned;
++}
++
++static inline bool blk_queue_is_zoned(struct request_queue *q)
++{
++	switch (blk_queue_zoned_model(q)) {
++	case BLK_ZONED_HA:
++	case BLK_ZONED_HM:
++		return true;
++	default:
++		return false;
++	}
++}
++
+ /*
+  * We regard a request as sync, if either a read or a sync write
+  */
+@@ -1354,6 +1381,26 @@ static inline unsigned int bdev_write_same(struct block_device *bdev)
+ 	return 0;
+ }
+ 
++static inline enum blk_zoned_model bdev_zoned_model(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_zoned_model(q);
++
++	return BLK_ZONED_NONE;
++}
++
++static inline bool bdev_is_zoned(struct block_device *bdev)
++{
++	struct request_queue *q = bdev_get_queue(bdev);
++
++	if (q)
++		return blk_queue_is_zoned(q);
++
++	return false;
++}
++
+ static inline int queue_dma_alignment(struct request_queue *q)
+ {
+ 	return q ? q->dma_alignment : 511;
+-- 
+2.7.4
+
