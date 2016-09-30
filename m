@@ -1,280 +1,40 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 2/7] libfc: Fixup disc_mutex handling
-Date: Fri, 30 Sep 2016 09:04:09 +0200
-Message-ID: <1475219054-31241-3-git-send-email-hare@suse.de>
-References: <1475219054-31241-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55655 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752172AbcI3HE1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 30 Sep 2016 03:04:27 -0400
-In-Reply-To: <1475219054-31241-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: [PATCH v5 4/7] block: Define zoned block device operations
+Date: Fri, 30 Sep 2016 09:20:20 +0200
+Message-ID: <ac02bb6f-50e7-ce56-8f61-3f7da82e173d@suse.de>
+References: <1475208699-27310-1-git-send-email-damien.lemoal@hgst.com>
+ <1475208699-27310-5-git-send-email-damien.lemoal@hgst.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1475208699-27310-5-git-send-email-damien.lemoal@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@hgst.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The list of attached 'rdata' remote port structures is RCU
-protected, so there is no need to take the 'disc_mutex' when
-traversing it.
-Rather we should be using rcu_read_lock() and kref_get_unless_zero()
-to validate the entries.
-We need, however, take the disc_mutex when deleting an entry;
-otherwise we risk clashes with list_add.
+On 09/30/2016 06:11 AM, Damien Le Moal wrote:
+> From: Shaun Tancheff <shaun.tancheff@seagate.com>
+>
+> Define REQ_OP_ZONE_REPORT and REQ_OP_ZONE_RESET for handling zones of
+> host-managed and host-aware zoned block devices. With with these two
+> new operations, the total number of operations defined reaches 8 and
+> still fits with the 3 bits definition of REQ_OP_BITS.
+>
+> Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/fcoe/fcoe_ctlr.c | 37 +++++++++++++++++++++++++++++--------
- drivers/scsi/libfc/fc_disc.c  | 38 +++++++++++++++++++++++++-------------
- drivers/scsi/libfc/fc_lport.c |  9 +++++++--
- drivers/scsi/libfc/fc_rport.c |  2 ++
- 4 files changed, 63 insertions(+), 23 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index a569c65..b9a6fd2 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -2145,9 +2145,15 @@ static void fcoe_ctlr_disc_stop_locked(struct fc_lport *lport)
- {
- 	struct fc_rport_priv *rdata;
- 
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers) {
-+		if (kref_get_unless_zero(&rdata->kref)) {
-+			lport->tt.rport_logoff(rdata);
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
-+		}
-+	}
-+	rcu_read_unlock();
- 	mutex_lock(&lport->disc.disc_mutex);
--	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers)
--		lport->tt.rport_logoff(rdata);
- 	lport->disc.disc_callback = NULL;
- 	mutex_unlock(&lport->disc.disc_mutex);
- }
-@@ -2472,17 +2478,22 @@ static void fcoe_ctlr_vn_add(struct fcoe_ctlr *fip, struct fc_rport_priv *new)
- 		mutex_unlock(&lport->disc.disc_mutex);
- 		return;
- 	}
-+	mutex_lock(&rdata->rp_mutex);
-+	mutex_unlock(&lport->disc.disc_mutex);
- 
- 	rdata->ops = &fcoe_ctlr_vn_rport_ops;
- 	rdata->disc_id = lport->disc.disc_id;
- 
- 	ids = &rdata->ids;
- 	if ((ids->port_name != -1 && ids->port_name != new->ids.port_name) ||
--	    (ids->node_name != -1 && ids->node_name != new->ids.node_name))
-+	    (ids->node_name != -1 && ids->node_name != new->ids.node_name)) {
-+		mutex_unlock(&rdata->rp_mutex);
- 		lport->tt.rport_logoff(rdata);
-+		mutex_lock(&rdata->rp_mutex);
-+	}
- 	ids->port_name = new->ids.port_name;
- 	ids->node_name = new->ids.node_name;
--	mutex_unlock(&lport->disc.disc_mutex);
-+	mutex_unlock(&rdata->rp_mutex);
- 
- 	frport = fcoe_ctlr_rport(rdata);
- 	LIBFCOE_FIP_DBG(fip, "vn_add rport %6.6x %s\n",
-@@ -2638,11 +2649,15 @@ static unsigned long fcoe_ctlr_vn_age(struct fcoe_ctlr *fip)
- 	unsigned long deadline;
- 
- 	next_time = jiffies + msecs_to_jiffies(FIP_VN_BEACON_INT * 10);
--	mutex_lock(&lport->disc.disc_mutex);
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(rdata, &lport->disc.rports, peers) {
-+		if (!kref_get_unless_zero(&rdata->kref))
-+			continue;
- 		frport = fcoe_ctlr_rport(rdata);
--		if (!frport->time)
-+		if (!frport->time) {
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
- 			continue;
-+		}
- 		deadline = frport->time +
- 			   msecs_to_jiffies(FIP_VN_BEACON_INT * 25 / 10);
- 		if (time_after_eq(jiffies, deadline)) {
-@@ -2653,8 +2668,9 @@ static unsigned long fcoe_ctlr_vn_age(struct fcoe_ctlr *fip)
- 			lport->tt.rport_logoff(rdata);
- 		} else if (time_before(deadline, next_time))
- 			next_time = deadline;
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	}
--	mutex_unlock(&lport->disc.disc_mutex);
-+	rcu_read_unlock();
- 	return next_time;
- }
- 
-@@ -2991,12 +3007,17 @@ static void fcoe_ctlr_vn_disc(struct fcoe_ctlr *fip)
- 	mutex_lock(&disc->disc_mutex);
- 	callback = disc->pending ? disc->disc_callback : NULL;
- 	disc->pending = 0;
-+	mutex_unlock(&disc->disc_mutex);
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(rdata, &disc->rports, peers) {
-+		if (!kref_get_unless_zero(&rdata->kref))
-+			continue;
- 		frport = fcoe_ctlr_rport(rdata);
- 		if (frport->time)
- 			lport->tt.rport_login(rdata);
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	}
--	mutex_unlock(&disc->disc_mutex);
-+	rcu_read_unlock();
- 	if (callback)
- 		callback(lport, DISC_EV_SUCCESS);
- }
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index 880a906..ad3965f 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -68,10 +68,14 @@ static void fc_disc_stop_rports(struct fc_disc *disc)
- 
- 	lport = fc_disc_lport(disc);
- 
--	mutex_lock(&disc->disc_mutex);
--	list_for_each_entry_rcu(rdata, &disc->rports, peers)
--		lport->tt.rport_logoff(rdata);
--	mutex_unlock(&disc->disc_mutex);
-+	rcu_read_lock();
-+	list_for_each_entry_rcu(rdata, &disc->rports, peers) {
-+		if (kref_get_unless_zero(&rdata->kref)) {
-+			lport->tt.rport_logoff(rdata);
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
-+		}
-+	}
-+	rcu_read_unlock();
- }
- 
- /**
-@@ -289,15 +293,19 @@ static void fc_disc_done(struct fc_disc *disc, enum fc_disc_event event)
- 	 * Skip ports which were never discovered.  These are the dNS port
- 	 * and ports which were created by PLOGI.
- 	 */
-+	rcu_read_lock();
- 	list_for_each_entry_rcu(rdata, &disc->rports, peers) {
--		if (!rdata->disc_id)
-+		if (!kref_get_unless_zero(&rdata->kref))
- 			continue;
--		if (rdata->disc_id == disc->disc_id)
--			lport->tt.rport_login(rdata);
--		else
--			lport->tt.rport_logoff(rdata);
-+		if (rdata->disc_id) {
-+			if (rdata->disc_id == disc->disc_id)
-+				lport->tt.rport_login(rdata);
-+			else
-+				lport->tt.rport_logoff(rdata);
-+		}
-+		kref_put(&rdata->kref, lport->tt.rport_destroy);
- 	}
--
-+	rcu_read_unlock();
- 	mutex_unlock(&disc->disc_mutex);
- 	disc->disc_callback(lport, event);
- 	mutex_lock(&disc->disc_mutex);
-@@ -592,7 +600,6 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 	lport = rdata->local_port;
- 	disc = &lport->disc;
- 
--	mutex_lock(&disc->disc_mutex);
- 	if (PTR_ERR(fp) == -FC_EX_CLOSED)
- 		goto out;
- 	if (IS_ERR(fp))
-@@ -607,16 +614,19 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			goto redisc;
- 		pn = (struct fc_ns_gid_pn *)(cp + 1);
- 		port_name = get_unaligned_be64(&pn->fn_wwpn);
-+		mutex_lock(&rdata->rp_mutex);
- 		if (rdata->ids.port_name == -1)
- 			rdata->ids.port_name = port_name;
- 		else if (rdata->ids.port_name != port_name) {
- 			FC_DISC_DBG(disc, "GPN_ID accepted.  WWPN changed. "
- 				    "Port-id %6.6x wwpn %16.16llx\n",
- 				    rdata->ids.port_id, port_name);
-+			mutex_unlock(&rdata->rp_mutex);
- 			lport->tt.rport_logoff(rdata);
--
-+			mutex_lock(&lport->disc.disc_mutex);
- 			new_rdata = lport->tt.rport_create(lport,
- 							   rdata->ids.port_id);
-+			mutex_unlock(&lport->disc.disc_mutex);
- 			if (new_rdata) {
- 				new_rdata->disc_id = disc->disc_id;
- 				lport->tt.rport_login(new_rdata);
-@@ -624,6 +634,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 			goto out;
- 		}
- 		rdata->disc_id = disc->disc_id;
-+		mutex_unlock(&rdata->rp_mutex);
- 		lport->tt.rport_login(rdata);
- 	} else if (ntohs(cp->ct_cmd) == FC_FS_RJT) {
- 		FC_DISC_DBG(disc, "GPN_ID rejected reason %x exp %x\n",
-@@ -633,10 +644,11 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
- 		FC_DISC_DBG(disc, "GPN_ID unexpected response code %x\n",
- 			    ntohs(cp->ct_cmd));
- redisc:
-+		mutex_lock(&disc->disc_mutex);
- 		fc_disc_restart(disc);
-+		mutex_unlock(&disc->disc_mutex);
- 	}
- out:
--	mutex_unlock(&disc->disc_mutex);
- 	kref_put(&rdata->kref, lport->tt.rport_destroy);
- }
- 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 04ce7cf..0b1ffc7 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -237,16 +237,19 @@ static const char *fc_lport_state(struct fc_lport *lport)
-  * @remote_fid:	 The FID of the ptp rport
-  * @remote_wwpn: The WWPN of the ptp rport
-  * @remote_wwnn: The WWNN of the ptp rport
-+ *
-+ * Locking Note: The lport lock is expected to be held before calling
-+ * this routine.
-  */
- static void fc_lport_ptp_setup(struct fc_lport *lport,
- 			       u32 remote_fid, u64 remote_wwpn,
- 			       u64 remote_wwnn)
- {
--	mutex_lock(&lport->disc.disc_mutex);
- 	if (lport->ptp_rdata) {
- 		lport->tt.rport_logoff(lport->ptp_rdata);
- 		kref_put(&lport->ptp_rdata->kref, lport->tt.rport_destroy);
- 	}
-+	mutex_lock(&lport->disc.disc_mutex);
- 	lport->ptp_rdata = lport->tt.rport_create(lport, remote_fid);
- 	kref_get(&lport->ptp_rdata->kref);
- 	lport->ptp_rdata->ids.port_name = remote_wwpn;
-@@ -1007,8 +1010,10 @@ EXPORT_SYMBOL(fc_lport_reset);
-  */
- static void fc_lport_reset_locked(struct fc_lport *lport)
- {
--	if (lport->dns_rdata)
-+	if (lport->dns_rdata) {
- 		lport->tt.rport_logoff(lport->dns_rdata);
-+		lport->dns_data = NULL;
-+	}
- 
- 	if (lport->ptp_rdata) {
- 		lport->tt.rport_logoff(lport->ptp_rdata);
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 4ec896e..a0ceba1 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -378,7 +378,9 @@ static void fc_rport_work(struct work_struct *work)
- 				mutex_unlock(&rdata->rp_mutex);
- 			} else {
- 				FC_RPORT_DBG(rdata, "work delete\n");
-+				mutex_lock(&lport->disc.disc_mutex);
- 				list_del_rcu(&rdata->peers);
-+				mutex_unlock(&lport->disc.disc_mutex);
- 				mutex_unlock(&rdata->rp_mutex);
- 				kref_put(&rdata->kref, lport->tt.rport_destroy);
- 			}
+Hannes
 -- 
-1.8.5.6
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
