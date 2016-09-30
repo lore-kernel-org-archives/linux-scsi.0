@@ -1,159 +1,76 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: dm-mpath: always return reservation conflict
-Date: Fri, 30 Sep 2016 08:55:44 +0800
-Message-ID: <1475196944.3384.8.camel@HansenPartnership.com>
-References: <1470141392-25479-1-git-send-email-hch@lst.de>
-         <1470141392-25479-2-git-send-email-hch@lst.de>
-         <20160811183832.GA27144@lst.de> <20160815130829.GA14829@redhat.com>
-         <20160815134039.GA5569@redhat.com> <20160926165230.GA5787@infradead.org>
-         <1474916784.2765.64.camel@HansenPartnership.com>
-         <9f7ee494-1432-90ad-55e2-dbd223cd7bf3@suse.de>
-         <1475002249.2716.31.camel@HansenPartnership.com>
-         <20160929150132.GA31965@redhat.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: [PATCH -next] scsi: ufs: fix error return code in ufshcd_init()
+Date: Fri, 30 Sep 2016 10:19:51 +0900
+Message-ID: <003e01d21ab8$be0b6c50$3a2244f0$@samsung.com>
+References: <1475074182-13038-1-git-send-email-weiyj.lk@gmail.com>
+ <CGME20160928224948epcas2p3b072781efb2cee0ba67f2a6bc30fbb59@epcas2p3.samsung.com>
+ <ce37f469faab393f53a9896e3b603843@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:34692 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S934998AbcI3Azz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Sep 2016 20:55:55 -0400
-In-Reply-To: <20160929150132.GA31965@redhat.com>
+Received: from mailout2.samsung.com ([203.254.224.25]:57472 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935413AbcI3BTy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Sep 2016 21:19:54 -0400
+In-reply-to: <ce37f469faab393f53a9896e3b603843@codeaurora.org>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: subhashj@codeaurora.org, 'Wei Yongjun' <weiyj.lk@gmail.com>
+Cc: 'Vinayak Holikatti' <vinholikatti@gmail.com>, "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'Wei Yongjun' <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 
-On Thu, 2016-09-29 at 11:01 -0400, Mike Snitzer wrote:
-> On Tue, Sep 27 2016 at  2:50pm -0400,
-> James Bottomley <James.Bottomley@hansenpartnership.com> wrote:
+Reviewed-by: Kiwoong Kim <kwmad.kim@samsung.com>
+
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of subhashj@codeaurora.org
+> Sent: Thursday, September 29, 2016 7:50 AM
+> To: Wei Yongjun
+> Cc: Vinayak Holikatti; James E.J. Bottomley; Martin K. Petersen; Wei
+> Yongjun; linux-scsi@vger.kernel.org; linux-scsi-owner@vger.kernel.org
+> Subject: Re: [PATCH -next] scsi: ufs: fix error return code in
+> ufshcd_init()
 > 
-> > On Tue, 2016-09-27 at 08:34 +0200, Hannes Reinecke wrote:
-> > > On 09/26/2016 09:06 PM, James Bottomley wrote:
-> > > > On Mon, 2016-09-26 at 09:52 -0700, Christoph Hellwig wrote:
-> > > > > Getting back to this after Hannes recovered from his vacation
-> > > > > and I had a chat with him..
-> > > > > 
-> > > > > On Mon, Aug 15, 2016 at 09:40:39AM -0400, Mike Snitzer wrote:
-> > > > > > Seems we still need a more sophisticated approach.  But I'm
-> > > > > > left wondering: if we didn't do it would anything notice? 
-> > > > > >  Sadly, the same big question from the original thread from
-> > > > > > a
-> > > > > > year ago:
-> > > > > 
-> > > > > Yes.  I have a customer looking to push the pNFS SCSI layout
-> > > > > into
-> > > > > a product, and the major show stopper right now is that we
-> > > > > can
-> > > > > trivially get into failver loops without this (or and
-> > > > > equivalent)
-> > > > > fix.
-> > > > > 
-> > > > > A year ago SCSI layout was still work in progress in the
-> > > > > IETF,
-> > > > > people use the similar block layout instead that doesn't use
-> > > > > PRs and we also didn't have the in-kernel PR API, so you 
-> > > > > effectively couldn't use PRs with multipathing.
-> > > > > 
-> > > > > > https://patchwork.kernel.org/patch/6797111/
-> > > > > > 
-> > > > > > > So this is throw-away for now (and I'll get Hannes' patch
-> > > > > > > applied for 4.8-rc3, with the tweak of returning -EBADE
-> > > > > > > immediately):
-> > > > > > 
-> > > > > > Unfortunately, I'm _not_ staging Hannes' patch until I have
-> > > > > > James Bottomley's Ack (given his original issues with the
-> > > > > > patch
-> > > > > > haven't been explained away AFAICT).
-> > > > > 
-> > > > > I've added James to the Cc.  His argument was that the old 
-> > > > > behavior could be implemented to use some non-standard use of
-> > > > > reservations without a specific example.  I don't really
-> > > > > think 
-> > > > > his example even is practical - once we use dm-mpath it 
-> > > > > exclusively claims the underling block devices, so any sort
-> > > > > of 
-> > > > > selective reservations would have had to happen before even
-> > > > > starting dm-multipath.
-> > > > 
-> > > > Well, now that you've made me reread the thread from 14 months
-> > > > ago 
-> > > > that wasn't quite my objection.  The objection hinged on the
-> > > > fact 
-> > > > that anything that uses path specific reservations would now
-> > > > fail
-> > > > instead of retrying on a different path.  I thought the IBM SVC
-> > > > did 
-> > > > this and Hannes implied he'd be able to check this ... did
-> > > > anyone 
-> > > > check?  If we've checked and there's no issue with the SVC,
-> > > > then I 
-> > > > don't have any other objections.
-> > > > 
-> > > > >   So a dynamic SAN controller would have to tear down and
-> > > > > rebuild 
-> > > > > the dm-multipath setup at all the time.
-> > > > 
-> > > > That was the job of the SVC: it sat in the middle of the SAN
-> > > > and
-> > > > controlled which node saw what storage.
-> > > > 
-> > > > https://www.ibm.com/support/knowledgecenter/STPVGU/com.ibm.stor
-> > > > age.
-> > > > svc.console.720.doc/svc_svcovr_1bcfiq.html
-> > > > 
-> > > > The SVC can issue its own reservations in those circumstances. 
-> > > >  What I'm not at all clear on is whether they'll interact badly
-> > > > with the dm-mp reservations.
-> > > > 
-> > > In the end SVC is (for us) just another storage array.
-> > > If and what SVC does in the background is of no interest to us.
-> > 
-> > How can that be true?  It sits *on* the san and manages devices, it
-> > doesn't sit between the initators and the devices.  It applies
-> > reservations to devices under management, but every node usually
-> > sees
-> > everything else, so devices under SVC management are visible to all
-> > initators unless you zone them off.
-> > 
-> > The last SVC manual I saw included a procedure for manually
-> > releasing
-> > stuck SVC reservations from an initator, which illustrates the
-> > expectation.
-> > 
-> > > OTOH I'd be very surprised if the SVC would be allowing us to see
-> > > remnants of its internal working (like persistent reservation 
-> > > errors); in doing so third-party applications would be able to
-> > > see 
-> > > and possibly modify these persistent reservations and the SVC
-> > > would 
-> > > find itself in a very fragile operating scenario.
-> > 
-> > Because unless you zone the fibre, that's precisely what you do
-> > see.
-> > 
-> > > Also interactions with GPFS (which uses it's own set of
-> > > reservations)
-> > > will become very tricky.
-> > > 
-> > > So I sincerely doubt we'll ever see SVC-originated persistent
-> > > reservations errors.
-> > > 
-> > > And as a side-note, this particular patch is included in SLES
-> > > since
-> > > 2011. With no noticeable side-effect.
-> > 
-> > OK, so can you actually say that someone has tested this scenario? 
-> >  If not, do you have the capacity to test it?
+> Looks good to me.
+> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 > 
-> I've elected to just take this change for 4.9.  Please see:
-> https://git.kernel.org/cgit/linux/kernel/git/device-mapper/linux-dm.g
-> it/commit/?h=dm-4.9&id=8ff232c1a819c2e98d85974a3bff0b7b8e2970ed
+> On 2016-09-28 07:49, Wei Yongjun wrote:
+> > From: Wei Yongjun <weiyongjun1@huawei.com>
+> >
+> > Fix to return a negative error code from the error handling case
+> > instead of 0, as done elsewhere in this function.
+> >
+> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> > ---
+> >  drivers/scsi/ufs/ufshcd.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 37f3c51..6aebb7e 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -6500,6 +6500,7 @@ int ufshcd_init(struct ufs_hba *hba, void
+> > __iomem *mmio_base, unsigned int irq)
+> >  		if (IS_ERR(hba->devfreq)) {
+> >  			dev_err(hba->dev, "Unable to register with
+> devfreq %ld\n",
+> >  					PTR_ERR(hba->devfreq));
+> > +			err = PTR_ERR(hba->devfreq);
+> >  			goto out_remove_scsi_host;
+> >  		}
+> >  		/* Suspend devfreq until the UFS device is detected */
+> >
+> >
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> > in
+> > the body of a message to majordomo@vger.kernel.org More majordomo info
+> > at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-That's fine.  I think the answer is that SVC technology is not around
-much so it can't be tested, so I was going to dump it on you to make
-the call anyway ...
-
-James
 
