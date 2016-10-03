@@ -1,42 +1,79 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 175431] scsi host6: runtime PM trying to activate child device
- host6 but parent (3-1:1.0) is not active
-Date: Sun, 02 Oct 2016 22:45:16 +0000
-Message-ID: <bug-175431-11613-COsbx9bNzf@https.bugzilla.kernel.org/>
-References: <bug-175431-11613@https.bugzilla.kernel.org/>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
+Date: Mon, 3 Oct 2016 20:09:33 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B060217@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+ <146706367078.29152.14405582249219794335.stgit@brunhilda>
+ <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
+ <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
+ <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
+ <1473359114.2781.38.camel@linux.vnet.ibm.com>
+ <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
+ <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:55782 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751130AbcJBWpV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 2 Oct 2016 18:45:21 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 7583F2024D
-        for <linux-scsi@vger.kernel.org>; Sun,  2 Oct 2016 22:45:19 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 797FA201EF
-        for <linux-scsi@vger.kernel.org>; Sun,  2 Oct 2016 22:45:17 +0000 (UTC)
-In-Reply-To: <bug-175431-11613@https.bugzilla.kernel.org/>
+Received: from mail-bn3nam01on0064.outbound.protection.outlook.com ([104.47.33.64]:47184
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751388AbcJCUJi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 3 Oct 2016 16:09:38 -0400
+In-Reply-To: <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=175431
-
-Cristian Aravena Romero <caravena@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-             Status|NEW                         |RESOLVED
-         Resolution|---                         |DUPLICATE
-
---- Comment #1 from Cristian Aravena Romero <caravena@gmail.com> ---
-
-
-*** This bug has been marked as a duplicate of bug 153171 ***
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VucGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBUaHVy
+c2RheSwgU2VwdGVtYmVyIDA4LCAyMDE2IDU6MzggUE0NCj4gVG86IFNjb3R0IEJlbmVzaDsgSmFt
+ZXMgQm90dG9tbGV5OyBEb24gQnJhY2U7IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBDYzogVmlzd2Fz
+IEc7IE1haGVzaCBSYWphc2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBL
+ZXZpbg0KPiBCYXJuZXR0OyBKdXN0aW4gTGluZGxleTsgZWxsaW90dEBocGUuY29tOyBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIFY0IDIvMl0gYWFjcmFp
+ZDogcmVtb3ZlIHdpbGRjYXJkIGZvciBzZXJpZXMgOSBjb250cm9sbGVycw0KPiANCj4gRVhURVJO
+QUwgRU1BSUwNCj4gDQo+IA0KPiBPbiBTZXB0ZW1iZXIgOCwgMjAxNiAyOjMzOjUyIFBNIEVEVCwg
+U2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT4gd3JvdGU6DQo+ID4+
+DQo+ID4+IE9uIFRodSwgMjAxNi0wOS0wOCBhdCAxODoxNSArMDAwMCwgRG9uIEJyYWNlIHdyb3Rl
+Og0KPiA+PiA+ID4gPiAtICAgIHsgMHg5MDA1LCAweDAyOGYsIFBDSV9BTllfSUQsIFBDSV9BTllf
+SUQsIDAsIDAsIDY1IH0sIC8qDQo+ID4+ID4gPiA+IEFkYXB0ZWMgUE1DDQo+ID4+ID4gPiA+IFNl
+cmllcyA5ICovDQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IEhvdyBhcmUgcGVvcGxlIHRoYXQgbG9h
+ZCBhYWNyYWlkIGluIHRoZWlyIGluaXRyZCBnb2luZyB0byBib290DQo+ID4+ID4gPiA+IGFmdGVy
+IHRoaXM/DQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IC0tDQo+ID4+ID4gPiA+IE1hcnRpbiBLLiBQ
+ZXRlcnNlbiAgICAgIE9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KPiA+PiA+ID4NCj4gPj4gPiA+
+IEkgdXBkYXRlZCBzbWFydHBxaS9LY29uZmlnIGFuZCBhZGRlZA0KPiA+RG9jdW1lbnRhdGlvbi9z
+Y3NpL3NtYXJ0cHFpLnR4dA0KPiA+PiA+ID4gdG8gaW5mb3JtIHVzZXJzIG9mIHRoZSBuZWVkIHRv
+IGNvbmZpZ3VyZSB0aGUgc21hcnRwcWkgZHJpdmVyDQo+ID5tb3ZpbmcNCj4gPj4gPiA+IGZvcndh
+cmQgZm9yIGFhY3JhaWQgU2VyaWVzIDkgY29udHJvbGxlcnMuDQo+ID4+ID4gPg0KPiA+PiA+ID4g
+SG9wZSB0aGlzIGhlbHBzLg0KPiA+Pg0KPiA+PiBUaGF0J3Mgbm90IGdvaW5nIHRvIGJlIGVub3Vn
+aDogdGhpcyBJRCBoYXMgYmVlbiBpbiB0aGUgYWFjcmlhZCBkcml2ZXINCj4gPnNpbmNlDQo+ID4+
+IDIwMTEuICBUaGF0IG1lYW5zIGFueW9uZSB3aG8gZmluYWxseSBnZXRzIGhvbGQgb2Ygb25lIG9m
+IHRoZXNlIG5ldw0KPiA+Y2FyZHMNCj4gPj4gYnV0IHVzZXMgYSBkaXN0cm8gdGhhdCBkb2Vzbid0
+IGhhdmUgdGhlIG5ldyBzbWFydHBxaSBkcml2ZXIgd2lsbCBiZQ0KPiA+YXR0YWNoZWQNCj4gPj4g
+dmlhIHRoZSBhYWNyYWlkIG9uZS4NCj4gPj4NCj4gPg0KPiA+VGhhdCdzIG9rIGJlY2F1c2UgZm9y
+IHByZXZpb3VzIGRpc3Ryb3MgdGhlIG5ldyBjb250cm9sbGVyIHdpbGwgd29yaw0KPiA+d2l0aCB0
+aGUgcHJldmlvdXMgYWFjcmFpZCBkcml2ZXIsIGFsdGhvdWdoIHdpdGggbm9uLW9wdGltYWwNCj4g
+PnBlcmZvcm1hbmNlLg0KPiANCj4gTm90IGFmdGVyIHRoaXMgY2hhbmdlIGhpdHMuIFRoZW4gc3lz
+dGVtcyB0aGF0IG9ubHkgaGF2ZSBhYWNyYWlkIGluIHRoZSBpbml0cmQNCj4gd2lsbCBmYWlsIHRv
+IGJvb3QuDQo+IA0KPiA+V2hhdCB3ZSB3YW50IHRvIGRvIGlzIHN5bmMgdXAgYXQgNC45IHNvIGdv
+aW5nIGZvcndhcmQgb25seSB0aGUgbmV3DQo+ID5zbWFydHBxaSBkcml2ZXIgd2lsbCBhdHRhY2gg
+dG8gdGhlc2UgbmV3IGNvbnRyb2xsZXJzLg0KPiANCj4gU28geW91IGhhdmUgYSBwbGFuIGluIHBs
+YWNlIHdpdGggdGhlIGRpc3Ryb3MgdG8gbWlncmF0ZSB0aGUgaW5pdHJkIGltYWdlcz8NCj4gV2l0
+aG91dCBiZWluZyB0b2xkLCBzb21lIHdpbGwgb25seSBpbnN0YWxsIHRoZSBtb2R1bGVzIHRoZSBw
+cmV2aW91cyBpbml0cmQgIHdhcw0KPiBjb25maWd1cmVkIGZvci4NCj4gDQo+IEphbWVzDQoNClll
+cyB3ZSBkbyBoYXZlIGEgcGxhbi4gDQpXZSBoYXZlIGFsc28gcnVuIHRlc3RzIHdoZXJlIHdlIGlu
+c3RhbGwgdXNpbmcgdGhlIGFhY3JhaWQgZHJpdmVyLCB0aGVuDQp1cGdyYWRlIHRvIHRoZSBzbWFy
+dHBxaSBkcml2ZXIuIEZvciB0aGUgbWFqb3IgZGlzdHJvcywgdGhlIGluaWl0cmQgd2FzDQp1cGRh
+dGVkIHdpdGggdGhlIG5ldyBzbWFydHBxaSBkcml2ZXIuDQoNClRoZSBkaXN0cm9zIGN1cnJlbnRs
+eSBoYXZlIHRoaXMgcGF0Y2ggYXBwbGllZCBhbHJlYWR5IGFuZCB3ZSBhcmUgY29uY2VybmVkDQp0
+aGF0IGl0IHdpbGwgYmUgcmVkYWN0ZWQgdGhlIG5leHQgdGltZSB0aGV5IHB1bGwgZnJvbSBrZXJu
+ZWwub3JnLg0KDQpJcyB0aGVyZSBzb21ldGhpbmcgSSBjYW4gYWRkIHRvIHRoZSBzbWFydHBxaS50
+eHQgZG9jdW1lbnQgdGhhdA0KY2FuIG1ha2UgdGhpcyBtb3JlIGNsZWFyPw0KDQpUaGFua3MsDQpE
+b24NCg0KPiANCj4gPlNjb3R0DQo+ID4NCj4gPj4gR2l2ZW4gdGhhdCB0aGUgbGlmZSB0aW1lcyBv
+ZiBlbnRlcnByaXNlIGRpc3RyaWJ1dGlvbnMgaXMgdHdvIHllYXJzDQo+ID5hbmQgeW91J3JlDQo+
+ID4+IHJlbGVhc2luZyB0aGlzIHNtYXJ0cHFpIHNvb24sIHRoZSBvdmVybGFwIGlzIHVuYXZvaWRh
+YmxlLg0KPiA+Pg0KPiA+PiBKYW1lcw0KPiA+Pg0KPiANCj4gDQo+IC0tDQo+IFNlbnQgZnJvbSBt
+eSBBbmRyb2lkIGRldmljZSB3aXRoIEstOSBNYWlsLiBQbGVhc2UgZXhjdXNlIG15IGJyZXZpdHku
+DQo=
