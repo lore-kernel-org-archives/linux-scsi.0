@@ -1,45 +1,43 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 02/12] scsi/cumana_1: Remove unused cumanascsi_setup() function
-Date: Tue,  4 Oct 2016 01:40:50 -0400 (EDT)
-Message-ID: <27baf9a385d0f85f539e81be46e1a4ef8c67226c.1475559357.git.fthain@telegraphics.com.au>
+Subject: [PATCH 12/12] scsi/ncr5380: Suppress unhelpful "interrupt without IRQ
+ bit" message
+Date: Tue,  4 Oct 2016 01:40:51 -0400 (EDT)
+Message-ID: <a20eaee4b35f4daf6b89cf9c6f47bd4989b9703d.1475559357.git.fthain@telegraphics.com.au>
 References: <cover.1475559357.git.fthain@telegraphics.com.au>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1475559357.git.fthain@telegraphics.com.au>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Russell King <linux@armlinux.org.uk>, linux-arm-kernel@lists.infradead.org
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+
+If a NCR5380 host instance ends up on a shared interrupt line then
+this printk will be a problem. It is already a problem on some Mac
+models: when testing mac_scsi on a PowerBook 180 I found that PDMA
+transfers (but not PIO transfers) cause the message to be logged.
+
+These spurious interrupts don't appear to come from the DRQ signal from
+the 5380. And they don't happen at all on the Mac LC III. A comment in
+the NetBSD source code mentions this mystery. Testing seems to show
+that we can safely ignore these interrupts.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/arm/cumana_1.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/NCR5380.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
-index 8e9cfe8..f616756 100644
---- a/drivers/scsi/arm/cumana_1.c
-+++ b/drivers/scsi/arm/cumana_1.c
-@@ -33,10 +33,6 @@
- 
- #include "../NCR5380.h"
- 
--void cumanascsi_setup(char *str, int *ints)
--{
--}
--
- #define CTRL	0x16fc
- #define STAT	0x2004
- #define L(v)	(((v)<<16)|((v) & 0x0000ffff))
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index d479e11..03d3d1b 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -995,7 +995,7 @@ static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
+ 		}
+ 		handled = 1;
+ 	} else {
+-		shost_printk(KERN_NOTICE, instance, "interrupt without IRQ bit\n");
++		dsprintk(NDEBUG_INTR, instance, "interrupt without IRQ bit\n");
+ #ifdef SUN3_SCSI_VME
+ 		dregs->csr |= CSR_DMA_ENABLE;
+ #endif
 -- 
 2.7.3
