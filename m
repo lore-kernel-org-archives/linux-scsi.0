@@ -1,41 +1,43 @@
-From: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Subject: [PATCH v2 2/3] hisi_sas: add device tree support for hip07
-Date: Tue, 4 Oct 2016 19:11:10 +0800
-Message-ID: <1475579471-11308-3-git-send-email-john.garry@huawei.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 1/3] devicetree: bindings: scsi: hisi_sas add hip07 support
+Date: Tue, 4 Oct 2016 19:11:09 +0800
+Message-ID: <1475579471-11308-2-git-send-email-john.garry@huawei.com>
 References: <1475579471-11308-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1475579471-11308-1-git-send-email-john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, robh+dt-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, mark.rutland-5wv7dgnIgG8@public.gmane.org
-Cc: linuxarm-hv44wF8Li93QT0dZR+AlfA@public.gmane.org, xuwei5-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org, john.garry2-s/0ZXS5h9803lw97EnAbAg@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, hare-IBi9RG/b67k@public.gmane.org, John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:46438 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750908AbcJDKuE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2016 06:50:04 -0400
+In-Reply-To: <1475579471-11308-1-git-send-email-john.garry@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, robh+dt@kernel.org, mark.rutland@arm.com
+Cc: linuxarm@huawei.com, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, devicetree@vger.kernel.org, hare@suse.com, John Garry <john.garry@huawei.com>, Xiang Chen <chenxiang66@hisilicon.com>
 
-Chipset hip07 incorporates v2 hw.
+Add support for hip07 chipset to hisi_sas controller.
 
-Signed-off-by: John Garry <john.garry-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
-Signed-off-by: Xiang Chen <chenxiang66-C8/M+/jPZTeaMJb+Lgu22Q@public.gmane.org>
+Chipset hip07 has v2 hw.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 1 +
+ Documentation/devicetree/bindings/scsi/hisilicon-sas.txt | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 9825a3f..758e06f 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2319,6 +2319,7 @@ static int hisi_sas_v2_remove(struct platform_device *pdev)
- 
- static const struct of_device_id sas_v2_of_match[] = {
- 	{ .compatible = "hisilicon,hip06-sas-v2",},
-+	{ .compatible = "hisilicon,hip07-sas-v2",},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, sas_v2_of_match);
+diff --git a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+index bf2411f..2a42a32 100644
+--- a/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
++++ b/Documentation/devicetree/bindings/scsi/hisilicon-sas.txt
+@@ -6,6 +6,7 @@ Main node required properties:
+   - compatible : value should be as follows:
+ 	(a) "hisilicon,hip05-sas-v1" for v1 hw in hip05 chipset
+ 	(b) "hisilicon,hip06-sas-v2" for v2 hw in hip06 chipset
++	(c) "hisilicon,hip07-sas-v2" for v2 hw in hip07 chipset
+   - sas-addr : array of 8 bytes for host SAS address
+   - reg : Address and length of the SAS register
+   - hisilicon,sas-syscon: phandle of syscon used for sas control
 -- 
 1.9.1
 
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
