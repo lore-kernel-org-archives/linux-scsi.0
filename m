@@ -1,84 +1,81 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: iscsi_trx going into D state
-Date: Tue, 4 Oct 2016 09:55:45 +0200
-Message-ID: <20161004075545.j52mg3a2jckrchlp@linux-x5ow.site>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: Fix a reference counting bug
+Date: Tue, 4 Oct 2016 10:08:42 +0200
+Message-ID: <60c9c051-0c74-5a73-c261-9a23a8ff21c6@suse.de>
+References: <dbb073e5-817b-c2bd-26b1-b12752a9d82b@sandisk.com>
+ <afae74e6-6bb6-aa3f-01c4-6c0b5558772d@suse.de>
+ <99110c0a-370e-e31e-d6e3-72d247a5a355@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
-Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:42830 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752174AbcJDIIv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 Oct 2016 04:08:51 -0400
+In-Reply-To: <99110c0a-370e-e31e-d6e3-72d247a5a355@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Sep 30, 2016 at 11:14:57AM -0600, Robert LeBlanc wrote:
-> We are having a reoccurring problem where iscsi_trx is going into D
-> state. It seems like it is waiting for a session tear down to happen
-> or something, but keeps waiting. We have to reboot these targets on
-> occasion. This is running the 4.4.12 kernel and we have seen it on
-> several previous 4.4.x and 4.2.x kernels. There is no message in dmesg
-> or /var/log/messages. This seems to happen with increased frequency
-> when we have a disruption in our Infiniband fabric, but can happen
-> without any changes to the fabric (other than hosts rebooting).
+On 09/29/2016 07:01 PM, Bart Van Assche wrote:
+> On 09/28/2016 10:46 PM, Hannes Reinecke wrote:
+>> On 09/29/2016 01:45 AM, Bart Van Assche wrote:
+>>> The code at the end of alua_rtpg_work() is as follows:
+>>>
+>>>     scsi_device_put(sdev);
+>>>     kref_put(&pg->kref, release_port_group);
+>>>
+>>> Make sure that all code that queues the work item associated
+>>> with alua_rtpg_work() holds both references.
+>>>
+>>> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+>>> Cc: Hannes Reinecke <hare@suse.com>
+>>> Cc: <stable@vger.kernel.org>
+>>> ---
+>>>  drivers/scsi/device_handler/scsi_dh_alua.c | 1 +
+>>>  1 file changed, 1 insertion(+)
+>>>
+>>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> index 752b5c9..f7099e2 100644
+>>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>>> @@ -889,6 +889,7 @@ static void alua_rtpg_queue(struct
+>>> alua_port_group *pg,
+>>>          /* Do not queue if the worker is already running */
+>>>          if (!(pg->flags & ALUA_PG_RUNNING)) {
+>>>              kref_get(&pg->kref);
+>>> +            scsi_device_get(sdev);
+>>>              start_queue = 1;
+>>>          }
+>>>      }
+>>>
+>> Nack.
+>>
+>> The scsi device reference tracks ->rtpg_sdev, not the queue item.
+>> So we only need to take the scsi device reference if we're assigning a
+>> new value to ->rtpg_sdev, which we are not.
 > 
-> # ps aux | grep iscsi | grep D
-> root      4185  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_trx]
-> root     18505  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_np]
+> Hello Hannes,
 > 
-> # cat /proc/4185/stack
-> [<ffffffff814cc999>] target_wait_for_sess_cmds+0x49/0x1a0
-> [<ffffffffa087292b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
-> [<ffffffff814f0de2>] iscsit_close_connection+0x162/0x840
-> [<ffffffff814df8df>] iscsit_take_action_for_connection_exit+0x7f/0x100
-> [<ffffffff814effc0>] iscsi_target_rx_thread+0x5a0/0xe80
-> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
-> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
-> [<ffffffffffffffff>] 0xffffffffffffffff
+> If queue_delayed_work() returns 0 that means that a call to
+> alua_rtpg_work() has already been scheduled. alua_rtpg_work() will drop
+> the reference on pg->rtpg_sdev. Are you sure that alua_rtpg_queue()
+> should call scsi_device_put(sdev) in that case?
 > 
-> # cat /proc/18505/stack
-> [<ffffffff814f0c71>] iscsit_stop_session+0x1b1/0x1c0
-> [<ffffffff814e2436>] iscsi_check_for_session_reinstatement+0x1e6/0x270
-> [<ffffffff814e4df0>] iscsi_target_check_for_existing_instances+0x30/0x40
-> [<ffffffff814e4f40>] iscsi_target_do_login+0x140/0x640
-> [<ffffffff814e62dc>] iscsi_target_start_negotiation+0x1c/0xb0
-> [<ffffffff814e402b>] iscsi_target_login_thread+0xa9b/0xfc0
-> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
-> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
-> [<ffffffffffffffff>] 0xffffffffffffffff
-> 
-> What can we do to help get this resolved?
-> 
-> Thanks,
-> 
-> ----------------
-> Robert LeBlanc
-> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Ah, now I see what you mean.
+However, your patch is still incorrect; when doing so we'll end up with
+a duplicate reference if the call to queue_delayed_work() succeeds.
 
-Hi,
-I've encountered the same issue and found a hack to fix it at [1] but I think
-the correct way for handling this issue would be like you said to tear down 
-the session in case a TASK ABORT times out. Unfortunately I'm not really
-familiar with the target code myself so I mainly use this reply to get me into
-the Cc loop.
+I'll be sending an updated patch.
 
-[1] http://marc.info/?l=linux-scsi&m=147282568910535&w=2
+Cheers,
 
-
+Hannes
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 NÃ¼rnberg
+GF: J. Hawn, J. Guild, F. ImendÃ¶rffer, HRB 16746 (AG NÃ¼rnberg)
