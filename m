@@ -1,71 +1,174 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/12] Fixes, cleanup and g_NCR5380_mmio/g_NCR5380 merger
-Date: Tue, 4 Oct 2016 10:23:13 +0200
-Message-ID: <bde7797c-224e-10b7-6204-d8cd48214ef9@suse.de>
-References: <cover.1475559357.git.fthain@telegraphics.com.au>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: iscsi_trx going into D state
+Date: Tue, 4 Oct 2016 11:11:18 +0200
+Message-ID: <5cfc7eb8-c59d-4b7a-3dee-99e17d72f251@suse.de>
+References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+ <20161004075545.j52mg3a2jckrchlp@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1475559357.git.fthain@telegraphics.com.au>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------FBFFFE8543B97244B1637133"
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20161004075545.j52mg3a2jckrchlp-qw2SdCWA0PpjqqEj2zc+bA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/04/2016 07:40 AM, Finn Thain wrote:
-> This patch series has fixes for compatibility, reliability and
-> performance issues and some cleanup. It also includes a new version
-> of Ondrej Zary's patch that merges g_NCR5380_mmio into g_NCR5380.
-> 
-> I've tested this patch series on a Powerbook 180. If someone would
-> test some of the other platforms that would be very helpful. All
-> drivers were compile-tested.
-> 
-> (Apologies for any duplicate messages.)
-> 
-> 
-> Finn Thain (12):
->   scsi/g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio drivers
->   scsi/cumana_1: Remove unused cumanascsi_setup() function
->   scsi/atari_scsi: Make device register accessors re-enterant
->   scsi/ncr5380: Simplify register polling limit
->   scsi/ncr5380: Increase register polling limit
->   scsi/ncr5380: Improve hostdata struct member alignment and
->     cache-ability
->   scsi/ncr5380: Store IO ports and addresses in host private data
->   scsi/ncr5380: Use correct types for device register accessors
->   scsi/ncr5380: Pass hostdata pointer to register polling routines
->   scsi/ncr5380: Expedite register polling
->   scsi/ncr5380: Use correct types for DMA routines
->   scsi/ncr5380: Suppress unhelpful "interrupt without IRQ bit" message
-> 
->  MAINTAINERS                   |   1 -
->  drivers/scsi/Kconfig          |  32 +----
->  drivers/scsi/Makefile         |   1 -
->  drivers/scsi/NCR5380.c        | 137 +++++++++++---------
->  drivers/scsi/NCR5380.h        |  87 +++++++++----
->  drivers/scsi/arm/cumana_1.c   |  98 +++++++-------
->  drivers/scsi/arm/oak.c        |  34 +++--
->  drivers/scsi/atari_scsi.c     |  77 ++++++-----
->  drivers/scsi/dmx3191d.c       |  20 +--
->  drivers/scsi/g_NCR5380.c      | 290 ++++++++++++++++++++----------------------
->  drivers/scsi/g_NCR5380.h      |  32 +----
->  drivers/scsi/g_NCR5380_mmio.c |  10 --
->  drivers/scsi/mac_scsi.c       |  83 +++++-------
->  drivers/scsi/sun3_scsi.c      |  80 ++++++------
->  14 files changed, 495 insertions(+), 487 deletions(-)
->  delete mode 100644 drivers/scsi/g_NCR5380_mmio.c
-> 
-For this series:
+This is a multi-part message in MIME format.
+--------------FBFFFE8543B97244B1637133
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On 10/04/2016 09:55 AM, Johannes Thumshirn wrote:
+> On Fri, Sep 30, 2016 at 11:14:57AM -0600, Robert LeBlanc wrote:
+>> We are having a reoccurring problem where iscsi_trx is going into D
+>> state. It seems like it is waiting for a session tear down to happen
+>> or something, but keeps waiting. We have to reboot these targets on
+>> occasion. This is running the 4.4.12 kernel and we have seen it on
+>> several previous 4.4.x and 4.2.x kernels. There is no message in dmesg
+>> or /var/log/messages. This seems to happen with increased frequency
+>> when we have a disruption in our Infiniband fabric, but can happen
+>> without any changes to the fabric (other than hosts rebooting).
+>>
+>> # ps aux | grep iscsi | grep D
+>> root      4185  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_trx]
+>> root     18505  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_np]
+>>
+>> # cat /proc/4185/stack
+>> [<ffffffff814cc999>] target_wait_for_sess_cmds+0x49/0x1a0
+>> [<ffffffffa087292b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
+>> [<ffffffff814f0de2>] iscsit_close_connection+0x162/0x840
+>> [<ffffffff814df8df>] iscsit_take_action_for_connection_exit+0x7f/0x100
+>> [<ffffffff814effc0>] iscsi_target_rx_thread+0x5a0/0xe80
+>> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
+>> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
+>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>
+>> # cat /proc/18505/stack
+>> [<ffffffff814f0c71>] iscsit_stop_session+0x1b1/0x1c0
+>> [<ffffffff814e2436>] iscsi_check_for_session_reinstatement+0x1e6/0x270
+>> [<ffffffff814e4df0>] iscsi_target_check_for_existing_instances+0x30/0x40
+>> [<ffffffff814e4f40>] iscsi_target_do_login+0x140/0x640
+>> [<ffffffff814e62dc>] iscsi_target_start_negotiation+0x1c/0xb0
+>> [<ffffffff814e402b>] iscsi_target_login_thread+0xa9b/0xfc0
+>> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
+>> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
+>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>
+>> What can we do to help get this resolved?
+>>
+>> Thanks,
+>>
+>> ----------------
+>> Robert LeBlanc
+>> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Hi,
+> I've encountered the same issue and found a hack to fix it at [1] but I think
+> the correct way for handling this issue would be like you said to tear down 
+> the session in case a TASK ABORT times out. Unfortunately I'm not really
+> familiar with the target code myself so I mainly use this reply to get me into
+> the Cc loop.
+> 
+> [1] http://marc.info/?l=linux-scsi&m=147282568910535&w=2
+> 
+> 
+Hmm. Looking at the code it looks as we might miss some calls to
+'complete'. Can you try with the attached patch?
 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
 SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+
+--------------FBFFFE8543B97244B1637133
+Content-Type: text/x-patch;
+ name="0001-iscsi_target-sanitze-sess_wait_on_completion.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-iscsi_target-sanitze-sess_wait_on_completion.patch"
+
+>From d481d8c27df8c09ea3798ce4a7217a26c3533161 Mon Sep 17 00:00:00 2001
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Date: Tue, 4 Oct 2016 11:05:46 +0200
+Subject: [PATCH] iscsi_target: sanitze sess_wait_on_completion
+
+When closing a session we only should set 'sess_wait_on_completion'
+if we are actually calling wait_for_completion(). And we should indeed
+call 'complete' in these cases, too.
+And add some WARN_ON() if we mess up with calculating the number
+of completions, too.
+
+Signed-off-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+---
+ drivers/target/iscsi/iscsi_target.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 39b928c..313724c 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -4287,6 +4287,7 @@ int iscsit_close_connection(
+ 	if (!atomic_read(&sess->session_reinstatement) &&
+ 	     atomic_read(&sess->session_fall_back_to_erl0)) {
+ 		spin_unlock_bh(&sess->conn_lock);
++		WARN_ON(atomic_read(&sess->sleep_on_sess_wait_comp));
+ 		iscsit_close_session(sess);
+ 
+ 		return 0;
+@@ -4557,7 +4558,6 @@ int iscsit_free_session(struct iscsi_session *sess)
+ 	int is_last;
+ 
+ 	spin_lock_bh(&sess->conn_lock);
+-	atomic_set(&sess->sleep_on_sess_wait_comp, 1);
+ 
+ 	list_for_each_entry_safe(conn, conn_tmp, &sess->sess_conn_list,
+ 			conn_list) {
+@@ -4585,7 +4585,10 @@ int iscsit_free_session(struct iscsi_session *sess)
+ 
+ 	if (atomic_read(&sess->nconn)) {
+ 		spin_unlock_bh(&sess->conn_lock);
++		atomic_inc(&sess->sleep_on_sess_wait_comp);
+ 		wait_for_completion(&sess->session_wait_comp);
++		atomic_dec(&sess->sleep_on_sess_wait_comp);
++		WARN_ON(atomic_read(&sess->sleep_on_sess_wait_comp));
+ 	} else
+ 		spin_unlock_bh(&sess->conn_lock);
+ 
+@@ -4603,8 +4606,6 @@ void iscsit_stop_session(
+ 	int is_last;
+ 
+ 	spin_lock_bh(&sess->conn_lock);
+-	if (session_sleep)
+-		atomic_set(&sess->sleep_on_sess_wait_comp, 1);
+ 
+ 	if (connection_sleep) {
+ 		list_for_each_entry_safe(conn, conn_tmp, &sess->sess_conn_list,
+@@ -4636,7 +4637,10 @@ void iscsit_stop_session(
+ 
+ 	if (session_sleep && atomic_read(&sess->nconn)) {
+ 		spin_unlock_bh(&sess->conn_lock);
++		atomic_inc(&sess->sleep_on_sess_wait_comp);
+ 		wait_for_completion(&sess->session_wait_comp);
++		atomic_dec(&sess->sleep_on_sess_wait_comp);
++		WARN_ON(atomic_read(&sess->sleep_on_sess_wait_comp);
+ 	} else
+ 		spin_unlock_bh(&sess->conn_lock);
+ }
+-- 
+2.6.6
+
+
+--------------FBFFFE8543B97244B1637133--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
