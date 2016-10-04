@@ -1,35 +1,39 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: iscsi_trx going into D state
-Date: Tue, 4 Oct 2016 04:46:42 -0700
-Message-ID: <20161004114642.GA2377@infradead.org>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
- <20161004075545.j52mg3a2jckrchlp@linux-x5ow.site>
- <5cfc7eb8-c59d-4b7a-3dee-99e17d72f251@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 153171] scsi host6: runtime PM trying to activate child device
+ host6 but parent (2-2:1.0) is not active
+Date: Tue, 04 Oct 2016 12:06:52 +0000
+Message-ID: <bug-153171-11613-3LyEyQxChE@https.bugzilla.kernel.org/>
+References: <bug-153171-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:59599 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752604AbcJDLqo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2016 07:46:44 -0400
-Content-Disposition: inline
-In-Reply-To: <5cfc7eb8-c59d-4b7a-3dee-99e17d72f251@suse.de>
+Received: from mail.kernel.org ([198.145.29.136]:60110 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750839AbcJDMHF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 4 Oct 2016 08:07:05 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 9E77620361
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2016 12:06:59 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 88C1420351
+        for <linux-scsi@vger.kernel.org>; Tue,  4 Oct 2016 12:06:52 +0000 (UTC)
+In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Robert LeBlanc <robert@leblancnet.us>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Tue, Oct 04, 2016 at 11:11:18AM +0200, Hannes Reinecke wrote:
-> Hmm. Looking at the code it looks as we might miss some calls to
-> 'complete'. Can you try with the attached patch?
+https://bugzilla.kernel.org/show_bug.cgi?id=153171
 
-That only looks slightly better than the original.  What this really
-needs is a waitqueue and and waitevent on sess->ncon.  Although
-that will need a bit more refactoring around that code.  There also
-are a few more ovbious issues around it, e.g. iscsit_close_connection
-needs to use atomic_dec_and_test on sess->nconn instead of having
-separate atomic_dec and atomic_read calls, and a lot of the 0 or 1
-atomic_ts in this code should be replaced with atomic bitops.
+--- Comment #9 from Christian Stadelmann <dev@genodeftest.de> ---
+(In reply to Christian Stadelmann from comment #6) 
+> It seems like this bug is preventing me on these machines to use any USB
+> thumb drives at all. In case anyone can confirm this I think it should go
+> into 4.8.0 before release immediately.
 
-Btw, there also was a fix from Lee in this area that added a missing
-wakeup, make sure your tree already has that.
+Can somebody confirm or deny that this is preventing you from mounting any USB
+thumb drives?
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
