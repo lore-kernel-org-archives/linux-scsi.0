@@ -1,56 +1,70 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and
- blk_resume_queue()
-Date: Wed, 5 Oct 2016 22:10:41 +0300
-Message-ID: <732bf5d6-d7a8-6ff0-6501-8a3d46f12fab@grimberg.me>
-References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
- <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
- <CACVXFVOO4P3RsnWci8XHdFoYBhNPq0KqjWJddsie-92+31bpEg@mail.gmail.com>
- <9fb67745-954c-a70f-a89a-d184c99ae9aa@sandisk.com>
- <CACVXFVMY19vuDjsECg2uX0_y_K7DUaaGqXPX9PYiBy5sfXmAEw@mail.gmail.com>
- <a11bb09a-6207-f4a8-cfd4-4fe5627c1700@sandisk.com>
- <09238e87-7d60-89c9-98b0-e51caa0c0839@grimberg.me>
- <6d612be9-7ba7-888e-f9c6-f8aa4ef1606a@sandisk.com>
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: Re: [PATCH 00/12] Fixes, cleanup and g_NCR5380_mmio/g_NCR5380 merger
+Date: Wed, 5 Oct 2016 21:57:29 +0200
+Message-ID: <201610052157.30379.linux@rainbow-software.org>
+References: <cover.1475559357.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: Text/Plain;
+  charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f68.google.com ([74.125.82.68]:34889 "EHLO
-        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754643AbcJETLG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2016 15:11:06 -0400
-In-Reply-To: <6d612be9-7ba7-888e-f9c6-f8aa4ef1606a@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1475559357.git.fthain@telegraphics.com.au>
+Content-Disposition: inline
+Sender: linux-kernel-owner@vger.kernel.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Ming Lei <tom.leiming@gmail.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-
->>> Hello Ming,
->>>
->>> Can you have a look at the attached patch? That patch uses an srcu read
->>> lock for all queue types, whether or not the BLK_MQ_F_BLOCKING flag has
->>> been set. Additionally, I have dropped the QUEUE_FLAG_QUIESCING flag.
->>> Just like previous versions, this patch has been tested.
->>
->> Hey Bart,
->>
->> Do we care about the synchronization of queue_rq and/or
->> blk_mq_run_hw_queue of the hctx is not stopped?
->>
->> I'm wandering if we can avoid introducing new barriers in the
->> submission path of its not absolutely needed.
+On Tuesday 04 October 2016 07:40:50 Finn Thain wrote:
+> This patch series has fixes for compatibility, reliability and
+> performance issues and some cleanup. It also includes a new version
+> of Ondrej Zary's patch that merges g_NCR5380_mmio into g_NCR5380.
 >
-> Hello Sagi,
-
-Hey Bart,
-
+> I've tested this patch series on a Powerbook 180. If someone would
+> test some of the other platforms that would be very helpful. All
+> drivers were compile-tested.
 >
-> I'm not sure whether the new blk_quiesce_queue() function is useful
-> without stopping all hardware contexts first. In other words, in my view
-> setting BLK_MQ_F_BLOCKING flag before calling blk_quiesce_queue() is
-> sufficient and I don't think that a new QUEUE_FLAG_QUIESCING flag is
-> necessary.
+> (Apologies for any duplicate messages.)
 
-I was referring to weather we can take srcu in the submission path
-conditional of the hctx being STOPPED?
+The patches won't apply against:
+4.9/scsi-queue
+Linus' master with my patches applied
+
+What tree should I try?
+
+> Finn Thain (12):
+>   scsi/g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio drivers
+>   scsi/cumana_1: Remove unused cumanascsi_setup() function
+>   scsi/atari_scsi: Make device register accessors re-enterant
+>   scsi/ncr5380: Simplify register polling limit
+>   scsi/ncr5380: Increase register polling limit
+>   scsi/ncr5380: Improve hostdata struct member alignment and
+>     cache-ability
+>   scsi/ncr5380: Store IO ports and addresses in host private data
+>   scsi/ncr5380: Use correct types for device register accessors
+>   scsi/ncr5380: Pass hostdata pointer to register polling routines
+>   scsi/ncr5380: Expedite register polling
+>   scsi/ncr5380: Use correct types for DMA routines
+>   scsi/ncr5380: Suppress unhelpful "interrupt without IRQ bit" message
+>
+>  MAINTAINERS                   |   1 -
+>  drivers/scsi/Kconfig          |  32 +----
+>  drivers/scsi/Makefile         |   1 -
+>  drivers/scsi/NCR5380.c        | 137 +++++++++++---------
+>  drivers/scsi/NCR5380.h        |  87 +++++++++----
+>  drivers/scsi/arm/cumana_1.c   |  98 +++++++-------
+>  drivers/scsi/arm/oak.c        |  34 +++--
+>  drivers/scsi/atari_scsi.c     |  77 ++++++-----
+>  drivers/scsi/dmx3191d.c       |  20 +--
+>  drivers/scsi/g_NCR5380.c      | 290
+> ++++++++++++++++++++---------------------- drivers/scsi/g_NCR5380.h      | 
+> 32 +----
+>  drivers/scsi/g_NCR5380_mmio.c |  10 --
+>  drivers/scsi/mac_scsi.c       |  83 +++++-------
+>  drivers/scsi/sun3_scsi.c      |  80 ++++++------
+>  14 files changed, 495 insertions(+), 487 deletions(-)
+>  delete mode 100644 drivers/scsi/g_NCR5380_mmio.c
+
+
+-- 
+Ondrej Zary
