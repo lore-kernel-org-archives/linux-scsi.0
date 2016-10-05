@@ -1,19 +1,29 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH v2 1/7] blk-mq: Introduce blk_mq_queue_stopped()
-Date: Wed, 5 Oct 2016 20:50:26 +0300
-Message-ID: <c5a9fd34-a8fa-d50f-20c2-a48f1f807e04@grimberg.me>
-References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
- <26c7db22-bac8-6d8c-ba6e-3cbf0cec3368@sandisk.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: iscsi_trx going into D state
+Date: Wed, 5 Oct 2016 11:03:05 -0700
+Message-ID: <20161005180305.GA2900@infradead.org>
+References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+ <20161004075545.j52mg3a2jckrchlp@linux-x5ow.site>
+ <5cfc7eb8-c59d-4b7a-3dee-99e17d72f251@suse.de>
+ <20161004114642.GA2377@infradead.org>
+ <CAANLjFrNz45nizmPa7XH4Hpw7e-KScGCsaMpXWG0BCNhuXxOCg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <26c7db22-bac8-6d8c-ba6e-3cbf0cec3368@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:58054 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752248AbcJESDH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 5 Oct 2016 14:03:07 -0400
+Content-Disposition: inline
+In-Reply-To: <CAANLjFrNz45nizmPa7XH4Hpw7e-KScGCsaMpXWG0BCNhuXxOCg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Robert LeBlanc <robert@leblancnet.us>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Looks good,
+Hi Robert,
 
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+I actually got the name wrong, the patch wasn't from Lee, but from Zhu,
+another SuSE engineer.  This is the one:
+
+http://www.spinics.net/lists/target-devel/msg13463.html
