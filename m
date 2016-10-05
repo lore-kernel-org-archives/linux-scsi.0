@@ -1,70 +1,59 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 00/12] Fixes, cleanup and g_NCR5380_mmio/g_NCR5380 merger
-Date: Wed, 5 Oct 2016 21:57:29 +0200
-Message-ID: <201610052157.30379.linux@rainbow-software.org>
-References: <cover.1475559357.git.fthain@telegraphics.com.au>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and
+ blk_resume_queue()
+Date: Wed, 5 Oct 2016 14:08:57 -0700
+Message-ID: <07628c2f-3a4e-b12e-663a-b0711ce20cc9@sandisk.com>
+References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
+ <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
+ <CACVXFVOO4P3RsnWci8XHdFoYBhNPq0KqjWJddsie-92+31bpEg@mail.gmail.com>
+ <9fb67745-954c-a70f-a89a-d184c99ae9aa@sandisk.com>
+ <CACVXFVMY19vuDjsECg2uX0_y_K7DUaaGqXPX9PYiBy5sfXmAEw@mail.gmail.com>
+ <a11bb09a-6207-f4a8-cfd4-4fe5627c1700@sandisk.com>
+ <09238e87-7d60-89c9-98b0-e51caa0c0839@grimberg.me>
+ <6d612be9-7ba7-888e-f9c6-f8aa4ef1606a@sandisk.com>
+ <732bf5d6-d7a8-6ff0-6501-8a3d46f12fab@grimberg.me>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="utf-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1475559357.git.fthain@telegraphics.com.au>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <732bf5d6-d7a8-6ff0-6501-8a3d46f12fab-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 04 October 2016 07:40:50 Finn Thain wrote:
-> This patch series has fixes for compatibility, reliability and
-> performance issues and some cleanup. It also includes a new version
-> of Ondrej Zary's patch that merges g_NCR5380_mmio into g_NCR5380.
->
-> I've tested this patch series on a Powerbook 180. If someone would
-> test some of the other platforms that would be very helpful. All
-> drivers were compile-tested.
->
-> (Apologies for any duplicate messages.)
+On 10/05/2016 12:11 PM, Sagi Grimberg wrote:
+> I was referring to weather we can take srcu in the submission path
+> conditional of the hctx being STOPPED?
 
-The patches won't apply against:
-4.9/scsi-queue
-Linus' master with my patches applied
+Hello Sagi,
 
-What tree should I try?
+Regarding run-time overhead:
+* rcu_read_lock() is a no-op on CONFIG_PREEMPT_NONE kernels and is
+   translated into preempt_disable() with preemption enabled. The latter
+   function modifies a per-cpu variable.
+* Checking BLK_MQ_S_STOPPED before taking an rcu or srcu lock is only
+   safe if the BLK_MQ_S_STOPPED flag is tested in such a way that the
+   compiler is told to reread the hctx flags (READ_ONCE()) and if the
+   compiler and CPU are told not to reorder test_bit() with the
+   memory accesses in (s)rcu_read_lock(). To avoid races
+   BLK_MQ_S_STOPPED will have to be tested a second time after the lock
+   has been obtained, similar to the double-checked-locking pattern.
+* srcu_read_lock() reads a word from the srcu structure, disables
+   preemption, calls __srcu_read_lock() and re-enables preemption. The
+   latter function increments two CPU-local variables and triggers a
+   memory barrier (smp_mp()).
 
-> Finn Thain (12):
->   scsi/g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio drivers
->   scsi/cumana_1: Remove unused cumanascsi_setup() function
->   scsi/atari_scsi: Make device register accessors re-enterant
->   scsi/ncr5380: Simplify register polling limit
->   scsi/ncr5380: Increase register polling limit
->   scsi/ncr5380: Improve hostdata struct member alignment and
->     cache-ability
->   scsi/ncr5380: Store IO ports and addresses in host private data
->   scsi/ncr5380: Use correct types for device register accessors
->   scsi/ncr5380: Pass hostdata pointer to register polling routines
->   scsi/ncr5380: Expedite register polling
->   scsi/ncr5380: Use correct types for DMA routines
->   scsi/ncr5380: Suppress unhelpful "interrupt without IRQ bit" message
->
->  MAINTAINERS                   |   1 -
->  drivers/scsi/Kconfig          |  32 +----
->  drivers/scsi/Makefile         |   1 -
->  drivers/scsi/NCR5380.c        | 137 +++++++++++---------
->  drivers/scsi/NCR5380.h        |  87 +++++++++----
->  drivers/scsi/arm/cumana_1.c   |  98 +++++++-------
->  drivers/scsi/arm/oak.c        |  34 +++--
->  drivers/scsi/atari_scsi.c     |  77 ++++++-----
->  drivers/scsi/dmx3191d.c       |  20 +--
->  drivers/scsi/g_NCR5380.c      | 290
-> ++++++++++++++++++++---------------------- drivers/scsi/g_NCR5380.h      | 
-> 32 +----
->  drivers/scsi/g_NCR5380_mmio.c |  10 --
->  drivers/scsi/mac_scsi.c       |  83 +++++-------
->  drivers/scsi/sun3_scsi.c      |  80 ++++++------
->  14 files changed, 495 insertions(+), 487 deletions(-)
->  delete mode 100644 drivers/scsi/g_NCR5380_mmio.c
+Swapping srcu_read_lock() and the BLK_MQ_S_STOPPED flag test will make 
+the code more complicated. Going back to the implementation that calls 
+rcu_read_lock() if .queue_rq() won't sleep will result in an 
+implementation that is easier to read and to verify. If I overlooked 
+something, please let me know.
+
+Bart.
 
 
--- 
-Ondrej Zary
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
