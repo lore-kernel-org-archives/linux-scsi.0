@@ -1,227 +1,212 @@
-From: =?UTF-8?B?RMSBdmlzIE1vc8SBbnM=?= <davispuh@gmail.com>
-Subject: Re: How to increase RAID/HBA controller's timeout?
-Date: Tue, 4 Oct 2016 20:08:53 +0300
-Message-ID: <CAOE4rSzM8pkR8Dex-cEJ6Oaym4RU47Vb3mFbZDTUnPCQE6bGoQ@mail.gmail.com>
-References: <CAOE4rSwrEBPHqXoyHbd2a6PTYp9ZnP=KXB7chOCfj0Q1MJfy2A@mail.gmail.com>
- <1a59730f-e489-86ce-b01a-fcb3c85a4b4d@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and
+ blk_resume_queue()
+Date: Tue, 4 Oct 2016 21:16:30 -0700
+Message-ID: <a11bb09a-6207-f4a8-cfd4-4fe5627c1700@sandisk.com>
+References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
+ <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
+ <CACVXFVOO4P3RsnWci8XHdFoYBhNPq0KqjWJddsie-92+31bpEg@mail.gmail.com>
+ <9fb67745-954c-a70f-a89a-d184c99ae9aa@sandisk.com>
+ <CACVXFVMY19vuDjsECg2uX0_y_K7DUaaGqXPX9PYiBy5sfXmAEw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: multipart/mixed;
+        boundary="------------A05DDFF095E327D971422CF5"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f176.google.com ([209.85.223.176]:33017 "EHLO
-        mail-io0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753935AbcJDRJA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 4 Oct 2016 13:09:00 -0400
-Received: by mail-io0-f176.google.com with SMTP id r145so159759161ior.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Oct 2016 10:08:54 -0700 (PDT)
-In-Reply-To: <1a59730f-e489-86ce-b01a-fcb3c85a4b4d@suse.de>
+Received: from mail-cys01nam02on0048.outbound.protection.outlook.com ([104.47.37.48]:23920
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750992AbcJEEQn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 5 Oct 2016 00:16:43 -0400
+In-Reply-To: <CACVXFVMY19vuDjsECg2uX0_y_K7DUaaGqXPX9PYiBy5sfXmAEw@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-> Well, this looks more like the ATA error recovery not working properly;
-> libata-eh is trying to reset the link (that's the 'hard resetting link'
-> message), but after that the device doesn't respond (that's the 'failed
-> to IDENTIFY' message).
-> So it's not so much a wrong timeout, it's a wrong EH implementation.
-> We would need to check why mvsas hard reset is not working; I've seen a
-> similar issue on isci, but haven't been able to debug things properly.
-> So it might even be a generic libsas EH issue, and not related to mvsas
-> at all.
->
+--------------A05DDFF095E327D971422CF5
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Thanks! Sadly I'm not familiar at all with this logic, what should I
-read up to be able to understand and investigate it more? When I'll
-have time I'll look into it. For now, I'll read from
-Documentation/scsi/*
-Also I need to update kernel first because this here right now is
-quite old one 4.6.2, maybe it's already fixed, but I've had seen this
-since atleast 4.2
+On 10/01/16 15:56, Ming Lei wrote:
+> If we just call the rcu/srcu read lock(or the mutex) around .queue_rq(), the
+> above code needn't to be duplicated any more.
 
-Here a bit different log, but still same issue.
+Hello Ming,
 
-[33537.921685] sas: Enter sas_scsi_recover_host busy: 1 failed: 1
-[33537.921693] sas: trying to find task 0xffff880423288700
-[33537.921697] sas: sas_scsi_find_task: aborting task 0xffff880423288700
-[33537.921702] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1540:mvs_abort_task() mvi=ffff880607840000 task=ffff880423288700
-slot=ffff8806078655b8 slot_idx=x0
-[33537.921708] sas: sas_scsi_find_task: task 0xffff880423288700 is aborted
-[33537.921710] sas: sas_eh_handle_sas_errors: task 0xffff880423288700 is aborted
-[33537.921717] sas: ata23: end_device-7:4: cmd error handler
-[33537.921755] sas: ata7: end_device-7:0: dev error handler
-[33537.921779] sas: ata8: end_device-7:1: dev error handler
-[33537.921794] sas: ata22: end_device-7:2: dev error handler
-[33537.921807] sas: ata10: end_device-7:3: dev error handler
-[33537.921833] sas: ata23: end_device-7:4: dev error handler
-[33537.921835] sas: ata12: end_device-7:5: dev error handler
-[33537.921846] sas: ata21: end_device-7:7: dev error handler
-[33537.921852] sas: ata13: end_device-7:6: dev error handler
-[33537.921870] ata23.00: exception Emask 0x0 SAct 0x4000 SErr 0x0
-action 0x6 frozen
-[33537.921877] ata23.00: failed command: READ FPDMA QUEUED
-[33537.921886] ata23.00: cmd 60/00:00:80:9f:ab/02:00:43:01:00/40 tag
-14 ncq 262144 in
-                        res 40/00:00:00:00:00/00:00:00:00:00/00 Emask
-0x4 (timeout)
-[33537.921892] ata23.00: status: { DRDY }
-[33537.921898] ata23: hard resetting link
-[33537.931932] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00000000.
-[33537.931936] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000001
-[33537.931972] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33537.931984] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000081
-[33537.949987] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33537.950000] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00010000
-[33537.950007] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 2026:notify plug
-in on phy[0]
-[33537.970026] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 884:get all reg
-link rate is 0x122000
-[33537.970035] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 889:get link rate is 10
-[33538.090081] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1079:phy 4
-attach dev info is 20001
-[33538.090089] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1081:phy 4
-attach sas addr is 4
-[33538.090111] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 277:phy 4 byte dmaded.
-[33538.090196] sas: sas_form_port: phy0 belongs to port4 already(1)!
-[33540.138362] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1430:mvs_I_T_nexus_reset for device[0]:rc= 0
-[33540.291688] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1771:port 4 slot
-0 rx_desc 30000 has error info8000000080000000.
-[33545.291735] ata23.00: qc timeout (cmd 0x27)
-[33545.291746] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1540:mvs_abort_task() mvi=ffff880607840000 task=ffff88027c093600
-slot=ffff8806078655b8 slot_idx=x0
-[33545.291755] ata23.00: failed to read native max address (err_mask=0x4)
-[33545.291758] ata23.00: HPA support seems broken, skipping HPA handling
-[33545.291762] ata23.00: revalidation failed (errno=-5)
-[33545.291770] ata23: hard resetting link
-[33545.301800] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00000000.
-[33545.301808] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000001
-[33545.301840] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33545.301846] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000081
-[33545.353623] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33545.353638] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00010000
-[33545.353644] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 2026:notify plug
-in on phy[0]
-[33545.373664] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 884:get all reg
-link rate is 0x122000
-[33545.373672] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 889:get link rate is 10
-[33545.493717] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1079:phy 4
-attach dev info is 20001
-[33545.493722] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1081:phy 4
-attach sas addr is 4
-[33545.493734] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 277:phy 4 byte dmaded.
-[33545.493757] sas: sas_form_port: phy0 belongs to port4 already(1)!
-[33547.508415] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1430:mvs_I_T_nexus_reset for device[0]:rc= 0
-[33547.661805] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1771:port 4 slot
-0 rx_desc 30000 has error info8000000080000000.
-[33562.662110] ata23.00: qc timeout (cmd 0xef)
-[33562.662121] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1540:mvs_abort_task() mvi=ffff880607840000 task=ffff88060ef85600
-slot=ffff8806078655b8 slot_idx=x0
-[33562.662130] ata23.00: failed to set xfermode (err_mask=0x4)
-[33562.662136] ata23.00: limiting speed to UDMA/133:PIO3
-[33562.662142] ata23: hard resetting link
-[33562.672285] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00000000.
-[33562.672295] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000001
-[33562.672327] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33562.672334] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000081
-[33562.698584] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33562.698599] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00010000
-[33562.698606] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 2026:notify plug
-in on phy[0]
-[33562.718624] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 884:get all reg
-link rate is 0x122000
-[33562.718633] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 889:get link rate is 10
-[33562.838683] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1079:phy 4
-attach dev info is 20001
-[33562.838692] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1081:phy 4
-attach sas addr is 4
-[33562.838704] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 277:phy 4 byte dmaded.
-[33562.838725] sas: sas_form_port: phy0 belongs to port4 already(1)!
-[33564.878817] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1430:mvs_I_T_nexus_reset for device[0]:rc= 0
-[33565.032192] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1771:port 4 slot
-0 rx_desc 30000 has error info8000000080000000.
-[33580.032378] ata23.00: qc timeout (cmd 0xef)
-[33580.032387] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1540:mvs_abort_task() mvi=ffff880607840000 task=ffff88004678ab00
-slot=ffff8806078655b8 slot_idx=x0
-[33580.032394] ata23.00: failed to set xfermode (err_mask=0x4)
-[33580.032399] ata23.00: disabled
-[33580.032416] ata23.00: device reported invalid CHS sector 0
-[33580.032425] ata23: hard resetting link
-[33580.042467] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00000000.
-[33580.042486] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000001
-[33580.042513] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33580.042518] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00000081
-[33580.063180] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1975:phy 4 ctrl
-sts=0x00122000.
-[33580.063186] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1977:phy 4 irq
-sts = 0x00010000
-[33580.063190] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 2026:notify plug
-in on phy[0]
-[33580.083201] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 884:get all reg
-link rate is 0x122000
-[33580.083204] /mnt/linux/drivers/scsi/mvsas/mv_94xx.c 889:get link rate is 10
-[33580.203236] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1079:phy 4
-attach dev info is 20001
-[33580.203240] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 1081:phy 4
-attach sas addr is 4
-[33580.203248] /mnt/linux/drivers/scsi/mvsas/mv_sas.c 277:phy 4 byte dmaded.
-[33580.203281] sas: sas_form_port: phy0 belongs to port4 already(1)!
-[33582.249047] /mnt/linux/drivers/scsi/mvsas/mv_sas.c
-1430:mvs_I_T_nexus_reset for device[0]:rc= 0
-[33582.402448] ata23: EH complete
-[33582.402477] sas: --- Exit sas_scsi_recover_host: busy: 0 failed: 0 tries: 1
-[33582.402538] sd 7:0:10:0: [sdp] tag#0 UNKNOWN(0x2003) Result:
-hostbyte=0x04 driverbyte=0x00
-[33582.402545] sd 7:0:10:0: [sdp] tag#0 CDB: opcode=0x88 88 00 00 00
-00 01 43 ab 9f 80 00 00 02 00 00 00
-[33582.402550] blk_update_request: I/O error, dev sdp, sector 5430288256
-[33582.402698] sd 7:0:10:0: [sdp] Read Capacity(16) failed: Result:
-hostbyte=0x04 driverbyte=0x00
-[33582.402704] sd 7:0:10:0: [sdp] Sense not available.
-[33582.402745] sd 7:0:10:0: [sdp] tag#0 UNKNOWN(0x2003) Result:
-hostbyte=0x04 driverbyte=0x00
-[33582.402755] sd 7:0:10:0: [sdp] tag#0 CDB: opcode=0x88 88 00 00 00
-00 01 43 ab 9f 80 00 00 00 08 00 00
-[33582.402760] blk_update_request: I/O error, dev sdp, sector 5430288256
-[33582.402778] sd 7:0:10:0: [sdp] Read Capacity(10) failed: Result:
-hostbyte=0x04 driverbyte=0x00
-[33582.402784] sd 7:0:10:0: [sdp] Sense not available.
-[33582.402903] sd 7:0:10:0: [sdp] tag#0 UNKNOWN(0x2003) Result:
-hostbyte=0x04 driverbyte=0x00
-[33582.402910] sdp: detected capacity change from 3000592982016 to 0
-[33582.402913] sd 7:0:10:0: [sdp] tag#0 CDB: opcode=0x88 88 00 00 00
-00 01 43 ab 9f 88 00 00 00 08 00 00
-[33582.402918] blk_update_request: I/O error, dev sdp, sector 5430288264
-[33585.106351] sd 7:0:10:0: [sdp] Read Capacity(16) failed: Result:
-hostbyte=0x04 driverbyte=0x00
-[33585.106357] sd 7:0:10:0: [sdp] Sense not available.
-[33585.106423] sd 7:0:10:0: [sdp] Read Capacity(10) failed: Result:
-hostbyte=0x04 driverbyte=0x00
-[33585.106427] sd 7:0:10:0: [sdp] Sense not available.
+Can you have a look at the attached patch? That patch uses an srcu read 
+lock for all queue types, whether or not the BLK_MQ_F_BLOCKING flag has 
+been set. Additionally, I have dropped the QUEUE_FLAG_QUIESCING flag. 
+Just like previous versions, this patch has been tested.
+
+Thanks,
+
+Bart.
+
+--------------A05DDFF095E327D971422CF5
+Content-Type: text/x-patch;
+	name="0001-blk-mq-Introduce-blk_mq_quiesce_queue.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename="0001-blk-mq-Introduce-blk_mq_quiesce_queue.patch"
+
+>From 25f02ed7ab7b2308fd18b89d180c0c613e55d416 Mon Sep 17 00:00:00 2001
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Date: Tue, 27 Sep 2016 10:52:36 -0700
+Subject: [PATCH] blk-mq: Introduce blk_mq_quiesce_queue()
+
+blk_mq_quiesce_queue() waits until ongoing .queue_rq() invocations
+have finished. This function does *not* wait until all outstanding
+requests have finished (this means invocation of request.end_io()).
+
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Ming Lei <tom.leiming@gmail.com>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ block/blk-mq.c         | 40 ++++++++++++++++++++++++++++++++++------
+ include/linux/blk-mq.h |  3 +++
+ include/linux/blkdev.h |  1 +
+ 3 files changed, 38 insertions(+), 6 deletions(-)
+
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index d8c45de..38ae685 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -115,6 +115,23 @@ void blk_mq_unfreeze_queue(struct request_queue *q)
+ }
+ EXPORT_SYMBOL_GPL(blk_mq_unfreeze_queue);
+ 
++/**
++ * blk_mq_quiesce_queue() - wait until all ongoing queue_rq calls have finished
++ *
++ * Note: this function does not prevent that the struct request end_io()
++ * callback function is invoked. Additionally, it is not prevented that
++ * new queue_rq() calls occur unless the queue has been stopped first.
++ */
++void blk_mq_quiesce_queue(struct request_queue *q)
++{
++	struct blk_mq_hw_ctx *hctx;
++	unsigned int i;
++
++	queue_for_each_hw_ctx(q, hctx, i)
++		synchronize_srcu(&hctx->queue_rq_srcu);
++}
++EXPORT_SYMBOL_GPL(blk_mq_quiesce_queue);
++
+ void blk_mq_wake_waiters(struct request_queue *q)
+ {
+ 	struct blk_mq_hw_ctx *hctx;
+@@ -789,11 +806,13 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+ 	LIST_HEAD(rq_list);
+ 	LIST_HEAD(driver_list);
+ 	struct list_head *dptr;
+-	int queued;
++	int queued, srcu_idx;
+ 
+ 	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
+ 		return;
+ 
++	srcu_idx = srcu_read_lock(&hctx->queue_rq_srcu);
++
+ 	WARN_ON(!cpumask_test_cpu(raw_smp_processor_id(), hctx->cpumask) &&
+ 		cpu_online(hctx->next_cpu));
+ 
+@@ -885,6 +904,8 @@ static void __blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx)
+ 		 **/
+ 		blk_mq_run_hw_queue(hctx, true);
+ 	}
++
++	srcu_read_unlock(&hctx->queue_rq_srcu, srcu_idx);
+ }
+ 
+ /*
+@@ -1298,7 +1319,7 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 	const int is_flush_fua = bio->bi_opf & (REQ_PREFLUSH | REQ_FUA);
+ 	struct blk_map_ctx data;
+ 	struct request *rq;
+-	unsigned int request_count = 0;
++	unsigned int request_count = 0, srcu_idx;
+ 	struct blk_plug *plug;
+ 	struct request *same_queue_rq = NULL;
+ 	blk_qc_t cookie;
+@@ -1341,7 +1362,7 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 		blk_mq_bio_to_request(rq, bio);
+ 
+ 		/*
+-		 * We do limited pluging. If the bio can be merged, do that.
++		 * We do limited plugging. If the bio can be merged, do that.
+ 		 * Otherwise the existing request in the plug list will be
+ 		 * issued. So the plug list will have one request at most
+ 		 */
+@@ -1361,9 +1382,12 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 		blk_mq_put_ctx(data.ctx);
+ 		if (!old_rq)
+ 			goto done;
+-		if (!blk_mq_direct_issue_request(old_rq, &cookie))
+-			goto done;
+-		blk_mq_insert_request(old_rq, false, true, true);
++
++		srcu_idx = srcu_read_lock(&data.hctx->queue_rq_srcu);
++		if (blk_mq_direct_issue_request(old_rq, &cookie) != 0)
++			blk_mq_insert_request(old_rq, false, true, true);
++		srcu_read_unlock(&data.hctx->queue_rq_srcu, srcu_idx);
++
+ 		goto done;
+ 	}
+ 
+@@ -1659,6 +1683,8 @@ static void blk_mq_exit_hctx(struct request_queue *q,
+ 	if (set->ops->exit_hctx)
+ 		set->ops->exit_hctx(hctx, hctx_idx);
+ 
++	cleanup_srcu_struct(&hctx->queue_rq_srcu);
++
+ 	blk_mq_unregister_cpu_notifier(&hctx->cpu_notifier);
+ 	blk_free_flush_queue(hctx->fq);
+ 	sbitmap_free(&hctx->ctx_map);
+@@ -1741,6 +1767,8 @@ static int blk_mq_init_hctx(struct request_queue *q,
+ 				   flush_start_tag + hctx_idx, node))
+ 		goto free_fq;
+ 
++	init_srcu_struct(&hctx->queue_rq_srcu);
++
+ 	return 0;
+ 
+  free_fq:
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 368c460d..b2ccd3c 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -3,6 +3,7 @@
+ 
+ #include <linux/blkdev.h>
+ #include <linux/sbitmap.h>
++#include <linux/srcu.h>
+ 
+ struct blk_mq_tags;
+ struct blk_flush_queue;
+@@ -41,6 +42,8 @@ struct blk_mq_hw_ctx {
+ 
+ 	struct blk_mq_tags	*tags;
+ 
++	struct srcu_struct	queue_rq_srcu;
++
+ 	unsigned long		queued;
+ 	unsigned long		run;
+ #define BLK_MQ_MAX_DISPATCH_ORDER	7
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c47c358..8259d87 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -824,6 +824,7 @@ extern void __blk_run_queue(struct request_queue *q);
+ extern void __blk_run_queue_uncond(struct request_queue *q);
+ extern void blk_run_queue(struct request_queue *);
+ extern void blk_run_queue_async(struct request_queue *q);
++extern void blk_mq_quiesce_queue(struct request_queue *q);
+ extern int blk_rq_map_user(struct request_queue *, struct request *,
+ 			   struct rq_map_data *, void __user *, unsigned long,
+ 			   gfp_t);
+-- 
+2.9.3
+
+
+--------------A05DDFF095E327D971422CF5--
