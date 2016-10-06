@@ -1,106 +1,31 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH v2] scsi: ufshcd: fix possible unclocked register access
-Date: Thu, 06 Oct 2016 19:28:32 +0900
-Message-ID: <000401d21fbc$62fd3600$28f7a200$@samsung.com>
-References: <CGME20161006021800epcas2p37d8a2c5f93e76c3e670adbb7f7c172ad@epcas2p3.samsung.com>
- <1475720241-25836-1-git-send-email-subhashj@codeaurora.org>
+From: guillermo.bossano17@foroabogados.ec
+Subject: =?utf-8?q?Donation_of_=C2=A31=2E5_Million_Pounds!!?=
+Date: Thu, 06 Oct 2016 08:44:51 +0100
+Message-ID: <20161006074633.210D750B0AF0@correo.funcionjudicial.gob.ec>
+Reply-To: colinsweir04@qq.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:46737 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754295AbcJFK2f (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2016 06:28:35 -0400
-In-reply-to: <1475720241-25836-1-git-send-email-subhashj@codeaurora.org>
-Content-language: ko
+Received: from mail.foroabogados.ec ([186.46.113.75]:15160 "EHLO
+        correo.funcionjudicial.gob.ec" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1754343AbcJFPH7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2016 11:07:59 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Subhash Jadavani' <subhashj@codeaurora.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: "'open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER'" <linux-scsi@vger.kernel.org>, 'open list' <linux-kernel@vger.kernel.org>
+To: Recipients <guillermo.bossano17@foroabogados.ec>
 
-Hi, Subhash.
+My wife and I have awarded you with a donation of £1.5 million Pounds
+from part of our Jackpot Lottery of 161,653,000 Million Pounds, send your
+name,address, phone for claims.
 
-Some UFS host controllers may need to call the vendor specific callback
-before and after controlling by clock control framework,
-regardless of whether available clocks are turned on or off.
+View http://www.bbc.co.uk/news/uk-scotland-glasgow-west-18801698
 
-Is there any special reason to limit to invoke the callback
-only when the clocks are turned on or not?
-Besides, the callback is acknowledged from core driver
-because 2nd argument is whether the clocks are turned on or not.
+We await your earliest response and God Bless you.
 
-If you have any other idea, please let me know.
+Best of luck.
 
-Thanks
-Regards
+Chris Colin & Weir
 
-> Vendor specific setup_clocks callback may require the clocks managed
-> by ufshcd driver to be ON. So if the vendor specific setup_clocks callback
-> is called while the required clocks are turned off, it could result into
-> unclocked register access.
-> 
-> To prevent possible unclock register access, this change makes sure that
-> required clocks remain enabled before calling into vendor specific
-> setup_clocks callback.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> ---
-> Changes from v2:
-> * Don't call ufshcd_vops_setup_clocks() again for clock off
-> ---
->  drivers/scsi/ufs/ufshcd.c | 22 +++++++++++++++++++++-
->  1 file changed, 21 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 05c7456..c1a77d3 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5389,6 +5389,17 @@ static int __ufshcd_setup_clocks(struct ufs_hba
-> *hba, bool on,
->  	if (!head || list_empty(head))
->  		goto out;
-> 
-> +	/*
-> +	 * vendor specific setup_clocks ops may depend on clocks managed by
-> +	 * this standard driver hence call the vendor specific setup_clocks
-> +	 * before disabling the clocks managed here.
-> +	 */
-> +	if (!on) {
-> +		ret = ufshcd_vops_setup_clocks(hba, on);
-> +		if (ret)
-> +			return ret;
-> +	}
-> +
->  	list_for_each_entry(clki, head, list) {
->  		if (!IS_ERR_OR_NULL(clki->clk)) {
->  			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
-> @@ -5410,7 +5421,16 @@ static int __ufshcd_setup_clocks(struct ufs_hba
-> *hba, bool on,
->  		}
->  	}
-> 
-> -	ret = ufshcd_vops_setup_clocks(hba, on);
-> +	/*
-> +	 * vendor specific setup_clocks ops may depend on clocks managed by
-> +	 * this standard driver hence call the vendor specific setup_clocks
-> +	 * after enabling the clocks managed here.
-> +	 */
-> +	if (on) {
-> +		ret = ufshcd_vops_setup_clocks(hba, on);
-> +		if (ret)
-> +			return ret;
-> +	}
->  out:
->  	if (ret) {
->  		list_for_each_entry(clki, head, list) {
-> --
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
+Reply E-mail:colinsweir04@qq.com
