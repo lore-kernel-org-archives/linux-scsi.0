@@ -1,43 +1,62 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v2 4/7] blk-mq: Introduce blk_quiesce_queue() and
- blk_resume_queue()
-Date: Wed, 5 Oct 2016 16:00:38 -0700
-Message-ID: <686e3937-0068-0f52-1208-1a832ff591c2@sandisk.com>
-References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com>
- <a9eb4e95-6d77-e527-c42a-fd2e6f104bed@sandisk.com>
- <CACVXFVOO4P3RsnWci8XHdFoYBhNPq0KqjWJddsie-92+31bpEg@mail.gmail.com>
- <9fb67745-954c-a70f-a89a-d184c99ae9aa@sandisk.com>
- <CACVXFVMY19vuDjsECg2uX0_y_K7DUaaGqXPX9PYiBy5sfXmAEw@mail.gmail.com>
- <a11bb09a-6207-f4a8-cfd4-4fe5627c1700@sandisk.com>
- <09238e87-7d60-89c9-98b0-e51caa0c0839@grimberg.me>
- <6d612be9-7ba7-888e-f9c6-f8aa4ef1606a@sandisk.com>
- <732bf5d6-d7a8-6ff0-6501-8a3d46f12fab@grimberg.me>
- <07628c2f-3a4e-b12e-663a-b0711ce20cc9@sandisk.com>
- <CACVXFVMwQnOuUukEMO8CyG3sPOg6DxuKAZx+5FT+LS+hGAcWVQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CACVXFVMwQnOuUukEMO8CyG3sPOg6DxuKAZx+5FT+LS+hGAcWVQ@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: [PATCH] scsi: ufshcd: fix possible unclocked register access
+Date: Wed,  5 Oct 2016 17:57:46 -0700
+Message-ID: <1475715466-1765-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
+        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/05/2016 03:49 PM, Ming Lei wrote:
-> We can use srcu read lock for BLOCKING and rcu read lock for non-BLOCKING,
-> by putting *_read_lock() and *_read_unlock() into two wrappers, which
-> should minimize the cost of srcu read lock & unlock and the code is still easy
-> to read & verify.
+Vendor specific setup_clocks callback may require the clocks managed
+by ufshcd driver to be ON. So if the vendor specific setup_clocks callback
+is called while the required clocks are turned off, it could result into
+unclocked register access.
 
-Hello Ming,
+To prevent possible unclock register access, this change makes sure that
+required clocks remain enabled before calling into vendor specific
+setup_clocks callback.
 
-The lock checking algorithms in the sparse and smatch static checkers 
-are unable to deal with code of the type "if (condition) (un)lock()". So 
-unless someone has a better proposal my preference is to use the 
-approach from the patch at the start of this e-mail thread.
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-Thanks,
-
-Bart.
-
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 05c7456..acee5a3 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5389,6 +5389,17 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 	if (!head || list_empty(head))
+ 		goto out;
+ 
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * before disabling the clocks managed here.
++	 */
++	if (!on) {
++		ret = ufshcd_vops_setup_clocks(hba, on);
++		if (ret)
++			return ret;
++	}
++
+ 	list_for_each_entry(clki, head, list) {
+ 		if (!IS_ERR_OR_NULL(clki->clk)) {
+ 			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
+@@ -5410,6 +5421,11 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 		}
+ 	}
+ 
++	/*
++	 * vendor specific setup_clocks ops may depend on clocks managed by
++	 * this standard driver hence call the vendor specific setup_clocks
++	 * after enabling the clocks managed here.
++	 */
+ 	ret = ufshcd_vops_setup_clocks(hba, on);
+ out:
+ 	if (ret) {
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
