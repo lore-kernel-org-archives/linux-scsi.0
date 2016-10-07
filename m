@@ -1,145 +1,75 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH] scsi: ufs: fix race between clock gating and devfreq scaling work
-Date: Thu,  6 Oct 2016 18:16:24 -0700
-Message-ID: <1475802984-23917-1-git-send-email-subhashj@codeaurora.org>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: [PATCH v1 0/8] Support for Exynos specific UFS driver
+Date: Fri, 07 Oct 2016 10:19:16 +0900
+Message-ID: <00a401d22038$d22456e0$766d04a0$@samsung.com>
+References: <006301d21fa9$70aebe80$520c3b80$@samsung.com>
+ <CGME20161006191329epcas2p3d0af873317e671edbec1a3d09fced9b7@epcas2p3.samsung.com>
+ <85ac557c49df48cc605813b04f3778f5@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33695 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936491AbcJGBQf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2016 21:16:35 -0400
+Received: from mailout1.samsung.com ([203.254.224.24]:45739 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754374AbcJGBTT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 6 Oct 2016 21:19:19 -0400
+In-reply-to: <85ac557c49df48cc605813b04f3778f5@codeaurora.org>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, "'Martin K. Petersen'" <martin.petersen@oracle.com>, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-UFS devfreq clock scaling work may require clocks to be ON if it need to
-execute some UFS commands hence it may request for clock hold before
-issuing the command. But if UFS clock gating work is already running in
-parallel, ungate work would end up waiting for the clock gating work to
-finish and as clock gating work would also wait for the clock scaling work
-to finish, we would enter in deadlock state. Here is the call trace during
-this deadlock state:
+Hi, Subhash
 
-Workqueue: devfreq_wq devfreq_monitor
-	__switch_to
-	__schedule
-	schedule
-	schedule_timeout
-	wait_for_common
-	wait_for_completion
-	flush_work
-	ufshcd_hold
-	ufshcd_send_uic_cmd
-	ufshcd_dme_get_attr
-	ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div
-	ufs_qcom_clk_scale_notify
-	ufshcd_scale_clks
-	ufshcd_devfreq_target
-	update_devfreq
-	devfreq_monitor
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+You're right.
+I submitted one of  patches first to link to the previous summary mail
+thread,
+but it failed. I'll try it again.
 
-Workqueue: events ufshcd_gate_work
-	__switch_to
-	__schedule
-	schedule
-	schedule_preempt_disabled
-	__mutex_lock_slowpath
-	mutex_lock
-	devfreq_monitor_suspend
-	devfreq_simple_ondemand_handler
-	devfreq_suspend_device
-	ufshcd_gate_work
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+Thank you
+Regards
 
-Workqueue: events ufshcd_ungate_work
-	__switch_to
-	__schedule
-	schedule
-	schedule_timeout
-	wait_for_common
-	wait_for_completion
-	flush_work
-	__cancel_work_timer
-	cancel_delayed_work_sync
-	ufshcd_ungate_work
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+> Hi Kim,
+> 
+> 
+> On 2016-10-06 01:12, Kiwoong Kim wrote:
+> > This series of patches introduce support for Exynos specific UFS
+> > driver.
+> > An original version of this has been applied on mass production of
+> > commercial mobile devices.
+> >
+> >  Documentation/devicetree/bindings/ufs/ufs-exynos.txt |   93 +
+> >  drivers/scsi/ufs/Kconfig                                      |   10 +
+> >  drivers/scsi/ufs/Makefile                                     |    1 +
+> >  drivers/scsi/ufs/mphy.h                                        |   38
+> > +
+> >  drivers/scsi/ufs/ufs-exynos.c                                | 2084
+> > ++++++++++++++++++++
+> >  drivers/scsi/ufs/ufs-exynos.h                                |  621
+> > ++++++
+> >  drivers/scsi/ufs/ufshcd.c                                     |  146
+> > +-
+> >  drivers/scsi/ufs/ufshcd.h                                     |   62 +
+> >  drivers/scsi/ufs/ufshci.h                                     |   14
+> > +-
+> >  drivers/scsi/ufs/unipro.h                                     |   24 +
+> >  10 files changed, 3073 insertions(+), 20 deletions(-)  create mode
+> > 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+> >  create mode 100644 drivers/scsi/ufs/mphy.h  create mode 100644
+> > drivers/scsi/ufs/ufs-exynos.c  create mode 100644
+> > drivers/scsi/ufs/ufs-exynos.h
+> 
+> This supposed to be 8-patch series but i only patch #1 (subject: [PATCH
+> v1 1/8] ufs: add some vendor specific operations) on mailing list. Can you
+> please send out the full patch series?
+> 
+> --
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Project
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-This change fixes this deadlock by doing this in devfreq work (devfreq_wq):
-Try cancelling clock gating work. If we are able to cancel gating work
-or it wasn't scheduled, hold the clock reference count until scaling is
-in progress. If gate work is already running in parallel, let's skip
-the frequecy scaling at this time and it will be retried once next scaling
-window expires.
-
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
-
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 05c7456..4011887 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6324,15 +6324,47 @@ static int ufshcd_devfreq_target(struct device *dev,
- {
- 	int err = 0;
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	bool release_clk_hold = false;
-+	unsigned long irq_flags;
- 
- 	if (!ufshcd_is_clkscaling_enabled(hba))
- 		return -EINVAL;
- 
-+	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	if (ufshcd_eh_in_progress(hba)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		return 0;
-+	}
-+
-+	if (ufshcd_is_clkgating_allowed(hba) &&
-+	    (hba->clk_gating.state != CLKS_ON)) {
-+		if (cancel_delayed_work(&hba->clk_gating.gate_work)) {
-+			/* hold the vote until the scaling work is completed */
-+			hba->clk_gating.active_reqs++;
-+			release_clk_hold = true;
-+			hba->clk_gating.state = CLKS_ON;
-+		} else {
-+			/*
-+			 * Clock gating work seems to be running in parallel
-+			 * hence skip scaling work to avoid deadlock between
-+			 * current scaling work and gating work.
-+			 */
-+			spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+			return 0;
-+		}
-+	}
-+	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+
- 	if (*freq == UINT_MAX)
- 		err = ufshcd_scale_clks(hba, true);
- 	else if (*freq == 0)
- 		err = ufshcd_scale_clks(hba, false);
- 
-+	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	if (release_clk_hold)
-+		__ufshcd_release(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+
- 	return err;
- }
- 
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
 
