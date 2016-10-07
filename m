@@ -1,171 +1,309 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [RESEND PATCH v3] scsi: ufshcd: fix possible unclocked register access
-Date: Thu,  6 Oct 2016 21:48:22 -0700
-Message-ID: <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
+Subject: Re: [PATCH v1 1/8] ufs: add some vendor specific operations
+Date: Thu, 06 Oct 2016 21:59:19 -0700
+Message-ID: <0413edcdb275340779b9cfa400bdb173@codeaurora.org>
+References: <006401d21faa$210df570$6329e050$@samsung.com>
+ <CGME20161006192528epcas2p3d83d8609980c1f27ec989ad0c5dabc0c@epcas2p3.samsung.com>
+ <374157914ed3ee27db50db2a9b6d7c10@codeaurora.org>
+ <00a501d2203b$7d328d70$7797a850$@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:52303 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:54103 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752643AbcJGEsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2016 00:48:36 -0400
+        with ESMTP id S1750976AbcJGE7W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2016 00:59:22 -0400
+In-Reply-To: <00a501d2203b$7d328d70$7797a850$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, linux-scsi@vger.kernel.org, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-Vendor specific setup_clocks callback may require the clocks managed
-by ufshcd driver to be ON. So if the vendor specific setup_clocks callback
-is called while the required clocks are turned off, it could result into
-unclocked register access.
+Hi Kim,
 
-To prevent possible unclock register access, this change adds one more
-argument to setup_clocks callback to let it know whether it is called
-pre/post the clock changes by core driver.
+On 2016-10-06 18:38, Kiwoong Kim wrote:
+> Hi, Subhash.
+> 
+> Thank for your comments.
+> I added my opinions below.
+> 
+> Regards
+> 
+>> Hi Kim,
+>> 
+>> 
+>> On 2016-10-06 01:17, Kiwoong Kim wrote:
+>> > Some UFS host controller may need to require some sequences before
+>> > used clocks are turned on or off.
+>> > e.g) control internal gates in UFS host
+>> 
+>> 
+>> I believe we are doing couple of other things as well other than clock
+>> control in this patch, such as hibern8 notify, *nexus_t* notify. You 
+>> might
+>> want to separate each in different patches. Also, please find more
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
-Changes from v2:
-* Added one more argument to setup_clocks callback, this should address
-  Kiwoong Kim's comments on v2.
+are you going to divide this patch?
 
-Changes from v1:
-* Don't call ufshcd_vops_setup_clocks() again for clock off
----
- drivers/scsi/ufs/ufs-qcom.c | 10 ++++++----
- drivers/scsi/ufs/ufshcd.c   | 17 ++++++++---------
- drivers/scsi/ufs/ufshcd.h   |  8 +++++---
- 3 files changed, 19 insertions(+), 16 deletions(-)
+>> additional below.
+>> 
+>> >
+>> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+>> > ---
+>> >  drivers/scsi/ufs/ufshcd.c |   15 +++++++++++++--
+>> >  drivers/scsi/ufs/ufshcd.h |   37 +++++++++++++++++++++++++++++++++++++
+>> >  2 files changed, 50 insertions(+), 2 deletions(-)
+>> >
+>> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+>> > index 05c7456..82c9a40 100644
+>> > --- a/drivers/scsi/ufs/ufshcd.c
+>> > +++ b/drivers/scsi/ufs/ufshcd.c
+>> > @@ -1474,6 +1474,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
+>> > *host, struct scsi_cmnd *cmd)
+>> >
+>> >  	/* issue command to the controller */
+>> >  	spin_lock_irqsave(hba->host->host_lock, flags);
+>> > +	ufshcd_vops_set_nexus_t_xfer_req(hba, tag, lrbp->cmd);
+>> >  	ufshcd_send_command(hba, tag);
+>> >  out_unlock:
+>> >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> > @@ -1683,6 +1684,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba
+>> > *hba,
+>> >  	/* Make sure descriptors are ready before ringing the doorbell */
+>> >  	wmb();
+>> >  	spin_lock_irqsave(hba->host->host_lock, flags);
+>> > +	ufshcd_vops_set_nexus_t_xfer_req(hba, tag, lrbp->cmd);
+>> 
+>> what does "next_t_xfer_req" means? why do we need this? and do you 
+>> think
+>> it may be useful/needed for non-exynos UFS host controllers as well?
+> 
+> Exynos UFS controller has  a logic to determine which slot owns 
+> received
+> UPIU,
+> to handle it properly.
+> This only run when software set a exynos-specific SFR to bitwise-1.
+> If the controller sends non-dependent request, such as NOP,
+> software would set the SFR to 0 because it don't need to determine.
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3aedf73..3c4f602 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1094,10 +1094,12 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
-  * ufs_qcom_setup_clocks - enables/disable clocks
-  * @hba: host controller instance
-  * @on: If true, enable clocks else disable them.
-+ * @status: PRE_CHANGE or POST_CHANGE notify
-  *
-  * Returns 0 on success, non-zero on failure.
-  */
--static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
-+static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
-+				 enum ufs_notify_change_status status)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
- 	int err;
-@@ -1111,7 +1113,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 	if (!host)
- 		return 0;
- 
--	if (on) {
-+	if (on && (status == POST_CHANGE)) {
- 		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
- 		if (err)
- 			goto out;
-@@ -1130,7 +1132,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 		if (vote == host->bus_vote.min_bw_vote)
- 			ufs_qcom_update_bus_bw_vote(host);
- 
--	} else {
-+	} else if (!on && (status == PRE_CHANGE)) {
- 
- 		/* M-PHY RMMI interface clocks can be turned off */
- 		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
-@@ -1254,7 +1256,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	ufs_qcom_set_caps(hba);
- 	ufs_qcom_advertise_quirks(hba);
- 
--	ufs_qcom_setup_clocks(hba, true);
-+	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
- 
- 	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
- 		ufs_qcom_hosts[hba->dev->id] = host;
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 05c7456..571a2f6 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5389,6 +5389,10 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 	if (!head || list_empty(head))
- 		goto out;
- 
-+	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
-+	if (ret)
-+		return ret;
-+
- 	list_for_each_entry(clki, head, list) {
- 		if (!IS_ERR_OR_NULL(clki->clk)) {
- 			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
-@@ -5410,7 +5414,10 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 		}
- 	}
- 
--	ret = ufshcd_vops_setup_clocks(hba, on);
-+	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
-+	if (ret)
-+		return ret;
-+
- out:
- 	if (ret) {
- 		list_for_each_entry(clki, head, list) {
-@@ -5500,8 +5507,6 @@ static void ufshcd_variant_hba_exit(struct ufs_hba *hba)
- 	if (!hba->vops)
- 		return;
- 
--	ufshcd_vops_setup_clocks(hba, false);
--
- 	ufshcd_vops_setup_regulators(hba, false);
- 
- 	ufshcd_vops_exit(hba);
-@@ -5905,10 +5910,6 @@ disable_clks:
- 	if (ret)
- 		goto set_link_active;
- 
--	ret = ufshcd_vops_setup_clocks(hba, false);
--	if (ret)
--		goto vops_resume;
--
- 	if (!ufshcd_is_link_active(hba))
- 		ufshcd_setup_clocks(hba, false);
- 	else
-@@ -5925,8 +5926,6 @@ disable_clks:
- 	ufshcd_hba_vreg_set_lpm(hba);
- 	goto out;
- 
--vops_resume:
--	ufshcd_vops_resume(hba, pm_op);
- set_link_active:
- 	ufshcd_vreg_set_hpm(hba);
- 	if (ufshcd_is_link_hibern8(hba) && !ufshcd_uic_hibern8_exit(hba))
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 430bef1..afff7f4 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -273,7 +273,8 @@ struct ufs_hba_variant_ops {
- 	u32	(*get_ufs_hci_version)(struct ufs_hba *);
- 	int	(*clk_scale_notify)(struct ufs_hba *, bool,
- 				    enum ufs_notify_change_status);
--	int	(*setup_clocks)(struct ufs_hba *, bool);
-+	int	(*setup_clocks)(struct ufs_hba *, bool,
-+				enum ufs_notify_change_status);
- 	int     (*setup_regulators)(struct ufs_hba *, bool);
- 	int	(*hce_enable_notify)(struct ufs_hba *,
- 				     enum ufs_notify_change_status);
-@@ -755,10 +756,11 @@ static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
- 	return 0;
- }
- 
--static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on)
-+static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on,
-+					enum ufs_notify_change_status status)
- {
- 	if (hba->vops && hba->vops->setup_clocks)
--		return hba->vops->setup_clocks(hba, on);
-+		return hba->vops->setup_clocks(hba, on, status);
- 	return 0;
- }
- 
+Ok, this is very specific to your controller. But i guess still the 
+callback names should be generic enough so that it may be used by other 
+host controller drivers if required in future.
+Can we think of different name? something like notify_cmd_issue?
+Also, why do we need to pass whole pointer to pass scsi command pointer? 
+what all scsi cmnd parameters will be used by exynos driver? may be your 
+full patch series might give more idea?
+
+
+> 
+> An answer of your question depends on whether other controllers
+> has a logic to function that.
+> 
+>> 
+>> 
+>> 
+>> >  	ufshcd_send_command(hba, tag);
+>> >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>> >
+>> > @@ -2651,6 +2653,8 @@ static int __ufshcd_uic_hibern8_enter(struct
+>> > ufs_hba *hba)
+>> >  	int ret;
+>> >  	struct uic_command uic_cmd = {0};
+>> >
+>> > +	ufshcd_vops_hibern8_notify(hba, true, PRE_CHANGE);
+>> > +
+>> >  	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+>> >  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>> >
+>> > @@ -2664,7 +2668,8 @@ static int __ufshcd_uic_hibern8_enter(struct
+>> > ufs_hba *hba)
+>> >  		 */
+>> >  		if (ufshcd_link_recovery(hba))
+>> >  			ret = -ENOLINK;
+>> > -	}
+>> > +	} else
+>> > +		ufshcd_vops_hibern8_notify(hba, true, POST_CHANGE);
+>> >
+>> >  	return ret;
+>> >  }
+>> > @@ -2687,13 +2692,16 @@ static int ufshcd_uic_hibern8_exit(struct
+>> > ufs_hba *hba)
+>> >  	struct uic_command uic_cmd = {0};
+>> >  	int ret;
+>> >
+>> > +	ufshcd_vops_hibern8_notify(hba, false, PRE_CHANGE);
+>> > +
+>> >  	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
+>> >  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>> >  	if (ret) {
+>> >  		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
+>> >  			__func__, ret);
+>> >  		ret = ufshcd_link_recovery(hba);
+>> > -	}
+>> > +	} else
+>> > +		ufshcd_vops_hibern8_notify(hba, false, POST_CHANGE);
+>> >
+>> >  	return ret;
+>> >  }
+>> > @@ -4312,6 +4320,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba
+>> > *hba, int lun_id, int task_id,
+>> >  	task_req_upiup->input_param2 = cpu_to_be32(task_id);
+>> >
+>> >  	/* send command to the controller */
+>> > +	ufshcd_vops_set_nexus_t_task_mgmt(hba, free_slot, tm_function);
+
+Same as above, we need to think of more generic name?
+
+
+
+Thanks,
+Subhash
+
+>> 
+>> 
+>> Same question as "next_t_xfer_req". what does "next_t_task_mgmt" 
+>> means?
+>> why do we need this? and do you think it may be useful/needed for
+>> non-exynos UFS host controllers as well?
+> 
+> Please refer to what I mentioned above.
+> 
+>> 
+>> 
+>> >  	__set_bit(free_slot, &hba->outstanding_tasks);
+>> >
+>> >  	/* Make sure descriptors are ready before ringing the task doorbell
+>> > */
+>> > @@ -5389,6 +5398,8 @@ static int __ufshcd_setup_clocks(struct ufs_hba
+>> > *hba, bool on,
+>> >  	if (!head || list_empty(head))
+>> >  		goto out;
+>> >
+>> > +	ufshcd_vops_pre_setup_clocks(hba, on);
+>> > +
+>> 
+>> I don't think we need a different op for this, we can simply use the
+>> existing op and add one more argument to it to indicate
+>> PRE_CHANGE/POST_CHANGE. If you agree with my response to "[PATCH v2]
+>> scsi: ufshcd: fix possible unclocked register access" patch, i can
+>> update send out v3 of my patch and then you can rebase your patch 
+>> series
+>> on top of my patch.
+> 
+> Okay, I agree with you. Then I assume that you would do that
+> and will change the patch.
+> 
+>> 
+>> 
+>> >  	list_for_each_entry(clki, head, list) {
+>> >  		if (!IS_ERR_OR_NULL(clki->clk)) {
+>> >  			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
+>> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+>> > index 430bef1..b97f7c2 100644
+>> > --- a/drivers/scsi/ufs/ufshcd.h
+>> > +++ b/drivers/scsi/ufs/ufshcd.h
+>> > @@ -252,6 +252,7 @@ struct ufs_pwr_mode_info {
+>> >   * @exit: called to cleanup everything done in init
+>> >   * @get_ufs_hci_version: called to get UFS HCI version
+>> >   * @clk_scale_notify: notifies that clks are scaled up/down
+>> > + * @pre_setup_clocks: called before controlling used clocks
+>> >   * @setup_clocks: called before touching any of the controller
+>> > registers
+>> >   * @setup_regulators: called before accessing the host controller
+>> >   * @hce_enable_notify: called before and after HCE enable bit is set
+>> > to allow
+>> > @@ -261,6 +262,9 @@ struct ufs_pwr_mode_info {
+>> >   * @pwr_change_notify: called before and after a power mode change
+>> >   *			is carried out to allow vendor spesific capabilities
+>> >   *			to be set.
+>> > + * @set_nexus_t_xfer_req:
+>> > + * @set_nexus_t_task_mgmt:
+>> > + * @hibern8_notify:
+>> >   * @suspend: called during host controller PM callback
+>> >   * @resume: called during host controller PM callback
+>> >   * @dbg_register_dump: used to dump controller debug information
+>> > @@ -273,6 +277,7 @@ struct ufs_hba_variant_ops {
+>> >  	u32	(*get_ufs_hci_version)(struct ufs_hba *);
+>> >  	int	(*clk_scale_notify)(struct ufs_hba *, bool,
+>> >  				    enum ufs_notify_change_status);
+>> > +	int	(*pre_setup_clocks)(struct ufs_hba *, bool);
+>> >  	int	(*setup_clocks)(struct ufs_hba *, bool);
+>> >  	int     (*setup_regulators)(struct ufs_hba *, bool);
+>> >  	int	(*hce_enable_notify)(struct ufs_hba *,
+>> > @@ -283,6 +288,10 @@ struct ufs_hba_variant_ops {
+>> >  					enum ufs_notify_change_status
+> status,
+>> >  					struct ufs_pa_layer_attr *,
+>> >  					struct ufs_pa_layer_attr *);
+>> > +	void	(*set_nexus_t_xfer_req)(struct ufs_hba *,
+>> > +					int, struct scsi_cmnd *);
+>> > +	void	(*set_nexus_t_task_mgmt)(struct ufs_hba *, int, u8);
+>> > +	void    (*hibern8_notify)(struct ufs_hba *, u8, bool);
+>> >  	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
+>> >  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>> >  	void	(*dbg_register_dump)(struct ufs_hba *hba);
+>> > @@ -755,6 +764,13 @@ static inline int
+>> > ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
+>> >  	return 0;
+>> >  }
+>> >
+>> > +static inline int ufshcd_vops_pre_setup_clocks(struct ufs_hba *hba,
+>> > bool on)
+>> > +{
+>> > +	if (hba->vops && hba->vops->pre_setup_clocks)
+>> > +		return hba->vops->pre_setup_clocks(hba, on);
+>> > +	return 0;
+>> > +}
+>> > +
+>> >  static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool
+>> > on)
+>> >  {
+>> >  	if (hba->vops && hba->vops->setup_clocks)
+>> > @@ -799,6 +815,27 @@ static inline int
+>> > ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
+>> >  	return -ENOTSUPP;
+>> >  }
+>> >
+>> > +static inline void ufshcd_vops_set_nexus_t_xfer_req(struct ufs_hba
+>> > *hba,
+>> > +					int tag, struct scsi_cmnd *cmd)
+>> > +{
+>> > +	if (hba->vops && hba->vops->set_nexus_t_xfer_req)
+>> > +		return hba->vops->set_nexus_t_xfer_req(hba, tag, cmd);
+>> > +}
+>> > +
+>> > +static inline void ufshcd_vops_set_nexus_t_task_mgmt(struct ufs_hba
+>> > *hba,
+>> > +					int tag, u8 tm_function)
+>> > +{
+>> > +	if (hba->vops && hba->vops->set_nexus_t_task_mgmt)
+>> > +		return hba->vops->set_nexus_t_task_mgmt(hba, tag,
+>> tm_function);
+>> > +}
+>> > +
+>> > +static inline void ufshcd_vops_hibern8_notify(struct ufs_hba *hba,
+>> > +					u8 enter, bool notify)
+>> > +{
+>> > +	if (hba->vops && hba->vops->hibern8_notify)
+>> > +		return hba->vops->hibern8_notify(hba, enter, notify);
+>> > +}
+>> > +
+>> >  static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum
+>> > ufs_pm_op op)
+>> >  {
+>> >  	if (hba->vops && hba->vops->suspend)
+>> 
+>> --
+>> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+>> a Linux Foundation Collaborative Project
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
+>> in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
