@@ -1,13 +1,17 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v3] scsi: ufshcd: fix possible unclocked register access
-Date: Thu,  6 Oct 2016 18:57:30 -0700
-Message-ID: <1475805450-14039-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [RESEND PATCH v3] scsi: ufshcd: fix possible unclocked register access
+Date: Thu,  6 Oct 2016 21:48:22 -0700
+Message-ID: <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:52303 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752643AbcJGEsg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2016 00:48:36 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 Vendor specific setup_clocks callback may require the clocks managed
 by ufshcd driver to be ON. So if the vendor specific setup_clocks callback
@@ -19,6 +23,13 @@ argument to setup_clocks callback to let it know whether it is called
 pre/post the clock changes by core driver.
 
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
+Changes from v2:
+* Added one more argument to setup_clocks callback, this should address
+  Kiwoong Kim's comments on v2.
+
+Changes from v1:
+* Don't call ufshcd_vops_setup_clocks() again for clock off
 ---
  drivers/scsi/ufs/ufs-qcom.c | 10 ++++++----
  drivers/scsi/ufs/ufshcd.c   | 17 ++++++++---------
@@ -157,3 +168,4 @@ index 430bef1..afff7f4 100644
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
