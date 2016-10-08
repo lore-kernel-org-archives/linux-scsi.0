@@ -1,113 +1,73 @@
-From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Issue with fc_exch_alloc failing initiated by
- fc_queuecommand on NUMA or large configurations with Intel ixgbe running
- FCOE
-Date: Sat, 8 Oct 2016 08:57:10 -0400 (EDT)
-Message-ID: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
-References: <1812349047.803888.1475929839972.JavaMail.zimbra@redhat.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v2 0/8] Support for Exynos specific UFS driver
+Date: Sat, 08 Oct 2016 09:38:59 -0700
+Message-ID: <e4edf11f725e817955f0a1fa9cafb3f3@codeaurora.org>
+References: <000001d22111$e6d67260$b4835720$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1812349047.803888.1475929839972.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Cc: "Curtis Taylor (cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org)" <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Bud Brown <bubrown-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:37332 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755437AbcJHQjE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2016 12:39:04 -0400
+In-Reply-To: <000001d22111$e6d67260$b4835720$@samsung.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: vinholikatti@gmail.com, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, =?UTF-8?Q?=EC=B6=94=ED=97=8C=EA=B4=91?= <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-Hello
+On 2016-10-07 20:13, Kiwoong Kim wrote:
+> This series of patches introduce support for Exynos specific UFS 
+> driver.
+> An original version of this has been applied on mass production
+> of commercial mobile devices.
+> 
+> I checked compiling with Subhash's patch
+> - [PATCH v3] scsi: ufshcd: fix possible unclocked register access
+> 
+> ---
+> Changes from v1:
+> * Separate a set of newer callbacks to be added
+> * Make Exynos specific UFS driver compatible with a following patch
+>      [PATCH v3] scsi: ufshcd: fix possible unclocked register access
+>      (http://www.spinics.net/lists/linux-scsi/msg100290.html)
+> * Rename three of the callbacks as follows:
+>    set_nexus_t_xfer_req -> setup_xfer_req
+>    set_nexus_t_task_mgmt -> setup_task_mgmt
+>    hibern8_notify -> setup_hibern8
+> ---
+>  Documentation/devicetree/bindings/ufs/ufs-exynos.txt |   93 +
+>  drivers/scsi/ufs/Kconfig                                       |   10 
+> +
+>  drivers/scsi/ufs/Makefile                                     |    1 +
+>  drivers/scsi/ufs/mphy.h                                        |   38 
+> +
+>  drivers/scsi/ufs/ufs-exynos.c                                | 2099
+> ++++++++++++++++++++
+>  drivers/scsi/ufs/ufs-exynos.h                                |  621 
+> ++++++
+>  drivers/scsi/ufs/ufshcd.c                                     |  144 
+> +-
+>  drivers/scsi/ufs/ufshcd.h                                     |   55 +
+>  drivers/scsi/ufs/ufshci.h                                     |   14 
+> +-
+>  drivers/scsi/ufs/unipro.h                                     |   24 +
+>  10 files changed, 3079 insertions(+), 20 deletions(-)
+>  create mode 100644 
+> Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+>  create mode 100644 drivers/scsi/ufs/mphy.h
+>  create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+>  create mode 100644 drivers/scsi/ufs/ufs-exynos.h
 
-This has been a tough problem to chase down but was finally reproduced.
-This issue is apparent on RHEL kernels and upstream so justified reporting here.
+I could only see one patch "[PATCH 01/10] ufs: introduce setup_xfer_req 
+callback" posted. can you post all of them? Also, please add the version 
+number for each patch in patch series.
 
-Its out there and some may not be aware its even happening other than very slow performance using ixgbe and software FCOE on large configurations.
+Thanks,
+Subhash
 
-Upstream Kernel used for reproducing is 4.8.0
-
-I/O performance was noted to be very impacted on a large NUMA test system (64 CPUS 4 NUMA nodes) running the software fcoe stack with Intel ixgbe interfaces.
-After capturing blktraces we saw for every I/O there was at least one blk_requeue_request and sometimes hundreds or more.
-This resulted in IOPS rates being marginal at best with queuing and high wait times.
-After narrowing this down with systemtap and trace-cmd we added further debug and it was apparent this was dues to SCSI_MLQUEUE_HOST_BUSY being returned.
-So I/O passes but very slowly as it constantly having to be requeued.
-
-The identical configuration in our lab with a single NUMA node and 4 CPUS does not see this issue at all.
-The same large system that reproduces this was booted with numa=off and still sees the issue.
-
-The flow is as follows:
-
->From with fc_queuecommand
-          fc_fcp_pkt_send() calls fc_fcp_cmd_send() calls tt.exch_seq_send() which calls fc_exch_seq_send
-
-this fails and returns NULL in fc_exch_alloc() as the list traveral never creates a match.
-
-static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
-				       struct fc_frame *fp,
-				       void (*resp)(struct fc_seq *,
-						    struct fc_frame *fp,
-						    void *arg),
-				       void (*destructor)(struct fc_seq *,
-							  void *),
-				       void *arg, u32 timer_msec)
-{
-	struct fc_exch *ep;
-	struct fc_seq *sp = NULL;
-	struct fc_frame_header *fh;
-	struct fc_fcp_pkt *fsp = NULL;
-	int rc = 1;
-
-	ep = fc_exch_alloc(lport, fp);     ***** Called Here and fails
-	if (!ep) {
-		fc_frame_free(fp);
-		printk("RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep = %p\n",ep);
-		return NULL;
-	}
-..
-..
-]
-
-
- fc_exch_alloc() - Allocate an exchange from an EM on a
- *	/**
- *	     local port's list of EMs.
- * @lport: The local port that will own the exchange
- * @fp:	   The FC frame that the exchange will be for
- *
- * This function walks the list of exchange manager(EM)
- * anchors to select an EM for a new exchange allocation. The
- * EM is selected when a NULL match function pointer is encountered
- * or when a call to a match function returns true.
- */
-static inline struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
-					    struct fc_frame *fp)
-{
-	struct fc_exch_mgr_anchor *ema;
-
-	list_for_each_entry(ema, &lport->ema_list, ema_list)
-		if (!ema->match || ema->match(fp))
-			return fc_exch_em_alloc(lport, ema->mp);
-	return NULL;                                 ***** Never matches so returns NULL
-}
-
-
-RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep = (null)
-RHDEBUG: rc -1 with !seq = (null) after calling tt.exch_seq_send  within fc_fcp_cmd_send
-RHDEBUG: rc non zero in :unlock within fc_fcp_cmd_send = -1
-RHDEBUG: In fc_fcp_pkt_send, we returned from  rc = lport->tt.fcp_cmd_send with rc = -1
-
-RHDEBUG: We hit SCSI_MLQUEUE_HOST_BUSY in fc_queuecommand with rval in fc_fcp_pkt_send=-1
-
-I am trying to get my head around why a large multi-node system sees this issue even with NUMA disabled.
-Has anybody seen this or is aware of this with configurations (using fc_queuecommand)
-
-I am continuing to add debug to narrow this down.
-
-Thanks
-Laurence 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
