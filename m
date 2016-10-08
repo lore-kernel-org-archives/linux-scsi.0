@@ -1,97 +1,66 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 01/10] ufs: introduce setup_xfer_req callback
-Date: Sat, 08 Oct 2016 09:41:27 -0700
-Message-ID: <3621c6238f4d98c3a6ef51db7f2cf212@codeaurora.org>
-References: <000201d22113$04f4e820$0edeb860$@samsung.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi: replace wrong device handler name for CLARiiON
+ arrays
+Date: Sat, 8 Oct 2016 19:17:59 +0200
+Message-ID: <612033e6-1caa-30e8-b4f2-8cf3fd5190c7@suse.de>
+References: <20161007161957.6042-1-xose.vazquez@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:37506 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753623AbcJHQl3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2016 12:41:29 -0400
-In-Reply-To: <000201d22113$04f4e820$0edeb860$@samsung.com>
+Received: from mx2.suse.de ([195.135.220.15]:56453 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757910AbcJHRSC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 8 Oct 2016 13:18:02 -0400
+In-Reply-To: <20161007161957.6042-1-xose.vazquez@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: vinholikatti@gmail.com, "'Martin K. Petersen'" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 'James Bottomley' <James.Bottomley@hansenpartnership.com>, =?UTF-8?Q?=27=EC=B6=94?= =?UTF-8?Q?=ED=97=8C=EA=B4=91=27?= <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Christoph Hellwig <hch@lst.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-On 2016-10-07 20:21, Kiwoong Kim wrote:
-> Some UFS host controller may need to configure some things
-> before any transfer request is issued.
-> 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+On 10/07/2016 06:19 PM, Xose Vazquez Perez wrote:
+> At drivers/scsi/device_handler/scsi_dh_emc.c it was defined as:
+> #define CLARIION_NAME                   "emc"
+>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: SCSI ML <linux-scsi@vger.kernel.org>
+> Cc: device-mapper development <dm-devel@redhat.com>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c |    2 ++
->  drivers/scsi/ufs/ufshcd.h |   10 ++++++++++
->  2 files changed, 12 insertions(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 05c7456..bb537db 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1474,6 +1474,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
-> 
->  	/* issue command to the controller */
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	ufshcd_vops_setup_xfer_req(hba, tag, (lrbp->cmd ? true : false));
->  	ufshcd_send_command(hba, tag);
->  out_unlock:
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> @@ -1683,6 +1684,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba 
-> *hba,
->  	/* Make sure descriptors are ready before ringing the doorbell */
->  	wmb();
->  	spin_lock_irqsave(hba->host->host_lock, flags);
-> +	ufshcd_vops_setup_xfer_req(hba, tag, (lrbp->cmd ? true : false));
->  	ufshcd_send_command(hba, tag);
->  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 430bef1..f37e5a4 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -261,6 +261,8 @@ struct ufs_pwr_mode_info {
->   * @pwr_change_notify: called before and after a power mode change
->   *			is carried out to allow vendor spesific capabilities
->   *			to be set.
-> + * @setup_xfer_req: called before any transfer request is issued
-> + *                  to set some things
->   * @suspend: called during host controller PM callback
->   * @resume: called during host controller PM callback
->   * @dbg_register_dump: used to dump controller debug information
-> @@ -283,6 +285,7 @@ struct ufs_hba_variant_ops {
->  					enum ufs_notify_change_status status,
->  					struct ufs_pa_layer_attr *,
->  					struct ufs_pa_layer_attr *);
-> +	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
->  	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
->  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
->  	void	(*dbg_register_dump)(struct ufs_hba *hba);
-> @@ -799,6 +802,13 @@ static inline int
-> ufshcd_vops_pwr_change_notify(struct ufs_hba *hba,
->  	return -ENOTSUPP;
->  }
-> 
-> +static inline void ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int 
-> tag,
-> +					bool is_cmd_not_null)
+>  drivers/scsi/scsi_dh.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index 54d446c..b8d3b97 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -36,9 +36,9 @@ struct scsi_dh_blist {
+>  };
+>
+>  static const struct scsi_dh_blist scsi_dh_blist[] = {
+> -	{"DGC", "RAID",			"clariion" },
+> -	{"DGC", "DISK",			"clariion" },
+> -	{"DGC", "VRAID",		"clariion" },
+> +	{"DGC", "RAID",			"emc" },
+> +	{"DGC", "DISK",			"emc" },
+> +	{"DGC", "VRAID",		"emc" },
+>
+>  	{"COMPAQ", "MSA1000 VOLUME",	"hp_sw" },
+>  	{"COMPAQ", "HSV110",		"hp_sw" },
+>
+Whee. Of course.
 
-This might sound better: s/is_cmd_not_null/is_scsi_cmd  ?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-> +{
-> +	if (hba->vops && hba->vops->setup_xfer_req)
-> +		return hba->vops->setup_xfer_req(hba, tag, is_cmd_not_null);
-> +}
-> +
->  static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum 
-> ufs_pm_op op)
->  {
->  	if (hba->vops && hba->vops->suspend)
+Cheers,
 
+Hannes
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
