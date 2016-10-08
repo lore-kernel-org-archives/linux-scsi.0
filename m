@@ -1,200 +1,219 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [Open-FCoE] Issue with fc_exch_alloc failing initiated by
+From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Issue with fc_exch_alloc failing initiated by
  fc_queuecommand on NUMA or large configurations with Intel ixgbe running
  FCOE
-Date: Sat, 8 Oct 2016 13:53:01 -0400 (EDT)
-Message-ID: <1360350390.815966.1475949181371.JavaMail.zimbra@redhat.com>
-References: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com> <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
+Date: Sat, 8 Oct 2016 15:44:16 -0400 (EDT)
+Message-ID: <1271455655.818631.1475955856691.JavaMail.zimbra@redhat.com>
+References: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
+ <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
+ <1360350390.815966.1475949181371.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx6-phx2.redhat.com ([209.132.183.39]:33922 "EHLO
-        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750745AbcJHRxH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 8 Oct 2016 13:53:07 -0400
-In-Reply-To: <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1360350390.815966.1475949181371.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, "Curtis Taylor (cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org)" <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Bud Brown <bubrown-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, fcoe-devel@open-fcoe.org, "Curtis Taylor (cjt@us.ibm.com)" <cjt@us.ibm.com>, Bud Brown <bubrown@redhat.com>
 
-
-
------ Original Message -----
-> From: "Hannes Reinecke" <hare@suse.de>
-> To: "Laurence Oberman" <loberman@redhat.com>, "Linux SCSI Mailinglist" <linux-scsi@vger.kernel.org>,
-> fcoe-devel@open-fcoe.org
-> Cc: "Curtis Taylor (cjt@us.ibm.com)" <cjt@us.ibm.com>, "Bud Brown" <bubrown@redhat.com>
-> Sent: Saturday, October 8, 2016 1:35:19 PM
-> Subject: Re: [Open-FCoE] Issue with fc_exch_alloc failing initiated by fc_queuecommand on NUMA or large
-> configurations with Intel ixgbe running FCOE
-> 
-> On 10/08/2016 02:57 PM, Laurence Oberman wrote:
-> > Hello
-> >
-> > This has been a tough problem to chase down but was finally reproduced.
-> > This issue is apparent on RHEL kernels and upstream so justified reporting
-> > here.
-> >
-> > Its out there and some may not be aware its even happening other than very
-> > slow
->  > performance using ixgbe and software FCOE on large configurations.
-> >
-> > Upstream Kernel used for reproducing is 4.8.0
-> >
-> > I/O performance was noted to be very impacted on a large NUMA test system
-> > (64 CPUS 4 NUMA nodes) running the software fcoe stack with Intel ixgbe
-> > interfaces.
-> > After capturing blktraces we saw for every I/O there was at least one
-> > blk_requeue_request and sometimes hundreds or more.
-> > This resulted in IOPS rates being marginal at best with queuing and high
-> > wait times.
-> > After narrowing this down with systemtap and trace-cmd we added further
-> > debug and it was apparent this was dues to SCSI_MLQUEUE_HOST_BUSY being
-> > returned.
-> > So I/O passes but very slowly as it constantly having to be requeued.
-> >
-> > The identical configuration in our lab with a single NUMA node and 4 CPUS
-> > does not see this issue at all.
-> > The same large system that reproduces this was booted with numa=off and
-> > still sees the issue.
-> >
-> Have you tested with my FCoE fixes?
-> I've done quite some fixes for libfc/fcoe, and it would be nice to see
-> how the patches behave with this setup.
-> 
-> > The flow is as follows:
-> >
-> > From with fc_queuecommand
-> >           fc_fcp_pkt_send() calls fc_fcp_cmd_send() calls
-> >           tt.exch_seq_send() which calls fc_exch_seq_send
-> >
-> > this fails and returns NULL in fc_exch_alloc() as the list traveral never
-> > creates a match.
-> >
-> > static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
-> > 				       struct fc_frame *fp,
-> > 				       void (*resp)(struct fc_seq *,
-> > 						    struct fc_frame *fp,
-> > 						    void *arg),
-> > 				       void (*destructor)(struct fc_seq *,
-> > 							  void *),
-> > 				       void *arg, u32 timer_msec)
-> > {
-> > 	struct fc_exch *ep;
-> > 	struct fc_seq *sp = NULL;
-> > 	struct fc_frame_header *fh;
-> > 	struct fc_fcp_pkt *fsp = NULL;
-> > 	int rc = 1;
-> >
-> > 	ep = fc_exch_alloc(lport, fp);     ***** Called Here and fails
-> > 	if (!ep) {
-> > 		fc_frame_free(fp);
-> > 		printk("RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep =
-> > 		%p\n",ep);
-> > 		return NULL;
-> > 	}
-> > ..
-> > ..
-> > ]
-> >
-> >
-> >  fc_exch_alloc() - Allocate an exchange from an EM on a
-> >  *	/**
-> >  *	     local port's list of EMs.
-> >  * @lport: The local port that will own the exchange
-> >  * @fp:	   The FC frame that the exchange will be for
-> >  *
-> >  * This function walks the list of exchange manager(EM)
-> >  * anchors to select an EM for a new exchange allocation. The
-> >  * EM is selected when a NULL match function pointer is encountered
-> >  * or when a call to a match function returns true.
-> >  */
-> > static inline struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
-> > 					    struct fc_frame *fp)
-> > {
-> > 	struct fc_exch_mgr_anchor *ema;
-> >
-> > 	list_for_each_entry(ema, &lport->ema_list, ema_list)
-> > 		if (!ema->match || ema->match(fp))
-> > 			return fc_exch_em_alloc(lport, ema->mp);
-> > 	return NULL;                                 ***** Never matches so
-> > 	returns NULL
-> > }
-> >
-> >
-> > RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep = (null)
-> > RHDEBUG: rc -1 with !seq = (null) after calling tt.exch_seq_send  within
-> > fc_fcp_cmd_send
-> > RHDEBUG: rc non zero in :unlock within fc_fcp_cmd_send = -1
-> > RHDEBUG: In fc_fcp_pkt_send, we returned from  rc = lport->tt.fcp_cmd_send
-> > with rc = -1
-> >
-> > RHDEBUG: We hit SCSI_MLQUEUE_HOST_BUSY in fc_queuecommand with rval in
-> > fc_fcp_pkt_send=-1
-> >
-> > I am trying to get my head around why a large multi-node system sees this
-> > issue even with NUMA disabled.
-> > Has anybody seen this or is aware of this with configurations (using
-> > fc_queuecommand)
-> >
-> > I am continuing to add debug to narrow this down.
-> >
-> You might actually be hitting a limitation in the exchange manager code.
-> The libfc exchange manager tries to be really clever and will assign a
-> per-cpu exchange manager (probably to increase locality). However, we
-> only have a limited number of exchanges, so on large systems we might
-> actually run into a exchange starvation problem, where we have in theory
-> enough free exchanges, but none for the submitting cpu.
-> 
-> (Personally, the exchange manager code is in urgent need of reworking.
-> It should be replaced by the sbitmap code from Omar).
-> 
-> Do check how many free exchanges are actually present for the stalling
-> CPU; it might be that you run into a starvation issue.
-> 
-> Cheers,
-> 
-> Hannes
-> --
-> Dr. Hannes Reinecke		      zSeries & Storage
-> hare@suse.de			      +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-> GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
-> 
-Hi Hannes, 
-Thanks for responding
-
-I am adding additional debug as I type this.
-
-I am using latest linux-next, I assume your latest FCOE are not in there yet.
-What is puzzling here is a identical kernel with 1 numa node and only 8GB memory does not see this.
-Surely if I was running out of exchanges that would show up on the smaller system as well.
-I am able to get to 1500 IOPS/sec with the same I/O exerciser on the smaller system with ZERO blk_requeue_request() calls.
-Again, same kernel, same ixgbe same FCOE switch etc.
-
-I traced specifically those initially because we saw it in the blktrace.
-
-I dont understand the match stuff going on in the list reversal stuff here very well, still trying to understand the code flow.
-the bool match() I also cannot figure out from the code.
-It runs the fc_exch_em_alloc() if ether bool *match is false or *match(fp)
-I can't find the actual code for the match, will have to get a vmcore to find it.
-
- static inline struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
- 					    struct fc_frame *fp)
- {
-	struct fc_exch_mgr_anchor *ema;
-
- 	list_for_each_entry(ema, &lport->ema_list, ema_list)
- 		if (!ema->match || ema->match(fp))
- 			return fc_exch_em_alloc(lport, ema->mp);
- 	return NULL;                                 ***** Never matches so
-	returns NULL
- }
-
-Will replay after some finer debug has been added
-
-Again specific to fc_queuecommand and S/W FCOE, not an issue with the F/C queuecommand in the HBA templates fro example lpfc or qla2xxx and alos not applicable to full offload FCOE like the Emulex cards.
-Thanks
-Laurence
+CgotLS0tLSBPcmlnaW5hbCBNZXNzYWdlIC0tLS0tCj4gRnJvbTogIkxhdXJlbmNlIE9iZXJtYW4i
+IDxsb2Jlcm1hbkByZWRoYXQuY29tPgo+IFRvOiAiSGFubmVzIFJlaW5lY2tlIiA8aGFyZUBzdXNl
+LmRlPgo+IENjOiAiTGludXggU0NTSSBNYWlsaW5nbGlzdCIgPGxpbnV4LXNjc2lAdmdlci5rZXJu
+ZWwub3JnPiwgZmNvZS1kZXZlbEBvcGVuLWZjb2Uub3JnLCAiQ3VydGlzIFRheWxvciAoY2p0QHVz
+LmlibS5jb20pIgo+IDxjanRAdXMuaWJtLmNvbT4sICJCdWQgQnJvd24iIDxidWJyb3duQHJlZGhh
+dC5jb20+Cj4gU2VudDogU2F0dXJkYXksIE9jdG9iZXIgOCwgMjAxNiAxOjUzOjAxIFBNCj4gU3Vi
+amVjdDogUmU6IFtPcGVuLUZDb0VdIElzc3VlIHdpdGggZmNfZXhjaF9hbGxvYyBmYWlsaW5nIGlu
+aXRpYXRlZCBieSBmY19xdWV1ZWNvbW1hbmQgb24gTlVNQSBvciBsYXJnZQo+IGNvbmZpZ3VyYXRp
+b25zIHdpdGggSW50ZWwgaXhnYmUgcnVubmluZyBGQ09FCj4gCj4gCj4gCj4gLS0tLS0gT3JpZ2lu
+YWwgTWVzc2FnZSAtLS0tLQo+ID4gRnJvbTogIkhhbm5lcyBSZWluZWNrZSIgPGhhcmVAc3VzZS5k
+ZT4KPiA+IFRvOiAiTGF1cmVuY2UgT2Jlcm1hbiIgPGxvYmVybWFuQHJlZGhhdC5jb20+LCAiTGlu
+dXggU0NTSSBNYWlsaW5nbGlzdCIKPiA+IDxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz4sCj4g
+PiBmY29lLWRldmVsQG9wZW4tZmNvZS5vcmcKPiA+IENjOiAiQ3VydGlzIFRheWxvciAoY2p0QHVz
+LmlibS5jb20pIiA8Y2p0QHVzLmlibS5jb20+LCAiQnVkIEJyb3duIgo+ID4gPGJ1YnJvd25AcmVk
+aGF0LmNvbT4KPiA+IFNlbnQ6IFNhdHVyZGF5LCBPY3RvYmVyIDgsIDIwMTYgMTozNToxOSBQTQo+
+ID4gU3ViamVjdDogUmU6IFtPcGVuLUZDb0VdIElzc3VlIHdpdGggZmNfZXhjaF9hbGxvYyBmYWls
+aW5nIGluaXRpYXRlZCBieQo+ID4gZmNfcXVldWVjb21tYW5kIG9uIE5VTUEgb3IgbGFyZ2UKPiA+
+IGNvbmZpZ3VyYXRpb25zIHdpdGggSW50ZWwgaXhnYmUgcnVubmluZyBGQ09FCj4gPiAKPiA+IE9u
+IDEwLzA4LzIwMTYgMDI6NTcgUE0sIExhdXJlbmNlIE9iZXJtYW4gd3JvdGU6Cj4gPiA+IEhlbGxv
+Cj4gPiA+Cj4gPiA+IFRoaXMgaGFzIGJlZW4gYSB0b3VnaCBwcm9ibGVtIHRvIGNoYXNlIGRvd24g
+YnV0IHdhcyBmaW5hbGx5IHJlcHJvZHVjZWQuCj4gPiA+IFRoaXMgaXNzdWUgaXMgYXBwYXJlbnQg
+b24gUkhFTCBrZXJuZWxzIGFuZCB1cHN0cmVhbSBzbyBqdXN0aWZpZWQKPiA+ID4gcmVwb3J0aW5n
+Cj4gPiA+IGhlcmUuCj4gPiA+Cj4gPiA+IEl0cyBvdXQgdGhlcmUgYW5kIHNvbWUgbWF5IG5vdCBi
+ZSBhd2FyZSBpdHMgZXZlbiBoYXBwZW5pbmcgb3RoZXIgdGhhbgo+ID4gPiB2ZXJ5Cj4gPiA+IHNs
+b3cKPiA+ICA+IHBlcmZvcm1hbmNlIHVzaW5nIGl4Z2JlIGFuZCBzb2Z0d2FyZSBGQ09FIG9uIGxh
+cmdlIGNvbmZpZ3VyYXRpb25zLgo+ID4gPgo+ID4gPiBVcHN0cmVhbSBLZXJuZWwgdXNlZCBmb3Ig
+cmVwcm9kdWNpbmcgaXMgNC44LjAKPiA+ID4KPiA+ID4gSS9PIHBlcmZvcm1hbmNlIHdhcyBub3Rl
+ZCB0byBiZSB2ZXJ5IGltcGFjdGVkIG9uIGEgbGFyZ2UgTlVNQSB0ZXN0IHN5c3RlbQo+ID4gPiAo
+NjQgQ1BVUyA0IE5VTUEgbm9kZXMpIHJ1bm5pbmcgdGhlIHNvZnR3YXJlIGZjb2Ugc3RhY2sgd2l0
+aCBJbnRlbCBpeGdiZQo+ID4gPiBpbnRlcmZhY2VzLgo+ID4gPiBBZnRlciBjYXB0dXJpbmcgYmxr
+dHJhY2VzIHdlIHNhdyBmb3IgZXZlcnkgSS9PIHRoZXJlIHdhcyBhdCBsZWFzdCBvbmUKPiA+ID4g
+YmxrX3JlcXVldWVfcmVxdWVzdCBhbmQgc29tZXRpbWVzIGh1bmRyZWRzIG9yIG1vcmUuCj4gPiA+
+IFRoaXMgcmVzdWx0ZWQgaW4gSU9QUyByYXRlcyBiZWluZyBtYXJnaW5hbCBhdCBiZXN0IHdpdGgg
+cXVldWluZyBhbmQgaGlnaAo+ID4gPiB3YWl0IHRpbWVzLgo+ID4gPiBBZnRlciBuYXJyb3dpbmcg
+dGhpcyBkb3duIHdpdGggc3lzdGVtdGFwIGFuZCB0cmFjZS1jbWQgd2UgYWRkZWQgZnVydGhlcgo+
+ID4gPiBkZWJ1ZyBhbmQgaXQgd2FzIGFwcGFyZW50IHRoaXMgd2FzIGR1ZXMgdG8gU0NTSV9NTFFV
+RVVFX0hPU1RfQlVTWSBiZWluZwo+ID4gPiByZXR1cm5lZC4KPiA+ID4gU28gSS9PIHBhc3NlcyBi
+dXQgdmVyeSBzbG93bHkgYXMgaXQgY29uc3RhbnRseSBoYXZpbmcgdG8gYmUgcmVxdWV1ZWQuCj4g
+PiA+Cj4gPiA+IFRoZSBpZGVudGljYWwgY29uZmlndXJhdGlvbiBpbiBvdXIgbGFiIHdpdGggYSBz
+aW5nbGUgTlVNQSBub2RlIGFuZCA0IENQVVMKPiA+ID4gZG9lcyBub3Qgc2VlIHRoaXMgaXNzdWUg
+YXQgYWxsLgo+ID4gPiBUaGUgc2FtZSBsYXJnZSBzeXN0ZW0gdGhhdCByZXByb2R1Y2VzIHRoaXMg
+d2FzIGJvb3RlZCB3aXRoIG51bWE9b2ZmIGFuZAo+ID4gPiBzdGlsbCBzZWVzIHRoZSBpc3N1ZS4K
+PiA+ID4KPiA+IEhhdmUgeW91IHRlc3RlZCB3aXRoIG15IEZDb0UgZml4ZXM/Cj4gPiBJJ3ZlIGRv
+bmUgcXVpdGUgc29tZSBmaXhlcyBmb3IgbGliZmMvZmNvZSwgYW5kIGl0IHdvdWxkIGJlIG5pY2Ug
+dG8gc2VlCj4gPiBob3cgdGhlIHBhdGNoZXMgYmVoYXZlIHdpdGggdGhpcyBzZXR1cC4KPiA+IAo+
+ID4gPiBUaGUgZmxvdyBpcyBhcyBmb2xsb3dzOgo+ID4gPgo+ID4gPiBGcm9tIHdpdGggZmNfcXVl
+dWVjb21tYW5kCj4gPiA+ICAgICAgICAgICBmY19mY3BfcGt0X3NlbmQoKSBjYWxscyBmY19mY3Bf
+Y21kX3NlbmQoKSBjYWxscwo+ID4gPiAgICAgICAgICAgdHQuZXhjaF9zZXFfc2VuZCgpIHdoaWNo
+IGNhbGxzIGZjX2V4Y2hfc2VxX3NlbmQKPiA+ID4KPiA+ID4gdGhpcyBmYWlscyBhbmQgcmV0dXJu
+cyBOVUxMIGluIGZjX2V4Y2hfYWxsb2MoKSBhcyB0aGUgbGlzdCB0cmF2ZXJhbCBuZXZlcgo+ID4g
+PiBjcmVhdGVzIGEgbWF0Y2guCj4gPiA+Cj4gPiA+IHN0YXRpYyBzdHJ1Y3QgZmNfc2VxICpmY19l
+eGNoX3NlcV9zZW5kKHN0cnVjdCBmY19scG9ydCAqbHBvcnQsCj4gPiA+IAkJCQkgICAgICAgc3Ry
+dWN0IGZjX2ZyYW1lICpmcCwKPiA+ID4gCQkJCSAgICAgICB2b2lkICgqcmVzcCkoc3RydWN0IGZj
+X3NlcSAqLAo+ID4gPiAJCQkJCQkgICAgc3RydWN0IGZjX2ZyYW1lICpmcCwKPiA+ID4gCQkJCQkJ
+ICAgIHZvaWQgKmFyZyksCj4gPiA+IAkJCQkgICAgICAgdm9pZCAoKmRlc3RydWN0b3IpKHN0cnVj
+dCBmY19zZXEgKiwKPiA+ID4gCQkJCQkJCSAgdm9pZCAqKSwKPiA+ID4gCQkJCSAgICAgICB2b2lk
+ICphcmcsIHUzMiB0aW1lcl9tc2VjKQo+ID4gPiB7Cj4gPiA+IAlzdHJ1Y3QgZmNfZXhjaCAqZXA7
+Cj4gPiA+IAlzdHJ1Y3QgZmNfc2VxICpzcCA9IE5VTEw7Cj4gPiA+IAlzdHJ1Y3QgZmNfZnJhbWVf
+aGVhZGVyICpmaDsKPiA+ID4gCXN0cnVjdCBmY19mY3BfcGt0ICpmc3AgPSBOVUxMOwo+ID4gPiAJ
+aW50IHJjID0gMTsKPiA+ID4KPiA+ID4gCWVwID0gZmNfZXhjaF9hbGxvYyhscG9ydCwgZnApOyAg
+ICAgKioqKiogQ2FsbGVkIEhlcmUgYW5kIGZhaWxzCj4gPiA+IAlpZiAoIWVwKSB7Cj4gPiA+IAkJ
+ZmNfZnJhbWVfZnJlZShmcCk7Cj4gPiA+IAkJcHJpbnRrKCJSSERFQlVHOiBJbiBmY19leGNoX3Nl
+cV9zZW5kIHJldHVybmVkIE5VTEwgYmVjYXVzZSAhZXAgd2l0aCBlcAo+ID4gPiAJCT0KPiA+ID4g
+CQklcFxuIixlcCk7Cj4gPiA+IAkJcmV0dXJuIE5VTEw7Cj4gPiA+IAl9Cj4gPiA+IC4uCj4gPiA+
+IC4uCj4gPiA+IF0KPiA+ID4KPiA+ID4KPiA+ID4gIGZjX2V4Y2hfYWxsb2MoKSAtIEFsbG9jYXRl
+IGFuIGV4Y2hhbmdlIGZyb20gYW4gRU0gb24gYQo+ID4gPiAgKgkvKioKPiA+ID4gICoJICAgICBs
+b2NhbCBwb3J0J3MgbGlzdCBvZiBFTXMuCj4gPiA+ICAqIEBscG9ydDogVGhlIGxvY2FsIHBvcnQg
+dGhhdCB3aWxsIG93biB0aGUgZXhjaGFuZ2UKPiA+ID4gICogQGZwOgkgICBUaGUgRkMgZnJhbWUg
+dGhhdCB0aGUgZXhjaGFuZ2Ugd2lsbCBiZSBmb3IKPiA+ID4gICoKPiA+ID4gICogVGhpcyBmdW5j
+dGlvbiB3YWxrcyB0aGUgbGlzdCBvZiBleGNoYW5nZSBtYW5hZ2VyKEVNKQo+ID4gPiAgKiBhbmNo
+b3JzIHRvIHNlbGVjdCBhbiBFTSBmb3IgYSBuZXcgZXhjaGFuZ2UgYWxsb2NhdGlvbi4gVGhlCj4g
+PiA+ICAqIEVNIGlzIHNlbGVjdGVkIHdoZW4gYSBOVUxMIG1hdGNoIGZ1bmN0aW9uIHBvaW50ZXIg
+aXMgZW5jb3VudGVyZWQKPiA+ID4gICogb3Igd2hlbiBhIGNhbGwgdG8gYSBtYXRjaCBmdW5jdGlv
+biByZXR1cm5zIHRydWUuCj4gPiA+ICAqLwo+ID4gPiBzdGF0aWMgaW5saW5lIHN0cnVjdCBmY19l
+eGNoICpmY19leGNoX2FsbG9jKHN0cnVjdCBmY19scG9ydCAqbHBvcnQsCj4gPiA+IAkJCQkJICAg
+IHN0cnVjdCBmY19mcmFtZSAqZnApCj4gPiA+IHsKPiA+ID4gCXN0cnVjdCBmY19leGNoX21ncl9h
+bmNob3IgKmVtYTsKPiA+ID4KPiA+ID4gCWxpc3RfZm9yX2VhY2hfZW50cnkoZW1hLCAmbHBvcnQt
+PmVtYV9saXN0LCBlbWFfbGlzdCkKPiA+ID4gCQlpZiAoIWVtYS0+bWF0Y2ggfHwgZW1hLT5tYXRj
+aChmcCkpCj4gPiA+IAkJCXJldHVybiBmY19leGNoX2VtX2FsbG9jKGxwb3J0LCBlbWEtPm1wKTsK
+PiA+ID4gCXJldHVybiBOVUxMOyAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICoqKioq
+IE5ldmVyIG1hdGNoZXMgc28KPiA+ID4gCXJldHVybnMgTlVMTAo+ID4gPiB9Cj4gPiA+Cj4gPiA+
+Cj4gPiA+IFJIREVCVUc6IEluIGZjX2V4Y2hfc2VxX3NlbmQgcmV0dXJuZWQgTlVMTCBiZWNhdXNl
+ICFlcCB3aXRoIGVwID0gKG51bGwpCj4gPiA+IFJIREVCVUc6IHJjIC0xIHdpdGggIXNlcSA9IChu
+dWxsKSBhZnRlciBjYWxsaW5nIHR0LmV4Y2hfc2VxX3NlbmQgIHdpdGhpbgo+ID4gPiBmY19mY3Bf
+Y21kX3NlbmQKPiA+ID4gUkhERUJVRzogcmMgbm9uIHplcm8gaW4gOnVubG9jayB3aXRoaW4gZmNf
+ZmNwX2NtZF9zZW5kID0gLTEKPiA+ID4gUkhERUJVRzogSW4gZmNfZmNwX3BrdF9zZW5kLCB3ZSBy
+ZXR1cm5lZCBmcm9tICByYyA9Cj4gPiA+IGxwb3J0LT50dC5mY3BfY21kX3NlbmQKPiA+ID4gd2l0
+aCByYyA9IC0xCj4gPiA+Cj4gPiA+IFJIREVCVUc6IFdlIGhpdCBTQ1NJX01MUVVFVUVfSE9TVF9C
+VVNZIGluIGZjX3F1ZXVlY29tbWFuZCB3aXRoIHJ2YWwgaW4KPiA+ID4gZmNfZmNwX3BrdF9zZW5k
+PS0xCj4gPiA+Cj4gPiA+IEkgYW0gdHJ5aW5nIHRvIGdldCBteSBoZWFkIGFyb3VuZCB3aHkgYSBs
+YXJnZSBtdWx0aS1ub2RlIHN5c3RlbSBzZWVzIHRoaXMKPiA+ID4gaXNzdWUgZXZlbiB3aXRoIE5V
+TUEgZGlzYWJsZWQuCj4gPiA+IEhhcyBhbnlib2R5IHNlZW4gdGhpcyBvciBpcyBhd2FyZSBvZiB0
+aGlzIHdpdGggY29uZmlndXJhdGlvbnMgKHVzaW5nCj4gPiA+IGZjX3F1ZXVlY29tbWFuZCkKPiA+
+ID4KPiA+ID4gSSBhbSBjb250aW51aW5nIHRvIGFkZCBkZWJ1ZyB0byBuYXJyb3cgdGhpcyBkb3du
+Lgo+ID4gPgo+ID4gWW91IG1pZ2h0IGFjdHVhbGx5IGJlIGhpdHRpbmcgYSBsaW1pdGF0aW9uIGlu
+IHRoZSBleGNoYW5nZSBtYW5hZ2VyIGNvZGUuCj4gPiBUaGUgbGliZmMgZXhjaGFuZ2UgbWFuYWdl
+ciB0cmllcyB0byBiZSByZWFsbHkgY2xldmVyIGFuZCB3aWxsIGFzc2lnbiBhCj4gPiBwZXItY3B1
+IGV4Y2hhbmdlIG1hbmFnZXIgKHByb2JhYmx5IHRvIGluY3JlYXNlIGxvY2FsaXR5KS4gSG93ZXZl
+ciwgd2UKPiA+IG9ubHkgaGF2ZSBhIGxpbWl0ZWQgbnVtYmVyIG9mIGV4Y2hhbmdlcywgc28gb24g
+bGFyZ2Ugc3lzdGVtcyB3ZSBtaWdodAo+ID4gYWN0dWFsbHkgcnVuIGludG8gYSBleGNoYW5nZSBz
+dGFydmF0aW9uIHByb2JsZW0sIHdoZXJlIHdlIGhhdmUgaW4gdGhlb3J5Cj4gPiBlbm91Z2ggZnJl
+ZSBleGNoYW5nZXMsIGJ1dCBub25lIGZvciB0aGUgc3VibWl0dGluZyBjcHUuCj4gPiAKPiA+IChQ
+ZXJzb25hbGx5LCB0aGUgZXhjaGFuZ2UgbWFuYWdlciBjb2RlIGlzIGluIHVyZ2VudCBuZWVkIG9m
+IHJld29ya2luZy4KPiA+IEl0IHNob3VsZCBiZSByZXBsYWNlZCBieSB0aGUgc2JpdG1hcCBjb2Rl
+IGZyb20gT21hcikuCj4gPiAKPiA+IERvIGNoZWNrIGhvdyBtYW55IGZyZWUgZXhjaGFuZ2VzIGFy
+ZSBhY3R1YWxseSBwcmVzZW50IGZvciB0aGUgc3RhbGxpbmcKPiA+IENQVTsgaXQgbWlnaHQgYmUg
+dGhhdCB5b3UgcnVuIGludG8gYSBzdGFydmF0aW9uIGlzc3VlLgo+ID4gCj4gPiBDaGVlcnMsCj4g
+PiAKPiA+IEhhbm5lcwo+ID4gLS0KPiA+IERyLiBIYW5uZXMgUmVpbmVja2UJCSAgICAgIHpTZXJp
+ZXMgJiBTdG9yYWdlCj4gPiBoYXJlQHN1c2UuZGUJCQkgICAgICArNDkgOTExIDc0MDUzIDY4OAo+
+ID4gU1VTRSBMSU5VWCBQcm9kdWN0cyBHbWJILCBNYXhmZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJl
+cmcKPiA+IEdGOiBKLiBIYXduLCBKLiBHdWlsZCwgRi4gSW1lbmTDtnJmZmVyLCBIUkIgMTY3NDYg
+KEFHIE7DvHJuYmVyZykKPiA+IAo+IEhpIEhhbm5lcywKPiBUaGFua3MgZm9yIHJlc3BvbmRpbmcK
+PiAKPiBJIGFtIGFkZGluZyBhZGRpdGlvbmFsIGRlYnVnIGFzIEkgdHlwZSB0aGlzLgo+IAo+IEkg
+YW0gdXNpbmcgbGF0ZXN0IGxpbnV4LW5leHQsIEkgYXNzdW1lIHlvdXIgbGF0ZXN0IEZDT0UgYXJl
+IG5vdCBpbiB0aGVyZSB5ZXQuCj4gV2hhdCBpcyBwdXp6bGluZyBoZXJlIGlzIGEgaWRlbnRpY2Fs
+IGtlcm5lbCB3aXRoIDEgbnVtYSBub2RlIGFuZCBvbmx5IDhHQgo+IG1lbW9yeSBkb2VzIG5vdCBz
+ZWUgdGhpcy4KPiBTdXJlbHkgaWYgSSB3YXMgcnVubmluZyBvdXQgb2YgZXhjaGFuZ2VzIHRoYXQg
+d291bGQgc2hvdyB1cCBvbiB0aGUgc21hbGxlcgo+IHN5c3RlbSBhcyB3ZWxsLgo+IEkgYW0gYWJs
+ZSB0byBnZXQgdG8gMTUwMCBJT1BTL3NlYyB3aXRoIHRoZSBzYW1lIEkvTyBleGVyY2lzZXIgb24g
+dGhlIHNtYWxsZXIKPiBzeXN0ZW0gd2l0aCBaRVJPIGJsa19yZXF1ZXVlX3JlcXVlc3QoKSBjYWxs
+cy4KPiBBZ2Fpbiwgc2FtZSBrZXJuZWwsIHNhbWUgaXhnYmUgc2FtZSBGQ09FIHN3aXRjaCBldGMu
+Cj4gCj4gSSB0cmFjZWQgc3BlY2lmaWNhbGx5IHRob3NlIGluaXRpYWxseSBiZWNhdXNlIHdlIHNh
+dyBpdCBpbiB0aGUgYmxrdHJhY2UuCj4gCj4gSSBkb250IHVuZGVyc3RhbmQgdGhlIG1hdGNoIHN0
+dWZmIGdvaW5nIG9uIGluIHRoZSBsaXN0IHJldmVyc2FsIHN0dWZmIGhlcmUKPiB2ZXJ5IHdlbGws
+IHN0aWxsIHRyeWluZyB0byB1bmRlcnN0YW5kIHRoZSBjb2RlIGZsb3cuCj4gdGhlIGJvb2wgbWF0
+Y2goKSBJIGFsc28gY2Fubm90IGZpZ3VyZSBvdXQgZnJvbSB0aGUgY29kZS4KPiBJdCBydW5zIHRo
+ZSBmY19leGNoX2VtX2FsbG9jKCkgaWYgZXRoZXIgYm9vbCAqbWF0Y2ggaXMgZmFsc2Ugb3IgKm1h
+dGNoKGZwKQo+IEkgY2FuJ3QgZmluZCB0aGUgYWN0dWFsIGNvZGUgZm9yIHRoZSBtYXRjaCwgd2ls
+bCBoYXZlIHRvIGdldCBhIHZtY29yZSB0byBmaW5kCj4gaXQuCj4gCj4gIHN0YXRpYyBpbmxpbmUg
+c3RydWN0IGZjX2V4Y2ggKmZjX2V4Y2hfYWxsb2Moc3RydWN0IGZjX2xwb3J0ICpscG9ydCwKPiAg
+CQkJCQkgICAgc3RydWN0IGZjX2ZyYW1lICpmcCkKPiAgewo+IAlzdHJ1Y3QgZmNfZXhjaF9tZ3Jf
+YW5jaG9yICplbWE7Cj4gCj4gIAlsaXN0X2Zvcl9lYWNoX2VudHJ5KGVtYSwgJmxwb3J0LT5lbWFf
+bGlzdCwgZW1hX2xpc3QpCj4gIAkJaWYgKCFlbWEtPm1hdGNoIHx8IGVtYS0+bWF0Y2goZnApKQo+
+ICAJCQlyZXR1cm4gZmNfZXhjaF9lbV9hbGxvYyhscG9ydCwgZW1hLT5tcCk7Cj4gIAlyZXR1cm4g
+TlVMTDsgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAqKioqKiBOZXZlciBtYXRjaGVz
+IHNvCj4gCXJldHVybnMgTlVMTAo+ICB9Cj4gCj4gV2lsbCByZXBsYXkgYWZ0ZXIgc29tZSBmaW5l
+ciBkZWJ1ZyBoYXMgYmVlbiBhZGRlZAo+IAo+IEFnYWluIHNwZWNpZmljIHRvIGZjX3F1ZXVlY29t
+bWFuZCBhbmQgUy9XIEZDT0UsIG5vdCBhbiBpc3N1ZSB3aXRoIHRoZSBGL0MKPiBxdWV1ZWNvbW1h
+bmQgaW4gdGhlIEhCQSB0ZW1wbGF0ZXMgZnJvIGV4YW1wbGUgbHBmYyBvciBxbGEyeHh4IGFuZCBh
+bG9zIG5vdAo+IGFwcGxpY2FibGUgdG8gZnVsbCBvZmZsb2FkIEZDT0UgbGlrZSB0aGUgRW11bGV4
+IGNhcmRzLgo+IFRoYW5rcwo+IExhdXJlbmNlCj4gLS0KPiBUbyB1bnN1YnNjcmliZSBmcm9tIHRo
+aXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgtc2NzaSIgaW4KPiB0aGUg
+Ym9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVsLm9yZwo+IE1vcmUgbWFq
+b3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFqb3Jkb21vLWluZm8uaHRt
+bAo+IApIaSBIYW5uZXMKClJlcGx5aW5nIHRvIG15IG93biBwcmlvciBtZXNzYWdlLgpBZGRlZCB0
+aGUgYWRkaXRpb25hbCBkZWJ1ZwoKUkhERUJVRzogaW4gZmNfZXhjaF9lbV9hbGxvYzogcmV0dXJu
+aW5nIE5VTEwgaW4gZXJyOiBwYXRoIGp1bXBlZCBmcm9tICBhbGxvY2F0ZSBuZXcgZXhjaCBmcm9t
+IHBvb2wgYmVjYXVzZSBpbmRleCA9PSBwb29sLT5uZXh0X2luZGV4ClJIREVCVUc6IEluIGZjX2V4
+Y2hfc2VxX3NlbmQgcmV0dXJuZWQgTlVMTCBiZWNhdXNlICFlcCB3aXRoIGVwID0gICAgICAgICAg
+IChudWxsKQpSSERFQlVHOiByYyAtMSB3aXRoICFzZXEgPSAgICAgICAgICAgKG51bGwpIGFmdGVy
+IGNhbGxpbmcgdHQuZXhjaF9zZXFfc2VuZCAgd2l0aGluIGZjX2ZjcF9jbWRfc2VuZApSSERFQlVH
+OiByYyBub24gemVybyBpbiA6dW5sb2NrIHdpdGhpbiBmY19mY3BfY21kX3NlbmQgPSAtMQpSSERF
+QlVHOiBJbiBmY19mY3BfcGt0X3NlbmQsIHdlIHJldHVybmVkIGZyb20gIHJjID0gbHBvcnQtPnR0
+LmZjcF9jbWRfc2VuZCB3aXRoIHJjID0gLTEKUkhERUJVRzogV2UgaGl0IFNDU0lfTUxRVUVVRV9I
+T1NUX0JVU1kgaW4gZmNfcXVldWVjb21tYW5kIHdpdGggcnZhbCBpbiBmY19mY3BfcGt0X3NlbmQ9
+LTEKClNvIHdlIGFyZSBhY3R1YWxseSBmYWlsaW5nIGluIGZjX2V4Y2hfZW1fYWxsb2Mgd2l0aCBp
+bmRleCA9PSBwb29sLT5uZXh0X2luZGV4LCBub3QgaW4gdGhlIGxpc3QgdHJhdmVyc2FsIGFzIEkg
+b3JpZ2luYWxseSB0aG91Z2h0LgoKVGhpcyBzZWVtcyB0byB0aGVuIG1hdGNoIHdoYXQgeW91ciBz
+YWlkLCB3ZSBhcmUgcnVubmluZyBvdXQgb2YgZXhjaGFuZ2VzLgoKRHVyaW5nIG15IHRlc3Rpbmcs
+IGlmIEkgc3RhcnQgbXVsdGlwbGUgZGQncyBhbmQgcmFtcCB0aGVtIHVwLCBmb3IgZXhhbXBsZSAx
+MDAgcGFyYWxsZWwgZGQncyB3aXRoIDY0IENQVVMgSSBzZWUgdGhpcy4KT24gdGhlIDQgQ1BVIHN5
+c3RlbSBpdCBkb2VzIG5vdCBoYXBwZW4uCgovKioKICogZmNfZXhjaF9lbV9hbGxvYygpIC0gQWxs
+b2NhdGUgYW4gZXhjaGFuZ2UgZnJvbSBhIHNwZWNpZmllZCBFTS4KICogQGxwb3J0OiBUaGUgbG9j
+YWwgcG9ydCB0aGF0IHRoZSBleGNoYW5nZSBpcyBmb3IKICogQG1wOiAgICBUaGUgZXhjaGFuZ2Ug
+bWFuYWdlciB0aGF0IHdpbGwgYWxsb2NhdGUgdGhlIGV4Y2hhbmdlCiAqCiAqIFJldHVybnMgcG9p
+bnRlciB0byBhbGxvY2F0ZWQgZmNfZXhjaCB3aXRoIGV4Y2ggbG9jayBoZWxkLgogKi8Kc3RhdGlj
+IHN0cnVjdCBmY19leGNoICpmY19leGNoX2VtX2FsbG9jKHN0cnVjdCBmY19scG9ydCAqbHBvcnQs
+CiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICBzdHJ1Y3QgZmNfZXhjaF9t
+Z3IgKm1wKQp7CiAgICAgICAgc3RydWN0IGZjX2V4Y2ggKmVwOwogICAgICAgIHVuc2lnbmVkIGlu
+dCBjcHU7CiAgICAgICAgdTE2IGluZGV4OwogICAgICAgIHN0cnVjdCBmY19leGNoX3Bvb2wgKnBv
+b2w7CgogICAgICAgIC8qIGFsbG9jYXRlIG1lbW9yeSBmb3IgZXhjaGFuZ2UgKi8KICAgICAgICBl
+cCA9IG1lbXBvb2xfYWxsb2MobXAtPmVwX3Bvb2wsIEdGUF9BVE9NSUMpOwogICAgICAgIGlmICgh
+ZXApIHsKICAgICAgICAgICAgICAgIGF0b21pY19pbmMoJm1wLT5zdGF0cy5ub19mcmVlX2V4Y2gp
+OwogICAgICAgICAgICAgICAgZ290byBvdXQ7CiAgICAgICAgfQogICAgICAgIG1lbXNldChlcCwg
+MCwgc2l6ZW9mKCplcCkpOwoKICAgICAgICBjcHUgPSBnZXRfY3B1KCk7CiAgICAgICAgcG9vbCA9
+IHBlcl9jcHVfcHRyKG1wLT5wb29sLCBjcHUpOwogICAgICAgIHNwaW5fbG9ja19iaCgmcG9vbC0+
+bG9jayk7CiAgICAgICAgcHV0X2NwdSgpOwoKICAgICAgICAvKiBwZWVrIGNhY2hlIG9mIGZyZWUg
+c2xvdCAqLwogICAgICAgIGlmIChwb29sLT5sZWZ0ICE9IEZDX1hJRF9VTktOT1dOKSB7CiAgICAg
+ICAgICAgICAgICBpbmRleCA9IHBvb2wtPmxlZnQ7CiAgICAgICAgICAgICAgICBwb29sLT5sZWZ0
+ID0gRkNfWElEX1VOS05PV047CiAgICAgICAgICAgICAgICBnb3RvIGhpdDsKICAgICAgICB9CiAg
+ICAgICAgaWYgKHBvb2wtPnJpZ2h0ICE9IEZDX1hJRF9VTktOT1dOKSB7CiAgICAgICAgICAgICAg
+ICBpbmRleCA9IHBvb2wtPnJpZ2h0OwogICAgICAgICAgICAgICAgcG9vbC0+cmlnaHQgPSBGQ19Y
+SURfVU5LTk9XTjsKICAgICAgICAgICAgICAgIGdvdG8gaGl0OwogICAgICAgIH0KCiAgICAgICAg
+aW5kZXggPSBwb29sLT5uZXh0X2luZGV4OwogICAgICAgIC8qIGFsbG9jYXRlIG5ldyBleGNoIGZy
+b20gcG9vbCAqLwogICAgICAgIHdoaWxlIChmY19leGNoX3B0cl9nZXQocG9vbCwgaW5kZXgpKSB7
+CiAgICAgICAgICAgICAgICBpbmRleCA9IGluZGV4ID09IG1wLT5wb29sX21heF9pbmRleCA/IDAg
+OiBpbmRleCArIDE7CiAgICAgICAgICAgICAgICBpZiAoaW5kZXggPT0gcG9vbC0+bmV4dF9pbmRl
+eCkKICAgICAgICAgICAgICAgICAgICAgICAgZ290byBlcnI7CgpJIHdpbGwgYXBwbHkgeW91ciBs
+YXRlc3QgRkNPRSBwYXRjaGVzLCBjYW4geW91IHByb3ZpZGUgYSBsaW5rIHRvIHlvdXIgdHJlZS4K
+ClRoYW5rcwpMYXVyZW5jZQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fX19fXwpmY29lLWRldmVsIG1haWxpbmcgbGlzdApmY29lLWRldmVsQG9wZW4tZmNvZS5vcmcK
+aHR0cDovL2xpc3RzLm9wZW4tZmNvZS5vcmcvbWFpbG1hbi9saXN0aW5mby9mY29lLWRldmVsCg==
