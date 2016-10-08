@@ -1,80 +1,62 @@
-From: Zhu Lingshan <lszhu@suse.com>
-Subject: Re: iscsi_trx going into D state
-Date: Sat, 8 Oct 2016 10:59:12 +0800
-Message-ID: <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v2 0/8] Support for Exynos specific UFS driver
+Date: Sat, 08 Oct 2016 12:13:11 +0900
+Message-ID: <000001d22111$e6d67260$b4835720$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp2.provo.novell.com ([137.65.250.81]:44223 "EHLO
-        smtp2.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751882AbcJHC7V (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Fri, 7 Oct 2016 22:59:21 -0400
-In-Reply-To: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+Received: from mailout4.samsung.com ([203.254.224.34]:58957 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751882AbcJHDNO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2016 23:13:14 -0400
+Received: from epcpsbgm1new.samsung.com (epcpsbgm1 [203.254.230.26])
+ by mailout4.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0OEP0310DKXZJ860@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Sat, 08 Oct 2016 12:13:11 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Robert LeBlanc <robert@leblancnet.us>, linux-rdma@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, =?utf-8?B?7LaU7ZeM6rSR?= <hg.chu@samsung.com>
 
-Hi Robert,
+This series of patches introduce support for Exynos specific UFS driver.
+An original version of this has been applied on mass production
+of commercial mobile devices.
 
-I also see this issue, but this is not the only code path can trigger 
-this problem, I think you may also see iscsi_np in D status. I fixed one 
-code path whitch still not merged to mainline. I will forward you my 
-patch later. Note: my patch only fixed one code path, you may see other 
-call statck with D status.
+I checked compiling with Subhash's patch
+- [PATCH v3] scsi: ufshcd: fix possible unclocked register access
 
-Thanks,
-BR
-Zhu Lingshan
+---
+Changes from v1:
+* Separate a set of newer callbacks to be added
+* Make Exynos specific UFS driver compatible with a following patch
+     [PATCH v3] scsi: ufshcd: fix possible unclocked register access
+     (http://www.spinics.net/lists/linux-scsi/msg100290.html)
+* Rename three of the callbacks as follows:
+   set_nexus_t_xfer_req -> setup_xfer_req
+   set_nexus_t_task_mgmt -> setup_task_mgmt
+   hibern8_notify -> setup_hibern8
+---
+ Documentation/devicetree/bindings/ufs/ufs-exynos.txt |   93 +
+ drivers/scsi/ufs/Kconfig                                       |   10 +
+ drivers/scsi/ufs/Makefile                                     |    1 +
+ drivers/scsi/ufs/mphy.h                                        |   38 +
+ drivers/scsi/ufs/ufs-exynos.c                                | 2099 ++++++++++++++++++++
+ drivers/scsi/ufs/ufs-exynos.h                                |  621 ++++++
+ drivers/scsi/ufs/ufshcd.c                                     |  144 +-
+ drivers/scsi/ufs/ufshcd.h                                     |   55 +
+ drivers/scsi/ufs/ufshci.h                                     |   14 +-
+ drivers/scsi/ufs/unipro.h                                     |   24 +
+ 10 files changed, 3079 insertions(+), 20 deletions(-)
+ create mode 100644 Documentation/devicetree/bindings/ufs/ufs-exynos.txt
+ create mode 100644 drivers/scsi/ufs/mphy.h
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.c
+ create mode 100644 drivers/scsi/ufs/ufs-exynos.h
 
-在 2016/10/1 1:14, Robert LeBlanc 写道:
-> We are having a reoccurring problem where iscsi_trx is going into D
-> state. It seems like it is waiting for a session tear down to happen
-> or something, but keeps waiting. We have to reboot these targets on
-> occasion. This is running the 4.4.12 kernel and we have seen it on
-> several previous 4.4.x and 4.2.x kernels. There is no message in dmesg
-> or /var/log/messages. This seems to happen with increased frequency
-> when we have a disruption in our Infiniband fabric, but can happen
-> without any changes to the fabric (other than hosts rebooting).
->
-> # ps aux | grep iscsi | grep D
-> root      4185  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_trx]
-> root     18505  0.0  0.0      0     0 ?        D    Sep29   0:00 [iscsi_np]
->
-> # cat /proc/4185/stack
-> [<ffffffff814cc999>] target_wait_for_sess_cmds+0x49/0x1a0
-> [<ffffffffa087292b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
-> [<ffffffff814f0de2>] iscsit_close_connection+0x162/0x840
-> [<ffffffff814df8df>] iscsit_take_action_for_connection_exit+0x7f/0x100
-> [<ffffffff814effc0>] iscsi_target_rx_thread+0x5a0/0xe80
-> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
-> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
-> [<ffffffffffffffff>] 0xffffffffffffffff
->
-> # cat /proc/18505/stack
-> [<ffffffff814f0c71>] iscsit_stop_session+0x1b1/0x1c0
-> [<ffffffff814e2436>] iscsi_check_for_session_reinstatement+0x1e6/0x270
-> [<ffffffff814e4df0>] iscsi_target_check_for_existing_instances+0x30/0x40
-> [<ffffffff814e4f40>] iscsi_target_do_login+0x140/0x640
-> [<ffffffff814e62dc>] iscsi_target_start_negotiation+0x1c/0xb0
-> [<ffffffff814e402b>] iscsi_target_login_thread+0xa9b/0xfc0
-> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
-> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
-> [<ffffffffffffffff>] 0xffffffffffffffff
->
-> What can we do to help get this resolved?
->
-> Thanks,
->
-> ----------------
-> Robert LeBlanc
-> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+-- 
+1.7.9.5
+
+--
 
