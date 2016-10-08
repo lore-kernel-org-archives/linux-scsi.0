@@ -1,195 +1,113 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [RESEND PATCH v3] scsi: ufshcd: fix possible unclocked register
- access
-Date: Sat, 08 Oct 2016 12:33:02 +0900
-Message-ID: <000301d22114$ac8d9c70$05a8d550$@samsung.com>
-References: <CGME20161007044848epcas2p1aa83439d196cf352c36f1da4dbd18b1d@epcas2p1.samsung.com>
- <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
+From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: Issue with fc_exch_alloc failing initiated by
+ fc_queuecommand on NUMA or large configurations with Intel ixgbe running
+ FCOE
+Date: Sat, 8 Oct 2016 08:57:10 -0400 (EDT)
+Message-ID: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
+References: <1812349047.803888.1475929839972.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ks_c_5601-1987
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:52419 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754449AbcJHDdE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 7 Oct 2016 23:33:04 -0400
-In-reply-to: <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1812349047.803888.1475929839972.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Cc: "Curtis Taylor (cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org)" <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, Bud Brown <bubrown-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: 'Subhash Jadavani' <subhashj@codeaurora.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: "'open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER'" <linux-scsi@vger.kernel.org>, 'open list' <linux-kernel@vger.kernel.org>
 
-Reviewed-by: Kiwoong Kim <kwmad.kim@samsung.com>
+Hello
 
-> Vendor specific setup_clocks callback may require the clocks managed
-> by ufshcd driver to be ON. So if the vendor specific setup_clocks callback
-> is called while the required clocks are turned off, it could result into
-> unclocked register access.
-> 
-> To prevent possible unclock register access, this change adds one more
-> argument to setup_clocks callback to let it know whether it is called
-> pre/post the clock changes by core driver.
-> 
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> ---
-> Changes from v2:
-> * Added one more argument to setup_clocks callback, this should address
->   Kiwoong Kim's comments on v2.
-> 
-> Changes from v1:
-> * Don't call ufshcd_vops_setup_clocks() again for clock off
-> ---
->  drivers/scsi/ufs/ufs-qcom.c | 10 ++++++----
->  drivers/scsi/ufs/ufshcd.c   | 17 ++++++++---------
->  drivers/scsi/ufs/ufshcd.h   |  8 +++++---
->  3 files changed, 19 insertions(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 3aedf73..3c4f602 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1094,10 +1094,12 @@ static void ufs_qcom_set_caps(struct ufs_hba *hba)
->   * ufs_qcom_setup_clocks - enables/disable clocks
->   * @hba: host controller instance
->   * @on: If true, enable clocks else disable them.
-> + * @status: PRE_CHANGE or POST_CHANGE notify
->   *
->   * Returns 0 on success, non-zero on failure.
->   */
-> -static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
-> +static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
-> +				 enum ufs_notify_change_status status)
->  {
->  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->  	int err;
-> @@ -1111,7 +1113,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
-*hba,
-> bool on)
->  	if (!host)
->  		return 0;
-> 
-> -	if (on) {
-> +	if (on && (status == POST_CHANGE)) {
->  		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
->  		if (err)
->  			goto out;
-> @@ -1130,7 +1132,7 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
-*hba,
-> bool on)
->  		if (vote == host->bus_vote.min_bw_vote)
->  			ufs_qcom_update_bus_bw_vote(host);
-> 
-> -	} else {
-> +	} else if (!on && (status == PRE_CHANGE)) {
-> 
->  		/* M-PHY RMMI interface clocks can be turned off */
->  		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
-> @@ -1254,7 +1256,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	ufs_qcom_set_caps(hba);
->  	ufs_qcom_advertise_quirks(hba);
-> 
-> -	ufs_qcom_setup_clocks(hba, true);
-> +	ufs_qcom_setup_clocks(hba, true, POST_CHANGE);
-> 
->  	if (hba->dev->id < MAX_UFS_QCOM_HOSTS)
->  		ufs_qcom_hosts[hba->dev->id] = host;
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 05c7456..571a2f6 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5389,6 +5389,10 @@ static int __ufshcd_setup_clocks(struct ufs_hba
-> *hba, bool on,
->  	if (!head || list_empty(head))
->  		goto out;
-> 
-> +	ret = ufshcd_vops_setup_clocks(hba, on, PRE_CHANGE);
-> +	if (ret)
-> +		return ret;
-> +
->  	list_for_each_entry(clki, head, list) {
->  		if (!IS_ERR_OR_NULL(clki->clk)) {
->  			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
-> @@ -5410,7 +5414,10 @@ static int __ufshcd_setup_clocks(struct ufs_hba
-> *hba, bool on,
->  		}
->  	}
-> 
-> -	ret = ufshcd_vops_setup_clocks(hba, on);
-> +	ret = ufshcd_vops_setup_clocks(hba, on, POST_CHANGE);
-> +	if (ret)
-> +		return ret;
-> +
->  out:
->  	if (ret) {
->  		list_for_each_entry(clki, head, list) {
-> @@ -5500,8 +5507,6 @@ static void ufshcd_variant_hba_exit(struct ufs_hba
-> *hba)
->  	if (!hba->vops)
->  		return;
-> 
-> -	ufshcd_vops_setup_clocks(hba, false);
-> -
->  	ufshcd_vops_setup_regulators(hba, false);
-> 
->  	ufshcd_vops_exit(hba);
-> @@ -5905,10 +5910,6 @@ disable_clks:
->  	if (ret)
->  		goto set_link_active;
-> 
-> -	ret = ufshcd_vops_setup_clocks(hba, false);
-> -	if (ret)
-> -		goto vops_resume;
-> -
->  	if (!ufshcd_is_link_active(hba))
->  		ufshcd_setup_clocks(hba, false);
->  	else
-> @@ -5925,8 +5926,6 @@ disable_clks:
->  	ufshcd_hba_vreg_set_lpm(hba);
->  	goto out;
-> 
-> -vops_resume:
-> -	ufshcd_vops_resume(hba, pm_op);
->  set_link_active:
->  	ufshcd_vreg_set_hpm(hba);
->  	if (ufshcd_is_link_hibern8(hba) && !ufshcd_uic_hibern8_exit(hba))
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 430bef1..afff7f4 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -273,7 +273,8 @@ struct ufs_hba_variant_ops {
->  	u32	(*get_ufs_hci_version)(struct ufs_hba *);
->  	int	(*clk_scale_notify)(struct ufs_hba *, bool,
->  				    enum ufs_notify_change_status);
-> -	int	(*setup_clocks)(struct ufs_hba *, bool);
-> +	int	(*setup_clocks)(struct ufs_hba *, bool,
-> +				enum ufs_notify_change_status);
->  	int     (*setup_regulators)(struct ufs_hba *, bool);
->  	int	(*hce_enable_notify)(struct ufs_hba *,
->  				     enum ufs_notify_change_status);
-> @@ -755,10 +756,11 @@ static inline int
-> ufshcd_vops_clk_scale_notify(struct ufs_hba *hba,
->  	return 0;
->  }
-> 
-> -static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on)
-> +static inline int ufshcd_vops_setup_clocks(struct ufs_hba *hba, bool on,
-> +					enum ufs_notify_change_status
-status)
->  {
->  	if (hba->vops && hba->vops->setup_clocks)
-> -		return hba->vops->setup_clocks(hba, on);
-> +		return hba->vops->setup_clocks(hba, on, status);
->  	return 0;
->  }
-> 
-> --
-> The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-> a Linux Foundation Collaborative Project
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+This has been a tough problem to chase down but was finally reproduced.
+This issue is apparent on RHEL kernels and upstream so justified reporting here.
+
+Its out there and some may not be aware its even happening other than very slow performance using ixgbe and software FCOE on large configurations.
+
+Upstream Kernel used for reproducing is 4.8.0
+
+I/O performance was noted to be very impacted on a large NUMA test system (64 CPUS 4 NUMA nodes) running the software fcoe stack with Intel ixgbe interfaces.
+After capturing blktraces we saw for every I/O there was at least one blk_requeue_request and sometimes hundreds or more.
+This resulted in IOPS rates being marginal at best with queuing and high wait times.
+After narrowing this down with systemtap and trace-cmd we added further debug and it was apparent this was dues to SCSI_MLQUEUE_HOST_BUSY being returned.
+So I/O passes but very slowly as it constantly having to be requeued.
+
+The identical configuration in our lab with a single NUMA node and 4 CPUS does not see this issue at all.
+The same large system that reproduces this was booted with numa=off and still sees the issue.
+
+The flow is as follows:
+
+>From with fc_queuecommand
+          fc_fcp_pkt_send() calls fc_fcp_cmd_send() calls tt.exch_seq_send() which calls fc_exch_seq_send
+
+this fails and returns NULL in fc_exch_alloc() as the list traveral never creates a match.
+
+static struct fc_seq *fc_exch_seq_send(struct fc_lport *lport,
+				       struct fc_frame *fp,
+				       void (*resp)(struct fc_seq *,
+						    struct fc_frame *fp,
+						    void *arg),
+				       void (*destructor)(struct fc_seq *,
+							  void *),
+				       void *arg, u32 timer_msec)
+{
+	struct fc_exch *ep;
+	struct fc_seq *sp = NULL;
+	struct fc_frame_header *fh;
+	struct fc_fcp_pkt *fsp = NULL;
+	int rc = 1;
+
+	ep = fc_exch_alloc(lport, fp);     ***** Called Here and fails
+	if (!ep) {
+		fc_frame_free(fp);
+		printk("RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep = %p\n",ep);
+		return NULL;
+	}
+..
+..
+]
 
 
+ fc_exch_alloc() - Allocate an exchange from an EM on a
+ *	/**
+ *	     local port's list of EMs.
+ * @lport: The local port that will own the exchange
+ * @fp:	   The FC frame that the exchange will be for
+ *
+ * This function walks the list of exchange manager(EM)
+ * anchors to select an EM for a new exchange allocation. The
+ * EM is selected when a NULL match function pointer is encountered
+ * or when a call to a match function returns true.
+ */
+static inline struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
+					    struct fc_frame *fp)
+{
+	struct fc_exch_mgr_anchor *ema;
+
+	list_for_each_entry(ema, &lport->ema_list, ema_list)
+		if (!ema->match || ema->match(fp))
+			return fc_exch_em_alloc(lport, ema->mp);
+	return NULL;                                 ***** Never matches so returns NULL
+}
+
+
+RHDEBUG: In fc_exch_seq_send returned NULL because !ep with ep = (null)
+RHDEBUG: rc -1 with !seq = (null) after calling tt.exch_seq_send  within fc_fcp_cmd_send
+RHDEBUG: rc non zero in :unlock within fc_fcp_cmd_send = -1
+RHDEBUG: In fc_fcp_pkt_send, we returned from  rc = lport->tt.fcp_cmd_send with rc = -1
+
+RHDEBUG: We hit SCSI_MLQUEUE_HOST_BUSY in fc_queuecommand with rval in fc_fcp_pkt_send=-1
+
+I am trying to get my head around why a large multi-node system sees this issue even with NUMA disabled.
+Has anybody seen this or is aware of this with configurations (using fc_queuecommand)
+
+I am continuing to add debug to narrow this down.
+
+Thanks
+Laurence 
