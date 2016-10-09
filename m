@@ -1,18 +1,12 @@
-From: Ming Lei <ming.lei@canonical.com>
-Subject: [PATCH] SCSI: scan: fix use-after-free
-Date: Sun,  9 Oct 2016 13:14:46 +0800
-Message-ID: <1475990086-4082-1-git-send-email-ming.lei@canonical.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f194.google.com ([209.85.192.194]:35857 "EHLO
-        mail-pf0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751303AbcJIFO5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 9 Oct 2016 01:14:57 -0400
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <JBottomley@parallels.com>, Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, Ming Lei <tom.leiming@gmail.com>, stable@vger.kernel.org
-
 From: Ming Lei <tom.leiming@gmail.com>
+Subject: [Resend PATCH] SCSI: scan: fix use-after-free
+Date: Sun,  9 Oct 2016 13:23:27 +0800
+Message-ID: <1475990608-4394-1-git-send-email-tom.leiming@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Ming Lei <tom.leiming@gmail.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 This patch fixes one use-after-free report[1] by KASAN.
 
@@ -135,6 +129,7 @@ the end of scsi_report_lun_scan().
 [    3.302396]
 ==================================================================
 
+Cc: Christoph Hellwig <hch@lst.de>
 Cc: stable@vger.kernel.org
 Signed-off-by: Ming Lei <tom.leiming@gmail.com>
 ---
@@ -161,4 +156,3 @@ index 212e98d940bc..bb9b58e21d95 100644
  
 -- 
 2.7.4
-
