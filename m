@@ -1,8 +1,8 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH v3 06/12] scsi/ncr5380: Improve hostdata struct member
- alignment and cache-ability
-Date: Mon, 10 Oct 2016 00:46:53 -0400 (EDT)
-Message-ID: <47c3a1f00baa50e01f35b01b923f57694ebc87d7.1476051962.git.fthain@telegraphics.com.au>
+Subject: [PATCH v3 03/12] scsi/atari_scsi: Make device register accessors
+ re-entrant
+Date: Mon, 10 Oct 2016 00:46:52 -0400 (EDT)
+Message-ID: <2a5daf99564531c72755fc133da8845d17eefdf5.1476051962.git.fthain@telegraphics.com.au>
 References: <cover.1476051961.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1476051961.git.fthain@telegraphics.com.au>
@@ -11,68 +11,51 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Re-order struct members so that hot data lies at the beginning of the
-struct and cold data at the end. Improve the comments while we're here.
+This patch fixes an old bug: accesses to device registers from the
+interrupt handler (after reselection, DMA completion etc.) could mess
+up a device register access elsewhere, if the latter takes place outside
+of an irq lock (during selection etc.).
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Tested-by: Ondrej Zary <linux@rainbow-software.org>
 Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 ---
- drivers/scsi/NCR5380.h | 40 ++++++++++++++++++++--------------------
- 1 file changed, 20 insertions(+), 20 deletions(-)
+ drivers/scsi/atari_scsi.c | 18 +++++++++++++++---
+ 1 file changed, 15 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index f0eea44..ceafa0c 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -219,27 +219,27 @@
- #define FLAG_TOSHIBA_DELAY		128	/* Allow for borken CD-ROMs */
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index a59ad94..862f30c 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -670,14 +670,26 @@ static void atari_scsi_tt_reg_write(unsigned char reg, unsigned char value)
  
- struct NCR5380_hostdata {
--	NCR5380_implementation_fields;		/* implementation specific */
--	struct Scsi_Host *host;			/* Host backpointer */
--	unsigned char id_mask, id_higher_mask;	/* 1 << id, all bits greater */
--	unsigned char busy[8];			/* index = target, bit = lun */
--	int dma_len;				/* requested length of DMA */
--	unsigned char last_message;		/* last message OUT */
--	struct scsi_cmnd *connected;		/* currently connected cmnd */
--	struct scsi_cmnd *selecting;		/* cmnd to be connected */
--	struct list_head unissued;		/* waiting to be issued */
--	struct list_head autosense;		/* priority issue queue */
--	struct list_head disconnected;		/* waiting for reconnect */
--	spinlock_t lock;			/* protects this struct */
--	int flags;
--	struct scsi_eh_save ses;
--	struct scsi_cmnd *sensing;
-+	NCR5380_implementation_fields;		/* Board-specific data */
-+	unsigned long poll_loops;		/* Register polling limit */
-+	spinlock_t lock;			/* Protects this struct */
-+	struct scsi_cmnd *connected;		/* Currently connected cmnd */
-+	struct list_head disconnected;		/* Waiting for reconnect */
-+	struct Scsi_Host *host;			/* SCSI host backpointer */
-+	struct workqueue_struct *work_q;	/* SCSI host work queue */
-+	struct work_struct main_task;		/* Work item for main loop */
-+	int flags;				/* Board-specific quirks */
-+	int dma_len;				/* Requested length of DMA */
-+	int read_overruns;	/* Transfer size reduction for DMA erratum */
-+	struct list_head unissued;		/* Waiting to be issued */
-+	struct scsi_cmnd *selecting;		/* Cmnd to be connected */
-+	struct list_head autosense;		/* Priority cmnd queue */
-+	struct scsi_cmnd *sensing;		/* Cmnd needing autosense */
-+	struct scsi_eh_save ses;		/* Cmnd state saved for EH */
-+	unsigned char busy[8];			/* Index = target, bit = lun */
-+	unsigned char id_mask;			/* 1 << Host ID */
-+	unsigned char id_higher_mask;		/* All bits above id_mask */
-+	unsigned char last_message;		/* Last Message Out */
- 	char info[256];
--	int read_overruns;                /* number of bytes to cut from a
--	                                   * transfer to handle chip overruns */
--	struct work_struct main_task;
--	struct workqueue_struct *work_q;
--	unsigned long poll_loops;		/* register polling limit */
- };
+ static unsigned char atari_scsi_falcon_reg_read(unsigned char reg)
+ {
+-	dma_wd.dma_mode_status= (u_short)(0x88 + reg);
+-	return (u_char)dma_wd.fdc_acces_seccount;
++	unsigned long flags;
++	unsigned char result;
++
++	reg += 0x88;
++	local_irq_save(flags);
++	dma_wd.dma_mode_status = (u_short)reg;
++	result = (u_char)dma_wd.fdc_acces_seccount;
++	local_irq_restore(flags);
++	return result;
+ }
  
- #ifdef __KERNEL__
+ static void atari_scsi_falcon_reg_write(unsigned char reg, unsigned char value)
+ {
+-	dma_wd.dma_mode_status = (u_short)(0x88 + reg);
++	unsigned long flags;
++
++	reg += 0x88;
++	local_irq_save(flags);
++	dma_wd.dma_mode_status = (u_short)reg;
+ 	dma_wd.fdc_acces_seccount = (u_short)value;
++	local_irq_restore(flags);
+ }
+ 
+ 
 -- 
 2.7.3
