@@ -1,58 +1,39 @@
 From: Russell King - ARM Linux <linux@armlinux.org.uk>
-Subject: Re: [PATCH v3 10/12] scsi/ncr5380: Expedite register polling
-Date: Mon, 10 Oct 2016 10:17:10 +0100
-Message-ID: <20161010091709.GY1041@n2100.armlinux.org.uk>
+Subject: Re: [PATCH v3 07/12] scsi/ncr5380: Store IO ports and addresses in
+ host private data
+Date: Mon, 10 Oct 2016 10:19:49 +0100
+Message-ID: <20161010091949.GZ1041@n2100.armlinux.org.uk>
 References: <cover.1476051961.git.fthain@telegraphics.com.au>
- <2806ba151f6983923fa0aae700245dfeb4cfaf38.1476051962.git.fthain@telegraphics.com.au>
+ <5c9f6b4913bc8bc4938d2de0bb19d4289226ec26.1476051962.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <2806ba151f6983923fa0aae700245dfeb4cfaf38.1476051962.git.fthain@telegraphics.com.au>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+In-Reply-To: <5c9f6b4913bc8bc4938d2de0bb19d4289226ec26.1476051962.git.fthain@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-arm-kernel@lists.infradead.org
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-kernel@lists.infradead.org, Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 On Mon, Oct 10, 2016 at 12:46:53AM -0400, Finn Thain wrote:
-> Avoid the call to NCR5380_poll_politely2() when possible. The call is
-> easily short-circuited on the PIO fast path, using the inline wrapper.
-> This requires that the NCR5380_read macro be made available before
-> any #include "NCR5380.h" so a few declarations have to be moved too.
+> The various 5380 drivers inconsistently store register pointers
+> either in the Scsi_Host struct "legacy crap" area or in special,
+> board-specific members of the NCR5380_hostdata struct. Uniform
+> use of the latter struct makes for simpler and faster code (see
+> the following patches) and helps to reduce use of the
+> NCR5380_implementation_fields macro.
 > 
 > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 > Reviewed-by: Hannes Reinecke <hare@suse.com>
 > Tested-by: Ondrej Zary <linux@rainbow-software.org>
 > Tested-by: Michael Schmitz <schmitzmic@gmail.com>
 > ---
+>  drivers/scsi/arm/cumana_1.c | 60 ++++++++++++++++++++--------------------
+>  drivers/scsi/arm/oak.c      | 23 ++++++++--------
 
-> diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
-> index ae1d4c6..fb7600d 100644
-> --- a/drivers/scsi/arm/cumana_1.c
-> +++ b/drivers/scsi/arm/cumana_1.c
-> @@ -29,6 +29,10 @@
->  #define NCR5380_implementation_fields	\
->  	unsigned ctrl
->  
-> +struct NCR5380_hostdata;
-> +static u8 cumanascsi_read(struct NCR5380_hostdata *, unsigned int);
-> +static void cumanascsi_write(struct NCR5380_hostdata *, unsigned int, u8);
-> +
->  #include "../NCR5380.h"
->  
->  #define CTRL	0x16fc
+For these two,
 
-This seems to be non-obviously unrelated to this commit - should it be in
-some other commit?
+Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
 
 -- 
 RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
