@@ -1,95 +1,38 @@
-From: =?UTF-8?B?6rmA6riw7JuF?= <kwmad.kim@samsung.com>
-Subject: =?UTF-8?B?UmU6IFtQQVRDSCAwMS8xMF0gdWZzOiBpbnRyb2R1Y2Ugc2V0?=
- =?UTF-8?B?dXBfeGZlcl9yZXEgY2FsbGJhY2su?=
-Date: Mon, 10 Oct 2016 07:06:38 +0000
-Message-ID: <553343946.212787.1476083198228.JavaMail.weblogic@ep1ml204d>
-References: <000201d22113$04f4e820$0edeb860$@samsung.com>
- <CGME20161008164138epcas2p32368d7db5b175550e9ef3e9c32818a42@epcas2p3.samsung.com>
-Reply-To: kwmad.kim@samsung.com
+From: Russell King - ARM Linux <linux@armlinux.org.uk>
+Subject: Re: [PATCH v3 02/12] scsi/cumana_1: Remove unused cumanascsi_setup()
+ function
+Date: Mon, 10 Oct 2016 10:11:46 +0100
+Message-ID: <20161010091146.GV1041@n2100.armlinux.org.uk>
+References: <cover.1476051961.git.fthain@telegraphics.com.au>
+ <0e4fe7993945cd855f230f95bc0d7410dd5a9baa.1476051962.git.fthain@telegraphics.com.au>
 Mime-Version: 1.0
-Content-Type: multipart/related;
- boundary="----=_Part_212786_477521255.1476083198228"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:59937 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751681AbcJJHGo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 10 Oct 2016 03:06:44 -0400
-Received: from epcas2p3.samsung.com (unknown [182.195.41.55])
- by mailout2.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OET01CXLL32J910@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Mon, 10 Oct 2016 16:06:39 +0900 (KST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+Content-Disposition: inline
+In-Reply-To: <0e4fe7993945cd855f230f95bc0d7410dd5a9baa.1476051962.git.fthain@telegraphics.com.au>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: Finn Thain <fthain@telegraphics.com.au>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?B?U3ViaGFzaCBKYWRhdmFuaQ==?= <subhashj@codeaurora.org>
-Cc: =?UTF-8?B?bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmc=?= <linux-scsi@vger.kernel.org>, =?UTF-8?B?7LaU7ZeM6rSR?= <hg.chu@samsung.com>
 
-------=_Part_212786_477521255.1476083198228
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset="utf-8"
+On Mon, Oct 10, 2016 at 12:46:52AM -0400, Finn Thain wrote:
+> Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-SGksIFN1Ymhhc2gNCg0KPiBPbiAyMDE2LTEwLTA3IDIwOjIxLCBLaXdvb25nIEtpbSB3cm90ZToN
-Cj4gPiBTb21lIFVGUyBob3N0IGNvbnRyb2xsZXIgbWF5IG5lZWQgdG8gY29uZmlndXJlIHNvbWUg
-dGhpbmdzIGJlZm9yZSBhbnkNCj4gPiB0cmFuc2ZlciByZXF1ZXN0IGlzIGlzc3VlZC4NCj4gPg0K
-PiA+IFNpZ25lZC1vZmYtYnk6IEtpd29vbmcgS2ltIDxrd21hZC5raW1Ac2Ftc3VuZy5jb20+DQo+
-ID4gLS0tDQo+ID4gIGRyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMgfCAgICAyICsrDQo+ID4gIGRy
-aXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggfCAgIDEwICsrKysrKysrKysNCj4gPiAgMiBmaWxlcyBj
-aGFuZ2VkLCAxMiBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9z
-Y3NpL3Vmcy91ZnNoY2QuYyBiL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmMNCj4gPiBpbmRleCAw
-NWM3NDU2Li5iYjUzN2RiIDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNk
-LmMNCj4gPiArKysgYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5jDQo+ID4gQEAgLTE0NzQsNiAr
-MTQ3NCw3IEBAIHN0YXRpYyBpbnQgdWZzaGNkX3F1ZXVlY29tbWFuZChzdHJ1Y3QgU2NzaV9Ib3N0
-DQo+ID4gKmhvc3QsIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkNCj4gPg0KPiA+ICAJLyogaXNzdWUg
-Y29tbWFuZCB0byB0aGUgY29udHJvbGxlciAqLw0KPiA+ICAJc3Bpbl9sb2NrX2lycXNhdmUoaGJh
-LT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsNCj4gPiArCXVmc2hjZF92b3BzX3NldHVwX3hmZXJf
-cmVxKGhiYSwgdGFnLCAobHJicC0+Y21kID8gdHJ1ZSA6IGZhbHNlKSk7DQo+ID4gIAl1ZnNoY2Rf
-c2VuZF9jb21tYW5kKGhiYSwgdGFnKTsNCj4gPiAgb3V0X3VubG9jazoNCj4gPiAgCXNwaW5fdW5s
-b2NrX2lycXJlc3RvcmUoaGJhLT5ob3N0LT5ob3N0X2xvY2ssIGZsYWdzKTsgQEAgLTE2ODMsNg0K
-PiA+ICsxNjg0LDcgQEAgc3RhdGljIGludCB1ZnNoY2RfZXhlY19kZXZfY21kKHN0cnVjdCB1ZnNf
-aGJhICpoYmEsDQo+ID4gIAkvKiBNYWtlIHN1cmUgZGVzY3JpcHRvcnMgYXJlIHJlYWR5IGJlZm9y
-ZSByaW5naW5nIHRoZSBkb29yYmVsbCAqLw0KPiA+ICAJd21iKCk7DQo+ID4gIAlzcGluX2xvY2tf
-aXJxc2F2ZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiA+ICsJdWZzaGNkX3ZvcHNf
-c2V0dXBfeGZlcl9yZXEoaGJhLCB0YWcsIChscmJwLT5jbWQgPyB0cnVlIDogZmFsc2UpKTsNCj4g
-PiAgCXVmc2hjZF9zZW5kX2NvbW1hbmQoaGJhLCB0YWcpOw0KPiA+ICAJc3Bpbl91bmxvY2tfaXJx
-cmVzdG9yZShoYmEtPmhvc3QtPmhvc3RfbG9jaywgZmxhZ3MpOw0KPiA+DQo+ID4gZGlmZiAtLWdp
-dCBhL2RyaXZlcnMvc2NzaS91ZnMvdWZzaGNkLmggYi9kcml2ZXJzL3Njc2kvdWZzL3Vmc2hjZC5o
-DQo+ID4gaW5kZXggNDMwYmVmMS4uZjM3ZTVhNCAxMDA2NDQNCj4gPiAtLS0gYS9kcml2ZXJzL3Nj
-c2kvdWZzL3Vmc2hjZC5oDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL3Vmcy91ZnNoY2QuaA0KPiA+
-IEBAIC0yNjEsNiArMjYxLDggQEAgc3RydWN0IHVmc19wd3JfbW9kZV9pbmZvIHsNCj4gPiAgICog
-QHB3cl9jaGFuZ2Vfbm90aWZ5OiBjYWxsZWQgYmVmb3JlIGFuZCBhZnRlciBhIHBvd2VyIG1vZGUg
-Y2hhbmdlDQo+ID4gICAqCQkJaXMgY2FycmllZCBvdXQgdG8gYWxsb3cgdmVuZG9yIHNwZXNpZmlj
-IGNhcGFiaWxpdGllcw0KPiA+ICAgKgkJCXRvIGJlIHNldC4NCj4gPiArICogQHNldHVwX3hmZXJf
-cmVxOiBjYWxsZWQgYmVmb3JlIGFueSB0cmFuc2ZlciByZXF1ZXN0IGlzIGlzc3VlZA0KPiA+ICsg
-KiAgICAgICAgICAgICAgICAgIHRvIHNldCBzb21lIHRoaW5ncw0KPiA+ICAgKiBAc3VzcGVuZDog
-Y2FsbGVkIGR1cmluZyBob3N0IGNvbnRyb2xsZXIgUE0gY2FsbGJhY2sNCj4gPiAgICogQHJlc3Vt
-ZTogY2FsbGVkIGR1cmluZyBob3N0IGNvbnRyb2xsZXIgUE0gY2FsbGJhY2sNCj4gPiAgICogQGRi
-Z19yZWdpc3Rlcl9kdW1wOiB1c2VkIHRvIGR1bXAgY29udHJvbGxlciBkZWJ1ZyBpbmZvcm1hdGlv
-biBAQA0KPiA+IC0yODMsNiArMjg1LDcgQEAgc3RydWN0IHVmc19oYmFfdmFyaWFudF9vcHMgew0K
-PiA+ICAJCQkJCWVudW0gdWZzX25vdGlmeV9jaGFuZ2Vfc3RhdHVzIHN0YXR1cywNCj4gPiAgCQkJ
-CQlzdHJ1Y3QgdWZzX3BhX2xheWVyX2F0dHIgKiwNCj4gPiAgCQkJCQlzdHJ1Y3QgdWZzX3BhX2xh
-eWVyX2F0dHIgKik7DQo+ID4gKwl2b2lkCSgqc2V0dXBfeGZlcl9yZXEpKHN0cnVjdCB1ZnNfaGJh
-ICosIGludCwgYm9vbCk7DQo+ID4gIAlpbnQgICAgICgqc3VzcGVuZCkoc3RydWN0IHVmc19oYmEg
-KiwgZW51bSB1ZnNfcG1fb3ApOw0KPiA+ICAJaW50ICAgICAoKnJlc3VtZSkoc3RydWN0IHVmc19o
-YmEgKiwgZW51bSB1ZnNfcG1fb3ApOw0KPiA+ICAJdm9pZAkoKmRiZ19yZWdpc3Rlcl9kdW1wKShz
-dHJ1Y3QgdWZzX2hiYSAqaGJhKTsNCj4gPiBAQCAtNzk5LDYgKzgwMiwxMyBAQCBzdGF0aWMgaW5s
-aW5lIGludA0KPiA+IHVmc2hjZF92b3BzX3B3cl9jaGFuZ2Vfbm90aWZ5KHN0cnVjdCB1ZnNfaGJh
-ICpoYmEsDQo+ID4gIAlyZXR1cm4gLUVOT1RTVVBQOw0KPiA+ICB9DQo+ID4NCj4gPiArc3RhdGlj
-IGlubGluZSB2b2lkIHVmc2hjZF92b3BzX3NldHVwX3hmZXJfcmVxKHN0cnVjdCB1ZnNfaGJhICpo
-YmEsDQo+ID4gK2ludA0KPiA+IHRhZywNCj4gPiArCQkJCQlib29sIGlzX2NtZF9ub3RfbnVsbCkN
-Cj4gDQo+IFRoaXMgbWlnaHQgc291bmQgYmV0dGVyOiBzL2lzX2NtZF9ub3RfbnVsbC9pc19zY3Np
-X2NtZCAgPw0KDQpPa2F5Lg0KDQpBbmQgSSB0aGluayBtYWlsIHRocmVhZGluZyBtYXkgYmUgbm90
-IGF2YWlhYmxlIGluIG15IGVudmlyb25tZW50DQptb2RpZnlpbmcgYSB0aXRsZSBvZiBvcmlnaW5h
-bCBtZXNzYWdlLg0KSSB3b3VsZCBmaXggdGhpcyBpc3N1ZSBvciBzdWJtaXQgZWFjaCBwYXRjaCBh
-dCBhIHRpbWUuDQoNClRoYW5rIHlvdS4NClJlZ2FyZHMuDQoNCj4gDQo+ID4gK3sNCj4gPiArCWlm
-IChoYmEtPnZvcHMgJiYgaGJhLT52b3BzLT5zZXR1cF94ZmVyX3JlcSkNCj4gPiArCQlyZXR1cm4g
-aGJhLT52b3BzLT5zZXR1cF94ZmVyX3JlcShoYmEsIHRhZywNCj4gaXNfY21kX25vdF9udWxsKTsg
-fQ0KPiA+ICsNCj4gPiAgc3RhdGljIGlubGluZSBpbnQgdWZzaGNkX3ZvcHNfc3VzcGVuZChzdHJ1
-Y3QgdWZzX2hiYSAqaGJhLCBlbnVtDQo+ID4gdWZzX3BtX29wIG9wKSAgew0KPiA+ICAJaWYgKGhi
-YS0+dm9wcyAmJiBoYmEtPnZvcHMtPnN1c3BlbmQpDQo+IA0KPiAtLQ0KPiBUaGUgUXVhbGNvbW0g
-SW5ub3ZhdGlvbiBDZW50ZXIsIEluYy4gaXMgYSBtZW1iZXIgb2YgQ29kZSBBdXJvcmEgRm9ydW0s
-IGENCj4gTGludXggRm91bmRhdGlvbiBDb2xsYWJvcmF0aXZlIFByb2plY3QNCj4gLS0NCj4gVG8g
-dW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVuc3Vic2NyaWJlIGxp
-bnV4LXNjc2kiIGluDQo+IHRoZSBib2R5IG9mIGEgbWVzc2FnZSB0byBtYWpvcmRvbW9Admdlci5r
-ZXJuZWwub3JnIE1vcmUgbWFqb3Jkb21vIGluZm8gYXQNCj4gaHR0cDovL3ZnZXIua2VybmVsLm9y
-Zy9tYWpvcmRvbW8taW5mby5odG1s
-------=_Part_212786_477521255.1476083198228--
+Thanks.
+
+Acked-by: Russell King <rmk+kernel@armlinux.org.uk>
+
+-- 
+RMK's Patch system: http://www.armlinux.org.uk/developer/patches/
+FTTC broadband for 0.8mile line: currently at 9.6Mbps down 400kbps up
+according to speedtest.net.
