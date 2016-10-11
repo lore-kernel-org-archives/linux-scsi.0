@@ -1,28 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/6] ipr: use pci_irq_allocate_vectors
-Date: Tue, 11 Oct 2016 16:18:05 -0400
-Message-ID: <yq1twciod1e.fsf@sermon.lab.mkp.net>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
-        <1473600688-24043-3-git-send-email-hch@lst.de>
+Subject: Re: [PATCH] fnic: Use time64_t to represent trace timestamps
+Date: Tue, 11 Oct 2016 16:28:35 -0400
+Message-ID: <yq1pon6ocjw.fsf@sermon.lab.mkp.net>
+References: <1475365694-8582-1-git-send-email-deepa.kernel@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-pci-owner@vger.kernel.org>
-In-Reply-To: <1473600688-24043-3-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Sun, 11 Sep 2016 15:31:24 +0200")
-Sender: linux-pci-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1475365694-8582-1-git-send-email-deepa.kernel@gmail.com> (Deepa
+        Dinamani's message of "Sat, 1 Oct 2016 16:48:14 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Deepa Dinamani <deepa.kernel@gmail.com>
+Cc: linux-kernel@vger.kernel.org, arnd@arndb.de, y2038@lists.linaro.org, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>, Brian Uchino <buchino@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Deepa" == Deepa Dinamani <deepa.kernel@gmail.com> writes:
 
-Christoph> Switch the ipr driver to use pci_alloc_irq_vectors.  We need
-Christoph> to two calls to pci_alloc_irq_vectors as ipr only supports
-Christoph> multiple MSI-X vectors, but not multiple MSI vectors.
-
-Christoph> Otherwise this cleans up a lot of cruft and allows to use a
-Christoph> common request_irq loop for irq types, which happens to only
-Christoph> iterate over a single line in the non MSI-X case.
+Deepa> trace timestamps use struct timespec and CURRENT_TIME which are
+Deepa> not y2038 safe.  These timestamps are only part of the trace log
+Deepa> on the machine and are not shared with the fnic.  Replace then
+Deepa> with y2038 safe struct timespec64 and ktime_get_real_ts64(),
+Deepa> respectively.
 
 Applied to 4.10/scsi-queue.
 
