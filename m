@@ -1,28 +1,93 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 6/7] SRP transport: Port srp_wait_for_queuecommand()
-        to scsi-mq
-Date: Tue, 11 Oct 2016 18:44:17 +0200
-Message-ID: <20161011164417.GB18822@lst.de>
-References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com> <bedf4b45-00b0-6844-047d-f1e05bb1092f@sandisk.com> <8ce2910d-fde0-724f-a61f-8fbd7fbf499d@grimberg.me> <619e3ffc-2123-4cb0-361a-4025ba47b991@sandisk.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 00/44] Convert FibreChannel bsg code to use bsg-lib
+Date: Tue, 11 Oct 2016 20:00:58 +0200
+Message-ID: <57FD28DA.703@suse.de>
+References: <cover.1476180827.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <619e3ffc-2123-4cb0-361a-4025ba47b991@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 05, 2016 at 02:51:50PM -0700, Bart Van Assche wrote:
-> There are multiple direct blk_*() calls in other SCSI transport drivers. So 
-> my proposal is to wait with moving this code into scsi_lib.c until there is 
-> a second user of this code.
+On 10/11/2016 01:28 PM, Johannes Thumshirn wrote:
+> This series converts the current bsg usage in the FibreChannel drivers over
+> to use bsg-lib. SAS will follow but 44 patches are big enough for one shot,
+> so I didn't want to include SAS in there as well.
+>
+> It looks a bit huge but most of the patches are only code movement and slow
+> API conversions so everything still works and builds when doing git bisects.
+>
+> I did take some inspiration from a similar patchset from Mike Christie
+> dating back to 2011 but it's not a 1:1 copy. Patch 43/44 is heavily based
+> on his series and attribution is given to him in the commit message.
+>
+> It is currently regression tested on FCoE using the 'fcns' and
+> 'fcrls'utilities.  I'm still trying to figure out how to test the other
+> LLDDs. So any pointer from the respective maintainers are appreciated
+> although the LLDD changes are purely mechanical. All they do is change from
+> 'struct fc_bsg_job' to 'struct bsg_job' and corresponding changes in order
+> to get the series bisectable.
+>
+> The idea for this change arose when discussing racy sysfs handling the FC
+> bsg code with Christoph and is a next step in moving all bsg clients to
+> bsg-lib to eventually clean up the in kernel bsg API.
+>
+> Johannes Thumshirn (44):
+>    scsi: Get rid of struct fc_bsg_buffer
 
-I still don't think these low-level difference for blk-mq vs legacy
-request belong into a scsi LLDD.  So I concur with Sagi that this
-should go into the core SCSI code.
+>    bfa: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    zfcp: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    ibmvfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    lpfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    qla2xxx: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    libfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+>    scsi: fc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+Please merge these in a single patch.
+You do a similar thing later (in the patch 'change FC drivers to use 
+'struct bsg_job''), so there's no need to have them a separate patches here.
 
-In fact I suspect we should just call it directly from
-scsi_internal_device_block, and maybe even scsi_internal_device_unblock
-for case of setting the device offline.
+>    scsi: fc: Export fc_bsg_jobdone
+>    zfcp: Use fc_bsg_jobdone()
+>    bfa: Use fc_bsg_jobdone()
+>    ibmvfc: Use fc_bsg_jobdone()
+>    libfc: Use fc_bsg_jobdone()
+>    lpfc: Use fc_bsg_jobdone()
+>    qla2xxx: Use fc_bsg_jobdone()
+Same for these patches
+
+>    scsi: fc: remove job_done method from struct fc_bsg_job
+>    scsi: Unify interfaces of fc_bsg_jobdone and bsg_job_done
+>    scsi: fc: provide fc_bsg_to_shost() helper
+>    scsi: fc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    bfa: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    lpfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    qla2xxx: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    libfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    ibmvfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+>    zfcp: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+And these
+
+>    scsi: fc: provide fc_bsg_to_rport() helper
+>    scsi: fc: use fc_bsg_to_rport() to access a bsg_job's rport
+>    zfcp: use fc_bsg_to_rport() to access a bsg_job's rport
+>    qla2xxx: use fc_bsg_to_rport() to access a bsg_job's rport
+>    lpfc: use fc_bsg_to_rport() to access a bsg_job's rport
+>    libfc: use fc_bsg_to_rport() to access a bsg_job's rport
+>    ibmvfc: use fc_bsg_to_rport() to access a bsg_job's rport
+And these.
+
+That should cut down the number of patches by quite a bit.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
