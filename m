@@ -1,93 +1,76 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 04/44] ibmvfc: don't use fc_bsg_job::request and
- fc_bsg_job::reply directly
-Date: Tue, 11 Oct 2016 13:28:35 +0200
-Message-ID: <47dc03cafbb55cae8fbc117764556d8c0f95da68.1476180827.git.jthumshirn@suse.de>
+Subject: [PATCH 35/44] block: add reference counting for struct bsg_job
+Date: Tue, 11 Oct 2016 13:29:06 +0200
+Message-ID: <153309f7b4d7a182cfc4b15f0d8c307b878c95df.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:39296 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753209AbcJKL3h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Oct 2016 07:29:37 -0400
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, Paul Mackerras <paulus@samba.org>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Johannes Thumshirn <jthumshirn@suse.de>, "open list:LINUX FOR POWERPC 32-BIT AND 64-BIT" <linuxppc-dev@lists.ozlabs.org>, Hannes Reinecke <hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
 
-Don't use fc_bsg_job::request and fc_bsg_job::reply directly, but use
-helper variables bsg_request and bsg_reply. This will be helpfull when
-transitioning to bsg-lib.
+Add reference counting to 'struct bsg_job' so we can implement a reuqest
+timeout handler for bsg_jobs, which is needed for Fibre Channel.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/ibmvscsi/ibmvfc.c | 22 ++++++++++++----------
- 1 file changed, 12 insertions(+), 10 deletions(-)
+ block/bsg-lib.c         | 7 +++++--
+ include/linux/bsg-lib.h | 2 ++
+ 2 files changed, 7 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index ab67ec4..8b55279 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -1821,28 +1821,30 @@ static int ibmvfc_bsg_request(struct fc_bsg_job *job)
- 	struct ibmvfc_event *evt;
- 	union ibmvfc_iu rsp_iu;
- 	unsigned long flags, port_id = -1;
--	unsigned int code = job->request->msgcode;
-+	struct fc_bsg_request *bsg_request = job->request;
-+	struct fc_bsg_reply *bsg_reply = job->reply;
-+	unsigned int code = bsg_request->msgcode;
- 	int rc = 0, req_seg, rsp_seg, issue_login = 0;
- 	u32 fc_flags, rsp_len;
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index 650f427..632fb40 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -32,8 +32,10 @@
+  * bsg_destroy_job - routine to teardown/delete a bsg job
+  * @job: bsg_job that is to be torn down
+  */
+-static void bsg_destroy_job(struct bsg_job *job)
++static void bsg_destroy_job(struct kref *kref)
+ {
++	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
++
+ 	put_device(job->dev);	/* release reference for the request */
  
- 	ENTER;
--	job->reply->reply_payload_rcv_len = 0;
-+	bsg_reply->reply_payload_rcv_len = 0;
- 	if (rport)
- 		port_id = rport->port_id;
+ 	kfree(job->request_payload.sg_list);
+@@ -84,7 +86,7 @@ static void bsg_softirq_done(struct request *rq)
+ 	struct bsg_job *job = rq->special;
  
- 	switch (code) {
- 	case FC_BSG_HST_ELS_NOLOGIN:
--		port_id = (job->request->rqst_data.h_els.port_id[0] << 16) |
--			(job->request->rqst_data.h_els.port_id[1] << 8) |
--			job->request->rqst_data.h_els.port_id[2];
-+		port_id = (bsg_request->rqst_data.h_els.port_id[0] << 16) |
-+			(bsg_request->rqst_data.h_els.port_id[1] << 8) |
-+			bsg_request->rqst_data.h_els.port_id[2];
- 	case FC_BSG_RPT_ELS:
- 		fc_flags = IBMVFC_FC_ELS;
- 		break;
- 	case FC_BSG_HST_CT:
- 		issue_login = 1;
--		port_id = (job->request->rqst_data.h_ct.port_id[0] << 16) |
--			(job->request->rqst_data.h_ct.port_id[1] << 8) |
--			job->request->rqst_data.h_ct.port_id[2];
-+		port_id = (bsg_request->rqst_data.h_ct.port_id[0] << 16) |
-+			(bsg_request->rqst_data.h_ct.port_id[1] << 8) |
-+			bsg_request->rqst_data.h_ct.port_id[2];
- 	case FC_BSG_RPT_CT:
- 		fc_flags = IBMVFC_FC_CT_IU;
- 		break;
-@@ -1931,12 +1933,12 @@ static int ibmvfc_bsg_request(struct fc_bsg_job *job)
- 	if (rsp_iu.passthru.common.status)
- 		rc = -EIO;
- 	else
--		job->reply->reply_payload_rcv_len = rsp_len;
-+		bsg_reply->reply_payload_rcv_len = rsp_len;
+ 	blk_end_request_all(rq, rq->errors);
+-	bsg_destroy_job(job);
++	kref_put(&job->kref, bsg_destroy_job);
+ }
  
- 	spin_lock_irqsave(vhost->host->host_lock, flags);
- 	ibmvfc_free_event(evt);
- 	spin_unlock_irqrestore(vhost->host->host_lock, flags);
--	job->reply->result = rc;
-+	bsg_reply->result = rc;
- 	job->job_done(job);
- 	rc = 0;
- out:
+ static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
+@@ -142,6 +144,7 @@ static int bsg_create_job(struct device *dev, struct request *req)
+ 	job->dev = dev;
+ 	/* take a reference for the request */
+ 	get_device(job->dev);
++	kref_init(&job->kref);
+ 	return 0;
+ 
+ failjob_rls_rqst_payload:
+diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+index a226652..58e0717 100644
+--- a/include/linux/bsg-lib.h
++++ b/include/linux/bsg-lib.h
+@@ -40,6 +40,8 @@ struct bsg_job {
+ 	struct device *dev;
+ 	struct request *req;
+ 
++	struct kref kref;
++
+ 	/* Transport/driver specific request/reply structs */
+ 	void *request;
+ 	void *reply;
 -- 
 1.8.5.6
+
