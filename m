@@ -1,145 +1,47 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [RESEND PATCH] scsi: ufs: fix race between clock gating and devfreq scaling work
-Date: Tue, 11 Oct 2016 16:15:59 -0700
-Message-ID: <1476227759-22389-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:47071 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752845AbcJKXQW (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2016 19:16:22 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH] scsi: NCR5380: no longer mark irq probing as __init
+Date: Wed, 12 Oct 2016 10:20:33 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1610121004480.20775@nippy.intranet>
+References: <20161011092356.2872181-1-arnd@arndb.de> <alpine.LNX.2.00.1610112038160.17850@nippy.intranet> <201610112258.05050.linux@rainbow-software.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201610112258.05050.linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 
-UFS devfreq clock scaling work may require clocks to be ON if it need to
-execute some UFS commands hence it may request for clock hold before
-issuing the command. But if UFS clock gating work is already running in
-parallel, ungate work would end up waiting for the clock gating work to
-finish and as clock gating work would also wait for the clock scaling work
-to finish, we would enter in deadlock state. Here is the call trace during
-this deadlock state:
 
-Workqueue: devfreq_wq devfreq_monitor
-	__switch_to
-	__schedule
-	schedule
-	schedule_timeout
-	wait_for_common
-	wait_for_completion
-	flush_work
-	ufshcd_hold
-	ufshcd_send_uic_cmd
-	ufshcd_dme_get_attr
-	ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div
-	ufs_qcom_clk_scale_notify
-	ufshcd_scale_clks
-	ufshcd_devfreq_target
-	update_devfreq
-	devfreq_monitor
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+On Tue, 11 Oct 2016, Ondrej Zary wrote:
 
-Workqueue: events ufshcd_gate_work
-	__switch_to
-	__schedule
-	schedule
-	schedule_preempt_disabled
-	__mutex_lock_slowpath
-	mutex_lock
-	devfreq_monitor_suspend
-	devfreq_simple_ondemand_handler
-	devfreq_suspend_device
-	ufshcd_gate_work
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+> 
+> I've tested IRQ probing on my IRQ7-hardwired ISA card without any 
+> success some time ago. No IRQ was detected because it wasn't even 
+> generated (no increment in /proc/interruptts).
 
-Workqueue: events ufshcd_ungate_work
-	__switch_to
-	__schedule
-	schedule
-	schedule_timeout
-	wait_for_common
-	wait_for_completion
-	flush_work
-	__cancel_work_timer
-	cancel_delayed_work_sync
-	ufshcd_ungate_work
-	process_one_work
-	worker_thread
-	kthread
-	ret_from_fork
+The IRQ line does not appear in /proc/interrupts unless it has already 
+been claimed. So if you saw that the interrupt count stayed the same, then 
+the interrupt line wasn't available in the first place.
 
-This change fixes this deadlock by doing this in devfreq work (devfreq_wq):
-Try cancelling clock gating work. If we are able to cancel gating work
-or it wasn't scheduled, hold the clock reference count until scaling is
-in progress. If gate work is already running in parallel, let's skip
-the frequecy scaling at this time and it will be retried once next scaling
-window expires.
+> It also produced some warnings in dmesg about conflicting interrupt 
+> flags.
 
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
- 1 file changed, 32 insertions(+)
+Presumably that's because there is no way to probe shared interrupt lines.
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 571a2f6..77700ee 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6323,15 +6323,47 @@ static int ufshcd_devfreq_target(struct device *dev,
- {
- 	int err = 0;
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	bool release_clk_hold = false;
-+	unsigned long irq_flags;
- 
- 	if (!ufshcd_is_clkscaling_enabled(hba))
- 		return -EINVAL;
- 
-+	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	if (ufshcd_eh_in_progress(hba)) {
-+		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+		return 0;
-+	}
-+
-+	if (ufshcd_is_clkgating_allowed(hba) &&
-+	    (hba->clk_gating.state != CLKS_ON)) {
-+		if (cancel_delayed_work(&hba->clk_gating.gate_work)) {
-+			/* hold the vote until the scaling work is completed */
-+			hba->clk_gating.active_reqs++;
-+			release_clk_hold = true;
-+			hba->clk_gating.state = CLKS_ON;
-+		} else {
-+			/*
-+			 * Clock gating work seems to be running in parallel
-+			 * hence skip scaling work to avoid deadlock between
-+			 * current scaling work and gating work.
-+			 */
-+			spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+			return 0;
-+		}
-+	}
-+	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+
- 	if (*freq == UINT_MAX)
- 		err = ufshcd_scale_clks(hba, true);
- 	else if (*freq == 0)
- 		err = ufshcd_scale_clks(hba, false);
- 
-+	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-+	if (release_clk_hold)
-+		__ufshcd_release(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
-+
- 	return err;
- }
- 
+> Can't the IRQ probing be simply deleted?
+> 
+
+It isn't clear to me that there's a bug in the driver. I never saw a bug 
+in the irq probe code when I went looking for a reason to delete that code 
+a while ago.
+
+Anyway, assuming that the interrupt line on your card works fine, have you 
+considered using probe_irq_on/probe_irq_off? See for example, sym53c416.c 
+and NCR53c406a.c.
+
+Bug or no bug, I'd be very happy to delete the NCR5380 probe code if we 
+can use the standard probe functions to retain the documented 
+functionality.
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
-
