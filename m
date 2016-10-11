@@ -1,40 +1,64 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 15/23] scsi_dh_alua: Add new blacklist flag
- 'BLIST_SYNC_ALUA'
-Date: Tue, 11 Oct 2016 08:00:33 +0200
-Message-ID: <370deeee-d98a-12cc-8efa-5a4ee5037282@suse.de>
-References: <9c10ea3c-76e5-8aad-4b30-1fd34d9bf288@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: NCR5380: no longer mark irq probing as __init
+Date: Tue, 11 Oct 2016 11:23:23 +0200
+Message-ID: <20161011092356.2872181-1-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49288 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750881AbcJKGAg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Oct 2016 02:00:36 -0400
-In-Reply-To: <9c10ea3c-76e5-8aad-4b30-1fd34d9bf288@gmail.com>
+Received: from mout.kundenserver.de ([212.227.126.130]:53291 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752516AbcJKJZP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2016 05:25:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>, "Stewart, Sean" <Sean.Stewart@netapp.com>, "George, Martin" <Martin.George@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>, "Schremmer, Steven" <Steven.Schremmer@netapp.com>
-Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>, Finn Thain <fthain@telegraphics.com.au>, Arnd Bergmann <arnd@arndb.de>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 10/10/2016 11:24 PM, Xose Vazquez Perez wrote:
-> Hi Hannes,
-> 
-> Try #2.
-> Is this needed for RDAC(INF-01-00) devices?
-> 
-Actually I have been in contact with NetApp, and they prefer _not_ to
-have the RDAC arrays marked for synchronous ALUA. They have validated
-things on their current firmware and the synchronous ALUA setting is not
-required anymore.
+The g_NCR5380 has been converted to more regular probing, which
+means its probe function can now be invoked after the __init section
+is discarded, as pointed out by this kbuild warning:
 
-Cheers,
+WARNING: drivers/scsi/built-in.o(.text+0x3a105): Section mismatch in reference from the function generic_NCR5380_isa_match() to the function .init.text:probe_intr()
+WARNING: drivers/scsi/built-in.o(.text+0x3a145): Section mismatch in reference from the function generic_NCR5380_isa_match() to the variable .init.data:probe_irq
 
-Hannes
+To make sure this works correctly in all cases, let's remove
+the __init and __initdata annotations.
+
+Fixes: a8cfbcaec0c1 ("scsi: g_NCR5380: Stop using scsi_module.c")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/NCR5380.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 7053de5bd468..61f34aca2fa0 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -353,7 +353,7 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+ #endif
+ 
+ 
+-static int probe_irq __initdata;
++static int probe_irq;
+ 
+ /**
+  * probe_intr	-	helper for IRQ autoprobe
+@@ -365,7 +365,7 @@ static int probe_irq __initdata;
+  * used by the IRQ probe code.
+  */
+ 
+-static irqreturn_t __init probe_intr(int irq, void *dev_id)
++static irqreturn_t probe_intr(int irq, void *dev_id)
+ {
+ 	probe_irq = irq;
+ 	return IRQ_HANDLED;
+@@ -380,7 +380,7 @@ static irqreturn_t __init probe_intr(int irq, void *dev_id)
+  * and then looking to see what interrupt actually turned up.
+  */
+ 
+-static int __init __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
++static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+ 						int possible)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.9.0
+
