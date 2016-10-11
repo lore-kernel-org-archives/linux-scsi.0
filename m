@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 30/44] lpfc: use fc_bsg_to_rport() to access a bsg_job's rport
-Date: Tue, 11 Oct 2016 13:29:01 +0200
-Message-ID: <bc4bfebbb6ad5da60fb162457e32c65de212359a.1476180827.git.jthumshirn@suse.de>
+Subject: [PATCH 32/44] ibmvfc: use fc_bsg_to_rport() to access a bsg_job's rport
+Date: Tue, 11 Oct 2016 13:29:03 +0200
+Message-ID: <e7bf41799445f34e4280f57f184e56b145a68f27.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
@@ -9,35 +9,27 @@ In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:LINUX FOR POWERPC 32-BIT AND
+        64-BIT" <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
-index bfcc37d..dae7cc3 100644
---- a/drivers/scsi/lpfc/lpfc_bsg.c
-+++ b/drivers/scsi/lpfc/lpfc_bsg.c
-@@ -386,7 +386,7 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job *job)
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index f7b50af..35114d9 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -1816,7 +1816,7 @@ unlock_out:
+ static int ibmvfc_bsg_request(struct fc_bsg_job *job)
  {
- 	struct lpfc_vport *vport = shost_priv(fc_bsg_to_shost(job));
- 	struct lpfc_hba *phba = vport->phba;
--	struct lpfc_rport_data *rdata = job->rport->dd_data;
-+	struct lpfc_rport_data *rdata = fc_bsg_to_rport(job)->dd_data;
- 	struct lpfc_nodelist *ndlp = rdata->pnode;
- 	struct fc_bsg_reply *bsg_reply = job->reply;
- 	struct ulp_bde64 *bpl = NULL;
-@@ -660,7 +660,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *job)
- {
- 	struct lpfc_vport *vport = shost_priv(fc_bsg_to_shost(job));
- 	struct lpfc_hba *phba = vport->phba;
--	struct lpfc_rport_data *rdata = job->rport->dd_data;
-+	struct lpfc_rport_data *rdata = fc_bsg_to_rport(job)->dd_data;
- 	struct lpfc_nodelist *ndlp = rdata->pnode;
- 	struct fc_bsg_request *bsg_request = job->request;
- 	struct fc_bsg_reply *bsg_reply = job->reply;
+ 	struct ibmvfc_host *vhost = shost_priv(fc_bsg_to_shost(job));
+-	struct fc_rport *rport = job->rport;
++	struct fc_rport *rport = fc_bsg_to_rport(job);
+ 	struct ibmvfc_passthru_mad *mad;
+ 	struct ibmvfc_event *evt;
+ 	union ibmvfc_iu rsp_iu;
 -- 
 1.8.5.6
