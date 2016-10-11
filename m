@@ -1,47 +1,24 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH] scsi: NCR5380: no longer mark irq probing as __init
-Date: Wed, 12 Oct 2016 10:20:33 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610121004480.20775@nippy.intranet>
-References: <20161011092356.2872181-1-arnd@arndb.de> <alpine.LNX.2.00.1610112038160.17850@nippy.intranet> <201610112258.05050.linux@rainbow-software.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] SCSI: remove one useless stack variable
+Date: Tue, 11 Oct 2016 18:02:45 -0400
+Message-ID: <yq1shs2mtmi.fsf@sermon.lab.mkp.net>
+References: <1476113133-24092-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201610112258.05050.linux@rainbow-software.org>
+In-Reply-To: <1476113133-24092-1-git-send-email-tom.leiming@gmail.com> (Ming
+        Lei's message of "Mon, 10 Oct 2016 23:25:33 +0800")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: linux-kernel@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
+>>>>> "Ming" == Ming Lei <tom.leiming@gmail.com> writes:
 
-On Tue, 11 Oct 2016, Ondrej Zary wrote:
+Ming> The local variable of 'devname' in scsi_report_lun_scan() isn't
+Ming> used any more, so remove it.
 
-> 
-> I've tested IRQ probing on my IRQ7-hardwired ISA card without any 
-> success some time ago. No IRQ was detected because it wasn't even 
-> generated (no increment in /proc/interruptts).
-
-The IRQ line does not appear in /proc/interrupts unless it has already 
-been claimed. So if you saw that the interrupt count stayed the same, then 
-the interrupt line wasn't available in the first place.
-
-> It also produced some warnings in dmesg about conflicting interrupt 
-> flags.
-
-Presumably that's because there is no way to probe shared interrupt lines.
-
-> Can't the IRQ probing be simply deleted?
-> 
-
-It isn't clear to me that there's a bug in the driver. I never saw a bug 
-in the irq probe code when I went looking for a reason to delete that code 
-a while ago.
-
-Anyway, assuming that the interrupt line on your card works fine, have you 
-considered using probe_irq_on/probe_irq_off? See for example, sym53c416.c 
-and NCR53c406a.c.
-
-Bug or no bug, I'd be very happy to delete the NCR5380 probe code if we 
-can use the standard probe functions to retain the documented 
-functionality.
+Applied to 4.9/scsi-fixes.
 
 -- 
+Martin K. Petersen	Oracle Linux Engineering
