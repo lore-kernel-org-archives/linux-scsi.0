@@ -1,53 +1,65 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [Open-FCoE] Issue with fc_exch_alloc failing initiated by
- fc_queuecommand on NUMA or large configurations with Intel ixgbe running
- FCOE
-Date: Tue, 11 Oct 2016 10:51:29 -0400
-Message-ID: <1476197489.4019.68.camel@localhost.localdomain>
-References: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
-         <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
-Reply-To: emilne@redhat.com
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Re: [PATCH 0/9] Introduce blk_quiesce_queue() and
+ blk_resume_queue()
+Date: Tue, 11 Oct 2016 12:27:09 -0400 (EDT)
+Message-ID: <2065305791.1268439.1476203229110.JavaMail.zimbra@redhat.com>
+References: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:57142 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752801AbcJKOvb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Oct 2016 10:51:31 -0400
-In-Reply-To: <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <7948dbb8-6333-dc62-2673-4da35b4dfdbc@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Laurence Oberman <loberman@redhat.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, fcoe-devel@open-fcoe.org, "Curtis Taylor (cjt@us.ibm.com)" <cjt@us.ibm.com>, Bud Brown <bubrown@redhat.com>
 
-On Sat, 2016-10-08 at 19:35 +0200, Hannes Reinecke wrote:
-> You might actually be hitting a limitation in the exchange manager code.
-> The libfc exchange manager tries to be really clever and will assign a 
-> per-cpu exchange manager (probably to increase locality). However, we 
-> only have a limited number of exchanges, so on large systems we might 
-> actually run into a exchange starvation problem, where we have in theory 
-> enough free exchanges, but none for the submitting cpu.
+
+
+----- Original Message -----
+> From: "Bart Van Assche" <bart.vanassche@sandisk.com>
+> To: "Jens Axboe" <axboe@fb.com>
+> Cc: "Christoph Hellwig" <hch@lst.de>, "James Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen"
+> <martin.petersen@oracle.com>, "Mike Snitzer" <snitzer@redhat.com>, "Doug Ledford" <dledford@redhat.com>, "Keith
+> Busch" <keith.busch@intel.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org,
+> linux-nvme@lists.infradead.org
+> Sent: Monday, September 26, 2016 2:25:54 PM
+> Subject: [PATCH 0/9] Introduce blk_quiesce_queue() and blk_resume_queue()
 > 
-> (Personally, the exchange manager code is in urgent need of reworking.
-> It should be replaced by the sbitmap code from Omar).
+> Hello Jens,
 > 
-> Do check how many free exchanges are actually present for the stalling 
-> CPU; it might be that you run into a starvation issue.
+> Multiple block drivers need the functionality to stop a request queue
+> and to wait until all ongoing request_fn() / queue_rq() calls have
+> finished without waiting until all outstanding requests have finished.
+> Hence this patch series that introduces the blk_quiesce_queue() and
+> blk_resume_queue() functions. The dm-mq, SRP and nvme patches in this
+> patch series are three examples of where these functions are useful.
+> These patches apply on top of the September 21 version of your
+> for-4.9/block branch. The individual patches in this series are:
+> 
+> 0001-blk-mq-Introduce-blk_mq_queue_stopped.patch
+> 0002-dm-Fix-a-race-condition-related-to-stopping-and-star.patch
+> 0003-RFC-nvme-Use-BLK_MQ_S_STOPPED-instead-of-QUEUE_FLAG_.patch
+> 0004-block-Move-blk_freeze_queue-and-blk_unfreeze_queue-c.patch
+> 0005-block-Extend-blk_freeze_queue_start-to-the-non-blk-m.patch
+> 0006-block-Rename-mq_freeze_wq-and-mq_freeze_depth.patch
+> 0007-blk-mq-Introduce-blk_quiesce_queue-and-blk_resume_qu.patch
+> 0008-SRP-transport-Port-srp_wait_for_queuecommand-to-scsi.patch
+> 0009-RFC-nvme-Fix-a-race-condition.patch
+> 
+> Thanks,
+> 
+> Bart.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+Hello
 
-We are still looking into this but one thing that looks bad is that
-the exchange manager code rounds up the number of CPUs to the next
-power of 2 before dividing up the exchange id space (and uses the lsbs
-of the xid to extract the CPU when looking up an xid). We have a machine
-with 288 CPUs, this code is just begging for a rewrite as it looks to
-be wasting most of the limited xid space on ixgbe FCoE.
+I took Bart's latest patches from his tree and tested all the SRP/RDMA and as many of the nvme tests.
 
-Looks like we get 512 offloaded xids on this adapter and 4096-512
-non-offloaded xids.  This would give 1 + 7 xids per CPU.  However, I'm
-not sure that even 4096 / 288 = 14 would be enough to prevent stalling.
+Everything is passing my tests, including SRP port resets etc.
+The nvme tests were all on a small intel nvme card.
 
-And, of course, potentially most of the CPUs aren't submitting I/O, so
-the whole idea of per-CPU xid space is questionable.
-
--Ewan
-
+Tested-by: Laurence Oberman <loberman@redhat.com>
