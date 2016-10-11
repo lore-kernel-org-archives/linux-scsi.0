@@ -1,54 +1,47 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 16/44] scsi: fc: remove job_done method from struct fc_bsg_job
-Date: Tue, 11 Oct 2016 13:28:47 +0200
-Message-ID: <0bbc14f14ceeadd280f435ec88c9cc43d6a01c85.1476180827.git.jthumshirn@suse.de>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: [PATCH 23/44] libfc: use fc_bsg_to_shost() to access a
+	bsg_job's Scsi_Host
+Date: Tue, 11 Oct 2016 13:28:54 +0200
+Message-ID: <a1755452b390d36d156e118ba8f3ba51271bebd5.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39098 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753039AbcJKL33 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Oct 2016 07:29:29 -0400
-In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
-References: <cover.1476180827.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <cover.1476180827.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <cover.1476180827.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+References: <cover.1476180827.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailinglist <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "open list:FCOE SUBSYSTEM libfc,
+ libfcoe, fcoe" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-Now that we've converted all LLDDs over to use fc_bsg_jobdone() directly,
-remove the function pointer from struct fc_bsg_job.
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 ---
- drivers/scsi/scsi_transport_fc.c | 1 -
- include/scsi/scsi_transport_fc.h | 1 -
- 2 files changed, 2 deletions(-)
+ drivers/scsi/libfc/fc_lport.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index b0ce417..4149dac 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3744,7 +3744,6 @@ fc_req_to_bsgjob(struct Scsi_Host *shost, struct fc_rport *rport,
- 		if (ret)
- 			goto failjob_rls_rqst_payload;
- 	}
--	job->job_done = fc_bsg_jobdone;
- 	if (rport)
- 		job->dev = &rport->dev;
- 	else
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index f90044a..9ef583f 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -637,7 +637,6 @@ struct fc_bsg_job {
- 	spinlock_t job_lock;
- 	unsigned int state_flags;
- 	unsigned int ref_cnt;
--	void (*job_done)(struct fc_bsg_job *);
- 
- 	struct fc_bsg_request *request;
- 	struct fc_bsg_reply *reply;
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 4bed7ec..c60fdb9 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -2087,7 +2087,7 @@ int fc_lport_bsg_request(struct fc_bsg_job *job)
+ 	struct fc_bsg_request *bsg_request = job->request;
+ 	struct fc_bsg_reply *bsg_reply = job->reply;
+ 	struct request *rsp = job->req->next_rq;
+-	struct Scsi_Host *shost = job->shost;
++	struct Scsi_Host *shost = fc_bsg_to_shost(job);
+ 	struct fc_lport *lport = shost_priv(shost);
+ 	struct fc_rport *rport;
+ 	struct fc_rport_priv *rdata;
 -- 
 1.8.5.6
-
