@@ -1,76 +1,43 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 35/44] block: add reference counting for struct bsg_job
-Date: Tue, 11 Oct 2016 13:29:06 +0200
-Message-ID: <153309f7b4d7a182cfc4b15f0d8c307b878c95df.1476180827.git.jthumshirn@suse.de>
+Subject: [PATCH 30/44] lpfc: use fc_bsg_to_rport() to access a bsg_job's rport
+Date: Tue, 11 Oct 2016 13:29:01 +0200
+Message-ID: <bc4bfebbb6ad5da60fb162457e32c65de212359a.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39296 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753209AbcJKL3h (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 11 Oct 2016 07:29:37 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
-
-Add reference counting to 'struct bsg_job' so we can implement a reuqest
-timeout handler for bsg_jobs, which is needed for Fibre Channel.
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/bsg-lib.c         | 7 +++++--
- include/linux/bsg-lib.h | 2 ++
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_bsg.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 650f427..632fb40 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -32,8 +32,10 @@
-  * bsg_destroy_job - routine to teardown/delete a bsg job
-  * @job: bsg_job that is to be torn down
-  */
--static void bsg_destroy_job(struct bsg_job *job)
-+static void bsg_destroy_job(struct kref *kref)
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index bfcc37d..dae7cc3 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -386,7 +386,7 @@ lpfc_bsg_send_mgmt_cmd(struct fc_bsg_job *job)
  {
-+	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
-+
- 	put_device(job->dev);	/* release reference for the request */
- 
- 	kfree(job->request_payload.sg_list);
-@@ -84,7 +86,7 @@ static void bsg_softirq_done(struct request *rq)
- 	struct bsg_job *job = rq->special;
- 
- 	blk_end_request_all(rq, rq->errors);
--	bsg_destroy_job(job);
-+	kref_put(&job->kref, bsg_destroy_job);
- }
- 
- static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
-@@ -142,6 +144,7 @@ static int bsg_create_job(struct device *dev, struct request *req)
- 	job->dev = dev;
- 	/* take a reference for the request */
- 	get_device(job->dev);
-+	kref_init(&job->kref);
- 	return 0;
- 
- failjob_rls_rqst_payload:
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index a226652..58e0717 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -40,6 +40,8 @@ struct bsg_job {
- 	struct device *dev;
- 	struct request *req;
- 
-+	struct kref kref;
-+
- 	/* Transport/driver specific request/reply structs */
- 	void *request;
- 	void *reply;
+ 	struct lpfc_vport *vport = shost_priv(fc_bsg_to_shost(job));
+ 	struct lpfc_hba *phba = vport->phba;
+-	struct lpfc_rport_data *rdata = job->rport->dd_data;
++	struct lpfc_rport_data *rdata = fc_bsg_to_rport(job)->dd_data;
+ 	struct lpfc_nodelist *ndlp = rdata->pnode;
+ 	struct fc_bsg_reply *bsg_reply = job->reply;
+ 	struct ulp_bde64 *bpl = NULL;
+@@ -660,7 +660,7 @@ lpfc_bsg_rport_els(struct fc_bsg_job *job)
+ {
+ 	struct lpfc_vport *vport = shost_priv(fc_bsg_to_shost(job));
+ 	struct lpfc_hba *phba = vport->phba;
+-	struct lpfc_rport_data *rdata = job->rport->dd_data;
++	struct lpfc_rport_data *rdata = fc_bsg_to_rport(job)->dd_data;
+ 	struct lpfc_nodelist *ndlp = rdata->pnode;
+ 	struct fc_bsg_request *bsg_request = job->request;
+ 	struct fc_bsg_reply *bsg_reply = job->reply;
 -- 
 1.8.5.6
-
