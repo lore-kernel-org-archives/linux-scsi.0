@@ -1,69 +1,40 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH v3 10/12] scsi/ncr5380: Expedite register polling
-Date: Tue, 11 Oct 2016 09:57:47 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610110924160.8220@nippy.intranet>
-References: <cover.1476051961.git.fthain@telegraphics.com.au> <2806ba151f6983923fa0aae700245dfeb4cfaf38.1476051962.git.fthain@telegraphics.com.au> <20161010091709.GY1041@n2100.armlinux.org.uk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 15/23] scsi_dh_alua: Add new blacklist flag
+ 'BLIST_SYNC_ALUA'
+Date: Tue, 11 Oct 2016 08:00:33 +0200
+Message-ID: <370deeee-d98a-12cc-8efa-5a4ee5037282@suse.de>
+References: <9c10ea3c-76e5-8aad-4b30-1fd34d9bf288@gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161010091709.GY1041@n2100.armlinux.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Russell King - ARM Linux <linux@armlinux.org.uk>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-kernel@lists.infradead.org, Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49288 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750881AbcJKGAg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 11 Oct 2016 02:00:36 -0400
+In-Reply-To: <9c10ea3c-76e5-8aad-4b30-1fd34d9bf288@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>, "Stewart, Sean" <Sean.Stewart@netapp.com>, "George, Martin" <Martin.George@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>, "Schremmer, Steven" <Steven.Schremmer@netapp.com>
+Cc: device-mapper development <dm-devel@redhat.com>, linux-scsi <linux-scsi@vger.kernel.org>
 
-
-On Mon, 10 Oct 2016, Russell King - ARM Linux wrote:
-
-> On Mon, Oct 10, 2016 at 12:46:53AM -0400, Finn Thain wrote:
-> > Avoid the call to NCR5380_poll_politely2() when possible. The call is 
-> > easily short-circuited on the PIO fast path, using the inline wrapper. 
-> > This requires that the NCR5380_read macro be made available before any 
-> > #include "NCR5380.h" so a few declarations have to be moved too.
-> > 
-> > Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
-> > Reviewed-by: Hannes Reinecke <hare@suse.com>
-> > Tested-by: Ondrej Zary <linux@rainbow-software.org>
-> > Tested-by: Michael Schmitz <schmitzmic@gmail.com>
-> > ---
+On 10/10/2016 11:24 PM, Xose Vazquez Perez wrote:
+> Hi Hannes,
 > 
-> > diff --git a/drivers/scsi/arm/cumana_1.c b/drivers/scsi/arm/cumana_1.c
-> > index ae1d4c6..fb7600d 100644
-> > --- a/drivers/scsi/arm/cumana_1.c
-> > +++ b/drivers/scsi/arm/cumana_1.c
-> > @@ -29,6 +29,10 @@
-> >  #define NCR5380_implementation_fields	\
-> >  	unsigned ctrl
-> >  
-> > +struct NCR5380_hostdata;
-> > +static u8 cumanascsi_read(struct NCR5380_hostdata *, unsigned int);
-> > +static void cumanascsi_write(struct NCR5380_hostdata *, unsigned int, u8);
-> > +
-> >  #include "../NCR5380.h"
-> >  
-> >  #define CTRL	0x16fc
+> Try #2.
+> Is this needed for RDAC(INF-01-00) devices?
 > 
-> This seems to be non-obviously unrelated to this commit - should it be 
-> in some other commit?
-> 
+Actually I have been in contact with NetApp, and they prefer _not_ to
+have the RDAC arrays marked for synchronous ALUA. They have validated
+things on their current firmware and the synchronous ALUA setting is not
+required anymore.
 
-The source of the problem here is the #include "../NCR5380.h", because 
-that header file both declares struct NCR5380_hostdata and (with this 
-patch) it also calls cumanascsi_read(). That means cumanascsi_read() has 
-to be declared earlier, and that in turn requires an incomplete definition 
-of struct NCR5380_hostdata. The commit log alludes to the problem but 
-could be made more explicit if you would like (?).
+Cheers,
 
-BTW, this problem doesn't arise in the other six 5380 drivers because each 
-one implements NCR5380_read() as a macro. It would be nice to get rid of 
-the macros in favour of an ops struct (in the course of converting the 
-driver to a library module) but I doubt that this is feasible now that 
-I've seen the performance benefit of this patch series.
-
-In the absence of link time optimization, the library module design would 
-prevent the inlining of functions like cumanascsi_read(). Since every byte 
-transfered by the 5380 in a PIO transfer requires at least 5 chip register 
-accesses, function calls would be prohibitively expensive. So I think we 
-are stuck with inline accessors or macros.
-
+Hannes
 -- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
