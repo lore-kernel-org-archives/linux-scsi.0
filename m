@@ -1,7 +1,7 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 28/44] zfcp: use fc_bsg_to_rport() to access a bsg_job's rport
-Date: Tue, 11 Oct 2016 13:28:59 +0200
-Message-ID: <2a8f29c92ac6347b898e7d5bc45a84990c2cbc0c.1476180827.git.jthumshirn@suse.de>
+Subject: [PATCH 26/44] scsi: fc: provide fc_bsg_to_rport() helper
+Date: Tue, 11 Oct 2016 13:28:57 +0200
+Message-ID: <e481c31a25ff01f8aceeddc1b587b795f5151f7d.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
@@ -9,37 +9,32 @@ In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
 References: <cover.1476180827.git.jthumshirn@suse.de>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "open list:S390 ZFCP DRIVER" <linux-s390@vger.kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
+
+Provide fc_bsg_to_rport() helper that will become handy when we're moving
+from struct fc_bsg_job to a plain struct bsg_job.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/s390/scsi/zfcp_fc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ include/scsi/scsi_transport_fc.h | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-diff --git a/drivers/s390/scsi/zfcp_fc.c b/drivers/s390/scsi/zfcp_fc.c
-index 813c286..1977a66 100644
---- a/drivers/s390/scsi/zfcp_fc.c
-+++ b/drivers/s390/scsi/zfcp_fc.c
-@@ -938,7 +938,7 @@ static int zfcp_fc_exec_els_job(struct fc_bsg_job *job,
- 				struct zfcp_adapter *adapter)
- {
- 	struct zfcp_fsf_ct_els *els = job->dd_data;
--	struct fc_rport *rport = job->rport;
-+	struct fc_rport *rport = fc_bsg_to_rport(job);
- 	struct fc_bsg_request *bsg_request = job->request;
- 	struct zfcp_port *port;
- 	u32 d_id;
-@@ -986,8 +986,9 @@ int zfcp_fc_exec_bsg_job(struct fc_bsg_job *job)
- 	struct zfcp_adapter *adapter;
- 	struct zfcp_fsf_ct_els *ct_els = job->dd_data;
- 	struct fc_bsg_request *bsg_request = job->request;
-+	struct fc_rport *rport = fc_bsg_to_rport(job);
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index efb9488..9f53fe3 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -824,6 +824,11 @@ static inline struct Scsi_Host *fc_bsg_to_shost(struct fc_bsg_job *job)
+ 	return job->shost;
+ }
  
--	shost = job->rport ? rport_to_shost(job->rport) : fc_bsg_to_shost(job);
-+	shost = rport ? rport_to_shost(rport) : fc_bsg_to_shost(job);
- 	adapter = (struct zfcp_adapter *)shost->hostdata[0];
- 
- 	if (!(atomic_read(&adapter->status) & ZFCP_STATUS_COMMON_OPEN))
++static inline struct fc_rport *fc_bsg_to_rport(struct fc_bsg_job *job)
++{
++	return job->rport;
++}
++
+ struct scsi_transport_template *fc_attach_transport(
+ 			struct fc_function_template *);
+ void fc_release_transport(struct scsi_transport_template *);
 -- 
 1.8.5.6
