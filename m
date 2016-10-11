@@ -1,144 +1,106 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH 02/44] bfa: don't use fc_bsg_job::request and fc_bsg_job::reply directly
-Date: Tue, 11 Oct 2016 13:28:33 +0200
-Message-ID: <f7d9c60e8fbf46e896fe5fb09b47bf1b552f8c9b.1476180827.git.jthumshirn@suse.de>
-References: <cover.1476180827.git.jthumshirn@suse.de>
+Subject: [PATCH 00/44] Convert FibreChannel bsg code to use bsg-lib
+Date: Tue, 11 Oct 2016 13:28:31 +0200
+Message-ID: <cover.1476180827.git.jthumshirn@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39073 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39061 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752884AbcJKL3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1752891AbcJKL3Z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 11 Oct 2016 07:29:25 -0400
-In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
-References: <cover.1476180827.git.jthumshirn@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
 
-Don't use fc_bsg_job::request and fc_bsg_job::reply directly, but use
-helper variables bsg_request and bsg_reply. This will be helpfull  when
-transitioning to bsg-lib.
+This series converts the current bsg usage in the FibreChannel drivers over
+to use bsg-lib. SAS will follow but 44 patches are big enough for one shot,
+so I didn't want to include SAS in there as well.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/bfa/bfad_bsg.c | 40 +++++++++++++++++++++++-----------------
- 1 file changed, 23 insertions(+), 17 deletions(-)
+It looks a bit huge but most of the patches are only code movement and slow
+API conversions so everything still works and builds when doing git bisects.
 
-diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
-index d1ad020..48366d8 100644
---- a/drivers/scsi/bfa/bfad_bsg.c
-+++ b/drivers/scsi/bfa/bfad_bsg.c
-@@ -3132,7 +3132,9 @@ bfad_iocmd_handler(struct bfad_s *bfad, unsigned int cmd, void *iocmd,
- static int
- bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
- {
--	uint32_t vendor_cmd = job->request->rqst_data.h_vendor.vendor_cmd[0];
-+	struct fc_bsg_request *bsg_request = job->request;
-+	struct fc_bsg_reply *bsg_reply = job->reply;
-+	uint32_t vendor_cmd = bsg_request->rqst_data.h_vendor.vendor_cmd[0];
- 	struct bfad_im_port_s *im_port =
- 			(struct bfad_im_port_s *) job->shost->hostdata[0];
- 	struct bfad_s *bfad = im_port->bfad;
-@@ -3175,8 +3177,8 @@ bfad_im_bsg_vendor_request(struct fc_bsg_job *job)
- 
- 	/* Fill the BSG job reply data */
- 	job->reply_len = job->reply_payload.payload_len;
--	job->reply->reply_payload_rcv_len = job->reply_payload.payload_len;
--	job->reply->result = rc;
-+	bsg_reply->reply_payload_rcv_len = job->reply_payload.payload_len;
-+	bsg_reply->result = rc;
- 
- 	job->job_done(job);
- 	return rc;
-@@ -3184,9 +3186,9 @@ error:
- 	/* free the command buffer */
- 	kfree(payload_kbuf);
- out:
--	job->reply->result = rc;
-+	bsg_reply->result = rc;
- 	job->reply_len = sizeof(uint32_t);
--	job->reply->reply_payload_rcv_len = 0;
-+	bsg_reply->reply_payload_rcv_len = 0;
- 	return rc;
- }
- 
-@@ -3362,18 +3364,20 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 	struct bfad_fcxp    *drv_fcxp;
- 	struct bfa_fcs_lport_s *fcs_port;
- 	struct bfa_fcs_rport_s *fcs_rport;
--	uint32_t command_type = job->request->msgcode;
-+	struct fc_bsg_request *bsg_request = bsg_request;
-+	struct fc_bsg_reply *bsg_reply = job->reply;
-+	uint32_t command_type = bsg_request->msgcode;
- 	unsigned long flags;
- 	struct bfad_buf_info *rsp_buf_info;
- 	void *req_kbuf = NULL, *rsp_kbuf = NULL;
- 	int rc = -EINVAL;
- 
- 	job->reply_len  = sizeof(uint32_t);	/* Atleast uint32_t reply_len */
--	job->reply->reply_payload_rcv_len = 0;
-+	bsg_reply->reply_payload_rcv_len = 0;
- 
- 	/* Get the payload passed in from userspace */
--	bsg_data = (struct bfa_bsg_data *) (((char *)job->request) +
--					sizeof(struct fc_bsg_request));
-+	bsg_data = (struct bfa_bsg_data *) (((char *)bsg_request) +
-+					    sizeof(struct fc_bsg_request));
- 	if (bsg_data == NULL)
- 		goto out;
- 
-@@ -3517,13 +3521,13 @@ bfad_im_bsg_els_ct_request(struct fc_bsg_job *job)
- 	/* fill the job->reply data */
- 	if (drv_fcxp->req_status == BFA_STATUS_OK) {
- 		job->reply_len = drv_fcxp->rsp_len;
--		job->reply->reply_payload_rcv_len = drv_fcxp->rsp_len;
--		job->reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
-+		bsg_reply->reply_payload_rcv_len = drv_fcxp->rsp_len;
-+		bsg_reply->reply_data.ctels_reply.status = FC_CTELS_STATUS_OK;
- 	} else {
--		job->reply->reply_payload_rcv_len =
-+		bsg_reply->reply_payload_rcv_len =
- 					sizeof(struct fc_bsg_ctels_reply);
- 		job->reply_len = sizeof(uint32_t);
--		job->reply->reply_data.ctels_reply.status =
-+		bsg_reply->reply_data.ctels_reply.status =
- 						FC_CTELS_STATUS_REJECT;
- 	}
- 
-@@ -3549,7 +3553,7 @@ out_free_mem:
- 	kfree(bsg_fcpt);
- 	kfree(drv_fcxp);
- out:
--	job->reply->result = rc;
-+	bsg_reply->result = rc;
- 
- 	if (rc == BFA_STATUS_OK)
- 		job->job_done(job);
-@@ -3560,9 +3564,11 @@ out:
- int
- bfad_im_bsg_request(struct fc_bsg_job *job)
- {
-+	struct fc_bsg_request *bsg_request = job->request;
-+	struct fc_bsg_reply *bsg_reply = job->reply;
- 	uint32_t rc = BFA_STATUS_OK;
- 
--	switch (job->request->msgcode) {
-+	switch (bsg_request->msgcode) {
- 	case FC_BSG_HST_VENDOR:
- 		/* Process BSG HST Vendor requests */
- 		rc = bfad_im_bsg_vendor_request(job);
-@@ -3575,8 +3581,8 @@ bfad_im_bsg_request(struct fc_bsg_job *job)
- 		rc = bfad_im_bsg_els_ct_request(job);
- 		break;
- 	default:
--		job->reply->result = rc = -EINVAL;
--		job->reply->reply_payload_rcv_len = 0;
-+		bsg_reply->result = rc = -EINVAL;
-+		bsg_reply->reply_payload_rcv_len = 0;
- 		break;
- 	}
- 
+I did take some inspiration from a similar patchset from Mike Christie
+dating back to 2011 but it's not a 1:1 copy. Patch 43/44 is heavily based
+on his series and attribution is given to him in the commit message.
+
+It is currently regression tested on FCoE using the 'fcns' and
+'fcrls'utilities.  I'm still trying to figure out how to test the other
+LLDDs. So any pointer from the respective maintainers are appreciated
+although the LLDD changes are purely mechanical. All they do is change from
+'struct fc_bsg_job' to 'struct bsg_job' and corresponding changes in order
+to get the series bisectable.
+
+The idea for this change arose when discussing racy sysfs handling the FC
+bsg code with Christoph and is a next step in moving all bsg clients to
+bsg-lib to eventually clean up the in kernel bsg API.
+
+Johannes Thumshirn (44):
+  scsi: Get rid of struct fc_bsg_buffer
+  bfa: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  zfcp: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  ibmvfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  lpfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  qla2xxx: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  libfc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  scsi: fc: don't use fc_bsg_job::request and fc_bsg_job::reply directly
+  scsi: fc: Export fc_bsg_jobdone
+  zfcp: Use fc_bsg_jobdone()
+  bfa: Use fc_bsg_jobdone()
+  ibmvfc: Use fc_bsg_jobdone()
+  libfc: Use fc_bsg_jobdone()
+  lpfc: Use fc_bsg_jobdone()
+  qla2xxx: Use fc_bsg_jobdone()
+  scsi: fc: remove job_done method from struct fc_bsg_job
+  scsi: Unify interfaces of fc_bsg_jobdone and bsg_job_done
+  scsi: fc: provide fc_bsg_to_shost() helper
+  scsi: fc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  bfa: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  lpfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  qla2xxx: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  libfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  ibmvfc: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  zfcp: use fc_bsg_to_shost() to access a bsg_job's Scsi_Host
+  scsi: fc: provide fc_bsg_to_rport() helper
+  scsi: fc: use fc_bsg_to_rport() to access a bsg_job's rport
+  zfcp: use fc_bsg_to_rport() to access a bsg_job's rport
+  qla2xxx: use fc_bsg_to_rport() to access a bsg_job's rport
+  lpfc: use fc_bsg_to_rport() to access a bsg_job's rport
+  libfc: use fc_bsg_to_rport() to access a bsg_job's rport
+  ibmvfc: use fc_bsg_to_rport() to access a bsg_job's rport
+  scsi: libfc: don't set FC_RQST_STATE_DONE before calling
+    fc_bsg_jobdone()
+  scsi: fc: implement kref backed reference counting
+  block: add reference counting for struct bsg_job
+  scsi: change FC drivers to use 'struct bsg_job'
+  block: export bsg_destroy_job
+  scsi: fc: Use bsg_destroy_job
+  block: export bsg_softirq_done
+  scsi: fc: use bsg_softirq_done
+  scsi: fc: use bsg_job_done
+  block: add bsg_job_put() and bsg_job_get()
+  scsi: fc: move FC transport's bsg code to bsg-lib
+  block: unexport bsg_softirq_done() again
+
+ block/bsg-lib.c                  |  19 +-
+ drivers/s390/scsi/zfcp_fc.c      |  33 +--
+ drivers/scsi/bfa/bfad_bsg.c      |  62 +++---
+ drivers/scsi/bfa/bfad_im.h       |   4 +-
+ drivers/scsi/ibmvscsi/ibmvfc.c   |  40 ++--
+ drivers/scsi/libfc/fc_lport.c    |  47 ++--
+ drivers/scsi/lpfc/lpfc_bsg.c     | 375 +++++++++++++++++++-------------
+ drivers/scsi/lpfc/lpfc_crtn.h    |   4 +-
+ drivers/scsi/qla2xxx/qla_bsg.c   | 449 ++++++++++++++++++++++-----------------
+ drivers/scsi/qla2xxx/qla_def.h   |   2 +-
+ drivers/scsi/qla2xxx/qla_gbl.h   |   4 +-
+ drivers/scsi/qla2xxx/qla_iocb.c  |  13 +-
+ drivers/scsi/qla2xxx/qla_isr.c   |  52 +++--
+ drivers/scsi/qla2xxx/qla_mr.c    |  15 +-
+ drivers/scsi/scsi_transport_fc.c | 409 ++++++-----------------------------
+ include/linux/bsg-lib.h          |   4 +
+ include/scsi/libfc.h             |   2 +-
+ include/scsi/scsi_transport_fc.h |  62 ++----
+ 18 files changed, 742 insertions(+), 854 deletions(-)
+
 -- 
 1.8.5.6
 
