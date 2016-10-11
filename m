@@ -1,49 +1,24 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v2 7/7] [RFC] nvme: Fix a race condition
-Date: Tue, 11 Oct 2016 18:46:01 +0200
-Message-ID: <20161011164601.GC18822@lst.de>
-References: <f153ee47-e599-c333-92b0-d5da475012f3@sandisk.com> <ff412bfb-548c-c4fc-5180-78ede8a19ef2@sandisk.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/44] Convert FibreChannel bsg code to use bsg-lib
+Date: Tue, 11 Oct 2016 09:49:38 -0700
+Message-ID: <20161011164938.GA6083@infradead.org>
+References: <cover.1476180827.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <ff412bfb-548c-c4fc-5180-78ede8a19ef2@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+In-Reply-To: <cover.1476180827.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Sep 28, 2016 at 05:01:45PM -0700, Bart Van Assche wrote:
-> Avoid that nvme_queue_rq() is still running when nvme_stop_queues()
-> returns. Untested.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Keith Busch <keith.busch@intel.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Sagi Grimberg <sagi@grimberg.me>
-> ---
->  drivers/nvme/host/core.c | 20 ++++++++++++--------
->  1 file changed, 12 insertions(+), 8 deletions(-)
-> 
-> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-> index d791fba..98f1f29 100644
-> --- a/drivers/nvme/host/core.c
-> +++ b/drivers/nvme/host/core.c
-> @@ -201,13 +201,9 @@ fail:
->  
->  void nvme_requeue_req(struct request *req)
->  {
-> -	unsigned long flags;
-> -
->  	blk_mq_requeue_request(req);
-> -	spin_lock_irqsave(req->q->queue_lock, flags);
-> -	if (!blk_mq_queue_stopped(req->q))
-> -		blk_mq_kick_requeue_list(req->q);
-> -	spin_unlock_irqrestore(req->q->queue_lock, flags);
-> +	WARN_ON_ONCE(blk_mq_queue_stopped(req->q));
-> +	blk_mq_kick_requeue_list(req->q);
->  }
->  EXPORT_SYMBOL_GPL(nvme_requeue_req);
+Hi Johannes,
 
-Can we just add a 'bool kick' argument to blk_mq_requeue_request and
-move all this handling to the core?
+this looks great to me.  But is there a chance to consolidate it into
+a more manageable set of patches?  E.g. all the patches to call
+export fc_bsg_jobdone, use it directly and remove the function pointer
+could go together, possibly even including the new calling convention.
+Similar all the patches about fc_bsg_to_shost could be merged into one,
+and if we add the bsg refcounting early, we could maybe skip a few
+steps of the conversion later on?
