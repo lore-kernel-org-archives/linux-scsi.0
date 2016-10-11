@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv2 0/7] libfc: sanitize kref and state machine fixes
-Date: Tue, 11 Oct 2016 17:07:07 -0400
-Message-ID: <yq1h98ioaro.fsf@sermon.lab.mkp.net>
-References: <1475226080-60365-1-git-send-email-hare@suse.de>
+Subject: Re: [RESEND PATCH v3] scsi: ufshcd: fix possible unclocked register access
+Date: Tue, 11 Oct 2016 17:55:16 -0400
+Message-ID: <yq160oyo8jf.fsf@sermon.lab.mkp.net>
+References: <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20462 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752993AbcJKVIQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 11 Oct 2016 17:08:16 -0400
-In-Reply-To: <1475226080-60365-1-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Fri, 30 Sep 2016 11:01:13 +0200")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1475815702-8624-1-git-send-email-subhashj@codeaurora.org>
+        (Subhash Jadavani's message of "Thu, 6 Oct 2016 21:48:22 -0700")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, "open list:UNIVERSAL FLASH STORAGE HOST
+        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Chad Dupuis <chad.dupuis@cavium.com>, linux-scsi@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
 
-Hannes> Hi all, here is the first round of patch to fixup libfc and
-Hannes> FCoE.  It consists of a rewrite of the libfc rport kref handling
-Hannes> (or, to be precise, is _implements_ rport kref handling) and
-Hannes> updates the 'disc_mutex' handling to match the new kref usage.
-Hannes> There are also some state machine fixes to handle FLOGI better
-Hannes> and a fix from Chad to harden FCoE login.
+Subhash> Vendor specific setup_clocks callback may require the clocks
+Subhash> managed by ufshcd driver to be ON. So if the vendor specific
+Subhash> setup_clocks callback is called while the required clocks are
+Subhash> turned off, it could result into unclocked register access.
+
+Subhash> To prevent possible unclock register access, this change adds
+Subhash> one more argument to setup_clocks callback to let it know
+Subhash> whether it is called pre/post the clock changes by core driver.
 
 Applied to 4.10/scsi-queue.
 
