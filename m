@@ -1,40 +1,100 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 00/44] Convert FibreChannel bsg code to use bsg-lib
-Date: Wed, 12 Oct 2016 09:06:17 +0200
-Message-ID: <20161012070609.42s2z3fs3yz57m3s@linux-x5ow.site>
-References: <cover.1476180827.git.jthumshirn@suse.de>
- <20161011164938.GA6083@infradead.org>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [bug report] scsi: hisi_sas: add internal abort to
+ hisi_sas_abort_task()
+Date: Wed, 12 Oct 2016 18:01:04 +0800
+Message-ID: <57FE09E0.9050801@huawei.com>
+References: <20161012061225.GK12841@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161011164938.GA6083@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:35845 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932485AbcJLKH6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 06:07:58 -0400
+In-Reply-To: <20161012061225.GK12841@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: linux-scsi@vger.kernel.org
 
-On Tue, Oct 11, 2016 at 09:49:38AM -0700, Christoph Hellwig wrote:
-> Hi Johannes,
-> 
-> this looks great to me.  But is there a chance to consolidate it into
-> a more manageable set of patches?  E.g. all the patches to call
-> export fc_bsg_jobdone, use it directly and remove the function pointer
-> could go together, possibly even including the new calling convention.
-> Similar all the patches about fc_bsg_to_shost could be merged into one,
-> and if we add the bsg refcounting early, we could maybe skip a few
-> steps of the conversion later on?
+On 12/10/2016 14:12, Dan Carpenter wrote:
+> Hello John Garry,
+>
+> The patch dc8a49cabc73: "scsi: hisi_sas: add internal abort to
+> hisi_sas_abort_task()" from Aug 24, 2016, leads to the following
+> static checker warning:
+>
+> 	drivers/scsi/hisi_sas/hisi_sas_main.c:848 hisi_sas_abort_task()
+> 	error: we previously assumed 'slot' could be null (see line 847)
+>
+> drivers/scsi/hisi_sas/hisi_sas_main.c
+>     809          spin_unlock_irqrestore(&task->task_state_lock, flags);
+>     810          sas_dev->dev_status = HISI_SAS_DEV_EH;
+>     811          if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
+>                      ^^^^^^^^^^^^^^^
+> We assume that ->lldd_task can be NULL.
+>
+>     812                  struct scsi_cmnd *cmnd = task->uldd_task;
+>     813                  struct hisi_sas_slot *slot = task->lldd_task;
+>     814                  u32 tag = slot->idx;
+>     815
+>     816                  int_to_scsilun(cmnd->device->lun, &lun);
+>     817                  tmf_task.tmf = TMF_ABORT_TASK;
+>     818                  tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
+>     819
+>     820                  rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun,
+>     821                                                    &tmf_task);
+>     822
+>     823                  /* if successful, clear the task and callback forwards.*/
+>     824                  if (rc == TMF_RESP_FUNC_COMPLETE) {
+>     825                          if (task->lldd_task) {
+>     826                                  struct hisi_sas_slot *slot;
+>     827
+>     828                                  slot = &hisi_hba->slot_info
+>     829                                          [tmf_task.tag_of_task_to_be_managed];
+>     830                                  spin_lock_irqsave(&hisi_hba->lock, flags);
+>     831                                  hisi_hba->hw->slot_complete(hisi_hba, slot, 1);
+>     832                                  spin_unlock_irqrestore(&hisi_hba->lock, flags);
+>     833                          }
+>     834                  }
+>     835
+>     836                  hisi_sas_internal_task_abort(hisi_hba, device,
+>     837                                               HISI_SAS_INT_ABT_CMD, tag);
+>     838          } else if (task->task_proto & SAS_PROTOCOL_SATA ||
+>     839                  task->task_proto & SAS_PROTOCOL_STP) {
+>     840                  if (task->dev->dev_type == SAS_SATA_DEV) {
+>     841                          hisi_sas_internal_task_abort(hisi_hba, device,
+>     842                                                       HISI_SAS_INT_ABT_DEV, 0);
+>     843                          rc = TMF_RESP_FUNC_COMPLETE;
+>     844                  }
+>     845          } else if (task->task_proto & SAS_PROTOCOL_SMP) {
+>     846                  /* SMP */
+>     847                  struct hisi_sas_slot *slot = task->lldd_task;
+>
+> We assign it to slot.
 
-Sure, I think 44 patches is a bit huge. Especially given the 0day bot
-fallout it generated. Let me see how I can slim it down.
+I will check this.
 
-	Johannes
+Thanks,
+John
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
+>     848                  u32 tag = slot->idx;
+>                                    ^^^^^^^^^
+> slot dereferenced without checking.
+>
+>     849
+>     850                  hisi_sas_internal_task_abort(hisi_hba, device,
+>     851                                               HISI_SAS_INT_ABT_CMD, tag);
+>     852          }
+>
+>
+>
+> regards,
+> dan carpenter
+>
+> .
+>
+
+
