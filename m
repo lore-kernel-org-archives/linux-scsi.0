@@ -1,125 +1,102 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 04/17 v2] lpfc: Set driver environment data on adapter
-Date: Wed, 12 Oct 2016 13:14:07 -0700
-Message-ID: <57fe998f.TsSKj4ofi6UpGQrs%james.smart@broadcom.com>
+Subject: [PATCH 01/17 v2] Fix few small typos in lpfc_scsi.c
+Date: Wed, 12 Oct 2016 13:14:04 -0700
+Message-ID: <57fe998c.T2Q59vHIKRBPe4Eg%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([202.86.248.61]:53783 "EHLO
-        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755981AbcJLUOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:41 -0400
+Received: from smtp.avagotech.com ([199.3.246.86]:59037 "EHLO
+        sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755906AbcJLUOk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:40 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 85C4A1006FF
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:09 -0700 (PDT)
+        by sgpsmtp2.avagotech.com (Postfix) with SMTP id E6B2512098D
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:05 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Set driver environment data on adapter
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This patch does a cleanup and fixes few small typos in lpfc_scsi.c
+
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+Signed-off-by: James Smart <james.smart@avagotech.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h | 12 ++++++++++++
- drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+ 
+ drivers/scsi/lpfc/lpfc_scsi.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index ee80227..0b2c337 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -921,6 +921,7 @@ struct mbox_header {
- #define LPFC_MBOX_OPCODE_GET_PORT_NAME			0x4D
- #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT			0x5A
- #define LPFC_MBOX_OPCODE_GET_VPD_DATA			0x5B
-+#define LPFC_MBOX_OPCODE_SET_HOST_DATA			0x5D
- #define LPFC_MBOX_OPCODE_SEND_ACTIVATION		0x73
- #define LPFC_MBOX_OPCODE_RESET_LICENSES			0x74
- #define LPFC_MBOX_OPCODE_GET_RSRC_EXTENT_INFO		0x9A
-@@ -2919,6 +2920,16 @@ struct lpfc_mbx_set_feature {
- };
- 
- 
-+#define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
-+struct lpfc_mbx_set_host_data {
-+#define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
-+	struct mbox_header header;
-+	uint32_t param_id;
-+	uint32_t param_len;
-+	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
-+};
-+
-+
- struct lpfc_mbx_get_sli4_parameters {
- 	struct mbox_header header;
- 	struct lpfc_sli4_parameters sli4_parameters;
-@@ -3313,6 +3324,7 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_get_port_name get_port_name;
- 		struct lpfc_mbx_set_feature  set_feature;
- 		struct lpfc_mbx_memory_dump_type3 mem_dump_type3;
-+		struct lpfc_mbx_set_host_data set_host_data;
- 		struct lpfc_mbx_nop nop;
- 	} un;
- };
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c532605..cb59f4e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -47,6 +47,7 @@
- #include "lpfc_compat.h"
- #include "lpfc_debugfs.h"
- #include "lpfc_vport.h"
-+#include "lpfc_version.h"
- 
- /* There are only four IOCB completion types. */
- typedef enum _lpfc_iocb_type {
-@@ -6289,6 +6290,25 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
- 	return 0;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index d197aa1..ca56f28 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -607,7 +607,7 @@ lpfc_sli4_fcp_xri_aborted(struct lpfc_hba *phba,
  }
  
-+void
-+lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
-+{
-+	uint32_t len;
-+
-+	len = sizeof(struct lpfc_mbx_set_host_data) -
-+		sizeof(struct lpfc_sli4_cfg_mhdr);
-+	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
-+			 LPFC_SLI4_MBX_EMBED);
-+
-+	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
-+	mbox->u.mqe.un.set_host_data.param_len = 8;
-+	snprintf(mbox->u.mqe.un.set_host_data.data,
-+		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
-+		 "Linux %s v"LPFC_DRIVER_VERSION,
-+		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
-+}
-+
  /**
-  * lpfc_sli4_hba_setup - SLI4 device intialization PCI function
-  * @phba: Pointer to HBA context object.
-@@ -6540,6 +6560,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 		goto out_free_mbox;
- 	}
+- * lpfc_sli4_post_scsi_sgl_list - Psot blocks of scsi buffer sgls from a list
++ * lpfc_sli4_post_scsi_sgl_list - Post blocks of scsi buffer sgls from a list
+  * @phba: pointer to lpfc hba data structure.
+  * @post_sblist: pointer to the scsi buffer list.
+  *
+@@ -736,7 +736,7 @@ lpfc_sli4_post_scsi_sgl_list(struct lpfc_hba *phba,
+ }
  
-+	lpfc_set_host_data(phba, mboxq);
-+
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	if (rc) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
-+				"2134 Failed to set host os driver version %x",
-+				rc);
-+	}
-+
- 	/* Read the port's service parameters. */
- 	rc = lpfc_read_sparam(phba, mboxq, vport->vpi);
- 	if (rc) {
--- 
-2.5.0
-
+ /**
+- * lpfc_sli4_repost_scsi_sgl_list - Repsot all the allocated scsi buffer sgls
++ * lpfc_sli4_repost_scsi_sgl_list - Repost all the allocated scsi buffer sgls
+  * @phba: pointer to lpfc hba data structure.
+  *
+  * This routine walks the list of scsi buffers that have been allocated and
+@@ -857,7 +857,7 @@ lpfc_new_scsi_buf_s4(struct lpfc_vport *vport, int num_to_alloc)
+ 				psb->data, psb->dma_handle);
+ 			kfree(psb);
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_FCP,
+-					"3368 Failed to allocated IOTAG for"
++					"3368 Failed to allocate IOTAG for"
+ 					" XRI:0x%x\n", lxri);
+ 			lpfc_sli4_free_xri(phba, lxri);
+ 			break;
+@@ -1136,7 +1136,7 @@ lpfc_release_scsi_buf(struct lpfc_hba *phba, struct lpfc_scsi_buf *psb)
+  *
+  * This routine does the pci dma mapping for scatter-gather list of scsi cmnd
+  * field of @lpfc_cmd for device with SLI-3 interface spec. This routine scans
+- * through sg elements and format the bdea. This routine also initializes all
++ * through sg elements and format the bde. This routine also initializes all
+  * IOCB fields which are dependent on scsi command request buffer.
+  *
+  * Return codes:
+@@ -1269,13 +1269,16 @@ lpfc_scsi_prep_dma_buf_s3(struct lpfc_hba *phba, struct lpfc_scsi_buf *lpfc_cmd)
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 
+-/* Return if if error injection is detected by Initiator */
++/* Return BG_ERR_INIT if error injection is detected by Initiator */
+ #define BG_ERR_INIT	0x1
+-/* Return if if error injection is detected by Target */
++/* Return BG_ERR_TGT if error injection is detected by Target */
+ #define BG_ERR_TGT	0x2
+-/* Return if if swapping CSUM<-->CRC is required for error injection */
++/* Return BG_ERR_SWAP if swapping CSUM<-->CRC is required for error injection */
+ #define BG_ERR_SWAP	0x10
+-/* Return if disabling Guard/Ref/App checking is required for error injection */
++/**
++ * Return BG_ERR_CHECK if disabling Guard/Ref/App checking is required for
++ * error injection
++ **/
+ #define BG_ERR_CHECK	0x20
+ 
+ /**
+@@ -4822,7 +4825,7 @@ wait_for_cmpl:
+ 		ret = FAILED;
+ 		lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+ 				 "0748 abort handler timed out waiting "
+-				 "for abortng I/O (xri:x%x) to complete: "
++				 "for aborting I/O (xri:x%x) to complete: "
+ 				 "ret %#x, ID %d, LUN %llu\n",
+ 				 iocb->sli4_xritag, ret,
+ 				 cmnd->device->id, cmnd->device->lun);
 
