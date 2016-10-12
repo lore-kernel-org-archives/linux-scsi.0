@@ -1,80 +1,67 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 16/17 v2] lpfc: Fix fw download on SLI-4 FC adapters
-Date: Wed, 12 Oct 2016 13:14:19 -0700
-Message-ID: <57fe999b.LkhVzK2phIyu2/YN%james.smart@broadcom.com>
+Subject: [PATCH 02/17 v2] lpfc: Correct embedded io wq element size
+Date: Wed, 12 Oct 2016 13:14:05 -0700
+Message-ID: <57fe998d.sIoov/3UyUW3cY0g%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([202.86.248.61]:53794 "EHLO
+Received: from bastion.smtp.avagotech.com ([202.86.248.61]:53782 "EHLO
         sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934068AbcJLUOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:48 -0400
+        with ESMTP id S1755922AbcJLUOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:41 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 99C2F10070B
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:21 -0700 (PDT)
+        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 843A2100706
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:07 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix fw download on SLI-4 FC adapters
+Correct embedded io wq element size. Embedded element sizes are
+128 byte elements
 
-Driver performs a quick validation of magic numbers in the fw
-download image. Driver needed to be updated for more recent
-magic numbers.
+Modified per review:
+change style of selecting wqesize using local variable
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_hw4.h  |  3 ++-
- drivers/scsi/lpfc/lpfc_init.c | 15 ++++++++-------
- 2 files changed, 10 insertions(+), 8 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 14 +++++---------
+ 1 file changed, 5 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index bbdcb5a..5646699 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -3996,7 +3996,8 @@ union lpfc_wqe128 {
- 	struct gen_req64_wqe gen_req;
- };
- 
--#define LPFC_GROUP_OJECT_MAGIC_NUM		0xfeaa0001
-+#define LPFC_GROUP_OJECT_MAGIC_G5		0xfeaa0001
-+#define LPFC_GROUP_OJECT_MAGIC_G6		0xfeaa0003
- #define LPFC_FILE_TYPE_GROUP			0xf7
- #define LPFC_FILE_ID_GROUP			0xa2
- struct lpfc_grp_hdr {
 diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 53227e5..442bbb8 100644
+index 734a042..af64d70 100644
 --- a/drivers/scsi/lpfc/lpfc_init.c
 +++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -10321,17 +10321,18 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 	image = (struct lpfc_grp_hdr *)fw->data;
+@@ -7256,6 +7256,7 @@ int
+ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ {
+ 	struct lpfc_queue *qdesc;
++	uint32_t wqesize;
+ 	int idx;
  
- 	INIT_LIST_HEAD(&dma_buffer_list);
--	if ((be32_to_cpu(image->magic_number) != LPFC_GROUP_OJECT_MAGIC_NUM) ||
--	    (bf_get_be32(lpfc_grp_hdr_file_type, image) !=
--	     LPFC_FILE_TYPE_GROUP) ||
--	    (bf_get_be32(lpfc_grp_hdr_id, image) != LPFC_FILE_ID_GROUP) ||
--	    (be32_to_cpu(image->size) != fw->size)) {
-+	if (((be32_to_cpu(image->magic_number) != LPFC_GROUP_OJECT_MAGIC_G5) &&
-+	     (be32_to_cpu(image->magic_number) != LPFC_GROUP_OJECT_MAGIC_G6)) ||
-+	   (bf_get_be32(lpfc_grp_hdr_file_type, image) !=
-+	    LPFC_FILE_TYPE_GROUP) ||
-+	   (be32_to_cpu(image->size) != fw->size)) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"3022 Invalid FW image found. "
--				"Magic:%x Type:%x ID:%x\n",
-+				"Magic:%x Type:%x ID:%x Size %d %ld\n",
- 				be32_to_cpu(image->magic_number),
- 				bf_get_be32(lpfc_grp_hdr_file_type, image),
--				bf_get_be32(lpfc_grp_hdr_id, image));
-+				bf_get_be32(lpfc_grp_hdr_id, image),
-+				be32_to_cpu(image->size), fw->size);
- 		rc = -EINVAL;
- 		goto release_out;
- 	}
+ 	/*
+@@ -7340,15 +7341,10 @@ lpfc_sli4_queue_create(struct lpfc_hba *phba)
+ 		phba->sli4_hba.fcp_cq[idx] = qdesc;
+ 
+ 		/* Create Fast Path FCP WQs */
+-		if (phba->fcp_embed_io) {
+-			qdesc = lpfc_sli4_queue_alloc(phba,
+-						      LPFC_WQE128_SIZE,
+-						      LPFC_WQE128_DEF_COUNT);
+-		} else {
+-			qdesc = lpfc_sli4_queue_alloc(phba,
+-						      phba->sli4_hba.wq_esize,
+-						      phba->sli4_hba.wq_ecount);
+-		}
++		wqesize = (phba->fcp_embed_io) ?
++				LPFC_WQE128_SIZE : phba->sli4_hba.wq_esize;
++		qdesc = lpfc_sli4_queue_alloc(phba, wqesize,
++						phba->sli4_hba.wq_ecount);
+ 		if (!qdesc) {
+ 			lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 					"0503 Failed allocate fast-path FCP "
 -- 
 2.5.0
 
