@@ -1,100 +1,59 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [bug report] scsi: hisi_sas: add internal abort to
- hisi_sas_abort_task()
-Date: Wed, 12 Oct 2016 18:01:04 +0800
-Message-ID: <57FE09E0.9050801@huawei.com>
-References: <20161012061225.GK12841@mwanda>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: [PATCH v2 07/16] scsi: libfc: don't set
+	FC_RQST_STATE_DONE before calling fc_bsg_jobdone()
+Date: Wed, 12 Oct 2016 15:06:33 +0200
+Message-ID: <c0be09bd5581f7993618132ed4bced8e5cb62ce1.1476276823.git.jthumshirn@suse.de>
+References: <cover.1476276823.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:35845 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932485AbcJLKH6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 06:07:58 -0400
-In-Reply-To: <20161012061225.GK12841@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <cover.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <cover.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+References: <cover.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Linux Kernel Mailinglist <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "open list:FCOE SUBSYSTEM libfc,
+ libfcoe, fcoe" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: linux-scsi@vger.kernel.org
 
-On 12/10/2016 14:12, Dan Carpenter wrote:
-> Hello John Garry,
->
-> The patch dc8a49cabc73: "scsi: hisi_sas: add internal abort to
-> hisi_sas_abort_task()" from Aug 24, 2016, leads to the following
-> static checker warning:
->
-> 	drivers/scsi/hisi_sas/hisi_sas_main.c:848 hisi_sas_abort_task()
-> 	error: we previously assumed 'slot' could be null (see line 847)
->
-> drivers/scsi/hisi_sas/hisi_sas_main.c
->     809          spin_unlock_irqrestore(&task->task_state_lock, flags);
->     810          sas_dev->dev_status = HISI_SAS_DEV_EH;
->     811          if (task->lldd_task && task->task_proto & SAS_PROTOCOL_SSP) {
->                      ^^^^^^^^^^^^^^^
-> We assume that ->lldd_task can be NULL.
->
->     812                  struct scsi_cmnd *cmnd = task->uldd_task;
->     813                  struct hisi_sas_slot *slot = task->lldd_task;
->     814                  u32 tag = slot->idx;
->     815
->     816                  int_to_scsilun(cmnd->device->lun, &lun);
->     817                  tmf_task.tmf = TMF_ABORT_TASK;
->     818                  tmf_task.tag_of_task_to_be_managed = cpu_to_le16(tag);
->     819
->     820                  rc = hisi_sas_debug_issue_ssp_tmf(task->dev, lun.scsi_lun,
->     821                                                    &tmf_task);
->     822
->     823                  /* if successful, clear the task and callback forwards.*/
->     824                  if (rc == TMF_RESP_FUNC_COMPLETE) {
->     825                          if (task->lldd_task) {
->     826                                  struct hisi_sas_slot *slot;
->     827
->     828                                  slot = &hisi_hba->slot_info
->     829                                          [tmf_task.tag_of_task_to_be_managed];
->     830                                  spin_lock_irqsave(&hisi_hba->lock, flags);
->     831                                  hisi_hba->hw->slot_complete(hisi_hba, slot, 1);
->     832                                  spin_unlock_irqrestore(&hisi_hba->lock, flags);
->     833                          }
->     834                  }
->     835
->     836                  hisi_sas_internal_task_abort(hisi_hba, device,
->     837                                               HISI_SAS_INT_ABT_CMD, tag);
->     838          } else if (task->task_proto & SAS_PROTOCOL_SATA ||
->     839                  task->task_proto & SAS_PROTOCOL_STP) {
->     840                  if (task->dev->dev_type == SAS_SATA_DEV) {
->     841                          hisi_sas_internal_task_abort(hisi_hba, device,
->     842                                                       HISI_SAS_INT_ABT_DEV, 0);
->     843                          rc = TMF_RESP_FUNC_COMPLETE;
->     844                  }
->     845          } else if (task->task_proto & SAS_PROTOCOL_SMP) {
->     846                  /* SMP */
->     847                  struct hisi_sas_slot *slot = task->lldd_task;
->
-> We assign it to slot.
+Don't set FC_RQST_STATE_DONE before calling fc_bsg_jobdone() as
+fc_bsg_jobdone() calls blk_complete_requeust() which raises a soft-IRQ that
+ends up in fc_bsg_sofirq_done() and fc_bsg_softirq_done() sets the
+FC_RQST_STATE_DONE flag.
 
-I will check this.
+Signed-off-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+---
+ drivers/scsi/libfc/fc_lport.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-Thanks,
-John
-
->
->     848                  u32 tag = slot->idx;
->                                    ^^^^^^^^^
-> slot dereferenced without checking.
->
->     849
->     850                  hisi_sas_internal_task_abort(hisi_hba, device,
->     851                                               HISI_SAS_INT_ABT_CMD, tag);
->     852          }
->
->
->
-> regards,
-> dan carpenter
->
-> .
->
-
-
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 156708a..53d13721 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1911,7 +1911,6 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		bsg_reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
+ 			-ECONNABORTED : -ETIMEDOUT;
+ 		job->reply_len = sizeof(uint32_t);
+-		job->state_flags |= FC_RQST_STATE_DONE;
+ 		fc_bsg_jobdone(job, bsg_reply->result,
+ 			       bsg_reply->reply_payload_rcv_len);
+ 		kfree(info);
+@@ -1947,7 +1946,6 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			bsg_reply->reply_payload_rcv_len =
+ 				job->reply_payload.payload_len;
+ 		bsg_reply->result = 0;
+-		job->state_flags |= FC_RQST_STATE_DONE;
+ 		fc_bsg_jobdone(job, bsg_reply->result,
+ 			       bsg_reply->reply_payload_rcv_len);
+ 		kfree(info);
+-- 
+1.8.5.6
