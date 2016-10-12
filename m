@@ -1,144 +1,202 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v2 08/16] scsi: fc: implement kref backed reference counting
-Date: Wed, 12 Oct 2016 15:06:34 +0200
-Message-ID: <60854e8cdb8b2306d403973ff3759e3650e7d0de.1476276823.git.jthumshirn@suse.de>
-References: <cover.1476276823.git.jthumshirn@suse.de>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH 1/2] scsi: Handle Unit Attention when issuing SCSI
+ command
+Date: Wed, 12 Oct 2016 21:15:52 +0800
+Message-ID: <1476278152.3538.7.camel@linux.vnet.ibm.com>
+References: <1476249921-17017-1-git-send-email-krisman@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37775 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755325AbcJLNIF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 12 Oct 2016 09:08:05 -0400
-In-Reply-To: <cover.1476276823.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1476276823.git.jthumshirn@suse.de>
-References: <cover.1476276823.git.jthumshirn@suse.de>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:50905 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932607AbcJLNQC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 12 Oct 2016 09:16:02 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9CDEBbX053108
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 09:16:01 -0400
+Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 261fq99x5e-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 09:16:01 -0400
+Received: from localhost
+        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Wed, 12 Oct 2016 07:16:00 -0600
+Received: from b03cxnp08028.gho.boulder.ibm.com (b03cxnp08028.gho.boulder.ibm.com [9.17.130.20])
+        by d03dlp02.boulder.ibm.com (Postfix) with ESMTP id AB0ED3E40048
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 07:15:57 -0600 (MDT)
+In-Reply-To: <1476249921-17017-1-git-send-email-krisman@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: brking@linux.vnet.ibm.com, linux-scsi@vger.kernel.org
 
-Implement kref backed reference counting instead of rolling our own. This
-elimnates the need of the following fields in 'struct fc_bsg_job':
-* ref_cnt
-* state_flags
-* job_lock
-bringing us close to unification of 'struct fc_bsg_job' and 'struct bsg_job'.
+On Wed, 2016-10-12 at 02:25 -0300, Gabriel Krisman Bertazi wrote:
+> Usually, re-sending the SCSI command is enough to recover from a Unit
+> Attention (UA).  This adds a generic retry code to the SCSI command 
+> path in case of an UA, before giving up and returning the error 
+> condition to the caller.
+> 
+> I added the UA verification into scsi_execute instead of
+> scsi_execute_req because there are at least a few callers that invoke
+> scsi_execute directly and would benefit from the internal UA retry.
+> Also, I didn't use scsi_normalize_sense to not duplicate 
+> functionality with scsi_execute_req_flags.  Instead, scsi_execute 
+> uses a small helper function that verifies only the UA condition 
+> directly from the raw sense buffer.  If this design is not OK, I can 
+> refactor to use scsi_normalize_sense.
+> 
+> This prevents us from duplicating the retry code in at least a few
+> places.  In particular, it fixes an issue found in some IBM 
+> enclosures, in which the device may return an Unit Attention during 
+> probe, breaking the bind with the ses module:
+> 
+> scsi 1:0:7:0: Failed to get diagnostic page 0x8000002
+> scsi 1:0:7:0: Failed to bind enclosure -19
+> 
+> Finally, should we have a NORETRY_UA flag to allow callers to disable
+> this mechanism?
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_transport_fc.c | 38 +++++++++-----------------------------
- include/scsi/scsi_transport_fc.h |  4 +---
- 2 files changed, 10 insertions(+), 32 deletions(-)
+I think not: let's use retries for this.  Allowing no retries would be
+the signal that you want the UA condition returned.
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 96b3a2e..b0e28af 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3560,16 +3560,9 @@ fc_vport_sched_delete(struct work_struct *work)
-  * @job:	fc_bsg_job that is to be torn down
-  */
- static void
--fc_destroy_bsgjob(struct fc_bsg_job *job)
-+fc_destroy_bsgjob(struct kref *kref)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(&job->job_lock, flags);
--	if (job->ref_cnt) {
--		spin_unlock_irqrestore(&job->job_lock, flags);
--		return;
--	}
--	spin_unlock_irqrestore(&job->job_lock, flags);
-+	struct fc_bsg_job *job = container_of(kref, struct fc_bsg_job, kref);
- 
- 	put_device(job->dev);	/* release reference for the request */
- 
-@@ -3620,15 +3613,9 @@ EXPORT_SYMBOL_GPL(fc_bsg_jobdone);
- static void fc_bsg_softirq_done(struct request *rq)
- {
- 	struct fc_bsg_job *job = rq->special;
--	unsigned long flags;
--
--	spin_lock_irqsave(&job->job_lock, flags);
--	job->state_flags |= FC_RQST_STATE_DONE;
--	job->ref_cnt--;
--	spin_unlock_irqrestore(&job->job_lock, flags);
- 
- 	blk_end_request_all(rq, rq->errors);
--	fc_destroy_bsgjob(job);
-+	kref_put(&job->kref, fc_destroy_bsgjob);
- }
- 
- /**
-@@ -3642,24 +3629,18 @@ fc_bsg_job_timeout(struct request *req)
- 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
- 	struct fc_rport *rport = fc_bsg_to_rport(job);
- 	struct fc_internal *i = to_fc_internal(shost->transportt);
--	unsigned long flags;
--	int err = 0, done = 0;
-+	int err = 0, inflight = 0;
- 
- 	if (rport && rport->port_state == FC_PORTSTATE_BLOCKED)
- 		return BLK_EH_RESET_TIMER;
- 
--	spin_lock_irqsave(&job->job_lock, flags);
--	if (job->state_flags & FC_RQST_STATE_DONE)
--		done = 1;
--	else
--		job->ref_cnt++;
--	spin_unlock_irqrestore(&job->job_lock, flags);
-+	inflight = kref_get_unless_zero(&job->kref);
- 
--	if (!done && i->f->bsg_timeout) {
-+	if (inflight && i->f->bsg_timeout) {
- 		/* call LLDD to abort the i/o as it has timed out */
- 		err = i->f->bsg_timeout(job);
- 		if (err == -EAGAIN) {
--			job->ref_cnt--;
-+			kref_put(&job->kref, fc_destroy_bsgjob);
- 			return BLK_EH_RESET_TIMER;
- 		} else if (err)
- 			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
-@@ -3667,7 +3648,7 @@ fc_bsg_job_timeout(struct request *req)
- 	}
- 
- 	/* the blk_end_sync_io() doesn't check the error */
--	if (done)
-+	if (!inflight)
- 		return BLK_EH_NOT_HANDLED;
- 	else
- 		return BLK_EH_HANDLED;
-@@ -3730,7 +3711,6 @@ fc_req_to_bsgjob(struct Scsi_Host *shost, struct fc_rport *rport,
- 	job->req = req;
- 	if (i->f->dd_bsg_size)
- 		job->dd_data = (void *)&job[1];
--	spin_lock_init(&job->job_lock);
- 	bsg_request = (struct fc_bsg_request *)req->cmd;
- 	job->request_len = req->cmd_len;
- 	bsg_reply = req->sense;
-@@ -3752,7 +3732,7 @@ fc_req_to_bsgjob(struct Scsi_Host *shost, struct fc_rport *rport,
- 		job->dev = &shost->shost_gendev;
- 	get_device(job->dev);		/* take a reference for the request */
- 
--	job->ref_cnt = 1;
-+	kref_init(&job->kref);
- 
- 	return 0;
- 
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 9f53fe3..8ae5680 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -634,9 +634,7 @@ struct fc_bsg_job {
- 	struct fc_rport *rport;
- 	struct device *dev;
- 	struct request *req;
--	spinlock_t job_lock;
--	unsigned int state_flags;
--	unsigned int ref_cnt;
-+	struct kref kref;
- 
- 	struct fc_bsg_request *request;
- 	struct fc_bsg_reply *reply;
--- 
-1.8.5.6
+> Link: https://patchwork.kernel.org/patch/9336763/
+> Suggested-by: Brian King <brking@linux.vnet.ibm.com>
+> Suggested-by: James Bottomley <jejb@linux.vnet.ibm.com>
+> Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/scsi_lib.c    | 47
+> +++++++++++++++++++++++++++++++++++++++++-----
+>  include/scsi/scsi_common.h |  9 +++++++++
+>  2 files changed, 51 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index c71344aebdbb..a4af411de2a4 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -47,6 +47,9 @@ struct kmem_cache *scsi_sdb_cache;
+>   */
+>  #define SCSI_QUEUE_DELAY	3
+>  
+> +/* Maximum number of retries when a scsi command triggers an Unit
+> Attention. */
+> +#define UNIT_ATTENTION_RETRIES 5
+
+We would also tick down the passed in retries so you don't need this
+artificial setting.
+
+>  static void
+>  scsi_set_blocked(struct scsi_cmnd *cmd, int reason)
+>  {
+> @@ -164,7 +167,7 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int
+> reason)
+>  	__scsi_queue_insert(cmd, reason, 1);
+>  }
+>  /**
+> - * scsi_execute - insert request and wait for the result
+> + * __scsi_execute - insert request and wait for the result
+>   * @sdev:	scsi device
+>   * @cmd:	scsi command
+>   * @data_direction: data direction
+> @@ -179,10 +182,10 @@ void scsi_queue_insert(struct scsi_cmnd *cmd,
+> int reason)
+>   * returns the req->errors value which is the scsi_cmnd result
+>   * field.
+>   */
+> -int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> -		 int data_direction, void *buffer, unsigned bufflen,
+> -		 unsigned char *sense, int timeout, int retries, u64
+> flags,
+> -		 int *resid)
+> +int __scsi_execute(struct scsi_device *sdev, const unsigned char
+> *cmd,
+> +		   int data_direction, void *buffer, unsigned
+> bufflen,
+> +		   unsigned char *sense, int timeout, int retries,
+> u64 flags,
+> +		   int *resid)
+>  {
+>  	struct request *req;
+>  	int write = (data_direction == DMA_TO_DEVICE);
+> @@ -227,6 +230,40 @@ int scsi_execute(struct scsi_device *sdev, const
+> unsigned char *cmd,
+>  
+>  	return ret;
+>  }
+> +
+> +int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+> +		 int data_direction, void *buffer, unsigned bufflen,
+> +		 unsigned char *sense, int timeout, int retries, u64
+> flags,
+> +		 int *resid)
+> +{
+> +	int result;
+> +	int retry = UNIT_ATTENTION_RETRIES;
+> +	bool priv_sense = false;
+> +
+> +	if (!sense) {
+> +		sense = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_NOIO);
+> +		priv_sense = true;
+> +		if (!sense)
+> +			return DRIVER_ERROR << 24;
+> +	}
+> +
+> +	while (retry--) {
+> +		result = __scsi_execute(sdev, cmd, data_direction,
+> buffer,
+> +					bufflen, sense, timeout,
+> retries,
+> +					flags, resid);
+
+OK, so really this isn't what you want, because blk_execute_req may
+have used several of your retries, so you now get a maximum possible
+set of retries at UNIT_ATTENTION_RETRIES*retries.  You need to start
+from the returned req->retries, which probably means this loop needs to
+be inside __scsi_execute.
+
+James
+
+
+> +
+> +		if (!scsi_sense_unit_attention(sense))
+> +			break;
+> +
+> +		if (retry)
+> +			memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
+> +	}
+> +
+> +	if (priv_sense)
+> +		kfree(sense);
+> +
+> +	return result;
+> +}
+>  EXPORT_SYMBOL(scsi_execute);
+>  
+>  int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned
+> char *cmd,
+> diff --git a/include/scsi/scsi_common.h b/include/scsi/scsi_common.h
+> index 20bf7eaef05a..747b632d5b57 100644
+> --- a/include/scsi/scsi_common.h
+> +++ b/include/scsi/scsi_common.h
+> @@ -58,6 +58,15 @@ static inline bool scsi_sense_valid(const struct
+> scsi_sense_hdr *sshdr)
+>  	return (sshdr->response_code & 0x70) == 0x70;
+>  }
+>  
+> +static inline bool scsi_sense_unit_attention(const char *sense)
+> +{
+> +	int resp = sense[0] & 0x7f;
+> +
+> +	return ((resp & 0x70) &&
+> +		((resp >= 0x72 && (sense[1] & 0xf) ==
+> UNIT_ATTENTION) ||
+> +		 (resp < 0x72 && (sense[2] & 0xf) ==
+> UNIT_ATTENTION)));
+> +}
+> +
+>  extern bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+>  				 struct scsi_sense_hdr *sshdr);
+>  
 
