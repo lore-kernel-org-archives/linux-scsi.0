@@ -1,106 +1,124 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 03/17 v2] lpfc: Fix sg_reset on SCSI device causing kernel crash
-Date: Wed, 12 Oct 2016 13:14:06 -0700
-Message-ID: <57fe998e.qbv3PDNFIL0gvh+R%james.smart@broadcom.com>
+Subject: [PATCH 04/17 v2] lpfc: Set driver environment data on adapter
+Date: Wed, 12 Oct 2016 13:14:07 -0700
+Message-ID: <57fe998f.TsSKj4ofi6UpGQrs%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([199.3.246.86]:59038 "EHLO
-        sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755972AbcJLUOk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:40 -0400
+Received: from smtp.avagotech.com ([202.86.248.61]:53783 "EHLO
+        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755981AbcJLUOl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:41 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp2.avagotech.com (Postfix) with SMTP id 206C212098F
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:08 -0700 (PDT)
+        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 85C4A1006FF
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:09 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix sg_reset on SCSI device causing kernel crash
-
-Driver could reference stale node pointers in task mgmt call.
-Changed to use resetting cmd and look up node pointer in task mgmt
-function.
-
-Modified per review:
-Revised lpfc_send_taskmgmt() to check rdata
+Set driver environment data on adapter
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_scsi.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
+ drivers/scsi/lpfc/lpfc_hw4.h | 12 ++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index ca56f28..4c53149e 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4948,26 +4948,30 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
-  *   0x2002 - Success.
-  **/
- static int
--lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
--		    unsigned  tgt_id, uint64_t lun_id,
--		    uint8_t task_mgmt_cmd)
-+lpfc_send_taskmgmt(struct lpfc_vport *vport, struct scsi_cmnd *cmnd,
-+		   unsigned int tgt_id, uint64_t lun_id,
-+		   uint8_t task_mgmt_cmd)
- {
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	struct lpfc_iocbq *iocbq;
- 	struct lpfc_iocbq *iocbqrsp;
--	struct lpfc_nodelist *pnode = rdata->pnode;
-+	struct lpfc_rport_data *rdata;
-+	struct lpfc_nodelist *pnode;
- 	int ret;
- 	int status;
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index ee80227..0b2c337 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -921,6 +921,7 @@ struct mbox_header {
+ #define LPFC_MBOX_OPCODE_GET_PORT_NAME			0x4D
+ #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT			0x5A
+ #define LPFC_MBOX_OPCODE_GET_VPD_DATA			0x5B
++#define LPFC_MBOX_OPCODE_SET_HOST_DATA			0x5D
+ #define LPFC_MBOX_OPCODE_SEND_ACTIVATION		0x73
+ #define LPFC_MBOX_OPCODE_RESET_LICENSES			0x74
+ #define LPFC_MBOX_OPCODE_GET_RSRC_EXTENT_INFO		0x9A
+@@ -2919,6 +2920,16 @@ struct lpfc_mbx_set_feature {
+ };
  
--	if (!pnode || !NLP_CHK_NODE_ACT(pnode))
-+	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
-+	if (!rdata || !rdata->pnode || !NLP_CHK_NODE_ACT(rdata->pnode))
- 		return FAILED;
-+	pnode = rdata->pnode;
  
--	lpfc_cmd = lpfc_get_scsi_buf(phba, rdata->pnode);
-+	lpfc_cmd = lpfc_get_scsi_buf(phba, pnode);
- 	if (lpfc_cmd == NULL)
- 		return FAILED;
- 	lpfc_cmd->timeout = phba->cfg_task_mgmt_tmo;
- 	lpfc_cmd->rdata = rdata;
-+	lpfc_cmd->pCmd = cmnd;
++#define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
++struct lpfc_mbx_set_host_data {
++#define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
++	struct mbox_header header;
++	uint32_t param_id;
++	uint32_t param_len;
++	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
++};
++
++
+ struct lpfc_mbx_get_sli4_parameters {
+ 	struct mbox_header header;
+ 	struct lpfc_sli4_parameters sli4_parameters;
+@@ -3313,6 +3324,7 @@ struct lpfc_mqe {
+ 		struct lpfc_mbx_get_port_name get_port_name;
+ 		struct lpfc_mbx_set_feature  set_feature;
+ 		struct lpfc_mbx_memory_dump_type3 mem_dump_type3;
++		struct lpfc_mbx_set_host_data set_host_data;
+ 		struct lpfc_mbx_nop nop;
+ 	} un;
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c532605..cb59f4e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -47,6 +47,7 @@
+ #include "lpfc_compat.h"
+ #include "lpfc_debugfs.h"
+ #include "lpfc_vport.h"
++#include "lpfc_version.h"
  
- 	status = lpfc_scsi_prep_task_mgmt_cmd(vport, lpfc_cmd, lun_id,
- 					   task_mgmt_cmd);
-@@ -5174,7 +5178,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+ /* There are only four IOCB completion types. */
+ typedef enum _lpfc_iocb_type {
+@@ -6289,6 +6290,25 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
+ 	return 0;
+ }
  
--	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
-+	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
- 						FCP_LUN_RESET);
++void
++lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
++{
++	uint32_t len;
++
++	len = sizeof(struct lpfc_mbx_set_host_data) -
++		sizeof(struct lpfc_sli4_cfg_mhdr);
++	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
++			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
++			 LPFC_SLI4_MBX_EMBED);
++
++	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
++	mbox->u.mqe.un.set_host_data.param_len = 8;
++	snprintf(mbox->u.mqe.un.set_host_data.data,
++		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
++		 "Linux %s v"LPFC_DRIVER_VERSION,
++		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
++}
++
+ /**
+  * lpfc_sli4_hba_setup - SLI4 device intialization PCI function
+  * @phba: Pointer to HBA context object.
+@@ -6540,6 +6560,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 		goto out_free_mbox;
+ 	}
  
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -5252,7 +5256,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
- 
--	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
-+	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
- 					FCP_TARGET_RESET);
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -5331,7 +5335,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
- 		if (!match)
- 			continue;
- 
--		status = lpfc_send_taskmgmt(vport, ndlp->rport->dd_data,
-+		status = lpfc_send_taskmgmt(vport, cmnd,
- 					i, 0, FCP_TARGET_RESET);
- 
- 		if (status != SUCCESS) {
++	lpfc_set_host_data(phba, mboxq);
++
++	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
++				"2134 Failed to set host os driver version %x",
++				rc);
++	}
++
+ 	/* Read the port's service parameters. */
+ 	rc = lpfc_read_sparam(phba, mboxq, vport->vpi);
+ 	if (rc) {
 -- 
 2.5.0
 
