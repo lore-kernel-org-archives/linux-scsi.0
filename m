@@ -1,61 +1,104 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 00/17 v2] lpfc: Update driver to version 11.2.0.2
-Date: Wed, 12 Oct 2016 13:14:03 -0700
-Message-ID: <57fe998b.g0/imZ+3/hLeAkS9%james.smart@broadcom.com>
+Subject: [PATCH 14/17 v2] lpfc: Correct panics with eh_timeout and
+ eh_deadline
+Date: Wed, 12 Oct 2016 13:14:17 -0700
+Message-ID: <57fe9999.ma9fce/fBLSubNC8%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([202.86.248.61]:53779 "EHLO
+Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:53792 "EHLO
         sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755884AbcJLUOl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:41 -0400
+        with ESMTP id S934040AbcJLUOr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:47 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 7F9D9100701
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:05 -0700 (PDT)
+        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 960CA10070A
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:19 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-This patch set updates the lpfc driver to revision 11.2.0.2
+Correct panics with eh_timeout and eh_deadline
 
-The patches were cut against scsi-misc
+We were having double completions on our SLI-3 version of adapters.
+Solved by clearing our command pointer before calling scsi_done.
 
+The eh paths potentially ran simulatenously and would see the non-null
+value and invoke scsi_done again.
 
-James Smart (17):
-  Fix few small typos in lpfc_scsi.c
-       originally posted by Milan Gandhi
-  lpfc: Correct embedded io wq element size
-  lpfc: Fix sg_reset on SCSI device causing kernel crash
-  lpfc: Set driver environment data on adapter
-  lpfc: Make lpfc_prot_mask and lpfc_prot_guard per hba parameters
-  lpfc: Code clean up for lpfc_iocb_cnt parameter
-  lpfc: Code cleanup for lpfc_enable_rrq parameter
-  lpfc: Code cleanup for lpfc_aer_support parameter
-  lpfc: Code cleanup for lpfc_topology parameter
-  lpfc: Code cleanup for lpfc_max_scsicmpl_time parameter
-  lpfc: Code cleanup for lpfc_sriov_nr_virtfn parameter
-  lpfc: Revise strings with full lpfc parameter name
-  lpfc: Fix lost target in pt-to-pt connect
-  lpfc: Correct panics with eh_timeout and eh_deadline
-  lpfc: Synchronize link speed with boot driver
-  lpfc: Fix fw download on SLI-4 FC adapters
-  lpfc: lpfc version changed to 11.2.0.2
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_scsi.c |  6 +++---
+ drivers/scsi/lpfc/lpfc_sli.c  | 12 ++++++++----
+ 2 files changed, 11 insertions(+), 7 deletions(-)
 
- drivers/scsi/lpfc/lpfc.h         |   6 ++
- drivers/scsi/lpfc/lpfc_attr.c    | 160 +++++++++++----------------------------
- drivers/scsi/lpfc/lpfc_bsg.c     |  44 +++++++++++
- drivers/scsi/lpfc/lpfc_bsg.h     |  10 +++
- drivers/scsi/lpfc/lpfc_crtn.h    |   2 -
- drivers/scsi/lpfc/lpfc_els.c     |   2 +-
- drivers/scsi/lpfc/lpfc_hw4.h     |  18 ++++-
- drivers/scsi/lpfc/lpfc_init.c    | 111 ++++++++++++++++++++-------
- drivers/scsi/lpfc/lpfc_scsi.c    |  49 +++++++-----
- drivers/scsi/lpfc/lpfc_sli.c     |  41 +++++++++-
- drivers/scsi/lpfc/lpfc_version.h |   2 +-
- 11 files changed, 272 insertions(+), 173 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 4c53149e..1b0ef79 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4142,13 +4142,13 @@ lpfc_scsi_cmd_iocb_cmpl(struct lpfc_hba *phba, struct lpfc_iocbq *pIocbIn,
+ 
+ 	lpfc_scsi_unprep_dma_buf(phba, lpfc_cmd);
+ 
+-	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
+-	cmd->scsi_done(cmd);
+-
+ 	spin_lock_irqsave(&phba->hbalock, flags);
+ 	lpfc_cmd->pCmd = NULL;
+ 	spin_unlock_irqrestore(&phba->hbalock, flags);
+ 
++	/* The sdev is not guaranteed to be valid post scsi_done upcall. */
++	cmd->scsi_done(cmd);
++
+ 	/*
+ 	 * If there is a thread waiting for command completion
+ 	 * wake up the thread.
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index cb59f4e..27cbd68 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -2677,15 +2677,16 @@ lpfc_sli_iocbq_lookup(struct lpfc_hba *phba,
+ 
+ 	if (iotag != 0 && iotag <= phba->sli.last_iotag) {
+ 		cmd_iocb = phba->sli.iocbq_lookup[iotag];
+-		list_del_init(&cmd_iocb->list);
+ 		if (cmd_iocb->iocb_flag & LPFC_IO_ON_TXCMPLQ) {
++			/* remove from txcmpl queue list */
++			list_del_init(&cmd_iocb->list);
+ 			cmd_iocb->iocb_flag &= ~LPFC_IO_ON_TXCMPLQ;
++			return cmd_iocb;
+ 		}
+-		return cmd_iocb;
+ 	}
+ 
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-			"0317 iotag x%x is out off "
++			"0317 iotag x%x is out of "
+ 			"range: max iotag x%x wd0 x%x\n",
+ 			iotag, phba->sli.last_iotag,
+ 			*(((uint32_t *) &prspiocb->iocb) + 7));
+@@ -2720,8 +2721,9 @@ lpfc_sli_iocbq_lookup_by_tag(struct lpfc_hba *phba,
+ 			return cmd_iocb;
+ 		}
+ 	}
++
+ 	lpfc_printf_log(phba, KERN_ERR, LOG_SLI,
+-			"0372 iotag x%x is out off range: max iotag (x%x)\n",
++			"0372 iotag x%x is out of range: max iotag (x%x)\n",
+ 			iotag, phba->sli.last_iotag);
+ 	return NULL;
+ }
+@@ -11808,6 +11810,8 @@ lpfc_sli4_els_wcqe_to_rspiocbq(struct lpfc_hba *phba,
+ 	/* Look up the ELS command IOCB and create pseudo response IOCB */
+ 	cmdiocbq = lpfc_sli_iocbq_lookup_by_tag(phba, pring,
+ 				bf_get(lpfc_wcqe_c_request_tag, wcqe));
++	/* Put the iocb back on the txcmplq */
++	lpfc_sli_ringtxcmpl_put(phba, pring, cmdiocbq);
+ 	spin_unlock_irqrestore(&pring->ring_lock, iflags);
+ 
+ 	if (unlikely(!cmdiocbq)) {
 -- 
 2.5.0
 
