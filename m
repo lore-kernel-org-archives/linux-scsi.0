@@ -1,56 +1,58 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 20/24] fcoe: set default TC priority
-Date: Thu, 13 Oct 2016 15:10:56 +0200
-Message-ID: <1476364260-12191-21-git-send-email-hare@suse.de>
+Subject: [PATCH 21/24] fcoe: catch invalid values for the 'enabled' attribute
+Date: Thu, 13 Oct 2016 15:10:57 +0200
+Message-ID: <1476364260-12191-22-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41199 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41161 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752784AbcJMNeF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:34:05 -0400
+        id S1751375AbcJMNeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:34:02 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-If DCB is not enabled or compiled in we still should be setting
-a sane default priority. So put FCoE frames in priority class
-'interactive' and FIP frames in priority class 'besteffort'.
+The 'enabled' sysfs attribute only accepts the values '0' and '1',
+so we should error out any other values.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe.c | 8 ++++++--
- 1 file changed, 6 insertions(+), 2 deletions(-)
+ drivers/scsi/fcoe/fcoe_sysfs.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index c907661..9876fca 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -2168,6 +2168,8 @@ static bool fcoe_match(struct net_device *netdev)
-  */
- static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
+index 9e6baac..9cf3d56 100644
+--- a/drivers/scsi/fcoe/fcoe_sysfs.c
++++ b/drivers/scsi/fcoe/fcoe_sysfs.c
+@@ -335,16 +335,24 @@ static ssize_t store_ctlr_enabled(struct device *dev,
+ 				  const char *buf, size_t count)
  {
-+	int ctlr_prio = TC_PRIO_BESTEFFORT;
-+	int fcoe_prio = TC_PRIO_INTERACTIVE;
- #ifdef CONFIG_DCB
- 	int dcbx;
- 	u8 fup, up;
-@@ -2194,10 +2196,12 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
- 			fup = dcb_getapp(netdev, &app);
- 		}
+ 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
++	bool enabled;
+ 	int rc;
  
--		fcoe->priority = ffs(up) ? ffs(up) - 1 : 0;
--		ctlr->priority = ffs(fup) ? ffs(fup) - 1 : fcoe->priority;
-+		fcoe_prio = ffs(up) ? ffs(up) - 1 : 0;
-+		ctlr_prio = ffs(fup) ? ffs(fup) - 1 : fcoe_prio;
- 	}
- #endif
-+	fcoe->priority = fcoe_prio;
-+	ctlr->priority = ctlr_prio;
- }
- 
- enum fcoe_create_link_state {
++	if (*buf == '1')
++		enabled = true;
++	else if (*buf == '0')
++		enabled = false;
++	else
++		return -EINVAL;
++
+ 	switch (ctlr->enabled) {
+ 	case FCOE_CTLR_ENABLED:
+-		if (*buf == '1')
++		if (enabled)
+ 			return count;
+ 		ctlr->enabled = FCOE_CTLR_DISABLED;
+ 		break;
+ 	case FCOE_CTLR_DISABLED:
+-		if (*buf == '0')
++		if (!enabled)
+ 			return count;
+ 		ctlr->enabled = FCOE_CTLR_ENABLED;
+ 		break;
 -- 
 1.8.5.6
 
