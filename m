@@ -1,90 +1,125 @@
-From: Adam Manzanares <adam.manzanares@wdc.com>
-Subject: Re: [PATCH v4 2/4] fusion: remove iopriority handling
-Date: Thu, 13 Oct 2016 15:12:25 -0700
-Message-ID: <20161013221225.GB2745@hgst.com>
-References: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
- <1476388433-2539-3-git-send-email-adam.manzanares@hgst.com>
- <8338586db99fd444337d27f9abc3a777@mail.gmail.com>
+From: james.smart@broadcom.com (James Smart)
+Subject: [PATCH v3 04/17] lpfc: Set driver environment data on adapter
+Date: Thu, 13 Oct 2016 15:06:05 -0700
+Message-ID: <5800054d.XngiQRDNTQkLdgRT%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8338586db99fd444337d27f9abc3a777@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: Adam Manzanares <adam.manzanares@hgst.com>, axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from sgpsmtp2.avagotech.com ([199.3.246.86]:36870 "EHLO
+        sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753630AbcJMWQf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:35 -0400
+Received: from flash (fx9xs32.emulex.com [10.230.226.120])
+        by sgpsmtp2.avagotech.com (Postfix) with SMTP id DA9D61209CC
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:06 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-The 10/13/2016 15:05, Sathya Prakash Veerichetty wrote:
-> By removing the code below, we put all the commands for all the types of
-> devices (SAS/SATA) as simple-Q (requeue as the device require) and I am
-> not sure whether it is the intention of this change.
-> 
 
-This is the intention of the change. I don't think the iopriority of the
-request is being used correctly. What does it mean to use 0x7 as an 
-indicator that a command should be put at the head of the queue? This 
-would be clearer if it was using some of the macros from ioprio. If 
-0x7 means something special I think this should be some #define in the 
-includes of the fusion driver with some documentation.
+Set driver environment data on adapter
 
-> -----Original Message-----
-> From: Adam Manzanares [mailto:adam.manzanares@hgst.com]
-> Sent: Thursday, October 13, 2016 1:54 PM
-> To: axboe@kernel.dk; tj@kernel.org; dan.j.williams@intel.com;
-> hare@suse.de; martin.petersen@oracle.com; mchristi@redhat.com;
-> toshi.kani@hpe.com; ming.lei@canonical.com; sathya.prakash@broadcom.com;
-> chaitra.basappa@broadcom.com; suganath-prabu.subramani@broadcom.com
-> Cc: linux-block@vger.kernel.org; linux-ide@vger.kernel.org;
-> linux-kernel@vger.kernel.org; MPT-FusionLinux.pdl@broadcom.com;
-> linux-scsi@vger.kernel.org; Adam Manzanares; Adam Manzanares
-> Subject: [PATCH v4 2/4] fusion: remove iopriority handling
-> 
-> The request priority is now by default coming from the ioc. It was not
-> clear what this code was trying to do based upon the iopriority class or
-> data. The driver should check that a device supports priorities and use
-> them according to the specificiations of ioprio.
-> 
-> Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
-> ---
->  drivers/message/fusion/mptscsih.c | 5 -----
->  1 file changed, 5 deletions(-)
-> 
-> diff --git a/drivers/message/fusion/mptscsih.c
-> b/drivers/message/fusion/mptscsih.c
-> index 6c9fc11..4740bb6 100644
-> --- a/drivers/message/fusion/mptscsih.c
-> +++ b/drivers/message/fusion/mptscsih.c
-> @@ -1369,11 +1369,6 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt)
->  	if ((vdevice->vtarget->tflags & MPT_TARGET_FLAGS_Q_YES)
->  	    && (SCpnt->device->tagged_supported)) {
->  		scsictl = scsidir | MPI_SCSIIO_CONTROL_SIMPLEQ;
-> -		if (SCpnt->request && SCpnt->request->ioprio) {
-> -			if (((SCpnt->request->ioprio & 0x7) == 1) ||
-> -				!(SCpnt->request->ioprio & 0x7))
-> -				scsictl |= MPI_SCSIIO_CONTROL_HEADOFQ;
-> -		}
->  	} else
->  		scsictl = scsidir | MPI_SCSIIO_CONTROL_UNTAGGED;
-> 
-> --
-> 2.1.4
-> 
-> Western Digital Corporation (and its subsidiaries) E-mail Confidentiality
-> Notice & Disclaimer:
-> 
-> This e-mail and any files transmitted with it may contain confidential or
-> legally privileged information of WDC and/or its affiliates, and are
-> intended solely for the use of the individual or entity to which they are
-> addressed. If you are not the intended recipient, any disclosure, copying,
-> distribution or any action taken or omitted to be taken in reliance on it,
-> is prohibited. If you have received this e-mail in error, please notify
-> the sender immediately and delete the e-mail in its entirety from your
-> system.
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+Signed-off-by: James Smart <james.smart@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_hw4.h | 12 ++++++++++++
+ drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++++++++++++++++++
+ 2 files changed, 41 insertions(+)
 
-Take care,
-Adam
+diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+index ee80227..0b2c337 100644
+--- a/drivers/scsi/lpfc/lpfc_hw4.h
++++ b/drivers/scsi/lpfc/lpfc_hw4.h
+@@ -921,6 +921,7 @@ struct mbox_header {
+ #define LPFC_MBOX_OPCODE_GET_PORT_NAME			0x4D
+ #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT			0x5A
+ #define LPFC_MBOX_OPCODE_GET_VPD_DATA			0x5B
++#define LPFC_MBOX_OPCODE_SET_HOST_DATA			0x5D
+ #define LPFC_MBOX_OPCODE_SEND_ACTIVATION		0x73
+ #define LPFC_MBOX_OPCODE_RESET_LICENSES			0x74
+ #define LPFC_MBOX_OPCODE_GET_RSRC_EXTENT_INFO		0x9A
+@@ -2919,6 +2920,16 @@ struct lpfc_mbx_set_feature {
+ };
+ 
+ 
++#define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
++struct lpfc_mbx_set_host_data {
++#define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
++	struct mbox_header header;
++	uint32_t param_id;
++	uint32_t param_len;
++	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
++};
++
++
+ struct lpfc_mbx_get_sli4_parameters {
+ 	struct mbox_header header;
+ 	struct lpfc_sli4_parameters sli4_parameters;
+@@ -3313,6 +3324,7 @@ struct lpfc_mqe {
+ 		struct lpfc_mbx_get_port_name get_port_name;
+ 		struct lpfc_mbx_set_feature  set_feature;
+ 		struct lpfc_mbx_memory_dump_type3 mem_dump_type3;
++		struct lpfc_mbx_set_host_data set_host_data;
+ 		struct lpfc_mbx_nop nop;
+ 	} un;
+ };
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c532605..cb59f4e 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -47,6 +47,7 @@
+ #include "lpfc_compat.h"
+ #include "lpfc_debugfs.h"
+ #include "lpfc_vport.h"
++#include "lpfc_version.h"
+ 
+ /* There are only four IOCB completion types. */
+ typedef enum _lpfc_iocb_type {
+@@ -6289,6 +6290,25 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
+ 	return 0;
+ }
+ 
++void
++lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
++{
++	uint32_t len;
++
++	len = sizeof(struct lpfc_mbx_set_host_data) -
++		sizeof(struct lpfc_sli4_cfg_mhdr);
++	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
++			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
++			 LPFC_SLI4_MBX_EMBED);
++
++	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
++	mbox->u.mqe.un.set_host_data.param_len = 8;
++	snprintf(mbox->u.mqe.un.set_host_data.data,
++		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
++		 "Linux %s v"LPFC_DRIVER_VERSION,
++		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
++}
++
+ /**
+  * lpfc_sli4_hba_setup - SLI4 device intialization PCI function
+  * @phba: Pointer to HBA context object.
+@@ -6540,6 +6560,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
+ 		goto out_free_mbox;
+ 	}
+ 
++	lpfc_set_host_data(phba, mboxq);
++
++	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
++	if (rc) {
++		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
++				"2134 Failed to set host os driver version %x",
++				rc);
++	}
++
+ 	/* Read the port's service parameters. */
+ 	rc = lpfc_read_sparam(phba, mboxq, vport->vpi);
+ 	if (rc) {
+-- 
+2.5.0
+
+
