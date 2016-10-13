@@ -1,94 +1,107 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v3 08/17] lpfc: Code cleanup for lpfc_aer_support
- parameter
-Date: Thu, 13 Oct 2016 15:06:09 -0700
-Message-ID: <58000551.k9hltsLTejjB3lYo%james.smart@broadcom.com>
+Subject: [PATCH v3 03/17] lpfc: Fix sg_reset on SCSI device causing kernel crash
+Date: Thu, 13 Oct 2016 15:06:04 -0700
+Message-ID: <5800054c.g3V3xbXWePOAaN/W%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([199.3.246.86]:36894 "EHLO
-        sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756959AbcJMWQf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:35 -0400
+Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:55291 "EHLO
+        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757017AbcJMWQg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:36 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp2.avagotech.com (Postfix) with SMTP id 327FA1209CE
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:11 -0700 (PDT)
+        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 6858D10074A
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:06 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Code cleanup for lpfc_aer_support parameter
+Fix sg_reset on SCSI device causing kernel crash
+
+Driver could reference stale node pointers in task mgmt call.
+Changed to use resetting cmd and look up node pointer in task mgmt
+function.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 43 +++----------------------------------------
- 1 file changed, 3 insertions(+), 40 deletions(-)
+v2 mods:
+ Revised lpfc_send_taskmgmt() to check rdata
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 22a66c7..ae76aaa 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3779,6 +3779,9 @@ static DEVICE_ATTR(lpfc_link_speed, S_IRUGO | S_IWUSR,
- #       1  = aer supported and enabled (default)
- # Value range is [0,1]. Default value is 1.
- */
-+LPFC_ATTR(aer_support, 1, 0, 1,
-+	"Enable PCIe device AER support");
-+lpfc_param_show(aer_support)
+ drivers/scsi/lpfc/lpfc_scsi.c | 22 +++++++++++++---------
+ 1 file changed, 13 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index ca56f28..4c53149e 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -4948,26 +4948,30 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
+  *   0x2002 - Success.
+  **/
+ static int
+-lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
+-		    unsigned  tgt_id, uint64_t lun_id,
+-		    uint8_t task_mgmt_cmd)
++lpfc_send_taskmgmt(struct lpfc_vport *vport, struct scsi_cmnd *cmnd,
++		   unsigned int tgt_id, uint64_t lun_id,
++		   uint8_t task_mgmt_cmd)
+ {
+ 	struct lpfc_hba   *phba = vport->phba;
+ 	struct lpfc_scsi_buf *lpfc_cmd;
+ 	struct lpfc_iocbq *iocbq;
+ 	struct lpfc_iocbq *iocbqrsp;
+-	struct lpfc_nodelist *pnode = rdata->pnode;
++	struct lpfc_rport_data *rdata;
++	struct lpfc_nodelist *pnode;
+ 	int ret;
+ 	int status;
  
- /**
-  * lpfc_aer_support_store - Set the adapter for aer support
-@@ -3861,46 +3864,6 @@ lpfc_aer_support_store(struct device *dev, struct device_attribute *attr,
- 	return rc;
- }
+-	if (!pnode || !NLP_CHK_NODE_ACT(pnode))
++	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
++	if (!rdata || !rdata->pnode || !NLP_CHK_NODE_ACT(rdata->pnode))
+ 		return FAILED;
++	pnode = rdata->pnode;
  
--static int lpfc_aer_support = 1;
--module_param(lpfc_aer_support, int, S_IRUGO);
--MODULE_PARM_DESC(lpfc_aer_support, "Enable PCIe device AER support");
--lpfc_param_show(aer_support)
--
--/**
-- * lpfc_aer_support_init - Set the initial adapters aer support flag
-- * @phba: lpfc_hba pointer.
-- * @val: enable aer or disable aer flag.
-- *
-- * Description:
-- * If val is in a valid range [0,1], then set the adapter's initial
-- * cfg_aer_support field. It will be up to the driver's probe_one
-- * routine to determine whether the device's AER support can be set
-- * or not.
-- *
-- * Notes:
-- * If the value is not in range log a kernel error message, and
-- * choose the default value of setting AER support and return.
-- *
-- * Returns:
-- * zero if val saved.
-- * -EINVAL val out of range
-- **/
--static int
--lpfc_aer_support_init(struct lpfc_hba *phba, int val)
--{
--	if (val == 0 || val == 1) {
--		phba->cfg_aer_support = val;
--		return 0;
--	}
--	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"2712 lpfc_aer_support attribute value %d out "
--			"of range, allowed values are 0|1, setting it "
--			"to default value of 1\n", val);
--	/* By default, try to enable AER on a device */
--	phba->cfg_aer_support = 1;
--	return -EINVAL;
--}
--
- static DEVICE_ATTR(lpfc_aer_support, S_IRUGO | S_IWUSR,
- 		   lpfc_aer_support_show, lpfc_aer_support_store);
+-	lpfc_cmd = lpfc_get_scsi_buf(phba, rdata->pnode);
++	lpfc_cmd = lpfc_get_scsi_buf(phba, pnode);
+ 	if (lpfc_cmd == NULL)
+ 		return FAILED;
+ 	lpfc_cmd->timeout = phba->cfg_task_mgmt_tmo;
+ 	lpfc_cmd->rdata = rdata;
++	lpfc_cmd->pCmd = cmnd;
  
+ 	status = lpfc_scsi_prep_task_mgmt_cmd(vport, lpfc_cmd, lun_id,
+ 					   task_mgmt_cmd);
+@@ -5174,7 +5178,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
+ 	fc_host_post_vendor_event(shost, fc_get_event_number(),
+ 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+ 
+-	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
++	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+ 						FCP_LUN_RESET);
+ 
+ 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+@@ -5252,7 +5256,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+ 	fc_host_post_vendor_event(shost, fc_get_event_number(),
+ 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
+ 
+-	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
++	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
+ 					FCP_TARGET_RESET);
+ 
+ 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+@@ -5331,7 +5335,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
+ 		if (!match)
+ 			continue;
+ 
+-		status = lpfc_send_taskmgmt(vport, ndlp->rport->dd_data,
++		status = lpfc_send_taskmgmt(vport, cmnd,
+ 					i, 0, FCP_TARGET_RESET);
+ 
+ 		if (status != SUCCESS) {
 -- 
 2.5.0
 
