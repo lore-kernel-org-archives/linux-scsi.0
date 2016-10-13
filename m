@@ -1,76 +1,42 @@
-From: Michael Cyr <mikecyr@us.ibm.com>
-Subject: [PATCH v2 6/6] ibmvscsis: Issues from Dan Carpenter/Smatch
-Date: Thu, 13 Oct 2016 11:02:43 -0500
-Message-ID: <1476374563-13967-7-git-send-email-mikecyr@us.ibm.com>
-References: <1476226685-2276-1-git-send-email-mikecyr@us.ibm.com>
- <1476374563-13967-1-git-send-email-mikecyr@us.ibm.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Subject: [PATCH] cciss: remove unneeded void pointer cast
+Date: Thu, 13 Oct 2016 13:10:42 -0300
+Message-ID: <1476375042-10175-1-git-send-email-javier@osg.samsung.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50349 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756549AbcJMQE5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 12:04:57 -0400
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9DFxR5T092283
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 12:03:15 -0400
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 262awv30q9-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 12:03:15 -0400
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mikecyr@us.ibm.com>;
-        Thu, 13 Oct 2016 12:03:14 -0400
-In-Reply-To: <1476374563-13967-1-git-send-email-mikecyr@us.ibm.com>
+Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:53404
+        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754421AbcJMQLP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 12:11:15 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: nab@linux-iscsi.org, joe@perches.com
-Cc: hch@infradead.org, bryantly@linux.vnet.ibm.com, James.Bottomley@HansenPartnership.com, tyreld@linux.vnet.ibm.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, seroyer@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com, Michael Cyr <mikecyr@us.ibm.com>
+To: linux-kernel@vger.kernel.org
+Cc: Javier Martinez Canillas <javier@osg.samsung.com>, esc.storagedev@microsemi.com, iss_storagedev@hp.com, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org
 
-Signed-off-by: Michael Cyr <mikecyr@us.ibm.com>
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
+It's not necessary to cast the result of kmalloc, since void pointers are
+promoted to any other type. This also fixes following coccinelle warning:
+
+casting value returned by memory allocation function to (struct cciss_scsi_adapter_data_t *) is useless.
+
+Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 13 +++----------
- 1 file changed, 3 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index fe220a1..c9fa356 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -1896,14 +1896,7 @@ static long ibmvscsis_mad(struct scsi_info *vscsi, struct viosrp_crq *crq)
+ drivers/block/cciss_scsi.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/block/cciss_scsi.c b/drivers/block/cciss_scsi.c
+index 1537302e56e3..06692f164f40 100644
+--- a/drivers/block/cciss_scsi.c
++++ b/drivers/block/cciss_scsi.c
+@@ -703,8 +703,7 @@ cciss_scsi_setup(ctlr_info_t *h)
+ 	struct cciss_scsi_adapter_data_t * shba;
  
- 		pr_debug("mad: type %d\n", be32_to_cpu(mad->type));
- 
--		if (be16_to_cpu(mad->length) < 0) {
--			dev_err(&vscsi->dev, "mad: length is < 0\n");
--			ibmvscsis_post_disconnect(vscsi,
--						  ERR_DISCONNECT_RECONNECT, 0);
--			rc = SRP_VIOLATION;
--		} else {
--			rc = ibmvscsis_process_mad(vscsi, iue);
--		}
-+		rc = ibmvscsis_process_mad(vscsi, iue);
- 
- 		pr_debug("mad: status %hd, rc %ld\n", be16_to_cpu(mad->status),
- 			 rc);
-@@ -2523,7 +2516,6 @@ static void ibmvscsis_parse_cmd(struct scsi_info *vscsi,
- 		dev_err(&vscsi->dev, "0x%llx: parsing SRP descriptor table failed.\n",
- 			srp->tag);
- 		goto fail;
--		return;
- 	}
- 
- 	cmd->rsp.sol_not = srp->sol_not;
-@@ -3282,7 +3274,8 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 	INIT_LIST_HEAD(&vscsi->waiting_rsp);
- 	INIT_LIST_HEAD(&vscsi->active_q);
- 
--	snprintf(vscsi->tport.tport_name, 256, "%s", dev_name(&vdev->dev));
-+	snprintf(vscsi->tport.tport_name, IBMVSCSIS_NAMELEN, "%s",
-+		 dev_name(&vdev->dev));
- 
- 	pr_debug("probe tport_name: %s\n", vscsi->tport.tport_name);
- 
+ 	ccissscsi[h->ctlr].ndevices = 0;
+-	shba = (struct cciss_scsi_adapter_data_t *)
+-		kmalloc(sizeof(*shba), GFP_KERNEL);	
++	shba = kmalloc(sizeof(*shba), GFP_KERNEL);
+ 	if (shba == NULL)
+ 		return;
+ 	shba->scsi_host = NULL;
 -- 
-2.5.0
+2.7.4
 
