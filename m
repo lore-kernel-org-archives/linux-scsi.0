@@ -1,108 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 15/24] libfc: don't fail sequence abort for completed exchanges
-Date: Thu, 13 Oct 2016 15:10:51 +0200
-Message-ID: <1476364260-12191-16-git-send-email-hare@suse.de>
+Subject: [PATCH 24/24] fcoe: filter out frames from invalid vlans
+Date: Thu, 13 Oct 2016 15:11:00 +0200
+Message-ID: <1476364260-12191-25-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41197 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41195 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752611AbcJMNeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1752096AbcJMNeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 13 Oct 2016 09:34:03 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-If a sequence should be aborted the exchange might already
-be completed (eg if the response is still queued in the rx
-queue), so this shouldn't considered as an error.
+Any multicase address is set on all interfaces, the base interface
+and any VLAN interfaces on top of this. So we might receive frames
+which are not destined for us.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
-Acked-by: Johannes Thumshirn <jth@kernel.org>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
 ---
- drivers/scsi/libfc/fc_fcp.c | 40 ++++++++++++++++++++++++++++++----------
- 1 file changed, 30 insertions(+), 10 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c | 12 +++++++++++-
+ 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 780d9f0..d43c925 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -258,6 +258,17 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
- 		mod_timer(&fsp->timer, jiffies + delay);
- }
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index d773b46..4aacd60 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2754,11 +2754,21 @@ static int fcoe_ctlr_vn_recv(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 		struct fc_rport_priv rdata;
+ 		struct fcoe_rport frport;
+ 	} buf;
+-	int rc;
++	int rc, vlan_id = 0;
  
-+static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
-+{
-+	fsp->state |= FC_SRB_ABORTED;
-+	fsp->state &= ~FC_SRB_ABORT_PENDING;
+ 	fiph = (struct fip_header *)skb->data;
+ 	sub = fiph->fip_subcode;
+ 
++	if (fip->lp->vlan)
++		vlan_id = skb_vlan_tag_get_id(skb);
 +
-+	if (fsp->wait_for_comp)
-+		complete(&fsp->tm_done);
-+	else
-+		fc_fcp_complete_locked(fsp);
-+}
-+
- /**
-  * fc_fcp_send_abort() - Send an abort for exchanges associated with a
-  *			 fcp_pkt
-@@ -265,6 +276,8 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
-  */
- static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
- {
-+	int rc;
-+
- 	if (!fsp->seq_ptr)
- 		return -EINVAL;
- 
-@@ -272,7 +285,16 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
- 	put_cpu();
- 
- 	fsp->state |= FC_SRB_ABORT_PENDING;
--	return fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
-+	rc = fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
-+	/*
-+	 * ->seq_exch_abort() might return -ENXIO if
-+	 * the sequence is already completed
-+	 */
-+	if (rc == -ENXIO) {
-+		fc_fcp_abort_done(fsp);
-+		rc = 0;
-+	}
-+	return rc;
- }
- 
- /**
-@@ -729,15 +751,8 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 		ba_done = 0;
- 	}
- 
--	if (ba_done) {
--		fsp->state |= FC_SRB_ABORTED;
--		fsp->state &= ~FC_SRB_ABORT_PENDING;
--
--		if (fsp->wait_for_comp)
--			complete(&fsp->tm_done);
--		else
--			fc_fcp_complete_locked(fsp);
--	}
-+	if (ba_done)
-+		fc_fcp_abort_done(fsp);
- }
- 
- /**
-@@ -1245,6 +1260,11 @@ static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
- 		return FAILED;
- 	}
- 
-+	if (fsp->state & FC_SRB_ABORTED) {
-+		FC_FCP_DBG(fsp, "target abort cmd  completed\n");
-+		return SUCCESS;
++	if (vlan_id && vlan_id != fip->lp->vlan) {
++		LIBFCOE_FIP_DBG(fip, "vn_recv drop frame sub %x vlan %d\n",
++				sub, vlan_id);
++		rc = -EAGAIN;
++		goto drop;
 +	}
 +
- 	init_completion(&fsp->tm_done);
- 	fsp->wait_for_comp = 1;
- 
+ 	rc = fcoe_ctlr_vn_parse(fip, skb, &buf.rdata);
+ 	if (rc) {
+ 		LIBFCOE_FIP_DBG(fip, "vn_recv vn_parse error %d\n", rc);
 -- 
 1.8.5.6
 
