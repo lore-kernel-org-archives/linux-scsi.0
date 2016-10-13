@@ -1,29 +1,39 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 14/16] block: add bsg_job_put() and bsg_job_get()
-Date: Thu, 13 Oct 2016 13:47:07 +0200
-Message-ID: <ded0fa07-42b8-e05a-fd8f-d05af8b8d704@suse.de>
+Subject: Re: [PATCH v2 15/16] scsi: fc: move FC transport's bsg code to
+ bsg-lib
+Date: Thu, 13 Oct 2016 13:49:50 +0200
+Message-ID: <95dd831f-a276-c336-010c-bd3794e023e3@suse.de>
 References: <cover.1476276823.git.jthumshirn@suse.de>
- <18a915378ba11b84faa85341beb57df3f5976b64.1476276823.git.jthumshirn@suse.de>
+ <65886ca677259889fff0ad31efd081401349ebdc.1476276823.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <18a915378ba11b84faa85341beb57df3f5976b64.1476276823.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:56914 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754198AbcJMLvx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 07:51:53 -0400
+In-Reply-To: <65886ca677259889fff0ad31efd081401349ebdc.1476276823.git.jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
 On 10/12/2016 03:06 PM, Johannes Thumshirn wrote:
-> Add bsg_job_put() and bsg_job_get() so don't need to export
-> bsg_destroy_job() any more.
+> Now that all conversions are done, move the FibreChannel bsg code over to the
+> bsg library. Note that CONFIG_SCSI_FC_ATTRS now needs to select BLK_DEV_BSGLIB
+> in order to build correctly.
+> 
+> This patch is derived from work done by Mike Christie in 2011 [1] but only the
+> iscsi parts got merged back then.
+> 
+> [1] http://marc.info/?l=linux-scsi&m=131149780921009&w=2
 > 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  block/bsg-lib.c                  | 17 ++++++++++++++---
->  drivers/scsi/scsi_transport_fc.c |  4 ++--
->  include/linux/bsg-lib.h          |  3 ++-
->  3 files changed, 18 insertions(+), 6 deletions(-)
+>  drivers/scsi/Kconfig             |   1 +
+>  drivers/scsi/scsi_transport_fc.c | 287 ++++++---------------------------------
+>  2 files changed, 44 insertions(+), 244 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
