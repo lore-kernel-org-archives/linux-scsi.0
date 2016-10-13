@@ -1,63 +1,126 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/24] libfc: Return LS_RJT_BUSY for PRLI in status PLOGI
-Date: Thu, 13 Oct 2016 15:10:47 +0200
-Message-ID: <1476364260-12191-12-git-send-email-hare@suse.de>
+Subject: [PATCH 02/24] libfc: spurious I/O error under high load
+Date: Thu, 13 Oct 2016 15:10:38 +0200
+Message-ID: <1476364260-12191-3-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40747 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40741 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755563AbcJMNXr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:23:47 -0400
+        id S1755548AbcJMNXq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:23:46 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-Occasionally it might happen that we receive a PRLI while we're still
-waiting for our PLOGI response. In that case we should return
-'busy' LS status instead of 'plogi required' LS status.
+If a command times out libfc is sending an REC, which also
+might fail (due to frames being lost or something).
+If no data has been transferred we can simply retry
+the command, but the current code sets a state of FC_ERROR,
+which then is being translated into DID_ERROR, resulting
+in an I/O error.
+So to handle this properly we need to set a separate
+state FC_TRANS_RESET and mapping it onto DID_SOFT_RETRY.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/libfc/fc_rport.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/libfc/fc_fcp.c | 23 +++++++++++++++--------
+ 1 file changed, 15 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 2b8214f..a867874 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1705,6 +1705,15 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	case RPORT_ST_READY:
- 	case RPORT_ST_ADISC:
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 5c6c73a..9f9eb7b 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -122,6 +122,7 @@ struct fc_fcp_internal {
+ #define FC_HRD_ERROR		9
+ #define FC_CRC_ERROR		10
+ #define FC_TIMED_OUT		11
++#define FC_TRANS_RESET		12
+ 
+ /*
+  * Error recovery timeout values.
+@@ -283,7 +284,7 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+  * fc_io_compl() will notify the SCSI-ml that the I/O is done.
+  * The SCSI-ml will retry the command.
+  */
+-static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
++static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp, int status_code)
+ {
+ 	if (fsp->seq_ptr) {
+ 		fsp->lp->tt.exch_done(fsp->seq_ptr);
+@@ -292,7 +293,7 @@ static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp)
+ 
+ 	fsp->state &= ~FC_SRB_ABORT_PENDING;
+ 	fsp->io_status = 0;
+-	fsp->status_code = FC_ERROR;
++	fsp->status_code = status_code;
+ 	fc_fcp_complete_locked(fsp);
+ }
+ 
+@@ -1208,7 +1209,7 @@ static void fc_fcp_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		return;
+ 
+ 	if (error == -FC_EX_CLOSED) {
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		goto unlock;
+ 	}
+ 
+@@ -1531,10 +1532,11 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 			 */
+ 			if (rjt->er_explan == ELS_EXPL_OXID_RXID &&
+ 			    fsp->xfer_len == 0) {
+-				fc_fcp_retry_cmd(fsp);
++				fsp->state |= FC_SRB_ABORTED;
++				fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
+ 				break;
+ 			}
+-			fc_fcp_recovery(fsp, FC_ERROR);
++			fc_fcp_recovery(fsp, FC_TRANS_RESET);
+ 			break;
+ 		}
+ 	} else if (opcode == ELS_LS_ACC) {
+@@ -1630,7 +1632,7 @@ static void fc_fcp_rec_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	case -FC_EX_CLOSED:
+ 		FC_FCP_DBG(fsp, "REC %p fid %6.6x exchange closed\n",
+ 			   fsp, fsp->rport->port_id);
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
  		break;
-+	case RPORT_ST_PLOGI:
-+		if (fc_frame_payload_op(fp) == ELS_PRLI) {
-+			FC_RPORT_DBG(rdata, "Reject ELS PRLI "
-+				     "while in state %s\n",
-+				     fc_rport_state(rdata));
-+			mutex_unlock(&rdata->rp_mutex);
-+			kref_put(&rdata->kref, lport->tt.rport_destroy);
-+			goto busy;
-+		}
+ 
  	default:
- 		FC_RPORT_DBG(rdata,
- 			     "Reject ELS 0x%02x while in state %s\n",
-@@ -1752,6 +1761,14 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 	els_data.explan = ELS_EXPL_PLOGI_REQD;
- 	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
- 	fc_frame_free(fp);
-+	return;
-+
-+busy:
-+	els_data.reason = ELS_RJT_BUSY;
-+	els_data.explan = ELS_EXPL_NONE;
-+	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
-+	fc_frame_free(fp);
-+	return;
+@@ -1729,7 +1731,7 @@ static void fc_fcp_srr(struct fc_fcp_pkt *fsp, enum fc_rctl r_ctl, u32 offset)
+ 	fc_fcp_pkt_hold(fsp);		/* hold for outstanding SRR */
+ 	return;
+ retry:
+-	fc_fcp_retry_cmd(fsp);
++	fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
  }
  
  /**
+@@ -1801,7 +1803,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		FC_FCP_DBG(fsp, "SRR error, exchange closed\n");
+ 		/* fall through */
+ 	default:
+-		fc_fcp_retry_cmd(fsp);
++		fc_fcp_retry_cmd(fsp, FC_ERROR);
+ 		break;
+ 	}
+ 	fc_fcp_unlock_pkt(fsp);
+@@ -2014,6 +2016,11 @@ static void fc_io_compl(struct fc_fcp_pkt *fsp)
+ 			   "due to FC_CMD_RESET\n");
+ 		sc_cmd->result = (DID_RESET << 16);
+ 		break;
++	case FC_TRANS_RESET:
++		FC_FCP_DBG(fsp, "Returning DID_SOFT_ERROR to scsi-ml "
++			   "due to FC_TRANS_RESET\n");
++		sc_cmd->result = (DID_SOFT_ERROR << 16);
++		break;
+ 	case FC_HRD_ERROR:
+ 		FC_FCP_DBG(fsp, "Returning DID_NO_CONNECT to scsi-ml "
+ 			   "due to FC_HRD_ERROR\n");
 -- 
 1.8.5.6
 
