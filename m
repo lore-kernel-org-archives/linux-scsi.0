@@ -1,202 +1,135 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 2/2] be2iscsi: Replace _bh with _irqsave/irqrestore
-Date: Thu, 13 Oct 2016 12:08:49 +0530
-Message-ID: <1476340729-8569-3-git-send-email-jitendra.bhivare@broadcom.com>
-References: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:33232 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750822AbcJMGsq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 02:48:46 -0400
-Received: by mail-qt0-f170.google.com with SMTP id s49so31949146qta.0
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 23:47:10 -0700 (PDT)
-In-Reply-To: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 02/10] mm: remove write/force parameters
+ from __get_user_pages_unlocked()
+Date: Thu, 13 Oct 2016 08:54:29 +0200
+Message-ID: <ce8bd0b0-84e3-4b3a-edeb-27709b0c5ce6@redhat.com>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161013002020.3062-3-lstoakes@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+In-Reply-To: <20161013002020.3062-3-lstoakes@gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Lorenzo Stoakes <lstoakes@gmail.com>, linux-mm@kvack.org
+Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linux-sh@vger.kerne, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.org, linux-fsdevel@vger.kernel.org, Andrew Morton <akpm@linux-foundation.org>, Mel Gorman <mgorman@techsingularity.net>
 List-Id: linux-scsi@vger.kernel.org
-To: cleech@redhat.com, lduncan@suse.com
-Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-[ 3843.132217] WARNING: CPU: 20 PID: 1227 at kernel/softirq.c:150 __local_bh_enable_ip+0x6b/0x90
-[ 3843.142815] Modules linked in:
-...
-[ 3843.294328] CPU: 20 PID: 1227 Comm: kworker/20:1H Tainted: G            E   4.8.0-rc1+ #3
-[ 3843.304944] Hardware name: Dell Inc. PowerEdge R720/0X6H47, BIOS 1.4.8 10/25/2012
-[ 3843.314798] Workqueue: kblockd blk_timeout_work
-[ 3843.321350]  0000000000000086 00000000a32f4533 ffff8802216d7bd8 ffffffff8135c3cf
-[ 3843.331146]  0000000000000000 0000000000000000 ffff8802216d7c18 ffffffff8108d661
-[ 3843.340918]  00000096216d7c50 0000000000000200 ffff8802d07cc828 ffff8801b3632550
-[ 3843.350687] Call Trace:
-[ 3843.354866]  [<ffffffff8135c3cf>] dump_stack+0x63/0x84
-[ 3843.362061]  [<ffffffff8108d661>] __warn+0xd1/0xf0
-[ 3843.368851]  [<ffffffff8108d79d>] warn_slowpath_null+0x1d/0x20
-[ 3843.376791]  [<ffffffff810930eb>] __local_bh_enable_ip+0x6b/0x90
-[ 3843.384903]  [<ffffffff816fe7be>] _raw_spin_unlock_bh+0x1e/0x20
-[ 3843.392940]  [<ffffffffa085f710>] beiscsi_alloc_pdu+0x2f0/0x6e0 [be2iscsi]
-[ 3843.402076]  [<ffffffffa06bc358>] __iscsi_conn_send_pdu+0xf8/0x370 [libiscsi]
-[ 3843.411549]  [<ffffffffa06bc6fe>] iscsi_send_nopout+0xbe/0x110 [libiscsi]
-[ 3843.420639]  [<ffffffffa06bd98b>] iscsi_eh_cmd_timed_out+0x29b/0x2b0 [libiscsi]
-[ 3843.430339]  [<ffffffff814cd1de>] scsi_times_out+0x5e/0x250
-[ 3843.438119]  [<ffffffff813374af>] blk_rq_timed_out+0x1f/0x60
-[ 3843.446009]  [<ffffffff8133759d>] blk_timeout_work+0xad/0x150
-[ 3843.454010]  [<ffffffff810a6642>] process_one_work+0x152/0x400
-[ 3843.462114]  [<ffffffff810a6f35>] worker_thread+0x125/0x4b0
-[ 3843.469961]  [<ffffffff810a6e10>] ? rescuer_thread+0x380/0x380
-[ 3843.478116]  [<ffffffff810aca28>] kthread+0xd8/0xf0
-[ 3843.485212]  [<ffffffff816fedff>] ret_from_fork+0x1f/0x40
-[ 3843.492908]  [<ffffffff810ac950>] ? kthread_park+0x60/0x60
-[ 3843.500715] ---[ end trace 57ec0a1d8f0dd3a0 ]---
-[ 3852.328667] NMI watchdog: Watchdog detected hard LOCKUP on cpu 1Kernel panic - not syncing: Hard LOCKUP
-
-blk_timeout_work takes queue_lock spin_lock with interrupts disabled
-before invoking iscsi_eh_cmd_timed_out. This causes a WARN_ON_ONCE in
-spin_unlock_bh for wrb_lock/io_sgl_lock/mgmt_sgl_lock.
-
-CPU was kept busy in lot of bottom half work with interrupts disabled
-thus causing hard lock up.
-
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
----
- drivers/scsi/be2iscsi/be_main.c | 37 +++++++++++++++++++++++--------------
- 1 file changed, 23 insertions(+), 14 deletions(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 68138a6..d9239c2 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -900,8 +900,9 @@ void hwi_ring_cq_db(struct beiscsi_hba *phba,
- static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
- {
- 	struct sgl_handle *psgl_handle;
-+	unsigned long flags;
- 
--	spin_lock_bh(&phba->io_sgl_lock);
-+	spin_lock_irqsave(&phba->io_sgl_lock, flags);
- 	if (phba->io_sgl_hndl_avbl) {
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
- 			    "BM_%d : In alloc_io_sgl_handle,"
-@@ -919,14 +920,16 @@ static struct sgl_handle *alloc_io_sgl_handle(struct beiscsi_hba *phba)
- 			phba->io_sgl_alloc_index++;
- 	} else
- 		psgl_handle = NULL;
--	spin_unlock_bh(&phba->io_sgl_lock);
-+	spin_unlock_irqrestore(&phba->io_sgl_lock, flags);
- 	return psgl_handle;
- }
- 
- static void
- free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- {
--	spin_lock_bh(&phba->io_sgl_lock);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&phba->io_sgl_lock, flags);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_IO,
- 		    "BM_%d : In free_,io_sgl_free_index=%d\n",
- 		    phba->io_sgl_free_index);
-@@ -941,7 +944,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 			     "value there=%p\n", phba->io_sgl_free_index,
- 			     phba->io_sgl_hndl_base
- 			     [phba->io_sgl_free_index]);
--		 spin_unlock_bh(&phba->io_sgl_lock);
-+		 spin_unlock_irqrestore(&phba->io_sgl_lock, flags);
- 		return;
- 	}
- 	phba->io_sgl_hndl_base[phba->io_sgl_free_index] = psgl_handle;
-@@ -950,7 +953,7 @@ free_io_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		phba->io_sgl_free_index = 0;
- 	else
- 		phba->io_sgl_free_index++;
--	spin_unlock_bh(&phba->io_sgl_lock);
-+	spin_unlock_irqrestore(&phba->io_sgl_lock, flags);
- }
- 
- static inline struct wrb_handle *
-@@ -958,15 +961,16 @@ beiscsi_get_wrb_handle(struct hwi_wrb_context *pwrb_context,
- 		       unsigned int wrbs_per_cxn)
- {
- 	struct wrb_handle *pwrb_handle;
-+	unsigned long flags;
- 
--	spin_lock_bh(&pwrb_context->wrb_lock);
-+	spin_lock_irqsave(&pwrb_context->wrb_lock, flags);
- 	pwrb_handle = pwrb_context->pwrb_handle_base[pwrb_context->alloc_index];
- 	pwrb_context->wrb_handles_available--;
- 	if (pwrb_context->alloc_index == (wrbs_per_cxn - 1))
- 		pwrb_context->alloc_index = 0;
- 	else
- 		pwrb_context->alloc_index++;
--	spin_unlock_bh(&pwrb_context->wrb_lock);
-+	spin_unlock_irqrestore(&pwrb_context->wrb_lock, flags);
- 
- 	if (pwrb_handle)
- 		memset(pwrb_handle->pwrb, 0, sizeof(*pwrb_handle->pwrb));
-@@ -1001,14 +1005,16 @@ beiscsi_put_wrb_handle(struct hwi_wrb_context *pwrb_context,
- 		       struct wrb_handle *pwrb_handle,
- 		       unsigned int wrbs_per_cxn)
- {
--	spin_lock_bh(&pwrb_context->wrb_lock);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&pwrb_context->wrb_lock, flags);
- 	pwrb_context->pwrb_handle_base[pwrb_context->free_index] = pwrb_handle;
- 	pwrb_context->wrb_handles_available++;
- 	if (pwrb_context->free_index == (wrbs_per_cxn - 1))
- 		pwrb_context->free_index = 0;
- 	else
- 		pwrb_context->free_index++;
--	spin_unlock_bh(&pwrb_context->wrb_lock);
-+	spin_unlock_irqrestore(&pwrb_context->wrb_lock, flags);
- }
- 
- /**
-@@ -1037,8 +1043,9 @@ free_wrb_handle(struct beiscsi_hba *phba, struct hwi_wrb_context *pwrb_context,
- static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
- {
- 	struct sgl_handle *psgl_handle;
-+	unsigned long flags;
- 
--	spin_lock_bh(&phba->mgmt_sgl_lock);
-+	spin_lock_irqsave(&phba->mgmt_sgl_lock, flags);
- 	if (phba->eh_sgl_hndl_avbl) {
- 		psgl_handle = phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index];
- 		phba->eh_sgl_hndl_base[phba->eh_sgl_alloc_index] = NULL;
-@@ -1056,14 +1063,16 @@ static struct sgl_handle *alloc_mgmt_sgl_handle(struct beiscsi_hba *phba)
- 			phba->eh_sgl_alloc_index++;
- 	} else
- 		psgl_handle = NULL;
--	spin_unlock_bh(&phba->mgmt_sgl_lock);
-+	spin_unlock_irqrestore(&phba->mgmt_sgl_lock, flags);
- 	return psgl_handle;
- }
- 
- void
- free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- {
--	spin_lock_bh(&phba->mgmt_sgl_lock);
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(&phba->mgmt_sgl_lock, flags);
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_CONFIG,
- 		    "BM_%d : In  free_mgmt_sgl_handle,"
- 		    "eh_sgl_free_index=%d\n",
-@@ -1078,7 +1087,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 			    "BM_%d : Double Free in eh SGL ,"
- 			    "eh_sgl_free_index=%d\n",
- 			    phba->eh_sgl_free_index);
--		spin_unlock_bh(&phba->mgmt_sgl_lock);
-+		spin_unlock_irqrestore(&phba->mgmt_sgl_lock, flags);
- 		return;
- 	}
- 	phba->eh_sgl_hndl_base[phba->eh_sgl_free_index] = psgl_handle;
-@@ -1088,7 +1097,7 @@ free_mgmt_sgl_handle(struct beiscsi_hba *phba, struct sgl_handle *psgl_handle)
- 		phba->eh_sgl_free_index = 0;
- 	else
- 		phba->eh_sgl_free_index++;
--	spin_unlock_bh(&phba->mgmt_sgl_lock);
-+	spin_unlock_irqrestore(&phba->mgmt_sgl_lock, flags);
- }
- 
- static void
--- 
-2.7.4
-
+CgpPbiAxMy8xMC8yMDE2IDAyOjIwLCBMb3JlbnpvIFN0b2FrZXMgd3JvdGU6Cj4gVGhpcyBwYXRj
+aCByZW1vdmVzIHRoZSB3cml0ZSBhbmQgZm9yY2UgcGFyYW1ldGVycyBmcm9tCj4gX19nZXRfdXNl
+cl9wYWdlc191bmxvY2tlZCgpIHRvIG1ha2UgdGhlIHVzZSBvZiBGT0xMX0ZPUkNFIGV4cGxpY2l0
+IGluIGNhbGxlcnMgYXMKPiB1c2Ugb2YgdGhpcyBmbGFnIGNhbiByZXN1bHQgaW4gc3VycHJpc2lu
+ZyBiZWhhdmlvdXIgKGFuZCBoZW5jZSBidWdzKSB3aXRoaW4gdGhlCj4gbW0gc3Vic3lzdGVtLgo+
+IAo+IFNpZ25lZC1vZmYtYnk6IExvcmVuem8gU3RvYWtlcyA8bHN0b2FrZXNAZ21haWwuY29tPgo+
+IC0tLQo+ICBpbmNsdWRlL2xpbnV4L21tLmggICAgIHwgIDMgKy0tCj4gIG1tL2d1cC5jICAgICAg
+ICAgICAgICAgfCAxNyArKysrKysrKystLS0tLS0tLQo+ICBtbS9ub21tdS5jICAgICAgICAgICAg
+IHwgMTIgKysrKysrKysrLS0tCj4gIG1tL3Byb2Nlc3Nfdm1fYWNjZXNzLmMgfCAgNyArKysrKy0t
+Cj4gIHZpcnQva3ZtL2FzeW5jX3BmLmMgICAgfCAgMyArKy0KPiAgdmlydC9rdm0va3ZtX21haW4u
+YyAgICB8IDExICsrKysrKysrLS0tCj4gIDYgZmlsZXMgY2hhbmdlZCwgMzQgaW5zZXJ0aW9ucygr
+KSwgMTkgZGVsZXRpb25zKC0pCj4gCj4gZGlmZiAtLWdpdCBhL2luY2x1ZGUvbGludXgvbW0uaCBi
+L2luY2x1ZGUvbGludXgvbW0uaAo+IGluZGV4IGU5Y2FlYzYuLjJkYjk4YjYgMTAwNjQ0Cj4gLS0t
+IGEvaW5jbHVkZS9saW51eC9tbS5oCj4gKysrIGIvaW5jbHVkZS9saW51eC9tbS5oCj4gQEAgLTEy
+ODUsOCArMTI4NSw3IEBAIGxvbmcgZ2V0X3VzZXJfcGFnZXNfbG9ja2VkKHVuc2lnbmVkIGxvbmcg
+c3RhcnQsIHVuc2lnbmVkIGxvbmcgbnJfcGFnZXMsCj4gIAkJICAgIGludCB3cml0ZSwgaW50IGZv
+cmNlLCBzdHJ1Y3QgcGFnZSAqKnBhZ2VzLCBpbnQgKmxvY2tlZCk7Cj4gIGxvbmcgX19nZXRfdXNl
+cl9wYWdlc191bmxvY2tlZChzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRzaywgc3RydWN0IG1tX3N0cnVj
+dCAqbW0sCj4gIAkJCSAgICAgICB1bnNpZ25lZCBsb25nIHN0YXJ0LCB1bnNpZ25lZCBsb25nIG5y
+X3BhZ2VzLAo+IC0JCQkgICAgICAgaW50IHdyaXRlLCBpbnQgZm9yY2UsIHN0cnVjdCBwYWdlICoq
+cGFnZXMsCj4gLQkJCSAgICAgICB1bnNpZ25lZCBpbnQgZ3VwX2ZsYWdzKTsKPiArCQkJICAgICAg
+IHN0cnVjdCBwYWdlICoqcGFnZXMsIHVuc2lnbmVkIGludCBndXBfZmxhZ3MpOwo+ICBsb25nIGdl
+dF91c2VyX3BhZ2VzX3VubG9ja2VkKHVuc2lnbmVkIGxvbmcgc3RhcnQsIHVuc2lnbmVkIGxvbmcg
+bnJfcGFnZXMsCj4gIAkJICAgIGludCB3cml0ZSwgaW50IGZvcmNlLCBzdHJ1Y3QgcGFnZSAqKnBh
+Z2VzKTsKPiAgaW50IGdldF91c2VyX3BhZ2VzX2Zhc3QodW5zaWduZWQgbG9uZyBzdGFydCwgaW50
+IG5yX3BhZ2VzLCBpbnQgd3JpdGUsCj4gZGlmZiAtLWdpdCBhL21tL2d1cC5jIGIvbW0vZ3VwLmMK
+PiBpbmRleCBiYTgzOTQyLi4zZDYyMGRkIDEwMDY0NAo+IC0tLSBhL21tL2d1cC5jCj4gKysrIGIv
+bW0vZ3VwLmMKPiBAQCAtODY1LDE3ICs4NjUsMTEgQEAgRVhQT1JUX1NZTUJPTChnZXRfdXNlcl9w
+YWdlc19sb2NrZWQpOwo+ICAgKi8KPiAgX19hbHdheXNfaW5saW5lIGxvbmcgX19nZXRfdXNlcl9w
+YWdlc191bmxvY2tlZChzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRzaywgc3RydWN0IG1tX3N0cnVjdCAq
+bW0sCj4gIAkJCQkJICAgICAgIHVuc2lnbmVkIGxvbmcgc3RhcnQsIHVuc2lnbmVkIGxvbmcgbnJf
+cGFnZXMsCj4gLQkJCQkJICAgICAgIGludCB3cml0ZSwgaW50IGZvcmNlLCBzdHJ1Y3QgcGFnZSAq
+KnBhZ2VzLAo+IC0JCQkJCSAgICAgICB1bnNpZ25lZCBpbnQgZ3VwX2ZsYWdzKQo+ICsJCQkJCSAg
+ICAgICBzdHJ1Y3QgcGFnZSAqKnBhZ2VzLCB1bnNpZ25lZCBpbnQgZ3VwX2ZsYWdzKQo+ICB7Cj4g
+IAlsb25nIHJldDsKPiAgCWludCBsb2NrZWQgPSAxOwo+ICAKPiAtCWlmICh3cml0ZSkKPiAtCQln
+dXBfZmxhZ3MgfD0gRk9MTF9XUklURTsKPiAtCWlmIChmb3JjZSkKPiAtCQlndXBfZmxhZ3MgfD0g
+Rk9MTF9GT1JDRTsKPiAtCj4gIAlkb3duX3JlYWQoJm1tLT5tbWFwX3NlbSk7Cj4gIAlyZXQgPSBf
+X2dldF91c2VyX3BhZ2VzX2xvY2tlZCh0c2ssIG1tLCBzdGFydCwgbnJfcGFnZXMsIHBhZ2VzLCBO
+VUxMLAo+ICAJCQkJICAgICAgJmxvY2tlZCwgZmFsc2UsIGd1cF9mbGFncyk7Cj4gQEAgLTkwNSw4
+ICs4OTksMTUgQEAgRVhQT1JUX1NZTUJPTChfX2dldF91c2VyX3BhZ2VzX3VubG9ja2VkKTsKPiAg
+bG9uZyBnZXRfdXNlcl9wYWdlc191bmxvY2tlZCh1bnNpZ25lZCBsb25nIHN0YXJ0LCB1bnNpZ25l
+ZCBsb25nIG5yX3BhZ2VzLAo+ICAJCQkgICAgIGludCB3cml0ZSwgaW50IGZvcmNlLCBzdHJ1Y3Qg
+cGFnZSAqKnBhZ2VzKQo+ICB7Cj4gKwl1bnNpZ25lZCBpbnQgZmxhZ3MgPSBGT0xMX1RPVUNIOwo+
+ICsKPiArCWlmICh3cml0ZSkKPiArCQlmbGFncyB8PSBGT0xMX1dSSVRFOwo+ICsJaWYgKGZvcmNl
+KQo+ICsJCWZsYWdzIHw9IEZPTExfRk9SQ0U7Cj4gKwo+ICAJcmV0dXJuIF9fZ2V0X3VzZXJfcGFn
+ZXNfdW5sb2NrZWQoY3VycmVudCwgY3VycmVudC0+bW0sIHN0YXJ0LCBucl9wYWdlcywKPiAtCQkJ
+CQkgd3JpdGUsIGZvcmNlLCBwYWdlcywgRk9MTF9UT1VDSCk7Cj4gKwkJCQkJIHBhZ2VzLCBmbGFn
+cyk7Cj4gIH0KPiAgRVhQT1JUX1NZTUJPTChnZXRfdXNlcl9wYWdlc191bmxvY2tlZCk7Cj4gIAo+
+IGRpZmYgLS1naXQgYS9tbS9ub21tdS5jIGIvbW0vbm9tbXUuYwo+IGluZGV4IDk1ZGFmODEuLjky
+NWRjYzEgMTAwNjQ0Cj4gLS0tIGEvbW0vbm9tbXUuYwo+ICsrKyBiL21tL25vbW11LmMKPiBAQCAt
+MTg1LDggKzE4NSw3IEBAIEVYUE9SVF9TWU1CT0woZ2V0X3VzZXJfcGFnZXNfbG9ja2VkKTsKPiAg
+Cj4gIGxvbmcgX19nZXRfdXNlcl9wYWdlc191bmxvY2tlZChzdHJ1Y3QgdGFza19zdHJ1Y3QgKnRz
+aywgc3RydWN0IG1tX3N0cnVjdCAqbW0sCj4gIAkJCSAgICAgICB1bnNpZ25lZCBsb25nIHN0YXJ0
+LCB1bnNpZ25lZCBsb25nIG5yX3BhZ2VzLAo+IC0JCQkgICAgICAgaW50IHdyaXRlLCBpbnQgZm9y
+Y2UsIHN0cnVjdCBwYWdlICoqcGFnZXMsCj4gLQkJCSAgICAgICB1bnNpZ25lZCBpbnQgZ3VwX2Zs
+YWdzKQo+ICsJCQkgICAgICAgc3RydWN0IHBhZ2UgKipwYWdlcywgdW5zaWduZWQgaW50IGd1cF9m
+bGFncykKPiAgewo+ICAJbG9uZyByZXQ7Cj4gIAlkb3duX3JlYWQoJm1tLT5tbWFwX3NlbSk7Cj4g
+QEAgLTIwMCw4ICsxOTksMTUgQEAgRVhQT1JUX1NZTUJPTChfX2dldF91c2VyX3BhZ2VzX3VubG9j
+a2VkKTsKPiAgbG9uZyBnZXRfdXNlcl9wYWdlc191bmxvY2tlZCh1bnNpZ25lZCBsb25nIHN0YXJ0
+LCB1bnNpZ25lZCBsb25nIG5yX3BhZ2VzLAo+ICAJCQkgICAgIGludCB3cml0ZSwgaW50IGZvcmNl
+LCBzdHJ1Y3QgcGFnZSAqKnBhZ2VzKQo+ICB7Cj4gKwl1bnNpZ25lZCBpbnQgZmxhZ3MgPSAwOwo+
+ICsKPiArCWlmICh3cml0ZSkKPiArCQlmbGFncyB8PSBGT0xMX1dSSVRFOwo+ICsJaWYgKGZvcmNl
+KQo+ICsJCWZsYWdzIHw9IEZPTExfRk9SQ0U7Cj4gKwo+ICAJcmV0dXJuIF9fZ2V0X3VzZXJfcGFn
+ZXNfdW5sb2NrZWQoY3VycmVudCwgY3VycmVudC0+bW0sIHN0YXJ0LCBucl9wYWdlcywKPiAtCQkJ
+CQkgd3JpdGUsIGZvcmNlLCBwYWdlcywgMCk7Cj4gKwkJCQkJIHBhZ2VzLCBmbGFncyk7Cj4gIH0K
+PiAgRVhQT1JUX1NZTUJPTChnZXRfdXNlcl9wYWdlc191bmxvY2tlZCk7Cj4gIAo+IGRpZmYgLS1n
+aXQgYS9tbS9wcm9jZXNzX3ZtX2FjY2Vzcy5jIGIvbW0vcHJvY2Vzc192bV9hY2Nlc3MuYwo+IGlu
+ZGV4IDA3NTE0ZDQuLmJlOGRjOGQgMTAwNjQ0Cj4gLS0tIGEvbW0vcHJvY2Vzc192bV9hY2Nlc3Mu
+Ywo+ICsrKyBiL21tL3Byb2Nlc3Nfdm1fYWNjZXNzLmMKPiBAQCAtODgsMTIgKzg4LDE2IEBAIHN0
+YXRpYyBpbnQgcHJvY2Vzc192bV9yd19zaW5nbGVfdmVjKHVuc2lnbmVkIGxvbmcgYWRkciwKPiAg
+CXNzaXplX3QgcmMgPSAwOwo+ICAJdW5zaWduZWQgbG9uZyBtYXhfcGFnZXNfcGVyX2xvb3AgPSBQ
+Vk1fTUFYX0tNQUxMT0NfUEFHRVMKPiAgCQkvIHNpemVvZihzdHJ1Y3QgcGFnZXMgKik7Cj4gKwl1
+bnNpZ25lZCBpbnQgZmxhZ3MgPSBGT0xMX1JFTU9URTsKPiAgCj4gIAkvKiBXb3JrIG91dCBhZGRy
+ZXNzIGFuZCBwYWdlIHJhbmdlIHJlcXVpcmVkICovCj4gIAlpZiAobGVuID09IDApCj4gIAkJcmV0
+dXJuIDA7Cj4gIAlucl9wYWdlcyA9IChhZGRyICsgbGVuIC0gMSkgLyBQQUdFX1NJWkUgLSBhZGRy
+IC8gUEFHRV9TSVpFICsgMTsKPiAgCj4gKwlpZiAodm1fd3JpdGUpCj4gKwkJZmxhZ3MgfD0gRk9M
+TF9XUklURTsKPiArCj4gIAl3aGlsZSAoIXJjICYmIG5yX3BhZ2VzICYmIGlvdl9pdGVyX2NvdW50
+KGl0ZXIpKSB7Cj4gIAkJaW50IHBhZ2VzID0gbWluKG5yX3BhZ2VzLCBtYXhfcGFnZXNfcGVyX2xv
+b3ApOwo+ICAJCXNpemVfdCBieXRlczsKPiBAQCAtMTA0LDggKzEwOCw3IEBAIHN0YXRpYyBpbnQg
+cHJvY2Vzc192bV9yd19zaW5nbGVfdmVjKHVuc2lnbmVkIGxvbmcgYWRkciwKPiAgCQkgKiBjdXJy
+ZW50L2N1cnJlbnQtPm1tCj4gIAkJICovCj4gIAkJcGFnZXMgPSBfX2dldF91c2VyX3BhZ2VzX3Vu
+bG9ja2VkKHRhc2ssIG1tLCBwYSwgcGFnZXMsCj4gLQkJCQkJCSAgdm1fd3JpdGUsIDAsIHByb2Nl
+c3NfcGFnZXMsCj4gLQkJCQkJCSAgRk9MTF9SRU1PVEUpOwo+ICsJCQkJCQkgIHByb2Nlc3NfcGFn
+ZXMsIGZsYWdzKTsKPiAgCQlpZiAocGFnZXMgPD0gMCkKPiAgCQkJcmV0dXJuIC1FRkFVTFQ7Cj4g
+IAo+IGRpZmYgLS1naXQgYS92aXJ0L2t2bS9hc3luY19wZi5jIGIvdmlydC9rdm0vYXN5bmNfcGYu
+Ywo+IGluZGV4IGRiOTY2ODguLjgwMzVjYzEgMTAwNjQ0Cj4gLS0tIGEvdmlydC9rdm0vYXN5bmNf
+cGYuYwo+ICsrKyBiL3ZpcnQva3ZtL2FzeW5jX3BmLmMKPiBAQCAtODQsNyArODQsOCBAQCBzdGF0
+aWMgdm9pZCBhc3luY19wZl9leGVjdXRlKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykKPiAgCSAq
+IG1tIGFuZCBtaWdodCBiZSBkb25lIGluIGFub3RoZXIgY29udGV4dCwgc28gd2UgbXVzdAo+ICAJ
+ICogdXNlIEZPTExfUkVNT1RFLgo+ICAJICovCj4gLQlfX2dldF91c2VyX3BhZ2VzX3VubG9ja2Vk
+KE5VTEwsIG1tLCBhZGRyLCAxLCAxLCAwLCBOVUxMLCBGT0xMX1JFTU9URSk7Cj4gKwlfX2dldF91
+c2VyX3BhZ2VzX3VubG9ja2VkKE5VTEwsIG1tLCBhZGRyLCAxLCBOVUxMLAo+ICsJCQlGT0xMX1dS
+SVRFIHwgRk9MTF9SRU1PVEUpOwo+ICAKPiAgCWt2bV9hc3luY19wYWdlX3ByZXNlbnRfc3luYyh2
+Y3B1LCBhcGYpOwo+ICAKPiBkaWZmIC0tZ2l0IGEvdmlydC9rdm0va3ZtX21haW4uYyBiL3ZpcnQv
+a3ZtL2t2bV9tYWluLmMKPiBpbmRleCA4MWRmYzczLi4yODUxMGU3IDEwMDY0NAo+IC0tLSBhL3Zp
+cnQva3ZtL2t2bV9tYWluLmMKPiArKysgYi92aXJ0L2t2bS9rdm1fbWFpbi5jCj4gQEAgLTE0MTYs
+MTAgKzE0MTYsMTUgQEAgc3RhdGljIGludCBodmFfdG9fcGZuX3Nsb3codW5zaWduZWQgbG9uZyBh
+ZGRyLCBib29sICphc3luYywgYm9vbCB3cml0ZV9mYXVsdCwKPiAgCQlkb3duX3JlYWQoJmN1cnJl
+bnQtPm1tLT5tbWFwX3NlbSk7Cj4gIAkJbnBhZ2VzID0gZ2V0X3VzZXJfcGFnZV9ub3dhaXQoYWRk
+ciwgd3JpdGVfZmF1bHQsIHBhZ2UpOwo+ICAJCXVwX3JlYWQoJmN1cnJlbnQtPm1tLT5tbWFwX3Nl
+bSk7Cj4gLQl9IGVsc2UKPiArCX0gZWxzZSB7Cj4gKwkJdW5zaWduZWQgaW50IGZsYWdzID0gRk9M
+TF9UT1VDSCB8IEZPTExfSFdQT0lTT047Cj4gKwo+ICsJCWlmICh3cml0ZV9mYXVsdCkKPiArCQkJ
+ZmxhZ3MgfD0gRk9MTF9XUklURTsKPiArCj4gIAkJbnBhZ2VzID0gX19nZXRfdXNlcl9wYWdlc191
+bmxvY2tlZChjdXJyZW50LCBjdXJyZW50LT5tbSwgYWRkciwgMSwKPiAtCQkJCQkJICAgd3JpdGVf
+ZmF1bHQsIDAsIHBhZ2UsCj4gLQkJCQkJCSAgIEZPTExfVE9VQ0h8Rk9MTF9IV1BPSVNPTik7Cj4g
+KwkJCQkJCSAgIHBhZ2UsIGZsYWdzKTsKPiArCX0KPiAgCWlmIChucGFnZXMgIT0gMSkKPiAgCQly
+ZXR1cm4gbnBhZ2VzOwo+ICAKPiAKCkFja2VkLWJ5OiBQYW9sbyBCb256aW5pIDxwYm9uemluaUBy
+ZWRoYXQuY29tPgpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+XwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5vcmcK
+aHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1nZngK
