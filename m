@@ -1,81 +1,90 @@
-From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v3 11/17] lpfc: Code cleanup for lpfc_sriov_nr_virtfn
- parameter
-Date: Thu, 13 Oct 2016 15:06:12 -0700
-Message-ID: <58000554.0voK73QL+g+4YEJH%james.smart@broadcom.com>
+From: Adam Manzanares <adam.manzanares@wdc.com>
+Subject: Re: [PATCH v4 2/4] fusion: remove iopriority handling
+Date: Thu, 13 Oct 2016 15:12:25 -0700
+Message-ID: <20161013221225.GB2745@hgst.com>
+References: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
+ <1476388433-2539-3-git-send-email-adam.manzanares@hgst.com>
+ <8338586db99fd444337d27f9abc3a777@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.avagotech.com ([202.86.248.61]:55040 "EHLO
-        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753702AbcJMWHU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:07:20 -0400
-Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 70E7610074C
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:14 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8338586db99fd444337d27f9abc3a777@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc: Adam Manzanares <adam.manzanares@hgst.com>, axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+The 10/13/2016 15:05, Sathya Prakash Veerichetty wrote:
+> By removing the code below, we put all the commands for all the types of
+> devices (SAS/SATA) as simple-Q (requeue as the device require) and I am
+> not sure whether it is the intention of this change.
+> 
 
-Code cleanup for lpfc_sriov_nr_virtfn parameter
+This is the intention of the change. I don't think the iopriority of the
+request is being used correctly. What does it mean to use 0x7 as an 
+indicator that a command should be put at the head of the queue? This 
+would be clearer if it was using some of the macros from ioprio. If 
+0x7 means something special I think this should be some #define in the 
+includes of the fusion driver with some documentation.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/lpfc/lpfc_attr.c | 35 +++--------------------------------
- 1 file changed, 3 insertions(+), 32 deletions(-)
+> -----Original Message-----
+> From: Adam Manzanares [mailto:adam.manzanares@hgst.com]
+> Sent: Thursday, October 13, 2016 1:54 PM
+> To: axboe@kernel.dk; tj@kernel.org; dan.j.williams@intel.com;
+> hare@suse.de; martin.petersen@oracle.com; mchristi@redhat.com;
+> toshi.kani@hpe.com; ming.lei@canonical.com; sathya.prakash@broadcom.com;
+> chaitra.basappa@broadcom.com; suganath-prabu.subramani@broadcom.com
+> Cc: linux-block@vger.kernel.org; linux-ide@vger.kernel.org;
+> linux-kernel@vger.kernel.org; MPT-FusionLinux.pdl@broadcom.com;
+> linux-scsi@vger.kernel.org; Adam Manzanares; Adam Manzanares
+> Subject: [PATCH v4 2/4] fusion: remove iopriority handling
+> 
+> The request priority is now by default coming from the ioc. It was not
+> clear what this code was trying to do based upon the iopriority class or
+> data. The driver should check that a device supports priorities and use
+> them according to the specificiations of ioprio.
+> 
+> Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
+> ---
+>  drivers/message/fusion/mptscsih.c | 5 -----
+>  1 file changed, 5 deletions(-)
+> 
+> diff --git a/drivers/message/fusion/mptscsih.c
+> b/drivers/message/fusion/mptscsih.c
+> index 6c9fc11..4740bb6 100644
+> --- a/drivers/message/fusion/mptscsih.c
+> +++ b/drivers/message/fusion/mptscsih.c
+> @@ -1369,11 +1369,6 @@ mptscsih_qcmd(struct scsi_cmnd *SCpnt)
+>  	if ((vdevice->vtarget->tflags & MPT_TARGET_FLAGS_Q_YES)
+>  	    && (SCpnt->device->tagged_supported)) {
+>  		scsictl = scsidir | MPI_SCSIIO_CONTROL_SIMPLEQ;
+> -		if (SCpnt->request && SCpnt->request->ioprio) {
+> -			if (((SCpnt->request->ioprio & 0x7) == 1) ||
+> -				!(SCpnt->request->ioprio & 0x7))
+> -				scsictl |= MPI_SCSIIO_CONTROL_HEADOFQ;
+> -		}
+>  	} else
+>  		scsictl = scsidir | MPI_SCSIIO_CONTROL_UNTAGGED;
+> 
+> --
+> 2.1.4
+> 
+> Western Digital Corporation (and its subsidiaries) E-mail Confidentiality
+> Notice & Disclaimer:
+> 
+> This e-mail and any files transmitted with it may contain confidential or
+> legally privileged information of WDC and/or its affiliates, and are
+> intended solely for the use of the individual or entity to which they are
+> addressed. If you are not the intended recipient, any disclosure, copying,
+> distribution or any action taken or omitted to be taken in reliance on it,
+> is prohibited. If you have received this e-mail in error, please notify
+> the sender immediately and delete the e-mail in its entirety from your
+> system.
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-ide" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 3051e66..1b6090c 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -4007,39 +4007,10 @@ lpfc_sriov_nr_virtfn_store(struct device *dev, struct device_attribute *attr,
- 	return rc;
- }
- 
--static int lpfc_sriov_nr_virtfn = LPFC_DEF_VFN_PER_PFN;
--module_param(lpfc_sriov_nr_virtfn, int, S_IRUGO|S_IWUSR);
--MODULE_PARM_DESC(lpfc_sriov_nr_virtfn, "Enable PCIe device SR-IOV virtual fn");
--lpfc_param_show(sriov_nr_virtfn)
-+LPFC_ATTR(sriov_nr_virtfn, LPFC_DEF_VFN_PER_PFN, 0, LPFC_MAX_VFN_PER_PFN,
-+	"Enable PCIe device SR-IOV virtual fn");
- 
--/**
-- * lpfc_sriov_nr_virtfn_init - Set the initial sr-iov virtual function enable
-- * @phba: lpfc_hba pointer.
-- * @val: link speed value.
-- *
-- * Description:
-- * If val is in a valid range [0,255], then set the adapter's initial
-- * cfg_sriov_nr_virtfn field. If it's greater than the maximum, the maximum
-- * number shall be used instead. It will be up to the driver's probe_one
-- * routine to determine whether the device's SR-IOV is supported or not.
-- *
-- * Returns:
-- * zero if val saved.
-- * -EINVAL val out of range
-- **/
--static int
--lpfc_sriov_nr_virtfn_init(struct lpfc_hba *phba, int val)
--{
--	if (val >= 0 && val <= LPFC_MAX_VFN_PER_PFN) {
--		phba->cfg_sriov_nr_virtfn = val;
--		return 0;
--	}
--
--	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3017 Enabling %d virtual functions is not "
--			"allowed.\n", val);
--	return -EINVAL;
--}
-+lpfc_param_show(sriov_nr_virtfn)
- static DEVICE_ATTR(lpfc_sriov_nr_virtfn, S_IRUGO | S_IWUSR,
- 		   lpfc_sriov_nr_virtfn_show, lpfc_sriov_nr_virtfn_store);
- 
--- 
-2.5.0
-
-
+Take care,
+Adam
