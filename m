@@ -1,15 +1,15 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH v2 03/16] scsi: fc: Export fc_bsg_jobdone
- and use it in FC drivers
-Date: Thu, 13 Oct 2016 13:27:59 +0200
-Message-ID: <2cfe19b2-dfe3-2fc2-2720-e579f5db5e35@suse.de>
+Subject: Re: [PATCH v2 04/16] scsi: Unify interfaces of
+ fc_bsg_jobdone and bsg_job_done
+Date: Thu, 13 Oct 2016 13:33:02 +0200
+Message-ID: <84d6c834-0976-83bc-7985-68284d9763b8@suse.de>
 References: <cover.1476276823.git.jthumshirn@suse.de>
- <be630735292b05efbefe3835b79f22a8f95f34da.1476276823.git.jthumshirn@suse.de>
+ <457c9d87193973d6e203eb43b9853138dbc0eafe.1476276823.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <be630735292b05efbefe3835b79f22a8f95f34da.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <457c9d87193973d6e203eb43b9853138dbc0eafe.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
 List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
  <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
@@ -24,26 +24,26 @@ Cc: "open list:S390 ZFCP DRIVER" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/12/2016 03:06 PM, Johannes Thumshirn wrote:
-> Export fc_bsg_jobdone so drivers can use it directly instead of doing
-> the round-trip via struct fc_bsg_job::job_done() and use it in the LLDDs.
-> =
-
-> As we've converted all LLDDs over to use fc_bsg_jobdone() directly,
-> we can remove the function pointer from struct fc_bsg_job as well.
+> Unify the interfaces of fc_bsg_jobdone and bsg_job_done. This will reduce=
+ the
+> diff when moving from 'struct fc_bsg_job' to a plain 'struct bsg_job' lat=
+er
+> on.
 > =
 
 > Signed-off-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 > ---
 >  drivers/s390/scsi/zfcp_fc.c      |  2 +-
->  drivers/scsi/bfa/bfad_bsg.c      |  4 ++--
->  drivers/scsi/ibmvscsi/ibmvfc.c   |  2 +-
->  drivers/scsi/libfc/fc_lport.c    |  4 ++--
->  drivers/scsi/lpfc/lpfc_bsg.c     | 38 +++++++++++++++++-----------------
->  drivers/scsi/qla2xxx/qla_bsg.c   | 44 ++++++++++++++++++++--------------=
+>  drivers/scsi/bfa/bfad_bsg.c      |  6 ++--
+>  drivers/scsi/ibmvscsi/ibmvfc.c   |  3 +-
+>  drivers/scsi/libfc/fc_lport.c    |  6 ++--
+>  drivers/scsi/lpfc/lpfc_bsg.c     | 68 +++++++++++++++++++++++++++-------=
 ------
->  drivers/scsi/scsi_transport_fc.c |  5 ++---
->  include/scsi/scsi_transport_fc.h |  2 +-
->  8 files changed, 50 insertions(+), 51 deletions(-)
+>  drivers/scsi/qla2xxx/qla_bsg.c   | 66 +++++++++++++++++++++++++---------=
+----
+>  drivers/scsi/scsi_transport_fc.c | 22 +++++++------
+>  include/scsi/scsi_transport_fc.h |  3 +-
+>  8 files changed, 116 insertions(+), 60 deletions(-)
 > =
 
 Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
