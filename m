@@ -1,57 +1,93 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v3 09/17] lpfc: Code cleanup for lpfc_topology parameter
-Date: Thu, 13 Oct 2016 15:06:10 -0700
-Message-ID: <58000552.hYxc6PG8Hb2SOW8o%james.smart@broadcom.com>
+Subject: [PATCH v3 08/17] lpfc: Code cleanup for lpfc_aer_support
+ parameter
+Date: Thu, 13 Oct 2016 15:06:09 -0700
+Message-ID: <58000551.k9hltsLTejjB3lYo%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([202.86.248.61]:55284 "EHLO
-        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757018AbcJMWQg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:36 -0400
+Received: from smtp.avagotech.com ([199.3.246.86]:36894 "EHLO
+        sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756959AbcJMWQf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:35 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 79018100730
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:12 -0700 (PDT)
+        by sgpsmtp2.avagotech.com (Postfix) with SMTP id 327FA1209CE
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:11 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Code cleanup for lpfc_topology parameter
+Code cleanup for lpfc_aer_support parameter
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 7 +++----
- 1 file changed, 3 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_attr.c | 43 +++----------------------------------------
+ 1 file changed, 3 insertions(+), 40 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index ae76aaa..81b1faf 100644
+index 22a66c7..ae76aaa 100644
 --- a/drivers/scsi/lpfc/lpfc_attr.c
 +++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -3194,6 +3194,8 @@ LPFC_VPORT_ATTR_R(scan_down, 1, 0, 1,
- # Set loop mode if you want to run as an NL_Port. Value range is [0,0x6].
- # Default value is 0.
+@@ -3779,6 +3779,9 @@ static DEVICE_ATTR(lpfc_link_speed, S_IRUGO | S_IWUSR,
+ #       1  = aer supported and enabled (default)
+ # Value range is [0,1]. Default value is 1.
  */
-+LPFC_ATTR(topology, 0, 0, 6,
-+	"Select Fibre Channel topology");
++LPFC_ATTR(aer_support, 1, 0, 1,
++	"Enable PCIe device AER support");
++lpfc_param_show(aer_support)
  
  /**
-  * lpfc_topology_set - Set the adapters topology field
-@@ -3271,11 +3273,8 @@ lpfc_topology_store(struct device *dev, struct device_attribute *attr,
- 		phba->brd_no, val);
- 	return -EINVAL;
+  * lpfc_aer_support_store - Set the adapter for aer support
+@@ -3861,46 +3864,6 @@ lpfc_aer_support_store(struct device *dev, struct device_attribute *attr,
+ 	return rc;
  }
--static int lpfc_topology = 0;
--module_param(lpfc_topology, int, S_IRUGO);
--MODULE_PARM_DESC(lpfc_topology, "Select Fibre Channel topology");
-+
- lpfc_param_show(topology)
--lpfc_param_init(topology, 0, 0, 6)
- static DEVICE_ATTR(lpfc_topology, S_IRUGO | S_IWUSR,
- 		lpfc_topology_show, lpfc_topology_store);
+ 
+-static int lpfc_aer_support = 1;
+-module_param(lpfc_aer_support, int, S_IRUGO);
+-MODULE_PARM_DESC(lpfc_aer_support, "Enable PCIe device AER support");
+-lpfc_param_show(aer_support)
+-
+-/**
+- * lpfc_aer_support_init - Set the initial adapters aer support flag
+- * @phba: lpfc_hba pointer.
+- * @val: enable aer or disable aer flag.
+- *
+- * Description:
+- * If val is in a valid range [0,1], then set the adapter's initial
+- * cfg_aer_support field. It will be up to the driver's probe_one
+- * routine to determine whether the device's AER support can be set
+- * or not.
+- *
+- * Notes:
+- * If the value is not in range log a kernel error message, and
+- * choose the default value of setting AER support and return.
+- *
+- * Returns:
+- * zero if val saved.
+- * -EINVAL val out of range
+- **/
+-static int
+-lpfc_aer_support_init(struct lpfc_hba *phba, int val)
+-{
+-	if (val == 0 || val == 1) {
+-		phba->cfg_aer_support = val;
+-		return 0;
+-	}
+-	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-			"2712 lpfc_aer_support attribute value %d out "
+-			"of range, allowed values are 0|1, setting it "
+-			"to default value of 1\n", val);
+-	/* By default, try to enable AER on a device */
+-	phba->cfg_aer_support = 1;
+-	return -EINVAL;
+-}
+-
+ static DEVICE_ATTR(lpfc_aer_support, S_IRUGO | S_IWUSR,
+ 		   lpfc_aer_support_show, lpfc_aer_support_store);
  
 -- 
 2.5.0
