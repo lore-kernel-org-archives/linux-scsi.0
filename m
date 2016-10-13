@@ -1,156 +1,91 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 14/24] libfc: quarantine timed out xids
-Date: Thu, 13 Oct 2016 15:10:50 +0200
-Message-ID: <1476364260-12191-15-git-send-email-hare@suse.de>
+Subject: [PATCH 17/24] libfc: reset timeout on queue full
+Date: Thu, 13 Oct 2016 15:10:53 +0200
+Message-ID: <1476364260-12191-18-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40758 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41165 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755622AbcJMNXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:23:49 -0400
+        id S1751437AbcJMNeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:34:02 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When a sequence times out we have no idea what happened to the
-frame. And we do not know if we will ever receive the frame.
-Hence we cannot re-use the xid as we would risk data corruption
-if the xid had been re-used and the timed out frame would be
-received after that.
-So we need to quarantine the xid until the lport is reset.
-Yes, I know this will (eventually) deplete the xid pool.
-But for now it's the safest method.
+When we're receiving a timeout we should be checking for queue
+full status; if there are still some packets pending we should
+be resetting the counter to ensure we're not missing out any
+packets which are still queued.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/libfc/fc_exch.c | 33 ++++++++++++++++++++++-----------
- drivers/scsi/libfc/fc_fcp.c  | 13 +++++++------
- include/scsi/libfc.h         |  1 +
- 3 files changed, 30 insertions(+), 17 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 20 +++++++++++++++++---
+ include/scsi/libfc.h        |  3 ++-
+ 2 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index e8784a7..5868824 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -94,6 +94,7 @@ struct fc_exch_pool {
- struct fc_exch_mgr {
- 	struct fc_exch_pool __percpu *pool;
- 	mempool_t	*ep_pool;
-+	struct fc_lport	*lport;
- 	enum fc_class	class;
- 	struct kref	kref;
- 	u16		min_xid;
-@@ -408,6 +409,8 @@ static int fc_exch_done_locked(struct fc_exch *ep)
- 	return rc;
- }
- 
-+static struct fc_exch fc_quarantine_exch;
-+
- /**
-  * fc_exch_ptr_get() - Return an exchange from an exchange pool
-  * @pool:  Exchange Pool to get an exchange from
-@@ -452,14 +455,17 @@ static void fc_exch_delete(struct fc_exch *ep)
- 
- 	/* update cache of free slot */
- 	index = (ep->xid - ep->em->min_xid) >> fc_cpu_order;
--	if (pool->left == FC_XID_UNKNOWN)
--		pool->left = index;
--	else if (pool->right == FC_XID_UNKNOWN)
--		pool->right = index;
--	else
--		pool->next_index = index;
--
--	fc_exch_ptr_set(pool, index, NULL);
-+	if (!(ep->state & FC_EX_QUARANTINE)) {
-+		if (pool->left == FC_XID_UNKNOWN)
-+			pool->left = index;
-+		else if (pool->right == FC_XID_UNKNOWN)
-+			pool->right = index;
-+		else
-+			pool->next_index = index;
-+		fc_exch_ptr_set(pool, index, NULL);
-+	} else {
-+		fc_exch_ptr_set(pool, index, &fc_quarantine_exch);
-+	}
- 	list_del(&ep->ex_list);
- 	spin_unlock_bh(&pool->lock);
- 	fc_exch_release(ep);	/* drop hold for exch in mp */
-@@ -916,14 +922,14 @@ static inline struct fc_exch *fc_exch_alloc(struct fc_lport *lport,
-  */
- static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
- {
-+	struct fc_lport *lport = mp->lport;
- 	struct fc_exch_pool *pool;
- 	struct fc_exch *ep = NULL;
- 	u16 cpu = xid & fc_cpu_mask;
- 
- 	if (cpu >= nr_cpu_ids || !cpu_possible(cpu)) {
--		printk_ratelimited(KERN_ERR
--			"libfc: lookup request for XID = %d, "
--			"indicates invalid CPU %d\n", xid, cpu);
-+		pr_err("host%u: lport %6.6x: xid %d invalid CPU %d\n:",
-+		       lport->host->host_no, lport->port_id, xid, cpu);
- 		return NULL;
- 	}
- 
-@@ -931,6 +937,10 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
- 		pool = per_cpu_ptr(mp->pool, cpu);
- 		spin_lock_bh(&pool->lock);
- 		ep = fc_exch_ptr_get(pool, (xid - mp->min_xid) >> fc_cpu_order);
-+		if (ep == &fc_quarantine_exch) {
-+			FC_LPORT_DBG(lport, "xid %x quarantined\n", xid);
-+			ep = NULL;
-+		}
- 		if (ep) {
- 			WARN_ON(ep->xid != xid);
- 			fc_exch_hold(ep);
-@@ -2429,6 +2439,7 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *lport,
- 		return NULL;
- 
- 	mp->class = class;
-+	mp->lport = lport;
- 	/* adjust em exch xid range for offload */
- 	mp->min_xid = min_xid;
- 
 diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index f7700cc..780d9f0 100644
+index d43c925..fb2ebc7 100644
 --- a/drivers/scsi/libfc/fc_fcp.c
 +++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -1529,13 +1529,14 @@ static void fc_fcp_rec_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
- 				   fsp->rport->port_id, rjt->er_reason,
- 				   rjt->er_explan);
- 			/*
--			 * If no data transfer, the command frame got dropped
--			 * so we just retry.  If data was transferred, we
--			 * lost the response but the target has no record,
--			 * so we abort and retry.
-+			 * If response got lost or is stuck in the
-+			 * queue somewhere we have no idea if and when
-+			 * the response will be received. So quarantine
-+			 * the xid and retry the command.
+@@ -254,8 +254,10 @@ static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
+  */
+ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+ {
+-	if (!(fsp->state & FC_SRB_COMPL))
++	if (!(fsp->state & FC_SRB_COMPL)) {
+ 		mod_timer(&fsp->timer, jiffies + delay);
++		fsp->timer_delay = delay;
++	}
+ }
+ 
+ static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
+@@ -932,6 +934,11 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 			 * Wait a at least one jiffy to see if it is delivered.
+ 			 * If this expires without data, we may do SRR.
  			 */
--			if (rjt->er_explan == ELS_EXPL_OXID_RXID &&
--			    fsp->xfer_len == 0) {
-+			if (rjt->er_explan == ELS_EXPL_OXID_RXID) {
-+				struct fc_exch *ep = fc_seq_exch(fsp->seq_ptr);
-+				ep->state |= FC_EX_QUARANTINE;
- 				fsp->state |= FC_SRB_ABORTED;
- 				fc_fcp_retry_cmd(fsp, FC_TRANS_RESET);
- 				break;
++			if (fsp->lp->qfull) {
++				FC_FCP_DBG(fsp, "tgt %6.6x queue busy retry\n",
++					   fsp->rport->port_id);
++				return;
++			}
+ 			FC_FCP_DBG(fsp, "tgt %6.6x xfer len %zx data underrun "
+ 				   "len %x, data len %x\n",
+ 				   fsp->rport->port_id,
+@@ -1434,8 +1441,15 @@ static void fc_fcp_timeout(unsigned long data)
+ 	if (fsp->cdb_cmd.fc_tm_flags)
+ 		goto unlock;
+ 
+-	FC_FCP_DBG(fsp, "fcp timeout, flags %x state %x\n",
+-		   rpriv->flags, fsp->state);
++	if (fsp->lp->qfull) {
++		FC_FCP_DBG(fsp, "fcp timeout, resetting timer delay %d\n",
++			   fsp->timer_delay);
++		setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
++		fc_fcp_timer_set(fsp, fsp->timer_delay);
++		goto unlock;
++	}
++	FC_FCP_DBG(fsp, "fcp timeout, delay %d flags %x state %x\n",
++		   fsp->timer_delay, rpriv->flags, fsp->state);
+ 	fsp->state |= FC_SRB_FCP_PROCESSING_TMO;
+ 
+ 	if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index dc42d80..8cb752f 100644
+index 8cb752f..f5aa54b 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -390,6 +390,7 @@ struct fc_seq {
+@@ -355,7 +355,8 @@ struct fc_fcp_pkt {
  
- #define FC_EX_DONE		(1 << 0) /* ep is completed */
- #define FC_EX_RST_CLEANUP	(1 << 1) /* reset is forcing completion */
-+#define FC_EX_QUARANTINE	(1 << 2) /* exch is quarantined */
- 
- /**
-  * struct fc_exch - Fibre Channel Exchange
+ 	/* Timeout/error related information */
+ 	struct timer_list timer;
+-	int	          wait_for_comp;
++	int		  wait_for_comp;
++	int		  timer_delay;
+ 	u32		  recov_retry;
+ 	struct fc_seq	  *recov_seq;
+ 	struct completion tm_done;
 -- 
 1.8.5.6
 
