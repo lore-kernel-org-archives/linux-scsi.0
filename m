@@ -1,174 +1,73 @@
-From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v4 4/4] ata: ATA Command Priority Disabled By Default
-Date: Thu, 13 Oct 2016 12:53:53 -0700
-Message-ID: <1476388433-2539-5-git-send-email-adam.manzanares@hgst.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v4 1/4] block: Add iocontext priority to request
+Date: Thu, 13 Oct 2016 14:09:34 -0600
+Message-ID: <068e03c4-3558-a6b1-2008-d13bde4958a1@kernel.dk>
 References: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
+ <1476388433-2539-2-git-send-email-adam.manzanares@hgst.com>
+ <CAPcyv4giMwLRkP9YDcOo4st2RqxPXsYYyTOJ2_U8ywQPteM5gQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com
-Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>, Adam Manzanares <adam.manzanares@wdc.com>
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f50.google.com ([209.85.214.50]:36717 "EHLO
+        mail-it0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752209AbcJMUKA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 16:10:00 -0400
+Received: by mail-it0-f50.google.com with SMTP id l13so194330225itl.1
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 13:09:37 -0700 (PDT)
+In-Reply-To: <CAPcyv4giMwLRkP9YDcOo4st2RqxPXsYYyTOJ2_U8ywQPteM5gQ@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Adam Manzanares <adam.manzanares@hgst.com>
+Cc: Tejun Heo <tj@kernel.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, mchristi@redhat.com, Toshi Kani <toshi.kani@hpe.com>, Ming Lei <ming.lei@canonical.com>, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-block@vger.kernel.org, IDE/ATA development list <linux-ide@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi <linux-scsi@vger.kernel.org>, Adam Manzananares <adam.manzanares@wdc.com>
 
-Add a sysfs entry to turn on priority information being passed
-to a ATA device. By default this feature is turned off.
+On 10/13/2016 02:06 PM, Dan Williams wrote:
+> On Thu, Oct 13, 2016 at 12:53 PM, Adam Manzanares
+> <adam.manzanares@hgst.com> wrote:
+>> Patch adds an association between iocontext ioprio and the ioprio of a
+>> request. This value is set in blk_rq_set_prio which takes the request and
+>> the ioc as arguments. If the ioc is valid in blk_rq_set_prio then the
+>> iopriority of the request is set as the iopriority of the ioc. In
+>> init_request_from_bio a check is made to see if the ioprio of the bio is
+>> valid and if so then the request prio comes from the bio.
+>>
+>> Signed-off-by: Adam Manzananares <adam.manzanares@wdc.com>
+>> ---
+>>  block/blk-core.c       |  4 +++-
+>>  include/linux/blkdev.h | 14 ++++++++++++++
+>>  2 files changed, 17 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/block/blk-core.c b/block/blk-core.c
+>> index 14d7c07..361b1b9 100644
+>> --- a/block/blk-core.c
+>> +++ b/block/blk-core.c
+>> @@ -1153,6 +1153,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+>>
+>>         blk_rq_init(q, rq);
+>>         blk_rq_set_rl(rq, rl);
+>> +       blk_rq_set_prio(rq, ioc);
+>>         req_set_op_attrs(rq, op, op_flags | REQ_ALLOCED);
+>>
+>>         /* init elvpriv */
+>> @@ -1656,7 +1657,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+>>
+>>         req->errors = 0;
+>>         req->__sector = bio->bi_iter.bi_sector;
+>> -       req->ioprio = bio_prio(bio);
+>> +       if (ioprio_valid(bio_prio(bio)))
+>> +               req->ioprio = bio_prio(bio);
+>
+> Should we use ioprio_best() here?  If req->ioprio and bio_prio()
+> disagree one side has explicitly asked for a higher priority.
 
-This patch depends on ata: Enabling ATA Command Priorities
+It's a good question - but if priority has been set in the bio, it makes
+sense that that would take priority over the general setting for the
+task/io context. So I think the patch is correct as-is.
 
-Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
----
- drivers/ata/libahci.c     |  1 +
- drivers/ata/libata-core.c |  2 +-
- drivers/ata/libata-scsi.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++
- include/linux/libata.h    |  8 ++++++
- 4 files changed, 78 insertions(+), 1 deletion(-)
+Adam, you'll want to rewrite the commit message though. A good commit
+message should explain WHY the change is made, not detail the code
+implementation of it.
 
-diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
-index dcf2c72..383adf7 100644
---- a/drivers/ata/libahci.c
-+++ b/drivers/ata/libahci.c
-@@ -140,6 +140,7 @@ EXPORT_SYMBOL_GPL(ahci_shost_attrs);
- struct device_attribute *ahci_sdev_attrs[] = {
- 	&dev_attr_sw_activity,
- 	&dev_attr_unload_heads,
-+	&dev_attr_enable_prio,
- 	NULL
- };
- EXPORT_SYMBOL_GPL(ahci_sdev_attrs);
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 181b530..d0cf987 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -787,7 +787,7 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 		if (tf->flags & ATA_TFLAG_FUA)
- 			tf->device |= 1 << 7;
- 
--		if (ata_ncq_prio_enabled(dev)) {
-+		if (ata_ncq_prio_enabled(dev) && ata_prio_enabled(dev)) {
- 			if (class == IOPRIO_CLASS_RT)
- 				tf->hob_nsect |= ATA_PRIO_HIGH <<
- 						 ATA_SHIFT_PRIO;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 18629e8..10ba118 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -271,6 +271,73 @@ DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
- 	    ata_scsi_park_show, ata_scsi_park_store);
- EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
- 
-+static ssize_t ata_enable_prio_show(struct device *device,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	int rc = 0;
-+	int enable_prio;
-+
-+	ap = ata_shost_to_port(sdev->host);
-+
-+	spin_lock_irq(ap->lock);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (!dev) {
-+		rc = -ENODEV;
-+		goto unlock;
-+	}
-+
-+	enable_prio = ata_prio_enabled(dev);
-+
-+unlock:
-+	spin_unlock_irq(ap->lock);
-+
-+	return rc ? rc : snprintf(buf, 20, "%u\n", enable_prio);
-+}
-+
-+static ssize_t ata_enable_prio_store(struct device *device,
-+				     struct device_attribute *attr,
-+				     const char *buf, size_t len)
-+{
-+	struct scsi_device *sdev = to_scsi_device(device);
-+	struct ata_port *ap;
-+	struct ata_device *dev;
-+	long int input;
-+	unsigned long flags;
-+	int rc;
-+
-+	rc = kstrtol(buf, 10, &input);
-+	if (rc)
-+		return rc;
-+	if ((input < 0) || (input > 1))
-+		return -EINVAL;
-+
-+	ap = ata_shost_to_port(sdev->host);
-+
-+	spin_lock_irqsave(ap->lock, flags);
-+	dev = ata_scsi_find_dev(ap, sdev);
-+	if (unlikely(!dev)) {
-+		rc = -ENODEV;
-+		goto unlock;
-+	}
-+
-+	if (input)
-+		dev->flags |= ATA_DFLAG_ENABLE_PRIO;
-+	else
-+		dev->flags &= ~ATA_DFLAG_ENABLE_PRIO;
-+
-+unlock:
-+	spin_unlock_irqrestore(ap->lock, flags);
-+
-+	return rc ? rc : len;
-+}
-+
-+DEVICE_ATTR(enable_prio, S_IRUGO | S_IWUSR,
-+	    ata_enable_prio_show, ata_enable_prio_store);
-+EXPORT_SYMBOL_GPL(dev_attr_enable_prio);
-+
- void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
- 			u8 sk, u8 asc, u8 ascq)
- {
-@@ -402,6 +469,7 @@ EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
- 
- struct device_attribute *ata_common_sdev_attrs[] = {
- 	&dev_attr_unload_heads,
-+	&dev_attr_enable_prio,
- 	NULL
- };
- EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 244f261..c8acb16 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -166,6 +166,7 @@ enum {
- 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
- 	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
- 	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
-+	ATA_DFLAG_ENABLE_PRIO	= (1 << 21), /* User enable device priority */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -544,6 +545,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes)
- 
- extern struct device_attribute dev_attr_link_power_management_policy;
- extern struct device_attribute dev_attr_unload_heads;
-+extern struct device_attribute dev_attr_enable_prio;
- extern struct device_attribute dev_attr_em_message_type;
- extern struct device_attribute dev_attr_em_message;
- extern struct device_attribute dev_attr_sw_activity;
-@@ -1627,6 +1629,12 @@ static inline int ata_ncq_prio_enabled(struct ata_device *dev)
- 	return (dev->flags & ATA_DFLAG_NCQ_PRIO) == ATA_DFLAG_NCQ_PRIO;
- }
- 
-+static inline int ata_prio_enabled(struct ata_device *dev)
-+{
-+	return ((dev->flags & ATA_DFLAG_ENABLE_PRIO) ==
-+		 ATA_DFLAG_ENABLE_PRIO);
-+}
-+
- static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
- {
- 	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
 -- 
-2.1.4
+Jens Axboe
 
