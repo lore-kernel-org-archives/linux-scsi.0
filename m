@@ -1,42 +1,65 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 01/16] scsi: Get rid of struct fc_bsg_buffer
-Date: Thu, 13 Oct 2016 11:01:41 +0200
-Message-ID: <35e25d76-fca2-3747-62d6-b507852338ba@suse.de>
-References: <cover.1476276823.git.jthumshirn@suse.de>
- <7d48b2abe199453b531e3bc6b560ea417d48d013.1476276823.git.jthumshirn@suse.de>
+From: Steffen Maier <maier@linux.vnet.ibm.com>
+Subject: Re: [patch] zfcp: spin_lock_irqsave() is not nestable
+Date: Thu, 13 Oct 2016 12:49:18 +0200
+Message-ID: <409dfaed-85eb-01ba-539d-df95f008a6bf@linux.vnet.ibm.com>
+References: <20161013085358.GH16198@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44258 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752193AbcJMJOR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 05:14:17 -0400
-In-Reply-To: <7d48b2abe199453b531e3bc6b560ea417d48d013.1476276823.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161013085358.GH16198@mwanda>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, =?UTF-8?Q?Hendrik_Br=c3=bcckner?= <brueckner@linux.vnet.ibm.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-On 10/12/2016 03:06 PM, Johannes Thumshirn wrote:
-> struct fc_bsg_buffer is just a clone of struct bsg_buffer from bsg-lib,
-> so use this one instead.
-> 
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->  drivers/scsi/lpfc/lpfc_bsg.c     |  3 ++-
->  drivers/scsi/scsi_transport_fc.c |  2 +-
->  include/scsi/scsi_transport_fc.h | 12 +++---------
->  3 files changed, 6 insertions(+), 11 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Dan, many thanks for catching this! Sparse did not notice, is there 
+other tooling that would find such things?
 
-Cheers,
+James, Martin, could you please queue this as fix for one of my patches 
+that went into the 4.9 merge window, so for 4.9-rc I guess?
+https://lkml.kernel.org/r/20161013085358.GH16198@mwanda
+or
+https://lkml.org/lkml/2016/10/13/94
 
-Hannes
+On 10/13/2016 10:53 AM, Dan Carpenter wrote:
+> We accidentally overwrite the original saved value of "flags" so that
+> we can't re-enable IRQs at the end of the function.  Presumably this
+> function is mostly called with IRQs disabled or it would be obvious in
+> testing.
+>
+> Fixes: aceeffbb59bb ("zfcp: trace full payload of all SAN records (req,resp,iels)")
+
+Cc: <stable@vger.kernel.org> #2.6.38+
+
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+
+Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
+
+>
+> diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+> index 637cf89..5810019 100644
+> --- a/drivers/s390/scsi/zfcp_dbf.c
+> +++ b/drivers/s390/scsi/zfcp_dbf.c
+> @@ -384,7 +384,7 @@ void zfcp_dbf_san(char *tag, struct zfcp_dbf *dbf,
+>  	/* if (len > rec_len):
+>  	 * dump data up to cap_len ignoring small duplicate in rec->payload
+>  	 */
+> -	spin_lock_irqsave(&dbf->pay_lock, flags);
+> +	spin_lock(&dbf->pay_lock);
+>  	memset(payload, 0, sizeof(*payload));
+>  	memcpy(payload->area, paytag, ZFCP_DBF_TAG_LEN);
+>  	payload->fsf_req_id = req_id;
+>
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Mit freundlichen Grüßen / Kind regards
+Steffen Maier
+
+Linux on z Systems Development
+
+IBM Deutschland Research & Development GmbH
+Vorsitzende des Aufsichtsrats: Martina Koederitz
+Geschaeftsfuehrung: Dirk Wittkopp
+Sitz der Gesellschaft: Boeblingen
+Registergericht: Amtsgericht Stuttgart, HRB 243294
