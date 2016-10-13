@@ -1,107 +1,57 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v3 03/17] lpfc: Fix sg_reset on SCSI device causing kernel crash
-Date: Thu, 13 Oct 2016 15:06:04 -0700
-Message-ID: <5800054c.g3V3xbXWePOAaN/W%james.smart@broadcom.com>
+Subject: [PATCH v3 07/17] lpfc: Code cleanup for lpfc_enable_rrq parameter
+Date: Thu, 13 Oct 2016 15:06:08 -0700
+Message-ID: <58000550.mGmznF0pv+Q11PU7%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:55291 "EHLO
+Received: from sgpsmtp1.avagotech.com ([202.86.248.61]:55289 "EHLO
         sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757017AbcJMWQg (ORCPT
+        with ESMTP id S1756992AbcJMWQg (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:36 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 6858D10074A
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:06 -0700 (PDT)
+        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 6E7EA10074E
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:10 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Fix sg_reset on SCSI device causing kernel crash
-
-Driver could reference stale node pointers in task mgmt call.
-Changed to use resetting cmd and look up node pointer in task mgmt
-function.
+Code cleanup for lpfc_enable_rrq parameter
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
-v2 mods:
- Revised lpfc_send_taskmgmt() to check rdata
+ drivers/scsi/lpfc/lpfc_attr.c | 8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
 
- drivers/scsi/lpfc/lpfc_scsi.c | 22 +++++++++++++---------
- 1 file changed, 13 insertions(+), 9 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index ca56f28..4c53149e 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -4948,26 +4948,30 @@ lpfc_check_fcp_rsp(struct lpfc_vport *vport, struct lpfc_scsi_buf *lpfc_cmd)
-  *   0x2002 - Success.
-  **/
- static int
--lpfc_send_taskmgmt(struct lpfc_vport *vport, struct lpfc_rport_data *rdata,
--		    unsigned  tgt_id, uint64_t lun_id,
--		    uint8_t task_mgmt_cmd)
-+lpfc_send_taskmgmt(struct lpfc_vport *vport, struct scsi_cmnd *cmnd,
-+		   unsigned int tgt_id, uint64_t lun_id,
-+		   uint8_t task_mgmt_cmd)
- {
- 	struct lpfc_hba   *phba = vport->phba;
- 	struct lpfc_scsi_buf *lpfc_cmd;
- 	struct lpfc_iocbq *iocbq;
- 	struct lpfc_iocbq *iocbqrsp;
--	struct lpfc_nodelist *pnode = rdata->pnode;
-+	struct lpfc_rport_data *rdata;
-+	struct lpfc_nodelist *pnode;
- 	int ret;
- 	int status;
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index e5092dc..22a66c7 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -2759,18 +2759,14 @@ LPFC_ATTR_R(enable_npiv, 1, 0, 1,
+ LPFC_ATTR_R(fcf_failover_policy, 1, 1, 2,
+ 	"FCF Fast failover=1 Priority failover=2");
  
--	if (!pnode || !NLP_CHK_NODE_ACT(pnode))
-+	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
-+	if (!rdata || !rdata->pnode || !NLP_CHK_NODE_ACT(rdata->pnode))
- 		return FAILED;
-+	pnode = rdata->pnode;
+-int lpfc_enable_rrq = 2;
+-module_param(lpfc_enable_rrq, int, S_IRUGO);
+-MODULE_PARM_DESC(lpfc_enable_rrq, "Enable RRQ functionality");
+-lpfc_param_show(enable_rrq);
+ /*
+ # lpfc_enable_rrq: Track XRI/OXID reuse after IO failures
+ #	0x0 = disabled, XRI/OXID use not tracked.
+ #	0x1 = XRI/OXID reuse is timed with ratov, RRQ sent.
+ #	0x2 = XRI/OXID reuse is timed with ratov, No RRQ sent.
+ */
+-lpfc_param_init(enable_rrq, 2, 0, 2);
+-static DEVICE_ATTR(lpfc_enable_rrq, S_IRUGO, lpfc_enable_rrq_show, NULL);
++LPFC_ATTR_R(enable_rrq, 2, 0, 2,
++	"Enable RRQ functionality");
  
--	lpfc_cmd = lpfc_get_scsi_buf(phba, rdata->pnode);
-+	lpfc_cmd = lpfc_get_scsi_buf(phba, pnode);
- 	if (lpfc_cmd == NULL)
- 		return FAILED;
- 	lpfc_cmd->timeout = phba->cfg_task_mgmt_tmo;
- 	lpfc_cmd->rdata = rdata;
-+	lpfc_cmd->pCmd = cmnd;
- 
- 	status = lpfc_scsi_prep_task_mgmt_cmd(vport, lpfc_cmd, lun_id,
- 					   task_mgmt_cmd);
-@@ -5174,7 +5178,7 @@ lpfc_device_reset_handler(struct scsi_cmnd *cmnd)
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
- 
--	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
-+	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
- 						FCP_LUN_RESET);
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -5252,7 +5256,7 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 	fc_host_post_vendor_event(shost, fc_get_event_number(),
- 		sizeof(scsi_event), (char *)&scsi_event, LPFC_NL_VENDOR_ID);
- 
--	status = lpfc_send_taskmgmt(vport, rdata, tgt_id, lun_id,
-+	status = lpfc_send_taskmgmt(vport, cmnd, tgt_id, lun_id,
- 					FCP_TARGET_RESET);
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-@@ -5331,7 +5335,7 @@ lpfc_bus_reset_handler(struct scsi_cmnd *cmnd)
- 		if (!match)
- 			continue;
- 
--		status = lpfc_send_taskmgmt(vport, ndlp->rport->dd_data,
-+		status = lpfc_send_taskmgmt(vport, cmnd,
- 					i, 0, FCP_TARGET_RESET);
- 
- 		if (status != SUCCESS) {
+ /*
+ # lpfc_suppress_link_up:  Bring link up at initialization
 -- 
 2.5.0
 
