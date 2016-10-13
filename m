@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 19/24] libfc: Check xid when looking up REC exchanges
-Date: Thu, 13 Oct 2016 15:10:55 +0200
-Message-ID: <1476364260-12191-20-git-send-email-hare@suse.de>
+Subject: [PATCH 20/24] fcoe: set default TC priority
+Date: Thu, 13 Oct 2016 15:10:56 +0200
+Message-ID: <1476364260-12191-21-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41200 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41199 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752030AbcJMNeF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1752784AbcJMNeF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 13 Oct 2016 09:34:05 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,49 +14,43 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-We currently can only lookup the local xid, so we need
-to reject REC with empty rxid.
+If DCB is not enabled or compiled in we still should be setting
+a sane default priority. So put FCoE frames in priority class
+'interactive' and FIP frames in priority class 'besteffort'.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_exch.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index c62fc27..4c69a99 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -2000,8 +2000,7 @@ static void fc_exch_els_rec(struct fc_frame *rfp)
- 	enum fc_els_rjt_reason reason = ELS_RJT_LOGIC;
- 	enum fc_els_rjt_explan explan;
- 	u32 sid;
--	u16 rxid;
--	u16 oxid;
-+	u16 xid, rxid, oxid;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index c907661..9876fca 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2168,6 +2168,8 @@ static bool fcoe_match(struct net_device *netdev)
+  */
+ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ {
++	int ctlr_prio = TC_PRIO_BESTEFFORT;
++	int fcoe_prio = TC_PRIO_INTERACTIVE;
+ #ifdef CONFIG_DCB
+ 	int dcbx;
+ 	u8 fup, up;
+@@ -2194,10 +2196,12 @@ static void fcoe_dcb_create(struct fcoe_interface *fcoe)
+ 			fup = dcb_getapp(netdev, &app);
+ 		}
  
- 	lport = fr_dev(rfp);
- 	rp = fc_frame_payload_get(rfp, sizeof(*rp));
-@@ -2012,9 +2011,18 @@ static void fc_exch_els_rec(struct fc_frame *rfp)
- 	rxid = ntohs(rp->rec_rx_id);
- 	oxid = ntohs(rp->rec_ox_id);
+-		fcoe->priority = ffs(up) ? ffs(up) - 1 : 0;
+-		ctlr->priority = ffs(fup) ? ffs(fup) - 1 : fcoe->priority;
++		fcoe_prio = ffs(up) ? ffs(up) - 1 : 0;
++		ctlr_prio = ffs(fup) ? ffs(fup) - 1 : fcoe_prio;
+ 	}
+ #endif
++	fcoe->priority = fcoe_prio;
++	ctlr->priority = ctlr_prio;
+ }
  
--	ep = fc_exch_lookup(lport,
--			    sid == fc_host_port_id(lport->host) ? oxid : rxid);
- 	explan = ELS_EXPL_OXID_RXID;
-+	if (sid == fc_host_port_id(lport->host))
-+		xid = oxid;
-+	else
-+		xid = rxid;
-+	if (xid == FC_XID_UNKNOWN) {
-+		FC_LPORT_DBG(lport,
-+			     "REC request from %x: invalid rxid %x oxid %x\n",
-+			     sid, rxid, oxid);
-+		goto reject;
-+	}
-+	ep = fc_exch_lookup(lport, xid);
- 	if (!ep) {
- 		FC_LPORT_DBG(lport,
- 			     "REC request from %x: rxid %x oxid %x not found\n",
+ enum fcoe_create_link_state {
 -- 
 1.8.5.6
 
