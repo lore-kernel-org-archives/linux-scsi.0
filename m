@@ -1,8 +1,8 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 Subject: Re: Patch: Revert commit
  3e22760d4db6fd89e0be46c3d132390a251da9c6 due to performance issues
-Date: Thu, 13 Oct 2016 14:51:06 +0200
-Message-ID: <f8c424a9-29ac-f445-25ad-3733a2efab5e@suse.de>
+Date: Thu, 13 Oct 2016 14:55:29 +0200
+Message-ID: <20161013125529.ki6c2oxp4ue5oc32@linux-x5ow.site>
 References: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
  <2d30ad34-7a5e-b2ba-05f4-b0d831944f4c@suse.de>
  <1476197489.4019.68.camel@localhost.localdomain>
@@ -11,9 +11,10 @@ References: <209207528.804499.1475931430678.JavaMail.zimbra@redhat.com>
  <1564904000.1465519.1476321625269.JavaMail.zimbra@redhat.com>
  <2049046384.1533310.1476362610308.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+Content-Disposition: inline
 In-Reply-To: <2049046384.1533310.1476362610308.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
  <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
@@ -24,56 +25,72 @@ List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
  <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
 Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
 Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ewan Milne <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: "Curtis Taylor (cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org)" <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, Bud Brown <bubrown-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+To: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Cc: Bud Brown <bubrown-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ewan Milne <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Curtis Taylor (cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org)" <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTMvMjAxNiAwMjo0MyBQTSwgTGF1cmVuY2UgT2Jlcm1hbiB3cm90ZToKPiAKPiAKPiBI
-ZWxsbwo+IAo+IFRoaXMgcGF0Y2ggcmV2ZXJ0cyBjb21taXQgM2UyMjc2MGQ0ZGI2ZmQ4OWUwYmU0
-NmMzZDEzMjM5MGEyNTFkYTljNi4KPiAKPiBUaGlzIHJldmVydCBjYW1lIGFib3V0IGJlY2F1c2Ug
-b2YgZWZmb3J0cyBieSBFd2FuIE1pbG5lLCBDdXJ0aXMgVGF5bG9yIGFuZCBJLgo+IEluIHJlc2Vh
-cmNoaW5nIHRoaXMgaXNzdWUsIHNpZ25pZmljYW50IHBlcmZvcm1hbmNlIGlzc3VlcyB3ZXJlIHNl
-ZW4gb24gbGFyZ2UgQ1BVIGNvdW50IAo+IHN5c3RlbXMgdXNpbmcgdGhlIHNvZnR3YXJlIEZDT0Ug
-c3RhY2suCj4gSGFubmVzIGFsc28gd2VpZ2hlZCBpbi4KPiAKPiBUaGUgc2FtZSB3YXMgbm90IGFw
-cGFyZW50IG9uIG11Y2ggc21hbGxlciBsb3cgY291bnQgQ1BVIHN5c3RlbXMuCj4gVGhlIGJlaGF2
-aW9yIGludHJvZHVjZWQgYnkgY29tbWl0IDNlMjI3NjBkNGRiNmZkODllMGJlNDZjM2QxMzIzOTBh
-MjUxZGE5YzYgbGFuZHMgc3VwIHdpdGggbGFyZ2UKPiBjb3VudCBDUFUgc3lzdGVtcyBzZWVpbmcg
-Y29udGludWFsIGJsa19yZXF1ZXVlX3JlcXVlc3QoKSBjYWxscyBkdWUgdG8gTUxfUVVFVUVfSE9T
-VF9CVVNZLgo+IAo+IEZyb20gRXdhbjoKPiAKPiBmY19leGNoX2FsbG9jKCkgdXNlZCB0byB0cnkg
-YWxsIHRoZSBhdmFpbGFibGUgZXhjaGFuZ2UgbWFuYWdlcnMgaW4gdGhlCj4gbGlzdCBmb3IgYW4g
-YXZhaWxhYmxlIGV4Y2hhbmdlIGlkLCBidXQgdGhpcyB3YXMgY2hhbmdlZCBpbiAyMDEwIHNvIHRo
-YXQKPiBpZiB0aGUgZmlyc3QgbWF0Y2hlZCBleGNoYW5nZSBtYW5hZ2VyIGNvdWxkbid0IGFsbG9j
-YXRlIG9uZSwgaXQgZmFpbHMKPiBhbmQgd2UgZW5kIHVwIHJldHVybmluZyBob3N0IGJ1c3kuICBU
-aGlzIHdhcyBkdWUgdG8gY29tbWl0Ogo+IAo+IFNldHRpbmcgdGhlIGRkcF9taW4gbW9kdWxlIHBh
-cmFtZXRlciB0byBmY29lIHRvIDEyOE1CIHByZXZlbnRzIHRoZSAtPm1hdGNoCj4gZnVuY3Rpb24g
-ZnJvbSBwZXJtaXR0aW5nIHRoZSB1c2Ugb2YgdGhlIG9mZmxvYWQgZXhjaGFuZ2UgbWFuYWdlciBm
-b3IgdGhlIGZyYW1lLAo+IGFuZCB3ZSBubyBsb25nZXIgc2VlIHRoZSBwcm9ibGVtIHdpdGggaG9z
-dCBidXN5IHN0YXR1cywgc2luY2UgaXQgdXNlcyB0aGUKPiBsYXJnZXIgbm9uLW9mZmxvYWRlZCBw
-b29sLgo+IAo+IFJldmVydGluZyBjb21taXQgM2UyMjc2MGQ0ZGI2ZmQ4OWUwYmU0NmMzZDEzMjM5
-MGEyNTFkYTljNiB3YXMgdGVzdGVkIHRvIGFsc28KPiBwcmV2ZW50IHRoZSBob3N0IGJ1c3kgaXNz
-dWUgZHVlIHRvIGZhaWxpbmcgYWxsb2NhdGlvbnMuCj4gCj4gU3VnZ2VzdGVkLWJ5OiBFd2FuIE1p
-bG5lIDxlbWlsbmVAcmVkaGF0LmNvbT4KPiBTdWdnZXN0ZWQtYnk6IEN1cnRpcyBUYXlsb3IgPGNq
-dEB1cy5pYm0uY29tPgo+IFRlc3RlZC1ieTogTGF1cmVuY2UgT2Jlcm1hbiA8bG9iZXJtYW5AcmVk
-aGF0LmNvbT4KPiBTaWduZWQtb2ZmLWJ5OiBMYXVyZW5jZSBPYmVybWFuIDxsb2Jlcm1hbkByZWRo
-YXQuY29tPgo+IAo+IGRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvbGliZmMvZmNfZXhjaC5jIGIv
-ZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2V4Y2guYwo+IGluZGV4IGU3MjY3M2IuLmQ1YzQwNDggMTAw
-NjQ0Cj4gLS0tIGEvZHJpdmVycy9zY3NpL2xpYmZjL2ZjX2V4Y2guYwo+ICsrKyBiL2RyaXZlcnMv
-c2NzaS9saWJmYy9mY19leGNoLmMKPiBAQCAtODkyLDEwICs4OTIsMTUgQEAgc3RhdGljIGlubGlu
-ZSBzdHJ1Y3QgZmNfZXhjaCAqZmNfZXhjaF9hbGxvYyhzdHJ1Y3QgZmNfbHBvcnQgKmxwb3J0LAo+
-ICAJCQkJCSAgICBzdHJ1Y3QgZmNfZnJhbWUgKmZwKQo+ICB7Cj4gIAlzdHJ1Y3QgZmNfZXhjaF9t
-Z3JfYW5jaG9yICplbWE7Cj4gKwlzdHJ1Y3QgZmNfZXhjaCAqZXA7Cj4gIAo+IC0JbGlzdF9mb3Jf
-ZWFjaF9lbnRyeShlbWEsICZscG9ydC0+ZW1hX2xpc3QsIGVtYV9saXN0KQo+IC0JCWlmICghZW1h
-LT5tYXRjaCB8fCBlbWEtPm1hdGNoKGZwKSkKPiAtCQkJcmV0dXJuIGZjX2V4Y2hfZW1fYWxsb2Mo
-bHBvcnQsIGVtYS0+bXApOwo+ICsJbGlzdF9mb3JfZWFjaF9lbnRyeShlbWEsICZscG9ydC0+ZW1h
-X2xpc3QsIGVtYV9saXN0KSB7Cj4gKwkJaWYgKCFlbWEtPm1hdGNoIHx8IGVtYS0+bWF0Y2goZnAp
-KSB7Cj4gKwkJCWVwID0gZmNfZXhjaF9lbV9hbGxvYyhscG9ydCwgZW1hLT5tcCk7Cj4gKwkJCWlm
-IChlcCkKPiArCQkJCXJldHVybiBlcDsKPiArCQl9Cj4gKwl9Cj4gIAlyZXR1cm4gTlVMTDsKPiAg
-fQo+IApSZXZpZXdlZC1ieTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPgoKQ2hlZXJz
-LAoKSGFubmVzCi0tIApEci4gSGFubmVzIFJlaW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYg
-TmV0d29ya2luZwpoYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4
-OApTVVNFIExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZwpHRjogRi4g
-SW1lbmTDtnJmZmVyLCBKLiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRv
-bgpIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX19fX19fX19fX18KZmNvZS1kZXZlbCBtYWlsaW5nIGxpc3QKZmNvZS1kZXZlbEBvcGVu
-LWZjb2Uub3JnCmh0dHA6Ly9saXN0cy5vcGVuLWZjb2Uub3JnL21haWxtYW4vbGlzdGluZm8vZmNv
-ZS1kZXZlbAo=
+On Thu, Oct 13, 2016 at 08:43:30AM -0400, Laurence Oberman wrote:
+> =
+
+> =
+
+> Hello
+> =
+
+> This patch reverts commit 3e22760d4db6fd89e0be46c3d132390a251da9c6.
+> =
+
+> This revert came about because of efforts by Ewan Milne, Curtis Taylor an=
+d I.
+> In researching this issue, significant performance issues were seen on la=
+rge CPU count =
+
+> systems using the software FCOE stack.
+> Hannes also weighed in.
+> =
+
+> The same was not apparent on much smaller low count CPU systems.
+> The behavior introduced by commit 3e22760d4db6fd89e0be46c3d132390a251da9c=
+6 lands sup with large
+> count CPU systems seeing continual blk_requeue_request() calls due to ML_=
+QUEUE_HOST_BUSY.
+> =
+
+> From Ewan:
+> =
+
+> fc_exch_alloc() used to try all the available exchange managers in the
+> list for an available exchange id, but this was changed in 2010 so that
+> if the first matched exchange manager couldn't allocate one, it fails
+> and we end up returning host busy.  This was due to commit:
+> =
+
+> Setting the ddp_min module parameter to fcoe to 128MB prevents the ->match
+> function from permitting the use of the offload exchange manager for the =
+frame,
+> and we no longer see the problem with host busy status, since it uses the
+> larger non-offloaded pool.
+> =
+
+> Reverting commit 3e22760d4db6fd89e0be46c3d132390a251da9c6 was tested to a=
+lso
+> prevent the host busy issue due to failing allocations.
+> =
+
+> Suggested-by: Ewan Milne <emilne-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Suggested-by: Curtis Taylor <cjt-r/Jw6+rmf7HQT0dZR+AlfA@public.gmane.org>
+> Tested-by: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+> =
+
+
+Acked-by: Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+
+-- =
+
+Johannes Thumshirn                                          Storage
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+HRB 21284 (AG N=FCrnberg)
+Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
