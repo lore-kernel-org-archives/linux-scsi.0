@@ -1,99 +1,77 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: [PATCH 1/1] [4.9-rc] ipr: Fix async error WARN_ON
-Date: Thu, 13 Oct 2016 14:45:24 -0500
-Message-ID: <20161013194524.EA0286A03C@b03ledav003.gho.boulder.ibm.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47038 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1756609AbcJMTqa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 15:46:30 -0400
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9DJhjHQ036953
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:45:30 -0400
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 262fh2aw97-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:45:29 -0400
-Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <brking@linux.vnet.ibm.com>;
-        Thu, 13 Oct 2016 13:45:29 -0600
-Sender: linux-scsi-owner@vger.kernel.org
+From: Adam Manzanares <adam.manzanares@hgst.com>
+Subject: [PATCH v4 1/4] block: Add iocontext priority to request
+Date: Thu, 13 Oct 2016 12:53:50 -0700
+Message-ID: <1476388433-2539-2-git-send-email-adam.manzanares@hgst.com>
+References: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com
+Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>, Adam Manzananares <adam.manzanares@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com, brking@linux.vnet.ibm.com
 
+Patch adds an association between iocontext ioprio and the ioprio of a
+request. This value is set in blk_rq_set_prio which takes the request and
+the ioc as arguments. If the ioc is valid in blk_rq_set_prio then the
+iopriority of the request is set as the iopriority of the ioc. In
+init_request_from_bio a check is made to see if the ioprio of the bio is
+valid and if so then the request prio comes from the bio.
 
-Commit afc3f83cb4a5 ("scsi: ipr: Add asynchronous error notification")
-introduced the warn on shown below. To fix this, rather than attempting
-to send the KOBJ_CHANGE uevent from interrupt context, which is what is
-causing the WARN_ON, just wake the ipr worker thread which will send a
-KOBJ_CHANGE uevent.
-
-[  142.278120] WARNING: CPU: 15 PID: 0 at kernel/softirq.c:161 __local_bh_enable_ip+0x7c/0xd0
-[  142.278124] Modules linked in: ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 ipt_REJECT nf_reject_ipv4 xt_conntrack ebtable_nat ebtable_broute bridge stp llc ebtable_filter ebtables ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6_tables iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security iptable_raw iptable_filter ses enclosure scsi_transport_sas sg pseries_rng nfsd auth_rpcgss nfs_acl lockd grace sunrpc ip_tables xfs libcrc32c sr_mod sd_mod cdrom ipr libata ibmvscsi scsi_transport_srp ibmveth dm_mirror dm_region_hash dm_log dm_mod
-[  142.278208] CPU: 15 PID: 0 Comm: swapper/15 Not tainted 4.8.0.ipr+ #21
-[  142.278213] task: c00000010cf24480 task.stack: c00000010cfec000
-[  142.278217] NIP: c0000000000c0c7c LR: c000000000881778 CTR: c0000000003c5bf0
-[  142.278221] REGS: c00000010cfef080 TRAP: 0700   Not tainted  (4.8.0.ipr+)
-[  142.278224] MSR: 8000000000029033 <SF,EE,ME,IR,DR,RI,LE>  CR: 28008022  XER: 2000000f
-[  142.278236] CFAR: c0000000000c0c20 SOFTE: 0 
-GPR00: c000000000706c78 c00000010cfef300 c000000000f91d00 c000000000706c78 
-GPR04: 0000000000000200 c000000000f7bc80 0000000000000000 00000000024000c0 
-GPR08: 0000000000000000 0000000000000001 c000000000ee1d00 c000000000a9bdd0 
-GPR12: c0000000003c5bf0 c00000000eb22d00 c000000100ca3880 c00000020ed38400 
-GPR16: 0000000000000000 0000000000000000 c000000100940508 0000000000000000 
-GPR20: 0000000000000000 0000000000000000 0000000000000000 00000000024000c0 
-GPR24: c0000000004588e0 c00000010863bd00 c00000010863bd00 c0000000013773f8 
-GPR28: c000000000f7bc80 0000000000000000 ffffffffffffffff c000000000f7bcd8 
-[  142.278290] NIP [c0000000000c0c7c] __local_bh_enable_ip+0x7c/0xd0
-[  142.278296] LR [c000000000881778] _raw_spin_unlock_bh+0x38/0x60
-[  142.278299] Call Trace:
-[  142.278303] [c00000010cfef300] [c000000000f7bc80] init_net+0x0/0x1900 (unreliable)
-[  142.278310] [c00000010cfef320] [c000000000706c78] peernet2id+0x58/0x80
-[  142.278316] [c00000010cfef370] [c00000000075caec] netlink_broadcast_filtered+0x30c/0x550
-[  142.278323] [c00000010cfef430] [c000000000459078] kobject_uevent_env+0x588/0x780
-[  142.278331] [c00000010cfef510] [d000000003163a6c] ipr_process_error+0x11c/0x240 [ipr]
-[  142.278337] [c00000010cfef5c0] [d000000003152298] ipr_fail_all_ops+0x108/0x220 [ipr]
-[  142.278343] [c00000010cfef670] [d0000000031643f8] ipr_reset_restore_cfg_space+0xa8/0x240 [ipr]
-[  142.278350] [c00000010cfef6f0] [d000000003158a00] ipr_reset_ioa_job+0x80/0xe0 [ipr]
-[  142.278356] [c00000010cfef720] [d000000003153f78] ipr_reset_timer_done+0xa8/0xe0 [ipr]
-[  142.278363] [c00000010cfef770] [c000000000149c88] call_timer_fn+0x58/0x1c0
-[  142.278368] [c00000010cfef800] [c000000000149f60] expire_timers+0x140/0x200
-[  142.278373] [c00000010cfef870] [c00000000014a0e8] run_timer_softirq+0xc8/0x230
-[  142.278379] [c00000010cfef900] [c0000000000c0844] __do_softirq+0x164/0x3c0
-[  142.278384] [c00000010cfef9f0] [c0000000000c0f18] irq_exit+0x1a8/0x1c0
-[  142.278389] [c00000010cfefa20] [c000000000020b54] timer_interrupt+0xa4/0xe0
-[  142.278394] [c00000010cfefa50] [c000000000002414] decrementer_common+0x114/0x180
-
-
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+Signed-off-by: Adam Manzananares <adam.manzanares@wdc.com>
 ---
+ block/blk-core.c       |  4 +++-
+ include/linux/blkdev.h | 14 ++++++++++++++
+ 2 files changed, 17 insertions(+), 1 deletion(-)
 
- drivers/scsi/ipr.c |    3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
-
-diff -puN drivers/scsi/ipr.c~ipr_async_err_fixup drivers/scsi/ipr.c
---- linux-2.6.git/drivers/scsi/ipr.c~ipr_async_err_fixup	2016-10-13 09:57:47.634920565 -0500
-+++ linux-2.6.git-bjking1/drivers/scsi/ipr.c	2016-10-13 14:42:25.654418345 -0500
-@@ -2586,7 +2586,6 @@ static void ipr_process_error(struct ipr
- 	struct ipr_hostrcb *hostrcb = ipr_cmd->u.hostrcb;
- 	u32 ioasc = be32_to_cpu(ipr_cmd->s.ioasa.hdr.ioasc);
- 	u32 fd_ioasc;
--	char *envp[] = { "ASYNC_ERR_LOG=1", NULL };
+diff --git a/block/blk-core.c b/block/blk-core.c
+index 14d7c07..361b1b9 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -1153,6 +1153,7 @@ static struct request *__get_request(struct request_list *rl, int op,
  
- 	if (ioa_cfg->sis64)
- 		fd_ioasc = be32_to_cpu(hostrcb->hcam.u.error64.fd_ioasc);
-@@ -2607,8 +2606,8 @@ static void ipr_process_error(struct ipr
- 	}
+ 	blk_rq_init(q, rq);
+ 	blk_rq_set_rl(rq, rl);
++	blk_rq_set_prio(rq, ioc);
+ 	req_set_op_attrs(rq, op, op_flags | REQ_ALLOCED);
  
- 	list_add_tail(&hostrcb->queue, &ioa_cfg->hostrcb_report_q);
-+	schedule_work(&ioa_cfg->work_q);
- 	hostrcb = ipr_get_free_hostrcb(ioa_cfg);
--	kobject_uevent_env(&ioa_cfg->host->shost_dev.kobj, KOBJ_CHANGE, envp);
+ 	/* init elvpriv */
+@@ -1656,7 +1657,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
  
- 	ipr_send_hcam(ioa_cfg, IPR_HCAM_CDB_OP_CODE_LOG_DATA, hostrcb);
+ 	req->errors = 0;
+ 	req->__sector = bio->bi_iter.bi_sector;
+-	req->ioprio = bio_prio(bio);
++	if (ioprio_valid(bio_prio(bio)))
++		req->ioprio = bio_prio(bio);
+ 	blk_rq_bio_prep(req->q, req, bio);
  }
-_
+ 
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index c47c358..9a0ceaa 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -934,6 +934,20 @@ static inline unsigned int blk_rq_count_bios(struct request *rq)
+ }
+ 
+ /*
++ * blk_rq_set_prio - associate a request with prio from ioc
++ * @rq: request of interest
++ * @ioc: target iocontext
++ *
++ * Assocate request prio with ioc prio so request based drivers
++ * can leverage priority information.
++ */
++static inline void blk_rq_set_prio(struct request *rq, struct io_context *ioc)
++{
++	if (ioc)
++		rq->ioprio = ioc->ioprio;
++}
++
++/*
+  * Request issue related functions.
+  */
+ extern struct request *blk_peek_request(struct request_queue *q);
+-- 
+2.1.4
 
