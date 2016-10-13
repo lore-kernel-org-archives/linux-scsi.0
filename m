@@ -1,39 +1,29 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 15/16] scsi: fc: move FC transport's bsg code to
- bsg-lib
-Date: Thu, 13 Oct 2016 13:49:50 +0200
-Message-ID: <95dd831f-a276-c336-010c-bd3794e023e3@suse.de>
+Subject: Re: [PATCH v2 12/16] scsi: fc: use bsg_softirq_done
+Date: Thu, 13 Oct 2016 13:45:38 +0200
+Message-ID: <cec7c174-288b-2740-e7d0-90b1dac881a2@suse.de>
 References: <cover.1476276823.git.jthumshirn@suse.de>
- <65886ca677259889fff0ad31efd081401349ebdc.1476276823.git.jthumshirn@suse.de>
+ <4bf6d3e57ce4637effcc763e5f5ed6166b32f518.1476276823.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:56914 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754198AbcJMLvx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 07:51:53 -0400
-In-Reply-To: <65886ca677259889fff0ad31efd081401349ebdc.1476276823.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4bf6d3e57ce4637effcc763e5f5ed6166b32f518.1476276823.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
 On 10/12/2016 03:06 PM, Johannes Thumshirn wrote:
-> Now that all conversions are done, move the FibreChannel bsg code over to the
-> bsg library. Note that CONFIG_SCSI_FC_ATTRS now needs to select BLK_DEV_BSGLIB
-> in order to build correctly.
-> 
-> This patch is derived from work done by Mike Christie in 2011 [1] but only the
-> iscsi parts got merged back then.
-> 
-> [1] http://marc.info/?l=linux-scsi&m=131149780921009&w=2
+> bsg_softirq_done() and fc_bsg_softirq_done() are copies of each other, so
+> ditch the fc specific one.
 > 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  drivers/scsi/Kconfig             |   1 +
->  drivers/scsi/scsi_transport_fc.c | 287 ++++++---------------------------------
->  2 files changed, 44 insertions(+), 244 deletions(-)
+>  block/bsg-lib.c                  |  3 ++-
+>  drivers/scsi/scsi_transport_fc.c | 16 ++--------------
+>  include/linux/bsg-lib.h          |  1 +
+>  3 files changed, 5 insertions(+), 15 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
