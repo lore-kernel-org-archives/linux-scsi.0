@@ -1,65 +1,59 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: Re: [patch] zfcp: spin_lock_irqsave() is not nestable
-Date: Thu, 13 Oct 2016 12:49:18 +0200
-Message-ID: <409dfaed-85eb-01ba-539d-df95f008a6bf@linux.vnet.ibm.com>
-References: <20161013085358.GH16198@mwanda>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH v2 02/16] scsi: don't use
+ fc_bsg_job::request and fc_bsg_job::reply directly
+Date: Thu, 13 Oct 2016 13:25:56 +0200
+Message-ID: <1053c1af-848d-ff60-01a5-13ea29ba23e8@suse.de>
+References: <cover.1476276823.git.jthumshirn@suse.de>
+ <b92d12e4f78c4998bc8ad000359c127e673379f3.1476276823.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161013085358.GH16198@mwanda>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, linux-scsi@vger.kernel.org, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, linux-s390@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, =?UTF-8?Q?Hendrik_Br=c3=bcckner?= <brueckner@linux.vnet.ibm.com>, Gerald Schaefer <gerald.schaefer@de.ibm.com>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <b92d12e4f78c4998bc8ad000359c127e673379f3.1476276823.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "open list:S390 ZFCP DRIVER" <linux-s390-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dick Kennedy <dick.kennedy-1wcpHE2jlwO1Z/+hSey0Gg@public.gmane.org>, "James E.J. Bottomley" <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Sudarsana Kalluru <sudarsana.kalluru-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Michael Ellerman <mpe-Gsx/Oe8HsFggBc27wqDAHg@public.gmane.org>, Anil Gurumurthy <anil.gurumurthy-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, "supporter:QLOGIC QLA2XXX FC-SCSI DRIVER" <qla2xxx-upstream-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>, Heiko Carstens <heiko.carstens-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, Linux Kernel Mailinglist <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "open list:FCOE SUBSYSTEM (libfc, libfcoe, fcoe)" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, Martin Schwidefsky <schwidefsky-tA70FqPdS9bQT0dZR+AlfA@public.gmane.org>, James Smart <james.smart-1wcpHE2jlwO1Z/+hSey0Gg@public.gmane.org>, Paul Mackerras <paulus-eUNUBHrolfbYtjvyW6yDsg@public.gmane.org>, Tyrel Datwyler <tyreld-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Benjamin Herrenschmidt <benh-XVmvHMARGAS8U2dJNN8I7kB+6BGkLq7r@public.gmane.org>, Steffen Maier <maier-23VcF4HTsmKsTnJN9+BGXg@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Dan, many thanks for catching this! Sparse did not notice, is there 
-other tooling that would find such things?
+On 10/12/2016 03:06 PM, Johannes Thumshirn wrote:
+> Don't use fc_bsg_job::request and fc_bsg_job::reply directly, but use
+> helper variables bsg_request and bsg_reply. This will be helpfull  when
+> transitioning to bsg-lib.
+> =
 
-James, Martin, could you please queue this as fix for one of my patches 
-that went into the 4.9 merge window, so for 4.9-rc I guess?
-https://lkml.kernel.org/r/20161013085358.GH16198@mwanda
-or
-https://lkml.org/lkml/2016/10/13/94
+> Signed-off-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+> ---
+>  drivers/s390/scsi/zfcp_fc.c      |   9 +-
+>  drivers/scsi/bfa/bfad_bsg.c      |  40 +++---
+>  drivers/scsi/ibmvscsi/ibmvfc.c   |  22 ++--
+>  drivers/scsi/libfc/fc_lport.c    |  23 ++--
+>  drivers/scsi/lpfc/lpfc_bsg.c     | 194 +++++++++++++++++-----------
+>  drivers/scsi/qla2xxx/qla_bsg.c   | 264 ++++++++++++++++++++++-----------=
+------
+>  drivers/scsi/qla2xxx/qla_iocb.c  |   5 +-
+>  drivers/scsi/qla2xxx/qla_isr.c   |  46 ++++---
+>  drivers/scsi/qla2xxx/qla_mr.c    |  10 +-
+>  drivers/scsi/scsi_transport_fc.c |  37 +++---
+>  10 files changed, 387 insertions(+), 263 deletions(-)
+> =
 
-On 10/13/2016 10:53 AM, Dan Carpenter wrote:
-> We accidentally overwrite the original saved value of "flags" so that
-> we can't re-enable IRQs at the end of the function.  Presumably this
-> function is mostly called with IRQs disabled or it would be obvious in
-> testing.
->
-> Fixes: aceeffbb59bb ("zfcp: trace full payload of all SAN records (req,resp,iels)")
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
-Cc: <stable@vger.kernel.org> #2.6.38+
+Cheers,
 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+Hannes
+-- =
 
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-
->
-> diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-> index 637cf89..5810019 100644
-> --- a/drivers/s390/scsi/zfcp_dbf.c
-> +++ b/drivers/s390/scsi/zfcp_dbf.c
-> @@ -384,7 +384,7 @@ void zfcp_dbf_san(char *tag, struct zfcp_dbf *dbf,
->  	/* if (len > rec_len):
->  	 * dump data up to cap_len ignoring small duplicate in rec->payload
->  	 */
-> -	spin_lock_irqsave(&dbf->pay_lock, flags);
-> +	spin_lock(&dbf->pay_lock);
->  	memset(payload, 0, sizeof(*payload));
->  	memcpy(payload->area, paytag, ZFCP_DBF_TAG_LEN);
->  	payload->fsf_req_id = req_id;
->
-
--- 
-Mit freundlichen Grüßen / Kind regards
-Steffen Maier
-
-Linux on z Systems Development
-
-IBM Deutschland Research & Development GmbH
-Vorsitzende des Aufsichtsrats: Martina Koederitz
-Geschaeftsfuehrung: Dirk Wittkopp
-Sitz der Gesellschaft: Boeblingen
-Registergericht: Amtsgericht Stuttgart, HRB 243294
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare-l3A5Bk7waGM@public.gmane.org			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
