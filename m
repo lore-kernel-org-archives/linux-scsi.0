@@ -1,36 +1,48 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 0/2] Locking issue in libiscsi and be2iscsi
-Date: Thu, 13 Oct 2016 12:08:47 +0530
-Message-ID: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH 1/2] libiscsi: Fix locking in __iscsi_conn_send_pdu
+Date: Thu, 13 Oct 2016 12:08:48 +0530
+Message-ID: <1476340729-8569-2-git-send-email-jitendra.bhivare@broadcom.com>
+References: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:35309 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752183AbcJMGrC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 02:47:02 -0400
-Received: by mail-qk0-f172.google.com with SMTP id z190so69859277qkc.2
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 23:46:44 -0700 (PDT)
+Received: from mail-qt0-f176.google.com ([209.85.216.176]:35795 "EHLO
+        mail-qt0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750909AbcJMGsq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 02:48:46 -0400
+Received: by mail-qt0-f176.google.com with SMTP id f6so34088947qtd.2
+        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 23:47:20 -0700 (PDT)
+In-Reply-To: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-These patches are being resent with required changes as per comments
-for [PATCH 02/28] be2iscsi: Replace _bh with _irqsave/irqrestore
+The code at free_task label in __iscsi_conn_send_pdu can get executed
+from blk_timeout_work which takes queue_lock using spin_lock_irq.
+back_lock taken with spin_unlock_bh will cause WARN_ON_ONCE.
+The code gets executed either with bottom half or IRQ disabled hence
+using spin_lock/spin_unlock for back_lock is safe.
 
-In IO handling path, there is no spin_lock taken with IRQs disabled
-when calling into libiscsi, so no issues were found with use of
-spin_lock_bh/spin_unlock_bh except for one in iscsi_eh_cmd_timeout.
+Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+---
+ drivers/scsi/libiscsi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-This needs to be applied on top 11.2.0.0 of be2iscsi committed in
-4.9/scsi-queue.
-
-Jitendra Bhivare (2):
-  libiscsi: Fix locking in __iscsi_conn_send_pdu
-  be2iscsi: Replace _bh with _irqsave/irqrestore
-
- drivers/scsi/be2iscsi/be_main.c | 37 +++++++++++++++++++++++--------------
- drivers/scsi/libiscsi.c         |  4 ++--
- 2 files changed, 25 insertions(+), 16 deletions(-)
-
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index c051694..f9b6fba 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -791,9 +791,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 
+ free_task:
+ 	/* regular RX path uses back_lock */
+-	spin_lock_bh(&session->back_lock);
++	spin_lock(&session->back_lock);
+ 	__iscsi_put_task(task);
+-	spin_unlock_bh(&session->back_lock);
++	spin_unlock(&session->back_lock);
+ 	return NULL;
+ }
+ 
 -- 
 2.7.4
+
