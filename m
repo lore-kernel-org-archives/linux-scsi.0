@@ -1,99 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 18/24] libfc: wait for E_D_TOV when out-of-order sequence is received
-Date: Thu, 13 Oct 2016 15:10:54 +0200
-Message-ID: <1476364260-12191-19-git-send-email-hare@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 21/24] fcoe: catch invalid values for the 'enabled'
+ attribute
+Date: Thu, 13 Oct 2016 15:37:42 +0200
+Message-ID: <20161013133742.njbprhrd45otcwji@linux-x5ow.site>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
+ <1476364260-12191-22-git-send-email-hare@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41162 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41555 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751532AbcJMNeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:34:02 -0400
-In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
+        id S1752861AbcJMNik (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:38:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1476364260-12191-22-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-When detecting an out-of-order sequence we should be waiting for
-E_D_TOV before trying to abort the sequence.
-The response might still be stuck in the queue somewhere.
+On Thu, Oct 13, 2016 at 03:10:57PM +0200, Hannes Reinecke wrote:
+> The 'enabled' sysfs attribute only accepts the values '0' and '1',
+> so we should error out any other values.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/libfc/fc_fcp.c | 38 ++++++++++++++++++++------------------
- 1 file changed, 20 insertions(+), 18 deletions(-)
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index fb2ebc7..c033946 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -460,6 +460,22 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- }
- 
- /**
-+ * get_fsp_rec_tov() - Helper function to get REC_TOV
-+ * @fsp: the FCP packet
-+ *
-+ * Returns rec tov in jiffies as rpriv->e_d_tov + 1 second
-+ */
-+static inline unsigned int get_fsp_rec_tov(struct fc_fcp_pkt *fsp)
-+{
-+	struct fc_rport_libfc_priv *rpriv = fsp->rport->dd_data;
-+	unsigned int e_d_tov = FC_DEF_E_D_TOV;
-+
-+	if (rpriv && rpriv->e_d_tov > e_d_tov)
-+		e_d_tov = rpriv->e_d_tov;
-+	return msecs_to_jiffies(e_d_tov) + HZ;
-+}
-+
-+/**
-  * fc_fcp_recv_data() - Handler for receiving SCSI-FCP data from a target
-  * @fsp: The FCP packet the data is on
-  * @fp:	 The data frame
-@@ -562,8 +578,10 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 	 * and completes the transfer, call the completion handler.
- 	 */
- 	if (unlikely(fsp->state & FC_SRB_RCV_STATUS) &&
--	    fsp->xfer_len == fsp->data_len - fsp->scsi_resid)
-+	    fsp->xfer_len == fsp->data_len - fsp->scsi_resid) {
-+		FC_FCP_DBG( fsp, "complete out-of-order sequence\n" );
- 		fc_fcp_complete_locked(fsp);
-+	}
- 	return;
- err:
- 	fc_fcp_recovery(fsp, host_bcode);
-@@ -943,7 +961,7 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 				   "len %x, data len %x\n",
- 				   fsp->rport->port_id,
- 				   fsp->xfer_len, expected_len, fsp->data_len);
--			fc_fcp_timer_set(fsp, 2);
-+			fc_fcp_timer_set(fsp, get_fsp_rec_tov(fsp));
- 			return;
- 		}
- 		fsp->status_code = FC_DATA_OVRRUN;
-@@ -1152,22 +1170,6 @@ static int fc_fcp_pkt_send(struct fc_lport *lport, struct fc_fcp_pkt *fsp)
- }
- 
- /**
-- * get_fsp_rec_tov() - Helper function to get REC_TOV
-- * @fsp: the FCP packet
-- *
-- * Returns rec tov in jiffies as rpriv->e_d_tov + 1 second
-- */
--static inline unsigned int get_fsp_rec_tov(struct fc_fcp_pkt *fsp)
--{
--	struct fc_rport_libfc_priv *rpriv = fsp->rport->dd_data;
--	unsigned int e_d_tov = FC_DEF_E_D_TOV;
--
--	if (rpriv && rpriv->e_d_tov > e_d_tov)
--		e_d_tov = rpriv->e_d_tov;
--	return msecs_to_jiffies(e_d_tov) + HZ;
--}
--
--/**
-  * fc_fcp_cmd_send() - Send a FCP command
-  * @lport: The local port to send the command on
-  * @fsp:   The FCP packet the command is on
 -- 
-1.8.5.6
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
