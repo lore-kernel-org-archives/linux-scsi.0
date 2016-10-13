@@ -1,103 +1,125 @@
-From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 12/17 v2] lpfc: Revise strings with full lpfc parameter
- name
-Date: Wed, 12 Oct 2016 13:14:15 -0700
-Message-ID: <57fe9997.SnXhmZmY0iqAlcH+%james.smart@broadcom.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([202.86.248.61]:53790 "EHLO
-        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934018AbcJLUOr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 12 Oct 2016 16:14:47 -0400
-Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 91B62100704
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Oct 2016 13:14:17 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Lorenzo Stoakes <lstoakes@gmail.com>
+Subject: [PATCH 01/10] mm: remove write/force parameters from __get_user_pages_locked()
+Date: Thu, 13 Oct 2016 01:20:11 +0100
+Message-ID: <20161013002020.3062-2-lstoakes@gmail.com>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20161013002020.3062-1-lstoakes@gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: linux-mm@kvack.org
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org, linux-sh@vger.kerne
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
+This patch removes the write and force parameters from __get_user_pages_locked()
+to make the use of FOLL_FORCE explicit in callers as use of this flag can result
+in surprising behaviour (and hence bugs) within the mm subsystem.
 
-Revise strings with full lpfc parameter name
-
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Lorenzo Stoakes <lstoakes@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 23 ++++++++++++-----------
- 1 file changed, 12 insertions(+), 11 deletions(-)
+ mm/gup.c | 47 +++++++++++++++++++++++++++++++++--------------
+ 1 file changed, 33 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 1b6090c..3740e5d 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2877,9 +2877,9 @@ lpfc_nodev_tmo_init(struct lpfc_vport *vport, int val)
- 		vport->cfg_nodev_tmo = vport->cfg_devloss_tmo;
- 		if (val != LPFC_DEF_DEVLOSS_TMO)
- 			lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--					 "0407 Ignoring nodev_tmo module "
--					 "parameter because devloss_tmo is "
--					 "set.\n");
-+					 "0407 Ignoring lpfc_nodev_tmo module "
-+					 "parameter because lpfc_devloss_tmo "
-+					 "is set.\n");
- 		return 0;
- 	}
+diff --git a/mm/gup.c b/mm/gup.c
+index 96b2b2f..ba83942 100644
+--- a/mm/gup.c
++++ b/mm/gup.c
+@@ -729,7 +729,6 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
+ 						struct mm_struct *mm,
+ 						unsigned long start,
+ 						unsigned long nr_pages,
+-						int write, int force,
+ 						struct page **pages,
+ 						struct vm_area_struct **vmas,
+ 						int *locked, bool notify_drop,
+@@ -747,10 +746,6 @@ static __always_inline long __get_user_pages_locked(struct task_struct *tsk,
  
-@@ -2938,8 +2938,8 @@ lpfc_nodev_tmo_set(struct lpfc_vport *vport, int val)
- 	if (vport->dev_loss_tmo_changed ||
- 	    (lpfc_devloss_tmo != LPFC_DEF_DEVLOSS_TMO)) {
- 		lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--				 "0401 Ignoring change to nodev_tmo "
--				 "because devloss_tmo is set.\n");
-+				 "0401 Ignoring change to lpfc_nodev_tmo "
-+				 "because lpfc_devloss_tmo is set.\n");
- 		return 0;
- 	}
- 	if (val >= LPFC_MIN_DEVLOSS_TMO && val <= LPFC_MAX_DEVLOSS_TMO) {
-@@ -2954,7 +2954,7 @@ lpfc_nodev_tmo_set(struct lpfc_vport *vport, int val)
- 		return 0;
- 	}
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--			 "0403 lpfc_nodev_tmo attribute cannot be set to"
-+			 "0403 lpfc_nodev_tmo attribute cannot be set to "
- 			 "%d, allowed range is [%d, %d]\n",
- 			 val, LPFC_MIN_DEVLOSS_TMO, LPFC_MAX_DEVLOSS_TMO);
- 	return -EINVAL;
-@@ -3005,8 +3005,8 @@ lpfc_devloss_tmo_set(struct lpfc_vport *vport, int val)
- 	}
+ 	if (pages)
+ 		flags |= FOLL_GET;
+-	if (write)
+-		flags |= FOLL_WRITE;
+-	if (force)
+-		flags |= FOLL_FORCE;
  
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_INIT,
--			 "0404 lpfc_devloss_tmo attribute cannot be set to"
--			 " %d, allowed range is [%d, %d]\n",
-+			 "0404 lpfc_devloss_tmo attribute cannot be set to "
-+			 "%d, allowed range is [%d, %d]\n",
- 			 val, LPFC_MIN_DEVLOSS_TMO, LPFC_MAX_DEVLOSS_TMO);
- 	return -EINVAL;
+ 	pages_done = 0;
+ 	lock_dropped = false;
+@@ -846,9 +841,15 @@ long get_user_pages_locked(unsigned long start, unsigned long nr_pages,
+ 			   int write, int force, struct page **pages,
+ 			   int *locked)
+ {
++	unsigned int flags = FOLL_TOUCH;
++
++	if (write)
++		flags |= FOLL_WRITE;
++	if (force)
++		flags |= FOLL_FORCE;
++
+ 	return __get_user_pages_locked(current, current->mm, start, nr_pages,
+-				       write, force, pages, NULL, locked, true,
+-				       FOLL_TOUCH);
++				       pages, NULL, locked, true, flags);
  }
-@@ -4174,7 +4174,8 @@ lpfc_fcp_imax_init(struct lpfc_hba *phba, int val)
- 	}
+ EXPORT_SYMBOL(get_user_pages_locked);
  
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3016 fcp_imax: %d out of range, using default\n", val);
-+			"3016 lpfc_fcp_imax: %d out of range, using default\n",
-+			val);
- 	phba->cfg_fcp_imax = LPFC_DEF_IMAX;
+@@ -869,9 +870,15 @@ __always_inline long __get_user_pages_unlocked(struct task_struct *tsk, struct m
+ {
+ 	long ret;
+ 	int locked = 1;
++
++	if (write)
++		gup_flags |= FOLL_WRITE;
++	if (force)
++		gup_flags |= FOLL_FORCE;
++
+ 	down_read(&mm->mmap_sem);
+-	ret = __get_user_pages_locked(tsk, mm, start, nr_pages, write, force,
+-				      pages, NULL, &locked, false, gup_flags);
++	ret = __get_user_pages_locked(tsk, mm, start, nr_pages, pages, NULL,
++				      &locked, false, gup_flags);
+ 	if (locked)
+ 		up_read(&mm->mmap_sem);
+ 	return ret;
+@@ -963,9 +970,15 @@ long get_user_pages_remote(struct task_struct *tsk, struct mm_struct *mm,
+ 		int write, int force, struct page **pages,
+ 		struct vm_area_struct **vmas)
+ {
+-	return __get_user_pages_locked(tsk, mm, start, nr_pages, write, force,
+-				       pages, vmas, NULL, false,
+-				       FOLL_TOUCH | FOLL_REMOTE);
++	unsigned int flags = FOLL_TOUCH | FOLL_REMOTE;
++
++	if (write)
++		flags |= FOLL_WRITE;
++	if (force)
++		flags |= FOLL_FORCE;
++
++	return __get_user_pages_locked(tsk, mm, start, nr_pages, pages, vmas,
++				       NULL, false, flags);
+ }
+ EXPORT_SYMBOL(get_user_pages_remote);
  
- 	return 0;
-@@ -4324,8 +4325,8 @@ lpfc_fcp_cpu_map_init(struct lpfc_hba *phba, int val)
- 	}
+@@ -979,9 +992,15 @@ long get_user_pages(unsigned long start, unsigned long nr_pages,
+ 		int write, int force, struct page **pages,
+ 		struct vm_area_struct **vmas)
+ {
++	unsigned int flags = FOLL_TOUCH;
++
++	if (write)
++		flags |= FOLL_WRITE;
++	if (force)
++		flags |= FOLL_FORCE;
++
+ 	return __get_user_pages_locked(current, current->mm, start, nr_pages,
+-				       write, force, pages, vmas, NULL, false,
+-				       FOLL_TOUCH);
++				       pages, vmas, NULL, false, flags);
+ }
+ EXPORT_SYMBOL(get_user_pages);
  
- 	lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--			"3326 fcp_cpu_map: %d out of range, using default\n",
--			val);
-+			"3326 lpfc_fcp_cpu_map: %d out of range, using "
-+			"default\n", val);
- 	phba->cfg_fcp_cpu_map = LPFC_DRIVER_CPU_MAP;
- 
- 	return 0;
 -- 
-2.5.0
+2.10.0
 
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
