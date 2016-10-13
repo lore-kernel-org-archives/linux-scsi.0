@@ -1,124 +1,60 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v3 04/17] lpfc: Set driver environment data on adapter
-Date: Thu, 13 Oct 2016 15:06:05 -0700
-Message-ID: <5800054d.XngiQRDNTQkLdgRT%james.smart@broadcom.com>
+Subject: [PATCH v3 00/17] lpfc: Update driver to version 11.2.0.2
+Date: Thu, 13 Oct 2016 15:06:01 -0700
+Message-ID: <58000549.uzQNZmDWt9VDYdS0%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from sgpsmtp2.avagotech.com ([199.3.246.86]:36870 "EHLO
+Received: from smtp.avagotech.com ([199.3.246.86]:36873 "EHLO
         sgpsmtp2.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753630AbcJMWQf (ORCPT
+        with ESMTP id S1756957AbcJMWQf (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Thu, 13 Oct 2016 18:16:35 -0400
 Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp2.avagotech.com (Postfix) with SMTP id DA9D61209CC
-        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:06 -0700 (PDT)
+        by sgpsmtp2.avagotech.com (Postfix) with SMTP id CF9E41209C7
+        for <linux-scsi@vger.kernel.org>; Thu, 13 Oct 2016 15:06:03 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Set driver environment data on adapter
+This patch set updates the lpfc driver to revision 11.2.0.2
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/lpfc/lpfc_hw4.h | 12 ++++++++++++
- drivers/scsi/lpfc/lpfc_sli.c | 29 +++++++++++++++++++++++++++++
- 2 files changed, 41 insertions(+)
+The patches were cut against scsi-misc
 
-diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
-index ee80227..0b2c337 100644
---- a/drivers/scsi/lpfc/lpfc_hw4.h
-+++ b/drivers/scsi/lpfc/lpfc_hw4.h
-@@ -921,6 +921,7 @@ struct mbox_header {
- #define LPFC_MBOX_OPCODE_GET_PORT_NAME			0x4D
- #define LPFC_MBOX_OPCODE_MQ_CREATE_EXT			0x5A
- #define LPFC_MBOX_OPCODE_GET_VPD_DATA			0x5B
-+#define LPFC_MBOX_OPCODE_SET_HOST_DATA			0x5D
- #define LPFC_MBOX_OPCODE_SEND_ACTIVATION		0x73
- #define LPFC_MBOX_OPCODE_RESET_LICENSES			0x74
- #define LPFC_MBOX_OPCODE_GET_RSRC_EXTENT_INFO		0x9A
-@@ -2919,6 +2920,16 @@ struct lpfc_mbx_set_feature {
- };
- 
- 
-+#define LPFC_SET_HOST_OS_DRIVER_VERSION    0x2
-+struct lpfc_mbx_set_host_data {
-+#define LPFC_HOST_OS_DRIVER_VERSION_SIZE   48
-+	struct mbox_header header;
-+	uint32_t param_id;
-+	uint32_t param_len;
-+	uint8_t  data[LPFC_HOST_OS_DRIVER_VERSION_SIZE];
-+};
-+
-+
- struct lpfc_mbx_get_sli4_parameters {
- 	struct mbox_header header;
- 	struct lpfc_sli4_parameters sli4_parameters;
-@@ -3313,6 +3324,7 @@ struct lpfc_mqe {
- 		struct lpfc_mbx_get_port_name get_port_name;
- 		struct lpfc_mbx_set_feature  set_feature;
- 		struct lpfc_mbx_memory_dump_type3 mem_dump_type3;
-+		struct lpfc_mbx_set_host_data set_host_data;
- 		struct lpfc_mbx_nop nop;
- 	} un;
- };
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index c532605..cb59f4e 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -47,6 +47,7 @@
- #include "lpfc_compat.h"
- #include "lpfc_debugfs.h"
- #include "lpfc_vport.h"
-+#include "lpfc_version.h"
- 
- /* There are only four IOCB completion types. */
- typedef enum _lpfc_iocb_type {
-@@ -6289,6 +6290,25 @@ lpfc_sli4_repost_els_sgl_list(struct lpfc_hba *phba)
- 	return 0;
- }
- 
-+void
-+lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
-+{
-+	uint32_t len;
-+
-+	len = sizeof(struct lpfc_mbx_set_host_data) -
-+		sizeof(struct lpfc_sli4_cfg_mhdr);
-+	lpfc_sli4_config(phba, mbox, LPFC_MBOX_SUBSYSTEM_COMMON,
-+			 LPFC_MBOX_OPCODE_SET_HOST_DATA, len,
-+			 LPFC_SLI4_MBX_EMBED);
-+
-+	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
-+	mbox->u.mqe.un.set_host_data.param_len = 8;
-+	snprintf(mbox->u.mqe.un.set_host_data.data,
-+		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
-+		 "Linux %s v"LPFC_DRIVER_VERSION,
-+		 (phba->hba_flag & HBA_FCOE_MODE) ? "FCoE" : "FC");
-+}
-+
- /**
-  * lpfc_sli4_hba_setup - SLI4 device intialization PCI function
-  * @phba: Pointer to HBA context object.
-@@ -6540,6 +6560,15 @@ lpfc_sli4_hba_setup(struct lpfc_hba *phba)
- 		goto out_free_mbox;
- 	}
- 
-+	lpfc_set_host_data(phba, mboxq);
-+
-+	rc = lpfc_sli_issue_mbox(phba, mboxq, MBX_POLL);
-+	if (rc) {
-+		lpfc_printf_log(phba, KERN_WARNING, LOG_MBOX | LOG_SLI,
-+				"2134 Failed to set host os driver version %x",
-+				rc);
-+	}
-+
- 	/* Read the port's service parameters. */
- 	rc = lpfc_read_sparam(phba, mboxq, vport->vpi);
- 	if (rc) {
+James Smart (17):
+  Fix few small typos in lpfc_scsi.c
+       originally posted by Milan Gandhi
+  lpfc: Correct embedded io wq element size
+  lpfc: Fix sg_reset on SCSI device causing kernel crash
+  lpfc: Set driver environment data on adapter
+  lpfc: Make lpfc_prot_mask and lpfc_prot_guard per hba parameters
+  lpfc: Code clean up for lpfc_iocb_cnt parameter
+  lpfc: Code cleanup for lpfc_enable_rrq parameter
+  lpfc: Code cleanup for lpfc_aer_support parameter
+  lpfc: Code cleanup for lpfc_topology parameter
+  lpfc: Code cleanup for lpfc_max_scsicmpl_time parameter
+  lpfc: Code cleanup for lpfc_sriov_nr_virtfn parameter
+  lpfc: Revise strings with full lpfc parameter name
+  lpfc: Fix lost target in pt-to-pt connect
+  lpfc: Correct panics with eh_timeout and eh_deadline
+  lpfc: Synchronize link speed with boot driver
+  lpfc: Fix fw download on SLI-4 FC adapters
+  lpfc: lpfc version changed to 11.2.0.2
+
+ drivers/scsi/lpfc/lpfc.h         |   6 ++
+ drivers/scsi/lpfc/lpfc_attr.c    | 160 +++++++++++----------------------------
+ drivers/scsi/lpfc/lpfc_bsg.c     |  45 +++++++++++
+ drivers/scsi/lpfc/lpfc_bsg.h     |  10 +++
+ drivers/scsi/lpfc/lpfc_crtn.h    |   2 -
+ drivers/scsi/lpfc/lpfc_els.c     |   2 +-
+ drivers/scsi/lpfc/lpfc_hw4.h     |  18 ++++-
+ drivers/scsi/lpfc/lpfc_init.c    | 116 ++++++++++++++++++++--------
+ drivers/scsi/lpfc/lpfc_scsi.c    |  49 +++++++-----
+ drivers/scsi/lpfc/lpfc_sli.c     |  41 +++++++++-
+ drivers/scsi/lpfc/lpfc_version.h |   2 +-
+ 11 files changed, 276 insertions(+), 175 deletions(-)
+
 -- 
 2.5.0
 
