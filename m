@@ -1,41 +1,33 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 03/17 v2] lpfc: Fix sg_reset on SCSI device causing
- kernel crash
-Date: Thu, 13 Oct 2016 09:51:59 +0200
-Message-ID: <20161013075159.sytlbvovdx6i4kfe@linux-x5ow.site>
-References: <57fe998e.qbv3PDNFIL0gvh+R%james.smart@broadcom.com>
+Subject: Re: [PATCH 01/17 v2] Fix few small typos in lpfc_scsi.c
+Date: Thu, 13 Oct 2016 09:46:14 +0200
+Message-ID: <20161013074614.evis7ri7jytxguyw@linux-x5ow.site>
+References: <57fe998c.T2Q59vHIKRBPe4Eg%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39963 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40434 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750822AbcJMHxe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 03:53:34 -0400
+        id S1751061AbcJMIEj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 04:04:39 -0400
 Content-Disposition: inline
-In-Reply-To: <57fe998e.qbv3PDNFIL0gvh+R%james.smart@broadcom.com>
+In-Reply-To: <57fe998c.T2Q59vHIKRBPe4Eg%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Wed, Oct 12, 2016 at 01:14:06PM -0700, James Smart wrote:
+On Wed, Oct 12, 2016 at 01:14:04PM -0700, James Smart wrote:
 > 
-> Fix sg_reset on SCSI device causing kernel crash
+> From: "Milan P. Gandhi" <mgandhi@redhat.com>
 > 
-> Driver could reference stale node pointers in task mgmt call.
-> Changed to use resetting cmd and look up node pointer in task mgmt
-> function.
+> This patch does a cleanup and fixes few small typos in lpfc_scsi.c
 > 
-> Modified per review:
-> Revised lpfc_send_taskmgmt() to check rdata
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
+> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> Signed-off-by: James Smart <james.smart@avagotech.com>
 > ---
->  drivers/scsi/lpfc/lpfc_scsi.c | 22 +++++++++++++---------
->  1 file changed, 13 insertions(+), 9 deletions(-)
-> 
+>  
 
 Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
