@@ -1,58 +1,108 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 21/24] fcoe: catch invalid values for the 'enabled' attribute
-Date: Thu, 13 Oct 2016 15:10:57 +0200
-Message-ID: <1476364260-12191-22-git-send-email-hare@suse.de>
+Subject: [PATCH 15/24] libfc: don't fail sequence abort for completed exchanges
+Date: Thu, 13 Oct 2016 15:10:51 +0200
+Message-ID: <1476364260-12191-16-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41161 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41197 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751375AbcJMNeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:34:02 -0400
+        id S1752611AbcJMNeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:34:03 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The 'enabled' sysfs attribute only accepts the values '0' and '1',
-so we should error out any other values.
+If a sequence should be aborted the exchange might already
+be completed (eg if the response is still queued in the rx
+queue), so this shouldn't considered as an error.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/fcoe/fcoe_sysfs.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/libfc/fc_fcp.c | 40 ++++++++++++++++++++++++++++++----------
+ 1 file changed, 30 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_sysfs.c b/drivers/scsi/fcoe/fcoe_sysfs.c
-index 9e6baac..9cf3d56 100644
---- a/drivers/scsi/fcoe/fcoe_sysfs.c
-+++ b/drivers/scsi/fcoe/fcoe_sysfs.c
-@@ -335,16 +335,24 @@ static ssize_t store_ctlr_enabled(struct device *dev,
- 				  const char *buf, size_t count)
- {
- 	struct fcoe_ctlr_device *ctlr = dev_to_ctlr(dev);
-+	bool enabled;
- 	int rc;
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 780d9f0..d43c925 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -258,6 +258,17 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+ 		mod_timer(&fsp->timer, jiffies + delay);
+ }
  
-+	if (*buf == '1')
-+		enabled = true;
-+	else if (*buf == '0')
-+		enabled = false;
-+	else
-+		return -EINVAL;
++static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
++{
++	fsp->state |= FC_SRB_ABORTED;
++	fsp->state &= ~FC_SRB_ABORT_PENDING;
 +
- 	switch (ctlr->enabled) {
- 	case FCOE_CTLR_ENABLED:
--		if (*buf == '1')
-+		if (enabled)
- 			return count;
- 		ctlr->enabled = FCOE_CTLR_DISABLED;
- 		break;
- 	case FCOE_CTLR_DISABLED:
--		if (*buf == '0')
-+		if (!enabled)
- 			return count;
- 		ctlr->enabled = FCOE_CTLR_ENABLED;
- 		break;
++	if (fsp->wait_for_comp)
++		complete(&fsp->tm_done);
++	else
++		fc_fcp_complete_locked(fsp);
++}
++
+ /**
+  * fc_fcp_send_abort() - Send an abort for exchanges associated with a
+  *			 fcp_pkt
+@@ -265,6 +276,8 @@ static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
+  */
+ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ {
++	int rc;
++
+ 	if (!fsp->seq_ptr)
+ 		return -EINVAL;
+ 
+@@ -272,7 +285,16 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ 	put_cpu();
+ 
+ 	fsp->state |= FC_SRB_ABORT_PENDING;
+-	return fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
++	rc = fsp->lp->tt.seq_exch_abort(fsp->seq_ptr, 0);
++	/*
++	 * ->seq_exch_abort() might return -ENXIO if
++	 * the sequence is already completed
++	 */
++	if (rc == -ENXIO) {
++		fc_fcp_abort_done(fsp);
++		rc = 0;
++	}
++	return rc;
+ }
+ 
+ /**
+@@ -729,15 +751,8 @@ static void fc_fcp_abts_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		ba_done = 0;
+ 	}
+ 
+-	if (ba_done) {
+-		fsp->state |= FC_SRB_ABORTED;
+-		fsp->state &= ~FC_SRB_ABORT_PENDING;
+-
+-		if (fsp->wait_for_comp)
+-			complete(&fsp->tm_done);
+-		else
+-			fc_fcp_complete_locked(fsp);
+-	}
++	if (ba_done)
++		fc_fcp_abort_done(fsp);
+ }
+ 
+ /**
+@@ -1245,6 +1260,11 @@ static int fc_fcp_pkt_abort(struct fc_fcp_pkt *fsp)
+ 		return FAILED;
+ 	}
+ 
++	if (fsp->state & FC_SRB_ABORTED) {
++		FC_FCP_DBG(fsp, "target abort cmd  completed\n");
++		return SUCCESS;
++	}
++
+ 	init_completion(&fsp->tm_done);
+ 	fsp->wait_for_comp = 1;
+ 
 -- 
 1.8.5.6
 
