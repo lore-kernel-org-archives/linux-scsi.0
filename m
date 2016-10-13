@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 12/24] libfc: Clarify ramp-down messages
-Date: Thu, 13 Oct 2016 15:10:48 +0200
-Message-ID: <1476364260-12191-13-git-send-email-hare@suse.de>
+Subject: [PATCH 13/24] libfc: safeguard against invalid exchange index
+Date: Thu, 13 Oct 2016 15:10:49 +0200
+Message-ID: <1476364260-12191-14-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40759 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:40757 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755654AbcJMNXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1755624AbcJMNXt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 13 Oct 2016 09:23:49 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,52 +14,57 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When the queue depth is reduced we should print out the reason
-for this; it might be due to a queue full condition.
+The cached exchange index might be invalid, in which case
+we should drop down to allocate a new one.
+And we should not try to access an invalid exchange when
+responding to a BA_ABTS.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_fcp.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/libfc/fc_exch.c | 21 ++++++++++++++-------
+ 1 file changed, 14 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index 0e2a201..f7700cc 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -403,8 +403,6 @@ static void fc_fcp_can_queue_ramp_down(struct fc_lport *lport)
- 	if (!can_queue)
- 		can_queue = 1;
- 	lport->host->can_queue = can_queue;
--	shost_printk(KERN_ERR, lport->host, "libfc: Could not allocate frame.\n"
--		     "Reducing can_queue to %d.\n", can_queue);
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 5e0a57f..e8784a7 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -827,14 +827,18 @@ static struct fc_exch *fc_exch_em_alloc(struct fc_lport *lport,
  
- unlock:
- 	spin_unlock_irqrestore(lport->host->host_lock, flags);
-@@ -431,6 +429,9 @@ static inline struct fc_frame *fc_fcp_frame_alloc(struct fc_lport *lport,
- 	put_cpu();
- 	/* error case */
- 	fc_fcp_can_queue_ramp_down(lport);
-+	shost_printk(KERN_ERR, lport->host,
-+		     "libfc: Could not allocate frame, "
-+		     "reducing can_queue to %d.\n", lport->host->can_queue);
- 	return NULL;
- }
- 
-@@ -1860,8 +1861,13 @@ int fc_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *sc_cmd)
- 	rpriv = rport->dd_data;
- 
- 	if (!fc_fcp_lport_queue_ready(lport)) {
--		if (lport->qfull)
-+		if (lport->qfull) {
- 			fc_fcp_can_queue_ramp_down(lport);
-+			shost_printk(KERN_ERR, lport->host,
-+				     "libfc: queue full, "
-+				     "reducing can_queue to %d.\n",
-+				     lport->host->can_queue);
+ 	/* peek cache of free slot */
+ 	if (pool->left != FC_XID_UNKNOWN) {
+-		index = pool->left;
+-		pool->left = FC_XID_UNKNOWN;
+-		goto hit;
++		if (!WARN_ON(fc_exch_ptr_get(pool, pool->left))) {
++			index = pool->left;
++			pool->left = FC_XID_UNKNOWN;
++			goto hit;
 +		}
- 		rc = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out;
  	}
+ 	if (pool->right != FC_XID_UNKNOWN) {
+-		index = pool->right;
+-		pool->right = FC_XID_UNKNOWN;
+-		goto hit;
++		if (!WARN_ON(fc_exch_ptr_get(pool, pool->right))) {
++			index = pool->right;
++			pool->right = FC_XID_UNKNOWN;
++			goto hit;
++		}
+ 	}
+ 
+ 	index = pool->next_index;
+@@ -1777,7 +1781,10 @@ static void fc_exch_recv_bls(struct fc_exch_mgr *mp, struct fc_frame *fp)
+ 				fc_frame_free(fp);
+ 			break;
+ 		case FC_RCTL_BA_ABTS:
+-			fc_exch_recv_abts(ep, fp);
++			if (ep)
++				fc_exch_recv_abts(ep, fp);
++			else
++				fc_frame_free(fp);
+ 			break;
+ 		default:			/* ignore junk */
+ 			fc_frame_free(fp);
 -- 
 1.8.5.6
 
