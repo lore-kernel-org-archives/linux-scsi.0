@@ -1,91 +1,42 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 17/24] libfc: reset timeout on queue full
-Date: Thu, 13 Oct 2016 15:10:53 +0200
-Message-ID: <1476364260-12191-18-git-send-email-hare@suse.de>
+Subject: [PATCH 23/24] fcoe: correct sending FIP VLAN packets on VLAN 0
+Date: Thu, 13 Oct 2016 15:10:59 +0200
+Message-ID: <1476364260-12191-24-git-send-email-hare@suse.de>
 References: <1476364260-12191-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41165 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41196 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751437AbcJMNeC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 13 Oct 2016 09:34:02 -0400
+        id S1752475AbcJMNeD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 09:34:03 -0400
 In-Reply-To: <1476364260-12191-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-When we're receiving a timeout we should be checking for queue
-full status; if there are still some packets pending we should
-be resetting the counter to ensure we're not missing out any
-packets which are still queued.
+The FIP VLAN frame consists of an ethernet header followed
+by the FIP VLAN frame, so we need to skip the ethernet header
+if we want to check the FIP opcode.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Acked-by: Johannes Thumshirn <jth@kernel.org>
 ---
- drivers/scsi/libfc/fc_fcp.c | 20 +++++++++++++++++---
- include/scsi/libfc.h        |  3 ++-
- 2 files changed, 19 insertions(+), 4 deletions(-)
+ drivers/scsi/fcoe/fcoe.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
-index d43c925..fb2ebc7 100644
---- a/drivers/scsi/libfc/fc_fcp.c
-+++ b/drivers/scsi/libfc/fc_fcp.c
-@@ -254,8 +254,10 @@ static inline void fc_fcp_unlock_pkt(struct fc_fcp_pkt *fsp)
-  */
- static void fc_fcp_timer_set(struct fc_fcp_pkt *fsp, unsigned long delay)
- {
--	if (!(fsp->state & FC_SRB_COMPL))
-+	if (!(fsp->state & FC_SRB_COMPL)) {
- 		mod_timer(&fsp->timer, jiffies + delay);
-+		fsp->timer_delay = delay;
-+	}
- }
- 
- static void fc_fcp_abort_done(struct fc_fcp_pkt *fsp)
-@@ -932,6 +934,11 @@ static void fc_fcp_resp(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
- 			 * Wait a at least one jiffy to see if it is delivered.
- 			 * If this expires without data, we may do SRR.
- 			 */
-+			if (fsp->lp->qfull) {
-+				FC_FCP_DBG(fsp, "tgt %6.6x queue busy retry\n",
-+					   fsp->rport->port_id);
-+				return;
-+			}
- 			FC_FCP_DBG(fsp, "tgt %6.6x xfer len %zx data underrun "
- 				   "len %x, data len %x\n",
- 				   fsp->rport->port_id,
-@@ -1434,8 +1441,15 @@ static void fc_fcp_timeout(unsigned long data)
- 	if (fsp->cdb_cmd.fc_tm_flags)
- 		goto unlock;
- 
--	FC_FCP_DBG(fsp, "fcp timeout, flags %x state %x\n",
--		   rpriv->flags, fsp->state);
-+	if (fsp->lp->qfull) {
-+		FC_FCP_DBG(fsp, "fcp timeout, resetting timer delay %d\n",
-+			   fsp->timer_delay);
-+		setup_timer(&fsp->timer, fc_fcp_timeout, (unsigned long)fsp);
-+		fc_fcp_timer_set(fsp, fsp->timer_delay);
-+		goto unlock;
-+	}
-+	FC_FCP_DBG(fsp, "fcp timeout, delay %d flags %x state %x\n",
-+		   fsp->timer_delay, rpriv->flags, fsp->state);
- 	fsp->state |= FC_SRB_FCP_PROCESSING_TMO;
- 
- 	if (rpriv->flags & FC_RP_FLAGS_REC_SUPPORTED)
-diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 8cb752f..f5aa54b 100644
---- a/include/scsi/libfc.h
-+++ b/include/scsi/libfc.h
-@@ -355,7 +355,8 @@ struct fc_fcp_pkt {
- 
- 	/* Timeout/error related information */
- 	struct timer_list timer;
--	int	          wait_for_comp;
-+	int		  wait_for_comp;
-+	int		  timer_delay;
- 	u32		  recov_retry;
- 	struct fc_seq	  *recov_seq;
- 	struct completion tm_done;
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 9876fca..cf4adaa 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -590,7 +590,8 @@ static void fcoe_fip_send(struct fcoe_ctlr *fip, struct sk_buff *skb)
+ 	 * Use default VLAN for FIP VLAN discovery protocol
+ 	 */
+ 	frame = (struct fip_frame *)skb->data;
+-	if (frame->fip.fip_op == ntohs(FIP_OP_VLAN) &&
++	if (ntohs(frame->eth.h_proto) == ETH_P_FIP &&
++	    ntohs(frame->fip.fip_op) == FIP_OP_VLAN &&
+ 	    fcoe->realdev != fcoe->netdev)
+ 		skb->dev = fcoe->realdev;
+ 	else
 -- 
 1.8.5.6
 
