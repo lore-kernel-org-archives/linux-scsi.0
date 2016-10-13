@@ -1,135 +1,146 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v3 11/16] scsi: fc: Use bsg_destroy_job
-Date: Thu, 13 Oct 2016 17:00:27 +0200
-Message-ID: <c21eeb69af1be44091fa0dbe13ff1d01c838526c.1476369687.git.jthumshirn@suse.de>
+Subject: [PATCH v3 08/16] scsi: fc: implement kref backed reference counting
+Date: Thu, 13 Oct 2016 17:00:24 +0200
+Message-ID: <be3ce7833c136328bf30b6f730957a3d2fba73e8.1476369687.git.jthumshirn@suse.de>
 References: <cover.1476369687.git.jthumshirn@suse.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:49737 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754882AbcJMPBz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 13 Oct 2016 11:01:55 -0400
 In-Reply-To: <cover.1476369687.git.jthumshirn@suse.de>
 In-Reply-To: <cover.1476369687.git.jthumshirn@suse.de>
 References: <cover.1476369687.git.jthumshirn@suse.de>
-Sender: linux-block-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-fc_destroy_bsgjob() and bsg_destroy_job() are now 1:1 copies, so use the
-later. As bsg_destroy_job() comes from bsg-lib we need to select it in Kconfig
-once CONFOG_SCSI_FC_ATTRS is active.
+Implement kref backed reference counting instead of rolling our own. This
+elimnates the need of the following fields in 'struct fc_bsg_job':
+* ref_cnt
+* state_flags
+* job_lock
+bringing us close to unification of 'struct fc_bsg_job' and 'struct bsg_job'.
 
 Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 ---
- block/bsg-lib.c                  |  7 +++++--
- drivers/scsi/Kconfig             |  1 +
- drivers/scsi/scsi_transport_fc.c | 23 ++---------------------
- include/linux/bsg-lib.h          |  1 +
- 4 files changed, 9 insertions(+), 23 deletions(-)
+ drivers/scsi/scsi_transport_fc.c | 40 +++++++++++-----------------------------
+ include/scsi/scsi_transport_fc.h |  4 +---
+ 2 files changed, 12 insertions(+), 32 deletions(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 632fb40..9f1e8fd 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -32,9 +32,12 @@
-  * bsg_destroy_job - routine to teardown/delete a bsg job
-  * @job: bsg_job that is to be torn down
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 96b3a2e..610a985 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3560,16 +3560,12 @@ struct fc_vport *
+  * @job:	fc_bsg_job that is to be torn down
   */
--static void bsg_destroy_job(struct kref *kref)
-+void bsg_destroy_job(struct kref *kref)
+ static void
+-fc_destroy_bsgjob(struct fc_bsg_job *job)
++fc_destroy_bsgjob(struct kref *kref)
  {
- 	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
+-	unsigned long flags;
++	struct fc_bsg_job *job = container_of(kref, struct fc_bsg_job, kref);
 +	struct request *rq = job->req;
-+
+ 
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->ref_cnt) {
+-		spin_unlock_irqrestore(&job->job_lock, flags);
+-		return;
+-	}
+-	spin_unlock_irqrestore(&job->job_lock, flags);
 +	blk_end_request_all(rq, rq->errors);
  
  	put_device(job->dev);	/* release reference for the request */
  
-@@ -42,6 +45,7 @@ static void bsg_destroy_job(struct kref *kref)
- 	kfree(job->reply_payload.sg_list);
- 	kfree(job);
- }
-+EXPORT_SYMBOL_GPL(bsg_destroy_job);
- 
- /**
-  * bsg_job_done - completion routine for bsg requests
-@@ -85,7 +89,6 @@ static void bsg_softirq_done(struct request *rq)
+@@ -3620,15 +3616,8 @@ void fc_bsg_jobdone(struct fc_bsg_job *job, int result,
+ static void fc_bsg_softirq_done(struct request *rq)
  {
- 	struct bsg_job *job = rq->special;
+ 	struct fc_bsg_job *job = rq->special;
+-	unsigned long flags;
  
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	job->state_flags |= FC_RQST_STATE_DONE;
+-	job->ref_cnt--;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
+-
 -	blk_end_request_all(rq, rq->errors);
- 	kref_put(&job->kref, bsg_destroy_job);
+-	fc_destroy_bsgjob(job);
++	kref_put(&job->kref, fc_destroy_bsgjob);
  }
  
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3e2bdb9..2774756 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -263,6 +263,7 @@ config SCSI_SPI_ATTRS
- config SCSI_FC_ATTRS
- 	tristate "FiberChannel Transport Attributes"
- 	depends on SCSI && NET
-+	select BLK_DEV_BSGLIB
- 	select SCSI_NETLINK
- 	help
- 	  If you wish to export transport-specific information about
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index eadc80f..d2d0a27 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -30,6 +30,7 @@
- #include <linux/slab.h>
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/bsg-lib.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -3554,26 +3555,6 @@ struct fc_vport *
-  * BSG support
-  */
- 
--
--/**
-- * fc_destroy_bsgjob - routine to teardown/delete a fc bsg job
-- * @job:	fc_bsg_job that is to be torn down
-- */
--static void
--fc_destroy_bsgjob(struct kref *kref)
--{
--	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
--	struct request *rq = job->req;
--
--	blk_end_request_all(rq, rq->errors);
--
--	put_device(job->dev);	/* release reference for the request */
--
--	kfree(job->request_payload.sg_list);
--	kfree(job->reply_payload.sg_list);
--	kfree(job);
--}
--
  /**
-  * fc_bsg_jobdone - completion routine for bsg requests that the LLD has
-  *                  completed
-@@ -3642,7 +3623,7 @@ static void fc_bsg_softirq_done(struct request *rq)
+@@ -3642,24 +3631,18 @@ static void fc_bsg_softirq_done(struct request *rq)
+ 	struct Scsi_Host *shost = fc_bsg_to_shost(job);
+ 	struct fc_rport *rport = fc_bsg_to_rport(job);
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+-	unsigned long flags;
+-	int err = 0, done = 0;
++	int err = 0, inflight = 0;
+ 
+ 	if (rport && rport->port_state == FC_PORTSTATE_BLOCKED)
+ 		return BLK_EH_RESET_TIMER;
+ 
+-	spin_lock_irqsave(&job->job_lock, flags);
+-	if (job->state_flags & FC_RQST_STATE_DONE)
+-		done = 1;
+-	else
+-		job->ref_cnt++;
+-	spin_unlock_irqrestore(&job->job_lock, flags);
++	inflight = kref_get_unless_zero(&job->kref);
+ 
+-	if (!done && i->f->bsg_timeout) {
++	if (inflight && i->f->bsg_timeout) {
  		/* call LLDD to abort the i/o as it has timed out */
  		err = i->f->bsg_timeout(job);
  		if (err == -EAGAIN) {
--			kref_put(&job->kref, fc_destroy_bsgjob);
-+			kref_put(&job->kref, bsg_destroy_job);
+-			job->ref_cnt--;
++			kref_put(&job->kref, fc_destroy_bsgjob);
  			return BLK_EH_RESET_TIMER;
  		} else if (err)
  			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index 58e0717..67f7de6 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -69,5 +69,6 @@ void bsg_job_done(struct bsg_job *job, int result,
- int bsg_setup_queue(struct device *dev, struct request_queue *q, char *name,
- 		    bsg_job_fn *job_fn, int dd_job_size);
- void bsg_request_fn(struct request_queue *q);
-+void bsg_destroy_job(struct kref *kref);
+@@ -3667,7 +3650,7 @@ static void fc_bsg_softirq_done(struct request *rq)
+ 	}
  
- #endif
+ 	/* the blk_end_sync_io() doesn't check the error */
+-	if (done)
++	if (!inflight)
+ 		return BLK_EH_NOT_HANDLED;
+ 	else
+ 		return BLK_EH_HANDLED;
+@@ -3730,7 +3713,6 @@ static void fc_bsg_softirq_done(struct request *rq)
+ 	job->req = req;
+ 	if (i->f->dd_bsg_size)
+ 		job->dd_data = (void *)&job[1];
+-	spin_lock_init(&job->job_lock);
+ 	bsg_request = (struct fc_bsg_request *)req->cmd;
+ 	job->request_len = req->cmd_len;
+ 	bsg_reply = req->sense;
+@@ -3752,7 +3734,7 @@ static void fc_bsg_softirq_done(struct request *rq)
+ 		job->dev = &shost->shost_gendev;
+ 	get_device(job->dev);		/* take a reference for the request */
+ 
+-	job->ref_cnt = 1;
++	kref_init(&job->kref);
+ 
+ 	return 0;
+ 
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 9f53fe3..8ae5680 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -634,9 +634,7 @@ struct fc_bsg_job {
+ 	struct fc_rport *rport;
+ 	struct device *dev;
+ 	struct request *req;
+-	spinlock_t job_lock;
+-	unsigned int state_flags;
+-	unsigned int ref_cnt;
++	struct kref kref;
+ 
+ 	struct fc_bsg_request *request;
+ 	struct fc_bsg_reply *reply;
 -- 
 1.8.5.6
 
