@@ -1,42 +1,47 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 14/17] lpfc: Correct panics with eh_timeout and
- eh_deadline
-Date: Fri, 14 Oct 2016 12:38:21 +0200
-Message-ID: <3363e29d-da1f-05f2-723c-a3a9e565e62a@suse.de>
-References: <58000557.XB6b5rUlrmwRw04e%james.smart@broadcom.com>
+Subject: Re: [PATCH v3 15/17] lpfc: Synchronize link speed with boot driver
+Date: Fri, 14 Oct 2016 12:43:35 +0200
+Message-ID: <b3406468-da29-e93a-d915-6ead33149404@suse.de>
+References: <58000558.oQvh2S/jqBX/2X/s%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45843 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46194 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751939AbcJNKiZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Oct 2016 06:38:25 -0400
-In-Reply-To: <58000557.XB6b5rUlrmwRw04e%james.smart@broadcom.com>
+        id S1754194AbcJNKni (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Oct 2016 06:43:38 -0400
+In-Reply-To: <58000558.oQvh2S/jqBX/2X/s%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
 On 10/14/2016 12:06 AM, James Smart wrote:
 > 
-> Correct panics with eh_timeout and eh_deadline
+> Synchronize link speed with boot driver
 > 
-> We were having double completions on our SLI-3 version of adapters.
-> Solved by clearing our command pointer before calling scsi_done.
-> 
-> The eh paths potentially ran simulatenously and would see the non-null
-> value and invoke scsi_done again.
+> Link speed settings set by the boot driver are reported by the hw.
+> Driver will attempt to read them, and if set, will respect their
+> values.
+> The driver can override the settings with its own if instructed by
+> user space (via bsg), with the new values being picked up by the
+> boot driver.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
->  drivers/scsi/lpfc/lpfc_scsi.c |  6 +++---
->  drivers/scsi/lpfc/lpfc_sli.c  | 12 ++++++++----
->  2 files changed, 11 insertions(+), 7 deletions(-)
+> v3 mods:
+>  parens cleanup
+>  use shost_priv() on new code
 > 
-I think I've suggested a similar patch some time ago ...
-
+>  drivers/scsi/lpfc/lpfc.h      |  4 ++++
+>  drivers/scsi/lpfc/lpfc_attr.c |  7 +++++-
+>  drivers/scsi/lpfc/lpfc_bsg.c  | 45 ++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_bsg.h  | 10 ++++++++
+>  drivers/scsi/lpfc/lpfc_hw4.h  |  3 +++
+>  drivers/scsi/lpfc/lpfc_init.c | 54 +++++++++++++++++++++++++++++++++++++++++++
+>  6 files changed, 122 insertions(+), 1 deletion(-)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
