@@ -1,34 +1,27 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] Locking issue in libiscsi and be2iscsi
-Date: Fri, 14 Oct 2016 16:50:26 -0400
-Message-ID: <yq1twceirjh.fsf@sermon.lab.mkp.net>
-References: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 11/24] libfc: Return LS_RJT_BUSY for PRLI in status PLOGI
+Date: Fri, 14 Oct 2016 14:25:56 -0700
+Message-ID: <9ee92a82-1996-cfb3-25ee-7a3b4b2be1e5@sandisk.com>
+References: <1476364260-12191-1-git-send-email-hare@suse.de>
+ <1476364260-12191-12-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:49785 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756821AbcJNUuh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 16:50:37 -0400
-In-Reply-To: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
-        (Jitendra Bhivare's message of "Thu, 13 Oct 2016 12:08:47 +0530")
+Received: from mail-cys01nam02on0042.outbound.protection.outlook.com ([104.47.37.42]:15014
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752516AbcJNV0G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Oct 2016 17:26:06 -0400
+In-Reply-To: <1476364260-12191-12-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Cc: cleech@redhat.com, lduncan@suse.com, linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Jitendra" == Jitendra Bhivare <jitendra.bhivare@broadcom.com> writes:
+On 10/13/2016 06:10 AM, Hannes Reinecke wrote:
+> Occasionally it might happen that we receive a PRLI while we're still
+> waiting for our PLOGI response. In that case we should return
+> 'busy' LS status instead of 'plogi required' LS status.
 
-Jitendra> These patches are being resent with required changes as per
-Jitendra> comments for [PATCH 02/28] be2iscsi: Replace _bh with
-Jitendra> _irqsave/irqrestore
-
-Jitendra> In IO handling path, there is no spin_lock taken with IRQs
-Jitendra> disabled when calling into libiscsi, so no issues were found
-Jitendra> with use of spin_lock_bh/spin_unlock_bh except for one in
-Jitendra> iscsi_eh_cmd_timeout.
-
-Somebody please review.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
