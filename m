@@ -1,44 +1,43 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 16/17] lpfc: Fix fw download on SLI-4 FC adapters
-Date: Fri, 14 Oct 2016 09:52:28 +0200
-Message-ID: <20161014075228.xydrbwf2x2k2cssj@linux-x5ow.site>
-References: <58000559.ask9jYTwRrGrLPVO%james.smart@broadcom.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v3 01/17] Fix few small typos in lpfc_scsi.c
+Date: Fri, 14 Oct 2016 12:31:37 +0200
+Message-ID: <304840db-7622-91ae-9a71-cac33d678082@suse.de>
+References: <5800054a.CGSEAA82tuayHqLT%james.smart@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37622 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45477 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753352AbcJNHwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Oct 2016 03:52:30 -0400
-Content-Disposition: inline
-In-Reply-To: <58000559.ask9jYTwRrGrLPVO%james.smart@broadcom.com>
+        id S1751725AbcJNKbk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Oct 2016 06:31:40 -0400
+In-Reply-To: <5800054a.CGSEAA82tuayHqLT%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
-On Thu, Oct 13, 2016 at 03:06:17PM -0700, James Smart wrote:
+On 10/14/2016 12:06 AM, James Smart wrote:
 > 
-> Fix fw download on SLI-4 FC adapters
+> From: "Milan P. Gandhi" <mgandhi@redhat.com>
 > 
-> Driver performs a quick validation of magic numbers in the fw
-> download image. Driver needed to be updated for more recent
-> magic numbers.
+> This patch does a cleanup and fixes few small typos in lpfc_scsi.c
 > 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
+> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+> Signed-off-by: James Smart <james.smart@avagotech.com>
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 > ---
-> v3 mods:
->  code cleanup: parsing image header fields
+>  
+>  drivers/scsi/lpfc/lpfc_scsi.c | 21 ++++++++++++---------
+>  1 file changed, 12 insertions(+), 9 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Thanks,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Cheers,
 
+Hannes
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
