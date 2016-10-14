@@ -1,27 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: ufs: changing maintainer
-Date: Fri, 14 Oct 2016 16:29:41 -0400
-Message-ID: <yq1k2dak72i.fsf@sermon.lab.mkp.net>
-References: <f5407f0a989e0bd67e648d418d44f11043d1fde4.1476460353.git.jpinto@synopsys.com>
+Subject: Re: [PATCH v3 00/17] lpfc: Update driver to version 11.2.0.2
+Date: Fri, 14 Oct 2016 16:33:54 -0400
+Message-ID: <yq1funyk6vh.fsf@sermon.lab.mkp.net>
+References: <58000549.uzQNZmDWt9VDYdS0%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:42702 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751594AbcJNUaI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 16:30:08 -0400
-In-Reply-To: <f5407f0a989e0bd67e648d418d44f11043d1fde4.1476460353.git.jpinto@synopsys.com>
-        (Joao Pinto's message of "Fri, 14 Oct 2016 16:59:23 +0100")
+Received: from aserp1040.oracle.com ([141.146.126.69]:40586 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755959AbcJNUeN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 16:34:13 -0400
+In-Reply-To: <58000549.uzQNZmDWt9VDYdS0%james.smart@broadcom.com> (James
+        Smart's message of "Thu, 13 Oct 2016 15:06:01 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Joao Pinto <Joao.Pinto@synopsys.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, Manjunath.MB@synopsys.com, Prabu.T@synopsys.com
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Joao" == Joao Pinto <Joao.Pinto@synopsys.com> writes:
+>>>>> "James" == James Smart <james.smart@broadcom.com> writes:
 
-Joao> I am going to leave Synopsys and so this patch changes the
-Joao> Maintainer for UFS Synopsys' specific drivers to my colleagues
-Joao> Manjunath and Prabu.
+James> This patch set updates the lpfc driver to revision 11.2.0.2
 
 Applied to 4.10/scsi-queue.
 
