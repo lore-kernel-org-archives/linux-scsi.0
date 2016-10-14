@@ -1,33 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hpsa: remove unneeded void pointer cast
-Date: Fri, 14 Oct 2016 16:23:16 -0400
-Message-ID: <yq1wphak7d7.fsf@sermon.lab.mkp.net>
-References: <1476375008-10034-1-git-send-email-javier@osg.samsung.com>
+Subject: Re: [PATCH 1/1] [4.9-rc] ipr: Fix async error WARN_ON
+Date: Fri, 14 Oct 2016 16:27:08 -0400
+Message-ID: <yq1oa2mk76r.fsf@sermon.lab.mkp.net>
+References: <20161013194524.EA0286A03C@b03ledav003.gho.boulder.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39854 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932817AbcJNUXx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 16:23:53 -0400
-In-Reply-To: <1476375008-10034-1-git-send-email-javier@osg.samsung.com>
-        (Javier Martinez Canillas's message of "Thu, 13 Oct 2016 13:10:08
-        -0300")
+Received: from aserp1040.oracle.com ([141.146.126.69]:36189 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751985AbcJNU1T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 16:27:19 -0400
+In-Reply-To: <20161013194524.EA0286A03C@b03ledav003.gho.boulder.ibm.com>
+        (Brian King's message of "Thu, 13 Oct 2016 14:45:24 -0500")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, esc.storagedev@microsemi.com, Don Brace <don.brace@microsemi.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, krisman@linux.vnet.ibm.com, wenxiong@linux.vnet.ibm.com
 
->>>>> "Javier" == Javier Martinez Canillas <javier@osg.samsung.com> writes:
+>>>>> "Brian" == Brian King <brking@linux.vnet.ibm.com> writes:
 
-Javier> It's not necessary to cast the result of kmalloc, since void
-Javier> pointers are promoted to any other type. This also fixes
-Javier> following coccinelle warning:
+Brian> Commit afc3f83cb4a5 ("scsi: ipr: Add asynchronous error
+Brian> notification") introduced the warn on shown below. To fix this,
+Brian> rather than attempting to send the KOBJ_CHANGE uevent from
+Brian> interrupt context, which is what is causing the WARN_ON, just
+Brian> wake the ipr worker thread which will send a KOBJ_CHANGE uevent.
 
-Javier> casting value returned by memory allocation function to
-Javier> (BIG_IOCTL_Command_struct *) is useless.
-
-Applied to 4.10/scsi-queue.
+Applied to 4.9/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
