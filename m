@@ -1,41 +1,36 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 15/17] lpfc: Synchronize link speed with boot driver
-Date: Fri, 14 Oct 2016 09:51:36 +0200
-Message-ID: <20161014075136.wiftedrdi6ho22r5@linux-x5ow.site>
-References: <58000558.oQvh2S/jqBX/2X/s%james.smart@broadcom.com>
+Subject: Re: [PATCH v3 16/17] lpfc: Fix fw download on SLI-4 FC adapters
+Date: Fri, 14 Oct 2016 09:52:28 +0200
+Message-ID: <20161014075228.xydrbwf2x2k2cssj@linux-x5ow.site>
+References: <58000559.ask9jYTwRrGrLPVO%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37542 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37622 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753352AbcJNHvj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 14 Oct 2016 03:51:39 -0400
+        id S1753352AbcJNHwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Oct 2016 03:52:30 -0400
 Content-Disposition: inline
-In-Reply-To: <58000558.oQvh2S/jqBX/2X/s%james.smart@broadcom.com>
+In-Reply-To: <58000559.ask9jYTwRrGrLPVO%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>
 Cc: linux-scsi@vger.kernel.org
 
-On Thu, Oct 13, 2016 at 03:06:16PM -0700, James Smart wrote:
+On Thu, Oct 13, 2016 at 03:06:17PM -0700, James Smart wrote:
 > 
-> Synchronize link speed with boot driver
+> Fix fw download on SLI-4 FC adapters
 > 
-> Link speed settings set by the boot driver are reported by the hw.
-> Driver will attempt to read them, and if set, will respect their
-> values.
-> The driver can override the settings with its own if instructed by
-> user space (via bsg), with the new values being picked up by the
-> boot driver.
+> Driver performs a quick validation of magic numbers in the fw
+> download image. Driver needed to be updated for more recent
+> magic numbers.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
 > v3 mods:
->  parens cleanup
->  use shost_priv() on new code
-> 
+>  code cleanup: parsing image header fields
 
 Thanks,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
