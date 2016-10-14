@@ -1,67 +1,78 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] smartpqi: initial commit of Microsemi smartpqi driver
-Date: Fri, 14 Oct 2016 16:59:53 +0300
-Message-ID: <20161014135953.GA5081@mwanda>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Denys Vlasenko <dvlasenk@redhat.com>
+Subject: [PATCH] scsi: aic7xxx: fix ahc_delay and ahd_delay
+Date: Fri, 14 Oct 2016 16:20:00 +0200
+Message-ID: <20161014142000.18833-1-dvlasenk@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:20629 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753350AbcJNOAL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 10:00:11 -0400
-Content-Disposition: inline
+Received: from mx1.redhat.com ([209.132.183.28]:57208 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754307AbcJNOUF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 14 Oct 2016 10:20:05 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kevin.barnett@microsemi.com
-Cc: esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+To: James Bottomley <JBottomley@Parallels.com>
+Cc: Denys Vlasenko <dvlasenk@redhat.com>, Hannes Reinicke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-Hello Kevin Barnett,
+They are buggy:
 
-The patch 6c223761eb54: "smartpqi: initial commit of Microsemi
-smartpqi driver" from Jun 27, 2016, leads to the following static
-checker warning:
+        while (usec > 0)
+               udelay(usec % 1024);
+               usec -= 1024;
 
-	drivers/scsi/smartpqi/smartpqi_init.c:3513 pqi_submit_raid_request_synchronous()
-	warn: inconsistent returns 'sem:&ctrl_info->sync_request_sem'.
+For example, for usec = 100*1024 + 1, old code will udelay(1) 101 times,
+i.e. it will be approximately equivalent to udelay(101),
+not the expected udelay(102400).
 
-drivers/scsi/smartpqi/smartpqi_init.c
-  3437  static int pqi_submit_raid_request_synchronous(struct pqi_ctrl_info *ctrl_info,
-  3438          struct pqi_iu_header *request, unsigned int flags,
-  3439          struct pqi_raid_error_info *error_info, unsigned long timeout_msecs)
-  3440  {
-  3441          int rc;
-  3442          struct pqi_io_request *io_request;
-  3443          unsigned long start_jiffies;
-  3444          unsigned long msecs_blocked;
-  3445          size_t iu_length;
-  3446  
-  3447          /*
-  3448           * Note that specifying PQI_SYNC_FLAGS_INTERRUPTABLE and a timeout value
-  3449           * are mutually exclusive.
-  3450           */
-  3451  
-  3452          if (flags & PQI_SYNC_FLAGS_INTERRUPTABLE) {
-  3453                  if (down_interruptible(&ctrl_info->sync_request_sem))
-  3454                          return -ERESTARTSYS;
-  3455          } else {
-  3456                  if (timeout_msecs == NO_TIMEOUT) {
-  3457                          down(&ctrl_info->sync_request_sem);
-  3458                  } else {
-  3459                          start_jiffies = jiffies;
-  3460                          if (down_timeout(&ctrl_info->sync_request_sem,
-  3461                                  msecs_to_jiffies(timeout_msecs)))
-  3462                                  return -ETIMEDOUT;
-  3463                          msecs_blocked =
-  3464                                  jiffies_to_msecs(jiffies - start_jiffies);
-  3465                          if (msecs_blocked >= timeout_msecs)
-  3466                                  return -ETIMEDOUT;
+This did not bite because all callers use values far from "pathological" ones,
+such as 500 and 1000 - these work fine with buggy code.
 
-You probably just want to delete this if statement because it is racy.
-Or unlock before returning at any rate.
+This was reported in 2006 but was missed.
 
-  3467                          timeout_msecs -= msecs_blocked;
-  3468                  }
-  3469          }
+Signed-off-by: Denys Vlasenko <dvlasenk@redhat.com>
+CC: James Bottomley <JBottomley@Parallels.com>
+CC: Hannes Reinicke <hare@suse.de>
+CC: linux-scsi@vger.kernel.org
+CC: linux-kernel@vger.kernel.org
+---
+ drivers/scsi/aic7xxx/aic79xx_osm.c | 7 ++++---
+ drivers/scsi/aic7xxx/aic7xxx_osm.c | 7 ++++---
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/scsi/aic7xxx/aic79xx_osm.c b/drivers/scsi/aic7xxx/aic79xx_osm.c
+index 2588b8f..e7a7838 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_osm.c
++++ b/drivers/scsi/aic7xxx/aic79xx_osm.c
+@@ -380,9 +380,10 @@ ahd_delay(long usec)
+ 	 * multi-millisecond waits.  Wait at most
+ 	 * 1024us per call.
+ 	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
++	udelay(usec & 1023);
++	usec >>= 10;
++	while (--usec >= 0) {
++		udelay(1024);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/aic7xxx/aic7xxx_osm.c b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+index fc6a831..c81798e 100644
+--- a/drivers/scsi/aic7xxx/aic7xxx_osm.c
++++ b/drivers/scsi/aic7xxx/aic7xxx_osm.c
+@@ -388,9 +388,10 @@ ahc_delay(long usec)
+ 	 * multi-millisecond waits.  Wait at most
+ 	 * 1024us per call.
+ 	 */
+-	while (usec > 0) {
+-		udelay(usec % 1024);
+-		usec -= 1024;
++	udelay(usec & 1023);
++	usec >>= 10;
++	while (--usec >= 0) {
++		udelay(1024);
+ 	}
+ }
+ 
+-- 
+2.9.2
+
