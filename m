@@ -1,88 +1,94 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [GIT PULL] final round of SCSI updates for the 4.8+ merge
- window
-Date: Sat, 15 Oct 2016 09:51:58 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610150938510.27214@nippy.intranet>
-References: <1476426828.22309.34.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:36738 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752103AbcJNXxx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 14 Oct 2016 19:53:53 -0400
-In-Reply-To: <1476426828.22309.34.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [PATCH 3/3] target: Don't override EXTENDED_COPY xcopy_pt_cmd SCSI status code
+Date: Sat, 15 Oct 2016 05:34:32 +0000
+Message-ID: <1476509672-27182-4-git-send-email-nab@linux-iscsi.org>
+References: <1476509672-27182-1-git-send-email-nab@linux-iscsi.org>
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1476509672-27182-1-git-send-email-nab@linux-iscsi.org>
+Sender: target-devel-owner@vger.kernel.org
+To: target-devel <target-devel@vger.kernel.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Vaibhav Tandon <vst@datera.io>, Dinesh Israni <ddi@datera.io>, Nixon Vincent <nixon.vincent@calsoftinc.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
+From: Dinesh Israni <ddi@datera.io>
 
-On Fri, 14 Oct 2016, James Bottomley wrote:
+This patch addresses a bug where a local EXTENDED_COPY WRITE or READ
+backend I/O request would always return SAM_STAT_CHECK_CONDITION,
+even if underlying xcopy_pt_cmd->se_cmd generated a different
+SCSI status code.
 
-> This is just a set of minor updates and fixes which weren't quite ready
-> in time for the first pull request.  The only real thing of note is
-> Mike Christie is stepping down as Maintainer of iscsi to be replaced by
-> Lee Duncan and Chris Leech.
-> 
-> The patch is available here:
-> 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
-> 
-> The short changelog is:
-> 
-> Baoyou Xie (1):
->       scsi: be2iscsi: mark symbols static where possible
-> 
-> Joao Pinto (1):
->       scsi: ufs: Kconfig fix
-> 
-> Kyuho Choi (1):
->       scsi: ufs: Enable no vccq quirk for skhynix device
-> 
-> Lee Duncan (1):
->       MAINTAINERS: Update open-iscsi maintainers
-> 
-> Ondrej Zary (3):
->       scsi: g_NCR5380: Stop using scsi_module.c
+ESX host environments expect to hit SAM_STAT_RESERVATION_CONFLICT
+for certain scenarios, and SAM_STAT_CHECK_CONDITION results in
+non-retriable status for these cases.
 
-I believe that patch introduces an .init.text section mismatch, that I 
-failed to notice when I reviewed it. So you may want Arnd Bergmann's fix 
-which is commit 8f087c089dae5 ("scsi: NCR5380: no longer mark irq probing 
-as __init") in mkp-scsi/4.10/scsi-queue.
+Tested on v4.1.y with ESX v5.5u2+ with local IBLOCK backend copy.
 
+Reported-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
+Tested-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
+Cc: Nixon Vincent <nixon.vincent@calsoftinc.com>
+Tested-by: Dinesh Israni <ddi@datera.io>
+Signed-off-by: Dinesh Israni <ddi@datera.io>
+Cc: Dinesh Israni <ddi@datera.io>
+Cc: stable@vger.kernel.org # 3.14+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
+ drivers/target/target_core_xcopy.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index f2a1443..094a144 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -662,6 +662,7 @@ static int target_xcopy_read_source(
+ 	rc = target_xcopy_setup_pt_cmd(xpt_cmd, xop, src_dev, &cdb[0],
+ 				remote_port, true);
+ 	if (rc < 0) {
++		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
+ 		transport_generic_free_cmd(se_cmd, 0);
+ 		return rc;
+ 	}
+@@ -673,6 +674,7 @@ static int target_xcopy_read_source(
+ 
+ 	rc = target_xcopy_issue_pt_cmd(xpt_cmd);
+ 	if (rc < 0) {
++		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
+ 		transport_generic_free_cmd(se_cmd, 0);
+ 		return rc;
+ 	}
+@@ -723,6 +725,7 @@ static int target_xcopy_write_destination(
+ 				remote_port, false);
+ 	if (rc < 0) {
+ 		struct se_cmd *src_cmd = &xop->src_pt_cmd->se_cmd;
++		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
+ 		/*
+ 		 * If the failure happened before the t_mem_list hand-off in
+ 		 * target_xcopy_setup_pt_cmd(), Reset memory + clear flag so that
+@@ -738,6 +741,7 @@ static int target_xcopy_write_destination(
+ 
+ 	rc = target_xcopy_issue_pt_cmd(xpt_cmd);
+ 	if (rc < 0) {
++		ec_cmd->scsi_status = xpt_cmd->se_cmd.scsi_status;
+ 		se_cmd->se_cmd_flags &= ~SCF_PASSTHROUGH_SG_TO_MEM_NOALLOC;
+ 		transport_generic_free_cmd(se_cmd, 0);
+ 		return rc;
+@@ -824,10 +828,14 @@ static void target_xcopy_do_work(struct work_struct *work)
+ out:
+ 	xcopy_pt_undepend_remotedev(xop);
+ 	kfree(xop);
+-
+-	pr_warn_ratelimited("target_xcopy_do_work: rc: %d, Setting X-COPY CHECK_CONDITION"
+-			    " -> sending response\n", rc);
+-	ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
++	/*
++	 * Don't override an error scsi status if it has already been set
++	 */
++	if (ec_cmd->scsi_status == SAM_STAT_GOOD) {
++		pr_warn_ratelimited("target_xcopy_do_work: rc: %d, Setting X-COPY"
++			" CHECK_CONDITION -> sending response\n", rc);
++		ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
++	}
+ 	target_complete_cmd(ec_cmd, SAM_STAT_CHECK_CONDITION);
+ }
+ 
 -- 
-
->       scsi: g_NCR5380: Reduce overrides[] from array to struct
->       scsi: g_NCR5380: Remove deprecated __setup
-> 
-> Varun Prakash (1):
->       scsi: cxgb4i: Set completion bit in work request
-> 
-> Wei Yongjun (1):
->       scsi: ufs: Fix error return code in ufshcd_init()
-> 
-> Zang Leigang (1):
->       scsi: ufs: Data Segment only needed for WRITE DESCRIPTOR
-> 
-> And the diffstat:
-> 
-> 
->  Documentation/scsi/g_NCR5380.txt   |  34 +-
->  MAINTAINERS                        |   6 +-
->  drivers/scsi/be2iscsi/be_main.c    |  12 +-
->  drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |   5 +
->  drivers/scsi/g_NCR5380.c           | 699 ++++++++++++++++---------------------
->  drivers/scsi/g_NCR5380.h           |   8 -
->  drivers/scsi/ufs/Kconfig           |   2 +-
->  drivers/scsi/ufs/ufs_quirks.h      |   2 +
->  drivers/scsi/ufs/ufshcd.c          |  10 +-
->  9 files changed, 345 insertions(+), 433 deletions(-)
-> 
-> James
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+1.9.1
