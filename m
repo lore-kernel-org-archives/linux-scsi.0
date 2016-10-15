@@ -1,157 +1,105 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/3] target: Make EXTENDED_COPY 0xe4 failure return COPY TARGET DEVICE NOT REACHABLE
-Date: Sat, 15 Oct 2016 05:34:31 +0000
-Message-ID: <1476509672-27182-3-git-send-email-nab@linux-iscsi.org>
-References: <1476509672-27182-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1476509672-27182-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, Vaibhav Tandon <vst@datera.io>, Dinesh Israni <ddi@datera.io>, Nixon Vincent <nixon.vincent@calsoftinc.com>, Nicholas Bellinger <nab@linux-iscsi.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v4 1/4] block: Add iocontext priority to request
+Date: Sat, 15 Oct 2016 10:43:56 +0200
+Message-ID: <fba9f099-4fb6-6679-b9c5-4f9aa8cf291e@suse.de>
+References: <1476388433-2539-1-git-send-email-adam.manzanares@hgst.com>
+ <1476388433-2539-2-git-send-email-adam.manzanares@hgst.com>
+ <733629ac-fb98-9acf-3b2b-e1554e839346@suse.de>
+ <20161014183554.GB6788@hgst.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20161014183554.GB6788@hgst.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Adam Manzananares <adam.manzanares@wdc.com>
+Cc: Adam Manzanares <adam.manzanares@hgst.com>, axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
+On 10/14/2016 08:35 PM, Adam Manzananares wrote:
+> The 10/14/2016 07:54, Hannes Reinecke wrote:
+>> On 10/13/2016 09:53 PM, Adam Manzanares wrote:
+>>> Patch adds an association between iocontext ioprio and the ioprio of a
+>>> request. This value is set in blk_rq_set_prio which takes the request and
+>>> the ioc as arguments. If the ioc is valid in blk_rq_set_prio then the
+>>> iopriority of the request is set as the iopriority of the ioc. In
+>>> init_request_from_bio a check is made to see if the ioprio of the bio is
+>>> valid and if so then the request prio comes from the bio.
+>>>
+>>> Signed-off-by: Adam Manzananares <adam.manzanares@wdc.com>
+>>> ---
+>>>  block/blk-core.c       |  4 +++-
+>>>  include/linux/blkdev.h | 14 ++++++++++++++
+>>>  2 files changed, 17 insertions(+), 1 deletion(-)
+>>>
+>>> diff --git a/block/blk-core.c b/block/blk-core.c
+>>> index 14d7c07..361b1b9 100644
+>>> --- a/block/blk-core.c
+>>> +++ b/block/blk-core.c
+>>> @@ -1153,6 +1153,7 @@ static struct request *__get_request(struct request_list *rl, int op,
+>>>
+>>>  	blk_rq_init(q, rq);
+>>>  	blk_rq_set_rl(rq, rl);
+>>> +	blk_rq_set_prio(rq, ioc);
+>>>  	req_set_op_attrs(rq, op, op_flags | REQ_ALLOCED);
+>>>
+>>>  	/* init elvpriv */
+>>> @@ -1656,7 +1657,8 @@ void init_request_from_bio(struct request *req, struct bio *bio)
+>>>
+>>>  	req->errors = 0;
+>>>  	req->__sector = bio->bi_iter.bi_sector;
+>>> -	req->ioprio = bio_prio(bio);
+>>> +	if (ioprio_valid(bio_prio(bio)))
+>>> +		req->ioprio = bio_prio(bio);
+>>>  	blk_rq_bio_prep(req->q, req, bio);
+>>>  }
+>>>
+>>> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+>>> index c47c358..9a0ceaa 100644
+>>> --- a/include/linux/blkdev.h
+>>> +++ b/include/linux/blkdev.h
+>>> @@ -934,6 +934,20 @@ static inline unsigned int blk_rq_count_bios(struct request *rq)
+>>>  }
+>>>
+>>>  /*
+>>> + * blk_rq_set_prio - associate a request with prio from ioc
+>>> + * @rq: request of interest
+>>> + * @ioc: target iocontext
+>>> + *
+>>> + * Assocate request prio with ioc prio so request based drivers
+>>> + * can leverage priority information.
+>>> + */
+>>> +static inline void blk_rq_set_prio(struct request *rq, struct io_context *ioc)
+>>> +{
+>>> +	if (ioc)
+>>> +		rq->ioprio = ioc->ioprio;
+>>> +}
+>>> +
+>>> +/*
+>>>   * Request issue related functions.
+>>>   */
+>>>  extern struct request *blk_peek_request(struct request_queue *q);
+>>>
+>> Don't you need to check for 'ioprio_valid()' here, too?
+>
+> I poked around and it should be safe to not check for ioprio valid
+> at this point. ioprio_valid only checks to see if the ioprio is
+> not IOPRIO_CLASS_NONE. The request by default has a ioprio of none
+> so if the ioc has ioprio of none we are not changing anything.
+>
+> The locations in the code that I found where the ioc prio is set are
+> either filtered through the syscall handler, which checks for invalid
+> priority combinations, or have valid priority values.
+>
+Thanks for the confirmation, that'll clarifies things.
 
-This patch addresses a bug where EXTENDED_COPY across multiple LUNs
-results in a CHECK_CONDITION when the source + destination are not
-located on the same physical node.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-ESX Host environments expect sense COPY_ABORTED w/ COPY TARGET DEVICE
-NOT REACHABLE to be returned when this occurs, in order to signal
-fallback to local copy method.
+Cheers,
 
-As described in section 6.3.3 of spc4r22:
-
-  "If it is not possible to complete processing of a segment because the
-   copy manager is unable to establish communications with a copy target
-   device, because the copy target device does not respond to INQUIRY,
-   or because the data returned in response to INQUIRY indicates
-   an unsupported logical unit, then the EXTENDED COPY command shall be
-   terminated with CHECK CONDITION status, with the sense key set to
-   COPY ABORTED, and the additional sense code set to COPY TARGET DEVICE
-   NOT REACHABLE."
-
-Tested on v4.1.y with ESX v5.5u2+ with BlockCopy across multiple nodes.
-
-Reported-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Tested-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Cc: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Tested-by: Dinesh Israni <ddi@datera.io>
-Signed-off-by: Dinesh Israni <ddi@datera.io>
-Cc: Dinesh Israni <ddi@datera.io>
-Cc: stable@vger.kernel.org # 3.14+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_transport.c |  7 +++++++
- drivers/target/target_core_xcopy.c     | 22 ++++++++++++++++------
- include/target/target_core_base.h      |  1 +
- 3 files changed, 24 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 00ec464..000bc6d 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1706,6 +1706,7 @@ void transport_generic_request_failure(struct se_cmd *cmd,
- 	case TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED:
- 	case TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED:
- 	case TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED:
-+	case TCM_COPY_TARGET_DEVICE_NOT_REACHABLE:
- 		break;
- 	case TCM_OUT_OF_RESOURCES:
- 		sense_reason = TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE;
-@@ -2873,6 +2874,12 @@ static const struct sense_info sense_info_table[] = {
- 		.ascq = 0x03, /* LOGICAL BLOCK REFERENCE TAG CHECK FAILED */
- 		.add_sector_info = true,
- 	},
-+	[TCM_COPY_TARGET_DEVICE_NOT_REACHABLE] = {
-+		.key = COPY_ABORTED,
-+		.asc = 0x0d,
-+		.ascq = 0x02, /* COPY TARGET DEVICE NOT REACHABLE */
-+
-+	},
- 	[TCM_LOGICAL_UNIT_COMMUNICATION_FAILURE] = {
- 		/*
- 		 * Returning ILLEGAL REQUEST would cause immediate IO errors on
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index 75cd854..f2a1443 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -104,7 +104,7 @@ static int target_xcopy_locate_se_dev_e4(struct se_cmd *se_cmd, struct xcopy_op
- 	}
- 	mutex_unlock(&g_device_mutex);
- 
--	pr_err("Unable to locate 0xe4 descriptor for EXTENDED_COPY\n");
-+	pr_debug_ratelimited("Unable to locate 0xe4 descriptor for EXTENDED_COPY\n");
- 	return -EINVAL;
- }
- 
-@@ -185,7 +185,7 @@ static int target_xcopy_parse_tiddesc_e4(struct se_cmd *se_cmd, struct xcopy_op
- 
- static int target_xcopy_parse_target_descriptors(struct se_cmd *se_cmd,
- 				struct xcopy_op *xop, unsigned char *p,
--				unsigned short tdll)
-+				unsigned short tdll, sense_reason_t *sense_ret)
- {
- 	struct se_device *local_dev = se_cmd->se_dev;
- 	unsigned char *desc = p;
-@@ -193,6 +193,8 @@ static int target_xcopy_parse_target_descriptors(struct se_cmd *se_cmd,
- 	unsigned short start = 0;
- 	bool src = true;
- 
-+	*sense_ret = TCM_INVALID_PARAMETER_LIST;
-+
- 	if (offset != 0) {
- 		pr_err("XCOPY target descriptor list length is not"
- 			" multiple of %d\n", XCOPY_TARGET_DESC_LEN);
-@@ -243,9 +245,16 @@ static int target_xcopy_parse_target_descriptors(struct se_cmd *se_cmd,
- 		rc = target_xcopy_locate_se_dev_e4(se_cmd, xop, true);
- 	else
- 		rc = target_xcopy_locate_se_dev_e4(se_cmd, xop, false);
--
--	if (rc < 0)
-+	/*
-+	 * If a matching IEEE NAA 0x83 descriptor for the requested device
-+	 * is not located on this node, return COPY_ABORTED with ASQ/ASQC
-+	 * 0x0d/0x02 - COPY_TARGET_DEVICE_NOT_REACHABLE to request the
-+	 * initiator to fall back to normal copy method.
-+	 */
-+	if (rc < 0) {
-+		*sense_ret = TCM_COPY_TARGET_DEVICE_NOT_REACHABLE;
- 		goto out;
-+	}
- 
- 	pr_debug("XCOPY TGT desc: Source dev: %p NAA IEEE WWN: 0x%16phN\n",
- 		 xop->src_dev, &xop->src_tid_wwn[0]);
-@@ -816,7 +825,8 @@ out:
- 	xcopy_pt_undepend_remotedev(xop);
- 	kfree(xop);
- 
--	pr_warn("target_xcopy_do_work: Setting X-COPY CHECK_CONDITION -> sending response\n");
-+	pr_warn_ratelimited("target_xcopy_do_work: rc: %d, Setting X-COPY CHECK_CONDITION"
-+			    " -> sending response\n", rc);
- 	ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
- 	target_complete_cmd(ec_cmd, SAM_STAT_CHECK_CONDITION);
- }
-@@ -875,7 +885,7 @@ sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
- 		" tdll: %hu sdll: %u inline_dl: %u\n", list_id, list_id_usage,
- 		tdll, sdll, inline_dl);
- 
--	rc = target_xcopy_parse_target_descriptors(se_cmd, xop, &p[16], tdll);
-+	rc = target_xcopy_parse_target_descriptors(se_cmd, xop, &p[16], tdll, &ret);
- 	if (rc <= 0)
- 		goto out;
- 
-diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
-index fb8e3b6..c211900 100644
---- a/include/target/target_core_base.h
-+++ b/include/target/target_core_base.h
-@@ -177,6 +177,7 @@ enum tcm_sense_reason_table {
- 	TCM_LOGICAL_BLOCK_GUARD_CHECK_FAILED	= R(0x15),
- 	TCM_LOGICAL_BLOCK_APP_TAG_CHECK_FAILED	= R(0x16),
- 	TCM_LOGICAL_BLOCK_REF_TAG_CHECK_FAILED	= R(0x17),
-+	TCM_COPY_TARGET_DEVICE_NOT_REACHABLE	= R(0x18),
- #undef R
- };
- 
+Hannes
 -- 
-1.9.1
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
