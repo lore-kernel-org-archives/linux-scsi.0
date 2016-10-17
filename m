@@ -1,40 +1,266 @@
-From: Daniel Walker <danielwa@cisco.com>
-Subject: Re: [PATCH] sd: assign appropriate log level
-Date: Mon, 17 Oct 2016 10:22:55 -0700
-Message-ID: <5c5e37b1-0058-c1eb-8a4c-c493c7493fd6@cisco.com>
-References: <20161017165108.29718-4-davsingl@cisco.com>
- <1476724750.2734.20.camel@linux.vnet.ibm.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to firmware
+Date: Mon, 17 Oct 2016 23:06:09 +0530
+Message-ID: <01e727ba166a34a97efdd5e890e4bc22@mail.gmail.com>
+References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
+         <1476699850-25083-5-git-send-email-sumit.saxena@broadcom.com>
+         <d9e79049-b4ce-588f-263d-dad015b3368d@suse.de>  <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
+         <1476721205.2734.12.camel@linux.vnet.ibm.com>   <14aa9905-b7fc-9695-dd19-1cc31cbee330@redhat.com>
+ <1476724793.2734.21.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-1.cisco.com ([173.37.142.88]:19770 "EHLO
-        alln-iport-1.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933168AbcJQRce (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 13:32:34 -0400
-In-Reply-To: <1476724750.2734.20.camel@linux.vnet.ibm.com>
+Received: from mail-it0-f48.google.com ([209.85.214.48]:38874 "EHLO
+        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030996AbcJQRgN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 13:36:13 -0400
+Received: by mail-it0-f48.google.com with SMTP id 66so15313315itl.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 10:36:12 -0700 (PDT)
+In-Reply-To: <1476724793.2734.21.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, David Singleton <davsingl@cisco.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shikhar Dogra <shidogra@cisco.com>, xe-kernel@external.cisco.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>
 
-On 10/17/2016 10:19 AM, James Bottomley wrote:
-> On Mon, 2016-10-17 at 09:51 -0700, David Singleton wrote:
->> From: Shikhar Dogra <shidogra@cisco.com>
->>
->> Reduce chatter on console for usb hotplug.
->> KERN_ERR is too high severity for these messages, moving them
->> to KERN_WARNING
-> It's an error because we have several USB to IDE bridges that have
-> write back cache drives but report nothing to the caching mode page.
->   For them this is a serious error because their data integrity is at
-> risk.  I'm open to other ways to fix your problem, but downgrading the
-> message severity because *you* don't have an issue would mask the
-> problem for others, so it's not really viable.
+> -----Original Message-----
+> From: James Bottomley [mailto:jejb@linux.vnet.ibm.com]
+> Sent: Monday, October 17, 2016 10:50 PM
+> To: Ric Wheeler; Hannes Reinecke; Sumit Saxena; linux-scsi@vger.kernel.org
+> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
+> kashyap.desai@broadcom.com; Christoph Hellwig; Martin K. Petersen; Jeff
+> Moyer; Gris Ge; Ewan Milne; Jens Axboe
+> Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command
+> to firmware
+>
+> On Mon, 2016-10-17 at 12:27 -0400, Ric Wheeler wrote:
+> > On 10/17/2016 12:20 PM, James Bottomley wrote:
+> > > On Mon, 2016-10-17 at 09:01 -0400, Ric Wheeler wrote:
+> > > > On 10/17/2016 07:34 AM, Hannes Reinecke wrote:
+> > > > > On 10/17/2016 12:24 PM, Sumit Saxena wrote:
+> > > > > > megaraid_sas driver returns SYNCHRONIZE_CACHE command back to
+> > > > > > SCSI layer without sending it to firmware as firmware takes
+> > > > > > care of flushing cache.  This patch will change the driver
+> > > > > > behavior wrt SYNCHRONIZE_CACHE handling. If underlying
+> > > > > > firmware has support to handle the SYNCHORNIZE_CACHE, driver
+> > > > > > will send it for firmware otherwise complete it back to SCSI
+> > > > > > layer with SUCCESS immediately.  If  Firmware  handle
+> > > > > > SYNCHORNIZE_CACHE for both VD and JBOD "canHandleSyncCache"
+> > > > > > bit in scratch pad register(offset
+> > > > > > 0x00B4) will be set.
+> > > > > >
+> > > > > > This behavior can be controlled via module parameter and user
+> > > > > > can fallback to old behavior of returning SYNCHRONIZE_CACHE by
+> > > > > > driver only without sending it to firmware.
+> > > > > >
+> > > > > > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> > > > > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> > > > > > ---
+> > > > > >    drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
+> > > > > >    drivers/scsi/megaraid/megaraid_sas_base.c   | 14 ++++++---
+> > > > > > -----
+> > > > > >    drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 +++
+> > > > > >    drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 ++
+> > > > > >    4 files changed, 14 insertions(+), 8 deletions(-)
+> > > > > >
+> > > > > > diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+> > > > > > b/drivers/scsi/megaraid/megaraid_sas.h
+> > > > > > index ca86c88..43fd14f 100644
+> > > > > > --- a/drivers/scsi/megaraid/megaraid_sas.h
+> > > > > > +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> > > > > > @@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
+> > > > > >    #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
+> > > > > >    #define MR_MAX_MSIX_REG_ARRAY                   16
+> > > > > >    #define MR_RDPQ_MODE_OFFSET			0X00800
+> > > > > > 000
+> > > > > > +#define MR_CAN_HANDLE_SYNC_CACHE_OFFSET		0X010
+> > > > > > 0000
+> > > > > > 0
+> > > > > > +
+> > > > > >    /*
+> > > > > >    * register set for both 1068 and 1078 controllers
+> > > > > >    * structure extended for 1078 registers @@ -2140,6 +2142,7
+> > > > > > @@ struct megasas_instance {
+> > > > > >    	u8 is_imr;
+> > > > > >    	u8 is_rdpq;
+> > > > > >    	bool dev_handle;
+> > > > > > +	bool fw_sync_cache_support;
+> > > > > >    };
+> > > > > >    struct MR_LD_VF_MAP {
+> > > > > >    	u32 size;
+> > > > > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > > > > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > > > > index 092387f..a4a8e2f 100644
+> > > > > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > > > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > > > > @@ -104,6 +104,10 @@ unsigned int scmd_timeout =
+> > > > > > MEGASAS_DEFAULT_CMD_TIMEOUT;
+> > > > > >    module_param(scmd_timeout, int, S_IRUGO);
+> > > > > >    MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10
+> > > > > > -90s), default 90s. See megasas_reset_timer.");
+> > > > > >
+> > > > > > +bool block_sync_cache;
+> > > > > > +module_param(block_sync_cache, bool, S_IRUGO);
+> > > > > > +MODULE_PARM_DESC(block_sync_cache, "Block SYNC CACHE by
+> > > > > > driver
+> > > > > > Default: 0(Send it to firmware)");
+> > > > > > +
+> > > > > >    MODULE_LICENSE("GPL");
+> > > > > >    MODULE_VERSION(MEGASAS_VERSION);
+> > > > > >    MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
+> > > > > > @@ -1700,16 +1704,10 @@ megasas_queue_command(struct
+> Scsi_Host
+> > > > > > *shost, struct scsi_cmnd *scmd)
+> > > > > >    		goto out_done;
+> > > > > >    	}
+> > > > > >
+> > > > > > -	switch (scmd->cmnd[0]) {
+> > > > > > -	case SYNCHRONIZE_CACHE:
+> > > > > > -		/*
+> > > > > > -		 * FW takes care of flush cache on its own
+> > > > > > -		 * No need to send it down
+> > > > > > -		 */
+> > > > > > +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
+> > > > > > +		(!instance->fw_sync_cache_support)) {
+> > > > > >    		scmd->result = DID_OK << 16;
+> > > > > >    		goto out_done;
+> > > > > > -	default:
+> > > > > > -		break;
+> > > > > >    	}
+> > > > > >
+> > > > > >    	return instance->instancet
+> > > > > > ->build_and_issue_cmd(instance, scmd);
+> > > > > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > > > > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > > > > index 2159f6a..8237580 100644
+> > > > > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > > > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > > > > @@ -747,6 +747,9 @@ megasas_ioc_init_fusion(struct
+> > > > > > megasas_instance *instance)
+> > > > > >    		ret = 1;
+> > > > > >    		goto fail_fw_init;
+> > > > > >    	}
+> > > > > > +	if (!block_sync_cache)
+> > > > > > +		instance->fw_sync_cache_support =
+> > > > > > (scratch_pad_2
+> > > > > > &
+> > > > > > +			MR_CAN_HANDLE_SYNC_CACHE_OFFSET) ? 1
+> > > > > > :
+> > > > > > 0;
+> > > > > >
+> > > > > >    	IOCInitMessage =
+> > > > > >    	  dma_alloc_coherent(&instance->pdev->dev,
+> > > > > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > > > > b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > > > > index e3bee04..2857154 100644
+> > > > > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > > > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > > > > @@ -72,6 +72,8 @@
+> > > > > >    #define MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET
+> > > > > >  (0x0000030C)
+> > > > > >    #define MPI2_REPLY_POST_HOST_INDEX_OFFSET	(0x000000
+> > > > > > 6C)
+> > > > > >
+> > > > > > +extern bool block_sync_cache;
+> > > > > > +
+> > > > > >    /*
+> > > > > >     * Raid context flags
+> > > > > >     */
+> > > > > >
+> > > > > Be extra careful with that.
+> > > > >
+> > > > > SYNCHRONIZE_CACHE has (potentially) a global scope, as there
+> > > > > might be an array-wide cache, and a cache flush would affect the
+> > > > > entire cache. Linux is using SYNCHRONIZE_CACHE as a per device
+> > > > > setting, ie it assumes that the effects of a cache flush is
+> > > > > restricted to the device in question.
+> > > > >
+> > > > > If this is _not_ the case I'd rather not enable it.
+> > > > > Have you checked that enabling this functionality doesn't have
+> > > > > negative performance impact?
+> > > > >
+> > > > > Cheers,
+> > > > >
+> > > > > Hannes
+> > > > This must go in - without this fix, there is no data integrity for
+> > > > any file system.
+> > > That's not what I get from the change log.  What it says to me is
+> > > that the caches are currently firmware managed.  Barring firmware
+> > > bugs, that means that we currently don't have any integrity issues.
+> >
+> > Your understanding (or the change log) is incorrect.
+>
+> There's no current way in English of construing "as firmware takes care of
+> flushing cache" to mean its inverse, so the changelog needs updating to
+> explain
+> that firmware does *not* take care of cache flushing, so effectively
+> nothing
+> does and we'll need a cc to stable if the problem is that nothing takes
+> care of
+> flushing the drive caches.
+>
+> James
 
-Is there a way to detect when you have a device of the type where this 
-is a serious issue ? This typically happen for USB drives, but seems to 
-have no effect on them.
+Sorry for confusion. More accurate to say  -
 
+Current megaraid_sas driver returns SYNCHRONIZE_CACHE command back to SCSI
+layer without sending it down to firmware as firmware supposed to takes care
+of flushing cache for all Virtual Disk at the time of system
+reboot/shutdown.
+Because of above FW rule driver coded wrongly and it added bug that
+SYNCHRONIZE_CACHE is not passed to FW for JBOD as well.  (MR Firmware wanted
+OS to manage SYNCHRONIZE_CACHE and pass the same to the Firmware. ).
+We figure out that even for VD, why driver should send back SYNC_CACHE
+command...let's have the same in FW (giving all control in FW)
 
-Daniel
+New behavior described -
+
+IF application requests SYNCH_CACHE
+ IF any FW which supports new API bit called canHandleSyncCache
+  Driver sends SYNCH_CACHE command to the FW
+  IF 'VirtualDisk'
+      FW does not send SYNCH_CACHE to drives
+      FW returns SUCCESS
+ELSE IF 'JBOD'
+     FW sends SYNCH_CACHE to drive
+     FW obtains status from drive and returns same status back to driver
+  ENDIF
+
+Fixing this is robust if FW and driver changes are inline. See below for
+more detail.
+
+Case - 1
+This patch is attempt to fix one level problem where Virtual Disks are not
+managed correctly in MR FW. There are some MR FW (E.a Gen2 and Gen2.5 FW),
+which set WCE bit for Virtual Disk but FW is not reply correct for
+SYNCH_CACHE.
+ This was handled in past and carry forward (in driver + FW ) to all new
+generation products as well. We tried to collect all possible details why it
+was handled such way to provide better driver fix for this issue( mainly to
+avoid this FW checks and module
+  parameters etc..). But now it looks like to make generic fix  (Device ID
+based etc..)is even risky, so went with this protective approach.  It is
+very risky to find out which Device ID and FW has capability to manage
+SYNC_CACHE, so we managed to figure out which are the new FW using FW
+capability bit.
+
+E.g Liberator/Thunderbolt MR FW SYNC_CACHE is write Unsupported command
+(this is a firmware bug) and immediately it will be failed to SML. This will
+cause File system to go Read-only.
+
+Case -2
+One more thing which we are trying and known driver can send "SYNC_CACHE"
+unconditionally to all generation of FW.  For this we are doing more unit
+testing on various controllers/FW and planning to provide another patch to
+fix JBOD path for any FW. (It will not be based on FW capability/module
+parameter).
+
+If we remove module parameter, we can ask customer to disable WCE on drive
+to get similar impact.
+
+` Kashyap
+>
+>
+> > The issue here is for devices that are non-RAID or pass through - this
+> > is a real issue and has been seen in practice.
+>
+>
