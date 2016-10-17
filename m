@@ -1,79 +1,226 @@
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 1/2] scsi: Handle Unit Attention when issuing SCSI command
-Date: Mon, 17 Oct 2016 14:17:54 -0200
-Message-ID: <87y41nhrv1.fsf@linux.vnet.ibm.com>
-References: <1476384477-3060-1-git-send-email-krisman@linux.vnet.ibm.com>
-        <1476422360.22309.29.camel@linux.vnet.ibm.com>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to
+ firmware
+Date: Mon, 17 Oct 2016 09:20:05 -0700
+Message-ID: <1476721205.2734.12.camel@linux.vnet.ibm.com>
+References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
+         <1476699850-25083-5-git-send-email-sumit.saxena@broadcom.com>
+         <d9e79049-b4ce-588f-263d-dad015b3368d@suse.de>
+         <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:47038 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935057AbcJQQSA (ORCPT
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32823 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S934930AbcJQQUT (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 12:18:00 -0400
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9HGHG2o043824
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:18:00 -0400
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 264yja04n7-1
+        Mon, 17 Oct 2016 12:20:19 -0400
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9HGK67L140914
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:20:18 -0400
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 2650kgvm5t-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:18:00 -0400
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:20:17 -0400
 Received: from localhost
-        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <krisman@linux.vnet.ibm.com>;
-        Mon, 17 Oct 2016 14:17:57 -0200
-Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
-        by d24dlp02.br.ibm.com (Postfix) with ESMTP id 9390B1DC006F
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:17:55 -0400 (EDT)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-        by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u9HGHtW54788256
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 14:17:55 -0200
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u9HGHtjc004845
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 14:17:55 -0200
-In-Reply-To: <1476422360.22309.29.camel@linux.vnet.ibm.com> (James Bottomley's
-        message of "Fri, 14 Oct 2016 13:19:20 +0800")
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Mon, 17 Oct 2016 10:20:15 -0600
+In-Reply-To: <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, kashyap.desai@broadcom.com, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>
 
-James Bottomley <jejb@linux.vnet.ibm.com> writes:
+On Mon, 2016-10-17 at 09:01 -0400, Ric Wheeler wrote:
+> On 10/17/2016 07:34 AM, Hannes Reinecke wrote:
+> > On 10/17/2016 12:24 PM, Sumit Saxena wrote:
+> > > megaraid_sas driver returns SYNCHRONIZE_CACHE command back to 
+> > > SCSI layer without sending it to firmware as firmware takes care 
+> > > of flushing cache.  This patch will change the driver behavior 
+> > > wrt SYNCHRONIZE_CACHE handling. If underlying firmware has 
+> > > support to handle the SYNCHORNIZE_CACHE, driver will send it for 
+> > > firmware otherwise complete it back to SCSI layer with SUCCESS 
+> > > immediately.  If  Firmware  handle SYNCHORNIZE_CACHE for both VD 
+> > > and JBOD "canHandleSyncCache" bit in scratch pad register(offset 
+> > > 0x00B4) will be set.
+> > > 
+> > > This behavior can be controlled via module parameter and user can 
+> > > fallback to old behavior of returning SYNCHRONIZE_CACHE by driver 
+> > > only without sending it to firmware.
+> > > 
+> > > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> > > ---
+> > >   drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
+> > >   drivers/scsi/megaraid/megaraid_sas_base.c   | 14 ++++++--------
+> > >   drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 +++
+> > >   drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 ++
+> > >   4 files changed, 14 insertions(+), 8 deletions(-)
+> > > 
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+> > > b/drivers/scsi/megaraid/megaraid_sas.h
+> > > index ca86c88..43fd14f 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas.h
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> > > @@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
+> > >   #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
+> > >   #define MR_MAX_MSIX_REG_ARRAY                   16
+> > >   #define MR_RDPQ_MODE_OFFSET			0X00800000
+> > > +#define MR_CAN_HANDLE_SYNC_CACHE_OFFSET		0X0100000
+> > > 0
+> > > +
+> > >   /*
+> > >   * register set for both 1068 and 1078 controllers
+> > >   * structure extended for 1078 registers
+> > > @@ -2140,6 +2142,7 @@ struct megasas_instance {
+> > >   	u8 is_imr;
+> > >   	u8 is_rdpq;
+> > >   	bool dev_handle;
+> > > +	bool fw_sync_cache_support;
+> > >   };
+> > >   struct MR_LD_VF_MAP {
+> > >   	u32 size;
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > index 092387f..a4a8e2f 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > > @@ -104,6 +104,10 @@ unsigned int scmd_timeout =
+> > > MEGASAS_DEFAULT_CMD_TIMEOUT;
+> > >   module_param(scmd_timeout, int, S_IRUGO);
+> > >   MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s),
+> > > default 90s. See megasas_reset_timer.");
+> > >   
+> > > +bool block_sync_cache;
+> > > +module_param(block_sync_cache, bool, S_IRUGO);
+> > > +MODULE_PARM_DESC(block_sync_cache, "Block SYNC CACHE by driver
+> > > Default: 0(Send it to firmware)");
+> > > +
+> > >   MODULE_LICENSE("GPL");
+> > >   MODULE_VERSION(MEGASAS_VERSION);
+> > >   MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
+> > > @@ -1700,16 +1704,10 @@ megasas_queue_command(struct Scsi_Host
+> > > *shost, struct scsi_cmnd *scmd)
+> > >   		goto out_done;
+> > >   	}
+> > >   
+> > > -	switch (scmd->cmnd[0]) {
+> > > -	case SYNCHRONIZE_CACHE:
+> > > -		/*
+> > > -		 * FW takes care of flush cache on its own
+> > > -		 * No need to send it down
+> > > -		 */
+> > > +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
+> > > +		(!instance->fw_sync_cache_support)) {
+> > >   		scmd->result = DID_OK << 16;
+> > >   		goto out_done;
+> > > -	default:
+> > > -		break;
+> > >   	}
+> > >   
+> > >   	return instance->instancet
+> > > ->build_and_issue_cmd(instance, scmd);
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > index 2159f6a..8237580 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > > @@ -747,6 +747,9 @@ megasas_ioc_init_fusion(struct
+> > > megasas_instance *instance)
+> > >   		ret = 1;
+> > >   		goto fail_fw_init;
+> > >   	}
+> > > +	if (!block_sync_cache)
+> > > +		instance->fw_sync_cache_support = (scratch_pad_2
+> > > &
+> > > +			MR_CAN_HANDLE_SYNC_CACHE_OFFSET) ? 1 :
+> > > 0;
+> > >   
+> > >   	IOCInitMessage =
+> > >   	  dma_alloc_coherent(&instance->pdev->dev,
+> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > index e3bee04..2857154 100644
+> > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+> > > @@ -72,6 +72,8 @@
+> > >   #define MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET   (0x0000030C)
+> > >   #define MPI2_REPLY_POST_HOST_INDEX_OFFSET	(0x0000006C)
+> > >   
+> > > +extern bool block_sync_cache;
+> > > +
+> > >   /*
+> > >    * Raid context flags
+> > >    */
+> > > 
+> > Be extra careful with that.
+> > 
+> > SYNCHRONIZE_CACHE has (potentially) a global scope, as there might 
+> > be an array-wide cache, and a cache flush would affect the entire 
+> > cache. Linux is using SYNCHRONIZE_CACHE as a per device setting, ie 
+> > it assumes that the effects of a cache flush is restricted to the 
+> > device in question.
+> > 
+> > If this is _not_ the case I'd rather not enable it.
+> > Have you checked that enabling this functionality doesn't have 
+> > negative performance impact?
+> > 
+> > Cheers,
+> > 
+> > Hannes
+> 
+> This must go in - without this fix, there is no data integrity for
+> any file system.
 
-> On Thu, 2016-10-13 at 15:47 -0300, Gabriel Krisman Bertazi wrote:
->> @@ -210,6 +219,13 @@ int scsi_execute(struct scsi_device *sdev, const
->> unsigned char *cmd,
->>  	 */
->>  	blk_execute_rq(req->q, NULL, req, 1);
->>  
->> +	if (scsi_sense_unit_attention(sense) && req->retries > 0) {
->> +		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
->> +		retries = req->retries - 1;
->> +		blk_put_request(req);
->> +		goto retry;
->> +	}
->
-> OK, so this is more theory, but I think you can actually reuse the same
-> request to go around this loop without doing a get/put.  I've cc'd Jens
-> to confirm, since no other driver I can find does this, but if it's
-> legal, it saves freeing and reallocating the request.  You can then
-> replace the goto with a do { } while (...) which makes the loop obvious
-> to the next person looking at this.
+That's not what I get from the change log.  What it says to me is that
+the caches are currently firmware managed.  Barring firmware bugs, that
+means that we currently don't have any integrity issues.
 
-Hi James,
+> In effect, this driver by default has been throwing away 
+> SYNCHRONIZE_CACHE commands even when acting in JBOD/non-RAID mode.
 
-I don't think the block layer currently has the machinery to reuse the
-request.  I think it would be easy to add for the MQ case but I
-don't know about SQ.  If we don't clean up or reinit the request before
-re-sending, we'll hit the BUG_ON in blk_start_request:
+That's not what the changelog says.  It says the cache flushing has
+been managed by the firmware only.  Meaning the firmware decides when
+to flush the cache.  Barring firmware bugs, this should mean that
+integrity is preserved in either mode.
 
-  BUG_ON(test_bit(REQ_ATOM_COMPLETE, &req->atomic_flags));
+> Of course, actually doing a SYNCHRONIZE_CACHE to drives will be 
+> slower than throwing it away, but this is not optional.
 
-Do you wanna take a v3 of the patch and fix this on a future patch, or
-should I be looking into patching the block layer interface?  I'll be
-looking into it, but I need to get familiar with the SQ code first.
+What Hannes means is that we need to know that turning over cache
+management to Linux is a) safe and b) not a performance regression. 
+ Given that there aren't any integrity issues, that's a reasonable
+request.
 
--- 
-Gabriel Krisman Bertazi
+> We really need to have some ways to validate that our IO stack is 
+> properly and safely configured.
+> 
+> I would love to see a couple of things:
+> 
+> * having T10 & T13 report the existence of a volatile write cache - 
+> this is different than WCE set, some devices have a write cache and 
+> are battery/flash backed.
+
+That's the non-volatile cache log page.
+
+James
+
+
+> * having a robust tool to test over power failure/disconnect that our
+> assumptions are true - any write is durable after a SYNCHRONIZE_CACHE 
+> or CACHE_FLUSH_EXT is sent and ack'ed
+> 
+> Regards,
+> 
+> Ric
+> 
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
+> in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
