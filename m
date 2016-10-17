@@ -1,45 +1,38 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] lpfc: use %zd format string for size_t
-Date: Mon, 17 Oct 2016 14:35:46 +0200
-Message-ID: <20161017123605.2217411-1-arnd@arndb.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 1/7] megaraid_sas: For SRIOV enabled firmware, ensure VF
+ driver waits for 30secs before reset
+Date: Mon, 17 Oct 2016 14:43:39 +0200
+Message-ID: <9fa6510a-cdb0-ad83-e73b-6b1c1cfeb88c@redhat.com>
+References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
+ <1476699850-25083-2-git-send-email-sumit.saxena@broadcom.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.133]:59747 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934802AbcJQMhA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 08:37:00 -0400
+Received: from mx1.redhat.com ([209.132.183.28]:47806 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934631AbcJQMnm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 08:43:42 -0400
+In-Reply-To: <1476699850-25083-2-git-send-email-sumit.saxena@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, James Bottomley <JBottomley@Odin.com>, Sebastian Herbszt <herbszt@gmx.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, stable@vger.kernel.org, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
 
-A recent bugfix introduced a harmless warning in the lpfc driver:
+On 17.10.2016 12:24, Sumit Saxena wrote:
+> For SRIOV enabled firmware, if there is a OCR(online controller reset)
+> possibility driver set the convert flag to 1, which is not happening if
+> there are outstanding commands even after 180 seconds.
+> As driver does not set convert flag to 1 and still making the OCR to run,
+> VF(Virtual function) driver is directly writing on to the register
+> instead of waiting for 30 seconds. Setting convert flag to 1 will cause
+> VF driver will wait for 30 secs before going for reset.
+>
+> CC: stable@vger.kernel.org
+> Signed-off-by: Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_write_firmware':
-drivers/scsi/lpfc/lpfc_logmsg.h:56:45: error: format '%ld' expects argument of type 'long int', but argument 9 has type 'size_t {aka const unsigned int}' [-Werror=format=]
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-'size_t' is always the same width as 'long' in the kernel, but the compiler
-doesn't know that. The %z modifier is what the standard expects to be
-used here, and this shuts up the warning.
-
-Fixes: 679053c651fb ("scsi: lpfc: Fix fw download on SLI-4 FC adapters")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 7be9b8a7bb19..4776fd85514f 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -10332,7 +10332,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
- 	    ftype != LPFC_FILE_TYPE_GROUP || fsize != fw->size) {
- 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
- 				"3022 Invalid FW image found. "
--				"Magic:%x Type:%x ID:%x Size %d %ld\n",
-+				"Magic:%x Type:%x ID:%x Size %d %zd\n",
- 				magic_number, ftype, fid, fsize, fw->size);
- 		rc = -EINVAL;
- 		goto release_out;
--- 
-2.9.0
+Tomas
 
