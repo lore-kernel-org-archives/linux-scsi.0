@@ -1,54 +1,55 @@
-From: Louis ISAKI <webb@formadablehope.com>
-Subject: =?UTF-8?Q?Gesch=C3=A4ftsvorschlag!!!?=
-Date: Mon, 17 Oct 2016 18:41:01 +0200
-Message-ID: <9d67951a7487bb9fe7dec7aac5fa1288@localhost>
-Reply-To: louis.isaki@aim.com
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns17198.c-dedie.net ([185.10.17.198]:38425 "EHLO
-        ns17198.c-dedie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755145AbcJQQze (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 12:55:34 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: David Singleton <davsingl@cisco.com>
+Subject: [PATCH] sd: assign appropriate log level
+Date: Mon, 17 Oct 2016 09:51:07 -0700
+Message-ID: <20161017165108.29718-4-davsingl@cisco.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Shikhar Dogra <shidogra@cisco.com>, xe-kernel@external.cisco.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+From: Shikhar Dogra <shidogra@cisco.com>
 
+Reduce chatter on console for usb hotplug.
+KERN_ERR is too high severity for these messages, moving them
+to KERN_WARNING
 
+USB devices never have a Caching Mode page, it doesn't make
+sense to make it an error when you have tons of USB devices where
+the print is useless, and not an error.
+
+For second message, the condition is not an error. The existing
+workaround of assuming a write through cache doesn't limit
+functionality in any way.
+
+Cc: xe-kernel@external.cisco.com
+Signed-off-by: Shikhar Dogra <shidogra@cisco.com>
+Signed-off-by: David Singleton <davsingl@cisco.com>
+---
+ drivers/scsi/sd.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 51e5629..ab7bfe3 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2540,7 +2540,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 			}
+ 		}
+ 
+-		sd_first_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
++		sd_first_printk(KERN_WARNING, sdkp, "No Caching mode page found\n");
+ 		goto defaults;
+ 
+ 	Page_found:
+@@ -2594,7 +2594,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 				"Assuming drive cache: write back\n");
+ 		sdkp->WCE = 1;
+ 	} else {
+-		sd_first_printk(KERN_ERR, sdkp,
++		sd_first_printk(KERN_WARNING, sdkp,
+ 				"Assuming drive cache: write through\n");
+ 		sdkp->WCE = 0;
+ 	}
 -- 
-Geschäftsvorschlag!!!
-
- 
-Ich vermute das diese E-Mail eine Überraschung für Sie sein wird, aber es
-ist wahr.Ich bin bei einer routinen Überprüfung in meiner Bank (First
-National Bank von Süd Afrika) wo ich arbeite, auf einem Konto gestoßen, was
-nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtzehn
-Million, Fünf Hundert Tausend, US Dollar) gutgeschrieben sind.
- 
-Dieses Konto gehörte Herrn Fisher Thomas, der ein Kunde in unsere Bank
-war, der leider verstorben ist. Herr Thomas war ein gebürtiger
-Deutscher.Damit es mir möglich ist dieses Geld USD$18.5M (Achtzehn Million,
-Fünf Hundert Tausend, US Dollar) inanspruch zunehmen, benötige ich die
-zusammenarbeit eines Ausländischen Partners wie Sie,den ich als Verwandter
-und Erbe des verstorbenen Herrn Thomas. vorstellen kann,damit wir das Geld
-inanspruch nehmen können.
- 
-Für diese Unterstützung erhalten Sie 30% der Erbschaftsumme und die
-restlichen 70% teile ich mir mit meinen zwei Arbeitskollegen, die mich bei
-dieser Transaktion ebenfalls unterstützen.Wenn Sie interessiert sind,
-können Sie mir bitte eine E-Mail schicken, damit ich Ihnen mehr Details
-zukommen lassen kann.
- 
-Schicken Sie bitte Ihre Antwort auf diese E-Mail Adresse:
-(louis.isaki@aim.com)
- 
-Mit freundlichen Grüßen
- 
-Louis ISAKI
-
-
-First National Bank. N.B.BITTE SENDEN SIE MIR Louis ISAKI ANTWORT ZU durch
-mein E-mail: (louis.isaki@aim.com).fÜR VERTRAULICHEN GRUND. Schicken Sie
-keine POST ZU MEINEM BÜRO-E-MAIL. If you understand english,please kindly
-reply with english.
+2.9.3
