@@ -1,42 +1,38 @@
-From: Jesper Nilsson <jesper.nilsson@axis.com>
-Subject: Re: [PATCH 10/10] mm: replace access_process_vm() write parameter
- with gup_flags
-Date: Mon, 17 Oct 2016 11:23:52 +0200
-Message-ID: <20161017092352.GH30704@axis.com>
-References: <20161013002020.3062-1-lstoakes@gmail.com>
- <20161013002020.3062-11-lstoakes@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20161013002020.3062-11-lstoakes@gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: Lorenzo Stoakes <lstoakes@gmail.com>
-Cc: linux-mm@kvack.org, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.org
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: [PATCH 0/7] megaraid_sas: Updates for scsi-next
+Date: Mon, 17 Oct 2016 03:24:03 -0700
+Message-ID: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f176.google.com ([209.85.192.176]:33841 "EHLO
+        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933510AbcJQKYW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 06:24:22 -0400
+Received: by mail-pf0-f176.google.com with SMTP id r16so54441121pfg.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 03:24:21 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, Sumit Saxena <sumit.saxena@broadcom.com>
 
-On Thu, Oct 13, 2016 at 01:20:20AM +0100, Lorenzo Stoakes wrote:
-> This patch removes the write parameter from access_process_vm() and replaces it
-> with a gup_flags parameter as use of this function previously _implied_
-> FOLL_FORCE, whereas after this patch callers explicitly pass this flag.
-> 
-> We make this explicit as use of FOLL_FORCE can result in surprising behaviour
-> (and hence bugs) within the mm subsystem.
-> 
-> Signed-off-by: Lorenzo Stoakes <lstoakes@gmail.com>
-> ---
->  arch/cris/arch-v32/kernel/ptrace.c |  4 ++--
+Sumit Saxena (7):
+  megaraid_sas: For SRIOV enabled firmware, ensure VF driver waits for
+    30secs before reset
+  megaraid_sas: Send correct PhysArm to FW for R1 VD downgrade
+  megaraid_sas: Do not fire DCMDs during PCI shutdown/detach
+  megaraid_sas: Send SYNCHRONIZE_CACHE command to firmware
+  megaraid_sas: driver version upgrade
+  MAINTAINERS: Update megaraid maintainers list
+  megaraid_sas: Do not set MPI2_TYPE_CUDA for JBOD FP path for FW which
+    does not support JBOD sequence map
 
-For the CRIS part:
+ MAINTAINERS                                 | 10 ++---
+ drivers/scsi/megaraid/megaraid_sas.h        |  7 +++-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 60 +++++++++++++++++++++++++----
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  6 ++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 21 ++++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +
+ 6 files changed, 82 insertions(+), 24 deletions(-)
 
-Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
-
-/^JN - Jesper Nilsson
 -- 
-               Jesper Nilsson -- jesper.nilsson@axis.com
+1.8.3.1
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
