@@ -1,7 +1,7 @@
 From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
 Subject: Re: iscsi_trx going into D state
-Date: Mon, 17 Oct 2016 13:03:04 -0600
-Message-ID: <CAANLjFqRznPV_Xa431j-R5LKdZE=pRzsn-q0oJWC=WETU0EN8g@mail.gmail.com>
+Date: Mon, 17 Oct 2016 13:11:34 -0600
+Message-ID: <CAANLjFoh+C8QE=qcPKqUUG3SnH2EMmS7DWZ5D4AD7yWMxoK0Zw@mail.gmail.com>
 References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
  <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com> <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA@mail.gmail.com>
 Mime-Version: 1.0
@@ -14,8 +14,103 @@ To: Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>
 Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-In addition, on the client we see:
+Sorry hit send too soon.
 
+In addition, on the client we see:
+# ps -aux | grep D | grep kworker
+root      5583  0.0  0.0      0     0 ?        D    11:55   0:03 [kworker/1=
+1:0]
+root      7721  0.1  0.0      0     0 ?        D    12:00   0:04 [kworker/4=
+:25]
+root     10877  0.0  0.0      0     0 ?        D    09:27   0:00 [kworker/2=
+2:1]
+root     11246  0.0  0.0      0     0 ?        D    10:28   0:00 [kworker/3=
+0:2]
+root     14034  0.0  0.0      0     0 ?        D    12:20   0:02 [kworker/1=
+9:15]
+root     14048  0.0  0.0      0     0 ?        D    12:20   0:00 [kworker/1=
+6:0]
+root     15871  0.0  0.0      0     0 ?        D    12:25   0:00 [kworker/1=
+3:0]
+root     17442  0.0  0.0      0     0 ?        D    12:28   0:00 [kworker/9=
+:1]
+root     17816  0.0  0.0      0     0 ?        D    12:30   0:00 [kworker/1=
+1:1]
+root     18744  0.0  0.0      0     0 ?        D    12:32   0:00 [kworker/1=
+0:2]
+root     19060  0.0  0.0      0     0 ?        D    12:32   0:00 [kworker/2=
+9:0]
+root     21748  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/2=
+1:0]
+root     21967  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/2=
+2:0]
+root     21978  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/2=
+2:2]
+root     22024  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/2=
+2:4]
+root     22035  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/2=
+2:5]
+root     22060  0.0  0.0      0     0 ?        D    12:40   0:00 [kworker/1=
+6:1]
+root     22282  0.0  0.0      0     0 ?        D    12:41   0:00 [kworker/2=
+6:0]
+root     22362  0.0  0.0      0     0 ?        D    12:42   0:00 [kworker/1=
+8:9]
+root     22426  0.0  0.0      0     0 ?        D    12:42   0:00 [kworker/1=
+6:3]
+root     23298  0.0  0.0      0     0 ?        D    12:43   0:00 [kworker/1=
+2:1]
+root     23302  0.0  0.0      0     0 ?        D    12:43   0:00 [kworker/1=
+2:5]
+root     24264  0.0  0.0      0     0 ?        D    12:46   0:00 [kworker/3=
+0:1]
+root     24271  0.0  0.0      0     0 ?        D    12:46   0:00 [kworker/1=
+4:8]
+root     24441  0.0  0.0      0     0 ?        D    12:47   0:00 [kworker/9=
+:7]
+root     24443  0.0  0.0      0     0 ?        D    12:47   0:00 [kworker/9=
+:9]
+root     25005  0.0  0.0      0     0 ?        D    12:48   0:00 [kworker/3=
+0:3]
+root     25158  0.0  0.0      0     0 ?        D    12:49   0:00 [kworker/9=
+:12]
+root     26382  0.0  0.0      0     0 ?        D    12:52   0:00 [kworker/1=
+3:2]
+root     26453  0.0  0.0      0     0 ?        D    12:52   0:00 [kworker/2=
+1:2]
+root     26724  0.0  0.0      0     0 ?        D    12:53   0:00 [kworker/1=
+9:1]
+root     28400  0.0  0.0      0     0 ?        D    05:20   0:00 [kworker/2=
+5:1]
+root     29552  0.0  0.0      0     0 ?        D    11:40   0:00 [kworker/1=
+7:1]
+root     29811  0.0  0.0      0     0 ?        D    11:40   0:00 [kworker/7=
+:10]
+root     31903  0.0  0.0      0     0 ?        D    11:43   0:00 [kworker/2=
+6:1]
+
+And all of the processes have this stack:
+[<ffffffffa0727ed5>] iser_release_work+0x25/0x60 [ib_iser]
+[<ffffffff8109633f>] process_one_work+0x14f/0x400
+[<ffffffff81096bb4>] worker_thread+0x114/0x470
+[<ffffffff8109c6f8>] kthread+0xd8/0xf0
+[<ffffffff8172004f>] ret_from_fork+0x3f/0x70
+[<ffffffffffffffff>] 0xffffffffffffffff
+
+We are not able to log out of the sessions in all cases. And have to
+restart the box.
+
+iscsiadm -m session will show messages like:
+iscsiadm: could not read session targetname: 5
+iscsiadm: could not find session info for session100
+iscsiadm: could not read session targetname: 5
+iscsiadm: could not find session info for session101
+iscsiadm: could not read session targetname: 5
+iscsiadm: could not find session info for session103
+...
+
+I can't find any way to force iscsiadm to clean up these sessions
+possibly due to tasks in D state.
 ----------------
 Robert LeBlanc
 PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
