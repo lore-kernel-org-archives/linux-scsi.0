@@ -1,59 +1,45 @@
-From: Ric Wheeler <rwheeler@redhat.com>
-Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to
- firmware
-Date: Mon, 17 Oct 2016 12:08:44 -0400
-Message-ID: <cd1f4d5c-2dd2-8d55-8e21-211b19221906@redhat.com>
-References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
- <1476699850-25083-5-git-send-email-sumit.saxena@broadcom.com>
- <d9e79049-b4ce-588f-263d-dad015b3368d@suse.de>
- <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
- <20161017155506.GA25521@infradead.org>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 0/6] Fixes for ibmvscsis driver
+Date: Mon, 17 Oct 2016 09:15:18 -0700
+Message-ID: <7e450d09-64a7-d32f-d332-289152b8c912@linux.vnet.ibm.com>
+References: <1476226685-2276-1-git-send-email-mikecyr@us.ibm.com>
+ <1476374563-13967-1-git-send-email-mikecyr@us.ibm.com>
+ <8fcdcfd1eedecae72a868ab45a872e06@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43496 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932682AbcJQQIr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 12:08:47 -0400
-In-Reply-To: <20161017155506.GA25521@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <8fcdcfd1eedecae72a868ab45a872e06@linux.vnet.ibm.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Steven Royer <seroyer@linux.vnet.ibm.com>, Michael Cyr <mikecyr@us.ibm.com>
+Cc: nab@linux-iscsi.org, joe@perches.com, hch@infradead.org, bryantly@linux.vnet.ibm.com, James.Bottomley@hansenpartnership.com, brking@linux.vnet.ibm.com, akpm@linux-foundation.org, bart.vanassche@sandisk.com, gregkh@linuxfoundation.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>
 
-On 10/17/2016 11:55 AM, Christoph Hellwig wrote:
-> On Mon, Oct 17, 2016 at 09:01:29AM -0400, Ric Wheeler wrote:
->> This must go in - without this fix, there is no data integrity for any file system.
-> megaraid always had odd ideas on cache flushing, and this might be
-> a opportunity to write down all the assumptions and document them.
->
->> In effect, this driver by default has been throwing away SYNCHRONIZE_CACHE
->> commands even when acting in JBOD/non-RAID mode.
-> That would explain some issues we've seen with megaraid hardware, but
-> it seems a bit too shocking to be true.
->
-> Looking over the patch I disagree with the module option - we must do
-> the right thing by default, which is sending SYNCHRONIZE_CACHE commands
-> if the WCE bit is set.  If there are controllers where this is harmful
-> for RAID mode and we can't fix the firmware in time we'll need to make
-> special exceptions for this case in the driver based on the PCI ID
-> and knowing what we talk to instead of leaving it to the user.
+On 10/14/2016 03:25 PM, Steven Royer wrote:
+> On 2016-10-13 11:02, Michael Cyr wrote:
+>> Various fixes and cleanups for the ibmvscsis driver.
+>> The first is a sort of prequel to the second, which is the primary
+>> change (and the biggest).  The rest are fairly small fixes.
+>>
+>> Michael Cyr (6):
+>>   ibmvscsis: Rearrange functions for future patches
+>>   ibmvscsis: Synchronize cmds at tpg_enable_store time
+>>   ibmvscsis: Synchronize cmds at remove time
+>>   ibmvscsis: Clean up properly if target_submit_cmd/tmr fails
+>>   ibmvscsis: Return correct partition name/# to client
+>>   ibmvscsis: Issues from Dan Carpenter/Smatch
+>>
+>>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 1096 
+>> +++++++++++++-----------------
+>>  drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.h |    5 +-
+>>  2 files changed, 494 insertions(+), 607 deletions(-)
+> 
+> I've tested with this patch.  Seems to fix cleanup issues, in particular 
+> after a target is removed or at target reboot time.
+> Signed-off-by: Steven Royer <seroyer@linux.vnet.ibm.com>
+> 
 
-I do agree - having users be able to disable this easily is asking for trouble. 
-It will be slower, but slower because the cache flush actually is effective.
+I think the "Tested-by" tag is more appropriate seeing as you tested the
+patch.
 
->
->> * having T10 & T13 report the existence of a volatile write cache - this is
->> different than WCE set, some devices have a write cache and are
->> battery/flash backed.
-> T10 is pretty clear now the WCE should only be set for a non-voltile
-> cache.  For a while they had odd NV bits to allow flushing a
-> non-volatile cache, but in the latest revisions all that is gone.
-
-If T10 has clarity on this, then the actual fix would be to have the driver 
-advertise WCE enabled only for the pass through/non-RAID luns (assuming the 
-drive's write cache was enabled) and then we would leave WCE disabled for the 
-targets that the firmware handles cache destaging for.
-
-
+-Tyrel
