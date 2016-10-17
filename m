@@ -1,43 +1,54 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 3/3] smartpqi: switch to pci_alloc_irq_vectors
-Date: Mon, 17 Oct 2016 16:34:34 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D193B07154E@avsrvexchmbx1.microsemi.net>
-References: <1476521241-32765-1-git-send-email-hch@lst.de>
- <1476521241-32765-4-git-send-email-hch@lst.de>
- <20161017073428.27xzw6du4j3r4qro@linux-x5ow.site>
- <4993A297653ECB4581FA5C3C31323D193B070B79@avsrvexchmbx1.microsemi.net>
- <20161017142036.GA17678@lst.de>
+From: Louis ISAKI <webb@formadablehope.com>
+Subject: =?UTF-8?Q?Gesch=C3=A4ftsvorschlag!!!?=
+Date: Mon, 17 Oct 2016 18:41:01 +0200
+Message-ID: <9d67951a7487bb9fe7dec7aac5fa1288@localhost>
+Reply-To: louis.isaki@aim.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0049.outbound.protection.outlook.com ([104.47.34.49]:33712
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932313AbcJQQfM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 12:35:12 -0400
-In-Reply-To: <20161017142036.GA17678@lst.de>
-Content-Language: en-US
+Received: from ns17198.c-dedie.net ([185.10.17.198]:38425 "EHLO
+        ns17198.c-dedie.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755145AbcJQQze (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 12:55:34 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "axboe@kernel.dk" <axboe@kernel.dk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@lst.de]
-> Sent: Monday, October 17, 2016 9:21 AM
-> To: Don Brace
-> Cc: Johannes Thumshirn; Christoph Hellwig; martin.petersen@oracle.com;
-> axboe@kernel.dk; linux-scsi@vger.kernel.org; linux-block@vger.kernel.org
-> Subject: Re: [PATCH 3/3] smartpqi: switch to pci_alloc_irq_vectors
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> Hi Don,
->=20
-> did you also have a chance to test the patch and verify that the
-> queues are properly set up with a smartpqi controller?
 
-I need more time to test, I need to apply some other patches to fully test.
+-- 
+Geschäftsvorschlag!!!
+
+ 
+Ich vermute das diese E-Mail eine Überraschung für Sie sein wird, aber es
+ist wahr.Ich bin bei einer routinen Überprüfung in meiner Bank (First
+National Bank von Süd Afrika) wo ich arbeite, auf einem Konto gestoßen, was
+nicht in anspruch genommen worden ist, wo derzeit USD$18.5M (Achtzehn
+Million, Fünf Hundert Tausend, US Dollar) gutgeschrieben sind.
+ 
+Dieses Konto gehörte Herrn Fisher Thomas, der ein Kunde in unsere Bank
+war, der leider verstorben ist. Herr Thomas war ein gebürtiger
+Deutscher.Damit es mir möglich ist dieses Geld USD$18.5M (Achtzehn Million,
+Fünf Hundert Tausend, US Dollar) inanspruch zunehmen, benötige ich die
+zusammenarbeit eines Ausländischen Partners wie Sie,den ich als Verwandter
+und Erbe des verstorbenen Herrn Thomas. vorstellen kann,damit wir das Geld
+inanspruch nehmen können.
+ 
+Für diese Unterstützung erhalten Sie 30% der Erbschaftsumme und die
+restlichen 70% teile ich mir mit meinen zwei Arbeitskollegen, die mich bei
+dieser Transaktion ebenfalls unterstützen.Wenn Sie interessiert sind,
+können Sie mir bitte eine E-Mail schicken, damit ich Ihnen mehr Details
+zukommen lassen kann.
+ 
+Schicken Sie bitte Ihre Antwort auf diese E-Mail Adresse:
+(louis.isaki@aim.com)
+ 
+Mit freundlichen Grüßen
+ 
+Louis ISAKI
+
+
+First National Bank. N.B.BITTE SENDEN SIE MIR Louis ISAKI ANTWORT ZU durch
+mein E-mail: (louis.isaki@aim.com).fÜR VERTRAULICHEN GRUND. Schicken Sie
+keine POST ZU MEINEM BÜRO-E-MAIL. If you understand english,please kindly
+reply with english.
