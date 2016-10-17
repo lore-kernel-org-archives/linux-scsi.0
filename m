@@ -1,73 +1,45 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH 5/7] megaraid_sas: driver version upgrade
-Date: Mon, 17 Oct 2016 17:50:47 +0530
-Message-ID: <04201a334e471b821892fe55c3f863b1@mail.gmail.com>
-References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
- <1476699850-25083-6-git-send-email-sumit.saxena@broadcom.com> <acb9270b-13e0-ad6e-0af5-ce05215db139@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] lpfc: use %zd format string for size_t
+Date: Mon, 17 Oct 2016 14:35:46 +0200
+Message-ID: <20161017123605.2217411-1-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f52.google.com ([209.85.218.52]:34204 "EHLO
-        mail-oi0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933453AbcJQM0H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 08:26:07 -0400
-Received: by mail-oi0-f52.google.com with SMTP id t73so210015083oie.1
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 05:26:07 -0700 (PDT)
-In-Reply-To: <acb9270b-13e0-ad6e-0af5-ce05215db139@suse.de>
+Received: from mout.kundenserver.de ([212.227.126.133]:59747 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934802AbcJQMhA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 08:37:00 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>
+To: James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, James Bottomley <JBottomley@Odin.com>, Sebastian Herbszt <herbszt@gmx.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->-----Original Message-----
->From: Hannes Reinecke [mailto:hare@suse.de]
->Sent: Monday, October 17, 2016 5:05 PM
->To: Sumit Saxena; linux-scsi@vger.kernel.org
->Cc: martin.petersen@oracle.com; thenzl@redhat.com;
-jejb@linux.vnet.ibm.com;
->kashyap.desai@broadcom.com
->Subject: Re: [PATCH 5/7] megaraid_sas: driver version upgrade
->
->On 10/17/2016 12:24 PM, Sumit Saxena wrote:
->> Upgrade driver version.
->>
->> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
->>  1 file changed, 2 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->> b/drivers/scsi/megaraid/megaraid_sas.h
->> index 43fd14f..1d4de90 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas.h
->> +++ b/drivers/scsi/megaraid/megaraid_sas.h
->> @@ -35,8 +35,8 @@
->>  /*
->>   * MegaRAID SAS Driver meta data
->>   */
->> -#define MEGASAS_VERSION				"06.811.02.00-rc1"
->> -#define MEGASAS_RELDATE				"April 12, 2016"
->> +#define MEGASAS_VERSION				"06.812.06.00-rc1"
->> +#define MEGASAS_RELDATE				"August 22, 2016"
->>
->>  /*
->>   * Device IDs
->>
->Please move this patch to the end of the series.
->Otherwise it's impossible to tell if the following patches should be part
-of the new
->version or not.
+A recent bugfix introduced a harmless warning in the lpfc driver:
 
-Sure..I will rectify and resend the patches.
->
->Cheers,
->
->Hannes
->--
->Dr. Hannes Reinecke		   Teamlead Storage & Networking
->hare@suse.de			               +49 911 74053 688
->SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
->GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton HRB
-21284 (AG
->N=C3=BCrnberg)
+drivers/scsi/lpfc/lpfc_init.c: In function 'lpfc_write_firmware':
+drivers/scsi/lpfc/lpfc_logmsg.h:56:45: error: format '%ld' expects argument of type 'long int', but argument 9 has type 'size_t {aka const unsigned int}' [-Werror=format=]
+
+'size_t' is always the same width as 'long' in the kernel, but the compiler
+doesn't know that. The %z modifier is what the standard expects to be
+used here, and this shuts up the warning.
+
+Fixes: 679053c651fb ("scsi: lpfc: Fix fw download on SLI-4 FC adapters")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 7be9b8a7bb19..4776fd85514f 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -10332,7 +10332,7 @@ lpfc_write_firmware(const struct firmware *fw, void *context)
+ 	    ftype != LPFC_FILE_TYPE_GROUP || fsize != fw->size) {
+ 		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+ 				"3022 Invalid FW image found. "
+-				"Magic:%x Type:%x ID:%x Size %d %ld\n",
++				"Magic:%x Type:%x ID:%x Size %d %zd\n",
+ 				magic_number, ftype, fid, fsize, fw->size);
+ 		rc = -EINVAL;
+ 		goto release_out;
+-- 
+2.9.0
+
