@@ -1,99 +1,50 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/7] megaraid_sas: Do not fire DCMDs during PCI
- shutdown/detach
-Date: Mon, 17 Oct 2016 13:31:19 +0200
-Message-ID: <cba7dc68-e472-bece-a71a-88db54160829@suse.de>
+Subject: Re: [PATCH 5/7] megaraid_sas: driver version upgrade
+Date: Mon, 17 Oct 2016 13:35:05 +0200
+Message-ID: <acb9270b-13e0-ad6e-0af5-ce05215db139@suse.de>
 References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
- <1476699850-25083-4-git-send-email-sumit.saxena@broadcom.com>
+ <1476699850-25083-6-git-send-email-sumit.saxena@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33878 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34086 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933234AbcJQLbV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 07:31:21 -0400
-In-Reply-To: <1476699850-25083-4-git-send-email-sumit.saxena@broadcom.com>
+        id S935129AbcJQLfQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 07:35:16 -0400
+In-Reply-To: <1476699850-25083-6-git-send-email-sumit.saxena@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com
 
 On 10/17/2016 12:24 PM, Sumit Saxena wrote:
-> This patch addresses the issue of driver firing DCMDs in PCI
-> shutdown/detach path irrespective of firmware state.
-> Driver will check for whether firmware is operational state or not
-> before firing DCMDs. If firmware is in unrecoverbale
-> state or does not become operational within specfied time, driver will
-> skip firing DCMDs.
+> Upgrade driver version.
 > 
 > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 46 +++++++++++++++++++++++++++++
->  drivers/scsi/megaraid/megaraid_sas_fusion.c |  9 ++++--
->  2 files changed, 52 insertions(+), 3 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-> index 9ff57de..092387f 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> @@ -6248,6 +6248,32 @@ fail_reenable_msix:
->  #define megasas_resume	NULL
->  #endif
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+> index 43fd14f..1d4de90 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -35,8 +35,8 @@
+>  /*
+>   * MegaRAID SAS Driver meta data
+>   */
+> -#define MEGASAS_VERSION				"06.811.02.00-rc1"
+> -#define MEGASAS_RELDATE				"April 12, 2016"
+> +#define MEGASAS_VERSION				"06.812.06.00-rc1"
+> +#define MEGASAS_RELDATE				"August 22, 2016"
 >  
-> +static inline int
-> +megasas_wait_for_adapter_operational(struct megasas_instance *instance)
-> +{
-> +	int wait_time = MEGASAS_RESET_WAIT_TIME * 2;
-> +	int i;
-> +
-> +	for (i = 0; i < wait_time; i++) {
-> +		if (atomic_read(&instance->adprecovery)
-> +			== MEGASAS_HBA_OPERATIONAL)
-> +			break;
-> +
-> +		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL))
-> +			dev_notice(&instance->pdev->dev, "waiting for controller reset to finish\n");
-> +
-> +		msleep(1000);
-> +	}
-> +
-> +	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
-> +		dev_info(&instance->pdev->dev, "%s timed out while waiting for HBA to recover.\n",
-> +			__func__);
-> +		return 1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  /**
->   * megasas_detach_one -	PCI hot"un"plug entry point
->   * @pdev:		PCI device structure
-> @@ -6272,9 +6298,18 @@ static void megasas_detach_one(struct pci_dev *pdev)
->  	if (instance->fw_crash_state != UNAVAILABLE)
->  		megasas_free_host_crash_buffer(instance);
->  	scsi_remove_host(instance->host);
-> +
-> +	msleep(1000);
-> +	if ((atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
-> +		|| ((atomic_read(&instance->adprecovery)
-> +			!= MEGASAS_HBA_OPERATIONAL) &&
-> +		megasas_wait_for_adapter_operational(instance)))
-> +		goto skip_firing_dcmds;
-> +
->  	megasas_flush_cache(instance);
->  	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
->  
-> +skip_firing_dcmds:
->  	/* cancel the delayed work if this work still in queue*/
->  	if (instance->ev != NULL) {
->  		struct megasas_aen_event *ev = instance->ev;
-Why not move the 'msleep' and 'atomic_read' into the call to
-megasas_wait_for_adapter_operational?
-Plus I'm not sure if the unconditional 'msleep' is a good idea here;
-maybe one should read 'adprecovery' first and _then_ call msleep if
-required?
+>  /*
+>   * Device IDs
+> 
+Please move this patch to the end of the series.
+Otherwise it's impossible to tell if the following patches should be
+part of the new version or not.
 
 Cheers,
 
