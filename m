@@ -1,20 +1,75 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 2/3] scsi: allow LLDDs to expose the queue mapping to
-        blk-mq
-Date: Mon, 17 Oct 2016 09:44:25 +0200
-Message-ID: <20161017074425.GA8624@lst.de>
-References: <1476521241-32765-1-git-send-email-hch@lst.de> <1476521241-32765-3-git-send-email-hch@lst.de> <20161017072703.jql7gbmbnsfed4n3@linux-x5ow.site>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 2/2] be2iscsi: Replace _bh with _irqsave/irqrestore
+Date: Mon, 17 Oct 2016 09:53:56 +0200
+Message-ID: <06ffd166-971c-3545-46eb-e559b6da666d@suse.de>
+References: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
+ <1476340729-8569-3-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161017072703.jql7gbmbnsfed4n3@linux-x5ow.site>
-Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com, don.brace@microsemi.com, axboe@kernel.dk, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:47121 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757904AbcJQHzs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 03:55:48 -0400
+In-Reply-To: <1476340729-8569-3-git-send-email-jitendra.bhivare@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, cleech@redhat.com, lduncan@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Oct 17, 2016 at 09:27:03AM +0200, Johannes Thumshirn wrote:
-> Shouldn't this hunk go into the previous patch?
+On 10/13/2016 08:38 AM, Jitendra Bhivare wrote:
+> [ 3843.132217] WARNING: CPU: 20 PID: 1227 at kernel/softirq.c:150 __local_bh_enable_ip+0x6b/0x90
+> [ 3843.142815] Modules linked in:
+> ...
+> [ 3843.294328] CPU: 20 PID: 1227 Comm: kworker/20:1H Tainted: G            E   4.8.0-rc1+ #3
+> [ 3843.304944] Hardware name: Dell Inc. PowerEdge R720/0X6H47, BIOS 1.4.8 10/25/2012
+> [ 3843.314798] Workqueue: kblockd blk_timeout_work
+> [ 3843.321350]  0000000000000086 00000000a32f4533 ffff8802216d7bd8 ffffffff8135c3cf
+> [ 3843.331146]  0000000000000000 0000000000000000 ffff8802216d7c18 ffffffff8108d661
+> [ 3843.340918]  00000096216d7c50 0000000000000200 ffff8802d07cc828 ffff8801b3632550
+> [ 3843.350687] Call Trace:
+> [ 3843.354866]  [<ffffffff8135c3cf>] dump_stack+0x63/0x84
+> [ 3843.362061]  [<ffffffff8108d661>] __warn+0xd1/0xf0
+> [ 3843.368851]  [<ffffffff8108d79d>] warn_slowpath_null+0x1d/0x20
+> [ 3843.376791]  [<ffffffff810930eb>] __local_bh_enable_ip+0x6b/0x90
+> [ 3843.384903]  [<ffffffff816fe7be>] _raw_spin_unlock_bh+0x1e/0x20
+> [ 3843.392940]  [<ffffffffa085f710>] beiscsi_alloc_pdu+0x2f0/0x6e0 [be2iscsi]
+> [ 3843.402076]  [<ffffffffa06bc358>] __iscsi_conn_send_pdu+0xf8/0x370 [libiscsi]
+> [ 3843.411549]  [<ffffffffa06bc6fe>] iscsi_send_nopout+0xbe/0x110 [libiscsi]
+> [ 3843.420639]  [<ffffffffa06bd98b>] iscsi_eh_cmd_timed_out+0x29b/0x2b0 [libiscsi]
+> [ 3843.430339]  [<ffffffff814cd1de>] scsi_times_out+0x5e/0x250
+> [ 3843.438119]  [<ffffffff813374af>] blk_rq_timed_out+0x1f/0x60
+> [ 3843.446009]  [<ffffffff8133759d>] blk_timeout_work+0xad/0x150
+> [ 3843.454010]  [<ffffffff810a6642>] process_one_work+0x152/0x400
+> [ 3843.462114]  [<ffffffff810a6f35>] worker_thread+0x125/0x4b0
+> [ 3843.469961]  [<ffffffff810a6e10>] ? rescuer_thread+0x380/0x380
+> [ 3843.478116]  [<ffffffff810aca28>] kthread+0xd8/0xf0
+> [ 3843.485212]  [<ffffffff816fedff>] ret_from_fork+0x1f/0x40
+> [ 3843.492908]  [<ffffffff810ac950>] ? kthread_park+0x60/0x60
+> [ 3843.500715] ---[ end trace 57ec0a1d8f0dd3a0 ]---
+> [ 3852.328667] NMI watchdog: Watchdog detected hard LOCKUP on cpu 1Kernel panic - not syncing: Hard LOCKUP
+> 
+> blk_timeout_work takes queue_lock spin_lock with interrupts disabled
+> before invoking iscsi_eh_cmd_timed_out. This causes a WARN_ON_ONCE in
+> spin_unlock_bh for wrb_lock/io_sgl_lock/mgmt_sgl_lock.
+> 
+> CPU was kept busy in lot of bottom half work with interrupts disabled
+> thus causing hard lock up.
+> 
+> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 37 +++++++++++++++++++++++--------------
+>  1 file changed, 23 insertions(+), 14 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Yes, it should, thanks.
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
