@@ -1,219 +1,162 @@
-From: Adam Manzanares <adam.manzanares@hgst.com>
-Subject: [PATCH v6 2/3] ata: Enabling ATA Command Priorities
-Date: Mon, 17 Oct 2016 11:27:29 -0700
-Message-ID: <1476728850-2309-3-git-send-email-adam.manzanares@hgst.com>
-References: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
+From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Subject: Re: iscsi_trx going into D state
+Date: Mon, 17 Oct 2016 13:03:04 -0600
+Message-ID: <CAANLjFqRznPV_Xa431j-R5LKdZE=pRzsn-q0oJWC=WETU0EN8g@mail.gmail.com>
+References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+ <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com> <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: axboe@kernel.dk, tj@kernel.org, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com
-Cc: linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzanares <adam.manzanares@hgst.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>
+Cc: linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch checks to see if an ATA device supports NCQ command priorities.
-If so and the user has specified an iocontext that indicates
-IO_PRIO_CLASS_RT then we build a tf with a high priority command.
+In addition, on the client we see:
 
-This is done to improve the tail latency of commands that are high
-priority by passing priority to the device.
+----------------
+Robert LeBlanc
+PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
 
-Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
----
- drivers/ata/libata-core.c | 35 ++++++++++++++++++++++++++++++++++-
- drivers/ata/libata-scsi.c |  6 +++++-
- drivers/ata/libata.h      |  2 +-
- include/linux/ata.h       |  6 ++++++
- include/linux/libata.h    | 18 ++++++++++++++++++
- 5 files changed, 64 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
-index 223a770..181b530 100644
---- a/drivers/ata/libata-core.c
-+++ b/drivers/ata/libata-core.c
-@@ -739,6 +739,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
-  *	@n_block: Number of blocks
-  *	@tf_flags: RW/FUA etc...
-  *	@tag: tag
-+ *	@class: IO priority class
-  *
-  *	LOCKING:
-  *	None.
-@@ -753,7 +754,7 @@ u64 ata_tf_read_block(const struct ata_taskfile *tf, struct ata_device *dev)
-  */
- int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 		    u64 block, u32 n_block, unsigned int tf_flags,
--		    unsigned int tag)
-+		    unsigned int tag, int class)
- {
- 	tf->flags |= ATA_TFLAG_ISADDR | ATA_TFLAG_DEVICE;
- 	tf->flags |= tf_flags;
-@@ -785,6 +786,12 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 		tf->device = ATA_LBA;
- 		if (tf->flags & ATA_TFLAG_FUA)
- 			tf->device |= 1 << 7;
-+
-+		if (ata_ncq_prio_enabled(dev)) {
-+			if (class == IOPRIO_CLASS_RT)
-+				tf->hob_nsect |= ATA_PRIO_HIGH <<
-+						 ATA_SHIFT_PRIO;
-+		}
- 	} else if (dev->flags & ATA_DFLAG_LBA) {
- 		tf->flags |= ATA_TFLAG_LBA;
- 
-@@ -2156,6 +2163,30 @@ static void ata_dev_config_ncq_non_data(struct ata_device *dev)
- 	}
- }
- 
-+static void ata_dev_config_ncq_prio(struct ata_device *dev)
-+{
-+	struct ata_port *ap = dev->link->ap;
-+	unsigned int err_mask;
-+
-+	err_mask = ata_read_log_page(dev,
-+				     ATA_LOG_SATA_ID_DEV_DATA,
-+				     ATA_LOG_SATA_SETTINGS,
-+				     ap->sector_buf,
-+				     1);
-+	if (err_mask) {
-+		ata_dev_dbg(dev,
-+			    "failed to get Identify Device data, Emask 0x%x\n",
-+			    err_mask);
-+		return;
-+	}
-+
-+	if (ap->sector_buf[ATA_LOG_NCQ_PRIO_OFFSET] & BIT(3))
-+		dev->flags |= ATA_DFLAG_NCQ_PRIO;
-+	else
-+		ata_dev_dbg(dev, "SATA page does not support priority\n");
-+
-+}
-+
- static int ata_dev_config_ncq(struct ata_device *dev,
- 			       char *desc, size_t desc_sz)
- {
-@@ -2205,6 +2236,8 @@ static int ata_dev_config_ncq(struct ata_device *dev,
- 			ata_dev_config_ncq_send_recv(dev);
- 		if (ata_id_has_ncq_non_data(dev->id))
- 			ata_dev_config_ncq_non_data(dev);
-+		if (ata_id_has_ncq_prio(dev->id))
-+			ata_dev_config_ncq_prio(dev);
- 	}
- 
- 	return 0;
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index 9cceb4a..2bccc3c 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -50,6 +50,7 @@
- #include <linux/uaccess.h>
- #include <linux/suspend.h>
- #include <asm/unaligned.h>
-+#include <linux/ioprio.h>
- 
- #include "libata.h"
- #include "libata-transport.h"
-@@ -1755,6 +1756,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- {
- 	struct scsi_cmnd *scmd = qc->scsicmd;
- 	const u8 *cdb = scmd->cmnd;
-+	struct request *rq = scmd->request;
-+	int class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
- 	unsigned int tf_flags = 0;
- 	u64 block;
- 	u32 n_block;
-@@ -1821,7 +1824,8 @@ static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
- 	qc->nbytes = n_block * scmd->device->sector_size;
- 
- 	rc = ata_build_rw_tf(&qc->tf, qc->dev, block, n_block, tf_flags,
--			     qc->tag);
-+			     qc->tag, class);
-+
- 	if (likely(rc == 0))
- 		return 0;
- 
-diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
-index 3b301a4..8f3a559 100644
---- a/drivers/ata/libata.h
-+++ b/drivers/ata/libata.h
-@@ -66,7 +66,7 @@ extern u64 ata_tf_to_lba48(const struct ata_taskfile *tf);
- extern struct ata_queued_cmd *ata_qc_new_init(struct ata_device *dev, int tag);
- extern int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
- 			   u64 block, u32 n_block, unsigned int tf_flags,
--			   unsigned int tag);
-+			   unsigned int tag, int class);
- extern u64 ata_tf_read_block(const struct ata_taskfile *tf,
- 			     struct ata_device *dev);
- extern unsigned ata_exec_internal(struct ata_device *dev,
-diff --git a/include/linux/ata.h b/include/linux/ata.h
-index fdb1803..af6859b 100644
---- a/include/linux/ata.h
-+++ b/include/linux/ata.h
-@@ -348,6 +348,7 @@ enum {
- 	ATA_LOG_DEVSLP_DETO	  = 0x01,
- 	ATA_LOG_DEVSLP_VALID	  = 0x07,
- 	ATA_LOG_DEVSLP_VALID_MASK = 0x80,
-+	ATA_LOG_NCQ_PRIO_OFFSET   = 0x09,
- 
- 	/* NCQ send and receive log */
- 	ATA_LOG_NCQ_SEND_RECV_SUBCMDS_OFFSET	= 0x00,
-@@ -940,6 +941,11 @@ static inline bool ata_id_has_ncq_non_data(const u16 *id)
- 	return id[ATA_ID_SATA_CAPABILITY_2] & BIT(5);
- }
- 
-+static inline bool ata_id_has_ncq_prio(const u16 *id)
-+{
-+	return id[ATA_ID_SATA_CAPABILITY] & BIT(12);
-+}
-+
- static inline bool ata_id_has_trim(const u16 *id)
- {
- 	if (ata_id_major_version(id) >= 7 &&
-diff --git a/include/linux/libata.h b/include/linux/libata.h
-index 616eef4..1a524cf 100644
---- a/include/linux/libata.h
-+++ b/include/linux/libata.h
-@@ -166,6 +166,7 @@ enum {
- 	ATA_DFLAG_NO_UNLOAD	= (1 << 17), /* device doesn't support unload */
- 	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
- 	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
-+	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
- 	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
- 
- 	ATA_DFLAG_DETACH	= (1 << 24),
-@@ -342,7 +343,9 @@ enum {
- 	ATA_SHIFT_PIO		= 0,
- 	ATA_SHIFT_MWDMA		= ATA_SHIFT_PIO + ATA_NR_PIO_MODES,
- 	ATA_SHIFT_UDMA		= ATA_SHIFT_MWDMA + ATA_NR_MWDMA_MODES,
-+	ATA_SHIFT_PRIO		= 6,
- 
-+	ATA_PRIO_HIGH		= 2,
- 	/* size of buffer to pad xfers ending on unaligned boundaries */
- 	ATA_DMA_PAD_SZ		= 4,
- 
-@@ -1610,6 +1613,21 @@ static inline int ata_ncq_enabled(struct ata_device *dev)
- 			      ATA_DFLAG_NCQ)) == ATA_DFLAG_NCQ;
- }
- 
-+/**
-+ *	ata_ncq_prio_enabled - Test whether NCQ prio is enabled
-+ *	@dev: ATA device to test for
-+ *
-+ *	LOCKING:
-+ *	spin_lock_irqsave(host lock)
-+ *
-+ *	RETURNS:
-+ *	1 if NCQ prio is enabled for @dev, 0 otherwise.
-+ */
-+static inline int ata_ncq_prio_enabled(struct ata_device *dev)
-+{
-+	return (dev->flags & ATA_DFLAG_NCQ_PRIO) == ATA_DFLAG_NCQ_PRIO;
-+}
-+
- static inline bool ata_fpdma_dsm_supported(struct ata_device *dev)
- {
- 	return (dev->flags & ATA_DFLAG_NCQ_SEND_RECV) &&
--- 
-2.1.4
-
+On Mon, Oct 17, 2016 at 10:32 AM, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org> wro=
+te:
+> Some more info as we hit this this morning. We have volumes mirrored
+> between two targets and we had one target on the kernel with the three
+> patches mentioned in this thread [0][1][2] and the other was on a
+> kernel without the patches. We decided that after a week and a half we
+> wanted to get both targets on the same kernel so we rebooted the
+> non-patched target. Within an hour we saw iSCSI in D state with the
+> same stack trace so it seems that we are not hitting any of the
+> WARN_ON lines. We are getting both iscsi_trx and iscsi_np both in D
+> state, this time we have two iscsi_trx processes in D state. I don't
+> know if stale sessions on the clients could be contributing to this
+> issue (the target trying to close non-existent sessions??). This is on
+> 4.4.23. Any more debug info we can throw at this problem to help?
+>
+> Thank you,
+> Robert LeBlanc
+>
+> # ps aux | grep D | grep iscsi
+> root     16525  0.0  0.0      0     0 ?        D    08:50   0:00 [iscsi_n=
+p]
+> root     16614  0.0  0.0      0     0 ?        D    08:50   0:00 [iscsi_t=
+rx]
+> root     16674  0.0  0.0      0     0 ?        D    08:50   0:00 [iscsi_t=
+rx]
+>
+> # for i in 16525 16614 16674; do echo $i; cat /proc/$i/stack; done
+> 16525
+> [<ffffffff814f0d5f>] iscsit_stop_session+0x19f/0x1d0
+> [<ffffffff814e2516>] iscsi_check_for_session_reinstatement+0x1e6/0x270
+> [<ffffffff814e4ed0>] iscsi_target_check_for_existing_instances+0x30/0x40
+> [<ffffffff814e5020>] iscsi_target_do_login+0x140/0x640
+> [<ffffffff814e63bc>] iscsi_target_start_negotiation+0x1c/0xb0
+> [<ffffffff814e410b>] iscsi_target_login_thread+0xa9b/0xfc0
+> [<ffffffff8109c748>] kthread+0xd8/0xf0
+> [<ffffffff8172018f>] ret_from_fork+0x3f/0x70
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 16614
+> [<ffffffff814cca79>] target_wait_for_sess_cmds+0x49/0x1a0
+> [<ffffffffa064692b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
+> [<ffffffff814f0ef2>] iscsit_close_connection+0x162/0x870
+> [<ffffffff814df9bf>] iscsit_take_action_for_connection_exit+0x7f/0x100
+> [<ffffffff814f00a0>] iscsi_target_rx_thread+0x5a0/0xe80
+> [<ffffffff8109c748>] kthread+0xd8/0xf0
+> [<ffffffff8172018f>] ret_from_fork+0x3f/0x70
+> [<ffffffffffffffff>] 0xffffffffffffffff
+> 16674
+> [<ffffffff814cca79>] target_wait_for_sess_cmds+0x49/0x1a0
+> [<ffffffffa064692b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
+> [<ffffffff814f0ef2>] iscsit_close_connection+0x162/0x870
+> [<ffffffff814df9bf>] iscsit_take_action_for_connection_exit+0x7f/0x100
+> [<ffffffff814f00a0>] iscsi_target_rx_thread+0x5a0/0xe80
+> [<ffffffff8109c748>] kthread+0xd8/0xf0
+> [<ffffffff8172018f>] ret_from_fork+0x3f/0x70
+> [<ffffffffffffffff>] 0xffffffffffffffff
+>
+>
+> [0] https://www.spinics.net/lists/target-devel/msg13463.html
+> [1] http://marc.info/?l=3Dlinux-scsi&m=3D147282568910535&w=3D2
+> [2] http://www.spinics.net/lists/linux-scsi/msg100221.html
+> ----------------
+> Robert LeBlanc
+> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+>
+>
+> On Fri, Oct 7, 2016 at 8:59 PM, Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org> wrote:
+>> Hi Robert,
+>>
+>> I also see this issue, but this is not the only code path can trigger th=
+is
+>> problem, I think you may also see iscsi_np in D status. I fixed one code
+>> path whitch still not merged to mainline. I will forward you my patch la=
+ter.
+>> Note: my patch only fixed one code path, you may see other call statck w=
+ith
+>> D status.
+>>
+>> Thanks,
+>> BR
+>> Zhu Lingshan
+>>
+>>
+>> =E5=9C=A8 2016/10/1 1:14, Robert LeBlanc =E5=86=99=E9=81=93:
+>>>
+>>> We are having a reoccurring problem where iscsi_trx is going into D
+>>> state. It seems like it is waiting for a session tear down to happen
+>>> or something, but keeps waiting. We have to reboot these targets on
+>>> occasion. This is running the 4.4.12 kernel and we have seen it on
+>>> several previous 4.4.x and 4.2.x kernels. There is no message in dmesg
+>>> or /var/log/messages. This seems to happen with increased frequency
+>>> when we have a disruption in our Infiniband fabric, but can happen
+>>> without any changes to the fabric (other than hosts rebooting).
+>>>
+>>> # ps aux | grep iscsi | grep D
+>>> root      4185  0.0  0.0      0     0 ?        D    Sep29   0:00
+>>> [iscsi_trx]
+>>> root     18505  0.0  0.0      0     0 ?        D    Sep29   0:00
+>>> [iscsi_np]
+>>>
+>>> # cat /proc/4185/stack
+>>> [<ffffffff814cc999>] target_wait_for_sess_cmds+0x49/0x1a0
+>>> [<ffffffffa087292b>] isert_wait_conn+0x1ab/0x2f0 [ib_isert]
+>>> [<ffffffff814f0de2>] iscsit_close_connection+0x162/0x840
+>>> [<ffffffff814df8df>] iscsit_take_action_for_connection_exit+0x7f/0x100
+>>> [<ffffffff814effc0>] iscsi_target_rx_thread+0x5a0/0xe80
+>>> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
+>>> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
+>>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>>
+>>> # cat /proc/18505/stack
+>>> [<ffffffff814f0c71>] iscsit_stop_session+0x1b1/0x1c0
+>>> [<ffffffff814e2436>] iscsi_check_for_session_reinstatement+0x1e6/0x270
+>>> [<ffffffff814e4df0>] iscsi_target_check_for_existing_instances+0x30/0x4=
+0
+>>> [<ffffffff814e4f40>] iscsi_target_do_login+0x140/0x640
+>>> [<ffffffff814e62dc>] iscsi_target_start_negotiation+0x1c/0xb0
+>>> [<ffffffff814e402b>] iscsi_target_login_thread+0xa9b/0xfc0
+>>> [<ffffffff8109c6f8>] kthread+0xd8/0xf0
+>>> [<ffffffff8172004f>] ret_from_fork+0x3f/0x70
+>>> [<ffffffffffffffff>] 0xffffffffffffffff
+>>>
+>>> What can we do to help get this resolved?
+>>>
+>>> Thanks,
+>>>
+>>> ----------------
+>>> Robert LeBlanc
+>>> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+>>> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
