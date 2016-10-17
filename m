@@ -1,107 +1,60 @@
-From: Dmitry Melekhov <dm@belkam.com>
-Subject: low read performance after removing/adding iscsi device
-Date: Mon, 17 Oct 2016 09:46:15 +0400
-Message-ID: <07a18a53-77ef-2aab-df59-70371d4e60bc@belkam.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/2] libiscsi: Fix locking in __iscsi_conn_send_pdu
+Date: Mon, 17 Oct 2016 09:19:34 +0200
+Message-ID: <8aeb7728-c5f2-e9d4-0879-a9431189045a@suse.de>
+References: <1476340729-8569-1-git-send-email-jitendra.bhivare@broadcom.com>
+ <1476340729-8569-2-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay2.belkam.com ([78.85.14.180]:37183 "EHLO relay2.belkam.com"
+Received: from mx2.suse.de ([195.135.220.15]:45103 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754441AbcJQFqS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 01:46:18 -0400
-Received: from inetgw1.p98.belkam.com (localhost [127.0.0.1])
-        (using TLSv1.2 with cipher AECDH-AES256-SHA (256/256 bits))
-        (No client certificate requested)
-        by relay2.belkam.com (Postfix) with ESMTPS id A4519205F6
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 09:46:15 +0400 (+04)
-Received: from localhost (localhost [127.0.0.1])
-        by inetgw1.p98.belkam.com (Postfix) with ESMTP id 9555F61794
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 09:46:15 +0400 (+04)
-Received: from inetgw1.p98.belkam.com ([127.0.0.1])
-        by localhost (inetgw1.p98.belkam.com [127.0.0.1]) (amavisd-new, port 10026)
-        with ESMTP id 8ULAmouKpj52 for <linux-scsi@vger.kernel.org>;
-        Mon, 17 Oct 2016 09:46:15 +0400 (+04)
-Received: from [192.168.22.229] (dm.p98.belkam.com [192.168.22.229])
-        by inetgw1.p98.belkam.com (Postfix) with ESMTP id 787036173C
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 09:46:15 +0400 (SAMT)
+        id S1756546AbcJQHTg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 03:19:36 -0400
+In-Reply-To: <1476340729-8569-2-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, cleech@redhat.com, lduncan@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-Hello!
+On 10/13/2016 08:38 AM, Jitendra Bhivare wrote:
+> The code at free_task label in __iscsi_conn_send_pdu can get executed
+> from blk_timeout_work which takes queue_lock using spin_lock_irq.
+> back_lock taken with spin_unlock_bh will cause WARN_ON_ONCE.
+> The code gets executed either with bottom half or IRQ disabled hence
+> using spin_lock/spin_unlock for back_lock is safe.
+> 
+> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+> ---
+>  drivers/scsi/libiscsi.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index c051694..f9b6fba 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -791,9 +791,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>  
+>  free_task:
+>  	/* regular RX path uses back_lock */
+> -	spin_lock_bh(&session->back_lock);
+> +	spin_lock(&session->back_lock);
+>  	__iscsi_put_task(task);
+> -	spin_unlock_bh(&session->back_lock);
+> +	spin_unlock(&session->back_lock);
+>  	return NULL;
+>  }
+>  
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+Cheers,
 
-We have two HPE MSA 2040 storages , so I'd like to do some volumes 
-backups from one storage to another.
-Unfortunately, we have no replication license, so I decided to do this 
-by using snapshots and dd :-)
-
-What I'm doing:
-1. creating snapshot on MSA;
-2. maps it to host on MSA;
-3. iscsiadm -m session --rescan
-4. /usr/bin/rescan-scsi-bus.sh --forcerescan -f
-
-then use mpath device, then
-
-5. unmap in MSA;
-6. remove snapshot;
-7. /usr/bin/rescan-scsi-bus.sh --forcerescan -f
-8. sometimes for some reason mpatha is in use, so
-dmsetup -f remove mpatha
-9. I want every new snapshot be mpatha, so I remove info from multipath:
-systemctl stop multipathd
-rm -f /etc/multipath/*
-systemctl start multipathd
-other luns, on another system has names in multipath.conf.
-
-Everything looks fine, but problem here is that at first run after 
-reboot read performance is twice higher:
-
-after reboot:
-603 MB/s and 200Gb volume dd time is 10 minutes,
-
-second and any other run:
-191 MB/s and 20-25 minutes run
-
-These are outputs from
-
-dd bs=8M  if=/dev/mapper/mpatha of=/dev/null status=progress
-
-
-This is not only for mpatha, but for any drive in it:
-mpatha (3600c0ff000267d5338e5005801000000) dm-4 HP ,MSA 2040 SAN
-size=200G features='1 queue_if_no_path' hwhandler='0' wp=rw
-|-+- policy='round-robin 0' prio=50 status=active
-| |- 2:0:0:0 sdq 65:0 active ready running
-| `- 4:0:0:0 sds 65:32 active ready running
-`-+- policy='round-robin 0' prio=10 status=enabled
-|- 3:0:0:0 sdr 65:16 active ready running
-`- 5:0:0:0 sdt 65:48 active ready running
-
-I tested sdq and sds.
-
-Btw, these names are always the same, i.e. after creating new snapshot, 
-rescan, etc, every drive has the same name.
-
-I I create another snapshot, i.e have 2 mapped snapshots in system - 
-result is the same, i.e. if first snapshot was removed,
-
-rescanned, and added again it is slow, but second one is OK, until 
-recreation.
-
-Other luns, from another system, which are never disconnects, has no 
-such problem.
-I tried to do iscsi logoff/logon, but no change....
-
-I even tried to install kernel-ml from el-repo , i.e. 4.8 , but it gives 
-me the same result...
-
-Just because reboot solves this problem I guess something is wrong in 
-scsi subsystem...
-
-Thank you!
-
-
-
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
