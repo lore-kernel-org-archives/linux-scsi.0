@@ -1,60 +1,99 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/7] megaraid_sas: Send correct PhysArm to FW for R1 VD
- downgrade
-Date: Mon, 17 Oct 2016 13:29:31 +0200
-Message-ID: <d0d7c9f2-da02-ce01-f4ed-ab24da6085da@suse.de>
+Subject: Re: [PATCH 3/7] megaraid_sas: Do not fire DCMDs during PCI
+ shutdown/detach
+Date: Mon, 17 Oct 2016 13:31:19 +0200
+Message-ID: <cba7dc68-e472-bece-a71a-88db54160829@suse.de>
 References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
- <1476699850-25083-3-git-send-email-sumit.saxena@broadcom.com>
+ <1476699850-25083-4-git-send-email-sumit.saxena@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33771 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33878 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933351AbcJQL3d (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 07:29:33 -0400
-In-Reply-To: <1476699850-25083-3-git-send-email-sumit.saxena@broadcom.com>
+        id S933234AbcJQLbV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 07:31:21 -0400
+In-Reply-To: <1476699850-25083-4-git-send-email-sumit.saxena@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com
 
 On 10/17/2016 12:24 PM, Sumit Saxena wrote:
-> This patch fixes the issue of wrong PhysArm was sent to firmware for R1
-> VD downgrade.
+> This patch addresses the issue of driver firing DCMDs in PCI
+> shutdown/detach path irrespective of firmware state.
+> Driver will check for whether firmware is operational state or not
+> before firing DCMDs. If firmware is in unrecoverbale
+> state or does not become operational within specfied time, driver will
+> skip firing DCMDs.
 > 
-> Signed-off-by: Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
 > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas_fp.c | 6 ++++--
->  1 file changed, 4 insertions(+), 2 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas_base.c   | 46 +++++++++++++++++++++++++++++
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c |  9 ++++--
+>  2 files changed, 52 insertions(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-> index e413113..f237d00 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-> +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-> @@ -782,7 +782,8 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
->  			(raid->regTypeReqOnRead != REGION_TYPE_UNUSED))))
->  			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
->  		else if (raid->level == 1) {
-> -			pd = MR_ArPdGet(arRef, physArm + 1, map);
-> +			physArm = physArm + 1;
-> +			pd = MR_ArPdGet(arRef, physArm, map);
->  			if (pd != MR_PD_INVALID)
->  				*pDevHandle = MR_PdDevHandleGet(pd, map);
->  		}
-> @@ -879,7 +880,8 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
->  			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
->  		else if (raid->level == 1) {
->  			/* Get alternate Pd. */
-> -			pd = MR_ArPdGet(arRef, physArm + 1, map);
-> +			physArm = physArm + 1;
-> +			pd = MR_ArPdGet(arRef, physArm, map);
->  			if (pd != MR_PD_INVALID)
->  				/* Get dev handle from Pd */
->  				*pDevHandle = MR_PdDevHandleGet(pd, map);
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 9ff57de..092387f 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -6248,6 +6248,32 @@ fail_reenable_msix:
+>  #define megasas_resume	NULL
+>  #endif
+>  
+> +static inline int
+> +megasas_wait_for_adapter_operational(struct megasas_instance *instance)
+> +{
+> +	int wait_time = MEGASAS_RESET_WAIT_TIME * 2;
+> +	int i;
+> +
+> +	for (i = 0; i < wait_time; i++) {
+> +		if (atomic_read(&instance->adprecovery)
+> +			== MEGASAS_HBA_OPERATIONAL)
+> +			break;
+> +
+> +		if (!(i % MEGASAS_RESET_NOTICE_INTERVAL))
+> +			dev_notice(&instance->pdev->dev, "waiting for controller reset to finish\n");
+> +
+> +		msleep(1000);
+> +	}
+> +
+> +	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
+> +		dev_info(&instance->pdev->dev, "%s timed out while waiting for HBA to recover.\n",
+> +			__func__);
+> +		return 1;
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+>  /**
+>   * megasas_detach_one -	PCI hot"un"plug entry point
+>   * @pdev:		PCI device structure
+> @@ -6272,9 +6298,18 @@ static void megasas_detach_one(struct pci_dev *pdev)
+>  	if (instance->fw_crash_state != UNAVAILABLE)
+>  		megasas_free_host_crash_buffer(instance);
+>  	scsi_remove_host(instance->host);
+> +
+> +	msleep(1000);
+> +	if ((atomic_read(&instance->adprecovery) == MEGASAS_HW_CRITICAL_ERROR)
+> +		|| ((atomic_read(&instance->adprecovery)
+> +			!= MEGASAS_HBA_OPERATIONAL) &&
+> +		megasas_wait_for_adapter_operational(instance)))
+> +		goto skip_firing_dcmds;
+> +
+>  	megasas_flush_cache(instance);
+>  	megasas_shutdown_controller(instance, MR_DCMD_CTRL_SHUTDOWN);
+>  
+> +skip_firing_dcmds:
+>  	/* cancel the delayed work if this work still in queue*/
+>  	if (instance->ev != NULL) {
+>  		struct megasas_aen_event *ev = instance->ev;
+Why not move the 'msleep' and 'atomic_read' into the call to
+megasas_wait_for_adapter_operational?
+Plus I'm not sure if the unconditional 'msleep' is a good idea here;
+maybe one should read 'adprecovery' first and _then_ call msleep if
+required?
 
 Cheers,
 
