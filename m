@@ -1,72 +1,63 @@
-From: <iari@itu.dk>
-Subject: [PATCH] Fix: scsi: megaraid: reduce the scope of pending-list lock to avoid double lock
-Date: Mon, 17 Oct 2016 09:30:06 +0200
-Message-ID: <1476689406-31316-1-git-send-email-iari@itu.dk>
+From: Joe Perches <joe@perches.com>
+Subject: Re: [PATCH] sd: assign appropriate log level
+Date: Mon, 17 Oct 2016 10:15:18 -0700
+Message-ID: <1476724518.4414.4.camel@perches.com>
+References: <20161017165108.29718-4-davsingl@cisco.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db5eur01on0099.outbound.protection.outlook.com ([104.47.2.99]:64160
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757617AbcJQRE5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 13:04:57 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="ISO-8859-1"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161017165108.29718-4-davsingl@cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Singleton <davsingl@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Shikhar Dogra <shidogra@cisco.com>, xe-kernel@external.cisco.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jiri Kosina <jkosina@suse.cz>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Iago Abal <mail@iagoabal.eu>
 
-From: Iago Abal <mail@iagoabal.eu>
+On Mon, 2016-10-17 at 09:51 -0700, David Singleton wrote:
+> From: Shikhar Dogra <shidogra@cisco.com>
+> 
+> Reduce chatter on console for usb hotplug.
+> KERN_ERR is too high severity for these messages, moving them
+> to KERN_WARNING
 
-The EBA code analyzer (https://github.com/models-team/eba) reported
-the following double lock:
+Perhaps KERN_NOTICE is more appropriate.
+That's the level for most of these sd_first_printk already.
 
-    1. In function `megaraid_reset_handler' at 2571;
-    2. take `&adapter->pend_list_lock' for the first time at 2602:
-
-           // FIRST
-           spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-
-    3. enter the `list_for_each_entry_safe' loop at 2603;
-    4. call `megaraid_mbox_mm_done' at 2616;
-    5. call `megaraid_mbox_runpendq' at 3782;
-    6. take `&adapter->pend_list_lock' for the second time at 1892:
-
-           // SECOND: DOUBLE LOCK !!!
-           spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
-
->From my shallow understanding of the code (so please review carefully), I think
-that it is not necessary to hold `PENDING_LIST_LOCK(adapter)' while executing
-the body of the `list_for_each_entry_safe' loop. I assume this because both
-`megaraid_mbox_mm_done' and `megaraid_dealloc_scb' are called from several
-places where, as far as I can tell, this lock is not hold. In fact, as reported
-by EBA, at some point `megaraid_mbox_mm_done' will acquire this lock again.
-
-Fixes: c005fb4fb2d2 ("[SCSI] megaraid_{mm,mbox}: fix a bug in reset handler")
-Signed-off-by: Iago Abal <mail@iagoabal.eu>
----
- drivers/scsi/megaraid/megaraid_mbox.c | 2 ++
- 1 file changed, 2 insertions(+)
-
-diff --git a/drivers/scsi/megaraid/megaraid_mbox.c b/drivers/scsi/megaraid/megaraid_mbox.c
-index f0987f2..7f11898 100644
---- a/drivers/scsi/megaraid/megaraid_mbox.c
-+++ b/drivers/scsi/megaraid/megaraid_mbox.c
-@@ -2603,6 +2603,7 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 	list_for_each_entry_safe(scb, tmp, &adapter->pend_list, list) {
- 		list_del_init(&scb->list);	// from pending list
- 
-+		spin_unlock_irqrestore(PENDING_LIST_LOCK(adapter), flags);
- 		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
- 			con_log(CL_ANN, (KERN_WARNING
- 			"megaraid: IOCTL packet with %d[%d:%d] being reset\n",
-@@ -2630,6 +2631,7 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
- 
- 			megaraid_dealloc_scb(adapter, scb);
- 		}
-+		spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
- 	}
- 	spin_unlock_irqrestore(PENDING_LIST_LOCK(adapter), flags);
- 
--- 
-1.9.1
-
+> USB devices never have a Caching Mode page, it doesn't make
+> sense to make it an error when you have tons of USB devices where
+> the print is useless, and not an error.
+> 
+> For second message, the condition is not an error. The existing
+> workaround of assuming a write through cache doesn't limit
+> functionality in any way.
+> 
+> Cc: xe-kernel@external.cisco.com
+> Signed-off-by: Shikhar Dogra <shidogra@cisco.com>
+> Signed-off-by: David Singleton <davsingl@cisco.com>
+> ---
+>  drivers/scsi/sd.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 51e5629..ab7bfe3 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2540,7 +2540,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+>  			}
+>  		}
+>  
+> -		sd_first_printk(KERN_ERR, sdkp, "No Caching mode page found\n");
+> +		sd_first_printk(KERN_WARNING, sdkp, "No Caching mode page found\n");
+>  		goto defaults;
+>  
+>  	Page_found:
+> @@ -2594,7 +2594,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+>  				"Assuming drive cache: write back\n");
+>  		sdkp->WCE = 1;
+>  	} else {s
+> -		sd_first_printk(KERN_ERR, sdkp,
+> +		sd_first_printk(KERN_WARNING, sdkp,
+>  				"Assuming drive cache: write through\n");
+>  		sdkp->WCE = 0;
+>  	}
+> 
