@@ -1,226 +1,69 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
 Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to
  firmware
-Date: Mon, 17 Oct 2016 09:20:05 -0700
-Message-ID: <1476721205.2734.12.camel@linux.vnet.ibm.com>
+Date: Mon, 17 Oct 2016 12:23:57 -0400
+Message-ID: <1476721437.4217.10.camel@localhost.localdomain>
 References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
          <1476699850-25083-5-git-send-email-sumit.saxena@broadcom.com>
          <d9e79049-b4ce-588f-263d-dad015b3368d@suse.de>
          <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
+         <20161017155506.GA25521@infradead.org>
+         <cd1f4d5c-2dd2-8d55-8e21-211b19221906@redhat.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:32823 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S934930AbcJQQUT (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 17 Oct 2016 12:20:19 -0400
-Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9HGK67L140914
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:20:18 -0400
-Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 2650kgvm5t-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 12:20:17 -0400
-Received: from localhost
-        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Mon, 17 Oct 2016 10:20:15 -0600
-In-Reply-To: <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
+Received: from mx1.redhat.com ([209.132.183.28]:60104 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932702AbcJQQX7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 17 Oct 2016 12:23:59 -0400
+In-Reply-To: <cd1f4d5c-2dd2-8d55-8e21-211b19221906@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, kashyap.desai@broadcom.com, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>
+To: Ric Wheeler <rwheeler@redhat.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Jens Axboe <axboe@kernel.dk>
 
-On Mon, 2016-10-17 at 09:01 -0400, Ric Wheeler wrote:
-> On 10/17/2016 07:34 AM, Hannes Reinecke wrote:
-> > On 10/17/2016 12:24 PM, Sumit Saxena wrote:
-> > > megaraid_sas driver returns SYNCHRONIZE_CACHE command back to 
-> > > SCSI layer without sending it to firmware as firmware takes care 
-> > > of flushing cache.  This patch will change the driver behavior 
-> > > wrt SYNCHRONIZE_CACHE handling. If underlying firmware has 
-> > > support to handle the SYNCHORNIZE_CACHE, driver will send it for 
-> > > firmware otherwise complete it back to SCSI layer with SUCCESS 
-> > > immediately.  If  Firmware  handle SYNCHORNIZE_CACHE for both VD 
-> > > and JBOD "canHandleSyncCache" bit in scratch pad register(offset 
-> > > 0x00B4) will be set.
-> > > 
-> > > This behavior can be controlled via module parameter and user can 
-> > > fallback to old behavior of returning SYNCHRONIZE_CACHE by driver 
-> > > only without sending it to firmware.
-> > > 
-> > > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-> > > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> > > ---
-> > >   drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
-> > >   drivers/scsi/megaraid/megaraid_sas_base.c   | 14 ++++++--------
-> > >   drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 +++
-> > >   drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 ++
-> > >   4 files changed, 14 insertions(+), 8 deletions(-)
-> > > 
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas.h
-> > > b/drivers/scsi/megaraid/megaraid_sas.h
-> > > index ca86c88..43fd14f 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas.h
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> > > @@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
-> > >   #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
-> > >   #define MR_MAX_MSIX_REG_ARRAY                   16
-> > >   #define MR_RDPQ_MODE_OFFSET			0X00800000
-> > > +#define MR_CAN_HANDLE_SYNC_CACHE_OFFSET		0X0100000
-> > > 0
-> > > +
-> > >   /*
-> > >   * register set for both 1068 and 1078 controllers
-> > >   * structure extended for 1078 registers
-> > > @@ -2140,6 +2142,7 @@ struct megasas_instance {
-> > >   	u8 is_imr;
-> > >   	u8 is_rdpq;
-> > >   	bool dev_handle;
-> > > +	bool fw_sync_cache_support;
-> > >   };
-> > >   struct MR_LD_VF_MAP {
-> > >   	u32 size;
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > index 092387f..a4a8e2f 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> > > @@ -104,6 +104,10 @@ unsigned int scmd_timeout =
-> > > MEGASAS_DEFAULT_CMD_TIMEOUT;
-> > >   module_param(scmd_timeout, int, S_IRUGO);
-> > >   MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s),
-> > > default 90s. See megasas_reset_timer.");
-> > >   
-> > > +bool block_sync_cache;
-> > > +module_param(block_sync_cache, bool, S_IRUGO);
-> > > +MODULE_PARM_DESC(block_sync_cache, "Block SYNC CACHE by driver
-> > > Default: 0(Send it to firmware)");
-> > > +
-> > >   MODULE_LICENSE("GPL");
-> > >   MODULE_VERSION(MEGASAS_VERSION);
-> > >   MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
-> > > @@ -1700,16 +1704,10 @@ megasas_queue_command(struct Scsi_Host
-> > > *shost, struct scsi_cmnd *scmd)
-> > >   		goto out_done;
-> > >   	}
-> > >   
-> > > -	switch (scmd->cmnd[0]) {
-> > > -	case SYNCHRONIZE_CACHE:
-> > > -		/*
-> > > -		 * FW takes care of flush cache on its own
-> > > -		 * No need to send it down
-> > > -		 */
-> > > +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
-> > > +		(!instance->fw_sync_cache_support)) {
-> > >   		scmd->result = DID_OK << 16;
-> > >   		goto out_done;
-> > > -	default:
-> > > -		break;
-> > >   	}
-> > >   
-> > >   	return instance->instancet
-> > > ->build_and_issue_cmd(instance, scmd);
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > index 2159f6a..8237580 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> > > @@ -747,6 +747,9 @@ megasas_ioc_init_fusion(struct
-> > > megasas_instance *instance)
-> > >   		ret = 1;
-> > >   		goto fail_fw_init;
-> > >   	}
-> > > +	if (!block_sync_cache)
-> > > +		instance->fw_sync_cache_support = (scratch_pad_2
-> > > &
-> > > +			MR_CAN_HANDLE_SYNC_CACHE_OFFSET) ? 1 :
-> > > 0;
-> > >   
-> > >   	IOCInitMessage =
-> > >   	  dma_alloc_coherent(&instance->pdev->dev,
-> > > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > > b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > > index e3bee04..2857154 100644
-> > > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> > > @@ -72,6 +72,8 @@
-> > >   #define MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET   (0x0000030C)
-> > >   #define MPI2_REPLY_POST_HOST_INDEX_OFFSET	(0x0000006C)
-> > >   
-> > > +extern bool block_sync_cache;
-> > > +
-> > >   /*
-> > >    * Raid context flags
-> > >    */
-> > > 
-> > Be extra careful with that.
-> > 
-> > SYNCHRONIZE_CACHE has (potentially) a global scope, as there might 
-> > be an array-wide cache, and a cache flush would affect the entire 
-> > cache. Linux is using SYNCHRONIZE_CACHE as a per device setting, ie 
-> > it assumes that the effects of a cache flush is restricted to the 
-> > device in question.
-> > 
-> > If this is _not_ the case I'd rather not enable it.
-> > Have you checked that enabling this functionality doesn't have 
-> > negative performance impact?
-> > 
-> > Cheers,
-> > 
-> > Hannes
+On Mon, 2016-10-17 at 12:08 -0400, Ric Wheeler wrote:
+> On 10/17/2016 11:55 AM, Christoph Hellwig wrote:
+> > On Mon, Oct 17, 2016 at 09:01:29AM -0400, Ric Wheeler wrote:
+> >> This must go in - without this fix, there is no data integrity for any file system.
+> > megaraid always had odd ideas on cache flushing, and this might be
+> > a opportunity to write down all the assumptions and document them.
+> >
+> >> In effect, this driver by default has been throwing away SYNCHRONIZE_CACHE
+> >> commands even when acting in JBOD/non-RAID mode.
+> > That would explain some issues we've seen with megaraid hardware, but
+> > it seems a bit too shocking to be true.
+> >
+> > Looking over the patch I disagree with the module option - we must do
+> > the right thing by default, which is sending SYNCHRONIZE_CACHE commands
+> > if the WCE bit is set.  If there are controllers where this is harmful
+> > for RAID mode and we can't fix the firmware in time we'll need to make
+> > special exceptions for this case in the driver based on the PCI ID
+> > and knowing what we talk to instead of leaving it to the user.
 > 
-> This must go in - without this fix, there is no data integrity for
-> any file system.
+> I do agree - having users be able to disable this easily is asking for trouble. 
+> It will be slower, but slower because the cache flush actually is effective.
 
-That's not what I get from the change log.  What it says to me is that
-the caches are currently firmware managed.  Barring firmware bugs, that
-means that we currently don't have any integrity issues.
+Absolutely.  It is a bad idea to allow users to disable correct behavior
+in order to achieve better performance, you will always get people who
+will do this and then pay the price eventually when they get corruption.
 
-> In effect, this driver by default has been throwing away 
-> SYNCHRONIZE_CACHE commands even when acting in JBOD/non-RAID mode.
-
-That's not what the changelog says.  It says the cache flushing has
-been managed by the firmware only.  Meaning the firmware decides when
-to flush the cache.  Barring firmware bugs, this should mean that
-integrity is preserved in either mode.
-
-> Of course, actually doing a SYNCHRONIZE_CACHE to drives will be 
-> slower than throwing it away, but this is not optional.
-
-What Hannes means is that we need to know that turning over cache
-management to Linux is a) safe and b) not a performance regression. 
- Given that there aren't any integrity issues, that's a reasonable
-request.
-
-> We really need to have some ways to validate that our IO stack is 
-> properly and safely configured.
 > 
-> I would love to see a couple of things:
+> >
+> >> * having T10 & T13 report the existence of a volatile write cache - this is
+> >> different than WCE set, some devices have a write cache and are
+> >> battery/flash backed.
+> > T10 is pretty clear now the WCE should only be set for a non-voltile
+> > cache.  For a while they had odd NV bits to allow flushing a
+> > non-volatile cache, but in the latest revisions all that is gone.
 > 
-> * having T10 & T13 report the existence of a volatile write cache - 
-> this is different than WCE set, some devices have a write cache and 
-> are battery/flash backed.
-
-That's the non-volatile cache log page.
-
-James
-
-
-> * having a robust tool to test over power failure/disconnect that our
-> assumptions are true - any write is durable after a SYNCHRONIZE_CACHE 
-> or CACHE_FLUSH_EXT is sent and ack'ed
-> 
-> Regards,
-> 
-> Ric
+> If T10 has clarity on this, then the actual fix would be to have the driver 
+> advertise WCE enabled only for the pass through/non-RAID luns (assuming the 
+> drive's write cache was enabled) and then we would leave WCE disabled for the 
+> targets that the firmware handles cache destaging for.
 > 
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+
 
