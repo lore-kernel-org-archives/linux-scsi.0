@@ -1,47 +1,40 @@
-From: ojab <ojab@ojab.ru>
-Subject: Re: `rmmod mpt3sas` leads to backtraces 'fs/sysfs/group.c:237
- sysfs_remove_group+0xa0/0xb0'
-Date: Mon, 17 Oct 2016 08:40:54 +0000
-Message-ID: <94a67af1-b9d5-2b7c-6e9a-6d0c3f66ff18@ojab.ru>
-References: <d24894f9-5943-a962-6614-9a199e563dd1@ojab.ru>
+From: Jesper Nilsson <jesper.nilsson@axis.com>
+Subject: Re: [PATCH 06/10] mm: replace get_user_pages() write/force
+ parameters with gup_flags
+Date: Mon, 17 Oct 2016 11:22:46 +0200
+Message-ID: <20161017092246.GG30704@axis.com>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161013002020.3062-7-lstoakes@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f54.google.com ([209.85.215.54]:35005 "EHLO
-        mail-lf0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933019AbcJQIlI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 04:41:08 -0400
-Received: by mail-lf0-f54.google.com with SMTP id l131so233125422lfl.2
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Oct 2016 01:40:58 -0700 (PDT)
-In-Reply-To: <d24894f9-5943-a962-6614-9a199e563dd1@ojab.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20161013002020.3062-7-lstoakes@gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: Lorenzo Stoakes <lstoakes@gmail.com>
+Cc: linux-mm@kvack.org, linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: MPT-FusionLinux.pdl@broadcom.com
-Cc: linux-scsi@vger.kernel.org
 
-On 2016/10/16 14:33, ojab wrote:
-> Oh hai!
->
-> I have LSI SAS 9217-8i HBA and `rmmod mpt3sas` leads to multiple
-> backtraces if any disks are connected to the HBA.
-> Reproducible on vanilla 4.7.5/4.8.1/4.9-rc1 kernels (haven't tested on
-> another versions).
->
-> Full output (4.9-rc1 kernel, 3*Seagate ST3000NM0023 drives are
-> connected) is rather long and can be found here:
-> https://gist.github.com/ojab/f21ff778a378e88b227a4253d683c6ca
+On Thu, Oct 13, 2016 at 01:20:16AM +0100, Lorenzo Stoakes wrote:
+> This patch removes the write and force parameters from get_user_pages() and
+> replaces them with a gup_flags parameter to make the use of FOLL_FORCE explicit
+> in callers as use of this flag can result in surprising behaviour (and hence
+> bugs) within the mm subsystem.
+> 
+> Signed-off-by: Lorenzo Stoakes <lstoakes@gmail.com>
+> ---
+>  arch/cris/arch-v32/drivers/cryptocop.c                 |  4 +---
 
-…and also on boot I have an error than can be related to the backtrace:
+For the CRIS part:
 
- >…
- >[Sun Oct 16 18:46:12 2016]  sdd: sdd1
- >[Sun Oct 16 18:46:12 2016] sd 6:0:1:0: [sdd] Attached SCSI disk
- >[Sun Oct 16 18:46:12 2016] udevd[239]: error opening 
-ATTR{/sys/devices/pci0000:00/0000:00:03.0/0000:02:00.0/host6/scsi_host/host6/link_power_management_policy} 
-for writing: Permission denied
- >…
+Acked-by: Jesper Nilsson <jesper.nilsson@axis.com>
 
-There is no such file in sysfs after boot completion.
+/^JN - Jesper Nilsson
+-- 
+               Jesper Nilsson -- jesper.nilsson@axis.com
 
-//wbr ojab
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
