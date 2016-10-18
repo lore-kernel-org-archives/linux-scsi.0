@@ -1,62 +1,104 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v8 1/7] block: Add 'zoned' queue limit
-Date: Tue, 18 Oct 2016 08:42:58 +0200
-Message-ID: <1e4d596f-e296-7f5c-0976-72c1d09ad71a@suse.de>
-References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
- <1476772835-18541-2-git-send-email-damien.lemoal@wdc.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: Need some pointers to debug a target hang
+Date: Tue, 18 Oct 2016 09:01:34 +0200
+Message-ID: <20161018070134.zhyk4ljaxzmvwfs2@linux-x5ow.site>
+References: <20160902141419.h23stppulnyfrnkz@c203.arch.suse.de>
+ <1476770275.8490.10.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41150 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42236 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757533AbcJRGnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 02:43:02 -0400
-In-Reply-To: <1476772835-18541-2-git-send-email-damien.lemoal@wdc.com>
+        id S1751953AbcJRHBk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 03:01:40 -0400
+Content-Disposition: inline
+In-Reply-To: <1476770275.8490.10.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Robert LeBlanc <robert@leblancnet.us>
 
-On 10/18/2016 08:40 AM, Damien Le Moal wrote:
-> From: Damien Le Moal <damien.lemoal@hgst.com>
-> 
-> Add the zoned queue limit to indicate the zoning model of a block device.
-> Defined values are 0 (BLK_ZONED_NONE) for regular block devices,
-> 1 (BLK_ZONED_HA) for host-aware zone block devices and 2 (BLK_ZONED_HM)
-> for host-managed zone block devices. The standards defined drive managed
-> model is not defined here since these block devices do not provide any
-> command for accessing zone information. Drive managed model devices will
-> be reported as BLK_ZONED_NONE.
-> 
-> The helper functions blk_queue_zoned_model and bdev_zoned_model return
-> the zoned limit and the functions blk_queue_is_zoned and bdev_is_zoned
-> return a boolean for callers to test if a block device is zoned.
-> 
-> The zoned attribute is also exported as a string to applications via
-> sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as "host-aware" and
-> BLK_ZONED_HM as "host-managed".
-> 
-> Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-> ---
->  Documentation/ABI/testing/sysfs-block | 16 ++++++++++++
->  block/blk-settings.c                  |  1 +
->  block/blk-sysfs.c                     | 18 ++++++++++++++
->  include/linux/blkdev.h                | 47 +++++++++++++++++++++++++++++++++++
->  4 files changed, 82 insertions(+)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+[+Cc Robert LeBlanc <robert@leblancnet.us> and full quote for context ]
 
-Cheers,
+On Mon, Oct 17, 2016 at 10:57:55PM -0700, Nicholas A. Bellinger wrote:
+> Hello Johannes,
+> 
+> Apologies for the extended delayed follow-up on this bug report.
+> 
+> On Fri, 2016-09-02 at 16:14 +0200, Johannes Thumshirn wrote:
+> > Hi Nick et al,
+> > 
+> > I'm having a "interesting" problem with the kernel's iSCSI target and
+> > could use a debug hint.
+> > 
+> > My target uses an iblock backstore on a dm-linear target. When I now
+> > get I/O form the initiator (I used a simple dd if=/dev/sda
+> > of=/dev/null) and call 'dmsetup suspend $backstore' it'll take about
+> > 15 seconds for the iscsi_ttx kernel thread to disapear, the iscsi_trx
+> > and iscsi_np threads are hanging in 'D'.
+> > 
+> > From iscsi_trx's stack I see it's waiting in
+> > __transport_wait_for_tasks(). The last thing I see in dmesg is the
+> > 'ABORT_TASK: Found referenced %s task_tag: %llu' printk but the
+> > 'ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: %llu" printk
+> > is missing from core_tmr_abort_task(). As there's a
+> > transport_wait_for_tasks() call in between I _think_ it is stuck in
+> > aborting this one task and none of the
+> > complete(se_cmd->t_transport_stop_comp) callers is called. What
+> > puzzels me a bit is that right after transport_wait_for_tasks() in
+> > core_tmr_abort_task() there's a call to transport_cmd_finish_abort()
+> > which in turn calls transport_cmd_check_stop_to_fabric() ->
+> > transport_cmd_check_stop() ->
+> > complete_all(&cmd->t_transport_stop_comp).
+> > 
+> > Doing 
+> > 
+> > --- a/drivers/target/target_core_transport.c
+> > +++ b/drivers/target/target_core_transport.c
+> > @@ -2739,7 +2739,7 @@ __transport_wait_for_tasks(struct se_cmd
+> >  
+> >         spin_unlock_irqrestore(&cmd->t_state_lock, *flags);
+> >  
+> > -       wait_for_completion(&cmd->t_transport_stop_comp);
+> > +       wait_for_completion_interruptible(&cmd->t_transport_stop_comp, 5 * HZ);
+> >  
+> >         spin_lock_irqsave(&cmd->t_state_lock, *flags);
+> >         cmd->transport_state &= ~(CMD_T_ACTIVE | CMD_T_STOP);
+> > 
+> > "resolves" the bug, but I don't think this is correct.
+> > 
+> > This is all easily reproducible with v4.8-rc4 in qemu (for instance).
+> > 
+> > Any advice is aprechiated.
+> > 
+> 
+> This is likely the missing SCF_ACK_KREF assignment in >= v4.1.y:
+> 
+> http://www.spinics.net/lists/target-devel/msg13530.html
+> 
+> At your earliest convenience, please verify using this patch for TMR
+> ABORT_TASK due to target-core backend I/O still outstanding, with
+> simultaneous failed iscsi session reinstatement -> repeated iscsi login
+> timeout scenario.
+> 
+> Also once target-core backend I/O has (finally) been completed back to
+> fabric driver code, the iscsi_np configfs group shutdown is allowed to
+> proceed.
+> 
 
-Hannes
+Hi Nic, 
+
+Thanks for the heads up, I'll give it a try.
+
+Robert has sent a similar bug report on
+http://www.spinics.net/lists/linux-rdma/msg41296.html so I CCed him as well.
+
+Johannes
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
 HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
