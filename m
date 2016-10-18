@@ -1,86 +1,275 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 13/20] libfc: Remove fc_rport_init()
-Date: Tue, 18 Oct 2016 10:01:47 +0200
-Message-ID: <1476777714-3543-14-git-send-email-hare@suse.de>
+Subject: [PATCH 01/20] libfc: Replace ->seq_els_rsp_send callback with function call
+Date: Tue, 18 Oct 2016 10:01:35 +0200
+Message-ID: <1476777714-3543-2-git-send-email-hare@suse.de>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47379 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47289 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758743AbcJRICc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 04:02:32 -0400
+        id S1752395AbcJRIC0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:02:26 -0400
 In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Function is empty now and can be removed.
+The 'seq_els_rsp_send' callback only ever had one implementation,
+so we might as well drop it and use the function directly.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c |  1 -
- drivers/scsi/fcoe/fcoe_ctlr.c     |  1 -
- drivers/scsi/libfc/fc_rport.c     | 10 ----------
- include/scsi/libfc.h              |  1 -
- 4 files changed, 13 deletions(-)
+ drivers/scsi/fcoe/fcoe_ctlr.c |  2 +-
+ drivers/scsi/libfc/fc_disc.c  |  4 ++--
+ drivers/scsi/libfc/fc_exch.c  |  8 +++-----
+ drivers/scsi/libfc/fc_lport.c |  6 +++---
+ drivers/scsi/libfc/fc_rport.c | 26 +++++++++++++-------------
+ include/scsi/libfc.h          | 10 ++--------
+ 6 files changed, 24 insertions(+), 32 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index f9ddb61..0990130 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -970,7 +970,6 @@ static int bnx2fc_libfc_config(struct fc_lport *lport)
- 		sizeof(struct libfc_function_template));
- 	fc_elsct_init(lport);
- 	fc_exch_init(lport);
--	fc_rport_init(lport);
- 	fc_disc_init(lport);
- 	fc_disc_config(lport, lport);
- 	return 0;
 diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 12efc1d..cea57e2 100644
+index 4aacd60..6cedc51 100644
 --- a/drivers/scsi/fcoe/fcoe_ctlr.c
 +++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -3235,7 +3235,6 @@ int fcoe_libfc_config(struct fc_lport *lport, struct fcoe_ctlr *fip,
- 	fc_exch_init(lport);
- 	fc_elsct_init(lport);
- 	fc_lport_init(lport);
--	fc_rport_init(lport);
- 	fc_disc_init(lport);
- 	fcoe_ctlr_mode_set(lport, fip, fip->mode);
- 	return 0;
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 6e50226..110a707 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -2182,16 +2182,6 @@ void fc_rport_flush_queue(void)
- EXPORT_SYMBOL(fc_rport_flush_queue);
+@@ -3031,7 +3031,7 @@ static void fcoe_ctlr_disc_recv(struct fc_lport *lport, struct fc_frame *fp)
+ 
+ 	rjt_data.reason = ELS_RJT_UNSUP;
+ 	rjt_data.explan = ELS_EXPL_NONE;
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
+ 	fc_frame_free(fp);
+ }
+ 
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index ad3965f..4e31152 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -154,7 +154,7 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
+ 			break;
+ 		}
+ 	}
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
++	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
+ 
+ 	/*
+ 	 * If not doing a complete rediscovery, do GPN_ID on
+@@ -182,7 +182,7 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
+ 	FC_DISC_DBG(disc, "Received a bad RSCN frame\n");
+ 	rjt_data.reason = ELS_RJT_LOGIC;
+ 	rjt_data.explan = ELS_EXPL_NONE;
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
+ 	fc_frame_free(fp);
+ }
+ 
+diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+index 9921dbb..3f58aeb 100644
+--- a/drivers/scsi/libfc/fc_exch.c
++++ b/drivers/scsi/libfc/fc_exch.c
+@@ -1222,8 +1222,8 @@ static void fc_exch_set_addr(struct fc_exch *ep,
+  *
+  * The received frame is not freed.
+  */
+-static void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
+-				struct fc_seq_els_data *els_data)
++void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
++			 struct fc_seq_els_data *els_data)
+ {
+ 	switch (els_cmd) {
+ 	case ELS_LS_RJT:
+@@ -1242,6 +1242,7 @@ static void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
+ 		FC_LPORT_DBG(fr_dev(fp), "Invalid ELS CMD:%x\n", els_cmd);
+ 	}
+ }
++EXPORT_SYMBOL_GPL(fc_seq_els_rsp_send);
  
  /**
-- * fc_rport_init() - Initialize the remote port layer for a local port
-- * @lport: The local port to initialize the remote port layer for
-- */
--int fc_rport_init(struct fc_lport *lport)
--{
--	return 0;
--}
--EXPORT_SYMBOL(fc_rport_init);
+  * fc_seq_send_last() - Send a sequence that is the last in the exchange
+@@ -2635,9 +2636,6 @@ int fc_exch_init(struct fc_lport *lport)
+ 	if (!lport->tt.seq_send)
+ 		lport->tt.seq_send = fc_seq_send;
+ 
+-	if (!lport->tt.seq_els_rsp_send)
+-		lport->tt.seq_els_rsp_send = fc_seq_els_rsp_send;
 -
--/**
-  * fc_rport_fcp_prli() - Handle incoming PRLI for the FCP initiator.
-  * @rdata: remote port private
-  * @spp_len: service parameter page length
+ 	if (!lport->tt.exch_done)
+ 		lport->tt.exch_done = fc_exch_done;
+ 
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 81ad8ac..bf79c9b 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -412,7 +412,7 @@ static void fc_lport_recv_rlir_req(struct fc_lport *lport, struct fc_frame *fp)
+ 	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
+ 		     fc_lport_state(lport));
+ 
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
++	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
+ 	fc_frame_free(fp);
+ }
+ 
+@@ -481,7 +481,7 @@ static void fc_lport_recv_rnid_req(struct fc_lport *lport,
+ 	if (!req) {
+ 		rjt_data.reason = ELS_RJT_LOGIC;
+ 		rjt_data.explan = ELS_EXPL_NONE;
+-		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
++		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+ 	} else {
+ 		fmt = req->rnid_fmt;
+ 		len = sizeof(*rp);
+@@ -521,7 +521,7 @@ static void fc_lport_recv_rnid_req(struct fc_lport *lport,
+  */
+ static void fc_lport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
+ {
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
++	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
+ 	fc_lport_enter_reset(lport);
+ 	fc_frame_free(fp);
+ }
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index a867874..4ca0f40 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -967,7 +967,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
+ reject_put:
+ 	kref_put(&rdata->kref, lport->tt.rport_destroy);
+ reject:
+-	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
+ 	fc_frame_free(rx_fp);
+ }
+ 
+@@ -1416,7 +1416,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
+ 	if (!fp) {
+ 		rjt_data.reason = ELS_RJT_UNAB;
+ 		rjt_data.reason = ELS_EXPL_INSUF_RES;
+-		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
++		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+ 		goto drop;
+ 	}
+ 	rtv = fc_frame_payload_get(fp, sizeof(*rtv));
+@@ -1591,7 +1591,7 @@ static void fc_rport_recv_adisc_req(struct fc_rport_priv *rdata,
+ 	if (!adisc) {
+ 		rjt_data.reason = ELS_RJT_PROT;
+ 		rjt_data.explan = ELS_EXPL_INV_LEN;
+-		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
++		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+ 		goto drop;
+ 	}
+ 
+@@ -1667,7 +1667,7 @@ static void fc_rport_recv_rls_req(struct fc_rport_priv *rdata,
+ 	goto out;
+ 
+ out_rjt:
+-	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
+ out:
+ 	fc_frame_free(rx_fp);
+ }
+@@ -1734,11 +1734,11 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ 		fc_rport_recv_adisc_req(rdata, fp);
+ 		break;
+ 	case ELS_RRQ:
+-		lport->tt.seq_els_rsp_send(fp, ELS_RRQ, NULL);
++		fc_seq_els_rsp_send(fp, ELS_RRQ, NULL);
+ 		fc_frame_free(fp);
+ 		break;
+ 	case ELS_REC:
+-		lport->tt.seq_els_rsp_send(fp, ELS_REC, NULL);
++		fc_seq_els_rsp_send(fp, ELS_REC, NULL);
+ 		fc_frame_free(fp);
+ 		break;
+ 	case ELS_RLS:
+@@ -1759,14 +1759,14 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+ reject:
+ 	els_data.reason = ELS_RJT_UNAB;
+ 	els_data.explan = ELS_EXPL_PLOGI_REQD;
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
++	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
+ 	fc_frame_free(fp);
+ 	return;
+ 
+ busy:
+ 	els_data.reason = ELS_RJT_BUSY;
+ 	els_data.explan = ELS_EXPL_NONE;
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
++	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
+ 	fc_frame_free(fp);
+ 	return;
+ }
+@@ -1812,7 +1812,7 @@ static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
+ 	default:
+ 		els_data.reason = ELS_RJT_UNSUP;
+ 		els_data.explan = ELS_EXPL_NONE;
+-		lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
++		fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
+ 		fc_frame_free(fp);
+ 		break;
+ 	}
+@@ -1939,7 +1939,7 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 	return;
+ 
+ reject:
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
+ 	fc_frame_free(fp);
+ }
+ 
+@@ -2055,7 +2055,7 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
+ 	rjt_data.reason = ELS_RJT_PROT;
+ 	rjt_data.explan = ELS_EXPL_INV_LEN;
+ reject:
+-	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
+ drop:
+ 	fc_frame_free(rx_fp);
+ }
+@@ -2126,7 +2126,7 @@ static void fc_rport_recv_prlo_req(struct fc_rport_priv *rdata,
+ 	rjt_data.reason = ELS_RJT_PROT;
+ 	rjt_data.explan = ELS_EXPL_INV_LEN;
+ reject:
+-	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
++	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
+ drop:
+ 	fc_frame_free(rx_fp);
+ }
+@@ -2146,7 +2146,7 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
+ 	struct fc_rport_priv *rdata;
+ 	u32 sid;
+ 
+-	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
++	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
+ 
+ 	sid = fc_frame_sid(fp);
+ 
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 57630c5..a776901 100644
+index f5aa54b..0e95803 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -978,7 +978,6 @@ static inline bool fc_fcp_is_read(const struct fc_fcp_pkt *fsp)
- /*
-  * REMOTE PORT LAYER
+@@ -553,14 +553,6 @@ struct libfc_function_template {
+ 			struct fc_frame *);
+ 
+ 	/*
+-	 * Send an ELS response using information from the received frame.
+-	 *
+-	 * STATUS: OPTIONAL
+-	 */
+-	void (*seq_els_rsp_send)(struct fc_frame *, enum fc_els_cmd,
+-				 struct fc_seq_els_data *);
+-
+-	/*
+ 	 * Abort an exchange and sequence. Generally called because of a
+ 	 * exchange timeout or an abort from the upper layer.
+ 	 *
+@@ -1138,6 +1130,8 @@ void fc_fill_hdr(struct fc_frame *, const struct fc_frame *,
   *****************************/
--int fc_rport_init(struct fc_lport *);
- void fc_rport_terminate_io(struct fc_rport *);
- struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
- 				      u32 port_id);
+ int fc_exch_init(struct fc_lport *);
+ void fc_exch_update_stats(struct fc_lport *lport);
++void fc_seq_els_rsp_send(struct fc_frame *, enum fc_els_cmd,
++			 struct fc_seq_els_data *);
+ struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *,
+ 					   struct fc_exch_mgr *,
+ 					   bool (*match)(struct fc_frame *));
 -- 
 1.8.5.6
 
