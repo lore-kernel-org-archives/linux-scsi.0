@@ -1,27 +1,27 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 15/20] libfc: Replace ->seq_exch_abort callback with
- function call
-Date: Tue, 18 Oct 2016 11:02:18 +0200
-Message-ID: <20161018090218.7pmuifjb7k2j5bk3@linux-x5ow.site>
+Subject: Re: [PATCH 16/20] libfc: Replace ->exch_done callback with function
+ call
+Date: Tue, 18 Oct 2016 11:03:13 +0200
+Message-ID: <20161018090313.jacqlft5tu7virmd@linux-x5ow.site>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
- <1476777714-3543-16-git-send-email-hare@suse.de>
+ <1476777714-3543-17-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55837 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55886 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757888AbcJRJCU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 05:02:20 -0400
+        id S1758687AbcJRJDO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 05:03:14 -0400
 Content-Disposition: inline
-In-Reply-To: <1476777714-3543-16-git-send-email-hare@suse.de>
+In-Reply-To: <1476777714-3543-17-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Oct 18, 2016 at 10:01:49AM +0200, Hannes Reinecke wrote:
-> The ->seq_exch_abort callback only ever had one implementation,
+On Tue, Oct 18, 2016 at 10:01:50AM +0200, Hannes Reinecke wrote:
+> The ->exch_done callback only ever had one implementation,
 > so we can as well call it directly and drop the callback.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
