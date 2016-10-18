@@ -1,36 +1,42 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v8 6/7] sd: Implement support for ZBC devices
-Date: Tue, 18 Oct 2016 12:58:11 -0400
-Message-ID: <x498ttlvbks.fsf@segfault.boston.devel.redhat.com>
-References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
-        <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH 07/20] scsi_transport_fc: rename 'fc_rport_create' to
+ 'fc_remote_port_create'
+Date: Tue, 18 Oct 2016 10:29:57 -0700
+Message-ID: <b33d2c30-478c-6d6b-597e-297dc4d54396@broadcom.com>
+References: <1476777714-3543-1-git-send-email-hare@suse.de>
+ <1476777714-3543-8-git-send-email-hare@suse.de>
+ <488ec5c6-3c64-d9e4-d8d1-42676b666b32@broadcom.com>
+ <CAGH8bx6+ZPAQRM1hWbEnzWj8qRJAcF7g3ne6oTbeWvbkXNtnvA@mail.gmail.com>
+ <CAGH8bx4Aut8NJ4t48yXv6+LJxfKvXFMOtzEm7UBuCqo-BwSEMA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:45474 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933242AbcJRQ6N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 12:58:13 -0400
-In-Reply-To: <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com> (Damien
-        Le Moal's message of "Tue, 18 Oct 2016 15:40:34 +0900")
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:35416 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933658AbcJRRaF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 13:30:05 -0400
+Received: by mail-pf0-f179.google.com with SMTP id s8so225486pfj.2
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 10:30:05 -0700 (PDT)
+In-Reply-To: <CAGH8bx4Aut8NJ4t48yXv6+LJxfKvXFMOtzEm7UBuCqo-BwSEMA@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
+To: Johannes Thumshirn <morbidrsa@gmail.com>
+Cc: Hannes Reinecke <hare@suse.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jth@kernel.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Damien Le Moal <damien.lemoal@wdc.com> writes:
 
-> +	if (!is_power_of_2(zone_blocks)) {
-> +		if (sdkp->first_scan)
-> +			sd_printk(KERN_NOTICE, sdkp,
-> +				  "Devices with non power of 2 zone "
-> +				  "size are not supported\n");
-> +		return -ENODEV;
-> +	}
 
-Are power of 2 zone sizes required by the standard?  I see why you've
-done this, but I wonder if we're artificially limiting the
-implementation, and whether there will be valid devices on the market
-that simply won't work with Linux because of this.
+On 10/18/2016 9:18 AM, Johannes Thumshirn wrote:
+>
+> Hi James,
+>
+> fc_rport_create() in scsi_transport_fc.c is static so there is no 
+> interface change here.
+>
+> Johannes
+>
 
--Jeff
+ah - that this was the published routine.  ok.
+
+-- james
+
