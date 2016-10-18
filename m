@@ -1,38 +1,49 @@
 From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH v8 0/7] ZBC / Zoned block device support
-Date: Wed, 19 Oct 2016 08:15:49 +0900
-Message-ID: <05d9cbd0-fb78-3f35-cc42-47f58640d184@wdc.com>
+Subject: Re: [PATCH v8 2/7] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
+Date: Wed, 19 Oct 2016 08:17:21 +0900
+Message-ID: <d391589a-6e87-3679-7b38-cddbf0125801@wdc.com>
 References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
- <2a80d950-c831-9ac6-1969-dc6386e58236@kernel.dk>
+ <1476772835-18541-3-git-send-email-damien.lemoal@wdc.com>
+ <x49funtvca2.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:52609 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752420AbcJRXP4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 19:15:56 -0400
-In-Reply-To: <2a80d950-c831-9ac6-1969-dc6386e58236@kernel.dk>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <x49funtvca2.fsf@segfault.boston.devel.redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 
-Jens,
 
-On 10/19/16 00:58, Jens Axboe wrote:
-> This is starting to look mergeable to me. Any objections in getting this
-> applied for 4.10? Looks like 6/7 should go through the SCSI tree, but I
-> can queue up the rest.
+Jeff,
 
-Yes, it would be great to get all this queued for 4.10. Indeed 6/7 is
-SCSI, but if possible, it would be great to get it in the same tree as
-the rest so that a single tree provides full ZBC support.
-Martin, any objection ?
+On 10/19/16 01:43, Jeff Moyer wrote:
+> Damien Le Moal <damien.lemoal@wdc.com> writes:
+> 
+>> diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
+>> index 75a5055..ee2d5cd 100644
+>> --- a/Documentation/ABI/testing/sysfs-block
+>> +++ b/Documentation/ABI/testing/sysfs-block
+>> @@ -251,3 +251,16 @@ Description:
+>>  		since drive-managed zoned block devices do not support
+>>  		zone commands, they will be treated as regular block
+>>  		devices and zoned will report "none".
+>> +
+>> +What:		/sys/block/<disk>/queue/chunk_sectors
+>> +Date:		September 2016
+>> +Contact:	Hannes Reinecke <hare@suse.com>
+>> +Description:
+>> +		chunk_sectors has different meaning depending on the type
+>> +		of the disk. For a RAID device (dm-raid), chunk_sectors
+>> +		indicates the size in 512B sectors of the RAID volume
+>> +		stripe segment. For a zoned block device, either
+>> +		host-aware or host-managed, chunk_sectors indicates the
+>> +		size of 512B sectors of the zones of the device, with
+>                      ^^
+>                      in
 
-Thank you.
-
-Best regards.
+Good catch. Thank you. Will fix this.
 
 -- 
 Damien Le Moal, Ph.D.
