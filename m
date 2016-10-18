@@ -1,79 +1,72 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 05/11] scsi: ufs: fix sense buffer size to 18 bytes
-Date: Mon, 17 Oct 2016 17:09:48 -0700
-Message-ID: <1476749388-11244-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v1 04/11] scsi: ufs: commit descriptors before setting the doorbell
+Date: Mon, 17 Oct 2016 17:09:36 -0700
+Message-ID: <1476749376-11204-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43628 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935674AbcJRAJm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 20:09:42 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: Gilad Broner <gbroner@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
 From: Gilad Broner <gbroner@codeaurora.org>
 
-According to UFS device specification, sense data can be only 18 bytes
-long, this change makes the changes accordingly.
+Add a write memory barrier to make sure descriptors prepared are actually
+written to memory before ringing the doorbell. We have also added the
+write memory barrier after ringing the doorbell register so that
+controller sees the new request immediately.
 
 Signed-off-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index beb4988..f549be3 100644
+index a99f57b..beb4988 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -45,6 +45,8 @@
- #include "ufs_quirks.h"
- #include "unipro.h"
- 
-+#define UFSHCD_REQ_SENSE_SIZE	18
-+
- #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
- 				 UTP_TASK_REQ_COMPL |\
- 				 UFSHCD_ERROR_MASK)
-@@ -898,7 +900,7 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
- 
- 		memcpy(lrbp->sense_buffer,
- 			lrbp->ucd_rsp_ptr->sr.sense_data,
--			min_t(int, len_to_copy, SCSI_SENSE_BUFFERSIZE));
-+			min_t(int, len_to_copy, UFSHCD_REQ_SENSE_SIZE));
- 	}
+@@ -878,6 +878,8 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	ufshcd_clk_scaling_start_busy(hba);
+ 	__set_bit(task_tag, &hba->outstanding_reqs);
+ 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	/* Make sure that doorbell is committed immediately */
++	wmb();
  }
  
-@@ -1463,7 +1465,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 
- 	WARN_ON(lrbp->cmd);
- 	lrbp->cmd = cmd;
--	lrbp->sense_bufflen = SCSI_SENSE_BUFFERSIZE;
-+	lrbp->sense_bufflen = UFSHCD_REQ_SENSE_SIZE;
- 	lrbp->sense_buffer = cmd->sense_buffer;
- 	lrbp->task_tag = tag;
- 	lrbp->lun = ufshcd_scsi_to_upiu_lun(cmd->device->lun);
-@@ -5594,19 +5596,19 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
- 				0,
- 				0,
- 				0,
--				SCSI_SENSE_BUFFERSIZE,
-+				UFSHCD_REQ_SENSE_SIZE,
- 				0};
- 	char *buffer;
- 	int ret;
- 
--	buffer = kzalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
-+	buffer = kzalloc(UFSHCD_REQ_SENSE_SIZE, GFP_KERNEL);
- 	if (!buffer) {
- 		ret = -ENOMEM;
+ /**
+@@ -1475,6 +1477,8 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 		clear_bit_unlock(tag, &hba->lrb_in_use);
  		goto out;
  	}
++	/* Make sure descriptors are ready before ringing the doorbell */
++	wmb();
  
- 	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
--				SCSI_SENSE_BUFFERSIZE, NULL,
-+				UFSHCD_REQ_SENSE_SIZE, NULL,
- 				msecs_to_jiffies(1000), 3, NULL, REQ_PM);
- 	if (ret)
- 		pr_err("%s: failed with err %d\n", __func__, ret);
+ 	/* issue command to the controller */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+@@ -1585,6 +1589,8 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
+ 	time_left = wait_for_completion_timeout(hba->dev_cmd.complete,
+ 			msecs_to_jiffies(max_timeout));
+ 
++	/* Make sure descriptors are ready before ringing the doorbell */
++	wmb();
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+ 	hba->dev_cmd.complete = NULL;
+ 	if (likely(time_left)) {
+@@ -4322,6 +4328,8 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
+ 	wmb();
+ 
+ 	ufshcd_writel(hba, 1 << free_slot, REG_UTP_TASK_REQ_DOOR_BELL);
++	/* Make sure that doorbell is committed immediately */
++	wmb();
+ 
+ 	spin_unlock_irqrestore(host->host_lock, flags);
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
