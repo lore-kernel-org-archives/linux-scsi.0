@@ -1,28 +1,29 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 01/20] libfc: Replace ->seq_els_rsp_send callback with
+Subject: Re: [PATCH 02/20] libfc: Replace ->lport_reset callback with
  function call
-Date: Tue, 18 Oct 2016 10:37:12 +0200
-Message-ID: <20161018083712.aibb35szyuws5nlw@linux-x5ow.site>
+Date: Tue, 18 Oct 2016 10:41:24 +0200
+Message-ID: <20161018084124.s24hogwexrmnfhen@linux-x5ow.site>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
- <1476777714-3543-2-git-send-email-hare@suse.de>
+ <1476777714-3543-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:52962 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53645 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752206AbcJRIhO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 04:37:14 -0400
+        id S1752045AbcJRIl0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:41:26 -0400
 Content-Disposition: inline
-In-Reply-To: <1476777714-3543-2-git-send-email-hare@suse.de>
+In-Reply-To: <1476777714-3543-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Oct 18, 2016 at 10:01:35AM +0200, Hannes Reinecke wrote:
-> The 'seq_els_rsp_send' callback only ever had one implementation,
-> so we might as well drop it and use the function directly.
+On Tue, Oct 18, 2016 at 10:01:36AM +0200, Hannes Reinecke wrote:
+> The ->lport_reset callback only ever had one implementation,
+> which already is exported. So remove it and use the function
+> directly.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
