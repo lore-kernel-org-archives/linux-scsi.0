@@ -1,43 +1,38 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH 0/7] ufs-qcom: phy/hcd: Clean up qcom-ufs phy and ufs-qcom hcd
-Date: Tue, 18 Oct 2016 10:18:58 +0530
-Message-ID: <1476766145-27583-1-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH 2/7] phy: qcom-ufs: Remove unnecessary BUG_ON
+Date: Tue, 18 Oct 2016 10:19:00 +0530
+Message-ID: <1476766145-27583-3-git-send-email-vivek.gautam@codeaurora.org>
+References: <1476766145-27583-1-git-send-email-vivek.gautam@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1476766145-27583-1-git-send-email-vivek.gautam@codeaurora.org>
 Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
 Cc: subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-These patches cleanup the ufs phy driver to an extent.
-Subsequent patches will target to clean the phy_init() of
-these qcom-ufs phy drivers in order to get rid of a number of
-exported APIs that phy drivers expose for ufs-qcom hcd driver
-to use.
+BUG_ON() are not preferred in the driver, plus the variable
+on which BUG_ON is asserted is already checked in the code
+before passing.
 
-These patches are based on linux-phy next branch, and have been
-tested with on db820c hardware with integration branch -
-'integration-linux-qcomlt' of qualcomm linaro lt tree [1].
+Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
+ drivers/phy/phy-qcom-ufs.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-[1] https://git.linaro.org/landing-teams/working/qualcomm/kernel.git
-
-Vivek Gautam (6):
-  phy: qcom-ufs: Remove unnecessary BUG_ON
-  phy: qcom-ufs: Use devm sibling of kstrdup for regulator names
-  phy: qcom-ufs-qmp-xx: Discard remove callback for drivers.
-  phy: qcom-ufs: Cleanup clock and regulator initialization
-  phy: qcom-ufs-qmp-xx: Move clock and regulator init out of phy init
-  ufs-qcom: phy/hcd: Refactoring phy clock handling
-
-Yaniv Gardi (1):
-  phy: qcom-ufs: remove failure when rx/tx_iface_clk are absence
-
- drivers/phy/phy-qcom-ufs-i.h        |   6 +-
- drivers/phy/phy-qcom-ufs-qmp-14nm.c |  66 ++++++++------------
- drivers/phy/phy-qcom-ufs-qmp-20nm.c |  60 +++++++------------
- drivers/phy/phy-qcom-ufs.c          | 116 +++++++++++++++++-------------------
- drivers/scsi/ufs/ufs-qcom.c         |  15 -----
- 5 files changed, 101 insertions(+), 162 deletions(-)
-
+diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+index 183ec04..805c91d 100644
+--- a/drivers/phy/phy-qcom-ufs.c
++++ b/drivers/phy/phy-qcom-ufs.c
+@@ -335,8 +335,6 @@ int ufs_qcom_phy_cfg_vreg(struct phy *phy,
+ 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(phy);
+ 	struct device *dev = ufs_qcom_phy->dev;
+ 
+-	BUG_ON(!vreg);
+-
+ 	if (regulator_count_voltages(reg) > 0) {
+ 		min_uV = on ? vreg->min_uV : 0;
+ 		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
