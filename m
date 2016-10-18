@@ -1,7 +1,7 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v2 06/10] phy: qcom-ufs: Remove unnecessary function declarations
-Date: Tue, 18 Oct 2016 19:58:13 +0530
-Message-ID: <1476800897-19898-7-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
+Date: Tue, 18 Oct 2016 19:58:15 +0530
+Message-ID: <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org>
 References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
@@ -10,189 +10,220 @@ To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.peter
 Cc: subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Move the functions' definitions to remove unnecessary
-declarations.
+Add phy clock enable code to phy_power_on/off callbacks, and
+remove explicit calls to enable these phy clocks from the
+ufs-qcom hcd driver.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 ---
 
-New patch added in v2 series.
+Changes since v1:
+ - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
+ - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
+ - removed function declaration and export symbol for these APIs.
 
- drivers/phy/phy-qcom-ufs.c | 133 +++++++++++++++++++++------------------------
- 1 file changed, 63 insertions(+), 70 deletions(-)
+ drivers/phy/phy-qcom-ufs.c       | 36 ++++++++++++++++++------------------
+ drivers/scsi/ufs/ufs-qcom.c      | 15 ---------------
+ include/linux/phy/phy-qcom-ufs.h | 18 ------------------
+ 3 files changed, 18 insertions(+), 51 deletions(-)
 
 diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index 3a87e88..144b11f 100644
+index 144b11f..a425cc2 100644
 --- a/drivers/phy/phy-qcom-ufs.c
 +++ b/drivers/phy/phy-qcom-ufs.c
-@@ -22,13 +22,6 @@
- #define VDDP_REF_CLK_MIN_UV        1200000
- #define VDDP_REF_CLK_MAX_UV        1200000
- 
--static int __ufs_qcom_phy_init_vreg(struct device *, struct ufs_qcom_phy_vreg *,
--				    const char *, bool);
--static int ufs_qcom_phy_init_vreg(struct device *, struct ufs_qcom_phy_vreg *,
--				  const char *);
--static int ufs_qcom_phy_base_init(struct platform_device *pdev,
--				  struct ufs_qcom_phy *phy_common);
--
- int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
- 			   struct ufs_qcom_phy_calibration *tbl_A,
- 			   int tbl_size_A,
-@@ -75,45 +68,6 @@ out:
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate);
- 
--struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
--				struct ufs_qcom_phy *common_cfg,
--				const struct phy_ops *ufs_qcom_phy_gen_ops,
--				struct ufs_qcom_phy_specific_ops *phy_spec_ops)
--{
--	int err;
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = NULL;
--	struct phy_provider *phy_provider;
--
--	err = ufs_qcom_phy_base_init(pdev, common_cfg);
--	if (err) {
--		dev_err(dev, "%s: phy base init failed %d\n", __func__, err);
--		goto out;
--	}
--
--	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
--	if (IS_ERR(phy_provider)) {
--		err = PTR_ERR(phy_provider);
--		dev_err(dev, "%s: failed to register phy %d\n", __func__, err);
--		goto out;
--	}
--
--	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops);
--	if (IS_ERR(generic_phy)) {
--		err =  PTR_ERR(generic_phy);
--		dev_err(dev, "%s: failed to create phy %d\n", __func__, err);
--		generic_phy = NULL;
--		goto out;
--	}
--
--	common_cfg->phy_spec_ops = phy_spec_ops;
--	common_cfg->dev = dev;
--
--out:
--	return generic_phy;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
--
- /*
-  * This assumes the embedded phy structure inside generic_phy is of type
-  * struct ufs_qcom_phy. In order to function properly it's crucial
-@@ -154,6 +108,45 @@ int ufs_qcom_phy_base_init(struct platform_device *pdev,
- 	return 0;
+@@ -373,10 +373,9 @@ out:
+ 	return ret;
  }
  
-+struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
-+				struct ufs_qcom_phy *common_cfg,
-+				const struct phy_ops *ufs_qcom_phy_gen_ops,
-+				struct ufs_qcom_phy_specific_ops *phy_spec_ops)
-+{
-+	int err;
-+	struct device *dev = &pdev->dev;
-+	struct phy *generic_phy = NULL;
-+	struct phy_provider *phy_provider;
-+
-+	err = ufs_qcom_phy_base_init(pdev, common_cfg);
-+	if (err) {
-+		dev_err(dev, "%s: phy base init failed %d\n", __func__, err);
-+		goto out;
-+	}
-+
-+	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	if (IS_ERR(phy_provider)) {
-+		err = PTR_ERR(phy_provider);
-+		dev_err(dev, "%s: failed to register phy %d\n", __func__, err);
-+		goto out;
-+	}
-+
-+	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops);
-+	if (IS_ERR(generic_phy)) {
-+		err =  PTR_ERR(generic_phy);
-+		dev_err(dev, "%s: failed to create phy %d\n", __func__, err);
-+		generic_phy = NULL;
-+		goto out;
-+	}
-+
-+	common_cfg->phy_spec_ops = phy_spec_ops;
-+	common_cfg->dev = dev;
-+
-+out:
-+	return generic_phy;
-+}
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
-+
- static int __ufs_qcom_phy_clk_get(struct device *dev,
- 			 const char *name, struct clk **clk_out, bool err_print)
+-int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
++static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
  {
-@@ -224,30 +217,6 @@ out:
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_clks);
+ 	int ret = 0;
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
  
--int
--ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common)
--{
--	int err;
--
--	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_pll,
--		"vdda-pll");
--	if (err)
--		goto out;
--
--	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_phy,
--		"vdda-phy");
--
--	if (err)
--		goto out;
--
--	/* vddp-ref-clk-* properties are optional */
--	__ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vddp_ref_clk,
--				 "vddp-ref-clk", true);
--out:
--	return err;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_vregulators);
--
- static int __ufs_qcom_phy_init_vreg(struct device *dev,
- 		struct ufs_qcom_phy_vreg *vreg, const char *name, bool optional)
- {
-@@ -316,6 +285,30 @@ static int ufs_qcom_phy_init_vreg(struct device *dev,
- 	return __ufs_qcom_phy_init_vreg(dev, vreg, name, false);
+ 	if (phy->is_ref_clk_enabled)
+ 		goto out;
+@@ -423,7 +422,6 @@ out_disable_src:
+ out:
+ 	return ret;
  }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
  
-+int
-+ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common)
-+{
-+	int err;
-+
-+	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_pll,
-+		"vdda-pll");
-+	if (err)
-+		goto out;
-+
-+	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_phy,
-+		"vdda-phy");
-+
-+	if (err)
-+		goto out;
-+
-+	/* vddp-ref-clk-* properties are optional */
-+	__ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vddp_ref_clk,
-+				 "vddp-ref-clk", true);
-+out:
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_vregulators);
-+
  static
- int ufs_qcom_phy_cfg_vreg(struct device *dev,
- 			  struct ufs_qcom_phy_vreg *vreg, bool on)
+ int ufs_qcom_phy_disable_vreg(struct device *dev,
+@@ -448,10 +446,8 @@ out:
+ 	return ret;
+ }
+ 
+-void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
++static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+-
+ 	if (phy->is_ref_clk_enabled) {
+ 		clk_disable_unprepare(phy->ref_clk);
+ 		/*
+@@ -464,7 +460,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
+ 		phy->is_ref_clk_enabled = false;
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
+ 
+ #define UFS_REF_CLK_EN	(1 << 5)
+ 
+@@ -517,9 +512,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
+ EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
+ 
+ /* Turn ON M-PHY RMMI interface clocks */
+-int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
++static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+ 	int ret = 0;
+ 
+ 	if (phy->is_iface_clk_enabled)
+@@ -543,20 +537,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
+ out:
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
+ 
+ /* Turn OFF M-PHY RMMI interface clocks */
+-void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
++void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+-
+ 	if (phy->is_iface_clk_enabled) {
+ 		clk_disable_unprepare(phy->tx_iface_clk);
+ 		clk_disable_unprepare(phy->rx_iface_clk);
+ 		phy->is_iface_clk_enabled = false;
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
+ 
+ int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+ {
+@@ -674,13 +664,20 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 		goto out_disable_phy;
+ 	}
+ 
+-	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
++	err = ufs_qcom_phy_enable_iface_clk(phy_common);
+ 	if (err) {
+-		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
++		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
+ 			__func__, err);
+ 		goto out_disable_pll;
+ 	}
+ 
++	err = ufs_qcom_phy_enable_ref_clk(phy_common);
++	if (err) {
++		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
++			__func__, err);
++		goto out_disable_iface_clk;
++	}
++
+ 	/* enable device PHY ref_clk pad rail */
+ 	if (phy_common->vddp_ref_clk.reg) {
+ 		err = ufs_qcom_phy_enable_vreg(dev,
+@@ -696,7 +693,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 	goto out;
+ 
+ out_disable_ref_clk:
+-	ufs_qcom_phy_disable_ref_clk(generic_phy);
++	ufs_qcom_phy_disable_ref_clk(phy_common);
++out_disable_iface_clk:
++	ufs_qcom_phy_disable_iface_clk(phy_common);
+ out_disable_pll:
+ 	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
+ out_disable_phy:
+@@ -715,7 +714,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+ 	if (phy_common->vddp_ref_clk.reg)
+ 		ufs_qcom_phy_disable_vreg(phy_common->dev,
+ 					  &phy_common->vddp_ref_clk);
+-	ufs_qcom_phy_disable_ref_clk(generic_phy);
++	ufs_qcom_phy_disable_ref_clk(phy_common);
++	ufs_qcom_phy_disable_iface_clk(phy_common);
+ 
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aedf73..6e4ce5f 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		return 0;
+ 
+ 	if (on) {
+-		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+-		if (err)
+-			goto out;
+-
+-		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+-		if (err) {
+-			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
+-				__func__, err);
+-			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+-			goto out;
+-		}
+ 		/* enable the device ref clock for HS mode*/
+ 		if (ufshcd_is_hs_mode(&hba->pwr_info))
+ 			ufs_qcom_dev_ref_clk_ctrl(host, true);
+@@ -1131,9 +1120,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 			ufs_qcom_update_bus_bw_vote(host);
+ 
+ 	} else {
+-
+-		/* M-PHY RMMI interface clocks can be turned off */
+-		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+ 		if (!ufs_qcom_is_link_active(hba))
+ 			/* disable device ref_clk */
+ 			ufs_qcom_dev_ref_clk_ctrl(host, false);
+@@ -1146,7 +1132,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+ 				__func__, err);
+ 
+-out:
+ 	return err;
+ }
+ 
+diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
+index 9d18e9f..35c070e 100644
+--- a/include/linux/phy/phy-qcom-ufs.h
++++ b/include/linux/phy/phy-qcom-ufs.h
+@@ -18,22 +18,6 @@
+ #include "phy.h"
+ 
+ /**
+- * ufs_qcom_phy_enable_ref_clk() - Enable the phy
+- * ref clock.
+- * @phy: reference to a generic phy
+- *
+- * returns 0 for success, and non-zero for error.
+- */
+-int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
+-
+-/**
+- * ufs_qcom_phy_disable_ref_clk() - Disable the phy
+- * ref clock.
+- * @phy: reference to a generic phy.
+- */
+-void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
+-
+-/**
+  * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
+  * ref clock.
+  * @phy: reference to a generic phy.
+@@ -47,8 +31,6 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy *phy);
+  */
+ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+ 
+-int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
+-void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
+ int ufs_qcom_phy_start_serdes(struct phy *phy);
+ int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+ int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
