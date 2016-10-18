@@ -1,117 +1,107 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH 4/7] phy: qcom-ufs-qmp-xx: Discard remove callback for drivers.
-Date: Tue, 18 Oct 2016 10:19:02 +0530
-Message-ID: <1476766145-27583-5-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH 7/7] ufs-qcom: phy/hcd: Refactoring phy clock handling
+Date: Tue, 18 Oct 2016 10:19:05 +0530
+Message-ID: <1476766145-27583-8-git-send-email-vivek.gautam@codeaurora.org>
 References: <1476766145-27583-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1476766145-27583-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
 Cc: subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-remove() callback does a phy_exit() only and nothing else now.
-The phy_exit() over the generic phy is called from the phy
-consumer, and phy provider driver should not explicitly need to
-call any phy_exit().
-So discard the remove callback for qcom-ufs phy platform drivers.
+Add phy clock enable code to phy_power_on/off callbacks, and
+remove explicit calls to enable these phy clocks from the
+ufs-qcom hcd driver.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/phy/phy-qcom-ufs-qmp-14nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs-qmp-20nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs.c          |  9 ---------
- 3 files changed, 41 deletions(-)
+ drivers/phy/phy-qcom-ufs.c  | 12 +++++++++++-
+ drivers/scsi/ufs/ufs-qcom.c | 15 ---------------
+ 2 files changed, 11 insertions(+), 16 deletions(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index 6ee5149..a305016 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -163,21 +163,6 @@ out:
- 	return err;
- }
- 
--static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
- static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-14nm"},
- 	{},
-@@ -186,7 +171,6 @@ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
- 
- static struct platform_driver ufs_qcom_phy_qmp_14nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_14nm_probe,
--	.remove = ufs_qcom_phy_qmp_14nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_14nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_14nm",
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-index 770087a..2db1fbb 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-@@ -219,21 +219,6 @@ out:
- 	return err;
- }
- 
--static int ufs_qcom_phy_qmp_20nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
- static const struct of_device_id ufs_qcom_phy_qmp_20nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-20nm"},
- 	{},
-@@ -242,7 +227,6 @@ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_20nm_of_match);
- 
- static struct platform_driver ufs_qcom_phy_qmp_20nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_20nm_probe,
--	.remove = ufs_qcom_phy_qmp_20nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_20nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_20nm",
 diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index f639a7c..b8f9286 100644
+index 3a87e88..687b9b7 100644
 --- a/drivers/phy/phy-qcom-ufs.c
 +++ b/drivers/phy/phy-qcom-ufs.c
-@@ -645,15 +645,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
+@@ -681,11 +681,18 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 		goto out_disable_phy;
+ 	}
  
--int ufs_qcom_phy_remove(struct phy *generic_phy,
--			struct ufs_qcom_phy *ufs_qcom_phy)
--{
--	phy_power_off(generic_phy);
++	err = ufs_qcom_phy_enable_iface_clk(generic_phy);
++	if (err) {
++		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
++			__func__, err);
++		goto out_disable_pll;
++	}
++
+ 	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
+ 	if (err) {
+ 		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
+ 			__func__, err);
+-		goto out_disable_pll;
++		goto out_disable_iface_clk;
+ 	}
+ 
+ 	/* enable device PHY ref_clk pad rail */
+@@ -704,6 +711,8 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 
+ out_disable_ref_clk:
+ 	ufs_qcom_phy_disable_ref_clk(generic_phy);
++out_disable_iface_clk:
++	ufs_qcom_phy_disable_iface_clk(generic_phy);
+ out_disable_pll:
+ 	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
+ out_disable_phy:
+@@ -723,6 +732,7 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+ 		ufs_qcom_phy_disable_vreg(phy_common->dev,
+ 					  &phy_common->vddp_ref_clk);
+ 	ufs_qcom_phy_disable_ref_clk(generic_phy);
++	ufs_qcom_phy_disable_iface_clk(generic_phy);
+ 
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aedf73..6e4ce5f 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		return 0;
+ 
+ 	if (on) {
+-		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+-		if (err)
+-			goto out;
 -
--	return 0;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_remove);
+-		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+-		if (err) {
+-			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
+-				__func__, err);
+-			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+-			goto out;
+-		}
+ 		/* enable the device ref clock for HS mode*/
+ 		if (ufshcd_is_hs_mode(&hba->pwr_info))
+ 			ufs_qcom_dev_ref_clk_ctrl(host, true);
+@@ -1131,9 +1120,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 			ufs_qcom_update_bus_bw_vote(host);
+ 
+ 	} else {
 -
- int ufs_qcom_phy_exit(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+-		/* M-PHY RMMI interface clocks can be turned off */
+-		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+ 		if (!ufs_qcom_is_link_active(hba))
+ 			/* disable device ref_clk */
+ 			ufs_qcom_dev_ref_clk_ctrl(host, false);
+@@ -1146,7 +1132,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+ 				__func__, err);
+ 
+-out:
+ 	return err;
+ }
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
