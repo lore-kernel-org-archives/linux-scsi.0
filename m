@@ -1,91 +1,108 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 02/11] scsi: ufshcd: release resources if probe fails
-Date: Mon, 17 Oct 2016 17:09:11 -0700
-Message-ID: <1476749352-11123-1-git-send-email-subhashj@codeaurora.org>
+Subject: [PATCH v1 03/11] scsi: ufs: fix bugs related to null pointer access and array size
+Date: Mon, 17 Oct 2016 17:09:24 -0700
+Message-ID: <1476749364-11163-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
+Cc: Yaniv Gardi <ygardi@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-If ufshcd pltfrm/pci driver's probe fails for some reason then ensure that
-scsi host is released to avoid memory leak but managed memory allocations
-(via devm_* calls) need not to be freed explicitly on probe failure as
-memory allocated with these functions is automatically freed on driver
-detach.
+From: Yaniv Gardi <ygardi@codeaurora.org>
 
+In this change there are a few fixes of possible NULL pointer access
+and possible access to index that exceeds array boundaries.
+
+Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd-pci.c    | 2 ++
- drivers/scsi/ufs/ufshcd-pltfrm.c | 5 +----
- drivers/scsi/ufs/ufshcd.c        | 3 ---
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufs.h    |  3 ++-
+ drivers/scsi/ufs/ufshcd.c | 25 +++++++++++++++++++------
+ 2 files changed, 21 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index d15eaa4..52b546f 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -104,6 +104,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 	pm_runtime_forbid(&pdev->dev);
- 	pm_runtime_get_noresume(&pdev->dev);
- 	ufshcd_remove(hba);
-+	ufshcd_dealloc_host(hba);
- }
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 845b874..7a6ccb6 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -46,6 +46,7 @@
+ #define QUERY_DESC_HDR_SIZE       2
+ #define QUERY_OSF_SIZE            (GENERAL_UPIU_REQUEST_SIZE - \
+ 					(sizeof(struct utp_upiu_header)))
++#define RESPONSE_UPIU_SENSE_DATA_LENGTH	18
+ 
+ #define UPIU_HEADER_DWORD(byte3, byte2, byte1, byte0)\
+ 			cpu_to_be32((byte3 << 24) | (byte2 << 16) |\
+@@ -416,7 +417,7 @@ struct utp_cmd_rsp {
+ 	__be32 residual_transfer_count;
+ 	__be32 reserved[4];
+ 	__be16 sense_data_len;
+-	u8 sense_data[18];
++	u8 sense_data[RESPONSE_UPIU_SENSE_DATA_LENGTH];
+ };
  
  /**
-@@ -147,6 +148,7 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-+		ufshcd_dealloc_host(hba);
- 		return err;
- 	}
- 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index db53f38..a72a4ba 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -163,7 +163,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 	if (ret) {
- 		dev_err(dev, "%s: unable to find %s err %d\n",
- 				__func__, prop_name, ret);
--		goto out_free;
-+		goto out;
- 	}
- 
- 	vreg->min_uA = 0;
-@@ -185,9 +185,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 
- 	goto out;
- 
--out_free:
--	devm_kfree(dev, vreg);
--	vreg = NULL;
- out:
- 	if (!ret)
- 		*out_vreg = vreg;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 77700ee..834a28c 100644
+index 834a28c..a99f57b 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6197,8 +6197,6 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba, true);
+@@ -889,10 +889,14 @@ static inline void ufshcd_copy_sense_data(struct ufshcd_lrb *lrbp)
+ 	int len;
+ 	if (lrbp->sense_buffer &&
+ 	    ufshcd_get_rsp_upiu_data_seg_len(lrbp->ucd_rsp_ptr)) {
++		int len_to_copy;
++
+ 		len = be16_to_cpu(lrbp->ucd_rsp_ptr->sr.sense_data_len);
++		len_to_copy = min_t(int, RESPONSE_UPIU_SENSE_DATA_LENGTH, len);
++
+ 		memcpy(lrbp->sense_buffer,
+ 			lrbp->ucd_rsp_ptr->sr.sense_data,
+-			min_t(int, len, SCSI_SENSE_BUFFERSIZE));
++			min_t(int, len_to_copy, SCSI_SENSE_BUFFERSIZE));
+ 	}
+ }
  
--	scsi_host_put(hba->host);
--
- 	ufshcd_exit_clk_gating(hba);
- 	if (ufshcd_is_clkscaling_enabled(hba))
- 		devfreq_remove_device(hba->devfreq);
-@@ -6561,7 +6559,6 @@ exit_gating:
- 	ufshcd_exit_clk_gating(hba);
- out_disable:
- 	hba->is_irq_enabled = false;
--	scsi_host_put(host);
- 	ufshcd_hba_exit(hba);
- out_error:
- 	return err;
+@@ -6091,7 +6095,10 @@ EXPORT_SYMBOL(ufshcd_system_suspend);
+ 
+ int ufshcd_system_resume(struct ufs_hba *hba)
+ {
+-	if (!hba || !hba->is_powered || pm_runtime_suspended(hba->dev))
++	if (!hba)
++		return -EINVAL;
++
++	if (!hba->is_powered || pm_runtime_suspended(hba->dev))
+ 		/*
+ 		 * Let the runtime resume take care of resuming
+ 		 * if runtime suspended.
+@@ -6112,7 +6119,10 @@ EXPORT_SYMBOL(ufshcd_system_resume);
+  */
+ int ufshcd_runtime_suspend(struct ufs_hba *hba)
+ {
+-	if (!hba || !hba->is_powered)
++	if (!hba)
++		return -EINVAL;
++
++	if (!hba->is_powered)
+ 		return 0;
+ 
+ 	return ufshcd_suspend(hba, UFS_RUNTIME_PM);
+@@ -6142,10 +6152,13 @@ EXPORT_SYMBOL(ufshcd_runtime_suspend);
+  */
+ int ufshcd_runtime_resume(struct ufs_hba *hba)
+ {
+-	if (!hba || !hba->is_powered)
++	if (!hba)
++		return -EINVAL;
++
++	if (!hba->is_powered)
+ 		return 0;
+-	else
+-		return ufshcd_resume(hba, UFS_RUNTIME_PM);
++
++	return ufshcd_resume(hba, UFS_RUNTIME_PM);
+ }
+ EXPORT_SYMBOL(ufshcd_runtime_resume);
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
