@@ -1,28 +1,28 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 16/20] libfc: Replace ->exch_done callback with function
- call
-Date: Tue, 18 Oct 2016 11:03:13 +0200
-Message-ID: <20161018090313.jacqlft5tu7virmd@linux-x5ow.site>
+Subject: Re: [PATCH 17/20] libfc: Replace ->seq_start_next callback with
+ function call
+Date: Tue, 18 Oct 2016 11:04:09 +0200
+Message-ID: <20161018090409.26fnef3f6pkqljfp@linux-x5ow.site>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
- <1476777714-3543-17-git-send-email-hare@suse.de>
+ <1476777714-3543-18-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55886 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55955 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758687AbcJRJDO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 05:03:14 -0400
+        id S1758797AbcJRJEL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 05:04:11 -0400
 Content-Disposition: inline
-In-Reply-To: <1476777714-3543-17-git-send-email-hare@suse.de>
+In-Reply-To: <1476777714-3543-18-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Oct 18, 2016 at 10:01:50AM +0200, Hannes Reinecke wrote:
-> The ->exch_done callback only ever had one implementation,
-> so we can as well call it directly and drop the callback.
+On Tue, Oct 18, 2016 at 10:01:51AM +0200, Hannes Reinecke wrote:
+> The ->seq_start_next callback only ever had one implementation,
+> so call the function directly and drop the callback.
 > 
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
