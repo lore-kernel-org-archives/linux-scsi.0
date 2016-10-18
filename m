@@ -1,49 +1,47 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 11/11] scsi: ufs: optimize clock gate work
-Date: Mon, 17 Oct 2016 17:11:07 -0700
-Message-ID: <1476749468-11486-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+Subject: Re: [RESEND PATCH] scsi: ufs: fix race between clock gating and
+ devfreq scaling work
+Date: Mon, 17 Oct 2016 17:13:56 -0700
+Message-ID: <8edb1a0aaa886ffc80564117a020f490@codeaurora.org>
+References: <1476227759-22389-1-git-send-email-subhashj@codeaurora.org>
+ <yq137jyk68k.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:44461 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754236AbcJRAN5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 17 Oct 2016 20:13:57 -0400
+In-Reply-To: <yq137jyk68k.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+On 2016-10-14 13:47, Martin K. Petersen wrote:
+>>>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
+> 
+> Subhash> UFS devfreq clock scaling work may require clocks to be ON if
+> Subhash> it need to execute some UFS commands hence it may request for
+> Subhash> clock hold before issuing the command. But if UFS clock gating
+> Subhash> work is already running in parallel, ungate work would end up
+> Subhash> waiting for the clock gating work to finish and as clock 
+> gating
+> Subhash> work would also wait for the clock scaling work to finish, we
+> Subhash> would enter in deadlock state. Here is the call trace during
+> Subhash> this deadlock state:
+> 
+> Somebody from the UFS camp, please review!
 
-In a case where gate work is called as part of cancel work
-from ungate path the clk state would be marked as REQ_CLKS_ON.
-There is no point gating the clocks and then end up turning
-them ON immediately in ungate work, save time by skipping the
-gate work and change the clk state to CLKS_ON as they are not
-turned off yet.
+As there was no review so far, i have moved this patch as first patch in 
+the new UFS bug fixes patch series ([PATCH v1 00/11] scsi: ufs: bug 
+fixes patch series #1) sent by me today.
 
-Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 9 ++++++++-
- 1 file changed, 8 insertions(+), 1 deletion(-)
+Thanks,
+Subhash
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 7959793..8cf5d8f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -739,7 +739,14 @@ static void ufshcd_gate_work(struct work_struct *work)
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	if (hba->clk_gating.is_suspended) {
-+	/*
-+	 * In case you are here to cancel this work the gating state
-+	 * would be marked as REQ_CLKS_ON. In this case save time by
-+	 * skipping the gating work and exit after changing the clock
-+	 * state to CLKS_ON.
-+	 */
-+	if (hba->clk_gating.is_suspended ||
-+		(hba->clk_gating.state == REQ_CLKS_ON)) {
- 		hba->clk_gating.state = CLKS_ON;
- 		goto rel_lock;
- 	}
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
 a Linux Foundation Collaborative Project
