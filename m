@@ -1,261 +1,62 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v8 7/7] blk-zoned: implement ioctls
-Date: Tue, 18 Oct 2016 15:40:35 +0900
-Message-ID: <1476772835-18541-8-git-send-email-damien.lemoal@wdc.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v8 1/7] block: Add 'zoned' queue limit
+Date: Tue, 18 Oct 2016 08:42:58 +0200
+Message-ID: <1e4d596f-e296-7f5c-0976-72c1d09ad71a@suse.de>
 References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
+ <1476772835-18541-2-git-send-email-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Damien Le Moal <damien.lemoal@hgst.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41150 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1757533AbcJRGnC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 02:43:02 -0400
+In-Reply-To: <1476772835-18541-2-git-send-email-damien.lemoal@wdc.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
-From: Shaun Tancheff <shaun@tancheff.com>
-
-Adds the new BLKREPORTZONE and BLKRESETZONE ioctls for respectively
-obtaining the zone configuration of a zoned block device and resetting
-the write pointer of sequential zones of a zoned block device.
-
-The BLKREPORTZONE ioctl maps directly to a single call of the function
-blkdev_report_zones. The zone information result is passed as an array
-of struct blk_zone identical to the structure used internally for
-processing the REQ_OP_ZONE_REPORT operation.  The BLKRESETZONE ioctl
-maps to a single call of the blkdev_reset_zones function.
-
-Signed-off-by: Shaun Tancheff <shaun.tancheff@seagate.com>
-Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+On 10/18/2016 08:40 AM, Damien Le Moal wrote:
+> From: Damien Le Moal <damien.lemoal@hgst.com>
+> 
+> Add the zoned queue limit to indicate the zoning model of a block device.
+> Defined values are 0 (BLK_ZONED_NONE) for regular block devices,
+> 1 (BLK_ZONED_HA) for host-aware zone block devices and 2 (BLK_ZONED_HM)
+> for host-managed zone block devices. The standards defined drive managed
+> model is not defined here since these block devices do not provide any
+> command for accessing zone information. Drive managed model devices will
+> be reported as BLK_ZONED_NONE.
+> 
+> The helper functions blk_queue_zoned_model and bdev_zoned_model return
+> the zoned limit and the functions blk_queue_is_zoned and bdev_is_zoned
+> return a boolean for callers to test if a block device is zoned.
+> 
+> The zoned attribute is also exported as a string to applications via
+> sysfs. BLK_ZONED_NONE shows as "none", BLK_ZONED_HA as "host-aware" and
+> BLK_ZONED_HM as "host-managed".
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@hgst.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+> Reviewed-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> Tested-by: Shaun Tancheff <shaun.tancheff@seagate.com>
+> ---
+>  Documentation/ABI/testing/sysfs-block | 16 ++++++++++++
+>  block/blk-settings.c                  |  1 +
+>  block/blk-sysfs.c                     | 18 ++++++++++++++
+>  include/linux/blkdev.h                | 47 +++++++++++++++++++++++++++++++++++
+>  4 files changed, 82 insertions(+)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- block/blk-zoned.c             | 93 +++++++++++++++++++++++++++++++++++++++++++
- block/ioctl.c                 |  4 ++
- include/linux/blkdev.h        | 21 ++++++++++
- include/uapi/linux/blkzoned.h | 40 +++++++++++++++++++
- include/uapi/linux/fs.h       |  4 ++
- 5 files changed, 162 insertions(+)
 
-diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index 1603573..667f95d 100644
---- a/block/blk-zoned.c
-+++ b/block/blk-zoned.c
-@@ -255,3 +255,96 @@ int blkdev_reset_zones(struct block_device *bdev,
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(blkdev_reset_zones);
-+
-+/**
-+ * BLKREPORTZONE ioctl processing.
-+ * Called from blkdev_ioctl.
-+ */
-+int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+			      unsigned int cmd, unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct request_queue *q;
-+	struct blk_zone_report rep;
-+	struct blk_zone *zones;
-+	int ret;
-+
-+	if (!argp)
-+		return -EINVAL;
-+
-+	q = bdev_get_queue(bdev);
-+	if (!q)
-+		return -ENXIO;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -ENOTTY;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (copy_from_user(&rep, argp, sizeof(struct blk_zone_report)))
-+		return -EFAULT;
-+
-+	if (!rep.nr_zones)
-+		return -EINVAL;
-+
-+	zones = kcalloc(rep.nr_zones, sizeof(struct blk_zone), GFP_KERNEL);
-+	if (!zones)
-+		return -ENOMEM;
-+
-+	ret = blkdev_report_zones(bdev, rep.sector,
-+				  zones, &rep.nr_zones,
-+				  GFP_KERNEL);
-+	if (ret)
-+		goto out;
-+
-+	if (copy_to_user(argp, &rep, sizeof(struct blk_zone_report))) {
-+		ret = -EFAULT;
-+		goto out;
-+	}
-+
-+	if (rep.nr_zones) {
-+		if (copy_to_user(argp + sizeof(struct blk_zone_report), zones,
-+				 sizeof(struct blk_zone) * rep.nr_zones))
-+			ret = -EFAULT;
-+	}
-+
-+ out:
-+	kfree(zones);
-+
-+	return ret;
-+}
-+
-+/**
-+ * BLKRESETZONE ioctl processing.
-+ * Called from blkdev_ioctl.
-+ */
-+int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+			     unsigned int cmd, unsigned long arg)
-+{
-+	void __user *argp = (void __user *)arg;
-+	struct request_queue *q;
-+	struct blk_zone_range zrange;
-+
-+	if (!argp)
-+		return -EINVAL;
-+
-+	q = bdev_get_queue(bdev);
-+	if (!q)
-+		return -ENXIO;
-+
-+	if (!blk_queue_is_zoned(q))
-+		return -ENOTTY;
-+
-+	if (!capable(CAP_SYS_ADMIN))
-+		return -EACCES;
-+
-+	if (!(mode & FMODE_WRITE))
-+		return -EBADF;
-+
-+	if (copy_from_user(&zrange, argp, sizeof(struct blk_zone_range)))
-+		return -EFAULT;
-+
-+	return blkdev_reset_zones(bdev, zrange.sector, zrange.nr_sectors,
-+				  GFP_KERNEL);
-+}
-diff --git a/block/ioctl.c b/block/ioctl.c
-index ed2397f..448f78a 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -513,6 +513,10 @@ int blkdev_ioctl(struct block_device *bdev, fmode_t mode, unsigned cmd,
- 				BLKDEV_DISCARD_SECURE);
- 	case BLKZEROOUT:
- 		return blk_ioctl_zeroout(bdev, mode, arg);
-+	case BLKREPORTZONE:
-+		return blkdev_report_zones_ioctl(bdev, mode, cmd, arg);
-+	case BLKRESETZONE:
-+		return blkdev_reset_zones_ioctl(bdev, mode, cmd, arg);
- 	case HDIO_GETGEO:
- 		return blkdev_getgeo(bdev, argp);
- 	case BLKRAGET:
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index 252043f..90097dd 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -316,6 +316,27 @@ extern int blkdev_report_zones(struct block_device *bdev,
- extern int blkdev_reset_zones(struct block_device *bdev, sector_t sectors,
- 			      sector_t nr_sectors, gfp_t gfp_mask);
- 
-+extern int blkdev_report_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+				     unsigned int cmd, unsigned long arg);
-+extern int blkdev_reset_zones_ioctl(struct block_device *bdev, fmode_t mode,
-+				    unsigned int cmd, unsigned long arg);
-+
-+#else /* CONFIG_BLK_DEV_ZONED */
-+
-+static inline int blkdev_report_zones_ioctl(struct block_device *bdev,
-+					    fmode_t mode, unsigned int cmd,
-+					    unsigned long arg)
-+{
-+	return -ENOTTY;
-+}
-+
-+static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
-+					   fmode_t mode, unsigned int cmd,
-+					   unsigned long arg)
-+{
-+	return -ENOTTY;
-+}
-+
- #endif /* CONFIG_BLK_DEV_ZONED */
- 
- struct request_queue {
-diff --git a/include/uapi/linux/blkzoned.h b/include/uapi/linux/blkzoned.h
-index a381721..40d1d7b 100644
---- a/include/uapi/linux/blkzoned.h
-+++ b/include/uapi/linux/blkzoned.h
-@@ -16,6 +16,7 @@
- #define _UAPI_BLKZONED_H
- 
- #include <linux/types.h>
-+#include <linux/ioctl.h>
- 
- /**
-  * enum blk_zone_type - Types of zones allowed in a zoned device.
-@@ -100,4 +101,43 @@ struct blk_zone {
- 	__u8	reserved[36];
- };
- 
-+/**
-+ * struct blk_zone_report - BLKREPORTZONE ioctl request/reply
-+ *
-+ * @sector: starting sector of report
-+ * @nr_zones: IN maximum / OUT actual
-+ * @reserved: padding to 16 byte alignment
-+ * @zones: Space to hold @nr_zones @zones entries on reply.
-+ *
-+ * The array of at most @nr_zones must follow this structure in memory.
-+ */
-+struct blk_zone_report {
-+	__u64		sector;
-+	__u32		nr_zones;
-+	__u8		reserved[4];
-+	struct blk_zone zones[0];
-+} __packed;
-+
-+/**
-+ * struct blk_zone_range - BLKRESETZONE ioctl request
-+ * @sector: starting sector of the first zone to issue reset write pointer
-+ * @nr_sectors: Total number of sectors of 1 or more zones to reset
-+ */
-+struct blk_zone_range {
-+	__u64		sector;
-+	__u64		nr_sectors;
-+};
-+
-+/**
-+ * Zoned block device ioctl's:
-+ *
-+ * @BLKREPORTZONE: Get zone information. Takes a zone report as argument.
-+ *                 The zone report will start from the zone containing the
-+ *                 sector specified in the report request structure.
-+ * @BLKRESETZONE: Reset the write pointer of the zones in the specified
-+ *                sector range. The sector range must be zone aligned.
-+ */
-+#define BLKREPORTZONE	_IOWR(0x12, 130, struct blk_zone_report)
-+#define BLKRESETZONE	_IOW(0x12, 131, struct blk_zone_range)
-+
- #endif /* _UAPI_BLKZONED_H */
-diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
-index 3b00f7c..e0fc7f0 100644
---- a/include/uapi/linux/fs.h
-+++ b/include/uapi/linux/fs.h
-@@ -222,6 +222,10 @@ struct fsxattr {
- #define BLKSECDISCARD _IO(0x12,125)
- #define BLKROTATIONAL _IO(0x12,126)
- #define BLKZEROOUT _IO(0x12,127)
-+/*
-+ * A jump here: 130-131 are reserved for zoned block devices
-+ * (see uapi/linux/blkzoned.h)
-+ */
- 
- #define BMAP_IOCTL 1		/* obsolete - kept for compatibility */
- #define FIBMAP	   _IO(0x00,1)	/* bmap access */
+Cheers,
+
+Hannes
 -- 
-2.7.4
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
