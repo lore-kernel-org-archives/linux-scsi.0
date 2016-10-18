@@ -1,65 +1,30 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH v3 11/11] nvme: Fix a race condition
-Date: Tue, 18 Oct 2016 14:53:35 -0700
-Message-ID: <2a29b7ec-0113-3450-9a36-b925b47b1fb0@sandisk.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: Re: [PATCH v3 0/11] Fix race conditions related to stopping block
+ layer queues
+Date: Tue, 18 Oct 2016 14:56:04 -0700
+Message-ID: <8fa81aa5-746f-c163-e26b-3a7becf7259e@sandisk.com>
 References: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lin <ming.l@ssi.samsung.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <b39eb0e7-1007-eb63-8e7f-9a7f08508379-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid that nvme_queue_rq() is still running when nvme_stop_queues()
-returns.
+On 10/18/2016 02:48 PM, Bart Van Assche wrote:
+> - blk_mq_quiesce_queue() has been reworked (thanks to Ming Lin and Sagi
+>    for their feedback).
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Keith Busch <keith.busch@intel.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Christoph Hellwig <hch@lst.de>
----
- drivers/nvme/host/core.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+(replying to my own e-mail)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index 18a265d..96f00c7 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -201,13 +201,7 @@ static struct nvme_ns *nvme_get_ns_from_disk(struct gendisk *disk)
- 
- void nvme_requeue_req(struct request *req)
- {
--	unsigned long flags;
--
--	blk_mq_requeue_request(req, false);
--	spin_lock_irqsave(req->q->queue_lock, flags);
--	if (!blk_mq_queue_stopped(req->q))
--		blk_mq_kick_requeue_list(req->q);
--	spin_unlock_irqrestore(req->q->queue_lock, flags);
-+	blk_mq_requeue_request(req, true);
- }
- EXPORT_SYMBOL_GPL(nvme_requeue_req);
- 
-@@ -2074,11 +2068,14 @@ EXPORT_SYMBOL_GPL(nvme_kill_queues);
- void nvme_stop_queues(struct nvme_ctrl *ctrl)
- {
- 	struct nvme_ns *ns;
-+	struct request_queue *q;
- 
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list) {
--		blk_mq_cancel_requeue_work(ns->queue);
--		blk_mq_stop_hw_queues(ns->queue);
-+		q = ns->queue;
-+		blk_mq_cancel_requeue_work(q);
-+		blk_mq_stop_hw_queues(q);
-+		blk_mq_quiesce_queue(q);
- 	}
- 	mutex_unlock(&ctrl->namespaces_mutex);
- }
--- 
-2.10.1
+A correction: Ming Lei provided feedback on v2 of this patch series 
+instead of Ming Lin.
 
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
