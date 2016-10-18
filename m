@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 11/20] libfc: Replace ->rport_recv_req callback with function call
-Date: Tue, 18 Oct 2016 10:01:45 +0200
-Message-ID: <1476777714-3543-12-git-send-email-hare@suse.de>
+Subject: [PATCH 08/20] libfc: Replace ->rport_create callback with function call
+Date: Tue, 18 Oct 2016 10:01:42 +0200
+Message-ID: <1476777714-3543-9-git-send-email-hare@suse.de>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47357 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47329 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758304AbcJRIC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1758211AbcJRIC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Tue, 18 Oct 2016 04:02:29 -0400
 In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,86 +14,161 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The ->rport_recv_req callback only ever had one implementation,
+The ->rport_create callback only ever had a single implementation,
 so we can as well call it directly and drop the callback.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_lport.c | 2 +-
- drivers/scsi/libfc/fc_rport.c | 6 ++----
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
+ drivers/scsi/libfc/fc_disc.c  | 7 +++----
+ drivers/scsi/libfc/fc_lport.c | 6 +++---
+ drivers/scsi/libfc/fc_rport.c | 9 +++------
  include/scsi/libfc.h          | 8 +-------
- 3 files changed, 4 insertions(+), 12 deletions(-)
+ 5 files changed, 11 insertions(+), 21 deletions(-)
 
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index bae4e5a..38e6779 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2515,7 +2515,7 @@ static void fcoe_ctlr_vn_add(struct fcoe_ctlr *fip, struct fc_rport_priv *new)
+ 		return;
+ 
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	rdata = lport->tt.rport_create(lport, port_id);
++	rdata = fc_rport_create(lport, port_id);
+ 	if (!rdata) {
+ 		mutex_unlock(&lport->disc.disc_mutex);
+ 		return;
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index e5ffeab..305dd85 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -454,7 +454,7 @@ static int fc_disc_gpn_ft_parse(struct fc_disc *disc, void *buf, size_t len)
+ 
+ 		if (ids.port_id != lport->port_id &&
+ 		    ids.port_name != lport->wwpn) {
+-			rdata = lport->tt.rport_create(lport, ids.port_id);
++			rdata = fc_rport_create(lport, ids.port_id);
+ 			if (rdata) {
+ 				rdata->ids.port_name = ids.port_name;
+ 				rdata->disc_id = disc->disc_id;
+@@ -624,8 +624,7 @@ static void fc_disc_gpn_id_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			mutex_unlock(&rdata->rp_mutex);
+ 			lport->tt.rport_logoff(rdata);
+ 			mutex_lock(&lport->disc.disc_mutex);
+-			new_rdata = lport->tt.rport_create(lport,
+-							   rdata->ids.port_id);
++			new_rdata = fc_rport_create(lport, rdata->ids.port_id);
+ 			mutex_unlock(&lport->disc.disc_mutex);
+ 			if (new_rdata) {
+ 				new_rdata->disc_id = disc->disc_id;
+@@ -690,7 +689,7 @@ static int fc_disc_single(struct fc_lport *lport, struct fc_disc_port *dp)
+ {
+ 	struct fc_rport_priv *rdata;
+ 
+-	rdata = lport->tt.rport_create(lport, dp->port_id);
++	rdata = fc_rport_create(lport, dp->port_id);
+ 	if (!rdata)
+ 		return -ENOMEM;
+ 	rdata->disc_id = 0;
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index a391cb1..937a442 100644
+index 2da6c7c..a16936a 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -902,7 +902,7 @@ static void fc_lport_recv_els_req(struct fc_lport *lport,
- 		/*
- 		 * Check opcode.
- 		 */
--		recv = lport->tt.rport_recv_req;
-+		recv = fc_rport_recv_req;
- 		switch (fc_frame_payload_op(fp)) {
- 		case ELS_FLOGI:
- 			if (!lport->point_to_multipoint)
+@@ -250,7 +250,7 @@ static void fc_lport_ptp_setup(struct fc_lport *lport,
+ 		kref_put(&lport->ptp_rdata->kref, fc_rport_destroy);
+ 	}
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	lport->ptp_rdata = lport->tt.rport_create(lport, remote_fid);
++	lport->ptp_rdata = fc_rport_create(lport, remote_fid);
+ 	kref_get(&lport->ptp_rdata->kref);
+ 	lport->ptp_rdata->ids.port_name = remote_wwpn;
+ 	lport->ptp_rdata->ids.node_name = remote_wwnn;
+@@ -1431,7 +1431,7 @@ static void fc_lport_enter_dns(struct fc_lport *lport)
+ 	fc_lport_state_enter(lport, LPORT_ST_DNS);
+ 
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	rdata = lport->tt.rport_create(lport, FC_FID_DIR_SERV);
++	rdata = fc_rport_create(lport, FC_FID_DIR_SERV);
+ 	mutex_unlock(&lport->disc.disc_mutex);
+ 	if (!rdata)
+ 		goto err;
+@@ -1548,7 +1548,7 @@ static void fc_lport_enter_fdmi(struct fc_lport *lport)
+ 	fc_lport_state_enter(lport, LPORT_ST_FDMI);
+ 
+ 	mutex_lock(&lport->disc.disc_mutex);
+-	rdata = lport->tt.rport_create(lport, FC_FID_MGMT_SERV);
++	rdata = fc_rport_create(lport, FC_FID_MGMT_SERV);
+ 	mutex_unlock(&lport->disc.disc_mutex);
+ 	if (!rdata)
+ 		goto err;
 diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index 22c8c92..feae7ab 100644
+index 5f674fc..b05fa99 100644
 --- a/drivers/scsi/libfc/fc_rport.c
 +++ b/drivers/scsi/libfc/fc_rport.c
-@@ -1786,7 +1786,7 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
+@@ -137,8 +137,7 @@ struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
   *
-  * Reference counting: does not modify kref
+  * Locking note:  must be called with the disc_mutex held.
   */
--static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
-+void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
+-static struct fc_rport_priv *fc_rport_create(struct fc_lport *lport,
+-					     u32 port_id)
++struct fc_rport_priv *fc_rport_create(struct fc_lport *lport, u32 port_id)
  {
- 	struct fc_seq_els_data els_data;
+ 	struct fc_rport_priv *rdata;
  
-@@ -1823,6 +1823,7 @@ static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
- 		break;
+@@ -172,6 +171,7 @@ static struct fc_rport_priv *fc_rport_create(struct fc_lport *lport,
  	}
+ 	return rdata;
  }
-+EXPORT_SYMBOL(fc_rport_recv_req);
++EXPORT_SYMBOL(fc_rport_create);
  
  /**
-  * fc_rport_recv_plogi_req() - Handler for Port Login (PLOGI) requests
-@@ -2185,9 +2186,6 @@ static void fc_rport_flush_queue(void)
+  * fc_rport_destroy() - Free a remote port after last reference is released
+@@ -1847,7 +1847,7 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
+ 
+ 	disc = &lport->disc;
+ 	mutex_lock(&disc->disc_mutex);
+-	rdata = lport->tt.rport_create(lport, sid);
++	rdata = fc_rport_create(lport, sid);
+ 	if (!rdata) {
+ 		mutex_unlock(&disc->disc_mutex);
+ 		rjt_data.reason = ELS_RJT_UNAB;
+@@ -2175,9 +2175,6 @@ static void fc_rport_flush_queue(void)
   */
  int fc_rport_init(struct fc_lport *lport)
  {
--	if (!lport->tt.rport_recv_req)
--		lport->tt.rport_recv_req = fc_rport_recv_req;
+-	if (!lport->tt.rport_create)
+-		lport->tt.rport_create = fc_rport_create;
 -
- 	if (!lport->tt.rport_flush_queue)
- 		lport->tt.rport_flush_queue = fc_rport_flush_queue;
+ 	if (!lport->tt.rport_login)
+ 		lport->tt.rport_login = fc_rport_login;
  
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index b75a182..1e1dbc9 100644
+index 683201f..47b69d2 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
 @@ -610,13 +610,6 @@ struct libfc_function_template {
  				  struct fc_frame *);
  
  	/*
--	 * Receive a request from a remote port.
+-	 * Create a remote port with a given port ID
 -	 *
 -	 * STATUS: OPTIONAL
 -	 */
--	void (*rport_recv_req)(struct fc_lport *, struct fc_frame *);
+-	struct fc_rport_priv *(*rport_create)(struct fc_lport *, u32);
 -
 -	/*
- 	 * Callback routine after the remote port is logged in
- 	 *
- 	 * STATUS: OPTIONAL
-@@ -1000,6 +993,7 @@ struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
+ 	 * Initiates the RP state machine. It is called from the LP module.
+ 	 * This function will issue the following commands to the N_Port
+ 	 * identified by the FC ID provided.
+@@ -1024,6 +1017,7 @@ static inline bool fc_fcp_is_read(const struct fc_fcp_pkt *fsp)
+ void fc_rport_terminate_io(struct fc_rport *);
+ struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
+ 				      u32 port_id);
++struct fc_rport_priv *fc_rport_create(struct fc_lport *, u32);
  void fc_rport_destroy(struct kref *kref);
- int fc_rport_login(struct fc_rport_priv *rdata);
- int fc_rport_logoff(struct fc_rport_priv *rdata);
-+void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp);
  
  /*
-  * DISCOVERY LAYER
 -- 
 1.8.5.6
 
