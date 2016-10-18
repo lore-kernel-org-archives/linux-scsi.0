@@ -1,73 +1,62 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 00/10] mm: adjust get_user_pages* functions to explicitly
- pass FOLL_* flags
-Date: Tue, 18 Oct 2016 17:30:50 +0200
-Message-ID: <20161018153050.GC13117@dhcp22.suse.cz>
-References: <20161013002020.3062-1-lstoakes@gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH v8 0/7] ZBC / Zoned block device support
+Date: Tue, 18 Oct 2016 09:58:00 -0600
+Message-ID: <2a80d950-c831-9ac6-1969-dc6386e58236@kernel.dk>
+References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <20161013002020.3062-1-lstoakes@gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: Lorenzo Stoakes <lstoakes@gmail.com>
-Cc: linux-mm@kvack.org, Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org, linux-sh@
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu 13-10-16 01:20:10, Lorenzo Stoakes wrote:
-> This patch series adjusts functions in the get_user_pages* family such that
-> desired FOLL_* flags are passed as an argument rather than implied by flags.
-> 
-> The purpose of this change is to make the use of FOLL_FORCE explicit so it is
-> easier to grep for and clearer to callers that this flag is being used. The use
-> of FOLL_FORCE is an issue as it overrides missing VM_READ/VM_WRITE flags for the
-> VMA whose pages we are reading from/writing to, which can result in surprising
-> behaviour.
-> 
-> The patch series came out of the discussion around commit 38e0885, which
-> addressed a BUG_ON() being triggered when a page was faulted in with PROT_NONE
-> set but having been overridden by FOLL_FORCE. do_numa_page() was run on the
-> assumption the page _must_ be one marked for NUMA node migration as an actual
-> PROT_NONE page would have been dealt with prior to this code path, however
-> FOLL_FORCE introduced a situation where this assumption did not hold.
-> 
-> See https://marc.info/?l=linux-mm&m=147585445805166 for the patch proposal.
+On 10/18/2016 12:40 AM, Damien Le Moal wrote:
+> This series introduces support for zoned block devices. It integrates
+> earlier submissions by Hannes Reinecke and Shaun Tancheff. Compared to the
+> previous series version, the code was significantly simplified by limiting
+> support to zoned devices satisfying the following conditions:
+> 1) All zones of the device are the same size, with the exception of an
+>    eventual last smaller runt zone.
+> 2) For host-managed disks, reads must be unrestricted (read commands do not
+>    fail due to zone or write pointer alignement constraints).
+> Zoned disks that do not satisfy these 2 conditions are ignored.
+>
+> These 2 conditions allowed dropping the zone information cache implemented
+> in the previous version. This simplifies the code and also reduces the memory
+> consumption at run time. Support for zoned devices now only require one bit
+> per zone (less than 8KB in total). This bit field is used to write-lock
+> zones and prevent the concurrent execution of multiple write commands in
+> the same zone. This avoids write ordering problems at dispatch time, for
+> both the simple queue and scsi-mq settings.
+>
+> The new operations introduced to suport zone manipulation was reduced to
+> only the two main ZBC/ZAC defined commands: REPORT ZONES (REQ_OP_ZONE_REPORT)
+> and RESET WRITE POINTER (REQ_OP_ZONE_RESET). This brings the total number of
+> operations defined to 8, which fits in the 3 bits (REQ_OP_BITS) reserved for
+> operation code in bio->bi_opf and req->cmd_flags.
+>
+> Most of the ZBC specific code is kept out of sd.c and implemented in the
+> new file sd_zbc.c. Similarly, at the block layer, most of the zoned block
+> device code is implemented in the new blk-zoned.c.
+>
+> For host-managed zoned block devices, the sequential write constraint of
+> write pointer zones is exposed to the user. Users of the disk (applications,
+> file systems or device mappers) must sequentially write to zones. This means
+> that for raw block device accesses from applications, buffered writes are
+> unreliable and direct I/Os must be used (or buffered writes with O_SYNC).
+>
+> Access to zone manipulation operations is also provided to applications
+> through a set of new ioctls. This allows applications operating on raw
+> block devices (e.g. mkfs.xxx) to discover a device zone layout and
+> manipulate zone state.
 
-I like this cleanup. Tracking FOLL_FORCE users was always a nightmare
-and the flag behavior is really subtle so we should better be explicit
-about it. I haven't gone through each patch separately but rather
-applied the whole series and checked the resulting diff. This all seems
-OK to me and feel free to add
-Acked-by: Michal Hocko <mhocko@suse.com>
+This is starting to look mergeable to me. Any objections in getting this
+applied for 4.10? Looks like 6/7 should go through the SCSI tree, but I
+can queue up the rest.
 
-I am wondering whether we can go further. E.g. it is not really clear to
-me whether we need an explicit FOLL_REMOTE when we can in fact check
-mm != current->mm and imply that. Maybe there are some contexts which
-wouldn't work, I haven't checked.
-
-Then I am also wondering about FOLL_TOUCH behavior.
-__get_user_pages_unlocked has only few callers which used to be
-get_user_pages_unlocked before 1e9877902dc7e ("mm/gup: Introduce
-get_user_pages_remote()"). To me a dropped FOLL_TOUCH seems
-unintentional. Now that get_user_pages_unlocked has gup_flags argument I
-guess we might want to get rid of the __g-u-p-u version altogether, no?
-
-__get_user_pages is quite low level and imho shouldn't be exported. It's
-only user - kvm - should rather pull those two functions to gup instead
-and export them. There is nothing really KVM specific in them.
-
-I also cannot say I would be entirely thrilled about get_user_pages_locked,
-we only have one user which can simply do lock g-u-p unlock AFAICS.
-
-I guess there is more work in that area and I do not want to impose all
-that work on you, but I couldn't resist once I saw you playing in that
-area ;) Definitely a good start!
 -- 
-Michal Hocko
-SUSE Labs
+Jens Axboe
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
