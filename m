@@ -1,125 +1,77 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v2 04/10] phy: qcom-ufs-qmp-xx: Discard remove callback for drivers.
-Date: Tue, 18 Oct 2016 19:58:11 +0530
-Message-ID: <1476800897-19898-5-git-send-email-vivek.gautam@codeaurora.org>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: [PATCH] scsi: update rdac devices at scsi_dh_rdac
+Date: Tue, 18 Oct 2016 17:11:54 +0200
+Message-ID: <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
+References: <20161007165549.6433-1-xose.vazquez@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41918 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761737AbcJRO3G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 10:29:06 -0400
-In-Reply-To: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
+Received: from mail-lf0-f66.google.com ([209.85.215.66]:32863 "EHLO
+        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755519AbcJRPL6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 11:11:58 -0400
+Received: by mail-lf0-f66.google.com with SMTP id l131so3408034lfl.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 08:11:57 -0700 (PDT)
+In-Reply-To: <20161007165549.6433-1-xose.vazquez@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Cc: subhashj@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+To: SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Babu Moger <babu.moger@oracle.com>
 
-remove() callback does a phy_exit() only and nothing else now.
-The phy_exit() over the generic phy is called from the phy
-consumer, and phy provider driver should not explicitly need to
-call any phy_exit().
-So discard the remove callback for qcom-ufs phy platform drivers.
+On 10/07/2016 06:55 PM, Xose Vazquez Perez wrote:
 
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
----
+This patch is pending, ACK is needed!
+The part of multipath-tools was done time ago.
 
-No change since v1.
+CC: Babu Moger, just in case.
 
- drivers/phy/phy-qcom-ufs-qmp-14nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs-qmp-20nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs.c          |  9 ---------
- 3 files changed, 41 deletions(-)
-
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index 6ee5149..a305016 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -163,21 +163,6 @@ out:
- 	return err;
- }
- 
--static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
- static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-14nm"},
- 	{},
-@@ -186,7 +171,6 @@ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
- 
- static struct platform_driver ufs_qcom_phy_qmp_14nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_14nm_probe,
--	.remove = ufs_qcom_phy_qmp_14nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_14nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_14nm",
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-index 770087a..2db1fbb 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-@@ -219,21 +219,6 @@ out:
- 	return err;
- }
- 
--static int ufs_qcom_phy_qmp_20nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
- static const struct of_device_id ufs_qcom_phy_qmp_20nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-20nm"},
- 	{},
-@@ -242,7 +227,6 @@ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_20nm_of_match);
- 
- static struct platform_driver ufs_qcom_phy_qmp_20nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_20nm_probe,
--	.remove = ufs_qcom_phy_qmp_20nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_20nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_20nm",
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index f639a7c..b8f9286 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -645,15 +645,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
- 
--int ufs_qcom_phy_remove(struct phy *generic_phy,
--			struct ufs_qcom_phy *ufs_qcom_phy)
--{
--	phy_power_off(generic_phy);
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_remove);
--
- int ufs_qcom_phy_exit(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> Remove IBM/1745 ghost array.
+> There is no references nowhere, also removed from multipath-tools
+> Confirmed by the original manufacturer(NetApp), and Google shows no results.
+>
+> Replace too wide "TP9" regex with full names.
+> TP9100 is included, at it is not a RDAC array.
+> This reverts partially the commit 352047
+> 
+> Add IBM 3542 and 3552, they are FAStT200 and FAStT500
+> 
+> Cc: Sean Stewart <Sean.Stewart@netapp.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: SCSI ML <linux-scsi@vger.kernel.org>
+> Cc: device-mapper development <dm-devel@redhat.com>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> ---
+>  drivers/scsi/scsi_dh.c | 8 ++++++--
+>  1 file changed, 6 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> index b8d3b97..a64b5ce 100644
+> --- a/drivers/scsi/scsi_dh.c
+> +++ b/drivers/scsi/scsi_dh.c
+> @@ -49,14 +49,18 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+>  	{"IBM", "1724",			"rdac", },
+>  	{"IBM", "1726",			"rdac", },
+>  	{"IBM", "1742",			"rdac", },
+> -	{"IBM", "1745",			"rdac", },
+>  	{"IBM", "1746",			"rdac", },
+>  	{"IBM", "1813",			"rdac", },
+>  	{"IBM", "1814",			"rdac", },
+>  	{"IBM", "1815",			"rdac", },
+>  	{"IBM", "1818",			"rdac", },
+>  	{"IBM", "3526",			"rdac", },
+> -	{"SGI", "TP9",			"rdac", },
+> +	{"IBM", "3542",			"rdac", },
+> +	{"IBM", "3552",			"rdac", },
+> +	{"SGI", "TP9300",		"rdac", },
+> +	{"SGI", "TP9400",		"rdac", },
+> +	{"SGI", "TP9500",		"rdac", },
+> +	{"SGI", "TP9700",		"rdac", },
+>  	{"SGI", "IS",			"rdac", },
+>  	{"STK", "OPENstorage D280",	"rdac", },
+>  	{"STK", "FLEXLINE 380",		"rdac", },
+> 
 
