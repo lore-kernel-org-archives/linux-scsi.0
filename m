@@ -1,275 +1,206 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 01/20] libfc: Replace ->seq_els_rsp_send callback with function call
-Date: Tue, 18 Oct 2016 10:01:35 +0200
-Message-ID: <1476777714-3543-2-git-send-email-hare@suse.de>
+Subject: [PATCH 16/20] libfc: Replace ->exch_done callback with function call
+Date: Tue, 18 Oct 2016 10:01:50 +0200
+Message-ID: <1476777714-3543-17-git-send-email-hare@suse.de>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47289 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47322 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752395AbcJRIC0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 04:02:26 -0400
+        id S1752448AbcJRICe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:02:34 -0400
 In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The 'seq_els_rsp_send' callback only ever had one implementation,
-so we might as well drop it and use the function directly.
+The ->exch_done callback only ever had one implementation,
+so we can as well call it directly and drop the callback.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/fcoe/fcoe_ctlr.c |  2 +-
- drivers/scsi/libfc/fc_disc.c  |  4 ++--
- drivers/scsi/libfc/fc_exch.c  |  8 +++-----
- drivers/scsi/libfc/fc_lport.c |  6 +++---
- drivers/scsi/libfc/fc_rport.c | 26 +++++++++++++-------------
- include/scsi/libfc.h          | 10 ++--------
- 6 files changed, 24 insertions(+), 32 deletions(-)
+ drivers/scsi/libfc/fc_exch.c    |  6 ++----
+ drivers/scsi/libfc/fc_fcp.c     | 20 +++++++++-----------
+ drivers/scsi/libfc/fc_lport.c   |  2 +-
+ drivers/target/tcm_fc/tfc_cmd.c |  4 ++--
+ include/scsi/libfc.h            |  9 +--------
+ 5 files changed, 15 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 4aacd60..6cedc51 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -3031,7 +3031,7 @@ static void fcoe_ctlr_disc_recv(struct fc_lport *lport, struct fc_frame *fp)
- 
- 	rjt_data.reason = ELS_RJT_UNSUP;
- 	rjt_data.explan = ELS_EXPL_NONE;
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(fp);
- }
- 
-diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
-index ad3965f..4e31152 100644
---- a/drivers/scsi/libfc/fc_disc.c
-+++ b/drivers/scsi/libfc/fc_disc.c
-@@ -154,7 +154,7 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
- 			break;
- 		}
- 	}
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
-+	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
- 
- 	/*
- 	 * If not doing a complete rediscovery, do GPN_ID on
-@@ -182,7 +182,7 @@ static void fc_disc_recv_rscn_req(struct fc_disc *disc, struct fc_frame *fp)
- 	FC_DISC_DBG(disc, "Received a bad RSCN frame\n");
- 	rjt_data.reason = ELS_RJT_LOGIC;
- 	rjt_data.explan = ELS_EXPL_NONE;
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(fp);
- }
- 
 diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 9921dbb..3f58aeb 100644
+index fffb9a3..b98ad3f 100644
 --- a/drivers/scsi/libfc/fc_exch.c
 +++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1222,8 +1222,8 @@ static void fc_exch_set_addr(struct fc_exch *ep,
+@@ -969,7 +969,7 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
   *
-  * The received frame is not freed.
+  * Note: May sleep if invoked from outside a response handler.
   */
--static void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
--				struct fc_seq_els_data *els_data)
-+void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
-+			 struct fc_seq_els_data *els_data)
+-static void fc_exch_done(struct fc_seq *sp)
++void fc_exch_done(struct fc_seq *sp)
  {
- 	switch (els_cmd) {
- 	case ELS_LS_RJT:
-@@ -1242,6 +1242,7 @@ static void fc_seq_els_rsp_send(struct fc_frame *fp, enum fc_els_cmd els_cmd,
- 		FC_LPORT_DBG(fr_dev(fp), "Invalid ELS CMD:%x\n", els_cmd);
- 	}
+ 	struct fc_exch *ep = fc_seq_exch(sp);
+ 	int rc;
+@@ -982,6 +982,7 @@ static void fc_exch_done(struct fc_seq *sp)
+ 	if (!rc)
+ 		fc_exch_delete(ep);
  }
-+EXPORT_SYMBOL_GPL(fc_seq_els_rsp_send);
++EXPORT_SYMBOL(fc_exch_done);
  
  /**
-  * fc_seq_send_last() - Send a sequence that is the last in the exchange
-@@ -2635,9 +2636,6 @@ int fc_exch_init(struct fc_lport *lport)
- 	if (!lport->tt.seq_send)
- 		lport->tt.seq_send = fc_seq_send;
+  * fc_exch_resp() - Allocate a new exchange for a response frame
+@@ -2654,9 +2655,6 @@ int fc_exch_init(struct fc_lport *lport)
+ 	if (!lport->tt.seq_set_resp)
+ 		lport->tt.seq_set_resp = fc_seq_set_resp;
  
--	if (!lport->tt.seq_els_rsp_send)
--		lport->tt.seq_els_rsp_send = fc_seq_els_rsp_send;
+-	if (!lport->tt.exch_done)
+-		lport->tt.exch_done = fc_exch_done;
 -
- 	if (!lport->tt.exch_done)
- 		lport->tt.exch_done = fc_exch_done;
+ 	if (!lport->tt.exch_mgr_reset)
+ 		lport->tt.exch_mgr_reset = fc_exch_mgr_reset;
  
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 2bb3f9f..4fadd62 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -311,7 +311,7 @@ static int fc_fcp_send_abort(struct fc_fcp_pkt *fsp)
+ static void fc_fcp_retry_cmd(struct fc_fcp_pkt *fsp, int status_code)
+ {
+ 	if (fsp->seq_ptr) {
+-		fsp->lp->tt.exch_done(fsp->seq_ptr);
++		fc_exch_done(fsp->seq_ptr);
+ 		fsp->seq_ptr = NULL;
+ 	}
+ 
+@@ -1036,7 +1036,7 @@ static void fc_fcp_complete_locked(struct fc_fcp_pkt *fsp)
+ 				fc_seq_send(lport, csp, conf_frame);
+ 			}
+ 		}
+-		lport->tt.exch_done(seq);
++		fc_exch_done(seq);
+ 	}
+ 	/*
+ 	 * Some resets driven by SCSI are not I/Os and do not have
+@@ -1054,10 +1054,8 @@ static void fc_fcp_complete_locked(struct fc_fcp_pkt *fsp)
+  */
+ static void fc_fcp_cleanup_cmd(struct fc_fcp_pkt *fsp, int error)
+ {
+-	struct fc_lport *lport = fsp->lp;
+-
+ 	if (fsp->seq_ptr) {
+-		lport->tt.exch_done(fsp->seq_ptr);
++		fc_exch_done(fsp->seq_ptr);
+ 		fsp->seq_ptr = NULL;
+ 	}
+ 	fsp->status_code = error;
+@@ -1349,7 +1347,7 @@ static int fc_lun_reset(struct fc_lport *lport, struct fc_fcp_pkt *fsp,
+ 
+ 	spin_lock_bh(&fsp->scsi_pkt_lock);
+ 	if (fsp->seq_ptr) {
+-		lport->tt.exch_done(fsp->seq_ptr);
++		fc_exch_done(fsp->seq_ptr);
+ 		fsp->seq_ptr = NULL;
+ 	}
+ 	fsp->wait_for_comp = 0;
+@@ -1403,7 +1401,7 @@ static void fc_tm_done(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 	if (fh->fh_type != FC_TYPE_BLS)
+ 		fc_fcp_resp(fsp, fp);
+ 	fsp->seq_ptr = NULL;
+-	fsp->lp->tt.exch_done(seq);
++	fc_exch_done(seq);
+ out_unlock:
+ 	fc_fcp_unlock_pkt(fsp);
+ out:
+@@ -1793,9 +1791,9 @@ static void fc_fcp_srr_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 
+ 	fh = fc_frame_header_get(fp);
+ 	/*
+-	 * BUG? fc_fcp_srr_error calls exch_done which would release
++	 * BUG? fc_fcp_srr_error calls fc_exch_done which would release
+ 	 * the ep. But if fc_fcp_srr_error had got -FC_EX_TIMEOUT,
+-	 * then fc_exch_timeout would be sending an abort. The exch_done
++	 * then fc_exch_timeout would be sending an abort. The fc_exch_done
+ 	 * call by fc_fcp_srr_error would prevent fc_exch.c from seeing
+ 	 * an abort response though.
+ 	 */
+@@ -1816,7 +1814,7 @@ static void fc_fcp_srr_resp(struct fc_seq *seq, struct fc_frame *fp, void *arg)
+ 	}
+ 	fc_fcp_unlock_pkt(fsp);
+ out:
+-	fsp->lp->tt.exch_done(seq);
++	fc_exch_done(seq);
+ 	fc_frame_free(fp);
+ }
+ 
+@@ -1846,7 +1844,7 @@ static void fc_fcp_srr_error(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 	}
+ 	fc_fcp_unlock_pkt(fsp);
+ out:
+-	fsp->lp->tt.exch_done(fsp->recov_seq);
++	fc_exch_done(fsp->recov_seq);
+ }
+ 
+ /**
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 81ad8ac..bf79c9b 100644
+index 7315675..2d3133f 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -412,7 +412,7 @@ static void fc_lport_recv_rlir_req(struct fc_lport *lport, struct fc_frame *fp)
- 	FC_LPORT_DBG(lport, "Received RLIR request while in state %s\n",
- 		     fc_lport_state(lport));
- 
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
-+	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
+@@ -980,7 +980,7 @@ void fc_lport_recv(struct fc_lport *lport, struct fc_frame *fp)
+ 	FC_LPORT_DBG(lport, "dropping unexpected frame type %x\n", fh->fh_type);
  	fc_frame_free(fp);
+ 	if (sp)
+-		lport->tt.exch_done(sp);
++		fc_exch_done(sp);
  }
+ EXPORT_SYMBOL(fc_lport_recv);
  
-@@ -481,7 +481,7 @@ static void fc_lport_recv_rnid_req(struct fc_lport *lport,
- 	if (!req) {
- 		rjt_data.reason = ELS_RJT_LOGIC;
- 		rjt_data.explan = ELS_EXPL_NONE;
--		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
-+		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
+diff --git a/drivers/target/tcm_fc/tfc_cmd.c b/drivers/target/tcm_fc/tfc_cmd.c
+index 7dc0eb7..07d392b 100644
+--- a/drivers/target/tcm_fc/tfc_cmd.c
++++ b/drivers/target/tcm_fc/tfc_cmd.c
+@@ -177,7 +177,7 @@ int ft_queue_status(struct se_cmd *se_cmd)
+ 		se_cmd->scsi_status = SAM_STAT_TASK_SET_FULL;
+ 		return -ENOMEM;
+ 	}
+-	lport->tt.exch_done(cmd->seq);
++	fc_exch_done(cmd->seq);
+ 	/*
+ 	 * Drop the extra ACK_KREF reference taken by target_submit_cmd()
+ 	 * ahead of ft_check_stop_free() -> transport_generic_free_cmd()
+@@ -324,7 +324,7 @@ static void ft_send_resp_status(struct fc_lport *lport,
+ 	sp = fr_seq(fp);
+ 	if (sp) {
+ 		fc_seq_send(lport, sp, fp);
+-		lport->tt.exch_done(sp);
++		fc_exch_done(sp);
  	} else {
- 		fmt = req->rnid_fmt;
- 		len = sizeof(*rp);
-@@ -521,7 +521,7 @@ static void fc_lport_recv_rnid_req(struct fc_lport *lport,
-  */
- static void fc_lport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- {
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
-+	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
- 	fc_lport_enter_reset(lport);
- 	fc_frame_free(fp);
- }
-diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
-index a867874..4ca0f40 100644
---- a/drivers/scsi/libfc/fc_rport.c
-+++ b/drivers/scsi/libfc/fc_rport.c
-@@ -967,7 +967,7 @@ static void fc_rport_recv_flogi_req(struct fc_lport *lport,
- reject_put:
- 	kref_put(&rdata->kref, lport->tt.rport_destroy);
- reject:
--	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(rx_fp);
- }
- 
-@@ -1416,7 +1416,7 @@ static void fc_rport_recv_rtv_req(struct fc_rport_priv *rdata,
- 	if (!fp) {
- 		rjt_data.reason = ELS_RJT_UNAB;
- 		rjt_data.reason = ELS_EXPL_INSUF_RES;
--		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
-+		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
- 		goto drop;
+ 		lport->tt.frame_send(lport, fp);
  	}
- 	rtv = fc_frame_payload_get(fp, sizeof(*rtv));
-@@ -1591,7 +1591,7 @@ static void fc_rport_recv_adisc_req(struct fc_rport_priv *rdata,
- 	if (!adisc) {
- 		rjt_data.reason = ELS_RJT_PROT;
- 		rjt_data.explan = ELS_EXPL_INV_LEN;
--		lport->tt.seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
-+		fc_seq_els_rsp_send(in_fp, ELS_LS_RJT, &rjt_data);
- 		goto drop;
- 	}
- 
-@@ -1667,7 +1667,7 @@ static void fc_rport_recv_rls_req(struct fc_rport_priv *rdata,
- 	goto out;
- 
- out_rjt:
--	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- out:
- 	fc_frame_free(rx_fp);
- }
-@@ -1734,11 +1734,11 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- 		fc_rport_recv_adisc_req(rdata, fp);
- 		break;
- 	case ELS_RRQ:
--		lport->tt.seq_els_rsp_send(fp, ELS_RRQ, NULL);
-+		fc_seq_els_rsp_send(fp, ELS_RRQ, NULL);
- 		fc_frame_free(fp);
- 		break;
- 	case ELS_REC:
--		lport->tt.seq_els_rsp_send(fp, ELS_REC, NULL);
-+		fc_seq_els_rsp_send(fp, ELS_REC, NULL);
- 		fc_frame_free(fp);
- 		break;
- 	case ELS_RLS:
-@@ -1759,14 +1759,14 @@ static void fc_rport_recv_els_req(struct fc_lport *lport, struct fc_frame *fp)
- reject:
- 	els_data.reason = ELS_RJT_UNAB;
- 	els_data.explan = ELS_EXPL_PLOGI_REQD;
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
-+	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
- 	fc_frame_free(fp);
- 	return;
- 
- busy:
- 	els_data.reason = ELS_RJT_BUSY;
- 	els_data.explan = ELS_EXPL_NONE;
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
-+	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
- 	fc_frame_free(fp);
- 	return;
- }
-@@ -1812,7 +1812,7 @@ static void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp)
- 	default:
- 		els_data.reason = ELS_RJT_UNSUP;
- 		els_data.explan = ELS_EXPL_NONE;
--		lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
-+		fc_seq_els_rsp_send(fp, ELS_LS_RJT, &els_data);
- 		fc_frame_free(fp);
- 		break;
- 	}
-@@ -1939,7 +1939,7 @@ static void fc_rport_recv_plogi_req(struct fc_lport *lport,
- 	return;
- 
- reject:
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(fp, ELS_LS_RJT, &rjt_data);
- 	fc_frame_free(fp);
- }
- 
-@@ -2055,7 +2055,7 @@ static void fc_rport_recv_prli_req(struct fc_rport_priv *rdata,
- 	rjt_data.reason = ELS_RJT_PROT;
- 	rjt_data.explan = ELS_EXPL_INV_LEN;
- reject:
--	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- drop:
- 	fc_frame_free(rx_fp);
- }
-@@ -2126,7 +2126,7 @@ static void fc_rport_recv_prlo_req(struct fc_rport_priv *rdata,
- 	rjt_data.reason = ELS_RJT_PROT;
- 	rjt_data.explan = ELS_EXPL_INV_LEN;
- reject:
--	lport->tt.seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
-+	fc_seq_els_rsp_send(rx_fp, ELS_LS_RJT, &rjt_data);
- drop:
- 	fc_frame_free(rx_fp);
- }
-@@ -2146,7 +2146,7 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
- 	struct fc_rport_priv *rdata;
- 	u32 sid;
- 
--	lport->tt.seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
-+	fc_seq_els_rsp_send(fp, ELS_LS_ACC, NULL);
- 
- 	sid = fc_frame_sid(fp);
- 
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index f5aa54b..0e95803 100644
+index 50d1af1..19f38eb 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -553,14 +553,6 @@ struct libfc_function_template {
- 			struct fc_frame *);
+@@ -515,14 +515,6 @@ struct libfc_function_template {
+ 	void (*get_lesb)(struct fc_lport *, struct fc_els_lesb *lesb);
  
  	/*
--	 * Send an ELS response using information from the received frame.
+-	 * Indicate that an exchange/sequence tuple is complete and the memory
+-	 * allocated for the related objects may be freed.
 -	 *
 -	 * STATUS: OPTIONAL
 -	 */
--	void (*seq_els_rsp_send)(struct fc_frame *, enum fc_els_cmd,
--				 struct fc_seq_els_data *);
+-	void (*exch_done)(struct fc_seq *);
 -
 -	/*
- 	 * Abort an exchange and sequence. Generally called because of a
- 	 * exchange timeout or an abort from the upper layer.
+ 	 * Start a new sequence on the same exchange/sequence tuple.
  	 *
-@@ -1138,6 +1130,8 @@ void fc_fill_hdr(struct fc_frame *, const struct fc_frame *,
-  *****************************/
- int fc_exch_init(struct fc_lport *);
- void fc_exch_update_stats(struct fc_lport *lport);
-+void fc_seq_els_rsp_send(struct fc_frame *, enum fc_els_cmd,
-+			 struct fc_seq_els_data *);
- struct fc_exch_mgr_anchor *fc_exch_mgr_add(struct fc_lport *,
- 					   struct fc_exch_mgr *,
- 					   bool (*match)(struct fc_frame *));
+ 	 * STATUS: OPTIONAL
+@@ -1040,6 +1032,7 @@ struct fc_exch_mgr *fc_exch_mgr_alloc(struct fc_lport *, enum fc_class class,
+ void fc_exch_mgr_reset(struct fc_lport *, u32 s_id, u32 d_id);
+ int fc_seq_send(struct fc_lport *lport, struct fc_seq *sp, struct fc_frame *fp);
+ int fc_seq_exch_abort(const struct fc_seq *, unsigned int timer_msec);
++void fc_exch_done(struct fc_seq *sp);
+ 
+ /*
+  * Functions for fc_functions_template
 -- 
 1.8.5.6
 
