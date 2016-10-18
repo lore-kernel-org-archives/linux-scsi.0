@@ -1,43 +1,60 @@
-From: Jeff Moyer <jmoyer@redhat.com>
-Subject: Re: [PATCH v8 2/7] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-Date: Tue, 18 Oct 2016 12:43:01 -0400
-Message-ID: <x49funtvca2.fsf@segfault.boston.devel.redhat.com>
-References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
-        <1476772835-18541-3-git-send-email-damien.lemoal@wdc.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: [PATCH] scsi_devinfo: apply to HP-rebranded same options as Hitachi
+Date: Tue, 18 Oct 2016 18:51:01 +0200
+Message-ID: <20161018165101.4286-1-xose.vazquez@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38472 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754743AbcJRQnG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 12:43:06 -0400
-In-Reply-To: <1476772835-18541-3-git-send-email-damien.lemoal@wdc.com> (Damien
-        Le Moal's message of "Tue, 18 Oct 2016 15:40:30 +0900")
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34474 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755421AbcJRQvF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 12:51:05 -0400
+Received: by mail-wm0-f66.google.com with SMTP id d199so310725wmd.1
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 09:51:05 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Takahiro Yasui <tyasui@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Matthias Rudolph <Matthias.Rudolph@hds.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-Damien Le Moal <damien.lemoal@wdc.com> writes:
+627511e3e modified some Hitachi entries:
 
-> diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
-> index 75a5055..ee2d5cd 100644
-> --- a/Documentation/ABI/testing/sysfs-block
-> +++ b/Documentation/ABI/testing/sysfs-block
-> @@ -251,3 +251,16 @@ Description:
->  		since drive-managed zoned block devices do not support
->  		zone commands, they will be treated as regular block
->  		devices and zoned will report "none".
-> +
-> +What:		/sys/block/<disk>/queue/chunk_sectors
-> +Date:		September 2016
-> +Contact:	Hannes Reinecke <hare@suse.com>
-> +Description:
-> +		chunk_sectors has different meaning depending on the type
-> +		of the disk. For a RAID device (dm-raid), chunk_sectors
-> +		indicates the size in 512B sectors of the RAID volume
-> +		stripe segment. For a zoned block device, either
-> +		host-aware or host-managed, chunk_sectors indicates the
-> +		size of 512B sectors of the zones of the device, with
-                     ^^
-                     in
+    Four models, OPEN-/DF400/DF500/DISK-SUBSYSTEM, can handle REPORT_LUN,
+    and the BLIST_REPORTLUN2 flag needs to be set. And DF600 doesn't require
+    any flags because it returns ANSI 03h (SPC).
+
+        {"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
+        {"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
+
+
+The same should have been done also for HP counterparts.
+    
+
+Cc: Takahiro Yasui <tyasui@redhat.com>
+Cc: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Matthias Rudolph <Matthias.Rudolph@hds.com>
+Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: SCSI ML <linux-scsi@vger.kernel.org>
+Cc: device-mapper development <dm-devel@redhat.com>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ drivers/scsi/scsi_devinfo.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 2464569..44d8cfb 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -186,9 +186,8 @@ static struct {
+ 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
+ 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
+ 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
+-	{"HP", "DF400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"HP", "DF500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+-	{"HP", "DF600", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
++	{"HP", "DF400", "*", BLIST_REPORTLUN2},
++	{"HP", "DF500", "*", BLIST_REPORTLUN2},
+ 	{"HP", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HP", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+ 	{"HP", "3390-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
+-- 
+2.10.1
+
