@@ -1,117 +1,124 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 03/20] libfc: Replace ->lport_recv with function call
-Date: Tue, 18 Oct 2016 10:01:37 +0200
-Message-ID: <1476777714-3543-4-git-send-email-hare@suse.de>
+Subject: [PATCH 12/20] libfc: Replace ->rport_flush_queue callback with function call
+Date: Tue, 18 Oct 2016 10:01:46 +0200
+Message-ID: <1476777714-3543-13-git-send-email-hare@suse.de>
 References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:47266 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:47378 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752339AbcJRIC0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 04:02:26 -0400
+        id S1758749AbcJRICb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 04:02:31 -0400
 In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-The ->lport_recv callback only ever had one implementation,
-so call the function directly and remove the callback.
+The ->rport_flush_queue callback only ever had a single
+implementation, so we can as well call it directly and
+drop the callback.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/libfc/fc_exch.c  | 4 ++--
- drivers/scsi/libfc/fc_lport.c | 9 +++------
+ drivers/scsi/fcoe/fcoe_ctlr.c | 2 +-
+ drivers/scsi/libfc/fc_disc.c  | 2 +-
+ drivers/scsi/libfc/fc_lport.c | 2 +-
+ drivers/scsi/libfc/fc_rport.c | 6 ++----
  include/scsi/libfc.h          | 8 +-------
- 3 files changed, 6 insertions(+), 15 deletions(-)
+ 5 files changed, 6 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 3f58aeb..cc320a9 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -1527,7 +1527,7 @@ static void fc_exch_recv_req(struct fc_lport *lport, struct fc_exch_mgr *mp,
- 	 * The upper-level protocol may request one later, if needed.
- 	 */
- 	if (fh->fh_rx_id == htons(FC_XID_UNKNOWN))
--		return lport->tt.lport_recv(lport, fp);
-+		return fc_lport_recv(lport, fp);
+diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
+index 12aecf3..12efc1d 100644
+--- a/drivers/scsi/fcoe/fcoe_ctlr.c
++++ b/drivers/scsi/fcoe/fcoe_ctlr.c
+@@ -2215,7 +2215,7 @@ static void fcoe_ctlr_disc_stop(struct fc_lport *lport)
+ static void fcoe_ctlr_disc_stop_final(struct fc_lport *lport)
+ {
+ 	fcoe_ctlr_disc_stop(lport);
+-	lport->tt.rport_flush_queue();
++	fc_rport_flush_queue();
+ 	synchronize_rcu();
+ }
  
- 	reject = fc_seq_lookup_recip(lport, mp, fp);
- 	if (reject == FC_RJT_NONE) {
-@@ -1548,7 +1548,7 @@ static void fc_exch_recv_req(struct fc_lport *lport, struct fc_exch_mgr *mp,
- 		 * first.
- 		 */
- 		if (!fc_invoke_resp(ep, sp, fp))
--			lport->tt.lport_recv(lport, fp);
-+			fc_lport_recv(lport, fp);
- 		fc_exch_release(ep);	/* release from lookup */
- 	} else {
- 		FC_LPORT_DBG(lport, "exch/seq lookup failed: reject %x\n",
+diff --git a/drivers/scsi/libfc/fc_disc.c b/drivers/scsi/libfc/fc_disc.c
+index 7efa5a6..6103231 100644
+--- a/drivers/scsi/libfc/fc_disc.c
++++ b/drivers/scsi/libfc/fc_disc.c
+@@ -719,7 +719,7 @@ static void fc_disc_stop(struct fc_lport *lport)
+ static void fc_disc_stop_final(struct fc_lport *lport)
+ {
+ 	fc_disc_stop(lport);
+-	lport->tt.rport_flush_queue();
++	fc_rport_flush_queue();
+ }
+ 
+ /**
 diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 05f83a6..42dcb72 100644
+index 937a442..7315675 100644
 --- a/drivers/scsi/libfc/fc_lport.c
 +++ b/drivers/scsi/libfc/fc_lport.c
-@@ -944,15 +944,14 @@ struct fc4_prov fc_lport_els_prov = {
- };
- 
+@@ -625,7 +625,7 @@ int fc_fabric_logoff(struct fc_lport *lport)
+ 	if (lport->dns_rdata)
+ 		fc_rport_logoff(lport->dns_rdata);
+ 	mutex_unlock(&lport->lp_mutex);
+-	lport->tt.rport_flush_queue();
++	fc_rport_flush_queue();
+ 	mutex_lock(&lport->lp_mutex);
+ 	fc_lport_enter_logo(lport);
+ 	mutex_unlock(&lport->lp_mutex);
+diff --git a/drivers/scsi/libfc/fc_rport.c b/drivers/scsi/libfc/fc_rport.c
+index feae7ab..6e50226 100644
+--- a/drivers/scsi/libfc/fc_rport.c
++++ b/drivers/scsi/libfc/fc_rport.c
+@@ -2175,10 +2175,11 @@ static void fc_rport_recv_logo_req(struct fc_lport *lport, struct fc_frame *fp)
  /**
-- * fc_lport_recv_req() - The generic lport request handler
-+ * fc_lport_recv() - The generic lport request handler
-  * @lport: The lport that received the request
-  * @fp: The frame the request is in
-  *
-  * Locking Note: This function should not be called with the lport
-  *		 lock held because it may grab the lock.
+  * fc_rport_flush_queue() - Flush the rport_event_queue
   */
--static void fc_lport_recv_req(struct fc_lport *lport,
--			      struct fc_frame *fp)
-+void fc_lport_recv(struct fc_lport *lport, struct fc_frame *fp)
+-static void fc_rport_flush_queue(void)
++void fc_rport_flush_queue(void)
  {
- 	struct fc_frame_header *fh = fc_frame_header_get(fp);
- 	struct fc_seq *sp = fr_seq(fp);
-@@ -983,6 +982,7 @@ static void fc_lport_recv_req(struct fc_lport *lport,
- 	if (sp)
- 		lport->tt.exch_done(sp);
+ 	flush_workqueue(rport_event_queue);
  }
-+EXPORT_SYMBOL(fc_lport_recv);
++EXPORT_SYMBOL(fc_rport_flush_queue);
  
  /**
-  * fc_lport_reset() - Reset a local port
-@@ -1865,9 +1865,6 @@ int fc_lport_config(struct fc_lport *lport)
+  * fc_rport_init() - Initialize the remote port layer for a local port
+@@ -2186,9 +2187,6 @@ static void fc_rport_flush_queue(void)
   */
- int fc_lport_init(struct fc_lport *lport)
+ int fc_rport_init(struct fc_lport *lport)
  {
--	if (!lport->tt.lport_recv)
--		lport->tt.lport_recv = fc_lport_recv_req;
+-	if (!lport->tt.rport_flush_queue)
+-		lport->tt.rport_flush_queue = fc_rport_flush_queue;
 -
- 	fc_host_port_type(lport->host) = FC_PORTTYPE_NPORT;
- 	fc_host_node_name(lport->host) = lport->wwnn;
- 	fc_host_port_name(lport->host) = lport->wwpn;
+ 	return 0;
+ }
+ EXPORT_SYMBOL(fc_rport_init);
 diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
-index 7ee0d27..7bba81e 100644
+index 1e1dbc9..57630c5 100644
 --- a/include/scsi/libfc.h
 +++ b/include/scsi/libfc.h
-@@ -621,13 +621,6 @@ struct libfc_function_template {
- 	void (*rport_flush_queue)(void);
+@@ -583,13 +583,6 @@ struct libfc_function_template {
+ 	void (*exch_mgr_reset)(struct fc_lport *, u32 s_id, u32 d_id);
  
  	/*
--	 * Receive a frame for a local port.
+-	 * Flush the rport work queue. Generally used before shutdown.
 -	 *
 -	 * STATUS: OPTIONAL
 -	 */
--	void (*lport_recv)(struct fc_lport *, struct fc_frame *);
+-	void (*rport_flush_queue)(void);
 -
 -	/*
  	 * Set the local port FC_ID.
  	 *
  	 * This may be provided by the LLD to allow it to be
-@@ -1060,6 +1053,7 @@ static inline bool fc_fcp_is_read(const struct fc_fcp_pkt *fsp)
- void fc_vports_linkchange(struct fc_lport *);
- int fc_lport_config(struct fc_lport *);
- int fc_lport_reset(struct fc_lport *);
-+void fc_lport_recv(struct fc_lport *lport, struct fc_frame *fp);
- int fc_set_mfs(struct fc_lport *, u32 mfs);
- struct fc_lport *libfc_vport_create(struct fc_vport *, int privsize);
- struct fc_lport *fc_vport_id_lookup(struct fc_lport *, u32 port_id);
+@@ -994,6 +987,7 @@ struct fc_rport_priv *fc_rport_lookup(const struct fc_lport *lport,
+ int fc_rport_login(struct fc_rport_priv *rdata);
+ int fc_rport_logoff(struct fc_rport_priv *rdata);
+ void fc_rport_recv_req(struct fc_lport *lport, struct fc_frame *fp);
++void fc_rport_flush_queue(void);
+ 
+ /*
+  * DISCOVERY LAYER
 -- 
 1.8.5.6
 
