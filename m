@@ -1,83 +1,254 @@
-From: Babu Moger <babu.moger@oracle.com>
-Subject: Re: [PATCH] scsi: update rdac devices at scsi_dh_rdac
-Date: Tue, 18 Oct 2016 14:47:08 -0500
-Message-ID: <39e5713e-5329-80a2-d2c5-d193f974e270@oracle.com>
-References: <20161007165549.6433-1-xose.vazquez@gmail.com>
- <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
+Date: Tue, 18 Oct 2016 13:13:44 -0700
+Message-ID: <d105d41f88e886f20df0384569b0b688@codeaurora.org>
+References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
+ <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23250 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751492AbcJRTr1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 15:47:27 -0400
-In-Reply-To: <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
-Cc: Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 
-At this point, I am not the right person to ack this change. However, 
-adding new vendor id's is mostly not an issue.
+On 2016-10-18 07:28, Vivek Gautam wrote:
+> Add phy clock enable code to phy_power_on/off callbacks, and
+> remove explicit calls to enable these phy clocks from the
+> ufs-qcom hcd driver.
+> 
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> ---
+> 
+> Changes since v1:
+>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
+>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
+>  - removed function declaration and export symbol for these APIs.
+> 
+>  drivers/phy/phy-qcom-ufs.c       | 36 
+> ++++++++++++++++++------------------
+>  drivers/scsi/ufs/ufs-qcom.c      | 15 ---------------
+>  include/linux/phy/phy-qcom-ufs.h | 18 ------------------
+>  3 files changed, 18 insertions(+), 51 deletions(-)
+> 
+> diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+> index 144b11f..a425cc2 100644
+> --- a/drivers/phy/phy-qcom-ufs.c
+> +++ b/drivers/phy/phy-qcom-ufs.c
+> @@ -373,10 +373,9 @@ out:
+>  	return ret;
+>  }
+> 
+> -int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
+> +static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
+>  {
+>  	int ret = 0;
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> 
+>  	if (phy->is_ref_clk_enabled)
+>  		goto out;
+> @@ -423,7 +422,6 @@ out_disable_src:
+>  out:
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
+> 
+>  static
+>  int ufs_qcom_phy_disable_vreg(struct device *dev,
+> @@ -448,10 +446,8 @@ out:
+>  	return ret;
+>  }
+> 
+> -void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
+> +static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> -
+>  	if (phy->is_ref_clk_enabled) {
+>  		clk_disable_unprepare(phy->ref_clk);
+>  		/*
+> @@ -464,7 +460,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy 
+> *generic_phy)
+>  		phy->is_ref_clk_enabled = false;
+>  	}
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
+> 
+>  #define UFS_REF_CLK_EN	(1 << 5)
+> 
+> @@ -517,9 +512,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy
+> *generic_phy)
+>  EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
+> 
+>  /* Turn ON M-PHY RMMI interface clocks */
+> -int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
+> +static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+>  	int ret = 0;
+> 
+>  	if (phy->is_iface_clk_enabled)
+> @@ -543,20 +537,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy 
+> *generic_phy)
+>  out:
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
+> 
+>  /* Turn OFF M-PHY RMMI interface clocks */
+> -void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
+> +void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> -
+>  	if (phy->is_iface_clk_enabled) {
+>  		clk_disable_unprepare(phy->tx_iface_clk);
+>  		clk_disable_unprepare(phy->rx_iface_clk);
+>  		phy->is_iface_clk_enabled = false;
+>  	}
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
+> 
+>  int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+>  {
+> @@ -674,13 +664,20 @@ int ufs_qcom_phy_power_on(struct phy 
+> *generic_phy)
+>  		goto out_disable_phy;
+>  	}
+> 
+> -	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
+> +	err = ufs_qcom_phy_enable_iface_clk(phy_common);
+>  	if (err) {
+> -		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
+> +		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
+>  			__func__, err);
+>  		goto out_disable_pll;
+>  	}
+> 
+> +	err = ufs_qcom_phy_enable_ref_clk(phy_common);
+> +	if (err) {
+> +		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
+> +			__func__, err);
+> +		goto out_disable_iface_clk;
+> +	}
+> +
+>  	/* enable device PHY ref_clk pad rail */
+>  	if (phy_common->vddp_ref_clk.reg) {
+>  		err = ufs_qcom_phy_enable_vreg(dev,
+> @@ -696,7 +693,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  	goto out;
+> 
+>  out_disable_ref_clk:
+> -	ufs_qcom_phy_disable_ref_clk(generic_phy);
+> +	ufs_qcom_phy_disable_ref_clk(phy_common);
+> +out_disable_iface_clk:
+> +	ufs_qcom_phy_disable_iface_clk(phy_common);
+>  out_disable_pll:
+>  	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
+>  out_disable_phy:
+> @@ -715,7 +714,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+>  	if (phy_common->vddp_ref_clk.reg)
+>  		ufs_qcom_phy_disable_vreg(phy_common->dev,
+>  					  &phy_common->vddp_ref_clk);
+> -	ufs_qcom_phy_disable_ref_clk(generic_phy);
+> +	ufs_qcom_phy_disable_ref_clk(phy_common);
+> +	ufs_qcom_phy_disable_iface_clk(phy_common);
+> 
+>  	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+>  	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 3aedf73..6e4ce5f 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+> *hba, bool on)
+>  		return 0;
+> 
+>  	if (on) {
+> -		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+> -		if (err)
+> -			goto out;
+> -
+> -		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+> -		if (err) {
+> -			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
+> -				__func__, err);
+> -			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+> -			goto out;
+> -		}
 
-But, removing could be a problem. Sean has to confirm this.
+Now that you are moving these ref clk enable/disable to phy_power_on/off 
+and these phy_power_on/off are called only in runtime suspend/resume (3 
+seconds after last UFS access).
+Goal is to disable the phy reference clock during aggressive gating 
+(10ms from last UFS access) so shouldn't we call the phy_power_on/off 
+from these setup_clocks() function as well?
 
+>  		/* enable the device ref clock for HS mode*/
+>  		if (ufshcd_is_hs_mode(&hba->pwr_info))
+>  			ufs_qcom_dev_ref_clk_ctrl(host, true);
+> @@ -1131,9 +1120,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+> *hba, bool on)
+>  			ufs_qcom_update_bus_bw_vote(host);
+> 
+>  	} else {
+> -
+> -		/* M-PHY RMMI interface clocks can be turned off */
+> -		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+>  		if (!ufs_qcom_is_link_active(hba))
+>  			/* disable device ref_clk */
+>  			ufs_qcom_dev_ref_clk_ctrl(host, false);
+> @@ -1146,7 +1132,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+> *hba, bool on)
+>  		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+>  				__func__, err);
+> 
+> -out:
+>  	return err;
+>  }
+> 
+> diff --git a/include/linux/phy/phy-qcom-ufs.h 
+> b/include/linux/phy/phy-qcom-ufs.h
+> index 9d18e9f..35c070e 100644
+> --- a/include/linux/phy/phy-qcom-ufs.h
+> +++ b/include/linux/phy/phy-qcom-ufs.h
+> @@ -18,22 +18,6 @@
+>  #include "phy.h"
+> 
+>  /**
+> - * ufs_qcom_phy_enable_ref_clk() - Enable the phy
+> - * ref clock.
+> - * @phy: reference to a generic phy
+> - *
+> - * returns 0 for success, and non-zero for error.
+> - */
+> -int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
+> -
+> -/**
+> - * ufs_qcom_phy_disable_ref_clk() - Disable the phy
+> - * ref clock.
+> - * @phy: reference to a generic phy.
+> - */
+> -void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
+> -
+> -/**
+>   * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
+>   * ref clock.
+>   * @phy: reference to a generic phy.
+> @@ -47,8 +31,6 @@ void ufs_qcom_phy_enable_dev_ref_clk(struct phy 
+> *phy);
+>   */
+>  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+> 
+> -int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
+> -void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
+>  int ufs_qcom_phy_start_serdes(struct phy *phy);
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+>  int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
 
-On 10/18/2016 10:11 AM, Xose Vazquez Perez wrote:
-> On 10/07/2016 06:55 PM, Xose Vazquez Perez wrote:
->
-> This patch is pending, ACK is needed!
-> The part of multipath-tools was done time ago.
->
-> CC: Babu Moger, just in case.
->
->> Remove IBM/1745 ghost array.
->> There is no references nowhere, also removed from multipath-tools
->> Confirmed by the original manufacturer(NetApp), and Google shows no results.
->>
->> Replace too wide "TP9" regex with full names.
->> TP9100 is included, at it is not a RDAC array.
->> This reverts partially the commit 352047
->>
->> Add IBM 3542 and 3552, they are FAStT200 and FAStT500
->>
->> Cc: Sean Stewart <Sean.Stewart@netapp.com>
->> Cc: Hannes Reinecke <hare@suse.de>
->> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
->> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
->> Cc: Martin K. Petersen <martin.petersen@oracle.com>
->> Cc: SCSI ML <linux-scsi@vger.kernel.org>
->> Cc: device-mapper development <dm-devel@redhat.com>
->> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->> ---
->>   drivers/scsi/scsi_dh.c | 8 ++++++--
->>   1 file changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
->> index b8d3b97..a64b5ce 100644
->> --- a/drivers/scsi/scsi_dh.c
->> +++ b/drivers/scsi/scsi_dh.c
->> @@ -49,14 +49,18 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
->>   	{"IBM", "1724",			"rdac", },
->>   	{"IBM", "1726",			"rdac", },
->>   	{"IBM", "1742",			"rdac", },
->> -	{"IBM", "1745",			"rdac", },
->>   	{"IBM", "1746",			"rdac", },
->>   	{"IBM", "1813",			"rdac", },
->>   	{"IBM", "1814",			"rdac", },
->>   	{"IBM", "1815",			"rdac", },
->>   	{"IBM", "1818",			"rdac", },
->>   	{"IBM", "3526",			"rdac", },
->> -	{"SGI", "TP9",			"rdac", },
->> +	{"IBM", "3542",			"rdac", },
->> +	{"IBM", "3552",			"rdac", },
->> +	{"SGI", "TP9300",		"rdac", },
->> +	{"SGI", "TP9400",		"rdac", },
->> +	{"SGI", "TP9500",		"rdac", },
->> +	{"SGI", "TP9700",		"rdac", },
->>   	{"SGI", "IS",			"rdac", },
->>   	{"STK", "OPENstorage D280",	"rdac", },
->>   	{"STK", "FLEXLINE 380",		"rdac", },
->>
-
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
