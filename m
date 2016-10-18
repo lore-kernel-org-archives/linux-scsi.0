@@ -1,42 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 153171] scsi host6: runtime PM trying to activate child device
- host6 but parent (2-2:1.0) is not active
-Date: Tue, 18 Oct 2016 10:18:27 +0000
-Message-ID: <bug-153171-11613-yfE5BMJSBM@https.bugzilla.kernel.org/>
-References: <bug-153171-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 08/20] libfc: Replace ->rport_create callback with
+ function call
+Date: Tue, 18 Oct 2016 12:23:22 +0200
+Message-ID: <2b698d8d-2b27-2cda-3435-8f8895673589@suse.de>
+References: <1476777714-3543-1-git-send-email-hare@suse.de>
+ <1476777714-3543-9-git-send-email-hare@suse.de>
+ <20161018085415.eb33ubgvdegcqrpm@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59914 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:33784 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758088AbcJRKSg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 06:18:36 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 963EB202EB
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 10:18:29 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 77B3320222
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 10:18:27 +0000 (UTC)
-In-Reply-To: <bug-153171-11613@https.bugzilla.kernel.org/>
+        id S1752803AbcJRKXZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 06:23:25 -0400
+In-Reply-To: <20161018085415.eb33ubgvdegcqrpm@linux-x5ow.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=153171
+On 10/18/2016 10:54 AM, Johannes Thumshirn wrote:
+> On Tue, Oct 18, 2016 at 10:01:42AM +0200, Hannes Reinecke wrote:
+>> The ->rport_create callback only ever had a single implementation,
+>> so we can as well call it directly and drop the callback.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+> 
+> Any reason we can't rename fc_rport_create() with fc_remote_port_create()
+> so the scsi_transport_fc.c patch isn't needed?
+> 
+Yes: consistency.
 
-Scott Mowerson <smowerson@gmail.com> changed:
+Every function in libfc/fc_rport.c is named 'fc_rport_XXX'. So we should
+stick to that naming scheme here, too.
+scsi_transport_fc.c does not have such a strict naming scheme, so it's
+easier to rename that.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |smowerson@gmail.com
+Cheers,
 
---- Comment #10 from Scott Mowerson <smowerson@gmail.com> ---
-This is preventing me from booting Ubuntu 16.10:
-https://bugs.launchpad.net/ubuntu/+source/linux/+bug/1631058?comments=all 
-
-But I am not using a low-latency kernel.
-
+Hannes
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
