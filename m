@@ -1,77 +1,39 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] scsi: update rdac devices at scsi_dh_rdac
-Date: Tue, 18 Oct 2016 17:11:54 +0200
-Message-ID: <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
-References: <20161007165549.6433-1-xose.vazquez@gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f66.google.com ([209.85.215.66]:32863 "EHLO
-        mail-lf0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755519AbcJRPL6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 11:11:58 -0400
-Received: by mail-lf0-f66.google.com with SMTP id l131so3408034lfl.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 08:11:57 -0700 (PDT)
-In-Reply-To: <20161007165549.6433-1-xose.vazquez@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] scsi: g_NCR5380: add HAS_IOPORT_MAP dependency
+Date: Tue, 18 Oct 2016 17:18:06 +0200
+Message-ID: <20161018151827.2729976-1-arnd@arndb.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ondrej Zary <linux@rainbow-software.org>, Finn Thain <fthain@telegraphics.com.au>, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>, Hannes Reinicke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
-Cc: Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Babu Moger <babu.moger@oracle.com>
 
-On 10/07/2016 06:55 PM, Xose Vazquez Perez wrote:
+The driver was changed to call ioport_map, which breaks platforms that
+cannot provide this function:
 
-This patch is pending, ACK is needed!
-The part of multipath-tools was done time ago.
+drivers/scsi/g_NCR5380.o: In function `generic_NCR5380_init_one.constprop.0':
+g_NCR5380.c:(.text.generic_NCR5380_init_one.constprop.0+0x388): undefined reference to `ioport_map'
 
-CC: Babu Moger, just in case.
+This adds a Kconfig dependency.
 
-> Remove IBM/1745 ghost array.
-> There is no references nowhere, also removed from multipath-tools
-> Confirmed by the original manufacturer(NetApp), and Google shows no results.
->
-> Replace too wide "TP9" regex with full names.
-> TP9100 is included, at it is not a RDAC array.
-> This reverts partially the commit 352047
-> 
-> Add IBM 3542 and 3552, they are FAStT200 and FAStT500
-> 
-> Cc: Sean Stewart <Sean.Stewart@netapp.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: SCSI ML <linux-scsi@vger.kernel.org>
-> Cc: device-mapper development <dm-devel@redhat.com>
-> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
-> ---
->  drivers/scsi/scsi_dh.c | 8 ++++++--
->  1 file changed, 6 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-> index b8d3b97..a64b5ce 100644
-> --- a/drivers/scsi/scsi_dh.c
-> +++ b/drivers/scsi/scsi_dh.c
-> @@ -49,14 +49,18 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
->  	{"IBM", "1724",			"rdac", },
->  	{"IBM", "1726",			"rdac", },
->  	{"IBM", "1742",			"rdac", },
-> -	{"IBM", "1745",			"rdac", },
->  	{"IBM", "1746",			"rdac", },
->  	{"IBM", "1813",			"rdac", },
->  	{"IBM", "1814",			"rdac", },
->  	{"IBM", "1815",			"rdac", },
->  	{"IBM", "1818",			"rdac", },
->  	{"IBM", "3526",			"rdac", },
-> -	{"SGI", "TP9",			"rdac", },
-> +	{"IBM", "3542",			"rdac", },
-> +	{"IBM", "3552",			"rdac", },
-> +	{"SGI", "TP9300",		"rdac", },
-> +	{"SGI", "TP9400",		"rdac", },
-> +	{"SGI", "TP9500",		"rdac", },
-> +	{"SGI", "TP9700",		"rdac", },
->  	{"SGI", "IS",			"rdac", },
->  	{"STK", "OPENstorage D280",	"rdac", },
->  	{"STK", "FLEXLINE 380",		"rdac", },
-> 
+Fixes: 04c40f82ccc5 ("scsi: g_NCR5380: Merge g_NCR5380 and g_NCR5380_mmio drivers")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/Kconfig | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
+index 98451fe031a4..3b416c9efe5e 100644
+--- a/drivers/scsi/Kconfig
++++ b/drivers/scsi/Kconfig
+@@ -744,7 +744,7 @@ config SCSI_ISCI
+ 
+ config SCSI_GENERIC_NCR5380
+ 	tristate "Generic NCR5380/53c400 SCSI ISA card support"
+-	depends on ISA && SCSI
++	depends on ISA && SCSI && HAS_IOPORT_MAP
+ 	select SCSI_SPI_ATTRS
+ 	---help---
+ 	  This is a driver for old ISA card SCSI controllers based on a
+-- 
+2.9.0
