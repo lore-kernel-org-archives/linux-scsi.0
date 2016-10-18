@@ -1,60 +1,36 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] scsi_devinfo: apply to HP-rebranded same options as Hitachi
-Date: Tue, 18 Oct 2016 18:51:01 +0200
-Message-ID: <20161018165101.4286-1-xose.vazquez@gmail.com>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: [PATCH v8 6/7] sd: Implement support for ZBC devices
+Date: Tue, 18 Oct 2016 12:58:11 -0400
+Message-ID: <x498ttlvbks.fsf@segfault.boston.devel.redhat.com>
+References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
+        <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:34474 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755421AbcJRQvF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 12:51:05 -0400
-Received: by mail-wm0-f66.google.com with SMTP id d199so310725wmd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Oct 2016 09:51:05 -0700 (PDT)
+Received: from mx1.redhat.com ([209.132.183.28]:45474 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933242AbcJRQ6N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 18 Oct 2016 12:58:13 -0400
+In-Reply-To: <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com> (Damien
+        Le Moal's message of "Tue, 18 Oct 2016 15:40:34 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Takahiro Yasui <tyasui@redhat.com>, Mike Christie <michaelc@cs.wisc.edu>, Matthias Rudolph <Matthias.Rudolph@hds.com>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
-627511e3e modified some Hitachi entries:
+Damien Le Moal <damien.lemoal@wdc.com> writes:
 
-    Four models, OPEN-/DF400/DF500/DISK-SUBSYSTEM, can handle REPORT_LUN,
-    and the BLIST_REPORTLUN2 flag needs to be set. And DF600 doesn't require
-    any flags because it returns ANSI 03h (SPC).
+> +	if (!is_power_of_2(zone_blocks)) {
+> +		if (sdkp->first_scan)
+> +			sd_printk(KERN_NOTICE, sdkp,
+> +				  "Devices with non power of 2 zone "
+> +				  "size are not supported\n");
+> +		return -ENODEV;
+> +	}
 
-        {"HITACHI", "DF400", "*", BLIST_REPORTLUN2},
-        {"HITACHI", "DF500", "*", BLIST_REPORTLUN2},
+Are power of 2 zone sizes required by the standard?  I see why you've
+done this, but I wonder if we're artificially limiting the
+implementation, and whether there will be valid devices on the market
+that simply won't work with Linux because of this.
 
-
-The same should have been done also for HP counterparts.
-    
-
-Cc: Takahiro Yasui <tyasui@redhat.com>
-Cc: Mike Christie <michaelc@cs.wisc.edu>
-Cc: Matthias Rudolph <Matthias.Rudolph@hds.com>
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/scsi/scsi_devinfo.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 2464569..44d8cfb 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -186,9 +186,8 @@ static struct {
- 	{"HP", "C1557A", NULL, BLIST_FORCELUN},
- 	{"HP", "C3323-300", "4269", BLIST_NOTQ},
- 	{"HP", "C5713A", NULL, BLIST_NOREPORTLUN},
--	{"HP", "DF400", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"HP", "DF500", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--	{"HP", "DF600", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
-+	{"HP", "DF400", "*", BLIST_REPORTLUN2},
-+	{"HP", "DF500", "*", BLIST_REPORTLUN2},
- 	{"HP", "OP-C-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3380-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
- 	{"HP", "3390-", "*", BLIST_SPARSELUN | BLIST_LARGELUN},
--- 
-2.10.1
-
+-Jeff
