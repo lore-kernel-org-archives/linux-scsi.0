@@ -1,38 +1,37 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 07/20] scsi_transport_fc: rename 'fc_rport_create' to
- 'fc_remote_port_create'
-Date: Tue, 18 Oct 2016 13:17:50 +0200
-Message-ID: <20161018111750.jm6wdp4nvnwpyn23@linux-x5ow.site>
-References: <1476777714-3543-1-git-send-email-hare@suse.de>
- <1476777714-3543-8-git-send-email-hare@suse.de>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 01/10] mm: remove write/force parameters
+ from __get_user_pages_locked()
+Date: Tue, 18 Oct 2016 14:43:05 +0200
+Message-ID: <20161018124305.GA29967@quack2.suse.cz>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161013002020.3062-2-lstoakes@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37883 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758432AbcJRLRx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 18 Oct 2016 07:17:53 -0400
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <intel-gfx-bounces@lists.freedesktop.org>
 Content-Disposition: inline
-In-Reply-To: <1476777714-3543-8-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20161013002020.3062-2-lstoakes@gmail.com>
+List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
+List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
+List-Post: <mailto:intel-gfx@lists.freedesktop.org>
+List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
+List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
+ <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
+Errors-To: intel-gfx-bounces@lists.freedesktop.org
+Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
+To: Lorenzo Stoakes <lstoakes@gmail.com>
+Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, linux-mm@kvack.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.orglin
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, Oct 18, 2016 at 10:01:41AM +0200, Hannes Reinecke wrote:
-> Required for the next patch.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
-
-Given the comment on the next patch,
-Acked-by: Johannes Thumshirn <jth@kernel.org>
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+T24gVGh1IDEzLTEwLTE2IDAxOjIwOjExLCBMb3JlbnpvIFN0b2FrZXMgd3JvdGU6Cj4gVGhpcyBw
+YXRjaCByZW1vdmVzIHRoZSB3cml0ZSBhbmQgZm9yY2UgcGFyYW1ldGVycyBmcm9tIF9fZ2V0X3Vz
+ZXJfcGFnZXNfbG9ja2VkKCkKPiB0byBtYWtlIHRoZSB1c2Ugb2YgRk9MTF9GT1JDRSBleHBsaWNp
+dCBpbiBjYWxsZXJzIGFzIHVzZSBvZiB0aGlzIGZsYWcgY2FuIHJlc3VsdAo+IGluIHN1cnByaXNp
+bmcgYmVoYXZpb3VyIChhbmQgaGVuY2UgYnVncykgd2l0aGluIHRoZSBtbSBzdWJzeXN0ZW0uCj4g
+Cj4gU2lnbmVkLW9mZi1ieTogTG9yZW56byBTdG9ha2VzIDxsc3RvYWtlc0BnbWFpbC5jb20+CgpM
+b29rcyBnb29kLiBZb3UgY2FuIGFkZDoKClJldmlld2VkLWJ5OiBKYW4gS2FyYSA8amFja0BzdXNl
+LmN6PgoKCQkJCQkJCQlIb256YQotLSAKSmFuIEthcmEgPGphY2tAc3VzZS5jb20+ClNVU0UgTGFi
+cywgQ1IKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50
+ZWwtZ2Z4IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBz
+Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
