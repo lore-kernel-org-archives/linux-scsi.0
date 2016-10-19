@@ -1,48 +1,66 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Need some pointers to debug a target hang
-Date: Tue, 18 Oct 2016 23:29:27 -0700
-Message-ID: <1476858567.8490.101.camel@haakon3.risingtidesystems.com>
-References: <20160902141419.h23stppulnyfrnkz@c203.arch.suse.de>
-         <1476770275.8490.10.camel@haakon3.risingtidesystems.com>
-         <20161018070134.zhyk4ljaxzmvwfs2@linux-x5ow.site>
-         <20161018173522.trhoqrcoeof4mn4w@linux-x5ow.site>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: [PATCH 04/10] mm: replace get_user_pages_locked() write/force
+ parameters with gup_flags
+Date: Wed, 19 Oct 2016 09:32:00 +0200
+Message-ID: <20161019073200.GK29967@quack2.suse.cz>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161013002020.3062-5-lstoakes@gmail.com>
+ <20161018125425.GD29967@quack2.suse.cz>
+ <20161018135609.GA30025@lucifer>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:57350 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754496AbcJSG33 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2016 02:29:29 -0400
-In-Reply-To: <20161018173522.trhoqrcoeof4mn4w@linux-x5ow.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <20161018135609.GA30025@lucifer>
+Sender: owner-linux-mm@kvack.org
+To: Lorenzo Stoakes <lstoakes@gmail.com>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, Linus Torvalds <torvalds@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org, linux-sh
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, Robert LeBlanc <robert@leblancnet.us>
 
-On Tue, 2016-10-18 at 19:35 +0200, Johannes Thumshirn wrote:
-> On Tue, Oct 18, 2016 at 09:01:34AM +0200, Johannes Thumshirn wrote:
+On Tue 18-10-16 14:56:09, Lorenzo Stoakes wrote:
+> On Tue, Oct 18, 2016 at 02:54:25PM +0200, Jan Kara wrote:
+> > > @@ -1282,7 +1282,7 @@ long get_user_pages(unsigned long start, unsigned long nr_pages,
+> > >  			    int write, int force, struct page **pages,
+> > >  			    struct vm_area_struct **vmas);
+> > >  long get_user_pages_locked(unsigned long start, unsigned long nr_pages,
+> > > -		    int write, int force, struct page **pages, int *locked);
+> > > +		    unsigned int gup_flags, struct page **pages, int *locked);
+> >
+> > Hum, the prototype is inconsistent with e.g. __get_user_pages_unlocked()
+> > where gup_flags come after **pages argument. Actually it makes more sense
+> > to have it before **pages so that input arguments come first and output
+> > arguments second but I don't care that much. But it definitely should be
+> > consistent...
 > 
-> [...]
+> It was difficult to decide quite how to arrange parameters as there was
+> inconsitency with regards to parameter ordering already - for example
+> __get_user_pages() places its flags argument before pages whereas, as you note,
+> __get_user_pages_unlocked() puts them afterwards.
 > 
-> > > 
-> > > This is likely the missing SCF_ACK_KREF assignment in >= v4.1.y:
-> > > 
-> > > http://www.spinics.net/lists/target-devel/msg13530.html
+> I ended up compromising by trying to match the existing ordering of the function
+> as much as I could by replacing write, force pairs with gup_flags in the same
+> location (with the exception of get_user_pages_unlocked() which I felt should
+> match __get_user_pages_unlocked() in signature) or if there was already a
+> gup_flags parameter as in the case of __get_user_pages_unlocked() I simply
+> removed the write, force pair and left the flags as the last parameter.
 > 
-> Sorry to disappoint you but it didn't fix my issue. Is there any debug data I
-> can give you, or do you have an advice where I could start looking?
+> I am happy to rearrange parameters as needed, however I am not sure if it'd be
+> worthwhile for me to do so (I am keen to try to avoid adding too much noise here
+> :)
 > 
-> I have to admit I only tested the patch on our downstream kernel and not the
-> upstream kernel, I'll repeat the tests on 4.8 final tomorrow.
-> 
+> If we were to rearrange parameters for consistency I'd suggest adjusting
+> __get_user_pages_unlocked() to put gup_flags before pages and do the same with
+> get_user_pages_unlocked(), let me know what you think.
 
-Is it possible to generate vmcore to have a look in crash + gdb..?
+Yeah, ok. If the inconsistency is already there, just leave it for now.
 
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
 
-
-
-
-
-
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
