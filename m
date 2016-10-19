@@ -1,34 +1,49 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v8 0/7] ZBC / Zoned block device support
-Date: Tue, 18 Oct 2016 20:46:04 -0400
-Message-ID: <yq1twc9f9o3.fsf@sermon.lab.mkp.net>
+Subject: Re: [PATCH v8 6/7] sd: Implement support for ZBC devices
+Date: Tue, 18 Oct 2016 20:47:14 -0400
+Message-ID: <yq1pomxf9m5.fsf@sermon.lab.mkp.net>
 References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
-        <2a80d950-c831-9ac6-1969-dc6386e58236@kernel.dk>
+        <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22302 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:22554 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751352AbcJSAqS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 20:46:18 -0400
-In-Reply-To: <2a80d950-c831-9ac6-1969-dc6386e58236@kernel.dk> (Jens Axboe's
-        message of "Tue, 18 Oct 2016 09:58:00 -0600")
+        with ESMTP id S932532AbcJSAr2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 20:47:28 -0400
+In-Reply-To: <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com> (Damien
+        Le Moal's message of "Tue, 18 Oct 2016 15:40:34 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Damien Le Moal <damien.lemoal@wdc.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
->>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
+>>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
 
-Jens> This is starting to look mergeable to me.
+Damien> Implement ZBC support functions to setup zoned disks, both
+Damien> host-managed and host-aware models. Only zoned disks that
+Damien> satisfy the following conditions are supported:
+Damien> 1) All zones are the same size, with the exception of an
+Damien>    eventual last smaller runt zone.
+Damien> 2) For host-managed disks, reads are unrestricted (reads are not
+Damien>    failed due to zone or write pointer alignement constraints).
+Damien> Zoned disks that do not satisfy these 2 conditions are setup
+Damien> with a capacity of 0 to prevent their use.
 
-Yup.
+Damien> The function sd_zbc_read_zones, called from sd_revalidate_disk,
+Damien> checks that the device satisfies the above two constraints. This
+Damien> function may also change the disk capacity previously set by
+Damien> sd_read_capacity for devices reporting only the capacity of
+Damien> conventional zones at the beginning of the LBA range
+Damien> (i.e. devices reporting rc_basis set to 0).
 
-Jens> Any objections in getting this applied for 4.10? Looks like 6/7
-Jens> should go through the SCSI tree, but I can queue up the rest.
+Damien> The capacity message output was moved out of sd_read_capacity
+Damien> into a new function sd_print_capacity to include this eventual
+Damien> capacity change by sd_zbc_read_zones. This new function also
+Damien> includes a call to sd_zbc_print_zones to display the number of
+Damien> zones and zone size of the device.
 
-I'm OK with it at this point. Probably easier if either you or I take
-the whole lot.
+Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
