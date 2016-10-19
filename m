@@ -1,25 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fcoe: Fixup missing initialisation in fcoe_dcb_create()
-Date: Tue, 18 Oct 2016 21:03:08 -0400
-Message-ID: <yq1h989f8vn.fsf@sermon.lab.mkp.net>
-References: <1476772756-121774-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH] scsi: g_NCR5380: add HAS_IOPORT_MAP dependency
+Date: Tue, 18 Oct 2016 21:10:02 -0400
+Message-ID: <yq1d1ixf8k5.fsf@sermon.lab.mkp.net>
+References: <20161018151827.2729976-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26814 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:29150 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754271AbcJSBDa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 21:03:30 -0400
-In-Reply-To: <1476772756-121774-1-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Tue, 18 Oct 2016 08:39:16 +0200")
+        with ESMTP id S1753216AbcJSBLc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 21:11:32 -0400
+In-Reply-To: <20161018151827.2729976-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Tue, 18 Oct 2016 17:18:06 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>, Finn Thain <fthain@telegraphics.com.au>, Hannes Reinecke <hare@suse.com>, Hannes Reinicke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
-Hannes> Found by 0-day robot.
+Arnd> The driver was changed to call ioport_map, which breaks platforms
+Arnd> that cannot provide this function:
 
 Applied to 4.10/scsi-queue.
 
