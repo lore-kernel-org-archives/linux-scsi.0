@@ -1,287 +1,378 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RFC 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver
- framework.
-Date: Wed, 19 Oct 2016 12:02:53 +0200
-Message-ID: <20161019100253.vxqxp5fhoxrlt6ay@linux-x5ow.site>
+Subject: Re: [RFC 1/6] qed: Add support for hardware offloaded iSCSI.
+Date: Wed, 19 Oct 2016 11:09:23 +0200
+Message-ID: <20161019090923.up3xgrbya3mxr7vu@linux-x5ow.site>
 References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com>
- <1476853273-22960-4-git-send-email-manish.rangankar@cavium.com>
+ <1476853273-22960-2-git-send-email-manish.rangankar@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1476853273-22960-4-git-send-email-manish.rangankar@cavium.com>
+In-Reply-To: <1476853273-22960-2-git-send-email-manish.rangankar@cavium.com>
 Sender: netdev-owner@vger.kernel.org
 To: manish.rangankar@cavium.com
-Cc: lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Nilesh Javali <nilesh.javali@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Chad Dupuis <chad.dupuis@cavium.com>, Saurav Kashyap <saurav.kashyap@cavium.com>, Arun Easi <arun.easi@cavium.com>
+Cc: lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@qlogic.com>, Arun Easi <arun.easi@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 19, 2016 at 01:01:10AM -0400, manish.rangankar@cavium.com wrote:
-> From: Manish Rangankar <manish.rangankar@cavium.com>
+Hi Manish,
+
+Some initital comments
+
+On Wed, Oct 19, 2016 at 01:01:08AM -0400, manish.rangankar@cavium.com wrote:
+> From: Yuval Mintz <Yuval.Mintz@qlogic.com>
 > 
-> The QLogic FastLinQ Driver for iSCSI (qedi) is the iSCSI specific module
-> for 41000 Series Converged Network Adapters by QLogic.
+> This adds the backbone required for the various HW initalizations
+> which are necessary for the iSCSI driver (qedi) for QLogic FastLinQ
+> 4xxxx line of adapters - FW notification, resource initializations, etc.
 > 
-> This patch consists of following changes:
->   - MAINTAINERS Makefile and Kconfig changes for qedi,
->   - PCI driver registration,
->   - iSCSI host level initialization,
->   - Debugfs and log level infrastructure.
-> 
-> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
-> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-> Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@cavium.com>
 > Signed-off-by: Arun Easi <arun.easi@cavium.com>
-> Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
+> Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
 > ---
+>  drivers/net/ethernet/qlogic/Kconfig            |   15 +
+>  drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
+>  drivers/net/ethernet/qlogic/qed/qed.h          |    8 +-
+>  drivers/net/ethernet/qlogic/qed/qed_dev.c      |   15 +
+>  drivers/net/ethernet/qlogic/qed/qed_int.h      |    1 -
+>  drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1310 ++++++++++++++++++++++++
+>  drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
+>  drivers/net/ethernet/qlogic/qed/qed_l2.c       |    1 -
+>  drivers/net/ethernet/qlogic/qed/qed_ll2.c      |   35 +-
+>  drivers/net/ethernet/qlogic/qed/qed_main.c     |    2 -
+>  drivers/net/ethernet/qlogic/qed/qed_mcp.h      |    6 -
+>  drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
+>  drivers/net/ethernet/qlogic/qed/qed_spq.c      |   15 +
+>  include/linux/qed/qed_if.h                     |    2 +
+>  include/linux/qed/qed_iscsi_if.h               |  249 +++++
+>  15 files changed, 1692 insertions(+), 22 deletions(-)
+>  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+>  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+>  create mode 100644 include/linux/qed/qed_iscsi_if.h
+> 
+> diff --git a/drivers/net/ethernet/qlogic/Kconfig b/drivers/net/ethernet/qlogic/Kconfig
+> index 0df1391f9..bad4fae 100644
+> --- a/drivers/net/ethernet/qlogic/Kconfig
+> +++ b/drivers/net/ethernet/qlogic/Kconfig
+> @@ -118,4 +118,19 @@ config INFINIBAND_QEDR
+>  	  for QLogic QED. This would be replaced by the 'real' option
+>  	  once the QEDR driver is added [+relocated].
+>  
+> +config QED_ISCSI
+> +	bool
+> +
+> +config QEDI
+> +	tristate "QLogic QED 25/40/100Gb iSCSI driver"
+> +	depends on QED
+> +	select QED_LL2
+> +	select QED_ISCSI
+> +	default n
+> +	---help---
+> +	  This provides a temporary node that allows the compilation
+> +	  and logical testing of the hardware offload iSCSI support
+> +	  for QLogic QED. This would be replaced by the 'real' option
+> +	  once the QEDI driver is added [+relocated].
+> +
+>  endif # NET_VENDOR_QLOGIC
+> diff --git a/drivers/net/ethernet/qlogic/qed/Makefile b/drivers/net/ethernet/qlogic/qed/Makefile
+> index cda0af7..b76669c 100644
+> --- a/drivers/net/ethernet/qlogic/qed/Makefile
+> +++ b/drivers/net/ethernet/qlogic/qed/Makefile
+> @@ -6,3 +6,4 @@ qed-y := qed_cxt.o qed_dev.o qed_hw.o qed_init_fw_funcs.o qed_init_ops.o \
+>  qed-$(CONFIG_QED_SRIOV) += qed_sriov.o qed_vf.o
+>  qed-$(CONFIG_QED_LL2) += qed_ll2.o
+>  qed-$(CONFIG_INFINIBAND_QEDR) += qed_roce.o
+> +qed-$(CONFIG_QED_ISCSI) += qed_iscsi.o
+> diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
+> index 653bb57..a61b1c0 100644
+> --- a/drivers/net/ethernet/qlogic/qed/qed.h
+> +++ b/drivers/net/ethernet/qlogic/qed/qed.h
+> @@ -35,6 +35,7 @@
+>  
+>  #define QED_WFQ_UNIT	100
+>  
+> +#define ISCSI_BDQ_ID(_port_id) (_port_id)
+
+This looks a bit odd to me.
 
 [...]
 
-> +static inline void *qedi_get_task_mem(struct qed_iscsi_tid *info, u32 tid)
+>  #endif
+> +		if (IS_ENABLED(CONFIG_QEDI) &&
+> +				p_hwfn->hw_info.personality == QED_PCI_ISCSI)
+> +			qed_iscsi_free(p_hwfn, p_hwfn->p_iscsi_info);
+
+
+Why not introduce a small helper like:
+static inline bool qed_is_iscsi_personality()
+{
+	return IS_ENABLED(CONFIG_QEDI) && p_hwfn->hw_info.personality ==
+		QED_PCI_ISCSI;
+}
+
+>  		qed_iov_free(p_hwfn);
+
+[...]
+
+> +
+> +	if (!GET_FIELD(p_ramrod->iscsi.flags,
+> +		       ISCSI_CONN_OFFLOAD_PARAMS_TCP_ON_CHIP_1B)) {
+> +		p_tcp = &p_ramrod->tcp;
+> +		ucval = p_conn->local_mac[1];
+> +		((u8 *)(&p_tcp->local_mac_addr_hi))[0] = ucval;
+> +		ucval = p_conn->local_mac[0];
+> +		((u8 *)(&p_tcp->local_mac_addr_hi))[1] = ucval;
+> +		ucval = p_conn->local_mac[3];
+> +		((u8 *)(&p_tcp->local_mac_addr_mid))[0] = ucval;
+> +		ucval = p_conn->local_mac[2];
+> +		((u8 *)(&p_tcp->local_mac_addr_mid))[1] = ucval;
+> +		ucval = p_conn->local_mac[5];
+> +		((u8 *)(&p_tcp->local_mac_addr_lo))[0] = ucval;
+> +		ucval = p_conn->local_mac[4];
+> +		((u8 *)(&p_tcp->local_mac_addr_lo))[1] = ucval;
+> +		ucval = p_conn->remote_mac[1];
+> +		((u8 *)(&p_tcp->remote_mac_addr_hi))[0] = ucval;
+> +		ucval = p_conn->remote_mac[0];
+> +		((u8 *)(&p_tcp->remote_mac_addr_hi))[1] = ucval;
+> +		ucval = p_conn->remote_mac[3];
+> +		((u8 *)(&p_tcp->remote_mac_addr_mid))[0] = ucval;
+> +		ucval = p_conn->remote_mac[2];
+> +		((u8 *)(&p_tcp->remote_mac_addr_mid))[1] = ucval;
+> +		ucval = p_conn->remote_mac[5];
+> +		((u8 *)(&p_tcp->remote_mac_addr_lo))[0] = ucval;
+> +		ucval = p_conn->remote_mac[4];
+> +		((u8 *)(&p_tcp->remote_mac_addr_lo))[1] = ucval;
+> +
+> +		p_tcp->vlan_id = cpu_to_le16(p_conn->vlan_id);
+> +
+> +		p_tcp->flags = p_conn->tcp_flags;
+> +		p_tcp->ip_version = p_conn->ip_version;
+> +		for (i = 0; i < 4; i++) {
+> +			dval = p_conn->remote_ip[i];
+> +			p_tcp->remote_ip[i] = cpu_to_le32(dval);
+> +			dval = p_conn->local_ip[i];
+> +			p_tcp->local_ip[i] = cpu_to_le32(dval);
+> +		}
+> +		p_tcp->ka_max_probe_cnt = p_conn->ka_max_probe_cnt;
+> +		p_tcp->dup_ack_theshold = p_conn->dup_ack_theshold;
+> +
+> +		p_tcp->rcv_next = cpu_to_le32(p_conn->rcv_next);
+> +		p_tcp->snd_una = cpu_to_le32(p_conn->snd_una);
+> +		p_tcp->snd_next = cpu_to_le32(p_conn->snd_next);
+> +		p_tcp->snd_max = cpu_to_le32(p_conn->snd_max);
+> +		p_tcp->snd_wnd = cpu_to_le32(p_conn->snd_wnd);
+> +		p_tcp->rcv_wnd = cpu_to_le32(p_conn->rcv_wnd);
+> +		p_tcp->snd_wl1 = cpu_to_le32(p_conn->snd_wl1);
+> +		p_tcp->cwnd = cpu_to_le32(p_conn->cwnd);
+> +		p_tcp->ss_thresh = cpu_to_le32(p_conn->ss_thresh);
+> +		p_tcp->srtt = cpu_to_le16(p_conn->srtt);
+> +		p_tcp->rtt_var = cpu_to_le16(p_conn->rtt_var);
+> +		p_tcp->ts_time = cpu_to_le32(p_conn->ts_time);
+> +		p_tcp->ts_recent = cpu_to_le32(p_conn->ts_recent);
+> +		p_tcp->ts_recent_age = cpu_to_le32(p_conn->ts_recent_age);
+> +		p_tcp->total_rt = cpu_to_le32(p_conn->total_rt);
+> +		dval = p_conn->ka_timeout_delta;
+> +		p_tcp->ka_timeout_delta = cpu_to_le32(dval);
+> +		dval = p_conn->rt_timeout_delta;
+> +		p_tcp->rt_timeout_delta = cpu_to_le32(dval);
+> +		p_tcp->dup_ack_cnt = p_conn->dup_ack_cnt;
+> +		p_tcp->snd_wnd_probe_cnt = p_conn->snd_wnd_probe_cnt;
+> +		p_tcp->ka_probe_cnt = p_conn->ka_probe_cnt;
+> +		p_tcp->rt_cnt = p_conn->rt_cnt;
+> +		p_tcp->flow_label = cpu_to_le32(p_conn->flow_label);
+> +		p_tcp->ka_timeout = cpu_to_le32(p_conn->ka_timeout);
+> +		p_tcp->ka_interval = cpu_to_le32(p_conn->ka_interval);
+> +		p_tcp->max_rt_time = cpu_to_le32(p_conn->max_rt_time);
+> +		dval = p_conn->initial_rcv_wnd;
+> +		p_tcp->initial_rcv_wnd = cpu_to_le32(dval);
+> +		p_tcp->ttl = p_conn->ttl;
+> +		p_tcp->tos_or_tc = p_conn->tos_or_tc;
+> +		p_tcp->remote_port = cpu_to_le16(p_conn->remote_port);
+> +		p_tcp->local_port = cpu_to_le16(p_conn->local_port);
+> +		p_tcp->mss = cpu_to_le16(p_conn->mss);
+> +		p_tcp->snd_wnd_scale = p_conn->snd_wnd_scale;
+> +		p_tcp->rcv_wnd_scale = p_conn->rcv_wnd_scale;
+> +		dval = p_conn->ts_ticks_per_second;
+> +		p_tcp->ts_ticks_per_second = cpu_to_le32(dval);
+> +		wval = p_conn->da_timeout_value;
+> +		p_tcp->da_timeout_value = cpu_to_le16(wval);
+> +		p_tcp->ack_frequency = p_conn->ack_frequency;
+> +		p_tcp->connect_mode = p_conn->connect_mode;
+> +	} else {
+> +		p_tcp2 =
+> +		    &((struct iscsi_spe_conn_offload_option2 *)p_ramrod)->tcp;
+> +		ucval = p_conn->local_mac[1];
+> +		((u8 *)(&p_tcp2->local_mac_addr_hi))[0] = ucval;
+> +		ucval = p_conn->local_mac[0];
+> +		((u8 *)(&p_tcp2->local_mac_addr_hi))[1] = ucval;
+> +		ucval = p_conn->local_mac[3];
+> +		((u8 *)(&p_tcp2->local_mac_addr_mid))[0] = ucval;
+> +		ucval = p_conn->local_mac[2];
+> +		((u8 *)(&p_tcp2->local_mac_addr_mid))[1] = ucval;
+> +		ucval = p_conn->local_mac[5];
+> +		((u8 *)(&p_tcp2->local_mac_addr_lo))[0] = ucval;
+> +		ucval = p_conn->local_mac[4];
+> +		((u8 *)(&p_tcp2->local_mac_addr_lo))[1] = ucval;
+> +
+> +		ucval = p_conn->remote_mac[1];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_hi))[0] = ucval;
+> +		ucval = p_conn->remote_mac[0];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_hi))[1] = ucval;
+> +		ucval = p_conn->remote_mac[3];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_mid))[0] = ucval;
+> +		ucval = p_conn->remote_mac[2];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_mid))[1] = ucval;
+> +		ucval = p_conn->remote_mac[5];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_lo))[0] = ucval;
+> +		ucval = p_conn->remote_mac[4];
+> +		((u8 *)(&p_tcp2->remote_mac_addr_lo))[1] = ucval;
+> +
+> +		p_tcp2->vlan_id = cpu_to_le16(p_conn->vlan_id);
+> +		p_tcp2->flags = p_conn->tcp_flags;
+> +
+> +		p_tcp2->ip_version = p_conn->ip_version;
+> +		for (i = 0; i < 4; i++) {
+> +			dval = p_conn->remote_ip[i];
+> +			p_tcp2->remote_ip[i] = cpu_to_le32(dval);
+> +			dval = p_conn->local_ip[i];
+> +			p_tcp2->local_ip[i] = cpu_to_le32(dval);
+> +		}
+> +
+> +		p_tcp2->flow_label = cpu_to_le32(p_conn->flow_label);
+> +		p_tcp2->ttl = p_conn->ttl;
+> +		p_tcp2->tos_or_tc = p_conn->tos_or_tc;
+> +		p_tcp2->remote_port = cpu_to_le16(p_conn->remote_port);
+> +		p_tcp2->local_port = cpu_to_le16(p_conn->local_port);
+> +		p_tcp2->mss = cpu_to_le16(p_conn->mss);
+> +		p_tcp2->rcv_wnd_scale = p_conn->rcv_wnd_scale;
+> +		p_tcp2->connect_mode = p_conn->connect_mode;
+> +		wval = p_conn->syn_ip_payload_length;
+> +		p_tcp2->syn_ip_payload_length = cpu_to_le16(wval);
+> +		p_tcp2->syn_phy_addr_lo = DMA_LO_LE(p_conn->syn_phy_addr);
+> +		p_tcp2->syn_phy_addr_hi = DMA_HI_LE(p_conn->syn_phy_addr);
+> +	}
+
+Is there any chance you could factor out above blocks into own functions so
+you have
+
+
+	if (!GET_FIELD(p_ramrod->iscsi.flags,
+		       ISCSI_CONN_OFFLOAD_PARAMS_TCP_ON_CHIP_1B)) {
+		qedi_do_stuff_off_chip();
+	else 
+		qedi_do_stuff_on_chip();
+
+> +
+
+[...]
+
+> +static void __iomem *qed_iscsi_get_db_addr(struct qed_hwfn *p_hwfn, u32 cid)
 > +{
-> +	return (void *)(info->blocks[tid / info->num_tids_per_block] +
-> +			(tid % info->num_tids_per_block) * info->size);
+> +	return (u8 __iomem *)p_hwfn->doorbells +
+> +			     qed_db_addr(cid, DQ_DEMS_LEGACY);
+> +}
+> +
+> +static void __iomem *qed_iscsi_get_primary_bdq_prod(struct qed_hwfn *p_hwfn,
+> +						    u8 bdq_id)
+> +{
+> +	u8 bdq_function_id = ISCSI_BDQ_ID(p_hwfn->port_id);
+> +
+> +	return (u8 __iomem *)p_hwfn->regview + GTT_BAR0_MAP_REG_MSDM_RAM +
+> +			     MSTORM_SCSI_BDQ_EXT_PROD_OFFSET(bdq_function_id,
+> +							     bdq_id);
+> +}
+> +
+> +static void __iomem *qed_iscsi_get_secondary_bdq_prod(struct qed_hwfn *p_hwfn,
+> +						      u8 bdq_id)
+> +{
+> +	u8 bdq_function_id = ISCSI_BDQ_ID(p_hwfn->port_id);
+> +
+> +	return (u8 __iomem *)p_hwfn->regview + GTT_BAR0_MAP_REG_TSDM_RAM +
+> +			     TSTORM_SCSI_BDQ_EXT_PROD_OFFSET(bdq_function_id,
+> +							     bdq_id);
 > +}
 
-Unnecessary cast here.
-
-
-[...]
-
-> +void
-> +qedi_dbg_err(struct qedi_dbg_ctx *qedi, const char *func, u32 line,
-> +	     const char *fmt, ...)
-> +{
-> +	va_list va;
-> +	struct va_format vaf;
-> +	char nfunc[32];
-> +
-> +	memset(nfunc, 0, sizeof(nfunc));
-> +	memcpy(nfunc, func, sizeof(nfunc) - 1);
-> +
-> +	va_start(va, fmt);
-> +
-> +	vaf.fmt = fmt;
-> +	vaf.va = &va;
-> +
-> +	if (likely(qedi) && likely(qedi->pdev))
-> +		pr_crit("[%s]:[%s:%d]:%d: %pV", dev_name(&qedi->pdev->dev),
-> +			nfunc, line, qedi->host_no, &vaf);
-> +	else
-> +		pr_crit("[0000:00:00.0]:[%s:%d]: %pV", nfunc, line, &vaf);
-
-pr_crit, seriously?
+Why are you casting to u8* here, you're returning void*? 
 
 [...]
 
-> +static void qedi_int_fp(struct qedi_ctx *qedi)
-> +{
-> +	struct qedi_fastpath *fp;
-> +	int id;
 > +
-> +	memset((void *)qedi->fp_array, 0, MIN_NUM_CPUS_MSIX(qedi) *
-> +	       sizeof(*qedi->fp_array));
-> +	memset((void *)qedi->sb_array, 0, MIN_NUM_CPUS_MSIX(qedi) *
-> +	       sizeof(*qedi->sb_array));
-
-I don't think the cast is necessary here.
-
-[...]
-
-> +static int qedi_setup_cid_que(struct qedi_ctx *qedi)
-> +{
-> +	int i;
+> +	if (tasks) {
+> +		struct qed_tid_mem *tid_info = kzalloc(sizeof(*tid_info),
+> +						       GFP_KERNEL);
 > +
-> +	qedi->cid_que.cid_que_base = kmalloc((qedi->max_active_conns *
-> +					      sizeof(u32)), GFP_KERNEL);
-> +	if (!qedi->cid_que.cid_que_base)
-> +		return -ENOMEM;
+> +		if (!tid_info) {
+> +			DP_NOTICE(cdev,
+> +				  "Failed to allocate tasks information\n");
+> +			qed_iscsi_stop(cdev);
+> +			return -ENOMEM;
+> +		}
 > +
-> +	qedi->cid_que.conn_cid_tbl = kmalloc((qedi->max_active_conns *
-> +					      sizeof(struct qedi_conn *)),
-> +					     GFP_KERNEL);
-
-Please use kmalloc_array() here.
-
-[...]
-
-> +/* MSI-X fastpath handler code */
-> +static irqreturn_t qedi_msix_handler(int irq, void *dev_id)
-> +{
-> +	struct qedi_fastpath *fp = dev_id;
-> +	struct qedi_ctx *qedi = fp->qedi;
-> +	bool wake_io_thread = true;
+> +		rc = qed_cxt_get_tid_mem_info(QED_LEADING_HWFN(cdev),
+> +					      tid_info);
+> +		if (rc) {
+> +			DP_NOTICE(cdev, "Failed to gather task information\n");
+> +			qed_iscsi_stop(cdev);
+> +			kfree(tid_info);
+> +			return rc;
+> +		}
 > +
-> +	qed_sb_ack(fp->sb_info, IGU_INT_DISABLE, 0);
+> +		/* Fill task information */
+> +		tasks->size = tid_info->tid_size;
+> +		tasks->num_tids_per_block = tid_info->num_tids_per_block;
+> +		memcpy(tasks->blocks, tid_info->blocks, MAX_TID_BLOCKS);
 > +
-> +process_again:
-> +	wake_io_thread = qedi_process_completions(fp);
-> +	if (wake_io_thread) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_DISC,
-> +			  "process already running\n");
+> +		kfree(tid_info);
 > +	}
 > +
-> +	if (qedi_fp_has_work(fp) == 0)
-> +		qed_sb_update_sb_idx(fp->sb_info);
-> +
-> +	/* Check for more work */
-> +	rmb();
-> +
-> +	if (qedi_fp_has_work(fp) == 0)
-> +		qed_sb_ack(fp->sb_info, IGU_INT_ENABLE, 1);
-> +	else
-> +		goto process_again;
-> +
-> +	return IRQ_HANDLED;
-> +}
-
-You might want to consider workqueues here.
-
-[...]
-
-> +static int qedi_alloc_itt(struct qedi_ctx *qedi)
-> +{
-> +	qedi->itt_map = kzalloc((sizeof(struct qedi_itt_map) *
-> +				MAX_ISCSI_TASK_ENTRIES), GFP_KERNEL);
-
-that screams for kcalloc()
-
-> +	if (!qedi->itt_map) {
-> +		QEDI_ERR(&qedi->dbg_ctx,
-> +			 "Unable to allocate itt map array memory\n");
-> +		return -ENOMEM;
-> +	}
 > +	return 0;
 > +}
-> +
-> +static void qedi_free_itt(struct qedi_ctx *qedi)
-> +{
-> +	kfree(qedi->itt_map);
-> +}
-> +
-> +static struct qed_ll2_cb_ops qedi_ll2_cb_ops = {
-> +	.rx_cb = qedi_ll2_rx,
-> +	.tx_cb = NULL,
-> +};
-> +
-> +static int qedi_percpu_io_thread(void *arg)
-> +{
-> +	struct qedi_percpu_s *p = arg;
-> +	struct qedi_work *work, *tmp;
-> +	unsigned long flags;
-> +	LIST_HEAD(work_list);
-> +
-> +	set_user_nice(current, -20);
-> +
-> +	while (!kthread_should_stop()) {
-> +		spin_lock_irqsave(&p->p_work_lock, flags);
-> +		while (!list_empty(&p->work_list)) {
-> +			list_splice_init(&p->work_list, &work_list);
-> +			spin_unlock_irqrestore(&p->p_work_lock, flags);
-> +
-> +			list_for_each_entry_safe(work, tmp, &work_list, list) {
-> +				list_del_init(&work->list);
-> +				qedi_fp_process_cqes(work->qedi, &work->cqe,
-> +						     work->que_idx);
-> +				kfree(work);
-> +			}
-> +			spin_lock_irqsave(&p->p_work_lock, flags);
-> +		}
-> +		set_current_state(TASK_INTERRUPTIBLE);
-> +		spin_unlock_irqrestore(&p->p_work_lock, flags);
-> +		schedule();
-> +	}
-> +	__set_current_state(TASK_RUNNING);
-> +
-> +	return 0;
-> +}
 
-A kthread with prio -20 IRQs turned off looping over a list, what could
-possibly go wrong here. I bet you your favorite beverage that this will
-cause Soft Lockups when running I/O stress tests BTDT.
+Maybe:
+
+struct qed_tid_mem *tid_info;
+[...]
+if (!tasks)
+	return 0;
+
+tid_info = kzalloc(sizeof(*tid_info), GFP_KERNEL);
+
+if (!tid_info) {
+	DP_NOTICE(cdev, "Failed to allocate tasks information\n");
+	qed_iscsi_stop(cdev);
+	return -ENOMEM;
+}
+
+rc = qed_cxt_get_tid_mem_info(QED_LEADING_HWFN(cdev), tid_info);
+if (rc) {
+	DP_NOTICE(cdev, "Failed to gather task information\n");
+	qed_iscsi_stop(cdev);
+	kfree(tid_info);
+	return rc;
+}
+
+/* Fill task information */
+tasks->size = tid_info->tid_size;
+tasks->num_tids_per_block = tid_info->num_tids_per_block;
+memcpy(tasks->blocks, tid_info->blocks, MAX_TID_BLOCKS);
+
+kfree(tid_info);
+
+> +
 
 [...]
 
-> +	if (mode != QEDI_MODE_RECOVERY) {
-> +		if (iscsi_host_add(qedi->shost, &pdev->dev)) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Could not add iscsi host\n");
-> +			rc = -ENOMEM;
-> +			goto remove_host;
-> +		}
-> +
-> +		/* Allocate uio buffers */
-> +		rc = qedi_alloc_uio_rings(qedi);
-> +		if (rc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "UIO alloc ring failed err=%d\n", rc);
-> +			goto remove_host;
-> +		}
-> +
-> +		rc = qedi_init_uio(qedi);
-> +		if (rc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "UIO init failed, err=%d\n", rc);
-> +			goto free_uio;
-> +		}
-> +
-> +		/* host the array on iscsi_conn */
-> +		rc = qedi_setup_cid_que(qedi);
-> +		if (rc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Could not setup cid que\n");
-> +			goto free_uio;
-> +		}
-> +
-> +		rc = qedi_cm_alloc_mem(qedi);
-> +		if (rc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Could not alloc cm memory\n");
-> +			goto free_cid_que;
-> +		}
-> +
-> +		rc = qedi_alloc_itt(qedi);
-> +		if (rc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Could not alloc itt memory\n");
-> +			goto free_cid_que;
-> +		}
-> +
-> +		sprintf(host_buf, "host_%d", qedi->shost->host_no);
-> +		qedi->tmf_thread = create_singlethread_workqueue(host_buf);
-> +		if (!qedi->tmf_thread) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Unable to start tmf thread!\n");
-> +			rc = -ENODEV;
-> +			goto free_cid_que;
-> +		}
-> +
-> +		sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
-> +		qedi->offload_thread = create_workqueue(host_buf);
-> +		if (!qedi->offload_thread) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Unable to start offload thread!\n");
-> +			rc = -ENODEV;
-> +			goto free_cid_que;
-> +		}
-> +
-> +		/* F/w needs 1st task context memory entry for performance */
-> +		set_bit(QEDI_RESERVE_TASK_ID, qedi->task_idx_map);
-> +		atomic_set(&qedi->num_offloads, 0);
-> +	}
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +		  "QLogic FastLinQ iSCSI Module qedi %s, FW %d.%d.%d.%d\n",
-> +		  QEDI_MODULE_VERSION, FW_MAJOR_VERSION, FW_MINOR_VERSION,
-> +		   FW_REVISION_VERSION, FW_ENGINEERING_VERSION);
-> +	return 0;
+> +/**
+> + * @brief start iscsi in FW
+> + *
+> + * @param cdev
+> + * @param tasks - qed will fill information about tasks
+> + *
 
-Please put the QEDI_INFO() above the if and invert the condition.
-
+Please use proper kerneldoc and not doxygen syntax.
 
 Thanks,
 	Johannes
+
 -- 
 Johannes Thumshirn                                          Storage
 jthumshirn@suse.de                                +49 911 74053 689
