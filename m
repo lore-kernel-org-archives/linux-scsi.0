@@ -1,56 +1,161 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH v8 2/7] blk-sysfs: Add 'chunk_sectors' to sysfs attributes
-Date: Wed, 19 Oct 2016 08:17:21 +0900
-Message-ID: <d391589a-6e87-3679-7b38-cddbf0125801@wdc.com>
-References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
- <1476772835-18541-3-git-send-email-damien.lemoal@wdc.com>
- <x49funtvca2.fsf@segfault.boston.devel.redhat.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v2 10/10] phy: qcom-ufs: Remove common layer phy exit
+ callback
+Date: Tue, 18 Oct 2016 17:07:29 -0700
+Message-ID: <c796178922167d6276168f0d055dd592@codeaurora.org>
+References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
+ <1476800897-19898-11-git-send-email-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <x49funtvca2.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:57387 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932854AbcJSAHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 20:07:31 -0400
+In-Reply-To: <1476800897-19898-11-git-send-email-vivek.gautam@codeaurora.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
-
-Jeff,
-
-On 10/19/16 01:43, Jeff Moyer wrote:
-> Damien Le Moal <damien.lemoal@wdc.com> writes:
+On 2016-10-18 07:28, Vivek Gautam wrote:
+> The common layer phy exit callback ufs_qcom_phy_exit()
+> calls phy_power_off() that has no meaning when phy_power_off()
+> callback is already registered with the phy provider and
+> the consumer makes use of the same.
+> Instead, add a no-op specific phy_exit() callback for now
+> to add the exit sequence at a later point.
 > 
->> diff --git a/Documentation/ABI/testing/sysfs-block b/Documentation/ABI/testing/sysfs-block
->> index 75a5055..ee2d5cd 100644
->> --- a/Documentation/ABI/testing/sysfs-block
->> +++ b/Documentation/ABI/testing/sysfs-block
->> @@ -251,3 +251,16 @@ Description:
->>  		since drive-managed zoned block devices do not support
->>  		zone commands, they will be treated as regular block
->>  		devices and zoned will report "none".
->> +
->> +What:		/sys/block/<disk>/queue/chunk_sectors
->> +Date:		September 2016
->> +Contact:	Hannes Reinecke <hare@suse.com>
->> +Description:
->> +		chunk_sectors has different meaning depending on the type
->> +		of the disk. For a RAID device (dm-raid), chunk_sectors
->> +		indicates the size in 512B sectors of the RAID volume
->> +		stripe segment. For a zoned block device, either
->> +		host-aware or host-managed, chunk_sectors indicates the
->> +		size of 512B sectors of the zones of the device, with
->                      ^^
->                      in
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> ---
+> 
+> New patch added in v2 series.
+> 
+>  drivers/phy/phy-qcom-ufs-i.h        |  1 -
+>  drivers/phy/phy-qcom-ufs-qmp-14nm.c |  7 ++++++-
+>  drivers/phy/phy-qcom-ufs-qmp-20nm.c |  7 ++++++-
+>  drivers/phy/phy-qcom-ufs.c          | 17 ++++++-----------
+>  4 files changed, 18 insertions(+), 14 deletions(-)
+> 
+> diff --git a/drivers/phy/phy-qcom-ufs-i.h 
+> b/drivers/phy/phy-qcom-ufs-i.h
+> index 69e836d..d505d98 100644
+> --- a/drivers/phy/phy-qcom-ufs-i.h
+> +++ b/drivers/phy/phy-qcom-ufs-i.h
+> @@ -141,7 +141,6 @@ struct ufs_qcom_phy_specific_ops {
+>  struct ufs_qcom_phy *get_ufs_qcom_phy(struct phy *generic_phy);
+>  int ufs_qcom_phy_power_on(struct phy *generic_phy);
+>  int ufs_qcom_phy_power_off(struct phy *generic_phy);
+> -int ufs_qcom_phy_exit(struct phy *generic_phy);
+>  int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common);
+>  int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common);
+>  int ufs_qcom_phy_remove(struct phy *generic_phy,
+> diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+> b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+> index a60cf34..061604f 100644
+> --- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+> +++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+> @@ -47,6 +47,11 @@ static int ufs_qcom_phy_qmp_14nm_init(struct phy
+> *generic_phy)
+>  	return 0;
+>  }
+> 
+> +static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
+> +{
+> +	return 0;
+> +}
+> +
+>  static
+>  void ufs_qcom_phy_qmp_14nm_power_control(struct ufs_qcom_phy *phy, 
+> bool val)
+>  {
+> @@ -94,7 +99,7 @@ static int ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct
+> ufs_qcom_phy *phy_common)
+> 
+>  static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
+>  	.init		= ufs_qcom_phy_qmp_14nm_init,
+> -	.exit		= ufs_qcom_phy_exit,
+> +	.exit		= ufs_qcom_phy_qmp_14nm_exit,
+>  	.power_on	= ufs_qcom_phy_power_on,
+>  	.power_off	= ufs_qcom_phy_power_off,
+>  	.owner		= THIS_MODULE,
+> diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+> b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+> index dfc5175..1a26a64 100644
+> --- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+> +++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+> @@ -66,6 +66,11 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy
+> *generic_phy)
+>  	return 0;
+>  }
+> 
+> +static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
+> +{
+> +	return 0;
+> +}
+> +
+>  static
+>  void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, 
+> bool val)
+>  {
+> @@ -152,7 +157,7 @@ static int
+> ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
+> 
+>  static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
+>  	.init		= ufs_qcom_phy_qmp_20nm_init,
+> -	.exit		= ufs_qcom_phy_exit,
+> +	.exit		= ufs_qcom_phy_qmp_20nm_exit,
+>  	.power_on	= ufs_qcom_phy_power_on,
+>  	.power_off	= ufs_qcom_phy_power_off,
+>  	.owner		= THIS_MODULE,
+> diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+> index a425cc2..494f90f 100644
+> --- a/drivers/phy/phy-qcom-ufs.c
+> +++ b/drivers/phy/phy-qcom-ufs.c
+> @@ -615,17 +615,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy
+> *generic_phy, bool is_rate_B)
+>  }
+>  EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
+> 
+> -int ufs_qcom_phy_exit(struct phy *generic_phy)
+> -{
+> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+> -
+> -	if (ufs_qcom_phy->is_powered_on)
+> -		phy_power_off(generic_phy);
+> -
+> -	return 0;
+> -}
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_exit);
+> -
+>  int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
+>  {
+>  	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+> @@ -647,6 +636,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  	struct device *dev = phy_common->dev;
+>  	int err;
+> 
+> +	if (phy_common->is_powered_on)
+> +		return 0;
+> +
+>  	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
+>  	if (err) {
+>  		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
+> @@ -709,6 +701,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+>  {
+>  	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
+> 
+> +	if (!phy_common->is_powered_on)
+> +		return 0;
+> +
+>  	phy_common->phy_spec_ops->power_control(phy_common, false);
+> 
+>  	if (phy_common->vddp_ref_clk.reg)
 
-Good catch. Thank you. Will fix this.
+LGTM , Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 -- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
