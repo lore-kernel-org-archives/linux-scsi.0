@@ -1,209 +1,37 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [RFC 2/6] qed: Add iSCSI out of order packet handling.
-Date: Wed, 19 Oct 2016 11:39:23 +0200
-Message-ID: <20161019093923.y635a66joxvqgz5u@linux-x5ow.site>
-References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com>
- <1476853273-22960-3-git-send-email-manish.rangankar@cavium.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v3 02/11] blk-mq: Introduce blk_mq_hctx_stopped()
+Date: Wed, 19 Oct 2016 08:58:55 -0700
+Message-ID: <4c09e48d-4b23-915a-bf60-c58d0aae6007@sandisk.com>
+References: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com>
+ <b5b0ffcc-767d-1b90-9c5a-52c57690dea8@sandisk.com>
+ <20161019131900.GB6323@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1476853273-22960-3-git-send-email-manish.rangankar@cavium.com>
-Sender: netdev-owner@vger.kernel.org
-To: manish.rangankar@cavium.com
-Cc: lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@qlogic.com>, Arun Easi <arun.easi@cavium.com>
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0079.outbound.protection.outlook.com ([104.47.38.79]:18080
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S941358AbcJSP7L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:59:11 -0400
+In-Reply-To: <20161019131900.GB6323@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@fb.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lin <ming.l@ssi.samsung.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On Wed, Oct 19, 2016 at 01:01:09AM -0400, manish.rangankar@cavium.com wrote:
-> From: Yuval Mintz <Yuval.Mintz@qlogic.com>
-> 
-> This patch adds out of order packet handling for hardware offloaded
-> iSCSI. Out of order packet handling requires driver buffer allocation
-> and assistance.
-> 
-> Signed-off-by: Arun Easi <arun.easi@cavium.com>
-> Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
-> ---
+On 10/19/2016 06:19 AM, Christoph Hellwig wrote:
+> On Tue, Oct 18, 2016 at 02:49:09PM -0700, Bart Van Assche wrote:
+>> Multiple functions test the BLK_MQ_S_STOPPED bit so introduce
+>> a helper function that performs this test.
+>
+> Looks sensible.  Any reason to have it in the public blk-mq.h instead
+> of the private one, though?  I see that dm is using it with this patch,
+> but that usage should go away once your full series is merged, right?
 
-[...]
+Hello Christoph,
 
-> +		if (IS_ENABLED(CONFIG_QEDI) &&
-> +			p_ll2_conn->conn_type == QED_LL2_TYPE_ISCSI_OOO) {
+Moving the blk_mq_hctx_stopped() declaration from the public to the 
+private blk-mq.h header file should be possible. I will look into this.
 
-If you're going to implement the qed_is_iscsi_personallity() helper, please
-consider a qed_ll2_is_iscsi_oooo() as well.
-
-> +			struct qed_ooo_buffer *p_buffer;
-
-[...]
-
-> +	while (cq_new_idx != cq_old_idx) {
-> +		struct core_rx_fast_path_cqe *p_cqe_fp;
-> +
-> +		cqe = qed_chain_consume(&p_rx->rcq_chain);
-> +		cq_old_idx = qed_chain_get_cons_idx(&p_rx->rcq_chain);
-> +		cqe_type = cqe->rx_cqe_sp.type;
-> +
-> +		if (cqe_type != CORE_RX_CQE_TYPE_REGULAR) {
-> +			DP_NOTICE(p_hwfn,
-> +				  "Got a non-regular LB LL2 completion [type 0x%02x]\n",
-> +				  cqe_type);
-> +			return -EINVAL;
-> +		}
-> +		p_cqe_fp = &cqe->rx_cqe_fp;
-> +
-> +		placement_offset = p_cqe_fp->placement_offset;
-> +		parse_flags = le16_to_cpu(p_cqe_fp->parse_flags.flags);
-> +		packet_length = le16_to_cpu(p_cqe_fp->packet_length);
-> +		vlan = le16_to_cpu(p_cqe_fp->vlan);
-> +		iscsi_ooo = (struct ooo_opaque *)&p_cqe_fp->opaque_data;
-> +		qed_ooo_save_history_entry(p_hwfn, p_hwfn->p_ooo_info,
-> +					   iscsi_ooo);
-> +		cid = le32_to_cpu(iscsi_ooo->cid);
-> +
-> +		/* Process delete isle first */
-> +		if (iscsi_ooo->drop_size)
-> +			qed_ooo_delete_isles(p_hwfn, p_hwfn->p_ooo_info, cid,
-> +					     iscsi_ooo->drop_isle,
-> +					     iscsi_ooo->drop_size);
-> +
-> +		if (iscsi_ooo->ooo_opcode == TCP_EVENT_NOP)
-> +			continue;
-> +
-> +		/* Now process create/add/join isles */
-> +		if (list_empty(&p_rx->active_descq)) {
-> +			DP_NOTICE(p_hwfn,
-> +				  "LL2 OOO RX chain has no submitted buffers\n");
-> +			return -EIO;
-> +		}
-> +
-> +		p_pkt = list_first_entry(&p_rx->active_descq,
-> +					 struct qed_ll2_rx_packet, list_entry);
-> +
-> +		if ((iscsi_ooo->ooo_opcode == TCP_EVENT_ADD_NEW_ISLE) ||
-> +		    (iscsi_ooo->ooo_opcode == TCP_EVENT_ADD_ISLE_RIGHT) ||
-> +		    (iscsi_ooo->ooo_opcode == TCP_EVENT_ADD_ISLE_LEFT) ||
-> +		    (iscsi_ooo->ooo_opcode == TCP_EVENT_ADD_PEN) ||
-> +		    (iscsi_ooo->ooo_opcode == TCP_EVENT_JOIN)) {
-> +			if (!p_pkt) {
-> +				DP_NOTICE(p_hwfn,
-> +					  "LL2 OOO RX packet is not valid\n");
-> +				return -EIO;
-> +			}
-> +			list_del(&p_pkt->list_entry);
-> +			p_buffer = (struct qed_ooo_buffer *)p_pkt->cookie;
-> +			p_buffer->packet_length = packet_length;
-> +			p_buffer->parse_flags = parse_flags;
-> +			p_buffer->vlan = vlan;
-> +			p_buffer->placement_offset = placement_offset;
-> +			qed_chain_consume(&p_rx->rxq_chain);
-> +			list_add_tail(&p_pkt->list_entry, &p_rx->free_descq);
-> +
-> +			switch (iscsi_ooo->ooo_opcode) {
-> +			case TCP_EVENT_ADD_NEW_ISLE:
-> +				qed_ooo_add_new_isle(p_hwfn,
-> +						     p_hwfn->p_ooo_info,
-> +						     cid,
-> +						     iscsi_ooo->ooo_isle,
-> +						     p_buffer);
-> +				break;
-> +			case TCP_EVENT_ADD_ISLE_RIGHT:
-> +				qed_ooo_add_new_buffer(p_hwfn,
-> +						       p_hwfn->p_ooo_info,
-> +						       cid,
-> +						       iscsi_ooo->ooo_isle,
-> +						       p_buffer,
-> +						       QED_OOO_RIGHT_BUF);
-> +				break;
-> +			case TCP_EVENT_ADD_ISLE_LEFT:
-> +				qed_ooo_add_new_buffer(p_hwfn,
-> +						       p_hwfn->p_ooo_info,
-> +						       cid,
-> +						       iscsi_ooo->ooo_isle,
-> +						       p_buffer,
-> +						       QED_OOO_LEFT_BUF);
-> +				break;
-> +			case TCP_EVENT_JOIN:
-> +				qed_ooo_add_new_buffer(p_hwfn,
-> +						       p_hwfn->p_ooo_info,
-> +						       cid,
-> +						       iscsi_ooo->ooo_isle +
-> +						       1,
-> +						       p_buffer,
-> +						       QED_OOO_LEFT_BUF);
-> +				qed_ooo_join_isles(p_hwfn,
-> +						   p_hwfn->p_ooo_info,
-> +						   cid, iscsi_ooo->ooo_isle);
-> +				break;
-> +			case TCP_EVENT_ADD_PEN:
-> +				num_ooo_add_to_peninsula++;
-> +				qed_ooo_put_ready_buffer(p_hwfn,
-> +							 p_hwfn->p_ooo_info,
-> +							 p_buffer, true);
-> +				break;
-> +			}
-> +		} else {
-> +			DP_NOTICE(p_hwfn,
-> +				  "Unexpected event (%d) TX OOO completion\n",
-> +				  iscsi_ooo->ooo_opcode);
-> +		}
-> +	}
-
-Can you factoror the body of that "while(cq_new_idx != cq_old_idx)" loop into
-a own function?
-
->  
-> -		b_last = list_empty(&p_rx->active_descq);
-> +	/* Submit RX buffer here */
-> +	while ((p_buffer = qed_ooo_get_free_buffer(p_hwfn,
-> +						   p_hwfn->p_ooo_info))) {
-
-This could be an opportunity for a qed_for_each_free_buffer() or maybe even a
-qed_ooo_submit_rx_buffers() and qed_ooo_submit_tx_buffers() as this is mostly
-duplicate code.
-
-> +		rc = qed_ll2_post_rx_buffer(p_hwfn, p_ll2_conn->my_id,
-> +					    p_buffer->rx_buffer_phys_addr,
-> +					    0, p_buffer, true);
-> +		if (rc) {
-> +			qed_ooo_put_free_buffer(p_hwfn, p_hwfn->p_ooo_info,
-> +						p_buffer);
-> +			break;
-> +		}
->  	}
-> +
-> +	/* Submit Tx buffers here */
-> +	while ((p_buffer = qed_ooo_get_ready_buffer(p_hwfn,
-> +						    p_hwfn->p_ooo_info))) {
-
-Ditto.
-
-[...]
-> +
-> +	/* Submit Tx buffers here */
-> +	while ((p_buffer = qed_ooo_get_ready_buffer(p_hwfn,
-> +						    p_hwfn->p_ooo_info))) {
-
-
-And here
-
-[...]
-
-> +	while ((p_buffer = qed_ooo_get_free_buffer(p_hwfn,
-> +						   p_hwfn->p_ooo_info))) {
-
-[..]
-
-> +	while ((p_buffer = qed_ooo_get_free_buffer(p_hwfn,
-> +						   p_hwfn->p_ooo_info))) {
-
-[...]
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Bart.
