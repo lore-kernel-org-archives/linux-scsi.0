@@ -1,161 +1,46 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2 10/10] phy: qcom-ufs: Remove common layer phy exit
- callback
-Date: Tue, 18 Oct 2016 17:07:29 -0700
-Message-ID: <c796178922167d6276168f0d055dd592@codeaurora.org>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
- <1476800897-19898-11-git-send-email-vivek.gautam@codeaurora.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v8 6/7] sd: Implement support for ZBC devices
+Date: Tue, 18 Oct 2016 20:44:35 -0400
+Message-ID: <yq1y41lf9qk.fsf@sermon.lab.mkp.net>
+References: <1476772835-18541-1-git-send-email-damien.lemoal@wdc.com>
+        <1476772835-18541-7-git-send-email-damien.lemoal@wdc.com>
+        <x498ttlvbks.fsf@segfault.boston.devel.redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57387 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932854AbcJSAHb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 20:07:31 -0400
-In-Reply-To: <1476800897-19898-11-git-send-email-vivek.gautam@codeaurora.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:21941 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752683AbcJSAo6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 18 Oct 2016 20:44:58 -0400
+In-Reply-To: <x498ttlvbks.fsf@segfault.boston.devel.redhat.com> (Jeff Moyer's
+        message of "Tue, 18 Oct 2016 12:58:11 -0400")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+To: Jeff Moyer <jmoyer@redhat.com>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, Damien Le Moal <damien.lemoal@hgst.com>
 
-On 2016-10-18 07:28, Vivek Gautam wrote:
-> The common layer phy exit callback ufs_qcom_phy_exit()
-> calls phy_power_off() that has no meaning when phy_power_off()
-> callback is already registered with the phy provider and
-> the consumer makes use of the same.
-> Instead, add a no-op specific phy_exit() callback for now
-> to add the exit sequence at a later point.
-> 
-> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-> ---
-> 
-> New patch added in v2 series.
-> 
->  drivers/phy/phy-qcom-ufs-i.h        |  1 -
->  drivers/phy/phy-qcom-ufs-qmp-14nm.c |  7 ++++++-
->  drivers/phy/phy-qcom-ufs-qmp-20nm.c |  7 ++++++-
->  drivers/phy/phy-qcom-ufs.c          | 17 ++++++-----------
->  4 files changed, 18 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/phy/phy-qcom-ufs-i.h 
-> b/drivers/phy/phy-qcom-ufs-i.h
-> index 69e836d..d505d98 100644
-> --- a/drivers/phy/phy-qcom-ufs-i.h
-> +++ b/drivers/phy/phy-qcom-ufs-i.h
-> @@ -141,7 +141,6 @@ struct ufs_qcom_phy_specific_ops {
->  struct ufs_qcom_phy *get_ufs_qcom_phy(struct phy *generic_phy);
->  int ufs_qcom_phy_power_on(struct phy *generic_phy);
->  int ufs_qcom_phy_power_off(struct phy *generic_phy);
-> -int ufs_qcom_phy_exit(struct phy *generic_phy);
->  int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common);
->  int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common);
->  int ufs_qcom_phy_remove(struct phy *generic_phy,
-> diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-> b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-> index a60cf34..061604f 100644
-> --- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-> +++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-> @@ -47,6 +47,11 @@ static int ufs_qcom_phy_qmp_14nm_init(struct phy
-> *generic_phy)
->  	return 0;
->  }
-> 
-> +static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
-> +{
-> +	return 0;
-> +}
-> +
->  static
->  void ufs_qcom_phy_qmp_14nm_power_control(struct ufs_qcom_phy *phy, 
-> bool val)
->  {
-> @@ -94,7 +99,7 @@ static int ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct
-> ufs_qcom_phy *phy_common)
-> 
->  static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
->  	.init		= ufs_qcom_phy_qmp_14nm_init,
-> -	.exit		= ufs_qcom_phy_exit,
-> +	.exit		= ufs_qcom_phy_qmp_14nm_exit,
->  	.power_on	= ufs_qcom_phy_power_on,
->  	.power_off	= ufs_qcom_phy_power_off,
->  	.owner		= THIS_MODULE,
-> diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-> b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-> index dfc5175..1a26a64 100644
-> --- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-> +++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-> @@ -66,6 +66,11 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy
-> *generic_phy)
->  	return 0;
->  }
-> 
-> +static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
-> +{
-> +	return 0;
-> +}
-> +
->  static
->  void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, 
-> bool val)
->  {
-> @@ -152,7 +157,7 @@ static int
-> ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
-> 
->  static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
->  	.init		= ufs_qcom_phy_qmp_20nm_init,
-> -	.exit		= ufs_qcom_phy_exit,
-> +	.exit		= ufs_qcom_phy_qmp_20nm_exit,
->  	.power_on	= ufs_qcom_phy_power_on,
->  	.power_off	= ufs_qcom_phy_power_off,
->  	.owner		= THIS_MODULE,
-> diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-> index a425cc2..494f90f 100644
-> --- a/drivers/phy/phy-qcom-ufs.c
-> +++ b/drivers/phy/phy-qcom-ufs.c
-> @@ -615,17 +615,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy
-> *generic_phy, bool is_rate_B)
->  }
->  EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
-> 
-> -int ufs_qcom_phy_exit(struct phy *generic_phy)
-> -{
-> -	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
-> -
-> -	if (ufs_qcom_phy->is_powered_on)
-> -		phy_power_off(generic_phy);
-> -
-> -	return 0;
-> -}
-> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_exit);
-> -
->  int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
->  {
->  	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
-> @@ -647,6 +636,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
->  	struct device *dev = phy_common->dev;
->  	int err;
-> 
-> +	if (phy_common->is_powered_on)
-> +		return 0;
-> +
->  	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
->  	if (err) {
->  		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
-> @@ -709,6 +701,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
->  {
->  	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
-> 
-> +	if (!phy_common->is_powered_on)
-> +		return 0;
-> +
->  	phy_common->phy_spec_ops->power_control(phy_common, false);
-> 
->  	if (phy_common->vddp_ref_clk.reg)
+>>>>> "Jeff" == Jeff Moyer <jmoyer@redhat.com> writes:
 
-LGTM , Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Jeff,
+
+Jeff> Are power of 2 zone sizes required by the standard?  I see why
+Jeff> you've done this, but I wonder if we're artificially limiting the
+Jeff> implementation, and whether there will be valid devices on the
+Jeff> market that simply won't work with Linux because of this.
+
+Standards are deliberately written to be permissive. But Linux doesn't
+support arbitrary sector sizes either even though the spec allows it. We
+always pick a reasonably sane subset of features to implement and this
+case is no different.
+
+After some discussion we decided to rip out all the complexity that was
+required to facilitate crazy drive layouts. As a result, the code is now
+in a state where we can actually merge it. The hope is that by picking a
+specific configuration subset and widely advertising it we can influence
+the market.
+
+Also, I am not aware of anybody actually asking the drive vendors to
+support crazy zone configurations.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Martin K. Petersen	Oracle Linux Engineering
