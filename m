@@ -1,1457 +1,374 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [RFC 6/6] qedi: Add support for data path.
-Date: Wed, 19 Oct 2016 12:24:20 +0200
-Message-ID: <fc58b63a-ac67-59e4-7698-4ab742848080@suse.de>
-References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com>
- <1476853273-22960-7-git-send-email-manish.rangankar@cavium.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 178381] New: Suspend to RAM test failed while
+ CONFIG_SCSI_MQ_DEFAULT is set
+Date: Wed, 19 Oct 2016 12:33:58 +0000
+Message-ID: <bug-178381-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:44240 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:48744 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S943034AbcJSOxs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:53:48 -0400
-In-Reply-To: <1476853273-22960-7-git-send-email-manish.rangankar@cavium.com>
+        id S943862AbcJSPBm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Oct 2016 11:01:42 -0400
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 0AAD720364
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2016 12:34:02 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id C63A820361
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2016 12:33:59 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: manish.rangankar@cavium.com, lduncan@suse.com, cleech@redhat.com
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Nilesh Javali <nilesh.javali@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Chad Dupuis <chad.dupuis@cavium.com>, Saurav Kashyap <saurav.kashyap@cavium.com>, Arun Easi <arun.easi@cavium.com>
+To: linux-scsi@vger.kernel.org
 
-On 10/19/2016 07:01 AM, manish.rangankar@cavium.com wrote:
-> From: Manish Rangankar <manish.rangankar@cavium.com>
-> 
-> This patch adds support for data path and TMF handling.
-> 
-> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
-> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-> Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@cavium.com>
-> Signed-off-by: Arun Easi <arun.easi@cavium.com>
-> Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-> ---
->  drivers/scsi/qedi/qedi_fw.c    | 1282 ++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/qedi/qedi_gbl.h   |    6 +
->  drivers/scsi/qedi/qedi_iscsi.c |    6 +
->  drivers/scsi/qedi/qedi_main.c  |    4 +
->  4 files changed, 1298 insertions(+)
-> 
-> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
-> index a820785..af1e14d 100644
-> --- a/drivers/scsi/qedi/qedi_fw.c
-> +++ b/drivers/scsi/qedi/qedi_fw.c
-> @@ -147,6 +147,114 @@ static void qedi_process_text_resp(struct qedi_ctx *qedi,
->  	spin_unlock(&session->back_lock);
->  }
->  
-> +static void qedi_tmf_resp_work(struct work_struct *work)
-> +{
-> +	struct qedi_cmd *qedi_cmd =
-> +				container_of(work, struct qedi_cmd, tmf_work);
-> +	struct qedi_conn *qedi_conn = qedi_cmd->conn;
-> +	struct qedi_ctx *qedi = qedi_conn->qedi;
-> +	struct iscsi_conn *conn = qedi_conn->cls_conn->dd_data;
-> +	struct iscsi_session *session = conn->session;
-> +	struct iscsi_tm_rsp *resp_hdr_ptr;
-> +	struct iscsi_cls_session *cls_sess;
-> +	int rval = 0;
-> +
-> +	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +	resp_hdr_ptr =  (struct iscsi_tm_rsp *)qedi_cmd->tmf_resp_buf;
-> +	cls_sess = iscsi_conn_to_session(qedi_conn->cls_conn);
-> +
-> +	iscsi_block_session(session->cls_session);
-> +	rval = qedi_cleanup_all_io(qedi, qedi_conn, qedi_cmd->task, true);
-> +	if (rval) {
-> +		clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +		qedi_clear_task_idx(qedi, qedi_cmd->task_id);
-> +		iscsi_unblock_session(session->cls_session);
-> +		return;
-> +	}
-> +
-> +	iscsi_unblock_session(session->cls_session);
-> +	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
-> +
-> +	spin_lock(&session->back_lock);
-> +	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
-> +	spin_unlock(&session->back_lock);
-> +	kfree(resp_hdr_ptr);
-> +	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +}
-> +
-> +static void qedi_process_tmf_resp(struct qedi_ctx *qedi,
-> +				  union iscsi_cqe *cqe,
-> +				  struct iscsi_task *task,
-> +				  struct qedi_conn *qedi_conn)
-> +
-> +{
-> +	struct iscsi_conn *conn = qedi_conn->cls_conn->dd_data;
-> +	struct iscsi_session *session = conn->session;
-> +	struct iscsi_tmf_response_hdr *cqe_tmp_response;
-> +	struct iscsi_tm_rsp *resp_hdr_ptr;
-> +	struct iscsi_tm *tmf_hdr;
-> +	struct qedi_cmd *qedi_cmd = NULL;
-> +	u32 *tmp;
-> +
-> +	cqe_tmp_response = &cqe->cqe_common.iscsi_hdr.tmf_response;
-> +
-> +	qedi_cmd = task->dd_data;
-> +	qedi_cmd->tmf_resp_buf = kzalloc(sizeof(*resp_hdr_ptr), GFP_KERNEL);
-> +	if (!qedi_cmd->tmf_resp_buf) {
-> +		QEDI_ERR(&qedi->dbg_ctx,
-> +			 "Failed to allocate resp buf, cid=0x%x\n",
-> +			  qedi_conn->iscsi_conn_id);
-> +		return;
-> +	}
-> +
-> +	spin_lock(&session->back_lock);
-> +	resp_hdr_ptr =  (struct iscsi_tm_rsp *)qedi_cmd->tmf_resp_buf;
-> +	memset(resp_hdr_ptr, 0, sizeof(struct iscsi_tm_rsp));
-> +
-> +	/* Fill up the header */
-> +	resp_hdr_ptr->opcode = cqe_tmp_response->opcode;
-> +	resp_hdr_ptr->flags = cqe_tmp_response->hdr_flags;
-> +	resp_hdr_ptr->response = cqe_tmp_response->hdr_response;
-> +	resp_hdr_ptr->hlength = 0;
-> +
-> +	hton24(resp_hdr_ptr->dlength,
-> +	       (cqe_tmp_response->hdr_second_dword &
-> +		ISCSI_TMF_RESPONSE_HDR_DATA_SEG_LEN_MASK));
-> +	tmp = (u32 *)resp_hdr_ptr->dlength;
-> +	resp_hdr_ptr->itt = build_itt(cqe->cqe_solicited.itid,
-> +				      conn->session->age);
-> +	resp_hdr_ptr->statsn = cpu_to_be32(cqe_tmp_response->stat_sn);
-> +	resp_hdr_ptr->exp_cmdsn  = cpu_to_be32(cqe_tmp_response->exp_cmd_sn);
-> +	resp_hdr_ptr->max_cmdsn = cpu_to_be32(cqe_tmp_response->max_cmd_sn);
-> +
-> +	tmf_hdr = (struct iscsi_tm *)qedi_cmd->task->hdr;
-> +
-> +	if (likely(qedi_cmd->io_cmd_in_list)) {
-> +		qedi_cmd->io_cmd_in_list = false;
-> +		list_del_init(&qedi_cmd->io_cmd);
-> +		qedi_conn->active_cmd_count--;
-> +	}
-> +
-> +	if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +	      ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
-> +	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +	      ISCSI_TM_FUNC_TARGET_WARM_RESET) ||
-> +	    ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +	      ISCSI_TM_FUNC_TARGET_COLD_RESET)) {
-> +		INIT_WORK(&qedi_cmd->tmf_work, qedi_tmf_resp_work);
-> +		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
-> +		goto unblock_sess;
-> +	}
-> +
-> +	qedi_clear_task_idx(qedi, qedi_cmd->task_id);
-> +
-> +	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)resp_hdr_ptr, NULL, 0);
-> +	kfree(resp_hdr_ptr);
-> +
-> +unblock_sess:
-> +	spin_unlock(&session->back_lock);
-> +}
-> +
->  static void qedi_process_login_resp(struct qedi_ctx *qedi,
->  				    union iscsi_cqe *cqe,
->  				    struct iscsi_task *task,
-> @@ -470,6 +578,121 @@ static void qedi_process_reject_mesg(struct qedi_ctx *qedi,
->  	spin_unlock_bh(&session->back_lock);
->  }
->  
-> +static void qedi_scsi_completion(struct qedi_ctx *qedi,
-> +				 union iscsi_cqe *cqe,
-> +				 struct iscsi_task *task,
-> +				 struct iscsi_conn *conn)
-> +{
-> +	struct scsi_cmnd *sc_cmd;
-> +	struct qedi_cmd *cmd = task->dd_data;
-> +	struct iscsi_session *session = conn->session;
-> +	struct iscsi_scsi_rsp *hdr;
-> +	struct iscsi_data_in_hdr *cqe_data_in;
-> +	int datalen = 0;
-> +	struct qedi_conn *qedi_conn;
-> +	u32 iscsi_cid;
-> +	bool mark_cmd_node_deleted = false;
-> +	u8 cqe_err_bits = 0;
-> +
-> +	iscsi_cid  = cqe->cqe_common.conn_id;
-> +	qedi_conn = qedi->cid_que.conn_cid_tbl[iscsi_cid];
-> +
-> +	cqe_data_in = &cqe->cqe_common.iscsi_hdr.data_in;
-> +	cqe_err_bits =
-> +		cqe->cqe_common.error_bitmap.error_bits.cqe_error_status_bits;
-> +
-> +	spin_lock_bh(&session->back_lock);
-> +	/* get the scsi command */
-> +	sc_cmd = cmd->scsi_cmd;
-> +
-> +	if (!sc_cmd) {
-> +		QEDI_WARN(&qedi->dbg_ctx, "sc_cmd is NULL!\n");
-> +		goto error;
-> +	}
-> +
-> +	if (!sc_cmd->SCp.ptr) {
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "SCp.ptr is NULL, returned in another context.\n");
-> +		goto error;
-> +	}
-> +
-> +	if (!sc_cmd->request) {
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "sc_cmd->request is NULL, sc_cmd=%p.\n",
-> +			  sc_cmd);
-> +		goto error;
-> +	}
-> +
-> +	if (!sc_cmd->request->special) {
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "request->special is NULL so request not valid, sc_cmd=%p.\n",
-> +			  sc_cmd);
-> +		goto error;
-> +	}
-> +
-> +	if (!sc_cmd->request->q) {
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "request->q is NULL so request is not valid, sc_cmd=%p.\n",
-> +			  sc_cmd);
-> +		goto error;
-> +	}
-> +
-> +	qedi_iscsi_unmap_sg_list(cmd);
-> +
-> +	hdr = (struct iscsi_scsi_rsp *)task->hdr;
-> +	hdr->opcode = cqe_data_in->opcode;
-> +	hdr->max_cmdsn = cpu_to_be32(cqe_data_in->max_cmd_sn);
-> +	hdr->exp_cmdsn = cpu_to_be32(cqe_data_in->exp_cmd_sn);
-> +	hdr->itt = build_itt(cqe->cqe_solicited.itid, conn->session->age);
-> +	hdr->response = cqe_data_in->reserved1;
-> +	hdr->cmd_status = cqe_data_in->status_rsvd;
-> +	hdr->flags = cqe_data_in->flags;
-> +	hdr->residual_count = cpu_to_be32(cqe_data_in->residual_count);
-> +
-> +	if (hdr->cmd_status == SAM_STAT_CHECK_CONDITION) {
-> +		datalen = cqe_data_in->reserved2 &
-> +			  ISCSI_COMMON_HDR_DATA_SEG_LEN_MASK;
-> +		memcpy((char *)conn->data, (char *)cmd->sense_buffer, datalen);
-> +	}
-> +
-> +	/* If f/w reports data underrun err then set residual to IO transfer
-> +	 * length, set Underrun flag and clear Overrun flag explicitly
-> +	 */
-> +	if (unlikely(cqe_err_bits &&
-> +		     GET_FIELD(cqe_err_bits, CQE_ERROR_BITMAP_UNDER_RUN_ERR))) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +			  "Under flow itt=0x%x proto flags=0x%x tid=0x%x cid 0x%x fw resid 0x%x sc dlen 0x%x\n",
-> +			  hdr->itt, cqe_data_in->flags, cmd->task_id,
-> +			  qedi_conn->iscsi_conn_id, hdr->residual_count,
-> +			  scsi_bufflen(sc_cmd));
-> +		hdr->residual_count = cpu_to_be32(scsi_bufflen(sc_cmd));
-> +		hdr->flags |= ISCSI_FLAG_CMD_UNDERFLOW;
-> +		hdr->flags &= (~ISCSI_FLAG_CMD_OVERFLOW);
-> +	}
-> +
-> +	spin_lock(&qedi_conn->list_lock);
-> +	if (likely(cmd->io_cmd_in_list)) {
-> +		cmd->io_cmd_in_list = false;
-> +		list_del_init(&cmd->io_cmd);
-> +		qedi_conn->active_cmd_count--;
-> +		mark_cmd_node_deleted = true;
-> +	}
-> +	spin_unlock(&qedi_conn->list_lock);
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
-> +		  "Freeing tid=0x%x for cid=0x%x\n",
-> +		  cmd->task_id, qedi_conn->iscsi_conn_id);
-> +	cmd->state = RESPONSE_RECEIVED;
-> +	if (io_tracing)
-> +		qedi_trace_io(qedi, task, cmd->task_id, QEDI_IO_TRACE_RSP);
-> +
-> +	qedi_clear_task_idx(qedi, cmd->task_id);
-> +	__iscsi_complete_pdu(conn, (struct iscsi_hdr *)hdr,
-> +			     conn->data, datalen);
-> +error:
-> +	spin_unlock_bh(&session->back_lock);
-> +}
-> +
->  static void qedi_mtask_completion(struct qedi_ctx *qedi,
->  				  union iscsi_cqe *cqe,
->  				  struct iscsi_task *task,
-> @@ -482,9 +705,16 @@ static void qedi_mtask_completion(struct qedi_ctx *qedi,
->  	iscsi_conn = conn->cls_conn->dd_data;
->  
->  	switch (hdr_opcode) {
-> +	case ISCSI_OPCODE_SCSI_RESPONSE:
-> +	case ISCSI_OPCODE_DATA_IN:
-> +		qedi_scsi_completion(qedi, cqe, task, iscsi_conn);
-> +		break;
->  	case ISCSI_OPCODE_LOGIN_RESPONSE:
->  		qedi_process_login_resp(qedi, cqe, task, conn);
->  		break;
-> +	case ISCSI_OPCODE_TMF_RESPONSE:
-> +		qedi_process_tmf_resp(qedi, cqe, task, conn);
-> +		break;
->  	case ISCSI_OPCODE_TEXT_RESPONSE:
->  		qedi_process_text_resp(qedi, cqe, task, conn);
->  		break;
-> @@ -520,6 +750,131 @@ static void qedi_process_nopin_local_cmpl(struct qedi_ctx *qedi,
->  	spin_unlock_bh(&session->back_lock);
->  }
->  
-> +static void qedi_process_cmd_cleanup_resp(struct qedi_ctx *qedi,
-> +					  struct iscsi_cqe_solicited *cqe,
-> +					  struct iscsi_task *task,
-> +					  struct iscsi_conn *conn)
-> +{
-> +	struct qedi_work_map *work, *work_tmp;
-> +	u32 proto_itt = cqe->itid;
-> +	u32 ptmp_itt = 0;
-> +	itt_t protoitt = 0;
-> +	int found = 0;
-> +	struct qedi_cmd *qedi_cmd = NULL;
-> +	u32 rtid = 0;
-> +	u32 iscsi_cid;
-> +	struct qedi_conn *qedi_conn;
-> +	struct qedi_cmd *cmd_new, *dbg_cmd;
-> +	struct iscsi_task *mtask;
-> +	struct iscsi_tm *tmf_hdr = NULL;
-> +
-> +	iscsi_cid = cqe->conn_id;
-> +	qedi_conn = qedi->cid_que.conn_cid_tbl[iscsi_cid];
-> +
-> +	/* Based on this itt get the corresponding qedi_cmd */
-> +	spin_lock_bh(&qedi_conn->tmf_work_lock);
-> +	list_for_each_entry_safe(work, work_tmp, &qedi_conn->tmf_work_list,
-> +				 list) {
-> +		if (work->rtid == proto_itt) {
-> +			/* We found the command */
-> +			qedi_cmd = work->qedi_cmd;
-> +			if (!qedi_cmd->list_tmf_work) {
-> +				QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +					  "TMF work not found, cqe->tid=0x%x, cid=0x%x\n",
-> +					  proto_itt, qedi_conn->iscsi_conn_id);
-> +				WARN_ON(1);
-> +			}
-> +			found = 1;
-> +			mtask = qedi_cmd->task;
-> +			tmf_hdr = (struct iscsi_tm *)mtask->hdr;
-> +			rtid = work->rtid;
-> +
-> +			list_del_init(&work->list);
-> +			kfree(work);
-> +			qedi_cmd->list_tmf_work = NULL;
-> +		}
-> +	}
-> +	spin_unlock_bh(&qedi_conn->tmf_work_lock);
-> +
-> +	if (found) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +			  "TMF work, cqe->tid=0x%x, tmf flags=0x%x, cid=0x%x\n",
-> +			  proto_itt, tmf_hdr->flags, qedi_conn->iscsi_conn_id);
-> +
-> +		if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +		    ISCSI_TM_FUNC_ABORT_TASK) {
-> +			spin_lock_bh(&conn->session->back_lock);
-> +
-> +			protoitt = build_itt(get_itt(tmf_hdr->rtt),
-> +					     conn->session->age);
-> +			task = iscsi_itt_to_task(conn, protoitt);
-> +
-> +			spin_unlock_bh(&conn->session->back_lock);
-> +
-> +			if (!task) {
-> +				QEDI_NOTICE(&qedi->dbg_ctx,
-> +					    "IO task completed, tmf rtt=0x%x, cid=0x%x\n",
-> +					    get_itt(tmf_hdr->rtt),
-> +					    qedi_conn->iscsi_conn_id);
-> +				return;
-> +			}
-> +
-> +			dbg_cmd = task->dd_data;
-> +
-> +			QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +				  "Abort tmf rtt=0x%x, i/o itt=0x%x, i/o tid=0x%x, cid=0x%x\n",
-> +				  get_itt(tmf_hdr->rtt), get_itt(task->itt),
-> +				  dbg_cmd->task_id, qedi_conn->iscsi_conn_id);
-> +
-> +			if (qedi_cmd->state == CLEANUP_WAIT_FAILED)
-> +				qedi_cmd->state = CLEANUP_RECV;
-> +
-> +			qedi_clear_task_idx(qedi_conn->qedi, rtid);
-> +
-> +			spin_lock(&qedi_conn->list_lock);
-> +			list_del_init(&dbg_cmd->io_cmd);
-> +			qedi_conn->active_cmd_count--;
-> +			spin_unlock(&qedi_conn->list_lock);
-> +			qedi_cmd->state = CLEANUP_RECV;
-> +			wake_up_interruptible(&qedi_conn->wait_queue);
-> +		}
-> +	} else if (qedi_conn->cmd_cleanup_req > 0) {
-> +		spin_lock_bh(&conn->session->back_lock);
-> +		qedi_get_proto_itt(qedi, cqe->itid, &ptmp_itt);
-> +		protoitt = build_itt(ptmp_itt, conn->session->age);
-> +		task = iscsi_itt_to_task(conn, protoitt);
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +			  "cleanup io itid=0x%x, protoitt=0x%x, cmd_cleanup_cmpl=%d, cid=0x%x\n",
-> +			  cqe->itid, protoitt, qedi_conn->cmd_cleanup_cmpl,
-> +			  qedi_conn->iscsi_conn_id);
-> +
-> +		spin_unlock_bh(&conn->session->back_lock);
-> +		if (!task) {
-> +			QEDI_NOTICE(&qedi->dbg_ctx,
-> +				    "task is null, itid=0x%x, cid=0x%x\n",
-> +				    cqe->itid, qedi_conn->iscsi_conn_id);
-> +			return;
-> +		}
-> +		qedi_conn->cmd_cleanup_cmpl++;
-> +		wake_up(&qedi_conn->wait_queue);
-> +		cmd_new = task->dd_data;
-> +
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_TID,
-> +			  "Freeing tid=0x%x for cid=0x%x\n",
-> +			  cqe->itid, qedi_conn->iscsi_conn_id);
-> +		qedi_clear_task_idx(qedi_conn->qedi, cqe->itid);
-> +
-> +	} else {
-> +		qedi_get_proto_itt(qedi, cqe->itid, &ptmp_itt);
-> +		protoitt = build_itt(ptmp_itt, conn->session->age);
-> +		task = iscsi_itt_to_task(conn, protoitt);
-> +		QEDI_ERR(&qedi->dbg_ctx,
-> +			 "Delayed or untracked cleanup response, itt=0x%x, tid=0x%x, cid=0x%x, task=%p\n",
-> +			 protoitt, cqe->itid, qedi_conn->iscsi_conn_id, task);
-> +		WARN_ON(1);
-> +	}
-> +}
-> +
->  void qedi_fp_process_cqes(struct qedi_ctx *qedi, union iscsi_cqe *cqe,
->  			  uint16_t que_idx)
->  {
-> @@ -619,6 +974,14 @@ void qedi_fp_process_cqes(struct qedi_ctx *qedi, union iscsi_cqe *cqe,
->  			break;
->  		}
->  		goto exit_fp_process;
-> +	case ISCSI_CQE_TYPE_DUMMY:
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM, "Dummy CqE\n");
-> +		goto exit_fp_process;
-> +	case ISCSI_CQE_TYPE_TASK_CLEANUP:
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM, "CleanUp CqE\n");
-> +		qedi_process_cmd_cleanup_resp(qedi, &cqe->cqe_solicited, task,
-> +					      conn);
-> +		goto exit_fp_process;
->  	default:
->  		QEDI_ERR(&qedi->dbg_ctx, "Error cqe.\n");
->  		break;
-> @@ -904,6 +1267,440 @@ int qedi_send_iscsi_logout(struct qedi_conn *qedi_conn,
->  	return 0;
->  }
->  
-> +int qedi_cleanup_all_io(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
-> +			struct iscsi_task *task, bool in_recovery)
-> +{
-> +	int rval;
-> +	struct iscsi_task *ctask;
-> +	struct qedi_cmd *cmd, *cmd_tmp;
-> +	struct iscsi_tm *tmf_hdr;
-> +	unsigned int lun = 0;
-> +	bool lun_reset = false;
-> +	struct iscsi_conn *conn = qedi_conn->cls_conn->dd_data;
-> +	struct iscsi_session *session = conn->session;
-> +
-> +	/* From recovery, task is NULL or from tmf resp valid task */
-> +	if (task) {
-> +		tmf_hdr = (struct iscsi_tm *)task->hdr;
-> +
-> +		if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +			ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) {
-> +			lun_reset = true;
-> +			lun = scsilun_to_int(&tmf_hdr->lun);
-> +		}
-> +	}
-> +
-> +	qedi_conn->cmd_cleanup_req = 0;
-> +	qedi_conn->cmd_cleanup_cmpl = 0;
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "active_cmd_count=%d, cid=0x%x, in_recovery=%d, lun_reset=%d\n",
-> +		  qedi_conn->active_cmd_count, qedi_conn->iscsi_conn_id,
-> +		  in_recovery, lun_reset);
-> +
-> +	if (lun_reset)
-> +		spin_lock_bh(&session->back_lock);
-> +
-> +	spin_lock(&qedi_conn->list_lock);
-> +
-> +	list_for_each_entry_safe(cmd, cmd_tmp, &qedi_conn->active_cmd_list,
-> +				 io_cmd) {
-> +		ctask = cmd->task;
-> +		if (ctask == task)
-> +			continue;
-> +
-> +		if (lun_reset) {
-> +			if (cmd->scsi_cmd && cmd->scsi_cmd->device) {
-> +				QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +					  "tid=0x%x itt=0x%x scsi_cmd_ptr=%p device=%p task_state=%d cmd_state=0%x cid=0x%x\n",
-> +					  cmd->task_id, get_itt(ctask->itt),
-> +					  cmd->scsi_cmd, cmd->scsi_cmd->device,
-> +					  ctask->state, cmd->state,
-> +					  qedi_conn->iscsi_conn_id);
-> +				if (cmd->scsi_cmd->device->lun != lun)
-> +					continue;
-> +			}
-> +		}
-> +		qedi_conn->cmd_cleanup_req++;
-> +		qedi_iscsi_cleanup_task(ctask, true);
-> +
-> +		list_del_init(&cmd->io_cmd);
-> +		qedi_conn->active_cmd_count--;
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "Deleted active cmd list node io_cmd=%p, cid=0x%x\n",
-> +			  &cmd->io_cmd, qedi_conn->iscsi_conn_id);
-> +	}
-> +
-> +	spin_unlock(&qedi_conn->list_lock);
-> +
-> +	if (lun_reset)
-> +		spin_unlock_bh(&session->back_lock);
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "cmd_cleanup_req=%d, cid=0x%x\n",
-> +		  qedi_conn->cmd_cleanup_req,
-> +		  qedi_conn->iscsi_conn_id);
-> +
-> +	rval  = wait_event_interruptible_timeout(qedi_conn->wait_queue,
-> +						 ((qedi_conn->cmd_cleanup_req ==
-> +						 qedi_conn->cmd_cleanup_cmpl) ||
-> +						 qedi_conn->ep),
-> +						 5 * HZ);
-> +	if (rval) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +			  "i/o cmd_cleanup_req=%d, equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
-> +			  qedi_conn->cmd_cleanup_req,
-> +			  qedi_conn->cmd_cleanup_cmpl,
-> +			  qedi_conn->iscsi_conn_id);
-> +
-> +		return 0;
-> +	}
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "i/o cmd_cleanup_req=%d, not equal to cmd_cleanup_cmpl=%d, cid=0x%x\n",
-> +		  qedi_conn->cmd_cleanup_req,
-> +		  qedi_conn->cmd_cleanup_cmpl,
-> +		  qedi_conn->iscsi_conn_id);
-> +
-> +	iscsi_host_for_each_session(qedi->shost,
-> +				    qedi_mark_device_missing);
-> +	qedi_ops->common->drain(qedi->cdev);
-> +
-> +	/* Enable IOs for all other sessions except current.*/
-> +	if (!wait_event_interruptible_timeout(qedi_conn->wait_queue,
-> +					      (qedi_conn->cmd_cleanup_req ==
-> +					       qedi_conn->cmd_cleanup_cmpl),
-> +					      5 * HZ)) {
-> +		iscsi_host_for_each_session(qedi->shost,
-> +					    qedi_mark_device_available);
-> +		return -1;
-> +	}
-> +
-> +	iscsi_host_for_each_session(qedi->shost,
-> +				    qedi_mark_device_available);
-> +
-> +	return 0;
-> +}
-> +
-> +void qedi_clearsq(struct qedi_ctx *qedi, struct qedi_conn *qedi_conn,
-> +		  struct iscsi_task *task)
-> +{
-> +	struct qedi_endpoint *qedi_ep;
-> +	int rval;
-> +
-> +	qedi_ep = qedi_conn->ep;
-> +	qedi_conn->cmd_cleanup_req = 0;
-> +	qedi_conn->cmd_cleanup_cmpl = 0;
-> +
-> +	if (!qedi_ep) {
-> +		QEDI_WARN(&qedi->dbg_ctx,
-> +			  "Cannot proceed, ep already disconnected, cid=0x%x\n",
-> +			  qedi_conn->iscsi_conn_id);
-> +		return;
-> +	}
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +		  "Clearing SQ for cid=0x%x, conn=%p, ep=%p\n",
-> +		  qedi_conn->iscsi_conn_id, qedi_conn, qedi_ep);
-> +
-> +	qedi_ops->clear_sq(qedi->cdev, qedi_ep->handle);
-> +
-> +	rval = qedi_cleanup_all_io(qedi, qedi_conn, task, true);
-> +	if (rval) {
-> +		QEDI_ERR(&qedi->dbg_ctx,
-> +			 "fatal error, need hard reset, cid=0x%x\n",
-> +			 qedi_conn->iscsi_conn_id);
-> +		WARN_ON(1);
-> +	}
-> +}
-> +
-> +static int qedi_wait_for_cleanup_request(struct qedi_ctx *qedi,
-> +					 struct qedi_conn *qedi_conn,
-> +					 struct iscsi_task *task,
-> +					 struct qedi_cmd *qedi_cmd,
-> +					 struct qedi_work_map *list_work)
-> +{
-> +	struct qedi_cmd *cmd = (struct qedi_cmd *)task->dd_data;
-> +	int wait;
-> +
-> +	wait  = wait_event_interruptible_timeout(qedi_conn->wait_queue,
-> +						 ((qedi_cmd->state ==
-> +						   CLEANUP_RECV) ||
-> +						 ((qedi_cmd->type == TYPEIO) &&
-> +						  (cmd->state ==
-> +						   RESPONSE_RECEIVED))),
-> +						 5 * HZ);
-> +	if (!wait) {
-> +		qedi_cmd->state = CLEANUP_WAIT_FAILED;
-> +
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +			  "Cleanup timedout tid=0x%x, issue connection recovery, cid=0x%x\n",
-> +			  cmd->task_id, qedi_conn->iscsi_conn_id);
-> +
-> +		return -1;
-> +	}
-> +	return 0;
-> +}
-> +
-> +static void qedi_tmf_work(struct work_struct *work)
-> +{
-> +	struct qedi_cmd *qedi_cmd =
-> +		container_of(work, struct qedi_cmd, tmf_work);
-> +	struct qedi_conn *qedi_conn = qedi_cmd->conn;
-> +	struct qedi_ctx *qedi = qedi_conn->qedi;
-> +	struct iscsi_conn *conn = qedi_conn->cls_conn->dd_data;
-> +	struct iscsi_cls_session *cls_sess;
-> +	struct qedi_work_map *list_work = NULL;
-> +	struct iscsi_task *mtask;
-> +	struct qedi_cmd *cmd;
-> +	struct iscsi_task *ctask;
-> +	struct iscsi_tm *tmf_hdr;
-> +	s16 rval = 0;
-> +	s16 tid = 0;
-> +
-> +	mtask = qedi_cmd->task;
-> +	tmf_hdr = (struct iscsi_tm *)mtask->hdr;
-> +	cls_sess = iscsi_conn_to_session(qedi_conn->cls_conn);
-> +	set_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +
-> +	ctask = iscsi_itt_to_task(conn, tmf_hdr->rtt);
-> +	if (!ctask || !ctask->sc) {
-> +		QEDI_ERR(&qedi->dbg_ctx, "Task already completed\n");
-> +		goto abort_ret;
-> +	}
-> +
-> +	cmd = (struct qedi_cmd *)ctask->dd_data;
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +		  "Abort tmf rtt=0x%x, cmd itt=0x%x, cmd tid=0x%x, cid=0x%x\n",
-> +		  get_itt(tmf_hdr->rtt), get_itt(ctask->itt), cmd->task_id,
-> +		  qedi_conn->iscsi_conn_id);
-> +
-> +	if (do_not_recover) {
-> +		QEDI_ERR(&qedi->dbg_ctx, "DONT SEND CLEANUP/ABORT %d\n",
-> +			 do_not_recover);
-> +		goto abort_ret;
-> +	}
-> +
-> +	list_work = kzalloc(sizeof(*list_work), GFP_ATOMIC);
-> +	if (!list_work) {
-> +		QEDI_ERR(&qedi->dbg_ctx, "Memory alloction failed\n");
-> +		goto abort_ret;
-> +	}
-> +
-> +	qedi_cmd->type = TYPEIO;
-> +	list_work->qedi_cmd = qedi_cmd;
-> +	list_work->rtid = cmd->task_id;
-> +	list_work->state = QEDI_WORK_SCHEDULED;
-> +	qedi_cmd->list_tmf_work = list_work;
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "Queue tmf work=%p, list node=%p, cid=0x%x, tmf flags=0x%x\n",
-> +		  list_work->ptr_tmf_work, list_work, qedi_conn->iscsi_conn_id,
-> +		  tmf_hdr->flags);
-> +
-> +	spin_lock_bh(&qedi_conn->tmf_work_lock);
-> +	list_add_tail(&list_work->list, &qedi_conn->tmf_work_list);
-> +	spin_unlock_bh(&qedi_conn->tmf_work_lock);
-> +
-> +	qedi_iscsi_cleanup_task(ctask, false);
-> +
-> +	rval = qedi_wait_for_cleanup_request(qedi, qedi_conn, ctask, qedi_cmd,
-> +					     list_work);
-> +	if (rval == -1) {
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_INFO,
-> +			  "FW cleanup got escalated, cid=0x%x\n",
-> +			  qedi_conn->iscsi_conn_id);
-> +		goto ldel_exit;
-> +	}
-> +
-> +	tid = qedi_get_task_idx(qedi);
-> +	if (tid == -1) {
-> +		QEDI_ERR(&qedi->dbg_ctx, "Invalid tid, cid=0x%x\n",
-> +			 qedi_conn->iscsi_conn_id);
-> +		goto ldel_exit;
-> +	}
-> +
-> +	qedi_cmd->task_id = tid;
-> +	qedi_send_iscsi_tmf(qedi_conn, qedi_cmd->task);
-> +
-> +abort_ret:
-> +	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +	return;
-> +
-> +ldel_exit:
-> +	spin_lock_bh(&qedi_conn->tmf_work_lock);
-> +	if (!qedi_cmd->list_tmf_work) {
-> +		list_del_init(&list_work->list);
-> +		qedi_cmd->list_tmf_work = NULL;
-> +		kfree(list_work);
-> +	}
-> +	spin_unlock_bh(&qedi_conn->tmf_work_lock);
-> +
-> +	spin_lock(&qedi_conn->list_lock);
-> +	list_del_init(&cmd->io_cmd);
-> +	qedi_conn->active_cmd_count--;
-> +	spin_unlock(&qedi_conn->list_lock);
-> +
-> +	clear_bit(QEDI_CONN_FW_CLEANUP, &qedi_conn->flags);
-> +}
-> +
-> +static int qedi_send_iscsi_tmf(struct qedi_conn *qedi_conn,
-> +			       struct iscsi_task *mtask)
-> +{
-> +	struct iscsi_conn *conn = qedi_conn->cls_conn->dd_data;
-> +	struct qedi_ctx *qedi = qedi_conn->qedi;
-> +	struct iscsi_task_context *fw_task_ctx;
-> +	struct iscsi_tmf_request_hdr *fw_tmf_request;
-> +	struct iscsi_sge *single_sge;
-> +	struct qedi_cmd *qedi_cmd;
-> +	struct qedi_cmd *cmd;
-> +	struct iscsi_task *ctask;
-> +	struct iscsi_tm *tmf_hdr;
-> +	struct iscsi_sge *req_sge;
-> +	struct iscsi_sge *resp_sge;
-> +	u32 scsi_lun[2];
-> +	s16 tid = 0, ptu_invalidate = 0;
-> +
-> +	req_sge = (struct iscsi_sge *)qedi_conn->gen_pdu.req_bd_tbl;
-> +	resp_sge = (struct iscsi_sge *)qedi_conn->gen_pdu.resp_bd_tbl;
-> +	qedi_cmd = (struct qedi_cmd *)mtask->dd_data;
-> +	tmf_hdr = (struct iscsi_tm *)mtask->hdr;
-> +
-> +	tid = qedi_cmd->task_id;
-> +	qedi_update_itt_map(qedi, tid, mtask->itt);
-> +
-> +	fw_task_ctx =
-> +	      (struct iscsi_task_context *)qedi_get_task_mem(&qedi->tasks, tid);
-> +	memset(fw_task_ctx, 0, sizeof(struct iscsi_task_context));
-> +
-> +	fw_tmf_request = &fw_task_ctx->ystorm_st_context.pdu_hdr.tmf_request;
-> +	fw_tmf_request->itt = qedi_set_itt(tid, get_itt(mtask->itt));
-> +	fw_tmf_request->cmd_sn = be32_to_cpu(tmf_hdr->cmdsn);
-> +
-> +	memcpy(scsi_lun, &tmf_hdr->lun, sizeof(struct scsi_lun));
-> +	fw_tmf_request->lun.lo = be32_to_cpu(scsi_lun[0]);
-> +	fw_tmf_request->lun.hi = be32_to_cpu(scsi_lun[1]);
-> +
-> +	if (qedi->tid_reuse_count[tid] == QEDI_MAX_TASK_NUM) {
-> +		ptu_invalidate = 1;
-> +		qedi->tid_reuse_count[tid] = 0;
-> +	}
-> +	fw_task_ctx->ystorm_st_context.state.reuse_count =
-> +						qedi->tid_reuse_count[tid];
-> +	fw_task_ctx->mstorm_st_context.reuse_count =
-> +						qedi->tid_reuse_count[tid]++;
-> +
-> +	if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +	     ISCSI_TM_FUNC_ABORT_TASK) {
-> +		ctask = iscsi_itt_to_task(conn, tmf_hdr->rtt);
-> +		if (!ctask || !ctask->sc) {
-> +			QEDI_ERR(&qedi->dbg_ctx,
-> +				 "Could not get reference task\n");
-> +			return 0;
-> +		}
-> +		cmd = (struct qedi_cmd *)ctask->dd_data;
-> +		fw_tmf_request->rtt =
-> +				qedi_set_itt(cmd->task_id,
-> +					     get_itt(tmf_hdr->rtt));
-> +	} else {
-> +		fw_tmf_request->rtt = ISCSI_RESERVED_TAG;
-> +	}
-> +
-> +	fw_tmf_request->opcode = tmf_hdr->opcode;
-> +	fw_tmf_request->function = tmf_hdr->flags;
-> +	fw_tmf_request->hdr_second_dword = ntoh24(tmf_hdr->dlength);
-> +	fw_tmf_request->ref_cmd_sn = be32_to_cpu(tmf_hdr->refcmdsn);
-> +
-> +	single_sge = &fw_task_ctx->mstorm_st_context.sgl_union.single_sge;
-> +	fw_task_ctx->mstorm_st_context.task_type = ISCSI_TASK_TYPE_MIDPATH;
-> +	fw_task_ctx->mstorm_ag_context.task_cid = (u16)qedi_conn->iscsi_conn_id;
-> +	single_sge->sge_addr.lo = resp_sge->sge_addr.lo;
-> +	single_sge->sge_addr.hi = resp_sge->sge_addr.hi;
-> +	single_sge->sge_len = resp_sge->sge_len;
-> +
-> +	SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +		  ISCSI_MFLAGS_SINGLE_SGE, 1);
-> +	SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +		  ISCSI_MFLAGS_SLOW_IO, 0);
-> +	fw_task_ctx->mstorm_st_context.sgl_size = 1;
-> +	fw_task_ctx->mstorm_st_context.rem_task_size = resp_sge->sge_len;
-> +
-> +	/* Ustorm context */
-> +	fw_task_ctx->ustorm_st_context.rem_rcv_len = 0;
-> +	fw_task_ctx->ustorm_st_context.exp_data_transfer_len = 0;
-> +	fw_task_ctx->ustorm_st_context.exp_data_sn = 0;
-> +	fw_task_ctx->ustorm_st_context.task_type =  ISCSI_TASK_TYPE_MIDPATH;
-> +	fw_task_ctx->ustorm_st_context.cq_rss_number = 0;
-> +
-> +	SET_FIELD(fw_task_ctx->ustorm_st_context.flags,
-> +		  USTORM_ISCSI_TASK_ST_CTX_LOCAL_COMP, 0);
-> +	SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +		  ISCSI_REG1_NUM_FAST_SGES, 0);
-> +
-> +	fw_task_ctx->ustorm_ag_context.icid = (u16)qedi_conn->iscsi_conn_id;
-> +	SET_FIELD(fw_task_ctx->ustorm_ag_context.flags1,
-> +		  USTORM_ISCSI_TASK_AG_CTX_R2T2RECV, 1);
-> +	fw_task_ctx->ustorm_st_context.lun.lo = be32_to_cpu(scsi_lun[0]);
-> +	fw_task_ctx->ustorm_st_context.lun.hi = be32_to_cpu(scsi_lun[1]);
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "Add TMF to SQ, tmf tid=0x%x, itt=0x%x, cid=0x%x\n",
-> +		  tid,  mtask->itt, qedi_conn->iscsi_conn_id);
-> +
-> +	spin_lock(&qedi_conn->list_lock);
-> +	list_add_tail(&qedi_cmd->io_cmd, &qedi_conn->active_cmd_list);
-> +	qedi_cmd->io_cmd_in_list = true;
-> +	qedi_conn->active_cmd_count++;
-> +	spin_unlock(&qedi_conn->list_lock);
-> +
-> +	qedi_add_to_sq(qedi_conn, mtask, tid, ptu_invalidate, false);
-> +	qedi_ring_doorbell(qedi_conn);
-> +	return 0;
-> +}
-> +
-> +int qedi_iscsi_abort_work(struct qedi_conn *qedi_conn,
-> +			  struct iscsi_task *mtask)
-> +{
-> +	struct qedi_ctx *qedi = qedi_conn->qedi;
-> +	struct iscsi_tm *tmf_hdr;
-> +	struct qedi_cmd *qedi_cmd = (struct qedi_cmd *)mtask->dd_data;
-> +	s16 tid = 0;
-> +
-> +	tmf_hdr = (struct iscsi_tm *)mtask->hdr;
-> +	qedi_cmd->task = mtask;
-> +
-> +	/* If abort task then schedule the work and return */
-> +	if ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +	    ISCSI_TM_FUNC_ABORT_TASK) {
-> +		qedi_cmd->state = CLEANUP_WAIT;
-> +		INIT_WORK(&qedi_cmd->tmf_work, qedi_tmf_work);
-> +		queue_work(qedi->tmf_thread, &qedi_cmd->tmf_work);
-> +
-> +	} else if (((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +		    ISCSI_TM_FUNC_LOGICAL_UNIT_RESET) ||
-> +		   ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +		    ISCSI_TM_FUNC_TARGET_WARM_RESET) ||
-> +		   ((tmf_hdr->flags & ISCSI_FLAG_TM_FUNC_MASK) ==
-> +		    ISCSI_TM_FUNC_TARGET_COLD_RESET)) {
-> +		tid = qedi_get_task_idx(qedi);
-> +		if (tid == -1) {
-> +			QEDI_ERR(&qedi->dbg_ctx, "Invalid tid, cid=0x%x\n",
-> +				 qedi_conn->iscsi_conn_id);
-> +			return -1;
-> +		}
-> +		qedi_cmd->task_id = tid;
-> +
-> +		qedi_send_iscsi_tmf(qedi_conn, qedi_cmd->task);
-> +
-> +	} else {
-> +		QEDI_ERR(&qedi->dbg_ctx, "Invalid tmf, cid=0x%x\n",
-> +			 qedi_conn->iscsi_conn_id);
-> +		return -1;
-> +	}
-> +
-> +	return 0;
-> +}
-> +
->  int qedi_send_iscsi_text(struct qedi_conn *qedi_conn,
->  			 struct iscsi_task *task)
->  {
-> @@ -1121,3 +1918,488 @@ int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
->  	qedi_ring_doorbell(qedi_conn);
->  	return 0;
->  }
-> +
-> +static int qedi_split_bd(struct qedi_cmd *cmd, u64 addr, int sg_len,
-> +			 int bd_index)
-> +{
-> +	struct iscsi_sge *bd = cmd->io_tbl.sge_tbl;
-> +	int frag_size, sg_frags;
-> +
-> +	sg_frags = 0;
-> +
-> +	while (sg_len) {
-> +		if (addr % QEDI_PAGE_SIZE)
-> +			frag_size =
-> +				   (QEDI_PAGE_SIZE - (addr % QEDI_PAGE_SIZE));
-> +		else
-> +			frag_size = (sg_len > QEDI_BD_SPLIT_SZ) ? 0 :
-> +				    (sg_len % QEDI_BD_SPLIT_SZ);
-> +
-> +		if (frag_size == 0)
-> +			frag_size = QEDI_BD_SPLIT_SZ;
-> +
-> +		bd[bd_index + sg_frags].sge_addr.lo = (addr & 0xffffffff);
-> +		bd[bd_index + sg_frags].sge_addr.hi = (addr >> 32);
-> +		bd[bd_index + sg_frags].sge_len = (u16)frag_size;
-> +		QEDI_INFO(&cmd->conn->qedi->dbg_ctx, QEDI_LOG_IO,
-> +			  "split sge %d: addr=%llx, len=%x",
-> +			  (bd_index + sg_frags), addr, frag_size);
-> +
-> +		addr += (u64)frag_size;
-> +		sg_frags++;
-> +		sg_len -= frag_size;
-> +	}
-> +	return sg_frags;
-> +}
-> +
-> +static int qedi_map_scsi_sg(struct qedi_ctx *qedi, struct qedi_cmd *cmd)
-> +{
-> +	struct scsi_cmnd *sc = cmd->scsi_cmd;
-> +	struct iscsi_sge *bd = cmd->io_tbl.sge_tbl;
-> +	struct scatterlist *sg;
-> +	int byte_count = 0;
-> +	int bd_count = 0;
-> +	int sg_count;
-> +	int sg_len;
-> +	int sg_frags;
-> +	u64 addr, end_addr;
-> +	int i;
-> +
-> +	WARN_ON(scsi_sg_count(sc) > QEDI_ISCSI_MAX_BDS_PER_CMD);
-> +
-> +	sg_count = dma_map_sg(&qedi->pdev->dev, scsi_sglist(sc),
-> +			      scsi_sg_count(sc), sc->sc_data_direction);
-> +
-> +	/*
-> +	 * New condition to send single SGE as cached-SGL.
-> +	 * Single SGE with length less than 64K.
-> +	 */
-> +	sg = scsi_sglist(sc);
-> +	if ((sg_count == 1) && (sg_dma_len(sg) <= MAX_SGLEN_FOR_CACHESGL)) {
-> +		sg_len = sg_dma_len(sg);
-> +		addr = (u64)sg_dma_address(sg);
-> +
-> +		bd[bd_count].sge_addr.lo = (addr & 0xffffffff);
-> +		bd[bd_count].sge_addr.hi = (addr >> 32);
-> +		bd[bd_count].sge_len = (u16)sg_len;
-> +
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_IO,
-> +			  "single-cashed-sgl: bd_count:%d addr=%llx, len=%x",
-> +			  sg_count, addr, sg_len);
-> +
-> +		return ++bd_count;
-> +	}
-> +
-> +	scsi_for_each_sg(sc, sg, sg_count, i) {
-> +		sg_len = sg_dma_len(sg);
-> +		addr = (u64)sg_dma_address(sg);
-> +		end_addr = (addr + sg_len);
-> +
-> +		/*
-> +		 * first sg elem in the 'list',
-> +		 * check if end addr is page-aligned.
-> +		 */
-> +		if ((i == 0) && (sg_count > 1) && (end_addr % QEDI_PAGE_SIZE))
-> +			cmd->use_slowpath = true;
-> +
-> +		/*
-> +		 * last sg elem in the 'list',
-> +		 * check if start addr is page-aligned.
-> +		 */
-> +		else if ((i == (sg_count - 1)) &&
-> +			 (sg_count > 1) && (addr % QEDI_PAGE_SIZE))
-> +			cmd->use_slowpath = true;
-> +
-> +		/*
-> +		 * middle sg elements in list,
-> +		 * check if start and end addr is page-aligned
-> +		 */
-> +		else if ((i != 0) && (i != (sg_count - 1)) &&
-> +			 ((addr % QEDI_PAGE_SIZE) ||
-> +			 (end_addr % QEDI_PAGE_SIZE)))
-> +			cmd->use_slowpath = true;
-> +
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_IO, "sg[%d] size=0x%x",
-> +			  i, sg_len);
-> +
-> +		if (sg_len > QEDI_BD_SPLIT_SZ) {
-> +			sg_frags = qedi_split_bd(cmd, addr, sg_len, bd_count);
-> +		} else {
-> +			sg_frags = 1;
-> +			bd[bd_count].sge_addr.lo = addr & 0xffffffff;
-> +			bd[bd_count].sge_addr.hi = addr >> 32;
-> +			bd[bd_count].sge_len = sg_len;
-> +		}
-> +		byte_count += sg_len;
-> +		bd_count += sg_frags;
-> +	}
-> +
-> +	if (byte_count != scsi_bufflen(sc))
-> +		QEDI_ERR(&qedi->dbg_ctx,
-> +			 "byte_count = %d != scsi_bufflen = %d\n", byte_count,
-> +			 scsi_bufflen(sc));
-> +	else
-> +		QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_IO, "byte_count = %d\n",
-> +			  byte_count);
-> +
-> +	WARN_ON(byte_count != scsi_bufflen(sc));
-> +
-> +	return bd_count;
-> +}
-> +
-> +static void qedi_iscsi_map_sg_list(struct qedi_cmd *cmd)
-> +{
-> +	int bd_count;
-> +	struct scsi_cmnd *sc = cmd->scsi_cmd;
-> +
-> +	if (scsi_sg_count(sc)) {
-> +		bd_count  = qedi_map_scsi_sg(cmd->conn->qedi, cmd);
-> +		if (bd_count == 0)
-> +			return;
-> +	} else {
-> +		struct iscsi_sge *bd = cmd->io_tbl.sge_tbl;
-> +
-> +		bd[0].sge_addr.lo = 0;
-> +		bd[0].sge_addr.hi = 0;
-> +		bd[0].sge_len = 0;
-> +		bd_count = 0;
-> +	}
-> +	cmd->io_tbl.sge_valid = bd_count;
-> +}
-> +
-> +static void qedi_cpy_scsi_cdb(struct scsi_cmnd *sc, u32 *dstp)
-> +{
-> +	u32 dword;
-> +	int lpcnt;
-> +	u8 *srcp;
-> +
-> +	lpcnt = sc->cmd_len / sizeof(dword);
-> +	srcp = (u8 *)sc->cmnd;
-> +	while (lpcnt--) {
-> +		memcpy(&dword, (const void *)srcp, 4);
-> +		*dstp = cpu_to_be32(dword);
-> +		srcp += 4;
-> +		dstp++;
-> +	}
-> +	if (sc->cmd_len & 0x3) {
-> +		dword = (u32)srcp[0] | ((u32)srcp[1] << 8);
-> +		*dstp = cpu_to_be32(dword);
-> +	}
-> +}
-> +
-> +void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
-> +		   u16 tid, int8_t direction)
-> +{
-> +	struct qedi_io_log *io_log;
-> +	struct iscsi_conn *conn = task->conn;
-> +	struct qedi_conn *qedi_conn = conn->dd_data;
-> +	struct scsi_cmnd *sc_cmd = task->sc;
-> +	unsigned long flags;
-> +	u8 op;
-> +
-> +	spin_lock_irqsave(&qedi->io_trace_lock, flags);
-> +
-> +	io_log = &qedi->io_trace_buf[qedi->io_trace_idx];
-> +	io_log->direction = direction;
-> +	io_log->task_id = tid;
-> +	io_log->cid = qedi_conn->iscsi_conn_id;
-> +	io_log->lun = sc_cmd->device->lun;
-> +	io_log->op = sc_cmd->cmnd[0];
-> +	op = sc_cmd->cmnd[0];
-> +
-> +	if (op == READ_10 || op == WRITE_10) {
-> +		io_log->lba[0] = sc_cmd->cmnd[2];
-> +		io_log->lba[1] = sc_cmd->cmnd[3];
-> +		io_log->lba[2] = sc_cmd->cmnd[4];
-> +		io_log->lba[3] = sc_cmd->cmnd[5];
-> +	} else {
-> +		io_log->lba[0] = 0;
-> +		io_log->lba[1] = 0;
-> +		io_log->lba[2] = 0;
-> +		io_log->lba[3] = 0;
-> +	}
-Only for READ_10 and WRITE_10? What about the other read or write commands?
+https://bugzilla.kernel.org/show_bug.cgi?id=178381
 
-> +	io_log->bufflen = scsi_bufflen(sc_cmd);
-> +	io_log->sg_count = scsi_sg_count(sc_cmd);
-> +	io_log->fast_sgs = qedi->fast_sgls;
-> +	io_log->cached_sgs = qedi->cached_sgls;
-> +	io_log->slow_sgs = qedi->slow_sgls;
-> +	io_log->cached_sge = qedi->use_cached_sge;
-> +	io_log->slow_sge = qedi->use_slow_sge;
-> +	io_log->fast_sge = qedi->use_fast_sge;
-> +	io_log->result = sc_cmd->result;
-> +	io_log->jiffies = jiffies;
-> +	io_log->blk_req_cpu = smp_processor_id();
-> +
-> +	if (direction == QEDI_IO_TRACE_REQ) {
-> +		/* For requests we only care about the submission CPU */
-> +		io_log->req_cpu = smp_processor_id() % qedi->num_queues;
-> +		io_log->intr_cpu = 0;
-> +		io_log->blk_rsp_cpu = 0;
-> +	} else if (direction == QEDI_IO_TRACE_RSP) {
-> +		io_log->req_cpu = smp_processor_id() % qedi->num_queues;
-> +		io_log->intr_cpu = qedi->intr_cpu;
-> +		io_log->blk_rsp_cpu = smp_processor_id();
-> +	}
-> +
-> +	qedi->io_trace_idx++;
-> +	if (qedi->io_trace_idx == QEDI_IO_TRACE_SIZE)
-> +		qedi->io_trace_idx = 0;
-> +
-> +	qedi->use_cached_sge = false;
-> +	qedi->use_slow_sge = false;
-> +	qedi->use_fast_sge = false;
-> +
-> +	spin_unlock_irqrestore(&qedi->io_trace_lock, flags);
-> +}
-> +
-> +int qedi_iscsi_send_ioreq(struct iscsi_task *task)
-> +{
-> +	struct iscsi_conn *conn = task->conn;
-> +	struct iscsi_session *session = conn->session;
-> +	struct Scsi_Host *shost = iscsi_session_to_shost(session->cls_session);
-> +	struct qedi_ctx *qedi = iscsi_host_priv(shost);
-> +	struct qedi_conn *qedi_conn = conn->dd_data;
-> +	struct qedi_cmd *cmd = task->dd_data;
-> +	struct scsi_cmnd *sc = task->sc;
-> +	struct iscsi_task_context *fw_task_ctx;
-> +	struct iscsi_cached_sge_ctx *cached_sge;
-> +	struct iscsi_phys_sgl_ctx *phys_sgl;
-> +	struct iscsi_virt_sgl_ctx *virt_sgl;
-> +	struct ystorm_iscsi_task_st_ctx *yst_cxt;
-> +	struct mstorm_iscsi_task_st_ctx *mst_cxt;
-> +	struct iscsi_sgl *sgl_struct;
-> +	struct iscsi_sge *single_sge;
-> +	struct iscsi_scsi_req *hdr = (struct iscsi_scsi_req *)task->hdr;
-> +	struct iscsi_sge *bd = cmd->io_tbl.sge_tbl;
-> +	enum iscsi_task_type task_type;
-> +	struct iscsi_cmd_hdr *fw_cmd;
-> +	u32 scsi_lun[2];
-> +	u16 cq_idx = smp_processor_id() % qedi->num_queues;
-> +	s16 ptu_invalidate = 0;
-> +	s16 tid = 0;
-> +	u8 num_fast_sgs;
-> +
-> +	tid = qedi_get_task_idx(qedi);
-> +	if (tid == -1)
-> +		return -ENOMEM;
-> +
-> +	qedi_iscsi_map_sg_list(cmd);
-> +
-> +	int_to_scsilun(sc->device->lun, (struct scsi_lun *)scsi_lun);
-> +	fw_task_ctx =
-> +	      (struct iscsi_task_context *)qedi_get_task_mem(&qedi->tasks, tid);
-> +
-> +	memset(fw_task_ctx, 0, sizeof(struct iscsi_task_context));
-> +	cmd->task_id = tid;
-> +
-> +	/* Ystrom context */
-Ystrom or Ystorm?
+            Bug ID: 178381
+           Summary: Suspend to RAM test failed while
+                    CONFIG_SCSI_MQ_DEFAULT is set
+           Product: SCSI Drivers
+           Version: 2.5
+    Kernel Version: 4.8.2
+          Hardware: x86-64
+                OS: Linux
+              Tree: Mainline
+            Status: NEW
+          Severity: normal
+          Priority: P1
+         Component: Other
+          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
+          Reporter: chintzung@gmail.com
+        Regression: No
 
-> +	fw_cmd = &fw_task_ctx->ystorm_st_context.pdu_hdr.cmd;
-> +	SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_ATTR, ISCSI_ATTR_SIMPLE);
-> +
-> +	if (sc->sc_data_direction == DMA_TO_DEVICE) {
-> +		if (conn->session->initial_r2t_en) {
-> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =
-> +				min((conn->session->imm_data_en *
-> +				    conn->max_xmit_dlength),
-> +				    conn->session->first_burst);
-> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =
-> +			      min(fw_task_ctx->ustorm_ag_context.exp_data_acked,
-> +				  scsi_bufflen(sc));
-> +		} else {
-> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =
-> +			      min(conn->session->first_burst, scsi_bufflen(sc));
-> +		}
-> +
-> +		SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_WRITE, 1);
-> +		task_type = ISCSI_TASK_TYPE_INITIATOR_WRITE;
-> +	} else {
-> +		if (scsi_bufflen(sc))
-> +			SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_READ, 1);
-> +		task_type = ISCSI_TASK_TYPE_INITIATOR_READ;
-> +	}
-> +
-> +	fw_cmd->lun.lo = be32_to_cpu(scsi_lun[0]);
-> +	fw_cmd->lun.hi = be32_to_cpu(scsi_lun[1]);
-> +
-> +	qedi_update_itt_map(qedi, tid, task->itt);
-> +	fw_cmd->itt = qedi_set_itt(tid, get_itt(task->itt));
-> +	fw_cmd->expected_transfer_length = scsi_bufflen(sc);
-> +	fw_cmd->cmd_sn = be32_to_cpu(hdr->cmdsn);
-> +	fw_cmd->opcode = hdr->opcode;
-> +	qedi_cpy_scsi_cdb(sc, (u32 *)fw_cmd->cdb);
-> +
-> +	/* Mstorm context */
-> +	fw_task_ctx->mstorm_st_context.sense_db.lo = (u32)cmd->sense_buffer_dma;
-> +	fw_task_ctx->mstorm_st_context.sense_db.hi =
-> +					(u32)((u64)cmd->sense_buffer_dma >> 32);
-> +	fw_task_ctx->mstorm_ag_context.task_cid = qedi_conn->iscsi_conn_id;
-> +	fw_task_ctx->mstorm_st_context.task_type = task_type;
-> +
-> +	if (qedi->tid_reuse_count[tid] == QEDI_MAX_TASK_NUM) {
-> +		ptu_invalidate = 1;
-> +		qedi->tid_reuse_count[tid] = 0;
-> +	}
-> +	fw_task_ctx->ystorm_st_context.state.reuse_count =
-> +						     qedi->tid_reuse_count[tid];
-> +	fw_task_ctx->mstorm_st_context.reuse_count =
-> +						   qedi->tid_reuse_count[tid]++;
-> +
-> +	/* Ustrorm context */
-Ustrorm?
+Hi, 
 
-> +	fw_task_ctx->ustorm_st_context.rem_rcv_len = scsi_bufflen(sc);
-> +	fw_task_ctx->ustorm_st_context.exp_data_transfer_len = scsi_bufflen(sc);
-> +	fw_task_ctx->ustorm_st_context.exp_data_sn =
-> +						   be32_to_cpu(hdr->exp_statsn);
-> +	fw_task_ctx->ustorm_st_context.task_type = task_type;
-> +	fw_task_ctx->ustorm_st_context.cq_rss_number = cq_idx;
-> +	fw_task_ctx->ustorm_ag_context.icid = (u16)qedi_conn->iscsi_conn_id;
-> +
-> +	SET_FIELD(fw_task_ctx->ustorm_ag_context.flags1,
-> +		  USTORM_ISCSI_TASK_AG_CTX_R2T2RECV, 1);
-> +	SET_FIELD(fw_task_ctx->ustorm_st_context.flags,
-> +		  USTORM_ISCSI_TASK_ST_CTX_LOCAL_COMP, 0);
-> +
-> +	num_fast_sgs = (cmd->io_tbl.sge_valid ?
-> +			min((u16)QEDI_FAST_SGE_COUNT,
-> +			    (u16)cmd->io_tbl.sge_valid) : 0);
-> +	SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +		  ISCSI_REG1_NUM_FAST_SGES, num_fast_sgs);
-> +
-> +	fw_task_ctx->ustorm_st_context.lun.lo = be32_to_cpu(scsi_lun[0]);
-> +	fw_task_ctx->ustorm_st_context.lun.hi = be32_to_cpu(scsi_lun[1]);
-> +
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_IO, "Total sge count [%d]\n",
-> +		  cmd->io_tbl.sge_valid);
-> +
-> +	yst_cxt = &fw_task_ctx->ystorm_st_context;
-> +	mst_cxt = &fw_task_ctx->mstorm_st_context;
-> +	/* Tx path */
-> +	if (task_type == ISCSI_TASK_TYPE_INITIATOR_WRITE) {
-> +		/* not considering  superIO or FastIO */
-> +		if (cmd->io_tbl.sge_valid == 1) {
-> +			cached_sge = &yst_cxt->state.sgl_ctx_union.cached_sge;
-> +			cached_sge->sge.sge_addr.lo = bd[0].sge_addr.lo;
-> +			cached_sge->sge.sge_addr.hi = bd[0].sge_addr.hi;
-> +			cached_sge->sge.sge_len = bd[0].sge_len;
-> +			qedi->cached_sgls++;
-> +		} else if ((cmd->io_tbl.sge_valid != 1) && cmd->use_slowpath) {
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SLOW_IO, 1);
-> +			SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +				  ISCSI_REG1_NUM_FAST_SGES, 0);
-> +			phys_sgl = &yst_cxt->state.sgl_ctx_union.phys_sgl;
-> +			phys_sgl->sgl_base.lo = (u32)(cmd->io_tbl.sge_tbl_dma);
-> +			phys_sgl->sgl_base.hi =
-> +				     (u32)((u64)cmd->io_tbl.sge_tbl_dma >> 32);
-> +			phys_sgl->sgl_size = cmd->io_tbl.sge_valid;
-> +			qedi->slow_sgls++;
-> +		} else if ((cmd->io_tbl.sge_valid != 1) && !cmd->use_slowpath) {
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SLOW_IO, 0);
-> +			SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +				  ISCSI_REG1_NUM_FAST_SGES,
-> +				  min((u16)QEDI_FAST_SGE_COUNT,
-> +				      (u16)cmd->io_tbl.sge_valid));
-> +			virt_sgl = &yst_cxt->state.sgl_ctx_union.virt_sgl;
-> +			virt_sgl->sgl_base.lo = (u32)(cmd->io_tbl.sge_tbl_dma);
-> +			virt_sgl->sgl_base.hi =
-> +				      (u32)((u64)cmd->io_tbl.sge_tbl_dma >> 32);
-> +			virt_sgl->sgl_initial_offset =
-> +				 (u32)bd[0].sge_addr.lo & (QEDI_PAGE_SIZE - 1);
-> +			qedi->fast_sgls++;
-> +		}
-> +		fw_task_ctx->mstorm_st_context.sgl_size = cmd->io_tbl.sge_valid;
-> +		fw_task_ctx->mstorm_st_context.rem_task_size = scsi_bufflen(sc);
-> +	} else {
-> +	/* Rx path */
-> +		if (cmd->io_tbl.sge_valid == 1) {
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SLOW_IO, 0);
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SINGLE_SGE, 1);
-> +			single_sge = &mst_cxt->sgl_union.single_sge;
-> +			single_sge->sge_addr.lo = bd[0].sge_addr.lo;
-> +			single_sge->sge_addr.hi = bd[0].sge_addr.hi;
-> +			single_sge->sge_len = bd[0].sge_len;
-> +			qedi->cached_sgls++;
-> +		} else if ((cmd->io_tbl.sge_valid != 1) && cmd->use_slowpath) {
-> +			sgl_struct = &mst_cxt->sgl_union.sgl_struct;
-> +			sgl_struct->sgl_addr.lo =
-> +						(u32)(cmd->io_tbl.sge_tbl_dma);
-> +			sgl_struct->sgl_addr.hi =
-> +				     (u32)((u64)cmd->io_tbl.sge_tbl_dma >> 32);
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SLOW_IO, 1);
-> +			SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +				  ISCSI_REG1_NUM_FAST_SGES, 0);
-> +			sgl_struct->updated_sge_size = 0;
-> +			sgl_struct->updated_sge_offset = 0;
-> +			qedi->slow_sgls++;
-> +		} else if ((cmd->io_tbl.sge_valid != 1) && !cmd->use_slowpath) {
-> +			sgl_struct = &mst_cxt->sgl_union.sgl_struct;
-> +			sgl_struct->sgl_addr.lo =
-> +						(u32)(cmd->io_tbl.sge_tbl_dma);
-> +			sgl_struct->sgl_addr.hi =
-> +				     (u32)((u64)cmd->io_tbl.sge_tbl_dma >> 32);
-> +			sgl_struct->byte_offset =
-> +				(u32)bd[0].sge_addr.lo & (QEDI_PAGE_SIZE - 1);
-> +			SET_FIELD(fw_task_ctx->mstorm_st_context.flags.mflags,
-> +				  ISCSI_MFLAGS_SLOW_IO, 0);
-> +			SET_FIELD(fw_task_ctx->ustorm_st_context.reg1.reg1_map,
-> +				  ISCSI_REG1_NUM_FAST_SGES, 0);
-> +			sgl_struct->updated_sge_size = 0;
-> +			sgl_struct->updated_sge_offset = 0;
-> +			qedi->fast_sgls++;
-> +		}
-> +		fw_task_ctx->mstorm_st_context.sgl_size = cmd->io_tbl.sge_valid;
-> +		fw_task_ctx->mstorm_st_context.rem_task_size = scsi_bufflen(sc);
-> +	}
-> +
-> +	if (cmd->io_tbl.sge_valid == 1)
-> +		/* Singel-SGL */
-> +		qedi->use_cached_sge = true;
-> +	else {
-> +		if (cmd->use_slowpath)
-> +			qedi->use_slow_sge = true;
-> +		else
-> +			qedi->use_fast_sge = true;
-> +	}
-> +	QEDI_INFO(&qedi->dbg_ctx, QEDI_LOG_IO,
-> +		  "%s: %s-SGL: num_sges=0x%x first-sge-lo=0x%x first-sge-hi=0x%x",
-> +		  (task_type == ISCSI_TASK_TYPE_INITIATOR_WRITE) ?
-> +		  "Write " : "Read ", (cmd->io_tbl.sge_valid == 1) ?
-> +		  "Single" : (cmd->use_slowpath ? "SLOW" : "FAST"),
-> +		  (u16)cmd->io_tbl.sge_valid, (u32)(cmd->io_tbl.sge_tbl_dma),
-> +		  (u32)((u64)cmd->io_tbl.sge_tbl_dma >> 32));
-> +
-> +	/*  Add command in active command list */
-> +	spin_lock(&qedi_conn->list_lock);
-> +	list_add_tail(&cmd->io_cmd, &qedi_conn->active_cmd_list);
-> +	cmd->io_cmd_in_list = true;
-> +	qedi_conn->active_cmd_count++;
-> +	spin_unlock(&qedi_conn->list_lock);
-> +
-> +	qedi_add_to_sq(qedi_conn, task, tid, ptu_invalidate, false);
-> +	qedi_ring_doorbell(qedi_conn);
-> +	if (io_tracing)
-> +		qedi_trace_io(qedi, task, tid, QEDI_IO_TRACE_REQ);
-> +
-> +	return 0;
-> +}
-> +
-> +int qedi_iscsi_cleanup_task(struct iscsi_task *task, bool mark_cmd_node_deleted)
-> +{
-> +	struct iscsi_conn *conn = task->conn;
-> +	struct qedi_conn *qedi_conn = conn->dd_data;
-> +	struct qedi_cmd *cmd = task->dd_data;
-> +	s16 ptu_invalidate = 0;
-> +
-> +	QEDI_INFO(&qedi_conn->qedi->dbg_ctx, QEDI_LOG_SCSI_TM,
-> +		  "issue cleanup tid=0x%x itt=0x%x task_state=%d cmd_state=0%x cid=0x%x\n",
-> +		  cmd->task_id, get_itt(task->itt), task->state,
-> +		  cmd->state, qedi_conn->iscsi_conn_id);
-> +
-> +	qedi_add_to_sq(qedi_conn, task, cmd->task_id, ptu_invalidate, true);
-> +	qedi_ring_doorbell(qedi_conn);
-> +
-> +	return 0;
-> +}
-> diff --git a/drivers/scsi/qedi/qedi_gbl.h b/drivers/scsi/qedi/qedi_gbl.h
-> index 85ea3d7..c50c2b1 100644
-> --- a/drivers/scsi/qedi/qedi_gbl.h
-> +++ b/drivers/scsi/qedi/qedi_gbl.h
-> @@ -28,11 +28,14 @@ int qedi_send_iscsi_login(struct qedi_conn *qedi_conn,
->  			  struct iscsi_task *task);
->  int qedi_send_iscsi_logout(struct qedi_conn *qedi_conn,
->  			   struct iscsi_task *task);
-> +int qedi_iscsi_abort_work(struct qedi_conn *qedi_conn,
-> +			  struct iscsi_task *mtask);
->  int qedi_send_iscsi_text(struct qedi_conn *qedi_conn,
->  			 struct iscsi_task *task);
->  int qedi_send_iscsi_nopout(struct qedi_conn *qedi_conn,
->  			   struct iscsi_task *task,
->  			   char *datap, int data_len, int unsol);
-> +int qedi_iscsi_send_ioreq(struct iscsi_task *task);
->  int qedi_get_task_idx(struct qedi_ctx *qedi);
->  void qedi_clear_task_idx(struct qedi_ctx *qedi, int idx);
->  int qedi_iscsi_cleanup_task(struct iscsi_task *task,
-> @@ -53,6 +56,9 @@ void qedi_start_conn_recovery(struct qedi_ctx *qedi,
->  int qedi_recover_all_conns(struct qedi_ctx *qedi);
->  void qedi_fp_process_cqes(struct qedi_ctx *qedi, union iscsi_cqe *cqe,
->  			  uint16_t que_idx);
-> +int qedi_cleanup_all_io(struct qedi_ctx *qedi,
-> +			struct qedi_conn *qedi_conn,
-> +			struct iscsi_task *task, bool in_recovery);
->  void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
->  		   u16 tid, int8_t direction);
->  int qedi_alloc_id(struct qedi_portid_tbl *id_tbl, u16 id);
-> diff --git a/drivers/scsi/qedi/qedi_iscsi.c b/drivers/scsi/qedi/qedi_iscsi.c
-> index caecdb8..7a07211 100644
-> --- a/drivers/scsi/qedi/qedi_iscsi.c
-> +++ b/drivers/scsi/qedi/qedi_iscsi.c
-> @@ -755,6 +755,9 @@ static int qedi_iscsi_send_generic_request(struct iscsi_task *task)
->  	case ISCSI_OP_LOGOUT:
->  		rc = qedi_send_iscsi_logout(qedi_conn, task);
->  		break;
-> +	case ISCSI_OP_SCSI_TMFUNC:
-> +		rc = qedi_iscsi_abort_work(qedi_conn, task);
-> +		break;
->  	case ISCSI_OP_TEXT:
->  		rc = qedi_send_iscsi_text(qedi_conn, task);
->  		break;
-> @@ -804,6 +807,9 @@ static int qedi_task_xmit(struct iscsi_task *task)
->  
->  	if (!sc)
->  		return qedi_mtask_xmit(conn, task);
-> +
-> +	cmd->scsi_cmd = sc;
-> +	return qedi_iscsi_send_ioreq(task);
->  }
->  
->  static struct iscsi_endpoint *
-> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-> index 22d19a3..fd0d335 100644
-> --- a/drivers/scsi/qedi/qedi_main.c
-> +++ b/drivers/scsi/qedi/qedi_main.c
-> @@ -43,6 +43,10 @@
->  module_param(debug, uint, S_IRUGO | S_IWUSR);
->  MODULE_PARM_DESC(debug, " Default debug level");
->  
-> +uint io_tracing;
-> +module_param(io_tracing, uint, S_IRUGO | S_IWUSR);
-> +MODULE_PARM_DESC(io_tracing,
-> +		 " Enable logging of SCSI requests/completions into trace buffer. (default off).");
->  const struct qed_iscsi_ops *qedi_ops;
->  static struct scsi_transport_template *qedi_scsi_transport;
->  static struct pci_driver qedi_pci_driver;
-> 
-Cheers,
+OS is Fedora 24 + Linux kernel 4.8.2 with SCSI_MQ is enabled.
 
-Hannes
+I executed below commands to do suspend to RAM test (S3 mode).
+
+$ echo platform > /sys/power/pm_test;echo mem > /sys/power/state
+
+It can resume correctly while only one disk is installed.
+
+However, it can't resume correctly while there are multiple disks.
+the system is hanging up.  
+
+
+I set hung_task_timeout_secs=120 to get the below message.
+============================================================
+
+[ 1280.985118] call 0000:00:01.1+ returned 0 after 5 usecs
+[ 1479.326798] INFO: task kworker/u8:2:1772 blocked for more than 120 seconds.
+[ 1479.333754] Tainted: G U 4.8.2 #1
+[ 1479.338718] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1479.346533] kworker/u8:2 D ffff8802596f3bf8 0 1772 2 0x00000000
+[ 1479.353622] Workqueue: events_unbound async_run_entry_fn
+[ 1479.358951] ffff8802596f3bf8 00ff8802596f3bd8 ffff880250e71e00
+ffff880263dd5a00
+[ 1479.366428] ffff88026dd19500 ffff8802596f4000 7fffffffffffffff
+ffff88025f5e2260
+[ 1479.373908] ffff880250e71e00 ffff880260af0740 ffff8802596f3c10
+ffffffff817f5cc5
+[ 1479.381385] Call Trace:
+[ 1479.383838] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1479.388800] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1479.394627] [<ffffffff810d87dc>] ? __enqueue_entity+0x6c/0x70
+[ 1479.400454] [<ffffffff810deb58>] ? enqueue_entity+0x2e8/0x8e0
+[ 1479.406279] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1479.412276] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1479.417497] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1479.422629] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1479.427587] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1479.432805] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1479.438890] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1479.444642] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1479.450035] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1479.455950] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1479.461776] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1479.467255] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1479.473269] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1479.478144] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1479.483535] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1479.489621] INFO: task md0_resync:2133 blocked for more than 120 seconds.
+[ 1479.496400] Tainted: G U 4.8.2 #1
+[ 1479.501358] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1479.509173] md0_resync D ffff88025717bbc8 0 2133 2 0x00000000
+[ 1479.516274] ffff88025717bbc8 00ff88025717bb78 ffff880263f69e00
+ffff880263dd5a00
+[ 1479.523766] 0000000058ec83c0 ffff88025717c000 ffff88025717bc48
+ffff880258662088
+[ 1479.531264] ffff880258662070 ffff880250a6f300 ffff88025717bbe0
+ffffffff817f5cc5
+[ 1479.538753] Call Trace:
+[ 1479.541203] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1479.546163] [<ffffffffa081910a>] raid1_sync_request+0x2da/0xba0 [raid1]
+[ 1479.552865] [<ffffffff810ea410>] ? prepare_to_wait_event+0xf0/0xf0
+[ 1479.559122] [<ffffffff8165618b>] md_do_sync+0x8bb/0xec0
+[ 1479.564428] [<ffffffff810ea410>] ? prepare_to_wait_event+0xf0/0xf0
+[ 1479.570688] [<ffffffff810d0fbe>] ? check_preempt_curr+0x7e/0x90
+[ 1479.576686] [<ffffffff810b41f3>] ? kernel_sigaction+0x43/0xe0
+[ 1479.582538] [<ffffffff81652ab9>] md_thread+0x139/0x150
+[ 1479.587757] [<ffffffff81652980>] ? find_pers+0x70/0x70
+[ 1479.592978] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1479.597863] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1479.603254] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1479.609350] INFO: task ext4lazyinit:2167 blocked for more than 120 seconds.
+[ 1479.616297] Tainted: G U 4.8.2 #1
+[ 1479.621256] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1479.629071] ext4lazyinit D ffff8802530e7be8 0 2167 2 0x00000000
+[ 1479.636161] ffff8802530e7be8 00000000041a2d80 ffff880253cf0000
+ffff880263dd5a00
+[ 1479.643637] 0000000420000008 ffff8802530e8000 ffff88026dd99500
+7fffffffffffffff
+[ 1479.651114] ffff880253cf0000 0000000000001000 ffff8802530e7c00
+ffffffff817f5cc5
+[ 1479.658587] Call Trace:
+[ 1479.661034] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1479.665995] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1479.671818] [<ffffffff81653776>] ? md_make_request+0xf6/0x230
+[ 1479.677645] [<ffffffff8111c741>] ? ktime_get+0x41/0xb0
+[ 1479.682864] [<ffffffff817f54b4>] io_schedule_timeout+0xa4/0x110
+[ 1479.688863] [<ffffffff817f6791>] wait_for_completion_io+0xe1/0x120
+[ 1479.695122] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1479.700340] [<ffffffff813ac165>] submit_bio_wait+0x65/0x90
+[ 1479.705905] [<ffffffff813be862>] blkdev_issue_zeroout+0x172/0x1e0
+[ 1479.712073] [<ffffffff812e3f9d>] ext4_init_inode_table+0x18d/0x390
+[ 1479.718343] [<ffffffff81301aa6>] ext4_lazyinit_thread+0x136/0x330
+[ 1479.724514] [<ffffffff81301970>] ? init_once+0x80/0x80
+[ 1479.729732] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1479.734607] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1479.739999] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1479.746082] INFO: task test.sh:2189 blocked for more than 120 seconds.
+[ 1479.752599] Tainted: G U 4.8.2 #1
+[ 1479.757557] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1479.765388] test.sh D ffff88021086fc10 0 2189 1865 0x00000000
+[ 1479.772474] ffff88021086fc10 00000000c74278a3 ffff8802597b1e00
+ffff880263dd5a00
+[ 1479.779955] ffffffff81e4c5a0 ffff880210870000 0000000000000000
+ffffffff81e4c5a0
+[ 1479.787434] ffffffff81ed8458 ffffffff81ed9510 ffff88021086fc28
+ffffffff817f5cc5
+[ 1479.794912] Call Trace:
+[ 1479.797361] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1479.802319] [<ffffffff810c9bb7>] async_synchronize_cookie_domain+0x77/0x150
+[ 1479.809357] [<ffffffff810ea410>] ? prepare_to_wait_event+0xf0/0xf0
+[ 1479.815611] [<ffffffff810c9cc7>] async_synchronize_full+0x17/0x20
+[ 1479.821795] [<ffffffff8153e37b>] dpm_suspend+0x1fb/0x2d0
+[ 1479.827186] [<ffffffff8153e890>] dpm_suspend_start+0x50/0x60
+[ 1479.832924] [<ffffffff810f5823>] suspend_devices_and_enter+0xd3/0x6d0
+[ 1479.839444] [<ffffffff810f6145>] pm_suspend+0x325/0x390
+[ 1479.844768] [<ffffffff810f494e>] state_store+0x7e/0xe0
+[ 1479.850002] [<ffffffff813e824f>] kobj_attr_store+0xf/0x20
+[ 1479.855480] [<ffffffff812d7037>] sysfs_kf_write+0x37/0x40
+[ 1479.860959] [<ffffffff812d657c>] kernfs_fop_write+0x11c/0x1b0
+[ 1479.866795] [<ffffffff81251c17>] __vfs_write+0x37/0x160
+[ 1479.872099] [<ffffffff8136e317>] ? selinux_file_permission+0xd7/0x110
+[ 1479.878612] [<ffffffff81363fad>] ? security_file_permission+0x3d/0xc0
+[ 1479.885127] [<ffffffff810f1a42>] ? percpu_down_read+0x12/0x50
+[ 1479.890951] [<ffffffff81252555>] vfs_write+0xb5/0x1a0
+[ 1479.896085] [<ffffffff812539a5>] SyS_write+0x55/0xc0
+[ 1479.901131] [<ffffffff817fa432>] entry_SYSCALL_64_fastpath+0x1a/0xa4
+[ 1479.907578] INFO: task kworker/u8:3:2193 blocked for more than 120 seconds.
+[ 1479.914527] Tainted: G U 4.8.2 #1
+[ 1479.919482] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1479.927296] kworker/u8:3 D ffff88025332bbf8 0 2193 2 0x00000000
+[ 1479.934379] Workqueue: events_unbound async_run_entry_fn
+[ 1479.939728] ffff88025332bbf8 0000000000000000 ffff880263ef1e00
+ffff880263dd3c00
+[ 1479.947208] ffffffff81a13180 ffff88025332c000 7fffffffffffffff
+ffff88025f5e7260
+[ 1479.954708] ffff880263ef1e00 ffff880260af0980 ffff88025332bc10
+ffffffff817f5cc5
+[ 1479.962190] Call Trace:
+[ 1479.964639] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1479.969611] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1479.975436] [<ffffffff810d87dc>] ? __enqueue_entity+0x6c/0x70
+[ 1479.981262] [<ffffffff810deb58>] ? enqueue_entity+0x2e8/0x8e0
+[ 1479.987087] [<ffffffff810cfe76>] ? __sched_setscheduler+0x8b6/0xb20
+[ 1479.993430] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1479.999429] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.004650] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.009782] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.014741] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.019957] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.026042] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.031782] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.037173] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.043084] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.048922] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.054405] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.060400] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.065275] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.070666] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1480.076748] INFO: task kworker/u8:14:2204 blocked for more than 120 seconds.
+[ 1480.083798] Tainted: G U 4.8.2 #1
+[ 1480.088754] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1480.096571] kworker/u8:14 D ffff880259763bf8 0 2204 2 0x00000000
+[ 1480.103667] Workqueue: events_unbound async_run_entry_fn
+[ 1480.108993] ffff880259763bf8 00ffffff810d7019 ffff88025ffc0000
+ffff88025678da00
+[ 1480.116476] ffff880259763c30 ffff880259764000 7fffffffffffffff
+ffff880255c294f8
+[ 1480.123956] ffff88025ffc0000 ffff8802589da620 ffff880259763c10
+ffffffff817f5cc5
+[ 1480.131452] Call Trace:
+[ 1480.133907] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1480.138866] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1480.144706] [<ffffffff810fe619>] ? console_trylock+0x19/0x60
+[ 1480.150444] [<ffffffff810ffbb1>] ? vprintk_emit+0x2b1/0x500
+[ 1480.156094] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1480.162105] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.167322] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.172455] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.177412] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.182629] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.188724] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.194460] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.199852] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.205762] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.211585] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.217063] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.223060] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.227933] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.233329] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1480.239414] INFO: task kworker/u8:15:2205 blocked for more than 120 seconds.
+[ 1480.246449] Tainted: G U 4.8.2 #1
+[ 1480.251407] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1480.259219] kworker/u8:15 D ffff880260bf3bf8 0 2205 2 0x00000000
+[ 1480.266302] Workqueue: events_unbound async_run_entry_fn
+[ 1480.271631] ffff880260bf3bf8 00ffffff810d7019 ffff88025ffc1e00
+ffff88025470bc00
+[ 1480.279110] ffff880260bf3c30 ffff880260bf4000 7fffffffffffffff
+ffff880263f332d8
+[ 1480.286593] ffff88025ffc1e00 ffff8802589da4a0 ffff880260bf3c10
+ffffffff817f5cc5
+[ 1480.294072] Call Trace:
+[ 1480.296520] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1480.301479] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1480.307306] [<ffffffff810fe619>] ? console_trylock+0x19/0x60
+[ 1480.313042] [<ffffffff810ffbb1>] ? vprintk_emit+0x2b1/0x500
+[ 1480.318691] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1480.324687] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.329904] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.335049] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.340008] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.345230] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.351313] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.357052] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.362444] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.368371] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.374199] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.379677] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.385673] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.390545] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.395937] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1480.402023] INFO: task kworker/u8:16:2206 blocked for more than 120 seconds.
+[ 1480.409057] Tainted: G U 4.8.2 #1
+[ 1480.414016] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1480.421830] kworker/u8:16 D ffff88021c917bf8 0 2206 2 0x00000000
+[ 1480.428918] Workqueue: events_unbound async_run_entry_fn
+[ 1480.434248] ffff88021c917bf8 00ffffff810d7019 ffff880262ec1e00
+ffff88025678da00
+[ 1480.441755] ffff88021c917c30 ffff88021c918000 7fffffffffffffff
+ffff880263f32ad8
+[ 1480.449230] ffff880262ec1e00 ffff8802589da440 ffff88021c917c10
+ffffffff817f5cc5
+[ 1480.456723] Call Trace:
+[ 1480.459174] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1480.464133] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1480.469958] [<ffffffff810d7019>] ? sched_clock_cpu+0x99/0xb0
+[ 1480.475696] [<ffffffff810d0f92>] ? check_preempt_curr+0x52/0x90
+[ 1480.481696] [<ffffffff810d0fe9>] ? ttwu_do_wakeup+0x19/0xe0
+[ 1480.487345] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1480.493343] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.498561] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.503693] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.508652] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.513869] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.519953] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.525695] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.531089] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.537002] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.542824] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.548300] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.554308] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.559192] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.564583] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1480.570666] INFO: task kworker/u8:17:2207 blocked for more than 120 seconds.
+[ 1480.577714] Tainted: G U 4.8.2 #1
+[ 1480.582674] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1480.590489] kworker/u8:17 D ffff880253343bf8 0 2207 2 0x00000000
+[ 1480.597574] Workqueue: events_unbound async_run_entry_fn
+[ 1480.602903] ffff880253343bf8 0000000000000000 ffff88025fceda00
+ffff8802597b1e00
+[ 1480.610386] 0000000000019500 ffff880253344000 7fffffffffffffff
+ffff880255c2a4f8
+[ 1480.617867] ffff88025fceda00 ffff8802589da860 ffff880253343c10
+ffffffff817f5cc5
+[ 1480.625349] Call Trace:
+[ 1480.627801] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1480.632760] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1480.638585] [<ffffffff810dbe11>] ? check_preempt_wakeup+0x121/0x220
+[ 1480.644929] [<ffffffff810d0fbe>] ? check_preempt_curr+0x7e/0x90
+[ 1480.650925] [<ffffffff810d0fe9>] ? ttwu_do_wakeup+0x19/0xe0
+[ 1480.656578] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1480.662588] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.667807] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.672938] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.677896] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.683116] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.689201] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.694938] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.700332] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.706243] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.712067] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.717556] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.723554] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.728440] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.733832] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+[ 1480.739930] INFO: task kworker/u8:25:2215 blocked for more than 120 seconds.
+[ 1480.746968] Tainted: G U 4.8.2 #1
+[ 1480.751923] "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this
+message.
+[ 1480.759739] kworker/u8:25 D ffff88025336bbf8 0 2215 2 0x00000000
+[ 1480.766827] Workqueue: events_unbound async_run_entry_fn
+[ 1480.772154] ffff88025336bbf8 0000000000000104 ffff880258bc5a00
+ffff880263dd5a00
+[ 1480.779636] 000001298023182e ffff88025336c000 7fffffffffffffff
+ffff880257aff458
+[ 1480.787116] ffff880258bc5a00 ffff8802597a4740 ffff88025336bc10
+ffffffff817f5cc5
+[ 1480.794594] Call Trace:
+[ 1480.797043] [<ffffffff817f5cc5>] schedule+0x35/0x80
+[ 1480.802002] [<ffffffff817f91e4>] schedule_timeout+0x2c4/0x440
+[ 1480.807840] [<ffffffff810d7019>] ? sched_clock_cpu+0x99/0xb0
+[ 1480.813594] [<ffffffff810d0f92>] ? check_preempt_curr+0x52/0x90
+[ 1480.819592] [<ffffffff810d0fe9>] ? ttwu_do_wakeup+0x19/0xe0
+[ 1480.825242] [<ffffffff817f70f1>] wait_for_completion+0xe1/0x120
+[ 1480.831239] [<ffffffff810d1f00>] ? wake_up_q+0x80/0x80
+[ 1480.836457] [<ffffffff8153b870>] ? dpm_wait+0x40/0x40
+[ 1480.841588] [<ffffffff8153b862>] dpm_wait+0x32/0x40
+[ 1480.846560] [<ffffffff8153b881>] dpm_wait_fn+0x11/0x20
+[ 1480.851779] [<ffffffff815299f0>] device_for_each_child+0x50/0x90
+[ 1480.857861] [<ffffffff8153c841>] __device_suspend+0x51/0x380
+[ 1480.863601] [<ffffffff8153cb8f>] async_suspend+0x1f/0xa0
+[ 1480.868996] [<ffffffff810c9a39>] async_run_entry_fn+0x39/0x140
+[ 1480.874924] [<ffffffff810c1234>] process_one_work+0x184/0x430
+[ 1480.880746] [<ffffffff810c152e>] worker_thread+0x4e/0x480
+[ 1480.886223] [<ffffffff810c14e0>] ? process_one_work+0x430/0x430
+[ 1480.892221] [<ffffffff810c7048>] kthread+0xd8/0xf0
+[ 1480.897093] [<ffffffff817fa63f>] ret_from_fork+0x1f/0x40
+[ 1480.902486] [<ffffffff810c6f70>] ? kthread_worker_fn+0x180/0x180
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+You are receiving this mail because:
+You are watching the assignee of the bug.
