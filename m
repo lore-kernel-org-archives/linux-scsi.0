@@ -1,316 +1,45 @@
-From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
-Subject: Re: iscsi_trx going into D state
-Date: Wed, 19 Oct 2016 10:41:54 -0600
-Message-ID: <CAANLjFoGEi29goybqsvEg6trystEkurVz52P8SwqGUSNV1jdSw@mail.gmail.com>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
- <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com> <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA@mail.gmail.com>
- <CAANLjFoh+C8QE=qcPKqUUG3SnH2EMmS7DWZ5D4AD7yWMxoK0Zw@mail.gmail.com>
- <4fc72e32-26fb-96bd-8a0d-814eef712b43@suse.com> <CAANLjFpx1MRNiu2388pY+U0O5z9gw+OJBtpOof47Lb_DxaJSBQ@mail.gmail.com>
- <1476774332.8490.43.camel@haakon3.risingtidesystems.com> <CAANLjFqXt5r=c9F75vjeK=_zLa8zCS1priLuZo=A1ZSHKZ=1Bw@mail.gmail.com>
- <1476858359.8490.97.camel@haakon3.risingtidesystems.com>
+From: Dave Hansen <dave.hansen@linux.intel.com>
+Subject: Re: [PATCH 00/10] mm: adjust get_user_pages* functions to explicitly
+ pass FOLL_* flags
+Date: Wed, 19 Oct 2016 09:49:43 -0700
+Message-ID: <5807A427.7010200@linux.intel.com>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161018153050.GC13117@dhcp22.suse.cz> <20161019085815.GA22239@lucifer>
+ <20161019090727.GE7517@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1476858359.8490.97.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
-Cc: Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga14.intel.com ([192.55.52.115]:42885 "EHLO mga14.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751790AbcJSQtr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Oct 2016 12:49:47 -0400
+In-Reply-To: <20161019090727.GE7517@dhcp22.suse.cz>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Michal Hocko <mhocko@kernel.org>, Lorenzo Stoakes <lstoakes@gmail.com>
+Cc: linux-mm@kvack.org, Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.
 
-Nicholas,
-
-I didn't have high hopes for the patch because we were not seeing
-TMR_ABORT_TASK (or 'abort') in dmesg or /var/log/messages, but it
-seemed to help regardless. Our clients finally OOMed from the hung
-sessions, so we are having to reboot them and we will do some more
-testing. We haven't put the updated kernel on our clients yet. Our
-clients have iSCSI root disks so I'm not sure if we can get a vmcore
-on those, but we will do what we can to get you a vmcore from the
-target if it happens again.
-
-As far as our configuration: It is a superMicro box with 6 SAMSUNG
-MZ7LM3T8HCJM-00005 SSDs. Two are for root and four are in mdadm
-RAID-10 for exporting via iSCSI/iSER. We have ZFS on top of the
-RAID-10 for checksum and snapshots only and we export ZVols to the
-clients (one or more per VM on the client). We do not persist the
-export info (targetcli saveconfig), but regenerate it from scripts.
-The client receives two or more of these exports and puts them in a
-RAID-1 device. The exports are served by iSER one one port and also by
-normal iSCSI on a different port for compatibility, but not normally
-used. If you need more info about the config, please let me know. It
-was kind of a vague request so I'm not sure what exactly is important
-to you.
-
-Thanks for helping us with this,
-Robert LeBlanc
-
-When we have problems, we usually see this in the logs:
-Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login timeout on
-Network Portal 0.0.0.0:3260
-Oct 17 08:57:50 prv-0-12-sanstack kernel: Unexpected ret: -104 send data 48
-Oct 17 08:57:50 prv-0-12-sanstack kernel: tx_data returned -32, expecting 48.
-Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login negotiation failed.
-
-I found some backtraces in the logs, not sure if this is helpful, this
-is before your patch (your patch booted at Oct 18 10:36:59):
-Oct 17 15:43:12 prv-0-12-sanstack kernel: INFO: rcu_sched
-self-detected stall on CPU
-Oct 17 15:43:12 prv-0-12-sanstack kernel: #0115-...: (41725 ticks this
-GP) idle=b59/140000000000001/0 softirq=535/535 fqs=30992
-Oct 17 15:43:12 prv-0-12-sanstack kernel: #011 (t=42006 jiffies g=1550
-c=1549 q=0)
-Oct 17 15:43:12 prv-0-12-sanstack kernel: Task dump for CPU 5:
-Oct 17 15:43:12 prv-0-12-sanstack kernel: kworker/u68:2   R  running
-task        0 17967      2 0x00000008
-Oct 17 15:43:12 prv-0-12-sanstack kernel: Workqueue: isert_comp_wq
-isert_cq_work [ib_isert]
-Oct 17 15:43:12 prv-0-12-sanstack kernel: ffff883f4c0dca80
-00000000af8ca7a4 ffff883f7fb43da8 ffffffff810ac83f
-Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000005
-ffffffff81adb680 ffff883f7fb43dc0 ffffffff810af179
-Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000006
-ffff883f7fb43df0 ffffffff810e1c10 ffff883f7fb57b80
-Oct 17 15:43:12 prv-0-12-sanstack kernel: Call Trace:
-Oct 17 15:43:12 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac83f>]
-sched_show_task+0xaf/0x110
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810af179>]
-dump_cpu_task+0x39/0x40
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e1c10>]
-rcu_dump_cpu_stacks+0x80/0xb0
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e6040>]
-rcu_check_callbacks+0x540/0x820
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810afd51>] ?
-account_system_time+0x81/0x110
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9a0>] ?
-tick_sched_do_timer+0x50/0x50
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810eb4d9>]
-update_process_times+0x39/0x60
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa755>]
-tick_sched_handle.isra.17+0x25/0x60
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9dd>]
-tick_sched_timer+0x3d/0x70
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec0c2>]
-__hrtimer_run_queues+0x102/0x290
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec5a8>]
-hrtimer_interrupt+0xa8/0x1a0
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
-local_apic_timer_interrupt+0x35/0x60
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8172343d>]
-smp_apic_timer_interrupt+0x3d/0x50
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff817216f7>]
-apic_timer_interrupt+0x87/0x90
-Oct 17 15:43:12 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d70fe>]
-? console_unlock+0x41e/0x4e0
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d74bc>]
-vprintk_emit+0x2fc/0x500
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d783f>]
-vprintk_default+0x1f/0x30
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81174c2a>] printk+0x5d/0x74
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814bc351>]
-transport_lookup_cmd_lun+0x1d1/0x200
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814edcf0>]
-iscsit_setup_scsi_cmd+0x230/0x540
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0890bf3>]
-isert_rx_do_work+0x3f3/0x7f0 [ib_isert]
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0891174>]
-isert_cq_work+0x184/0x770 [ib_isert]
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109734f>]
-process_one_work+0x14f/0x400
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097bc4>]
-worker_thread+0x114/0x470
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8171c55a>] ?
-__schedule+0x34a/0x7f0
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097ab0>] ?
-rescuer_thread+0x310/0x310
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d708>] kthread+0xd8/0xf0
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
-kthread_park+0x60/0x60
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81720c8f>]
-ret_from_fork+0x3f/0x70
-Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
-kthread_park+0x60/0x60
-
-Oct 17 16:34:03 prv-0-12-sanstack kernel: INFO: rcu_sched
-self-detected stall on CPU
-Oct 17 16:34:03 prv-0-12-sanstack kernel: #01128-...: (5999 ticks this
-GP) idle=2f9/140000000000001/0 softirq=457/457 fqs=4830
-Oct 17 16:34:03 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=3546
-c=3545 q=0)
-Oct 17 16:34:03 prv-0-12-sanstack kernel: Task dump for CPU 28:
-Oct 17 16:34:03 prv-0-12-sanstack kernel: iscsi_np        R  running
-task        0 16597      2 0x0000000c
-Oct 17 16:34:03 prv-0-12-sanstack kernel: ffff887f40350000
-00000000b98a67bb ffff887f7f503da8 ffffffff810ac8ff
-Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001c
-ffffffff81adb680 ffff887f7f503dc0 ffffffff810af239
-Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001d
-ffff887f7f503df0 ffffffff810e1cd0 ffff887f7f517b80
-Oct 17 16:34:03 prv-0-12-sanstack kernel: Call Trace:
-Oct 17 16:34:03 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
-sched_show_task+0xaf/0x110
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810af239>]
-dump_cpu_task+0x39/0x40
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
-rcu_dump_cpu_stacks+0x80/0xb0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
-rcu_check_callbacks+0x540/0x820
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
-account_system_time+0x81/0x110
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
-tick_sched_do_timer+0x50/0x50
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
-update_process_times+0x39/0x60
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
-tick_sched_handle.isra.17+0x25/0x60
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
-tick_sched_timer+0x3d/0x70
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
-__hrtimer_run_queues+0x102/0x290
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
-hrtimer_interrupt+0xa8/0x1a0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
-local_apic_timer_interrupt+0x35/0x60
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
-smp_apic_timer_interrupt+0x3d/0x50
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
-apic_timer_interrupt+0x87/0x90
-Oct 17 16:34:03 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
-? console_unlock+0x41e/0x4e0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d757c>]
-vprintk_emit+0x2fc/0x500
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d78ff>]
-vprintk_default+0x1f/0x30
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81174dde>] printk+0x5d/0x74
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e71ad>]
-iscsi_target_locate_portal+0x62d/0x6f0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e5100>]
-iscsi_target_login_thread+0x6f0/0xfc0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e4a10>] ?
-iscsi_target_login_sess_out+0x250/0x250
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
-kthread_park+0x60/0x60
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
-ret_from_fork+0x3f/0x70
-Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
-kthread_park+0x60/0x60
-
-I don't think this one is related, but it happened a couple of times:
-Oct 17 11:46:52 prv-0-12-sanstack kernel: INFO: rcu_sched
-self-detected stall on CPU
-Oct 17 11:46:52 prv-0-12-sanstack kernel: #01119-...: (5999 ticks this
-GP) idle=727/140000000000001/0 softirq=1346/1346 fqs=4990
-Oct 17 11:46:52 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=4295
-c=4294 q=0)
-Oct 17 11:46:52 prv-0-12-sanstack kernel: Task dump for CPU 19:
-Oct 17 11:46:52 prv-0-12-sanstack kernel: kworker/19:1    R  running
-task        0   301      2 0x00000008
-Oct 17 11:46:52 prv-0-12-sanstack kernel: Workqueue:
-events_power_efficient fb_flashcursor
-Oct 17 11:46:52 prv-0-12-sanstack kernel: ffff883f6009ca80
-00000000010a7cdd ffff883f7fcc3da8 ffffffff810ac8ff
-Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000013
-ffffffff81adb680 ffff883f7fcc3dc0 ffffffff810af239
-Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000014
-ffff883f7fcc3df0 ffffffff810e1cd0 ffff883f7fcd7b80
-Oct 17 11:46:52 prv-0-12-sanstack kernel: Call Trace:
-Oct 17 11:46:52 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
-sched_show_task+0xaf/0x110
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810af239>]
-dump_cpu_task+0x39/0x40
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
-rcu_dump_cpu_stacks+0x80/0xb0
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
-rcu_check_callbacks+0x540/0x820
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
-account_system_time+0x81/0x110
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
-tick_sched_do_timer+0x50/0x50
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
-update_process_times+0x39/0x60
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
-tick_sched_handle.isra.17+0x25/0x60
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
-tick_sched_timer+0x3d/0x70
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
-__hrtimer_run_queues+0x102/0x290
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
-hrtimer_interrupt+0xa8/0x1a0
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
-local_apic_timer_interrupt+0x35/0x60
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
-smp_apic_timer_interrupt+0x3d/0x50
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
-apic_timer_interrupt+0x87/0x90
-Oct 17 11:46:52 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
-? console_unlock+0x41e/0x4e0
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff813866ad>]
-fb_flashcursor+0x5d/0x140
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8138bc00>] ?
-bit_clear+0x110/0x110
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109740f>]
-process_one_work+0x14f/0x400
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097c84>]
-worker_thread+0x114/0x470
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8171cdda>] ?
-__schedule+0x34a/0x7f0
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097b70>] ?
-rescuer_thread+0x310/0x310
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
-kthread_park+0x60/0x60
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
-ret_from_fork+0x3f/0x70
-Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
-kthread_park+0x60/0x60
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
-
-
-On Wed, Oct 19, 2016 at 12:25 AM, Nicholas A. Bellinger
-<nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
-> On Tue, 2016-10-18 at 16:13 -0600, Robert LeBlanc wrote:
->> Nicholas,
+On 10/19/2016 02:07 AM, Michal Hocko wrote:
+> On Wed 19-10-16 09:58:15, Lorenzo Stoakes wrote:
+>> On Tue, Oct 18, 2016 at 05:30:50PM +0200, Michal Hocko wrote:
+>>> I am wondering whether we can go further. E.g. it is not really clear to
+>>> me whether we need an explicit FOLL_REMOTE when we can in fact check
+>>> mm != current->mm and imply that. Maybe there are some contexts which
+>>> wouldn't work, I haven't checked.
 >>
->> We patched this in and for the first time in many reboots, we didn't
->> have iSCSI going straight into D state. We have had to work on a
->> couple of other things, so we don't know if this is just a coincidence
->> or not. We will reboot back into the old kernel and back a few times
->> and do some more testing, but so far it has given us a little bit of
->> hope that we may be narrowing down on the root cause. We will report
->> back once we have some more info.
->>
->> Thank you,
->> Robert LeBlanc
->> ----------------
->> Robert LeBlanc
->> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
->>
->
-> Hello Robert,
->
-> Thanks for the update.  Btw, if the original /var/log/messages
-> reproduction logs for iser-target are still handy, I'm happy to have
-> a look to confirm.  Feel free to send them along here, or off-list if
-> necessary.
->
-> For further reference, you can also enable Linux kernel crash dump
-> (LKCD) at build time using CONFIG_CRASH_DUMP=y, so it's possible to
-> manually generate a vmcore dumpfile of the running system via 'echo c
->> /proc/sysrq-trigger', once the bug occurs.
->
-> http://cateee.net/lkddb/web-lkddb/CRASH_DUMP.html
->
-> Note in order to fully debug within this in a LKCD environment, it
-> requires the vmcore dump from /var/crash/, unstripped vmlinux,
-> target_core_mod, iscsi_target_mod and ib_isert modules matching the
-> specific particular x86_64 build setup of the running system.
->
-> Also, can you share a bit more about the details of your particular
-> iser-target + backend setup..?
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>> This flag is set even when /proc/self/mem is used. I've not looked deeply into
+>> this flag but perhaps accessing your own memory this way can be considered
+>> 'remote' since you're not accessing it directly. On the other hand, perhaps this
+>> is just mistaken in this case?
+> 
+> My understanding of the flag is quite limited as well. All I know it is
+> related to protection keys and it is needed to bypass protection check.
+> See arch_vma_access_permitted. See also 1b2ee1266ea6 ("mm/core: Do not
+> enforce PKEY permissions on remote mm access").
+
+Yeah, we need the flag to tell us when PKEYs should be applied or not.
+The current task's PKRU (pkey rights register) should really only be
+used to impact access to the task's memory, but has no bearing on how a
+given task should access remote memory.
+
