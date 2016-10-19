@@ -1,152 +1,606 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH v3 0/11] Fix race conditions related to stopping block
- layer queues
-Date: Wed, 19 Oct 2016 18:24:55 -0400
-Message-ID: <20161019222454.GA1215@localhost.localdomain>
-References: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com>
+From: Arun Easi <arun.easi@cavium.com>
+Subject: Re: [RFC 1/6] qed: Add support for hardware offloaded iSCSI.
+Date: Wed, 19 Oct 2016 15:28:32 -0700
+Message-ID: <alpine.LRH.2.00.1610191449231.25712@mvluser05.qlc.com>
+References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com> <1476853273-22960-2-git-send-email-manish.rangankar@cavium.com> <263515de-e1d4-ea86-644b-3f214bcff5ac@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Ming Lin <ming.l@ssi.samsung.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <263515de-e1d4-ea86-644b-3f214bcff5ac@suse.de>
+Sender: netdev-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: manish.rangankar@cavium.com, lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart,
+Thanks Hannes for the review. Please see my comments inline..
 
-I'm running linux 4.9-rc1 + linux-block/for-linus, and alternating tests
-with and without this series.
+On Wed, 19 Oct 2016, 12:31am, Hannes Reinecke wrote:
 
-Without this, I'm not seeing any problems in a link-down test while
-running fio after ~30 runs.
+> On 10/19/2016 07:01 AM, manish.rangankar@cavium.com wrote:
+> > From: Yuval Mintz <Yuval.Mintz@qlogic.com>
+> > 
+> > This adds the backbone required for the various HW initalizations
+> > which are necessary for the iSCSI driver (qedi) for QLogic FastLinQ
+> > 4xxxx line of adapters - FW notification, resource initializations, etc.
+> > 
+> > Signed-off-by: Arun Easi <arun.easi@cavium.com>
+> > Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
+> > ---
+> >  drivers/net/ethernet/qlogic/Kconfig            |   15 +
+> >  drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
+> >  drivers/net/ethernet/qlogic/qed/qed.h          |    8 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_dev.c      |   15 +
+> >  drivers/net/ethernet/qlogic/qed/qed_int.h      |    1 -
+> >  drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1310 ++++++++++++++++++++++++
+> >  drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
+> >  drivers/net/ethernet/qlogic/qed/qed_l2.c       |    1 -
+> >  drivers/net/ethernet/qlogic/qed/qed_ll2.c      |   35 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_main.c     |    2 -
+> >  drivers/net/ethernet/qlogic/qed/qed_mcp.h      |    6 -
+> >  drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
+> >  drivers/net/ethernet/qlogic/qed/qed_spq.c      |   15 +
+> >  include/linux/qed/qed_if.h                     |    2 +
+> >  include/linux/qed/qed_iscsi_if.h               |  249 +++++
+> >  15 files changed, 1692 insertions(+), 22 deletions(-)
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+> >  create mode 100644 include/linux/qed/qed_iscsi_if.h
+> > 
 
-With this series, I only see the test pass infrequently. Most of the
-time I observe one of several failures. In all cases, it looks like the
-rq->queuelist is in an unexpected state.
+-- snipped --
 
-I think I've almost got this tracked down, but I have to leave for the
-day soon. Rather than having a more useful suggestion, I've put the two
-failures below.
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_iscsi.c b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+> > new file mode 100644
+> > index 0000000..cb22dad
+> > --- /dev/null
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+> > @@ -0,0 +1,1310 @@
+> > +/* QLogic qed NIC Driver
+> 
+> Shouldn't that be qedi iSCSI Driver?
 
+Actually, this is the common module under drivers/net/, which was 
+submitted along with the NIC driver, qede, so the comment stayed.
 
-First failure:
+In this driver architecture, for all protocols, there is this
+common module, qed, as well as a protocol module (qede, qedr, qedi
+etc.).
 
-[  214.782075] ------------[ cut here ]------------
-[  214.782098] kernel BUG at block/blk-mq.c:498!
-[  214.782117] invalid opcode: 0000 [#1] SMP
-[  214.782133] Modules linked in: nvme nvme_core nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_raw ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_mangle ip6table_security iptable_raw iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_mangle iptable_security ebtable_filter ebtables ip6table_filter ip6_tables vfat fat
-[  214.782356] CPU: 6 PID: 160 Comm: kworker/u16:6 Not tainted 4.9.0-rc1+ #28
-[  214.782383] Hardware name: Gigabyte Technology Co., Ltd. Z97X-UD5H/Z97X-UD5H, BIOS F8 06/17/2014
-[  214.782419] Workqueue: nvme nvme_reset_work [nvme]
-[  214.782440] task: ffff8c0815403b00 task.stack: ffffb6ad01384000
-[  214.782463] RIP: 0010:[<ffffffff9f3b88a5>]  [<ffffffff9f3b88a5>] blk_mq_requeue_request+0x35/0x40
-[  214.782502] RSP: 0018:ffffb6ad01387b88  EFLAGS: 00010287
-[  214.782524] RAX: ffff8c0814b98400 RBX: ffff8c0814b98200 RCX: 0000000000007530
-[  214.782551] RDX: 0000000000000007 RSI: 0000000000000001 RDI: ffff8c0814b98200
-[  214.782578] RBP: ffffb6ad01387b98 R08: 0000000000000000 R09: ffffffff9f408680
-[  214.783394] R10: 0000000000000394 R11: 0000000000000388 R12: 0000000000000001
-[  214.784212] R13: ffff8c081593a000 R14: 0000000000000001 R15: ffff8c080cdea740
-[  214.785033] FS:  0000000000000000(0000) GS:ffff8c081fb80000(0000) knlGS:0000000000000000
-[  214.785869] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  214.786710] CR2: 00007ffae4497f34 CR3: 00000001dfe06000 CR4: 00000000001406e0
-[  214.787559] Stack:
-[  214.788406]  ffff8c0814b98200 0000000000000000 ffffb6ad01387ba8 ffffffffc03451b3
-[  214.789287]  ffffb6ad01387bd0 ffffffffc0357a4a ffff8c0814b98200 ffffd6acffc81a00
-[  214.790174]  0000000000000006 ffffb6ad01387bf8 ffffffff9f3b8e22 ffff8c0814b98200
-[  214.791066] Call Trace:
-[  214.791935]  [<ffffffffc03451b3>] nvme_requeue_req+0x13/0x20 [nvme_core]
-[  214.792810]  [<ffffffffc0357a4a>] nvme_complete_rq+0x16a/0x1d0 [nvme]
-[  214.793680]  [<ffffffff9f3b8e22>] __blk_mq_complete_request+0x72/0xe0
-[  214.794551]  [<ffffffff9f3b8eac>] blk_mq_complete_request+0x1c/0x20
-[  214.795422]  [<ffffffffc0345e70>] nvme_cancel_request+0x50/0x90 [nvme_core]
-[  214.796299]  [<ffffffff9f3bc09e>] bt_tags_iter+0x2e/0x40
-[  214.797157]  [<ffffffff9f3bc523>] blk_mq_tagset_busy_iter+0x173/0x1e0
-[  214.798005]  [<ffffffffc0345e20>] ? nvme_shutdown_ctrl+0x100/0x100 [nvme_core]
-[  214.798852]  [<ffffffffc0345e20>] ? nvme_shutdown_ctrl+0x100/0x100 [nvme_core]
-[  214.799682]  [<ffffffffc035603d>] nvme_dev_disable+0x11d/0x380 [nvme]
-[  214.800511]  [<ffffffff9f0479fa>] ? acpi_unregister_gsi_ioapic+0x3a/0x40
-[  214.801344]  [<ffffffff9f52d33c>] ? dev_warn+0x6c/0x90
-[  214.802157]  [<ffffffffc0356bc4>] nvme_reset_work+0xa4/0xdc0 [nvme]
-[  214.802961]  [<ffffffff9f025736>] ? __switch_to+0x2b6/0x5f0
-[  214.803773]  [<ffffffff9f0bb1bf>] process_one_work+0x15f/0x430
-[  214.804593]  [<ffffffff9f0bb4de>] worker_thread+0x4e/0x490
-[  214.805419]  [<ffffffff9f0bb490>] ? process_one_work+0x430/0x430
-[  214.806255]  [<ffffffff9f0c0d09>] kthread+0xd9/0xf0
-[  214.807096]  [<ffffffff9f0c0c30>] ? kthread_park+0x60/0x60
-[  214.807946]  [<ffffffff9f81dc15>] ret_from_fork+0x25/0x30
-[  214.808801] Code: 54 53 48 89 fb 41 89 f4 e8 a9 fa ff ff 48 8b 03 48 39 c3 75 16 41 0f b6 d4 48 89 df be 01 00 00 00 e8 10 ff ff ff 5b 41 5c 5d c3 <0f> 0b 66 0f 1f 84 00 00 00 00 00 0f 1f 44 00 00 55 be 40 00 00
-[  214.810714] RIP  [<ffffffff9f3b88a5>] blk_mq_requeue_request+0x35/0x40
-[  214.811628]  RSP <ffffb6ad01387b88>
-[  214.812545] ---[ end trace 6ef3a3b6f8cea418 ]---
-[  214.813437] ------------[ cut here ]------------
+This comment needs to be changed in all files under qed/. We will submit 
+another patch to do that.
 
+> > +static int qed_sp_iscsi_conn_offload(struct qed_hwfn *p_hwfn,
+> > +				     struct qed_iscsi_conn *p_conn,
+> > +				     enum spq_mode comp_mode,
+> > +				     struct qed_spq_comp_cb *p_comp_addr)
+> > +{
+> > +	struct iscsi_spe_conn_offload *p_ramrod = NULL;
+> > +	struct tcp_offload_params_opt2 *p_tcp2 = NULL;
+> > +	struct tcp_offload_params *p_tcp = NULL;
+> > +	struct qed_spq_entry *p_ent = NULL;
+> > +	struct qed_sp_init_data init_data;
+> > +	union qed_qm_pq_params pq_params;
+> > +	u16 pq0_id = 0, pq1_id = 0;
+> > +	dma_addr_t r2tq_pbl_addr;
+> > +	dma_addr_t xhq_pbl_addr;
+> > +	dma_addr_t uhq_pbl_addr;
+> > +	int rc = 0;
+> > +	u32 dval;
+> > +	u16 wval;
+> > +	u8 ucval;
+> > +	u8 i;
+> > +
+> > +	/* Get SPQ entry */
+> > +	memset(&init_data, 0, sizeof(init_data));
+> > +	init_data.cid = p_conn->icid;
+> > +	init_data.opaque_fid = p_hwfn->hw_info.opaque_fid;
+> > +	init_data.comp_mode = comp_mode;
+> > +	init_data.p_comp_data = p_comp_addr;
+> > +
+> > +	rc = qed_sp_init_request(p_hwfn, &p_ent,
+> > +				 ISCSI_RAMROD_CMD_ID_OFFLOAD_CONN,
+> > +				 PROTOCOLID_ISCSI, &init_data);
+> > +	if (rc)
+> > +		return rc;
+> > +
+> > +	p_ramrod = &p_ent->ramrod.iscsi_conn_offload;
+> > +
+> > +	/* Transmission PQ is the first of the PF */
+> > +	memset(&pq_params, 0, sizeof(pq_params));
+> > +	pq0_id = qed_get_qm_pq(p_hwfn, PROTOCOLID_ISCSI, &pq_params);
+> > +	p_conn->physical_q0 = cpu_to_le16(pq0_id);
+> > +	p_ramrod->iscsi.physical_q0 = cpu_to_le16(pq0_id);
+> > +
+> > +	/* iSCSI Pure-ACK PQ */
+> > +	pq_params.iscsi.q_idx = 1;
+> > +	pq1_id = qed_get_qm_pq(p_hwfn, PROTOCOLID_ISCSI, &pq_params);
+> > +	p_conn->physical_q1 = cpu_to_le16(pq1_id);
+> > +	p_ramrod->iscsi.physical_q1 = cpu_to_le16(pq1_id);
+> > +
+> > +	p_ramrod->hdr.op_code = ISCSI_RAMROD_CMD_ID_OFFLOAD_CONN;
+> > +	SET_FIELD(p_ramrod->hdr.flags, ISCSI_SLOW_PATH_HDR_LAYER_CODE,
+> > +		  p_conn->layer_code);
+> > +
+> > +	p_ramrod->conn_id = cpu_to_le16(p_conn->conn_id);
+> > +	p_ramrod->fw_cid = cpu_to_le32(p_conn->icid);
+> > +
+> > +	DMA_REGPAIR_LE(p_ramrod->iscsi.sq_pbl_addr, p_conn->sq_pbl_addr);
+> > +
+> > +	r2tq_pbl_addr = qed_chain_get_pbl_phys(&p_conn->r2tq);
+> > +	DMA_REGPAIR_LE(p_ramrod->iscsi.r2tq_pbl_addr, r2tq_pbl_addr);
+> > +
+> > +	xhq_pbl_addr = qed_chain_get_pbl_phys(&p_conn->xhq);
+> > +	DMA_REGPAIR_LE(p_ramrod->iscsi.xhq_pbl_addr, xhq_pbl_addr);
+> > +
+> > +	uhq_pbl_addr = qed_chain_get_pbl_phys(&p_conn->uhq);
+> > +	DMA_REGPAIR_LE(p_ramrod->iscsi.uhq_pbl_addr, uhq_pbl_addr);
+> > +
+> > +	p_ramrod->iscsi.initial_ack = cpu_to_le32(p_conn->initial_ack);
+> > +	p_ramrod->iscsi.flags = p_conn->offl_flags;
+> > +	p_ramrod->iscsi.default_cq = p_conn->default_cq;
+> > +	p_ramrod->iscsi.stat_sn = cpu_to_le32(p_conn->stat_sn);
+> > +
+> > +	if (!GET_FIELD(p_ramrod->iscsi.flags,
+> > +		       ISCSI_CONN_OFFLOAD_PARAMS_TCP_ON_CHIP_1B)) {
+> > +		p_tcp = &p_ramrod->tcp;
+> > +		ucval = p_conn->local_mac[1];
+> > +		((u8 *)(&p_tcp->local_mac_addr_hi))[0] = ucval;
+> > +		ucval = p_conn->local_mac[0];
+> > +		((u8 *)(&p_tcp->local_mac_addr_hi))[1] = ucval;
+> > +		ucval = p_conn->local_mac[3];
+> > +		((u8 *)(&p_tcp->local_mac_addr_mid))[0] = ucval;
+> > +		ucval = p_conn->local_mac[2];
+> > +		((u8 *)(&p_tcp->local_mac_addr_mid))[1] = ucval;
+> > +		ucval = p_conn->local_mac[5];
+> > +		((u8 *)(&p_tcp->local_mac_addr_lo))[0] = ucval;
+> > +		ucval = p_conn->local_mac[4];
+> > +		((u8 *)(&p_tcp->local_mac_addr_lo))[1] = ucval;
+> > +		ucval = p_conn->remote_mac[1];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_hi))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[0];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_hi))[1] = ucval;
+> > +		ucval = p_conn->remote_mac[3];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_mid))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[2];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_mid))[1] = ucval;
+> > +		ucval = p_conn->remote_mac[5];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_lo))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[4];
+> > +		((u8 *)(&p_tcp->remote_mac_addr_lo))[1] = ucval;
+> > +
+> This looks terribly like endianness swapping. You sure this is
+> applicable for all architecture and endianness settings?
+> And wouldn't it be better to use one of the get_unaligned_XXX functions
+> here?
 
-Second failure, warning followed by NMI watchdog:
+The mac address in the p_tcp structure takes mac in the reverse order as 
+in p_conn. A for loop, or 3 swab16p for each copy would also do, will make 
+that change.
 
-[  410.736619] ------------[ cut here ]------------
-[  410.736624] WARNING: CPU: 2 PID: 577 at lib/list_debug.c:29 __list_add+0x62/0xb0
-[  410.736883] list_add corruption. next->prev should be prev (ffffacf481847d78), but was ffff931f8fb78000. (next=ffff931f8fb78000).
-[  410.736884] Modules linked in: nvme nvme_core nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_REJECT nf_reject_ipv6 ip6t_rpfilter xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_security ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_raw ip6table_mangle iptable_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_raw iptable_mangle ebtable_filter ebtables ip6table_filter ip6_tables vfat fat
-[  410.736902] CPU: 2 PID: 577 Comm: kworker/2:1H Not tainted 4.9.0-rc1+ #28
-[  410.736903] Hardware name: Gigabyte Technology Co., Ltd. Z97X-UD5H/Z97X-UD5H, BIOS F8 06/17/2014
-[  410.736906] Workqueue: kblockd blk_mq_run_work_fn
-[  410.736907]  ffffacf481847c80 ffffffffae3dce7e ffffacf481847cd0 0000000000000000
-[  410.736909]  ffffacf481847cc0 ffffffffae0a116b 0000001dae0b9cac ffff931f8fb78000
-[  410.736910]  ffffacf481847d78 ffff931f8fb78000 ffff931f8fb78000 0000000000000000
-[  410.736912] Call Trace:
-[  410.736916]  [<ffffffffae3dce7e>] dump_stack+0x63/0x85
-[  410.736918]  [<ffffffffae0a116b>] __warn+0xcb/0xf0
-[  410.736920]  [<ffffffffae0a11ef>] warn_slowpath_fmt+0x5f/0x80
-[  410.736921]  [<ffffffffae3fc362>] __list_add+0x62/0xb0
-[  410.736923]  [<ffffffffae3ba108>] blk_mq_process_rq_list+0x258/0x350
-[  410.736925]  [<ffffffffae3ba289>] __blk_mq_run_hw_queue+0x89/0x90
-[  410.736926]  [<ffffffffae3ba2d2>] blk_mq_run_work_fn+0x12/0x20
-[  410.736928]  [<ffffffffae0bb1bf>] process_one_work+0x15f/0x430
-[  410.736929]  [<ffffffffae0bb4de>] worker_thread+0x4e/0x490
-[  410.736931]  [<ffffffffae0bb490>] ? process_one_work+0x430/0x430
-[  410.736932]  [<ffffffffae0bb490>] ? process_one_work+0x430/0x430
-[  410.736934]  [<ffffffffae003c27>] ? do_syscall_64+0x67/0x180
-[  410.736936]  [<ffffffffae0c0d09>] kthread+0xd9/0xf0
-[  410.736937]  [<ffffffffae0c0c30>] ? kthread_park+0x60/0x60
-[  410.736940]  [<ffffffffae81dc15>] ret_from_fork+0x25/0x30
-[  410.736941] ---[ end trace 0d9c0b78654a9c5e ]---
-[  410.736942] ------------[ cut here ]-----------
+> 
+> > +		p_tcp->vlan_id = cpu_to_le16(p_conn->vlan_id);
+> > +
+> > +		p_tcp->flags = p_conn->tcp_flags;
+> > +		p_tcp->ip_version = p_conn->ip_version;
+> > +		for (i = 0; i < 4; i++) {
+> > +			dval = p_conn->remote_ip[i];
+> > +			p_tcp->remote_ip[i] = cpu_to_le32(dval);
+> > +			dval = p_conn->local_ip[i];
+> > +			p_tcp->local_ip[i] = cpu_to_le32(dval);
+> > +		}
+> > +		p_tcp->ka_max_probe_cnt = p_conn->ka_max_probe_cnt;
+> > +		p_tcp->dup_ack_theshold = p_conn->dup_ack_theshold;
+> > +
+> > +		p_tcp->rcv_next = cpu_to_le32(p_conn->rcv_next);
+> > +		p_tcp->snd_una = cpu_to_le32(p_conn->snd_una);
+> > +		p_tcp->snd_next = cpu_to_le32(p_conn->snd_next);
+> > +		p_tcp->snd_max = cpu_to_le32(p_conn->snd_max);
+> > +		p_tcp->snd_wnd = cpu_to_le32(p_conn->snd_wnd);
+> > +		p_tcp->rcv_wnd = cpu_to_le32(p_conn->rcv_wnd);
+> > +		p_tcp->snd_wl1 = cpu_to_le32(p_conn->snd_wl1);
+> > +		p_tcp->cwnd = cpu_to_le32(p_conn->cwnd);
+> > +		p_tcp->ss_thresh = cpu_to_le32(p_conn->ss_thresh);
+> > +		p_tcp->srtt = cpu_to_le16(p_conn->srtt);
+> > +		p_tcp->rtt_var = cpu_to_le16(p_conn->rtt_var);
+> > +		p_tcp->ts_time = cpu_to_le32(p_conn->ts_time);
+> > +		p_tcp->ts_recent = cpu_to_le32(p_conn->ts_recent);
+> > +		p_tcp->ts_recent_age = cpu_to_le32(p_conn->ts_recent_age);
+> > +		p_tcp->total_rt = cpu_to_le32(p_conn->total_rt);
+> > +		dval = p_conn->ka_timeout_delta;
+> > +		p_tcp->ka_timeout_delta = cpu_to_le32(dval);
+> > +		dval = p_conn->rt_timeout_delta;
+> > +		p_tcp->rt_timeout_delta = cpu_to_le32(dval);
+> > +		p_tcp->dup_ack_cnt = p_conn->dup_ack_cnt;
+> > +		p_tcp->snd_wnd_probe_cnt = p_conn->snd_wnd_probe_cnt;
+> > +		p_tcp->ka_probe_cnt = p_conn->ka_probe_cnt;
+> > +		p_tcp->rt_cnt = p_conn->rt_cnt;
+> > +		p_tcp->flow_label = cpu_to_le32(p_conn->flow_label);
+> > +		p_tcp->ka_timeout = cpu_to_le32(p_conn->ka_timeout);
+> > +		p_tcp->ka_interval = cpu_to_le32(p_conn->ka_interval);
+> > +		p_tcp->max_rt_time = cpu_to_le32(p_conn->max_rt_time);
+> > +		dval = p_conn->initial_rcv_wnd;
+> > +		p_tcp->initial_rcv_wnd = cpu_to_le32(dval);
+> > +		p_tcp->ttl = p_conn->ttl;
+> > +		p_tcp->tos_or_tc = p_conn->tos_or_tc;
+> > +		p_tcp->remote_port = cpu_to_le16(p_conn->remote_port);
+> > +		p_tcp->local_port = cpu_to_le16(p_conn->local_port);
+> > +		p_tcp->mss = cpu_to_le16(p_conn->mss);
+> > +		p_tcp->snd_wnd_scale = p_conn->snd_wnd_scale;
+> > +		p_tcp->rcv_wnd_scale = p_conn->rcv_wnd_scale;
+> > +		dval = p_conn->ts_ticks_per_second;
+> > +		p_tcp->ts_ticks_per_second = cpu_to_le32(dval);
+> > +		wval = p_conn->da_timeout_value;
+> > +		p_tcp->da_timeout_value = cpu_to_le16(wval);
+> > +		p_tcp->ack_frequency = p_conn->ack_frequency;
+> > +		p_tcp->connect_mode = p_conn->connect_mode;
+> > +	} else {
+> > +		p_tcp2 =
+> > +		    &((struct iscsi_spe_conn_offload_option2 *)p_ramrod)->tcp;
+> > +		ucval = p_conn->local_mac[1];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_hi))[0] = ucval;
+> > +		ucval = p_conn->local_mac[0];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_hi))[1] = ucval;
+> > +		ucval = p_conn->local_mac[3];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_mid))[0] = ucval;
+> > +		ucval = p_conn->local_mac[2];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_mid))[1] = ucval;
+> > +		ucval = p_conn->local_mac[5];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_lo))[0] = ucval;
+> > +		ucval = p_conn->local_mac[4];
+> > +		((u8 *)(&p_tcp2->local_mac_addr_lo))[1] = ucval;
+> > +
+> > +		ucval = p_conn->remote_mac[1];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_hi))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[0];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_hi))[1] = ucval;
+> > +		ucval = p_conn->remote_mac[3];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_mid))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[2];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_mid))[1] = ucval;
+> > +		ucval = p_conn->remote_mac[5];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_lo))[0] = ucval;
+> > +		ucval = p_conn->remote_mac[4];
+> > +		((u8 *)(&p_tcp2->remote_mac_addr_lo))[1] = ucval;
+> > +
+> Same here.
 
-[  436.159108] NMI watchdog: BUG: soft lockup - CPU#2 stuck for 23s! [kworker/2:1H:577]
-[  436.159126] Modules linked in: nvme nvme_core nf_conntrack_netbios_ns nf_conntrack_broadcast ip6t_REJECT nf_reject_ipv6 ip6t_rpfilter xt_conntrack ip_set nfnetlink ebtable_nat ebtable_broute bridge stp llc ip6table_security ip6table_nat nf_conntrack_ipv6 nf_defrag_ipv6 nf_nat_ipv6 ip6table_raw ip6table_mangle iptable_security iptable_nat nf_conntrack_ipv4 nf_defrag_ipv4 nf_nat_ipv4 nf_nat nf_conntrack iptable_raw iptable_mangle ebtable_filter ebtables ip6table_filter ip6_tables vfat fat
-[  436.159138] CPU: 2 PID: 577 Comm: kworker/2:1H Tainted: G        W       4.9.0-rc1+ #28
-[  436.159138] Hardware name: Gigabyte Technology Co., Ltd. Z97X-UD5H/Z97X-UD5H, BIOS F8 06/17/2014
-[  436.159142] Workqueue: kblockd blk_mq_run_work_fn
-[  436.159143] task: ffff931f95411d80 task.stack: ffffacf481844000
-[  436.159143] RIP: 0010:[<ffffffffae3b7f11>]  [<ffffffffae3b7f11>] __blk_mq_free_request+0x31/0x50
-[  436.159145] RSP: 0018:ffffacf481847d08  EFLAGS: 00000246
-[  436.159146] RAX: ffff931f8fb78000 RBX: ffff931f8f9f8000 RCX: 0000000000010000
-[  436.159146] RDX: 0000000000000040 RSI: ffffccf47fc81800 RDI: ffff931f8da45c00
-[  436.159147] RBP: ffffacf481847d10 R08: 0000000000000000 R09: ffff931f8fb78000
-[  436.159147] R10: 0000000000000000 R11: 0000000000000015 R12: 00000000fffffffb
-[  436.159147] R13: ffffacf481847d88 R14: ffff931f8fb78000 R15: 0000000000000000
-[  436.159148] FS:  0000000000000000(0000) GS:ffff931f9fa80000(0000) knlGS:0000000000000000
-[  436.159148] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[  436.159149] CR2: 000055dab2dc8b70 CR3: 000000009de06000 CR4: 00000000001406e0
-[  436.159149] Stack:
-[  436.159150]  ffff931f8fb78000 ffffacf481847d20 ffffffffae3b7f6d ffffacf481847d30
-[  436.159151]  ffffffffae3b7fa2 ffffacf481847d50 ffffffffae3b8d93 ffff931f8da45c00
-[  436.159152]  ffffacf481847d78 ffffacf481847de0 ffffffffae3ba1db ffff931f8f9f8000
-[  436.159153] Call Trace:
-[  436.159155]  [<ffffffffae3b7f6d>] blk_mq_free_hctx_request+0x3d/0x40
-[  436.159156]  [<ffffffffae3b7fa2>] blk_mq_free_request+0x32/0x40
-[  436.159157]  [<ffffffffae3b8d93>] blk_mq_end_request+0x53/0x70
-[  436.159158]  [<ffffffffae3ba1db>] blk_mq_process_rq_list+0x32b/0x350
-[  436.159159]  [<ffffffffae3ba289>] __blk_mq_run_hw_queue+0x89/0x90
-[  436.159160]  [<ffffffffae3ba2d2>] blk_mq_run_work_fn+0x12/0x20
-[  436.159162]  [<ffffffffae0bb1bf>] process_one_work+0x15f/0x430
-[  436.159163]  [<ffffffffae0bb4de>] worker_thread+0x4e/0x490
-[  436.159164]  [<ffffffffae0bb490>] ? process_one_work+0x430/0x430
-[  436.159165]  [<ffffffffae0bb490>] ? process_one_work+0x430/0x430
-[  436.159166]  [<ffffffffae003c27>] ? do_syscall_64+0x67/0x180
-[  436.159168]  [<ffffffffae0c0d09>] kthread+0xd9/0xf0
-[  436.159169]  [<ffffffffae0c0c30>] ? kthread_park+0x60/0x60
-[  436.159171]  [<ffffffffae81dc15>] ret_from_fork+0x25/0x30
-[  436.159172] Code: 89 d0 55 f6 40 4b 20 48 89 e5 53 8b 92 00 01 00 00 48 8b 58 30 74 07 f0 ff 8f e0 01 00 00 48 c7 40 48 00 00 00 00 f0 80 60 50 fd <e8> ba 47 00 00 48 89 df e8 d2 70 ff ff 5b 5d c3 66 66 66 66 66
+Noted.
+
+> 
+> > +		p_tcp2->vlan_id = cpu_to_le16(p_conn->vlan_id);
+
+-- snip --
+
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_iscsi.h b/drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+> > new file mode 100644
+> > index 0000000..269848c
+> > --- /dev/null
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+> > @@ -0,0 +1,52 @@
+> > +/* QLogic qed NIC Driver
+> > + * Copyright (c) 2015 QLogic Corporation
+> > + *
+> > + * This software is available under the terms of the GNU General Public License
+> > + * (GPL) Version 2, available from the file COPYING in the main directory of
+> > + * this source tree.
+> > + */
+> > +
+> > +#ifndef _QED_ISCSI_H
+> > +#define _QED_ISCSI_H
+> > +#include <linux/types.h>
+> > +#include <linux/list.h>
+> > +#include <linux/slab.h>
+> > +#include <linux/spinlock.h>
+> > +#include <linux/qed/tcp_common.h>
+> > +#include <linux/qed/qed_iscsi_if.h>
+> > +#include <linux/qed/qed_chain.h>
+> > +#include "qed.h"
+> > +#include "qed_hsi.h"
+> > +#include "qed_mcp.h"
+> > +#include "qed_sp.h"
+> > +
+> > +struct qed_iscsi_info {
+> > +	spinlock_t lock;
+> > +	struct list_head free_list;
+> > +	u16 max_num_outstanding_tasks;
+> > +	void *event_context;
+> > +	iscsi_event_cb_t event_cb;
+> > +};
+> > +
+> > +#ifdef CONFIG_QED_LL2
+> > +extern const struct qed_ll2_ops qed_ll2_ops_pass;
+> > +#endif
+> > +
+> > +#if IS_ENABLED(CONFIG_QEDI)
+> > +struct qed_iscsi_info *qed_iscsi_alloc(struct qed_hwfn *p_hwfn);
+> > +
+> > +void qed_iscsi_setup(struct qed_hwfn *p_hwfn,
+> > +		     struct qed_iscsi_info *p_iscsi_info);
+> > +
+> > +void qed_iscsi_free(struct qed_hwfn *p_hwfn,
+> > +		    struct qed_iscsi_info *p_iscsi_info);
+> > +#else /* IS_ENABLED(CONFIG_QEDI) */
+> > +static inline struct qed_iscsi_info *qed_iscsi_alloc(
+> > +		struct qed_hwfn *p_hwfn) { return NULL; }
+> > +static inline void qed_iscsi_setup(struct qed_hwfn *p_hwfn,
+> > +		struct qed_iscsi_info *p_iscsi_info) {}
+> > +static inline void qed_iscsi_free(struct qed_hwfn *p_hwfn,
+> > +		struct qed_iscsi_info *p_iscsi_info) {}
+> > +#endif /* IS_ENABLED(CONFIG_QEDI) */
+> > +
+> > +#endif
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_l2.c b/drivers/net/ethernet/qlogic/qed/qed_l2.c
+> > index ddd410a..07e2f77 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_l2.c
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_l2.c
+> > @@ -2187,6 +2187,5 @@ const struct qed_eth_ops *qed_get_eth_ops(void)
+> >  
+> >  void qed_put_eth_ops(void)
+> >  {
+> > -	/* TODO - reference count for module? */
+> >  }
+> >  EXPORT_SYMBOL(qed_put_eth_ops);
+> >
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_ll2.c b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
+> > index a6db107..e67f3c9 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_ll2.c
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_ll2.c
+> > @@ -299,6 +299,7 @@ static void qed_ll2_txq_flush(struct qed_hwfn *p_hwfn, u8 connection_handle)
+> >  		p_tx->cur_completing_bd_idx = 1;
+> >  		b_last_frag = p_tx->cur_completing_bd_idx == p_pkt->bd_used;
+> >  		tx_frag = p_pkt->bds_set[0].tx_frag;
+> > +#if IS_ENABLED(CONFIG_INFINIBAND_QEDR)
+> >  		if (p_ll2_conn->gsi_enable)
+> >  			qed_ll2b_release_tx_gsi_packet(p_hwfn,
+> >  						       p_ll2_conn->my_id,
+> > @@ -307,6 +308,7 @@ static void qed_ll2_txq_flush(struct qed_hwfn *p_hwfn, u8 connection_handle)
+> >  						       b_last_frag,
+> >  						       b_last_packet);
+> >  		else
+> > +#endif
+> >  			qed_ll2b_complete_tx_packet(p_hwfn,
+> >  						    p_ll2_conn->my_id,
+> >  						    p_pkt->cookie,
+> Huh? What is that doing here?
+> 
+
+This is the infiniband part of the common module. The "#if" was to
+prevent a compile error when infiniband part was not used (like
+for this, iSCSI).
+
+BTW, there is another patch that was submitted by Yuval M. to fix
+that, this RFC just came in between. We will be pulling in that
+change for the next series.
+
+> > @@ -367,6 +369,7 @@ static int qed_ll2_txq_completion(struct qed_hwfn *p_hwfn, void *p_cookie)
+> >  
+> >  		spin_unlock_irqrestore(&p_tx->lock, flags);
+> >  		tx_frag = p_pkt->bds_set[0].tx_frag;
+> > +#if IS_ENABLED(CONFIG_INFINIBAND_QEDR)
+> >  		if (p_ll2_conn->gsi_enable)
+> >  			qed_ll2b_complete_tx_gsi_packet(p_hwfn,
+> >  							p_ll2_conn->my_id,
+> > @@ -374,6 +377,7 @@ static int qed_ll2_txq_completion(struct qed_hwfn *p_hwfn, void *p_cookie)
+> >  							tx_frag,
+> >  							b_last_frag, !num_bds);
+> >  		else
+> > +#endif
+> >  			qed_ll2b_complete_tx_packet(p_hwfn,
+> >  						    p_ll2_conn->my_id,
+> >  						    p_pkt->cookie,
+> > @@ -421,6 +425,7 @@ static int qed_ll2_txq_completion(struct qed_hwfn *p_hwfn, void *p_cookie)
+> >  			  "Mismatch between active_descq and the LL2 Rx chain\n");
+> >  	list_add_tail(&p_pkt->list_entry, &p_rx->free_descq);
+> >  
+> > +#if IS_ENABLED(CONFIG_INFINIBAND_QEDR)
+> >  	spin_unlock_irqrestore(&p_rx->lock, lock_flags);
+> >  	qed_ll2b_complete_rx_gsi_packet(p_hwfn,
+> >  					p_ll2_info->my_id,
+> > @@ -433,6 +438,7 @@ static int qed_ll2_txq_completion(struct qed_hwfn *p_hwfn, void *p_cookie)
+> >  					src_mac_addrhi,
+> >  					src_mac_addrlo, b_last_cqe);
+> >  	spin_lock_irqsave(&p_rx->lock, lock_flags);
+> > +#endif
+> >  
+> >  	return 0;
+> >  }
+> > @@ -1516,11 +1522,12 @@ static void qed_ll2_register_cb_ops(struct qed_dev *cdev,
+> >  
+> >  static int qed_ll2_start(struct qed_dev *cdev, struct qed_ll2_params *params)
+> >  {
+> > -	struct qed_ll2_info ll2_info;
+> > +	struct qed_ll2_info *ll2_info;
+> >  	struct qed_ll2_buffer *buffer;
+> >  	enum qed_ll2_conn_type conn_type;
+> >  	struct qed_ptt *p_ptt;
+> >  	int rc, i;
+> > +	u8 gsi_enable = 1;
+> >  
+> >  	/* Initialize LL2 locks & lists */
+> >  	INIT_LIST_HEAD(&cdev->ll2->list);
+> > @@ -1552,6 +1559,7 @@ static int qed_ll2_start(struct qed_dev *cdev, struct qed_ll2_params *params)
+> >  	switch (QED_LEADING_HWFN(cdev)->hw_info.personality) {
+> >  	case QED_PCI_ISCSI:
+> >  		conn_type = QED_LL2_TYPE_ISCSI;
+> > +		gsi_enable = 0;
+> >  		break;
+> >  	case QED_PCI_ETH_ROCE:
+> >  		conn_type = QED_LL2_TYPE_ROCE;
+> > @@ -1561,18 +1569,23 @@ static int qed_ll2_start(struct qed_dev *cdev, struct qed_ll2_params *params)
+> >  	}
+> >  
+> >  	/* Prepare the temporary ll2 information */
+> > -	memset(&ll2_info, 0, sizeof(ll2_info));
+> > -	ll2_info.conn_type = conn_type;
+> > -	ll2_info.mtu = params->mtu;
+> > -	ll2_info.rx_drop_ttl0_flg = params->drop_ttl0_packets;
+> > -	ll2_info.rx_vlan_removal_en = params->rx_vlan_stripping;
+> > -	ll2_info.tx_tc = 0;
+> > -	ll2_info.tx_dest = CORE_TX_DEST_NW;
+> > -	ll2_info.gsi_enable = 1;
+> > -
+> > -	rc = qed_ll2_acquire_connection(QED_LEADING_HWFN(cdev), &ll2_info,
+> > +	ll2_info = kzalloc(sizeof(*ll2_info), GFP_KERNEL);
+> > +	if (!ll2_info) {
+> > +		DP_INFO(cdev, "Failed to allocate LL2 info buffer\n");
+> > +		goto fail;
+> > +	}
+> > +	ll2_info->conn_type = conn_type;
+> > +	ll2_info->mtu = params->mtu;
+> > +	ll2_info->rx_drop_ttl0_flg = params->drop_ttl0_packets;
+> > +	ll2_info->rx_vlan_removal_en = params->rx_vlan_stripping;
+> > +	ll2_info->tx_tc = 0;
+> > +	ll2_info->tx_dest = CORE_TX_DEST_NW;
+> > +	ll2_info->gsi_enable = gsi_enable;
+> > +
+> > +	rc = qed_ll2_acquire_connection(QED_LEADING_HWFN(cdev), ll2_info,
+> >  					QED_LL2_RX_SIZE, QED_LL2_TX_SIZE,
+> >  					&cdev->ll2->handle);
+> > +	kfree(ll2_info);
+> >  	if (rc) {
+> >  		DP_INFO(cdev, "Failed to acquire LL2 connection\n");
+> >  		goto fail;
+> Where is the benefit of this hunk? And is it related to iSCSI?
+
+This hunk was to prevent a large stack warning (was present with
+gcc 4.8.3). This is a common function applicable to iSCSI as well.
+
+> 
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_main.c b/drivers/net/ethernet/qlogic/qed/qed_main.c
+> > index 4ee3151..a01ad9d 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_main.c
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_main.c
+> > @@ -1239,7 +1239,6 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+> >  	if (link.link_up)
+> >  		if_link->link_up = true;
+> >  
+> > -	/* TODO - at the moment assume supported and advertised speed equal */
+> >  	if_link->supported_caps = QED_LM_FIBRE_BIT;
+> >  	if (params.speed.autoneg)
+> >  		if_link->supported_caps |= QED_LM_Autoneg_BIT;
+> > @@ -1294,7 +1293,6 @@ static void qed_fill_link(struct qed_hwfn *hwfn,
+> >  	if (link.link_up)
+> >  		if_link->speed = link.speed;
+> >  
+> > -	/* TODO - fill duplex properly */
+> >  	if_link->duplex = DUPLEX_FULL;
+> >  	qed_mcp_get_media_type(hwfn->cdev, &media_type);
+> >  	if_link->port = qed_get_port_type(media_type);
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_mcp.h b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
+> > index dff520e..2e5f51b 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_mcp.h
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_mcp.h
+> > @@ -314,9 +314,6 @@ int qed_mcp_bist_clock_test(struct qed_hwfn *p_hwfn,
+> >  
+> >  /* Using hwfn number (and not pf_num) is required since in CMT mode,
+> >   * same pf_num may be used by two different hwfn
+> > - * TODO - this shouldn't really be in .h file, but until all fields
+> > - * required during hw-init will be placed in their correct place in shmem
+> > - * we need it in qed_dev.c [for readin the nvram reflection in shmem].
+> >   */
+> >  #define MCP_PF_ID_BY_REL(p_hwfn, rel_pfid) (QED_IS_BB((p_hwfn)->cdev) ?	       \
+> >  					    ((rel_pfid) |		       \
+> > @@ -324,9 +321,6 @@ int qed_mcp_bist_clock_test(struct qed_hwfn *p_hwfn,
+> >  					    rel_pfid)
+> >  #define MCP_PF_ID(p_hwfn) MCP_PF_ID_BY_REL(p_hwfn, (p_hwfn)->rel_pf_id)
+> >  
+> > -/* TODO - this is only correct as long as only BB is supported, and
+> > - * no port-swapping is implemented; Afterwards we'll need to fix it.
+> > - */
+> >  #define MFW_PORT(_p_hwfn)       ((_p_hwfn)->abs_pf_id %	\
+> >  				 ((_p_hwfn)->cdev->num_ports_in_engines * 2))
+> >  struct qed_mcp_info {
+> Please split off the patch and use a separate one to remove all the TODO
+> entries. They do not relate to the iSCSI offload bit.
+> 
+
+Will do.
+
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h b/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
+> > index b414a05..9754420 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_reg_addr.h
+> > @@ -82,6 +82,8 @@
+> >  	0x1c80000UL
+> >  #define BAR0_MAP_REG_XSDM_RAM \
+> >  	0x1e00000UL
+> > +#define BAR0_MAP_REG_YSDM_RAM \
+> > +	0x1e80000UL
+> >  #define  NIG_REG_RX_LLH_BRB_GATE_DNTFWD_PERPF \
+> >  	0x5011f4UL
+> >  #define  PRS_REG_SEARCH_TCP \
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_spq.c b/drivers/net/ethernet/qlogic/qed/qed_spq.c
+> > index caff415..d3fa578 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_spq.c
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_spq.c
+> > @@ -24,6 +24,7 @@
+> >  #include "qed_hsi.h"
+> >  #include "qed_hw.h"
+> >  #include "qed_int.h"
+> > +#include "qed_iscsi.h"
+> >  #include "qed_mcp.h"
+> >  #include "qed_reg_addr.h"
+> >  #include "qed_sp.h"
+> > @@ -249,6 +250,20 @@ static int qed_spq_hw_post(struct qed_hwfn *p_hwfn,
+> >  		return qed_sriov_eqe_event(p_hwfn,
+> >  					   p_eqe->opcode,
+> >  					   p_eqe->echo, &p_eqe->data);
+> > +	case PROTOCOLID_ISCSI:
+> > +		if (!IS_ENABLED(CONFIG_QEDI))
+> > +			return -EINVAL;
+> > +
+> > +		if (p_hwfn->p_iscsi_info->event_cb) {
+> > +			struct qed_iscsi_info *p_iscsi = p_hwfn->p_iscsi_info;
+> > +
+> > +			return p_iscsi->event_cb(p_iscsi->event_context,
+> > +						 p_eqe->opcode, &p_eqe->data);
+> > +		} else {
+> > +			DP_NOTICE(p_hwfn,
+> > +				  "iSCSI async completion is not set\n");
+> > +			return -EINVAL;
+> > +		}
+> >  	default:
+> >  		DP_NOTICE(p_hwfn,
+> >  			  "Unknown Async completion for protocol: %d\n",
+> > diff --git a/include/linux/qed/qed_if.h b/include/linux/qed/qed_if.h
+> > index f9ae903..c0c9fa8 100644
+> > --- a/include/linux/qed/qed_if.h
+> > +++ b/include/linux/qed/qed_if.h
+> > @@ -165,6 +165,7 @@ struct qed_iscsi_pf_params {
+> >  	u32 max_cwnd;
+> >  	u16 cq_num_entries;
+> >  	u16 cmdq_num_entries;
+> > +	u32 two_msl_timer;
+> >  	u16 dup_ack_threshold;
+> >  	u16 tx_sws_timer;
+> >  	u16 min_rto;
+> > @@ -271,6 +272,7 @@ struct qed_dev_info {
+> >  enum qed_sb_type {
+> >  	QED_SB_TYPE_L2_QUEUE,
+> >  	QED_SB_TYPE_CNQ,
+> > +	QED_SB_TYPE_STORAGE,
+> >  };
+> >  
+> >  enum qed_protocol {
+> > diff --git a/include/linux/qed/qed_iscsi_if.h b/include/linux/qed/qed_iscsi_if.h
+> > new file mode 100644
+> > index 0000000..6735ee5
+> > --- /dev/null
+> > +++ b/include/linux/qed/qed_iscsi_if.h
+> > @@ -0,0 +1,249 @@
+> > +/* QLogic qed NIC Driver
+> Again, this is the iSCSI driver, is it not?
+> 
+> > + * Copyright (c) 2015 QLogic Corporation
+> > + *
+> And you _might_ want to check the copyright, seeing that it's being
+> posted from the cavium.com domain ...
+> 
+
+Yes, rest of the files (already existing) for qed has the same
+copyright, so this patch did not modify it. qedi, OTOH, has all
+new files and are using the updated ones. A new patch will be
+posted to update the qed files.
+
+Regards,
+-Arun
