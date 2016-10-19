@@ -1,63 +1,23 @@
-From: Michael Ellerman <mpe@ellerman.id.au>
-Subject: Re: [PATCH 10/10] mm: replace access_process_vm() write parameter with gup_flags
-Date: Wed, 19 Oct 2016 22:10:46 +1100
-Message-ID: <87twc84mrt.fsf@concordia.ellerman.id.au>
-References: <20161013002020.3062-1-lstoakes@gmail.com> <20161013002020.3062-11-lstoakes@gmail.com>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [PATCH v3 08/11] SRP transport: Move queuecommand() wait code
+        to SCSI core
+Date: Wed, 19 Oct 2016 15:38:46 +0200
+Message-ID: <20161019133846.GA6809@lst.de>
+References: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com> <09a8efcb-d0e0-d5bd-288c-686b553e6326@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20161013002020.3062-11-lstoakes@gmail.com>
-Sender: owner-linux-mm@kvack.org
-To: linux-mm@kvack.org
-Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lorenzo Stoakes <lstoakes@gmail.com>, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.o
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <09a8efcb-d0e0-d5bd-288c-686b553e6326-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Lorenzo Stoakes <lstoakes@gmail.com> writes:
+Looks fine,
 
-> diff --git a/arch/powerpc/kernel/ptrace32.c b/arch/powerpc/kernel/ptrace32.c
-> index f52b7db3..010b7b3 100644
-> --- a/arch/powerpc/kernel/ptrace32.c
-> +++ b/arch/powerpc/kernel/ptrace32.c
-> @@ -74,7 +74,7 @@ long compat_arch_ptrace(struct task_struct *child, compat_long_t request,
->  			break;
->  
->  		copied = access_process_vm(child, (u64)addrOthers, &tmp,
-> -				sizeof(tmp), 0);
-> +				sizeof(tmp), FOLL_FORCE);
->  		if (copied != sizeof(tmp))
->  			break;
->  		ret = put_user(tmp, (u32 __user *)data);
-
-LGTM.
-
-> @@ -179,7 +179,8 @@ long compat_arch_ptrace(struct task_struct *child, compat_long_t request,
->  			break;
->  		ret = 0;
->  		if (access_process_vm(child, (u64)addrOthers, &tmp,
-> -					sizeof(tmp), 1) == sizeof(tmp))
-> +					sizeof(tmp),
-> +					FOLL_FORCE | FOLL_WRITE) == sizeof(tmp))
->  			break;
->  		ret = -EIO;
->  		break;
-
-If you're respinning this anyway, can you format that as:
-
-		if (access_process_vm(child, (u64)addrOthers, &tmp, sizeof(tmp),
-				      FOLL_FORCE | FOLL_WRITE) == sizeof(tmp))
-  			break;
-
-I realise you probably deliberately didn't do that to make the diff clearer.
-
-Either way:
-
-Acked-by: Michael Ellerman <mpe@ellerman.id.au> (powerpc)
-
-
-cheers
-
+Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 --
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
