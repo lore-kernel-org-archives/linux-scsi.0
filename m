@@ -1,358 +1,316 @@
-From: Ching Huang <ching2048@areca.com.tw>
-Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to
- firmware
-Date: Wed, 19 Oct 2016 17:50:26 +0800
-Message-ID: <1476870626.11867.11.camel@Centos6.3-64>
-References: <1476699850-25083-1-git-send-email-sumit.saxena@broadcom.com>
-         <1476699850-25083-5-git-send-email-sumit.saxena@broadcom.com>
-         <d9e79049-b4ce-588f-263d-dad015b3368d@suse.de>
-         <9e5fbcef-bd72-71be-76f6-f41e26b5cb3c@redhat.com>
-         <1476721205.2734.12.camel@linux.vnet.ibm.com>
-         <14aa9905-b7fc-9695-dd19-1cc31cbee330@redhat.com>
-         <1476724793.2734.21.camel@linux.vnet.ibm.com>
-         <01e727ba166a34a97efdd5e890e4bc22@mail.gmail.com>
-         <1476726692.2734.36.camel@linux.vnet.ibm.com>
-         <b803c55c-23db-3bec-3d2f-58bc53d4ef37@redhat.com>
+From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Subject: Re: iscsi_trx going into D state
+Date: Wed, 19 Oct 2016 10:41:54 -0600
+Message-ID: <CAANLjFoGEi29goybqsvEg6trystEkurVz52P8SwqGUSNV1jdSw@mail.gmail.com>
+References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+ <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com> <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA@mail.gmail.com>
+ <CAANLjFoh+C8QE=qcPKqUUG3SnH2EMmS7DWZ5D4AD7yWMxoK0Zw@mail.gmail.com>
+ <4fc72e32-26fb-96bd-8a0d-814eef712b43@suse.com> <CAANLjFpx1MRNiu2388pY+U0O5z9gw+OJBtpOof47Lb_DxaJSBQ@mail.gmail.com>
+ <1476774332.8490.43.camel@haakon3.risingtidesystems.com> <CAANLjFqXt5r=c9F75vjeK=_zLa8zCS1priLuZo=A1ZSHKZ=1Bw@mail.gmail.com>
+ <1476858359.8490.97.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f195.google.com ([209.85.192.195]:35920 "EHLO
-        mail-pf0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756063AbcJSQhU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 19 Oct 2016 12:37:20 -0400
-Received: by mail-pf0-f195.google.com with SMTP id r16so2895639pfg.3
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2016 09:37:20 -0700 (PDT)
-In-Reply-To: <b803c55c-23db-3bec-3d2f-58bc53d4ef37@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <1476858359.8490.97.camel-XoQW25Eq2zviZyQQd+hFbcojREIfoBdhmpATvIKMPHk@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Cc: Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Ric Wheeler <rwheeler@redhat.com>, Hannes Reinecke <hare@suse.de>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <mkp@mkp.net>, Jeff Moyer <jmoyer@redhat.com>, Gris Ge <fge@redhat.com>, Ewan Milne <emilne@redhat.com>, Jens Axboe <axboe@kernel.dk>, RaghavaAditya.Renukunta@microsemi.com
 
-Hi Tomas,
+Nicholas,
 
-SCSI command checking in queuecommand function of arcmsr can be removed safely. 
-Now driver can pass all scsi command to controller firmware.
+I didn't have high hopes for the patch because we were not seeing
+TMR_ABORT_TASK (or 'abort') in dmesg or /var/log/messages, but it
+seemed to help regardless. Our clients finally OOMed from the hung
+sessions, so we are having to reboot them and we will do some more
+testing. We haven't put the updated kernel on our clients yet. Our
+clients have iSCSI root disks so I'm not sure if we can get a vmcore
+on those, but we will do what we can to get you a vmcore from the
+target if it happens again.
 
-diff -uprN a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
---- a/drivers/scsi/arcmsr/arcmsr_hba.c	2016-10-19 16:18:45.000000000 +0800
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c	2016-10-19 16:31:59.665524699 +0800
-@@ -2623,13 +2623,6 @@ static int arcmsr_queue_command_lck(stru
- 	cmd->scsi_done = done;
- 	cmd->host_scribble = NULL;
- 	cmd->result = 0;
--	if ((scsicmd == SYNCHRONIZE_CACHE) ||(scsicmd == SEND_DIAGNOSTIC)){
--		if(acb->devstate[target][lun] == ARECA_RAID_GONE) {
--    			cmd->result = (DID_NO_CONNECT << 16);
--		}
--		cmd->scsi_done(cmd);
--		return 0;
--	}
- 	if (target == 16) {
- 		/* virtual device for iop message transfer */
- 		arcmsr_handle_virtual_command(acb, cmd);
+As far as our configuration: It is a superMicro box with 6 SAMSUNG
+MZ7LM3T8HCJM-00005 SSDs. Two are for root and four are in mdadm
+RAID-10 for exporting via iSCSI/iSER. We have ZFS on top of the
+RAID-10 for checksum and snapshots only and we export ZVols to the
+clients (one or more per VM on the client). We do not persist the
+export info (targetcli saveconfig), but regenerate it from scripts.
+The client receives two or more of these exports and puts them in a
+RAID-1 device. The exports are served by iSER one one port and also by
+normal iSCSI on a different port for compatibility, but not normally
+used. If you need more info about the config, please let me know. It
+was kind of a vague request so I'm not sure what exactly is important
+to you.
 
-Thanks
-Ching
-On Tue, 2016-10-18 at 15:56 +0200, Tomas Henzl wrote:
-> Hi,
-> 
-> similar suspicious code path can be found in the queuecommand functions in other drivers too
-> these are -
-> pmcraid.c
-> arcmsr_hba.c
-> cc-ing maintainers - 
-> (but both drivers seem to be unmaintained for a while -
-> I've added Ching for arcmsr and Raghava for pmcraid)
-> 
-> please read this thread and verify that your driver and firmware is safe.
-> 
-> It is expected that a raid card controls the disk write cache (switches it off)
-> but this might not be true for all modes of operation a raid adapter handles
-> - pass through/non-RAID etc. In such case when disk write cache is enabled
-> and your driver skips the SYNCHRONIZE_CACHE command a FS corruption
-> is very much possible during unexpected power loss or even a clean shutdown.
-> 
-> tomash
-> 
-> On 17.10.2016 19:51, James Bottomley wrote:
-> > On Mon, 2016-10-17 at 23:06 +0530, Kashyap Desai wrote:
-> >>> -----Original Message-----
-> >>> From: James Bottomley [mailto:jejb@linux.vnet.ibm.com]
-> >>> Sent: Monday, October 17, 2016 10:50 PM
-> >>> To: Ric Wheeler; Hannes Reinecke; Sumit Saxena; 
-> >>> linux-scsi@vger.kernel.org
-> >>> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
-> >>> kashyap.desai@broadcom.com; Christoph Hellwig; Martin K. Petersen;
-> >>> Jeff
-> >>> Moyer; Gris Ge; Ewan Milne; Jens Axboe
-> >>> Subject: Re: [PATCH 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE
-> >>> command
-> >>> to firmware
-> >>>
-> >>> On Mon, 2016-10-17 at 12:27 -0400, Ric Wheeler wrote:
-> >>>> On 10/17/2016 12:20 PM, James Bottomley wrote:
-> >>>>> On Mon, 2016-10-17 at 09:01 -0400, Ric Wheeler wrote:
-> >>>>>> On 10/17/2016 07:34 AM, Hannes Reinecke wrote:
-> >>>>>>> On 10/17/2016 12:24 PM, Sumit Saxena wrote:
-> >>>>>>>> megaraid_sas driver returns SYNCHRONIZE_CACHE command
-> >>>>>>>> back to
-> >>>>>>>> SCSI layer without sending it to firmware as firmware
-> >>>>>>>> takes
-> >>>>>>>> care of flushing cache.  This patch will change the
-> >>>>>>>> driver
-> >>>>>>>> behavior wrt SYNCHRONIZE_CACHE handling. If underlying
-> >>>>>>>> firmware has support to handle the SYNCHORNIZE_CACHE,
-> >>>>>>>> driver
-> >>>>>>>> will send it for firmware otherwise complete it back to
-> >>>>>>>> SCSI
-> >>>>>>>> layer with SUCCESS immediately.  If  Firmware  handle
-> >>>>>>>> SYNCHORNIZE_CACHE for both VD and JBOD
-> >>>>>>>> "canHandleSyncCache"
-> >>>>>>>> bit in scratch pad register(offset
-> >>>>>>>> 0x00B4) will be set.
-> >>>>>>>>
-> >>>>>>>> This behavior can be controlled via module parameter and
-> >>>>>>>> user
-> >>>>>>>> can fallback to old behavior of returning
-> >>>>>>>> SYNCHRONIZE_CACHE by
-> >>>>>>>> driver only without sending it to firmware.
-> >>>>>>>>
-> >>>>>>>> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-> >>>>>>>> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> >>>>>>>> ---
-> >>>>>>>>    drivers/scsi/megaraid/megaraid_sas.h        |  3 +++
-> >>>>>>>>    drivers/scsi/megaraid/megaraid_sas_base.c   | 14
-> >>>>>>>> ++++++---
-> >>>>>>>> -----
-> >>>>>>>>    drivers/scsi/megaraid/megaraid_sas_fusion.c |  3 +++
-> >>>>>>>>    drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 ++
-> >>>>>>>>    4 files changed, 14 insertions(+), 8 deletions(-)
-> >>>>>>>>
-> >>>>>>>> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
-> >>>>>>>> b/drivers/scsi/megaraid/megaraid_sas.h
-> >>>>>>>> index ca86c88..43fd14f 100644
-> >>>>>>>> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> >>>>>>>> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> >>>>>>>> @@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
-> >>>>>>>>    #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
-> >>>>>>>>    #define MR_MAX_MSIX_REG_ARRAY                   16
-> >>>>>>>>    #define MR_RDPQ_MODE_OFFSET			0X0
-> >>>>>>>> 0800
-> >>>>>>>> 000
-> >>>>>>>> +#define MR_CAN_HANDLE_SYNC_CACHE_OFFSET		0
-> >>>>>>>> X010
-> >>>>>>>> 0000
-> >>>>>>>> 0
-> >>>>>>>> +
-> >>>>>>>>    /*
-> >>>>>>>>    * register set for both 1068 and 1078 controllers
-> >>>>>>>>    * structure extended for 1078 registers @@ -2140,6
-> >>>>>>>> +2142,7
-> >>>>>>>> @@ struct megasas_instance {
-> >>>>>>>>    	u8 is_imr;
-> >>>>>>>>    	u8 is_rdpq;
-> >>>>>>>>    	bool dev_handle;
-> >>>>>>>> +	bool fw_sync_cache_support;
-> >>>>>>>>    };
-> >>>>>>>>    struct MR_LD_VF_MAP {
-> >>>>>>>>    	u32 size;
-> >>>>>>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
-> >>>>>>>> b/drivers/scsi/megaraid/megaraid_sas_base.c
-> >>>>>>>> index 092387f..a4a8e2f 100644
-> >>>>>>>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
-> >>>>>>>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-> >>>>>>>> @@ -104,6 +104,10 @@ unsigned int scmd_timeout =
-> >>>>>>>> MEGASAS_DEFAULT_CMD_TIMEOUT;
-> >>>>>>>>    module_param(scmd_timeout, int, S_IRUGO);
-> >>>>>>>>    MODULE_PARM_DESC(scmd_timeout, "scsi command timeout
-> >>>>>>>> (10
-> >>>>>>>> -90s), default 90s. See megasas_reset_timer.");
-> >>>>>>>>
-> >>>>>>>> +bool block_sync_cache;
-> >>>>>>>> +module_param(block_sync_cache, bool, S_IRUGO);
-> >>>>>>>> +MODULE_PARM_DESC(block_sync_cache, "Block SYNC CACHE by
-> >>>>>>>> driver
-> >>>>>>>> Default: 0(Send it to firmware)");
-> >>>>>>>> +
-> >>>>>>>>    MODULE_LICENSE("GPL");
-> >>>>>>>>    MODULE_VERSION(MEGASAS_VERSION);
-> >>>>>>>>    MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
-> >>>>>>>> @@ -1700,16 +1704,10 @@ megasas_queue_command(struct
-> >>> Scsi_Host
-> >>>>>>>> *shost, struct scsi_cmnd *scmd)
-> >>>>>>>>    		goto out_done;
-> >>>>>>>>    	}
-> >>>>>>>>
-> >>>>>>>> -	switch (scmd->cmnd[0]) {
-> >>>>>>>> -	case SYNCHRONIZE_CACHE:
-> >>>>>>>> -		/*
-> >>>>>>>> -		 * FW takes care of flush cache on its
-> >>>>>>>> own
-> >>>>>>>> -		 * No need to send it down
-> >>>>>>>> -		 */
-> >>>>>>>> +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
-> >>>>>>>> +		(!instance->fw_sync_cache_support)) {
-> >>>>>>>>    		scmd->result = DID_OK << 16;
-> >>>>>>>>    		goto out_done;
-> >>>>>>>> -	default:
-> >>>>>>>> -		break;
-> >>>>>>>>    	}
-> >>>>>>>>
-> >>>>>>>>    	return instance->instancet
-> >>>>>>>> ->build_and_issue_cmd(instance, scmd);
-> >>>>>>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> >>>>>>>> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> >>>>>>>> index 2159f6a..8237580 100644
-> >>>>>>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> >>>>>>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-> >>>>>>>> @@ -747,6 +747,9 @@ megasas_ioc_init_fusion(struct
-> >>>>>>>> megasas_instance *instance)
-> >>>>>>>>    		ret = 1;
-> >>>>>>>>    		goto fail_fw_init;
-> >>>>>>>>    	}
-> >>>>>>>> +	if (!block_sync_cache)
-> >>>>>>>> +		instance->fw_sync_cache_support =
-> >>>>>>>> (scratch_pad_2
-> >>>>>>>> &
-> >>>>>>>> +			MR_CAN_HANDLE_SYNC_CACHE_OFFSET)
-> >>>>>>>> ? 1
-> >>>>>>>> :
-> >>>>>>>> 0;
-> >>>>>>>>
-> >>>>>>>>    	IOCInitMessage =
-> >>>>>>>>    	  dma_alloc_coherent(&instance->pdev->dev,
-> >>>>>>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> >>>>>>>> b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> >>>>>>>> index e3bee04..2857154 100644
-> >>>>>>>> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> >>>>>>>> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-> >>>>>>>> @@ -72,6 +72,8 @@
-> >>>>>>>>    #define MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET
-> >>>>>>>>  (0x0000030C)
-> >>>>>>>>    #define MPI2_REPLY_POST_HOST_INDEX_OFFSET	(0x00
-> >>>>>>>> 0000
-> >>>>>>>> 6C)
-> >>>>>>>>
-> >>>>>>>> +extern bool block_sync_cache;
-> >>>>>>>> +
-> >>>>>>>>    /*
-> >>>>>>>>     * Raid context flags
-> >>>>>>>>     */
-> >>>>>>>>
-> >>>>>>> Be extra careful with that.
-> >>>>>>>
-> >>>>>>> SYNCHRONIZE_CACHE has (potentially) a global scope, as
-> >>>>>>> there
-> >>>>>>> might be an array-wide cache, and a cache flush would
-> >>>>>>> affect the
-> >>>>>>> entire cache. Linux is using SYNCHRONIZE_CACHE as a per
-> >>>>>>> device
-> >>>>>>> setting, ie it assumes that the effects of a cache flush is
-> >>>>>>> restricted to the device in question.
-> >>>>>>>
-> >>>>>>> If this is _not_ the case I'd rather not enable it.
-> >>>>>>> Have you checked that enabling this functionality doesn't
-> >>>>>>> have
-> >>>>>>> negative performance impact?
-> >>>>>>>
-> >>>>>>> Cheers,
-> >>>>>>>
-> >>>>>>> Hannes
-> >>>>>> This must go in - without this fix, there is no data
-> >>>>>> integrity for
-> >>>>>> any file system.
-> >>>>> That's not what I get from the change log.  What it says to me
-> >>>>> is
-> >>>>> that the caches are currently firmware managed.  Barring
-> >>>>> firmware
-> >>>>> bugs, that means that we currently don't have any integrity
-> >>>>> issues.
-> >>>> Your understanding (or the change log) is incorrect.
-> >>> There's no current way in English of construing "as firmware takes
-> >>> care of
-> >>> flushing cache" to mean its inverse, so the changelog needs
-> >>> updating to
-> >>> explain
-> >>> that firmware does *not* take care of cache flushing, so
-> >>> effectively
-> >>> nothing
-> >>> does and we'll need a cc to stable if the problem is that nothing
-> >>> takes
-> >>> care of
-> >>> flushing the drive caches.
-> >>>
-> >>> James
-> >> Sorry for confusion. More accurate to say  -
-> >>
-> >> Current megaraid_sas driver returns SYNCHRONIZE_CACHE command back to 
-> >> SCSI layer without sending it down to firmware as firmware supposed 
-> >> to takes care of flushing cache for all Virtual Disk at the time of 
-> >> system reboot/shutdown. Because of above FW rule driver coded wrongly 
-> >> and it added bug that SYNCHRONIZE_CACHE is not passed to FW for JBOD 
-> >> as well.  (MR Firmware wanted OS to manage SYNCHRONIZE_CACHE and pass 
-> >> the same to the Firmware. ). We figure out that even for VD, why 
-> >> driver should send back SYNC_CACHE command...let's have the same in
-> >> FW (giving all control in FW)
-> >>
-> >> New behavior described -
-> >>
-> >> IF application requests SYNCH_CACHE
-> >>  IF any FW which supports new API bit called canHandleSyncCache
-> >>   Driver sends SYNCH_CACHE command to the FW
-> >>   IF 'VirtualDisk'
-> >>       FW does not send SYNCH_CACHE to drives
-> >>       FW returns SUCCESS
-> >> ELSE IF 'JBOD'
-> >>      FW sends SYNCH_CACHE to drive
-> >>      FW obtains status from drive and returns same status back to
-> >> driver
-> >>   ENDIF
-> >>
-> >> Fixing this is robust if FW and driver changes are inline. See below 
-> >> for more detail.
-> >>
-> >> Case - 1
-> >> This patch is attempt to fix one level problem where Virtual Disks 
-> >> are not managed correctly in MR FW. There are some MR FW (E.a Gen2 
-> >> and Gen2.5 FW), which set WCE bit for Virtual Disk but FW is not 
-> >> reply correct for SYNCH_CACHE.  This was handled in past and carry 
-> >> forward (in driver + FW ) to all new generation products as well. We 
-> >> tried to collect all possible details why it was handled such way to 
-> >> provide better driver fix for this issue(mainly to avoid this FW 
-> >> checks and module  parameters etc..). But now it looks like to make 
-> >> generic fix (Device ID based etc..)is even risky, so went with this 
-> >> protective approach.  It is very risky to find out which Device ID 
-> >> and FW has capability to manage SYNC_CACHE, so we managed to figure 
-> >> out which are the new FW using FW capability bit.
-> >>
-> >> E.g Liberator/Thunderbolt MR FW SYNC_CACHE is write Unsupported 
-> >> command (this is a firmware bug) and immediately it will be failed to 
-> >> SML. This will cause File system to go Read-only.
-> > That's a better description ... what you're saying is that the patch
-> > doesn't actually fix the bug Ric is worrying about.
-> >
-> >> Case -2
-> >> One more thing which we are trying and known driver can send 
-> >> "SYNC_CACHE" unconditionally to all generation of FW.  For this we 
-> >> are doing more unit testing on various controllers/FW and planning to 
-> >> provide another patch to fix JBOD path for any FW. (It will not be 
-> >> based on FW capability/module parameter).
-> > OK, but we really need this ASAP.  As Ric said, data integrity is at
-> > risk until this is fixed.  Can you also reference the commit that
-> > introduced the problem so we know how far to do the sable backports?
-> >
-> >> If we remove module parameter, we can ask customer to disable WCE on
-> >> drive to get similar impact.
-> > Thanks,
-> >
-> > James
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-> 
+Thanks for helping us with this,
+Robert LeBlanc
+
+When we have problems, we usually see this in the logs:
+Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login timeout on
+Network Portal 0.0.0.0:3260
+Oct 17 08:57:50 prv-0-12-sanstack kernel: Unexpected ret: -104 send data 48
+Oct 17 08:57:50 prv-0-12-sanstack kernel: tx_data returned -32, expecting 48.
+Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login negotiation failed.
+
+I found some backtraces in the logs, not sure if this is helpful, this
+is before your patch (your patch booted at Oct 18 10:36:59):
+Oct 17 15:43:12 prv-0-12-sanstack kernel: INFO: rcu_sched
+self-detected stall on CPU
+Oct 17 15:43:12 prv-0-12-sanstack kernel: #0115-...: (41725 ticks this
+GP) idle=b59/140000000000001/0 softirq=535/535 fqs=30992
+Oct 17 15:43:12 prv-0-12-sanstack kernel: #011 (t=42006 jiffies g=1550
+c=1549 q=0)
+Oct 17 15:43:12 prv-0-12-sanstack kernel: Task dump for CPU 5:
+Oct 17 15:43:12 prv-0-12-sanstack kernel: kworker/u68:2   R  running
+task        0 17967      2 0x00000008
+Oct 17 15:43:12 prv-0-12-sanstack kernel: Workqueue: isert_comp_wq
+isert_cq_work [ib_isert]
+Oct 17 15:43:12 prv-0-12-sanstack kernel: ffff883f4c0dca80
+00000000af8ca7a4 ffff883f7fb43da8 ffffffff810ac83f
+Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000005
+ffffffff81adb680 ffff883f7fb43dc0 ffffffff810af179
+Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000006
+ffff883f7fb43df0 ffffffff810e1c10 ffff883f7fb57b80
+Oct 17 15:43:12 prv-0-12-sanstack kernel: Call Trace:
+Oct 17 15:43:12 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac83f>]
+sched_show_task+0xaf/0x110
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810af179>]
+dump_cpu_task+0x39/0x40
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e1c10>]
+rcu_dump_cpu_stacks+0x80/0xb0
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e6040>]
+rcu_check_callbacks+0x540/0x820
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810afd51>] ?
+account_system_time+0x81/0x110
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9a0>] ?
+tick_sched_do_timer+0x50/0x50
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810eb4d9>]
+update_process_times+0x39/0x60
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa755>]
+tick_sched_handle.isra.17+0x25/0x60
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9dd>]
+tick_sched_timer+0x3d/0x70
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec0c2>]
+__hrtimer_run_queues+0x102/0x290
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec5a8>]
+hrtimer_interrupt+0xa8/0x1a0
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+local_apic_timer_interrupt+0x35/0x60
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8172343d>]
+smp_apic_timer_interrupt+0x3d/0x50
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff817216f7>]
+apic_timer_interrupt+0x87/0x90
+Oct 17 15:43:12 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d70fe>]
+? console_unlock+0x41e/0x4e0
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d74bc>]
+vprintk_emit+0x2fc/0x500
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d783f>]
+vprintk_default+0x1f/0x30
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81174c2a>] printk+0x5d/0x74
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814bc351>]
+transport_lookup_cmd_lun+0x1d1/0x200
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814edcf0>]
+iscsit_setup_scsi_cmd+0x230/0x540
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0890bf3>]
+isert_rx_do_work+0x3f3/0x7f0 [ib_isert]
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0891174>]
+isert_cq_work+0x184/0x770 [ib_isert]
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109734f>]
+process_one_work+0x14f/0x400
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097bc4>]
+worker_thread+0x114/0x470
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8171c55a>] ?
+__schedule+0x34a/0x7f0
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097ab0>] ?
+rescuer_thread+0x310/0x310
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d708>] kthread+0xd8/0xf0
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
+kthread_park+0x60/0x60
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81720c8f>]
+ret_from_fork+0x3f/0x70
+Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
+kthread_park+0x60/0x60
+
+Oct 17 16:34:03 prv-0-12-sanstack kernel: INFO: rcu_sched
+self-detected stall on CPU
+Oct 17 16:34:03 prv-0-12-sanstack kernel: #01128-...: (5999 ticks this
+GP) idle=2f9/140000000000001/0 softirq=457/457 fqs=4830
+Oct 17 16:34:03 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=3546
+c=3545 q=0)
+Oct 17 16:34:03 prv-0-12-sanstack kernel: Task dump for CPU 28:
+Oct 17 16:34:03 prv-0-12-sanstack kernel: iscsi_np        R  running
+task        0 16597      2 0x0000000c
+Oct 17 16:34:03 prv-0-12-sanstack kernel: ffff887f40350000
+00000000b98a67bb ffff887f7f503da8 ffffffff810ac8ff
+Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001c
+ffffffff81adb680 ffff887f7f503dc0 ffffffff810af239
+Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001d
+ffff887f7f503df0 ffffffff810e1cd0 ffff887f7f517b80
+Oct 17 16:34:03 prv-0-12-sanstack kernel: Call Trace:
+Oct 17 16:34:03 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
+sched_show_task+0xaf/0x110
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810af239>]
+dump_cpu_task+0x39/0x40
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
+rcu_dump_cpu_stacks+0x80/0xb0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
+rcu_check_callbacks+0x540/0x820
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
+account_system_time+0x81/0x110
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
+tick_sched_do_timer+0x50/0x50
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
+update_process_times+0x39/0x60
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
+tick_sched_handle.isra.17+0x25/0x60
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
+tick_sched_timer+0x3d/0x70
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
+__hrtimer_run_queues+0x102/0x290
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
+hrtimer_interrupt+0xa8/0x1a0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+local_apic_timer_interrupt+0x35/0x60
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
+smp_apic_timer_interrupt+0x3d/0x50
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
+apic_timer_interrupt+0x87/0x90
+Oct 17 16:34:03 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
+? console_unlock+0x41e/0x4e0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d757c>]
+vprintk_emit+0x2fc/0x500
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d78ff>]
+vprintk_default+0x1f/0x30
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81174dde>] printk+0x5d/0x74
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e71ad>]
+iscsi_target_locate_portal+0x62d/0x6f0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e5100>]
+iscsi_target_login_thread+0x6f0/0xfc0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e4a10>] ?
+iscsi_target_login_sess_out+0x250/0x250
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+kthread_park+0x60/0x60
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
+ret_from_fork+0x3f/0x70
+Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+kthread_park+0x60/0x60
+
+I don't think this one is related, but it happened a couple of times:
+Oct 17 11:46:52 prv-0-12-sanstack kernel: INFO: rcu_sched
+self-detected stall on CPU
+Oct 17 11:46:52 prv-0-12-sanstack kernel: #01119-...: (5999 ticks this
+GP) idle=727/140000000000001/0 softirq=1346/1346 fqs=4990
+Oct 17 11:46:52 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=4295
+c=4294 q=0)
+Oct 17 11:46:52 prv-0-12-sanstack kernel: Task dump for CPU 19:
+Oct 17 11:46:52 prv-0-12-sanstack kernel: kworker/19:1    R  running
+task        0   301      2 0x00000008
+Oct 17 11:46:52 prv-0-12-sanstack kernel: Workqueue:
+events_power_efficient fb_flashcursor
+Oct 17 11:46:52 prv-0-12-sanstack kernel: ffff883f6009ca80
+00000000010a7cdd ffff883f7fcc3da8 ffffffff810ac8ff
+Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000013
+ffffffff81adb680 ffff883f7fcc3dc0 ffffffff810af239
+Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000014
+ffff883f7fcc3df0 ffffffff810e1cd0 ffff883f7fcd7b80
+Oct 17 11:46:52 prv-0-12-sanstack kernel: Call Trace:
+Oct 17 11:46:52 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
+sched_show_task+0xaf/0x110
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810af239>]
+dump_cpu_task+0x39/0x40
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
+rcu_dump_cpu_stacks+0x80/0xb0
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
+rcu_check_callbacks+0x540/0x820
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
+account_system_time+0x81/0x110
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
+tick_sched_do_timer+0x50/0x50
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
+update_process_times+0x39/0x60
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
+tick_sched_handle.isra.17+0x25/0x60
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
+tick_sched_timer+0x3d/0x70
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
+__hrtimer_run_queues+0x102/0x290
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
+hrtimer_interrupt+0xa8/0x1a0
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+local_apic_timer_interrupt+0x35/0x60
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
+smp_apic_timer_interrupt+0x3d/0x50
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
+apic_timer_interrupt+0x87/0x90
+Oct 17 11:46:52 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
+? console_unlock+0x41e/0x4e0
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff813866ad>]
+fb_flashcursor+0x5d/0x140
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8138bc00>] ?
+bit_clear+0x110/0x110
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109740f>]
+process_one_work+0x14f/0x400
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097c84>]
+worker_thread+0x114/0x470
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8171cdda>] ?
+__schedule+0x34a/0x7f0
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097b70>] ?
+rescuer_thread+0x310/0x310
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+kthread_park+0x60/0x60
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
+ret_from_fork+0x3f/0x70
+Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+kthread_park+0x60/0x60
+----------------
+Robert LeBlanc
+PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
 
 
+On Wed, Oct 19, 2016 at 12:25 AM, Nicholas A. Bellinger
+<nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org> wrote:
+> On Tue, 2016-10-18 at 16:13 -0600, Robert LeBlanc wrote:
+>> Nicholas,
+>>
+>> We patched this in and for the first time in many reboots, we didn't
+>> have iSCSI going straight into D state. We have had to work on a
+>> couple of other things, so we don't know if this is just a coincidence
+>> or not. We will reboot back into the old kernel and back a few times
+>> and do some more testing, but so far it has given us a little bit of
+>> hope that we may be narrowing down on the root cause. We will report
+>> back once we have some more info.
+>>
+>> Thank you,
+>> Robert LeBlanc
+>> ----------------
+>> Robert LeBlanc
+>> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+>>
+>
+> Hello Robert,
+>
+> Thanks for the update.  Btw, if the original /var/log/messages
+> reproduction logs for iser-target are still handy, I'm happy to have
+> a look to confirm.  Feel free to send them along here, or off-list if
+> necessary.
+>
+> For further reference, you can also enable Linux kernel crash dump
+> (LKCD) at build time using CONFIG_CRASH_DUMP=y, so it's possible to
+> manually generate a vmcore dumpfile of the running system via 'echo c
+>> /proc/sysrq-trigger', once the bug occurs.
+>
+> http://cateee.net/lkddb/web-lkddb/CRASH_DUMP.html
+>
+> Note in order to fully debug within this in a LKCD environment, it
+> requires the vmcore dump from /var/crash/, unstripped vmlinux,
+> target_core_mod, iscsi_target_mod and ib_isert modules matching the
+> specific particular x86_64 build setup of the running system.
+>
+> Also, can you share a bit more about the details of your particular
+> iser-target + backend setup..?
+>
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
