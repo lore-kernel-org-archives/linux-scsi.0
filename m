@@ -1,23 +1,73 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v3 10/11] nvme: Use BLK_MQ_S_STOPPED instead of
-        QUEUE_FLAG_STOPPED in blk-mq code
-Date: Wed, 19 Oct 2016 15:39:39 +0200
-Message-ID: <20161019133939.GC6809@lst.de>
-References: <b39eb0e7-1007-eb63-8e7f-9a7f08508379@sandisk.com> <39c07429-2508-4123-8fe1-ecf407f8571d@sandisk.com>
+From: Chad Dupuis <chad.dupuis@cavium.com>
+Subject: Re: [PATCH 00/20] libfc callback cleanup
+Date: Wed, 19 Oct 2016 08:49:41 -0400
+Message-ID: <alpine.OSX.2.00.1610190849090.354@administrators-macbook-pro.local>
+References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41724 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941093AbcJSOQe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 19 Oct 2016 10:16:34 -0400
-Content-Disposition: inline
-In-Reply-To: <39c07429-2508-4123-8fe1-ecf407f8571d@sandisk.com>
+Received: from mail-by2nam01on0083.outbound.protection.outlook.com ([104.47.34.83]:36800
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S938790AbcJSQXU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 19 Oct 2016 12:23:20 -0400
+In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lin <ming.l@ssi.samsung.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-Looks fine,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+On Tue, 18 Oct 2016, 8:01am -0000, Hannes Reinecke wrote:
+
+> Hi all,
+> 
+> it has been bugging me for a while that libfc has tons of callbacks
+> in an attempt to abstract things away. But as it turned out
+> no-one ever used those, rendering them quite pointless.
+> As I got some time to kill on the train back from Vienna I've decided
+> to finally kill them and call the functions directly.
+> 
+> As usual, comments and reviews are welcome.
+> 
+> Hannes Reinecke (20):
+>   libfc: Replace ->seq_els_rsp_send callback with function call
+>   libfc: Replace ->lport_reset callback with function call
+>   libfc: Replace ->lport_recv with function call
+>   libfc: Replace ->exch_seq_send callback with function call
+>   libfc: Replace ->rport_destroy callback with function call
+>   libfc: Replace ->rport_lookup callback with function call
+>   scsi_transport_fc: rename 'fc_rport_create' to 'fc_remote_port_create'
+>   libfc: Replace ->rport_create callback with function call
+>   libfc: Replace ->rport_login callback with function call
+>   libfc: Replace ->rport_logoff callback with function call
+>   libfc: Replace ->rport_recv_req callback with function call
+>   libfc: Replace ->rport_flush_queue callback with function call
+>   libfc: Remove fc_rport_init()
+>   libfc: Replace ->seq_send callback with function call
+>   libfc: Replace ->seq_exch_abort callback with function call
+>   libfc: Replace ->exch_done callback with function call
+>   libfc: Replace ->seq_start_next callback with function call
+>   libfc: Replace ->seq_set_resp callback with direct function call
+>   libfc: Replace ->seq_assign callback with function call
+>   libfc: Replace ->seq_release callback with function call
+> 
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c |   1 -
+>  drivers/scsi/bnx2fc/bnx2fc_tgt.c  |   3 +-
+>  drivers/scsi/fcoe/fcoe_ctlr.c     |  35 ++++---
+>  drivers/scsi/fnic/fnic_scsi.c     |   2 +-
+>  drivers/scsi/libfc/fc_disc.c      |  33 ++++---
+>  drivers/scsi/libfc/fc_elsct.c     |   2 +-
+>  drivers/scsi/libfc/fc_exch.c      | 104 ++++++++++----------
+>  drivers/scsi/libfc/fc_fcp.c       |  45 ++++-----
+>  drivers/scsi/libfc/fc_libfc.c     |   2 +-
+>  drivers/scsi/libfc/fc_lport.c     |  62 ++++++------
+>  drivers/scsi/libfc/fc_rport.c     | 167 ++++++++++++++------------------
+>  drivers/scsi/scsi_transport_fc.c  |   8 +-
+>  drivers/target/tcm_fc/tfc_cmd.c   |  20 ++--
+>  drivers/target/tcm_fc/tfc_io.c    |   4 +-
+>  include/scsi/libfc.h              | 195 ++++++--------------------------------
+>  15 files changed, 254 insertions(+), 429 deletions(-)
+> 
+
+Hannes, thanks for doing this.  Should make the code much more readable. 
