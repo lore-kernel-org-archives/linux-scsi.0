@@ -1,83 +1,46 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
-Date: Wed, 19 Oct 2016 23:15:14 +0530
-Message-ID: <CAFp+6iGN3_1+9Rj+ewMucMY2gVWpSuszM8_dB2Xu4a_iT+ZAHw@mail.gmail.com>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
- <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org> <d105d41f88e886f20df0384569b0b688@codeaurora.org>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH v6 1/3] block: Add iocontext priority to request
+Date: Wed, 19 Oct 2016 14:05:24 -0400
+Message-ID: <20161019180524.GH18532@htj.duckdns.org>
+References: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
+ <1476728850-2309-2-git-send-email-adam.manzanares@hgst.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <d105d41f88e886f20df0384569b0b688@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-ide-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1476728850-2309-2-git-send-email-adam.manzanares@hgst.com>
+Sender: linux-ide-owner@vger.kernel.org
+To: Adam Manzanares <adam.manzanares@hgst.com>
+Cc: axboe@kernel.dk, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, Adam Manzananares <adam.manzanares@wdc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
+Hello,
 
+On Mon, Oct 17, 2016 at 11:27:28AM -0700, Adam Manzanares wrote:
+> Patch adds an association between iocontext ioprio and the ioprio of a
+> request. This is done to enable request based drivers the ability to
+> act on priority information stored in the request. An example being
+> ATA devices that support command priorities. If the ATA driver discovers
+> that the device supports command priorities and the request has valid
+> priority information indicating the request is high priority, then a high
+> priority command can be sent to the device. This should improve tail
+> latencies for high priority IO on any device that queues requests
+> internally and can make use of the priority information stored in the
+> request.
+> 
+> The ioprio of the request is set in blk_rq_set_prio which takes the
+> request and the ioc as arguments. If the ioc is valid in blk_rq_set_prio
+> then the iopriority of the request is set as the iopriority of the ioc.
+> In init_request_from_bio a check is made to see if the ioprio of the bio
+> is valid and if so then the request prio comes from the bio.
+> 
+> Signed-off-by: Adam Manzananares <adam.manzanares@wdc.com>
 
-On Wed, Oct 19, 2016 at 1:43 AM, Subhash Jadavani
-<subhashj@codeaurora.org> wrote:
-> On 2016-10-18 07:28, Vivek Gautam wrote:
->>
->> Add phy clock enable code to phy_power_on/off callbacks, and
->> remove explicit calls to enable these phy clocks from the
->> ufs-qcom hcd driver.
->>
->> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
->> ---
->>
->> Changes since v1:
->>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
->>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
->>  - removed function declaration and export symbol for these APIs.
+Jens, if you're okay with it, I can route this through
+libata/for-4.10, or this can be applied to block and libata tree can
+pull from it.
 
-[snip]
-
->> --- a/drivers/scsi/ufs/ufs-qcom.c
->> +++ b/drivers/scsi/ufs/ufs-qcom.c
->> @@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
->> *hba, bool on)
->>                 return 0;
->>
->>         if (on) {
->> -               err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
->> -               if (err)
->> -                       goto out;
->> -
->> -               err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
->> -               if (err) {
->> -                       dev_err(hba->dev, "%s enable phy ref clock failed,
->> err=%d\n",
->> -                               __func__, err);
->> -                       ufs_qcom_phy_disable_iface_clk(host->generic_phy);
->> -                       goto out;
->> -               }
->
->
-> Now that you are moving these ref clk enable/disable to phy_power_on/off and
-> these phy_power_on/off are called only in runtime suspend/resume (3 seconds
-> after last UFS access).
-> Goal is to disable the phy reference clock during aggressive gating (10ms
-> from last UFS access) so shouldn't we call the phy_power_on/off from these
-> setup_clocks() function as well?
->
-
-So setup_clocks() is called for aggressive clock gating as well ?
-If that's the case then yes, we may need to call. But we should try to
-understand here. The phy_power_off turns off all the clocks - reflclk,
-and other interface clocks. Do we want all of them to be turned off ?
-
-phy_power_off will also turn off the PHY. Do we want all this for aggressive
-clock gating ?
-
-
-[snip]
-
-
-Regards
-Vivek
+Thanks.
 
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+tejun
