@@ -1,110 +1,195 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
-Date: Wed, 19 Oct 2016 12:18:12 -0700
-Message-ID: <b5e0234aea75ab395bc42ad85d45fe4e@codeaurora.org>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
- <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org>
- <d105d41f88e886f20df0384569b0b688@codeaurora.org>
- <CAFp+6iGN3_1+9Rj+ewMucMY2gVWpSuszM8_dB2Xu4a_iT+ZAHw@mail.gmail.com>
+From: Adam Manzanares <adam.manzanares@wdc.com>
+Subject: Re: [PATCH v6 3/3] ata: ATA Command Priority Disabled By Default
+Date: Wed, 19 Oct 2016 13:02:45 -0700
+Message-ID: <20161019200244.GB2506@hgst.com>
+References: <1476728850-2309-1-git-send-email-adam.manzanares@hgst.com>
+ <1476728850-2309-4-git-send-email-adam.manzanares@hgst.com>
+ <20161019183829.GK18532@htj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAFp+6iGN3_1+9Rj+ewMucMY2gVWpSuszM8_dB2Xu4a_iT+ZAHw@mail.gmail.com>
+Content-Disposition: inline
+In-Reply-To: <20161019183829.GK18532@htj.duckdns.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+To: Tejun Heo <tj@kernel.org>
+Cc: Adam Manzanares <adam.manzanares@hgst.com>, axboe@kernel.dk, dan.j.williams@intel.com, hare@suse.de, martin.petersen@oracle.com, mchristi@redhat.com, toshi.kani@hpe.com, ming.lei@canonical.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, linux-block@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 2016-10-19 10:45, Vivek Gautam wrote:
-> Hi,
+The 10/19/2016 14:38, Tejun Heo wrote:
+> Hello,
 > 
+> Removed ata_ncq_prio_on() and renamed _on to _enable.  If I messed up
+> anything, please let me know.
 > 
-> On Wed, Oct 19, 2016 at 1:43 AM, Subhash Jadavani
-> <subhashj@codeaurora.org> wrote:
->> On 2016-10-18 07:28, Vivek Gautam wrote:
->>> 
->>> Add phy clock enable code to phy_power_on/off callbacks, and
->>> remove explicit calls to enable these phy clocks from the
->>> ufs-qcom hcd driver.
->>> 
->>> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
->>> ---
->>> 
->>> Changes since v1:
->>>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
->>>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
->>>  - removed function declaration and export symbol for these APIs.
-> 
-> [snip]
-> 
->>> --- a/drivers/scsi/ufs/ufs-qcom.c
->>> +++ b/drivers/scsi/ufs/ufs-qcom.c
->>> @@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct 
->>> ufs_hba
->>> *hba, bool on)
->>>                 return 0;
->>> 
->>>         if (on) {
->>> -               err = 
->>> ufs_qcom_phy_enable_iface_clk(host->generic_phy);
->>> -               if (err)
->>> -                       goto out;
->>> -
->>> -               err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
->>> -               if (err) {
->>> -                       dev_err(hba->dev, "%s enable phy ref clock 
->>> failed,
->>> err=%d\n",
->>> -                               __func__, err);
->>> -                       
->>> ufs_qcom_phy_disable_iface_clk(host->generic_phy);
->>> -                       goto out;
->>> -               }
->> 
->> 
->> Now that you are moving these ref clk enable/disable to 
->> phy_power_on/off and
->> these phy_power_on/off are called only in runtime suspend/resume (3 
->> seconds
->> after last UFS access).
->> Goal is to disable the phy reference clock during aggressive gating 
->> (10ms
->> from last UFS access) so shouldn't we call the phy_power_on/off from 
->> these
->> setup_clocks() function as well?
->> 
-> 
-> So setup_clocks() is called for aggressive clock gating as well ?
-> If that's the case then yes, we may need to call. But we should try to
-> understand here. The phy_power_off turns off all the clocks - reflclk,
-> and other interface clocks. Do we want all of them to be turned off ?
 
-Yes, we want to turn off the ref clock (& other clocks) during 
-aggressive gating.
+Works as expected. Thanks for cleaning this up.
 
+> Also, can you please send a follow-up patch to make the store function
+> reject prio enabling if the device doesn't support it?
 > 
-> phy_power_off will also turn off the PHY. Do we want all this for 
-> aggressive
-> clock gating ?
 
-Yes, PHY rails can be powered off both during the aggressive clk gating 
-and runtime suspend. But as the regulator on/off latencies could be 
-higher (especially for the shared rail), we were turning them off doing 
-it in runtime suspend only (via phy_power_off()).
-Now that phy_power_on/off is managing both clocks and regulators, and we 
-will really want to turn off the ref clocks during clock gating, there 
-is no option but to call phy_power_on/off during aggressive gating.
+I'll send something out shortly.
 
-> 
-> 
-> [snip]
-> 
-> 
-> Regards
-> Vivek
+Take care,
+Adam
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+> Thanks.
+> 
+> ------ 8< ------
+> From 84f95243b5439a20c33837075b88926bfa00c4ec Mon Sep 17 00:00:00 2001
+> From: Adam Manzanares <adam.manzanares@hgst.com>
+> Date: Mon, 17 Oct 2016 11:27:30 -0700
+> Subject: [PATCH 2/2] ata: ATA Command Priority Disabled By Default
+> 
+> Add a sysfs entry to turn on priority information being passed
+> to a ATA device. By default this feature is turned off.
+> 
+> This patch depends on ata: Enabling ATA Command Priorities
+> 
+> tj: Renamed ncq_prio_on to ncq_prio_enable and removed trivial
+>     ata_ncq_prio_on() and open-coded the test.
+> 
+> Signed-off-by: Adam Manzanares <adam.manzanares@hgst.com>
+> Signed-off-by: Tejun Heo <tj@kernel.org>
+> ---
+>  drivers/ata/libahci.c     |  1 +
+>  drivers/ata/libata-core.c |  3 ++-
+>  drivers/ata/libata-scsi.c | 68 +++++++++++++++++++++++++++++++++++++++++++++++
+>  include/linux/libata.h    |  2 ++
+>  4 files changed, 73 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 0d028ea..ee7db31 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -140,6 +140,7 @@ EXPORT_SYMBOL_GPL(ahci_shost_attrs);
+>  struct device_attribute *ahci_sdev_attrs[] = {
+>  	&dev_attr_sw_activity,
+>  	&dev_attr_unload_heads,
+> +	&dev_attr_ncq_prio_enable,
+>  	NULL
+>  };
+>  EXPORT_SYMBOL_GPL(ahci_sdev_attrs);
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index 8346faf..b294339 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -787,7 +787,8 @@ int ata_build_rw_tf(struct ata_taskfile *tf, struct ata_device *dev,
+>  		if (tf->flags & ATA_TFLAG_FUA)
+>  			tf->device |= 1 << 7;
+>  
+> -		if (dev->flags & ATA_DFLAG_NCQ_PRIO) {
+> +		if ((dev->flags & ATA_DFLAG_NCQ_PRIO) &&
+> +		    (dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE)) {
+>  			if (class == IOPRIO_CLASS_RT)
+>  				tf->hob_nsect |= ATA_PRIO_HIGH <<
+>  						 ATA_SHIFT_PRIO;
+> diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> index 2bccc3c..87597a3 100644
+> --- a/drivers/ata/libata-scsi.c
+> +++ b/drivers/ata/libata-scsi.c
+> @@ -271,6 +271,73 @@ DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
+>  	    ata_scsi_park_show, ata_scsi_park_store);
+>  EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
+>  
+> +static ssize_t ata_ncq_prio_enable_show(struct device *device,
+> +					struct device_attribute *attr, char *buf)
+> +{
+> +	struct scsi_device *sdev = to_scsi_device(device);
+> +	struct ata_port *ap;
+> +	struct ata_device *dev;
+> +	bool ncq_prio_enable;
+> +	int rc = 0;
+> +
+> +	ap = ata_shost_to_port(sdev->host);
+> +
+> +	spin_lock_irq(ap->lock);
+> +	dev = ata_scsi_find_dev(ap, sdev);
+> +	if (!dev) {
+> +		rc = -ENODEV;
+> +		goto unlock;
+> +	}
+> +
+> +	ncq_prio_enable = dev->flags & ATA_DFLAG_NCQ_PRIO_ENABLE;
+> +
+> +unlock:
+> +	spin_unlock_irq(ap->lock);
+> +
+> +	return rc ? rc : snprintf(buf, 20, "%u\n", ncq_prio_enable);
+> +}
+> +
+> +static ssize_t ata_ncq_prio_enable_store(struct device *device,
+> +					 struct device_attribute *attr,
+> +					 const char *buf, size_t len)
+> +{
+> +	struct scsi_device *sdev = to_scsi_device(device);
+> +	struct ata_port *ap;
+> +	struct ata_device *dev;
+> +	long int input;
+> +	unsigned long flags;
+> +	int rc;
+> +
+> +	rc = kstrtol(buf, 10, &input);
+> +	if (rc)
+> +		return rc;
+> +	if ((input < 0) || (input > 1))
+> +		return -EINVAL;
+> +
+> +	ap = ata_shost_to_port(sdev->host);
+> +
+> +	spin_lock_irqsave(ap->lock, flags);
+> +	dev = ata_scsi_find_dev(ap, sdev);
+> +	if (unlikely(!dev)) {
+> +		rc = -ENODEV;
+> +		goto unlock;
+> +	}
+> +
+> +	if (input)
+> +		dev->flags |= ATA_DFLAG_NCQ_PRIO_ENABLE;
+> +	else
+> +		dev->flags &= ~ATA_DFLAG_NCQ_PRIO_ENABLE;
+> +
+> +unlock:
+> +	spin_unlock_irqrestore(ap->lock, flags);
+> +
+> +	return rc ? rc : len;
+> +}
+> +
+> +DEVICE_ATTR(ncq_prio_enable, S_IRUGO | S_IWUSR,
+> +	    ata_ncq_prio_enable_show, ata_ncq_prio_enable_store);
+> +EXPORT_SYMBOL_GPL(dev_attr_ncq_prio_enable);
+> +
+>  void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
+>  			u8 sk, u8 asc, u8 ascq)
+>  {
+> @@ -402,6 +469,7 @@ EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
+>  
+>  struct device_attribute *ata_common_sdev_attrs[] = {
+>  	&dev_attr_unload_heads,
+> +	&dev_attr_ncq_prio_enable,
+>  	NULL
+>  };
+>  EXPORT_SYMBOL_GPL(ata_common_sdev_attrs);
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index 90b69a6..c170be5 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -167,6 +167,7 @@ enum {
+>  	ATA_DFLAG_UNLOCK_HPA	= (1 << 18), /* unlock HPA */
+>  	ATA_DFLAG_NCQ_SEND_RECV = (1 << 19), /* device supports NCQ SEND and RECV */
+>  	ATA_DFLAG_NCQ_PRIO	= (1 << 20), /* device supports NCQ priority */
+> +	ATA_DFLAG_NCQ_PRIO_ENABLE = (1 << 21), /* Priority cmds sent to dev */
+>  	ATA_DFLAG_INIT_MASK	= (1 << 24) - 1,
+>  
+>  	ATA_DFLAG_DETACH	= (1 << 24),
+> @@ -545,6 +546,7 @@ typedef void (*ata_postreset_fn_t)(struct ata_link *link, unsigned int *classes)
+>  
+>  extern struct device_attribute dev_attr_link_power_management_policy;
+>  extern struct device_attribute dev_attr_unload_heads;
+> +extern struct device_attribute dev_attr_ncq_prio_enable;
+>  extern struct device_attribute dev_attr_em_message_type;
+>  extern struct device_attribute dev_attr_em_message;
+>  extern struct device_attribute dev_attr_sw_activity;
+> -- 
+> 2.7.4
+> 
