@@ -1,40 +1,83 @@
-From: Dave Hansen <dave.hansen@linux.intel.com>
-Subject: Re: [PATCH 00/10] mm: adjust get_user_pages* functions
- to explicitly pass FOLL_* flags
-Date: Wed, 19 Oct 2016 10:23:55 -0700
-Message-ID: <5807AC2B.4090208@linux.intel.com>
-References: <20161013002020.3062-1-lstoakes@gmail.com>
- <20161018153050.GC13117@dhcp22.suse.cz> <20161019085815.GA22239@lucifer>
- <20161019090727.GE7517@dhcp22.suse.cz> <5807A427.7010200@linux.intel.com>
- <20161019170127.GN24393@dhcp22.suse.cz>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
+Date: Wed, 19 Oct 2016 23:15:14 +0530
+Message-ID: <CAFp+6iGN3_1+9Rj+ewMucMY2gVWpSuszM8_dB2Xu4a_iT+ZAHw@mail.gmail.com>
+References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
+ <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org> <d105d41f88e886f20df0384569b0b688@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
-In-Reply-To: <20161019170127.GN24393@dhcp22.suse.cz>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Michal Hocko <mhocko@kernel.org>
-Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, Jan Kara <jack@suse.cz>, kvm@vger.kernel.org, linux-sh@vger.kernel.org, dri-devel@lists.freedesktop.org, linux-mm@kvack.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-ia64@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lorenzo Stoakes <lstoakes@gmail.com>, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.kernel.org, linux-fs
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <d105d41f88e886f20df0384569b0b688@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMTAvMTkvMjAxNiAxMDowMSBBTSwgTWljaGFsIEhvY2tvIHdyb3RlOgo+IFRoZSBxdWVzdGlv
-biBJIGhhZCBlYXJsaWVyIHdhcyB3aGV0aGVyIHRoaXMgaGFzIHRvIGJlIGFuIGV4cGxpY2l0IEZP
-TEwKPiBmbGFnIHVzZWQgYnkgZy11LXAgdXNlcnMgb3Igd2UgY2FuIGp1c3QgdXNlIGl0IGludGVy
-bmFsbHkgd2hlbiBtbSAhPQo+IGN1cnJlbnQtPm1tCgpUaGUgcmVhc29uIEkgY2hvc2Ugbm90IHRv
-IGRvIHRoYXQgd2FzIHRoYXQgZGVmZXJyZWQgd29yayBnZXRzIHJ1biB1bmRlcgphIGJhc2ljYWxs
-eSByYW5kb20gJ2N1cnJlbnQnLiAgSWYgd2UganVzdCB1c2UgJ21tICE9IGN1cnJlbnQtPm1tJywg
-dGhlbgp0aGUgZGVmZXJyZWQgd29yayB3aWxsIHNvbWV0aW1lcyBoYXZlIHBrZXlzIGVuZm9yY2Vk
-IGFuZCBzb21ldGltZXMgbm90LApiYXNpY2FsbHkgcmFuZG9tbHkuCgpXZSB3YW50IHRvIGJlIGNv
-bnNpc3RlbnQgd2l0aCB3aGV0aGVyIHRoZXkgYXJlIGVuZm9yY2VkIG9yIG5vdCwgc28gd2UKZXhw
-bGljaXRseSBpbmRpY2F0ZSB0aGF0IGJ5IGNhbGxpbmcgdGhlIHJlbW90ZSB2YXJpYW50IHZzLiBw
-bGFpbi4KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX18KSW50
-ZWwtZ2Z4IG1haWxpbmcgbGlzdApJbnRlbC1nZnhAbGlzdHMuZnJlZWRlc2t0b3Aub3JnCmh0dHBz
-Oi8vbGlzdHMuZnJlZWRlc2t0b3Aub3JnL21haWxtYW4vbGlzdGluZm8vaW50ZWwtZ2Z4Cg==
+Hi,
+
+
+On Wed, Oct 19, 2016 at 1:43 AM, Subhash Jadavani
+<subhashj@codeaurora.org> wrote:
+> On 2016-10-18 07:28, Vivek Gautam wrote:
+>>
+>> Add phy clock enable code to phy_power_on/off callbacks, and
+>> remove explicit calls to enable these phy clocks from the
+>> ufs-qcom hcd driver.
+>>
+>> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+>> ---
+>>
+>> Changes since v1:
+>>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
+>>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
+>>  - removed function declaration and export symbol for these APIs.
+
+[snip]
+
+>> --- a/drivers/scsi/ufs/ufs-qcom.c
+>> +++ b/drivers/scsi/ufs/ufs-qcom.c
+>> @@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+>> *hba, bool on)
+>>                 return 0;
+>>
+>>         if (on) {
+>> -               err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+>> -               if (err)
+>> -                       goto out;
+>> -
+>> -               err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+>> -               if (err) {
+>> -                       dev_err(hba->dev, "%s enable phy ref clock failed,
+>> err=%d\n",
+>> -                               __func__, err);
+>> -                       ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+>> -                       goto out;
+>> -               }
+>
+>
+> Now that you are moving these ref clk enable/disable to phy_power_on/off and
+> these phy_power_on/off are called only in runtime suspend/resume (3 seconds
+> after last UFS access).
+> Goal is to disable the phy reference clock during aggressive gating (10ms
+> from last UFS access) so shouldn't we call the phy_power_on/off from these
+> setup_clocks() function as well?
+>
+
+So setup_clocks() is called for aggressive clock gating as well ?
+If that's the case then yes, we may need to call. But we should try to
+understand here. The phy_power_off turns off all the clocks - reflclk,
+and other interface clocks. Do we want all of them to be turned off ?
+
+phy_power_off will also turn off the PHY. Do we want all this for aggressive
+clock gating ?
+
+
+[snip]
+
+
+Regards
+Vivek
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
