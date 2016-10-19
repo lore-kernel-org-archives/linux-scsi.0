@@ -1,51 +1,63 @@
-From: Michal Hocko <mhocko@kernel.org>
-Subject: Re: [PATCH 08/10] mm: replace __access_remote_vm()
- write parameter with gup_flags
-Date: Wed, 19 Oct 2016 10:13:52 +0200
-Message-ID: <20161019081352.GB7562@dhcp22.suse.cz>
+From: Lorenzo Stoakes <lstoakes@gmail.com>
+Subject: Re: [PATCH 08/10] mm: replace __access_remote_vm() write parameter
+ with gup_flags
+Date: Wed, 19 Oct 2016 09:40:45 +0100
+Message-ID: <20161019084045.GA19441@lucifer>
 References: <20161013002020.3062-1-lstoakes@gmail.com>
  <20161013002020.3062-9-lstoakes@gmail.com>
  <20161019075903.GP29967@quack2.suse.cz>
+ <20161019081352.GB7562@dhcp22.suse.cz>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <intel-gfx-bounces@lists.freedesktop.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
 Content-Disposition: inline
-In-Reply-To: <20161019075903.GP29967@quack2.suse.cz>
-List-Unsubscribe: <https://lists.freedesktop.org/mailman/options/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=unsubscribe>
-List-Archive: <https://lists.freedesktop.org/archives/intel-gfx>
-List-Post: <mailto:intel-gfx@lists.freedesktop.org>
-List-Help: <mailto:intel-gfx-request@lists.freedesktop.org?subject=help>
-List-Subscribe: <https://lists.freedesktop.org/mailman/listinfo/intel-gfx>,
- <mailto:intel-gfx-request@lists.freedesktop.org?subject=subscribe>
-Errors-To: intel-gfx-bounces@lists.freedesktop.org
-Sender: "Intel-gfx" <intel-gfx-bounces@lists.freedesktop.org>
-To: Jan Kara <jack@suse.cz>
-Cc: linux-mips@linux-mips.org, linux-fbdev@vger.kernel.org, linux-ia64@vger.kernel.org, kvm@vger.kernel.org, linux-sh@vger.kernel.org, Dave Hansen <dave.hansen@linux.intel.com>, dri-devel@lists.freedesktop.org, linux-mm@kvack.org, netdev@vger.kernel.org, sparclinux@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-rdma@vger.kernel.org, x86@kernel.org, Hugh Dickins <hughd@google.com>, linux-media@vger.kernel.org, Rik van Riel <riel@redhat.com>, intel-gfx@lists.freedesktop.org, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, linux-arm-kernel@lists.infradead.org, Lorenzo Stoakes <lstoakes@gmail.com>, linux-cris-kernel@axis.com, Linus Torvalds <torvalds@linux-foundation.org>, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org, linux-security-module@vger.kernel.org, linux-alpha@vger.ker
+In-Reply-To: <20161019081352.GB7562@dhcp22.suse.cz>
+Sender: owner-linux-mm@kvack.org
+To: Michal Hocko <mhocko@kernel.org>
+Cc: Jan Kara <jack@suse.cz>, linux-mm@kvack.org, Linus Torvalds <torvalds@linux-foundation.org>, Hugh Dickins <hughd@google.com>, Dave Hansen <dave.hansen@linux.intel.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-security-module@vger.kernel.org, linux-sh
 List-Id: linux-scsi@vger.kernel.org
 
-T24gV2VkIDE5LTEwLTE2IDA5OjU5OjAzLCBKYW4gS2FyYSB3cm90ZToKPiBPbiBUaHUgMTMtMTAt
-MTYgMDE6MjA6MTgsIExvcmVuem8gU3RvYWtlcyB3cm90ZToKPiA+IFRoaXMgcGF0Y2ggcmVtb3Zl
-cyB0aGUgd3JpdGUgcGFyYW1ldGVyIGZyb20gX19hY2Nlc3NfcmVtb3RlX3ZtKCkgYW5kIHJlcGxh
-Y2VzIGl0Cj4gPiB3aXRoIGEgZ3VwX2ZsYWdzIHBhcmFtZXRlciBhcyB1c2Ugb2YgdGhpcyBmdW5j
-dGlvbiBwcmV2aW91c2x5IF9pbXBsaWVkXwo+ID4gRk9MTF9GT1JDRSwgd2hlcmVhcyBhZnRlciB0
-aGlzIHBhdGNoIGNhbGxlcnMgZXhwbGljaXRseSBwYXNzIHRoaXMgZmxhZy4KPiA+IAo+ID4gV2Ug
-bWFrZSB0aGlzIGV4cGxpY2l0IGFzIHVzZSBvZiBGT0xMX0ZPUkNFIGNhbiByZXN1bHQgaW4gc3Vy
-cHJpc2luZyBiZWhhdmlvdXIKPiA+IChhbmQgaGVuY2UgYnVncykgd2l0aGluIHRoZSBtbSBzdWJz
-eXN0ZW0uCj4gPiAKPiA+IFNpZ25lZC1vZmYtYnk6IExvcmVuem8gU3RvYWtlcyA8bHN0b2FrZXNA
-Z21haWwuY29tPgo+IAo+IFNvIEknbSBub3QgY29udmluY2VkIHRoaXMgKGFuZCB0aGUgZm9sbG93
-aW5nIHR3byBwYXRjaGVzKSBpcyBhY3R1YWxseQo+IGhlbHBpbmcgbXVjaC4gQnkgZ3JlcHBpbmcg
-Zm9yIEZPTExfRk9SQ0Ugd2Ugd2lsbCBlYXNpbHkgc2VlIHRoYXQgYW55IGNhbGxlcgo+IG9mIGFj
-Y2Vzc19yZW1vdGVfdm0oKSBnZXRzIHRoYXQgc2VtYW50aWNzIGFuZCBjYW4gdGh1cyBjb250aW51
-ZSBzZWFyY2gKCkkgYW0gcmVhbGx5IHdvbmRlcmluZy4gSXMgdGhlcmUgYW55dGhpbmcgaW5oZXJl
-bnQgdGhhdCB3b3VsZCByZXF1aXJlCkZPTExfRk9SQ0UgZm9yIGFjY2Vzc19yZW1vdGVfdm0/IEkg
-bWVhbiBGT0xMX0ZPUkNFIGlzIGEgcmVhbGx5Cm5vbi10cml2aWFsIHRoaW5nLiBJdCBkb2Vzbid0
-IG9iZXkgdm1hIHBlcm1pc3Npb25zIHNvIHdlIHNob3VsZCByZWFsbHkKbWluaW1pemUgaXRzIHVz
-YWdlLiBEbyBhbGwgb2YgdGhvc2UgdXNlcnMgcmVhbGx5IG5lZWQgRk9MTF9GT1JDRT8KCkFueXdh
-eSBJIHdvdWxkIHJhdGhlciBzZWUgdGhlIGZsYWcgZXhwbGljaXQgYW5kIHVzZWQgYXQgbW9yZSBw
-bGFjZXMgdGhhbgpoaWRkZW4gYmVoaW5kIGEgaGVscGVyIGZ1bmN0aW9uLgotLSAKTWljaGFsIEhv
-Y2tvClNVU0UgTGFicwpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fXwpJbnRlbC1nZnggbWFpbGluZyBsaXN0CkludGVsLWdmeEBsaXN0cy5mcmVlZGVza3RvcC5v
-cmcKaHR0cHM6Ly9saXN0cy5mcmVlZGVza3RvcC5vcmcvbWFpbG1hbi9saXN0aW5mby9pbnRlbC1n
-ZngK
+On Wed, Oct 19, 2016 at 10:13:52AM +0200, Michal Hocko wrote:
+> On Wed 19-10-16 09:59:03, Jan Kara wrote:
+> > On Thu 13-10-16 01:20:18, Lorenzo Stoakes wrote:
+> > > This patch removes the write parameter from __access_remote_vm() and replaces it
+> > > with a gup_flags parameter as use of this function previously _implied_
+> > > FOLL_FORCE, whereas after this patch callers explicitly pass this flag.
+> > >
+> > > We make this explicit as use of FOLL_FORCE can result in surprising behaviour
+> > > (and hence bugs) within the mm subsystem.
+> > >
+> > > Signed-off-by: Lorenzo Stoakes <lstoakes@gmail.com>
+> >
+> > So I'm not convinced this (and the following two patches) is actually
+> > helping much. By grepping for FOLL_FORCE we will easily see that any caller
+> > of access_remote_vm() gets that semantics and can thus continue search
+>
+> I am really wondering. Is there anything inherent that would require
+> FOLL_FORCE for access_remote_vm? I mean FOLL_FORCE is a really
+> non-trivial thing. It doesn't obey vma permissions so we should really
+> minimize its usage. Do all of those users really need FOLL_FORCE?
+
+I wonder about this also, for example by accessing /proc/self/mem you trigger
+access_remote_vm() and consequently get_user_pages_remote() meaning FOLL_FORCE
+is implied and you can use /proc/self/mem to override any VMA permissions. I
+wonder if this is desirable behaviour or whether this ought to be limited to
+ptrace system calls. Regardless, by making the flag more visible it makes it
+easier to see that this is happening.
+
+Note that this /proc/self/mem behaviour is what triggered the bug that brought
+about this discussion in the first place -
+https://marc.info/?l=linux-mm&m=147363447105059 - as using /proc/self/mem this
+way on PROT_NONE memory broke some assumptions.
+
+On the other hand I see your point Jan in that you know any caller of these
+functions will have FOLL_FORCE implied, and you have to decide to stop passing
+the flag at _some_ point in the stack, however it seems fairly sane to have that
+stopping point exist outside of exported gup functions so the gup interface
+forces explicitness but callers can wrap things as they need.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
