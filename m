@@ -1,96 +1,79 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: Re: Device or HBA QD throttling creates holes in Sequential work load
-Date: Thu, 20 Oct 2016 12:11:14 +0530
-Message-ID: <CAHsXFKEuXfHt3316qqW1Ccyd6Kyo_qZ6+jq39vMJyZRm5e5MBw@mail.gmail.com>
-References: <CAHsXFKHHZToPLuB9N2UJ98b0hKnsz8_fNzb2Anz5aTUXZ1+YpA@mail.gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [RFC 1/6] qed: Add support for hardware offloaded iSCSI.
+Date: Thu, 20 Oct 2016 09:09:01 +0200
+Message-ID: <20161020070901.52tm2d255dquocho@linux-x5ow.site>
+References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com>
+ <1476853273-22960-2-git-send-email-manish.rangankar@cavium.com>
+ <20161019090923.up3xgrbya3mxr7vu@linux-x5ow.site>
+ <alpine.LRH.2.00.1610191538530.25712@mvluser05.qlc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f52.google.com ([209.85.214.52]:35765 "EHLO
-        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750845AbcJTGlQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 02:41:16 -0400
-Received: by mail-it0-f52.google.com with SMTP id 4so155195764itv.0
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2016 23:41:16 -0700 (PDT)
-In-Reply-To: <CAHsXFKHHZToPLuB9N2UJ98b0hKnsz8_fNzb2Anz5aTUXZ1+YpA@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <alpine.LRH.2.00.1610191538530.25712@mvluser05.qlc.com>
+Sender: netdev-owner@vger.kernel.org
+To: Arun Easi <arun.easi@cavium.com>
+Cc: manish.rangankar@cavium.com, lduncan@suse.com, cleech@redhat.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, Yuval.Mintz@cavium.com, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@qlogic.com>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-Reply to see if email reached to linux-scsi@vger.kernel.org.
+Hi Arun,
 
+On Wed, Oct 19, 2016 at 05:14:59PM -0700, Arun Easi wrote:
+> Thanks Johannes for the review, please see my response below.
+> 
 
-On Thu, Oct 20, 2016 at 12:07 PM, Kashyap Desai
-<kashyap.desai@broadcom.com> wrote:
-> Hi,
->
-> I am doing some performance tuning in MR driver to understand how sdev queue
-> depth and hba queue depth play role in IO submission from above layer.
->
->  I have 24 JBOD connected to MR 12GB controller and I can see performance
-> for 4K Sequential work load as below.
->
->  HBA QD for MR controller is 4065 and Per device QD is set to 32
->
->
->
-> queue depth from <fio> 256 reports 300K IOPS
->
-> queue depth from <fio> 128 reports 330K IOPS
->
-> queue depth from <fio> 64 reports 360K IOPS
->
-> queue depth from <fio> 32 reports 510K IOPS
->
->
->
-> In MR driver I added debug print and confirm that more IO come to driver as
-> random IO whenever I have <fio> queue depth more than 32.
->
-> I have debug using scsi logging level and blktrace as well. Below is snippet
-> of logs using scsi logging level.  In summary, if SML do flow control of IO
-> due to Device QD or HBA QD,  IO coming to LLD is more random pattern.
->
->
->
-> I see IO coming to driver is not sequential.
->
->
->
-> [79546.912041] sd 18:2:21:0: [sdy] tag#854 CDB: Write(10) 2a 00 00 03 c0 3b
-> 00 00 01 00 [79546.912049] sd 18:2:21:0: [sdy] tag#855 CDB: Write(10) 2a 00
-> 00 03 c0 3c 00 00 01 00 [79546.912053] sd 18:2:21:0: [sdy] tag#886 CDB:
-> Write(10) 2a 00 00 03 c0 5b 00 00 01 00 <- After 3c it jumps to 5b. Sequence
-> are overlapped. Due to sdev QD throttling.
->
-> [79546.912056] sd 18:2:21:0: [sdy] tag#887 CDB: Write(10) 2a 00 00 03 c0 5c
-> 00 00 01 00 [79546.912250] sd 18:2:21:0: [sdy] tag#856 CDB: Write(10) 2a 00
-> 00 03 c0 3d 00 00 01 00 [79546.912257] sd 18:2:21:0: [sdy] tag#888 CDB:
-> Write(10) 2a 00 00 03 c0 5d 00 00 01 00 [79546.912259] sd 18:2:21:0: [sdy]
-> tag#857 CDB: Write(10) 2a 00 00 03 c0 3e 00 00 01 00 [79546.912268] sd
-> 18:2:21:0: [sdy] tag#858 CDB: Write(10) 2a 00 00 03 c0 3f 00 00 01 00
->
->
->
-> If scsi_request_fn() breaks due to unavailability of device queue (due to
-> below check), will there be any side defect as I observe ?
->
->                 if (!scsi_dev_queue_ready(q, sdev))
->
->                              break;
->
->  If I reduce HBA QD and make sure IO from above layer is throttled due to
-> HBA QD, there is a same impact.  MR driver use host wide shared tag map.
->
->  Can someone help me if this can be tunable in LLD providing additional
-> settings or it is expected behavior ? Problem I am facing is, I am not able
-> to figure out optimal device queue depth for different configuration and
-> work load.
->
->  ` Kashyap
->
->
->
->
->
->
+[...]
+
+> > 
+> > Why not introduce a small helper like:
+> > static inline bool qed_is_iscsi_personality()
+> > {
+> > 	return IS_ENABLED(CONFIG_QEDI) && p_hwfn->hw_info.personality ==
+> > 		QED_PCI_ISCSI;
+> > }
+> 
+> I think I can remove the IS_ENABLED() check in places like this
+> and have the check contained in header file. qed_iscsi_free()
+> already is taken care, if I do the same fore qed_ooo*, I think
+> the check would just be "p_hwfn->hw_info.personality ==
+> QED_PCI_ISCSI", which would keep it consistent with the other
+> areas where similar check is done for other protocols.
+
+Sounds good.
+
+> 
+
+[...]
+
+> > 
+> > Is there any chance you could factor out above blocks into own functions so
+> > you have
+> > 
+> > 
+> > 	if (!GET_FIELD(p_ramrod->iscsi.flags,
+> > 		       ISCSI_CONN_OFFLOAD_PARAMS_TCP_ON_CHIP_1B)) {
+> > 		qedi_do_stuff_off_chip();
+> > 	else 
+> > 		qedi_do_stuff_on_chip();
+> > 
+> 
+> This function mostly fills data needed for the firmware interface.
+> By having all data necessary for the command
+> ISCSI_RAMROD_CMD_ID_OFFLOAD_CONN in this function it is easier to
+> refer what is being fed to firmware. If you do not have strong
+> objections, I would like to keep it this way.
+
+No strong objections, I just don't think these lengthy blocks are readable,
+but I don't want to do too much bikeshedding about it.
+
+Thanks,
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
