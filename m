@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 05/10] mpt3sas: Bump driver version as "14.100.00.00"
-Date: Thu, 20 Oct 2016 17:50:13 +0530
-Message-ID: <1476966018-10457-6-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 07/10] mpt3sas: Increased/Additional MSIX support for SAS35  devices.
+Date: Thu, 20 Oct 2016 17:50:15 +0530
+Message-ID: <1476966018-10457-8-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,27 +10,134 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+For SAS35 devices MSIX vectors are inceased to 128 from 96. To support this
+Reply post host index register count is increased to 16. Also variable
+msix96_vector is replaced with combined_reply_queue and variable
+combined_reply_index_count is added to set different values for SAS3 and
+SAS35 devices.
+
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  | 14 +++++++-------
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  8 +++++---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++--
+ 3 files changed, 21 insertions(+), 12 deletions(-)
 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index 9ad7f7c..43cdc02 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1078,7 +1078,7 @@ _base_interrupt(int irq, void *bus_id)
+ 	 * new reply host index value in ReplyPostIndex Field and msix_index
+ 	 * value in MSIxIndex field.
+ 	 */
+-	if (ioc->msix96_vector)
++	if (ioc->combined_reply_queue)
+ 		writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
+ 			MPI2_RPHI_MSIX_INDEX_SHIFT),
+ 			ioc->replyPostRegisterIndex[msix_index/8]);
+@@ -2052,7 +2052,7 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	_base_free_irq(ioc);
+ 	_base_disable_msix(ioc);
+ 
+-	if (ioc->msix96_vector) {
++	if (ioc->combined_reply_queue) {
+ 		kfree(ioc->replyPostRegisterIndex);
+ 		ioc->replyPostRegisterIndex = NULL;
+ 	}
+@@ -2162,7 +2162,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 	/* Use the Combined reply queue feature only for SAS3 C0 & higher
+ 	 * revision HBAs and also only when reply queue count is greater than 8
+ 	 */
+-	if (ioc->msix96_vector && ioc->reply_queue_count > 8) {
++	if (ioc->combined_reply_queue && ioc->reply_queue_count > 8) {
+ 		/* Determine the Supplemental Reply Post Host Index Registers
+ 		 * Addresse. Supplemental Reply Post Host Index Registers
+ 		 * starts at offset MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET and
+@@ -2170,7 +2170,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 		 * MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET from previous one.
+ 		 */
+ 		ioc->replyPostRegisterIndex = kcalloc(
+-		     MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT,
++		     ioc->combined_reply_index_count,
+ 		     sizeof(resource_size_t *), GFP_KERNEL);
+ 		if (!ioc->replyPostRegisterIndex) {
+ 			dfailprintk(ioc, printk(MPT3SAS_FMT
+@@ -2180,14 +2180,14 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
+ 			goto out_fail;
+ 		}
+ 
+-		for (i = 0; i < MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT; i++) {
++		for (i = 0; i < ioc->combined_reply_index_count; i++) {
+ 			ioc->replyPostRegisterIndex[i] = (resource_size_t *)
+ 			     ((u8 *)&ioc->chip->Doorbell +
+ 			     MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
+ 			     (i * MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET));
+ 		}
+ 	} else
+-		ioc->msix96_vector = 0;
++		ioc->combined_reply_queue = 0;
+ 
+ 	if (ioc->is_warpdrive) {
+ 		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
+@@ -5140,7 +5140,7 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
+ 
+ 	/* initialize reply post host index */
+ 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+-		if (ioc->msix96_vector)
++		if (ioc->combined_reply_queue)
+ 			writel((reply_q->msix_index & 7)<<
+ 			   MPI2_RPHI_MSIX_INDEX_SHIFT,
+ 			   ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index e923c91..6f03a86 100644
+index 3d75c57..acb4106 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -73,8 +73,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"13.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		13
-+#define MPT3SAS_DRIVER_VERSION		"14.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		14
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+@@ -300,8 +300,9 @@
+  * There are twelve Supplemental Reply Post Host Index Registers
+  * and each register is at offset 0x10 bytes from the previous one.
+  */
+-#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT 12
+-#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET (0x10)
++#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G3	12
++#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G35	16
++#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET	(0x10)
+ 
+ /* OEM Identifiers */
+ #define MFG10_OEM_ID_INVALID                   (0x00000000)
+@@ -1158,7 +1159,8 @@ struct MPT3SAS_ADAPTER {
+ 	u8		reply_queue_count;
+ 	struct list_head reply_queue_list;
+ 
+-	u8		msix96_vector;
++	u8		combined_reply_queue;
++	u8		combined_reply_index_count;
+ 	/* reply post register index */
+ 	resource_size_t	**replyPostRegisterIndex;
+ 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 521849d..a1c541d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -8748,8 +8748,15 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		}
+ 		if ((ioc->hba_mpi_version_belonged == MPI25_VERSION &&
+ 			pdev->revision >= SAS3_PCI_DEVICE_C0_REVISION) ||
+-			(ioc->hba_mpi_version_belonged == MPI26_VERSION))
+-			ioc->msix96_vector = 1;
++			(ioc->hba_mpi_version_belonged == MPI26_VERSION)) {
++			ioc->combined_reply_queue = 1;
++			if (ioc->is_gen35_ioc)
++				ioc->combined_reply_index_count =
++				 MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G35;
++			else
++				ioc->combined_reply_index_count =
++				 MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G3;
++		}
+ 		break;
+ 	default:
+ 		return -ENODEV;
 -- 
 1.8.3.1
