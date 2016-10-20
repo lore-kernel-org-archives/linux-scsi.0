@@ -1,37 +1,30 @@
 From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [RFC 5/6] qedi: Add support for iSCSI session management.
-Date: Thu, 20 Oct 2016 09:09:01 +0000
-Message-ID: <D42E83FD.34116%manish.rangankar@cavium.com>
+Subject: Re: [RFC 6/6] qedi: Add support for data path.
+Date: Thu, 20 Oct 2016 09:24:13 +0000
+Message-ID: <D42E8924.3413A%manish.rangankar@cavium.com>
 References: <1476853273-22960-1-git-send-email-manish.rangankar@cavium.com>
- <1476853273-22960-6-git-send-email-manish.rangankar@cavium.com>
- <6f79e92c-ea12-331b-5c20-e9a3587b1d80@suse.de>
+ <1476853273-22960-7-git-send-email-manish.rangankar@cavium.com>
+ <fc58b63a-ac67-59e4-7698-4ab742848080@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0059.outbound.protection.outlook.com ([104.47.40.59]:44576
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751044AbcJTJYa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Oct 2016 05:24:30 -0400
-In-Reply-To: <6f79e92c-ea12-331b-5c20-e9a3587b1d80@suse.de>
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <fc58b63a-ac67-59e4-7698-4ab742848080@suse.de>
 Content-Language: en-US
-Content-ID: <4BA0FED753D050468A0C4973F864B35E@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Content-ID: <874D47A4F8092649AB48C1530E9C0C0A@namprd07.prod.outlook.com>
+Sender: netdev-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "lduncan@suse.com" <lduncan@suse.com>, "cleech@redhat.com" <cleech@redhat.com>
 Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, "Mintz, Yuval" <Yuval.Mintz@cavium.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "Javali, Nilesh" <Nilesh.Javali@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>, "Kashyap, Saurav" <Saurav.Kashyap@cavium.com>, "Easi, Arun" <Arun.Easi@cavium.com>
+List-Id: linux-scsi@vger.kernel.org
 
 
 
-On 19/10/16 1:33 PM, "Hannes Reinecke" <hare@suse.de> wrote:
+On 19/10/16 3:54 PM, "Hannes Reinecke" <hare@suse.de> wrote:
 
 >On 10/19/2016 07:01 AM, manish.rangankar@cavium.com wrote:
 >> From: Manish Rangankar <manish.rangankar@cavium.com>
 >>=20
->> This patch adds support for iscsi_transport LLD Login,
->> Logout, NOP-IN/NOP-OUT, Async, Reject PDU processing
->> and Firmware async event handling support.
+>> This patch adds support for data path and TMF handling.
 >>=20
 >> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
 >> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
@@ -40,210 +33,198 @@ On 19/10/16 1:33 PM, "Hannes Reinecke" <hare@suse.de> wrote:
 >> Signed-off-by: Arun Easi <arun.easi@cavium.com>
 >> Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
 >> ---
->>  drivers/scsi/qedi/qedi_fw.c    | 1123 ++++++++++++++++++++++++++++
->>  drivers/scsi/qedi/qedi_gbl.h   |   67 ++
->>  drivers/scsi/qedi/qedi_iscsi.c | 1604
+>>  drivers/scsi/qedi/qedi_fw.c    | 1282
 >>++++++++++++++++++++++++++++++++++++++++
->>  drivers/scsi/qedi/qedi_iscsi.h |  228 ++++++
->>  drivers/scsi/qedi/qedi_main.c  |  164 ++++
->>  5 files changed, 3186 insertions(+)
->>  create mode 100644 drivers/scsi/qedi/qedi_fw.c
->>  create mode 100644 drivers/scsi/qedi/qedi_gbl.h
->>  create mode 100644 drivers/scsi/qedi/qedi_iscsi.c
->>  create mode 100644 drivers/scsi/qedi/qedi_iscsi.h
+>>  drivers/scsi/qedi/qedi_gbl.h   |    6 +
+>>  drivers/scsi/qedi/qedi_iscsi.c |    6 +
+>>  drivers/scsi/qedi/qedi_main.c  |    4 +
+>>  4 files changed, 1298 insertions(+)
 >>=20
+>> diff --git a/drivers/scsi/qedi/qedi_fw.c b/drivers/scsi/qedi/qedi_fw.c
+>> index a820785..af1e14d 100644
+>> --- a/drivers/scsi/qedi/qedi_fw.c
+>> +++ b/drivers/scsi/qedi/qedi_fw.c
+>> @@ -147,6 +147,114 @@ static void qedi_process_text_resp(struct
+>>qedi_ctx *qedi,
+>>  	spin_unlock(&session->back_lock);
+>>  }
 
 --snipped--
->>
->> +static void qedi_process_async_mesg(struct qedi_ctx *qedi,
->> +				    union iscsi_cqe *cqe,
->> +				    struct iscsi_task *task,
->> +				    struct qedi_conn *qedi_conn,
->> +				    u16 que_idx)
+>> +void qedi_trace_io(struct qedi_ctx *qedi, struct iscsi_task *task,
+>> +		   u16 tid, int8_t direction)
 >> +{
->> +	struct iscsi_conn *conn =3D qedi_conn->cls_conn->dd_data;
->> +	struct iscsi_session *session =3D conn->session;
->> +	struct iscsi_async_msg_hdr *cqe_async_msg;
->> +	struct iscsi_async *resp_hdr;
->> +	u32 scsi_lun[2];
->> +	u32 pdu_len, num_bdqs;
->> +	char bdq_data[QEDI_BDQ_BUF_SIZE];
+>> +	struct qedi_io_log *io_log;
+>> +	struct iscsi_conn *conn =3D task->conn;
+>> +	struct qedi_conn *qedi_conn =3D conn->dd_data;
+>> +	struct scsi_cmnd *sc_cmd =3D task->sc;
 >> +	unsigned long flags;
+>> +	u8 op;
 >> +
->> +	spin_lock_bh(&session->back_lock);
+>> +	spin_lock_irqsave(&qedi->io_trace_lock, flags);
 >> +
->> +	cqe_async_msg =3D &cqe->cqe_common.iscsi_hdr.async_msg;
->> +	pdu_len =3D cqe_async_msg->hdr_second_dword &
->> +		ISCSI_ASYNC_MSG_HDR_DATA_SEG_LEN_MASK;
->> +	num_bdqs =3D pdu_len / QEDI_BDQ_BUF_SIZE;
+>> +	io_log =3D &qedi->io_trace_buf[qedi->io_trace_idx];
+>> +	io_log->direction =3D direction;
+>> +	io_log->task_id =3D tid;
+>> +	io_log->cid =3D qedi_conn->iscsi_conn_id;
+>> +	io_log->lun =3D sc_cmd->device->lun;
+>> +	io_log->op =3D sc_cmd->cmnd[0];
+>> +	op =3D sc_cmd->cmnd[0];
 >> +
->> +	if (cqe->cqe_common.cqe_type =3D=3D ISCSI_CQE_TYPE_UNSOLICITED) {
->> +		spin_lock_irqsave(&qedi->hba_lock, flags);
->> +		qedi_unsol_pdu_adjust_bdq(qedi, &cqe->cqe_unsolicited,
->> +					  pdu_len, num_bdqs, bdq_data);
->> +		spin_unlock_irqrestore(&qedi->hba_lock, flags);
->> +	}
->> +
->> +	resp_hdr =3D (struct iscsi_async *)&qedi_conn->gen_pdu.resp_hdr;
->> +	memset(resp_hdr, 0, sizeof(struct iscsi_hdr));
->> +	resp_hdr->opcode =3D cqe_async_msg->opcode;
->> +	resp_hdr->flags =3D 0x80;
->> +
->> +	scsi_lun[0] =3D cpu_to_be32(cqe_async_msg->lun.lo);
->> +	scsi_lun[1] =3D cpu_to_be32(cqe_async_msg->lun.hi);
->I _think_ we have a SCSI LUN structure ...
-
-Will do.
-
---snipped--
->> +void qedi_process_iscsi_error(struct qedi_endpoint *ep, struct
->>async_data *data)
->> +{
->> +	struct qedi_conn *qedi_conn;
->> +	struct qedi_ctx *qedi;
->> +	char warn_notice[] =3D "iscsi_warning";
->> +	char error_notice[] =3D "iscsi_error";
->> +	char *message;
->> +	int need_recovery =3D 0;
->> +	u32 err_mask =3D 0;
->> +	char msg[64];
->> +
->> +	if (!ep)
->> +		return;
->> +
->> +	qedi_conn =3D ep->conn;
->> +	if (!qedi_conn)
->> +		return;
->> +
->> +	qedi =3D ep->qedi;
->> +
->> +	QEDI_ERR(&qedi->dbg_ctx, "async event iscsi error:0x%x\n",
->> +		 data->error_code);
->> +
->> +	if (err_mask) {
->> +		need_recovery =3D 0;
->> +		message =3D warn_notice;
+>> +	if (op =3D=3D READ_10 || op =3D=3D WRITE_10) {
+>> +		io_log->lba[0] =3D sc_cmd->cmnd[2];
+>> +		io_log->lba[1] =3D sc_cmd->cmnd[3];
+>> +		io_log->lba[2] =3D sc_cmd->cmnd[4];
+>> +		io_log->lba[3] =3D sc_cmd->cmnd[5];
 >> +	} else {
->> +		need_recovery =3D 1;
->> +		message =3D error_notice;
+>> +		io_log->lba[0] =3D 0;
+>> +		io_log->lba[1] =3D 0;
+>> +		io_log->lba[2] =3D 0;
+>> +		io_log->lba[3] =3D 0;
+>> +	}
+>Only for READ_10 and WRITE_10? What about the other read or write
+>commands?
+
+We will add support for other scsi commands in the next revision.
+
+>
+>> +	io_log->bufflen =3D scsi_bufflen(sc_cmd);
+>> +	io_log->sg_count =3D scsi_sg_count(sc_cmd);
+>> +	io_log->fast_sgs =3D qedi->fast_sgls;
+>> +	io_log->cached_sgs =3D qedi->cached_sgls;
+>> +	io_log->slow_sgs =3D qedi->slow_sgls;
+>> +	io_log->cached_sge =3D qedi->use_cached_sge;
+>> +	io_log->slow_sge =3D qedi->use_slow_sge;
+>> +	io_log->fast_sge =3D qedi->use_fast_sge;
+>> +	io_log->result =3D sc_cmd->result;
+>> +	io_log->jiffies =3D jiffies;
+>> +	io_log->blk_req_cpu =3D smp_processor_id();
+>> +
+>> +	if (direction =3D=3D QEDI_IO_TRACE_REQ) {
+>> +		/* For requests we only care about the submission CPU */
+>> +		io_log->req_cpu =3D smp_processor_id() % qedi->num_queues;
+>> +		io_log->intr_cpu =3D 0;
+>> +		io_log->blk_rsp_cpu =3D 0;
+>> +	} else if (direction =3D=3D QEDI_IO_TRACE_RSP) {
+>> +		io_log->req_cpu =3D smp_processor_id() % qedi->num_queues;
+>> +		io_log->intr_cpu =3D qedi->intr_cpu;
+>> +		io_log->blk_rsp_cpu =3D smp_processor_id();
 >> +	}
 >> +
->> +	switch (data->error_code) {
->> +	case ISCSI_STATUS_NONE:
->> +		strcpy(msg, "tcp_error none");
->> +		break;
->> +	case ISCSI_CONN_ERROR_TASK_CID_MISMATCH:
->> +		strcpy(msg, "task cid mismatch");
->> +		break;
->> +	case ISCSI_CONN_ERROR_TASK_NOT_VALID:
->> +		strcpy(msg, "invalid task");
->> +		break;
->> +	case ISCSI_CONN_ERROR_RQ_RING_IS_FULL:
->> +		strcpy(msg, "rq ring full");
->> +		break;
->> +	case ISCSI_CONN_ERROR_CMDQ_RING_IS_FULL:
->> +		strcpy(msg, "cmdq ring full");
->> +		break;
->> +	case ISCSI_CONN_ERROR_HQE_CACHING_FAILED:
->> +		strcpy(msg, "sge caching failed");
->> +		break;
->> +	case ISCSI_CONN_ERROR_HEADER_DIGEST_ERROR:
->> +		strcpy(msg, "hdr digest error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_LOCAL_COMPLETION_ERROR:
->> +		strcpy(msg, "local cmpl error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_DATA_OVERRUN:
->> +		strcpy(msg, "invalid task");
->> +		break;
->> +	case ISCSI_CONN_ERROR_OUT_OF_SGES_ERROR:
->> +		strcpy(msg, "out of sge error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_TCP_SEG_PROC_IP_OPTIONS_ERROR:
->> +		strcpy(msg, "tcp seg ip options error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_TCP_IP_FRAGMENT_ERROR:
->> +		strcpy(msg, "tcp ip fragment error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_AHS_LEN:
->> +		strcpy(msg, "AHS len protocol error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_ITT_OUT_OF_RANGE:
->> +		strcpy(msg, "itt out of range error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DATA_SEG_LEN_EXCEEDS_PDU_SIZE:
->> +		strcpy(msg, "data seg more than pdu size");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_INVALID_OPCODE:
->> +		strcpy(msg, "invalid opcode");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_INVALID_OPCODE_BEFORE_UPDATE:
->> +		strcpy(msg, "invalid opcode before update");
->> +		break;
->> +	case ISCSI_CONN_ERROR_UNVALID_NOPIN_DSL:
->> +		strcpy(msg, "unexpected opcode");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_R2T_CARRIES_NO_DATA:
->> +		strcpy(msg, "r2t carries no data");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DATA_SN:
->> +		strcpy(msg, "data sn error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DATA_IN_TTT:
->> +		strcpy(msg, "data TTT error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_R2T_TTT:
->> +		strcpy(msg, "r2t TTT error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_R2T_BUFFER_OFFSET:
->> +		strcpy(msg, "buffer offset error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_BUFFER_OFFSET_OOO:
->> +		strcpy(msg, "buffer offset ooo");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_R2T_SN:
->> +		strcpy(msg, "data seg len 0");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DESIRED_DATA_TRNS_LEN_0:
->> +		strcpy(msg, "data xer len error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DESIRED_DATA_TRNS_LEN_1:
->> +		strcpy(msg, "data xer len1 error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DESIRED_DATA_TRNS_LEN_2:
->> +		strcpy(msg, "data xer len2 error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_LUN:
->> +		strcpy(msg, "protocol lun error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_F_BIT_ZERO:
->> +		strcpy(msg, "f bit zero error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_F_BIT_ZERO_S_BIT_ONE:
->> +		strcpy(msg, "f bit zero s bit one error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_EXP_STAT_SN:
->> +		strcpy(msg, "exp stat sn error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DSL_NOT_ZERO:
->> +		strcpy(msg, "dsl not zero error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_INVALID_DSL:
->> +		strcpy(msg, "invalid dsl");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_DATA_SEG_LEN_TOO_BIG:
->> +		strcpy(msg, "data seg len too big");
->> +		break;
->> +	case ISCSI_CONN_ERROR_PROTOCOL_ERR_OUTSTANDING_R2T_COUNT:
->> +		strcpy(msg, "outstanding r2t count error");
->> +		break;
->> +	case ISCSI_CONN_ERROR_SENSE_DATA_LENGTH:
->> +		strcpy(msg, "sense datalen error");
->> +		break;
->Please use an array for mapping values onto strings.
+>> +	qedi->io_trace_idx++;
+>> +	if (qedi->io_trace_idx =3D=3D QEDI_IO_TRACE_SIZE)
+>> +		qedi->io_trace_idx =3D 0;
+>> +
+>> +	qedi->use_cached_sge =3D false;
+>> +	qedi->use_slow_sge =3D false;
+>> +	qedi->use_fast_sge =3D false;
+>> +
+>> +	spin_unlock_irqrestore(&qedi->io_trace_lock, flags);
+>> +}
+>> +
+>> +int qedi_iscsi_send_ioreq(struct iscsi_task *task)
+>> +{
+>> +	struct iscsi_conn *conn =3D task->conn;
+>> +	struct iscsi_session *session =3D conn->session;
+>> +	struct Scsi_Host *shost =3D
+>>iscsi_session_to_shost(session->cls_session);
+>> +	struct qedi_ctx *qedi =3D iscsi_host_priv(shost);
+>> +	struct qedi_conn *qedi_conn =3D conn->dd_data;
+>> +	struct qedi_cmd *cmd =3D task->dd_data;
+>> +	struct scsi_cmnd *sc =3D task->sc;
+>> +	struct iscsi_task_context *fw_task_ctx;
+>> +	struct iscsi_cached_sge_ctx *cached_sge;
+>> +	struct iscsi_phys_sgl_ctx *phys_sgl;
+>> +	struct iscsi_virt_sgl_ctx *virt_sgl;
+>> +	struct ystorm_iscsi_task_st_ctx *yst_cxt;
+>> +	struct mstorm_iscsi_task_st_ctx *mst_cxt;
+>> +	struct iscsi_sgl *sgl_struct;
+>> +	struct iscsi_sge *single_sge;
+>> +	struct iscsi_scsi_req *hdr =3D (struct iscsi_scsi_req *)task->hdr;
+>> +	struct iscsi_sge *bd =3D cmd->io_tbl.sge_tbl;
+>> +	enum iscsi_task_type task_type;
+>> +	struct iscsi_cmd_hdr *fw_cmd;
+>> +	u32 scsi_lun[2];
+>> +	u16 cq_idx =3D smp_processor_id() % qedi->num_queues;
+>> +	s16 ptu_invalidate =3D 0;
+>> +	s16 tid =3D 0;
+>> +	u8 num_fast_sgs;
+>> +
+>> +	tid =3D qedi_get_task_idx(qedi);
+>> +	if (tid =3D=3D -1)
+>> +		return -ENOMEM;
+>> +
+>> +	qedi_iscsi_map_sg_list(cmd);
+>> +
+>> +	int_to_scsilun(sc->device->lun, (struct scsi_lun *)scsi_lun);
+>> +	fw_task_ctx =3D
+>> +	      (struct iscsi_task_context *)qedi_get_task_mem(&qedi->tasks,
+>>tid);
+>> +
+>> +	memset(fw_task_ctx, 0, sizeof(struct iscsi_task_context));
+>> +	cmd->task_id =3D tid;
+>> +
+>> +	/* Ystrom context */
+>Ystrom or Ystorm?
 
-Will add this change in next revision.
+Noted
+
+>
+>> +	fw_cmd =3D &fw_task_ctx->ystorm_st_context.pdu_hdr.cmd;
+>> +	SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_ATTR, ISCSI_ATTR_SIMPLE);
+>> +
+>> +	if (sc->sc_data_direction =3D=3D DMA_TO_DEVICE) {
+>> +		if (conn->session->initial_r2t_en) {
+>> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =3D
+>> +				min((conn->session->imm_data_en *
+>> +				    conn->max_xmit_dlength),
+>> +				    conn->session->first_burst);
+>> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =3D
+>> +			      min(fw_task_ctx->ustorm_ag_context.exp_data_acked,
+>> +				  scsi_bufflen(sc));
+>> +		} else {
+>> +			fw_task_ctx->ustorm_ag_context.exp_data_acked =3D
+>> +			      min(conn->session->first_burst, scsi_bufflen(sc));
+>> +		}
+>> +
+>> +		SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_WRITE, 1);
+>> +		task_type =3D ISCSI_TASK_TYPE_INITIATOR_WRITE;
+>> +	} else {
+>> +		if (scsi_bufflen(sc))
+>> +			SET_FIELD(fw_cmd->flags_attr, ISCSI_CMD_HDR_READ, 1);
+>> +		task_type =3D ISCSI_TASK_TYPE_INITIATOR_READ;
+>> +	}
+>> +
+>> +	fw_cmd->lun.lo =3D be32_to_cpu(scsi_lun[0]);
+>> +	fw_cmd->lun.hi =3D be32_to_cpu(scsi_lun[1]);
+>> +
+>> +	qedi_update_itt_map(qedi, tid, task->itt);
+>> +	fw_cmd->itt =3D qedi_set_itt(tid, get_itt(task->itt));
+>> +	fw_cmd->expected_transfer_length =3D scsi_bufflen(sc);
+>> +	fw_cmd->cmd_sn =3D be32_to_cpu(hdr->cmdsn);
+>> +	fw_cmd->opcode =3D hdr->opcode;
+>> +	qedi_cpy_scsi_cdb(sc, (u32 *)fw_cmd->cdb);
+>> +
+>> +	/* Mstorm context */
+>> +	fw_task_ctx->mstorm_st_context.sense_db.lo =3D
+>>(u32)cmd->sense_buffer_dma;
+>> +	fw_task_ctx->mstorm_st_context.sense_db.hi =3D
+>> +					(u32)((u64)cmd->sense_buffer_dma >> 32);
+>> +	fw_task_ctx->mstorm_ag_context.task_cid =3D qedi_conn->iscsi_conn_id;
+>> +	fw_task_ctx->mstorm_st_context.task_type =3D task_type;
+>> +
+>> +	if (qedi->tid_reuse_count[tid] =3D=3D QEDI_MAX_TASK_NUM) {
+>> +		ptu_invalidate =3D 1;
+>> +		qedi->tid_reuse_count[tid] =3D 0;
+>> +	}
+>> +	fw_task_ctx->ystorm_st_context.state.reuse_count =3D
+>> +						     qedi->tid_reuse_count[tid];
+>> +	fw_task_ctx->mstorm_st_context.reuse_count =3D
+>> +						   qedi->tid_reuse_count[tid]++;
+>> +
+>> +	/* Ustrorm context */
+>Ustrorm?
+
+Noted
 
 Thanks,
 Manish R.
-
