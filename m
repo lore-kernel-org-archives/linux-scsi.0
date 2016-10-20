@@ -1,75 +1,39 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2 1/2] scsi: Handle Unit Attention when issuing SCSI
- command
-Date: Thu, 20 Oct 2016 14:39:28 -0400
-Message-ID: <1476988768.3094.55.camel@HansenPartnership.com>
-References: <1476384477-3060-1-git-send-email-krisman@linux.vnet.ibm.com>
-         <1476422360.22309.29.camel@linux.vnet.ibm.com>
-         <87y41nhrv1.fsf@linux.vnet.ibm.com>
+From: Michal Hocko <mhocko@kernel.org>
+Subject: Re: [PATCH 00/10] mm: adjust get_user_pages* functions to explicitly
+ pass FOLL_* flags
+Date: Thu, 20 Oct 2016 21:26:47 +0200
+Message-ID: <20161020192646.GC27342@dhcp22.suse.cz>
+References: <20161013002020.3062-1-lstoakes@gmail.com>
+ <20161018153050.GC13117@dhcp22.suse.cz>
+ <20161019085815.GA22239@lucifer>
+ <20161019090727.GE7517@dhcp22.suse.cz>
+ <5807A427.7010200@linux.intel.com>
+ <20161019170127.GN24393@dhcp22.suse.cz>
+ <5807AC2B.4090208@linux.intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:35530 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S933511AbcJTSjf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 20 Oct 2016 14:39:35 -0400
-In-Reply-To: <87y41nhrv1.fsf@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-media-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <5807AC2B.4090208@linux.intel.com>
+Sender: linux-media-owner@vger.kernel.org
+To: Dave Hansen <dave.hansen@linux.intel.com>
+Cc: Lorenzo Stoakes <lstoakes@gmail.com>, linux-mm@kvack.org, Linus Torvalds <torvalds@linux-foundation.org>, Jan Kara <jack@suse.cz>, Hugh Dickins <hughd@google.com>, Rik van Riel <riel@redhat.com>, Mel Gorman <mgorman@techsingularity.net>, Andrew Morton <akpm@linux-foundation.org>, adi-buildroot-devel@lists.sourceforge.net, ceph-devel@vger.kernel.org, dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, kvm@vger.kernel.org, linux-alpha@vger.kernel.org, linux-arm-kernel@lists.infradead.org, linux-cris-kernel@axis.com, linux-fbdev@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ia64@vger.kernel.org, linux-kernel@vger.kernel.org, linux-media@vger.kernel.org, linux-mips@linux-mips.org, linux-rdma@vger.kernel.org, linux-s390@vger.kernel.org, linux-samsung-soc@vg
 List-Id: linux-scsi@vger.kernel.org
-To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 
-On Mon, 2016-10-17 at 14:17 -0200, Gabriel Krisman Bertazi wrote:
-> James Bottomley <jejb@linux.vnet.ibm.com> writes:
+On Wed 19-10-16 10:23:55, Dave Hansen wrote:
+> On 10/19/2016 10:01 AM, Michal Hocko wrote:
+> > The question I had earlier was whether this has to be an explicit FOLL
+> > flag used by g-u-p users or we can just use it internally when mm !=
+> > current->mm
 > 
-> > On Thu, 2016-10-13 at 15:47 -0300, Gabriel Krisman Bertazi wrote:
-> > > @@ -210,6 +219,13 @@ int scsi_execute(struct scsi_device *sdev,
-> > > const
-> > > unsigned char *cmd,
-> > >  	 */
-> > >  	blk_execute_rq(req->q, NULL, req, 1);
-> > >  
-> > > +	if (scsi_sense_unit_attention(sense) && req->retries >
-> > > 0) {
-> > > +		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
-> > > +		retries = req->retries - 1;
-> > > +		blk_put_request(req);
-> > > +		goto retry;
-> > > +	}
-> > 
-> > OK, so this is more theory, but I think you can actually reuse the
-> > same
-> > request to go around this loop without doing a get/put.  I've cc'd
-> > Jens
-> > to confirm, since no other driver I can find does this, but if it's
-> > legal, it saves freeing and reallocating the request.  You can then
-> > replace the goto with a do { } while (...) which makes the loop
-> > obvious
-> > to the next person looking at this.
-> 
-> Hi James,
-> 
-> I don't think the block layer currently has the machinery to reuse 
-> the request.  I think it would be easy to add for the MQ case but I
-> don't know about SQ.  If we don't clean up or reinit the request 
-> before re-sending, we'll hit the BUG_ON in blk_start_request:
-> 
->   BUG_ON(test_bit(REQ_ATOM_COMPLETE, &req->atomic_flags));
-> 
-> Do you wanna take a v3 of the patch and fix this on a future patch, 
+> The reason I chose not to do that was that deferred work gets run under
+> a basically random 'current'.  If we just use 'mm != current->mm', then
+> the deferred work will sometimes have pkeys enforced and sometimes not,
+> basically randomly.
 
+OK, I see (async_pf_execute and ksm ). It makes more sense to me. Thanks
+for the clarification.
 
-That works.  I certainly believe, looking at the code, that we can
-reuse the request, but in the absence from confirmation from Jens I'm
-certainly not going to insist on it.
-
-James
-
-> or should I be looking into patching the block layer interface?  I'll
-> be looking into it, but I need to get familiar with the SQ code
-> first.
-
-
-
+-- 
+Michal Hocko
+SUSE Labs
