@@ -1,36 +1,56 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 6/7] megaraid_sas: Do not set MPI2_TYPE_CUDA for JBOD
- FP path for FW which does not support JBOD sequence map
-Date: Thu, 20 Oct 2016 07:51:28 -0400
-Message-ID: <1476964288.3094.4.camel@linux.vnet.ibm.com>
-References: <1476954305-576-1-git-send-email-sumit.saxena@broadcom.com>
-         <1476954305-576-7-git-send-email-sumit.saxena@broadcom.com>
-         <20161020091526.GA22193@kroah.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20161020091526.GA22193@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>, Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, kashyap.desai@broadcom.com, stable@vger.kernel.org
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 00/10]  mpt3sas driver Enhancements and
+Date: Thu, 20 Oct 2016 17:50:08 +0530
+Message-ID: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, 2016-10-20 at 11:15 +0200, Greg KH wrote:
-> On Thu, Oct 20, 2016 at 02:05:04AM -0700, Sumit Saxena wrote:
-> > CC: stable@vger.kernel.org
-> > Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
-> > Reviewed-by: Hannes Reinecke <hare@suse.com>
-> > Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> > ---
-> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 8 ++++----
-> >  1 file changed, 4 insertions(+), 4 deletions(-)
-> 
-> I know I reject patches without any changelog text in them, hopefully
-> the scsi maintainers also do...
+Here is the change list:
+Posting 10 patches for mpt3sas driver enhancements and few fixes.
+  * Added Device ID's for SAS35 devices and updated MPI Header.
+  * Support "EEDP Escape flag" for SAS35 devices.
+  * fixed improper printk statement.
+  * Regardless of whether RDPQ disabled card is enumerated
+    first or RDPQ enabled card is enumerated first, MSIX vectors
+    depends on the cards capability.
+  * device_remove_in_progress bit check has been added in IOCTL path. If
+    bit is set, then IOCTL will be failed printing failure message.
+  * Started using the Atomic Request Descriptors for
+    SAS35 devices.
+  * For SAS35 devices MSIX vectors are inceased to 128 from 96.
+  * Fixing Endianness issue.
+  * Updated driver version to 14.100.00.00
 
-It depends: for complex patches needing detailed explanations, yes. 
- However, this is a four line change for which the subject seems
-adequately descriptive, so this particular one seems fine.
+Suganath Prabu S (10):
+  mpt3sas: Fix for improper info displayed in var log,      while
+    blocking or  unblocking the device.
+  mpt3sas: Fix for incorrect numbers for MSIX vectors      enabled when 
+    non RDPQ card is enumerated first.
+  mpt3sas: Implement device_remove_in_progress check in      IOCTL path
+  mpt3sas: Removing unused macro "MPT_DEVICE_TLR_ON"
+  mpt3sas: Bump driver version as "14.100.00.00"
+  mpt3sas: Added Device ID's for SAS35 devices and      updated MPI
+    header.
+  mpt3sas: Increased/Additional MSIX support for SAS35      devices.
+  mpt3sas: set EEDP-escape-flags for SAS35 devices.
+  mpt3sas: Use the new MPI 2.6 32-bit Atomic Request      Descriptors
+    for SAS35 devices.
+  mpt3sas: Fix for Endianness issue.
 
-James
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |   7 ++
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 186 ++++++++++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  37 +++---
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  69 +++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h       |   1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 113 +++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |   8 +-
+ 8 files changed, 333 insertions(+), 90 deletions(-)
+
+Thanks,
+Suganath prabu S 
+-- 
+1.8.3.1
