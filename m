@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 07/10] mpt3sas: Increased/Additional MSIX support for SAS35  devices.
-Date: Thu, 20 Oct 2016 17:50:15 +0530
-Message-ID: <1476966018-10457-8-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 06/10] mpt3sas: Added Device ID's for SAS35 devices and  updated MPI header.
+Date: Thu, 20 Oct 2016 17:50:14 +0530
+Message-ID: <1476966018-10457-7-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,134 +10,134 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-For SAS35 devices MSIX vectors are inceased to 128 from 96. To support this
-Reply post host index register count is increased to 16. Also variable
-msix96_vector is replaced with combined_reply_queue and variable
-combined_reply_index_count is added to set different values for SAS3 and
-SAS35 devices.
+Added Device ID's for SAS35 devices (Ventura, Crusader, Harpoon &
+Tomcat) and updated mpi header file for the same. Also added
+"is_gen35_ioc" to MPT3SAS_ADAPTER structure for identifying SAS35 adapters.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  | 14 +++++++-------
- drivers/scsi/mpt3sas/mpt3sas_base.h  |  8 +++++---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++--
- 3 files changed, 21 insertions(+), 12 deletions(-)
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h |  7 +++++++
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |  1 +
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |  5 ++++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h   |  1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 31 +++++++++++++++++++++++++++++++
+ 5 files changed, 44 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 9ad7f7c..43cdc02 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1078,7 +1078,7 @@ _base_interrupt(int irq, void *bus_id)
- 	 * new reply host index value in ReplyPostIndex Field and msix_index
- 	 * value in MSIxIndex field.
- 	 */
--	if (ioc->msix96_vector)
-+	if (ioc->combined_reply_queue)
- 		writel(reply_q->reply_post_host_index | ((msix_index  & 7) <<
- 			MPI2_RPHI_MSIX_INDEX_SHIFT),
- 			ioc->replyPostRegisterIndex[msix_index/8]);
-@@ -2052,7 +2052,7 @@ mpt3sas_base_unmap_resources(struct MPT3SAS_ADAPTER *ioc)
- 	_base_free_irq(ioc);
- 	_base_disable_msix(ioc);
+diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+index 95356a8..fa61baf 100644
+--- a/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
++++ b/drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h
+@@ -478,6 +478,13 @@ typedef struct _MPI2_CONFIG_REPLY {
+ #define MPI26_MFGPAGE_DEVID_SAS3324_3               (0x00C2)
+ #define MPI26_MFGPAGE_DEVID_SAS3324_4               (0x00C3)
  
--	if (ioc->msix96_vector) {
-+	if (ioc->combined_reply_queue) {
- 		kfree(ioc->replyPostRegisterIndex);
- 		ioc->replyPostRegisterIndex = NULL;
- 	}
-@@ -2162,7 +2162,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 	/* Use the Combined reply queue feature only for SAS3 C0 & higher
- 	 * revision HBAs and also only when reply queue count is greater than 8
- 	 */
--	if (ioc->msix96_vector && ioc->reply_queue_count > 8) {
-+	if (ioc->combined_reply_queue && ioc->reply_queue_count > 8) {
- 		/* Determine the Supplemental Reply Post Host Index Registers
- 		 * Addresse. Supplemental Reply Post Host Index Registers
- 		 * starts at offset MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET and
-@@ -2170,7 +2170,7 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 		 * MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET from previous one.
- 		 */
- 		ioc->replyPostRegisterIndex = kcalloc(
--		     MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT,
-+		     ioc->combined_reply_index_count,
- 		     sizeof(resource_size_t *), GFP_KERNEL);
- 		if (!ioc->replyPostRegisterIndex) {
- 			dfailprintk(ioc, printk(MPT3SAS_FMT
-@@ -2180,14 +2180,14 @@ mpt3sas_base_map_resources(struct MPT3SAS_ADAPTER *ioc)
- 			goto out_fail;
- 		}
++#define MPI26_MFGPAGE_DEVID_SAS3516                 (0x00AA)
++#define MPI26_MFGPAGE_DEVID_SAS3516_1               (0x00AB)
++#define MPI26_MFGPAGE_DEVID_SAS3416                 (0x00AC)
++#define MPI26_MFGPAGE_DEVID_SAS3508                 (0x00AD)
++#define MPI26_MFGPAGE_DEVID_SAS3508_1               (0x00AE)
++#define MPI26_MFGPAGE_DEVID_SAS3408                 (0x00AF)
++
+ /*Manufacturing Page 0 */
  
--		for (i = 0; i < MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT; i++) {
-+		for (i = 0; i < ioc->combined_reply_index_count; i++) {
- 			ioc->replyPostRegisterIndex[i] = (resource_size_t *)
- 			     ((u8 *)&ioc->chip->Doorbell +
- 			     MPI25_SUP_REPLY_POST_HOST_INDEX_OFFSET +
- 			     (i * MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET));
- 		}
- 	} else
--		ioc->msix96_vector = 0;
-+		ioc->combined_reply_queue = 0;
- 
- 	if (ioc->is_warpdrive) {
- 		ioc->reply_post_host_index[0] = (resource_size_t __iomem *)
-@@ -5140,7 +5140,7 @@ _base_make_ioc_operational(struct MPT3SAS_ADAPTER *ioc)
- 
- 	/* initialize reply post host index */
- 	list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
--		if (ioc->msix96_vector)
-+		if (ioc->combined_reply_queue)
- 			writel((reply_q->msix_index & 7)<<
- 			   MPI2_RPHI_MSIX_INDEX_SHIFT,
- 			   ioc->replyPostRegisterIndex[reply_q->msix_index/8]);
+ typedef struct _MPI2_CONFIG_PAGE_MAN_0 {
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 3d75c57..acb4106 100644
+index 6f03a86..3d75c57 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -300,8 +300,9 @@
-  * There are twelve Supplemental Reply Post Host Index Registers
-  * and each register is at offset 0x10 bytes from the previous one.
-  */
--#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT 12
--#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET (0x10)
-+#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G3	12
-+#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G35	16
-+#define MPT3_SUP_REPLY_POST_HOST_INDEX_REG_OFFSET	(0x10)
+@@ -1191,6 +1191,7 @@ struct MPT3SAS_ADAPTER {
+ 	struct SL_WH_MPI_TRIGGERS_T diag_trigger_mpi;
+ 	void		*device_remove_in_progress;
+ 	u16		device_remove_in_progress_sz;
++	u8		is_gen35_ioc;
+ };
  
- /* OEM Identifiers */
- #define MFG10_OEM_ID_INVALID                   (0x00000000)
-@@ -1158,7 +1159,8 @@ struct MPT3SAS_ADAPTER {
- 	u8		reply_queue_count;
- 	struct list_head reply_queue_list;
+ typedef u8 (*MPT_CALLBACK)(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index f204ce1..62be7d4 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -1096,7 +1096,10 @@ _ctl_getiocinfo(struct MPT3SAS_ADAPTER *ioc, void __user *arg)
+ 		break;
+ 	case MPI25_VERSION:
+ 	case MPI26_VERSION:
+-		karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS3;
++		if (ioc->is_gen35_ioc)
++			karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS35;
++		else
++			karg.adapter_type = MPT3_IOCTL_INTERFACE_SAS3;
+ 		strcat(karg.driver_version, MPT3SAS_DRIVER_VERSION);
+ 		break;
+ 	}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.h b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
+index 8940835..f3e17a8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.h
+@@ -143,6 +143,7 @@ struct mpt3_ioctl_pci_info {
+ #define MPT2_IOCTL_INTERFACE_SAS2	(0x04)
+ #define MPT2_IOCTL_INTERFACE_SAS2_SSS6200	(0x05)
+ #define MPT3_IOCTL_INTERFACE_SAS3	(0x06)
++#define MPT3_IOCTL_INTERFACE_SAS35	(0x07)
+ #define MPT2_IOCTL_VERSION_LENGTH	(32)
  
--	u8		msix96_vector;
-+	u8		combined_reply_queue;
-+	u8		combined_reply_index_count;
- 	/* reply post register index */
- 	resource_size_t	**replyPostRegisterIndex;
- 
+ /**
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 521849d..a1c541d 100644
+index 9584d6b..521849d 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -8748,8 +8748,15 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		}
+@@ -8660,6 +8660,12 @@ _scsih_determine_hba_mpi_version(struct pci_dev *pdev)
+ 	case MPI26_MFGPAGE_DEVID_SAS3324_2:
+ 	case MPI26_MFGPAGE_DEVID_SAS3324_3:
+ 	case MPI26_MFGPAGE_DEVID_SAS3324_4:
++	case MPI26_MFGPAGE_DEVID_SAS3508:
++	case MPI26_MFGPAGE_DEVID_SAS3508_1:
++	case MPI26_MFGPAGE_DEVID_SAS3408:
++	case MPI26_MFGPAGE_DEVID_SAS3516:
++	case MPI26_MFGPAGE_DEVID_SAS3516_1:
++	case MPI26_MFGPAGE_DEVID_SAS3416:
+ 		return MPI26_VERSION;
+ 	}
+ 	return 0;
+@@ -8728,6 +8734,18 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ioc->hba_mpi_version_belonged = hba_mpi_version;
+ 		ioc->id = mpt3_ids++;
+ 		sprintf(ioc->driver_name, "%s", MPT3SAS_DRIVER_NAME);
++		switch (pdev->device) {
++		case MPI26_MFGPAGE_DEVID_SAS3508:
++		case MPI26_MFGPAGE_DEVID_SAS3508_1:
++		case MPI26_MFGPAGE_DEVID_SAS3408:
++		case MPI26_MFGPAGE_DEVID_SAS3516:
++		case MPI26_MFGPAGE_DEVID_SAS3516_1:
++		case MPI26_MFGPAGE_DEVID_SAS3416:
++			ioc->is_gen35_ioc = 1;
++			break;
++		default:
++			ioc->is_gen35_ioc = 0;
++		}
  		if ((ioc->hba_mpi_version_belonged == MPI25_VERSION &&
  			pdev->revision >= SAS3_PCI_DEVICE_C0_REVISION) ||
--			(ioc->hba_mpi_version_belonged == MPI26_VERSION))
--			ioc->msix96_vector = 1;
-+			(ioc->hba_mpi_version_belonged == MPI26_VERSION)) {
-+			ioc->combined_reply_queue = 1;
-+			if (ioc->is_gen35_ioc)
-+				ioc->combined_reply_index_count =
-+				 MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G35;
-+			else
-+				ioc->combined_reply_index_count =
-+				 MPT3_SUP_REPLY_POST_HOST_INDEX_REG_COUNT_G3;
-+		}
- 		break;
- 	default:
- 		return -ENODEV;
+ 			(ioc->hba_mpi_version_belonged == MPI26_VERSION))
+@@ -9134,6 +9152,19 @@ static const struct pci_device_id mpt3sas_pci_table[] = {
+ 		PCI_ANY_ID, PCI_ANY_ID },
+ 	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3324_4,
+ 		PCI_ANY_ID, PCI_ANY_ID },
++	/* Ventura, Crusader, Harpoon & Tomcat ~ 3516, 3416, 3508 & 3408*/
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3508,
++		PCI_ANY_ID, PCI_ANY_ID },
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3508_1,
++		PCI_ANY_ID, PCI_ANY_ID },
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3408,
++		PCI_ANY_ID, PCI_ANY_ID },
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3516,
++		PCI_ANY_ID, PCI_ANY_ID },
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3516_1,
++		PCI_ANY_ID, PCI_ANY_ID },
++	{ MPI2_MFGPAGE_VENDORID_LSI, MPI26_MFGPAGE_DEVID_SAS3416,
++		PCI_ANY_ID, PCI_ANY_ID },
+ 	{0}     /* Terminating entry */
+ };
+ MODULE_DEVICE_TABLE(pci, mpt3sas_pci_table);
 -- 
 1.8.3.1
