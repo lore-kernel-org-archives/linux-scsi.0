@@ -1,19 +1,19 @@
 From: Kashyap Desai <kashyap.desai@broadcom.com>
 Subject: Device or HBA level QD throttling creates randomness in sequetial workload
-Date: Thu, 20 Oct 2016 02:58:35 -0700
-Message-ID: <1476957515-1685-1-git-send-email-kashyap.desai@broadcom.com>
+Date: Thu, 20 Oct 2016 03:08:45 -0700
+Message-ID: <1476958125-1753-1-git-send-email-kashyap.desai@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f171.google.com ([209.85.192.171]:34304 "EHLO
-        mail-pf0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754597AbcJTJ6q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 05:58:46 -0400
-Received: by mail-pf0-f171.google.com with SMTP id r16so33713159pfg.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2016 02:58:46 -0700 (PDT)
+Received: from mail-pf0-f181.google.com ([209.85.192.181]:34247 "EHLO
+        mail-pf0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1759489AbcJTKIz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 06:08:55 -0400
+Received: by mail-pf0-f181.google.com with SMTP id r16so33872697pfg.1
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2016 03:08:54 -0700 (PDT)
 Received: from dhcp-135-24-192-142.localdomain ([192.19.239.250])
-        by smtp.gmail.com with ESMTPSA id a4sm70485875pax.8.2016.10.20.02.58.40
+        by smtp.gmail.com with ESMTPSA id j17sm70320520pfe.79.2016.10.20.03.08.52
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 20 Oct 2016 02:58:41 -0700 (PDT)
+        Thu, 20 Oct 2016 03:08:53 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
