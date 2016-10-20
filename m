@@ -1,56 +1,77 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 00/10]  mpt3sas driver Enhancements and
-Date: Thu, 20 Oct 2016 17:50:08 +0530
-Message-ID: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
+Subject: [PATCH 02/10] mpt3sas: Fix for incorrect numbers for MSIX vectors  enabled when  non RDPQ card is enumerated first.
+Date: Thu, 20 Oct 2016 17:50:10 +0530
+Message-ID: <1476966018-10457-3-git-send-email-suganath-prabu.subramani@broadcom.com>
+References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f179.google.com ([209.85.220.179]:33930 "EHLO
+        mail-qk0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757934AbcJTMVH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 08:21:07 -0400
+Received: by mail-qk0-f179.google.com with SMTP id f128so87110172qkb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2016 05:21:07 -0700 (PDT)
+In-Reply-To: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
 
-Here is the change list:
-Posting 10 patches for mpt3sas driver enhancements and few fixes.
-  * Added Device ID's for SAS35 devices and updated MPI Header.
-  * Support "EEDP Escape flag" for SAS35 devices.
-  * fixed improper printk statement.
-  * Regardless of whether RDPQ disabled card is enumerated
-    first or RDPQ enabled card is enumerated first, MSIX vectors
-    depends on the cards capability.
-  * device_remove_in_progress bit check has been added in IOCTL path. If
-    bit is set, then IOCTL will be failed printing failure message.
-  * Started using the Atomic Request Descriptors for
-    SAS35 devices.
-  * For SAS35 devices MSIX vectors are inceased to 128 from 96.
-  * Fixing Endianness issue.
-  * Updated driver version to 14.100.00.00
+No. of MSIX vectors supported = min (Total no. of CPU cores,
+MSIX vectors supported by card)
 
-Suganath Prabu S (10):
-  mpt3sas: Fix for improper info displayed in var log,      while
-    blocking or  unblocking the device.
-  mpt3sas: Fix for incorrect numbers for MSIX vectors      enabled when 
-    non RDPQ card is enumerated first.
-  mpt3sas: Implement device_remove_in_progress check in      IOCTL path
-  mpt3sas: Removing unused macro "MPT_DEVICE_TLR_ON"
-  mpt3sas: Bump driver version as "14.100.00.00"
-  mpt3sas: Added Device ID's for SAS35 devices and      updated MPI
-    header.
-  mpt3sas: Increased/Additional MSIX support for SAS35      devices.
-  mpt3sas: set EEDP-escape-flags for SAS35 devices.
-  mpt3sas: Use the new MPI 2.6 32-bit Atomic Request      Descriptors
-    for SAS35 devices.
-  mpt3sas: Fix for Endianness issue.
+when RDPQ is disabled "max_msix_vectors" module parameter which was
+declared as global was set to '8' and hence if there are more than one card
+in system among which if RDPQ disabled card is enumerated first then only 8
+MSIX vectors was getting enabled for all the cards(including RDPQ enabled
+card,which can support more than 8 MSIX vectors).
 
- drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |   7 ++
- drivers/scsi/mpt3sas/mpt3sas_base.c      | 186 ++++++++++++++++++++++++++-----
- drivers/scsi/mpt3sas/mpt3sas_base.h      |  37 +++---
- drivers/scsi/mpt3sas/mpt3sas_config.c    |   2 +-
- drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  69 +++++++++---
- drivers/scsi/mpt3sas/mpt3sas_ctl.h       |   1 +
- drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 113 +++++++++++++++----
- drivers/scsi/mpt3sas/mpt3sas_transport.c |   8 +-
- 8 files changed, 333 insertions(+), 90 deletions(-)
+Used local variable instead of global variable ,if RDPQ is disabled this
+local variable is set to '8' else it is set to "max_msix_vectors" (by
+default this is set to -1, whose value can be set by user during driver
+load time).So now regardless of whether RDPQ disabled card is enumerated
+first or RDPQ enabled card is enumerated first , MSIX vectors enabled
+depends on the cards capability.
 
-Thanks,
-Suganath prabu S 
+Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index a1a5ceb..4ea81e1 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1959,7 +1959,7 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	struct msix_entry *entries, *a;
+ 	int r;
+-	int i;
++	int i, local_max_msix_vectors;
+ 	u8 try_msix = 0;
+ 
+ 	if (msix_disable == -1 || msix_disable == 0)
+@@ -1979,13 +1979,15 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ 	  ioc->cpu_count, max_msix_vectors);
+ 
+ 	if (!ioc->rdpq_array_enable && max_msix_vectors == -1)
+-		max_msix_vectors = 8;
++		local_max_msix_vectors = 8;
++	else
++		local_max_msix_vectors = max_msix_vectors;
+ 
+-	if (max_msix_vectors > 0) {
+-		ioc->reply_queue_count = min_t(int, max_msix_vectors,
++	if (local_max_msix_vectors > 0) {
++		ioc->reply_queue_count = min_t(int, local_max_msix_vectors,
+ 			ioc->reply_queue_count);
+ 		ioc->msix_vector_count = ioc->reply_queue_count;
+-	} else if (max_msix_vectors == 0)
++	} else if (local_max_msix_vectors == 0)
+ 		goto try_ioapic;
+ 
+ 	if (ioc->msix_vector_count < ioc->cpu_count)
 -- 
 1.8.3.1
+
