@@ -1,53 +1,36 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH 08/10] mpt3sas: set EEDP-escape-flags for SAS35 devices.
-Date: Thu, 20 Oct 2016 17:50:16 +0530
-Message-ID: <1476966018-10457-9-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH 05/10] mpt3sas: Bump driver version as "14.100.00.00"
+Date: Thu, 20 Oct 2016 17:50:13 +0530
+Message-ID: <1476966018-10457-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:33999 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932373AbcJTMVq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 08:21:46 -0400
-Received: by mail-qt0-f170.google.com with SMTP id q7so51388762qtq.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2016 05:21:45 -0700 (PDT)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
-
-An UNMAP command on a PI formatted device will leave the Logical Block
-Application Tag and Logical Block Reference Tag as all F's (for those LBAs
-that are unmapped). To avoid IO errors if those LBAs are subsequently read
-before they are written with valid tag fields, the MPI SCSI IO requests
-need to set the EEDPFlags element EEDP Escape Mode field, Bits [7:6]
-appropriately. A value of 2 should be set to disable all PI checks if the
-Logical Block Application Tag is 0xFFFF for PI types 1 and 2.  A value
-of 3 should be set to disable all PI checks if the Logical Block
-Application Tag is 0xFFFF and the Logical Block Reference Tag is
-0xFFFFFFFF for PI type 3.
+List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a1c541d..c58f326 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3989,6 +3989,9 @@ _scsih_setup_eedp(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
- 
- 	mpi_request_3v->EEDPBlockSize =
- 	    cpu_to_le16(scmd->device->sector_size);
-+
-+	if (ioc->is_gen35_ioc)
-+		eedp_flags |= MPI25_SCSIIO_EEDPFLAGS_APPTAG_DISABLE_MODE;
- 	mpi_request->EEDPFlags = cpu_to_le16(eedp_flags);
- }
- 
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index e923c91..6f03a86 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -73,8 +73,8 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"13.100.00.00"
+-#define MPT3SAS_MAJOR_VERSION		13
++#define MPT3SAS_DRIVER_VERSION		"14.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		14
+ #define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
 -- 
 1.8.3.1
-
