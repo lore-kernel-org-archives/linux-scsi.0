@@ -1,116 +1,96 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH 08/10] ufs-qcom: phy/hcd: Refactoring phy clock handling
-Date: Thu, 20 Oct 2016 09:14:51 +0530
-Message-ID: <CAFp+6iE1X=-B=MhGBwcQHYnvn1ojZzSTqAFdJc+iFSOKbnYEuQ@mail.gmail.com>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org>
- <1476800897-19898-9-git-send-email-vivek.gautam@codeaurora.org>
- <d105d41f88e886f20df0384569b0b688@codeaurora.org> <CAFp+6iGN3_1+9Rj+ewMucMY2gVWpSuszM8_dB2Xu4a_iT+ZAHw@mail.gmail.com>
- <b5e0234aea75ab395bc42ad85d45fe4e@codeaurora.org>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: Re: Device or HBA QD throttling creates holes in Sequential work load
+Date: Thu, 20 Oct 2016 12:11:14 +0530
+Message-ID: <CAHsXFKEuXfHt3316qqW1Ccyd6Kyo_qZ6+jq39vMJyZRm5e5MBw@mail.gmail.com>
+References: <CAHsXFKHHZToPLuB9N2UJ98b0hKnsz8_fNzb2Anz5aTUXZ1+YpA@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <b5e0234aea75ab395bc42ad85d45fe4e@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, martin.petersen@oracle.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f52.google.com ([209.85.214.52]:35765 "EHLO
+        mail-it0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750845AbcJTGlQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 02:41:16 -0400
+Received: by mail-it0-f52.google.com with SMTP id 4so155195764itv.0
+        for <linux-scsi@vger.kernel.org>; Wed, 19 Oct 2016 23:41:16 -0700 (PDT)
+In-Reply-To: <CAHsXFKHHZToPLuB9N2UJ98b0hKnsz8_fNzb2Anz5aTUXZ1+YpA@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Thu, Oct 20, 2016 at 12:48 AM, Subhash Jadavani
-<subhashj@codeaurora.org> wrote:
-> On 2016-10-19 10:45, Vivek Gautam wrote:
->>
->> Hi,
->>
->>
->> On Wed, Oct 19, 2016 at 1:43 AM, Subhash Jadavani
->> <subhashj@codeaurora.org> wrote:
->>>
->>> On 2016-10-18 07:28, Vivek Gautam wrote:
->>>>
->>>>
->>>> Add phy clock enable code to phy_power_on/off callbacks, and
->>>> remove explicit calls to enable these phy clocks from the
->>>> ufs-qcom hcd driver.
->>>>
->>>> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
->>>> ---
->>>>
->>>> Changes since v1:
->>>>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
->>>>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
->>>>  - removed function declaration and export symbol for these APIs.
->>
->>
->> [snip]
->>
->>>> --- a/drivers/scsi/ufs/ufs-qcom.c
->>>> +++ b/drivers/scsi/ufs/ufs-qcom.c
->>>> @@ -1112,17 +1112,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
->>>> *hba, bool on)
->>>>                 return 0;
->>>>
->>>>         if (on) {
->>>> -               err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
->>>> -               if (err)
->>>> -                       goto out;
->>>> -
->>>> -               err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
->>>> -               if (err) {
->>>> -                       dev_err(hba->dev, "%s enable phy ref clock
->>>> failed,
->>>> err=%d\n",
->>>> -                               __func__, err);
->>>> -
->>>> ufs_qcom_phy_disable_iface_clk(host->generic_phy);
->>>> -                       goto out;
->>>> -               }
->>>
->>>
->>>
->>> Now that you are moving these ref clk enable/disable to phy_power_on/off
->>> and
->>> these phy_power_on/off are called only in runtime suspend/resume (3
->>> seconds
->>> after last UFS access).
->>> Goal is to disable the phy reference clock during aggressive gating (10ms
->>> from last UFS access) so shouldn't we call the phy_power_on/off from
->>> these
->>> setup_clocks() function as well?
->>>
->>
->> So setup_clocks() is called for aggressive clock gating as well ?
->> If that's the case then yes, we may need to call. But we should try to
->> understand here. The phy_power_off turns off all the clocks - reflclk,
->> and other interface clocks. Do we want all of them to be turned off ?
+Reply to see if email reached to linux-scsi@vger.kernel.org.
+
+
+On Thu, Oct 20, 2016 at 12:07 PM, Kashyap Desai
+<kashyap.desai@broadcom.com> wrote:
+> Hi,
+>
+> I am doing some performance tuning in MR driver to understand how sdev queue
+> depth and hba queue depth play role in IO submission from above layer.
+>
+>  I have 24 JBOD connected to MR 12GB controller and I can see performance
+> for 4K Sequential work load as below.
+>
+>  HBA QD for MR controller is 4065 and Per device QD is set to 32
 >
 >
-> Yes, we want to turn off the ref clock (& other clocks) during aggressive
-> gating.
-
-Ok.
-
 >
->>
->> phy_power_off will also turn off the PHY. Do we want all this for
->> aggressive
->> clock gating ?
+> queue depth from <fio> 256 reports 300K IOPS
+>
+> queue depth from <fio> 128 reports 330K IOPS
+>
+> queue depth from <fio> 64 reports 360K IOPS
+>
+> queue depth from <fio> 32 reports 510K IOPS
 >
 >
-> Yes, PHY rails can be powered off both during the aggressive clk gating and
-> runtime suspend. But as the regulator on/off latencies could be higher
-> (especially for the shared rail), we were turning them off doing it in
-> runtime suspend only (via phy_power_off()).
-> Now that phy_power_on/off is managing both clocks and regulators, and we
-> will really want to turn off the ref clocks during clock gating, there is no
-> option but to call phy_power_on/off during aggressive gating.
-
-Alright then, i will update the change to add phy_power_off/on()
-during aggressive clock gating.
-
-
-Thanks
-Vivek
-
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+>
+> In MR driver I added debug print and confirm that more IO come to driver as
+> random IO whenever I have <fio> queue depth more than 32.
+>
+> I have debug using scsi logging level and blktrace as well. Below is snippet
+> of logs using scsi logging level.  In summary, if SML do flow control of IO
+> due to Device QD or HBA QD,  IO coming to LLD is more random pattern.
+>
+>
+>
+> I see IO coming to driver is not sequential.
+>
+>
+>
+> [79546.912041] sd 18:2:21:0: [sdy] tag#854 CDB: Write(10) 2a 00 00 03 c0 3b
+> 00 00 01 00 [79546.912049] sd 18:2:21:0: [sdy] tag#855 CDB: Write(10) 2a 00
+> 00 03 c0 3c 00 00 01 00 [79546.912053] sd 18:2:21:0: [sdy] tag#886 CDB:
+> Write(10) 2a 00 00 03 c0 5b 00 00 01 00 <- After 3c it jumps to 5b. Sequence
+> are overlapped. Due to sdev QD throttling.
+>
+> [79546.912056] sd 18:2:21:0: [sdy] tag#887 CDB: Write(10) 2a 00 00 03 c0 5c
+> 00 00 01 00 [79546.912250] sd 18:2:21:0: [sdy] tag#856 CDB: Write(10) 2a 00
+> 00 03 c0 3d 00 00 01 00 [79546.912257] sd 18:2:21:0: [sdy] tag#888 CDB:
+> Write(10) 2a 00 00 03 c0 5d 00 00 01 00 [79546.912259] sd 18:2:21:0: [sdy]
+> tag#857 CDB: Write(10) 2a 00 00 03 c0 3e 00 00 01 00 [79546.912268] sd
+> 18:2:21:0: [sdy] tag#858 CDB: Write(10) 2a 00 00 03 c0 3f 00 00 01 00
+>
+>
+>
+> If scsi_request_fn() breaks due to unavailability of device queue (due to
+> below check), will there be any side defect as I observe ?
+>
+>                 if (!scsi_dev_queue_ready(q, sdev))
+>
+>                              break;
+>
+>  If I reduce HBA QD and make sure IO from above layer is throttled due to
+> HBA QD, there is a same impact.  MR driver use host wide shared tag map.
+>
+>  Can someone help me if this can be tunable in LLD providing additional
+> settings or it is expected behavior ? Problem I am facing is, I am not able
+> to figure out optimal device queue depth for different configuration and
+> work load.
+>
+>  ` Kashyap
+>
+>
+>
+>
+>
+>
