@@ -1,132 +1,102 @@
-From: "ojab //" <ojab@ojab.ru>
-Subject: Re: `rmmod mpt3sas` leads to backtraces 'fs/sysfs/group.c:237 sysfs_remove_group+0xa0/0xb0'
-Date: Thu, 20 Oct 2016 10:57:19 +0000
-Message-ID: <CAKzrAgSuTzHNgHpqjG1c8-0joiuMdBSWHmxJk7sFPoyejq8MZg@mail.gmail.com>
-References: <71t90w18vb6cwdir7ikw2uj1.1476745939770@email.android.com> <607afd326622dac95727c5f55ee18f29@mail.gmail.com>
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA controller
+ hardware v1.1
+Date: Thu, 20 Oct 2016 16:44:24 +0530
+Message-ID: <1476962064-8775-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f65.google.com ([209.85.213.65]:33581 "EHLO
-        mail-vk0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752843AbcJTK5V (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 06:57:21 -0400
-Received: by mail-vk0-f65.google.com with SMTP id 83so2684997vkd.0
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Oct 2016 03:57:20 -0700 (PDT)
-In-Reply-To: <607afd326622dac95727c5f55ee18f29@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: devicetree@vger.kernel.org, mlangsdo@redhat.com, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chaitra Basappa <chaitra.basappa@broadcom.com>
-Cc: Laurence Oberman <loberman@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 
-Hi,
+This patch enables NCQ support for APM X-Gene SATA controller
+hardware v1.1 that was broken with hardware v1.0.
 
-ses module was not built/loaded in my tests (ENCLOSURE_SERVICES was
-not set in the kernel config), so it's not the case.
-Also Oracle bug is private, so I can't tell if it's really related.
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+---
+ drivers/ata/ahci_xgene.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-//wbr ojab
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 73b19b2..8b88be9 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -87,6 +87,7 @@
 
+ enum xgene_ahci_version {
+ 	XGENE_AHCI_V1 = 1,
++	XGENE_AHCI_V1_1,
+ 	XGENE_AHCI_V2,
+ };
 
-On Thu, Oct 20, 2016 at 10:08 AM, Chaitra Basappa
-<chaitra.basappa@broadcom.com> wrote:
-> Hi Ojab,
->
-> I would like to clarify that issue is not because of the below mentioned
-> patch/ mpt3sas driver, its due to some SES module patch which we have see=
-n
-> earlier without merged/combined (mpt2sas & mpt3sas) driver too.
->
->
->
-> So before unloading driver try unloading ses module(`rmmod ses`) and then
-> unload driver, driver unloads successfully.
->
->
->
-> This confirms issue is not because of driver , so ses module patches need=
-s
-> to be checked to identify the patch causing this issue.
->
->
->
-> Also we have reported below Bug with oracle , which we observed on
-> OEL6.8_UEK(4.1.12-37.4.1_x86_64)
->
-> https://bugzilla.oracle.com/bugzilla/show_bug.cgi?id=3D15521
->
->
->
-> Thanks,
->
-> Chaitra
->
->
->
->
->
-> From: mpt-fusionlinux.pdl@broadcom.com
-> [mailto:mpt-fusionlinux.pdl@broadcom.com] On Behalf Of Laurence Oberman
-> Sent: Tuesday, October 18, 2016 4:42 AM
-> To: ojab; Johannes Thumshirn
-> Cc: MPT-FusionLinux.pdl@broadcom.com; linux-scsi@vger.kernel.org
-> Subject: RE: `rmmod mpt3sas` leads to backtraces 'fs/sysfs/group.c:237
-> sysfs_remove_group+0xa0/0xb0'
->
->
->
->
->
->
->
->
->
->
->
-> Sent on the new Sprint Network from my Samsung Galaxy S=C2=AE4
->
->
->
-> -------- Original message --------
-> From: ojab <ojab@ojab.ru>
-> Date: 10/17/2016 17:11 (GMT-05:00)
-> To: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-> Subject: Re: `rmmod mpt3sas` leads to backtraces 'fs/sysfs/group.c:237
-> sysfs_remove_group+0xa0/0xb0'
->
-> On 2016/10/17 14:42, Johannes Thumshirn wrote:
->> On Sun, Oct 16, 2016 at 02:33:28PM +0000, ojab wrote:
->>
->> Hi Ojab,
->>
->> Do you have a known good kernel? If yes can you do a git bisect to see
->> which
->> commit introduces this?
->>
->> Thanks,
->> Johannes
->>
->
-> The issue is reproducible from the start, i. e. from commit
->
-> c84b06a48c4d8ac8270624453132f3fa1a4a0f9d mpt3sas: Single driver module
-> which supports both SAS 2.0 & SAS 3.0 HBAs
->
-> in which support for my HBA was added.
-> Before that the same issue can be reproduced using mpt2sas module in
-> kernels >=3D 4.1.
->
-> Unfortunately earlier kernels fail to boot on my HW, so I can't
-> investigate further.
->
-> //wbr ojab
->
-> I have one of these in my lab. I will investigate and try reproduce and
-> track it down as soon as I get a chance.
->
->
->
-> Thanks
->
->
+@@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ #ifdef CONFIG_ACPI
+ static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+ 	{ "APMC0D0D", XGENE_AHCI_V1},
++	{ "APMC0D67", XGENE_AHCI_V1_1},
+ 	{ "APMC0D32", XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+
+ static const struct of_device_id xgene_ahci_of_match[] = {
+ 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
++	{.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
+ 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	const struct of_device_id *of_devid;
+ 	enum xgene_ahci_version version = XGENE_AHCI_V1;
+-	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
+-					      &xgene_ahci_v2_port_info };
++	const struct ata_port_info *ppi;
+ 	int rc;
+
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
+ 					__func__);
+ 				version = XGENE_AHCI_V1;
+-			} else if (info->valid & ACPI_VALID_CID) {
+-				version = XGENE_AHCI_V2;
+ 			}
+ 		}
+ 	}
+@@ -858,18 +858,20 @@ skip_clk_phy:
+
+ 	switch (version) {
+ 	case XGENE_AHCI_V1:
++		ppi = &xgene_ahci_v1_port_info;
+ 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
+ 		break;
+ 	case XGENE_AHCI_V2:
++		ppi = &xgene_ahci_v2_port_info;
+ 		hpriv->flags |= AHCI_HFLAG_YES_FBS;
+ 		hpriv->irq_handler = xgene_ahci_irq_intr;
+ 		break;
+ 	default:
++		ppi = &xgene_ahci_v1_port_info;
+ 		break;
+ 	}
+
+-	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
+-				     &ahci_platform_sht);
++	rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+
+--
+1.7.1
