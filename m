@@ -1,62 +1,131 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 0/6] tcm_fc fixes
-Date: Fri, 21 Oct 2016 00:46:00 -0700
-Message-ID: <1477035960.8490.148.camel@haakon3.risingtidesystems.com>
+Subject: Re: [PATCH 1/6] target: fix hang in target_wait_for_sess_cmds()
+Date: Fri, 21 Oct 2016 01:00:29 -0700
+Message-ID: <1477036829.8490.160.camel@haakon3.risingtidesystems.com>
 References: <1471856051-87398-1-git-send-email-hare@suse.de>
+         <1471856051-87398-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:41934 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753311AbcJUHqD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2016 03:46:03 -0400
-In-Reply-To: <1471856051-87398-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1471856051-87398-2-git-send-email-hare@suse.de>
+Sender: target-devel-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>
-
-Hi Hannes & Martin,
-
-Apologies for the extended delay on this.  Comments below.
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
 On Mon, 2016-08-22 at 10:54 +0200, Hannes Reinecke wrote:
-> Hi Nic,
+> When shutting down a session I'm seeing this hung_task message:
 > 
-> here's a set of patches and fixes I've found during debugging
-> FCoE over virtio.
-> The first two fix a race condition I've encountered during starting
-> and stopping initiators; they are similar to your prior patches,
-> but I still think they should be applied to avoid any race issues.
-> The next three are just minor cleanups, but the last one is
-> _absolutely_ crucial.
-> With the current code tcm_fc will behave _very_ odd if you're
-> running in a virtualized environment, as the xid allocator in libfc
-> will be thouroughly thrashed by sending frames on _other_ cpus than
-> those the originator frame got received on.
-> This causes frames to be delayed (by up to several minutes)
-> leading to I/O errors on the initiator side.
+> INFO: task kworker/u128:0:6 blocked for more than 480 seconds.
+>       Tainted: G            E   N  4.4.17-default+ #241
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> kworker/u128:0  D ffff880237615c00     0     6      2 0x00000000
+>  Workqueue: fc_rport_eq fc_rport_work [libfc]
+>  ffff88017edd7c48 ffffffff81c11500 ffff88017edd0180 ffff88017edd8000
+>  ffff88035b6860a8 ffff88017edd0180 ffff88036461eac0 0000000000000000
+>  ffff88017edd7c60 ffffffff815db4d5 7fffffffffffffff ffff88017edd7d10
+> Call Trace:
+>  [<ffffffff815db4d5>] schedule+0x35/0x80
+>  [<ffffffff815dde17>] schedule_timeout+0x237/0x2d0
+>  [<ffffffff815dc6e3>] wait_for_completion+0xa3/0x110
+>  [<ffffffffa0869fb5>] target_wait_for_sess_cmds+0x45/0x190 [target_core_mod]
+>  [<ffffffffa03953b4>] ft_close_sess+0x24/0x30 [tcm_fc]
+>  [<ffffffffa03955ba>] ft_prlo+0x8a/0x95 [tcm_fc]
+>  [<ffffffffa066fc28>] fc_rport_work+0x3b8/0x7c0 [libfc]
+>  [<ffffffff810939ee>] process_one_work+0x14e/0x410
+>  [<ffffffff81094246>] worker_thread+0x116/0x490
 > 
+> Looking at the code it looks as if there is some confusion about
+> when to call 'wait_for_completion(&cmd->cmd_wait_comp).
+> The problem is that there are _two_ sections where the code
+> waits for 'cmd_wait_comp' completion, but the completion
+> is only called with 'complete', not 'complete_all'.
+> So we cannot have both waiting for it, doing so will lead
+> to a stuck wait_for_completion.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/target/target_core_transport.c | 16 ++++++++++------
+>  1 file changed, 10 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 6094a6b..2e1a6d8 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -2522,7 +2522,7 @@ int transport_generic_free_cmd(struct se_cmd *cmd, int wait_for_tasks)
+>  	 * the remaining calls to target_put_sess_cmd(), and not the
+>  	 * callers of this function.
+>  	 */
+> -	if (aborted) {
+> +	if (aborted && !cmd->cmd_wait_set) {
+>  		pr_debug("Detected CMD_T_ABORTED for ITT: %llu\n", cmd->tag);
+>  		wait_for_completion(&cmd->cmd_wait_comp);
+>  		cmd->se_tfo->release_cmd(cmd);
 
-Thanks for the heads up on #6.  Applied with v4.5+ tag, the earliest
-stable where TARGET_SCF_USE_CPUID is available.
+Do you recall if hung se_cmd shutdown was with both CMD_T_ABORTED and
+!CMD_T_ABORTED descriptors, or former only..?
 
-> As usual, comments and reviews are welcome.
-> 
-> Hannes Reinecke (6):
->   target: fix hang in target_wait_for_sess_cmds()
->   target: fix potential race window in target_sess_cmd_list_waiting()
->   target/tcm_fc: print command pointer in debug message
->   target/tcm_fc: return detailed error in ft_sess_create()
->   target/tcm_fc: Update debugging statements to match libfc usage
->   target/tcm_fc: use CPU affinity for responses
-> 
->  drivers/target/target_core_transport.c | 28 ++++++++++++++---------
->  drivers/target/tcm_fc/tfc_cmd.c        |  4 ++--
->  drivers/target/tcm_fc/tfc_sess.c       | 42 +++++++++++++++++++++++-----------
->  3 files changed, 48 insertions(+), 26 deletions(-)
-> 
+Using v4.4.y code for CMD_T_ABORTED, you likely hit the missing
+SCF_ACK_KREF assignment regression leak:
 
-Applied #3-6 to target-pending/master.  Comments inline for #1 and #2.
+http://www.spinics.net/lists/target-devel/msg13530.html
 
+> @@ -2642,9 +2642,11 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
+>  	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list) {
+>  		rc = kref_get_unless_zero(&se_cmd->cmd_kref);
+>  		if (rc) {
+> -			se_cmd->cmd_wait_set = 1;
+>  			spin_lock(&se_cmd->t_state_lock);
+> -			se_cmd->transport_state |= CMD_T_FABRIC_STOP;
+> +			if (!(se_cmd->transport_state & CMD_T_FABRIC_STOP)) {
+> +				se_cmd->cmd_wait_set = 1;
+> +				se_cmd->transport_state |= CMD_T_FABRIC_STOP;
+> +			}
+>  			spin_unlock(&se_cmd->t_state_lock);
+>  		}
+>  	}
+
+So tcm_fc uses transport_generic_free_cmd(se_cmd, wait_for_tasks=0) in
+ft_check_stop_free() to drop the extra SCF_ACK_KREF reference, which
+does the extra if (aborted) check + possible sleep mentioned above.
+
+AFAICT, ft_check_stop_free() response callback should be using
+target_put_sess_cmd() to drop se_cmd->cmd_kref, and not attempt to block
+for aborted status at all..
+
+> @@ -2664,24 +2666,26 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
+>  
+>  	list_for_each_entry_safe(se_cmd, tmp_cmd,
+>  				&se_sess->sess_wait_list, se_cmd_list) {
+> +		int cmd_wait;
+>  		pr_debug("Waiting for se_cmd: %p t_state: %d, fabric state:"
+>  			" %d\n", se_cmd, se_cmd->t_state,
+>  			se_cmd->se_tfo->get_cmd_state(se_cmd));
+>  
+>  		spin_lock_irqsave(&se_cmd->t_state_lock, flags);
+>  		tas = (se_cmd->transport_state & CMD_T_TAS);
+> +		cmd_wait = se_cmd->cmd_wait_set;
+>  		spin_unlock_irqrestore(&se_cmd->t_state_lock, flags);
+> -
+>  		if (!target_put_sess_cmd(se_cmd)) {
+>  			if (tas)
+>  				target_put_sess_cmd(se_cmd);
+>  		}
+> -
+> +		if (!cmd_wait)
+> +			continue;
+>  		wait_for_completion(&se_cmd->cmd_wait_comp);
+>  		pr_debug("After cmd_wait_comp: se_cmd: %p t_state: %d"
+>  			" fabric state: %d\n", se_cmd, se_cmd->t_state,
+>  			se_cmd->se_tfo->get_cmd_state(se_cmd));
+> -
+> +		se_cmd->cmd_wait_set = 0;
+>  		se_cmd->se_tfo->release_cmd(se_cmd);
+>  	}
+>  
+
+target_wait_for_sess_cmd() must always wait for se_cmd->cmd_wait_comp to
+finish, because fabric drivers currently expect all outstanding
+se_cmd->se_sess to complete before it's safe to release driver specific
+session resources.
