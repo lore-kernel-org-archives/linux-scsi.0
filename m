@@ -1,99 +1,149 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: [PATCH 2/6] target: fix potential race window in
- target_sess_cmd_list_waiting()
-Date: Fri, 21 Oct 2016 01:19:22 -0700
-Message-ID: <1477037962.8490.163.camel@haakon3.risingtidesystems.com>
-References: <1471856051-87398-1-git-send-email-hare@suse.de>
-         <1471856051-87398-3-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:47029 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754310AbcJUITY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2016 04:19:24 -0400
-In-Reply-To: <1471856051-87398-3-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: [PATCH] scsi: ufs: changing authors e-mail
+Date: Fri, 21 Oct 2016 10:33:21 +0100
+Message-ID: <d7b122c23645a6e97fcacdf3b62b27b7b7add59b.1477042106.git.jpinto@synopsys.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Joao Pinto <Joao.Pinto@synopsys.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>, Hannes Reinecke <hare@suse.com>
 
-On Mon, 2016-08-22 at 10:54 +0200, Hannes Reinecke wrote:
-> target_sess_cmd_list_waiting() might hit on a condition where
-> the kref for the command is already 0, but the destructor has
-> not been called yet (or is stuck in waiting for a spin lock).
-> Rather than leaving the command on the list we should explicitly
-> remove it to avoid race issues later on.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/target/target_core_transport.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-> index 2e1a6d8..ce136f0 100644
-> --- a/drivers/target/target_core_transport.c
-> +++ b/drivers/target/target_core_transport.c
-> @@ -2547,8 +2547,8 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
->  	 * fabric acknowledgement that requires two target_put_sess_cmd()
->  	 * invocations before se_cmd descriptor release.
->  	 */
-> -	if (ack_kref)
-> -		kref_get(&se_cmd->cmd_kref);
-> +	if (ack_kref && !kref_get_unless_zero(&se_cmd->cmd_kref))
-> +		return -EINVAL;
->  
+Although I am leaving Synopsys, I would like to keep working with the
+linux kernel community and help in what you might find useful. For that
+I am sending this patch to change my contact e-mail. 
 
-Makes sense.
+Signed-off-by: Joao Pinto <jpinto@synopsys.com>
+---
+ drivers/scsi/ufs/tc-dwc-g210-pci.c    | 4 ++--
+ drivers/scsi/ufs/tc-dwc-g210-pltfrm.c | 4 ++--
+ drivers/scsi/ufs/tc-dwc-g210.c        | 4 ++--
+ drivers/scsi/ufs/tc-dwc-g210.h        | 2 +-
+ drivers/scsi/ufs/ufshcd-dwc.c         | 4 ++--
+ drivers/scsi/ufs/ufshcd-dwc.h         | 2 +-
+ drivers/scsi/ufs/ufshci-dwc.h         | 2 +-
+ 7 files changed, 11 insertions(+), 11 deletions(-)
 
-Applying the following version to target-pending/master atop pending
-SCF_ACK_KREF regression bug-fix.
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 9ebbf94..ad6fb3f 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2535,7 +2535,9 @@ int target_get_sess_cmd(struct se_cmd *se_cmd, bool ack_kref)
-         * invocations before se_cmd descriptor release.
-         */
-        if (ack_kref) {
--               kref_get(&se_cmd->cmd_kref);
-+               if (!kref_get_unless_zero(&se_cmd->cmd_kref))
-+                       return -EINVAL;
-+
-                se_cmd->se_cmd_flags |= SCF_ACK_KREF;
-        }
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pci.c b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+index c09a0fe..13b9e6c 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210-pci.c
++++ b/drivers/scsi/ufs/tc-dwc-g210-pci.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -176,6 +176,6 @@ static void tc_dwc_g210_pci_remove(struct pci_dev *pdev)
  
->  	spin_lock_irqsave(&se_sess->sess_cmd_lock, flags);
->  	if (se_sess->sess_tearing_down) {
-> @@ -2627,7 +2627,7 @@ EXPORT_SYMBOL(target_put_sess_cmd);
->   */
->  void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
->  {
-> -	struct se_cmd *se_cmd;
-> +	struct se_cmd *se_cmd, *tmp_cmd;
->  	unsigned long flags;
->  	int rc;
->  
-> @@ -2639,7 +2639,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
->  	se_sess->sess_tearing_down = 1;
->  	list_splice_init(&se_sess->sess_cmd_list, &se_sess->sess_wait_list);
->  
-> -	list_for_each_entry(se_cmd, &se_sess->sess_wait_list, se_cmd_list) {
-> +	list_for_each_entry_safe(se_cmd, tmp_cmd,
-> +				 &se_sess->sess_wait_list, se_cmd_list) {
->  		rc = kref_get_unless_zero(&se_cmd->cmd_kref);
->  		if (rc) {
->  			spin_lock(&se_cmd->t_state_lock);
-> @@ -2648,7 +2649,8 @@ void target_sess_cmd_list_set_waiting(struct se_session *se_sess)
->  				se_cmd->transport_state |= CMD_T_FABRIC_STOP;
->  			}
->  			spin_unlock(&se_cmd->t_state_lock);
-> -		}
-> +		} else
-> +			list_del_init(&se_cmd->se_cmd_list);
->  	}
->  
->  	spin_unlock_irqrestore(&se_sess->sess_cmd_lock, flags);
-
+ module_pci_driver(tc_dwc_g210_pci_driver);
+ 
+-MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
++MODULE_AUTHOR("Joao Pinto <jpmpinto@gmail.com>");
+ MODULE_DESCRIPTION("Synopsys Test Chip G210 PCI glue driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+index 2d3f527..89166a9 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
++++ b/drivers/scsi/ufs/tc-dwc-g210-pltfrm.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -109,5 +109,5 @@ static int tc_dwc_g210_pltfm_remove(struct platform_device *pdev)
+ 
+ MODULE_ALIAS("platform:tc-dwc-g210-pltfm");
+ MODULE_DESCRIPTION("Synopsys Test Chip G210 platform glue driver");
+-MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
++MODULE_AUTHOR("Joao Pinto <jpmpinto@gmail.com>");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.c b/drivers/scsi/ufs/tc-dwc-g210.c
+index dc03e47..aeff7ff 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210.c
++++ b/drivers/scsi/ufs/tc-dwc-g210.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -315,6 +315,6 @@ int tc_dwc_g210_config_20_bit(struct ufs_hba *hba)
+ }
+ EXPORT_SYMBOL(tc_dwc_g210_config_20_bit);
+ 
+-MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
++MODULE_AUTHOR("Joao Pinto <jpmpinto@gmail.com>");
+ MODULE_DESCRIPTION("Synopsys G210 Test Chip driver");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/scsi/ufs/tc-dwc-g210.h b/drivers/scsi/ufs/tc-dwc-g210.h
+index fb177db..3ec4373 100644
+--- a/drivers/scsi/ufs/tc-dwc-g210.h
++++ b/drivers/scsi/ufs/tc-dwc-g210.h
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+diff --git a/drivers/scsi/ufs/ufshcd-dwc.c b/drivers/scsi/ufs/ufshcd-dwc.c
+index 5fd16c7..28bd3a3 100644
+--- a/drivers/scsi/ufs/ufshcd-dwc.c
++++ b/drivers/scsi/ufs/ufshcd-dwc.c
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+@@ -149,6 +149,6 @@ int ufshcd_dwc_link_startup_notify(struct ufs_hba *hba,
+ }
+ EXPORT_SYMBOL(ufshcd_dwc_link_startup_notify);
+ 
+-MODULE_AUTHOR("Joao Pinto <Joao.Pinto@synopsys.com>");
++MODULE_AUTHOR("Joao Pinto <jpmpinto@gmail.com>");
+ MODULE_DESCRIPTION("UFS Host driver for Synopsys Designware Core");
+ MODULE_LICENSE("Dual BSD/GPL");
+diff --git a/drivers/scsi/ufs/ufshcd-dwc.h b/drivers/scsi/ufs/ufshcd-dwc.h
+index c8be295..0bbad1b 100644
+--- a/drivers/scsi/ufs/ufshcd-dwc.h
++++ b/drivers/scsi/ufs/ufshcd-dwc.h
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+diff --git a/drivers/scsi/ufs/ufshci-dwc.h b/drivers/scsi/ufs/ufshci-dwc.h
+index ca341fe..1b31330 100644
+--- a/drivers/scsi/ufs/ufshci-dwc.h
++++ b/drivers/scsi/ufs/ufshci-dwc.h
+@@ -3,7 +3,7 @@
+  *
+  * Copyright (C) 2015-2016 Synopsys, Inc. (www.synopsys.com)
+  *
+- * Authors: Joao Pinto <jpinto@synopsys.com>
++ * Authors: Joao Pinto <jpmpinto@gmail.com>
+  *
+  * This program is free software; you can redistribute it and/or modify
+  * it under the terms of the GNU General Public License version 2 as
+-- 
+1.8.1.5
