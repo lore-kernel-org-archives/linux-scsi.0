@@ -1,98 +1,62 @@
-From: <alters@usg.edu>
-Subject: (unknown)
-Date: Fri, 21 Oct 2016 03:49:12 -0000
-Message-ID: <147702175212.13763.975615144775998120@windstream.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 0/6] tcm_fc fixes
+Date: Fri, 21 Oct 2016 00:46:00 -0700
+Message-ID: <1477035960.8490.148.camel@haakon3.risingtidesystems.com>
+References: <1471856051-87398-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_60218631287406_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from h226.164.187.173.dynamic.ip.windstream.net ([173.187.164.226]:55827
-        "HELO windstream.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1751036AbcJUDtV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 20 Oct 2016 23:49:21 -0400
-Subject: 
-Content-Disposition: attachment
+Received: from mail.linux-iscsi.org ([67.23.28.174]:41934 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753311AbcJUHqD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2016 03:46:03 -0400
+In-Reply-To: <1471856051-87398-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin Wilck <martin.wilck@suse.com>
 
-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
+Hi Hannes & Martin,
+
+Apologies for the extended delay on this.  Comments below.
+
+On Mon, 2016-08-22 at 10:54 +0200, Hannes Reinecke wrote:
+> Hi Nic,
+> 
+> here's a set of patches and fixes I've found during debugging
+> FCoE over virtio.
+> The first two fix a race condition I've encountered during starting
+> and stopping initiators; they are similar to your prior patches,
+> but I still think they should be applied to avoid any race issues.
+> The next three are just minor cleanups, but the last one is
+> _absolutely_ crucial.
+> With the current code tcm_fc will behave _very_ odd if you're
+> running in a virtualized environment, as the xid allocator in libfc
+> will be thouroughly thrashed by sending frames on _other_ cpus than
+> those the originator frame got received on.
+> This causes frames to be delayed (by up to several minutes)
+> leading to I/O errors on the initiator side.
+> 
+
+Thanks for the heads up on #6.  Applied with v4.5+ tag, the earliest
+stable where TARGET_SCF_USE_CPUID is available.
+
+> As usual, comments and reviews are welcome.
+> 
+> Hannes Reinecke (6):
+>   target: fix hang in target_wait_for_sess_cmds()
+>   target: fix potential race window in target_sess_cmd_list_waiting()
+>   target/tcm_fc: print command pointer in debug message
+>   target/tcm_fc: return detailed error in ft_sess_create()
+>   target/tcm_fc: Update debugging statements to match libfc usage
+>   target/tcm_fc: use CPU affinity for responses
+> 
+>  drivers/target/target_core_transport.c | 28 ++++++++++++++---------
+>  drivers/target/tcm_fc/tfc_cmd.c        |  4 ++--
+>  drivers/target/tcm_fc/tfc_sess.c       | 42 +++++++++++++++++++++++-----------
+>  3 files changed, 48 insertions(+), 26 deletions(-)
+> 
+
+Applied #3-6 to target-pending/master.  Comments inline for #1 and #2.
+
