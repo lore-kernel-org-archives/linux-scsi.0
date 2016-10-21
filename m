@@ -1,41 +1,41 @@
 From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: [PATCH v3 8/8] megaraid_sas: driver version upgrade
-Date: Fri, 21 Oct 2016 06:33:36 -0700
-Message-ID: <1477056816-7058-9-git-send-email-kashyap.desai@broadcom.com>
-References: <1477056816-7058-1-git-send-email-kashyap.desai@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:35480 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933402AbcJUNec (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2016 09:34:32 -0400
-Received: by mail-pf0-f173.google.com with SMTP id s8so57270422pfj.2
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2016 06:34:32 -0700 (PDT)
-In-Reply-To: <1477056816-7058-1-git-send-email-kashyap.desai@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: RE: [PATCH v2 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to firmware
+Date: Fri, 21 Oct 2016 19:09:41 +0530
+Message-ID: <6837335a4ececfc172e61456afc5b0bd@mail.gmail.com>
+References: <4bc9319fb76ad1a7b80df01beef33710@mail.gmail.com> <1477053404.2922.11.camel@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1477053404.2922.11.camel@linux.vnet.ibm.com>
+Sender: stable-owner@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, sumit.saxena@broadcom.com
 
-Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+> > >
+> > > Can you please split this into two, so we can backport the bug fix
+> > > without any of the feature addition junk?
+> >
+> > James  - I am sending new patch making two logical fix as you
+> > requested. JBOD fix will be marked for CC:stable and for Virtual disk
+> > I will post only for head (not for stable). Let me know if resending
+> > complete series is good or resending this patch is better.
+>
+> This is up to Martin, because he has to sort it out, but I think we can
+> cope with
+> just the two patches.  The bug fix one has to go into the fixes branch for
+> immediate application and the rest of the series will go into the misc
+> branch for
+> the 4.10 merge window.
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 43fd14f..74c7b44 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -35,8 +35,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"06.811.02.00-rc1"
--#define MEGASAS_RELDATE				"April 12, 2016"
-+#define MEGASAS_VERSION				"06.812.07.00-rc1"
-+#define MEGASAS_RELDATE				"August 22, 2016"
- 
- /*
-  * Device IDs
--- 
-2.4.11
+I resend patch set ( v3 series) . Martin, please use latest resend v3 for
+4.10 merge.
 
+Need Reviewed-by tag for below patch as reworked from original submission.
+[PATCH v3 3/8] megaraid_sas: Do not fire DCMDs during PCI shutdown/detach
+[PATCH v3 4/8] megaraid_sas: Send SYNCHRONIZE_CACHE for non-raid to firmware
+[PATCH v3 5/8] megaraid_sas: Send SYNCHRONIZE_CACHE for VD to firmware
+
+>
+> James
+>
