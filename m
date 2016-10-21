@@ -1,41 +1,46 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH v2 4/7] megaraid_sas: Send SYNCHRONIZE_CACHE command to firmware
-Date: Fri, 21 Oct 2016 19:09:41 +0530
-Message-ID: <6837335a4ececfc172e61456afc5b0bd@mail.gmail.com>
-References: <4bc9319fb76ad1a7b80df01beef33710@mail.gmail.com> <1477053404.2922.11.camel@linux.vnet.ibm.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] sd: fix uninitialized variable access in error handling
+Date: Fri, 21 Oct 2016 17:32:24 +0200
+Message-ID: <20161021153246.3456962-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1477053404.2922.11.camel@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, stable@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Jens Axboe <axboe@fb.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-> > >
-> > > Can you please split this into two, so we can backport the bug fix
-> > > without any of the feature addition junk?
-> >
-> > James  - I am sending new patch making two logical fix as you
-> > requested. JBOD fix will be marked for CC:stable and for Virtual disk
-> > I will post only for head (not for stable). Let me know if resending
-> > complete series is good or resending this patch is better.
->
-> This is up to Martin, because he has to sort it out, but I think we can
-> cope with
-> just the two patches.  The bug fix one has to go into the fixes branch for
-> immediate application and the rest of the series will go into the misc
-> branch for
-> the 4.10 merge window.
+If sd_zbc_report_zones fails, the check for 'zone_blocks == 0'
+later in the function accesses uninitialized data:
 
-I resend patch set ( v3 series) . Martin, please use latest resend v3 for
-4.10 merge.
+drivers/scsi/sd_zbc.c: In function ‘sd_zbc_read_zones’:
+drivers/scsi/sd_zbc.c:520:7: error: ‘zone_blocks’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
 
-Need Reviewed-by tag for below patch as reworked from original submission.
-[PATCH v3 3/8] megaraid_sas: Do not fire DCMDs during PCI shutdown/detach
-[PATCH v3 4/8] megaraid_sas: Send SYNCHRONIZE_CACHE for non-raid to firmware
-[PATCH v3 5/8] megaraid_sas: Send SYNCHRONIZE_CACHE for VD to firmware
+This sets it to zero, which has the desired effect of leaving
+the sd_zbc_read_zones successfully with sdkp->zone_blocks = 0.
 
->
-> James
->
+Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/sd_zbc.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+index 16d3fa62d8ac..d5b3bd915d9e 100644
+--- a/drivers/scsi/sd_zbc.c
++++ b/drivers/scsi/sd_zbc.c
+@@ -455,8 +455,10 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+ 
+ 	/* Do a report zone to get the same field */
+ 	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
+-	if (ret)
++	if (ret) {
++		zone_blocks = 0;
+ 		goto out;
++	}
+ 
+ 	same = buf[4] & 0x0f;
+ 	if (same > 0) {
+-- 
+2.9.0
