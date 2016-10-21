@@ -1,53 +1,118 @@
-From: Chris Leech <cleech@redhat.com>
-Subject: [PATCH 1/1] libfc: don't have fc_exch_find log errors on a new exchange
-Date: Fri, 21 Oct 2016 14:10:53 -0700
-Message-ID: <1477084253-1742-1-git-send-email-cleech@redhat.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51896 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932989AbcJUVLC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 21 Oct 2016 17:11:02 -0400
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 577E36330D
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2016 21:11:02 +0000 (UTC)
-Received: from straylight.hirudinean.org.com (ovpn-116-10.phx2.redhat.com [10.3.116.10])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id u9LLB1Sk018579
-        for <linux-scsi@vger.kernel.org>; Fri, 21 Oct 2016 17:11:02 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: Device or HBA level QD throttling creates randomness in
+ sequetial workload
+Date: Fri, 21 Oct 2016 14:31:21 -0700
+Message-ID: <20161021213121.GA10030@vader.DHCP.thefacebook.com>
+References: <97184c74229af78b0d97e6b8016af972@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <97184c74229af78b0d97e6b8016af972@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, Christoph Hellwig <hch@infradead.org>, paolo.valente@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-With the error message I added in "libfc: sanity check cpu number
-extracted from xid" I didn't account for the fact that fc_exch_find is
-called with FC_XID_UNKNOWN at the start of a new exchange if we are the
-responder.
+On Fri, Oct 21, 2016 at 05:43:35PM +0530, Kashyap Desai wrote:
+> Hi -
+> 
+> I found below conversation and it is on the same line as I wanted some
+> input from mailing list.
+> 
+> http://marc.info/?l=linux-kernel&m=147569860526197&w=2
+> 
+> I can do testing on any WIP item as Omar mentioned in above discussion.
+> https://github.com/osandov/linux/tree/blk-mq-iosched
 
-It doesn't come up with the initiator much, but that's basically every
-exchange for a target.  By checking the xid for FC_XID_UNKNOWN first, we
-not only prevent the erroneous error message, but skip the unnecessary
-lookup attempt as well.
+Are you using blk-mq for this disk? If not, then the work there won't
+affect you.
 
-Signed-off-by: Chris Leech <cleech@redhat.com>
----
- drivers/scsi/libfc/fc_exch.c | 3 +++
- 1 file changed, 3 insertions(+)
+> Is there any workaround/alternative in latest upstream kernel, if user
+> wants to see limited penalty  for Sequential Work load on HDD ?
+> 
+> ` Kashyap
+> 
+> > -----Original Message-----
+> > From: Kashyap Desai [mailto:kashyap.desai@broadcom.com]
+> > Sent: Thursday, October 20, 2016 3:39 PM
+> > To: linux-scsi@vger.kernel.org
+> > Subject: Device or HBA level QD throttling creates randomness in
+> sequetial
+> > workload
+> >
+> > [ Apologize, if you find more than one instance of my email.
+> > Web based email client has some issue, so now trying git send mail.]
+> >
+> > Hi,
+> >
+> > I am doing some performance tuning in MR driver to understand how sdev
+> > queue depth and hba queue depth play role in IO submission from above
+> layer.
+> > I have 24 JBOD connected to MR 12GB controller and I can see performance
+> for
+> > 4K Sequential work load as below.
+> >
+> > HBA QD for MR controller is 4065 and Per device QD is set to 32
+> >
+> > queue depth from <fio> 256 reports 300K IOPS queue depth from <fio> 128
+> > reports 330K IOPS queue depth from <fio> 64 reports 360K IOPS queue
+> depth
+> > from <fio> 32 reports 510K IOPS
+> >
+> > In MR driver I added debug print and confirm that more IO come to driver
+> as
+> > random IO whenever I have <fio> queue depth more than 32.
+> >
+> > I have debug using scsi logging level and blktrace as well. Below is
+> snippet of
+> > logs using scsi logging level.  In summary, if SML do flow control of IO
+> due to
+> > Device QD or HBA QD, IO coming to LLD is more random pattern.
+> >
+> > I see IO coming to driver is not sequential.
+> >
+> > [79546.912041] sd 18:2:21:0: [sdy] tag#854 CDB: Write(10) 2a 00 00 03 c0
+> 3b 00
+> > 00 01 00 [79546.912049] sd 18:2:21:0: [sdy] tag#855 CDB: Write(10) 2a 00
+> 00 03
+> > c0 3c 00 00 01 00 [79546.912053] sd 18:2:21:0: [sdy] tag#886 CDB:
+> Write(10) 2a
+> > 00 00 03 c0 5b 00 00 01 00
+> >
+> > <KD> After LBA "00 03 c0 3c" next command is with LBA "00 03 c0 5b".
+> > Two Sequence are overlapped due to sdev QD throttling.
+> >
+> > [79546.912056] sd 18:2:21:0: [sdy] tag#887 CDB: Write(10) 2a 00 00 03 c0
+> 5c 00
+> > 00 01 00 [79546.912250] sd 18:2:21:0: [sdy] tag#856 CDB: Write(10) 2a 00
+> 00 03
+> > c0 3d 00 00 01 00 [79546.912257] sd 18:2:21:0: [sdy] tag#888 CDB:
+> Write(10) 2a
+> > 00 00 03 c0 5d 00 00 01 00 [79546.912259] sd 18:2:21:0: [sdy] tag#857
+> CDB:
+> > Write(10) 2a 00 00 03 c0 3e 00 00 01 00 [79546.912268] sd 18:2:21:0:
+> [sdy]
+> > tag#858 CDB: Write(10) 2a 00 00 03 c0 3f 00 00 01 00
+> >
+> >  If scsi_request_fn() breaks due to unavailability of device queue (due
+> to below
+> > check), will there be any side defect as I observe ?
+> >                 if (!scsi_dev_queue_ready(q, sdev))
+> >                              break;
+> >
+> > If I reduce HBA QD and make sure IO from above layer is throttled due to
+> HBA
+> > QD, there is a same impact.
+> > MR driver use host wide shared tag map.
+> >
+> > Can someone help me if this can be tunable in LLD providing additional
+> settings
+> > or it is expected behavior ? Problem I am facing is, I am not able to
+> figure out
+> > optimal device queue depth for different configuration and work load.
+> >
+> > Thanks, Kashyap
 
-diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
-index 16ca31a..42cc403 100644
---- a/drivers/scsi/libfc/fc_exch.c
-+++ b/drivers/scsi/libfc/fc_exch.c
-@@ -910,6 +910,9 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
- 	struct fc_exch *ep = NULL;
- 	u16 cpu = xid & fc_cpu_mask;
- 
-+	if (xid == FC_XID_UNKNOWN)
-+		return NULL;
-+
- 	if (cpu >= nr_cpu_ids || !cpu_possible(cpu)) {
- 		printk_ratelimited(KERN_ERR
- 			"libfc: lookup request for XID = %d, "
 -- 
-2.7.4
-
+Omar
