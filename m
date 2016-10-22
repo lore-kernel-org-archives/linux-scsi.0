@@ -1,102 +1,105 @@
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 3/6] scsi: qla4xxx: print MAC and SID via %p[mM][R]
-Date: Sat, 22 Oct 2016 20:32:28 +0300
-Message-ID: <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
-References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Subject: Re: [PATCH] scsi: update rdac devices at scsi_dh_rdac
+Date: Sat, 22 Oct 2016 23:41:50 +0200
+Message-ID: <b0fe9b75-6288-3ac5-9d77-f7f43e9a5756@gmail.com>
+References: <20161007165549.6433-1-xose.vazquez@gmail.com>
+ <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
+ <39e5713e-5329-80a2-d2c5-d193f974e270@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:11525 "EHLO mga03.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964798AbcJVRdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 22 Oct 2016 13:33:36 -0400
-In-Reply-To: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:36786 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755759AbcJVVlx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2016 17:41:53 -0400
+Received: by mail-wm0-f66.google.com with SMTP id f193so3965543wmg.3
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2016 14:41:53 -0700 (PDT)
+In-Reply-To: <39e5713e-5329-80a2-d2c5-d193f974e270@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>, QLogic-Storage-Upstream@qlogic.com, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Babu Moger <babu.moger@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+Cc: Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
 
-From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
+On 10/18/2016 09:47 PM, Babu Moger wrote:
 
-In the kernel we have nice specifier to print MAC by given pointer to the
-address in a binary form.
+> At this point, I am not the right person to ack this change.
 
-Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
-Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-Cc: QLogic-Storage-Upstream@qlogic.com
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
----
- drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
- drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
- drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
- 3 files changed, 7 insertions(+), 21 deletions(-)
+Thank you anyway.
 
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index c291fdf..1da04f3 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
- 	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
- 	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
- 
--	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
--			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
--			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
--			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
-+	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
- 
- 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
- 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
-diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-index 06ddd13..bccd8b6 100644
---- a/drivers/scsi/qla4xxx/ql4_nx.c
-+++ b/drivers/scsi/qla4xxx/ql4_nx.c
-@@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
- 	ha->phy_port_num = sys_info->port_num;
- 	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
- 
--	DEBUG2(printk("scsi%ld: %s: "
--	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
--	    "serial %s\n", ha->host_no, __func__,
--	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
--	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
--	    ha->serial_number));
-+	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
-+	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
- 
- 	status = QLA_SUCCESS;
- 
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 01c3610..9fbb33f 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -6304,13 +6304,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
- 	 * ISID would not match firmware generated ISID.
- 	 */
- 	if (is_isid_compare) {
--		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
--			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
--			__func__, old_tddb->isid[5], old_tddb->isid[4],
--			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
--			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
--			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
--			new_tddb->isid[0]));
-+		DEBUG2(ql4_printk(KERN_INFO, ha,
-+			"%s: old ISID [%pmR] New ISID [%pmR]\n",
-+			__func__, old_tddb->isid, new_tddb->isid));
- 
- 		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
- 			   sizeof(old_tddb->isid)))
-@@ -7925,10 +7921,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
- 		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
- 		break;
- 	case ISCSI_FLASHNODE_ISID:
--		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
--			     fnode_sess->isid[0], fnode_sess->isid[1],
--			     fnode_sess->isid[2], fnode_sess->isid[3],
--			     fnode_sess->isid[4], fnode_sess->isid[5]);
-+		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
- 		break;
- 	case ISCSI_FLASHNODE_TSID:
- 		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
--- 
-2.9.3
+Last chance before this patch is lost in the mailing list noise.
+
+> However, adding new vendor id's is mostly not an issue.
+
+> But, removing could be a problem. Sean has to confirm this.
+
+It already was done, all changes are already included in
+multipath-tools. See below.
+
+> On 10/18/2016 10:11 AM, Xose Vazquez Perez wrote:
+>> On 10/07/2016 06:55 PM, Xose Vazquez Perez wrote:
+>>
+>> This patch is pending, ACK is needed!
+>> The part of multipath-tools was done time ago.
+>>
+>> CC: Babu Moger, just in case.
+
+>>> Remove IBM/1745 ghost array.
+>>> There is no references nowhere, also removed from multipath-tools
+>>> Confirmed by the original manufacturer(NetApp), and Google shows no results.
+
+http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=ae9c385ab793600c3595c1ee513463d8d4ccf885
+
+>>> Replace too wide "TP9" regex with full names.
+>>> TP9100 is included, at it is not a RDAC array.
+>>> This reverts partially the commit 352047
+
+https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=352047
+http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=c6fbd3725c06b3ee240ce0fe4e5eedb97f934e09
+
+>>> Add IBM 3542 and 3552, they are FAStT200 and FAStT500
+
+http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=4080b06683f8045a331631a0b8cb12be2becd0cf
+http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=e39610b0d3a4b5da16adcd10f18460dde609c41b
+
+>>> Cc: Sean Stewart <Sean.Stewart@netapp.com>
+>>> Cc: Hannes Reinecke <hare@suse.de>
+>>> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
+>>> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+>>> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+>>> Cc: SCSI ML <linux-scsi@vger.kernel.org>
+>>> Cc: device-mapper development <dm-devel@redhat.com>
+>>> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+>>> ---
+>>>   drivers/scsi/scsi_dh.c | 8 ++++++--
+>>>   1 file changed, 6 insertions(+), 2 deletions(-)
+>>>
+>>> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+>>> index b8d3b97..a64b5ce 100644
+>>> --- a/drivers/scsi/scsi_dh.c
+>>> +++ b/drivers/scsi/scsi_dh.c
+>>> @@ -49,14 +49,18 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
+>>>       {"IBM", "1724",            "rdac", },
+>>>       {"IBM", "1726",            "rdac", },
+>>>       {"IBM", "1742",            "rdac", },
+>>> -    {"IBM", "1745",            "rdac", },
+>>>       {"IBM", "1746",            "rdac", },
+>>>       {"IBM", "1813",            "rdac", },
+>>>       {"IBM", "1814",            "rdac", },
+>>>       {"IBM", "1815",            "rdac", },
+>>>       {"IBM", "1818",            "rdac", },
+>>>       {"IBM", "3526",            "rdac", },
+>>> -    {"SGI", "TP9",            "rdac", },
+>>> +    {"IBM", "3542",            "rdac", },
+>>> +    {"IBM", "3552",            "rdac", },
+>>> +    {"SGI", "TP9300",        "rdac", },
+>>> +    {"SGI", "TP9400",        "rdac", },
+>>> +    {"SGI", "TP9500",        "rdac", },
+>>> +    {"SGI", "TP9700",        "rdac", },
+>>>       {"SGI", "IS",            "rdac", },
+>>>       {"STK", "OPENstorage D280",    "rdac", },
+>>>       {"STK", "FLEXLINE 380",        "rdac", },
+>>>
+> 
+> 
 
