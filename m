@@ -1,71 +1,102 @@
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Subject: [PATCH v3 5/6] scsi: replace custom approach to hexdump small buffers
-Date: Sat, 22 Oct 2016 20:32:30 +0300
-Message-ID: <20161022173231.170417-6-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 3/6] scsi: qla4xxx: print MAC and SID via %p[mM][R]
+Date: Sat, 22 Oct 2016 20:32:28 +0300
+Message-ID: <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
 References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga05.intel.com ([192.55.52.43]:32630 "EHLO mga05.intel.com"
+Received: from mga03.intel.com ([134.134.136.65]:11525 "EHLO mga03.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S964798AbcJVRdM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 22 Oct 2016 13:33:12 -0400
+        id S964798AbcJVRdg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 22 Oct 2016 13:33:36 -0400
 In-Reply-To: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>, Jon Mason <jonmason@broadcom.com>
+Cc: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>, QLogic-Storage-Upstream@qlogic.com, Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-In kernel we have defined specifier (%*ph[C]) to dump small buffers in a hex
-format. Replace custom approach by a generic one.
+From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
 
-Cc: Jon Mason <jonmason@broadcom.com>
+In the kernel we have nice specifier to print MAC by given pointer to the
+address in a binary form.
+
+Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
+Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/scsi/scsi_transport_srp.c | 11 +----------
- drivers/scsi/sd.c                 |  4 +---
- 2 files changed, 2 insertions(+), 13 deletions(-)
+ drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
+ drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
+ drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
+ 3 files changed, 7 insertions(+), 21 deletions(-)
 
-diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-index e3cd3ec..02cfc6b 100644
---- a/drivers/scsi/scsi_transport_srp.c
-+++ b/drivers/scsi/scsi_transport_srp.c
-@@ -115,21 +115,12 @@ static DECLARE_TRANSPORT_CLASS(srp_host_class, "srp_host", srp_host_setup,
- static DECLARE_TRANSPORT_CLASS(srp_rport_class, "srp_remote_ports",
- 			       NULL, NULL, NULL);
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index c291fdf..1da04f3 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+ 	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
+ 	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
  
--#define SRP_PID(p) \
--	(p)->port_id[0], (p)->port_id[1], (p)->port_id[2], (p)->port_id[3], \
--	(p)->port_id[4], (p)->port_id[5], (p)->port_id[6], (p)->port_id[7], \
--	(p)->port_id[8], (p)->port_id[9], (p)->port_id[10], (p)->port_id[11], \
--	(p)->port_id[12], (p)->port_id[13], (p)->port_id[14], (p)->port_id[15]
--
--#define SRP_PID_FMT "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:" \
--	"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x"
--
- static ssize_t
- show_srp_rport_id(struct device *dev, struct device_attribute *attr,
- 		  char *buf)
- {
- 	struct srp_rport *rport = transport_class_to_srp_rport(dev);
--	return sprintf(buf, SRP_PID_FMT "\n", SRP_PID(rport));
-+	return sprintf(buf, "%16phC\n", rport->port_id);
- }
+-	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
+-			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
+-			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
+-			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
++	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
  
- static DEVICE_ATTR(port_id, S_IRUGO, show_srp_rport_id, NULL);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index b9618ff..5634b54 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2472,9 +2472,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
- 		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
- 			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
- 				  sdkp->write_prot ? "on" : "off");
--			sd_printk(KERN_DEBUG, sdkp,
--				  "Mode Sense: %02x %02x %02x %02x\n",
--				  buffer[0], buffer[1], buffer[2], buffer[3]);
-+			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
- 		}
- 	}
- }
+ 	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
+ 	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index 06ddd13..bccd8b6 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
+ 	ha->phy_port_num = sys_info->port_num;
+ 	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
+ 
+-	DEBUG2(printk("scsi%ld: %s: "
+-	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
+-	    "serial %s\n", ha->host_no, __func__,
+-	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
+-	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
+-	    ha->serial_number));
++	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
++	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
+ 
+ 	status = QLA_SUCCESS;
+ 
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 01c3610..9fbb33f 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6304,13 +6304,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
+ 	 * ISID would not match firmware generated ISID.
+ 	 */
+ 	if (is_isid_compare) {
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
+-			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
+-			__func__, old_tddb->isid[5], old_tddb->isid[4],
+-			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
+-			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
+-			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
+-			new_tddb->isid[0]));
++		DEBUG2(ql4_printk(KERN_INFO, ha,
++			"%s: old ISID [%pmR] New ISID [%pmR]\n",
++			__func__, old_tddb->isid, new_tddb->isid));
+ 
+ 		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
+ 			   sizeof(old_tddb->isid)))
+@@ -7925,10 +7921,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+ 		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
+ 		break;
+ 	case ISCSI_FLASHNODE_ISID:
+-		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
+-			     fnode_sess->isid[0], fnode_sess->isid[1],
+-			     fnode_sess->isid[2], fnode_sess->isid[3],
+-			     fnode_sess->isid[4], fnode_sess->isid[5]);
++		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
+ 		break;
+ 	case ISCSI_FLASHNODE_TSID:
+ 		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
 -- 
 2.9.3
 
