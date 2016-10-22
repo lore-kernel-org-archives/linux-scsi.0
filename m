@@ -1,56 +1,68 @@
-From: postmaster <webb@formadablehope.com>
-Subject: =?UTF-8?Q?Gesch=C3=A4ftsvorschlag!!!?=
-Date: Fri, 21 Oct 2016 22:07:33 +0200
-Message-ID: <58ca1dd200e33d6275376b6a91ea0642@institut-ambressence.com>
-Reply-To: <louis.isaki@aim.com>
+From: Steven Moore <zgpt66p@cplonetie.me>
+Subject: Get A Part Time Job Today
+Date: Sat, 22 Oct 2016 04:54:36 -0700
+Message-ID: <BLUPR14MB03228939813B5A25667172D9D6D70__30508.3873834976$1477140043$gmane$org@BLUPR14MB0322.namprd14.prod.outlook.com>
+Reply-To: <231101xyz@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from neo.yellow-internet.com ([91.121.210.21]:49986 "EHLO
-        neo.yellow-internet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755140AbcJVCll (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 21 Oct 2016 22:41:41 -0400
+Received: from mail-cys01nam02hn0222.outbound.protection.outlook.com ([104.47.37.222]:27036
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S936453AbcJVMkJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 22 Oct 2016 08:40:09 -0400
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <zgpt66p@cplonetie.me>
 
+Hello
+ =
 
+ =
 
--- 
-Geschäftsvorschlag!!!
+My Name is Steven Moore.We seek the service of a Secret Shopper in our apex=
+-consult Organization. The assignment will pay  per duty .You can make $200=
+ everyday , depends on how fast you able to take up your work. I am sure yo=
+u cannot spend more than 1-2 hours per day on your assignment . No Money or=
+ Fee is required to become secret shopper.
+ =
 
+ =
 
-Ich vermute das diese E-Mail eine Überraschung für Sie sein wird, aber 
-es ist wahr.Ich bin bei einer routinen Überprüfung in meiner Bank (First 
-National Bank von Süd Afrika) wo ich arbeite, auf einem Konto 
-gestoßen,was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M 
-(Achtzehn Million, Fünf Hundert Tausend, US Dollar) gutgeschrieben sind.
+ =
 
-Dieses Konto gehörte Herrn Fisher Thomas, der ein Kunde in unsere Bank 
-war, der leider verstorben ist. Herr Thomas war ein gebürtiger 
-Deutscher.Damit es mir möglich ist dieses Geld USD$18.5M (Achtzehn 
-Million, Fünf Hundert Tausend, US Dollar) inanspruch zunehmen, benötige 
-ich die zusammenarbeit eines  Ausländischen Partners wie Sie,den ich als 
-Verwandter und Erbe des verstorbenen Herrn Thomas. vorstellen kann,damit 
-wir das Geld inanspruch nehmen können.
+KINDLY SEND YOUR INFORMATION BELOW IF INTERESTED:
+ =
 
-Für diese Unterstützung erhalten Sie 30% der Erbschaftsumme und die 
-restlichen 70% teile ich mir mit meinen zwei Arbeitskollegen, die mich 
-bei dieser Transaktion ebenfalls unterstützen.Wenn Sie interessiert 
-sind, können Sie mir bitte eine E-Mail schicken, damit ich Ihnen mehr 
-Details zukommen lassen kann.
+ =
 
-Schicken Sie bitte Ihre Antwort auf diese E-Mail Adresse: 
-(louis.isaki@aim.com)
+ =
 
-Mit freundlichen Grüßen
+Your Name:
+Street Address: ( Not PO. BOX )
+Apartment Number:
+City: State:
+Zip Code:  =
 
-Louis ISAKI
+Country:
+Cell/Home phone number:
+Age:
+Present working Status:
+ =
 
+You can also vist our website to Regrister online:
+ =
 
-First National Bank. N.B.BITTE SENDEN SIE MIR Louis ISAKI ANTWORT ZU 
-durch mein E-mail: (louis.isaki@aim.com).fÜR VERTRAULICHEN GRUND. 
-Schicken Sie
-keine POST ZU MEINEM BÜRO-E-MAIL. If you understand english,please 
-kindly reply with english.
+ =
+
+http://www.apex-consult.net/
+ =
+
+ =
+
+Regards,
+Steven Moore
+231101xyz@gmail.com
+=20
