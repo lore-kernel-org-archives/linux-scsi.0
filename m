@@ -1,105 +1,84 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH] scsi: update rdac devices at scsi_dh_rdac
-Date: Sat, 22 Oct 2016 23:41:50 +0200
-Message-ID: <b0fe9b75-6288-3ac5-9d77-f7f43e9a5756@gmail.com>
-References: <20161007165549.6433-1-xose.vazquez@gmail.com>
- <eb9d6973-2e0b-843b-4547-94b64dcd05fc@gmail.com>
- <39e5713e-5329-80a2-d2c5-d193f974e270@oracle.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: [GIT PULL] target fixes for v4.9-rc2
+Date: Sat, 22 Oct 2016 19:31:25 -0700
+Message-ID: <1477189885.18052.25.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36786 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755759AbcJVVlx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2016 17:41:53 -0400
-Received: by mail-wm0-f66.google.com with SMTP id f193so3965543wmg.3
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Oct 2016 14:41:53 -0700 (PDT)
-In-Reply-To: <39e5713e-5329-80a2-d2c5-d193f974e270@oracle.com>
+Received: from mail.linux-iscsi.org ([67.23.28.174]:35421 "EHLO
+        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756237AbcJWCbg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 22 Oct 2016 22:31:36 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Babu Moger <babu.moger@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
-Cc: Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+To: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, vst@datera.io, ddi@datera.io, nixon.vincent@calsoftinc.com
 
-On 10/18/2016 09:47 PM, Babu Moger wrote:
+Hello Linus,
 
-> At this point, I am not the right person to ack this change.
+Here are the outstanding target-pending fixes for v4.9-rc2.  Please go
+ahead and pull from:
 
-Thank you anyway.
+  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
 
-Last chance before this patch is lost in the mailing list noise.
+This includes:
 
-> However, adding new vendor id's is mostly not an issue.
+  - Fix v4.1.y+ reference leak regression with concurrent TMR ABORT_TASK +
+    session shutdown. (Vaibhav Tandon)
+  - Enable tcm_fc w/ SCF_USE_CPUID to avoid host exchange timeouts (Hannes)
+  - target/user error sense handling fixes. (Andy + MNC + HCH)
+  - Fix iscsi-target NOP_OUT error path iscsi_cmd descriptor leak (Varun)
+  - Two EXTENDED_COPY SCSI status fixes for ESX VAAI (Dinesh Israni + Nixon Vincent)
+  - Revert a v4.8 residual overflow change, that breaks sg_inq with
+    small allocation lengths.
 
-> But, removing could be a problem. Sean has to confirm this.
+There are a number of folks stress testing the v4.1.y regression fix in
+their environments, and more folks doing iser-target I/O stress testing
+atop recent v4.x.y code.
 
-It already was done, all changes are already included in
-multipath-tools. See below.
+There is also one v4.2.y+ RCU conversion regression related to explicit
+NodeACL configfs changes, that is still being tracked down.
 
-> On 10/18/2016 10:11 AM, Xose Vazquez Perez wrote:
->> On 10/07/2016 06:55 PM, Xose Vazquez Perez wrote:
->>
->> This patch is pending, ACK is needed!
->> The part of multipath-tools was done time ago.
->>
->> CC: Babu Moger, just in case.
+Thank you,
 
->>> Remove IBM/1745 ghost array.
->>> There is no references nowhere, also removed from multipath-tools
->>> Confirmed by the original manufacturer(NetApp), and Google shows no results.
+--nab
 
-http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=ae9c385ab793600c3595c1ee513463d8d4ccf885
+Andy Grover (3):
+  target/user: Use sense_reason_t in tcmu_queue_cmd_ring
+  target/user: Return an error if cmd data size is too large
+  target/user: Fix comments to not refer to data ring
 
->>> Replace too wide "TP9" regex with full names.
->>> TP9100 is included, at it is not a RDAC array.
->>> This reverts partially the commit 352047
+Colin Ian King (1):
+  iscsi-target: fix spelling mistake "Unsolicitied" -> "Unsolicited"
 
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=352047
-http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=c6fbd3725c06b3ee240ce0fe4e5eedb97f934e09
+Dinesh Israni (1):
+  target: Don't override EXTENDED_COPY xcopy_pt_cmd SCSI status code
 
->>> Add IBM 3542 and 3552, they are FAStT200 and FAStT500
+Hannes Reinecke (5):
+  target: fix potential race window in target_sess_cmd_list_waiting()
+  target/tcm_fc: print command pointer in debug message
+  target/tcm_fc: return detailed error in ft_sess_create()
+  target/tcm_fc: Update debugging statements to match libfc usage
+  target/tcm_fc: use CPU affinity for responses
 
-http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=4080b06683f8045a331631a0b8cb12be2becd0cf
-http://git.opensvc.com/gitweb.cgi?p=multipath-tools/.git;a=commitdiff;h=e39610b0d3a4b5da16adcd10f18460dde609c41b
+Nicholas Bellinger (3):
+  target: Re-add missing SCF_ACK_KREF assignment in v4.1.y
+  target: Make EXTENDED_COPY 0xe4 failure return COPY TARGET DEVICE NOT
+    REACHABLE
+  Revert "target: Fix residual overflow handling in
+    target_complete_cmd_with_length"
 
->>> Cc: Sean Stewart <Sean.Stewart@netapp.com>
->>> Cc: Hannes Reinecke <hare@suse.de>
->>> Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
->>> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
->>> Cc: Martin K. Petersen <martin.petersen@oracle.com>
->>> Cc: SCSI ML <linux-scsi@vger.kernel.org>
->>> Cc: device-mapper development <dm-devel@redhat.com>
->>> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
->>> ---
->>>   drivers/scsi/scsi_dh.c | 8 ++++++--
->>>   1 file changed, 6 insertions(+), 2 deletions(-)
->>>
->>> diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
->>> index b8d3b97..a64b5ce 100644
->>> --- a/drivers/scsi/scsi_dh.c
->>> +++ b/drivers/scsi/scsi_dh.c
->>> @@ -49,14 +49,18 @@ static const struct scsi_dh_blist scsi_dh_blist[] = {
->>>       {"IBM", "1724",            "rdac", },
->>>       {"IBM", "1726",            "rdac", },
->>>       {"IBM", "1742",            "rdac", },
->>> -    {"IBM", "1745",            "rdac", },
->>>       {"IBM", "1746",            "rdac", },
->>>       {"IBM", "1813",            "rdac", },
->>>       {"IBM", "1814",            "rdac", },
->>>       {"IBM", "1815",            "rdac", },
->>>       {"IBM", "1818",            "rdac", },
->>>       {"IBM", "3526",            "rdac", },
->>> -    {"SGI", "TP9",            "rdac", },
->>> +    {"IBM", "3542",            "rdac", },
->>> +    {"IBM", "3552",            "rdac", },
->>> +    {"SGI", "TP9300",        "rdac", },
->>> +    {"SGI", "TP9400",        "rdac", },
->>> +    {"SGI", "TP9500",        "rdac", },
->>> +    {"SGI", "TP9700",        "rdac", },
->>>       {"SGI", "IS",            "rdac", },
->>>       {"STK", "OPENstorage D280",    "rdac", },
->>>       {"STK", "FLEXLINE 380",        "rdac", },
->>>
-> 
-> 
+Varun Prakash (1):
+  iscsi-target: fix iscsi cmd leak
+
+ drivers/target/iscsi/iscsi_target.c       |  6 +++-
+ drivers/target/iscsi/iscsi_target_login.c |  4 +--
+ drivers/target/target_core_transport.c    | 39 ++++++++++++------------
+ drivers/target/target_core_user.c         | 50 +++++++++++++------------------
+ drivers/target/target_core_xcopy.c        | 34 ++++++++++++++++-----
+ drivers/target/tcm_fc/tfc_cmd.c           |  4 +--
+ drivers/target/tcm_fc/tfc_sess.c          | 42 ++++++++++++++++++--------
+ include/target/target_core_base.h         |  1 +
+ 8 files changed, 105 insertions(+), 75 deletions(-)
 
