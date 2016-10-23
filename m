@@ -1,67 +1,61 @@
-From: <alters@usg.edu>
-Subject: (unknown)
-Date: Sun, 23 Oct 2016 18:32:47 -0000
-Message-ID: <147724756740.13679.11344720858071292337@rima-tde.net>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH] sd: fix uninitialized variable access in error handling
+Date: Mon, 24 Oct 2016 08:37:37 +0900
+Message-ID: <4bd72b9c-7826-0bfd-7004-09732c774091@wdc.com>
+References: <20161021153246.3456962-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_555627325_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 241.red-81-45-85.staticip.rima-tde.net ([81.45.85.241]:57790
-        "HELO rima-tde.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1755088AbcJWScz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 23 Oct 2016 14:32:55 -0400
-Subject: 
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161021153246.3456962-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun.tancheff@seagate.com>, Jens Axboe <axboe@fb.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
-lS3SAVBLBQYAAAAAAQABAFoAAABaCgAAAAA=
+
+
+On 10/22/16 00:32, Arnd Bergmann wrote:
+> If sd_zbc_report_zones fails, the check for 'zone_blocks == 0'
+> later in the function accesses uninitialized data:
+> 
+> drivers/scsi/sd_zbc.c: In function ‘sd_zbc_read_zones’:
+> drivers/scsi/sd_zbc.c:520:7: error: ‘zone_blocks’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> This sets it to zero, which has the desired effect of leaving
+> the sd_zbc_read_zones successfully with sdkp->zone_blocks = 0.
+> 
+> Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/sd_zbc.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
+> index 16d3fa62d8ac..d5b3bd915d9e 100644
+> --- a/drivers/scsi/sd_zbc.c
+> +++ b/drivers/scsi/sd_zbc.c
+> @@ -455,8 +455,10 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+>  
+>  	/* Do a report zone to get the same field */
+>  	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
+> -	if (ret)
+> +	if (ret) {
+> +		zone_blocks = 0;
+>  		goto out;
+> +	}
+>  
+>  	same = buf[4] & 0x0f;
+>  	if (same > 0) {
+
+Reviewed-by: Damien Le Moal <damien.lemoal@wdc.com>
+
+-- 
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
