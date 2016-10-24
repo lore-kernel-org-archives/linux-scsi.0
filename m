@@ -1,52 +1,125 @@
-From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH] lpfc: Revise MAINTAINERS to reflect Broadcom
-Date: Mon, 24 Oct 2016 09:05:06 -0700
-Message-ID: <580e3132.F/Of3Vs1k6lgixPf%james.smart@broadcom.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: Device or HBA level QD throttling creates randomness in sequetial workload
+Date: Tue, 25 Oct 2016 00:24:24 +0530
+Message-ID: <2d656e9c9fbde7206e40a635c61a6084@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bastion.smtp.avagotech.com ([202.86.248.61]:38625 "EHLO
-        sgpsmtp1.avagotech.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933767AbcJXQFN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2016 12:05:13 -0400
-Received: from flash (fx9xs32.emulex.com [10.230.226.120])
-        by sgpsmtp1.avagotech.com (Postfix) with SMTP id 06B6F10016C
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2016 09:05:08 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, Christoph Hellwig <hch@infradead.org>, paolo.valente@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+
+> -----Original Message-----
+> From: Omar Sandoval [mailto:osandov@osandov.com]
+> Sent: Monday, October 24, 2016 9:11 PM
+> To: Kashyap Desai
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org; linux-
+> block@vger.kernel.org; axboe@kernel.dk; Christoph Hellwig;
+> paolo.valente@linaro.org
+> Subject: Re: Device or HBA level QD throttling creates randomness in
+sequetial
+> workload
+>
+> On Mon, Oct 24, 2016 at 06:35:01PM +0530, Kashyap Desai wrote:
+> > >
+> > > On Fri, Oct 21, 2016 at 05:43:35PM +0530, Kashyap Desai wrote:
+> > > > Hi -
+> > > >
+> > > > I found below conversation and it is on the same line as I wanted
+> > > > some input from mailing list.
+> > > >
+> > > > http://marc.info/?l=linux-kernel&m=147569860526197&w=2
+> > > >
+> > > > I can do testing on any WIP item as Omar mentioned in above
+> > discussion.
+> > > > https://github.com/osandov/linux/tree/blk-mq-iosched
+> >
+> > I tried build kernel using this repo, but looks like it is not allowed
+> > to reboot due to some changes in <block> layer.
+>
+> Did you build the most up-to-date version of that branch? I've been
+force
+> pushing to it, so the commit id that you built would be useful.
+> What boot failure are you seeing?
+
+Below  is latest commit on repo.
+commit b077a9a5149f17ccdaa86bc6346fa256e3c1feda
+Author: Omar Sandoval <osandov@fb.com>
+Date:   Tue Sep 20 11:20:03 2016 -0700
+
+    [WIP] blk-mq: limit bio queue depth
+
+I have latest repo from 4.9/scsi-next maintained by Martin which boots
+fine.  Only Delta is  " CONFIG_SBITMAP" is enabled in WIP blk-mq-iosched
+branch. I could not see any meaningful data on boot hang, so going to try
+one more time tomorrow.
 
 
-Avago is now known as Broadcom.
-Revise the emails and website for lpfc accordingly
+>
+> > >
+> > > Are you using blk-mq for this disk? If not, then the work there
+> > > won't
+> > affect you.
+> >
+> > YES. I am using blk-mq for my test. I also confirm if use_blk_mq is
+> > disable, Sequential work load issue is not seen and <cfq> scheduling
+> > works well.
+>
+> Ah, okay, perfect. Can you send the fio job file you're using? Hard to
+tell exactly
+> what's going on without the details. A sequential workload with just one
+> submitter is about as easy as it gets, so this _should_ be behaving
+nicely.
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- MAINTAINERS | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+<FIO script>
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 072fe36..96e0ec6 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -4681,11 +4681,11 @@ M:	David Woodhouse <dwmw2@infradead.org>
- L:	linux-embedded@vger.kernel.org
- S:	Maintained
- 
--EMULEX/AVAGO LPFC FC/FCOE SCSI DRIVER
--M:	James Smart <james.smart@avagotech.com>
--M:	Dick Kennedy <dick.kennedy@avagotech.com>
-+EMULEX/BROADCOM LPFC FC/FCOE SCSI DRIVER
-+M:	James Smart <james.smart@broadcom.com>
-+M:	Dick Kennedy <dick.kennedy@broadcom.com>
- L:	linux-scsi@vger.kernel.org
--W:	http://www.avagotech.com
-+W:	http://www.broadcom.com
- S:	Supported
- F:	drivers/scsi/lpfc/
- 
--- 
-2.5.0
+; setup numa policy for each thread
+; 'numactl --show' to determine the maximum numa nodes
+[global]
+ioengine=libaio
+buffered=0
+rw=write
+bssplit=4K/100
+iodepth=256
+numjobs=1
+direct=1
+runtime=60s
+allow_mounted_write=0
 
+[job1]
+filename=/dev/sdd
+..
+[job24]
+filename=/dev/sdaa
 
+When I tune /sys/module/scsi_mod/parameters/use_blk_mq = 1, below is a
+ioscheduler detail. (It is in blk-mq mode. )
+/sys/devices/pci0000:00/0000:00:02.0/0000:02:00.0/host10/target10:2:13/10:
+2:13:0/block/sdq/queue/scheduler:none
+
+When I have set /sys/module/scsi_mod/parameters/use_blk_mq = 0,
+ioscheduler picked by SML is <cfq>.
+/sys/devices/pci0000:00/0000:00:02.0/0000:02:00.0/host10/target10:2:13/10:
+2:13:0/block/sdq/queue/scheduler:noop deadline [cfq]
+
+I see in blk-mq performance is very low for Sequential Write work load and
+I confirm that blk-mq convert Sequential work load into random stream due
+to  io-scheduler change in blk-mq vs legacy block layer.
+
+>
+> > >
+> > > > Is there any workaround/alternative in latest upstream kernel, if
+> > > > user wants to see limited penalty  for Sequential Work load on HDD
+?
+> > > >
+> > > > ` Kashyap
+> > > >
+>
+> P.S., your emails are being marked as spam by Gmail. Actually, Gmail
+seems to
+> mark just about everything I get from Broadcom as spam due to failed
+DMARC.
+>
+> --
+> Omar
