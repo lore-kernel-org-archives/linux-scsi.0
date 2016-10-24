@@ -1,80 +1,50 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH v3 5/6] scsi: replace custom approach to hexdump small
- buffers
-Date: Mon, 24 Oct 2016 08:35:38 -0400
-Message-ID: <1477312538.17595.4.camel@localhost.localdomain>
-References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
-         <20161022173231.170417-6-andriy.shevchenko@linux.intel.com>
-Reply-To: emilne@redhat.com
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: Device or HBA level QD throttling creates randomness in sequetial workload
+Date: Mon, 24 Oct 2016 18:35:01 +0530
+Message-ID: <1f7cec69e6e12b6baa8e7f180a8e41b3@mail.gmail.com>
+References: <97184c74229af78b0d97e6b8016af972@mail.gmail.com> <20161021213121.GA10030@vader.DHCP.thefacebook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35350 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932934AbcJXMfl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Oct 2016 08:35:41 -0400
-In-Reply-To: <20161022173231.170417-6-andriy.shevchenko@linux.intel.com>
+Received: from mail-yb0-f178.google.com ([209.85.213.178]:34314 "EHLO
+        mail-yb0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S936015AbcJXNO6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2016 09:14:58 -0400
+Received: by mail-yb0-f178.google.com with SMTP id f97so75107953ybi.1
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2016 06:14:57 -0700 (PDT)
+In-Reply-To: <20161021213121.GA10030@vader.DHCP.thefacebook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jon Mason <jonmason@broadcom.com>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, Christoph Hellwig <hch@infradead.org>, paolo.valente@linaro.org
 
-On Sat, 2016-10-22 at 20:32 +0300, Andy Shevchenko wrote:
-> In kernel we have defined specifier (%*ph[C]) to dump small buffers in a hex
-> format. Replace custom approach by a generic one.
-> 
-> Cc: Jon Mason <jonmason@broadcom.com>
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
->  drivers/scsi/scsi_transport_srp.c | 11 +----------
->  drivers/scsi/sd.c                 |  4 +---
->  2 files changed, 2 insertions(+), 13 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
-> index e3cd3ec..02cfc6b 100644
-> --- a/drivers/scsi/scsi_transport_srp.c
-> +++ b/drivers/scsi/scsi_transport_srp.c
-> @@ -115,21 +115,12 @@ static DECLARE_TRANSPORT_CLASS(srp_host_class, "srp_host", srp_host_setup,
->  static DECLARE_TRANSPORT_CLASS(srp_rport_class, "srp_remote_ports",
->  			       NULL, NULL, NULL);
->  
-> -#define SRP_PID(p) \
-> -	(p)->port_id[0], (p)->port_id[1], (p)->port_id[2], (p)->port_id[3], \
-> -	(p)->port_id[4], (p)->port_id[5], (p)->port_id[6], (p)->port_id[7], \
-> -	(p)->port_id[8], (p)->port_id[9], (p)->port_id[10], (p)->port_id[11], \
-> -	(p)->port_id[12], (p)->port_id[13], (p)->port_id[14], (p)->port_id[15]
-> -
-> -#define SRP_PID_FMT "%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x:" \
-> -	"%02x:%02x:%02x:%02x:%02x:%02x:%02x:%02x"
-> -
->  static ssize_t
->  show_srp_rport_id(struct device *dev, struct device_attribute *attr,
->  		  char *buf)
->  {
->  	struct srp_rport *rport = transport_class_to_srp_rport(dev);
-> -	return sprintf(buf, SRP_PID_FMT "\n", SRP_PID(rport));
-> +	return sprintf(buf, "%16phC\n", rport->port_id);
->  }
->  
->  static DEVICE_ATTR(port_id, S_IRUGO, show_srp_rport_id, NULL);
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b9618ff..5634b54 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2472,9 +2472,7 @@ sd_read_write_protect_flag(struct scsi_disk *sdkp, unsigned char *buffer)
->  		if (sdkp->first_scan || old_wp != sdkp->write_prot) {
->  			sd_printk(KERN_NOTICE, sdkp, "Write Protect is %s\n",
->  				  sdkp->write_prot ? "on" : "off");
-> -			sd_printk(KERN_DEBUG, sdkp,
-> -				  "Mode Sense: %02x %02x %02x %02x\n",
-> -				  buffer[0], buffer[1], buffer[2], buffer[3]);
-> +			sd_printk(KERN_DEBUG, sdkp, "Mode Sense: %4ph\n", buffer);
->  		}
->  	}
->  }
+>
+> On Fri, Oct 21, 2016 at 05:43:35PM +0530, Kashyap Desai wrote:
+> > Hi -
+> >
+> > I found below conversation and it is on the same line as I wanted some
+> > input from mailing list.
+> >
+> > http://marc.info/?l=linux-kernel&m=147569860526197&w=2
+> >
+> > I can do testing on any WIP item as Omar mentioned in above
+discussion.
+> > https://github.com/osandov/linux/tree/blk-mq-iosched
 
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
+I tried build kernel using this repo, but looks like it is not allowed to
+reboot due to some changes in <block> layer.
 
+>
+> Are you using blk-mq for this disk? If not, then the work there won't
+affect you.
 
+YES. I am using blk-mq for my test. I also confirm if use_blk_mq is
+disable, Sequential work load issue is not seen and <cfq> scheduling works
+well.
 
+>
+> > Is there any workaround/alternative in latest upstream kernel, if user
+> > wants to see limited penalty  for Sequential Work load on HDD ?
+> >
+> > ` Kashyap
+> >
