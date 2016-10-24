@@ -1,81 +1,108 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH v3 2/6] fusion: print lan address via %pMR
-Date: Mon, 24 Oct 2016 08:32:39 -0400
-Message-ID: <1477312359.17595.1.camel@localhost.localdomain>
+Subject: Re: [PATCH v3 3/6] scsi: qla4xxx: print MAC and SID via %p[mM][R]
+Date: Mon, 24 Oct 2016 08:34:37 -0400
+Message-ID: <1477312477.17595.2.camel@localhost.localdomain>
 References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
-         <20161022173231.170417-3-andriy.shevchenko@linux.intel.com>
+         <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:52010 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:55962 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932934AbcJXMcm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Oct 2016 08:32:42 -0400
-In-Reply-To: <20161022173231.170417-3-andriy.shevchenko@linux.intel.com>
+        id S936132AbcJXMej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Oct 2016 08:34:39 -0400
+In-Reply-To: <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, QLogic-Storage-Upstream@qlogic.com
 
 On Sat, 2016-10-22 at 20:32 +0300, Andy Shevchenko wrote:
-> LAN MAC addresses can be printed directly using %pMR specifier.
+> From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
 > 
-> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> In the kernel we have nice specifier to print MAC by given pointer to the
+> address in a binary form.
+> 
+> Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
+> Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
+> Cc: QLogic-Storage-Upstream@qlogic.com
 > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 > ---
->  drivers/message/fusion/mptbase.c | 14 ++++----------
->  1 file changed, 4 insertions(+), 10 deletions(-)
+>  drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
+>  drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
+>  drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
+>  3 files changed, 7 insertions(+), 21 deletions(-)
 > 
-> diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
-> index 89c7ed1..f82745c 100644
-> --- a/drivers/message/fusion/mptbase.c
-> +++ b/drivers/message/fusion/mptbase.c
-> @@ -2585,10 +2585,7 @@ mpt_do_ioc_recovery(MPT_ADAPTER *ioc, u32 reason, int sleepFlag)
->  				(void) GetLanConfigPages(ioc);
->  				a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
->  				dprintk(ioc, printk(MYIOC_s_DEBUG_FMT
-> -					"LanAddr = %02X:%02X:%02X"
-> -					":%02X:%02X:%02X\n",
-> -					ioc->name, a[5], a[4],
-> -					a[3], a[2], a[1], a[0]));
-> +					"LanAddr = %pMR\n", ioc->name, a));
->  			}
->  			break;
+> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+> index c291fdf..1da04f3 100644
+> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+> @@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
+>  	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
+>  	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
 >  
-> @@ -6783,8 +6780,7 @@ static int mpt_iocinfo_proc_show(struct seq_file *m, void *v)
->  		if (ioc->bus_type == FC) {
->  			if (ioc->pfacts[p].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN) {
->  				u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
-> -				seq_printf(m, "    LanAddr = %02X:%02X:%02X:%02X:%02X:%02X\n",
-> -						a[5], a[4], a[3], a[2], a[1], a[0]);
-> +				seq_printf(m, "    LanAddr = %pMR\n", a);
->  			}
->  			seq_printf(m, "    WWN = %08X%08X:%08X%08X\n",
->  					ioc->fc_port_page0[p].WWNN.High,
-> @@ -6861,8 +6857,7 @@ mpt_print_ioc_summary(MPT_ADAPTER *ioc, char *buffer, int *size, int len, int sh
+> -	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
+> -			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
+> -			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
+> -			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
+> +	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
 >  
->  	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
->  		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
-> -		y += sprintf(buffer+len+y, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
-> -			a[5], a[4], a[3], a[2], a[1], a[0]);
-> +		y += sprintf(buffer+len+y, ", LanAddr=%pMR", a);
->  	}
+>  	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
+>  	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
+> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+> index 06ddd13..bccd8b6 100644
+> --- a/drivers/scsi/qla4xxx/ql4_nx.c
+> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
+> @@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
+>  	ha->phy_port_num = sys_info->port_num;
+>  	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
 >  
->  	y += sprintf(buffer+len+y, ", IRQ=%d", ioc->pci_irq);
-> @@ -6896,8 +6891,7 @@ static void seq_mpt_print_ioc_summary(MPT_ADAPTER *ioc, struct seq_file *m, int
+> -	DEBUG2(printk("scsi%ld: %s: "
+> -	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
+> -	    "serial %s\n", ha->host_no, __func__,
+> -	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
+> -	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
+> -	    ha->serial_number));
+> +	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
+> +	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
 >  
->  	if (showlan && (ioc->pfacts[0].ProtocolFlags & MPI_PORTFACTS_PROTOCOL_LAN)) {
->  		u8 *a = (u8*)&ioc->lan_cnfg_page1.HardwareAddressLow;
-> -		seq_printf(m, ", LanAddr=%02X:%02X:%02X:%02X:%02X:%02X",
-> -			a[5], a[4], a[3], a[2], a[1], a[0]);
-> +		seq_printf(m, ", LanAddr=%pMR", a);
->  	}
+>  	status = QLA_SUCCESS;
 >  
->  	seq_printf(m, ", IRQ=%d", ioc->pci_irq);
+> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+> index 01c3610..9fbb33f 100644
+> --- a/drivers/scsi/qla4xxx/ql4_os.c
+> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+> @@ -6304,13 +6304,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
+>  	 * ISID would not match firmware generated ISID.
+>  	 */
+>  	if (is_isid_compare) {
+> -		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
+> -			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
+> -			__func__, old_tddb->isid[5], old_tddb->isid[4],
+> -			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
+> -			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
+> -			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
+> -			new_tddb->isid[0]));
+> +		DEBUG2(ql4_printk(KERN_INFO, ha,
+> +			"%s: old ISID [%pmR] New ISID [%pmR]\n",
+> +			__func__, old_tddb->isid, new_tddb->isid));
+>  
+>  		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
+>  			   sizeof(old_tddb->isid)))
+> @@ -7925,10 +7921,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
+>  		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
+>  		break;
+>  	case ISCSI_FLASHNODE_ISID:
+> -		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
+> -			     fnode_sess->isid[0], fnode_sess->isid[1],
+> -			     fnode_sess->isid[2], fnode_sess->isid[3],
+> -			     fnode_sess->isid[4], fnode_sess->isid[5]);
+> +		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
+>  		break;
+>  	case ISCSI_FLASHNODE_TSID:
+>  		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
