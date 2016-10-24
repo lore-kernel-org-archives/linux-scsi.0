@@ -1,43 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 04/10] mpt3sas: Removing unused macro "MPT_DEVICE_TLR_ON"
-Date: Mon, 24 Oct 2016 16:47:49 +0200
-Message-ID: <e2606c21-cb01-11c4-c4f7-a8192797e245@suse.de>
+Subject: Re: [PATCH 05/10] mpt3sas: Bump driver version as "14.100.00.00"
+Date: Mon, 24 Oct 2016 16:48:06 +0200
+Message-ID: <79c37ed8-00b7-20bc-a3b6-7d8ef1c8dfe0@suse.de>
 References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1476966018-10457-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+ <1476966018-10457-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1476966018-10457-5-git-send-email-suganath-prabu.subramani@broadcom.com>
+In-Reply-To: <1476966018-10457-6-git-send-email-suganath-prabu.subramani@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
 On 10/20/2016 02:20 PM, Suganath Prabu S wrote:
-> Removing macro "MPT_DEVICE_TLR_ON" defined in header file as its unused
->
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h | 1 -
->  1 file changed, 1 deletion(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 >
 > diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index 4221a4d..e923c91 100644
+> index e923c91..6f03a86 100644
 > --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
 > +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -375,7 +375,6 @@ struct MPT3SAS_TARGET {
->   * per device private data
->   */
->  #define MPT_DEVICE_FLAGS_INIT		0x01
-> -#define MPT_DEVICE_TLR_ON		0x02
+> @@ -73,8 +73,8 @@
+>  #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+>  #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+>  #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+> -#define MPT3SAS_DRIVER_VERSION		"13.100.00.00"
+> -#define MPT3SAS_MAJOR_VERSION		13
+> +#define MPT3SAS_DRIVER_VERSION		"14.100.00.00"
+> +#define MPT3SAS_MAJOR_VERSION		14
+>  #define MPT3SAS_MINOR_VERSION		100
+>  #define MPT3SAS_BUILD_VERSION		0
+>  #define MPT3SAS_RELEASE_VERSION	00
 >
->  #define MFG_PAGE10_HIDE_SSDS_MASK	(0x00000003)
->  #define MFG_PAGE10_HIDE_ALL_DISKS	(0x00)
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Please move this to the end of the patch series.
 
 Cheers,
 
