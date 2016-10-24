@@ -1,39 +1,65 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: Re: [PATCH 1/2] scsi: smartpqi: Replace semaphore sync_request_sem with mutex
-Date: Mon, 24 Oct 2016 12:10:49 +0200
-Message-ID: <3504862.DmmQhD8X6k@wuerfel>
-References: <1476953642-2160-1-git-send-email-binoy.jayan@linaro.org> <2193537.0Se2hussi4@wuerfel> <CAHv-k_956e7bFnMedo34nJS=nQ-OC=UUic+VsAYSRL69iTeX+A@mail.gmail.com>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH v3 1/6] scsi: fnic: use kernel's '%pM' format option to
+ print MAC
+Date: Mon, 24 Oct 2016 08:29:17 -0400
+Message-ID: <1477312157.17595.0.camel@localhost.localdomain>
+References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
+         <20161022173231.170417-2-andriy.shevchenko@linux.intel.com>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7Bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAHv-k_956e7bFnMedo34nJS=nQ-OC=UUic+VsAYSRL69iTeX+A@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Binoy Jayan <binoy.jayan@linaro.org>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, kevin Barnett <kevin.barnett@microsemi.com>, Don Brace <don.brace@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, Linux kernel mailing list <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:52274 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934831AbcJXM3T (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Oct 2016 08:29:19 -0400
+In-Reply-To: <20161022173231.170417-2-andriy.shevchenko@linux.intel.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Hiral Patel <hiralpat@cisco.com>, Suma Ramars <sramars@cisco.com>
 
-On Monday, October 24, 2016 3:34:27 PM CEST Binoy Jayan wrote:
-> Hi Arnd
+On Sat, 2016-10-22 at 20:32 +0300, Andy Shevchenko wrote:
+> Instead of supplying each byte through stack let's use %pM specifier.
 > 
-> On 20 October 2016 at 14:36, Arnd Bergmann <arnd@arndb.de> wrote:
-> > On Thursday, October 20, 2016 2:24:01 PM CEST Binoy Jayan wrote:
-> >> Semaphores are going away in the future, so replace the semaphore
-> >> sync_request_sem with the a mutex lock. timeout_msecs is not used
-> >> for the lock sync_request_sem, so remove the timed locking too.
-> >>
-> >> Signed-off-by: Binoy Jayan <binoy.jayan@linaro.org>
-> >
-> > The patch looks correct to me, but I think if you remove the support
-> > for handling timeouts, you should update the prototype of
-> > pqi_submit_raid_request_synchronous to no longer pass the timeout
-> > argument in the first place.
+> Cc: Hiral Patel <hiralpat@cisco.com>
+> Cc: Suma Ramars <sramars@cisco.com>
+> Acked-by: Tom Tucker <tom@opengridcomputing.com>
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/scsi/fnic/vnic_dev.c | 10 ++--------
+>  1 file changed, 2 insertions(+), 8 deletions(-)
 > 
-> But we still need "timeout_msecs" in a call to
-> pqi_submit_raid_request_synchronous_with_io_request()
-> 
-> drivers/scsi/smartpqi/smartpqi_init.c +3484
+> diff --git a/drivers/scsi/fnic/vnic_dev.c b/drivers/scsi/fnic/vnic_dev.c
+> index 9795d6f..ba69d61 100644
+> --- a/drivers/scsi/fnic/vnic_dev.c
+> +++ b/drivers/scsi/fnic/vnic_dev.c
+> @@ -499,10 +499,7 @@ void vnic_dev_add_addr(struct vnic_dev *vdev, u8 *addr)
+>  
+>  	err = vnic_dev_cmd(vdev, CMD_ADDR_ADD, &a0, &a1, wait);
+>  	if (err)
+> -		printk(KERN_ERR
+> -			"Can't add addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+> -			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+> -			err);
+> +		pr_err("Can't add addr [%pM], %d\n", addr, err);
+>  }
+>  
+>  void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+> @@ -517,10 +514,7 @@ void vnic_dev_del_addr(struct vnic_dev *vdev, u8 *addr)
+>  
+>  	err = vnic_dev_cmd(vdev, CMD_ADDR_DEL, &a0, &a1, wait);
+>  	if (err)
+> -		printk(KERN_ERR
+> -			"Can't del addr [%02x:%02x:%02x:%02x:%02x:%02x], %d\n",
+> -			addr[0], addr[1], addr[2], addr[3], addr[4], addr[5],
+> -			err);
+> +		pr_err("Can't del addr [%pM], %d\n", addr, err);
+>  }
+>  
+>  int vnic_dev_notify_set(struct vnic_dev *vdev, u16 intr)
 
-Why? If it's always zero, we can remove that too.
+Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
-	Arnd
+
