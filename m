@@ -1,85 +1,65 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 10/10] mpt3sas: Fix for Endianness issue.
-Date: Mon, 24 Oct 2016 16:53:46 +0200
-Message-ID: <959280c2-a07f-bbcd-896f-f8d77df54084@suse.de>
-References: <1476966018-10457-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <1476966018-10457-11-git-send-email-suganath-prabu.subramani@broadcom.com>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: Device or HBA level QD throttling creates randomness in
+ sequetial workload
+Date: Mon, 24 Oct 2016 08:41:23 -0700
+Message-ID: <20161024154123.GA7379@vader>
+References: <97184c74229af78b0d97e6b8016af972@mail.gmail.com>
+ <20161021213121.GA10030@vader.DHCP.thefacebook.com>
+ <1f7cec69e6e12b6baa8e7f180a8e41b3@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1476966018-10457-11-git-send-email-suganath-prabu.subramani@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>, JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1f7cec69e6e12b6baa8e7f180a8e41b3@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, axboe@kernel.dk, Christoph Hellwig <hch@infradead.org>, paolo.valente@linaro.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/20/2016 02:20 PM, Suganath Prabu S wrote:
-> Use le16_to_cpu only for accessing two byte data provided by controller.
->
-> Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
-> Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
-> Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++-----
->  1 file changed, 7 insertions(+), 5 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 6d17f66..981be7b 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -5384,10 +5384,10 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
->  			sas_device->handle, handle);
->  		sas_target_priv_data->handle = handle;
->  		sas_device->handle = handle;
-> -		if (sas_device_pg0.Flags &
-> +		if (le16_to_cpu(sas_device_pg0.Flags) &
->  		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
->  			sas_device->enclosure_level =
-> -				le16_to_cpu(sas_device_pg0.EnclosureLevel);
-> +				sas_device_pg0.EnclosureLevel;
->  			memcpy(sas_device->connector_name,
->  				sas_device_pg0.ConnectorName, 4);
->  			sas_device->connector_name[4] = '\0';
-> @@ -5516,9 +5516,10 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
->  	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
->  	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
->
-> -	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-> +	if (le16_to_cpu(sas_device_pg0.Flags)
-> +		& MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
->  		sas_device->enclosure_level =
-> -			le16_to_cpu(sas_device_pg0.EnclosureLevel);
-> +			sas_device_pg0.EnclosureLevel;
->  		memcpy(sas_device->connector_name,
->  			sas_device_pg0.ConnectorName, 4);
->  		sas_device->connector_name[4] = '\0';
-> @@ -7056,7 +7057,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
->  			if (sas_device_pg0->Flags &
->  			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
->  				sas_device->enclosure_level =
-> -				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
-> +				   sas_device_pg0->EnclosureLevel;
->  				memcpy(&sas_device->connector_name[0],
->  					&sas_device_pg0->ConnectorName[0], 4);
->  			} else {
-> @@ -7118,6 +7119,7 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
->  		sas_device_pg0.SASAddress =
->  				le64_to_cpu(sas_device_pg0.SASAddress);
->  		sas_device_pg0.Slot = le16_to_cpu(sas_device_pg0.Slot);
-> +		sas_device_pg0.Flags = le16_to_cpu(sas_device_pg0.Flags);
->  		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
->  	}
->
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Mon, Oct 24, 2016 at 06:35:01PM +0530, Kashyap Desai wrote:
+> >
+> > On Fri, Oct 21, 2016 at 05:43:35PM +0530, Kashyap Desai wrote:
+> > > Hi -
+> > >
+> > > I found below conversation and it is on the same line as I wanted some
+> > > input from mailing list.
+> > >
+> > > http://marc.info/?l=linux-kernel&m=147569860526197&w=2
+> > >
+> > > I can do testing on any WIP item as Omar mentioned in above
+> discussion.
+> > > https://github.com/osandov/linux/tree/blk-mq-iosched
+> 
+> I tried build kernel using this repo, but looks like it is not allowed to
+> reboot due to some changes in <block> layer.
 
-Cheers,
+Did you build the most up-to-date version of that branch? I've been
+force pushing to it, so the commit id that you built would be useful.
+What boot failure are you seeing?
 
-Hannes
+> >
+> > Are you using blk-mq for this disk? If not, then the work there won't
+> affect you.
+> 
+> YES. I am using blk-mq for my test. I also confirm if use_blk_mq is
+> disable, Sequential work load issue is not seen and <cfq> scheduling works
+> well.
+
+Ah, okay, perfect. Can you send the fio job file you're using? Hard to
+tell exactly what's going on without the details. A sequential workload
+with just one submitter is about as easy as it gets, so this _should_ be
+behaving nicely.
+
+> >
+> > > Is there any workaround/alternative in latest upstream kernel, if user
+> > > wants to see limited penalty  for Sequential Work load on HDD ?
+> > >
+> > > ` Kashyap
+> > >
+
+P.S., your emails are being marked as spam by Gmail. Actually, Gmail
+seems to mark just about everything I get from Broadcom as spam due to
+failed DMARC.
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Omar
