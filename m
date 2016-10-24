@@ -1,56 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sd: fix uninitialized variable access in error handling
-Date: Mon, 24 Oct 2016 16:37:07 +0200
-Message-ID: <0f5ac05c-404f-b0d8-a66e-80a55260664c@suse.de>
-References: <20161021153246.3456962-1-arnd@arndb.de>
+Subject: Re: [PATCH 1/1] libfc: don't have fc_exch_find log errors on a new
+ exchange
+Date: Mon, 24 Oct 2016 16:37:59 +0200
+Message-ID: <c31a1481-75d0-a350-2ef5-1910e9270691@suse.de>
+References: <1477084253-1742-1-git-send-email-cleech@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54397 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:54608 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S935051AbcJXOhP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Oct 2016 10:37:15 -0400
-In-Reply-To: <20161021153246.3456962-1-arnd@arndb.de>
+        id S1754975AbcJXOiC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Oct 2016 10:38:02 -0400
+In-Reply-To: <1477084253-1742-1-git-send-email-cleech@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Shaun Tancheff <shaun.tancheff@seagate.com>, Jens Axboe <axboe@fb.com>, Damien Le Moal <damien.lemoal@hgst.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org
 
-On 10/21/2016 05:32 PM, Arnd Bergmann wrote:
-> If sd_zbc_report_zones fails, the check for 'zone_blocks == 0'
-> later in the function accesses uninitialized data:
+On 10/21/2016 11:10 PM, Chris Leech wrote:
+> With the error message I added in "libfc: sanity check cpu number
+> extracted from xid" I didn't account for the fact that fc_exch_find is
+> called with FC_XID_UNKNOWN at the start of a new exchange if we are the
+> responder.
 >
-> drivers/scsi/sd_zbc.c: In function ‘sd_zbc_read_zones’:
-> drivers/scsi/sd_zbc.c:520:7: error: ‘zone_blocks’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> It doesn't come up with the initiator much, but that's basically every
+> exchange for a target.  By checking the xid for FC_XID_UNKNOWN first, we
+> not only prevent the erroneous error message, but skip the unnecessary
+> lookup attempt as well.
 >
-> This sets it to zero, which has the desired effect of leaving
-> the sd_zbc_read_zones successfully with sdkp->zone_blocks = 0.
->
-> Fixes: 89d947561077 ("sd: Implement support for ZBC devices")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> Signed-off-by: Chris Leech <cleech@redhat.com>
 > ---
->  drivers/scsi/sd_zbc.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+>  drivers/scsi/libfc/fc_exch.c | 3 +++
+>  1 file changed, 3 insertions(+)
 >
-> diff --git a/drivers/scsi/sd_zbc.c b/drivers/scsi/sd_zbc.c
-> index 16d3fa62d8ac..d5b3bd915d9e 100644
-> --- a/drivers/scsi/sd_zbc.c
-> +++ b/drivers/scsi/sd_zbc.c
-> @@ -455,8 +455,10 @@ static int sd_zbc_check_zone_size(struct scsi_disk *sdkp)
+> diff --git a/drivers/scsi/libfc/fc_exch.c b/drivers/scsi/libfc/fc_exch.c
+> index 16ca31a..42cc403 100644
+> --- a/drivers/scsi/libfc/fc_exch.c
+> +++ b/drivers/scsi/libfc/fc_exch.c
+> @@ -910,6 +910,9 @@ static struct fc_exch *fc_exch_find(struct fc_exch_mgr *mp, u16 xid)
+>  	struct fc_exch *ep = NULL;
+>  	u16 cpu = xid & fc_cpu_mask;
 >
->  	/* Do a report zone to get the same field */
->  	ret = sd_zbc_report_zones(sdkp, buf, SD_ZBC_BUF_SIZE, 0);
-> -	if (ret)
-> +	if (ret) {
-> +		zone_blocks = 0;
->  		goto out;
-> +	}
+> +	if (xid == FC_XID_UNKNOWN)
+> +		return NULL;
+> +
+>  	if (cpu >= nr_cpu_ids || !cpu_possible(cpu)) {
+>  		printk_ratelimited(KERN_ERR
+>  			"libfc: lookup request for XID = %d, "
 >
->  	same = buf[4] & 0x0f;
->  	if (same > 0) {
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Does that still apply with my libfc patchset?
+I was under the impression I've fixed it already ...
 
 Cheers,
 
@@ -58,6 +57,6 @@ Hannes
 -- 
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
 hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N�rnberg
+GF: F. Imend�rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N�rnberg)
