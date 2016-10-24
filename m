@@ -1,108 +1,70 @@
 From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH v3 3/6] scsi: qla4xxx: print MAC and SID via %p[mM][R]
-Date: Mon, 24 Oct 2016 08:34:37 -0400
-Message-ID: <1477312477.17595.2.camel@localhost.localdomain>
+Subject: Re: [PATCH v3 4/6] [SCSI] ips: don't use custom hex_asc_upper[]
+ table
+Date: Mon, 24 Oct 2016 08:34:52 -0400
+Message-ID: <1477312492.17595.3.camel@localhost.localdomain>
 References: <20161022173231.170417-1-andriy.shevchenko@linux.intel.com>
-         <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
+         <20161022173231.170417-5-andriy.shevchenko@linux.intel.com>
 Reply-To: emilne@redhat.com
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55962 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:52974 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936132AbcJXMej (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Oct 2016 08:34:39 -0400
-In-Reply-To: <20161022173231.170417-4-andriy.shevchenko@linux.intel.com>
+        id S935259AbcJXMey (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 24 Oct 2016 08:34:54 -0400
+In-Reply-To: <20161022173231.170417-5-andriy.shevchenko@linux.intel.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>, QLogic-Storage-Upstream@qlogic.com
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Andy Shevchenko <andy.shevchenko@gmail.com>, Adaptec OEM Raid Solutions <aacraid@adaptec.com>
 
 On Sat, 2016-10-22 at 20:32 +0300, Andy Shevchenko wrote:
-> From: Oleksandr Khoshaba <oleksandr.khoshaba@gmail.com>
+> From: Andy Shevchenko <andy.shevchenko@gmail.com>
 > 
-> In the kernel we have nice specifier to print MAC by given pointer to the
-> address in a binary form.
+> We have table of the HEX characters in the kernel. Replace custom by a generic
+> one.
 > 
-> Signed-off-by: Oleksandr Khoshaba <Oleksandr.Khoshaba@gmail.com>
-> Acked-by: Vikas Chaudhary <vikas.chaudhary@qlogic.com>
-> Cc: QLogic-Storage-Upstream@qlogic.com
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>
+> Signed-off-by: Andy Shevchenko <andy.shevchenko@gmail.com>
 > ---
->  drivers/scsi/qla4xxx/ql4_mbx.c |  5 +----
->  drivers/scsi/qla4xxx/ql4_nx.c  |  8 ++------
->  drivers/scsi/qla4xxx/ql4_os.c  | 15 ++++-----------
->  3 files changed, 7 insertions(+), 21 deletions(-)
+>  drivers/scsi/ips.c | 13 +++++--------
+>  1 file changed, 5 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-> index c291fdf..1da04f3 100644
-> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-> @@ -2032,10 +2032,7 @@ int qla4xxx_set_param_ddbentry(struct scsi_qla_host *ha,
->  	ptid = (uint16_t *)&fw_ddb_entry->isid[1];
->  	*ptid = cpu_to_le16((uint16_t)ddb_entry->sess->target_id);
+> diff --git a/drivers/scsi/ips.c b/drivers/scsi/ips.c
+> index 02cb76f..3419e1b 100644
+> --- a/drivers/scsi/ips.c
+> +++ b/drivers/scsi/ips.c
+> @@ -2241,9 +2241,6 @@ ips_get_bios_version(ips_ha_t * ha, int intr)
+>  	uint8_t minor;
+>  	uint8_t subminor;
+>  	uint8_t *buffer;
+> -	char hexDigits[] =
+> -	    { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C',
+> -     'D', 'E', 'F' };
 >  
-> -	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%02x%02x%02x%02x%02x%02x]\n",
-> -			  fw_ddb_entry->isid[5], fw_ddb_entry->isid[4],
-> -			  fw_ddb_entry->isid[3], fw_ddb_entry->isid[2],
-> -			  fw_ddb_entry->isid[1], fw_ddb_entry->isid[0]));
-> +	DEBUG2(ql4_printk(KERN_INFO, ha, "ISID [%pmR]\n", fw_ddb_entry->isid));
+>  	METHOD_TRACE("ips_get_bios_version", 1);
 >  
->  	iscsi_opts = le16_to_cpu(fw_ddb_entry->iscsi_options);
->  	memset(fw_ddb_entry->iscsi_alias, 0, sizeof(fw_ddb_entry->iscsi_alias));
-> diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
-> index 06ddd13..bccd8b6 100644
-> --- a/drivers/scsi/qla4xxx/ql4_nx.c
-> +++ b/drivers/scsi/qla4xxx/ql4_nx.c
-> @@ -4094,12 +4094,8 @@ int qla4_8xxx_get_sys_info(struct scsi_qla_host *ha)
->  	ha->phy_port_num = sys_info->port_num;
->  	ha->iscsi_pci_func_cnt = sys_info->iscsi_pci_func_cnt;
+> @@ -2374,13 +2371,13 @@ ips_get_bios_version(ips_ha_t * ha, int intr)
+>  		}
+>  	}
 >  
-> -	DEBUG2(printk("scsi%ld: %s: "
-> -	    "mac %02x:%02x:%02x:%02x:%02x:%02x "
-> -	    "serial %s\n", ha->host_no, __func__,
-> -	    ha->my_mac[0], ha->my_mac[1], ha->my_mac[2],
-> -	    ha->my_mac[3], ha->my_mac[4], ha->my_mac[5],
-> -	    ha->serial_number));
-> +	DEBUG2(printk("scsi%ld: %s: mac %pM serial %s\n",
-> +	    ha->host_no, __func__, ha->my_mac, ha->serial_number));
+> -	ha->bios_version[0] = hexDigits[(major & 0xF0) >> 4];
+> +	ha->bios_version[0] = hex_asc_upper_hi(major);
+>  	ha->bios_version[1] = '.';
+> -	ha->bios_version[2] = hexDigits[major & 0x0F];
+> -	ha->bios_version[3] = hexDigits[subminor];
+> +	ha->bios_version[2] = hex_asc_upper_lo(major);
+> +	ha->bios_version[3] = hex_asc_upper_lo(subminor);
+>  	ha->bios_version[4] = '.';
+> -	ha->bios_version[5] = hexDigits[(minor & 0xF0) >> 4];
+> -	ha->bios_version[6] = hexDigits[minor & 0x0F];
+> +	ha->bios_version[5] = hex_asc_upper_hi(minor);
+> +	ha->bios_version[6] = hex_asc_upper_lo(minor);
+>  	ha->bios_version[7] = 0;
+>  }
 >  
->  	status = QLA_SUCCESS;
->  
-> diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-> index 01c3610..9fbb33f 100644
-> --- a/drivers/scsi/qla4xxx/ql4_os.c
-> +++ b/drivers/scsi/qla4xxx/ql4_os.c
-> @@ -6304,13 +6304,9 @@ static int qla4xxx_compare_tuple_ddb(struct scsi_qla_host *ha,
->  	 * ISID would not match firmware generated ISID.
->  	 */
->  	if (is_isid_compare) {
-> -		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: old ISID [%02x%02x%02x"
-> -			"%02x%02x%02x] New ISID [%02x%02x%02x%02x%02x%02x]\n",
-> -			__func__, old_tddb->isid[5], old_tddb->isid[4],
-> -			old_tddb->isid[3], old_tddb->isid[2], old_tddb->isid[1],
-> -			old_tddb->isid[0], new_tddb->isid[5], new_tddb->isid[4],
-> -			new_tddb->isid[3], new_tddb->isid[2], new_tddb->isid[1],
-> -			new_tddb->isid[0]));
-> +		DEBUG2(ql4_printk(KERN_INFO, ha,
-> +			"%s: old ISID [%pmR] New ISID [%pmR]\n",
-> +			__func__, old_tddb->isid, new_tddb->isid));
->  
->  		if (memcmp(&old_tddb->isid[0], &new_tddb->isid[0],
->  			   sizeof(old_tddb->isid)))
-> @@ -7925,10 +7921,7 @@ qla4xxx_sysfs_ddb_get_param(struct iscsi_bus_flash_session *fnode_sess,
->  		rc = sprintf(buf, "%u\n", fnode_conn->keepalive_timeout);
->  		break;
->  	case ISCSI_FLASHNODE_ISID:
-> -		rc = sprintf(buf, "%02x%02x%02x%02x%02x%02x\n",
-> -			     fnode_sess->isid[0], fnode_sess->isid[1],
-> -			     fnode_sess->isid[2], fnode_sess->isid[3],
-> -			     fnode_sess->isid[4], fnode_sess->isid[5]);
-> +		rc = sprintf(buf, "%pm\n", fnode_sess->isid);
->  		break;
->  	case ISCSI_FLASHNODE_TSID:
->  		rc = sprintf(buf, "%u\n", fnode_sess->tsid);
 
 Reviewed-by: Ewan D. Milne <emilne@redhat.com>
 
