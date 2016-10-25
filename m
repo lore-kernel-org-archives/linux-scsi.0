@@ -1,202 +1,158 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH v2] block: Fix kernel panic occurs while creating second raid disk
-Date: Tue, 25 Oct 2016 18:08:48 +0530
-Message-ID: <1477399128-22052-1-git-send-email-sreekanth.reddy@broadcom.com>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, linux-block@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+From: Benjamin Block <bblock@linux.vnet.ibm.com>
+Subject: Re: [PATCH v3 1/2] scsi: Handle Unit Attention when issuing SCSI
+ command
+Date: Tue, 25 Oct 2016 15:00:55 +0200
+Message-ID: <20161025130055.GA12090@bblock-ThinkPad-W530>
+References: <1477279216-11256-1-git-send-email-krisman@linux.vnet.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:56607 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1758563AbcJYNCm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Oct 2016 09:02:42 -0400
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9PCxMC4114968
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 09:02:42 -0400
+Received: from e06smtp06.uk.ibm.com (e06smtp06.uk.ibm.com [195.75.94.102])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26a5p7yy9x-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 09:02:42 -0400
+Received: from localhost
+        by e06smtp06.uk.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <bblock@linux.vnet.ibm.com>;
+        Tue, 25 Oct 2016 14:01:09 +0100
+Received: from b06cxnps3075.portsmouth.uk.ibm.com (d06relay10.portsmouth.uk.ibm.com [9.149.109.195])
+        by d06dlp02.portsmouth.uk.ibm.com (Postfix) with ESMTP id E9F68219005F
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 14:00:22 +0100 (BST)
+Received: from d06av10.portsmouth.uk.ibm.com (d06av10.portsmouth.uk.ibm.com [9.149.37.251])
+        by b06cxnps3075.portsmouth.uk.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id u9PD16No29556874
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 13:01:06 GMT
+Received: from d06av10.portsmouth.uk.ibm.com (localhost [127.0.0.1])
+        by d06av10.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id u9PC17o7023934
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 06:01:07 -0600
+Received: from bblock-ThinkPad-W530 (dyn-9-152-212-116.boeblingen.de.ibm.com [9.152.212.116])
+        by d06av10.portsmouth.uk.ibm.com (8.14.4/8.14.4/NCO v10.0 AVin) with ESMTP id u9PC17dl023905
+        for <linux-scsi@vger.kernel.org>; Tue, 25 Oct 2016 06:01:07 -0600
+Content-Disposition: inline
+In-Reply-To: <1477279216-11256-1-git-send-email-krisman@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, gabriel@krisman.be, brking@linux.vnet.ibm.com
 
-From: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+On 01:20 Mon 24 Oct     , Gabriel Krisman Bertazi wrote:
+> James,
+> 
+> I fixed the things you pointed out on the previous review.  As
+> discussed, I didn't change the code to reuse the request yet.  We can
+> follow up on that later.
+> 
+> Thanks,
+> 
+> >8
+> 
+> Usually, re-sending the SCSI command is enough to recover from a Unit
+> Attention (UA).  This adds a generic retry code to the SCSI command path
+> in case of an UA, before giving up and returning the error condition to
+> the caller.
+> 
+> I added the UA verification into scsi_execute instead of
+> scsi_execute_req because there are at least a few callers that invoke
+> scsi_execute directly and would benefit from the internal UA retry.
+> Also, I didn't use scsi_normalize_sense to not duplicate functionality
+> with scsi_execute_req_flags.  Instead, scsi_execute uses a small helper
+> function that verifies only the UA condition directly from the raw sense
+> buffer.  If this design is not OK, I can refactor to use
+> scsi_normalize_sense.
+> 
+> This prevents us from duplicating the retry code in at least a few
+> places.  In particular, it fixes an issue found in some IBM enclosures,
+> in which the device may return an Unit Attention during probe, breaking
+> the bind with the ses module:
+> 
+> scsi 1:0:7:0: Failed to get diagnostic page 0x8000002
+> scsi 1:0:7:0: Failed to bind enclosure -19
+> 
+> Link: https://patchwork.kernel.org/patch/9336763/
+> Suggested-by: Brian King <brking@linux.vnet.ibm.com>
+> Suggested-by: James Bottomley <jejb@linux.vnet.ibm.com>
+> Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+> ---
+>  drivers/scsi/scsi_lib.c | 24 ++++++++++++++++++++++++
+>  1 file changed, 24 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index c71344aebdbb..4f6a91d6ee34 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -163,6 +163,16 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
+>  {
+>  	__scsi_queue_insert(cmd, reason, 1);
+>  }
+> +
+> +static inline bool scsi_sense_unit_attention(const char *sense)
+> +{
+> +	int resp = sense[0] & 0x7f;
+> +
+> +	return ((resp & 0x70) &&
+> +		((resp >= 0x72 && (sense[1] & 0xf) == UNIT_ATTENTION) ||
+> +		 (resp < 0x72 && (sense[2] & 0xf) == UNIT_ATTENTION)));
+> +}
+> +
 
-Observing below kernel panic while creating second raid disk
-on LSI SAS3008 HBA card.
+Just some minor nit-pick. In other places where we check for valid sense
+(SCSI_SENSE_VALID(), scsi_sense_valid())
+we always check for whether the upper nibble really only contains 0x70
+((resp & 0x70) == 0x70). 
 
-[  +0.000055] ------------[ cut here ]------------
-[  +0.000007] WARNING: CPU: 2 PID: 281 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x62/0x80
-[  +0.000002] sysfs: cannot create duplicate filename '/devices/virtual/bdi/8:32'
-[  +0.000001] Modules linked in: mptctl mptbase xt_CHECKSUM iptable_mangle ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat  nf_conntrack tun bridge stp llc ebtable_filter ebtables ip6table_filter ip6_tables intel_rapl sb_edac edac_core x86_pkg_temp_pclmul joydev ghash_clmulni_intel iTCO_wdt ipmi_ssif mei_me pcspkr mei iTCO_vendor_support ipmi_si i2c_i801 lpc_ich mfd_corema acpi_pad wmi acpi_power_meter nfsd auth_rpcgss nfs_acl lockd grace binfmt_misc sunrpc xfs libcrc32c ast i2c_algo_bit drm_kore raid_class nvme_core scsi_transport_sas dca
-[  +0.000067] CPU: 2 PID: 281 Comm: kworker/u49:5 Not tainted 4.9.0-rc2 #1
-[  +0.000002] Hardware name: Supermicro SYS-2028U-TNRT+/X10DRU-i+, BIOS 1.1 07/22/2015
-[  +0.000005] Workqueue: events_unbound async_run_entry_fn
-[  +0.000004] Call Trace:
-[  +0.000009]  [<ffffffff813ca51e>] dump_stack+0x63/0x85
-[  +0.000005]  [<ffffffff810a5bfb>] __warn+0xcb/0xf0
-[  +0.000004]  [<ffffffff810a5c7f>] warn_slowpath_fmt+0x5f/0x80
-[  +0.000006]  [<ffffffff812bf17f>] ? kernfs_path_from_node+0x4f/0x60
-[  +0.000002]  [<ffffffff812c2942>] sysfs_warn_dup+0x62/0x80
-[  +0.000002]  [<ffffffff812c2a27>] sysfs_create_dir_ns+0x77/0x90
-[  +0.000004]  [<ffffffff813ccef9>] kobject_add_internal+0x99/0x330
-[  +0.000003]  [<ffffffff813d6efb>] ? vsnprintf+0x35b/0x4c0
-[  +0.000003]  [<ffffffff813cd6f5>] kobject_add+0x75/0xd0
-[  +0.000006]  [<ffffffff81514e43>] ? device_private_init+0x23/0x70
-[  +0.000007]  [<ffffffff817cb652>] ? mutex_lock+0x12/0x30
-[  +0.000003]  [<ffffffff81514fa9>] device_add+0x119/0x670
-[  +0.000004]  [<ffffffff815156f0>] device_create_groups_vargs+0xe0/0xf0
-[  +0.000003]  [<ffffffff8151571c>] device_create_vargs+0x1c/0x20
-[  +0.000006]  [<ffffffff811d712c>] bdi_register+0x8c/0x180
-[  +0.000003]  [<ffffffff811d7506>] bdi_register_owner+0x36/0x60
-[  +0.000006]  [<ffffffff813ad778>] device_add_disk+0x168/0x480
-[  +0.000005]  [<ffffffff81524891>] ? update_autosuspend+0x51/0x60
-[  +0.000005]  [<ffffffff81557770>] sd_probe_async+0x110/0x1c0
-[  +0.000002]  [<ffffffff810c8a49>] async_run_entry_fn+0x39/0x140
-[  +0.000003]  [<ffffffff810bfa5f>] process_one_work+0x15f/0x430
-[  +0.000002]  [<ffffffff810bfd7e>] worker_thread+0x4e/0x490
-[  +0.000002]  [<ffffffff810bfd30>] ? process_one_work+0x430/0x430
-[  +0.000003]  [<ffffffff810c55a9>] kthread+0xd9/0xf0
-[  +0.000003]  [<ffffffff810c54d0>] ? kthread_park+0x60/0x60
-[  +0.000003]  [<ffffffff817ce595>] ret_from_fork+0x25/0x30
-[  +0.000002] ------------[ cut here ]------------
-[  +0.000004] WARNING: CPU: 2 PID: 281 at lib/kobject.c:240 kobject_add_internal+0x2bd/0x330
-[  +0.000001] kobject_add_internal failed for 8:32 with -EEXIST, don't try to register things with the same name in the same
-[  +0.000001] Modules linked in: mptctl mptbase xt_CHECKSUM iptable_mangle ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat  nf_conntrack tun bridge stp llc ebtable_filter ebtables ip6table_filter ip6_tables intel_rapl sb_edac edac_core x86_pkg_temp_pclmul joydev ghash_clmulni_intel iTCO_wdt ipmi_ssif mei_me pcspkr mei iTCO_vendor_support ipmi_si i2c_i801 lpc_ich mfd_corema acpi_pad wmi acpi_power_meter nfsd auth_rpcgss nfs_acl lockd grace binfmt_misc sunrpc xfs libcrc32c ast i2c_algo_bit drm_kore raid_class nvme_core scsi_transport_sas dca
-[  +0.000043] CPU: 2 PID: 281 Comm: kworker/u49:5 Tainted: G        W       4.9.0-rc2 #1
-[  +0.000001] Hardware name: Supermicro SYS-2028U-TNRT+/X10DRU-i+, BIOS 1.1 07/22/2015
-[  +0.000002] Workqueue: events_unbound async_run_entry_fn
-[  +0.000003] Call Trace:
-[  +0.000003]  [<ffffffff813ca51e>] dump_stack+0x63/0x85
-[  +0.000003]  [<ffffffff810a5bfb>] __warn+0xcb/0xf0
-[  +0.000004]  [<ffffffff810a5c7f>] warn_slowpath_fmt+0x5f/0x80
-[  +0.000002]  [<ffffffff812c294a>] ? sysfs_warn_dup+0x6a/0x80
-[  +0.000003]  [<ffffffff813cd11d>] kobject_add_internal+0x2bd/0x330
-[  +0.000003]  [<ffffffff813d6efb>] ? vsnprintf+0x35b/0x4c0
-[  +0.000003]  [<ffffffff813cd6f5>] kobject_add+0x75/0xd0
-[  +0.000003]  [<ffffffff81514e43>] ? device_private_init+0x23/0x70
-[  +0.000004]  [<ffffffff817cb652>] ? mutex_lock+0x12/0x30
-[  +0.000002]  [<ffffffff81514fa9>] device_add+0x119/0x670
-[  +0.000004]  [<ffffffff815156f0>] device_create_groups_vargs+0xe0/0xf0
-[  +0.000003]  [<ffffffff8151571c>] device_create_vargs+0x1c/0x20
-[  +0.000003]  [<ffffffff811d712c>] bdi_register+0x8c/0x180
-[  +0.000003]  [<ffffffff811d7506>] bdi_register_owner+0x36/0x60
-[  +0.000004]  [<ffffffff813ad778>] device_add_disk+0x168/0x480
-[  +0.000003]  [<ffffffff81524891>] ? update_autosuspend+0x51/0x60
-[  +0.000002]  [<ffffffff81557770>] sd_probe_async+0x110/0x1c0
-[  +0.000002]  [<ffffffff810c8a49>] async_run_entry_fn+0x39/0x140
-[  +0.000002]  [<ffffffff810bfa5f>] process_one_work+0x15f/0x430
-[  +0.000002]  [<ffffffff810bfd7e>] worker_thread+0x4e/0x490
-[  +0.000002]  [<ffffffff810bfd30>] ? process_one_work+0x430/0x430
-[  +0.000003]  [<ffffffff810c55a9>] kthread+0xd9/0xf0
-[  +0.000003]  [<ffffffff810c54d0>] ? kthread_park+0x60/0x60
-[  +0.000003]  [<ffffffff817ce595>] ret_from_fork+0x25/0x30
-[  +0.000949] BUG: unable to handle kernel
-[  +0.005263] NULL pointer dereference
-[  +0.002853] IP: [<ffffffff812c2c64>] sysfs_do_create_link_sd.isra.2+0x34/0xb0
-[  +0.008584] PGD 0
+I also find it strange that we now have 3 different and independent
+functions/places that check for valid sense.
 
-[  +0.006115] Oops: 0000 [#1] SMP
-[  +0.004531] Modules linked in: mptctl mptbase xt_CHECKSUM iptable_mangle ipt_MASQUERADE nf_nat_masquerade_ipv4 iptable_nat  nf_conntrack tun bridge stp llc ebtable_filter ebtables ip6table_filter ip6_tables intel_rapl sb_edac edac_core x86_pkg_temp_pclmul joydev ghash_clmulni_intel iTCO_wdt ipmi_ssif mei_me pcspkr mei iTCO_vendor_support ipmi_si i2c_i801 lpc_ich mfd_corema acpi_pad wmi acpi_power_meter nfsd auth_rpcgss nfs_acl lockd grace binfmt_misc sunrpc xfs libcrc32c ast i2c_algo_bit drm_kore raid_class nvme_core scsi_transport_sas dca
-[  +0.080566] CPU: 17 PID: 281 Comm: kworker/u49:5 Tainted: G        W       4.9.0-rc2 #1
-[  +0.009472] Hardware name: Supermicro SYS-2028U-TNRT+/X10DRU-i+, BIOS 1.1 07/22/2015
-[  +0.009169] Workqueue: events_unbound async_run_entry_fn
-[  +0.007340] RIP: 0010:[<ffffffff812c2c64>]  [<ffffffff812c2c64>] sysfs_do_create_link_sd.isra.2+0x34/0xb0
-[  +0.010294] Call Trace:
-[  +0.005269]  [<ffffffff812c2d05>] sysfs_create_link+0x25/0x40
-[  +0.008568]  [<ffffffff813ad80c>] device_add_disk+0x1fc/0x480
-[  +0.008551]  [<ffffffff81557770>] sd_probe_async+0x110/0x1c0
-[  +0.008456]  [<ffffffff810c8a49>] async_run_entry_fn+0x39/0x140
-[  +0.010021]  [<ffffffff810bfa5f>] process_one_work+0x15f/0x430
-[  +0.009623]  [<ffffffff810bfd7e>] worker_thread+0x4e/0x490
-[  +0.007422]  [<ffffffff810bfd30>] ? process_one_work+0x430/0x430
-[  +0.008728]  [<ffffffff810c55a9>] kthread+0xd9/0xf0
-[  +0.007578]  [<ffffffff810c54d0>] ? kthread_park+0x60/0x60
-[  +0.006816]  [<ffffffff817ce595>] ret_from_fork+0x25/0x30
-[  +0.006814] Code: 75 48 85 ff 74 70 55 48 89 e5 41 57 41 56 41 55 41 54 49 89 fe 53 48 c7 c7 90 74 01 82 48 89 f3 41 89 cc  c5 ff ff c6 05 15 48 d5
-[  +0.022853] RIP  [<ffffffff812c2c64>] sysfs_do_create_link_sd.isra.2+0x34/0xb0
-[  +0.008679]  RSP <ffffc90019c3fd10>
-[  +0.006129] BUG: unable to handle kernel
 
-While analyzing this issue, I observed that while creating the first raid disk,
-we hide first raid disk's PD devices (i.e. device will be their but it won't have
-block device entry). But kernel is not removing the entries of this first raid disk's
- PD devices BDI's in /sys/devices/virtual/bdi/ path, still it shows bdi device entries
-for these PD eventhough these PD doesn't have a block device names.
+                                                    Beste Grüße / Best regards,
+                                                      - Benjamin Block
 
-e.g.
-output of 'ls -l /dev/sd*' after creating first raid disk
-[root@dhcp ~]# ls -l /dev/sd*
-brw-rw---- 1 root disk 8,   0 Oct 24 17:37 /dev/sda
-brw-rw---- 1 root disk 8,   1 Oct 24 17:37 /dev/sda1
-brw-rw---- 1 root disk 8,   2 Oct 24 17:37 /dev/sda2
-brw-rw---- 1 root disk 8,   3 Oct 24 17:37 /dev/sda3
-brw-rw---- 1 root disk 8,  16 Oct 24 17:37 /dev/sdb
-brw-rw---- 1 root disk 8,  64 Oct 24 17:37 /dev/sde
-brw-rw---- 1 root disk 8,  80 Oct 24 17:37 /dev/sdf
-brw-rw---- 1 root disk 8,  96 Oct 24 17:37 /dev/sdg
-brw-rw---- 1 root disk 8, 112 Oct 24 17:37 /dev/sdh
-brw-rw---- 1 root disk 8, 128 Oct 24 17:37 /dev/sdi
-brw-rw---- 1 root disk 8, 144 Oct 24 17:37 /dev/sdj
-brw-rw---- 1 root disk 8, 160 Oct 24 17:41 /dev/sdk
+>  /**
+>   * scsi_execute - insert request and wait for the result
+>   * @sdev:	scsi device
+> @@ -187,7 +197,14 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+>  	struct request *req;
+>  	int write = (data_direction == DMA_TO_DEVICE);
+>  	int ret = DRIVER_ERROR << 24;
+> +	unsigned char sense_buf[SCSI_SENSE_BUFFERSIZE];
+> 
+> +	if (!sense) {
+> +		sense = sense_buf;
+> +		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
+> +	}
+> +
+> + retry:
+>  	req = blk_get_request(sdev->request_queue, write, __GFP_RECLAIM);
+>  	if (IS_ERR(req))
+>  		return ret;
+> @@ -210,6 +227,13 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+>  	 */
+>  	blk_execute_rq(req->q, NULL, req, 1);
+> 
+> +	if (scsi_sense_unit_attention(sense) && req->retries > 0) {
+> +		memset(sense, 0, SCSI_SENSE_BUFFERSIZE);
+> +		retries = req->retries - 1;
+> +		blk_put_request(req);
+> +		goto retry;
+> +	}
+> +
+>  	/*
+>  	 * Some devices (USB mass-storage in particular) may transfer
+>  	 * garbage data together with a residue indicating that the data
+> -- 
+> 2.7.4
 
-outout of 'ls -l /sys/devices/virtual/bdi/'
-[root@dhcp-135-24-192-127 ~]# ls -l /sys/devices/virtual/bdi/
-total 0
-drwxr-xr-x 3 root root 0 Oct 24 17:39 259:0
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:0
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:112
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:128
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:144
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:16
-drwxr-xr-x 3 root root 0 Oct 24 17:41 8:160
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:32
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:48
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:64
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:80
-drwxr-xr-x 3 root root 0 Oct 24 17:39 8:96
-
-Here we can observe that there are no block devices for
-'8:32' & '8:48' bdi entries, which are PD's for raid disk /dev/sdk.
-
-Now while creating a second raid disk, kernel is trying to use
-MAJOR:MINOR as 8:32 for second raid disk and we observe
-above kernel OOPs.
-
-By calling bdi_unregister() in del_gendisk() function has resolved this
-issue.
-
-v2 Change set:
-  * Remove bdi device from on the list only if it has valid device
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
----
- block/genhd.c    |  1 +
- mm/backing-dev.c | 10 +++++-----
- 2 files changed, 6 insertions(+), 5 deletions(-)
-
-diff --git a/block/genhd.c b/block/genhd.c
-index fcd6d4f..b95f2fa 100644
---- a/block/genhd.c
-+++ b/block/genhd.c
-@@ -658,6 +658,7 @@ void del_gendisk(struct gendisk *disk)
- 	disk->flags &= ~GENHD_FL_UP;
- 
- 	sysfs_remove_link(&disk_to_dev(disk)->kobj, "bdi");
-+	bdi_unregister(&disk->queue->backing_dev_info);
- 	blk_unregister_queue(disk);
- 	blk_unregister_region(disk_devt(disk), disk->minors);
- 
-diff --git a/mm/backing-dev.c b/mm/backing-dev.c
-index 8fde443..80a64f0 100644
---- a/mm/backing-dev.c
-+++ b/mm/backing-dev.c
-@@ -853,12 +853,12 @@ static void bdi_remove_from_list(struct backing_dev_info *bdi)
- 
- void bdi_unregister(struct backing_dev_info *bdi)
- {
--	/* make sure nobody finds us on the bdi_list anymore */
--	bdi_remove_from_list(bdi);
--	wb_shutdown(&bdi->wb);
--	cgwb_bdi_destroy(bdi);
--
- 	if (bdi->dev) {
-+		/* make sure nobody finds us on the bdi_list anymore */
-+		bdi_remove_from_list(bdi);
-+		wb_shutdown(&bdi->wb);
-+		cgwb_bdi_destroy(bdi);
-+
- 		bdi_debug_unregister(bdi);
- 		device_unregister(bdi->dev);
- 		bdi->dev = NULL;
 -- 
-2.4.3
+Linux on z Systems Development         /         IBM Systems & Technology Group
+		  IBM Deutschland Research & Development GmbH 
+Vorsitz. AufsR.: Martina Koederitz     /        Geschäftsführung: Dirk Wittkopp
+Sitz der Gesellschaft: Böblingen / Registergericht: AmtsG Stuttgart, HRB 243294
 
