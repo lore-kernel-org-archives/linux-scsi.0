@@ -1,38 +1,34 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
-Date: Mon, 24 Oct 2016 23:55:59 +0000
-Message-ID: <bug-176951-11613-rkQPlGs4DA@https.bugzilla.kernel.org/>
-References: <bug-176951-11613@https.bugzilla.kernel.org/>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 00/20] libfc callback cleanup
+Date: Mon, 24 Oct 2016 20:37:42 -0400
+Message-ID: <yq1eg35b6w9.fsf@sermon.lab.mkp.net>
+References: <1476777714-3543-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:33638 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754157AbcJXX4G (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 24 Oct 2016 19:56:06 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 90FA62026C
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2016 23:56:04 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id BDFDB20260
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2016 23:55:59 +0000 (UTC)
-In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32959 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752105AbcJYAiE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 24 Oct 2016 20:38:04 -0400
+In-Reply-To: <1476777714-3543-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Tue, 18 Oct 2016 10:01:34 +0200")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Bart van Assche <bart.vanassche@sandisk.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=176951
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Len Brown <lenb@kernel.org> changed:
+Hannes> Hi all, it has been bugging me for a while that libfc has tons
+Hannes> of callbacks in an attempt to abstract things away. But as it
+Hannes> turned out no-one ever used those, rendering them quite
+Hannes> pointless.  As I got some time to kill on the train back from
+Hannes> Vienna I've decided to finally kill them and call the functions
+Hannes> directly.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-          Component|Config-Tables               |Other
-           Assignee|acpi_config-tables@kernel-b |scsi_drivers-other@kernel-b
-                   |ugs.osdl.org                |ugs.osdl.org
-            Product|ACPI                        |SCSI Drivers
+Applied to 4.10/scsi-queue.
+
+Thanks!
 
 -- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Martin K. Petersen	Oracle Linux Engineering
