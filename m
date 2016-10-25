@@ -1,62 +1,44 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] advansys: fix build warning for PCI=n
-Date: Tue, 25 Oct 2016 07:57:21 +0200
-Message-ID: <16f7581f-0bdc-56ad-522e-12f3c4dc0828@suse.com>
-References: <20161024155207.3027347-1-arnd@arndb.de>
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH v2 00/10] ufs-qcom: phy/hcd: Clean up qcom-ufs phy and
+ ufs-qcom hcd
+Date: Tue, 25 Oct 2016 11:30:16 +0530
+Message-ID: <CAFp+6iFPu-6PsoV21rL9-=dgsGy=baXUry3rjAMmf-4sFVLK9g@mail.gmail.com>
+References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org> <yq1a8dtb6rt.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161024155207.3027347-1-arnd@arndb.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <yq1a8dtb6rt.fsf@sermon.lab.mkp.net>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 10/24/2016 05:51 PM, Arnd Bergmann wrote:
-> The advansys probe function tries to handle both ISA and PCI cases,
-> each hidden in an #ifdef when unused. This leads to a warning
-> indicating that when PCI is disabled we could be using uninitialized
-> data:
-> 
-> drivers/scsi/advansys.c: In function ‘advansys_board_found’:
-> drivers/scsi/advansys.c:11036:5: error: ‘ret’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> drivers/scsi/advansys.c:10928:28: note: ‘ret’ was declared here
-> drivers/scsi/advansys.c:11309:8: error: ‘share_irq’ may be used uninitialized in this function [-Werror=maybe-uninitialized]
-> drivers/scsi/advansys.c:10928:6: note: ‘share_irq’ was declared here
-> 
-> This cannot happen in practice because the hardware in question
-> only exists for PCI, but changing the code to just error out
-> here is better for consistency and avoids the warning.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
->  drivers/scsi/advansys.c | 3 +++
->  1 file changed, 3 insertions(+)
-> 
-> diff --git a/drivers/scsi/advansys.c b/drivers/scsi/advansys.c
-> index febbd83e2ecd..81dd0927246b 100644
-> --- a/drivers/scsi/advansys.c
-> +++ b/drivers/scsi/advansys.c
-> @@ -11030,6 +11030,9 @@ static int advansys_board_found(struct Scsi_Host *shost, unsigned int iop,
->  		ASC_DBG(2, "AdvInitGetConfig()\n");
->  
->  		ret = AdvInitGetConfig(pdev, shost) ? -ENODEV : 0;
-> +#else
-> +		share_irq = 0;
-> +		ret = -ENODEV;
->  #endif /* CONFIG_PCI */
->  	}
->  
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hi Martin,
 
-Cheers,
 
-Hannes
+
+On Tue, Oct 25, 2016 at 6:10 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Vivek" == Vivek Gautam <vivek.gautam@codeaurora.org> writes:
+>
+> Vivek,
+>
+> Vivek> These patches cleanup the ufs phy driver to an extent.
+> Vivek> Subsequent patches will target to clean the phy_init() of these
+> Vivek> qcom-ufs phy drivers in order to get rid of a number of exported
+> Vivek> APIs that phy drivers expose for ufs-qcom hcd driver to use.
+>
+> Please submit a v3 which addresses the review comments and adds the
+> relevant Reviewed-by: tags.
+>
+> Thanks!
+
+Sure, i will send the v3 in couple of days.
+
+
+Thanks
+Vivek
+
 -- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
