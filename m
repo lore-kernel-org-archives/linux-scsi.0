@@ -1,44 +1,60 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH v2 00/10] ufs-qcom: phy/hcd: Clean up qcom-ufs phy and
- ufs-qcom hcd
-Date: Tue, 25 Oct 2016 11:30:16 +0530
-Message-ID: <CAFp+6iFPu-6PsoV21rL9-=dgsGy=baXUry3rjAMmf-4sFVLK9g@mail.gmail.com>
-References: <1476800897-19898-1-git-send-email-vivek.gautam@codeaurora.org> <yq1a8dtb6rt.fsf@sermon.lab.mkp.net>
+From: Chaitra Basappa <chaitra.basappa@broadcom.com>
+Subject: RE: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
+Date: Tue, 25 Oct 2016 12:23:40 +0530
+Message-ID: <81470825e9a6238fff464f9135787090@mail.gmail.com>
+References: <bug-179341-11613@https.bugzilla.kernel.org/> <bug-179341-11613-AWI3KvF9Wz@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <yq1a8dtb6rt.fsf@sermon.lab.mkp.net>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Subhash Jadavani <subhashj@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f182.google.com ([209.85.161.182]:34373 "EHLO
+        mail-yw0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757474AbcJYGxn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 25 Oct 2016 02:53:43 -0400
+Received: by mail-yw0-f182.google.com with SMTP id w3so216711056ywg.1
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Oct 2016 23:53:42 -0700 (PDT)
+In-Reply-To: <bug-179341-11613-AWI3KvF9Wz@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: bugzilla-daemon@bugzilla.kernel.org, linux-scsi@vger.kernel.org
 
-Hi Martin,
+Hi,
+ Please share driver logs with logging_level set to "0x3f8".
 
+If driver cannot be unloaded and loaded,then the module parameter has to be
+passed as kernel command line in the boot loader as
+=E2=80=9Cmpt3sas.logging_level=3D0x3F8=E2=80=9D else if driver module can b=
+e unloaded and
+loaded then simply give logging_level=3D0x3F8 for insmod or modprobe.
 
+Thanks,
+ Chaitra
 
-On Tue, Oct 25, 2016 at 6:10 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Vivek" == Vivek Gautam <vivek.gautam@codeaurora.org> writes:
->
-> Vivek,
->
-> Vivek> These patches cleanup the ufs phy driver to an extent.
-> Vivek> Subsequent patches will target to clean the phy_init() of these
-> Vivek> qcom-ufs phy drivers in order to get rid of a number of exported
-> Vivek> APIs that phy drivers expose for ufs-qcom hcd driver to use.
->
-> Please submit a v3 which addresses the review comments and adds the
-> relevant Reviewed-by: tags.
->
-> Thanks!
+-----Original Message-----
+From: linux-scsi-owner@vger.kernel.org
+[mailto:linux-scsi-owner@vger.kernel.org] On Behalf Of
+bugzilla-daemon@bugzilla.kernel.org
+Sent: Friday, October 21, 2016 6:43 AM
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
 
-Sure, i will send the v3 in couple of days.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D179341
 
+--- Comment #2 from Badalyan Vyacheslav <v.badalyan@open-bs.ru> ---
+        Adapter Selected is a Avago SAS: SAS3008(C0)
 
-Thanks
-Vivek
+Num   Ctlr            FW Ver        NVDATA        x86-BIOS         PCI Addr
+---------------------------------------------------------------------------=
+-
 
--- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+0  SAS3008(C0)  13.00.00.00    0b.02.00.03    08.31.00.00     00:0a:00:00
+1  SAS3008(C0)  13.00.00.00    0b.02.00.03    08.31.00.00     00:08:00:00
+
+--
+You are receiving this mail because:
+You are watching someone on the CC list of the bug.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-scsi" in th=
+e
+body of a message to majordomo@vger.kernel.org More majordomo info at
+http://vger.kernel.org/majordomo-info.html
