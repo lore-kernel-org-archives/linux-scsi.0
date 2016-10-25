@@ -1,98 +1,144 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 02/16] scsi: don't use fc_bsg_job::request and
- fc_bsg_job::reply directly
-Date: Tue, 25 Oct 2016 09:43:14 +0200
-Message-ID: <20161025074313.4ma4czgdj46imaei@linux-x5ow.site>
-References: <cover.1476369687.git.jthumshirn@suse.de>
- <bbc682928173d64848ab0cbff689b1ad3d715fb7.1476369687.git.jthumshirn@suse.de>
- <ebc46cfa-0bee-aa71-ba0b-d7c86628df0c@linux.vnet.ibm.com>
- <20161014073821.qvkpjtwraqnwzzs3@linux-x5ow.site>
+From: "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>
+Subject: RE: Crash in TCM-LIO
+Date: Tue, 25 Oct 2016 05:33:45 +0000
+Message-ID: <BY1PR0701MB164496C3C3E05D7B686D7CEA8EA80@BY1PR0701MB1644.namprd07.prod.outlook.com>
+References: <BN6PR11MB197044D930C8512F099143A494A90@BN6PR11MB1970.namprd11.prod.outlook.com>
+ <1477292393.19735.40.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161014073821.qvkpjtwraqnwzzs3@linux-x5ow.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>s
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0068.outbound.protection.outlook.com ([104.47.36.68]:11322
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752259AbcJYIGs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 25 Oct 2016 04:06:48 -0400
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>, TomK <tk@mdevsys.com>
 
-On Fri, Oct 14, 2016 at 09:38:21AM +0200, Johannes Thumshirn wrote:
-> On Thu, Oct 13, 2016 at 05:55:11PM +0200, Steffen Maier wrote:
-> > Hm, still behaves for me like I reported for v2:
-> > http://marc.info/?l=linux-scsi&m=147637177902937&w=2
-> 
-> Hi Steffen,
-> 
-> Can you please try the following on top of 2/16?
-> 
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 4149dac..baebaab 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -3786,6 +3786,12 @@ enum fc_dispatch_result {
->  	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
->  	int ret;
->  
-> +	/* check if we really have all the request data needed */
-> +	if (job->request_len < cmdlen) {
-> +		ret = -ENOMSG;
-> +		goto fail_host_msg;
-> +	}
-> +
->  	/* Validate the host command */
->  	switch (bsg_request->msgcode) {
->  	case FC_BSG_HST_ADD_RPORT:
-> @@ -3831,12 +3837,6 @@ enum fc_dispatch_result {
->  		goto fail_host_msg;
->  	}
->  
-> -	/* check if we really have all the request data needed */
-> -	if (job->request_len < cmdlen) {
-> -		ret = -ENOMSG;
-> -		goto fail_host_msg;
-> -	}
-> -
->  	ret = i->f->bsg_request(job);
->  	if (!ret)
->  		return FC_DISPATCH_UNLOCKED;
-> @@ -3887,6 +3887,12 @@ enum fc_dispatch_result {
->  	int cmdlen = sizeof(uint32_t);	/* start with length of msgcode */
->  	int ret;
->  
-> +	/* check if we really have all the request data needed */
-> +	if (job->request_len < cmdlen) {
-> +		ret = -ENOMSG;
-> +		goto fail_rport_msg;
-> +	}
-> +
->  	/* Validate the rport command */
->  	switch (bsg_request->msgcode) {
->  	case FC_BSG_RPT_ELS:
-> 
-> 
-> 
-> The rational behind this is, in fc_req_to_bsgjob() we're assigning
-> job->request as req->cmd and job->request_len = req->cmd_len. But without
-> checkinf job->request_len we don't know whether we're save to touch
-> job->request (a.k.a. bsg_request).
-
-Hi Steffen,
-Did you have any chance testing this? I hacked fcping to work with non-FCoE
-and rports as well and tested with FCoE and lpfc. No problems seen from my
-side. I've also pused the series (With this change folded in) to my git 
-tree at [1] if this helps you in any way.
-
-[1] https://git.kernel.org/cgit/linux/kernel/git/jth/linux.git/log/?h=scsi-bsg-rewrite-v4
-
-Thanks a lot,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+SGVsbG8gTmljaG9sYXMsDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBHdXJ1
+bXVydGh5LCBBbmlsIA0KU2VudDogMjQgT2N0b2JlciAyMDE2IDE0OjUwDQpUbzogJ05pY2hvbGFz
+IEEuIEJlbGxpbmdlcicgPG5hYkBsaW51eC1pc2NzaS5vcmc+OyBBbmlsIEd1cnVtdXJ0aHkgPEFu
+aWwuR3VydW11cnRoeUBxbG9naWMuY29tPg0KQ2M6IGxpbnV4LXNjc2kgPGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnPjsgTWFsYXZhbGksIEdpcmlkaGFyIDxHaXJpZGhhci5NYWxhdmFsaUBjYXZp
+dW0uY29tPjsgVHJhbiwgUXVpbm4gPFF1aW5uLlRyYW5AY2F2aXVtLmNvbT47IFRvbUsgPHRrQG1k
+ZXZzeXMuY29tPg0KU3ViamVjdDogUkU6IENyYXNoIGluIFRDTS1MSU8NCg0KDQoNCi0tLS0tT3Jp
+Z2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBOaWNob2xhcyBBLiBCZWxsaW5nZXIgW21haWx0bzpu
+YWJAbGludXgtaXNjc2kub3JnXQ0KU2VudDogMjQgT2N0b2JlciAyMDE2IDEyOjMwDQpUbzogQW5p
+bCBHdXJ1bXVydGh5IDxBbmlsLkd1cnVtdXJ0aHlAcWxvZ2ljLmNvbT4NCkNjOiBsaW51eC1zY3Np
+IDxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz47IE1hbGF2YWxpLCBHaXJpZGhhciA8R2lyaWRo
+YXIuTWFsYXZhbGlAY2F2aXVtLmNvbT47IFRyYW4sIFF1aW5uIDxRdWlubi5UcmFuQGNhdml1bS5j
+b20+OyBUb21LIDx0a0BtZGV2c3lzLmNvbT4NClN1YmplY3Q6IFJlOiBDcmFzaCBpbiBUQ00tTElP
+DQoNCkhlbGxvIEFuaWwgJiBDbywNCg0KT24gTW9uLCAyMDE2LTEwLTI0IGF0IDA2OjM2ICswMDAw
+LCBBbmlsIEd1cnVtdXJ0aHkgd3JvdGU6DQo+IEhlbGxvIE5pY2hvbGFzLA0KPiANCj4gICBJIHdh
+cyB0cnlpbmcgdG8gZ2V0IERJRiB3b3JraW5nIG9uIFRDTS1MSU8gd2l0aCBhIFFMb2dpYyBGQyBh
+ZGFwdGVyIA0KPiBvbiBrZXJuZWwgdmVyc2lvbiA0LjcuIEkgbm90aWNlZCBhIGNyYXNoIHdoZW4g
+dGhlcmUgd2FzIGFuIGFib3J0IA0KPiByZWNlaXZlZCBieSB0aGUgdGFyZ2V0IHdpdGggdGhlIGZv
+bGxvd2luZyBzdGFjayB0cmFjZToNCj4gDQo+ICANCg0KVGhhbmtzIGZvciByZXBvcnRpbmcuDQoN
+Cj4gDQo+IFs3MTg4NC41ODg3NDhdIEJVRzogdW5hYmxlIHRvIGhhbmRsZSBrZXJuZWwgTlVMTCBw
+b2ludGVyIGRlcmVmZXJlbmNlIA0KPiBhdCAwMDAwMDAwMDAwMDAwMGUwDQo+IA0KPiBbNzE4ODQu
+NTg4ODgxXSBJUDogWzxmZmZmZmZmZjgxMWZmNTJhPl0ga21lbV9jYWNoZV9mcmVlKzB4MTFhLzB4
+MjAwDQo+IA0KPiBbNzE4ODQuNTg4OTgxXSBQR0QgMA0KPiANCj4gWzcxODg0LjU4OTAxN10gT29w
+czogMDAwMCBbIzFdIFNNUA0KPiANCj4gWzcxODg0LjU4OTA0MV0gLS0tLS0tLS0tLS0tWyBjdXQg
+aGVyZSBdLS0tLS0tLS0tLS0tDQo+IA0KPiBbNzE4ODQuNTg5MDQ4XSBXQVJOSU5HOiBDUFU6IDIg
+UElEOiAyMDc4MyBhdCBsaWIvbGlzdF9kZWJ1Zy5jOjYyDQo+IF9fbGlzdF9kZWxfZW50cnkrMHg4
+Ni8weGQwDQo+IA0KPiBbNzE4ODQuNTg5MDQ5XSBsaXN0X2RlbCBjb3JydXB0aW9uLiBuZXh0LT5w
+cmV2IHNob3VsZCBiZSANCj4gZmZmZjg4MDZmOGRhZWI2OCwgYnV0IHdhcyBmZmZmODgwNmY4ZGI3
+OWU4DQo+IA0KPiBbNzE4ODQuNTg5MDc1XSBNb2R1bGVzIGxpbmtlZCBpbjogdGFyZ2V0X2NvcmVf
+cHNjc2kgdGNtX3FsYTJ4eHgoT0UpDQo+IHFsYTJ4eHgoT0UpIGlzY3NpX3RhcmdldF9tb2QgdGFy
+Z2V0X2NvcmVfZmlsZSB0YXJnZXRfY29yZV9pYmxvY2sgDQo+IHRhcmdldF9jb3JlX21vZCBuZXRj
+b25zb2xlIGVidGFibGVfbmF0IGVidGFibGVzIGlwdF9NQVNRVUVSQURFDQo+IG5mX25hdF9tYXNx
+dWVyYWRlX2lwdjQgaXB0YWJsZV9uYXQgbmZfbmF0X2lwdjQgbmZfbmF0IHh0X0NIRUNLU1VNIA0K
+PiBpcHRhYmxlX21hbmdsZSBicmlkZ2UgODAyMXEgbXJwIGdhcnAgc3RwIGxsYyBpcHRfUkVKRUNU
+IG5mX3JlamVjdF9pcHY0DQo+IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19pcHY0IGlwdGFi
+bGVfZmlsdGVyIGlwX3RhYmxlcyBpcDZ0X1JFSkVDVA0KPiBuZl9yZWplY3RfaXB2NiBuZl9jb25u
+dHJhY2tfaXB2NiBuZl9kZWZyYWdfaXB2NiB4dF9zdGF0ZSBuZl9jb25udHJhY2sgDQo+IGlwNnRh
+YmxlX2ZpbHRlciBpcDZfdGFibGVzIGJpbmZtdF9taXNjIHZob3N0X25ldCBtYWN2dGFwIG1hY3Zs
+YW4gdmhvc3QgDQo+IHR1biB1aW5wdXQgc2cgc2VyaW9fcmF3IGlUQ09fd2R0IGlUQ09fdmVuZG9y
+X3N1cHBvcnQgaXBtaV9zc2lmIGlwbWlfc2kgDQo+IGlwbWlfbXNnaGFuZGxlciBocGlsbyBocHdk
+dCBibngyIGludGVsX3Bvd2VyY2xhbXAgY29yZXRlbXAga3ZtX2ludGVsIA0KPiBrdm0gaXJxYnlw
+YXNzIGNyY3QxMGRpZl9wY2xtdWwgY3JjMzJfcGNsbXVsIGNyYzMyY19pbnRlbCANCj4gZ2hhc2hf
+Y2xtdWxuaV9pbnRlbCBwY3Nwa3IgYWNwaV9wb3dlcl9tZXRlciBscGNfaWNoIG1mZF9jb3JlIA0K
+PiBpN2NvcmVfZWRhYyBlZGFjX2NvcmUgc2hwY2hwIGV4dDQoRSkgbWJjYWNoZShFKSBqYmQyKEUp
+IHNkX21vZChFKQ0KPiBzcl9tb2QoRSkgY2Ryb20oRSkgc2NzaV90cmFuc3BvcnRfZmMoRSkgaHBz
+YShFKSBzY3NpX3RyYW5zcG9ydF9zYXMoRSkNCj4gYWVzbmlfaW50ZWwoRSkgYWJsa19oZWxwZXIo
+RSkgY3J5cHRkKEUpIGxydyhFKSBnZjEyOG11bChFKQ0KPiBnbHVlX2hlbHBlcihFKSBwYXRhX2Fj
+cGkoRSkgYXRhX2dlbmVyaWMoRSkgYXRhX3BpaXgoRSkgbGliYXRhKEUpDQo+IHJhZGVvbihFKSB0
+dG0oRSkgZHJtX2ttc19oZWxwZXIoRSkgZHJtKEUpIGZiX3N5c19mb3BzKEUpIHN5c2ltZ2JsdChF
+KQ0KPiBzeXNmaWxscmVjdChFKSBzeXNjb3B5YXJlYShFKSBpMmNfYWxnb19iaXQoRSkgaTJjX2Nv
+cmUoRSkgZG1fbWlycm9yKEUpDQo+IGRtX3JlZ2lvbl9oYXNoKEUpIGRtX2xvZyhFKSBkbV9tb2Qo
+RSkgW2xhc3QgdW5sb2FkZWQ6IHFsYTJ4eHhdDQo+IA0KPiBbNzE4ODQuNTg5MDkxXSBDUFU6IDIg
+UElEOiAyMDc4MyBDb21tOiBrd29ya2VyLzI6MCBUYWludGVkOiBHICAgICAgICBXDQo+IElPRSAg
+IDQuNy4wLXJjMSsgIzINCj4gDQo+IFs3MTg4NC41ODkwOTJdIEhhcmR3YXJlIG5hbWU6IEhQIFBy
+b0xpYW50IERMMzgwIEc3LCBCSU9TIFA2Nw0KPiAwNS8wNS8yMDExDQo+IA0KPiBbNzE4ODQuNTg5
+MTA3XSBXb3JrcXVldWU6IHRhcmdldF9jb21wbGV0aW9uIHRhcmdldF9jb21wbGV0ZV9va193b3Jr
+IA0KPiBbdGFyZ2V0X2NvcmVfbW9kXQ0KPiANCj4gWzcxODg0LjU4OTEwOV0gIDAwMDAwMDAwMDAw
+MDAwMDAgZmZmZjg4MDQwOGQxZmFlOCBmZmZmZmZmZjgxMzUyMTk3DQo+IGZmZmZmZmZmODEzNzBl
+ZjYNCj4gDQo+IFs3MTg4NC41ODkxMTBdICBmZmZmODgwNDA4ZDFmYjQ4IGZmZmY4ODA0MDhkMWZi
+NDggMDAwMDAwMDAwMDAwMDAwMA0KPiBmZmZmODgwNDA4ZDFmYjM4DQo+IA0KPiBbNzE4ODQuNTg5
+MTExXSAgZmZmZmZmZmY4MTA4YTEyZCAwMDAwMDAwMDAwMDAwN2MzIDAwMDAwMDNlMDAwMDAyNDYN
+Cj4gMDAwMDAwMDAwMDAwMDI0Ng0KPiANCj4gWzcxODg0LjU4OTExMl0gQ2FsbCBUcmFjZToNCj4g
+DQo+IFs3MTg4NC41ODkxMTVdICBbPGZmZmZmZmZmODEzNTIxOTc+XSBkdW1wX3N0YWNrKzB4Njcv
+MHg5MA0KPiANCj4gWzcxODg0LjU4OTExN10gIFs8ZmZmZmZmZmY4MTM3MGVmNj5dID8gX19saXN0
+X2RlbF9lbnRyeSsweDg2LzB4ZDANCj4gDQo+IFs3MTg4NC41ODkxMTldICBbPGZmZmZmZmZmODEw
+OGExMmQ+XSBfX3dhcm4rMHhmZC8weDEyMA0KPiANCj4gWzcxODg0LjU4OTEyMF0gIFs8ZmZmZmZm
+ZmY4MTA4YTIwOT5dIHdhcm5fc2xvd3BhdGhfZm10KzB4NDkvMHg1MA0KPiANCj4gWzcxODg0LjU4
+OTEyMl0gIFs8ZmZmZmZmZmY4MTM3MGVmNj5dIF9fbGlzdF9kZWxfZW50cnkrMHg4Ni8weGQwDQo+
+IA0KPiBbNzE4ODQuNTg5MTIzXSAgWzxmZmZmZmZmZjgxMzcwZjUxPl0gbGlzdF9kZWwrMHgxMS8w
+eDQwDQo+IA0KPiBbNzE4ODQuNTg5MTMyXSAgWzxmZmZmZmZmZmEwNzk5ZDFlPl0gdGFyZ2V0X3Jl
+bW92ZV9mcm9tX3N0YXRlX2xpc3QNCj4gKzB4NmUvMHg4MCBbdGFyZ2V0X2NvcmVfbW9kXQ0KPiAN
+Cj4gWzcxODg0LjU4OTE0MF0gIFs8ZmZmZmZmZmZhMDc5OWUxND5dIHRyYW5zcG9ydF9jbWRfY2hl
+Y2tfc3RvcA0KPiArMHhlNC8weDEyMCBbdGFyZ2V0X2NvcmVfbW9kXQ0KPiANCj4gWzcxODg0LjU4
+OTE1MV0gIFs8ZmZmZmZmZmZhMDc5OWU2NT5dDQo+IHRyYW5zcG9ydF9jbWRfY2hlY2tfc3RvcF90
+b19mYWJyaWMrMHgxNS8weDIwIFt0YXJnZXRfY29yZV9tb2RdDQo+IA0KPiBbNzE4ODQuNTg5MTYw
+XSAgWzxmZmZmZmZmZmEwNzlkYmZlPl0gdGFyZ2V0X2NvbXBsZXRlX29rX3dvcmsNCj4gKzB4MTRl
+LzB4MjgwIFt0YXJnZXRfY29yZV9tb2RdDQo+IA0KPiBbNzE4ODQuNTg5MTYyXSAgWzxmZmZmZmZm
+ZjgxMGEzOWMwPl0gPyBwd3FfZGVjX25yX2luX2ZsaWdodCsweDUwLzB4YTANCj4gDQo+IFs3MTg4
+NC41ODkxNjRdICBbPGZmZmZmZmZmODEwYTQ3MDM+XSBwcm9jZXNzX29uZV93b3JrKzB4MTgzLzB4
+NGQwDQo+IA0KPiBbNzE4ODQuNTg5MTY2XSAgWzxmZmZmZmZmZjgxNmQ5MTNmPl0gPyBfX3NjaGVk
+dWxlKzB4MWZmLzB4NWMwDQo+IA0KPiBbNzE4ODQuNTg5MTY3XSAgWzxmZmZmZmZmZjgxNmQ5NjAw
+Pl0gPyBzY2hlZHVsZSsweDQwLzB4YjANCj4gDQo+IFs3MTg4NC41ODkxNjldICBbPGZmZmZmZmZm
+ODEwYTUzYmQ+XSB3b3JrZXJfdGhyZWFkKzB4MTZkLzB4NTMwDQo+IA0KPiBbNzE4ODQuNTg5MTcx
+XSAgWzxmZmZmZmZmZjgxMDJlYjFkPl0gPyBfX3N3aXRjaF90bysweDFjZC8weDVlMA0KPiANCj4g
+WzcxODg0LjU4OTE3M10gIFs8ZmZmZmZmZmY4MTZkOTEzZj5dID8gX19zY2hlZHVsZSsweDFmZi8w
+eDVjMA0KPiANCj4gWzcxODg0LjU4OTE3NV0gIFs8ZmZmZmZmZmY4MTBjYzU4Nj5dID8gX193YWtl
+X3VwX2NvbW1vbisweDU2LzB4OTANCj4gDQo+IFs3MTg4NC41ODkxNzddICBbPGZmZmZmZmZmODEw
+YTUyNTA+XSA/IG1heWJlX2NyZWF0ZV93b3JrZXIrMHgxMjAvMHgxMjANCj4gDQo+IFs3MTg4NC41
+ODkxNzhdICBbPGZmZmZmZmZmODE2ZDk2MDA+XSA/IHNjaGVkdWxlKzB4NDAvMHhiMA0KPiANCj4g
+WzcxODg0LjU4OTE3OV0gIFs8ZmZmZmZmZmY4MTBhNTI1MD5dID8gbWF5YmVfY3JlYXRlX3dvcmtl
+cisweDEyMC8weDEyMA0KPiANCj4gWzcxODg0LjU4OTE4MF0gIFs8ZmZmZmZmZmY4MTBhOWZjYz5d
+IGt0aHJlYWQrMHhjYy8weGYwDQo+IA0KPiBbNzE4ODQuNTg5MTgzXSAgWzxmZmZmZmZmZjgxMDAz
+ZjA4Pl0gPyBkb19zeXNjYWxsXzY0KzB4NzgvMHgxZDANCj4gDQo+IFs3MTg4NC41ODkxODVdICBb
+PGZmZmZmZmZmODEwYjQ5ZWU+XSA/IHNjaGVkdWxlX3RhaWwrMHgxZS8weGMwDQo+IA0KPiBbNzE4
+ODQuNTg5MTg4XSAgWzxmZmZmZmZmZjgxNmRkNDdmPl0gcmV0X2Zyb21fZm9yaysweDFmLzB4NDAN
+Cj4gDQo+IFs3MTg4NC41ODkxODldICBbPGZmZmZmZmZmODEwYTlmMDA+XSA/IGt0aHJlYWRfZnJl
+ZXphYmxlX3Nob3VsZF9zdG9wDQo+ICsweDcwLzB4NzANCj4gDQo+IFs3MTg4NC41ODkxOTBdIC0t
+LVsgZW5kIHRyYWNlIDdmMjRkNmM4NjNiNmUzNWIgXS0tLQ0KPiANCj4gWzcxODg0LjU4OTIwNF0g
+LS0tLS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQo+IA0KPiBbNzE4ODQuNTg5MjA2
+XSBXQVJOSU5HOiBDUFU6IDIgUElEOiAyMDc4MyBhdCBsaWIvbGlzdF9kZWJ1Zy5jOjU5DQo+IF9f
+bGlzdF9kZWxfZW50cnkrMHhhNS8weGQwDQo+IA0KPiAgDQoNCldhcyBsaXN0IGNvcnJ1cHRpb24g
+cHJlY2VkZWQgYnkgaHVuZyBrZXJuZWwgdGFzayB3YXJuaW5ncy4uPw0KDQpOby4gVGhlIG9ubHkg
+bWVzc2FnZXMgcHJpb3IgdG8gdGhlbSB3ZXJlIHNpbWlsYXIgdG8gdGhpczoNClsgMzM0NS44NjQz
+NTldIEFCT1JUX1RBU0s6IFNlbmRpbmcgVE1SX1RBU0tfRE9FU19OT1RfRVhJU1QgZm9yIHJlZl90
+YWc6IDEyMTkxNjggWyAzMzQ1Ljg2NDM3OF0gcWxhMnh4eCBbMDAwMDowYjowMC4xXS1lOTAwOjQ6
+IFJFU0VULVRNUiBvbmxpbmUvYWN0aXZlL29sZC1jb3VudC9uZXctY291bnQgPSAxLzAvMC8xLg0K
+WyAzMzQ1Ljg2NDQxOF0gQlVHOiB1bmFibGUgdG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIg
+ZGVyZWZlcmVuY2UgYXQgMDAwMDAwMDAwMDAwMDBlMCBbIDMzNDUuODY0NTQ5XSBJUDogWzxmZmZm
+ZmZmZjgxMWZmNTJhPl0ga21lbV9jYWNoZV9mcmVlKzB4MTFhLzB4MjAwDQoNCj4gDQo+IE9uIHRo
+aXMgcGFydGljdWxhciBrZXJuZWwgdmVyc2lvbiAoNC43KSwgSSBhbSB1bmFibGUgdG8gZ2V0IGEg
+Y3Jhc2ggDQo+IGR1bXAsIHNvIGNhbm5vdCByZWFsbHkgZmF0aG9tIHdoYXRzIGdvaW5nIG9uLg0K
+PiANCg0KTm90ZSB0aGVyZSBpcyBhIHY0LjErIHJlZmVyZW5jZSBsZWFrIHJlZ3Jlc3Npb24gZm9y
+IEFCT1JUX1RBU0sgKyBzZXNzaW9uIHNodXRkb3duIGhlcmU6DQoNCmh0dHBzOi8vZ2l0aHViLmNv
+bS90b3J2YWxkcy9saW51eC9jb21taXQvNTI3MjY4ZGYzMWU1N2NmMmI2ZDQxNzE5ODcxN2M2ZDZh
+ZmRiMWUzZQ0KDQo+IEhhdmUgeW91IHNlZW4gb3IgaGF2ZSBiZWVuIG5vdGlmaWVkIG9mIHRoaXMg
+YmVoYXZpb3VyPw0KDQpUb21LIChDQycpIHJlcG9ydGVkIHNvbWV0aGluZyBzaW1pbGFyIHVzaW5n
+IHY0LjguNCB3aXRoIEVTWCBob3N0cyBBQk9SVF9UQVNLICsgdGNtL3FsYTJ4eHggcG9ydHMuDQoN
+Cj4gICBBbnkgaWRlYXMvdGhvdWdodHMgb24gaG93IHRvIHByb2NlZWQ/DQo+IA0KPiAgDQoNCkN1
+cnJlbnRseSB1bnN1cmUgaWYgdGhpcyBsaXN0IGNvcnJ1cHRpb24gaXMgcmVsYXRlZCB0byB0aGUg
+YWJvdmUgcmVncmVzc2lvbiwgb3Igbm90Lg0KDQpQbGVhc2UgdmVyaWZ5IHVzaW5nIHRoZSBwYXRj
+aCBvbiB2NC43LnkgY29kZSBkdXJpbmcgdGNtL3FsYTJ4eHggc2Vzc2lvbiBzaHV0ZG93biAtPiBy
+ZXN0YXJ0LCBvbmNlIEFCT1JUX1RBU0sgaGFzIG9jY3VycmVkLg0KW0FuaWxdIEkgc2VlIHRoZSBp
+c3N1ZSBldmVuIHdoZW4gSSBhcHBseSB0aGlzIHBhdGNoIHRvIG15IGtlcm5lbC4NCg0K
