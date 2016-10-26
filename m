@@ -1,184 +1,627 @@
-From: "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>
-Subject: RE: Crash in TCM-LIO
-Date: Wed, 26 Oct 2016 09:01:26 +0000
-Message-ID: <BY1PR0701MB16441418742EDB804D96619A8EAB0@BY1PR0701MB1644.namprd07.prod.outlook.com>
-References: <BN6PR11MB197044D930C8512F099143A494A90@BN6PR11MB1970.namprd11.prod.outlook.com>
-         <1477292393.19735.40.camel@haakon3.risingtidesystems.com>
-          <BY1PR0701MB164496C3C3E05D7B686D7CEA8EA80@BY1PR0701MB1644.namprd07.prod.outlook.com>
- <1477462728.19735.95.camel@haakon3.risingtidesystems.com>
+From: TomK <tk@mdevsys.com>
+Subject: Re: Kernel 4.8.4: INFO: task kworker/u16:8:289 blocked for more than
+ 120 seconds.
+Date: Wed, 26 Oct 2016 08:08:38 -0400
+Message-ID: <e1dc6704-e9f6-bb5c-108d-6f2c44501511@mdevsys.com>
+References: <0f72bb4a-3cdf-ffd0-db75-5c8b303b921c@mdevsys.com>
+ <64ef386e-8de2-0b1c-9322-f02530a3e783@mdevsys.com>
+ <0851dba9-ad6c-c419-dc92-93c5d7d2f54a@mdevsys.com>
+ <1477291017.19735.26.camel@haakon3.risingtidesystems.com>
+ <b12c29d1-64a2-16dd-f38e-b4226e606df2@mdevsys.com>
+ <58bfd43f-ff17-f724-9adf-ffd1f828a0e9@mdevsys.com>
+ <1477466446.19735.113.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0062.outbound.protection.outlook.com ([104.47.40.62]:31001
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757888AbcJZJR6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Oct 2016 05:17:58 -0400
-In-Reply-To: <1477462728.19735.95.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
+Received: from mout.perfora.net ([74.208.4.197]:60418 "EHLO mout.perfora.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753971AbcJZMI4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Oct 2016 08:08:56 -0400
+In-Reply-To: <1477466446.19735.113.camel@haakon3.risingtidesystems.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: Anil Gurumurthy <Anil.Gurumurthy@qlogic.com>, linux-scsi <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "Tran, Quinn" <Quinn.Tran@cavium.com>, TomK <tk@mdevsys.com>
+Cc: linux-scsi@vger.kernel.org, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>
 
-SGVsbG8gTmljaG9sYXMsDQoNCi0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBOaWNo
-b2xhcyBBLiBCZWxsaW5nZXIgW21haWx0bzpuYWJAbGludXgtaXNjc2kub3JnXSANClNlbnQ6IDI2
-IE9jdG9iZXIgMjAxNiAxMTo0OQ0KVG86IEd1cnVtdXJ0aHksIEFuaWwgPEFuaWwuR3VydW11cnRo
-eUBjYXZpdW0uY29tPg0KQ2M6IEFuaWwgR3VydW11cnRoeSA8QW5pbC5HdXJ1bXVydGh5QHFsb2dp
-Yy5jb20+OyBsaW51eC1zY3NpIDxsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz47IE1hbGF2YWxp
-LCBHaXJpZGhhciA8R2lyaWRoYXIuTWFsYXZhbGlAY2F2aXVtLmNvbT47IFRyYW4sIFF1aW5uIDxR
-dWlubi5UcmFuQGNhdml1bS5jb20+OyBUb21LIDx0a0BtZGV2c3lzLmNvbT4NClN1YmplY3Q6IFJl
-OiBDcmFzaCBpbiBUQ00tTElPDQoNCkhlbGxvIEFuaWwgJiBDbywNCg0KT24gVHVlLCAyMDE2LTEw
-LTI1IGF0IDA1OjMzICswMDAwLCBHdXJ1bXVydGh5LCBBbmlsIHdyb3RlOg0KPiBPbiBNb24sIDIw
-MTYtMTAtMjQgYXQgMDY6MzYgKzAwMDAsIEFuaWwgR3VydW11cnRoeSB3cm90ZToNCg0KPFNOSVA+
-DQoNCj4gPiANCj4gPiBbNzE4ODQuNTg4NzQ4XSBCVUc6IHVuYWJsZSB0byBoYW5kbGUga2VybmVs
-IE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSANCj4gPiBhdCAwMDAwMDAwMDAwMDAwMGUwDQo+ID4g
-DQo+ID4gWzcxODg0LjU4ODg4MV0gSVA6IFs8ZmZmZmZmZmY4MTFmZjUyYT5dIGttZW1fY2FjaGVf
-ZnJlZSsweDExYS8weDIwMA0KPiA+IA0KPiA+IFs3MTg4NC41ODg5ODFdIFBHRCAwDQo+ID4gDQo+
-ID4gWzcxODg0LjU4OTAxN10gT29wczogMDAwMCBbIzFdIFNNUA0KPiA+IA0KPiA+IFs3MTg4NC41
-ODkwNDFdIC0tLS0tLS0tLS0tLVsgY3V0IGhlcmUgXS0tLS0tLS0tLS0tLQ0KPiA+IA0KPiA+IFs3
-MTg4NC41ODkwNDhdIFdBUk5JTkc6IENQVTogMiBQSUQ6IDIwNzgzIGF0IGxpYi9saXN0X2RlYnVn
-LmM6NjINCj4gPiBfX2xpc3RfZGVsX2VudHJ5KzB4ODYvMHhkMA0KPiA+IA0KPiA+IFs3MTg4NC41
-ODkwNDldIGxpc3RfZGVsIGNvcnJ1cHRpb24uIG5leHQtPnByZXYgc2hvdWxkIGJlIA0KPiA+IGZm
-ZmY4ODA2ZjhkYWViNjgsIGJ1dCB3YXMgZmZmZjg4MDZmOGRiNzllOA0KPiA+IA0KPiA+IFs3MTg4
-NC41ODkwNzVdIE1vZHVsZXMgbGlua2VkIGluOiB0YXJnZXRfY29yZV9wc2NzaSB0Y21fcWxhMnh4
-eChPRSkNCj4gPiBxbGEyeHh4KE9FKSBpc2NzaV90YXJnZXRfbW9kIHRhcmdldF9jb3JlX2ZpbGUg
-dGFyZ2V0X2NvcmVfaWJsb2NrIA0KPiA+IHRhcmdldF9jb3JlX21vZCBuZXRjb25zb2xlIGVidGFi
-bGVfbmF0IGVidGFibGVzIGlwdF9NQVNRVUVSQURFDQo+ID4gbmZfbmF0X21hc3F1ZXJhZGVfaXB2
-NCBpcHRhYmxlX25hdCBuZl9uYXRfaXB2NCBuZl9uYXQgeHRfQ0hFQ0tTVU0gDQo+ID4gaXB0YWJs
-ZV9tYW5nbGUgYnJpZGdlIDgwMjFxIG1ycCBnYXJwIHN0cCBsbGMgaXB0X1JFSkVDVCANCj4gPiBu
-Zl9yZWplY3RfaXB2NA0KPiA+IG5mX2Nvbm50cmFja19pcHY0IG5mX2RlZnJhZ19pcHY0IGlwdGFi
-bGVfZmlsdGVyIGlwX3RhYmxlcyANCj4gPiBpcDZ0X1JFSkVDVA0KPiA+IG5mX3JlamVjdF9pcHY2
-IG5mX2Nvbm50cmFja19pcHY2IG5mX2RlZnJhZ19pcHY2IHh0X3N0YXRlIA0KPiA+IG5mX2Nvbm50
-cmFjayBpcDZ0YWJsZV9maWx0ZXIgaXA2X3RhYmxlcyBiaW5mbXRfbWlzYyB2aG9zdF9uZXQgDQo+
-ID4gbWFjdnRhcCBtYWN2bGFuIHZob3N0IHR1biB1aW5wdXQgc2cgc2VyaW9fcmF3IGlUQ09fd2R0
-IA0KPiA+IGlUQ09fdmVuZG9yX3N1cHBvcnQgaXBtaV9zc2lmIGlwbWlfc2kgaXBtaV9tc2doYW5k
-bGVyIGhwaWxvIGhwd2R0IA0KPiA+IGJueDIgaW50ZWxfcG93ZXJjbGFtcCBjb3JldGVtcCBrdm1f
-aW50ZWwga3ZtIGlycWJ5cGFzcyANCj4gPiBjcmN0MTBkaWZfcGNsbXVsIGNyYzMyX3BjbG11bCBj
-cmMzMmNfaW50ZWwgZ2hhc2hfY2xtdWxuaV9pbnRlbCANCj4gPiBwY3Nwa3IgYWNwaV9wb3dlcl9t
-ZXRlciBscGNfaWNoIG1mZF9jb3JlIGk3Y29yZV9lZGFjIGVkYWNfY29yZSANCj4gPiBzaHBjaHAg
-ZXh0NChFKSBtYmNhY2hlKEUpIGpiZDIoRSkgc2RfbW9kKEUpDQo+ID4gc3JfbW9kKEUpIGNkcm9t
-KEUpIHNjc2lfdHJhbnNwb3J0X2ZjKEUpIGhwc2EoRSkgDQo+ID4gc2NzaV90cmFuc3BvcnRfc2Fz
-KEUpDQo+ID4gYWVzbmlfaW50ZWwoRSkgYWJsa19oZWxwZXIoRSkgY3J5cHRkKEUpIGxydyhFKSBn
-ZjEyOG11bChFKQ0KPiA+IGdsdWVfaGVscGVyKEUpIHBhdGFfYWNwaShFKSBhdGFfZ2VuZXJpYyhF
-KSBhdGFfcGlpeChFKSBsaWJhdGEoRSkNCj4gPiByYWRlb24oRSkgdHRtKEUpIGRybV9rbXNfaGVs
-cGVyKEUpIGRybShFKSBmYl9zeXNfZm9wcyhFKSANCj4gPiBzeXNpbWdibHQoRSkNCj4gPiBzeXNm
-aWxscmVjdChFKSBzeXNjb3B5YXJlYShFKSBpMmNfYWxnb19iaXQoRSkgaTJjX2NvcmUoRSkgDQo+
-ID4gZG1fbWlycm9yKEUpDQo+ID4gZG1fcmVnaW9uX2hhc2goRSkgZG1fbG9nKEUpIGRtX21vZChF
-KSBbbGFzdCB1bmxvYWRlZDogcWxhMnh4eF0NCj4gPiANCj4gPiBbNzE4ODQuNTg5MDkxXSBDUFU6
-IDIgUElEOiAyMDc4MyBDb21tOiBrd29ya2VyLzI6MCBUYWludGVkOiBHICAgICAgICBXDQo+ID4g
-SU9FICAgNC43LjAtcmMxKyAjMg0KPiA+IA0KPiA+IFs3MTg4NC41ODkwOTJdIEhhcmR3YXJlIG5h
-bWU6IEhQIFByb0xpYW50IERMMzgwIEc3LCBCSU9TIFA2Nw0KPiA+IDA1LzA1LzIwMTENCj4gPiAN
-Cj4gPiBbNzE4ODQuNTg5MTA3XSBXb3JrcXVldWU6IHRhcmdldF9jb21wbGV0aW9uIHRhcmdldF9j
-b21wbGV0ZV9va193b3JrIA0KPiA+IFt0YXJnZXRfY29yZV9tb2RdDQo+ID4gDQo+ID4gWzcxODg0
-LjU4OTEwOV0gIDAwMDAwMDAwMDAwMDAwMDAgZmZmZjg4MDQwOGQxZmFlOCBmZmZmZmZmZjgxMzUy
-MTk3DQo+ID4gZmZmZmZmZmY4MTM3MGVmNg0KPiA+IA0KPiA+IFs3MTg4NC41ODkxMTBdICBmZmZm
-ODgwNDA4ZDFmYjQ4IGZmZmY4ODA0MDhkMWZiNDggMDAwMDAwMDAwMDAwMDAwMA0KPiA+IGZmZmY4
-ODA0MDhkMWZiMzgNCj4gPiANCj4gPiBbNzE4ODQuNTg5MTExXSAgZmZmZmZmZmY4MTA4YTEyZCAw
-MDAwMDAwMDAwMDAwN2MzIDAwMDAwMDNlMDAwMDAyNDYNCj4gPiAwMDAwMDAwMDAwMDAwMjQ2DQo+
-ID4gDQo+ID4gWzcxODg0LjU4OTExMl0gQ2FsbCBUcmFjZToNCj4gPiANCj4gPiBbNzE4ODQuNTg5
-MTE1XSAgWzxmZmZmZmZmZjgxMzUyMTk3Pl0gZHVtcF9zdGFjaysweDY3LzB4OTANCj4gPiANCj4g
-PiBbNzE4ODQuNTg5MTE3XSAgWzxmZmZmZmZmZjgxMzcwZWY2Pl0gPyBfX2xpc3RfZGVsX2VudHJ5
-KzB4ODYvMHhkMA0KPiA+IA0KPiA+IFs3MTg4NC41ODkxMTldICBbPGZmZmZmZmZmODEwOGExMmQ+
-XSBfX3dhcm4rMHhmZC8weDEyMA0KPiA+IA0KPiA+IFs3MTg4NC41ODkxMjBdICBbPGZmZmZmZmZm
-ODEwOGEyMDk+XSB3YXJuX3Nsb3dwYXRoX2ZtdCsweDQ5LzB4NTANCj4gPiANCj4gPiBbNzE4ODQu
-NTg5MTIyXSAgWzxmZmZmZmZmZjgxMzcwZWY2Pl0gX19saXN0X2RlbF9lbnRyeSsweDg2LzB4ZDAN
-Cj4gPiANCj4gPiBbNzE4ODQuNTg5MTIzXSAgWzxmZmZmZmZmZjgxMzcwZjUxPl0gbGlzdF9kZWwr
-MHgxMS8weDQwDQo+ID4gDQo+ID4gWzcxODg0LjU4OTEzMl0gIFs8ZmZmZmZmZmZhMDc5OWQxZT5d
-IHRhcmdldF9yZW1vdmVfZnJvbV9zdGF0ZV9saXN0DQo+ID4gKzB4NmUvMHg4MCBbdGFyZ2V0X2Nv
-cmVfbW9kXQ0KPiA+IA0KPiA+IFs3MTg4NC41ODkxNDBdICBbPGZmZmZmZmZmYTA3OTllMTQ+XSB0
-cmFuc3BvcnRfY21kX2NoZWNrX3N0b3ANCj4gPiArMHhlNC8weDEyMCBbdGFyZ2V0X2NvcmVfbW9k
-XQ0KPiA+IA0KPiA+IFs3MTg4NC41ODkxNTFdICBbPGZmZmZmZmZmYTA3OTllNjU+XQ0KPiA+IHRy
-YW5zcG9ydF9jbWRfY2hlY2tfc3RvcF90b19mYWJyaWMrMHgxNS8weDIwIFt0YXJnZXRfY29yZV9t
-b2RdDQo+ID4gDQo+ID4gWzcxODg0LjU4OTE2MF0gIFs8ZmZmZmZmZmZhMDc5ZGJmZT5dIHRhcmdl
-dF9jb21wbGV0ZV9va193b3JrDQo+ID4gKzB4MTRlLzB4MjgwIFt0YXJnZXRfY29yZV9tb2RdDQo+
-ID4gDQo+ID4gWzcxODg0LjU4OTE2Ml0gIFs8ZmZmZmZmZmY4MTBhMzljMD5dID8gDQo+ID4gcHdx
-X2RlY19ucl9pbl9mbGlnaHQrMHg1MC8weGEwDQo+ID4gDQo+ID4gWzcxODg0LjU4OTE2NF0gIFs8
-ZmZmZmZmZmY4MTBhNDcwMz5dIHByb2Nlc3Nfb25lX3dvcmsrMHgxODMvMHg0ZDANCj4gPiANCj4g
-PiBbNzE4ODQuNTg5MTY2XSAgWzxmZmZmZmZmZjgxNmQ5MTNmPl0gPyBfX3NjaGVkdWxlKzB4MWZm
-LzB4NWMwDQo+ID4gDQo+ID4gWzcxODg0LjU4OTE2N10gIFs8ZmZmZmZmZmY4MTZkOTYwMD5dID8g
-c2NoZWR1bGUrMHg0MC8weGIwDQo+ID4gDQo+ID4gWzcxODg0LjU4OTE2OV0gIFs8ZmZmZmZmZmY4
-MTBhNTNiZD5dIHdvcmtlcl90aHJlYWQrMHgxNmQvMHg1MzANCj4gPiANCj4gPiBbNzE4ODQuNTg5
-MTcxXSAgWzxmZmZmZmZmZjgxMDJlYjFkPl0gPyBfX3N3aXRjaF90bysweDFjZC8weDVlMA0KPiA+
-IA0KPiA+IFs3MTg4NC41ODkxNzNdICBbPGZmZmZmZmZmODE2ZDkxM2Y+XSA/IF9fc2NoZWR1bGUr
-MHgxZmYvMHg1YzANCj4gPiANCj4gPiBbNzE4ODQuNTg5MTc1XSAgWzxmZmZmZmZmZjgxMGNjNTg2
-Pl0gPyBfX3dha2VfdXBfY29tbW9uKzB4NTYvMHg5MA0KPiA+IA0KPiA+IFs3MTg4NC41ODkxNzdd
-ICBbPGZmZmZmZmZmODEwYTUyNTA+XSA/IA0KPiA+IG1heWJlX2NyZWF0ZV93b3JrZXIrMHgxMjAv
-MHgxMjANCj4gPiANCj4gPiBbNzE4ODQuNTg5MTc4XSAgWzxmZmZmZmZmZjgxNmQ5NjAwPl0gPyBz
-Y2hlZHVsZSsweDQwLzB4YjANCj4gPiANCj4gPiBbNzE4ODQuNTg5MTc5XSAgWzxmZmZmZmZmZjgx
-MGE1MjUwPl0gPyANCj4gPiBtYXliZV9jcmVhdGVfd29ya2VyKzB4MTIwLzB4MTIwDQo+ID4gDQo+
-ID4gWzcxODg0LjU4OTE4MF0gIFs8ZmZmZmZmZmY4MTBhOWZjYz5dIGt0aHJlYWQrMHhjYy8weGYw
-DQo+ID4gDQo+ID4gWzcxODg0LjU4OTE4M10gIFs8ZmZmZmZmZmY4MTAwM2YwOD5dID8gZG9fc3lz
-Y2FsbF82NCsweDc4LzB4MWQwDQo+ID4gDQo+ID4gWzcxODg0LjU4OTE4NV0gIFs8ZmZmZmZmZmY4
-MTBiNDllZT5dID8gc2NoZWR1bGVfdGFpbCsweDFlLzB4YzANCj4gPiANCj4gPiBbNzE4ODQuNTg5
-MTg4XSAgWzxmZmZmZmZmZjgxNmRkNDdmPl0gcmV0X2Zyb21fZm9yaysweDFmLzB4NDANCj4gPiAN
-Cj4gPiBbNzE4ODQuNTg5MTg5XSAgWzxmZmZmZmZmZjgxMGE5ZjAwPl0gPyBrdGhyZWFkX2ZyZWV6
-YWJsZV9zaG91bGRfc3RvcA0KPiA+ICsweDcwLzB4NzANCj4gPiANCj4gPiBbNzE4ODQuNTg5MTkw
-XSAtLS1bIGVuZCB0cmFjZSA3ZjI0ZDZjODYzYjZlMzViIF0tLS0NCj4gPiANCj4gPiBbNzE4ODQu
-NTg5MjA0XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NCj4gPiANCj4gPiBb
-NzE4ODQuNTg5MjA2XSBXQVJOSU5HOiBDUFU6IDIgUElEOiAyMDc4MyBhdCBsaWIvbGlzdF9kZWJ1
-Zy5jOjU5DQo+ID4gX19saXN0X2RlbF9lbnRyeSsweGE1LzB4ZDANCj4gPiANCj4gPiAgDQo+IA0K
-PiBXYXMgbGlzdCBjb3JydXB0aW9uIHByZWNlZGVkIGJ5IGh1bmcga2VybmVsIHRhc2sgd2Fybmlu
-Z3MuLj8NCj4gDQo+IE5vLiBUaGUgb25seSBtZXNzYWdlcyBwcmlvciB0byB0aGVtIHdlcmUgc2lt
-aWxhciB0byB0aGlzOg0KPiBbIDMzNDUuODY0MzU5XSBBQk9SVF9UQVNLOiBTZW5kaW5nIFRNUl9U
-QVNLX0RPRVNfTk9UX0VYSVNUIGZvciByZWZfdGFnOiAxMjE5MTY4IFsgMzM0NS44NjQzNzhdIHFs
-YTJ4eHggWzAwMDA6MGI6MDAuMV0tZTkwMDo0OiBSRVNFVC1UTVIgb25saW5lL2FjdGl2ZS9vbGQt
-Y291bnQvbmV3LWNvdW50ID0gMS8wLzAvMS4NCj4gWyAzMzQ1Ljg2NDQxOF0gQlVHOiB1bmFibGUg
-dG8gaGFuZGxlIGtlcm5lbCBOVUxMIHBvaW50ZXIgZGVyZWZlcmVuY2UgDQo+IGF0IDAwMDAwMDAw
-MDAwMDAwZTAgWyAzMzQ1Ljg2NDU0OV0gSVA6IFs8ZmZmZmZmZmY4MTFmZjUyYT5dIA0KPiBrbWVt
-X2NhY2hlX2ZyZWUrMHgxMWEvMHgyMDANCj4gDQoNClRoYW5rcyBmb3IgY29uZmlybWluZy4gIFRo
-ZSBBQk9SVF9UQVNLIFRNUl9UQVNLX0RPRVNfTk9UX0VYSVNUIGV4Y2VwdGlvbnMgaGVyZSBkbyBu
-b3QgZGVwZW5kIG9uIHRoZSBtaXNzaW5nIFNDRl9BQ0tfS1JFRiBiaXQgYXNzaWdubWVudC4NCg0K
-VGhlIGVhcmxpZXIgU0NGX0FDS19LUkVGIHJlZmVyZW5jZSBsZWFrIGZpeCBpcyBzcGVjaWZpYyB0
-byBUTVIgdGhhdCByZWZlcmVuY2UgYWN0aXZlIHNlX2NtZC0+Y21kX2tyZWYgdGFncywgd2hlbiBJ
-L08gaXMgc3RpbGwgb3V0c3RhbmRpbmcgdG8gYXNzb2NpYXRlZCB0YXJnZXQtY29yZSBzZV9jbWQt
-PnNlX2RldiBiYWNrZW5kcy4NCg0KPiA+IA0KPiA+IE9uIHRoaXMgcGFydGljdWxhciBrZXJuZWwg
-dmVyc2lvbiAoNC43KSwgSSBhbSB1bmFibGUgdG8gZ2V0IGEgY3Jhc2ggDQo+ID4gZHVtcCwgc28g
-Y2Fubm90IHJlYWxseSBmYXRob20gd2hhdHMgZ29pbmcgb24uDQo+ID4gDQo+IA0KPiBOb3RlIHRo
-ZXJlIGlzIGEgdjQuMSsgcmVmZXJlbmNlIGxlYWsgcmVncmVzc2lvbiBmb3IgQUJPUlRfVEFTSyAr
-IHNlc3Npb24gc2h1dGRvd24gaGVyZToNCj4gDQo+IGh0dHBzOi8vZ2l0aHViLmNvbS90b3J2YWxk
-cy9saW51eC9jb21taXQvNTI3MjY4ZGYzMWU1N2NmMmI2ZDQxNzE5ODcxN2MNCj4gNmQ2YWZkYjFl
-M2UNCj4gDQo+ID4gSGF2ZSB5b3Ugc2VlbiBvciBoYXZlIGJlZW4gbm90aWZpZWQgb2YgdGhpcyBi
-ZWhhdmlvdXI/DQo+IA0KPiBUb21LIChDQycpIHJlcG9ydGVkIHNvbWV0aGluZyBzaW1pbGFyIHVz
-aW5nIHY0LjguNCB3aXRoIEVTWCBob3N0cyBBQk9SVF9UQVNLICsgdGNtL3FsYTJ4eHggcG9ydHMu
-DQo+IA0KPiA+ICAgQW55IGlkZWFzL3Rob3VnaHRzIG9uIGhvdyB0byBwcm9jZWVkPw0KPiA+IA0K
-PiA+ICANCj4gDQo+IEN1cnJlbnRseSB1bnN1cmUgaWYgdGhpcyBsaXN0IGNvcnJ1cHRpb24gaXMg
-cmVsYXRlZCB0byB0aGUgYWJvdmUgcmVncmVzc2lvbiwgb3Igbm90Lg0KPiANCj4gUGxlYXNlIHZl
-cmlmeSB1c2luZyB0aGUgcGF0Y2ggb24gdjQuNy55IGNvZGUgZHVyaW5nIHRjbS9xbGEyeHh4IHNl
-c3Npb24gc2h1dGRvd24gLT4gcmVzdGFydCwgb25jZSBBQk9SVF9UQVNLIGhhcyBvY2N1cnJlZC4N
-Cj4gW0FuaWxdIEkgc2VlIHRoZSBpc3N1ZSBldmVuIHdoZW4gSSBhcHBseSB0aGlzIHBhdGNoIHRv
-IG15IGtlcm5lbC4NCj4gDQoNCkZyb20gYWJvdmUgKyBUb21LJ3MgbGlzdCBjb3JydXB0aW9uIGxv
-Z3MsIGl0IGxvb2tzIGxpa2UgYSBzZV9jbWQtPmNtZF9rcmVmIGlzIHByZW1hdHVyZWx5IHJlYWNo
-aW5nIHplcm8gKyBmcmVlaW5nIG1lbW9yeSB3aGlsZSBzZV9jbWQgbWVtb3J5IGlzIHN0aWxsIG91
-dHN0YW5kaW5nIHRvIHRhcmdldC1jb3JlIGJhY2tlbmQuDQoNClRoZSBzZV9jbWQtPnN0YXRlX2xp
-c3QgaXMgbm90IHVzZWQgYnkgVE1SLCBzbyBBRkFJQ1QgbGlzdCBjb3JydXB0aW9uIGhlcmUgaXMg
-c3BlY2lmaWMgdG8gcWxhX3RndF9jbWQtPnNlX2NtZCBkaXNwYXRjaGVkIGludG8gdGFyZ2V0LWNv
-cmUsIHJlbGVhc2VkIHdoaWxlIHNlX2NtZCBpcyBzdGlsbCBvdXRzdGFuZGluZy4NCg0KVG8gY29u
-ZmlybSB2ZXJpZnkgdGhlIHRoZW9yeSwgcGxlYXNlIGNoYW5nZSB0aGUgbGlzdF9kZWJ1ZyB3YXJu
-IGFib3ZlIGludG8gQlVHX09OIHdpdGggTEtDRCBsb2dpYyBpbiBwbGFjZSwgYW5kIGxldCdzIGhh
-dmUgYSBsb29rLg0KDQpbQW5pbF0NCldpdGggdGhlIEJVR19PTiwgSSBwcmV0dHkgbXVjaCBzZWUg
-dGhlIHNhbWUgdGhpbmcuIEdldHRpbmcgYSBjcmFzaCBkdW1wIGhhcyBiZWVuIGEgc2lnbmlmaWNh
-bnQgY2hhbGxlbmdlIC0gbmV2ZXIgYmVlbiBhYmxlIHRvIGdlbmVyYXRlIG9uZSB3aXRoIGtlcm5l
-bCA0LjYgYW5kIGxhdGVyLg0KDQpbIDM1MTMuMjU4OTc5XSBBQk9SVF9UQVNLOiBTZW5kaW5nIFRN
-Ul9UQVNLX0RPRVNfTk9UX0VYSVNUIGZvciByZWZfdGFnOiAxMjU4NzIwDQpbIDM1MTMuMjU4OTk4
-XSBxbGEyeHh4IFswMDAwOjBiOjAwLjFdLWU5MDA6NDogUkVTRVQtVE1SIG9ubGluZS9hY3RpdmUv
-b2xkLWNvdW50L25ldy1jb3VudCA9IDEvMC8wLzEuDQpbIDM1MTMuMjU5MDQ1XSBCVUc6IHVuYWJs
-ZSB0byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAwMDAwMDAwMDAw
-MDAwMGUwDQpbIDM1MTMuMjU5MTc3XSBJUDogWzxmZmZmZmZmZjgxMWZmNTJhPl0ga21lbV9jYWNo
-ZV9mcmVlKzB4MTFhLzB4MjAwDQpbIDM1MTMuMjU5Mjc3XSBQR0QgMA0KWyAzNTEzLjI1OTMxMl0g
-T29wczogMDAwMCBbIzFdIFNNUA0KWyAzNTEzLjI1OTM2Ml0gTW9kdWxlcyBsaW5rZWQgaW46IHRh
-cmdldF9jb3JlX3BzY3NpIHRjbV9xbGEyeHh4KE9FKSBxbGEyeHh4KE9FKSBpc2NzaV90YXJnZXRf
-bW9kIHRhcmdldF9jb3JlX2ZpbGUgdGFyZ2V0X2NvcmVfaWJsb2NrIHRhcmdldF9jb3JlX21vZCBu
-ZXRjb25zb2xlIGVidGFibGVfbmF0IGVidGFibGVzIGlwdF9NQVNRVUVSQURFIG5mX25hdF9tYXNx
-dWVyYWRlX2lwdjQgaXB0YWJsZV9uYXQgbmZfbmF0X2lwdjQgbmZfbmF0IHh0X0NIRUNLU1VNIGlw
-dGFibGVfbWFuZ2xlIGJyaWRnZSA4MDIxcSBtcnAgZ2FycCBzdHAgbGxjIGlwdF9SRUpFQ1QgbmZf
-cmVqZWN0X2lwdjQgbmZfY29ubnRyYWNrX2lwdjQgbmZfZGVmcmFnX2lwdjQgaXB0YWJsZV9maWx0
-ZXIgaXBfdGFibGVzIGlwNnRfUkVKRUNUIG5mX3JlamVjdF9pcHY2WyAzNTEzLjI2MDAxMl0gLS0t
-LS0tLS0tLS0tWyBjdXQgaGVyZSBdLS0tLS0tLS0tLS0tDQpbIDM1MTMuMjYwMDE4XSBXQVJOSU5H
-OiBDUFU6IDIgUElEOiAzODkgYXQgbGliL2xpc3RfZGVidWcuYzo2MSBfX2xpc3RfZGVsX2VudHJ5
-KzB4NjUvMHhiMA0KWyAzNTEzLjI2MDAxOV0gbGlzdF9kZWwgY29ycnVwdGlvbi4gcHJldi0+bmV4
-dCBzaG91bGQgYmUgZmZmZjg4MDZlYzdjMzMyOCwgYnV0IHdhcyBmZmZmODgwNmVjN2JjZjY4DQpb
-IDM1MTMuMjYwMDE5XSBNb2R1bGVzIGxpbmtlZCBpbjogdGFyZ2V0X2NvcmVfcHNjc2kgdGNtX3Fs
-YTJ4eHgoT0UpIHFsYTJ4eHgoT0UpIGlzY3NpX3RhcmdldF9tb2QgdGFyZ2V0X2NvcmVfZmlsZSB0
-DQo=
+On 10/26/2016 3:20 AM, Nicholas A. Bellinger wrote:
+> Hello TomK & Co,
+>
+> Comments below.
+>
+> On Tue, 2016-10-25 at 22:05 -0400, TomK wrote:
+>> On 10/25/2016 1:28 AM, TomK wrote:
+>>> On 10/24/2016 2:36 AM, Nicholas A. Bellinger wrote:
+>>>> Hi TomK,
+>>>>
+>>>> Thanks for reporting this bug.  Comments inline below.
+>>>>
+>>>> On Mon, 2016-10-24 at 00:45 -0400, TomK wrote:
+>>>>> On 10/24/2016 12:32 AM, TomK wrote:
+>>>>>> On 10/23/2016 10:03 PM, TomK wrote:
+>
+> <SNIP>
+>
+>>>>>> Including the full log:
+>>>>>>
+>>>>>> http://microdevsys.com/linux-lio/messages-mailing-list
+>>>>>>
+>>>>>
+>>>>
+>>>> Thanks for posting with qla2xxx verbose debug enabled on your setup.
+>>>>
+>>>>>
+>>>>> When tryint to shut down target using /etc/init.d/target stop, the
+>>>>> following is printed repeatedly:
+>>>>>
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e837:20:
+>>>>> ABTS_RECV_24XX: instance 0
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f811:20:
+>>>>> qla_target(0): task abort (s_id=1:5:0, tag=1177068, param=0)
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f812:20:
+>>>>> qla_target(0): task abort for non-existant session
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f80e:20:
+>>>>> Scheduling work (type 1, prm ffff880093365680) to find session for param
+>>>>> ffff88010f8c7680 (size 64, tgt ffff880111f06600)
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f800:20: Sess
+>>>>> work (tgt ffff880111f06600)
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending
+>>>>> task mgmt ABTS response (ha=ffff88010fae0000, atio=ffff880093365694,
+>>>>> status=4
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20:
+>>>>> ABTS_RESP_24XX: compl_status 31
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e807:20: Sending
+>>>>> retry TERM EXCH CTIO7 (ha=ffff88010fae0000)
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending
+>>>>> task mgmt ABTS response (ha=ffff88010fae0000, atio=ffff88010f8c76c0,
+>>>>> status=0
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20:
+>>>>> ABTS_RESP_24XX: compl_status 0
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20:
+>>>>> qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 029c
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-3861:20: New
+>>>>> command while device ffff880111f06600 is shutting down
+>>>>> Oct 24 00:39:48 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e859:20:
+>>>>> qla_target: Unable to send command to target for req, ignoring.
+>>>>>
+>>>>>
+>>>>
+>>>> At your earliest convenience, please verify the patch using v4.8.y with
+>>>> the above ABORT_TASK + shutdown scenario.
+>>>>
+>>>> Also, it would be helpful to understand why this ESX FC host is
+>>>> generating ABORT_TASKs.
+>>>>
+>>>> Eg: Is ABORT_TASK generated due to FC target response packet loss..?
+>>>> Or due to target backend I/O latency, that ultimately triggers FC host
+>>>> side timeouts...?
+>>>>
+>
+> Ok, so the specific hung task warnings reported earlier above are
+> ABORT_TASK due to the target-core backend md array holding onto
+> outstanding I/O long enough, for ESX host side SCSI timeouts to begin to
+> trigger.
+>
+>>>>>
+>>>>> + when I disable the ports on the brocade switch that we're using then
+>>>>> try to stop target, the following is printed:
+>>>>>
+>>>>>
+>>>>>
+>>>>> Oct 24 00:41:31 mbpc-pc kernel: qla2xxx [0000:04:00.1]-680a:21: Loop
+>>>>> down - seconds remaining 231.
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680a:20: Loop
+>>>>> down - seconds remaining 153.
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ------------[ cut here ]------------
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: WARNING: CPU: 2 PID: 8615 at
+>>>>> lib/list_debug.c:33 __list_add+0xbe/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: list_add corruption. prev->next should
+>>>>> be next (ffff88009e83b330), but was ffff88011fc972a0.
+>>>>> (prev=ffff880118ada4c0).
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Modules linked in: tcm_qla2xxx tcm_fc
+>>>>> tcm_loop target_core_file target_core_iblock target_core_pscsi
+>>>>> target_core_mod configfs ip6table_filter ip6_tables ebtable_nat ebtables
+>>>>> nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_CHECKSUM
+>>>>> iptable_mangle bridge nfsd lockd grace nfs_acl auth_rpcgss autofs4 it87
+>>>>> hwmon_vid bnx2fc cnic uio fcoe libfcoe libfc 8021q garp stp llc ppdev
+>>>>> parport_pc parport sunrpc cpufreq_ondemand bonding ipv6 crc_ccitt
+>>>>> ipt_REJECT nf_reject_ipv4 xt_multiport iptable_filter ip_tables fuse
+>>>>> vfat fat xfs vhost_net macvtap macvlan vhost tun uinput raid456
+>>>>> async_raid6_recov async_pq async_xor xor async_memcpy async_tx raid6_pq
+>>>>> libcrc32c joydev sg serio_raw e1000 kvm_amd kvm irqbypass r8169 mii
+>>>>> pcspkr k10temp snd_hda_codec_realtek snd_hda_codec_generic snd_hda_intel
+>>>>> snd_hda_codec snd_hda_core snd_hwdep snd_seq snd_seq_device snd_pcm
+>>>>> snd_timer snd soundcore i2c_piix4 i2c_core wmi acpi_cpufreq shpchp ext4
+>>>>> mbcache jbd2 qla2xxx scsi_transport_fc floppy firewire_ohci f
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: irewire_core crc_itu_t sd_mod pata_acpi
+>>>>> ata_generic pata_jmicron ahci libahci usb_storage dm_mirror
+>>>>> dm_region_hash dm_log dm_mod
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: CPU: 2 PID: 8615 Comm: kworker/2:3 Not
+>>>>> tainted 4.8.4 #2
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Hardware name: Gigabyte Technology Co.,
+>>>>> Ltd. GA-890XA-UD3/GA-890XA-UD3, BIOS FC 08/02/2010
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: 0000000000000000 ffff880092b83b48
+>>>>> ffffffff812e88e9 ffffffff8130753e
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ffff880092b83ba8 ffff880092b83ba8
+>>>>> 0000000000000000 ffff880092b83b98
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ffffffff81066a7d ffff88000058f952
+>>>>> 0000002100000046 ffffffff8101eae8
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Call Trace:
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff812e88e9>]
+>>>>> dump_stack+0x51/0x78
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8130753e>] ?
+>>>>> __list_add+0xbe/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81066a7d>] __warn+0xfd/0x120
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8101eae8>] ?
+>>>>> __switch_to+0x398/0x7e0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81066b59>]
+>>>>> warn_slowpath_fmt+0x49/0x50
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8130753e>]
+>>>>> __list_add+0xbe/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8107d0b2>]
+>>>>> move_linked_works+0x62/0x90
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8108070c>]
+>>>>> process_one_work+0x25c/0x4e0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162c040>] ?
+>>>>> schedule+0x40/0xb0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8108150d>]
+>>>>> worker_thread+0x16d/0x520
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162bb3d>] ?
+>>>>> __schedule+0x2fd/0x6a0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810923f2>] ?
+>>>>> default_wake_function+0x12/0x20
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810a6f06>] ?
+>>>>> __wake_up_common+0x56/0x90
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>>>> maybe_create_worker+0x110/0x110
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162c040>] ?
+>>>>> schedule+0x40/0xb0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>>>> maybe_create_worker+0x110/0x110
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81085fec>] kthread+0xcc/0xf0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8109130e>] ?
+>>>>> schedule_tail+0x1e/0xc0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162f60f>]
+>>>>> ret_from_fork+0x1f/0x40
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81085f20>] ?
+>>>>> kthread_freezable_should_stop+0x70/0x70
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ---[ end trace 713a9071c9f5f464 ]---
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ------------[ cut here ]------------
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: WARNING: CPU: 2 PID: 8615 at
+>>>>> lib/list_debug.c:36 __list_add+0x9c/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: list_add double add:
+>>>>> new=ffff880118ada4c0, prev=ffff880118ada4c0, next=ffff88009e83b330.
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Modules linked in: tcm_qla2xxx tcm_fc
+>>>>> tcm_loop target_core_file target_core_iblock target_core_pscsi
+>>>>> target_core_mod configfs ip6table_filter ip6_tables ebtable_nat ebtables
+>>>>> nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_CHECKSUM
+>>>>> iptable_mangle bridge nfsd lockd grace nfs_acl auth_rpcgss autofs4 it87
+>>>>> hwmon_vid bnx2fc cnic uio fcoe libfcoe libfc 8021q garp stp llc ppdev
+>>>>> parport_pc parport sunrpc cpufreq_ondemand bonding ipv6 crc_ccitt
+>>>>> ipt_REJECT nf_reject_ipv4 xt_multiport iptable_filter ip_tables fuse
+>>>>> vfat fat xfs vhost_net macvtap macvlan vhost tun uinput raid456
+>>>>> async_raid6_recov async_pq async_xor xor async_memcpy async_tx raid6_pq
+>>>>> libcrc32c joydev sg serio_raw e1000 kvm_amd kvm irqbypass r8169 mii
+>>>>> pcspkr k10temp snd_hda_codec_realtek snd_hda_codec_generic snd_hda_intel
+>>>>> snd_hda_codec snd_hda_core snd_hwdep snd_seq snd_seq_device snd_pcm
+>>>>> snd_timer snd soundcore i2c_piix4 i2c_core wmi acpi_cpufreq shpchp ext4
+>>>>> mbcache jbd2 qla2xxx scsi_transport_fc floppy firewire_ohci f
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: irewire_core crc_itu_t sd_mod pata_acpi
+>>>>> ata_generic pata_jmicron ahci libahci usb_storage dm_mirror
+>>>>> dm_region_hash dm_log dm_mod
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: CPU: 2 PID: 8615 Comm: kworker/2:3
+>>>>> Tainted: G        W       4.8.4 #2
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Hardware name: Gigabyte Technology Co.,
+>>>>> Ltd. GA-890XA-UD3/GA-890XA-UD3, BIOS FC 08/02/2010
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: 0000000000000000 ffff880092b83b48
+>>>>> ffffffff812e88e9 ffffffff8130751c
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ffff880092b83ba8 ffff880092b83ba8
+>>>>> 0000000000000000 ffff880092b83b98
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ffffffff81066a7d ffff88000058f952
+>>>>> 0000002400000046 ffffffff8101eae8
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: Call Trace:
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff812e88e9>]
+>>>>> dump_stack+0x51/0x78
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8130751c>] ?
+>>>>> __list_add+0x9c/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81066a7d>] __warn+0xfd/0x120
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8101eae8>] ?
+>>>>> __switch_to+0x398/0x7e0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81066b59>]
+>>>>> warn_slowpath_fmt+0x49/0x50
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8130751c>]
+>>>>> __list_add+0x9c/0xd0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8107d0b2>]
+>>>>> move_linked_works+0x62/0x90
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8108070c>]
+>>>>> process_one_work+0x25c/0x4e0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162c040>] ?
+>>>>> schedule+0x40/0xb0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8108150d>]
+>>>>> worker_thread+0x16d/0x520
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162bb3d>] ?
+>>>>> __schedule+0x2fd/0x6a0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810923f2>] ?
+>>>>> default_wake_function+0x12/0x20
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810a6f06>] ?
+>>>>> __wake_up_common+0x56/0x90
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>>>> maybe_create_worker+0x110/0x110
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162c040>] ?
+>>>>> schedule+0x40/0xb0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>>>> maybe_create_worker+0x110/0x110
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81085fec>] kthread+0xcc/0xf0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8109130e>] ?
+>>>>> schedule_tail+0x1e/0xc0
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff8162f60f>]
+>>>>> ret_from_fork+0x1f/0x40
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: [<ffffffff81085f20>] ?
+>>>>> kthread_freezable_should_stop+0x70/0x70
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: ---[ end trace 713a9071c9f5f465 ]---
+>>>>> Oct 24 00:41:32 mbpc-pc kernel: qla2xxx [0000:04:00.1]-680a:21: Loop
+>>>>> down - seconds remaining 230.
+>>>>> Oct 24 00:41:33 mbpc-pc kernel: qla2xxx [0000:04:00.0]-680a:20: Loop
+>>>>> down - seconds remaining 152.
+>>>>>
+>>>>>
+>>>>
+>>>> Mmmm.  Could be a side effect of the target-core regression, but not
+>>>> completely sure..
+>>>>
+>>>> Adding QLOGIC folks CC'.
+>>>>
+>>>> --
+>>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>>>> the body of a message to majordomo@vger.kernel.org
+>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>
+>
+> Adding Anil CC'
+>
+>>>
+>>> Hey Nicholas,
+>>>
+>>>
+>>>> At your earliest convenience, please verify the patch using v4.8.y with
+>>>> the above ABORT_TASK + shutdown scenario.
+>>>>
+>>>> Also, it would be helpful to understand why this ESX FC host is
+>>>> generating ABORT_TASKs.
+>>>>
+>>>> Eg: Is ABORT_TASK generated due to FC target response packet loss..?
+>>>> Or due to target backend I/O latency, that ultimately triggers FC host
+>>>> side timeouts...?
+>>>
+>>>
+>>> Here is where it gets interesting and to your thought above.  Take for
+>>> example this log snippet
+>>> (http://microdevsys.com/linux-lio/messages-recent):
+>>>
+>>> Oct 23 22:12:51 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Jan  7 00:36:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon
+>>> successfully started
+>>> Oct 23 22:14:14 mbpc-pc kernel: hpet1: lost 9599 rtc interrupts
+>>> Oct 23 22:14:14 mbpc-pc kernel: hpet1: lost 1 rtc interrupts
+>>> Oct 23 22:15:02 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Oct 23 22:15:41 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Jan  7 00:38:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon
+>>> successfully started
+>>> Oct 23 22:16:29 mbpc-pc kernel: hpet1: lost 9599 rtc interrupts
+>>> Oct 23 22:17:30 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Jan  7 00:40:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon
+>>> successfully started
+>>> Oct 23 22:18:29 mbpc-pc kernel: ABORT_TASK: Found referenced qla2xxx
+>>> task_tag: 1195032
+>>> Oct 23 22:18:33 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Oct 23 22:18:42 mbpc-pc kernel: ABORT_TASK: Sending
+>>> TMR_FUNCTION_COMPLETE for ref_tag: 1195032
+>>> Oct 23 22:18:42 mbpc-pc kernel: ABORT_TASK: Found referenced qla2xxx
+>>> task_tag: 1122276
+>>> Oct 23 22:19:35 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Jan  7 00:42:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon
+>>> successfully started
+>>> Oct 23 22:20:41 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Oct 23 22:21:07 mbpc-pc kernel: INFO: task kworker/u16:8:308 blocked for
+>>> more than 120 seconds.
+>>> Oct 23 22:21:07 mbpc-pc kernel:      Not tainted 4.8.4 #2
+>>> Oct 23 22:21:07 mbpc-pc kernel: "echo 0 >
+>>> /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+>>> Oct 23 22:21:07 mbpc-pc kernel: kworker/u16:8   D ffff880111b8fa18     0
+>>>   308      2 0x00000000
+>>> Oct 23 22:21:07 mbpc-pc kernel: Workqueue: tmr-fileio target_tmr_work
+>>> [target_core_mod]
+>>> Oct 23 22:21:07 mbpc-pc kernel: ffff880111b8fa18 0000000000000400
+>>> ffff880112180480 ffff880111b8f998
+>>> Oct 23 22:21:07 mbpc-pc kernel: ffff88011107a380 ffffffff81f99ca0
+>>> ffffffff81f998ef ffff880100000000
+>>> Oct 23 22:21:07 mbpc-pc kernel: ffffffff812f27d9 0000000000000000
+>>> ffffe8ffffcda000 ffff880000000000
+>>> Oct 23 22:21:07 mbpc-pc kernel: Call Trace:
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff812f27d9>] ? number+0x2e9/0x310
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162c040>] schedule+0x40/0xb0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff81080169>] ?
+>>> start_flush_work+0x49/0x180
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162e7ec>]
+>>> schedule_timeout+0x9c/0xe0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810802ba>] ? flush_work+0x1a/0x40
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810bd15c>] ?
+>>> console_unlock+0x35c/0x380
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162cfa0>]
+>>> wait_for_completion+0xc0/0xf0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810923e0>] ?
+>>> try_to_wake_up+0x260/0x260
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffffa08f6f84>]
+>>> __transport_wait_for_tasks+0xb4/0x1b0 [target_core_mod]
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810bdd1f>] ?
+>>> vprintk_default+0x1f/0x30
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8115cc5c>] ? printk+0x46/0x48
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffffa08f70c4>]
+>>> transport_wait_for_tasks+0x44/0x60 [target_core_mod]
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffffa08f46e2>]
+>>> core_tmr_abort_task+0xf2/0x160 [target_core_mod]
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffffa08f6aa4>]
+>>> target_tmr_work+0x154/0x160 [target_core_mod]
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff81080639>]
+>>> process_one_work+0x189/0x4e0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810d060c>] ?
+>>> del_timer_sync+0x4c/0x60
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8108131e>] ?
+>>> maybe_create_worker+0x8e/0x110
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8108150d>]
+>>> worker_thread+0x16d/0x520
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810923f2>] ?
+>>> default_wake_function+0x12/0x20
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810a6f06>] ?
+>>> __wake_up_common+0x56/0x90
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>> maybe_create_worker+0x110/0x110
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff810813a0>] ?
+>>> maybe_create_worker+0x110/0x110
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff81085fec>] kthread+0xcc/0xf0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8109130e>] ?
+>>> schedule_tail+0x1e/0xc0
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff8162f60f>]
+>>> ret_from_fork+0x1f/0x40
+>>> Oct 23 22:21:07 mbpc-pc kernel: [<ffffffff81085f20>] ?
+>>> kthread_freezable_should_stop+0x70/0x70
+>>> Oct 23 22:21:52 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>> Jan  7 00:44:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon
+>>> successfully started
+>>> Oct 23 22:23:03 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
+>>>
+>>>
+>>> And compare it to the following snippet
+>>> (http://microdevsys.com/linux-lio/iostat-tkx-interesting-bit.txt) taken
+>>> from this bigger iostat session
+>>> (http://microdevsys.com/linux-lio/iostat-tkx.txt):
+>>>
+>
+> <SNIP>
+>
+>>>
+>>>
+>>> We can see that /dev/sdf ramps up to 100% starting at around (10/23/2016
+>>> 10:18:18 PM) and stays that way till about the (10/23/2016 10:18:42 PM)
+>>> mark when something occurs and it drops down to below 100% numbers.
+>>>
+>>> So I checked the array which shows all clean, even across reboots:
+>>>
+>>> [root@mbpc-pc ~]# cat /proc/mdstat
+>>> Personalities : [raid6] [raid5] [raid4]
+>>> md0 : active raid6 sdb[7] sdf[6] sdd[3] sda[5] sdc[1] sde[8]
+>>>       3907045632 blocks super 1.2 level 6, 64k chunk, algorithm 2 [6/6]
+>>> [UUUUUU]
+>>>       bitmap: 1/8 pages [4KB], 65536KB chunk
+>>>
+>>> unused devices: <none>
+>>> [root@mbpc-pc ~]#
+>>>
+>>>
+>>> Then I run smartctl across all disks and sure enough /dev/sdf prints this:
+>>>
+>>> [root@mbpc-pc ~]# smartctl -A /dev/sdf
+>>> smartctl 5.43 2012-06-30 r3573 [x86_64-linux-4.8.4] (local build)
+>>> Copyright (C) 2002-12 by Bruce Allen, http://smartmontools.sourceforge.net
+>>>
+>>> Error SMART Values Read failed: scsi error badly formed scsi parameters
+>>> Smartctl: SMART Read Values failed.
+>>>
+>>> === START OF READ SMART DATA SECTION ===
+>>> [root@mbpc-pc ~]#
+>>>
+>>> So it would appear we found the root cause, a bad disk.  True the disk
+>>> is bad and I'll be replacing it however, even with a degraded disk
+>>> (checking now) the array functions just fine and I have no data loss.  I
+>>> only lost 1.  I would have to loose 3 to get a catastrophic failure on
+>>> this RAID6:
+>>>
+>>> [root@mbpc-pc ~]# cat /proc/mdstat
+>>> Personalities : [raid6] [raid5] [raid4]
+>>> md0 : active raid6 sdf[6](F) sda[5] sde[8] sdb[7] sdd[3] sdc[1]
+>>>       3907045632 blocks super 1.2 level 6, 64k chunk, algorithm 2 [6/5]
+>>> [UUUU_U]
+>>>       bitmap: 6/8 pages [24KB], 65536KB chunk
+>>>
+>>> unused devices: <none>
+>>> [root@mbpc-pc ~]# mdadm --detail /dev/md0
+>>> /dev/md0:
+>>>         Version : 1.2
+>>>   Creation Time : Mon Mar 26 00:06:24 2012
+>>>      Raid Level : raid6
+>>>      Array Size : 3907045632 (3726.05 GiB 4000.81 GB)
+>>>   Used Dev Size : 976761408 (931.51 GiB 1000.20 GB)
+>>>    Raid Devices : 6
+>>>   Total Devices : 6
+>>>     Persistence : Superblock is persistent
+>>>
+>>>   Intent Bitmap : Internal
+>>>
+>>>     Update Time : Tue Oct 25 00:31:13 2016
+>>>           State : clean, degraded
+>>>  Active Devices : 5
+>>> Working Devices : 5
+>>>  Failed Devices : 1
+>>>   Spare Devices : 0
+>>>
+>>>          Layout : left-symmetric
+>>>      Chunk Size : 64K
+>>>
+>>>            Name : mbpc:0
+>>>            UUID : 2f36ac48:5e3e4c54:72177c53:bea3e41e
+>>>          Events : 118368
+>>>
+>>>     Number   Major   Minor   RaidDevice State
+>>>        8       8       64        0      active sync   /dev/sde
+>>>        1       8       32        1      active sync   /dev/sdc
+>>>        7       8       16        2      active sync   /dev/sdb
+>>>        3       8       48        3      active sync   /dev/sdd
+>>>        8       0        0        8      removed
+>>>        5       8        0        5      active sync   /dev/sda
+>>>
+>>>        6       8       80        -      faulty   /dev/sdf
+>>> [root@mbpc-pc ~]#
+>>>
+>>> Last night I cut power to the /dev/sdf disk to spin it down the removed
+>>> it and reinserted it.  The array resynced without issue however the
+>>> smartctl -A command still failed on it. Today I check and bad blocks
+>>> were recorded on the disk and the array has since removed /dev/sdf (per
+>>> above).  Also I have to say that these ESXi hosts worked in this
+>>> configuration, without any hickup, for about 4 months.  No LUN failure
+>>> on the ESXi side.  I haven't changed the LUN in that time (had no reason
+>>> to do so).
+>>>
+>>> So now here's the real question that I have.  Why would the array
+>>> continue to function, as intended, with only one disk failure yet the
+>>> QLogic / Target drivers stop and error out?  The RAID6 (software) array
+>>> should care about the failure, and it should handle it.  QLogic / Target
+>>> Drivers shouldn't really be too impacted (aside from read speed maybe)
+>>> about a disk failing inside the array.  That would be my thinking.  The
+>>> Target / QLogic software seems to have picked up on a failure ahead of
+>>> the software RAID 6 detecting it.  I've had this RAID6 for over 6 years
+>>> now.  Aside from the occassional disk replacement, quite rock solid.
+>
+> The earlier hung task warnings after ABORT_TASK w/ TMR_FUNCTION_COMPLETE
+> and after explicit configfs shutdown are likely the missing SCF_ACK_KREF
+> bit assignment.  Note the bug is specific to high backed I/O latency
+> with v4.1+ code, so you'll want to include it for all future builds.
+>
+> AFAICT thus far the list corruption bug reported here and also from Anil
+> & Co looks like a separate bug using tcm_qla2xxx ports.
+>
+>>>
+>>> So anyway, I added the fix you pointed out to the 4.8.4 kernel and
+>>> recompiled.  I restarted it, with the RAID6 degraded as it is.  All
+>>> mounted fine and I checked the LUN's from the ESXi side:
+>>>
+>>> [root@mbpc-pc ~]# /etc/init.d/target start
+>>> The Linux SCSI Target is already stopped                   [  OK  ]
+>>> [info] The Linux SCSI Target looks properly installed.
+>>> The configfs filesystem was not mounted, consider adding it[WARNING]
+>>> [info] Loaded core module target_core_mod.
+>>> [info] Loaded core module target_core_pscsi.
+>>> [info] Loaded core module target_core_iblock.
+>>> [info] Loaded core module target_core_file.
+>>> Failed to load fabric module ib_srpt                       [WARNING]
+>>> Failed to load fabric module tcm_usb_gadget                [WARNING]
+>>> [info] Loaded fabric module tcm_loop.
+>>> [info] Loaded fabric module tcm_fc.
+>>> Failed to load fabric module vhost_scsi                    [WARNING]
+>>> [info] Loaded fabric module tcm_qla2xxx.
+>>> Failed to load fabric module iscsi_target_mod              [WARNING]
+>>> [info] Loading config from /etc/target/scsi_target.lio, this may take
+>>> several minutes for FC adapters.
+>>> [info] Loaded /etc/target/scsi_target.lio.
+>>> Started The Linux SCSI Target                              [  OK  ]
+>>> [root@mbpc-pc ~]#
+>>>
+>>>
+>>> Enabled the brocade ports:
+>>>
+>>>
+>>>  18  18   011200   id    N4   No_Light    FC
+>>>  19  19   011300   id    N4   No_Sync     FC  Disabled (Persistent)
+>>>  20  20   011400   id    N4   No_Light    FC
+>>>  21  21   011500   id    N4   No_Light    FC
+>>>  22  22   011600   id    N4   No_Light    FC
+>>>  23  23   011700   id    N4   No_Light    FC  Disabled (Persistent)
+>>>  24  24   011800   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  25  25   011900   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  26  26   011a00   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  27  27   011b00   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  28  28   011c00   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  29  29   011d00   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  30  30   011e00   --    N4   No_Module   FC  (No POD License) Disabled
+>>>  31  31   011f00   --    N4   No_Module   FC  (No POD License) Disabled
+>>> sw0:admin> portcfgpersistentenable 19
+>>> sw0:admin> portcfgpersistentenable 23
+>>> sw0:admin> date
+>>> Tue Oct 25 04:03:42 UTC 2016
+>>> sw0:admin>
+>>>
+>>> And still after 30 minutes, there is no failure.  This run includes the
+>>> fix you asked me to ass
+>>> (https://github.com/torvalds/linux/commit/527268df31e57cf2b6d417198717c6d6afdb1e3e)
+>>>  .  If everything works, I will revert the patch and see if I can
+>>> reproduce the issue.  If I can reproduce it, then the disk might not
+>>> have been it, but the patch was.  I'll keep you posted on that when I
+>>> get a new disk tomorrow.
+>>>
+>>>
+>>> Right now this is a POC setup so I have lots of room to experiment.
+>>>
+>>
+>> Hey Nicholas,
+>>
+>> I've done some testing up till now.  With or without the patch above, as
+>> long as the faulty disk is removed from the RAID 6 software array,
+>> everything works fine with the Target Driver and ESXi hosts.
+>
+> Thanks again for the extra debug + feedback, and confirming the earlier
+> hung task warnings with md disk failure.
+>
+>>   This is
+>> even on a degraded array:
+>>
+>> [root@mbpc-pc ~]# cat /proc/mdstat
+>> Personalities : [raid6] [raid5] [raid4]
+>> md0 : active raid6 sdc[1] sda[5] sdd[3] sde[8] sdb[7]
+>>        3907045632 blocks super 1.2 level 6, 64k chunk, algorithm 2 [6/5]
+>> [UUUU_U]
+>>        bitmap: 6/8 pages [24KB], 65536KB chunk
+>>
+>> unused devices: <none>
+>> [root@mbpc-pc ~]#
+>>
+>> So at the moment, the data points to the single failed single disk (
+>> /dev/sdf ) as causing the Target Drivers or QLogic cards to throw an
+>> exception.
+>>
+>> Tomorrow I will insert the failed disk back in to see if the a) array
+>> takes it back, b) it causes a failure with the patch applied.
+>>
+>> Looks like the failed disk /dev/sdf was limping along for months and
+>> until I removed the power, it didn't collapse on itself.
+>>
+>
+> AFAICT, the list corruption observed is a separate bug from the hung
+> tasks during ABORT_TASK w/ TMR_COMPLETE_FUNCTION with explicit target
+> shutdown.
+>
+
+Correct, I will be including the fix either way but will take some time 
+to test out if I can reproduce the failure by reinserting this bad disk 
+then a new disk.  I want to see if this hang will be reproduced by doing 
+these actions to the RAID6 Software Raid to determine if this failure is 
+isolated to a particularly bad disk or any sort of add or remove disk 
+actions in a RAID6.
+
+-- 
+Cheers,
+Tom K.
+-------------------------------------------------------------------------------------
+
+Living on earth is expensive, but it includes a free trip around the sun.
+
