@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v2 10/11] mpt3sas: Fix for Endianness issue.
-Date: Wed, 26 Oct 2016 13:34:41 +0530
-Message-ID: <1477469082-32395-11-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v2 04/11] mpt3sas: Removing unused macro "MPT_DEVICE_TLR_ON"
+Date: Wed, 26 Oct 2016 13:34:35 +0530
+Message-ID: <1477469082-32395-5-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1477469082-32395-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477469082-32395-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,7 +10,7 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Use le16_to_cpu only for accessing two byte data provided by controller.
+Removing macro "MPT_DEVICE_TLR_ON" defined in header file as its unused
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
@@ -18,55 +18,20 @@ Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 6d17f66..981be7b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -5384,10 +5384,10 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
- 			sas_device->handle, handle);
- 		sas_target_priv_data->handle = handle;
- 		sas_device->handle = handle;
--		if (sas_device_pg0.Flags &
-+		if (le16_to_cpu(sas_device_pg0.Flags) &
- 		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 			sas_device->enclosure_level =
--				le16_to_cpu(sas_device_pg0.EnclosureLevel);
-+				sas_device_pg0.EnclosureLevel;
- 			memcpy(sas_device->connector_name,
- 				sas_device_pg0.ConnectorName, 4);
- 			sas_device->connector_name[4] = '\0';
-@@ -5516,9 +5516,10 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
- 	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
- 	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 4221a4d..e923c91 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -375,7 +375,6 @@ struct MPT3SAS_TARGET {
+  * per device private data
+  */
+ #define MPT_DEVICE_FLAGS_INIT		0x01
+-#define MPT_DEVICE_TLR_ON		0x02
  
--	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
-+	if (le16_to_cpu(sas_device_pg0.Flags)
-+		& MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 		sas_device->enclosure_level =
--			le16_to_cpu(sas_device_pg0.EnclosureLevel);
-+			sas_device_pg0.EnclosureLevel;
- 		memcpy(sas_device->connector_name,
- 			sas_device_pg0.ConnectorName, 4);
- 		sas_device->connector_name[4] = '\0';
-@@ -7056,7 +7057,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
- 			if (sas_device_pg0->Flags &
- 			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
- 				sas_device->enclosure_level =
--				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
-+				   sas_device_pg0->EnclosureLevel;
- 				memcpy(&sas_device->connector_name[0],
- 					&sas_device_pg0->ConnectorName[0], 4);
- 			} else {
-@@ -7118,6 +7119,7 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
- 		sas_device_pg0.SASAddress =
- 				le64_to_cpu(sas_device_pg0.SASAddress);
- 		sas_device_pg0.Slot = le16_to_cpu(sas_device_pg0.Slot);
-+		sas_device_pg0.Flags = le16_to_cpu(sas_device_pg0.Flags);
- 		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
- 	}
- 
+ #define MFG_PAGE10_HIDE_SSDS_MASK	(0x00000003)
+ #define MFG_PAGE10_HIDE_ALL_DISKS	(0x00)
 -- 
 2.4.3
