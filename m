@@ -1,8 +1,8 @@
 From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH 08/12] dm: Fix a race condition related to stopping and
- starting queues
-Date: Wed, 26 Oct 2016 15:54:34 -0700
-Message-ID: <28b3e91c-018a-0dbd-8ca9-0a7994a97a5d@sandisk.com>
+Subject: [PATCH 09/12] SRP transport: Move queuecommand() wait code to SCSI
+ core
+Date: Wed, 26 Oct 2016 15:55:00 -0700
+Message-ID: <e86cdaf9-6305-d2cb-6068-0a050c023d73@sandisk.com>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
@@ -14,79 +14,152 @@ To: Jens Axboe <axboe@fb.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Ensure that all ongoing dm_mq_queue_rq() and dm_mq_requeue_request()
-calls have stopped before setting the "queue stopped" flag. This
-allows to remove the "queue stopped" test from dm_mq_queue_rq() and
-dm_mq_requeue_request(). This patch fixes a race condition because
-dm_mq_queue_rq() is called without holding the queue lock and hence
-BLK_MQ_S_STOPPED can be set at any time while dm_mq_queue_rq() is
-in progress. This patch prevents that the following hang occurs
-sporadically when using dm-mq:
-
-INFO: task systemd-udevd:10111 blocked for more than 480 seconds.
-Call Trace:
- [<ffffffff8161f397>] schedule+0x37/0x90
- [<ffffffff816239ef>] schedule_timeout+0x27f/0x470
- [<ffffffff8161e76f>] io_schedule_timeout+0x9f/0x110
- [<ffffffff8161fb36>] bit_wait_io+0x16/0x60
- [<ffffffff8161f929>] __wait_on_bit_lock+0x49/0xa0
- [<ffffffff8114fe69>] __lock_page+0xb9/0xc0
- [<ffffffff81165d90>] truncate_inode_pages_range+0x3e0/0x760
- [<ffffffff81166120>] truncate_inode_pages+0x10/0x20
- [<ffffffff81212a20>] kill_bdev+0x30/0x40
- [<ffffffff81213d41>] __blkdev_put+0x71/0x360
- [<ffffffff81214079>] blkdev_put+0x49/0x170
- [<ffffffff812141c0>] blkdev_close+0x20/0x30
- [<ffffffff811d48e8>] __fput+0xe8/0x1f0
- [<ffffffff811d4a29>] ____fput+0x9/0x10
- [<ffffffff810842d3>] task_work_run+0x83/0xb0
- [<ffffffff8106606e>] do_exit+0x3ee/0xc40
- [<ffffffff8106694b>] do_group_exit+0x4b/0xc0
- [<ffffffff81073d9a>] get_signal+0x2ca/0x940
- [<ffffffff8101bf43>] do_signal+0x23/0x660
- [<ffffffff810022b3>] exit_to_usermode_loop+0x73/0xb0
- [<ffffffff81002cb0>] syscall_return_slowpath+0xb0/0xc0
- [<ffffffff81624e33>] entry_SYSCALL_64_fastpath+0xa6/0xa8
+Additionally, rename srp_wait_for_queuecommand() into
+scsi_wait_for_queuecommand() and add a comment about the
+queuecommand() call from scsi_send_eh_cmnd().
 
 Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Cc: Mike Snitzer <snitzer@redhat.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Doug Ledford <dledford@redhat.com>
 ---
- drivers/md/dm-rq.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/scsi_lib.c           | 41 +++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/scsi_transport_srp.c | 35 ++-------------------------------
+ include/scsi/scsi_host.h          |  1 +
+ 3 files changed, 44 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index d47a504..107ed19 100644
---- a/drivers/md/dm-rq.c
-+++ b/drivers/md/dm-rq.c
-@@ -105,6 +105,8 @@ static void dm_mq_stop_queue(struct request_queue *q)
- 	/* Avoid that requeuing could restart the queue. */
- 	blk_mq_cancel_requeue_work(q);
- 	blk_mq_stop_hw_queues(q);
-+	/* Wait until dm_mq_queue_rq() has finished. */
-+	blk_mq_quiesce_queue(q);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index ab5b06f..c1561e7 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2722,6 +2722,47 @@ void sdev_evt_send_simple(struct scsi_device *sdev,
+ EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
+ 
+ /**
++ * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
++ * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
++ *
++ * To do: add support for scsi-mq in this function.
++ */
++static int scsi_request_fn_active(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++	struct request_queue *q;
++	int request_fn_active = 0;
++
++	shost_for_each_device(sdev, shost) {
++		q = sdev->request_queue;
++
++		spin_lock_irq(q->queue_lock);
++		request_fn_active += q->request_fn_active;
++		spin_unlock_irq(q->queue_lock);
++	}
++
++	return request_fn_active;
++}
++
++/**
++ * scsi_wait_for_queuecommand() - wait for ongoing queuecommand() calls
++ * @shost: SCSI host pointer.
++ *
++ * Wait until the ongoing shost->hostt->queuecommand() calls that are
++ * invoked from scsi_request_fn() have finished.
++ *
++ * To do: avoid that scsi_send_eh_cmnd() calls queuecommand() after
++ * scsi_internal_device_block() has blocked a SCSI device and remove and also
++ * remove the rport mutex lock and unlock calls from srp_queuecommand().
++ */
++void scsi_wait_for_queuecommand(struct Scsi_Host *shost)
++{
++	while (scsi_request_fn_active(shost))
++		msleep(20);
++}
++EXPORT_SYMBOL(scsi_wait_for_queuecommand);
++
++/**
+  *	scsi_device_quiesce - Block user issued commands.
+  *	@sdev:	scsi device to quiesce.
+  *
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index e3cd3ec..8b190dc 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -24,7 +24,6 @@
+ #include <linux/err.h>
+ #include <linux/slab.h>
+ #include <linux/string.h>
+-#include <linux/delay.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -402,36 +401,6 @@ static void srp_reconnect_work(struct work_struct *work)
+ 	}
  }
  
- void dm_stop_queue(struct request_queue *q)
-@@ -887,17 +889,6 @@ static int dm_mq_queue_rq(struct blk_mq_hw_ctx *hctx,
- 		dm_put_live_table(md, srcu_idx);
- 	}
- 
--	/*
--	 * On suspend dm_stop_queue() handles stopping the blk-mq
--	 * request_queue BUT: even though the hw_queues are marked
--	 * BLK_MQ_S_STOPPED at that point there is still a race that
--	 * is allowing block/blk-mq.c to call ->queue_rq against a
--	 * hctx that it really shouldn't.  The following check guards
--	 * against this rarity (albeit _not_ race-free).
--	 */
--	if (unlikely(test_bit(BLK_MQ_S_STOPPED, &hctx->state)))
--		return BLK_MQ_RQ_QUEUE_BUSY;
+-/**
+- * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
+- * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
+- *
+- * To do: add support for scsi-mq in this function.
+- */
+-static int scsi_request_fn_active(struct Scsi_Host *shost)
+-{
+-	struct scsi_device *sdev;
+-	struct request_queue *q;
+-	int request_fn_active = 0;
 -
- 	if (ti->type->busy && ti->type->busy(ti))
- 		return BLK_MQ_RQ_QUEUE_BUSY;
+-	shost_for_each_device(sdev, shost) {
+-		q = sdev->request_queue;
+-
+-		spin_lock_irq(q->queue_lock);
+-		request_fn_active += q->request_fn_active;
+-		spin_unlock_irq(q->queue_lock);
+-	}
+-
+-	return request_fn_active;
+-}
+-
+-/* Wait until ongoing shost->hostt->queuecommand() calls have finished. */
+-static void srp_wait_for_queuecommand(struct Scsi_Host *shost)
+-{
+-	while (scsi_request_fn_active(shost))
+-		msleep(20);
+-}
+-
+ static void __rport_fail_io_fast(struct srp_rport *rport)
+ {
+ 	struct Scsi_Host *shost = rport_to_shost(rport);
+@@ -446,7 +415,7 @@ static void __rport_fail_io_fast(struct srp_rport *rport)
+ 	/* Involve the LLD if possible to terminate all I/O on the rport. */
+ 	i = to_srp_internal(shost->transportt);
+ 	if (i->f->terminate_rport_io) {
+-		srp_wait_for_queuecommand(shost);
++		scsi_wait_for_queuecommand(shost);
+ 		i->f->terminate_rport_io(rport);
+ 	}
+ }
+@@ -576,7 +545,7 @@ int srp_reconnect_rport(struct srp_rport *rport)
+ 	if (res)
+ 		goto out;
+ 	scsi_target_block(&shost->shost_gendev);
+-	srp_wait_for_queuecommand(shost);
++	scsi_wait_for_queuecommand(shost);
+ 	res = rport->state != SRP_RPORT_LOST ? i->f->reconnect(rport) : -ENODEV;
+ 	pr_debug("%s (state %d): transport.reconnect() returned %d\n",
+ 		 dev_name(&shost->shost_gendev), rport->state, res);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 7e4cd53..0e2c361 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -789,6 +789,7 @@ extern void scsi_remove_host(struct Scsi_Host *);
+ extern struct Scsi_Host *scsi_host_get(struct Scsi_Host *);
+ extern void scsi_host_put(struct Scsi_Host *t);
+ extern struct Scsi_Host *scsi_host_lookup(unsigned short);
++extern void scsi_wait_for_queuecommand(struct Scsi_Host *shost);
+ extern const char *scsi_host_state_name(enum scsi_host_state);
+ extern void scsi_cmd_get_serial(struct Scsi_Host *, struct scsi_cmnd *);
  
 -- 
 2.10.1
