@@ -1,80 +1,102 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 03/12] blk-mq: Introduce blk_mq_queue_stopped()
-Date: Wed, 26 Oct 2016 15:52:05 -0700
-Message-ID: <f68b2997-8b0d-7aea-2859-5fbda4f6bf71@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 04/12] blk-mq: Move more code into
+ blk_mq_direct_issue_request()
+Date: Wed, 26 Oct 2016 15:52:35 -0700
+Message-ID: <32b0bd88-cb8e-754a-89fc-b1825778b05a@sandisk.com>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <b22edafc-725f-0419-d074-34d35d57d126-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0062.outbound.protection.outlook.com ([104.47.42.62]:36964
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932584AbcJZWws (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Oct 2016 18:52:48 -0400
+In-Reply-To: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-The function blk_queue_stopped() allows to test whether or not a
-traditional request queue has been stopped. Introduce a helper
-function that allows block drivers to query easily whether or not
-one or more hardware contexts of a blk-mq queue have been stopped.
+Move the "hctx stopped" test and the insert request calls into
+blk_mq_direct_issue_request(). Rename that function into
+blk_mq_try_issue_directly() to reflect its new semantics. Pass
+the hctx pointer to that function instead of looking it up a
+second time. These changes avoid that code has to be duplicated
+in the next patch.
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
-Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Reviewed-by: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Hannes Reinecke <hare@suse.com>
+Cc: Sagi Grimberg <sagi@grimberg.me>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- block/blk-mq.c         | 20 ++++++++++++++++++++
- include/linux/blk-mq.h |  1 +
- 2 files changed, 21 insertions(+)
+ block/blk-mq.c | 18 ++++++++++--------
+ 1 file changed, 10 insertions(+), 8 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index b52b3a6..4643fa8 100644
+index 4643fa8..0cf21c2 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -946,6 +946,26 @@ void blk_mq_run_hw_queues(struct request_queue *q, bool async)
+@@ -1243,11 +1243,11 @@ static struct request *blk_mq_map_request(struct request_queue *q,
+ 	return rq;
  }
- EXPORT_SYMBOL(blk_mq_run_hw_queues);
  
-+/**
-+ * blk_mq_queue_stopped() - check whether one or more hctxs have been stopped
-+ * @q: request queue.
-+ *
-+ * The caller is responsible for serializing this function against
-+ * blk_mq_{start,stop}_hw_queue().
-+ */
-+bool blk_mq_queue_stopped(struct request_queue *q)
-+{
-+	struct blk_mq_hw_ctx *hctx;
-+	int i;
-+
-+	queue_for_each_hw_ctx(q, hctx, i)
-+		if (blk_mq_hctx_stopped(hctx))
-+			return true;
-+
-+	return false;
-+}
-+EXPORT_SYMBOL(blk_mq_queue_stopped);
-+
- void blk_mq_stop_hw_queue(struct blk_mq_hw_ctx *hctx)
+-static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
++static void blk_mq_try_issue_directly(struct blk_mq_hw_ctx *hctx,
++				      struct request *rq, blk_qc_t *cookie)
  {
- 	cancel_work(&hctx->run_work);
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 535ab2e..aa93000 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -223,6 +223,7 @@ void blk_mq_delay_kick_requeue_list(struct request_queue *q, unsigned long msecs
- void blk_mq_abort_requeue_list(struct request_queue *q);
- void blk_mq_complete_request(struct request *rq, int error);
+ 	int ret;
+ 	struct request_queue *q = rq->q;
+-	struct blk_mq_hw_ctx *hctx = blk_mq_map_queue(q, rq->mq_ctx->cpu);
+ 	struct blk_mq_queue_data bd = {
+ 		.rq = rq,
+ 		.list = NULL,
+@@ -1255,6 +1255,9 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+ 	};
+ 	blk_qc_t new_cookie = blk_tag_to_qc_t(rq->tag, hctx->queue_num);
  
-+bool blk_mq_queue_stopped(struct request_queue *q);
- void blk_mq_stop_hw_queue(struct blk_mq_hw_ctx *hctx);
- void blk_mq_start_hw_queue(struct blk_mq_hw_ctx *hctx);
- void blk_mq_stop_hw_queues(struct request_queue *q);
++	if (blk_mq_hctx_stopped(hctx))
++		goto insert;
++
+ 	/*
+ 	 * For OK queue, we are done. For error, kill it. Any other
+ 	 * error (busy), just add it to our list as we previously
+@@ -1263,7 +1266,7 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+ 	ret = q->mq_ops->queue_rq(hctx, &bd);
+ 	if (ret == BLK_MQ_RQ_QUEUE_OK) {
+ 		*cookie = new_cookie;
+-		return 0;
++		return;
+ 	}
+ 
+ 	__blk_mq_requeue_request(rq);
+@@ -1272,10 +1275,11 @@ static int blk_mq_direct_issue_request(struct request *rq, blk_qc_t *cookie)
+ 		*cookie = BLK_QC_T_NONE;
+ 		rq->errors = -EIO;
+ 		blk_mq_end_request(rq, rq->errors);
+-		return 0;
++		return;
+ 	}
+ 
+-	return -1;
++insert:
++	blk_mq_insert_request(rq, false, true, true);
+ }
+ 
+ /*
+@@ -1352,9 +1356,7 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+ 		blk_mq_put_ctx(data.ctx);
+ 		if (!old_rq)
+ 			goto done;
+-		if (blk_mq_hctx_stopped(data.hctx) ||
+-		    blk_mq_direct_issue_request(old_rq, &cookie) != 0)
+-			blk_mq_insert_request(old_rq, false, true, true);
++		blk_mq_try_issue_directly(data.hctx, old_rq, &cookie);
+ 		goto done;
+ 	}
+ 
 -- 
 2.10.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
