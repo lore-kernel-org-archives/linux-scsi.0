@@ -1,66 +1,81 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 12/12] nvme: Fix a race condition related to stopping queues
-Date: Wed, 26 Oct 2016 15:56:28 -0700
-Message-ID: <c84a33ce-e601-400b-f4c5-9c2ae4904f4f@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 10/12] SRP transport, scsi-mq: Wait for .queue_rq() if
+ necessary
+Date: Wed, 26 Oct 2016 15:55:34 -0700
+Message-ID: <0cd77719-1f11-d5c3-3186-1c7c3cfd6886@sandisk.com>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <b22edafc-725f-0419-d074-34d35d57d126-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Avoid that nvme_queue_rq() is still running when nvme_stop_queues()
-returns.
+Ensure that if scsi-mq is enabled that scsi_wait_for_queuecommand()
+waits until ongoing shost->hostt->queuecommand() calls have finished.
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Reviewed-by: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: Doug Ledford <dledford@redhat.com>
 ---
- drivers/nvme/host/core.c | 15 ++++++---------
- 1 file changed, 6 insertions(+), 9 deletions(-)
+ drivers/scsi/scsi_lib.c | 20 +++++++++++++++-----
+ 1 file changed, 15 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index b662416..d6ab9a0 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -201,13 +201,7 @@ static struct nvme_ns *nvme_get_ns_from_disk(struct gendisk *disk)
- 
- void nvme_requeue_req(struct request *req)
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c1561e7..9b8b19e 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2724,8 +2724,6 @@ EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
+ /**
+  * scsi_request_fn_active() - number of kernel threads inside scsi_request_fn()
+  * @shost: SCSI host for which to count the number of scsi_request_fn() callers.
+- *
+- * To do: add support for scsi-mq in this function.
+  */
+ static int scsi_request_fn_active(struct Scsi_Host *shost)
  {
--	unsigned long flags;
--
--	blk_mq_requeue_request(req, false);
--	spin_lock_irqsave(req->q->queue_lock, flags);
--	if (!blk_mq_queue_stopped(req->q))
--		blk_mq_kick_requeue_list(req->q);
--	spin_unlock_irqrestore(req->q->queue_lock, flags);
-+	blk_mq_requeue_request(req, !blk_mq_queue_stopped(req->q));
+@@ -2744,12 +2742,20 @@ static int scsi_request_fn_active(struct Scsi_Host *shost)
+ 	return request_fn_active;
  }
- EXPORT_SYMBOL_GPL(nvme_requeue_req);
  
-@@ -2079,8 +2073,11 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
- 
- 	mutex_lock(&ctrl->namespaces_mutex);
- 	list_for_each_entry(ns, &ctrl->namespaces, list) {
--		blk_mq_cancel_requeue_work(ns->queue);
--		blk_mq_stop_hw_queues(ns->queue);
-+		struct request_queue *q = ns->queue;
++static void scsi_mq_wait_for_queuecommand(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
 +
-+		blk_mq_cancel_requeue_work(q);
-+		blk_mq_stop_hw_queues(q);
-+		blk_mq_quiesce_queue(q);
- 	}
- 	mutex_unlock(&ctrl->namespaces_mutex);
++	shost_for_each_device(sdev, shost)
++		blk_mq_quiesce_queue(sdev->request_queue);
++}
++
+ /**
+  * scsi_wait_for_queuecommand() - wait for ongoing queuecommand() calls
+  * @shost: SCSI host pointer.
+  *
+  * Wait until the ongoing shost->hostt->queuecommand() calls that are
+- * invoked from scsi_request_fn() have finished.
++ * invoked from either scsi_request_fn() or scsi_queue_rq() have finished.
+  *
+  * To do: avoid that scsi_send_eh_cmnd() calls queuecommand() after
+  * scsi_internal_device_block() has blocked a SCSI device and remove and also
+@@ -2757,8 +2763,12 @@ static int scsi_request_fn_active(struct Scsi_Host *shost)
+  */
+ void scsi_wait_for_queuecommand(struct Scsi_Host *shost)
+ {
+-	while (scsi_request_fn_active(shost))
+-		msleep(20);
++	if (shost->use_blk_mq) {
++		scsi_mq_wait_for_queuecommand(shost);
++	} else {
++		while (scsi_request_fn_active(shost))
++			msleep(20);
++	}
  }
+ EXPORT_SYMBOL(scsi_wait_for_queuecommand);
+ 
 -- 
 2.10.1
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
