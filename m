@@ -1,41 +1,79 @@
-From: Mark Lord <kernel@start.ca>
-Subject: Re: [RFC] libata-scsi: introducing SANITIZE translation
-Date: Wed, 26 Oct 2016 18:44:47 -0400
-Message-ID: <a38e505d-bb78-ac7c-d289-0460eef9449a@start.ca>
-References: <577e843e.0a86620a.59167.ffffb899@mx.google.com>
- <1467910054.2322.7.camel@HansenPartnership.com>
- <CAGnHSE=8HEZ8AnDGjdOAhaA8f117GdbZZNhbQQOCYYM1b-8PvQ@mail.gmail.com>
- <1467998971.2343.10.camel@HansenPartnership.com>
- <CAGnHSEkLer=GRZxoc=AmS7J_oe945hSdUV2TisSuvfXdCPQ2Ow@mail.gmail.com>
- <1468025398.2390.24.camel@HansenPartnership.com>
- <CAGnHSEms1rwy7-+URRMrdggpk=_7YVijHwf1h93iBKW7zLxh8g@mail.gmail.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 07/12] dm: Use BLK_MQ_S_STOPPED instead of QUEUE_FLAG_STOPPED
+ in blk-mq code
+Date: Wed, 26 Oct 2016 15:54:07 -0700
+Message-ID: <a0733adf-065e-2099-3850-cb1c55df1e35@sandisk.com>
+References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail3.start.ca ([64.140.120.243]:46092 "EHLO mail3.start.ca"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcJZWyJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 26 Oct 2016 18:54:09 -0400
-In-Reply-To: <CAGnHSEms1rwy7-+URRMrdggpk=_7YVijHwf1h93iBKW7zLxh8g@mail.gmail.com>
+Received: from mail-dm3nam03on0080.outbound.protection.outlook.com ([104.47.41.80]:22688
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932707AbcJZWyY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 26 Oct 2016 18:54:24 -0400
+In-Reply-To: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tom Yan <tom.ty89@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Tejun Heo <tj@kernel.org>, martin.petersen@oracle.com, dgilbert@interlog.com, linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On 16-07-11 02:35 AM, Tom Yan wrote:
-> I don't suppose there would be any problem doing it in userspace /
-> with ATA PASS-THROUGH anyway.
-..
->>> On 8 July 2016 at 17:29, James Bottomley
->>> <James.Bottomley@hansenpartnership.com> wrote:
-..
->> Not really.  The point is that you've proposed something as an addition
->> to the kernel that can also be done in userspace.  Checking if it can
->> work easily there is like a barrier to entry.  If it works, then fine,
->> we're done.  If it throws up problems then we reconsider the kernel
->> route.
+Instead of manipulating both QUEUE_FLAG_STOPPED and BLK_MQ_S_STOPPED
+in the dm start and stop queue functions, only manipulate the latter
+flag. Change blk_queue_stopped() tests into blk_mq_queue_stopped().
 
-hdparm has full support for the SANITIZE commands in userspace.
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Cc: Mike Snitzer <snitzer@redhat.com>
+---
+ drivers/md/dm-rq.c | 18 ++----------------
+ 1 file changed, 2 insertions(+), 16 deletions(-)
 
--ml
+diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+index fbd37b4..d47a504 100644
+--- a/drivers/md/dm-rq.c
++++ b/drivers/md/dm-rq.c
+@@ -75,12 +75,6 @@ static void dm_old_start_queue(struct request_queue *q)
+ 
+ static void dm_mq_start_queue(struct request_queue *q)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	queue_flag_clear(QUEUE_FLAG_STOPPED, q);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+-
+ 	blk_mq_start_stopped_hw_queues(q, true);
+ 	blk_mq_kick_requeue_list(q);
+ }
+@@ -105,16 +99,8 @@ static void dm_old_stop_queue(struct request_queue *q)
+ 
+ static void dm_mq_stop_queue(struct request_queue *q)
+ {
+-	unsigned long flags;
+-
+-	spin_lock_irqsave(q->queue_lock, flags);
+-	if (blk_queue_stopped(q)) {
+-		spin_unlock_irqrestore(q->queue_lock, flags);
++	if (blk_mq_queue_stopped(q))
+ 		return;
+-	}
+-
+-	queue_flag_set(QUEUE_FLAG_STOPPED, q);
+-	spin_unlock_irqrestore(q->queue_lock, flags);
+ 
+ 	/* Avoid that requeuing could restart the queue. */
+ 	blk_mq_cancel_requeue_work(q);
+@@ -341,7 +327,7 @@ static void __dm_mq_kick_requeue_list(struct request_queue *q, unsigned long mse
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(q->queue_lock, flags);
+-	if (!blk_queue_stopped(q))
++	if (!blk_mq_queue_stopped(q))
+ 		blk_mq_delay_kick_requeue_list(q, msecs);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
+ }
+-- 
+2.10.1
+
