@@ -1,7 +1,7 @@
 From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
-Subject: [PATCH v2 05/11] mpt3sas: Bump driver version as "14.100.00.00"
-Date: Wed, 26 Oct 2016 13:34:36 +0530
-Message-ID: <1477469082-32395-6-git-send-email-suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v2 10/11] mpt3sas: Fix for Endianness issue.
+Date: Wed, 26 Oct 2016 13:34:41 +0530
+Message-ID: <1477469082-32395-11-git-send-email-suganath-prabu.subramani@broadcom.com>
 References: <1477469082-32395-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477469082-32395-1-git-send-email-suganath-prabu.subramani@broadcom.com>
@@ -10,27 +10,63 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com, Sathya Prakash <sathya.prakash@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Use le16_to_cpu only for accessing two byte data provided by controller.
+
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Sathya Prakash <sathya.prakash@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index e923c91..6f03a86 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -73,8 +73,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"13.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		13
-+#define MPT3SAS_DRIVER_VERSION		"14.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		14
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		0
- #define MPT3SAS_RELEASE_VERSION	00
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6d17f66..981be7b 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -5384,10 +5384,10 @@ _scsih_check_device(struct MPT3SAS_ADAPTER *ioc,
+ 			sas_device->handle, handle);
+ 		sas_target_priv_data->handle = handle;
+ 		sas_device->handle = handle;
+-		if (sas_device_pg0.Flags &
++		if (le16_to_cpu(sas_device_pg0.Flags) &
+ 		     MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 			sas_device->enclosure_level =
+-				le16_to_cpu(sas_device_pg0.EnclosureLevel);
++				sas_device_pg0.EnclosureLevel;
+ 			memcpy(sas_device->connector_name,
+ 				sas_device_pg0.ConnectorName, 4);
+ 			sas_device->connector_name[4] = '\0';
+@@ -5516,9 +5516,10 @@ _scsih_add_device(struct MPT3SAS_ADAPTER *ioc, u16 handle, u8 phy_num,
+ 	sas_device->fast_path = (le16_to_cpu(sas_device_pg0.Flags) &
+ 	    MPI25_SAS_DEVICE0_FLAGS_FAST_PATH_CAPABLE) ? 1 : 0;
+ 
+-	if (sas_device_pg0.Flags & MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
++	if (le16_to_cpu(sas_device_pg0.Flags)
++		& MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 		sas_device->enclosure_level =
+-			le16_to_cpu(sas_device_pg0.EnclosureLevel);
++			sas_device_pg0.EnclosureLevel;
+ 		memcpy(sas_device->connector_name,
+ 			sas_device_pg0.ConnectorName, 4);
+ 		sas_device->connector_name[4] = '\0';
+@@ -7056,7 +7057,7 @@ Mpi2SasDevicePage0_t *sas_device_pg0)
+ 			if (sas_device_pg0->Flags &
+ 			      MPI2_SAS_DEVICE0_FLAGS_ENCL_LEVEL_VALID) {
+ 				sas_device->enclosure_level =
+-				   le16_to_cpu(sas_device_pg0->EnclosureLevel);
++				   sas_device_pg0->EnclosureLevel;
+ 				memcpy(&sas_device->connector_name[0],
+ 					&sas_device_pg0->ConnectorName[0], 4);
+ 			} else {
+@@ -7118,6 +7119,7 @@ _scsih_search_responding_sas_devices(struct MPT3SAS_ADAPTER *ioc)
+ 		sas_device_pg0.SASAddress =
+ 				le64_to_cpu(sas_device_pg0.SASAddress);
+ 		sas_device_pg0.Slot = le16_to_cpu(sas_device_pg0.Slot);
++		sas_device_pg0.Flags = le16_to_cpu(sas_device_pg0.Flags);
+ 		_scsih_mark_responding_sas_device(ioc, &sas_device_pg0);
+ 	}
+ 
 -- 
 2.4.3
