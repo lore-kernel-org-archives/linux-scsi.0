@@ -1,58 +1,58 @@
-From: Chanwoo Choi <cw00.choi@samsung.com>
-Subject: [PATCH 2/2] scsi: ufs: Use the resource-managed function to add
- devfreq device
-Date: Wed, 26 Oct 2016 16:38:18 +0900
-Message-ID: <1477467498-27145-1-git-send-email-cw00.choi@samsung.com>
-References: <1477467350-27059-1-git-send-email-cw00.choi@samsung.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:36348 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754658AbcJZHi0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2016 03:38:26 -0400
-In-reply-to: <1477467350-27059-1-git-send-email-cw00.choi@samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH v2 00/11] mpt3sas driver Enhancements and
+Date: Wed, 26 Oct 2016 13:34:31 +0530
+Message-ID: <1477469082-32395-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: myungjoo.ham@samsung.com, kyungmin.park@samsung.com
-Cc: rjw@rjwysocki.net, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, cpgs@samsung.com, Chanwoo Choi <cw00.choi@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
-This patch uses the resource-managed to add the devfreq device.
-This function will make it easy to handle the devfreq device.
+Here is the change list:
+Posting 11 patches for mpt3sas driver enhancements and few fixes.
+  * Added Device ID's for SAS35 devices and updated MPI Header.
+  * Support "EEDP Escape flag" for SAS35 devices.
+  * fixed improper printk statement.
+  * Regardless of whether RDPQ disabled card is enumerated
+    first or RDPQ enabled card is enumerated first, MSIX vectors
+    depends on the cards capability.
+  * device_remove_in_progress bit check has been added in IOCTL path. If
+    bit is set, then IOCTL will be failed printing failure message.
+  * Started using the Atomic Request Descriptors for
+    SAS35 devices.
+  * For SAS35 devices MSIX vectors are inceased to 128 from 96.
+  * Fixing Endianness issue.
+  * Updated driver version to 14.100.00.00 at the end of SAS3
+    changes and updated driver minor version to 14.101.00.00
+    after SAS35 changes.
 
-- struct devfreq *devm_devfreq_add_device(struct device *dev,
-				  struct devfreq_dev_profile *profile,
-				  const char *governor_name,
-				  void *data);
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Signed-off-by: Chanwoo Choi <cw00.choi@samsung.com>
----
- drivers/scsi/ufs/ufshcd.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+Suganath Prabu S (11):
+  mpt3sas: Fix for improper info displayed in var log, while blocking or
+    unblocking the device.
+  mpt3sas: Fix for incorrect numbers for MSIX vectors enabled when non
+    RDPQ card is enumerated first.
+  mpt3sas: Implement device_remove_in_progress check in      IOCTL path
+  mpt3sas: Removing unused macro "MPT_DEVICE_TLR_ON"
+  mpt3sas: Bump driver version as "14.100.00.00"
+  mpt3sas: Added Device ID's for SAS35 devices and updated MPI header.
+  mpt3sas: Increased/Additional MSIX support for SAS35 devices.
+  mpt3sas: set EEDP-escape-flags for SAS35 devices.
+  mpt3sas: Use the new MPI 2.6 32-bit Atomic Request      Descriptors
+    for SAS35 devices.
+  mpt3sas: Fix for Endianness issue.
+  mpt3sas: Bump driver version as "14.101.00.00"
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index f08d41a2d70b..e639071fd3a1 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6198,8 +6198,6 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	scsi_host_put(hba->host);
- 
- 	ufshcd_exit_clk_gating(hba);
--	if (ufshcd_is_clkscaling_enabled(hba))
--		devfreq_remove_device(hba->devfreq);
- 	ufshcd_hba_exit(hba);
- }
- EXPORT_SYMBOL_GPL(ufshcd_remove);
-@@ -6495,7 +6493,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	}
- 
- 	if (ufshcd_is_clkscaling_enabled(hba)) {
--		hba->devfreq = devfreq_add_device(dev, &ufs_devfreq_profile,
-+		hba->devfreq = devm_devfreq_add_device(dev, &ufs_devfreq_profile,
- 						   "simple_ondemand", NULL);
- 		if (IS_ERR(hba->devfreq)) {
- 			dev_err(hba->dev, "Unable to register with devfreq %ld\n",
+ drivers/scsi/mpt3sas/mpi/mpi2_cnfg.h     |   7 ++
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 186 ++++++++++++++++++++++++++-----
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  39 ++++---
+ drivers/scsi/mpt3sas/mpt3sas_config.c    |   2 +-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  69 +++++++++---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.h       |   1 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 113 +++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_transport.c |   8 +-
+ 8 files changed, 334 insertions(+), 91 deletions(-)
+
+Thanks,
+Suganath prabu S 
 -- 
-1.9.1
-
+2.4.3
