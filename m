@@ -1,60 +1,71 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] scsi_debug: Fix memory leak if LBP enabled and module
- is unloaded
-Date: Wed, 26 Oct 2016 12:56:05 -0400 (EDT)
-Message-ID: <836409948.4605193.1477500965467.JavaMail.zimbra@redhat.com>
-References: <1477495373-1179-1-git-send-email-emilne@redhat.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH 2/2] scsi: ufs: Use the resource-managed function to add
+ devfreq device
+Date: Wed, 26 Oct 2016 10:23:03 -0700
+Message-ID: <5742aac5e4d5e4c550a7c073047e2426@codeaurora.org>
+References: <1477467350-27059-1-git-send-email-cw00.choi@samsung.com>
+ <1477467498-27145-1-git-send-email-cw00.choi@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx4-phx2.redhat.com ([209.132.183.25]:41136 "EHLO
-        mx4-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752432AbcJZQ4G (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 26 Oct 2016 12:56:06 -0400
-In-Reply-To: <1477495373-1179-1-git-send-email-emilne@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1477467498-27145-1-git-send-email-cw00.choi@samsung.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chanwoo Choi <cw00.choi@samsung.com>
+Cc: myungjoo.ham@samsung.com, kyungmin.park@samsung.com, rjw@rjwysocki.net, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, cpgs@samsung.com, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
-
-
------ Original Message -----
-> From: "Ewan D. Milne" <emilne@redhat.com>
-> To: linux-scsi@vger.kernel.org
-> Sent: Wednesday, October 26, 2016 11:22:53 AM
-> Subject: [PATCH] scsi_debug: Fix memory leak if LBP enabled and module is unloaded
+On 2016-10-26 00:38, Chanwoo Choi wrote:
+> This patch uses the resource-managed to add the devfreq device.
+> This function will make it easy to handle the devfreq device.
 > 
-> From: "Ewan D. Milne" <emilne@redhat.com>
-> 
-> map_storep was not being vfree()'d in the module_exit call.
-> 
-> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> - struct devfreq *devm_devfreq_add_device(struct device *dev,
+> 				  struct devfreq_dev_profile *profile,
+> 				  const char *governor_name,
+> 				  void *data);
+> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: linux-scsi@vger.kernel.org
+> Signed-off-by: Chanwoo Choi <cw00.choi@samsung.com>
 > ---
->  drivers/scsi/scsi_debug.c | 1 +
->  1 file changed, 1 insertion(+)
+>  drivers/scsi/ufs/ufshcd.c | 4 +---
+>  1 file changed, 1 insertion(+), 3 deletions(-)
 > 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index c905709..cf04a36 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -5134,6 +5134,7 @@ static void __exit scsi_debug_exit(void)
->  	bus_unregister(&pseudo_lld_bus);
->  	root_device_unregister(pseudo_primary);
->  
-> +	vfree(map_storep);
->  	vfree(dif_storep);
->  	vfree(fake_storep);
->  	kfree(sdebug_q_arr);
-> --
-> 2.1.0
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index f08d41a2d70b..e639071fd3a1 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -6198,8 +6198,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+>  	scsi_host_put(hba->host);
 > 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>  	ufshcd_exit_clk_gating(hba);
+> -	if (ufshcd_is_clkscaling_enabled(hba))
+> -		devfreq_remove_device(hba->devfreq);
+>  	ufshcd_hba_exit(hba);
+>  }
+>  EXPORT_SYMBOL_GPL(ufshcd_remove);
+> @@ -6495,7 +6493,7 @@ int ufshcd_init(struct ufs_hba *hba, void
+> __iomem *mmio_base, unsigned int irq)
+>  	}
 > 
+>  	if (ufshcd_is_clkscaling_enabled(hba)) {
+> -		hba->devfreq = devfreq_add_device(dev, &ufs_devfreq_profile,
+> +		hba->devfreq = devm_devfreq_add_device(dev, &ufs_devfreq_profile,
+>  						   "simple_ondemand", NULL);
+>  		if (IS_ERR(hba->devfreq)) {
+>  			dev_err(hba->dev, "Unable to register with devfreq %ld\n",
 
-Looks fine
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+This change looks good to me but this will have merge conflicts if this 
+gets in after my patch series "	[PATCH v1 00/11] scsi: ufs: bug fixes 
+patch series #1" (due to "[PATCH v1 06/11] scsi: ufs: suspend clock 
+scaling for failed runtime_resume"). so if you can, please pull in my 
+patch series and rebase your change on top of it and send it out again.
+
+Thanks,
+Subhash
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
