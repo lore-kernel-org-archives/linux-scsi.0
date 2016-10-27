@@ -1,47 +1,49 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 03/12] blk-mq: Introduce blk_mq_queue_stopped()
-Date: Thu, 27 Oct 2016 07:49:13 +0200
-Message-ID: <d1afa90c-b1ee-8185-0fac-40a812ed195c@suse.de>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 04/12] blk-mq: Move more code into
+ blk_mq_direct_issue_request()
+Date: Thu, 27 Oct 2016 07:50:12 +0200
+Message-ID: <65a0c5f7-4650-14ea-3d28-b1a8e338b97b@suse.de>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
- <f68b2997-8b0d-7aea-2859-5fbda4f6bf71@sandisk.com>
+ <32b0bd88-cb8e-754a-89fc-b1825778b05a@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46157 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751303AbcJ0FtY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Oct 2016 01:49:24 -0400
-In-Reply-To: <f68b2997-8b0d-7aea-2859-5fbda4f6bf71@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <32b0bd88-cb8e-754a-89fc-b1825778b05a-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
 On 10/27/2016 12:52 AM, Bart Van Assche wrote:
-> The function blk_queue_stopped() allows to test whether or not a
-> traditional request queue has been stopped. Introduce a helper
-> function that allows block drivers to query easily whether or not
-> one or more hardware contexts of a blk-mq queue have been stopped.
+> Move the "hctx stopped" test and the insert request calls into
+> blk_mq_direct_issue_request(). Rename that function into
+> blk_mq_try_issue_directly() to reflect its new semantics. Pass
+> the hctx pointer to that function instead of looking it up a
+> second time. These changes avoid that code has to be duplicated
+> in the next patch.
 > 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+> Cc: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+> Cc: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+> Cc: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 > ---
->  block/blk-mq.c         | 20 ++++++++++++++++++++
->  include/linux/blk-mq.h |  1 +
->  2 files changed, 21 insertions(+)
+>  block/blk-mq.c | 18 ++++++++++--------
+>  1 file changed, 10 insertions(+), 8 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
 
 Cheers,
 
 Hannes
 -- 
 Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+hare-l3A5Bk7waGM@public.gmane.org			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
