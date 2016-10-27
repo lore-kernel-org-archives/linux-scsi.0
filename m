@@ -1,37 +1,40 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 06/12] blk-mq: Add a kick_requeue_list argument to
- blk_mq_requeue_request()
-Date: Thu, 27 Oct 2016 10:28:36 +0200
-Message-ID: <20161027082836.pafo4gosudwc4mix@linux-x5ow.site>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 07/12] dm: Use BLK_MQ_S_STOPPED instead of
+ QUEUE_FLAG_STOPPED in blk-mq code
+Date: Thu, 27 Oct 2016 10:28:21 +0200
+Message-ID: <20161027082821.bf6fcvuaeb6ke6oc@linux-x5ow.site>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
- <3944826d-bfde-f1e6-40ec-2c9a3c259e3a@sandisk.com>
+ <a0733adf-065e-2099-3850-cb1c55df1e35@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 Content-Disposition: inline
-In-Reply-To: <3944826d-bfde-f1e6-40ec-2c9a3c259e3a@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+In-Reply-To: <a0733adf-065e-2099-3850-cb1c55df1e35-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Oct 26, 2016 at 03:53:39PM -0700, Bart Van Assche wrote:
-> Most blk_mq_requeue_request() and blk_mq_add_to_requeue_list() calls
-> are followed by kicking the requeue list. Hence add an argument to
-> these two functions that allows to kick the requeue list. This was
-> proposed by Christoph Hellwig.
+On Wed, Oct 26, 2016 at 03:54:07PM -0700, Bart Van Assche wrote:
+> Instead of manipulating both QUEUE_FLAG_STOPPED and BLK_MQ_S_STOPPED
+> in the dm start and stop queue functions, only manipulate the latter
+> flag. Change blk_queue_stopped() tests into blk_mq_queue_stopped().
 > 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
 Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 
 -- 
 Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
 GF: Felix Imendörffer, Jane Smithard, Graham Norton
 HRB 21284 (AG Nürnberg)
 Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
