@@ -1,46 +1,28 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 85751] iSCSI initiator lockup during logout
-Date: Thu, 27 Oct 2016 13:21:43 +0000
-Message-ID: <bug-85751-11613-y79IOJXzii@https.bugzilla.kernel.org/>
-References: <bug-85751-11613@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 05/12] blk-mq: Introduce blk_mq_quiesce_queue()
+Date: Thu, 27 Oct 2016 14:42:58 +0200
+Message-ID: <20161027124258.GD13200@lst.de>
+References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com> <5143c240-39af-9fe2-d3e6-ed69f9c20531@sandisk.com> <CACVXFVPWL=izFmUPtpi-+RLrhNX0LFfw2m6eurgMC5GvfDWsxQ@mail.gmail.com> <7690b469-f5b7-ab04-4b6f-fa0d679e0f18@acm.org> <CACVXFVNvdNXm4JXsXo2p1_pZLqDpCos0MTTR+svR98p_vw5PCA@mail.gmail.com> <16074653-5e31-27b0-90db-33d36a9df0bc@acm.org> <CACVXFVNyRnJFnsSO9TNksE5GNy7TJKL=iZnqrv38=u0XCrW7jA@mail.gmail.com> <8404f2d1-5bc3-6c84-7ca0-24e7672ff67d@acm.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:47382 "EHLO mail.kernel.org"
+Received: from verein.lst.de ([213.95.11.211]:55831 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S936606AbcJ0N73 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Oct 2016 09:59:29 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id DFD93203A1
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 13:21:46 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id E08192038E
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 13:21:44 +0000 (UTC)
-In-Reply-To: <bug-85751-11613@https.bugzilla.kernel.org/>
+        id S965022AbcJ0OBs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Oct 2016 10:01:48 -0400
+Content-Disposition: inline
+In-Reply-To: <8404f2d1-5bc3-6c84-7ca0-24e7672ff67d@acm.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Ming Lei <tom.leiming@gmail.com>, Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=85751
+On Wed, Oct 26, 2016 at 08:05:14PM -0700, Bart Van Assche wrote:
+> I'll leave it to Jens to decide whether I should repost the patch series 
+> with this change integrated or whether to realize this change with a 
+> follow-up patch.
 
-Jaden <jaden1q84@gmail.com> changed:
-
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |jaden1q84@gmail.com
-
---- Comment #4 from Jaden <jaden1q84@gmail.com> ---
-I also encountered the similar issue, but not in logout stage. If the links are
-down could also meet this issue occasionally. Below are my reproduce steps:
-
-1.while :; do dd if=/dev/sdc of=/dev/null bs=1K count=1 iflag=direct; done
-2.kill -SIGSTOP `pidof iscsid`
-3.iptables -A OUTPUT -p tcp --dport 3260 -j DROP
-
-I think it is cause by a status conflict between the waitting for lost IO
-request and iscsi device remove procedure. Any new thoughs?
-
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+I would prefer to get the series in now.  I think we should eventually
+the stop queues call, the quience call and even the cancellation of
+the requeues into a single function, but it's not as urgent.  I think
+this series actually is Linux 4.9 material.
