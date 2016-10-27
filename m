@@ -1,34 +1,69 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 02/12] blk-mq: Introduce blk_mq_hctx_stopped()
-Date: Thu, 27 Oct 2016 10:15:08 +0200
-Message-ID: <20161027081508.6tip6extcglzacyw@linux-x5ow.site>
-References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
- <0de50789-e3b7-0a07-73c1-4fb87b1f957e@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <0de50789-e3b7-0a07-73c1-4fb87b1f957e@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix for block device of raid exists even after deleting raid disk
+Date: Thu, 27 Oct 2016 16:16:26 +0530
+Message-ID: <1477565186-13970-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f174.google.com ([209.85.220.174]:33929 "EHLO
+        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S964886AbcJ0OGL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2016 10:06:11 -0400
+Received: by mail-qk0-f174.google.com with SMTP id x11so45770482qka.1
+        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 07:05:53 -0700 (PDT)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-On Wed, Oct 26, 2016 at 03:51:33PM -0700, Bart Van Assche wrote:
-> Multiple functions test the BLK_MQ_S_STOPPED bit so introduce
-> a helper function that performs this test.
-> 
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Christoph Hellwig <hch@lst.de>
+While merging mpt3sas & mpt2sas code, we posted below patch for WarpDrive
+support,
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+mpt3sas: Ported WarpDrive product SSS6200 support
+commit id is 7786ab6aff
 
+In this patch and in the below hunk, we have added is_warpdrive
+check condition on the wrong line
+---------------------------------------------------------------------------
+ scsih_target_alloc(struct scsi_target *starget)
+                        sas_target_priv_data->handle = raid_device->handle;
+                        sas_target_priv_data->sas_address = raid_device->wwid;
+                        sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
+-                       raid_device->starget = starget;
++                       sas_target_priv_data->raid_device = raid_device;
++                       if (ioc->is_warpdrive)
++                               raid_device->starget = starget;
+                }
+                spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+                return 0;
+------------------------------------------------------------------------------
+
+Actually that check should be for below line
+ sas_target_priv_data->raid_device = raid_device;
+
+Due to above hunk, we are not initializing raid_device's starget for raid volumes,
+and so during raid disk deletion driver is not calling scsi_remove_target() API as
+driver observes starget field of raid_device's structure as NULL.
+
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 981be7b..618c9df8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1279,9 +1279,9 @@ scsih_target_alloc(struct scsi_target *starget)
+ 			sas_target_priv_data->handle = raid_device->handle;
+ 			sas_target_priv_data->sas_address = raid_device->wwid;
+ 			sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
+-			sas_target_priv_data->raid_device = raid_device;
+ 			if (ioc->is_warpdrive)
+-				raid_device->starget = starget;
++				sas_target_priv_data->raid_device = raid_device;
++			raid_device->starget = starget;
+ 		}
+ 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+ 		return 0;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.4.3
+
