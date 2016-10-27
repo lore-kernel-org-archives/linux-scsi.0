@@ -1,69 +1,41 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: [PATCH] mpt3sas: Fix for block device of raid exists even after deleting raid disk
-Date: Thu, 27 Oct 2016 16:16:26 +0530
-Message-ID: <1477565186-13970-1-git-send-email-Sreekanth.Reddy@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f174.google.com ([209.85.220.174]:33929 "EHLO
-        mail-qk0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S964886AbcJ0OGL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2016 10:06:11 -0400
-Received: by mail-qk0-f174.google.com with SMTP id x11so45770482qka.1
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 07:05:53 -0700 (PDT)
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH 01/12] blk-mq: Do not invoke .queue_rq() for a stopped
+ queue
+Date: Thu, 27 Oct 2016 10:14:37 +0200
+Message-ID: <20161027081437.oasmbdo2se7smrb6@linux-x5ow.site>
+References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
+ <1debcf7f-c950-308b-d297-3e48a77e08d7@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Disposition: inline
+In-Reply-To: <1debcf7f-c950-308b-d297-3e48a77e08d7-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lin <ming.l-Vzezgt5dB6uUEJcrhfAQsw@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-While merging mpt3sas & mpt2sas code, we posted below patch for WarpDrive
-support,
+On Wed, Oct 26, 2016 at 03:50:44PM -0700, Bart Van Assche wrote:
+> The meaning of the BLK_MQ_S_STOPPED flag is "do not call
+> .queue_rq()". Hence modify blk_mq_make_request() such that requests
+> are queued instead of issued if a queue has been stopped.
+> 
+> Reported-by: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+> Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+> Reviewed-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
 
-mpt3sas: Ported WarpDrive product SSS6200 support
-commit id is 7786ab6aff
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 
-In this patch and in the below hunk, we have added is_warpdrive
-check condition on the wrong line
----------------------------------------------------------------------------
- scsih_target_alloc(struct scsi_target *starget)
-                        sas_target_priv_data->handle = raid_device->handle;
-                        sas_target_priv_data->sas_address = raid_device->wwid;
-                        sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
--                       raid_device->starget = starget;
-+                       sas_target_priv_data->raid_device = raid_device;
-+                       if (ioc->is_warpdrive)
-+                               raid_device->starget = starget;
-                }
-                spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
-                return 0;
-------------------------------------------------------------------------------
-
-Actually that check should be for below line
- sas_target_priv_data->raid_device = raid_device;
-
-Due to above hunk, we are not initializing raid_device's starget for raid volumes,
-and so during raid disk deletion driver is not calling scsi_remove_target() API as
-driver observes starget field of raid_device's structure as NULL.
-
-Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 981be7b..618c9df8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1279,9 +1279,9 @@ scsih_target_alloc(struct scsi_target *starget)
- 			sas_target_priv_data->handle = raid_device->handle;
- 			sas_target_priv_data->sas_address = raid_device->wwid;
- 			sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
--			sas_target_priv_data->raid_device = raid_device;
- 			if (ioc->is_warpdrive)
--				raid_device->starget = starget;
-+				sas_target_priv_data->raid_device = raid_device;
-+			raid_device->starget = starget;
- 		}
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 		return 0;
 -- 
-2.4.3
-
+Johannes Thumshirn                                          Storage
+jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
