@@ -1,44 +1,67 @@
-From: Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org>
-Subject: Re: [PATCH 05/12] blk-mq: Introduce blk_mq_quiesce_queue()
-Date: Wed, 26 Oct 2016 20:05:14 -0700
-Message-ID: <8404f2d1-5bc3-6c84-7ca0-24e7672ff67d@acm.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/12] blk-mq: Do not invoke .queue_rq() for a stopped
+ queue
+Date: Thu, 27 Oct 2016 07:47:38 +0200
+Message-ID: <abd81fc9-fcab-4abd-0f28-0d31eee78dbc@suse.de>
 References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
-        <5143c240-39af-9fe2-d3e6-ed69f9c20531@sandisk.com>
-        <CACVXFVPWL=izFmUPtpi-+RLrhNX0LFfw2m6eurgMC5GvfDWsxQ@mail.gmail.com>
-        <7690b469-f5b7-ab04-4b6f-fa0d679e0f18@acm.org>
-        <CACVXFVNvdNXm4JXsXo2p1_pZLqDpCos0MTTR+svR98p_vw5PCA@mail.gmail.com>
-        <16074653-5e31-27b0-90db-33d36a9df0bc@acm.org>
-        <CACVXFVNyRnJFnsSO9TNksE5GNy7TJKL=iZnqrv38=u0XCrW7jA@mail.gmail.com>
+ <1debcf7f-c950-308b-d297-3e48a77e08d7@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <CACVXFVNyRnJFnsSO9TNksE5GNy7TJKL=iZnqrv38=u0XCrW7jA-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46082 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751032AbcJ0Frn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 27 Oct 2016 01:47:43 -0400
+In-Reply-To: <1debcf7f-c950-308b-d297-3e48a77e08d7@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lin <ming.l@ssi.samsung.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On 10/26/16 19:48, Ming Lei wrote:
-> On Thu, Oct 27, 2016 at 10:40 AM, Bart Van Assche <bvanassche-HInyCGIudOg@public.gmane.org> wrote:
->> If you have a look at the later patches in this series then you will see
->> that the dm core and the NVMe driver have been modified such that
->> blk_mq_stop_hw_queues(q) is called immediately before
->> blk_mq_quiesce_queue(q) is called.
->
-> Cause any current and future users of blk_mq_quiesce_queue(q)
-> have to set the flag via blk_mq_stop_hw_queues(q), why not set
-> the flag explicitly in blk_mq_quiesce_queue(q)?
+On 10/27/2016 12:50 AM, Bart Van Assche wrote:
+> The meaning of the BLK_MQ_S_STOPPED flag is "do not call
+> .queue_rq()". Hence modify blk_mq_make_request() such that requests
+> are queued instead of issued if a queue has been stopped.
+> 
+> Reported-by: Ming Lei <tom.leiming@gmail.com>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Ming Lei <tom.leiming@gmail.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Sagi Grimberg <sagi@grimberg.me>
+> Cc: Johannes Thumshirn <jthumshirn@suse.de>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  block/blk-mq.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index ddc2eed..b5dcafb 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1332,9 +1332,9 @@ static blk_qc_t blk_mq_make_request(struct request_queue *q, struct bio *bio)
+>  		blk_mq_put_ctx(data.ctx);
+>  		if (!old_rq)
+>  			goto done;
+> -		if (!blk_mq_direct_issue_request(old_rq, &cookie))
+> -			goto done;
+> -		blk_mq_insert_request(old_rq, false, true, true);
+> +		if (test_bit(BLK_MQ_S_STOPPED, &data.hctx->state) ||
+> +		    blk_mq_direct_issue_request(old_rq, &cookie) != 0)
+> +			blk_mq_insert_request(old_rq, false, true, true);
+>  		goto done;
+>  	}
+>  
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Hello Ming,
+Cheers,
 
-I'll leave it to Jens to decide whether I should repost the patch series 
-with this change integrated or whether to realize this change with a 
-follow-up patch.
-
-Bart.
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
