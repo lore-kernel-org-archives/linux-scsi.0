@@ -1,40 +1,70 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+From: "Qiuxin (robert)" <qiuxin@huawei.com>
 Subject: Re: A question regarding "multiple SGL"
-Date: Thu, 27 Oct 2016 08:41:15 +0200
-Message-ID: <20161027064115.GA5864@lst.de>
+Date: Thu, 27 Oct 2016 06:57:56 +0000
+Message-ID: <B78D1A958924E54594997EFF975251625BD49445@szxeml592-mbx.china.huawei.com>
 References: <20161027005230.9904DC00097@webmail.sinamail.sina.com.cn>
+ <20161027064115.GA5864@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <20161027005230.9904DC00097-2RFepEojUI2gQzYKMK1YzK/p1tWXv8elb9TvmfFkwKk@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: =?utf-8?B?6ZGr5oS/?= <qiuxincsu-k+cT0dCbe1g@public.gmane.org>
-Cc: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, "tiger.zhao" <tiger.zhao-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>, qiuxin <qiuxin-hv44wF8Li93QT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset="gb2312"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:28120 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933242AbcJ0G72 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2016 02:59:28 -0400
+In-Reply-To: <20161027064115.GA5864@lst.de>
+Content-Language: zh-CN
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, Ming Lei <tom.leiming@gmail.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, Keith Busch <keith.busch@intel.com>, Doug Ledford <dledford@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Laurence Oberman <loberman@redhat.com>, Tiger zhao <tiger.zhao@huawei.com>
 
-Hi Robert,
-
-There is no feature called "Multiple SGL in one NVMe capsule".  The
-NVMe over Fabrics specification allows a controller to advertise how
-many SGL descriptors it supports using the MSDBD Identify field:
-
-"Maximum SGL Data Block Descriptors (MSDBD): This field indicates the
-maximum number of (Keyed) SGL Data Block descriptors that a host is allowed to
-place in a capsule. A value of 0h indicates no limit."
-
-Setting this value to 1 is perfectly valid.  Similarly a host is free
-to chose any number of SGL descriptors between 0 (only for command that
-don't transfer data) to the limit imposed by the controller using the
-MSDBD field.
-
-There are no plans to support a MSDBD value larger than 1 in the Linux
-NVMe target, and there are no plans to ever submit commands with multiple
-SGLs from the host driver either.
-
-Cheers,
-	Christoph
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+SGkgQ2hyaXN0b3BoLA0KDQpUaGFua3MgLCBnb3QgaXQuDQoNCkNvdWxkIHlvdSBwbGVhc2UgZG8g
+bWUgZmF2b3IgdG8gbGV0IG1lIGtub3cgdGhlIGJhY2tncm91bmQgd2h5IHdlIE9OTFkgc3VwcG9y
+dCAiIE1TREJEID09MSI/ICAgSSBhbSBOT1QgdHJ5aW5nIHRvIHJlc2lzdCBvciBvcHBvc2UgYW55
+dGhpbmcgLCBJIGp1c3Qgd2FudCB0byBrbm93IHRoZSByZWFzb24uICBZb3Uga25vdywgIGl0IGlz
+IGEgbGl0dGxlIHdpcmVkIGZvciBtZSwgYXMgICJNU0RCRCA9PTEiIGRvZXMgbm90IGZ1bGZpbGwg
+YWxsIHRoZSB1c2UgY2FzZXMgd2hpY2ggaXMgZGVwaWN0ZWQgaW4gdGhlIHNwZWMuDQoNCkJlc3Qs
+DQpSb2JlcnQgUWl1eGluDQpfX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+DQpSb2JlcnQgUWl1eGluDQq7qs6qvLzK9dPQz965q8u+IEh1YXdlaSBUZWNobm9sb2dpZXMgQ28u
+LCBMdGQuDQpQaG9uZTogKzg2LTc1NS0yODQyMDM1Nw0KRmF4OiANCk1vYmlsZTogKzg2IDE1OTg2
+NjM4NDI5DQpFbWFpbDogcWl1eGluQGh1YXdlaS5jb20NCrXY1rejusnu29rK0MH6uNrH+NvgzO+7
+qs6qu/m12CDTyrHgo7o1MTgxMjkNCkh1YXdlaSBUZWNobm9sb2dpZXMgQ28uLCBMdGQuDQpCYW50
+aWFuLCBMb25nZ2FuZyBEaXN0cmljdCxTaGVuemhlbiA1MTgxMjksIFAuUi5DaGluYQ0KaHR0cDov
+L3d3dy5odWF3ZWkuY29tIA0KX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+Xw0Ksb7Tyrz+vLDG5Li9vP66rNPQu6rOqrmry761xLGjw9zQxc+io6y99s/e09q3osvNuPjJz8Pm
+tdjWt9bQwdCz9rXEuPbIy7vyyLrX6aGjvfsNCta5yM66zsbky/vIy9LUyM66ztDOyr3KudPDo6iw
+/MCotauyu8/e09rIq7K/u/Kyv7fWtdjQucK2oaK4tNbGoaK78smit6KjqbG+08q8/tbQDQq1xNDF
+z6Kho8jnufvE+rTtytXBy7G+08q8/qOsx+vE+sGivLS157uwu/LTyrz+zajWqreivP7Iy7Kiyb6z
+/bG+08q8/qOhDQpUaGlzIGUtbWFpbCBhbmQgaXRzIGF0dGFjaG1lbnRzIGNvbnRhaW4gY29uZmlk
+ZW50aWFsIGluZm9ybWF0aW9uIGZyb20gSFVBV0VJLCB3aGljaCANCmlzIGludGVuZGVkIG9ubHkg
+Zm9yIHRoZSBwZXJzb24gb3IgZW50aXR5IHdob3NlIGFkZHJlc3MgaXMgbGlzdGVkIGFib3ZlLiBB
+bnkgdXNlIG9mIHRoZSANCmluZm9ybWF0aW9uIGNvbnRhaW5lZCBoZXJlaW4gaW4gYW55IHdheSAo
+aW5jbHVkaW5nLCBidXQgbm90IGxpbWl0ZWQgdG8sIHRvdGFsIG9yIHBhcnRpYWwgDQpkaXNjbG9z
+dXJlLCByZXByb2R1Y3Rpb24sIG9yIGRpc3NlbWluYXRpb24pIGJ5IHBlcnNvbnMgb3RoZXIgdGhh
+biB0aGUgaW50ZW5kZWQgDQpyZWNpcGllbnQocykgaXMgcHJvaGliaXRlZC4gSWYgeW91IHJlY2Vp
+dmUgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3RpZnkgdGhlIHNlbmRlciBieSANCnBo
+b25lIG9yIGVtYWlsIGltbWVkaWF0ZWx5IGFuZCBkZWxldGUgaXQhDQotLS0tLdPKvP7Urbz+LS0t
+LS0NCreivP7IyzogQ2hyaXN0b3BoIEhlbGx3aWcgW21haWx0bzpoY2hAbHN0LmRlXSANCreiy83K
+sbzkOiAyMDE2xOoxMNTCMjfI1SAxNDo0MQ0KytW8/sjLOiD2ztS4DQqzrcvNOiBCYXJ0IFZhbiBB
+c3NjaGU7IEplbnMgQXhib2U7IGxpbnV4LWJsb2NrQHZnZXIua2VybmVsLm9yZzsgSmFtZXMgQm90
+dG9tbGV5OyBNYXJ0aW4gSy4gUGV0ZXJzZW47IE1pa2UgU25pdHplcjsgbGludXgtcmRtYUB2Z2Vy
+Lmtlcm5lbC5vcmc7IE1pbmcgTGVpOyBsaW51eC1udm1lQGxpc3RzLmluZnJhZGVhZC5vcmc7IEtl
+aXRoIEJ1c2NoOyBEb3VnIExlZGZvcmQ7IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBMYXVy
+ZW5jZSBPYmVybWFuOyBDaHJpc3RvcGggSGVsbHdpZzsgVGlnZXIgemhhbzsgUWl1eGluIChyb2Jl
+cnQpDQrW98ziOiBSZTogQSBxdWVzdGlvbiByZWdhcmRpbmcgIm11bHRpcGxlIFNHTCINCg0KSGkg
+Um9iZXJ0LA0KDQpUaGVyZSBpcyBubyBmZWF0dXJlIGNhbGxlZCAiTXVsdGlwbGUgU0dMIGluIG9u
+ZSBOVk1lIGNhcHN1bGUiLiAgVGhlIE5WTWUgb3ZlciBGYWJyaWNzIHNwZWNpZmljYXRpb24gYWxs
+b3dzIGEgY29udHJvbGxlciB0byBhZHZlcnRpc2UgaG93IG1hbnkgU0dMIGRlc2NyaXB0b3JzIGl0
+IHN1cHBvcnRzIHVzaW5nIHRoZSBNU0RCRCBJZGVudGlmeSBmaWVsZDoNCg0KIk1heGltdW0gU0dM
+IERhdGEgQmxvY2sgRGVzY3JpcHRvcnMgKE1TREJEKTogVGhpcyBmaWVsZCBpbmRpY2F0ZXMgdGhl
+IG1heGltdW0gbnVtYmVyIG9mIChLZXllZCkgU0dMIERhdGEgQmxvY2sgZGVzY3JpcHRvcnMgdGhh
+dCBhIGhvc3QgaXMgYWxsb3dlZCB0byBwbGFjZSBpbiBhIGNhcHN1bGUuIEEgdmFsdWUgb2YgMGgg
+aW5kaWNhdGVzIG5vIGxpbWl0LiINCg0KU2V0dGluZyB0aGlzIHZhbHVlIHRvIDEgaXMgcGVyZmVj
+dGx5IHZhbGlkLiAgU2ltaWxhcmx5IGEgaG9zdCBpcyBmcmVlIHRvIGNob3NlIGFueSBudW1iZXIg
+b2YgU0dMIGRlc2NyaXB0b3JzIGJldHdlZW4gMCAob25seSBmb3IgY29tbWFuZCB0aGF0IGRvbid0
+IHRyYW5zZmVyIGRhdGEpIHRvIHRoZSBsaW1pdCBpbXBvc2VkIGJ5IHRoZSBjb250cm9sbGVyIHVz
+aW5nIHRoZSBNU0RCRCBmaWVsZC4NCg0KVGhlcmUgYXJlIG5vIHBsYW5zIHRvIHN1cHBvcnQgYSBN
+U0RCRCB2YWx1ZSBsYXJnZXIgdGhhbiAxIGluIHRoZSBMaW51eCBOVk1lIHRhcmdldCwgYW5kIHRo
+ZXJlIGFyZSBubyBwbGFucyB0byBldmVyIHN1Ym1pdCBjb21tYW5kcyB3aXRoIG11bHRpcGxlIFNH
+THMgZnJvbSB0aGUgaG9zdCBkcml2ZXIgZWl0aGVyLg0KDQpDaGVlcnMsDQoJQ2hyaXN0b3BoDQo=
