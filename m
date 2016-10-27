@@ -1,67 +1,39 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a
- deadlock
-Date: Thu, 27 Oct 2016 11:46:34 +0200
-Message-ID: <20161027094634.fifk7wd43vyu64bd@linux-x5ow.site>
-References: <14379fd1-c9bd-ad75-ca7c-0632f3e3c5d1@sandisk.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 05/12] blk-mq: Introduce blk_mq_quiesce_queue()
+Date: Thu, 27 Oct 2016 21:16:29 +0800
+Message-ID: <CACVXFVOpc2rwydYWjSHWs18QmACr+-fSP75rwk+tBv6WWAwg2g@mail.gmail.com>
+References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
+ <5143c240-39af-9fe2-d3e6-ed69f9c20531@sandisk.com> <CACVXFVPWL=izFmUPtpi-+RLrhNX0LFfw2m6eurgMC5GvfDWsxQ@mail.gmail.com>
+ <7690b469-f5b7-ab04-4b6f-fa0d679e0f18@acm.org> <CACVXFVNvdNXm4JXsXo2p1_pZLqDpCos0MTTR+svR98p_vw5PCA@mail.gmail.com>
+ <16074653-5e31-27b0-90db-33d36a9df0bc@acm.org> <CACVXFVNyRnJFnsSO9TNksE5GNy7TJKL=iZnqrv38=u0XCrW7jA@mail.gmail.com>
+ <8404f2d1-5bc3-6c84-7ca0-24e7672ff67d@acm.org> <20161027124258.GD13200@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36030 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S942687AbcJ0OXv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Oct 2016 10:23:51 -0400
-Content-Disposition: inline
-In-Reply-To: <14379fd1-c9bd-ad75-ca7c-0632f3e3c5d1@sandisk.com>
+Received: from mail-ua0-f195.google.com ([209.85.217.195]:34997 "EHLO
+        mail-ua0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1033997AbcJ0OZM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2016 10:25:12 -0400
+In-Reply-To: <20161027124258.GD13200@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@fb.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-Hi Bart,
+On Thu, Oct 27, 2016 at 8:42 PM, Christoph Hellwig <hch@lst.de> wrote:
+> On Wed, Oct 26, 2016 at 08:05:14PM -0700, Bart Van Assche wrote:
+>> I'll leave it to Jens to decide whether I should repost the patch series
+>> with this change integrated or whether to realize this change with a
+>> follow-up patch.
+>
+> I would prefer to get the series in now.  I think we should eventually
+> the stop queues call, the quience call and even the cancellation of
+> the requeues into a single function, but it's not as urgent.  I think
+> this series actually is Linux 4.9 material.
 
-On Wed, Oct 26, 2016 at 11:44:51AM -0700, Bart Van Assche wrote:
-> The solution I prefer is to modify the SCSI scanning code such that
-> the scan_mutex is only held while performing the actual LUN scanning
-> and while ensuring that no SCSI device has been created yet for a
-> certain LUN number but not while the Linux device and its sysfs
-> attributes are created. Since that approach would require extensive
-> changes in the SCSI scanning code, another approach has been chosen,
-> namely to make self-removal asynchronous. This patch avoids that
-> self-removal triggers the following deadlock:
+Yeah, that is fine to cleanup in follow-up patch.
 
-I'm not sure I like yet another asynchronity in the scsi code, but your
-reason is very much understandable and I agree that this is the faster way.
+Reviewed-by: Ming Lei <tom.leiming@gmail.com>
 
-[...]
-
-> 
-> References: http://www.spinics.net/lists/linux-scsi/msg86551.html
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Johannes Thumshirn <jthumshirn@suse.de>
-> Cc: Sagi Grimberg <sagi@grimberg.me>
-> Cc: <stable@vger.kernel.org>
-> ---
-
-[...]
-
->  
-> +static void scsi_remove_device_async(struct scsi_device *sdev)
-> +{
-> +	if (scsi_device_get(sdev) < 0)
-
-Nit: the < 0 could be dropped, scsi_device_get returns either -ENXIO or
-0. But no reason to respin.
-
-Anyways,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Thanks
+Ming Lei
