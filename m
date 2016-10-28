@@ -1,48 +1,63 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 4/4] scsi: ufs: change device rails hpm mode ramp up sequence
-Date: Thu, 27 Oct 2016 17:26:24 -0700
-Message-ID: <1477614384-5526-1-git-send-email-subhashj@codeaurora.org>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: [PATCH RESEND] mpt3sas: Fix for block device of raid exists even after deleting raid disk
+Date: Fri, 28 Oct 2016 10:09:12 +0530
+Message-ID: <1477629552-27404-1-git-send-email-Sreekanth.Reddy@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
-        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+To: jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, stable@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-When we are resuming the UFS device rails in HPM mode, we are first
-powering on the VCC rail while VCCQ and VCCQ2 rails still being in LPM
-mode. Some UFS devices may take VCC on event as hint that host wants
-UFS device to be resumed and may start drawing more power from the
-VCCQ/VCCQ2 rails (while they are still in LPM mode) causing voltage drop
-on these rails. This change fixes this issue by bringing VCCQ & VCCQ2 rails
-out of LPM before powering on VCC rail.
+While merging mpt3sas & mpt2sas code, we posted below patch for WarpDrive
+support,
 
-Reviewed-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+mpt3sas: Ported WarpDrive product SSS6200 support
+commit id is 7786ab6aff
+
+In this patch and in the below hunk, we have added is_warpdrive
+check condition on the wrong line
+---------------------------------------------------------------------------
+ scsih_target_alloc(struct scsi_target *starget)
+                        sas_target_priv_data->handle = raid_device->handle;
+                        sas_target_priv_data->sas_address = raid_device->wwid;
+                        sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
+-                       raid_device->starget = starget;
++                       sas_target_priv_data->raid_device = raid_device;
++                       if (ioc->is_warpdrive)
++                               raid_device->starget = starget;
+                }
+                spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+                return 0;
+------------------------------------------------------------------------------
+
+Actually that check should be for below line
+ sas_target_priv_data->raid_device = raid_device;
+
+Due to above hunk, we are not initializing raid_device's starget for raid volumes,
+and so during raid disk deletion driver is not calling scsi_remove_target() API as
+driver observes starget field of raid_device's structure as NULL.
+
+Signed-off-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 9ed96ae..8cf5d8f 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -5819,7 +5819,6 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
- 	    !hba->dev_info.is_lu_power_on_wp) {
- 		ret = ufshcd_setup_vreg(hba, true);
- 	} else if (!ufshcd_is_ufs_dev_active(hba)) {
--		ret = ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, true);
- 		if (!ret && !ufshcd_is_link_active(hba)) {
- 			ret = ufshcd_config_vreg_hpm(hba, hba->vreg_info.vccq);
- 			if (ret)
-@@ -5828,6 +5827,7 @@ static int ufshcd_vreg_set_hpm(struct ufs_hba *hba)
- 			if (ret)
- 				goto vccq_lpm;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 981be7b..618c9df8 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1279,9 +1279,9 @@ scsih_target_alloc(struct scsi_target *starget)
+ 			sas_target_priv_data->handle = raid_device->handle;
+ 			sas_target_priv_data->sas_address = raid_device->wwid;
+ 			sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
+-			sas_target_priv_data->raid_device = raid_device;
+ 			if (ioc->is_warpdrive)
+-				raid_device->starget = starget;
++				sas_target_priv_data->raid_device = raid_device;
++			raid_device->starget = starget;
  		}
-+		ret = ufshcd_toggle_vreg(hba->dev, hba->vreg_info.vcc, true);
- 	}
- 	goto out;
- 
+ 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
+ 		return 0;
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+2.4.3
