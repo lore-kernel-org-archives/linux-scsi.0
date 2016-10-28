@@ -1,203 +1,148 @@
-From: Keith Busch <keith.busch@intel.com>
-Subject: Re: [PATCH 11/12] nvme: Use BLK_MQ_S_STOPPED instead of
- QUEUE_FLAG_STOPPED in blk-mq code
-Date: Fri, 28 Oct 2016 17:06:28 -0400
-Message-ID: <20161028210628.GE5621@localhost.localdomain>
-References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
- <805e1911-cd10-0563-c76b-256d76054b08@sandisk.com>
- <20161028160145.GC5621@localhost.localdomain>
- <655c62ca-5da8-3c8f-9e56-016b7d518267@sandisk.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: esp_scsi QTAG in FAS216
+Date: Sat, 29 Oct 2016 08:54:42 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1610281658120.30954@nippy.intranet>
+References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com> <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com> <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com>
+ <20140413.221414.853080853067673824.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga07.intel.com ([134.134.136.100]:39835 "EHLO mga07.intel.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1756755AbcJ1Uzp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Oct 2016 16:55:45 -0400
-Content-Disposition: inline
-In-Reply-To: <655c62ca-5da8-3c8f-9e56-016b7d518267@sandisk.com>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:33256 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S942614AbcJ1Vyv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 28 Oct 2016 17:54:51 -0400
+In-Reply-To: <20140413.221414.853080853067673824.davem@davemloft.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
-
-On Fri, Oct 28, 2016 at 11:51:35AM -0700, Bart Van Assche wrote:
-> I think it is wrong that kicking the requeue list starts stopped queues
-> because this makes it impossible to stop request processing without setting
-> an additional flag next to BLK_MQ_S_STOPPED. Can you have a look at the
-> attached two patches? These patches survive my dm-multipath and SCSI tests.
-
-Hi Bart,
-
-These look good to me, and succesful on my NVMe tests.
-
-Thanks,
-Keith
+To: David Miller <davem@davemloft.net>
+Cc: schmitzmic@gmail.com, jongk@linux-m68k.org, tuomas.vainikka@aalto.fi, geert@linux-m68k.org, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
 
 
-> From e93799f726485a3eeee98837c992c5c0068d7180 Mon Sep 17 00:00:00 2001
-> From: Bart Van Assche <bart.vanassche@sandisk.com>
-> Date: Fri, 28 Oct 2016 10:48:58 -0700
-> Subject: [PATCH 1/2] block: Avoid that requeueing starts stopped queues
+On Sun, 13 Apr 2014, David Miller wrote:
+
+> > esp_get_revision but later cleared in the same function. It appears 
+> > we'd need to set it after the call to scsi_esp_register() - can you 
+> > test whether that obsoletes the zorro_esp_slave_configure hack, 
+> > Tuomas?
+>  ...
+> > > Group 2 Commands
+> > > (seems to only be relevant for target mode).
+> > >
+> > > And about the QTE bit:
+> > >
+> > > Bit 6 Queue Tag Enable
+> > >
+> > > When this bit is set, the 53CF94/96 can receive 3-byte messages 
+> > > during bus-initiated Select With ATN. This feature is also enabled 
+> > > by setting bit 3 in the Configuration 2 register.
+> > 
+> > My preference would be to set this one (named ESP_CONFIG3_TBMS). Your 
+> > opinion, Dave?
 > 
-> Since blk_mq_requeue_work() starts stopped queues and since
-> execution of this function can be scheduled after a queue has
-> been stopped it is not possible to stop queues without using
-> an additional state variable to track whether or not the queue
-> has been stopped. Hence modify blk_mq_requeue_work() such that it
-> does not start stopped queues. My conclusion after a review of
-> the blk_mq_stop_hw_queues() and blk_mq_{delay_,}kick_requeue_list()
-> callers is as follows:
-> * In the dm driver starting and stopping queues should only happen
->   if __dm_suspend() or __dm_resume() is called and not if the
->   requeue list is processed.
-> * In the SCSI core queue stopping and starting should only be
->   performed by the scsi_internal_device_block() and
->   scsi_internal_device_unblock() functions but not by any other
->   function.
-> * In the NVMe core only the functions that call
->   blk_mq_start_stopped_hw_queues() explicitly should start stopped
->   queues.
-> * A blk_mq_start_stopped_hwqueues() call must be added in the
->   xen-blkfront driver in its blkif_recover() function.
-> ---
->  block/blk-mq.c               | 6 +-----
->  drivers/block/xen-blkfront.c | 1 +
->  drivers/md/dm-rq.c           | 7 +------
->  drivers/scsi/scsi_lib.c      | 1 -
->  4 files changed, 3 insertions(+), 12 deletions(-)
+> As seems to be agreed upon here, the SCSI2 bit in the CONFIG2 register 
+> (ESP_CONFIG2_SCSI2ENAB) is only for when the chip is used in target 
+> mode.  So it is not relevant for our discussion because this driver is 
+> for initiator mode operation only.
 > 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index a49b8af..24dfd0d 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -528,11 +528,7 @@ static void blk_mq_requeue_work(struct work_struct *work)
->  		blk_mq_insert_request(rq, false, false, false);
+> But some pieces of documentation seem like they might not agree on this 
+> point.
+
+I think there is ambiguity, and I see some differences between the 
+documentation for ESP236 and that for FAS236 devices. But I don't agree 
+that ESP_CONFIG2_SCSI2ENAB is only for target mode.
+
+This bug affects re-selection. So documentation which refers to a "device 
+[being] selected" tends to be ambiguous, because re-selection is still 
+selection in some sense. E.g. the Am53C94/Am53C96 (preliminary) datasheet 
+says this:
+
+    Extended Message Feature: When the S2FE [ESP_CONFIG2_SCSI2ENAB] bit is 
+    set and the device is selected with attention, the device will monitor 
+    the /ATN signal at the end of the first message byte. If the /ATN 
+    signal is active, the device will request two more message bytes 
+    before switching to the command phase. If the /ATN signal is inactive 
+    the device will switch to the command phase.
+
+But the next part is clear enough and seems to explain the mac_esp 
+(ESP236) failure:
+
+    When the S2FE bit is reset the device as a target will request a 
+    single message byte. As an initiator, the device will abort the 
+    selection sequence if the target does not switch to the command phase 
+    after receiving a single message byte.
+
+The document you cited, NCR53C9X.txt, seems unambiguous about the role of 
+the initiator. (Just search for "identify message" to see the relevant 
+parts.)
+
+Moreover, for reselection, NCR53C9X.txt says the chip will expect 2 tag 
+bytes only when tagged queueing is enabled, that is, QTE bit aka 
+ESP_CONFIG3_TMS bit is set. The QTE feature "is also enabled by setting 
+bit 3 in the Configuration 2 register", aka ESP_CONFIG2_SCSI2ENAB, which 
+is what your patch does.
+
+> 
+> With respect to bit 3 in the config3 register, it can take on one of
+> two meaning depending upon chip revision.  As per ESP_CONFIG3_{TMS,FCLK}
+> it either controls fast SCSI clocking, or it enabled 3 byte message
+> recognition.
+> 
+> But oddly in the NCR53CX docs:
+> 
+> 	http://www.ibiblio.org/pub/historic-linux/early-ports/Sparc/NCR/NCR53C9X.txt
+> 
+> it speaks as if ESP_CONFIG3_TMS and ESP_CONFIG3_TENB are merely finer
+> grained versions of config2 register setting ESP_CONFIG2_SCSI2ENAB,
+> which enables both features.
+
+Yes, so setting the ESP_CONFIG2_SCSI2ENAB bit is correct. The only problem 
+is, doesn't the ESP_CONFIG3_TMS bit get cleared again later, when the 
+CONFIG3 register is written to?
+
+> 
+> Again I looked at the FreeBSD driver and for all chips after plain 
+> esp100, they set ESP_CONFIG2_SCSI2ENAB.
+> 
+> Can we try testing the following patch?
+
+It could be that this patch would be sufficient to fix mac_esp because 
+ESP236 seems to have no ESP_CONFIG3_TMS bit.
+
+We know that this patch didn't work for zorro_esp (FAS236) but it would be 
+helpful to know what value the CONFIG3 register took in the end.
+
+-- 
+
+> 
+> ====================
+> esp_scsi: Set SCSI2 bit in config2 register.
+> 
+> This should allow proper recognition of 3 byte reselection
+> on all esp100a and later chips.
+> 
+> Reported-by: Kars de Jong <jongk@linux-m68k.org>
+> Reported-by: Michael Schmitz <schmitzmic@gmail.com>
+> Signed-off-by: David S. Miller <davem@davemloft.net>
+> 
+> diff --git a/drivers/scsi/esp_scsi.c b/drivers/scsi/esp_scsi.c
+> index 55548dc..16f69e0 100644
+> --- a/drivers/scsi/esp_scsi.c
+> +++ b/drivers/scsi/esp_scsi.c
+> @@ -2160,7 +2160,7 @@ static void esp_get_revision(struct esp *esp)
+>  		 */
+>  		esp->rev = ESP100;
+>  	} else {
+> -		esp->config2 = 0;
+> +		esp->config2 = ESP_CONFIG2_SCSI2ENAB;
+>  		esp_set_all_config3(esp, 5);
+>  		esp->prev_cfg3 = 5;
+>  		esp_write8(esp->config2, ESP_CFG2);
+> @@ -2187,8 +2187,6 @@ static void esp_get_revision(struct esp *esp)
+>  			} else {
+>  				esp->rev = ESP236;
+>  			}
+> -			esp->config2 = 0;
+> -			esp_write8(esp->config2, ESP_CFG2);
+>  		}
 >  	}
->  
-> -	/*
-> -	 * Use the start variant of queue running here, so that running
-> -	 * the requeue work will kick stopped queues.
-> -	 */
-> -	blk_mq_start_hw_queues(q);
-> +	blk_mq_run_hw_queues(q, false);
 >  }
->  
->  void blk_mq_add_to_requeue_list(struct request *rq, bool at_head,
-> diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-> index 1ca702d..a3e1727 100644
-> --- a/drivers/block/xen-blkfront.c
-> +++ b/drivers/block/xen-blkfront.c
-> @@ -2045,6 +2045,7 @@ static int blkif_recover(struct blkfront_info *info)
->  		BUG_ON(req->nr_phys_segments > segs);
->  		blk_mq_requeue_request(req, false);
->  	}
-> +	blk_mq_start_stopped_hwqueues(info->rq);
->  	blk_mq_kick_requeue_list(info->rq);
->  
->  	while ((bio = bio_list_pop(&info->bio_list)) != NULL) {
-> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-> index 107ed19..b951ae83 100644
-> --- a/drivers/md/dm-rq.c
-> +++ b/drivers/md/dm-rq.c
-> @@ -326,12 +326,7 @@ static void dm_old_requeue_request(struct request *rq)
->  
->  static void __dm_mq_kick_requeue_list(struct request_queue *q, unsigned long msecs)
->  {
-> -	unsigned long flags;
-> -
-> -	spin_lock_irqsave(q->queue_lock, flags);
-> -	if (!blk_mq_queue_stopped(q))
-> -		blk_mq_delay_kick_requeue_list(q, msecs);
-> -	spin_unlock_irqrestore(q->queue_lock, flags);
-> +	blk_mq_delay_kick_requeue_list(q, msecs);
->  }
->  
->  void dm_mq_kick_requeue_list(struct mapped_device *md)
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 4cddaff..94f54ac 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1939,7 +1939,6 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
->  out:
->  	switch (ret) {
->  	case BLK_MQ_RQ_QUEUE_BUSY:
-> -		blk_mq_stop_hw_queue(hctx);
->  		if (atomic_read(&sdev->device_busy) == 0 &&
->  		    !scsi_device_blocked(sdev))
->  			blk_mq_delay_queue(hctx, SCSI_QUEUE_DELAY);
-> -- 
-> 2.10.1
-> 
-
-> From 47eec3bdcf4b673e3ab606543cb3acdf7f4de593 Mon Sep 17 00:00:00 2001
-> From: Bart Van Assche <bart.vanassche@sandisk.com>
-> Date: Fri, 28 Oct 2016 10:50:04 -0700
-> Subject: [PATCH 2/2] blk-mq: Remove blk_mq_cancel_requeue_work()
-> 
-> Since blk_mq_requeue_work() no longer restarts stopped queues
-> canceling requeue work is no longer needed to prevent that a
-> stopped queue would be restarted. Hence remove this function.
-> ---
->  block/blk-mq.c           | 6 ------
->  drivers/md/dm-rq.c       | 2 --
->  drivers/nvme/host/core.c | 1 -
->  include/linux/blk-mq.h   | 1 -
->  4 files changed, 10 deletions(-)
-> 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index 24dfd0d..1aa79e5 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -557,12 +557,6 @@ void blk_mq_add_to_requeue_list(struct request *rq, bool at_head,
->  }
->  EXPORT_SYMBOL(blk_mq_add_to_requeue_list);
->  
-> -void blk_mq_cancel_requeue_work(struct request_queue *q)
-> -{
-> -	cancel_delayed_work_sync(&q->requeue_work);
-> -}
-> -EXPORT_SYMBOL_GPL(blk_mq_cancel_requeue_work);
-> -
->  void blk_mq_kick_requeue_list(struct request_queue *q)
->  {
->  	kblockd_schedule_delayed_work(&q->requeue_work, 0);
-> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-> index b951ae83..7f426ab 100644
-> --- a/drivers/md/dm-rq.c
-> +++ b/drivers/md/dm-rq.c
-> @@ -102,8 +102,6 @@ static void dm_mq_stop_queue(struct request_queue *q)
->  	if (blk_mq_queue_stopped(q))
->  		return;
->  
-> -	/* Avoid that requeuing could restart the queue. */
-> -	blk_mq_cancel_requeue_work(q);
->  	blk_mq_stop_hw_queues(q);
->  	/* Wait until dm_mq_queue_rq() has finished. */
->  	blk_mq_quiesce_queue(q);
-> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-> index d6ab9a0..a67e815 100644
-> --- a/drivers/nvme/host/core.c
-> +++ b/drivers/nvme/host/core.c
-> @@ -2075,7 +2075,6 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
->  	list_for_each_entry(ns, &ctrl->namespaces, list) {
->  		struct request_queue *q = ns->queue;
->  
-> -		blk_mq_cancel_requeue_work(q);
->  		blk_mq_stop_hw_queues(q);
->  		blk_mq_quiesce_queue(q);
->  	}
-> diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-> index 76f6319..35a0af5 100644
-> --- a/include/linux/blk-mq.h
-> +++ b/include/linux/blk-mq.h
-> @@ -221,7 +221,6 @@ void __blk_mq_end_request(struct request *rq, int error);
->  void blk_mq_requeue_request(struct request *rq, bool kick_requeue_list);
->  void blk_mq_add_to_requeue_list(struct request *rq, bool at_head,
->  				bool kick_requeue_list);
-> -void blk_mq_cancel_requeue_work(struct request_queue *q);
->  void blk_mq_kick_requeue_list(struct request_queue *q);
->  void blk_mq_delay_kick_requeue_list(struct request_queue *q, unsigned long msecs);
->  void blk_mq_abort_requeue_list(struct request_queue *q);
-> -- 
-> 2.10.1
