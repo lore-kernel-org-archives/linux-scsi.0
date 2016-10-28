@@ -1,39 +1,92 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 121531] Adaptec 7805H SAS HBA (pm80xx): hangs when writing
- >80MB at once
-Date: Thu, 27 Oct 2016 21:57:40 +0000
-Message-ID: <bug-121531-11613-DCuzX8OeZM@https.bugzilla.kernel.org/>
-References: <bug-121531-11613@https.bugzilla.kernel.org/>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:52908 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933375AbcJ0V5o (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 27 Oct 2016 17:57:44 -0400
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 45716203A1
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 21:57:43 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 1805020398
-        for <linux-scsi@vger.kernel.org>; Thu, 27 Oct 2016 21:57:41 +0000 (UTC)
-In-Reply-To: <bug-121531-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: [PATCH v1 2/4] scsi: ufshcd: release resources if probe fails
+Date: Thu, 27 Oct 2016 17:25:58 -0700
+Message-ID: <1477614358-5444-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
+        CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=121531
+If ufshcd pltfrm/pci driver's probe fails for some reason then ensure that
+scsi host is released to avoid memory leak but managed memory allocations
+(via devm_* calls) need not to be freed explicitly on probe failure as
+memory allocated with these functions is automatically freed on driver
+detach.
 
---- Comment #22 from Chloé Desoutter <chloe@tigres-rouges.net> ---
-(In reply to Chloé Desoutter from comment #20)
-> Currently testing w/ PM8001_MPI_QUEUE = 256.
-> 
-> Prospective patch attached.
+Reviewed-by: Sahitya Tummala <stummala@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd-pci.c    | 2 ++
+ drivers/scsi/ufs/ufshcd-pltfrm.c | 5 +----
+ drivers/scsi/ufs/ufshcd.c        | 3 ---
+ 3 files changed, 3 insertions(+), 7 deletions(-)
 
-I confirm that after 36 hours of intensive workload, I see no visible
-performance loss on a PM8001 and that there's been no data error since then.
-
+diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
+index d15eaa4..52b546f 100644
+--- a/drivers/scsi/ufs/ufshcd-pci.c
++++ b/drivers/scsi/ufs/ufshcd-pci.c
+@@ -104,6 +104,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	pm_runtime_forbid(&pdev->dev);
+ 	pm_runtime_get_noresume(&pdev->dev);
+ 	ufshcd_remove(hba);
++	ufshcd_dealloc_host(hba);
+ }
+ 
+ /**
+@@ -147,6 +148,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
+ 	err = ufshcd_init(hba, mmio_base, pdev->irq);
+ 	if (err) {
+ 		dev_err(&pdev->dev, "Initialization failed\n");
++		ufshcd_dealloc_host(hba);
+ 		return err;
+ 	}
+ 
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index db53f38..a72a4ba 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -163,7 +163,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 	if (ret) {
+ 		dev_err(dev, "%s: unable to find %s err %d\n",
+ 				__func__, prop_name, ret);
+-		goto out_free;
++		goto out;
+ 	}
+ 
+ 	vreg->min_uA = 0;
+@@ -185,9 +185,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
+ 
+ 	goto out;
+ 
+-out_free:
+-	devm_kfree(dev, vreg);
+-	vreg = NULL;
+ out:
+ 	if (!ret)
+ 		*out_vreg = vreg;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 5c931d1..6c0082e 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6253,8 +6253,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+ 	ufshcd_hba_stop(hba, true);
+ 
+-	scsi_host_put(hba->host);
+-
+ 	ufshcd_exit_clk_gating(hba);
+ 	if (ufshcd_is_clkscaling_enabled(hba))
+ 		devfreq_remove_device(hba->devfreq);
+@@ -6616,7 +6614,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	ufshcd_exit_clk_gating(hba);
+ out_disable:
+ 	hba->is_irq_enabled = false;
+-	scsi_host_put(host);
+ 	ufshcd_hba_exit(hba);
+ out_error:
+ 	return err;
 -- 
-You are receiving this mail because:
-You are the assignee for the bug.
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
