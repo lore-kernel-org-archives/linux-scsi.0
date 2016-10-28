@@ -1,108 +1,63 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] scsi_dh_alua: fix wrong scsi_device_put() in
- alua_rtpg_queue()
-Date: Fri, 28 Oct 2016 08:05:12 -0700
-Message-ID: <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
-References: <1477642877-10228-1-git-send-email-tang.junhui@zte.com.cn>
+From: Keith Busch <keith.busch@intel.com>
+Subject: Re: [PATCH 11/12] nvme: Use BLK_MQ_S_STOPPED instead of
+ QUEUE_FLAG_STOPPED in blk-mq code
+Date: Fri, 28 Oct 2016 12:01:45 -0400
+Message-ID: <20161028160145.GC5621@localhost.localdomain>
+References: <b22edafc-725f-0419-d074-34d35d57d126@sandisk.com>
+ <805e1911-cd10-0563-c76b-256d76054b08@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0082.outbound.protection.outlook.com ([104.47.38.82]:6701
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932747AbcJ1PFW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 28 Oct 2016 11:05:22 -0400
-In-Reply-To: <1477642877-10228-1-git-send-email-tang.junhui@zte.com.cn>
+Received: from mga05.intel.com ([192.55.52.43]:53357 "EHLO mga05.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752947AbcJ1PvB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 28 Oct 2016 11:51:01 -0400
+Content-Disposition: inline
+In-Reply-To: <805e1911-cd10-0563-c76b-256d76054b08@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tang.junhui@zte.com.cn, hare@suse.de, matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 
-On 10/28/2016 01:21 AM, tang.junhui@zte.com.cn wrote:
-> From: "tang.junhui" <tang.junhui@zte.com.cn>
-> 
-> scsi_device_put() is called when the conditions pg->rtpg_sdev!=NULL
-> and queue_delayed_work() failure satisfied, actually it should be not
-> to call because scsi_device_get() is not called previous in this scene.
-> 
-> Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 5 ++++-
->  1 file changed, 4 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 241829e..78081df 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -866,6 +866,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  			    struct alua_queue_data *qdata, bool force)
->  {
->  	int start_queue = 0;
-> +	int sdev_geted = 0;
->  	unsigned long flags;
->  	struct workqueue_struct *alua_wq = kaluad_wq;
+On Wed, Oct 26, 2016 at 03:56:04PM -0700, Bart Van Assche wrote:
+> diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+> index 7bb73ba..b662416 100644
+> --- a/drivers/nvme/host/core.c
+> +++ b/drivers/nvme/host/core.c
+> @@ -205,7 +205,7 @@ void nvme_requeue_req(struct request *req)
 >  
-> @@ -884,6 +885,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  		kref_get(&pg->kref);
->  		pg->rtpg_sdev = sdev;
->  		scsi_device_get(sdev);
-> +		sdev_geted = 1;
->  		start_queue = 1;
->  	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
->  		pg->flags |= ALUA_PG_RUN_RTPG;
-> @@ -901,7 +903,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  	if (start_queue &&
->  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
->  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
-> -		scsi_device_put(sdev);
-> +		if (sdev_geted)
-> +			scsi_device_put(sdev);
->  		kref_put(&pg->kref, release_port_group);
->  	}
+>  	blk_mq_requeue_request(req, false);
+>  	spin_lock_irqsave(req->q->queue_lock, flags);
+> -	if (!blk_queue_stopped(req->q))
+> +	if (!blk_mq_queue_stopped(req->q))
+>  		blk_mq_kick_requeue_list(req->q);
+>  	spin_unlock_irqrestore(req->q->queue_lock, flags);
 >  }
+> @@ -2079,10 +2079,6 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
+>  
+>  	mutex_lock(&ctrl->namespaces_mutex);
+>  	list_for_each_entry(ns, &ctrl->namespaces, list) {
+> -		spin_lock_irq(ns->queue->queue_lock);
+> -		queue_flag_set(QUEUE_FLAG_STOPPED, ns->queue);
+> -		spin_unlock_irq(ns->queue->queue_lock);
+> -
+>  		blk_mq_cancel_requeue_work(ns->queue);
+>  		blk_mq_stop_hw_queues(ns->queue);
 
-Hello Tang Junhui,
+There's actually a reason the queue stoppage is using a different flag
+than blk_mq_queue_stopped: kicking the queue starts stopped queues.
+The driver has to ensure the requeue work can't be kicked prior to
+cancelling the current requeue work. Once we know requeue work isn't
+running and can't restart again, then we're safe to stop the hw queues.
 
-Personally I prefer the patch below because that patch does not introduce
-a new variable. This is a patch I started testing four weeks ago and it has
-survived all my ALUA tests so far. Please note that I do not know whether
-my tests hit the !(pg->flags & ALUA_PG_RUNNING) code path.
+It's a pretty obscure condition, requiring the controller post an
+error completion at the same time the driver decides to reset the
+controller. Here's the sequence with the wrong outcome:
 
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Date: Thu, 29 Sep 2016 10:06:51 -0700
-Subject: [PATCH] scsi_dh_alua: Fix a reference counting bug
-
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/device_handler/scsi_dh_alua.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 241829e..23835f7 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -890,6 +890,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		/* Do not queue if the worker is already running */
- 		if (!(pg->flags & ALUA_PG_RUNNING)) {
- 			kref_get(&pg->kref);
-+			sdev = NULL;
- 			start_queue = 1;
- 		}
- 	}
-@@ -901,7 +902,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 	if (start_queue &&
- 	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
- 				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
--		scsi_device_put(sdev);
-+		if (sdev)
-+			scsi_device_put(sdev);
- 		kref_put(&pg->kref, release_port_group);
- 	}
- }
--- 
-2.10.1
-
-
- 
+ CPU A                   CPU B
+ -----                   -----
+nvme_stop_queues         nvme_requeue_req
+ blk_mq_stop_hw_queues    if (blk_mq_queue_stopped) <- returns false
+  blk_mq_stop_hw_queue     blk_mq_kick_requeue_list
+                         blk_mq_requeue_work
+                          blk_mq_start_hw_queues
