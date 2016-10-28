@@ -1,92 +1,146 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 2/4] scsi: ufshcd: release resources if probe fails
-Date: Thu, 27 Oct 2016 17:25:58 -0700
-Message-ID: <1477614358-5444-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Subject: [PATCH v1 1/4] scsi: ufs: fix race between clock gating and devfreq scaling work
+Date: Thu, 27 Oct 2016 17:25:47 -0700
+Message-ID: <1477614347-5404-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:33308 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S942875AbcJ1AZx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 27 Oct 2016 20:25:53 -0400
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-List-Id: linux-scsi@vger.kernel.org
 
-If ufshcd pltfrm/pci driver's probe fails for some reason then ensure that
-scsi host is released to avoid memory leak but managed memory allocations
-(via devm_* calls) need not to be freed explicitly on probe failure as
-memory allocated with these functions is automatically freed on driver
-detach.
+UFS devfreq clock scaling work may require clocks to be ON if it need to
+execute some UFS commands hence it may request for clock hold before
+issuing the command. But if UFS clock gating work is already running in
+parallel, ungate work would end up waiting for the clock gating work to
+finish and as clock gating work would also wait for the clock scaling work
+to finish, we would enter in deadlock state. Here is the call trace during
+this deadlock state:
+
+Workqueue: devfreq_wq devfreq_monitor
+	__switch_to
+	__schedule
+	schedule
+	schedule_timeout
+	wait_for_common
+	wait_for_completion
+	flush_work
+	ufshcd_hold
+	ufshcd_send_uic_cmd
+	ufshcd_dme_get_attr
+	ufs_qcom_set_dme_vs_core_clk_ctrl_clear_div
+	ufs_qcom_clk_scale_notify
+	ufshcd_scale_clks
+	ufshcd_devfreq_target
+	update_devfreq
+	devfreq_monitor
+	process_one_work
+	worker_thread
+	kthread
+	ret_from_fork
+
+Workqueue: events ufshcd_gate_work
+	__switch_to
+	__schedule
+	schedule
+	schedule_preempt_disabled
+	__mutex_lock_slowpath
+	mutex_lock
+	devfreq_monitor_suspend
+	devfreq_simple_ondemand_handler
+	devfreq_suspend_device
+	ufshcd_gate_work
+	process_one_work
+	worker_thread
+	kthread
+	ret_from_fork
+
+Workqueue: events ufshcd_ungate_work
+	__switch_to
+	__schedule
+	schedule
+	schedule_timeout
+	wait_for_common
+	wait_for_completion
+	flush_work
+	__cancel_work_timer
+	cancel_delayed_work_sync
+	ufshcd_ungate_work
+	process_one_work
+	worker_thread
+	kthread
+	ret_from_fork
+
+This change fixes this deadlock by doing this in devfreq work (devfreq_wq):
+Try cancelling clock gating work. If we are able to cancel gating work
+or it wasn't scheduled, hold the clock reference count until scaling is
+in progress. If gate work is already running in parallel, let's skip
+the frequecy scaling at this time and it will be retried once next scaling
+window expires.
 
 Reviewed-by: Sahitya Tummala <stummala@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd-pci.c    | 2 ++
- drivers/scsi/ufs/ufshcd-pltfrm.c | 5 +----
- drivers/scsi/ufs/ufshcd.c        | 3 ---
- 3 files changed, 3 insertions(+), 7 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++++++
+ 1 file changed, 32 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufshcd-pci.c b/drivers/scsi/ufs/ufshcd-pci.c
-index d15eaa4..52b546f 100644
---- a/drivers/scsi/ufs/ufshcd-pci.c
-+++ b/drivers/scsi/ufs/ufshcd-pci.c
-@@ -104,6 +104,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 	pm_runtime_forbid(&pdev->dev);
- 	pm_runtime_get_noresume(&pdev->dev);
- 	ufshcd_remove(hba);
-+	ufshcd_dealloc_host(hba);
- }
- 
- /**
-@@ -147,6 +148,7 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- 	err = ufshcd_init(hba, mmio_base, pdev->irq);
- 	if (err) {
- 		dev_err(&pdev->dev, "Initialization failed\n");
-+		ufshcd_dealloc_host(hba);
- 		return err;
- 	}
- 
-diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
-index db53f38..a72a4ba 100644
---- a/drivers/scsi/ufs/ufshcd-pltfrm.c
-+++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
-@@ -163,7 +163,7 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 	if (ret) {
- 		dev_err(dev, "%s: unable to find %s err %d\n",
- 				__func__, prop_name, ret);
--		goto out_free;
-+		goto out;
- 	}
- 
- 	vreg->min_uA = 0;
-@@ -185,9 +185,6 @@ static int ufshcd_populate_vreg(struct device *dev, const char *name,
- 
- 	goto out;
- 
--out_free:
--	devm_kfree(dev, vreg);
--	vreg = NULL;
- out:
- 	if (!ret)
- 		*out_vreg = vreg;
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 5c931d1..6c0082e 100644
+index 304adce..5c931d1 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6253,8 +6253,6 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufshcd_disable_intr(hba, hba->intr_mask);
- 	ufshcd_hba_stop(hba, true);
+@@ -6379,15 +6379,47 @@ static int ufshcd_devfreq_target(struct device *dev,
+ {
+ 	int err = 0;
+ 	struct ufs_hba *hba = dev_get_drvdata(dev);
++	bool release_clk_hold = false;
++	unsigned long irq_flags;
  
--	scsi_host_put(hba->host);
--
- 	ufshcd_exit_clk_gating(hba);
- 	if (ufshcd_is_clkscaling_enabled(hba))
- 		devfreq_remove_device(hba->devfreq);
-@@ -6616,7 +6614,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufshcd_exit_clk_gating(hba);
- out_disable:
- 	hba->is_irq_enabled = false;
--	scsi_host_put(host);
- 	ufshcd_hba_exit(hba);
- out_error:
+ 	if (!ufshcd_is_clkscaling_enabled(hba))
+ 		return -EINVAL;
+ 
++	spin_lock_irqsave(hba->host->host_lock, irq_flags);
++	if (ufshcd_eh_in_progress(hba)) {
++		spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
++		return 0;
++	}
++
++	if (ufshcd_is_clkgating_allowed(hba) &&
++	    (hba->clk_gating.state != CLKS_ON)) {
++		if (cancel_delayed_work(&hba->clk_gating.gate_work)) {
++			/* hold the vote until the scaling work is completed */
++			hba->clk_gating.active_reqs++;
++			release_clk_hold = true;
++			hba->clk_gating.state = CLKS_ON;
++		} else {
++			/*
++			 * Clock gating work seems to be running in parallel
++			 * hence skip scaling work to avoid deadlock between
++			 * current scaling work and gating work.
++			 */
++			spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
++			return 0;
++		}
++	}
++	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
++
+ 	if (*freq == UINT_MAX)
+ 		err = ufshcd_scale_clks(hba, true);
+ 	else if (*freq == 0)
+ 		err = ufshcd_scale_clks(hba, false);
+ 
++	spin_lock_irqsave(hba->host->host_lock, irq_flags);
++	if (release_clk_hold)
++		__ufshcd_release(hba);
++	spin_unlock_irqrestore(hba->host->host_lock, irq_flags);
++
  	return err;
+ }
+ 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
