@@ -1,127 +1,58 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v3 06/12] phy: qcom-ufs-qmp-xx: Discard remove callback for drivers.
-Date: Sun, 30 Oct 2016 01:52:08 +0530
-Message-ID: <1477772534-14170-7-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v3 04/12] phy: qcom-ufs-14nm: Add new compatible for msm8996 based phy
+Date: Sun, 30 Oct 2016 01:52:06 +0530
+Message-ID: <1477772534-14170-5-git-send-email-vivek.gautam@codeaurora.org>
 References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46568 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755347AbcJ2UW4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2016 16:22:56 -0400
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-remove() callback does a phy_power_off() only over the phy,
-and nothing else now.
-The phy_power_off() over the generic phy is called from the phy
-consumer, and phy provider driver should not explicitly need to
-call any phy ops.
-So discard the remove callback for qcom-ufs phy platform drivers.
+Add a new compatible string for 14nm ufs phy present on msm8996
+chipset. This phy is bit different from the legacy 14nm ufs phy
+in terms of the clocks that are needed to be handled in the driver.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
 
-Changes since v2:
- - Addressed review comment about commmit message: s/phy_exit/phy_power_off
+New patch in v3 of this cleanup series.
 
- drivers/phy/phy-qcom-ufs-qmp-14nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs-qmp-20nm.c | 16 ----------------
- drivers/phy/phy-qcom-ufs.c          |  9 ---------
- 3 files changed, 41 deletions(-)
+ Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+index 070baf4..b6b5130 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
++++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+@@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the controller node should
+ contain a phandle reference to UFS PHY node.
+ 
+ Required properties:
+-- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
+-		      or "qcom,ufs-phy-qmp-14nm" according to the relevant phy in use.
++- compatible        : compatible list, contains one of the following -
++			"qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
++			"qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
++			"qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
++			 present on MSM8996 chipset.
+ - reg               : should contain PHY register address space (mandatory),
+ - reg-names         : indicates various resources passed to driver (via reg proptery) by name.
+                       Required "reg-names" is "phy_mem".
 diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index b3d2612..560f272 100644
+index e3bede7..b3d2612 100644
 --- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
 +++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -163,21 +163,6 @@ static int ufs_qcom_phy_qmp_14nm_probe(struct platform_device *pdev)
- 	return err;
- }
+@@ -180,6 +180,7 @@ static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
  
--static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
  static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
  	{.compatible = "qcom,ufs-phy-qmp-14nm"},
- 	{.compatible = "qcom,msm8996-ufs-phy-qmp-14nm"},
-@@ -187,7 +172,6 @@ static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
- 
- static struct platform_driver ufs_qcom_phy_qmp_14nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_14nm_probe,
--	.remove = ufs_qcom_phy_qmp_14nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_14nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_14nm",
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-index e09ecb8c..9a2f53d 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-@@ -219,21 +219,6 @@ static int ufs_qcom_phy_qmp_20nm_probe(struct platform_device *pdev)
- 	return err;
- }
- 
--static int ufs_qcom_phy_qmp_20nm_remove(struct platform_device *pdev)
--{
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = to_phy(dev);
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--	int err = 0;
--
--	err = ufs_qcom_phy_remove(generic_phy, ufs_qcom_phy);
--	if (err)
--		dev_err(dev, "%s: ufs_qcom_phy_remove failed = %d\n",
--			__func__, err);
--
--	return err;
--}
--
- static const struct of_device_id ufs_qcom_phy_qmp_20nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-20nm"},
++	{.compatible = "qcom,msm8996-ufs-phy-qmp-14nm"},
  	{},
-@@ -242,7 +227,6 @@ static int ufs_qcom_phy_qmp_20nm_remove(struct platform_device *pdev)
- 
- static struct platform_driver ufs_qcom_phy_qmp_20nm_driver = {
- 	.probe = ufs_qcom_phy_qmp_20nm_probe,
--	.remove = ufs_qcom_phy_qmp_20nm_remove,
- 	.driver = {
- 		.of_match_table = ufs_qcom_phy_qmp_20nm_of_match,
- 		.name = "ufs_qcom_phy_qmp_20nm",
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index 11c8cae..1a0c224 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -625,15 +625,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
- 
--int ufs_qcom_phy_remove(struct phy *generic_phy,
--			struct ufs_qcom_phy *ufs_qcom_phy)
--{
--	phy_power_off(generic_phy);
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_remove);
--
- int ufs_qcom_phy_exit(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
