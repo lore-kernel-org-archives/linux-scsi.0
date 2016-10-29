@@ -1,55 +1,52 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v3 02/12] phy: qcom-ufs: Use devm sibling of kstrdup for regulator names
-Date: Sun, 30 Oct 2016 01:52:04 +0530
-Message-ID: <1477772534-14170-3-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v3 05/12] phy: qcom-ufs: Skip obtaining rx/tx_iface_clk for msm8996 based phy
+Date: Sun, 30 Oct 2016 01:52:07 +0530
+Message-ID: <1477772534-14170-6-git-send-email-vivek.gautam@codeaurora.org>
 References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46062 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755148AbcJ2UWi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2016 16:22:38 -0400
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-This helps us in avoiding any requirement for kfree() operation
-to be called exclusively over the allocated string pointer.
+The tx_iface_clk and rx_iface_clk no longer exist with UFS Phy
+present on msm8996. So skip obtaining these clocks using
+compatible match.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
 
-No changes since v1.
+New patch in v3 of this cleanup series.
+Comes in place of the following patch in v2 -
+ phy: qcom-ufs: remove failure when rx/tx_iface_clk are absent
 
- drivers/phy/phy-qcom-ufs.c | 5 +----
- 1 file changed, 1 insertion(+), 4 deletions(-)
+ drivers/phy/phy-qcom-ufs.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index 455064c..5dc24d8 100644
+index a173b30..11c8cae 100644
 --- a/drivers/phy/phy-qcom-ufs.c
 +++ b/drivers/phy/phy-qcom-ufs.c
-@@ -251,7 +251,7 @@ static int __ufs_qcom_phy_init_vreg(struct phy *phy,
- 
- 	char prop_name[MAX_PROP_NAME];
- 
--	vreg->name = kstrdup(name, GFP_KERNEL);
-+	vreg->name = devm_kstrdup(dev, name, GFP_KERNEL);
- 	if (!vreg->name) {
- 		err = -ENOMEM;
- 		goto out;
-@@ -637,9 +637,6 @@ int ufs_qcom_phy_remove(struct phy *generic_phy,
+@@ -184,6 +184,10 @@ int ufs_qcom_phy_clk_get(struct device *dev,
  {
- 	phy_power_off(generic_phy);
+ 	int err;
  
--	kfree(ufs_qcom_phy->vdda_pll.name);
--	kfree(ufs_qcom_phy->vdda_phy.name);
--
- 	return 0;
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_remove);
++	if (of_device_is_compatible(phy_common->dev->of_node,
++				"qcom,msm8996-ufs-phy-qmp-14nm"))
++		goto skip_txrx_clk;
++
+ 	err = ufs_qcom_phy_clk_get(phy_common->dev, "tx_iface_clk",
+ 				   &phy_common->tx_iface_clk);
+ 	if (err)
+@@ -199,6 +203,7 @@ int ufs_qcom_phy_clk_get(struct device *dev,
+ 	if (err)
+ 		goto out;
+ 
++skip_txrx_clk:
+ 	/*
+ 	 * "ref_clk_parent" is optional hence don't abort init if it's not
+ 	 * found.
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
