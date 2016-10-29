@@ -1,492 +1,293 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: Re: Kernel 4.8.4: INFO: task kworker/u16:8:289 blocked for more
- than 120 seconds.
-Date: Sat, 29 Oct 2016 14:44:48 -0700
-Message-ID: <1477777488.22703.37.camel@haakon3.risingtidesystems.com>
-References: <0f72bb4a-3cdf-ffd0-db75-5c8b303b921c@mdevsys.com>
-         <64ef386e-8de2-0b1c-9322-f02530a3e783@mdevsys.com>
-         <0851dba9-ad6c-c419-dc92-93c5d7d2f54a@mdevsys.com>
-         <1477291017.19735.26.camel@haakon3.risingtidesystems.com>
-         <b12c29d1-64a2-16dd-f38e-b4226e606df2@mdevsys.com>
-         <58bfd43f-ff17-f724-9adf-ffd1f828a0e9@mdevsys.com>
-         <1477466446.19735.113.camel@haakon3.risingtidesystems.com>
-         <e1dc6704-e9f6-bb5c-108d-6f2c44501511@mdevsys.com>
-         <b9cbfa95-1e57-eece-4327-e3b51fc46834@mdevsys.com>
-         <1477727428.19735.192.camel@haakon3.risingtidesystems.com>
-         <6e764083-f3c9-bd15-640b-2833d8ad544d@mdevsys.com>
+From: "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Subject: Re: iscsi_trx going into D state
+Date: Sat, 29 Oct 2016 15:29:50 -0700
+Message-ID: <1477780190.22703.47.camel@haakon3.risingtidesystems.com>
+References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
+         <880e374c-cf8b-f276-e930-57b09fe1a686@suse.com>
+         <CAANLjFobXiBO2tXxTBB-8BQjM8FC0wmxdxQvEd6Rp=1LZkrvpA@mail.gmail.com>
+         <CAANLjFoh+C8QE=qcPKqUUG3SnH2EMmS7DWZ5D4AD7yWMxoK0Zw@mail.gmail.com>
+         <4fc72e32-26fb-96bd-8a0d-814eef712b43@suse.com>
+         <CAANLjFpx1MRNiu2388pY+U0O5z9gw+OJBtpOof47Lb_DxaJSBQ@mail.gmail.com>
+         <1476774332.8490.43.camel@haakon3.risingtidesystems.com>
+         <CAANLjFqXt5r=c9F75vjeK=_zLa8zCS1priLuZo=A1ZSHKZ=1Bw@mail.gmail.com>
+         <1476858359.8490.97.camel@haakon3.risingtidesystems.com>
+         <CAANLjFoGEi29goybqsvEg6trystEkurVz52P8SwqGUSNV1jdSw@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linux-iscsi.org ([67.23.28.174]:33872 "EHLO
-        linux-iscsi.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752380AbcJ2Vo7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 29 Oct 2016 17:44:59 -0400
-In-Reply-To: <6e764083-f3c9-bd15-640b-2833d8ad544d@mdevsys.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <CAANLjFoGEi29goybqsvEg6trystEkurVz52P8SwqGUSNV1jdSw-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
+Cc: Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: TomK <tk@mdevsys.com>
-Cc: linux-scsi@vger.kernel.org, Himanshu Madhani <himanshu.madhani@qlogic.com>, Quinn Tran <quinn.tran@qlogic.com>, Giridhar Malavali <giridhar.malavali@qlogic.com>, "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>
 
-On Sat, 2016-10-29 at 14:10 -0400, TomK wrote:
-> On 10/29/2016 3:50 AM, Nicholas A. Bellinger wrote:
-> > Hi TomK & Co,
-> >
-> > On Fri, 2016-10-28 at 02:01 -0400, TomK wrote:
-> >> On 10/26/2016 8:08 AM, TomK wrote:
-> >>> On 10/26/2016 3:20 AM, Nicholas A. Bellinger wrote:
-> >
+Hi Robert,
 
-<SNIP>
-
-> >>
-> >> 1) As soon as I re-add the bad disk without the patch, I loose the LUN
-> >> off the ESXi hosts.  Same thing happens with the patch.  No change.  The
-> >> disk is pulling things down.  Worse, the kernel panics and locks me out
-> >> of the system (http://microdevsys.com/linux-lio/messages-oct-27-2016.txt) :
-> >>
-> >
-> > So after groking these logs, the point when ata6 failing scsi_device is
-> > holding outstanding I/O beyond ESX FC host side timeouts, manifests
-> > itself as ABORT_TASK tag=1122276:
-> >
-> > Oct 28 00:42:56 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 077e
-> > Oct 28 00:42:56 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 077f
-> > Oct 28 00:42:56 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 0780
-> > Oct 28 00:42:57 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e837:20: ABTS_RECV_24XX: instance 0
-> > Oct 28 00:42:57 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f811:20: qla_target(0): task abort (s_id=1:5:0, tag=1122276, param=0)
-> > Oct 28 00:42:57 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f80f:20: qla_target(0): task abort (tag=1122276)
-> > Oct 28 00:42:57 mbpc-pc kernel: ABORT_TASK: Found referenced qla2xxx task_tag: 1122276
-> >
-> > and eventually:
-> >
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e837:20: ABTS_RECV_24XX: instance 0
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f811:20: qla_target(0): task abort (s_id=1:5:0, tag=1122276, param=0)
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f881:20: unable to find cmd in driver or LIO for tag 0x111fe4
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f854:20: qla_target(0): __qlt_24xx_handle_abts() failed: -2
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff88010f123a40, status=4
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20: ABTS_RESP_24XX: compl_status 31
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e807:20: Sending retry TERM EXCH CTIO7 (ha=ffff88010f110000)
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff88010f123a80, status=0
-> > Oct 28 00:43:18 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20: ABTS_RESP_24XX: compl_status 0
-> >
-> > The outstanding se_cmd with tag=1122276 for ata6 completes back to
-> > target-core, allowing ABORT_TASK + TMR_FUNCTION_COMPLETE status to
-> > progress:
-> >
-> > Oct 28 00:44:25 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
-> > Oct 28 00:44:29 mbpc-pc kernel: ata6: SATA link up 1.5 Gbps (SStatus 113 SControl 310)
-> > Oct 28 00:44:29 mbpc-pc kernel: ata6.00: configured for UDMA/133
-> > Oct 28 00:44:29 mbpc-pc kernel: ata6.00: retrying FLUSH 0xea Emask 0x4
-> > Oct 28 00:44:29 mbpc-pc kernel: ata6.00: device reported invalid CHS sector 0
-> > Oct 28 00:44:29 mbpc-pc kernel: ata6: EH complete
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM EXCH CTIO (ha=ffff88010f110000)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f814:20: qla_target(0): terminating exchange for aborted cmd=ffff880099392fa8 (se_cmd=ffff880099392fa8, tag=1122276)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM EXCH CTIO (ha=ffff88010f110000)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e851:20: qla_target(0): Terminating cmd ffff880099392fa8 with incorrect state 2
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20: Intermediate CTIO received (status 6)
-> > Oct 28 00:44:30 mbpc-pc kernel: ABORT_TASK: Sending TMR_FUNCTION_COMPLETE for ref_tag: 1122276
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20: Intermediate CTIO received (status 8)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f813:20: TM response mcmd (ffff8800b1e2f0f0) status 0x0 state 0x0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff8800b1e2f300, status=0
-> > Oct 28 00:44:30 mbpc-pc kernel: ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: 1122996
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f813:20: TM response mcmd (ffff8800b1e2f340) status 0x2 state 0x0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff8800b1e2f550, status=2
-> > Oct 28 00:44:30 mbpc-pc kernel: ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: 1122204
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f813:20: TM response mcmd (ffff8800b1e2f590) status 0x2 state 0x0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff8800b1e2f7a0, status=2
-> > Oct 28 00:44:30 mbpc-pc kernel: ABORT_TASK: Sending TMR_TASK_DOES_NOT_EXIST for ref_tag: 1122240
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20: ABTS_RESP_24XX: compl_status 0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f813:20: TM response mcmd (ffff8800b1e2f7e0) status 0x2 state 0x0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20: ABTS_RESP_24XX: compl_status 31
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e807:20: Sending retry TERM EXCH CTIO7 (ha=ffff88010f110000)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff88010f124280, status=0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e838:20: ABTS_RESP_24XX: compl_status 31
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e807:20: Sending retry TERM EXCH CTIO7 (ha=ffff88010f110000)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff88010f1242c0, status=0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e806:20: Sending task mgmt ABTS response (ha=ffff88010f110000, atio=ffff8800b1e2f9f0, status=2
-> >
-> > and continues with TMR_TASK_DOES_NOT_EXIST for other oustanding tags..
-> >
-> > Until, target-core session release for two tcm_qla2xxx host ports:
-> >
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f884:20: qlt_free_session_done: se_sess ffff880099a80a80 / sess ffff880111665cc0 from port 21:03:00:1b:32:74:b6:cb loop_id 0x03 s_id 01:05:00 logout 1 keep 1 els_logo 0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff8800993849f8] ox_id 0773
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f884:20: qlt_free_session_done: se_sess ffff88009e8f9040 / sess ffff8800abe95480 from port 50:01:43:80:16:77:99:38 loop_id 0x02 s_id 01:00:00 logout 1 keep 1 els_logo 0
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff880099199f38] ox_id 05f7
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff880099199f38] ox_id 05f7
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4801:20: DPC handler waking up, dpc_flags=0x0.
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2870:20: Async-logout - hdl=2 loop-id=3 portid=010500.
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-2870:20: Async-logout - hdl=3 loop-id=2 portid=010000.
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4800:20: DPC handler sleeping.
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM EXCH CTIO (ha=ffff88010f110000)
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM EXCH CTIO (ha=ffff88010f110000)
-> >
-> > From there, ELS with unexpected NOTIFY_ACK received start to occur:
-> >
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4801:20: DPC handler waking up, dpc_flags=0x0.
-> > Oct 28 00:44:30 mbpc-pc kernel: qla2xxx [0000:04:00.0]-4800:20: DPC handler sleeping.
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:20: IMMED_NOTIFY ATIO
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:20: qla_target(0): Port ID: 0x00:00:01 ELS opcode: 0x03
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM ELS CTIO (ha=ffff88010f110000)
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f897:20: Linking sess ffff8800abe95480 [0] wwn 50:01:43:80:16:77:99:38 with PLOGI ACK to wwn 50:01:43:80:16:77:99:38 s_id 01:00:00, ref=1
-> > Oct 28 00:44:34 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e862:20: qla_target(0): Unexpected NOTIFY_ACK received
-> >
-> > ELS packets for the same two host ports continue:
-> >
-> > Oct 28 00:46:40 mbpc-pc kernel: hpet1: lost 9599 rtc interrupts
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:20: IMMED_NOTIFY ATIO
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:20: qla_target(0): Port ID: 0x00:00:01 ELS opcode: 0x03
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM ELS CTIO (ha=ffff88010f110000)
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f897:20: Linking sess ffff8800abe95480 [0] wwn 50:01:43:80:16:77:99:38 with PLOGI ACK to wwn 50:01:43:80:16:77:99:38 s_id 01:00:00, ref=1
-> > Oct 28 00:46:40 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e862:20: qla_target(0): Unexpected NOTIFY_ACK received
-> > Oct 28 00:46:46 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 05b1
-> > Oct 28 00:46:46 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818:20: is_send_status=1, cmd->bufflen=4096, cmd->sg_cnt=1, cmd->dma_data_direction=1 se_cmd[ffff88009a9977d8]
-> > Oct 28 00:46:46 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff88009a9977d8] ox_id 05b1
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type d ox_id 0000
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e82e:20: IMMED_NOTIFY ATIO
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f826:20: qla_target(0): Port ID: 0x00:05:01 ELS opcode: 0x03
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending TERM ELS CTIO (ha=ffff88010f110000)
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f897:20: Linking sess ffff880111665cc0 [0] wwn 21:03:00:1b:32:74:b6:cb with PLOGI ACK to wwn 21:03:00:1b:32:74:b6:cb s_id 01:05:00, ref=1
-> > Oct 28 00:46:49 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e862:20: qla_target(0): Unexpected NOTIFY_ACK received
-> >
-> > And eventually, the 360 second hung task timeout warnings appear:
-> >
-> > Oct 28 00:49:48 mbpc-pc kernel: hpet1: lost 9600 rtc interrupts
-> > Oct 28 00:49:55 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 05ba
-> > Oct 28 00:49:55 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818:20: is_send_status=1, cmd->bufflen=4096, cmd->sg_cnt=1, cmd->dma_data_direction=1 se_cmd[ffff88009a988508]
-> > Oct 28 00:49:55 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff88009a988508] ox_id 05ba
-> > Oct 28 00:50:16 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e872:20: qlt_24xx_atio_pkt_all_vps: qla_target(0): type 6 ox_id 05bb
-> > Oct 28 00:50:16 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e818:20: is_send_status=1, cmd->bufflen=4096, cmd->sg_cnt=1, cmd->dma_data_direction=1 se_cmd[ffff88009a988508]
-> > Oct 28 00:50:16 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20: qlt_free_cmd: se_cmd[ffff88009a988508] ox_id 05bb
-> > Jan  3 15:34:00 192.168.0.2 syslog: dhcpfwd : dhcp forwarder daemon successfully started
-> > Oct 28 00:50:33 mbpc-pc kernel: INFO: task kworker/0:2:31731 blocked for more than 360 seconds.
-> > Oct 28 00:50:33 mbpc-pc kernel:      Not tainted 4.8.4 #2
-> > Oct 28 00:50:33 mbpc-pc kernel: "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
-> > Oct 28 00:50:33 mbpc-pc kernel: kworker/0:2     D ffff88011affb968     0 31731      2 0x00000080
-> > Oct 28 00:50:33 mbpc-pc kernel: Workqueue: events qlt_free_session_done [qla2xxx]
-> > Oct 28 00:50:33 mbpc-pc kernel: ffff88011affb968 ffff88011affb8d8 ffff880013514940 0000000000000006
-> > Oct 28 00:50:33 mbpc-pc kernel: ffff8801140fe880 ffffffff81f998c2 0000000000000000 ffff880100000000
-> > Oct 28 00:50:33 mbpc-pc kernel: ffffffff810bdaaa ffffffff00000000 ffffffff00000051 ffff880100000000
-> > Oct 28 00:50:33 mbpc-pc kernel: Call Trace:
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff810bdaaa>] ? vprintk_emit+0x27a/0x4d0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162c040>] schedule+0x40/0xb0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8115cc5c>] ? printk+0x46/0x48
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162e7ec>] schedule_timeout+0x9c/0xe0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162cfa0>] wait_for_completion+0xc0/0xf0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff810923e0>] ? try_to_wake_up+0x260/0x260
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff81161d73>] ? mempool_free+0x33/0x90
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffffa08f76ad>] target_wait_for_sess_cmds+0x4d/0x1b0 [target_core_mod]
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffffa00e7188>] ? qla2x00_post_work+0x58/0x70 [qla2xxx]
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffffa0286f69>] tcm_qla2xxx_free_session+0x49/0x90 [tcm_qla2xxx]
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffffa01447e9>] qlt_free_session_done+0xf9/0x3d0 [qla2xxx]
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff81080639>] process_one_work+0x189/0x4e0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8107d915>] ? wq_worker_waking_up+0x15/0x70
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8109eb59>] ? idle_balance+0x79/0x290
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8108150d>] worker_thread+0x16d/0x520
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162bb3d>] ? __schedule+0x2fd/0x6a0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff810813a0>] ? maybe_create_worker+0x110/0x110
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff810813a0>] ? maybe_create_worker+0x110/0x110
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff81085fec>] kthread+0xcc/0xf0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8109130e>] ? schedule_tail+0x1e/0xc0
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff8162f60f>] ret_from_fork+0x1f/0x40
-> > Oct 28 00:50:33 mbpc-pc kernel: [<ffffffff81085f20>] ? kthread_freezable_should_stop+0x70/0x70
-> >
-> >>
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20:
-> >> Intermediate CTIO received (status 6)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending
-> >> TERM EXCH CTIO (ha=ffff88010ecb0000)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f814:20:
-> >> qla_target(0): terminating exchange for aborted cmd=ffff88009af9f488
-> >> (se_cmd=ffff88009af9f488, tag=1131312)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending
-> >> TERM EXCH CTIO (ha=ffff88010ecb0000)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e851:20:
-> >> qla_target(0): Terminating cmd ffff88009af9f488 with incorrect state 2
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending
-> >> TERM EXCH CTIO (ha=ffff88010ecb0000)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20:
-> >> Intermediate CTIO received (status 6)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20:
-> >> Intermediate CTIO received (status 8)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e81c:20: Sending
-> >> TERM EXCH CTIO (ha=ffff88010ecb0000)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-f81d:20:
-> >> Intermediate CTIO received (status 6)
-> >> Oct 28 01:19:59 mbpc-pc kernel: qla2xxx [0000:04:00.0]-e874:20:
-> >> qlt_free_cmd: se_cmd[ffff88009af9f488] ox_id 0673
-> >> Oct 28 01:19:59 mbpc-pc kernel: ------------[ cut here ]------------
-> >> Oct 28 01:19:59 mbpc-pc kernel: kernel BUG at
-> >> drivers/scsi/qla2xxx/qla_target.c:3319!
-> >> Oct 28 01:19:59 mbpc-pc kernel: invalid opcode: 0000 [#1] SMP
-> >> Oct 28 01:19:59 mbpc-pc kernel: Modules linked in: tcm_qla2xxx tcm_fc
-> >> tcm_loop target_core_file target_core_iblock target_core_pscsi
-> >> target_core_mod configfs ip6table_filter ip6_tables ebtable_nat ebtables
-> >> nf_conntrack_ipv4 nf_defrag_ipv4 xt_state nf_conntrack xt_CHECKSUM
-> >> iptable_mangle bridge nfsd lockd grace nfs_acl auth_rpcgss autofs4 it87
-> >> hwmon_vid bnx2fc cnic uio fcoe libfcoe libfc 8021q garp stp llc ppdev
-> >> parport_pc parport sunrpc cpufreq_ondemand bonding ipv6 crc_ccitt
-> >> ipt_REJECT nf_reject_ipv4 xt_multiport iptable_filter ip_tables fuse
-> >> vfat fat xfs vhost_net macvtap macvlan vhost tun uinput raid456
-> >> async_raid6_recov async_pq async_xor xor async_memcpy async_tx raid6_pq
-> >> libcrc32c joydev sg serio_raw e1000 r8169 mii kvm_amd kvm
-> >> snd_hda_codec_realtek snd_hda_codec_generic irqbypass pcspkr k10temp
-> >> snd_hda_intel snd_hda_codec snd_hda_core snd_hwdep snd_seq
-> >> snd_seq_device snd_pcm snd_timer snd soundcore i2c_piix4 i2c_core wmi
-> >> shpchp acpi_cpufreq ext4 mbcache jbd2 qla2xxx scsi_transport_fc floppy
-> >> firewire_ohci f
-> >> Oct 28 01:19:59 mbpc-pc kernel: irewire_core crc_itu_t sd_mod pata_acpi
-> >> ata_generic pata_jmicron ahci libahci usb_storage dm_mirror
-> >> dm_region_hash dm_log dm_mod
-> >> Oct 28 01:19:59 mbpc-pc kernel: CPU: 0 PID: 296 Comm: kworker/u16:6 Not
-> >> tainted 4.8.4 #2
-> >> Oct 28 01:19:59 mbpc-pc kernel: Hardware name: Gigabyte Technology Co.,
-> >> Ltd. GA-890XA-UD3/GA-890XA-UD3, BIOS FC 08/02/2010
-> >> Oct 28 01:19:59 mbpc-pc kernel: Workqueue: tmr-fileio target_tmr_work
-> >> [target_core_mod]
-> >> Oct 28 01:19:59 mbpc-pc kernel: task: ffff8801109623c0 task.stack:
-> >> ffff880110968000
-> >> Oct 28 01:19:59 mbpc-pc kernel: RIP: 0010:[<ffffffffa0143810>]
-> >> [<ffffffffa0143810>] qlt_free_cmd+0x160/0x180 [qla2xxx]
-> >> Oct 28 01:19:59 mbpc-pc kernel: RSP: 0018:ffff88011096bb18  EFLAGS: 00010202
-> >> Oct 28 01:19:59 mbpc-pc kernel: RAX: 0000000000000051 RBX:
-> >> ffff88009af9f488 RCX: 0000000000000006
-> >> Oct 28 01:19:59 mbpc-pc kernel: RDX: 0000000000000007 RSI:
-> >> 0000000000000007 RDI: ffff88011fc0cb40
-> >> Oct 28 01:19:59 mbpc-pc kernel: RBP: ffff88011096bb48 R08:
-> >> 0000000000000000 R09: ffffffff81fa4765
-> >> Oct 28 01:19:59 mbpc-pc kernel: R10: 0000000000000074 R11:
-> >> 0000000000000002 R12: ffff8801137770c0
-> >> Oct 28 01:19:59 mbpc-pc kernel: R13: ffff8800a126eaf0 R14:
-> >> ffff88009af9f510 R15: 0000000000000296
-> >> Oct 28 01:19:59 mbpc-pc kernel: FS:  0000000000000000(0000)
-> >> GS:ffff88011fc00000(0000) knlGS:0000000000000000
-> >> Oct 28 01:19:59 mbpc-pc kernel: CS:  0010 DS: 0000 ES: 0000 CR0:
-> >> 0000000080050033
-> >> Oct 28 01:19:59 mbpc-pc kernel: CR2: 00007f8eef58d000 CR3:
-> >> 00000000cabad000 CR4: 00000000000006f0
-> >> Oct 28 01:19:59 mbpc-pc kernel: Stack:
-> >> Oct 28 01:19:59 mbpc-pc kernel: ffff880000000673 ffff88009af9f488
-> >> ffff8800a126eaf0 ffff88009af9f59c
-> >> Oct 28 01:19:59 mbpc-pc kernel: ffff88009af9f488 ffff8800a126eaf0
-> >> ffff88011096bb58 ffffffffa027f7f4
-> >> Oct 28 01:19:59 mbpc-pc kernel: ffff88011096bbb8 ffffffffa08f758c
-> >> ffff88009af9f510 ffff88009af9f488
-> >> Oct 28 01:19:59 mbpc-pc kernel: Call Trace:
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffffa027f7f4>]
-> >> tcm_qla2xxx_release_cmd+0x14/0x30 [tcm_qla2xxx]
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffffa08f758c>]
-> >> target_release_cmd_kref+0xac/0x110 [target_core_mod]
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffffa08f7627>]
-> >> target_put_sess_cmd+0x37/0x70 [target_core_mod]
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffffa08f46f7>]
-> >> core_tmr_abort_task+0x107/0x160 [target_core_mod]
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffffa08f6aa4>]
-> >> target_tmr_work+0x154/0x160 [target_core_mod]
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff81080639>]
-> >> process_one_work+0x189/0x4e0
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff810d060c>] ?
-> >> del_timer_sync+0x4c/0x60
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8108131e>] ?
-> >> maybe_create_worker+0x8e/0x110
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8108150d>]
-> >> worker_thread+0x16d/0x520
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff810923f2>] ?
-> >> default_wake_function+0x12/0x20
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff810a6f06>] ?
-> >> __wake_up_common+0x56/0x90
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff810813a0>] ?
-> >> maybe_create_worker+0x110/0x110
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8162c040>] ? schedule+0x40/0xb0
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff810813a0>] ?
-> >> maybe_create_worker+0x110/0x110
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff81085fec>] kthread+0xcc/0xf0
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8109130e>] ?
-> >> schedule_tail+0x1e/0xc0
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff8162f60f>] ret_from_fork+0x1f/0x40
-> >> Oct 28 01:19:59 mbpc-pc kernel: [<ffffffff81085f20>] ?
-> >> kthread_freezable_should_stop+0x70/0x70
-> >> Oct 28 01:19:59 mbpc-pc kernel: Code: 0d 00 00 48 c7 c7 00 2a 16 a0 e8
-> >> ac 32 f2 e0 48 83 c4 18 5b 41 5c 41 5d c9 c3 48 8b bb 90 02 00 00 e8 85
-> >> da 07 e1 e9 30 ff ff ff <0f> 0b eb fe 0f 0b 66 2e 0f 1f 84 00 00 00 00
-> >> 00 eb f4 66 66 66
-> >> Oct 28 01:19:59 mbpc-pc kernel: RIP  [<ffffffffa0143810>]
-> >> qlt_free_cmd+0x160/0x180 [qla2xxx]
-> >> Oct 28 01:19:59 mbpc-pc kernel: RSP <ffff88011096bb18>
-> >> Oct 28 01:19:59 mbpc-pc kernel: ---[ end trace 2551bf47a19dbe2e ]---
-> >>
-> >
-> > Mmm.
-> >
-> > This BUG_ON is signaling a qla_tgt_cmd descriptor is being freed while
-> > qlt_handle_cmd_for_atio() has queued it for backend execution, but
-> > qla_tgt_cmd->work -> __qlt_do_work() has not executed.
-> >
-> >>
-> >>
-> >> 2) This works with a new disk that's just been inserted.  No issues.
-> >>
-> >>
-> >
-> > Thanks for verifying this scenario.
-> >
-> >>
-> >>
-> >> The kernel had the patch in both scenarios.  So appears we can't
-> >> function on a degraded array that looses 1 (RAID 5 / 6 ) or 2 ( RAID 6 )
-> >> disks, at the moment, even though the array itself is fine.  Perhaps
-> >> it's the nature of the failed disk.
-> >>
-> >
-> > AFAICT, the hung task involves ABORT_TASK across tcm_qla2xxx session
-> > reinstatement, when backend I/O latency is high enough to cause
-> > ABORT_TASK operations across FC fabric host side session reset.
-> >
-> > From logs alone, it's unclear if the failing backend ata6 is leaking I/O
-> > (indefinitely) when hung task warning happen, but the preceding ata6
-> > failures + device resets seem to indicate I/O completions are just
-> > taking a really long time to complete.
-> >
-> > Also, it's unclear if the BUG_ON(cmd->cmd_in_wq) in qlt_free_cmd() is a
-> > side effect of the earlier hung task, or separate tcm_qla2xxx session
-> > reinstatement bug.
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> >
+On Wed, 2016-10-19 at 10:41 -0600, Robert LeBlanc wrote:
+> Nicholas,
 > 
-> 
-> Thanks Nicholas.
-> 
-> Is it possible the RAID 6 array, after attempting to write sectors to a 
-> bad disk, received an error and returned a status message that the QLA 
-> could not interpret?  Thereby sending the QLA into a routine expecting a 
-> recognized message and simply timing out?  All the while the array 
-> simply 'moved on' along it's merry way.   (For example, a message akin 
-> to "Unexpected xyz received, ignoring" type of message that should be 
-> interpreted and actioned on.)  Or perhaps the software RAID 6 isn't 
-> returning anything meaningful to the QLA driver.  (If it isn't though, 
-> it can be argued that the QLA / Target Drivers shouldn't have to care if 
-> the array is working.)
-
-So target-core waits for all outstanding backend I/O to complete during
-session reinstatement.
-
-The two hung task warnings observed here mean target-core I/O
-descriptors from each two tcm_qla2xxx ports are waiting to be completed
-during session reinstatement, but this never happens.
-
-Which means one of three things:
-
-1) The backend below target-core is leaking I/O completions, which
-   is a bug outside of target-core and needs to be identified.
-2) There is a target-core bug leaking se_cmd->cmd_kref, preventing
-   the final reference release to occur.
-3) There is a tcm_qla2xxx bug leaking se_cmd->cmd_kref, preventing
-   the final reference release to occur.
-
-> 
-> The 100% util on /dev/sdf lasted for less then 30 seconds.
-
-Based on the above, between when tag=1122276 got ABORT_TASK and ata6
-finally gave back the descriptor to allow TMR_FUNCTION_COMPLETE was at
-least 90 seconds.
-
-This does not include the extra time from initial I/O submission to when
-ESX SCSI timeouts fire to generate ABORT_TASK, which IIRC depends upon
-the FC host LLD.
-
-Btw, I don't recall libata device timeouts being 90+ seconds plus, which
-looks a little strange..
-
-This timeout is in /sys/class/scsi_device/$HCTL/device/eh_timeout.
-
-So assuming MD is not holding onto I/O much beyond backend device
-eh_timeout during failure, a simple work-around is to keep the combined
-backend eh_timeout and MD consumer I/O timeout lower than ESX FC SCSI
-timeouts.
-
->From the logs above, it would likely mask this specific bug if it's
-related to #2 or #3.
-
-> Well below 
-> the 120s default timeout (I've upped this to 360 for the purpose of 
-> testing this scenario)
-> 
-> I do see these:
-> 
-> http://microdevsys.com/linux-lio/messages-mailing-list
-> Oct 23 19:50:26 mbpc-pc kernel: qla2xxx [0000:04:00.0]-5811:20: 
-> Asynchronous PORT UPDATE ignored 0000/0004/0600.
-> 
-> but I don't think it's that one as it doesn't correlate well at all.
+> I didn't have high hopes for the patch because we were not seeing
+> TMR_ABORT_TASK (or 'abort') in dmesg or /var/log/messages, but it
+> seemed to help regardless. Our clients finally OOMed from the hung
+> sessions, so we are having to reboot them and we will do some more
+> testing. We haven't put the updated kernel on our clients yet. Our
+> clients have iSCSI root disks so I'm not sure if we can get a vmcore
+> on those, but we will do what we can to get you a vmcore from the
+> target if it happens again.
 > 
 
-These are unrelated to the hung task warnings.
+Just checking in to see if you've observed further issues with
+iser-target ports, and/or able to generate a crashdump with v4.4.y..?
 
-> If there's another test that I can do to get more info, please feel free 
-> to suggest.
+> As far as our configuration: It is a superMicro box with 6 SAMSUNG
+> MZ7LM3T8HCJM-00005 SSDs. Two are for root and four are in mdadm
+> RAID-10 for exporting via iSCSI/iSER. We have ZFS on top of the
+> RAID-10 for checksum and snapshots only and we export ZVols to the
+> clients (one or more per VM on the client). We do not persist the
+> export info (targetcli saveconfig), but regenerate it from scripts.
+> The client receives two or more of these exports and puts them in a
+> RAID-1 device. The exports are served by iSER one one port and also by
+> normal iSCSI on a different port for compatibility, but not normally
+> used. If you need more info about the config, please let me know. It
+> was kind of a vague request so I'm not sure what exactly is important
+> to you.
+
+Thanks for the extra details of your hardware + user-space
+configuration.
+
+> Thanks for helping us with this,
+> Robert LeBlanc
 > 
+> When we have problems, we usually see this in the logs:
+> Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login timeout on
+> Network Portal 0.0.0.0:3260
+> Oct 17 08:57:50 prv-0-12-sanstack kernel: Unexpected ret: -104 send data 48
+> Oct 17 08:57:50 prv-0-12-sanstack kernel: tx_data returned -32, expecting 48.
+> Oct 17 08:57:50 prv-0-12-sanstack kernel: iSCSI Login negotiation failed.
+> 
+> I found some backtraces in the logs, not sure if this is helpful, this
+> is before your patch (your patch booted at Oct 18 10:36:59):
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: INFO: rcu_sched
+> self-detected stall on CPU
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: #0115-...: (41725 ticks this
+> GP) idle=b59/140000000000001/0 softirq=535/535 fqs=30992
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: #011 (t=42006 jiffies g=1550
+> c=1549 q=0)
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: Task dump for CPU 5:
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: kworker/u68:2   R  running
+> task        0 17967      2 0x00000008
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: Workqueue: isert_comp_wq
+> isert_cq_work [ib_isert]
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: ffff883f4c0dca80
+> 00000000af8ca7a4 ffff883f7fb43da8 ffffffff810ac83f
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000005
+> ffffffff81adb680 ffff883f7fb43dc0 ffffffff810af179
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: 0000000000000006
+> ffff883f7fb43df0 ffffffff810e1c10 ffff883f7fb57b80
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: Call Trace:
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac83f>]
+> sched_show_task+0xaf/0x110
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810af179>]
+> dump_cpu_task+0x39/0x40
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e1c10>]
+> rcu_dump_cpu_stacks+0x80/0xb0
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810e6040>]
+> rcu_check_callbacks+0x540/0x820
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810afd51>] ?
+> account_system_time+0x81/0x110
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9a0>] ?
+> tick_sched_do_timer+0x50/0x50
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810eb4d9>]
+> update_process_times+0x39/0x60
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa755>]
+> tick_sched_handle.isra.17+0x25/0x60
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810fa9dd>]
+> tick_sched_timer+0x3d/0x70
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec0c2>]
+> __hrtimer_run_queues+0x102/0x290
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810ec5a8>]
+> hrtimer_interrupt+0xa8/0x1a0
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+> local_apic_timer_interrupt+0x35/0x60
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8172343d>]
+> smp_apic_timer_interrupt+0x3d/0x50
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff817216f7>]
+> apic_timer_interrupt+0x87/0x90
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d70fe>]
+> ? console_unlock+0x41e/0x4e0
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d74bc>]
+> vprintk_emit+0x2fc/0x500
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff810d783f>]
+> vprintk_default+0x1f/0x30
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81174c2a>] printk+0x5d/0x74
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814bc351>]
+> transport_lookup_cmd_lun+0x1d1/0x200
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff814edcf0>]
+> iscsit_setup_scsi_cmd+0x230/0x540
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0890bf3>]
+> isert_rx_do_work+0x3f3/0x7f0 [ib_isert]
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffffa0891174>]
+> isert_cq_work+0x184/0x770 [ib_isert]
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109734f>]
+> process_one_work+0x14f/0x400
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097bc4>]
+> worker_thread+0x114/0x470
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8171c55a>] ?
+> __schedule+0x34a/0x7f0
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81097ab0>] ?
+> rescuer_thread+0x310/0x310
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d708>] kthread+0xd8/0xf0
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
+> kthread_park+0x60/0x60
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff81720c8f>]
+> ret_from_fork+0x3f/0x70
+> Oct 17 15:43:12 prv-0-12-sanstack kernel: [<ffffffff8109d630>] ?
+> kthread_park+0x60/0x60
+> 
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: INFO: rcu_sched
+> self-detected stall on CPU
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: #01128-...: (5999 ticks this
+> GP) idle=2f9/140000000000001/0 softirq=457/457 fqs=4830
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=3546
+> c=3545 q=0)
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: Task dump for CPU 28:
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: iscsi_np        R  running
+> task        0 16597      2 0x0000000c
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: ffff887f40350000
+> 00000000b98a67bb ffff887f7f503da8 ffffffff810ac8ff
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001c
+> ffffffff81adb680 ffff887f7f503dc0 ffffffff810af239
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: 000000000000001d
+> ffff887f7f503df0 ffffffff810e1cd0 ffff887f7f517b80
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: Call Trace:
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
+> sched_show_task+0xaf/0x110
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810af239>]
+> dump_cpu_task+0x39/0x40
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
+> rcu_dump_cpu_stacks+0x80/0xb0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
+> rcu_check_callbacks+0x540/0x820
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
+> account_system_time+0x81/0x110
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
+> tick_sched_do_timer+0x50/0x50
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
+> update_process_times+0x39/0x60
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
+> tick_sched_handle.isra.17+0x25/0x60
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
+> tick_sched_timer+0x3d/0x70
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
+> __hrtimer_run_queues+0x102/0x290
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
+> hrtimer_interrupt+0xa8/0x1a0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+> local_apic_timer_interrupt+0x35/0x60
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
+> smp_apic_timer_interrupt+0x3d/0x50
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
+> apic_timer_interrupt+0x87/0x90
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
+> ? console_unlock+0x41e/0x4e0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d757c>]
+> vprintk_emit+0x2fc/0x500
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff810d78ff>]
+> vprintk_default+0x1f/0x30
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff81174dde>] printk+0x5d/0x74
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e71ad>]
+> iscsi_target_locate_portal+0x62d/0x6f0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e5100>]
+> iscsi_target_login_thread+0x6f0/0xfc0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff814e4a10>] ?
+> iscsi_target_login_sess_out+0x250/0x250
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+> kthread_park+0x60/0x60
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
+> ret_from_fork+0x3f/0x70
+> Oct 17 16:34:03 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+> kthread_park+0x60/0x60
+> 
+> I don't think this one is related, but it happened a couple of times:
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: INFO: rcu_sched
+> self-detected stall on CPU
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: #01119-...: (5999 ticks this
+> GP) idle=727/140000000000001/0 softirq=1346/1346 fqs=4990
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: #011 (t=6000 jiffies g=4295
+> c=4294 q=0)
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: Task dump for CPU 19:
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: kworker/19:1    R  running
+> task        0   301      2 0x00000008
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: Workqueue:
+> events_power_efficient fb_flashcursor
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: ffff883f6009ca80
+> 00000000010a7cdd ffff883f7fcc3da8 ffffffff810ac8ff
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000013
+> ffffffff81adb680 ffff883f7fcc3dc0 ffffffff810af239
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: 0000000000000014
+> ffff883f7fcc3df0 ffffffff810e1cd0 ffff883f7fcd7b80
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: Call Trace:
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: <IRQ>  [<ffffffff810ac8ff>]
+> sched_show_task+0xaf/0x110
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810af239>]
+> dump_cpu_task+0x39/0x40
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e1cd0>]
+> rcu_dump_cpu_stacks+0x80/0xb0
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810e6100>]
+> rcu_check_callbacks+0x540/0x820
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810afe11>] ?
+> account_system_time+0x81/0x110
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa60>] ?
+> tick_sched_do_timer+0x50/0x50
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810eb599>]
+> update_process_times+0x39/0x60
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810fa815>]
+> tick_sched_handle.isra.17+0x25/0x60
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810faa9d>]
+> tick_sched_timer+0x3d/0x70
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec182>]
+> __hrtimer_run_queues+0x102/0x290
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff810ec668>]
+> hrtimer_interrupt+0xa8/0x1a0
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81052c65>]
+> local_apic_timer_interrupt+0x35/0x60
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81723cbd>]
+> smp_apic_timer_interrupt+0x3d/0x50
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81721f77>]
+> apic_timer_interrupt+0x87/0x90
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: <EOI>  [<ffffffff810d71be>]
+> ? console_unlock+0x41e/0x4e0
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff813866ad>]
+> fb_flashcursor+0x5d/0x140
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8138bc00>] ?
+> bit_clear+0x110/0x110
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109740f>]
+> process_one_work+0x14f/0x400
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097c84>]
+> worker_thread+0x114/0x470
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8171cdda>] ?
+> __schedule+0x34a/0x7f0
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff81097b70>] ?
+> rescuer_thread+0x310/0x310
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d7c8>] kthread+0xd8/0xf0
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+> kthread_park+0x60/0x60
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8172150f>]
+> ret_from_fork+0x3f/0x70
+> Oct 17 11:46:52 prv-0-12-sanstack kernel: [<ffffffff8109d6f0>] ?
+> kthread_park+0x60/0x60
 
-Ideally, being able to generate a vmcore crashdump is the most helpful.
-This involves manually triggering a crash after you observe the hung
-tasks.  It's reasonably easy to setup once CONFIG_KEXEC=y +
-CONFIG_CRASH_DUMP=y are enabled:
+RCU self-detected schedule stalls typically mean some code is
+monopolizing execution on a specific CPU for an extended period of time
+(eg: endless loop), preventing normal RCU grace-period callbacks from
+running in a timely manner.
 
-https://fedoraproject.org/wiki/How_to_use_kdump_to_debug_kernel_crashes
+It's hard to tell without more log context and/or crashdump what was
+going on here.
 
-I don't know if you'll run into problems on v4.8.y as per Anil's earlier
-email, but getting a proper vmcore for analysis is usually the fastest
-path to root cause.
-
-Short of that, it would be helpful to identify the state of the se_cmd
-descriptors getting leaked.  Here's a quick patch to add some more
-verbosity:
-
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 7dfefd6..9b93a2c 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -2657,9 +2657,13 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
- 
-        list_for_each_entry_safe(se_cmd, tmp_cmd,
-                                &se_sess->sess_wait_list, se_cmd_list) {
--               pr_debug("Waiting for se_cmd: %p t_state: %d, fabric state:"
--                       " %d\n", se_cmd, se_cmd->t_state,
--                       se_cmd->se_tfo->get_cmd_state(se_cmd));
-+               printk("Waiting for se_cmd: %p t_state: %d, fabric state:"
-+                       " %d se_cmd_flags: 0x%08x transport_state: 0x%08x"
-+                       " CDB: 0x%02x\n",
-+                       se_cmd, se_cmd->t_state,
-+                       se_cmd->se_tfo->get_cmd_state(se_cmd),
-+                       se_cmd->se_cmd_flags, se_cmd->transport_state,
-+                       se_cmd->t_task_cdb[0]);
- 
-                spin_lock_irqsave(&se_cmd->t_state_lock, flags);
-                tas = (se_cmd->transport_state & CMD_T_TAS);
-@@ -2671,9 +2675,13 @@ void target_wait_for_sess_cmds(struct se_session *se_sess)
-                }
- 
-                wait_for_completion(&se_cmd->cmd_wait_comp);
--               pr_debug("After cmd_wait_comp: se_cmd: %p t_state: %d"
--                       " fabric state: %d\n", se_cmd, se_cmd->t_state,
--                       se_cmd->se_tfo->get_cmd_state(se_cmd));
-+               printk("After cmd_wait_comp: se_cmd: %p t_state: %d"
-+                       " fabric state: %d se_cmd_flags: 0x%08x transport_state:"
-+                       " 0x%08x CDB: 0x%02x\n",
-+                       se_cmd, se_cmd->t_state,
-+                       se_cmd->se_tfo->get_cmd_state(se_cmd),
-+                       se_cmd->se_cmd_flags, se_cmd->transport_state,
-+                       se_cmd->t_task_cdb[0]);
- 
-                se_cmd->se_tfo->release_cmd(se_cmd);
-        }
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
