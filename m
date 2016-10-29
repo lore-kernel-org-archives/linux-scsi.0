@@ -1,7 +1,7 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v3 04/12] phy: qcom-ufs-14nm: Add new compatible for msm8996 based phy
-Date: Sun, 30 Oct 2016 01:52:06 +0530
-Message-ID: <1477772534-14170-5-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v3 08/12] phy: qcom-ufs-qmp-xx: Move clock and regulator init out of phy init
+Date: Sun, 30 Oct 2016 01:52:10 +0530
+Message-ID: <1477772534-14170-9-git-send-email-vivek.gautam@codeaurora.org>
 References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
@@ -10,49 +10,189 @@ To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.peter
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add a new compatible string for 14nm ufs phy present on msm8996
-chipset. This phy is bit different from the legacy 14nm ufs phy
-in terms of the clocks that are needed to be handled in the driver.
+The phy init is meant to do phy initialization rather than
+just getting the clock and regulator. Move these clock and
+regulator get to probe(), to make room for actual phy
+initialization sequence.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
 
-New patch in v3 of this cleanup series.
+No changes since v1.
 
- Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
- drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c | 52 ++++++++++++++++++-------------------
+ drivers/phy/phy-qcom-ufs-qmp-20nm.c | 46 +++++++++++++++-----------------
+ 2 files changed, 46 insertions(+), 52 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-index 070baf4..b6b5130 100644
---- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-@@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the controller node should
- contain a phandle reference to UFS PHY node.
- 
- Required properties:
--- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
--		      or "qcom,ufs-phy-qmp-14nm" according to the relevant phy in use.
-+- compatible        : compatible list, contains one of the following -
-+			"qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
-+			"qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
-+			"qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
-+			 present on MSM8996 chipset.
- - reg               : should contain PHY register address space (mandatory),
- - reg-names         : indicates various resources passed to driver (via reg proptery) by name.
-                       Required "reg-names" is "phy_mem".
 diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index e3bede7..b3d2612 100644
+index 560f272..ae74614 100644
 --- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
 +++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -180,6 +180,7 @@ static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
+@@ -44,30 +44,7 @@ void ufs_qcom_phy_qmp_14nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
  
- static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-14nm"},
-+	{.compatible = "qcom,msm8996-ufs-phy-qmp-14nm"},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
+ static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
+ {
+-	struct ufs_qcom_phy_qmp_14nm *phy = phy_get_drvdata(generic_phy);
+-	struct ufs_qcom_phy *phy_common = &phy->common_cfg;
+-	int err;
+-
+-	err = ufs_qcom_phy_init_clks(phy_common);
+-	if (err) {
+-		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
+-			__func__, err);
+-		goto out;
+-	}
+-
+-	err = ufs_qcom_phy_init_vregulators(phy_common);
+-	if (err) {
+-		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
+-			__func__, err);
+-		goto out;
+-	}
+-	phy_common->vdda_phy.max_uV = UFS_PHY_VDDA_PHY_UV;
+-	phy_common->vdda_phy.min_uV = UFS_PHY_VDDA_PHY_UV;
+-
+-	ufs_qcom_phy_qmp_14nm_advertise_quirks(phy_common);
+-
+-out:
+-	return err;
++	return 0;
+ }
+ 
+ static
+@@ -136,6 +113,7 @@ static int ufs_qcom_phy_qmp_14nm_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct phy *generic_phy;
+ 	struct ufs_qcom_phy_qmp_14nm *phy;
++	struct ufs_qcom_phy *phy_common;
+ 	int err = 0;
+ 
+ 	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
+@@ -143,8 +121,9 @@ static int ufs_qcom_phy_qmp_14nm_probe(struct platform_device *pdev)
+ 		err = -ENOMEM;
+ 		goto out;
+ 	}
++	phy_common = &phy->common_cfg;
+ 
+-	generic_phy = ufs_qcom_phy_generic_probe(pdev, &phy->common_cfg,
++	generic_phy = ufs_qcom_phy_generic_probe(pdev, phy_common,
+ 				&ufs_qcom_phy_qmp_14nm_phy_ops, &phy_14nm_ops);
+ 
+ 	if (!generic_phy) {
+@@ -154,10 +133,29 @@ static int ufs_qcom_phy_qmp_14nm_probe(struct platform_device *pdev)
+ 		goto out;
+ 	}
+ 
++	err = ufs_qcom_phy_init_clks(phy_common);
++	if (err) {
++		dev_err(phy_common->dev,
++			"%s: ufs_qcom_phy_init_clks() failed %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	err = ufs_qcom_phy_init_vregulators(phy_common);
++	if (err) {
++		dev_err(phy_common->dev,
++			"%s: ufs_qcom_phy_init_vregulators() failed %d\n",
++			__func__, err);
++		goto out;
++	}
++	phy_common->vdda_phy.max_uV = UFS_PHY_VDDA_PHY_UV;
++	phy_common->vdda_phy.min_uV = UFS_PHY_VDDA_PHY_UV;
++
++	ufs_qcom_phy_qmp_14nm_advertise_quirks(phy_common);
++
+ 	phy_set_drvdata(generic_phy, phy);
+ 
+-	strlcpy(phy->common_cfg.name, UFS_PHY_NAME,
+-		sizeof(phy->common_cfg.name));
++	strlcpy(phy_common->name, UFS_PHY_NAME, sizeof(phy_common->name));
+ 
+ out:
+ 	return err;
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+index 9a2f53d..dfc5175 100644
+--- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
++++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+@@ -63,28 +63,7 @@ void ufs_qcom_phy_qmp_20nm_advertise_quirks(struct ufs_qcom_phy *phy_common)
+ 
+ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
+ {
+-	struct ufs_qcom_phy_qmp_20nm *phy = phy_get_drvdata(generic_phy);
+-	struct ufs_qcom_phy *phy_common = &phy->common_cfg;
+-	int err = 0;
+-
+-	err = ufs_qcom_phy_init_clks(phy_common);
+-	if (err) {
+-		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
+-			__func__, err);
+-		goto out;
+-	}
+-
+-	err = ufs_qcom_phy_init_vregulators(phy_common);
+-	if (err) {
+-		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
+-			__func__, err);
+-		goto out;
+-	}
+-
+-	ufs_qcom_phy_qmp_20nm_advertise_quirks(phy_common);
+-
+-out:
+-	return err;
++	return 0;
+ }
+ 
+ static
+@@ -192,6 +171,7 @@ static int ufs_qcom_phy_qmp_20nm_probe(struct platform_device *pdev)
+ 	struct device *dev = &pdev->dev;
+ 	struct phy *generic_phy;
+ 	struct ufs_qcom_phy_qmp_20nm *phy;
++	struct ufs_qcom_phy *phy_common;
+ 	int err = 0;
+ 
+ 	phy = devm_kzalloc(dev, sizeof(*phy), GFP_KERNEL);
+@@ -199,8 +179,9 @@ static int ufs_qcom_phy_qmp_20nm_probe(struct platform_device *pdev)
+ 		err = -ENOMEM;
+ 		goto out;
+ 	}
++	phy_common = &phy->common_cfg;
+ 
+-	generic_phy = ufs_qcom_phy_generic_probe(pdev, &phy->common_cfg,
++	generic_phy = ufs_qcom_phy_generic_probe(pdev, phy_common,
+ 				&ufs_qcom_phy_qmp_20nm_phy_ops, &phy_20nm_ops);
+ 
+ 	if (!generic_phy) {
+@@ -210,10 +191,25 @@ static int ufs_qcom_phy_qmp_20nm_probe(struct platform_device *pdev)
+ 		goto out;
+ 	}
+ 
++	err = ufs_qcom_phy_init_clks(phy_common);
++	if (err) {
++		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_clks() failed %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	err = ufs_qcom_phy_init_vregulators(phy_common);
++	if (err) {
++		dev_err(phy_common->dev, "%s: ufs_qcom_phy_init_vregulators() failed %d\n",
++			__func__, err);
++		goto out;
++	}
++
++	ufs_qcom_phy_qmp_20nm_advertise_quirks(phy_common);
++
+ 	phy_set_drvdata(generic_phy, phy);
+ 
+-	strlcpy(phy->common_cfg.name, UFS_PHY_NAME,
+-			sizeof(phy->common_cfg.name));
++	strlcpy(phy_common->name, UFS_PHY_NAME, sizeof(phy_common->name));
+ 
+ out:
+ 	return err;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
