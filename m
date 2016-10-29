@@ -1,11 +1,11 @@
 From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH v5 05/14] blk-mq: Avoid that requeueing starts stopped queues
-Date: Fri, 28 Oct 2016 17:20:32 -0700
-Message-ID: <8d5b97cb-429a-e451-ad2e-ad63a3f94dfd@sandisk.com>
+Subject: [PATCH v5 06/14] blk-mq: Remove blk_mq_cancel_requeue_work()
+Date: Fri, 28 Oct 2016 17:20:49 -0700
+Message-ID: <7207b8ad-aec9-b7d8-e36b-8c360bf32f06@sandisk.com>
 References: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 In-Reply-To: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
 Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
@@ -13,105 +13,78 @@ To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
 Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Since blk_mq_requeue_work() starts stopped queues and since
-execution of this function can be scheduled after a queue has
-been stopped it is not possible to stop queues without using
-an additional state variable to track whether or not the queue
-has been stopped. Hence modify blk_mq_requeue_work() such that it
-does not start stopped queues. My conclusion after a review of
-the blk_mq_stop_hw_queues() and blk_mq_{delay_,}kick_requeue_list()
-callers is as follows:
-* In the dm driver starting and stopping queues should only happen
-  if __dm_suspend() or __dm_resume() is called and not if the
-  requeue list is processed.
-* In the SCSI core queue stopping and starting should only be
-  performed by the scsi_internal_device_block() and
-  scsi_internal_device_unblock() functions but not by any other
-  function. Although the blk_mq_stop_hw_queue() call in
-  scsi_queue_rq() may help to reduce CPU load if a LLD queue is
-  full, figuring out whether or not a queue should be restarted
-  when requeueing a command would require to introduce additional
-  locking in scsi_mq_requeue_cmd() to avoid a race with
-  scsi_internal_device_block(). Avoid this complexity by removing
-  the blk_mq_stop_hw_queue() call from scsi_queue_rq().
-* In the NVMe core only the functions that call
-  blk_mq_start_stopped_hw_queues() explicitly should start stopped
-  queues.
-* A blk_mq_start_stopped_hwqueues() call must be added in the
-  xen-blkfront driver in its blkif_recover() function.
+Since blk_mq_requeue_work() no longer restarts stopped queues
+canceling requeue work is no longer needed to prevent that a
+stopped queue would be restarted. Hence remove this function.
 
 Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Cc: Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Roger Pau Monné <roger.pau-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>
 Cc: Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Cc: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+Cc: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
+Cc: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
 ---
- block/blk-mq.c               | 6 +-----
- drivers/block/xen-blkfront.c | 1 +
- drivers/md/dm-rq.c           | 7 +------
- drivers/scsi/scsi_lib.c      | 1 -
- 4 files changed, 3 insertions(+), 12 deletions(-)
+ block/blk-mq.c           | 6 ------
+ drivers/md/dm-rq.c       | 2 --
+ drivers/nvme/host/core.c | 1 -
+ include/linux/blk-mq.h   | 1 -
+ 4 files changed, 10 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index c8ae970..fe367b5 100644
+index fe367b5..534128a 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -503,11 +503,7 @@ static void blk_mq_requeue_work(struct work_struct *work)
- 		blk_mq_insert_request(rq, false, false, false);
- 	}
- 
--	/*
--	 * Use the start variant of queue running here, so that running
--	 * the requeue work will kick stopped queues.
--	 */
--	blk_mq_start_hw_queues(q);
-+	blk_mq_run_hw_queues(q, false);
+@@ -528,12 +528,6 @@ void blk_mq_add_to_requeue_list(struct request *rq, bool at_head)
  }
+ EXPORT_SYMBOL(blk_mq_add_to_requeue_list);
  
- void blk_mq_add_to_requeue_list(struct request *rq, bool at_head)
-diff --git a/drivers/block/xen-blkfront.c b/drivers/block/xen-blkfront.c
-index 9908597..60fff99 100644
---- a/drivers/block/xen-blkfront.c
-+++ b/drivers/block/xen-blkfront.c
-@@ -2045,6 +2045,7 @@ static int blkif_recover(struct blkfront_info *info)
- 		BUG_ON(req->nr_phys_segments > segs);
- 		blk_mq_requeue_request(req);
- 	}
-+	blk_mq_start_stopped_hwqueues(info->rq);
- 	blk_mq_kick_requeue_list(info->rq);
- 
- 	while ((bio = bio_list_pop(&info->bio_list)) != NULL) {
+-void blk_mq_cancel_requeue_work(struct request_queue *q)
+-{
+-	cancel_delayed_work_sync(&q->requeue_work);
+-}
+-EXPORT_SYMBOL_GPL(blk_mq_cancel_requeue_work);
+-
+ void blk_mq_kick_requeue_list(struct request_queue *q)
+ {
+ 	kblockd_schedule_delayed_work(&q->requeue_work, 0);
 diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-index 1d0d2ad..1794de5 100644
+index 1794de5..2b82496 100644
 --- a/drivers/md/dm-rq.c
 +++ b/drivers/md/dm-rq.c
-@@ -338,12 +338,7 @@ static void dm_old_requeue_request(struct request *rq)
+@@ -116,8 +116,6 @@ static void dm_mq_stop_queue(struct request_queue *q)
+ 	queue_flag_set(QUEUE_FLAG_STOPPED, q);
+ 	spin_unlock_irqrestore(q->queue_lock, flags);
  
- static void __dm_mq_kick_requeue_list(struct request_queue *q, unsigned long msecs)
- {
--	unsigned long flags;
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	if (!blk_queue_stopped(q))
--		blk_mq_delay_kick_requeue_list(q, msecs);
--	spin_unlock_irqrestore(q->queue_lock, flags);
-+	blk_mq_delay_kick_requeue_list(q, msecs);
+-	/* Avoid that requeuing could restart the queue. */
+-	blk_mq_cancel_requeue_work(q);
+ 	blk_mq_stop_hw_queues(q);
  }
  
- void dm_mq_kick_requeue_list(struct mapped_device *md)
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 2cca9cf..126a784 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1941,7 +1941,6 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
- out:
- 	switch (ret) {
- 	case BLK_MQ_RQ_QUEUE_BUSY:
--		blk_mq_stop_hw_queue(hctx);
- 		if (atomic_read(&sdev->device_busy) == 0 &&
- 		    !scsi_device_blocked(sdev))
- 			blk_mq_delay_queue(hctx, SCSI_QUEUE_DELAY);
+diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
+index 79e679d..ab5f59e 100644
+--- a/drivers/nvme/host/core.c
++++ b/drivers/nvme/host/core.c
+@@ -2083,7 +2083,6 @@ void nvme_stop_queues(struct nvme_ctrl *ctrl)
+ 		queue_flag_set(QUEUE_FLAG_STOPPED, ns->queue);
+ 		spin_unlock_irq(ns->queue->queue_lock);
+ 
+-		blk_mq_cancel_requeue_work(ns->queue);
+ 		blk_mq_stop_hw_queues(ns->queue);
+ 	}
+ 	mutex_unlock(&ctrl->namespaces_mutex);
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index aa93000..a85a20f 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -217,7 +217,6 @@ void __blk_mq_end_request(struct request *rq, int error);
+ 
+ void blk_mq_requeue_request(struct request *rq);
+ void blk_mq_add_to_requeue_list(struct request *rq, bool at_head);
+-void blk_mq_cancel_requeue_work(struct request_queue *q);
+ void blk_mq_kick_requeue_list(struct request_queue *q);
+ void blk_mq_delay_kick_requeue_list(struct request_queue *q, unsigned long msecs);
+ void blk_mq_abort_requeue_list(struct request_queue *q);
 -- 
 2.10.1
 
