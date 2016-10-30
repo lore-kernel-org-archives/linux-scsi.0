@@ -1,41 +1,74 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Sun, 30 Oct 2016 13:33:18 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610301331301.20114@nippy.intranet>
-References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com> <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com> <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com> <20140413.221414.853080853067673824.davem@davemloft.net>
- <alpine.LNX.2.00.1610281658120.30954@nippy.intranet>
-Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-m68k-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1610281658120.30954@nippy.intranet>
-Sender: linux-m68k-owner@vger.kernel.org
-To: David Miller <davem@davemloft.net>
-Cc: schmitzmic@gmail.com, jongk@linux-m68k.org, tuomas.vainikka@aalto.fi, geert@linux-m68k.org, linux-m68k@vger.kernel.org, linux-scsi@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH 2/2] g_NCR5380: Test the IRQ before accepting it
+Date: Sun, 30 Oct 2016 11:49:43 +0100
+Message-ID: <1477824583-1559-2-git-send-email-linux@rainbow-software.org>
+References: <1477824583-1559-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1477824583-1559-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
+Trigger an IRQ first with a test IRQ handler to find out if it really
+works. Disable the IRQ if not.
+This prevents hang when incorrect IRQ was specified by user.
 
-On Sat, 29 Oct 2016, I wrote:
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/scsi/g_NCR5380.c |   31 +++++++++++++++++++++++++++++--
+ 1 file changed, 29 insertions(+), 2 deletions(-)
 
-> 
-> On Sun, 13 Apr 2014, David Miller wrote:
-> 
-> > 
-> > But oddly in the NCR53CX docs:
-> > 
-> > 	http://www.ibiblio.org/pub/historic-linux/early-ports/Sparc/NCR/NCR53C9X.txt
-> > 
-> > it speaks as if ESP_CONFIG3_TMS and ESP_CONFIG3_TENB are merely finer 
-> > grained versions of config2 register setting ESP_CONFIG2_SCSI2ENAB, 
-> > which enables both features.
-> 
-> Yes, so setting the ESP_CONFIG2_SCSI2ENAB bit is correct. The only 
-> problem is, doesn't the ESP_CONFIG3_TMS bit get cleared again later, 
-> when the CONFIG3 register is written to?
-> 
-
-Nevermind my question. To falsify my own theory, I see that 
-ESP_CONFIG3_TMS == ESP_CONFIG3_FCLK, and thus esp_scsi does actually set 
-the relevant bit, and therefore "the FSC can receive 3-byte messages 
-during businitiated select with ATN."
-
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 3790ed5..f0c5b10 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -67,6 +67,14 @@
+ MODULE_ALIAS("g_NCR5380_mmio");
+ MODULE_LICENSE("GPL");
+ 
++static bool irq_working;
++
++static irqreturn_t test_irq(int irq, void *dev_id)
++{
++	irq_working = true;
++	return IRQ_HANDLED;
++}
++
+ /*
+  * Configure I/O address of 53C400A or DTC436 by writing magic numbers
+  * to ports 0x779 and 0x379.
+@@ -275,10 +283,29 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+ 		/* set IRQ for HP C2502 */
+ 		if (board == BOARD_HP_C2502)
+ 			magic_configure(port_idx, instance->irq, magic);
+-		if (request_irq(instance->irq, generic_NCR5380_intr,
+-				0, "NCR5380", instance)) {
++		/* test if the IRQ is working */
++		irq_working = false;
++		if (request_irq(instance->irq, test_irq,
++				0, "NCR5380-irqtest", NULL)) {
+ 			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
+ 			instance->irq = NO_IRQ;
++		} else {
++			NCR5380_trigger_irq(instance);
++			free_irq(instance->irq, NULL);
++			if (irq_working) {
++				if (request_irq(instance->irq,
++						generic_NCR5380_intr, 0,
++						"NCR5380", instance)) {
++					printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n",
++					       instance->host_no,
++					       instance->irq);
++					instance->irq = NO_IRQ;
++				}
++			} else {
++				printk(KERN_WARNING "scsi%d : IRQ%d not working, interrupts disabled\n",
++				       instance->host_no, instance->irq);
++				instance->irq = NO_IRQ;
++			}
+ 		}
+ 	}
+ 
 -- 
+Ondrej Zary
