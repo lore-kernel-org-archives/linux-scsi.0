@@ -1,73 +1,161 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a
- deadlock
-Date: Sun, 30 Oct 2016 14:25:58 -0600
-Message-ID: <1477859158.2777.10.camel@linux.vnet.ibm.com>
-References: <14379fd1-c9bd-ad75-ca7c-0632f3e3c5d1@sandisk.com>
-         <1477706936.2850.27.camel@linux.vnet.ibm.com>
-         <BLUPR02MB168399B25661CFC9D1DA93F381AF0@BLUPR02MB1683.namprd02.prod.outlook.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46200 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1757332AbcJ3U0K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 Oct 2016 16:26:10 -0400
-Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id u9UKNfsf095239
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Oct 2016 16:26:09 -0400
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26dgkqcvhm-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Sun, 30 Oct 2016 16:26:09 -0400
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Sun, 30 Oct 2016 14:26:08 -0600
-In-Reply-To: <BLUPR02MB168399B25661CFC9D1DA93F381AF0@BLUPR02MB1683.namprd02.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Ondrej Zary <linux@rainbow-software.org>
+Subject: [PATCH 1/3] NCR5380: Use probe_irq_*() for IRQ probing
+Date: Sun, 30 Oct 2016 23:40:01 +0100
+Message-ID: <1477867203-7480-1-git-send-email-linux@rainbow-software.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Sun, 2016-10-30 at 19:22 +0000, Bart Van Assche wrote:
-> On 10/28/16 19:08, James Bottomley wrote:
-> > This is a deadlock caused by an inversion issue in kernfs (suicide
-> > vs
-> > non-suicide removes); so fixing it in SCSI alone really isn't
-> > appropriate.  I count at least five other subsystems all using this
-> > mechanism, so they'll all be similarly affected.  It looks to be
-> > fairly
-> > simply fixable inside kernfs, so please fix it that way.
-> 
-> Hello James,
-> 
-> Can you clarify this further? To me this looks like the result of how
-> the SCSI core works rather than an issue in the kernfs layer.
+Use standard probe_irq_on() and probe_irq_off() functions instead of own
+implementation.
+This prevents warning messages like this in the kernel log:
+genirq: Flags mismatch irq 1. 00000000 (NCR-probe) vs. 00000080 (i8042)
 
-I'm at a bit of a loss, the problem looks clear from the original
-trace, so I'm not really sure what's not clear to you.
+Move the IRQ trigger code to a separate function so it can be used for
+other purposes (testing if the IRQ works).
 
-The inversion is between the scan mutex and s_active which is the
-rather fanciful name Tejun gave to the hand rolled mutex in
-kernfs_node.
+Also add missing IRQ reset after probe.
 
-The reason for the inversion is that s_active is taken when you open a
-sysfs file, including the delete one.  There's a special suidice path
-to allow that file to be deleted while something else holds the lock. 
- However, if the delete path also takes any lock, and there's a way to
-get into delete not via writing to sysfs (which is pretty much
-universally true) then you get an inversion because kernfs_node mutex
-is also taken when the file is removed, which is why it's not specific
-to scsi.
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+---
+ drivers/scsi/NCR5380.c   |   72 +++++++++++++++++-----------------------------
+ drivers/scsi/NCR5380.h   |    3 +-
+ drivers/scsi/g_NCR5380.c |    2 +-
+ 3 files changed, 29 insertions(+), 48 deletions(-)
 
-Since you press the issue, I've got to say I'm not a huge fan of trying
-to escape from a lock inversion by making some path asynchronous
-because it usually leads to even more problems on down the road.  If
-there's some problem with the generic fix, there is a way of fixing
-this in SCSI without introducing asynchronicity.
-
-James
-
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index d849ffa..01c0027 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -351,50 +351,13 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+ }
+ #endif
+ 
+-
+-static int probe_irq;
+-
+-/**
+- * probe_intr	-	helper for IRQ autoprobe
+- * @irq: interrupt number
+- * @dev_id: unused
+- * @regs: unused
+- *
+- * Set a flag to indicate the IRQ in question was received. This is
+- * used by the IRQ probe code.
+- */
+-
+-static irqreturn_t probe_intr(int irq, void *dev_id)
+-{
+-	probe_irq = irq;
+-	return IRQ_HANDLED;
+-}
+-
+-/**
+- * NCR5380_probe_irq	-	find the IRQ of an NCR5380
+- * @instance: NCR5380 controller
+- * @possible: bitmask of ISA IRQ lines
+- *
+- * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
+- * and then looking to see what interrupt actually turned up.
+- */
+-
+-static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+-						int possible)
++static void NCR5380_trigger_irq(struct Scsi_Host *instance)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+-	unsigned long timeout;
+-	int trying_irqs, i, mask;
+-
+-	for (trying_irqs = 0, i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+-		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+-			trying_irqs |= mask;
+-
+-	timeout = jiffies + msecs_to_jiffies(250);
+-	probe_irq = NO_IRQ;
++	unsigned long timeout = jiffies + msecs_to_jiffies(2500);
+ 
+ 	/*
+-	 * A interrupt is triggered whenever BSY = false, SEL = true
++	 * An interrupt is triggered whenever BSY = false, SEL = true
+ 	 * and a bit set in the SELECT_ENABLE_REG is asserted on the
+ 	 * SCSI bus.
+ 	 *
+@@ -402,23 +365,40 @@ static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+ 	 * (I/O, C/D, and MSG) match those in the TCR, so we must reset that
+ 	 * to zero.
+ 	 */
+-
+ 	NCR5380_write(TARGET_COMMAND_REG, 0);
+ 	NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+ 	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_SEL);
+ 
+-	while (probe_irq == NO_IRQ && time_before(jiffies, timeout))
++	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_IRQ) &&
++	       time_before(jiffies, timeout))
+ 		schedule_timeout_uninterruptible(1);
+ 
+ 	NCR5380_write(SELECT_ENABLE_REG, 0);
+ 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
++}
+ 
+-	for (i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+-		if (trying_irqs & mask)
+-			free_irq(i, NULL);
++/**
++ * NCR5380_probe_irq	-	find the IRQ of an NCR5380
++ * @instance: NCR5380 controller
++ *
++ * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
++ * and then looking to see what interrupt actually turned up.
++ */
++
++static int NCR5380_probe_irq(struct Scsi_Host *instance)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++	int irqs, irq;
++
++	irqs = probe_irq_on();
++	NCR5380_trigger_irq(instance);
++	irq = probe_irq_off(irqs);
++	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++	if (irq < 0)
++		irq = 0;
+ 
+-	return probe_irq;
++	return irq;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index 3c6ce54..b2fca52 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -290,7 +290,8 @@ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
+ #define NCR5380_dprint_phase(flg, arg) do {} while (0)
+ #endif
+ 
+-static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
++static void NCR5380_trigger_irq(struct Scsi_Host *instance);
++static int NCR5380_probe_irq(struct Scsi_Host *instance);
+ static int NCR5380_init(struct Scsi_Host *instance, int flags);
+ static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
+ static void NCR5380_exit(struct Scsi_Host *instance);
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 7299ad9..3790ed5 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -265,7 +265,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+ 	if (irq != IRQ_AUTO)
+ 		instance->irq = irq;
+ 	else
+-		instance->irq = NCR5380_probe_irq(instance, 0xffff);
++		instance->irq = NCR5380_probe_irq(instance);
+ 
+ 	/* Compatibility with documented NCR5380 kernel parameters */
+ 	if (instance->irq == 255)
+-- 
+Ondrej Zary
