@@ -1,117 +1,70 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] scsi_dh_alua: fix wrong scsi_device_put() in
- alua_rtpg_queue()
-Date: Sun, 30 Oct 2016 13:54:57 +0100
-Message-ID: <379a3618-7ecd-97b5-eadb-a946e8c61c02@suse.de>
-References: <1477642877-10228-1-git-send-email-tang.junhui@zte.com.cn>
- <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 02/16] scsi: don't use fc_bsg_job::request and
+ fc_bsg_job::reply directly
+Date: Sun, 30 Oct 2016 11:56:52 -0600
+Message-ID: <20161030175652.al6viedhd3i67jq5@linux-x5ow.site>
+References: <cover.1476276823.git.jthumshirn@suse.de>
+ <b92d12e4f78c4998bc8ad000359c127e673379f3.1476276823.git.jthumshirn@suse.de>
+ <2ea07f3f-88eb-b795-fa37-a223bf80e581@linux.vnet.ibm.com>
+ <20161013162405.aoxy3bdkc4bqtwsk@linux-x5ow.site>
+ <4b411836-e76f-b67a-3d49-ad3d51b8f216@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41679 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:48611 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753014AbcJ3MzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 Oct 2016 08:55:10 -0400
-In-Reply-To: <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
+        id S1753391AbcJ3R5V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 30 Oct 2016 13:57:21 -0400
+Content-Disposition: inline
+In-Reply-To: <4b411836-e76f-b67a-3d49-ad3d51b8f216@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, tang.junhui@zte.com.cn, matthew@wil.cx
-Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>s
 
-On 10/28/2016 05:05 PM, Bart Van Assche wrote:
-> On 10/28/2016 01:21 AM, tang.junhui@zte.com.cn wrote:
->> From: "tang.junhui" <tang.junhui@zte.com.cn>
->>
->> scsi_device_put() is called when the conditions pg->rtpg_sdev!=NULL
->> and queue_delayed_work() failure satisfied, actually it should be not
->> to call because scsi_device_get() is not called previous in this scene.
->>
->> Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
->> ---
->>  drivers/scsi/device_handler/scsi_dh_alua.c | 5 ++++-
->>  1 file changed, 4 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
->> index 241829e..78081df 100644
->> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
->> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
->> @@ -866,6 +866,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->>  			    struct alua_queue_data *qdata, bool force)
->>  {
->>  	int start_queue = 0;
->> +	int sdev_geted = 0;
->>  	unsigned long flags;
->>  	struct workqueue_struct *alua_wq = kaluad_wq;
->>
->> @@ -884,6 +885,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->>  		kref_get(&pg->kref);
->>  		pg->rtpg_sdev = sdev;
->>  		scsi_device_get(sdev);
->> +		sdev_geted = 1;
->>  		start_queue = 1;
->>  	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
->>  		pg->flags |= ALUA_PG_RUN_RTPG;
->> @@ -901,7 +903,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->>  	if (start_queue &&
->>  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
->>  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
->> -		scsi_device_put(sdev);
->> +		if (sdev_geted)
->> +			scsi_device_put(sdev);
->>  		kref_put(&pg->kref, release_port_group);
->>  	}
->>  }
->
-> Hello Tang Junhui,
->
-> Personally I prefer the patch below because that patch does not introduce
-> a new variable. This is a patch I started testing four weeks ago and it has
-> survived all my ALUA tests so far. Please note that I do not know whether
-> my tests hit the !(pg->flags & ALUA_PG_RUNNING) code path.
->
-> From: Bart Van Assche <bart.vanassche@sandisk.com>
-> Date: Thu, 29 Sep 2016 10:06:51 -0700
-> Subject: [PATCH] scsi_dh_alua: Fix a reference counting bug
->
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Cc: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/device_handler/scsi_dh_alua.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-> index 241829e..23835f7 100644
-> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
-> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-> @@ -890,6 +890,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  		/* Do not queue if the worker is already running */
->  		if (!(pg->flags & ALUA_PG_RUNNING)) {
->  			kref_get(&pg->kref);
-> +			sdev = NULL;
->  			start_queue = 1;
->  		}
->  	}
-> @@ -901,7 +902,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
->  	if (start_queue &&
->  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
->  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
-> -		scsi_device_put(sdev);
-> +		if (sdev)
-> +			scsi_device_put(sdev);
->  		kref_put(&pg->kref, release_port_group);
->  	}
->  }
->
-Yes, this looks far better.
+On Fri, Oct 28, 2016 at 11:53:46AM +0200, Steffen Maier wrote:
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+[...]
 
-Cheers,
+> > > 
+> > > > @@ -3937,6 +3944,7 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+> > > >  	struct request *req;
+> > > >  	struct fc_bsg_job *job;
+> > > >  	enum fc_dispatch_result ret;
+> > > > +	struct fc_bsg_reply *bsg_reply;
+> > > > 
+> > > >  	if (!get_device(dev))
+> > > >  		return;
+> > > > @@ -3973,8 +3981,9 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
+> > > >  		/* check if we have the msgcode value at least */
+> > > >  		if (job->request_len < sizeof(uint32_t)) {
+> > > >  			BUG_ON(job->reply_len < sizeof(uint32_t));
+> > > > -			job->reply->reply_payload_rcv_len = 0;
+> > > > -			job->reply->result = -ENOMSG;
+> > > > +			bsg_reply = job->reply;
+> > > > +			bsg_reply->reply_payload_rcv_len = 0;
+> > > > +			bsg_reply->result = -ENOMSG;
+> 
+> Compiler optimization re-ordered above two lines and the first pointer
+> derefence is bsg_reply->result [field offset 0] where bsg_reply is NULL.
+> The assignment tries to write to memory at address NULL causing the kernel
+> page fault.
+> 
+> Does your suggested change for [PATCH v3 02/16], shuffling the
+> job->request_len checks, address above kernel page fault?
 
-Hannes
+This is what I hope at least. I'm sorry but I don't have any experience with s390
+and zfcp at all. I still need to get a test environment set up, but all the
+people knowing how to do are rather busy at the moment. All my tests on x86_64
+with FCoE and lpfc haven't had a problem so far.
+
+Thanks,
+	Johannes
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
