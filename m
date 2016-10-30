@@ -1,94 +1,117 @@
-From: Andrey Grodzovsky <andrey2805@gmail.com>
-Subject: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination.
-Date: Sun, 30 Oct 2016 08:43:37 -0400
-Message-ID: <1477831417-25655-1-git-send-email-andrey2805@gmail.com>
-Return-path: <stable-owner@vger.kernel.org>
-Sender: stable-owner@vger.kernel.org
-To: MPT-FusionLinux.pdl@broadcom.com
-Cc: Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: fix wrong scsi_device_put() in
+ alua_rtpg_queue()
+Date: Sun, 30 Oct 2016 13:54:57 +0100
+Message-ID: <379a3618-7ecd-97b5-eadb-a946e8c61c02@suse.de>
+References: <1477642877-10228-1-git-send-email-tang.junhui@zte.com.cn>
+ <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41679 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753014AbcJ3MzK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 30 Oct 2016 08:55:10 -0400
+In-Reply-To: <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, tang.junhui@zte.com.cn, matthew@wil.cx
+Cc: linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
 
-Problem:
-This is a work around for a bug with LSI Fusion MPT SAS2 when
-pefroming secure erase. Due to the very long time the operation
-takes commands issued during the erase will time out and will trigger
-execution of abort hook. Even though the abort hook is called for
-the specifc command which timed out this leads to entire device halt
-(scsi_state terminated) and premature termination of the secured erase.
+On 10/28/2016 05:05 PM, Bart Van Assche wrote:
+> On 10/28/2016 01:21 AM, tang.junhui@zte.com.cn wrote:
+>> From: "tang.junhui" <tang.junhui@zte.com.cn>
+>>
+>> scsi_device_put() is called when the conditions pg->rtpg_sdev!=NULL
+>> and queue_delayed_work() failure satisfied, actually it should be not
+>> to call because scsi_device_get() is not called previous in this scene.
+>>
+>> Signed-off-by: tang.junhui <tang.junhui@zte.com.cn>
+>> ---
+>>  drivers/scsi/device_handler/scsi_dh_alua.c | 5 ++++-
+>>  1 file changed, 4 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> index 241829e..78081df 100644
+>> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+>> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+>> @@ -866,6 +866,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>>  			    struct alua_queue_data *qdata, bool force)
+>>  {
+>>  	int start_queue = 0;
+>> +	int sdev_geted = 0;
+>>  	unsigned long flags;
+>>  	struct workqueue_struct *alua_wq = kaluad_wq;
+>>
+>> @@ -884,6 +885,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>>  		kref_get(&pg->kref);
+>>  		pg->rtpg_sdev = sdev;
+>>  		scsi_device_get(sdev);
+>> +		sdev_geted = 1;
+>>  		start_queue = 1;
+>>  	} else if (!(pg->flags & ALUA_PG_RUN_RTPG) && force) {
+>>  		pg->flags |= ALUA_PG_RUN_RTPG;
+>> @@ -901,7 +903,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>>  	if (start_queue &&
+>>  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
+>>  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
+>> -		scsi_device_put(sdev);
+>> +		if (sdev_geted)
+>> +			scsi_device_put(sdev);
+>>  		kref_put(&pg->kref, release_port_group);
+>>  	}
+>>  }
+>
+> Hello Tang Junhui,
+>
+> Personally I prefer the patch below because that patch does not introduce
+> a new variable. This is a patch I started testing four weeks ago and it has
+> survived all my ALUA tests so far. Please note that I do not know whether
+> my tests hit the !(pg->flags & ALUA_PG_RUNNING) code path.
+>
+> From: Bart Van Assche <bart.vanassche@sandisk.com>
+> Date: Thu, 29 Sep 2016 10:06:51 -0700
+> Subject: [PATCH] scsi_dh_alua: Fix a reference counting bug
+>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index 241829e..23835f7 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -890,6 +890,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>  		/* Do not queue if the worker is already running */
+>  		if (!(pg->flags & ALUA_PG_RUNNING)) {
+>  			kref_get(&pg->kref);
+> +			sdev = NULL;
+>  			start_queue = 1;
+>  		}
+>  	}
+> @@ -901,7 +902,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>  	if (start_queue &&
+>  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
+>  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
+> -		scsi_device_put(sdev);
+> +		if (sdev)
+> +			scsi_device_put(sdev);
+>  		kref_put(&pg->kref, release_port_group);
+>  	}
+>  }
+>
+Yes, this looks far better.
 
-Fix:
-Set device state to busy while erase in progress to reject any incoming
-commands until the erase is done. The device is blocked any way during
-this time and cannot execute any other command.
-More data and logs can be found here -
-https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+Cheers,
 
-diff --git [PATCH]drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5a97e32..5542dd02 100644
---- [PATCH]drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3500,6 +3500,23 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
- 
-+/**
-+ * This is a work around for a bug with LSI Fusion MPT SAS2 when
-+ * pefroming secure erase. Due to the verly long time the operation
-+ * takes commands issued during the erase will time out and will trigger
-+ * execution of abort hook. This leads to device reset and premature
-+ * termination of the secured erase.
-+ */
-+static inline bool disk_erase_command(struct scsi_cmnd *scmd)
-+{
-+   /**
-+   * Identify secure erase command according to
-+   * ATA/ATAPI Command Set (ATA8-ACS) p.202
-+   */
-+   return scmd->cmd_len == 16 && scmd->cmnd[14] == 0xf4;
-+}
-+
-+
- 
- /**
-  * _scsih_qcmd - main scsi request entry point
-@@ -3528,6 +3545,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		scsi_print_command(scmd);
- #endif
- 
-+   /**
-+	* Lock the device for any subsequent command until secured erase
-+	* command is done.
-+	*/
-+	if (disk_erase_command(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
-+
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4062,6 +4087,11 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
- 
-+	/* Secured erase is done. Unlock the device */
-+	if (disk_erase_command(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
+Hannes
 -- 
-2.1.4
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
