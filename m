@@ -1,70 +1,115 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 02/16] scsi: don't use fc_bsg_job::request and
- fc_bsg_job::reply directly
-Date: Sun, 30 Oct 2016 11:56:52 -0600
-Message-ID: <20161030175652.al6viedhd3i67jq5@linux-x5ow.site>
-References: <cover.1476276823.git.jthumshirn@suse.de>
- <b92d12e4f78c4998bc8ad000359c127e673379f3.1476276823.git.jthumshirn@suse.de>
- <2ea07f3f-88eb-b795-fa37-a223bf80e581@linux.vnet.ibm.com>
- <20161013162405.aoxy3bdkc4bqtwsk@linux-x5ow.site>
- <4b411836-e76f-b67a-3d49-ad3d51b8f216@linux.vnet.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination.
+Date: Sun, 30 Oct 2016 19:43:04 +0100
+Message-ID: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de>
+References: <1477831417-25655-1-git-send-email-andrey2805@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48611 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753391AbcJ3R5V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 30 Oct 2016 13:57:21 -0400
-Content-Disposition: inline
-In-Reply-To: <4b411836-e76f-b67a-3d49-ad3d51b8f216@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed;
+ boundary="------------B9AC4891C615F5DAD18AC976"
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1477831417-25655-1-git-send-email-andrey2805@gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Andrey Grodzovsky <andrey2805@gmail.com>, MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>s
 
-On Fri, Oct 28, 2016 at 11:53:46AM +0200, Steffen Maier wrote:
+This is a multi-part message in MIME format.
+--------------B9AC4891C615F5DAD18AC976
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 
-[...]
+On 10/30/2016 01:43 PM, Andrey Grodzovsky wrote:
+> Problem:
+> This is a work around for a bug with LSI Fusion MPT SAS2 when
+> pefroming secure erase. Due to the very long time the operation
+> takes commands issued during the erase will time out and will trigger
+> execution of abort hook. Even though the abort hook is called for
+> the specifc command which timed out this leads to entire device halt
+> (scsi_state terminated) and premature termination of the secured erase.
+>
+Actually, it is _not_ the erase command which times out, it's the 
+successive commands which time out, as the controller is unable to 
+process them while erase is running.
+I suspect a bug in the SAT-layer from the mpt3sas firmware, which simply 
+does not return 'busy' for additional commands when erase is in progress.
+That being said, this issue was obscured prior to implementing 
+asynchronous aborts, as originally a timeout would be invoking SCSI EH, 
+which would wait for all outstanding commands to complete.
+So by the time SCSI EH was invoked the erase command was already 
+completed, allowing for a successful retry of the failing command.
+With asynchronous aborts we don't have this option, as the abort will 
+succeed, but the command cannot be retried as the original erase command 
+is still running.
 
-> > > 
-> > > > @@ -3937,6 +3944,7 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
-> > > >  	struct request *req;
-> > > >  	struct fc_bsg_job *job;
-> > > >  	enum fc_dispatch_result ret;
-> > > > +	struct fc_bsg_reply *bsg_reply;
-> > > > 
-> > > >  	if (!get_device(dev))
-> > > >  		return;
-> > > > @@ -3973,8 +3981,9 @@ fc_bsg_request_handler(struct request_queue *q, struct Scsi_Host *shost,
-> > > >  		/* check if we have the msgcode value at least */
-> > > >  		if (job->request_len < sizeof(uint32_t)) {
-> > > >  			BUG_ON(job->reply_len < sizeof(uint32_t));
-> > > > -			job->reply->reply_payload_rcv_len = 0;
-> > > > -			job->reply->result = -ENOMSG;
-> > > > +			bsg_reply = job->reply;
-> > > > +			bsg_reply->reply_payload_rcv_len = 0;
-> > > > +			bsg_reply->result = -ENOMSG;
-> 
-> Compiler optimization re-ordered above two lines and the first pointer
-> derefence is bsg_reply->result [field offset 0] where bsg_reply is NULL.
-> The assignment tries to write to memory at address NULL causing the kernel
-> page fault.
-> 
-> Does your suggested change for [PATCH v3 02/16], shuffling the
-> job->request_len checks, address above kernel page fault?
+In the light of the above I guess we need something like the attached 
+patch. I'm not utterly proud of if, but I guess it's the best we can do 
+for the moment.
 
-This is what I hope at least. I'm sorry but I don't have any experience with s390
-and zfcp at all. I still need to get a test environment set up, but all the
-people knowing how to do are rather busy at the moment. All my tests on x86_64
-with FCoE and lpfc haven't had a problem so far.
+Cheers,
 
-Thanks,
-	Johannes
+Hannes
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+
+--------------B9AC4891C615F5DAD18AC976
+Content-Type: text/x-patch;
+ name="0001-mpt3sas-hack-disable-concurrent-commands-for-ATA_16-.patch"
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+ filename*0="0001-mpt3sas-hack-disable-concurrent-commands-for-ATA_16-.pa";
+ filename*1="tch"
+
+>From 1556746987c3b4c1a1a4705625280b1136554f89 Mon Sep 17 00:00:00 2001
+From: Hannes Reinecke <hare@suse.de>
+Date: Sun, 30 Oct 2016 14:24:44 +0100
+Subject: [PATCH] mpt3sas: hack: disable concurrent commands for ATA_16/ATA_12
+
+There's a bug in the mpt3sas driver/firmware which would not return
+BUSY if it's busy processing requests (eg 'erase') and cannot
+respond to other commands. Hence these commands will timeout
+and eventually start the error handler.
+This patch disallows request processing whenever an ATA_12 or
+ATA_16 command is received, thereby avoiding this problem.
+
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 11 +++++++++++
+ 1 file changed, 11 insertions(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 97987e7..18b9f09 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4096,6 +4096,13 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	    sas_device_priv_data->block)
+ 		return SCSI_MLQUEUE_DEVICE_BUSY;
+ 
++	/*
++	 * Hack: block the device for any ATA_12/ATA_16 command
++	 */
++	if (scmd->cmnd[0] == 0xa1 || scmd->cmnd[0] == 0x85) {
++		sas_device_priv_data = scmd->device->hostdata;
++		_scsih_internal_device_block(scmd->device, sas_device_priv_data);
++	}
+ 	if (scmd->sc_data_direction == DMA_FROM_DEVICE)
+ 		mpi_control = MPI2_SCSIIO_CONTROL_READ;
+ 	else if (scmd->sc_data_direction == DMA_TO_DEVICE)
+@@ -4835,6 +4842,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 
+  out:
+ 
++	if (scmd->cmnd[0] == 0xa1 || scmd->cmnd[0] == 0x85) {
++		sas_device_priv_data = scmd->device->hostdata;
++		_scsih_internal_device_unblock(scmd->device, sas_device_priv_data);
++	}
+ 	scsi_dma_unmap(scmd);
+ 
+ 	scmd->scsi_done(scmd);
+-- 
+2.6.6
+
+
+--------------B9AC4891C615F5DAD18AC976--
