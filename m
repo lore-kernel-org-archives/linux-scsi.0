@@ -1,161 +1,94 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 1/2] NCR5380: Use probe_irq_*() for IRQ probing
-Date: Sun, 30 Oct 2016 11:49:42 +0100
-Message-ID: <1477824583-1559-1-git-send-email-linux@rainbow-software.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Andrey Grodzovsky <andrey2805@gmail.com>
+Subject: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination.
+Date: Sun, 30 Oct 2016 08:43:37 -0400
+Message-ID: <1477831417-25655-1-git-send-email-andrey2805@gmail.com>
+Return-path: <stable-owner@vger.kernel.org>
+Sender: stable-owner@vger.kernel.org
+To: MPT-FusionLinux.pdl@broadcom.com
+Cc: Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use standard probe_irq_on() and probe_irq_off() functions instead of own
-implementation.
-This prevents warning messages like this in the kernel log:
-genirq: Flags mismatch irq 1. 00000000 (NCR-probe) vs. 00000080 (i8042)
+Problem:
+This is a work around for a bug with LSI Fusion MPT SAS2 when
+pefroming secure erase. Due to the very long time the operation
+takes commands issued during the erase will time out and will trigger
+execution of abort hook. Even though the abort hook is called for
+the specifc command which timed out this leads to entire device halt
+(scsi_state terminated) and premature termination of the secured erase.
 
-Move the IRQ trigger code to a separate function so it can be used for
-other purposes (testing if the IRQ works).
+Fix:
+Set device state to busy while erase in progress to reject any incoming
+commands until the erase is done. The device is blocked any way during
+this time and cannot execute any other command.
+More data and logs can be found here -
+https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
 
-Also add missing IRQ reset after probe.
-
-Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: <stable@vger.kernel.org>
 ---
- drivers/scsi/NCR5380.c   |   72 +++++++++++++++++-----------------------------
- drivers/scsi/NCR5380.h   |    3 +-
- drivers/scsi/g_NCR5380.c |    2 +-
- 3 files changed, 29 insertions(+), 48 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
 
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index d849ffa..01c0027 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -351,50 +351,13 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+diff --git [PATCH]drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5a97e32..5542dd02 100644
+--- [PATCH]drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3500,6 +3500,23 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+ 	    SAM_STAT_CHECK_CONDITION;
  }
- #endif
  
--
--static int probe_irq;
--
--/**
-- * probe_intr	-	helper for IRQ autoprobe
-- * @irq: interrupt number
-- * @dev_id: unused
-- * @regs: unused
-- *
-- * Set a flag to indicate the IRQ in question was received. This is
-- * used by the IRQ probe code.
-- */
--
--static irqreturn_t probe_intr(int irq, void *dev_id)
--{
--	probe_irq = irq;
--	return IRQ_HANDLED;
--}
--
--/**
-- * NCR5380_probe_irq	-	find the IRQ of an NCR5380
-- * @instance: NCR5380 controller
-- * @possible: bitmask of ISA IRQ lines
-- *
-- * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
-- * and then looking to see what interrupt actually turned up.
-- */
--
--static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
--						int possible)
-+static void NCR5380_trigger_irq(struct Scsi_Host *instance)
- {
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
--	unsigned long timeout;
--	int trying_irqs, i, mask;
--
--	for (trying_irqs = 0, i = 1, mask = 2; i < 16; ++i, mask <<= 1)
--		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
--			trying_irqs |= mask;
--
--	timeout = jiffies + msecs_to_jiffies(250);
--	probe_irq = NO_IRQ;
-+	unsigned long timeout = jiffies + msecs_to_jiffies(2500);
- 
- 	/*
--	 * A interrupt is triggered whenever BSY = false, SEL = true
-+	 * An interrupt is triggered whenever BSY = false, SEL = true
- 	 * and a bit set in the SELECT_ENABLE_REG is asserted on the
- 	 * SCSI bus.
- 	 *
-@@ -402,23 +365,40 @@ static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
- 	 * (I/O, C/D, and MSG) match those in the TCR, so we must reset that
- 	 * to zero.
- 	 */
--
- 	NCR5380_write(TARGET_COMMAND_REG, 0);
- 	NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
- 	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_SEL);
- 
--	while (probe_irq == NO_IRQ && time_before(jiffies, timeout))
-+	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_IRQ) &&
-+	       time_before(jiffies, timeout))
- 		schedule_timeout_uninterruptible(1);
- 
- 	NCR5380_write(SELECT_ENABLE_REG, 0);
- 	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-+}
- 
--	for (i = 1, mask = 2; i < 16; ++i, mask <<= 1)
--		if (trying_irqs & mask)
--			free_irq(i, NULL);
 +/**
-+ * NCR5380_probe_irq	-	find the IRQ of an NCR5380
-+ * @instance: NCR5380 controller
-+ *
-+ * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
-+ * and then looking to see what interrupt actually turned up.
++ * This is a work around for a bug with LSI Fusion MPT SAS2 when
++ * pefroming secure erase. Due to the verly long time the operation
++ * takes commands issued during the erase will time out and will trigger
++ * execution of abort hook. This leads to device reset and premature
++ * termination of the secured erase.
 + */
-+
-+static int NCR5380_probe_irq(struct Scsi_Host *instance)
++static inline bool disk_erase_command(struct scsi_cmnd *scmd)
 +{
-+	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-+	int irqs, irq;
++   /**
++   * Identify secure erase command according to
++   * ATA/ATAPI Command Set (ATA8-ACS) p.202
++   */
++   return scmd->cmd_len == 16 && scmd->cmnd[14] == 0xf4;
++}
 +
-+	irqs = probe_irq_on();
-+	NCR5380_trigger_irq(instance);
-+	irq = probe_irq_off(irqs);
-+	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-+	if (irq < 0)
-+		irq = 0;
- 
--	return probe_irq;
-+	return irq;
- }
++
  
  /**
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index 3c6ce54..b2fca52 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -290,7 +290,8 @@ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
- #define NCR5380_dprint_phase(flg, arg) do {} while (0)
+  * _scsih_qcmd - main scsi request entry point
+@@ -3528,6 +3545,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		scsi_print_command(scmd);
  #endif
  
--static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
-+static void NCR5380_trigger_irq(struct Scsi_Host *instance);
-+static int NCR5380_probe_irq(struct Scsi_Host *instance);
- static int NCR5380_init(struct Scsi_Host *instance, int flags);
- static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
- static void NCR5380_exit(struct Scsi_Host *instance);
-diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 7299ad9..3790ed5 100644
---- a/drivers/scsi/g_NCR5380.c
-+++ b/drivers/scsi/g_NCR5380.c
-@@ -265,7 +265,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 	if (irq != IRQ_AUTO)
- 		instance->irq = irq;
- 	else
--		instance->irq = NCR5380_probe_irq(instance, 0xffff);
-+		instance->irq = NCR5380_probe_irq(instance);
++   /**
++	* Lock the device for any subsequent command until secured erase
++	* command is done.
++	*/
++	if (disk_erase_command(scmd))
++		scsi_internal_device_block(scmd->device);
++
++
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -4062,6 +4087,11 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	if (scmd == NULL)
+ 		return 1;
  
- 	/* Compatibility with documented NCR5380 kernel parameters */
- 	if (instance->irq == 255)
++	/* Secured erase is done. Unlock the device */
++	if (disk_erase_command(scmd))
++		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
++
++
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+ 
+ 	if (mpi_reply == NULL) {
 -- 
-Ondrej Zary
+2.1.4
