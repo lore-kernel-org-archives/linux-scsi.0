@@ -1,54 +1,52 @@
-From: Luis de Bethencourt <luisbg@osg.samsung.com>
-Subject: Re: [PATCH] mvsas: fix error return code in mvs_task_prep()
-Date: Mon, 31 Oct 2016 15:13:57 +0000
-Message-ID: <9a9d6b4a-2429-93d6-8ca1-2b89e0f9ef42@osg.samsung.com>
-References: <1477926250-10292-1-git-send-email-weiyj.lk@gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 1/4] hpsa: correct lockup detector pci_disable_device
+Date: Mon, 31 Oct 2016 15:20:49 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B07FFC9@avsrvexchmbx1.microsemi.net>
+References: <147752001094.813.10247306839794156732.stgit@brunhilda>
+ <147752050626.813.15549750881571218281.stgit@brunhilda>
+ <20161027151903.GA4602@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ec2-52-27-115-49.us-west-2.compute.amazonaws.com ([52.27.115.49]:32845
-        "EHLO s-opensource.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S943917AbcJaPPS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2016 11:15:18 -0400
-In-Reply-To: <1477926250-10292-1-git-send-email-weiyj.lk@gmail.com>
+Received: from mail-bn3nam01on0070.outbound.protection.outlook.com ([104.47.33.70]:30020
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S943763AbcJaPVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Oct 2016 11:21:08 -0400
+In-Reply-To: <20161027151903.GA4602@infradead.org>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Tejun Heo <tj@kernel.org>, Baoyou Xie <baoyou.xie@linaro.org>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 31/10/16 15:04, Wei Yongjun wrote:
-> From: Wei Yongjun <weiyongjun1@huawei.com>
-> 
-> Fix to return error code -ENOMEM from the error handling
-> case instead of 0, as done elsewhere in this function.
-> 
-> Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
-> ---
->  drivers/scsi/mvsas/mv_sas.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
-> index 86eb199..c7cc803 100644
-> --- a/drivers/scsi/mvsas/mv_sas.c
-> +++ b/drivers/scsi/mvsas/mv_sas.c
-> @@ -791,8 +791,10 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
->  	slot->slot_tag = tag;
->  
->  	slot->buf = pci_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
-> -	if (!slot->buf)
-> +	if (!slot->buf) {
-> +		rc = -ENOMEM;
->  		goto err_out_tag;
-> +	}
->  	memset(slot->buf, 0, MVS_SLOT_BUF_SZ);
->  
->  	tei.task = task;
-> 
+> -----Original Message-----
+> From: Christoph Hellwig [mailto:hch@infradead.org]
+> Sent: Thursday, October 27, 2016 10:19 AM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; John Hall; Kevin Barnett; Mahesh
+> Rajashekhara; hch@infradead.org; Scott Teel; Viswas G; Justin Lindley; Sc=
+ott
+> Benesh; elliott@hpe.com; POSWALD@suse.com; linux-scsi@vger.kernel.org
+> Subject: Re: [PATCH 1/4] hpsa: correct lockup detector pci_disable_device
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> > -     pci_disable_device(h->pdev);
+> > +     if (pci_is_enabled(h->pdev))
+> > +             pci_disable_device(h->pdev);
+> >       fail_all_outstanding_cmds(h);
+>=20
+> Humm.  How can this even happen when the device isn't enabled?
 
-Looks good to me.
+controller_lockup_detected can be called multiple times, especially when I =
+am
+exercising the reset handler and abort handler, so I wanted to avoid the ke=
+rnel
+warning messages.
 
-This will make the rc in dev_printk() and prep_out correct.
+fail_all_outstanding_commands is called with status CMD_CTLR_LOCKUP
+and complete_scsi_command returns DID_NO_CONNECT.
 
-Thanks,
-Luis
