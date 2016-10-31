@@ -1,54 +1,77 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v3 12/12] scsi/ufs: qcom: Don't free resource-managed
- kmalloc element
-Date: Mon, 31 Oct 2016 14:14:32 -0700
-Message-ID: <569766034ef33abd18048929f6e42df6@codeaurora.org>
-References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
- <1477772534-14170-13-git-send-email-vivek.gautam@codeaurora.org>
+From: Jim Gill <jgill@vmware.com>
+Subject: Re: [PATCH] vmw_pvscsi: return SUCCESS for successful command aborts
+Date: Mon, 31 Oct 2016 22:04:16 +0000
+Message-ID: <DM2PR0501MB1536D5BFF3BBE109199083C6CBAE0@DM2PR0501MB1536.namprd05.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:38430 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S946965AbcJaVOe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2016 17:14:34 -0400
-In-Reply-To: <1477772534-14170-13-git-send-email-vivek.gautam@codeaurora.org>
+Received: from ex13-edg-ou-002.vmware.com ([208.91.0.190]:55638 "EHLO
+        EX13-EDG-OU-002.vmware.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S947365AbcJaWEZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Oct 2016 18:04:25 -0400
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, sboyd@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
+Cc: "emilne@redhat.com" <emilne@redhat.com>, "djeffery@redhat.com" <djeffery@redhat.com>, pv-drivers <pv-drivers@vmware.com>
 
-On 2016-10-29 13:22, Vivek Gautam wrote:
-> Host is allocated by managed kmalloc (devm_kmalloc). The
-> memory allocated with this function is automatically
-> freed on driver detach.
-> So, no need to make an exclusive free call over it.
-> 
-> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+
+On Fri, 2016-10-28 at 12:27 -0400, David Jeffery wrote:
+> The vmw_pvscsi driver reports most successful aborts as FAILED to the scs=
+i
+> error handler.  This is do to a misunderstanding of how completion_done()=
+ works
+> and its interaction with a successful wait using wait_for_completion_time=
+out().
+> The vmw_pvscsi driver is expecting completion_done() to always return tru=
+e if
+> complete() has been called on the completion structure.  But completion_d=
+one()
+> returns true after complete() has been called only if no function like
+> wait_for_completion_timeout() has seen the completion and cleared it as p=
+art of
+> successfully waiting for the completion.
+>=20
+> Instead of using completion_done(), vmw_pvscsi should just use the return
+> value from wait_for_completion_timeout() to know if the wait timed out or=
+ not.
+>=20
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+>=20
 > ---
-> 
-> New patch added in v3 of this cleanup series.
-> 
->  drivers/scsi/ufs/ufs-qcom.c | 1 -
->  1 file changed, 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index 9590df5..60a38b1 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1263,7 +1263,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  out_unregister_bus:
->  	phy_exit(host->generic_phy);
->  out_host_free:
-> -	devm_kfree(dev, host);
->  	ufshcd_set_variant(hba, NULL);
->  out:
->  	return err;
+>  vmw_pvscsi.c |    5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+>=20
+> --- a/drivers/scsi/vmw_pvscsi.c
+> +++ b/drivers/scsi/vmw_pvscsi.c
+> @@ -793,6 +793,7 @@ static int pvscsi_abort(struct scsi_cmnd
+>  	unsigned long flags;
+>  	int result =3D SUCCESS;
+>  	DECLARE_COMPLETION_ONSTACK(abort_cmp);
+> +	int done;
+> =20
+>  	scmd_printk(KERN_DEBUG, cmd, "task abort on host %u, %p\n",
+>  		    adapter->host->host_no, cmd);
+> @@ -824,10 +825,10 @@ static int pvscsi_abort(struct scsi_cmnd
+>  	pvscsi_abort_cmd(adapter, ctx);
+>  	spin_unlock_irqrestore(&adapter->hw_lock, flags);
+>  	/* Wait for 2 secs for the completion. */
+> -	wait_for_completion_timeout(&abort_cmp, msecs_to_jiffies(2000));
+> +	done =3D wait_for_completion_timeout(&abort_cmp, msecs_to_jiffies(2000)=
+);
+>  	spin_lock_irqsave(&adapter->hw_lock, flags);
+> =20
+> -	if (!completion_done(&abort_cmp)) {
+> +	if (!done) {
+>  		/*
+>  		 * Failed to abort the command, unmark the fact that it
+>  		 * was requested to be aborted.
+> --
 
-LGTM, Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
-
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+David, VMware prefers to update the module's version number as the driver i=
+s updated. Would you
+please update the PVSCSI_DRIVER_VERSION_STRING in vmx_pvscsi.h from 1.0.6.0=
+-k to 1.0.7.0-k?
+Otherwise the patch looks fine to us.=
