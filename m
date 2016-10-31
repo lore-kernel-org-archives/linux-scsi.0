@@ -1,12 +1,12 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 3/3] NCR5380: Check for chip presence in NCR5380_init()
-Date: Mon, 31 Oct 2016 20:35:00 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610312023240.20925@nippy.intranet>
-References: <1477867203-7480-1-git-send-email-linux@rainbow-software.org> <1477867203-7480-3-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1610311359080.32132@nippy.intranet> <201610310859.53758.linux@rainbow-software.org>
+Subject: Re: [PATCH 1/3] NCR5380: Use probe_irq_*() for IRQ probing
+Date: Mon, 31 Oct 2016 20:40:23 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1610312035170.20925@nippy.intranet>
+References: <1477867203-7480-1-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1610311311250.32132@nippy.intranet> <201610310911.14684.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201610310859.53758.linux@rainbow-software.org>
+In-Reply-To: <201610310911.14684.linux@rainbow-software.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Ondrej Zary <linux@rainbow-software.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -17,45 +17,202 @@ On Mon, 31 Oct 2016, Ondrej Zary wrote:
 
 > On Monday 31 October 2016, Finn Thain wrote:
 > > On Sun, 30 Oct 2016, Ondrej Zary wrote:
-> > > Read back MODE_REG after writing it in NCR5380_init() to check if the
-> > > chip is really there.
+> > > Use standard probe_irq_on() and probe_irq_off() functions instead of own
+> > > implementation.
+> >
+> > Thanks for doing this.
+> >
+> > > This prevents warning messages like this in the kernel log:
+> > > genirq: Flags mismatch irq 1. 00000000 (NCR-probe) vs. 00000080 (i8042)
 > > >
-> > > This prevents hang when incorrect I/O address was specified by user.
+> > > Move the IRQ trigger code to a separate function so it can be used for
+> > > other purposes (testing if the IRQ works).
+> > >
+> > > Also add missing IRQ reset after probe.
 > > >
 > > > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 > > > ---
-> > >  drivers/scsi/NCR5380.c |    5 +++++
-> > >  1 file changed, 5 insertions(+)
+> > >  drivers/scsi/NCR5380.c   |   72
+> > > +++++++++++++++++----------------------------- drivers/scsi/NCR5380.h   |
+> > >    3 +-
+> > >  drivers/scsi/g_NCR5380.c |    2 +-
+> > >  3 files changed, 29 insertions(+), 48 deletions(-)
 > > >
 > > > diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-> > > index 01c0027..ce3156d 100644
+> > > index d849ffa..01c0027 100644
 > > > --- a/drivers/scsi/NCR5380.c
 > > > +++ b/drivers/scsi/NCR5380.c
-> > > @@ -495,6 +495,11 @@ static int NCR5380_init(struct Scsi_Host *instance,
-> > > int flags)
+> > > @@ -351,50 +351,13 @@ static void NCR5380_print_phase(struct Scsi_Host
+> > > *instance) }
+> > >  #endif
 > > >
+> > > -
+> > > -static int probe_irq;
+> > > -
+> > > -/**
+> > > - * probe_intr	-	helper for IRQ autoprobe
+> > > - * @irq: interrupt number
+> > > - * @dev_id: unused
+> > > - * @regs: unused
+> > > - *
+> > > - * Set a flag to indicate the IRQ in question was received. This is
+> > > - * used by the IRQ probe code.
+> > > - */
+> > > -
+> > > -static irqreturn_t probe_intr(int irq, void *dev_id)
+> > > -{
+> > > -	probe_irq = irq;
+> > > -	return IRQ_HANDLED;
+> > > -}
+> > > -
+> > > -/**
+> > > - * NCR5380_probe_irq	-	find the IRQ of an NCR5380
+> > > - * @instance: NCR5380 controller
+> > > - * @possible: bitmask of ISA IRQ lines
+> > > - *
+> > > - * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
+> > > - * and then looking to see what interrupt actually turned up.
+> > > - */
+> > > -
+> > > -static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+> > > -						int possible)
+> > > +static void NCR5380_trigger_irq(struct Scsi_Host *instance)
+> > >  {
+> > >  	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+> > > -	unsigned long timeout;
+> > > -	int trying_irqs, i, mask;
+> > > -
+> > > -	for (trying_irqs = 0, i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+> > > -		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe",
+> > > NULL) == 0)) -			trying_irqs |= mask;
+> > > -
+> > > -	timeout = jiffies + msecs_to_jiffies(250);
+> > > -	probe_irq = NO_IRQ;
+> > > +	unsigned long timeout = jiffies + msecs_to_jiffies(2500);
+> > >
+> > >  	/*
+> > > -	 * A interrupt is triggered whenever BSY = false, SEL = true
+> > > +	 * An interrupt is triggered whenever BSY = false, SEL = true
+> > >  	 * and a bit set in the SELECT_ENABLE_REG is asserted on the
+> > >  	 * SCSI bus.
+> > >  	 *
+> > > @@ -402,23 +365,40 @@ static int __maybe_unused NCR5380_probe_irq(struct
+> > > Scsi_Host *instance, * (I/O, C/D, and MSG) match those in the TCR, so we
+> > > must reset that * to zero.
+> > >  	 */
+> > > -
+> > >  	NCR5380_write(TARGET_COMMAND_REG, 0);
+> > >  	NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+> > >  	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
+> > >  	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA |
+> > > ICR_ASSERT_SEL);
+> > >
+> > > -	while (probe_irq == NO_IRQ && time_before(jiffies, timeout))
+> > > +	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_IRQ) &&
+> > > +	       time_before(jiffies, timeout))
+> > >  		schedule_timeout_uninterruptible(1);
+> >
+> > You don't need a 2.5 second timeout here. To raise the interrupt the chip
+> > should not need more than a bus settle delay (400ns). Calling msleep(1)
+> > should be plenty.
+> 
+> Yes, 2.5s is a mistake (leftover from testing), sorry.
+> 
+> > Better still, please drop the loop, the delay and the BASR_IRQ test here,
+> > and if need be, put the delay in the caller. This routine discards the
+> > result of that sequence anyway.
+> 
+> Will if work if the following lines are executed before the delay?
+
+I think so... but you're right, it is better if the delay remains here.
+
+> 
+> >
+> > >  	NCR5380_write(SELECT_ENABLE_REG, 0);
 > > >  	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
-> > >  	NCR5380_write(MODE_REG, MR_BASE);
-> > > +	/* check if the chip is really there */
-> > > +	if (NCR5380_read(MODE_REG) != MR_BASE) {
-> > > +		NCR5380_exit(instance);
-> > > +		return -ENODEV;
-> > > +	}
+> > > +}
+> > >
+> > > -	for (i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+> > > -		if (trying_irqs & mask)
+> > > -			free_irq(i, NULL);
+> > > +/**
+> > > + * NCR5380_probe_irq	-	find the IRQ of an NCR5380
+> > > + * @instance: NCR5380 controller
+> > > + *
+> > > + * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
+> > > + * and then looking to see what interrupt actually turned up.
+> > > + */
+> > > +
+> > > +static int NCR5380_probe_irq(struct Scsi_Host *instance)
+> > > +{
+> > > +	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+> > > +	int irqs, irq;
+> > > +
 > >
-> > This doesn't belong in the core driver. Only the 5380 ISA drivers have 
-> > configurable base addresses.
+> > Please rename irqs to irq_mask.
 > >
-> > Also, MR_BASE == 0, so that test is likely to be ineffectual anyway. 
-> > This patch doesn't really add any value AFAICT.
+> > Other drivers like tty/cyclades.c begin with,
+> >
+> > 	/* forget possible initially masked and pending IRQ */
+> > 	irq = probe_irq_off(probe_irq_on());
+> >
+> > Perhaps we need that here too?
 > 
-> This fixes the most common problem: no device present at the specified 
-> I/O address, all reads result in 0xff.
-> 
+> Only cyclades and 8250_port do that, other drivers don't.
+> Don't know what exact problem should that solve.
 
-ISTR that's true for ISA in general, so I guess it would be okay in 
-g_NCR5380.c.
-
-Better do this before NCR5380_init() so you can probe before allocating a 
-scsi host. Just write 0 to MODE_REG or SELECT_ENABLE_REG.
+OK. I'm no expert on ISA so I'll leave it up to you.
 
 -- 
+
+> 
+> >
+> > > +	irqs = probe_irq_on();
+> >
+> > You should clear any pending interrupt on the chip before you try to
+> > trigger another one.
+> >
+> > > +	NCR5380_trigger_irq(instance);
+> >
+> > Please do the msleep(1) here.
+> >
+> > > +	irq = probe_irq_off(irqs);
+> > > +	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+> > > +	if (irq < 0)
+> > > +		irq = 0;
+> >
+> > Please use NO_IRQ instead of 0.
+> >
+> > > -	return probe_irq;
+> > > +	return irq;
+> > >  }
+> > >
+> > >  /**
+> > > diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+> > > index 3c6ce54..b2fca52 100644
+> > > --- a/drivers/scsi/NCR5380.h
+> > > +++ b/drivers/scsi/NCR5380.h
+> > > @@ -290,7 +290,8 @@ static inline struct scsi_cmnd
+> > > *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr) #define
+> > > NCR5380_dprint_phase(flg, arg) do {} while (0)
+> > >  #endif
+> > >
+> > > -static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
+> > > +static void NCR5380_trigger_irq(struct Scsi_Host *instance);
+> > > +static int NCR5380_probe_irq(struct Scsi_Host *instance);
+> > >  static int NCR5380_init(struct Scsi_Host *instance, int flags);
+> > >  static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
+> > >  static void NCR5380_exit(struct Scsi_Host *instance);
+> >
+> > Please move NCR5380_probe_irq and NCR5380_trigger_irq implementations 
+> > and prototypes out of the core driver and into g_NCR5380.c. The reason 
+> > is, ISA cards are probably the only 5380 cards ever likely to need 
+> > manual IRQ configuration. It would better to have g_NCR5380 support 
+> > more ISA cards than to add more ISA drivers, therefore this code isn't 
+> > likely to be needed in the core driver.
+> >
+> > Thanks.
+> 
+> 
+> 
+> 
