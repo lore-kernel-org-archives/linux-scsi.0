@@ -1,16 +1,16 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 2/3] g_NCR5380: Test the IRQ before accepting it
-Date: Mon, 31 Oct 2016 14:09:52 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1610311348110.32132@nippy.intranet>
-References: <1477867203-7480-1-git-send-email-linux@rainbow-software.org> <1477867203-7480-2-git-send-email-linux@rainbow-software.org>
+Subject: Re: [PATCH 3/3] NCR5380: Check for chip presence in NCR5380_init()
+Date: Mon, 31 Oct 2016 14:12:22 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1610311359080.32132@nippy.intranet>
+References: <1477867203-7480-1-git-send-email-linux@rainbow-software.org> <1477867203-7480-3-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:36482 "EHLO
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:36522 "EHLO
         kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758078AbcJaDJs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Oct 2016 23:09:48 -0400
-In-Reply-To: <1477867203-7480-2-git-send-email-linux@rainbow-software.org>
+        with ESMTP id S1758131AbcJaDMR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 30 Oct 2016 23:12:17 -0400
+In-Reply-To: <1477867203-7480-3-git-send-email-linux@rainbow-software.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Ondrej Zary <linux@rainbow-software.org>
@@ -19,74 +19,39 @@ Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-ker
 
 On Sun, 30 Oct 2016, Ondrej Zary wrote:
 
-> Trigger an IRQ first with a test IRQ handler to find out if it really
-> works. Disable the IRQ if not.
+> Read back MODE_REG after writing it in NCR5380_init() to check if the
+> chip is really there.
 > 
-> This prevents hang when incorrect IRQ was specified by user.
+> This prevents hang when incorrect I/O address was specified by user.
 > 
 > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 > ---
->  drivers/scsi/g_NCR5380.c |   32 ++++++++++++++++++++++++++++++--
->  1 file changed, 30 insertions(+), 2 deletions(-)
+>  drivers/scsi/NCR5380.c |    5 +++++
+>  1 file changed, 5 insertions(+)
 > 
-> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> index 3790ed5..261e168 100644
-> --- a/drivers/scsi/g_NCR5380.c
-> +++ b/drivers/scsi/g_NCR5380.c
-> @@ -67,6 +67,14 @@
->  MODULE_ALIAS("g_NCR5380_mmio");
->  MODULE_LICENSE("GPL");
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index 01c0027..ce3156d 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -495,6 +495,11 @@ static int NCR5380_init(struct Scsi_Host *instance, int flags)
 >  
-> +static bool irq_working;
-> +
-> +static irqreturn_t test_irq(int irq, void *dev_id)
-> +{
-> +	irq_working = true;
-> +	return IRQ_HANDLED;
-> +}
-> +
->  /*
->   * Configure I/O address of 53C400A or DTC436 by writing magic numbers
->   * to ports 0x779 and 0x379.
-> @@ -275,10 +283,30 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
->  		/* set IRQ for HP C2502 */
->  		if (board == BOARD_HP_C2502)
->  			magic_configure(port_idx, instance->irq, magic);
-> -		if (request_irq(instance->irq, generic_NCR5380_intr,
-> -				0, "NCR5380", instance)) {
-> +		/* test if the IRQ is working */
-> +		irq_working = false;
-> +		if (request_irq(instance->irq, test_irq,
-> +				0, "NCR5380-irqtest", NULL)) {
->  			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
->  			instance->irq = NO_IRQ;
-> +		} else {
-> +			NCR5380_trigger_irq(instance);
-> +			NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-> +			free_irq(instance->irq, NULL);
-> +			if (irq_working) {
-> +				if (request_irq(instance->irq,
-> +						generic_NCR5380_intr, 0,
-> +						"NCR5380", instance)) {
-> +					printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n",
-> +					       instance->host_no,
-> +					       instance->irq);
-> +					instance->irq = NO_IRQ;
-> +				}
-> +			} else {
-> +				printk(KERN_WARNING "scsi%d : IRQ%d not working, interrupts disabled\n",
-> +				       instance->host_no, instance->irq);
-> +				instance->irq = NO_IRQ;
-> +			}
->  		}
->  	}
->  
-> 
+>  	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+>  	NCR5380_write(MODE_REG, MR_BASE);
+> +	/* check if the chip is really there */
+> +	if (NCR5380_read(MODE_REG) != MR_BASE) {
+> +		NCR5380_exit(instance);
+> +		return -ENODEV;
+> +	}
 
-If the user omits to specify an irq, you can just default to IRQ_AUTO. 
-This might result in NO_IRQ, which gives the same result as this patch.
- 
-And when the user does specify an IRQ, we should trust them. So this 
-compexity doesn't add any value AFAICT. Thanks but no thanks.
+This doesn't belong in the core driver. Only the 5380 ISA drivers have 
+configurable base addresses.
+
+Also, MR_BASE == 0, so that test is likely to be ineffectual anyway. This 
+patch doesn't really add any value AFAICT.
 
 -- 
+
+>  	NCR5380_write(TARGET_COMMAND_REG, 0);
+>  	NCR5380_write(SELECT_ENABLE_REG, 0);
+>  
+> 
