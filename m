@@ -1,7 +1,7 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 4/6] g_NCR5380: Add IRQ auto-configuration for HP C2502
-Date: Mon, 31 Oct 2016 21:18:30 +0100
-Message-ID: <1477945112-25659-5-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 2/6] g_NCR5380: Test the IRQ before accepting it
+Date: Mon, 31 Oct 2016 21:18:28 +0100
+Message-ID: <1477945112-25659-3-git-send-email-linux@rainbow-software.org>
 References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477945112-25659-1-git-send-email-linux@rainbow-software.org>
@@ -10,74 +10,77 @@ To: Christoph Hellwig <hch@infradead.org>
 Cc: Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Find free and working IRQ automatically on HP C2502 cards.
-Also allow IRQ 9 to work (aliases to IRQ 2 on the card).
+Trigger an IRQ first with a test IRQ handler to find out if it really
+works. Disable the IRQ if not.
+
+This prevents hang when incorrect IRQ was specified by user.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/g_NCR5380.c |   29 +++++++++++++++++++++++++++--
- 1 file changed, 27 insertions(+), 2 deletions(-)
+ drivers/scsi/g_NCR5380.c |   44 +++++++++++++++++++++++++++++++++++++++++---
+ 1 file changed, 41 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index e713dba..27fc499 100644
+index 09c660b..0d1f6ad 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -156,6 +156,8 @@ static void magic_configure(int idx, u8 irq, u8 magic[])
- 	outb(magic[4], 0x379);
- 
- 	/* allowed IRQs for HP C2502 */
-+	if (irq == 9)
-+		irq = 2;
- 	if (irq != 2 && irq != 3 && irq != 4 && irq != 5 && irq != 7)
- 		irq = 0;
- 	if (idx >= 0 && idx <= 7)
-@@ -163,6 +165,21 @@ static void magic_configure(int idx, u8 irq, u8 magic[])
- 	outb(cfg, 0x379);
+@@ -115,6 +115,32 @@ static int NCR5380_probe_irq(struct Scsi_Host *instance)
+ 	return irq;
  }
  
-+/* find a free and working IRQ (for HP C2502) */
-+static int NCR5380_find_irq(struct Scsi_Host *instance, u8 irqs[],
-+			    int port_idx, u8 magic[])
-+{
-+	int i;
++static bool irq_working;
 +
-+	for (i = 0; irqs[i]; i++) {
-+		magic_configure(port_idx, irqs[i], magic);
-+		if (NCR5380_test_irq(instance, irqs[i]) == 0)
-+			return irqs[i];
-+	}
-+	magic_configure(port_idx, 0, magic);
-+	return NO_IRQ;
++static irqreturn_t test_irq(int irq, void *dev_id)
++{
++	irq_working = true;
++	return IRQ_HANDLED;
 +}
 +
- static unsigned int ncr_53c400a_ports[] = {
- 	0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
- };
-@@ -175,6 +192,9 @@ static void magic_configure(int idx, u8 irq, u8 magic[])
- static u8 hp_c2502_magic[] = {	/* HP C2502 */
- 	0x0f, 0x22, 0xf0, 0x20, 0x80
- };
-+static u8 hp_c2502_irqs[] = {
-+	9, 5, 7, 3, 4, 0
-+};
- 
- static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 			struct device *pdev, int base, int irq, int board)
-@@ -345,8 +365,13 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 
- 	if (irq != IRQ_AUTO)
- 		instance->irq = irq;
--	else
--		instance->irq = NCR5380_probe_irq(instance);
-+	else {
-+		if (board == BOARD_HP_C2502)
-+			instance->irq = NCR5380_find_irq(instance,
-+						hp_c2502_irqs, port_idx, magic);
-+		else
-+			instance->irq = NCR5380_probe_irq(instance);
++/* test if the IRQ is working */
++static int NCR5380_test_irq(struct Scsi_Host *instance, int irq)
++{
++	struct NCR5380_hostdata *hostdata = shost_priv(instance);
++
++	irq_working = false;
++	if (request_irq(irq, test_irq, 0, "NCR5380-irqtest", NULL))
++		return -EBUSY;
++	NCR5380_trigger_irq(instance);
++	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
++	free_irq(irq, NULL);
++
++	if (!irq_working)
++		return -EIO;
++
++	return 0;
++}
++
+ /*
+  * Configure I/O address of 53C400A or DTC436 by writing magic numbers
+  * to ports 0x779 and 0x379.
+@@ -323,9 +349,21 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+ 		/* set IRQ for HP C2502 */
+ 		if (board == BOARD_HP_C2502)
+ 			magic_configure(port_idx, instance->irq, magic);
+-		if (request_irq(instance->irq, generic_NCR5380_intr,
+-				0, "NCR5380", instance)) {
+-			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n", instance->host_no, instance->irq);
++		ret = NCR5380_test_irq(instance, instance->irq);
++		if (ret) {
++			printk(KERN_WARNING "scsi%d : IRQ%d not %s, interrupts disabled\n",
++			       instance->host_no, instance->irq,
++			       (ret == -EBUSY) ? "free" : "working");
++			instance->irq = NO_IRQ;
++		}
 +	}
- 
- 	/* Compatibility with documented NCR5380 kernel parameters */
- 	if (instance->irq == 255)
++
++	if (instance->irq != NO_IRQ) {
++		if (request_irq(instance->irq, generic_NCR5380_intr, 0,
++				"NCR5380", instance)) {
++			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n",
++			       instance->host_no,
++			       instance->irq);
+ 			instance->irq = NO_IRQ;
+ 		}
+ 	}
 -- 
 Ondrej Zary
