@@ -1,49 +1,38 @@
 From: Ondrej Zary <linux@rainbow-software.org>
-Subject: [PATCH 3/6] g_NCR5380: Check for chip presence before calling NCR5380_init()
-Date: Mon, 31 Oct 2016 21:18:29 +0100
-Message-ID: <1477945112-25659-4-git-send-email-linux@rainbow-software.org>
+Subject: [PATCH 5/6] g_NCR5380: Autoprobe IRQ by default
+Date: Mon, 31 Oct 2016 21:18:31 +0100
+Message-ID: <1477945112-25659-6-git-send-email-linux@rainbow-software.org>
 References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from ns.gsystem.sk ([62.176.172.50]:36104 "EHLO gsystem.sk"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S946328AbcJaUSt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Oct 2016 16:18:49 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1477945112-25659-1-git-send-email-linux@rainbow-software.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: Christoph Hellwig <hch@infradead.org>
 Cc: Finn Thain <fthain@telegraphics.com.au>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 
-Write and read back MODE_REG to check if the chip is really there
-before doing more initialization.
-
-This prevents hang when incorrect I/O address was specified by user (in
-the most common case where no device is present there so all reads
-result in 0xff).
+IRQ probing seems to work fine now. Default to autoprobe for IRQ instead
+of disabling it.
 
 Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
 ---
- drivers/scsi/g_NCR5380.c |    7 +++++++
- 1 file changed, 7 insertions(+)
+ drivers/scsi/g_NCR5380.c |    4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-index 0d1f6ad..e713dba 100644
+index 27fc499..6a08d3e 100644
 --- a/drivers/scsi/g_NCR5380.c
 +++ b/drivers/scsi/g_NCR5380.c
-@@ -322,6 +322,13 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
- 		}
- 	}
+@@ -52,9 +52,9 @@
+ module_param(dtc_3181e, int, 0);
+ module_param(hp_c2502, int, 0);
  
-+	/* check if the chip is really there */
-+	NCR5380_write(MODE_REG, 0);
-+	if (NCR5380_read(MODE_REG) != 0) {
-+		ret = -ENODEV;
-+		goto out_unregister;
-+	}
-+
- 	ret = NCR5380_init(instance, flags | FLAG_LATE_DMA_SETUP);
- 	if (ret)
- 		goto out_unregister;
+-static int irq[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
++static int irq[] = { IRQ_AUTO, IRQ_AUTO, IRQ_AUTO, IRQ_AUTO, IRQ_AUTO, IRQ_AUTO, IRQ_AUTO, IRQ_AUTO };
+ module_param_array(irq, int, NULL, 0);
+-MODULE_PARM_DESC(irq, "IRQ number(s)");
++MODULE_PARM_DESC(irq, "IRQ number(s) (0=disable, 254=auto [default])");
+ 
+ static int base[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+ module_param_array(base, int, NULL, 0);
 -- 
 Ondrej Zary
-
