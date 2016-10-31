@@ -1,37 +1,41 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [PATCH 00/60] block: support multipage bvec
-Date: Tue, 1 Nov 2016 06:52:08 +0800
-Message-ID: <CACVXFVN7Cnf8CqsnQwJEeOJTQr=qmHWLrieO++0XXcK3=mWQCw@mail.gmail.com>
-References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com> <20161031152519.GA25791@infradead.org>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: esp_scsi QTAG in FAS216
+Date: Tue, 1 Nov 2016 10:47:30 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1611011017470.23137@nippy.intranet>
+References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com> <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com> <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com> <20140413.221414.853080853067673824.davem@davemloft.net>
+ <alpine.LNX.2.00.1610281658120.30954@nippy.intranet> <alpine.LNX.2.00.1610301331301.20114@nippy.intranet> <50ffb9f6-ebe0-9e87-1244-25dfb2ec01d2@gmail.com> <CAOmrzkKPsFKvgvHzPJKCP-Vm9EYnFoy+Gq0C=Ly9zAA3D_zDaA@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <owner-linux-mm@kvack.org>
-In-Reply-To: <20161031152519.GA25791@infradead.org>
-Sender: owner-linux-mm@kvack.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Coly Li <colyli@suse.de>, Dan Williams <dan.j.williams@intel.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>, Johannes Berg <johannes.berg@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>, Kei
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-m68k-owner@vger.kernel.org>
+In-Reply-To: <CAOmrzkKPsFKvgvHzPJKCP-Vm9EYnFoy+Gq0C=Ly9zAA3D_zDaA@mail.gmail.com>
+Sender: linux-m68k-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: David Miller <davem@davemloft.net>, Kars de Jong <jongk@linux-m68k.org>, Tuomas Vainikka <tuomas.vainikka@aalto.fi>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Oct 31, 2016 at 11:25 PM, Christoph Hellwig <hch@infradead.org> wrote:
-> Hi Ming,
->
-> can you send a first patch just doing the obvious cleanups like
-> converting to bio_add_page and replacing direct poking into the
-> bio with the proper accessors?  That should help reducing the
 
-OK, that is just the 1st part of the patchset.
+On Tue, 1 Nov 2016, Michael Schmitz wrote:
 
-> actual series to a sane size, and it should also help to cut
-> down the Cc list.
->
+> > I had tried to set that bit in zorro_esp_slave_configure but had not 
+> > done a proper job of it - I'd only set esp->config3 and forgot to set 
+> > tp->esp_config3. Time to retest this ...
+> 
+> I don't think it's quite that easy - the ESP_CONFIG3_TENB bit needs to 
+> be set for all targets if at least one SCSI-2 target is on the bus and 
+> we allow dosconnecting, no?
 
+I think ESP_CONFIG3_TENB is for FAS100A and FASHME. The bug here is on 
+ESP236 and FAS236, so ESP_CONFIG3_TBMS would be the relevant bit.
 
+The bit gets set when ESP_CONFIG2_SCSI2ENAB gets set (as in David's 
+patch) so we then need to avoid clobbering it, since ESP_CONFIG3_TBMS == 
+ESP_CONFIG3_EWIDE. I think we have to test for HME to avoid this clash.
 
-Thanks,
-Ming Lei
+-- 
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+> 
+> Adrian - any chance I can get access to elgar again for some more testing?
+> 
+> Cheers,
+> 
+>   Michael
