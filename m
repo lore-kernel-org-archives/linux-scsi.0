@@ -1,106 +1,78 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: mpt3sas: fix some spelling mistakes in message and comments
-Date: Mon, 31 Oct 2016 09:34:46 -0600
-Message-ID: <20161031153446.18846-1-colin.king@canonical.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 2/4] hpsa: add generate controller NMI on lockup
+Date: Mon, 31 Oct 2016 15:26:04 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B07FFEE@avsrvexchmbx1.microsemi.net>
+References: <147752001094.813.10247306839794156732.stgit@brunhilda>
+ <147752051230.813.13699218798744038354.stgit@brunhilda>
+ <4b6cf4a2-a9af-dcd2-4412-f292d51513ca@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:36105 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S944124AbcJaPev (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2016 11:34:51 -0400
+Received: from mail-sn1nam01on0083.outbound.protection.outlook.com ([104.47.32.83]:49629
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S944049AbcJaPlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 31 Oct 2016 11:41:07 -0400
+In-Reply-To: <4b6cf4a2-a9af-dcd2-4412-f292d51513ca@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Colin Ian King <colin.king@canonical.com>
-
-Trival fixes, minor spelling mistakes in comments and in a KERN_INFO
-message.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 16 ++++++++--------
- 1 file changed, 8 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 981be7b..4f28963 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -423,7 +423,7 @@ _scsih_get_sas_address(struct MPT3SAS_ADAPTER *ioc, u16 handle,
- 		return 0;
- 	}
- 
--	/* we hit this becuase the given parent handle doesn't exist */
-+	/* we hit this because the given parent handle doesn't exist */
- 	if (ioc_status == MPI2_IOCSTATUS_CONFIG_INVALID_PAGE)
- 		return -ENXIO;
- 
-@@ -1523,7 +1523,7 @@ _scsih_display_sata_capabilities(struct MPT3SAS_ADAPTER *ioc,
- /*
-  * raid transport support -
-  * Enabled for SLES11 and newer, in older kernels the driver will panic when
-- * unloading the driver followed by a load - I beleive that the subroutine
-+ * unloading the driver followed by a load - I believe that the subroutine
-  * raid_class_release() is not cleaning up properly.
-  */
- 
-@@ -2948,7 +2948,7 @@ _scsih_ublock_io_device(struct MPT3SAS_ADAPTER *ioc, u64 sas_address)
-  * @ioc: per adapter object
-  * @handle: device handle
-  *
-- * During device pull we need to appropiately set the sdev state.
-+ * During device pull we need to appropriately set the sdev state.
-  */
- static void
- _scsih_block_io_all_device(struct MPT3SAS_ADAPTER *ioc)
-@@ -2977,7 +2977,7 @@ _scsih_block_io_all_device(struct MPT3SAS_ADAPTER *ioc)
-  * @ioc: per adapter object
-  * @handle: device handle
-  *
-- * During device pull we need to appropiately set the sdev state.
-+ * During device pull we need to appropriately set the sdev state.
-  */
- static void
- _scsih_block_io_device(struct MPT3SAS_ADAPTER *ioc, u16 handle)
-@@ -3936,7 +3936,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
-  * _scsih_setup_eedp - setup MPI request for EEDP transfer
-  * @ioc: per adapter object
-  * @scmd: pointer to scsi command object
-- * @mpi_request: pointer to the SCSI_IO reqest message frame
-+ * @mpi_request: pointer to the SCSI_IO request message frame
-  *
-  * Supporting protection 1 and 3.
-  *
-@@ -4088,7 +4088,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		scmd->result = DID_NO_CONNECT << 16;
- 		scmd->scsi_done(scmd);
- 		return 0;
--	/* device busy with task managment */
-+	/* device busy with task management */
- 	} else if (sas_target_priv_data->tm_busy ||
- 	    sas_device_priv_data->block)
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
-@@ -6327,7 +6327,7 @@ _scsih_reprobe_lun(struct scsi_device *sdev, void *no_uld_attach)
- {
- 	sdev->no_uld_attach = no_uld_attach ? 1 : 0;
- 	sdev_printk(KERN_INFO, sdev, "%s raid component\n",
--	    sdev->no_uld_attach ? "hidding" : "exposing");
-+	    sdev->no_uld_attach ? "hiding" : "exposing");
- 	WARN_ON(scsi_device_reprobe(sdev));
- }
- 
-@@ -9217,7 +9217,7 @@ scsih_init(void)
- 	 /* queuecommand callback hander */
- 	scsi_io_cb_idx = mpt3sas_base_register_callback_handler(_scsih_io_done);
- 
--	/* task managment callback handler */
-+	/* task management callback handler */
- 	tm_cb_idx = mpt3sas_base_register_callback_handler(_scsih_tm_done);
- 
- 	/* base internal commands callback handler */
--- 
-2.9.3
-
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
+aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDI3LCAyMDE2IDQ6
+MDMgQU0NCj4gVG86IERvbiBCcmFjZTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IEpvaG4gSGFs
+bDsgS2V2aW4gQmFybmV0dDsgTWFoZXNoDQo+IFJhamFzaGVraGFyYTsgaGNoQGluZnJhZGVhZC5v
+cmc7IFNjb3R0IFRlZWw7IFZpc3dhcyBHOyBKdXN0aW4gTGluZGxleTsgU2NvdHQNCj4gQmVuZXNo
+OyBlbGxpb3R0QGhwZS5jb207IFBPU1dBTERAc3VzZS5jb20NCj4gQ2M6IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi80XSBocHNhOiBhZGQgZ2VuZXJh
+dGUgY29udHJvbGxlciBOTUkgb24gbG9ja3VwDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4g
+DQo+IE9uIDEwLzI3LzIwMTYgMTI6MjEgQU0sIERvbiBCcmFjZSB3cm90ZToNCj4gPiBUZWxsIHRo
+ZSBjb250cm9sbGVyIHRvIE5NSSB3aGVuIHRoZSBjb250cm9sbGVyIGRlYWRsb2Nrcy4NCj4gPg0K
+PiA+IFJldmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNyb3NlbWkuY29t
+Pg0KPiA+IFJldmlld2VkLWJ5OiBTY290dCBUZWVsIDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+
+DQo+ID4gUmV2aWV3ZWQtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1p
+LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWku
+Y29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jICAgICB8ICAgIDYgKysrKysr
+DQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNhX2NtZC5oIHwgICAgMSArDQo+ID4gIDIgZmlsZXMgY2hh
+bmdlZCwgNyBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBpbmRleCA3OThmYjIwLi45ZmI3Mzlj
+IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiArKysgYi9kcml2ZXJz
+L3Njc2kvaHBzYS5jDQo+ID4gQEAgLTg0NTEsNiArODQ1MSwxMiBAQCBzdGF0aWMgdm9pZCBjb250
+cm9sbGVyX2xvY2t1cF9kZXRlY3RlZChzdHJ1Y3QNCj4gY3Rscl9pbmZvICpoKQ0KPiA+ICAgICAg
+ICAgICAgICAgICAgICAgICAibG9ja3VwIGRldGVjdGVkIGFmdGVyICVkIGJ1dCBzY3JhdGNocGFk
+IHJlZ2lzdGVyIGlzIHplcm9cbiIsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgIGgtPmhlYXJ0
+YmVhdF9zYW1wbGVfaW50ZXJ2YWwgLyBIWik7DQo+ID4gICAgICAgICAgICAgICBsb2NrdXBfZGV0
+ZWN0ZWQgPSAweGZmZmZmZmZmOw0KPiA+ICsgICAgIH0gZWxzZSBpZiAobG9ja3VwX2RldGVjdGVk
+ID09IDB4ZmZmZjAwMDApIHsNCj4gPiArICAgICAgICAgICAgIC8qDQo+ID4gKyAgICAgICAgICAg
+ICAgKiBSaW5nIGNvbnRyb2xsZXIgTk1JIGRvb3JiZWxsDQo+ID4gKyAgICAgICAgICAgICAgKi8N
+Cj4gPiArICAgICAgICAgICAgIGRldl93YXJuKCZoLT5wZGV2LT5kZXYsICJUZWxsaW5nIGNvbnRy
+b2xsZXIgdG8gZG8gYW4gTk1JXG4iKTsNCj4gPiArICAgICAgICAgICAgIHdyaXRlbChET09SQkVM
+TF9HRU5FUkFURV9OTUksIGgtPnZhZGRyICsgU0E1X0RPT1JCRUxMKTsNCj4gPiAgICAgICB9DQo+
+ID4gICAgICAgc2V0X2xvY2t1cF9kZXRlY3RlZF9mb3JfYWxsX2NwdXMoaCwgbG9ja3VwX2RldGVj
+dGVkKTsNCj4gPiAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZoLT5sb2NrLCBmbGFncyk7
+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ocHNhX2NtZC5oIGIvZHJpdmVycy9zY3Np
+L2hwc2FfY21kLmgNCj4gPiBpbmRleCBhNTg0Y2RmLi5kMTg2ZjgwIDEwMDY0NA0KPiA+IC0tLSBh
+L2RyaXZlcnMvc2NzaS9ocHNhX2NtZC5oDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL2hwc2FfY21k
+LmgNCj4gPiBAQCAtMTQyLDYgKzE0Miw3IEBADQo+ID4gICNkZWZpbmUgRE9PUkJFTExfQ1RMUl9S
+RVNFVCAgMHgwMDAwMDAwNGwNCj4gPiAgI2RlZmluZSBET09SQkVMTF9DVExSX1JFU0VUMiAweDAw
+MDAwMDIwbA0KPiA+ICAjZGVmaW5lIERPT1JCRUxMX0NMRUFSX0VWRU5UUyAgICAgICAgMHgwMDAw
+MDA0MGwNCj4gPiArI2RlZmluZSBET09SQkVMTF9HRU5FUkFURV9OTUkgICAgICAgIDB4MDAwMDAw
+ODBsDQo+ID4NCj4gPiAgI2RlZmluZSBDRkdUQkxfVHJhbnNfU2ltcGxlICAgICAweDAwMDAwMDAy
+bA0KPiA+ICAjZGVmaW5lIENGR1RCTF9UcmFuc19QZXJmb3JtYW50IDB4MDAwMDAwMDRsDQo+ID4N
+Cj4gQ2FyZSB0byBlbGFib3JhdGUgYSBiaXQgbW9yZSBoZXJlPw0KPiAnR2VuZXJhdGluZyBOTUkn
+IHRlbmRzIHRvIHJpbmcgc29tZSBhbGFybSBiZWxscywgc28gSSdkIHJhdGhlciBrbm93DQo+IHdo
+ZXJlIHRoZSBOTUkgaXMgYWN0dWFsbHkgZ2VuZXJhdGVkLCBhbmQgaWYgaXMgY291bGQgcmVmbGVj
+dCBiYWNrIHRvIHRoZQ0KPiBzeXN0ZW0gLi4uDQoNClRoZXJlIGFyZSBzb21lIHJhcmUgY2FzZXMg
+d2hlcmUgd2UgZ2V0IHRoaXMgbG9ja3VwIGNvZGUgYW5kIHdlDQpuZWVkIHRvIHRlbGwgdGhlIGNv
+bnRyb2xsZXIgdG8gZG8gaXRzIG93biBOTUkuIFRoaXMgTk1JIGlzIG9ubHkgZG9uZQ0Kb24gdGhl
+IGNvbnRyb2xsZXIgYW5kIGRvZXMgbm90IHRlbGwgdGhlIE9TIHRvIHBlcmZvcm0gYW4gTk1JLg0K
+DQpUaGFua3MsDQpEb24gQnJhY2UNCg0KRVNDIC0gU21hcnQgU3RvcmFnZQ0KTWljcm9zZW1pIENv
+cnBvcmF0aW9uDQoNCg0KPiANCj4gQ2hlZXJzLA0KPiANCj4gSGFubmVzDQo+IC0tDQo+IERyLiBI
+YW5uZXMgUmVpbmVja2UgICAgICAgICAgICAgICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdvcmtp
+bmcNCj4gaGFyZUBzdXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArNDkg
+OTExIDc0MDUzIDY4OA0KPiBTVVNFIExJTlVYIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7D
+vHJuYmVyZw0KPiBHRjogRi4gSW1lbmTDtnJmZmVyLCBKLiBTbWl0aGFyZCwgSi4gR3VpbGQsIEQu
+IFVwbWFueXUsIEcuIE5vcnRvbg0KPiBIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykNCg==
