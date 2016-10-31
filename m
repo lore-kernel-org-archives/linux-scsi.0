@@ -1,52 +1,28 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 1/4] hpsa: correct lockup detector pci_disable_device
-Date: Mon, 31 Oct 2016 15:20:49 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D193B07FFC9@avsrvexchmbx1.microsemi.net>
-References: <147752001094.813.10247306839794156732.stgit@brunhilda>
- <147752050626.813.15549750881571218281.stgit@brunhilda>
- <20161027151903.GA4602@infradead.org>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 00/60] block: support multipage bvec
+Date: Mon, 31 Oct 2016 08:25:19 -0700
+Message-ID: <20161031152519.GA25791@infradead.org>
+References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0070.outbound.protection.outlook.com ([104.47.33.70]:30020
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S943763AbcJaPVI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 31 Oct 2016 11:21:08 -0400
-In-Reply-To: <20161027151903.GA4602@infradead.org>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com>
+Sender: owner-linux-mm@kvack.org
+To: Ming Lei <tom.leiming@gmail.com>
+Cc: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@ZenIV.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Coly Li <colyli@suse.de>, Dan Williams <dan.j.williams@intel.com>, "open list:DEVICE-MAPPER  (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>, Johannes Berg <johannes.berg@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@in>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Christoph Hellwig [mailto:hch@infradead.org]
-> Sent: Thursday, October 27, 2016 10:19 AM
-> To: Don Brace
-> Cc: jejb@linux.vnet.ibm.com; John Hall; Kevin Barnett; Mahesh
-> Rajashekhara; hch@infradead.org; Scott Teel; Viswas G; Justin Lindley; Sc=
-ott
-> Benesh; elliott@hpe.com; POSWALD@suse.com; linux-scsi@vger.kernel.org
-> Subject: Re: [PATCH 1/4] hpsa: correct lockup detector pci_disable_device
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> > -     pci_disable_device(h->pdev);
-> > +     if (pci_is_enabled(h->pdev))
-> > +             pci_disable_device(h->pdev);
-> >       fail_all_outstanding_cmds(h);
->=20
-> Humm.  How can this even happen when the device isn't enabled?
+Hi Ming,
 
-controller_lockup_detected can be called multiple times, especially when I =
-am
-exercising the reset handler and abort handler, so I wanted to avoid the ke=
-rnel
-warning messages.
+can you send a first patch just doing the obvious cleanups like
+converting to bio_add_page and replacing direct poking into the
+bio with the proper accessors?  That should help reducing the
+actual series to a sane size, and it should also help to cut
+down the Cc list.
 
-fail_all_outstanding_commands is called with status CMD_CTLR_LOCKUP
-and complete_scsi_command returns DID_NO_CONNECT.
-
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
