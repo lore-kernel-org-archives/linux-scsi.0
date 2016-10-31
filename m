@@ -1,53 +1,37 @@
-From: Louis ISAKI <webb@formadablehope.com>
-Subject: =?UTF-8?Q?Gesch=C3=A4ftsvorschlag!!!?=
-Date: Mon, 31 Oct 2016 16:07:36 +0100
-Message-ID: <1b8740d33b5160e3720de757bb520ba2@institut-ambressence.com>
-Reply-To: <louis.isaki@aim.com>
+From: Ming Lei <tom.leiming@gmail.com>
+Subject: Re: [PATCH 00/60] block: support multipage bvec
+Date: Tue, 1 Nov 2016 06:52:08 +0800
+Message-ID: <CACVXFVN7Cnf8CqsnQwJEeOJTQr=qmHWLrieO++0XXcK3=mWQCw@mail.gmail.com>
+References: <1477728600-12938-1-git-send-email-tom.leiming@gmail.com> <20161031152519.GA25791@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from neo.yellow-internet.com ([91.121.210.21]:41855 "EHLO
-        neo.yellow-internet.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S947417AbcJaWSK (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 31 Oct 2016 18:18:10 -0400
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <20161031152519.GA25791@infradead.org>
+Sender: owner-linux-mm@kvack.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Jens Axboe <axboe@fb.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Linux FS Devel <linux-fsdevel@vger.kernel.org>, "Kirill A . Shutemov" <kirill.shutemov@linux.intel.com>, Al Viro <viro@zeniv.linux.org.uk>, Andrew Morton <akpm@linux-foundation.org>, Bart Van Assche <bart.vanassche@sandisk.com>, "open list:GFS2 FILE SYSTEM" <cluster-devel@redhat.com>, Coly Li <colyli@suse.de>, Dan Williams <dan.j.williams@intel.com>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Hannes Reinecke <hare@suse.de>, Jiri Kosina <jkosina@suse.cz>, Joe Perches <joe@perches.com>, Johannes Berg <johannes.berg@intel.com>, Johannes Thumshirn <jthumshirn@suse.de>, Kei
 List-Id: linux-scsi@vger.kernel.org
 
+On Mon, Oct 31, 2016 at 11:25 PM, Christoph Hellwig <hch@infradead.org> wrote:
+> Hi Ming,
+>
+> can you send a first patch just doing the obvious cleanups like
+> converting to bio_add_page and replacing direct poking into the
+> bio with the proper accessors?  That should help reducing the
+
+OK, that is just the 1st part of the patchset.
+
+> actual series to a sane size, and it should also help to cut
+> down the Cc list.
+>
 
 
--- 
-Geschäftsvorschlag!!!
 
+Thanks,
+Ming Lei
 
-Ich vermute das diese E-Mail eine Überraschung für Sie sein wird, aber 
-es ist wahr.Ich bin bei einer routinen Überprüfung in meiner Bank (First 
-National Bank von Süd Afrika) wo ich arbeite, auf einem Konto gestoßen, 
-was nicht in anspruch genommen worden ist, wo derzeit USD$18.5M 
-(Achtzehn Million, Fünf Hundert Tausend, US Dollar) gutgeschrieben sind.
-
-Dieses Konto gehörte Herrn Fisher Thomas, der ein Kunde in unsere Bank 
-war, der leider verstorben ist. Herr Thomas war ein gebürtiger 
-Deutscher.Damit es mir möglich ist dieses Geld USD$18.5M (Achtzehn 
-Million, Fünf Hundert Tausend, US Dollar) inanspruch zunehmen, benötige 
-ich die zusammenarbeit eines Ausländischen Partners wie Sie,den ich als 
-Verwandter und Erbe des verstorbenen Herrn Thomas. vorstellen kann,damit 
-wir das Geld inanspruch nehmen können.
-
-Für diese Unterstützung erhalten Sie 30% der Erbschaftsumme und die 
-restlichen 70% teile ich mir mit meinen zwei Arbeitskollegen, die mich 
-bei dieser Transaktion ebenfalls unterstützen.Wenn Sie interessiert 
-sind, können Sie mir bitte eine E-Mail schicken, damit ich Ihnen mehr 
-Details zukommen lassen kann.
-
-Schicken Sie bitte Ihre Antwort auf diese E-Mail Adresse: 
-(louis.isaki@aim.com) Mit freundlichen Grüßen
-
-Louis ISAKI
-
-
-First National Bank. N.B.BITTE SENDEN SIE MIR Louis ISAKI ANTWORT ZU 
-durch mein E-mail: (louis.isaki@aim.com).fÜR VERTRAULICHEN GRUND. 
-Schicken Sie keine POST ZU MEINEM BÜRO-E-MAIL. If you understand 
-english,please kindly reply with english.
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
