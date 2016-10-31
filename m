@@ -1,106 +1,211 @@
-From: "Jin, Ke (Nokia - CN/Hangzhou)" <ke.jin@nokia.com>
-Subject: RE: iscsi target kernel error log support
-Date: Mon, 31 Oct 2016 01:30:32 +0000
-Message-ID: <VI1PR0701MB2783CB91F88B5130CCACE0179AAE0@VI1PR0701MB2783.eurprd07.prod.outlook.com>
-References: <VI1PR0701MB2783907515D67321D0628FD19AD30@VI1PR0701MB2783.eurprd07.prod.outlook.com>
- <1477785483.22703.92.camel@haakon3.risingtidesystems.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 1/3] NCR5380: Use probe_irq_*() for IRQ probing
+Date: Mon, 31 Oct 2016 14:07:58 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1610311311250.32132@nippy.intranet>
+References: <1477867203-7480-1-git-send-email-linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1477785483.22703.92.camel@haakon3.risingtidesystems.com>
-Content-Language: en-US
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tom Herbert <tom@herbertland.com>, Andy Grover <agrover@redhat.com>
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1477867203-7480-1-git-send-email-linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGksDQpUaGFua3MgZm9yIHJlcGx5OikNCg0KQWN0dWFsbHkgd2hlbiBjb25maWd1cmUgc2Vjb25k
-IHRhcmdldCwgSSBleGVjdXRlIHRhcmdldGNsaSAvaXNjc2kgY3JlYXRlIGlxbi4yMDE2LTA4Lm5v
-a2lhLmxhYjpvbXUtMCB3aGljaCB3aWxsIGF1dG9tYXRpY2FsbHkgY3JlYXRlIHRoZSAwLjAuMC4w
-IDMyNjAgbGlzdGVuaW5nIHNvY2tldCBmb3IgbWUuDQpCdXQgSSB0aGluayB3ZSBkbyBub3QgbmVl
-ZCBpdCBhdCBhbGwsIGJlY2F1c2Ugd2Ugd2lsbCBkZWxldGUgaXQgbGF0ZXIsIGFmdGVyIHRoYXQg
-Y29uZmlndXJlIG93biBJUChsaWtlIGJlbG93IDEwLjE4MC4xODAuMjIyICksIHNvIEkgYW0gd29u
-ZGVyaW5nIHdoZXRoZXIgaXMgdGhlcmUgYW55IG90aGVyIGlzY3NpIHRhcmdldCBjb25maWd1cmF0
-aW9uIGNhbiBhdm9pZCB0aGlzIHVubmVjZXNzYXJ5IGlzc3VlLg0KDQoiDQp0YXJnZXRjbGkgL2lz
-Y3NpL2lxbi4yMDE2LTA4Lm5va2lhLmxhYjpjaHUtMC90cGcxL3BvcnRhbHMgZGVsZXRlIDAuMC4w
-LjAgMzI2MA0KdGFyZ2V0Y2xpIC9pc2NzaS9pcW4uMjAxNi0wOC5ub2tpYS5sYWI6Y2h1LTAvdHBn
-MS9wb3J0YWxzIGNyZWF0ZSAxMC4xODAuMTgwLjIyMg0KVXNpbmcgZGVmYXVsdCBJUCBwb3J0IDMy
-NjANCiINCg0KVGhhbmtzIGFnYWluLg0KDQpCcnMsDQpKaW4gS2UNCg0KDQoNCi0tLS0tT3JpZ2lu
-YWwgTWVzc2FnZS0tLS0tDQpGcm9tOiBOaWNob2xhcyBBLiBCZWxsaW5nZXIgW21haWx0bzpuYWJA
-bGludXgtaXNjc2kub3JnXSANClNlbnQ6IFN1bmRheSwgT2N0b2JlciAzMCwgMjAxNiA3OjU4IEFN
-DQpUbzogSmluLCBLZSAoTm9raWEgLSBDTi9IYW5nemhvdSkgPGtlLmppbkBub2tpYS5jb20+DQpD
-YzogdGFyZ2V0LWRldmVsQHZnZXIua2VybmVsLm9yZzsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5v
-cmc7IFhpb25nLCBMaSAoTm9raWEgLSBDTi9IYW5nemhvdSkgPGxpLnhpb25nQG5va2lhLmNvbT47
-IFRvbSBIZXJiZXJ0IDx0b21AaGVyYmVydGxhbmQuY29tPjsgQW5keSBHcm92ZXIgPGFncm92ZXJA
-cmVkaGF0LmNvbT4NClN1YmplY3Q6IFJlOiBpc2NzaSB0YXJnZXQga2VybmVsIGVycm9yIGxvZyBz
-dXBwb3J0DQoNCkhpIEppbiwNCg0KQWRkaW5nIFRvbSBDQycgZm9yIFNPX1JFVVNFUE9SVCBhbmQg
-QW5keSBDQycgZm9yIElOQUREUl9BTlkgKyB0YXJnZXRjbGkuDQoNCk9uIFR1ZSwgMjAxNi0xMC0x
-OCBhdCAwMToyNSArMDAwMCwgSmluLCBLZSAoTm9raWEgLSBDTi9IYW5nemhvdSkgd3JvdGU6DQo+
-IEhpLA0KPiBTb3JyeSB0byBkaXN0dXJiIHlvdS4NCj4gIA0KPiBJIGFtIHVzaW5nIHRhcmdldGNs
-aSB0byBjb25maWd1cmUgdGhlIGlzY3NpIHRhcmdldCBvbiBteSBsaW51eCBob3N0LiBJDQo+IGZp
-bmQgb25lIGlzc3VlLCBjb3VsZCB5b3Uga2luZGx5IHJldmlldyBpdCBhbmQgZ2l2ZSBzb21lIGNv
-bW1lbnRzIHRvDQo+IG1lLg0KPiAgDQo+IElzc3VlOiAobGludXgga2VybmVsIDQuNCBzdGFibGUp
-DQo+ICANCj4gQ29uZmlndXJlIGZpcnN0IHRhcmdldDoNCj4gMTAvMTQvMTYgMTc6MDc6MDAuNTM4
-NDE3OTQyOiB0YXJnZXRjbGkgL2lzY3NpIGNyZWF0ZSBpcW4uMjAxNi0wOC5ub2tpYS5sYWI6Y2h1
-LTANCj4gQ3JlYXRlZCB0YXJnZXQgaXFuLjIwMTYtMDgubm9raWEubGFiOmNodS0wLg0KPiBDcmVh
-dGVkIFRQRyAxLg0KPiBHbG9iYWwgcHJlZiBhdXRvX2FkZF9kZWZhdWx0X3BvcnRhbD10cnVlDQo+
-IENyZWF0ZWQgZGVmYXVsdCBwb3J0YWwgbGlzdGVuaW5nIG9uIGFsbCBJUHMgKDAuMC4wLjApLCBw
-b3J0IDMyNjAuDQo+IDEwLzE0LzE2IDE3OjA3OjAwLjY1MDY4ODIyOTogdGFyZ2V0Y2xpIC9iYWNr
-c3RvcmVzL2Jsb2NrIGNyZWF0ZSBpYmxvY2tfMCBkZXY9L2Rldi9zZGENCj4gQ3JlYXRlZCBibG9j
-ayBzdG9yYWdlIG9iamVjdCBpYmxvY2tfMCB1c2luZyAvZGV2L3NkYS4NCj4gMTAvMTQvMTYgMTc6
-MDc6MDAuNzcyNDM1NDA0OiB0YXJnZXRjbGkgL2lzY3NpL2lxbi4yMDE2LTA4Lm5va2lhLmxhYjpj
-aHUtMC90cGcxL2x1bnMgY3JlYXRlIC9iYWNrc3RvcmVzL2Jsb2NrL2libG9ja18wIDENCj4gQ3Jl
-YXRlZCBMVU4gMS4NCj4gMTAvMTQvMTYgMTc6MDc6MDAuODk0MzU1ODgzOiB0YXJnZXRjbGkgL2lz
-Y3NpL2lxbi4yMDE2LTA4Lm5va2lhLmxhYjpjaHUtMC90cGcxL3BvcnRhbHMgZGVsZXRlIDAuMC4w
-LjAgMzI2MA0KPiBEZWxldGVkIG5ldHdvcmsgcG9ydGFsIDAuMC4wLjA6MzI2MA0KPiAxMC8xNC8x
-NiAxNzowNzowMS4wMTI0MTA3ODY6IHRhcmdldGNsaSAvaXNjc2kvaXFuLjIwMTYtMDgubm9raWEu
-bGFiOmNodS0wL3RwZzEvcG9ydGFscyBjcmVhdGUgMTAuMTgwLjE4MC4xMTENCj4gVXNpbmcgZGVm
-YXVsdCBJUCBwb3J0IDMyNjANCj4gQ3JlYXRlZCBuZXR3b3JrIHBvcnRhbCAxMC4xODAuMTgwLjEx
-MTozMjYwLg0KPiAxMC8xNC8xNiAxNzowNzowMS4xMzA0Nzg2ODE6IHRhcmdldGNsaSAvaXNjc2kv
-aXFuLjIwMTYtMDgubm9raWEubGFiOmNodS0wL3RwZzEvYWNscyBjcmVhdGUgaXFuLjIwMTYtMDgu
-bm9raWEubGFiOmluaXRpYXRvci5jaHUtMC0wDQo+IENyZWF0ZWQgTm9kZSBBQ0wgZm9yIGlxbi4y
-MDE2LTA4Lm5va2lhLmxhYjppbml0aWF0b3IuY2h1LTAtMA0KPiBDcmVhdGVkIG1hcHBlZCBMVU4g
-MS4NCj4gIA0KPiBUaGVuIEkgY29uZmlndXJlIHNlY29uZCB0YXJnZXQgb24gc2FtZSBob3N0Lg0K
-PiB0YXJnZXRjbGkgL2lzY3NpIGNyZWF0ZSBpcW4uMjAxNi0wOC5ub2tpYS5sYWI6b211LTANCj4g
-Q3JlYXRlZCB0YXJnZXQgaXFuLjIwMTYtMDgubm9raWEubGFiOm9tdS4NCj4gQ3JlYXRlZCBUUEcg
-MS4NCj4gRGVmYXVsdCBwb3J0YWwgbm90IGNyZWF0ZWQsIFRQR3Mgd2l0aGluIGEgdGFyZ2V0IGNh
-bm5vdCBzaGFyZSBpcDpwb3J0Lg0KPiBUaGVuIEkgY2hlY2sgdGhlIGtlcm5lbCBsb2cgd2l0aCBk
-bWVzZywgdGhlcmUgaXMgb25lIGVycm9yIGxvZw0KPiDigJxrZXJuZWxfYmluZCgpIGZhaWxlZDog
-LTk44oCdLg0KPiAgDQo+ICANCg0KU28gQUZBSUssIHRoZSBmYWlsdXJlIG9mIElOQUREUl9BTlkg
-cG9ydGFsIGJpbmRpbmcgd2hlbiAhSU5BRERSX0FOWQ0KcG9ydGFscyBleGlzdCB3YXMgdGhlIG9y
-aWdpbmFsIGV4cGVjdGVkIGJlaGF2aW9yLg0KDQo+ICANCj4gVGhlbiBJIGJlZ2luIHRvIGNoZWNr
-IHRoZSBpc2NzaSBrZXJuZWwgbW9kdWxlIGNvZGUuIGxpbnV4LXN0YWJsZQ0KPiBcZHJpdmVyc1x0
-YXJnZXRcaXNjc2lcIGlzY3NpX3RhcmdldF9sb2dpbi5jDQo+IGludCBpc2NzaXRfc2V0dXBfbnAo
-KQ0KPiB7DQo+ICAgICAgICAgcmV0ID0ga2VybmVsX3NldHNvY2tvcHQoc29jaywgU09MX1NPQ0tF
-VCwgU09fUkVVU0VBRERSLCANCj4gICAgICAgICAgICAgICAgICAgICAgICAgKGNoYXIgKikmb3B0
-LCBzaXplb2Yob3B0KSk7DQo+IH0NCj4gSSB0aGluayBTT19SRVVTRUFERFIgaXMgbm90IGVub3Vn
-aCBpbiB0aGlzIGNhc2UgKHRoZXJlIGhhdmUgdHdvDQo+IHRhcmdldHMgY29uZmlndXJlZCksIHdo
-ZW4gdGFyZ2V0Y2xpIC9pc2NzaSBjcmVhdGUNCj4gaXFuLjIwMTYtMDgubm9raWEubGFiOm9tdS0w
-LCBpdCB3aWxsIGNyZWF0ZSBsaXN0ZW5pbmcgc29ja2V0IHdpdGgNCj4gMCwwLDAsMDozMjYwLCBi
-ZWNhdXNlIGl0IGFscmVhZHkgaGF2ZSAxMC4xODAuMTgwLjExMTozMjYwIGxpc3RlbmluZw0KPiBz
-b2NrZXRzIHRoZXJlIGluIGZpcnN0IHRhcmdldCwgc28gdGhpcyBjYXVzZSB0aGUga2VybmVsX2Jp
-bmQoKSBmYWlsZWQ6DQo+IC05OOKAnS4gU28gSSBhZGQgU09fUkVVU0VQT1JUIGFsc28uIEl0IHdv
-cmtzLg0KPiBpbnQgaXNjc2l0X3NldHVwX25wKCkNCj4gew0KPiAgICAgICAgIHJldCA9IGtlcm5l
-bF9zZXRzb2Nrb3B0KHNvY2ssIFNPTF9TT0NLRVQsIFNPX1JFVVNFQUREUiwgDQo+ICAgICAgICAg
-ICAgICAgICAgICAgICAgIChjaGFyICopJm9wdCwgc2l6ZW9mKG9wdCkpOw0KPiAgICAgICAgIHJl
-dCA9IGtlcm5lbF9zZXRzb2Nrb3B0KHNvY2ssIFNPTF9TT0NLRVQsIFNPX1JFVVNFUE9SVCwNCj4g
-ICAgICAgICAgICAgICAgICAgICAgICAgKGNoYXIgKikmb3B0LCBzaXplb2Yob3B0KSk7DQo+IH0N
-Cj4gIA0KPiBIb3cgZG8geW91IHRoaW5rLCBkbyB5b3UgdGhpbmsgdGhpcyBpcyB0aGUga2VybmVs
-IGJ1ZyBvciBqdXN0IG15DQo+IGNvbmZpZ3VyYXRpb24gaXNzdWUsIG9yIHlvdSBhbHJlYWR5IGhh
-dmUgdGhpcyBwYXRjaD8NCj4gIA0KDQpBdCBpc2NzaS10YXJnZXQgYXBwbGljYXRpb24gbGV2ZWws
-IHdlJ3JlIHVzaW5nIGEgaXNjc2lfbnAga3RocmVhZA0KbGlzdGVuZXIgcGVyIGlwdjQgLyBpcHY2
-IGFkZHIgKyBwb3J0LiAoZWc6IG9uZSBsaXN0ZW5lciBwZXIgaXNjc2kNCm5ldHdvcmsgcG9ydGFs
-KQ0KDQpUaGUgbmV0d29yayBwb3J0YWwgY2FuIGJlIHNoYXJlZCBhY3Jvc3MgTiB0YXJnZXQgZW5k
-cG9pbnRzDQppbiAvc3lzL2tlcm5lbC9jb25maWcvdGFyZ2V0L2lzY3NpLyRJUU4vJFRQR1QvbnAv
-KiwgYnV0IHRoZSBhY3R1YWwNCmxpc3RlbmluZyArIGFjY2VwdCBmb3IgZWFjaCBpcHY0IC8gaXB2
-NiBhZGRyICsgcG9ydCBpcyBzdGlsbCBkb25lIGZyb20gYQ0Kc2luZ2xlIGt0aHJlYWQgY29udGV4
-dC4NCg0KU28gQUZBSUNUIGZvciB5b3VyIHVzZS1jYXNlLCBhZGRpbmcgU09fUkVVU0VQT1JUIHRv
-IGFsbG93IGNvbmN1cnJlbnQNCklOQUREUl9BTlkgKyAhSU5BRERSX0FOWSBuZXR3b3JrIHBvcnRh
-bHMgc2hvdWxkIGJlIE9LLCBhdCBsZWFzdCBmcm9tIGFuDQppc2NzaS10YXJnZXQgcGVyc3BlY3Rp
-dmUuDQoNClRoYXQgaXMsIGlzY3NpLXRhcmdldCB3b3VsZCBjb25zaWRlciBlYWNoIGFzIGEgc2Vw
-YXJhdGUgbmV0d29yayBwb3J0YWwsDQphbGxvd2luZyBJTkFERFJfQU5ZICsgIUlOQUREUl9BTlkg
-YWNjZXB0cyB0byBiZSBzZXJ2aWNlZCBhY3Jvc3MgbXVsdGlwbGUNCmlzY3NpX25wIGt0aHJlYWRz
-Lg0KDQpUaGVyZSBzaG91bGQgbm90IGJlIGFuIGluaGVyZW50IGlzc3VlIGFsbG93aW5nIHRoaXMs
-IGJ1dCBpdCB3b3VsZCB1c2VmdWwNCnRvIHVuZGVyc3RhbmQgaWYgdGhlcmUgYXJlIGFueSBvdGhl
-ciBwb3NzaWJsZSByYW1pZmljYXRpb25zIGJlZm9yZQ0KZW5hYmxpbmcgYnkgZGVmYXVsdC4NCg0K
+
+On Sun, 30 Oct 2016, Ondrej Zary wrote:
+
+> Use standard probe_irq_on() and probe_irq_off() functions instead of own
+> implementation.
+
+Thanks for doing this.
+
+> This prevents warning messages like this in the kernel log:
+> genirq: Flags mismatch irq 1. 00000000 (NCR-probe) vs. 00000080 (i8042)
+> 
+> Move the IRQ trigger code to a separate function so it can be used for
+> other purposes (testing if the IRQ works).
+> 
+> Also add missing IRQ reset after probe.
+> 
+> Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+> ---
+>  drivers/scsi/NCR5380.c   |   72 +++++++++++++++++-----------------------------
+>  drivers/scsi/NCR5380.h   |    3 +-
+>  drivers/scsi/g_NCR5380.c |    2 +-
+>  3 files changed, 29 insertions(+), 48 deletions(-)
+> 
+> diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+> index d849ffa..01c0027 100644
+> --- a/drivers/scsi/NCR5380.c
+> +++ b/drivers/scsi/NCR5380.c
+> @@ -351,50 +351,13 @@ static void NCR5380_print_phase(struct Scsi_Host *instance)
+>  }
+>  #endif
+>  
+> -
+> -static int probe_irq;
+> -
+> -/**
+> - * probe_intr	-	helper for IRQ autoprobe
+> - * @irq: interrupt number
+> - * @dev_id: unused
+> - * @regs: unused
+> - *
+> - * Set a flag to indicate the IRQ in question was received. This is
+> - * used by the IRQ probe code.
+> - */
+> -
+> -static irqreturn_t probe_intr(int irq, void *dev_id)
+> -{
+> -	probe_irq = irq;
+> -	return IRQ_HANDLED;
+> -}
+> -
+> -/**
+> - * NCR5380_probe_irq	-	find the IRQ of an NCR5380
+> - * @instance: NCR5380 controller
+> - * @possible: bitmask of ISA IRQ lines
+> - *
+> - * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
+> - * and then looking to see what interrupt actually turned up.
+> - */
+> -
+> -static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+> -						int possible)
+> +static void NCR5380_trigger_irq(struct Scsi_Host *instance)
+>  {
+>  	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+> -	unsigned long timeout;
+> -	int trying_irqs, i, mask;
+> -
+> -	for (trying_irqs = 0, i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+> -		if ((mask & possible) && (request_irq(i, &probe_intr, 0, "NCR-probe", NULL) == 0))
+> -			trying_irqs |= mask;
+> -
+> -	timeout = jiffies + msecs_to_jiffies(250);
+> -	probe_irq = NO_IRQ;
+> +	unsigned long timeout = jiffies + msecs_to_jiffies(2500);
+>  
+>  	/*
+> -	 * A interrupt is triggered whenever BSY = false, SEL = true
+> +	 * An interrupt is triggered whenever BSY = false, SEL = true
+>  	 * and a bit set in the SELECT_ENABLE_REG is asserted on the
+>  	 * SCSI bus.
+>  	 *
+> @@ -402,23 +365,40 @@ static int __maybe_unused NCR5380_probe_irq(struct Scsi_Host *instance,
+>  	 * (I/O, C/D, and MSG) match those in the TCR, so we must reset that
+>  	 * to zero.
+>  	 */
+> -
+>  	NCR5380_write(TARGET_COMMAND_REG, 0);
+>  	NCR5380_write(SELECT_ENABLE_REG, hostdata->id_mask);
+>  	NCR5380_write(OUTPUT_DATA_REG, hostdata->id_mask);
+>  	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE | ICR_ASSERT_DATA | ICR_ASSERT_SEL);
+>  
+> -	while (probe_irq == NO_IRQ && time_before(jiffies, timeout))
+> +	while (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_IRQ) &&
+> +	       time_before(jiffies, timeout))
+>  		schedule_timeout_uninterruptible(1);
+
+You don't need a 2.5 second timeout here. To raise the interrupt the chip 
+should not need more than a bus settle delay (400ns). Calling msleep(1) 
+should be plenty.
+
+Better still, please drop the loop, the delay and the BASR_IRQ test here, 
+and if need be, put the delay in the caller. This routine discards the 
+result of that sequence anyway.
+
+>  
+>  	NCR5380_write(SELECT_ENABLE_REG, 0);
+>  	NCR5380_write(INITIATOR_COMMAND_REG, ICR_BASE);
+> +}
+>  
+> -	for (i = 1, mask = 2; i < 16; ++i, mask <<= 1)
+> -		if (trying_irqs & mask)
+> -			free_irq(i, NULL);
+> +/**
+> + * NCR5380_probe_irq	-	find the IRQ of an NCR5380
+> + * @instance: NCR5380 controller
+> + *
+> + * Autoprobe for the IRQ line used by the NCR5380 by triggering an IRQ
+> + * and then looking to see what interrupt actually turned up.
+> + */
+> +
+> +static int NCR5380_probe_irq(struct Scsi_Host *instance)
+> +{
+> +	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+> +	int irqs, irq;
+> +
+
+Please rename irqs to irq_mask.
+
+Other drivers like tty/cyclades.c begin with,
+
+	/* forget possible initially masked and pending IRQ */
+	irq = probe_irq_off(probe_irq_on());
+
+Perhaps we need that here too?
+
+> +	irqs = probe_irq_on();
+
+You should clear any pending interrupt on the chip before you try to 
+trigger another one.
+
+> +	NCR5380_trigger_irq(instance);
+
+Please do the msleep(1) here.
+
+> +	irq = probe_irq_off(irqs);
+> +	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
+> +	if (irq < 0)
+> +		irq = 0;
+
+Please use NO_IRQ instead of 0.
+
+>  
+> -	return probe_irq;
+> +	return irq;
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+> index 3c6ce54..b2fca52 100644
+> --- a/drivers/scsi/NCR5380.h
+> +++ b/drivers/scsi/NCR5380.h
+> @@ -290,7 +290,8 @@ static inline struct scsi_cmnd *NCR5380_to_scmd(struct NCR5380_cmd *ncmd_ptr)
+>  #define NCR5380_dprint_phase(flg, arg) do {} while (0)
+>  #endif
+>  
+> -static int NCR5380_probe_irq(struct Scsi_Host *instance, int possible);
+> +static void NCR5380_trigger_irq(struct Scsi_Host *instance);
+> +static int NCR5380_probe_irq(struct Scsi_Host *instance);
+>  static int NCR5380_init(struct Scsi_Host *instance, int flags);
+>  static int NCR5380_maybe_reset_bus(struct Scsi_Host *);
+>  static void NCR5380_exit(struct Scsi_Host *instance);
+
+Please move NCR5380_probe_irq and NCR5380_trigger_irq implementations and 
+prototypes out of the core driver and into g_NCR5380.c. The reason is, ISA 
+cards are probably the only 5380 cards ever likely to need manual IRQ 
+configuration. It would better to have g_NCR5380 support more ISA cards 
+than to add more ISA drivers, therefore this code isn't likely to be 
+needed in the core driver.
+
+Thanks.
+
+-- 
+
+> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+> index 7299ad9..3790ed5 100644
+> --- a/drivers/scsi/g_NCR5380.c
+> +++ b/drivers/scsi/g_NCR5380.c
+> @@ -265,7 +265,7 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+>  	if (irq != IRQ_AUTO)
+>  		instance->irq = irq;
+>  	else
+> -		instance->irq = NCR5380_probe_irq(instance, 0xffff);
+> +		instance->irq = NCR5380_probe_irq(instance);
+>  
+>  	/* Compatibility with documented NCR5380 kernel parameters */
+>  	if (instance->irq == 255)
+> 
