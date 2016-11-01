@@ -1,36 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/3] scsi_dh: switch to scsi_execute_req_flags()
-Date: Tue, 1 Nov 2016 18:00:07 +0100
-Message-ID: <247b5304-90b3-034a-5b1a-3e8efedd3940@suse.de>
-References: <1477936770-106687-1-git-send-email-hare@suse.de>
- <20161101144156.GA17827@lst.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi_dh_alua: Fix a reference counting bug
+Date: Tue, 01 Nov 2016 13:32:10 -0400
+Message-ID: <yq1ziljyulh.fsf@sermon.lab.mkp.net>
+References: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59613 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752558AbcKARAL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Nov 2016 13:00:11 -0400
-In-Reply-To: <20161101144156.GA17827@lst.de>
+Received: from userp1040.oracle.com ([156.151.31.81]:22284 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752872AbcKARc1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 13:32:27 -0400
+In-Reply-To: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com> (Bart Van
+        Assche's message of "Tue, 1 Nov 2016 08:19:57 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, tang.junhui@zte.com.cn, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/01/2016 03:41 PM, Christoph Hellwig wrote:
-> A little warning: scsi_execute_req_flags grew a new argument in the block
-> tree to be able to specify the request-only flags.  So any of these
-> patches would create a (mostly harmless) conflict in linux-next.
->
-I don't mind creating the patches against the block tree.
-Martin? Jens? What's the preferred way here?
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Cheers,
+Bart> The code at the end of alua_rtpg_work() is as follows:
+Bart> 	scsi_device_put(sdev);
+Bart> 	kref_put(&pg->kref, release_port_group);
 
-Hannes
+Bart> In other words, alua_rtpg_queue() must hold an sdev reference and
+Bart> a pg reference before queueing rtpg work. If no rtpg work is
+Bart> queued no additional references should be held when
+Bart> alua_rtpg_queue() returns. If no rtpg work is queued, ensure that
+Bart> alua_rtpg_queue() only gives up the sdev reference if that
+Bart> reference was obtained by the same alua_rtpg_queue() call.
+
+Applied to 4.9/scsi-fixes.
+
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Martin K. Petersen	Oracle Linux Engineering
