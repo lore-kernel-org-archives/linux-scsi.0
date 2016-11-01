@@ -1,63 +1,73 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] fnic: remove a pointless test
-Date: Tue,  1 Nov 2016 17:40:21 +0100
-Message-ID: <1478018421-22820-1-git-send-email-thenzl@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] scsi_dh_alua: Fix a reference counting bug
+Date: Tue, 1 Nov 2016 17:59:00 +0100
+Message-ID: <04dca258-7dfe-aaae-0fef-ce46cef14f70@suse.de>
+References: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46238 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:59513 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751316AbcKAQkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Nov 2016 12:40:24 -0400
+        id S1751337AbcKAQ7H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Nov 2016 12:59:07 -0400
+In-Reply-To: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: sramars@cisco.com, hiralpat@cisco.com, buchino@cisco.com
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: tang.junhui@zte.com.cn, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-rport can't be null here, it would have failed already in
-fc_remote_port_chkready
+On 11/01/2016 03:19 PM, Bart Van Assche wrote:
+> The code at the end of alua_rtpg_work() is as follows:
+>
+> 	scsi_device_put(sdev);
+> 	kref_put(&pg->kref, release_port_group);
+>
+> In other words, alua_rtpg_queue() must hold an sdev reference and
+> a pg reference before queueing rtpg work. If no rtpg work is queued
+> no additional references should be held when alua_rtpg_queue()
+> returns. If no rtpg work is queued, ensure that alua_rtpg_queue()
+> only gives up the sdev reference if that reference was obtained by
+> the same alua_rtpg_queue() call.
+>
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Hannes Reinecke <hare@suse.com>
+> Cc: Tang Junhui <tang.junhui@zte.com.cn>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/device_handler/scsi_dh_alua.c | 4 +++-
+>  1 file changed, 3 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+> index f375167..7bb2068 100644
+> --- a/drivers/scsi/device_handler/scsi_dh_alua.c
+> +++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+> @@ -891,6 +891,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>  		/* Do not queue if the worker is already running */
+>  		if (!(pg->flags & ALUA_PG_RUNNING)) {
+>  			kref_get(&pg->kref);
+> +			sdev = NULL;
+>  			start_queue = 1;
+>  		}
+>  	}
+> @@ -902,7 +903,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
+>  	if (start_queue &&
+>  	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
+>  				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
+> -		scsi_device_put(sdev);
+> +		if (sdev)
+> +			scsi_device_put(sdev);
+>  		kref_put(&pg->kref, release_port_group);
+>  	}
+>  }
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/fnic/fnic_scsi.c | 20 +++++++++-----------
- 1 file changed, 9 insertions(+), 11 deletions(-)
+Cheers,
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index d9fd2f8415..1d3ecaee56 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -441,6 +441,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	unsigned long ptr;
- 	spinlock_t *io_lock = NULL;
- 	int io_lock_acquired = 0;
-+	struct fc_rport_libfc_priv *rp;
- 
- 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
- 		return SCSI_MLQUEUE_HOST_BUSY;
-@@ -454,17 +455,14 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 		return 0;
- 	}
- 
--	if (rport) {
--		struct fc_rport_libfc_priv *rp = rport->dd_data;
--
--		if (!rp || rp->rp_state != RPORT_ST_READY) {
--			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
--				"returning DID_NO_CONNECT for IO as rport is removed\n");
--			atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
--			sc->result = DID_NO_CONNECT<<16;
--			done(sc);
--			return 0;
--		}
-+	rp = rport->dd_data;
-+	if (!rp || rp->rp_state != RPORT_ST_READY) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+			"returning DID_NO_CONNECT for IO as rport is removed\n");
-+		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-+		sc->result = DID_NO_CONNECT<<16;
-+		done(sc);
-+		return 0;
- 	}
- 
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
+Hannes
 -- 
-2.7.4
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
