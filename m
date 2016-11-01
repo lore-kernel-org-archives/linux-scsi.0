@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_dh_alua: fix missing kref_put() in alua_rtpg_work()
-Date: Tue, 01 Nov 2016 09:44:16 -0400
-Message-ID: <yq17f8n2u33.fsf@sermon.lab.mkp.net>
-References: <1477641247-9632-1-git-send-email-tang.junhui@zte.com.cn>
+Subject: Re: [PATCH RESEND] mpt3sas: Fix for block device of raid exists even after deleting raid disk
+Date: Tue, 01 Nov 2016 09:49:56 -0400
+Message-ID: <yq137jb2ttn.fsf@sermon.lab.mkp.net>
+References: <1477629552-27404-1-git-send-email-Sreekanth.Reddy@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19636 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1169195AbcKANoY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 09:44:24 -0400
-In-Reply-To: <1477641247-9632-1-git-send-email-tang.junhui@zte.com.cn> (tang
-        junhui's message of "Fri, 28 Oct 2016 15:54:07 +0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1477629552-27404-1-git-send-email-Sreekanth.Reddy@broadcom.com>
+        (Sreekanth Reddy's message of "Fri, 28 Oct 2016 10:09:12 +0530")
+Sender: stable-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: tang.junhui@zte.com.cn
-Cc: hare@suse.de, matthew@wil.cx, linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
 
->>>>> "tang" == tang junhui <tang.junhui@zte.com.cn> writes:
+>>>>> "Sreekanth" == Sreekanth Reddy <sreekanth.reddy@broadcom.com> writes:
 
-tang> Reference count of pg leaks in alua_rtpg_work() since kref_put()
-tang> is not called to decrease the reference count of pg when the
-tang> condition
-tang> pg->rtpg_sdev==NULL satisfied (actually it is easy to satisfy), it
-tang> would cause memory of pg leakage.
+Sreekanth> While merging mpt3sas & mpt2sas code, we posted below patch
+Sreekanth> for WarpDrive support,
+
+[...]
+
+Sreekanth> Due to above hunk, we are not initializing raid_device's
+Sreekanth> starget for raid volumes, and so during raid disk deletion
+Sreekanth> driver is not calling scsi_remove_target() API as driver
+Sreekanth> observes starget field of raid_device's structure as NULL.
 
 Applied to 4.9/scsi-fixes.
 
