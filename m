@@ -1,17 +1,31 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH v5 07/14] blk-mq: Introduce blk_mq_quiesce_queue()
-Date: Tue, 1 Nov 2016 18:02:02 +0200
-Message-ID: <c06b66d6-2806-b38e-ade1-89ff5c6804fc@grimberg.me>
-References: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3@sandisk.com>
- <81a7e98c-51b0-99f0-c143-303425508bff@sandisk.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH 1/3] blk-mq: export blk_mq_map_queues
+Date: Tue, 1 Nov 2016 10:02:51 -0600
+Message-ID: <20161101160251.GA9797@kernel.dk>
+References: <1478009569-19026-1-git-send-email-hch@lst.de>
+ <1478009569-19026-2-git-send-email-hch@lst.de>
+ <yq1lgx319jl.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <81a7e98c-51b0-99f0-c143-303425508bff@sandisk.com>
+Content-Disposition: inline
+In-Reply-To: <yq1lgx319jl.fsf@sermon.lab.mkp.net>
 Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, don.brace@microsemi.com, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
+On Tue, Nov 01 2016, Martin K. Petersen wrote:
+> >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+> 
+> Christoph> This will allow SCSI to have a single blk_mq_ops structure
+> Christoph> that either lets the LLDD map the queues to PCIe MSIx vectors
+> Christoph> or use the default.
+> 
+> Jens, any objection to me funneling this change through the SCSI tree?
+
+No, that's fine, you can add my reviewed-by.
+
+-- 
+Jens Axboe
+
