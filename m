@@ -1,31 +1,28 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1 0/4] scsi: ufs: bug fixes patch series #2
-Date: Tue, 01 Nov 2016 10:08:20 -0400
-Message-ID: <yq1pomf1eej.fsf@sermon.lab.mkp.net>
-References: <1477614336-5364-1-git-send-email-subhashj@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Christoph Hellwig <hch@lst.de>
+Subject: expose queue the queue mapping for SCSI drivers V2
+Date: Tue,  1 Nov 2016 08:12:46 -0600
+Message-ID: <1478009569-19026-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30542 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S966143AbcKAOIa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 10:08:30 -0400
-In-Reply-To: <1477614336-5364-1-git-send-email-subhashj@codeaurora.org>
-        (Subhash Jadavani's message of "Thu, 27 Oct 2016 17:25:36 -0700")
+Received: from bombadil.infradead.org ([198.137.202.9]:34174 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966238AbcKAOMx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 10:12:53 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, don.brace@microsemi.com
+Cc: axboe@kernel.dk, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
->>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
+In 4.9 I've added support in the interrupt layer to automatically
+assign the interrupt affinity at interrupt allocation time, and
+expose that information to blk-mq.
 
-Subhash> This patch series contains not reviewed changes from patch
-Subhash> series #1 ([PATCH v1 00/11] scsi: ufs: bug fixes patch series
-Subhash> #1).  These bug fixes patch series are intended to bring in
-Subhash> important bug fixes required for UFS stability and
-Subhash> functionality.
+This series extents that so that SCSI driver can pass on the information
+as well.  The SCSI part is fairly trivial, although we need to also
+export the default queue mapping function in blk-mq to keep things simple.
 
-Applied to 4.10/scsi-queue.
+I've also converted over the smartpqi driver as an example as it's the
+easiest of the multiqueue SCSI drivers to convert.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Changes since V1:
+ - move the EXPORT_SYMBOL of blk_mq_map_queues to the right patch
+ - added Reviewed-by, Acked-by and Tested-by tags
