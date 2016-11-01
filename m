@@ -1,30 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] vmw_pvscsi: return SUCCESS for successful command aborts
-Date: Tue, 01 Nov 2016 09:54:36 -0400
-Message-ID: <yq1y4131f1f.fsf@sermon.lab.mkp.net>
-References: <DM2PR0501MB1536D5BFF3BBE109199083C6CBAE0@DM2PR0501MB1536.namprd05.prod.outlook.com>
+Subject: Re: [PATCH v3 00/12] ufs-qcom: phy/hcd: Clean up qcom-ufs phy and ufs-qcom hcd
+Date: Tue, 01 Nov 2016 09:58:18 -0400
+Message-ID: <yq1twbr1ev9.fsf@sermon.lab.mkp.net>
+References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18735 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:21753 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932756AbcKANyo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 09:54:44 -0400
-In-Reply-To: <DM2PR0501MB1536D5BFF3BBE109199083C6CBAE0@DM2PR0501MB1536.namprd05.prod.outlook.com>
-        (Jim Gill's message of "Mon, 31 Oct 2016 22:04:16 +0000")
+        with ESMTP id S965962AbcKAN63 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 09:58:29 -0400
+In-Reply-To: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
+        (Vivek Gautam's message of "Sun, 30 Oct 2016 01:52:02 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jim Gill <jgill@vmware.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, "emilne@redhat.com" <emilne@redhat.com>, "djeffery@redhat.com" <djeffery@redhat.com>, pv-drivers <pv-drivers@vmware.com>
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
->>>>> "Jim" == Jim Gill <jgill@vmware.com> writes:
+>>>>> "Vivek" == Vivek Gautam <vivek.gautam@codeaurora.org> writes:
 
-Jim> VMware prefers to update the module's version number as the driver
-Jim> is updated. Would you please update the
-Jim> PVSCSI_DRIVER_VERSION_STRING in vmx_pvscsi.h from 1.0.6.0-k to
-Jim> 1.0.7.0-k?  Otherwise the patch looks fine to us.
+Vivek> These patches cleanup the ufs phy driver to an extent.
+Vivek> Subsequent patches will target to clean the phy_init() of these
+Vivek> qcom-ufs phy drivers in order to get rid of a number of exported
+Vivek> APIs that phy drivers expose for ufs-qcom hcd driver to use.
 
-Applied to 4.9/scsi-fixes with a bumped version number.
+Vivek: Please address the comments to patch 4.
+
+Subhash: Please review patches 5 and 9.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
