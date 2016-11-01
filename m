@@ -1,68 +1,34 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: esp_scsi QTAG in FAS216
-Date: Tue, 1 Nov 2016 18:23:06 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1611011816520.3174@nippy.intranet>
-References: <CAOmrzkK1hoT72zA4CzajCH2uNwkiVPWi8vJQswB=4Q4uf-kSZQ@mail.gmail.com> <CACz-3rjNixJBjKxzjpneFE8BHKpzR-hvhWsabT_AtrWZZUgvsA@mail.gmail.com> <CAOmrzkJZEZigKEyb5_66H2FNaEX7F_TXyvQNMpMZu1MyuOudBw@mail.gmail.com> <20140413.221414.853080853067673824.davem@davemloft.net>
- <alpine.LNX.2.00.1610281658120.30954@nippy.intranet> <alpine.LNX.2.00.1610301331301.20114@nippy.intranet> <50ffb9f6-ebe0-9e87-1244-25dfb2ec01d2@gmail.com> <CAOmrzkKPsFKvgvHzPJKCP-Vm9EYnFoy+Gq0C=Ly9zAA3D_zDaA@mail.gmail.com> <alpine.LNX.2.00.1611011017470.23137@nippy.intranet>
- <83f2bc09-3e29-1c3d-46d8-0ee009a7c67e@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi_dh_alua: fix wrong scsi_device_put() in alua_rtpg_queue()
+Date: Tue, 01 Nov 2016 09:43:47 -0400
+Message-ID: <yq1bmxz2u3w.fsf@sermon.lab.mkp.net>
+References: <1477642877-10228-1-git-send-email-tang.junhui@zte.com.cn>
+        <96621137-8209-634e-3d70-ffd89319f103@sandisk.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:44420 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1034089AbcKAHXN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 03:23:13 -0400
-In-Reply-To: <83f2bc09-3e29-1c3d-46d8-0ee009a7c67e@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:46787 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1169191AbcKANoB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 09:44:01 -0400
+In-Reply-To: <96621137-8209-634e-3d70-ffd89319f103@sandisk.com> (Bart Van
+        Assche's message of "Fri, 28 Oct 2016 08:05:12 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: David Miller <davem@davemloft.net>, Kars de Jong <jongk@linux-m68k.org>, Tuomas Vainikka <tuomas.vainikka@aalto.fi>, Geert Uytterhoeven <geert@linux-m68k.org>, Linux/m68k <linux-m68k@vger.kernel.org>, scsi <linux-scsi@vger.kernel.org>, John Paul Adrian Glaubitz <glaubitz@physik.fu-berlin.de>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: tang.junhui@zte.com.cn, hare@suse.de, matthew@wil.cx, linux-scsi@vger.kernel.org, zhang.kai16@zte.com.cn
 
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-On Tue, 1 Nov 2016, Michael Schmitz wrote:
+Bart,
 
-> Hi Finn,
-> 
-> Am 01.11.2016 um 12:47 schrieb Finn Thain:
-> > 
-> > On Tue, 1 Nov 2016, Michael Schmitz wrote:
-> > 
-> >>> I had tried to set that bit in zorro_esp_slave_configure but had not 
-> >>> done a proper job of it - I'd only set esp->config3 and forgot to 
-> >>> set tp->esp_config3. Time to retest this ...
-> >>
-> >> I don't think it's quite that easy - the ESP_CONFIG3_TENB bit needs 
-> >> to be set for all targets if at least one SCSI-2 target is on the bus 
-> >> and we allow dosconnecting, no?
-> > 
-> > I think ESP_CONFIG3_TENB is for FAS100A and FASHME. The bug here is on 
-> > ESP236 and FAS236, so ESP_CONFIG3_TBMS would be the relevant bit.
-> 
-> I stand corrected. Err... confused.
-> 
-> When setting ESP_CONFIG3_TBMS, should we set ESP_CONFIG3_GTM as well?
+Bart> Personally I prefer the patch below because that patch does not
+Bart> introduce a new variable. This is a patch I started testing four
+Bart> weeks ago and it has survived all my ALUA tests so far. Please
+Bart> note that I do not know whether my tests hit the !(pg->flags &
+Bart> ALUA_PG_RUNNING) code path.
 
-I think that depends entirely on the target. But it isn't relevant to the 
-bug at hand AFAICS.
+Please submit a real patch with a suitable description for this.
 
 -- 
-
-> 
-> > The bit gets set when ESP_CONFIG2_SCSI2ENAB gets set (as in David's 
-> > patch) so we then need to avoid clobbering it, since ESP_CONFIG3_TBMS 
-> > == ESP_CONFIG3_EWIDE. I think we have to test for HME to avoid this 
-> > clash.
-> 
-> I'd want to set these bits for ESP236 and FAS236 only, so no clash with 
-> HME. As you found out, ESP_CONFIG3_TBMS aka ESP_CONFIG3_EWIDE gets 
-> clobbered on bus reset cleanup unconditionally.
-> 
-> Cheers,
-> 
-> 	Michael
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Martin K. Petersen	Oracle Linux Engineering
