@@ -1,36 +1,41 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi_dh_alua: Fix a reference counting bug
-Date: Tue, 01 Nov 2016 13:32:10 -0400
-Message-ID: <yq1ziljyulh.fsf@sermon.lab.mkp.net>
-References: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] mvsas: fix error return code in mvs_task_prep()
+Date: Tue, 1 Nov 2016 11:36:12 -0600
+Message-ID: <20161101173612.GC16704@mtj.duckdns.org>
+References: <1477926250-10292-1-git-send-email-weiyj.lk@gmail.com>
+ <20161031162926.GB26364@mtj.duckdns.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:22284 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752872AbcKARc1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 13:32:27 -0400
-In-Reply-To: <bf51a27f-d99f-4a43-867b-0b683ec1784d@sandisk.com> (Bart Van
-        Assche's message of "Tue, 1 Nov 2016 08:19:57 -0600")
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:36464 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753239AbcKARgP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 13:36:15 -0400
+Received: by mail-pf0-f196.google.com with SMTP id n85so12185661pfi.3
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Nov 2016 10:36:14 -0700 (PDT)
+Content-Disposition: inline
+In-Reply-To: <20161031162926.GB26364@mtj.duckdns.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, tang.junhui@zte.com.cn, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Wei Yongjun <weiyj.lk@gmail.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Wilfried Weissmann <Wilfried.Weissmann@gmx.at>, Luis de Bethencourt <luisbg@osg.samsung.com>, Johannes Thumshirn <jthumshirn@suse.de>, Hannes Reinecke <hare@suse.de>, Baoyou Xie <baoyou.xie@linaro.org>, Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+On Mon, Oct 31, 2016 at 10:29:26AM -0600, Tejun Heo wrote:
+> On Mon, Oct 31, 2016 at 03:04:10PM +0000, Wei Yongjun wrote:
+> > From: Wei Yongjun <weiyongjun1@huawei.com>
+> > 
+> > Fix to return error code -ENOMEM from the error handling
+> > case instead of 0, as done elsewhere in this function.
+> > 
+> > Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
+> 
+> Applied to libata/for-4.9-fixes.
 
-Bart> The code at the end of alua_rtpg_work() is as follows:
-Bart> 	scsi_device_put(sdev);
-Bart> 	kref_put(&pg->kref, release_port_group);
+I messed up.  This should have gone through scsi, not libata.  Chatted
+with Martin and as the patch is a small obvious fix decided to leave
+it in libata tree.  My apologies for the confusion.
 
-Bart> In other words, alua_rtpg_queue() must hold an sdev reference and
-Bart> a pg reference before queueing rtpg work. If no rtpg work is
-Bart> queued no additional references should be held when
-Bart> alua_rtpg_queue() returns. If no rtpg work is queued, ensure that
-Bart> alua_rtpg_queue() only gives up the sdev reference if that
-Bart> reference was obtained by the same alua_rtpg_queue() call.
-
-Applied to 4.9/scsi-fixes.
+Thanks.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
