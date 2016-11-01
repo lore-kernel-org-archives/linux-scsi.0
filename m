@@ -1,32 +1,43 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: Fix scsi scan hang triggered if adapter fails during init
-Date: Tue, 01 Nov 2016 16:42:11 -0400
-Message-ID: <yq1funbylss.fsf@sermon.lab.mkp.net>
-References: <1477082727-29137-1-git-send-email-William.Kuzeja@stratus.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCHv2 0/3] scsi_dh: switch to scsi_execute_req_flags()
+Date: Tue,  1 Nov 2016 22:49:35 +0100
+Message-ID: <1478036978-30583-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:30301 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750889AbcKAUmf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 1 Nov 2016 16:42:35 -0400
-In-Reply-To: <1477082727-29137-1-git-send-email-William.Kuzeja@stratus.com>
-        (Bill Kuzeja's message of "Fri, 21 Oct 2016 16:45:27 -0400")
+Received: from mx2.suse.de ([195.135.220.15]:60309 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754563AbcKAVtu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Nov 2016 17:49:50 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bill Kuzeja <William.Kuzeja@stratus.com>
-Cc: linux-scsi@vger.kernel.org, qla2xxx-upstream@qlogic.com, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
->>>>> "Bill" == Bill Kuzeja <William.Kuzeja@stratus.com> writes:
+Hi all,
 
-Bill> A system can get hung task timeouts if a qlogic board fails during
-Bill> initialization (if the board breaks again or fails the init). The
-Bill> hang involves the scsi scan.
+here's a patchset to switch to scsi_execute_req_flags() for
+all SCSI device handlers. Originally we would be using
+blk_execute_rq_nowait to allow the 'activate' function
+to run asynchronously.
+However, as we're now calling the 'activate' function
+synchronously there's no point in using the blk_execute_rq()
+interface and we should be using scsi_execute_req_flags()
+instead.
 
-Bill> In a nutshell, since commit beb9e315e6e0 ("qla2xxx: Prevent
-Bill> removal and board_disable race"):
+As usual, comments and reviews are welcome.
 
-Applied to 4.9/scsi-fixes.
+Changes to v1:
+- Integrate reviews from hch
+
+Hannes Reinecke (3):
+  scsi_dh_rdac: switch to scsi_execute_req_flags()
+  scsi_dh_emc: switch to scsi_execute_req_flags()
+  scsi_dh_hp_sw: switch to scsi_execute_req_flags()
+
+ drivers/scsi/device_handler/scsi_dh_emc.c   | 245 ++++++----------------------
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c | 218 +++++++------------------
+ drivers/scsi/device_handler/scsi_dh_rdac.c  | 172 ++++++-------------
+ 3 files changed, 164 insertions(+), 471 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.6.6
+
