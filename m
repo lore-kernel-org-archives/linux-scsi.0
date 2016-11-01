@@ -1,63 +1,63 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: [PATCH] megaraid-sas: request irqs later
-Date: Tue,  1 Nov 2016 17:32:02 +0100
-Message-ID: <1478017922-22655-1-git-send-email-thenzl@redhat.com>
+Subject: [PATCH] fnic: remove a pointless test
+Date: Tue,  1 Nov 2016 17:40:21 +0100
+Message-ID: <1478018421-22820-1-git-send-email-thenzl@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:55032 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:46238 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750918AbcKAQcF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 1 Nov 2016 12:32:05 -0400
+        id S1751316AbcKAQkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Nov 2016 12:40:24 -0400
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: sumit.saxena@broadcom.com, kashyap.desai@broadcom.com
+Cc: sramars@cisco.com, hiralpat@cisco.com, buchino@cisco.com
 
-It is not good when an irq arrives before
-driver structures are allocated.
+rport can't be null here, it would have failed already in
+fc_remote_port_chkready
 
 Signed-off-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c | 12 +++++-------
- 1 file changed, 5 insertions(+), 7 deletions(-)
+ drivers/scsi/fnic/fnic_scsi.c | 20 +++++++++-----------
+ 1 file changed, 9 insertions(+), 11 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index c3efcc7255..e207410150 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5155,11 +5155,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
- 		(unsigned long)instance);
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index d9fd2f8415..1d3ecaee56 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -441,6 +441,7 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 	unsigned long ptr;
+ 	spinlock_t *io_lock = NULL;
+ 	int io_lock_acquired = 0;
++	struct fc_rport_libfc_priv *rp;
  
--	if (instance->msix_vectors ?
--		megasas_setup_irqs_msix(instance, 1) :
--		megasas_setup_irqs_ioapic(instance))
--		goto fail_setup_irqs;
+ 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
+ 		return SCSI_MLQUEUE_HOST_BUSY;
+@@ -454,17 +455,14 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
+ 		return 0;
+ 	}
+ 
+-	if (rport) {
+-		struct fc_rport_libfc_priv *rp = rport->dd_data;
 -
- 	instance->ctrl_info = kzalloc(sizeof(struct megasas_ctrl_info),
- 				GFP_KERNEL);
- 	if (instance->ctrl_info == NULL)
-@@ -5175,6 +5170,10 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	if (instance->instancet->init_adapter(instance))
- 		goto fail_init_adapter;
+-		if (!rp || rp->rp_state != RPORT_ST_READY) {
+-			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
+-				"returning DID_NO_CONNECT for IO as rport is removed\n");
+-			atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
+-			sc->result = DID_NO_CONNECT<<16;
+-			done(sc);
+-			return 0;
+-		}
++	rp = rport->dd_data;
++	if (!rp || rp->rp_state != RPORT_ST_READY) {
++		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"returning DID_NO_CONNECT for IO as rport is removed\n");
++		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
++		sc->result = DID_NO_CONNECT<<16;
++		done(sc);
++		return 0;
+ 	}
  
-+	if (instance->msix_vectors ?
-+		megasas_setup_irqs_msix(instance, 1) :
-+		megasas_setup_irqs_ioapic(instance))
-+		goto fail_init_adapter;
- 
- 	instance->instancet->enable_intr(instance);
- 
-@@ -5314,9 +5313,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 
- fail_get_pd_list:
- 	instance->instancet->disable_intr(instance);
--fail_init_adapter:
- 	megasas_destroy_irqs(instance);
--fail_setup_irqs:
-+fail_init_adapter:
- 	if (instance->msix_vectors)
- 		pci_disable_msix(instance->pdev);
- 	instance->msix_vectors = 0;
+ 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
 -- 
 2.7.4
 
