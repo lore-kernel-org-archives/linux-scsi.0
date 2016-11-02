@@ -1,95 +1,117 @@
-From: Andrey Grodzovsky <andrey2805@gmail.com>
-Subject: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v2)
-Date: Tue,  1 Nov 2016 20:09:54 -0400
-Message-ID: <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination
+ (v2)
+Date: Wed, 2 Nov 2016 03:07:35 +0100
+Message-ID: <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de>
 References: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: MPT-FusionLinux.pdl@broadcom.com
-Cc: Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+ <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60667 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754155AbcKBCHm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 1 Nov 2016 22:07:42 -0400
+In-Reply-To: <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrey Grodzovsky <andrey2805@gmail.com>, MPT-FusionLinux.pdl@broadcom.com
+Cc: linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, stable@vger.kernel.org
 
-Problem:
-This is a work around for a bug with LSI Fusion MPT SAS2 when
-pefroming secure erase. Due to the very long time the operation
-takes commands issued during the erase will time out and will trigger
-execution of abort hook. Even though the abort hook is called for
-the specifc command which timed out this leads to entire device halt
-(scsi_state terminated) and premature termination of the secured erase.
+On 11/02/2016 01:09 AM, Andrey Grodzovsky wrote:
+> Problem:
+> This is a work around for a bug with LSI Fusion MPT SAS2 when
+> pefroming secure erase. Due to the very long time the operation
+> takes commands issued during the erase will time out and will trigger
+> execution of abort hook. Even though the abort hook is called for
+> the specifc command which timed out this leads to entire device halt
+> (scsi_state terminated) and premature termination of the secured erase.
+>
+> Fix:
+> Set device state to busy while erase in progress to reject any incoming
+> commands until the erase is done. The device is blocked any way during
+> this time and cannot execute any other command.
+> More data and logs can be found here -
+> https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
+>
+> v2: Update according to example patch by Hannes Reinecke to apply
+> the blocking logic to any ATA 12/16 command.
+>
+> Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+> Cc: <linux-scsi@vger.kernel.org>
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: <stable@vger.kernel.org>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 26 ++++++++++++++++++++++++++
+>  1 file changed, 26 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 5a97e32..43ab0cc 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -3500,6 +3500,20 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+>  	    SAM_STAT_CHECK_CONDITION;
+>  }
+>
+> +/**
+> + * This is a work around for a bug with LSI Fusion MPT SAS2 when
+> + * pefroming secure erase. Due to the verly long time the operation
+> + * takes commands issued during the erase will time out and will trigger
+> + * execution of abort hook. This leads to device reset and premature
+> + * termination of the secured erase.
+> + *
+> + */
+> +static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
+> +{
+> +   return (scmd->cmnd[0] == 0xa1 || scmd->cmnd[0] == 0x85);
+> +}
+> +
+> +
+>
+>  /**
+>   * _scsih_qcmd - main scsi request entry point
+> @@ -3528,6 +3542,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>  		scsi_print_command(scmd);
+>  #endif
+>
+> +   /**
+> +	* Lock the device for any subsequent command until
+> +	* command is done.
+> +	*/
+> +	if (ata_12_16_cmd(scmd))
+> +		scsi_internal_device_block(scmd->device);
+> +
+> +
+>  	sas_device_priv_data = scmd->device->hostdata;
+>  	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+>  		scmd->result = DID_NO_CONNECT << 16;
+> @@ -4062,6 +4084,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>  	if (scmd == NULL)
+>  		return 1;
+>
+> +	if (ata_12_16_cmd(scmd))
+> +		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
+> +
+> +
+>  	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+>
+>  	if (mpi_reply == NULL) {
+>
+Yeah, it's ugly, but I can't think of a better solution for the moment.
+Thanks for debugging this.
 
-Fix:
-Set device state to busy while erase in progress to reject any incoming
-commands until the erase is done. The device is blocked any way during
-this time and cannot execute any other command.
-More data and logs can be found here -
-https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-v2: Update according to example patch by Hannes Reinecke to apply
-the blocking logic to any ATA 12/16 command.
+Cheers,
 
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: <stable@vger.kernel.org>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 26 ++++++++++++++++++++++++++
- 1 file changed, 26 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 5a97e32..43ab0cc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3500,6 +3500,20 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
- 
-+/**
-+ * This is a work around for a bug with LSI Fusion MPT SAS2 when
-+ * pefroming secure erase. Due to the verly long time the operation
-+ * takes commands issued during the erase will time out and will trigger
-+ * execution of abort hook. This leads to device reset and premature
-+ * termination of the secured erase.
-+ *
-+ */
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+{
-+   return (scmd->cmnd[0] == 0xa1 || scmd->cmnd[0] == 0x85);
-+}
-+
-+
- 
- /**
-  * _scsih_qcmd - main scsi request entry point
-@@ -3528,6 +3542,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		scsi_print_command(scmd);
- #endif
- 
-+   /**
-+	* Lock the device for any subsequent command until
-+	* command is done.
-+	*/
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
-+
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4062,6 +4084,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
- 
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
+Hannes
 -- 
-2.1.4
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
