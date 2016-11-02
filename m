@@ -1,61 +1,55 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH 1/3] scsi_dh_rdac: switch to scsi_execute_req_flags()
-Date: Wed, 02 Nov 2016 11:44:29 -0400
-Message-ID: <1478101469.1001.9.camel@localhost.localdomain>
-References: <1478036978-30583-1-git-send-email-hare@suse.de>
-         <1478036978-30583-2-git-send-email-hare@suse.de>
-Reply-To: emilne@redhat.com
+From: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Subject: Re: [PATCH v5 0/14] Fix race conditions related to stopping block
+ layer queues
+Date: Wed, 2 Nov 2016 12:52:54 -0600
+Message-ID: <cfd115a1-78e1-7ed5-3c19-42334a5dbe72@fb.com>
+References: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:38882 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755945AbcKBPog (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 2 Nov 2016 11:44:36 -0400
-In-Reply-To: <1478036978-30583-2-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, Mike Snitzer <snitzer-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Keith Busch <keith.busch-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Konrad Rzeszutek Wilk <konrad.wilk-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>, =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau-Sxgqhf6Nn4DQT0dZR+AlfA@public.gmane.org>, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org" <linux-nvme-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Tue, 2016-11-01 at 22:49 +0100, Hannes Reinecke wrote:
-...
->  static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
->  			char *array_name, u8 *array_id)
->  {
-> -	int err, i;
-> -	struct c8_inquiry *inqp;
-> +	int err = SCSI_DH_IO, i;
-> +	struct c8_inquiry *inqp = &h->inq.c8;
->  
-> -	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
-> -	if (err == SCSI_DH_OK) {
-> -		inqp = &h->inq.c8;
-> +	if (!scsi_get_vpd_page(sdev, 0xC8, (unsigned char *)inqp,
-> +			       sizeof(struct c8_inquiry))) {
->  		if (inqp->page_code != 0xc8)
->  			return SCSI_DH_NOSYS;
->  		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
-> @@ -453,20 +382,20 @@ static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
->  		*(array_name+ARRAY_LABEL_LEN-1) = '\0';
->  		memset(array_id, 0, UNIQUE_ID_LEN);
->  		memcpy(array_id, inqp->array_unique_id, inqp->array_uniq_id_len);
-> +		err = SCSI_DH_OK;
->  	}
->  	return err;
->  }
->  
+On 10/28/2016 06:18 PM, Bart Van Assche wrote:
+> Hello Jens,
+>
+> Multiple block drivers need the functionality to stop a request queue
+> and to wait until all ongoing request_fn() / queue_rq() calls have
+> finished without waiting until all outstanding requests have finished.
+> Hence this patch series that introduces the blk_mq_quiesce_queue()
+> function. The dm-mq, SRP and NVMe patches in this patch series are three
+> examples of where these functions are useful. These patches have been
+> tested on top of kernel v4.9-rc2. The following tests have been run to
+> verify this patch series:
+> - Mike's mptest suite that stress-tests dm-multipath.
+> - My own srp-test suite that stress-tests SRP on top of dm-multipath.
+> - fio on top of the NVMeOF host driver that was connected to the NVMeOF
+>   target driver on the same host.
+> - Laurence verified the previous version (v3) of this patch series by
+>   running it through the Red Hat SRP and NVMe test suites.
+>
+> The changes compared to the third version of this patch series are:
+> - Added a blk_mq_stop_hw_queues() call in blk_mq_quiesce_queue() as
+>   requested by Ming Lei.
+> - Modified scsi_unblock_target() such that it waits until
+>   .queuecommand() finished. Unexported scsi_wait_for_queuecommand().
+> - Reordered the two NVMe patches.
+> - Added a patch that avoids that blk_mq_requeue_work() restarts stopped
+>   queues.
+> - Added a patch that removes blk_mq_cancel_requeue_work().
 
-In this and other places the patch changes the code from submitting the
-INQUIRY/EVPD command for the page it wants, to calling scsi_get_vpd_page().
-scsi_get_vpd_page() will return -EINVAL if the device did not report in
-VPD page 0 that the requested page is in the list of supported pages.
-Did you actually verify that the RDAC returns all of these VPD pages in
-its VPD page 0 list?
+Bart, I have applied the series, except patches 11+12. I don't mind
+taking them through the block tree, but they can go through the SCSI
+tree as well. Let me know what folks think.
 
-I mean, I know it's supposed to, but these are old devices.
+-- 
+Jens Axboe
 
--Ewan
-
-
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
