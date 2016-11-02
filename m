@@ -1,125 +1,144 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 4/6] g_NCR5380: Add IRQ auto-configuration for HP C2502
-Date: Wed, 2 Nov 2016 09:29:22 +0100
-Message-ID: <201611020929.22464.linux@rainbow-software.org>
-References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <1477945112-25659-5-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1611011258090.25806@nippy.intranet>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v2)
+Date: Wed, 2 Nov 2016 15:35:11 +0530
+Message-ID: <CAK=zhgpYj0TcrPK8kQ-TTqGfU=JHZbXr+2-szGf1w_XcOU3p9Q@mail.gmail.com>
+References: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de> <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+ <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1611011258090.25806@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-vk0-f42.google.com ([209.85.213.42]:35125 "EHLO
+        mail-vk0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752429AbcKBKFN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2016 06:05:13 -0400
+Received: by mail-vk0-f42.google.com with SMTP id w194so8466036vkw.2
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2016 03:05:13 -0700 (PDT)
+In-Reply-To: <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrey Grodzovsky <andrey2805@gmail.com>
+Cc: PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org
 
-On Wednesday 02 November 2016, Finn Thain wrote:
-> On Mon, 31 Oct 2016, Ondrej Zary wrote:
-> > Find free and working IRQ automatically on HP C2502 cards.
-> > Also allow IRQ 9 to work (aliases to IRQ 2 on the card).
-> >
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > ---
-> >  drivers/scsi/g_NCR5380.c |   29 +++++++++++++++++++++++++++--
-> >  1 file changed, 27 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> > index e713dba..27fc499 100644
-> > --- a/drivers/scsi/g_NCR5380.c
-> > +++ b/drivers/scsi/g_NCR5380.c
-> > @@ -156,6 +156,8 @@ static void magic_configure(int idx, u8 irq, u8
-> > magic[]) outb(magic[4], 0x379);
-> >
-> >  	/* allowed IRQs for HP C2502 */
-> > +	if (irq == 9)
-> > +		irq = 2;
-> >  	if (irq != 2 && irq != 3 && irq != 4 && irq != 5 && irq != 7)
-> >  		irq = 0;
-> >  	if (idx >= 0 && idx <= 7)
-> > @@ -163,6 +165,21 @@ static void magic_configure(int idx, u8 irq, u8
-> > magic[]) outb(cfg, 0x379);
-> >  }
-> >
-> > +/* find a free and working IRQ (for HP C2502) */
-> > +static int NCR5380_find_irq(struct Scsi_Host *instance, u8 irqs[],
-> > +			    int port_idx, u8 magic[])
-> > +{
-> > +	int i;
-> > +
-> > +	for (i = 0; irqs[i]; i++) {
-> > +		magic_configure(port_idx, irqs[i], magic);
-> > +		if (NCR5380_test_irq(instance, irqs[i]) == 0)
-> > +			return irqs[i];
+On Wed, Nov 2, 2016 at 7:37 AM, Hannes Reinecke <hare@suse.de> wrote:
+> On 11/02/2016 01:09 AM, Andrey Grodzovsky wrote:
+>>
+>> Problem:
+>> This is a work around for a bug with LSI Fusion MPT SAS2 when
+>> pefroming secure erase. Due to the very long time the operation
+>> takes commands issued during the erase will time out and will trigger
+>> execution of abort hook. Even though the abort hook is called for
+>> the specifc command which timed out this leads to entire device halt
+>> (scsi_state terminated) and premature termination of the secured erase.
+>>
+>> Fix:
+>> Set device state to busy while erase in progress to reject any incoming
+>> commands until the erase is done. The device is blocked any way during
+>> this time and cannot execute any other command.
+>> More data and logs can be found here -
+>> https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
+>>
+>> v2: Update according to example patch by Hannes Reinecke to apply
+>> the blocking logic to any ATA 12/16 command.
+>>
+>> Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+>> Cc: <linux-scsi@vger.kernel.org>
+>> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+>> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+>> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+>> Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+>> Cc: Hannes Reinecke <hare@suse.de>
+>> Cc: <stable@vger.kernel.org>
+>> ---
+>>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 26 ++++++++++++++++++++++++++
+>>  1 file changed, 26 insertions(+)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> index 5a97e32..43ab0cc 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>> @@ -3500,6 +3500,20 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd=
+,
+>> u16 ioc_status)
+>>             SAM_STAT_CHECK_CONDITION;
+>>  }
+>>
+>> +/**
+>> + * This is a work around for a bug with LSI Fusion MPT SAS2 when
+>> + * pefroming secure erase. Due to the verly long time the operation
+>> + * takes commands issued during the erase will time out and will trigge=
+r
+>> + * execution of abort hook. This leads to device reset and premature
+>> + * termination of the secured erase.
+>> + *
+>> + */
+>> +static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
+>> +{
+>> +   return (scmd->cmnd[0] =3D=3D 0xa1 || scmd->cmnd[0] =3D=3D 0x85);
+>> +}
+>> +
+>> +
+>>
+>>  /**
+>>   * _scsih_qcmd - main scsi request entry point
+>> @@ -3528,6 +3542,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct
+>> scsi_cmnd *scmd)
+>>                 scsi_print_command(scmd);
+>>  #endif
+>>
+>> +   /**
+>> +       * Lock the device for any subsequent command until
+>> +       * command is done.
+>> +       */
+>> +       if (ata_12_16_cmd(scmd))
+>> +               scsi_internal_device_block(scmd->device);
+>> +
+>> +
+>>         sas_device_priv_data =3D scmd->device->hostdata;
+>>         if (!sas_device_priv_data || !sas_device_priv_data->sas_target) =
+{
+>>                 scmd->result =3D DID_NO_CONNECT << 16;
+>> @@ -4062,6 +4084,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16
+>> smid, u8 msix_index, u32 reply)
+>>         if (scmd =3D=3D NULL)
+>>                 return 1;
+>>
+>> +       if (ata_12_16_cmd(scmd))
+>> +               scsi_internal_device_unblock(scmd->device, SDEV_RUNNING)=
+;
+>> +
+>> +
+>>         mpi_request =3D mpt3sas_base_get_msg_frame(ioc, smid);
+>>
+>>         if (mpi_reply =3D=3D NULL) {
+>>
+> Yeah, it's ugly, but I can't think of a better solution for the moment.
+> Thanks for debugging this.
+
+May I known the result of same test case if the SATA drive is
+connected to on-bord SATA?
+
+If it is assumed to be HBA firmware issue then it should be fixed in
+the Firmware not in the driver. Have you tried with the latest HBA
+Firmware image?  if it still occurs then is it possible for you to
+share the firmware logs?
+
+I think that service request has raised for this issue with Broadcom,
+in this service request our support people can help you in collecting
+the firmware logs and can provide the analysis of those firmware logs.
+
+Thanks,
+Sreekanth
+
 >
-> The NCR5380_test_irq routine in patch 2/6 doesn't work for shared irqs, so
-> you may not get the IRQ you would expect. (The core driver does support
-> shared irqs, BTW.)
-
-ISA bus does not support IRQ sharing.
-
-> Also, you've ignored the irq module parameters. From the user's point of
-> view, surely the least surprising thing is to attempt to configure the
-> card for whatever irq the user asked for.
-
-I haven't. NCR5380_find_irq is only called when irq is set to IRQ_AUTO.
-
-> If the specified irq isn't supported by the board, just log an error and
-> fail. If you want to be user friendly, print a message to tell them what
-> irqs the card supports.
-
-If the IRQ is not supported (or does not work), user gets a warning and the 
-driver continues with IRQ disabled.
-
-> If the user asks for IRQ_AUTO, just configure the board for a hard-coded
-> default, say 9, and print a warning message to say so.
-
-The card is almost Plug&Play. The base address is already configured 
-automatically by the driver so doing the same for IRQ makes sense.
-
-> Either way, if request_irq fails just continue with NO_IRQ, as per usual.
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 >
-> To me that's the most flexible and least surprising behaviour. But again,
-> if someone with more ISA knowledge wishes to weigh in, that's fine too.
+> Cheers,
 >
-> > +	}
-> > +	magic_configure(port_idx, 0, magic);
-> > +	return NO_IRQ;
-> > +}
-> > +
-> >  static unsigned int ncr_53c400a_ports[] = {
-> >  	0x280, 0x290, 0x300, 0x310, 0x330, 0x340, 0x348, 0x350, 0
-> >  };
-> > @@ -175,6 +192,9 @@ static void magic_configure(int idx, u8 irq, u8
-> > magic[]) static u8 hp_c2502_magic[] = {	/* HP C2502 */
-> >  	0x0f, 0x22, 0xf0, 0x20, 0x80
-> >  };
-> > +static u8 hp_c2502_irqs[] = {
-> > +	9, 5, 7, 3, 4, 0
-> > +};
-> >
-> >  static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
-> >  			struct device *pdev, int base, int irq, int board)
-> > @@ -345,8 +365,13 @@ static int generic_NCR5380_init_one(struct
-> > scsi_host_template *tpnt,
-> >
-> >  	if (irq != IRQ_AUTO)
-> >  		instance->irq = irq;
-> > -	else
-> > -		instance->irq = NCR5380_probe_irq(instance);
-> > +	else {
-> > +		if (board == BOARD_HP_C2502)
-> > +			instance->irq = NCR5380_find_irq(instance,
-> > +						hp_c2502_irqs, port_idx, magic);
-> > +		else
-> > +			instance->irq = NCR5380_probe_irq(instance);
-> > +	}
-> >
-> >  	/* Compatibility with documented NCR5380 kernel parameters */
-> >  	if (instance->irq == 255)
-
-
-
--- 
-Ondrej Zary
+> Hannes
+> --
+> Dr. Hannes Reinecke                   zSeries & Storage
+> hare@suse.de                          +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg)
