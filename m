@@ -1,117 +1,31 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 2/6] g_NCR5380: Test the IRQ before accepting it
-Date: Wed, 2 Nov 2016 20:16:00 +0100
-Message-ID: <201611022016.00556.linux@rainbow-software.org>
-References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <1477945112-25659-3-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1611011257130.25806@nippy.intranet>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v5 0/14] Fix race conditions related to stopping block
+ layer queues
+Date: Wed, 2 Nov 2016 13:35:40 -0600
+Message-ID: <cb120a20-2a40-053a-5621-2209777b5ef4@sandisk.com>
+References: <7460e8b2-2cfd-c0d5-7ae7-7f662d89dad3@sandisk.com>
+ <cfd115a1-78e1-7ed5-3c19-42334a5dbe72@fb.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1611011257130.25806@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <cfd115a1-78e1-7ed5-3c19-42334a5dbe72@fb.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Mike Snitzer <snitzer@redhat.com>, Doug Ledford <dledford@redhat.com>, Keith Busch <keith.busch@intel.com>, Ming Lei <tom.leiming@gmail.com>, Konrad Rzeszutek Wilk <konrad.wilk@oracle.com>, =?UTF-8?Q?Roger_Pau_Monn=c3=a9?= <roger.pau@citrix.com>, Laurence Oberman <loberman@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wednesday 02 November 2016 08:45:26 Finn Thain wrote:
-> On Mon, 31 Oct 2016, Ondrej Zary wrote:
-> > Trigger an IRQ first with a test IRQ handler to find out if it really
-> > works. Disable the IRQ if not.
-> >
-> > This prevents hang when incorrect IRQ was specified by user.
->
-> Once again, how does it cause a hang?
+On 11/02/2016 01:08 PM, Jens Axboe wrote:
+> Bart, I have applied the series, except patches 11+12. I don't mind
+> taking them through the block tree, but they can go through the SCSI
+> tree as well. Let me know what folks think.
 
-Kernel scans the bus, finds a HDD, then attempts to read MBR. modprobe process 
-is stuck but the system is still running. Then the transfer probably times 
-out and everything locks up hard, even fbcon cursor stops blinking. I guess 
-that kernel is trying to abort or reset.
-BTW. rescan-scsi-bus also causes hang, anytime, even without IRQ.
+Hello Jens,
 
-> If the user specifies an IRQ, we should trust them. If they don't specify
-> an IRQ then probe (as in patch 5/6).
->
-> > Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
-> > ---
-> >  drivers/scsi/g_NCR5380.c |   44
-> > +++++++++++++++++++++++++++++++++++++++++--- 1 file changed, 41
-> > insertions(+), 3 deletions(-)
-> >
-> > diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> > index 09c660b..0d1f6ad 100644
-> > --- a/drivers/scsi/g_NCR5380.c
-> > +++ b/drivers/scsi/g_NCR5380.c
-> > @@ -115,6 +115,32 @@ static int NCR5380_probe_irq(struct Scsi_Host
-> > *instance) return irq;
-> >  }
-> >
-> > +static bool irq_working;
-> > +
-> > +static irqreturn_t test_irq(int irq, void *dev_id)
-> > +{
-> > +	irq_working = true;
-> > +	return IRQ_HANDLED;
-> > +}
-> > +
-> > +/* test if the IRQ is working */
-> > +static int NCR5380_test_irq(struct Scsi_Host *instance, int irq)
-> > +{
-> > +	struct NCR5380_hostdata *hostdata = shost_priv(instance);
-> > +
-> > +	irq_working = false;
-> > +	if (request_irq(irq, test_irq, 0, "NCR5380-irqtest", NULL))
-> > +		return -EBUSY;
-> > +	NCR5380_trigger_irq(instance);
-> > +	NCR5380_read(RESET_PARITY_INTERRUPT_REG);
-> > +	free_irq(irq, NULL);
-> > +
-> > +	if (!irq_working)
-> > +		return -EIO;
-> > +
-> > +	return 0;
-> > +}
-> > +
->
-> IMO the extra complexity is not justified by the possibility of machines
-> with misconfigured BIOS or incorrect module parameters.
->
-> I don't want another irq probing mechanism. We just got rid of one.
->
-> But I won't mind if the SCSI maintainers who know ISA better than I do
-> would like to review this.
->
-> >  /*
-> >   * Configure I/O address of 53C400A or DTC436 by writing magic numbers
-> >   * to ports 0x779 and 0x379.
-> > @@ -323,9 +349,21 @@ static int generic_NCR5380_init_one(struct
-> > scsi_host_template *tpnt, /* set IRQ for HP C2502 */
-> >  		if (board == BOARD_HP_C2502)
-> >  			magic_configure(port_idx, instance->irq, magic);
-> > -		if (request_irq(instance->irq, generic_NCR5380_intr,
-> > -				0, "NCR5380", instance)) {
-> > -			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n",
-> > instance->host_no, instance->irq); +		ret = NCR5380_test_irq(instance,
-> > instance->irq);
-> > +		if (ret) {
-> > +			printk(KERN_WARNING "scsi%d : IRQ%d not %s, interrupts disabled\n",
-> > +			       instance->host_no, instance->irq,
-> > +			       (ret == -EBUSY) ? "free" : "working");
-> > +			instance->irq = NO_IRQ;
-> > +		}
-> > +	}
-> > +
-> > +	if (instance->irq != NO_IRQ) {
-> > +		if (request_irq(instance->irq, generic_NCR5380_intr, 0,
-> > +				"NCR5380", instance)) {
-> > +			printk(KERN_WARNING "scsi%d : IRQ%d not free, interrupts disabled\n",
-> > +			       instance->host_no,
-> > +			       instance->irq);
-> >  			instance->irq = NO_IRQ;
-> >  		}
-> >  	}
+Thanks for having applied this patch series. I will resend the SCSI 
+patches to the SCSI maintainers. Since I am not aware of any bug report 
+for which these patches are the proper fix I don't think there is any 
+urgency to apply the SCSI patches.
 
+Bart.
 
--- 
-Ondrej Zary
