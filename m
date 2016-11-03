@@ -1,63 +1,89 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: [PATCH 4/6] g_NCR5380: Add IRQ auto-configuration for HP C2502
-Date: Thu, 3 Nov 2016 09:00:56 +0100
-Message-ID: <201611030900.56371.linux@rainbow-software.org>
-References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <201611020929.22464.linux@rainbow-software.org> <alpine.LNX.2.00.1611022056450.12392@nippy.intranet>
+From: Jinpu Wang <jinpu.wang@profitbricks.com>
+Subject: Re: Question about latest PM80xx driver
+Date: Thu, 3 Nov 2016 09:34:36 +0100
+Message-ID: <CAMGffE=kDD-FrfCQGofWMpEUVrWjDTnRYSeLa0sEG7+qHWmp1w@mail.gmail.com>
+References: <CADaLNDn4KvyEiNwkjFrAkEmKo6tOPU4rb971ObgCFuYjiQPKFg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1611022056450.12392@nippy.intranet>
-Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f43.google.com ([209.85.218.43]:35850 "EHLO
+        mail-oi0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754991AbcKCIe6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2016 04:34:58 -0400
+Received: by mail-oi0-f43.google.com with SMTP id v84so72434634oie.3
+        for <linux-scsi@vger.kernel.org>; Thu, 03 Nov 2016 01:34:57 -0700 (PDT)
+In-Reply-To: <CADaLNDn4KvyEiNwkjFrAkEmKo6tOPU4rb971ObgCFuYjiQPKFg@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Duc Dang <dhdang@apm.com>
+Cc: lindar_liu <lindar_liu@usish.com>, pmchba@pmcs.com, linux-scsi@vger.kernel.org, patches <patches@apm.com>
 
-On Thursday 03 November 2016, Finn Thain wrote:
-> On Wed, 2 Nov 2016, Ondrej Zary wrote:
-> > > Also, you've ignored the irq module parameters. From the user's point
-> > > of view, surely the least surprising thing is to attempt to configure
-> > > the card for whatever irq the user asked for.
-> >
-> > I haven't. NCR5380_find_irq is only called when irq is set to IRQ_AUTO.
+Hi Duc,
+
+On Thu, Nov 3, 2016 at 2:02 AM, Duc Dang <dhdang@apm.com> wrote:
+> Hi Jack, Lindar and All,
 >
-> My mistake.
+> I was testing Adaptec PMC-Sierra PM8018 SAS HBA [Series 7H] card
+> [9005:8088] with our ARM64 server SoC and occasionally saw a hang in
+> pm8001_pci_probe. It looks like the driver was trying to read nvmd
+> information (using get_nvmd_req) and wait for completion but the
+> completion never happens, so I got a kernel timeout trace:
 >
-> > > If the specified irq isn't supported by the board, just log an error
-> > > and fail. If you want to be user friendly, print a message to tell
-> > > them what irqs the card supports.
-> >
-> > If the IRQ is not supported (or does not work), user gets a warning and
-> > the driver continues with IRQ disabled.
-> >
-> > > If the user asks for IRQ_AUTO, just configure the board for a
-> > > hard-coded default, say 9, and print a warning message to say so.
-> >
-> > The card is almost Plug&Play. The base address is already configured
-> > automatically by the driver so doing the same for IRQ makes sense.
+> "echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+> swapper/0       D ffffffc000086ec0     0     1      0 0x00000000
+> Call trace:
+> [<ffffffc000086ec0>] __switch_to+0x90/0xb0
+> [<ffffffc0009e2214>] __schedule+0x204/0x670
+> [<ffffffc0009e26c0>] schedule+0x40/0xb0
+> [<ffffffc0009e549c>] schedule_timeout+0x15c/0x1b0
+> [<ffffffc0009e32e0>] wait_for_common+0xa0/0x150
+> [<ffffffc0009e33a4>] wait_for_completion+0x14/0x20
+> [<ffffffc00059a9cc>] pm8001_pci_probe+0xb7c/0xd10
+> [<ffffffc00046c7f0>] pci_device_probe+0xa0/0x120
+> [<ffffffc00053ff7c>] driver_probe_device+0x12c/0x2e0
+> [<ffffffc0005401cc>] __driver_attach+0x9c/0xa0
+> [<ffffffc00053e0ac>] bus_for_each_dev+0x5c/0xa0
+> [<ffffffc00053f8e0>] driver_attach+0x20/0x30
+> [<ffffffc00053f428>] bus_add_driver+0x108/0x230
+> [<ffffffc0005409e0>] driver_register+0x60/0x100
+> [<ffffffc00046b5a0>] __pci_register_driver+0x40/0x50
+> [<ffffffc000de3610>] pm8001_init+0x70/0xa8
+> [<ffffffc000082904>] do_one_initcall+0x94/0x1b0
+> [<ffffffc000dbcab8>] kernel_init_freeable+0x150/0x1f4
+> [<ffffffc0009df2c0>] kernel_init+0x10/0xf0
 >
-> Why don't we see any other drivers doing this?
+> The current driver in kernel.org is 0.1.38, is this already the latest on=
+e?
+>
+> I saw in the Readme file of BIOS package in Microsemi website
+> (http://storage.microsemi.com/en-us/downloads/bios_fw/bios_fw_ver/product=
+id=3Dasa-71605h&dn=3Dadaptec+71605h.php)
+> mentions below issue. Is the hang symptom similar to the one that I
+> saw?
+>
+> 5.14 FreeBSD Hangs when No Devices on HBA
+>         On FreeBSD systems, the OS fails to boot when no devices are
+>         connected to the HBAs.
+>
+>         WORKAROUND: Connect at least one device to the HBA to complete
+>         the boot process.
+>
+>
+> Regards,
+> Duc Dang.
 
-Many ISA sound card drivers do this - there's even a function for this:
-static int snd_legacy_find_free_irq(int *irq_table)
-
-Unfortunately, it's defined in ALSA headers and even protected with an #ifdef.
-
-> If the card was really plug and play, I expect we would just call
-> pnp_irq(), as the other PNP drivers do.
-
-The card predates the PnP standard so we can't.
-
-> > > Either way, if request_irq fails just continue with NO_IRQ, as per
-> > > usual.
-> > >
-> > > To me that's the most flexible and least surprising behaviour. But
-> > > again, if someone with more ISA knowledge wishes to weigh in, that's
-> > > fine too.
+Likely it related to your hardware, maybe you don't have NVM device to
+save VPD related info, you can tweak that part, eg comment out
+#define PM8001_READ_VPD.
 
 
 
--- 
-Ondrej Zary
+--=20
+Mit freundlichen Gr=C3=BC=C3=9Fen,
+Best Regards,
+
+Jack Wang
+
+Linux Kernel Developer Storage
+ProfitBricks GmbH  The IaaS-Company.
