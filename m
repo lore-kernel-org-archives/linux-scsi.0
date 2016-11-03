@@ -1,30 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 01/16] scsi: Get rid of struct fc_bsg_buffer
-Date: Thu, 3 Nov 2016 08:15:10 -0700
-Message-ID: <20161103151510.GA7404@infradead.org>
+Subject: Re: [PATCH v3 03/16] scsi: fc: Export fc_bsg_jobdone and use it in
+ FC drivers
+Date: Thu, 3 Nov 2016 08:17:01 -0700
+Message-ID: <20161103151701.GB7404@infradead.org>
 References: <cover.1476369687.git.jthumshirn@suse.de>
- <f3ec22a53e5165c8e57440e26dcc7b0dbb73800a.1476369687.git.jthumshirn@suse.de>
+ <b7afadab74451838c0b29cc857a7d47174f68c39.1476369687.git.jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:57968 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756911AbcKCPPO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2016 11:15:14 -0400
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <f3ec22a53e5165c8e57440e26dcc7b0dbb73800a.1476369687.git.jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <b7afadab74451838c0b29cc857a7d47174f68c39.1476369687.git.jthumshirn@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
 To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Steffen Maier <maier@linux.vnet.ibm.com>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dic
+List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Oct 13, 2016 at 05:00:17PM +0200, Johannes Thumshirn wrote:
-> struct fc_bsg_buffer is just a clone of struct bsg_buffer from bsg-lib,
-> so use this one instead.
+On Thu, Oct 13, 2016 at 05:00:19PM +0200, Johannes Thumshirn wrote:
+> Export fc_bsg_jobdone so drivers can use it directly instead of doing
+> the round-trip via struct fc_bsg_job::job_done() and use it in the LLDDs.
+> 
+> As we've converted all LLDDs over to use fc_bsg_jobdone() directly,
+> we can remove the function pointer from struct fc_bsg_job as well.
 > 
 > Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Looks good,
+Looks fine,
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
