@@ -1,12 +1,12 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 2/6] g_NCR5380: Test the IRQ before accepting it
-Date: Thu, 3 Nov 2016 13:17:04 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1611031151350.14245@nippy.intranet>
-References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <1477945112-25659-3-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1611011257130.25806@nippy.intranet> <201611022016.00556.linux@rainbow-software.org>
+Subject: Re: [PATCH 4/6] g_NCR5380: Add IRQ auto-configuration for HP C2502
+Date: Thu, 3 Nov 2016 13:17:18 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1611022056450.12392@nippy.intranet>
+References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <1477945112-25659-5-git-send-email-linux@rainbow-software.org> <alpine.LNX.2.00.1611011258090.25806@nippy.intranet> <201611020929.22464.linux@rainbow-software.org>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <201611022016.00556.linux@rainbow-software.org>
+In-Reply-To: <201611020929.22464.linux@rainbow-software.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Ondrej Zary <linux@rainbow-software.org>
 Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
@@ -15,32 +15,39 @@ List-Id: linux-scsi@vger.kernel.org
 
 On Wed, 2 Nov 2016, Ondrej Zary wrote:
 
-> On Wednesday 02 November 2016 08:45:26 Finn Thain wrote:
-> > On Mon, 31 Oct 2016, Ondrej Zary wrote:
-> > > Trigger an IRQ first with a test IRQ handler to find out if it 
-> > > really works. Disable the IRQ if not.
-> > >
-> > > This prevents hang when incorrect IRQ was specified by user.
-> >
-> > Once again, how does it cause a hang?
+> > Also, you've ignored the irq module parameters. From the user's point 
+> > of view, surely the least surprising thing is to attempt to configure 
+> > the card for whatever irq the user asked for.
 > 
-> Kernel scans the bus, finds a HDD, then attempts to read MBR. modprobe 
-> process is stuck but the system is still running. Then the transfer 
-> probably times out and everything locks up hard, even fbcon cursor stops 
-> blinking. I guess that kernel is trying to abort or reset.
+> I haven't. NCR5380_find_irq is only called when irq is set to IRQ_AUTO.
+> 
 
-I don't think this issue relates to the patch, because the chip irq is not 
-needed for exception handling.
+My mistake.
 
-A backtrace from the soft lockup detector should help explain this.
+> > If the specified irq isn't supported by the board, just log an error 
+> > and fail. If you want to be user friendly, print a message to tell 
+> > them what irqs the card supports.
+> 
+> If the IRQ is not supported (or does not work), user gets a warning and 
+> the driver continues with IRQ disabled.
+> 
+> > If the user asks for IRQ_AUTO, just configure the board for a 
+> > hard-coded default, say 9, and print a warning message to say so.
+> 
+> The card is almost Plug&Play. The base address is already configured 
+> automatically by the driver so doing the same for IRQ makes sense.
 
-> BTW. rescan-scsi-bus also causes hang, anytime, even without IRQ.
+Why don't we see any other drivers doing this?
 
-I would try "scsi_logging_level -s -a 7" to find out what is going on 
-during the bus scan (for modprobe or rescan-scsi-bus).
+If the card was really plug and play, I expect we would just call 
+pnp_irq(), as the other PNP drivers do.
 
-The polling loops in generic_NCR5380_pread/pwrite can cause a lockup 
-because they lack timeouts. Better to call NCR5380_poll_politely, as in 
-macscsi_pread/pwrite.
+> 
+> > Either way, if request_irq fails just continue with NO_IRQ, as per 
+> > usual.
+> >
+> > To me that's the most flexible and least surprising behaviour. But 
+> > again, if someone with more ISA knowledge wishes to weigh in, that's 
+> > fine too.
 
 -- 
