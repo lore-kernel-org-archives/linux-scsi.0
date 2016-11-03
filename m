@@ -1,247 +1,86 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v4 09/12] ufs-qcom: phy/hcd: Refactoring phy clock handling
-Date: Thu,  3 Nov 2016 23:00:50 +0530
-Message-ID: <1478194250-19132-1-git-send-email-vivek.gautam@codeaurora.org>
-References: <CAFp+6iGiQG2BV0W0rFKEW6YnEWDkjOqoruJ-neTjKjfKx7yVdA@mail.gmail.com>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <CAFp+6iGiQG2BV0W0rFKEW6YnEWDkjOqoruJ-neTjKjfKx7yVdA@mail.gmail.com>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
-Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 02/16] scsi: don't use fc_bsg_job::request and
+ fc_bsg_job::reply directly
+Date: Thu, 3 Nov 2016 18:42:50 +0100
+Message-ID: <20161103174250.ury2u5zbyi2tfyvt@linux-x5ow.site>
+References: <cover.1476369687.git.jthumshirn@suse.de>
+ <bbc682928173d64848ab0cbff689b1ad3d715fb7.1476369687.git.jthumshirn@suse.de>
+ <ebc46cfa-0bee-aa71-ba0b-d7c86628df0c@linux.vnet.ibm.com>
+ <20161014073821.qvkpjtwraqnwzzs3@linux-x5ow.site>
+ <20161103151751.GD7404@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20161103151751.GD7404@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Steffen Maier <maier@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Add phy clock enable code to phy_power_on/off callbacks, and
-remove explicit calls to enable these phy clocks from the
-ufs-qcom hcd driver.
+On Thu, Nov 03, 2016 at 08:17:51AM -0700, Christoph Hellwig wrote:
+> On Fri, Oct 14, 2016 at 09:38:21AM +0200, Johannes Thumshirn wrote:
+> > On Thu, Oct 13, 2016 at 05:55:11PM +0200, Steffen Maier wrote:
+> > > Hm, still behaves for me like I reported for v2:
+> > > http://marc.info/?l=linux-scsi&m=147637177902937&w=2
+> > 
+> > Hi Steffen,
+> > 
+> > Can you please try the following on top of 2/16?
+> 
+> How does this fit into the patch we're replying to?
 
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
----
+Sorry but I don't quite get you.
 
-Changes since v3:
- - Moved phy_power_off() under *link not active* check
-   during aggressive clock gating.
+If you look at a mixed source assembly listing for fc_host_dispatch() [1] we load
+the the offset of 24 from %r12 into %r1 and then the beginning of %r1 into %r2
+and crash. So if we now check if  job->request_len is smaller than uint32_t we
+know we can't have a messagecode in the request and bail out early, instead of
+accessing a possible NULL pointer. At least that's my analysis, feel free to
+correct me if I'm wrong.
 
-Changes since v2:
- - Added phy_power_on() and phy_power_off() calls to
-   power-cycle the PHY during aggressive clk gating.
+[1] Listing:
+static int fc_bsg_host_dispatch(struct Scsi_Host *shost, struct bsg_job *job)
+{
+        struct fc_internal *i = to_fc_internal(shost->transportt);
+        struct fc_bsg_request *bsg_request = job->request;
+    5d54:       e3 10 c0 18 00 04       lg      %r1,24(%r12)
+        struct fc_bsg_reply *bsg_reply = job->reply;
+    5d5a:       e3 b0 c0 20 00 04       lg      %r11,32(%r12)
+        int cmdlen = sizeof(uint32_t);  /* start with length of msgcode */
+        int ret;
 
-Changes since v1:
- - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
- - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
- - removed function declaration and export symbol for these APIs.
+        /* check if we really have all the request data needed */
+        if (job->request_len < cmdlen) {
+    5d60:       a7 c4 00 48             jle     5df0 <fc_bsg_dispatch+0x1f0>
+                ret = -ENOMSG;
+                goto fail_host_msg;
+        }
 
- drivers/phy/phy-qcom-ufs.c       | 36 ++++++++++++++++++------------------
- drivers/scsi/ufs/ufs-qcom.c      | 21 ++++++---------------
- include/linux/phy/phy-qcom-ufs.h | 18 ------------------
- 3 files changed, 24 insertions(+), 51 deletions(-)
+        /* Validate the host command */
+        switch (bsg_request->msgcode) {
+    5d64:       58 20 10 00             l       %r2,0(%r1)
+    5d68:       c2 2f 80 00 00 03       clfi    %r2,2147483651
+    5d6e:       a7 84 00 1a             je      5da2 <fc_bsg_dispatch+0x1a2>
+    5d72:       a7 24 00 0a             jh      5d86 <fc_bsg_dispatch+0x186>
+    5d76:       c0 19 80 00 00 01       iilf    %r1,2147483649
+    5d7c:       ec 21 00 2b a0 77       clrj    %r2,%r1,10,5dd2 <fc_bsg_dispatch+0x1d2>
+    5d82:       a7 f4 00 3b             j       5df8 <fc_bsg_dispatch+0x1f8>
+    5d86:       c0 59 80 00 00 04       iilf    %r5,2147483652
+    5d8c:       ec 25 00 0b 80 76       crj     %r2,%r5,8,5da2 <fc_bsg_dispatch+0x1a2>
+    5d92:       c0 59 80 00 00 ff       iilf    %r5,2147483903
+    5d98:       ec 25 00 13 80 76       crj     %r2,%r5,8,5dbe <fc_bsg_dispatch+0x1be>
+    5d9e:       a7 f4 00 2d             j       5df8 <fc_bsg_dispatch+0x1f8>
 
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index 1ec64d5..9dff4c2 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -366,10 +366,9 @@ int ufs_qcom_phy_enable_vreg(struct device *dev,
- 	return ret;
- }
- 
--int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
-+static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
- {
- 	int ret = 0;
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
- 
- 	if (phy->is_ref_clk_enabled)
- 		goto out;
-@@ -416,7 +415,6 @@ int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
- out:
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
- 
- static
- int ufs_qcom_phy_disable_vreg(struct device *dev,
-@@ -441,10 +439,8 @@ int ufs_qcom_phy_disable_vreg(struct device *dev,
- 	return ret;
- }
- 
--void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
-+static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
--
- 	if (phy->is_ref_clk_enabled) {
- 		clk_disable_unprepare(phy->ref_clk);
- 		/*
-@@ -457,7 +453,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
- 		phy->is_ref_clk_enabled = false;
- 	}
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
- 
- #define UFS_REF_CLK_EN	(1 << 5)
- 
-@@ -510,9 +505,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
- 
- /* Turn ON M-PHY RMMI interface clocks */
--int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
-+static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
- 	int ret = 0;
- 
- 	if (phy->is_iface_clk_enabled)
-@@ -536,20 +530,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
- out:
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
- 
- /* Turn OFF M-PHY RMMI interface clocks */
--void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
-+void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
--
- 	if (phy->is_iface_clk_enabled) {
- 		clk_disable_unprepare(phy->tx_iface_clk);
- 		clk_disable_unprepare(phy->rx_iface_clk);
- 		phy->is_iface_clk_enabled = false;
- 	}
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
- 
- int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
- {
-@@ -667,13 +657,20 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 		goto out_disable_phy;
- 	}
- 
--	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
-+	err = ufs_qcom_phy_enable_iface_clk(phy_common);
- 	if (err) {
--		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
-+		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
- 			__func__, err);
- 		goto out_disable_pll;
- 	}
- 
-+	err = ufs_qcom_phy_enable_ref_clk(phy_common);
-+	if (err) {
-+		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
-+			__func__, err);
-+		goto out_disable_iface_clk;
-+	}
-+
- 	/* enable device PHY ref_clk pad rail */
- 	if (phy_common->vddp_ref_clk.reg) {
- 		err = ufs_qcom_phy_enable_vreg(dev,
-@@ -689,7 +686,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 	goto out;
- 
- out_disable_ref_clk:
--	ufs_qcom_phy_disable_ref_clk(generic_phy);
-+	ufs_qcom_phy_disable_ref_clk(phy_common);
-+out_disable_iface_clk:
-+	ufs_qcom_phy_disable_iface_clk(phy_common);
- out_disable_pll:
- 	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
- out_disable_phy:
-@@ -708,7 +707,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
- 	if (phy_common->vddp_ref_clk.reg)
- 		ufs_qcom_phy_disable_vreg(phy_common->dev,
- 					  &phy_common->vddp_ref_clk);
--	ufs_qcom_phy_disable_ref_clk(generic_phy);
-+	ufs_qcom_phy_disable_ref_clk(phy_common);
-+	ufs_qcom_phy_disable_iface_clk(phy_common);
- 
- 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
- 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3aedf73..3a86ff3 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1112,17 +1112,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 		return 0;
- 
- 	if (on) {
--		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
--		if (err)
--			goto out;
-+		phy_power_on(host->generic_phy);
- 
--		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
--		if (err) {
--			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
--				__func__, err);
--			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
--			goto out;
--		}
- 		/* enable the device ref clock for HS mode*/
- 		if (ufshcd_is_hs_mode(&hba->pwr_info))
- 			ufs_qcom_dev_ref_clk_ctrl(host, true);
-@@ -1131,13 +1122,14 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 			ufs_qcom_update_bus_bw_vote(host);
- 
- 	} else {
--
--		/* M-PHY RMMI interface clocks can be turned off */
--		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
--		if (!ufs_qcom_is_link_active(hba))
-+		if (!ufs_qcom_is_link_active(hba)) {
- 			/* disable device ref_clk */
- 			ufs_qcom_dev_ref_clk_ctrl(host, false);
- 
-+			/* powering off PHY during aggressive clk gating */
-+			phy_power_off(host->generic_phy);
-+		}
-+
- 		vote = host->bus_vote.min_bw_vote;
- 	}
- 
-@@ -1146,7 +1138,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
- 		dev_err(hba->dev, "%s: set bus vote failed %d\n",
- 				__func__, err);
- 
--out:
- 	return err;
- }
- 
-diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
-index 9d18e9f..35c070e 100644
---- a/include/linux/phy/phy-qcom-ufs.h
-+++ b/include/linux/phy/phy-qcom-ufs.h
-@@ -18,22 +18,6 @@
- #include "phy.h"
- 
- /**
-- * ufs_qcom_phy_enable_ref_clk() - Enable the phy
-- * ref clock.
-- * @phy: reference to a generic phy
-- *
-- * returns 0 for success, and non-zero for error.
-- */
--int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
--
--/**
-- * ufs_qcom_phy_disable_ref_clk() - Disable the phy
-- * ref clock.
-- * @phy: reference to a generic phy.
-- */
--void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
--
--/**
-  * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
-  * ref clock.
-  * @phy: reference to a generic phy.
-@@ -47,8 +31,6 @@
-  */
- void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
- 
--int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
--void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
- int ufs_qcom_phy_start_serdes(struct phy *phy);
- int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
- int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
+
+Thanks,
+	Johannes
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
