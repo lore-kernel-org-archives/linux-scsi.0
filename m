@@ -1,75 +1,66 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 1/3] scsi_dh_rdac: switch to scsi_execute_req_flags()
-Date: Wed, 2 Nov 2016 22:27:02 +0100
-Message-ID: <6bb2b352-d137-a9da-2f35-e6b0cdef4774@suse.com>
-References: <1478036978-30583-1-git-send-email-hare@suse.de>
- <1478036978-30583-2-git-send-email-hare@suse.de>
- <1478101469.1001.9.camel@localhost.localdomain>
+From: Duc Dang <dhdang@apm.com>
+Subject: Question about latest PM80xx driver
+Date: Wed, 2 Nov 2016 18:02:31 -0700
+Message-ID: <CADaLNDn4KvyEiNwkjFrAkEmKo6tOPU4rb971ObgCFuYjiQPKFg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:55127 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757568AbcKBV1j (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Wed, 2 Nov 2016 17:27:39 -0400
-In-Reply-To: <1478101469.1001.9.camel@localhost.localdomain>
+Received: from mail-vk0-f50.google.com ([209.85.213.50]:36202 "EHLO
+        mail-vk0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751487AbcKCBDH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 2 Nov 2016 21:03:07 -0400
+Received: by mail-vk0-f50.google.com with SMTP id p9so27525692vkd.3
+        for <linux-scsi@vger.kernel.org>; Wed, 02 Nov 2016 18:03:02 -0700 (PDT)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Jack Wang <jinpu.wang@profitbricks.com>, lindar_liu@usish.com, pmchba@pmcs.com
+Cc: linux-scsi@vger.kernel.org, patches <patches@apm.com>
 
-On 11/02/2016 04:44 PM, Ewan D. Milne wrote:
-> On Tue, 2016-11-01 at 22:49 +0100, Hannes Reinecke wrote:
-> ...
->>  static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
->>  			char *array_name, u8 *array_id)
->>  {
->> -	int err, i;
->> -	struct c8_inquiry *inqp;
->> +	int err = SCSI_DH_IO, i;
->> +	struct c8_inquiry *inqp = &h->inq.c8;
->>
->> -	err = submit_inquiry(sdev, 0xC8, sizeof(struct c8_inquiry), h);
->> -	if (err == SCSI_DH_OK) {
->> -		inqp = &h->inq.c8;
->> +	if (!scsi_get_vpd_page(sdev, 0xC8, (unsigned char *)inqp,
->> +			       sizeof(struct c8_inquiry))) {
->>  		if (inqp->page_code != 0xc8)
->>  			return SCSI_DH_NOSYS;
->>  		if (inqp->page_id[0] != 'e' || inqp->page_id[1] != 'd' ||
->> @@ -453,20 +382,20 @@ static int get_lun_info(struct scsi_device *sdev, struct rdac_dh_data *h,
->>  		*(array_name+ARRAY_LABEL_LEN-1) = '\0';
->>  		memset(array_id, 0, UNIQUE_ID_LEN);
->>  		memcpy(array_id, inqp->array_unique_id, inqp->array_uniq_id_len);
->> +		err = SCSI_DH_OK;
->>  	}
->>  	return err;
->>  }
->>
->
-> In this and other places the patch changes the code from submitting the
-> INQUIRY/EVPD command for the page it wants, to calling scsi_get_vpd_page().
-> scsi_get_vpd_page() will return -EINVAL if the device did not report in
-> VPD page 0 that the requested page is in the list of supported pages.
-> Did you actually verify that the RDAC returns all of these VPD pages in
-> its VPD page 0 list?
->
-> I mean, I know it's supposed to, but these are old devices.
->
-Errm.
+Hi Jack, Lindar and All,
 
-Old? Don't tell that to the E-Series folk; you'll never again get 
-something sponsored :-)
+I was testing Adaptec PMC-Sierra PM8018 SAS HBA [Series 7H] card
+[9005:8088] with our ARM64 server SoC and occasionally saw a hang in
+pm8001_pci_probe. It looks like the driver was trying to read nvmd
+information (using get_nvmd_req) and wait for completion but the
+completion never happens, so I got a kernel timeout trace:
 
-No, seriously: RDAC mode is continued to be supported even on the latest 
-models, and all firmware revisions I've got support VPD page 0x0.
-And incidentally, this is the very same method we're using for basically 
-all tools accessing VPD page 0x83, be it in the kernel or something like 
-sg3_utils.
-_Not_ asking for page 0x0 lead to crashes on several older devices.
+"echo 0 > /proc/sys/kernel/hung_task_timeout_secs" disables this message.
+swapper/0       D ffffffc000086ec0     0     1      0 0x00000000
+Call trace:
+[<ffffffc000086ec0>] __switch_to+0x90/0xb0
+[<ffffffc0009e2214>] __schedule+0x204/0x670
+[<ffffffc0009e26c0>] schedule+0x40/0xb0
+[<ffffffc0009e549c>] schedule_timeout+0x15c/0x1b0
+[<ffffffc0009e32e0>] wait_for_common+0xa0/0x150
+[<ffffffc0009e33a4>] wait_for_completion+0x14/0x20
+[<ffffffc00059a9cc>] pm8001_pci_probe+0xb7c/0xd10
+[<ffffffc00046c7f0>] pci_device_probe+0xa0/0x120
+[<ffffffc00053ff7c>] driver_probe_device+0x12c/0x2e0
+[<ffffffc0005401cc>] __driver_attach+0x9c/0xa0
+[<ffffffc00053e0ac>] bus_for_each_dev+0x5c/0xa0
+[<ffffffc00053f8e0>] driver_attach+0x20/0x30
+[<ffffffc00053f428>] bus_add_driver+0x108/0x230
+[<ffffffc0005409e0>] driver_register+0x60/0x100
+[<ffffffc00046b5a0>] __pci_register_driver+0x40/0x50
+[<ffffffc000de3610>] pm8001_init+0x70/0xa8
+[<ffffffc000082904>] do_one_initcall+0x94/0x1b0
+[<ffffffc000dbcab8>] kernel_init_freeable+0x150/0x1f4
+[<ffffffc0009df2c0>] kernel_init+0x10/0xf0
 
-Cheers,
+The current driver in kernel.org is 0.1.38, is this already the latest one?
 
-Hannes
+I saw in the Readme file of BIOS package in Microsemi website
+(http://storage.microsemi.com/en-us/downloads/bios_fw/bios_fw_ver/productid=asa-71605h&dn=adaptec+71605h.php)
+mentions below issue. Is the hang symptom similar to the one that I
+saw?
+
+5.14 FreeBSD Hangs when No Devices on HBA
+        On FreeBSD systems, the OS fails to boot when no devices are
+        connected to the HBAs.
+
+        WORKAROUND: Connect at least one device to the HBA to complete
+        the boot process.
+
+
+Regards,
+Duc Dang.
