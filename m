@@ -1,86 +1,247 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: Re: [PATCH v3 04/12] phy: qcom-ufs-14nm: Add new compatible for
- msm8996 based phy
-Date: Thu, 3 Nov 2016 22:37:11 +0530
-Message-ID: <CAFp+6iHDJEEiE0XHEi46X9xPL=5kmDRa2vUOqj2tkML5+W2h9g@mail.gmail.com>
-References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
- <1477772534-14170-5-git-send-email-vivek.gautam@codeaurora.org> <bee1a974145c606c40d61781fc2f3c9c@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:49602 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758232AbcKCRHO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2016 13:07:14 -0400
-In-Reply-To: <bee1a974145c606c40d61781fc2f3c9c@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: [PATCH v4 09/12] ufs-qcom: phy/hcd: Refactoring phy clock handling
+Date: Thu,  3 Nov 2016 23:00:50 +0530
+Message-ID: <1478194250-19132-1-git-send-email-vivek.gautam@codeaurora.org>
+References: <CAFp+6iGiQG2BV0W0rFKEW6YnEWDkjOqoruJ-neTjKjfKx7yVdA@mail.gmail.com>
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <CAFp+6iGiQG2BV0W0rFKEW6YnEWDkjOqoruJ-neTjKjfKx7yVdA@mail.gmail.com>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
+Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Boyd <sboyd@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
-Hi,
+Add phy clock enable code to phy_power_on/off callbacks, and
+remove explicit calls to enable these phy clocks from the
+ufs-qcom hcd driver.
 
+Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+---
 
-On Tue, Nov 1, 2016 at 2:41 AM, Subhash Jadavani
-<subhashj@codeaurora.org> wrote:
-> On 2016-10-29 13:22, Vivek Gautam wrote:
->>
->> Add a new compatible string for 14nm ufs phy present on msm8996
->> chipset. This phy is bit different from the legacy 14nm ufs phy
->> in terms of the clocks that are needed to be handled in the driver.
->>
->> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
->> ---
->>
->> New patch in v3 of this cleanup series.
->>
->>  Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
->>  drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
->>  2 files changed, 6 insertions(+), 2 deletions(-)
->>
->> diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
->> b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
->> index 070baf4..b6b5130 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
->> @@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the
->> controller node should
->>  contain a phandle reference to UFS PHY node.
->>
->>  Required properties:
->> -- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
->> -                     or "qcom,ufs-phy-qmp-14nm" according to the relevant
->> phy in use.
->> +- compatible        : compatible list, contains one of the following -
->> +                       "qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
->> +                       "qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
->> +                       "qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
->> +                        present on MSM8996 chipset.
->
-> For future chipsets (after MSM8996), we have to use this same compatible
-> strings? If yes, "msm8996" in compatible string name may cause confusions?
-> may be we should start following v1/v2/... terminologies for this?
-> something like "qcom,ufs-phy-qmp-v2" to start with?
+Changes since v3:
+ - Moved phy_power_off() under *link not active* check
+   during aggressive clock gating.
 
-Are we trying to complement the actual IP hardware versioning with this ?
-Isn't it possible that we will end up using v2 for more than a couple of
-actual IP hardware versions ?
+Changes since v2:
+ - Added phy_power_on() and phy_power_off() calls to
+   power-cycle the PHY during aggressive clk gating.
 
-I have seen cases wherein the IP versions are preceded by the
-SOC names, the IPs appeared first in. And if the same IP is used in
-subsequent SOCs, we use same compatible string. This, rather,
-makes things easier to comprehend - it's the same IP that was
-used on older SoC.
+Changes since v1:
+ - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
+ - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
+ - removed function declaration and export symbol for these APIs.
 
-I am fine with adding versions to the compatible string as well.
-But like i asked earlier - are we just creating versions for our
-own understanding, or are we also complementing the actual
-IP hardware versions ?
+ drivers/phy/phy-qcom-ufs.c       | 36 ++++++++++++++++++------------------
+ drivers/scsi/ufs/ufs-qcom.c      | 21 ++++++---------------
+ include/linux/phy/phy-qcom-ufs.h | 18 ------------------
+ 3 files changed, 24 insertions(+), 51 deletions(-)
 
-
-Thanks
-Vivek
-
+diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+index 1ec64d5..9dff4c2 100644
+--- a/drivers/phy/phy-qcom-ufs.c
++++ b/drivers/phy/phy-qcom-ufs.c
+@@ -366,10 +366,9 @@ int ufs_qcom_phy_enable_vreg(struct device *dev,
+ 	return ret;
+ }
+ 
+-int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
++static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
+ {
+ 	int ret = 0;
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+ 
+ 	if (phy->is_ref_clk_enabled)
+ 		goto out;
+@@ -416,7 +415,6 @@ int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
+ out:
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
+ 
+ static
+ int ufs_qcom_phy_disable_vreg(struct device *dev,
+@@ -441,10 +439,8 @@ int ufs_qcom_phy_disable_vreg(struct device *dev,
+ 	return ret;
+ }
+ 
+-void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
++static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+-
+ 	if (phy->is_ref_clk_enabled) {
+ 		clk_disable_unprepare(phy->ref_clk);
+ 		/*
+@@ -457,7 +453,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
+ 		phy->is_ref_clk_enabled = false;
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
+ 
+ #define UFS_REF_CLK_EN	(1 << 5)
+ 
+@@ -510,9 +505,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
+ EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
+ 
+ /* Turn ON M-PHY RMMI interface clocks */
+-int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
++static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+ 	int ret = 0;
+ 
+ 	if (phy->is_iface_clk_enabled)
+@@ -536,20 +530,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
+ out:
+ 	return ret;
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
+ 
+ /* Turn OFF M-PHY RMMI interface clocks */
+-void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
++void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
+ {
+-	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+-
+ 	if (phy->is_iface_clk_enabled) {
+ 		clk_disable_unprepare(phy->tx_iface_clk);
+ 		clk_disable_unprepare(phy->rx_iface_clk);
+ 		phy->is_iface_clk_enabled = false;
+ 	}
+ }
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
+ 
+ int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+ {
+@@ -667,13 +657,20 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 		goto out_disable_phy;
+ 	}
+ 
+-	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
++	err = ufs_qcom_phy_enable_iface_clk(phy_common);
+ 	if (err) {
+-		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
++		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
+ 			__func__, err);
+ 		goto out_disable_pll;
+ 	}
+ 
++	err = ufs_qcom_phy_enable_ref_clk(phy_common);
++	if (err) {
++		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
++			__func__, err);
++		goto out_disable_iface_clk;
++	}
++
+ 	/* enable device PHY ref_clk pad rail */
+ 	if (phy_common->vddp_ref_clk.reg) {
+ 		err = ufs_qcom_phy_enable_vreg(dev,
+@@ -689,7 +686,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 	goto out;
+ 
+ out_disable_ref_clk:
+-	ufs_qcom_phy_disable_ref_clk(generic_phy);
++	ufs_qcom_phy_disable_ref_clk(phy_common);
++out_disable_iface_clk:
++	ufs_qcom_phy_disable_iface_clk(phy_common);
+ out_disable_pll:
+ 	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
+ out_disable_phy:
+@@ -708,7 +707,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+ 	if (phy_common->vddp_ref_clk.reg)
+ 		ufs_qcom_phy_disable_vreg(phy_common->dev,
+ 					  &phy_common->vddp_ref_clk);
+-	ufs_qcom_phy_disable_ref_clk(generic_phy);
++	ufs_qcom_phy_disable_ref_clk(phy_common);
++	ufs_qcom_phy_disable_iface_clk(phy_common);
+ 
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+ 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 3aedf73..3a86ff3 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1112,17 +1112,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		return 0;
+ 
+ 	if (on) {
+-		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+-		if (err)
+-			goto out;
++		phy_power_on(host->generic_phy);
+ 
+-		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+-		if (err) {
+-			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
+-				__func__, err);
+-			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+-			goto out;
+-		}
+ 		/* enable the device ref clock for HS mode*/
+ 		if (ufshcd_is_hs_mode(&hba->pwr_info))
+ 			ufs_qcom_dev_ref_clk_ctrl(host, true);
+@@ -1131,13 +1122,14 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 			ufs_qcom_update_bus_bw_vote(host);
+ 
+ 	} else {
+-
+-		/* M-PHY RMMI interface clocks can be turned off */
+-		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+-		if (!ufs_qcom_is_link_active(hba))
++		if (!ufs_qcom_is_link_active(hba)) {
+ 			/* disable device ref_clk */
+ 			ufs_qcom_dev_ref_clk_ctrl(host, false);
+ 
++			/* powering off PHY during aggressive clk gating */
++			phy_power_off(host->generic_phy);
++		}
++
+ 		vote = host->bus_vote.min_bw_vote;
+ 	}
+ 
+@@ -1146,7 +1138,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on)
+ 		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+ 				__func__, err);
+ 
+-out:
+ 	return err;
+ }
+ 
+diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
+index 9d18e9f..35c070e 100644
+--- a/include/linux/phy/phy-qcom-ufs.h
++++ b/include/linux/phy/phy-qcom-ufs.h
+@@ -18,22 +18,6 @@
+ #include "phy.h"
+ 
+ /**
+- * ufs_qcom_phy_enable_ref_clk() - Enable the phy
+- * ref clock.
+- * @phy: reference to a generic phy
+- *
+- * returns 0 for success, and non-zero for error.
+- */
+-int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
+-
+-/**
+- * ufs_qcom_phy_disable_ref_clk() - Disable the phy
+- * ref clock.
+- * @phy: reference to a generic phy.
+- */
+-void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
+-
+-/**
+  * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
+  * ref clock.
+  * @phy: reference to a generic phy.
+@@ -47,8 +31,6 @@
+  */
+ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+ 
+-int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
+-void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
+ int ufs_qcom_phy_start_serdes(struct phy *phy);
+ int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+ int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
 -- 
-Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
