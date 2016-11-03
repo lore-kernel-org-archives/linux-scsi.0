@@ -1,62 +1,86 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH 1/3] scsi_dh_rdac: switch to scsi_execute_req_flags()
-Date: Thu, 03 Nov 2016 12:11:39 -0400
-Message-ID: <1478189499.1001.26.camel@localhost.localdomain>
-References: <1478036978-30583-1-git-send-email-hare@suse.de>
-         <1478036978-30583-2-git-send-email-hare@suse.de>
-         <1478101469.1001.9.camel@localhost.localdomain>
-         <6bb2b352-d137-a9da-2f35-e6b0cdef4774@suse.com>
-Reply-To: emilne@redhat.com
+From: Vivek Gautam <vivek.gautam@codeaurora.org>
+Subject: Re: [PATCH v3 04/12] phy: qcom-ufs-14nm: Add new compatible for
+ msm8996 based phy
+Date: Thu, 3 Nov 2016 22:37:11 +0530
+Message-ID: <CAFp+6iHDJEEiE0XHEi46X9xPL=5kmDRa2vUOqj2tkML5+W2h9g@mail.gmail.com>
+References: <1477772534-14170-1-git-send-email-vivek.gautam@codeaurora.org>
+ <1477772534-14170-5-git-send-email-vivek.gautam@codeaurora.org> <bee1a974145c606c40d61781fc2f3c9c@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41934 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1758307AbcKCQLl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 3 Nov 2016 12:11:41 -0400
-In-Reply-To: <6bb2b352-d137-a9da-2f35-e6b0cdef4774@suse.com>
+Received: from smtp.codeaurora.org ([198.145.29.96]:49602 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758232AbcKCRHO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2016 13:07:14 -0400
+In-Reply-To: <bee1a974145c606c40d61781fc2f3c9c@codeaurora.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: kishon <kishon@ti.com>, jejb@linux.vnet.ibm.com, Vinayak Holikatti <vinholikatti@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Stephen Boyd <sboyd@codeaurora.org>, Yaniv Gardi <ygardi@codeaurora.org>, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 
-On Wed, 2016-11-02 at 22:27 +0100, Hannes Reinecke wrote:
-> On 11/02/2016 04:44 PM, Ewan D. Milne wrote:
-> > In this and other places the patch changes the code from submitting the
-> > INQUIRY/EVPD command for the page it wants, to calling scsi_get_vpd_page().
-> > scsi_get_vpd_page() will return -EINVAL if the device did not report in
-> > VPD page 0 that the requested page is in the list of supported pages.
-> > Did you actually verify that the RDAC returns all of these VPD pages in
-> > its VPD page 0 list?
-> >
-> > I mean, I know it's supposed to, but these are old devices.
-> >
-> Errm.
-> 
-> Old? Don't tell that to the E-Series folk; you'll never again get 
-> something sponsored :-)
-> 
-> No, seriously: RDAC mode is continued to be supported even on the latest 
-> models, and all firmware revisions I've got support VPD page 0x0.
-> And incidentally, this is the very same method we're using for basically 
-> all tools accessing VPD page 0x83, be it in the kernel or something like 
-> sg3_utils.
-> _Not_ asking for page 0x0 lead to crashes on several older devices.
-
-You're right, I was curious, so I resurrected our old RDAC, and it does
-in fact report the necessary supported VPD pages:
-
-# sg_vpd -H /dev/sg4
-Supported VPD pages VPD page:
- 00     20 00 00 12 00 80 83 85  86 87 b0 b1 c0 c1 c2 c3     ...............
- 10     c4 c8 c9 ca d0 e0                                   ......
-
-My concern was that older devices might not do this, I think there have
-been some arrays that had hidden commands/pages.
-
--Ewan
+Hi,
 
 
+On Tue, Nov 1, 2016 at 2:41 AM, Subhash Jadavani
+<subhashj@codeaurora.org> wrote:
+> On 2016-10-29 13:22, Vivek Gautam wrote:
+>>
+>> Add a new compatible string for 14nm ufs phy present on msm8996
+>> chipset. This phy is bit different from the legacy 14nm ufs phy
+>> in terms of the clocks that are needed to be handled in the driver.
+>>
+>> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+>> ---
+>>
+>> New patch in v3 of this cleanup series.
+>>
+>>  Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
+>>  drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
+>>  2 files changed, 6 insertions(+), 2 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+>> b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+>> index 070baf4..b6b5130 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+>> @@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the
+>> controller node should
+>>  contain a phandle reference to UFS PHY node.
+>>
+>>  Required properties:
+>> -- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
+>> -                     or "qcom,ufs-phy-qmp-14nm" according to the relevant
+>> phy in use.
+>> +- compatible        : compatible list, contains one of the following -
+>> +                       "qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
+>> +                       "qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
+>> +                       "qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
+>> +                        present on MSM8996 chipset.
+>
+> For future chipsets (after MSM8996), we have to use this same compatible
+> strings? If yes, "msm8996" in compatible string name may cause confusions?
+> may be we should start following v1/v2/... terminologies for this?
+> something like "qcom,ufs-phy-qmp-v2" to start with?
+
+Are we trying to complement the actual IP hardware versioning with this ?
+Isn't it possible that we will end up using v2 for more than a couple of
+actual IP hardware versions ?
+
+I have seen cases wherein the IP versions are preceded by the
+SOC names, the IPs appeared first in. And if the same IP is used in
+subsequent SOCs, we use same compatible string. This, rather,
+makes things easier to comprehend - it's the same IP that was
+used on older SoC.
+
+I am fine with adding versions to the compatible string as well.
+But like i asked earlier - are we just creating versions for our
+own understanding, or are we also complementing the actual
+IP hardware versions ?
 
 
+Thanks
+Vivek
+
+-- 
+Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
