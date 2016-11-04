@@ -1,50 +1,268 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 4/6] g_NCR5380: Add IRQ auto-configuration for HP C2502
-Date: Fri, 4 Nov 2016 14:00:46 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1611041357230.709@nippy.intranet>
-References: <1477945112-25659-1-git-send-email-linux@rainbow-software.org> <201611020929.22464.linux@rainbow-software.org> <alpine.LNX.2.00.1611022056450.12392@nippy.intranet> <201611030900.56371.linux@rainbow-software.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v4 09/12] ufs-qcom: phy/hcd: Refactoring phy clock
+ handling
+Date: Thu, 03 Nov 2016 23:05:47 -0700
+Message-ID: <7d4a8c16a9a08b231fd07be85cca03b8@codeaurora.org>
+References: <CAFp+6iGiQG2BV0W0rFKEW6YnEWDkjOqoruJ-neTjKjfKx7yVdA@mail.gmail.com>
+ <1478194250-19132-1-git-send-email-vivek.gautam@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from kvm5.telegraphics.com.au ([98.124.60.144]:54332 "EHLO
-        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932829AbcKDDAj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 3 Nov 2016 23:00:39 -0400
-In-Reply-To: <201611030900.56371.linux@rainbow-software.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+In-Reply-To: <1478194250-19132-1-git-send-email-vivek.gautam@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Vivek Gautam <vivek.gautam@codeaurora.org>
+Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, sboyd@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ondrej Zary <linux@rainbow-software.org>
-Cc: Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-
-On Thu, 3 Nov 2016, Ondrej Zary wrote:
-
-> On Thursday 03 November 2016, Finn Thain wrote:
-> > On Wed, 2 Nov 2016, Ondrej Zary wrote:
-> > > 
-> > > The card is almost Plug&Play. The base address is already configured 
-> > > automatically by the driver so doing the same for IRQ makes sense.
-> >
-> > Why don't we see any other drivers doing this?
+On 2016-11-03 10:30, Vivek Gautam wrote:
+> Add phy clock enable code to phy_power_on/off callbacks, and
+> remove explicit calls to enable these phy clocks from the
+> ufs-qcom hcd driver.
 > 
-> Many ISA sound card drivers do this - there's even a function for this: 
-> static int snd_legacy_find_free_irq(int *irq_table)
+> Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
+> ---
+> 
+> Changes since v3:
+>  - Moved phy_power_off() under *link not active* check
+>    during aggressive clock gating.
+> 
+> Changes since v2:
+>  - Added phy_power_on() and phy_power_off() calls to
+>    power-cycle the PHY during aggressive clk gating.
+> 
+> Changes since v1:
+>  - staticized ufs_qcom_phy_enable(/disable)_ref_clk(),
+>  - staticized ufs_qcom_phy_enable(/disable)_iface_clk()
+>  - removed function declaration and export symbol for these APIs.
+> 
+>  drivers/phy/phy-qcom-ufs.c       | 36 
+> ++++++++++++++++++------------------
+>  drivers/scsi/ufs/ufs-qcom.c      | 21 ++++++---------------
+>  include/linux/phy/phy-qcom-ufs.h | 18 ------------------
+>  3 files changed, 24 insertions(+), 51 deletions(-)
+> 
+> diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+> index 1ec64d5..9dff4c2 100644
+> --- a/drivers/phy/phy-qcom-ufs.c
+> +++ b/drivers/phy/phy-qcom-ufs.c
+> @@ -366,10 +366,9 @@ int ufs_qcom_phy_enable_vreg(struct device *dev,
+>  	return ret;
+>  }
+> 
+> -int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
+> +static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
+>  {
+>  	int ret = 0;
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> 
+>  	if (phy->is_ref_clk_enabled)
+>  		goto out;
+> @@ -416,7 +415,6 @@ int ufs_qcom_phy_enable_ref_clk(struct phy 
+> *generic_phy)
+>  out:
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
+> 
+>  static
+>  int ufs_qcom_phy_disable_vreg(struct device *dev,
+> @@ -441,10 +439,8 @@ int ufs_qcom_phy_disable_vreg(struct device *dev,
+>  	return ret;
+>  }
+> 
+> -void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
+> +static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> -
+>  	if (phy->is_ref_clk_enabled) {
+>  		clk_disable_unprepare(phy->ref_clk);
+>  		/*
+> @@ -457,7 +453,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy 
+> *generic_phy)
+>  		phy->is_ref_clk_enabled = false;
+>  	}
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
+> 
+>  #define UFS_REF_CLK_EN	(1 << 5)
+> 
+> @@ -510,9 +505,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy
+> *generic_phy)
+>  EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
+> 
+>  /* Turn ON M-PHY RMMI interface clocks */
+> -int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
+> +static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+>  	int ret = 0;
+> 
+>  	if (phy->is_iface_clk_enabled)
+> @@ -536,20 +530,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy 
+> *generic_phy)
+>  out:
+>  	return ret;
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
+> 
+>  /* Turn OFF M-PHY RMMI interface clocks */
+> -void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
+> +void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
+>  {
+> -	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+> -
+>  	if (phy->is_iface_clk_enabled) {
+>  		clk_disable_unprepare(phy->tx_iface_clk);
+>  		clk_disable_unprepare(phy->rx_iface_clk);
+>  		phy->is_iface_clk_enabled = false;
+>  	}
+>  }
+> -EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
+> 
+>  int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
+>  {
+> @@ -667,13 +657,20 @@ int ufs_qcom_phy_power_on(struct phy 
+> *generic_phy)
+>  		goto out_disable_phy;
+>  	}
+> 
+> -	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
+> +	err = ufs_qcom_phy_enable_iface_clk(phy_common);
+>  	if (err) {
+> -		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
+> +		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
+>  			__func__, err);
+>  		goto out_disable_pll;
+>  	}
+> 
+> +	err = ufs_qcom_phy_enable_ref_clk(phy_common);
+> +	if (err) {
+> +		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
+> +			__func__, err);
+> +		goto out_disable_iface_clk;
+> +	}
+> +
+>  	/* enable device PHY ref_clk pad rail */
+>  	if (phy_common->vddp_ref_clk.reg) {
+>  		err = ufs_qcom_phy_enable_vreg(dev,
+> @@ -689,7 +686,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+>  	goto out;
+> 
+>  out_disable_ref_clk:
+> -	ufs_qcom_phy_disable_ref_clk(generic_phy);
+> +	ufs_qcom_phy_disable_ref_clk(phy_common);
+> +out_disable_iface_clk:
+> +	ufs_qcom_phy_disable_iface_clk(phy_common);
+>  out_disable_pll:
+>  	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
+>  out_disable_phy:
+> @@ -708,7 +707,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
+>  	if (phy_common->vddp_ref_clk.reg)
+>  		ufs_qcom_phy_disable_vreg(phy_common->dev,
+>  					  &phy_common->vddp_ref_clk);
+> -	ufs_qcom_phy_disable_ref_clk(generic_phy);
+> +	ufs_qcom_phy_disable_ref_clk(phy_common);
+> +	ufs_qcom_phy_disable_iface_clk(phy_common);
+> 
+>  	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
+>  	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index 3aedf73..3a86ff3 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1112,17 +1112,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+> *hba, bool on)
+>  		return 0;
+> 
+>  	if (on) {
+> -		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
+> -		if (err)
+> -			goto out;
+> +		phy_power_on(host->generic_phy);
+> 
+> -		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
+> -		if (err) {
+> -			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
+> -				__func__, err);
+> -			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+> -			goto out;
+> -		}
+>  		/* enable the device ref clock for HS mode*/
+>  		if (ufshcd_is_hs_mode(&hba->pwr_info))
+>  			ufs_qcom_dev_ref_clk_ctrl(host, true);
+> @@ -1131,13 +1122,14 @@ static int ufs_qcom_setup_clocks(struct
+> ufs_hba *hba, bool on)
+>  			ufs_qcom_update_bus_bw_vote(host);
+> 
+>  	} else {
+> -
+> -		/* M-PHY RMMI interface clocks can be turned off */
+> -		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
+> -		if (!ufs_qcom_is_link_active(hba))
+> +		if (!ufs_qcom_is_link_active(hba)) {
+>  			/* disable device ref_clk */
+>  			ufs_qcom_dev_ref_clk_ctrl(host, false);
+> 
+> +			/* powering off PHY during aggressive clk gating */
+> +			phy_power_off(host->generic_phy);
+> +		}
+> +
+>  		vote = host->bus_vote.min_bw_vote;
+>  	}
+> 
+> @@ -1146,7 +1138,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba
+> *hba, bool on)
+>  		dev_err(hba->dev, "%s: set bus vote failed %d\n",
+>  				__func__, err);
+> 
+> -out:
+>  	return err;
+>  }
+> 
+> diff --git a/include/linux/phy/phy-qcom-ufs.h 
+> b/include/linux/phy/phy-qcom-ufs.h
+> index 9d18e9f..35c070e 100644
+> --- a/include/linux/phy/phy-qcom-ufs.h
+> +++ b/include/linux/phy/phy-qcom-ufs.h
+> @@ -18,22 +18,6 @@
+>  #include "phy.h"
+> 
+>  /**
+> - * ufs_qcom_phy_enable_ref_clk() - Enable the phy
+> - * ref clock.
+> - * @phy: reference to a generic phy
+> - *
+> - * returns 0 for success, and non-zero for error.
+> - */
+> -int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
+> -
+> -/**
+> - * ufs_qcom_phy_disable_ref_clk() - Disable the phy
+> - * ref clock.
+> - * @phy: reference to a generic phy.
+> - */
+> -void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
+> -
+> -/**
+>   * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
+>   * ref clock.
+>   * @phy: reference to a generic phy.
+> @@ -47,8 +31,6 @@
+>   */
+>  void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
+> 
+> -int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
+> -void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
+>  int ufs_qcom_phy_start_serdes(struct phy *phy);
+>  int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
+>  int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
 
-Well, if snd_legacy_find_free_irq() is good enough for the ALSA 
-maintainers, it is good enough for me.
-
-But I still don't like this patch. I would prefer to cut-and-paste 
-snd_legacy_find_free_irq() as g_NCR5380_find_free_irq(), and 
-snd_legacy_empty_irq_handler() as g_NCR5380_empty_irq_handler(), to allow 
-for refactoring all that into a common header file later on.
-
-When the user asks for board == BOARD_HP_C2502 and irq == IRQ_AUTO, just 
-use the first result from g_NCR5380_find_free_irq() to program the card. 
-If no irq is free, program the card for irq 0.
-
-Then just proceed with the usual IRQ_AUTO probing, like you would for any 
-other board. That way, there is no need for NCR5380_test_irq() at all, and 
-you can drop patch 2/5 (at least until we figure out why a command timeout 
-during modprobe hangs your system).
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 -- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
