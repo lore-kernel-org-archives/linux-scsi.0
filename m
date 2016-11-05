@@ -1,84 +1,109 @@
-From: <demorton@dow.com>
-Subject: 13235 linux-scsi
-Date: Sat, 05 Nov 2016 08:34:44 -0000
-Message-ID: <147833488429.27907.17428745354922308955@hinet.net>
+From: Andrey Grodzovsky <andrey2805@gmail.com>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v2)
+Date: Sat, 5 Nov 2016 09:17:57 -0400
+Message-ID: <CAJphD_oSmjHKP=HrHvVd4VwwzSQyhgCagjgQfxsAt9YJ1mN7Rg@mail.gmail.com>
+References: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de> <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
+ <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de> <CAK=zhgpYj0TcrPK8kQ-TTqGfU=JHZbXr+2-szGf1w_XcOU3p9Q@mail.gmail.com>
+ <CAJphD_qrQftfCOn_uzXCfdX=Xv9BYvVQ60AZ4DR2rc3gfXQa_Q@mail.gmail.com>
+ <30w645ulbhlofxrk1h4a9q3s.1478144944778@email.android.com>
+ <CAK=zhgra2zDZon5fuW1OwQfJ_2ExkAzcsKGiuBJaLYX6sMoTCQ@mail.gmail.com> <38e3e634-6e08-58bd-bc11-8a0a470b78d9@suse.de>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_892105577733872_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 1-163-5-166.dynamic.hinet.net ([1.163.5.166]:57733 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1750991AbcKEIeu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 5 Nov 2016 04:34:50 -0400
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <38e3e634-6e08-58bd-bc11-8a0a470b78d9@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Igor Rybak <igor@media-clone.com>, Ezra Kohavi <ezra@media-clone.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
+On Fri, Nov 4, 2016 at 10:51 AM, Hannes Reinecke <hare@suse.de> wrote:
+> On 11/04/2016 01:45 PM, Sreekanth Reddy wrote:
+>>
+>> Hi All,
+>>
+>> From last two days, I was working with my firmware team to get the
+>> required info over this issue. Here is my firmware team response
+>>
+>> "For ATA PASSTHROUGH commands, the IOC SATL will not check for the
+>> opcode and will direct it to the drive. So even though ATA PASSTHOUGH
+>> has ATA erase to the drive, IOC SATL FW will not know that and as a
+>> general logic for all ATA PASSTHOGH commands, IOC FW will pend the
+>> upcoming IOs untill the previous ATA PASSTHORUGH completes. This is as
+>> per the SAT specification for SAS controllers and we can't compare it
+>> with the SATA controllers in the on board that have full fledge SATA
+>> implementation".
+>>
+>> So this is an expected behavior from our HBA firmware. i.e. it will
+>> pend the subsequent commands if any ATA PASSTHROUGH command is going
+>> on. So their is no issue with the FW.
+>>
+> But is there a way to figure out if the firmware / SATL layer is busy
+> processing requests?
+>
+> With 'real' ATA HBAs these issue doesn't occur, as the ATA erase command =
+is
+> a non-queued command, and hence the next command automatically has to wai=
+t
+> for the erase command to complete.
+> But this wait happens as the ATA HBA returns 'BUSY', and the linux I/O st=
+ack
+> will then reset the timeout for all consecutive commands.
+>
+> With mpt3sas _all_ commands are queued, so if there is a long-running I/O
+> command all other commands already in the queue will time out.
+>
+> Which is at least a very awkward behaviour.
+>
+> Checking with SAT-3 (section 6.2.4: Commands the SATL queues internally) =
+the
+> implemented behaviour is standards conformant, although the standard also
+> allows for returning 'TASK SET FULL' or 'BUSY' in these cases.
+> Doing so would nicely solve this issue.
+>
+>> Today I have tried the same test case on my local setup. i.e. I have
+>> issued a secure erase command using hdparm utility and observed the
+>> same issue on 4.2.3-300.fc23.x86_64 kernel.
+>>
+>> Then after browsing over this issue, I found that some people are
+>> recommending to enable 'CONFIG_IDE_TASK_IOCTL' Kconfig flag. I had a
+>> compiled 4.4.0 kernel, so I have enabled this CONFIG_IDE_TASK_IOCTL
+>> and recompiled this 4.4.0 kernel and booted in to this kernel. Then I
+>> tried same test case and I haven't observed this issue and secure
+>> erase operation was completed successfully.
+>>
+>> So, can you please try once with CONFIG_IDE_TASK_IOCTL enabled.
+>>
+> Errm.
+> CONFIG_IDE_TASK_IOCTL is for the old IDE subsystem, which isn't in use he=
+re.
+> So this option does not make a difference when using mpt3sas, as this is =
+a
+> 'real' SCSI driver which never calls out into any of these subsystems.
+>
+> I would be _VERY_ much surprised if that would make a difference.
+>
+> The reason why this behaviour did go unnoticed with older kernels was tha=
+t a
+> command timeout would trigger SCSI EH to engage, and that in turn require=
+d
+> all outstanding commands to complete.
+> So by the time SCSI EH started the ERASE command was complete, and a retr=
+y
+> of the timed-out commands would work.
+
+Indeed, when retesting with CONFIG_IDE_TASK_IOCTL=3Dy and. reverting the
+fix the bug is back.
+
+Thanks,
+Andrey
+>
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                   zSeries & Storage
+> hare@suse.de                          +49 911 74053 688
+> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg)
