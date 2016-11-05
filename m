@@ -1,109 +1,110 @@
-From: Andrey Grodzovsky <andrey2805@gmail.com>
-Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v2)
-Date: Sat, 5 Nov 2016 09:17:57 -0400
-Message-ID: <CAJphD_oSmjHKP=HrHvVd4VwwzSQyhgCagjgQfxsAt9YJ1mN7Rg@mail.gmail.com>
-References: <2179ecb8-183f-a500-4d65-10f64f0f43cc@suse.de> <1478045394-19536-1-git-send-email-andrey2805@gmail.com>
- <dbeededa-e2fc-53d3-997c-34ba1129a80b@suse.de> <CAK=zhgpYj0TcrPK8kQ-TTqGfU=JHZbXr+2-szGf1w_XcOU3p9Q@mail.gmail.com>
- <CAJphD_qrQftfCOn_uzXCfdX=Xv9BYvVQ60AZ4DR2rc3gfXQa_Q@mail.gmail.com>
- <30w645ulbhlofxrk1h4a9q3s.1478144944778@email.android.com>
- <CAK=zhgra2zDZon5fuW1OwQfJ_2ExkAzcsKGiuBJaLYX6sMoTCQ@mail.gmail.com> <38e3e634-6e08-58bd-bc11-8a0a470b78d9@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.9-rc3
+Date: Sat, 05 Nov 2016 07:29:51 -0600
+Message-ID: <1478352591.2858.5.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <38e3e634-6e08-58bd-bc11-8a0a470b78d9@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Igor Rybak <igor@media-clone.com>, Ezra Kohavi <ezra@media-clone.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bedivere.hansenpartnership.com ([66.63.167.143]:49178 "EHLO
+        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754130AbcKENaC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 5 Nov 2016 09:30:02 -0400
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 
-On Fri, Nov 4, 2016 at 10:51 AM, Hannes Reinecke <hare@suse.de> wrote:
-> On 11/04/2016 01:45 PM, Sreekanth Reddy wrote:
->>
->> Hi All,
->>
->> From last two days, I was working with my firmware team to get the
->> required info over this issue. Here is my firmware team response
->>
->> "For ATA PASSTHROUGH commands, the IOC SATL will not check for the
->> opcode and will direct it to the drive. So even though ATA PASSTHOUGH
->> has ATA erase to the drive, IOC SATL FW will not know that and as a
->> general logic for all ATA PASSTHOGH commands, IOC FW will pend the
->> upcoming IOs untill the previous ATA PASSTHORUGH completes. This is as
->> per the SAT specification for SAS controllers and we can't compare it
->> with the SATA controllers in the on board that have full fledge SATA
->> implementation".
->>
->> So this is an expected behavior from our HBA firmware. i.e. it will
->> pend the subsequent commands if any ATA PASSTHROUGH command is going
->> on. So their is no issue with the FW.
->>
-> But is there a way to figure out if the firmware / SATL layer is busy
-> processing requests?
->
-> With 'real' ATA HBAs these issue doesn't occur, as the ATA erase command =
-is
-> a non-queued command, and hence the next command automatically has to wai=
-t
-> for the erase command to complete.
-> But this wait happens as the ATA HBA returns 'BUSY', and the linux I/O st=
-ack
-> will then reset the timeout for all consecutive commands.
->
-> With mpt3sas _all_ commands are queued, so if there is a long-running I/O
-> command all other commands already in the queue will time out.
->
-> Which is at least a very awkward behaviour.
->
-> Checking with SAT-3 (section 6.2.4: Commands the SATL queues internally) =
-the
-> implemented behaviour is standards conformant, although the standard also
-> allows for returning 'TASK SET FULL' or 'BUSY' in these cases.
-> Doing so would nicely solve this issue.
->
->> Today I have tried the same test case on my local setup. i.e. I have
->> issued a secure erase command using hdparm utility and observed the
->> same issue on 4.2.3-300.fc23.x86_64 kernel.
->>
->> Then after browsing over this issue, I found that some people are
->> recommending to enable 'CONFIG_IDE_TASK_IOCTL' Kconfig flag. I had a
->> compiled 4.4.0 kernel, so I have enabled this CONFIG_IDE_TASK_IOCTL
->> and recompiled this 4.4.0 kernel and booted in to this kernel. Then I
->> tried same test case and I haven't observed this issue and secure
->> erase operation was completed successfully.
->>
->> So, can you please try once with CONFIG_IDE_TASK_IOCTL enabled.
->>
-> Errm.
-> CONFIG_IDE_TASK_IOCTL is for the old IDE subsystem, which isn't in use he=
-re.
-> So this option does not make a difference when using mpt3sas, as this is =
-a
-> 'real' SCSI driver which never calls out into any of these subsystems.
->
-> I would be _VERY_ much surprised if that would make a difference.
->
-> The reason why this behaviour did go unnoticed with older kernels was tha=
-t a
-> command timeout would trigger SCSI EH to engage, and that in turn require=
-d
-> all outstanding commands to complete.
-> So by the time SCSI EH started the ERASE command was complete, and a retr=
-y
-> of the timed-out commands would work.
+Two more important data integrity fixes related to RAID device drivers
+which wrongly throw away the SYNCHRONIZE CACHE command in the non-RAID
+path and a memory leak fix in the scsi_debug driver.
 
-Indeed, when retesting with CONFIG_IDE_TASK_IOCTL=3Dy and. reverting the
-fix the bug is back.
+The patch is available here:
 
-Thanks,
-Andrey
->
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                   zSeries & Storage
-> hare@suse.de                          +49 911 74053 688
-> SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: J. Hawn, J. Guild, F. Imend=C3=B6rffer, HRB 16746 (AG N=C3=BCrnberg)
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Ching Huang (1):
+      scsi: arcmsr: Send SYNCHRONIZE_CACHE command to firmware
+
+Ewan D. Milne (1):
+      scsi: scsi_debug: Fix memory leak if LBP enabled and module is unloaded
+
+Kashyap Desai (1):
+      scsi: megaraid_sas: Fix data integrity failure for JBOD (passthrough) devices
+
+And the diffstat:
+
+ drivers/scsi/arcmsr/arcmsr_hba.c          |  9 ---------
+ drivers/scsi/megaraid/megaraid_sas_base.c | 13 +++++--------
+ drivers/scsi/scsi_debug.c                 |  1 +
+ 3 files changed, 6 insertions(+), 17 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
+index 3d53d63..f0cfb04 100644
+--- a/drivers/scsi/arcmsr/arcmsr_hba.c
++++ b/drivers/scsi/arcmsr/arcmsr_hba.c
+@@ -2636,18 +2636,9 @@ static int arcmsr_queue_command_lck(struct scsi_cmnd *cmd,
+ 	struct AdapterControlBlock *acb = (struct AdapterControlBlock *) host->hostdata;
+ 	struct CommandControlBlock *ccb;
+ 	int target = cmd->device->id;
+-	int lun = cmd->device->lun;
+-	uint8_t scsicmd = cmd->cmnd[0];
+ 	cmd->scsi_done = done;
+ 	cmd->host_scribble = NULL;
+ 	cmd->result = 0;
+-	if ((scsicmd == SYNCHRONIZE_CACHE) ||(scsicmd == SEND_DIAGNOSTIC)){
+-		if(acb->devstate[target][lun] == ARECA_RAID_GONE) {
+-    			cmd->result = (DID_NO_CONNECT << 16);
+-		}
+-		cmd->scsi_done(cmd);
+-		return 0;
+-	}
+ 	if (target == 16) {
+ 		/* virtual device for iop message transfer */
+ 		arcmsr_handle_virtual_command(acb, cmd);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 9ff57de..d8b1fbd 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1700,16 +1700,13 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		goto out_done;
+ 	}
+ 
+-	switch (scmd->cmnd[0]) {
+-	case SYNCHRONIZE_CACHE:
+-		/*
+-		 * FW takes care of flush cache on its own
+-		 * No need to send it down
+-		 */
++	/*
++	 * FW takes care of flush cache on its own for Virtual Disk.
++	 * No need to send it down for VD. For JBOD send SYNCHRONIZE_CACHE to FW.
++	 */
++	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) && MEGASAS_IS_LOGICAL(scmd)) {
+ 		scmd->result = DID_OK << 16;
+ 		goto out_done;
+-	default:
+-		break;
+ 	}
+ 
+ 	return instance->instancet->build_and_issue_cmd(instance, scmd);
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index c905709..cf04a36 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -5134,6 +5134,7 @@ static void __exit scsi_debug_exit(void)
+ 	bus_unregister(&pseudo_lld_bus);
+ 	root_device_unregister(pseudo_primary);
+ 
++	vfree(map_storep);
+ 	vfree(dif_storep);
+ 	vfree(fake_storep);
+ 	kfree(sdebug_q_arr);
