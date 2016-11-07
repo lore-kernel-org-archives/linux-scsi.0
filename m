@@ -1,84 +1,34 @@
-From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v7 02/11] rpmb: enable emmc specific read data fixup
-Date: Mon,  7 Nov 2016 21:53:05 +0200
-Message-ID: <1478548394-8184-3-git-send-email-tomas.winkler@intel.com>
-References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-doc-owner@vger.kernel.org>
-In-Reply-To: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-doc-owner@vger.kernel.org
-To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
-Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PREEMPT-RT] [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
+Date: Mon, 7 Nov 2016 20:10:25 +0100
+Message-ID: <20161107191025.GA5357@lst.de>
+References: <20160817101003.30055-1-bigeasy@linutronix.de> <20161107161901.GA12297@infradead.org> <alpine.DEB.2.20.1611071729030.3709@nanos> <20161107163848.GA1421@lst.de> <20161107164628.jrft3ovlp5myfvs5@linutronix.de> <20161107164846.GA1966@lst.de> <20161107170420.gc6jhsewglgkfsdi@linutronix.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:59508 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932997AbcKGTK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Nov 2016 14:10:27 -0500
+Content-Disposition: inline
+In-Reply-To: <20161107170420.gc6jhsewglgkfsdi@linutronix.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Christoph Hellwig <hch@lst.de>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>
 
-For eMMC the block count of the RPMB read operation is not indicated in
-the original RPMB Data Read Request packet.
-This might be different then the implementation of other protocol
-standards.
-This patch implements a fixup for this behavior.
+On Mon, Nov 07, 2016 at 06:04:21PM +0100, Sebastian Andrzej Siewior wrote:
+> So we keep things as they are right now or are we getting also rid of
+> the internal list? This was tested by Johannes and Chad (claimed to do
+> testing)
 
-V6: new in the series
-V7: resend
+IFF the patches actually are tested as-is let's get them in.  I don't
+think they are how we want the code to like in the long run, though.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- drivers/char/rpmb/core.c | 36 +++++++++++++++++++++++++++++++++---
- 1 file changed, 33 insertions(+), 3 deletions(-)
+> 
+> Not sure what the last point is about.
 
-diff --git a/drivers/char/rpmb/core.c b/drivers/char/rpmb/core.c
-index ff10cbb7b644..8cfbbb721538 100644
---- a/drivers/char/rpmb/core.c
-+++ b/drivers/char/rpmb/core.c
-@@ -117,6 +117,35 @@ static int rpmb_request_verify(struct rpmb_dev *rdev, struct rpmb_data *rpmbd)
- }
- 
- /**
-+ * rpmb_cmd_fixup - fixup rpmb command
-+ *
-+ * @rdev: rpmb device
-+ * @cmds: rpmb command list
-+ * @ncmds: number of commands
-+ *
-+ */
-+static void rpmb_cmd_fixup(struct rpmb_dev *rdev,
-+			   struct rpmb_cmd *cmds, u32 ncmds)
-+{
-+	int i;
-+
-+	if (rdev->ops->type != RPMB_TYPE_EMMC)
-+		return;
-+
-+	/* Fixup RPMB_READ_DATA specific to eMMC
-+	 * The block count of the RPMB read operation is not indicated
-+	 * in the original RPMB Data Read Request packet.
-+	 * This is different then implementation for other protocol
-+	 * standards.
-+	 */
-+	for (i = 0; i < ncmds; i++)
-+		if (cmds->frames->req_resp == cpu_to_be16(RPMB_READ_DATA)) {
-+			dev_dbg(&rdev->dev, "Fixing up READ_DATA frame to block_count=0\n");
-+			cmds->frames->block_count = 0;
-+		}
-+}
-+
-+/**
-  * rpmb_cmd_seq - send RPMB command sequence
-  *
-  * @rdev: rpmb device
-@@ -136,10 +165,11 @@ int rpmb_cmd_seq(struct rpmb_dev *rdev, struct rpmb_cmd *cmds, u32 ncmds)
- 		return -EINVAL;
- 
- 	mutex_lock(&rdev->lock);
--	if (rdev->ops && rdev->ops->cmd_seq)
-+	err = -EOPNOTSUPP;
-+	if (rdev->ops && rdev->ops->cmd_seq) {
-+		rpmb_cmd_fixup(rdev, cmds, ncmds);
- 		err = rdev->ops->cmd_seq(rdev->dev.parent, cmds, ncmds);
--	else
--		err = -EOPNOTSUPP;
-+	}
- 	mutex_unlock(&rdev->lock);
- 	return err;
- }
--- 
-2.7.4
-
+It's about bnx2i and bnx2fc being clients of the main cnix driver,
+which does the actual interrupt handling.  It seems we should actually
+offloading things to a workqueue or threaded interrupts in that core
+module instead of duplicating it in the clients.
