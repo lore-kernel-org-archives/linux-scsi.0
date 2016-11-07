@@ -1,162 +1,128 @@
 From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v7 04/11] char: rpmb: add device attributes
-Date: Mon,  7 Nov 2016 21:53:07 +0200
-Message-ID: <1478548394-8184-5-git-send-email-tomas.winkler@intel.com>
-References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-mmc-owner@vger.kernel.org>
-In-Reply-To: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-mmc-owner@vger.kernel.org
+Subject: [PATCH v7 00/11] char:rpmb: Replay Protected Memory Block (RPMB) subsystem
+Date: Mon,  7 Nov 2016 21:53:03 +0200
+Message-ID: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga11.intel.com ([192.55.52.93]:28198 "EHLO mga11.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933648AbcKGTA5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Nov 2016 14:00:57 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
 Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
-List-Id: linux-scsi@vger.kernel.org
 
-Add attribute type that displays underlay storage type technology
-EMMC, UFS, and attribute id, that displays underlay storage device id.
-For EMMC this would be content of CID and for UFS serial number from
-the device descriptor.
+Few storage technologies such is EMMC, UFS, and NVMe support RPMB
+hardware partition with common protocol and frame layout.
+The RPMB partition cannot be accessed via standard block layer, but by a
+set of specific commands: WRITE, READ, GET_WRITE_COUNTER, and
+PROGRAM_KEY.
+Such a partition provides authenticated and replay protected access,
+hence suitable as a secure storage.
 
-V2: resend
-V3: set kernel version to 4.7
-V4: update target date to Maj
-V5: update date and kernel version
-V6: 1. Add simulation device type
-    2. Update date and kernel version
-    3. Use binary attribute for id
-    4. use simple sprintf instead of scnprintf
-    5. Add more verbose documenation
-V7: resend
+The RPMB layer aims to provide in-kernel API for Trusted Execution
+Environment (TEE) devices that are capable to securely compute block
+frame signature. In case a TEE device wish to store a replay protected
+data, it creates an RPMB frame with requested data and computes HMAC of
+the frame, then it requests the storage device via RPMB layer to store
+the data.
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
----
- Documentation/ABI/testing/sysfs-class-rpmb | 27 +++++++++++
- drivers/char/rpmb/core.c                   | 72 ++++++++++++++++++++++++++++++
- 2 files changed, 99 insertions(+)
+The layer provides two APIs, for rpmb_req_cmd() for issuing one of RPMB
+specific commands and rpmb_seq_cmd() for issuing of raw RPMB protocol
+frames,  which is close to the functionality provided by emmc multi ioctl
+interface.
 
-diff --git a/Documentation/ABI/testing/sysfs-class-rpmb b/Documentation/ABI/testing/sysfs-class-rpmb
-index 2ea6dbb91fac..3c01925e29dc 100644
---- a/Documentation/ABI/testing/sysfs-class-rpmb
-+++ b/Documentation/ABI/testing/sysfs-class-rpmb
-@@ -18,3 +18,30 @@ Contact:	Tomas Winkler <tomas.winkler@intel.com>
- Description:
- 		The /sys/class/rpmb/rpmbN directory is created for
- 		each RPMB registered device.
-+
-+What:		/sys/class/rpmb/rpmbN/type
-+Date:		Nov 2016
-+KernelVersion:	4.10
-+Contact:	Tomas Winkler <tomas.winkler@intel.com>
-+Description:
-+		The /sys/class/rpmb/rpmbN/type file contains device
-+		underlaying storage type technology: EMMC, UFS, SIM.
-+
-+What:		/sys/class/rpmb/rpmbN/id
-+Date:		Nov 2016
-+KernelVersion:	4.10
-+Contact:	Tomas Winkler <tomas.winkler@intel.com>
-+Description:
-+		The /sys/class/rpmb/rpmbN/id file contains unique device id
-+		in a binary form as defined by underlying storage device.
-+		In case of multiple RPMB devices a user can determine correct
-+		device.
-+		The content can be parsed according the storage device type.
-+
-+What:		/sys/class/rpmb/rpmbN/reliable_wr_cnt
-+Date:		Nov 2016
-+KernelVersion:	4.10
-+Contact:	Tomas Winkler <tomas.winkler@intel.com>
-+Description:
-+		The /sys/class/rpmb/rpmbN/reliable_wr_cnt file contains
-+		number of blocks that can be reliable written in a single request.
-diff --git a/drivers/char/rpmb/core.c b/drivers/char/rpmb/core.c
-index 8cfbbb721538..f6b4cabb0982 100644
---- a/drivers/char/rpmb/core.c
-+++ b/drivers/char/rpmb/core.c
-@@ -338,6 +338,76 @@ struct rpmb_dev *rpmb_dev_find_by_device(struct device *parent)
- }
- EXPORT_SYMBOL_GPL(rpmb_dev_find_by_device);
- 
-+static ssize_t type_show(struct device *dev,
-+			 struct device_attribute *attr, char *buf)
-+{
-+	struct rpmb_dev *rdev = to_rpmb_dev(dev);
-+	ssize_t ret;
-+
-+	switch (rdev->ops->type) {
-+	case RPMB_TYPE_EMMC:
-+		ret = sprintf(buf, "EMMC\n");
-+		break;
-+	case RPMB_TYPE_UFS:
-+		ret = sprintf(buf, "UFS\n");
-+		break;
-+	case RPMB_TYPE_SIM:
-+		ret = sprintf(buf, "SIM\n");
-+		break;
-+	default:
-+		ret = sprintf(buf, "UNKNOWN\n");
-+		break;
-+	}
-+
-+	return ret;
-+}
-+static DEVICE_ATTR_RO(type);
-+
-+static ssize_t id_read(struct file *file, struct kobject *kobj,
-+		       struct bin_attribute *attr, char *buf,
-+		       loff_t off, size_t count)
-+{
-+	struct device *dev = kobj_to_dev(kobj);
-+	struct rpmb_dev *rdev = to_rpmb_dev(dev);
-+	size_t sz = min_t(size_t, rdev->ops->dev_id_len, PAGE_SIZE);
-+
-+	if (!rdev->ops->dev_id)
-+		return 0;
-+
-+	return memory_read_from_buffer(buf, count, &off, rdev->ops->dev_id, sz);
-+}
-+static BIN_ATTR_RO(id, 0);
-+
-+static ssize_t reliable_wr_cnt_show(struct device *dev,
-+				    struct device_attribute *attr, char *buf)
-+{
-+	struct rpmb_dev *rdev = to_rpmb_dev(dev);
-+
-+	return sprintf(buf, "%u\n", rdev->ops->reliable_wr_cnt);
-+}
-+static DEVICE_ATTR_RO(reliable_wr_cnt);
-+
-+static struct attribute *rpmb_attrs[] = {
-+	&dev_attr_type.attr,
-+	&dev_attr_reliable_wr_cnt.attr,
-+	NULL,
-+};
-+
-+static struct bin_attribute *rpmb_bin_attributes[] = {
-+	&bin_attr_id,
-+	NULL,
-+};
-+
-+static struct attribute_group rpmb_attr_group = {
-+	.attrs = rpmb_attrs,
-+	.bin_attrs = rpmb_bin_attributes,
-+};
-+
-+static const struct attribute_group *rpmb_attr_groups[] = {
-+	&rpmb_attr_group,
-+	NULL
-+};
-+
- /**
-  * rpmb_dev_unregister - unregister RPMB partition from the RPMB subsystem
-  *
-@@ -407,6 +477,8 @@ struct rpmb_dev *rpmb_dev_register(struct device *dev,
- 	dev_set_name(&rdev->dev, "rpmb%d", id);
- 	rdev->dev.class = &rpmb_class;
- 	rdev->dev.parent = dev;
-+	rdev->dev.groups = rpmb_attr_groups;
-+
- 	ret = device_register(&rdev->dev);
- 	if (ret)
- 		goto exit;
+A TEE driver can claim the RPMB interface, for example, via
+class_interface_register ().
+
+A storage device registers its RPMB hardware (eMMC) partition or RPMB
+W-LUN (UFS) with the RPMB layer providing an implementation for
+rpmb_seq_cmd() handler. The interface enables sending sequence of RPMB
+standard frames.
+
+A parallel user space API is provided via /dev/rpmbX character
+device with two IOCTL commands.
+Simplified one, RPMB_IOC_REQ_CMD, were read result cycles is performed
+by the framework on behalf the user and second, RPMB_IOC_SEQ_CMD where
+the whole RPMB sequence, including RESULT_READ is supplied by the caller.
+The latter is intended for easier adjusting of the applications that
+use MMC_IOC_MULTI_CMD ioctl, such as
+https://android.googlesource.com/trusty/app/storage/
+
+There is a also sample tool under tools/rpmb/ directory that exercises
+these interfaces and a simulation device that implements the device part.
+
+The code is also available from:
+
+https://github.com/tomasbw/linux-mei.git rpmb
+
+V7  1. Special thanks to Avri Altman <avri.altman@sandisk.com> for testing emmc and ufs.
+    2. Fix char device interface.
+    3. Add Documentation
+    4. Addional small fixes described in individual patches.
+
+Tomas Winkler (11):
+  rpmb: add Replay Protected Memory Block (RPMB) subsystem
+  rpmb: enable emmc specific read data fixup
+  rpmb: add sysfs-class ABI documentation
+  char: rpmb: add device attributes
+  char: rpmb: provide a user space interface
+  char: rpmb: add RPMB simulation device
+  tools rpmb: add RPBM access tool
+  mmc: block: register RPMB partition with the RPMB subsystem
+  scsi: ufs: connect to RPMB subsystem
+  scsi: ufs: retrieve rpmb rw size
+  char: rpmb: Document Replay Protected Memory Block (RPMB) subsystem
+
+ Documentation/ABI/testing/sysfs-class-rpmb |   47 ++
+ Documentation/index.rst                    |    1 +
+ Documentation/ioctl/ioctl-number.txt       |    1 +
+ Documentation/rpmb/conf.py                 |    5 +
+ Documentation/rpmb/index.rst               |   18 +
+ Documentation/rpmb/introduction.rst        |  102 +++
+ Documentation/rpmb/rpmb-tool.rst           |   19 +
+ Documentation/rpmb/simulation-device.rst   |   19 +
+ MAINTAINERS                                |   11 +
+ drivers/char/Kconfig                       |    2 +
+ drivers/char/Makefile                      |    1 +
+ drivers/char/rpmb/Kconfig                  |   32 +
+ drivers/char/rpmb/Makefile                 |    6 +
+ drivers/char/rpmb/cdev.c                   |  331 +++++++++
+ drivers/char/rpmb/core.c                   |  523 ++++++++++++++
+ drivers/char/rpmb/rpmb-cdev.h              |   25 +
+ drivers/char/rpmb/rpmb_sim.c               |  744 ++++++++++++++++++++
+ drivers/mmc/card/Kconfig                   |    1 +
+ drivers/mmc/card/block.c                   |  258 ++++++-
+ drivers/scsi/ufs/Kconfig                   |    1 +
+ drivers/scsi/ufs/ufs.h                     |    6 +
+ drivers/scsi/ufs/ufshcd.c                  |  205 ++++++
+ drivers/scsi/ufs/ufshcd.h                  |    2 +
+ include/linux/rpmb.h                       |  167 +++++
+ include/uapi/linux/Kbuild                  |    1 +
+ include/uapi/linux/rpmb.h                  |  153 ++++
+ tools/Makefile                             |   14 +-
+ tools/rpmb/.gitignore                      |    2 +
+ tools/rpmb/Makefile                        |   34 +
+ tools/rpmb/rpmb.c                          | 1035 ++++++++++++++++++++++++++++
+ 30 files changed, 3758 insertions(+), 8 deletions(-)
+ create mode 100644 Documentation/ABI/testing/sysfs-class-rpmb
+ create mode 100644 Documentation/rpmb/conf.py
+ create mode 100644 Documentation/rpmb/index.rst
+ create mode 100644 Documentation/rpmb/introduction.rst
+ create mode 100644 Documentation/rpmb/rpmb-tool.rst
+ create mode 100644 Documentation/rpmb/simulation-device.rst
+ create mode 100644 drivers/char/rpmb/Kconfig
+ create mode 100644 drivers/char/rpmb/Makefile
+ create mode 100644 drivers/char/rpmb/cdev.c
+ create mode 100644 drivers/char/rpmb/core.c
+ create mode 100644 drivers/char/rpmb/rpmb-cdev.h
+ create mode 100644 drivers/char/rpmb/rpmb_sim.c
+ create mode 100644 include/linux/rpmb.h
+ create mode 100644 include/uapi/linux/rpmb.h
+ create mode 100644 tools/rpmb/.gitignore
+ create mode 100644 tools/rpmb/Makefile
+ create mode 100644 tools/rpmb/rpmb.c
+
 -- 
 2.7.4
 
