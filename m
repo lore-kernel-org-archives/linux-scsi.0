@@ -1,40 +1,32 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] target: fix spelling mistake and unwrap multi-line text
-Date: Mon,  7 Nov 2016 16:31:21 +0000
-Message-ID: <20161107163121.23559-1-colin.king@canonical.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: Re: [PREEMPT-RT] [REPOST PATCH 1/5] scsi: bnx2i: convert to
+ kworker
+Date: Mon, 7 Nov 2016 17:31:03 +0100 (CET)
+Message-ID: <alpine.DEB.2.20.1611071729030.3709@nanos>
+References: <20160817101003.30055-1-bigeasy@linutronix.de> <20161107161901.GA12297@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-To: "Nicholas A . Bellinger" <nab@linux-iscsi.org>, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from Galois.linutronix.de ([146.0.238.70]:52423 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932295AbcKGQdp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2016 11:33:45 -0500
+In-Reply-To: <20161107161901.GA12297@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Mon, 7 Nov 2016, Christoph Hellwig wrote:
 
-Trivial fix to spelling mistake "Obselete" to "Obsolete"
-in error message and also turn multi-line text into one
-line.
+> It seems like the whole damn driver should just use threaded interrupts.
+> Of course it's a giant beast and not just the iSCSI one.  But even
+> if we don't go all the way I'd much prefer workqueues.  kthread work
+> is simply the worst API ever and I'd prefer to not have it proliferate.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/target/target_core_pr.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+That's what the patch is doing. It uses INIT_WORK() and
+schedule_work[_on](). I can't find any reference to kthread work.
 
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 47463c9..0cd38af 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -253,8 +253,7 @@ target_scsi2_reservation_reserve(struct se_cmd *cmd)
- 
- 	if ((cmd->t_task_cdb[1] & 0x01) &&
- 	    (cmd->t_task_cdb[1] & 0x02)) {
--		pr_err("LongIO and Obselete Bits set, returning"
--				" ILLEGAL_REQUEST\n");
-+		pr_err("LongIO and Obsolete Bits set, returning ILLEGAL_REQUEST\n");
- 		return TCM_UNSUPPORTED_SCSI_OPCODE;
- 	}
- 	/*
--- 
-2.9.3
+Thanks,
+
+	tglx
