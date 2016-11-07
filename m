@@ -1,49 +1,33 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH 3/4] qla2xxx: Add Block Multi Queue functionality.
-Date: Mon, 07 Nov 2016 11:43:28 -0500
-Message-ID: <1478537008.32271.43.camel@localhost.localdomain>
-References: <1478277213-3848-1-git-send-email-himanshu.madhani@cavium.com>
-         <1478277213-3848-4-git-send-email-himanshu.madhani@cavium.com>
-Reply-To: emilne@redhat.com
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Subject: Re: [PREEMPT-RT] [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
+Date: Mon, 7 Nov 2016 17:46:29 +0100
+Message-ID: <20161107164628.jrft3ovlp5myfvs5@linutronix.de>
+References: <20160817101003.30055-1-bigeasy@linutronix.de>
+ <20161107161901.GA12297@infradead.org>
+ <alpine.DEB.2.20.1611071729030.3709@nanos>
+ <20161107163848.GA1421@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:40444 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752174AbcKGQn3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Nov 2016 11:43:29 -0500
-In-Reply-To: <1478277213-3848-4-git-send-email-himanshu.madhani@cavium.com>
+Received: from Galois.linutronix.de ([146.0.238.70]:52484 "EHLO
+        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752337AbcKGQrQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2016 11:47:16 -0500
+Content-Disposition: inline
+In-Reply-To: <20161107163848.GA1421@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: himanshu.madhani@cavium.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, himanshu.madhani@qlogic.com
+To: Christoph Hellwig <hch@lst.de>
+Cc: Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>
 
-On Fri, 2016-11-04 at 09:33 -0700, himanshu.madhani@cavium.com wrote:
-> From: Michael Hernandez <michael.hernandez@cavium.com>
-> 
-> Tell the SCSI layer how many hardware queues we have based on the
-> number of max queue pairs created. The number of max queue pairs
-> created will depend on number of MSI X vector count or number of CPU's
-> in a system.
-> 
-> This feature can be turned on via CONFIG_SCSI_MQ_DEFAULT or passing
-> scsi_mod.use_blk_mq=Y as a parameter to the kernel
-> Queue pair creation depend on module parameter "ql2xmqsupport", which
-> need to be enabled to create queue pair.
-> 
+On 2016-11-07 17:38:48 [+0100], Christoph Hellwig wrote:
+> You're right it does - between the incorrect subject and the fact
+> that it still keeps the linked list of items arounds instead of fully
+> using the workqueue infrastructure I was a bit confused before my
+> first coffee this morning.  Same applies to patch 2.
 
-I don't understand this change at all.  Setting ->nr_hw_queues causes
-the block layer to allocate a number of queues for that Scsi_Host
-object, but it does not appear as if this code uses that functionality.
-There is nothing in the patch that examines the tag to see which queue
-the request came in on, in order to map it to a hardware queue.
+sorry for the confusion in the subject. If I remember correctly you said
+that we may not have enough room for a larger / work_struct struct and I
+should keep the list for now.
 
-Instead, this patch seems to be reworking the mechanism involved in
-NPIV vport creation, which creates an entirely separate Scsi_Host
-object.  The driver was already creating separate request queues to
-the card for vports, so what does this have to do with Block-MQ?
-
--Ewan
- 
-
+Sebastian
