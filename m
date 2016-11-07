@@ -1,96 +1,85 @@
-From: "Guilherme G. Piccoli" <gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Mon, 7 Nov 2016 16:23:10 -0200
-Message-ID: <5820C68E.6050206@linux.vnet.ibm.com>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
- <56447FF7.40600@dev.mellanox.co.il> <5644FD6C.9070805@cs.wisc.edu>
- <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
- <56461502.70306@cs.wisc.edu>
- <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg@mail.gmail.com>
- <20161107181556.cnhwst4nu63xtrqk@straylight.hirudinean.org>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBD235QUNTYKBBE4NQPAQKGQEHQI5VFQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <20161107181556.cnhwst4nu63xtrqk-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Shlomo Pongratz <shlomopongratz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH v7 10/11] scsi: ufs: retrieve rpmb rw size
+Date: Mon,  7 Nov 2016 21:53:13 +0200
+Message-ID: <1478548394-8184-11-git-send-email-tomas.winkler@intel.com>
+References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Alexander Usyskin <alexander.usyskin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/07/2016 04:15 PM, Chris Leech wrote:
-> Hi,
-> 
-> I'm kicking this old thread because I don't think this ever got
-> resolved.  I wish I had more info, but it seems to involve target
-> specific behavior that hasn't come up in our test labs.
+Retrieve maximum number of RPMB frames that can be
+in a single request.
+Currently the limitations is provided only for writes
+via reliable_wr_cnt API.
 
-Thanks very much for reopening this thread! We have the Or's patch
-reverted in multiple distros, so the issue is not likely to happen on
-customer's from IBM, but upstream kernel never saw a proper fix for this.
+V7: New in the series
 
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+---
+ drivers/scsi/ufs/ufs.h    |  6 ++++++
+ drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++++
+ 2 files changed, 28 insertions(+)
 
-> 
-> So what can I do at this point to help resolve this?
-> 
-> On Sun, Nov 15, 2015 at 12:10:48PM +0200, Or Gerlitz wrote:
->> Mike, Chris
->>
->> After the locking change, adding a task to any of the connection
->> mgmtqueue, cmdqueue, or requeue lists is under the session forward lock.
->>
->> Removing tasks from any of these lists in iscsi_data_xmit is under
->> the session forward lock and **before** calling down to the transport
->> to handle the task.
->>
->> The iscsi_complete_task helper was added by Mike's commit
->> 3bbaaad95fd38ded "[SCSI] libiscsi: handle cleanup task races"
->> and is indeed typically called under the backward lock && has this section
->>
->> +       if (!list_empty(&task->running))
->> +               list_del_init(&task->running);
->>
->> which per my reading of the code never comes into play, can you comment?
->>
->> Lets address this area before we move to the others claims made on the patch.
-> 
-> This bit in particular is where I see a cause for concern.  If that
-> list_del_init call ever races against other list operations, there's a
-> potential corruption.  It's presumably there for a reason, and Mike
-> explained a case where some targets have been known to send a check
-> condition at unexpected times that would hit it.
-> 
-> I don't like having known list locking violations hanging around, based
-> on an expectation that we'll never hit that path with well behaved
-> targets.
-> 
-> If we can get a fix worked up for the list locking here, can we get any
-> testing on it from the original reports at IBM?  That was very helpful
-> in testing a full reversion patch.
-
-Sure! Count on us to test any patches. I guess the first step is to
-reproduce on upstream right? We haven't tested specifically this
-scenario for long time. Will try to reproduce on 4.9-rc4 and update here.
-
-Cheers,
-
-
-
-Guilherme
-
-
-> 
-> - Chris Leech
-> 
-
+diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
+index 845b874e2977..84bb8d7c6b63 100644
+--- a/drivers/scsi/ufs/ufs.h
++++ b/drivers/scsi/ufs/ufs.h
+@@ -176,6 +176,12 @@ enum ufs_desc_max_size {
+ 	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
+ };
+ 
++enum geometry_desc_param_offset {
++	GEOMETRY_DESC_LEN		= 0x0,
++	GEOMETRY_DESC_TYPE		= 0x1,
++	GEOMETRY_DESC_RPMB_RW_SIZE	= 0x17,
++};
++
+ /* Unit descriptor parameters offsets in bytes*/
+ enum unit_desc_param {
+ 	UNIT_DESC_PARAM_LEN			= 0x0,
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 95bb9dc7fbfe..69f5b03f6774 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -2196,6 +2196,15 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
+ 				      param_offset, param_read_buf, param_size);
+ }
+ 
++static inline int ufshcd_read_geometry_desc_param(struct ufs_hba *hba,
++				enum geometry_desc_param_offset param_offset,
++				u8 *param_read_buf, u32 param_size)
++{
++	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_GEOMETRY, 0,
++				      param_offset, param_read_buf, param_size);
++}
++
++
+ /**
+  * ufshcd_memory_alloc - allocate memory for host memory space data structures
+  * @hba: per adapter instance
+@@ -4896,6 +4905,19 @@ static struct rpmb_ops ufshcd_rpmb_dev_ops = {
+ static inline void ufshcd_rpmb_add(struct ufs_hba *hba)
+ {
+ 	struct rpmb_dev *rdev;
++	u8 rw_size;
++	int ret;
++
++	ret = ufshcd_read_geometry_desc_param(hba, GEOMETRY_DESC_RPMB_RW_SIZE,
++					&rw_size, sizeof(rw_size));
++	if (ret) {
++		dev_warn(hba->dev, "%s: cannot get rpmb rw limit %d\n",
++			 dev_name(hba->dev), ret);
++		/* fallback to singel frame write */
++		rw_size = 1;
++	}
++
++	ufshcd_rpmb_dev_ops.reliable_wr_cnt = rw_size;
+ 
+ 	scsi_device_get(hba->sdev_ufs_rpmb);
+ 	rdev = rpmb_dev_register(hba->dev, &ufshcd_rpmb_dev_ops);
 -- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+2.7.4
