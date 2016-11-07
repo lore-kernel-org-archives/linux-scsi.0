@@ -1,46 +1,85 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 07/11] hisi_sas: delete repeated configuration in free_device_v2_hw()
-Date: Mon, 7 Nov 2016 20:48:36 +0800
-Message-ID: <1478522920-108145-8-git-send-email-john.garry@huawei.com>
-References: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
+From: <molino.petrone@libero.it>
+Subject: 54200 linux-scsi
+Date: Mon, 07 Nov 2016 12:40:17 -0000
+Message-ID: <147852241704.27180.15577852358519945052@hinet.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: application/zip; name="EMAIL_791618589_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:30295 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750998AbcKGMdy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2016 07:33:54 -0500
-In-Reply-To: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
+Received: from 36-232-154-72.dynamic-ip.hinet.net ([36.232.154.72]:34154 "HELO
+        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
+        id S1752280AbcKGMkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 7 Nov 2016 07:40:24 -0500
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, john.garry2@mail.dcu.ie, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+To: linux-scsi@vger.kernel.org
 
-From: Xiang Chen <chenxiang66@hisilicon.com>
-
-Delete repeated configuration items for hisi_sas_device() when
-we free a device. These items are now only set in
-hisi_sas_dev_gone().
-
-Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
-Signed-off-by: John Garry <john.garry@huawei.com>
----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 --
- 1 file changed, 2 deletions(-)
-
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 7567193..3081eec 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -739,8 +739,6 @@ static void free_device_v2_hw(struct hisi_hba *hisi_hba,
- 			qw0 &= ~(1 << ITCT_HDR_VALID_OFF);
- 			hisi_sas_write32(hisi_hba, ENT_INT_SRC3,
- 					 ENT_INT_SRC3_ITC_INT_MSK);
--			hisi_hba->devices[dev_id].dev_type = SAS_PHY_UNUSED;
--			hisi_hba->devices[dev_id].dev_status = HISI_SAS_DEV_NORMAL;
- 
- 			/* clear the itct */
- 			hisi_sas_write32(hisi_hba, ITCT_CLR, 0);
--- 
-1.9.1
-
+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
+AIIOAAAAAA==
