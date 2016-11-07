@@ -1,85 +1,295 @@
 From: Tomas Winkler <tomas.winkler@intel.com>
-Subject: [PATCH v7 10/11] scsi: ufs: retrieve rpmb rw size
-Date: Mon,  7 Nov 2016 21:53:13 +0200
-Message-ID: <1478548394-8184-11-git-send-email-tomas.winkler@intel.com>
+Subject: [PATCH v7 09/11] scsi: ufs: connect to RPMB subsystem
+Date: Mon,  7 Nov 2016 21:53:12 +0200
+Message-ID: <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
 References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-doc-owner@vger.kernel.org>
 In-Reply-To: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-doc-owner@vger.kernel.org
 To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
 Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>, Alexander Usyskin <alexander.usyskin@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Retrieve maximum number of RPMB frames that can be
-in a single request.
-Currently the limitations is provided only for writes
-via reliable_wr_cnt API.
+Register UFS RPMB LUN with the RPMB subsystem and provide
+implementation for the RPMB access operations. RPMB partition is
+accessed via a sequence of security protocol in and security protocol
+out commands with UFS specific parameters. This multi step process is
+abstracted into 4 basic RPMB commands.
 
-V7: New in the series
+V2: resend
+V3: resend
+V4: Kconfig: use select RPMB to ensure valid configuration
+V5: Revamp code using new sequence command.
+V6: Resend
+V7: Resend
 
-Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 Signed-off-by: Alexander Usyskin <alexander.usyskin@intel.com>
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
 ---
- drivers/scsi/ufs/ufs.h    |  6 ++++++
- drivers/scsi/ufs/ufshcd.c | 22 ++++++++++++++++++++++
- 2 files changed, 28 insertions(+)
+ drivers/scsi/ufs/Kconfig  |   1 +
+ drivers/scsi/ufs/ufshcd.c | 183 ++++++++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h |   2 +
+ 3 files changed, 186 insertions(+)
 
-diff --git a/drivers/scsi/ufs/ufs.h b/drivers/scsi/ufs/ufs.h
-index 845b874e2977..84bb8d7c6b63 100644
---- a/drivers/scsi/ufs/ufs.h
-+++ b/drivers/scsi/ufs/ufs.h
-@@ -176,6 +176,12 @@ enum ufs_desc_max_size {
- 	QUERY_DESC_RFU_MAX_SIZE			= 0x00,
- };
- 
-+enum geometry_desc_param_offset {
-+	GEOMETRY_DESC_LEN		= 0x0,
-+	GEOMETRY_DESC_TYPE		= 0x1,
-+	GEOMETRY_DESC_RPMB_RW_SIZE	= 0x17,
-+};
-+
- /* Unit descriptor parameters offsets in bytes*/
- enum unit_desc_param {
- 	UNIT_DESC_PARAM_LEN			= 0x0,
+diff --git a/drivers/scsi/ufs/Kconfig b/drivers/scsi/ufs/Kconfig
+index e27b4d4e6ae2..8b545a9c51dd 100644
+--- a/drivers/scsi/ufs/Kconfig
++++ b/drivers/scsi/ufs/Kconfig
+@@ -38,6 +38,7 @@ config SCSI_UFSHCD
+ 	select PM_DEVFREQ
+ 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+ 	select NLS
++	select RPMB
+ 	---help---
+ 	This selects the support for UFS devices in Linux, say Y and make
+ 	  sure that you know the name of your UFS host adapter (the card
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 95bb9dc7fbfe..69f5b03f6774 100644
+index 05c745663c10..95bb9dc7fbfe 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -2196,6 +2196,15 @@ static inline int ufshcd_read_unit_desc_param(struct ufs_hba *hba,
- 				      param_offset, param_read_buf, param_size);
+@@ -37,10 +37,13 @@
+  * license terms, and distributes only under these terms.
+  */
+ 
++#include <asm/unaligned.h>
+ #include <linux/async.h>
+ #include <linux/devfreq.h>
+ #include <linux/nls.h>
+ #include <linux/of.h>
++#include <linux/rpmb.h>
++
+ #include "ufshcd.h"
+ #include "ufs_quirks.h"
+ #include "unipro.h"
+@@ -4753,6 +4756,178 @@ static void ufshcd_init_icc_levels(struct ufs_hba *hba)
+ 
  }
  
-+static inline int ufshcd_read_geometry_desc_param(struct ufs_hba *hba,
-+				enum geometry_desc_param_offset param_offset,
-+				u8 *param_read_buf, u32 param_size)
++#define SEC_PROTOCOL_UFS  0xEC
++#define   SEC_SPECIFIC_UFS_RPMB 0x0001
++
++#define SEC_PROTOCOL_CMD_SIZE 12
++#define SEC_PROTOCOL_RETRIES 3
++#define SEC_PROTOCOL_RETRIES_ON_RESET 10
++#define SEC_PROTOCOL_TIMEOUT msecs_to_jiffies(1000)
++
++static int
++ufshcd_rpmb_security_out(struct scsi_device *sdev,
++			 struct rpmb_frame *frames, u32 cnt)
 +{
-+	return ufshcd_read_desc_param(hba, QUERY_DESC_IDN_GEOMETRY, 0,
-+				      param_offset, param_read_buf, param_size);
++	struct scsi_sense_hdr sshdr;
++	u32 trans_len = cnt * sizeof(struct rpmb_frame);
++	int reset_retries = SEC_PROTOCOL_RETRIES_ON_RESET;
++	int ret;
++	u8 cmd[SEC_PROTOCOL_CMD_SIZE];
++
++	memset(cmd, 0, SEC_PROTOCOL_CMD_SIZE);
++	cmd[0] = SECURITY_PROTOCOL_OUT;
++	cmd[1] = SEC_PROTOCOL_UFS;
++	put_unaligned_be16(SEC_SPECIFIC_UFS_RPMB, cmd + 2);
++	cmd[4] = 0;                              /* inc_512 bit 7 set to 0 */
++	put_unaligned_be32(trans_len, cmd + 6);  /* transfer length */
++
++retry:
++	ret = scsi_execute_req_flags(sdev, cmd, DMA_TO_DEVICE,
++				     frames, trans_len, &sshdr,
++				     SEC_PROTOCOL_TIMEOUT, SEC_PROTOCOL_RETRIES,
++				     NULL, 0);
++
++	if (ret && scsi_sense_valid(&sshdr) &&
++	    sshdr.sense_key == UNIT_ATTENTION &&
++	    sshdr.asc == 0x29 && sshdr.ascq == 0x00)
++		/*
++		 * Device reset might occur several times,
++		 * give it one more chance
++		 */
++		if (--reset_retries > 0)
++			goto retry;
++
++	if (ret)
++		dev_err(&sdev->sdev_gendev, "%s: failed with err %0x\n",
++			__func__, ret);
++
++	if (driver_byte(ret) & DRIVER_SENSE)
++		scsi_print_sense_hdr(sdev, "rpmb: security out", &sshdr);
++
++	return ret;
 +}
 +
++static int
++ufshcd_rpmb_security_in(struct scsi_device *sdev,
++			struct rpmb_frame *frames, u32 cnt)
++{
++	struct scsi_sense_hdr sshdr;
++	u32 alloc_len = cnt * sizeof(struct rpmb_frame);
++	int reset_retries = SEC_PROTOCOL_RETRIES_ON_RESET;
++	int ret;
++	u8 cmd[SEC_PROTOCOL_CMD_SIZE];
 +
- /**
-  * ufshcd_memory_alloc - allocate memory for host memory space data structures
-  * @hba: per adapter instance
-@@ -4896,6 +4905,19 @@ static struct rpmb_ops ufshcd_rpmb_dev_ops = {
- static inline void ufshcd_rpmb_add(struct ufs_hba *hba)
- {
- 	struct rpmb_dev *rdev;
-+	u8 rw_size;
++	memset(cmd, 0, SEC_PROTOCOL_CMD_SIZE);
++	cmd[0] = SECURITY_PROTOCOL_IN;
++	cmd[1] = SEC_PROTOCOL_UFS;
++	put_unaligned_be16(SEC_SPECIFIC_UFS_RPMB, cmd + 2);
++	cmd[4] = 0;                             /* inc_512 bit 7 set to 0 */
++	put_unaligned_be32(alloc_len, cmd + 6); /* allocation length */
++
++retry:
++	ret = scsi_execute_req_flags(sdev, cmd, DMA_FROM_DEVICE,
++				     frames, alloc_len, &sshdr,
++				     SEC_PROTOCOL_TIMEOUT, SEC_PROTOCOL_RETRIES,
++				     NULL, 0);
++
++	if (ret && scsi_sense_valid(&sshdr) &&
++	    sshdr.sense_key == UNIT_ATTENTION &&
++	    sshdr.asc == 0x29 && sshdr.ascq == 0x00)
++		/*
++		 * Device reset might occur several times,
++		 * give it one more chance
++		*/
++		if (--reset_retries > 0)
++			goto retry;
++
++	if (ret)
++		dev_err(&sdev->sdev_gendev, "%s: failed with err %0x\n",
++			__func__, ret);
++
++	if (driver_byte(ret) & DRIVER_SENSE)
++		scsi_print_sense_hdr(sdev, "rpmb: security in", &sshdr);
++
++	return ret;
++}
++
++static int ufshcd_rpmb_cmd_seq(struct device *dev,
++			       struct rpmb_cmd *cmds, u32 ncmds)
++{
++	unsigned long flags;
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	struct scsi_device *sdev;
++	struct rpmb_cmd *cmd;
++	int i;
 +	int ret;
 +
-+	ret = ufshcd_read_geometry_desc_param(hba, GEOMETRY_DESC_RPMB_RW_SIZE,
-+					&rw_size, sizeof(rw_size));
-+	if (ret) {
-+		dev_warn(hba->dev, "%s: cannot get rpmb rw limit %d\n",
-+			 dev_name(hba->dev), ret);
-+		/* fallback to singel frame write */
-+		rw_size = 1;
++	spin_lock_irqsave(hba->host->host_lock, flags);
++	sdev = hba->sdev_ufs_rpmb;
++	if (sdev) {
++		ret = scsi_device_get(sdev);
++		if (!ret && !scsi_device_online(sdev)) {
++			ret = -ENODEV;
++			scsi_device_put(sdev);
++		}
++	} else {
++		ret = -ENODEV;
++	}
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (ret)
++		return ret;
++
++	for (ret = 0, i = 0; i < ncmds && !ret; i++) {
++		cmd = &cmds[i];
++		if (cmd->flags & RPMB_F_WRITE)
++			ret = ufshcd_rpmb_security_out(sdev, cmd->frames,
++						       cmd->nframes);
++		else
++			ret = ufshcd_rpmb_security_in(sdev, cmd->frames,
++						      cmd->nframes);
++	}
++	scsi_device_put(sdev);
++	return ret;
++}
++
++static struct rpmb_ops ufshcd_rpmb_dev_ops = {
++	.cmd_seq = ufshcd_rpmb_cmd_seq,
++	.type = RPMB_TYPE_UFS,
++};
++
++static inline void ufshcd_rpmb_add(struct ufs_hba *hba)
++{
++	struct rpmb_dev *rdev;
++
++	scsi_device_get(hba->sdev_ufs_rpmb);
++	rdev = rpmb_dev_register(hba->dev, &ufshcd_rpmb_dev_ops);
++	if (IS_ERR(rdev)) {
++		dev_warn(hba->dev, "%s: cannot register to rpmb %ld\n",
++			 dev_name(hba->dev), PTR_ERR(rdev));
++		goto out_put_dev;
 +	}
 +
-+	ufshcd_rpmb_dev_ops.reliable_wr_cnt = rw_size;
++	return;
++
++out_put_dev:
++	scsi_device_put(hba->sdev_ufs_rpmb);
++	hba->sdev_ufs_rpmb = NULL;
++}
++
++static inline void ufshcd_rpmb_remove(struct ufs_hba *hba)
++{
++	unsigned long flags;
++
++	if (!hba->sdev_ufs_rpmb)
++		return;
++
++	spin_lock_irqsave(hba->host->host_lock, flags);
++
++	rpmb_dev_unregister(hba->dev);
++	scsi_device_put(hba->sdev_ufs_rpmb);
++	hba->sdev_ufs_rpmb = NULL;
++
++	spin_unlock_irqrestore(hba->host->host_lock, flags);
++}
++
+ /**
+  * ufshcd_scsi_add_wlus - Adds required W-LUs
+  * @hba: per-adapter instance
+@@ -4808,7 +4983,11 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
+ 		ret = PTR_ERR(sdev_rpmb);
+ 		goto remove_sdev_boot;
+ 	}
++	hba->sdev_ufs_rpmb = sdev_rpmb;
++
++	ufshcd_rpmb_add(hba);
+ 	scsi_device_put(sdev_rpmb);
++
+ 	goto out;
  
- 	scsi_device_get(hba->sdev_ufs_rpmb);
- 	rdev = rpmb_dev_register(hba->dev, &ufshcd_rpmb_dev_ops);
+ remove_sdev_boot:
+@@ -6177,6 +6356,8 @@ int ufshcd_shutdown(struct ufs_hba *hba)
+ 			goto out;
+ 	}
+ 
++	ufshcd_rpmb_remove(hba);
++
+ 	ret = ufshcd_suspend(hba, UFS_SHUTDOWN_PM);
+ out:
+ 	if (ret)
+@@ -6193,6 +6374,8 @@ EXPORT_SYMBOL(ufshcd_shutdown);
+  */
+ void ufshcd_remove(struct ufs_hba *hba)
+ {
++	ufshcd_rpmb_remove(hba);
++
+ 	scsi_remove_host(hba->host);
+ 	/* disable interrupts */
+ 	ufshcd_disable_intr(hba, hba->intr_mask);
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 430bef111293..a8bd7216825a 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -348,6 +348,7 @@ struct ufs_init_prefetch {
+  * @utmrdl_dma_addr: UTMRDL DMA address
+  * @host: Scsi_Host instance of the driver
+  * @dev: device handle
++ * @sdev_ufs_rpmb: reference to RPMB device W-LU
+  * @lrb: local reference block
+  * @lrb_in_use: lrb in use
+  * @outstanding_tasks: Bits representing outstanding task requests
+@@ -410,6 +411,7 @@ struct ufs_hba {
+ 	 * "UFS device" W-LU.
+ 	 */
+ 	struct scsi_device *sdev_ufs_device;
++	struct scsi_device *sdev_ufs_rpmb;
+ 
+ 	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+ 	enum uic_link_state uic_link_state;
 -- 
 2.7.4
+
