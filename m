@@ -1,29 +1,84 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH v7 09/11] scsi: ufs: connect to RPMB subsystem
-Date: Mon, 7 Nov 2016 20:01:09 +0100
-Message-ID: <20161107190109.GA5110@lst.de>
-References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com> <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Tomas Winkler <tomas.winkler@intel.com>
+Subject: [PATCH v7 02/11] rpmb: enable emmc specific read data fixup
+Date: Mon,  7 Nov 2016 21:53:05 +0200
+Message-ID: <1478548394-8184-3-git-send-email-tomas.winkler@intel.com>
+References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
 Return-path: <linux-doc-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
+In-Reply-To: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
 Sender: linux-doc-owner@vger.kernel.org
-To: Tomas Winkler <tomas.winkler@intel.com>
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve =?iso-8859-1?B?SGr4bm5lduVn?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>, Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Alexander Usyskin <alexander.usyskin@intel.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, Adrian Hunter <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, =?UTF-8?q?Arve=20Hj=C3=B8nnev=C3=A5g?= <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Christoph Hellwig <hch@lst.de>, Yaniv Gardi <ygardi@codeaurora.org>
+Cc: Avri Altman <avri.altman@gmail.com>, linux-kernel@vger.kernel.org, linux-mmc@vger.kernel.org, linux-scsi@vger.kernel.org, linux-doc@vger.kernel.org, Tomas Winkler <tomas.winkler@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Nov 07, 2016 at 09:53:12PM +0200, Tomas Winkler wrote:
-> Register UFS RPMB LUN with the RPMB subsystem and provide
-> implementation for the RPMB access operations. RPMB partition is
-> accessed via a sequence of security protocol in and security protocol
-> out commands with UFS specific parameters. This multi step process is
-> abstracted into 4 basic RPMB commands.
+For eMMC the block count of the RPMB read operation is not indicated in
+the original RPMB Data Read Request packet.
+This might be different then the implementation of other protocol
+standards.
+This patch implements a fixup for this behavior.
 
-This is a giant layering violation - the security protocol is not something
-up to the LLDD but the core code.
+V6: new in the series
+V7: resend
 
-And honestly the idea of defintining a security protocol in the UFS
-spec is just as braindead.  If you care about this please take it up
-with T10 to get RPMB support into one of the core SCSI specs instead
-of a transport.
+Signed-off-by: Tomas Winkler <tomas.winkler@intel.com>
+---
+ drivers/char/rpmb/core.c | 36 +++++++++++++++++++++++++++++++++---
+ 1 file changed, 33 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/char/rpmb/core.c b/drivers/char/rpmb/core.c
+index ff10cbb7b644..8cfbbb721538 100644
+--- a/drivers/char/rpmb/core.c
++++ b/drivers/char/rpmb/core.c
+@@ -117,6 +117,35 @@ static int rpmb_request_verify(struct rpmb_dev *rdev, struct rpmb_data *rpmbd)
+ }
+ 
+ /**
++ * rpmb_cmd_fixup - fixup rpmb command
++ *
++ * @rdev: rpmb device
++ * @cmds: rpmb command list
++ * @ncmds: number of commands
++ *
++ */
++static void rpmb_cmd_fixup(struct rpmb_dev *rdev,
++			   struct rpmb_cmd *cmds, u32 ncmds)
++{
++	int i;
++
++	if (rdev->ops->type != RPMB_TYPE_EMMC)
++		return;
++
++	/* Fixup RPMB_READ_DATA specific to eMMC
++	 * The block count of the RPMB read operation is not indicated
++	 * in the original RPMB Data Read Request packet.
++	 * This is different then implementation for other protocol
++	 * standards.
++	 */
++	for (i = 0; i < ncmds; i++)
++		if (cmds->frames->req_resp == cpu_to_be16(RPMB_READ_DATA)) {
++			dev_dbg(&rdev->dev, "Fixing up READ_DATA frame to block_count=0\n");
++			cmds->frames->block_count = 0;
++		}
++}
++
++/**
+  * rpmb_cmd_seq - send RPMB command sequence
+  *
+  * @rdev: rpmb device
+@@ -136,10 +165,11 @@ int rpmb_cmd_seq(struct rpmb_dev *rdev, struct rpmb_cmd *cmds, u32 ncmds)
+ 		return -EINVAL;
+ 
+ 	mutex_lock(&rdev->lock);
+-	if (rdev->ops && rdev->ops->cmd_seq)
++	err = -EOPNOTSUPP;
++	if (rdev->ops && rdev->ops->cmd_seq) {
++		rpmb_cmd_fixup(rdev, cmds, ncmds);
+ 		err = rdev->ops->cmd_seq(rdev->dev.parent, cmds, ncmds);
+-	else
+-		err = -EOPNOTSUPP;
++	}
+ 	mutex_unlock(&rdev->lock);
+ 	return err;
+ }
+-- 
+2.7.4
+
