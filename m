@@ -1,34 +1,40 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PREEMPT-RT] [REPOST PATCH 1/5] scsi: bnx2i: convert to kworker
-Date: Mon, 7 Nov 2016 20:10:25 +0100
-Message-ID: <20161107191025.GA5357@lst.de>
-References: <20160817101003.30055-1-bigeasy@linutronix.de> <20161107161901.GA12297@infradead.org> <alpine.DEB.2.20.1611071729030.3709@nanos> <20161107163848.GA1421@lst.de> <20161107164628.jrft3ovlp5myfvs5@linutronix.de> <20161107164846.GA1966@lst.de> <20161107170420.gc6jhsewglgkfsdi@linutronix.de>
+From: "Winkler, Tomas" <tomas.winkler@intel.com>
+Subject: RE: [PATCH v7 09/11] scsi: ufs: connect to RPMB subsystem
+Date: Mon, 7 Nov 2016 19:27:38 +0000
+Message-ID: <5B8DA87D05A7694D9FA63FD143655C1B5431750E@hasmsx108.ger.corp.intel.com>
+References: <1478548394-8184-1-git-send-email-tomas.winkler@intel.com>
+ <1478548394-8184-10-git-send-email-tomas.winkler@intel.com>
+ <20161107190109.GA5110@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:59508 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932997AbcKGTK1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Nov 2016 14:10:27 -0500
-Content-Disposition: inline
-In-Reply-To: <20161107170420.gc6jhsewglgkfsdi@linutronix.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-mmc-owner@vger.kernel.org>
+In-Reply-To: <20161107190109.GA5110@lst.de>
+Content-Language: en-US
+Sender: linux-mmc-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Ulf Hansson <ulf.hansson@linaro.org>, "Hunter, Adrian" <adrian.hunter@intel.com>, James Bottomley <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, Andy Lutomirski <luto@kernel.org>, Arve Hj?nnev?g <arve@android.com>, Michael Ryleev <gmar@google.com>, Joao Pinto <Joao.Pinto@synopsys.com>, Yaniv Gardi <ygardi@codeaurora.org>, Avri Altman <avri.altman@gmail.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>, "Usyskin, Alexander" <alexan>
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: Christoph Hellwig <hch@lst.de>, Thomas Gleixner <tglx@linutronix.de>, Christoph Hellwig <hch@infradead.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>
-
-On Mon, Nov 07, 2016 at 06:04:21PM +0100, Sebastian Andrzej Siewior wrote:
-> So we keep things as they are right now or are we getting also rid of
-> the internal list? This was tested by Johannes and Chad (claimed to do
-> testing)
-
-IFF the patches actually are tested as-is let's get them in.  I don't
-think they are how we want the code to like in the long run, though.
 
 > 
-> Not sure what the last point is about.
+> On Mon, Nov 07, 2016 at 09:53:12PM +0200, Tomas Winkler wrote:
+> > Register UFS RPMB LUN with the RPMB subsystem and provide
+> > implementation for the RPMB access operations. RPMB partition is
+> > accessed via a sequence of security protocol in and security protocol
+> > out commands with UFS specific parameters. This multi step process is
+> > abstracted into 4 basic RPMB commands.
+> 
+> This is a giant layering violation - the security protocol is not something up to
+> the LLDD but the core code.
+> 
+> And honestly the idea of defintining a security protocol in the UFS spec is just
+> as braindead.  If you care about this please take it up with T10 to get RPMB
+> support into one of the core SCSI specs instead of a transport.
 
-It's about bnx2i and bnx2fc being clients of the main cnix driver,
-which does the actual interrupt handling.  It seems we should actually
-offloading things to a workqueue or threaded interrupts in that core
-module instead of duplicating it in the clients.
+I  value your opinion but I'm not responsible for inventing RPMB 
+and/or its  implementation storage devices (eMMC, UFC, NVMe), it's pretty much done deal out there in the wild. 
+I'm just trying to provide common API above it.
+
+Thanks
+Tomas
+
