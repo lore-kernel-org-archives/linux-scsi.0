@@ -1,85 +1,83 @@
-From: <molino.petrone@libero.it>
-Subject: 54200 linux-scsi
-Date: Mon, 07 Nov 2016 12:40:17 -0000
-Message-ID: <147852241704.27180.15577852358519945052@hinet.net>
+From: Johnny Bieren <jbieren@redhat.com>
+Subject: CISS driver error introduced with kernel-4.9.0-0.rc2.git1.1.fc26
+Date: Mon, 7 Nov 2016 07:44:05 -0500
+Message-ID: <58207715.9000403@redhat.com>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_791618589_linux-scsi.zip"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 36-232-154-72.dynamic-ip.hinet.net ([36.232.154.72]:34154 "HELO
-        hinet.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with SMTP
-        id S1752280AbcKGMkY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 7 Nov 2016 07:40:24 -0500
-Content-Disposition: attachment
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: don.brace@microsemi.com
+Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-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
-AIIOAAAAAA==
+Hello,
+
+It appears that a check_unmap kernel failure for the CISS driver was 
+introduced with kernel-4.9.0-0.rc2.git1.1.fc26.  When booting this 
+kernel, or any newer kernel, I see the following:
+
+  [    3.676658] HP CISS Driver (v 3.6.26)
+0m] Reached target System Initialization.
+          Starting dracut initqueue hook...
+          Starting Show Plymouth Boot Screen...
+[    3.756592] scsi host0: pata_amd
+[    3.772866] scsi host1: pata_amd
+[    3.782052] ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0x2000 irq 14
+[    3.789616] ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x2008 irq 15
+[    3.825789] cciss 0000:02:04.0: cciss0: <0x46> at PCI 0000:02:04.0 IRQ 24 using DAC
+[    3.836530] audit: type=1130 audit(1478270493.962:10): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=plymouth-start comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
+[
+   OK
+] Started Show[    3.839544] ------------[ cut here ]------------
+  Plymouth Boot S[    3.839555] WARNING: CPU: 0 PID: 193 at lib/dma-debug.c:1164 check_unmap+0x4af/0x940
+creen.
+[    3.839559] cciss 0000:02:04.0: DMA-API: device driver failed to check map error[device address=0x0000000038f521c0] [size=36 bytes] [mapped as single]
+[    3.839563] Modules linked in: serio_raw cciss(+) pata_amd
+[    3.839566] CPU: 0 PID: 193 Comm: kworker/0:2 Not tainted 4.9.0-0.rc2.git1.1.fc26.x86_64 #1
+[    3.839567] Hardware name: HP ProLiant DL385 G1, BIOS A05 03/01/2006
+[    3.839573] Workqueue: events work_for_cpu_fn
+[    3.839577]  ffff9e9ec05938f8 ffffffff8546cd23 ffff9e9ec0593948 0000000000000000
+[    3.839579]  ffff9e9ec0593938 ffffffff850af4cb 0000048c00000082 ffff8aa07ca0ea60
+[    3.839582]  ffffffff87483a00 ffff8aa07b878180 0000000000000282 ffffffff85c5ad66
+[    3.839582] Call Trace:
+[    3.839588]  [<ffffffff8546cd23>] dump_stack+0x86/0xc3
+[    3.839591]  [<ffffffff850af4cb>] __warn+0xcb/0xf0
+[    3.839593]  [<ffffffff850af54f>] warn_slowpath_fmt+0x5f/0x80
+[    3.839595]  [<ffffffff854a26ff>] check_unmap+0x4af/0x940
+[    3.839597]  [<ffffffff854a2c09>] debug_dma_unmap_page+0x79/0xa0
+[    3.839613]  [<ffffffffc032d427>] sendcmd_withirq_core+0x217/0x260 [cciss]
+[    3.839618]  [<ffffffff85906820>] ? wait_for_completion+0x110/0x140
+[    3.839623]  [<ffffffffc03301a8>] sendcmd_withirq+0x98/0xb0 [cciss]
+[    3.839628]  [<ffffffffc033348f>] cciss_init_one+0x1a8f/0x1f70 [cciss]
+[    3.839632]  [<ffffffff854ca4f5>] local_pci_probe+0x45/0xa0
+[    3.839634]  [<ffffffff850cbd74>] work_for_cpu_fn+0x14/0x20
+[    3.839637]  [<ffffffff850d020e>] process_one_work+0x23e/0x6f0
+[    3.839638]  [<ffffffff850d018a>] ? process_one_work+0x1ba/0x6f0
+[    3.839641]  [<ffffffff850d0893>] worker_thread+0x1d3/0x490
+[    3.839642]  [<ffffffff850d06c0>] ? process_one_work+0x6f0/0x6f0
+[    3.839644]  [<ffffffff850d06c0>] ? process_one_work+0x6f0/0x6f0
+[    3.839648]  [<ffffffff850d7b52>] kthread+0x102/0x120
+[    3.839652]  [<ffffffff85111175>] ? trace_hardirqs_on_caller+0xf5/0x1b0
+[    3.839655]  [<ffffffff850d7a50>] ? kthread_park+0x60/0x60
+[    3.839658]  [<ffffffff8590cbfa>] ret_from_fork+0x2a/0x40
+[    3.839659] ---[ end trace 1ec289ff52b16fd7 ]---
+[    3.839660] Mapped at:
+[    3.839663]
+[    3.839663] [<ffffffff854a131c>] debug_dma_map_page+0x8c/0x160
+[    3.839668]
+[    3.839668] [<ffffffffc032e75f>] fill_cmd+0x1bf/0x420 [cciss]
+[    3.839672]
+[    3.839672] [<ffffffffc0330174>] sendcmd_withirq+0x64/0xb0 [cciss]
+[    3.839676]
+[    3.839676] [<ffffffffc033348f>] cciss_init_one+0x1a8f/0x1f70 [cciss]
+[    3.839679]
+[    3.839679] [<ffffffff854ca4f5>] local_pci_probe+0x45/0xa0
+[    3.859535] scsi host2: cciss
+
+This problem does not appear when booting with 
+kernel-4.9.0-0.rc2.git0.1.fc26.  It reproduces 100% of the time, simply 
+try to boot kernel-4.9.0-0.rc2.git1.1.fc26 on a host with a CISS disk.
+
+Thank you,
+Johnny
