@@ -1,97 +1,78 @@
-From: Laura Abbott <labbott@redhat.com>
-Subject: Re: CISS driver error introduced with kernel-4.9.0-0.rc2.git1.1.fc26
-Date: Mon, 7 Nov 2016 09:18:18 -0800
-Message-ID: <7bbbf5e8-2a29-0673-8116-181c9b8df26a@redhat.com>
-References: <58207715.9000403@redhat.com>
+From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
+Date: Mon, 7 Nov 2016 10:15:56 -0800
+Message-ID: <20161107181556.cnhwst4nu63xtrqk@straylight.hirudinean.org>
+References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+ <56447FF7.40600@dev.mellanox.co.il>
+ <5644FD6C.9070805@cs.wisc.edu>
+ <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
+ <56461502.70306@cs.wisc.edu>
+ <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg@mail.gmail.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:33965 "EHLO
-        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932758AbcKGRSX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 7 Nov 2016 12:18:23 -0500
-Received: by mail-qk0-f169.google.com with SMTP id q130so184844065qke.1
-        for <linux-scsi@vger.kernel.org>; Mon, 07 Nov 2016 09:18:22 -0800 (PST)
-In-Reply-To: <58207715.9000403@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBCYMVIPVXQMBBYEJQPAQKGQEIXU5LYQ-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg-JsoAwUIsXosN+BqQ9rBEUg@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org
+Cc: Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Guilherme Piccoli <gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Shlomo Pongratz <shlomopongratz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johnny Bieren <jbieren@redhat.com>, don.brace@microsemi.com
-Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 11/07/2016 04:44 AM, Johnny Bieren wrote:
-> Hello,
->
-> It appears that a check_unmap kernel failure for the CISS driver was introduced with kernel-4.9.0-0.rc2.git1.1.fc26.  When booting this kernel, or any newer kernel, I see the following:
->
->  [    3.676658] HP CISS Driver (v 3.6.26)
-> 0m] Reached target System Initialization.
->          Starting dracut initqueue hook...
->          Starting Show Plymouth Boot Screen...
-> [    3.756592] scsi host0: pata_amd
-> [    3.772866] scsi host1: pata_amd
-> [    3.782052] ata1: PATA max UDMA/133 cmd 0x1f0 ctl 0x3f6 bmdma 0x2000 irq 14
-> [    3.789616] ata2: PATA max UDMA/133 cmd 0x170 ctl 0x376 bmdma 0x2008 irq 15
-> [    3.825789] cciss 0000:02:04.0: cciss0: <0x46> at PCI 0000:02:04.0 IRQ 24 using DAC
-> [    3.836530] audit: type=1130 audit(1478270493.962:10): pid=1 uid=0 auid=4294967295 ses=4294967295 subj=kernel msg='unit=plymouth-start comm="systemd" exe="/usr/lib/systemd/systemd" hostname=? addr=? terminal=? res=success'
-> [
->   OK
-> ] Started Show[    3.839544] ------------[ cut here ]------------
->  Plymouth Boot S[    3.839555] WARNING: CPU: 0 PID: 193 at lib/dma-debug.c:1164 check_unmap+0x4af/0x940
-> creen.
-> [    3.839559] cciss 0000:02:04.0: DMA-API: device driver failed to check map error[device address=0x0000000038f521c0] [size=36 bytes] [mapped as single]
-> [    3.839563] Modules linked in: serio_raw cciss(+) pata_amd
-> [    3.839566] CPU: 0 PID: 193 Comm: kworker/0:2 Not tainted 4.9.0-0.rc2.git1.1.fc26.x86_64 #1
-> [    3.839567] Hardware name: HP ProLiant DL385 G1, BIOS A05 03/01/2006
-> [    3.839573] Workqueue: events work_for_cpu_fn
-> [    3.839577]  ffff9e9ec05938f8 ffffffff8546cd23 ffff9e9ec0593948 0000000000000000
-> [    3.839579]  ffff9e9ec0593938 ffffffff850af4cb 0000048c00000082 ffff8aa07ca0ea60
-> [    3.839582]  ffffffff87483a00 ffff8aa07b878180 0000000000000282 ffffffff85c5ad66
-> [    3.839582] Call Trace:
-> [    3.839588]  [<ffffffff8546cd23>] dump_stack+0x86/0xc3
-> [    3.839591]  [<ffffffff850af4cb>] __warn+0xcb/0xf0
-> [    3.839593]  [<ffffffff850af54f>] warn_slowpath_fmt+0x5f/0x80
-> [    3.839595]  [<ffffffff854a26ff>] check_unmap+0x4af/0x940
-> [    3.839597]  [<ffffffff854a2c09>] debug_dma_unmap_page+0x79/0xa0
-> [    3.839613]  [<ffffffffc032d427>] sendcmd_withirq_core+0x217/0x260 [cciss]
-> [    3.839618]  [<ffffffff85906820>] ? wait_for_completion+0x110/0x140
-> [    3.839623]  [<ffffffffc03301a8>] sendcmd_withirq+0x98/0xb0 [cciss]
-> [    3.839628]  [<ffffffffc033348f>] cciss_init_one+0x1a8f/0x1f70 [cciss]
-> [    3.839632]  [<ffffffff854ca4f5>] local_pci_probe+0x45/0xa0
-> [    3.839634]  [<ffffffff850cbd74>] work_for_cpu_fn+0x14/0x20
-> [    3.839637]  [<ffffffff850d020e>] process_one_work+0x23e/0x6f0
-> [    3.839638]  [<ffffffff850d018a>] ? process_one_work+0x1ba/0x6f0
-> [    3.839641]  [<ffffffff850d0893>] worker_thread+0x1d3/0x490
-> [    3.839642]  [<ffffffff850d06c0>] ? process_one_work+0x6f0/0x6f0
-> [    3.839644]  [<ffffffff850d06c0>] ? process_one_work+0x6f0/0x6f0
-> [    3.839648]  [<ffffffff850d7b52>] kthread+0x102/0x120
-> [    3.839652]  [<ffffffff85111175>] ? trace_hardirqs_on_caller+0xf5/0x1b0
-> [    3.839655]  [<ffffffff850d7a50>] ? kthread_park+0x60/0x60
-> [    3.839658]  [<ffffffff8590cbfa>] ret_from_fork+0x2a/0x40
-> [    3.839659] ---[ end trace 1ec289ff52b16fd7 ]---
-> [    3.839660] Mapped at:
-> [    3.839663]
-> [    3.839663] [<ffffffff854a131c>] debug_dma_map_page+0x8c/0x160
-> [    3.839668]
-> [    3.839668] [<ffffffffc032e75f>] fill_cmd+0x1bf/0x420 [cciss]
-> [    3.839672]
-> [    3.839672] [<ffffffffc0330174>] sendcmd_withirq+0x64/0xb0 [cciss]
-> [    3.839676]
-> [    3.839676] [<ffffffffc033348f>] cciss_init_one+0x1a8f/0x1f70 [cciss]
-> [    3.839679]
-> [    3.839679] [<ffffffff854ca4f5>] local_pci_probe+0x45/0xa0
-> [    3.859535] scsi host2: cciss
->
-> This problem does not appear when booting with kernel-4.9.0-0.rc2.git0.1.fc26.  It reproduces 100% of the time, simply try to boot kernel-4.9.0-0.rc2.git1.1.fc26 on a host with a CISS disk.
->
-> Thank you,
-> Johnny
+Hi,
 
-For reference, the corresponding upstream commits for the Fedora tags are
-6edc51a8d43b0bb8263fefaa8eb0cf62e8499978 and
-9fe68cad6e74967b88d0c6aeca7d9cd6b6e91942 although I think those two tags
-may be a misdirection because  kernel-4.9.0-0.rc2.git0.1.fc26 had
-DMA_API_DEBUG turned off.
+I'm kicking this old thread because I don't think this ever got
+resolved.  I wish I had more info, but it seems to involve target
+specific behavior that hasn't come up in our test labs.
 
-Thanks,
-Laura
+So what can I do at this point to help resolve this?
+
+On Sun, Nov 15, 2015 at 12:10:48PM +0200, Or Gerlitz wrote:
+> Mike, Chris
+> 
+> After the locking change, adding a task to any of the connection
+> mgmtqueue, cmdqueue, or requeue lists is under the session forward lock.
+> 
+> Removing tasks from any of these lists in iscsi_data_xmit is under
+> the session forward lock and **before** calling down to the transport
+> to handle the task.
+> 
+> The iscsi_complete_task helper was added by Mike's commit
+> 3bbaaad95fd38ded "[SCSI] libiscsi: handle cleanup task races"
+> and is indeed typically called under the backward lock && has this section
+> 
+> +       if (!list_empty(&task->running))
+> +               list_del_init(&task->running);
+> 
+> which per my reading of the code never comes into play, can you comment?
+> 
+> Lets address this area before we move to the others claims made on the patch.
+
+This bit in particular is where I see a cause for concern.  If that
+list_del_init call ever races against other list operations, there's a
+potential corruption.  It's presumably there for a reason, and Mike
+explained a case where some targets have been known to send a check
+condition at unexpected times that would hit it.
+
+I don't like having known list locking violations hanging around, based
+on an expectation that we'll never hit that path with well behaved
+targets.
+
+If we can get a fix worked up for the list locking here, can we get any
+testing on it from the original reports at IBM?  That was very helpful
+in testing a full reversion patch.
+
+- Chris Leech
+
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
