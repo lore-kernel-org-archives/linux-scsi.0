@@ -1,51 +1,54 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH] libfc: fix seconds_since_last_reset miscalculation
-Date: Tue,  8 Nov 2016 09:44:54 +0100
-Message-ID: <1478594694-98847-1-git-send-email-jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>
+From: Chanwoo Choi <cw00.choi@samsung.com>
+Subject: [PATCH v2 2/2] scsi: ufs: Use the resource-managed function to add
+ devfreq device
+Date: Tue, 08 Nov 2016 18:13:28 +0900
+Message-ID: <1478596408-2958-3-git-send-email-cw00.choi@samsung.com>
+References: <1478596408-2958-1-git-send-email-cw00.choi@samsung.com>
+Return-path: <linux-pm-owner@vger.kernel.org>
+In-reply-to: <1478596408-2958-1-git-send-email-cw00.choi@samsung.com>
+Sender: linux-pm-owner@vger.kernel.org
+To: myungjoo.ham@samsung.com, kyungmin.park@samsung.com
+Cc: rjw@rjwysocki.net, subhashj@codeaurora.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, Chanwoo Choi <cw00.choi@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Commit 540eb1eef 'scsi: libfc: fix seconds_since_last_reset calculation'
-removed the use of 'struct timespec' from fc_get_host_stats(). This broke the
-output of 'fcoeadm -s' after kernel 4.8-rc1 as lport->boot_time - jiffies
-could become negative as in this example:
+This patch uses the resource-managed to add the devfreq device.
+This function will make it easy to handle the devfreq device.
 
-$ cat /sys/class/fc_host/host8/statistics/seconds_since_last_reset 
-0x10624dd2f1977b4
-
-Take this into account so
-/sys/class/fc_host/hostX/statistics/seconds_since_last_reset is sane again.
-
-Fixes: 540eb1eef ('scsi: libfc: fix seconds_since_last_reset calculation')
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Tested-by: Holger Schranz <holger@fam-schranz.de>
+- struct devfreq *devm_devfreq_add_device(struct device *dev,
+				  struct devfreq_dev_profile *profile,
+				  const char *governor_name,
+				  void *data);
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Signed-off-by: Chanwoo Choi <cw00.choi@samsung.com>
 ---
- drivers/scsi/libfc/fc_lport.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/ufs/ufshcd.c | 4 +---
+ 1 file changed, 1 insertion(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-index 04ce7cf..475c0a9 100644
---- a/drivers/scsi/libfc/fc_lport.c
-+++ b/drivers/scsi/libfc/fc_lport.c
-@@ -304,11 +304,15 @@ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
- 	unsigned int cpu;
- 	u64 fcp_in_bytes = 0;
- 	u64 fcp_out_bytes = 0;
-+	unsigned long boot_time = lport->boot_time;
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e491c4bda32f..e8c5ba274830 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -6250,8 +6250,6 @@ void ufshcd_remove(struct ufs_hba *hba)
+ 	ufshcd_hba_stop(hba, true);
  
- 	fc_stats = &lport->host_stats;
- 	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
+ 	ufshcd_exit_clk_gating(hba);
+-	if (ufshcd_is_clkscaling_enabled(hba))
+-		devfreq_remove_device(hba->devfreq);
+ 	ufshcd_hba_exit(hba);
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_remove);
+@@ -6579,7 +6577,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 	}
  
--	fc_stats->seconds_since_last_reset = (lport->boot_time - jiffies) / HZ;
-+	if (boot_time > jiffies)
-+		fc_stats->seconds_since_last_reset = (boot_time - jiffies) / HZ;
-+	else
-+		fc_stats->seconds_since_last_reset = (jiffies - boot_time) / HZ;
- 
- 	for_each_possible_cpu(cpu) {
- 		struct fc_stats *stats;
+ 	if (ufshcd_is_clkscaling_enabled(hba)) {
+-		hba->devfreq = devfreq_add_device(dev, &ufs_devfreq_profile,
++		hba->devfreq = devm_devfreq_add_device(dev, &ufs_devfreq_profile,
+ 						   "simple_ondemand", NULL);
+ 		if (IS_ERR(hba->devfreq)) {
+ 			dev_err(hba->dev, "Unable to register with devfreq %ld\n",
 -- 
-1.8.5.6
+1.9.1
+
