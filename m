@@ -1,135 +1,82 @@
-From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 10/12] phy: qcom-ufs: Remove common layer phy exit callback
-Date: Tue,  8 Nov 2016 15:37:49 +0530
-Message-ID: <1478599671-13071-11-git-send-email-vivek.gautam@codeaurora.org>
-References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
-To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
-Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Ordering problems with 3ware controller
+Date: Tue, 8 Nov 2016 11:07:37 +0100
+Message-ID: <a41b4bab-edb7-34ab-eb76-7ff4d6e3f677@molgen.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.molgen.mpg.de ([141.14.17.9]:51289 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932477AbcKHKPc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 05:15:32 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Adam Radford <linuxraid@lsi.com>
 
-The common layer phy exit callback ufs_qcom_phy_exit()
-calls phy_power_off() that has no meaning when phy_power_off()
-callback is already registered with the phy provider and
-the consumer makes use of the same.
-Instead, add a no-op specific phy_exit() callback for now
-to add the exit sequence at a later point.
+Dear Linux SCSI folks,
 
-Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/phy/phy-qcom-ufs-i.h        |  1 -
- drivers/phy/phy-qcom-ufs-qmp-14nm.c |  7 ++++++-
- drivers/phy/phy-qcom-ufs-qmp-20nm.c |  7 ++++++-
- drivers/phy/phy-qcom-ufs.c          | 17 ++++++-----------
- 4 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs-i.h b/drivers/phy/phy-qcom-ufs-i.h
-index 69e836d..d505d98 100644
---- a/drivers/phy/phy-qcom-ufs-i.h
-+++ b/drivers/phy/phy-qcom-ufs-i.h
-@@ -141,7 +141,6 @@ struct ufs_qcom_phy_specific_ops {
- struct ufs_qcom_phy *get_ufs_qcom_phy(struct phy *generic_phy);
- int ufs_qcom_phy_power_on(struct phy *generic_phy);
- int ufs_qcom_phy_power_off(struct phy *generic_phy);
--int ufs_qcom_phy_exit(struct phy *generic_phy);
- int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common);
- int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common);
- int ufs_qcom_phy_remove(struct phy *generic_phy,
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index ae74614..c71c847 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -47,6 +47,11 @@ static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
- 	return 0;
- }
- 
-+static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
-+{
-+	return 0;
-+}
-+
- static
- void ufs_qcom_phy_qmp_14nm_power_control(struct ufs_qcom_phy *phy, bool val)
- {
-@@ -94,7 +99,7 @@ static int ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
- 
- static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
- 	.init		= ufs_qcom_phy_qmp_14nm_init,
--	.exit		= ufs_qcom_phy_exit,
-+	.exit		= ufs_qcom_phy_qmp_14nm_exit,
- 	.power_on	= ufs_qcom_phy_power_on,
- 	.power_off	= ufs_qcom_phy_power_off,
- 	.owner		= THIS_MODULE,
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-index dfc5175..1a26a64 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
-@@ -66,6 +66,11 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
- 	return 0;
- }
- 
-+static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
-+{
-+	return 0;
-+}
-+
- static
- void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, bool val)
- {
-@@ -152,7 +157,7 @@ static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
- 
- static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
- 	.init		= ufs_qcom_phy_qmp_20nm_init,
--	.exit		= ufs_qcom_phy_exit,
-+	.exit		= ufs_qcom_phy_qmp_20nm_exit,
- 	.power_on	= ufs_qcom_phy_power_on,
- 	.power_off	= ufs_qcom_phy_power_off,
- 	.owner		= THIS_MODULE,
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index fdd9b90..c69568b 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -602,17 +602,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
- 
--int ufs_qcom_phy_exit(struct phy *generic_phy)
--{
--	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
--
--	if (ufs_qcom_phy->is_powered_on)
--		phy_power_off(generic_phy);
--
--	return 0;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_exit);
--
- int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
-@@ -634,6 +623,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 	struct device *dev = phy_common->dev;
- 	int err;
- 
-+	if (phy_common->is_powered_on)
-+		return 0;
-+
- 	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
- 	if (err) {
- 		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
-@@ -696,6 +688,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
- {
- 	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
- 
-+	if (!phy_common->is_powered_on)
-+		return 0;
-+
- 	phy_common->phy_spec_ops->power_control(phy_common, false);
- 
- 	if (phy_common->vddp_ref_clk.reg)
--- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Updating from Linux 4.4.X to Linux 4.8.4, we noticed that the 3ware 
+devices under `/dev` – `/dev/twa0`, `/dev/twa1`, … – map to the 
+controllers differently.
+
+This unfortunately breaks quite a lot of our scripts, as we depend on 
+the fact that the first controller is also in the front.
+
+> $ dmesg | grep 3ware
+> [   14.509238] 3ware 9000 Storage Controller device driver for Linux v2.26.02.014.
+> [   14.824274] scsi host8: 3ware 9000 Storage Controller
+> [   14.824537] 3w-9xxx: scsi8: Found a 3ware 9000 Storage Controller at 0xd0200000, IRQ: 17.
+> [   15.508310] scsi host9: 3ware 9000 Storage Controller
+> [   15.508569] 3w-9xxx: scsi9: Found a 3ware 9000 Storage Controller at 0xda100000, IRQ: 17.
+
+Tracing `twi_cli` it looks like the ordering of the devices in 
+`/sys/class/scsi_host` might have changed, as `getdents64` seems to be 
+used for the ordering of creating `/dev/twaX`.
+
+> $ find /sys/class/scsi_host/ -ls
+>      6033      0 drwxr-xr-x   2  root     system          0 Nov  8 10:58 /sys/class/scsi_host/
+>     23125      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host0 -> ../../devices/pci0000:00/0000:00:07.0/ata1/host0/scsi_host/host0
+>     29893      0 lrwxrwxrwx   1  root     system          0 Oct 27 18:03 /sys/class/scsi_host/host9 -> ../../devices/pci0000:80/0000:80:0e.0/0000:90:00.0/host9/scsi_host/host9
+>     23878      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host7 -> ../../devices/pci0000:80/0000:80:08.0/ata8/host7/scsi_host/host7
+>     23640      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host5 -> ../../devices/pci0000:80/0000:80:07.0/ata6/host5/scsi_host/host5
+>     23402      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host3 -> ../../devices/pci0000:00/0000:00:08.0/ata4/host3/scsi_host/host3
+>     23164      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host1 -> ../../devices/pci0000:00/0000:00:07.0/ata2/host1/scsi_host/host1
+>     29851      0 lrwxrwxrwx   1  root     system          0 Oct 27 18:03 /sys/class/scsi_host/host8 -> ../../devices/pci0000:00/0000:00:0e.0/0000:05:00.0/host8/scsi_host/host8
+>     23839      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host6 -> ../../devices/pci0000:80/0000:80:08.0/ata7/host6/scsi_host/host6
+>     23601      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host4 -> ../../devices/pci0000:80/0000:80:07.0/ata5/host4/scsi_host/host4
+>     23363      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host2 -> ../../devices/pci0000:00/0000:00:08.0/ata3/host2/scsi_host/host2
+> $ sudo -i tw_cli show
+>
+> Ctl   Model        (V)Ports  Drives   Units   NotOpt  RRate   VRate  BBU
+> ------------------------------------------------------------------------
+> c8    9650SE-8LPML 8         8        1       0       5       1      OK
+> c9    9690SA-8E    0         0        0       0       5       1      OK
+>
+> Enclosure     Slots  Drives  Fans  TSUnits  PSUnits  Alarms
+> --------------------------------------------------------------
+> /c9/e0        16     0       3     1        2        1
+
+So in this case `c8` is mapped to `/dev/twa1`, and `c9` to `/dev/twa0`.
+
+As we do not know of a way, to use `tw_cli` to find the correct mapping, 
+or another place, we rely on the implicit ordering, which – according to 
+my colleagues – has worked for over 15 years [1].
+
+Do you know of a way, to either get the mapping “over an API” so we 
+don’t have to rely on the implicit ordering?
+
+Otherwise, do you know, why the ordering has changed, and can this be 
+reverted?
+
+
+Kind regards,
+
+Paul Menzel
+
+
+[1] 
+https://www.thomas-krenn.com/de/wiki/Smartmontools_mit_3ware_RAID_Controller
+     (German)
