@@ -1,48 +1,43 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 05/12] phy: qcom-ufs: Skip obtaining rx/tx_iface_clk for msm8996 based phy
-Date: Tue,  8 Nov 2016 15:37:44 +0530
-Message-ID: <1478599671-13071-6-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v5 12/12] scsi/ufs: qcom: Don't free resource-managed kmalloc element
+Date: Tue,  8 Nov 2016 15:37:51 +0530
+Message-ID: <1478599671-13071-13-git-send-email-vivek.gautam@codeaurora.org>
 References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:32958 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932432AbcKHKJM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 05:09:12 -0500
 In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
-List-Id: linux-scsi@vger.kernel.org
 
-The tx_iface_clk and rx_iface_clk no longer exist with UFS Phy
-present on msm8996. So skip obtaining these clocks using
-compatible match.
+Host is allocated by managed kmalloc (devm_kmalloc). The
+memory allocated with this function is automatically
+freed on driver detach.
+So, no need to make an exclusive free call over it.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/phy/phy-qcom-ufs.c | 5 +++++
- 1 file changed, 5 insertions(+)
+ drivers/scsi/ufs/ufs-qcom.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index b0171fe..3fa7b07 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -182,6 +182,10 @@ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common)
- {
- 	int err;
- 
-+	if (of_device_is_compatible(phy_common->dev->of_node,
-+				"qcom,msm8996-ufs-phy-qmp-14nm"))
-+		goto skip_txrx_clk;
-+
- 	err = ufs_qcom_phy_clk_get(phy_common->dev, "tx_iface_clk",
- 				   &phy_common->tx_iface_clk);
- 	if (err)
-@@ -197,6 +201,7 @@ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common)
- 	if (err)
- 		goto out;
- 
-+skip_txrx_clk:
- 	/*
- 	 * "ref_clk_parent" is optional hence don't abort init if it's not
- 	 * found.
+diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+index 31df783..804f4e7 100644
+--- a/drivers/scsi/ufs/ufs-qcom.c
++++ b/drivers/scsi/ufs/ufs-qcom.c
+@@ -1268,7 +1268,6 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+ out_unregister_bus:
+ 	phy_exit(host->generic_phy);
+ out_host_free:
+-	devm_kfree(dev, host);
+ 	ufshcd_set_variant(hba, NULL);
+ out:
+ 	return err;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
