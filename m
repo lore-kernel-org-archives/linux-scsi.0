@@ -1,14 +1,14 @@
 From: Chanwoo Choi <cw00.choi@samsung.com>
 Subject: [PATCH v2 2/2] scsi: ufs: Use the resource-managed function to add
  devfreq device
-Date: Tue, 08 Nov 2016 18:13:28 +0900
-Message-ID: <1478596408-2958-3-git-send-email-cw00.choi@samsung.com>
+Date: Tue, 08 Nov 2016 18:16:59 +0900
+Message-ID: <1478596619-3064-1-git-send-email-cw00.choi@samsung.com>
 References: <1478596408-2958-1-git-send-email-cw00.choi@samsung.com>
 Return-path: <linux-pm-owner@vger.kernel.org>
 In-reply-to: <1478596408-2958-1-git-send-email-cw00.choi@samsung.com>
 Sender: linux-pm-owner@vger.kernel.org
 To: myungjoo.ham@samsung.com, kyungmin.park@samsung.com
-Cc: rjw@rjwysocki.net, subhashj@codeaurora.org, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, Chanwoo Choi <cw00.choi@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: rjw@rjwysocki.net, subhashj@codeaurora.org, cpgs@samsung.com, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, Chanwoo Choi <cw00.choi@samsung.com>, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 This patch uses the resource-managed to add the devfreq device.
