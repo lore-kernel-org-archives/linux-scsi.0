@@ -1,71 +1,161 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a deadlock
-Date: Tue, 08 Nov 2016 13:13:04 -0600
-Message-ID: <87oa1pvl8f.fsf@xmission.com>
-References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
-        <1478618887.2824.2.camel@linux.vnet.ibm.com>
-        <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
-        <1478628101.2824.27.camel@linux.vnet.ibm.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v1] ufs: introcude UFSHCD_QUIRK_GET_VS_RESULT quirk
+Date: Tue, 08 Nov 2016 11:16:57 -0800
+Message-ID: <22d0ea8492548a02faf6dd4f46ff435b@codeaurora.org>
+References: <002001d23994$8cce5080$a66af180$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out03.mta.xmission.com ([166.70.13.233]:44534 "EHLO
-        out03.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751453AbcKHTPd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 14:15:33 -0500
-In-Reply-To: <1478628101.2824.27.camel@linux.vnet.ibm.com> (James Bottomley's
-        message of "Tue, 08 Nov 2016 10:01:41 -0800")
+Received: from smtp.codeaurora.org ([198.145.29.96]:53444 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750869AbcKHTQ7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 14:16:59 -0500
+In-Reply-To: <002001d23994$8cce5080$a66af180$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, vinholikatti@gmail.com, =?UTF-8?Q?=EC=B6=94=ED=97=8C=EA=B4=91?= <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-James Bottomley <jejb@linux.vnet.ibm.com> writes:
+On 2016-11-07 23:48, Kiwoong Kim wrote:
+> Some UFS host controllers may not report a result of
+> UIC command completion properly.
+> In such cases, they should get the result from UIC directly
+> if their architectures support that.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 27 +++++++++++++++++++++++----
+>  drivers/scsi/ufs/ufshcd.h | 20 ++++++++++++++++++++
+>  2 files changed, 43 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index d4a5a9c..8e19631 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1011,7 +1011,10 @@ static inline bool
+> ufshcd_ready_for_uic_cmd(struct ufs_hba *hba)
+>   */
+>  static inline u8 ufshcd_get_upmcrs(struct ufs_hba *hba)
+>  {
+> -	return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
+> +	if (hba->quirks & UFSHCD_QUIRK_GET_VS_RESULT)
+> +		return (u8)ufshcd_vops_get_vs_info(hba, VS_OP_03);
+> +	else
+> +		return (ufshcd_readl(hba, REG_CONTROLLER_STATUS) >> 8) & 0x7;
+>  }
+> 
+>  /**
+> @@ -1038,6 +1041,17 @@ ufshcd_dispatch_uic_cmd(struct ufs_hba *hba,
+> struct uic_command *uic_cmd)
+>  		      REG_UIC_COMMAND);
+>  }
+> 
+> +static inline enum vs_opcode ufshcd_get_vs_opcode(struct uic_command 
+> *uic_cmd)
+> +{
+> +	if (uic_cmd->command == UIC_CMD_DME_LINK_STARTUP)
+> +		return VS_OP_00;
+> +	else if ((uic_cmd->command == UIC_CMD_DME_HIBER_ENTER))
+> +		return VS_OP_01;
+> +	else if ((uic_cmd->command == UIC_CMD_DME_HIBER_EXIT))
+> +		return VS_OP_02;
+> +	else
+> +		return VS_OP_INVALID;
+> +}
+>  /**
+>   * ufshcd_wait_for_uic_cmd - Wait complectioin of UIC command
+>   * @hba: per adapter instance
+> @@ -1051,11 +1065,16 @@ ufshcd_wait_for_uic_cmd(struct ufs_hba *hba,
+> struct uic_command *uic_cmd)
+>  {
+>  	int ret;
+>  	unsigned long flags;
+> +	enum vs_opcode vs_op = ufshcd_get_vs_opcode(uic_cmd);
 
-> On Tue, 2016-11-08 at 08:52 -0800, Bart Van Assche wrote:
->> On 11/08/2016 07:28 AM, James Bottomley wrote:
->> > On Mon, 2016-11-07 at 16:32 -0800, Bart Van Assche wrote:
->> > > diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
->> > > index cf4c636..44ec536 100644
->> > > --- a/fs/kernfs/dir.c
->> > > +++ b/fs/kernfs/dir.c
->> > > @@ -1410,7 +1410,7 @@ int kernfs_remove_by_name_ns(struct
->> > > kernfs_node
->> > > *parent, const char *name,
->> > >  	mutex_lock(&kernfs_mutex);
->> > > 
->> > >  	kn = kernfs_find_ns(parent, name, ns);
->> > > -	if (kn)
->> > > +	if (kn && !(kn->flags & KERNFS_SUICIDED))
->> > 
->> > Actually, wrong flag, you need KERNFS_SUICIDAL.  The reason is that
->> > kernfs_mutex is actually dropped half way through __kernfs_remove, 
->> > so KERNFS_SUICIDED is not set atomically with this mutex.
->> 
->> Hello James,
->> 
->> Sorry but what you wrote is not correct.
->
-> I think you agree it is dropped.  I don't need to add the bit about the
-> reacquisition because the race is mediated by the first acquisition not
-> the second one, if you mediate on KERNFS_SUICIDAL, you only need to
-> worry about this because the mediation is in the first acquisition.  If
-> you mediate on KERNFS_SUICIDED, you need to explain that the final
-> thing that means the race can't happen is the unbreak in the sysfs
-> delete path re-acquiring s_active ... the explanation of what's going
-> on and why gets about 2x more complex.
+Please move this after we check the quirk below.
 
-Is it really the dropping of the lock that is causing this?
-I don't see that when I read those traces.
+> 
+>  	if (wait_for_completion_timeout(&uic_cmd->done,
+> -					msecs_to_jiffies(UIC_CMD_TIMEOUT)))
+> -		ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+> -	else
+> +					msecs_to_jiffies(UIC_CMD_TIMEOUT))) {
+> +		if (hba->quirks & UFSHCD_QUIRK_GET_VS_RESULT &&
+> +					vs_op != VS_OP_INVALID)
+> +			ret = ufshcd_vops_get_vs_info(hba, vs_op);
+> +		else
+> +			ret = uic_cmd->argument2 & MASK_UIC_COMMAND_RESULT;
+> +	} else
+>  		ret = -ETIMEDOUT;
+> 
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 13504b4..8cf3991 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -245,6 +245,14 @@ struct ufs_pwr_mode_info {
+>  	struct ufs_pa_layer_attr info;
+>  };
+> 
+> +enum vs_opcode {
+> +	VS_OP_00 = 0x00,
+> +	VS_OP_01,
+> +	VS_OP_02,
+> +	VS_OP_03,
+> +	VS_OP_INVALID = 0xFF,
+> +};
+> +
 
-I am going to put my vote in for doing all of the self removal
-sem-asynchronously by using task_work_add, and killing
-device_remove_self, sysfs_remove_self, kernfs_remove_self.  Using
-task_work_add remains synchronous with userspace so userspace should not
-care, and we get the benefit of not having two different variants of the
-same code racing with each other.
+How do we interpret these codes? and how is this useful for non-exynos 
+UFS host controller? Please make it generic which can be used by other 
+controllers in future (if required).
 
-It might take a little more work but will leave code that is much more
-maintainable in the long run.
+>  /**
+>   * struct ufs_hba_variant_ops - variant specific callbacks
+>   * @name: variant name
+> @@ -297,6 +305,7 @@ struct ufs_hba_variant_ops {
+>  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
+>  	void	(*dbg_register_dump)(struct ufs_hba *hba);
+>  	int	(*phy_initialization)(struct ufs_hba *);
+> +	int	(*get_vs_info)(struct ufs_hba *hba, enum vs_opcode);
+>  };
+> 
+>  /* clock gating state  */
+> @@ -484,6 +493,8 @@ struct ufs_hba {
+>  	 */
+>  	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+> 
+> +	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
 
-Eric
+Name is weird, can we name it to reflect the actual purpose of this 
+quirk? something like UFSHCD_QUIRK_BROKEN_UIC_COMPL ?
+
+> +
+>  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+> 
+>  	/* Device deviations from standard UFS device spec. */
+> @@ -853,4 +864,13 @@ static inline void
+> ufshcd_vops_dbg_register_dump(struct ufs_hba *hba)
+>  		hba->vops->dbg_register_dump(hba);
+>  }
+> 
+> +static inline int ufshcd_vops_get_vs_info(struct ufs_hba *hba,
+
+
+You may name it as *get_uic_coml_info() ?
+
+> +					enum vs_opcode op)
+> +{
+> +	if (hba->vops && hba->vops->get_vs_info)
+> +		return hba->vops->get_vs_info(hba, op);
+> +
+> +	return -ENOTSUPP;
+> +}
+> +
+>  #endif /* End of Header */
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
