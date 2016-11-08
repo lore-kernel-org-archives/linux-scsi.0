@@ -1,109 +1,128 @@
 From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v1] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
-Date: Tue, 08 Nov 2016 16:50:46 +0900
-Message-ID: <002201d23994$d0aae750$7200b5f0$@samsung.com>
+Subject: [PATCH v1] ufs: introduce UFSHCD_QUIRK_USE_OF_HCE quirk
+Date: Tue, 08 Nov 2016 16:57:34 +0900
+Message-ID: <002301d23995$c3be88c0$4b3b9a40$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout3.samsung.com ([203.254.224.33]:55094 "EHLO
-        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752883AbcKHHus (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 02:50:48 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:48803 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751861AbcKHH5g (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 02:57:36 -0500
 Received: from epcpsbgm2new.samsung.com (epcpsbgm2 [203.254.230.27])
- by mailout3.samsung.com
+ by mailout4.samsung.com
  (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OGB01D71CGM7970@mailout3.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 08 Nov 2016 16:50:46 +0900 (KST)
+ with ESMTP id <0OGB022F2CRY2Q50@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 08 Nov 2016 16:57:34 +0900 (KST)
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, vinholikatti@gmail.com
 Cc: =?UTF-8?B?7LaU7ZeM6rSR?= <hg.chu@samsung.com>
 
-Some UFS host controllers may clear a transfer request slot
-by setting an associated bit in UTLRCLR/UTMLRCLR to 1, not 0.
-That's opposite to what UFS spec decribes.
+Some host controller might not initialize itself
+by setting "Host Controller Enable" to 1.
+They should do this to reset UIC.
+In such cases, 'DME reset' and 'DME enable' are required
+for normal subsequent operations.
 
 Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 ---
- drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++----
+ drivers/scsi/ufs/ufshcd.c | 44 +++++++++++++++++++++++++++++++++++++++++++-
  drivers/scsi/ufs/ufshcd.h |  1 +
- 2 files changed, 29 insertions(+), 4 deletions(-)
+ 2 files changed, 44 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 549e3e8..24d6ea7 100644
+index 24d6ea7..c904854 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
-  */
- static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
- {
--	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+	u32 clear;
-+
-+	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-+		clear = (1 << pos);
-+	else
-+		clear = ~(1 << pos);
-+
-+	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-+}
-+
-+/**
-+ * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-+ * @hba: per adapter instance
-+ * @pos: position of the bit to be cleared
-+ */
-+static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
-+{
-+	u32 clear;
-+
-+	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-+		clear = (1 << pos);
-+	else
-+		clear = ~(1 << pos);
-+
-+	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
+@@ -2496,6 +2496,37 @@ static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
+ 	usleep_range(min_sleep_time_us, min_sleep_time_us + 50);
  }
  
++static int ufshcd_dme_reset(struct ufs_hba *hba)
++{
++	struct uic_command uic_cmd = {0};
++	int ret;
++
++	uic_cmd.command = UIC_CMD_DME_RESET;
++	uic_cmd.argument1 = 0x1;
++
++	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++	if (ret)
++		dev_err(hba->dev,
++			"dme-reset: error code %d\n", ret);
++
++	return ret;
++}
++
++static int ufshcd_dme_enable(struct ufs_hba *hba)
++{
++	struct uic_command uic_cmd = {0};
++	int ret;
++
++	uic_cmd.command = UIC_CMD_DME_ENABLE;
++
++	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
++	if (ret)
++		dev_err(hba->dev,
++			"dme-enable: error code %d\n", ret);
++
++	return ret;
++}
++
  /**
-@@ -1147,7 +1171,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
-  *
-  * Returns 0 in case of success, non-zero value in case of failure
-  */
--static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-+static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+  * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
+  * @hba: per adapter instance
+@@ -3101,6 +3132,7 @@ static inline void ufshcd_hba_stop(struct ufs_hba *hba, bool can_sleep)
+ static int ufshcd_hba_enable(struct ufs_hba *hba)
  {
- 	struct ufshcd_sg_entry *prd_table;
- 	struct scatterlist *sg;
-@@ -1529,7 +1553,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 	int retry;
++	int ret = 0;
  
- 	ufshcd_comp_scsi_upiu(hba, lrbp);
+ 	/*
+ 	 * msleep of 1 and 5 used in this function might result in msleep(20),
+@@ -3117,6 +3149,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
  
--	err = ufshcd_map_sg(lrbp);
-+	err = ufshcd_map_sg(hba, lrbp);
- 	if (err) {
- 		lrbp->cmd = NULL;
- 		clear_bit_unlock(tag, &hba->lrb_in_use);
-@@ -4329,7 +4353,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
- 		goto out;
+ 	ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
  
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-+	ufshcd_utmrl_clear(hba, tag);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
++	if (hba->quirks & UFSHCD_QUIRK_USE_OF_HCE)
++		goto use_dme;
++
+ 	/* start controller initialization sequence */
+ 	ufshcd_hba_start(hba);
  
- 	/* poll for max. 1 sec to clear door bell register by h/w */
+@@ -3145,12 +3180,19 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
+ 		msleep(5);
+ 	}
+ 
++use_dme:
+ 	/* enable UIC related interrupts */
+ 	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
+ 
++	if (hba->quirks & UFSHCD_QUIRK_USE_OF_HCE) {
++		ret = ufshcd_dme_reset(hba);
++		if (!ret)
++			ret = ufshcd_dme_enable(hba);
++	}
++
+ 	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+ 
+-	return 0;
++	return ret;
+ }
+ 
+ static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 565f005..c4abd76 100644
+index c4abd76..6a96f24 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -495,6 +495,7 @@ struct ufs_hba {
- 
+@@ -496,6 +496,7 @@ struct ufs_hba {
  	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
  	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
-+	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+ 	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
++	#define UFSHCD_QUIRK_USE_OF_HCE				UFS_BIT(9)
  
  
  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
