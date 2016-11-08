@@ -1,47 +1,100 @@
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: [PATCH] scsi_devinfo: remove synchronous ALUA for NETAPP/RDAC devices
-Date: Tue,  8 Nov 2016 20:32:42 +0100
-Message-ID: <20161108193242.3454-1-xose.vazquez@gmail.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: Re: [PATCH v1] ufs: introduce UFSHCD_QUIRK_BROKEN_DWORD_UTRD quirk
+Date: Tue, 08 Nov 2016 11:34:16 -0800
+Message-ID: <a0c337c3537b86c8cdeb1780958684d0@codeaurora.org>
+References: <002101d23994$a1026f00$e3074d00$@samsung.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f65.google.com ([74.125.82.65]:34819 "EHLO
-        mail-wm0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753408AbcKHTdQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 14:33:16 -0500
-Received: by mail-wm0-f65.google.com with SMTP id a20so13929958wme.2
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Nov 2016 11:33:15 -0800 (PST)
+Received: from smtp.codeaurora.org ([198.145.29.96]:60580 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751479AbcKHTeS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 14:34:18 -0500
+In-Reply-To: <002101d23994$a1026f00$e3074d00$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>, Martin George <Martin.George@netapp.com>, Robert Stankey <Robert.Stankey@netapp.com>, Steven Schremmer <Steven.Schremmer@netapp.com>, Sean Stewart <Sean.Stewart@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, vinholikatti@gmail.com, =?UTF-8?Q?=EC=B6=94=ED=97=8C=EA=B4=91?= <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-NetApp did confirm this is only required for ONTAP(LUN C-Mode).
+On 2016-11-07 23:49, Kiwoong Kim wrote:
+> Some UFS host controllers may think
+> granularitys of PRDT length and offset as bytes, not double words.
+> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 24 +++++++++++++++++++-----
+>  drivers/scsi/ufs/ufshcd.h |  2 ++
+>  2 files changed, 21 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 8e19631..549e3e8 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1161,8 +1161,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb 
+> *lrbp)
+>  		return sg_segments;
+> 
+>  	if (sg_segments) {
+> -		lrbp->utr_descriptor_ptr->prd_table_length =
+> -					cpu_to_le16((u16) (sg_segments));
+> +		if (hba->quirks & UFSHCD_QUIRK_BROKEN_DWORD_UTRD)
 
-Cc: Martin George <Martin.George@netapp.com>
-Cc: Robert Stankey <Robert.Stankey@netapp.com>
-Cc: Steven Schremmer <Steven.Schremmer@netapp.com>
-Cc: Sean Stewart <Sean.Stewart@netapp.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: Christophe Varoqui <christophe.varoqui@opensvc.com>
-Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: SCSI ML <linux-scsi@vger.kernel.org>
-Cc: device-mapper development <dm-devel@redhat.com>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
----
- drivers/scsi/scsi_devinfo.c | 1 -
- 1 file changed, 1 deletion(-)
+This might sound more specific: 
+s/UFSHCD_QUIRK_BROKEN_DWORD_UTRD/UFSHCD_QUIRK_PRDT_BYTE_GRAN .
 
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 2464569..1fb7964 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -221,7 +221,6 @@ static struct {
- 	{"NEC", "PD-1 ODX654P", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"NEC", "iStorage", NULL, BLIST_REPORTLUN2},
- 	{"NETAPP", "LUN C-Mode", NULL, BLIST_SYNC_ALUA},
--	{"NETAPP", "INF-01-00", NULL, BLIST_SYNC_ALUA},
- 	{"NRC", "MBR-7", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"NRC", "MBR-7.4", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
- 	{"PIONEER", "CD-ROM DRM-600", NULL, BLIST_FORCELUN | BLIST_SINGLELUN},
+> +			lrbp->utr_descriptor_ptr->prd_table_length =
+> +				cpu_to_le16((u16)(sg_segments *
+> +					sizeof(struct ufshcd_sg_entry)));
+> +		else
+> +			lrbp->utr_descriptor_ptr->prd_table_length =
+> +				cpu_to_le16((u16) (sg_segments));
+> 
+>  		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+> 
+> @@ -2385,12 +2390,21 @@ static void
+> ufshcd_host_memory_configure(struct ufs_hba *hba)
+>  				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
+> 
+>  		/* Response upiu and prdt offset should be in double words */
+> -		utrdlp[i].response_upiu_offset =
+> +		if (hba->quirks & UFSHCD_QUIRK_BROKEN_DWORD_UTRD) {
+> +			utrdlp[i].response_upiu_offset =
+> +				cpu_to_le16(response_offset);
+> +			utrdlp[i].prd_table_offset =
+> +				cpu_to_le16(prdt_offset);
+> +			utrdlp[i].response_upiu_length =
+> +				cpu_to_le16(ALIGNED_UPIU_SIZE);
+> +		} else {
+> +			utrdlp[i].response_upiu_offset =
+>  				cpu_to_le16((response_offset >> 2));
+> -		utrdlp[i].prd_table_offset =
+> +			utrdlp[i].prd_table_offset =
+>  				cpu_to_le16((prdt_offset >> 2));
+> -		utrdlp[i].response_upiu_length =
+> +			utrdlp[i].response_upiu_length =
+>  				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
+> +		}
+> 
+>  		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+>  		hba->lrb[i].ucd_req_ptr =
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 8cf3991..565f005 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -494,6 +494,8 @@ struct ufs_hba {
+>  	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+> 
+>  	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
+> +	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
+> +
+
+This extra line space isn't needed.
+
+> 
+>  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+
 -- 
-2.10.2
-
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
