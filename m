@@ -1,38 +1,61 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 01/12] phy: qcom-ufs: Remove unnecessary BUG_ON
-Date: Tue,  8 Nov 2016 15:37:40 +0530
-Message-ID: <1478599671-13071-2-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v5 04/12] phy: qcom-ufs-14nm: Add new compatible for msm8996 based phy
+Date: Tue,  8 Nov 2016 15:37:43 +0530
+Message-ID: <1478599671-13071-5-git-send-email-vivek.gautam@codeaurora.org>
 References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:60096 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932212AbcKHKIf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 05:08:35 -0500
 In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
-List-Id: linux-scsi@vger.kernel.org
 
-BUG_ON() are not preferred in the driver, plus the variable
-on which BUG_ON is asserted is already checked in the code
-before passing.
+Add a new compatible string for 14nm ufs phy present on msm8996
+chipset. This phy is bit different from the legacy 14nm ufs phy
+in terms of the clocks that are needed to be handled in the driver.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/phy/phy-qcom-ufs.c | 2 --
- 1 file changed, 2 deletions(-)
+ Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
+ 2 files changed, 6 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index 18a5b49..455064c 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -322,8 +322,6 @@ int ufs_qcom_phy_cfg_vreg(struct phy *phy,
- 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(phy);
- 	struct device *dev = ufs_qcom_phy->dev;
+diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+index 070baf4..b6b5130 100644
+--- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
++++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
+@@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the controller node should
+ contain a phandle reference to UFS PHY node.
  
--	BUG_ON(!vreg);
--
- 	if (regulator_count_voltages(reg) > 0) {
- 		min_uV = on ? vreg->min_uV : 0;
- 		ret = regulator_set_voltage(reg, min_uV, vreg->max_uV);
+ Required properties:
+-- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
+-		      or "qcom,ufs-phy-qmp-14nm" according to the relevant phy in use.
++- compatible        : compatible list, contains one of the following -
++			"qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
++			"qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
++			"qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
++			 present on MSM8996 chipset.
+ - reg               : should contain PHY register address space (mandatory),
+ - reg-names         : indicates various resources passed to driver (via reg proptery) by name.
+                       Required "reg-names" is "phy_mem".
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+index e3bede7..b3d2612 100644
+--- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
++++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+@@ -180,6 +180,7 @@ static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
+ 
+ static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
+ 	{.compatible = "qcom,ufs-phy-qmp-14nm"},
++	{.compatible = "qcom,msm8996-ufs-phy-qmp-14nm"},
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
