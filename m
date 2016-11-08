@@ -1,29 +1,43 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] aacraid: switch to pci_alloc_irq_vectors
-Date: Tue, 8 Nov 2016 15:58:59 +0100
-Message-ID: <20161108145859.GC12817@lst.de>
-References: <1478589090-74217-1-git-send-email-hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] hpsa: switch to pci_alloc_irq_vectors
+Date: Tue, 8 Nov 2016 16:00:46 +0100
+Message-ID: <81600b31-5977-f323-6609-7fc2e0ce55b0@suse.de>
+References: <1478589145-74280-1-git-send-email-hare@suse.de>
+ <20161108145802.GB12817@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:41896 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:57065 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751296AbcKHO7A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 09:59:00 -0500
-Content-Disposition: inline
-In-Reply-To: <1478589090-74217-1-git-send-email-hare@suse.de>
+        id S1752340AbcKHPAu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 10:00:50 -0500
+In-Reply-To: <20161108145802.GB12817@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Don Brace <don.brace@microsemi.com>
 
-> @@ -1246,7 +1246,6 @@ struct aac_dev
->  	u32			max_msix;	/* max. MSI-X vectors */
->  	u32			vector_cap;	/* MSI-X vector capab.*/
->  	int			msi_enabled;	/* MSI/MSI-X enabled */
-> -	struct msix_entry	msixentry[AAC_MAX_MSIX];
->  	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
+On 11/08/2016 03:58 PM, Christoph Hellwig wrote:
+> On Tue, Nov 08, 2016 at 08:12:25AM +0100, Hannes Reinecke wrote:
+>> Use pci_alloc_irq_vectors and drop the hand-crafted
+>> interrupt affinity routines.
+>
+> There are a couple more things we can do here.  I actually have a patch
+> in my tree that goes a little further, I'll post it in a bit.
+>
+Right. I'll wait for it.
 
-With a bit more work we should be able to get rid of the aac_msix
-array as well.  I had actually started looking into that but got
-dragged away.
+If you also happen to have patches for megaraid and mpt3sas I'd be very 
+much interested in looking into them; I'm currently working on 
+converting them, too.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
