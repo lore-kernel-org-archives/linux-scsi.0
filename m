@@ -1,69 +1,27 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2 2/2] scsi: ufs: Use the resource-managed function to
- add devfreq device
-Date: Tue, 08 Nov 2016 12:40:57 -0800
-Message-ID: <153efd17adaed2dd87d03acbd80ad89b@codeaurora.org>
-References: <1478596408-2958-1-git-send-email-cw00.choi@samsung.com>
- <1478596619-3064-1-git-send-email-cw00.choi@samsung.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 8/8] megaraid_sas: driver version upgrade
+Date: Tue, 08 Nov 2016 18:05:15 -0500
+Message-ID: <yq1vavxr2s4.fsf@sermon.lab.mkp.net>
+References: <1477056816-7058-1-git-send-email-kashyap.desai@broadcom.com>
+        <1477056816-7058-9-git-send-email-kashyap.desai@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:33540 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752640AbcKHUk6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 15:40:58 -0500
-In-Reply-To: <1478596619-3064-1-git-send-email-cw00.choi@samsung.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:20314 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750724AbcKHXFZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 18:05:25 -0500
+In-Reply-To: <1477056816-7058-9-git-send-email-kashyap.desai@broadcom.com>
+        (Kashyap Desai's message of "Fri, 21 Oct 2016 06:33:36 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Chanwoo Choi <cw00.choi@samsung.com>
-Cc: myungjoo.ham@samsung.com, kyungmin.park@samsung.com, rjw@rjwysocki.net, cpgs@samsung.com, linux-pm@vger.kernel.org, linux-kernel@vger.kernel.org, Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, sumit.saxena@broadcom.com
 
-On 2016-11-08 01:16, Chanwoo Choi wrote:
-> This patch uses the resource-managed to add the devfreq device.
-> This function will make it easy to handle the devfreq device.
-> 
-> - struct devfreq *devm_devfreq_add_device(struct device *dev,
-> 				  struct devfreq_dev_profile *profile,
-> 				  const char *governor_name,
-> 				  void *data);
-> Cc: Vinayak Holikatti <vinholikatti@gmail.com>
-> Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
-> Cc: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org
-> Signed-off-by: Chanwoo Choi <cw00.choi@samsung.com>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 4 +---
->  1 file changed, 1 insertion(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e491c4bda32f..e8c5ba274830 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -6250,8 +6250,6 @@ void ufshcd_remove(struct ufs_hba *hba)
->  	ufshcd_hba_stop(hba, true);
-> 
->  	ufshcd_exit_clk_gating(hba);
-> -	if (ufshcd_is_clkscaling_enabled(hba))
-> -		devfreq_remove_device(hba->devfreq);
->  	ufshcd_hba_exit(hba);
->  }
->  EXPORT_SYMBOL_GPL(ufshcd_remove);
-> @@ -6579,7 +6577,7 @@ int ufshcd_init(struct ufs_hba *hba, void
-> __iomem *mmio_base, unsigned int irq)
->  	}
-> 
->  	if (ufshcd_is_clkscaling_enabled(hba)) {
-> -		hba->devfreq = devfreq_add_device(dev, &ufs_devfreq_profile,
-> +		hba->devfreq = devm_devfreq_add_device(dev, &ufs_devfreq_profile,
->  						   "simple_ondemand", NULL);
->  		if (IS_ERR(hba->devfreq)) {
->  			dev_err(hba->dev, "Unable to register with devfreq %ld\n",
+>>>>> "Kashyap" == Kashyap Desai <kashyap.desai@broadcom.com> writes:
 
-LGTM.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+Rebased on top of Linus' tree to get the JBOD SYNCHRONIZE CACHE fix
+pulled in and applied patches 5 through 8 to 4.10/scsi-queue.
 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Martin K. Petersen	Oracle Linux Engineering
