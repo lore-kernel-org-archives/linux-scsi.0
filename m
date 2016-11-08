@@ -1,185 +1,208 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] aacraid: switch to pci_alloc_irq_vectors
-Date: Tue,  8 Nov 2016 08:11:30 +0100
-Message-ID: <1478589090-74217-1-git-send-email-hare@suse.de>
+Subject: [PATCH] hpsa: switch to pci_alloc_irq_vectors
+Date: Tue,  8 Nov 2016 08:12:25 +0100
+Message-ID: <1478589145-74280-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43412 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:43447 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751687AbcKHHLi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 02:11:38 -0500
+        id S1752044AbcKHHMc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 02:12:32 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>, Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>, Don Brace <don.brace@microsemi.com>
 
 Use pci_alloc_irq_vectors and drop the hand-crafted
 interrupt affinity routines.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: Don Brace <don.brace@microsemi.com>
 ---
- drivers/scsi/aacraid/aacraid.h  |  1 -
- drivers/scsi/aacraid/comminit.c | 10 +++-------
- drivers/scsi/aacraid/commsup.c  | 25 +++++--------------------
- drivers/scsi/aacraid/linit.c    | 20 ++++----------------
- 4 files changed, 12 insertions(+), 44 deletions(-)
+ drivers/scsi/hpsa.c | 72 +++++++++++++++++++----------------------------------
+ drivers/scsi/hpsa.h |  1 -
+ 2 files changed, 26 insertions(+), 47 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 969c312..f059c14 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1246,7 +1246,6 @@ struct aac_dev
- 	u32			max_msix;	/* max. MSI-X vectors */
- 	u32			vector_cap;	/* MSI-X vector capab.*/
- 	int			msi_enabled;	/* MSI/MSI-X enabled */
--	struct msix_entry	msixentry[AAC_MAX_MSIX];
- 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
- 	u8			adapter_shutdown;
- 	u32			handle_pci_error;
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 341ea32..4f56b10 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -378,16 +378,12 @@ void aac_define_int_mode(struct aac_dev *dev)
- 	if (msi_count > AAC_MAX_MSIX)
- 		msi_count = AAC_MAX_MSIX;
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 4e82b69..104e699 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5618,7 +5618,7 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
+ 	sh->sg_tablesize = h->maxsgentries;
+ 	sh->transportt = hpsa_sas_transport_template;
+ 	sh->hostdata[0] = (unsigned long) h;
+-	sh->irq = h->intr[h->intr_mode];
++	sh->irq = pci_irq_vector(h->pdev, h->intr_mode);
+ 	sh->unique_id = sh->irq;
  
--	for (i = 0; i < msi_count; i++)
--		dev->msixentry[i].entry = i;
--
- 	if (msi_count > 1 &&
- 	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
- 		min_msix = 2;
--		i = pci_enable_msix_range(dev->pdev,
--				    dev->msixentry,
--				    min_msix,
--				    msi_count);
-+		i = pci_alloc_irq_vectors(dev->pdev,
-+					  min_msix, msi_count,
-+					  PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
- 		if (i > 0) {
- 			dev->msi_enabled = 1;
- 			msi_count = i;
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 0aeecec..9e7551f 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2043,30 +2043,22 @@ int aac_acquire_irq(struct aac_dev *dev)
- 	int i;
- 	int j;
- 	int ret = 0;
--	int cpu;
- 
--	cpu = cpumask_first(cpu_online_mask);
- 	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
- 		for (i = 0; i < dev->max_msix; i++) {
- 			dev->aac_msix[i].vector_no = i;
- 			dev->aac_msix[i].dev = dev;
--			if (request_irq(dev->msixentry[i].vector,
-+			if (request_irq(pci_irq_vector(dev->pdev, i),
- 					dev->a_ops.adapter_intr,
- 					0, "aacraid", &(dev->aac_msix[i]))) {
- 				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
- 						dev->name, dev->id, i);
- 				for (j = 0 ; j < i ; j++)
--					free_irq(dev->msixentry[j].vector,
-+					free_irq(pci_irq_vector(dev->pdev, j),
- 						 &(dev->aac_msix[j]));
- 				pci_disable_msix(dev->pdev);
- 				ret = -1;
- 			}
--			if (irq_set_affinity_hint(dev->msixentry[i].vector,
--							get_cpu_mask(cpu))) {
--				printk(KERN_ERR "%s%d: Failed to set IRQ affinity for cpu %d\n",
--					    dev->name, dev->id, cpu);
--			}
--			cpu = cpumask_next(cpu, cpu_online_mask);
- 		}
- 	} else {
- 		dev->aac_msix[0].vector_no = 0;
-@@ -2096,16 +2088,9 @@ void aac_free_irq(struct aac_dev *dev)
- 	    dev->pdev->device == PMC_DEVICE_S8 ||
- 	    dev->pdev->device == PMC_DEVICE_S9) {
- 		if (dev->max_msix > 1) {
--			for (i = 0; i < dev->max_msix; i++) {
--				if (irq_set_affinity_hint(
--					dev->msixentry[i].vector, NULL)) {
--					printk(KERN_ERR "%s%d: Failed to reset IRQ affinity for cpu %d\n",
--					    dev->name, dev->id, cpu);
--				}
--				cpu = cpumask_next(cpu, cpu_online_mask);
--				free_irq(dev->msixentry[i].vector,
--						&(dev->aac_msix[i]));
--			}
-+			for (i = 0; i < dev->max_msix; i++)
-+				free_irq(pci_irq_vector(dev->pdev, i),
-+					 &(dev->aac_msix[i]));
- 		} else {
- 			free_irq(dev->pdev->irq, &(dev->aac_msix[0]));
- 		}
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 79871f3..e4f3e22 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1071,7 +1071,6 @@ ssize_t aac_get_serial_number(struct device *device, char *buf)
- static void __aac_shutdown(struct aac_dev * aac)
+ 	h->scsi_host = sh;
+@@ -7667,14 +7667,9 @@ static void hpsa_disable_interrupt_mode(struct ctlr_info *h)
+  */
+ static void hpsa_interrupt_mode(struct ctlr_info *h)
  {
- 	int i;
--	int cpu;
++	unsigned int irq_flags = PCI_IRQ_LEGACY;
+ #ifdef CONFIG_PCI_MSI
+-	int err, i;
+-	struct msix_entry hpsa_msix_entries[MAX_REPLY_QUEUES];
+-
+-	for (i = 0; i < MAX_REPLY_QUEUES; i++) {
+-		hpsa_msix_entries[i].vector = 0;
+-		hpsa_msix_entries[i].entry = i;
+-	}
++	int err;
  
- 	aac_send_shutdown(aac);
- 
-@@ -1087,24 +1086,13 @@ static void __aac_shutdown(struct aac_dev * aac)
- 		kthread_stop(aac->thread);
+ 	/* Some boards advertise MSI but don't really support it */
+ 	if ((h->board_id == 0x40700E11) || (h->board_id == 0x40800E11) ||
+@@ -7685,8 +7680,8 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 		h->msix_vector = MAX_REPLY_QUEUES;
+ 		if (h->msix_vector > num_online_cpus())
+ 			h->msix_vector = num_online_cpus();
+-		err = pci_enable_msix_range(h->pdev, hpsa_msix_entries,
+-					    1, h->msix_vector);
++		err = pci_alloc_irq_vectors(h->pdev, 1, h->msix_vector,
++					    PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+ 		if (err < 0) {
+ 			dev_warn(&h->pdev->dev, "MSI-X init failed %d\n", err);
+ 			h->msix_vector = 0;
+@@ -7696,22 +7691,21 @@ static void hpsa_interrupt_mode(struct ctlr_info *h)
+ 			       "available\n", err);
+ 		}
+ 		h->msix_vector = err;
+-		for (i = 0; i < h->msix_vector; i++)
+-			h->intr[i] = hpsa_msix_entries[i].vector;
+ 		return;
  	}
- 	aac_adapter_disable_int(aac);
--	cpu = cpumask_first(cpu_online_mask);
- 	if (aac->pdev->device == PMC_DEVICE_S6 ||
- 	    aac->pdev->device == PMC_DEVICE_S7 ||
- 	    aac->pdev->device == PMC_DEVICE_S8 ||
- 	    aac->pdev->device == PMC_DEVICE_S9) {
- 		if (aac->max_msix > 1) {
- 			for (i = 0; i < aac->max_msix; i++) {
--				if (irq_set_affinity_hint(
--				    aac->msixentry[i].vector,
--				    NULL)) {
--					printk(KERN_ERR "%s%d: Failed to reset IRQ affinity for cpu %d\n",
--						aac->name,
--						aac->id,
--						cpu);
--				}
--				cpu = cpumask_next(cpu,
--						cpu_online_mask);
--				free_irq(aac->msixentry[i].vector,
-+				free_irq(pci_irq_vector(aac->pdev, i),
- 					 &(aac->aac_msix[i]));
- 			}
- 		} else {
-@@ -1350,7 +1338,7 @@ static void aac_release_resources(struct aac_dev *aac)
- 	    aac->pdev->device == PMC_DEVICE_S9) {
- 		if (aac->max_msix > 1) {
- 			for (i = 0; i < aac->max_msix; i++)
--				free_irq(aac->msixentry[i].vector,
-+				free_irq(pci_irq_vector(aac->pdev, i),
- 					&(aac->aac_msix[i]));
- 		} else {
- 			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
-@@ -1396,13 +1384,13 @@ static int aac_acquire_resources(struct aac_dev *dev)
- 			dev->aac_msix[i].vector_no = i;
- 			dev->aac_msix[i].dev = dev;
+ single_msi_mode:
+ 	if (pci_find_capability(h->pdev, PCI_CAP_ID_MSI)) {
+ 		dev_info(&h->pdev->dev, "MSI capable controller\n");
+-		if (!pci_enable_msi(h->pdev))
++		if (!pci_enable_msi(h->pdev)) {
+ 			h->msi_vector = 1;
+-		else
++			irq_flags = PCI_IRQ_MSI;
++		} else
+ 			dev_warn(&h->pdev->dev, "MSI init failed\n");
+ 	}
+ default_int_mode:
+ #endif				/* CONFIG_PCI_MSI */
+ 	/* if we get here we're going to use the default interrupt mode */
+-	h->intr[h->intr_mode] = h->pdev->irq;
++	pci_alloc_irq_vectors(h->pdev, 1, 1, irq_flags);
+ }
  
--			if (request_irq(dev->msixentry[i].vector,
-+			if (request_irq(pci_irq_vector(dev->pdev, i),
- 					dev->a_ops.adapter_intr,
- 					0, "aacraid", &(dev->aac_msix[i]))) {
- 				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
- 						name, instance, i);
- 				for (j = 0 ; j < i ; j++)
--					free_irq(dev->msixentry[j].vector,
-+					free_irq(pci_irq_vector(dev->pdev, j),
- 						 &(dev->aac_msix[j]));
- 				pci_disable_msix(dev->pdev);
- 				goto error_iounmap;
+ static int hpsa_lookup_board_id(struct pci_dev *pdev, u32 *board_id)
+@@ -8236,17 +8230,6 @@ static int hpsa_alloc_cmd_pool(struct ctlr_info *h)
+ 	return -ENOMEM;
+ }
+ 
+-static void hpsa_irq_affinity_hints(struct ctlr_info *h)
+-{
+-	int i, cpu;
+-
+-	cpu = cpumask_first(cpu_online_mask);
+-	for (i = 0; i < h->msix_vector; i++) {
+-		irq_set_affinity_hint(h->intr[i], get_cpu_mask(cpu));
+-		cpu = cpumask_next(cpu, cpu_online_mask);
+-	}
+-}
+-
+ /* clear affinity hints and free MSI-X, MSI, or legacy INTx vectors */
+ static void hpsa_free_irqs(struct ctlr_info *h)
+ {
+@@ -8255,15 +8238,13 @@ static void hpsa_free_irqs(struct ctlr_info *h)
+ 	if (!h->msix_vector || h->intr_mode != PERF_MODE_INT) {
+ 		/* Single reply queue, only one irq to free */
+ 		i = h->intr_mode;
+-		irq_set_affinity_hint(h->intr[i], NULL);
+-		free_irq(h->intr[i], &h->q[i]);
++		free_irq(pci_irq_vector(h->pdev, i), &h->q[i]);
+ 		h->q[i] = 0;
+ 		return;
+ 	}
+ 
+ 	for (i = 0; i < h->msix_vector; i++) {
+-		irq_set_affinity_hint(h->intr[i], NULL);
+-		free_irq(h->intr[i], &h->q[i]);
++		free_irq(pci_irq_vector(h->pdev, i), &h->q[i]);
+ 		h->q[i] = 0;
+ 	}
+ 	for (; i < MAX_REPLY_QUEUES; i++)
+@@ -8288,17 +8269,18 @@ static int hpsa_request_irqs(struct ctlr_info *h,
+ 		/* If performant mode and MSI-X, use multiple reply queues */
+ 		for (i = 0; i < h->msix_vector; i++) {
+ 			sprintf(h->intrname[i], "%s-msix%d", h->devname, i);
+-			rc = request_irq(h->intr[i], msixhandler,
+-					0, h->intrname[i],
+-					&h->q[i]);
++			rc = request_irq(pci_irq_vector(h->pdev, i),
++					 msixhandler, 0, h->intrname[i],
++					 &h->q[i]);
+ 			if (rc) {
+ 				int j;
+ 
+ 				dev_err(&h->pdev->dev,
+ 					"failed to get irq %d for %s\n",
+-				       h->intr[i], h->devname);
++					pci_irq_vector(h->pdev, i), h->devname);
+ 				for (j = 0; j < i; j++) {
+-					free_irq(h->intr[j], &h->q[j]);
++					free_irq(pci_irq_vector(h->pdev, i),
++						 &h->q[j]);
+ 					h->q[j] = 0;
+ 				}
+ 				for (; j < MAX_REPLY_QUEUES; j++)
+@@ -8306,7 +8288,6 @@ static int hpsa_request_irqs(struct ctlr_info *h,
+ 				return rc;
+ 			}
+ 		}
+-		hpsa_irq_affinity_hints(h);
+ 	} else {
+ 		/* Use single reply pool */
+ 		if (h->msix_vector > 0 || h->msi_vector) {
+@@ -8316,23 +8297,22 @@ static int hpsa_request_irqs(struct ctlr_info *h,
+ 			else
+ 				sprintf(h->intrname[h->intr_mode],
+ 					"%s-msi", h->devname);
+-			rc = request_irq(h->intr[h->intr_mode],
+-				msixhandler, 0,
+-				h->intrname[h->intr_mode],
+-				&h->q[h->intr_mode]);
++			rc = request_irq(pci_irq_vector(h->pdev, h->intr_mode),
++					 msixhandler, 0,
++					 h->intrname[h->intr_mode],
++					 &h->q[h->intr_mode]);
+ 		} else {
+ 			sprintf(h->intrname[h->intr_mode],
+ 				"%s-intx", h->devname);
+-			rc = request_irq(h->intr[h->intr_mode],
+-				intxhandler, IRQF_SHARED,
+-				h->intrname[h->intr_mode],
+-				&h->q[h->intr_mode]);
++			rc = request_irq(pci_irq_vector(h->pdev, h->intr_mode),
++					 intxhandler, IRQF_SHARED,
++					 h->intrname[h->intr_mode],
++					 &h->q[h->intr_mode]);
+ 		}
+-		irq_set_affinity_hint(h->intr[h->intr_mode], NULL);
+ 	}
+ 	if (rc) {
+ 		dev_err(&h->pdev->dev, "failed to get irq %d for %s\n",
+-		       h->intr[h->intr_mode], h->devname);
++			pci_irq_vector(h->pdev, h->intr_mode), h->devname);
+ 		hpsa_free_irqs(h);
+ 		return -ENODEV;
+ 	}
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 82cdfad..a10a24c 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -175,7 +175,6 @@ struct ctlr_info {
+ #	define DOORBELL_INT	1
+ #	define SIMPLE_MODE_INT	2
+ #	define MEMQ_MODE_INT	3
+-	unsigned int intr[MAX_REPLY_QUEUES];
+ 	unsigned int msix_vector;
+ 	unsigned int msi_vector;
+ 	int intr_mode; /* either PERF_MODE_INT or SIMPLE_MODE_INT */
 -- 
 1.8.5.6
 
