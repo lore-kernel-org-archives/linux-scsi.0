@@ -1,29 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 00/12] ufs-qcom: phy/hcd: Clean up qcom-ufs phy and ufs-qcom hcd
-Date: Tue, 08 Nov 2016 18:06:25 -0500
-Message-ID: <yq1r36lr2q6.fsf@sermon.lab.mkp.net>
-References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
+Subject: Re: [REGRESSION] 4.9-rc4+ doesn't boot on my test box
+Date: Tue, 08 Nov 2016 18:15:22 -0500
+Message-ID: <yq1mvh9r2b9.fsf@sermon.lab.mkp.net>
+References: <f0fa381c-e224-b660-27c4-dede4a5b543e@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20822 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751032AbcKHXGk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 18:06:40 -0500
-In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-        (Vivek Gautam's message of "Tue, 8 Nov 2016 15:37:39 +0530")
+Received: from userp1040.oracle.com ([156.151.31.81]:40061 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751570AbcKHXPb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 18:15:31 -0500
+In-Reply-To: <f0fa381c-e224-b660-27c4-dede4a5b543e@kernel.dk> (Jens Axboe's
+        message of "Tue, 8 Nov 2016 10:42:37 -0700")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Vivek Gautam <vivek.gautam@codeaurora.org>
-Cc: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com, sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
->>>>> "Vivek" == Vivek Gautam <vivek.gautam@codeaurora.org> writes:
+>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
 
-Vivek> Here's the rebased version of patches based on 4.10/scsi-queue
-Vivek> branch as requested.  The patches can now be applied and
-Vivek> pulled-in.
+Jens> I wasted half a day on this, thinking it was something in my
+Jens> 4.10 branches. But it turns out it is not, the regression is in
+Jens> mainline.
 
-Thanks! Applied to 4.10/scsi-queue.
+Kashyap, have you tested the stable fix without the remainder of the
+driver update in place?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
