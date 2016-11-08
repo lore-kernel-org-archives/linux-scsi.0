@@ -1,82 +1,51 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [RESEND][PATCH v1] ufs: introduce setup_task_mgmt
-Date: Tue, 08 Nov 2016 17:03:41 +0900
-Message-ID: <002601d23996$9e5872c0$db095840$@samsung.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:35117 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751991AbcKHIOw (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 03:14:52 -0500
-Received: from epcpsbgm2new.samsung.com (epcpsbgm2 [203.254.230.27])
- by mailout2.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OGB007Z4D25T240@mailout2.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 08 Nov 2016 17:03:41 +0900 (KST)
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] libfc: fix seconds_since_last_reset miscalculation
+Date: Tue,  8 Nov 2016 09:44:54 +0100
+Message-ID: <1478594694-98847-1-git-send-email-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>, Bart Van Assche <bart.vanassche@sandisk.com>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: =?UTF-8?B?7LaU7ZeM6rSR?= <hg.chu@samsung.com>
 
-Some UFS host controller may need to configure some things
-before any task management request is issued.
+Commit 540eb1eef 'scsi: libfc: fix seconds_since_last_reset calculation'
+removed the use of 'struct timespec' from fc_get_host_stats(). This broke the
+output of 'fcoeadm -s' after kernel 4.8-rc1 as lport->boot_time - jiffies
+could become negative as in this example:
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+$ cat /sys/class/fc_host/host8/statistics/seconds_since_last_reset 
+0x10624dd2f1977b4
+
+Take this into account so
+/sys/class/fc_host/hostX/statistics/seconds_since_last_reset is sane again.
+
+Fixes: 540eb1eef ('scsi: libfc: fix seconds_since_last_reset calculation')
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Tested-by: Holger Schranz <holger@fam-schranz.de>
 ---
- drivers/scsi/ufs/ufshcd.c |  1 +
- drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
- 2 files changed, 11 insertions(+)
+ drivers/scsi/libfc/fc_lport.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index bf78321..fdb0502 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -4358,6 +4358,7 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba *hba, int lun_id, int task_id,
- 	task_req_upiup->input_param2 = cpu_to_be32(task_id);
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 04ce7cf..475c0a9 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -304,11 +304,15 @@ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+ 	unsigned int cpu;
+ 	u64 fcp_in_bytes = 0;
+ 	u64 fcp_out_bytes = 0;
++	unsigned long boot_time = lport->boot_time;
  
- 	/* send command to the controller */
-+	ufshcd_vops_setup_task_mgmt(hba, free_slot, tm_function);
- 	__set_bit(free_slot, &hba->outstanding_tasks);
+ 	fc_stats = &lport->host_stats;
+ 	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
  
- 	/* Make sure descriptors are ready before ringing the task doorbell */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index f2a69c0..b084d89 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -263,6 +263,8 @@ struct ufs_pwr_mode_info {
-  *			to be set.
-  * @setup_xfer_req: called before any transfer request is issued
-  *                  to set some things
-+ * @setup_task_mgmt: called before any task management request is issued
-+ *                  to set some things
-  * @suspend: called during host controller PM callback
-  * @resume: called during host controller PM callback
-  * @dbg_register_dump: used to dump controller debug information
-@@ -287,6 +289,7 @@ struct ufs_hba_variant_ops {
- 					struct ufs_pa_layer_attr *,
- 					struct ufs_pa_layer_attr *);
- 	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
-+	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
- 	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
- 	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
- 	void	(*dbg_register_dump)(struct ufs_hba *hba);
-@@ -811,6 +814,13 @@ static inline void ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int tag,
- 		return hba->vops->setup_xfer_req(hba, tag, is_cmd_not_null);
- }
+-	fc_stats->seconds_since_last_reset = (lport->boot_time - jiffies) / HZ;
++	if (boot_time > jiffies)
++		fc_stats->seconds_since_last_reset = (boot_time - jiffies) / HZ;
++	else
++		fc_stats->seconds_since_last_reset = (jiffies - boot_time) / HZ;
  
-+static inline void ufshcd_vops_setup_task_mgmt(struct ufs_hba *hba,
-+					int tag, u8 tm_function)
-+{
-+	if (hba->vops && hba->vops->setup_task_mgmt)
-+		return hba->vops->setup_task_mgmt(hba, tag, tm_function);
-+}
-+
- static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum ufs_pm_op op)
- {
- 	if (hba->vops && hba->vops->suspend)
+ 	for_each_possible_cpu(cpu) {
+ 		struct fc_stats *stats;
 -- 
-2.1.4
-
+1.8.5.6
