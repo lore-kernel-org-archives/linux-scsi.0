@@ -1,88 +1,60 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a
- deadlock
-Date: Tue, 8 Nov 2016 15:33:33 -0800
-Message-ID: <0129858f-382b-0903-7157-40e5ec8a9e6a@sandisk.com>
-References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
- <1478618887.2824.2.camel@linux.vnet.ibm.com>
- <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
- <1478628101.2824.27.camel@linux.vnet.ibm.com> <87oa1pvl8f.fsf@xmission.com>
+From: Arun Easi <arun.easi@cavium.com>
+Subject: Re: [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver
+ framework.
+Date: Tue, 8 Nov 2016 12:04:48 -0800
+Message-ID: <alpine.LRH.2.00.1611081129440.28058@mvluser05.qlc.com>
+References: <201611081805.KzpHTNxg%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0064.outbound.protection.outlook.com ([104.47.32.64]:9900
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751591AbcKHXdm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 18:33:42 -0500
-In-Reply-To: <87oa1pvl8f.fsf@xmission.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <201611081805.KzpHTNxg%fengguang.wu@intel.com>
+Sender: netdev-owner@vger.kernel.org
+To: kbuild test robot <lkp@intel.com>
+Cc: Manish Rangankar <manish.rangankar@cavium.com>, kbuild-all@01.org, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/08/2016 11:15 AM, Eric W. Biederman wrote:
-> James Bottomley <jejb@linux.vnet.ibm.com> writes:
->
->> On Tue, 2016-11-08 at 08:52 -0800, Bart Van Assche wrote:
->>> On 11/08/2016 07:28 AM, James Bottomley wrote:
->>>> On Mon, 2016-11-07 at 16:32 -0800, Bart Van Assche wrote:
->>>>> diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
->>>>> index cf4c636..44ec536 100644
->>>>> --- a/fs/kernfs/dir.c
->>>>> +++ b/fs/kernfs/dir.c
->>>>> @@ -1410,7 +1410,7 @@ int kernfs_remove_by_name_ns(struct
->>>>> kernfs_node
->>>>> *parent, const char *name,
->>>>>  	mutex_lock(&kernfs_mutex);
->>>>>
->>>>>  	kn = kernfs_find_ns(parent, name, ns);
->>>>> -	if (kn)
->>>>> +	if (kn && !(kn->flags & KERNFS_SUICIDED))
->>>>
->>>> Actually, wrong flag, you need KERNFS_SUICIDAL.  The reason is that
->>>> kernfs_mutex is actually dropped half way through __kernfs_remove,
->>>> so KERNFS_SUICIDED is not set atomically with this mutex.
->>>
->>> Hello James,
->>>
->>> Sorry but what you wrote is not correct.
->>
->> I think you agree it is dropped.  I don't need to add the bit about the
->> reacquisition because the race is mediated by the first acquisition not
->> the second one, if you mediate on KERNFS_SUICIDAL, you only need to
->> worry about this because the mediation is in the first acquisition.  If
->> you mediate on KERNFS_SUICIDED, you need to explain that the final
->> thing that means the race can't happen is the unbreak in the sysfs
->> delete path re-acquiring s_active ... the explanation of what's going
->> on and why gets about 2x more complex.
->
-> Is it really the dropping of the lock that is causing this?
-> I don't see that when I read those traces.
->
-> I am going to put my vote in for doing all of the self removal
-> sem-asynchronously by using task_work_add, and killing
-> device_remove_self, sysfs_remove_self, kernfs_remove_self.  Using
-> task_work_add remains synchronous with userspace so userspace should not
-> care, and we get the benefit of not having two different variants of the
-> same code racing with each other.
->
-> It might take a little more work but will leave code that is much more
-> maintainable in the long run.
+[ Sending on behalf of Manish to cover for the time difference. ]
 
-Hello Eric,
+Hi Martin, James,
 
-I'm completely in favor of keeping code maintainable. But what's not 
-clear to me is whether asynchronous I/O can be submitted to a sysfs 
-attribute? If so, on what context will task work queued through 
-task_work_add() be executed if an aio write is used to write into a 
-sysfs attribute?
+I would like to request your input on this kbuild test error on the 
+series, where they compile fine together, but is not bisectable.
 
-Additionally, can a process enter the exiting state after writing into 
-the sysfs delete attribute started and before task_work_add() has been 
-called? I'm asking this because in that case task_work_add() will fail.
+qedi is the new iSCSI driver, which we are trying to submit, for our 41000 
+series CNA. This patch series were broken up into logical blocks for 
+review purpose, but were not made to compile individually. It is our 
+impression that this is acceptable for SCSI and all the initial "qedi" 
+patches will be squashed and committed as a single commit. Please let us 
+know if we are mistaken, and if so, we will post another series 
+with this taken care of.
 
-Thanks,
+FYI, this series accompany additions to the common core module, "qed", 
+that goes under drivers/net/. The patches for the qed module compiles fine 
+individually and so is bisectable.
 
-Bart.
+In regards to the additional warnings brought out by kbuild test on 
+"PATCH v2 6/6" and "PATCH v2 3/6", we will post a v3 with the fixes.
+
+Regards,
+-Arun
+
+On Tue, 8 Nov 2016, 2:52am -0000, kbuild test robot wrote:
+
+> Hi Manish,
+> 
+> [auto build test ERROR on net-next/master]
+> [also build test ERROR on v4.9-rc4]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Manish-Rangankar/qed-Add-support-for-hardware-offloaded-iSCSI/20161108-180027
+> config: ia64-allmodconfig (attached as .config)
+> compiler: ia64-linux-gcc (GCC) 6.2.0
+> reproduce:
+>         wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
+>         chmod +x ~/bin/make.cross
+>         # save the attached .config to linux build tree
+>         make.cross ARCH=ia64 
+> 
+> Note: the linux-review/Manish-Rangankar/qed-Add-support-for-hardware-offloaded-iSCSI/20161108-180027 HEAD dd4d1d0e0785d20cdcfdf9b2c792c564a79b2de2 builds fine.
+>       It only hurts bisectibility.
+> 
