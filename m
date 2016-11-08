@@ -1,61 +1,47 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 04/12] phy: qcom-ufs-14nm: Add new compatible for msm8996 based phy
-Date: Tue,  8 Nov 2016 15:37:43 +0530
-Message-ID: <1478599671-13071-5-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v5 02/12] phy: qcom-ufs: Use devm sibling of kstrdup for regulator names
+Date: Tue,  8 Nov 2016 15:37:41 +0530
+Message-ID: <1478599671-13071-3-git-send-email-vivek.gautam@codeaurora.org>
 References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60096 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932212AbcKHKIf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 05:08:35 -0500
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Add a new compatible string for 14nm ufs phy present on msm8996
-chipset. This phy is bit different from the legacy 14nm ufs phy
-in terms of the clocks that are needed to be handled in the driver.
+This helps us in avoiding any requirement for kfree() operation
+to be called exclusively over the allocated string pointer.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- Documentation/devicetree/bindings/ufs/ufs-qcom.txt | 7 +++++--
- drivers/phy/phy-qcom-ufs-qmp-14nm.c                | 1 +
- 2 files changed, 6 insertions(+), 2 deletions(-)
+ drivers/phy/phy-qcom-ufs.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-diff --git a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-index 070baf4..b6b5130 100644
---- a/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-+++ b/Documentation/devicetree/bindings/ufs/ufs-qcom.txt
-@@ -7,8 +7,11 @@ To bind UFS PHY with UFS host controller, the controller node should
- contain a phandle reference to UFS PHY node.
+diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+index 455064c..5dc24d8 100644
+--- a/drivers/phy/phy-qcom-ufs.c
++++ b/drivers/phy/phy-qcom-ufs.c
+@@ -251,7 +251,7 @@ static int __ufs_qcom_phy_init_vreg(struct phy *phy,
  
- Required properties:
--- compatible        : compatible list, contains "qcom,ufs-phy-qmp-20nm"
--		      or "qcom,ufs-phy-qmp-14nm" according to the relevant phy in use.
-+- compatible        : compatible list, contains one of the following -
-+			"qcom,ufs-phy-qmp-20nm" for 20nm ufs phy,
-+			"qcom,ufs-phy-qmp-14nm" for legacy 14nm ufs phy,
-+			"qcom,msm8996-ufs-phy-qmp-14nm" for 14nm ufs phy
-+			 present on MSM8996 chipset.
- - reg               : should contain PHY register address space (mandatory),
- - reg-names         : indicates various resources passed to driver (via reg proptery) by name.
-                       Required "reg-names" is "phy_mem".
-diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-index e3bede7..b3d2612 100644
---- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-+++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
-@@ -180,6 +180,7 @@ static int ufs_qcom_phy_qmp_14nm_remove(struct platform_device *pdev)
+ 	char prop_name[MAX_PROP_NAME];
  
- static const struct of_device_id ufs_qcom_phy_qmp_14nm_of_match[] = {
- 	{.compatible = "qcom,ufs-phy-qmp-14nm"},
-+	{.compatible = "qcom,msm8996-ufs-phy-qmp-14nm"},
- 	{},
- };
- MODULE_DEVICE_TABLE(of, ufs_qcom_phy_qmp_14nm_of_match);
+-	vreg->name = kstrdup(name, GFP_KERNEL);
++	vreg->name = devm_kstrdup(dev, name, GFP_KERNEL);
+ 	if (!vreg->name) {
+ 		err = -ENOMEM;
+ 		goto out;
+@@ -637,9 +637,6 @@ int ufs_qcom_phy_remove(struct phy *generic_phy,
+ {
+ 	phy_power_off(generic_phy);
+ 
+-	kfree(ufs_qcom_phy->vdda_pll.name);
+-	kfree(ufs_qcom_phy->vdda_phy.name);
+-
+ 	return 0;
+ }
+ EXPORT_SYMBOL_GPL(ufs_qcom_phy_remove);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
