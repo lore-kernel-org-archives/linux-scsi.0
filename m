@@ -1,199 +1,135 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 07/12] phy: qcom-ufs: Remove unnecessary function declarations
-Date: Tue,  8 Nov 2016 15:37:46 +0530
-Message-ID: <1478599671-13071-8-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v5 10/12] phy: qcom-ufs: Remove common layer phy exit callback
+Date: Tue,  8 Nov 2016 15:37:49 +0530
+Message-ID: <1478599671-13071-11-git-send-email-vivek.gautam@codeaurora.org>
 References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:60582 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932212AbcKHKIu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 05:08:50 -0500
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-arm-msm-owner@vger.kernel.org
 To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.petersen@oracle.com
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
+List-Id: linux-scsi@vger.kernel.org
 
-Move the functions' definitions to remove unnecessary
-declarations.
+The common layer phy exit callback ufs_qcom_phy_exit()
+calls phy_power_off() that has no meaning when phy_power_off()
+callback is already registered with the phy provider and
+the consumer makes use of the same.
+Instead, add a no-op specific phy_exit() callback for now
+to add the exit sequence at a later point.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/phy/phy-qcom-ufs.c | 131 +++++++++++++++++++++------------------------
- 1 file changed, 62 insertions(+), 69 deletions(-)
+ drivers/phy/phy-qcom-ufs-i.h        |  1 -
+ drivers/phy/phy-qcom-ufs-qmp-14nm.c |  7 ++++++-
+ drivers/phy/phy-qcom-ufs-qmp-20nm.c |  7 ++++++-
+ drivers/phy/phy-qcom-ufs.c          | 17 ++++++-----------
+ 4 files changed, 18 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index b85f882..c5c29fe 100644
---- a/drivers/phy/phy-qcom-ufs.c
-+++ b/drivers/phy/phy-qcom-ufs.c
-@@ -22,13 +22,6 @@
- #define VDDP_REF_CLK_MIN_UV        1200000
- #define VDDP_REF_CLK_MAX_UV        1200000
- 
--static int __ufs_qcom_phy_init_vreg(struct device *, struct ufs_qcom_phy_vreg *,
--				    const char *, bool);
--static int ufs_qcom_phy_init_vreg(struct device *, struct ufs_qcom_phy_vreg *,
--				  const char *);
--static int ufs_qcom_phy_base_init(struct platform_device *pdev,
--				  struct ufs_qcom_phy *phy_common);
--
- int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
- 			   struct ufs_qcom_phy_calibration *tbl_A,
- 			   int tbl_size_A,
-@@ -75,45 +68,6 @@ int ufs_qcom_phy_calibrate(struct ufs_qcom_phy *ufs_qcom_phy,
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate);
- 
--struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
--				struct ufs_qcom_phy *common_cfg,
--				const struct phy_ops *ufs_qcom_phy_gen_ops,
--				struct ufs_qcom_phy_specific_ops *phy_spec_ops)
--{
--	int err;
--	struct device *dev = &pdev->dev;
--	struct phy *generic_phy = NULL;
--	struct phy_provider *phy_provider;
--
--	err = ufs_qcom_phy_base_init(pdev, common_cfg);
--	if (err) {
--		dev_err(dev, "%s: phy base init failed %d\n", __func__, err);
--		goto out;
--	}
--
--	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
--	if (IS_ERR(phy_provider)) {
--		err = PTR_ERR(phy_provider);
--		dev_err(dev, "%s: failed to register phy %d\n", __func__, err);
--		goto out;
--	}
--
--	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops);
--	if (IS_ERR(generic_phy)) {
--		err =  PTR_ERR(generic_phy);
--		dev_err(dev, "%s: failed to create phy %d\n", __func__, err);
--		generic_phy = NULL;
--		goto out;
--	}
--
--	common_cfg->phy_spec_ops = phy_spec_ops;
--	common_cfg->dev = dev;
--
--out:
--	return generic_phy;
--}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
--
- /*
-  * This assumes the embedded phy structure inside generic_phy is of type
-  * struct ufs_qcom_phy. In order to function properly it's crucial
-@@ -154,6 +108,45 @@ int ufs_qcom_phy_base_init(struct platform_device *pdev,
+diff --git a/drivers/phy/phy-qcom-ufs-i.h b/drivers/phy/phy-qcom-ufs-i.h
+index 69e836d..d505d98 100644
+--- a/drivers/phy/phy-qcom-ufs-i.h
++++ b/drivers/phy/phy-qcom-ufs-i.h
+@@ -141,7 +141,6 @@ struct ufs_qcom_phy_specific_ops {
+ struct ufs_qcom_phy *get_ufs_qcom_phy(struct phy *generic_phy);
+ int ufs_qcom_phy_power_on(struct phy *generic_phy);
+ int ufs_qcom_phy_power_off(struct phy *generic_phy);
+-int ufs_qcom_phy_exit(struct phy *generic_phy);
+ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common);
+ int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common);
+ int ufs_qcom_phy_remove(struct phy *generic_phy,
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-14nm.c b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+index ae74614..c71c847 100644
+--- a/drivers/phy/phy-qcom-ufs-qmp-14nm.c
++++ b/drivers/phy/phy-qcom-ufs-qmp-14nm.c
+@@ -47,6 +47,11 @@ static int ufs_qcom_phy_qmp_14nm_init(struct phy *generic_phy)
  	return 0;
  }
  
-+struct phy *ufs_qcom_phy_generic_probe(struct platform_device *pdev,
-+				struct ufs_qcom_phy *common_cfg,
-+				const struct phy_ops *ufs_qcom_phy_gen_ops,
-+				struct ufs_qcom_phy_specific_ops *phy_spec_ops)
++static int ufs_qcom_phy_qmp_14nm_exit(struct phy *generic_phy)
 +{
-+	int err;
-+	struct device *dev = &pdev->dev;
-+	struct phy *generic_phy = NULL;
-+	struct phy_provider *phy_provider;
-+
-+	err = ufs_qcom_phy_base_init(pdev, common_cfg);
-+	if (err) {
-+		dev_err(dev, "%s: phy base init failed %d\n", __func__, err);
-+		goto out;
-+	}
-+
-+	phy_provider = devm_of_phy_provider_register(dev, of_phy_simple_xlate);
-+	if (IS_ERR(phy_provider)) {
-+		err = PTR_ERR(phy_provider);
-+		dev_err(dev, "%s: failed to register phy %d\n", __func__, err);
-+		goto out;
-+	}
-+
-+	generic_phy = devm_phy_create(dev, NULL, ufs_qcom_phy_gen_ops);
-+	if (IS_ERR(generic_phy)) {
-+		err =  PTR_ERR(generic_phy);
-+		dev_err(dev, "%s: failed to create phy %d\n", __func__, err);
-+		generic_phy = NULL;
-+		goto out;
-+	}
-+
-+	common_cfg->phy_spec_ops = phy_spec_ops;
-+	common_cfg->dev = dev;
-+
-+out:
-+	return generic_phy;
++	return 0;
 +}
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_generic_probe);
 +
- static int __ufs_qcom_phy_clk_get(struct device *dev,
- 			 const char *name, struct clk **clk_out, bool err_print)
+ static
+ void ufs_qcom_phy_qmp_14nm_power_control(struct ufs_qcom_phy *phy, bool val)
  {
-@@ -217,29 +210,6 @@ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common)
- }
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_clks);
+@@ -94,7 +99,7 @@ static int ufs_qcom_phy_qmp_14nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
  
--int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common)
+ static const struct phy_ops ufs_qcom_phy_qmp_14nm_phy_ops = {
+ 	.init		= ufs_qcom_phy_qmp_14nm_init,
+-	.exit		= ufs_qcom_phy_exit,
++	.exit		= ufs_qcom_phy_qmp_14nm_exit,
+ 	.power_on	= ufs_qcom_phy_power_on,
+ 	.power_off	= ufs_qcom_phy_power_off,
+ 	.owner		= THIS_MODULE,
+diff --git a/drivers/phy/phy-qcom-ufs-qmp-20nm.c b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+index dfc5175..1a26a64 100644
+--- a/drivers/phy/phy-qcom-ufs-qmp-20nm.c
++++ b/drivers/phy/phy-qcom-ufs-qmp-20nm.c
+@@ -66,6 +66,11 @@ static int ufs_qcom_phy_qmp_20nm_init(struct phy *generic_phy)
+ 	return 0;
+ }
+ 
++static int ufs_qcom_phy_qmp_20nm_exit(struct phy *generic_phy)
++{
++	return 0;
++}
++
+ static
+ void ufs_qcom_phy_qmp_20nm_power_control(struct ufs_qcom_phy *phy, bool val)
+ {
+@@ -152,7 +157,7 @@ static int ufs_qcom_phy_qmp_20nm_is_pcs_ready(struct ufs_qcom_phy *phy_common)
+ 
+ static const struct phy_ops ufs_qcom_phy_qmp_20nm_phy_ops = {
+ 	.init		= ufs_qcom_phy_qmp_20nm_init,
+-	.exit		= ufs_qcom_phy_exit,
++	.exit		= ufs_qcom_phy_qmp_20nm_exit,
+ 	.power_on	= ufs_qcom_phy_power_on,
+ 	.power_off	= ufs_qcom_phy_power_off,
+ 	.owner		= THIS_MODULE,
+diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
+index fdd9b90..c69568b 100644
+--- a/drivers/phy/phy-qcom-ufs.c
++++ b/drivers/phy/phy-qcom-ufs.c
+@@ -602,17 +602,6 @@ int ufs_qcom_phy_calibrate_phy(struct phy *generic_phy, bool is_rate_B)
+ }
+ EXPORT_SYMBOL_GPL(ufs_qcom_phy_calibrate_phy);
+ 
+-int ufs_qcom_phy_exit(struct phy *generic_phy)
 -{
--	int err;
+-	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
 -
--	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_pll,
--		"vdda-pll");
--	if (err)
--		goto out;
+-	if (ufs_qcom_phy->is_powered_on)
+-		phy_power_off(generic_phy);
 -
--	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_phy,
--		"vdda-phy");
--
--	if (err)
--		goto out;
--
--	/* vddp-ref-clk-* properties are optional */
--	__ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vddp_ref_clk,
--				 "vddp-ref-clk", true);
--out:
--	return err;
+-	return 0;
 -}
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_vregulators);
+-EXPORT_SYMBOL_GPL(ufs_qcom_phy_exit);
 -
- static int __ufs_qcom_phy_init_vreg(struct device *dev,
- 		struct ufs_qcom_phy_vreg *vreg, const char *name, bool optional)
+ int ufs_qcom_phy_is_pcs_ready(struct phy *generic_phy)
  {
-@@ -306,6 +276,29 @@ static int ufs_qcom_phy_init_vreg(struct device *dev,
- 	return __ufs_qcom_phy_init_vreg(dev, vreg, name, false);
- }
+ 	struct ufs_qcom_phy *ufs_qcom_phy = get_ufs_qcom_phy(generic_phy);
+@@ -634,6 +623,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
+ 	struct device *dev = phy_common->dev;
+ 	int err;
  
-+int ufs_qcom_phy_init_vregulators(struct ufs_qcom_phy *phy_common)
-+{
-+	int err;
++	if (phy_common->is_powered_on)
++		return 0;
 +
-+	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_pll,
-+		"vdda-pll");
-+	if (err)
-+		goto out;
-+
-+	err = ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vdda_phy,
-+		"vdda-phy");
-+
-+	if (err)
-+		goto out;
-+
-+	/* vddp-ref-clk-* properties are optional */
-+	__ufs_qcom_phy_init_vreg(phy_common->dev, &phy_common->vddp_ref_clk,
-+				 "vddp-ref-clk", true);
-+out:
-+	return err;
-+}
-+EXPORT_SYMBOL_GPL(ufs_qcom_phy_init_vregulators);
-+
- static int ufs_qcom_phy_cfg_vreg(struct device *dev,
- 			  struct ufs_qcom_phy_vreg *vreg, bool on)
+ 	err = ufs_qcom_phy_enable_vreg(dev, &phy_common->vdda_phy);
+ 	if (err) {
+ 		dev_err(dev, "%s enable vdda_phy failed, err=%d\n",
+@@ -696,6 +688,9 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
  {
+ 	struct ufs_qcom_phy *phy_common = get_ufs_qcom_phy(generic_phy);
+ 
++	if (!phy_common->is_powered_on)
++		return 0;
++
+ 	phy_common->phy_spec_ops->power_control(phy_common, false);
+ 
+ 	if (phy_common->vddp_ref_clk.reg)
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
