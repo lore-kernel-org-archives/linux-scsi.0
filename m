@@ -1,82 +1,166 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Ordering problems with 3ware controller
-Date: Tue, 8 Nov 2016 11:07:37 +0100
-Message-ID: <a41b4bab-edb7-34ab-eb76-7ff4d6e3f677@molgen.mpg.de>
+From: Manish Rangankar <manish.rangankar@cavium.com>
+Subject: [PATCH v2 0/6] Add QLogic FastLinQ iSCSI (qedi) driver.
+Date: Mon, 7 Nov 2016 22:56:57 -0800
+Message-ID: <1478588223-16183-1-git-send-email-manish.rangankar@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.molgen.mpg.de ([141.14.17.9]:51289 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932477AbcKHKPc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 05:15:32 -0500
+Received: from mail-sn1nam01on0077.outbound.protection.outlook.com ([104.47.32.77]:54432
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S933001AbcKHK3f (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 05:29:35 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: Adam Radford <linuxraid@lsi.com>
+To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
 
-Dear Linux SCSI folks,
+This series introduces hardware offload iSCSI initiator driver for the
+41000 Series Converged Network Adapters (579xx chip) by Qlogic. The overall
+driver design includes a common module ('qed') and protocol specific
+dependent modules ('qedi' for iSCSI).
+
+This is an open iSCSI driver, modifications to open iSCSI user components
+'iscsid', 'iscsiuio', etc. are required for the solution to work. The user
+space changes are also in the process of being submitted.
+
+    https://groups.google.com/forum/#!forum/open-iscsi
+
+The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
+enhanced with functionality required for the iSCSI support. This series
+is based on:
+
+    net tree base: Merge of net and net-next as of 10/31/2016
+
+Changes from RFC v1:
+
+ RFC v1 comments reference:
+
+  http://marc.info/?l=linux-scsi&w=2&r=1&s=qed&q=b
+
+ The following comments were incorporated:-
+
+  1. MAC copying to use unaligned macro in qed_sp_iscsi_conn_offload()
+  2. Contain scattered IS_ENABLED() check inside header file.
+  3. Reduce indent in qed_iscsi_start() by changing logic slightly.
+  4. Use kernel-doc style documentation.
+  5. Shorten qed_ll2_lb_rxq_completion() by removing queue handling as
+     a separate function.
+  6. Reduce code duplication by creating qed_ooo_submit_[tr]x_buffers().
+  7. Remove dynamic memory allocation in ISR for solicited packets. 
+  8. Rearrange qedi_process_iscsi_error() code to use mapping values
+     onto strings.
+  9. Use kernel-doc style documentation in qedi_hsi.h
+  10. Change pr_crit to pr_err. 
+  11. Remove unnecessary typecasting. 
+  12. Change kmalloc to kmalloc_array in qedi_setup_cid_que(). 
+  13. Rearrange firmware and driver version information print. 
+  14. Change variable names from scsi_lun to other, as scsi_lun struct exists.
+  15. Introduce QEDI_U64_HI and QEDI_U64_LO macros for code readability. 
+  16. Move scsi_dma_unmap above sge_valid in qedi_iscsi_unmap_sg_list(). 
+  17. Introduce QEDI_OFLD_WAIT_STATE for code readability.
+  18. Add cond_resched() in per_cpu_io_thread to avoid soft-lockups.
+  19. Change trace_io to accomodate all the scsi commands. 
+  20. Spell correction in comments section.
+
+ The following comments were not incorporated:-
+  1. Remove "QLogic qed NIC Driver" comment
+     - Applies to drivers/net/ethernet/qlogic/qed/*.[ch]
+     - This will be submitted as a separate patch, as there are multiple
+       files (files that are not part of this series) need to be updated
+       and this change is not related to this series.
+  2. Update copyright
+     - Applies to drivers/net/ethernet/qlogic/qed/*.[ch]
+     - Same as above, will submit a separate patch, as multiple files
+       need to be updated and this change is not related to this series.
+  3. Remove adding and removing of QEDI Kconfig entries. Added by
+     "qed" patch and removed and re-added by "qedi" patch.
+     - QEDI driver is composed of two parts, the common module (qed) and
+       the protocol module (qedi), which goes in net and scsi trees
+       respectively. The qed module conditionally enables certain
+       functionality for the QEDI module in qed; hence the Kconfig entry was
+       added for QEDI by qed; otherwise it looks odd to use CONFIG_QEDI
+       in qed. So, the remove and re-add is left as is.
+  4. Workqueue implementation in completion path.
+     - This change will be submitted as a separate patch, as it requires 
+       complete performance validation cycle.
+  5. IRQ handling changes from Christoph H. irq work. 
+     - This change will also be subitted as a separate patch, as it also
+       require change in qed.ko module which will affect other protocol
+       drivers (qedr, qede) as well.
+     - This change will be integral part of MQ/MQ-TAG infrastructure that
+       we want to employ in our qedi driver. 
+  6. Using multiple memory barriers.
+     - We kept both memory barriers as a failsafe, as for some architectures
+       the call is the same but on others they are two different assembly
+       operations. We have updated patch with same information in comments.
 
 
-Updating from Linux 4.4.X to Linux 4.8.4, we noticed that the 3ware 
-devices under `/dev` – `/dev/twa0`, `/dev/twa1`, … – map to the 
-controllers differently.
+Manish Rangankar (4):
+  qedi: Add QLogic FastLinQ offload iSCSI driver framework.
+  qedi: Add LL2 iSCSI interface for offload iSCSI.
+  qedi: Add support for iSCSI session management.
+  qedi: Add support for data path.
 
-This unfortunately breaks quite a lot of our scripts, as we depend on 
-the fact that the first controller is also in the front.
+Yuval Mintz (2):
+  qed: Add support for hardware offloaded iSCSI.
+  qed: Add iSCSI out of order packet handling.
 
-> $ dmesg | grep 3ware
-> [   14.509238] 3ware 9000 Storage Controller device driver for Linux v2.26.02.014.
-> [   14.824274] scsi host8: 3ware 9000 Storage Controller
-> [   14.824537] 3w-9xxx: scsi8: Found a 3ware 9000 Storage Controller at 0xd0200000, IRQ: 17.
-> [   15.508310] scsi host9: 3ware 9000 Storage Controller
-> [   15.508569] 3w-9xxx: scsi9: Found a 3ware 9000 Storage Controller at 0xda100000, IRQ: 17.
+ MAINTAINERS                                    |    6 +
+ drivers/net/ethernet/qlogic/Kconfig            |   15 +
+ drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
+ drivers/net/ethernet/qlogic/qed/qed.h          |    8 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c      |   22 +
+ drivers/net/ethernet/qlogic/qed/qed_int.h      |    1 -
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1276 +++++++++++++
+ drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
+ drivers/net/ethernet/qlogic/qed/qed_l2.c       |    1 -
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c      |  507 ++++-
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h      |    9 +
+ drivers/net/ethernet/qlogic/qed/qed_ooo.c      |  501 +++++
+ drivers/net/ethernet/qlogic/qed/qed_ooo.h      |  173 ++
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
+ drivers/net/ethernet/qlogic/qed/qed_roce.c     |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_spq.c      |   24 +
+ drivers/scsi/Kconfig                           |    1 +
+ drivers/scsi/Makefile                          |    1 +
+ drivers/scsi/qedi/Kconfig                      |   10 +
+ drivers/scsi/qedi/Makefile                     |    5 +
+ drivers/scsi/qedi/qedi.h                       |  364 ++++
+ drivers/scsi/qedi/qedi_dbg.c                   |  143 ++
+ drivers/scsi/qedi/qedi_dbg.h                   |  144 ++
+ drivers/scsi/qedi/qedi_debugfs.c               |  244 +++
+ drivers/scsi/qedi/qedi_fw.c                    | 2378 ++++++++++++++++++++++++
+ drivers/scsi/qedi/qedi_gbl.h                   |   73 +
+ drivers/scsi/qedi/qedi_hsi.h                   |   52 +
+ drivers/scsi/qedi/qedi_iscsi.c                 | 1624 ++++++++++++++++
+ drivers/scsi/qedi/qedi_iscsi.h                 |  232 +++
+ drivers/scsi/qedi/qedi_main.c                  | 2143 +++++++++++++++++++++
+ drivers/scsi/qedi/qedi_sysfs.c                 |   52 +
+ drivers/scsi/qedi/qedi_version.h               |   14 +
+ include/linux/qed/qed_if.h                     |    2 +
+ include/linux/qed/qed_iscsi_if.h               |  229 +++
+ 34 files changed, 10297 insertions(+), 13 deletions(-)
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.h
+ create mode 100644 drivers/scsi/qedi/Kconfig
+ create mode 100644 drivers/scsi/qedi/Makefile
+ create mode 100644 drivers/scsi/qedi/qedi.h
+ create mode 100644 drivers/scsi/qedi/qedi_dbg.c
+ create mode 100644 drivers/scsi/qedi/qedi_dbg.h
+ create mode 100644 drivers/scsi/qedi/qedi_debugfs.c
+ create mode 100644 drivers/scsi/qedi/qedi_fw.c
+ create mode 100644 drivers/scsi/qedi/qedi_gbl.h
+ create mode 100644 drivers/scsi/qedi/qedi_hsi.h
+ create mode 100644 drivers/scsi/qedi/qedi_iscsi.c
+ create mode 100644 drivers/scsi/qedi/qedi_iscsi.h
+ create mode 100644 drivers/scsi/qedi/qedi_main.c
+ create mode 100644 drivers/scsi/qedi/qedi_sysfs.c
+ create mode 100644 drivers/scsi/qedi/qedi_version.h
+ create mode 100644 include/linux/qed/qed_iscsi_if.h
 
-Tracing `twi_cli` it looks like the ordering of the devices in 
-`/sys/class/scsi_host` might have changed, as `getdents64` seems to be 
-used for the ordering of creating `/dev/twaX`.
+-- 
+1.8.3.1
 
-> $ find /sys/class/scsi_host/ -ls
->      6033      0 drwxr-xr-x   2  root     system          0 Nov  8 10:58 /sys/class/scsi_host/
->     23125      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host0 -> ../../devices/pci0000:00/0000:00:07.0/ata1/host0/scsi_host/host0
->     29893      0 lrwxrwxrwx   1  root     system          0 Oct 27 18:03 /sys/class/scsi_host/host9 -> ../../devices/pci0000:80/0000:80:0e.0/0000:90:00.0/host9/scsi_host/host9
->     23878      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host7 -> ../../devices/pci0000:80/0000:80:08.0/ata8/host7/scsi_host/host7
->     23640      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host5 -> ../../devices/pci0000:80/0000:80:07.0/ata6/host5/scsi_host/host5
->     23402      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host3 -> ../../devices/pci0000:00/0000:00:08.0/ata4/host3/scsi_host/host3
->     23164      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host1 -> ../../devices/pci0000:00/0000:00:07.0/ata2/host1/scsi_host/host1
->     29851      0 lrwxrwxrwx   1  root     system          0 Oct 27 18:03 /sys/class/scsi_host/host8 -> ../../devices/pci0000:00/0000:00:0e.0/0000:05:00.0/host8/scsi_host/host8
->     23839      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host6 -> ../../devices/pci0000:80/0000:80:08.0/ata7/host6/scsi_host/host6
->     23601      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host4 -> ../../devices/pci0000:80/0000:80:07.0/ata5/host4/scsi_host/host4
->     23363      0 lrwxrwxrwx   1  root     system          0 Oct 27 17:41 /sys/class/scsi_host/host2 -> ../../devices/pci0000:00/0000:00:08.0/ata3/host2/scsi_host/host2
-> $ sudo -i tw_cli show
->
-> Ctl   Model        (V)Ports  Drives   Units   NotOpt  RRate   VRate  BBU
-> ------------------------------------------------------------------------
-> c8    9650SE-8LPML 8         8        1       0       5       1      OK
-> c9    9690SA-8E    0         0        0       0       5       1      OK
->
-> Enclosure     Slots  Drives  Fans  TSUnits  PSUnits  Alarms
-> --------------------------------------------------------------
-> /c9/e0        16     0       3     1        2        1
-
-So in this case `c8` is mapped to `/dev/twa1`, and `c9` to `/dev/twa0`.
-
-As we do not know of a way, to use `tw_cli` to find the correct mapping, 
-or another place, we rely on the implicit ordering, which – according to 
-my colleagues – has worked for over 15 years [1].
-
-Do you know of a way, to either get the mapping “over an API” so we 
-don’t have to rely on the implicit ordering?
-
-Otherwise, do you know, why the ordering has changed, and can this be 
-reverted?
-
-
-Kind regards,
-
-Paul Menzel
-
-
-[1] 
-https://www.thomas-krenn.com/de/wiki/Smartmontools_mit_3ware_RAID_Controller
-     (German)
