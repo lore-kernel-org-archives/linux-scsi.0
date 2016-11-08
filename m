@@ -1,38 +1,49 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 187231] kernel panic during hpsa MSI plus tg3 MSI
-Date: Tue, 08 Nov 2016 16:01:26 +0000
-Message-ID: <bug-187231-11613-uUHVVa8p9E@https.bugzilla.kernel.org/>
-References: <bug-187231-11613@https.bugzilla.kernel.org/>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a
+ deadlock
+Date: Tue, 8 Nov 2016 08:52:15 -0800
+Message-ID: <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
+References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
+ <1478618887.2824.2.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="utf-8"; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:59226 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752978AbcKHQBe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 11:01:34 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 49D6F2025B
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2016 16:01:33 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 367F020279
-        for <linux-scsi@vger.kernel.org>; Tue,  8 Nov 2016 16:01:27 +0000 (UTC)
-In-Reply-To: <bug-187231-11613@https.bugzilla.kernel.org/>
+Received: from mail-co1nam03on0071.outbound.protection.outlook.com ([104.47.40.71]:33504
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753940AbcKHQwa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 11:52:30 -0500
+In-Reply-To: <1478618887.2824.2.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Greg Kroah-Hartman <greg@kroah.com>, Eric Biederman <ebiederm@xmission.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=187231
+On 11/08/2016 07:28 AM, James Bottomley wrote:
+> On Mon, 2016-11-07 at 16:32 -0800, Bart Van Assche wrote:
+>> diff --git a/fs/kernfs/dir.c b/fs/kernfs/dir.c
+>> index cf4c636..44ec536 100644
+>> --- a/fs/kernfs/dir.c
+>> +++ b/fs/kernfs/dir.c
+>> @@ -1410,7 +1410,7 @@ int kernfs_remove_by_name_ns(struct kernfs_node
+>> *parent, const char *name,
+>>  	mutex_lock(&kernfs_mutex);
+>>
+>>  	kn = kernfs_find_ns(parent, name, ns);
+>> -	if (kn)
+>> +	if (kn && !(kn->flags & KERNFS_SUICIDED))
+>
+> Actually, wrong flag, you need KERNFS_SUICIDAL.  The reason is that
+> kernfs_mutex is actually dropped half way through __kernfs_remove, so
+> KERNFS_SUICIDED is not set atomically with this mutex.
 
---- Comment #4 from Patrick Schaaf <kernelorg@bof.de> ---
-That problematic box, which showed the kernel panic with 4.8.6, and the
-resetting/reset-up-to-20-seconds pauses several times a day with both 4.8 and
-4.4.x, has now been running on 3.14.79 (with the same kvm load as before), for
-30 hours, without any such HPSA resetting symptoms, or untoward pauses in the
-VMs that I could otherwise notice in monitoring.
+Hello James,
 
-So somehow 3.14 does not trigger these episodes, or so it seems.
+Sorry but what you wrote is not correct. __kernfs_remove() calls 
+kernfs_drain(). That last function not only drops but also reacquires 
+kernfs_mutex. So both KERNFS_SUICIDAL and KERNFS_SUICIDED are set while 
+holding kernfs_mutex.
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Bart.
+
