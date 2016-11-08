@@ -1,82 +1,63 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: [REGRESSION] 4.9-rc4+ doesn't boot on my test box
-Date: Tue, 8 Nov 2016 10:42:37 -0700
-Message-ID: <f0fa381c-e224-b660-27c4-dede4a5b543e@kernel.dk>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 0/2] qla2xxx: fix errors in PCI device remove with ongoing
+ I/O
+Date: Tue, 8 Nov 2016 17:47:44 +0000
+Message-ID: <25A8D59D-ED2B-4E97-80DD-36F347862DEC@cavium.com>
+References: <1478548411-17932-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f53.google.com ([209.85.214.53]:33338 "EHLO
-        mail-it0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754038AbcKHRmk (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 12:42:40 -0500
-Received: by mail-it0-f53.google.com with SMTP id e187so33328653itc.0
-        for <linux-scsi@vger.kernel.org>; Tue, 08 Nov 2016 09:42:40 -0800 (PST)
+Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:43392
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932996AbcKHRrr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 8 Nov 2016 12:47:47 -0500
+In-Reply-To: <1478548411-17932-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <704158789F7B5D49AC0728EA426C4049@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
-Cc: Kashyap Desai <kashyap.desai@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-Hi,
-
-I wasted half a day on this, thinking it was something in my 4.10
-branches. But it turns out it is not, the regression is in mainline.
-
-Looking at the recent fixes, turns out to be this one:
-
-commit 1e793f6fc0db920400574211c48f9157a37e3945
-Author: Kashyap Desai <kashyap.desai@broadcom.com>
-Date:   Fri Oct 21 06:33:32 2016 -0700
-
-     scsi: megaraid_sas: Fix data integrity failure for JBOD 
-(passthrough) devices
-
-If I revert that, box boots fine again. The effect of the regression is
-that my box detects tons of SCSI devices (literally, thousands):
-
-[   11.675834] sd 0:2:0:0: [sda] Sector size 0 reported, assuming 512.
-[   11.675840] sd 0:2:0:0: Attached scsi generic sg0 type 0
-[   11.676096] sd 0:2:1:0: Attached scsi generic sg1 type 0
-[   11.676099] sd 0:2:1:0: [sdb] Sector size 0 reported, assuming 512.
-[   11.676105] sd 0:2:1:0: [sdb] 1 512-byte logical blocks: (512 B/512 B)
-[   11.676107] sd 0:2:1:0: [sdb] 0-byte physical blocks
-[   11.676132] sd 0:2:1:0: [sdb] Write Protect is off
-[   11.676170] sd 0:2:1:0: [sdb] Asking for cache data failed
-[   11.676173] sd 0:2:1:0: [sdb] Assuming drive cache: write through
-[   11.676410] sd 0:2:2:0: Attached scsi generic sg2 type 0
-[   11.676432] sd 0:2:2:0: [sdc] Sector size 0 reported, assuming 512.
-[   11.676435] sd 0:2:2:0: [sdc] 1 512-byte logical blocks: (512 B/512 B)
-[   11.676438] sd 0:2:2:0: [sdc] 0-byte physical blocks
-[   11.676442] sd 0:2:1:0: [sdb] Sector size 0 reported, assuming 512.
-[   11.676454] sd 0:2:2:0: [sdc] Write Protect is off
-[   11.676476] sd 0:2:2:0: [sdc] Asking for cache data failed
-[   11.676478] sd 0:2:2:0: [sdc] Assuming drive cache: write through
-[...]
-
-[   11.717641] sd 0:3:63:0: Attached scsi generic sg127 type 0
-[   11.717757] sd 0:3:62:0: [sddw] Sector size 0 reported, assuming 512.
-[   11.717801] sd 0:3:63:0: [sddx] Sector size 0 reported, assuming 512.
-[   11.717802] sd 0:3:62:0: [sddw] Attached SCSI disk
-[   11.718011] sd 0:3:63:0: [sddx] Sector size 0 reported, assuming 512.
-
-where a normal boots just detects sda and the CD-ROM:
-
-[   10.398120] sd 0:2:0:0: Attached scsi generic sg0 type 0
-[   10.398369] sd 0:2:0:0: [sda] 975699968 512-byte logical blocks: (500 
-GB/465 GiB)
-[   10.398684] sd 0:2:0:0: [sda] Write Protect is off
-[   10.398872] sd 0:2:0:0: [sda] Write cache: disabled, read cache: 
-enabled, supports DPO and FUA
-[   10.435084]  sda: sda1 sda2 < sda5 sda6 > sda3
-[   10.437522] scsi 5:0:0:0: CD-ROM            TEAC     DVD-ROM DV-28SW 
-R.2B PQ: 0 ANSI: 5
-[   10.456582] sd 0:2:0:0: [sda] Attached SCSI disk
-[   10.500499] sr 5:0:0:0: [sr0] scsi3-mmc drive: 24x/24x cd/rw xa/form2 
-cdda tray
-[   10.508830] cdrom: Uniform CD-ROM driver Revision: 3.20
-[   10.515186] sr 5:0:0:0: Attached scsi generic sg1 type 5
-
-
--- 
-Jens Axboe
-
+DQoNCk9uIDExLzcvMTYsIDExOjUzIEFNLCAiTWF1cmljaW8gRmFyaWEgZGUgT2xpdmVpcmEiIDxt
+YXVyaWNmb0BsaW51eC52bmV0LmlibS5jb20+IHdyb3RlOg0KDQo+VGhpcyBwYXRjaHNldCBhZGRy
+ZXNzZXMgYSBjb3VwbGUgb2YgZXJyb3JzIHRoYXQgbWlnaHQgaGFwcGVuIGR1cmluZw0KPlBDSSBk
+ZXZpY2UgcmVtb3ZlIChlLmcuLCBQQ0kgaG90cGx1ZywgUG93ZXJWTSBETFBBUiksIHdoaWNoIHBy
+ZXZlbnQNCj50aGUgc3VjY2Vzc2Z1bCByZW1vdmFsIGFuZCByZS1hZGRpdGlvbiBvZiB0aGUgYWRh
+cHRlciB0byB0aGUgc3lzdGVtLA0KPmFuZCBjYXVzZSBhbiBvb3BzIGFuZC9vciBpbnZhbGlkIERN
+QSBhY2Nlc3MgKHRyaWdnZXJzIGFuIEVFSCBldmVudCkuDQo+DQo+SXQgYWxsb3dlZCBzZXZlcmFs
+IGN5Y2xlcyBvZiBQQ0kgZGV2aWNlIGFkZC9yZW1vdmUgd2l0aCBvbmdvaW5nIEkvTywNCj50byBj
+b21wbGV0ZSBzdWNjZXNzZnVsbHkgd2l0aG91dCB0cmlnZ2VyaW5nIG9vcHNlcyBvciBFRUggZXZl
+bnRzLg0KPg0KPlZlcmlmaWVkIG9uIHY0LjktcmMzLg0KPg0KPlRlc3QtY2FzZToNCj4tLS0NCj4g
+ICAgIyBsc3BjaQ0KPiAgICA8Li4uPg0KPiAgICAwMDFkOjcwOjAwLjAgRmlicmUgQ2hhbm5lbDog
+UUxvZ2ljIENvcnAuIElTUDI1MzItYmFzZWQgLi4uDQo+ICAgIDAwMWQ6NzA6MDAuMSBGaWJyZSBD
+aGFubmVsOiBRTG9naWMgQ29ycC4gSVNQMjUzMi1iYXNlZCAuLi4NCj4gICAgPC4uLj4NCj4NCj4g
+ICAgIyBmb3Igc2QgaW4gJChmaW5kIC9zeXMvYnVzL3BjaS9kZXZpY2VzLzAwMWQ6NzA6MDAuKi8g
+XA0KPiAgICAgICAgICAgICAgICAgICAgICAgLW5hbWUgJ3NkKicgLXByaW50ZiAiJWZcbiIpOyBk
+byBcDQo+ICAgICAgICBkZCBpZj0vZGV2LyRzZCBvZj0vZGV2L251bGwgaWZsYWc9bm9jYWNoZSAm
+IGRvbmUNCj4NCj4gICAgIyBlY2hvIDEgfCB0ZWUgL3N5cy9idXMvcGNpL2RldmljZXMvMDAxZDo3
+MDowMC4qL3JlbW92ZQ0KPiAgICAodGhpcyBlaXRoZXIgd29ya3Mgb3Igbm90KQ0KPg0KPiAgICAj
+IGVjaG8gMSA+IC9zeXMvYnVzL3BjaS9yZXNjYW4NCj4NCj5CZWZvcmU6DQo+LS0tDQo+ICAgIDwu
+Li4+DQo+ICAgIEVFSDogRnJvemVuIFBIQiMxZC1QRSM3MDAwMDAgZGV0ZWN0ZWQNCj4gICAgcWxh
+Mnh4eCBbMDAxZDo3MDowMC4xXS04MDQyOjI6IFBDSS9SZWdpc3RlciBkaXNjb25uZWN0LCBleGl0
+aW5nLg0KPiAgICA8Li4uPg0KPiAgICBFRUg6IERldGVjdGVkIFBDSSBidXMgZXJyb3Igb24gUEhC
+IzI5LVBFIzcwMDAwMA0KPiAgICA8Li4uPg0KPiAgICAoYW5kL29yKQ0KPiAgICBVbmFibGUgdG8g
+aGFuZGxlIGtlcm5lbCBwYWdpbmcgcmVxdWVzdCBmb3IgZGF0YSBhdCBhZGRyZXNzIDB4MDAwMDAx
+MzgNCj4gICAgPC4uLj4NCj4gICAgTklQIFtkMDAwMDAwMDA0NzAwYTQwXSBxbGEyeHh4X3F1ZXVl
+Y29tbWFuZCsweDgwLzB4M2YwIFtxbGEyeHh4XQ0KPiAgICBMUiBbZDAwMDAwMDAwNDcwMGExMF0g
+cWxhMnh4eF9xdWV1ZWNvbW1hbmQrMHg1MC8weDNmMCBbcWxhMnh4eF0NCj4NCj4gICAgKGNvbW1h
+bmQgZG9lcyBub3QgcmV0dXJuOyBhZGFwdGVyIGNhbm5vdCBiZSByZS1hZGRlZCkNCj4NCj5BZnRl
+cjoNCj4tLS0NCj4gICAgPC4uLj4NCj4gICAgcWxhMnh4eCBbMDAxZDo3MDowMC4wXS04MDFjOjE6
+IEFib3J0IGNvbW1hbmQgaXNzdWVkIG5leHVzPTE6MDowIC0tICAxIDIwMDMuDQo+ICAgIDwuLi4+
+DQo+ICAgIHFsYTJ4eHggWzAwMWQ6NzA6MDAuMV0tODAxYzoyOiBBYm9ydCBjb21tYW5kIGlzc3Vl
+ZCBuZXh1cz0yOjM6MCAtLSAgMSAyMDAzLg0KPiAgICA8Li4uPg0KPg0KPiAgICAoY29tbWFuZCBk
+b2VzIHJldHVybjsgYWRhcHRlciBjYW4gYmUgcmUtYWRkZWQgY29ycmVjdGx5KQ0KPg0KPg0KPk1h
+dXJpY2lvIEZhcmlhIGRlIE9saXZlaXJhICgyKToNCj4gIHFsYTJ4eHg6IGRvIG5vdCBxdWV1ZSBj
+b21tYW5kcyB3aGVuIHVubG9hZGluZw0KPiAgcWxhMnh4eDogZml4IGludmFsaWQgRE1BIGFjY2Vz
+cyBhZnRlciBjb21tYW5kIGFib3J0cyBpbiBQQ0kgZGV2aWNlDQo+ICAgIHJlbW92ZQ0KPg0KPiBk
+cml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYyB8IDE0ICsrKysrKysrKysrKysrDQo+IDEgZmls
+ZSBjaGFuZ2VkLCAxNCBpbnNlcnRpb25zKCspDQo+DQo+LS0gDQo+MS44LjMuMQ0KPg0KVGhhbmtz
+IGZvciB0aGUgcGF0Y2hlcy4gU2VyaWVzIExvb2tzIEdvb2QuIA0KDQpBY2tlZC1ieTogSGltYW5z
+aHUgTWFkaGFuaSA8aGltYW5zaHUubWFkaGFuaUBjYXZpdW0uY29tPg0KDQo+DQo=
