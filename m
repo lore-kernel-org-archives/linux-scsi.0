@@ -1,7 +1,7 @@
 From: Vivek Gautam <vivek.gautam@codeaurora.org>
-Subject: [PATCH v5 09/12] ufs-qcom: phy/hcd: Refactoring phy clock handling
-Date: Tue,  8 Nov 2016 15:37:48 +0530
-Message-ID: <1478599671-13071-10-git-send-email-vivek.gautam@codeaurora.org>
+Subject: [PATCH v5 05/12] phy: qcom-ufs: Skip obtaining rx/tx_iface_clk for msm8996 based phy
+Date: Tue,  8 Nov 2016 15:37:44 +0530
+Message-ID: <1478599671-13071-6-git-send-email-vivek.gautam@codeaurora.org>
 References: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
 Return-path: <linux-arm-msm-owner@vger.kernel.org>
 In-Reply-To: <1478599671-13071-1-git-send-email-vivek.gautam@codeaurora.org>
@@ -10,225 +10,39 @@ To: kishon@ti.com, jejb@linux.vnet.ibm.com, vinholikatti@gmail.com, martin.peter
 Cc: sboyd@codeaurora.org, subhashj@codeaurora.org, ygardi@codeaurora.org, linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, Vivek Gautam <vivek.gautam@codeaurora.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Add phy clock enable code to phy_power_on/off callbacks, and
-remove explicit calls to enable these phy clocks from the
-ufs-qcom hcd driver.
+The tx_iface_clk and rx_iface_clk no longer exist with UFS Phy
+present on msm8996. So skip obtaining these clocks using
+compatible match.
 
 Signed-off-by: Vivek Gautam <vivek.gautam@codeaurora.org>
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/phy/phy-qcom-ufs.c       | 36 ++++++++++++++++++------------------
- drivers/scsi/ufs/ufs-qcom.c      | 21 ++++++---------------
- include/linux/phy/phy-qcom-ufs.h | 18 ------------------
- 3 files changed, 24 insertions(+), 51 deletions(-)
+ drivers/phy/phy-qcom-ufs.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
 diff --git a/drivers/phy/phy-qcom-ufs.c b/drivers/phy/phy-qcom-ufs.c
-index c5c29fe..fdd9b90 100644
+index b0171fe..3fa7b07 100644
 --- a/drivers/phy/phy-qcom-ufs.c
 +++ b/drivers/phy/phy-qcom-ufs.c
-@@ -361,10 +361,9 @@ static int ufs_qcom_phy_enable_vreg(struct device *dev,
- 	return ret;
- }
- 
--int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
-+static int ufs_qcom_phy_enable_ref_clk(struct ufs_qcom_phy *phy)
+@@ -182,6 +182,10 @@ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common)
  {
- 	int ret = 0;
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
+ 	int err;
  
- 	if (phy->is_ref_clk_enabled)
++	if (of_device_is_compatible(phy_common->dev->of_node,
++				"qcom,msm8996-ufs-phy-qmp-14nm"))
++		goto skip_txrx_clk;
++
+ 	err = ufs_qcom_phy_clk_get(phy_common->dev, "tx_iface_clk",
+ 				   &phy_common->tx_iface_clk);
+ 	if (err)
+@@ -197,6 +201,7 @@ int ufs_qcom_phy_init_clks(struct ufs_qcom_phy *phy_common)
+ 	if (err)
  		goto out;
-@@ -411,7 +410,6 @@ int ufs_qcom_phy_enable_ref_clk(struct phy *generic_phy)
- out:
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_ref_clk);
  
- static int ufs_qcom_phy_disable_vreg(struct device *dev,
- 			      struct ufs_qcom_phy_vreg *vreg)
-@@ -435,10 +433,8 @@ static int ufs_qcom_phy_disable_vreg(struct device *dev,
- 	return ret;
- }
- 
--void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
-+static void ufs_qcom_phy_disable_ref_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
--
- 	if (phy->is_ref_clk_enabled) {
- 		clk_disable_unprepare(phy->ref_clk);
- 		/*
-@@ -451,7 +447,6 @@ void ufs_qcom_phy_disable_ref_clk(struct phy *generic_phy)
- 		phy->is_ref_clk_enabled = false;
- 	}
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_ref_clk);
- 
- #define UFS_REF_CLK_EN	(1 << 5)
- 
-@@ -504,9 +499,8 @@ void ufs_qcom_phy_disable_dev_ref_clk(struct phy *generic_phy)
- EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_dev_ref_clk);
- 
- /* Turn ON M-PHY RMMI interface clocks */
--int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
-+static int ufs_qcom_phy_enable_iface_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
- 	int ret = 0;
- 
- 	if (phy->is_iface_clk_enabled)
-@@ -530,20 +524,16 @@ int ufs_qcom_phy_enable_iface_clk(struct phy *generic_phy)
- out:
- 	return ret;
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_enable_iface_clk);
- 
- /* Turn OFF M-PHY RMMI interface clocks */
--void ufs_qcom_phy_disable_iface_clk(struct phy *generic_phy)
-+void ufs_qcom_phy_disable_iface_clk(struct ufs_qcom_phy *phy)
- {
--	struct ufs_qcom_phy *phy = get_ufs_qcom_phy(generic_phy);
--
- 	if (phy->is_iface_clk_enabled) {
- 		clk_disable_unprepare(phy->tx_iface_clk);
- 		clk_disable_unprepare(phy->rx_iface_clk);
- 		phy->is_iface_clk_enabled = false;
- 	}
- }
--EXPORT_SYMBOL_GPL(ufs_qcom_phy_disable_iface_clk);
- 
- int ufs_qcom_phy_start_serdes(struct phy *generic_phy)
- {
-@@ -661,13 +651,20 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 		goto out_disable_phy;
- 	}
- 
--	err = ufs_qcom_phy_enable_ref_clk(generic_phy);
-+	err = ufs_qcom_phy_enable_iface_clk(phy_common);
- 	if (err) {
--		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
-+		dev_err(dev, "%s enable phy iface clock failed, err=%d\n",
- 			__func__, err);
- 		goto out_disable_pll;
- 	}
- 
-+	err = ufs_qcom_phy_enable_ref_clk(phy_common);
-+	if (err) {
-+		dev_err(dev, "%s enable phy ref clock failed, err=%d\n",
-+			__func__, err);
-+		goto out_disable_iface_clk;
-+	}
-+
- 	/* enable device PHY ref_clk pad rail */
- 	if (phy_common->vddp_ref_clk.reg) {
- 		err = ufs_qcom_phy_enable_vreg(dev,
-@@ -683,7 +680,9 @@ int ufs_qcom_phy_power_on(struct phy *generic_phy)
- 	goto out;
- 
- out_disable_ref_clk:
--	ufs_qcom_phy_disable_ref_clk(generic_phy);
-+	ufs_qcom_phy_disable_ref_clk(phy_common);
-+out_disable_iface_clk:
-+	ufs_qcom_phy_disable_iface_clk(phy_common);
- out_disable_pll:
- 	ufs_qcom_phy_disable_vreg(dev, &phy_common->vdda_pll);
- out_disable_phy:
-@@ -702,7 +701,8 @@ int ufs_qcom_phy_power_off(struct phy *generic_phy)
- 	if (phy_common->vddp_ref_clk.reg)
- 		ufs_qcom_phy_disable_vreg(phy_common->dev,
- 					  &phy_common->vddp_ref_clk);
--	ufs_qcom_phy_disable_ref_clk(generic_phy);
-+	ufs_qcom_phy_disable_ref_clk(phy_common);
-+	ufs_qcom_phy_disable_iface_clk(phy_common);
- 
- 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_pll);
- 	ufs_qcom_phy_disable_vreg(phy_common->dev, &phy_common->vdda_phy);
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 3c4f602..5f70a35 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1114,17 +1114,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 		return 0;
- 
- 	if (on && (status == POST_CHANGE)) {
--		err = ufs_qcom_phy_enable_iface_clk(host->generic_phy);
--		if (err)
--			goto out;
-+		phy_power_on(host->generic_phy);
- 
--		err = ufs_qcom_phy_enable_ref_clk(host->generic_phy);
--		if (err) {
--			dev_err(hba->dev, "%s enable phy ref clock failed, err=%d\n",
--				__func__, err);
--			ufs_qcom_phy_disable_iface_clk(host->generic_phy);
--			goto out;
--		}
- 		/* enable the device ref clock for HS mode*/
- 		if (ufshcd_is_hs_mode(&hba->pwr_info))
- 			ufs_qcom_dev_ref_clk_ctrl(host, true);
-@@ -1133,13 +1124,14 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 			ufs_qcom_update_bus_bw_vote(host);
- 
- 	} else if (!on && (status == PRE_CHANGE)) {
--
--		/* M-PHY RMMI interface clocks can be turned off */
--		ufs_qcom_phy_disable_iface_clk(host->generic_phy);
--		if (!ufs_qcom_is_link_active(hba))
-+		if (!ufs_qcom_is_link_active(hba)) {
- 			/* disable device ref_clk */
- 			ufs_qcom_dev_ref_clk_ctrl(host, false);
- 
-+			/* powering off PHY during aggressive clk gating */
-+			phy_power_off(host->generic_phy);
-+		}
-+
- 		vote = host->bus_vote.min_bw_vote;
- 	}
- 
-@@ -1148,7 +1140,6 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
- 		dev_err(hba->dev, "%s: set bus vote failed %d\n",
- 				__func__, err);
- 
--out:
- 	return err;
- }
- 
-diff --git a/include/linux/phy/phy-qcom-ufs.h b/include/linux/phy/phy-qcom-ufs.h
-index 9d18e9f..35c070e 100644
---- a/include/linux/phy/phy-qcom-ufs.h
-+++ b/include/linux/phy/phy-qcom-ufs.h
-@@ -18,22 +18,6 @@
- #include "phy.h"
- 
- /**
-- * ufs_qcom_phy_enable_ref_clk() - Enable the phy
-- * ref clock.
-- * @phy: reference to a generic phy
-- *
-- * returns 0 for success, and non-zero for error.
-- */
--int ufs_qcom_phy_enable_ref_clk(struct phy *phy);
--
--/**
-- * ufs_qcom_phy_disable_ref_clk() - Disable the phy
-- * ref clock.
-- * @phy: reference to a generic phy.
-- */
--void ufs_qcom_phy_disable_ref_clk(struct phy *phy);
--
--/**
-  * ufs_qcom_phy_enable_dev_ref_clk() - Enable the device
-  * ref clock.
-  * @phy: reference to a generic phy.
-@@ -47,8 +31,6 @@
-  */
- void ufs_qcom_phy_disable_dev_ref_clk(struct phy *phy);
- 
--int ufs_qcom_phy_enable_iface_clk(struct phy *phy);
--void ufs_qcom_phy_disable_iface_clk(struct phy *phy);
- int ufs_qcom_phy_start_serdes(struct phy *phy);
- int ufs_qcom_phy_set_tx_lane_enable(struct phy *phy, u32 tx_lanes);
- int ufs_qcom_phy_calibrate_phy(struct phy *phy, bool is_rate_B);
++skip_txrx_clk:
+ 	/*
+ 	 * "ref_clk_parent" is optional hence don't abort init if it's not
+ 	 * found.
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
