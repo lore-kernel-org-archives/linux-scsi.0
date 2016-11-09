@@ -1,51 +1,34 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] hpsa: switch to pci_alloc_irq_vectors
-Date: Wed, 9 Nov 2016 16:45:22 +0100
-Message-ID: <dc7c9c33-7a88-bd4f-c330-16c8f447e4cc@suse.de>
-References: <1478589145-74280-1-git-send-email-hare@suse.de>
- <4993A297653ECB4581FA5C3C31323D193B083C61@avsrvexchmbx1.microsemi.net>
- <20161109153628.GA23452@lst.de>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] megaraid_sas: fix macro MEGASAS_IS_LOGICAL to avoid
+ regression caused by commit 1e793f6fc0db920400574211c48f9157a37e3945
+Date: Wed, 9 Nov 2016 16:51:30 +0100
+Message-ID: <80021f6f-54fe-3571-4d17-f29fde363a08@redhat.com>
+References: <1478689182-10854-1-git-send-email-sumit.saxena@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45161 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752870AbcKIPp0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Nov 2016 10:45:26 -0500
-In-Reply-To: <20161109153628.GA23452@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <1478689182-10854-1-git-send-email-sumit.saxena@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, shivasharan.srikanteshwara@broadcom.com, axboe@kernel.dk, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-On 11/09/2016 04:36 PM, Christoph Hellwig wrote:
-> On Wed, Nov 09, 2016 at 03:32:48PM +0000, Don Brace wrote:
->> Do we need to add an entry for map_queues?
+On 9.11.2016 11:59, Sumit Saxena wrote:
+> This patch will fix regression caused by below commit-
+> 1e793f6 scsi: megaraid_sas: Fix data integrity failure for JBOD (passthrough) devices
 >
-> The existing driver only supports a single submission queue.
-> If some of the devices support more than one submission queue
-> we could enhance the driver to support it, but we'd need docs
-> and hardware.
+> The problem was MEGASAS_IS_LOGICAL macro does not have braces and because of above commit 
+> using this macro was exposing lot of non-existing SCSI devices(all SCSI commands to channels-1,2,3 was
+> returned as SUCCESS-DID_OK by driver).
 >
-Hardware is not an issue :-)
+> Fixes: 1e793f6fc0db920400574211c48f9157a37e3945 
+> Reported-by: Jens Axboe <axboe@kernel.dk>
+> CC: stable@vger.kernel.org
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> Signed-off-by: Sumit Saxena <sumit.saxena@broadcom.com>
+> Tested-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-However, I'm still curious about the layout of the queues.
-Are all queues (in performant mode) identical and can we use them for 
-parallel submission? Or do we have to treat them differently?
-(There were some rumours that it actually uses the queues for different 
-I/O sizes ...)
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Once that is cleared up it shouldn't be too hard moving to full 
-multiqueue support.
-(If we have identical queues, that is :-)
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Tomas
