@@ -1,96 +1,120 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 187381] 4.9.-rc4 produces hundreds of unusable scsi devices.
-Date: Wed, 09 Nov 2016 21:50:19 +0000
-Message-ID: <bug-187381-11613-FcrymO2AID@https.bugzilla.kernel.org/>
-References: <bug-187381-11613@https.bugzilla.kernel.org/>
+From: Samuel Silbory <samuel.silbory@hds.com>
+Subject: RE: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi
+ devices.
+Date: Wed, 9 Nov 2016 23:07:48 +0000
+Message-ID: <5F2174A7F2A7FD43BEB9EFF9FF5229F0C7009BA4@USINDEM103.corp.hds.com>
+References: <bug-187381-11613@https.bugzilla.kernel.org/>,<1478724561.18853.1.camel@HansenPartnership.com>,<5F2174A7F2A7FD43BEB9EFF9FF5229F0C7009B71@USINDEM103.corp.hds.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:37318 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751550AbcKIVuW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Nov 2016 16:50:22 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 0759B20392
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2016 21:50:21 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 7AE6C2038A
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2016 21:50:19 +0000 (UTC)
-In-Reply-To: <bug-187381-11613@https.bugzilla.kernel.org/>
+Received: from usindpps06.hds.com ([207.126.252.19]:60570 "EHLO
+        usindpps06.hds.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753660AbcKIXIG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 18:08:06 -0500
+In-Reply-To: <5F2174A7F2A7FD43BEB9EFF9FF5229F0C7009B71@USINDEM103.corp.hds.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>, "bugzilla-daemon@bugzilla.kernel.org" <bugzilla-daemon@bugzilla.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=187381
-
---- Comment #2 from Samuel Flory Silbory <samuel.silbory@hds.com> ---
-Certainly I'll give it a try.
-________________________________________
-From: James Bottomley [James.Bottomley@HansenPartnership.com]
-Sent: Wednesday, November 09, 2016 12:49 PM
-To: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org
-Cc: Samuel Silbory
-Subject: Re: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi
-devices.
-
-On Wed, 2016-11-09 at 20:20 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_show-5Fbug.cgi-3Fid-3D187381&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=67orQXH1IekXCew60eHDOmksAqiZIU69q0eGzoqiWMM&e=
->
->             Bug ID: 187381
->            Summary: 4.9.-rc4 produces hundreds of unusable scsi
-> devices.
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 4.9-rc4
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->           Reporter: samuel.silbory@hds.com
->         Regression: No
->
-> Created attachment 244091
->   -->
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_attachment.cgi-3Fid-3D244091-26action-3Dedit&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=ypXf8FCNK77zZPf1gXuZlzQpRkGQWJ_WEGmWjqnXTOI&e=
-> Debian's kernel log file.  Note that this contains functional boots
-> with older
-> kernels as well earlier in the file.
->
-> With both my hand compiled 4.9-rc4 from kernel.org sources and
-> Ubuntu's
-> 4.9.0-040900rc4-generic the kernel creates hundred of useless
-> /dev/sd??
-> devices.  This system is fine with various 4.4, and 4.8 kernels.
->
-> The logs are spammed with messages like these
-> 2016-11-09T12:17:00.021765-08:00 Node001 kernel: [75590.503155] Dev
-> sdjm:
-> unable to read RDB block 1
-> 2016-11-09T12:17:00.021767-08:00 Node001 kernel: [75590.503188]
->  sdjm: unable
-> to read partition table
-> 2016-11-09T12:17:00.021769-08:00 Node001 kernel: [75590.503191] sdjm:
-> partition
-> table beyond EOD, enabling native capacity
-> 2016-11-09T12:17:00.021776-08:00 Node001 kernel: [75590.504463] sd
-> 1:3:126:0:
-
-This was reported to the mailing list and should be fixed by this:
-
-https://urldefense.proofpoint.com/v2/url?u=http-3A__marc.info_-3Fl-3Dlinux-2Dscsi-26m-3D147868920429684&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=KCePcDLsNpEqob1iEoGGCb5Qf-smnMYk4XsK62Sp0h4&e=
-
-We'll fast track this, but can you verify it fixes your issue.
-
-Thanks,
-
-James
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+Seems sane now.=0A=
+root@pcsnode:~# uname -a=0A=
+Linux pcsnode 4.9.0-rc4-1-default #1 SMP Wed Nov 9 13:59:28 PST 2016 x86_64=
+ GNU/Linux=0A=
+root@pcsnode:~# ls /dev/sd*=0A=
+/dev/sda  /dev/sdc  /dev/sde  /dev/sdg	/dev/sdi  /dev/sdk   /dev/sdk2	/dev/=
+sdk4  /dev/sdk6  /dev/sdl=0A=
+/dev/sdb  /dev/sdd  /dev/sdf  /dev/sdh	/dev/sdj  /dev/sdk1  /dev/sdk3	/dev/=
+sdk5  /dev/sdk7  /dev/sdm=0A=
+root@pcsnode:~# =0A=
+=0A=
+The only difference compared to 4.8/4/4 is the boot drive on the SATA contr=
+oller ended up sdk instead of sdm (the last drive).  It's not an issue for =
+me as I mount things by UUID=0A=
+=0A=
+________________________________________=0A=
+From: Samuel Silbory=0A=
+Sent: Wednesday, November 09, 2016 1:19 PM=0A=
+To: James Bottomley; bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.k=
+ernel.org=0A=
+Subject: RE: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi =
+devices.=0A=
+=0A=
+Certainly I'll give it a try.=0A=
+________________________________________=0A=
+From: James Bottomley [James.Bottomley@HansenPartnership.com]=0A=
+Sent: Wednesday, November 09, 2016 12:49 PM=0A=
+To: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org=0A=
+Cc: Samuel Silbory=0A=
+Subject: Re: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi =
+devices.=0A=
+=0A=
+On Wed, 2016-11-09 at 20:20 +0000, bugzilla-daemon@bugzilla.kernel.org=0A=
+wrote:=0A=
+> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__bugzilla.kernel.or=
+g_show-5Fbug.cgi-3Fid-3D187381&d=3DCwICaQ&c=3DDZ-EF4pZfxGSU6MfABwx0g&r=3D4F=
+OU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=3DqqYheGXoM4mBPxyZZ7HM1rugSFukV=
+AVfEjl1ifhaoqU&s=3D67orQXH1IekXCew60eHDOmksAqiZIU69q0eGzoqiWMM&e=3D=0A=
+>=0A=
+>             Bug ID: 187381=0A=
+>            Summary: 4.9.-rc4 produces hundreds of unusable scsi=0A=
+> devices.=0A=
+>            Product: SCSI Drivers=0A=
+>            Version: 2.5=0A=
+>     Kernel Version: 4.9-rc4=0A=
+>           Hardware: All=0A=
+>                 OS: Linux=0A=
+>               Tree: Mainline=0A=
+>             Status: NEW=0A=
+>           Severity: normal=0A=
+>           Priority: P1=0A=
+>          Component: Other=0A=
+>           Assignee: scsi_drivers-other@kernel-bugs.osdl.org=0A=
+>           Reporter: samuel.silbory@hds.com=0A=
+>         Regression: No=0A=
+>=0A=
+> Created attachment 244091=0A=
+>   -->=0A=
+> https://urldefense.proofpoint.com/v2/url?u=3Dhttps-3A__bugzilla.kernel.or=
+g_attachment.cgi-3Fid-3D244091-26action-3Dedit&d=3DCwICaQ&c=3DDZ-EF4pZfxGSU=
+6MfABwx0g&r=3D4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=3DqqYheGXoM4mBP=
+xyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=3DypXf8FCNK77zZPf1gXuZlzQpRkGQWJ_WEGmWjqnX=
+TOI&e=3D=0A=
+> Debian's kernel log file.  Note that this contains functional boots=0A=
+> with older=0A=
+> kernels as well earlier in the file.=0A=
+>=0A=
+> With both my hand compiled 4.9-rc4 from kernel.org sources and=0A=
+> Ubuntu's=0A=
+> 4.9.0-040900rc4-generic the kernel creates hundred of useless=0A=
+> /dev/sd??=0A=
+> devices.  This system is fine with various 4.4, and 4.8 kernels.=0A=
+>=0A=
+> The logs are spammed with messages like these=0A=
+> 2016-11-09T12:17:00.021765-08:00 Node001 kernel: [75590.503155] Dev=0A=
+> sdjm:=0A=
+> unable to read RDB block 1=0A=
+> 2016-11-09T12:17:00.021767-08:00 Node001 kernel: [75590.503188]=0A=
+>  sdjm: unable=0A=
+> to read partition table=0A=
+> 2016-11-09T12:17:00.021769-08:00 Node001 kernel: [75590.503191] sdjm:=0A=
+> partition=0A=
+> table beyond EOD, enabling native capacity=0A=
+> 2016-11-09T12:17:00.021776-08:00 Node001 kernel: [75590.504463] sd=0A=
+> 1:3:126:0:=0A=
+=0A=
+This was reported to the mailing list and should be fixed by this:=0A=
+=0A=
+https://urldefense.proofpoint.com/v2/url?u=3Dhttp-3A__marc.info_-3Fl-3Dlinu=
+x-2Dscsi-26m-3D147868920429684&d=3DCwICaQ&c=3DDZ-EF4pZfxGSU6MfABwx0g&r=3D4F=
+OU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=3DqqYheGXoM4mBPxyZZ7HM1rugSFukV=
+AVfEjl1ifhaoqU&s=3DKCePcDLsNpEqob1iEoGGCb5Qf-smnMYk4XsK62Sp0h4&e=3D=0A=
+=0A=
+We'll fast track this, but can you verify it fixes your issue.=0A=
+=0A=
+Thanks,=0A=
+=0A=
+James=0A=
+=0A=
+=0A=
