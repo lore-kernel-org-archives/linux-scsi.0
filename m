@@ -1,218 +1,93 @@
 From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH v1] ufs: add a variety of definitions decribed in UFS spec
-Date: Wed, 09 Nov 2016 14:40:12 +0900
-Message-ID: <001001d23a4b$bd7cb2f0$387618d0$@samsung.com>
-References: <002501d23996$327bfdb0$9773f910$@samsung.com>
- <CGME20161108203831epcas4p38bc08836b45debe75b88b942bf35cc39@epcas4p3.samsung.com>
- <2c1f05aeb007a435a3666dc652ea7a50@codeaurora.org>
+Subject: RE: [PATCH v1] ufs: introduce UFSHCI_QUIRK_SKIP_INTR_AGGR quirk
+Date: Wed, 09 Nov 2016 14:43:31 +0900
+Message-ID: <001101d23a4c$34165510$9c42ff30$@samsung.com>
+References: <002401d23996$1986d4b0$4c947e10$@samsung.com>
+ <CGME20161108195647epcas2p4b49e05b9bd4512a8e6f90280a5f7f40a@epcas2p4.samsung.com>
+ <d8123bcfe400777db2b5745a2d2b3d8d@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=Windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout4.samsung.com ([203.254.224.34]:47085 "EHLO
-        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750905AbcKIFkP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 00:40:15 -0500
-In-reply-to: <2c1f05aeb007a435a3666dc652ea7a50@codeaurora.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:34056 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750774AbcKIFne (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 00:43:34 -0500
+In-reply-to: <d8123bcfe400777db2b5745a2d2b3d8d@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Subhash Jadavani' <subhashj@codeaurora.org>
 Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-> > These things are defined to be used by some UFS Host controllers.
+> > If UFS driver resets interrupt aggregation timer and counter
+> > when there is a pending doorbell, an interrupt of IO completion
+> > of a corresponding task may be missed.
+> > That would cause a command timeout.
+> >
+> > If UFS driver resets interrupt aggregation timer and counter
+> > when there is a pending doorbell, a competion interrupt
+> > of a corresponing task may be issued.
+> > That would casue a command timeout.
 > >
 > > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > > ---
-> >  drivers/scsi/ufs/mphy.h   | 38 ++++++++++++++++++++++++++++++++++++++
-> >  drivers/scsi/ufs/ufshci.h | 14 +++++++++++---
-> > drivers/scsi/ufs/unipro.h | 24 ++++++++++++++++++++++++
-> >  3 files changed, 73 insertions(+), 3 deletions(-)  create mode 100644
-> > drivers/scsi/ufs/mphy.h
+> >  drivers/scsi/ufs/ufshcd.c | 4 +++-
+> >  drivers/scsi/ufs/ufshcd.h | 1 +
+> >  2 files changed, 4 insertions(+), 1 deletion(-)
 > >
-> > diff --git a/drivers/scsi/ufs/mphy.h b/drivers/scsi/ufs/mphy.h new
-> > file mode 100644 index 0000000..c431f49
-> > --- /dev/null
-> > +++ b/drivers/scsi/ufs/mphy.h
-> > @@ -0,0 +1,38 @@
-> > +/*
-> > + * drivers/scsi/ufs/mphy.h
-> > + *
-> > + * Copyright (C) 2014 Samsung Electronics Co., Ltd.
-> > + *
-> > + * This program is free software; you can redistribute it and/or
-> > modify
-> > + * it under the terms of the GNU General Public License as published
-> > by
-> > + * the Free Software Foundation; either version 2 of the License, or
-> > + * (at your option) any later version.
-> > + */
-> > +
-> > +#ifndef _MPHY_H_
-> > +#define _MPHY_H_
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index c904854..65bbf59 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -3730,7 +3730,9 @@ static void ufshcd_transfer_req_compl(struct
+> > ufs_hba *hba)
+> >  	 * false interrupt if device completes another request after
+> > resetting
+> >  	 * aggregation and before reading the DB.
+> >  	 */
+> > -	if (ufshcd_is_intr_aggr_allowed(hba))
+> > +	if ((ufshcd_is_intr_aggr_allowed(hba))
+> > +		&& !(hba->quirks & UFSHCI_QUIRK_SKIP_INTR_AGGR))
 > 
-> Do we really need separate file for MPHY? May be we can have these
-> accomodated in unipro.h itself?
+> Why do we need this new quirk? If controller has the issue with
+> interrupt aggregation, you can remove this UFSHCD_CAP_INTR_AGGR to
+> disable the aggregation altogether.
 
-I think it's needed. MPHY spec isn't related with Unipro spec directly.
-Is there any reason why we say that this file is deprecated?
-Please let me know if you have.
+This fragment doesn't mean disabling interrupt aggregation.
+It just means that interrupt aggregation logic would not be reset in ISR.
 
-> 
-> > +
-> > +#define TX_HIBERN8TIME_CAP		0x0f
-> > +#define TX_MIN_ACTIVATE_TIME		0x33
-> > +
-> > +#define RX_HS_G1_SYNC_LEN_CAP	0x8b
-> > +#define RX_HS_G1_PREP_LEN_CAP	0x8c
-> > +#define RX_HS_G2_SYNC_LEN_CAP	0x94
-> > +#define RX_HS_G3_SYNC_LEN_CAP	0x95
-> > +#define RX_HS_G2_PREP_LEN_CAP	0x96
-> > +#define RX_HS_G3_PREP_LEN_CAP	0x97
-> > + #define SYNC_RANGE_FINE	(0 << 6)
-> > + #define SYNC_RANGE_COARSE	(1 << 6)
-> > + #define SYNC_LEN(x)		((x) & 0x3f)
-> > + #define PREP_LEN(x)		((x) & 0xf)
-> > +#define RX_ADV_GRANULARITY_CAP		0x98
-> > + #define RX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
-> > +#define TX_ADV_GRANULARITY_CAP		0x10
-> > + #define TX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
-> > +#define RX_MIN_ACTIVATETIME_CAP		0x8f
-> > +#define RX_HIBERN8TIME_CAP		0x92
-> > +#define RX_ADV_HIBERN8TIME_CAP		0x99
-> > +#define RX_ADV_MIN_ACTIVATETIME_CAP	0x9a
-> > +
-> > +#endif /* _MPHY_H_ */
-> > +
-> > diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-> > index 9599741..26dc340 100644
-> > --- a/drivers/scsi/ufs/ufshci.h
-> > +++ b/drivers/scsi/ufs/ufshci.h
-> > @@ -170,17 +170,25 @@ enum {
-> >  /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
-> >  #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
-> >  #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
-> > -#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
-> > -#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
-> > -#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
-> > +#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED		UFS_BIT(0)
-> > +#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT	UFS_BIT(1)
-> > +#define UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF		UFS_BIT(5)
-> 
-> why don't we just add macros for all the bits in UECDL ? This makes it
-> easy in future.
+But I think that the name of the quirk doesn't represent the function of it
+expectedly.
+I'll change the name with another one, such as
+UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR.
 
-Okay. I'll think about it and apply new macros on new version of this patch.
 
 > 
-> > +#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT		UFS_BIT(13)
+> > +		ufshcd_reset_intr_aggr(hba);
+> >  		ufshcd_reset_intr_aggr(hba);
 > >
-> >  /* UECN - Host UIC Error Code Network Layer 40h */
-> >  #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
-> >  #define UIC_NETWORK_LAYER_ERROR_CODE_MASK	0x7
-> > +#define UIC_NETWORK_UNSUPPORTED_HEADER_TYPE	BIT(0)
-> > +#define UIC_NETWORK_BAD_DEVICEID_ENC		BIT(1)
-> > +#define UIC_NETWORK_LHDR_TRAP_PACKET_DROPPING	BIT(2)
+> >  	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> > index 6a96f24..6a9c6e9 100644
+> > --- a/drivers/scsi/ufs/ufshcd.h
+> > +++ b/drivers/scsi/ufs/ufshcd.h
+> > @@ -497,6 +497,7 @@ struct ufs_hba {
+> >  	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
+> >  	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> >  	#define UFSHCD_QUIRK_USE_OF_HCE				UFS_BIT(9)
+> > +	#define UFSHCI_QUIRK_SKIP_INTR_AGGR			UFS_BIT(10)
 > >
-> >  /* UECT - Host UIC Error Code Transport Layer 44h */
-> >  #define UIC_TRANSPORT_LAYER_ERROR		UFS_BIT(31)
-> >  #define UIC_TRANSPORT_LAYER_ERROR_CODE_MASK	0x7F
-> > +#define UIC_TRANSPORT_UNSUPPORTED_HEADER_TYPE	BIT(0)
-> > +#define UIC_TRANSPORT_UNKNOWN_CPORTID		BIT(1)
-> > +#define UIC_TRANSPORT_NO_CONNECTION_RX		BIT(2)
-> > +#define UIC_TRANSPORT_BAD_TC			BIT(4)
-> 
-> May be add definition for bit-5 and 6 as well.
-
-Okay. I'll add those things on new version of this patch.
-
-> 
 > >
-> >  /* UECDME - Host UIC Error Code DME 48h */
-> >  #define UIC_DME_ERROR			UFS_BIT(31)
-> > diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-> > index eff8b56..e47e2c2 100644
-> > --- a/drivers/scsi/ufs/unipro.h
-> > +++ b/drivers/scsi/ufs/unipro.h
-> > @@ -127,6 +127,7 @@
-> >  #define PA_PACPREQEOBTIMEOUT	0x1591
-> >  #define PA_HIBERN8TIME		0x15A7
-> >  #define PA_LOCALVERINFO		0x15A9
-> > +#define PA_GRANULARITY		0x15AA
-> >  #define PA_TACTIVATE		0x15A8
-> >  #define PA_PACPFRAMECOUNT	0x15C0
-> >  #define PA_PACPERRORCOUNT	0x15C1
-> > @@ -170,6 +171,9 @@ enum {
-> >  	UNCHANGED	= 7,
-> >  };
-> >
-> > +#define IS_PWR_MODE_HS(m)        (((m) == FAST_MODE) || ((m) ==
-> > FASTAUTO_MODE))
-> 
-> s/IS_PWR_MODE_HS/IS_HS_PWR_MODE ?
-> 
-> > +#define IS_PWR_MODE_PWM(m)       (((m) == SLOW_MODE) || ((m) ==
-> > SLOWAUTO_MODE))
-> 
-> s/IS_PWR_MODE_PWM/IS_PWM_PWR_MODE ?
-> 
-> > +
-> >  /* PA TX/RX Frequency Series */
-> >  enum {
-> >  	PA_HS_MODE_A	= 1,
-> > @@ -231,6 +235,11 @@ enum ufs_unipro_ver {
-> >  #define DL_PEERTC1PRESENT	0x2066
-> >  #define DL_PEERTC1RXINITCREVAL	0x2067
-> >
-> > +/* Default value of L2 Timer */
-> > +#define FC0PROTTIMEOUTVAL	8191
-> > +#define TC0REPLAYTIMEOUTVAL	65535
-> > +#define AFC0REQTIMEOUTVAL	32767
-> > +
-> >  /*
-> >   * Network Layer Attributes
-> >   */
-> > @@ -259,6 +268,21 @@ enum ufs_unipro_ver {
-> >  #define T_TC0TXMAXSDUSIZE	0x4060
-> >  #define T_TC1TXMAXSDUSIZE	0x4061
-> >
-> > +/* CPort setting */
-> > +#define E2EFC_ON	(1 << 0)
-> > +#define E2EFC_OFF	(0 << 0)
-> > +#define CSD_N_ON	(0 << 1)
-> > +#define CSD_N_OFF	(1 << 1)
-> > +#define CSV_N_ON	(0 << 2)
-> > +#define CSV_N_OFF	(1 << 2)
-> 
-> 
-> Can you please specify where these are coming from? Spec number and
-> section/line number?
-
-These definitions are associated with Unipro attributes 0x4025, that is
-T_CPortFlags.
-I referred version 1.6 - 6 August 2013.
-You can find details in Chapter 8.17 and Table 92 in the spec
-
-
-> 
-> > +#define CPORT_DEF_FLAGS	(CSV_N_OFF | CSD_N_OFF | E2EFC_OFF)
-> > +
-> > +/* CPort connection state */
-> > +enum {
-> > +	CPORT_IDLE = 0,
-> > +	CPORT_CONNECTED,
-> > +};
-> > +
-> >  #ifdef FALSE
-> >  #undef FALSE
-> >  #endif
+> >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec.
+> */
 > 
 > --
-> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
-> Linux Foundation Collaborative Projec
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+> a Linux Foundation Collaborative Project
 > --
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
 
 
