@@ -1,197 +1,218 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Tue, 8 Nov 2016 21:21:42 -0800
-Message-ID: <20161109052142.j4psips7yvx7uohx@straylight.hirudinean.org>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
- <56447FF7.40600@dev.mellanox.co.il>
- <5644FD6C.9070805@cs.wisc.edu>
- <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
- <56461502.70306@cs.wisc.edu>
- <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg@mail.gmail.com>
- <20161107181556.cnhwst4nu63xtrqk@straylight.hirudinean.org>
- <5820C68E.6050206@linux.vnet.ibm.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: [PATCH v1] ufs: add a variety of definitions decribed in UFS spec
+Date: Wed, 09 Nov 2016 14:40:12 +0900
+Message-ID: <001001d23a4b$bd7cb2f0$387618d0$@samsung.com>
+References: <002501d23996$327bfdb0$9773f910$@samsung.com>
+ <CGME20161108203831epcas4p38bc08836b45debe75b88b942bf35cc39@epcas4p3.samsung.com>
+ <2c1f05aeb007a435a3666dc652ea7a50@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCYMVIPVXQMBB3XERLAQKGQEIJLRSGY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <5820C68E.6050206-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: "Guilherme G. Piccoli" <gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Shlomo Pongratz <shlomopongratz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=Windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout4.samsung.com ([203.254.224.34]:47085 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750905AbcKIFkP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 00:40:15 -0500
+In-reply-to: <2c1f05aeb007a435a3666dc652ea7a50@codeaurora.org>
+Content-language: ko
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On Mon, Nov 07, 2016 at 04:23:10PM -0200, Guilherme G. Piccoli wrote:
->
-> Sure! Count on us to test any patches. I guess the first step is to
-> reproduce on upstream right? We haven't tested specifically this
-> scenario for long time. Will try to reproduce on 4.9-rc4 and update here.
+> > These things are defined to be used by some UFS Host controllers.
+> >
+> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> > ---
+> >  drivers/scsi/ufs/mphy.h   | 38 ++++++++++++++++++++++++++++++++++++++
+> >  drivers/scsi/ufs/ufshci.h | 14 +++++++++++---
+> > drivers/scsi/ufs/unipro.h | 24 ++++++++++++++++++++++++
+> >  3 files changed, 73 insertions(+), 3 deletions(-)  create mode 100644
+> > drivers/scsi/ufs/mphy.h
+> >
+> > diff --git a/drivers/scsi/ufs/mphy.h b/drivers/scsi/ufs/mphy.h new
+> > file mode 100644 index 0000000..c431f49
+> > --- /dev/null
+> > +++ b/drivers/scsi/ufs/mphy.h
+> > @@ -0,0 +1,38 @@
+> > +/*
+> > + * drivers/scsi/ufs/mphy.h
+> > + *
+> > + * Copyright (C) 2014 Samsung Electronics Co., Ltd.
+> > + *
+> > + * This program is free software; you can redistribute it and/or
+> > modify
+> > + * it under the terms of the GNU General Public License as published
+> > by
+> > + * the Free Software Foundation; either version 2 of the License, or
+> > + * (at your option) any later version.
+> > + */
+> > +
+> > +#ifndef _MPHY_H_
+> > +#define _MPHY_H_
+> 
+> Do we really need separate file for MPHY? May be we can have these
+> accomodated in unipro.h itself?
 
-Great, I'm looking forward to hearing the result.
+I think it's needed. MPHY spec isn't related with Unipro spec directly.
+Is there any reason why we say that this file is deprecated?
+Please let me know if you have.
 
-Assuming it reproduces, I don't think this level of fine grained locking
-is necessarily the best solution, but it may help confirm the problem.
-Especially if the WARN_ONCE I slipped in here triggers.
+> 
+> > +
+> > +#define TX_HIBERN8TIME_CAP		0x0f
+> > +#define TX_MIN_ACTIVATE_TIME		0x33
+> > +
+> > +#define RX_HS_G1_SYNC_LEN_CAP	0x8b
+> > +#define RX_HS_G1_PREP_LEN_CAP	0x8c
+> > +#define RX_HS_G2_SYNC_LEN_CAP	0x94
+> > +#define RX_HS_G3_SYNC_LEN_CAP	0x95
+> > +#define RX_HS_G2_PREP_LEN_CAP	0x96
+> > +#define RX_HS_G3_PREP_LEN_CAP	0x97
+> > + #define SYNC_RANGE_FINE	(0 << 6)
+> > + #define SYNC_RANGE_COARSE	(1 << 6)
+> > + #define SYNC_LEN(x)		((x) & 0x3f)
+> > + #define PREP_LEN(x)		((x) & 0xf)
+> > +#define RX_ADV_GRANULARITY_CAP		0x98
+> > + #define RX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
+> > +#define TX_ADV_GRANULARITY_CAP		0x10
+> > + #define TX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
+> > +#define RX_MIN_ACTIVATETIME_CAP		0x8f
+> > +#define RX_HIBERN8TIME_CAP		0x92
+> > +#define RX_ADV_HIBERN8TIME_CAP		0x99
+> > +#define RX_ADV_MIN_ACTIVATETIME_CAP	0x9a
+> > +
+> > +#endif /* _MPHY_H_ */
+> > +
+> > diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> > index 9599741..26dc340 100644
+> > --- a/drivers/scsi/ufs/ufshci.h
+> > +++ b/drivers/scsi/ufs/ufshci.h
+> > @@ -170,17 +170,25 @@ enum {
+> >  /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
+> >  #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
+> >  #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+> > -#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
+> > -#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
+> > -#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
+> > +#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED		UFS_BIT(0)
+> > +#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT	UFS_BIT(1)
+> > +#define UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF		UFS_BIT(5)
+> 
+> why don't we just add macros for all the bits in UECDL ? This makes it
+> easy in future.
 
-- Chris
+Okay. I'll think about it and apply new macros on new version of this patch.
 
----
+> 
+> > +#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT		UFS_BIT(13)
+> >
+> >  /* UECN - Host UIC Error Code Network Layer 40h */
+> >  #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
+> >  #define UIC_NETWORK_LAYER_ERROR_CODE_MASK	0x7
+> > +#define UIC_NETWORK_UNSUPPORTED_HEADER_TYPE	BIT(0)
+> > +#define UIC_NETWORK_BAD_DEVICEID_ENC		BIT(1)
+> > +#define UIC_NETWORK_LHDR_TRAP_PACKET_DROPPING	BIT(2)
+> >
+> >  /* UECT - Host UIC Error Code Transport Layer 44h */
+> >  #define UIC_TRANSPORT_LAYER_ERROR		UFS_BIT(31)
+> >  #define UIC_TRANSPORT_LAYER_ERROR_CODE_MASK	0x7F
+> > +#define UIC_TRANSPORT_UNSUPPORTED_HEADER_TYPE	BIT(0)
+> > +#define UIC_TRANSPORT_UNKNOWN_CPORTID		BIT(1)
+> > +#define UIC_TRANSPORT_NO_CONNECTION_RX		BIT(2)
+> > +#define UIC_TRANSPORT_BAD_TC			BIT(4)
+> 
+> May be add definition for bit-5 and 6 as well.
 
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index f9b6fba..fbd18ab 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -560,8 +560,12 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
- 	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
- 	task->state = state;
- 
--	if (!list_empty(&task->running))
-+	spin_lock_bh(&conn->taskqueuelock);
-+	if (!list_empty(&task->running)) {
-+		WARN_ONCE(1, "iscsi_complete_task while task on list");
- 		list_del_init(&task->running);
-+	}
-+	spin_unlock_bh(&conn->taskqueuelock);
- 
- 	if (conn->task == task)
- 		conn->task = NULL;
-@@ -783,7 +787,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
- 		if (session->tt->xmit_task(task))
- 			goto free_task;
- 	} else {
-+		spin_lock_bh(&conn->taskqueuelock);
- 		list_add_tail(&task->running, &conn->mgmtqueue);
-+		spin_unlock_bh(&conn->taskqueuelock);
- 		iscsi_conn_queue_work(conn);
- 	}
- 
-@@ -1474,8 +1480,10 @@ void iscsi_requeue_task(struct iscsi_task *task)
- 	 * this may be on the requeue list already if the xmit_task callout
- 	 * is handling the r2ts while we are adding new ones
- 	 */
-+	spin_lock_bh(&conn->taskqueuelock);
- 	if (list_empty(&task->running))
- 		list_add_tail(&task->running, &conn->requeue);
-+	spin_unlock_bh(&conn->taskqueuelock);
- 	iscsi_conn_queue_work(conn);
- }
- EXPORT_SYMBOL_GPL(iscsi_requeue_task);
-@@ -1512,22 +1520,26 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 	 * only have one nop-out as a ping from us and targets should not
- 	 * overflow us with nop-ins
- 	 */
-+	spin_lock_bh(&conn->taskqueuelock);
- check_mgmt:
- 	while (!list_empty(&conn->mgmtqueue)) {
- 		conn->task = list_entry(conn->mgmtqueue.next,
- 					 struct iscsi_task, running);
- 		list_del_init(&conn->task->running);
-+		spin_unlock_bh(&conn->taskqueuelock);
- 		if (iscsi_prep_mgmt_task(conn, conn->task)) {
- 			/* regular RX path uses back_lock */
- 			spin_lock_bh(&conn->session->back_lock);
- 			__iscsi_put_task(conn->task);
- 			spin_unlock_bh(&conn->session->back_lock);
- 			conn->task = NULL;
-+			spin_lock_bh(&conn->taskqueuelock);
- 			continue;
- 		}
- 		rc = iscsi_xmit_task(conn);
- 		if (rc)
- 			goto done;
-+		spin_lock_bh(&conn->taskqueuelock);
- 	}
- 
- 	/* process pending command queue */
-@@ -1535,19 +1547,24 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 		conn->task = list_entry(conn->cmdqueue.next, struct iscsi_task,
- 					running);
- 		list_del_init(&conn->task->running);
-+		spin_unlock_bh(&conn->taskqueuelock);
- 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
- 			fail_scsi_task(conn->task, DID_IMM_RETRY);
-+			spin_lock_bh(&conn->taskqueuelock);
- 			continue;
- 		}
- 		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
- 		if (rc) {
- 			if (rc == -ENOMEM || rc == -EACCES) {
-+				spin_lock_bh(&conn->taskqueuelock);
- 				list_add_tail(&conn->task->running,
- 					      &conn->cmdqueue);
- 				conn->task = NULL;
-+				spin_unlock_bh(&conn->taskqueuelock);
- 				goto done;
- 			} else
- 				fail_scsi_task(conn->task, DID_ABORT);
-+			spin_lock_bh(&conn->taskqueuelock);
- 			continue;
- 		}
- 		rc = iscsi_xmit_task(conn);
-@@ -1558,6 +1575,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 		 * we need to check the mgmt queue for nops that need to
- 		 * be sent to aviod starvation
- 		 */
-+		spin_lock_bh(&conn->taskqueuelock);
- 		if (!list_empty(&conn->mgmtqueue))
- 			goto check_mgmt;
- 	}
-@@ -1577,12 +1595,15 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
- 		conn->task = task;
- 		list_del_init(&conn->task->running);
- 		conn->task->state = ISCSI_TASK_RUNNING;
-+		spin_unlock_bh(&conn->taskqueuelock);
- 		rc = iscsi_xmit_task(conn);
- 		if (rc)
- 			goto done;
-+		spin_lock_bh(&conn->taskqueuelock);
- 		if (!list_empty(&conn->mgmtqueue))
- 			goto check_mgmt;
- 	}
-+	spin_unlock_bh(&conn->taskqueuelock);
- 	spin_unlock_bh(&conn->session->frwd_lock);
- 	return -ENODATA;
- 
-@@ -1738,7 +1759,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
- 			goto prepd_reject;
- 		}
- 	} else {
-+		spin_lock_bh(&conn->taskqueuelock);
- 		list_add_tail(&task->running, &conn->cmdqueue);
-+		spin_unlock_bh(&conn->taskqueuelock);
- 		iscsi_conn_queue_work(conn);
- 	}
- 
-@@ -2897,6 +2920,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
- 	INIT_LIST_HEAD(&conn->mgmtqueue);
- 	INIT_LIST_HEAD(&conn->cmdqueue);
- 	INIT_LIST_HEAD(&conn->requeue);
-+	spin_lock_init(&conn->taskqueuelock);
- 	INIT_WORK(&conn->xmitwork, iscsi_xmitworker);
- 
- 	/* allocate login_task used for the login/text sequences */
-diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-index 4d1c46a..c7b1dc7 100644
---- a/include/scsi/libiscsi.h
-+++ b/include/scsi/libiscsi.h
-@@ -196,6 +196,7 @@ struct iscsi_conn {
- 	struct iscsi_task	*task;		/* xmit task in progress */
- 
- 	/* xmit */
-+	spinlock_t		taskqueuelock;  /* protects the next three lists */
- 	struct list_head	mgmtqueue;	/* mgmt (control) xmit queue */
- 	struct list_head	cmdqueue;	/* data-path cmd queue */
- 	struct list_head	requeue;	/* tasks needing another run */
+Okay. I'll add those things on new version of this patch.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+> 
+> >
+> >  /* UECDME - Host UIC Error Code DME 48h */
+> >  #define UIC_DME_ERROR			UFS_BIT(31)
+> > diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> > index eff8b56..e47e2c2 100644
+> > --- a/drivers/scsi/ufs/unipro.h
+> > +++ b/drivers/scsi/ufs/unipro.h
+> > @@ -127,6 +127,7 @@
+> >  #define PA_PACPREQEOBTIMEOUT	0x1591
+> >  #define PA_HIBERN8TIME		0x15A7
+> >  #define PA_LOCALVERINFO		0x15A9
+> > +#define PA_GRANULARITY		0x15AA
+> >  #define PA_TACTIVATE		0x15A8
+> >  #define PA_PACPFRAMECOUNT	0x15C0
+> >  #define PA_PACPERRORCOUNT	0x15C1
+> > @@ -170,6 +171,9 @@ enum {
+> >  	UNCHANGED	= 7,
+> >  };
+> >
+> > +#define IS_PWR_MODE_HS(m)        (((m) == FAST_MODE) || ((m) ==
+> > FASTAUTO_MODE))
+> 
+> s/IS_PWR_MODE_HS/IS_HS_PWR_MODE ?
+> 
+> > +#define IS_PWR_MODE_PWM(m)       (((m) == SLOW_MODE) || ((m) ==
+> > SLOWAUTO_MODE))
+> 
+> s/IS_PWR_MODE_PWM/IS_PWM_PWR_MODE ?
+> 
+> > +
+> >  /* PA TX/RX Frequency Series */
+> >  enum {
+> >  	PA_HS_MODE_A	= 1,
+> > @@ -231,6 +235,11 @@ enum ufs_unipro_ver {
+> >  #define DL_PEERTC1PRESENT	0x2066
+> >  #define DL_PEERTC1RXINITCREVAL	0x2067
+> >
+> > +/* Default value of L2 Timer */
+> > +#define FC0PROTTIMEOUTVAL	8191
+> > +#define TC0REPLAYTIMEOUTVAL	65535
+> > +#define AFC0REQTIMEOUTVAL	32767
+> > +
+> >  /*
+> >   * Network Layer Attributes
+> >   */
+> > @@ -259,6 +268,21 @@ enum ufs_unipro_ver {
+> >  #define T_TC0TXMAXSDUSIZE	0x4060
+> >  #define T_TC1TXMAXSDUSIZE	0x4061
+> >
+> > +/* CPort setting */
+> > +#define E2EFC_ON	(1 << 0)
+> > +#define E2EFC_OFF	(0 << 0)
+> > +#define CSD_N_ON	(0 << 1)
+> > +#define CSD_N_OFF	(1 << 1)
+> > +#define CSV_N_ON	(0 << 2)
+> > +#define CSV_N_OFF	(1 << 2)
+> 
+> 
+> Can you please specify where these are coming from? Spec number and
+> section/line number?
+
+These definitions are associated with Unipro attributes 0x4025, that is
+T_CPortFlags.
+I referred version 1.6 - 6 August 2013.
+You can find details in Chapter 8.17 and Table 92 in the spec
+
+
+> 
+> > +#define CPORT_DEF_FLAGS	(CSV_N_OFF | CSD_N_OFF | E2EFC_OFF)
+> > +
+> > +/* CPort connection state */
+> > +enum {
+> > +	CPORT_IDLE = 0,
+> > +	CPORT_CONNECTED,
+> > +};
+> > +
+> >  #ifdef FALSE
+> >  #undef FALSE
+> >  #endif
+> 
+> --
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Projec
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
+
+
