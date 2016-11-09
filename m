@@ -1,36 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-Date: Tue, 08 Nov 2016 19:07:57 -0500
-Message-ID: <yq1y40tplb6.fsf@sermon.lab.mkp.net>
-References: <201611081805.KzpHTNxg%fengguang.wu@intel.com>
-        <alpine.LRH.2.00.1611081129440.28058@mvluser05.qlc.com>
-        <yq137j1r0q3.fsf@sermon.lab.mkp.net>
-        <alpine.LRH.2.00.1611081555110.28058@mvluser05.qlc.com>
+Subject: Re: [PATCH 4.9/scsi-fixes] libcxgbi: fix incorrect DDP resource cleanup
+Date: Tue, 08 Nov 2016 19:12:12 -0500
+Message-ID: <yq1twbhpl43.fsf@sermon.lab.mkp.net>
+References: <1478362768-19895-1-git-send-email-varun@chelsio.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:44322 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:45772 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751573AbcKIAIQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 19:08:16 -0500
-In-Reply-To: <alpine.LRH.2.00.1611081555110.28058@mvluser05.qlc.com> (Arun
-        Easi's message of "Tue, 8 Nov 2016 16:00:55 -0800")
+        with ESMTP id S1752275AbcKIAMU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 19:12:20 -0500
+In-Reply-To: <1478362768-19895-1-git-send-email-varun@chelsio.com> (Varun
+        Prakash's message of "Sat, 5 Nov 2016 21:49:28 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Arun Easi <arun.easi@cavium.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, kbuild test robot <lkp@intel.com>, Manish Rangankar <manish.rangankar@cavium.com>, kbuild-all@01.org, James Bottomley <jejb@linux.vnet.ibm.com>, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
+To: Varun Prakash <varun@chelsio.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, indranil@chelsio.com
 
->>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
+>>>>> "Varun" == Varun Prakash <varun@chelsio.com> writes:
 
->> It's fine to post the patches split up to ease the review
->> process. But whatever we commit must obviously be bisectable.
+Varun> Before calling task_release_itt() task data is memset to zero
+Varun> because of which DDP context information is lost resulting in
+Varun> incorrect DDP resource cleanup, to fix this call
+Varun> task_release_itt() before memset.
 
-Arun> If it is alright with you, we would like to have all of our
-Arun> initial patches for the driver (qedi) squashed as a single commit
-Arun> to the tree. We will ensure that this single combined commit
-Arun> compiles clean.
-
-That's fine with me.
+Applied to 4.9/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
