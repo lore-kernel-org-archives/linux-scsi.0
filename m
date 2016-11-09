@@ -1,47 +1,36 @@
-From: Arun Easi <arun.easi@cavium.com>
-Subject: Re: [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver
- framework.
-Date: Tue, 8 Nov 2016 16:00:55 -0800
-Message-ID: <alpine.LRH.2.00.1611081555110.28058@mvluser05.qlc.com>
-References: <201611081805.KzpHTNxg%fengguang.wu@intel.com> <alpine.LRH.2.00.1611081129440.28058@mvluser05.qlc.com> <yq137j1r0q3.fsf@sermon.lab.mkp.net>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver framework.
+Date: Tue, 08 Nov 2016 19:07:57 -0500
+Message-ID: <yq1y40tplb6.fsf@sermon.lab.mkp.net>
+References: <201611081805.KzpHTNxg%fengguang.wu@intel.com>
+        <alpine.LRH.2.00.1611081129440.28058@mvluser05.qlc.com>
+        <yq137j1r0q3.fsf@sermon.lab.mkp.net>
+        <alpine.LRH.2.00.1611081555110.28058@mvluser05.qlc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:3775
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751618AbcKIABI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 8 Nov 2016 19:01:08 -0500
-In-Reply-To: <yq137j1r0q3.fsf@sermon.lab.mkp.net>
+Received: from aserp1040.oracle.com ([141.146.126.69]:44322 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751573AbcKIAIQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 19:08:16 -0500
+In-Reply-To: <alpine.LRH.2.00.1611081555110.28058@mvluser05.qlc.com> (Arun
+        Easi's message of "Tue, 8 Nov 2016 16:00:55 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: kbuild test robot <lkp@intel.com>, Manish Rangankar <manish.rangankar@cavium.com>, kbuild-all@01.org, James Bottomley <jejb@linux.vnet.ibm.com>, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
+To: Arun Easi <arun.easi@cavium.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, kbuild test robot <lkp@intel.com>, Manish Rangankar <manish.rangankar@cavium.com>, kbuild-all@01.org, James Bottomley <jejb@linux.vnet.ibm.com>, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval Mintz <Yuval.Mintz@cavium.com>
 
-Martin,
+>>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
 
-On Tue, 8 Nov 2016, 3:49pm -0000, Martin K. Petersen wrote:
+>> It's fine to post the patches split up to ease the review
+>> process. But whatever we commit must obviously be bisectable.
 
-> >>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
-> 
-> Arun,
-> 
-> Arun> qedi is the new iSCSI driver, which we are trying to submit, for
-> Arun> our 41000 series CNA. This patch series were broken up into
-> Arun> logical blocks for review purpose, but were not made to compile
-> Arun> individually. It is our impression that this is acceptable for
-> Arun> SCSI and all the initial "qedi" patches will be squashed and
-> Arun> committed as a single commit. Please let us know if we are
-> Arun> mistaken, and if so, we will post another series with this taken
-> Arun> care of.
-> 
-> It's fine to post the patches split up to ease the review process. But
-> whatever we commit must obviously be bisectable.
-> 
+Arun> If it is alright with you, we would like to have all of our
+Arun> initial patches for the driver (qedi) squashed as a single commit
+Arun> to the tree. We will ensure that this single combined commit
+Arun> compiles clean.
 
-If it is alright with you, we would like to have all of our initial 
-patches for the driver (qedi) squashed as a single commit to the tree. We 
-will ensure that this single combined commit compiles clean.
+That's fine with me.
 
-Regards,
--Arun
+-- 
+Martin K. Petersen	Oracle Linux Engineering
