@@ -1,160 +1,176 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a deadlock
-Date: Tue, 08 Nov 2016 20:10:44 -0600
-Message-ID: <87pom5o123.fsf@xmission.com>
-References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
-        <1478618887.2824.2.camel@linux.vnet.ibm.com>
-        <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
-        <1478628101.2824.27.camel@linux.vnet.ibm.com>
-        <87oa1pvl8f.fsf@xmission.com>
-        <1478648684.2368.17.camel@linux.vnet.ibm.com>
-        <87bmxpqxlb.fsf@xmission.com>
-        <1478655815.2368.34.camel@linux.vnet.ibm.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: [PATCH v1] ufs: introduce UFSHCD_QUIRK_USE_OF_HCE quirk
+Date: Wed, 09 Nov 2016 11:13:31 +0900
+Message-ID: <008901d23a2e$de466e30$9ad34a90$@samsung.com>
+References: <002301d23995$c3be88c0$4b3b9a40$@samsung.com>
+ <CGME20161108195009epcas3p175b3268eeac30ace7ab05d8ea134fd38@epcas3p1.samsung.com>
+ <2c77bb07cb872130fb55c555391f8080@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:46210 "EHLO
-        out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751099AbcKICNO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 21:13:14 -0500
-In-Reply-To: <1478655815.2368.34.camel@linux.vnet.ibm.com> (James Bottomley's
-        message of "Tue, 08 Nov 2016 17:43:35 -0800")
+Received: from mailout2.samsung.com ([203.254.224.25]:40539 "EHLO
+        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751099AbcKICNe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 8 Nov 2016 21:13:34 -0500
+In-reply-to: <2c77bb07cb872130fb55c555391f8080@codeaurora.org>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-James Bottomley <jejb@linux.vnet.ibm.com> writes:
 
-> On Tue, 2016-11-08 at 18:57 -0600, Eric W. Biederman wrote:
->> James Bottomley <jejb@linux.vnet.ibm.com> writes:
->> 
->> > On Tue, 2016-11-08 at 13:13 -0600, Eric W. Biederman wrote:
-> [...]
->> > > Is it really the dropping of the lock that is causing this?
->> > > I don't see that when I read those traces.
->> > 
->> > No, it's an ABBA lock inversion that causes this.  The traces are
->> > somewhat dense, but they say it here:
->> > 
->> >  Possible unsafe locking scenario:
->> >        CPU0                    CPU1
->> >        ----                    ----
->> >   lock(s_active#336);
->> >                                lock(&shost->scan_mutex);
->> >                                lock(s_active#336);
->> >   lock(&shost->scan_mutex);
->> > 
->> >  *** DEADLOCK ***
->> > 
->> > The detailed explanation of this is here:
->> > 
->> > http://marc.info/?l=linux-scsi&m=147855187425596
->> > 
->> > The fix is ensuring that the CPU1 thread doesn't get into taking
->> > s_active if CPU0 already has it using the KERNFS_SUICIDED/AL flag 
->> > as an indicator.
->> 
->> So.  The kernfs code does not look safe to have kernfs_remove_self
->> and kernfs_remove_by_name_ns racing against each other I agree.
->> 
->> The kernfs_remove_self path turns KERNFS_SUICIDAL into another 
->> blocking lock by another name, and without lockdep annotations so I 
->> don't know that it is safe.
->
-> Yes ... the number of hand rolled locks in that code make it super hard
-> to follow.
->
->> The relevant bit from kernfs_remove_self is:
->> 
->> 	if (!(kn->flags & KERNFS_SUICIDAL)) {
->> 		kn->flags |= KERNFS_SUICIDAL;
->> 		__kernfs_remove(kn);
->> 		kn->flags |= KERNFS_SUICIDED;
->> 		ret = true;
->> 	} else {
->> 		wait_queue_head_t *waitq = &kernfs_root(kn)
->> ->deactivate_waitq;
->> 		DEFINE_WAIT(wait);
->> 
->> 		while (true) {
->> 			prepare_to_wait(waitq, &wait,
->> TASK_UNINTERRUPTIBLE);
->> 
->> 			if ((kn->flags & KERNFS_SUICIDED) &&
->> 			    atomic_read(&kn->active) ==
->> KN_DEACTIVATED_BIAS)
->> 				break;
->> 
->> 			mutex_unlock(&kernfs_mutex);
->> 			schedule();
->> 			mutex_lock(&kernfs_mutex);
->> 		}
->> 		finish_wait(waitq, &wait);
->> 		WARN_ON_ONCE(!RB_EMPTY_NODE(&kn->rb));
->> 		ret = false;
->> 	}
->> 
->> I am pretty certain that if you are going to make kernfs_remove_self 
->> and kernfs_remove_by_name_ns to be safe to race against each other, 
->> not just the KERNFS_SUICIDAL check, but the wait when KERNFS_SUICIDAL 
->> is set needs to be added ot kernfs_remove_by_name_ns.
->
-> I don't think you can do that: waiting for SUICIDED would introduce
-> another potential lock entanglement.  I'm reasonably happy that the
-> deactivation offset coupled with kernfs_drain in the non self remove
-> path means that the necessary cleanup is done when the directory itself
-> is removed.  That seems to be a common pattern in all non-self
-> removes.
 
-But if we don't I am pretty certain there will be asynchrounous behavior
-in some cases that could potentially confuse userspace.
+> On 2016-11-07 23:57, Kiwoong Kim wrote:
+> > Some host controller might not initialize itself by setting "Host
+> > Controller Enable" to 1.
+> 
+> > They should do this to reset UIC.
+> 
+> I am not sure if i understood this statment. can you give more details?
 
-Which is partly why I would like to kill kernfs_remove_self.
+UFSHCI spec says as follows:
+- When HCE is ‘0’ and software writes ‘1’, the host 
+controller hardware shall execute the step 2 described in section 7.1.1
+of this standard, including reset of the host UTP and UIC layers.
 
->> And I suspect if you add the appropriate lockdep annotations to that 
->> mess you will find yourself in a similar but related ABBA deadlock.
->
-> I can't prove the negative, but as long as there's no waiting on the
-> SUICIDED/AL flags in the non-self remove path, I believe we're safe
-> with the current patch.
->
->> Which is why I would like a simpler easier to understand mechanism if
->> we can.
->
-> I don't disagree: If you want to clean out the Augean Stables, I can
-> lend you the thigh length rubber boots and the gas mask.  However, I
-> think that what we're currently proposing: a simple patch to make
-> device_remove_file_self() actually work for everyone, along with
-> stringent testing is the better approach.
->
-> After all, if you look at
->
-> commit ac0ece9174aca9aa895ce0accc54f1f8ff12d117
-> Author: Tejun Heo <tj@kernel.org>
-> Date:   Mon Feb 3 14:03:03 2014 -0500
->
->     scsi: use device_remove_file_self() instead of device_schedule_callback()
->
-> You'll see Tejun added all this stuff just to remove the async callback
-> we originally had.  Simply restoring the async callback back makes us
-> quite considerably worse off because the device_remove_file_self()
-> mechanism is in use elsewhere.  We need either to fix it and move on or
-> junk it and go back to the original.
+I found that a specific controller didn't execute reset of UIC layers
+Properly for an internal problem.
+At that time, DME reset and DME enable could make UIC be reset properly
+instead of using "Host Controller Enable".
 
-I vote we junk it and go back to something that resembles the original.
-there are only about 5 other callers so this isn't that bad to do.
+> 
+> > In such cases, 'DME reset' and 'DME enable' are required for normal
+> > subsequent operations.
+> 
+> This means HCE implementation is broken, you should name the quirk as
+> UFSHCD_QUIRK_BROKEN_HCE .
 
-Tejun's work clearly added this deadlock 2 and a half years ago, and
-it was nasty enough no one noticed until recently.
+Okay.
 
-Using task_work_add(current, ...) as I posted earlier let's us retain
-the synchronous property of the current API.
+> 
+> >
+> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> > ---
+> >  drivers/scsi/ufs/ufshcd.c | 44
+> > +++++++++++++++++++++++++++++++++++++++++++-
+> >  drivers/scsi/ufs/ufshcd.h |  1 +
+> >  2 files changed, 44 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 24d6ea7..c904854 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -2496,6 +2496,37 @@ static inline void
+> > ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
+> >  	usleep_range(min_sleep_time_us, min_sleep_time_us + 50);  }
+> >
+> > +static int ufshcd_dme_reset(struct ufs_hba *hba) {
+> > +	struct uic_command uic_cmd = {0};
+> > +	int ret;
+> > +
+> > +	uic_cmd.command = UIC_CMD_DME_RESET;
+> > +	uic_cmd.argument1 = 0x1;
+> > +
+> > +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+> > +	if (ret)
+> > +		dev_err(hba->dev,
+> > +			"dme-reset: error code %d\n", ret);
+> 
+> This error message doesn't say which DME command failed, do you want to
+> add that?
 
-While we debate the details I am happy to look at scsi as a special case
-and solve for scsi.  Then when we have the details worked out we can go
-fix the other cases.  Given my preliminary patch in my last reply it
-looks very straight forward to fix this sanely.
+I think that the string "dme-reset" is useful when clarifying some problems.
+But if you don't agree merging it to mainline, I'll remove it in next
+version.
 
-Eric
+> 
+> > +
+> > +	return ret;
+> > +}
+> > +
+> > +static int ufshcd_dme_enable(struct ufs_hba *hba) {
+> > +	struct uic_command uic_cmd = {0};
+> > +	int ret;
+> > +
+> > +	uic_cmd.command = UIC_CMD_DME_ENABLE;
+> > +
+> > +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
+> > +	if (ret)
+> > +		dev_err(hba->dev,
+> > +			"dme-enable: error code %d\n", ret);
+> 
+> This error message doesn't say which DME command failed, do you want to
+> add that?
+
+Same with above.
+
+> 
+> > +
+> > +	return ret;
+> > +}
+> > +
+> >  /**
+> >   * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
+> >   * @hba: per adapter instance
+> > @@ -3101,6 +3132,7 @@ static inline void ufshcd_hba_stop(struct
+> > ufs_hba *hba, bool can_sleep)  static int ufshcd_hba_enable(struct
+> > ufs_hba *hba)  {
+> >  	int retry;
+> > +	int ret = 0;
+> >
+> >  	/*
+> >  	 * msleep of 1 and 5 used in this function might result in
+> > msleep(20), @@ -3117,6 +3149,9 @@ static int ufshcd_hba_enable(struct
+> > ufs_hba *hba)
+> >
+> >  	ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
+> >
+> > +	if (hba->quirks & UFSHCD_QUIRK_USE_OF_HCE)
+> > +		goto use_dme;
+> > +
+> >  	/* start controller initialization sequence */
+> >  	ufshcd_hba_start(hba);
+> >
+> > @@ -3145,12 +3180,19 @@ static int ufshcd_hba_enable(struct ufs_hba
+> > *hba)
+> >  		msleep(5);
+> >  	}
+> >
+> > +use_dme:
+> >  	/* enable UIC related interrupts */
+> >  	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
+> >
+> > +	if (hba->quirks & UFSHCD_QUIRK_USE_OF_HCE) {
+> > +		ret = ufshcd_dme_reset(hba);
+> > +		if (!ret)
+> > +			ret = ufshcd_dme_enable(hba);
+> > +	}
+> > +
+> >  	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
+> >
+> > -	return 0;
+> > +	return ret;
+> >  }
+> >
+> >  static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer) diff
+> > --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
+> > c4abd76..6a96f24 100644
+> > --- a/drivers/scsi/ufs/ufshcd.h
+> > +++ b/drivers/scsi/ufs/ufshcd.h
+> > @@ -496,6 +496,7 @@ struct ufs_hba {
+> >  	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
+> >  	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
+> >  	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> > +	#define UFSHCD_QUIRK_USE_OF_HCE				UFS_BIT(9)
+> >
+> >
+> >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec.
+> */
+> 
+> --
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Project
+
 
