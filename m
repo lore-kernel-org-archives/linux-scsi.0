@@ -1,30 +1,40 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: fix macro MEGASAS_IS_LOGICAL to avoid regression caused by commit 1e793f6fc0db920400574211c48f9157a37e3945
-Date: Wed, 09 Nov 2016 11:30:52 -0500
-Message-ID: <yq1wpgcobsz.fsf@sermon.lab.mkp.net>
-References: <1478689182-10854-1-git-send-email-sumit.saxena@broadcom.com>
+From: Tejun Heo <tj@kernel.org>
+Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
+ controller hardware v1.1
+Date: Wed, 9 Nov 2016 11:45:31 -0500
+Message-ID: <20161109164531.GA14630@htj.duckdns.org>
+References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
+ <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1478689182-10854-1-git-send-email-sumit.saxena@broadcom.com>
-        (Sumit Saxena's message of "Wed, 9 Nov 2016 02:59:42 -0800")
-Sender: stable-owner@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, shivasharan.srikanteshwara@broadcom.com, axboe@kernel.dk, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yb0-f194.google.com ([209.85.213.194]:36711 "EHLO
+        mail-yb0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754335AbcKIQpd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 11:45:33 -0500
+Content-Disposition: inline
+In-Reply-To: <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Rameshwar Sahu <rsahu@apm.com>
+Cc: Olof Johansson <olof@lixom.net>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, ddutile@redhat.com, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
 
->>>>> "Sumit" == Sumit Saxena <sumit.saxena@broadcom.com> writes:
+Hello,
 
-Sumit> This patch will fix regression caused by below commit- 1e793f6
-Sumit> scsi: megaraid_sas: Fix data integrity failure for JBOD
-Sumit> (passthrough) devices
+On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
+> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
+> > *pdev)
+> >                                 dev_warn(&pdev->dev, "%s: Error reading
+> > device info. Assume version1\n",
+> >                                         __func__);
+> >                                 version = XGENE_AHCI_V1;
+> > -                       } else if (info->valid & ACPI_VALID_CID) {
+> > -                               version = XGENE_AHCI_V2;
 
-Sumit> The problem was MEGASAS_IS_LOGICAL macro does not have braces and
-Sumit> because of above commit using this macro was exposing lot of
-Sumit> non-existing SCSI devices(all SCSI commands to channels-1,2,3 was
-Sumit> returned as SUCCESS-DID_OK by driver).
+Can you please explain this part a bit?  Everything else looks good to
+me.
 
-Applied to 4.9/scsi-fixes.
+Thanks.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+tejun
