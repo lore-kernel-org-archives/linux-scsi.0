@@ -1,42 +1,90 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Re: Delivery Status Notification for linuxraid@lsi.com
-Date: Thu, 10 Nov 2016 15:10:03 +0100
-Message-ID: <c2ebb7c0-50de-fa27-c8bd-7491f06d860e@molgen.mpg.de>
-References: <047d7b66fd9d4090c40540dd252b@google.com>
- <c8571e44-4587-705e-9d48-da62b3312c0c@molgen.mpg.de>
- <yq1wpgbmnrj.fsf@sermon.lab.mkp.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.molgen.mpg.de ([141.14.17.9]:57293 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933033AbcKJOKG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Nov 2016 09:10:06 -0500
-In-Reply-To: <yq1wpgbmnrj.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andrey Grodzovsky <andrey2805@gmail.com>
+Subject: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v4)
+Date: Thu, 10 Nov 2016 09:35:27 -0500
+Message-ID: <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
+References: <20161110135443.GA28767@kroah.com>
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20161110135443.GA28767@kroah.com>
+Sender: stable-owner@vger.kernel.org
+To: MPT-FusionLinux.pdl@broadcom.com
+Cc: igor@media-clone.com, ezra@media-clone.com, Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
 
-Dear Martin,
+Problem:
+This is a work around for a bug with LSI Fusion MPT SAS2 when
+pefroming secure erase. Due to the very long time the operation
+takes commands issued during the erase will time out and will trigger
+execution of abort hook. Even though the abort hook is called for
+the specific command which timed out this leads to entire device halt
+(scsi_state terminated) and premature termination of the secured erase.
 
+Fix:
+Set device state to busy while erase in progress to reject any incoming
+commands until the erase is done. The device is blocked any way during
+this time and cannot execute any other command.
+More data and logs can be found here -
+https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
 
-On 11/10/16 15:07, Martin K. Petersen wrote:
->>>>>> "Paul" == Paul Menzel <pmenzel@molgen.mpg.de> writes:
+v2: Update according to example patch by Hannes Reinecke to apply
+the blocking logic to any ATA 12/16 command.
 
-> Paul> Probably you know it already, but the listed email address of the
-> Paul> 3WARE SCSI drivers maintainer linuxraid@lsi.com doesn’t work (for
-> Paul> me).
->
-> Ownership of these products is now with Broadcom. To my knowledge the
-> 3ware product lines have been discontinued.
+v3: Use SCSI commands opcodes definitions instead of value and
+correct identation.
 
-Indeed. I forgot to actually formulate the intend of my message.
+v4: Fix checkpath errors and warning.
 
-What should happen to the entry in the file `MAINTAINERS`?
+Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-
-Kind regards,
-
-Paul
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 5a97e32..c032319 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3500,6 +3500,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+ 	    SAM_STAT_CHECK_CONDITION;
+ }
+ 
++static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
++{
++	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
++}
+ 
+ /**
+  * _scsih_qcmd - main scsi request entry point
+@@ -3528,6 +3532,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 		scsi_print_command(scmd);
+ #endif
+ 
++	/**
++	* Lock the device for any subsequent command until
++	* command is done.
++	*/
++	if (ata_12_16_cmd(scmd))
++		scsi_internal_device_block(scmd->device);
++
++
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -4062,6 +4074,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	if (scmd == NULL)
+ 		return 1;
+ 
++	if (ata_12_16_cmd(scmd))
++		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
++
++
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+ 
+ 	if (mpi_reply == NULL) {
+-- 
+2.1.4
