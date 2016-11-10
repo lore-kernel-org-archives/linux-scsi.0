@@ -1,81 +1,115 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2] ufs: introduce setup_task_mgmt
-Date: Thu, 10 Nov 2016 10:15:05 -0800
-Message-ID: <a368b99cc68ae4a6e8c935e9713bf5f6@codeaurora.org>
-References: <002301d23b4c$3ba55550$b2effff0$@samsung.com>
+Subject: Re: [PATCH v2] ufs: introduce hibern8_notify callback
+Date: Thu, 10 Nov 2016 10:15:45 -0800
+Message-ID: <705df336d5c416fc899f6431a6450ee2@codeaurora.org>
+References: <002401d23b4c$70a1f060$51e5d120$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:54566 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55074 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751503AbcKJSPG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 13:15:06 -0500
-In-Reply-To: <002301d23b4c$3ba55550$b2effff0$@samsung.com>
+        with ESMTP id S1752508AbcKJSQJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 13:16:09 -0500
+In-Reply-To: <002401d23b4c$70a1f060$51e5d120$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kiwoong Kim <kwmad.kim@samsung.com>
 Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-10 04:16, Kiwoong Kim wrote:
+On 2016-11-10 04:17, Kiwoong Kim wrote:
 > Some UFS host controller may need to configure some things
-> before any task management request is issued
+> around hibern8 enter/exit
 > 
-> v2: move a comment to another place
+> v2: change the callback name and data type of 2nd argument
 > 
 > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c |  2 ++
->  drivers/scsi/ufs/ufshcd.h | 10 ++++++++++
->  2 files changed, 12 insertions(+)
+>  drivers/scsi/ufs/ufshcd.c | 12 ++++++++++--
+>  drivers/scsi/ufs/ufshcd.h | 12 ++++++++++++
+>  2 files changed, 22 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index bf78321..301b592 100644
+> index 301b592..e75fbb3 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -4357,6 +4357,8 @@ static int ufshcd_issue_tm_cmd(struct ufs_hba
-> *hba, int lun_id, int task_id,
->  	task_req_upiup->input_param1 = cpu_to_be32(lun_id);
->  	task_req_upiup->input_param2 = cpu_to_be32(task_id);
+> @@ -2697,6 +2697,8 @@ static int __ufshcd_uic_hibern8_enter(struct 
+> ufs_hba *hba)
+>  	int ret;
+>  	struct uic_command uic_cmd = {0};
 > 
-> +	ufshcd_vops_setup_task_mgmt(hba, free_slot, tm_function);
+> +	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER, PRE_CHANGE);
 > +
->  	/* send command to the controller */
->  	__set_bit(free_slot, &hba->outstanding_tasks);
+>  	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
+>  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
 > 
+> @@ -2710,7 +2712,9 @@ static int __ufshcd_uic_hibern8_enter(struct 
+> ufs_hba *hba)
+>  		 */
+>  		if (ufshcd_link_recovery(hba))
+>  			ret = -ENOLINK;
+> -	}
+> +	} else
+> +		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER,
+> +								POST_CHANGE);
+> 
+>  	return ret;
+>  }
+> @@ -2733,13 +2737,17 @@ static int ufshcd_uic_hibern8_exit(struct 
+> ufs_hba *hba)
+>  	struct uic_command uic_cmd = {0};
+>  	int ret;
+> 
+> +	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT, PRE_CHANGE);
+> +
+>  	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
+>  	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
+>  	if (ret) {
+>  		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
+>  			__func__, ret);
+>  		ret = ufshcd_link_recovery(hba);
+> -	}
+> +	} else
+> +		ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT,
+> +								POST_CHANGE);
+> 
+>  	return ret;
+>  }
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index e935fd1..05d8384 100644
+> index 05d8384..8e76501 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -263,6 +263,8 @@ struct ufs_pwr_mode_info {
->   *			to be set.
->   * @setup_xfer_req: called before any transfer request is issued
+> @@ -265,6 +265,8 @@ struct ufs_pwr_mode_info {
 >   *                  to set some things
-> + * @setup_task_mgmt: called before any task management request is 
+>   * @setup_task_mgmt: called before any task management request is 
 > issued
-> + *                  to set some things
+>   *                  to set some things
+> + * @hibern8_notify: called around hibern8 enter/exit
+> + *		    to configure some things
 >   * @suspend: called during host controller PM callback
 >   * @resume: called during host controller PM callback
 >   * @dbg_register_dump: used to dump controller debug information
-> @@ -287,6 +289,7 @@ struct ufs_hba_variant_ops {
->  					struct ufs_pa_layer_attr *,
+> @@ -290,6 +292,8 @@ struct ufs_hba_variant_ops {
 >  					struct ufs_pa_layer_attr *);
 >  	void	(*setup_xfer_req)(struct ufs_hba *, int, bool);
-> +	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+>  	void	(*setup_task_mgmt)(struct ufs_hba *, int, u8);
+> +	void    (*hibern8_notify)(struct ufs_hba *, enum uic_cmd_dme,
+> +				       enum ufs_notify_change_status);
 >  	int     (*suspend)(struct ufs_hba *, enum ufs_pm_op);
 >  	int     (*resume)(struct ufs_hba *, enum ufs_pm_op);
 >  	void	(*dbg_register_dump)(struct ufs_hba *hba);
-> @@ -811,6 +814,13 @@ static inline void
-> ufshcd_vops_setup_xfer_req(struct ufs_hba *hba, int tag,
->  		return hba->vops->setup_xfer_req(hba, tag, is_scsi_cmd);
+> @@ -821,6 +825,14 @@ static inline void
+> ufshcd_vops_setup_task_mgmt(struct ufs_hba *hba,
+>  		return hba->vops->setup_task_mgmt(hba, tag, tm_function);
 >  }
 > 
-> +static inline void ufshcd_vops_setup_task_mgmt(struct ufs_hba *hba,
-> +					int tag, u8 tm_function)
+> +static inline void ufshcd_vops_hibern8_notify(struct ufs_hba *hba,
+> +					enum uic_cmd_dme cmd,
+> +					enum ufs_notify_change_status status)
 > +{
-> +	if (hba->vops && hba->vops->setup_task_mgmt)
-> +		return hba->vops->setup_task_mgmt(hba, tag, tm_function);
+> +	if (hba->vops && hba->vops->hibern8_notify)
+> +		return hba->vops->hibern8_notify(hba, cmd, status);
 > +}
 > +
 >  static inline int ufshcd_vops_suspend(struct ufs_hba *hba, enum 
@@ -86,6 +120,7 @@ On 2016-11-10 04:16, Kiwoong Kim wrote:
 
 LGTM.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
