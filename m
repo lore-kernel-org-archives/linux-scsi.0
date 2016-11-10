@@ -1,30 +1,179 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: Delivery Status Notification for linuxraid@lsi.com
-Date: Thu, 10 Nov 2016 10:47:02 -0800
-Message-ID: <CAHtARFGbeEs7oOk_WVUqmxa5rcT7EoGB4jjyxzfNFL+SSwzwgQ@mail.gmail.com>
-References: <047d7b66fd9d4090c40540dd252b@google.com> <c8571e44-4587-705e-9d48-da62b3312c0c@molgen.mpg.de>
- <yq1wpgbmnrj.fsf@sermon.lab.mkp.net> <CAHtARFERFg=aioUKs39Yz1kcb1-V=68saGRrX27tJ9z8G0Z1WA@mail.gmail.com>
- <1478803343.3267.18.camel@linux.vnet.ibm.com>
+From: Chris Leech <cleech@redhat.com>
+Subject: Re: iscsi: make mutex for target scanning and unbinding per-session
+Date: Thu, 10 Nov 2016 13:22:06 -0800
+Message-ID: <20161110212206.6tvm6epqoumrlbmv@straylight.hirudinean.org>
+References: <1478542920-24460-1-git-send-email-cleech@redhat.com>
+ <d2f94e55-6a17-434f-8be0-e899ffe4802e@googlegroups.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f47.google.com ([74.125.82.47]:35294 "EHLO
-        mail-wm0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755890AbcKJSrE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 13:47:04 -0500
-Received: by mail-wm0-f47.google.com with SMTP id a197so385627034wmd.0
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2016 10:47:03 -0800 (PST)
-In-Reply-To: <1478803343.3267.18.camel@linux.vnet.ibm.com>
+Received: from mx1.redhat.com ([209.132.183.28]:37472 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S933682AbcKJVWM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 10 Nov 2016 16:22:12 -0500
+Content-Disposition: inline
+In-Reply-To: <d2f94e55-6a17-434f-8be0-e899ffe4802e@googlegroups.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Paul Menzel <pmenzel@molgen.mpg.de>, linux-scsi <linux-scsi@vger.kernel.org>
+To: open-iscsi@googlegroups.com
+Cc: linux-scsi@vger.kernel.org, lduncan@suse.com
 
-On Thu, Nov 10, 2016 at 10:42 AM, James Bottomley
-<jejb@linux.vnet.ibm.com> wrote:
-> It would look a lot better if you submitted the patch to change this
-> rather than having git history show someone else dumping it on you ...
+On Thu, Nov 10, 2016 at 10:00:54AM -0800, The Lee-Man wrote:
+> On Monday, November 7, 2016 at 11:22:23 AM UTC-7, Chris Leech wrote:
+> >
+> > Currently the iSCSI transport class synchronises target scanning and 
+> > unbinding with a host level mutex.  For multi-session hosts (offloading 
+> > iSCSI HBAs) connecting to storage arrays that may implement one 
+> > target-per-lun, this can result in the target scan work for hundreds of 
+> > sessions being serialized behind a single mutex.  With slow enough 
+> > response times, this can cause scan requests initiated from userspace to 
+> > block on the mutex long enough to trigger 120 sec hung task warnings. 
+> >
+> > I can't see any reason not to move this to a session level mutex and let 
+> > the target scans run in parallel, speeding up connecting to a large 
+> > number of targets.  Note that as iscsi_tcp creates a virtual host for 
+> > each session, software iSCSI is effectively doing this already. 
+> >
+> 
+> I understood the reason for this mutex was to protect against the case
+> where there are multiple paths to a target. In such cases, you can get
+> simultaneous access to sysfs attributes (files), which can cause errors,
+> i.e. two threads trying to write an attribute at the same time, or one
+> changing an attribute while another reads or removes it.
 
-Sure, I will do that.
+This particular mutex is only serializing scanning targets for devices,
+and used in __iscsi_unbind_session to ensure that no scans are in
+progress adding new scsi devices while we're trying to remove a target.
+ 
+> I worry that changing it will not address those issues.
+> 
+> [Side note: we *really* need a test suite that somehow includes
+>  cases like this.]
+> 
+> >
+> > Signed-off-by: Chris Leech <cleech@redhat.com> 
+> > --- 
+> >  drivers/scsi/scsi_transport_iscsi.c | 19 ++++++------------- 
+> >  include/scsi/scsi_transport_iscsi.h |  2 +- 
+> >  2 files changed, 7 insertions(+), 14 deletions(-) 
+> >
+> > diff --git a/drivers/scsi/scsi_transport_iscsi.c 
+> > b/drivers/scsi/scsi_transport_iscsi.c 
+> > index 42bca61..83c90fa 100644 
+> > --- a/drivers/scsi/scsi_transport_iscsi.c 
+> > +++ b/drivers/scsi/scsi_transport_iscsi.c 
+> > @@ -1568,7 +1568,6 @@ static int iscsi_setup_host(struct 
+> > transport_container *tc, struct device *dev, 
+> >   
+> >          memset(ihost, 0, sizeof(*ihost)); 
+> >          atomic_set(&ihost->nr_scans, 0); 
+> > -        mutex_init(&ihost->mutex); 
+> >   
+> >          iscsi_bsg_host_add(shost, ihost); 
+> >          /* ignore any bsg add error - we just can't do sgio */ 
+> > @@ -1789,8 +1788,6 @@ static int iscsi_user_scan_session(struct device 
+> > *dev, void *data) 
+> >  { 
+> >          struct iscsi_scan_data *scan_data = data; 
+> >          struct iscsi_cls_session *session; 
+> > -        struct Scsi_Host *shost; 
+> > -        struct iscsi_cls_host *ihost; 
+> >          unsigned long flags; 
+> >          unsigned int id; 
+> >   
+> > @@ -1801,10 +1798,7 @@ static int iscsi_user_scan_session(struct device 
+> > *dev, void *data) 
+> >   
+> >          ISCSI_DBG_TRANS_SESSION(session, "Scanning session\n"); 
+> >   
+> > -        shost = iscsi_session_to_shost(session); 
+> > -        ihost = shost->shost_data; 
+> > - 
+> > -        mutex_lock(&ihost->mutex); 
+> > +        mutex_lock(&session->mutex); 
+> >          spin_lock_irqsave(&session->lock, flags); 
+> >          if (session->state != ISCSI_SESSION_LOGGED_IN) { 
+> >                  spin_unlock_irqrestore(&session->lock, flags); 
+> > @@ -1823,7 +1817,7 @@ static int iscsi_user_scan_session(struct device 
+> > *dev, void *data) 
+> >          } 
+> >   
+> >  user_scan_exit: 
+> > -        mutex_unlock(&ihost->mutex); 
+> > +        mutex_unlock(&session->mutex); 
+> >          ISCSI_DBG_TRANS_SESSION(session, "Completed session scan\n"); 
+> >          return 0; 
+> >  } 
+> > @@ -2001,26 +1995,24 @@ static void __iscsi_unbind_session(struct 
+> > work_struct *work) 
+> >          struct iscsi_cls_session *session = 
+> >                          container_of(work, struct iscsi_cls_session, 
+> >                                       unbind_work); 
+> > -        struct Scsi_Host *shost = iscsi_session_to_shost(session); 
+> > -        struct iscsi_cls_host *ihost = shost->shost_data; 
+> >          unsigned long flags; 
+> >          unsigned int target_id; 
+> >   
+> >          ISCSI_DBG_TRANS_SESSION(session, "Unbinding session\n"); 
+> >   
+> >          /* Prevent new scans and make sure scanning is not in progress */ 
+> > -        mutex_lock(&ihost->mutex); 
+> > +        mutex_lock(&session->mutex); 
+> >          spin_lock_irqsave(&session->lock, flags); 
+> >          if (session->target_id == ISCSI_MAX_TARGET) { 
+> >                  spin_unlock_irqrestore(&session->lock, flags); 
+> > -                mutex_unlock(&ihost->mutex); 
+> > +                mutex_unlock(&session->mutex); 
+> >                  return; 
+> >          } 
+> >   
+> >          target_id = session->target_id; 
+> >          session->target_id = ISCSI_MAX_TARGET; 
+> >          spin_unlock_irqrestore(&session->lock, flags); 
+> > -        mutex_unlock(&ihost->mutex); 
+> > +        mutex_unlock(&session->mutex); 
+> >   
+> >          if (session->ida_used) 
+> >                  ida_simple_remove(&iscsi_sess_ida, target_id); 
+> > @@ -2053,6 +2045,7 @@ iscsi_alloc_session(struct Scsi_Host *shost, struct 
+> > iscsi_transport *transport, 
+> >          INIT_WORK(&session->unbind_work, __iscsi_unbind_session); 
+> >          INIT_WORK(&session->scan_work, iscsi_scan_session); 
+> >          spin_lock_init(&session->lock); 
+> > +        mutex_init(&session->mutex); 
+> >   
+> >          /* this is released in the dev's release function */ 
+> >          scsi_host_get(shost); 
+> > diff --git a/include/scsi/scsi_transport_iscsi.h 
+> > b/include/scsi/scsi_transport_iscsi.h 
+> > index 6183d20..acf9d9d 100644 
+> > --- a/include/scsi/scsi_transport_iscsi.h 
+> > +++ b/include/scsi/scsi_transport_iscsi.h 
+> > @@ -238,6 +238,7 @@ struct iscsi_cls_session { 
+> >          struct work_struct unblock_work; 
+> >          struct work_struct scan_work; 
+> >          struct work_struct unbind_work; 
+> > +        struct mutex mutex; 
+> >   
+> >          /* recovery fields */ 
+> >          int recovery_tmo; 
+> > @@ -272,7 +273,6 @@ struct iscsi_cls_session { 
+> >   
+> >  struct iscsi_cls_host { 
+> >          atomic_t nr_scans; 
+> > -        struct mutex mutex; 
+> >          struct request_queue *bsg_q; 
+> >          uint32_t port_speed; 
+> >          uint32_t port_state; 
+> > -- 
+> > 2.7.4 
+> >
+> >
+> 
+> -- 
+> You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+> To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe@googlegroups.com.
+> To post to this group, send email to open-iscsi@googlegroups.com.
+> Visit this group at https://groups.google.com/group/open-iscsi.
+> For more options, visit https://groups.google.com/d/optout.
 
--Aadm
