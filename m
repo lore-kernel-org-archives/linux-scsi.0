@@ -1,130 +1,77 @@
 From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH v1] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
-Date: Thu, 10 Nov 2016 10:24:54 +0900
-Message-ID: <000001d23af1$3e0a56c0$ba1f0440$@samsung.com>
-References: <002201d23994$d0aae750$7200b5f0$@samsung.com>
- <CGME20161108194301epcas5p105979259c1ec1e01af1ba28a32029c69@epcas5p1.samsung.com>
- <7334902e3d23dcf5be238d172f9d6fc2@codeaurora.org>
+Subject: RE: [PATCH v1] ufs: introduce UFSHCI_QUIRK_SKIP_INTR_AGGR quirk
+Date: Thu, 10 Nov 2016 10:28:08 +0900
+Message-ID: <000001d23af1$b18b6e40$14a24ac0$@samsung.com>
+References: <002401d23996$1986d4b0$4c947e10$@samsung.com>
+ <CGME20161108195647epcas2p4b49e05b9bd4512a8e6f90280a5f7f40a@epcas2p4.samsung.com>
+ <d8123bcfe400777db2b5745a2d2b3d8d@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=Windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:41996 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755102AbcKJBY6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 20:24:58 -0500
-In-reply-to: <7334902e3d23dcf5be238d172f9d6fc2@codeaurora.org>
+Received: from mailout3.samsung.com ([203.254.224.33]:47955 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754429AbcKJB2L (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 20:28:11 -0500
+In-reply-to: <d8123bcfe400777db2b5745a2d2b3d8d@codeaurora.org>
 Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: 'Subhash Jadavani' <subhashj@codeaurora.org>
-Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
+Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org, cpgs@samsung.com
 
-> > Some UFS host controllers may clear a transfer request slot by setting
-> > an associated bit in UTLRCLR/UTMLRCLR to 1, not 0.
-> 
-> s/UTLRCLR/UTRLCLR
-> s/UTMLRCLR/UTMRLCLR
-> 
+Hi, Subhash
 
-Okay
+I'll update this patch referring what you said (including adding comments of
+other quirks)
 
-> 
-> > That's opposite to what UFS spec decribes.
+> > If UFS driver resets interrupt aggregation timer and counter when
+> > there is a pending doorbell, an interrupt of IO completion of a
+> > corresponding task may be missed.
+> > That would cause a command timeout.
+> >
+> > If UFS driver resets interrupt aggregation timer and counter when
+> > there is a pending doorbell, a competion interrupt of a corresponing
+> > task may be issued.
+> > That would casue a command timeout.
 > >
 > > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > > ---
-> >  drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++----
-> > drivers/scsi/ufs/ufshcd.h |  1 +
-> >  2 files changed, 29 insertions(+), 4 deletions(-)
+> >  drivers/scsi/ufs/ufshcd.c | 4 +++-
+> >  drivers/scsi/ufs/ufshcd.h | 1 +
+> >  2 files changed, 4 insertions(+), 1 deletion(-)
 > >
 > > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index 549e3e8..24d6ea7 100644
+> > index c904854..65bbf59 100644
 > > --- a/drivers/scsi/ufs/ufshcd.c
 > > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct
-> > ufs_hba *hba, int slot)
-> >   */
-> >  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)  {
-> > -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> > +	u32 clear;
-> > +
-> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-> > +		clear = (1 << pos);
-> > +	else
-> > +		clear = ~(1 << pos);
-> > +
-> > +	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR); }
-> > +
-> > +/**
-> > + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-> > + * @hba: per adapter instance
-> > + * @pos: position of the bit to be cleared  */ static inline void
-> > +ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos) {
-> > +	u32 clear;
-> > +
-> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-> > +		clear = (1 << pos);
-> > +	else
-> > +		clear = ~(1 << pos);
-> > +
-> > +	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
-> >  }
-> >
-> >  /**
-> > @@ -1147,7 +1171,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
-> > uic_command *uic_cmd)
-> >   *
-> >   * Returns 0 in case of success, non-zero value in case of failure
-> >   */
-> > -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-> > +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb
-> > +*lrbp)
+> > @@ -3730,7 +3730,9 @@ static void ufshcd_transfer_req_compl(struct
+> > ufs_hba *hba)
+> >  	 * false interrupt if device completes another request after
+> > resetting
+> >  	 * aggregation and before reading the DB.
+> >  	 */
+> > -	if (ufshcd_is_intr_aggr_allowed(hba))
+> > +	if ((ufshcd_is_intr_aggr_allowed(hba))
+> > +		&& !(hba->quirks & UFSHCI_QUIRK_SKIP_INTR_AGGR))
 > 
-> unrelated change. Please remove it.
+> Why do we need this new quirk? If controller has the issue with interrupt
+> aggregation, you can remove this UFSHCD_CAP_INTR_AGGR to disable the
+> aggregation altogether.
 > 
-
-Okay
-
-> >  {
-> >  	struct ufshcd_sg_entry *prd_table;
-> >  	struct scatterlist *sg;
-> > @@ -1529,7 +1553,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> > *host, struct scsi_cmnd *cmd)
+> > +		ufshcd_reset_intr_aggr(hba);
+> >  		ufshcd_reset_intr_aggr(hba);
 > >
-> >  	ufshcd_comp_scsi_upiu(hba, lrbp);
-> >
-> > -	err = ufshcd_map_sg(lrbp);
-> > +	err = ufshcd_map_sg(hba, lrbp);
-> 
-> unrelated change.  Please remove it.
-
-Okay
-
-> 
-> 
-> >  	if (err) {
-> >  		lrbp->cmd = NULL;
-> >  		clear_bit_unlock(tag, &hba->lrb_in_use); @@ -4329,7 +4353,7
-> @@
-> > static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
-> >  		goto out;
-> >
-> >  	spin_lock_irqsave(hba->host->host_lock, flags);
-> > -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-> > +	ufshcd_utmrl_clear(hba, tag);
-> >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >
-> >  	/* poll for max. 1 sec to clear door bell register by h/w */ diff
-> > --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
-> > 565f005..c4abd76 100644
+> >  	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> > index 6a96f24..6a9c6e9 100644
 > > --- a/drivers/scsi/ufs/ufshcd.h
 > > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -495,6 +495,7 @@ struct ufs_hba {
-> >
-> >  	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
+> > @@ -497,6 +497,7 @@ struct ufs_hba {
 > >  	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
-> > +	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> >  	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> >  	#define UFSHCD_QUIRK_USE_OF_HCE				UFS_BIT(9)
+> > +	#define UFSHCI_QUIRK_SKIP_INTR_AGGR			UFS_BIT(10)
 > >
 > >
 > >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec.
