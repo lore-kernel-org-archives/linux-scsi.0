@@ -1,73 +1,49 @@
-From: Greg KH <greg@kroah.com>
-Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination
- (v3)
-Date: Thu, 10 Nov 2016 14:54:43 +0100
-Message-ID: <20161110135443.GA28767@kroah.com>
-References: <CAK=zhgqeRBcMHgvmeQSgRmpC+JBx8vAYoy3Jr8jh6VkV02UFSg@mail.gmail.com>
- <1478785372-5261-1-git-send-email-andrey2805@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: Ordering problems with 3ware controller
+Date: Thu, 10 Nov 2016 08:59:21 -0500
+Message-ID: <yq11syjo2py.fsf@sermon.lab.mkp.net>
+References: <a41b4bab-edb7-34ab-eb76-7ff4d6e3f677@molgen.mpg.de>
+        <yq1bmxpr0wj.fsf@sermon.lab.mkp.net>
+        <49d06c24-24a0-e0fa-0cae-af8ea79a38e0@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out4-smtp.messagingengine.com ([66.111.4.28]:46108 "EHLO
-        out4-smtp.messagingengine.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932862AbcKJNye (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 10 Nov 2016 08:54:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1478785372-5261-1-git-send-email-andrey2805@gmail.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:40004 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932845AbcKJN7e (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 08:59:34 -0500
+In-Reply-To: <49d06c24-24a0-e0fa-0cae-af8ea79a38e0@molgen.mpg.de> (Paul
+        Menzel's message of "Wed, 9 Nov 2016 10:08:37 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrey Grodzovsky <andrey2805@gmail.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, igor@media-clone.com, ezra@media-clone.com, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+To: Paul Menzel <pmenzel@molgen.mpg.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, dvteam@molgen.mpg.de
 
-On Thu, Nov 10, 2016 at 08:42:52AM -0500, Andrey Grodzovsky wrote:
-> Problem:
-> This is a work around for a bug with LSI Fusion MPT SAS2 when
-> pefroming secure erase. Due to the very long time the operation
-> takes commands issued during the erase will time out and will trigger
-> execution of abort hook. Even though the abort hook is called for
-> the specifc command which timed out this leads to entire device halt
-> (scsi_state terminated) and premature termination of the secured erase.
-> 
-> Fix:
-> Set device state to busy while erase in progress to reject any incoming
-> commands until the erase is done. The device is blocked any way during
-> this time and cannot execute any other command.
-> More data and logs can be found here -
-> https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
-> 
-> v2: Update according to example patch by Hannes Reinecke to apply
-> the blocking logic to any ATA 12/16 command.
-> 
-> v3: Use SCSI commands opcodes definitions instead of value and
-> correct identation.
-> 
-> Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-> Cc: <linux-scsi@vger.kernel.org>
-> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-> Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: <stable@vger.kernel.org>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 16 ++++++++++++++++
->  1 file changed, 16 insertions(+)
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 5a97e32..320f16c 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -3500,6 +3500,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
->  	    SAM_STAT_CHECK_CONDITION;
->  }
->  
-> +static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-> +{
-> +   return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-> +}
+>>>>> "Paul" == Paul Menzel <pmenzel@molgen.mpg.de> writes:
 
-Please always run your patches through checkpatch.pl so you don't get a
-grumpy maintainer emailing you and telling you to run your patches
-through checkpatch.pl...
+Paul,
 
+>> Linux does not provide device discovery ordering guarantees. You need
+>> to fix your scripts to use UUIDs, filesystem labels, or DM devices to
+>> get stable naming.
+
+Paul> Indeed. But it worked for several years, so that *something* must
+Paul> have changed that the ordering of the result of `getdents64` is
+Paul> different now.
+
+Could be changes in the PCI or platform code that causes things to be
+enumerated differently. Whatever it is, it has nothing to do with the
+3ware drivers themselves since they have been dormant for a long time.
+
+Paul> Fixing the scripts is unfortunately not that easy, as `tw_cli` is
+Paul> a proprietary tool [1], and we do not have the sources. It does a
+Paul> `readdir()`.
+
+That's beside the point. Whatever you are doing that needs to address a
+specific physical controller needs to use a different scheme than
+discovery order to do so. Don't know if these cards provide a device
+identification VPD or something with a serial number that you could key
+off of?
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
