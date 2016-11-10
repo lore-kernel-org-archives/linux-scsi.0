@@ -1,119 +1,141 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 187381] 4.9.-rc4 produces hundreds of unusable scsi devices.
-Date: Wed, 09 Nov 2016 23:08:05 +0000
-Message-ID: <bug-187381-11613-G09cKjAJkL@https.bugzilla.kernel.org/>
-References: <bug-187381-11613@https.bugzilla.kernel.org/>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: RE: [PATCH v1] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
+Date: Thu, 10 Nov 2016 10:24:54 +0900
+Message-ID: <000001d23af1$3e0a56c0$ba1f0440$@samsung.com>
+References: <002201d23994$d0aae750$7200b5f0$@samsung.com>
+ <CGME20161108194301epcas5p105979259c1ec1e01af1ba28a32029c69@epcas5p1.samsung.com>
+ <7334902e3d23dcf5be238d172f9d6fc2@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=Windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44800 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754369AbcKIXII (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 9 Nov 2016 18:08:08 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id B86B52038A
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2016 23:08:06 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 8309D2037C
-        for <linux-scsi@vger.kernel.org>; Wed,  9 Nov 2016 23:08:05 +0000 (UTC)
-In-Reply-To: <bug-187381-11613@https.bugzilla.kernel.org/>
+Received: from mailout1.samsung.com ([203.254.224.24]:41996 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755102AbcKJBY6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 9 Nov 2016 20:24:58 -0500
+In-reply-to: <7334902e3d23dcf5be238d172f9d6fc2@codeaurora.org>
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: 'Subhash Jadavani' <subhashj@codeaurora.org>
+Cc: "'James E.J. Bottomley'" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "'Martin K. Petersen'" <martin.petersen@oracle.com>, vinholikatti@gmail.com, '???' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=187381
+> > Some UFS host controllers may clear a transfer request slot by setting
+> > an associated bit in UTLRCLR/UTMLRCLR to 1, not 0.
+> 
+> s/UTLRCLR/UTRLCLR
+> s/UTMLRCLR/UTMRLCLR
+> 
 
---- Comment #3 from Samuel Flory Silbory <samuel.silbory@hds.com> ---
-Seems sane now.
-root@pcsnode:~# uname -a
-Linux pcsnode 4.9.0-rc4-1-default #1 SMP Wed Nov 9 13:59:28 PST 2016 x86_64
-GNU/Linux
-root@pcsnode:~# ls /dev/sd*
-/dev/sda  /dev/sdc  /dev/sde  /dev/sdg    /dev/sdi  /dev/sdk   /dev/sdk2   
-/dev/sdk4  /dev/sdk6  /dev/sdl
-/dev/sdb  /dev/sdd  /dev/sdf  /dev/sdh    /dev/sdj  /dev/sdk1  /dev/sdk3   
-/dev/sdk5  /dev/sdk7  /dev/sdm
-root@pcsnode:~# 
+Okay
 
-The only difference compared to 4.8/4/4 is the boot drive on the SATA
-controller ended up sdk instead of sdm (the last drive).  It's not an issue for
-me as I mount things by UUID
+> 
+> > That's opposite to what UFS spec decribes.
+> >
+> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> > ---
+> >  drivers/scsi/ufs/ufshcd.c | 32 ++++++++++++++++++++++++++++----
+> > drivers/scsi/ufs/ufshcd.h |  1 +
+> >  2 files changed, 29 insertions(+), 4 deletions(-)
+> >
+> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> > index 549e3e8..24d6ea7 100644
+> > --- a/drivers/scsi/ufs/ufshcd.c
+> > +++ b/drivers/scsi/ufs/ufshcd.c
+> > @@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct
+> > ufs_hba *hba, int slot)
+> >   */
+> >  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)  {
+> > -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+> > +	u32 clear;
+> > +
+> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> > +		clear = (1 << pos);
+> > +	else
+> > +		clear = ~(1 << pos);
+> > +
+> > +	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR); }
+> > +
+> > +/**
+> > + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
+> > + * @hba: per adapter instance
+> > + * @pos: position of the bit to be cleared  */ static inline void
+> > +ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos) {
+> > +	u32 clear;
+> > +
+> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> > +		clear = (1 << pos);
+> > +	else
+> > +		clear = ~(1 << pos);
+> > +
+> > +	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
+> >  }
+> >
+> >  /**
+> > @@ -1147,7 +1171,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+> > uic_command *uic_cmd)
+> >   *
+> >   * Returns 0 in case of success, non-zero value in case of failure
+> >   */
+> > -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+> > +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb
+> > +*lrbp)
+> 
+> unrelated change. Please remove it.
+> 
 
-________________________________________
-From: Samuel Silbory
-Sent: Wednesday, November 09, 2016 1:19 PM
-To: James Bottomley; bugzilla-daemon@bugzilla.kernel.org;
-linux-scsi@vger.kernel.org
-Subject: RE: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi
-devices.
+Okay
 
-Certainly I'll give it a try.
-________________________________________
-From: James Bottomley [James.Bottomley@HansenPartnership.com]
-Sent: Wednesday, November 09, 2016 12:49 PM
-To: bugzilla-daemon@bugzilla.kernel.org; linux-scsi@vger.kernel.org
-Cc: Samuel Silbory
-Subject: Re: [Bug 187381] New: 4.9.-rc4 produces hundreds of unusable scsi
-devices.
+> >  {
+> >  	struct ufshcd_sg_entry *prd_table;
+> >  	struct scatterlist *sg;
+> > @@ -1529,7 +1553,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
+> > *host, struct scsi_cmnd *cmd)
+> >
+> >  	ufshcd_comp_scsi_upiu(hba, lrbp);
+> >
+> > -	err = ufshcd_map_sg(lrbp);
+> > +	err = ufshcd_map_sg(hba, lrbp);
+> 
+> unrelated change.  Please remove it.
 
-On Wed, 2016-11-09 at 20:20 +0000, bugzilla-daemon@bugzilla.kernel.org
-wrote:
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_show-5Fbug.cgi-3Fid-3D187381&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=67orQXH1IekXCew60eHDOmksAqiZIU69q0eGzoqiWMM&e=
->
->             Bug ID: 187381
->            Summary: 4.9.-rc4 produces hundreds of unusable scsi
-> devices.
->            Product: SCSI Drivers
->            Version: 2.5
->     Kernel Version: 4.9-rc4
->           Hardware: All
->                 OS: Linux
->               Tree: Mainline
->             Status: NEW
->           Severity: normal
->           Priority: P1
->          Component: Other
->           Assignee: scsi_drivers-other@kernel-bugs.osdl.org
->           Reporter: samuel.silbory@hds.com
->         Regression: No
->
-> Created attachment 244091
->   -->
-> https://urldefense.proofpoint.com/v2/url?u=https-3A__bugzilla.kernel.org_attachment.cgi-3Fid-3D244091-26action-3Dedit&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=ypXf8FCNK77zZPf1gXuZlzQpRkGQWJ_WEGmWjqnXTOI&e=
-> Debian's kernel log file.  Note that this contains functional boots
-> with older
-> kernels as well earlier in the file.
->
-> With both my hand compiled 4.9-rc4 from kernel.org sources and
-> Ubuntu's
-> 4.9.0-040900rc4-generic the kernel creates hundred of useless
-> /dev/sd??
-> devices.  This system is fine with various 4.4, and 4.8 kernels.
->
-> The logs are spammed with messages like these
-> 2016-11-09T12:17:00.021765-08:00 Node001 kernel: [75590.503155] Dev
-> sdjm:
-> unable to read RDB block 1
-> 2016-11-09T12:17:00.021767-08:00 Node001 kernel: [75590.503188]
->  sdjm: unable
-> to read partition table
-> 2016-11-09T12:17:00.021769-08:00 Node001 kernel: [75590.503191] sdjm:
-> partition
-> table beyond EOD, enabling native capacity
-> 2016-11-09T12:17:00.021776-08:00 Node001 kernel: [75590.504463] sd
-> 1:3:126:0:
+Okay
 
-This was reported to the mailing list and should be fixed by this:
+> 
+> 
+> >  	if (err) {
+> >  		lrbp->cmd = NULL;
+> >  		clear_bit_unlock(tag, &hba->lrb_in_use); @@ -4329,7 +4353,7
+> @@
+> > static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+> >  		goto out;
+> >
+> >  	spin_lock_irqsave(hba->host->host_lock, flags);
+> > -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
+> > +	ufshcd_utmrl_clear(hba, tag);
+> >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> >
+> >  	/* poll for max. 1 sec to clear door bell register by h/w */ diff
+> > --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h index
+> > 565f005..c4abd76 100644
+> > --- a/drivers/scsi/ufs/ufshcd.h
+> > +++ b/drivers/scsi/ufs/ufshcd.h
+> > @@ -495,6 +495,7 @@ struct ufs_hba {
+> >
+> >  	#define UFSHCD_QUIRK_GET_VS_RESULT			UFS_BIT(6)
+> >  	#define UFSHCD_QUIRK_BROKEN_DWORD_UTRD                  UFS_BIT(7)
+> > +	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> >
+> >
+> >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec.
+> */
+> 
+> --
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum, a
+> Linux Foundation Collaborative Project
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
 
-https://urldefense.proofpoint.com/v2/url?u=http-3A__marc.info_-3Fl-3Dlinux-2Dscsi-26m-3D147868920429684&d=CwICaQ&c=DZ-EF4pZfxGSU6MfABwx0g&r=4FOU_7YnNtQNKWSdicj67DITRyD0V0NPxX2P7qBxsr8&m=qqYheGXoM4mBPxyZZ7HM1rugSFukVAVfEjl1ifhaoqU&s=KCePcDLsNpEqob1iEoGGCb5Qf-smnMYk4XsK62Sp0h4&e=
 
-We'll fast track this, but can you verify it fixes your issue.
-
-Thanks,
-
-James
-
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
