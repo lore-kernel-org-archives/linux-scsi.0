@@ -1,126 +1,107 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: Reduced latency is killing performance
-Date: Fri, 11 Nov 2016 12:39:08 +0100
-Message-ID: <9ce7d6d2-cdb1-9aea-4333-c2733710cf98@suse.de>
-References: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
- <DF4PR84MB0169E701F447438730B8E954ABBB0@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH 3/5] megaraid_sas: do not crash on invalid completion
+Date: Fri, 11 Nov 2016 17:21:51 +0530
+Message-ID: <5f5b5d4c3503fabc4344b8eddfc30129@mail.gmail.com>
+References: <1478857492-4581-1-git-send-email-hare@suse.de> <1478857492-4581-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <DF4PR84MB0169E701F447438730B8E954ABBB0@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
-Sender: linux-block-owner@vger.kernel.org
-To: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f48.google.com ([209.85.214.48]:37229 "EHLO
+        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753256AbcKKLvz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 06:51:55 -0500
+Received: by mail-it0-f48.google.com with SMTP id u205so116905104itc.0
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 03:51:55 -0800 (PST)
+In-Reply-To: <1478857492-4581-4-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 11/11/2016 08:02 AM, Elliott, Robert (Persistent Memory) wrote:
+>-----Original Message-----
+>From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+>owner@vger.kernel.org] On Behalf Of Hannes Reinecke
+>Sent: Friday, November 11, 2016 3:15 PM
+>To: Martin K. Petersen
+>Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; linux-
+>scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
+>Subject: [PATCH 3/5] megaraid_sas: do not crash on invalid completion
 >
->
->> -----Original Message-----
->> From: linux-block-owner@vger.kernel.org [mailto:linux-block-
->> owner@vger.kernel.org] On Behalf Of Hannes Reinecke
->> Sent: Thursday, November 10, 2016 10:05 AM
->> To: Jens Axboe <axboe@kernel.dk>; Christoph Hellwig <hch@lst.de>
->> Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>; linux-
->> block@vger.kernel.org
->> Subject: Reduced latency is killing performance
->>
->> Hi all,
->>
->> this really feels like a follow-up to the discussion we've had in
->> Santa Fe, but finally I'm able to substantiate it with some numbers.
->>
->> I've made a patch to enable the megaraid_sas driver for multiqueue.
->> While this is pretty straightforward (I'll be sending the patchset
->> later on), the results are ... interesting.
->>
->> I've run the 'ssd-test.fio' script from Jens' repository, and these
->> results for MQ/SQ (- is mq, + is sq):
->>
->>  Run status group 0 (all jobs):  [4 KiB sequential reads]
->> -   READ: io=10641MB, aggrb=181503KB/s
->> +   READ: io=18370MB, aggrb=312572KB/s
->>
->>  Run status group 1 (all jobs):  [4 KiB random reads]
->> -   READ: io=441444KB, aggrb=7303KB/s
->> +   READ: io=223108KB, aggrb=3707KB/s
->>
->>  Run status group 2 (all jobs):  [4 KiB sequential writes]
->> -  WRITE: io=22485MB, aggrb=383729KB/s
->> +  WRITE: io=47421MB, aggrb=807581KB/s
->>
->>  Run status group 3 (all jobs):  [4 KiB random writes]
->> -  WRITE: io=489852KB, aggrb=8110KB/s
->> +  WRITE: io=489748KB, aggrb=8134KB/s
->>
->>  Disk stats (read/write):
->> -  sda: ios=2834412/5878578, merge=0/0
->> +  sda: ios=205278/2680329, merge=4552593/9580622
->
-> [deleted minb, maxb, mint, maxt, ticks, in_queue, and util above]
->
->>
->> As you can see, we're really losing performance in the multiqueue
->> case.
->> And the main reason for that is that we submit about _10 times_ as
->> much I/O as we do for the single-queue case.
->
-> That script is running:
-> 0) 4 KiB sequential reads
-> 1) 4 KiB random reads
-> 2) 4 KiB sequential writes
-> 3) 4 KiB random writes
->
-> I think you're just seeing a lack of merges for the tiny sequential
-> workloads.  Those are the ones where mq has lower aggrb results.
->
-Yep.
+>Avoid a kernel oops when receiving an invalid command completion.
+scmd_local set to NULL(for cases MPI2_FUNCTION_SCSI_IO_REQUEST and
+MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST) will be serious bug(either in driver
+or firmware) which should be debugged
+and driver should not really continue beyond that. This indicates that
+driver internal frames are corrupted. If needed, whenever driver detects
+it, it can mark the adapter as dead(stopping further activities).
+If OS is installed behind megasas controller then after declaring adapter
+dead, system reboot will be required. Kernel panic may give here more
+information whenever this condition hits so we kept it like this.
+If you are facing this issue, please share the details. I will work on
+this.
 
-> Check the value in /sys/block/sda/queue/nomerges. The values are
->     0=search for fast and slower merges
->     1=only attempt fast merges
->     2=don't attempt any merges
->
-It's set to '0'.
+Thanks,
+Sumit
 
-> The SNIA Enterprise Solid State Storage Performance Test Specification
-> (SSS PTS-E) only measures 128 KiB and 1 MiB sequential IOs - it doesn't
-> test tiny sequential IOs.  Applications may do anything, but I think
-> most understand that fewer, bigger transfers are more efficient
-> throughout the IO stack.  A blocksize of 128 KiB would reduce those
-> IOs by 96%.
 >
-Note: it's just the test which has been named 'SSD'. The devices 
-themselves were no SSDs; just normal disks.
-
-> For hpsa, we often turned them off to avoid the overhead while running
-> applications generating decent-sized IOs on their own.
+>Signed-off-by: Hannes Reinecke <hare@suse.com>
+>---
+> drivers/scsi/megaraid/megaraid_sas_fusion.c | 22 +++++++++++++++-------
+> 1 file changed, 15 insertions(+), 7 deletions(-)
 >
-> Note that the random read aggrb value doubled with mq, and random
-> writes showed no impact.
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>index 38137de..eb3cb0f 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>@@ -2298,13 +2298,15 @@ static void megasas_build_ld_nonrw_fusion(struct
+>megasas_instance *instance,
+> 			break;
+> 		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
+> 			/* Update load balancing info */
+>-			device_id = MEGASAS_DEV_INDEX(scmd_local);
+>-			lbinfo = &fusion->load_balance_info[device_id];
+>-			if (cmd_fusion->scmd->SCp.Status &
+>-			    MEGASAS_LOAD_BALANCE_FLAG) {
+>-
+>atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
+>-				cmd_fusion->scmd->SCp.Status &=
+>-					~MEGASAS_LOAD_BALANCE_FLAG;
+>+			if (scmd_local) {
+>+				device_id = MEGASAS_DEV_INDEX(scmd_local);
+>+				lbinfo =
+>&fusion->load_balance_info[device_id];
+>+				if (cmd_fusion->scmd->SCp.Status &
+>+				    MEGASAS_LOAD_BALANCE_FLAG) {
+>+
+>atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
+>+					cmd_fusion->scmd->SCp.Status &=
+>+
+>~MEGASAS_LOAD_BALANCE_FLAG;
+>+				}
+> 			}
+> 			if (reply_descript_type ==
+> 			    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) { @@
+>-2315,6 +2317,12 @@ static void megasas_build_ld_nonrw_fusion(struct
+>megasas_instance *instance,
+> 			/* Fall thru and complete IO */
+> 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO
+>Path */
+> 			/* Map the FW Cmd Status */
+>+			if (!scmd_local) {
+>+				dev_err(&instance->pdev->dev,
+>+					"cmd[%d:%d] already completed\n",
+>+					MSIxIndex, smid);
+>+				break;
+>+			}
+> 			map_cmd_status(cmd_fusion, status, extStatus);
+> 			scsi_io_req->RaidContext.status = 0;
+> 			scsi_io_req->RaidContext.exStatus = 0;
+>--
+>1.8.5.6
 >
-> You might also want to set
->     cpus_allowed_policy=split
-> to keep threads from wandering across CPUs (and thus changing queues).
->
-Done so; no difference.
-
->> So I guess having an I/O scheduler is critical, even for the scsi-mq
->> case.
->
-> blk-mq still supports merges without any scheduler.
->
-But it doesn't _do_ merging, as the example nicely shows.
-
-So if we could get merging going we should be halfway there ...
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+>--
+>To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of
+>a message to majordomo@vger.kernel.org More majordomo info at
+>http://vger.kernel.org/majordomo-info.html
