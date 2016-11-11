@@ -1,78 +1,89 @@
-From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
-Subject: RE: Reduced latency is killing performance
-Date: Fri, 11 Nov 2016 07:02:45 +0000
-Message-ID: <DF4PR84MB0169E701F447438730B8E954ABBB0@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
-References: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
+From: wangyijing <wangyijing@huawei.com>
+Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
+Date: Fri, 11 Nov 2016 16:49:53 +0800
+Message-ID: <58258631.1090203@huawei.com>
+References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
+ <be84afd4-640d-1913-404a-505fd72c1324@huawei.com>
+ <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
+ <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
+ <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
+ <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
+ <58257D52.6090507@huawei.com>
+ <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0094.outbound.protection.outlook.com ([104.47.41.94]:21942
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1756097AbcKKIfZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Nov 2016 03:35:25 -0500
-In-Reply-To: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, john.garry2@mail.dcu.ie, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, jinpu.wang@profitbricks.com
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtYmxvY2stb3du
-ZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtYmxvY2stDQo+IG93bmVyQHZnZXIua2Vy
-bmVsLm9yZ10gT24gQmVoYWxmIE9mIEhhbm5lcyBSZWluZWNrZQ0KPiBTZW50OiBUaHVyc2RheSwg
-Tm92ZW1iZXIgMTAsIDIwMTYgMTA6MDUgQU0NCj4gVG86IEplbnMgQXhib2UgPGF4Ym9lQGtlcm5l
-bC5kaz47IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiBDYzogU0NTSSBNYWlsaW5n
-IExpc3QgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgbGludXgtDQo+IGJsb2NrQHZnZXIu
-a2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZWR1Y2VkIGxhdGVuY3kgaXMga2lsbGluZyBwZXJmb3Jt
-YW5jZQ0KPiANCj4gSGkgYWxsLA0KPiANCj4gdGhpcyByZWFsbHkgZmVlbHMgbGlrZSBhIGZvbGxv
-dy11cCB0byB0aGUgZGlzY3Vzc2lvbiB3ZSd2ZSBoYWQgaW4NCj4gU2FudGEgRmUsIGJ1dCBmaW5h
-bGx5IEknbSBhYmxlIHRvIHN1YnN0YW50aWF0ZSBpdCB3aXRoIHNvbWUgbnVtYmVycy4NCj4gDQo+
-IEkndmUgbWFkZSBhIHBhdGNoIHRvIGVuYWJsZSB0aGUgbWVnYXJhaWRfc2FzIGRyaXZlciBmb3Ig
-bXVsdGlxdWV1ZS4NCj4gV2hpbGUgdGhpcyBpcyBwcmV0dHkgc3RyYWlnaHRmb3J3YXJkIChJJ2xs
-IGJlIHNlbmRpbmcgdGhlIHBhdGNoc2V0DQo+IGxhdGVyIG9uKSwgdGhlIHJlc3VsdHMgYXJlIC4u
-LiBpbnRlcmVzdGluZy4NCj4gDQo+IEkndmUgcnVuIHRoZSAnc3NkLXRlc3QuZmlvJyBzY3JpcHQg
-ZnJvbSBKZW5zJyByZXBvc2l0b3J5LCBhbmQgdGhlc2UNCj4gcmVzdWx0cyBmb3IgTVEvU1EgKC0g
-aXMgbXEsICsgaXMgc3EpOg0KPiANCj4gIFJ1biBzdGF0dXMgZ3JvdXAgMCAoYWxsIGpvYnMpOiAg
-WzQgS2lCIHNlcXVlbnRpYWwgcmVhZHNdDQo+IC0gICBSRUFEOiBpbz0xMDY0MU1CLCBhZ2dyYj0x
-ODE1MDNLQi9zDQo+ICsgICBSRUFEOiBpbz0xODM3ME1CLCBhZ2dyYj0zMTI1NzJLQi9zDQo+IA0K
-PiAgUnVuIHN0YXR1cyBncm91cCAxIChhbGwgam9icyk6ICBbNCBLaUIgcmFuZG9tIHJlYWRzXQ0K
-PiAtICAgUkVBRDogaW89NDQxNDQ0S0IsIGFnZ3JiPTczMDNLQi9zDQo+ICsgICBSRUFEOiBpbz0y
-MjMxMDhLQiwgYWdncmI9MzcwN0tCL3MNCj4gDQo+ICBSdW4gc3RhdHVzIGdyb3VwIDIgKGFsbCBq
-b2JzKTogIFs0IEtpQiBzZXF1ZW50aWFsIHdyaXRlc10NCj4gLSAgV1JJVEU6IGlvPTIyNDg1TUIs
-IGFnZ3JiPTM4MzcyOUtCL3MNCj4gKyAgV1JJVEU6IGlvPTQ3NDIxTUIsIGFnZ3JiPTgwNzU4MUtC
-L3MNCj4gDQo+ICBSdW4gc3RhdHVzIGdyb3VwIDMgKGFsbCBqb2JzKTogIFs0IEtpQiByYW5kb20g
-d3JpdGVzXQ0KPiAtICBXUklURTogaW89NDg5ODUyS0IsIGFnZ3JiPTgxMTBLQi9zDQo+ICsgIFdS
-SVRFOiBpbz00ODk3NDhLQiwgYWdncmI9ODEzNEtCL3MNCj4gDQo+ICBEaXNrIHN0YXRzIChyZWFk
-L3dyaXRlKToNCj4gLSAgc2RhOiBpb3M9MjgzNDQxMi81ODc4NTc4LCBtZXJnZT0wLzANCj4gKyAg
-c2RhOiBpb3M9MjA1Mjc4LzI2ODAzMjksIG1lcmdlPTQ1NTI1OTMvOTU4MDYyMg0KDQpbZGVsZXRl
-ZCBtaW5iLCBtYXhiLCBtaW50LCBtYXh0LCB0aWNrcywgaW5fcXVldWUsIGFuZCB1dGlsIGFib3Zl
-XQ0KDQo+IA0KPiBBcyB5b3UgY2FuIHNlZSwgd2UncmUgcmVhbGx5IGxvc2luZyBwZXJmb3JtYW5j
-ZSBpbiB0aGUgbXVsdGlxdWV1ZQ0KPiBjYXNlLg0KPiBBbmQgdGhlIG1haW4gcmVhc29uIGZvciB0
-aGF0IGlzIHRoYXQgd2Ugc3VibWl0IGFib3V0IF8xMCB0aW1lc18gYXMNCj4gbXVjaCBJL08gYXMg
-d2UgZG8gZm9yIHRoZSBzaW5nbGUtcXVldWUgY2FzZS4NCg0KVGhhdCBzY3JpcHQgaXMgcnVubmlu
-ZzoNCjApIDQgS2lCIHNlcXVlbnRpYWwgcmVhZHMNCjEpIDQgS2lCIHJhbmRvbSByZWFkcw0KMikg
-NCBLaUIgc2VxdWVudGlhbCB3cml0ZXMNCjMpIDQgS2lCIHJhbmRvbSB3cml0ZXMNCg0KSSB0aGlu
-ayB5b3UncmUganVzdCBzZWVpbmcgYSBsYWNrIG9mIG1lcmdlcyBmb3IgdGhlIHRpbnkgc2VxdWVu
-dGlhbA0Kd29ya2xvYWRzLiAgVGhvc2UgYXJlIHRoZSBvbmVzIHdoZXJlIG1xIGhhcyBsb3dlciBh
-Z2dyYiByZXN1bHRzLg0KDQpDaGVjayB0aGUgdmFsdWUgaW4gL3N5cy9ibG9jay9zZGEvcXVldWUv
-bm9tZXJnZXMuIFRoZSB2YWx1ZXMgYXJlDQogICAgMD1zZWFyY2ggZm9yIGZhc3QgYW5kIHNsb3dl
-ciBtZXJnZXMNCiAgICAxPW9ubHkgYXR0ZW1wdCBmYXN0IG1lcmdlcw0KICAgIDI9ZG9uJ3QgYXR0
-ZW1wdCBhbnkgbWVyZ2VzDQoNClRoZSBTTklBIEVudGVycHJpc2UgU29saWQgU3RhdGUgU3RvcmFn
-ZSBQZXJmb3JtYW5jZSBUZXN0IFNwZWNpZmljYXRpb24NCihTU1MgUFRTLUUpIG9ubHkgbWVhc3Vy
-ZXMgMTI4IEtpQiBhbmQgMSBNaUIgc2VxdWVudGlhbCBJT3MgLSBpdCBkb2Vzbid0DQp0ZXN0IHRp
-bnkgc2VxdWVudGlhbCBJT3MuICBBcHBsaWNhdGlvbnMgbWF5IGRvIGFueXRoaW5nLCBidXQgSSB0
-aGluaw0KbW9zdCB1bmRlcnN0YW5kIHRoYXQgZmV3ZXIsIGJpZ2dlciB0cmFuc2ZlcnMgYXJlIG1v
-cmUgZWZmaWNpZW50IA0KdGhyb3VnaG91dCB0aGUgSU8gc3RhY2suICBBIGJsb2Nrc2l6ZSBvZiAx
-MjggS2lCIHdvdWxkIHJlZHVjZSB0aG9zZQ0KSU9zIGJ5IDk2JS4NCg0KRm9yIGhwc2EsIHdlIG9m
-dGVuIHR1cm5lZCB0aGVtIG9mZiB0byBhdm9pZCB0aGUgb3ZlcmhlYWQgd2hpbGUgcnVubmluZw0K
-YXBwbGljYXRpb25zIGdlbmVyYXRpbmcgZGVjZW50LXNpemVkIElPcyBvbiB0aGVpciBvd24uDQoN
-Ck5vdGUgdGhhdCB0aGUgcmFuZG9tIHJlYWQgYWdncmIgdmFsdWUgZG91YmxlZCB3aXRoIG1xLCBh
-bmQgcmFuZG9tDQp3cml0ZXMgc2hvd2VkIG5vIGltcGFjdC4NCg0KWW91IG1pZ2h0IGFsc28gd2Fu
-dCB0byBzZXQgDQogICAgY3B1c19hbGxvd2VkX3BvbGljeT1zcGxpdA0KdG8ga2VlcCB0aHJlYWRz
-IGZyb20gd2FuZGVyaW5nIGFjcm9zcyBDUFVzIChhbmQgdGh1cyBjaGFuZ2luZyBxdWV1ZXMpLg0K
-DQo+IFNvIEkgZ3Vlc3MgaGF2aW5nIGFuIEkvTyBzY2hlZHVsZXIgaXMgY3JpdGljYWwsIGV2ZW4g
-Zm9yIHRoZSBzY3NpLW1xDQo+IGNhc2UuDQoNCmJsay1tcSBzdGlsbCBzdXBwb3J0cyBtZXJnZXMg
-d2l0aG91dCBhbnkgc2NoZWR1bGVyLg0KDQotLS0NClJvYmVydCBFbGxpb3R0LCBIUEUgUGVyc2lz
-dGVudCBNZW1vcnkNCg0KDQoNCg==
+>>> I have not seen the flutter issue. I am just trying to solve the horrible WARN dump.
+>>> However I do understand that there may be a issue related to how we queue the events; there was a recent attempt to fix this, but it came to nothing:
+>>> https://www.spinics.net/lists/linux-scsi/msg99991.html
+>>
+>> We found libsas hotplug several problems:
+>> 1. sysfs warning calltrace(like the case you found);
+> 
+> Maybe you can then review my patch.
+
+I did it, I think your solution to fix the sysfs calltrace issue is ok, and what I worried about is we still need to fix
+the rest issues. So it's better if we could fix all issues one time.
+
+> 
+>> 2. hot-add and hot-remove work events may process out of order;
+>> 3. in some extreme cases, libsas may miss some events, if the same event is still pending in workqueue.
+>>
+> 
+> Can you tell me how to recreate #2 and #3?
+
+Qilin Chen and Yousong He help me to reproduce it, I told them to reply this mail to tell you the test steps.
+Some tests we did is make sas phy link flutter, so hardware would post phy down and phy up events sequentially.
+
+1. scsi host workqueue receive phy down and phy up events.                                             in process                 new added
+2. sas_deform_port would post a new destruct event to scsi host workqueue, so things in workqueue like [phy down-----phy up -----destruct]
+
+So the phy down logic is separated by phy up, and it's not atomic, not safe, something unexpected would happen.
+
+For case 3, we make hardware burst post lots pair of phy up and phy down events, so if libsas is processing the phy up event, the next
+phy up event can not queue to scsi host workqueue again, it will lost, it's not we expect.
+
+> 
+>> It's a complex issue, we posted two patches, try to fix these issues, but now few people are interested in it  :(
+>>
+> 
+> IIRC, you sent as RFC and got a "reviewed-by" from Hannes, so I'm not sure what else you want. BTW, I thought that the changes were quite drastic.
+
+I agree, the changes seems something drastic. But I think current libsas hotplug framework has a big flaw.
+
+> 
+> John
+> 
+>>>
+>>>>
+>>>> Alternatively we need a mechanism to cancel in-flight port shutdown
+>>>> requests when we start re-attaching devices before queued port
+>>>> destruction events have run.
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>> _______________________________________________
+>>> linuxarm mailing list
+>>> linuxarm@huawei.com
+>>> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
+>>>
+>>> .
+>>>
+>>
+>>
+>> .
+>>
+> 
+> 
+> 
+> .
+> 
