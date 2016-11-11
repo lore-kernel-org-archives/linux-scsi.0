@@ -1,49 +1,78 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 2/6] qed: Add iSCSI out of order packet handling.
-Date: Fri, 11 Nov 2016 16:59:28 +0100
-Message-ID: <40d086c4-e22b-521a-3b06-83a7e949ea00@suse.de>
-References: <1478588223-16183-1-git-send-email-manish.rangankar@cavium.com>
- <1478588223-16183-3-git-send-email-manish.rangankar@cavium.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 2/4] hpsa: add generate controller NMI on lockup
+Date: Fri, 11 Nov 2016 16:09:06 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B0B8FAC@avsrvexchmbx1.microsemi.net>
+References: <147752001094.813.10247306839794156732.stgit@brunhilda>
+ <147752051230.813.13699218798744038354.stgit@brunhilda>
+ <4b6cf4a2-a9af-dcd2-4412-f292d51513ca@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1478588223-16183-3-git-send-email-manish.rangankar@cavium.com>
-Sender: netdev-owner@vger.kernel.org
-To: Manish Rangankar <manish.rangankar@cavium.com>, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0040.outbound.protection.outlook.com ([104.47.41.40]:20480
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932954AbcKKQYl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 11:24:41 -0500
+In-Reply-To: <4b6cf4a2-a9af-dcd2-4412-f292d51513ca@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/08/2016 07:56 AM, Manish Rangankar wrote:
-> From: Yuval Mintz <Yuval.Mintz@cavium.com>
->
-> This patch adds out of order packet handling for hardware offloaded
-> iSCSI. Out of order packet handling requires driver buffer allocation
-> and assistance.
->
-> Signed-off-by: Arun Easi <arun.easi@cavium.com>
-> Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
-> ---
->  drivers/net/ethernet/qlogic/qed/Makefile   |   2 +-
->  drivers/net/ethernet/qlogic/qed/qed.h      |   1 +
->  drivers/net/ethernet/qlogic/qed/qed_dev.c  |  14 +-
->  drivers/net/ethernet/qlogic/qed/qed_ll2.c  | 503 ++++++++++++++++++++++++++++-
->  drivers/net/ethernet/qlogic/qed/qed_ll2.h  |   9 +
->  drivers/net/ethernet/qlogic/qed/qed_ooo.c  | 501 ++++++++++++++++++++++++++++
->  drivers/net/ethernet/qlogic/qed/qed_ooo.h  | 173 ++++++++++
->  drivers/net/ethernet/qlogic/qed/qed_roce.c |   1 +
->  drivers/net/ethernet/qlogic/qed/qed_spq.c  |   9 +
->  9 files changed, 1201 insertions(+), 12 deletions(-)
->  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.c
->  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.h
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
+aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDI3LCAyMDE2IDQ6
+MDMgQU0NCj4gVG86IERvbiBCcmFjZTsgamVqYkBsaW51eC52bmV0LmlibS5jb207IEpvaG4gSGFs
+bDsgS2V2aW4gQmFybmV0dDsgTWFoZXNoDQo+IFJhamFzaGVraGFyYTsgaGNoQGluZnJhZGVhZC5v
+cmc7IFNjb3R0IFRlZWw7IFZpc3dhcyBHOyBKdXN0aW4gTGluZGxleTsgU2NvdHQNCj4gQmVuZXNo
+OyBlbGxpb3R0QGhwZS5jb207IFBPU1dBTERAc3VzZS5jb20NCj4gQ2M6IGxpbnV4LXNjc2lAdmdl
+ci5rZXJuZWwub3JnDQo+IFN1YmplY3Q6IFJlOiBbUEFUQ0ggMi80XSBocHNhOiBhZGQgZ2VuZXJh
+dGUgY29udHJvbGxlciBOTUkgb24gbG9ja3VwDQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4g
+DQo+IE9uIDEwLzI3LzIwMTYgMTI6MjEgQU0sIERvbiBCcmFjZSB3cm90ZToNCj4gPiBUZWxsIHRo
+ZSBjb250cm9sbGVyIHRvIE5NSSB3aGVuIHRoZSBjb250cm9sbGVyIGRlYWRsb2Nrcy4NCj4gPg0K
+PiA+IFJldmlld2VkLWJ5OiBTY290dCBCZW5lc2ggPHNjb3R0LmJlbmVzaEBtaWNyb3NlbWkuY29t
+Pg0KPiA+IFJldmlld2VkLWJ5OiBTY290dCBUZWVsIDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+
+DQo+ID4gUmV2aWV3ZWQtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1p
+LmNvbT4NCj4gPiBTaWduZWQtb2ZmLWJ5OiBEb24gQnJhY2UgPGRvbi5icmFjZUBtaWNyb3NlbWku
+Y29tPg0KPiA+IC0tLQ0KPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jICAgICB8ICAgIDYgKysrKysr
+DQo+ID4gIGRyaXZlcnMvc2NzaS9ocHNhX2NtZC5oIHwgICAgMSArDQo+ID4gIDIgZmlsZXMgY2hh
+bmdlZCwgNyBpbnNlcnRpb25zKCspDQo+ID4NCj4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L2hwc2EuYyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBpbmRleCA3OThmYjIwLi45ZmI3Mzlj
+IDEwMDY0NA0KPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiArKysgYi9kcml2ZXJz
+L3Njc2kvaHBzYS5jDQo+ID4gQEAgLTg0NTEsNiArODQ1MSwxMiBAQCBzdGF0aWMgdm9pZCBjb250
+cm9sbGVyX2xvY2t1cF9kZXRlY3RlZChzdHJ1Y3QNCj4gY3Rscl9pbmZvICpoKQ0KPiA+ICAgICAg
+ICAgICAgICAgICAgICAgICAibG9ja3VwIGRldGVjdGVkIGFmdGVyICVkIGJ1dCBzY3JhdGNocGFk
+IHJlZ2lzdGVyIGlzIHplcm9cbiIsDQo+ID4gICAgICAgICAgICAgICAgICAgICAgIGgtPmhlYXJ0
+YmVhdF9zYW1wbGVfaW50ZXJ2YWwgLyBIWik7DQo+ID4gICAgICAgICAgICAgICBsb2NrdXBfZGV0
+ZWN0ZWQgPSAweGZmZmZmZmZmOw0KPiA+ICsgICAgIH0gZWxzZSBpZiAobG9ja3VwX2RldGVjdGVk
+ID09IDB4ZmZmZjAwMDApIHsNCj4gPiArICAgICAgICAgICAgIC8qDQo+ID4gKyAgICAgICAgICAg
+ICAgKiBSaW5nIGNvbnRyb2xsZXIgTk1JIGRvb3JiZWxsDQo+ID4gKyAgICAgICAgICAgICAgKi8N
+Cj4gPiArICAgICAgICAgICAgIGRldl93YXJuKCZoLT5wZGV2LT5kZXYsICJUZWxsaW5nIGNvbnRy
+b2xsZXIgdG8gZG8gYW4gTk1JXG4iKTsNCj4gPiArICAgICAgICAgICAgIHdyaXRlbChET09SQkVM
+TF9HRU5FUkFURV9OTUksIGgtPnZhZGRyICsgU0E1X0RPT1JCRUxMKTsNCj4gPiAgICAgICB9DQo+
+ID4gICAgICAgc2V0X2xvY2t1cF9kZXRlY3RlZF9mb3JfYWxsX2NwdXMoaCwgbG9ja3VwX2RldGVj
+dGVkKTsNCj4gPiAgICAgICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZoLT5sb2NrLCBmbGFncyk7
+DQo+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9ocHNhX2NtZC5oIGIvZHJpdmVycy9zY3Np
+L2hwc2FfY21kLmgNCj4gPiBpbmRleCBhNTg0Y2RmLi5kMTg2ZjgwIDEwMDY0NA0KPiA+IC0tLSBh
+L2RyaXZlcnMvc2NzaS9ocHNhX2NtZC5oDQo+ID4gKysrIGIvZHJpdmVycy9zY3NpL2hwc2FfY21k
+LmgNCj4gPiBAQCAtMTQyLDYgKzE0Miw3IEBADQo+ID4gICNkZWZpbmUgRE9PUkJFTExfQ1RMUl9S
+RVNFVCAgMHgwMDAwMDAwNGwNCj4gPiAgI2RlZmluZSBET09SQkVMTF9DVExSX1JFU0VUMiAweDAw
+MDAwMDIwbA0KPiA+ICAjZGVmaW5lIERPT1JCRUxMX0NMRUFSX0VWRU5UUyAgICAgICAgMHgwMDAw
+MDA0MGwNCj4gPiArI2RlZmluZSBET09SQkVMTF9HRU5FUkFURV9OTUkgICAgICAgIDB4MDAwMDAw
+ODBsDQo+ID4NCj4gPiAgI2RlZmluZSBDRkdUQkxfVHJhbnNfU2ltcGxlICAgICAweDAwMDAwMDAy
+bA0KPiA+ICAjZGVmaW5lIENGR1RCTF9UcmFuc19QZXJmb3JtYW50IDB4MDAwMDAwMDRsDQo+ID4N
+Cj4gQ2FyZSB0byBlbGFib3JhdGUgYSBiaXQgbW9yZSBoZXJlPw0KPiAnR2VuZXJhdGluZyBOTUkn
+IHRlbmRzIHRvIHJpbmcgc29tZSBhbGFybSBiZWxscywgc28gSSdkIHJhdGhlciBrbm93DQo+IHdo
+ZXJlIHRoZSBOTUkgaXMgYWN0dWFsbHkgZ2VuZXJhdGVkLCBhbmQgaWYgaXMgY291bGQgcmVmbGVj
+dCBiYWNrIHRvIHRoZQ0KPiBzeXN0ZW0gLi4uDQo+IA0KPiBDaGVlcnMsDQo+IA0KPiBIYW5uZXMN
+Cj4gLS0NCj4gRHIuIEhhbm5lcyBSZWluZWNrZSAgICAgICAgICAgICAgICBUZWFtbGVhZCBTdG9y
+YWdlICYgTmV0d29ya2luZw0KPiBoYXJlQHN1c2UuZGUgICAgICAgICAgICAgICAgICAgICAgICAg
+ICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4DQo+IFNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0
+ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+IEdGOiBGLiBJbWVuZMO2cmZmZXIsIEouIFNtaXRoYXJk
+LCBKLiBHdWlsZCwgRC4gVXBtYW55dSwgRy4gTm9ydG9uDQo+IEhSQiAyMTI4NCAoQUcgTsO8cm5i
+ZXJnKQ0KDQoNClRoZXJlIGFyZSBzb21lIHJhcmUgY2FzZXMgd2hlcmUgd2UgZ2V0IHRoaXMgbG9j
+a3VwIGNvZGUgYW5kIHdlDQpuZWVkIHRvIHRlbGwgdGhlIGNvbnRyb2xsZXIgdG8gZG8gaXRzIG93
+biBOTUkuIFRoaXMgTk1JIGlzIG9ubHkgZG9uZQ0Kb24gdGhlIGNvbnRyb2xsZXIgYW5kIGRvZXMg
+bm90IHRlbGwgdGhlIE9TIHRvIHBlcmZvcm0gYW4gTk1JLg0KDQpUaGFua3MsDQpEb24gQnJhY2UN
+Cg0KRVNDIC0gU21hcnQgU3RvcmFnZQ0KTWljcm9zZW1pIENvcnBvcmF0aW9uDQo=
