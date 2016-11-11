@@ -1,49 +1,31 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 5/6] qedi: Add support for iSCSI session management.
-Date: Fri, 11 Nov 2016 17:47:37 +0100
-Message-ID: <e74f2c3d-c0bb-cd3a-b33a-246f0946c73e@suse.de>
-References: <1478588223-16183-1-git-send-email-manish.rangankar@cavium.com>
- <1478588223-16183-6-git-send-email-manish.rangankar@cavium.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: Reduced latency is killing performance
+Date: Fri, 11 Nov 2016 09:15:09 -0800
+Message-ID: <711f875e-4bfa-168f-647d-49fd51729284@sandisk.com>
+References: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <1478588223-16183-6-git-send-email-manish.rangankar@cavium.com>
-Sender: netdev-owner@vger.kernel.org
-To: Manish Rangankar <manish.rangankar@cavium.com>, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 11/08/2016 07:57 AM, Manish Rangankar wrote:
-> This patch adds support for iscsi_transport LLD Login,
-> Logout, NOP-IN/NOP-OUT, Async, Reject PDU processing
-> and Firmware async event handling support.
->
-> Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
-> Signed-off-by: Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>
-> Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap@cavium.com>
-> Signed-off-by: Arun Easi <arun.easi@cavium.com>
-> Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-> ---
->  drivers/scsi/qedi/qedi_fw.c    | 1106 +++++++++++++++++++++++++++
->  drivers/scsi/qedi/qedi_gbl.h   |   67 ++
->  drivers/scsi/qedi/qedi_iscsi.c | 1611 ++++++++++++++++++++++++++++++++++++++++
->  drivers/scsi/qedi/qedi_iscsi.h |  232 ++++++
->  drivers/scsi/qedi/qedi_main.c  |  166 +++++
->  5 files changed, 3182 insertions(+)
->  create mode 100644 drivers/scsi/qedi/qedi_fw.c
->  create mode 100644 drivers/scsi/qedi/qedi_gbl.h
->  create mode 100644 drivers/scsi/qedi/qedi_iscsi.c
->  create mode 100644 drivers/scsi/qedi/qedi_iscsi.h
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On 11/10/2016 08:04 AM, Hannes Reinecke wrote:
+> this really feels like a follow-up to the discussion we've had in Santa
+> Fe, but finally I'm able to substantiate it with some numbers.
 
-Cheers,
+Hello Hannes,
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Since for the sequential read test the difference between the 50th 
+percentile sequential read completion time (2.7 ms) and the average 
+completion time (52 ms) is large I assume that you ran the ssd-test.fio 
+job on top of a hard disk or hard disk array? How many hardware queues 
+were active during your test? If multiple hardware queues were active, 
+can you repeat your test with a single hardware queue? The plan for 
+adding I/O scheduling support to blk-mq is - at least initially - only 
+to perform I/O scheduling if there is only a single hardware queue.
+
+Bart.
