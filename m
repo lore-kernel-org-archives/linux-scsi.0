@@ -1,89 +1,138 @@
-From: wangyijing <wangyijing@huawei.com>
-Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
-Date: Fri, 11 Nov 2016 16:49:53 +0800
-Message-ID: <58258631.1090203@huawei.com>
-References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
- <be84afd4-640d-1913-404a-505fd72c1324@huawei.com>
- <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
- <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
- <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
- <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
- <58257D52.6090507@huawei.com>
- <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, Dan Williams <dan.j.williams@intel.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, john.garry2@mail.dcu.ie, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, jinpu.wang@profitbricks.com
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 2/5] megaraid_sas: avoid calling megasas_lookup_instance()
+Date: Fri, 11 Nov 2016 10:44:49 +0100
+Message-ID: <1478857492-4581-3-git-send-email-hare@suse.de>
+References: <1478857492-4581-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60658 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754760AbcKKJpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 04:45:05 -0500
+In-Reply-To: <1478857492-4581-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
->>> I have not seen the flutter issue. I am just trying to solve the horrible WARN dump.
->>> However I do understand that there may be a issue related to how we queue the events; there was a recent attempt to fix this, but it came to nothing:
->>> https://www.spinics.net/lists/linux-scsi/msg99991.html
->>
->> We found libsas hotplug several problems:
->> 1. sysfs warning calltrace(like the case you found);
-> 
-> Maybe you can then review my patch.
+It's quite pointless to call megasas_lookup_instance() if we can
+derive a pointer to the structure directly.
 
-I did it, I think your solution to fix the sysfs calltrace issue is ok, and what I worried about is we still need to fix
-the rest issues. So it's better if we could fix all issues one time.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h        |  3 ++-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 24 +++++++++++-------------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
+ 3 files changed, 14 insertions(+), 15 deletions(-)
 
-> 
->> 2. hot-add and hot-remove work events may process out of order;
->> 3. in some extreme cases, libsas may miss some events, if the same event is still pending in workqueue.
->>
-> 
-> Can you tell me how to recreate #2 and #3?
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 8f1d2b4..296e692 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2375,7 +2375,8 @@ void megasas_return_mfi_mpt_pthr(struct megasas_instance *instance,
+ int megasas_cmd_type(struct scsi_cmnd *cmd);
+ void megasas_setup_jbod_map(struct megasas_instance *instance);
+ 
+-void megasas_update_sdev_properties(struct scsi_device *sdev);
++void megasas_update_sdev_properties(struct megasas_instance *instance,
++				    struct scsi_device *sdev);
+ int megasas_reset_fusion(struct Scsi_Host *shost, int reason);
+ int megasas_task_abort_fusion(struct scsi_cmnd *scmd);
+ int megasas_reset_target_fusion(struct scsi_cmnd *scmd);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index e7e3efd..d580406 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1736,22 +1736,22 @@ static struct megasas_instance *megasas_lookup_instance(u16 host_no)
+ /*
+ * megasas_update_sdev_properties - Update sdev structure based on controller's FW capabilities
+ *
++* @instance: Megasas instance
+ * @sdev: OS provided scsi device
+ *
+ * Returns void
+ */
+-void megasas_update_sdev_properties(struct scsi_device *sdev)
++void megasas_update_sdev_properties(struct megasas_instance *instance,
++				    struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+ 	u32 device_id, ld;
+-	struct megasas_instance *instance;
+ 	struct fusion_context *fusion;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+ 	struct MR_LD_RAID *raid;
+ 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+ 
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	fusion = instance->ctrl_context;
+ 	mr_device_priv_data = sdev->hostdata;
+ 
+@@ -1780,13 +1780,11 @@ void megasas_update_sdev_properties(struct scsi_device *sdev)
+ 	}
+ }
+ 
+-static void megasas_set_device_queue_depth(struct scsi_device *sdev)
++static void megasas_set_device_queue_depth(struct megasas_instance *instance,
++					   struct scsi_device *sdev)
+ {
+ 	u16				pd_index = 0;
+ 	int		ret = DCMD_FAILED;
+-	struct megasas_instance *instance;
+-
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+ 
+ 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+ 		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) + sdev->id;
+@@ -1822,9 +1820,9 @@ static void megasas_set_device_queue_depth(struct scsi_device *sdev)
+ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+-	struct megasas_instance *instance;
++	struct megasas_instance *instance = (struct megasas_instance *)
++		sdev->host->hostdata;
+ 
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	if (instance->pd_list_not_supported) {
+ 		if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
+ 			sdev->type == TYPE_DISK) {
+@@ -1835,8 +1833,8 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 				return -ENXIO;
+ 		}
+ 	}
+-	megasas_set_device_queue_depth(sdev);
+-	megasas_update_sdev_properties(sdev);
++	megasas_set_device_queue_depth(instance, sdev);
++	megasas_update_sdev_properties(instance, sdev);
+ 
+ 	/*
+ 	 * The RAID firmware may require extended timeouts.
+@@ -1850,10 +1848,10 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ static int megasas_slave_alloc(struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+-	struct megasas_instance *instance ;
++	struct megasas_instance *instance = (struct megasas_instance *)
++		sdev->host->hostdata;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+-	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+ 		/*
+ 		 * Open the OS scan to the SYSTEM PD
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 2159f6a..38137de 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3535,7 +3535,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 			megasas_setup_jbod_map(instance);
+ 
+ 			shost_for_each_device(sdev, shost)
+-				megasas_update_sdev_properties(sdev);
++				megasas_update_sdev_properties(instance, sdev);
+ 
+ 			clear_bit(MEGASAS_FUSION_IN_RESET,
+ 				  &instance->reset_flags);
+-- 
+1.8.5.6
 
-Qilin Chen and Yousong He help me to reproduce it, I told them to reply this mail to tell you the test steps.
-Some tests we did is make sas phy link flutter, so hardware would post phy down and phy up events sequentially.
-
-1. scsi host workqueue receive phy down and phy up events.                                             in process                 new added
-2. sas_deform_port would post a new destruct event to scsi host workqueue, so things in workqueue like [phy down-----phy up -----destruct]
-
-So the phy down logic is separated by phy up, and it's not atomic, not safe, something unexpected would happen.
-
-For case 3, we make hardware burst post lots pair of phy up and phy down events, so if libsas is processing the phy up event, the next
-phy up event can not queue to scsi host workqueue again, it will lost, it's not we expect.
-
-> 
->> It's a complex issue, we posted two patches, try to fix these issues, but now few people are interested in it  :(
->>
-> 
-> IIRC, you sent as RFC and got a "reviewed-by" from Hannes, so I'm not sure what else you want. BTW, I thought that the changes were quite drastic.
-
-I agree, the changes seems something drastic. But I think current libsas hotplug framework has a big flaw.
-
-> 
-> John
-> 
->>>
->>>>
->>>> Alternatively we need a mechanism to cancel in-flight port shutdown
->>>> requests when we start re-attaching devices before queued port
->>>> destruction events have run.
->>>>
->>>> .
->>>>
->>>
->>>
->>> _______________________________________________
->>> linuxarm mailing list
->>> linuxarm@huawei.com
->>> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
->>>
->>> .
->>>
->>
->>
->> .
->>
-> 
-> 
-> 
-> .
-> 
