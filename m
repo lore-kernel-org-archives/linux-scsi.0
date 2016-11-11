@@ -1,206 +1,142 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] hpsa: scsi-mq support
-Date: Fri, 11 Nov 2016 16:46:34 +0100
-Message-ID: <1478879194-32529-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH v2 1/6] qed: Add support for hardware offloaded iSCSI.
+Date: Fri, 11 Nov 2016 16:57:57 +0100
+Message-ID: <1c5639c1-4160-72fe-ecc7-ca6257ec333f@suse.de>
+References: <1478588223-16183-1-git-send-email-manish.rangankar@cavium.com>
+ <1478588223-16183-2-git-send-email-manish.rangankar@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55723 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:60911 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932954AbcKKPqj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Nov 2016 10:46:39 -0500
+        id S1750979AbcKKP6O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 10:58:14 -0500
+In-Reply-To: <1478588223-16183-2-git-send-email-manish.rangankar@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Manish Rangankar <manish.rangankar@cavium.com>, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
+Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
 
-This patch enables full scsi-mq support for the hpsa driver.
-Due to some reports of performance regressions this patch
-also adds a parameter 'use_blk_mq' which can be used to
-disable multiqueue support if required.
+On 11/08/2016 07:56 AM, Manish Rangankar wrote:
+> From: Yuval Mintz <Yuval.Mintz@cavium.com>
+>
+> This adds the backbone required for the various HW initalizations
+> which are necessary for the iSCSI driver (qedi) for QLogic FastLinQ
+> 4xxxx line of adapters - FW notification, resource initializations, etc.
+>
+> Signed-off-by: Arun Easi <arun.easi@cavium.com>
+> Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
+> ---
+>  drivers/net/ethernet/qlogic/Kconfig            |   15 +
+>  drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
+>  drivers/net/ethernet/qlogic/qed/qed.h          |    7 +-
+>  drivers/net/ethernet/qlogic/qed/qed_dev.c      |   12 +
+>  drivers/net/ethernet/qlogic/qed/qed_int.h      |    1 -
+>  drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1276 ++++++++++++++++++++++++
+>  drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
+>  drivers/net/ethernet/qlogic/qed/qed_l2.c       |    1 -
+>  drivers/net/ethernet/qlogic/qed/qed_ll2.c      |    4 +-
+>  drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
+>  drivers/net/ethernet/qlogic/qed/qed_spq.c      |   15 +
+>  include/linux/qed/qed_if.h                     |    2 +
+>  include/linux/qed/qed_iscsi_if.h               |  229 +++++
+>  13 files changed, 1613 insertions(+), 4 deletions(-)
+>  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+>  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+>  create mode 100644 include/linux/qed/qed_iscsi_if.h
+>
+> diff --git a/drivers/net/ethernet/qlogic/Kconfig b/drivers/net/ethernet/qlogic/Kconfig
+> index 32f2a45..2832570 100644
+> --- a/drivers/net/ethernet/qlogic/Kconfig
+> +++ b/drivers/net/ethernet/qlogic/Kconfig
+> @@ -110,4 +110,19 @@ config QEDE
+>  config QED_RDMA
+>  	bool
+>
+> +config QED_ISCSI
+> +	bool
+> +
+> +config QEDI
+> +	tristate "QLogic QED 25/40/100Gb iSCSI driver"
+> +	depends on QED
+> +	select QED_LL2
+> +	select QED_ISCSI
+> +	default n
+> +	---help---
+> +	  This provides a temporary node that allows the compilation
+> +	  and logical testing of the hardware offload iSCSI support
+> +	  for QLogic QED. This would be replaced by the 'real' option
+> +	  once the QEDI driver is added [+relocated].
+> +
+>  endif # NET_VENDOR_QLOGIC
+> diff --git a/drivers/net/ethernet/qlogic/qed/Makefile b/drivers/net/ethernet/qlogic/qed/Makefile
+> index 967acf3..597e15c 100644
+> --- a/drivers/net/ethernet/qlogic/qed/Makefile
+> +++ b/drivers/net/ethernet/qlogic/qed/Makefile
+> @@ -6,3 +6,4 @@ qed-y := qed_cxt.o qed_dev.o qed_hw.o qed_init_fw_funcs.o qed_init_ops.o \
+>  qed-$(CONFIG_QED_SRIOV) += qed_sriov.o qed_vf.o
+>  qed-$(CONFIG_QED_LL2) += qed_ll2.o
+>  qed-$(CONFIG_QED_RDMA) += qed_roce.o
+> +qed-$(CONFIG_QED_ISCSI) += qed_iscsi.o
+> diff --git a/drivers/net/ethernet/qlogic/qed/qed.h b/drivers/net/ethernet/qlogic/qed/qed.h
+> index 50b8a01..15286c1 100644
+> --- a/drivers/net/ethernet/qlogic/qed/qed.h
+> +++ b/drivers/net/ethernet/qlogic/qed/qed.h
+> @@ -35,6 +35,7 @@
+>
+>  #define QED_WFQ_UNIT	100
+>
+> +#define ISCSI_BDQ_ID(_port_id) (_port_id)
+>  #define QED_WID_SIZE            (1024)
+>  #define QED_PF_DEMS_SIZE        (4)
+>
+> @@ -392,6 +393,7 @@ struct qed_hwfn {
+>  	bool				using_ll2;
+>  	struct qed_ll2_info		*p_ll2_info;
+>  	struct qed_rdma_info		*p_rdma_info;
+> +	struct qed_iscsi_info		*p_iscsi_info;
+>  	struct qed_pf_params		pf_params;
+>
+>  	bool b_rdma_enabled_in_prs;
+> @@ -593,6 +595,8 @@ struct qed_dev {
+>  	/* Linux specific here */
+>  	struct  qede_dev		*edev;
+>  	struct  pci_dev			*pdev;
+> +	u32 flags;
+> +#define QED_FLAG_STORAGE_STARTED	(BIT(0))
+>  	int				msg_enable;
+>
+>  	struct pci_params		pci_params;
+> @@ -606,6 +610,7 @@ struct qed_dev {
+>  	union {
+>  		struct qed_common_cb_ops	*common;
+>  		struct qed_eth_cb_ops		*eth;
+> +		struct qed_iscsi_cb_ops		*iscsi;
+>  	} protocol_ops;
+>  	void				*ops_cookie;
+>
+> @@ -615,7 +620,7 @@ struct qed_dev {
+>  	struct qed_cb_ll2_info		*ll2;
+>  	u8				ll2_mac_address[ETH_ALEN];
+>  #endif
+> -
+> +	DECLARE_HASHTABLE(connections, 10);
+>  	const struct firmware		*firmware;
+>
+>  	u32 rdma_max_sge;
+10 connections? Only?
+Hmm.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/hpsa.c | 64 +++++++++++++++++++++++++++++++++++++++++++----------
- 1 file changed, 52 insertions(+), 12 deletions(-)
+Other than that:
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 0df0e04..ef4e81a 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -91,6 +91,9 @@
- MODULE_PARM_DESC(hpsa_simple_mode,
- 	"Use 'simple mode' rather than 'performant mode'");
- 
-+bool use_blk_mq = true;
-+module_param(use_blk_mq, bool, 0);
-+
- /* define the PCI info for the cards we can control */
- static const struct pci_device_id hpsa_pci_device_id[] = {
- 	{PCI_VENDOR_ID_HP,     PCI_DEVICE_ID_HP_CISSE,     0x103C, 0x3241},
-@@ -1137,12 +1140,13 @@ static void __enqueue_cmd_and_start_io(struct ctlr_info *h,
- 	}
- }
- 
--static void enqueue_cmd_and_start_io(struct ctlr_info *h, struct CommandList *c)
-+static void enqueue_cmd_and_start_io(struct ctlr_info *h,
-+				     struct CommandList *c, int reply_queue)
- {
- 	if (unlikely(hpsa_is_pending_event(c)))
- 		return finish_cmd(c);
- 
--	__enqueue_cmd_and_start_io(h, c, DEFAULT_REPLY_QUEUE);
-+	__enqueue_cmd_and_start_io(h, c, reply_queue);
- }
- 
- static inline int is_hba_lunid(unsigned char scsi3addr[])
-@@ -4614,6 +4618,7 @@ static int hpsa_scsi_ioaccel1_queue_command(struct ctlr_info *h,
- 	int use_sg, i;
- 	struct SGDescriptor *curr_sg;
- 	u32 control = IOACCEL1_CONTROL_SIMPLEQUEUE;
-+	int reply_queue = DEFAULT_REPLY_QUEUE;
- 
- 	/* TODO: implement chaining support */
- 	if (scsi_sg_count(cmd) > h->ioaccel_maxsg) {
-@@ -4683,8 +4688,12 @@ static int hpsa_scsi_ioaccel1_queue_command(struct ctlr_info *h,
- 	cp->control = cpu_to_le32(control);
- 	memcpy(cp->CDB, cdb, cdb_len);
- 	memcpy(cp->CISS_LUN, scsi3addr, 8);
-+	if (shost_use_blk_mq(cmd->device->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(cmd->request);
-+		reply_queue = blk_mq_unique_tag_to_hwq(blk_tag);
-+	}
- 	/* Tag was already set at init time. */
--	enqueue_cmd_and_start_io(h, c);
-+	enqueue_cmd_and_start_io(h, c, reply_queue);
- 	return 0;
- }
- 
-@@ -4778,6 +4787,7 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	u64 addr64;
- 	u32 len;
- 	u32 total_len = 0;
-+	int reply_queue = DEFAULT_REPLY_QUEUE;
- 
- 	if (!cmd->device)
- 		return -1;
-@@ -4882,7 +4892,11 @@ static int hpsa_scsi_ioaccel2_queue_command(struct ctlr_info *h,
- 	} else
- 		cp->sg_count = (u8) use_sg;
- 
--	enqueue_cmd_and_start_io(h, c);
-+	if (shost_use_blk_mq(cmd->device->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(cmd->request);
-+		reply_queue = blk_mq_unique_tag_to_hwq(blk_tag);
-+	}
-+	enqueue_cmd_and_start_io(h, c, reply_queue);
- 	return 0;
- }
- 
-@@ -5284,6 +5298,8 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
- 	struct CommandList *c, struct scsi_cmnd *cmd,
- 	unsigned char scsi3addr[])
- {
-+	int reply_queue = DEFAULT_REPLY_QUEUE;
-+
- 	cmd->host_scribble = (unsigned char *) c;
- 	c->cmd_type = CMD_SCSI;
- 	c->scsi_cmd = cmd;
-@@ -5339,7 +5355,11 @@ static int hpsa_ciss_submit(struct ctlr_info *h,
- 		hpsa_cmd_resolve_and_free(h, c);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
--	enqueue_cmd_and_start_io(h, c);
-+	if (shost_use_blk_mq(cmd->device->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(cmd->request);
-+		reply_queue = blk_mq_unique_tag_to_hwq(blk_tag);
-+	}
-+	enqueue_cmd_and_start_io(h, c, reply_queue);
- 	/* the cmd'll come back via intr handler in complete_scsi_command()  */
- 	return 0;
- }
-@@ -5642,13 +5662,23 @@ static int hpsa_scsi_host_alloc(struct ctlr_info *h)
- static int hpsa_scsi_add_host(struct ctlr_info *h)
- {
- 	int rv;
-+	struct Scsi_Host *sh = h->scsi_host;
- 
--	rv = scsi_add_host(h->scsi_host, &h->pdev->dev);
-+	if (h->intr_mode == PERF_MODE_INT && h->msix_vectors > 0)
-+		sh->nr_hw_queues = h->msix_vectors;
-+	else
-+		sh->nr_hw_queues = 1;
-+
-+	if (use_blk_mq) {
-+		sh->can_queue = sh->can_queue / sh->nr_hw_queues;
-+		sh->use_blk_mq = 1;
-+	}
-+	rv = scsi_add_host(sh, &h->pdev->dev);
- 	if (rv) {
- 		dev_err(&h->pdev->dev, "scsi_add_host failed\n");
- 		return rv;
- 	}
--	scsi_scan_host(h->scsi_host);
-+	scsi_scan_host(sh);
- 	return 0;
- }
- 
-@@ -5658,10 +5688,20 @@ static int hpsa_scsi_add_host(struct ctlr_info *h)
-  * an index to select our command block.  (The offset allows us to reserve the
-  * low-numbered entries for our own uses.)
-  */
--static int hpsa_get_cmd_index(struct scsi_cmnd *scmd)
-+static int hpsa_get_cmd_index(struct ctlr_info *h, struct scsi_cmnd *scmd)
- {
- 	int idx = scmd->request->tag;
- 
-+	if (shost_use_blk_mq(scmd->device->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(scmd->request);
-+		u16 hwq = blk_mq_unique_tag_to_hwq(blk_tag);
-+		u16 tag = blk_mq_unique_tag_to_tag(blk_tag);
-+		int msix_vectors, hwq_size;
-+
-+		msix_vectors = h->msix_vectors > 0 ? h->msix_vectors : 1;
-+		hwq_size = (h->nr_cmds - HPSA_NRESERVED_CMDS) / msix_vectors;
-+		idx = (hwq * hwq_size) + tag;
-+	}
- 	if (idx < 0)
- 		return idx;
- 
-@@ -5811,7 +5851,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	if (lockup_detected(h)) {
- 		snprintf(msg, sizeof(msg),
- 			 "cmd %d RESET FAILED, lockup detected",
--			 hpsa_get_cmd_index(scsicmd));
-+			 hpsa_get_cmd_index(h, scsicmd));
- 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
- 		return FAILED;
- 	}
-@@ -5820,7 +5860,7 @@ static int hpsa_eh_device_reset_handler(struct scsi_cmnd *scsicmd)
- 	if (detect_controller_lockup(h)) {
- 		snprintf(msg, sizeof(msg),
- 			 "cmd %d RESET FAILED, new lockup detected",
--			 hpsa_get_cmd_index(scsicmd));
-+			 hpsa_get_cmd_index(h, scsicmd));
- 		hpsa_show_dev_msg(KERN_WARNING, h, dev, msg);
- 		return FAILED;
- 	}
-@@ -6293,7 +6333,7 @@ static int hpsa_eh_abort_handler(struct scsi_cmnd *sc)
- static struct CommandList *cmd_tagged_alloc(struct ctlr_info *h,
- 					    struct scsi_cmnd *scmd)
- {
--	int idx = hpsa_get_cmd_index(scmd);
-+	int idx = hpsa_get_cmd_index(h, scmd);
- 	struct CommandList *c = h->cmd_pool + idx;
- 
- 	if (idx < HPSA_NRESERVED_CMDS || idx >= h->nr_cmds) {
-@@ -6857,7 +6897,7 @@ static void hpsa_send_host_reset(struct ctlr_info *h, unsigned char *scsi3addr,
- 		RAID_CTLR_LUNID, TYPE_MSG);
- 	c->Request.CDB[1] = reset_type; /* fill_cmd defaults to target reset */
- 	c->waiting = NULL;
--	enqueue_cmd_and_start_io(h, c);
-+	enqueue_cmd_and_start_io(h, c, DEFAULT_REPLY_QUEUE);
- 	/* Don't wait for completion, the reset won't complete.  Don't free
- 	 * the command either.  This is the last command we will send before
- 	 * re-initializing everything, so it doesn't matter and won't leak.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+
+Cheers,
+
+Hannes
 -- 
-1.8.5.6
-
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
