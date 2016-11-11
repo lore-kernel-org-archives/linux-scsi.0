@@ -1,105 +1,167 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: Reduced latency is killing performance
-Date: Fri, 11 Nov 2016 15:56:29 +0530
-Message-ID: <db715a3a74c33343f1ac387a30dfcdab@mail.gmail.com>
-References: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de> <0d0f1e6f-0f61-c316-8db8-112c4de1d8c9@kernel.dk>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH 2/5] megaraid_sas: avoid calling megasas_lookup_instance()
+Date: Fri, 11 Nov 2016 16:16:39 +0530
+Message-ID: <fd6392a049c41e17e9dc202c8e29e10b@mail.gmail.com>
+References: <1478857492-4581-1-git-send-email-hare@suse.de> <1478857492-4581-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:38114 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751606AbcKKK0c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 05:26:32 -0500
-Received: by mail-it0-f43.google.com with SMTP id q124so111172612itd.1
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 02:26:32 -0800 (PST)
-In-Reply-To: <0d0f1e6f-0f61-c316-8db8-112c4de1d8c9@kernel.dk>
+Received: from mail-yw0-f179.google.com ([209.85.161.179]:33999 "EHLO
+        mail-yw0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750738AbcKKKqm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 05:46:42 -0500
+Received: by mail-yw0-f179.google.com with SMTP id t125so7682986ywc.1
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 02:46:41 -0800 (PST)
+In-Reply-To: <1478857492-4581-3-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
-Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-> -----Original Message-----
-> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> owner@vger.kernel.org] On Behalf Of Jens Axboe
-> Sent: Thursday, November 10, 2016 10:18 PM
-> To: Hannes Reinecke; Christoph Hellwig
-> Cc: SCSI Mailing List; linux-block@vger.kernel.org
-> Subject: Re: Reduced latency is killing performance
+>-----Original Message-----
+>From: Hannes Reinecke [mailto:hare@suse.de]
+>Sent: Friday, November 11, 2016 3:15 PM
+>To: Martin K. Petersen
+>Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; linux-
+>scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
+>Subject: [PATCH 2/5] megaraid_sas: avoid calling
+megasas_lookup_instance()
 >
-> On 11/10/2016 09:04 AM, Hannes Reinecke wrote:
-> > Hi all,
-> >
-> > this really feels like a follow-up to the discussion we've had in
-> > Santa Fe, but finally I'm able to substantiate it with some numbers.
-> >
-> > I've made a patch to enable the megaraid_sas driver for multiqueue.
-> > While this is pretty straightforward (I'll be sending the patchset
-> > later on), the results are ... interesting.
-> >
-> > I've run the 'ssd-test.fio' script from Jens' repository, and these
-> > results for MQ/SQ (- is mq, + is sq):
-> >
-> >  Run status group 0 (all jobs):
-> > -   READ: io=10641MB, aggrb=181503KB/s, minb=181503KB/s,
-> > maxb=181503KB/s, mint=60033msec, maxt=60033msec
-> > +   READ: io=18370MB, aggrb=312572KB/s, minb=312572KB/s,
-> > maxb=312572KB/s, mint=60181msec, maxt=60181msec
-> >
-> >  Run status group 1 (all jobs):
-> > -   READ: io=441444KB, aggrb=7303KB/s, minb=7303KB/s, maxb=7303KB/s,
-> > mint=60443msec, maxt=60443msec
-> > +   READ: io=223108KB, aggrb=3707KB/s, minb=3707KB/s, maxb=3707KB/s,
-> > mint=60182msec, maxt=60182msec
-> >
-> >  Run status group 2 (all jobs):
-> > -  WRITE: io=22485MB, aggrb=383729KB/s, minb=383729KB/s,
-> > maxb=383729KB/s, mint=60001msec, maxt=60001msec
-> > +  WRITE: io=47421MB, aggrb=807581KB/s, minb=807581KB/s,
-> > maxb=807581KB/s, mint=60129msec, maxt=60129msec
-> >
-> >  Run status group 3 (all jobs):
-> > -  WRITE: io=489852KB, aggrb=8110KB/s, minb=8110KB/s, maxb=8110KB/s,
-> > mint=60399msec, maxt=60399msec
-> > +  WRITE: io=489748KB, aggrb=8134KB/s, minb=8134KB/s, maxb=8134KB/s,
-> > mint=60207msec, maxt=60207msec
-> >
-> >  Disk stats (read/write):
-> > -  sda: ios=2834412/5878578, merge=0/0, ticks=86269292/48364836,
-> > in_queue=135345876, util=99.20%
-> > +  sda: ios=205278/2680329, merge=4552593/9580622,
-> > ticks=12539912/12965228, in_queue=25512312, util=99.59%
-> >
-> > As you can see, we're really losing performance in the multiqueue case.
-> > And the main reason for that is that we submit about _10 times_ as
-> > much I/O as we do for the single-queue case.
+>It's quite pointless to call megasas_lookup_instance() if we can derive a
+pointer
+>to the structure directly.
 >
-> What's the setup like? I'm going to need more details.
->
-> The baseline test is using the legacy path, single queue. The new test is
-> multiqueue, scsi-mq. What's sda?
+>Signed-off-by: Hannes Reinecke <hare@suse.com>
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
-Hannes -
-
-Please share setup/config details so that I can also validate and post my
-findings.
-
-` Kashyap
-
+>---
+> drivers/scsi/megaraid/megaraid_sas.h        |  3 ++-
+> drivers/scsi/megaraid/megaraid_sas_base.c   | 24
++++++++++++-------------
+> drivers/scsi/megaraid/megaraid_sas_fusion.c |  2 +-
+> 3 files changed, 14 insertions(+), 15 deletions(-)
 >
-> > So I guess having an I/O scheduler is critical, even for the scsi-mq
-> > case.
+>diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+>b/drivers/scsi/megaraid/megaraid_sas.h
+>index 8f1d2b4..296e692 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas.h
+>+++ b/drivers/scsi/megaraid/megaraid_sas.h
+>@@ -2375,7 +2375,8 @@ void megasas_return_mfi_mpt_pthr(struct
+>megasas_instance *instance,  int megasas_cmd_type(struct scsi_cmnd *cmd);
+>void megasas_setup_jbod_map(struct megasas_instance *instance);
 >
-> Each of these sections is a single job. For some reason we are not merging
-> as
-> well as we should, that's the reason for the performance loss. In fact,
-> we're not
-> merging at all. That's not IO scheduling.
+>-void megasas_update_sdev_properties(struct scsi_device *sdev);
+>+void megasas_update_sdev_properties(struct megasas_instance *instance,
+>+				    struct scsi_device *sdev);
+> int megasas_reset_fusion(struct Scsi_Host *shost, int reason);  int
+>megasas_task_abort_fusion(struct scsi_cmnd *scmd);  int
+>megasas_reset_target_fusion(struct scsi_cmnd *scmd); diff --git
+>a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index e7e3efd..d580406 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -1736,22 +1736,22 @@ static struct megasas_instance
+>*megasas_lookup_instance(u16 host_no)
+> /*
+> * megasas_update_sdev_properties - Update sdev structure based on
+>controller's FW capabilities
+> *
+>+* @instance: Megasas instance
+> * @sdev: OS provided scsi device
+> *
+> * Returns void
+> */
+>-void megasas_update_sdev_properties(struct scsi_device *sdev)
+>+void megasas_update_sdev_properties(struct megasas_instance *instance,
+>+				    struct scsi_device *sdev)
+> {
+> 	u16 pd_index = 0;
+> 	u32 device_id, ld;
+>-	struct megasas_instance *instance;
+> 	struct fusion_context *fusion;
+> 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+> 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+> 	struct MR_LD_RAID *raid;
+> 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
 >
-> --
-> Jens Axboe
+>-	instance = megasas_lookup_instance(sdev->host->host_no);
+> 	fusion = instance->ctrl_context;
+> 	mr_device_priv_data = sdev->hostdata;
 >
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of
-> a message to majordomo@vger.kernel.org More majordomo info at
-> http://vger.kernel.org/majordomo-info.html
+>@@ -1780,13 +1780,11 @@ void megasas_update_sdev_properties(struct
+>scsi_device *sdev)
+> 	}
+> }
+>
+>-static void megasas_set_device_queue_depth(struct scsi_device *sdev)
+>+static void megasas_set_device_queue_depth(struct megasas_instance
+>*instance,
+>+					   struct scsi_device *sdev)
+> {
+> 	u16				pd_index = 0;
+> 	int		ret = DCMD_FAILED;
+>-	struct megasas_instance *instance;
+>-
+>-	instance = megasas_lookup_instance(sdev->host->host_no);
+>
+> 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+> 		pd_index = (sdev->channel *
+>MEGASAS_MAX_DEV_PER_CHANNEL) + sdev->id; @@ -1822,9 +1820,9 @@
+>static void megasas_set_device_queue_depth(struct scsi_device *sdev)
+static int
+>megasas_slave_configure(struct scsi_device *sdev)  {
+> 	u16 pd_index = 0;
+>-	struct megasas_instance *instance;
+>+	struct megasas_instance *instance = (struct megasas_instance *)
+>+		sdev->host->hostdata;
+>
+>-	instance = megasas_lookup_instance(sdev->host->host_no);
+> 	if (instance->pd_list_not_supported) {
+> 		if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
+> 			sdev->type == TYPE_DISK) {
+>@@ -1835,8 +1833,8 @@ static int megasas_slave_configure(struct
+scsi_device
+>*sdev)
+> 				return -ENXIO;
+> 		}
+> 	}
+>-	megasas_set_device_queue_depth(sdev);
+>-	megasas_update_sdev_properties(sdev);
+>+	megasas_set_device_queue_depth(instance, sdev);
+>+	megasas_update_sdev_properties(instance, sdev);
+>
+> 	/*
+> 	 * The RAID firmware may require extended timeouts.
+>@@ -1850,10 +1848,10 @@ static int megasas_slave_configure(struct
+>scsi_device *sdev)  static int megasas_slave_alloc(struct scsi_device
+*sdev)  {
+> 	u16 pd_index = 0;
+>-	struct megasas_instance *instance ;
+>+	struct megasas_instance *instance = (struct megasas_instance *)
+>+		sdev->host->hostdata;
+> 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+>
+>-	instance = megasas_lookup_instance(sdev->host->host_no);
+> 	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
+> 		/*
+> 		 * Open the OS scan to the SYSTEM PD
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>index 2159f6a..38137de 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>@@ -3535,7 +3535,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost,
+int
+>reason)
+> 			megasas_setup_jbod_map(instance);
+>
+> 			shost_for_each_device(sdev, shost)
+>-				megasas_update_sdev_properties(sdev);
+>+				megasas_update_sdev_properties(instance,
+>sdev);
+>
+> 			clear_bit(MEGASAS_FUSION_IN_RESET,
+> 				  &instance->reset_flags);
+>--
+>1.8.5.6
