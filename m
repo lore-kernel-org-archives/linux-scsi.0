@@ -1,103 +1,100 @@
-From: Gabriel C <nix.or.die@gmail.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.9-rc3
-Date: Fri, 11 Nov 2016 05:10:05 +0100
-Message-ID: <024723a1-3dec-f644-277b-4178118cc241@gmail.com>
-References: <1478352591.2858.5.camel@HansenPartnership.com>
- <1eee17da-1166-6a48-8a21-0ad5d6a0660a@gmail.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a deadlock
+Date: Thu, 10 Nov 2016 22:13:29 -0600
+Message-ID: <87k2calkly.fsf@xmission.com>
+References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
+        <1478618887.2824.2.camel@linux.vnet.ibm.com>
+        <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
+        <1478628101.2824.27.camel@linux.vnet.ibm.com>
+        <87oa1pvl8f.fsf@xmission.com>
+        <1478648684.2368.17.camel@linux.vnet.ibm.com>
+        <87bmxpqxlb.fsf@xmission.com>
+        <1478655815.2368.34.camel@linux.vnet.ibm.com>
+        <87pom5o123.fsf@xmission.com>
+        <1478828244.3267.49.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1eee17da-1166-6a48-8a21-0ad5d6a0660a@gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from out02.mta.xmission.com ([166.70.13.232]:55369 "EHLO
+        out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S965482AbcKKEP4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 23:15:56 -0500
+In-Reply-To: <1478828244.3267.49.camel@linux.vnet.ibm.com> (James Bottomley's
+        message of "Thu, 10 Nov 2016 17:37:24 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
 
+James Bottomley <jejb@linux.vnet.ibm.com> writes:
 
+> On Tue, 2016-11-08 at 20:10 -0600, Eric W. Biederman wrote:
+>> James Bottomley <jejb@linux.vnet.ibm.com> writes:
+>> 
+>> > On Tue, 2016-11-08 at 18:57 -0600, Eric W. Biederman wrote:
+> [...]
+>> > > I am pretty certain that if you are going to make 
+>> > > kernfs_remove_self and kernfs_remove_by_name_ns to be safe to 
+>> > > race against each other, not just the KERNFS_SUICIDAL check, but 
+>> > > the wait when KERNFS_SUICIDAL is set needs to be added ot
+>> > > kernfs_remove_by_name_ns.
+>> > 
+>> > I don't think you can do that: waiting for SUICIDED would introduce
+>> > another potential lock entanglement.  I'm reasonably happy that the
+>> > deactivation offset coupled with kernfs_drain in the non self 
+>> > remove path means that the necessary cleanup is done when the 
+>> > directory itself is removed.  That seems to be a common pattern in 
+>> > all non-self removes.
+>> 
+>> But if we don't I am pretty certain there will be asynchrounous 
+>> behavior in some cases that could potentially confuse userspace.
+>
+> But the original behaviour kernfs_remove_self() eliminated was the
+> asynchronous callback.  If we go back to that, we're definitely going
+> to introduce far more asynchronous behaviour.
 
-On 11.11.2016 04:30, Gabriel C wrote:
-> 
-> On 05.11.2016 14:29, James Bottomley wrote:
-> 
-> 
-> ...
-> 
->> Kashyap Desai (1):
->>       scsi: megaraid_sas: Fix data integrity failure for JBOD (passthrough) devices
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
->> index 9ff57de..d8b1fbd 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->> @@ -1700,16 +1700,13 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
->>  		goto out_done;
->>  	}
->>  
->> -	switch (scmd->cmnd[0]) {
->> -	case SYNCHRONIZE_CACHE:
->> -		/*
->> -		 * FW takes care of flush cache on its own
->> -		 * No need to send it down
->> -		 */
->> +	/*
->> +	 * FW takes care of flush cache on its own for Virtual Disk.
->> +	 * No need to send it down for VD. For JBOD send SYNCHRONIZE_CACHE to FW.
->> +	 */
->> +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) && MEGASAS_IS_LOGICAL(scmd)) {
->>  		scmd->result = DID_OK << 16;
->>  		goto out_done;
->> -	default:
->> -		break;
->>  	}
->>  
->>  	return instance->instancet->build_and_issue_cmd(instance, scmd);
-> 
-> This patch breaks my box.. I'm not able to boot it anymore.
-> It seems with this patch I have /dev/sda[a-z] to /dev/sdz[a-z] ?!?
-> 
-> I'm not sure how to get an log since dracut times out and I'm dropped , after a very long time
-> of probing 'ghost devices', in a emercency shell, journalctl doesn't work also..
-> 
-> After reverting this one I can boot normal.
-> 
-> Box is a FUJITSU PRIMERGY TX200 S5..
-> 
-> This is from an working kernel..
-> 
-> [    5.119371] megaraid_sas 0000:01:00.0: FW now in Ready state
-> [    5.119418] megaraid_sas 0000:01:00.0: firmware supports msix        : (0)
-> [    5.119420] megaraid_sas 0000:01:00.0: current msix/online cpus      : (1/16)
-> [    5.119422] megaraid_sas 0000:01:00.0: RDPQ mode     : (disabled)
-> [    5.123100] ehci-pci 0000:00:1a.7: cache line size of 32 is not supported
-> [    5.123113] ehci-pci 0000:00:1a.7: irq 18, io mem 0xb0020000
-> 
-> ...
-> 
-> [    5.208063] megaraid_sas 0000:01:00.0: controller type       : MR(256MB)
-> [    5.208065] megaraid_sas 0000:01:00.0: Online Controller Reset(OCR)  : Enabled
-> [    5.208067] megaraid_sas 0000:01:00.0: Secure JBOD support   : No
-> [    5.208070] megaraid_sas 0000:01:00.0: megasas_init_mfi: fw_support_ieee=0
-> [    5.208073] megaraid_sas 0000:01:00.0: INIT adapter done
-> [    5.208075] megaraid_sas 0000:01:00.0: Jbod map is not supported megasas_setup_jbod_map 4967
-> [    5.230163] megaraid_sas 0000:01:00.0: MR_DCMD_PD_LIST_QUERY failed/not supported by firmware
-> [    5.252080] megaraid_sas 0000:01:00.0: DCMD not supported by firmware - megasas_ld_list_query 4369
-> [    5.274086] megaraid_sas 0000:01:00.0: pci id                : (0x1000)/(0x0060)/(0x1734)/(0x10f9)
-> [    5.274089] megaraid_sas 0000:01:00.0: unevenspan support    : no
-> [    5.274090] megaraid_sas 0000:01:00.0: firmware crash dump   : no
-> [    5.274092] megaraid_sas 0000:01:00.0: jbod sync map         : no
-> [    5.274094] scsi host0: Avago SAS based MegaRAID driver
-> [    5.280022] scsi 0:0:6:0: Direct-Access     ATA      WDC WD5002ABYS-5 3B06 PQ: 0 ANSI: 5
-> [    5.282153] scsi 0:0:7:0: Direct-Access     ATA      WDC WD5002ABYS-5 3B06 PQ: 0 ANSI: 5
-> [    5.285180] scsi 0:0:10:0: Direct-Access     ATA      ST500NM0011      FTM6 PQ: 0 ANSI: 5
-> [    5.369885] scsi 0:2:0:0: Direct-Access     LSI      MegaRAID SAS RMB 1.40 PQ: 0 ANSI: 5
-> 
-> ..
-> 
-> Please let me know if you need more infos and/or want me to test patches.
-> 
-> 
+Not from a userspace perspective if we use task_work_add(current,...).
 
-I managed to get some parts of the broken dmesg. There it is :
+In that case we simply get to do an asynchrnous looking thing before we
+return to userspace.  So an asynchronous form, but not actually
+asynchronous actions.
 
-http://ftp.frugalware.org/pub/other/people/crazy/kernel/broken-dmesg
+>> Which is partly why I would like to kill kernfs_remove_self.
+>
+> I took a look at it.  It's definitely not cleanly revertible given
+> what's gone on since.  Even just trying to excise it is going to be
+> hard given all the tentacles it has.
+
+Well changing the users and removing the code from kernfs and sysfs
+doesn't look hard.  There are only 5-7 users of this insane and broken
+remove self thing.
+
+I think even if we do the naive thing and don't use any helpers in
+kernfs, sysfs, or the device subsystem we could easily wind up with less
+code in the kernel.  Certainly it will be code that is simpler and
+easier to get right.
+
+>> Using task_work_add(current, ...) as I posted earlier let's us retain
+>> the synchronous property of the current API.
+>> 
+>> While we debate the details I am happy to look at scsi as a special 
+>> case and solve for scsi.  Then when we have the details worked out we 
+>> can go fix the other cases.  Given my preliminary patch in my last 
+>> reply it looks very straight forward to fix this sanely.
+>
+> I don't think there's any urgency to fix SCSI.  You can only really
+> trigger this by hammering the device and host remove paths, which isn't
+> what users normally do ... as the fact it's been in the field for 2.5
+> years with no apparent problems shows.
+
+Sure little urgency.  But scsi makes a good concrete example for which
+a reproducer is known.  So it is a good test ground.
+
+> I'd like Greg and Tejun to weigh in on this before we start doing
+> something, since they created the initial problem.
+
+Fair.  Although I wouldn't be surprised if we don't hear anything short
+of a concrete patch that changes everything.
+
+Eric
+
