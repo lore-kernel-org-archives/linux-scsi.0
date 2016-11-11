@@ -1,18 +1,18 @@
 From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH 3/5] megaraid_sas: do not crash on invalid completion
-Date: Fri, 11 Nov 2016 17:21:51 +0530
-Message-ID: <5f5b5d4c3503fabc4344b8eddfc30129@mail.gmail.com>
-References: <1478857492-4581-1-git-send-email-hare@suse.de> <1478857492-4581-4-git-send-email-hare@suse.de>
+Subject: RE: [PATCH 4/5] megaraid_sas: scsi-mq support
+Date: Fri, 11 Nov 2016 17:26:47 +0530
+Message-ID: <17a4e2736f9d73e6daac6b409769402f@mail.gmail.com>
+References: <1478857492-4581-1-git-send-email-hare@suse.de> <1478857492-4581-5-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f48.google.com ([209.85.214.48]:37229 "EHLO
-        mail-it0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753256AbcKKLvz (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 06:51:55 -0500
-Received: by mail-it0-f48.google.com with SMTP id u205so116905104itc.0
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 03:51:55 -0800 (PST)
-In-Reply-To: <1478857492-4581-4-git-send-email-hare@suse.de>
+Received: from mail-yw0-f178.google.com ([209.85.161.178]:33132 "EHLO
+        mail-yw0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756380AbcKKL4t (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 06:56:49 -0500
+Received: by mail-yw0-f178.google.com with SMTP id r204so8878355ywb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 03:56:49 -0800 (PST)
+In-Reply-To: <1478857492-4581-5-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
@@ -25,78 +25,184 @@ Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartn
 >To: Martin K. Petersen
 >Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; linux-
 >scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
->Subject: [PATCH 3/5] megaraid_sas: do not crash on invalid completion
+>Subject: [PATCH 4/5] megaraid_sas: scsi-mq support
 >
->Avoid a kernel oops when receiving an invalid command completion.
-scmd_local set to NULL(for cases MPI2_FUNCTION_SCSI_IO_REQUEST and
-MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST) will be serious bug(either in driver
-or firmware) which should be debugged
-and driver should not really continue beyond that. This indicates that
-driver internal frames are corrupted. If needed, whenever driver detects
-it, it can mark the adapter as dead(stopping further activities).
-If OS is installed behind megasas controller then after declaring adapter
-dead, system reboot will be required. Kernel panic may give here more
-information whenever this condition hits so we kept it like this.
-If you are facing this issue, please share the details. I will work on
-this.
+>This patch enables full scsi multiqueue support. But as I have been
+seeing
+>performance regressions I've also added a module parameter 'use_blk_mq',
+>allowing multiqueue to be switched off if required.
+
+I may need sometime to comment on this patch. I will have some performance
+runs with this patch. Can you share your test configuration details?
 
 Thanks,
 Sumit
-
 >
 >Signed-off-by: Hannes Reinecke <hare@suse.com>
 >---
-> drivers/scsi/megaraid/megaraid_sas_fusion.c | 22 +++++++++++++++-------
-> 1 file changed, 15 insertions(+), 7 deletions(-)
+> drivers/scsi/megaraid/megaraid_sas_base.c   | 22 +++++++++++++++++
+> drivers/scsi/megaraid/megaraid_sas_fusion.c | 38
+>+++++++++++++++++++++--------
+> 2 files changed, 50 insertions(+), 10 deletions(-)
 >
->diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+>diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+>b/drivers/scsi/megaraid/megaraid_sas_base.c
+>index d580406..1af47e6 100644
+>--- a/drivers/scsi/megaraid/megaraid_sas_base.c
+>+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+>@@ -48,6 +48,7 @@
+> #include <linux/blkdev.h>
+> #include <linux/mutex.h>
+> #include <linux/poll.h>
+>+#include <linux/blk-mq-pci.h>
+>
+> #include <scsi/scsi.h>
+> #include <scsi/scsi_cmnd.h>
+>@@ -104,6 +105,9 @@
+> module_param(scmd_timeout, int, S_IRUGO);
+>MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s), default
+>90s. See megasas_reset_timer.");
+>
+>+bool use_blk_mq = true;
+>+module_param_named(use_blk_mq, use_blk_mq, bool, 0);
+>+
+> MODULE_LICENSE("GPL");
+> MODULE_VERSION(MEGASAS_VERSION);
+> MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
+>@@ -1882,6 +1886,17 @@ static void megasas_slave_destroy(struct
+scsi_device
+>*sdev)
+> 	sdev->hostdata = NULL;
+> }
+>
+>+static int megasas_map_queues(struct Scsi_Host *shost) {
+>+	struct megasas_instance *instance = (struct megasas_instance *)
+>+		shost->hostdata;
+>+
+>+	if (!instance->ctrl_context)
+>+		return 0;
+>+
+>+	return blk_mq_pci_map_queues(&shost->tag_set, instance->pdev, 0);
+}
+>+
+> /*
+> * megasas_complete_outstanding_ioctls - Complete outstanding ioctls
+after a
+> *                                       kill adapter
+>@@ -2986,6 +3001,7 @@ struct device_attribute *megaraid_host_attrs[] = {
+> 	.slave_configure = megasas_slave_configure,
+> 	.slave_alloc = megasas_slave_alloc,
+> 	.slave_destroy = megasas_slave_destroy,
+>+	.map_queues = megasas_map_queues,
+> 	.queuecommand = megasas_queue_command,
+> 	.eh_target_reset_handler = megasas_reset_target,
+> 	.eh_abort_handler = megasas_task_abort, @@ -5610,6 +5626,12 @@
+>static int megasas_io_attach(struct megasas_instance *instance)
+> 	host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
+> 	host->max_lun = MEGASAS_MAX_LUN;
+> 	host->max_cmd_len = 16;
+>+	host->nr_hw_queues = instance->msix_vectors ?
+>+		instance->msix_vectors : 1;
+>+	if (use_blk_mq) {
+>+		host->can_queue = instance->max_scsi_cmds /
+>host->nr_hw_queues;
+>+		host->use_blk_mq = 1;
+>+	}
+>
+> 	/*
+> 	 * Notify the mid-layer about the new controller diff --git
+>a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 >b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->index 38137de..eb3cb0f 100644
+>index eb3cb0f..aba53c0 100644
 >--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 >+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->@@ -2298,13 +2298,15 @@ static void megasas_build_ld_nonrw_fusion(struct
+>@@ -1703,6 +1703,7 @@ static int megasas_create_sg_sense_fusion(struct
+>megasas_instance *instance)
+> 	struct IO_REQUEST_INFO io_info;
+> 	struct fusion_context *fusion;
+> 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+>+	u16 msix_index;
+> 	u8 *raidLUN;
+>
+> 	device_id = MEGASAS_DEV_INDEX(scp);
+>@@ -1792,11 +1793,13 @@ static int megasas_create_sg_sense_fusion(struct
+>megasas_instance *instance)
+> 			fp_possible = io_info.fpOkForIo;
+> 	}
+>
+>-	/* Use raw_smp_processor_id() for now until cmd->request->cpu is
+>CPU
+>-	   id by default, not CPU group id, otherwise all MSI-X queues
+>won't
+>-	   be utilized */
+>-	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+>-		raw_smp_processor_id() % instance->msix_vectors : 0;
+>+	if (shost_use_blk_mq(instance->host)) {
+>+		u32 blk_tag = blk_mq_unique_tag(scp->request);
+>+		msix_index = blk_mq_unique_tag_to_hwq(blk_tag);
+>+	} else
+>+		msix_index = instance->msix_vectors ?
+>+			raw_smp_processor_id() % instance->msix_vectors :
+>0;
+>+	cmd->request_desc->SCSIIO.MSIxIndex = msix_index;
+>
+> 	if (fp_possible) {
+> 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info,
+scp,
+>@@ -1971,6 +1974,7 @@ static void megasas_build_ld_nonrw_fusion(struct
 >megasas_instance *instance,
-> 			break;
-> 		case MPI2_FUNCTION_SCSI_IO_REQUEST:  /*Fast Path IO.*/
-> 			/* Update load balancing info */
->-			device_id = MEGASAS_DEV_INDEX(scmd_local);
->-			lbinfo = &fusion->load_balance_info[device_id];
->-			if (cmd_fusion->scmd->SCp.Status &
->-			    MEGASAS_LOAD_BALANCE_FLAG) {
+> 	struct RAID_CONTEXT	*pRAID_Context;
+> 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+> 	struct fusion_context *fusion = instance->ctrl_context;
+>+	u16 msix_index;
+> 	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id -
+>1) & 1];
+>
+> 	device_id = MEGASAS_DEV_INDEX(scmd);
+>@@ -2013,11 +2017,14 @@ static void megasas_build_ld_nonrw_fusion(struct
+>megasas_instance *instance,
+> 		io_request->DevHandle = cpu_to_le16(0xFFFF);
+> 	}
+>
+>+	if (shost_use_blk_mq(instance->host)) {
+>+		u32 blk_tag = blk_mq_unique_tag(scmd->request);
+>+		msix_index = blk_mq_unique_tag_to_hwq(blk_tag);
+>+	} else
+>+		msix_index = instance->msix_vectors ?
+>+			(raw_smp_processor_id() % instance->msix_vectors)
+>: 0;
+>+	cmd->request_desc->SCSIIO.MSIxIndex = msix_index;
+> 	cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
+>-	cmd->request_desc->SCSIIO.MSIxIndex =
+>-		instance->msix_vectors ?
+>-		(raw_smp_processor_id() % instance->msix_vectors) : 0;
 >-
->atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
->-				cmd_fusion->scmd->SCp.Status &=
->-					~MEGASAS_LOAD_BALANCE_FLAG;
->+			if (scmd_local) {
->+				device_id = MEGASAS_DEV_INDEX(scmd_local);
->+				lbinfo =
->&fusion->load_balance_info[device_id];
->+				if (cmd_fusion->scmd->SCp.Status &
->+				    MEGASAS_LOAD_BALANCE_FLAG) {
->+
->atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
->+					cmd_fusion->scmd->SCp.Status &=
->+
->~MEGASAS_LOAD_BALANCE_FLAG;
->+				}
-> 			}
-> 			if (reply_descript_type ==
-> 			    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) { @@
->-2315,6 +2317,12 @@ static void megasas_build_ld_nonrw_fusion(struct
+>
+> 	if (!fp_possible) {
+> 		/* system pd firmware path */
+>@@ -2188,7 +2195,18 @@ static void megasas_build_ld_nonrw_fusion(struct
 >megasas_instance *instance,
-> 			/* Fall thru and complete IO */
-> 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO
->Path */
-> 			/* Map the FW Cmd Status */
->+			if (!scmd_local) {
->+				dev_err(&instance->pdev->dev,
->+					"cmd[%d:%d] already completed\n",
->+					MSIxIndex, smid);
->+				break;
->+			}
-> 			map_cmd_status(cmd_fusion, status, extStatus);
-> 			scsi_io_req->RaidContext.status = 0;
-> 			scsi_io_req->RaidContext.exStatus = 0;
+> 		return SCSI_MLQUEUE_DEVICE_BUSY;
+> 	}
+>
+>-	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
+>+	if (shost_use_blk_mq(instance->host)) {
+>+		int msix_vectors, hwq_size;
+>+		u32 blk_tag = blk_mq_unique_tag(scmd->request);
+>+		u16 hwq = blk_mq_unique_tag_to_hwq(blk_tag);
+>+		u16 tag = blk_mq_unique_tag_to_tag(blk_tag);
+>+
+>+		msix_vectors = instance->msix_vectors ?
+>+			instance->msix_vectors : 1;
+>+		hwq_size = instance->max_scsi_cmds / msix_vectors;
+>+		cmd = megasas_get_cmd_fusion(instance, (hwq * hwq_size) +
+>tag);
+>+	} else
+>+		cmd = megasas_get_cmd_fusion(instance,
+>scmd->request->tag);
+>
+> 	index = cmd->index;
+>
 >--
 >1.8.5.6
 >
