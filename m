@@ -1,45 +1,89 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: [PATCH 04/12] target: avoid to access .bi_vcnt directly
-Date: Fri, 11 Nov 2016 20:05:32 +0800
-Message-ID: <1478865957-25252-5-git-send-email-tom.leiming@gmail.com>
-References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Ming Lei <tom.leiming@gmail.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, "open list:TARGET SUBSYSTEM" <target-devel@vger.kernel.org>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
+Date: Fri, 11 Nov 2016 14:47:47 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+ <146706367078.29152.14405582249219794335.stgit@brunhilda>
+ <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
+ <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
+ <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
+ <1473359114.2781.38.camel@linux.vnet.ibm.com>
+ <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
+ <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0045.outbound.protection.outlook.com ([104.47.40.45]:57494
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755827AbcKKOr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 09:47:56 -0500
+In-Reply-To: <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When the bio is full, bio_add_pc_page() will return zero,
-so use this way to handle full bio.
-
-Also replace access to .bi_vcnt for pr_debug() with bio_segments().
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Ming Lei <tom.leiming@gmail.com>
----
- drivers/target/target_core_pscsi.c | 8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/target/target_core_pscsi.c b/drivers/target/target_core_pscsi.c
-index 9125d9358dea..04d7aa7390d0 100644
---- a/drivers/target/target_core_pscsi.c
-+++ b/drivers/target/target_core_pscsi.c
-@@ -935,13 +935,9 @@ pscsi_map_sg(struct se_cmd *cmd, struct scatterlist *sgl, u32 sgl_nents,
- 
- 			rc = bio_add_pc_page(pdv->pdv_sd->request_queue,
- 					bio, page, bytes, off);
--			if (rc != bytes)
--				goto fail;
--
- 			pr_debug("PSCSI: bio->bi_vcnt: %d nr_vecs: %d\n",
--				bio->bi_vcnt, nr_vecs);
--
--			if (bio->bi_vcnt > nr_vecs) {
-+				bio_segments(bio), nr_vecs);
-+			if (rc != bytes) {
- 				pr_debug("PSCSI: Reached bio->bi_vcnt max:"
- 					" %d i: %d bio: %p, allocating another"
- 					" bio\n", bio->bi_vcnt, i, bio);
--- 
-2.7.4
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
+aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VucGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBUaHVy
+c2RheSwgU2VwdGVtYmVyIDA4LCAyMDE2IDU6MzggUE0NCj4gVG86IFNjb3R0IEJlbmVzaDsgSmFt
+ZXMgQm90dG9tbGV5OyBEb24gQnJhY2U7IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBDYzogVmlzd2Fz
+IEc7IE1haGVzaCBSYWphc2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBL
+ZXZpbg0KPiBCYXJuZXR0OyBKdXN0aW4gTGluZGxleTsgZWxsaW90dEBocGUuY29tOyBsaW51eC1z
+Y3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIFY0IDIvMl0gYWFjcmFp
+ZDogcmVtb3ZlIHdpbGRjYXJkIGZvciBzZXJpZXMgOSBjb250cm9sbGVycw0KPiANCj4gRVhURVJO
+QUwgRU1BSUwNCj4gDQo+IA0KPiBPbiBTZXB0ZW1iZXIgOCwgMjAxNiAyOjMzOjUyIFBNIEVEVCwg
+U2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT4gd3JvdGU6DQo+ID4+
+DQo+ID4+IE9uIFRodSwgMjAxNi0wOS0wOCBhdCAxODoxNSArMDAwMCwgRG9uIEJyYWNlIHdyb3Rl
+Og0KPiA+PiA+ID4gPiAtICAgIHsgMHg5MDA1LCAweDAyOGYsIFBDSV9BTllfSUQsIFBDSV9BTllf
+SUQsIDAsIDAsIDY1IH0sIC8qDQo+ID4+ID4gPiA+IEFkYXB0ZWMgUE1DDQo+ID4+ID4gPiA+IFNl
+cmllcyA5ICovDQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IEhvdyBhcmUgcGVvcGxlIHRoYXQgbG9h
+ZCBhYWNyYWlkIGluIHRoZWlyIGluaXRyZCBnb2luZyB0byBib290DQo+ID4+ID4gPiA+IGFmdGVy
+IHRoaXM/DQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IC0tDQo+ID4+ID4gPiA+IE1hcnRpbiBLLiBQ
+ZXRlcnNlbiAgICAgIE9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KPiA+PiA+ID4NCj4gPj4gPiA+
+IEkgdXBkYXRlZCBzbWFydHBxaS9LY29uZmlnIGFuZCBhZGRlZA0KPiA+RG9jdW1lbnRhdGlvbi9z
+Y3NpL3NtYXJ0cHFpLnR4dA0KPiA+PiA+ID4gdG8gaW5mb3JtIHVzZXJzIG9mIHRoZSBuZWVkIHRv
+IGNvbmZpZ3VyZSB0aGUgc21hcnRwcWkgZHJpdmVyDQo+ID5tb3ZpbmcNCj4gPj4gPiA+IGZvcndh
+cmQgZm9yIGFhY3JhaWQgU2VyaWVzIDkgY29udHJvbGxlcnMuDQo+ID4+ID4gPg0KPiA+PiA+ID4g
+SG9wZSB0aGlzIGhlbHBzLg0KPiA+Pg0KPiA+PiBUaGF0J3Mgbm90IGdvaW5nIHRvIGJlIGVub3Vn
+aDogdGhpcyBJRCBoYXMgYmVlbiBpbiB0aGUgYWFjcmlhZCBkcml2ZXINCj4gPnNpbmNlDQo+ID4+
+IDIwMTEuICBUaGF0IG1lYW5zIGFueW9uZSB3aG8gZmluYWxseSBnZXRzIGhvbGQgb2Ygb25lIG9m
+IHRoZXNlIG5ldw0KPiA+Y2FyZHMNCj4gPj4gYnV0IHVzZXMgYSBkaXN0cm8gdGhhdCBkb2Vzbid0
+IGhhdmUgdGhlIG5ldyBzbWFydHBxaSBkcml2ZXIgd2lsbCBiZQ0KPiA+YXR0YWNoZWQNCj4gPj4g
+dmlhIHRoZSBhYWNyYWlkIG9uZS4NCj4gPj4NCj4gPg0KPiA+VGhhdCdzIG9rIGJlY2F1c2UgZm9y
+IHByZXZpb3VzIGRpc3Ryb3MgdGhlIG5ldyBjb250cm9sbGVyIHdpbGwgd29yaw0KPiA+d2l0aCB0
+aGUgcHJldmlvdXMgYWFjcmFpZCBkcml2ZXIsIGFsdGhvdWdoIHdpdGggbm9uLW9wdGltYWwNCj4g
+PnBlcmZvcm1hbmNlLg0KPiANCj4gTm90IGFmdGVyIHRoaXMgY2hhbmdlIGhpdHMuIFRoZW4gc3lz
+dGVtcyB0aGF0IG9ubHkgaGF2ZSBhYWNyYWlkIGluIHRoZSBpbml0cmQNCj4gd2lsbCBmYWlsIHRv
+IGJvb3QuDQo+IA0KPiA+V2hhdCB3ZSB3YW50IHRvIGRvIGlzIHN5bmMgdXAgYXQgNC45IHNvIGdv
+aW5nIGZvcndhcmQgb25seSB0aGUgbmV3DQo+ID5zbWFydHBxaSBkcml2ZXIgd2lsbCBhdHRhY2gg
+dG8gdGhlc2UgbmV3IGNvbnRyb2xsZXJzLg0KPiANCj4gU28geW91IGhhdmUgYSBwbGFuIGluIHBs
+YWNlIHdpdGggdGhlIGRpc3Ryb3MgdG8gbWlncmF0ZSB0aGUgaW5pdHJkIGltYWdlcz8NCj4gV2l0
+aG91dCBiZWluZyB0b2xkLCBzb21lIHdpbGwgb25seSBpbnN0YWxsIHRoZSBtb2R1bGVzIHRoZSBw
+cmV2aW91cyBpbml0cmQgIHdhcw0KPiBjb25maWd1cmVkIGZvci4NCj4gDQo+IEphbWVzDQo+IA0K
+PiA+U2NvdHQNCj4gPg0KPiA+PiBHaXZlbiB0aGF0IHRoZSBsaWZlIHRpbWVzIG9mIGVudGVycHJp
+c2UgZGlzdHJpYnV0aW9ucyBpcyB0d28geWVhcnMNCj4gPmFuZCB5b3UncmUNCj4gPj4gcmVsZWFz
+aW5nIHRoaXMgc21hcnRwcWkgc29vbiwgdGhlIG92ZXJsYXAgaXMgdW5hdm9pZGFibGUuDQo+ID4+
+DQo+ID4+IEphbWVzDQo+ID4+DQo+IA0KDQpUaGUgSUQgd2Ugd2FudCB0byByZW1vdmUgZnJvbSB0
+aGUgYWFjcmFpZCBkcml2ZXIgd2lsbCBub3QgYmUgYXZhaWxhYmxlIHVudGlsIFExIG5leHQgeWVh
+ciwNCnNvIG5vIGN1c3RvbWVyIGN1cnJlbnRseSBoYXMgaXQgeWV0LiBJZiB0aGV5IGFyZSBydW5u
+aW5nIGFuIG9sZGVyIGtlcm5lbCwgdGhlIGFhY3JhaWQgZHJpdmVyDQp3aWxsIHN1cHBvcnQgdGhp
+cyBJRCBidXQgaW4gJ3N5bmMnIG1vZGUsIHRoZWlyIHNlcnZlcnMgd2lsbCBjb250aW51ZSB0byBi
+b290LiANCg0KSWYgdGhleSB1cGdyYWRlIHRvIGEgbmV3ZXIga2VybmVsIGFuZCBkbyBub3Qga25v
+dyAgdG8gY29uZmlndXJlIHRoZSBzbWFydHBxaQ0KZHJpdmVyIGFuZCB0aGUgc3lzdGVtIGZhaWxz
+IHRvIGJvb3QsIHRoZXkgY2FuIGZhbGwgYmFjayB0byB0aGUgcHJldmlvdXMNCmtlcm5lbCBhbmQg
+Y29uZmlndXJlIHRoZSBzbWFydHBxaSBkcml2ZXIuDQoNClRoaXMgcGF0Y2ggaXMgZm9yIG5ld2Vy
+IGtlcm5lbHMgZ29pbmcgZm9yd2FyZC4gV2UgbmVlZCB0byBlbGltaW5hdGUgdGhlDQpkdXBsaWNh
+dGlvbiBmb3IgbmV3ZXIga2VybmVscy4gSWYgYm90aCBkcml2ZXJzIHN1cHBvcnQgdGhlIHNhbWUg
+SUQNCnRoZXkgd2lsbCBoYXZlIHRvIGtub3cgaG93IHRvIHJlYnVpbGQgdGhlaXIgaW5pdHJkIHdp
+dGggYSBzcGVjaWZpYyBkcml2ZXINCm9yZGVyLiBDdXN0b21lcnMgdGhhdCBoYXZlIHNlcnZlcnMg
+Y29uZmlndXJlZCB3aXRoIGJvdGggb2xkZXIgYWFjcmFpZCBkZXZpY2VzDQphbmQgdGhlIG5ld2Vy
+IHNtYXJ0cHFpIGRldmljZXMgd2lsbCBkZWZpbml0ZWx5IGhhdmUgdG8gZG8gdGhpcy4gSGF2aW5n
+IHRvIA0KcmVidWlsZCB0aGUga2VybmVsIHdpdGggc21hcnRwcWkgZW5hYmxlZCB3b3VsZCBzZWVt
+IHRvIGJlIGFuIGVhc2llcg0KY3VzdG9tZXIgZXhwZXJpZW5jZS4NCg0KVGhlIG9mZmljaWFsbHkg
+c3VwcG9ydGVkIGRyaXZlciBmb3IgdGhpcyBJRCBpcyBzbWFydHBxaS4NCg0KVGhhbmtzLA0KRG9u
+IEJyYWNlDQoNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jvc2VtaSBDb3Jwb3JhdGlvbg0KDQo+
+IA0KPiAtLQ0KPiBTZW50IGZyb20gbXkgQW5kcm9pZCBkZXZpY2Ugd2l0aCBLLTkgTWFpbC4gUGxl
+YXNlIGV4Y3VzZSBteSBicmV2aXR5Lg0K
