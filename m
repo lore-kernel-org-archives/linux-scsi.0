@@ -1,66 +1,148 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH] hpsa: scsi-mq support
-Date: Fri, 11 Nov 2016 19:22:05 +0100
-Message-ID: <39d1198d-eb49-71ed-9139-f0efd9eefd0d@suse.com>
-References: <1478879194-32529-1-git-send-email-hare@suse.de>
- <20161111163532.GA14922@infradead.org>
+From: Arun Easi <arun.easi@cavium.com>
+Subject: Re: [PATCH v2 1/6] qed: Add support for hardware offloaded iSCSI.
+Date: Fri, 11 Nov 2016 10:12:05 -0800
+Message-ID: <alpine.LRH.2.00.1611111006100.28058@mvluser05.qlc.com>
+References: <1478588223-16183-1-git-send-email-manish.rangankar@cavium.com> <1478588223-16183-2-git-send-email-manish.rangankar@cavium.com> <1c5639c1-4160-72fe-ecc7-ca6257ec333f@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:55742 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932697AbcKKSWb (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Fri, 11 Nov 2016 13:22:31 -0500
-In-Reply-To: <20161111163532.GA14922@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <1c5639c1-4160-72fe-ecc7-ca6257ec333f@suse.de>
+Sender: netdev-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Manish Rangankar <manish.rangankar@cavium.com>, martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 
-On 11/11/2016 05:35 PM, Christoph Hellwig wrote:
-> On Fri, Nov 11, 2016 at 04:46:34PM +0100, Hannes Reinecke wrote:
->> This patch enables full scsi-mq support for the hpsa driver.
->> Due to some reports of performance regressions this patch
->> also adds a parameter 'use_blk_mq' which can be used to
->> disable multiqueue support if required.
->
-> This patch looks odd to me.  The hardware does not seem to support
-> multiple submission queues, which makes exposing nr_hw_queues > 1
-> rather pointless given that the block layer (using blk-mq or the legacy
-> path) can already steer completions to the submitting cpu.
->
-Well, it's the same as with megasas and mpt3sas. Each of those have
-a single MMIO register where the driver writes the address of the
-command into. What exactly the hardware does in the back doesn't
-really matter here; the command is in memory and the hardware can
-access it as it sees fit. So from that point of view we can assume
-having a submission queue to match the completion queue;
-With that setup we do have a contention point on the single command 
-register, but that's about it.
-We still should benefit from scsi-mq, though.
+On Fri, 11 Nov 2016, 7:57am, Hannes Reinecke wrote:
 
-> You also mention there are performance regressions, but don't talk
-> about any benefits.  I also think per-driver module parameters for this
-> are generally a rather bad idea.
->
-Well; this is also suffering from the same performance regression I 
-noticed when doing performance testing on megasas.
-I'm still trying to figure out _where_ to problem actually is (it might 
-be fio itself, using several submission queues in parallel thereby
-defeating merging), but it might also be due to the setup I've been
-testing with.
-As it's inconclusive I've added this parameter.
+> On 11/08/2016 07:56 AM, Manish Rangankar wrote:
+> > From: Yuval Mintz <Yuval.Mintz@cavium.com>
+> > 
+> > This adds the backbone required for the various HW initalizations
+> > which are necessary for the iSCSI driver (qedi) for QLogic FastLinQ
+> > 4xxxx line of adapters - FW notification, resource initializations, etc.
+> > 
+> > Signed-off-by: Arun Easi <arun.easi@cavium.com>
+> > Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
+> > ---
+> >  drivers/net/ethernet/qlogic/Kconfig            |   15 +
+> >  drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
+> >  drivers/net/ethernet/qlogic/qed/qed.h          |    7 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_dev.c      |   12 +
+> >  drivers/net/ethernet/qlogic/qed/qed_int.h      |    1 -
+> >  drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1276
+> > ++++++++++++++++++++++++
+> >  drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
+> >  drivers/net/ethernet/qlogic/qed/qed_l2.c       |    1 -
+> >  drivers/net/ethernet/qlogic/qed/qed_ll2.c      |    4 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
+> >  drivers/net/ethernet/qlogic/qed/qed_spq.c      |   15 +
+> >  include/linux/qed/qed_if.h                     |    2 +
+> >  include/linux/qed/qed_iscsi_if.h               |  229 +++++
+> >  13 files changed, 1613 insertions(+), 4 deletions(-)
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
+> >  create mode 100644 include/linux/qed/qed_iscsi_if.h
+> > 
+> > diff --git a/drivers/net/ethernet/qlogic/Kconfig
+> > b/drivers/net/ethernet/qlogic/Kconfig
+> > index 32f2a45..2832570 100644
+> > --- a/drivers/net/ethernet/qlogic/Kconfig
+> > +++ b/drivers/net/ethernet/qlogic/Kconfig
+> > @@ -110,4 +110,19 @@ config QEDE
+> >  config QED_RDMA
+> >  	bool
+> > 
+> > +config QED_ISCSI
+> > +	bool
+> > +
+> > +config QEDI
+> > +	tristate "QLogic QED 25/40/100Gb iSCSI driver"
+> > +	depends on QED
+> > +	select QED_LL2
+> > +	select QED_ISCSI
+> > +	default n
+> > +	---help---
+> > +	  This provides a temporary node that allows the compilation
+> > +	  and logical testing of the hardware offload iSCSI support
+> > +	  for QLogic QED. This would be replaced by the 'real' option
+> > +	  once the QEDI driver is added [+relocated].
+> > +
+> >  endif # NET_VENDOR_QLOGIC
+> > diff --git a/drivers/net/ethernet/qlogic/qed/Makefile
+> > b/drivers/net/ethernet/qlogic/qed/Makefile
+> > index 967acf3..597e15c 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/Makefile
+> > +++ b/drivers/net/ethernet/qlogic/qed/Makefile
+> > @@ -6,3 +6,4 @@ qed-y := qed_cxt.o qed_dev.o qed_hw.o qed_init_fw_funcs.o
+> > qed_init_ops.o \
+> >  qed-$(CONFIG_QED_SRIOV) += qed_sriov.o qed_vf.o
+> >  qed-$(CONFIG_QED_LL2) += qed_ll2.o
+> >  qed-$(CONFIG_QED_RDMA) += qed_roce.o
+> > +qed-$(CONFIG_QED_ISCSI) += qed_iscsi.o
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed.h
+> > b/drivers/net/ethernet/qlogic/qed/qed.h
+> > index 50b8a01..15286c1 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed.h
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed.h
+> > @@ -35,6 +35,7 @@
+> > 
+> >  #define QED_WFQ_UNIT	100
+> > 
+> > +#define ISCSI_BDQ_ID(_port_id) (_port_id)
+> >  #define QED_WID_SIZE            (1024)
+> >  #define QED_PF_DEMS_SIZE        (4)
+> > 
+> > @@ -392,6 +393,7 @@ struct qed_hwfn {
+> >  	bool				using_ll2;
+> >  	struct qed_ll2_info		*p_ll2_info;
+> >  	struct qed_rdma_info		*p_rdma_info;
+> > +	struct qed_iscsi_info		*p_iscsi_info;
+> >  	struct qed_pf_params		pf_params;
+> > 
+> >  	bool b_rdma_enabled_in_prs;
+> > @@ -593,6 +595,8 @@ struct qed_dev {
+> >  	/* Linux specific here */
+> >  	struct  qede_dev		*edev;
+> >  	struct  pci_dev			*pdev;
+> > +	u32 flags;
+> > +#define QED_FLAG_STORAGE_STARTED	(BIT(0))
+> >  	int				msg_enable;
+> > 
+> >  	struct pci_params		pci_params;
+> > @@ -606,6 +610,7 @@ struct qed_dev {
+> >  	union {
+> >  		struct qed_common_cb_ops	*common;
+> >  		struct qed_eth_cb_ops		*eth;
+> > +		struct qed_iscsi_cb_ops		*iscsi;
+> >  	} protocol_ops;
+> >  	void				*ops_cookie;
+> > 
+> > @@ -615,7 +620,7 @@ struct qed_dev {
+> >  	struct qed_cb_ll2_info		*ll2;
+> >  	u8				ll2_mac_address[ETH_ALEN];
+> >  #endif
+> > -
+> > +	DECLARE_HASHTABLE(connections, 10);
+> >  	const struct firmware		*firmware;
+> > 
+> >  	u32 rdma_max_sge;
+> 10 connections? Only?
+> Hmm.
 
-> So what exactly are the benefits of this MQ-mode for a single submission
-> queue device, and what do we need to do to get these without lying about
-> the number of submission queues?
->
-As I said; for a single submission queue you are correct, but I don't 
-think that is the case here.
-But then Don should be able to shed some light here.
+10 is the hash bits => 2^10 hash buckets, allowing for a large number of 
+connections. qedi driver currently uses 1k connections per port.
 
-Cheers,
+Thanks for the reviews, Hannes.
 
-Hannes
+Regards,
+-Arun
+
+> 
+> Other than that:
+> 
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> 
+> Cheers,
+> 
+> Hannes
+> 
