@@ -1,47 +1,75 @@
-From: Rameshwar Sahu <rsahu-qTEPVZfXA3Y@public.gmane.org>
-Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Fri, 11 Nov 2016 13:36:28 +0530
-Message-ID: <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
-References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
- <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com> <20161109164531.GA14630@htj.duckdns.org>
+From: wangyijing <wangyijing@huawei.com>
+Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
+Date: Fri, 11 Nov 2016 16:12:02 +0800
+Message-ID: <58257D52.6090507@huawei.com>
+References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
+ <be84afd4-640d-1913-404a-505fd72c1324@huawei.com>
+ <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
+ <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
+ <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
+ <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20161109164531.GA14630-piEFEHQLUPpN0TnZuCh8vA@public.gmane.org>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-ide-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Devicetree List <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-arm <linux-arm-kernel-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org>, Don Dutile <ddutile-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Jon Masters <jcm-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, patches <patches-qTEPVZfXA3Y@public.gmane.org>
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([119.145.14.52]:1916 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1755668AbcKKIUf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 11 Nov 2016 03:20:35 -0500
+In-Reply-To: <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, john.garry2@mail.dcu.ie, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, jinpu.wang@profitbricks.com
 
-Hi Tejun,
+> 
+> They're not the same. I don't see how your solution properly deals with remote sas_port deletion.
+> 
+> When we unplug a device connected to an expander, can't the sas_port be deleted twice, in sas_unregister_devs_sas_addr() from domain revalidation and also now in sas_destruct_devices()? I think that this gives a NULL dereference.
+> And we still get the WARN as the sas_port has still been deleted before the device.
+> 
+> In my solution, we should always delete the sas_port after the attached device.
+> 
+>>>
+>>> i.e. it moves the port destruction to the workqueue and still suffers
+>>> from the flutter problem:
+>>>
+>>> http://marc.info/?l=linux-scsi&m=143801026028006&w=2
+>>> http://marc.info/?l=linux-scsi&m=143801971131073&w=2
+>>>
+>>> Perhaps we instead need to quiet this warning?
+>>>
+>>> http://marc.info/?l=linux-scsi&m=143802229932175&w=2
+> 
+> I have not seen the flutter issue. I am just trying to solve the horrible WARN dump.
+> However I do understand that there may be a issue related to how we queue the events; there was a recent attempt to fix this, but it came to nothing:
+> https://www.spinics.net/lists/linux-scsi/msg99991.html
 
-On Wed, Nov 9, 2016 at 10:15 PM, Tejun Heo <tj-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org> wrote:
-> Hello,
->
-> On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
->> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
->> > *pdev)
->> >                                 dev_warn(&pdev->dev, "%s: Error reading
->> > device info. Assume version1\n",
->> >                                         __func__);
->> >                                 version = XGENE_AHCI_V1;
->> > -                       } else if (info->valid & ACPI_VALID_CID) {
->> > -                               version = XGENE_AHCI_V2;
->
-> Can you please explain this part a bit?  Everything else looks good to
-> me.
+We found libsas hotplug several problems:
+1. sysfs warning calltrace(like the case you found);
+2. hot-add and hot-remove work events may process out of order;
+3. in some extreme cases, libsas may miss some events, if the same event is still pending in workqueue.
 
-Here we should not assume XGENE_AHCI_V2 always in case of having valid
-_CID in ACPI table.
-I need to remove this assumption because V1_1 has also valid _CID for
-backward compatibly with v1.
->
-> Thanks.
->
-> --
-> tejun
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+It's a complex issue, we posted two patches, try to fix these issues, but now few people are interested in it  :(
+
+> 
+> Cheers,
+> John
+> 
+>>
+>> Alternatively we need a mechanism to cancel in-flight port shutdown
+>> requests when we start re-attaching devices before queued port
+>> destruction events have run.
+>>
+>> .
+>>
+> 
+> 
+> _______________________________________________
+> linuxarm mailing list
+> linuxarm@huawei.com
+> http://rnd-openeuler.huawei.com/mailman/listinfo/linuxarm
+> 
+> .
+> 
+
