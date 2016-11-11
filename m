@@ -1,169 +1,51 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 4/5] megaraid_sas: scsi-mq support
-Date: Fri, 11 Nov 2016 10:44:51 +0100
-Message-ID: <1478857492-4581-5-git-send-email-hare@suse.de>
-References: <1478857492-4581-1-git-send-email-hare@suse.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 187231] kernel panic during hpsa MSI plus tg3 MSI
+Date: Fri, 11 Nov 2016 09:54:23 +0000
+Message-ID: <bug-187231-11613-yt2lu9cYjE@https.bugzilla.kernel.org/>
+References: <bug-187231-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:60655 "EHLO mx2.suse.de"
+Received: from mail.kernel.org ([198.145.29.136]:57006 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754747AbcKKJpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Nov 2016 04:45:05 -0500
-In-Reply-To: <1478857492-4581-1-git-send-email-hare@suse.de>
+        id S932398AbcKKJy2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 04:54:28 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 82E522063E
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 09:54:26 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 3D7F72063B
+        for <linux-scsi@vger.kernel.org>; Fri, 11 Nov 2016 09:54:24 +0000 (UTC)
+In-Reply-To: <bug-187231-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: linux-scsi@vger.kernel.org
 
-This patch enables full scsi multiqueue support. But as I have
-been seeing performance regressions I've also added a module
-parameter 'use_blk_mq', allowing multiqueue to be switched
-off if required.
+https://bugzilla.kernel.org/show_bug.cgi?id=187231
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c   | 22 +++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 38 +++++++++++++++++++++--------
- 2 files changed, 50 insertions(+), 10 deletions(-)
+--- Comment #5 from Patrick Schaaf <kernelorg@bof.de> ---
+After almost 4 days my problematic box downgraded to 3.14.79, finally made some
+noise, like this:
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index d580406..1af47e6 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -48,6 +48,7 @@
- #include <linux/blkdev.h>
- #include <linux/mutex.h>
- #include <linux/poll.h>
-+#include <linux/blk-mq-pci.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -104,6 +105,9 @@
- module_param(scmd_timeout, int, S_IRUGO);
- MODULE_PARM_DESC(scmd_timeout, "scsi command timeout (10-90s), default 90s. See megasas_reset_timer.");
- 
-+bool use_blk_mq = true;
-+module_param_named(use_blk_mq, use_blk_mq, bool, 0);
-+
- MODULE_LICENSE("GPL");
- MODULE_VERSION(MEGASAS_VERSION);
- MODULE_AUTHOR("megaraidlinux.pdl@avagotech.com");
-@@ -1882,6 +1886,17 @@ static void megasas_slave_destroy(struct scsi_device *sdev)
- 	sdev->hostdata = NULL;
- }
- 
-+static int megasas_map_queues(struct Scsi_Host *shost)
-+{
-+	struct megasas_instance *instance = (struct megasas_instance *)
-+		shost->hostdata;
-+
-+	if (!instance->ctrl_context)
-+		return 0;
-+
-+	return blk_mq_pci_map_queues(&shost->tag_set, instance->pdev, 0);
-+}
-+
- /*
- * megasas_complete_outstanding_ioctls - Complete outstanding ioctls after a
- *                                       kill adapter
-@@ -2986,6 +3001,7 @@ struct device_attribute *megaraid_host_attrs[] = {
- 	.slave_configure = megasas_slave_configure,
- 	.slave_alloc = megasas_slave_alloc,
- 	.slave_destroy = megasas_slave_destroy,
-+	.map_queues = megasas_map_queues,
- 	.queuecommand = megasas_queue_command,
- 	.eh_target_reset_handler = megasas_reset_target,
- 	.eh_abort_handler = megasas_task_abort,
-@@ -5610,6 +5626,12 @@ static int megasas_io_attach(struct megasas_instance *instance)
- 	host->max_id = MEGASAS_MAX_DEV_PER_CHANNEL;
- 	host->max_lun = MEGASAS_MAX_LUN;
- 	host->max_cmd_len = 16;
-+	host->nr_hw_queues = instance->msix_vectors ?
-+		instance->msix_vectors : 1;
-+	if (use_blk_mq) {
-+		host->can_queue = instance->max_scsi_cmds / host->nr_hw_queues;
-+		host->use_blk_mq = 1;
-+	}
- 
- 	/*
- 	 * Notify the mid-layer about the new controller
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index eb3cb0f..aba53c0 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1703,6 +1703,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 	struct IO_REQUEST_INFO io_info;
- 	struct fusion_context *fusion;
- 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
-+	u16 msix_index;
- 	u8 *raidLUN;
- 
- 	device_id = MEGASAS_DEV_INDEX(scp);
-@@ -1792,11 +1793,13 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 			fp_possible = io_info.fpOkForIo;
- 	}
- 
--	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
--	   id by default, not CPU group id, otherwise all MSI-X queues won't
--	   be utilized */
--	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
--		raw_smp_processor_id() % instance->msix_vectors : 0;
-+	if (shost_use_blk_mq(instance->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(scp->request);
-+		msix_index = blk_mq_unique_tag_to_hwq(blk_tag);
-+	} else
-+		msix_index = instance->msix_vectors ?
-+			raw_smp_processor_id() % instance->msix_vectors : 0;
-+	cmd->request_desc->SCSIIO.MSIxIndex = msix_index;
- 
- 	if (fp_possible) {
- 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
-@@ -1971,6 +1974,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 	struct RAID_CONTEXT	*pRAID_Context;
- 	struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
- 	struct fusion_context *fusion = instance->ctrl_context;
-+	u16 msix_index;
- 	pd_sync = (void *)fusion->pd_seq_sync[(instance->pd_seq_map_id - 1) & 1];
- 
- 	device_id = MEGASAS_DEV_INDEX(scmd);
-@@ -2013,11 +2017,14 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		io_request->DevHandle = cpu_to_le16(0xFFFF);
- 	}
- 
-+	if (shost_use_blk_mq(instance->host)) {
-+		u32 blk_tag = blk_mq_unique_tag(scmd->request);
-+		msix_index = blk_mq_unique_tag_to_hwq(blk_tag);
-+	} else
-+		msix_index = instance->msix_vectors ?
-+			(raw_smp_processor_id() % instance->msix_vectors) : 0;
-+	cmd->request_desc->SCSIIO.MSIxIndex = msix_index;
- 	cmd->request_desc->SCSIIO.DevHandle = io_request->DevHandle;
--	cmd->request_desc->SCSIIO.MSIxIndex =
--		instance->msix_vectors ?
--		(raw_smp_processor_id() % instance->msix_vectors) : 0;
--
- 
- 	if (!fp_possible) {
- 		/* system pd firmware path */
-@@ -2188,7 +2195,18 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
- 
--	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
-+	if (shost_use_blk_mq(instance->host)) {
-+		int msix_vectors, hwq_size;
-+		u32 blk_tag = blk_mq_unique_tag(scmd->request);
-+		u16 hwq = blk_mq_unique_tag_to_hwq(blk_tag);
-+		u16 tag = blk_mq_unique_tag_to_tag(blk_tag);
-+
-+		msix_vectors = instance->msix_vectors ?
-+			instance->msix_vectors : 1;
-+		hwq_size = instance->max_scsi_cmds / msix_vectors;
-+		cmd = megasas_get_cmd_fusion(instance, (hwq * hwq_size) + tag);
-+	} else
-+		cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
- 
- 	index = cmd->index;
- 
+2016-11-11T03:31:10.608539+01:00 kvm3f kernel: [320020.727691] hpsa
+0000:03:00.0: Abort request on C0:B0:T0:L0
+2016-11-11T03:31:10.608555+01:00 kvm3f kernel: [320020.728175] hpsa
+0000:03:00.0: cp ffff8868f2c17000 is reported invalid (probably means target
+device no longer present)
+2016-11-11T03:31:10.608557+01:00 kvm3f kernel: [320020.728796] hpsa
+0000:03:00.0: cp ffff8868f2c17000 is reported invalid (probably means target
+device no longer present)
+2016-11-11T03:31:10.608558+01:00 kvm3f kernel: [320020.729389] hpsa
+0000:03:00.0: FAILED abort on device C0:B0:T0:L0
+2016-11-11T03:31:10.608560+01:00 kvm3f kernel: [320020.729708] hpsa
+0000:03:00.0: resetting device 0:0:0:0
+2016-11-11T03:31:26.968534+01:00 kvm3f kernel: [320037.081397] hpsa
+0000:03:00.0: device is ready.
+
+So, maybe there is a somewhat weirdly faulty drive in that array, which
+otherwise does not show any (SMART / ILO logs) symptoms...
+
 -- 
-1.8.5.6
-
+You are receiving this mail because:
+You are the assignee for the bug.
