@@ -1,101 +1,56 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH] Fix: scsi: megaraid: reduce the scope of pending-list
- lock to avoid double lock
-Date: Fri, 11 Nov 2016 10:18:00 +0530
-Message-ID: <a260eaf3071e2547c4438da9f7b7cbcb@mail.gmail.com>
-References: <1476689406-31316-1-git-send-email-iari@itu.dk>
+From: Mike Christie <mchristi@redhat.com>
+Subject: Re: iscsi: make mutex for target scanning and unbinding per-session
+Date: Thu, 10 Nov 2016 23:01:33 -0600
+Message-ID: <582550AD.9010007@redhat.com>
+References: <1478542920-24460-1-git-send-email-cleech@redhat.com>
+ <58250144.2050009@redhat.com>
+ <20161111011303.mod2s5wyymge6byx@straylight.hirudinean.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f54.google.com ([209.85.214.54]:37747 "EHLO
-        mail-it0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934894AbcKKEsC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 23:48:02 -0500
-Received: by mail-it0-f54.google.com with SMTP id u205so95271694itc.0
-        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2016 20:48:02 -0800 (PST)
-In-Reply-To: <1476689406-31316-1-git-send-email-iari@itu.dk>
+Received: from mx1.redhat.com ([209.132.183.28]:39442 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750849AbcKKFBf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 00:01:35 -0500
+In-Reply-To: <20161111011303.mod2s5wyymge6byx@straylight.hirudinean.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: iari@itu.dk, Jiri Kosina <jkosina@suse.cz>
-Cc: Kashyap Desai <kashyap.desai@avagotech.com>, Sumit Saxena <sumit.saxena@avagotech.com>, Uday Lingala <uday.lingala@avagotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@avagotech.com, linux-scsi@vger.kernel.org, Iago Abal <mail@iagoabal.eu>
+To: Chris Leech <cleech@redhat.com>, open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org, lduncan@suse.com
 
-> -----Original Message-----
-> From: iari@itu.dk [mailto:iari@itu.dk]
-> Sent: Monday, October 17, 2016 1:00 PM
-> To: Jiri Kosina
-> Cc: Kashyap Desai; Sumit Saxena; Uday Lingala; James E.J. Bottomley;
-Martin K.
-> Petersen; megaraidlinux.pdl@avagotech.com; linux-scsi@vger.kernel.org;
-Iago
-> Abal
-> Subject: [PATCH] Fix: scsi: megaraid: reduce the scope of pending-list
-lock to
-> avoid double lock
->
-> From: Iago Abal <mail@iagoabal.eu>
->
-> The EBA code analyzer (https://github.com/models-team/eba) reported the
-> following double lock:
->
->     1. In function `megaraid_reset_handler' at 2571;
->     2. take `&adapter->pend_list_lock' for the first time at 2602:
->
->            // FIRST
->            spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
->
->     3. enter the `list_for_each_entry_safe' loop at 2603;
->     4. call `megaraid_mbox_mm_done' at 2616;
->     5. call `megaraid_mbox_runpendq' at 3782;
->     6. take `&adapter->pend_list_lock' for the second time at 1892:
->
->            // SECOND: DOUBLE LOCK !!!
->            spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
->
-> From my shallow understanding of the code (so please review carefully),
-I think
-> that it is not necessary to hold `PENDING_LIST_LOCK(adapter)' while
-executing
-> the body of the `list_for_each_entry_safe' loop. I assume this because
-both
-> `megaraid_mbox_mm_done' and `megaraid_dealloc_scb' are called from
-> several places where, as far as I can tell, this lock is not hold. In
-fact, as reported
-> by EBA, at some point `megaraid_mbox_mm_done' will acquire this lock
-again.
->
-> Fixes: c005fb4fb2d2 ("[SCSI] megaraid_{mm,mbox}: fix a bug in reset
-handler")
-> Signed-off-by: Iago Abal <mail@iagoabal.eu>
-> ---
->  drivers/scsi/megaraid/megaraid_mbox.c | 2 ++
->  1 file changed, 2 insertions(+)
->
-> diff --git a/drivers/scsi/megaraid/megaraid_mbox.c
-> b/drivers/scsi/megaraid/megaraid_mbox.c
-> index f0987f2..7f11898 100644
-> --- a/drivers/scsi/megaraid/megaraid_mbox.c
-> +++ b/drivers/scsi/megaraid/megaraid_mbox.c
-> @@ -2603,6 +2603,7 @@ static DEF_SCSI_QCMD(megaraid_queue_command)
->  	list_for_each_entry_safe(scb, tmp, &adapter->pend_list, list) {
->  		list_del_init(&scb->list);	// from pending list
->
-> +		spin_unlock_irqrestore(PENDING_LIST_LOCK(adapter), flags);
->  		if (scb->sno >= MBOX_MAX_SCSI_CMDS) {
->  			con_log(CL_ANN, (KERN_WARNING
->  			"megaraid: IOCTL packet with %d[%d:%d] being
-> reset\n", @@ -2630,6 +2631,7 @@ static
-> DEF_SCSI_QCMD(megaraid_queue_command)
->
->  			megaraid_dealloc_scb(adapter, scb);
->  		}
-> +		spin_lock_irqsave(PENDING_LIST_LOCK(adapter), flags);
->  	}
->  	spin_unlock_irqrestore(PENDING_LIST_LOCK(adapter), flags);
+On 11/10/2016 07:13 PM, Chris Leech wrote:
+> On Thu, Nov 10, 2016 at 05:22:44PM -0600, Mike Christie wrote:
+>> > On 11/07/2016 12:22 PM, Chris Leech wrote:
+>>> > > Currently the iSCSI transport class synchronises target scanning and
+>>> > > unbinding with a host level mutex.  For multi-session hosts (offloading
+>>> > > iSCSI HBAs) connecting to storage arrays that may implement one
+>>> > > target-per-lun, this can result in the target scan work for hundreds of
+>>> > > sessions being serialized behind a single mutex.  With slow enough
+>> > 
+>> > Does this patch alone help or is there a scsi piece too?
+>  
+> I had this tested when working a hung task timeout issue at boot, and
+> was told that it fixed the issue.  The exact situation may be more
+> complex, I think it was only 128 sessions which is surprising that it
+> would hit a 2 minute timeout.  But every backtrace was at this mutex.
+> 
 
-Sorry for delay. We had internal discussion and confirm that it is safe to
-remove mbox driver from mainline as this product is discontinued and we
-are planning to post patch to remove megaraid mbox driver from mainline.
+I think you are also hitting a issue where the normal scan time is
+higher than usual and that might be a userspace bug. I am not sure how
+the mutex patch helps, but I have not thought about it.
 
->
-> --
-> 1.9.1
+I think iscsid will scan the entire host during login. We only want
+iscsi_sysfs_scan_host to scan the specific target for the session we
+just logged into.
+
+In the kernel we are setting SCSI_SCAN_RESCAN for the scan and userspace
+did echo - - - > ..../scan for the entire host, so iscsi_user_scan is
+going to rescan every target that is setup. So once you get to 127
+sessions/targets it could be a loonngg scan of all 127 of them, and
+target 128 is going to have to wait a loooonnggg time for that mutex and
+then also execute a long scan.
+
+If you have userspace do the single target scan, it should execute
+faster. I know that does not solve the serialization problem. You will
+still have lots of targets waiting to be scanned.
+
