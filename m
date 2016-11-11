@@ -1,47 +1,78 @@
-From: wangyijing <wangyijing@huawei.com>
-Subject: Re: [RFC][PATCH v2 0/2] Improve libsas hotplug
-Date: Fri, 11 Nov 2016 16:26:57 +0800
-Message-ID: <582580D1.6040806@huawei.com>
-References: <1474946145-29755-1-git-send-email-wangyijing@huawei.com>
+From: "Elliott, Robert (Persistent Memory)" <elliott@hpe.com>
+Subject: RE: Reduced latency is killing performance
+Date: Fri, 11 Nov 2016 07:02:45 +0000
+Message-ID: <DF4PR84MB0169E701F447438730B8E954ABBB0@DF4PR84MB0169.NAMPRD84.PROD.OUTLOOK.COM>
+References: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1474946145-29755-1-git-send-email-wangyijing@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: hare@suse.de, tj@kernel.org, chenqilin2@huawei.com, fangwei1@huawei.com, heyousong@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0094.outbound.protection.outlook.com ([104.47.41.94]:21942
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1756097AbcKKIfZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 03:35:25 -0500
+In-Reply-To: <72489f3f-d181-09a2-fc17-27ba36ad9620@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: SCSI Mailing List <linux-scsi@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
-Hi James, sorry to bother you, these two patches try to fix several issues
-in libsas, Dan Williams and John Garry also found similar issue, and post
-some patches before. Dan Williams's solution fix the sysfs warning calltrace,
-but may introduce new flutter issue.
-
-In these two patches, we introduce a new workqueue to fix the flutter issue.
-Do you have time to look at these patches ? Your comments is important to us,
-It help us to know whether we are in the right direction to fix these issues.
-
-Thanks!
-Yijing.
-
-在 2016/9/27 11:15, Yijing Wang 写道:
-> v1-v2: Fix memory allocation issue in interrupt context.
-> 
-> Yijing Wang (2):
->   libsas: Alloc dynamic work to avoid missing sas events
->   libsas: Fix hotplug issue in libsas
-> 
->  drivers/scsi/libsas/sas_ata.c       |  34 ++---
->  drivers/scsi/libsas/sas_discover.c  | 245 ++++++++++++++++++++++++++----------
->  drivers/scsi/libsas/sas_event.c     |  61 +++++----
->  drivers/scsi/libsas/sas_expander.c  |  54 ++++++--
->  drivers/scsi/libsas/sas_init.c      |  31 ++++-
->  drivers/scsi/libsas/sas_internal.h  |  45 ++++++-
->  drivers/scsi/libsas/sas_phy.c       |  50 +++-----
->  drivers/scsi/libsas/sas_port.c      |  35 ++++--
->  drivers/scsi/libsas/sas_scsi_host.c |  23 ++++
->  include/scsi/libsas.h               |  13 +-
->  include/scsi/sas_ata.h              |   4 +-
->  11 files changed, 404 insertions(+), 191 deletions(-)
-> 
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogbGludXgtYmxvY2stb3du
+ZXJAdmdlci5rZXJuZWwub3JnIFttYWlsdG86bGludXgtYmxvY2stDQo+IG93bmVyQHZnZXIua2Vy
+bmVsLm9yZ10gT24gQmVoYWxmIE9mIEhhbm5lcyBSZWluZWNrZQ0KPiBTZW50OiBUaHVyc2RheSwg
+Tm92ZW1iZXIgMTAsIDIwMTYgMTA6MDUgQU0NCj4gVG86IEplbnMgQXhib2UgPGF4Ym9lQGtlcm5l
+bC5kaz47IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPiBDYzogU0NTSSBNYWlsaW5n
+IExpc3QgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPjsgbGludXgtDQo+IGJsb2NrQHZnZXIu
+a2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSZWR1Y2VkIGxhdGVuY3kgaXMga2lsbGluZyBwZXJmb3Jt
+YW5jZQ0KPiANCj4gSGkgYWxsLA0KPiANCj4gdGhpcyByZWFsbHkgZmVlbHMgbGlrZSBhIGZvbGxv
+dy11cCB0byB0aGUgZGlzY3Vzc2lvbiB3ZSd2ZSBoYWQgaW4NCj4gU2FudGEgRmUsIGJ1dCBmaW5h
+bGx5IEknbSBhYmxlIHRvIHN1YnN0YW50aWF0ZSBpdCB3aXRoIHNvbWUgbnVtYmVycy4NCj4gDQo+
+IEkndmUgbWFkZSBhIHBhdGNoIHRvIGVuYWJsZSB0aGUgbWVnYXJhaWRfc2FzIGRyaXZlciBmb3Ig
+bXVsdGlxdWV1ZS4NCj4gV2hpbGUgdGhpcyBpcyBwcmV0dHkgc3RyYWlnaHRmb3J3YXJkIChJJ2xs
+IGJlIHNlbmRpbmcgdGhlIHBhdGNoc2V0DQo+IGxhdGVyIG9uKSwgdGhlIHJlc3VsdHMgYXJlIC4u
+LiBpbnRlcmVzdGluZy4NCj4gDQo+IEkndmUgcnVuIHRoZSAnc3NkLXRlc3QuZmlvJyBzY3JpcHQg
+ZnJvbSBKZW5zJyByZXBvc2l0b3J5LCBhbmQgdGhlc2UNCj4gcmVzdWx0cyBmb3IgTVEvU1EgKC0g
+aXMgbXEsICsgaXMgc3EpOg0KPiANCj4gIFJ1biBzdGF0dXMgZ3JvdXAgMCAoYWxsIGpvYnMpOiAg
+WzQgS2lCIHNlcXVlbnRpYWwgcmVhZHNdDQo+IC0gICBSRUFEOiBpbz0xMDY0MU1CLCBhZ2dyYj0x
+ODE1MDNLQi9zDQo+ICsgICBSRUFEOiBpbz0xODM3ME1CLCBhZ2dyYj0zMTI1NzJLQi9zDQo+IA0K
+PiAgUnVuIHN0YXR1cyBncm91cCAxIChhbGwgam9icyk6ICBbNCBLaUIgcmFuZG9tIHJlYWRzXQ0K
+PiAtICAgUkVBRDogaW89NDQxNDQ0S0IsIGFnZ3JiPTczMDNLQi9zDQo+ICsgICBSRUFEOiBpbz0y
+MjMxMDhLQiwgYWdncmI9MzcwN0tCL3MNCj4gDQo+ICBSdW4gc3RhdHVzIGdyb3VwIDIgKGFsbCBq
+b2JzKTogIFs0IEtpQiBzZXF1ZW50aWFsIHdyaXRlc10NCj4gLSAgV1JJVEU6IGlvPTIyNDg1TUIs
+IGFnZ3JiPTM4MzcyOUtCL3MNCj4gKyAgV1JJVEU6IGlvPTQ3NDIxTUIsIGFnZ3JiPTgwNzU4MUtC
+L3MNCj4gDQo+ICBSdW4gc3RhdHVzIGdyb3VwIDMgKGFsbCBqb2JzKTogIFs0IEtpQiByYW5kb20g
+d3JpdGVzXQ0KPiAtICBXUklURTogaW89NDg5ODUyS0IsIGFnZ3JiPTgxMTBLQi9zDQo+ICsgIFdS
+SVRFOiBpbz00ODk3NDhLQiwgYWdncmI9ODEzNEtCL3MNCj4gDQo+ICBEaXNrIHN0YXRzIChyZWFk
+L3dyaXRlKToNCj4gLSAgc2RhOiBpb3M9MjgzNDQxMi81ODc4NTc4LCBtZXJnZT0wLzANCj4gKyAg
+c2RhOiBpb3M9MjA1Mjc4LzI2ODAzMjksIG1lcmdlPTQ1NTI1OTMvOTU4MDYyMg0KDQpbZGVsZXRl
+ZCBtaW5iLCBtYXhiLCBtaW50LCBtYXh0LCB0aWNrcywgaW5fcXVldWUsIGFuZCB1dGlsIGFib3Zl
+XQ0KDQo+IA0KPiBBcyB5b3UgY2FuIHNlZSwgd2UncmUgcmVhbGx5IGxvc2luZyBwZXJmb3JtYW5j
+ZSBpbiB0aGUgbXVsdGlxdWV1ZQ0KPiBjYXNlLg0KPiBBbmQgdGhlIG1haW4gcmVhc29uIGZvciB0
+aGF0IGlzIHRoYXQgd2Ugc3VibWl0IGFib3V0IF8xMCB0aW1lc18gYXMNCj4gbXVjaCBJL08gYXMg
+d2UgZG8gZm9yIHRoZSBzaW5nbGUtcXVldWUgY2FzZS4NCg0KVGhhdCBzY3JpcHQgaXMgcnVubmlu
+ZzoNCjApIDQgS2lCIHNlcXVlbnRpYWwgcmVhZHMNCjEpIDQgS2lCIHJhbmRvbSByZWFkcw0KMikg
+NCBLaUIgc2VxdWVudGlhbCB3cml0ZXMNCjMpIDQgS2lCIHJhbmRvbSB3cml0ZXMNCg0KSSB0aGlu
+ayB5b3UncmUganVzdCBzZWVpbmcgYSBsYWNrIG9mIG1lcmdlcyBmb3IgdGhlIHRpbnkgc2VxdWVu
+dGlhbA0Kd29ya2xvYWRzLiAgVGhvc2UgYXJlIHRoZSBvbmVzIHdoZXJlIG1xIGhhcyBsb3dlciBh
+Z2dyYiByZXN1bHRzLg0KDQpDaGVjayB0aGUgdmFsdWUgaW4gL3N5cy9ibG9jay9zZGEvcXVldWUv
+bm9tZXJnZXMuIFRoZSB2YWx1ZXMgYXJlDQogICAgMD1zZWFyY2ggZm9yIGZhc3QgYW5kIHNsb3dl
+ciBtZXJnZXMNCiAgICAxPW9ubHkgYXR0ZW1wdCBmYXN0IG1lcmdlcw0KICAgIDI9ZG9uJ3QgYXR0
+ZW1wdCBhbnkgbWVyZ2VzDQoNClRoZSBTTklBIEVudGVycHJpc2UgU29saWQgU3RhdGUgU3RvcmFn
+ZSBQZXJmb3JtYW5jZSBUZXN0IFNwZWNpZmljYXRpb24NCihTU1MgUFRTLUUpIG9ubHkgbWVhc3Vy
+ZXMgMTI4IEtpQiBhbmQgMSBNaUIgc2VxdWVudGlhbCBJT3MgLSBpdCBkb2Vzbid0DQp0ZXN0IHRp
+bnkgc2VxdWVudGlhbCBJT3MuICBBcHBsaWNhdGlvbnMgbWF5IGRvIGFueXRoaW5nLCBidXQgSSB0
+aGluaw0KbW9zdCB1bmRlcnN0YW5kIHRoYXQgZmV3ZXIsIGJpZ2dlciB0cmFuc2ZlcnMgYXJlIG1v
+cmUgZWZmaWNpZW50IA0KdGhyb3VnaG91dCB0aGUgSU8gc3RhY2suICBBIGJsb2Nrc2l6ZSBvZiAx
+MjggS2lCIHdvdWxkIHJlZHVjZSB0aG9zZQ0KSU9zIGJ5IDk2JS4NCg0KRm9yIGhwc2EsIHdlIG9m
+dGVuIHR1cm5lZCB0aGVtIG9mZiB0byBhdm9pZCB0aGUgb3ZlcmhlYWQgd2hpbGUgcnVubmluZw0K
+YXBwbGljYXRpb25zIGdlbmVyYXRpbmcgZGVjZW50LXNpemVkIElPcyBvbiB0aGVpciBvd24uDQoN
+Ck5vdGUgdGhhdCB0aGUgcmFuZG9tIHJlYWQgYWdncmIgdmFsdWUgZG91YmxlZCB3aXRoIG1xLCBh
+bmQgcmFuZG9tDQp3cml0ZXMgc2hvd2VkIG5vIGltcGFjdC4NCg0KWW91IG1pZ2h0IGFsc28gd2Fu
+dCB0byBzZXQgDQogICAgY3B1c19hbGxvd2VkX3BvbGljeT1zcGxpdA0KdG8ga2VlcCB0aHJlYWRz
+IGZyb20gd2FuZGVyaW5nIGFjcm9zcyBDUFVzIChhbmQgdGh1cyBjaGFuZ2luZyBxdWV1ZXMpLg0K
+DQo+IFNvIEkgZ3Vlc3MgaGF2aW5nIGFuIEkvTyBzY2hlZHVsZXIgaXMgY3JpdGljYWwsIGV2ZW4g
+Zm9yIHRoZSBzY3NpLW1xDQo+IGNhc2UuDQoNCmJsay1tcSBzdGlsbCBzdXBwb3J0cyBtZXJnZXMg
+d2l0aG91dCBhbnkgc2NoZWR1bGVyLg0KDQotLS0NClJvYmVydCBFbGxpb3R0LCBIUEUgUGVyc2lz
+dGVudCBNZW1vcnkNCg0KDQoNCg==
