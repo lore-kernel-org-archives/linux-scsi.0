@@ -1,100 +1,103 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] Avoid that SCSI device removal through sysfs triggers a deadlock
-Date: Thu, 10 Nov 2016 22:13:29 -0600
-Message-ID: <87k2calkly.fsf@xmission.com>
-References: <7d35e3f1-6c58-26bc-297b-73993aa90f0b@sandisk.com>
-        <1478618887.2824.2.camel@linux.vnet.ibm.com>
-        <eecdade1-2b35-b877-cb66-6d9c1dc02ddf@sandisk.com>
-        <1478628101.2824.27.camel@linux.vnet.ibm.com>
-        <87oa1pvl8f.fsf@xmission.com>
-        <1478648684.2368.17.camel@linux.vnet.ibm.com>
-        <87bmxpqxlb.fsf@xmission.com>
-        <1478655815.2368.34.camel@linux.vnet.ibm.com>
-        <87pom5o123.fsf@xmission.com>
-        <1478828244.3267.49.camel@linux.vnet.ibm.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v4)
+Date: Fri, 11 Nov 2016 10:08:41 +0530
+Message-ID: <CAK=zhgpUo-t=xBm93NmBf6q-VD01C2s7mqFOy-C7Vo=WABGvSw@mail.gmail.com>
+References: <20161110135443.GA28767@kroah.com> <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out02.mta.xmission.com ([166.70.13.232]:55369 "EHLO
-        out02.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965482AbcKKEP4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 23:15:56 -0500
-In-Reply-To: <1478828244.3267.49.camel@linux.vnet.ibm.com> (James Bottomley's
-        message of "Thu, 10 Nov 2016 17:37:24 -0800")
+Received: from mail-vk0-f48.google.com ([209.85.213.48]:33670 "EHLO
+        mail-vk0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933491AbcKKEin (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 10 Nov 2016 23:38:43 -0500
+Received: by mail-vk0-f48.google.com with SMTP id 137so5015817vkl.0
+        for <linux-scsi@vger.kernel.org>; Thu, 10 Nov 2016 20:38:42 -0800 (PST)
+In-Reply-To: <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Greg Kroah-Hartman <greg@kroah.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Tejun Heo <htejun@gmail.com>
+To: Andrey Grodzovsky <andrey2805@gmail.com>
+Cc: PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Igor Rybak <igor@media-clone.com>, Ezra Kohavi <ezra@media-clone.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 
-James Bottomley <jejb@linux.vnet.ibm.com> writes:
-
-> On Tue, 2016-11-08 at 20:10 -0600, Eric W. Biederman wrote:
->> James Bottomley <jejb@linux.vnet.ibm.com> writes:
->> 
->> > On Tue, 2016-11-08 at 18:57 -0600, Eric W. Biederman wrote:
-> [...]
->> > > I am pretty certain that if you are going to make 
->> > > kernfs_remove_self and kernfs_remove_by_name_ns to be safe to 
->> > > race against each other, not just the KERNFS_SUICIDAL check, but 
->> > > the wait when KERNFS_SUICIDAL is set needs to be added ot
->> > > kernfs_remove_by_name_ns.
->> > 
->> > I don't think you can do that: waiting for SUICIDED would introduce
->> > another potential lock entanglement.  I'm reasonably happy that the
->> > deactivation offset coupled with kernfs_drain in the non self 
->> > remove path means that the necessary cleanup is done when the 
->> > directory itself is removed.  That seems to be a common pattern in 
->> > all non-self removes.
->> 
->> But if we don't I am pretty certain there will be asynchrounous 
->> behavior in some cases that could potentially confuse userspace.
+On Thu, Nov 10, 2016 at 8:05 PM, Andrey Grodzovsky <andrey2805@gmail.com> wrote:
+> Problem:
+> This is a work around for a bug with LSI Fusion MPT SAS2 when
+> pefroming secure erase. Due to the very long time the operation
+> takes commands issued during the erase will time out and will trigger
+> execution of abort hook. Even though the abort hook is called for
+> the specific command which timed out this leads to entire device halt
+> (scsi_state terminated) and premature termination of the secured erase.
 >
-> But the original behaviour kernfs_remove_self() eliminated was the
-> asynchronous callback.  If we go back to that, we're definitely going
-> to introduce far more asynchronous behaviour.
-
-Not from a userspace perspective if we use task_work_add(current,...).
-
-In that case we simply get to do an asynchrnous looking thing before we
-return to userspace.  So an asynchronous form, but not actually
-asynchronous actions.
-
->> Which is partly why I would like to kill kernfs_remove_self.
+> Fix:
+> Set device state to busy while erase in progress to reject any incoming
+> commands until the erase is done. The device is blocked any way during
+> this time and cannot execute any other command.
+> More data and logs can be found here -
+> https://drive.google.com/file/d/0B9ocOHYHbbS1Q3VMdkkzeWFkTjg/view
 >
-> I took a look at it.  It's definitely not cleanly revertible given
-> what's gone on since.  Even just trying to excise it is going to be
-> hard given all the tentacles it has.
-
-Well changing the users and removing the code from kernfs and sysfs
-doesn't look hard.  There are only 5-7 users of this insane and broken
-remove self thing.
-
-I think even if we do the naive thing and don't use any helpers in
-kernfs, sysfs, or the device subsystem we could easily wind up with less
-code in the kernel.  Certainly it will be code that is simpler and
-easier to get right.
-
->> Using task_work_add(current, ...) as I posted earlier let's us retain
->> the synchronous property of the current API.
->> 
->> While we debate the details I am happy to look at scsi as a special 
->> case and solve for scsi.  Then when we have the details worked out we 
->> can go fix the other cases.  Given my preliminary patch in my last 
->> reply it looks very straight forward to fix this sanely.
+> v2: Update according to example patch by Hannes Reinecke to apply
+> the blocking logic to any ATA 12/16 command.
 >
-> I don't think there's any urgency to fix SCSI.  You can only really
-> trigger this by hammering the device and host remove paths, which isn't
-> what users normally do ... as the fact it's been in the field for 2.5
-> years with no apparent problems shows.
+> v3: Use SCSI commands opcodes definitions instead of value and
+> correct identation.
+>
+> v4: Fix checkpath errors and warning.
+>
+> Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+> Cc: <linux-scsi@vger.kernel.org>
+> Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+> Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+> Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+> Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+> Cc: Hannes Reinecke <hare@suse.de>
+> Cc: <stable@vger.kernel.org>
 
-Sure little urgency.  But scsi makes a good concrete example for which
-a reproducer is known.  So it is a good test ground.
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-> I'd like Greg and Tejun to weigh in on this before we start doing
-> something, since they created the initial problem.
-
-Fair.  Although I wouldn't be surprised if we don't hear anything short
-of a concrete patch that changes everything.
-
-Eric
-
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 5a97e32..c032319 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -3500,6 +3500,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+>             SAM_STAT_CHECK_CONDITION;
+>  }
+>
+> +static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
+> +{
+> +       return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
+> +}
+>
+>  /**
+>   * _scsih_qcmd - main scsi request entry point
+> @@ -3528,6 +3532,14 @@ _scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>                 scsi_print_command(scmd);
+>  #endif
+>
+> +       /**
+> +       * Lock the device for any subsequent command until
+> +       * command is done.
+> +       */
+> +       if (ata_12_16_cmd(scmd))
+> +               scsi_internal_device_block(scmd->device);
+> +
+> +
+>         sas_device_priv_data = scmd->device->hostdata;
+>         if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+>                 scmd->result = DID_NO_CONNECT << 16;
+> @@ -4062,6 +4074,10 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>         if (scmd == NULL)
+>                 return 1;
+>
+> +       if (ata_12_16_cmd(scmd))
+> +               scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
+> +
+> +
+>         mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+>
+>         if (mpi_reply == NULL) {
+> --
+> 2.1.4
+>
