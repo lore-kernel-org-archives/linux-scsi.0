@@ -1,89 +1,84 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Fri, 11 Nov 2016 14:47:47 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
- <146706367078.29152.14405582249219794335.stgit@brunhilda>
- <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
- <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
- <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
- <1473359114.2781.38.camel@linux.vnet.ibm.com>
- <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
- <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/5] megaraid_sas: switch to pci_alloc_irq_vectors
+Date: Fri, 11 Nov 2016 15:59:05 +0100
+Message-ID: <30690328-e04f-7f41-d2d0-6d05c41b3290@suse.de>
+References: <1478857492-4581-1-git-send-email-hare@suse.de>
+ <1478857492-4581-2-git-send-email-hare@suse.de>
+ <7d5dca7d9f030cb76de03d90a8b02340@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0045.outbound.protection.outlook.com ([104.47.40.45]:57494
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755827AbcKKOr4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Nov 2016 09:47:56 -0500
-In-Reply-To: <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
-Content-Language: en-US
+Received: from mx2.suse.de ([195.135.220.15]:34124 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752140AbcKKO7I (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 11 Nov 2016 09:59:08 -0500
+In-Reply-To: <7d5dca7d9f030cb76de03d90a8b02340@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Sumit Saxena <sumit.saxena@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBKYW1lcyBCb3R0b21sZXkgW21h
-aWx0bzpKYW1lcy5Cb3R0b21sZXlASGFuc2VucGFydG5lcnNoaXAuY29tXQ0KPiBTZW50OiBUaHVy
-c2RheSwgU2VwdGVtYmVyIDA4LCAyMDE2IDU6MzggUE0NCj4gVG86IFNjb3R0IEJlbmVzaDsgSmFt
-ZXMgQm90dG9tbGV5OyBEb24gQnJhY2U7IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBDYzogVmlzd2Fz
-IEc7IE1haGVzaCBSYWphc2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBL
-ZXZpbg0KPiBCYXJuZXR0OyBKdXN0aW4gTGluZGxleTsgZWxsaW90dEBocGUuY29tOyBsaW51eC1z
-Y3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIFY0IDIvMl0gYWFjcmFp
-ZDogcmVtb3ZlIHdpbGRjYXJkIGZvciBzZXJpZXMgOSBjb250cm9sbGVycw0KPiANCj4gRVhURVJO
-QUwgRU1BSUwNCj4gDQo+IA0KPiBPbiBTZXB0ZW1iZXIgOCwgMjAxNiAyOjMzOjUyIFBNIEVEVCwg
-U2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT4gd3JvdGU6DQo+ID4+
-DQo+ID4+IE9uIFRodSwgMjAxNi0wOS0wOCBhdCAxODoxNSArMDAwMCwgRG9uIEJyYWNlIHdyb3Rl
-Og0KPiA+PiA+ID4gPiAtICAgIHsgMHg5MDA1LCAweDAyOGYsIFBDSV9BTllfSUQsIFBDSV9BTllf
-SUQsIDAsIDAsIDY1IH0sIC8qDQo+ID4+ID4gPiA+IEFkYXB0ZWMgUE1DDQo+ID4+ID4gPiA+IFNl
-cmllcyA5ICovDQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IEhvdyBhcmUgcGVvcGxlIHRoYXQgbG9h
-ZCBhYWNyYWlkIGluIHRoZWlyIGluaXRyZCBnb2luZyB0byBib290DQo+ID4+ID4gPiA+IGFmdGVy
-IHRoaXM/DQo+ID4+ID4gPiA+DQo+ID4+ID4gPiA+IC0tDQo+ID4+ID4gPiA+IE1hcnRpbiBLLiBQ
-ZXRlcnNlbiAgICAgIE9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KPiA+PiA+ID4NCj4gPj4gPiA+
-IEkgdXBkYXRlZCBzbWFydHBxaS9LY29uZmlnIGFuZCBhZGRlZA0KPiA+RG9jdW1lbnRhdGlvbi9z
-Y3NpL3NtYXJ0cHFpLnR4dA0KPiA+PiA+ID4gdG8gaW5mb3JtIHVzZXJzIG9mIHRoZSBuZWVkIHRv
-IGNvbmZpZ3VyZSB0aGUgc21hcnRwcWkgZHJpdmVyDQo+ID5tb3ZpbmcNCj4gPj4gPiA+IGZvcndh
-cmQgZm9yIGFhY3JhaWQgU2VyaWVzIDkgY29udHJvbGxlcnMuDQo+ID4+ID4gPg0KPiA+PiA+ID4g
-SG9wZSB0aGlzIGhlbHBzLg0KPiA+Pg0KPiA+PiBUaGF0J3Mgbm90IGdvaW5nIHRvIGJlIGVub3Vn
-aDogdGhpcyBJRCBoYXMgYmVlbiBpbiB0aGUgYWFjcmlhZCBkcml2ZXINCj4gPnNpbmNlDQo+ID4+
-IDIwMTEuICBUaGF0IG1lYW5zIGFueW9uZSB3aG8gZmluYWxseSBnZXRzIGhvbGQgb2Ygb25lIG9m
-IHRoZXNlIG5ldw0KPiA+Y2FyZHMNCj4gPj4gYnV0IHVzZXMgYSBkaXN0cm8gdGhhdCBkb2Vzbid0
-IGhhdmUgdGhlIG5ldyBzbWFydHBxaSBkcml2ZXIgd2lsbCBiZQ0KPiA+YXR0YWNoZWQNCj4gPj4g
-dmlhIHRoZSBhYWNyYWlkIG9uZS4NCj4gPj4NCj4gPg0KPiA+VGhhdCdzIG9rIGJlY2F1c2UgZm9y
-IHByZXZpb3VzIGRpc3Ryb3MgdGhlIG5ldyBjb250cm9sbGVyIHdpbGwgd29yaw0KPiA+d2l0aCB0
-aGUgcHJldmlvdXMgYWFjcmFpZCBkcml2ZXIsIGFsdGhvdWdoIHdpdGggbm9uLW9wdGltYWwNCj4g
-PnBlcmZvcm1hbmNlLg0KPiANCj4gTm90IGFmdGVyIHRoaXMgY2hhbmdlIGhpdHMuIFRoZW4gc3lz
-dGVtcyB0aGF0IG9ubHkgaGF2ZSBhYWNyYWlkIGluIHRoZSBpbml0cmQNCj4gd2lsbCBmYWlsIHRv
-IGJvb3QuDQo+IA0KPiA+V2hhdCB3ZSB3YW50IHRvIGRvIGlzIHN5bmMgdXAgYXQgNC45IHNvIGdv
-aW5nIGZvcndhcmQgb25seSB0aGUgbmV3DQo+ID5zbWFydHBxaSBkcml2ZXIgd2lsbCBhdHRhY2gg
-dG8gdGhlc2UgbmV3IGNvbnRyb2xsZXJzLg0KPiANCj4gU28geW91IGhhdmUgYSBwbGFuIGluIHBs
-YWNlIHdpdGggdGhlIGRpc3Ryb3MgdG8gbWlncmF0ZSB0aGUgaW5pdHJkIGltYWdlcz8NCj4gV2l0
-aG91dCBiZWluZyB0b2xkLCBzb21lIHdpbGwgb25seSBpbnN0YWxsIHRoZSBtb2R1bGVzIHRoZSBw
-cmV2aW91cyBpbml0cmQgIHdhcw0KPiBjb25maWd1cmVkIGZvci4NCj4gDQo+IEphbWVzDQo+IA0K
-PiA+U2NvdHQNCj4gPg0KPiA+PiBHaXZlbiB0aGF0IHRoZSBsaWZlIHRpbWVzIG9mIGVudGVycHJp
-c2UgZGlzdHJpYnV0aW9ucyBpcyB0d28geWVhcnMNCj4gPmFuZCB5b3UncmUNCj4gPj4gcmVsZWFz
-aW5nIHRoaXMgc21hcnRwcWkgc29vbiwgdGhlIG92ZXJsYXAgaXMgdW5hdm9pZGFibGUuDQo+ID4+
-DQo+ID4+IEphbWVzDQo+ID4+DQo+IA0KDQpUaGUgSUQgd2Ugd2FudCB0byByZW1vdmUgZnJvbSB0
-aGUgYWFjcmFpZCBkcml2ZXIgd2lsbCBub3QgYmUgYXZhaWxhYmxlIHVudGlsIFExIG5leHQgeWVh
-ciwNCnNvIG5vIGN1c3RvbWVyIGN1cnJlbnRseSBoYXMgaXQgeWV0LiBJZiB0aGV5IGFyZSBydW5u
-aW5nIGFuIG9sZGVyIGtlcm5lbCwgdGhlIGFhY3JhaWQgZHJpdmVyDQp3aWxsIHN1cHBvcnQgdGhp
-cyBJRCBidXQgaW4gJ3N5bmMnIG1vZGUsIHRoZWlyIHNlcnZlcnMgd2lsbCBjb250aW51ZSB0byBi
-b290LiANCg0KSWYgdGhleSB1cGdyYWRlIHRvIGEgbmV3ZXIga2VybmVsIGFuZCBkbyBub3Qga25v
-dyAgdG8gY29uZmlndXJlIHRoZSBzbWFydHBxaQ0KZHJpdmVyIGFuZCB0aGUgc3lzdGVtIGZhaWxz
-IHRvIGJvb3QsIHRoZXkgY2FuIGZhbGwgYmFjayB0byB0aGUgcHJldmlvdXMNCmtlcm5lbCBhbmQg
-Y29uZmlndXJlIHRoZSBzbWFydHBxaSBkcml2ZXIuDQoNClRoaXMgcGF0Y2ggaXMgZm9yIG5ld2Vy
-IGtlcm5lbHMgZ29pbmcgZm9yd2FyZC4gV2UgbmVlZCB0byBlbGltaW5hdGUgdGhlDQpkdXBsaWNh
-dGlvbiBmb3IgbmV3ZXIga2VybmVscy4gSWYgYm90aCBkcml2ZXJzIHN1cHBvcnQgdGhlIHNhbWUg
-SUQNCnRoZXkgd2lsbCBoYXZlIHRvIGtub3cgaG93IHRvIHJlYnVpbGQgdGhlaXIgaW5pdHJkIHdp
-dGggYSBzcGVjaWZpYyBkcml2ZXINCm9yZGVyLiBDdXN0b21lcnMgdGhhdCBoYXZlIHNlcnZlcnMg
-Y29uZmlndXJlZCB3aXRoIGJvdGggb2xkZXIgYWFjcmFpZCBkZXZpY2VzDQphbmQgdGhlIG5ld2Vy
-IHNtYXJ0cHFpIGRldmljZXMgd2lsbCBkZWZpbml0ZWx5IGhhdmUgdG8gZG8gdGhpcy4gSGF2aW5n
-IHRvIA0KcmVidWlsZCB0aGUga2VybmVsIHdpdGggc21hcnRwcWkgZW5hYmxlZCB3b3VsZCBzZWVt
-IHRvIGJlIGFuIGVhc2llcg0KY3VzdG9tZXIgZXhwZXJpZW5jZS4NCg0KVGhlIG9mZmljaWFsbHkg
-c3VwcG9ydGVkIGRyaXZlciBmb3IgdGhpcyBJRCBpcyBzbWFydHBxaS4NCg0KVGhhbmtzLA0KRG9u
-IEJyYWNlDQoNCkVTQyAtIFNtYXJ0IFN0b3JhZ2UNCk1pY3Jvc2VtaSBDb3Jwb3JhdGlvbg0KDQo+
-IA0KPiAtLQ0KPiBTZW50IGZyb20gbXkgQW5kcm9pZCBkZXZpY2Ugd2l0aCBLLTkgTWFpbC4gUGxl
-YXNlIGV4Y3VzZSBteSBicmV2aXR5Lg0K
+On 11/11/2016 12:32 PM, Sumit Saxena wrote:
+>> -----Original Message-----
+>> From: Hannes Reinecke [mailto:hare@suse.de]
+>> Sent: Friday, November 11, 2016 3:15 PM
+>> To: Martin K. Petersen
+>> Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; linux-
+>> scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
+>> Subject: [PATCH 1/5] megaraid_sas: switch to pci_alloc_irq_vectors
+>>
+>> Cleanup the MSI-X handling allowing us to use the PCI-layer provided
+> vector
+>> allocation.
+>>
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> ---
+>> drivers/scsi/megaraid/megaraid_sas.h      |  1 -
+>> drivers/scsi/megaraid/megaraid_sas_base.c | 63
+> ++++++++++++++-----------------
+>> 2 files changed, 29 insertions(+), 35 deletions(-)
+>>
+>> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
+>> b/drivers/scsi/megaraid/megaraid_sas.h
+>> index ca86c88..8f1d2b4 100644
+>> --- a/drivers/scsi/megaraid/megaraid_sas.h
+>> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+[ .. ]
+>> @@ -6163,9 +6153,14 @@ static void megasas_shutdown_controller(struct
+>> megasas_instance *instance,
+>> 		goto fail_ready_state;
+>>
+>> 	/* Now re-enable MSI-X */
+>> -	if (instance->msix_vectors &&
+>> -	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
+>> -				  instance->msix_vectors))
+>> +	if (instance->msix_vectors)
+>> +		irq_flags = PCI_IRQ_MSIX;
+>> +	if (smp_affinity_enable)
+>> +		irq_flags |= PCI_IRQ_AFFINITY;
+>> +	rval = pci_alloc_irq_vectors(instance->pdev, 1,
+>> +				     instance->msix_vectors ?
+>> +				     instance->msix_vectors : 1,
+> irq_flags);
+>> +	if (rval < 0)
+> If smp_affinity_enable parameter is set to 1(which is default) and legacy
+> interrupts are setup, then here driver will pass irq_flags set to
+> (PCI_IRQ_LEGACY | PCI_IRQ_AFFINITY) while calling function
+> pci_alloc_irq_vectors().
+> Should not driver set PCI_IRQ_AFFINITY only for MSI-x interrupts? Setting
+> PCI_IRQ_AFFINITY for legacy interrupts may restrict all interrupts
+> completion to single CPU(because IRQ affinity will be set) as there will
+> be single IRQ for legacy interrupts ?
+> 
+You are right; irq affinity only makes sense for MSI-X.
+I'll be fixing it up.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
