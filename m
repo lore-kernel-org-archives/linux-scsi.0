@@ -1,54 +1,48 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: megaraid_sas: add in missing white spaces in error messages text
-Date: Sat, 12 Nov 2016 16:25:24 +0000
-Message-ID: <20161112162524.4585-1-colin.king@canonical.com>
+From: Andrey Grodzovsky <andrey2805@gmail.com>
+Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v4)
+Date: Sat, 12 Nov 2016 11:36:09 -0500
+Message-ID: <CAJphD_rAW+fmJq3dK8-a-fpDOdMcLk2t0dUGVUrowXFQ=jA08A@mail.gmail.com>
+References: <20161110135443.GA28767@kroah.com> <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
+ <yq1inrsk976.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:49264 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965364AbcKLQZe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2016 11:25:34 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <yq1inrsk976.fsf@sermon.lab.mkp.net>
+Sender: stable-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Igor Rybak <igor@media-clone.com>, Ezra Kohavi <ezra@media-clone.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+On Sat, Nov 12, 2016 at 10:29 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Andrey" == Andrey Grodzovsky <andrey2805@gmail.com> writes:
+>
+> Andrey,
+>
+> Andrey> Problem: This is a work around for a bug with LSI Fusion MPT
+> Andrey> SAS2 when pefroming secure erase. Due to the very long time the
+> Andrey> operation takes commands issued during the erase will time out
+> Andrey> and will trigger execution of abort hook. Even though the abort
+> Andrey> hook is called for the specific command which timed out this
+> Andrey> leads to entire device halt (scsi_state terminated) and
+> Andrey> premature termination of the secured erase.
+>
+> This patch didn't apply to the SCSI tree. I merged it into
+> 4.9/scsi-fixes by hand.
 
-A couple of  dev_printk messages spans two lines and the literal string
-is missing a white space between words. Add the white space.
+Sorry about that and thanks. Next time i will work of off latest tree.
+Regarding older code where there is still a separate mpt2sas driver, should
+a separate patch to be done or this fix will be ported there ?
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index f6db7ab..d8eaf53 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -6788,8 +6788,7 @@ static int megasas_mgmt_ioctl_fw(struct file *file, unsigned long arg)
- 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
- 		spin_unlock_irqrestore(&instance->hba_lock, flags);
- 
--		dev_err(&instance->pdev->dev, "timed out while"
--			"waiting for HBA to recover\n");
-+		dev_err(&instance->pdev->dev, "timed out while waiting for HBA to recover\n");
- 		error = -ENODEV;
- 		goto out_up;
- 	}
-@@ -6857,8 +6856,7 @@ static int megasas_mgmt_ioctl_aen(struct file *file, unsigned long arg)
- 	spin_lock_irqsave(&instance->hba_lock, flags);
- 	if (atomic_read(&instance->adprecovery) != MEGASAS_HBA_OPERATIONAL) {
- 		spin_unlock_irqrestore(&instance->hba_lock, flags);
--		dev_err(&instance->pdev->dev, "timed out while waiting"
--				"for HBA to recover\n");
-+		dev_err(&instance->pdev->dev, "timed out while waiting for HBA to recover\n");
- 		return -ENODEV;
- 	}
- 	spin_unlock_irqrestore(&instance->hba_lock, flags);
--- 
-2.10.2
-
+Thanks,
+Andrey
+>
+> Also, please check Documentation/SubmittingPatches for future
+> submissions. Patch version goes inside the [PATCH foo/bar] brackets and
+> patch changelog entries below "---" separator.
+>
+> Thanks!
+> Martin
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
