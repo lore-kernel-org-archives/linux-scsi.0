@@ -1,227 +1,208 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.9-rc4
-Date: Fri, 11 Nov 2016 17:35:28 -0800
-Message-ID: <1478914528.2502.17.camel@HansenPartnership.com>
+From: "Guilherme G. Piccoli" <gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
+Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
+Date: Fri, 11 Nov 2016 23:51:13 -0200
+Message-ID: <58267591.2080803@linux.vnet.ibm.com>
+References: <1447304741-6594-1-git-send-email-mchristi@redhat.com>
+ <56447FF7.40600@dev.mellanox.co.il> <5644FD6C.9070805@cs.wisc.edu>
+ <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com>
+ <56461502.70306@cs.wisc.edu>
+ <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg@mail.gmail.com>
+ <20161107181556.cnhwst4nu63xtrqk@straylight.hirudinean.org>
+ <5820C68E.6050206@linux.vnet.ibm.com>
+ <20161109052142.j4psips7yvx7uohx@straylight.hirudinean.org>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBD235QUNTYKBBG7LTHAQKGQECYLZ5WI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+In-Reply-To: <20161109052142.j4psips7yvx7uohx-r8IHplWLGbA5tHQWs+pTeqPFFGjUI2lm2LY78lusg7I@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Shlomo Pongratz <shlomopongratz-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-The megaraid_sas patch in here fixes a major regression in the last fix
-set that made all megaraid_sas cards unusable.  It turns out no-one had
-actually tested such an "obvious" fix, sigh.   The fix for the fix has
-been tested ...
+On 11/09/2016 03:21 AM, Chris Leech wrote:
+> On Mon, Nov 07, 2016 at 04:23:10PM -0200, Guilherme G. Piccoli wrote:
+>>
+>> Sure! Count on us to test any patches. I guess the first step is to
+>> reproduce on upstream right? We haven't tested specifically this
+>> scenario for long time. Will try to reproduce on 4.9-rc4 and update here.
+> 
+> Great, I'm looking forward to hearing the result.
+> 
+> Assuming it reproduces, I don't think this level of fine grained locking
+> is necessarily the best solution, but it may help confirm the problem.
+> Especially if the WARN_ONCE I slipped in here triggers.
+> 
+> - Chris
 
-The next most serious is the vmw_pvscsi abort problem which basically
-means that aborts don't work on the vmware paravirt devices and error
-handling always escalates to reset.
+Chris, I'm not able to reproduce right now - environment was
+misconfigured, and now I'm leaving the office for 20 days.
 
-The rest are an assortment of missed reference counting in certain
-paths and corner case bugs that show up on some architectures.
+Will test as soon as I'm back!
+Thanks,
 
-The patch is available here:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Guilherme
 
-The short changelog is:
 
-Bart Van Assche (1):
-      scsi: scsi_dh_alua: Fix a reference counting bug
+> 
+> ---
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index f9b6fba..fbd18ab 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -560,8 +560,12 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
+>  	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
+>  	task->state = state;
+> 
+> -	if (!list_empty(&task->running))
+> +	spin_lock_bh(&conn->taskqueuelock);
+> +	if (!list_empty(&task->running)) {
+> +		WARN_ONCE(1, "iscsi_complete_task while task on list");
+>  		list_del_init(&task->running);
+> +	}
+> +	spin_unlock_bh(&conn->taskqueuelock);
+> 
+>  	if (conn->task == task)
+>  		conn->task = NULL;
+> @@ -783,7 +787,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+>  		if (session->tt->xmit_task(task))
+>  			goto free_task;
+>  	} else {
+> +		spin_lock_bh(&conn->taskqueuelock);
+>  		list_add_tail(&task->running, &conn->mgmtqueue);
+> +		spin_unlock_bh(&conn->taskqueuelock);
+>  		iscsi_conn_queue_work(conn);
+>  	}
+> 
+> @@ -1474,8 +1480,10 @@ void iscsi_requeue_task(struct iscsi_task *task)
+>  	 * this may be on the requeue list already if the xmit_task callout
+>  	 * is handling the r2ts while we are adding new ones
+>  	 */
+> +	spin_lock_bh(&conn->taskqueuelock);
+>  	if (list_empty(&task->running))
+>  		list_add_tail(&task->running, &conn->requeue);
+> +	spin_unlock_bh(&conn->taskqueuelock);
+>  	iscsi_conn_queue_work(conn);
+>  }
+>  EXPORT_SYMBOL_GPL(iscsi_requeue_task);
+> @@ -1512,22 +1520,26 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  	 * only have one nop-out as a ping from us and targets should not
+>  	 * overflow us with nop-ins
+>  	 */
+> +	spin_lock_bh(&conn->taskqueuelock);
+>  check_mgmt:
+>  	while (!list_empty(&conn->mgmtqueue)) {
+>  		conn->task = list_entry(conn->mgmtqueue.next,
+>  					 struct iscsi_task, running);
+>  		list_del_init(&conn->task->running);
+> +		spin_unlock_bh(&conn->taskqueuelock);
+>  		if (iscsi_prep_mgmt_task(conn, conn->task)) {
+>  			/* regular RX path uses back_lock */
+>  			spin_lock_bh(&conn->session->back_lock);
+>  			__iscsi_put_task(conn->task);
+>  			spin_unlock_bh(&conn->session->back_lock);
+>  			conn->task = NULL;
+> +			spin_lock_bh(&conn->taskqueuelock);
+>  			continue;
+>  		}
+>  		rc = iscsi_xmit_task(conn);
+>  		if (rc)
+>  			goto done;
+> +		spin_lock_bh(&conn->taskqueuelock);
+>  	}
+> 
+>  	/* process pending command queue */
+> @@ -1535,19 +1547,24 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  		conn->task = list_entry(conn->cmdqueue.next, struct iscsi_task,
+>  					running);
+>  		list_del_init(&conn->task->running);
+> +		spin_unlock_bh(&conn->taskqueuelock);
+>  		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
+>  			fail_scsi_task(conn->task, DID_IMM_RETRY);
+> +			spin_lock_bh(&conn->taskqueuelock);
+>  			continue;
+>  		}
+>  		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
+>  		if (rc) {
+>  			if (rc == -ENOMEM || rc == -EACCES) {
+> +				spin_lock_bh(&conn->taskqueuelock);
+>  				list_add_tail(&conn->task->running,
+>  					      &conn->cmdqueue);
+>  				conn->task = NULL;
+> +				spin_unlock_bh(&conn->taskqueuelock);
+>  				goto done;
+>  			} else
+>  				fail_scsi_task(conn->task, DID_ABORT);
+> +			spin_lock_bh(&conn->taskqueuelock);
+>  			continue;
+>  		}
+>  		rc = iscsi_xmit_task(conn);
+> @@ -1558,6 +1575,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  		 * we need to check the mgmt queue for nops that need to
+>  		 * be sent to aviod starvation
+>  		 */
+> +		spin_lock_bh(&conn->taskqueuelock);
+>  		if (!list_empty(&conn->mgmtqueue))
+>  			goto check_mgmt;
+>  	}
+> @@ -1577,12 +1595,15 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+>  		conn->task = task;
+>  		list_del_init(&conn->task->running);
+>  		conn->task->state = ISCSI_TASK_RUNNING;
+> +		spin_unlock_bh(&conn->taskqueuelock);
+>  		rc = iscsi_xmit_task(conn);
+>  		if (rc)
+>  			goto done;
+> +		spin_lock_bh(&conn->taskqueuelock);
+>  		if (!list_empty(&conn->mgmtqueue))
+>  			goto check_mgmt;
+>  	}
+> +	spin_unlock_bh(&conn->taskqueuelock);
+>  	spin_unlock_bh(&conn->session->frwd_lock);
+>  	return -ENODATA;
+> 
+> @@ -1738,7 +1759,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+>  			goto prepd_reject;
+>  		}
+>  	} else {
+> +		spin_lock_bh(&conn->taskqueuelock);
+>  		list_add_tail(&task->running, &conn->cmdqueue);
+> +		spin_unlock_bh(&conn->taskqueuelock);
+>  		iscsi_conn_queue_work(conn);
+>  	}
+> 
+> @@ -2897,6 +2920,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+>  	INIT_LIST_HEAD(&conn->mgmtqueue);
+>  	INIT_LIST_HEAD(&conn->cmdqueue);
+>  	INIT_LIST_HEAD(&conn->requeue);
+> +	spin_lock_init(&conn->taskqueuelock);
+>  	INIT_WORK(&conn->xmitwork, iscsi_xmitworker);
+> 
+>  	/* allocate login_task used for the login/text sequences */
+> diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+> index 4d1c46a..c7b1dc7 100644
+> --- a/include/scsi/libiscsi.h
+> +++ b/include/scsi/libiscsi.h
+> @@ -196,6 +196,7 @@ struct iscsi_conn {
+>  	struct iscsi_task	*task;		/* xmit task in progress */
+> 
+>  	/* xmit */
+> +	spinlock_t		taskqueuelock;  /* protects the next three lists */
+>  	struct list_head	mgmtqueue;	/* mgmt (control) xmit queue */
+>  	struct list_head	cmdqueue;	/* data-path cmd queue */
+>  	struct list_head	requeue;	/* tasks needing another run */
+> 
 
-Bill Kuzeja (1):
-      scsi: qla2xxx: Fix scsi scan hang triggered if adapter fails during init
-
-David Jeffery (1):
-      scsi: vmw_pvscsi: return SUCCESS for successful command aborts
-
-Mauricio Faria de Oliveira (2):
-      scsi: qla2xxx: fix invalid DMA access after command aborts in PCI device remove
-      scsi: qla2xxx: do not queue commands when unloading
-
-Sreekanth Reddy (1):
-      scsi: mpt3sas: Fix for block device of raid exists even after deleting raid disk
-
-Sumit Saxena (1):
-      scsi: megaraid_sas: fix macro MEGASAS_IS_LOGICAL to avoid regression
-
-Varun Prakash (1):
-      scsi: libcxgbi: fix incorrect DDP resource cleanup
-
-tang.junhui (1):
-      scsi: scsi_dh_alua: fix missing kref_put() in alua_rtpg_work()
-
-And the diffstat:
-
- drivers/scsi/cxgbi/libcxgbi.c              |  3 ++-
- drivers/scsi/device_handler/scsi_dh_alua.c |  5 ++++-
- drivers/scsi/megaraid/megaraid_sas.h       |  2 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c       |  4 ++--
- drivers/scsi/qla2xxx/qla_os.c              | 16 ++++++++++++++++
- drivers/scsi/vmw_pvscsi.c                  |  5 +++--
- drivers/scsi/vmw_pvscsi.h                  |  2 +-
- 7 files changed, 29 insertions(+), 8 deletions(-)
-
-With full diff below.
-
-James
-
----
-
-diff --git a/drivers/scsi/cxgbi/libcxgbi.c b/drivers/scsi/cxgbi/libcxgbi.c
-index d142113..2ffe029 100644
---- a/drivers/scsi/cxgbi/libcxgbi.c
-+++ b/drivers/scsi/cxgbi/libcxgbi.c
-@@ -2081,9 +2081,10 @@ void cxgbi_cleanup_task(struct iscsi_task *task)
- 	/*  never reached the xmit task callout */
- 	if (tdata->skb)
- 		__kfree_skb(tdata->skb);
--	memset(tdata, 0, sizeof(*tdata));
- 
- 	task_release_itt(task, task->hdr_itt);
-+	memset(tdata, 0, sizeof(*tdata));
-+
- 	iscsi_tcp_cleanup_task(task);
- }
- EXPORT_SYMBOL_GPL(cxgbi_cleanup_task);
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 241829e..7bb2068 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -793,6 +793,7 @@ static void alua_rtpg_work(struct work_struct *work)
- 		WARN_ON(pg->flags & ALUA_PG_RUN_RTPG);
- 		WARN_ON(pg->flags & ALUA_PG_RUN_STPG);
- 		spin_unlock_irqrestore(&pg->lock, flags);
-+		kref_put(&pg->kref, release_port_group);
- 		return;
- 	}
- 	if (pg->flags & ALUA_SYNC_STPG)
-@@ -890,6 +891,7 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 		/* Do not queue if the worker is already running */
- 		if (!(pg->flags & ALUA_PG_RUNNING)) {
- 			kref_get(&pg->kref);
-+			sdev = NULL;
- 			start_queue = 1;
- 		}
- 	}
-@@ -901,7 +903,8 @@ static void alua_rtpg_queue(struct alua_port_group *pg,
- 	if (start_queue &&
- 	    !queue_delayed_work(alua_wq, &pg->rtpg_work,
- 				msecs_to_jiffies(ALUA_RTPG_DELAY_MSECS))) {
--		scsi_device_put(sdev);
-+		if (sdev)
-+			scsi_device_put(sdev);
- 		kref_put(&pg->kref, release_port_group);
- 	}
- }
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index ca86c88..3aaea71 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2233,7 +2233,7 @@ struct megasas_instance_template {
- };
- 
- #define MEGASAS_IS_LOGICAL(scp)						\
--	(scp->device->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1
-+	((scp->device->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1)
- 
- #define MEGASAS_DEV_INDEX(scp)						\
- 	(((scp->device->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) +	\
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 209a969..8aa769a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1273,9 +1273,9 @@ scsih_target_alloc(struct scsi_target *starget)
- 			sas_target_priv_data->handle = raid_device->handle;
- 			sas_target_priv_data->sas_address = raid_device->wwid;
- 			sas_target_priv_data->flags |= MPT_TARGET_FLAGS_VOLUME;
--			sas_target_priv_data->raid_device = raid_device;
- 			if (ioc->is_warpdrive)
--				raid_device->starget = starget;
-+				sas_target_priv_data->raid_device = raid_device;
-+			raid_device->starget = starget;
- 		}
- 		spin_unlock_irqrestore(&ioc->raid_device_lock, flags);
- 		return 0;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index ace65db..567fa08 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -707,6 +707,11 @@ qla2xxx_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	srb_t *sp;
- 	int rval;
- 
-+	if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags))) {
-+		cmd->result = DID_NO_CONNECT << 16;
-+		goto qc24_fail_command;
-+	}
-+
- 	if (ha->flags.eeh_busy) {
- 		if (ha->flags.pci_channel_io_perm_failure) {
- 			ql_dbg(ql_dbg_aer, vha, 0x9010,
-@@ -1451,6 +1456,15 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
- 		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
- 			sp = req->outstanding_cmds[cnt];
- 			if (sp) {
-+				/* Get a reference to the sp and drop the lock.
-+				 * The reference ensures this sp->done() call
-+				 * - and not the call in qla2xxx_eh_abort() -
-+				 * ends the SCSI command (with result 'res').
-+				 */
-+				sp_get(sp);
-+				spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+				qla2xxx_eh_abort(GET_CMD_SP(sp));
-+				spin_lock_irqsave(&ha->hardware_lock, flags);
- 				req->outstanding_cmds[cnt] = NULL;
- 				sp->done(vha, sp, res);
- 			}
-@@ -2341,6 +2355,8 @@ qla2xxx_scan_finished(struct Scsi_Host *shost, unsigned long time)
- {
- 	scsi_qla_host_t *vha = shost_priv(shost);
- 
-+	if (test_bit(UNLOADING, &vha->dpc_flags))
-+		return 1;
- 	if (!vha->host)
- 		return 1;
- 	if (time > vha->hw->loop_reset_delay * HZ)
-diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
-index 4a0d3cd..15ca09c 100644
---- a/drivers/scsi/vmw_pvscsi.c
-+++ b/drivers/scsi/vmw_pvscsi.c
-@@ -793,6 +793,7 @@ static int pvscsi_abort(struct scsi_cmnd *cmd)
- 	unsigned long flags;
- 	int result = SUCCESS;
- 	DECLARE_COMPLETION_ONSTACK(abort_cmp);
-+	int done;
- 
- 	scmd_printk(KERN_DEBUG, cmd, "task abort on host %u, %p\n",
- 		    adapter->host->host_no, cmd);
-@@ -824,10 +825,10 @@ static int pvscsi_abort(struct scsi_cmnd *cmd)
- 	pvscsi_abort_cmd(adapter, ctx);
- 	spin_unlock_irqrestore(&adapter->hw_lock, flags);
- 	/* Wait for 2 secs for the completion. */
--	wait_for_completion_timeout(&abort_cmp, msecs_to_jiffies(2000));
-+	done = wait_for_completion_timeout(&abort_cmp, msecs_to_jiffies(2000));
- 	spin_lock_irqsave(&adapter->hw_lock, flags);
- 
--	if (!completion_done(&abort_cmp)) {
-+	if (!done) {
- 		/*
- 		 * Failed to abort the command, unmark the fact that it
- 		 * was requested to be aborted.
-diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
-index c097d2c..d41292e 100644
---- a/drivers/scsi/vmw_pvscsi.h
-+++ b/drivers/scsi/vmw_pvscsi.h
-@@ -26,7 +26,7 @@
- 
- #include <linux/types.h>
- 
--#define PVSCSI_DRIVER_VERSION_STRING   "1.0.6.0-k"
-+#define PVSCSI_DRIVER_VERSION_STRING   "1.0.7.0-k"
- 
- #define PVSCSI_MAX_NUM_SG_ENTRIES_PER_SEGMENT 128
- 
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
