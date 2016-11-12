@@ -1,64 +1,151 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] scsi_transport_fc: Hold queue lock while calling
- blk_run_queue_async()
-Date: Fri, 11 Nov 2016 16:55:50 -0800
-Message-ID: <fb002f66-4648-9653-63b1-9c24a2c02666@sandisk.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [GIT PULL] SCSI fixes for 4.9-rc3
+Date: Sat, 12 Nov 2016 06:38:30 +0530
+Message-ID: <8275700b8bd4c457dab7b6e7260fce00@mail.gmail.com>
+References: <1478352591.2858.5.camel@HansenPartnership.com>
+ <1eee17da-1166-6a48-8a21-0ad5d6a0660a@gmail.com> <024723a1-3dec-f644-277b-4178118cc241@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0076.outbound.protection.outlook.com ([104.47.32.76]:34813
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S938426AbcKLA4B (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 11 Nov 2016 19:56:01 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <024723a1-3dec-f644-277b-4178118cc241@gmail.com>
+Sender: stable-owner@vger.kernel.org
+To: Gabriel C <nix.or.die@gmail.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, James Smart <james.smart@avagotech.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-It is required to hold the queue lock when calling blk_run_queue_async()
-to avoid that a race between blk_run_queue_async() and
-blk_cleanup_queue() is triggered. Additionally, remove the get_device()
-and put_device() calls from fc_bsg_goose_queue. It is namely the
-responsibility of the caller of fc_bsg_goose_queue() to ensure that
-the bsg queue does not disappear while fc_bsg_goose_queue() is in
-progress.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Gabriel C
+> Sent: Friday, November 11, 2016 9:40 AM
+> To: James Bottomley; Andrew Morton; Linus Torvalds
+> Cc: linux-scsi; linux-kernel; stable@vger.kernel.org
+> Subject: Re: [GIT PULL] SCSI fixes for 4.9-rc3
+>
+>
+>
+> On 11.11.2016 04:30, Gabriel C wrote:
+> >
+> > On 05.11.2016 14:29, James Bottomley wrote:
+> >
+> >
+> > ...
+> >
+> >> Kashyap Desai (1):
+> >>       scsi: megaraid_sas: Fix data integrity failure for JBOD
+> >> (passthrough) devices
+> >>
+> >> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> >> b/drivers/scsi/megaraid/megaraid_sas_base.c
+> >> index 9ff57de..d8b1fbd 100644
+> >> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> >> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> >> @@ -1700,16 +1700,13 @@ megasas_queue_command(struct Scsi_Host
+> *shost, struct scsi_cmnd *scmd)
+> >>  		goto out_done;
+> >>  	}
+> >>
+> >> -	switch (scmd->cmnd[0]) {
+> >> -	case SYNCHRONIZE_CACHE:
+> >> -		/*
+> >> -		 * FW takes care of flush cache on its own
+> >> -		 * No need to send it down
+> >> -		 */
+> >> +	/*
+> >> +	 * FW takes care of flush cache on its own for Virtual Disk.
+> >> +	 * No need to send it down for VD. For JBOD send
+> SYNCHRONIZE_CACHE to FW.
+> >> +	 */
+> >> +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
+> >> +MEGASAS_IS_LOGICAL(scmd)) {
+> >>  		scmd->result = DID_OK << 16;
+> >>  		goto out_done;
+> >> -	default:
+> >> -		break;
+> >>  	}
+> >>
+> >>  	return instance->instancet->build_and_issue_cmd(instance, scmd);
+> >
+> > This patch breaks my box.. I'm not able to boot it anymore.
+> > It seems with this patch I have /dev/sda[a-z] to /dev/sdz[a-z] ?!?
+> >
+> > I'm not sure how to get an log since dracut times out and I'm dropped
+> > , after a very long time of probing 'ghost devices', in a emercency
+> > shell,
+> journalctl doesn't work also..
+> >
+> > After reverting this one I can boot normal.
+> >
+> > Box is a FUJITSU PRIMERGY TX200 S5..
 
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: James Smart <james.smart@avagotech.com>
----
- drivers/scsi/scsi_transport_fc.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+Please  check now commit.  Below commit has complete fix.
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 0f3a386..a32ab8e 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -3855,15 +3855,15 @@ fc_bsg_host_dispatch(struct request_queue *q, struct Scsi_Host *shost,
- static void
- fc_bsg_goose_queue(struct fc_rport *rport)
- {
--	if (!rport->rqst_q)
-+	struct request_queue *q = rport->rqst_q;
-+	unsigned long flags;
-+
-+	if (!q)
- 		return;
- 
--	/*
--	 * This get/put dance makes no sense
--	 */
--	get_device(&rport->dev);
--	blk_run_queue_async(rport->rqst_q);
--	put_device(&rport->dev);
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	blk_run_queue_async(q);
-+	spin_unlock_irqrestore(q->queue_lock, flags);
- }
- 
- /**
--- 
-2.10.1
+http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=5e5ec1759dd663a1d5a2f10930224dd009e500e8
 
+
+> >
+> > This is from an working kernel..
+> >
+> > [    5.119371] megaraid_sas 0000:01:00.0: FW now in Ready state
+> > [    5.119418] megaraid_sas 0000:01:00.0: firmware supports msix
+> > : (0)
+> > [    5.119420] megaraid_sas 0000:01:00.0: current msix/online cpus
+> > : (1/16)
+> > [    5.119422] megaraid_sas 0000:01:00.0: RDPQ mode     : (disabled)
+> > [    5.123100] ehci-pci 0000:00:1a.7: cache line size of 32 is not
+> > supported
+> > [    5.123113] ehci-pci 0000:00:1a.7: irq 18, io mem 0xb0020000
+> >
+> > ...
+> >
+> > [    5.208063] megaraid_sas 0000:01:00.0: controller type       :
+> > MR(256MB)
+> > [    5.208065] megaraid_sas 0000:01:00.0: Online Controller Reset(OCR)
+> > :
+> Enabled
+> > [    5.208067] megaraid_sas 0000:01:00.0: Secure JBOD support   : No
+> > [    5.208070] megaraid_sas 0000:01:00.0: megasas_init_mfi:
+> fw_support_ieee=0
+> > [    5.208073] megaraid_sas 0000:01:00.0: INIT adapter done
+> > [    5.208075] megaraid_sas 0000:01:00.0: Jbod map is not supported
+> megasas_setup_jbod_map 4967
+> > [    5.230163] megaraid_sas 0000:01:00.0: MR_DCMD_PD_LIST_QUERY
+> failed/not supported by firmware
+> > [    5.252080] megaraid_sas 0000:01:00.0: DCMD not supported by
+> > firmware -
+> megasas_ld_list_query 4369
+> > [    5.274086] megaraid_sas 0000:01:00.0: pci id                :
+> (0x1000)/(0x0060)/(0x1734)/(0x10f9)
+> > [    5.274089] megaraid_sas 0000:01:00.0: unevenspan support    : no
+> > [    5.274090] megaraid_sas 0000:01:00.0: firmware crash dump   : no
+> > [    5.274092] megaraid_sas 0000:01:00.0: jbod sync map         : no
+> > [    5.274094] scsi host0: Avago SAS based MegaRAID driver
+> > [    5.280022] scsi 0:0:6:0: Direct-Access     ATA      WDC WD5002ABYS-5
+> > 3B06
+> PQ: 0 ANSI: 5
+> > [    5.282153] scsi 0:0:7:0: Direct-Access     ATA      WDC WD5002ABYS-5
+> > 3B06
+> PQ: 0 ANSI: 5
+> > [    5.285180] scsi 0:0:10:0: Direct-Access     ATA      ST500NM0011
+> > FTM6 PQ:
+> 0 ANSI: 5
+> > [    5.369885] scsi 0:2:0:0: Direct-Access     LSI      MegaRAID SAS RMB
+> > 1.40 PQ:
+> 0 ANSI: 5
+> >
+> > ..
+> >
+> > Please let me know if you need more infos and/or want me to test
+> > patches.
+> >
+> >
+>
+> I managed to get some parts of the broken dmesg. There it is :
+>
+> http://ftp.frugalware.org/pub/other/people/crazy/kernel/broken-dmesg
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of
+> a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
