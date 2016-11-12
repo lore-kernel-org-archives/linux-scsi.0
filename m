@@ -1,97 +1,52 @@
-From: Gabriel C <nix.or.die@gmail.com>
-Subject: Re: [GIT PULL] SCSI fixes for 4.9-rc3
-Date: Sat, 12 Nov 2016 03:05:32 +0100
-Message-ID: <02467dd3-21ab-9807-d516-87cc75b793a1@gmail.com>
-References: <1478352591.2858.5.camel@HansenPartnership.com>
- <1eee17da-1166-6a48-8a21-0ad5d6a0660a@gmail.com>
- <024723a1-3dec-f644-277b-4178118cc241@gmail.com>
- <8275700b8bd4c457dab7b6e7260fce00@mail.gmail.com>
+From: "UNCLAIMED ASSET" <noreply@mail.co.uk>
+Subject: Nujna response.//..
+Date: Sat, 12 Nov 2016 02:58:49 -0500
+Message-ID: <E1c5TDA-0004WD-Iv@srv01.wsp.net.br>
+Reply-To: steve.s.bhatti@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <8275700b8bd4c457dab7b6e7260fce00@mail.gmail.com>
-Sender: stable-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, James Bottomley <James.Bottomley@hansenpartnership.com>, Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 177-069-092-234.static.ctbctelecom.com.br ([177.69.92.234]:35304
+        "EHLO srv01.wsp.net.br" rhost-flags-OK-FAIL-OK-OK) by vger.kernel.org
+        with ESMTP id S1752236AbcKLJeP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2016 04:34:15 -0500
+Received: from 75-151-23-182-michigan.hfc.comcastbusiness.net ([75.151.23.182] helo=PRIMSSERVER.PR.Headquarters.epainrehab.com)
+        by srv01.wsp.net.br with esmtpa (Exim 4.84_2)
+        (envelope-from <noreply@mail.co.uk>)
+        id 1c5TDA-0004WD-Iv
+        for linux-scsi@vger.kernel.org; Sat, 12 Nov 2016 05:58:53 -0200
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+Steve Bhatti,
+Operations / regionalni direktor
+Santander Bank Plc,
+47-48 Piccadilly
+PICCADILLY
+W1J0DT
+London, Združeno Kraljestvo
+ 
+Hi,
 
+Sem Steve Bhatti, od Harlesden North West London, vodja oddelka racunovodskega revidiranja in formalno višji vodja programer pri Deutsche bank, tukaj v Angliji (Santander Bank Plc). Delal sem tudi za novejše ministrov Bank Plc.
+ 
+Rabim nujno pomoc pri prenosu vsoto (£ 21,5) milijona britanskih funtov na svoj racun v 11 ali 15 bancnih dni. Ta denar je bil v mirovanju za let v naši banki brez zahtevka. Želim banka sprostiti denar za vas, najbližje osebe v naši pokojnega Stranka (lastnik racuna), ki je na žalost izgubil življenje februarja 2003, po južnem ZDA raketoplana Columbia, je umrl en sam clovek. Nocem, da je denar šel v zakladniškega racuna banke kot zapušceni sklada. To je torej razlog, zakaj sem kontakt z vami, da bi lahko banka spustite denar za vas, saj naj ožjih sorodnikov na umrlega kupca. (Late David McDowell Brown), ameriški državljan Arlington v Virginiji.
+Prosimo, da bi vas rad, da ta predlog kot top skrivnost in ga izbrisati, ce vas ne zanimajo.
+ 
+Tu je delitev razmerje; 50% za mene in 40% za vas, medtem ko 10% je za vse stroške, ki so nastali v casu transakcije. Ce ste zainteresirani, se obrnite mi neposredno preko mojega zasebnega / direktno pošto: steve.s.bhatti@gmail.com
 
-On 12.11.2016 02:08, Kashyap Desai wrote:
->> -----Original Message-----
->> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
->> owner@vger.kernel.org] On Behalf Of Gabriel C
->> Sent: Friday, November 11, 2016 9:40 AM
->> To: James Bottomley; Andrew Morton; Linus Torvalds
->> Cc: linux-scsi; linux-kernel; stable@vger.kernel.org
->> Subject: Re: [GIT PULL] SCSI fixes for 4.9-rc3
->>
->>
->>
->> On 11.11.2016 04:30, Gabriel C wrote:
->>>
->>> On 05.11.2016 14:29, James Bottomley wrote:
->>>
->>>
->>> ...
->>>
->>>> Kashyap Desai (1):
->>>>       scsi: megaraid_sas: Fix data integrity failure for JBOD
->>>> (passthrough) devices
->>>>
->>>> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->>>> b/drivers/scsi/megaraid/megaraid_sas_base.c
->>>> index 9ff57de..d8b1fbd 100644
->>>> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
->>>> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->>>> @@ -1700,16 +1700,13 @@ megasas_queue_command(struct Scsi_Host
->> *shost, struct scsi_cmnd *scmd)
->>>>  		goto out_done;
->>>>  	}
->>>>
->>>> -	switch (scmd->cmnd[0]) {
->>>> -	case SYNCHRONIZE_CACHE:
->>>> -		/*
->>>> -		 * FW takes care of flush cache on its own
->>>> -		 * No need to send it down
->>>> -		 */
->>>> +	/*
->>>> +	 * FW takes care of flush cache on its own for Virtual Disk.
->>>> +	 * No need to send it down for VD. For JBOD send
->> SYNCHRONIZE_CACHE to FW.
->>>> +	 */
->>>> +	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
->>>> +MEGASAS_IS_LOGICAL(scmd)) {
->>>>  		scmd->result = DID_OK << 16;
->>>>  		goto out_done;
->>>> -	default:
->>>> -		break;
->>>>  	}
->>>>
->>>>  	return instance->instancet->build_and_issue_cmd(instance, scmd);
->>>
->>> This patch breaks my box.. I'm not able to boot it anymore.
->>> It seems with this patch I have /dev/sda[a-z] to /dev/sdz[a-z] ?!?
->>>
->>> I'm not sure how to get an log since dracut times out and I'm dropped
->>> , after a very long time of probing 'ghost devices', in a emercency
->>> shell,
->> journalctl doesn't work also..
->>>
->>> After reverting this one I can boot normal.
->>>
->>> Box is a FUJITSU PRIMERGY TX200 S5..
-> 
-> Please  check now commit.  Below commit has complete fix.
-> 
-> http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/commit/?id=5e5ec1759dd663a1d5a2f10930224dd009e500e8
-> 
-
-
-This patch fixes the problem for me. Thank you.
-
-
-Regards,
-
-Gabriel C
+Navedite mi sledi spodaj, kot smo 7 dni teci skozi. To je zelo nujna.
+ 
+1. Polno ime:
+2. Direct Mobile Število:
+3. Kontaktni naslov:
+4. Poklic:
+5. Age:
+6. Spol:
+7. Državljanstvo:
+ 
+S spoštovanjem,
+Dr. Steve Bhatti.
