@@ -1,48 +1,52 @@
-From: Andrey Grodzovsky <andrey2805@gmail.com>
-Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v4)
-Date: Sat, 12 Nov 2016 11:36:09 -0500
-Message-ID: <CAJphD_rAW+fmJq3dK8-a-fpDOdMcLk2t0dUGVUrowXFQ=jA08A@mail.gmail.com>
-References: <20161110135443.GA28767@kroah.com> <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
- <yq1inrsk976.fsf@sermon.lab.mkp.net>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] iscsi: fix spelling mistakes in dev_warn messages
+Date: Sat, 12 Nov 2016 16:49:50 +0000
+Message-ID: <20161112164950.5605-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <yq1inrsk976.fsf@sermon.lab.mkp.net>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Igor Rybak <igor@media-clone.com>, Ezra Kohavi <ezra@media-clone.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from youngberry.canonical.com ([91.189.89.112]:49498 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S966411AbcKLQuD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2016 11:50:03 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-On Sat, Nov 12, 2016 at 10:29 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Andrey" == Andrey Grodzovsky <andrey2805@gmail.com> writes:
->
-> Andrey,
->
-> Andrey> Problem: This is a work around for a bug with LSI Fusion MPT
-> Andrey> SAS2 when pefroming secure erase. Due to the very long time the
-> Andrey> operation takes commands issued during the erase will time out
-> Andrey> and will trigger execution of abort hook. Even though the abort
-> Andrey> hook is called for the specific command which timed out this
-> Andrey> leads to entire device halt (scsi_state terminated) and
-> Andrey> premature termination of the secured erase.
->
-> This patch didn't apply to the SCSI tree. I merged it into
-> 4.9/scsi-fixes by hand.
+From: Colin Ian King <colin.king@canonical.com>
 
-Sorry about that and thanks. Next time i will work of off latest tree.
-Regarding older code where there is still a separate mpt2sas driver, should
-a separate patch to be done or this fix will be ported there ?
+Trivial fix to spelling mistake "suspeneded" to "suspended" in
+dev_warn messages
 
-Thanks,
-Andrey
->
-> Also, please check Documentation/SubmittingPatches for future
-> submissions. Patch version goes inside the [PATCH foo/bar] brackets and
-> patch changelog entries below "---" separator.
->
-> Thanks!
-> Martin
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/isci/remote_node_context.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/isci/remote_node_context.c b/drivers/scsi/isci/remote_node_context.c
+index 1910100..30bd800 100644
+--- a/drivers/scsi/isci/remote_node_context.c
++++ b/drivers/scsi/isci/remote_node_context.c
+@@ -454,7 +454,7 @@ enum sci_status sci_remote_node_context_event_handler(struct sci_remote_node_con
+ 				 * the device since it's being invalidated anyway */
+ 				dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
+ 					"%s: SCIC Remote Node Context 0x%p was "
+-					"suspeneded by hardware while being "
++					"suspended by hardware while being "
+ 					"invalidated.\n", __func__, sci_rnc);
+ 				break;
+ 			default:
+@@ -473,7 +473,7 @@ enum sci_status sci_remote_node_context_event_handler(struct sci_remote_node_con
+ 				 * the device since it's being resumed anyway */
+ 				dev_warn(scirdev_to_dev(rnc_to_dev(sci_rnc)),
+ 					"%s: SCIC Remote Node Context 0x%p was "
+-					"suspeneded by hardware while being resumed.\n",
++					"suspended by hardware while being resumed.\n",
+ 					__func__, sci_rnc);
+ 				break;
+ 			default:
+-- 
+2.10.2
+
