@@ -1,40 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] [SCSI] mpt3sas: Fix secure erase premature termination (v4)
-Date: Sat, 12 Nov 2016 10:29:49 -0500
-Message-ID: <yq1inrsk976.fsf@sermon.lab.mkp.net>
-References: <20161110135443.GA28767@kroah.com>
-        <1478788527-7372-1-git-send-email-andrey2805@gmail.com>
+Subject: Re: [PATCH v2] ufs: introduce setup_xfer_req callback
+Date: Sat, 12 Nov 2016 10:38:59 -0500
+Message-ID: <yq1eg2gk8rw.fsf@sermon.lab.mkp.net>
+References: <002201d23b4c$012486d0$036d9470$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1478788527-7372-1-git-send-email-andrey2805@gmail.com> (Andrey
-        Grodzovsky's message of "Thu, 10 Nov 2016 09:35:27 -0500")
-Sender: stable-owner@vger.kernel.org
-To: Andrey Grodzovsky <andrey2805@gmail.com>
-Cc: MPT-FusionLinux.pdl@broadcom.com, igor@media-clone.com, ezra@media-clone.com, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:23503 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751643AbcKLPjJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 12 Nov 2016 10:39:09 -0500
+In-Reply-To: <002201d23b4c$012486d0$036d9470$@samsung.com> (Kiwoong Kim's
+        message of "Thu, 10 Nov 2016 21:14:36 +0900")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
->>>>> "Andrey" == Andrey Grodzovsky <andrey2805@gmail.com> writes:
+>>>>> "Kiwoong" == Kiwoong Kim <kwmad.kim@samsung.com> writes:
 
-Andrey,
+Kiwoong> Some UFS host controller may need to configure some things
+Kiwoong> before any transfer request is issued.
 
-Andrey> Problem: This is a work around for a bug with LSI Fusion MPT
-Andrey> SAS2 when pefroming secure erase. Due to the very long time the
-Andrey> operation takes commands issued during the erase will time out
-Andrey> and will trigger execution of abort hook. Even though the abort
-Andrey> hook is called for the specific command which timed out this
-Andrey> leads to entire device halt (scsi_state terminated) and
-Andrey> premature termination of the secured erase.
+Applied your 3 v2 patches to 4.10/scsi-queue.
 
-This patch didn't apply to the SCSI tree. I merged it into
-4.9/scsi-fixes by hand.
+Kiwoong> V2: change data type of 2nd argument
 
-Also, please check Documentation/SubmittingPatches for future
-submissions. Patch version goes inside the [PATCH foo/bar] brackets and
-patch changelog entries below "---" separator.
+Please make sure to put change entries like this below a --- separator
+so they don't become part of the git commit description.
 
 Thanks!
-Martin
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
