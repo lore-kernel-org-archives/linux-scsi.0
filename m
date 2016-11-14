@@ -1,31 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: do not abort all commands in the adapter during EEH recovery
-Date: Mon, 14 Nov 2016 18:39:37 -0500
-Message-ID: <yq1a8d1fx6u.fsf@sermon.lab.mkp.net>
-References: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH] hpsa: correct logical resets
+Date: Mon, 14 Nov 2016 18:44:10 -0500
+Message-ID: <yq160npfwz9.fsf@sermon.lab.mkp.net>
+References: <147881417483.804.10756927186886954941.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-        (Mauricio Faria de Oliveira's message of "Mon, 14 Nov 2016 19:26:22
-        -0200")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: Himanshu.Madhani@cavium.com, qla2xxx-upstream@qlogic.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:44909 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938935AbcKNXow (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 18:44:52 -0500
+In-Reply-To: <147881417483.804.10756927186886954941.stgit@brunhilda> (Don
+        Brace's message of "Thu, 10 Nov 2016 15:42:54 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Mauricio> The previous commit ("qla2xxx: fix invalid DMA access after
-Mauricio> command aborts in PCI device remove") introduced a regression
-Mauricio> during an EEH recovery, since the change to the
-Mauricio> qla2x00_abort_all_cmds() function calls qla2xxx_eh_abort(),
-Mauricio> which verifies the EEH recovery condition but handles it
-Mauricio> heavy-handed. (commit a465537ad1a4 "qla2xxx: Disable the
-Mauricio> adapter and skip error recovery in case of register
-Mauricio> disconnect.")
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 0b6eb5a..a296537 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -300,6 +300,10 @@ static bool hpsa_cmd_dev_match(struct ctlr_info *h, struct CommandList *c,
+ 			       struct hpsa_scsi_dev_t *dev,
+ 			       unsigned char *scsi3addr);
+ 
++static int wait_for_device_to_become_ready(struct ctlr_info *h,
++					   unsigned char lunaddr[],
++					   int reply_queue);
++
+ static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+ {
+ 	unsigned long *priv = shost_priv(sdev->host);
 
-Applied to 4.9/scsi-fixes.
+Wouldn't it be nicer to put this with the rest of the function
+prototypes at the beginning of the file?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
