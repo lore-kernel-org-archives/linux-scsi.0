@@ -1,22 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] sd_zbc: Force use of READ16/WRITE16
-Date: Mon, 14 Nov 2016 17:10:37 +0100
-Message-ID: <20161114161037.GA28481@lst.de>
-References: <1478843606-15647-1-git-send-email-damien.lemoal@wdc.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 0/2] sd: Fix a deadlock between event checking and device
+ removal
+Date: Mon, 14 Nov 2016 10:35:07 -0800
+Message-ID: <9500e9b2-2d34-099d-aa90-d38fb3feb02e@sandisk.com>
+References: <a8f0ee8f-7b40-2375-47a4-52f78af29d8d@sandisk.com>
+ <1479016028.17624.16.camel@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:50750 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753706AbcKNQKk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Nov 2016 11:10:40 -0500
-Content-Disposition: inline
-In-Reply-To: <1478843606-15647-1-git-send-email-damien.lemoal@wdc.com>
+Received: from mail-dm3nam03on0049.outbound.protection.outlook.com ([104.47.41.49]:38284
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932414AbcKNSfS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Nov 2016 13:35:18 -0500
+In-Reply-To: <1479016028.17624.16.camel@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>
+To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Looks fine,
+On 11/12/2016 09:47 PM, James Bottomley wrote:
+> On Fri, 2016-11-11 at 16:38 -0800, Bart Van Assche wrote:
+>> Hello James and Martin,
+>>
+>> This short patch series fixes a deadlock that I ran into for the
+>> first time several months ago but for which I had not yet had the
+>> time to post a fix. As usual, feedback is appreciated.
+>
+> First question would be why do we need to push highly dm specific
+> knowledge into block, like REQ_FAIL_IF_NO_PATH.  Can't we just use
+> REQ_FAILFAST_X for this?
+>
+> Also, I don't quite understand how you've configured multipath
+> underneath SCSI.  I thought dm-mp always went on top?
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Hello James,
+
+dm-multipath was running on top of SCSI in my setup which means that at 
+least the patch description is wrong. Since it was some time ago that I 
+ran into this deadlock, I will check first whether I can still reproduce it.
+
+Bart.
+
