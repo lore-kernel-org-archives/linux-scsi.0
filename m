@@ -1,57 +1,70 @@
-From: Arun Easi <arun.easi@cavium.com>
-Subject: qed, qedi patchset submission
-Date: Mon, 14 Nov 2016 13:53:50 -0800
-Message-ID: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: do not abort all commands in the adapter during
+ EEH recovery
+Date: Mon, 14 Nov 2016 22:07:01 +0000
+Message-ID: <15B66EB6-63CD-46D3-B6A9-444CCD181D2B@cavium.com>
+References: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Content-Language: en-US
+Content-ID: <67653AF62BD8AC49999BD6C4C5918AD1@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi Martin, David,
-
-This is regarding the submission of the recent patch series we have posted
-to linux-scsi and netdev:
-
-    [PATCH v2 0/6] Add QLogic FastLinQ iSCSI (qedi) driver.
-    [PATCH v2 1/6] qed: Add support for hardware offloaded iSCSI.
-    [PATCH v2 2/6] qed: Add iSCSI out of order packet handling.
-    [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-    [PATCH v2 4/6] qedi: Add LL2 iSCSI interface for offload iSCSI.
-    [PATCH v2 5/6] qedi: Add support for iSCSI session management.
-    [PATCH v2 6/6] qedi: Add support for data path.
-
-Patches 1 & 2 are "qed" module patches that goes under
-drivers/net/ethernet/qlogic/qed/ and include/linux/qed/ directory.
-	- These are the iSCSI enablement changes to the common "qed"
-	  module. There is no dependency for these patches and so
-	  can go independently.
-
-Patches 3, 4, 5 & 6 are the qedi patches that is aimed towards
-drivers/scsi/qedi/ directory.
-	- These are the core qedi changes and is dependent on the
-	  qed changes (invokes qed_XXX functions).
-
-As qed sits in the net tree, the patches are usually submitted via netdev.
-
-Do you have any preference or thoughts on how the "qed" patches be 
-approached? Just as a reference, our rdma driver "qedr" went through 
-something similar[1], and eventually "qed" patches were taken by David 
-in the net tree and "qedr", in the rdma tree (obviously) by Doug L.
-
-Hi David,
-
-For the "qed" enablement sent with the v2 series, we did not prefix the 
-qed patches with "[PATCH net-next]" prefix, so netdev folks may have 
-failed to notice/review that, sorry about that. We will send the next (v3) 
-series with that corrected.
-
-Right now, we are basing the "qed" patches on top of latest net + net-next 
-tree. FYI, I tried a test merge of net-next/master + qed patches with 
-"net/master" and I see no conflict in qed.
-
-Regards,
--Arun
-
-[1] http://marc.info/?l=linux-rdma&m=147509152719831&w=2
+DQoNCk9uIDExLzE0LzE2LCAxOjI2IFBNLCAiTWF1cmljaW8gRmFyaWEgZGUgT2xpdmVpcmEiIDxt
+YXVyaWNmb0BsaW51eC52bmV0LmlibS5jb20+IHdyb3RlOg0KDQo+VGhlIHByZXZpb3VzIGNvbW1p
+dCAoInFsYTJ4eHg6IGZpeCBpbnZhbGlkIERNQSBhY2Nlc3MgYWZ0ZXIgY29tbWFuZA0KPmFib3J0
+cyBpbiBQQ0kgZGV2aWNlIHJlbW92ZSIpIGludHJvZHVjZWQgYSByZWdyZXNzaW9uIGR1cmluZyBh
+biBFRUgNCj5yZWNvdmVyeSwgc2luY2UgdGhlIGNoYW5nZSB0byB0aGUgcWxhMngwMF9hYm9ydF9h
+bGxfY21kcygpIGZ1bmN0aW9uDQo+Y2FsbHMgcWxhMnh4eF9laF9hYm9ydCgpLCB3aGljaCB2ZXJp
+ZmllcyB0aGUgRUVIIHJlY292ZXJ5IGNvbmRpdGlvbg0KPmJ1dCBoYW5kbGVzIGl0IGhlYXZ5LWhh
+bmRlZC4gKGNvbW1pdCBhNDY1NTM3YWQxYTQgInFsYTJ4eHg6IERpc2FibGUNCj50aGUgYWRhcHRl
+ciBhbmQgc2tpcCBlcnJvciByZWNvdmVyeSBpbiBjYXNlIG9mIHJlZ2lzdGVyIGRpc2Nvbm5lY3Qu
+IikNCj4NCj5UaGlzIHByb2JsZW0gd2FycmFudHMgYSBtb3JlIGdlbmVyYWwvb3B0aW1pc3RpYyBz
+b2x1dGlvbiByaWdodCBpbnRvDQo+cWxhMnh4eF9laF9hYm9ydCgpICAoZWcgaW4gY2FzZSBhIHJl
+YWwgY29tbWFuZCBhYm9ydCBhcnJpdmVzIGR1cmluZw0KPkVFSCByZWNvdmVyeSwgb3IgaWYgaXQg
+dGFrZXMgbG9uZyBlbm91Z2ggdG8gdHJpZ2dlciBjb21tYW5kIGFib3J0cyk7DQo+YnV0IGl0J3Mg
+c3RpbGwgd29ydGggdG8gYWRkIGEgY2hlY2sgdG8gZW5zdXJlIHRoZSBjb2RlIGFkZGVkIGJ5IHRo
+ZQ0KPnByZXZpb3VzIGNvbW1pdCBpcyBjb3JyZWN0IGFuZCBjb250YWluZWQgd2l0aGluIGl0cyBv
+d25lciBmdW5jdGlvbi4NCj4NCj5UaGlzIGNvbW1pdCBqdXN0IGFkZHMgYSAnaWYgKCFoYS0+Zmxh
+Z3MuZWVoX2J1c3kpJyBjaGVjayBhcm91bmQgaXQuDQo+KGFoZW07IGEgdHJpdmlhbCBmaXggZm9y
+IHRoaXMgLXJjIHNlcmllczsgc29ycnkgZm9yIHRoaXMgb3ZlcnNpZ2h0LikNCj4NCj5XaXRoIGl0
+IGFwcGxpZWQsIGJvdGggUENJIGRldmljZSByZW1vdmUgYW5kIEVFSCByZWNvdmVyeSB3b3JrcyBm
+aW5lLg0KPg0KPkZpeGVzOiAxNTM1YWE3NWEzZDggKCJzY3NpOiBxbGEyeHh4OiBmaXggaW52YWxp
+ZCBETUEgYWNjZXNzIGFmdGVyDQo+Y29tbWFuZCBhYm9ydHMgaW4gUENJIGRldmljZSByZW1vdmUi
+KQ0KPlNpZ25lZC1vZmYtYnk6IE1hdXJpY2lvIEZhcmlhIGRlIE9saXZlaXJhIDxtYXVyaWNmb0Bs
+aW51eC52bmV0LmlibS5jb20+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5j
+IHwgMjEgKysrKysrKysrKysrKy0tLS0tLS0tDQo+IDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRp
+b25zKCspLCA4IGRlbGV0aW9ucygtKQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxh
+Mnh4eC9xbGFfb3MuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+aW5kZXggNTY3
+ZmEwODBlMjYxLi41NmQ2MTQyODUyYTUgMTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX29zLmMNCj4rKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYw0KPkBAIC0x
+NDU2LDE1ICsxNDU2LDIwIEBAIHVpbnQzMl90IHFsYTJ4MDBfaXNwX3JlZ19zdGF0KHN0cnVjdCBx
+bGFfaHdfZGF0YSAqaGEpDQo+IAkJZm9yIChjbnQgPSAxOyBjbnQgPCByZXEtPm51bV9vdXRzdGFu
+ZGluZ19jbWRzOyBjbnQrKykgew0KPiAJCQlzcCA9IHJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRd
+Ow0KPiAJCQlpZiAoc3ApIHsNCj4tCQkJCS8qIEdldCBhIHJlZmVyZW5jZSB0byB0aGUgc3AgYW5k
+IGRyb3AgdGhlIGxvY2suDQo+LQkJCQkgKiBUaGUgcmVmZXJlbmNlIGVuc3VyZXMgdGhpcyBzcC0+
+ZG9uZSgpIGNhbGwNCj4tCQkJCSAqIC0gYW5kIG5vdCB0aGUgY2FsbCBpbiBxbGEyeHh4X2VoX2Fi
+b3J0KCkgLQ0KPi0JCQkJICogZW5kcyB0aGUgU0NTSSBjb21tYW5kICh3aXRoIHJlc3VsdCAncmVz
+JykuDQo+KwkJCQkvKiBEb24ndCBhYm9ydCBjb21tYW5kcyBpbiBhZGFwdGVyIGR1cmluZyBFRUgN
+Cj4rCQkJCSAqIHJlY292ZXJ5IGFzIGl0J3Mgbm90IGFjY2Vzc2libGUvcmVzcG9uZGluZy4NCj4g
+CQkJCSAqLw0KPi0JCQkJc3BfZ2V0KHNwKTsNCj4tCQkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUo
+JmhhLT5oYXJkd2FyZV9sb2NrLCBmbGFncyk7DQo+LQkJCQlxbGEyeHh4X2VoX2Fib3J0KEdFVF9D
+TURfU1Aoc3ApKTsNCj4tCQkJCXNwaW5fbG9ja19pcnFzYXZlKCZoYS0+aGFyZHdhcmVfbG9jaywg
+ZmxhZ3MpOw0KPisJCQkJaWYgKCFoYS0+ZmxhZ3MuZWVoX2J1c3kpIHsNCj4rCQkJCQkvKiBHZXQg
+YSByZWZlcmVuY2UgdG8gdGhlIHNwIGFuZCBkcm9wIHRoZSBsb2NrLg0KPisJCQkJCSAqIFRoZSBy
+ZWZlcmVuY2UgZW5zdXJlcyB0aGlzIHNwLT5kb25lKCkgY2FsbA0KPisJCQkJCSAqIC0gYW5kIG5v
+dCB0aGUgY2FsbCBpbiBxbGEyeHh4X2VoX2Fib3J0KCkgLQ0KPisJCQkJCSAqIGVuZHMgdGhlIFND
+U0kgY29tbWFuZCAod2l0aCByZXN1bHQgJ3JlcycpLg0KPisJCQkJCSAqLw0KPisJCQkJCXNwX2dl
+dChzcCk7DQo+KwkJCQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGEtPmhhcmR3YXJlX2xvY2ss
+IGZsYWdzKTsNCj4rCQkJCQlxbGEyeHh4X2VoX2Fib3J0KEdFVF9DTURfU1Aoc3ApKTsNCj4rCQkJ
+CQlzcGluX2xvY2tfaXJxc2F2ZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCj4rCQkJCX0N
+Cj4gCQkJCXJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRdID0gTlVMTDsNCj4gCQkJCXNwLT5kb25l
+KHZoYSwgc3AsIHJlcyk7DQo+IAkJCX0NCj4tLSANCj4xLjguMy4xDQo+DQoNCkFja2VkLWJ5OiBI
+aW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQoNClRoYW5rcywN
+CkhpbWFuc2h1DQoNCg==
