@@ -1,33 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: qed, qedi patchset submission
-Date: Mon, 14 Nov 2016 18:47:27 -0500
-Message-ID: <yq11sydfwts.fsf@sermon.lab.mkp.net>
-References: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com>
+Subject: Re: [PATCH] megaraid-sas: request irqs later
+Date: Mon, 14 Nov 2016 18:48:04 -0500
+Message-ID: <yq1wpg5ei8b.fsf@sermon.lab.mkp.net>
+References: <1478017922-22655-1-git-send-email-thenzl@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com> (Arun
-        Easi's message of "Mon, 14 Nov 2016 13:53:50 -0800")
-Sender: netdev-owner@vger.kernel.org
-To: Arun Easi <arun.easi@cavium.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46081 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938953AbcKNXsL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 18:48:11 -0500
+In-Reply-To: <1478017922-22655-1-git-send-email-thenzl@redhat.com> (Tomas
+        Henzl's message of "Tue, 1 Nov 2016 17:32:02 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, sumit.saxena@broadcom.com, kashyap.desai@broadcom.com
 
->>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
+>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
 
-Arun,
+Tomas> It is not good when an irq arrives before driver structures are
+Tomas> allocated.
 
-Arun> Do you have any preference or thoughts on how the "qed" patches be
-Arun> approached? Just as a reference, our rdma driver "qedr" went
-Arun> through something similar[1], and eventually "qed" patches were
-Arun> taken by David in the net tree and "qedr", in the rdma tree
-Arun> (obviously) by Doug L.
-
-DaveM can queue the whole series or I can hold the SCSI pieces for
-rc1. Either way works for me.
-
-However, I would like to do a review of the driver first. I will try to
-get it done this week.
+Sumit, Kashyap: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
