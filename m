@@ -1,70 +1,57 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: [PATCH] qla2xxx: do not abort all commands in the adapter during EEH recovery
-Date: Mon, 14 Nov 2016 19:26:22 -0200
-Message-ID: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Himanshu.Madhani@cavium.com, qla2xxx-upstream@qlogic.com
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Arun Easi <arun.easi@cavium.com>
+Subject: qed, qedi patchset submission
+Date: Mon, 14 Nov 2016 13:53:50 -0800
+Message-ID: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="US-ASCII"
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-The previous commit ("qla2xxx: fix invalid DMA access after command
-aborts in PCI device remove") introduced a regression during an EEH
-recovery, since the change to the qla2x00_abort_all_cmds() function
-calls qla2xxx_eh_abort(), which verifies the EEH recovery condition
-but handles it heavy-handed. (commit a465537ad1a4 "qla2xxx: Disable
-the adapter and skip error recovery in case of register disconnect.")
+Hi Martin, David,
 
-This problem warrants a more general/optimistic solution right into
-qla2xxx_eh_abort()  (eg in case a real command abort arrives during
-EEH recovery, or if it takes long enough to trigger command aborts);
-but it's still worth to add a check to ensure the code added by the
-previous commit is correct and contained within its owner function.
+This is regarding the submission of the recent patch series we have posted
+to linux-scsi and netdev:
 
-This commit just adds a 'if (!ha->flags.eeh_busy)' check around it.
-(ahem; a trivial fix for this -rc series; sorry for this oversight.)
+    [PATCH v2 0/6] Add QLogic FastLinQ iSCSI (qedi) driver.
+    [PATCH v2 1/6] qed: Add support for hardware offloaded iSCSI.
+    [PATCH v2 2/6] qed: Add iSCSI out of order packet handling.
+    [PATCH v2 3/6] qedi: Add QLogic FastLinQ offload iSCSI driver framework.
+    [PATCH v2 4/6] qedi: Add LL2 iSCSI interface for offload iSCSI.
+    [PATCH v2 5/6] qedi: Add support for iSCSI session management.
+    [PATCH v2 6/6] qedi: Add support for data path.
 
-With it applied, both PCI device remove and EEH recovery works fine.
+Patches 1 & 2 are "qed" module patches that goes under
+drivers/net/ethernet/qlogic/qed/ and include/linux/qed/ directory.
+	- These are the iSCSI enablement changes to the common "qed"
+	  module. There is no dependency for these patches and so
+	  can go independently.
 
-Fixes: 1535aa75a3d8 ("scsi: qla2xxx: fix invalid DMA access after
-command aborts in PCI device remove")
-Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 21 +++++++++++++--------
- 1 file changed, 13 insertions(+), 8 deletions(-)
+Patches 3, 4, 5 & 6 are the qedi patches that is aimed towards
+drivers/scsi/qedi/ directory.
+	- These are the core qedi changes and is dependent on the
+	  qed changes (invokes qed_XXX functions).
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 567fa080e261..56d6142852a5 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1456,15 +1456,20 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
- 			sp = req->outstanding_cmds[cnt];
- 			if (sp) {
--				/* Get a reference to the sp and drop the lock.
--				 * The reference ensures this sp->done() call
--				 * - and not the call in qla2xxx_eh_abort() -
--				 * ends the SCSI command (with result 'res').
-+				/* Don't abort commands in adapter during EEH
-+				 * recovery as it's not accessible/responding.
- 				 */
--				sp_get(sp);
--				spin_unlock_irqrestore(&ha->hardware_lock, flags);
--				qla2xxx_eh_abort(GET_CMD_SP(sp));
--				spin_lock_irqsave(&ha->hardware_lock, flags);
-+				if (!ha->flags.eeh_busy) {
-+					/* Get a reference to the sp and drop the lock.
-+					 * The reference ensures this sp->done() call
-+					 * - and not the call in qla2xxx_eh_abort() -
-+					 * ends the SCSI command (with result 'res').
-+					 */
-+					sp_get(sp);
-+					spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+					qla2xxx_eh_abort(GET_CMD_SP(sp));
-+					spin_lock_irqsave(&ha->hardware_lock, flags);
-+				}
- 				req->outstanding_cmds[cnt] = NULL;
- 				sp->done(vha, sp, res);
- 			}
--- 
-1.8.3.1
+As qed sits in the net tree, the patches are usually submitted via netdev.
+
+Do you have any preference or thoughts on how the "qed" patches be 
+approached? Just as a reference, our rdma driver "qedr" went through 
+something similar[1], and eventually "qed" patches were taken by David 
+in the net tree and "qedr", in the rdma tree (obviously) by Doug L.
+
+Hi David,
+
+For the "qed" enablement sent with the v2 series, we did not prefix the 
+qed patches with "[PATCH net-next]" prefix, so netdev folks may have 
+failed to notice/review that, sorry about that. We will send the next (v3) 
+series with that corrected.
+
+Right now, we are basing the "qed" patches on top of latest net + net-next 
+tree. FYI, I tried a test merge of net-next/master + qed patches with 
+"net/master" and I see no conflict in qed.
+
+Regards,
+-Arun
+
+[1] http://marc.info/?l=linux-rdma&m=147509152719831&w=2
