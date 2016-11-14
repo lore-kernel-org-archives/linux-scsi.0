@@ -1,29 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hpsa: free irq on q indexed by h->intr_mode and not i
-Date: Mon, 14 Nov 2016 18:36:31 -0500
-Message-ID: <yq1eg2dfxc0.fsf@sermon.lab.mkp.net>
-References: <20161114125935.12158-1-colin.king@canonical.com>
+Subject: Re: [PATCH] qla2xxx: do not abort all commands in the adapter during EEH recovery
+Date: Mon, 14 Nov 2016 18:39:37 -0500
+Message-ID: <yq1a8d1fx6u.fsf@sermon.lab.mkp.net>
+References: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19993 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754630AbcKNXgp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 18:36:45 -0500
-In-Reply-To: <20161114125935.12158-1-colin.king@canonical.com> (Colin King's
-        message of "Mon, 14 Nov 2016 12:59:35 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+        (Mauricio Faria de Oliveira's message of "Mon, 14 Nov 2016 19:26:22
+        -0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: Himanshu.Madhani@cavium.com, qla2xxx-upstream@qlogic.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Christoph Hellwig <hch@lst.de>, Don Brace <don.brace@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
 
-Colin> From: Colin Ian King <colin.king@canonical.com> Use correct index
-Colin> on q, use h->intr_mode instead of i. Issue detected using static
-Colin> analysis with cppcheck
+Mauricio> The previous commit ("qla2xxx: fix invalid DMA access after
+Mauricio> command aborts in PCI device remove") introduced a regression
+Mauricio> during an EEH recovery, since the change to the
+Mauricio> qla2x00_abort_all_cmds() function calls qla2xxx_eh_abort(),
+Mauricio> which verifies the EEH recovery condition but handles it
+Mauricio> heavy-handed. (commit a465537ad1a4 "qla2xxx: Disable the
+Mauricio> adapter and skip error recovery in case of register
+Mauricio> disconnect.")
 
-Applied to 4.10/scsi-queue.
+Applied to 4.9/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
