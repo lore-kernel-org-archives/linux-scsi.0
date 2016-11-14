@@ -1,86 +1,77 @@
-From: "Dr. Felix Collins" <felixcollinsfnb2@gmail.com>
-Subject: PLEASE VIEW THE ATTACHED FILE AND CONTACT ME.
-Date: Mon, 14 Nov 2016 07:43:19 +0000 (UTC)
-Message-ID: <1666584935.3489547.1479109399212__4641.88629198379$1479110234$gmane$org@mail.yahoo.com>
-References: <1666584935.3489547.1479109399212.ref@mail.yahoo.com>
-Reply-To: "Dr. Felix Collins" <felixcollinsa@gmail.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH] hpsa: scsi-mq support
+Date: Mon, 14 Nov 2016 16:35:04 +0530
+Message-ID: <6105636cc4a0ef42d47eb426d91634dd@mail.gmail.com>
+References: <1478879194-32529-1-git-send-email-hare@suse.de>
+ <20161111163532.GA14922@infradead.org> <39d1198d-eb49-71ed-9139-f0efd9eefd0d@suse.com>
+ <20161112173223.GA22158@infradead.org> <cba051f8-3055-53c4-2860-ee4c51a7043d@suse.com>
+ <20161113115841.GA4818@lst.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed;
-        boundary="----=_Part_3489546_1885277376.1479109399212"
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from nm33-vm5.bullet.mail.ne1.yahoo.com ([98.138.229.69]:58821 "EHLO
-        nm33-vm5.bullet.mail.ne1.yahoo.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753901AbcKNH4y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Nov 2016 02:56:54 -0500
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:35668 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932970AbcKNLFH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 06:05:07 -0500
+Received: by mail-qk0-f169.google.com with SMTP id n204so90830254qke.2
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Nov 2016 03:05:07 -0800 (PST)
+In-Reply-To: <20161113115841.GA4818@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
 
-------=_Part_3489546_1885277376.1479109399212
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Christoph Hellwig
+> Sent: Sunday, November 13, 2016 5:29 PM
+> To: Hannes Reinecke
+> Cc: Christoph Hellwig; Hannes Reinecke; Christoph Hellwig; Martin K.
+Petersen;
+> James Bottomley; Don Brace; linux-scsi@vger.kernel.org; Jens Axboe
+> Subject: Re: [PATCH] hpsa: scsi-mq support
+>
+> On Sun, Nov 13, 2016 at 10:44:47AM +0100, Hannes Reinecke wrote:
+> > One day to mark with bright red in the calendar.
+> >
+> > Christoph Hellwig is telling me _NOT_ to use scsi-mq.
+>
+> That's not what I'm doing.
+>
+> > This patch was done so see what would needed to be done to convert a
+> > legacy driver.
+> > As I was under the impression that scsi-mq is the way forward, seeing
+> > that it should be enabled per default.
+> > But I must have been mistaken. Apparently.
+>
+> What I am doing is to tell you you should not expose multiple queues
+unless the
+> hardware actually has multiple submissions queues.  The blk-mq and
+scsi-mq
+> code works just fine with a single submission queue, and the hpsa driver
+in
+> particular works really well with scsi-mq and a single submission queue.
+E.g. the
+> RAID HBA on slide 19 of this presentations is an hpsa one:
 
+I have similar results for MegaRaid where seen MR driver gives significant
+improvement for Single Submission Queue and multiple Completion Queue.
+Having said that scsi-mq is enabled but with single Queue is more than
+enough to maximize improvement of SCSI-MQ.
 
+Major advantage was seen while IO load is cross the boundary of Physical
+CPU socket.
 
-------=_Part_3489546_1885277376.1479109399212
-Content-Type: application/msword
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment;
-	filename="FROM FIRST NATIONAL BANK OF SOUTH AFRICA (F.N.B)..rtf"
-Content-ID: <f03ac67e-da25-e224-9d59-4c56ed95efcb@yahoo.com>
+>From this discussion I understood that - Similar logical changes proposed
+for megaraid_sas  and we are not really going to gain with fake multiple
+submission exposed to SML.
 
-e1xydGYxXGFuc2lcYW5zaWNwZzEyNTJcZGVmZjBcZGVmbGFuZzcxNzd7XGZvbnR0Ymx7XGYwXGZz
-d2lzc1xmY2hhcnNldDAgQXJpYWw7fX0NCntcKlxnZW5lcmF0b3IgTXNmdGVkaXQgNS40MS4xNS4x
-NTEyO31cdmlld2tpbmQ0XHVjMVxwYXJkXGYwXGZzMjQgSSBhbSBGZWxpeCBDb2xsaW5zLCBJIHdv
-cmsgd2l0aCB0aGUgRklSU1QgTkFUSU9OQUwgQkFOSyBPRiBTT1VUSCBBRlJJQ0EgKEYuTi5CKS5c
-cGFyDQpQbGVhc2UgY29udGFjdCBtZSB3aXRoIHRoaXMgZW1haWwgYWRkcmVzc2VzLlxwYXINCmZl
-bGl4Y29sbGluc2FAZ21haWwuY29tXHBhcg0KUGxlYXNlIGNhbGwgbWUgb24gbXkgcHJpdmF0ZSBu
-dW1iZXIgKCsyNy03OSAtMTQxLTIzODUpXHBhcg0KXHBhcg0KXHBhcg0KQVRURU5USU9OOiBTSVIv
-TUFEQU0sXHBhcg0KXHBhcg0KSSBkbyB1bmRlcnN0YW5kIHRoZSBjb25jZXJuIHRoaXMgbGV0dGVy
-IHdpbGwgYnJpbmcgdG8geW91IGZvciB0aGUgZmFjdCB0aGF0IGl0IGNvbWVzIGZyb20gYSB0b3Rh
-bCBzdHJhbmdlciwgYnV0IGJlIHJlc3QgYXNzdXJlZCBmb3IgaXQgY29tZXMgd2l0aCBnb29kIGlu
-dGVudGlvbnMuIEkgZ290IHlvdXIgY29udGFjdCB0aHJvdWdoIHRoZSBTb3V0aCBBZnJpY2FuIElu
-dGVybmF0aW9uYWwgRXhjaGFuZ2UgTmV0d29yayBPbi1saW5lIGhlcmUgaW4gSm9oYW5uZXNidXJn
-LCBTb3V0aCBBZnJpY2EuIEZvciBwdXJwb3NlIG9mIGludHJvZHVjdGlvbiBJIGFtIEZlbGl4IENv
-bGxpbnMsIEkgd29yayB3aXRoIHRoZSBGSVJTVCBOQVRJT05BTCBCQU5LIE9GIFNPVVRIIEFGUklD
-QSAoRi5OLkIpICBUaGVyZSBpcyBhbiBhY2NvdW50IG9wZW5lZCBpbiB0aGlzIGJhbmsgc2luY2Ug
-MTk4MCBhbmQgc2luY2UgMTk5NSBub2JvZHkgaGFzIG9wZXJhdGVkIG9uIHRoaXMgYWNjb3VudCBh
-Z2Fpbi4gQWZ0ZXIgZ29pbmcgdGhyb3VnaCBzb21lIG9sZCBmaWxlcyBpbiB0aGUgcmVjb3Jkcywg
-SSBkaXNjb3ZlcmVkIHRoYXQgaWYgSSBkb24ndCByZW1pdCB0aGlzIG1vbmV5IG91dCB1cmdlbnRs
-eSBpdCB3b3VsZCBiZSBmb3JmZWl0ZWQgZm9yIG5vdGhpbmcuXHBhcg0KXHBhcg0KVGhlIG93bmVy
-IG9mIHRoaXMgYWNjb3VudCBpcyBNci4gU21pdGggLkIuIEFuZHJlYXMsIGEgZm9yZWlnbmVyIGFu
-ZCBhIG1pbmVyIGF0IEtydWdlciBHb2xkIENvLW9wZXJhdGlvbiwgYSBnZW9sb2dpc3QgYnkgcHJv
-ZmVzc2lvbiBhbmQgaGUgZGllZCBzaW5jZSAxOTk0LiBObyBvdGhlciBwZXJzb24ga25vd3MgYWJv
-dXQgdGhpcyBhY2NvdW50IG9yIGFueXRoaW5nIGNvbmNlcm5pbmcgaXQsIHRoZSBhY2NvdW50IGhh
-cyBubyBvdGhlciBiZW5lZmljaWFyeSBhbmQgbXkgaW52ZXN0aWdhdGlvbiBwcm92ZWQgdG8gbWUg
-YXMgd2VsbCB0aGF0IHRoZSBjb21wYW55IGRvZXMgbm90IGtub3cgYW55dGhpbmcgYWJvdXQgdGhp
-cyBhY2NvdW50IGFuZCB0aGUgYW1vdW50IGludm9sdmVkIGlzIFVTRCQ3NSwwMDAuMDAwLDAwICgg
-U2V2ZW50eSBGaXZlIE1pbGxpb24gVW5pdGVkIFN0YXRlcyBEb2xsYXJzKS4gSSBhbSBvbmx5IGNv
-bnRhY3RpbmcgeW91IGFzIGEgZm9yZWlnbmVyIGJlY2F1c2UgdGhpcyBtb25leSBjYW5ub3QgYmUg
-YXBwcm92ZWQgdG8gYSBsb2NhbCBiYW5rIGhlcmUsIGJ1dCBjYW4gb25seSBiZSBhcHByb3ZlZCB0
-byBhbnkgZm9yZWlnbiBhY2NvdW50IGJlY2F1c2UgdGhlIG1vbmV5IGlzIGluIFVuaXRlZCBTdGF0
-ZXMgRG9sbGFycyBhbmQgdGhlIGZvcm1lciBvd25lciBvZiB0aGUgYWNjb3VudCBNci4gU21pdGgg
-LkIgLiBBbmRyZWFzIGlzIGEgZm9yZWlnbmVyIHRvby4gSSBuZWVkIGEgdHJ1dGhmdWwgcGVyc29u
-IGluIHRoaXMgYnVzaW5lc3MgYmVjYXVzZSBJIGRvbid0IHdhbnQgdG8gbWFrZSBtaXN0YWtlcy5c
-cGFyDQpccGFyDQogSSBuZWVkIHlvdXIgc3Ryb25nIGFzc3VyYW5jZSBhbmQgdHJ1c3QuIFdpdGgg
-bXkgcG9zaXRpb24gbm93IGluIG9mZmljZSBJIGNhbiB0cmFuc2ZlciB0aGlzIG1vbmV5IHRvIGFu
-eSBmb3JlaWduIHJlbGlhYmxlIGFjY291bnQsIHRocm91Z2ggb24tbGluZSBiYW5raW5nIG9yIFRl
-bGVncmFwaGljIFRyYW5zZmVyIChULlQpIHdoaWNoIHlvdSBjYW4gcHJvdmlkZSB3aXRoIGFzc3Vy
-YW5jZSB0aGF0IHRoaXMgbW9uZXkgd2lsbCBiZSBpbnRhY3QgcGVuZGluZyBteSBwaHlzaWNhbCBh
-cnJpdmFsIHRvIHlvdXIgY291bnRyeSBmb3Igc2hhcmluZy4gSSB3aWxsIGFwcGx5IGZvciBhbm51
-YWwgbGVhdmUgdG8gZ2V0IGEgdmlzYSBpbW1lZGlhdGVseSBJIGhlYXIgZnJvbSB5b3UgdGhhdCB5
-b3UgYXJlIHJlYWR5IHRvIGFjdCBhbmQgcmVjZWl2ZSB0aGlzIG1vbmV5IGluIHlvdXIgYWNjb3Vu
-dC4gQXQgdGhlIGNvbmNsdXNpb24gb2YgdGhpcyBidXNpbmVzcywgSSB3aWxsIGNvbWUgdG8geW91
-ciBjb3VudHJ5IGZvciB3aXRoZHJhd2FsIGFuZCBzaGFyaW5nIGFuZCBvdGhlciBpbnZlc3RtZW50
-cy4geW91IHdpbGwgYmUgZ2l2ZW4gNDAlIG9mIHRoZSB0b3RhbCBhbW91bnQsIDUwJSB3aWxsIGJl
-IGZvciBtZSAsIGFuZCB3aGlsZSAxMCUgd2lsbCBiZSBmb3IgZXhwZW5zZXMgYm90aCBwYXJ0aWVz
-IG1pZ2h0IGluY3VyIGR1cmluZyB0aGUgcHJvY2VzcyBvZiB0cmFuc2ZlcnJpbmcgdGhpcyBtb25l
-eS5ccGFyDQpccGFyDQpUaGVyZWZvcmUsIGlmIHlvdSBhcmUgd2lsbGluZyBhbmQgaW50ZXJlc3Rl
-ZCB0byByZW5kZXIgdGhlIG5lZWRlZCBhc3Npc3RhbmNlLCBFbmRlYXZvciB0byByZXBseSB0aHJv
-dWdoIG15IGVtYWlsIGFkZHJlc3MsIEkgYWxzbyBuZWVkIHlvdXIgcHJpdmF0ZSBwaG9uZSBhbmQg
-ZmF4IG51bWJlcnMgZm9yIGVhc3kgY29tbXVuaWNhdGlvbi4gSSB3aWxsIGdpdmUgbW9yZSBjbGFy
-aWZpY2F0aW9ucyBvbiB0aGUgbW9kYWxpdGllcyBuZWVkZWQgZm9yIHRoZSBzdWNjZXNzZnVsIGNv
-bXBsZXRpb24gb2YgdGhpcyB0cmFuc2FjdGlvbi5ccGFyDQpccGFyDQpccGFyDQpCZXN0IFJlZ2Fy
-ZHMsXHBhcg0KRHIuIEZlbGl4IENvbGxpbnNccGFyDQogXHBhcg0KfQ0KAA==
+Kashyap
 
-------=_Part_3489546_1885277376.1479109399212--
+>
+> http://events.linuxfoundation.org/sites/events/files/slides/scsi.pdf
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of
+> a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
