@@ -1,70 +1,26 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] qla2xxx: do not abort all commands in the adapter during
- EEH recovery
-Date: Mon, 14 Nov 2016 22:07:01 +0000
-Message-ID: <15B66EB6-63CD-46D3-B6A9-444CCD181D2B@cavium.com>
-References: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH] scsi: megaraid_sas: add in missing white spaces in error
+ messages text
+Date: Mon, 14 Nov 2016 14:24:48 -0800
+Message-ID: <b1a8dbb6-e905-ff64-e402-a9373b12609c@sandisk.com>
+References: <20161112162524.4585-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1479158782-4544-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Content-Language: en-US
-Content-ID: <67653AF62BD8AC49999BD6C4C5918AD1@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0071.outbound.protection.outlook.com ([104.47.42.71]:45184
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S965039AbcKNWY5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 14 Nov 2016 17:24:57 -0500
+In-Reply-To: <20161112162524.4585-1-colin.king@canonical.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-DQoNCk9uIDExLzE0LzE2LCAxOjI2IFBNLCAiTWF1cmljaW8gRmFyaWEgZGUgT2xpdmVpcmEiIDxt
-YXVyaWNmb0BsaW51eC52bmV0LmlibS5jb20+IHdyb3RlOg0KDQo+VGhlIHByZXZpb3VzIGNvbW1p
-dCAoInFsYTJ4eHg6IGZpeCBpbnZhbGlkIERNQSBhY2Nlc3MgYWZ0ZXIgY29tbWFuZA0KPmFib3J0
-cyBpbiBQQ0kgZGV2aWNlIHJlbW92ZSIpIGludHJvZHVjZWQgYSByZWdyZXNzaW9uIGR1cmluZyBh
-biBFRUgNCj5yZWNvdmVyeSwgc2luY2UgdGhlIGNoYW5nZSB0byB0aGUgcWxhMngwMF9hYm9ydF9h
-bGxfY21kcygpIGZ1bmN0aW9uDQo+Y2FsbHMgcWxhMnh4eF9laF9hYm9ydCgpLCB3aGljaCB2ZXJp
-ZmllcyB0aGUgRUVIIHJlY292ZXJ5IGNvbmRpdGlvbg0KPmJ1dCBoYW5kbGVzIGl0IGhlYXZ5LWhh
-bmRlZC4gKGNvbW1pdCBhNDY1NTM3YWQxYTQgInFsYTJ4eHg6IERpc2FibGUNCj50aGUgYWRhcHRl
-ciBhbmQgc2tpcCBlcnJvciByZWNvdmVyeSBpbiBjYXNlIG9mIHJlZ2lzdGVyIGRpc2Nvbm5lY3Qu
-IikNCj4NCj5UaGlzIHByb2JsZW0gd2FycmFudHMgYSBtb3JlIGdlbmVyYWwvb3B0aW1pc3RpYyBz
-b2x1dGlvbiByaWdodCBpbnRvDQo+cWxhMnh4eF9laF9hYm9ydCgpICAoZWcgaW4gY2FzZSBhIHJl
-YWwgY29tbWFuZCBhYm9ydCBhcnJpdmVzIGR1cmluZw0KPkVFSCByZWNvdmVyeSwgb3IgaWYgaXQg
-dGFrZXMgbG9uZyBlbm91Z2ggdG8gdHJpZ2dlciBjb21tYW5kIGFib3J0cyk7DQo+YnV0IGl0J3Mg
-c3RpbGwgd29ydGggdG8gYWRkIGEgY2hlY2sgdG8gZW5zdXJlIHRoZSBjb2RlIGFkZGVkIGJ5IHRo
-ZQ0KPnByZXZpb3VzIGNvbW1pdCBpcyBjb3JyZWN0IGFuZCBjb250YWluZWQgd2l0aGluIGl0cyBv
-d25lciBmdW5jdGlvbi4NCj4NCj5UaGlzIGNvbW1pdCBqdXN0IGFkZHMgYSAnaWYgKCFoYS0+Zmxh
-Z3MuZWVoX2J1c3kpJyBjaGVjayBhcm91bmQgaXQuDQo+KGFoZW07IGEgdHJpdmlhbCBmaXggZm9y
-IHRoaXMgLXJjIHNlcmllczsgc29ycnkgZm9yIHRoaXMgb3ZlcnNpZ2h0LikNCj4NCj5XaXRoIGl0
-IGFwcGxpZWQsIGJvdGggUENJIGRldmljZSByZW1vdmUgYW5kIEVFSCByZWNvdmVyeSB3b3JrcyBm
-aW5lLg0KPg0KPkZpeGVzOiAxNTM1YWE3NWEzZDggKCJzY3NpOiBxbGEyeHh4OiBmaXggaW52YWxp
-ZCBETUEgYWNjZXNzIGFmdGVyDQo+Y29tbWFuZCBhYm9ydHMgaW4gUENJIGRldmljZSByZW1vdmUi
-KQ0KPlNpZ25lZC1vZmYtYnk6IE1hdXJpY2lvIEZhcmlhIGRlIE9saXZlaXJhIDxtYXVyaWNmb0Bs
-aW51eC52bmV0LmlibS5jb20+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5j
-IHwgMjEgKysrKysrKysrKysrKy0tLS0tLS0tDQo+IDEgZmlsZSBjaGFuZ2VkLCAxMyBpbnNlcnRp
-b25zKCspLCA4IGRlbGV0aW9ucygtKQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxh
-Mnh4eC9xbGFfb3MuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+aW5kZXggNTY3
-ZmEwODBlMjYxLi41NmQ2MTQyODUyYTUgMTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4
-eHgvcWxhX29zLmMNCj4rKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYw0KPkBAIC0x
-NDU2LDE1ICsxNDU2LDIwIEBAIHVpbnQzMl90IHFsYTJ4MDBfaXNwX3JlZ19zdGF0KHN0cnVjdCBx
-bGFfaHdfZGF0YSAqaGEpDQo+IAkJZm9yIChjbnQgPSAxOyBjbnQgPCByZXEtPm51bV9vdXRzdGFu
-ZGluZ19jbWRzOyBjbnQrKykgew0KPiAJCQlzcCA9IHJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRd
-Ow0KPiAJCQlpZiAoc3ApIHsNCj4tCQkJCS8qIEdldCBhIHJlZmVyZW5jZSB0byB0aGUgc3AgYW5k
-IGRyb3AgdGhlIGxvY2suDQo+LQkJCQkgKiBUaGUgcmVmZXJlbmNlIGVuc3VyZXMgdGhpcyBzcC0+
-ZG9uZSgpIGNhbGwNCj4tCQkJCSAqIC0gYW5kIG5vdCB0aGUgY2FsbCBpbiBxbGEyeHh4X2VoX2Fi
-b3J0KCkgLQ0KPi0JCQkJICogZW5kcyB0aGUgU0NTSSBjb21tYW5kICh3aXRoIHJlc3VsdCAncmVz
-JykuDQo+KwkJCQkvKiBEb24ndCBhYm9ydCBjb21tYW5kcyBpbiBhZGFwdGVyIGR1cmluZyBFRUgN
-Cj4rCQkJCSAqIHJlY292ZXJ5IGFzIGl0J3Mgbm90IGFjY2Vzc2libGUvcmVzcG9uZGluZy4NCj4g
-CQkJCSAqLw0KPi0JCQkJc3BfZ2V0KHNwKTsNCj4tCQkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUo
-JmhhLT5oYXJkd2FyZV9sb2NrLCBmbGFncyk7DQo+LQkJCQlxbGEyeHh4X2VoX2Fib3J0KEdFVF9D
-TURfU1Aoc3ApKTsNCj4tCQkJCXNwaW5fbG9ja19pcnFzYXZlKCZoYS0+aGFyZHdhcmVfbG9jaywg
-ZmxhZ3MpOw0KPisJCQkJaWYgKCFoYS0+ZmxhZ3MuZWVoX2J1c3kpIHsNCj4rCQkJCQkvKiBHZXQg
-YSByZWZlcmVuY2UgdG8gdGhlIHNwIGFuZCBkcm9wIHRoZSBsb2NrLg0KPisJCQkJCSAqIFRoZSBy
-ZWZlcmVuY2UgZW5zdXJlcyB0aGlzIHNwLT5kb25lKCkgY2FsbA0KPisJCQkJCSAqIC0gYW5kIG5v
-dCB0aGUgY2FsbCBpbiBxbGEyeHh4X2VoX2Fib3J0KCkgLQ0KPisJCQkJCSAqIGVuZHMgdGhlIFND
-U0kgY29tbWFuZCAod2l0aCByZXN1bHQgJ3JlcycpLg0KPisJCQkJCSAqLw0KPisJCQkJCXNwX2dl
-dChzcCk7DQo+KwkJCQkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmaGEtPmhhcmR3YXJlX2xvY2ss
-IGZsYWdzKTsNCj4rCQkJCQlxbGEyeHh4X2VoX2Fib3J0KEdFVF9DTURfU1Aoc3ApKTsNCj4rCQkJ
-CQlzcGluX2xvY2tfaXJxc2F2ZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCj4rCQkJCX0N
-Cj4gCQkJCXJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRdID0gTlVMTDsNCj4gCQkJCXNwLT5kb25l
-KHZoYSwgc3AsIHJlcyk7DQo+IAkJCX0NCj4tLSANCj4xLjguMy4xDQo+DQoNCkFja2VkLWJ5OiBI
-aW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQoNClRoYW5rcywN
-CkhpbWFuc2h1DQoNCg==
+On 11/12/2016 08:25 AM, Colin King wrote:
+> A couple of dev_printk messages spans two lines and the literal string
+> is missing a white space between words. Add the white space.
+
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
