@@ -1,25 +1,33 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH] iscsi: fix spelling mistakes in dev_warn messages
-Date: Mon, 14 Nov 2016 14:24:09 -0800
-Message-ID: <e2c3cc9f-144c-28bc-3677-36a389fa9969@sandisk.com>
-References: <20161112164950.5605-1-colin.king@canonical.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi_transport_fc: Hold queue lock while calling blk_run_queue_async()
+Date: Mon, 14 Nov 2016 18:26:21 -0500
+Message-ID: <yq137ithcde.fsf@sermon.lab.mkp.net>
+References: <fb002f66-4648-9653-63b1-9c24a2c02666@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0060.outbound.protection.outlook.com ([104.47.36.60]:10896
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S965552AbcKNWYR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 14 Nov 2016 17:24:17 -0500
-In-Reply-To: <20161112164950.5605-1-colin.king@canonical.com>
+Received: from aserp1040.oracle.com ([141.146.126.69]:51038 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753048AbcKNX0f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 18:26:35 -0500
+In-Reply-To: <fb002f66-4648-9653-63b1-9c24a2c02666@sandisk.com> (Bart Van
+        Assche's message of "Fri, 11 Nov 2016 16:55:50 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Hannes Reinecke <hare@suse.de>, James Smart <james.smart@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 11/12/2016 08:49 AM, Colin King wrote:
-> Trivial fix to spelling mistake "suspeneded" to "suspended" in
-> dev_warn messages
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
 
-Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Bart> It is required to hold the queue lock when calling
+Bart> blk_run_queue_async() to avoid that a race between
+Bart> blk_run_queue_async() and blk_cleanup_queue() is
+Bart> triggered. Additionally, remove the get_device() and put_device()
+Bart> calls from fc_bsg_goose_queue. It is namely the responsibility of
+Bart> the caller of fc_bsg_goose_queue() to ensure that the bsg queue
+Bart> does not disappear while fc_bsg_goose_queue() is in progress.
+
+Applied to 4.10/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
