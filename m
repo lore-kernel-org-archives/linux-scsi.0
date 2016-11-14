@@ -1,40 +1,54 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] hpsa: scsi-mq support
-Date: Sun, 13 Nov 2016 12:58:41 +0100
-Message-ID: <20161113115841.GA4818@lst.de>
-References: <1478879194-32529-1-git-send-email-hare@suse.de> <20161111163532.GA14922@infradead.org> <39d1198d-eb49-71ed-9139-f0efd9eefd0d@suse.com> <20161112173223.GA22158@infradead.org> <cba051f8-3055-53c4-2860-ee4c51a7043d@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+From: Li Qiang <liq3ea@gmail.com>
+Subject: [PATCH] 53c700: fix memory leak of dma non-cosistent memory
+Date: Mon, 14 Nov 2016 15:07:58 +0800
+Message-ID: <582962db.0130ed0a.10866.5633@mx.google.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:37872 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933584AbcKML6n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 13 Nov 2016 06:58:43 -0500
-Content-Disposition: inline
-In-Reply-To: <cba051f8-3055-53c4-2860-ee4c51a7043d@suse.com>
+Received: from mail-qk0-f195.google.com ([209.85.220.195]:35901 "EHLO
+        mail-qk0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752875AbcKNHIN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 14 Nov 2016 02:08:13 -0500
+Received: by mail-qk0-f195.google.com with SMTP id h201so10186749qke.3
+        for <linux-scsi@vger.kernel.org>; Sun, 13 Nov 2016 23:08:12 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Jens Axboe <axboe@kernel.dk>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
+Cc: Li Qiang <liq3ea@gmail.com>
 
-On Sun, Nov 13, 2016 at 10:44:47AM +0100, Hannes Reinecke wrote:
-> One day to mark with bright red in the calendar.
->
-> Christoph Hellwig is telling me _NOT_ to use scsi-mq.
+From: Li Qiang <liq3ea@gmail.com>
 
-That's not what I'm doing.
+In NCR_700_detect function, if an error occurs it will return
+NULL without freeing the dma non-cosistent memory once allocated.
+This patch avoid this.
 
-> This patch was done so see what would needed to be done to convert a legacy 
-> driver.
-> As I was under the impression that scsi-mq is the way forward, seeing that 
-> it should be enabled per default.
-> But I must have been mistaken. Apparently.
+Signed-off-by: Li Qiang <liq3ea@gmail.com>
+---
+ drivers/scsi/53c700.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
 
-What I am doing is to tell you you should not expose multiple queues
-unless the hardware actually has multiple submissions queues.  The blk-mq
-and scsi-mq code works just fine with a single submission queue, and
-the hpsa driver in particular works really well with scsi-mq and a single
-submission queue.  E.g. the RAID HBA on slide 19 of this presentations is
-an hpsa one:
+diff --git a/drivers/scsi/53c700.c b/drivers/scsi/53c700.c
+index 95e32a4..d5a2ba3 100644
+--- a/drivers/scsi/53c700.c
++++ b/drivers/scsi/53c700.c
+@@ -332,8 +332,10 @@ struct Scsi_Host *
+ 		tpnt->proc_name = "53c700";
+ 
+ 	host = scsi_host_alloc(tpnt, 4);
+-	if (!host)
++	if (!host) {
++		dma_free_noncoherent(hostdata->dev, TOTAL_MEM_SIZE, memory, pScript);
+ 		return NULL;
++	}
+ 	memset(hostdata->slots, 0, sizeof(struct NCR_700_command_slot)
+ 	       * NCR_700_COMMAND_SLOTS_PER_HOST);
+ 	for (j = 0; j < NCR_700_COMMAND_SLOTS_PER_HOST; j++) {
+@@ -394,6 +396,7 @@ struct Scsi_Host *
+ 
+ 	if (scsi_add_host(host, dev)) {
+ 		dev_printk(KERN_ERR, dev, "53c700: scsi_add_host failed\n");
++		dma_free_noncoherent(hostdata->dev, TOTAL_MEM_SIZE, memory, pScript);
+ 		scsi_host_put(host);
+ 		return NULL;
+ 	}
+-- 
+1.8.3.1
 
-http://events.linuxfoundation.org/sites/events/files/slides/scsi.pdf
