@@ -1,183 +1,64 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: [PATCH v2] ufs: add a variety of definitions decribed in UFS spec
-Date: Tue, 15 Nov 2016 20:24:01 +0900
-Message-ID: <00fa01d23f32$c3c136e0$4b43a4a0$@samsung.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v3 02/16] scsi: don't use fc_bsg_job::request and
+ fc_bsg_job::reply directly
+Date: Tue, 15 Nov 2016 12:56:22 +0100
+Message-ID: <20161115115622.j4ker3atejcodqrc@linux-x5ow.site>
+References: <cover.1476369687.git.jthumshirn@suse.de>
+ <bbc682928173d64848ab0cbff689b1ad3d715fb7.1476369687.git.jthumshirn@suse.de>
+ <ebc46cfa-0bee-aa71-ba0b-d7c86628df0c@linux.vnet.ibm.com>
+ <20161014073821.qvkpjtwraqnwzzs3@linux-x5ow.site>
+ <20161025074313.4ma4czgdj46imaei@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout1.samsung.com ([203.254.224.24]:48745 "EHLO
-        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751704AbcKOLYD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 06:24:03 -0500
-Received: from epcpsbgm1new.samsung.com (epcpsbgm1 [203.254.230.26])
- by mailout1.samsung.com
- (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
- with ESMTP id <0OGO00LGHL01T280@mailout1.samsung.com> for
- linux-scsi@vger.kernel.org; Tue, 15 Nov 2016 20:24:01 +0900 (KST)
-Content-language: ko
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20161025074313.4ma4czgdj46imaei@linux-x5ow.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>s
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, vinholikatti@gmail.com
-Cc: cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
-These things are defined to be used by some UFS Host controllers.
-And a new file for some declarations of mphy standard is added
+On Tue, Oct 25, 2016 at 09:43:14AM +0200, Johannes Thumshirn wrote:
+> On Fri, Oct 14, 2016 at 09:38:21AM +0200, Johannes Thumshirn wrote:
+> > On Thu, Oct 13, 2016 at 05:55:11PM +0200, Steffen Maier wrote:
+> > > Hm, still behaves for me like I reported for v2:
+> > > http://marc.info/?l=linux-scsi&m=147637177902937&w=2
 
-V2
-- modify the commit message
-- add a new macro for UECDL
-- add two definitions about UECDL
-- change the names of two macros
-(s/IS_PWR_MODE_HS/IS_HS_PWR_MODE, s/IS_PWR_MODE_PWM/IS_PWM_PWR_MODE)
+[...]
 
-Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
---- 
- drivers/scsi/ufs/mphy.h   | 38 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshci.h | 17 ++++++++++++++---
- drivers/scsi/ufs/unipro.h | 26 ++++++++++++++++++++++++++
- 3 files changed, 78 insertions(+), 3 deletions(-)
- create mode 100644 drivers/scsi/ufs/mphy.h
+> > 
+> > The rational behind this is, in fc_req_to_bsgjob() we're assigning
+> > job->request as req->cmd and job->request_len = req->cmd_len. But without
+> > checkinf job->request_len we don't know whether we're save to touch
+> > job->request (a.k.a. bsg_request).
+> 
+> Hi Steffen,
+> Did you have any chance testing this? I hacked fcping to work with non-FCoE
+> and rports as well and tested with FCoE and lpfc. No problems seen from my
+> side. I've also pused the series (With this change folded in) to my git 
+> tree at [1] if this helps you in any way.
+> 
+> [1] https://git.kernel.org/cgit/linux/kernel/git/jth/linux.git/log/?h=scsi-bsg-rewrite-v4
+> 
 
-diff --git a/drivers/scsi/ufs/mphy.h b/drivers/scsi/ufs/mphy.h
-new file mode 100644
-index 0000000..c431f49
---- /dev/null
-+++ b/drivers/scsi/ufs/mphy.h
-@@ -0,0 +1,38 @@
-+/*
-+ * drivers/scsi/ufs/mphy.h
-+ *
-+ * Copyright (C) 2014 Samsung Electronics Co., Ltd.
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2 of the License, or
-+ * (at your option) any later version.
-+ */
-+
-+#ifndef _MPHY_H_
-+#define _MPHY_H_
-+
-+#define TX_HIBERN8TIME_CAP		0x0f
-+#define TX_MIN_ACTIVATE_TIME		0x33
-+
-+#define RX_HS_G1_SYNC_LEN_CAP	0x8b
-+#define RX_HS_G1_PREP_LEN_CAP	0x8c
-+#define RX_HS_G2_SYNC_LEN_CAP	0x94
-+#define RX_HS_G3_SYNC_LEN_CAP	0x95
-+#define RX_HS_G2_PREP_LEN_CAP	0x96
-+#define RX_HS_G3_PREP_LEN_CAP	0x97
-+ #define SYNC_RANGE_FINE	(0 << 6)
-+ #define SYNC_RANGE_COARSE	(1 << 6)
-+ #define SYNC_LEN(x)		((x) & 0x3f)
-+ #define PREP_LEN(x)		((x) & 0xf)
-+#define RX_ADV_GRANULARITY_CAP		0x98
-+ #define RX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
-+#define TX_ADV_GRANULARITY_CAP		0x10
-+ #define TX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
-+#define RX_MIN_ACTIVATETIME_CAP		0x8f
-+#define RX_HIBERN8TIME_CAP		0x92
-+#define RX_ADV_HIBERN8TIME_CAP		0x99
-+#define RX_ADV_MIN_ACTIVATETIME_CAP	0x9a
-+
-+#endif /* _MPHY_H_ */
-+
-diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
-index 9599741..a1a06ac9 100644
---- a/drivers/scsi/ufs/ufshci.h
-+++ b/drivers/scsi/ufs/ufshci.h
-@@ -170,17 +170,28 @@ enum {
- /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
- #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
- #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
--#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
--#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
--#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
-+#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED		UFS_BIT(0)
-+#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT	UFS_BIT(1)
-+#define UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF		UFS_BIT(5)
-+#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT		UFS_BIT(13)
-+#define UIC_DATA_LINK_LAYER_ERROR_CASE(r, x)		(r & x)
- 
- /* UECN - Host UIC Error Code Network Layer 40h */
- #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
- #define UIC_NETWORK_LAYER_ERROR_CODE_MASK	0x7
-+#define UIC_NETWORK_UNSUPPORTED_HEADER_TYPE	BIT(0)
-+#define UIC_NETWORK_BAD_DEVICEID_ENC		BIT(1)
-+#define UIC_NETWORK_LHDR_TRAP_PACKET_DROPPING	BIT(2)
- 
- /* UECT - Host UIC Error Code Transport Layer 44h */
- #define UIC_TRANSPORT_LAYER_ERROR		UFS_BIT(31)
- #define UIC_TRANSPORT_LAYER_ERROR_CODE_MASK	0x7F
-+#define UIC_TRANSPORT_UNSUPPORTED_HEADER_TYPE	BIT(0)
-+#define UIC_TRANSPORT_UNKNOWN_CPORTID		BIT(1)
-+#define UIC_TRANSPORT_NO_CONNECTION_RX		BIT(2)
-+#define UIC_TRANSPORT_BAD_TC			BIT(4)
-+#define UIC_TRANSPORT_E2E_CREDIT_OVERFLOW	BIT(5)
-+#define UIC_TRANSPORT_SAFETY_VALVE_DROPPING	BIT(6)
- 
- /* UECDME - Host UIC Error Code DME 48h */
- #define UIC_DME_ERROR			UFS_BIT(31)
-diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
-index eff8b56..490d867 100644
---- a/drivers/scsi/ufs/unipro.h
-+++ b/drivers/scsi/ufs/unipro.h
-@@ -127,6 +127,7 @@
- #define PA_PACPREQEOBTIMEOUT	0x1591
- #define PA_HIBERN8TIME		0x15A7
- #define PA_LOCALVERINFO		0x15A9
-+#define PA_GRANULARITY		0x15AA
- #define PA_TACTIVATE		0x15A8
- #define PA_PACPFRAMECOUNT	0x15C0
- #define PA_PACPERRORCOUNT	0x15C1
-@@ -170,6 +171,9 @@ enum {
- 	UNCHANGED	= 7,
- };
- 
-+#define IS_HS_PWR_MODE(m)        (((m) == FAST_MODE) || ((m) == FASTAUTO_MODE))
-+#define IS_PWM_PWR_MODE(m)       (((m) == SLOW_MODE) || ((m) == SLOWAUTO_MODE))
-+
- /* PA TX/RX Frequency Series */
- enum {
- 	PA_HS_MODE_A	= 1,
-@@ -231,6 +235,11 @@ enum ufs_unipro_ver {
- #define DL_PEERTC1PRESENT	0x2066
- #define DL_PEERTC1RXINITCREVAL	0x2067
- 
-+/* Default value of L2 Timer */
-+#define FC0PROTTIMEOUTVAL	8191
-+#define TC0REPLAYTIMEOUTVAL	65535
-+#define AFC0REQTIMEOUTVAL	32767
-+
- /*
-  * Network Layer Attributes
-  */
-@@ -259,6 +268,23 @@ enum ufs_unipro_ver {
- #define T_TC0TXMAXSDUSIZE	0x4060
- #define T_TC1TXMAXSDUSIZE	0x4061
- 
-+/* CPort setting */
-+#define T_CPORTFLAGS_E2EFC_ON	(1 << 0)
-+#define T_CPORTFLAGS_E2EFC_OFF	(0 << 0)
-+#define T_CPORTFLAGS_CSD_N_ON	(0 << 1)
-+#define T_CPORTFLAGS_CSD_N_OFF	(1 << 1)
-+#define T_CPORTFLAGS_CSV_N_ON	(0 << 2)
-+#define T_CPORTFLAGS_CSV_N_OFF	(1 << 2)
-+#define T_CPORTFLAGS_DEF	(T_CPORTFLAGS_CSV_N_OFF | \
-+				T_CPORTFLAGS_CSD_N_OFF | \
-+				T_CPORTFLAGS_E2EFC_OFF)
-+
-+/* CPort connection state */
-+enum {
-+	CPORT_IDLE = 0,
-+	CPORT_CONNECTED,
-+};
-+
- #ifdef FALSE
- #undef FALSE
- #endif
+So I finally have a test system up and running. I have good and bad news. The
+good news is, I can't get the system crashing with my patches, the bad news is
+I can't get zfcp_ping and zfcp_show to output something but HBA_STATUS_ERROR
+with my patches and without.
+
+And btw, I renamed the branch to fc-bsg-rewrite-v4 in case you want to clone
+from it (it has patch 2/16 changed to the v3 submission).
+
+Can you please have a look with your setup?
+
+Thanks,
+	Johannes
+
 -- 
-2.1.4
-
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
