@@ -1,70 +1,71 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 02/16] scsi: don't use fc_bsg_job::request and
- fc_bsg_job::reply directly
-Date: Tue, 15 Nov 2016 16:39:33 +0100
-Message-ID: <20161115153933.ktho6pui7awuvfyx@linux-x5ow.site>
-References: <cover.1476369687.git.jthumshirn@suse.de>
- <bbc682928173d64848ab0cbff689b1ad3d715fb7.1476369687.git.jthumshirn@suse.de>
- <ebc46cfa-0bee-aa71-ba0b-d7c86628df0c@linux.vnet.ibm.com>
- <20161014073821.qvkpjtwraqnwzzs3@linux-x5ow.site>
- <20161025074313.4ma4czgdj46imaei@linux-x5ow.site>
- <20161115115622.j4ker3atejcodqrc@linux-x5ow.site>
- <8647eacd-a029-dff0-4f78-dafef89a5ad9@linux.vnet.ibm.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH] hpsa: correct logical resets
+Date: Tue, 15 Nov 2016 15:59:20 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B0BAE3E@avsrvexchmbx1.microsemi.net>
+References: <147881417483.804.10756927186886954941.stgit@brunhilda>
+ <yq160npfwz9.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8647eacd-a029-dff0-4f78-dafef89a5ad9@linux.vnet.ibm.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@infradead.org>, Hannes Reinecke <hare@suse.de>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, Benjamin Herrenschmidt <benh@kernel.crashing.org>, Paul Mackerras <paulus@samba.org>, Michael Ellerman <mpe@ellerman.id.au>, Johannes Thumshirn <jth@kernel.org>, James Smart <james.smart@avagotech.com>, Dick Kennedy <dick.kennedy@avagotech.com>s
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0076.outbound.protection.outlook.com ([104.47.32.76]:63072
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752823AbcKOQOB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 15 Nov 2016 11:14:01 -0500
+In-Reply-To: <yq160npfwz9.fsf@sermon.lab.mkp.net>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali-saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Nov 15, 2016 at 03:31:27PM +0100, Steffen Maier wrote:
-> Hi Johannes,
-> 
-> On 11/15/2016 12:56 PM, Johannes Thumshirn wrote:
-> > On Tue, Oct 25, 2016 at 09:43:14AM +0200, Johannes Thumshirn wrote:
-> > > On Fri, Oct 14, 2016 at 09:38:21AM +0200, Johannes Thumshirn wrote:
-> > > > On Thu, Oct 13, 2016 at 05:55:11PM +0200, Steffen Maier wrote:
-> > > > > Hm, still behaves for me like I reported for v2:
-> > > > > http://marc.info/?l=linux-scsi&m=147637177902937&w=2
-> > 
-> > [...]
-> > 
-> > > > 
-> > > > The rational behind this is, in fc_req_to_bsgjob() we're assigning
-> > > > job->request as req->cmd and job->request_len = req->cmd_len. But without
-> > > > checkinf job->request_len we don't know whether we're save to touch
-> > > > job->request (a.k.a. bsg_request).
-> > > 
-> > > Hi Steffen,
-> > > Did you have any chance testing this? I hacked fcping to work with non-FCoE
-> > > and rports as well and tested with FCoE and lpfc. No problems seen from my
-> > > side. I've also pused the series (With this change folded in) to my git
-> > > tree at [1] if this helps you in any way.
-> > > 
-> > > [1] https://git.kernel.org/cgit/linux/kernel/git/jth/linux.git/log/?h=scsi-bsg-rewrite-v4
-> > > 
-> > 
-> > So I finally have a test system up and running. I have good and bad news. The
-> > good news is, I can't get the system crashing with my patches, the bad news is
-> > I can't get zfcp_ping and zfcp_show to output something but HBA_STATUS_ERROR
-> > with my patches and without.
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Monday, November 14, 2016 5:44 PM
+> To: Don Brace
+> Cc: jejb@linux.vnet.ibm.com; John Hall; Kevin Barnett; Mahesh
+> Rajashekhara; Bader Ali-saleh; hch@infradead.org; Scott Teel; Viswas G;
+> Justin Lindley; Scott Benesh; elliott@hpe.com; POSWALD@suse.com; linux-
+> scsi@vger.kernel.org
+> Subject: Re: [PATCH] hpsa: correct logical resets
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> >>>>> "Don" =3D=3D Don Brace <don.brace@microsemi.com> writes:
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 0b6eb5a..a296537 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -300,6 +300,10 @@ static bool hpsa_cmd_dev_match(struct ctlr_info *h,
+> struct CommandList *c,
+>                                struct hpsa_scsi_dev_t *dev,
+>                                unsigned char *scsi3addr);
+>=20
+> +static int wait_for_device_to_become_ready(struct ctlr_info *h,
+> +                                          unsigned char lunaddr[],
+> +                                          int reply_queue);
+> +
+>  static inline struct ctlr_info *sdev_to_hba(struct scsi_device *sdev)
+>  {
+>         unsigned long *priv =3D shost_priv(sdev->host);
+>=20
+> Wouldn't it be nicer to put this with the rest of the function
+> prototypes at the beginning of the file?
+>=20
+> --
+> Martin K. Petersen      Oracle Linux Engineering
 
-Please ignore my last mails, apparently it's a wise idea to check which user
-id one has before running zfcp_ping...
+Ok, I can move it up above
+static int hpsa_wait_for_board_state(struct pci_dev *pdev, void __iomem *va=
+ddr,
+                                     int wait_for_ready);
 
-The good news for this is, I can now recreate the crashes you have and thus
-have a chance to fix them :-)
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
 
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
