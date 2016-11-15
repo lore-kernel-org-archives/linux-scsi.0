@@ -1,52 +1,25 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Tue, 15 Nov 2016 11:21:18 -0500
-Message-ID: <20161115162118.GA30547@htj.duckdns.org>
-References: <1469524857-3720-1-git-send-email-rsahu@apm.com>
- <CAFd313x-mXpy0N3aKx2rfoag1FNOrN-LzKb5UHkY2L+GGc0B-A@mail.gmail.com>
- <20161109164531.GA14630@htj.duckdns.org>
- <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
+From: Joao Pinto <Joao.Pinto@synopsys.com>
+Subject: Back to Synopsys
+Date: Tue, 15 Nov 2016 16:23:55 +0000
+Message-ID: <348ed791-bd97-f73d-1a2f-6acb4538a9e4@synopsys.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-ide-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAFd313ycmpdp7wHCVRJrigJV31hLwBGOo=FNENwgFnNKyVkQBA@mail.gmail.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Rameshwar Sahu <rsahu@apm.com>
-Cc: Olof Johansson <olof@lixom.net>, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, Devicetree List <devicetree@vger.kernel.org>, linux-arm <linux-arm-kernel@lists.infradead.org>, Don Dutile <ddutile@redhat.com>, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtprelay.synopsys.com ([198.182.47.9]:57397 "EHLO
+        smtprelay.synopsys.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751985AbcKOQYA (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 11:24:00 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com, ygardi@codeaurora.org, JBottomley@Parallels.com
+Cc: linux-scsi@vger.kernel.org
 
-Hello, Rameshwar.
+Hi all,
 
-On Fri, Nov 11, 2016 at 01:36:28PM +0530, Rameshwar Sahu wrote:
-> Hi Tejun,
-> 
-> On Wed, Nov 9, 2016 at 10:15 PM, Tejun Heo <tj@kernel.org> wrote:
-> > Hello,
-> >
-> > On Wed, Sep 14, 2016 at 04:15:00PM +0530, Rameshwar Sahu wrote:
-> >> > @@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device
-> >> > *pdev)
-> >> >                                 dev_warn(&pdev->dev, "%s: Error reading
-> >> > device info. Assume version1\n",
-> >> >                                         __func__);
-> >> >                                 version = XGENE_AHCI_V1;
-> >> > -                       } else if (info->valid & ACPI_VALID_CID) {
-> >> > -                               version = XGENE_AHCI_V2;
-> >
-> > Can you please explain this part a bit?  Everything else looks good to
-> > me.
-> 
-> Here we should not assume XGENE_AHCI_V2 always in case of having valid
-> _CID in ACPI table.
-> I need to remove this assumption because V1_1 has also valid _CID for
-> backward compatibly with v1.
+I am back to Synopsys, so please don't apply the patches I sent a few weeks ago
+with the goal of changing the UFS drivers author e-mail.
+I will be available to help in anything you need.
 
-Can you please repost with the above explanation added to the commit
-message?
-
-Thanks!
-
--- 
-tejun
+Thanks,
+Joao
