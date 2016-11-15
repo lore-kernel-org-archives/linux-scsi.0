@@ -1,108 +1,102 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 04/14] cxlflash: Avoid command room violation
-Date: Tue, 15 Nov 2016 17:14:25 -0600
-Message-ID: <1479251665-22816-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 06/14] cxlflash: Allocate memory instead of using command pool for AFU sync
+Date: Tue, 15 Nov 2016 17:14:52 -0600
+Message-ID: <1479251692-22892-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1479251530-22573-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36297 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36739 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1030207AbcKOXOf (ORCPT
+        by vger.kernel.org with ESMTP id S1030207AbcKOXO7 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Nov 2016 18:14:35 -0500
+        Tue, 15 Nov 2016 18:14:59 -0500
 Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAFNE7aq076931
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:14:35 -0500
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAFNE8k7076971
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:14:59 -0500
 Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26r77vjhft-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26r77vjhte-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:14:34 -0500
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:14:59 -0500
 Received: from localhost
         by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Tue, 15 Nov 2016 16:14:34 -0700
+        Tue, 15 Nov 2016 16:14:58 -0700
 In-Reply-To: <1479251530-22573-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
-During test, a command room violation interrupt is occasionally seen
-for the master context when the CXL flash devices are stressed.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-After studying the code, there could be gaps in the way command room
-value is being cached in cxlflash. When the cached command room is zero
-the thread attempting to send becomes burdened with updating the cached
-value with the actual value from the AFU. Today, this is handled with
-an atomic set operation of the raw value read. Following the atomic
-update, the thread proceeds to send.
+As staging for the removal of the AFU command pool, remove the reliance
+upon the pool for the internal AFU sync command. Instead of obtaining an
+AFU command from the pool, dynamically allocate memory with the appropriate
+alignment requirements. Since the AFU sync service is only executed from
+the process environment, blocking is acceptable.
 
-This behavior is incorrect on two counts:
-
-   - The update fails to take into account the current thread and its
-     consumption of one of the hardware commands.
-
-   - The update does not take into account other threads also atomically
-     updating. Per design, a worker thread updates the cached value when
-     a send thread times out. By not performing an atomic compare/exchange,
-     the cached value can be incorrectly clobbered.
-
-To correct these issues, the runtime updates of the cached command room
-are updated to use atomic64_cmpxchg() and the send routine is updated to
-take into account the current thread consuming a hardware command.
-
-Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 16 ++++++++++------
- 1 file changed, 10 insertions(+), 6 deletions(-)
+ drivers/scsi/cxlflash/main.c | 25 ++++++++++++-------------
+ 1 file changed, 12 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 6d33d8c..1a32e8b 100644
+index 51ee9ef..816d85c 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -322,9 +322,10 @@ static int send_cmd(struct afu *afu, struct afu_cmd *cmd)
- 	if (!newval) {
- 		do {
- 			room = readq_be(&afu->host_map->cmd_room);
--			atomic64_set(&afu->room, room);
--			if (room)
--				goto write_ioarrin;
-+			if (room) {
-+				atomic64_cmpxchg(&afu->room, 0, room);
-+				goto retry;
-+			}
- 			udelay(1 << nretry);
- 		} while (nretry++ < MC_ROOM_RETRY_CNT);
- 
-@@ -346,7 +347,6 @@ static int send_cmd(struct afu *afu, struct afu_cmd *cmd)
- 		goto no_room;
- 	}
- 
--write_ioarrin:
- 	writeq_be((u64)&cmd->rcb, &afu->host_map->ioarrin);
- out:
- 	pr_devel("%s: cmd=%p len=%d ea=%p rc=%d\n", __func__, cmd,
-@@ -2409,6 +2409,7 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 	struct afu *afu = cfg->afu;
+@@ -1847,8 +1847,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	struct cxlflash_cfg *cfg = afu->parent;
  	struct device *dev = &cfg->dev->dev;
- 	int port;
-+	u64 room;
- 	ulong lock_flags;
+ 	struct afu_cmd *cmd = NULL;
++	char *buf = NULL;
+ 	int rc = 0;
+-	int retry_cnt = 0;
+ 	static DEFINE_MUTEX(sync_active);
  
- 	/* Avoid MMIO if the device has failed */
-@@ -2437,8 +2438,11 @@ static void cxlflash_worker_thread(struct work_struct *work)
+ 	if (cfg->state != STATE_NORMAL) {
+@@ -1857,23 +1857,23 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
  	}
  
- 	if (afu->read_room) {
--		atomic64_set(&afu->room, readq_be(&afu->host_map->cmd_room));
--		afu->read_room = false;
-+		room = readq_be(&afu->host_map->cmd_room);
-+		if (room) {
-+			atomic64_cmpxchg(&afu->room, 0, room);
-+			afu->read_room = false;
-+		}
+ 	mutex_lock(&sync_active);
+-retry:
+-	cmd = cmd_checkout(afu);
+-	if (unlikely(!cmd)) {
+-		retry_cnt++;
+-		udelay(1000 * retry_cnt);
+-		if (retry_cnt < MC_RETRY_CNT)
+-			goto retry;
+-		dev_err(dev, "%s: could not get a free command\n", __func__);
++	buf = kzalloc(sizeof(*cmd) + __alignof__(*cmd) - 1, GFP_KERNEL);
++	if (unlikely(!buf)) {
++		dev_err(dev, "%s: no memory for command\n", __func__);
+ 		rc = -1;
+ 		goto out;
  	}
  
- 	spin_unlock_irqrestore(cfg->host->host_lock, lock_flags);
+-	pr_debug("%s: afu=%p cmd=%p %d\n", __func__, afu, cmd, ctx_hndl_u);
++	cmd = (struct afu_cmd *)PTR_ALIGN(buf, __alignof__(*cmd));
++	init_completion(&cmd->cevent);
++	spin_lock_init(&cmd->slock);
++	cmd->parent = afu;
+ 
+-	memset(cmd->rcb.cdb, 0, sizeof(cmd->rcb.cdb));
++	pr_debug("%s: afu=%p cmd=%p %d\n", __func__, afu, cmd, ctx_hndl_u);
+ 
+ 	cmd->rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
++	cmd->rcb.ctx_id = afu->ctx_hndl;
++	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
+ 	cmd->rcb.port_sel = 0x0;	/* NA */
+ 	cmd->rcb.lun_id = 0x0;	/* NA */
+ 	cmd->rcb.data_len = 0x0;
+@@ -1899,8 +1899,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 		rc = -1;
+ out:
+ 	mutex_unlock(&sync_active);
+-	if (cmd)
+-		cmd_checkin(cmd);
++	kfree(buf);
+ 	pr_debug("%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
 -- 
 2.1.0
 
