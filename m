@@ -1,42 +1,40 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] libfc: fix seconds_since_last_reset miscalculation
-Date: Tue, 15 Nov 2016 10:18:40 +0100
-Message-ID: <20161115091840.7cldqui4dpi7nrz5@linux-x5ow.site>
-References: <1478594694-98847-1-git-send-email-jthumshirn@suse.de>
- <BLUPR02MB16830DECB29262BACBA94FA681A60@BLUPR02MB1683.namprd02.prod.outlook.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [PATCH] megaraid-sas: request irqs later
+Date: Tue, 15 Nov 2016 15:59:45 +0530
+Message-ID: <2069a5360bb2b911283d00a6a74db9bb@mail.gmail.com>
+References: <1478017922-22655-1-git-send-email-thenzl@redhat.com> <yq1wpg5ei8b.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <BLUPR02MB16830DECB29262BACBA94FA681A60@BLUPR02MB1683.namprd02.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Arnd Bergmann <arnd@arndb.de>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-it0-f49.google.com ([209.85.214.49]:36418 "EHLO
+        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755484AbcKOK3w (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 05:29:52 -0500
+Received: by mail-it0-f49.google.com with SMTP id q124so162456242itd.1
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 02:29:51 -0800 (PST)
+In-Reply-To: <yq1wpg5ei8b.fsf@sermon.lab.mkp.net>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>
 
-On Tue, Nov 08, 2016 at 03:04:43PM +0000, Bart Van Assche wrote:
+>-----Original Message-----
+>From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+>Sent: Tuesday, November 15, 2016 5:18 AM
+>To: Tomas Henzl
+>Cc: linux-scsi@vger.kernel.org; sumit.saxena@broadcom.com;
+>kashyap.desai@broadcom.com
+>Subject: Re: [PATCH] megaraid-sas: request irqs later
+>
+>>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
+>
+>Tomas> It is not good when an irq arrives before driver structures are
+>Tomas> allocated.
+>
+>Sumit, Kashyap: Please review!
 
-[...]
-
-> Hello Johannes,
-> 
-> I think the above code will miscalculate seconds_since_last_reset if 
-> 'jiffies' wraps around after an lport has been created and before 
-> seconds_since_last_reset is computed. Shouldn't seconds_since_last_reset 
-> be computed as follows?
-> 
-> 	fc_stats->seconds_since_last_reset = (jiffies - boot_time) / HZ;
-
-But what happens when jiffies - boot_time becomes negative? Then we
-reintroduce the bug again and have 'fcoeadm -s' show weird values.
-
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Looks good.. I think I have acked this patch earlier also.
+Acked-by: Sumit Saxena<sumit.saxena@broadcom.com>
+>
+>--
+>Martin K. Petersen	Oracle Linux Engineering
