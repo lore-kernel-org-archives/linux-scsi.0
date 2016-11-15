@@ -1,40 +1,115 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [PATCH] megaraid-sas: request irqs later
-Date: Tue, 15 Nov 2016 15:59:45 +0530
-Message-ID: <2069a5360bb2b911283d00a6a74db9bb@mail.gmail.com>
-References: <1478017922-22655-1-git-send-email-thenzl@redhat.com> <yq1wpg5ei8b.fsf@sermon.lab.mkp.net>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v2] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
+Date: Tue, 15 Nov 2016 19:49:49 +0900
+Message-ID: <00e801d23f2d$fcb56430$f6202c90$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:36418 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755484AbcKOK3w (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 05:29:52 -0500
-Received: by mail-it0-f49.google.com with SMTP id q124so162456242itd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 02:29:51 -0800 (PST)
-In-Reply-To: <yq1wpg5ei8b.fsf@sermon.lab.mkp.net>
+Received: from mailout3.samsung.com ([203.254.224.33]:48606 "EHLO
+        mailout3.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754177AbcKOKtw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 05:49:52 -0500
+Received: from epcpsbgm1new.samsung.com (epcpsbgm1 [203.254.230.26])
+ by mailout3.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0OGO00RX1JERXV90@mailout3.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 15 Nov 2016 19:49:49 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Kashyap Desai <kashyap.desai@broadcom.com>
+To: linux-scsi@vger.kernel.org, vinholikatti@gmail.com
+Cc: cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
->-----Original Message-----
->From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
->Sent: Tuesday, November 15, 2016 5:18 AM
->To: Tomas Henzl
->Cc: linux-scsi@vger.kernel.org; sumit.saxena@broadcom.com;
->kashyap.desai@broadcom.com
->Subject: Re: [PATCH] megaraid-sas: request irqs later
->
->>>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
->
->Tomas> It is not good when an irq arrives before driver structures are
->Tomas> allocated.
->
->Sumit, Kashyap: Please review!
+Some UFS host controllers may think
+granularitys of PRDT length and offset as bytes, not double words.
 
-Looks good.. I think I have acked this patch earlier also.
-Acked-by: Sumit Saxena<sumit.saxena@broadcom.com>
->
->--
->Martin K. Petersen	Oracle Linux Engineering
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 28 +++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 27 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index e75fbb3..d6e3112 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1128,7 +1128,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  *
+  * Returns 0 in case of success, non-zero value in case of failure
+  */
+-static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
++static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ {
+ 	struct ufshcd_sg_entry *prd_table;
+ 	struct scatterlist *sg;
+@@ -1142,8 +1142,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 		return sg_segments;
+ 
+ 	if (sg_segments) {
+-		lrbp->utr_descriptor_ptr->prd_table_length =
+-					cpu_to_le16((u16) (sg_segments));
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((u16)(sg_segments *
++					sizeof(struct ufshcd_sg_entry)));
++		else
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((u16) (sg_segments));
+ 
+ 		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+ 
+@@ -1505,7 +1510,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	ufshcd_comp_scsi_upiu(hba, lrbp);
+ 
+-	err = ufshcd_map_sg(lrbp);
++	err = ufshcd_map_sg(hba, lrbp);
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+ 		clear_bit_unlock(tag, &hba->lrb_in_use);
+@@ -2366,12 +2371,21 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
+ 
+ 		/* Response upiu and prdt offset should be in double words */
+-		utrdlp[i].response_upiu_offset =
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
++			utrdlp[i].response_upiu_offset =
++				cpu_to_le16(response_offset);
++			utrdlp[i].prd_table_offset =
++				cpu_to_le16(prdt_offset);
++			utrdlp[i].response_upiu_length =
++				cpu_to_le16(ALIGNED_UPIU_SIZE);
++		} else {
++			utrdlp[i].response_upiu_offset =
+ 				cpu_to_le16((response_offset >> 2));
+-		utrdlp[i].prd_table_offset =
++			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16((prdt_offset >> 2));
+-		utrdlp[i].response_upiu_length =
++			utrdlp[i].response_upiu_length =
+ 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++		}
+ 
+ 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+ 		hba->lrb[i].ucd_req_ptr =
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8e76501..7d9ff22 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -485,6 +485,12 @@ struct ufs_hba {
+ 	 */
+ 	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+ 
++	/*
++	 * This quirk needs to be enabled if the host contoller regards
++	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
++	 */
++	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
++
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
+ 	/* Device deviations from standard UFS device spec. */
+-- 
+2.1.4
+
