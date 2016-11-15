@@ -1,25 +1,25 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 11/14] cxlflash: Cleanup send_tmf()
-Date: Tue, 15 Nov 2016 17:15:40 -0600
-Message-ID: <1479251740-23078-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 13/14] cxlflash: Migrate IOARRIN specific routines to function pointers
+Date: Tue, 15 Nov 2016 17:16:03 -0600
+Message-ID: <1479251763-23150-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1479251530-22573-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38004 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46245 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S964988AbcKOXPw (ORCPT
+        by vger.kernel.org with ESMTP id S1161085AbcKOXQO (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 15 Nov 2016 18:15:52 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAFNEEZV077198
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:15:52 -0500
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26r77vjjr4-1
+        Tue, 15 Nov 2016 18:16:14 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAFNEJTn129930
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:16:14 -0500
+Received: from e32.co.us.ibm.com (e32.co.us.ibm.com [32.97.110.150])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26r1yxu36b-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:15:52 -0500
+        for <linux-scsi@vger.kernel.org>; Tue, 15 Nov 2016 18:16:14 -0500
 Received: from localhost
-        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e32.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Tue, 15 Nov 2016 18:15:51 -0500
+        Tue, 15 Nov 2016 16:16:13 -0700
 In-Reply-To: <1479251530-22573-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,69 +28,113 @@ Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian M
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-The send_tmf() routine includes some copy/paste cruft that can be
-removed as well as the setting of an AFU command-specific while
-holding the tmf_slock. While not a bug, it is out of place and
-should be shifted down alongside the other command initialization
-statements for clarity.
+As staging for supporting hardware with a different queuing mechanism,
+move the send_cmd() and context_reset() routines to function pointers
+that are configured when the AFU is initialized. In addition, rename
+the existing routines to better reflect the queue model they support.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 22 +++++++---------------
- 1 file changed, 7 insertions(+), 15 deletions(-)
+ drivers/scsi/cxlflash/common.h |  3 +++
+ drivers/scsi/cxlflash/main.c   | 21 +++++++++++----------
+ 2 files changed, 14 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
+index c4a7014..30c3cdb 100644
+--- a/drivers/scsi/cxlflash/common.h
++++ b/drivers/scsi/cxlflash/common.h
+@@ -161,6 +161,9 @@ struct afu {
+ 	 * fields after this point
+ 	 */
+ 
++	int (*send_cmd)(struct afu *, struct afu_cmd *);
++	void (*context_reset)(struct afu_cmd *);
++
+ 	/* AFU HW */
+ 	struct cxl_ioctl_start_work work;
+ 	struct cxlflash_afu_map __iomem *afu_map;	/* entire MMIO map */
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index e5b5d8f..5acc3fe 100644
+index d5b355c..7fc8843 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -324,12 +324,10 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
-  */
- static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- {
--	struct afu_cmd *cmd = sc_to_afucz(scp);
--
- 	u32 port_sel = scp->device->channel + 1;
--	short lflag = 0;
- 	struct Scsi_Host *host = scp->device->host;
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
-+	struct afu_cmd *cmd = sc_to_afucz(scp);
- 	struct device *dev = &cfg->dev->dev;
- 	ulong lock_flags;
- 	int rc = 0;
-@@ -342,27 +340,21 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- 						  !cfg->tmf_active,
- 						  cfg->tmf_slock);
- 	cfg->tmf_active = true;
--	cmd->cmd_tmf = true;
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+@@ -188,12 +188,10 @@ static void cmd_complete(struct afu_cmd *cmd)
+ }
  
-+	cmd->rcb.scp = scp;
-+	cmd->parent = afu;
-+	cmd->cmd_tmf = true;
-+
- 	cmd->rcb.ctx_id = afu->ctx_hndl;
- 	cmd->rcb.msi = SISL_MSI_RRQ_UPDATED;
- 	cmd->rcb.port_sel = port_sel;
- 	cmd->rcb.lun_id = lun_to_lunid(scp->device->lun);
--
--	lflag = SISL_REQ_FLAGS_TMF_CMD;
--
- 	cmd->rcb.req_flags = (SISL_REQ_FLAGS_PORT_LUN_ID |
--			      SISL_REQ_FLAGS_SUP_UNDERRUN | lflag);
--
--	/* Stash the scp in the command, for reuse during interrupt */
--	cmd->rcb.scp = scp;
--	cmd->parent = afu;
--
--	/* Copy the CDB from the cmd passed in */
-+			      SISL_REQ_FLAGS_SUP_UNDERRUN |
-+			      SISL_REQ_FLAGS_TMF_CMD);
+ /**
+- * context_reset() - timeout handler for AFU commands
++ * context_reset_ioarrin() - reset command owner context via IOARRIN register
+  * @cmd:	AFU command that timed out.
+- *
+- * Sends a reset to the AFU.
+  */
+-static void context_reset(struct afu_cmd *cmd)
++static void context_reset_ioarrin(struct afu_cmd *cmd)
+ {
+ 	int nretry = 0;
+ 	u64 rrin = 0x1;
+@@ -217,14 +215,14 @@ static void context_reset(struct afu_cmd *cmd)
+ }
+ 
+ /**
+- * send_cmd() - sends an AFU command
++ * send_cmd_ioarrin() - sends an AFU command via IOARRIN register
+  * @afu:	AFU associated with the host.
+  * @cmd:	AFU command to send.
+  *
+  * Return:
+  *	0 on success, SCSI_MLQUEUE_HOST_BUSY on failure
+  */
+-static int send_cmd(struct afu *afu, struct afu_cmd *cmd)
++static int send_cmd_ioarrin(struct afu *afu, struct afu_cmd *cmd)
+ {
+ 	struct cxlflash_cfg *cfg = afu->parent;
+ 	struct device *dev = &cfg->dev->dev;
+@@ -298,7 +296,7 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ 
+ 	timeout = wait_for_completion_timeout(&cmd->cevent, timeout);
+ 	if (!timeout) {
+-		context_reset(cmd);
++		afu->context_reset(cmd);
+ 		rc = -1;
+ 	}
+ 
+@@ -355,7 +353,7 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 			      SISL_REQ_FLAGS_TMF_CMD);
  	memcpy(cmd->rcb.cdb, &tmfcmd, sizeof(tmfcmd));
  
--	/* Send the command */
- 	rc = send_cmd(afu, cmd);
+-	rc = send_cmd(afu, cmd);
++	rc = afu->send_cmd(afu, cmd);
  	if (unlikely(rc)) {
  		spin_lock_irqsave(&cfg->tmf_slock, lock_flags);
+ 		cfg->tmf_active = false;
+@@ -486,7 +484,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	cmd->rcb.req_flags = req_flags;
+ 	memcpy(cmd->rcb.cdb, scp->cmnd, sizeof(cmd->rcb.cdb));
+ 
+-	rc = send_cmd(afu, cmd);
++	rc = afu->send_cmd(afu, cmd);
+ 	if (unlikely(rc))
+ 		scsi_dma_unmap(scp);
+ out:
+@@ -1656,6 +1654,9 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 		goto err2;
+ 	}
+ 
++	afu->send_cmd = send_cmd_ioarrin;
++	afu->context_reset = context_reset_ioarrin;
++
+ 	pr_debug("%s: afu version %s, interface version 0x%llX\n", __func__,
+ 		 afu->version, afu->interface_version);
+ 
+@@ -1747,7 +1748,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	*((__be16 *)&cmd->rcb.cdb[2]) = cpu_to_be16(ctx_hndl_u);
+ 	*((__be32 *)&cmd->rcb.cdb[4]) = cpu_to_be32(res_hndl_u);
+ 
+-	rc = send_cmd(afu, cmd);
++	rc = afu->send_cmd(afu, cmd);
+ 	if (unlikely(rc))
+ 		goto out;
+ 
 -- 
 2.1.0
 
