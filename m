@@ -1,120 +1,110 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
-Date: Tue, 15 Nov 2016 10:25:58 -0800
-Message-ID: <e7bd6c63853084201ecaf3938068b4cb@codeaurora.org>
-References: <00e801d23f2d$fcb56430$f6202c90$@samsung.com>
+Subject: Re: [PATCH v2] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
+Date: Tue, 15 Nov 2016 10:28:34 -0800
+Message-ID: <23f918125db0071cc0514c85385c7734@codeaurora.org>
+References: <00e901d23f2e$4bbf7610$e33e6230$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:53350 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:55534 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751749AbcKOSZ7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 13:25:59 -0500
-In-Reply-To: <00e801d23f2d$fcb56430$f6202c90$@samsung.com>
+        with ESMTP id S1752415AbcKOS2f (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 13:28:35 -0500
+In-Reply-To: <00e901d23f2e$4bbf7610$e33e6230$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kiwoong Kim <kwmad.kim@samsung.com>
 Cc: linux-scsi@vger.kernel.org, vinholikatti@gmail.com, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-15 02:49, Kiwoong Kim wrote:
-> Some UFS host controllers may think
-> granularitys of PRDT length and offset as bytes, not double words.
+On 2016-11-15 02:52, Kiwoong Kim wrote:
+> Some UFS host controllers may clear a transfer request slot
+> by setting an associated bit in UTRLCLR/UTMRLCLR to 1, not 0.
+> That's opposite to what UFS spec describes.
+> 
+> v2: modify the commit message, remove unrelated changes
+
+As Martin mentioned in other email, please separate this version history 
+from commit text with line having "----" before the start of version 
+history.
+Rest all looks good but i will wait for updated patch fixing above 
+before giving Reviewed-By.
+
 > 
 > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 28 +++++++++++++++++++++-------
->  drivers/scsi/ufs/ufshcd.h |  6 ++++++
->  2 files changed, 27 insertions(+), 7 deletions(-)
+>  drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++++++++++++--
+>  drivers/scsi/ufs/ufshcd.h |  7 +++++++
+>  2 files changed, 33 insertions(+), 2 deletions(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e75fbb3..d6e3112 100644
+> index d6e3112..c9cf011 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1128,7 +1128,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
-> uic_command *uic_cmd)
->   *
->   * Returns 0 in case of success, non-zero value in case of failure
+> @@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct
+> ufs_hba *hba, int slot)
 >   */
-> -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-> +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
 >  {
->  	struct ufshcd_sg_entry *prd_table;
->  	struct scatterlist *sg;
-> @@ -1142,8 +1142,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb 
-> *lrbp)
->  		return sg_segments;
+> -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+> +	u32 clear;
+> +
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> +		clear = (1 << pos);
+> +	else
+> +		clear = ~(1 << pos);
+> +
+> +	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+> +}
+> +
+> +/**
+> + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
+> + * @hba: per adapter instance
+> + * @pos: position of the bit to be cleared
+> + */
+> +static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
+> +{
+> +	u32 clear;
+> +
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> +		clear = (1 << pos);
+> +	else
+> +		clear = ~(1 << pos);
+> +
+> +	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
+>  }
 > 
->  	if (sg_segments) {
-> -		lrbp->utr_descriptor_ptr->prd_table_length =
-> -					cpu_to_le16((u16) (sg_segments));
-> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16)(sg_segments *
-> +					sizeof(struct ufshcd_sg_entry)));
-> +		else
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16) (sg_segments));
+>  /**
+> @@ -4312,7 +4336,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba
+> *hba, int tag)
+>  		goto out;
 > 
->  		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
+> +	ufshcd_utmrl_clear(hba, tag);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
 > 
-> @@ -1505,7 +1510,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
-> 
->  	ufshcd_comp_scsi_upiu(hba, lrbp);
-> 
-> -	err = ufshcd_map_sg(lrbp);
-> +	err = ufshcd_map_sg(hba, lrbp);
->  	if (err) {
->  		lrbp->cmd = NULL;
->  		clear_bit_unlock(tag, &hba->lrb_in_use);
-> @@ -2366,12 +2371,21 @@ static void
-> ufshcd_host_memory_configure(struct ufs_hba *hba)
->  				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
-> 
->  		/* Response upiu and prdt offset should be in double words */
-> -		utrdlp[i].response_upiu_offset =
-> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
-> +			utrdlp[i].response_upiu_offset =
-> +				cpu_to_le16(response_offset);
-> +			utrdlp[i].prd_table_offset =
-> +				cpu_to_le16(prdt_offset);
-> +			utrdlp[i].response_upiu_length =
-> +				cpu_to_le16(ALIGNED_UPIU_SIZE);
-> +		} else {
-> +			utrdlp[i].response_upiu_offset =
->  				cpu_to_le16((response_offset >> 2));
-> -		utrdlp[i].prd_table_offset =
-> +			utrdlp[i].prd_table_offset =
->  				cpu_to_le16((prdt_offset >> 2));
-> -		utrdlp[i].response_upiu_length =
-> +			utrdlp[i].response_upiu_length =
->  				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
-> +		}
-> 
->  		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
->  		hba->lrb[i].ucd_req_ptr =
+>  	/* poll for max. 1 sec to clear door bell register by h/w */
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 8e76501..7d9ff22 100644
+> index 7d9ff22..9838598 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -485,6 +485,12 @@ struct ufs_hba {
+> @@ -491,6 +491,13 @@ struct ufs_hba {
 >  	 */
->  	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+>  	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
 > 
 > +	/*
-> +	 * This quirk needs to be enabled if the host contoller regards
-> +	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
+> +	 * This quirk needs to be enabled if the host contoller has to set
+> +	 * the bit corresponding the slot to be cleared to 1, not 0 as
+> +	 * described in UFS spec.
 > +	 */
-> +	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
+> +	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
 > +
 >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
 > 
 >  	/* Device deviations from standard UFS device spec. */
 
-LGTM.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
 a Linux Foundation Collaborative Project
