@@ -1,46 +1,43 @@
-From: Geliang Tang <geliangtang@gmail.com>
-Subject: [PATCH] scsi: a100u2w: use module_pci_driver
-Date: Wed, 16 Nov 2016 21:00:57 +0800
-Message-ID: <42d7656b1c64b458b59eb55f32aed3c53ff1bc0d.1479278712.git.geliangtang@gmail.com>
-References: <3c6dc0c2b50e9ade60eb484a2e8e4e6234432ec0.1479278622.git.geliangtang@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] mvsas: fix command_active typo
+Date: Wed, 16 Nov 2016 16:08:34 +0100
+Message-ID: <20161116150855.3083872-1-arnd@arndb.de>
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <3c6dc0c2b50e9ade60eb484a2e8e4e6234432ec0.1479278622.git.geliangtang@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Geliang Tang <geliangtang@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: Xiangliang Yu <yuxiangl@marvell.com>, Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Use module_pci_driver() helper to simplify the code.
+gcc-7 notices that the condition in mvs_94xx_command_active looks
+suspicious:
 
-Signed-off-by: Geliang Tang <geliangtang@gmail.com>
+drivers/scsi/mvsas/mv_94xx.c: In function 'mvs_94xx_command_active':
+drivers/scsi/mvsas/mv_94xx.c:671:15: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+
+This was introduced when the mv_printk() statement got added,
+and leads to the condition being ignored. This is probably harmless.
+
+Changing '&&' to '&' makes the code look reasonable, as we check the
+command bit before setting and printing it.
+
+Fixes: a4632aae8b66 ("[SCSI] mvsas: Add new macros and functions")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/a100u2w.c | 13 +------------
- 1 file changed, 1 insertion(+), 12 deletions(-)
+ drivers/scsi/mvsas/mv_94xx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/a100u2w.c b/drivers/scsi/a100u2w.c
-index 8086bd0..b2942ec 100644
---- a/drivers/scsi/a100u2w.c
-+++ b/drivers/scsi/a100u2w.c
-@@ -1222,19 +1222,8 @@ static struct pci_driver inia100_pci_driver = {
- 	.remove		= inia100_remove_one,
- };
- 
--static int __init inia100_init(void)
--{
--	return pci_register_driver(&inia100_pci_driver);
--}
--
--static void __exit inia100_exit(void)
--{
--	pci_unregister_driver(&inia100_pci_driver);
--}
-+module_pci_driver(inia100_pci_driver);
- 
- MODULE_DESCRIPTION("Initio A100U2W SCSI driver");
- MODULE_AUTHOR("Initio Corporation");
- MODULE_LICENSE("Dual BSD/GPL");
--
--module_init(inia100_init);
--module_exit(inia100_exit);
+diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
+index 4c57d9abce7b..7de5d8d75480 100644
+--- a/drivers/scsi/mvsas/mv_94xx.c
++++ b/drivers/scsi/mvsas/mv_94xx.c
+@@ -668,7 +668,7 @@ static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
+ {
+ 	u32 tmp;
+ 	tmp = mvs_cr32(mvi, MVS_COMMAND_ACTIVE+(slot_idx >> 3));
+-	if (tmp && 1 << (slot_idx % 32)) {
++	if (tmp & 1 << (slot_idx % 32)) {
+ 		mv_printk("command active %08X,  slot [%x].\n", tmp, slot_idx);
+ 		mvs_cw32(mvi, MVS_COMMAND_ACTIVE + (slot_idx >> 3),
+ 			1 << (slot_idx % 32));
 -- 
-2.9.3
+2.9.0
