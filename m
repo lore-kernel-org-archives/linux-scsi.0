@@ -1,43 +1,30 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] mvsas: fix command_active typo
-Date: Wed, 16 Nov 2016 16:08:34 +0100
-Message-ID: <20161116150855.3083872-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Xiangliang Yu <yuxiangl@marvell.com>, Arnd Bergmann <arnd@arndb.de>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH] fnic: Correcting rport check location in
+ fnic_queuecommand_lck
+Date: Wed, 16 Nov 2016 16:12:19 +0100
+Message-ID: <210049c0-8339-7830-b731-69fc1d81d7c0@redhat.com>
+References: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:39940 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752328AbcKPPMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 16 Nov 2016 10:12:31 -0500
+In-Reply-To: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>, linux-scsi@vger.kernel.org
+Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
-gcc-7 notices that the condition in mvs_94xx_command_active looks
-suspicious:
+On 16.11.2016 09:54, Satish Kharat wrote:
+> Signed-off-by: Satish Kharat <satishkh@cisco.com>
+> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
 
-drivers/scsi/mvsas/mv_94xx.c: In function 'mvs_94xx_command_active':
-drivers/scsi/mvsas/mv_94xx.c:671:15: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+Looks good,
 
-This was introduced when the mv_printk() statement got added,
-and leads to the condition being ignored. This is probably harmless.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Changing '&&' to '&' makes the code look reasonable, as we check the
-command bit before setting and printing it.
+Tomas
 
-Fixes: a4632aae8b66 ("[SCSI] mvsas: Add new macros and functions")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/mvsas/mv_94xx.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/mvsas/mv_94xx.c b/drivers/scsi/mvsas/mv_94xx.c
-index 4c57d9abce7b..7de5d8d75480 100644
---- a/drivers/scsi/mvsas/mv_94xx.c
-+++ b/drivers/scsi/mvsas/mv_94xx.c
-@@ -668,7 +668,7 @@ static void mvs_94xx_command_active(struct mvs_info *mvi, u32 slot_idx)
- {
- 	u32 tmp;
- 	tmp = mvs_cr32(mvi, MVS_COMMAND_ACTIVE+(slot_idx >> 3));
--	if (tmp && 1 << (slot_idx % 32)) {
-+	if (tmp & 1 << (slot_idx % 32)) {
- 		mv_printk("command active %08X,  slot [%x].\n", tmp, slot_idx);
- 		mvs_cw32(mvi, MVS_COMMAND_ACTIVE + (slot_idx >> 3),
- 			1 << (slot_idx % 32));
--- 
-2.9.0
