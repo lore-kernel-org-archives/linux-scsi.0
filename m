@@ -1,72 +1,43 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] bfa: turn bfa_mem_{kva,dma}_setup into inline functions
-Date: Wed, 16 Nov 2016 16:14:27 +0100
-Message-ID: <20161116151445.3208739-1-arnd@arndb.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.17.13]:51107 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753423AbcKPPPI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 10:15:08 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] mvsas: fix command_active typo
+Date: Wed, 16 Nov 2016 16:18:08 +0100
+Message-ID: <20161116151808.5lnbops4jgmbi3f3@linux-x5ow.site>
+References: <20161116150855.3083872-1-arnd@arndb.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20161116150855.3083872-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Xiangliang Yu <yuxiangl@marvell.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-These two macros cause lots of warnings with gcc-7:
+On Wed, Nov 16, 2016 at 04:08:34PM +0100, Arnd Bergmann wrote:
+> gcc-7 notices that the condition in mvs_94xx_command_active looks
+> suspicious:
+> 
+> drivers/scsi/mvsas/mv_94xx.c: In function 'mvs_94xx_command_active':
+> drivers/scsi/mvsas/mv_94xx.c:671:15: error: '<<' in boolean context, did you mean '<' ? [-Werror=int-in-bool-context]
+> 
+> This was introduced when the mv_printk() statement got added,
+> and leads to the condition being ignored. This is probably harmless.
+> 
+> Changing '&&' to '&' makes the code look reasonable, as we check the
+> command bit before setting and printing it.
+> 
+> Fixes: a4632aae8b66 ("[SCSI] mvsas: Add new macros and functions")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
 
-drivers/scsi/bfa/bfa_svc.c: In function 'bfa_fcxp_meminfo':
-drivers/scsi/bfa/bfa_svc.c:521:103: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
+Looks reasonable,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Using inline functions makes them much more readable and avoids
-the warnings.
-
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/bfa/bfa_ioc.h | 30 +++++++++++++++++-------------
- 1 file changed, 17 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
-index 523fb02109b6..c27ed80f12ab 100644
---- a/drivers/scsi/bfa/bfa_ioc.h
-+++ b/drivers/scsi/bfa/bfa_ioc.h
-@@ -111,20 +111,24 @@ struct bfa_meminfo_s {
- 	struct bfa_mem_kva_s kva_info;
- };
- 
--/* BFA memory segment setup macros */
--#define bfa_mem_dma_setup(_meminfo, _dm_ptr, _seg_sz) do {	\
--	((bfa_mem_dma_t *)(_dm_ptr))->mem_len = (_seg_sz);	\
--	if (_seg_sz)						\
--		list_add_tail(&((bfa_mem_dma_t *)_dm_ptr)->qe,	\
--			      &(_meminfo)->dma_info.qe);	\
--} while (0)
-+/* BFA memory segment setup helpers */
-+static inline void bfa_mem_dma_setup(struct bfa_meminfo_s *meminfo,
-+				     struct bfa_mem_dma_s *dm_ptr,
-+				     size_t seg_sz)
-+{
-+	dm_ptr->mem_len = seg_sz;
-+	if (seg_sz)
-+		list_add_tail(&dm_ptr->qe, &meminfo->dma_info.qe);
-+}
- 
--#define bfa_mem_kva_setup(_meminfo, _kva_ptr, _seg_sz) do {	\
--	((bfa_mem_kva_t *)(_kva_ptr))->mem_len = (_seg_sz);	\
--	if (_seg_sz)						\
--		list_add_tail(&((bfa_mem_kva_t *)_kva_ptr)->qe,	\
--			      &(_meminfo)->kva_info.qe);	\
--} while (0)
-+static inline void bfa_mem_kva_setup(struct bfa_meminfo_s *meminfo,
-+				     struct bfa_mem_kva_s *kva_ptr,
-+				     size_t seg_sz)
-+{
-+	kva_ptr->mem_len = seg_sz;
-+	if (seg_sz)
-+		list_add_tail(&kva_ptr->qe, &meminfo->kva_info.qe);
-+}
- 
- /* BFA dma memory segments iterator */
- #define bfa_mem_dma_sptr(_mod, _i)	(&(_mod)->dma_seg[(_i)])
 -- 
-2.9.0
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
