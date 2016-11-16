@@ -1,52 +1,101 @@
-From: Zang Leigang <zangleigang@hisilicon.com>
-Subject: [PATCH] scsi: ufs: introduce a new ufshcd_statea UFSHCD_STATE_EH_SCHEDULED
-Date: Wed, 16 Nov 2016 11:29:37 +0800
-Message-ID: <20161116032937.117395-1-zangleigang@hisilicon.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v3] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
+Date: Wed, 16 Nov 2016 14:03:04 +0900
+Message-ID: <000401d23fc6$b6685110$2338f330$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga03-in.huawei.com ([119.145.14.66]:11476 "EHLO
-        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935055AbcKPDad (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 15 Nov 2016 22:30:33 -0500
+Received: from mailout4.samsung.com ([203.254.224.34]:54750 "EHLO
+        mailout4.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750697AbcKPFDV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 00:03:21 -0500
+Received: from epcpsbgm2new.samsung.com (epcpsbgm2 [203.254.230.27])
+ by mailout4.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0OGP029MEY11QV60@mailout4.samsung.com> for
+ linux-scsi@vger.kernel.org; Wed, 16 Nov 2016 14:03:04 +0900 (KST)
+Content-language: ko
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
-Add a new ufshcd_state, indicats that an err handler may get to run
-immediately. Use UFSHCD_STATE_ERROR here looks not literaly correct.
+Some UFS host controllers may clear a transfer request slot
+by setting an associated bit in UTRLCLR/UTMRLCLR to 1, not 0.
+That's opposite to what UFS spec describes.
 
-Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+ drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h |  7 +++++++
+ 2 files changed, 33 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 05c7456..59d4130 100644
+index d6e3112..c9cf011 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -123,6 +123,7 @@ enum {
- 	UFSHCD_STATE_RESET,
- 	UFSHCD_STATE_ERROR,
- 	UFSHCD_STATE_OPERATIONAL,
-+	UFSHCD_STATE_EH_SCHEDULED,
- };
+@@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct ufs_hba *hba, int slot)
+  */
+ static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+ {
+-	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
++	u32 clear;
++
++	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
++		clear = (1 << pos);
++	else
++		clear = ~(1 << pos);
++
++	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
++}
++
++/**
++ * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
++ * @hba: per adapter instance
++ * @pos: position of the bit to be cleared
++ */
++static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
++{
++	u32 clear;
++
++	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
++		clear = (1 << pos);
++	else
++		clear = ~(1 << pos);
++
++	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
+ }
  
- /* UFSHCD error handling flags */
-@@ -1410,6 +1411,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- 	switch (hba->ufshcd_state) {
- 	case UFSHCD_STATE_OPERATIONAL:
- 		break;
-+	case UFSHCD_STATE_EH_SCHEDULED:
- 	case UFSHCD_STATE_RESET:
- 		err = SCSI_MLQUEUE_HOST_BUSY;
- 		goto out_unlock;
-@@ -4158,7 +4160,7 @@ static void ufshcd_check_errors(struct ufs_hba *hba)
- 			/* block commands from scsi mid-layer */
- 			scsi_block_requests(hba->host);
+ /**
+@@ -4312,7 +4336,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+ 		goto out;
  
--			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-+			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
- 			schedule_work(&hba->eh_work);
- 		}
- 	}
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
++	ufshcd_utmrl_clear(hba, tag);
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 
+ 	/* poll for max. 1 sec to clear door bell register by h/w */
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 7d9ff22..9838598 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -491,6 +491,13 @@ struct ufs_hba {
+ 	 */
+ 	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
+ 
++	/*
++	 * This quirk needs to be enabled if the host contoller has to set
++	 * the bit corresponding the slot to be cleared to 1, not 0 as
++	 * described in UFS spec.
++	 */
++	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
++
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+ 
+ 	/* Device deviations from standard UFS device spec. */
 -- 
-2.9.3
+2.1.4
+
 
