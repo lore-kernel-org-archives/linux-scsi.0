@@ -1,30 +1,72 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] fnic: Correcting rport check location in
- fnic_queuecommand_lck
-Date: Wed, 16 Nov 2016 16:12:19 +0100
-Message-ID: <210049c0-8339-7830-b731-69fc1d81d7c0@redhat.com>
-References: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] bfa: turn bfa_mem_{kva,dma}_setup into inline functions
+Date: Wed, 16 Nov 2016 16:14:27 +0100
+Message-ID: <20161116151445.3208739-1-arnd@arndb.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39940 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752328AbcKPPMb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Nov 2016 10:12:31 -0500
-In-Reply-To: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
+Received: from mout.kundenserver.de ([212.227.17.13]:51107 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753423AbcKPPPI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 10:15:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, linux-scsi@vger.kernel.org
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 16.11.2016 09:54, Satish Kharat wrote:
-> Signed-off-by: Satish Kharat <satishkh@cisco.com>
-> Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
+These two macros cause lots of warnings with gcc-7:
 
-Looks good,
+drivers/scsi/bfa/bfa_svc.c: In function 'bfa_fcxp_meminfo':
+drivers/scsi/bfa/bfa_svc.c:521:103: error: '*' in boolean context, suggest '&&' instead [-Werror=int-in-bool-context]
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Using inline functions makes them much more readable and avoids
+the warnings.
 
-Tomas
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/bfa/bfa_ioc.h | 30 +++++++++++++++++-------------
+ 1 file changed, 17 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/bfa/bfa_ioc.h b/drivers/scsi/bfa/bfa_ioc.h
+index 523fb02109b6..c27ed80f12ab 100644
+--- a/drivers/scsi/bfa/bfa_ioc.h
++++ b/drivers/scsi/bfa/bfa_ioc.h
+@@ -111,20 +111,24 @@ struct bfa_meminfo_s {
+ 	struct bfa_mem_kva_s kva_info;
+ };
+ 
+-/* BFA memory segment setup macros */
+-#define bfa_mem_dma_setup(_meminfo, _dm_ptr, _seg_sz) do {	\
+-	((bfa_mem_dma_t *)(_dm_ptr))->mem_len = (_seg_sz);	\
+-	if (_seg_sz)						\
+-		list_add_tail(&((bfa_mem_dma_t *)_dm_ptr)->qe,	\
+-			      &(_meminfo)->dma_info.qe);	\
+-} while (0)
++/* BFA memory segment setup helpers */
++static inline void bfa_mem_dma_setup(struct bfa_meminfo_s *meminfo,
++				     struct bfa_mem_dma_s *dm_ptr,
++				     size_t seg_sz)
++{
++	dm_ptr->mem_len = seg_sz;
++	if (seg_sz)
++		list_add_tail(&dm_ptr->qe, &meminfo->dma_info.qe);
++}
+ 
+-#define bfa_mem_kva_setup(_meminfo, _kva_ptr, _seg_sz) do {	\
+-	((bfa_mem_kva_t *)(_kva_ptr))->mem_len = (_seg_sz);	\
+-	if (_seg_sz)						\
+-		list_add_tail(&((bfa_mem_kva_t *)_kva_ptr)->qe,	\
+-			      &(_meminfo)->kva_info.qe);	\
+-} while (0)
++static inline void bfa_mem_kva_setup(struct bfa_meminfo_s *meminfo,
++				     struct bfa_mem_kva_s *kva_ptr,
++				     size_t seg_sz)
++{
++	kva_ptr->mem_len = seg_sz;
++	if (seg_sz)
++		list_add_tail(&kva_ptr->qe, &meminfo->kva_info.qe);
++}
+ 
+ /* BFA dma memory segments iterator */
+ #define bfa_mem_dma_sptr(_mod, _i)	(&(_mod)->dma_seg[(_i)])
+-- 
+2.9.0
 
