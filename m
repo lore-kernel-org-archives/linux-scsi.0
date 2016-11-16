@@ -1,88 +1,197 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v3] ufs: introduce UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR quirk
-Date: Wed, 16 Nov 2016 10:54:48 -0800
-Message-ID: <f8c2f1028a39a13130dc8831584d96cb@codeaurora.org>
-References: <000601d23fc7$0701b580$15052080$@samsung.com>
+Subject: Re: [PATCH v3] ufs: add a variety of definitions decribed in UFS spec
+Date: Wed, 16 Nov 2016 11:01:08 -0800
+Message-ID: <96cdb99dd4d013a08854e038f23fa992@codeaurora.org>
+References: <000801d23fc8$45b14420$d113cc60$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41614 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:47006 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751572AbcKPSyt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 13:54:49 -0500
-In-Reply-To: <000601d23fc7$0701b580$15052080$@samsung.com>
+        with ESMTP id S932411AbcKPTBK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 14:01:10 -0500
+In-Reply-To: <000801d23fc8$45b14420$d113cc60$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kiwoong Kim <kwmad.kim@samsung.com>
 Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-15 21:05, Kiwoong Kim wrote:
-> If UFS driver resets interrupt aggregation timer and counter
-> when there are some pended tasks, an IO competion interrupt
-> of any corresponing task may be issued.
-> That would casue a command timeout.
+On 2016-11-15 21:14, Kiwoong Kim wrote:
+> These things are defined to be used by some UFS Host controllers.
+> And a new file for some declarations of mphy standard is added
 > 
-> One thing you should mind to use interrupt aggreation
-> with this quirk is that the host controller should be
-> able to refresh interrupt aggreation counter or timer
-> in other way, such as doing it automatically when receiving
-> any response.
-> 
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+> V3: add new macros of all bits of UECDL
 
-This was the comment on v2: "As Martin mentioned in other email, please 
-separate this version history from commit text with line having "----" 
-before the start of version history."
-So i would have expected the patch version to be still v2 and just add 
-the version history separator added before version history. But you 
-posted v3 and removed the version history altogether. As far as patch 
-contents are concerned, it looks good to me hence i am adding by 
-reviewed-by. But please make sure to keep the version history intact for 
-fewer patches.
+
+You should keep the previous version history intact as well. Please do 
+that in future. Other than that, this patch looks good to me.
 
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 3 ++-
->  drivers/scsi/ufs/ufshcd.h | 7 +++++++
->  2 files changed, 9 insertions(+), 1 deletion(-)
+>  drivers/scsi/ufs/mphy.h   | 38 ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshci.h | 28 +++++++++++++++++++++++++---
+>  drivers/scsi/ufs/unipro.h | 26 ++++++++++++++++++++++++++
+>  3 files changed, 89 insertions(+), 3 deletions(-)
+>  create mode 100644 drivers/scsi/ufs/mphy.h
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 8aac98f..7b62d8b 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -3713,7 +3713,8 @@ static void ufshcd_transfer_req_compl(struct 
-> ufs_hba *hba)
->  	 * false interrupt if device completes another request after 
-> resetting
->  	 * aggregation and before reading the DB.
->  	 */
-> -	if (ufshcd_is_intr_aggr_allowed(hba))
-> +	if ((ufshcd_is_intr_aggr_allowed(hba))
-> +		&& !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
->  		ufshcd_reset_intr_aggr(hba);
-> 
->  	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index dfa17ac..d6861ed 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -505,6 +505,13 @@ struct ufs_hba {
->  	 */
->  	#define UFSHCD_QUIRK_BROKEN_HCE				UFS_BIT(9)
-> 
-> +	/*
-> +	 * This quirk is only not to reset interrupt aggregation logic
-> +	 * in ISR. The reset can make the host controller miss an event
-> +	 * of previously completed IO.
-> +	 */
-> +	#define UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		UFS_BIT(10)
+> diff --git a/drivers/scsi/ufs/mphy.h b/drivers/scsi/ufs/mphy.h
+> new file mode 100644
+> index 0000000..c431f49
+> --- /dev/null
+> +++ b/drivers/scsi/ufs/mphy.h
+> @@ -0,0 +1,38 @@
+> +/*
+> + * drivers/scsi/ufs/mphy.h
+> + *
+> + * Copyright (C) 2014 Samsung Electronics Co., Ltd.
+> + *
+> + * This program is free software; you can redistribute it and/or 
+> modify
+> + * it under the terms of the GNU General Public License as published 
+> by
+> + * the Free Software Foundation; either version 2 of the License, or
+> + * (at your option) any later version.
+> + */
 > +
->  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+> +#ifndef _MPHY_H_
+> +#define _MPHY_H_
+> +
+> +#define TX_HIBERN8TIME_CAP		0x0f
+> +#define TX_MIN_ACTIVATE_TIME		0x33
+> +
+> +#define RX_HS_G1_SYNC_LEN_CAP	0x8b
+> +#define RX_HS_G1_PREP_LEN_CAP	0x8c
+> +#define RX_HS_G2_SYNC_LEN_CAP	0x94
+> +#define RX_HS_G3_SYNC_LEN_CAP	0x95
+> +#define RX_HS_G2_PREP_LEN_CAP	0x96
+> +#define RX_HS_G3_PREP_LEN_CAP	0x97
+> + #define SYNC_RANGE_FINE	(0 << 6)
+> + #define SYNC_RANGE_COARSE	(1 << 6)
+> + #define SYNC_LEN(x)		((x) & 0x3f)
+> + #define PREP_LEN(x)		((x) & 0xf)
+> +#define RX_ADV_GRANULARITY_CAP		0x98
+> + #define RX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
+> +#define TX_ADV_GRANULARITY_CAP		0x10
+> + #define TX_ADV_GRAN_STEP(x)	((((x) & 0x3) << 1) | 0x1)
+> +#define RX_MIN_ACTIVATETIME_CAP		0x8f
+> +#define RX_HIBERN8TIME_CAP		0x92
+> +#define RX_ADV_HIBERN8TIME_CAP		0x99
+> +#define RX_ADV_MIN_ACTIVATETIME_CAP	0x9a
+> +
+> +#endif /* _MPHY_H_ */
+> +
+> diff --git a/drivers/scsi/ufs/ufshci.h b/drivers/scsi/ufs/ufshci.h
+> index 9599741..799cb26 100644
+> --- a/drivers/scsi/ufs/ufshci.h
+> +++ b/drivers/scsi/ufs/ufshci.h
+> @@ -170,17 +170,39 @@ enum {
+>  /* UECDL - Host UIC Error Code Data Link Layer 3Ch */
+>  #define UIC_DATA_LINK_LAYER_ERROR		UFS_BIT(31)
+>  #define UIC_DATA_LINK_LAYER_ERROR_CODE_MASK	0x7FFF
+> -#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT	0x2000
+> -#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED	0x0001
+> -#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT 0x0002
+> +#define UIC_DATA_LINK_LAYER_ERROR_NAC_RECEIVED			UFS_BIT(0)
+> +#define UIC_DATA_LINK_LAYER_ERROR_TCx_REPLAY_TIMEOUT		UFS_BIT(1)
+> +#define UIC_DATA_LINK_LAYER_ERROR_AFCx_REQUEST_TIMEOUT		UFS_BIT(2)
+> +#define UIC_DATA_LINK_LAYER_ERROR_FCx_PROTECTION_TIMEOUT	UFS_BIT(3)
+> +#define UIC_DATA_LINK_LAYER_ERROR_CRC_ERROR			UFS_BIT(4)
+> +#define UIC_DATA_LINK_LAYER_ERROR_RX_BUF_OF			UFS_BIT(5)
+> +#define UIC_DATA_LINK_LAYER_ERROR_MAX_FRAME_LENGTH_EXCEEDED	UFS_BIT(6)
+> +#define UIC_DATA_LINK_LAYER_ERROR_WRONG_SEQUENCE_NUMBER		UFS_BIT(7)
+> +#define UIC_DATA_LINK_LAYER_ERROR_AFC_FRAME_SYNTAX_ERROR	UFS_BIT(8)
+> +#define UIC_DATA_LINK_LAYER_ERROR_NAC_FRAME_SYNTAX_ERROR	UFS_BIT(9)
+> +#define UIC_DATA_LINK_LAYER_ERROR_EOF_SYNTAX_ERROR		UFS_BIT(10)
+> +#define UIC_DATA_LINK_LAYER_ERROR_FRAME_SYNTAX_ERROR		UFS_BIT(11)
+> +#define UIC_DATA_LINK_LAYER_ERROR_BAD_CTRL_SYMBOL_TYPE		UFS_BIT(12)
+> +#define UIC_DATA_LINK_LAYER_ERROR_PA_INIT			UFS_BIT(13)
+> +#define UIC_DATA_LINK_LAYER_ERROR_PA_ERROR_IND_RECEIVED		UFS_BIT(14)
+> +
 > 
->  	/* Device deviations from standard UFS device spec. */
+>  /* UECN - Host UIC Error Code Network Layer 40h */
+>  #define UIC_NETWORK_LAYER_ERROR			UFS_BIT(31)
+>  #define UIC_NETWORK_LAYER_ERROR_CODE_MASK	0x7
+> +#define UIC_NETWORK_UNSUPPORTED_HEADER_TYPE	BIT(0)
+> +#define UIC_NETWORK_BAD_DEVICEID_ENC		BIT(1)
+> +#define UIC_NETWORK_LHDR_TRAP_PACKET_DROPPING	BIT(2)
+> 
+>  /* UECT - Host UIC Error Code Transport Layer 44h */
+>  #define UIC_TRANSPORT_LAYER_ERROR		UFS_BIT(31)
+>  #define UIC_TRANSPORT_LAYER_ERROR_CODE_MASK	0x7F
+> +#define UIC_TRANSPORT_UNSUPPORTED_HEADER_TYPE	BIT(0)
+> +#define UIC_TRANSPORT_UNKNOWN_CPORTID		BIT(1)
+> +#define UIC_TRANSPORT_NO_CONNECTION_RX		BIT(2)
+> +#define UIC_TRANSPORT_BAD_TC			BIT(4)
+> +#define UIC_TRANSPORT_E2E_CREDIT_OVERFLOW	BIT(5)
+> +#define UIC_TRANSPORT_SAFETY_VALVE_DROPPING	BIT(6)
+> 
+>  /* UECDME - Host UIC Error Code DME 48h */
+>  #define UIC_DME_ERROR			UFS_BIT(31)
+> diff --git a/drivers/scsi/ufs/unipro.h b/drivers/scsi/ufs/unipro.h
+> index eff8b56..490d867 100644
+> --- a/drivers/scsi/ufs/unipro.h
+> +++ b/drivers/scsi/ufs/unipro.h
+> @@ -127,6 +127,7 @@
+>  #define PA_PACPREQEOBTIMEOUT	0x1591
+>  #define PA_HIBERN8TIME		0x15A7
+>  #define PA_LOCALVERINFO		0x15A9
+> +#define PA_GRANULARITY		0x15AA
+>  #define PA_TACTIVATE		0x15A8
+>  #define PA_PACPFRAMECOUNT	0x15C0
+>  #define PA_PACPERRORCOUNT	0x15C1
+> @@ -170,6 +171,9 @@ enum {
+>  	UNCHANGED	= 7,
+>  };
+> 
+> +#define IS_HS_PWR_MODE(m)        (((m) == FAST_MODE) || ((m) == 
+> FASTAUTO_MODE))
+> +#define IS_PWM_PWR_MODE(m)       (((m) == SLOW_MODE) || ((m) == 
+> SLOWAUTO_MODE))
+> +
+>  /* PA TX/RX Frequency Series */
+>  enum {
+>  	PA_HS_MODE_A	= 1,
+> @@ -231,6 +235,11 @@ enum ufs_unipro_ver {
+>  #define DL_PEERTC1PRESENT	0x2066
+>  #define DL_PEERTC1RXINITCREVAL	0x2067
+> 
+> +/* Default value of L2 Timer */
+> +#define FC0PROTTIMEOUTVAL	8191
+> +#define TC0REPLAYTIMEOUTVAL	65535
+> +#define AFC0REQTIMEOUTVAL	32767
+> +
+>  /*
+>   * Network Layer Attributes
+>   */
+> @@ -259,6 +268,23 @@ enum ufs_unipro_ver {
+>  #define T_TC0TXMAXSDUSIZE	0x4060
+>  #define T_TC1TXMAXSDUSIZE	0x4061
+> 
+> +/* CPort setting */
+> +#define T_CPORTFLAGS_E2EFC_ON	(1 << 0)
+> +#define T_CPORTFLAGS_E2EFC_OFF	(0 << 0)
+> +#define T_CPORTFLAGS_CSD_N_ON	(0 << 1)
+> +#define T_CPORTFLAGS_CSD_N_OFF	(1 << 1)
+> +#define T_CPORTFLAGS_CSV_N_ON	(0 << 2)
+> +#define T_CPORTFLAGS_CSV_N_OFF	(1 << 2)
+> +#define T_CPORTFLAGS_DEF	(T_CPORTFLAGS_CSV_N_OFF | \
+> +				T_CPORTFLAGS_CSD_N_OFF | \
+> +				T_CPORTFLAGS_E2EFC_OFF)
+> +
+> +/* CPort connection state */
+> +enum {
+> +	CPORT_IDLE = 0,
+> +	CPORT_CONNECTED,
+> +};
+> +
+>  #ifdef FALSE
+>  #undef FALSE
+>  #endif
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
