@@ -1,76 +1,59 @@
-From: Satish Kharat <satishkh@cisco.com>
-Subject: [PATCH] fnic: Correcting rport check location in fnic_queuecommand_lck
-Date: Wed, 16 Nov 2016 00:54:01 -0800
-Message-ID: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from alln-iport-4.cisco.com ([173.37.142.91]:4252 "EHLO
-        alln-iport-4.cisco.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752352AbcKPJDv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 04:03:51 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 02/11] hisi_sas: alloc queue id of slot according to
+ device id
+Date: Wed, 16 Nov 2016 10:02:47 +0000
+Message-ID: <e6beb124-abe6-246f-9c9c-b69f63a4bdfa@huawei.com>
+References: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
+ <1478522920-108145-3-git-send-email-john.garry@huawei.com>
+ <CAMj5BkiMcsDsp+XvG3-zDVK2iWy-L0JvL2kcnAi7JkSeBzjpGQ@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <CAMj5BkiMcsDsp+XvG3-zDVK2iWy-L0JvL2kcnAi7JkSeBzjpGQ@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Zhangfei Gao <zhangfei.gao@gmail.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
-To: satishkh@cisco.com, linux-scsi@vger.kernel.org, thenzl@redhat.com
-Cc: Sesidhar Baddela <sebaddel@cisco.com>
 
-Signed-off-by: Satish Kharat <satishkh@cisco.com>
-Signed-off-by: Sesidhar Baddela <sebaddel@cisco.com>
----
- drivers/scsi/fnic/fnic_scsi.c | 28 ++++++++++++++++++----------
- 1 file changed, 18 insertions(+), 10 deletions(-)
+On 16/11/2016 01:41, Zhangfei Gao wrote:
+> On Mon, Nov 7, 2016 at 8:48 PM, John Garry <john.garry@huawei.com> wrote:
+>> From: Xiang Chen <chenxiang66@hisilicon.com>
+>>
+>> Currently slots are allocated from queues in a round-robin fashion.
+>> This causes a problem for internal commands in device mode. For this
+>> mode, we should ensure that the internal abort command is the last
+>> command seen in the host for that device. We can only ensure this when
+>> we place the internal abort command after the preceding commands for
+>> device that in the same queue, as there is no order in which the host
+>> will select a queue to execute the next command.
+>
+> Is there performance penalty, since only one queue is supported for a device.
 
-diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-index bfaba06..2544a37 100644
---- a/drivers/scsi/fnic/fnic_scsi.c
-+++ b/drivers/scsi/fnic/fnic_scsi.c
-@@ -441,30 +441,38 @@ static int fnic_queuecommand_lck(struct scsi_cmnd *sc, void (*done)(struct scsi_
- 	unsigned long ptr;
- 	spinlock_t *io_lock = NULL;
- 	int io_lock_acquired = 0;
-+	struct fc_rport_libfc_priv *rp;
- 
- 	if (unlikely(fnic_chk_state_flags_locked(fnic, FNIC_FLAGS_IO_BLOCKED)))
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 
- 	rport = starget_to_rport(scsi_target(sc->device));
-+	if (!rport) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+				"returning DID_NO_CONNECT for IO as rport is NULL\n");
-+		sc->result = DID_NO_CONNECT << 16;
-+		done(sc);
-+		return 0;
-+	}
-+
- 	ret = fc_remote_port_chkready(rport);
- 	if (ret) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+				"rport is not ready\n");
- 		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
- 		sc->result = ret;
- 		done(sc);
- 		return 0;
- 	}
- 
--	if (rport) {
--		struct fc_rport_libfc_priv *rp = rport->dd_data;
--
--		if (!rp || rp->rp_state != RPORT_ST_READY) {
--			FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
-+	rp = rport->dd_data;
-+	if (!rp || rp->rp_state != RPORT_ST_READY) {
-+		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
- 				"returning DID_NO_CONNECT for IO as rport is removed\n");
--			atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
--			sc->result = DID_NO_CONNECT<<16;
--			done(sc);
--			return 0;
--		}
-+		atomic64_inc(&fnic_stats->misc_stats.rport_not_ready);
-+		sc->result = DID_NO_CONNECT<<16;
-+		done(sc);
-+		return 0;
- 	}
- 
- 	if (lp->state != LPORT_ST_READY || !(lp->link_up))
--- 
-2.5.5
+Hi Zhangfei,
 
+ From testing I have not seen any noteable performance change. However, 
+please note the comment on mq, below.
+
+Cheers,
+John
+
+>
+>>
+>> This queue restriction makes supporting scsi mq more tricky in
+>> the future, but should not be a blocker.
+>>
+>> Note: Even though v1 hw does not support internal abort, the
+>>       allocation method is chosen to be the same for consistency.
+>>
+>> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+>> Signed-off-by: John Garry <john.garry@huawei.com>
+>
+> Reviewed-by: Zhangfei Gao <zhangfei.gao@linaro.org>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+> .
+>
