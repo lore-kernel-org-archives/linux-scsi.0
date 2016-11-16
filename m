@@ -1,28 +1,34 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v3] ufs: introduce UFSHCD_QUIRK_BROKEN_HCE quirk
-Date: Wed, 16 Nov 2016 10:54:24 -0800
-Message-ID: <f49d80d1d9b20ed7e894c32bdc396d12@codeaurora.org>
-References: <000501d23fc6$f0dfa9b0$d29efd10$@samsung.com>
+Subject: Re: [PATCH v3] ufs: introduce UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR quirk
+Date: Wed, 16 Nov 2016 10:54:48 -0800
+Message-ID: <f8c2f1028a39a13130dc8831584d96cb@codeaurora.org>
+References: <000601d23fc7$0701b580$15052080$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:41058 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:41614 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750928AbcKPSyZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 13:54:25 -0500
-In-Reply-To: <000501d23fc6$f0dfa9b0$d29efd10$@samsung.com>
+        with ESMTP id S1751572AbcKPSyt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 13:54:49 -0500
+In-Reply-To: <000601d23fc7$0701b580$15052080$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Kiwoong Kim <kwmad.kim@samsung.com>
 Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-15 21:04, Kiwoong Kim wrote:
-> Some UFS host controllers might not be able to
-> reset UIC by setting HCE to 1.
-> Those controllers should invoke 'DME reset' and 'DME enable'
-> in order instead.
+On 2016-11-15 21:05, Kiwoong Kim wrote:
+> If UFS driver resets interrupt aggregation timer and counter
+> when there are some pended tasks, an IO competion interrupt
+> of any corresponing task may be issued.
+> That would casue a command timeout.
+> 
+> One thing you should mind to use interrupt aggreation
+> with this quirk is that the host controller should be
+> able to refresh interrupt aggreation counter or timer
+> in other way, such as doing it automatically when receiving
+> any response.
 > 
 
 This was the comment on v2: "As Martin mentioned in other email, please 
@@ -37,113 +43,42 @@ fewer patches.
 
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
-
 > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufshcd.c | 44 
-> +++++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/ufs/ufshcd.h |  7 +++++++
->  2 files changed, 50 insertions(+), 1 deletion(-)
+>  drivers/scsi/ufs/ufshcd.c | 3 ++-
+>  drivers/scsi/ufs/ufshcd.h | 7 +++++++
+>  2 files changed, 9 insertions(+), 1 deletion(-)
 > 
 > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index c9cf011..8aac98f 100644
+> index 8aac98f..7b62d8b 100644
 > --- a/drivers/scsi/ufs/ufshcd.c
 > +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -2477,6 +2477,37 @@ static inline void
-> ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba)
->  	usleep_range(min_sleep_time_us, min_sleep_time_us + 50);
->  }
+> @@ -3713,7 +3713,8 @@ static void ufshcd_transfer_req_compl(struct 
+> ufs_hba *hba)
+>  	 * false interrupt if device completes another request after 
+> resetting
+>  	 * aggregation and before reading the DB.
+>  	 */
+> -	if (ufshcd_is_intr_aggr_allowed(hba))
+> +	if ((ufshcd_is_intr_aggr_allowed(hba))
+> +		&& !(hba->quirks & UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR))
+>  		ufshcd_reset_intr_aggr(hba);
 > 
-> +static int ufshcd_dme_reset(struct ufs_hba *hba)
-> +{
-> +	struct uic_command uic_cmd = {0};
-> +	int ret;
-> +
-> +	uic_cmd.command = UIC_CMD_DME_RESET;
-> +	uic_cmd.argument1 = 0x1;
-> +
-> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"dme-reset: error code %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
-> +static int ufshcd_dme_enable(struct ufs_hba *hba)
-> +{
-> +	struct uic_command uic_cmd = {0};
-> +	int ret;
-> +
-> +	uic_cmd.command = UIC_CMD_DME_ENABLE;
-> +
-> +	ret = ufshcd_send_uic_cmd(hba, &uic_cmd);
-> +	if (ret)
-> +		dev_err(hba->dev,
-> +			"dme-enable: error code %d\n", ret);
-> +
-> +	return ret;
-> +}
-> +
->  /**
->   * ufshcd_dme_set_attr - UIC command for DME_SET, DME_PEER_SET
->   * @hba: per adapter instance
-> @@ -3084,6 +3115,7 @@ static inline void ufshcd_hba_stop(struct
-> ufs_hba *hba, bool can_sleep)
->  static int ufshcd_hba_enable(struct ufs_hba *hba)
->  {
->  	int retry;
-> +	int ret = 0;
-> 
->  	/*
->  	 * msleep of 1 and 5 used in this function might result in 
-> msleep(20),
-> @@ -3100,6 +3132,9 @@ static int ufshcd_hba_enable(struct ufs_hba *hba)
-> 
->  	ufshcd_vops_hce_enable_notify(hba, PRE_CHANGE);
-> 
-> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_HCE)
-> +		goto use_dme;
-> +
->  	/* start controller initialization sequence */
->  	ufshcd_hba_start(hba);
-> 
-> @@ -3128,12 +3163,19 @@ static int ufshcd_hba_enable(struct ufs_hba 
-> *hba)
->  		msleep(5);
->  	}
-> 
-> +use_dme:
->  	/* enable UIC related interrupts */
->  	ufshcd_enable_intr(hba, UFSHCD_UIC_MASK);
-> 
-> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_HCE) {
-> +		ret = ufshcd_dme_reset(hba);
-> +		if (!ret)
-> +			ret = ufshcd_dme_enable(hba);
-> +	}
-> +
->  	ufshcd_vops_hce_enable_notify(hba, POST_CHANGE);
-> 
-> -	return 0;
-> +	return ret;
->  }
-> 
->  static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
+>  	tr_doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
 > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 9838598..dfa17ac 100644
+> index dfa17ac..d6861ed 100644
 > --- a/drivers/scsi/ufs/ufshcd.h
 > +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -498,6 +498,13 @@ struct ufs_hba {
+> @@ -505,6 +505,13 @@ struct ufs_hba {
 >  	 */
->  	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+>  	#define UFSHCD_QUIRK_BROKEN_HCE				UFS_BIT(9)
 > 
 > +	/*
-> +	 * This quirk needs to be enabled if the host contoller can't reset
-> +	 * UIC by setting HCE to 1. Those controllers should invoke
-> +	 * DME reset and DME enable in order.
+> +	 * This quirk is only not to reset interrupt aggregation logic
+> +	 * in ISR. The reset can make the host controller miss an event
+> +	 * of previously completed IO.
 > +	 */
-> +	#define UFSHCD_QUIRK_BROKEN_HCE				UFS_BIT(9)
+> +	#define UFSHCI_QUIRK_SKIP_RESET_INTR_AGGR		UFS_BIT(10)
 > +
 >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
 > 
