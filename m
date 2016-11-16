@@ -1,66 +1,114 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs: introduce a new ufshcd_statea
- UFSHCD_STATE_EH_SCHEDULED
-Date: Wed, 16 Nov 2016 10:48:35 -0800
-Message-ID: <a80d0b3c77a2d68c1a1d1aa82dc76139@codeaurora.org>
-References: <20161116032937.117395-1-zangleigang@hisilicon.com>
+Subject: Re: [PATCH v3] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
+Date: Wed, 16 Nov 2016 10:52:53 -0800
+Message-ID: <4efc79cfcd21ee4044a3d3a2f9551078@codeaurora.org>
+References: <000401d23fc6$b6685110$2338f330$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:36736 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:39376 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752629AbcKPSsg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 13:48:36 -0500
-In-Reply-To: <20161116032937.117395-1-zangleigang@hisilicon.com>
+        with ESMTP id S1751464AbcKPSwz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 13:52:55 -0500
+In-Reply-To: <000401d23fc6$b6685110$2338f330$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zang Leigang <zangleigang@hisilicon.com>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-15 19:29, Zang Leigang wrote:
-> Add a new ufshcd_state, indicats that an err handler may get to run
-> immediately. Use UFSHCD_STATE_ERROR here looks not literaly correct.
+On 2016-11-15 21:03, Kiwoong Kim wrote:
+> Some UFS host controllers may clear a transfer request slot
+> by setting an associated bit in UTRLCLR/UTMRLCLR to 1, not 0.
+> That's opposite to what UFS spec describes.
 > 
-> Signed-off-by: Zang Leigang <zangleigang@hisilicon.com>
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index 05c7456..59d4130 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -123,6 +123,7 @@ enum {
->  	UFSHCD_STATE_RESET,
->  	UFSHCD_STATE_ERROR,
->  	UFSHCD_STATE_OPERATIONAL,
-> +	UFSHCD_STATE_EH_SCHEDULED,
->  };
-> 
->  /* UFSHCD error handling flags */
-> @@ -1410,6 +1411,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
->  	switch (hba->ufshcd_state) {
->  	case UFSHCD_STATE_OPERATIONAL:
->  		break;
-> +	case UFSHCD_STATE_EH_SCHEDULED:
->  	case UFSHCD_STATE_RESET:
->  		err = SCSI_MLQUEUE_HOST_BUSY;
->  		goto out_unlock;
-> @@ -4158,7 +4160,7 @@ static void ufshcd_check_errors(struct ufs_hba 
-> *hba)
->  			/* block commands from scsi mid-layer */
->  			scsi_block_requests(hba->host);
-> 
-> -			hba->ufshcd_state = UFSHCD_STATE_ERROR;
-> +			hba->ufshcd_state = UFSHCD_STATE_EH_SCHEDULED;
->  			schedule_work(&hba->eh_work);
->  		}
->  	}
 
+This was the comment on v2: "As Martin mentioned in other email, please 
+separate this version history from commit text with line having "----" 
+before the start of version history."
+So i would have expected the patch version to be still v2 and just add 
+the version history separator added before version history. But you 
+posted v3 and removed the version history altogether. As far as patch 
+contents are concerned, it looks good to me hence i am adding by 
+reviewed-by. But please make sure to keep the version history intact for 
+fewer patches.
 
-LGTM.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
+
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++++++++++++--
+>  drivers/scsi/ufs/ufshcd.h |  7 +++++++
+>  2 files changed, 33 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index d6e3112..c9cf011 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct
+> ufs_hba *hba, int slot)
+>   */
+>  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
+>  {
+> -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+> +	u32 clear;
+> +
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> +		clear = (1 << pos);
+> +	else
+> +		clear = ~(1 << pos);
+> +
+> +	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
+> +}
+> +
+> +/**
+> + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
+> + * @hba: per adapter instance
+> + * @pos: position of the bit to be cleared
+> + */
+> +static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
+> +{
+> +	u32 clear;
+> +
+> +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
+> +		clear = (1 << pos);
+> +	else
+> +		clear = ~(1 << pos);
+> +
+> +	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
+>  }
+> 
+>  /**
+> @@ -4312,7 +4336,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba
+> *hba, int tag)
+>  		goto out;
+> 
+>  	spin_lock_irqsave(hba->host->host_lock, flags);
+> -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
+> +	ufshcd_utmrl_clear(hba, tag);
+>  	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> 
+>  	/* poll for max. 1 sec to clear door bell register by h/w */
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 7d9ff22..9838598 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -491,6 +491,13 @@ struct ufs_hba {
+>  	 */
+>  	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
+> 
+> +	/*
+> +	 * This quirk needs to be enabled if the host contoller has to set
+> +	 * the bit corresponding the slot to be cleared to 1, not 0 as
+> +	 * described in UFS spec.
+> +	 */
+> +	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
+> +
+>  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+> 
+>  	/* Device deviations from standard UFS device spec. */
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
