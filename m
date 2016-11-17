@@ -1,92 +1,107 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] hpsa: use bus '3' for legacy HBA devices
-Date: Thu, 17 Nov 2016 12:15:56 +0100
-Message-ID: <1479381356-94616-1-git-send-email-hare@suse.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36179 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751667AbcKQLQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Nov 2016 06:16:14 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Subject: Re: "hpsa: Change SAS transport devices to bus 0." commit breaks
+ hpacucli on old controller firmware
+Date: Thu, 17 Nov 2016 12:17:29 +0100
+Message-ID: <f6b163ab-29ca-a9f2-6eef-2d6aec03fd02@suse.de>
+References: <1477592113.812104.769415169.23FCE36A@webmail.messagingengine.com>
+ <b73337d1-fd89-9310-5998-f62388028ef5@microsemi.com>
+ <0dda89dd-ba20-6fbb-d4dd-1bb6601a4108@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <0dda89dd-ba20-6fbb-d4dd-1bb6601a4108@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: brace77070@gmail.com, Jack Suter <jack@suter.io>
+Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, scott.teel@microsemi.com, kevin.barnett@microsemi.com, thenzl@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Jack Suter <jack@suter.io>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Older controllers use SCSI target id '0' for the first internal
-disk. As the controllers are now placed on the same bus than the
-internal disks this leads to a clash with the SCSI target id of
-controller.
-This patch checks the SCSI revision, and moves older controller
-to bus '3' to be compatible with older releases and avoid this
-problem.
+On 11/16/2016 05:09 PM, brace77070@gmail.com wrote:
+> On 10/31/2016 02:06 PM, Don Brace wrote:
+>> On 10/27/2016 01:15 PM, Jack Suter wrote:
+>>> Hi there,
+>>>
+>>> Commit "hpsa: Change SAS transport devices to bus 0."
+>>> (09371d623c9c3dc6ed7f53ec8ab01d25f0c6c697) breaks the hpacucli utility
+>>> for some HP Smart Array controllers with old firmware.
+>>>
+>>> Specifically, I have a P410 connected to an HP DL180 G6 running firmware
+>>> version 1.66. Yes, the firmware is old, but it works. On the 4.4 series
+>>> kernels and earlier, hpacucli works with no trouble. On 4.5 and later,
+>>> the hpsa driver reports errors  in the kernel log, and hpacucli reports
+>>> "Error: No controllers detected."
+>>>
+>>> Oct 27 15:50:30 hostname kernel: [   32.189495] hpsa 0000:06:00.0: scsi
+>>> 0:0:0:0: added RAID              HP       P410 controller
+>>> SSDSmartPathCap- En- Exp=1
+>>> Oct 27 15:50:30 hostname kernel: [   32.190054] hpsa 0000:06:00.0:
+>>> addition failed -19, device not added.
+>>>
+>>> Reverting the above commit resolves both the hpsa errors and the
+>>> hpacucli error when tested with kernel 4.7.9.
+>>>
+>>> In addition to this troublesome server, I have a handful of servers with
+>>> P410 controllers and firmware versions ranging from 3.52 to 6.60. All of
+>>> them work with the 09371d62 commit in place, which leads me to believe
+>>> it is just this old 1.66 firmware that is incompatible.
+>>>
+>>> While a firmware upgrade seems like the simple solution, I think this
+>>> should be considered a bug/regression due to it breaking functionality
+>>> that previously worked. It appears others may have run into this issue
+>>> too:
+>>> http://superuser.com/questions/1093124/coreos-hp410-raid1-device-not-added-19
+>>>
+>>>
+>>> Some dmesg output (grep -e hpsa -e sg) is below from both a 4.4.2 kernel
+>>> (working) and 4.5.7 kernel (broken). Note the change in SCSI address
+>>> from 0:3:0:0 to 0:0:0:0.
+>>>
+>>> Please let me know if you need me to do any testing to help resolve
+>>> this.
+>>>
+>>> Jack Suter
+>> I discussed this with the ssacli developers and they do not look
+>> at the bus, but I see "device not added" messages that
+>> should not be there. I'll attack your issue from that
+>> perspective.
+>>
+>> Thanks,
+>> Don Brace
+> 
+> The root cause is that this older firmware is not scsi revision 5 and
+> thus we add the
+> controller at the end of the list, not at the beginning.
+> 
+>         if (is_scsi_rev_5(h))
+>                 raid_ctlr_position = 0;
+>         else
+>                 raid_ctlr_position = nphysicals + nlogicals;
+> 
+> So the first logical volume gets BTL 0:0:0 and then we attempt to add in
+> the controller
+> using the same BTL values at the end of the list. Thus you get the
+> "device not added" messages.
+> 
+> The change to bus 0 was because the SAS transport is using bus 0 and
+> there was a
+> discrepancy in what the driver was putting the controller on and what
+> the SAS
+> transport was actually using.
+> 
+> I'll work on a patch to resolve this for you.
+> 
+One can resolve this issue with checking the SCSI revision of the
+controller, and move every controller with revision '0' to bus 3.
+That solved the issue for me.
 
-Fixes: 09371d623c9 ("hpsa: Change SAS transport devices to bus 0.")
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/hpsa.c | 14 ++++++++++----
- drivers/scsi/hpsa.h |  2 ++
- 2 files changed, 12 insertions(+), 4 deletions(-)
+Patch posted in a different mail.
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index ef4e81a..d0a22aa 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -2034,7 +2034,8 @@ static int hpsa_slave_alloc(struct scsi_device *sdev)
- 			sd->target = sdev_id(sdev);
- 			sd->lun = sdev->lun;
- 		}
--	} else
-+	}
-+	if (!sd)
- 		sd = lookup_hpsa_scsi_dev(h, sdev_channel(sdev),
- 					sdev_id(sdev), sdev->lun);
- 
-@@ -3850,6 +3851,7 @@ static int hpsa_update_device_info(struct ctlr_info *h,
- 		sizeof(this_device->vendor));
- 	memcpy(this_device->model, &inq_buff[16],
- 		sizeof(this_device->model));
-+	this_device->rev = inq_buff[2];
- 	memset(this_device->device_id, 0,
- 		sizeof(this_device->device_id));
- 	if (hpsa_get_device_id(h, scsi3addr, this_device->device_id, 8,
-@@ -3939,10 +3941,14 @@ static void figure_bus_target_lun(struct ctlr_info *h,
- 
- 	if (!is_logical_dev_addr_mode(lunaddrbytes)) {
- 		/* physical device, target and lun filled in later */
--		if (is_hba_lunid(lunaddrbytes))
-+		if (is_hba_lunid(lunaddrbytes)) {
-+			int bus = HPSA_HBA_BUS;
-+
-+			if (!device->rev)
-+				bus = HPSA_LEGACY_HBA_BUS;
- 			hpsa_set_bus_target_lun(device,
--					HPSA_HBA_BUS, 0, lunid & 0x3fff);
--		else
-+					bus, 0, lunid & 0x3fff);
-+		} else
- 			/* defer target, lun assignment for physical devices */
- 			hpsa_set_bus_target_lun(device,
- 					HPSA_PHYSICAL_DEVICE_BUS, -1, -1);
-diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
-index 3faf6cf..64e9829 100644
---- a/drivers/scsi/hpsa.h
-+++ b/drivers/scsi/hpsa.h
-@@ -69,6 +69,7 @@ struct hpsa_scsi_dev_t {
- 	u64 sas_address;
- 	unsigned char vendor[8];        /* bytes 8-15 of inquiry data */
- 	unsigned char model[16];        /* bytes 16-31 of inquiry data */
-+	unsigned char rev;		/* byte 2 of inquiry data */
- 	unsigned char raid_level;	/* from inquiry page 0xC1 */
- 	unsigned char volume_offline;	/* discovered via TUR or VPD */
- 	u16 queue_depth;		/* max queue_depth for this device */
-@@ -400,6 +401,7 @@ struct offline_device_entry {
- #define HPSA_RAID_VOLUME_BUS		1
- #define HPSA_EXTERNAL_RAID_VOLUME_BUS	2
- #define HPSA_HBA_BUS			0
-+#define HPSA_LEGACY_HBA_BUS		3
- 
- /*
- 	Send the command to the hardware
+Cheers,
+
+Hannes
 -- 
-1.8.5.6
-
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
