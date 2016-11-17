@@ -1,137 +1,70 @@
-From: Kiwoong Kim <kwmad.kim@samsung.com>
-Subject: RE: [PATCH v3] ufs: introduce UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR quirk
-Date: Thu, 17 Nov 2016 22:52:17 +0900
-Message-ID: <01f901d240d9$cf715e40$6e541ac0$@samsung.com>
-References: <000401d23fc6$b6685110$2338f330$@samsung.com>
- <CGME20161116185259epcas5p14aae8bce84e7f2750081139c7a9533af@epcas5p1.samsung.com>
- <4efc79cfcd21ee4044a3d3a2f9551078@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+Subject: Re: [PATCH 01/14] cxlflash: Set sg_tablesize to 1 instead of SG_NONE
+Date: Thu, 17 Nov 2016 13:20:13 -0600
+Message-ID: <E29324C2-3F4A-4046-86E8-F30EA11F3112@linux.vnet.ibm.com>
+References: <1479251530-22573-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1479251617-22707-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Mime-Version: 1.0 (Mac OS X Mail 10.1 \(3251\))
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mailout2.samsung.com ([203.254.224.25]:32975 "EHLO
-        mailout2.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933150AbcKQSCb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 13:02:31 -0500
-In-reply-to: <4efc79cfcd21ee4044a3d3a2f9551078@codeaurora.org>
-Content-language: ko
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37096 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752272AbcKQTUU (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Nov 2016 14:20:20 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAHJIxH3040809
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2016 14:20:20 -0500
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26sfvpgkb5-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2016 14:20:20 -0500
+Received: from localhost
+        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mrochs@linux.vnet.ibm.com>;
+        Thu, 17 Nov 2016 12:20:19 -0700
+In-Reply-To: <1479251617-22707-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: 'Subhash Jadavani' <subhashj@codeaurora.org>
-Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, 'HeonGwang Chu' <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-> On 2016-11-15 21:03, Kiwoong Kim wrote:
-> > Some UFS host controllers may clear a transfer request slot
-> > by setting an associated bit in UTRLCLR/UTMRLCLR to 1, not 0.
-> > That's opposite to what UFS spec describes.
-> >
+> On Nov 15, 2016, at 5:13 PM, Uma Krishnan <ukrishn@linux.vnet.ibm.com> wrote:
 > 
-> This was the comment on v2: "As Martin mentioned in other email, please
-> separate this version history from commit text with line having "----"
-> before the start of version history."
-> So i would have expected the patch version to be still v2 and just add
-> the version history separator added before version history. But you
-
-Okay. You mean re-sending it with moving the separator to another line,
-don't you? I knew that I should update version even if there is a change
-of commit message and version history. Thank you for your information.
-
-> posted v3 and removed the version history altogether. As far as patch
-> contents are concerned, it looks good to me hence i am adding by
-> reviewed-by. But please make sure to keep the version history intact for
-> fewer patches.
-
-I have one question.
-If I would update v4 of this patch as Martin asked,
-which one should I choose?
-1) adding changes from v1~v4
-2) adding just something like 'version update'
-Because there is no difference between v3 and v4.
-
+> The following Oops is encountered when blk_mq is enabled with the
+> cxlflash driver:
 > 
-> Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+> [ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
+> [ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
+> [ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
+> [ 2960.817314] Call Trace:
+> [ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
+> [ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
+> [ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
+> [ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
+> [ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
+> [ 2960.817344] blk_finish_plug+0x58/0x80
+> [ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
+> [ 2960.817352] force_page_cache_readahead+0x68/0xd0
+> [ 2960.817356] generic_file_read_iter+0x43c/0x6a0
+> [ 2960.817359] blkdev_read_iter+0x68/0xa0
+> [ 2960.817361] __vfs_read+0x11c/0x180
+> [ 2960.817364] vfs_read+0xa4/0x1c0
+> [ 2960.817366] SyS_read+0x6c/0x110
+> [ 2960.817369] system_call+0x38/0xb4
 > 
+> The SCSI blk_mq stack assumes that sg_tablesize is always a non-zero
+> value with scsi_mq_setup_tags() allocating tags using sg_tablesize.
+> The cxlflash driver currently uses SG_NONE (0) for the sg_tablesize
+> as the devices it supports are not capable of scatter gather. This
+> mismatch of values results in the Oops above.
 > 
-> > Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
-> > ---
-> >  drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++++++++++++--
-> >  drivers/scsi/ufs/ufshcd.h |  7 +++++++
-> >  2 files changed, 33 insertions(+), 2 deletions(-)
-> >
-> > diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> > index d6e3112..c9cf011 100644
-> > --- a/drivers/scsi/ufs/ufshcd.c
-> > +++ b/drivers/scsi/ufs/ufshcd.c
-> > @@ -392,7 +392,31 @@ static inline void ufshcd_put_tm_slot(struct
-> > ufs_hba *hba, int slot)
-> >   */
-> >  static inline void ufshcd_utrl_clear(struct ufs_hba *hba, u32 pos)
-> >  {
-> > -	ufshcd_writel(hba, ~(1 << pos), REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> > +	u32 clear;
-> > +
-> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-> > +		clear = (1 << pos);
-> > +	else
-> > +		clear = ~(1 << pos);
-> > +
-> > +	ufshcd_writel(hba, clear, REG_UTP_TRANSFER_REQ_LIST_CLEAR);
-> > +}
-> > +
-> > +/**
-> > + * ufshcd_utmrl_clear - Clear a bit in UTRMLCLR register
-> > + * @hba: per adapter instance
-> > + * @pos: position of the bit to be cleared
-> > + */
-> > +static inline void ufshcd_utmrl_clear(struct ufs_hba *hba, u32 pos)
-> > +{
-> > +	u32 clear;
-> > +
-> > +	if (hba->quirks & UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR)
-> > +		clear = (1 << pos);
-> > +	else
-> > +		clear = ~(1 << pos);
-> > +
-> > +	ufshcd_writel(hba, clear, REG_UTP_TASK_REQ_LIST_CLEAR);
-> >  }
-> >
-> >  /**
-> > @@ -4312,7 +4336,7 @@ static int ufshcd_clear_tm_cmd(struct ufs_hba
-> > *hba, int tag)
-> >  		goto out;
-> >
-> >  	spin_lock_irqsave(hba->host->host_lock, flags);
-> > -	ufshcd_writel(hba, ~(1 << tag), REG_UTP_TASK_REQ_LIST_CLEAR);
-> > +	ufshcd_utmrl_clear(hba, tag);
-> >  	spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >
-> >  	/* poll for max. 1 sec to clear door bell register by h/w */
-> > diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> > index 7d9ff22..9838598 100644
-> > --- a/drivers/scsi/ufs/ufshcd.h
-> > +++ b/drivers/scsi/ufs/ufshcd.h
-> > @@ -491,6 +491,13 @@ struct ufs_hba {
-> >  	 */
-> >  	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
-> >
-> > +	/*
-> > +	 * This quirk needs to be enabled if the host contoller has to set
-> > +	 * the bit corresponding the slot to be cleared to 1, not 0 as
-> > +	 * described in UFS spec.
-> > +	 */
-> > +	#define UFSHCD_QUIRK_BROKEN_REQ_LIST_CLR                UFS_BIT(8)
-> > +
-> >  	unsigned int quirks;	/* Deviations from standard UFSHCI spec.
-> */
-> >
-> >  	/* Device deviations from standard UFS device spec. */
+> To resolve this issue, sg_tablesize for cxlflash can simply be set
+> to 1, a value which satisfies the constraints in cxlflash and the
+> lack of support of SG_NONE in SCSI blk_mq.
 > 
-> --
-> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-> a Linux Foundation Collaborative Project
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
+Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
