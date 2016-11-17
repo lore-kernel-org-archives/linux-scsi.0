@@ -1,26 +1,24 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fnic: Correcting rport check location in fnic_queuecommand_lck
-Date: Wed, 16 Nov 2016 20:43:11 -0500
-Message-ID: <yq1twb6ankg.fsf@sermon.lab.mkp.net>
-References: <1479286441-8243-1-git-send-email-satishkh@cisco.com>
+Subject: Re: [PATCH] scsi: dmx3191d: use module_pci_driver
+Date: Wed, 16 Nov 2016 20:44:16 -0500
+Message-ID: <yq1poluanin.fsf@sermon.lab.mkp.net>
+References: <3c6dc0c2b50e9ade60eb484a2e8e4e6234432ec0.1479278622.git.geliangtang@gmail.com>
+        <015ae0a9f5aea965329a6669367ee7a61089ef6b.1479278839.git.geliangtang@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:23905 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932773AbcKQBnU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 20:43:20 -0500
-In-Reply-To: <1479286441-8243-1-git-send-email-satishkh@cisco.com> (Satish
-        Kharat's message of "Wed, 16 Nov 2016 00:54:01 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <015ae0a9f5aea965329a6669367ee7a61089ef6b.1479278839.git.geliangtang@gmail.com>
+        (Geliang Tang's message of "Wed, 16 Nov 2016 21:00:58 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Geliang Tang <geliangtang@gmail.com>
+Cc: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, Sesidhar Baddela <sebaddel@cisco.com>
 
->>>>> "Satish" == Satish Kharat <satishkh@cisco.com> writes:
+>>>>> "Geliang" == Geliang Tang <geliangtang@gmail.com> writes:
 
-Applied to 4.10/scsi-queue. Please add a more verbose patch description
-next time.
+Geliang> Use module_pci_driver() helper to simplify the code.
+
+Applied to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
