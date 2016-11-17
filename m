@@ -1,143 +1,68 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH v4 10/15] scsi: fc: Use bsg_destroy_job
-Date: Thu, 17 Nov 2016 10:31:20 +0100
-Message-ID: <9aede92a31caaa415d15a38982c3c3bc81549c0f.1479374720.git.jthumshirn@suse.de>
-References: <cover.1479374719.git.jthumshirn@suse.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1479374719.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1479374719.git.jthumshirn@suse.de>
-References: <cover.1479374719.git.jthumshirn@suse.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, Hannes Reinecke <hare@suse.com>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>
+From: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH] mpt3sas: Fix for SATA drive in blocked state, after diag reset while ATA Passthrough command is outstanding.
+Date: Thu, 17 Nov 2016 16:15:58 +0530
+Message-ID: <1479379558-1780-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f43.google.com ([74.125.82.43]:37240 "EHLO
+        mail-wm0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S941543AbcKQKqg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 05:46:36 -0500
+Received: by mail-wm0-f43.google.com with SMTP id t79so136267245wmt.0
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2016 02:46:35 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 
-fc_destroy_bsgjob() and bsg_destroy_job() are now 1:1 copies, so use the
-later. As bsg_destroy_job() comes from bsg-lib we need to select it in Kconfig
-once CONFOG_SCSI_FC_ATTRS is active.
+While issuing any ATA Pass-through command to Firmware,
+driver will block the device, it will unblock the device only if that
+IO completes through ISR path. But if in-between any host reset
+occurs then driver won't unblock the device and
+device will be in blocked state.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- block/bsg-lib.c                  |  7 +++++--
- drivers/scsi/Kconfig             |  1 +
- drivers/scsi/scsi_transport_fc.c | 25 +++----------------------
- include/linux/bsg-lib.h          |  1 +
- 4 files changed, 10 insertions(+), 24 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 632fb40..9f1e8fd 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -32,9 +32,12 @@
-  * bsg_destroy_job - routine to teardown/delete a bsg job
-  * @job: bsg_job that is to be torn down
-  */
--static void bsg_destroy_job(struct kref *kref)
-+void bsg_destroy_job(struct kref *kref)
- {
- 	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
-+	struct request *rq = job->req;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index a250cfd..5c8f752 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3899,6 +3899,11 @@ _scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
+ 	}
+ }
+ 
++static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
++{
++	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
++}
 +
-+	blk_end_request_all(rq, rq->errors);
- 
- 	put_device(job->dev);	/* release reference for the request */
- 
-@@ -42,6 +45,7 @@ static void bsg_destroy_job(struct kref *kref)
- 	kfree(job->reply_payload.sg_list);
- 	kfree(job);
- }
-+EXPORT_SYMBOL_GPL(bsg_destroy_job);
- 
  /**
-  * bsg_job_done - completion routine for bsg requests
-@@ -85,7 +89,6 @@ static void bsg_softirq_done(struct request *rq)
- {
- 	struct bsg_job *job = rq->special;
- 
--	blk_end_request_all(rq, rq->errors);
- 	kref_put(&job->kref, bsg_destroy_job);
+  * _scsih_flush_running_cmds - completing outstanding commands.
+  * @ioc: per adapter object
+@@ -3920,6 +3925,9 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
+ 		if (!scmd)
+ 			continue;
+ 		count++;
++		if (ata_12_16_cmd(scmd))
++			scsi_internal_device_unblock(scmd->device,
++							SDEV_RUNNING);
+ 		mpt3sas_base_free_smid(ioc, smid);
+ 		scsi_dma_unmap(scmd);
+ 		if (ioc->pci_error_recovery)
+@@ -4027,11 +4035,6 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
+ 	    SAM_STAT_CHECK_CONDITION;
  }
  
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 3b416c9..dfa9334 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -263,6 +263,7 @@ config SCSI_SPI_ATTRS
- config SCSI_FC_ATTRS
- 	tristate "FiberChannel Transport Attributes"
- 	depends on SCSI && NET
-+	select BLK_DEV_BSGLIB
- 	select SCSI_NETLINK
- 	help
- 	  If you wish to export transport-specific information about
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 10a2254..0f350b7 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -30,6 +30,7 @@
- #include <linux/slab.h>
- #include <linux/delay.h>
- #include <linux/kernel.h>
-+#include <linux/bsg-lib.h>
- #include <scsi/scsi_device.h>
- #include <scsi/scsi_host.h>
- #include <scsi/scsi_transport.h>
-@@ -3554,26 +3555,6 @@ struct fc_vport *
-  * BSG support
-  */
- 
--
--/**
-- * fc_destroy_bsgjob - routine to teardown/delete a fc bsg job
-- * @job:	fc_bsg_job that is to be torn down
-- */
--static void
--fc_destroy_bsgjob(struct kref *kref)
+-static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
 -{
--	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
--	struct request *rq = job->req;
--
--	blk_end_request_all(rq, rq->errors);
--
--	put_device(job->dev);	/* release reference for the request */
--
--	kfree(job->request_payload.sg_list);
--	kfree(job->reply_payload.sg_list);
--	kfree(job);
+-	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
 -}
 -
  /**
-  * fc_bsg_jobdone - completion routine for bsg requests that the LLD has
-  *                  completed
-@@ -3617,7 +3598,7 @@ static void fc_bsg_softirq_done(struct request *rq)
- {
- 	struct bsg_job *job = rq->special;
- 
--	kref_put(&job->kref, fc_destroy_bsgjob);
-+	kref_put(&job->kref, bsg_destroy_job);
- }
- 
- /**
-@@ -3642,7 +3623,7 @@ static void fc_bsg_softirq_done(struct request *rq)
- 		/* call LLDD to abort the i/o as it has timed out */
- 		err = i->f->bsg_timeout(job);
- 		if (err == -EAGAIN) {
--			kref_put(&job->kref, fc_destroy_bsgjob);
-+			kref_put(&job->kref, bsg_destroy_job);
- 			return BLK_EH_RESET_TIMER;
- 		} else if (err)
- 			printk(KERN_ERR "ERROR: FC BSG request timeout - LLD "
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index 58e0717..67f7de6 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -69,5 +69,6 @@ void bsg_job_done(struct bsg_job *job, int result,
- int bsg_setup_queue(struct device *dev, struct request_queue *q, char *name,
- 		    bsg_job_fn *job_fn, int dd_job_size);
- void bsg_request_fn(struct request_queue *q);
-+void bsg_destroy_job(struct kref *kref);
- 
- #endif
+  * scsih_qcmd - main scsi request entry point
+  * @scmd: pointer to scsi command object
 -- 
-1.8.5.6
+2.4.3
+
