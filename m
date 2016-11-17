@@ -1,49 +1,80 @@
-From: =?utf-8?B?5Z+65Z2R5pa95bel6K6+5aSH?= <litao918512@163.com>
-Subject: =?utf-8?B?4peG4peG4peGIDIwMTfnrKzljYHkupTlsYrkuK3lm73vvIjlub/lt57vvInlm73pmYU=?=
-        =?utf-8?B?5rG96L2m6Zu26YOo5Lu25Y+K55So5ZOB5bGV6KeI5LyaICBbR0hDOC9D?=
-        =?utf-8?B?LW1dIDIwODAz?=
-Date: Thu, 17 Nov 2016 11:51:28 +0800
-Message-ID: <20161117115140267026@czcz.com.cn>
-Reply-To: <emailqunfa@21cn.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] libfc: fix seconds_since_last_reset miscalculation
+Date: Thu, 17 Nov 2016 09:12:29 +0100
+Message-ID: <20161117081229.bie344dn55jekdxl@linux-x5ow.site>
+References: <1478594694-98847-1-git-send-email-jthumshirn@suse.de>
+ <1479221415.3426.3.camel@sandisk.com>
+ <20161115150531.73jvxfclzzbtpfal@linux-x5ow.site>
+ <4107905.14NieVZ4Uo@wuerfel>
 Mime-Version: 1.0
-Content-Type: text/plain;
-        charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [117.41.168.70] ([117.41.168.70]:3847 "EHLO host016"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752897AbcKQEaU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 16 Nov 2016 23:30:20 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <4107905.14NieVZ4Uo@wuerfel>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@infradead.org" <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-bGl0YW85MTg1MTJAMTYzLmNvbQ0KDQrkuK3lm73lm73pmYXmsb3ovabpm7bpg6jku7bljZrop4jk
-vJoNCkNoaW5hIEludGVybmF0aW9uYWwgQXV0byBQYXJ0cyBFeHBvDQoNCg0K5Lit5Y2O5Lq65rCR
-5YWx5ZKM5Zu95ZWG5Yqh6YOo5byV5a+85pSv5oyB5bGV5LyaDQrlm73lrrbnuqflm73pmYXmgKfm
-sb3ovabphY3ku7bnlKjlk4HlsZXotLjlubPlj7ANCuOAgA0K44CQ5Lit5paH5ZCN56ew44CRIDIw
-MTfnrKzljYHkupTlsYrkuK3lm73vvIjlub/lt57vvInlm73pmYXmsb3ovabpm7bpg6jku7blj4rn
-lKjlk4HlsZXop4jkvJoNCuOAkOiLseaWh+WQjeensOOAkSBUaGUgMTV0aCBDaGluYSAoR3Vhbmd6
-aG91KSBJbnRlcm5hdGlvbmFsIEF1dG8gUGFydHMgRXhwbywyMDE3IO+8iENBUEUgMjAxN++8iQ0K
-44CADQrjgJDlsZXkvJrml6XmnJ/jgJEgMjAxN+W5tDA25pyIMDLigJQwNOaXpQ0K44CQ5bGV5Lya
-5Zy66aaG44CRIOW5v+W3nueQtua0suS/neWIqeS4lui0uOWNmuiniOmmhg0K44CADQrjgJDlsZXk
-vJrnroDku4vjgJEg5pys5bGKQ0FQRemihOiuoeWxleS8mumdouenrzY3MDAw5bmz5pa557Gz77yM
-5qCH5YeG5bGV5L2NMzAwMOWkmuS4qu+8jOWPguinguinguS8lzY1MzMw5aSa5Lq677yb5YW25Lit
-77yM5LiT5Lia5Lmw5a62MzAwMDDlpJrkurrvvIznu4jnq6/mtojotLnogIUyNTAwMOWkmuS6uu+8
-jOWbveWklumHh+i0reWVhjc1NTHlpJrkurrjgIINCuOAkOWPguWxleaDheWGteOAkSDnm67liY3k
-u4XlianlsJHph4/lsZXkvY3vvIzor7fljbPliLvnmbvpmYblrpjnvZHmiqXlkI3jgILmnLrkuI3l
-j6/lpLHvvIENCuOAgA0K44CQ5Y+C5bGV6IGU57O744CRIA0K5a6Y572R77yaaHR0cDovL3d3dy5D
-QVBFLWNoaW5hLmNvbSANCu+8se+8se+8mjEyODA5Mzk1I3FxLmNvbe+8iOmCrueuse+8iQ0K55S1
-6K+d77yaNDAwMC02ODAtODYw6L2sODE0NO+8myAwMTDigJQ4Njk5LTcxNTXjgIE2OTIzLTY5NDQg
-DQrmiYvmnLrvvJoxMzktMTAzMS04MTQ077ybIA0K6IGU57O75Lq677ya546L6LaFIO+8iOWFiOeU
-n++8iQ0KDQogDQrjgIDjgIANCuOAgOOAgA0K44CQ5YWs5LyX5bmz5Y+w44CRDQrjgIDjgIANCuW+
-ruS/oe+8miDlj4LlsZXmtojmga8g77yISUTvvJpDYW5aaGFuWGlhb1hp77yJ4oCU4oCUIOWTgeeJ
-jOaJqeW8oOeahOW5s+WPsOOAgOW4guWcuuW8gOaLk+eahOahpeaigQ0K5b6u5L+h77yaIOWxleWV
-huS5i+WutiDvvIhJRO+8mlpoYW5TaGFuZ1poaUppYe+8ieKAlOKAlCDkuLrlsZXllYbmj5Dkvpvm
-nIDkvbPokKXlnLDjgIDkuLrpmIHkuIvokKXpgKDlj4LlsZXku7flgLwNCuOAgOOAgA0K44CA44CA
-DQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0K55m+
-5LiH576k5Y+R57O757uffOS4uuaCqOWPkemAgXzlpoLkuI3luIzmnJvlho3mlLbliLDmraTooYzk
-uJrotYTorq986K+35Zue5aSN4oCcVEQrQ0FQRSAyMDE34oCd6Iez6YKu566xMTA1NTgwMDgxMkBx
-cS5jb20NCg==
+On Wed, Nov 16, 2016 at 05:58:14PM +0100, Arnd Bergmann wrote:
+> On Tuesday, November 15, 2016 4:05:31 PM CET Johannes Thumshirn wrote:
+> > On Tue, Nov 15, 2016 at 02:50:17PM +0000, Bart Van Assche wrote:
+> > > On Tue, 2016-11-15 at 10:18 +0100, Johannes Thumshirn wrote:
+> > > > On Tue, Nov 08, 2016 at 03:04:43PM +0000, Bart Van Assche wrote:
+> > > > > I think the above code will miscalculate seconds_since_last_reset
+> > > > > if 
+> > > > > 'jiffies' wraps around after an lport has been created and before 
+> > > > > seconds_since_last_reset is computed. Shouldn't
+> > > > > seconds_since_last_reset 
+> > > > > be computed as follows?
+> > > > > 
+> > > > >   fc_stats->seconds_since_last_reset = (jiffies - boot_time) /
+> > > > > HZ;
+> > > > 
+> > > > But what happens when jiffies - boot_time becomes negative? Then we
+> > > > reintroduce the bug again and have 'fcoeadm -s' show weird values.
+> > > 
+> > > Hello Johannes,
+> > > 
+> > > If your concern is about 'jiffies' wrapping around on 32-bit systems
+> > > then you should use get_jiffies_64(). get_jiffies_64() - boot_time
+> > > can't become negative. It namely takes several million years before a
+> > > 64-bit HZ counter wraps around.
+> > 
+> > You're right. I'll respin using get_jiffies_64() and resent once it is tested.
+> 
+> Sorry for the bug I introduced and for not noticing this thread earlier.
+> Looking at this again now, I think it's clear that the bug was simply
+> mixing up the left and right side of the subtraction, the simple fix
+> would be
+> 
+> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+> index 2d3133f62463..fe643f2195f0 100644
+> --- a/drivers/scsi/libfc/fc_lport.c
+> +++ b/drivers/scsi/libfc/fc_lport.c
+> @@ -311,7 +311,7 @@ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
+>  	fc_stats = &lport->host_stats;
+>  	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
+>  
+> -	fc_stats->seconds_since_last_reset = (lport->boot_time - jiffies) / HZ;
+> +	fc_stats->seconds_since_last_reset = (jiffies - lport->boot_time) / HZ;
+>  
+>  	for_each_possible_cpu(cpu) {
+>  		struct fc_stats *stats;
+> 
+> This works correctly across jiffies overflows, as long as there is at least one
+> reset for every jiffies overflow (49 days or more). If we can have longer times
+> between resets, then we could either use get_jiffies_64() or ktime_get_seconds().
 
+Yes I was going to resend this today, but I'm trapped in the s390 pit...
 
+	Johannes
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
