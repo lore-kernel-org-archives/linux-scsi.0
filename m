@@ -1,80 +1,60 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] libfc: fix seconds_since_last_reset miscalculation
-Date: Thu, 17 Nov 2016 09:12:29 +0100
-Message-ID: <20161117081229.bie344dn55jekdxl@linux-x5ow.site>
-References: <1478594694-98847-1-git-send-email-jthumshirn@suse.de>
- <1479221415.3426.3.camel@sandisk.com>
- <20161115150531.73jvxfclzzbtpfal@linux-x5ow.site>
- <4107905.14NieVZ4Uo@wuerfel>
+From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Subject: [PATCH v4 06/15] scsi: libfc: don't set
+	FC_RQST_STATE_DONE before calling fc_bsg_jobdone()
+Date: Thu, 17 Nov 2016 10:31:16 +0100
+Message-ID: <4a88b902ff8b37efcdfb6439d10555701e170a40.1479374720.git.jthumshirn@suse.de>
+References: <cover.1479374719.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <4107905.14NieVZ4Uo@wuerfel>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "hch@infradead.org" <hch@infradead.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <cover.1479374719.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+In-Reply-To: <cover.1479374719.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+References: <cover.1479374719.git.jthumshirn-l3A5Bk7waGM@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K . Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: "open list:SCSI SUBSYSTEM" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "open list:FCOE SUBSYSTEM libfc,
+ libfcoe, fcoe" <fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>, Johannes Thumshirn <jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Nov 16, 2016 at 05:58:14PM +0100, Arnd Bergmann wrote:
-> On Tuesday, November 15, 2016 4:05:31 PM CET Johannes Thumshirn wrote:
-> > On Tue, Nov 15, 2016 at 02:50:17PM +0000, Bart Van Assche wrote:
-> > > On Tue, 2016-11-15 at 10:18 +0100, Johannes Thumshirn wrote:
-> > > > On Tue, Nov 08, 2016 at 03:04:43PM +0000, Bart Van Assche wrote:
-> > > > > I think the above code will miscalculate seconds_since_last_reset
-> > > > > if 
-> > > > > 'jiffies' wraps around after an lport has been created and before 
-> > > > > seconds_since_last_reset is computed. Shouldn't
-> > > > > seconds_since_last_reset 
-> > > > > be computed as follows?
-> > > > > 
-> > > > >   fc_stats->seconds_since_last_reset = (jiffies - boot_time) /
-> > > > > HZ;
-> > > > 
-> > > > But what happens when jiffies - boot_time becomes negative? Then we
-> > > > reintroduce the bug again and have 'fcoeadm -s' show weird values.
-> > > 
-> > > Hello Johannes,
-> > > 
-> > > If your concern is about 'jiffies' wrapping around on 32-bit systems
-> > > then you should use get_jiffies_64(). get_jiffies_64() - boot_time
-> > > can't become negative. It namely takes several million years before a
-> > > 64-bit HZ counter wraps around.
-> > 
-> > You're right. I'll respin using get_jiffies_64() and resent once it is tested.
-> 
-> Sorry for the bug I introduced and for not noticing this thread earlier.
-> Looking at this again now, I think it's clear that the bug was simply
-> mixing up the left and right side of the subtraction, the simple fix
-> would be
-> 
-> diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
-> index 2d3133f62463..fe643f2195f0 100644
-> --- a/drivers/scsi/libfc/fc_lport.c
-> +++ b/drivers/scsi/libfc/fc_lport.c
-> @@ -311,7 +311,7 @@ struct fc_host_statistics *fc_get_host_stats(struct Scsi_Host *shost)
->  	fc_stats = &lport->host_stats;
->  	memset(fc_stats, 0, sizeof(struct fc_host_statistics));
->  
-> -	fc_stats->seconds_since_last_reset = (lport->boot_time - jiffies) / HZ;
-> +	fc_stats->seconds_since_last_reset = (jiffies - lport->boot_time) / HZ;
->  
->  	for_each_possible_cpu(cpu) {
->  		struct fc_stats *stats;
-> 
-> This works correctly across jiffies overflows, as long as there is at least one
-> reset for every jiffies overflow (49 days or more). If we can have longer times
-> between resets, then we could either use get_jiffies_64() or ktime_get_seconds().
+Don't set FC_RQST_STATE_DONE before calling fc_bsg_jobdone() as
+fc_bsg_jobdone() calls blk_complete_requeust() which raises a soft-IRQ that
+ends up in fc_bsg_sofirq_done() and fc_bsg_softirq_done() sets the
+FC_RQST_STATE_DONE flag.
 
-Yes I was going to resend this today, but I'm trapped in the s390 pit...
+Signed-off-by: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
+Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+---
+ drivers/scsi/libfc/fc_lport.c | 2 --
+ 1 file changed, 2 deletions(-)
 
-	Johannes
-
+diff --git a/drivers/scsi/libfc/fc_lport.c b/drivers/scsi/libfc/fc_lport.c
+index 5e24ca3..cc98ebc 100644
+--- a/drivers/scsi/libfc/fc_lport.c
++++ b/drivers/scsi/libfc/fc_lport.c
+@@ -1912,7 +1912,6 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 		bsg_reply->result = (PTR_ERR(fp) == -FC_EX_CLOSED) ?
+ 			-ECONNABORTED : -ETIMEDOUT;
+ 		job->reply_len = sizeof(uint32_t);
+-		job->state_flags |= FC_RQST_STATE_DONE;
+ 		fc_bsg_jobdone(job, bsg_reply->result,
+ 			       bsg_reply->reply_payload_rcv_len);
+ 		kfree(info);
+@@ -1948,7 +1947,6 @@ static void fc_lport_bsg_resp(struct fc_seq *sp, struct fc_frame *fp,
+ 			bsg_reply->reply_payload_rcv_len =
+ 				job->reply_payload.payload_len;
+ 		bsg_reply->result = 0;
+-		job->state_flags |= FC_RQST_STATE_DONE;
+ 		fc_bsg_jobdone(job, bsg_reply->result,
+ 			       bsg_reply->reply_payload_rcv_len);
+ 		kfree(info);
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.8.5.6
