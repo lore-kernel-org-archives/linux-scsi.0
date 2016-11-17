@@ -1,22 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: dmx3191d: use module_pci_driver
-Date: Wed, 16 Nov 2016 20:44:16 -0500
-Message-ID: <yq1poluanin.fsf@sermon.lab.mkp.net>
-References: <3c6dc0c2b50e9ade60eb484a2e8e4e6234432ec0.1479278622.git.geliangtang@gmail.com>
-        <015ae0a9f5aea965329a6669367ee7a61089ef6b.1479278839.git.geliangtang@gmail.com>
+Subject: Re: [PATCH] mvsas: fix command_active typo
+Date: Wed, 16 Nov 2016 20:49:37 -0500
+Message-ID: <yq1lgwian9q.fsf@sermon.lab.mkp.net>
+References: <20161116150855.3083872-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <015ae0a9f5aea965329a6669367ee7a61089ef6b.1479278839.git.geliangtang@gmail.com>
-        (Geliang Tang's message of "Wed, 16 Nov 2016 21:00:58 +0800")
+In-Reply-To: <20161116150855.3083872-1-arnd@arndb.de> (Arnd Bergmann's message
+        of "Wed, 16 Nov 2016 16:08:34 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: Geliang Tang <geliangtang@gmail.com>
-Cc: Finn Thain <fthain@telegraphics.com.au>, Michael Schmitz <schmitzmic@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Xiangliang Yu <yuxiangl@marvell.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Geliang" == Geliang Tang <geliangtang@gmail.com> writes:
+>>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
 
-Geliang> Use module_pci_driver() helper to simplify the code.
+Arnd> gcc-7 notices that the condition in mvs_94xx_command_active looks
+Arnd> suspicious:
 
 Applied to 4.10/scsi-queue.
 
