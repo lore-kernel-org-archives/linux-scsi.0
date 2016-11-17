@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fnic: remove a pointless test
-Date: Wed, 16 Nov 2016 20:39:00 -0500
-Message-ID: <yq137iqc2bv.fsf@sermon.lab.mkp.net>
-References: <1478018421-22820-1-git-send-email-thenzl@redhat.com>
+Subject: Re: [PATCH] 53c700: fix memory leak of dma non-cosistent memory
+Date: Wed, 16 Nov 2016 20:41:16 -0500
+Message-ID: <yq1y40iannn.fsf@sermon.lab.mkp.net>
+References: <582962db.0130ed0a.10866.5633@mx.google.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:22916 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935947AbcKQBjQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 20:39:16 -0500
-In-Reply-To: <1478018421-22820-1-git-send-email-thenzl@redhat.com> (Tomas
-        Henzl's message of "Tue, 1 Nov 2016 17:40:21 +0100")
+Received: from userp1040.oracle.com ([156.151.31.81]:17988 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932773AbcKQBlY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 16 Nov 2016 20:41:24 -0500
+In-Reply-To: <582962db.0130ed0a.10866.5633@mx.google.com> (Li Qiang's message
+        of "Mon, 14 Nov 2016 15:07:58 +0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>
-Cc: Tomas Henzl <thenzl@redhat.com>, linux-scsi@vger.kernel.org
+To: Li Qiang <liq3ea@gmail.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org
 
+>>>>> "Li" == Li Qiang <liq3ea@gmail.com> writes:
 
-Satish, Sesidhar,
+Li> In NCR_700_detect function, if an error occurs it will return NULL
+Li> without freeing the dma non-cosistent memory once allocated.  This
+Li> patch avoid this.
 
-Please review Tomas' patch:
-
-	https://patchwork.kernel.org/patch/9407637/
-
-Thank you!
+James: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
