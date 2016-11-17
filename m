@@ -1,77 +1,26 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH RESEND v4 08/15] block: add reference counting for struct bsg_job
-Date: Thu, 17 Nov 2016 16:09:31 +0100
-Message-ID: <07ed1ca26f9ab85bdc32cb9b582c8f36e9424d49.1479374720.git.jthumshirn__3022.01016243107$1479404129$gmane$org@suse.de>
-References: <cover.1479374719.git.jthumshirn@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v2] libfc: fix seconds_since_last_reset miscalculation
+Date: Thu, 17 Nov 2016 09:40:29 -0800
+Message-ID: <e7dea378-8178-e351-42a6-be7e63a0b972@sandisk.com>
+References: <1479386367-63443-1-git-send-email-jthumshirn@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42832 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S941593AbcKQReB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 17 Nov 2016 12:34:01 -0500
-In-Reply-To: <cover.1479374719.git.jthumshirn@suse.de>
-In-Reply-To: <cover.1479374719.git.jthumshirn@suse.de>
-References: <cover.1479374719.git.jthumshirn@suse.de>
+Received: from mail-sn1nam02on0069.outbound.protection.outlook.com ([104.47.36.69]:34947
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S941515AbcKQRkk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 17 Nov 2016 12:40:40 -0500
+In-Reply-To: <1479386367-63443-1-git-send-email-jthumshirn@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@infradead.org>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@kernel.dk>, "open list:BLOCK LAYER" <linux-block@vger.kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-Add reference counting to 'struct bsg_job' so we can implement a reuqest
-timeout handler for bsg_jobs, which is needed for Fibre Channel.
+On 11/17/2016 04:39 AM, Johannes Thumshirn wrote:
+> Commit 540eb1eef 'scsi: libfc: fix seconds_since_last_reset calculation'
+> removed the use of 'struct timespec' from fc_get_host_stats(). This broke the
+> output of 'fcoeadm -s' after kernel 4.8-rc1.
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
----
- block/bsg-lib.c         | 7 +++++--
- include/linux/bsg-lib.h | 2 ++
- 2 files changed, 7 insertions(+), 2 deletions(-)
-
-diff --git a/block/bsg-lib.c b/block/bsg-lib.c
-index 650f427..632fb40 100644
---- a/block/bsg-lib.c
-+++ b/block/bsg-lib.c
-@@ -32,8 +32,10 @@
-  * bsg_destroy_job - routine to teardown/delete a bsg job
-  * @job: bsg_job that is to be torn down
-  */
--static void bsg_destroy_job(struct bsg_job *job)
-+static void bsg_destroy_job(struct kref *kref)
- {
-+	struct bsg_job *job = container_of(kref, struct bsg_job, kref);
-+
- 	put_device(job->dev);	/* release reference for the request */
- 
- 	kfree(job->request_payload.sg_list);
-@@ -84,7 +86,7 @@ static void bsg_softirq_done(struct request *rq)
- 	struct bsg_job *job = rq->special;
- 
- 	blk_end_request_all(rq, rq->errors);
--	bsg_destroy_job(job);
-+	kref_put(&job->kref, bsg_destroy_job);
- }
- 
- static int bsg_map_buffer(struct bsg_buffer *buf, struct request *req)
-@@ -142,6 +144,7 @@ static int bsg_create_job(struct device *dev, struct request *req)
- 	job->dev = dev;
- 	/* take a reference for the request */
- 	get_device(job->dev);
-+	kref_init(&job->kref);
- 	return 0;
- 
- failjob_rls_rqst_payload:
-diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
-index a226652..58e0717 100644
---- a/include/linux/bsg-lib.h
-+++ b/include/linux/bsg-lib.h
-@@ -40,6 +40,8 @@ struct bsg_job {
- 	struct device *dev;
- 	struct request *req;
- 
-+	struct kref kref;
-+
- 	/* Transport/driver specific request/reply structs */
- 	void *request;
- 	void *reply;
--- 
-1.8.5.6
-
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
