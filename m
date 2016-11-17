@@ -1,107 +1,39 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: "hpsa: Change SAS transport devices to bus 0." commit breaks
- hpacucli on old controller firmware
-Date: Thu, 17 Nov 2016 12:17:29 +0100
-Message-ID: <f6b163ab-29ca-a9f2-6eef-2d6aec03fd02@suse.de>
-References: <1477592113.812104.769415169.23FCE36A@webmail.messagingengine.com>
- <b73337d1-fd89-9310-5998-f62388028ef5@microsemi.com>
- <0dda89dd-ba20-6fbb-d4dd-1bb6601a4108@gmail.com>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: Re: [PATCH v2] libfc: fix seconds_since_last_reset miscalculation
+Date: Thu, 17 Nov 2016 14:48:42 +0100
+Message-ID: <3375236.FqBgC7CYno@wuerfel>
+References: <1479386367-63443-1-git-send-email-jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <0dda89dd-ba20-6fbb-d4dd-1bb6601a4108@gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: brace77070@gmail.com, Jack Suter <jack@suter.io>
-Cc: iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, martin.petersen@oracle.com, scott.teel@microsemi.com, kevin.barnett@microsemi.com, thenzl@redhat.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.133]:62863 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752902AbcKQObI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 09:31:08 -0500
+In-Reply-To: <1479386367-63443-1-git-send-email-jthumshirn@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>
 
-On 11/16/2016 05:09 PM, brace77070@gmail.com wrote:
-> On 10/31/2016 02:06 PM, Don Brace wrote:
->> On 10/27/2016 01:15 PM, Jack Suter wrote:
->>> Hi there,
->>>
->>> Commit "hpsa: Change SAS transport devices to bus 0."
->>> (09371d623c9c3dc6ed7f53ec8ab01d25f0c6c697) breaks the hpacucli utility
->>> for some HP Smart Array controllers with old firmware.
->>>
->>> Specifically, I have a P410 connected to an HP DL180 G6 running firmware
->>> version 1.66. Yes, the firmware is old, but it works. On the 4.4 series
->>> kernels and earlier, hpacucli works with no trouble. On 4.5 and later,
->>> the hpsa driver reports errors  in the kernel log, and hpacucli reports
->>> "Error: No controllers detected."
->>>
->>> Oct 27 15:50:30 hostname kernel: [   32.189495] hpsa 0000:06:00.0: scsi
->>> 0:0:0:0: added RAID              HP       P410 controller
->>> SSDSmartPathCap- En- Exp=1
->>> Oct 27 15:50:30 hostname kernel: [   32.190054] hpsa 0000:06:00.0:
->>> addition failed -19, device not added.
->>>
->>> Reverting the above commit resolves both the hpsa errors and the
->>> hpacucli error when tested with kernel 4.7.9.
->>>
->>> In addition to this troublesome server, I have a handful of servers with
->>> P410 controllers and firmware versions ranging from 3.52 to 6.60. All of
->>> them work with the 09371d62 commit in place, which leads me to believe
->>> it is just this old 1.66 firmware that is incompatible.
->>>
->>> While a firmware upgrade seems like the simple solution, I think this
->>> should be considered a bug/regression due to it breaking functionality
->>> that previously worked. It appears others may have run into this issue
->>> too:
->>> http://superuser.com/questions/1093124/coreos-hp410-raid1-device-not-added-19
->>>
->>>
->>> Some dmesg output (grep -e hpsa -e sg) is below from both a 4.4.2 kernel
->>> (working) and 4.5.7 kernel (broken). Note the change in SCSI address
->>> from 0:3:0:0 to 0:0:0:0.
->>>
->>> Please let me know if you need me to do any testing to help resolve
->>> this.
->>>
->>> Jack Suter
->> I discussed this with the ssacli developers and they do not look
->> at the bus, but I see "device not added" messages that
->> should not be there. I'll attack your issue from that
->> perspective.
->>
->> Thanks,
->> Don Brace
+On Thursday, November 17, 2016 1:39:27 PM CET Johannes Thumshirn wrote:
+> Commit 540eb1eef 'scsi: libfc: fix seconds_since_last_reset calculation'
+> removed the use of 'struct timespec' from fc_get_host_stats(). This broke the
+> output of 'fcoeadm -s' after kernel 4.8-rc1.
 > 
-> The root cause is that this older firmware is not scsi revision 5 and
-> thus we add the
-> controller at the end of the list, not at the beginning.
+> Fixes: 540eb1eef ('scsi: libfc: fix seconds_since_last_reset calculation')
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
 > 
->         if (is_scsi_rev_5(h))
->                 raid_ctlr_position = 0;
->         else
->                 raid_ctlr_position = nphysicals + nlogicals;
-> 
-> So the first logical volume gets BTL 0:0:0 and then we attempt to add in
-> the controller
-> using the same BTL values at the end of the list. Thus you get the
-> "device not added" messages.
-> 
-> The change to bus 0 was because the SAS transport is using bus 0 and
-> there was a
-> discrepancy in what the driver was putting the controller on and what
-> the SAS
-> transport was actually using.
-> 
-> I'll work on a patch to resolve this for you.
-> 
-One can resolve this issue with checking the SCSI revision of the
-controller, and move every controller with revision '0' to bus 3.
-That solved the issue for me.
 
-Patch posted in a different mail.
+Acked-by: Arnd Bergmann <arnd@arndb.de>
 
-Cheers,
+I actually made the same patch today and was going to send it out
+after getting my other patches to build cleanly, but you were faster.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Are we worried about 32-bit systems overflowing here when the elapsed
+time since the last reset is over 49 days? If we are, we probably
+want another patch on top, though this one is sufficient to fix
+the regression, and it has no problems on 64-bit machines.
+
+	Arnd
