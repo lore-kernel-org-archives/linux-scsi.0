@@ -1,32 +1,53 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] fnic: remove a pointless test
-Date: Thu, 17 Nov 2016 20:52:40 -0500
-Message-ID: <yq1eg297dw7.fsf@sermon.lab.mkp.net>
-References: <1478018421-22820-1-git-send-email-thenzl@redhat.com>
-        <972c0b2d-c614-36bd-cdf1-3c1204cc032b@redhat.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
+Date: Thu, 17 Nov 2016 17:53:31 -0800
+Message-ID: <CAPcyv4g7_kDAZNZ2ikBRgFsX-hFpcXEV2xg9YS0Ha7PjSBkzVQ@mail.gmail.com>
+References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
+ <be84afd4-640d-1913-404a-505fd72c1324@huawei.com> <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
+ <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
+ <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
+ <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com> <58257D52.6090507@huawei.com>
+ <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com> <58258631.1090203@huawei.com>
+ <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:34396 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751091AbcKRBwr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 20:52:47 -0500
-In-Reply-To: <972c0b2d-c614-36bd-cdf1-3c1204cc032b@redhat.com> (Tomas Henzl's
-        message of "Thu, 17 Nov 2016 15:14:12 +0100")
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:33860 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751495AbcKRBxd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 20:53:33 -0500
+Received: by mail-oi0-f53.google.com with SMTP id z62so74351660oiz.1
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2016 17:53:33 -0800 (PST)
+In-Reply-To: <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>
-Cc: linux-scsi@vger.kernel.org, sramars@cisco.com, hiralpat@cisco.com, buchino@cisco.com
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, wangyijing <wangyijing@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>
 
->>>>> "Tomas" == Tomas Henzl <thenzl@redhat.com> writes:
+On Thu, Nov 17, 2016 at 7:23 AM, John Garry <john.garry@huawei.com> wrote:
+> On 11/11/2016 08:49, wangyijing wrote:
+>>>>>
+>>>>> I have not seen the flutter issue. I am just trying to solve the
+>>>>> horrible WARN dump.
+>>>>> However I do understand that there may be a issue related to how we
+>>>>> queue the events; there was a recent attempt to fix this, but it came to
+>>>>> nothing:
+>>>>> https://www.spinics.net/lists/linux-scsi/msg99991.html
+>>>>
+>>>>
+>>>> We found libsas hotplug several problems:
+>>>> 1. sysfs warning calltrace(like the case you found);
+>>>
+>>>
+>>> Maybe you can then review my patch.
+>>
+>>
+>> I did it, I think your solution to fix the sysfs calltrace issue is ok,
+>> and what I worried about is we still need to fix
+>> the rest issues. So it's better if we could fix all issues one time.
+>>
+>
+> @Maintainers, would you be willing to accept this patch as an interim fix
+> for the dastardly WARN while we try to fix the flutter issue?
 
-Tomas> Martin, another (better) patch "fnic: Correcting rport check
-Tomas> location in fnic_queuecommand_lck" has been added to
-Tomas> 4.10/scsi-queue.
-
-Tomas> Please drop this one.
-
-Done!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+To me this adds a bug to quiet a benign, albeit noisy, warning.
