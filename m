@@ -1,160 +1,261 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] pmcraid: switch to pci_alloc_irq_vectors
-Date: Fri, 18 Nov 2016 07:28:16 +0100
-Message-ID: <1479450496-14331-1-git-send-email-hch@lst.de>
+Subject: [PATCH] qla4xxx: switch to pci_alloc_irq_vectors
+Date: Fri, 18 Nov 2016 08:15:21 +0100
+Message-ID: <1479453321-18036-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41990 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:46440 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751058AbcKRG22 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 01:28:28 -0500
-Received: from [83.175.99.196] (helo=localhost)
-        by bombadil.infradead.org with esmtpsa (Exim 4.85_2 #1 (Red Hat Linux))
-        id 1c7cew-0005GZ-Se
-        for linux-scsi@vger.kernel.org; Fri, 18 Nov 2016 06:28:27 +0000
+        with ESMTP id S1751058AbcKRHPb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 02:15:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+
+And simplify the MSI-X logic in general - just request the two
+vectors directly instead of going through an indirection table.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/pmcraid.c | 92 ++++++++++++++++++++++----------------------------
- drivers/scsi/pmcraid.h |  1 -
- 2 files changed, 41 insertions(+), 52 deletions(-)
+ drivers/scsi/qla4xxx/ql4_def.h  | 18 +--------
+ drivers/scsi/qla4xxx/ql4_glbl.h |  1 -
+ drivers/scsi/qla4xxx/ql4_isr.c  | 25 +++++-------
+ drivers/scsi/qla4xxx/ql4_nx.c   | 87 +++++++++++------------------------------
+ 4 files changed, 35 insertions(+), 96 deletions(-)
 
-diff --git a/drivers/scsi/pmcraid.c b/drivers/scsi/pmcraid.c
-index 68a5c34..b517642 100644
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -4590,16 +4590,14 @@ static void pmcraid_tasklet_function(unsigned long instance)
- static
- void pmcraid_unregister_interrupt_handler(struct pmcraid_instance *pinstance)
- {
-+	struct pci_dev *pdev = pinstance->pdev;
- 	int i;
+diff --git a/drivers/scsi/qla4xxx/ql4_def.h b/drivers/scsi/qla4xxx/ql4_def.h
+index a7cfc27..aeebefb 100644
+--- a/drivers/scsi/qla4xxx/ql4_def.h
++++ b/drivers/scsi/qla4xxx/ql4_def.h
+@@ -409,18 +409,9 @@ struct qla4_8xxx_legacy_intr_set {
  
- 	for (i = 0; i < pinstance->num_hrrq; i++)
--		free_irq(pinstance->hrrq_vector[i].vector,
--			 &(pinstance->hrrq_vector[i]));
-+		free_irq(pci_irq_vector(pdev, i), &pinstance->hrrq_vector[i]);
+ /* MSI-X Support */
  
--	if (pinstance->interrupt_mode) {
--		pci_disable_msix(pinstance->pdev);
--		pinstance->interrupt_mode = 0;
--	}
-+	pinstance->interrupt_mode = 0;
-+	pci_free_irq_vectors(pdev);
- }
- 
- /**
-@@ -4612,60 +4610,52 @@ void pmcraid_unregister_interrupt_handler(struct pmcraid_instance *pinstance)
- static int
- pmcraid_register_interrupt_handler(struct pmcraid_instance *pinstance)
- {
--	int rc;
- 	struct pci_dev *pdev = pinstance->pdev;
-+	unsigned int irq_flag = PCI_IRQ_LEGACY, flag;
-+	int num_hrrq, rc, i;
-+	irq_handler_t isr;
- 
--	if ((pmcraid_enable_msix) &&
--		(pci_find_capability(pdev, PCI_CAP_ID_MSIX))) {
--		int num_hrrq = PMCRAID_NUM_MSIX_VECTORS;
--		struct msix_entry entries[PMCRAID_NUM_MSIX_VECTORS];
--		int i;
--		for (i = 0; i < PMCRAID_NUM_MSIX_VECTORS; i++)
--			entries[i].entry = i;
+-#define QLA_MSIX_DEFAULT	0x00
+-#define QLA_MSIX_RSP_Q		0x01
 -
--		num_hrrq = pci_enable_msix_range(pdev, entries, 1, num_hrrq);
--		if (num_hrrq < 0)
--			goto pmcraid_isr_legacy;
++#define QLA_MSIX_DEFAULT	0
++#define QLA_MSIX_RSP_Q		1
+ #define QLA_MSIX_ENTRIES	2
+-#define QLA_MIDX_DEFAULT	0
+-#define QLA_MIDX_RSP_Q		1
 -
--		for (i = 0; i < num_hrrq; i++) {
--			pinstance->hrrq_vector[i].hrrq_id = i;
--			pinstance->hrrq_vector[i].drv_inst = pinstance;
--			pinstance->hrrq_vector[i].vector = entries[i].vector;
--			rc = request_irq(pinstance->hrrq_vector[i].vector,
--					pmcraid_isr_msix, 0,
--					PMCRAID_DRIVER_NAME,
--					&(pinstance->hrrq_vector[i]));
--
--			if (rc) {
--				int j;
--				for (j = 0; j < i; j++)
--					free_irq(entries[j].vector,
--						 &(pinstance->hrrq_vector[j]));
--				pci_disable_msix(pdev);
--				goto pmcraid_isr_legacy;
--			}
--		}
-+	if (pmcraid_enable_msix)
-+		irq_flag |= PCI_IRQ_MSIX;
+-struct ql4_msix_entry {
+-	int have_irq;
+-	uint16_t msix_vector;
+-	uint16_t msix_entry;
+-};
  
--		pinstance->num_hrrq = num_hrrq;
-+	num_hrrq = pci_alloc_irq_vectors(pdev, 1, PMCRAID_NUM_MSIX_VECTORS,
-+			irq_flag);
-+	if (num_hrrq < 0)
-+		return num_hrrq;
-+
-+	if (pdev->msix_enabled) {
-+		flag = 0;
-+		isr = pmcraid_isr_msix;
-+	} else {
-+		flag = IRQF_SHARED;
-+		isr = pmcraid_isr;
-+	}
-+
-+	for (i = 0; i < num_hrrq; i++) {
-+		struct pmcraid_isr_param *vec = &pinstance->hrrq_vector[i];
-+
-+		vec->hrrq_id = i;
-+		vec->drv_inst = pinstance;
-+		rc = request_irq(pci_irq_vector(pdev, i), isr, flag,
-+				PMCRAID_DRIVER_NAME, vec);
-+		if (rc)
-+			goto out_unwind;
-+	}
-+
-+	pinstance->num_hrrq = num_hrrq;
-+	if (pdev->msix_enabled) {
- 		pinstance->interrupt_mode = 1;
- 		iowrite32(DOORBELL_INTR_MODE_MSIX,
- 			  pinstance->int_regs.host_ioa_interrupt_reg);
- 		ioread32(pinstance->int_regs.host_ioa_interrupt_reg);
--		goto pmcraid_isr_out;
+ /*
+  * ISP Operations
+@@ -572,9 +563,6 @@ struct scsi_qla_host {
+ #define AF_IRQ_ATTACHED			10 /* 0x00000400 */
+ #define AF_DISABLE_ACB_COMPLETE		11 /* 0x00000800 */
+ #define AF_HA_REMOVAL			12 /* 0x00001000 */
+-#define AF_INTx_ENABLED			15 /* 0x00008000 */
+-#define AF_MSI_ENABLED			16 /* 0x00010000 */
+-#define AF_MSIX_ENABLED			17 /* 0x00020000 */
+ #define AF_MBOX_COMMAND_NOPOLL		18 /* 0x00040000 */
+ #define AF_FW_RECOVERY			19 /* 0x00080000 */
+ #define AF_EEH_BUSY			20 /* 0x00100000 */
+@@ -762,8 +750,6 @@ struct scsi_qla_host {
+ 	struct isp_operations *isp_ops;
+ 	struct ql82xx_hw_data hw;
+ 
+-	struct ql4_msix_entry msix_entries[QLA_MSIX_ENTRIES];
+-
+ 	uint32_t nx_dev_init_timeout;
+ 	uint32_t nx_reset_timeout;
+ 	void *fw_dump;
+diff --git a/drivers/scsi/qla4xxx/ql4_glbl.h b/drivers/scsi/qla4xxx/ql4_glbl.h
+index 2559144..bce96a5 100644
+--- a/drivers/scsi/qla4xxx/ql4_glbl.h
++++ b/drivers/scsi/qla4xxx/ql4_glbl.h
+@@ -134,7 +134,6 @@ int qla4_8xxx_get_flash_info(struct scsi_qla_host *ha);
+ void qla4_82xx_enable_intrs(struct scsi_qla_host *ha);
+ void qla4_82xx_disable_intrs(struct scsi_qla_host *ha);
+ int qla4_8xxx_enable_msix(struct scsi_qla_host *ha);
+-void qla4_8xxx_disable_msix(struct scsi_qla_host *ha);
+ irqreturn_t qla4_8xxx_msi_handler(int irq, void *dev_id);
+ irqreturn_t qla4_8xxx_default_intr_handler(int irq, void *dev_id);
+ irqreturn_t qla4_8xxx_msix_rsp_q(int irq, void *dev_id);
+diff --git a/drivers/scsi/qla4xxx/ql4_isr.c b/drivers/scsi/qla4xxx/ql4_isr.c
+index 4f9c0f2..ff89bba 100644
+--- a/drivers/scsi/qla4xxx/ql4_isr.c
++++ b/drivers/scsi/qla4xxx/ql4_isr.c
+@@ -1107,7 +1107,7 @@ static void qla4_82xx_spurious_interrupt(struct scsi_qla_host *ha,
+ 	DEBUG2(ql4_printk(KERN_INFO, ha, "Spurious Interrupt\n"));
+ 	if (is_qla8022(ha)) {
+ 		writel(0, &ha->qla4_82xx_reg->host_int);
+-		if (test_bit(AF_INTx_ENABLED, &ha->flags))
++		if (!ha->pdev->msi_enabled && !ha->pdev->msix_enabled)
+ 			qla4_82xx_wr_32(ha, ha->nx_legacy_intr.tgt_mask_reg,
+ 			    0xfbff);
+ 	}
+@@ -1564,19 +1564,18 @@ int qla4xxx_request_irqs(struct scsi_qla_host *ha)
+ 
+ try_msi:
+ 	/* Trying MSI */
+-	ret = pci_enable_msi(ha->pdev);
++	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
+ 	if (!ret) {
+ 		ret = request_irq(ha->pdev->irq, qla4_8xxx_msi_handler,
+ 			0, DRIVER_NAME, ha);
+ 		if (!ret) {
+ 			DEBUG2(ql4_printk(KERN_INFO, ha, "MSI: Enabled.\n"));
+-			set_bit(AF_MSI_ENABLED, &ha->flags);
+ 			goto irq_attached;
+ 		} else {
+ 			ql4_printk(KERN_WARNING, ha,
+ 			    "MSI: Failed to reserve interrupt %d "
+ 			    "already in use.\n", ha->pdev->irq);
+-			pci_disable_msi(ha->pdev);
++			pci_free_irq_vectors(ha->pdev);
+ 		}
  	}
  
--pmcraid_isr_legacy:
--	/* If MSI-X registration failed fallback to legacy mode, where
--	 * only one hrrq entry will be used
--	 */
--	pinstance->hrrq_vector[0].hrrq_id = 0;
--	pinstance->hrrq_vector[0].drv_inst = pinstance;
--	pinstance->hrrq_vector[0].vector = pdev->irq;
--	pinstance->num_hrrq = 1;
--
--	rc = request_irq(pdev->irq, pmcraid_isr, IRQF_SHARED,
--			 PMCRAID_DRIVER_NAME, &pinstance->hrrq_vector[0]);
--pmcraid_isr_out:
-+	return 0;
+@@ -1592,7 +1591,6 @@ int qla4xxx_request_irqs(struct scsi_qla_host *ha)
+ 	    IRQF_SHARED, DRIVER_NAME, ha);
+ 	if (!ret) {
+ 		DEBUG2(ql4_printk(KERN_INFO, ha, "INTx: Enabled.\n"));
+-		set_bit(AF_INTx_ENABLED, &ha->flags);
+ 		goto irq_attached;
+ 
+ 	} else {
+@@ -1614,14 +1612,11 @@ int qla4xxx_request_irqs(struct scsi_qla_host *ha)
+ 
+ void qla4xxx_free_irqs(struct scsi_qla_host *ha)
+ {
+-	if (test_and_clear_bit(AF_IRQ_ATTACHED, &ha->flags)) {
+-		if (test_bit(AF_MSIX_ENABLED, &ha->flags)) {
+-			qla4_8xxx_disable_msix(ha);
+-		} else if (test_and_clear_bit(AF_MSI_ENABLED, &ha->flags)) {
+-			free_irq(ha->pdev->irq, ha);
+-			pci_disable_msi(ha->pdev);
+-		} else if (test_and_clear_bit(AF_INTx_ENABLED, &ha->flags)) {
+-			free_irq(ha->pdev->irq, ha);
+-		}
+-	}
++	if (!test_and_clear_bit(AF_IRQ_ATTACHED, &ha->flags))
++		return;
 +
-+out_unwind:
-+	while (--i > 0)
-+		free_irq(pci_irq_vector(pdev, i), &pinstance->hrrq_vector[i]);
-+	pci_free_irq_vectors(pdev);
- 	return rc;
++	if (ha->pdev->msix_enabled)
++		free_irq(pci_irq_vector(ha->pdev, 1), ha);
++	free_irq(pci_irq_vector(ha->pdev, 0), ha);
++	pci_free_irq_vectors(ha->pdev);
+ }
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index bccd8b6..50cdb3d 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3945,7 +3945,7 @@ void qla4_82xx_process_mbox_intr(struct scsi_qla_host *ha, int out_count)
+ 		ha->isp_ops->interrupt_service_routine(ha, intr_status);
+ 
+ 		if (test_bit(AF_INTERRUPTS_ON, &ha->flags) &&
+-		    test_bit(AF_INTx_ENABLED, &ha->flags))
++		    (!ha->pdev->msi_enabled && !ha->pdev->msix_enabled))
+ 			qla4_82xx_wr_32(ha, ha->nx_legacy_intr.tgt_mask_reg,
+ 					0xfbff);
+ 	}
+@@ -4174,78 +4174,37 @@ qla4_82xx_disable_intrs(struct scsi_qla_host *ha)
+ 	spin_unlock_irq(&ha->hardware_lock);
  }
  
-diff --git a/drivers/scsi/pmcraid.h b/drivers/scsi/pmcraid.h
-index e1d150f..568b18a 100644
---- a/drivers/scsi/pmcraid.h
-+++ b/drivers/scsi/pmcraid.h
-@@ -628,7 +628,6 @@ struct pmcraid_interrupts {
- /* ISR parameters LLD allocates (one for each MSI-X if enabled) vectors */
- struct pmcraid_isr_param {
- 	struct pmcraid_instance *drv_inst;
--	u16 vector;			/* allocated msi-x vector */
- 	u8 hrrq_id;			/* hrrq entry index */
- };
+-struct ql4_init_msix_entry {
+-	uint16_t entry;
+-	uint16_t index;
+-	const char *name;
+-	irq_handler_t handler;
+-};
+-
+-static struct ql4_init_msix_entry qla4_8xxx_msix_entries[QLA_MSIX_ENTRIES] = {
+-	{ QLA_MSIX_DEFAULT, QLA_MIDX_DEFAULT,
+-	    "qla4xxx (default)",
+-	    (irq_handler_t)qla4_8xxx_default_intr_handler },
+-	{ QLA_MSIX_RSP_Q, QLA_MIDX_RSP_Q,
+-	    "qla4xxx (rsp_q)", (irq_handler_t)qla4_8xxx_msix_rsp_q },
+-};
+-
+-void
+-qla4_8xxx_disable_msix(struct scsi_qla_host *ha)
+-{
+-	int i;
+-	struct ql4_msix_entry *qentry;
+-
+-	for (i = 0; i < QLA_MSIX_ENTRIES; i++) {
+-		qentry = &ha->msix_entries[qla4_8xxx_msix_entries[i].index];
+-		if (qentry->have_irq) {
+-			free_irq(qentry->msix_vector, ha);
+-			DEBUG2(ql4_printk(KERN_INFO, ha, "%s: %s\n",
+-				__func__, qla4_8xxx_msix_entries[i].name));
+-		}
+-	}
+-	pci_disable_msix(ha->pdev);
+-	clear_bit(AF_MSIX_ENABLED, &ha->flags);
+-}
+-
+ int
+ qla4_8xxx_enable_msix(struct scsi_qla_host *ha)
+ {
+-	int i, ret;
+-	struct msix_entry entries[QLA_MSIX_ENTRIES];
+-	struct ql4_msix_entry *qentry;
+-
+-	for (i = 0; i < QLA_MSIX_ENTRIES; i++)
+-		entries[i].entry = qla4_8xxx_msix_entries[i].entry;
++	int ret;
+ 
+-	ret = pci_enable_msix_exact(ha->pdev, entries, ARRAY_SIZE(entries));
++	ret = pci_alloc_irq_vectors(ha->pdev, QLA_MSIX_ENTRIES,
++			QLA_MSIX_ENTRIES, PCI_IRQ_MSIX);
+ 	if (ret) {
+ 		ql4_printk(KERN_WARNING, ha,
+ 		    "MSI-X: Failed to enable support -- %d/%d\n",
+ 		    QLA_MSIX_ENTRIES, ret);
+-		goto msix_out;
+-	}
+-	set_bit(AF_MSIX_ENABLED, &ha->flags);
+-
+-	for (i = 0; i < QLA_MSIX_ENTRIES; i++) {
+-		qentry = &ha->msix_entries[qla4_8xxx_msix_entries[i].index];
+-		qentry->msix_vector = entries[i].vector;
+-		qentry->msix_entry = entries[i].entry;
+-		qentry->have_irq = 0;
+-		ret = request_irq(qentry->msix_vector,
+-		    qla4_8xxx_msix_entries[i].handler, 0,
+-		    qla4_8xxx_msix_entries[i].name, ha);
+-		if (ret) {
+-			ql4_printk(KERN_WARNING, ha,
+-			    "MSI-X: Unable to register handler -- %x/%d.\n",
+-			    qla4_8xxx_msix_entries[i].index, ret);
+-			qla4_8xxx_disable_msix(ha);
+-			goto msix_out;
+-		}
+-		qentry->have_irq = 1;
+-		DEBUG2(ql4_printk(KERN_INFO, ha, "%s: %s\n",
+-			__func__, qla4_8xxx_msix_entries[i].name));
++		return ret;
+ 	}
+-msix_out:
++
++	ret = request_irq(pci_irq_vector(ha->pdev, 0),
++			qla4_8xxx_default_intr_handler, 0, "qla4xxx (default)",
++			ha);
++	if (ret)
++		goto out_free_vectors;
++
++	ret = request_irq(pci_irq_vector(ha->pdev, 1),
++			qla4_8xxx_msix_rsp_q, 0, "qla4xxx (rsp_q)", ha);
++	if (ret)
++		goto out_free_default_irq;
++
++	return 0;
++
++out_free_default_irq:
++	free_irq(pci_irq_vector(ha->pdev, 0), ha);
++out_free_vectors:
++	pci_free_irq_vectors(ha->pdev);
+ 	return ret;
+ }
  
 -- 
 2.1.4
