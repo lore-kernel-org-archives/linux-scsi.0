@@ -1,34 +1,89 @@
-From: David Miller <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>
-Subject: Re: [PATCH net-next] cxgb4: Allocate Tx queues dynamically
-Date: Fri, 18 Nov 2016 14:04:46 -0500 (EST)
-Message-ID: <20161118.140446.1811222085231950254.davem@davemloft.net>
-References: <1479467260-6509-1-git-send-email-atul.gupta@chelsio.com>
+From: Dan Williams <dan.j.williams@intel.com>
+Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
+Date: Fri, 18 Nov 2016 11:08:04 -0800
+Message-ID: <CAPcyv4gO2oHg2FjVu89cmy7E7+9QPm4AVF_zSy04C3QXiM0UPw@mail.gmail.com>
+References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
+ <be84afd4-640d-1913-404a-505fd72c1324@huawei.com> <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
+ <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
+ <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
+ <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com> <58257D52.6090507@huawei.com>
+ <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com> <58258631.1090203@huawei.com>
+ <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com> <CAPcyv4g7_kDAZNZ2ikBRgFsX-hFpcXEV2xg9YS0Ha7PjSBkzVQ@mail.gmail.com>
+ <ca8ce351-ae6c-6878-4cd7-af7af11122ad@huawei.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1479467260-6509-1-git-send-email-atul.gupta-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: atul.gupta-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
-Cc: netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-crypto-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, herbert-lOAM2aK0SrRLBo1qDEOMRrpzq4S04n8Q@public.gmane.org, leedom-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, nirranjan-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, varun-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org, swise-7bPotxP6k4+P2YhJcF5u+vpXobYPEAuW@public.gmane.org, hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <ca8ce351-ae6c-6878-4cd7-af7af11122ad@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, wangyijing <wangyijing@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Atul Gupta <atul.gupta-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-Date: Fri, 18 Nov 2016 16:37:40 +0530
+On Fri, Nov 18, 2016 at 1:00 AM, John Garry <john.garry@huawei.com> wrote:
+> On 18/11/2016 01:53, Dan Williams wrote:
+>>
+>> On Thu, Nov 17, 2016 at 7:23 AM, John Garry <john.garry@huawei.com> wrote:
+>>>
+>>> On 11/11/2016 08:49, wangyijing wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>> I have not seen the flutter issue. I am just trying to solve the
+>>>>>>> horrible WARN dump.
+>>>>>>> However I do understand that there may be a issue related to how we
+>>>>>>> queue the events; there was a recent attempt to fix this, but it came
+>>>>>>> to
+>>>>>>> nothing:
+>>>>>>> https://www.spinics.net/lists/linux-scsi/msg99991.html
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>> We found libsas hotplug several problems:
+>>>>>> 1. sysfs warning calltrace(like the case you found);
+>>>>>
+>>>>>
+>>>>>
+>>>>> Maybe you can then review my patch.
+>>>>
+>>>>
+>>>>
+>>>> I did it, I think your solution to fix the sysfs calltrace issue is ok,
+>>>> and what I worried about is we still need to fix
+>>>> the rest issues. So it's better if we could fix all issues one time.
+>>>>
+>>>
+>>> @Maintainers, would you be willing to accept this patch as an interim fix
+>>> for the dastardly WARN while we try to fix the flutter issue?
+>>
+>>
+>> To me this adds a bug to quiet a benign, albeit noisy, warning.
+>>
+>
+> What is the bug which is being added?
 
-> From: Hariprasad Shenai <hariprasad-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
-> 
-> Allocate resources dynamically for Upper layer driver's (ULD) like
-> cxgbit, iw_cxgb4, cxgb4i and chcr. The resources allocated include Tx
-> queues which are allocated when ULD register with cxgb4 driver and freed
-> while un-registering. The Tx queues which are shared by ULD shall be
-> allocated by first registering driver and un-allocated by last
-> unregistering driver.
-> 
-> Signed-off-by: Atul Gupta <atul.gupta-ut6Up61K2wZBDgjK7y7TUQ@public.gmane.org>
+The bug where we queue a port teardown, but see a port formation event
+in the meantime.
 
-Applied.
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> And it's a very noisy warning, as in 6K lines on the console when an
+> expander is unplugged.
+
+Does something like this modulate the failure?
+
+diff --git a/drivers/scsi/scsi_transport_sas.c
+b/drivers/scsi/scsi_transport_sas.c            index
+60b651bfaa01..11401e5c88ba 100644
+                 --- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -262,9 +262,10 @@ static void sas_bsg_remove(struct Scsi_Host
+*shost, struct sas_rphy *rphy
+ {
+        struct request_queue *q;
+
+-       if (rphy)
++       if (rphy) {
+                q = rphy->q;
+-       else
++               rphy->q = NULL;
++       } else
+                q = to_sas_host_attrs(shost)->q;
+
+        if (!q)
