@@ -1,37 +1,39 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] scsi: be2iscsi: allocate enough memory in
- beiscsi_boot_get_sinfo()
-Date: Fri, 18 Nov 2016 14:53:39 +0300
-Message-ID: <20161118115339.GD3281@mwanda>
+From: Greg KH <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH] mpt2sas: Fix secure erase premature termination.
+Date: Fri, 18 Nov 2016 12:54:28 +0100
+Message-ID: <20161118115428.GA12997@kroah.com>
+References: <1479469369-15066-1-git-send-email-suganath-prabu.subramani@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:39266 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753076AbcKRLyE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 06:54:04 -0500
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1479469369-15066-1-git-send-email-suganath-prabu.subramani@broadcom.com>
+Sender: stable-owner@vger.kernel.org
+To: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Cc: stable@vger.kernel.org, andrey2805@gmail.com, hch@infradead.org, jejb@kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, FusionLinux.pdl@broadcom.com, hare@suse.de, Sathya.Prakash@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-We accidentally allocate sizeof(u32) instead of sizeof(struct
-be_cmd_get_session_resp).
+On Fri, Nov 18, 2016 at 05:12:49PM +0530, Suganath Prabu S wrote:
+> Problem:
+> This is a work around for a bug with LSI Fusion MPT SAS2 when
+> pefroming secure erase. Due to the very long time the operation
+> takes commands issued during the erase will time out and will trigger
+> execution of abort hook. Even though the abort hook is called for
+> the specific command which timed out this leads to entire device halt
+> (scsi_state terminated) and premature termination of the secured erase.
+> 
+> Fix:
+> Set device state to busy while erase in progress to reject any incoming
+> commands until the erase is done. The device is blocked any way during
+> this time and cannot execute any other command.
+> 
+> P.S
+> This is a backport from the same fix for mpt3sas driver intended
+> for pre-4.4 stable trees.
 
-Fixes: 50a4b824be9e ("scsi: be2iscsi: Fix to make boot discovery non-blocking")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+What is the git commit id of the patch in Linus's tree that matches up
+with this one?
 
-diff --git a/drivers/scsi/be2iscsi/be_mgmt.c b/drivers/scsi/be2iscsi/be_mgmt.c
-index aebc4dd..ac05317b 100644
---- a/drivers/scsi/be2iscsi/be_mgmt.c
-+++ b/drivers/scsi/be2iscsi/be_mgmt.c
-@@ -1083,7 +1083,7 @@ unsigned int beiscsi_boot_get_sinfo(struct beiscsi_hba *phba)
- 	nonemb_cmd = &phba->boot_struct.nonemb_cmd;
- 	nonemb_cmd->size = sizeof(*resp);
- 	nonemb_cmd->va = pci_alloc_consistent(phba->ctrl.pdev,
--					      sizeof(nonemb_cmd->size),
-+					      nonemb_cmd->size,
- 					      &nonemb_cmd->dma);
- 	if (!nonemb_cmd->va) {
- 		mutex_unlock(&ctrl->mbox_lock);
+thanks,
+
+greg k-h
