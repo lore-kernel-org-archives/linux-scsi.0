@@ -1,53 +1,204 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
-Date: Thu, 17 Nov 2016 17:53:31 -0800
-Message-ID: <CAPcyv4g7_kDAZNZ2ikBRgFsX-hFpcXEV2xg9YS0Ha7PjSBkzVQ@mail.gmail.com>
-References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
- <be84afd4-640d-1913-404a-505fd72c1324@huawei.com> <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
- <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
- <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
- <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com> <58257D52.6090507@huawei.com>
- <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com> <58258631.1090203@huawei.com>
- <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] vmw_pvscsi: switch to pci_alloc_irq_vectors
+Date: Fri, 18 Nov 2016 07:02:38 +0100
+Message-ID: <1479448958-6653-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f53.google.com ([209.85.218.53]:33860 "EHLO
-        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751495AbcKRBxd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 17 Nov 2016 20:53:33 -0500
-Received: by mail-oi0-f53.google.com with SMTP id z62so74351660oiz.1
-        for <linux-scsi@vger.kernel.org>; Thu, 17 Nov 2016 17:53:33 -0800 (PST)
-In-Reply-To: <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:39779 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751058AbcKRGCn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 01:02:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, wangyijing <wangyijing@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>
+To: jgill@vmware.com
+Cc: pv-drivers@vmware.com, linux-scsi@vger.kernel.org
 
-On Thu, Nov 17, 2016 at 7:23 AM, John Garry <john.garry@huawei.com> wrote:
-> On 11/11/2016 08:49, wangyijing wrote:
->>>>>
->>>>> I have not seen the flutter issue. I am just trying to solve the
->>>>> horrible WARN dump.
->>>>> However I do understand that there may be a issue related to how we
->>>>> queue the events; there was a recent attempt to fix this, but it came to
->>>>> nothing:
->>>>> https://www.spinics.net/lists/linux-scsi/msg99991.html
->>>>
->>>>
->>>> We found libsas hotplug several problems:
->>>> 1. sysfs warning calltrace(like the case you found);
->>>
->>>
->>> Maybe you can then review my patch.
->>
->>
->> I did it, I think your solution to fix the sysfs calltrace issue is ok,
->> and what I worried about is we still need to fix
->> the rest issues. So it's better if we could fix all issues one time.
->>
->
-> @Maintainers, would you be willing to accept this patch as an interim fix
-> for the dastardly WARN while we try to fix the flutter issue?
+And simply the interrupt handler by splitting the INTx case that needs
+to deal with shared interrupts into a separate helper.
 
-To me this adds a bug to quiet a benign, albeit noisy, warning.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/vmw_pvscsi.c | 104 +++++++++++++++++-----------------------------
+ drivers/scsi/vmw_pvscsi.h |   5 ---
+ 2 files changed, 38 insertions(+), 71 deletions(-)
+
+diff --git a/drivers/scsi/vmw_pvscsi.c b/drivers/scsi/vmw_pvscsi.c
+index 4a0d3cd..642dd4e 100644
+--- a/drivers/scsi/vmw_pvscsi.c
++++ b/drivers/scsi/vmw_pvscsi.c
+@@ -68,10 +68,7 @@ struct pvscsi_ctx {
+ 
+ struct pvscsi_adapter {
+ 	char				*mmioBase;
+-	unsigned int			irq;
+ 	u8				rev;
+-	bool				use_msi;
+-	bool				use_msix;
+ 	bool				use_msg;
+ 	bool				use_req_threshold;
+ 
+@@ -1160,30 +1157,26 @@ static bool pvscsi_setup_req_threshold(struct pvscsi_adapter *adapter,
+ static irqreturn_t pvscsi_isr(int irq, void *devp)
+ {
+ 	struct pvscsi_adapter *adapter = devp;
+-	int handled;
+-
+-	if (adapter->use_msi || adapter->use_msix)
+-		handled = true;
+-	else {
+-		u32 val = pvscsi_read_intr_status(adapter);
+-		handled = (val & PVSCSI_INTR_ALL_SUPPORTED) != 0;
+-		if (handled)
+-			pvscsi_write_intr_status(devp, val);
+-	}
+-
+-	if (handled) {
+-		unsigned long flags;
++	unsigned long flags;
+ 
+-		spin_lock_irqsave(&adapter->hw_lock, flags);
++	spin_lock_irqsave(&adapter->hw_lock, flags);
++	pvscsi_process_completion_ring(adapter);
++	if (adapter->use_msg && pvscsi_msg_pending(adapter))
++		queue_work(adapter->workqueue, &adapter->work);
++	spin_unlock_irqrestore(&adapter->hw_lock, flags);
+ 
+-		pvscsi_process_completion_ring(adapter);
+-		if (adapter->use_msg && pvscsi_msg_pending(adapter))
+-			queue_work(adapter->workqueue, &adapter->work);
++	return IRQ_HANDLED;
++}
+ 
+-		spin_unlock_irqrestore(&adapter->hw_lock, flags);
+-	}
++static irqreturn_t pvscsi_shared_isr(int irq, void *devp)
++{
++	struct pvscsi_adapter *adapter = devp;
++	u32 val = pvscsi_read_intr_status(adapter);
+ 
+-	return IRQ_RETVAL(handled);
++	if (!(val & PVSCSI_INTR_ALL_SUPPORTED))
++		return IRQ_NONE;
++	pvscsi_write_intr_status(devp, val);
++	return pvscsi_isr(irq, devp);
+ }
+ 
+ static void pvscsi_free_sgls(const struct pvscsi_adapter *adapter)
+@@ -1195,34 +1188,10 @@ static void pvscsi_free_sgls(const struct pvscsi_adapter *adapter)
+ 		free_pages((unsigned long)ctx->sgl, get_order(SGL_SIZE));
+ }
+ 
+-static int pvscsi_setup_msix(const struct pvscsi_adapter *adapter,
+-			     unsigned int *irq)
+-{
+-	struct msix_entry entry = { 0, PVSCSI_VECTOR_COMPLETION };
+-	int ret;
+-
+-	ret = pci_enable_msix_exact(adapter->dev, &entry, 1);
+-	if (ret)
+-		return ret;
+-
+-	*irq = entry.vector;
+-
+-	return 0;
+-}
+-
+ static void pvscsi_shutdown_intr(struct pvscsi_adapter *adapter)
+ {
+-	if (adapter->irq) {
+-		free_irq(adapter->irq, adapter);
+-		adapter->irq = 0;
+-	}
+-	if (adapter->use_msi) {
+-		pci_disable_msi(adapter->dev);
+-		adapter->use_msi = 0;
+-	} else if (adapter->use_msix) {
+-		pci_disable_msix(adapter->dev);
+-		adapter->use_msix = 0;
+-	}
++	free_irq(pci_irq_vector(adapter->dev, 0), adapter);
++	pci_free_irq_vectors(adapter->dev);
+ }
+ 
+ static void pvscsi_release_resources(struct pvscsi_adapter *adapter)
+@@ -1358,11 +1327,11 @@ static u32 pvscsi_get_max_targets(struct pvscsi_adapter *adapter)
+ 
+ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ {
++	unsigned int irq_flag = PCI_IRQ_MSIX | PCI_IRQ_MSI | PCI_IRQ_LEGACY;
+ 	struct pvscsi_adapter *adapter;
+ 	struct pvscsi_adapter adapter_temp;
+ 	struct Scsi_Host *host = NULL;
+ 	unsigned int i;
+-	unsigned long flags = 0;
+ 	int error;
+ 	u32 max_id;
+ 
+@@ -1511,30 +1480,33 @@ static int pvscsi_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto out_reset_adapter;
+ 	}
+ 
+-	if (!pvscsi_disable_msix &&
+-	    pvscsi_setup_msix(adapter, &adapter->irq) == 0) {
+-		printk(KERN_INFO "vmw_pvscsi: using MSI-X\n");
+-		adapter->use_msix = 1;
+-	} else if (!pvscsi_disable_msi && pci_enable_msi(pdev) == 0) {
+-		printk(KERN_INFO "vmw_pvscsi: using MSI\n");
+-		adapter->use_msi = 1;
+-		adapter->irq = pdev->irq;
+-	} else {
+-		printk(KERN_INFO "vmw_pvscsi: using INTx\n");
+-		adapter->irq = pdev->irq;
+-		flags = IRQF_SHARED;
+-	}
++	if (pvscsi_disable_msix)
++		irq_flag &= ~PCI_IRQ_MSIX;
++	if (pvscsi_disable_msi)
++		irq_flag &= ~PCI_IRQ_MSI;
++
++	error = pci_alloc_irq_vectors(adapter->dev, 1, 1, irq_flag);
++	if (error)
++		goto out_reset_adapter;
+ 
+ 	adapter->use_req_threshold = pvscsi_setup_req_threshold(adapter, true);
+ 	printk(KERN_DEBUG "vmw_pvscsi: driver-based request coalescing %sabled\n",
+ 	       adapter->use_req_threshold ? "en" : "dis");
+ 
+-	error = request_irq(adapter->irq, pvscsi_isr, flags,
+-			    "vmw_pvscsi", adapter);
++	if (adapter->dev->msix_enabled || adapter->dev->msi_enabled) {
++		printk(KERN_INFO "vmw_pvscsi: using MSI%s\n",
++			adapter->dev->msix_enabled ? "-X" : "");
++		error = request_irq(pci_irq_vector(pdev, 0), pvscsi_isr,
++				0, "vmw_pvscsi", adapter);
++	} else {
++		printk(KERN_INFO "vmw_pvscsi: using INTx\n");
++		error = request_irq(pci_irq_vector(pdev, 0), pvscsi_shared_isr,
++				IRQF_SHARED, "vmw_pvscsi", adapter);
++	}
++
+ 	if (error) {
+ 		printk(KERN_ERR
+ 		       "vmw_pvscsi: unable to request IRQ: %d\n", error);
+-		adapter->irq = 0;
+ 		goto out_reset_adapter;
+ 	}
+ 
+diff --git a/drivers/scsi/vmw_pvscsi.h b/drivers/scsi/vmw_pvscsi.h
+index c097d2c..b3060fe 100644
+--- a/drivers/scsi/vmw_pvscsi.h
++++ b/drivers/scsi/vmw_pvscsi.h
+@@ -423,11 +423,6 @@ struct PVSCSIConfigPageController {
+ #define PVSCSI_MAX_INTRS        24
+ 
+ /*
+- * Enumeration of supported MSI-X vectors
+- */
+-#define PVSCSI_VECTOR_COMPLETION   0
+-
+-/*
+  * Misc constants for the rings.
+  */
+ 
+-- 
+2.1.4
+
