@@ -1,47 +1,85 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: use PCI layer IRQ affinity in lpfc
-Date: Fri, 18 Nov 2016 08:21:35 -0800
-Message-ID: <96e879ef-3152-f133-b89d-ae3f2661a85e@broadcom.com>
-References: <1479395693-5781-1-git-send-email-hch@lst.de>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 5/5] megaraid_sas: add mmio barrier after register writes
+Date: Fri, 18 Nov 2016 22:18:47 +0530
+Message-ID: <67e94cdd16a9f55f3a73a12a13330ed0@mail.gmail.com>
+References: <1478857492-4581-1-git-send-email-hare@suse.de>
+ <1478857492-4581-6-git-send-email-hare@suse.de> <5f6fcc3e-a48f-7909-c409-1d265ea9135c@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:35386 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932255AbcKRQVh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 11:21:37 -0500
-Received: by mail-pg0-f49.google.com with SMTP id p66so104435688pga.2
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2016 08:21:37 -0800 (PST)
-In-Reply-To: <1479395693-5781-1-git-send-email-hch@lst.de>
+Received: from mail-qk0-f173.google.com ([209.85.220.173]:34695 "EHLO
+        mail-qk0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752724AbcKRQsu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 18 Nov 2016 11:48:50 -0500
+Received: by mail-qk0-f173.google.com with SMTP id q130so270706539qke.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Nov 2016 08:48:49 -0800 (PST)
+In-Reply-To: <5f6fcc3e-a48f-7909-c409-1d265ea9135c@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: hare@suse.de, linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sumit Saxena <sumit.saxena@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Hi Christoph,
-
-We had already done this work in the larger lpfc patch that had been 
-posted for nvme work.
-
-I'll look at separating out just the irq part and post a reply.
-
--- james
-
-
-On 11/17/2016 7:14 AM, Christoph Hellwig wrote:
-> This series has two patches: the first is a simple conversion of
-> lpfc to use pci_alloc_irq_vectors.  The second is more interesting,
-> and makes use of the PCI_IRQ_AFFINITY option to use the core interrupt
-> affinity assignment that takes nodes into account and can be easily
-> queried.  It also ensures we propagate this information to blk-mq
-> to make sure the block layer queues are properly aligned to the
-> interrupt vectors.
+> -----Original Message-----
+> From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
+> owner@vger.kernel.org] On Behalf Of Tomas Henzl
+> Sent: Friday, November 18, 2016 9:23 PM
+> To: Hannes Reinecke; Martin K. Petersen
+> Cc: Christoph Hellwig; James Bottomley; Sumit Saxena; linux-
+> scsi@vger.kernel.org; Hannes Reinecke
+> Subject: Re: [PATCH 5/5] megaraid_sas: add mmio barrier after register
+writes
 >
-> Note that these patches require core IRQ changes from a stable
-> branch in the tip tree to be pulled in first:
+> On 11.11.2016 10:44, Hannes Reinecke wrote:
+> > The megaraid_sas HBA only has a single register for I/O submission,
+> > which will be hit pretty hard with scsi-mq. To ensure that the PCI
+> > writes have made it across we need to add a mmio barrier after each
+> > write; otherwise I've been seeing spurious command completions and I/O
+> > stalls.
 >
-> 	git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip.git irq/for-block
->
-> Also be aware that I don't have any lpfc hardware to actually test these.
+> Why is it needed that the PCI write reaches the hw exactly at this
+point?
+> Is it possible that this is a hw deficiency like that the hw can't
+handle
+> communication without tiny pauses, and so possible to remove in next
+> generation?
+> Thanks,
+> Tomas
 
+I think this is good to have mmiowb as we are already doing  for writel()
+version of megasas_return_cmd_fusion.
+May be not for x86, but for some other CPU arch it is useful. I think it
+become more evident while scs-mq support for more than one submission
+queue patch of Hannes expose this issue.
+
+Probably this patch is good. Intermediate PCI device (PCI bridge ?)  may
+cache PCI packet and eventually out of order PCI packet to MegaRAID HBA
+can cause this type of spurious completion.
+
+>
+> >
+> > Signed-off-by: Hannes Reinecke <hare@suse.com>
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 1 +
+> >  1 file changed, 1 insertion(+)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > index aba53c0..729a654 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > @@ -196,6 +196,7 @@ inline void megasas_return_cmd_fusion(struct
+> megasas_instance *instance,
+> >  			le32_to_cpu(req_desc->u.low));
+> >
+> >  	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
+> > +	mmiowb();
+> >  #else
+> >  	unsigned long flags;
+> >
+>
+>
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+the body of
+> a message to majordomo@vger.kernel.org More majordomo info at
+> http://vger.kernel.org/majordomo-info.html
