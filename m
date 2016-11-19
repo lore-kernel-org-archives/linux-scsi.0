@@ -1,63 +1,32 @@
 From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH] scsi: pmcraid: Add missing resource releases
-Date: Sat, 19 Nov 2016 18:43:18 +0100
-Message-ID: <20161119174318.20394-1-lambert.quentin@gmail.com>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] isci: Add a missing call to pci_unmap_biosrom
+Date: Sat, 19 Nov 2016 18:43:40 +0100
+Message-ID: <20161119174340.20447-1-lambert.quentin@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 Cc: Quentin Lambert <lambert.quentin@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Most error branches following the call to pmcraid_get_free_cmd contain
-a call to pmcraid_return_cmd. This patch add these calls where they are
-missing.
-
-Moreover, most error branches following the call to class_create contain
-a call to class_destroy. This patch add these calls where they are
-missing.
+Most error branches following the call to pci_map_biosrom contain
+a call to pci_unmap_biosrom. This patch add these calls where
+they are missing.
 
 This issue was found with Hector.
 
 Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 
 ---
- drivers/scsi/pmcraid.c |   10 +++++++---
- 1 file changed, 7 insertions(+), 3 deletions(-)
+ drivers/scsi/isci/probe_roms.c |    1 +
+ 1 file changed, 1 insertion(+)
 
---- a/drivers/scsi/pmcraid.c
-+++ b/drivers/scsi/pmcraid.c
-@@ -3787,11 +3787,11 @@ static long pmcraid_ioctl_passthrough(
- 						      direction);
- 		if (rc) {
- 			pmcraid_err("couldn't build passthrough ioadls\n");
--			goto out_free_buffer;
-+			goto out_free_cmd;
- 		}
- 	} else if (request_size < 0) {
- 		rc = -EINVAL;
--		goto out_free_buffer;
-+		goto out_free_cmd;
- 	}
- 
- 	/* If data is being written into the device, copy the data from user
-@@ -3908,6 +3908,8 @@ out_handle_response:
- 
- out_free_sglist:
- 	pmcraid_release_passthrough_ioadls(cmd, request_size, direction);
-+
-+out_free_cmd:
- 	pmcraid_return_cmd(cmd);
- 
- out_free_buffer:
-@@ -6018,8 +6020,10 @@ static int __init pmcraid_init(void)
- 
- 	error = pmcraid_netlink_init();
- 
--	if (error)
-+	if (error) {
-+		class_destroy(pmcraid_class);
- 		goto out_unreg_chrdev;
-+	}
- 
- 	error = pci_register_driver(&pmcraid_driver);
- 
+--- a/drivers/scsi/isci/probe_roms.c
++++ b/drivers/scsi/isci/probe_roms.c
+@@ -54,6 +54,7 @@ struct isci_orom *isci_request_oprom(str
+ 	len = pci_biosrom_size(pdev);
+ 	rom = devm_kzalloc(&pdev->dev, sizeof(*rom), GFP_KERNEL);
+ 	if (!rom) {
++		pci_unmap_biosrom(oprom);
+ 		dev_warn(&pdev->dev,
+ 			 "Unable to allocate memory for orom\n");
+ 		return NULL;
