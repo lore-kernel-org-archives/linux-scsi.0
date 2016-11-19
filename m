@@ -1,15 +1,15 @@
 From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH] scsi: aic94xx: Add a missing call to kfree
-Date: Sat, 19 Nov 2016 18:40:38 +0100
-Message-ID: <20161119174038.20083-1-lambert.quentin@gmail.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] cxgb4i: Add a missing call to neigh_release
+Date: Sat, 19 Nov 2016 18:42:14 +0100
+Message-ID: <20161119174214.20241-1-lambert.quentin@gmail.com>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 Cc: Quentin Lambert <lambert.quentin@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Most error branches following the call to kzalloc contain
-a call to kfree. This patch add these calls where they are
+Most error branches following the call to dst_neigh_lookup contain
+a call to neigh_release. This patch add these calls where they are
 missing.
 
 This issue was found with Hector.
@@ -17,20 +17,17 @@ This issue was found with Hector.
 Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 
 ---
- drivers/scsi/aic94xx/aic94xx_hwi.c |    4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/cxgbi/cxgb4i/cxgb4i.c |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
---- a/drivers/scsi/aic94xx/aic94xx_hwi.c
-+++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
-@@ -228,8 +228,10 @@ static int asd_init_scbs(struct asd_ha_s
- 	bitmap_bytes = (asd_ha->seq.tc_index_bitmap_bits+7)/8;
- 	bitmap_bytes = BITS_TO_LONGS(bitmap_bytes*8)*sizeof(unsigned long);
- 	asd_ha->seq.tc_index_bitmap = kzalloc(bitmap_bytes, GFP_KERNEL);
--	if (!asd_ha->seq.tc_index_bitmap)
-+	if (!asd_ha->seq.tc_index_bitmap) {
-+		kfree(asd_ha->seq.tc_index_array);
- 		return -ENOMEM;
-+	}
- 
- 	spin_lock_init(&seq->tc_index_lock);
- 
+--- a/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
++++ b/drivers/scsi/cxgbi/cxgb4i/cxgb4i.c
+@@ -1410,7 +1410,7 @@ static int init_act_open(struct cxgbi_so
+ 	csk->atid = cxgb4_alloc_atid(lldi->tids, csk);
+ 	if (csk->atid < 0) {
+ 		pr_err("%s, NO atid available.\n", ndev->name);
+-		return -EINVAL;
++		goto rel_resource_without_clip;
+ 	}
+ 	cxgbi_sock_set_flag(csk, CTPF_HAS_ATID);
+ 	cxgbi_sock_get(csk);
