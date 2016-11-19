@@ -1,32 +1,36 @@
 From: Quentin Lambert <lambert.quentin@gmail.com>
-Subject: [PATCH] isci: Add a missing call to pci_unmap_biosrom
-Date: Sat, 19 Nov 2016 18:43:40 +0100
-Message-ID: <20161119174340.20447-1-lambert.quentin@gmail.com>
+Subject: [PATCH] [SCSI] dpt_i2o: Add a missing call to kfree
+Date: Sat, 19 Nov 2016 18:42:34 +0100
+Message-ID: <20161119174234.20292-1-lambert.quentin@gmail.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Intel SCU Linux support <intel-linux-scu@intel.com>, Artur Paszkiewicz <artur.paszkiewicz@intel.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 Cc: Quentin Lambert <lambert.quentin@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Most error branches following the call to pci_map_biosrom contain
-a call to pci_unmap_biosrom. This patch add these calls where
-they are missing.
+Most error branches following the call to kzalloc contain
+a call to kfree. This patch add these calls where they are
+missing.
 
 This issue was found with Hector.
 
 Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
 
 ---
- drivers/scsi/isci/probe_roms.c |    1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/dpt_i2o.c |    4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
---- a/drivers/scsi/isci/probe_roms.c
-+++ b/drivers/scsi/isci/probe_roms.c
-@@ -54,6 +54,7 @@ struct isci_orom *isci_request_oprom(str
- 	len = pci_biosrom_size(pdev);
- 	rom = devm_kzalloc(&pdev->dev, sizeof(*rom), GFP_KERNEL);
- 	if (!rom) {
-+		pci_unmap_biosrom(oprom);
- 		dev_warn(&pdev->dev,
- 			 "Unable to allocate memory for orom\n");
- 		return NULL;
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -1754,8 +1754,10 @@ static int adpt_i2o_passthru(adpt_hba* p
+ 	sg_offset = (msg[0]>>4)&0xf;
+ 	msg[2] = 0x40000000; // IOCTL context
+ 	msg[3] = adpt_ioctl_to_context(pHba, reply);
+-	if (msg[3] == (u32)-1)
++	if (msg[3] == (u32)-1) {
++		kfree(reply);
+ 		return -EBUSY;
++	}
+ 
+ 	memset(sg_list,0, sizeof(sg_list[0])*pHba->sg_tablesize);
+ 	if(sg_offset) {
