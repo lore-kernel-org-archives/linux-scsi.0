@@ -1,34 +1,63 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
-Date: Sun, 20 Nov 2016 00:17:15 +0000
-Message-ID: <bug-179341-11613-WleupTGgV1@https.bugzilla.kernel.org/>
-References: <bug-179341-11613@https.bugzilla.kernel.org/>
+From: Bjorn Andersson <bjorn.andersson@linaro.org>
+Subject: Re: [PATCH] ufs: qcom: Properly clear hba priv on failure
+Date: Sat, 19 Nov 2016 22:15:04 -0800
+Message-ID: <20161120061504.GP28340@tuxbot>
+References: <1479502542-1136-1-git-send-email-bjorn.andersson@linaro.org>
+ <99d75f263b7b973ddbe5031d8500048c@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44632 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752997AbcKTARU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 19 Nov 2016 19:17:20 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 7ADC420268
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 00:17:18 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id 2790120295
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 00:17:16 +0000 (UTC)
-In-Reply-To: <bug-179341-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-arm-msm-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <99d75f263b7b973ddbe5031d8500048c@codeaurora.org>
+Sender: linux-arm-msm-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Yaniv Gardi <ygardi@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=179341
+On Sat 19 Nov 12:30 PST 2016, Subhash Jadavani wrote:
 
---- Comment #3 from Badalyan Vyacheslav <v.badalyan@open-bs.ru> ---
-Created attachment 245171
-  --> https://bugzilla.kernel.org/attachment.cgi?id=245171&action=edit
-Dmes wiyh loh
+> On 2016-11-18 12:55, Bjorn Andersson wrote:
+> >In the case where we fail to acquire the phy the hba priv will be set
+> >already, so during cleanup ufs_qcom_setup_clocks() will dereference the
+> >now free, but still "valid looking" pointer "host".
+> 
+> host (ufs_qcom_host) was allocated with devm_kzalloc() so i am not sure why
+> it would be freed up before probe() returns failure.
+> 
 
--- 
-You are receiving this mail because:
-You are watching someone on the CC list of the bug.
+Sorry, I missed the fact that the devm_kfree() was dropped, the actual
+problem still remains, although it no longer results in a panic.
+
+As ufs_qcom_init() returns from not having found the phy it the variant
+data will be a zero-initialized object.  The error path of
+ufshcd_hba_init() will then take us through ufs_qcom_setup_clocks(),
+which will pass the check for a NULL variant data and use the
+uninitialized host object.
+
+I can update the commit message to reflect the new state of things.
+
+Regards,
+Bjorn
+
+> >Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> >---
+> > drivers/scsi/ufs/ufs-qcom.c | 2 +-
+> > 1 file changed, 1 insertion(+), 1 deletion(-)
+> >
+> >diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> >index d345434b084f..7bd88ffee47a 100644
+> >--- a/drivers/scsi/ufs/ufs-qcom.c
+> >+++ b/drivers/scsi/ufs/ufs-qcom.c
+> >@@ -1197,7 +1197,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+> > 	if (IS_ERR(host->generic_phy)) {
+> > 		err = PTR_ERR(host->generic_phy);
+> > 		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
+> >-		goto out;
+> >+		goto out_host_free;
+> > 	}
+> >
+> > 	err = ufs_qcom_bus_register(host);
+> 
+> -- 
+> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+> a Linux Foundation Collaborative Project
