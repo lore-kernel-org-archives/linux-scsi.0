@@ -1,24 +1,32 @@
-From: Sky Finance <loan@skfn.org>
-Subject: QUICK LOAN OFFER
-Date: Sat, 19 Nov 2016 22:08:43 -0800
-Message-ID: <20161120064138.3ECA12239D4C__9321.03253803707$1479635167$gmane$org@mail.ponyexpress.kz>
-Reply-To: skyfinance001@gmail.com
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
+Date: Sun, 20 Nov 2016 13:38:52 +0000
+Message-ID: <bug-179341-11613-8AnC8kH7Il@https.bugzilla.kernel.org/>
+References: <bug-179341-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.ponyexpress.kz ([178.88.184.100]:39776 "EHLO
-        mail.ponyexpress.kz" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753173AbcKTJqB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2016 04:46:01 -0500
-Content-Description: Mail message body
+Received: from mail.kernel.org ([198.145.29.136]:41668 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752293AbcKTNi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 20 Nov 2016 08:38:56 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 91AB620212
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 13:38:53 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 5FBBE20142
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 13:38:52 +0000 (UTC)
+In-Reply-To: <bug-179341-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Recipients <loan@skfn.org>
+To: linux-scsi@vger.kernel.org
 
-Do You Need A Loan Of Any Kind ? If Yes Email Now For More Info Contact us on: skyfinance001@gmail.com
+https://bugzilla.kernel.org/show_bug.cgi?id=179341
 
----
-This email has been checked for viruses by Avast antivirus software.
-https://www.avast.com/antivirus
+--- Comment #4 from Badalyan Vyacheslav <v.badalyan@open-bs.ru> ---
+I was attach log in BZ
 
+-- 
+You are receiving this mail because:
+You are watching someone on the CC list of the bug.
