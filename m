@@ -1,32 +1,50 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
-Date: Sun, 20 Nov 2016 13:38:52 +0000
-Message-ID: <bug-179341-11613-8AnC8kH7Il@https.bugzilla.kernel.org/>
-References: <bug-179341-11613@https.bugzilla.kernel.org/>
+From: Eyal Ben David <bdeyal@gmail.com>
+Subject: SG does not ignore dxferp (direct io + mmap)
+Date: Sun, 20 Nov 2016 18:02:49 +0200
+Message-ID: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:41668 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752293AbcKTNi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 20 Nov 2016 08:38:56 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 91AB620212
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 13:38:53 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 5FBBE20142
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 13:38:52 +0000 (UTC)
-In-Reply-To: <bug-179341-11613@https.bugzilla.kernel.org/>
+Received: from mail-io0-f181.google.com ([209.85.223.181]:32940 "EHLO
+        mail-io0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752019AbcKTQCu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2016 11:02:50 -0500
+Received: by mail-io0-f181.google.com with SMTP id j65so22155996iof.0
+        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 08:02:50 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=179341
+Hi all,
 
---- Comment #4 from Badalyan Vyacheslav <v.badalyan@open-bs.ru> ---
-I was attach log in BZ
+We have some IO utility that perform the IOs using sg and direct io with mmap.
+Our current systems are Ubuntu 14.04, RHEL 6,7
+The IO utility always set dxferp to either the address or mmap of
+other allocation (valloc)
+Setting dxferp was harmless since SG is supposed to ignore the address
+if mmap IO is selected.
+When porting to Ubuntu 16.04, we had a corruption problem - first byte
+of a read task is always 0.
+When setting dxferp as NULL the corruption does not occur any more.
+This is a regression and not according to SCSI generic documentation.
 
--- 
-You are receiving this mail because:
-You are watching someone on the CC list of the bug.
+I wrote a small program that shows the change:
+
+Read indirect (no mmap), lba=0:
+=======================
+$ ./sg_mmap_read -d /dev/sg0 -l 0
+0000000 eb 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
+
+Read with mmap, lba=0, dxferp=NULL:
+============================
+$ ./sg_mmap_read -d /dev/sg0 -l 0 -m
+0000000 eb 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
+
+Read with mmap, lba=0, dxferp=address from mmap
+======================================
+$ ./sg_mmap_read -d /dev/sg0 -l 0 -m -b
+0000000 00 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
+
+On the older systems all results are the same.
+
+Thanks for any answer!
