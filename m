@@ -1,110 +1,59 @@
-From: <junplzen@cmkos.cz>
-Subject: 10503 linux-scsi
-Date: Mon, 21 Nov 2016 04:36:41 -0000
-Message-ID: <147970300166.5036.18076734402153898269@redewsp.com.br>
+From: "Gurumurthy, Anil" <Anil.Gurumurthy@cavium.com>
+Subject: RE: [PATCH] bfa: turn bfa_mem_{kva,dma}_setup into inline functions
+Date: Mon, 21 Nov 2016 04:41:37 +0000
+Message-ID: <BY1PR0701MB16448F82D6CB999E9D7E5C698EB50@BY1PR0701MB1644.namprd07.prod.outlook.com>
+References: <20161116151445.3208739-1-arnd@arndb.de>
+ <20161118132203.3og7fayqxk3xd5r2@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: application/zip; name="EMAIL_0122070_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 50-94-184-177.redewsp.com.br ([177.184.94.50]:49763 "HELO
-        redewsp.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with SMTP id S1751713AbcKUEgt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2016 23:36:49 -0500
-Content-Disposition: attachment
+Received: from mail-sn1nam02on0050.outbound.protection.outlook.com ([104.47.36.50]:49310
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751258AbcKUElp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 20 Nov 2016 23:41:45 -0500
+In-Reply-To: <20161118132203.3og7fayqxk3xd5r2@linux-x5ow.site>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-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
+Patch looks good.
+Acked by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+
+
+-----Original Message-----
+From: Johannes Thumshirn [mailto:jthumshirn@suse.de]=20
+Sent: 18 November 2016 18:52
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen <mar=
+tin.petersen@oracle.com>; Anil Gurumurthy <anil.gurumurthy@qlogic.com>; Sud=
+arsana Kalluru <sudarsana.kalluru@qlogic.com>; linux-scsi@vger.kernel.org; =
+linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] bfa: turn bfa_mem_{kva,dma}_setup into inline function=
+s
+
+On Wed, Nov 16, 2016 at 04:14:27PM +0100, Arnd Bergmann wrote:
+> These two macros cause lots of warnings with gcc-7:
+>=20
+> drivers/scsi/bfa/bfa_svc.c: In function 'bfa_fcxp_meminfo':
+> drivers/scsi/bfa/bfa_svc.c:521:103: error: '*' in boolean context,=20
+> suggest '&&' instead [-Werror=3Dint-in-bool-context]
+>=20
+> Using inline functions makes them much more readable and avoids the=20
+> warnings.
+>=20
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+--=20
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton HRB 21284 (AG N=FCrnb=
+erg) Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
