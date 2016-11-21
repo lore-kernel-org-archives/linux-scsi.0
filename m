@@ -1,57 +1,55 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] mpt2sas: Fix secure erase premature termination.
-Date: Mon, 21 Nov 2016 10:53:32 +0100
-Message-ID: <20161121095307.xhexu2hjfyt52ybs@linux-x5ow.site>
-References: <1479469369-15066-1-git-send-email-suganath-prabu.subramani@broadcom.com>
- <20161118115428.GA12997@kroah.com>
- <CA+RiK67B6CJtw9B0Omisp2h1EgnRsCf77bTtmw294Rscyqu8yg@mail.gmail.com>
- <20161121094138.GA16352@kroah.com>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] scsi: hisi_sas: Add a missing call to kfree
+Date: Mon, 21 Nov 2016 12:53:43 +0000
+Message-ID: <e1e060ba-a231-b4f3-4a41-f9fac9ca2d54@huawei.com>
+References: <20161119174259.20344-1-lambert.quentin@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58409 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751754AbcKUJxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Nov 2016 04:53:38 -0500
-Content-Disposition: inline
-In-Reply-To: <20161121094138.GA16352@kroah.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161119174259.20344-1-lambert.quentin@gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Quentin Lambert <lambert.quentin@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, stable@vger.kernel.org, Andrey Grodzovsky <andrey2805@gmail.com>, Christoph Hellwig <hch@infradead.org>, jejb@kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Sathya Prakash <Sathya.Prakash@broadcom.com>
 
-On Mon, Nov 21, 2016 at 10:41:38AM +0100, Greg KH wrote:
-> On Mon, Nov 21, 2016 at 03:05:38PM +0530, Suganath Prabu Subramani wrote:
-> > Commit id and other details are given below:
-> > 
-> > commit 18f6084a989ba1b38702f9af37a2e4049a924be6
-> > Author: Andrey Grodzovsky <andrey2805@gmail.com>
-> > Date:   Thu Nov 10 09:35:27 2016 -0500
-> > 
-> >     scsi: mpt3sas: Fix secure erase premature termination
-> > 
-> 
-> For what?  I have no context here...
+On 19/11/2016 17:42, Quentin Lambert wrote:
+> Most error branches following the call to hisi_sas_shost_alloc contain
+> a call to kfree. This patch add these calls where they are
+> missing.
+>
+> This issue was found with Hector.
 
-Hi, 
+I think that this patch is fine. However I have noticed that we should 
+do a call to hisi_sas_free() for this failure, and later failures in the 
+probe.
 
-Let me chime in and give you some context. Once upon a time there have been
-two LSI/Avago/Broadcom SAS HBA drivers called mpt2sas and mpt3sas. Luckily
-they got merged and so we only have to fix bugs in one file instead all of 
-it's copies. This was around commit c84b06a48c4d8ac8270624453132f3fa1a4a0f9d
-which went in v4.4. This patch looks like the mpt2sas version of above fix for
-stable kernels before the mpt{2,3}sas unification (a.k.a pre-4.4).
+I can generate a patch for this.
 
-Hope that helps.
+Cheers,
+John
 
-Byte,
-	Johannes
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
+> Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+>
+> ---
+>  drivers/scsi/hisi_sas/hisi_sas_main.c |    6 ++++--
+>  1 file changed, 4 insertions(+), 2 deletions(-)
+>
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1503,8 +1503,10 @@ int hisi_sas_probe(struct platform_devic
+>
+>  	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
+>  	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
+> -	if (!arr_phy || !arr_port)
+> -		return -ENOMEM;
+> +	if (!arr_phy || !arr_port) {
+> +		rc = -ENOMEM;
+> +		goto err_out_ha;
+> +	}
+>
+>  	sha->sas_phy = arr_phy;
+>  	sha->sas_port = arr_port;
+>
+> .
+>
