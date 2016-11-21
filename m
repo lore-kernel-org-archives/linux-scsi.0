@@ -1,123 +1,36 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: SG does not ignore dxferp (direct io + mmap)
-Date: Mon, 21 Nov 2016 09:24:35 -0500
-Message-ID: <1479738275.19792.24.camel@localhost.localdomain>
-References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
-         <408136530.631221.1479686684102.JavaMail.zimbra@redhat.com>
-         <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
-Reply-To: emilne@redhat.com
+From: Quentin Lambert <lambert.quentin@gmail.com>
+Subject: Re: [PATCH] scsi: hisi_sas: Add a missing call to kfree
+Date: Mon, 21 Nov 2016 15:25:23 +0100
+Message-ID: <916d3638-f3a6-dedc-c89d-de368db0213b@gmail.com>
+References: <20161119174259.20344-1-lambert.quentin@gmail.com>
+ <e1e060ba-a231-b4f3-4a41-f9fac9ca2d54@huawei.com>
+ <0edd4edf-f7c8-053d-7eba-724757dc7d43@gmail.com>
+ <aed62bfb-f26a-78de-8d8e-2b186b07d21f@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35624 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752502AbcKUOYh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Nov 2016 09:24:37 -0500
-In-Reply-To: <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <aed62bfb-f26a-78de-8d8e-2b186b07d21f@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Eyal Ben David <bdeyal@gmail.com>
-Cc: Laurence Oberman <loberman@redhat.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
-
-On Mon, 2016-11-21 at 11:23 +0200, Eyal Ben David wrote:
-> Hi,
-> 
-> The utility I mentioned is just a small program that I wrote to learn
-> more about the problem.
-> 
-> It is a very simple read16 with options for mmap and dxferp as null or other.
-> 
-> Here is the source code:
-> 
-> == cut here ==
-> 
-
-<snip>
-
-> 2016-11-21 2:04 GMT+02:00 Laurence Oberman <loberman@redhat.com>:
-> >
-> >
-> > ----- Original Message -----
-> >> From: "Eyal Ben David" <bdeyal@gmail.com>
-> >> To: linux-scsi@vger.kernel.org
-> >> Sent: Sunday, November 20, 2016 11:02:49 AM
-> >> Subject: SG does not ignore dxferp (direct io + mmap)
-> >>
-> >> Hi all,
-> >>
-> >> We have some IO utility that perform the IOs using sg and direct io with
-> >> mmap.
-> >> Our current systems are Ubuntu 14.04, RHEL 6,7
-> >> The IO utility always set dxferp to either the address or mmap of
-> >> other allocation (valloc)
-> >> Setting dxferp was harmless since SG is supposed to ignore the address
-> >> if mmap IO is selected.
-> >> When porting to Ubuntu 16.04, we had a corruption problem - first byte
-> >> of a read task is always 0.
-> >> When setting dxferp as NULL the corruption does not occur any more.
-> >> This is a regression and not according to SCSI generic documentation.
-> >>
-> >> I wrote a small program that shows the change:
-> >>
-> >> Read indirect (no mmap), lba=0:
-> >> =======================
-> >> $ ./sg_mmap_read -d /dev/sg0 -l 0
-> >> 0000000 eb 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
-> >>
-> >> Read with mmap, lba=0, dxferp=NULL:
-> >> ============================
-> >> $ ./sg_mmap_read -d /dev/sg0 -l 0 -m
-> >> 0000000 eb 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
-> >>
-> >> Read with mmap, lba=0, dxferp=address from mmap
-> >> ======================================
-> >> $ ./sg_mmap_read -d /dev/sg0 -l 0 -m -b
-> >> 0000000 00 63 90 10 8e d0 bc 00 b0 b8 00 00 8e d8 8e c0
-> >>
-> >> On the older systems all results are the same.
-> >>
-> >> Thanks for any answer!
-> >> --
-
-For what it's worth, I ran this on a 4.8 kernel and did not see your
-problem.  I couldn't reproduce it on a RHEL kernel either.
-
-# ./sg_mmap_read -d /dev/sg0 -l 0 | od -x
-0000000 63eb 1090 d08e 00bc b8b0 0000 d88e c08e
-0000020 befb 7c00 00bf b906 0200 a4f3 21ea 0006
-0000040 be00 07be 0438 0b75 c683 8110 fefe 7507
-0000060 ebf3 b416 b002 bb01 7c00 80b2 748a 8b01
-0000100
-# ./sg_mmap_read -d /dev/sg0 -l 0 -m | od -x
-0000000 63eb 1090 d08e 00bc b8b0 0000 d88e c08e
-0000020 befb 7c00 00bf b906 0200 a4f3 21ea 0006
-0000040 be00 07be 0438 0b75 c683 8110 fefe 7507
-0000060 ebf3 b416 b002 bb01 7c00 80b2 748a 8b01
-0000100
-# ./sg_mmap_read -d /dev/sg0 -l 0 -m -b | od -x
-0000000 63eb 1090 d08e 00bc b8b0 0000 d88e c08e
-0000020 befb 7c00 00bf b906 0200 a4f3 21ea 0006
-0000040 be00 07be 0438 0b75 c683 8110 fefe 7507
-0000060 ebf3 b416 b002 bb01 7c00 80b2 748a 8b01
-0000100
-
-The only recent relevant change I see is:
-
-commit 5ecee0a3ee8d74b6950cb41e8989b0c2174568d4
-Author: Douglas Gilbert <dgilbert@interlog.com>
-Date:   Thu Mar 3 00:31:29 2016 -0500
-
-    sg: fix dxferp in from_to case
-
-However the kernel I used has that change, and the
-change purposely does not clear hp->dxferp if
-SG_DXFER_TO_FROM_DEV is specified, which your program
-does not, and the behavior is correct regardless.
-
-Can you modify your program to output the userspace
-address of your buffer?
-
--Ewan
 
 
+On 11/21/2016 03:16 PM, John Garry wrote:
+> On 21/11/2016 13:20, Quentin Lambert wrote:
+>>
+>>
+>> On 11/21/2016 01:53 PM, John Garry wrote:
+>>> However I have noticed that we should do a call to hisi_sas_free() for
+>>> this failure, and later failures in the probe.
+>> I don't understand why, and would welcome the opportunity to learn
+>> something.
+>>
+>
+> We call hisi_sas_alloc() from hisi_sas_shost_alloc(); if we fail after 
+> this in hisi_sas_probe(), then we should free the memmories and 
+> workqueue got in hisi_sas_alloc(), which we don't.
+Thanks.
+Are you writing the patch or do you want me to do it?
+
+Quentin
