@@ -1,75 +1,49 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
-Date: Mon, 21 Nov 2016 15:16:26 +0000
-Message-ID: <7d4e4aa5-0d15-ca8c-243f-24c60e1378ed@huawei.com>
-References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
- <be84afd4-640d-1913-404a-505fd72c1324@huawei.com>
- <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
- <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
- <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
- <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
- <58257D52.6090507@huawei.com>
- <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
- <58258631.1090203@huawei.com>
- <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
- <CAPcyv4g7_kDAZNZ2ikBRgFsX-hFpcXEV2xg9YS0Ha7PjSBkzVQ@mail.gmail.com>
- <ca8ce351-ae6c-6878-4cd7-af7af11122ad@huawei.com>
- <CAPcyv4gO2oHg2FjVu89cmy7E7+9QPm4AVF_zSy04C3QXiM0UPw@mail.gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: SG does not ignore dxferp (direct io + mmap)
+Date: Mon, 21 Nov 2016 16:44:34 +0100
+Message-ID: <20161121154434.g2d434yilg7sfj77@linux-x5ow.site>
+References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
+ <408136530.631221.1479686684102.JavaMail.zimbra@redhat.com>
+ <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
+ <1479738275.19792.24.camel@localhost.localdomain>
+ <CAPrnrPCkXPDWDpbt3HxsTWEoKGt-Atnk2QtJKX4tmG_AeDx8Lw@mail.gmail.com>
+ <20161121151552.odbd6rf6dxqvdi2f@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAPcyv4gO2oHg2FjVu89cmy7E7+9QPm4AVF_zSy04C3QXiM0UPw@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, wangyijing <wangyijing@huawei.com>, linux-scsi <linux-scsi@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:54717 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754219AbcKUPoh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Nov 2016 10:44:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20161121151552.odbd6rf6dxqvdi2f@linux-x5ow.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Eyal Ben David <bdeyal@gmail.com>
+Cc: emilne@redhat.com, Laurence Oberman <loberman@redhat.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
->>>> @Maintainers, would you be willing to accept this patch as an interim fix
->>>> for the dastardly WARN while we try to fix the flutter issue?
->>>
->>>
->>> To me this adds a bug to quiet a benign, albeit noisy, warning.
->>>
->>
->> What is the bug which is being added?
->
-> The bug where we queue a port teardown, but see a port formation event
-> in the meantime.
+On Mon, Nov 21, 2016 at 04:15:52PM +0100, Johannes Thumshirn wrote:
+> On Mon, Nov 21, 2016 at 04:55:29PM +0200, Eyal Ben David wrote:
+> > Thanks for your reply,
+> > 
+> > On RHEL system it does not occur.
+> > 
+> > So far I have seen the problem on Ubuntu 16.04 and Fedora 22 (both
+> > with kernel 4.4.x)
 
-As I understand, this vulnerability already exists:
-http://marc.info/?l=linux-scsi&m=143801026028006&w=2
+As Ewan already pointed out, do you have commit
+5ecee0a3ee8d74b6950cb41e8989b0c2174568d4 applied in your kernels? It went in
+4.6 and got stable backported from there till 2.6.something. I'm trying this
+patch myself to see whether it is the required change or not.
 
-I actually don't understand how libsas dealt with flutter (which I take 
-to mean a burst of up and down events) before these changes, as it can 
-only queue simultaneously one up and one down event per port. So, if we 
-get a flutter, then the events are lost and we get indeterminate state.
+Byte,
+	Johannes
 
->
->> And it's a very noisy warning, as in 6K lines on the console when an
->> expander is unplugged.
->
-> Does something like this modulate the failure?
->
-> diff --git a/drivers/scsi/scsi_transport_sas.c
-> b/drivers/scsi/scsi_transport_sas.c            index
-> 60b651bfaa01..11401e5c88ba 100644
->                  --- a/drivers/scsi/scsi_transport_sas.c
-> +++ b/drivers/scsi/scsi_transport_sas.c
-> @@ -262,9 +262,10 @@ static void sas_bsg_remove(struct Scsi_Host
-> *shost, struct sas_rphy *rphy
->  {
->         struct request_queue *q;
->
-> -       if (rphy)
-> +       if (rphy) {
->                 q = rphy->q;
-> -       else
-> +               rphy->q = NULL;
-> +       } else
->                 q = to_sas_host_attrs(shost)->q;
->
->         if (!q)
->
-> .
->
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
