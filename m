@@ -1,125 +1,57 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v3] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
-Date: Mon, 21 Nov 2016 10:35:35 -0800
-Message-ID: <4a2a1aaa670806755475d23be7239b1a@codeaurora.org>
-References: <000401d24236$cb8fc5b0$62af5110$@samsung.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH RESEND v4 02/15] scsi: don't use fc_bsg_job::request and
+ fc_bsg_job::reply directly
+Date: Mon, 21 Nov 2016 11:14:18 -0800
+Message-ID: <ab8ba289-f102-dee1-9c04-44849f867c12@linux.vnet.ibm.com>
+References: <cover.1479374719.git.jthumshirn@suse.de>
+ <70cda0c20ecedf82323ff96e62ed6250a4cb575d.1479374719.git.jthumshirn@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:44368 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752810AbcKUSfh (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 13:35:37 -0500
-In-Reply-To: <000401d24236$cb8fc5b0$62af5110$@samsung.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:58353 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754726AbcKUTO3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Nov 2016 14:14:29 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uALJE8ax126796
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2016 14:14:28 -0500
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 26v5j4mauv-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Nov 2016 14:14:28 -0500
+Received: from localhost
+        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Mon, 21 Nov 2016 12:14:28 -0700
+In-Reply-To: <70cda0c20ecedf82323ff96e62ed6250a4cb575d.1479374719.git.jthumshirn@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "open list:S390 ZFCP DRIVER" <linux-s390@vger.kernel.org>, Dick Kennedy <dick.kennedy@avagotech.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, "supporter:QLOGIC QLA2XXX FC-SCSI DRIVER" <qla2xxx-upstream@qlogic.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, "open list:FCOE SUBSYSTEM libfc, libfcoe, fcoe" <fcoe-devel@open-fcoe.org>, Christoph Hellwig <hch@infradead.org>, Martin Schwidefsky <schwidefsky@de.ibm.com>, James Smart <james.smart@avagotech.com>, Paul Mackerras <paulus@samba.org>, Hannes Reinecke <hare@suse.de>, Steffen Maier <maier@linux.vnet.ibm.com>, Johannes Thumshirn <jth@kernel.>
 
-On 2016-11-18 23:30, Kiwoong Kim wrote:
-> Some UFS host controllers may think
-> granularities of PRDT length and offset as bytes, not double words.
+On 11/17/2016 07:09 AM, Johannes Thumshirn wrote:
+> Don't use fc_bsg_job::request and fc_bsg_job::reply directly, but use
+> helper variables bsg_request and bsg_reply. This will be helpfull  when
+> transitioning to bsg-lib.
 > 
-> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
 > ---
-> V2: change the name of the quirk
-> (UFSHCD_QUIRK_BROKEN_DWORD_UTRD -> UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-> V3: (rebased to 4.10/scsi-queue tip)
-> ---
->  drivers/scsi/ufs/ufshcd.c | 28 +++++++++++++++++++++-------
->  drivers/scsi/ufs/ufshcd.h |  6 ++++++
->  2 files changed, 27 insertions(+), 7 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index e75fbb3..d6e3112 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -1128,7 +1128,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
-> uic_command *uic_cmd)
->   *
->   * Returns 0 in case of success, non-zero value in case of failure
->   */
-> -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
-> +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
->  {
->  	struct ufshcd_sg_entry *prd_table;
->  	struct scatterlist *sg;
-> @@ -1142,8 +1142,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb 
-> *lrbp)
->  		return sg_segments;
-> 
->  	if (sg_segments) {
-> -		lrbp->utr_descriptor_ptr->prd_table_length =
-> -					cpu_to_le16((u16) (sg_segments));
-> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16)(sg_segments *
-> +					sizeof(struct ufshcd_sg_entry)));
-> +		else
-> +			lrbp->utr_descriptor_ptr->prd_table_length =
-> +				cpu_to_le16((u16) (sg_segments));
-> 
->  		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
-> 
-> @@ -1505,7 +1510,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
-> *host, struct scsi_cmnd *cmd)
-> 
->  	ufshcd_comp_scsi_upiu(hba, lrbp);
-> 
-> -	err = ufshcd_map_sg(lrbp);
-> +	err = ufshcd_map_sg(hba, lrbp);
->  	if (err) {
->  		lrbp->cmd = NULL;
->  		clear_bit_unlock(tag, &hba->lrb_in_use);
-> @@ -2366,12 +2371,21 @@ static void
-> ufshcd_host_memory_configure(struct ufs_hba *hba)
->  				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
-> 
->  		/* Response upiu and prdt offset should be in double words */
-> -		utrdlp[i].response_upiu_offset =
-> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
-> +			utrdlp[i].response_upiu_offset =
-> +				cpu_to_le16(response_offset);
-> +			utrdlp[i].prd_table_offset =
-> +				cpu_to_le16(prdt_offset);
-> +			utrdlp[i].response_upiu_length =
-> +				cpu_to_le16(ALIGNED_UPIU_SIZE);
-> +		} else {
-> +			utrdlp[i].response_upiu_offset =
->  				cpu_to_le16((response_offset >> 2));
-> -		utrdlp[i].prd_table_offset =
-> +			utrdlp[i].prd_table_offset =
->  				cpu_to_le16((prdt_offset >> 2));
-> -		utrdlp[i].response_upiu_length =
-> +			utrdlp[i].response_upiu_length =
->  				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
-> +		}
-> 
->  		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
->  		hba->lrb[i].ucd_req_ptr =
-> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-> index 8e76501..7d9ff22 100644
-> --- a/drivers/scsi/ufs/ufshcd.h
-> +++ b/drivers/scsi/ufs/ufshcd.h
-> @@ -485,6 +485,12 @@ struct ufs_hba {
->  	 */
->  	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
-> 
-> +	/*
-> +	 * This quirk needs to be enabled if the host contoller regards
-> +	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
-> +	 */
-> +	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
-> +
->  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
-> 
->  	/* Device deviations from standard UFS device spec. */
+>  drivers/s390/scsi/zfcp_fc.c      |   9 +-
+>  drivers/scsi/bfa/bfad_bsg.c      |  40 +++---
+>  drivers/scsi/ibmvscsi/ibmvfc.c   |  22 ++--
+>  drivers/scsi/libfc/fc_lport.c    |  23 ++--
+>  drivers/scsi/lpfc/lpfc_bsg.c     | 199 ++++++++++++++++++-----------
+>  drivers/scsi/qla2xxx/qla_bsg.c   | 264 ++++++++++++++++++++++-----------------
+>  drivers/scsi/qla2xxx/qla_iocb.c  |   5 +-
+>  drivers/scsi/qla2xxx/qla_isr.c   |  46 ++++---
+>  drivers/scsi/qla2xxx/qla_mr.c    |  10 +-
+>  drivers/scsi/scsi_transport_fc.c |  55 ++++----
+>  10 files changed, 398 insertions(+), 275 deletions(-)
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
+For ibmvfc portion...
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Acked-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+
