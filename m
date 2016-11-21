@@ -1,68 +1,55 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 1/2] hpsa: cleanup sas_phy structures in sysfs when
- unloading
-Date: Mon, 21 Nov 2016 15:13:36 +0100
-Message-ID: <20161121141336.gkc35pjmlojhxm35@linux-x5ow.site>
+Subject: Re: [PATCH 2/2] hpsa: destroy sas transport properties before
+ scsi_host
+Date: Mon, 21 Nov 2016 15:14:41 +0100
+Message-ID: <20161121141441.rljdubw2rcmrl43v@linux-x5ow.site>
 References: <20161121140429.12788-1-mwilck@suse.de>
- <20161121140429.12788-2-mwilck@suse.de>
+ <20161121140429.12788-3-mwilck@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37659 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37920 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752889AbcKUONj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 21 Nov 2016 09:13:39 -0500
+        id S1753075AbcKUOOo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 21 Nov 2016 09:14:44 -0500
 Content-Disposition: inline
-In-Reply-To: <20161121140429.12788-2-mwilck@suse.de>
+In-Reply-To: <20161121140429.12788-3-mwilck@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Martin Wilck <mwilck@suse.de>
 Cc: don.brace@pmcs.com, storagedev@pmcs.com, iss_storagedev@hp.com, linux-scsi@vger.kernel.org, JBottomley@odin.com, hch@lst.de, hare@suse.de
 
-On Mon, Nov 21, 2016 at 03:04:28PM +0100, Martin Wilck wrote:
-> When the hpsa module is unloaded using rmmod, dangling
-> symlinks remain under /sys/class/sas_phy. Fix this by
-> calling sas_phy_delete() rather than sas_phy_free (which,
-> according to comments, should not be called for PHYs that
-> have been set up successfully, anyway).
+On Mon, Nov 21, 2016 at 03:04:29PM +0100, Martin Wilck wrote:
+> Unloading the hpsa driver causes warnings
 > 
-> References: bsc#1010946.
-
-I don't think the SUSE bugzilla tag is of relevance upstream. But for sake of
-completeness we could add a 
-Link: https://bugzilla.suse.com/show_bug.cgi?id=1010946
-
+> [ 1063.793652] WARNING: CPU: 1 PID: 4850 at ../fs/sysfs/group.c:237 device_del+0x54/0x240()
+> [ 1063.793659] sysfs group ffffffff81cf21a0 not found for kobject 'port-2:0'
+> 
+> with two different stacks:
+> 1)
+> [ 1063.793774]  [<ffffffff81448af4>] device_del+0x54/0x240
+> [ 1063.793780]  [<ffffffff8145178a>] transport_remove_classdev+0x4a/0x60
+> [ 1063.793784]  [<ffffffff81451216>] attribute_container_device_trigger+0xa6/0xb0
+> [ 1063.793802]  [<ffffffffa0105d46>] sas_port_delete+0x126/0x160 [scsi_transport_sas]
+> [ 1063.793819]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa]
+> 
+> 2)
+> [ 1063.797103]  [<ffffffff81448af4>] device_del+0x54/0x240
+> [ 1063.797118]  [<ffffffffa0105d4e>] sas_port_delete+0x12e/0x160 [scsi_transport_sas]
+> [ 1063.797134]  [<ffffffffa036ebcc>] hpsa_free_sas_port+0x3c/0x70 [hpsa]
+> 
+> This is caused by the fact that host device hostX is deleted before the
+> SAS transport devices hostX/port-a:b.
+> 
+> This patch fixes this by reverting the order of device deletions.
+> 
+> References: bsc#1010946
 > Signed-off-by: Martin Wilck <mwilck@suse.de>
-
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
 > ---
->  drivers/scsi/hpsa.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index efe2f36..8ec77c3 100644
-> --- a/drivers/scsi/hpsa.c
-> +++ b/drivers/scsi/hpsa.c
-> @@ -9547,9 +9547,9 @@ static void hpsa_free_sas_phy(struct hpsa_sas_phy *hpsa_sas_phy)
->  	struct sas_phy *phy = hpsa_sas_phy->phy;
->  
->  	sas_port_delete_phy(hpsa_sas_phy->parent_port->port, phy);
-> -	sas_phy_free(phy);
->  	if (hpsa_sas_phy->added_to_port)
->  		list_del(&hpsa_sas_phy->phy_list_entry);
-> +	sas_phy_delete(phy);
->  	kfree(hpsa_sas_phy);
->  }
->  
-> -- 
-> 2.10.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+With the References changed to the bug link like in patch 1/2 
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
 Johannes Thumshirn                                          Storage
