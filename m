@@ -1,84 +1,66 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] ufs: qcom: Properly clear hba priv on failure
-Date: Mon, 21 Nov 2016 10:32:56 -0800
-Message-ID: <b6e636aa2b010c0013028c67f47d25a4@codeaurora.org>
-References: <1479502542-1136-1-git-send-email-bjorn.andersson@linaro.org>
- <99d75f263b7b973ddbe5031d8500048c@codeaurora.org>
- <20161120061504.GP28340@tuxbot>
+Subject: Re: [PATCH v2] ufs: qcom: Properly clear hba priv on failure
+Date: Mon, 21 Nov 2016 10:33:32 -0800
+Message-ID: <2a5a8cf3b6eb25c4def4a03d879208e3@codeaurora.org>
+References: <1479623691-7612-1-git-send-email-bjorn.andersson@linaro.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-msm-owner@vger.kernel.org>
-In-Reply-To: <20161120061504.GP28340@tuxbot>
-Sender: linux-arm-msm-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:43624 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754576AbcKUSde (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 13:33:34 -0500
+In-Reply-To: <1479623691-7612-1-git-send-email-bjorn.andersson@linaro.org>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Bjorn Andersson <bjorn.andersson@linaro.org>
 Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Yaniv Gardi <ygardi@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
-On 2016-11-19 22:15, Bjorn Andersson wrote:
-> On Sat 19 Nov 12:30 PST 2016, Subhash Jadavani wrote:
+On 2016-11-19 22:34, Bjorn Andersson wrote:
+> ufs_qcom_init() sets the hba priv data before attempting to acquire the
+> phy handle, so make sure to clear this in the case of an error. Failing
+> to do this will make ufs_qcom_setup_clocks() operate on the 
+> uninitalized
+> host object.
 > 
->> On 2016-11-18 12:55, Bjorn Andersson wrote:
->> >In the case where we fail to acquire the phy the hba priv will be set
->> >already, so during cleanup ufs_qcom_setup_clocks() will dereference the
->> >now free, but still "valid looking" pointer "host".
->> 
->> host (ufs_qcom_host) was allocated with devm_kzalloc() so i am not 
->> sure why
->> it would be freed up before probe() returns failure.
->> 
+> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> ---
+>  drivers/scsi/ufs/ufs-qcom.c | 6 +++---
+>  1 file changed, 3 insertions(+), 3 deletions(-)
 > 
-> Sorry, I missed the fact that the devm_kfree() was dropped, the actual
-> problem still remains, although it no longer results in a panic.
-
-Agreed.
-
+> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
+> index d345434b084f..4de372d271b0 100644
+> --- a/drivers/scsi/ufs/ufs-qcom.c
+> +++ b/drivers/scsi/ufs/ufs-qcom.c
+> @@ -1197,12 +1197,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	if (IS_ERR(host->generic_phy)) {
+>  		err = PTR_ERR(host->generic_phy);
+>  		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
+> -		goto out;
+> +		goto out_variant_clear;
+>  	}
 > 
-> As ufs_qcom_init() returns from not having found the phy it the variant
-> data will be a zero-initialized object.  The error path of
-> ufshcd_hba_init() will then take us through ufs_qcom_setup_clocks(),
-> which will pass the check for a NULL variant data and use the
-> uninitialized host object.
-
-Yes, Make sense.
-
+>  	err = ufs_qcom_bus_register(host);
+>  	if (err)
+> -		goto out_host_free;
+> +		goto out_variant_clear;
 > 
-> I can update the commit message to reflect the new state of things.
+>  	ufs_qcom_get_controller_revision(hba, &host->hw_ver.major,
+>  		&host->hw_ver.minor, &host->hw_ver.step);
+> @@ -1267,7 +1267,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>  	phy_power_off(host->generic_phy);
+>  out_unregister_bus:
+>  	phy_exit(host->generic_phy);
+> -out_host_free:
+> +out_variant_clear:
+>  	ufshcd_set_variant(hba, NULL);
+>  out:
+>  	return err;
 
-Your new patch set looks good, will add my ack.
-
-> 
-> Regards,
-> Bjorn
-> 
->> >Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
->> >---
->> > drivers/scsi/ufs/ufs-qcom.c | 2 +-
->> > 1 file changed, 1 insertion(+), 1 deletion(-)
->> >
->> >diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
->> >index d345434b084f..7bd88ffee47a 100644
->> >--- a/drivers/scsi/ufs/ufs-qcom.c
->> >+++ b/drivers/scsi/ufs/ufs-qcom.c
->> >@@ -1197,7 +1197,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->> > 	if (IS_ERR(host->generic_phy)) {
->> > 		err = PTR_ERR(host->generic_phy);
->> > 		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
->> >-		goto out;
->> >+		goto out_host_free;
->> > 	}
->> >
->> > 	err = ufs_qcom_bus_register(host);
->> 
->> --
->> The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
->> a Linux Foundation Collaborative Project
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" 
-> in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Looks good to me.
+Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
