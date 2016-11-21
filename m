@@ -1,63 +1,121 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH v2] ufs: qcom: Properly clear hba priv on failure
-Date: Mon, 21 Nov 2016 10:33:32 -0800
-Message-ID: <2a5a8cf3b6eb25c4def4a03d879208e3@codeaurora.org>
-References: <1479623691-7612-1-git-send-email-bjorn.andersson@linaro.org>
+Subject: Re: [PATCH v3] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
+Date: Mon, 21 Nov 2016 10:35:35 -0800
+Message-ID: <4a2a1aaa670806755475d23be7239b1a@codeaurora.org>
+References: <000401d24236$cb8fc5b0$62af5110$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=US-ASCII;
  format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:43624 "EHLO
+Received: from smtp.codeaurora.org ([198.145.29.96]:44368 "EHLO
         smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754576AbcKUSde (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 13:33:34 -0500
-In-Reply-To: <1479623691-7612-1-git-send-email-bjorn.andersson@linaro.org>
+        with ESMTP id S1752810AbcKUSfh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 13:35:37 -0500
+In-Reply-To: <000401d24236$cb8fc5b0$62af5110$@samsung.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bjorn Andersson <bjorn.andersson@linaro.org>
-Cc: Vinayak Holikatti <vinholikatti@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Yaniv Gardi <ygardi@codeaurora.org>, Vivek Gautam <vivek.gautam@codeaurora.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-scsi-owner@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>, linux-scsi-owner@vger.kernel.org
 
-On 2016-11-19 22:34, Bjorn Andersson wrote:
-> ufs_qcom_init() sets the hba priv data before attempting to acquire the
-> phy handle, so make sure to clear this in the case of an error. Failing
-> to do this will make ufs_qcom_setup_clocks() operate on the 
-> uninitalized
-> host object.
+On 2016-11-18 23:30, Kiwoong Kim wrote:
+> Some UFS host controllers may think
+> granularities of PRDT length and offset as bytes, not double words.
 > 
-> Signed-off-by: Bjorn Andersson <bjorn.andersson@linaro.org>
+> Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
 > ---
->  drivers/scsi/ufs/ufs-qcom.c | 6 +++---
->  1 file changed, 3 insertions(+), 3 deletions(-)
+> V2: change the name of the quirk
+> (UFSHCD_QUIRK_BROKEN_DWORD_UTRD -> UFSHCD_QUIRK_PRDT_BYTE_GRAN)
+> V3: (rebased to 4.10/scsi-queue tip)
+> ---
+>  drivers/scsi/ufs/ufshcd.c | 28 +++++++++++++++++++++-------
+>  drivers/scsi/ufs/ufshcd.h |  6 ++++++
+>  2 files changed, 27 insertions(+), 7 deletions(-)
 > 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index d345434b084f..4de372d271b0 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1197,12 +1197,12 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	if (IS_ERR(host->generic_phy)) {
->  		err = PTR_ERR(host->generic_phy);
->  		dev_err(dev, "%s: PHY get failed %d\n", __func__, err);
-> -		goto out;
-> +		goto out_variant_clear;
->  	}
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index e75fbb3..d6e3112 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -1128,7 +1128,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct
+> uic_command *uic_cmd)
+>   *
+>   * Returns 0 in case of success, non-zero value in case of failure
+>   */
+> -static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+> +static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+>  {
+>  	struct ufshcd_sg_entry *prd_table;
+>  	struct scatterlist *sg;
+> @@ -1142,8 +1142,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb 
+> *lrbp)
+>  		return sg_segments;
 > 
->  	err = ufs_qcom_bus_register(host);
->  	if (err)
-> -		goto out_host_free;
-> +		goto out_variant_clear;
+>  	if (sg_segments) {
+> -		lrbp->utr_descriptor_ptr->prd_table_length =
+> -					cpu_to_le16((u16) (sg_segments));
+> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
+> +			lrbp->utr_descriptor_ptr->prd_table_length =
+> +				cpu_to_le16((u16)(sg_segments *
+> +					sizeof(struct ufshcd_sg_entry)));
+> +		else
+> +			lrbp->utr_descriptor_ptr->prd_table_length =
+> +				cpu_to_le16((u16) (sg_segments));
 > 
->  	ufs_qcom_get_controller_revision(hba, &host->hw_ver.major,
->  		&host->hw_ver.minor, &host->hw_ver.step);
-> @@ -1267,7 +1267,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
->  	phy_power_off(host->generic_phy);
->  out_unregister_bus:
->  	phy_exit(host->generic_phy);
-> -out_host_free:
-> +out_variant_clear:
->  	ufshcd_set_variant(hba, NULL);
->  out:
->  	return err;
+>  		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+> 
+> @@ -1505,7 +1510,7 @@ static int ufshcd_queuecommand(struct Scsi_Host
+> *host, struct scsi_cmnd *cmd)
+> 
+>  	ufshcd_comp_scsi_upiu(hba, lrbp);
+> 
+> -	err = ufshcd_map_sg(lrbp);
+> +	err = ufshcd_map_sg(hba, lrbp);
+>  	if (err) {
+>  		lrbp->cmd = NULL;
+>  		clear_bit_unlock(tag, &hba->lrb_in_use);
+> @@ -2366,12 +2371,21 @@ static void
+> ufshcd_host_memory_configure(struct ufs_hba *hba)
+>  				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
+> 
+>  		/* Response upiu and prdt offset should be in double words */
+> -		utrdlp[i].response_upiu_offset =
+> +		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
+> +			utrdlp[i].response_upiu_offset =
+> +				cpu_to_le16(response_offset);
+> +			utrdlp[i].prd_table_offset =
+> +				cpu_to_le16(prdt_offset);
+> +			utrdlp[i].response_upiu_length =
+> +				cpu_to_le16(ALIGNED_UPIU_SIZE);
+> +		} else {
+> +			utrdlp[i].response_upiu_offset =
+>  				cpu_to_le16((response_offset >> 2));
+> -		utrdlp[i].prd_table_offset =
+> +			utrdlp[i].prd_table_offset =
+>  				cpu_to_le16((prdt_offset >> 2));
+> -		utrdlp[i].response_upiu_length =
+> +			utrdlp[i].response_upiu_length =
+>  				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
+> +		}
+> 
+>  		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+>  		hba->lrb[i].ucd_req_ptr =
+> diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+> index 8e76501..7d9ff22 100644
+> --- a/drivers/scsi/ufs/ufshcd.h
+> +++ b/drivers/scsi/ufs/ufshcd.h
+> @@ -485,6 +485,12 @@ struct ufs_hba {
+>  	 */
+>  	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
+> 
+> +	/*
+> +	 * This quirk needs to be enabled if the host contoller regards
+> +	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
+> +	 */
+> +	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
+> +
+>  	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
+> 
+>  	/* Device deviations from standard UFS device spec. */
 
 Looks good to me.
 Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
