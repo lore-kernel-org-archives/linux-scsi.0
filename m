@@ -1,29 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bfa: turn bfa_mem_{kva,dma}_setup into inline functions
-Date: Mon, 21 Nov 2016 22:29:27 -0500
-Message-ID: <yq17f7w19bc.fsf@sermon.lab.mkp.net>
-References: <20161116151445.3208739-1-arnd@arndb.de>
+Subject: Re: [patch] scsi: be2iscsi: allocate enough memory in beiscsi_boot_get_sinfo()
+Date: Mon, 21 Nov 2016 22:33:42 -0500
+Message-ID: <yq137ik1949.fsf@sermon.lab.mkp.net>
+References: <20161118115339.GD3281@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161116151445.3208739-1-arnd@arndb.de> (Arnd Bergmann's message
-        of "Wed, 16 Nov 2016 16:14:27 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, Johannes Thumshirn <jthumshirn@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:46350 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754957AbcKVDdu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 22:33:50 -0500
+In-Reply-To: <20161118115339.GD3281@mwanda> (Dan Carpenter's message of "Fri,
+        18 Nov 2016 14:53:39 +0300")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
->>>>> "Arnd" == Arnd Bergmann <arnd@arndb.de> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Arnd> These two macros cause lots of warnings with gcc-7:
-Arnd> drivers/scsi/bfa/bfa_svc.c: In function 'bfa_fcxp_meminfo':
-Arnd> drivers/scsi/bfa/bfa_svc.c:521:103: error: '*' in boolean context,
-Arnd> suggest '&&' instead [-Werror=int-in-bool-context]
+Dan> We accidentally allocate sizeof(u32) instead of sizeof(struct
+Dan> be_cmd_get_session_resp).
 
-Arnd> Using inline functions makes them much more readable and avoids
-Arnd> the warnings.
-
-Applied to 4.10/scsi-queue.
+Applied to 4.9/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
