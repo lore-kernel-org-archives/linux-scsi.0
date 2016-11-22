@@ -1,40 +1,52 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 00/12] block: cleanup direct access to bvec table
-Date: Tue, 22 Nov 2016 08:53:00 -0700
-Message-ID: <167c2511-349f-a8e6-17d1-f7ce438b2f14@fb.com>
-References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: SG does not ignore dxferp (direct io + mmap)
+Date: Tue, 22 Nov 2016 17:00:55 +0100
+Message-ID: <20161122160055.7q7oruuapsfwlsbu@linux-x5ow.site>
+References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
+ <408136530.631221.1479686684102.JavaMail.zimbra@redhat.com>
+ <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
+ <1479738275.19792.24.camel@localhost.localdomain>
+ <1ca8515f-abd2-7428-8baa-dca879833be3@interlog.com>
+ <1479752642.19792.43.camel@localhost.localdomain>
+ <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
+ <CAPrnrPB1kJZkzbJNVrtKLp_w9Ts8jmOzQczYwANodV=HerCm=w@mail.gmail.com>
+ <858849309.1558836.1479828683078.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org
-Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Adrian Hunter <adrian.hunter@intel.com>, Coly Li <colyli@suse.de>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Jiri Kosina <jkosina@suse.cz>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@intel.com>, Kent Overstreet <kent.overstreet@gmail.com>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:NVM EXPRESS TARGET DRIVER" <linux-nvme@lists.infradead.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:36404 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753368AbcKVQBB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 22 Nov 2016 11:01:01 -0500
+Content-Disposition: inline
+In-Reply-To: <858849309.1558836.1479828683078.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Eyal Ben David <bdeyal@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On 11/11/2016 05:05 AM, Ming Lei wrote:
-> Hi,
->
-> This patchset cleans up direct access to bvec table.
->
-> The 1st patch passes bvec table to bio_init(), so that
-> direct access to bvec table in bio initialization is avoided.
->
-> For other patches, most of them uses bio_add_page()
-> to replace hardcode style of adding page to bvec,
-> and others avoids to access bio->bi_vcnt.
->
-> The most special one is to use bvec iterator helpers
-> to implement .get_page/.next_page for dm-io.c
->
-> One big motivation is to prepare for supporting multipage
-> bvec, but this patchset is one good cleanup too even not
-> for that purpose.
+On Tue, Nov 22, 2016 at 10:31:23AM -0500, Laurence Oberman wrote:
+[...]
 
-I've added the series, except 6-8, the dm parts. I updated some of the
-descriptions/subjects to read a little better.
+> Its not failing on 4.8-rc2 so working on tracing rgw ioctl SG_DXFER_FROM_DEV as well and will bisect this weekend and/or add some kernel probes.
+> Just need to get some time.
+> Johannes or Ewan may beat me to it.
+
+Sounds like a good plan. I did work on an automated test setup all day but
+couldn't recreate the bug with qemu (and it's default AHCI emulation, will
+try virtio-scsi tomorrow).
+
+@Eyal is this with a physical or virtual host? And what kind of HBA do you
+have? Just in case it makes a difference.
+
+Byte,
+	Johannes
 
 -- 
-Jens Axboe
-
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
