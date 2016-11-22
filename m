@@ -1,177 +1,144 @@
-From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 3/5] scsi: bnx2fc: clean up header definitions
-Date: Tue, 22 Nov 2016 18:48:11 +0100
-Message-ID: <20161122174813.16184-4-bigeasy@linutronix.de>
-References: <20161122174813.16184-1-bigeasy@linutronix.de>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:60413 "EHLO
-        Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933721AbcKVRsZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 12:48:25 -0500
-In-Reply-To: <20161122174813.16184-1-bigeasy@linutronix.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Subject: [PATCH v2 1/2] blk-mq: Fix failed allocation path when mapping queues
+Date: Tue, 22 Nov 2016 15:54:28 -0200
+Message-ID: <1479837269-5742-1-git-send-email-krisman@linux.vnet.ibm.com>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-- All symbols which are only used within one .c file are marked static
-  and removed from the bnx2fc.h file if possible.
+In blk_mq_map_swqueue, there is a memory optimization that frees the
+tags of a queue that has gone unmapped.  Later, if that hctx is remapped
+after another topology change, the tags need to be reallocated.
 
-- the declarion of bnx2fc_percpu is moved into the header file
+If this allocation fails, a simple WARN_ON triggers, but the block layer
+ends up with an active hctx without any corresponding set of tags.
+Then, any income IO to that hctx can trigger an Oops.
 
-This patch was only compile-tested due to -ENODEV.
+I can reproduce it consistently by running IO, flipping CPUs on and off
+and eventually injecting a memory allocation failure in that path.
 
-Cc: QLogic-Storage-Upstream@qlogic.com
-Cc: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+In the fix below, if the system experiences a failed allocation of any
+hctx's tags, we remap all the ctxs of that queue to the hctx_0, which
+should always keep it's tags.  There is a minor performance hit, since
+our mapping just got worse after the error path, but this is
+the simplest solution to handle this error path.  The performance hit
+will disappear after another successful remap.
+
+I considered dropping the memory optimization all together, but it
+seemed a bad trade-off to handle this very specific error case.
+
+My one concern about this patch is if remapping an arbitrary queue to
+hctx_0 could result in outstanding requests getting submitted to the
+wrong hctx.  I couldn't observe this happening during tests, but I'm not
+entirely sure it'll never happen.  I believe the queue will be empty if
+we are trying to allocate tags for it, unless it was using another alive
+hctx queue and for some reason got reassigned to this new hctx.  is this
+possible at all?
+
+This should apply cleanly on top of Jen's for-next branch.
+
+The Oops is the one below:
+
+SP (3fff935ce4d0) is in userspace
+1:mon> e
+cpu 0x1: Vector: 300 (Data Access) at [c000000fe99eb110]
+    pc: c0000000005e868c: __sbitmap_queue_get+0x2c/0x180
+    lr: c000000000575328: __bt_get+0x48/0xd0
+    sp: c000000fe99eb390
+   msr: 900000010280b033
+   dar: 28
+ dsisr: 40000000
+  current = 0xc000000fe9966800
+  paca    = 0xc000000007e80300   softe: 0        irq_happened: 0x01
+    pid   = 11035, comm = aio-stress
+Linux version 4.8.0-rc6+ (root@bean) (gcc version 5.4.0 20160609
+(Ubuntu/IBM 5.4.0-6ubuntu1~16.04.2) ) #3 SMP Mon Oct 10 20:16:53 CDT 2016
+1:mon> s
+[c000000fe99eb3d0] c000000000575328 __bt_get+0x48/0xd0
+[c000000fe99eb400] c000000000575838 bt_get.isra.1+0x78/0x2d0
+[c000000fe99eb480] c000000000575cb4 blk_mq_get_tag+0x44/0x100
+[c000000fe99eb4b0] c00000000056f6f4 __blk_mq_alloc_request+0x44/0x220
+[c000000fe99eb500] c000000000570050 blk_mq_map_request+0x100/0x1f0
+[c000000fe99eb580] c000000000574650 blk_mq_make_request+0xf0/0x540
+[c000000fe99eb640] c000000000561c44 generic_make_request+0x144/0x230
+[c000000fe99eb690] c000000000561e00 submit_bio+0xd0/0x200
+[c000000fe99eb740] c0000000003ef740 ext4_io_submit+0x90/0xb0
+[c000000fe99eb770] c0000000003e95d8 ext4_writepages+0x588/0xdd0
+[c000000fe99eb910] c00000000025a9f0 do_writepages+0x60/0xc0
+[c000000fe99eb940] c000000000246c88 __filemap_fdatawrite_range+0xf8/0x180
+[c000000fe99eb9e0] c000000000246f90 filemap_write_and_wait_range+0x70/0xf0
+[c000000fe99eba20] c0000000003dd844 ext4_sync_file+0x214/0x540
+[c000000fe99eba80] c000000000364718 vfs_fsync_range+0x78/0x130
+[c000000fe99ebad0] c0000000003dd46c ext4_file_write_iter+0x35c/0x430
+[c000000fe99ebb90] c00000000038c280 aio_run_iocb+0x3b0/0x450
+[c000000fe99ebce0] c00000000038dc28 do_io_submit+0x368/0x730
+[c000000fe99ebe30] c000000000009404 system_call+0x38/0xec
+
+Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>
+Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Cc: linux-block@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |  5 +----
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 19 +++++++++----------
- drivers/scsi/bnx2fc/bnx2fc_hwi.c  |  6 ++----
- 3 files changed, 12 insertions(+), 18 deletions(-)
+ block/blk-mq.c | 21 +++++++++++++++------
+ 1 file changed, 15 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index fdd89935cac7..64308584405d 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -172,6 +172,7 @@ struct bnx2fc_percpu_s {
- 	struct list_head work_list;
- 	spinlock_t fp_work_lock;
- };
-+DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
-=20
- struct bnx2fc_fw_stats {
- 	u64	fc_crc_cnt;
-@@ -513,7 +514,6 @@ void bnx2fc_cmd_mgr_free(struct bnx2fc_cmd_mgr *cmgr);
- void bnx2fc_get_link_state(struct bnx2fc_hba *hba);
- char *bnx2fc_get_next_rqe(struct bnx2fc_rport *tgt, u8 num_items);
- void bnx2fc_return_rqe(struct bnx2fc_rport *tgt, u8 num_items);
--int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen);
- int bnx2fc_send_rrq(struct bnx2fc_cmd *aborted_io_req);
- int bnx2fc_send_adisc(struct bnx2fc_rport *tgt, struct fc_frame *fp);
- int bnx2fc_send_logo(struct bnx2fc_rport *tgt, struct fc_frame *fp);
-@@ -537,7 +537,6 @@ void bnx2fc_init_task(struct bnx2fc_cmd *io_req,
- void bnx2fc_add_2_sq(struct bnx2fc_rport *tgt, u16 xid);
- void bnx2fc_ring_doorbell(struct bnx2fc_rport *tgt);
- int bnx2fc_eh_abort(struct scsi_cmnd *sc_cmd);
--int bnx2fc_eh_host_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_target_reset(struct scsi_cmnd *sc_cmd);
- int bnx2fc_eh_device_reset(struct scsi_cmnd *sc_cmd);
- void bnx2fc_rport_event_handler(struct fc_lport *lport,
-@@ -570,8 +569,6 @@ struct fc_seq *bnx2fc_elsct_send(struct fc_lport *lport=
-, u32 did,
- 						   struct fc_frame *,
- 						   void *),
- 				      void *arg, u32 timeout);
--void bnx2fc_arm_cq(struct bnx2fc_rport *tgt);
--int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt);
- void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, u16 wqe);
- struct bnx2fc_rport *bnx2fc_tgt_lookup(struct fcoe_port *port,
- 					     u32 port_id);
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc=
-_fcoe.c
-index 79ff0ed2b364..97424e0eaa23 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -49,7 +49,7 @@ struct workqueue_struct *bnx2fc_wq;
-  * Here the io threads are per cpu but the l2 thread is just one
-  */
- struct fcoe_percpu_s bnx2fc_global;
--DEFINE_SPINLOCK(bnx2fc_global_lock);
-+static DEFINE_SPINLOCK(bnx2fc_global_lock);
-=20
- static struct cnic_ulp_ops bnx2fc_cnic_cb;
- static struct libfc_function_template bnx2fc_libfc_fcn_templ;
-@@ -107,22 +107,22 @@ MODULE_PARM_DESC(debug_logging,
- 		"\t\t0x10 - fcoe L2 fame related logs.\n"
- 		"\t\t0xff - LOG all messages.");
-=20
--uint bnx2fc_devloss_tmo;
-+static uint bnx2fc_devloss_tmo;
- module_param_named(devloss_tmo, bnx2fc_devloss_tmo, uint, S_IRUGO);
- MODULE_PARM_DESC(devloss_tmo, " Change devloss_tmo for the remote ports "
- 	"attached via bnx2fc.");
-=20
--uint bnx2fc_max_luns =3D BNX2FC_MAX_LUN;
-+static uint bnx2fc_max_luns =3D BNX2FC_MAX_LUN;
- module_param_named(max_luns, bnx2fc_max_luns, uint, S_IRUGO);
- MODULE_PARM_DESC(max_luns, " Change the default max_lun per SCSI host. Def=
-ault "
- 	"0xffff.");
-=20
--uint bnx2fc_queue_depth;
-+static uint bnx2fc_queue_depth;
- module_param_named(queue_depth, bnx2fc_queue_depth, uint, S_IRUGO);
- MODULE_PARM_DESC(queue_depth, " Change the default queue depth of SCSI dev=
-ices "
- 	"attached via bnx2fc.");
-=20
--uint bnx2fc_log_fka;
-+static uint bnx2fc_log_fka;
- module_param_named(log_fka, bnx2fc_log_fka, uint, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(log_fka, " Print message to kernel log when fcoe is "
- 	"initiating a FIP keep alive when debug logging is enabled.");
-@@ -167,7 +167,7 @@ static void bnx2fc_clean_rx_queue(struct fc_lport *lp)
- 	spin_unlock_bh(&bg->fcoe_rx_list.lock);
- }
-=20
--int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
-+static int bnx2fc_get_paged_crc_eof(struct sk_buff *skb, int tlen)
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index a6af66ae01e5..8cc58f23b2c2 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -1870,7 +1870,7 @@ static void blk_mq_init_cpu_queues(struct request_queue *q,
+ static void blk_mq_map_swqueue(struct request_queue *q,
+ 			       const struct cpumask *online_mask)
  {
- 	int rc;
- 	spin_lock(&bnx2fc_global_lock);
-@@ -1396,10 +1396,9 @@ static struct bnx2fc_hba *bnx2fc_hba_create(struct c=
-nic_dev *cnic)
- 	return NULL;
- }
-=20
--static struct bnx2fc_interface *
--bnx2fc_interface_create(struct bnx2fc_hba *hba,
--			struct net_device *netdev,
--			enum fip_state fip_mode)
-+static struct bnx2fc_interface *bnx2fc_interface_create(struct bnx2fc_hba =
-*hba,
-+				      struct net_device *netdev,
-+				      enum fip_state fip_mode)
- {
- 	struct fcoe_ctlr_device *ctlr_dev;
- 	struct bnx2fc_interface *interface;
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_=
-hwi.c
-index 1ed7a1784e15..c2288d6cd217 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -14,8 +14,6 @@
-=20
- #include "bnx2fc.h"
-=20
--DECLARE_PER_CPU(struct bnx2fc_percpu_s, bnx2fc_percpu);
--
- static void bnx2fc_fastpath_notification(struct bnx2fc_hba *hba,
- 					struct fcoe_kcqe *new_cqe_kcqe);
- static void bnx2fc_process_ofld_cmpl(struct bnx2fc_hba *hba,
-@@ -980,7 +978,7 @@ void bnx2fc_process_cq_compl(struct bnx2fc_rport *tgt, =
-u16 wqe)
- 	spin_unlock_bh(&tgt->tgt_lock);
- }
-=20
--void bnx2fc_arm_cq(struct bnx2fc_rport *tgt)
-+static void bnx2fc_arm_cq(struct bnx2fc_rport *tgt)
- {
- 	struct b577xx_fcoe_rx_doorbell *rx_db =3D &tgt->rx_db;
- 	u32 msg;
-@@ -1007,7 +1005,7 @@ static struct bnx2fc_work *bnx2fc_alloc_work(struct b=
-nx2fc_rport *tgt, u16 wqe)
- 	return work;
- }
-=20
--int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
-+static int bnx2fc_process_new_cqes(struct bnx2fc_rport *tgt)
- {
- 	struct fcoe_cqe *cq;
- 	u32 cq_cons;
---=20
-2.10.2
+-	unsigned int i;
++	unsigned int i, hctx_idx;
+ 	struct blk_mq_hw_ctx *hctx;
+ 	struct blk_mq_ctx *ctx;
+ 	struct blk_mq_tag_set *set = q->tag_set;
+@@ -1893,6 +1893,15 @@ static void blk_mq_map_swqueue(struct request_queue *q,
+ 		if (!cpumask_test_cpu(i, online_mask))
+ 			continue;
+ 
++		hctx_idx = q->mq_map[i];
++		/* unmapped hw queue can be remapped after CPU topo changed */
++		if (!set->tags[hctx_idx]) {
++			set->tags[hctx_idx] = blk_mq_init_rq_map(set, hctx_idx);
++
++			if (!set->tags[hctx_idx])
++				q->mq_map[i] = 0;
++		}
++
+ 		ctx = per_cpu_ptr(q->queue_ctx, i);
+ 		hctx = blk_mq_map_queue(q, i);
+ 
+@@ -1909,7 +1918,10 @@ static void blk_mq_map_swqueue(struct request_queue *q,
+ 		 * disable it and free the request entries.
+ 		 */
+ 		if (!hctx->nr_ctx) {
+-			if (set->tags[i]) {
++			/* Never unmap queue 0.  We need it as a
++			 * fallback in case of a new remap fails
++			 * allocation. */
++			if (i && set->tags[i]) {
+ 				blk_mq_free_rq_map(set, set->tags[i], i);
+ 				set->tags[i] = NULL;
+ 			}
+@@ -1917,11 +1929,8 @@ static void blk_mq_map_swqueue(struct request_queue *q,
+ 			continue;
+ 		}
+ 
+-		/* unmapped hw queue can be remapped after CPU topo changed */
+-		if (!set->tags[i])
+-			set->tags[i] = blk_mq_init_rq_map(set, i);
+ 		hctx->tags = set->tags[i];
+-		WARN_ON(!hctx->tags);
++		BUG_ON(!hctx->tags);
+ 
+ 		/*
+ 		 * Set the map size to the number of mapped software queues.
+-- 
+2.7.4
 
