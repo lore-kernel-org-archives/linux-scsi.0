@@ -1,38 +1,32 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] hpsa: fix uninitialized variable
-Date: Tue, 22 Nov 2016 17:32:03 +0100
-Message-ID: <0e07702a-eb51-56df-cdbc-c6d661b26f30@redhat.com>
-References: <1479827138-2211-1-git-send-email-hare@suse.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 00/11] hisi_sas: some fixes, improvements, and new
+ features
+Date: Tue, 22 Nov 2016 16:41:50 +0000
+Message-ID: <1f3075ff-d301-54e3-942f-76ca958a6c77@huawei.com>
+References: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
+ <yq1lgwlei5j.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:41680 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755584AbcKVQd0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 22 Nov 2016 11:33:26 -0500
-In-Reply-To: <1479827138-2211-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq1lgwlei5j.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, john.garry2@mail.dcu.ie
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>
 
-On 22.11.2016 16:05, Hannes Reinecke wrote:
-> With the recent patch to hpsa this warning is issued:
+On 14/11/2016 23:49, Martin K. Petersen wrote:
+>>>>>> "John" == John Garry <john.garry@huawei.com> writes:
 >
-> drivers/scsi/hpsa.c: In function 'hpsa_slave_alloc':
-> drivers/scsi/hpsa.c:2033:5: error: 'sd' may be used uninitialized in this function [-Werror=maybe-uninitialized]
+> John> This patchset introduces some misc bug fixes, improvements, and
+> John> new features to the HiSilicon SAS driver.
 >
-> The patch that caused this is marked for stable backports,
-> so this one has to be backported on top as well.
+> This series needs review.
 >
-> Fixes: 4eb307f7b18d ("scsi: hpsa: use bus '3' for legacy HBA devices")
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Looks good.
+Hi Martin,
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Are you happy with this patchset now that I've got an external review?
 
-Tomas
-
+Thanks,
+John
