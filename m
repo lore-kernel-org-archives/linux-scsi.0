@@ -1,28 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] scsi: be2iscsi: allocate enough memory in beiscsi_boot_get_sinfo()
-Date: Mon, 21 Nov 2016 22:33:42 -0500
-Message-ID: <yq137ik1949.fsf@sermon.lab.mkp.net>
-References: <20161118115339.GD3281@mwanda>
+Subject: Re: [PATCH v3] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
+Date: Mon, 21 Nov 2016 22:37:15 -0500
+Message-ID: <yq1y40cyyl0.fsf@sermon.lab.mkp.net>
+References: <000401d24236$cb8fc5b0$62af5110$@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:46350 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754957AbcKVDdu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 22:33:50 -0500
-In-Reply-To: <20161118115339.GD3281@mwanda> (Dan Carpenter's message of "Fri,
-        18 Nov 2016 14:53:39 +0300")
+Received: from aserp1040.oracle.com ([141.146.126.69]:50081 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754521AbcKVDhX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 21 Nov 2016 22:37:23 -0500
+In-Reply-To: <000401d24236$cb8fc5b0$62af5110$@samsung.com> (Kiwoong Kim's
+        message of "Sat, 19 Nov 2016 16:30:25 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Kiwoong Kim <kwmad.kim@samsung.com>
+Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>>>> "Kiwoong" == Kiwoong Kim <kwmad.kim@samsung.com> writes:
 
-Dan> We accidentally allocate sizeof(u32) instead of sizeof(struct
-Dan> be_cmd_get_session_resp).
+Hi Kiwoong,
 
-Applied to 4.9/scsi-fixes.
+Kiwoong> Some UFS host controllers may think granularities of PRDT
+Kiwoong> length and offset as bytes, not double words.
+
+This patch does not apply to 4.10/scsi-queue. Please rebase and
+resubmit.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
