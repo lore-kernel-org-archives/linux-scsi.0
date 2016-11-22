@@ -1,15 +1,15 @@
 From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Subject: [PATCH 2/5] scsi: bnx2fc: convert per-CPU thread to workqueue
-Date: Tue, 22 Nov 2016 18:48:10 +0100
-Message-ID: <20161122174813.16184-3-bigeasy@linutronix.de>
+Subject: [PATCH 1/5] scsi: bnx2i: convert to workqueue
+Date: Tue, 22 Nov 2016 18:48:09 +0100
+Message-ID: <20161122174813.16184-2-bigeasy@linutronix.de>
 References: <20161122174813.16184-1-bigeasy@linutronix.de>
 Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from Galois.linutronix.de ([146.0.238.70]:60409 "EHLO
+Received: from Galois.linutronix.de ([146.0.238.70]:60411 "EHLO
         Galois.linutronix.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933713AbcKVRsY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 12:48:24 -0500
+        with ESMTP id S933717AbcKVRsZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 12:48:25 -0500
 In-Reply-To: <20161122174813.16184-1-bigeasy@linutronix.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -20,16 +20,26 @@ The driver creates its own per-CPU threads which are updated based on CPU
 hotplug events. It is also possible to use kworkers and remove some of the
 infrastructure get the same job done while saving a few lines of code.
 
-bnx2fc_percpu_io_thread() becomes bnx2fc_percpu_io_work() which is
-mostly the same code. The outer loop (kthread_should_stop()) gets
-removed and the remaining code is shifted to the left.
-In bnx2fc_process_new_cqes() the code checked for ->iothread to
-decide if there is an active per-CPU thread. With the kworkers this
-is no longer possible nor required. The allocation of a new work item
-(via bnx2fc_alloc_work()) does no longer happen with the ->fp_work_lock
-lock held. It performs only a memory allocation + initialization which
-does not require any kind of serialization. The lock is held while
-adding the new member to fps->work_list list.
+The DECLARE_PER_CPU() definition is moved into the header file where it
+belongs. bnx2i_percpu_io_thread() becomes bnx2i_percpu_io_work() which is
+mostly the same code. The outer loop (kthread_should_stop()) gets removed a=
+nd
+the remaining code is shifted to the left.
+bnx2i_queue_scsi_cmd_resp() is mostly the same. The code checked ->iothread=
+ to
+decide if there is an active per-CPU thread. With the kworkers this is no
+longer possible nor required.
+The allocation of struct bnx2i_work does not happen with ->p_work_lock held
+which is not required. I am unsure about the call-stack so I can't say
+if this qualifies it for the allocation with GFP_KERNEL instead of
+GFP_ATOMIC (it is not _bh lock but as I said, I don't know the context).
+The allocation case has been reversed so the inner if case is called on
+!bnx2i_work and is just the invocation one function since the lock is not
+held during allocation. The init of the new bnx2i_work struct is now
+done also without the ->p_work_lock held: it is a new object, nobody
+knows about it yet. It should be enough to hold the lock while adding
+this item to the list. I am unsure about that atomic_inc() so I keep
+things as they were.
 
 The remaining part is the removal CPU hotplug notifier since it is taken
 care by the workqueue code.
@@ -40,124 +50,257 @@ Cc: QLogic-Storage-Upstream@qlogic.com
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 ---
- drivers/scsi/bnx2fc/bnx2fc.h      |   2 +-
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 157 ++++++----------------------------=
+ drivers/scsi/bnx2i/bnx2i.h      |  11 +---
+ drivers/scsi/bnx2i/bnx2i_hwi.c  | 101 ++++++++++++++-------------------
+ drivers/scsi/bnx2i/bnx2i_init.c | 121 +++---------------------------------=
 ----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c  |  22 +++---
- 3 files changed, 32 insertions(+), 149 deletions(-)
+ 3 files changed, 53 insertions(+), 180 deletions(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc.h b/drivers/scsi/bnx2fc/bnx2fc.h
-index fdd4eb4e41b2..fdd89935cac7 100644
---- a/drivers/scsi/bnx2fc/bnx2fc.h
-+++ b/drivers/scsi/bnx2fc/bnx2fc.h
-@@ -168,7 +168,7 @@ extern struct fcoe_percpu_s bnx2fc_global;
- extern struct workqueue_struct *bnx2fc_wq;
+diff --git a/drivers/scsi/bnx2i/bnx2i.h b/drivers/scsi/bnx2i/bnx2i.h
+index ed7f3228e234..78cdc493bab5 100644
+--- a/drivers/scsi/bnx2i/bnx2i.h
++++ b/drivers/scsi/bnx2i/bnx2i.h
+@@ -31,7 +31,6 @@
+ #include <linux/netdevice.h>
+ #include <linux/completion.h>
+ #include <linux/kthread.h>
+-#include <linux/cpu.h>
 =20
- struct bnx2fc_percpu_s {
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -775,12 +774,11 @@ struct bnx2i_work {
+ };
+=20
+ struct bnx2i_percpu_s {
 -	struct task_struct *iothread;
 +	struct work_struct work;
  	struct list_head work_list;
- 	spinlock_t fp_work_lock;
+ 	spinlock_t p_work_lock;
  };
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc=
-_fcoe.c
-index f9ddb6156f14..79ff0ed2b364 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -127,13 +127,6 @@ module_param_named(log_fka, bnx2fc_log_fka, uint, S_IR=
-UGO|S_IWUSR);
- MODULE_PARM_DESC(log_fka, " Print message to kernel log when fcoe is "
- 	"initiating a FIP keep alive when debug logging is enabled.");
 =20
--static int bnx2fc_cpu_callback(struct notifier_block *nfb,
--			     unsigned long action, void *hcpu);
--/* notification function for CPU hotplug events */
--static struct notifier_block bnx2fc_cpu_notifier =3D {
--	.notifier_call =3D bnx2fc_cpu_callback,
--};
 -
- static inline struct net_device *bnx2fc_netdev(const struct fc_lport *lpor=
-t)
+ /* Global variables */
+ extern unsigned int error_mask1, error_mask2;
+ extern u64 iscsi_error_mask;
+@@ -797,7 +795,7 @@ extern unsigned int rq_size;
+=20
+ extern struct device_attribute *bnx2i_dev_attributes[];
+=20
+-
++DECLARE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
+=20
+ /*
+  * Function Prototypes
+@@ -875,8 +873,5 @@ extern void bnx2i_print_active_cmd_queue(struct bnx2i_c=
+onn *conn);
+ extern void bnx2i_print_xmit_pdu_queue(struct bnx2i_conn *conn);
+ extern void bnx2i_print_recv_state(struct bnx2i_conn *conn);
+=20
+-extern int bnx2i_percpu_io_thread(void *arg);
+-extern int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+-				       struct bnx2i_conn *bnx2i_conn,
+-				       struct cqe *cqe);
++extern void bnx2i_percpu_io_work(struct work_struct *work);
+ #endif
+diff --git a/drivers/scsi/bnx2i/bnx2i_hwi.c b/drivers/scsi/bnx2i/bnx2i_hwi.c
+index 42921dbba927..9be58f6523b3 100644
+--- a/drivers/scsi/bnx2i/bnx2i_hwi.c
++++ b/drivers/scsi/bnx2i/bnx2i_hwi.c
+@@ -19,8 +19,6 @@
+ #include <scsi/libiscsi.h>
+ #include "bnx2i.h"
+=20
+-DECLARE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
+-
+ /**
+  * bnx2i_get_cid_num - get cid from ep
+  * @ep: 	endpoint pointer
+@@ -1350,9 +1348,9 @@ int bnx2i_send_fw_iscsi_init_msg(struct bnx2i_hba *hb=
+a)
+  *
+  * process SCSI CMD Response CQE & complete the request to SCSI-ML
+  */
+-int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
+-				struct bnx2i_conn *bnx2i_conn,
+-				struct cqe *cqe)
++static int bnx2i_process_scsi_cmd_resp(struct iscsi_session *session,
++				       struct bnx2i_conn *bnx2i_conn,
++				       struct cqe *cqe)
  {
- 	return ((struct bnx2fc_interface *)
-@@ -621,39 +614,32 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- }
+ 	struct iscsi_conn *conn =3D bnx2i_conn->cls_conn->dd_data;
+ 	struct bnx2i_hba *hba =3D bnx2i_conn->hba;
+@@ -1862,45 +1860,37 @@ static void bnx2i_process_cmd_cleanup_resp(struct i=
+scsi_session *session,
+=20
 =20
  /**
-- * bnx2fc_percpu_io_thread - thread per cpu for ios
-+ * bnx2fc_percpu_io_work - work per cpu for ios
+- * bnx2i_percpu_io_thread - thread per cpu for ios
++ * bnx2i_percpu_io_work - thread per cpu for ios
   *
-- * @arg:	ptr to bnx2fc_percpu_info structure
+- * @arg:	ptr to bnx2i_percpu_info structure
 + * @work_s:	The work struct
   */
--static int bnx2fc_percpu_io_thread(void *arg)
-+static void bnx2fc_percpu_io_work(struct work_struct *work_s)
+-int bnx2i_percpu_io_thread(void *arg)
++void bnx2i_percpu_io_work(struct work_struct *work_s)
  {
--	struct bnx2fc_percpu_s *p =3D arg;
-+	struct bnx2fc_percpu_s *p;
- 	struct bnx2fc_work *work, *tmp;
+-	struct bnx2i_percpu_s *p =3D arg;
++	struct bnx2i_percpu_s *p;
+ 	struct bnx2i_work *work, *tmp;
  	LIST_HEAD(work_list);
 =20
 -	set_user_nice(current, MIN_NICE);
--	set_current_state(TASK_INTERRUPTIBLE);
++	p =3D container_of(work_s, struct bnx2i_percpu_s, work);
+=20
 -	while (!kthread_should_stop()) {
--		schedule();
--		spin_lock_bh(&p->fp_work_lock);
+-		spin_lock_bh(&p->p_work_lock);
 -		while (!list_empty(&p->work_list)) {
 -			list_splice_init(&p->work_list, &work_list);
--			spin_unlock_bh(&p->fp_work_lock);
-+	p =3D container_of(work_s, struct bnx2fc_percpu_s, work);
-=20
+-			spin_unlock_bh(&p->p_work_lock);
+-
 -			list_for_each_entry_safe(work, tmp, &work_list, list) {
 -				list_del_init(&work->list);
--				bnx2fc_process_cq_compl(work->tgt, work->wqe);
+-				/* work allocated in the bh, freed here */
+-				bnx2i_process_scsi_cmd_resp(work->session,
+-							    work->bnx2i_conn,
+-							    &work->cqe);
+-				atomic_dec(&work->bnx2i_conn->work_cnt);
 -				kfree(work);
 -			}
--
--			spin_lock_bh(&p->fp_work_lock);
+-			spin_lock_bh(&p->p_work_lock);
 -		}
--		__set_current_state(TASK_INTERRUPTIBLE);
-+	spin_lock_bh(&p->fp_work_lock);
+-		set_current_state(TASK_INTERRUPTIBLE);
++	spin_lock_bh(&p->p_work_lock);
 +	while (!list_empty(&p->work_list)) {
 +		list_splice_init(&p->work_list, &work_list);
- 		spin_unlock_bh(&p->fp_work_lock);
--	}
--	__set_current_state(TASK_RUNNING);
-=20
--	return 0;
+ 		spin_unlock_bh(&p->p_work_lock);
+-		schedule();
++
 +		list_for_each_entry_safe(work, tmp, &work_list, list) {
 +			list_del_init(&work->list);
-+			bnx2fc_process_cq_compl(work->tgt, work->wqe);
++			/* work allocated in the bh, freed here */
++			bnx2i_process_scsi_cmd_resp(work->session,
++						    work->bnx2i_conn,
++						    &work->cqe);
++			atomic_dec(&work->bnx2i_conn->work_cnt);
 +			kfree(work);
 +		}
-+
-+		spin_lock_bh(&p->fp_work_lock);
-+	}
-+	spin_unlock_bh(&p->fp_work_lock);
++		spin_lock_bh(&p->p_work_lock);
+ 	}
+-	__set_current_state(TASK_RUNNING);
+-
+-	return 0;
++	spin_unlock_bh(&p->p_work_lock);
  }
 =20
- static struct fc_host_statistics *bnx2fc_get_host_stats(struct Scsi_Host *=
-shost)
-@@ -2571,91 +2557,6 @@ static struct fcoe_transport bnx2fc_transport =3D {
- 	.disable =3D bnx2fc_disable,
- };
+-
+ /**
+  * bnx2i_queue_scsi_cmd_resp - queue cmd completion to the percpu thread
+  * @bnx2i_conn:		bnx2i connection
+@@ -1920,7 +1910,6 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_ses=
+sion *session,
+ 	struct bnx2i_percpu_s *p =3D NULL;
+ 	struct iscsi_task *task;
+ 	struct scsi_cmnd *sc;
+-	int rc =3D 0;
+ 	int cpu;
 =20
+ 	spin_lock(&session->back_lock);
+@@ -1939,33 +1928,29 @@ static int bnx2i_queue_scsi_cmd_resp(struct iscsi_s=
+ession *session,
+=20
+ 	spin_unlock(&session->back_lock);
+=20
+-	p =3D &per_cpu(bnx2i_percpu, cpu);
+-	spin_lock(&p->p_work_lock);
+-	if (unlikely(!p->iothread)) {
+-		rc =3D -EINVAL;
+-		goto err;
+-	}
+ 	/* Alloc and copy to the cqe */
+ 	bnx2i_work =3D kzalloc(sizeof(struct bnx2i_work), GFP_ATOMIC);
+-	if (bnx2i_work) {
+-		INIT_LIST_HEAD(&bnx2i_work->list);
+-		bnx2i_work->session =3D session;
+-		bnx2i_work->bnx2i_conn =3D bnx2i_conn;
+-		memcpy(&bnx2i_work->cqe, cqe, sizeof(struct cqe));
+-		list_add_tail(&bnx2i_work->list, &p->work_list);
+-		atomic_inc(&bnx2i_conn->work_cnt);
+-		wake_up_process(p->iothread);
+-		spin_unlock(&p->p_work_lock);
+-		goto done;
+-	} else
+-		rc =3D -ENOMEM;
+-err:
+-	spin_unlock(&p->p_work_lock);
+-	bnx2i_process_scsi_cmd_resp(session, bnx2i_conn, (struct cqe *)cqe);
+-done:
+-	return rc;
+-}
++	if (!bnx2i_work) {
++		bnx2i_process_scsi_cmd_resp(session, bnx2i_conn,
++					    (struct cqe *)cqe);
++		return -ENOMEM;
++	}
+=20
++	p =3D per_cpu_ptr(&bnx2i_percpu, cpu);
++
++	INIT_LIST_HEAD(&bnx2i_work->list);
++	bnx2i_work->session =3D session;
++	bnx2i_work->bnx2i_conn =3D bnx2i_conn;
++	memcpy(&bnx2i_work->cqe, cqe, sizeof(struct cqe));
++
++	spin_lock(&p->p_work_lock);
++	list_add_tail(&bnx2i_work->list, &p->work_list);
++	atomic_inc(&bnx2i_conn->work_cnt);
++	spin_unlock(&p->p_work_lock);
++
++	schedule_work_on(cpu, &p->work);
++	return 0;
++}
+=20
+ /**
+  * bnx2i_process_new_cqes - process newly DMA'ed CQE's
+diff --git a/drivers/scsi/bnx2i/bnx2i_init.c b/drivers/scsi/bnx2i/bnx2i_ini=
+t.c
+index c8b410c24cf0..976a6bc86d39 100644
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -70,14 +70,6 @@ u64 iscsi_error_mask =3D 0x00;
+=20
+ DEFINE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
+=20
+-static int bnx2i_cpu_callback(struct notifier_block *nfb,
+-			      unsigned long action, void *hcpu);
+-/* notification function for CPU hotplug events */
+-static struct notifier_block bnx2i_cpu_notifier =3D {
+-	.notifier_call =3D bnx2i_cpu_callback,
+-};
+-
+-
+ /**
+  * bnx2i_identify_device - identifies NetXtreme II device type
+  * @hba: 		Adapter structure pointer
+@@ -410,93 +402,6 @@ int bnx2i_get_stats(void *handle)
+ 	return 0;
+ }
+=20
+-
 -/**
-- * bnx2fc_percpu_thread_create - Create a receive thread for an
-- *				 online CPU
+- * bnx2i_percpu_thread_create - Create a receive thread for an
+- *				online CPU
 - *
-- * @cpu: cpu index for the online cpu
+- * @cpu:	cpu index for the online cpu
 - */
--static void bnx2fc_percpu_thread_create(unsigned int cpu)
+-static void bnx2i_percpu_thread_create(unsigned int cpu)
 -{
--	struct bnx2fc_percpu_s *p;
+-	struct bnx2i_percpu_s *p;
 -	struct task_struct *thread;
 -
--	p =3D &per_cpu(bnx2fc_percpu, cpu);
+-	p =3D &per_cpu(bnx2i_percpu, cpu);
 -
--	thread =3D kthread_create_on_node(bnx2fc_percpu_io_thread,
--					(void *)p, cpu_to_node(cpu),
--					"bnx2fc_thread/%d", cpu);
+-	thread =3D kthread_create_on_node(bnx2i_percpu_io_thread, (void *)p,
+-					cpu_to_node(cpu),
+-					"bnx2i_thread/%d", cpu);
 -	/* bind thread to the cpu */
 -	if (likely(!IS_ERR(thread))) {
 -		kthread_bind(thread, cpu);
@@ -166,60 +309,60 @@ shost)
 -	}
 -}
 -
--static void bnx2fc_percpu_thread_destroy(unsigned int cpu)
--{
--	struct bnx2fc_percpu_s *p;
--	struct task_struct *thread;
--	struct bnx2fc_work *work, *tmp;
 -
--	BNX2FC_MISC_DBG("destroying io thread for CPU %d\n", cpu);
+-static void bnx2i_percpu_thread_destroy(unsigned int cpu)
+-{
+-	struct bnx2i_percpu_s *p;
+-	struct task_struct *thread;
+-	struct bnx2i_work *work, *tmp;
 -
 -	/* Prevent any new work from being queued for this CPU */
--	p =3D &per_cpu(bnx2fc_percpu, cpu);
--	spin_lock_bh(&p->fp_work_lock);
+-	p =3D &per_cpu(bnx2i_percpu, cpu);
+-	spin_lock_bh(&p->p_work_lock);
 -	thread =3D p->iothread;
 -	p->iothread =3D NULL;
--
 -
 -	/* Free all work in the list */
 -	list_for_each_entry_safe(work, tmp, &p->work_list, list) {
 -		list_del_init(&work->list);
--		bnx2fc_process_cq_compl(work->tgt, work->wqe);
+-		bnx2i_process_scsi_cmd_resp(work->session,
+-					    work->bnx2i_conn, &work->cqe);
 -		kfree(work);
 -	}
 -
--	spin_unlock_bh(&p->fp_work_lock);
--
+-	spin_unlock_bh(&p->p_work_lock);
 -	if (thread)
 -		kthread_stop(thread);
 -}
 -
+-
 -/**
-- * bnx2fc_cpu_callback - Handler for CPU hotplug events
+- * bnx2i_cpu_callback - Handler for CPU hotplug events
 - *
-- * @nfb:    The callback data block
-- * @action: The event triggering the callback
-- * @hcpu:   The index of the CPU that the event is for
+- * @nfb:	The callback data block
+- * @action:	The event triggering the callback
+- * @hcpu:	The index of the CPU that the event is for
 - *
-- * This creates or destroys per-CPU data for fcoe
+- * This creates or destroys per-CPU data for iSCSI
 - *
 - * Returns NOTIFY_OK always.
 - */
--static int bnx2fc_cpu_callback(struct notifier_block *nfb,
--			     unsigned long action, void *hcpu)
+-static int bnx2i_cpu_callback(struct notifier_block *nfb,
+-			      unsigned long action, void *hcpu)
 -{
 -	unsigned cpu =3D (unsigned long)hcpu;
 -
 -	switch (action) {
 -	case CPU_ONLINE:
 -	case CPU_ONLINE_FROZEN:
--		printk(PFX "CPU %x online: Create Rx thread\n", cpu);
--		bnx2fc_percpu_thread_create(cpu);
+-		printk(KERN_INFO "bnx2i: CPU %x online: Create Rx thread\n",
+-			cpu);
+-		bnx2i_percpu_thread_create(cpu);
 -		break;
 -	case CPU_DEAD:
 -	case CPU_DEAD_FROZEN:
--		printk(PFX "CPU %x offline: Remove Rx thread\n", cpu);
--		bnx2fc_percpu_thread_destroy(cpu);
+-		printk(KERN_INFO "CPU %x offline: Remove Rx thread\n", cpu);
+-		bnx2i_percpu_thread_destroy(cpu);
 -		break;
 -	default:
 -		break;
@@ -227,91 +370,55 @@ shost)
 -	return NOTIFY_OK;
 -}
 -
- static int bnx2fc_slave_configure(struct scsi_device *sdev)
- {
- 	if (!bnx2fc_queue_depth)
-@@ -2723,19 +2624,9 @@ static int __init bnx2fc_mod_init(void)
- 		p =3D &per_cpu(bnx2fc_percpu, cpu);
+-
+ /**
+  * bnx2i_mod_init - module init entry point
+  *
+@@ -533,22 +438,12 @@ static int __init bnx2i_mod_init(void)
+=20
+ 	/* Create percpu kernel threads to handle iSCSI I/O completions */
+ 	for_each_possible_cpu(cpu) {
+-		p =3D &per_cpu(bnx2i_percpu, cpu);
++		p =3D per_cpu_ptr(&bnx2i_percpu, cpu);
  		INIT_LIST_HEAD(&p->work_list);
- 		spin_lock_init(&p->fp_work_lock);
-+		INIT_WORK(&p->work, bnx2fc_percpu_io_work);
+ 		spin_lock_init(&p->p_work_lock);
+-		p->iothread =3D NULL;
++		INIT_WORK(&p->work, bnx2i_percpu_io_work);
  	}
 =20
 -	cpu_notifier_register_begin();
 -
--	for_each_online_cpu(cpu) {
--		bnx2fc_percpu_thread_create(cpu);
--	}
+-	for_each_online_cpu(cpu)
+-		bnx2i_percpu_thread_create(cpu);
 -
 -	/* Initialize per CPU interrupt thread */
--	__register_hotcpu_notifier(&bnx2fc_cpu_notifier);
+-	__register_hotcpu_notifier(&bnx2i_cpu_notifier);
 -
 -	cpu_notifier_register_done();
 -
- 	cnic_register_driver(CNIC_ULP_FCOE, &bnx2fc_cnic_cb);
-=20
  	return 0;
-@@ -2798,17 +2689,13 @@ static void __exit bnx2fc_mod_exit(void)
- 	if (l2_thread)
- 		kthread_stop(l2_thread);
+=20
+ unreg_xport:
+@@ -587,14 +482,12 @@ static void __exit bnx2i_mod_exit(void)
+ 	}
+ 	mutex_unlock(&bnx2i_dev_lock);
 =20
 -	cpu_notifier_register_begin();
 +	for_each_possible_cpu(cpu) {
-+		struct bnx2fc_percpu_s *p;
++		struct bnx2i_percpu_s *p;
 =20
--	/* Destroy per cpu threads */
--	for_each_online_cpu(cpu) {
--		bnx2fc_percpu_thread_destroy(cpu);
-+		p =3D per_cpu_ptr(&bnx2fc_percpu, cpu);
-+		flush_work(&p->work);
- 	}
-=20
--	__unregister_hotcpu_notifier(&bnx2fc_cpu_notifier);
+-	for_each_online_cpu(cpu)
+-		bnx2i_percpu_thread_destroy(cpu);
+-
+-	__unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
 -
 -	cpu_notifier_register_done();
--
- 	destroy_workqueue(bnx2fc_wq);
- 	/*
- 	 * detach from scsi transport
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_=
-hwi.c
-index 5ff9f89c17c7..1ed7a1784e15 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -1046,23 +1046,19 @@ int bnx2fc_process_new_cqes(struct bnx2fc_rport *tg=
-t)
- 			struct bnx2fc_percpu_s *fps =3D NULL;
- 			unsigned int cpu =3D wqe % num_possible_cpus();
++		p =3D per_cpu_ptr(&bnx2i_percpu, cpu);
++		flush_work(&p->work);
++	}
 =20
--			fps =3D &per_cpu(bnx2fc_percpu, cpu);
--			spin_lock_bh(&fps->fp_work_lock);
--			if (unlikely(!fps->iothread))
--				goto unlock;
--
- 			work =3D bnx2fc_alloc_work(tgt, wqe);
--			if (work)
-+			if (work) {
-+				fps =3D &per_cpu(bnx2fc_percpu, cpu);
-+
-+				spin_lock_bh(&fps->fp_work_lock);
- 				list_add_tail(&work->list,
- 					      &fps->work_list);
--unlock:
--			spin_unlock_bh(&fps->fp_work_lock);
--
--			/* Pending work request completion */
--			if (fps->iothread && work)
--				wake_up_process(fps->iothread);
--			else
-+				spin_unlock_bh(&fps->fp_work_lock);
-+				schedule_work_on(cpu, &fps->work);
-+			} else {
- 				bnx2fc_process_cq_compl(tgt, wqe);
-+			}
-+
- 			num_free_sqes++;
- 		}
- 		cqe++;
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ 	cnic_unregister_driver(CNIC_ULP_ISCSI);
 --=20
 2.10.2
 
