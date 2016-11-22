@@ -1,117 +1,125 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.9-rc6
-Date: Mon, 21 Nov 2016 22:27:56 -0800
-Message-ID: <1479796076.2309.74.camel@HansenPartnership.com>
+From: Kiwoong Kim <kwmad.kim@samsung.com>
+Subject: [PATCH v4] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
+Date: Tue, 22 Nov 2016 17:06:59 +0900
+Message-ID: <01b501d24497$66a81e50$33f85af0$@samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mailout1.samsung.com ([203.254.224.24]:44185 "EHLO
+        mailout1.samsung.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752817AbcKVIHC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 03:07:02 -0500
+Received: from epcpsbgm1new.samsung.com (epcpsbgm1 [203.254.230.26])
+ by mailout1.samsung.com
+ (Oracle Communications Messaging Server 7.0.5.31.0 64bit (built May  5 2014))
+ with ESMTP id <0OH101V6XAJOGME0@mailout1.samsung.com> for
+ linux-scsi@vger.kernel.org; Tue, 22 Nov 2016 17:07:00 +0900 (KST)
+Content-language: ko
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
-Two small fixes.  One prevents timeouts on mpt3sas when trying to use
-the secure erase protocol which causes the erase protocol to be
-aborted.  The second is a regression in a prior fix which causes all
-commands to abort during PCI extended error recovery, which is
-incorrect because PCI EEH is independent from what's happening on the
-FC transport.
+Some UFS host controllers may think
+granularities of PRDT length and offset as bytes, not double words.
 
-The patch is available here:
+Signed-off-by: Kiwoong Kim <kwmad.kim@samsung.com>
+---
+V2: change the name of the quirk
+(UFSHCD_QUIRK_BROKEN_DWORD_UTRD -> UFSHCD_QUIRK_PRDT_BYTE_GRAN)
+V3: (rebased to for-next tip)
+V4: (rebased to 4.10/scsi-queue tip)
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Andrey Grodzovsky (1):
-      scsi: mpt3sas: Fix secure erase premature termination
-
-Mauricio Faria de Oliveira (1):
-      scsi: qla2xxx: do not abort all commands in the adapter during EEH recovery
-
-And the diffstat:
-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ++++++++++++++-
- drivers/scsi/qla2xxx/qla_os.c        | 21 +++++++++++++--------
- 2 files changed, 27 insertions(+), 9 deletions(-)
-
-With full diff below.
-
-James
+Sorry for repeating submitting the same patch, everyone.
+And I truly appreciate that all of you always give me some advice
+about the rules of mainline.
 
 ---
+ drivers/scsi/ufs/ufshcd.c | 28 +++++++++++++++++++++-------
+ drivers/scsi/ufs/ufshcd.h |  6 ++++++
+ 2 files changed, 27 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 8aa769a..91b70bc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4010,7 +4010,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 4214881..f91e50b 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1129,7 +1129,7 @@ ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd)
+  *
+  * Returns 0 in case of success, non-zero value in case of failure
+  */
+-static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
++static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ {
+ 	struct ufshcd_sg_entry *prd_table;
+ 	struct scatterlist *sg;
+@@ -1143,8 +1143,13 @@ static int ufshcd_map_sg(struct ufshcd_lrb *lrbp)
+ 		return sg_segments;
  
--
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+{
-+	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+}
+ 	if (sg_segments) {
+-		lrbp->utr_descriptor_ptr->prd_table_length =
+-					cpu_to_le16((u16) (sg_segments));
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN)
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((u16)(sg_segments *
++					sizeof(struct ufshcd_sg_entry)));
++		else
++			lrbp->utr_descriptor_ptr->prd_table_length =
++				cpu_to_le16((u16) (sg_segments));
  
- /**
-  * scsih_qcmd - main scsi request entry point
-@@ -4038,6 +4041,13 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	if (ioc->logging_level & MPT_DEBUG_SCSI)
- 		scsi_print_command(scmd);
+ 		prd_table = (struct ufshcd_sg_entry *)lrbp->ucd_prdt_ptr;
+ 
+@@ -1507,7 +1512,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
+ 
+ 	ufshcd_comp_scsi_upiu(hba, lrbp);
+ 
+-	err = ufshcd_map_sg(lrbp);
++	err = ufshcd_map_sg(hba, lrbp);
+ 	if (err) {
+ 		lrbp->cmd = NULL;
+ 		clear_bit_unlock(tag, &hba->lrb_in_use); 
+@@ -2368,12 +2373,21 @@ static void ufshcd_host_memory_configure(struct ufs_hba *hba)
+ 				cpu_to_le32(upper_32_bits(cmd_desc_element_addr));
+ 
+ 		/* Response upiu and prdt offset should be in double words */
+-		utrdlp[i].response_upiu_offset =
++		if (hba->quirks & UFSHCD_QUIRK_PRDT_BYTE_GRAN) {
++			utrdlp[i].response_upiu_offset =
++				cpu_to_le16(response_offset);
++			utrdlp[i].prd_table_offset =
++				cpu_to_le16(prdt_offset);
++			utrdlp[i].response_upiu_length =
++				cpu_to_le16(ALIGNED_UPIU_SIZE);
++		} else {
++			utrdlp[i].response_upiu_offset =
+ 				cpu_to_le16((response_offset >> 2));
+-		utrdlp[i].prd_table_offset =
++			utrdlp[i].prd_table_offset =
+ 				cpu_to_le16((prdt_offset >> 2));
+-		utrdlp[i].response_upiu_length =
++			utrdlp[i].response_upiu_length =
+ 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
++		}
+ 
+ 		hba->lrb[i].utr_descriptor_ptr = (utrdlp + i);
+ 		hba->lrb[i].ucd_req_ptr =
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 8e76501..7d9ff22 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -485,6 +485,12 @@ struct ufs_hba {
+ 	 */
+ 	#define UFSHCD_QUIRK_BROKEN_UFS_HCI_VERSION		UFS_BIT(5)
  
 +	/*
-+	 * Lock the device for any subsequent command until command is
-+	 * done.
++	 * This quirk needs to be enabled if the host contoller regards
++	 * resolution of the values of PRDTO and PRDTL in UTRD as byte.
 +	 */
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
++	#define UFSHCD_QUIRK_PRDT_BYTE_GRAN			UFS_BIT(7)
 +
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4613,6 +4623,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
+ 	unsigned int quirks;	/* Deviations from standard UFSHCI spec. */
  
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 567fa08..56d6142 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1456,15 +1456,20 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
- 		for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
- 			sp = req->outstanding_cmds[cnt];
- 			if (sp) {
--				/* Get a reference to the sp and drop the lock.
--				 * The reference ensures this sp->done() call
--				 * - and not the call in qla2xxx_eh_abort() -
--				 * ends the SCSI command (with result 'res').
-+				/* Don't abort commands in adapter during EEH
-+				 * recovery as it's not accessible/responding.
- 				 */
--				sp_get(sp);
--				spin_unlock_irqrestore(&ha->hardware_lock, flags);
--				qla2xxx_eh_abort(GET_CMD_SP(sp));
--				spin_lock_irqsave(&ha->hardware_lock, flags);
-+				if (!ha->flags.eeh_busy) {
-+					/* Get a reference to the sp and drop the lock.
-+					 * The reference ensures this sp->done() call
-+					 * - and not the call in qla2xxx_eh_abort() -
-+					 * ends the SCSI command (with result 'res').
-+					 */
-+					sp_get(sp);
-+					spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+					qla2xxx_eh_abort(GET_CMD_SP(sp));
-+					spin_lock_irqsave(&ha->hardware_lock, flags);
-+				}
- 				req->outstanding_cmds[cnt] = NULL;
- 				sp->done(vha, sp, res);
- 			}
+ 	/* Device deviations from standard UFS device spec. */
+-- 
+2.1.4
+
