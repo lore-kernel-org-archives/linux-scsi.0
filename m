@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/11] hisi_sas: some fixes, improvements, and new features
-Date: Tue, 22 Nov 2016 17:01:10 -0500
-Message-ID: <yq1r363w4wp.fsf@sermon.lab.mkp.net>
-References: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
-        <yq1lgwlei5j.fsf@sermon.lab.mkp.net>
-        <1f3075ff-d301-54e3-942f-76ca958a6c77@huawei.com>
+Subject: Re: [PATCH] scsi: pmcraid: Add missing resource releases
+Date: Tue, 22 Nov 2016 17:03:16 -0500
+Message-ID: <yq1mvgrw4t7.fsf@sermon.lab.mkp.net>
+References: <20161119174318.20394-1-lambert.quentin@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1f3075ff-d301-54e3-942f-76ca958a6c77@huawei.com> (John Garry's
-        message of "Tue, 22 Nov 2016 16:41:50 +0000")
+In-Reply-To: <20161119174318.20394-1-lambert.quentin@gmail.com> (Quentin
+        Lambert's message of "Sat, 19 Nov 2016 18:43:18 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, john.garry2@mail.dcu.ie
+To: Quentin Lambert <lambert.quentin@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Quentin" == Quentin Lambert <lambert.quentin@gmail.com> writes:
 
-John,
+Quentin> Most error branches following the call to pmcraid_get_free_cmd
+Quentin> contain a call to pmcraid_return_cmd. This patch add these
+Quentin> calls where they are missing.
 
-John> Are you happy with this patchset now that I've got an external
-John> review?
+Quentin> Moreover, most error branches following the call to
+Quentin> class_create contain a call to class_destroy. This patch add
+Quentin> these calls where they are missing.
 
-Zhangfei Geo asked a question about patch 1/11 that has yet to be
-answered. Patch 5/11 is still unreviewed.
+Applied to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
