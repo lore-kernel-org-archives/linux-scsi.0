@@ -1,29 +1,32 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: pmcraid: Add missing resource releases
-Date: Tue, 22 Nov 2016 17:03:16 -0500
-Message-ID: <yq1mvgrw4t7.fsf@sermon.lab.mkp.net>
-References: <20161119174318.20394-1-lambert.quentin@gmail.com>
+From: =?UTF-8?Q?Pan=C3=AD_KLeung?= <info@atechnet.sk>
+Subject: List pre vas
+Date: Wed, 23 Nov 2016 03:54:35 +0800
+Message-ID: <34fdd3a139dd2c0e17ee4699ec87987d__41658.3044491292$1479853861$gmane$org@localhost>
+Reply-To: kmyleung21@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161119174318.20394-1-lambert.quentin@gmail.com> (Quentin
-        Lambert's message of "Sat, 19 Nov 2016 18:43:18 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Quentin Lambert <lambert.quentin@gmail.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8;
+ format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from 35-234-47-212.rev.cloud.scaleway.com ([212.47.234.35]:60500
+        "EHLO mail.dealer.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S932636AbcKVWad (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 17:30:33 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Quentin" == Quentin Lambert <lambert.quentin@gmail.com> writes:
 
-Quentin> Most error branches following the call to pmcraid_get_free_cmd
-Quentin> contain a call to pmcraid_return_cmd. This patch add these
-Quentin> calls where they are missing.
 
-Quentin> Moreover, most error branches following the call to
-Quentin> class_create contain a call to class_destroy. This patch add
-Quentin> these calls where they are missing.
+Ahoj.....
 
-Applied to 4.10/scsi-queue.
+Dobre rano, a jak to delate? Jen rychly jedno, je tu oficialni 
+prilezitosti bych chtel diskutovat s vami soukrome.
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Ocenil bych vasi rychlou reakci tady na mem osobnim soukromeho e-mailu 
+nize pro dalsi komunikaci.
+
+S pratelskym pozdravem,
+Paní Ko May Leung
+email: kmyleung21@gmail.com
+Místopredseda, Managing Director
+a vykonny reditel Chong Hing Bank Limited
