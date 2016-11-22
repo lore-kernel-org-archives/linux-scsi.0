@@ -1,53 +1,40 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH] scsi: aic94xx: Add a missing call to kfree
-Date: Tue, 22 Nov 2016 16:51:25 +0100
-Message-ID: <a98c4b93-2e49-0d99-18dd-ac00446f3ca7@redhat.com>
-References: <20161119174038.20083-1-lambert.quentin@gmail.com>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: [PATCH 00/12] block: cleanup direct access to bvec table
+Date: Tue, 22 Nov 2016 08:53:00 -0700
+Message-ID: <167c2511-349f-a8e6-17d1-f7ce438b2f14@fb.com>
+References: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="windows-1252"; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20161119174038.20083-1-lambert.quentin@gmail.com>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Quentin Lambert <lambert.quentin@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1478865957-25252-1-git-send-email-tom.leiming@gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Ming Lei <tom.leiming@gmail.com>, linux-kernel@vger.kernel.org
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Adrian Hunter <adrian.hunter@intel.com>, Coly Li <colyli@suse.de>, "open list:DEVICE-MAPPER (LVM)" <dm-devel@redhat.com>, "open list:DRBD DRIVER" <drbd-dev@lists.linbit.com>, Eric Wheeler <git@linux.ewheeler.net>, Guoqing Jiang <gqjiang@suse.com>, Hannes Reinecke <hare@suse.com>, Jiri Kosina <jkosina@suse.cz>, Johannes Thumshirn <jthumshirn@suse.de>, Keith Busch <keith.busch@intel.com>, Kent Overstreet <kent.overstreet@gmail.com>, "open list:BCACHE (BLOCK LAYER CACHE)" <linux-bcache@vger.kernel.org>, "open list:NVM EXPRESS TARGET DRIVER" <linux-nvme@lists.infradead.org>, "open list:SOFTWARE RAID (Multiple Disks) SUPPORT" <linux-raid@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 19.11.2016 18:40, Quentin Lambert wrote:
-> Most error branches following the call to kzalloc contain
-> a call to kfree. This patch add these calls where they are
-> missing.
+On 11/11/2016 05:05 AM, Ming Lei wrote:
+> Hi,
 >
-> This issue was found with Hector.
-
-Hi Quentin,
-most error branches also do set the freed pointer to NULL,
-please do the same.
-
-tomash
-
-> Signed-off-by: Quentin Lambert <lambert.quentin@gmail.com>
+> This patchset cleans up direct access to bvec table.
 >
-> ---
->  drivers/scsi/aic94xx/aic94xx_hwi.c |    4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
+> The 1st patch passes bvec table to bio_init(), so that
+> direct access to bvec table in bio initialization is avoided.
 >
-> --- a/drivers/scsi/aic94xx/aic94xx_hwi.c
-> +++ b/drivers/scsi/aic94xx/aic94xx_hwi.c
-> @@ -228,8 +228,10 @@ static int asd_init_scbs(struct asd_ha_s
->  	bitmap_bytes = (asd_ha->seq.tc_index_bitmap_bits+7)/8;
->  	bitmap_bytes = BITS_TO_LONGS(bitmap_bytes*8)*sizeof(unsigned long);
->  	asd_ha->seq.tc_index_bitmap = kzalloc(bitmap_bytes, GFP_KERNEL);
-> -	if (!asd_ha->seq.tc_index_bitmap)
-> +	if (!asd_ha->seq.tc_index_bitmap) {
-> +		kfree(asd_ha->seq.tc_index_array);
->  		return -ENOMEM;
-> +	}
->  
->  	spin_lock_init(&seq->tc_index_lock);
->  
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> For other patches, most of them uses bio_add_page()
+> to replace hardcode style of adding page to bvec,
+> and others avoids to access bio->bi_vcnt.
+>
+> The most special one is to use bvec iterator helpers
+> to implement .get_page/.next_page for dm-io.c
+>
+> One big motivation is to prepare for supporting multipage
+> bvec, but this patchset is one good cleanup too even not
+> for that purpose.
 
+I've added the series, except 6-8, the dm parts. I updated some of the
+descriptions/subjects to read a little better.
+
+-- 
+Jens Axboe
 
