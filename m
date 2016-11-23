@@ -1,47 +1,55 @@
-From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Subject: Re: [PATCH] lpfc: fix oops/BUG in lpfc_sli_ringtxcmpl_put()
-Date: Wed, 23 Nov 2016 10:41:54 -0200
-Message-ID: <c8516a1c-4a95-5e89-ad3a-84eb88272e19@linux.vnet.ibm.com>
-References: <1479904399-19496-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH v2] [hv] storvsc: Payload buffer incorrectly sized for 32 bit
+ kernels.
+Date: Wed, 23 Nov 2016 08:46:33 -0500
+Message-ID: <1479908793-19872-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:53910 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S935601AbcKWMnJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Nov 2016 07:43:09 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uANCdI7W055709
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 07:42:11 -0500
-Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 26w81evp64-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 07:42:11 -0500
-Received: from localhost
-        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
-        Wed, 23 Nov 2016 10:42:08 -0200
-In-Reply-To: <1479904399-19496-1-git-send-email-mauricfo@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@broadcom.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Harsha Thyagaraja <hathyaga@in.ibm.com>
 
-Due credit; an oversight.
+On a 32 bit kernel sizeof(void *) is not 64 bits as hv_mpb_array
+requires. Also the buffer needs to be cleared or the upper bytes
+will contain junk.
 
-On 11/23/2016 10:33 AM, Mauricio Faria de Oliveira wrote:
+Suggested-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+Signed-off-by: Cathy Avery <cavery@redhat.com>
 
-Reported-by: Harsha Thyagaraja <hathyaga@in.ibm.com>
+ChangeLog:
 
-> Cc: stable@vger.kernel.org # v4.8
-> Fixes: 22466da5b4b7 ("lpfc: Fix possible NULL pointer dereference")
-> Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+v1) Initial submission
+v2) Remove memset and replace kmalloc with kzalloc.
+---
+ drivers/scsi/storvsc_drv.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 8ccfc9e..05526b7 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1495,9 +1495,9 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 	if (sg_count) {
+ 		if (sg_count > MAX_PAGE_BUFFER_COUNT) {
+ 
+-			payload_sz = (sg_count * sizeof(void *) +
++			payload_sz = (sg_count * sizeof(u64) +
+ 				      sizeof(struct vmbus_packet_mpb_array));
+-			payload = kmalloc(payload_sz, GFP_ATOMIC);
++			payload = kzalloc(payload_sz, GFP_ATOMIC);
+ 			if (!payload)
+ 				return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
 -- 
-Mauricio Faria de Oliveira
-IBM Linux Technology Center
-
+2.5.0
