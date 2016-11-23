@@ -1,48 +1,94 @@
-From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: [PATCH 2/2] SRP transport, scsi-mq: Wait for .queue_rq() if necessary
-Date: Tue, 22 Nov 2016 16:17:50 -0800
-Message-ID: <7c9a22c1-9940-7a8d-a479-c8cc5d274c60@sandisk.com>
-References: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com>
+From: wangyijing <wangyijing@huawei.com>
+Subject: Re: [RFC PATCH] scsi: libsas: fix WARN on device removal
+Date: Wed, 23 Nov 2016 09:07:32 +0800
+Message-ID: <5834EBD4.5010104@huawei.com>
+References: <1478185120-5509-1-git-send-email-john.garry@huawei.com>
+ <be84afd4-640d-1913-404a-505fd72c1324@huawei.com>
+ <b800ae5c-f275-728c-27b4-230663757781@huawei.com>
+ <CAPcyv4g+XzCuHsUvqeE+r8hqgPK3yq=E9k23a89XcLs96bkphg@mail.gmail.com>
+ <CAPcyv4hvuFLhS2sYXkccXMTSh-ggxo7uHN2Qt6i5g8GkyBksrw@mail.gmail.com>
+ <9870e7bc-a472-1913-1930-ac022e8ad5e8@huawei.com>
+ <58257D52.6090507@huawei.com>
+ <93ae84f6-75a2-f576-808e-f98c6256b6a6@huawei.com>
+ <58258631.1090203@huawei.com>
+ <9bdd2ca5-aa72-6a18-b66d-8e791e4852c7@huawei.com>
+ <CAPcyv4g7_kDAZNZ2ikBRgFsX-hFpcXEV2xg9YS0Ha7PjSBkzVQ@mail.gmail.com>
+ <ca8ce351-ae6c-6878-4cd7-af7af11122ad@huawei.com>
+ <CAPcyv4gO2oHg2FjVu89cmy7E7+9QPm4AVF_zSy04C3QXiM0UPw@mail.gmail.com>
+ <7d4e4aa5-0d15-ca8c-243f-24c60e1378ed@huawei.com>
+ <CAPcyv4jtK4A0mKnBxuurncy8YSLPBC6_nEcanzF3v38TJya8mw@mail.gmail.com>
+ <96fb83c2-ef02-181c-b27d-bb4c3dbc8194@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <39d8cb23-0406-e8c3-6e3a-a467ebe41470-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga04-in.huawei.com ([119.145.14.52]:22649 "EHLO
+        szxga04-in.huawei.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1752353AbcKWBLX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 20:11:23 -0500
+In-Reply-To: <96fb83c2-ef02-181c-b27d-bb4c3dbc8194@huawei.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, Dan Williams <dan.j.williams@intel.com>
+Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxarm@huawei.com, lindar_liu@usish.com, Tejun Heo <tj@kernel.org>, Jinpu Wang <jinpu.wang@profitbricks.com>
 
-Ensure that if scsi-mq is enabled that scsi_internal_device_block()
-waits until ongoing shost->hostt->queuecommand() calls have finished.
+>>
+>> The events are not lost.
+> 
+> In sas_queue_event(), if there is a particular event pending for a port/PHY, we cannot queue further same event types for that port/PHY. I think my colleagues found issue where we try to enqueue multiple complementary events.
 
-Signed-off-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Reviewed-by: Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>
-Reviewed-by: Martin K. Petersen <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Cc: James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
----
- drivers/scsi/scsi_lib.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Yes， we found this issue in our local tests.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 84c9e61..11d082d 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2872,7 +2872,7 @@ scsi_internal_device_block(struct scsi_device *sdev)
- 	 * request queue. 
- 	 */
- 	if (q->mq_ops) {
--		blk_mq_stop_hw_queues(q);
-+		blk_mq_quiesce_queue(q);
- 	} else {
- 		spin_lock_irqsave(q->queue_lock, flags);
- 		blk_stop_queue(q);
--- 
-2.10.2
+> 
+>> The new problem this patch introduces is
+>> delaying sas port deletion where it was previously immediate.  So now
+>> we can get into a situation where the port has gone down and can start
+>> processing a port up event before the previous deletion work has run.
+>>
+>>>>
+>>>>> And it's a very noisy warning, as in 6K lines on the console when an
+>>>>> expander is unplugged.
+>>>>
+>>>>
+>>>> Does something like this modulate the failure?
+>>
+>> I'm curious if we simply need to fix the double deletion of the
+>> sas_port bsg queue, could you try the changes below?
+>>
+> 
+> No, I just tested it on a root port and we get the same WARN.
+> 
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_transport_sas.c
+>>>> b/drivers/scsi/scsi_transport_sas.c            index
+>>>> 60b651bfaa01..11401e5c88ba 100644
+>>>>                  --- a/drivers/scsi/scsi_transport_sas.c
+>>>> +++ b/drivers/scsi/scsi_transport_sas.c
+>>>> @@ -262,9 +262,10 @@ static void sas_bsg_remove(struct Scsi_Host
+>>>> *shost, struct sas_rphy *rphy
+>>>>  {
+>>>>         struct request_queue *q;
+>>>>
+>>>> -       if (rphy)
+>>>> +       if (rphy) {
+>>>>                 q = rphy->q;
+>>>> -       else
+>>>> +               rphy->q = NULL;
+>>>> +       } else
+>>>>                 q = to_sas_host_attrs(shost)->q;
+>>>>
+>>>>         if (!q)
+>>>>
+>>>> .
+>>>>
+>>>
+>>>
+>>
+>> .
+>>
+> 
+> 
+> 
+> .
+> 
 
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
