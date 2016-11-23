@@ -1,41 +1,25 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] hpsa: fix uninitialized variable
-Date: Wed, 23 Nov 2016 08:20:37 +0100
-Message-ID: <c5642905-7e06-318b-b97a-3df26760a79e@suse.de>
-References: <1479827138-2211-1-git-send-email-hare@suse.de>
- <yq1vavfw52u.fsf@sermon.lab.mkp.net>
+From: Zhangfei Gao <zhangfei.gao@gmail.com>
+Subject: Re: [PATCH 05/11] hisi_sas: replace WARN_ON() with dev_warn() for
+ internal abort
+Date: Wed, 23 Nov 2016 16:57:34 +0800
+Message-ID: <CAMj5Bki25eYbxLsLMmCam0WYaWG1D_ZuM2xEWvtgWA4ocfRnZw@mail.gmail.com>
+References: <1478522920-108145-1-git-send-email-john.garry@huawei.com> <1478522920-108145-6-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49175 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932707AbcKWHVE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Nov 2016 02:21:04 -0500
-In-Reply-To: <yq1vavfw52u.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1478522920-108145-6-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, John Garry <john.garry2@mail.dcu.ie>, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>
 
-On 11/22/2016 10:57 PM, Martin K. Petersen wrote:
->>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
-> 
-> Hannes> With the recent patch to hpsa this warning is issued:
-> Hannes> drivers/scsi/hpsa.c: In function 'hpsa_slave_alloc':
-> Hannes> drivers/scsi/hpsa.c:2033:5: error: 'sd' may be used
-> Hannes> uninitialized in this function [-Werror=maybe-uninitialized]
-> 
-> I amended your original patch.
-> 
-Ta.
+On Mon, Nov 7, 2016 at 8:48 PM, John Garry <john.garry@huawei.com> wrote:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
+>
+> Replace WARN_ON() with dev_warn() print when internal abort fails.
+>
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Zhangfei Gao <zhangfei.gao@linaro.org>
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Sorry, miss this one.
