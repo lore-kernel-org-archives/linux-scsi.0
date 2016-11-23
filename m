@@ -1,37 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v4] ufs: introduce UFSHCD_QUIRK_PRDT_BYTE_GRAN quirk
-Date: Tue, 22 Nov 2016 16:45:06 -0500
-Message-ID: <yq1zikrw5nh.fsf@sermon.lab.mkp.net>
-References: <01b501d24497$66a81e50$33f85af0$@samsung.com>
+From: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
+Subject: [PATCH 0/2] SRP transport, scsi-mq: Wait for .queue_rq() if necessary
+Date: Tue, 22 Nov 2016 16:16:06 -0800
+Message-ID: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1050.oracle.com ([156.151.31.82]:19029 "EHLO
-        userp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932559AbcKVWmG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 22 Nov 2016 17:42:06 -0500
-Received: from userp1040.oracle.com (userp1040.oracle.com [156.151.31.81])
-        by userp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id uAMLkF5p025812
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Nov 2016 21:46:15 GMT
-In-Reply-To: <01b501d24497$66a81e50$33f85af0$@samsung.com> (Kiwoong Kim's
-        message of "Tue, 22 Nov 2016 17:06:59 +0900")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: James Bottomley <jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>, "Martin K. Petersen" <martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, Max Gurtovoy <maxg-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Kiwoong Kim <kwmad.kim@samsung.com>
-Cc: linux-scsi@vger.kernel.org, cpgs@samsung.com, HeonGwang Chu <hg.chu@samsung.com>
 
->>>>> "Kiwoong" == Kiwoong Kim <kwmad.kim@samsung.com> writes:
+Hello James and Martin,
 
-Hi Kiwoong,
+The SRP transport code must wait until ongoing .queuecommand() / 
+.queue_rq() callback function invocations have finished before 
+reconnecting at the transport layer level and also before invoking 
+.terminate_rport_io(). This is already the case for the single queue 
+path but not yet for the scsi-mq path. This patch series realizes the 
+proper serialization for the scsi-mq path. Compared to last time these 
+patches were posted, only the patch descriptions and one comment have 
+been changed.
 
-Kiwoong> Some UFS host controllers may think granularities of PRDT
-Kiwoong> length and offset as bytes, not double words.
+See also "[PATCH v5 0/14] Fix race conditions related to stopping block 
+layer queues" 
+(https://www.mail-archive.com/linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org/msg01830.html) 
+for a previous post of these patches.
 
-Your patch still didn't apply cleanly to 4.10/scsi-queue. I did it by
-hand. Please verify.
-
-Thanks!
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Bart.
+--
+To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
