@@ -1,44 +1,66 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH] [hv] storvsc: Payload buffer incorrectly sized for 32
- bit kernels.
-Date: Wed, 23 Nov 2016 10:56:24 +0800
-Message-ID: <201611231035.GigM5iAx%fengguang.wu@intel.com>
-References: <1479836185-6741-1-git-send-email-cavery@redhat.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
+Date: Wed, 23 Nov 2016 06:09:59 +0000
+Message-ID: <bug-179341-11613-O6nLjl1Gsv@https.bugzilla.kernel.org/>
+References: <bug-179341-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <1479836185-6741-1-git-send-email-cavery@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, kbuild-all@01.org, devel@linuxdriverproject.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:42504 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750945AbcKWGKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Nov 2016 01:10:09 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 22A5220173
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 06:10:02 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id D9E2A20374
+        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 06:09:59 +0000 (UTC)
+In-Reply-To: <bug-179341-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Cathy,
+https://bugzilla.kernel.org/show_bug.cgi?id=179341
 
-[auto build test WARNING on scsi/for-next]
-[also build test WARNING on v4.9-rc6 next-20161122]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+--- Comment #8 from Chaitra P B <chaitra.basappa@broadcom.com> ---
+(In reply to Badalyan Vyacheslav from comment #7)
+> Help is needed. How to get a log FW? 
+> 
+> This is "SAS 9300-16i Host Bus Adapter" and not have any HW RAID. 
+> 
+> [root@nas sas3ircu_linux_x64_rel]# ./sas3ircu 0 LOGIR
+> Avago Technologies SAS3 IR Configuration Utility.
+> Version 14.00.00.00 (2016.07.21)
+> Copyright (c) 2009-2016 Avago Technologies. All rights reserved.
+> 
+> SAS3IRCU: The LOGIR command is not supported by the firmware currently
+> loaded on controller 0.
+> 
+> [root@nas sas3ircu_linux_x64_rel]# ./sas3ircu list
+> Avago Technologies SAS3 IR Configuration Utility.
+> Version 14.00.00.00 (2016.07.21)
+> Copyright (c) 2009-2016 Avago Technologies. All rights reserved.
+> 
+> 
+>          Adapter      Vendor  Device                       SubSys  SubSys
+>  Index    Type          ID      ID    Pci Address          Ven ID  Dev ID
+>  -----  ------------  ------  ------  -----------------    ------  ------
+>    0     SAS3008       1000h   97h    00h:0ah:00h:00h      1000h   3130h
+> 
+>          Adapter      Vendor  Device                       SubSys  SubSys
+>  Index    Type          ID      ID    Pci Address          Ven ID  Dev ID
+>  -----  ------------  ------  ------  -----------------    ------  ------
+>    1     SAS3008       1000h   97h    00h:08h:00h:00h      1000h   3130h
+> SAS3IRCU: Utility Completed Successfully.
 
-url:    https://github.com/0day-ci/linux/commits/Cathy-Avery/storvsc-Payload-buffer-incorrectly-sized-for-32-bit-kernels/20161123-091420
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+Badalyan,
 
+Connect UART to controller, then open Teraterm window & use below commands: 
+"iop show diag" -> outputs ring buffer and trace buffer.
+"pl dbg" -> outputs other debug info.
 
-coccinelle warnings: (new ones prefixed by >>)
-
->> drivers/scsi/storvsc_drv.c:1500:13-20: WARNING: kzalloc should be used for payload, instead of kmalloc/memset
-
-Please review and possibly fold the followup patch.
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+-- 
+You are receiving this mail because:
+You are watching someone on the CC list of the bug.
