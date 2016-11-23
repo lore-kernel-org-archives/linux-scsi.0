@@ -1,141 +1,88 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: SG does not ignore dxferp (direct io + mmap)
-Date: Wed, 23 Nov 2016 15:22:04 -0500
-Message-ID: <1479932524.28416.43.camel@localhost.localdomain>
-References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
-         <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
-         <1479738275.19792.24.camel@localhost.localdomain>
-         <1ca8515f-abd2-7428-8baa-dca879833be3@interlog.com>
-         <1479752642.19792.43.camel@localhost.localdomain>
-         <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
-         <1479839407.28416.21.camel@localhost.localdomain>
-         <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
-         <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
-Reply-To: emilne@redhat.com
+From: Tushar Dave <tushar.n.dave@oracle.com>
+Subject: [PATCH] qlogicpti: Fix compiler warnings
+Date: Wed, 23 Nov 2016 13:29:57 -0800
+Message-ID: <1479936597-29061-1-git-send-email-tushar.n.dave@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56770 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S933402AbcKWUWG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Nov 2016 15:22:06 -0500
-In-Reply-To: <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+Sender: sparclinux-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, thomas.tai@oracle.com, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: Eyal Ben David <bdeyal@gmail.com>, Johannes Thumshirn <jthumshirn@suse.de>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Wed, 2016-11-23 at 13:55 -0500, Laurence Oberman wrote:
-> 
-> ----- Original Message -----
-> > From: "Eyal Ben David" <bdeyal@gmail.com>
-> > To: "Ewan D. Milne" <emilne@redhat.com>
-> > Cc: "Johannes Thumshirn" <jthumshirn@suse.de>, dgilbert@interlog.com, "Laurence Oberman" <loberman@redhat.com>,
-> > linux-scsi@vger.kernel.org
-> > Sent: Tuesday, November 22, 2016 3:55:44 PM
-> > Subject: Re: SG does not ignore dxferp (direct io + mmap)
-> > 
-> > On Tue, Nov 22, 2016 at 8:30 PM, Ewan D. Milne <emilne@redhat.com> wrote:
-> > >
-> > > I see the behavior (zero byte) on the 4.4.34, 4.5.7, 4.6.7, and 4.7.10
-> > > -stable kernels.  But not (of course) on 4.8.10 -stable.
-> > >
-> > > It doesn't look like the sg driver, might be something in the mmap code?
-> > 
-> > 
-> > A kernel guy colleague suggested to look at copy_from_user / copy_to_user
-> > code.
-> > It was changed in 4.8
-> > 
-> > It was OK with 3.13  (Ubuntu 14.04) but from some kernel (prior or equal to
-> > 4.4)
-> > until 4.7 we see the bug. It was somehow fixed at 4.8.
-> > 
-> > In order to fully understand what happened, there are two changes to find.
-> > They might not even be related.
-> > 
-> > Thanks!
-> > Eyal
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> > 
-> 
-> So 4.7.9 fails and 4.8.0 works and 4.8.0 is a rebase so we have 
-> 
-> [loberman@localhost linux-stable-4.8.10]$ git log --oneline v4.7.9..v4.8 | wc -l
-> 14552
-> 
-> No obvious single commits stand out for me for copy_from* or copy_to*
-> There is this:
-> 
-> 3fa6c50 mm: optimize copy_page_to/from_iter_iovec
-> 6e05050 sh: fix copy_from_user()
-> e697100 x86/uaccess: force copy_*_user() to be inlined
-> 
-> I will have to do this the hard way with bisects to figure out which commit addresses this.
-> 
-> Back when I have had enough time to do it.
-> 
-> Thanks
-> Laurence
+qlogicpti uses '__u32' for dma handle while invoking kernel DMA APIs,
+instead of using dma_addr_t. This hasn't caused any 'incompatible
+pointer type' warning on SPARC because until now dma_addr_t is of
+type u32. However, recent changes in SPARC ATU (iommu) enabled 64bit
+DMA and therefore dma_addr_t became of type u64. This makes
+'incompatible pointer type' warnings inevitable.
 
-Yes, in fact...
+e.g.
+drivers/scsi/qlogicpti.c: In function ‘qpti_map_queues’:
+drivers/scsi/qlogicpti.c:813: warning: passing argument 3 of ‘dma_alloc_coherent’ from incompatible pointer type
+./include/linux/dma-mapping.h:445: note: expected ‘dma_addr_t *’ but argument is of type ‘__u32 *’
+drivers/scsi/qlogicpti.c:822: warning: passing argument 3 of ‘dma_alloc_coherent’ from incompatible pointer type
+./include/linux/dma-mapping.h:445: note: expected ‘dma_addr_t *’ but argument is of type ‘__u32 *’
 
-Bisecting between 4.7 and 4.8 to see where the behavior changes so that
-the zero byte no longer appears leads to this commit:
+This patch resolves above compiler warnings.
 
+Signed-off-by: Tushar Dave <tushar.n.dave@oracle.com>
+Reviewed-by: thomas tai <thomas.tai@oracle.com>
 ---
-Bisecting: 0 revisions left to test after this (roughly 0 steps)
-[3fa6c507319c897598512da91c010a4ad2ed682c] mm: optimize copy_page_to/from_iter_iovec
----
+ drivers/scsi/qlogicpti.c | 10 ++++++----
+ drivers/scsi/qlogicpti.h |  4 ++--
+ 2 files changed, 8 insertions(+), 6 deletions(-)
 
-commit 3fa6c507319c897598512da91c010a4ad2ed682c
-Author: Mikulas Patocka <mpatocka@redhat.com>
-Date:   Thu Jul 28 15:48:50 2016 -0700
-
-    mm: optimize copy_page_to/from_iter_iovec
-    
-    copy_page_to_iter_iovec() and copy_page_from_iter_iovec() copy some data
-    to userspace or from userspace.  These functions have a fast path where
-    they map a page using kmap_atomic and a slow path where they use kmap.
-    
-    kmap is slower than kmap_atomic, so the fast path is preferred.
-    
-    However, on kernels without highmem support, kmap just calls
-    page_address, so there is no need to avoid kmap.  On kernels without
-    highmem support, the fast path just increases code size (and cache
-    footprint) and it doesn't improve copy performance in any way.
-    
-    This patch enables the fast path only if CONFIG_HIGHMEM is defined.
-    
-    Code size reduced by this patch:
-      x86 (without highmem)       928
-      x86-64              960
-      sparc64             848
-      alpha                      1136
-      pa-risc            1200
-    
-    [akpm@linux-foundation.org: use IS_ENABLED(), per Andi]
-    Link: http://lkml.kernel.org/r/alpine.LRH.2.02.1607221711410.4818@file01.intranet.prod.int.rdu2.redhat.com
-    Signed-off-by: Mikulas Patocka <mpatocka@redhat.com>
-    Cc: Hugh Dickins <hughd@google.com>
-    Cc: Michal Hocko <mhocko@kernel.org>
-    Cc: Alexander Viro <viro@zeniv.linux.org.uk>
-    Cc: Mel Gorman <mgorman@suse.de>
-    Cc: Johannes Weiner <hannes@cmpxchg.org>
-    Cc: Andi Kleen <andi@firstfloor.org>
-    Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-    Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-
----
-
-In other words, this commit made the bad behavior go away in 4.8.
-Need to look at this in more detail, it doesn't appear as if this patch
-was intended to fix such a problem.
-
--Ewan
-
+diff --git a/drivers/scsi/qlogicpti.c b/drivers/scsi/qlogicpti.c
+index 69bfc0a..e25ad8c 100644
+--- a/drivers/scsi/qlogicpti.c
++++ b/drivers/scsi/qlogicpti.c
+@@ -315,6 +315,8 @@ static inline void qlogicpti_set_hostdev_defaults(struct qlogicpti *qpti)
+ static int qlogicpti_reset_hardware(struct Scsi_Host *host)
+ {
+ 	struct qlogicpti *qpti = (struct qlogicpti *) host->hostdata;
++	__u32 qres_dvma = (__u32)qpti->res_dvma;
++	__u32 qreq_dvma = (__u32)qpti->req_dvma;
+ 	u_short param[6];
+ 	unsigned short risc_code_addr;
+ 	int loop_count, i;
+@@ -391,8 +393,8 @@ static int qlogicpti_reset_hardware(struct Scsi_Host *host)
+ 
+ 	param[0] = MBOX_INIT_RES_QUEUE;
+ 	param[1] = RES_QUEUE_LEN + 1;
+-	param[2] = (u_short) (qpti->res_dvma >> 16);
+-	param[3] = (u_short) (qpti->res_dvma & 0xffff);
++	param[2] = (u_short)(qres_dvma >> 16);
++	param[3] = (u_short)(qres_dvma & 0xffff);
+ 	param[4] = param[5] = 0;
+ 	if (qlogicpti_mbox_command(qpti, param, 1)) {
+ 		printk(KERN_EMERG "qlogicpti%d: Cannot init response queue.\n",
+@@ -403,8 +405,8 @@ static int qlogicpti_reset_hardware(struct Scsi_Host *host)
+ 
+ 	param[0] = MBOX_INIT_REQ_QUEUE;
+ 	param[1] = QLOGICPTI_REQ_QUEUE_LEN + 1;
+-	param[2] = (u_short) (qpti->req_dvma >> 16);
+-	param[3] = (u_short) (qpti->req_dvma & 0xffff);
++	param[2] = (u_short)(qreq_dvma >> 16);
++	param[3] = (u_short)(qreq_dvma & 0xffff);
+ 	param[4] = param[5] = 0;
+ 	if (qlogicpti_mbox_command(qpti, param, 1)) {
+ 		printk(KERN_EMERG "qlogicpti%d: Cannot init request queue.\n",
+diff --git a/drivers/scsi/qlogicpti.h b/drivers/scsi/qlogicpti.h
+index 4377e87..892a0b0 100644
+--- a/drivers/scsi/qlogicpti.h
++++ b/drivers/scsi/qlogicpti.h
+@@ -356,8 +356,8 @@ struct qlogicpti {
+ 
+ 	/* The rest of the elements are unimportant for performance. */
+ 	struct qlogicpti         *next;
+-	__u32                     res_dvma;             /* Ptr to RESPONSE bufs (DVMA)*/
+-	__u32                     req_dvma;             /* Ptr to REQUEST bufs (DVMA) */
++	dma_addr_t                res_dvma;             /* Ptr to RESPONSE bufs (DVMA)*/
++	dma_addr_t                req_dvma;             /* Ptr to REQUEST bufs (DVMA) */
+ 	u_char	                  fware_majrev, fware_minrev, fware_micrev;
+ 	struct Scsi_Host         *qhost;
+ 	int                       qpti_id;
+-- 
+1.9.1
 
