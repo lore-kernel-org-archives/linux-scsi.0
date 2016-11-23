@@ -1,66 +1,41 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 179341] mpt3sas: LSISAS3008 don't see Intel 540s SSD
-Date: Wed, 23 Nov 2016 06:09:59 +0000
-Message-ID: <bug-179341-11613-O6nLjl1Gsv@https.bugzilla.kernel.org/>
-References: <bug-179341-11613@https.bugzilla.kernel.org/>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] hpsa: fix uninitialized variable
+Date: Wed, 23 Nov 2016 08:20:37 +0100
+Message-ID: <c5642905-7e06-318b-b97a-3df26760a79e@suse.de>
+References: <1479827138-2211-1-git-send-email-hare@suse.de>
+ <yq1vavfw52u.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:42504 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:49175 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750945AbcKWGKJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 23 Nov 2016 01:10:09 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 22A5220173
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 06:10:02 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id D9E2A20374
-        for <linux-scsi@vger.kernel.org>; Wed, 23 Nov 2016 06:09:59 +0000 (UTC)
-In-Reply-To: <bug-179341-11613@https.bugzilla.kernel.org/>
+        id S932707AbcKWHVE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 23 Nov 2016 02:21:04 -0500
+In-Reply-To: <yq1vavfw52u.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Arnd Bergmann <arnd@arndb.de>, Hannes Reinecke <hare@suse.com>
 
-https://bugzilla.kernel.org/show_bug.cgi?id=179341
+On 11/22/2016 10:57 PM, Martin K. Petersen wrote:
+>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+> 
+> Hannes> With the recent patch to hpsa this warning is issued:
+> Hannes> drivers/scsi/hpsa.c: In function 'hpsa_slave_alloc':
+> Hannes> drivers/scsi/hpsa.c:2033:5: error: 'sd' may be used
+> Hannes> uninitialized in this function [-Werror=maybe-uninitialized]
+> 
+> I amended your original patch.
+> 
+Ta.
 
---- Comment #8 from Chaitra P B <chaitra.basappa@broadcom.com> ---
-(In reply to Badalyan Vyacheslav from comment #7)
-> Help is needed. How to get a log FW? 
-> 
-> This is "SAS 9300-16i Host Bus Adapter" and not have any HW RAID. 
-> 
-> [root@nas sas3ircu_linux_x64_rel]# ./sas3ircu 0 LOGIR
-> Avago Technologies SAS3 IR Configuration Utility.
-> Version 14.00.00.00 (2016.07.21)
-> Copyright (c) 2009-2016 Avago Technologies. All rights reserved.
-> 
-> SAS3IRCU: The LOGIR command is not supported by the firmware currently
-> loaded on controller 0.
-> 
-> [root@nas sas3ircu_linux_x64_rel]# ./sas3ircu list
-> Avago Technologies SAS3 IR Configuration Utility.
-> Version 14.00.00.00 (2016.07.21)
-> Copyright (c) 2009-2016 Avago Technologies. All rights reserved.
-> 
-> 
->          Adapter      Vendor  Device                       SubSys  SubSys
->  Index    Type          ID      ID    Pci Address          Ven ID  Dev ID
->  -----  ------------  ------  ------  -----------------    ------  ------
->    0     SAS3008       1000h   97h    00h:0ah:00h:00h      1000h   3130h
-> 
->          Adapter      Vendor  Device                       SubSys  SubSys
->  Index    Type          ID      ID    Pci Address          Ven ID  Dev ID
->  -----  ------------  ------  ------  -----------------    ------  ------
->    1     SAS3008       1000h   97h    00h:08h:00h:00h      1000h   3130h
-> SAS3IRCU: Utility Completed Successfully.
+Cheers,
 
-Badalyan,
-
-Connect UART to controller, then open Teraterm window & use below commands: 
-"iop show diag" -> outputs ring buffer and trace buffer.
-"pl dbg" -> outputs other debug info.
-
+Hannes
 -- 
-You are receiving this mail because:
-You are watching someone on the CC list of the bug.
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
