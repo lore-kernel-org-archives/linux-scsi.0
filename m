@@ -1,99 +1,34 @@
-From: <junplzen@cmkos.cz>
-Subject: 24814 linux-scsi
-Date: Thu, 24 Nov 2016 21:50:25 -0000
-Message-ID: <148002422539.7497.10819730891579549827@neobee.net>
+From: "Mr. Piyush Gupta" <dsbbank@zoho.com>
+Subject: GOOD DAY FRIEND
+Date: Thu, 24 Nov 2016 11:50:08 -0500
+Message-ID: <70c3f100af2548a27a52fbece528eac6__48147.1548941501$1480037345$gmane$org@localhost>
+Reply-To: infopiyush@gmail.com
 Mime-Version: 1.0
-Content-Type: application/zip; name="INFO_06506918_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from IP-212-69-7-10.neobee.net ([212.69.7.10]:58847 "HELO neobee.net"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S965905AbcKXVua (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 24 Nov 2016 16:50:30 -0500
-Content-Disposition: attachment
+Received: from 130-182-172-163.rev.cloud.scaleway.com ([163.172.182.130]:35858
+        "EHLO mail.dealer.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750857AbcKYB2q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 24 Nov 2016 20:28:46 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-UEsDBBQAAgAIAOEceUmFCwqHZBEAAGYRAAASABwATU9ORVlfOTQ0Nl9aSVAuemlwVVQJAAP1XTdY
-9V03WHV4CwABBAAAAAAEAAAAAHWYVVQUDNeFyQGkW1JpUJTuRjqHlBh6kBqGbgFHShqGHIaUEhGQ
-FoYQULqEkVapoaUGUIb63vf/7r61/r3W3vuci3N3rh6gPiERAx4BHineGnuYbvaWR3kbDR7eQ208
-PEo8djxDYyNNawc5SUnpp54BFuZkeITndjJW/zoolBwPnwjvH/1f/AbpNrC30yov9zqXJvMuhObm
-aAQLk8LyhuUW/GhYMmHMHOEOi+TIbsDlEcKp+7kDM1KiB+NolTDYZZ301bnOgVGKGFfx+qWRkY+R
-8VFnWwQOt7F7bU9HMhscdeRVF5Pzcwk+QpTXENQpVWeN2ry2u+qOuPqWgOq03gCLbR9JjrwMV5DO
-FFraWqQvyjeRqb4JKSlULgsqUYkw2qytGzZfbpE32UuWSLwSsL3YnJ3Nwp0CLzGLIM4RDO1xebfi
-OKbRnhODESt+wC8C2NrxS63SwfJaeIF3lx8wXH+M/Q33bKvQq7JRNOVjylZW+cp0lJiu0fR9/tqb
-O9Oes9PJM/eTUfHBfaUxTLGOMP0d1LUTcePHgtUe9YcMElISswYvDopnVQo35CZC/VP9pt7rSx9c
-Pg5uZ9SPU97960MH+3G9uwszgkZb5fnvCsXGPhxPumPHrF/MhnyD/SV9nUdS4SpTbzrHQFfmCmIm
-Ec+IHGKzeZqOcLCOYgz4jiDMRJtOXY4hlRKGOW0rLvNkY9YFz8rgNknPCzZLThts7d3B/AFX44dU
-gRLsLx67Nq06akUFIP/qB4/5pHOzeb7wdjZ6gZpwfaFuyXpucvTsoNx5+YgtbCe3H3Uu6K58Vti7
-vOHO+jgWPRomettMZaVtIDLh1DQeIpQlw7toY2P69rpTdlHJ3JIWZc1qzfcDOMwQfe8mjatt/eDZ
-LsJ5N2K0PNDWQ4v4LqkCbQDp9A3PPME6Cm3GW1BcPycvAd1vblSM7K4OCMaR/GJnsvuYunnpREvm
-I+g26Knf1STN0hj02s01rw5trfkmkL3CReqppsctZGRAqZJFsfcmh7MioNFnUBYjmnfx3CWH1x75
-uUKtoKup9tW5f9YhoXarba+j3UdUyZB2pxpHK4KqU8X6fdWmKOPYOzcHjNWoKUfbZuakfKv+dT8d
-TJ9b19aCe4OtUvsjuZTlaBDPlLoK3WFB0Mjge+sc3ArcJ+zxWn+hdfB6IjWlz9LzyNESq5GzC6Tu
-F1Pg2rvTE32U6tdBCR5p3hm5uA6KZmqqTdiKJfMsK2afBiDyZOTNij+1wnipb677kwmBtQ1I5TCB
-Jco9dTkKNKeywCj+07bP9slmhGw7r1Q6OCngBZp635lAXrF7xEH6Y6dF04L+Nlr8Kx9Qn+a5iCOk
-KrMQYsocvPIdy4MQJiU3PTfF+vOhgMeZceKKJ0K8Y+JQQ7EhtbNSRBH393DzI8tRJGQ6CkIZ9Bjx
-m0/bOT/3wxl2Tqvh45QmVPfPTAb70Q4Rx9cUGbPSeAsW585N7Ljscatpd9lr4R5ln/JcivgZ268O
-EPAx/rOxDT2jC2uzpOd6Ljt1fsAqTZhfRjH85TulfQltEmMfpRDJMfqvxdx8NYtDu4VynwI92TGg
-gJQBH5zhoYzvDDjcoA8mSlz/OSuEiT1M8oy7Zd8oU7GkTvZQMVaCNB8eaUFFKjbAf750GmYp3ftQ
-6FDE1+/7ePWh4OgXBW5ET/T21PPSiuabNrEZPzM4rHRGEVw01DUxcnZv3tv+gwbsjnEk3O3wGjH4
-qLWcEcMSeVxXfYFI2eyPUlDnp12c0gcnEZLEfOaNknOdebY9073wCypmb3pqgWuXimWnY59/Q2wJ
-LismuneVLkQ7mVEh8PK07IMTU1rNVMHGycSxHBcDJIeJQXfgY23xvtOdtIlpQtPqYOPrNXOO2RM6
-e5vqLkpzwBtRRoKws+tzE66DIdo7/ryRRdBoUnU7RMoyXiB9ygoT/EExfoYSyFxvfPktK66JtYX3
-LfxX4WqHzuyHjMcHUtAEl7X1T6/QWZPGycK7c97Y2vCxzNBvpkK12c+8ji+3ExyeM0p89LAHjYBi
-Jsf2BuV8f7wTfWTdlS4+bmnunHb7BBjMqpvD52czqK7RKCSbxJVZT0gOt4BD3rl/a7i2HRbyF/TQ
-2LzM7PsZWfLXmw2jNunAWfnwRNVbDTZnZj5wmE3hayIoESN/mefAXnf2BHZm3QoOz0xT+Kad03qv
-jsxEXbzYdhGdeQYijHXwOP4lfXuvJwPqbDnO1Qfj6tWovD7YbSdxFs03rUpHqX8RP//e++CWQ+fL
-h9YlMfLRPv0wOEvz3c+YNXdV1WaDKlPLene4h4Kw9FjwU/CFVx0hIxwBDCxcq46vnvL5sq+Bo1DS
-HfqLC0QbSYSuylkZFskhklwJ+h5G5l7NNiS6FujGraz1WErzd+3a19AUgtGfc/kFAqqIGnq3wEUu
-A4txRjhWAp3jUNuXjUS39AphKt8vHgaGYwenqIWM+SwU49gsLngMxdDhR3J8oAvScWnTL5ahfH1M
-F3liL0+pel5GyfN/a4RfrPT7F/L2wwufbcmfrC7yfRxNAno7RtBzE8A6yFRlfrBvMDjRJ7XCQPmE
-8fwVTtpGrHGdr/HSek4ZRM1lTazi9A2iGEmRyd4Q9PsZR+5VR3Xl/PJSfbBRHJ0CacfkVIyQUHPm
-e3ToAv7gMAM5dUU9imQs8iH6wtAkDasXd3YwQjbcQrKrzcTHLGrTTzNKFPAWQIC5l1htJY36521D
-Qf2vRR3F9bY+GTy4cubaEwpLYh1GKkK07zVTcGb3ep/z2NFLvrBwKWrA6bfAWRdfLHy8gmZU3iwI
-U9DxBUybb1zf+8zuf2nFXxC32UFcWoQ3Fkn6lnozoeb+aOMje/XB7OVxPGkyz5BXLYDbFH+P32c/
-5AHi8WFFVW2Q/aqbcrv4Uzx/ybI1O20iyYdrZcIpQD/20y/Oh7NiDUsc4bP6pNVB0ymUt+JmBO6e
-r8WfBqIL4olg6tyx843adoT4hb/1CHeRfgQ8Rz1py58ocBC+UZQpd/aIA0VBXfb5M5FV2t1ClJ8+
-Gel8I+HQhfszhuIUOtOKrho3Uf+0pUdeqH40DwedXEAtADuuyGP1eJLpZHeuNCOUZrH8iZvbqJrB
-nCqXs7TgPExoiTiXs9scbRusFlRmVVHtRpSupHKzvZHeKTg8/+7BVTIPfeT61ZUAx57BXru0ZVYq
-4V1/VtcfSQoZlrN7iMYpSA6mvjnR1PdZpW1g1JKCL8e5bvFIfzr3ZPFna6YHT5zEz7zQ0EU+dlWm
-7e6pRgq5svE1AfQlft+TIWlhm0IjVEcKmNGlVCj7DLjEvKLDj9Q89HHTsMOoySgdT+zhS+zQVK2Q
-IMcSJuvPvuH0OCXOwBvdTOIGBpicNlZx0SSVXHUSVAlNqXNX9qfpBLc/KKu0A0Ebq/P33vMnc1Fq
-cnGaQ4UWc6tNxK6qax4WApxlQAYkrMVgtdy9iUfdGcyW+wrJlfd0FE71eIrMJvhIUfNYWOnH04p6
-zhbaUouiLuzsW9WyFMnIK35MAXaLy6Bzx+NhO5UON9Y3kIROgwU4sXP83VhmMha3avOClLU1wsqe
-hRfm5EbkRPFuQuLTefFoDGz/N/wZNBq9ENCEM0Fu/2ZqF4kK0e91at8M5dWTN8ue6nDTG/3SxItY
-94LJ5GVJKgAtmHbqql0puK76609bLLUZKAaT5JND4wSxqw/MLVc4lHSekIOthIT+xMy3DBYInKd6
-ZN0TpAwqPAnJ27CStXhvxyOMKmVXUJA9QdHeWqZmwKNRejb6X+uLoqg/vwZuNav0XH2lfib3Q/7s
-M4GkD9PV9UlCnsw6p2YNyBkCo0gm3znVXbk53YA9wqch/cyrnOTQWI3rs1G5/u3WW7X6eBBhDHxl
-R1jDq3K34Qjt+xAj/s7hBurTGxSxbGjh/PN9LgnkgUP0n9kc2p9Ge+YwaQLXz5RvXR+pdQPkcT9k
-QqIG7MBIaHa5I6Nn2J4Ej0uUWz0DjdZ6U01hclWnDGGoZ2Ieh1CJv2HlZJaWgLUVaG/OjjHi7lXA
-5VZD0clci1Oe9CjB9tUmQFJFDwuD0rLWCmO3ikoIOCJaR7zNFgmLynyCRlKne5B9QtOcbO7yE/Dk
-NNc0re1vz9P48DKH26ffUPM/jFmKboqDTKQ1Pf/AO5u7sjz3i8Zrml68Ceaxmrm3IHKfMvADPAIt
-7KMeOZLpPi9OiYveJJasmpaR21d7h7zZqaxFWrC1njOTdFMoztgrnS9vUYCH2I66+H4rMr3poH9o
-/miD53dVtulbwU2Wx4B1BX0RucpJSIzkm8MjWC/mGTagVWARygeoogvjb6NLyeoUOe3ppqhRflHx
-hxrEHZq5l92R/fupws6iR3W8Q1vRL5Q8TOVPClAgtVZFkqCdy+Pto17tfZFXxlqCuNsG7tq/2W5Q
-iiTwCvadfrrXWPojE/Xj2I0EPpDGagsWwOJiuC1zZllwqq4W6ItDVirtNChjZ1XdIPPWtVa6ZpCj
-ZheRJXwpbbJYwR2e9VnFX+4ZnuNd2sAHrIHF35rH1nJJ7biGcwpehfRRqtgZzfBwB3g5UsXgWqsU
-4uKsLXsSA3hxelfsia+XRMWTXcb15HZ3/LDoxjIB3TFEsXXllLFzr5k1RodUCPgECW0ZM9rSJoN6
-/kCw5XloyVEa+8fYhI4rxRubJRMBaBSk3SBxZFHBfLyWsedOowK1GL58QCPYs2LIQ+Ku0AbwmAq8
-TcKcIO/BFFKkQjYsNi/YTTahE1Jm3tuFXaZ5USNFAR0pqn+ZePK+t2JoGoM3xrLrnmZClep+u2XF
-kztZMZ67UU/8vqMsj+rmaY/JVAodZmKTRPBvuDjzRrgPylLzxpgvy4PulNvNl7HqUIL3WIQqYydH
-VUftK8svPafkC2MSKR7ZnXynGdJD6HVfGDCes3wOsu7yZUv+4jaKWXKgb9Y8Fjy+J+Pl74R085XR
-xGYMUoIHr2EAdvAb33X+CsP86K5SuBlp0UXl/Ra5I3/hGC5Q0Il68aDzVPd+BeKwUOmRD9uvuzC+
-iepbucu9VBde+Z8S1sN115XHkhchYpUdYn8pHUjyNGdDEQHkPt1vdW1ccpe4dCeV+qc8bG6Qcz5Z
-qS29WvFKFJ1Dtcs/JT3ENL09tyWJSptizBJ0AeYptFrJ5gvXo6nTQP4RjqfRDwdM868LxDCHLLlT
-inmTODvCPJ7Wk/IZHdFwEHwFgDjr7vavlPkq1Y0mtCS58vJ/ir83ZnYiOSI0YLqH54ocvvbznoWi
-zTQ2fUHdmX9YxfDer52KI+CyFl/7cg5XLFZBi1Sui9qRSv2oYHpdpbQzAePFemvNECFZJ8CrtdaW
-ha35e1x5u7R/RgUwu8zyWX+yNwomO46P7a+K+im2j1aUkwrZfrIdlh+gF1ZUzdkhIq80ysKTM+0n
-augXmX9l0w/6hPNSmhFH2H1rB5mwWLH0kPP3VleSOsjdrMRqmmz0MosKrmeV2EZv36cuWM2f/uS3
-x7m3eOGO0g706bxI59VSzdUKM/HXgFtQca4dfmwzNiKCrjAE7CMWOTKlp4Gegj5Rcjlf2oP2p2p3
-O5/HF2bGN56uzDp6hRb9cE3bvF+vOHe+EKl8VCUO72UVGqNSA4X2heMBtN8bkJ2GviJvMwKk4fvu
-7aX88gBVGorCNMLuGWpo7g1GwgzlHQnpPpFq6wQ3J7MzmB9dez4YUXfJZpYovBvgsq431wWUI6kO
-4MMplRkDOShywxE/Ipk01wB66IA5/MItUwXzOdrbqeVAhO+zRpkxEa4zJfRg686CQ2eTVr4UQ/pT
-WsHs7CRHLD3XepTGEYAul5T6QXnqrBaB6XUmBbO8pulhy/doGRc18yC/zFE2TWHiAql3DSeX1Rjc
-uB38kmCr8A/TFVjnGZPPl2mNPaNS3UlD3h2n0M9gE2/+RAP18Qk4Cf8//HH/X7CBh/+PK2D/Tv8D
-Q4j/C0P+B4QA9YkB/z3DxzP7p29o/t3+A1BLAQIeAxQAAgAIAOEceUmFCwqHZBEAAGYRAAASABgA
-AAAAAAAAAACkgQAAAABNT05FWV85NDQ2X1pJUC56aXBVVAUAA/VdN1h1eAsAAQQAAAAABAAAAABQ
-SwUGAAAAAAEAAQBYAAAAsBEAAAAA
+
+
+-- 
+Dear Friend,
+
+Good Day, I am Mr. Piyush Gupta as a  (DBSHK) banker, I have funds worth 
+of $25.500,000.00 to secretly secure and transfer in to your account of 
+my late client who dead with next of kin, which i will like to invest in 
+profitable business in your country.
+
+Please if you are interested to help me without betrayed me, do and 
+write me for more details. Here is my Email: infopiyushg@gmail.com
+
+Regards,
+Mr. Piyush Gupta.
+(DBSHK)
+Hong Kong.
