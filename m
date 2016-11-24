@@ -1,64 +1,81 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 02/11] scsi: ufs: add index details to query error messages
-Date: Wed, 23 Nov 2016 16:31:18 -0800
-Message-ID: <1479947478-6976-1-git-send-email-subhashj@codeaurora.org>
+Subject: [PATCH v1 05/11] scsi: ufs: increase the scsi query response timeout
+Date: Wed, 23 Nov 2016 16:31:52 -0800
+Message-ID: <1479947512-7096-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: Yaniv Gardi <ygardi@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
+Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORAGE HOST
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Yaniv Gardi <ygardi@codeaurora.org>
+It is found thats UFS device may take longer than 30ms to respond to
+query requests and in this case we might run into following scenario:
 
-When sending query to the device, the index  of the failure
-is additional useful information that should be printed out as it
-might specify the logical unit (LU) where the error occurred.
+1. UFS host SW sends a query request to UFS device to read an attribute
+   value. SW uses tag #31 for this purpose.
+2. UFS host SW waits for 30ms to get the query response (and doorbell
+   to be cleared by UFS host HW).
+3. UFS device doesn't respond back within 30ms hence UFS host SW times
+   out waiting for the query response.
+4. UFS host SW clears the tag#31 from UTRLCLR register.
+5. UFS host SW waits until UFS host HW to clear tag#31 from the doorbell
+   register.
+6. UFS host SW retries the same query request on same tag#31 (sends a query
+   request to device to read an attribute value).
+7. UFS host HW gets the query response from the device but this was
+   intended as a query response for the 1st query request sent (step-1).
+8. Now UFS device sends another query response to host (for query request
+   sent @step-6).
 
-Signed-off-by: Yaniv Gardi <ygardi@codeaurora.org>
+Now there are 2 issues that could happen with above scenario:
+1. UFS device should have actually responded back with only one query
+   response but it is found that device may respond back with 2 query
+   responses.
+2. If UFS device responds back with 2 resposes on same tag, host HW/SW
+   behaviour isn't predictable.
+
+To avoid running into above scenario, we would basically allow device
+to take longer (upto 1.5 seconds) for query response.
+
+Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 13 +++++++------
- 1 file changed, 7 insertions(+), 6 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 13 ++-----------
+ 1 file changed, 2 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 0b278a1..9abc11e 100644
+index d6e87dc..393f6d5 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -1914,8 +1914,8 @@ static int ufshcd_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
- 	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
+@@ -59,15 +59,9 @@
+ #define NOP_OUT_TIMEOUT    30 /* msecs */
  
- 	if (err) {
--		dev_err(hba->dev, "%s: opcode 0x%.2x for idn %d failed, err = %d\n",
--				__func__, opcode, idn, err);
-+		dev_err(hba->dev, "%s: opcode 0x%.2x for idn %d failed, index %d, err = %d\n",
-+				__func__, opcode, idn, index, err);
+ /* Query request retries */
+-#define QUERY_REQ_RETRIES 10
++#define QUERY_REQ_RETRIES 3
+ /* Query request timeout */
+-#define QUERY_REQ_TIMEOUT 30 /* msec */
+-/*
+- * Query request timeout for fDeviceInit flag
+- * fDeviceInit query response time for some devices is too large that default
+- * QUERY_REQ_TIMEOUT may not be enough for such devices.
+- */
+-#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
++#define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
+ 
+ /* Task management command timeout */
+ #define TM_CMD_TIMEOUT	100 /* msecs */
+@@ -1842,9 +1836,6 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
  		goto out_unlock;
  	}
  
-@@ -2014,8 +2014,8 @@ static int __ufshcd_query_descriptor(struct ufs_hba *hba,
- 	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, QUERY_REQ_TIMEOUT);
+-	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
+-		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
+-
+ 	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
  
  	if (err) {
--		dev_err(hba->dev, "%s: opcode 0x%.2x for idn %d failed, err = %d\n",
--				__func__, opcode, idn, err);
-+		dev_err(hba->dev, "%s: opcode 0x%.2x for idn %d failed, index %d, err = %d\n",
-+				__func__, opcode, idn, index, err);
- 		goto out_unlock;
- 	}
- 
-@@ -2112,8 +2112,9 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
- 	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
- 	     ufs_query_desc_max_size[desc_id])
- 	    || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
--		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d param_offset %d buff_len %d ret %d",
--			__func__, desc_id, param_offset, buff_len, ret);
-+		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, param_offset %d, buff_len %d ,index %d, ret %d",
-+			__func__, desc_id, param_offset, buff_len,
-+			desc_index, ret);
- 		if (!ret)
- 			ret = -EINVAL;
- 
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
