@@ -1,7 +1,7 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 05/11] scsi: ufs: increase the scsi query response timeout
-Date: Wed, 23 Nov 2016 16:31:52 -0800
-Message-ID: <1479947512-7096-1-git-send-email-subhashj@codeaurora.org>
+Subject: [PATCH v1 04/11] scsi: ufs: fix failure to read the string descriptor
+Date: Wed, 23 Nov 2016 16:31:41 -0800
+Message-ID: <1479947501-7056-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
@@ -9,73 +9,74 @@ Cc: Subhash Jadavani <subhashj@codeaurora.org>, "open list:UNIVERSAL FLASH STORA
         CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-It is found thats UFS device may take longer than 30ms to respond to
-query requests and in this case we might run into following scenario:
+While reading variable size descriptors (like string descriptor), some UFS
+devices may report the "LENGTH" (field in "Transaction Specific fields" of
+Query Response UPIU) same as what was requested in Query Request UPIU
+instead of reporting the actual size of the variable size descriptor.
+Although it's safe to ignore the "LENGTH" field for variable size
+descriptors as we can always derive the length of the descriptor from
+the descriptor header fields. Hence this change impose the length match
+check only for fixed size descriptors (for which we always request the
+correct size as part of Query Request UPIU).
 
-1. UFS host SW sends a query request to UFS device to read an attribute
-   value. SW uses tag #31 for this purpose.
-2. UFS host SW waits for 30ms to get the query response (and doorbell
-   to be cleared by UFS host HW).
-3. UFS device doesn't respond back within 30ms hence UFS host SW times
-   out waiting for the query response.
-4. UFS host SW clears the tag#31 from UTRLCLR register.
-5. UFS host SW waits until UFS host HW to clear tag#31 from the doorbell
-   register.
-6. UFS host SW retries the same query request on same tag#31 (sends a query
-   request to device to read an attribute value).
-7. UFS host HW gets the query response from the device but this was
-   intended as a query response for the 1st query request sent (step-1).
-8. Now UFS device sends another query response to host (for query request
-   sent @step-6).
-
-Now there are 2 issues that could happen with above scenario:
-1. UFS device should have actually responded back with only one query
-   response but it is found that device may respond back with 2 query
-   responses.
-2. If UFS device responds back with 2 resposes on same tag, host HW/SW
-   behaviour isn't predictable.
-
-To avoid running into above scenario, we would basically allow device
-to take longer (upto 1.5 seconds) for query response.
-
-Reviewed-by: Gilad Broner <gbroner@codeaurora.org>
+Reviewed-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 13 ++-----------
- 1 file changed, 2 insertions(+), 11 deletions(-)
+ drivers/scsi/ufs/ufshcd.c | 40 +++++++++++++++++++++++++++++++---------
+ 1 file changed, 31 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index d6e87dc..393f6d5 100644
+index 9abc11e..d6e87dc 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -59,15 +59,9 @@
- #define NOP_OUT_TIMEOUT    30 /* msecs */
+@@ -2108,16 +2108,38 @@ static int ufshcd_read_desc_param(struct ufs_hba *hba,
+ 					desc_id, desc_index, 0, desc_buf,
+ 					&buff_len);
  
- /* Query request retries */
--#define QUERY_REQ_RETRIES 10
-+#define QUERY_REQ_RETRIES 3
- /* Query request timeout */
--#define QUERY_REQ_TIMEOUT 30 /* msec */
--/*
-- * Query request timeout for fDeviceInit flag
-- * fDeviceInit query response time for some devices is too large that default
-- * QUERY_REQ_TIMEOUT may not be enough for such devices.
-- */
--#define QUERY_FDEVICEINIT_REQ_TIMEOUT 600 /* msec */
-+#define QUERY_REQ_TIMEOUT 1500 /* 1.5 seconds */
+-	if (ret || (buff_len < ufs_query_desc_max_size[desc_id]) ||
+-	    (desc_buf[QUERY_DESC_LENGTH_OFFSET] !=
+-	     ufs_query_desc_max_size[desc_id])
+-	    || (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id)) {
+-		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, param_offset %d, buff_len %d ,index %d, ret %d",
+-			__func__, desc_id, param_offset, buff_len,
+-			desc_index, ret);
+-		if (!ret)
+-			ret = -EINVAL;
++	if (ret) {
++		dev_err(hba->dev, "%s: Failed reading descriptor. desc_id %d, desc_index %d, param_offset %d, ret %d",
++			__func__, desc_id, desc_index, param_offset, ret);
++
++		goto out;
++	}
++
++	/* Sanity check */
++	if (desc_buf[QUERY_DESC_DESC_TYPE_OFFSET] != desc_id) {
++		dev_err(hba->dev, "%s: invalid desc_id %d in descriptor header",
++			__func__, desc_buf[QUERY_DESC_DESC_TYPE_OFFSET]);
++		ret = -EINVAL;
++		goto out;
++	}
  
- /* Task management command timeout */
- #define TM_CMD_TIMEOUT	100 /* msecs */
-@@ -1842,9 +1836,6 @@ int ufshcd_query_flag(struct ufs_hba *hba, enum query_opcode opcode,
- 		goto out_unlock;
++	/*
++	 * While reading variable size descriptors (like string descriptor),
++	 * some UFS devices may report the "LENGTH" (field in "Transaction
++	 * Specific fields" of Query Response UPIU) same as what was requested
++	 * in Query Request UPIU instead of reporting the actual size of the
++	 * variable size descriptor.
++	 * Although it's safe to ignore the "LENGTH" field for variable size
++	 * descriptors as we can always derive the length of the descriptor from
++	 * the descriptor header fields. Hence this change impose the length
++	 * match check only for fixed size descriptors (for which we always
++	 * request the correct size as part of Query Request UPIU).
++	 */
++	if ((desc_id != QUERY_DESC_IDN_STRING) &&
++	    (buff_len != desc_buf[QUERY_DESC_LENGTH_OFFSET])) {
++		dev_err(hba->dev, "%s: desc_buf length mismatch: buff_len %d, buff_len(desc_header) %d",
++			__func__, buff_len, desc_buf[QUERY_DESC_LENGTH_OFFSET]);
++		ret = -EINVAL;
+ 		goto out;
  	}
  
--	if (idn == QUERY_FLAG_IDN_FDEVICEINIT)
--		timeout = QUERY_FDEVICEINIT_REQ_TIMEOUT;
--
- 	err = ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_QUERY, timeout);
- 
- 	if (err) {
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
