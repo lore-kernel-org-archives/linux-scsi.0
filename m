@@ -1,44 +1,78 @@
-From: Eyal Ben David <bdeyal@gmail.com>
-Subject: Re: SG does not ignore dxferp (direct io + mmap)
-Date: Fri, 25 Nov 2016 14:36:34 +0200
-Message-ID: <CAPrnrPBsBPH2B48QYLPCsdpg0LT7iBxc2+g+_xHPcDOjRf7f5A@mail.gmail.com>
-References: <1479738275.19792.24.camel@localhost.localdomain>
- <1ca8515f-abd2-7428-8baa-dca879833be3@interlog.com> <1479752642.19792.43.camel@localhost.localdomain>
- <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site> <1479839407.28416.21.camel@localhost.localdomain>
- <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
- <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
- <1479932524.28416.43.camel@localhost.localdomain> <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
- <CAPrnrPBcvBcNaZ5asJquRSp4Ann3xHVGSRbwLkvPF+YKJ6OpCw@mail.gmail.com> <20161125115317.llxd2lslf7ovitxd@linux-x5ow.site>
+From: Jelle de Jong <jelledejong@powercraft.nl>
+Subject: ata mapping mvsas driver
+Date: Fri, 25 Nov 2016 14:41:47 +0100
+Message-ID: <3f769afb-f978-46dd-8289-55f7c86e6d5b@powercraft.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f193.google.com ([209.85.223.193]:34825 "EHLO
-        mail-io0-f193.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752780AbcKYMhf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2016 07:37:35 -0500
-Received: by mail-io0-f193.google.com with SMTP id h133so9261148ioe.2
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 04:36:35 -0800 (PST)
-In-Reply-To: <20161125115317.llxd2lslf7ovitxd@linux-x5ow.site>
+Received: from relay02.cambriumhosting.nl ([217.19.16.174]:50734 "EHLO
+        relay02.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754283AbcKYNtf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Nov 2016 08:49:35 -0500
+Received: from relay02.cambriumhosting.nl (localhost [127.0.0.1])
+        by relay02.cambriumhosting.nl (Postfix) with ESMTP id 516B38077C
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 14:41:49 +0100 (CET)
+Received: from yessica.powercraft.nl (ebony.powercraft.nl [84.245.27.193])
+        by relay02.cambriumhosting.nl (Postfix) with ESMTP id 3824082107
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 14:41:49 +0100 (CET)
+Received: from [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4] (unknown [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4])
+        by yessica.powercraft.nl (Postfix) with ESMTPSA id 5BB9620178
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 14:39:11 +0100 (CET)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, Laurence Oberman <loberman@redhat.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Fri, Nov 25, 2016 at 1:53 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> On Fri, Nov 25, 2016 at 01:20:34PM +0200, Eyal Ben David wrote:
->> Note that sg_mmap_read does not parse the SCSI sense, so the script
->> might fail for other reasons (some SCSI error) and think its a zero
->> byte corruption.
->
-> But SCSI generic checks for errors and returns -EINVAL on CHECK_CONDITION or
-> DRIVER_SENSE (and sets SG_INFO_CHECK in hdr.info).
->
-Ah OK. We use async write/read instead of ioctl and forgot that ioctl
-checks the read.
+Hello everybody,
 
-> Anyways, can you test the patch Ewan found on one of your kernel's that are
-> known to fail?
+I am trying to find the mapping for ata22.00. due to some repeated issues:
 
-All the examples I gave before were on physical hosts and storage at a
-testing lab.
-That would be difficult to do. Sorry.
+# 3.16.36-1+deb8u2~bpo70+1 crazing down
+http://paste.debian.net/hidden/54c12fae/
+
+# smart status 16 disks WDC 1TB RE SATA
+http://paste.debian.net/hidden/8bfe8d2f/
+
+"[473315.445703] ata22.00: exception Emask 0x0 SAct 0x7fe00007 SErr 0x0 
+action 0x6 frozen"
+
+lsscsi --verbose doesn’t provide me with the ata details?
+http://paste.debian.net/hidden/430599a0/
+
+root@shirley:~# lsscsi --verbose
+[0:0:0:0]    disk    ATA      WDC WD1003FBYX-0 1V01  /dev/sdc
+   dir: /sys/bus/scsi/devices/0:0:0:0 
+[/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:0/end_device-0:0:0/target0:0:0/0:0:0:0]
+
+I can not find any useful unique_id with the mvsas driver...
+find /sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/ -iname 
+unique_id
+
+grep ata22 /var/log/messages indicates it is really mapped somewhere...
+
+root@shirley:~# readlink /sys/block/sdm
+../devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:10/end_device-0:0:10/target0:0:10/0:0:10:0/block/sdm
+
+Best I came up with with no results:
+
+root@shirley:~# find 
+/sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/host0/port-0\:0/expander-0\:0/port-0\:0\:10/end_device-0\:0\:10/target0\:0\:10/0\:0\:10\:0/ 
+-type f  -exec grep -i ata {} \;
+
+Linux shirley 3.16.0-0.bpo.4-amd64 #1 SMP Debian 
+3.16.36-1+deb8u2~bpo70+1 (2016-10-19) x86_64 GNU/Linux
+root@shirley:~# lsmod mvsas
+Usage: lsmod
+
+root@shirley:~# modinfo mvsas
+filename: 
+/lib/modules/3.16.0-0.bpo.4-amd64/kernel/drivers/scsi/mvsas/mvsas.ko
+license:        GPL
+version:        0.8.16
+
+Thank you in advance!
+
+Kind regards,
+
+Jelle de Jong
