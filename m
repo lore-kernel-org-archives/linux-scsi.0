@@ -1,32 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 00/11] hisi_sas: some fixes, improvements, and new features
-Date: Fri, 25 Nov 2016 09:55:28 -0500
-Message-ID: <yq1twavtxr3.fsf@sermon.lab.mkp.net>
-References: <1478522920-108145-1-git-send-email-john.garry@huawei.com>
-        <yq1lgwlei5j.fsf@sermon.lab.mkp.net>
-        <1f3075ff-d301-54e3-942f-76ca958a6c77@huawei.com>
-        <yq1r363w4wp.fsf@sermon.lab.mkp.net>
-        <79c94630-b84a-95d8-9e19-f51ec946c393@huawei.com>
+Subject: Re: [PATCH] lpfc: fix oops/BUG in lpfc_sli_ringtxcmpl_put()
+Date: Fri, 25 Nov 2016 10:00:16 -0500
+Message-ID: <yq1poljtxj3.fsf@sermon.lab.mkp.net>
+References: <1479904399-19496-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:49720 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754213AbcKYOzo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2016 09:55:44 -0500
-In-Reply-To: <79c94630-b84a-95d8-9e19-f51ec946c393@huawei.com> (John Garry's
-        message of "Fri, 25 Nov 2016 11:40:38 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1479904399-19496-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+        (Mauricio Faria de Oliveira's message of "Wed, 23 Nov 2016 10:33:19
+        -0200")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: james.smart@broadcom.com, martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, linuxarm@huawei.com, linux-kernel@vger.kernel.org, john.garry2@mail.dcu.ie
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
 
-John> I think that these 2 outstanding issues have been
-John> addressed. Please let me know if there is anything else.
+Mauricio> The BUG_ON() recently introduced in lpfc_sli_ringtxcmpl_put()
+Mauricio> is hit in the lpfc_els_abort() > lpfc_sli_issue_abort_iotag()
+Mauricio> > lpfc_sli_abort_iotag_issue() function path [similar names],
+Mauricio> due to 'piocb->vport == NULL':
 
-Series applied to 4.10/scsi-queue.
+Applied to 4.9/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
