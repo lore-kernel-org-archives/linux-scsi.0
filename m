@@ -1,52 +1,88 @@
-From: <alters@usg.edu>
-Subject: 33736 linux-scsi
-Date: Fri, 25 Nov 2016 06:06:37 -0000
-Message-ID: <148005399702.12679.4908914564807219677@vnpt.vn>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: SG does not ignore dxferp (direct io + mmap)
+Date: Fri, 25 Nov 2016 09:07:58 +0100
+Message-ID: <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
+References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
+ <CAPrnrPBOrkzz5f5rVE4jBkEEvEQRoeo73y50V6cVNgP3c5yzNg@mail.gmail.com>
+ <1479738275.19792.24.camel@localhost.localdomain>
+ <1ca8515f-abd2-7428-8baa-dca879833be3@interlog.com>
+ <1479752642.19792.43.camel@localhost.localdomain>
+ <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
+ <1479839407.28416.21.camel@localhost.localdomain>
+ <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
+ <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
+ <1479932524.28416.43.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: application/zip; name="INFO_3376703376765_linux-scsi.zip"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from static.vnpt.vn ([14.162.184.64]:43521 "HELO vnpt.vn"
-        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with SMTP
-        id S1751645AbcKYGGt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Nov 2016 01:06:49 -0500
-Content-Disposition: attachment
+Received: from mx2.suse.de ([195.135.220.15]:46648 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754170AbcKYInw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Nov 2016 03:43:52 -0500
+Content-Disposition: inline
+In-Reply-To: <1479932524.28416.43.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: Laurence Oberman <loberman@redhat.com>, Eyal Ben David <bdeyal@gmail.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-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
+On Wed, Nov 23, 2016 at 03:22:04PM -0500, Ewan Milne wrote:
+
+[...]
+
+> ---
+> 
+> In other words, this commit made the bad behavior go away in 4.8.
+> Need to look at this in more detail, it doesn't appear as if this patch
+> was intended to fix such a problem.
+> 
+> -Ewan
+
+Are you sure it did? I can repropduce copy_to_user() errors with 4.8 as well.
+Using the very same reproducer. On 4.8 it's just harder to trigger and
+doesn't trigger on AHCI as fas as I can telli (maybe I just haven't hit
+it hard enough). I can trigger it on QEMUs SCSI CDROM emulation and hpsa
+though. I cannot however trigger this with a minimal config inside an initrd.
+
+
+Here's my test:
+
+--- 8< ---
+#!/bin/sh 
+
+cleanup()
+{
+	rm -f expect.txt
+	rm -f test.txt
+}
+
+trap cleanup EXIT INT 
+
+./sg_mmap_read -d /dev/sg0 -l 0 | od -x > expect.txt
+
+for i in $(seq 1 5000); do
+	./sg_mmap_read -d /dev/sg0 -l 0 | od -x > test.txt
+	diff expect.txt test.txt > /dev/null
+	if [ $? -ne 0 ]; then
+		echo "FAIL"
+		exit 1
+	fi
+done
+
+echo "PASS"
+
+--- >8 ---
+
+I added some trace_printk()s to sg.c and try to hunt it down. It'll be good to
+know if anyone of you can reproduce it with the above script as well.
+
+Byte,
+	Johannes
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
