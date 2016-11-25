@@ -1,23 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ufs: Add missing UFS_MASK macro definition
-Date: Fri, 25 Nov 2016 10:05:55 -0500
-Message-ID: <yq1lgw7tx9o.fsf@sermon.lab.mkp.net>
-References: <1479963531-6458-1-git-send-email-zhangfei.gao@linaro.org>
+Subject: Re: [PATCH 0/2] SRP transport, scsi-mq: Wait for .queue_rq() if necessary
+Date: Fri, 25 Nov 2016 10:12:14 -0500
+Message-ID: <yq1d1hjtwz5.fsf@sermon.lab.mkp.net>
+References: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19020 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:22171 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754877AbcKYPGr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2016 10:06:47 -0500
-In-Reply-To: <1479963531-6458-1-git-send-email-zhangfei.gao@linaro.org>
-        (Zhangfei Gao's message of "Thu, 24 Nov 2016 12:58:51 +0800")
+        with ESMTP id S1755094AbcKYPMv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 25 Nov 2016 10:12:51 -0500
+In-Reply-To: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com> (Bart Van
+        Assche's message of "Tue, 22 Nov 2016 16:16:06 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Zhangfei Gao <zhangfei.gao@linaro.org>
-Cc: Subhash Jadavani <subhashj@codeaurora.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Santosh Y <santoshsy@gmail.com>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Doug Ledford <dledford@redhat.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
 
->>>>> "Zhangfei" == Zhangfei Gao <zhangfei.gao@linaro.org> writes:
+>>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+
+Bart> The SRP transport code must wait until ongoing .queuecommand() /
+Bart> .queue_rq() callback function invocations have finished before
+Bart> reconnecting at the transport layer level and also before invoking
+Bart> .terminate_rport_io(). This is already the case for the single
+Bart> queue path but not yet for the scsi-mq path. This patch series
+Bart> realizes the proper serialization for the scsi-mq path. Compared
+Bart> to last time these patches were posted, only the patch
+Bart> descriptions and one comment have been changed.
 
 Applied to 4.10/scsi-queue.
 
