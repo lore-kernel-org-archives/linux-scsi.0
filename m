@@ -1,31 +1,31 @@
 From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 188961] New: Function mvs_task_prep() returns improper values
- on failures
-Date: Fri, 25 Nov 2016 11:12:35 +0000
-Message-ID: <bug-188961-11613@https.bugzilla.kernel.org/>
+Subject: [Bug 189051] New: Function fnic_probe() does not set set code when
+ the call to mempool_create_slab_pool() fails
+Date: Fri, 25 Nov 2016 11:20:03 +0000
+Message-ID: <bug-189051-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:34224 "EHLO mail.kernel.org"
+Received: from mail.kernel.org ([198.145.29.136]:34284 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751041AbcKYLTi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 25 Nov 2016 06:19:38 -0500
+        id S1753100AbcKYLUP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 25 Nov 2016 06:20:15 -0500
 Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 7EF9A20456
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 11:12:41 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id F198E20172
-        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 11:12:35 +0000 (UTC)
+        by mail.kernel.org (Postfix) with ESMTP id 9E83A20453
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 11:20:09 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id CE13720172
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Nov 2016 11:20:03 +0000 (UTC)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=188961
+https://bugzilla.kernel.org/show_bug.cgi?id=189051
 
-            Bug ID: 188961
-           Summary: Function mvs_task_prep() returns improper values on
-                    failures
+            Bug ID: 189051
+           Summary: Function fnic_probe() does not set set code when the
+                    call to mempool_create_slab_pool() fails
            Product: SCSI Drivers
            Version: 2.5
     Kernel Version: linux-4.9-rc6
@@ -40,56 +40,77 @@ https://bugzilla.kernel.org/show_bug.cgi?id=188961
           Reporter: bianpan2010@ruc.edu.cn
         Regression: No
 
-The function mvs_task_prep() defined in file drivers/scsi/mvsas/mv_sas.c
-returns 0 on success, or non-zero values on failures. It calls function
-pci_pool_alloc() and checks its return value against NULL (at line 794), and if
-the return value is NULL, the control flow jumps to label "err_out_tag", cleans
-allocated memory and returns variable rc. Function pci_pool_alloc() is called
-after the check of variable rc, so the value of rc must be 0. As a result,
-mvs_task_prep() will return 0 (indicates success) even the call to
-pci_pool_alloc() fails. I think it is better to assign "-ENOMEM" to rc when
-pci_pool_alloc() fails. Codes and comments related to this bug are summarised
-as follows.
+In the function fnic_probe() defined in file drivers/scsi/fnic/fnic_main.c,
+when the call to mempool_create_slab_pool() (at line 738) returns a NULL
+pointer, the control flow jumps to label "err_out_free_resources", and returns
+variable err. Because variable err is checked at line 714, the value of err
+must be 0 here. As a result, function fnic_probe() returns 0 (indicates
+success) even if the call to mempool_create_slab_pool() fails.
+There are other 2 similar bugs when the call to mempool_create_slab_pool() fail
+at lines 742 and 747. Though these errors may occur rarely, I think it may be
+better to set correct error codes (e.g. -ENOMEM) on failures. Codes related to
+these bugs are summarised as follows.
 
-mvs_task_prep @@ drivers/scsi/mvsas/mv_sas.c
- 711 static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int
-is_tmf,
- 712                 struct mvs_tmf_task *tmf, int *pass)
- 713 {
+fnic_probe @@ drivers/scsi/fnic/fnic_main.c
+ 541 static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id
+*ent)
+ 542 {
          ...
- 719     int rc = 0;
+ 547     int err;
          ...
- 783     rc = mvs_tag_alloc(mvi, &tag);
- 784     if (rc)
- 785         goto err_out;
- 786 
- 787     slot = &mvi->slot_info[tag];
- 788 
- 789     task->lldd_task = NULL;
- 790     slot->n_elem = n_elem;
- 791     slot->slot_tag = tag;
- 792 
- 793     slot->buf = pci_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
- 794     if (!slot->buf)
-             // insert "rc = -ENOMEM" here?
- 795         goto err_out_tag;
+ 713     err = fnic_alloc_vnic_resources(fnic);
+ 714     if (err) {
+ 715         shost_printk(KERN_ERR, fnic->lport->host,
+ 716                  "Failed to alloc vNIC resources, "
+ 717                  "aborting.\n");
+ 718         goto err_out_clear_intr;
+ 719     }
          ...
- 838     return rc;
- 839 
- 840 err_out_slot_buf:
- 841     pci_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
- 842 err_out_tag:
- 843     mvs_tag_free(mvi, tag);
- 844 err_out:
- 845 
- 846     dev_printk(KERN_ERR, mvi->dev, "mvsas prep failed[%d]!\n", rc);
- 847     if (!sas_protocol_ata(task->task_proto))
- 848         if (n_elem)
- 849             dma_unmap_sg(mvi->dev, task->scatter, n_elem,
- 850                      task->data_dir);
- 851 prep_out:
- 852     return rc;
- 853 }
+         // Insert "err = -ENOMEM;" ?
+ 738     fnic->io_req_pool = mempool_create_slab_pool(2, fnic_io_req_cache);
+ 739     if (!fnic->io_req_pool)
+             // Bug (1): the value of err is 0
+ 740         goto err_out_free_resources;
+ 741 
+ 742     pool = mempool_create_slab_pool(2,
+fnic_sgl_cache[FNIC_SGL_CACHE_DFLT]);
+ 743     if (!pool)
+             // Bug (2): the value of err is 0
+ 744         goto err_out_free_ioreq_pool;
+ 745     fnic->io_sgl_pool[FNIC_SGL_CACHE_DFLT] = pool;
+ 746 
+ 747     pool = mempool_create_slab_pool(2,
+fnic_sgl_cache[FNIC_SGL_CACHE_MAX]);
+ 748     if (!pool)
+             // Bug (3): the value of err is 0
+ 749         goto err_out_free_dflt_pool;
+         ...
+ 901     return 0;
+         ...
+ 914 err_out_free_dflt_pool:
+ 915     mempool_destroy(fnic->io_sgl_pool[FNIC_SGL_CACHE_DFLT]);
+ 916 err_out_free_ioreq_pool:
+ 917     mempool_destroy(fnic->io_req_pool);
+ 918 err_out_free_resources:
+ 919     fnic_free_vnic_resources(fnic);
+ 920 err_out_clear_intr:
+ 921     fnic_clear_intr_mode(fnic);
+ 922 err_out_dev_close:
+ 923     vnic_dev_close(fnic->vdev);
+ 924 err_out_vnic_unregister:
+ 925     vnic_dev_unregister(fnic->vdev);
+ 926 err_out_iounmap:
+ 927     fnic_iounmap(fnic);
+ 928 err_out_release_regions:
+ 929     pci_release_regions(pdev);
+ 930 err_out_disable_device:
+ 931     pci_disable_device(pdev);
+ 932 err_out_free_hba:
+ 933     fnic_stats_debugfs_remove(fnic);
+ 934     scsi_host_put(lp->host);
+ 935 err_out:
+ 936     return err;
+ 937 }
 
 Thanks very much!
 
