@@ -1,41 +1,78 @@
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Subject: [PATCH] bnx2fc: shift wrapping bug in bnx2fc_process_unsol_compl()
-Date: Sat, 26 Nov 2016 19:36:29 +0100
-Message-ID: <20161126183629.9969-1-christophe.jaillet@wanadoo.fr>
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+From: Jelle de Jong <jelledejong@powercraft.nl>
+Subject: ata mapping mvsas driver question
+Date: Sat, 26 Nov 2016 21:43:56 +0100
+Message-ID: <362cdbe9-3633-499e-9ee4-b1a8afed2e40@powercraft.nl>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from relay01.cambriumhosting.nl ([217.19.16.173]:46691 "EHLO
+        relay01.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752435AbcKZUoE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Sat, 26 Nov 2016 15:44:04 -0500
+Received: from relay01.cambriumhosting.nl (localhost [127.0.0.1])
+        by relay01.cambriumhosting.nl (Postfix) with ESMTP id 4EC80522BA
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:44:01 +0100 (CET)
+Received: from yessica.powercraft.nl (ebony.powercraft.nl [84.245.27.193])
+        by relay01.cambriumhosting.nl (Postfix) with ESMTP id 3E9CF5220D
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:44:01 +0100 (CET)
+Received: from [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4] (unknown [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4])
+        by yessica.powercraft.nl (Postfix) with ESMTPSA id 278002036C
+        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:41:26 +0100 (CET)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-BNX2FC_NUM_ERR_BITS is 63. err_warn_bit_map is a u64. So, to make sure that
-no shift wrapping will occur, we need need additionnal casting.
+Hello everybody,
 
-The same test is already done a few lines above and '(u64)1' is already
-used there. So just do the same here.
+I am trying to find the mapping for ata22.00. due to some repeated issues:
 
-Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
----
-I guess that this could also be written with a '1ULL << i' which would be
-cleaner and less verbose IMHO, but apparently this driver does not use
-such things yet. So keep the current style with casting.
----
- drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+# 3.16.36-1+deb8u2~bpo70+1 crazing down
+http://paste.debian.net/hidden/54c12fae/
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-index 5ff9f89c17c7..a9dccb3b49cc 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-@@ -829,7 +829,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
- 			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
- 			(u64)err_entry->data.err_warn_bitmap_lo;
- 		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
--			if (err_warn_bit_map & (u64) (1 << i)) {
-+			if (err_warn_bit_map & (u64)((u64)1 << i)) {
- 				err_warn = i;
- 				break;
- 			}
--- 
-2.9.3
+# smart status 16 disks WDC 1TB RE SATA
+http://paste.debian.net/hidden/8bfe8d2f/
 
+"[473315.445703] ata22.00: exception Emask 0x0 SAct 0x7fe00007 SErr 0x0 
+action 0x6 frozen"
+
+lsscsi --verbose doesn’t provide me with the ata details?
+http://paste.debian.net/hidden/430599a0/
+
+root@shirley:~# lsscsi --verbose
+[0:0:0:0]    disk    ATA      WDC WD1003FBYX-0 1V01  /dev/sdc
+   dir: /sys/bus/scsi/devices/0:0:0:0 
+[/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:0/end_device-0:0:0/target0:0:0/0:0:0:0]
+
+I can not find any useful unique_id with the mvsas driver...
+find /sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/ -iname 
+unique_id
+
+grep ata22 /var/log/messages indicates it is really mapped somewhere...
+
+root@shirley:~# readlink /sys/block/sdm
+../devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:10/end_device-0:0:10/target0:0:10/0:0:10:0/block/sdm
+
+Best I came up with with no results:
+
+root@shirley:~# find 
+/sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/host0/port-0\:0/expander-0\:0/port-0\:0\:10/end_device-0\:0\:10/target0\:0\:10/0\:0\:10\:0/ 
+-type f  -exec grep -i ata {} \;
+
+Linux shirley 3.16.0-0.bpo.4-amd64 #1 SMP Debian 
+3.16.36-1+deb8u2~bpo70+1 (2016-10-19) x86_64 GNU/Linux
+root@shirley:~# lsmod mvsas
+Usage: lsmod
+
+root@shirley:~# modinfo mvsas
+filename: 
+/lib/modules/3.16.0-0.bpo.4-amd64/kernel/drivers/scsi/mvsas/mvsas.ko
+license:        GPL
+version:        0.8.16
+
+Thank you in advance!
+
+Kind regards,
+
+Jelle de Jong
