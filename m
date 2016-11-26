@@ -1,77 +1,41 @@
-From: Max Gurtovoy <maxg@mellanox.com>
-Subject: Re: [PATCH 1/2] SRP transport: Move queuecommand() wait code to SCSI
- core
-Date: Sat, 26 Nov 2016 01:21:53 +0200
-Message-ID: <0187d160-5985-32c4-95c0-466c4f09bdf9@mellanox.com>
-References: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com>
- <649cb037-3196-df4d-0d31-47f040ce44a2@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-db5eur01on0051.outbound.protection.outlook.com ([104.47.2.51]:20408
-        "EHLO EUR01-DB5-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750783AbcKZJC4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 26 Nov 2016 04:02:56 -0500
-In-Reply-To: <649cb037-3196-df4d-0d31-47f040ce44a2@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] bnx2fc: shift wrapping bug in bnx2fc_process_unsol_compl()
+Date: Sat, 26 Nov 2016 19:36:29 +0100
+Message-ID: <20161126183629.9969-1-christophe.jaillet@wanadoo.fr>
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Sender: kernel-janitors-owner@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Doug Ledford <dledford@redhat.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
 
+BNX2FC_NUM_ERR_BITS is 63. err_warn_bit_map is a u64. So, to make sure that
+no shift wrapping will occur, we need need additionnal casting.
 
+The same test is already done a few lines above and '(u64)1' is already
+used there. So just do the same here.
 
-On 11/23/2016 2:17 AM, Bart Van Assche wrote:
-> Additionally, rename srp_wait_for_queuecommand() into
-> scsi_wait_for_queuecommand() and add a comment about the
-> queuecommand() call from scsi_send_eh_cmnd().
->
-> Note: this patch changes scsi_internal_device_block from a function
-> that did not sleep into a function that may sleep. This is fine for
-> all callers of this function:
-> * scsi_internal_device_block() is called from the mpt3sas device while
->   that driver holds the ioc->dm_cmds.mutex. This means that the mpt3sas
->   driver calls this function from thread context.
-> * scsi_target_block() is called by __iscsi_block_session() from
->   kernel thread context and with IRQs enabled.
-> * The SRP transport code also calls scsi_target_block() from kernel
->   thread context while sleeping is allowed.
-> * The snic driver also calls scsi_target_block() from a context from
->   which sleeping is allowed. The scsi_target_block() call namely occurs
->   immediately after a scsi_flush_work() call.
->
-> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-> Reviewed-by: Sagi Grimberg <sagi@grimberg.me>
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> Cc: James Bottomley <jejb@linux.vnet.ibm.com>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Doug Ledford <dledford@redhat.com>
-> ---
->  drivers/scsi/scsi_lib.c           | 41 +++++++++++++++++++++++++++++++++++++--
->  drivers/scsi/scsi_transport_srp.c | 41 ++++++---------------------------------
->  2 files changed, 45 insertions(+), 37 deletions(-)
->
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+I guess that this could also be written with a '1ULL << i' which would be
+cleaner and less verbose IMHO, but apparently this driver does not use
+such things yet. So keep the current style with casting.
+---
+ drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+index 5ff9f89c17c7..a9dccb3b49cc 100644
+--- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
++++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
+@@ -829,7 +829,7 @@ static void bnx2fc_process_unsol_compl(struct bnx2fc_rport *tgt, u16 wqe)
+ 			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
+ 			(u64)err_entry->data.err_warn_bitmap_lo;
+ 		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
+-			if (err_warn_bit_map & (u64) (1 << i)) {
++			if (err_warn_bit_map & (u64)((u64)1 << i)) {
+ 				err_warn = i;
+ 				break;
+ 			}
+-- 
+2.9.3
 
-> +
-> +/**
-> + * scsi_wait_for_queuecommand() - wait for ongoing queuecommand() calls
-> + * @shost: SCSI host pointer.
-
-the arg is sdev.
-
-> + *
-> + * Wait until the ongoing shost->hostt->queuecommand() calls that are
-> + * invoked from scsi_request_fn() have finished.
-> + */
-> +static void scsi_wait_for_queuecommand(struct scsi_device *sdev)
-> +{
-> +	WARN_ON_ONCE(sdev->host->use_blk_mq);
-> +
-> +	while (scsi_request_fn_active(sdev))
-> +		msleep(20);
-> +}
-> +
-> +/**
->   *	scsi_device_quiesce - Block user issued commands.
