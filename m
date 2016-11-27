@@ -1,78 +1,51 @@
-From: Jelle de Jong <jelledejong@powercraft.nl>
-Subject: ata mapping mvsas driver question
-Date: Sat, 26 Nov 2016 21:43:56 +0100
-Message-ID: <362cdbe9-3633-499e-9ee4-b1a8afed2e40@powercraft.nl>
+From: <molino.petrone@libero.it>
+Subject: (unknown)
+Date: Sun, 27 Nov 2016 03:07:50 -0000
+Message-ID: <148021607066.32573.7414380375112178044@m-online.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: application/zip; name="INFO_878208733419_linux-scsi.zip"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from relay01.cambriumhosting.nl ([217.19.16.173]:46691 "EHLO
-        relay01.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752435AbcKZUoE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sat, 26 Nov 2016 15:44:04 -0500
-Received: from relay01.cambriumhosting.nl (localhost [127.0.0.1])
-        by relay01.cambriumhosting.nl (Postfix) with ESMTP id 4EC80522BA
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:44:01 +0100 (CET)
-Received: from yessica.powercraft.nl (ebony.powercraft.nl [84.245.27.193])
-        by relay01.cambriumhosting.nl (Postfix) with ESMTP id 3E9CF5220D
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:44:01 +0100 (CET)
-Received: from [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4] (unknown [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4])
-        by yessica.powercraft.nl (Postfix) with ESMTPSA id 278002036C
-        for <linux-scsi@vger.kernel.org>; Sat, 26 Nov 2016 21:41:26 +0100 (CET)
+Received: from host-82-135-31-117.customer.m-online.net ([82.135.31.117]:51815
+        "HELO m-online.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with SMTP id S1752830AbcK0DHz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 26 Nov 2016 22:07:55 -0500
+Content-Disposition: attachment
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-Hello everybody,
-
-I am trying to find the mapping for ata22.00. due to some repeated issues:
-
-# 3.16.36-1+deb8u2~bpo70+1 crazing down
-http://paste.debian.net/hidden/54c12fae/
-
-# smart status 16 disks WDC 1TB RE SATA
-http://paste.debian.net/hidden/8bfe8d2f/
-
-"[473315.445703] ata22.00: exception Emask 0x0 SAct 0x7fe00007 SErr 0x0 
-action 0x6 frozen"
-
-lsscsi --verbose doesn’t provide me with the ata details?
-http://paste.debian.net/hidden/430599a0/
-
-root@shirley:~# lsscsi --verbose
-[0:0:0:0]    disk    ATA      WDC WD1003FBYX-0 1V01  /dev/sdc
-   dir: /sys/bus/scsi/devices/0:0:0:0 
-[/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:0/end_device-0:0:0/target0:0:0/0:0:0:0]
-
-I can not find any useful unique_id with the mvsas driver...
-find /sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/ -iname 
-unique_id
-
-grep ata22 /var/log/messages indicates it is really mapped somewhere...
-
-root@shirley:~# readlink /sys/block/sdm
-../devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:10/end_device-0:0:10/target0:0:10/0:0:10:0/block/sdm
-
-Best I came up with with no results:
-
-root@shirley:~# find 
-/sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/host0/port-0\:0/expander-0\:0/port-0\:0\:10/end_device-0\:0\:10/target0\:0\:10/0\:0\:10\:0/ 
--type f  -exec grep -i ata {} \;
-
-Linux shirley 3.16.0-0.bpo.4-amd64 #1 SMP Debian 
-3.16.36-1+deb8u2~bpo70+1 (2016-10-19) x86_64 GNU/Linux
-root@shirley:~# lsmod mvsas
-Usage: lsmod
-
-root@shirley:~# modinfo mvsas
-filename: 
-/lib/modules/3.16.0-0.bpo.4-amd64/kernel/drivers/scsi/mvsas/mvsas.ko
-license:        GPL
-version:        0.8.16
-
-Thank you in advance!
-
-Kind regards,
-
-Jelle de Jong
+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
