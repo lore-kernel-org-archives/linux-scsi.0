@@ -1,67 +1,40 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] bnx2fc: shift wrapping bug in
- bnx2fc_process_unsol_compl()
-Date: Mon, 28 Nov 2016 12:05:35 -0500 (EST)
-Message-ID: <200414664.924328.1480352735685.JavaMail.zimbra@redhat.com>
-References: <20161126183629.9969-1-christophe.jaillet@wanadoo.fr>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH v2] qlogicpti: Fix compiler warnings
+Date: Mon, 28 Nov 2016 15:55:22 -0500 (EST)
+Message-ID: <20161128.155522.86308473181404365.davem@davemloft.net>
+References: <1479954484-1301-1-git-send-email-tushar.n.dave@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20161126183629.9969-1-christophe.jaillet@wanadoo.fr>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Cc: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin petersen <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <1479954484-1301-1-git-send-email-tushar.n.dave@oracle.com>
+Sender: sparclinux-owner@vger.kernel.org
+To: tushar.n.dave@oracle.com
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, thomas.tai@oracle.com, sparclinux@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-
-
------ Original Message -----
-> From: "Christophe JAILLET" <christophe.jaillet@wanadoo.fr>
-> To: QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, "martin petersen" <martin.petersen@oracle.com>
-> Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, "Christophe JAILLET"
-> <christophe.jaillet@wanadoo.fr>
-> Sent: Saturday, November 26, 2016 1:36:29 PM
-> Subject: [PATCH] bnx2fc: shift wrapping bug in bnx2fc_process_unsol_compl()
-> 
-> BNX2FC_NUM_ERR_BITS is 63. err_warn_bit_map is a u64. So, to make sure that
-> no shift wrapping will occur, we need need additionnal casting.
-> 
-> The same test is already done a few lines above and '(u64)1' is already
-> used there. So just do the same here.
-> 
-> Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-> ---
-> I guess that this could also be written with a '1ULL << i' which would be
-> cleaner and less verbose IMHO, but apparently this driver does not use
-> such things yet. So keep the current style with casting.
-> ---
->  drivers/scsi/bnx2fc/bnx2fc_hwi.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> index 5ff9f89c17c7..a9dccb3b49cc 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_hwi.c
-> @@ -829,7 +829,7 @@ static void bnx2fc_process_unsol_compl(struct
-> bnx2fc_rport *tgt, u16 wqe)
->  			((u64)err_entry->data.err_warn_bitmap_hi << 32) |
->  			(u64)err_entry->data.err_warn_bitmap_lo;
->  		for (i = 0; i < BNX2FC_NUM_ERR_BITS; i++) {
-> -			if (err_warn_bit_map & (u64) (1 << i)) {
-> +			if (err_warn_bit_map & (u64)((u64)1 << i)) {
->  				err_warn = i;
->  				break;
->  			}
-> --
-> 2.9.3
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
-
-Looks fine to me.
-Reviewed-by: Laurence Oberman <loberman@redhat.com>
+RnJvbTogVHVzaGFyIERhdmUgPHR1c2hhci5uLmRhdmVAb3JhY2xlLmNvbT4NCkRhdGU6IFdlZCwg
+MjMgTm92IDIwMTYgMTg6Mjg6MDQgLTA4MDANCg0KPiBxbG9naWNwdGkgdXNlcyAnX191MzInIGZv
+ciBkbWEgaGFuZGxlIHdoaWxlIGludm9raW5nIGtlcm5lbCBETUEgQVBJcywNCj4gaW5zdGVhZCBv
+ZiB1c2luZyBkbWFfYWRkcl90LiBUaGlzIGhhc24ndCBjYXVzZWQgYW55ICdpbmNvbXBhdGlibGUN
+Cj4gcG9pbnRlciB0eXBlJyB3YXJuaW5nIG9uIFNQQVJDIGJlY2F1c2UgdW50aWwgbm93IGRtYV9h
+ZGRyX3QgaXMgb2YNCj4gdHlwZSB1MzIuIEhvd2V2ZXIsIHJlY2VudCBjaGFuZ2VzIGluIFNQQVJD
+IEFUVSAoaW9tbXUpIGVuYWJsZWQgNjRiaXQNCj4gRE1BIGFuZCB0aGVyZWZvcmUgZG1hX2FkZHJf
+dCBiZWNhbWUgb2YgdHlwZSB1NjQuIFRoaXMgbWFrZXMNCj4gJ2luY29tcGF0aWJsZSBwb2ludGVy
+IHR5cGUnIHdhcm5pbmdzIGluZXZpdGFibGUuDQo+IA0KPiBlLmcuDQo+IGRyaXZlcnMvc2NzaS9x
+bG9naWNwdGkuYzogSW4gZnVuY3Rpb24goXFwdGlfbWFwX3F1ZXVlc6I6DQo+IGRyaXZlcnMvc2Nz
+aS9xbG9naWNwdGkuYzo4MTM6IHdhcm5pbmc6IHBhc3NpbmcgYXJndW1lbnQgMyBvZiChZG1hX2Fs
+bG9jX2NvaGVyZW50oiBmcm9tIGluY29tcGF0aWJsZSBwb2ludGVyIHR5cGUNCj4gLi9pbmNsdWRl
+L2xpbnV4L2RtYS1tYXBwaW5nLmg6NDQ1OiBub3RlOiBleHBlY3RlZCChZG1hX2FkZHJfdCAqoiBi
+dXQgYXJndW1lbnQgaXMgb2YgdHlwZSChX191MzIgKqINCj4gZHJpdmVycy9zY3NpL3Fsb2dpY3B0
+aS5jOjgyMjogd2FybmluZzogcGFzc2luZyBhcmd1bWVudCAzIG9mIKFkbWFfYWxsb2NfY29oZXJl
+bnSiIGZyb20gaW5jb21wYXRpYmxlIHBvaW50ZXIgdHlwZQ0KPiAuL2luY2x1ZGUvbGludXgvZG1h
+LW1hcHBpbmcuaDo0NDU6IG5vdGU6IGV4cGVjdGVkIKFkbWFfYWRkcl90ICqiIGJ1dCBhcmd1bWVu
+dCBpcyBvZiB0eXBlIKFfX3UzMiAqog0KPiANCj4gRm9yIHRoZSByZWNvcmQsIHFsb2dpY3B0aSBu
+ZXZlciBleGVjdXRlcyBvbiBzdW40di4gVGhlcmVmb3JlIGV2ZW4NCj4gdGhvdWdoIDY0Yml0IERN
+QSBpcyBlbmFibGVkIG9uIFNQQVJDLCBxbG9naWNwdGkgY29udGludWVzIHRvIHVzZQ0KPiBsZWdh
+Y3kgaW9tbXUgdGhhdCBndWFyYW50ZWVzIERNQSBhZGRyZXNzIGlzIGFsd2F5cyBpbiAzMmJpdCBy
+YW5nZS4NCj4gDQo+IFRoaXMgcGF0Y2ggcmVzb2x2ZXMgYWZvcmVtZW50aW9uZWQgY29tcGlsZXIg
+d2FybmluZ3MuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBUdXNoYXIgRGF2ZSA8dHVzaGFyLm4uZGF2
+ZUBvcmFjbGUuY29tPg0KPiBSZXZpZXdlZC1ieTogdGhvbWFzIHRhaSA8dGhvbWFzLnRhaUBvcmFj
+bGUuY29tPg0KDQpBcHBsaWVkLg0K
