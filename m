@@ -1,32 +1,49 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] scsi: lpfc: Replace pci_pool_alloc by pci_pool_zalloc
-Date: Mon, 28 Nov 2016 11:21:26 +0100
-Message-ID: <20161128102125.5zurgzgb4wpbotwp@linux-x5ow.site>
-References: <20161128095237.GA30900@gnr743-HP-ZBook-15>
+Subject: Re: SG does not ignore dxferp (direct io + mmap)
+Date: Mon, 28 Nov 2016 11:30:05 +0100
+Message-ID: <20161128103005.c6ttwqoeif6wi7ns@linux-x5ow.site>
+References: <1479738275.19792.24.camel@localhost.localdomain>
+ <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
+ <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
+ <1479932524.28416.43.camel@localhost.localdomain>
+ <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
+ <CAPrnrPBcvBcNaZ5asJquRSp4Ann3xHVGSRbwLkvPF+YKJ6OpCw@mail.gmail.com>
+ <20161125115317.llxd2lslf7ovitxd@linux-x5ow.site>
+ <CAPrnrPBsBPH2B48QYLPCsdpg0LT7iBxc2+g+_xHPcDOjRf7f5A@mail.gmail.com>
+ <805036857.58360.1480085165589.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36715 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37619 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754384AbcK1KVd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 05:21:33 -0500
+        id S1754607AbcK1KaM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Nov 2016 05:30:12 -0500
 Content-Disposition: inline
-In-Reply-To: <20161128095237.GA30900@gnr743-HP-ZBook-15>
+In-Reply-To: <805036857.58360.1480085165589.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org
+To: Laurence Oberman <loberman@redhat.com>
+Cc: Eyal Ben David <bdeyal@gmail.com>, "Ewan D. Milne" <emilne@redhat.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-On Mon, Nov 28, 2016 at 03:22:37PM +0530, Souptick Joarder wrote:
-> In lpfc_new_scsi_buf_s3() and lpfc_new_scsi_buf_s4() pci_pool_alloc
-> followed by memset will be replaced by pci_pool_zalloc()
+On Fri, Nov 25, 2016 at 09:46:05AM -0500, Laurence Oberman wrote:
+
+[...]
+
 > 
-> Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
-> ---
+> Johannes, you are reproducing another race in your test I think.
+> 
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This might actually be true. Disclaimer I'm hauntiung that one for quite some
+time and now have a reproducer for it not just a downstream bug report.
+
+I was tracing it down to the exact opposite of this KASAN report [1] which came
+in over the weekend, so I'll be looking into this one as well now.
+
+[1] http://www.spinics.net/lists/linux-scsi/msg102232.html
+
+Byte,
+	Johannes
 
 -- 
 Johannes Thumshirn                                          Storage
