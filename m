@@ -1,86 +1,53 @@
-From: John Garry <john.garry@huawei.com>
-Subject: Re: [patch] scsi: hisi_sas: shift vs compare typos
-Date: Tue, 29 Nov 2016 11:20:33 +0000
-Message-ID: <05d1c119-bdd1-5624-def8-42f026f2ef40@huawei.com>
-References: <20161129104725.GA7623@mwanda>
+From: David Vrabel <david.vrabel@citrix.com>
+Subject: Re: [PATCH] xen/scsifront: don't advance ring request
+ pointer in case of error
+Date: Tue, 29 Nov 2016 11:28:39 +0000
+Message-ID: <de9639d9-620a-beac-7a58-14939c2baa0f@citrix.com>
+References: <20161125202650.GK6266@mwanda>
+ <20161129105013.7419-1-jgross@suse.com> <583D712F0200007800123283@suse.com>
+ <cbf7fc2e-09e4-f2ef-3fa3-5371be08270d@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:5621 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751136AbcK2LVH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 06:21:07 -0500
-In-Reply-To: <20161129104725.GA7623@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <xen-devel-bounces@lists.xen.org>
+In-Reply-To: <cbf7fc2e-09e4-f2ef-3fa3-5371be08270d@suse.com>
+List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
+List-Post: <mailto:xen-devel@lists.xen.org>
+List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
+List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
+ <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
+Errors-To: xen-devel-bounces@lists.xen.org
+Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
+To: Juergen Gross <jgross@suse.com>, Jan Beulich <JBeulich@suse.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, lambert.quentin@gmail.com, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, boris.ostrovsky@oracle.com, dan.carpenter@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Xiang Chen <chenxiang66@hisilicon.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, Linuxarm <linuxarm@huawei.com>, tanxiaofei <tanxiaofei@huawei.com>
 
-On 29/11/2016 10:47, Dan Carpenter wrote:
-> There are some typos where we intended "<<" but have "<".  Seems likely
-> to cause a bunch of problems.
->
-> Fixes: d3b688d3c69d ("scsi: hisi_sas: add v2 hw support for ECC and AXI bus fatal error")
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> ---
-> There is another static checker warning to fix perhaps:
->
-> 	drivers/scsi/hisi_sas/hisi_sas_v2_hw.c:2015 phy_up_v2_hw()
-> 	warn: was expecting a 64 bit value instead of '(2 | 1)'
->
-> The code is doing:
->
-> 	phy->phy_type &= ~(PORT_TYPE_SAS | PORT_TYPE_SATA);
-
-Right, I think that a u32 would suffice. We can generate a separate 
-patch for this.
-
->
-> phy->phy_type is a u64 and PORT_TYPE_SAS is "1U << 1".  So this code
-> is clearing out the high 32 bits of ->phy_type uninitentionally.  It's
-> simple enough to make it 1ULL << 1 but the question is, do we really
-> need ->phy_type to be a 64 bit variable?  I'm pretty sure that a u32
-> will suffice.
->
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> index 15487f2..93876c0 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-> @@ -64,19 +64,19 @@
->  					 HGC_LM_DFX_STATUS2_ITCTLIST_OFF)
->  #define HGC_CQE_ECC_ADDR		0x13c
->  #define HGC_CQE_ECC_1B_ADDR_OFF	0
-> -#define HGC_CQE_ECC_1B_ADDR_MSK	(0x3f < HGC_CQE_ECC_1B_ADDR_OFF)
-> +#define HGC_CQE_ECC_1B_ADDR_MSK	(0x3f << HGC_CQE_ECC_1B_ADDR_OFF)
->  #define HGC_CQE_ECC_MB_ADDR_OFF	8
-> -#define HGC_CQE_ECC_MB_ADDR_MSK (0x3f < HGC_CQE_ECC_MB_ADDR_OFF)
-> +#define HGC_CQE_ECC_MB_ADDR_MSK (0x3f << HGC_CQE_ECC_MB_ADDR_OFF)
->  #define HGC_IOST_ECC_ADDR		0x140
->  #define HGC_IOST_ECC_1B_ADDR_OFF	0
-> -#define HGC_IOST_ECC_1B_ADDR_MSK	(0x3ff < HGC_IOST_ECC_1B_ADDR_OFF)
-> +#define HGC_IOST_ECC_1B_ADDR_MSK	(0x3ff << HGC_IOST_ECC_1B_ADDR_OFF)
->  #define HGC_IOST_ECC_MB_ADDR_OFF	16
-> -#define HGC_IOST_ECC_MB_ADDR_MSK	(0x3ff < HGC_IOST_ECC_MB_ADDR_OFF)
-> +#define HGC_IOST_ECC_MB_ADDR_MSK	(0x3ff << HGC_IOST_ECC_MB_ADDR_OFF)
->  #define HGC_DQE_ECC_ADDR		0x144
->  #define HGC_DQE_ECC_1B_ADDR_OFF	0
-> -#define HGC_DQE_ECC_1B_ADDR_MSK	(0xfff < HGC_DQE_ECC_1B_ADDR_OFF)
-> +#define HGC_DQE_ECC_1B_ADDR_MSK	(0xfff << HGC_DQE_ECC_1B_ADDR_OFF)
->  #define HGC_DQE_ECC_MB_ADDR_OFF	16
-> -#define HGC_DQE_ECC_MB_ADDR_MSK (0xfff < HGC_DQE_ECC_MB_ADDR_OFF)
-> +#define HGC_DQE_ECC_MB_ADDR_MSK (0xfff << HGC_DQE_ECC_MB_ADDR_OFF)
->  #define HGC_INVLD_DQE_INFO		0x148
->  #define HGC_INVLD_DQE_INFO_FB_CH0_OFF	9
->  #define HGC_INVLD_DQE_INFO_FB_CH0_MSK	(0x1 << HGC_INVLD_DQE_INFO_FB_CH0_OFF)
->
-> .
->
-
-Cheers
-
-These were introduced in recent patch applied to 4.10 queue, and would 
-only affect rare occurance of AXI/ECC error.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-
+T24gMjkvMTEvMTYgMTE6MTksIEp1ZXJnZW4gR3Jvc3Mgd3JvdGU6Cj4gT24gMjkvMTEvMTYgMTI6
+MTQsIEphbiBCZXVsaWNoIHdyb3RlOgo+Pj4+PiBPbiAyOS4xMS4xNiBhdCAxMTo1MCwgPEpHcm9z
+c0BzdXNlLmNvbT4gd3JvdGU6Cj4+PiAtLS0gYS9kcml2ZXJzL3Njc2kveGVuLXNjc2lmcm9udC5j
+Cj4+PiArKysgYi9kcml2ZXJzL3Njc2kveGVuLXNjc2lmcm9udC5jCj4+PiBAQCAtMTg0LDggKzE4
+NCw2IEBAIHN0YXRpYyBzdHJ1Y3QgdnNjc2lpZl9yZXF1ZXN0ICpzY3NpZnJvbnRfcHJlX3JlcShz
+dHJ1Y3QgdnNjc2lmcm50X2luZm8gKmluZm8pCj4+PiAgCj4+PiAgCXJpbmdfcmVxID0gUklOR19H
+RVRfUkVRVUVTVCgmKGluZm8tPnJpbmcpLCByaW5nLT5yZXFfcHJvZF9wdnQpOwo+Pj4gIAo+Pj4g
+LQlyaW5nLT5yZXFfcHJvZF9wdnQrKzsKPj4KPj4gUGxlYXNlIG5vdGUgdGhlICJfcHZ0IiBzdWZm
+aXgsIHdoaWNoIHN0YW5kcyBmb3IgInByaXZhdGUiOiBUaGlzIGZpZWxkIGlzCj4+IG5vdCB2aXNp
+YmxlIHRvIHRoZSBiYWNrZW5kLiBPbmx5IHJpbmctPnNyaW5nIGZpZWxkcyBhcmUgc2hhcmVkLCBh
+bmQKPj4gdGhlIHVwZGF0aW5nIG9mIHRoZSBzaGFyZWQgZmllbGQgaGFwcGVucyBpbiBSSU5HX1BV
+U0hfUkVRVUVTVFMoKQo+PiBhbmQgUklOR19QVVNIX1JFUVVFU1RTX0FORF9DSEVDS19OT1RJRlko
+KS4KPiAKPiBTdXJlLCBidXQgUklOR19QVVNIX1JFUVVFU1RTKCkgd2lsbCBjb3B5IHJlcV9wcm9k
+X3B2dCB0byByZXFfcHJvZC4gSW4KPiB0aGUgY2FzZSBjb3JyZWN0ZWQgdGhpcyB3b3VsZCBhZHZh
+bmNlIHJlcV9wcm9kIGJ5IHR3byBhZnRlciB0aGUgZXJyb3IKPiBjYXNlIGJlZm9yZSwgZXZlbiBp
+ZiBvbmx5IG9uZSByZXF1ZXN0IHdvdWxkIGhhdmUgbWFkZSBpdCB0byB0aGUgcmluZy4KPiAKPiBB
+cyBhbiBhbHRlcm5hdGl2ZSBJIGNvdWxkIGhhdmUgZGVjcmVtZW50ZWQgcmVxX3Byb2RfcHZ0IGlu
+IGNhc2Ugb2YgYW4KPiBlcnJvciwgYnV0IEkgbGlrZSBteSBjdXJyZW50IHNvbHV0aW9uIGJldHRl
+ci4KCkZXSVcsIEkgZm91bmQgdGhlIGNvbW1pdCBtZXNzYWdlIGEgYml0IG1pc2xlYWRpbmcgYW5k
+IGFsc28gY2FtZSB0byB0aGUKc2FtZSBjb25jbHVzaW9uIGFzIEphbiBpbml0aWFsbHkuCgpQZXJo
+YXBzLAoKIldoZW4gYWRkaW5nIGEgbmV3IHJlcXVlc3QgdG8gdGhlIHJpbmcsIGFuIGVycm9yIG1h
+eSBjYXVzZSB0aGUKKHBhcnRpYWxseSBjb25zdHJ1Y3RlZCkgcmVxdWVzdCB0byBiZSBkaXNjYXJk
+ZWQgYW5kIHVzZWQgZm9yIHRoZSBuZXh0LgpUaHVzIHJpbmctPnJlcV9wcm9kX3B2dCBzaG91bGQg
+bm90IGJlIGFkdmFuY2VkIHVudGlsIHdlIGtub3cgdGhlIHJlcXVlc3QKd2lsbCBiZSBzdWNjZXNz
+ZnVsbHkgYWRkZWQgdG8gdGhlIHJpbmcuIgoKT3Igc2ltaWxhci4KCkRhdmlkCgpfX19fX19fX19f
+X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFpbGluZyBs
+aXN0Clhlbi1kZXZlbEBsaXN0cy54ZW4ub3JnCmh0dHBzOi8vbGlzdHMueGVuLm9yZy94ZW4tZGV2
+ZWwK
