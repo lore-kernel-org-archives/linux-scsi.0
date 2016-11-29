@@ -1,19 +1,19 @@
 From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 1/3] hpsa: use correct DID_NO_CONNECT hostbyte
-Date: Tue, 29 Nov 2016 02:02:47 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D193B0CCCFD@avsrvexchmbx1.microsemi.net>
+Subject: RE: [PATCH 3/3] hpsa: add 'ctlr_num' sysfs attribute
+Date: Tue, 29 Nov 2016 02:03:36 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B0CCD11@avsrvexchmbx1.microsemi.net>
 References: <1479454369-100281-1-git-send-email-hare@suse.de>
- <1479454369-100281-2-git-send-email-hare@suse.de>
+ <1479454369-100281-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0063.outbound.protection.outlook.com ([104.47.41.63]:20768
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0070.outbound.protection.outlook.com ([104.47.40.70]:56736
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755132AbcK2CDQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 21:03:16 -0500
-In-Reply-To: <1479454369-100281-2-git-send-email-hare@suse.de>
+        id S1753935AbcK2CEK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Nov 2016 21:04:10 -0500
+In-Reply-To: <1479454369-100281-4-git-send-email-hare@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -26,34 +26,59 @@ Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartn
 > To: Martin K. Petersen
 > Cc: Christoph Hellwig; James Bottomley; Don Brace; Martin Wilck; linux-
 > scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
-> Subject: [PATCH 1/3] hpsa: use correct DID_NO_CONNECT hostbyte
+> Subject: [PATCH 3/3] hpsa: add 'ctlr_num' sysfs attribute
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> NOT_READY is a sense key, not a legit scsi hostbyte value.
-> Use DID_NO_CONNECT instead.
+> Add a sysfs attribute 'ctlr_num' holding the current HPSA controller
+> number. This is required to construct compability 'cciss' links.
 >=20
 > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->  drivers/scsi/hpsa.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/hpsa.c | 13 +++++++++++++
+>  1 file changed, 13 insertions(+)
 >=20
 > diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-> index ea64c01..488e17c 100644
+> index 3d89f74..5834117 100644
 > --- a/drivers/scsi/hpsa.c
 > +++ b/drivers/scsi/hpsa.c
-> @@ -5493,7 +5493,7 @@ static int hpsa_scsi_queue_command(struct
-> Scsi_Host *sh, struct scsi_cmnd *cmd)
+> @@ -867,6 +867,16 @@ static ssize_t path_info_show(struct device *dev,
+>         return output_len;
+>  }
 >=20
->         dev =3D cmd->device->hostdata;
->         if (!dev) {
-> -               cmd->result =3D NOT_READY << 16; /* host byte */
-> +               cmd->result =3D DID_NO_CONNECT << 16;
->                 cmd->scsi_done(cmd);
->                 return 0;
->         }
+> +static ssize_t host_show_ctlr_num(struct device *dev,
+> +       struct device_attribute *attr, char *buf)
+> +{
+> +       struct ctlr_info *h;
+> +       struct Scsi_Host *shost =3D class_to_shost(dev);
+> +
+> +       h =3D shost_to_hba(shost);
+> +       return snprintf(buf, 20, "%d\n", h->ctlr);
+> +}
+> +
+>  static DEVICE_ATTR(raid_level, S_IRUGO, raid_level_show, NULL);
+>  static DEVICE_ATTR(lunid, S_IRUGO, lunid_show, NULL);
+>  static DEVICE_ATTR(unique_id, S_IRUGO, unique_id_show, NULL);
+> @@ -890,6 +900,8 @@ static DEVICE_ATTR(resettable, S_IRUGO,
+>         host_show_resettable, NULL);
+>  static DEVICE_ATTR(lockup_detected, S_IRUGO,
+>         host_show_lockup_detected, NULL);
+> +static DEVICE_ATTR(ctlr_num, S_IRUGO,
+> +       host_show_ctlr_num, NULL);
+>=20
+>  static struct device_attribute *hpsa_sdev_attrs[] =3D {
+>         &dev_attr_raid_level,
+> @@ -910,6 +922,7 @@ static DEVICE_ATTR(lockup_detected, S_IRUGO,
+>         &dev_attr_hp_ssd_smart_path_status,
+>         &dev_attr_raid_offload_debug,
+>         &dev_attr_lockup_detected,
+> +       &dev_attr_ctlr_num,
+>         NULL,
+>  };
+>=20
 > --
 > 1.8.5.6
 
 Acked-by: Don Brace <don.brace@microsemi.com>
+
