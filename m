@@ -1,53 +1,60 @@
-From: David Vrabel <david.vrabel@citrix.com>
-Subject: Re: [PATCH] xen/scsifront: don't advance ring request
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [Xen-devel] [PATCH] xen/scsifront: don't advance ring request
  pointer in case of error
-Date: Tue, 29 Nov 2016 11:28:39 +0000
-Message-ID: <de9639d9-620a-beac-7a58-14939c2baa0f@citrix.com>
+Date: Tue, 29 Nov 2016 12:33:44 +0100
+Message-ID: <7ab5f25c-0611-e67a-3d31-a9c46e5e9aaa@suse.com>
 References: <20161125202650.GK6266@mwanda>
  <20161129105013.7419-1-jgross@suse.com> <583D712F0200007800123283@suse.com>
  <cbf7fc2e-09e4-f2ef-3fa3-5371be08270d@suse.com>
+ <de9639d9-620a-beac-7a58-14939c2baa0f@citrix.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-In-Reply-To: <cbf7fc2e-09e4-f2ef-3fa3-5371be08270d@suse.com>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: Juergen Gross <jgross@suse.com>, Jan Beulich <JBeulich@suse.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <de9639d9-620a-beac-7a58-14939c2baa0f@citrix.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: David Vrabel <david.vrabel@citrix.com>, Jan Beulich <JBeulich@suse.com>
 Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, lambert.quentin@gmail.com, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org, boris.ostrovsky@oracle.com, dan.carpenter@oracle.com
 List-Id: linux-scsi@vger.kernel.org
 
-T24gMjkvMTEvMTYgMTE6MTksIEp1ZXJnZW4gR3Jvc3Mgd3JvdGU6Cj4gT24gMjkvMTEvMTYgMTI6
-MTQsIEphbiBCZXVsaWNoIHdyb3RlOgo+Pj4+PiBPbiAyOS4xMS4xNiBhdCAxMTo1MCwgPEpHcm9z
-c0BzdXNlLmNvbT4gd3JvdGU6Cj4+PiAtLS0gYS9kcml2ZXJzL3Njc2kveGVuLXNjc2lmcm9udC5j
-Cj4+PiArKysgYi9kcml2ZXJzL3Njc2kveGVuLXNjc2lmcm9udC5jCj4+PiBAQCAtMTg0LDggKzE4
-NCw2IEBAIHN0YXRpYyBzdHJ1Y3QgdnNjc2lpZl9yZXF1ZXN0ICpzY3NpZnJvbnRfcHJlX3JlcShz
-dHJ1Y3QgdnNjc2lmcm50X2luZm8gKmluZm8pCj4+PiAgCj4+PiAgCXJpbmdfcmVxID0gUklOR19H
-RVRfUkVRVUVTVCgmKGluZm8tPnJpbmcpLCByaW5nLT5yZXFfcHJvZF9wdnQpOwo+Pj4gIAo+Pj4g
-LQlyaW5nLT5yZXFfcHJvZF9wdnQrKzsKPj4KPj4gUGxlYXNlIG5vdGUgdGhlICJfcHZ0IiBzdWZm
-aXgsIHdoaWNoIHN0YW5kcyBmb3IgInByaXZhdGUiOiBUaGlzIGZpZWxkIGlzCj4+IG5vdCB2aXNp
-YmxlIHRvIHRoZSBiYWNrZW5kLiBPbmx5IHJpbmctPnNyaW5nIGZpZWxkcyBhcmUgc2hhcmVkLCBh
-bmQKPj4gdGhlIHVwZGF0aW5nIG9mIHRoZSBzaGFyZWQgZmllbGQgaGFwcGVucyBpbiBSSU5HX1BV
-U0hfUkVRVUVTVFMoKQo+PiBhbmQgUklOR19QVVNIX1JFUVVFU1RTX0FORF9DSEVDS19OT1RJRlko
-KS4KPiAKPiBTdXJlLCBidXQgUklOR19QVVNIX1JFUVVFU1RTKCkgd2lsbCBjb3B5IHJlcV9wcm9k
-X3B2dCB0byByZXFfcHJvZC4gSW4KPiB0aGUgY2FzZSBjb3JyZWN0ZWQgdGhpcyB3b3VsZCBhZHZh
-bmNlIHJlcV9wcm9kIGJ5IHR3byBhZnRlciB0aGUgZXJyb3IKPiBjYXNlIGJlZm9yZSwgZXZlbiBp
-ZiBvbmx5IG9uZSByZXF1ZXN0IHdvdWxkIGhhdmUgbWFkZSBpdCB0byB0aGUgcmluZy4KPiAKPiBB
-cyBhbiBhbHRlcm5hdGl2ZSBJIGNvdWxkIGhhdmUgZGVjcmVtZW50ZWQgcmVxX3Byb2RfcHZ0IGlu
-IGNhc2Ugb2YgYW4KPiBlcnJvciwgYnV0IEkgbGlrZSBteSBjdXJyZW50IHNvbHV0aW9uIGJldHRl
-ci4KCkZXSVcsIEkgZm91bmQgdGhlIGNvbW1pdCBtZXNzYWdlIGEgYml0IG1pc2xlYWRpbmcgYW5k
-IGFsc28gY2FtZSB0byB0aGUKc2FtZSBjb25jbHVzaW9uIGFzIEphbiBpbml0aWFsbHkuCgpQZXJo
-YXBzLAoKIldoZW4gYWRkaW5nIGEgbmV3IHJlcXVlc3QgdG8gdGhlIHJpbmcsIGFuIGVycm9yIG1h
-eSBjYXVzZSB0aGUKKHBhcnRpYWxseSBjb25zdHJ1Y3RlZCkgcmVxdWVzdCB0byBiZSBkaXNjYXJk
-ZWQgYW5kIHVzZWQgZm9yIHRoZSBuZXh0LgpUaHVzIHJpbmctPnJlcV9wcm9kX3B2dCBzaG91bGQg
-bm90IGJlIGFkdmFuY2VkIHVudGlsIHdlIGtub3cgdGhlIHJlcXVlc3QKd2lsbCBiZSBzdWNjZXNz
-ZnVsbHkgYWRkZWQgdG8gdGhlIHJpbmcuIgoKT3Igc2ltaWxhci4KCkRhdmlkCgpfX19fX19fX19f
-X19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fXwpYZW4tZGV2ZWwgbWFpbGluZyBs
-aXN0Clhlbi1kZXZlbEBsaXN0cy54ZW4ub3JnCmh0dHBzOi8vbGlzdHMueGVuLm9yZy94ZW4tZGV2
-ZWwK
+On 29/11/16 12:28, David Vrabel wrote:
+> On 29/11/16 11:19, Juergen Gross wrote:
+>> On 29/11/16 12:14, Jan Beulich wrote:
+>>>>>> On 29.11.16 at 11:50, <JGross@suse.com> wrote:
+>>>> --- a/drivers/scsi/xen-scsifront.c
+>>>> +++ b/drivers/scsi/xen-scsifront.c
+>>>> @@ -184,8 +184,6 @@ static struct vscsiif_request *scsifront_pre_req(struct vscsifrnt_info *info)
+>>>>  
+>>>>  	ring_req = RING_GET_REQUEST(&(info->ring), ring->req_prod_pvt);
+>>>>  
+>>>> -	ring->req_prod_pvt++;
+>>>
+>>> Please note the "_pvt" suffix, which stands for "private": This field is
+>>> not visible to the backend. Only ring->sring fields are shared, and
+>>> the updating of the shared field happens in RING_PUSH_REQUESTS()
+>>> and RING_PUSH_REQUESTS_AND_CHECK_NOTIFY().
+>>
+>> Sure, but RING_PUSH_REQUESTS() will copy req_prod_pvt to req_prod. In
+>> the case corrected this would advance req_prod by two after the error
+>> case before, even if only one request would have made it to the ring.
+>>
+>> As an alternative I could have decremented req_prod_pvt in case of an
+>> error, but I like my current solution better.
+> 
+> FWIW, I found the commit message a bit misleading and also came to the
+> same conclusion as Jan initially.
+> 
+> Perhaps,
+> 
+> "When adding a new request to the ring, an error may cause the
+> (partially constructed) request to be discarded and used for the next.
+> Thus ring->req_prod_pvt should not be advanced until we know the request
+> will be successfully added to the ring."
+
+This is indeed much better, thanks.
+
+In case there are no other objections I'll fix this up when
+committing.
+
+
+Juergen
