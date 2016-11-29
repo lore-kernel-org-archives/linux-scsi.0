@@ -1,15 +1,15 @@
 From: <gregkh@linuxfoundation.org>
-Subject: Patch "scsi: mpt3sas: Fix secure erase premature termination" has been added to the 4.4-stable tree
-Date: Tue, 29 Nov 2016 16:33:39 +0100
-Message-ID: <148043361917038@kroah.com>
+Subject: Patch "scsi: mpt3sas: Fix secure erase premature termination" has been added to the 4.8-stable tree
+Date: Tue, 29 Nov 2016 16:34:58 +0100
+Message-ID: <1480433698247236@kroah.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=ANSI_X3.4-1968
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.linuxfoundation.org ([140.211.169.12]:44600 "EHLO
+Received: from mail.linuxfoundation.org ([140.211.169.12]:45150 "EHLO
         mail.linuxfoundation.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758123AbcK2Pdo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 10:33:44 -0500
+        with ESMTP id S934103AbcK2Pft (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 10:35:49 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: andrey2805@gmail.com, Sreekanth.Reddy@broadcom.com, chaitra.basappa@broadcom.com, gregkh@linuxfoundation.org, hare@suse.de, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, sathya.prakash@broadcom.com, suganath-prabu.subramani@broadcom.com
@@ -20,12 +20,12 @@ This is a note to let you know that I've just added the patch titled
 
     scsi: mpt3sas: Fix secure erase premature termination
 
-to the 4.4-stable tree which can be found at:
+to the 4.8-stable tree which can be found at:
     http://www.kernel.org/git/?p=linux/kernel/git/stable/stable-queue.git;a=summary
 
 The filename of the patch is:
      scsi-mpt3sas-fix-secure-erase-premature-termination.patch
-and it can be found in the queue-4.4 subdirectory.
+and it can be found in the queue-4.8 subdirectory.
 
 If you, or anyone else, feels it should not be added to the stable tree,
 please let <stable@vger.kernel.org> know about it.
@@ -68,7 +68,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3831,7 +3831,10 @@ _scsih_eedp_error_handling(struct scsi_c
+@@ -4019,7 +4019,10 @@ _scsih_eedp_error_handling(struct scsi_c
  	    SAM_STAT_CHECK_CONDITION;
  }
  
@@ -80,7 +80,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  
  /**
   * scsih_qcmd - main scsi request entry point
-@@ -3859,6 +3862,13 @@ scsih_qcmd(struct Scsi_Host *shost, stru
+@@ -4047,6 +4050,13 @@ scsih_qcmd(struct Scsi_Host *shost, stru
  	if (ioc->logging_level & MPT_DEBUG_SCSI)
  		scsi_print_command(scmd);
  
@@ -94,7 +94,7 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
  	sas_device_priv_data = scmd->device->hostdata;
  	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
  		scmd->result = DID_NO_CONNECT << 16;
-@@ -4431,6 +4441,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *i
+@@ -4622,6 +4632,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *i
  	if (scmd == NULL)
  		return 1;
  
@@ -108,4 +108,4 @@ Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
 
 Patches currently in stable-queue which might be from andrey2805@gmail.com are
 
-queue-4.4/scsi-mpt3sas-fix-secure-erase-premature-termination.patch
+queue-4.8/scsi-mpt3sas-fix-secure-erase-premature-termination.patch
