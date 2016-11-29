@@ -1,64 +1,39 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: [PATCH] xen/scsifront: don't advance ring request pointer in case of error
-Date: Tue, 29 Nov 2016 11:50:13 +0100
-Message-ID: <20161129105013.7419-1-jgross@suse.com>
+From: "Jan Beulich" <JBeulich@suse.com>
+Subject: Re: [Xen-devel] [PATCH] xen/scsifront: don't advance ring
+ request pointer in case of error
+Date: Tue, 29 Nov 2016 04:14:39 -0700
+Message-ID: <583D712F0200007800123283@prv-mh.provo.novell.com>
 References: <20161125202650.GK6266@mwanda>
+ <20161129105013.7419-1-jgross@suse.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57426 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753243AbcK2Ku3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Nov 2016 05:50:29 -0500
-In-Reply-To: <20161125202650.GK6266@mwanda>
+Received: from prv-mh.provo.novell.com ([137.65.248.74]:50230 "EHLO
+        prv-mh.provo.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753824AbcK2LOp (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:6:2>);
+        Tue, 29 Nov 2016 06:14:45 -0500
+In-Reply-To: <20161129105013.7419-1-jgross@suse.com>
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Cc: boris.ostrovsky@oracle.com, lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, Juergen Gross <jgross@suse.com>
+To: Juergen Gross <JGross@suse.com>
+Cc: lambert.quentin@gmail.com, jejb@linux.vnet.ibm.com, xen-devel@lists.xenproject.org, boris.ostrovsky@oracle.com, dan.carpenter@oracle.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-When allocating a new ring slot for a request don't advance the
-producer index until the request is really ready to go to the backend.
-Otherwise only partially filled requests will be visible to the
-backend in case of errors on the frontend side.
+>>> On 29.11.16 at 11:50, <JGross@suse.com> wrote:
+> --- a/drivers/scsi/xen-scsifront.c
+> +++ b/drivers/scsi/xen-scsifront.c
+> @@ -184,8 +184,6 @@ static struct vscsiif_request *scsifront_pre_req(struct vscsifrnt_info *info)
+>  
+>  	ring_req = RING_GET_REQUEST(&(info->ring), ring->req_prod_pvt);
+>  
+> -	ring->req_prod_pvt++;
 
-In scsifront_action_handler() free the request id in case of an error.
+Please note the "_pvt" suffix, which stands for "private": This field is
+not visible to the backend. Only ring->sring fields are shared, and
+the updating of the shared field happens in RING_PUSH_REQUESTS()
+and RING_PUSH_REQUESTS_AND_CHECK_NOTIFY().
 
-Signed-off-by: Juergen Gross <jgross@suse.com>
----
-In case accepted I'll take this patch through the Xen tree as it is based
-on another patch by lambert.quentin@gmail.com which is going through Xen, too.
----
- drivers/scsi/xen-scsifront.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/xen-scsifront.c b/drivers/scsi/xen-scsifront.c
-index c01316c..33805f6 100644
---- a/drivers/scsi/xen-scsifront.c
-+++ b/drivers/scsi/xen-scsifront.c
-@@ -184,8 +184,6 @@ static struct vscsiif_request *scsifront_pre_req(struct vscsifrnt_info *info)
- 
- 	ring_req = RING_GET_REQUEST(&(info->ring), ring->req_prod_pvt);
- 
--	ring->req_prod_pvt++;
--
- 	ring_req->rqid = (uint16_t)id;
- 
- 	return ring_req;
-@@ -196,6 +194,8 @@ static void scsifront_do_request(struct vscsifrnt_info *info)
- 	struct vscsiif_front_ring *ring = &(info->ring);
- 	int notify;
- 
-+	ring->req_prod_pvt++;
-+
- 	RING_PUSH_REQUESTS_AND_CHECK_NOTIFY(ring, notify);
- 	if (notify)
- 		notify_remote_via_irq(info->irq);
-@@ -626,6 +626,7 @@ static int scsifront_action_handler(struct scsi_cmnd *sc, uint8_t act)
- 	}
- 
- 	if (scsifront_enter(info)) {
-+		scsifront_put_rqid(info, shadow->rqid);
- 		spin_unlock_irq(host->host_lock);
- 		kfree(shadow);
- 		return FAILED;
--- 
-2.10.2
+Jan
 
