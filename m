@@ -1,29 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: bnx2i + bnx2fc: convert to generic workqueue (#2)
-Date: Tue, 29 Nov 2016 11:56:57 -0500
-Message-ID: <yq160n6ns12.fsf@sermon.lab.mkp.net>
-References: <20161122174813.16184-1-bigeasy@linutronix.de>
+Subject: Re: [PATCH v2] [hv] storvsc: Payload buffer incorrectly sized for 32
+ bit kernels.
+Date: Tue, 29 Nov 2016 11:57:46 -0500
+Message-ID: <yq11sxunrzp.fsf@sermon.lab.mkp.net>
+References: <1479908793-19872-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:31555 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756435AbcK2Q5T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 11:57:19 -0500
-In-Reply-To: <20161122174813.16184-1-bigeasy@linutronix.de> (Sebastian Andrzej
-        Siewior's message of "Tue, 22 Nov 2016 18:48:08 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1479908793-19872-1-git-send-email-cavery@redhat.com> (Cathy
+ Avery's message of "Wed, 23 Nov 2016 08:46:33 -0500")
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Cathy Avery <cavery@redhat.com>
+Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Chad Dupuis <chad.dupuis@qlogic.com>, rt@linutronix.de, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>
 
->>>>> "Sebastian" == Sebastian Andrzej Siewior <bigeasy@linutronix.de> writes:
+>>>>> "Cathy" == Cathy Avery <cavery@redhat.com> writes:
 
-Sebastian> This is the a repost + fixups to get the patches applied
-Sebastian> against v4.9-rc4.  mkp's scsi for-next tree can be merged
-Sebastian> with no conflicts.
+Cathy> On a 32 bit kernel sizeof(void *) is not 64 bits as hv_mpb_array
+Cathy> requires. Also the buffer needs to be cleared or the upper bytes
+Cathy> will contain junk.
 
-Chad?
+K.Y.: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
