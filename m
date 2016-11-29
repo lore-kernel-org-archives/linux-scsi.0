@@ -1,71 +1,48 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [Xen-devel] [PATCH] xen/scsifront: don't advance ring request
- pointer in case of error
-Date: Tue, 29 Nov 2016 13:33:02 +0100
-Message-ID: <495b2925-b280-8f23-3798-e0da16dbd884@suse.com>
-References: <20161125202650.GK6266@mwanda>
- <20161129105013.7419-1-jgross@suse.com> <583D712F0200007800123283@suse.com>
- <cbf7fc2e-09e4-f2ef-3fa3-5371be08270d@suse.com>
- <583D772D02000078001232DD@suse.com>
+From: Javier Martinez Canillas <javier@osg.samsung.com>
+Subject: Re: [PATCH] cciss: remove unneeded void pointer cast
+Date: Tue, 29 Nov 2016 11:46:47 -0300
+Message-ID: <71516d59-b181-d5b0-ead6-96e915846064@osg.samsung.com>
+References: <1476375042-10175-1-git-send-email-javier@osg.samsung.com>
+ <4993A297653ECB4581FA5C3C31323D193B06FBC0@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41323 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754321AbcK2MdF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 29 Nov 2016 07:33:05 -0500
-In-Reply-To: <583D772D02000078001232DD@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D193B06FBC0@avsrvexchmbx1.microsemi.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "esc.storagedev" <esc.storagedev@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Jan Beulich <JBeulich@suse.com>
-Cc: lambert.quentin@gmail.com, jejb@linux.vnet.ibm.com, xen-devel@lists.xenproject.org, boris.ostrovsky@oracle.com, dan.carpenter@oracle.com, martin.petersen@oracle.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 29/11/16 12:40, Jan Beulich wrote:
->>>> On 29.11.16 at 12:19, <JGross@suse.com> wrote:
->> On 29/11/16 12:14, Jan Beulich wrote:
->>>>>> On 29.11.16 at 11:50, <JGross@suse.com> wrote:
->>>> --- a/drivers/scsi/xen-scsifront.c
->>>> +++ b/drivers/scsi/xen-scsifront.c
->>>> @@ -184,8 +184,6 @@ static struct vscsiif_request *scsifront_pre_req(struct 
->> vscsifrnt_info *info)
->>>>  
->>>>  	ring_req = RING_GET_REQUEST(&(info->ring), ring->req_prod_pvt);
->>>>  
->>>> -	ring->req_prod_pvt++;
->>>
->>> Please note the "_pvt" suffix, which stands for "private": This field is
->>> not visible to the backend. Only ring->sring fields are shared, and
->>> the updating of the shared field happens in RING_PUSH_REQUESTS()
->>> and RING_PUSH_REQUESTS_AND_CHECK_NOTIFY().
+Hello Don,
+
+On 10/13/2016 03:12 PM, Don Brace wrote:
+>> -----Original Message-----
+>> From: Javier Martinez Canillas [mailto:javier@osg.samsung.com]
+>> Sent: Thursday, October 13, 2016 11:11 AM
+>> To: linux-kernel@vger.kernel.org
+>> Cc: Javier Martinez Canillas; esc.storagedev; iss_storagedev@hp.com; Don
+>> Brace; linux-scsi@vger.kernel.org
+>> Subject: [PATCH] cciss: remove unneeded void pointer cast
 >>
->> Sure, but RING_PUSH_REQUESTS() will copy req_prod_pvt to req_prod. In
->> the case corrected this would advance req_prod by two after the error
->> case before, even if only one request would have made it to the ring.
+>> EXTERNAL EMAIL
+>>
+>>
+>> It's not necessary to cast the result of kmalloc, since void pointers are
+>> promoted to any other type. This also fixes following coccinelle warning:
+>>
+>> casting value returned by memory allocation function to (struct
+>> cciss_scsi_adapter_data_t *) is useless.
+>>
+>> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
 > 
-> Okay, then I may have been mislead by the patch description: I
-> understood it to say that you want to avoid the backend seeing
-> requests which haven't been filled fully, but it looks like you're
-> instead saying that for these requests the filling will never be
-> completed (because of some unrelated(?) error). Iirc other
-> frontend drivers behave similarly to the unpatched scsifront, and
+> Acked-by: Don Brace <don.brace@microsemi.com>
+>> ---
 
-blkfront and netfront seem to be okay.
+Thanks for the ack. Do you know who is supposed to pick this patch?
 
-> incrementing req_prod_pvt late has possible (perhaps just
-> theoretical) other issues, like parallel retrieval and filling of them
-> on mor than one CPU. Wouldn't it be better to obtain a request
-
-In scsifront the complete critical path is guarded by a lock.
-
-> structure only when everything else is ready (and hence no further
-> errors can occur)? After all you also need to deal with the acquired
-> ID upon errors, and seems odd to me to deal with the two parts of
-> cleanup in different places (and even in different ways).
-
-Hmm, I can see your point.
-
-I'll have a look how intrusive such a change would be.
-
-
-Juergen
+Best regards,
+-- 
+Javier Martinez Canillas
+Open Source Group
+Samsung Research America
