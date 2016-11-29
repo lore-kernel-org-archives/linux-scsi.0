@@ -1,40 +1,69 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v2] qlogicpti: Fix compiler warnings
-Date: Mon, 28 Nov 2016 15:55:22 -0500 (EST)
-Message-ID: <20161128.155522.86308473181404365.davem@davemloft.net>
-References: <1479954484-1301-1-git-send-email-tushar.n.dave@oracle.com>
-Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
-Content-Transfer-Encoding: base64
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1479954484-1301-1-git-send-email-tushar.n.dave@oracle.com>
-Sender: sparclinux-owner@vger.kernel.org
-To: tushar.n.dave@oracle.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, thomas.tai@oracle.com, sparclinux@vger.kernel.org
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 00/14] cxlflash: Fixes, enhancements, cleanup and staging
+Date: Mon, 28 Nov 2016 18:39:44 -0600
+Message-ID: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:42039 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752889AbcK2Akr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Nov 2016 19:40:47 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cXlS043189
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:40:42 -0500
+Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 270xutscsu-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:40:42 -0500
+Received: from localhost
+        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Mon, 28 Nov 2016 17:40:41 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-RnJvbTogVHVzaGFyIERhdmUgPHR1c2hhci5uLmRhdmVAb3JhY2xlLmNvbT4NCkRhdGU6IFdlZCwg
-MjMgTm92IDIwMTYgMTg6Mjg6MDQgLTA4MDANCg0KPiBxbG9naWNwdGkgdXNlcyAnX191MzInIGZv
-ciBkbWEgaGFuZGxlIHdoaWxlIGludm9raW5nIGtlcm5lbCBETUEgQVBJcywNCj4gaW5zdGVhZCBv
-ZiB1c2luZyBkbWFfYWRkcl90LiBUaGlzIGhhc24ndCBjYXVzZWQgYW55ICdpbmNvbXBhdGlibGUN
-Cj4gcG9pbnRlciB0eXBlJyB3YXJuaW5nIG9uIFNQQVJDIGJlY2F1c2UgdW50aWwgbm93IGRtYV9h
-ZGRyX3QgaXMgb2YNCj4gdHlwZSB1MzIuIEhvd2V2ZXIsIHJlY2VudCBjaGFuZ2VzIGluIFNQQVJD
-IEFUVSAoaW9tbXUpIGVuYWJsZWQgNjRiaXQNCj4gRE1BIGFuZCB0aGVyZWZvcmUgZG1hX2FkZHJf
-dCBiZWNhbWUgb2YgdHlwZSB1NjQuIFRoaXMgbWFrZXMNCj4gJ2luY29tcGF0aWJsZSBwb2ludGVy
-IHR5cGUnIHdhcm5pbmdzIGluZXZpdGFibGUuDQo+IA0KPiBlLmcuDQo+IGRyaXZlcnMvc2NzaS9x
-bG9naWNwdGkuYzogSW4gZnVuY3Rpb24goXFwdGlfbWFwX3F1ZXVlc6I6DQo+IGRyaXZlcnMvc2Nz
-aS9xbG9naWNwdGkuYzo4MTM6IHdhcm5pbmc6IHBhc3NpbmcgYXJndW1lbnQgMyBvZiChZG1hX2Fs
-bG9jX2NvaGVyZW50oiBmcm9tIGluY29tcGF0aWJsZSBwb2ludGVyIHR5cGUNCj4gLi9pbmNsdWRl
-L2xpbnV4L2RtYS1tYXBwaW5nLmg6NDQ1OiBub3RlOiBleHBlY3RlZCChZG1hX2FkZHJfdCAqoiBi
-dXQgYXJndW1lbnQgaXMgb2YgdHlwZSChX191MzIgKqINCj4gZHJpdmVycy9zY3NpL3Fsb2dpY3B0
-aS5jOjgyMjogd2FybmluZzogcGFzc2luZyBhcmd1bWVudCAzIG9mIKFkbWFfYWxsb2NfY29oZXJl
-bnSiIGZyb20gaW5jb21wYXRpYmxlIHBvaW50ZXIgdHlwZQ0KPiAuL2luY2x1ZGUvbGludXgvZG1h
-LW1hcHBpbmcuaDo0NDU6IG5vdGU6IGV4cGVjdGVkIKFkbWFfYWRkcl90ICqiIGJ1dCBhcmd1bWVu
-dCBpcyBvZiB0eXBlIKFfX3UzMiAqog0KPiANCj4gRm9yIHRoZSByZWNvcmQsIHFsb2dpY3B0aSBu
-ZXZlciBleGVjdXRlcyBvbiBzdW40di4gVGhlcmVmb3JlIGV2ZW4NCj4gdGhvdWdoIDY0Yml0IERN
-QSBpcyBlbmFibGVkIG9uIFNQQVJDLCBxbG9naWNwdGkgY29udGludWVzIHRvIHVzZQ0KPiBsZWdh
-Y3kgaW9tbXUgdGhhdCBndWFyYW50ZWVzIERNQSBhZGRyZXNzIGlzIGFsd2F5cyBpbiAzMmJpdCBy
-YW5nZS4NCj4gDQo+IFRoaXMgcGF0Y2ggcmVzb2x2ZXMgYWZvcmVtZW50aW9uZWQgY29tcGlsZXIg
-d2FybmluZ3MuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBUdXNoYXIgRGF2ZSA8dHVzaGFyLm4uZGF2
-ZUBvcmFjbGUuY29tPg0KPiBSZXZpZXdlZC1ieTogdGhvbWFzIHRhaSA8dGhvbWFzLnRhaUBvcmFj
-bGUuY29tPg0KDQpBcHBsaWVkLg0K
+The first four patches in this patch series include fixes for command
+room violation and lun table management.
+
+The remaining patches remove the reliance upon an internally maintained
+private command pool in favor of private commands being allocated
+alongside the SCSI commands. Several cleanup opportunities were noticed
+while removing the private command pool infrastructure and have been
+included as well. Lastly, the final two patches provide staging for
+supporting hardware with a different queuing model.
+
+The series is based upon 4.9-rc5, intended for 4.10 and is bisectable.
+
+v2 Changes:
+- Incorporate comments from Matthew R. Ochs
+- Updated command room violation patch to use a spin lock
+
+Matthew R. Ochs (10):
+  cxlflash: Remove unused buffer from AFU command
+  cxlflash: Allocate memory instead of using command pool for AFU sync
+  cxlflash: Use cmd_size for private commands
+  cxlflash: Remove private command pool
+  cxlflash: Wait for active AFU commands to timeout upon tear down
+  cxlflash: Remove AFU command lock
+  cxlflash: Cleanup send_tmf()
+  cxlflash: Cleanup queuecommand()
+  cxlflash: Migrate IOARRIN specific routines to function pointers
+  cxlflash: Migrate scsi command pointer to AFU command
+
+Uma Krishnan (4):
+  cxlflash: Set sg_tablesize to 1 instead of SG_NONE
+  cxlflash: Fix crash in cxlflash_restore_luntable()
+  cxlflash: Improve context_reset() logic
+  cxlflash: Avoid command room violation
+
+ drivers/scsi/cxlflash/common.h  |  39 ++--
+ drivers/scsi/cxlflash/lunmgt.c  |   6 +
+ drivers/scsi/cxlflash/main.c    | 410 ++++++++++------------------------------
+ drivers/scsi/cxlflash/sislite.h |   2 +-
+ 4 files changed, 130 insertions(+), 327 deletions(-)
+
+-- 
+2.1.0
+
