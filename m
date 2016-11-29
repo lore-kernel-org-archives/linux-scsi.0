@@ -1,188 +1,127 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 04/14] cxlflash: Avoid command room violation
-Date: Mon, 28 Nov 2016 18:41:45 -0600
-Message-ID: <1480380105-60310-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 05/14] cxlflash: Remove unused buffer from AFU command
+Date: Mon, 28 Nov 2016 18:42:01 -0600
+Message-ID: <1480380121-60346-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43754 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753935AbcK2AmA (ORCPT
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36742 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753935AbcK2AmM (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 19:42:00 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cWVD131605
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:59 -0500
+        Mon, 28 Nov 2016 19:42:12 -0500
+Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cYvL017391
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:11 -0500
 Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 270w686e96-1
+        by mx0a-001b2d01.pphosted.com with ESMTP id 270rpgfd1w-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:59 -0500
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:11 -0500
 Received: from localhost
         by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Mon, 28 Nov 2016 17:41:58 -0700
+        Mon, 28 Nov 2016 17:42:10 -0700
 In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-During test, a command room violation interrupt is occasionally seen
-for the master context when the CXL flash devices are stressed.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-After studying the code, there could be gaps in the way command room
-value is being cached in cxlflash. When the cached command room is zero
-the thread attempting to send becomes burdened with updating the cached
-value with the actual value from the AFU. Today, this is handled with an
-atomic set operation of the raw value read. Following the atomic update,
-the thread proceeds to send.
+The cxlflash driver originally required a per-command 4K buffer that
+hosted data passed to the AFU. When the routines that initiate AFU
+and internal SCSI commands were refactored to use scsi_execute(), the
+need for this buffer became obsolete. As it is no longer necessary,
+the buffer is removed.
 
-This behavior is incorrect on two counts:
-
-   - The update fails to take into account the current thread and its
-     consumption of one of the hardware commands.
-
-   - The update does not take into account other threads also atomically
-     updating. Per design, a worker thread updates the cached value when a
-     send thread times out. By not protecting the update with a lock, the
-     cached value can be incorrectly clobbered.
-
-To correct these issues, the update of the cached command room has been
-simplified and also protected using a spin lock which is held until the
-MMIO is complete. This ensures the command room is properly consumed by
-the same thread. Update of cached value also takes into account the
-current thread consuming a hardware command.
-
-Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h |  4 +--
- drivers/scsi/cxlflash/main.c   | 66 ++++++++++++------------------------------
- 2 files changed, 20 insertions(+), 50 deletions(-)
+ drivers/scsi/cxlflash/common.h |  1 -
+ drivers/scsi/cxlflash/main.c   | 28 ++--------------------------
+ 2 files changed, 2 insertions(+), 27 deletions(-)
 
 diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 6e68155..ef2943d 100644
+index ef2943d..4525514 100644
 --- a/drivers/scsi/cxlflash/common.h
 +++ b/drivers/scsi/cxlflash/common.h
-@@ -173,8 +173,8 @@ struct afu {
- 	u64 *hrrq_end;
- 	u64 *hrrq_curr;
- 	bool toggle;
--	bool read_room;
--	atomic64_t room;
-+	s64 room;
-+	spinlock_t rrin_slock; /* Lock to rrin queuing and cmd_room updates */
- 	u64 hb;
- 	u32 cmd_couts;		/* Number of command checkouts */
- 	u32 internal_lun;	/* User-desired LUN mode for this AFU */
+@@ -134,7 +134,6 @@ struct afu_cmd {
+ 	struct sisl_ioasa sa;	/* IOASA must follow IOARCB */
+ 	spinlock_t slock;
+ 	struct completion cevent;
+-	char *buf;		/* per command buffer */
+ 	struct afu *parent;
+ 	int slot;
+ 	atomic_t free;
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 6d33d8c..1292a74 100644
+index 1292a74..9f2821d 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -306,59 +306,34 @@ static int send_cmd(struct afu *afu, struct afu_cmd *cmd)
- {
- 	struct cxlflash_cfg *cfg = afu->parent;
- 	struct device *dev = &cfg->dev->dev;
--	int nretry = 0;
- 	int rc = 0;
--	u64 room;
--	long newval;
-+	s64 room;
-+	ulong lock_flags;
- 
- 	/*
--	 * This routine is used by critical users such an AFU sync and to
--	 * send a task management function (TMF). Thus we want to retry a
--	 * bit before returning an error. To avoid the performance penalty
--	 * of MMIO, we spread the update of 'room' over multiple commands.
-+	 * To avoid the performance penalty of MMIO, spread the update of
-+	 * 'room' over multiple commands.
- 	 */
--retry:
--	newval = atomic64_dec_if_positive(&afu->room);
--	if (!newval) {
--		do {
--			room = readq_be(&afu->host_map->cmd_room);
--			atomic64_set(&afu->room, room);
--			if (room)
--				goto write_ioarrin;
--			udelay(1 << nretry);
--		} while (nretry++ < MC_ROOM_RETRY_CNT);
--
--		dev_err(dev, "%s: no cmd_room to send 0x%X\n",
--		       __func__, cmd->rcb.cdb[0]);
--
--		goto no_room;
--	} else if (unlikely(newval < 0)) {
--		/* This should be rare. i.e. Only if two threads race and
--		 * decrement before the MMIO read is done. In this case
--		 * just benefit from the other thread having updated
--		 * afu->room.
--		 */
--		if (nretry++ < MC_ROOM_RETRY_CNT) {
--			udelay(1 << nretry);
--			goto retry;
-+	spin_lock_irqsave(&afu->rrin_slock, lock_flags);
-+	if (--afu->room < 0) {
-+		room = readq_be(&afu->host_map->cmd_room);
-+		if (room <= 0) {
-+			dev_dbg_ratelimited(dev, "%s: no cmd_room to send "
-+					    "0x%02X, room=0x%016llX\n",
-+					    __func__, cmd->rcb.cdb[0], room);
-+			afu->room = 0;
-+			rc = SCSI_MLQUEUE_HOST_BUSY;
-+			goto out;
- 		}
--
--		goto no_room;
-+		afu->room = room - 1;
- 	}
- 
--write_ioarrin:
- 	writeq_be((u64)&cmd->rcb, &afu->host_map->ioarrin);
- out:
-+	spin_unlock_irqrestore(&afu->rrin_slock, lock_flags);
- 	pr_devel("%s: cmd=%p len=%d ea=%p rc=%d\n", __func__, cmd,
- 		 cmd->rcb.data_len, (void *)cmd->rcb.data_ea, rc);
- 	return rc;
--
--no_room:
--	afu->read_room = true;
--	kref_get(&cfg->afu->mapcount);
--	schedule_work(&cfg->work_q);
--	rc = SCSI_MLQUEUE_HOST_BUSY;
--	goto out;
- }
- 
- /**
-@@ -1827,7 +1802,8 @@ static int init_afu(struct cxlflash_cfg *cfg)
- 	}
- 
- 	afu_err_intr_init(cfg->afu);
--	atomic64_set(&afu->room, readq_be(&afu->host_map->cmd_room));
-+	spin_lock_init(&afu->rrin_slock);
-+	afu->room = readq_be(&afu->host_map->cmd_room);
- 
- 	/* Restore the LUN mappings */
- 	cxlflash_restore_luntable(cfg);
-@@ -2399,7 +2375,6 @@ MODULE_DEVICE_TABLE(pci, cxlflash_pci_table);
-  * Handles the following events:
-  * - Link reset which cannot be performed on interrupt context due to
-  * blocking up to a few seconds
-- * - Read AFU command room
-  * - Rescan the host
+@@ -41,8 +41,7 @@ MODULE_LICENSE("GPL");
+  * Commands are checked out in a round-robin fashion. Note that since
+  * the command pool is larger than the hardware queue, the majority of
+  * times we will only loop once or twice before getting a command. The
+- * buffer and CDB within the command are initialized (zeroed) prior to
+- * returning.
++ * CDB within the command is initialized (zeroed) prior to returning.
+  *
+  * Return: The checked out command or NULL when command pool is empty.
   */
- static void cxlflash_worker_thread(struct work_struct *work)
-@@ -2436,11 +2411,6 @@ static void cxlflash_worker_thread(struct work_struct *work)
- 		cfg->lr_state = LINK_RESET_COMPLETE;
- 	}
+@@ -59,7 +58,6 @@ static struct afu_cmd *cmd_checkout(struct afu *afu)
+ 		if (!atomic_dec_if_positive(&cmd->free)) {
+ 			pr_devel("%s: returning found index=%d cmd=%p\n",
+ 				 __func__, cmd->slot, cmd);
+-			memset(cmd->buf, 0, CMD_BUFSIZE);
+ 			memset(cmd->rcb.cdb, 0, sizeof(cmd->rcb.cdb));
+ 			return cmd;
+ 		}
+@@ -590,17 +588,9 @@ static void cxlflash_wait_for_pci_err_recovery(struct cxlflash_cfg *cfg)
+  */
+ static void free_mem(struct cxlflash_cfg *cfg)
+ {
+-	int i;
+-	char *buf = NULL;
+ 	struct afu *afu = cfg->afu;
  
--	if (afu->read_room) {
--		atomic64_set(&afu->room, readq_be(&afu->host_map->cmd_room));
--		afu->read_room = false;
--	}
+ 	if (cfg->afu) {
+-		for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
+-			buf = afu->cmd[i].buf;
+-			if (!((u64)buf & (PAGE_SIZE - 1)))
+-				free_page((ulong)buf);
+-		}
 -
- 	spin_unlock_irqrestore(cfg->host->host_lock, lock_flags);
+ 		free_pages((ulong)afu, get_order(sizeof(struct afu)));
+ 		cfg->afu = NULL;
+ 	}
+@@ -849,7 +839,6 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
+ {
+ 	int rc = 0;
+ 	int i;
+-	char *buf = NULL;
+ 	struct device *dev = &cfg->dev->dev;
  
- 	if (atomic_dec_if_positive(&cfg->scan_host_needed) >= 0)
+ 	/* AFU is ~12k, i.e. only one 64k page or up to four 4k pages */
+@@ -864,20 +853,7 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
+ 	cfg->afu->parent = cfg;
+ 	cfg->afu->afu_map = NULL;
+ 
+-	for (i = 0; i < CXLFLASH_NUM_CMDS; buf += CMD_BUFSIZE, i++) {
+-		if (!((u64)buf & (PAGE_SIZE - 1))) {
+-			buf = (void *)__get_free_page(GFP_KERNEL | __GFP_ZERO);
+-			if (unlikely(!buf)) {
+-				dev_err(dev,
+-					"%s: Allocate command buffers fail!\n",
+-				       __func__);
+-				rc = -ENOMEM;
+-				free_mem(cfg);
+-				goto out;
+-			}
+-		}
+-
+-		cfg->afu->cmd[i].buf = buf;
++	for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
+ 		atomic_set(&cfg->afu->cmd[i].free, 1);
+ 		cfg->afu->cmd[i].slot = i;
+ 	}
 -- 
 2.1.0
 
