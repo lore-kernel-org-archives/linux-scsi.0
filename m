@@ -1,29 +1,36 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: Replace pci_pool_alloc by pci_pool_zalloc
-Date: Tue, 29 Nov 2016 11:59:50 -0500
-Message-ID: <yq1shqamdbt.fsf@sermon.lab.mkp.net>
-References: <20161128095237.GA30900@gnr743-HP-ZBook-15>
+Subject: Re: [PATCH] cciss: remove unneeded void pointer cast
+Date: Tue, 29 Nov 2016 12:02:30 -0500
+Message-ID: <yq1oa0ymd7d.fsf@sermon.lab.mkp.net>
+References: <1476375042-10175-1-git-send-email-javier@osg.samsung.com>
+        <4993A297653ECB4581FA5C3C31323D193B06FBC0@avsrvexchmbx1.microsemi.net>
+        <71516d59-b181-d5b0-ead6-96e915846064@osg.samsung.com>
+        <yq1bmwyp7ls.fsf@sermon.lab.mkp.net>
+        <12021f2a-ae68-db3d-6e22-c538da0e5889@osg.samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:33540 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756797AbcK2RAB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 12:00:01 -0500
-In-Reply-To: <20161128095237.GA30900@gnr743-HP-ZBook-15> (Souptick Joarder's
-        message of "Mon, 28 Nov 2016 15:22:37 +0530")
+Received: from userp1040.oracle.com ([156.151.31.81]:32526 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752046AbcK2RCk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 12:02:40 -0500
+In-Reply-To: <12021f2a-ae68-db3d-6e22-c538da0e5889@osg.samsung.com> (Javier
+        Martinez Canillas's message of "Tue, 29 Nov 2016 13:54:37 -0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: james.smart@broadcom.com, dick.kennedy@broadcom.com
-Cc: Souptick Joarder <jrdr.linux@gmail.com>, linux-scsi@vger.kernel.org
+To: Javier Martinez Canillas <javier@osg.samsung.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Don Brace <don.brace@microsemi.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "esc.storagedev" <esc.storagedev@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Souptick" == Souptick Joarder <jrdr.linux@gmail.com> writes:
+>>>>> "Javier" == Javier Martinez Canillas <javier@osg.samsung.com> writes:
 
-Souptick> In lpfc_new_scsi_buf_s3() and lpfc_new_scsi_buf_s4()
-Souptick> pci_pool_alloc followed by memset will be replaced by
-Souptick> pci_pool_zalloc()
+>> I'm happy to queue it. However, I never saw Don's ack and neither did
+>> patchwork. Was that done in a private email?
 
-James, Dick: Please review!
+Javier> Strange, it wasn't a private email but for some reason I see
+Javier> that it didn't made it to neither LKML nor linux-scsi indeed. I
+Javier> was also not able to find it in those archives.
+
+Don: Please re-ack so we get it in the archives. Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
