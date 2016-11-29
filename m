@@ -1,113 +1,127 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 14/14] cxlflash: Migrate scsi command pointer to AFU command
-Date: Mon, 28 Nov 2016 18:43:18 -0600
-Message-ID: <1480380198-60687-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 1/2] hpsa: cleanup sas_phy structures in sysfs when
+ unloading
+Date: Tue, 29 Nov 2016 01:52:58 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D193B0CCCB7@avsrvexchmbx1.microsemi.net>
+References: <20161121140429.12788-1-mwilck@suse.de>
+ <20161121140429.12788-2-mwilck@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:51638 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1754991AbcK2An0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 19:43:26 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cYrX125024
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:43:26 -0500
-Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 270tb0rhum-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:43:25 -0500
-Received: from localhost
-        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Mon, 28 Nov 2016 19:43:24 -0500
-In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Received: from mail-sn1nam01on0089.outbound.protection.outlook.com ([104.47.32.89]:1728
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750754AbcK2Bx0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 28 Nov 2016 20:53:26 -0500
+In-Reply-To: <20161121140429.12788-2-mwilck@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: Martin Wilck <mwilck@suse.de>
+Cc: dl-esc-Team ESD Storage Dev Support <esc-TeamESDStorageDevSupport@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+> -----Original Message-----
+> From: Martin Wilck [mailto:mwilck@suse.de]
+> Sent: Monday, November 21, 2016 8:04 AM
+> To: Don Brace
+> Cc: dl-esc-Team ESD Storage Dev Support; iss_storagedev@hp.com; linux-
+> scsi@vger.kernel.org; JBottomley@odin.com; hch@lst.de; hare@suse.de;
+> Martin Wilck
+> Subject: [PATCH 1/2] hpsa: cleanup sas_phy structures in sysfs when
+> unloading
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> When the hpsa module is unloaded using rmmod, dangling
+> symlinks remain under /sys/class/sas_phy. Fix this by
+> calling sas_phy_delete() rather than sas_phy_free (which,
+> according to comments, should not be called for PHYs that
+> have been set up successfully, anyway).
+>=20
+> References: bsc#1010946.
+> Signed-off-by: Martin Wilck <mwilck@suse.de>
+> ---
+>  drivers/scsi/hpsa.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index efe2f36..8ec77c3 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -9547,9 +9547,9 @@ static void hpsa_free_sas_phy(struct hpsa_sas_phy
+> *hpsa_sas_phy)
+>         struct sas_phy *phy =3D hpsa_sas_phy->phy;
+>=20
+>         sas_port_delete_phy(hpsa_sas_phy->parent_port->port, phy);
+> -       sas_phy_free(phy);
+>         if (hpsa_sas_phy->added_to_port)
+>                 list_del(&hpsa_sas_phy->phy_list_entry);
+> +       sas_phy_delete(phy);
+>         kfree(hpsa_sas_phy);
+>  }
+>=20
+> --
+> 2.10.1
 
-Currently, when sending a SCSI command, the pointer is stored in a
-reserved field of the AFU command descriptor for retrieval once the
-SCSI command has completed. In order to support new descriptor formats
-that make use of the reserved field, the pointer is migrated to outside
-the descriptor where it can still be found during completion processing.
+I tried these patches on: 4.9.0-rc7, was this correct?
 
-Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
----
- drivers/scsi/cxlflash/common.h  |  1 +
- drivers/scsi/cxlflash/main.c    | 10 +++++-----
- drivers/scsi/cxlflash/sislite.h |  2 +-
- 3 files changed, 7 insertions(+), 6 deletions(-)
+I got the following stack trace:
+[  231.192289] ------------[ cut here ]------------
+[  231.214333] WARNING: CPU: 51 PID: 15876 at fs/sysfs/group.c:237 sysfs_re=
+move_group+0x8e/0x90
+[  231.254371] sysfs group 'power' not found for kobject '4:0:0:0'
+[  231.282637] Modules linked in: ip6t_rpfilter ip6t_REJECT nf_reject_ipv6 =
+nf_conntrack_ipv6 nf_defrag_ipv6 ipt_REJECT nf_reject_ipv4 nf_conntrack_ipv=
+4 nf_defrag_ipv4 xt_conntrack nf_conntrack cfg80211 rfkill ebtable_nat ebta=
+ble_broute bridge stp llc ebtable_filter ebtables ip6table_mangle ip6table_=
+security ip6table_raw ip6table_filter ip6_tables iptable_mangle iptable_sec=
+urity iptable_raw iptable_filter ip_tables sb_edac edac_core x86_pkg_temp_t=
+hermal coretemp crct10dif_pclmul crc32_pclmul iTCO_wdt ghash_clmulni_intel =
+iTCO_vendor_support aesni_intel lrw gf128mul glue_helper ablk_helper cryptd=
+ osst pcspkr ch st ioatdma lpc_ich hpilo hpwdt mfd_core dca ipmi_si ipmi_ms=
+ghandler pcc_cpufreq wmi acpi_cpufreq acpi_power_meter uinput mgag200 i2c_a=
+lgo_bit drm_kms_helper syscopyarea sysfillrect sysimgblt fb_sys_fops
+[  231.620046]  ttm drm crc32c_intel tg3 serio_raw ptp usb_storage i2c_core=
+ hpsa(-) pps_core scsi_transport_sas dm_mirror dm_region_hash dm_log dm_mod
+[  231.676364] CPU: 51 PID: 15876 Comm: rmmod Not tainted 4.9.0-rc7+ #22
+[  231.706769] Hardware name: HP ProLiant DL580 Gen8, BIOS P79 08/18/2016
+[  231.737730]  ffffc9002123bbf0 ffffffff815909bd ffffc9002123bc40 00000000=
+00000000
+[  231.772474]  ffffc9002123bc30 ffffffff81090901 000000ed00000246 00000000=
+00000000
+[  231.807897]  ffffffff81f71560 ffff8820529faea8 ffff88205542ea60 00000000=
+024b0090
+[  231.842671] Call Trace:
+[  231.854426]  [<ffffffff815909bd>] dump_stack+0x85/0xc8
+[  231.878826]  [<ffffffff81090901>] __warn+0xd1/0xf0
+[  231.901476]  [<ffffffff8109097f>] warn_slowpath_fmt+0x5f/0x80
+[  231.929515]  [<ffffffff8196e5de>] ? mutex_unlock+0xe/0x10
+[  231.955067]  [<ffffffff812f1a6a>] ? kernfs_find_and_get_ns+0x4a/0x60
+[  231.985095]  [<ffffffff812f56ae>] sysfs_remove_group+0x8e/0x90
+[  232.012416]  [<ffffffff816dd1b7>] dpm_sysfs_remove+0x57/0x60
+[  232.038904]  [<ffffffff816cf928>] device_del+0x58/0x270
+[  232.064056]  [<ffffffff816cfb5a>] device_unregister+0x1a/0x60
+[  232.091138]  [<ffffffff8157d470>] bsg_unregister_queue+0x60/0xa0
+[  232.119498]  [<ffffffff8170e2ea>] __scsi_remove_device+0xaa/0xd0
+[  232.147745]  [<ffffffff8170c369>] scsi_forget_host+0x69/0x70
+[  232.174666]  [<ffffffff816ff292>] scsi_remove_host+0x82/0x130
+[  232.201804]  [<ffffffffa007cfc3>] hpsa_remove_one+0x93/0x190 [hpsa]
+[  232.231329]  [<ffffffff815dd8d9>] pci_device_remove+0x39/0xc0
+[  232.258089]  [<ffffffff816d4aca>] __device_release_driver+0x9a/0x150
+[  232.288005]  [<ffffffff816d4ca1>] driver_detach+0xc1/0xd0
+[  232.313479]  [<ffffffff816d3a98>] bus_remove_driver+0x58/0xd0
+[  232.341280]  [<ffffffff816d572c>] driver_unregister+0x2c/0x50
+[  232.369272]  [<ffffffff815dbf3a>] pci_unregister_driver+0x2a/0x80
+[  232.398723]  [<ffffffffa0085869>] hpsa_cleanup+0x10/0x7a7 [hpsa]
+[  232.428094]  [<ffffffff8113571c>] SyS_delete_module+0x1bc/0x220
+[  232.456716]  [<ffffffff81003c0c>] do_syscall_64+0x6c/0x200
+[  232.483125]  [<ffffffff81971d49>] entry_SYSCALL64_slow_path+0x25/0x25
+[  232.514162] ---[ end trace 3c490662736284eb ]---
 
-diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 6b8d1d3..0e9de5d 100644
---- a/drivers/scsi/cxlflash/common.h
-+++ b/drivers/scsi/cxlflash/common.h
-@@ -129,6 +129,7 @@ struct afu_cmd {
- 	struct sisl_ioarcb rcb;	/* IOARCB (cache line aligned) */
- 	struct sisl_ioasa sa;	/* IOASA must follow IOARCB */
- 	struct afu *parent;
-+	struct scsi_cmnd *scp;
- 	struct completion cevent;
- 
- 	u8 cmd_tmf:1;
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index d2d2d83..b17ebf6 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -151,7 +151,7 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
-  *
-  * Prepares and submits command that has either completed or timed out to
-  * the SCSI stack. Checks AFU command back into command pool for non-internal
-- * (rcb.scp populated) commands.
-+ * (cmd->scp populated) commands.
-  */
- static void cmd_complete(struct afu_cmd *cmd)
- {
-@@ -161,8 +161,8 @@ static void cmd_complete(struct afu_cmd *cmd)
- 	struct cxlflash_cfg *cfg = afu->parent;
- 	bool cmd_is_tmf;
- 
--	if (cmd->rcb.scp) {
--		scp = cmd->rcb.scp;
-+	if (cmd->scp) {
-+		scp = cmd->scp;
- 		if (unlikely(cmd->sa.ioasc))
- 			process_cmd_err(cmd, scp);
- 		else
-@@ -315,7 +315,7 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
- 	cfg->tmf_active = true;
- 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
- 
--	cmd->rcb.scp = scp;
-+	cmd->scp = scp;
- 	cmd->parent = afu;
- 	cmd->cmd_tmf = true;
- 
-@@ -445,7 +445,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
- 		cmd->rcb.data_ea = sg_dma_address(sg);
- 	}
- 
--	cmd->rcb.scp = scp;
-+	cmd->scp = scp;
- 	cmd->parent = afu;
- 
- 	cmd->rcb.ctx_id = afu->ctx_hndl;
-diff --git a/drivers/scsi/cxlflash/sislite.h b/drivers/scsi/cxlflash/sislite.h
-index 347fc16..1a2d09c 100644
---- a/drivers/scsi/cxlflash/sislite.h
-+++ b/drivers/scsi/cxlflash/sislite.h
-@@ -72,7 +72,7 @@ struct sisl_ioarcb {
- 	u16 timeout;		/* in units specified by req_flags */
- 	u32 rsvd1;
- 	u8 cdb[16];		/* must be in big endian */
--	struct scsi_cmnd *scp;
-+	u64 reserved;		/* Reserved area */
- } __packed;
- 
- struct sisl_rc {
--- 
-2.1.0
 
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
