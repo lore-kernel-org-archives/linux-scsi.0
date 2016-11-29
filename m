@@ -1,35 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] [hv] storvsc: Payload buffer incorrectly sized for 32
- bit kernels.
-Date: Tue, 29 Nov 2016 11:57:46 -0500
-Message-ID: <yq11sxunrzp.fsf@sermon.lab.mkp.net>
-References: <1479908793-19872-1-git-send-email-cavery@redhat.com>
+Subject: Re: [PATCH] scsi/ipr: Fix runaway IRQs when falling back from MSI to LSI
+Date: Tue, 29 Nov 2016 11:58:38 -0500
+Message-ID: <yq1wpfmmddt.fsf@sermon.lab.mkp.net>
+References: <1479947042.10230.88.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1479908793-19872-1-git-send-email-cavery@redhat.com> (Cathy
- Avery's message of "Wed, 23 Nov 2016 08:46:33 -0500")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:32834 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755947AbcK2Q65 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 29 Nov 2016 11:58:57 -0500
+In-Reply-To: <1479947042.10230.88.camel@kernel.crashing.org> (Benjamin
+        Herrenschmidt's message of "Thu, 24 Nov 2016 11:24:02 +1100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxppc dev list <linuxppc-dev@lists.ozlabs.org>
 
->>>>> "Cathy" == Cathy Avery <cavery@redhat.com> writes:
+>>>>> "Benjamin" == Benjamin Herrenschmidt <benh@kernel.crashing.org> writes:
 
-Cathy> On a 32 bit kernel sizeof(void *) is not 64 bits as hv_mpb_array
-Cathy> requires. Also the buffer needs to be cleared or the upper bytes
-Cathy> will contain junk.
+Benjamin> LSIs must be ack'ed with an MMIO otherwise they remain
+Benjamin> asserted forever. This is controlled by the "clear_isr" flag.
 
-K.Y.: Please review!
+Benjamin> While we set that flag properly when deciding initially
+Benjamin> whether to use LSIs or MSIs, we fail to set it if we first
+Benjamin> chose MSIs, the test fails, then fallback to LSIs.
+
+Brian: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
