@@ -1,25 +1,25 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 08/14] cxlflash: Remove private command pool
-Date: Mon, 28 Nov 2016 18:42:27 -0600
-Message-ID: <1480380147-60461-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 09/14] cxlflash: Wait for active AFU commands to timeout upon tear down
+Date: Mon, 28 Nov 2016 18:42:33 -0600
+Message-ID: <1480380153-60497-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:37262 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44665 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755278AbcK2Amf (ORCPT
+        by vger.kernel.org with ESMTP id S1755308AbcK2Aml (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 19:42:35 -0500
-Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0dACA114508
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:34 -0500
-Received: from e31.co.us.ibm.com (e31.co.us.ibm.com [32.97.110.149])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 270vsg7mtq-1
+        Mon, 28 Nov 2016 19:42:41 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cV9f043064
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:40 -0500
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 270xutsgb3-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:34 -0500
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:42:40 -0500
 Received: from localhost
-        by e31.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Mon, 28 Nov 2016 17:42:33 -0700
+        Mon, 28 Nov 2016 17:42:39 -0700
 In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -28,169 +28,71 @@ Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian M
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-Clean up and remove the remaining private command pool infrastructure
-that is no longer required.
+With the removal of the static private command pool, the ability to
+'complete' outstanding commands was lost. While not an issue for the
+commands originating outside the driver, internal AFU commands are
+synchronous and therefore have a timeout associated with them. To
+avoid a stale memory access, the tear down sequence needs to ensure
+that there are not any active commands before proceeding. As these
+internal AFU commands are rare events, the simplest way to accomplish
+this is detecting the activity and waiting for it to timeout.
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/common.h |  7 -----
- drivers/scsi/cxlflash/main.c   | 68 ------------------------------------------
- 2 files changed, 75 deletions(-)
+ drivers/scsi/cxlflash/common.h | 1 +
+ drivers/scsi/cxlflash/main.c   | 6 +++++-
+ 2 files changed, 6 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/cxlflash/common.h b/drivers/scsi/cxlflash/common.h
-index 539908f..7e4ba31 100644
+index 7e4ba31..6211677 100644
 --- a/drivers/scsi/cxlflash/common.h
 +++ b/drivers/scsi/cxlflash/common.h
-@@ -136,8 +136,6 @@ struct afu_cmd {
- 	spinlock_t slock;
- 	struct completion cevent;
- 	struct afu *parent;
--	int slot;
--	atomic_t free;
- 
- 	u8 cmd_tmf:1;
- 
-@@ -164,10 +162,6 @@ struct afu {
- 	/* Stuff requiring alignment go first. */
- 
- 	u64 rrq_entry[NUM_RRQ_ENTRY];	/* 2K RRQ */
--	/*
--	 * Command & data for AFU commands.
--	 */
--	struct afu_cmd cmd[CXLFLASH_NUM_CMDS];
- 
- 	/* Beware of alignment till here. Preferably introduce new
- 	 * fields after this point
-@@ -189,7 +183,6 @@ struct afu {
+@@ -180,6 +180,7 @@ struct afu {
+ 	u64 *hrrq_end;
+ 	u64 *hrrq_curr;
+ 	bool toggle;
++	atomic_t cmds_active;	/* Number of currently active AFU commands */
  	s64 room;
  	spinlock_t rrin_slock; /* Lock to rrin queuing and cmd_room updates */
  	u64 hb;
--	u32 cmd_couts;		/* Number of command checkouts */
- 	u32 internal_lun;	/* User-desired LUN mode for this AFU */
- 
- 	char version[16];
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index 43140ce..19156ad 100644
+index 19156ad..839eca4 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -35,33 +35,6 @@ MODULE_AUTHOR("Matthew R. Ochs <mrochs@linux.vnet.ibm.com>");
- MODULE_LICENSE("GPL");
- 
- /**
-- * cmd_checkin() - checks in an AFU command
-- * @cmd:	AFU command to checkin.
-- *
-- * Safe to pass commands that have already been checked in. Several
-- * internal tracking fields are reset as part of the checkin. Note
-- * that these are intentionally reset prior to toggling the free bit
-- * to avoid clobbering values in the event that the command is checked
-- * out right away.
-- */
--static void cmd_checkin(struct afu_cmd *cmd)
--{
--	cmd->rcb.scp = NULL;
--	cmd->rcb.timeout = 0;
--	cmd->sa.ioasc = 0;
--	cmd->cmd_tmf = false;
--	cmd->sa.host_use[0] = 0; /* clears both completion and retry bytes */
--
--	if (unlikely(atomic_inc_return(&cmd->free) != 1)) {
--		pr_err("%s: Freeing cmd (%d) that is not in use!\n",
--		       __func__, cmd->slot);
--		return;
--	}
--
--	pr_devel("%s: released cmd %p index=%d\n", __func__, cmd, cmd->slot);
--}
--
--/**
-  * process_cmd_err() - command error handler
-  * @cmd:	AFU command that experienced the error.
-  * @scp:	SCSI command associated with the AFU command in error.
-@@ -560,28 +533,12 @@ static void free_mem(struct cxlflash_cfg *cfg)
+@@ -531,7 +531,7 @@ static void free_mem(struct cxlflash_cfg *cfg)
   *
-  * Cleans up all state associated with the command queue, and unmaps
+  * Safe to call with AFU in a partially allocated/initialized state.
+  *
+- * Cleans up all state associated with the command queue, and unmaps
++ * Waits for any active internal AFU commands to timeout and then unmaps
   * the MMIO space.
-- *
-- *  - complete() will take care of commands we initiated (they'll be checked
-- *  in as part of the cleanup that occurs after the completion)
-- *
-- *  - cmd_checkin() will take care of entries that we did not initiate and that
-- *  have not (and will not) complete because they are sitting on a [now stale]
-- *  hardware queue
   */
  static void stop_afu(struct cxlflash_cfg *cfg)
- {
--	int i;
+@@ -539,6 +539,8 @@ static void stop_afu(struct cxlflash_cfg *cfg)
  	struct afu *afu = cfg->afu;
--	struct afu_cmd *cmd;
  
  	if (likely(afu)) {
--		for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
--			cmd = &afu->cmd[i];
--			complete(&cmd->cevent);
--			if (!atomic_read(&cmd->free))
--				cmd_checkin(cmd);
--		}
--
++		while (atomic_read(&afu->cmds_active))
++			ssleep(1);
  		if (likely(afu->afu_map)) {
  			cxl_psa_unmap((void __iomem *)afu->afu_map);
  			afu->afu_map = NULL;
-@@ -794,7 +751,6 @@ static void cxlflash_remove(struct pci_dev *pdev)
- static int alloc_mem(struct cxlflash_cfg *cfg)
- {
- 	int rc = 0;
--	int i;
- 	struct device *dev = &cfg->dev->dev;
- 
- 	/* AFU is ~12k, i.e. only one 64k page or up to four 4k pages */
-@@ -808,12 +764,6 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
+@@ -1721,6 +1723,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
  	}
- 	cfg->afu->parent = cfg;
- 	cfg->afu->afu_map = NULL;
--
--	for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
--		atomic_set(&cfg->afu->cmd[i].free, 1);
--		cfg->afu->cmd[i].slot = i;
--	}
--
+ 
+ 	mutex_lock(&sync_active);
++	atomic_inc(&afu->cmds_active);
+ 	buf = kzalloc(sizeof(*cmd) + __alignof__(*cmd) - 1, GFP_KERNEL);
+ 	if (unlikely(!buf)) {
+ 		dev_err(dev, "%s: no memory for command\n", __func__);
+@@ -1762,6 +1765,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 		     (cmd->sa.host_use_b[0] & B_ERROR)))
+ 		rc = -1;
  out:
- 	return rc;
- }
-@@ -1443,13 +1393,6 @@ static void init_pcr(struct cxlflash_cfg *cfg)
- 
- 	/* Program the Endian Control for the master context */
- 	writeq_be(SISL_ENDIAN_CTRL, &afu->host_map->endian_ctrl);
--
--	/* Initialize cmd fields that never change */
--	for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
--		afu->cmd[i].rcb.ctx_id = afu->ctx_hndl;
--		afu->cmd[i].rcb.msi = SISL_MSI_RRQ_UPDATED;
--		afu->cmd[i].rcb.rrq = 0x0;
--	}
- }
- 
- /**
-@@ -1538,19 +1481,8 @@ static int init_global(struct cxlflash_cfg *cfg)
- static int start_afu(struct cxlflash_cfg *cfg)
- {
- 	struct afu *afu = cfg->afu;
--	struct afu_cmd *cmd;
--
--	int i = 0;
- 	int rc = 0;
- 
--	for (i = 0; i < CXLFLASH_NUM_CMDS; i++) {
--		cmd = &afu->cmd[i];
--
--		init_completion(&cmd->cevent);
--		spin_lock_init(&cmd->slock);
--		cmd->parent = afu;
--	}
--
- 	init_pcr(cfg);
- 
- 	/* After an AFU reset, RRQ entries are stale, clear them */
++	atomic_dec(&afu->cmds_active);
+ 	mutex_unlock(&sync_active);
+ 	kfree(buf);
+ 	pr_debug("%s: returning rc=%d\n", __func__, rc);
 -- 
 2.1.0
 
