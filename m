@@ -1,82 +1,90 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH v2 01/14] cxlflash: Set sg_tablesize to 1 instead of SG_NONE
-Date: Mon, 28 Nov 2016 18:41:06 -0600
-Message-ID: <1480380067-60200-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 02/14] cxlflash: Fix crash in cxlflash_restore_luntable()
+Date: Mon, 28 Nov 2016 18:41:19 -0600
+Message-ID: <1480380079-60236-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:48194 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:38125 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1752872AbcK2AlU (ORCPT
+        by vger.kernel.org with ESMTP id S1753137AbcK2Al3 (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 28 Nov 2016 19:41:20 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0e8eO088518
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:19 -0500
-Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 270tdafr7f-1
+        Mon, 28 Nov 2016 19:41:29 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAT0cVf4050998
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:28 -0500
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 270su4hthw-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:19 -0500
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Nov 2016 19:41:28 -0500
 Received: from localhost
-        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Mon, 28 Nov 2016 17:41:18 -0700
+        Mon, 28 Nov 2016 19:41:28 -0500
 In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
 Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-The following Oops is encountered when blk_mq is enabled with the
-cxlflash driver:
+During test, the following crash was observed:
 
-[ 2960.817172] Oops: Kernel access of bad area, sig: 11 [#5]
-[ 2960.817309] NIP  __blk_mq_run_hw_queue+0x278/0x4c0
-[ 2960.817313] LR __blk_mq_run_hw_queue+0x2bc/0x4c0
-[ 2960.817314] Call Trace:
-[ 2960.817320] __blk_mq_run_hw_queue+0x2bc/0x4c0 (unreliable)
-[ 2960.817324] blk_mq_run_hw_queue+0xd8/0x100
-[ 2960.817329] blk_mq_insert_requests+0x14c/0x1f0
-[ 2960.817333] blk_mq_flush_plug_list+0x150/0x190
-[ 2960.817338] blk_flush_plug_list+0x11c/0x2b0
-[ 2960.817344] blk_finish_plug+0x58/0x80
-[ 2960.817348] __do_page_cache_readahead+0x1c0/0x2e0
-[ 2960.817352] force_page_cache_readahead+0x68/0xd0
-[ 2960.817356] generic_file_read_iter+0x43c/0x6a0
-[ 2960.817359] blkdev_read_iter+0x68/0xa0
-[ 2960.817361] __vfs_read+0x11c/0x180
-[ 2960.817364] vfs_read+0xa4/0x1c0
-[ 2960.817366] SyS_read+0x6c/0x110
-[ 2960.817369] system_call+0x38/0xb4
+[34538.981505] Faulting instruction address: 0xd000000007c9c870
+cpu 0x9: Vector: 300 (Data Access) at [c0000007f1e8f590]
+    pc: d000000007c9c870: cxlflash_restore_luntable+0x70/0x1d0 [cxlflash]
+    lr: d000000007c9c84c: cxlflash_restore_luntable+0x4c/0x1d0 [cxlflash]
+    sp: c0000007f1e8f810
+   msr: 9000000100009033
+   dar: c00000171d637438
+ dsisr: 40000000
+  current = 0xc0000007f1e43f90
+  paca    = 0xc000000007b25100   softe: 0        irq_happened: 0x01
+    pid   = 493, comm = eehd
+enter ? for help
+[c0000007f1e8f8a0] d000000007c940b0 init_afu+0xd60/0x1200 [cxlflash]
+[c0000007f1e8f9a0] d000000007c945a8 cxlflash_pci_slot_reset+0x58/0xe0 [cxlflash]
+[c0000007f1e8fa20] d00000000715f790 cxl_pci_slot_reset+0x230/0x340 [cxl]
+[c0000007f1e8fae0] c000000000040dd4 eeh_report_reset+0x144/0x180
+[c0000007f1e8fb20] c00000000003f708 eeh_pe_dev_traverse+0x98/0x170
+[c0000007f1e8fbb0] c000000000041618 eeh_handle_normal_event+0x328/0x410
+[c0000007f1e8fc30] c000000000041db8 eeh_handle_event+0x178/0x330
+[c0000007f1e8fce0] c000000000042118 eeh_event_handler+0x1a8/0x1b0
+[c0000007f1e8fd80] c00000000011420c kthread+0xec/0x100
+[c0000007f1e8fe30] c00000000000a47c ret_from_kernel_thread+0x5c/0xe0
 
-The SCSI blk_mq stack assumes that sg_tablesize is always a non-zero
-value with scsi_mq_setup_tags() allocating tags using sg_tablesize.
-The cxlflash driver currently uses SG_NONE (0) for the sg_tablesize
-as the devices it supports are not capable of scatter gather. This
-mismatch of values results in the Oops above.
+When superpipe mode is disabled for a LUN, the references for the
+local lun are deleted but the LUN is still identified as being present
+in the LUN table. This mismatched state can result in the above crash
+when the LUN table is restored during an error recovery operation.
 
-To resolve this issue, sg_tablesize for cxlflash can simply be set
-to 1, a value which satisfies the constraints in cxlflash and the
-lack of support of SG_NONE in SCSI blk_mq.
+To fix this issue, the local LUN information structure is updated to
+reflect the LUN is no longer in the LUN table once all references to
+the LUN are gone.
 
 Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 Acked-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/cxlflash/lunmgt.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index b301655..6004860 100644
---- a/drivers/scsi/cxlflash/main.c
-+++ b/drivers/scsi/cxlflash/main.c
-@@ -2377,7 +2377,7 @@ static struct scsi_host_template driver_template = {
- 	.cmd_per_lun = CXLFLASH_MAX_CMDS_PER_LUN,
- 	.can_queue = CXLFLASH_MAX_CMDS,
- 	.this_id = -1,
--	.sg_tablesize = SG_NONE,	/* No scatter gather support */
-+	.sg_tablesize = 1,	/* No scatter gather support */
- 	.max_sectors = CXLFLASH_MAX_SECTORS,
- 	.use_clustering = ENABLE_CLUSTERING,
- 	.shost_attrs = cxlflash_host_attrs,
+diff --git a/drivers/scsi/cxlflash/lunmgt.c b/drivers/scsi/cxlflash/lunmgt.c
+index a0923ca..6c318db9 100644
+--- a/drivers/scsi/cxlflash/lunmgt.c
++++ b/drivers/scsi/cxlflash/lunmgt.c
+@@ -254,8 +254,14 @@ int cxlflash_manage_lun(struct scsi_device *sdev,
+ 		if (lli->parent->mode != MODE_NONE)
+ 			rc = -EBUSY;
+ 		else {
++			/*
++			 * Clean up local LUN for this port and reset table
++			 * tracking when no more references exist.
++			 */
+ 			sdev->hostdata = NULL;
+ 			lli->port_sel &= ~CHAN2PORT(chan);
++			if (lli->port_sel == 0U)
++				lli->in_table = false;
+ 		}
+ 	}
+ 
 -- 
 2.1.0
 
