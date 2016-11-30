@@ -1,73 +1,49 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 0/5] qla2xxx: Features updates for driver
-Date: Wed, 30 Nov 2016 12:24:52 -0800
-Message-ID: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
+From: Brian King <brking@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi/ipr: Fix runaway IRQs when falling back from MSI to
+ LSI
+Date: Wed, 30 Nov 2016 15:28:55 -0600
+Message-ID: <683a1049-2ff3-2777-b908-062212008ae4@linux.vnet.ibm.com>
+References: <1479947042.10230.88.camel@kernel.crashing.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0082.outbound.protection.outlook.com ([104.47.38.82]:34976
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754816AbcK3U53 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Nov 2016 15:57:29 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1479947042.10230.88.camel@kernel.crashing.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-scsi@vger.kernel.org
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxppc dev list <linuxppc-dev@lists.ozlabs.org>
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-Hi Martin,
 
-Please consider this revised series for scsi-misc inclusion
-at your earliest convenience.
+Looks good. Thanks! Here is an updated version that should apply
+cleanly on top of scsi-next.
 
-Changes from v1 --> v2
+8<
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
 
-o Split up the patches for Multiqueue into infrastucture changes
-  and support for adding multiqueue capablity in the driver as
-  per Ewan's suggestion.
-o Incorporate new pci_irq_alloc_vector call as per Christoph's suggestion.
-o To address comments related to Mailbox patches by Ewan, I have
-  reworked the patch to clean-up mailbox workqueue cleanup. 
+LSIs must be ack'ed with an MMIO otherwise they remain asserted
+forever. This is controlled by the "clear_isr" flag.
 
-Thanks,
-Himanshu
+While we set that flag properly when deciding initially whether
+to use LSIs or MSIs, we fail to set it if we first chose MSIs,
+the test fails, then fallback to LSIs.
 
-Himanshu Madhani (1):
-  qla2xxx: Only allow operational MBX to proceed during RESET.
+Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
+---
 
-Michael Hernandez (1):
-  qla2xxx: Add multiple queue pair functionality.
+ drivers/scsi/ipr.c |    1 +
+ 1 file changed, 1 insertion(+)
 
-Quinn Tran (1):
-  qla2xxx: Fix Target mode handling with Multiqueue changes.
-
-Samy (1):
-  qla2xxx: Fix mailbox command timeout due to starvation
-
-Sawan Chandak (1):
-  qla2xxx: Add Block Multi Queue functionality.
-
- drivers/scsi/qla2xxx/Makefile     |   3 +-
- drivers/scsi/qla2xxx/qla_attr.c   |  36 ++--
- drivers/scsi/qla2xxx/qla_bottom.c | 398 ++++++++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_dbg.c    |   4 +-
- drivers/scsi/qla2xxx/qla_def.h    | 118 +++++++++--
- drivers/scsi/qla2xxx/qla_gbl.h    |  34 +++-
- drivers/scsi/qla2xxx/qla_init.c   |  14 +-
- drivers/scsi/qla2xxx/qla_inline.h |  30 +++
- drivers/scsi/qla2xxx/qla_iocb.c   |  56 ++----
- drivers/scsi/qla2xxx/qla_isr.c    | 160 +++++++--------
- drivers/scsi/qla2xxx/qla_mbx.c    | 176 ++++++++++++++---
- drivers/scsi/qla2xxx/qla_mid.c    | 116 +++++------
- drivers/scsi/qla2xxx/qla_mq.c     | 279 ++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_os.c     | 335 ++++++++++++++++++++------------
- drivers/scsi/qla2xxx/qla_target.c |   4 +
- drivers/scsi/qla2xxx/qla_top.c    |  95 +++++++++
- 16 files changed, 1453 insertions(+), 405 deletions(-)
- create mode 100644 drivers/scsi/qla2xxx/qla_bottom.c
- create mode 100644 drivers/scsi/qla2xxx/qla_mq.c
- create mode 100644 drivers/scsi/qla2xxx/qla_top.c
-
--- 
-1.8.3.1
-
+diff -puN drivers/scsi/ipr.c~ipr_misx_fail_intx_clear_isr drivers/scsi/ipr.c
+--- scsi/drivers/scsi/ipr.c~ipr_misx_fail_intx_clear_isr	2016-11-29 20:56:27.902534325 -0600
++++ scsi-bjking1/drivers/scsi/ipr.c	2016-11-29 20:56:50.645538533 -0600
+@@ -10157,6 +10157,7 @@ static int ipr_probe_ioa(struct pci_dev
+ 			pci_free_irq_vectors(pdev);
+ 
+ 			ioa_cfg->nvectors = 1;
++			ioa_cfg->clear_isr = 1;
+ 			break;
+ 		default:
+ 			goto out_msi_disable;
+_
