@@ -1,31 +1,38 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 00/14] cxlflash: Fixes, enhancements, cleanup and staging
-Date: Wed, 30 Nov 2016 11:42:13 -0500
-Message-ID: <yq1shq8j4wq.fsf@sermon.lab.mkp.net>
-References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: Re: qed, qedi patchset submission
+Date: Wed, 30 Nov 2016 11:45:41 -0500
+Message-ID: <yq1oa0wj4qy.fsf@sermon.lab.mkp.net>
+References: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com>
+        <yq11sydfwts.fsf@sermon.lab.mkp.net>
+        <alpine.LRH.2.00.1611291452030.28058@mvluser05.qlc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:41074 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751606AbcK3Qm2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 11:42:28 -0500
-In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        (Uma Krishnan's message of "Mon, 28 Nov 2016 18:39:44 -0600")
+Received: from userp1040.oracle.com ([156.151.31.81]:40368 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752789AbcK3Qpx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 11:45:53 -0500
+In-Reply-To: <alpine.LRH.2.00.1611291452030.28058@mvluser05.qlc.com> (Arun
+        Easi's message of "Tue, 29 Nov 2016 15:11:26 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
+To: Arun Easi <arun.easi@cavium.com>
+Cc: David Miller <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+>>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
 
-Uma> The first four patches in this patch series include fixes for
-Uma> command room violation and lun table management.
+Arun,
 
-Applied patches 1-4 to 4.10/scsi-queue. The remainder of the series
-needs review.
+Arun> So far, we have been posting qedi changes split into functional
+Arun> blocks, for review, but was not bisectable. With Martin ok to our
+Arun> request to squash all patches while committing to tree, we were
+Arun> wondering if we should post the qedi patches squashed, with all
+Arun> the Reviewed-by added, or continue to post as before?
 
-Thanks!
+I guess it depends how things can be split up in a bisectable fashion.
+
+If the net/ pieces can be completely separated from the scsi/ pieces
+maybe it would be best to have two patches?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
