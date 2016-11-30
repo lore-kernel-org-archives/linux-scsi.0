@@ -1,45 +1,113 @@
-From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2 14/14] cxlflash: Migrate scsi command pointer to AFU
- command
-Date: Wed, 30 Nov 2016 16:14:13 -0600
-Message-ID: <1f4a9c03-5389-1ef3-3139-99042368907b@linux.vnet.ibm.com>
-References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
- <1480380198-60687-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44112 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1755691AbcK3WNf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Nov 2016 17:13:35 -0500
-Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAUM9fVL032351
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2016 17:13:30 -0500
-Received: from e35.co.us.ibm.com (e35.co.us.ibm.com [32.97.110.153])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 27238sc6bf-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2016 17:13:29 -0500
-Received: from localhost
-        by e35.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Wed, 30 Nov 2016 15:13:29 -0700
-In-Reply-To: <1480380198-60687-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Subject: [PATCH] scsi: hpsa: use %phN for short hex dumps
+Date: Wed, 30 Nov 2016 23:35:47 +0100
+Message-ID: <1480545348-32669-1-git-send-email-linux@rasmusvillemoes.dk>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>, iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-> From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
->
-> Currently, when sending a SCSI command, the pointer is stored in a
-> reserved field of the AFU command descriptor for retrieval once the
-> SCSI command has completed. In order to support new descriptor formats
-> that make use of the reserved field, the pointer is migrated to outside
-> the descriptor where it can still be found during completion processing.
->
-> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Passing one instead of 8 or 16 arguments reduces the size of the
+generated code somewhat:
 
-Acked-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+add/remove: 2/3 grow/shrink: 1/4 up/down: 1772/-2137 (-365)
 
+There's one more candidate, unique_id_show, but that uses %02X, and I'm
+not sure it would be ok to start using lowercase there, so I've left it
+alone for now.
+
+Signed-off-by: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+---
+ drivers/scsi/hpsa.c | 40 +++++++++++++---------------------------
+ 1 file changed, 13 insertions(+), 27 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index a1d6ab76a514..d74268ffb71e 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -700,9 +700,7 @@ static ssize_t lunid_show(struct device *dev,
+ 	}
+ 	memcpy(lunid, hdev->scsi3addr, sizeof(lunid));
+ 	spin_unlock_irqrestore(&h->lock, flags);
+-	return snprintf(buf, 20, "0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-		lunid[0], lunid[1], lunid[2], lunid[3],
+-		lunid[4], lunid[5], lunid[6], lunid[7]);
++	return snprintf(buf, 20, "0x%8phN\n", lunid);
+ }
+ 
+ static ssize_t unique_id_show(struct device *dev,
+@@ -2824,14 +2822,8 @@ static void hpsa_print_cmd(struct ctlr_info *h, char *txt,
+ 	const u8 *cdb = c->Request.CDB;
+ 	const u8 *lun = c->Header.LUN.LunAddrBytes;
+ 
+-	dev_warn(&h->pdev->dev, "%s: LUN:%02x%02x%02x%02x%02x%02x%02x%02x"
+-	" CDB:%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-		txt, lun[0], lun[1], lun[2], lun[3],
+-		lun[4], lun[5], lun[6], lun[7],
+-		cdb[0], cdb[1], cdb[2], cdb[3],
+-		cdb[4], cdb[5], cdb[6], cdb[7],
+-		cdb[8], cdb[9], cdb[10], cdb[11],
+-		cdb[12], cdb[13], cdb[14], cdb[15]);
++	dev_warn(&h->pdev->dev, "%s: LUN:%8phN CDB:%16phN\n",
++		 txt, lun, cdb);
+ }
+ 
+ static void hpsa_scsi_interpret_error(struct ctlr_info *h,
+@@ -5999,11 +5991,9 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 
+ 	if (h->raid_offload_debug > 0)
+ 		dev_info(&h->pdev->dev,
+-			"scsi %d:%d:%d:%d %s scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
++			"scsi %d:%d:%d:%d %s scsi3addr 0x%8phN\n",
+ 			h->scsi_host->host_no, dev->bus, dev->target, dev->lun,
+-			"Reset as abort",
+-			scsi3addr[0], scsi3addr[1], scsi3addr[2], scsi3addr[3],
+-			scsi3addr[4], scsi3addr[5], scsi3addr[6], scsi3addr[7]);
++			"Reset as abort", scsi3addr);
+ 
+ 	if (!dev->offload_enabled) {
+ 		dev_warn(&h->pdev->dev,
+@@ -6020,32 +6010,28 @@ static int hpsa_send_reset_as_abort_ioaccel2(struct ctlr_info *h,
+ 	/* send the reset */
+ 	if (h->raid_offload_debug > 0)
+ 		dev_info(&h->pdev->dev,
+-			"Reset as abort: Resetting physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-			psa[0], psa[1], psa[2], psa[3],
+-			psa[4], psa[5], psa[6], psa[7]);
++			"Reset as abort: Resetting physical device at scsi3addr 0x%8phN\n",
++			psa);
+ 	rc = hpsa_do_reset(h, dev, psa, HPSA_PHYS_TARGET_RESET, reply_queue);
+ 	if (rc != 0) {
+ 		dev_warn(&h->pdev->dev,
+-			"Reset as abort: Failed on physical device at scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-			psa[0], psa[1], psa[2], psa[3],
+-			psa[4], psa[5], psa[6], psa[7]);
++			"Reset as abort: Failed on physical device at scsi3addr 0x%8phN\n",
++			psa);
+ 		return rc; /* failed to reset */
+ 	}
+ 
+ 	/* wait for device to recover */
+ 	if (wait_for_device_to_become_ready(h, psa, reply_queue) != 0) {
+ 		dev_warn(&h->pdev->dev,
+-			"Reset as abort: Failed: Device never recovered from reset: 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-			psa[0], psa[1], psa[2], psa[3],
+-			psa[4], psa[5], psa[6], psa[7]);
++			"Reset as abort: Failed: Device never recovered from reset: 0x%8phN\n",
++			psa);
+ 		return -1;  /* failed to recover */
+ 	}
+ 
+ 	/* device recovered */
+ 	dev_info(&h->pdev->dev,
+-		"Reset as abort: Device recovered from reset: scsi3addr 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+-		psa[0], psa[1], psa[2], psa[3],
+-		psa[4], psa[5], psa[6], psa[7]);
++		"Reset as abort: Device recovered from reset: scsi3addr 0x%8phN\n",
++		psa);
+ 
+ 	return rc; /* success */
+ }
+-- 
+2.1.4
