@@ -1,62 +1,35 @@
-From: Arun Easi <arun.easi@cavium.com>
-Subject: Re: qed, qedi patchset submission
-Date: Wed, 30 Nov 2016 09:15:28 -0800
-Message-ID: <alpine.LRH.2.00.1611300858390.28058@mvluser05.qlc.com>
-References: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com> <yq11sydfwts.fsf@sermon.lab.mkp.net> <alpine.LRH.2.00.1611291452030.28058@mvluser05.qlc.com> <yq1oa0wj4qy.fsf@sermon.lab.mkp.net>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [patch] scsi: dpt_i2o: double free on error path
+Date: Wed, 30 Nov 2016 22:36:48 +0300
+Message-ID: <20161130193648.GA24818@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0087.outbound.protection.outlook.com ([104.47.34.87]:18705
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1757623AbcK3Ruc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 30 Nov 2016 12:50:32 -0500
-In-Reply-To: <yq1oa0wj4qy.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+Content-Disposition: inline
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Quentin Lambert <lambert.quentin@gmail.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: David Miller <davem@davemloft.net>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
-Thanks for the response, Martin.
+We recently introduced a kfree() in the caller for this function.
+That's where, logically, you would think the kfree() should be.
+Unfortunately the code was just ugly and not buggy so the static
+checker warning was a false postive and introduced a double free.
 
-On Wed, 30 Nov 2016, 8:45am, Martin K. Petersen wrote:
+I've removed the old kfree() and left the new one.
 
-> >>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
-> 
-> Arun,
-> 
-> Arun> So far, we have been posting qedi changes split into functional
-> Arun> blocks, for review, but was not bisectable. With Martin ok to our
-> Arun> request to squash all patches while committing to tree, we were
-> Arun> wondering if we should post the qedi patches squashed, with all
-> Arun> the Reviewed-by added, or continue to post as before?
-> 
-> I guess it depends how things can be split up in a bisectable fashion.
+Fixes: 021e2927586d ("scsi: dpt_i2o: Add a missing call to kfree")
+Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
 
-These were the patches that was sent:
-  1 qed: Add support for hardware offloaded iSCSI.
-  2 qed: Add iSCSI out of order packet handling.
-  3 qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-  4 qedi: Add LL2 iSCSI interface for offload iSCSI.
-  5 qedi: Add support for iSCSI session management.
-  6 qedi: Add support for data path.
-
-> 
-> If the net/ pieces can be completely separated from the scsi/ pieces
-> maybe it would be best to have two patches?
-> 
-
-Yes, those pieces can be completely separated; there are actually 3 parts, 
-2 that goes to net/ and 1 to scsi/.
-
-In the list above, 1 & 2 goes to net/ and are bisectable. 3 through 6 are 
-scsi/ pieces, which are the ones requested for collapsing.
-
-We will post these pieces for V3, then:
-
-  1 [PATCH v3 net-next 1/3] qed: Add support for hardware offloaded iSCSI.
-  2 [PATCH v3 net-next 2/3] qed: Add iSCSI out of order packet handling.
-  3 [PATCH v3 3/3] qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-
-Regards,
--Arun
+diff --git a/drivers/scsi/dpt_i2o.c b/drivers/scsi/dpt_i2o.c
+index f88b3d2..27c0dce 100644
+--- a/drivers/scsi/dpt_i2o.c
++++ b/drivers/scsi/dpt_i2o.c
+@@ -651,7 +651,6 @@ static u32 adpt_ioctl_to_context(adpt_hba * pHba, void *reply)
+ 	}
+ 	spin_unlock_irqrestore(pHba->host->host_lock, flags);
+ 	if (i >= nr) {
+-		kfree (reply);
+ 		printk(KERN_WARNING"%s: Too many outstanding "
+ 				"ioctl commands\n", pHba->name);
+ 		return (u32)-1;
