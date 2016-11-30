@@ -1,49 +1,44 @@
-From: Brian King <brking@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi/ipr: Fix runaway IRQs when falling back from MSI to
- LSI
-Date: Wed, 30 Nov 2016 15:28:55 -0600
-Message-ID: <683a1049-2ff3-2777-b908-062212008ae4@linux.vnet.ibm.com>
-References: <1479947042.10230.88.camel@kernel.crashing.org>
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 05/14] cxlflash: Remove unused buffer from AFU command
+Date: Wed, 30 Nov 2016 16:03:37 -0600
+Message-ID: <cbac1db4-468e-ef72-c96f-51634eb8005f@linux.vnet.ibm.com>
+References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <1480380121-60346-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1479947042.10230.88.camel@kernel.crashing.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Benjamin Herrenschmidt <benh@kernel.crashing.org>, linux-scsi@vger.kernel.org
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linuxppc dev list <linuxppc-dev@lists.ozlabs.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:54862 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1756915AbcK3WC5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 30 Nov 2016 17:02:57 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uAULtdvT146567
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2016 17:02:56 -0500
+Received: from e33.co.us.ibm.com (e33.co.us.ibm.com [32.97.110.151])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 27238sbucy-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Nov 2016 17:02:56 -0500
+Received: from localhost
+        by e33.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Wed, 30 Nov 2016 15:02:54 -0700
+In-Reply-To: <1480380121-60346-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
+> From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
+>
+> The cxlflash driver originally required a per-command 4K buffer that
+> hosted data passed to the AFU. When the routines that initiate AFU
+> and internal SCSI commands were refactored to use scsi_execute(), the
+> need for this buffer became obsolete. As it is no longer necessary,
+> the buffer is removed.
+>
+> Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 
-Looks good. Thanks! Here is an updated version that should apply
-cleanly on top of scsi-next.
+Acked-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 
-8<
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-
-LSIs must be ack'ed with an MMIO otherwise they remain asserted
-forever. This is controlled by the "clear_isr" flag.
-
-While we set that flag properly when deciding initially whether
-to use LSIs or MSIs, we fail to set it if we first chose MSIs,
-the test fails, then fallback to LSIs.
-
-Signed-off-by: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Signed-off-by: Brian King <brking@linux.vnet.ibm.com>
----
-
- drivers/scsi/ipr.c |    1 +
- 1 file changed, 1 insertion(+)
-
-diff -puN drivers/scsi/ipr.c~ipr_misx_fail_intx_clear_isr drivers/scsi/ipr.c
---- scsi/drivers/scsi/ipr.c~ipr_misx_fail_intx_clear_isr	2016-11-29 20:56:27.902534325 -0600
-+++ scsi-bjking1/drivers/scsi/ipr.c	2016-11-29 20:56:50.645538533 -0600
-@@ -10157,6 +10157,7 @@ static int ipr_probe_ioa(struct pci_dev
- 			pci_free_irq_vectors(pdev);
- 
- 			ioa_cfg->nvectors = 1;
-+			ioa_cfg->clear_isr = 1;
- 			break;
- 		default:
- 			goto out_msi_disable;
-_
