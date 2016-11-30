@@ -1,86 +1,28 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: [PATCH 4.4 09/21] scsi: mpt3sas: Fix secure erase premature termination
-Date: Wed, 30 Nov 2016 10:27:25 +0100
-Message-ID: <20161130092655.398094910@linuxfoundation.org>
-References: <20161130092654.890709900@linuxfoundation.org>
+From: Varun Prakash <varun@chelsio.com>
+Subject: Re: [PATCH] cxgb4i: Add a missing call to neigh_release
+Date: Wed, 30 Nov 2016 16:49:32 +0530
+Message-ID: <20161130111931.GA1703@chelsio.com>
+References: <20161119174214.20241-1-lambert.quentin@gmail.com>
+ <yq1inr6nsfq.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20161130092654.890709900@linuxfoundation.org>
-Sender: stable-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org, Andrey Grodzovsky <andrey2805@gmail.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <yq1inr6nsfq.fsf@sermon.lab.mkp.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Quentin Lambert <lambert.quentin@gmail.com>, Karen Xie <kxie@chelsio.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-4.4-stable review patch.  If anyone has any objections, please let me know.
+On Tue, Nov 29, 2016 at 10:18:09PM +0530, Martin K. Petersen wrote:
+> >>>>> "Quentin" == Quentin Lambert <lambert.quentin@gmail.com> writes:
+> 
+> Quentin> Most error branches following the call to dst_neigh_lookup
+> Quentin> contain a call to neigh_release. This patch add these calls
+> Quentin> where they are missing.
+> 
+> Varun: Please review!
+> 
+Looks good.
 
-------------------
-
-From: Andrey Grodzovsky <andrey2805@gmail.com>
-
-commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
-
-This is a work around for a bug with LSI Fusion MPT SAS2 when perfoming
-secure erase. Due to the very long time the operation takes, commands
-issued during the erase will time out and will trigger execution of the
-abort hook. Even though the abort hook is called for the specific
-command which timed out, this leads to entire device halt
-(scsi_state terminated) and premature termination of the secure erase.
-
-Set device state to busy while ATA passthrough commands are in progress.
-
-[mkp: hand applied to 4.9/scsi-fixes, tweaked patch description]
-
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3831,7 +3831,10 @@ _scsih_eedp_error_handling(struct scsi_c
- 	    SAM_STAT_CHECK_CONDITION;
- }
- 
--
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+{
-+	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+}
- 
- /**
-  * scsih_qcmd - main scsi request entry point
-@@ -3859,6 +3862,13 @@ scsih_qcmd(struct Scsi_Host *shost, stru
- 	if (ioc->logging_level & MPT_DEBUG_SCSI)
- 		scsi_print_command(scmd);
- 
-+	/*
-+	 * Lock the device for any subsequent command until command is
-+	 * done.
-+	 */
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4431,6 +4441,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *i
- 	if (scmd == NULL)
- 		return 1;
- 
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
+Acked-by: Varun Prakash <varun@chelsio.com>
