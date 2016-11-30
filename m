@@ -1,38 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: qed, qedi patchset submission
-Date: Wed, 30 Nov 2016 11:45:41 -0500
-Message-ID: <yq1oa0wj4qy.fsf@sermon.lab.mkp.net>
-References: <alpine.LRH.2.00.1611141256340.28058@mvluser05.qlc.com>
-        <yq11sydfwts.fsf@sermon.lab.mkp.net>
-        <alpine.LRH.2.00.1611291452030.28058@mvluser05.qlc.com>
+Subject: Re: [PATCH 4.8 11/37] scsi: mpt3sas: Fix secure erase premature termination
+Date: Wed, 30 Nov 2016 11:49:56 -0500
+Message-ID: <yq1k2bkj4jv.fsf@sermon.lab.mkp.net>
+References: <20161130092729.623248210@linuxfoundation.org>
+        <20161130092730.337406282@linuxfoundation.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40368 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752789AbcK3Qpx (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 11:45:53 -0500
-In-Reply-To: <alpine.LRH.2.00.1611291452030.28058@mvluser05.qlc.com> (Arun
-        Easi's message of "Tue, 29 Nov 2016 15:11:26 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161130092730.337406282@linuxfoundation.org> (Greg
+        Kroah-Hartman's message of "Wed, 30 Nov 2016 10:29:48 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, Andrey Grodzovsky <andrey2805@gmail.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Arun Easi <arun.easi@cavium.com>
-Cc: David Miller <davem@davemloft.net>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org
 
->>>>> "Arun" == Arun Easi <arun.easi@cavium.com> writes:
+>>>>> "Greg" == Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
 
-Arun,
+Greg,
 
-Arun> So far, we have been posting qedi changes split into functional
-Arun> blocks, for review, but was not bisectable. With Martin ok to our
-Arun> request to squash all patches while committing to tree, we were
-Arun> wondering if we should post the qedi patches squashed, with all
-Arun> the Reviewed-by added, or continue to post as before?
+Greg> From: Andrey Grodzovsky <andrey2805@gmail.com>
 
-I guess it depends how things can be split up in a bisectable fashion.
+Greg> commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
 
-If the net/ pieces can be completely separated from the scsi/ pieces
-maybe it would be best to have two patches?
+Please also queue 7ff723ad0f87 ("scsi: mpt3sas: Unblock device after
+controller reset") which just hit Linus' tree. It's a bug fix for the
+patch above.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
