@@ -1,43 +1,76 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH][V2] scsi: megaraid-sas: fix spelling mistake of "outstanding"
-Date: Wed, 30 Nov 2016 10:47:03 +0530
-Message-ID: <0224a6a40ed0aaebfa88d9a82aae5125@mail.gmail.com>
-References: <20161129191333.9176-1-colin.king@canonical.com> <99f3f833-6dd6-557a-2ae4-0051dfbe9f36@sandisk.com>
+From: KY Srinivasan <kys@microsoft.com>
+Subject: RE: [PATCH v2] [hv] storvsc: Payload buffer incorrectly sized for 32
+ bit kernels.
+Date: Wed, 30 Nov 2016 06:14:56 +0000
+Message-ID: <DM5PR03MB2490406F1FD55B88E5675486A08C0@DM5PR03MB2490.namprd03.prod.outlook.com>
+References: <1479908793-19872-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f173.google.com ([209.85.216.173]:36111 "EHLO
-        mail-qt0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751382AbcK3FRF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 00:17:05 -0500
-Received: by mail-qt0-f173.google.com with SMTP id w33so177630059qtc.3
-        for <linux-scsi@vger.kernel.org>; Tue, 29 Nov 2016 21:17:05 -0800 (PST)
-In-Reply-To: <99f3f833-6dd6-557a-2ae4-0051dfbe9f36@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1479908793-19872-1-git-send-email-cavery@redhat.com>
+Content-Language: en-US
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: Cathy Avery <cavery@redhat.com>, Haiyang Zhang <haiyangz@microsoft.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, Colin King <colin.king@canonical.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Sasikumar PC <sasikumar.pc@broadcom.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
+
+
 
 > -----Original Message-----
-> From: Bart Van Assche [mailto:bart.vanassche@sandisk.com]
-> Sent: Wednesday, November 30, 2016 12:50 AM
-> To: Colin King; Kashyap Desai; Sumit Saxena; Shivasharan S; James E . J .
-> Bottomley; Martin K . Petersen; megaraidlinux.pdl@broadcom.com; linux-
+> From: Cathy Avery [mailto:cavery@redhat.com]
+> Sent: Wednesday, November 23, 2016 5:47 AM
+> To: KY Srinivasan <kys@microsoft.com>; Haiyang Zhang
+> <haiyangz@microsoft.com>; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com
+> Cc: devel@linuxdriverproject.org; linux-kernel@vger.kernel.org; linux-
 > scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org
-> Subject: Re: [PATCH][V2] scsi: megaraid-sas: fix spelling mistake of
-> "outstanding"
->
-> On 11/29/2016 11:13 AM, Colin King wrote:
-> > Trivial fix to spelling mistake "oustanding" to "outstanding" in
-> > dev_info and scmd_printk messages. Also join wrapped literal string in
-> > the scmd_printk.
->
-> Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Subject: [PATCH v2] [hv] storvsc: Payload buffer incorrectly sized for 32 bit
+> kernels.
+> 
+> On a 32 bit kernel sizeof(void *) is not 64 bits as hv_mpb_array
+> requires. Also the buffer needs to be cleared or the upper bytes
+> will contain junk.
+> 
+> Suggested-by: Vitaly Kuznetsov <vkuznets@redhat.com>
+> Signed-off-by: Cathy Avery <cavery@redhat.com>
 
-Please hold this commit as we have patch set work in progress for MegaRaid
-Driver. It will conflict it this patch commits.
-We will be re-submitting this patch with appropriate Signed-off and
-Submitted-by tags.
+Thanks Cathy.
 
-Thanks, Kashyap
+Reviewed-by: K. Y. Srinivasan <kys@microsoft.com>
+> 
+> ChangeLog:
+> 
+> v1) Initial submission
+> v2) Remove memset and replace kmalloc with kzalloc.
+> ---
+>  drivers/scsi/storvsc_drv.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 8ccfc9e..05526b7 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1495,9 +1495,9 @@ static int storvsc_queuecommand(struct Scsi_Host
+> *host, struct scsi_cmnd *scmnd)
+>  	if (sg_count) {
+>  		if (sg_count > MAX_PAGE_BUFFER_COUNT) {
+> 
+> -			payload_sz = (sg_count * sizeof(void *) +
+> +			payload_sz = (sg_count * sizeof(u64) +
+>  				      sizeof(struct vmbus_packet_mpb_array));
+> -			payload = kmalloc(payload_sz, GFP_ATOMIC);
+> +			payload = kzalloc(payload_sz, GFP_ATOMIC);
+>  			if (!payload)
+>  				return SCSI_MLQUEUE_DEVICE_BUSY;
+>  		}
+> --
+> 2.5.0
