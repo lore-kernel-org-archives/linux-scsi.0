@@ -1,32 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [patch] scsi: dpt_i2o: double free on error path
-Date: Wed, 30 Nov 2016 19:54:46 -0500
-Message-ID: <yq1wpfkh3jd.fsf@sermon.lab.mkp.net>
-References: <20161130193648.GA24818@mwanda>
+Subject: Re: [PATCH v2 00/14] cxlflash: Fixes, enhancements, cleanup and staging
+Date: Wed, 30 Nov 2016 19:55:25 -0500
+Message-ID: <yq1shq8h3ia.fsf@sermon.lab.mkp.net>
+References: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16780 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758124AbcLAAza (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 19:55:30 -0500
-In-Reply-To: <20161130193648.GA24818@mwanda> (Dan Carpenter's message of "Wed,
-        30 Nov 2016 22:36:48 +0300")
+Received: from userp1040.oracle.com ([156.151.31.81]:47933 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1757184AbcLAAzh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 30 Nov 2016 19:55:37 -0500
+In-Reply-To: <1480379984-60114-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+        (Uma Krishnan's message of "Mon, 28 Nov 2016 18:39:44 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, Quentin Lambert <lambert.quentin@gmail.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
->>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
+>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
 
-Dan> We recently introduced a kfree() in the caller for this function.
-Dan> That's where, logically, you would think the kfree() should be.
-Dan> Unfortunately the code was just ugly and not buggy so the static
-Dan> checker warning was a false postive and introduced a double free.
+Uma> The first four patches in this patch series include fixes for
+Uma> command room violation and lun table management.
 
-Dan> I've removed the old kfree() and left the new one.
-
-Applied to 4.10/scsi-queue.
+Applied patches 5 through 14 to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
