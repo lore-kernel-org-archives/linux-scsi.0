@@ -1,34 +1,26 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: [PATCH 4.8 11/37] scsi: mpt3sas: Fix secure erase premature
- termination
-Date: Thu, 1 Dec 2016 08:10:39 +0100
-Message-ID: <20161201071039.GA14521@kroah.com>
-References: <20161130092729.623248210@linuxfoundation.org>
- <20161130092730.337406282@linuxfoundation.org>
- <yq1k2bkj4jv.fsf@sermon.lab.mkp.net>
+From: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
+Subject: Re: [PATCH v2] isci: switch to pci_alloc_irq_vectors
+Date: Thu, 1 Dec 2016 08:45:02 +0100
+Message-ID: <91a7e65f-1237-75fb-2676-3a39b3f91670@intel.com>
+References: <1480522861-18096-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <yq1k2bkj4jv.fsf@sermon.lab.mkp.net>
-Sender: stable-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, Andrey Grodzovsky <andrey2805@gmail.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mga02.intel.com ([134.134.136.20]:59709 "EHLO mga02.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1758509AbcLAHpF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Dec 2016 02:45:05 -0500
+In-Reply-To: <1480522861-18096-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc: intel-linux-scu@intel.com, linux-scsi@vger.kernel.org
 
-On Wed, Nov 30, 2016 at 11:49:56AM -0500, Martin K. Petersen wrote:
-> >>>>> "Greg" == Greg Kroah-Hartman <gregkh@linuxfoundation.org> writes:
-> 
-> Greg,
-> 
-> Greg> From: Andrey Grodzovsky <andrey2805@gmail.com>
-> 
-> Greg> commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
-> 
-> Please also queue 7ff723ad0f87 ("scsi: mpt3sas: Unblock device after
-> controller reset") which just hit Linus' tree. It's a bug fix for the
-> patch above.
+On 11/30/2016 05:21 PM, Christoph Hellwig wrote:
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Now queued up, thanks.
+Reviewed-by: Artur Paszkiewicz <artur.paszkiewicz@intel.com>
 
-greg k-h
+Thanks,
+Artur
