@@ -1,103 +1,222 @@
-From: Manish Rangankar <manish.rangankar@cavium.com>
-Subject: [PATCH v3 0/3] Add QLogic FastLinQ iSCSI (qedi) driver.
-Date: Thu, 1 Dec 2016 00:21:05 -0800
-Message-ID: <1480580468-31567-1-git-send-email-manish.rangankar@cavium.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 3/5] qla2xxx: Add multiple queue pair functionality.
+Date: Thu, 1 Dec 2016 09:39:09 +0100
+Message-ID: <118f1092-d945-d170-31dd-fd25ef0105c4@suse.de>
+References: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480537497-16429-4-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: martin.petersen@oracle.com, lduncan@suse.com, cleech@redhat.com
-Cc: linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:37026 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932318AbcLAIjL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Dec 2016 03:39:11 -0500
+In-Reply-To: <1480537497-16429-4-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
 
-This series introduces hardware offload iSCSI initiator driver for the
-41000 Series Converged Network Adapters (579xx chip) by Qlogic. The overall
-driver design includes a common module ('qed') and protocol specific
-dependent modules ('qedi' for iSCSI).
+On 11/30/2016 09:24 PM, Himanshu Madhani wrote:
+> From: Michael Hernandez <michael.hernandez@cavium.com>
+> 
+> Replaced existing multiple queue functionality with framework
+> that allows for the creation of pairs of request and response queues,
+> either at start of day or dynamically.
+> 
+> Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+> Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> ---
+>  drivers/scsi/qla2xxx/Makefile     |   3 +-
+>  drivers/scsi/qla2xxx/qla_attr.c   |  36 ++--
+>  drivers/scsi/qla2xxx/qla_bottom.c | 398 ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/qla2xxx/qla_dbg.c    |   4 +-
+>  drivers/scsi/qla2xxx/qla_def.h    | 114 +++++++++--
+>  drivers/scsi/qla2xxx/qla_gbl.h    |  34 +++-
+>  drivers/scsi/qla2xxx/qla_init.c   |  14 +-
+>  drivers/scsi/qla2xxx/qla_inline.h |  30 +++
+>  drivers/scsi/qla2xxx/qla_iocb.c   |  56 ++----
+>  drivers/scsi/qla2xxx/qla_isr.c    | 109 +++++------
+>  drivers/scsi/qla2xxx/qla_mbx.c    |  44 +++--
+>  drivers/scsi/qla2xxx/qla_mid.c    | 116 +++++------
+>  drivers/scsi/qla2xxx/qla_mq.c     | 279 ++++++++++++++++++++++++++
+>  drivers/scsi/qla2xxx/qla_os.c     | 235 +++++++++++-----------
+>  drivers/scsi/qla2xxx/qla_target.c |   4 +
+>  drivers/scsi/qla2xxx/qla_top.c    |  95 +++++++++
+>  16 files changed, 1230 insertions(+), 341 deletions(-)
+>  create mode 100644 drivers/scsi/qla2xxx/qla_bottom.c
+>  create mode 100644 drivers/scsi/qla2xxx/qla_mq.c
+>  create mode 100644 drivers/scsi/qla2xxx/qla_top.c
+> 
+[ .. ]
+> diff --git a/drivers/scsi/qla2xxx/qla_bottom.c b/drivers/scsi/qla2xxx/qla_bottom.c
+> new file mode 100644
+> index 0000000..8bf757e
+> --- /dev/null
+> +++ b/drivers/scsi/qla2xxx/qla_bottom.c
+> @@ -0,0 +1,398 @@
+> +/*
+> + * QLogic Fibre Channel HBA Driver
+> + * Copyright (c)  2016 QLogic Corporation
+> + *
+> + * See LICENSE.qla2xxx for copyright and licensing details.
+> + */
+> +#include "qla_def.h"
+> +
+> +/**
+> + * qla2xxx_start_scsi_mq() - Send a SCSI command to the ISP
+> + * @sp: command to send to the ISP
+> + *
+> + * Returns non-zero if a failure occurred, else zero.
+> + */
+> +
+> +static int
+> +qla2xxx_start_scsi_mq(srb_t *sp)
+> +{
+> +	int		nseg;
+> +	unsigned long   flags;
+> +	uint32_t	*clr_ptr;
+> +	uint32_t        index;
+> +	uint32_t	handle;
+> +	struct cmd_type_7 *cmd_pkt;
+> +	uint16_t	cnt;
+> +	uint16_t	req_cnt;
+> +	uint16_t	tot_dsds;
+> +	struct req_que *req = NULL;
+> +	struct rsp_que *rsp = NULL;
+> +	struct scsi_cmnd *cmd = GET_CMD_SP(sp);
+> +	struct scsi_qla_host *vha = sp->fcport->vha;
+> +	struct qla_hw_data *ha = vha->hw;
+> +	struct qla_qpair *qpair = sp->qpair;
+> +
+> +	/* Setup qpair pointers */
+> +	rsp = qpair->rsp;
+> +	req = qpair->req;
+> +
+> +	/* So we know we haven't pci_map'ed anything yet */
+> +	tot_dsds = 0;
+> +
+> +	/* Send marker if required */
+> +	if (vha->marker_needed != 0) {
+> +		if (qla2x00_marker(vha, req, rsp, 0, 0, MK_SYNC_ALL) !=
+> +		    QLA_SUCCESS)
+> +			return QLA_FUNCTION_FAILED;
+> +		vha->marker_needed = 0;
+> +	}
+> +
+> +	/* Acquire qpair specific lock */
+> +	spin_lock_irqsave(&qpair->qp_lock, flags);
+> +
+> +	/* Check for room in outstanding command list. */
+> +	handle = req->current_outstanding_cmd;
+> +	for (index = 1; index < req->num_outstanding_cmds; index++) {
+> +		handle++;
+> +		if (handle == req->num_outstanding_cmds)
+> +			handle = 1;
+> +		if (!req->outstanding_cmds[handle])
+> +			break;
+> +	}
+> +	if (index == req->num_outstanding_cmds)
+> +		goto queuing_error;
+> +
+> +	/* Map the sg table so we have an accurate count of sg entries needed */
+> +	if (scsi_sg_count(cmd)) {
+> +		nseg = dma_map_sg(&ha->pdev->dev, scsi_sglist(cmd),
+> +		    scsi_sg_count(cmd), cmd->sc_data_direction);
+> +		if (unlikely(!nseg))
+> +			goto queuing_error;
+> +	} else
+> +		nseg = 0;
+> +
+> +	tot_dsds = nseg;
+> +	req_cnt = qla24xx_calc_iocbs(vha, tot_dsds);
+> +	if (req->cnt < (req_cnt + 2)) {
+> +		cnt = IS_SHADOW_REG_CAPABLE(ha) ? *req->out_ptr :
+> +		    RD_REG_DWORD_RELAXED(req->req_q_out);
+> +		if (req->ring_index < cnt)
+> +			req->cnt = cnt - req->ring_index;
+> +		else
+> +			req->cnt = req->length -
+> +				(req->ring_index - cnt);
+> +		if (req->cnt < (req_cnt + 2))
+> +			goto queuing_error;
+> +	}
+> +
+> +	/* Build command packet. */
+> +	req->current_outstanding_cmd = handle;
+> +	req->outstanding_cmds[handle] = sp;
+> +	sp->handle = handle;
+> +	cmd->host_scribble = (unsigned char *)(unsigned long)handle;
+> +	req->cnt -= req_cnt;
+> +
+This will kill all performance benefits; having a single array to handle
+all outstanding commands inevitably leads to cache trashing.
 
-This is an open iSCSI driver, modifications to open iSCSI user components
-'iscsid', 'iscsiuio', etc. are required for the solution to work. The user
-space changes are also in the process of being submitted.
+[ .. ]
+> @@ -812,23 +817,27 @@ static void qla_do_work(struct work_struct *work)
+>  	if (!IS_MSIX_NACK_CAPABLE(ha))
+>  		options |= BIT_6;
+>  
+> +	/* Set option to indicate response queue creation */
+> +	options |= BIT_1;
+> +
 
-    https://groups.google.com/forum/#!forum/open-iscsi
+Is this bit supported on all firmware releases?
+Do we need an updated firmware for this?
 
-The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
-enhanced with functionality required for the iSCSI support. This series
-is based on:
 
-    net tree base: Merge of net and net-next as of 11/29/2016
+[ .. ]
+> +		/* Create request queue */
+> +		req_id = qla25xx_create_req_que(ha, 0, vp_idx, 0, rsp_id, qos);
+> +		if (!req_id) {
+> +			ql_log(ql_log_warn, vha, 0x0186,
+> +			    "Failed to create request queue.\n");
+> +			goto fail_req;
+> +		}
+> +
+> +		qpair->req = ha->req_q_map[req_id];
+> +		qpair->rsp->req = qpair->req;
+> +
+> +		if (IS_T10_PI_CAPABLE(ha) && ql2xenabledif) {
+> +			if (ha->fw_attributes & BIT_4)
+> +				qpair->difdix_supported = 1;
+> +		}
+> +
+> +		qpair->srb_mempool = mempool_create_slab_pool(SRB_MIN_REQ, srb_cachep);
+> +		if (!qpair->srb_mempool) {
+> +			ql_log(ql_log_warn, vha, 0x0191,
+> +			    "Failed to create srb mempool for qpair %d\n",
+> +			    qpair->id);
+> +			goto fail_mempool;
+> +		}
+> +
+> +		/* Set CPU affinity hint */
+> +		if (cpu_mask)
+> +			qla2xxx_set_affinity_hint(qpair, cpu_mask);
+> +
+> +		if (cpu_mask) {
+> +			cpumask_copy(&qpair->cpu_mask, cpu_mask);
+> +			for_each_cpu(cpu_id, cpu_mask) {
+> +				hint = per_cpu_ptr(vha->qps_hint, cpu_id);
+> +				hint->change_in_progress = 1;
+> +				hint->qp = qpair;
+> +				hint->change_in_progress = 0;
+> +			}
+> +		}
+> +
+Please use the irq-affinity rework from Christoph Hellwig here; we
+really shouldn't introduce any home-grown interrupt affinity settings
+anymore.
 
-Changes from RFC v2:
 
-  1. qedi patches are squashed into single patch to prevent krobot
-     warning.
-  2. Fixed 'hw_p_cpuq' incompatible pointer type. 
-  3. Fixed sparse incompatible types in comparison expression. 
-  4. Misc fixes with latest 'checkpatch --strict' option.
-  5. Remove int_mode option from MODULE_PARAM.
-  6. Prefix all MODULE_PARAM params with qedi_*.
-  7. Use CONFIG_QED_ISCSI instead of CONFIG_QEDI
-  8. Added bad task mem access fix.
+Cheers,
 
-Manish Rangankar (1):
-  qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-
-Yuval Mintz (2):
-  qed: Add support for hardware offloaded iSCSI.
-  qed: Add iSCSI out of order packet handling.
-
- MAINTAINERS                                    |    6 +
- drivers/net/ethernet/qlogic/Kconfig            |    3 +
- drivers/net/ethernet/qlogic/qed/Makefile       |    1 +
- drivers/net/ethernet/qlogic/qed/qed.h          |    8 +-
- drivers/net/ethernet/qlogic/qed/qed_dev.c      |   22 +
- drivers/net/ethernet/qlogic/qed/qed_iscsi.c    | 1277 +++++++++++++
- drivers/net/ethernet/qlogic/qed/qed_iscsi.h    |   52 +
- drivers/net/ethernet/qlogic/qed/qed_ll2.c      |  555 +++++-
- drivers/net/ethernet/qlogic/qed/qed_ll2.h      |    9 +
- drivers/net/ethernet/qlogic/qed/qed_ooo.c      |  501 +++++
- drivers/net/ethernet/qlogic/qed/qed_ooo.h      |  176 ++
- drivers/net/ethernet/qlogic/qed/qed_reg_addr.h |    2 +
- drivers/net/ethernet/qlogic/qed/qed_roce.c     |    1 +
- drivers/net/ethernet/qlogic/qed/qed_spq.c      |   24 +
- drivers/scsi/Kconfig                           |    1 +
- drivers/scsi/Makefile                          |    1 +
- drivers/scsi/qedi/Kconfig                      |   10 +
- drivers/scsi/qedi/Makefile                     |    5 +
- drivers/scsi/qedi/qedi.h                       |  364 ++++
- drivers/scsi/qedi/qedi_dbg.c                   |  143 ++
- drivers/scsi/qedi/qedi_dbg.h                   |  144 ++
- drivers/scsi/qedi/qedi_debugfs.c               |  244 +++
- drivers/scsi/qedi/qedi_fw.c                    | 2378 ++++++++++++++++++++++++
- drivers/scsi/qedi/qedi_gbl.h                   |   73 +
- drivers/scsi/qedi/qedi_hsi.h                   |   52 +
- drivers/scsi/qedi/qedi_iscsi.c                 | 1624 ++++++++++++++++
- drivers/scsi/qedi/qedi_iscsi.h                 |  232 +++
- drivers/scsi/qedi/qedi_main.c                  | 2127 +++++++++++++++++++++
- drivers/scsi/qedi/qedi_sysfs.c                 |   52 +
- drivers/scsi/qedi/qedi_version.h               |   14 +
- include/linux/qed/qed_if.h                     |    2 +
- include/linux/qed/qed_iscsi_if.h               |  229 +++
- 32 files changed, 10303 insertions(+), 29 deletions(-)
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.c
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_iscsi.h
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.c
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_ooo.h
- create mode 100644 drivers/scsi/qedi/Kconfig
- create mode 100644 drivers/scsi/qedi/Makefile
- create mode 100644 drivers/scsi/qedi/qedi.h
- create mode 100644 drivers/scsi/qedi/qedi_dbg.c
- create mode 100644 drivers/scsi/qedi/qedi_dbg.h
- create mode 100644 drivers/scsi/qedi/qedi_debugfs.c
- create mode 100644 drivers/scsi/qedi/qedi_fw.c
- create mode 100644 drivers/scsi/qedi/qedi_gbl.h
- create mode 100644 drivers/scsi/qedi/qedi_hsi.h
- create mode 100644 drivers/scsi/qedi/qedi_iscsi.c
- create mode 100644 drivers/scsi/qedi/qedi_iscsi.h
- create mode 100644 drivers/scsi/qedi/qedi_main.c
- create mode 100644 drivers/scsi/qedi/qedi_sysfs.c
- create mode 100644 drivers/scsi/qedi/qedi_version.h
- create mode 100644 include/linux/qed/qed_iscsi_if.h
-
+Hannes
 -- 
-1.8.3.1
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
