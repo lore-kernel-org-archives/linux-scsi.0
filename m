@@ -1,43 +1,40 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 2/5] qla2xxx: Fix mailbox command timeout due to
- starvation
-Date: Thu, 1 Dec 2016 16:47:57 +0000
-Message-ID: <0B0C0879-3FF0-4ED9-9D0A-C1D2E47E384A@cavium.com>
-References: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
- <1480537497-16429-3-git-send-email-himanshu.madhani@cavium.com>
- <edb6a523-beb0-04df-8dfc-18d7b1a77ff6@suse.de>
+From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2 1/2] blk-mq: Fix failed allocation path when mapping queues
+Date: Thu, 01 Dec 2016 15:51:37 -0200
+Message-ID: <8737i7sfkm.fsf@linux.vnet.ibm.com>
+References: <1479837269-5742-1-git-send-email-krisman@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0065.outbound.protection.outlook.com ([104.47.38.65]:38801
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932760AbcLARC3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Dec 2016 12:02:29 -0500
-In-Reply-To: <edb6a523-beb0-04df-8dfc-18d7b1a77ff6@suse.de>
-Content-Language: en-US
-Content-ID: <4DCD9552ED1B7E4986EA3CE6EF912B44@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1479837269-5742-1-git-send-email-krisman@linux.vnet.ibm.com>
+        (Gabriel Krisman Bertazi's message of "Tue, 22 Nov 2016 15:54:28
+        -0200")
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpPbiAxMS8zMC8xNiwgMTE6NTggUE0sICJIYW5uZXMgUmVpbmVja2UiIDxoYXJlQHN1c2UuZGU+
-IHdyb3RlOg0KDQo+T24gMTEvMzAvMjAxNiAwOToyNCBQTSwgSGltYW5zaHUgTWFkaGFuaSB3cm90
-ZToNCj4+IEZyb206IFNhbXkgPHNhbXlAcHVyZXN0b3JhZ2UuY29tPg0KPj4gDQo+PiBTaWduZWQt
-b2ZmLWJ5OiBTYW15IDxzYW15QHB1cmVzdG9yYWdlLmNvbT4NCj4+IFNpZ25lZC1vZmYtYnk6IEhp
-bWFuc2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAY2F2aXVtLmNvbT4NCj4+IC0tLQ0KPj4g
-IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kZWYuaCB8ICAzICsrDQo+PiAgZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX21ieC5jIHwgODggKysrKysrKysrKysrKysrKysrKysrKysrKysrKysrLS0t
-LS0tLS0tLS0tDQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgIHwgMjQgKysrKysr
-KysrKysrDQo+PiAgMyBmaWxlcyBjaGFuZ2VkLCA5MSBpbnNlcnRpb25zKCspLCAyNCBkZWxldGlv
-bnMoLSkNCj4+IA0KPlRoaXMgY291bGQgZG8gd2l0aCBhIHNvbWUgZGVzY3JpcHRpb24uDQoNClRo
-YW5rcyBmb3IgdGhlIHJldmlldy4gV2lsbCBhZGQgbW9yZSBkZXNjcmlwdGlvbiB3aGVuIHN1Ym1p
-dHRpbmcgcmV2aXNlZCBzZXJpZXMuIA0KDQo+DQo+T3RoZXJ3aXNlOg0KPg0KPlJldmlld2VkLWJ5
-OiBIYW5uZXMgUmVpbmVja2UgPGhhcmVAc3VzZS5jb20+DQo+DQo+Q2hlZXJzDQo+DQo+SGFubmVz
-DQo+LS0gDQo+RHIuIEhhbm5lcyBSZWluZWNrZQkJICAgVGVhbWxlYWQgU3RvcmFnZSAmIE5ldHdv
-cmtpbmcNCj5oYXJlQHN1c2UuZGUJCQkgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OA0K
-PlNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+R0Y6IEYu
-IEltZW5kw7ZyZmZlciwgSi4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1LCBHLiBOb3J0
-b24NCj5IUkIgMjEyODQgKEFHIE7DvHJuYmVyZykNCg==
+Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com> writes:
+
+> My one concern about this patch is if remapping an arbitrary queue to
+> hctx_0 could result in outstanding requests getting submitted to the
+> wrong hctx.  I couldn't observe this happening during tests, but I'm not
+> entirely sure it'll never happen.  I believe the queue will be empty if
+> we are trying to allocate tags for it, unless it was using another alive
+> hctx queue and for some reason got reassigned to this new hctx.  is this
+> possible at all?
+
+I no longer believe this case to be an issue for accepting this patch,
+since if a queue enters this path and get's remapped to hctx_0, it means
+the ctx would already be getting remaped to a new queue anyway, and it
+should use the requests that were just mapped for that queue.  So, for a
+correctness standpoint it doesn't matter which queue we are remaping,
+the failed hctx or hctx_0, no request would get redirected to the wrong
+queue with this change.
+
+Jens, do you think this set is good for merging in 4.10?  It fixes some
+issues for us on low memory conditions.
+
+-- 
+Gabriel Krisman Bertazi
+
