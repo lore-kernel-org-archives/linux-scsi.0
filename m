@@ -1,158 +1,105 @@
-From: Finn Thain <fthain@telegraphics.com.au>
-Subject: Re: [PATCH 27/39] Annotate hardware config module parameters in
- drivers/scsi/
-Date: Fri, 2 Dec 2016 09:05:41 +1100 (AEDT)
-Message-ID: <alpine.LNX.2.00.1612020903450.24840@nippy.intranet>
-References: <148059537897.31612.9461043954611464597.stgit@warthog.procyon.org.uk> <148059559339.31612.16180464424786438715.stgit@warthog.procyon.org.uk>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH 0/2] hpsa: fix rmmod issues
+Date: Thu, 1 Dec 2016 23:22:54 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D194180229D@avsrvexchmbx1.microsemi.net>
+References: <20161121140429.12788-1-mwilck@suse.de>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <148059559339.31612.16180464424786438715.stgit@warthog.procyon.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: David Howells <dhowells@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Michael Schmitz <schmitzmic@gmail.com>, Achim Leubner <achim_leubner@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, gnomes@lxorguk.ukuu.org.uk, linux-security-module@vger.kernel.org, keyrings@vger.kernel.org, minyard@acm.org, "Juergen E. Fischer" <fischer@norbit.de>, Dario Ballabio <ballabio_dario@emc.com>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0050.outbound.protection.outlook.com ([104.47.38.50]:27072
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751227AbcLAXjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Dec 2016 18:39:09 -0500
+In-Reply-To: <20161121140429.12788-1-mwilck@suse.de>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Martin Wilck <mwilck@suse.de>
+Cc: dl-esc-Team ESD Storage Dev Support <esc-TeamESDStorageDevSupport@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
 
-
-On Thu, 1 Dec 2016, David Howells wrote:
-
-> When the kernel is running in secure boot mode, we lock down the kernel 
-> to prevent userspace from modifying the running kernel image.  Whilst 
-> this includes prohibiting access to things like /dev/mem, it must also 
-> prevent access by means of configuring driver modules in such a way as 
-> to cause a device to access or modify the kernel image.
-> 
-
-I can see how base addresses and IO ports are relevant, but the irq 
-parameter changes below don't protect the kernel image AFAICT. What's the 
-rationale for those changes? I think it should be stated here.
-
-> To this end, annotate module_param* statements that refer to hardware 
-> configuration and indicate for future reference what type of parameter 
-> they specify.  The parameter parser in the core sees this information 
-> and can skip such parameters with an error message if the kernel is 
-> locked down. The module initialisation then runs as normal, but just 
-> sees whatever the default values for those parameters is.
-> 
-> Note that we do still need to do the module initialisation because some 
-> drivers have viable defaults set in case parameters aren't specified and 
-> some drivers support automatic configuration (e.g. PNP or PCI) in 
-> addition to manually coded parameters.
-> 
-> This patch annotates drivers in drivers/scsi/.
-> 
-> Suggested-by: One Thousand Gnomes <gnomes@lxorguk.ukuu.org.uk>
-> Signed-off-by: David Howells <dhowells@redhat.com>
-> cc: "Juergen E. Fischer" <fischer@norbit.de>
-> cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>
-> cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-> cc: Dario Ballabio <ballabio_dario@emc.com>
-> cc: Finn Thain <fthain@telegraphics.com.au>
-> cc: Michael Schmitz <schmitzmic@gmail.com>
-> cc: Achim Leubner <achim_leubner@adaptec.com>
-> cc: linux-scsi@vger.kernel.org
-> ---
-> 
->  drivers/scsi/aha152x.c   |    4 ++--
->  drivers/scsi/aha1542.c   |    2 +-
->  drivers/scsi/g_NCR5380.c |    8 ++++----
->  drivers/scsi/gdth.c      |    2 +-
->  drivers/scsi/qlogicfas.c |    4 ++--
->  5 files changed, 10 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-> index f44d0487236e..ce5dc73d85bb 100644
-> --- a/drivers/scsi/aha152x.c
-> +++ b/drivers/scsi/aha152x.c
-> @@ -331,11 +331,11 @@ MODULE_LICENSE("GPL");
->  #if !defined(PCMCIA)
->  #if defined(MODULE)
->  static int io[] = {0, 0};
-> -module_param_array(io, int, NULL, 0);
-> +module_param_hw_array(io, int, ioport, NULL, 0);
->  MODULE_PARM_DESC(io,"base io address of controller");
->  
->  static int irq[] = {0, 0};
-> -module_param_array(irq, int, NULL, 0);
-> +module_param_hw_array(irq, int, irq, NULL, 0);
->  MODULE_PARM_DESC(irq,"interrupt for controller");
->  
->  static int scsiid[] = {7, 7};
-> diff --git a/drivers/scsi/aha1542.c b/drivers/scsi/aha1542.c
-> index 7db448ec8beb..a23cc9ac5acd 100644
-> --- a/drivers/scsi/aha1542.c
-> +++ b/drivers/scsi/aha1542.c
-> @@ -31,7 +31,7 @@ module_param(isapnp, bool, 0);
->  MODULE_PARM_DESC(isapnp, "enable PnP support (default=1)");
->  
->  static int io[MAXBOARDS] = { 0x330, 0x334, 0, 0 };
-> -module_param_array(io, int, NULL, 0);
-> +module_param_hw_array(io, int, ioport, NULL, 0);
->  MODULE_PARM_DESC(io, "base IO address of controller (0x130,0x134,0x230,0x234,0x330,0x334, default=0x330,0x334)");
->  
->  /* time AHA spends on the AT-bus during data transfer */
-> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> index cbf010324c18..cf4fa7a2e738 100644
-> --- a/drivers/scsi/g_NCR5380.c
-> +++ b/drivers/scsi/g_NCR5380.c
-> @@ -44,8 +44,8 @@ static int ncr_53c400;
->  static int ncr_53c400a;
->  static int dtc_3181e;
->  static int hp_c2502;
-> -module_param(ncr_irq, int, 0);
-> -module_param(ncr_addr, int, 0);
-> +module_param_hw(ncr_irq, int, irq, 0);
-> +module_param_hw(ncr_addr, int, ioport, 0);
->  module_param(ncr_5380, int, 0);
->  module_param(ncr_53c400, int, 0);
->  module_param(ncr_53c400a, int, 0);
-> @@ -53,11 +53,11 @@ module_param(dtc_3181e, int, 0);
->  module_param(hp_c2502, int, 0);
->  
->  static int irq[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-> -module_param_array(irq, int, NULL, 0);
-> +module_param_hw_array(irq, int, irq, NULL, 0);
->  MODULE_PARM_DESC(irq, "IRQ number(s)");
->  
->  static int base[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
-> -module_param_array(base, int, NULL, 0);
-> +module_param_hw_array(base, int, ioport, NULL, 0);
->  MODULE_PARM_DESC(base, "base address(es)");
->  
->  static int card[] = { -1, -1, -1, -1, -1, -1, -1, -1 };
-> diff --git a/drivers/scsi/gdth.c b/drivers/scsi/gdth.c
-> index 0a767740bf02..4ec08fb2dfa8 100644
-> --- a/drivers/scsi/gdth.c
-> +++ b/drivers/scsi/gdth.c
-> @@ -353,7 +353,7 @@ static int probe_eisa_isa = 0;
->  static int force_dma32 = 0;
->  
->  /* parameters for modprobe/insmod */
-> -module_param_array(irq, int, NULL, 0);
-> +module_param_hw_array(irq, int, irq, NULL, 0);
->  module_param(disable, int, 0);
->  module_param(reserve_mode, int, 0);
->  module_param_array(reserve_list, int, NULL, 0);
-> diff --git a/drivers/scsi/qlogicfas.c b/drivers/scsi/qlogicfas.c
-> index 61cac87fb86f..840823b99e51 100644
-> --- a/drivers/scsi/qlogicfas.c
-> +++ b/drivers/scsi/qlogicfas.c
-> @@ -137,8 +137,8 @@ static struct Scsi_Host *__qlogicfas_detect(struct scsi_host_template *host,
->  static struct qlogicfas408_priv *cards;
->  static int iobase[MAX_QLOGICFAS];
->  static int irq[MAX_QLOGICFAS] = { [0 ... MAX_QLOGICFAS-1] = -1 };
-> -module_param_array(iobase, int, NULL, 0);
-> -module_param_array(irq, int, NULL, 0);
-> +module_param_hw_array(iobase, int, ioport, NULL, 0);
-> +module_param_hw_array(irq, int, irq, NULL, 0);
->  MODULE_PARM_DESC(iobase, "I/O address");
->  MODULE_PARM_DESC(irq, "IRQ");
->  
-> 
+> -----Original Message-----
+> From: Martin Wilck [mailto:mwilck@suse.de]
+> Sent: Monday, November 21, 2016 8:04 AM
+> To: Don Brace
+> Cc: dl-esc-Team ESD Storage Dev Support; iss_storagedev@hp.com; linux-
+> scsi@vger.kernel.org; JBottomley@odin.com; hch@lst.de; hare@suse.de;
+> Martin Wilck
+> Subject: [PATCH 0/2] hpsa: fix rmmod issues
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> This patch set fixes two issues I encountered when removing the
+> hpsa modules with rmmod.
+>=20
+> Comments and reviews are welcome.
+>=20
+> Martin Wilck (2):
+>   hpsa: cleanup sas_phy structures in sysfs when unloading
+>   hpsa: destroy sas transport properties before scsi_host
+>=20
+>  drivers/scsi/hpsa.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+>=20
 > --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> 2.10.1
 
--- 
+I have both patches applied and I still get stack traces.
+
+
+
+[252338.604903] ------------[ cut here ]------------
+[252338.627899] WARNING: CPU: 69 PID: 23977 at fs/sysfs/group.c:237 sysfs_r=
+emove_group+0x8e/0x90
+[252338.668726] sysfs group 'power' not found for kobject '5:0:0:0'
+[252338.697526] Modules linked in: hpsa(OE-) scsi_transport_sas(OE) ip6t_rp=
+filter ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 ipt_REJE=
+CT nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrac=
+k cfg80211 rfkill ebtable_nat ebtable_broute bridge stp llc ebtable_filter =
+ebtables ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6=
+_tables iptable_mangle iptable_security iptable_raw iptable_filter ip_table=
+s osst ch st sb_edac edac_core x86_pkg_temp_thermal coretemp crct10dif_pclm=
+ul crc32_pclmul ghash_clmulni_intel aesni_intel lrw iTCO_wdt gf128mul glue_=
+helper iTCO_vendor_support ablk_helper cryptd pcspkr ioatdma lpc_ich hpwdt =
+hpilo mfd_core dca ipmi_si wmi ipmi_msghandler pcc_cpufreq acpi_cpufreq acp=
+i_power_meter uinput mgag200 i2c_algo_bit drm_kms_helper syscopyarea
+[252339.038528]  sysfillrect sysimgblt fb_sys_fops ttm drm crc32c_intel ser=
+io_raw tg3 ptp usb_storage i2c_core pps_core dm_mirror dm_region_hash dm_lo=
+g dm_mod [last unloaded: scsi_transport_sas]
+[252339.113923] CPU: 69 PID: 23977 Comm: rmmod Tainted: G        W  OE   4.=
+9.0-rc71+ #24
+[252339.151296] Hardware name: HP ProLiant DL580 Gen8, BIOS P79 08/18/2016
+[252339.183354]  ffffc9000ff1bbf0 ffffffff815909bd ffffc9000ff1bc40 0000000=
+000000000
+[252339.219046]  ffffc9000ff1bc30 ffffffff81090901 000000ed00000246 0000000=
+000000000
+[252339.255044]  ffffffff81f71560 ffff88204584dd38 ffff882051e93670 0000000=
+000ae1090
+[252339.290927] Call Trace:
+[252339.303968]  [<ffffffff815909bd>] dump_stack+0x85/0xc8
+[252339.329624]  [<ffffffff81090901>] __warn+0xd1/0xf0
+[252339.354037]  [<ffffffff8109097f>] warn_slowpath_fmt+0x5f/0x80
+[252339.382084]  [<ffffffff8196e5de>] ? mutex_unlock+0xe/0x10
+[252339.408515]  [<ffffffff812f1a6a>] ? kernfs_find_and_get_ns+0x4a/0x60
+[252339.439571]  [<ffffffff812f56ae>] sysfs_remove_group+0x8e/0x90
+[252339.468069]  [<ffffffff816dd1b7>] dpm_sysfs_remove+0x57/0x60
+[252339.495701]  [<ffffffff816cf928>] device_del+0x58/0x270
+[252339.521474]  [<ffffffff816cfb5a>] device_unregister+0x1a/0x60
+[252339.549796]  [<ffffffff8157d470>] bsg_unregister_queue+0x60/0xa0
+[252339.578999]  [<ffffffff8170e2ea>] __scsi_remove_device+0xaa/0xd0
+[252339.608230]  [<ffffffff8170c369>] scsi_forget_host+0x69/0x70
+[252339.635723]  [<ffffffff816ff292>] scsi_remove_host+0x82/0x130
+[252339.663738]  [<ffffffffa038cfc3>] hpsa_remove_one+0x93/0x190 [hpsa]
+[252339.694960]  [<ffffffff815dd8d9>] pci_device_remove+0x39/0xc0
+[252339.723128]  [<ffffffff816d4aca>] __device_release_driver+0x9a/0x150
+[252339.753539]  [<ffffffff816d4ca1>] driver_detach+0xc1/0xd0
+[252339.779784]  [<ffffffff816d3a98>] bus_remove_driver+0x58/0xd0
+[252339.807519]  [<ffffffff816d572c>] driver_unregister+0x2c/0x50
+[252339.835948]  [<ffffffff815dbf3a>] pci_unregister_driver+0x2a/0x80
+[252339.865660]  [<ffffffffa0395869>] hpsa_cleanup+0x10/0x7a7 [hpsa]
+[252339.894682]  [<ffffffff8113571c>] SyS_delete_module+0x1bc/0x220
+[252339.924020]  [<ffffffff81003c0c>] do_syscall_64+0x6c/0x200
+[252339.950862]  [<ffffffff81971d49>] entry_SYSCALL64_slow_path+0x25/0x25
+[252339.982292] ---[ end trace 03cf2c42f2f658e5 ]---
