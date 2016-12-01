@@ -1,76 +1,123 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: SG does not ignore dxferp (direct io + mmap)
-Date: Thu, 01 Dec 2016 08:40:31 -0500
-Message-ID: <yq18trzhink.fsf@sermon.lab.mkp.net>
-References: <CAPrnrPAanjswy-aeLF2s_JWCHCudXC6cwWmX8M7NuLMDSR95Mw@mail.gmail.com>
-        <1479752642.19792.43.camel@localhost.localdomain>
-        <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
-        <1479839407.28416.21.camel@localhost.localdomain>
-        <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
-        <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
-        <1479932524.28416.43.camel@localhost.localdomain>
-        <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
-        <1194718949.74785.1480096576577.JavaMail.zimbra@redhat.com>
-        <1480523188.28416.94.camel@localhost.localdomain>
+From: Jeff Layton <jlayton@poochiereds.net>
+Subject: LSF/MM 2017: Call for Proposals
+Date: Thu, 01 Dec 2016 09:11:46 -0500
+Message-ID: <1480601506.2511.7.camel@poochiereds.net>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38617 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754600AbcLANlQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 1 Dec 2016 08:41:16 -0500
-In-Reply-To: <1480523188.28416.94.camel@localhost.localdomain> (Ewan
-        D. Milne's message of "Wed, 30 Nov 2016 11:26:28 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, Johannes Thumshirn <jthumshirn@suse.de>, Laurence Oberman <loberman@redhat.com>, Eyal Ben David <bdeyal@gmail.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
->>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+The annual Linux Storage, Filesystem and Memory Management (LSF/MM)
+Summit for 2017 will be held on March 20th and 21st at the Hyatt
+Cambridge, Cambridge, MA. LSF/MM is an invitation-only technical
+workshop to map out improvements to the Linux storage, filesystem and
+memory management subsystems that will make their way into the mainline
+kernel within the coming years.
 
->> I think what we need to understand is what caused the regression in
->> the first place, I probably should have been bisecting the original
->> failure rather than trying to find where it started working.
+    http://events.linuxfoundation.org/events/linux-storage-filesystem-and-mm-summit
 
-Ewan> Bisecting leads to this commit:
+Like last year, LSF/MM will be colocated with the Linux Foundation Vault
+conference which takes place on March 22nd and 23rd in the same Venue.
+For those that do not know, Vault is designed to be an event where open
+source storage and filesystem practitioners meet storage implementors
+and, as such, it would be of benefit for LSF/MM attendees to attend.
 
-commit 37f19e57a0de3c4a3417aa13ff4d04f1e0dee4b3
-Author: Christoph Hellwig <hch@lst.de>
-Date:   Sun Jan 18 16:16:33 2015 +0100
+Unlike past years, Vault admission is not free for LSF/MM attendees this
+year unless they're giving a talk. There is a discount for LSF/MM
+attendees, however we would also like to encourage folks to submit talk
+proposals to speak at the Vault conference.
 
-    block: merge __bio_map_user_iov into bio_map_user_iov
-    
-    And also remove the unused bdev argument.
-    
-    Signed-off-by: Christoph Hellwig <hch@lst.de>
-    Reviewed-by: Ming Lei <tom.leiming@gmail.com>
-    Signed-off-by: Jens Axboe <axboe@fb.com>
+    http://events.linuxfoundation.org/events/vault
 
-Specifically, the problem appears to be caused by the removal of
-the setting of bio->bi_bdev, which would previously be set to NULL.
-If I add:
+On behalf of the committee I am issuing a call for agenda proposals that
+are suitable for cross-track discussion as well as technical subjects
+for the breakout sessions.
 
-diff --git a/block/bio.c b/block/bio.c
-index 0723d4c..ecac37b 100644
---- a/block/bio.c
-+++ b/block/bio.c
-@@ -1351,6 +1351,7 @@ struct bio *bio_map_user_iov(struct request_queue
-*q,
-        if (iter->type & WRITE)
-                bio->bi_rw |= REQ_WRITE;
- 
-+       bio->bi_bdev = NULL;
-        bio->bi_flags |= (1 << BIO_USER_MAPPED);
- 
-        /*
+If advance notice is required for visa applications then please point
+that out in your proposal or request to attend, and submit the topic
+as soon as possible.
 
-Ewan> The test passes (no zero byte corruption).
+1) Proposals for agenda topics should be sent before January 15th, 2016
+to:
 
-Ewan> Setting dxferp would cause map_data.null_mapped to be set before
-Ewan> it is passed to blk_rq_map_user(_iov) which would cause a
-Ewan> difference in behavior.
+    lsf-pc@lists.linux-foundation.org
 
-Christoph?
+and cc the Linux list or lists that are relevant for the topic in
+question:
 
+    ATA:   linux-ide@vger.kernel.org
+    Block: linux-block@vger.kernel.org
+    FS:    linux-fsdevel@vger.kernel.org
+    MM:    linux-mm@kvack.org
+    SCSI:  linux-scsi@vger.kernel.org
+    NVMe:  linux-nvme@lists.infradead.org
+
+Please tag your proposal with [LSF/MM TOPIC] to make it easier to track.
+In addition, please make sure to start a new thread for each topic
+rather than following up to an existing one.  Agenda topics and
+attendees will be selected by the program committee, but the final
+agenda will be formed by consensus of the attendees on the day.
+
+2) Requests to attend the summit for those that are not proposing a
+topic should be sent to:
+
+    lsf-pc@lists.linux-foundation.org
+
+Please summarise what expertise you will bring to the meeting, and what
+you would like to discuss. Please also tag your email with [LSF/MM
+ATTEND] and send it as a new thread so there is less chance of it
+getting lost.
+
+We will try to cap attendance at around 25-30 per track to facilitate
+discussions although the final numbers will depend on the room sizes at
+the venue.
+
+Brief presentations are allowed to guide discussion, but are strongly
+discouraged. There will be no recording or audio bridge. However, we
+expect that written minutes will be published as we did in previous
+years:
+
+2016: https://lwn.net/Articles/lsfmm2016/
+
+2015: https://lwn.net/Articles/lsfmm2015/
+
+2014: http://lwn.net/Articles/LSFMM2014/
+
+2013: http://lwn.net/Articles/548089/
+
+3) If you have feedback on last year's meeting that we can use to
+improve this year's, please also send that to:
+
+    lsf-pc@lists.linux-foundation.org
+
+Thank you on behalf of the program committee:
+
+Storage:
+    James Bottomley
+    Martin K. Petersen (track chair)
+    Sagi Grimberg
+
+Filesystems:
+    Anna Schumaker
+    Chris Mason
+    Eric Sandeen
+    Jan Kara
+    Jeff Layton (summit chair)
+    Josef Bacik (track chair)
+    Trond Myklebust
+
+MM:
+    Johannes Weiner
+    Rik van Riel (track chair)
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Jeff Layton <jlayton@poochiereds.net>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
