@@ -1,194 +1,193 @@
 From: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
-Subject: [PATCH 07/11] megaraid_sas: Add the Support for SAS3.5 Generic Megaraid Controllers Capabilities
-Date: Fri,  2 Dec 2016 09:07:24 -0500
-Message-ID: <1480687648-36380-8-git-send-email-sasikumar.pc@broadcom.com>
+Subject: [PATCH 01/11] megaraid_sas: Add new pci device Ids for SAS3.5 Generic Megaraid Controllers
+Date: Fri,  2 Dec 2016 09:07:18 -0500
+Message-ID: <1480687648-36380-2-git-send-email-sasikumar.pc@broadcom.com>
 References: <1480687648-36380-1-git-send-email-sasikumar.pc@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f178.google.com ([209.85.216.178]:35035 "EHLO
-        mail-qt0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1761759AbcLBOIE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2016 09:08:04 -0500
-Received: by mail-qt0-f178.google.com with SMTP id c47so252538592qtc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 02 Dec 2016 06:08:03 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1480687648-36380-1-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, sumit.saxena@broadcom.com, thenzl@redhat.com, Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
 
-The Megaraid driver has to support the SAS3.5 Generic Megaraid Controllers Firmware functionality.
-
-This patch is depending on patch 6
+This patch contains new pci device ids for SAS3.5 Generic Megaraid Controllers
 
 Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_base.c   | 53 ++++++++++++++---------------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 18 +++++-----
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  1 +
- 3 files changed, 36 insertions(+), 36 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        | 11 ++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 20 +++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 29 ++++++++++++++++++++++-------
+ 3 files changed, 51 insertions(+), 9 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 0d2625b..f24ce88 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -56,6 +56,14 @@
+ #define PCI_DEVICE_ID_LSI_INTRUDER_24		0x00cf
+ #define PCI_DEVICE_ID_LSI_CUTLASS_52		0x0052
+ #define PCI_DEVICE_ID_LSI_CUTLASS_53		0x0053
++#define PCI_DEVICE_ID_LSI_MECTOR		    0x00D4
++#define PCI_DEVICE_ID_LSI_VENTURA		    0x0014
++#define PCI_DEVICE_ID_LSI_CRUSADER		    0x0015
++#define PCI_DEVICE_ID_LSI_HARPOON		    0x0016
++#define PCI_DEVICE_ID_LSI_TOMCAT		    0x0017
++#define PCI_DEVICE_ID_LSI_VENTURA_4PORT		0x001B
++#define PCI_DEVICE_ID_LSI_CRUSADER_4PORT	0x001C
++#define PCI_DEVICE_ID_LSI_MARLIN		    0x00D3
+ 
+ /*
+  * Intel HBA SSDIDs
+@@ -1478,7 +1486,7 @@ struct megasas_register_set {
+ 
+ 	u32 	inbound_high_queue_port ;	/*00C4h*/
+ 
+-	u32 	reserved_5;			/*00C8h*/
++	u32 inbound_single_queue_port;	/*00C8h*/
+ 	u32	res_6[11];			/*CCh*/
+ 	u32	host_diag;
+ 	u32	seq_offset;
+@@ -2143,6 +2151,7 @@ struct megasas_instance {
+ 	u8 is_rdpq;
+ 	bool dev_handle;
+ 	bool fw_sync_cache_support;
++	bool is_ventura;
+ };
+ struct MR_LD_VF_MAP {
+ 	u32 size;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index b74609c..cfd379a 100644
+index 5462676..b7166b8 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5058,34 +5058,29 @@ static int megasas_init_fw(struct megasas_instance *instance)
+@@ -155,6 +155,15 @@ static int megasas_register_aen(struct megasas_instance *instance,
+ 	/* Intruder 24 port*/
+ 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CUTLASS_52)},
+ 	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CUTLASS_53)},
++	/* VENTURA */
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VENTURA)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_MARLIN)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_MECTOR)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CRUSADER)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_HARPOON)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_TOMCAT)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_VENTURA_4PORT)},
++	{PCI_DEVICE(PCI_VENDOR_ID_LSI_LOGIC, PCI_DEVICE_ID_LSI_CRUSADER_4PORT)},
+ 	{}
+ };
  
- 	reg_set = instance->reg_set;
+@@ -5723,6 +5732,15 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	instance->pdev = pdev;
  
--	switch (instance->pdev->device) {
--	case PCI_DEVICE_ID_LSI_FUSION:
--	case PCI_DEVICE_ID_LSI_PLASMA:
--	case PCI_DEVICE_ID_LSI_INVADER:
--	case PCI_DEVICE_ID_LSI_FURY:
--	case PCI_DEVICE_ID_LSI_INTRUDER:
--	case PCI_DEVICE_ID_LSI_INTRUDER_24:
--	case PCI_DEVICE_ID_LSI_CUTLASS_52:
--	case PCI_DEVICE_ID_LSI_CUTLASS_53:
-+	if (fusion)
- 		instance->instancet = &megasas_instance_template_fusion;
--		break;
--	case PCI_DEVICE_ID_LSI_SAS1078R:
--	case PCI_DEVICE_ID_LSI_SAS1078DE:
--		instance->instancet = &megasas_instance_template_ppc;
--		break;
--	case PCI_DEVICE_ID_LSI_SAS1078GEN2:
--	case PCI_DEVICE_ID_LSI_SAS0079GEN2:
--		instance->instancet = &megasas_instance_template_gen2;
--		break;
--	case PCI_DEVICE_ID_LSI_SAS0073SKINNY:
--	case PCI_DEVICE_ID_LSI_SAS0071SKINNY:
--		instance->instancet = &megasas_instance_template_skinny;
--		break;
--	case PCI_DEVICE_ID_LSI_SAS1064R:
--	case PCI_DEVICE_ID_DELL_PERC5:
--	default:
--		instance->instancet = &megasas_instance_template_xscale;
--		break;
-+	else {
-+		switch (instance->pdev->device) {
-+		case PCI_DEVICE_ID_LSI_SAS1078R:
-+		case PCI_DEVICE_ID_LSI_SAS1078DE:
-+			instance->instancet = &megasas_instance_template_ppc;
-+			break;
-+		case PCI_DEVICE_ID_LSI_SAS1078GEN2:
-+		case PCI_DEVICE_ID_LSI_SAS0079GEN2:
-+			instance->instancet = &megasas_instance_template_gen2;
-+			break;
-+		case PCI_DEVICE_ID_LSI_SAS0073SKINNY:
-+		case PCI_DEVICE_ID_LSI_SAS0071SKINNY:
-+			instance->instancet = &megasas_instance_template_skinny;
-+			break;
-+		case PCI_DEVICE_ID_LSI_SAS1064R:
-+		case PCI_DEVICE_ID_DELL_PERC5:
-+		default:
-+			instance->instancet = &megasas_instance_template_xscale;
-+			instance->pd_list_not_supported = 1;
-+			break;
-+		}
- 	}
- 
- 	if (megasas_transition_to_ready(instance, 0)) {
-@@ -5827,7 +5822,9 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	switch (instance->pdev->device) {
++	case PCI_DEVICE_ID_LSI_VENTURA:
++	case PCI_DEVICE_ID_LSI_MARLIN:
++	case PCI_DEVICE_ID_LSI_MECTOR:
++	case PCI_DEVICE_ID_LSI_CRUSADER:
++	case PCI_DEVICE_ID_LSI_HARPOON:
++	case PCI_DEVICE_ID_LSI_TOMCAT:
++	case PCI_DEVICE_ID_LSI_VENTURA_4PORT:
++	case PCI_DEVICE_ID_LSI_CRUSADER_4PORT:
++	     instance->is_ventura = true;
+ 	case PCI_DEVICE_ID_LSI_FUSION:
+ 	case PCI_DEVICE_ID_LSI_PLASMA:
+ 	case PCI_DEVICE_ID_LSI_INVADER:
+@@ -5747,7 +5765,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
  		if ((instance->pdev->device == PCI_DEVICE_ID_LSI_FUSION) ||
  			(instance->pdev->device == PCI_DEVICE_ID_LSI_PLASMA))
  			fusion->adapter_type = THUNDERBOLT_SERIES;
--		else if (!instance->is_ventura)
-+		else if (instance->is_ventura)
-+			fusion->adapter_type = VENTURA_SERIES;
-+		else
+-		else
++		else if (!instance->is_ventura)
  			fusion->adapter_type = INVADER_SERIES;
  	}
  	break;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index e0b188d..331cacd 100644
+index 24778ba..e048423 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -244,7 +244,9 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
+@@ -189,15 +189,29 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
+  */
+ static void
+ megasas_fire_cmd_fusion(struct megasas_instance *instance,
+-		union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc)
++	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc, bool is_32bit)
+ {
++	struct megasas_register_set __iomem *regs = instance->reg_set;
++	unsigned long flags;
++	
++	if (is_32bit)
++		writel(le32_to_cpu(req_desc->u.low),
++			&(regs)->inbound_single_queue_port);
++	else if (instance->is_ventura) {
++		spin_lock_irqsave(&instance->hba_lock, flags);
++		writel(le32_to_cpu(req_desc->u.low),
++			&(regs)->inbound_low_queue_port);
++		writel(le32_to_cpu(req_desc->u.high),
++			&(regs)->inbound_high_queue_port);
++		mmiowb();
++		spin_unlock_irqrestore(&instance->hba_lock, flags);
++	} else {
+ #if defined(writeq) && defined(CONFIG_64BIT)
+ 	u64 req_data = (((u64)le32_to_cpu(req_desc->u.high) << 32) |
+ 			le32_to_cpu(req_desc->u.low));
  
- 	reg_set = instance->reg_set;
+ 	writeq(req_data, &instance->reg_set->inbound_low_queue_port);
+ #else
+-	unsigned long flags;
  
--	cur_max_fw_cmds = readl(&instance->reg_set->outbound_scratch_pad_3) & 0x00FFFF;
-+	/* ventura FW does not fill outbound_scratch_pad_3 with queue depth */
-+	if (!instance->is_ventura)
-+		cur_max_fw_cmds = readl(&instance->reg_set->outbound_scratch_pad_3) & 0x00FFFF;
+ 	spin_lock_irqsave(&instance->hba_lock, flags);
+ 	writel(le32_to_cpu(req_desc->u.low),
+@@ -207,6 +221,7 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
+ 	mmiowb();
+ 	spin_unlock_irqrestore(&instance->hba_lock, flags);
+ #endif
++	}
+ }
  
- 	if (dual_qdepth_disable || !cur_max_fw_cmds)
- 		cur_max_fw_cmds = instance->instancet->read_fw_status_reg(reg_set) & 0x00FFFF;
-@@ -842,7 +844,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 	drv_ops = (MFI_CAPABILITIES *) &(init_frame->driver_operations);
+ /**
+@@ -850,7 +865,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+ 			break;
+ 	}
  
- 	/* driver support Extended MSIX */
--	if (fusion->adapter_type == INVADER_SERIES)
-+	if (fusion->adapter_type >= INVADER_SERIES)
- 		drv_ops->mfi_capabilities.support_additional_msix = 1;
- 	/* driver supports HA / Remote LUN over Fast Path interface */
- 	drv_ops->mfi_capabilities.support_fp_remote_lun = 1;
-@@ -1496,7 +1498,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+-	megasas_fire_cmd_fusion(instance, &req_desc);
++	megasas_fire_cmd_fusion(instance, &req_desc, false);
  
- 	fusion = instance->ctrl_context;
+ 	wait_and_poll(instance, cmd, MFI_POLL_TIMEOUT_SECS);
  
--	if (fusion->adapter_type == INVADER_SERIES) {
-+	if (fusion->adapter_type >= INVADER_SERIES) {
- 		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end = sgl_ptr;
- 		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
- 		sgl_ptr_end->Flags = 0;
-@@ -1513,7 +1515,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 		sgl_ptr->Length = cpu_to_le32(sg_dma_len(os_sgl));
- 		sgl_ptr->Address = cpu_to_le64(sg_dma_address(os_sgl));
- 		sgl_ptr->Flags = 0;
--		if (fusion->adapter_type == INVADER_SERIES)
-+		if (fusion->adapter_type >= INVADER_SERIES)
- 			if (i == sge_count - 1)
- 				sgl_ptr->Flags = IEEE_SGE_FLAGS_END_OF_LIST;
- 		sgl_ptr++;
-@@ -1524,7 +1526,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 		    (sge_count > fusion->max_sge_in_main_msg)) {
+@@ -2224,7 +2239,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 	 */
+ 	atomic_inc(&instance->fw_outstanding);
  
- 			struct MPI25_IEEE_SGE_CHAIN64 *sg_chain;
--			if (fusion->adapter_type == INVADER_SERIES) {
-+			if (fusion->adapter_type >= INVADER_SERIES) {
- 				if ((le16_to_cpu(cmd->io_request->IoFlags) &
- 					MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH) !=
- 					MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH)
-@@ -1540,7 +1542,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 			sg_chain = sgl_ptr;
- 			/* Prepare chain element */
- 			sg_chain->NextChainOffset = 0;
--			if (fusion->adapter_type == INVADER_SERIES)
-+			if (fusion->adapter_type >= INVADER_SERIES)
- 				sg_chain->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT;
- 			else
- 				sg_chain->Flags =
-@@ -2277,7 +2279,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		pRAID_Context->timeoutValue =
- 			cpu_to_le16((os_timeout_value > timeout_limit) ?
- 			timeout_limit : os_timeout_value);
--		if (fusion->adapter_type == INVADER_SERIES)
-+		if (fusion->adapter_type >= INVADER_SERIES)
- 			io_request->IoFlags |=
- 				cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
+-	megasas_fire_cmd_fusion(instance, req_desc);
++	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
  
-@@ -2974,7 +2976,7 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
+ 	return 0;
+ }
+@@ -2595,7 +2610,7 @@ irqreturn_t megasas_isr_fusion(int irq, void *devp)
+ 		return DCMD_NOT_FIRED;
+ 	}
  
- 	io_req = cmd->io_request;
+-	megasas_fire_cmd_fusion(instance, req_desc);
++	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
+ 	return DCMD_SUCCESS;
+ }
  
--	if (fusion->adapter_type == INVADER_SERIES) {
-+	if (fusion->adapter_type >= INVADER_SERIES) {
- 		struct MPI25_IEEE_SGE_CHAIN64 *sgl_ptr_end =
- 			(struct MPI25_IEEE_SGE_CHAIN64 *)&io_req->SGL;
- 		sgl_ptr_end += fusion->max_sge_in_main_msg - 1;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 8addf0e..1feaad0 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -107,6 +107,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
- enum MR_FUSION_ADAPTER_TYPE {
- 	THUNDERBOLT_SERIES = 0,
- 	INVADER_SERIES = 1,
-+	VENTURA_SERIES = 2,
- };
+@@ -2888,7 +2903,7 @@ void megasas_refire_mgmt_cmd(struct megasas_instance *instance)
+ 				cpu_to_le32(MR_DCMD_SYSTEM_PD_MAP_GET_INFO)))
+ 				&& !(cmd_mfi->flags & DRV_DCMD_SKIP_REFIRE);
+ 		if (refire_cmd)
+-			megasas_fire_cmd_fusion(instance, req_desc);
++			megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
+ 		else
+ 			megasas_return_cmd(instance, cmd_mfi);
+ 	}
+@@ -3067,7 +3082,7 @@ static int megasas_track_scsiio(struct megasas_instance *instance,
+ 		mr_request->tmReqFlags.isTMForLD = 1;
  
- /*
+ 	init_completion(&cmd_fusion->done);
+-	megasas_fire_cmd_fusion(instance, req_desc);
++	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
+ 
+ 	timeleft = wait_for_completion_timeout(&cmd_fusion->done, 50 * HZ);
+ 
 -- 
 1.8.3.1
-
