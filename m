@@ -1,105 +1,59 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 0/2] hpsa: fix rmmod issues
-Date: Thu, 1 Dec 2016 23:22:54 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D194180229D@avsrvexchmbx1.microsemi.net>
-References: <20161121140429.12788-1-mwilck@suse.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] scsi_dh_alua: Add return value and check for
+ alua_rtpg_queue() to avoid DM devices I/Os hang
+Date: Fri, 2 Dec 2016 02:58:00 +0000
+Message-ID: <BLUPR02MB1683EAC61CDF43C2E9D3FA8F818E0@BLUPR02MB1683.namprd02.prod.outlook.com>
+References: <1479983105-7264-1-git-send-email-tang.junhui@zte.com.cn>
+ <be5dbac2-6d45-1741-4eed-138aa109477c@sandisk.com>
+ <OFADBB4E3F.FF85F07C-ON4825807D.0009F390-4825807D.0009FA01@zte.com.cn>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0050.outbound.protection.outlook.com ([104.47.38.50]:27072
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0062.outbound.protection.outlook.com ([104.47.41.62]:16219
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751227AbcLAXjJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 1 Dec 2016 18:39:09 -0500
-In-Reply-To: <20161121140429.12788-1-mwilck@suse.de>
+        id S1751364AbcLBC6C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 1 Dec 2016 21:58:02 -0500
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Martin Wilck <mwilck@suse.de>
-Cc: dl-esc-Team ESD Storage Dev Support <esc-TeamESDStorageDevSupport@microsemi.com>, "iss_storagedev@hp.com" <iss_storagedev@hp.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "JBottomley@odin.com" <JBottomley@odin.com>, "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>
+To: "tang.junhui@zte.com.cn" <tang.junhui@zte.com.cn>
+Cc: "hare@suse.de" <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Martin Wilck [mailto:mwilck@suse.de]
-> Sent: Monday, November 21, 2016 8:04 AM
-> To: Don Brace
-> Cc: dl-esc-Team ESD Storage Dev Support; iss_storagedev@hp.com; linux-
-> scsi@vger.kernel.org; JBottomley@odin.com; hch@lst.de; hare@suse.de;
-> Martin Wilck
-> Subject: [PATCH 0/2] hpsa: fix rmmod issues
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> This patch set fixes two issues I encountered when removing the
-> hpsa modules with rmmod.
->=20
-> Comments and reviews are welcome.
->=20
-> Martin Wilck (2):
->   hpsa: cleanup sas_phy structures in sysfs when unloading
->   hpsa: destroy sas transport properties before scsi_host
->=20
->  drivers/scsi/hpsa.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
->=20
-> --
-> 2.10.1
-
-I have both patches applied and I still get stack traces.
-
-
-
-[252338.604903] ------------[ cut here ]------------
-[252338.627899] WARNING: CPU: 69 PID: 23977 at fs/sysfs/group.c:237 sysfs_r=
-emove_group+0x8e/0x90
-[252338.668726] sysfs group 'power' not found for kobject '5:0:0:0'
-[252338.697526] Modules linked in: hpsa(OE-) scsi_transport_sas(OE) ip6t_rp=
-filter ip6t_REJECT nf_reject_ipv6 nf_conntrack_ipv6 nf_defrag_ipv6 ipt_REJE=
-CT nf_reject_ipv4 nf_conntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrac=
-k cfg80211 rfkill ebtable_nat ebtable_broute bridge stp llc ebtable_filter =
-ebtables ip6table_mangle ip6table_security ip6table_raw ip6table_filter ip6=
-_tables iptable_mangle iptable_security iptable_raw iptable_filter ip_table=
-s osst ch st sb_edac edac_core x86_pkg_temp_thermal coretemp crct10dif_pclm=
-ul crc32_pclmul ghash_clmulni_intel aesni_intel lrw iTCO_wdt gf128mul glue_=
-helper iTCO_vendor_support ablk_helper cryptd pcspkr ioatdma lpc_ich hpwdt =
-hpilo mfd_core dca ipmi_si wmi ipmi_msghandler pcc_cpufreq acpi_cpufreq acp=
-i_power_meter uinput mgag200 i2c_algo_bit drm_kms_helper syscopyarea
-[252339.038528]  sysfillrect sysimgblt fb_sys_fops ttm drm crc32c_intel ser=
-io_raw tg3 ptp usb_storage i2c_core pps_core dm_mirror dm_region_hash dm_lo=
-g dm_mod [last unloaded: scsi_transport_sas]
-[252339.113923] CPU: 69 PID: 23977 Comm: rmmod Tainted: G        W  OE   4.=
-9.0-rc71+ #24
-[252339.151296] Hardware name: HP ProLiant DL580 Gen8, BIOS P79 08/18/2016
-[252339.183354]  ffffc9000ff1bbf0 ffffffff815909bd ffffc9000ff1bc40 0000000=
-000000000
-[252339.219046]  ffffc9000ff1bc30 ffffffff81090901 000000ed00000246 0000000=
-000000000
-[252339.255044]  ffffffff81f71560 ffff88204584dd38 ffff882051e93670 0000000=
-000ae1090
-[252339.290927] Call Trace:
-[252339.303968]  [<ffffffff815909bd>] dump_stack+0x85/0xc8
-[252339.329624]  [<ffffffff81090901>] __warn+0xd1/0xf0
-[252339.354037]  [<ffffffff8109097f>] warn_slowpath_fmt+0x5f/0x80
-[252339.382084]  [<ffffffff8196e5de>] ? mutex_unlock+0xe/0x10
-[252339.408515]  [<ffffffff812f1a6a>] ? kernfs_find_and_get_ns+0x4a/0x60
-[252339.439571]  [<ffffffff812f56ae>] sysfs_remove_group+0x8e/0x90
-[252339.468069]  [<ffffffff816dd1b7>] dpm_sysfs_remove+0x57/0x60
-[252339.495701]  [<ffffffff816cf928>] device_del+0x58/0x270
-[252339.521474]  [<ffffffff816cfb5a>] device_unregister+0x1a/0x60
-[252339.549796]  [<ffffffff8157d470>] bsg_unregister_queue+0x60/0xa0
-[252339.578999]  [<ffffffff8170e2ea>] __scsi_remove_device+0xaa/0xd0
-[252339.608230]  [<ffffffff8170c369>] scsi_forget_host+0x69/0x70
-[252339.635723]  [<ffffffff816ff292>] scsi_remove_host+0x82/0x130
-[252339.663738]  [<ffffffffa038cfc3>] hpsa_remove_one+0x93/0x190 [hpsa]
-[252339.694960]  [<ffffffff815dd8d9>] pci_device_remove+0x39/0xc0
-[252339.723128]  [<ffffffff816d4aca>] __device_release_driver+0x9a/0x150
-[252339.753539]  [<ffffffff816d4ca1>] driver_detach+0xc1/0xd0
-[252339.779784]  [<ffffffff816d3a98>] bus_remove_driver+0x58/0xd0
-[252339.807519]  [<ffffffff816d572c>] driver_unregister+0x2c/0x50
-[252339.835948]  [<ffffffff815dbf3a>] pci_unregister_driver+0x2a/0x80
-[252339.865660]  [<ffffffffa0395869>] hpsa_cleanup+0x10/0x7a7 [hpsa]
-[252339.894682]  [<ffffffff8113571c>] SyS_delete_module+0x1bc/0x220
-[252339.924020]  [<ffffffff81003c0c>] do_syscall_64+0x6c/0x200
-[252339.950862]  [<ffffffff81971d49>] entry_SYSCALL64_slow_path+0x25/0x25
-[252339.982292] ---[ end trace 03cf2c42f2f658e5 ]---
+On 12/01/16 17:49, tang.junhui@zte.com.cn wrote:=0A=
+>> Bart wrote:=0A=
+>> Please drop this patch. I think the alua_rtpg_queue() caller should=0A=
+>> ensure that pg !=3D NULL.=0A=
+>=0A=
+> Failure may also be occurred in queue_delayed_work(),=0A=
+> since it would cause serious problems,=0A=
+> so I think we are worth checking for it.=0A=
+=0A=
+Hello Tang,=0A=
+=0A=
+Have you been able to trigger the condition explained in the patch =0A=
+description or is this only something you think that can happen based on =
+=0A=
+your interpretation of the source code? My comments about the checks =0A=
+that have been added are:=0A=
+* All alua_rtpg_queue() callers pass a non-NULL pointer as first =0A=
+argument which means that the return statement under "if (!pg)" in =0A=
+alua_rtpg_queue() is never executed.=0A=
+* Even if queue_delayed_work() returns 0 the qdata work passed to =0A=
+alua_rtpg_queue() is still added to the pg->rtpg_list and hence will be =0A=
+executed once the delayed work is executed. So I think that the =0A=
+condition you described (fn() not called) cannot happen. From =0A=
+alua_rtpg_work():=0A=
+=0A=
+	list_splice_init(&pg->rtpg_list, &qdata_list);=0A=
+         [ ... ]=0A=
+	list_for_each_entry_safe(qdata, tmp, &qdata_list, entry) {=0A=
+		list_del(&qdata->entry);=0A=
+		if (qdata->callback_fn)=0A=
+			qdata->callback_fn(qdata->callback_data, err);=0A=
+		kfree(qdata);=0A=
+	}=0A=
+=0A=
+Bart.=0A=
+=0A=
