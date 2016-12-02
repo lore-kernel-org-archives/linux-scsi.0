@@ -1,45 +1,244 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] hpsa: expose enclosures
-Date: Fri, 2 Dec 2016 12:41:59 +0100
-Message-ID: <4f2d7544-0848-051e-65b9-af4649076c44@suse.de>
-References: <1480674993-118324-1-git-send-email-hare@suse.de>
- <20161202113958.GA26885@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Subject: [PATCH] megaraid_sas: switch to pci_alloc_irq_vectors
+Date: Fri,  2 Dec 2016 12:52:23 +0100
+Message-ID: <1480679543-79236-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53487 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55656 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754527AbcLBLmC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Dec 2016 06:42:02 -0500
-In-Reply-To: <20161202113958.GA26885@lst.de>
+        id S1753629AbcLBLw1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 06:52:27 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 12/02/2016 12:39 PM, Christoph Hellwig wrote:
-> On Fri, Dec 02, 2016 at 11:36:33AM +0100, Hannes Reinecke wrote:
->> Some servers have a built-in enclosure which will show up on the
->> same bus as the internal physical devices. As the driver doesn't
->> differentiate here they'll be hidden from the OS.
->> This patch add a module parameter 'hpsa_expose_enclosure' which
->> will expose these enclosures.
->
-> Any reason for not doing this unconditionally?
->
-Backwards compability.
-hpsa never did, so it _might_ be by design.
-You never know :-)
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/megaraid/megaraid_sas.h      |  1 -
+ drivers/scsi/megaraid/megaraid_sas_base.c | 78 +++++++++++++++----------------
+ 2 files changed, 38 insertions(+), 41 deletions(-)
 
-I surely can make this the default if Don agrees.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 74c7b44..757ddda 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2120,7 +2120,6 @@ struct megasas_instance {
+ 	u32 ctrl_context_pages;
+ 	struct megasas_ctrl_info *ctrl_info;
+ 	unsigned int msix_vectors;
+-	struct msix_entry msixentry[MEGASAS_MAX_MSIX_QUEUES];
+ 	struct megasas_irq_context irq_context[MEGASAS_MAX_MSIX_QUEUES];
+ 	u64 map_id;
+ 	u64 pd_seq_map_id;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 5462676..692f40a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4837,7 +4837,7 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ }
+ 
+ /*
+- * megasas_setup_irqs_msix -		register legacy interrupts.
++ * megasas_setup_irqs_ioapic -		register legacy interrupts.
+  * @instance:				Adapter soft state
+  *
+  * Do not enable interrupt, only setup ISRs.
+@@ -4852,8 +4852,9 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 	pdev = instance->pdev;
+ 	instance->irq_context[0].instance = instance;
+ 	instance->irq_context[0].MSIxIndex = 0;
+-	if (request_irq(pdev->irq, instance->instancet->service_isr,
+-		IRQF_SHARED, "megasas", &instance->irq_context[0])) {
++	if (request_irq(pci_irq_vector(pdev, 0),
++			instance->instancet->service_isr, IRQF_SHARED,
++			"megasas", &instance->irq_context[0])) {
+ 		dev_err(&instance->pdev->dev,
+ 				"Failed to register IRQ from %s %d\n",
+ 				__func__, __LINE__);
+@@ -4874,28 +4875,23 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ static int
+ megasas_setup_irqs_msix(struct megasas_instance *instance, u8 is_probe)
+ {
+-	int i, j, cpu;
++	int i, j;
+ 	struct pci_dev *pdev;
+ 
+ 	pdev = instance->pdev;
+ 
+ 	/* Try MSI-x */
+-	cpu = cpumask_first(cpu_online_mask);
+ 	for (i = 0; i < instance->msix_vectors; i++) {
+ 		instance->irq_context[i].instance = instance;
+ 		instance->irq_context[i].MSIxIndex = i;
+-		if (request_irq(instance->msixentry[i].vector,
++		if (request_irq(pci_irq_vector(pdev, i),
+ 			instance->instancet->service_isr, 0, "megasas",
+ 			&instance->irq_context[i])) {
+ 			dev_err(&instance->pdev->dev,
+ 				"Failed to register IRQ for vector %d.\n", i);
+-			for (j = 0; j < i; j++) {
+-				if (smp_affinity_enable)
+-					irq_set_affinity_hint(
+-						instance->msixentry[j].vector, NULL);
+-				free_irq(instance->msixentry[j].vector,
+-					&instance->irq_context[j]);
+-			}
++			for (j = 0; j < i; j++)
++				free_irq(pci_irq_vector(pdev, j),
++					 &instance->irq_context[j]);
+ 			/* Retry irq register for IO_APIC*/
+ 			instance->msix_vectors = 0;
+ 			if (is_probe)
+@@ -4903,14 +4899,6 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 			else
+ 				return -1;
+ 		}
+-		if (smp_affinity_enable) {
+-			if (irq_set_affinity_hint(instance->msixentry[i].vector,
+-				get_cpu_mask(cpu)))
+-				dev_err(&instance->pdev->dev,
+-					"Failed to set affinity hint"
+-					" for cpu %d\n", cpu);
+-			cpu = cpumask_next(cpu, cpu_online_mask);
+-		}
+ 	}
+ 	return 0;
+ }
+@@ -4927,14 +4915,12 @@ int megasas_set_crash_dump_params(struct megasas_instance *instance,
+ 
+ 	if (instance->msix_vectors)
+ 		for (i = 0; i < instance->msix_vectors; i++) {
+-			if (smp_affinity_enable)
+-				irq_set_affinity_hint(
+-					instance->msixentry[i].vector, NULL);
+-			free_irq(instance->msixentry[i].vector,
++			free_irq(pci_irq_vector(instance->pdev, i),
+ 				 &instance->irq_context[i]);
+ 		}
+ 	else
+-		free_irq(instance->pdev->irq, &instance->irq_context[0]);
++		free_irq(pci_irq_vector(instance->pdev, 0),
++			 &instance->irq_context[0]);
+ }
+ 
+ /**
+@@ -5092,6 +5078,8 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	msix_enable = (instance->instancet->read_fw_status_reg(reg_set) &
+ 		       0x4000000) >> 0x1a;
+ 	if (msix_enable && !msix_disable) {
++		int irq_flags = PCI_IRQ_MSIX;
++
+ 		scratch_pad_2 = readl
+ 			(&instance->reg_set->outbound_scratch_pad_2);
+ 		/* Check max MSI-X vectors */
+@@ -5128,15 +5116,18 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		/* Don't bother allocating more MSI-X vectors than cpus */
+ 		instance->msix_vectors = min(instance->msix_vectors,
+ 					     (unsigned int)num_online_cpus());
+-		for (i = 0; i < instance->msix_vectors; i++)
+-			instance->msixentry[i].entry = i;
+-		i = pci_enable_msix_range(instance->pdev, instance->msixentry,
+-					  1, instance->msix_vectors);
++		if (smp_affinity_enable)
++			irq_flags |= PCI_IRQ_AFFINITY;
++		i = pci_alloc_irq_vectors(instance->pdev, 1,
++					  instance->msix_vectors, irq_flags);
+ 		if (i > 0)
+ 			instance->msix_vectors = i;
+ 		else
+ 			instance->msix_vectors = 0;
+ 	}
++	i = pci_alloc_irq_vectors(instance->pdev, 1, 1, PCI_IRQ_LEGACY);
++	if (i < 0)
++		goto fail_setup_irqs;
+ 
+ 	dev_info(&instance->pdev->dev,
+ 		"firmware supports msix\t: (%d)", fw_msix_count);
+@@ -5307,10 +5298,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 
+ fail_get_pd_list:
+ 	instance->instancet->disable_intr(instance);
+-	megasas_destroy_irqs(instance);
+ fail_init_adapter:
++	megasas_destroy_irqs(instance);
++fail_setup_irqs:
+ 	if (instance->msix_vectors)
+-		pci_disable_msix(instance->pdev);
++		pci_free_irq_vectors(instance->pdev);
+ 	instance->msix_vectors = 0;
+ fail_ready_state:
+ 	kfree(instance->ctrl_info);
+@@ -5579,7 +5571,6 @@ static int megasas_io_attach(struct megasas_instance *instance)
+ 	/*
+ 	 * Export parameters required by SCSI mid-layer
+ 	 */
+-	host->irq = instance->pdev->irq;
+ 	host->unique_id = instance->unique_id;
+ 	host->can_queue = instance->max_scsi_cmds;
+ 	host->this_id = instance->init_id;
+@@ -5942,7 +5933,7 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 	else
+ 		megasas_release_mfi(instance);
+ 	if (instance->msix_vectors)
+-		pci_disable_msix(instance->pdev);
++		pci_free_irq_vectors(instance->pdev);
+ fail_init_mfi:
+ fail_alloc_dma_buf:
+ 	if (instance->evt_detail)
+@@ -6100,7 +6091,7 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	megasas_destroy_irqs(instance);
+ 
+ 	if (instance->msix_vectors)
+-		pci_disable_msix(instance->pdev);
++		pci_free_irq_vectors(instance->pdev);
+ 
+ 	pci_save_state(pdev);
+ 	pci_disable_device(pdev);
+@@ -6120,6 +6111,7 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 	int rval;
+ 	struct Scsi_Host *host;
+ 	struct megasas_instance *instance;
++	int irq_flags = PCI_IRQ_LEGACY;
+ 
+ 	instance = pci_get_drvdata(pdev);
+ 	host = instance->host;
+@@ -6155,9 +6147,15 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
+ 		goto fail_ready_state;
+ 
+ 	/* Now re-enable MSI-X */
+-	if (instance->msix_vectors &&
+-	    pci_enable_msix_exact(instance->pdev, instance->msixentry,
+-				  instance->msix_vectors))
++	if (instance->msix_vectors) {
++		irq_flags = PCI_IRQ_MSIX;
++		if (smp_affinity_enable)
++		    irq_flags |= PCI_IRQ_AFFINITY;
++	}
++	rval = pci_alloc_irq_vectors(instance->pdev, 1,
++				     instance->msix_vectors ?
++				     instance->msix_vectors : 1, irq_flags);
++	if (rval < 0)
+ 		goto fail_reenable_msix;
+ 
+ 	if (instance->ctrl_context) {
+@@ -6330,7 +6328,7 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	megasas_destroy_irqs(instance);
+ 
+ 	if (instance->msix_vectors)
+-		pci_disable_msix(instance->pdev);
++		pci_free_irq_vectors(instance->pdev);
+ 
+ 	if (instance->ctrl_context) {
+ 		megasas_release_fusion(instance);
+@@ -6425,7 +6423,7 @@ static void megasas_shutdown(struct pci_dev *pdev)
+ 	megasas_destroy_irqs(instance);
+ 
+ 	if (instance->msix_vectors)
+-		pci_disable_msix(instance->pdev);
++		pci_free_irq_vectors(instance->pdev);
+ }
+ 
+ /**
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.8.5.6
+
