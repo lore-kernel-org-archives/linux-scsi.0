@@ -1,26 +1,59 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH v3 0/3] Add QLogic FastLinQ iSCSI (qedi) driver.
-Date: Fri, 02 Dec 2016 12:44:59 -0500 (EST)
-Message-ID: <20161202.124459.2265206205513630074.davem@davemloft.net>
-References: <1480580468-31567-1-git-send-email-manish.rangankar@cavium.com>
-        <D4671854.35C28%manish.rangankar@cavium.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2 4/5] qla2xxx: Add Block Multi Queue functionality.
+Date: Fri, 2 Dec 2016 18:27:09 +0000
+Message-ID: <8FDCA427-9261-4A88-BD55-D44A8FF9238D@cavium.com>
+References: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480537497-16429-5-git-send-email-himanshu.madhani@cavium.com>
+ <20161201102537.GA7894@infradead.org>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from shards.monkeyblade.net ([184.105.139.130]:37388 "EHLO
-        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751546AbcLBRrM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 2 Dec 2016 12:47:12 -0500
-In-Reply-To: <D4671854.35C28%manish.rangankar@cavium.com>
+Received: from mail-sn1nam02on0046.outbound.protection.outlook.com ([104.47.36.46]:42462
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752243AbcLBS22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 13:28:28 -0500
+In-Reply-To: <20161201102537.GA7894@infradead.org>
+Content-Language: en-US
+Content-ID: <742EBC6B6816804993D03F4995AC9489@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Manish.Rangankar@cavium.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, Yuval.Mintz@cavium.com, cleech@redhat.com, lduncan@suse.com
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Date: Fri, 2 Dec 2016 07:00:39 +0000
-
-> Please consider applying the qed patches 1 & 2 to net-next.
-
-Ok, done.
+T24gMTIvMS8xNiwgMjoyNSBBTSwgIkNocmlzdG9waCBIZWxsd2lnIiA8aGNoQGluZnJhZGVhZC5v
+cmc+IHdyb3RlOg0KDQoNCg0KPj4gLQlwY2lfZGlzYWJsZV9tc2l4KGhhLT5wZGV2KTsNCj4+ICsJ
+cGNpX2ZyZWVfaXJxX3ZlY3RvcnMoaGEtPnBkZXYpOw0KPg0KPlBsZWFzZSBtYWtlIHRoZSBzd2l0
+Y2ggdG8gcGNpX2FsbG9jX2lycV92ZWN0b3JzIC8gcGNpX2ZyZWVfaXJxX3ZlY3RvcnMNCj5hIHNl
+W2FyYXRlIHBhdGNoLg0KDQpBY2suIFdl4oCZbGwgc3BsaXQgdXAgcGF0Y2guIA0KDQo+DQo+PiAr
+CXJldCA9IHBjaV9hbGxvY19pcnFfdmVjdG9ycyhoYS0+cGRldiwNCj4+ICsJCU1JTl9NU0lYX0NP
+VU5ULCBoYS0+bXNpeF9jb3VudCwgUENJX0lSUV9NU0lYKTsNCj4NCj5BbmQgZm9yIHByb3BlciBi
+bGstbXEgc3VwcG9ydCB5b3UgbXVzdCB1c2UgUENJX0lSUV9BRkZJTklUWSB0byBnZXQNCj50aGUg
+YWZmaW5pdHkgcmlnaHQuDQoNCkFjay4gDQoNCj4NCj4+ICAJCS8qIFJlY2FsY3VsYXRlIHF1ZXVl
+IHZhbHVlcyAqLw0KPj4gLQkJaWYgKHFsMnhtcXN1cHBvcnQpIHsNCj4+ICsJCWlmIChoYS0+bXFp
+b2Jhc2UgJiYgcWwyeG1xc3VwcG9ydCkgew0KPg0KPldoZXJlIGlzIHRoYXQgY2hhbmdlIGNvbWlu
+ZyBmcm9tPw0KDQpUaGlzIGNoYW5nZSB3YXMgaW50cm9kdWNlZCBpbiBwcmV2aW91cyBwYXRjaC4g
+DQo+DQo+PiAgCQkJY3B1cyA9IG51bV9vbmxpbmVfY3B1cygpOw0KPj4gIAkJCWhhLT5tYXhfcmVx
+X3F1ZXVlcyA9IChoYS0+bXNpeF9jb3VudCAtIDEgPiBjcHVzKSA/DQo+PiAgCQkJCShjcHVzICsg
+MSkgOiAoaGEtPm1zaXhfY291bnQgLSAxKTsNCj4+IC0JCQloYS0+bWF4X3JzcF9xdWV1ZXMgPSBo
+YS0+bWF4X3JlcV9xdWV1ZXM7DQo+PiAgDQo+PiAgCQkJLyogQVRJT1EgbmVlZHMgMSB2ZWN0b3Iu
+IFRoYXQncyAxIGxlc3MgUVBhaXIgKi8NCj4+ICAJCQlpZiAoUUxBX1RHVF9NT0RFX0VOQUJMRUQo
+KSkNCj4+ICAJCQkJaGEtPm1heF9yZXFfcXVldWVzLS07DQo+DQo+QW5kIGRvbid0IGRvIHlvdXIg
+b3duIGxvb2sgYXQgb25saW5lIGNwdXMgYW5kIHF1ZXVlIHNwcmVhZGluZywgdGhhdCdzDQo+d2hh
+dCBQQ0lfSVJRX0FGRklOSVRZIGFuZCBibGtfbXFfcGNpX21hcF9xdWV1ZXMgYXJlIGZvci4NCg0K
+V2XigJlsbCB1cGRhdGUgcGF0Y2ggd2l0aCB0aGUgcmVjb21tZW5kYXRpb24uIA0KDQo+DQo+PiAg
+CQkgICAgIk1TSTogRW5hYmxlZC5cbiIpOw0KPj4gQEAgLTMyNzMsMTEgKzMyNjEsMTAgQEAgc3Ry
+dWN0IHFsYV9pbml0X21zaXhfZW50cnkgew0KPj4gIA0KPj4gIAlpZiAoaGEtPmZsYWdzLm1zaXhf
+ZW5hYmxlZCkNCj4+ICAJCXFsYTI0eHhfZGlzYWJsZV9tc2l4KGhhKTsNCj4+IC0JZWxzZSBpZiAo
+aGEtPmZsYWdzLm1zaV9lbmFibGVkKSB7DQo+PiAtCQlmcmVlX2lycShoYS0+cGRldi0+aXJxLCBy
+c3ApOw0KPj4gLQkJcGNpX2Rpc2FibGVfbXNpKGhhLT5wZGV2KTsNCj4+IC0JfSBlbHNlDQo+PiAt
+CQlmcmVlX2lycShoYS0+cGRldi0+aXJxLCByc3ApOw0KPj4gKwllbHNlIHsNCj4+ICsJCWZyZWVf
+aXJxKHBjaV9pcnFfdmVjdG9yKGhhLT5wZGV2LCAwKSwgcnNwKTsNCj4+ICsJCXBjaV9mcmVlX2ly
+cV92ZWN0b3JzKGhhLT5wZGV2KTsNCj4+ICsJfQ0KPg0KPlBsZWFzZSBhbHNvIGtpbGwgb2ZmIHFs
+YTI0eHhfZGlzYWJsZV9tc2l4LCBhbmQgaGF2ZSBhIHNpbmdsZQ0KPmNhbGxzaXRlIHRoYXQgaXRl
+cmF0ZXMgb3ZlciBhbGwgdmVjdG9ycyBhbmQgZmluYWxseSBjYWxscw0KPnBjaV9mcmVlX2lycV92
+ZWN0b3JzLg0KDQpBY2suIFdl4oCZbGwgdXBkYXRlIGluIHJldmlzZWQgcGF0Y2guDQoNCj4NCj4+
+IC0JaWYgKHFsMnhtcXN1cHBvcnQpIHsNCj4+ICsJaWYgKHFsMnhtcXN1cHBvcnQgJiYgaGEtPm1h
+eF9xcGFpcnMpIHsNCj4NCj5XaGVyZSBkb2VzIHRoaXMgY29tZSBmcm9tPw0KDQpUaGlzIHdhcyBp
+bnRyb2R1Y2VkIGluIGVhcmxpZXIgcGF0Y2ggDQoNCj4NCg==
