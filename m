@@ -1,65 +1,56 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv3] hpsa: fallback to use legacy REPORT PHYS command
-Date: Fri,  2 Dec 2016 11:36:13 +0100
-Message-ID: <1480674973-118250-1-git-send-email-hare@suse.de>
+Subject: [PATCH] hpsa: expose enclosures
+Date: Fri,  2 Dec 2016 11:36:33 +0100
+Message-ID: <1480674993-118324-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:45512 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:45540 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1759021AbcLBKgQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Dec 2016 05:36:16 -0500
+        id S932755AbcLBKgg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 05:36:36 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Older SmartArray controllers (eg SmartArray 64xx) do
-not support the extended REPORT PHYS command, so
-fallback to use the legacy version here.
+Some servers have a built-in enclosure which will show up on the
+same bus as the internal physical devices. As the driver doesn't
+differentiate here they'll be hidden from the OS.
+This patch add a module parameter 'hpsa_expose_enclosure' which
+will expose these enclosures.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/hpsa.c | 28 ++++++++++++++++++++++++++--
- 1 file changed, 26 insertions(+), 2 deletions(-)
+ drivers/scsi/hpsa.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index 216c137..3783ef6 100644
+index 3783ef6..b9e05b3 100644
 --- a/drivers/scsi/hpsa.c
 +++ b/drivers/scsi/hpsa.c
-@@ -3640,8 +3640,32 @@ static int hpsa_scsi_do_report_luns(struct ctlr_info *h, int logical,
- static inline int hpsa_scsi_do_report_phys_luns(struct ctlr_info *h,
- 		struct ReportExtendedLUNdata *buf, int bufsize)
- {
--	return hpsa_scsi_do_report_luns(h, 0, buf, bufsize,
--						HPSA_REPORT_PHYS_EXTENDED);
-+	int rc;
-+	struct ReportLUNdata *lbuf;
-+
-+	rc = hpsa_scsi_do_report_luns(h, 0, buf, bufsize,
-+				      HPSA_REPORT_PHYS_EXTENDED);
-+	if (!rc || !hpsa_allow_any)
-+		return rc;
-+
-+	/* REPORT PHYS EXTENDED is not supported */
-+	lbuf = kzalloc(sizeof(*lbuf), GFP_KERNEL);
-+	if (!lbuf)
-+		return -ENOMEM;
-+
-+	rc = hpsa_scsi_do_report_luns(h, 0, lbuf, sizeof(*lbuf), 0);
-+	if (!rc) {
-+		int i;
-+		u32 nphys;
-+
-+		/* Copy ReportLUNdata header */
-+		memcpy(buf, lbuf, 8);
-+		nphys = be32_to_cpu(*((__be32 *)lbuf->LUNListLength)) / 8;
-+		for (i = 0; i < nphys; i++)
-+			memcpy(buf->LUN[i].lunid, lbuf->LUN[i], 8);
-+	}
-+	kfree(lbuf);
-+	return rc;
- }
+@@ -90,6 +90,10 @@
+ module_param(hpsa_simple_mode, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(hpsa_simple_mode,
+ 	"Use 'simple mode' rather than 'performant mode'");
++static int hpsa_expose_enclosure;
++module_param(hpsa_expose_enclosure, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(hpsa_expose_enclosure,
++	     "Expose enclosure devices to the OS");
  
- static inline int hpsa_scsi_do_report_log_luns(struct ctlr_info *h,
+ /* define the PCI info for the cards we can control */
+ static const struct pci_device_id hpsa_pci_device_id[] = {
+@@ -4417,7 +4421,11 @@ static void hpsa_update_scsi_devices(struct ctlr_info *h)
+ 		 * Expose all devices except for physical devices that
+ 		 * are masked.
+ 		 */
+-		if (MASKED_DEVICE(lunaddrbytes) && this_device->physical_device)
++		if (hpsa_expose_enclosure &&
++		    this_device->devtype == TYPE_ENCLOSURE)
++			this_device->expose_device = 1;
++		else if (MASKED_DEVICE(lunaddrbytes) &&
++			 this_device->physical_device)
+ 			this_device->expose_device = 0;
+ 		else
+ 			this_device->expose_device = 1;
 -- 
 1.8.5.6
 
