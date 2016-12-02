@@ -1,11 +1,11 @@
 From: Christoph Hellwig <hch@lst.de>
 Subject: [PATCH] block: improve handling of the magic discard payload
-Date: Fri,  2 Dec 2016 13:18:55 +0100
-Message-ID: <1480681135-19921-1-git-send-email-hch@lst.de>
+Date: Fri,  2 Dec 2016 13:19:02 +0100
+Message-ID: <1480681142-19963-1-git-send-email-hch@lst.de>
 Return-path: <linux-block-owner@vger.kernel.org>
 Sender: linux-block-owner@vger.kernel.org
 To: axboe@kernel.dk, martin.petersen@oracle.com, keith.busch@intel.com
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infraded.org
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
 Instead of allocating a single unused biovec for discard requests, send
