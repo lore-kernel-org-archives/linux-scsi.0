@@ -1,165 +1,151 @@
-From: Dmitry Vyukov <dvyukov@google.com>
-Subject: Re: scsi: use-after-free in bio_copy_from_iter
-Date: Fri, 2 Dec 2016 17:50:39 +0100
-Message-ID: <CACT4Y+auCpJbXhmxbr4OmSHbiVkatyWmDxGGShs=WvO=HCXRKA@mail.gmail.com>
-References: <CACT4Y+aBd+1pssnsVx2x145n7Q1nDMU=xc7NAiOCtpy-MA-EDg@mail.gmail.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2 3/5] qla2xxx: Add multiple queue pair functionality.
+Date: Fri, 2 Dec 2016 17:37:52 +0000
+Message-ID: <ADB7CECF-6B25-42CD-955C-D028B81F16E4@cavium.com>
+References: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480537497-16429-4-git-send-email-himanshu.madhani@cavium.com>
+ <118f1092-d945-d170-31dd-fd25ef0105c4@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CACT4Y+aBd+1pssnsVx2x145n7Q1nDMU=xc7NAiOCtpy-MA-EDg@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Doug Gilbert <dgilbert@interlog.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, axboe@kernel.dk, linux-block@vger.kernel.org, David Rientjes <rientjes@google.com>
-Cc: syzkaller <syzkaller@googlegroups.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0041.outbound.protection.outlook.com ([104.47.34.41]:39520
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753013AbcLBRi4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 12:38:56 -0500
+In-Reply-To: <118f1092-d945-d170-31dd-fd25ef0105c4@suse.de>
+Content-Language: en-US
+Content-ID: <4DBB52B35C26274EBACEDD3642DFAC7D@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Fri, Nov 25, 2016 at 8:08 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
-> Hello,
->
-> The following program triggers use-after-free in bio_copy_from_iter:
-> https://gist.githubusercontent.com/dvyukov/80cd94b4e4c288f16ee4c787d404118b/raw/10536069562444da51b758bb39655b514ff93b45/gistfile1.txt
->
->
-> ==================================================================
-> BUG: KASAN: use-after-free in copy_from_iter+0xf30/0x15e0 at addr
-> ffff880062c6e02a
-> Read of size 4096 by task a.out/8529
-> page:ffffea00018b1b80 count:2 mapcount:0 mapping:ffff88006c80e9d0 index:0x1695
-> flags: 0x5fffc0000000864(referenced|lru|active|private)
-> page dumped because: kasan: bad access detected
-> page->mem_cgroup:ffff88003ebcea00
-> CPU: 1 PID: 8529 Comm: a.out Not tainted 4.9.0-rc6+ #55
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
->  ffff880039ca6770 ffffffff834c3bb9 ffffffff00000001 1ffff10007394c81
->  ffffed0007394c79 0000000041b58ab3 ffffffff89575c30 ffffffff834c38cb
->  0000000000000000 0000000000000000 0000000000000001 0000000000000000
-> Call Trace:
->  [<     inline     >] __dump_stack lib/dump_stack.c:15
->  [<ffffffff834c3bb9>] dump_stack+0x2ee/0x3f5 lib/dump_stack.c:51
->  [<     inline     >] print_address_description mm/kasan/report.c:211
->  [<     inline     >] kasan_report_error mm/kasan/report.c:285
->  [<ffffffff819f18b8>] kasan_report+0x418/0x440 mm/kasan/report.c:305
->  [<     inline     >] check_memory_region_inline mm/kasan/kasan.c:308
->  [<ffffffff819f0509>] check_memory_region+0x139/0x190 mm/kasan/kasan.c:315
->  [<ffffffff819f0a43>] memcpy+0x23/0x50 mm/kasan/kasan.c:350
->  [<ffffffff83525d10>] copy_from_iter+0xf30/0x15e0 lib/iov_iter.c:559
->  [<ffffffff83526834>] copy_page_from_iter+0x474/0x860 lib/iov_iter.c:614
->  [<     inline     >] bio_copy_from_iter block/bio.c:1025
->  [<ffffffff833dfc10>] bio_copy_user_iov+0xb50/0xf10 block/bio.c:1226
->  [<     inline     >] __blk_rq_map_user_iov block/blk-map.c:56
->  [<ffffffff83421c15>] blk_rq_map_user_iov+0x295/0x930 block/blk-map.c:130
->  [<ffffffff834223e9>] blk_rq_map_user+0x139/0x1e0 block/blk-map.c:159
->  [<     inline     >] sg_start_req drivers/scsi/sg.c:1757
->  [<ffffffff8470269a>] sg_common_write.isra.20+0x12da/0x1b20
-> drivers/scsi/sg.c:772
->  [<ffffffff8470774a>] sg_write+0x78a/0xda0 drivers/scsi/sg.c:675
->  [<ffffffff81a6fabe>] __vfs_write+0x65e/0x830 fs/read_write.c:510
->  [<ffffffff81a6fd7c>] __kernel_write+0xec/0x340 fs/read_write.c:532
->  [<ffffffff81b41e7c>] write_pipe_buf+0x19c/0x260 fs/splice.c:814
->  [<     inline     >] splice_from_pipe_feed fs/splice.c:519
->  [<ffffffff81b426af>] __splice_from_pipe+0x31f/0x750 fs/splice.c:643
->  [<ffffffff81b45dcc>] splice_from_pipe+0x1dc/0x300 fs/splice.c:678
->  [<ffffffff81b45f95>] default_file_splice_write+0x45/0x90 fs/splice.c:826
->  [<     inline     >] do_splice_from fs/splice.c:868
->  [<ffffffff81b3e2ba>] direct_splice_actor+0x12a/0x190 fs/splice.c:1035
->  [<ffffffff81b40706>] splice_direct_to_actor+0x2c6/0x840 fs/splice.c:990
->  [<ffffffff81b40f4e>] do_splice_direct+0x2ce/0x470 fs/splice.c:1078
->  [<ffffffff81a7459f>] do_sendfile+0x73f/0x1060 fs/read_write.c:1401
->  [<     inline     >] SYSC_sendfile64 fs/read_write.c:1456
->  [<ffffffff81a7677e>] SyS_sendfile64+0xee/0x1a0 fs/read_write.c:1448
->  [<ffffffff8814cf85>] entry_SYSCALL_64_fastpath+0x23/0xc6
-> arch/x86/entry/entry_64.S:209
-> Memory state around the buggy address:
->  ffff880062c6ef00: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->  ffff880062c6ef80: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
->>ffff880062c6f000: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->                    ^
->  ffff880062c6f080: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
->  ffff880062c6f100: ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
-> ==================================================================
-> Disabling lock debugging due to kernel taint
-> BUG: unable to handle kernel paging request at ffff880062c6f000
-> IP: [<ffffffff835051c2>] __memcpy+0x12/0x20 arch/x86/lib/memcpy_64.S:37
-> PGD c53d067 [  494.351750] PUD c540067
-> PMD 7fdea067 [  494.351750] PTE 8000000062c6f060
->
-> Oops: 0000 [#1] SMP DEBUG_PAGEALLOC KASAN
-> Modules linked in:
-> CPU: 1 PID: 8529 Comm: a.out Tainted: G    B           4.9.0-rc6+ #55
-> Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
-> task: ffff88003c54e3c0 task.stack: ffff880039ca0000
-> RIP: 0010:[<ffffffff835051c2>]  [<ffffffff835051c2>]
-> __memcpy+0x12/0x20 arch/x86/lib/memcpy_64.S:37
-> RSP: 0018:ffff880039ca6838  EFLAGS: 00010246
-> RAX: ffff880031b99000 RBX: 0000000000001000 RCX: 0000000000000006
-> RDX: 0000000000000000 RSI: ffff880062c6effa RDI: ffff880031b99fd0
-> RBP: ffff880039ca6858 R08: 0000000000000000 R09: 0000000000000000
-> R10: 0000000000000200 R11: ffffed00063733ff R12: ffff880031b99000
-> R13: ffff880062c6e02a R14: ffff880039ca6f70 R15: ffff880039ca6d18
-> FS:  00007f7a78013700(0000) GS:ffff88003ed00000(0000) knlGS:0000000000000000
-> CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> CR2: ffff880062c6f000 CR3: 000000006411f000 CR4: 00000000000006e0
-> Stack:
->  ffffffff819f0a65 ffff880039ca71a0 0000000000001000 0000000000002000
->  ffff880039ca6d40 ffffffff83525d10 0000000041b58ab3 ffffffff89576240
->  ffffffff00000001 0000000000000000 0000000041b58ab3 ffffffff894d07b0
-> Call Trace:
->  [<ffffffff83525d10>] copy_from_iter+0xf30/0x15e0 lib/iov_iter.c:559
->  [<ffffffff83526834>] copy_page_from_iter+0x474/0x860 lib/iov_iter.c:614
->  [<     inline     >] bio_copy_from_iter block/bio.c:1025
->  [<ffffffff833dfc10>] bio_copy_user_iov+0xb50/0xf10 block/bio.c:1226
->  [<     inline     >] __blk_rq_map_user_iov block/blk-map.c:56
->  [<ffffffff83421c15>] blk_rq_map_user_iov+0x295/0x930 block/blk-map.c:130
->  [<ffffffff834223e9>] blk_rq_map_user+0x139/0x1e0 block/blk-map.c:159
->  [<     inline     >] sg_start_req drivers/scsi/sg.c:1757
->  [<ffffffff8470269a>] sg_common_write.isra.20+0x12da/0x1b20
-> drivers/scsi/sg.c:772
->  [<ffffffff8470774a>] sg_write+0x78a/0xda0 drivers/scsi/sg.c:675
->  [<ffffffff81a6fabe>] __vfs_write+0x65e/0x830 fs/read_write.c:510
->  [<ffffffff81a6fd7c>] __kernel_write+0xec/0x340 fs/read_write.c:532
->  [<ffffffff81b41e7c>] write_pipe_buf+0x19c/0x260 fs/splice.c:814
->  [<     inline     >] splice_from_pipe_feed fs/splice.c:519
->  [<ffffffff81b426af>] __splice_from_pipe+0x31f/0x750 fs/splice.c:643
->  [<ffffffff81b45dcc>] splice_from_pipe+0x1dc/0x300 fs/splice.c:678
->  [<ffffffff81b45f95>] default_file_splice_write+0x45/0x90 fs/splice.c:826
->  [<     inline     >] do_splice_from fs/splice.c:868
->  [<ffffffff81b3e2ba>] direct_splice_actor+0x12a/0x190 fs/splice.c:1035
->  [<ffffffff81b40706>] splice_direct_to_actor+0x2c6/0x840 fs/splice.c:990
->  [<ffffffff81b40f4e>] do_splice_direct+0x2ce/0x470 fs/splice.c:1078
->  [<ffffffff81a7459f>] do_sendfile+0x73f/0x1060 fs/read_write.c:1401
->  [<     inline     >] SYSC_sendfile64 fs/read_write.c:1456
->  [<ffffffff81a7677e>] SyS_sendfile64+0xee/0x1a0 fs/read_write.c:1448
->  [<ffffffff8814cf85>] entry_SYSCALL_64_fastpath+0x23/0xc6
-> arch/x86/entry/entry_64.S:209
-> Code: 4e fe e9 4d ff ff ff e8 9d c7 4e fe eb 8f e8 96 c7 4e fe e9 66
-> ff ff ff 90 0f 1f 44 00 00 48 89 f8 48 89 d1 48 c1 e9 03 83 e2 07 <f3>
-> 48 a5 89 d1 f3 a4 c3 66 0f 1f 44 00 00 48 89 f8 48 89 d1 f3
-> RIP  [<ffffffff835051c2>] __memcpy+0x12/0x20 arch/x86/lib/memcpy_64.S:37
->  RSP <ffff880039ca6838>
-> CR2: ffff880062c6f000
-> ---[ end trace 13b61a6864c2c008 ]---
-> ==================================================================
->
->
-> There are no alloc/free stacks in the report, so maybe it is not
-> use-after-free but rather an out-of-bounds.
->
-> On commit 16ae16c6e5616c084168740990fc508bda6655d4 (Nov 24).
-
-
-+David did some debugging of a similar case. His 0x400 at location
-0x2000efdc refers to 0xffff at 0x20012fdc in the provided reproducer:
-    NONFAILING(*(uint32_t*)0x20012fdc = (uint32_t)0xffff);
-Here is his explanation:
-=====
-That's not nice, it's passing a reply_len mismatch of 0x400 which is going
-to cause an sg_write warning (in 988 bytes, out 38 bytes).  input_size
-will be 74 since count == 80, the mxsize is 0x400 (!) so after subtracting
-SZ_SG_HEADER we get the 988 bytes in.  This forces SG_DXFER_TO_FROM_DEV
-when we really want SG_DXFER_TO_DEV.  If you set the value at 0x2000efdc
-to 0x24 rather than 0x400 so there's a legitimate reply_len equal to
-SG_DXFER_TO_FROM_DEV, I'd assume this passes just fine, assuming your
-container can get enough memory.
-=====
-
-I've tried to replace 0xffff in the provided reproducer with 0x24 and
-it indeed does not crash.
+SGkgSGFubmVzLCANCg0KDQoNCg0KT24gMTIvMS8xNiwgMTI6MzkgQU0sICJIYW5uZXMgUmVpbmVj
+a2UiIDxoYXJlQHN1c2UuZGU+IHdyb3RlOg0KDQo+T24gMTEvMzAvMjAxNiAwOToyNCBQTSwgSGlt
+YW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IEZyb206IE1pY2hhZWwgSGVybmFuZGV6IDxtaWNoYWVs
+Lmhlcm5hbmRlekBjYXZpdW0uY29tPg0KPj4gDQo+PiBSZXBsYWNlZCBleGlzdGluZyBtdWx0aXBs
+ZSBxdWV1ZSBmdW5jdGlvbmFsaXR5IHdpdGggZnJhbWV3b3JrDQo+PiB0aGF0IGFsbG93cyBmb3Ig
+dGhlIGNyZWF0aW9uIG9mIHBhaXJzIG9mIHJlcXVlc3QgYW5kIHJlc3BvbnNlIHF1ZXVlcywNCj4+
+IGVpdGhlciBhdCBzdGFydCBvZiBkYXkgb3IgZHluYW1pY2FsbHkuDQo+PiANCj4+IFNpZ25lZC1v
+ZmYtYnk6IFNhd2FuIENoYW5kYWsgPHNhd2FuLmNoYW5kYWtAY2F2aXVtLmNvbT4NCj4+IFNpZ25l
+ZC1vZmYtYnk6IE1pY2hhZWwgSGVybmFuZGV6IDxtaWNoYWVsLmhlcm5hbmRlekBjYXZpdW0uY29t
+Pg0KPj4gU2lnbmVkLW9mZi1ieTogSGltYW5zaHUgTWFkaGFuaSA8aGltYW5zaHUubWFkaGFuaUBj
+YXZpdW0uY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvTWFrZWZpbGUgICAg
+IHwgICAzICstDQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0dHIuYyAgIHwgIDM2ICsr
+LS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYm90dG9tLmMgfCAzOTggKysrKysrKysr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysNCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfZGJnLmMgICAgfCAgIDQgKy0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGVmLmgg
+ICAgfCAxMTQgKysrKysrKysrLS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ2JsLmgg
+ICAgfCAgMzQgKysrLQ0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pbml0LmMgICB8ICAx
+NCArLQ0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pbmxpbmUuaCB8ICAzMCArKysNCj4+
+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW9jYi5jICAgfCAgNTYgKystLS0tDQo+PiAgZHJp
+dmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jICAgIHwgMTA5ICsrKysrLS0tLS0tDQo+PiAgZHJp
+dmVycy9zY3NpL3FsYTJ4eHgvcWxhX21ieC5jICAgIHwgIDQ0ICsrKy0tDQo+PiAgZHJpdmVycy9z
+Y3NpL3FsYTJ4eHgvcWxhX21pZC5jICAgIHwgMTE2ICsrKysrLS0tLS0tDQo+PiAgZHJpdmVycy9z
+Y3NpL3FsYTJ4eHgvcWxhX21xLmMgICAgIHwgMjc5ICsrKysrKysrKysrKysrKysrKysrKysrKysr
+DQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgICAgIHwgMjM1ICsrKysrKysrKysr
+LS0tLS0tLS0tLS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMgfCAgIDQg
+Kw0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90b3AuYyAgICB8ICA5NSArKysrKysrKysN
+Cj4+ICAxNiBmaWxlcyBjaGFuZ2VkLCAxMjMwIGluc2VydGlvbnMoKyksIDM0MSBkZWxldGlvbnMo
+LSkNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JvdHRv
+bS5jDQo+PiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9tcS5j
+DQo+PiAgY3JlYXRlIG1vZGUgMTAwNjQ0IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90b3AuYw0K
+Pj4gDQo+WyAuLiBdDQo+PiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2Jv
+dHRvbS5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JvdHRvbS5jDQo+PiBuZXcgZmlsZSBt
+b2RlIDEwMDY0NA0KPj4gaW5kZXggMDAwMDAwMC4uOGJmNzU3ZQ0KPj4gLS0tIC9kZXYvbnVsbA0K
+Pj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JvdHRvbS5jDQo+PiBAQCAtMCwwICsx
+LDM5OCBAQA0KPj4gKy8qDQo+PiArICogUUxvZ2ljIEZpYnJlIENoYW5uZWwgSEJBIERyaXZlcg0K
+Pj4gKyAqIENvcHlyaWdodCAoYykgIDIwMTYgUUxvZ2ljIENvcnBvcmF0aW9uDQo+PiArICoNCj4+
+ICsgKiBTZWUgTElDRU5TRS5xbGEyeHh4IGZvciBjb3B5cmlnaHQgYW5kIGxpY2Vuc2luZyBkZXRh
+aWxzLg0KPj4gKyAqLw0KPj4gKyNpbmNsdWRlICJxbGFfZGVmLmgiDQo+PiArDQo+PiArLyoqDQo+
+PiArICogcWxhMnh4eF9zdGFydF9zY3NpX21xKCkgLSBTZW5kIGEgU0NTSSBjb21tYW5kIHRvIHRo
+ZSBJU1ANCj4+ICsgKiBAc3A6IGNvbW1hbmQgdG8gc2VuZCB0byB0aGUgSVNQDQo+PiArICoNCj4+
+ICsgKiBSZXR1cm5zIG5vbi16ZXJvIGlmIGEgZmFpbHVyZSBvY2N1cnJlZCwgZWxzZSB6ZXJvLg0K
+Pj4gKyAqLw0KPj4gKw0KPj4gK3N0YXRpYyBpbnQNCj4+ICtxbGEyeHh4X3N0YXJ0X3Njc2lfbXEo
+c3JiX3QgKnNwKQ0KPj4gK3sNCj4+ICsJaW50CQluc2VnOw0KPj4gKwl1bnNpZ25lZCBsb25nICAg
+ZmxhZ3M7DQo+PiArCXVpbnQzMl90CSpjbHJfcHRyOw0KPj4gKwl1aW50MzJfdCAgICAgICAgaW5k
+ZXg7DQo+PiArCXVpbnQzMl90CWhhbmRsZTsNCj4+ICsJc3RydWN0IGNtZF90eXBlXzcgKmNtZF9w
+a3Q7DQo+PiArCXVpbnQxNl90CWNudDsNCj4+ICsJdWludDE2X3QJcmVxX2NudDsNCj4+ICsJdWlu
+dDE2X3QJdG90X2RzZHM7DQo+PiArCXN0cnVjdCByZXFfcXVlICpyZXEgPSBOVUxMOw0KPj4gKwlz
+dHJ1Y3QgcnNwX3F1ZSAqcnNwID0gTlVMTDsNCj4+ICsJc3RydWN0IHNjc2lfY21uZCAqY21kID0g
+R0VUX0NNRF9TUChzcCk7DQo+PiArCXN0cnVjdCBzY3NpX3FsYV9ob3N0ICp2aGEgPSBzcC0+ZmNw
+b3J0LT52aGE7DQo+PiArCXN0cnVjdCBxbGFfaHdfZGF0YSAqaGEgPSB2aGEtPmh3Ow0KPj4gKwlz
+dHJ1Y3QgcWxhX3FwYWlyICpxcGFpciA9IHNwLT5xcGFpcjsNCj4+ICsNCj4+ICsJLyogU2V0dXAg
+cXBhaXIgcG9pbnRlcnMgKi8NCj4+ICsJcnNwID0gcXBhaXItPnJzcDsNCj4+ICsJcmVxID0gcXBh
+aXItPnJlcTsNCj4+ICsNCj4+ICsJLyogU28gd2Uga25vdyB3ZSBoYXZlbid0IHBjaV9tYXAnZWQg
+YW55dGhpbmcgeWV0ICovDQo+PiArCXRvdF9kc2RzID0gMDsNCj4+ICsNCj4+ICsJLyogU2VuZCBt
+YXJrZXIgaWYgcmVxdWlyZWQgKi8NCj4+ICsJaWYgKHZoYS0+bWFya2VyX25lZWRlZCAhPSAwKSB7
+DQo+PiArCQlpZiAocWxhMngwMF9tYXJrZXIodmhhLCByZXEsIHJzcCwgMCwgMCwgTUtfU1lOQ19B
+TEwpICE9DQo+PiArCQkgICAgUUxBX1NVQ0NFU1MpDQo+PiArCQkJcmV0dXJuIFFMQV9GVU5DVElP
+Tl9GQUlMRUQ7DQo+PiArCQl2aGEtPm1hcmtlcl9uZWVkZWQgPSAwOw0KPj4gKwl9DQo+PiArDQo+
+PiArCS8qIEFjcXVpcmUgcXBhaXIgc3BlY2lmaWMgbG9jayAqLw0KPj4gKwlzcGluX2xvY2tfaXJx
+c2F2ZSgmcXBhaXItPnFwX2xvY2ssIGZsYWdzKTsNCj4+ICsNCj4+ICsJLyogQ2hlY2sgZm9yIHJv
+b20gaW4gb3V0c3RhbmRpbmcgY29tbWFuZCBsaXN0LiAqLw0KPj4gKwloYW5kbGUgPSByZXEtPmN1
+cnJlbnRfb3V0c3RhbmRpbmdfY21kOw0KPj4gKwlmb3IgKGluZGV4ID0gMTsgaW5kZXggPCByZXEt
+Pm51bV9vdXRzdGFuZGluZ19jbWRzOyBpbmRleCsrKSB7DQo+PiArCQloYW5kbGUrKzsNCj4+ICsJ
+CWlmIChoYW5kbGUgPT0gcmVxLT5udW1fb3V0c3RhbmRpbmdfY21kcykNCj4+ICsJCQloYW5kbGUg
+PSAxOw0KPj4gKwkJaWYgKCFyZXEtPm91dHN0YW5kaW5nX2NtZHNbaGFuZGxlXSkNCj4+ICsJCQli
+cmVhazsNCj4+ICsJfQ0KPj4gKwlpZiAoaW5kZXggPT0gcmVxLT5udW1fb3V0c3RhbmRpbmdfY21k
+cykNCj4+ICsJCWdvdG8gcXVldWluZ19lcnJvcjsNCj4+ICsNCj4+ICsJLyogTWFwIHRoZSBzZyB0
+YWJsZSBzbyB3ZSBoYXZlIGFuIGFjY3VyYXRlIGNvdW50IG9mIHNnIGVudHJpZXMgbmVlZGVkICov
+DQo+PiArCWlmIChzY3NpX3NnX2NvdW50KGNtZCkpIHsNCj4+ICsJCW5zZWcgPSBkbWFfbWFwX3Nn
+KCZoYS0+cGRldi0+ZGV2LCBzY3NpX3NnbGlzdChjbWQpLA0KPj4gKwkJICAgIHNjc2lfc2dfY291
+bnQoY21kKSwgY21kLT5zY19kYXRhX2RpcmVjdGlvbik7DQo+PiArCQlpZiAodW5saWtlbHkoIW5z
+ZWcpKQ0KPj4gKwkJCWdvdG8gcXVldWluZ19lcnJvcjsNCj4+ICsJfSBlbHNlDQo+PiArCQluc2Vn
+ID0gMDsNCj4+ICsNCj4+ICsJdG90X2RzZHMgPSBuc2VnOw0KPj4gKwlyZXFfY250ID0gcWxhMjR4
+eF9jYWxjX2lvY2JzKHZoYSwgdG90X2RzZHMpOw0KPj4gKwlpZiAocmVxLT5jbnQgPCAocmVxX2Nu
+dCArIDIpKSB7DQo+PiArCQljbnQgPSBJU19TSEFET1dfUkVHX0NBUEFCTEUoaGEpID8gKnJlcS0+
+b3V0X3B0ciA6DQo+PiArCQkgICAgUkRfUkVHX0RXT1JEX1JFTEFYRUQocmVxLT5yZXFfcV9vdXQp
+Ow0KPj4gKwkJaWYgKHJlcS0+cmluZ19pbmRleCA8IGNudCkNCj4+ICsJCQlyZXEtPmNudCA9IGNu
+dCAtIHJlcS0+cmluZ19pbmRleDsNCj4+ICsJCWVsc2UNCj4+ICsJCQlyZXEtPmNudCA9IHJlcS0+
+bGVuZ3RoIC0NCj4+ICsJCQkJKHJlcS0+cmluZ19pbmRleCAtIGNudCk7DQo+PiArCQlpZiAocmVx
+LT5jbnQgPCAocmVxX2NudCArIDIpKQ0KPj4gKwkJCWdvdG8gcXVldWluZ19lcnJvcjsNCj4+ICsJ
+fQ0KPj4gKw0KPj4gKwkvKiBCdWlsZCBjb21tYW5kIHBhY2tldC4gKi8NCj4+ICsJcmVxLT5jdXJy
+ZW50X291dHN0YW5kaW5nX2NtZCA9IGhhbmRsZTsNCj4+ICsJcmVxLT5vdXRzdGFuZGluZ19jbWRz
+W2hhbmRsZV0gPSBzcDsNCj4+ICsJc3AtPmhhbmRsZSA9IGhhbmRsZTsNCj4+ICsJY21kLT5ob3N0
+X3NjcmliYmxlID0gKHVuc2lnbmVkIGNoYXIgKikodW5zaWduZWQgbG9uZyloYW5kbGU7DQo+PiAr
+CXJlcS0+Y250IC09IHJlcV9jbnQ7DQo+PiArDQo+VGhpcyB3aWxsIGtpbGwgYWxsIHBlcmZvcm1h
+bmNlIGJlbmVmaXRzOyBoYXZpbmcgYSBzaW5nbGUgYXJyYXkgdG8gaGFuZGxlDQo+YWxsIG91dHN0
+YW5kaW5nIGNvbW1hbmRzIGluZXZpdGFibHkgbGVhZHMgdG8gY2FjaGUgdHJhc2hpbmcuDQoNClRo
+ZSBvdXRzdGFuZGluZyBjb21tYW5kIGFycmF5IGlzIG9uIGEgcGVyIHF1ZXVlIHBhaXIgYmFzaXMg
+d2hlcmUg4oCccmVx4oCdIGlzDQp0aGUgcmVxdWVzdCBxdWV1ZSBvZiB0aGUgcXVldWUgcGFpci4N
+Cg0KPg0KPlsgLi4gXQ0KPj4gQEAgLTgxMiwyMyArODE3LDI3IEBAIHN0YXRpYyB2b2lkIHFsYV9k
+b193b3JrKHN0cnVjdCB3b3JrX3N0cnVjdCAqd29yaykNCj4+ICAJaWYgKCFJU19NU0lYX05BQ0tf
+Q0FQQUJMRShoYSkpDQo+PiAgCQlvcHRpb25zIHw9IEJJVF82Ow0KPj4gIA0KPj4gKwkvKiBTZXQg
+b3B0aW9uIHRvIGluZGljYXRlIHJlc3BvbnNlIHF1ZXVlIGNyZWF0aW9uICovDQo+PiArCW9wdGlv
+bnMgfD0gQklUXzE7DQo+PiArDQo+DQo+SXMgdGhpcyBiaXQgc3VwcG9ydGVkIG9uIGFsbCBmaXJt
+d2FyZSByZWxlYXNlcz8NCj5EbyB3ZSBuZWVkIGFuIHVwZGF0ZWQgZmlybXdhcmUgZm9yIHRoaXM/
+DQoNCk5vIG5lZWQgZm9yIGZpcm13YXJlIHVwZGF0ZS4gVGhpcyBCSVQgaXMgc3VwcG9ydGVkIGZv
+ciBhbGwgZmlybXdhcmUgcmVsZWFzZS4gDQoNCj4NCj4NCj5bIC4uIF0NCj4+ICsJCS8qIENyZWF0
+ZSByZXF1ZXN0IHF1ZXVlICovDQo+PiArCQlyZXFfaWQgPSBxbGEyNXh4X2NyZWF0ZV9yZXFfcXVl
+KGhhLCAwLCB2cF9pZHgsIDAsIHJzcF9pZCwgcW9zKTsNCj4+ICsJCWlmICghcmVxX2lkKSB7DQo+
+PiArCQkJcWxfbG9nKHFsX2xvZ193YXJuLCB2aGEsIDB4MDE4NiwNCj4+ICsJCQkgICAgIkZhaWxl
+ZCB0byBjcmVhdGUgcmVxdWVzdCBxdWV1ZS5cbiIpOw0KPj4gKwkJCWdvdG8gZmFpbF9yZXE7DQo+
+PiArCQl9DQo+PiArDQo+PiArCQlxcGFpci0+cmVxID0gaGEtPnJlcV9xX21hcFtyZXFfaWRdOw0K
+Pj4gKwkJcXBhaXItPnJzcC0+cmVxID0gcXBhaXItPnJlcTsNCj4+ICsNCj4+ICsJCWlmIChJU19U
+MTBfUElfQ0FQQUJMRShoYSkgJiYgcWwyeGVuYWJsZWRpZikgew0KPj4gKwkJCWlmIChoYS0+Zndf
+YXR0cmlidXRlcyAmIEJJVF80KQ0KPj4gKwkJCQlxcGFpci0+ZGlmZGl4X3N1cHBvcnRlZCA9IDE7
+DQo+PiArCQl9DQo+PiArDQo+PiArCQlxcGFpci0+c3JiX21lbXBvb2wgPSBtZW1wb29sX2NyZWF0
+ZV9zbGFiX3Bvb2woU1JCX01JTl9SRVEsIHNyYl9jYWNoZXApOw0KPj4gKwkJaWYgKCFxcGFpci0+
+c3JiX21lbXBvb2wpIHsNCj4+ICsJCQlxbF9sb2cocWxfbG9nX3dhcm4sIHZoYSwgMHgwMTkxLA0K
+Pj4gKwkJCSAgICAiRmFpbGVkIHRvIGNyZWF0ZSBzcmIgbWVtcG9vbCBmb3IgcXBhaXIgJWRcbiIs
+DQo+PiArCQkJICAgIHFwYWlyLT5pZCk7DQo+PiArCQkJZ290byBmYWlsX21lbXBvb2w7DQo+PiAr
+CQl9DQo+PiArDQo+PiArCQkvKiBTZXQgQ1BVIGFmZmluaXR5IGhpbnQgKi8NCj4+ICsJCWlmIChj
+cHVfbWFzaykNCj4+ICsJCQlxbGEyeHh4X3NldF9hZmZpbml0eV9oaW50KHFwYWlyLCBjcHVfbWFz
+ayk7DQo+PiArDQo+PiArCQlpZiAoY3B1X21hc2spIHsNCj4+ICsJCQljcHVtYXNrX2NvcHkoJnFw
+YWlyLT5jcHVfbWFzaywgY3B1X21hc2spOw0KPj4gKwkJCWZvcl9lYWNoX2NwdShjcHVfaWQsIGNw
+dV9tYXNrKSB7DQo+PiArCQkJCWhpbnQgPSBwZXJfY3B1X3B0cih2aGEtPnFwc19oaW50LCBjcHVf
+aWQpOw0KPj4gKwkJCQloaW50LT5jaGFuZ2VfaW5fcHJvZ3Jlc3MgPSAxOw0KPj4gKwkJCQloaW50
+LT5xcCA9IHFwYWlyOw0KPj4gKwkJCQloaW50LT5jaGFuZ2VfaW5fcHJvZ3Jlc3MgPSAwOw0KPj4g
+KwkJCX0NCj4+ICsJCX0NCj4+ICsNCj5QbGVhc2UgdXNlIHRoZSBpcnEtYWZmaW5pdHkgcmV3b3Jr
+IGZyb20gQ2hyaXN0b3BoIEhlbGx3aWcgaGVyZTsgd2UNCj5yZWFsbHkgc2hvdWxkbid0IGludHJv
+ZHVjZSBhbnkgaG9tZS1ncm93biBpbnRlcnJ1cHQgYWZmaW5pdHkgc2V0dGluZ3MNCj5hbnltb3Jl
+Lg0KDQpXZSBhcmUgcmV2aXNpbmcgcGF0Y2guIFdpbGwgc3VibWl0IHVwZGF0ZWQgcGF0Y2ggc2hv
+cnRseS4NCg0KPg0KPg0KPkNoZWVycywNCj4NCj5IYW5uZXMNCj4tLSANCj5Eci4gSGFubmVzIFJl
+aW5lY2tlCQkgICBUZWFtbGVhZCBTdG9yYWdlICYgTmV0d29ya2luZw0KPmhhcmVAc3VzZS5kZQkJ
+CSAgICAgICAgICAgICAgICs0OSA5MTEgNzQwNTMgNjg4DQo+U1VTRSBMSU5VWCBHbWJILCBNYXhm
+ZWxkc3RyLiA1LCA5MDQwOSBOw7xybmJlcmcNCj5HRjogRi4gSW1lbmTDtnJmZmVyLCBKLiBTbWl0
+aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbg0KPkhSQiAyMTI4NCAoQUcgTsO8
+cm5iZXJnKQ0K
