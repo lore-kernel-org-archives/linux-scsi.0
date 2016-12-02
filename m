@@ -1,50 +1,110 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: SG does not ignore dxferp (direct io + mmap)
-Date: Fri, 02 Dec 2016 08:29:43 -0500
-Message-ID: <1480685383.28416.147.camel@localhost.localdomain>
-References: <1479752642.19792.43.camel@localhost.localdomain>
-         <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
-         <1479839407.28416.21.camel@localhost.localdomain>
-         <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
-         <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
-         <1479932524.28416.43.camel@localhost.localdomain>
-         <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
-         <1194718949.74785.1480096576577.JavaMail.zimbra@redhat.com>
-         <1480523188.28416.94.camel@localhost.localdomain>
-         <yq18trzhink.fsf@sermon.lab.mkp.net> <20161202122133.GA14247@infradead.org>
-Reply-To: emilne@redhat.com
+From: Quentin Lambert <lambert.quentin@gmail.com>
+Subject: Re: [PATCH] scsi: hisi_sas: fix free'ing in probe and remove
+Date: Fri, 2 Dec 2016 14:43:56 +0100
+Message-ID: <8820139e-44d1-23e5-f9bd-98aaa63f96b9@gmail.com>
+References: <1480434357-63730-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56544 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751187AbcLBN3p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Dec 2016 08:29:45 -0500
-In-Reply-To: <20161202122133.GA14247@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1480434357-63730-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
+Cc: john.garry2@mail.dcu.ie, xuwei5@hisilicon.com, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, zhangfei.gao@linaro.org, linuxarm@huawei.com, Xiaofei Tan <tanxiaofei@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Laurence Oberman <loberman@redhat.com>, Eyal Ben David <bdeyal@gmail.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
-
-On Fri, 2016-12-02 at 04:21 -0800, Christoph Hellwig wrote:
-> On Thu, Dec 01, 2016 at 08:40:31AM -0500, Martin K. Petersen wrote:
-> > Specifically, the problem appears to be caused by the removal of
-> > the setting of bio->bi_bdev, which would previously be set to NULL.
-> > If I add:
-> 
-> Very odd.  For one I would expect it to be NULL anyway, second
-> I don't see why the behavior changed.  But given that this reverts
-> to the original assignment and makes things work I'll happily hack it
-> to get things working again:
-> 
-> Acked-by: Christoph Hellwig <hch@lst.de>
-
-Yeah, I'm not sure I understand this either, apart from the change
-adjusting the code to effectively do what it used to and making the
-test case work.  I'm reluctant to cc: stable yet, let me look at this
-a bit more and I'll post the actual patch soon.
-
--Ewan
 
 
+
+On 11/29/2016 04:45 PM, John Garry wrote:
+> From: Xiaofei Tan <tanxiaofei@huawei.com>
+>
+> This patch addresses 4 problems in the module probe/remove:
+> - When hisi_sas_shost_alloc() fails after we alloc shost memory,
+> we should free shost memory before the function returns.
+> - When hisi_sas_probe() fails after we alloc the HBA memories,
+> we should also free the HBA memories.
+> - We should free shost memory at the end of hisi_sas_remove().
+> - sha->core.shost is set twice, so remove extra set.
+>
+> Signed-off-by: Xiaofei Tan <tanxiaofei@huawei.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Quentin Lambert <lambert.quentin@gmail.com>
+>
+> diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> index 6d6f150..d50e9cf 100644
+> --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
+> +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+> @@ -1412,8 +1412,10 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+>   	struct clk *refclk;
+>   
+>   	shost = scsi_host_alloc(&hisi_sas_sht, sizeof(*hisi_hba));
+> -	if (!shost)
+> -		goto err_out;
+> +	if (!shost) {
+> +		dev_err(dev, "scsi host alloc failed\n");
+> +		return NULL;
+> +	}
+>   	hisi_hba = shost_priv(shost);
+>   
+>   	hisi_hba->hw = hw;
+> @@ -1477,6 +1479,7 @@ static struct Scsi_Host *hisi_sas_shost_alloc(struct platform_device *pdev,
+>   
+>   	return shost;
+>   err_out:
+> +	kfree(shost);
+>   	dev_err(dev, "shost alloc failed\n");
+>   	return NULL;
+>   }
+> @@ -1503,10 +1506,8 @@ int hisi_sas_probe(struct platform_device *pdev,
+>   	int rc, phy_nr, port_nr, i;
+>   
+>   	shost = hisi_sas_shost_alloc(pdev, hw);
+> -	if (!shost) {
+> -		rc = -ENOMEM;
+> -		goto err_out_ha;
+> -	}
+> +	if (!shost)
+> +		return -ENOMEM;
+>   
+>   	sha = SHOST_TO_SAS_HA(shost);
+>   	hisi_hba = shost_priv(shost);
+> @@ -1516,12 +1517,13 @@ int hisi_sas_probe(struct platform_device *pdev,
+>   
+>   	arr_phy = devm_kcalloc(dev, phy_nr, sizeof(void *), GFP_KERNEL);
+>   	arr_port = devm_kcalloc(dev, port_nr, sizeof(void *), GFP_KERNEL);
+> -	if (!arr_phy || !arr_port)
+> -		return -ENOMEM;
+> +	if (!arr_phy || !arr_port) {
+> +		rc = -ENOMEM;
+> +		goto err_out_ha;
+> +	}
+>   
+>   	sha->sas_phy = arr_phy;
+>   	sha->sas_port = arr_port;
+> -	sha->core.shost = shost;
+>   	sha->lldd_ha = hisi_hba;
+>   
+>   	shost->transportt = hisi_sas_stt;
+> @@ -1566,6 +1568,7 @@ int hisi_sas_probe(struct platform_device *pdev,
+>   err_out_register_ha:
+>   	scsi_remove_host(shost);
+>   err_out_ha:
+> +	hisi_sas_free(hisi_hba);
+>   	kfree(shost);
+>   	return rc;
+>   }
+> @@ -1575,12 +1578,14 @@ int hisi_sas_remove(struct platform_device *pdev)
+>   {
+>   	struct sas_ha_struct *sha = platform_get_drvdata(pdev);
+>   	struct hisi_hba *hisi_hba = sha->lldd_ha;
+> +	struct Scsi_Host *shost = sha->core.shost;
+>   
+>   	scsi_remove_host(sha->core.shost);
+>   	sas_unregister_ha(sha);
+>   	sas_remove_host(sha->core.shost);
+>   
+>   	hisi_sas_free(hisi_hba);
+> +	kfree(shost);
+>   	return 0;
+>   }
+>   EXPORT_SYMBOL_GPL(hisi_sas_remove);
