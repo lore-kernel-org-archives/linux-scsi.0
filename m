@@ -1,63 +1,56 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 00/11] Updates for scsi-next
-Date: Fri, 2 Dec 2016 15:40:07 +0100
-Message-ID: <427adff7-c6ce-257c-7e6b-3925b0aaff61@redhat.com>
-References: <1480687648-36380-1-git-send-email-sasikumar.pc@broadcom.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH] mpt3sas: switch to pci_alloc_irq_vectors
+Date: Fri, 2 Dec 2016 15:45:50 +0100
+Message-ID: <300db668-b679-3a2b-2f0b-cce50f645bde@suse.de>
+References: <1480679607-79306-1-git-send-email-hare@suse.de>
+ <20161202143036.GB31264@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1480687648-36380-1-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, sumit.saxena@broadcom.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:55157 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752602AbcLBOpy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 09:45:54 -0500
+In-Reply-To: <20161202143036.GB31264@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 2.12.2016 15:07, Sasikumar Chandrasekaran wrote:
-> Sasikumar Chandrasekaran (11):
->   megaraid_sas: Add new pci device Ids for SAS3.5 Generic Megaraid
->     Controllers
->   megaraid_sas: 128 MSIX Support
->   megaraid_sas: EEDP Escape Mode Support for SAS3.5 Generic Megaraid
->     Controllers
->   megaraid_sas: SAS3.5 Generic Megaraid Controllers Stream Detection and
->     IO Coalescing
->   megaraid_sas: SAS3.5 Generic Megaraid Controllers Fast Path for RAID
->     1/10 Writes
->   megaraid_sas: Dynamic Raid Map Changes for SAS3.5 Generic Megaraid
->     Controllers
->   megaraid_sas: Add the Support for SAS3.5 Generic Megaraid Controllers
->     Capabilities
->   megaraid_sas: Enable or Disable Fast path based on the PCI Threshold
->     Bandwidth
->   megaraid_sas: ldio_outstanding variable is not decremented in
->     completion path
->   megaraid_sas: Implement the PD Map support for SAS3.5 Generic Megaraid
->     Controllers
->   megaraid_sas: driver version upgrade
+On 12/02/2016 03:30 PM, Christoph Hellwig wrote:
+>> +static inline u16
+>>  _base_get_msix_index(struct MPT3SAS_ADAPTER *ioc)
+>>  {
+>> +	return pci_irq_get_affinity_vector(ioc->pdev, raw_smp_processor_id());
+>>  }
 >
->  drivers/scsi/megaraid/megaraid_sas.h        | 139 ++++--
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 242 +++++++---
->  drivers/scsi/megaraid/megaraid_sas_fp.c     | 319 +++++++++++--
->  drivers/scsi/megaraid/megaraid_sas_fusion.c | 687 ++++++++++++++++++++++++----
->  drivers/scsi/megaraid/megaraid_sas_fusion.h | 318 ++++++++++++-
->  5 files changed, 1474 insertions(+), 231 deletions(-)
+> This looks extremely sketchy. Are we guaranteed to always have enough
+> MSI-X vectors that each CPU has it's own?  I'd much prefer to keep the
+> indirection array of the existing code.
 >
-Hi Sasikumar,
+Hmm. Okay. will be doing so.
 
-pleas run the scripts/checkpatch.pl script on your patch before sending,
-it shows errors like this one
+>> +static int scsih_map_queues(struct Scsi_Host *shost)
+>> +{
+>> +	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+>> +
+>> +	return blk_mq_pci_map_queues(&shost->tag_set, ioc->pdev, 0);
+>> +}
+>
+> Given that mpt3sas only supports a single hardware queue (and doesn't
+> set the nr_hw_queues field) this is pointless and won't have any effect.
+>
+Well, it does, actually.
+But this is part of another patchset enabling 'real' mq support.
+I'll be redoing the patch.
 
-ERROR: DOS line endings
-#80: FILE: drivers/scsi/megaraid/megaraid_sas.h:59:
-+#define PCI_DEVICE_ID_LSI_MECTOR^I^I    0x00D4^M$
+Cheers,
 
->From my point of view there are too many checkpatch issues and the series
-should be fixed.
-
-Also when you resend the series add a version counting string V2 , V3 ...
-to the mail subject so -> "[PATCH V2 00/11] Updates for scsi-next"
-
-
-Thanks,
-Tomas
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
