@@ -1,59 +1,69 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 4/5] qla2xxx: Add Block Multi Queue functionality.
-Date: Fri, 2 Dec 2016 18:27:09 +0000
-Message-ID: <8FDCA427-9261-4A88-BD55-D44A8FF9238D@cavium.com>
-References: <1480537497-16429-1-git-send-email-himanshu.madhani@cavium.com>
- <1480537497-16429-5-git-send-email-himanshu.madhani@cavium.com>
- <20161201102537.GA7894@infradead.org>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: SG does not ignore dxferp (direct io + mmap)
+Date: Fri, 02 Dec 2016 14:29:37 -0500
+Message-ID: <1480706977.28416.189.camel@localhost.localdomain>
+References: <1479752642.19792.43.camel@localhost.localdomain>
+         <20161122083759.xeifuex3xxfimuwz@linux-x5ow.site>
+         <1479839407.28416.21.camel@localhost.localdomain>
+         <CAPrnrPAFSUL4C+N09-BUUm+7e84oxasaHb7-Ej-+8FuYOddRgA@mail.gmail.com>
+         <2146476957.2165908.1479927335303.JavaMail.zimbra@redhat.com>
+         <1479932524.28416.43.camel@localhost.localdomain>
+         <20161125080758.5bh5jkcgvhw3xuvb@linux-x5ow.site>
+         <1194718949.74785.1480096576577.JavaMail.zimbra@redhat.com>
+         <1480523188.28416.94.camel@localhost.localdomain>
+         <yq18trzhink.fsf@sermon.lab.mkp.net> <20161202122133.GA14247@infradead.org>
+         <1480685383.28416.147.camel@localhost.localdomain>
+         <9af9525a-be53-c3ee-6977-dd7aa30385f9@suse.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0046.outbound.protection.outlook.com ([104.47.36.46]:42462
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752243AbcLBS22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Dec 2016 13:28:28 -0500
-In-Reply-To: <20161201102537.GA7894@infradead.org>
-Content-Language: en-US
-Content-ID: <742EBC6B6816804993D03F4995AC9489@namprd07.prod.outlook.com>
+Received: from mx1.redhat.com ([209.132.183.28]:57392 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751618AbcLBT3j (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 14:29:39 -0500
+In-Reply-To: <9af9525a-be53-c3ee-6977-dd7aa30385f9@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>, Laurence Oberman <loberman@redhat.com>, Eyal Ben David <bdeyal@gmail.com>, dgilbert@interlog.com, linux-scsi@vger.kernel.org
 
-T24gMTIvMS8xNiwgMjoyNSBBTSwgIkNocmlzdG9waCBIZWxsd2lnIiA8aGNoQGluZnJhZGVhZC5v
-cmc+IHdyb3RlOg0KDQoNCg0KPj4gLQlwY2lfZGlzYWJsZV9tc2l4KGhhLT5wZGV2KTsNCj4+ICsJ
-cGNpX2ZyZWVfaXJxX3ZlY3RvcnMoaGEtPnBkZXYpOw0KPg0KPlBsZWFzZSBtYWtlIHRoZSBzd2l0
-Y2ggdG8gcGNpX2FsbG9jX2lycV92ZWN0b3JzIC8gcGNpX2ZyZWVfaXJxX3ZlY3RvcnMNCj5hIHNl
-W2FyYXRlIHBhdGNoLg0KDQpBY2suIFdl4oCZbGwgc3BsaXQgdXAgcGF0Y2guIA0KDQo+DQo+PiAr
-CXJldCA9IHBjaV9hbGxvY19pcnFfdmVjdG9ycyhoYS0+cGRldiwNCj4+ICsJCU1JTl9NU0lYX0NP
-VU5ULCBoYS0+bXNpeF9jb3VudCwgUENJX0lSUV9NU0lYKTsNCj4NCj5BbmQgZm9yIHByb3BlciBi
-bGstbXEgc3VwcG9ydCB5b3UgbXVzdCB1c2UgUENJX0lSUV9BRkZJTklUWSB0byBnZXQNCj50aGUg
-YWZmaW5pdHkgcmlnaHQuDQoNCkFjay4gDQoNCj4NCj4+ICAJCS8qIFJlY2FsY3VsYXRlIHF1ZXVl
-IHZhbHVlcyAqLw0KPj4gLQkJaWYgKHFsMnhtcXN1cHBvcnQpIHsNCj4+ICsJCWlmIChoYS0+bXFp
-b2Jhc2UgJiYgcWwyeG1xc3VwcG9ydCkgew0KPg0KPldoZXJlIGlzIHRoYXQgY2hhbmdlIGNvbWlu
-ZyBmcm9tPw0KDQpUaGlzIGNoYW5nZSB3YXMgaW50cm9kdWNlZCBpbiBwcmV2aW91cyBwYXRjaC4g
-DQo+DQo+PiAgCQkJY3B1cyA9IG51bV9vbmxpbmVfY3B1cygpOw0KPj4gIAkJCWhhLT5tYXhfcmVx
-X3F1ZXVlcyA9IChoYS0+bXNpeF9jb3VudCAtIDEgPiBjcHVzKSA/DQo+PiAgCQkJCShjcHVzICsg
-MSkgOiAoaGEtPm1zaXhfY291bnQgLSAxKTsNCj4+IC0JCQloYS0+bWF4X3JzcF9xdWV1ZXMgPSBo
-YS0+bWF4X3JlcV9xdWV1ZXM7DQo+PiAgDQo+PiAgCQkJLyogQVRJT1EgbmVlZHMgMSB2ZWN0b3Iu
-IFRoYXQncyAxIGxlc3MgUVBhaXIgKi8NCj4+ICAJCQlpZiAoUUxBX1RHVF9NT0RFX0VOQUJMRUQo
-KSkNCj4+ICAJCQkJaGEtPm1heF9yZXFfcXVldWVzLS07DQo+DQo+QW5kIGRvbid0IGRvIHlvdXIg
-b3duIGxvb2sgYXQgb25saW5lIGNwdXMgYW5kIHF1ZXVlIHNwcmVhZGluZywgdGhhdCdzDQo+d2hh
-dCBQQ0lfSVJRX0FGRklOSVRZIGFuZCBibGtfbXFfcGNpX21hcF9xdWV1ZXMgYXJlIGZvci4NCg0K
-V2XigJlsbCB1cGRhdGUgcGF0Y2ggd2l0aCB0aGUgcmVjb21tZW5kYXRpb24uIA0KDQo+DQo+PiAg
-CQkgICAgIk1TSTogRW5hYmxlZC5cbiIpOw0KPj4gQEAgLTMyNzMsMTEgKzMyNjEsMTAgQEAgc3Ry
-dWN0IHFsYV9pbml0X21zaXhfZW50cnkgew0KPj4gIA0KPj4gIAlpZiAoaGEtPmZsYWdzLm1zaXhf
-ZW5hYmxlZCkNCj4+ICAJCXFsYTI0eHhfZGlzYWJsZV9tc2l4KGhhKTsNCj4+IC0JZWxzZSBpZiAo
-aGEtPmZsYWdzLm1zaV9lbmFibGVkKSB7DQo+PiAtCQlmcmVlX2lycShoYS0+cGRldi0+aXJxLCBy
-c3ApOw0KPj4gLQkJcGNpX2Rpc2FibGVfbXNpKGhhLT5wZGV2KTsNCj4+IC0JfSBlbHNlDQo+PiAt
-CQlmcmVlX2lycShoYS0+cGRldi0+aXJxLCByc3ApOw0KPj4gKwllbHNlIHsNCj4+ICsJCWZyZWVf
-aXJxKHBjaV9pcnFfdmVjdG9yKGhhLT5wZGV2LCAwKSwgcnNwKTsNCj4+ICsJCXBjaV9mcmVlX2ly
-cV92ZWN0b3JzKGhhLT5wZGV2KTsNCj4+ICsJfQ0KPg0KPlBsZWFzZSBhbHNvIGtpbGwgb2ZmIHFs
-YTI0eHhfZGlzYWJsZV9tc2l4LCBhbmQgaGF2ZSBhIHNpbmdsZQ0KPmNhbGxzaXRlIHRoYXQgaXRl
-cmF0ZXMgb3ZlciBhbGwgdmVjdG9ycyBhbmQgZmluYWxseSBjYWxscw0KPnBjaV9mcmVlX2lycV92
-ZWN0b3JzLg0KDQpBY2suIFdl4oCZbGwgdXBkYXRlIGluIHJldmlzZWQgcGF0Y2guDQoNCj4NCj4+
-IC0JaWYgKHFsMnhtcXN1cHBvcnQpIHsNCj4+ICsJaWYgKHFsMnhtcXN1cHBvcnQgJiYgaGEtPm1h
-eF9xcGFpcnMpIHsNCj4NCj5XaGVyZSBkb2VzIHRoaXMgY29tZSBmcm9tPw0KDQpUaGlzIHdhcyBp
-bnRyb2R1Y2VkIGluIGVhcmxpZXIgcGF0Y2ggDQoNCj4NCg==
+On Fri, 2016-12-02 at 15:10 +0100, Hannes Reinecke wrote:
+> On 12/02/2016 02:29 PM, Ewan D. Milne wrote:
+> > On Fri, 2016-12-02 at 04:21 -0800, Christoph Hellwig wrote:
+> >> On Thu, Dec 01, 2016 at 08:40:31AM -0500, Martin K. Petersen wrote:
+> >>> Specifically, the problem appears to be caused by the removal of
+> >>> the setting of bio->bi_bdev, which would previously be set to NULL.
+> >>> If I add:
+> >>
+> >> Very odd.  For one I would expect it to be NULL anyway, second
+> >> I don't see why the behavior changed.  But given that this reverts
+> >> to the original assignment and makes things work I'll happily hack it
+> >> to get things working again:
+> >>
+> >> Acked-by: Christoph Hellwig <hch@lst.de>
+> >
+> > Yeah, I'm not sure I understand this either, apart from the change
+> > adjusting the code to effectively do what it used to and making the
+> > test case work.  I'm reluctant to cc: stable yet, let me look at this
+> > a bit more and I'll post the actual patch soon.
+> >
+> Plus we found that this is basically a timing issue; we've found that 
+> supposedly fixed bugs will crop up after ~4k iterations.
+> (Johannes did a _lot_ of testing here :-)
+> So just because the bug failed to materialize can also mean that you 
+> simply didn't test long enough.
+> 
+Yes, and following the code paths it isn't completely clear how this
+leads to the single zero-byte corruption, I am continuing to investigate.
+There may very well be more than one problem.
+
+On kernel versions I tested where I got a failure it was a solid
+failure, it never worked no matter how many times I tried, but I
+did not exhaustively test apparently successful kernel versions.
+Not thousands, of times, anyway.
+
+-Ewan
+
+
