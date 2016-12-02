@@ -1,13 +1,13 @@
 From: Juergen Gross <jgross@suse.com>
 Subject: [PATCH v2] xen/scsifront: don't request a slot on the ring until request is ready
-Date: Fri,  2 Dec 2016 07:10:54 +0100
-Message-ID: <20161202061054.14402-1-jgross@suse.com>
+Date: Fri,  2 Dec 2016 07:13:51 +0100
+Message-ID: <20161202061351.14495-1-jgross@suse.com>
 References: <20161125202650.GK6266@mwanda>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <20161125202650.GK6266@mwanda>
 Sender: linux-kernel-owner@vger.kernel.org
 To: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Cc: boris.ostrovsky@oracle.com, lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.peter^Cn@oracle.com, Juergen Gross <jgross@suse.com>
+Cc: boris.ostrovsky@oracle.com, lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.peter@oracle.com, Juergen Gross <jgross@suse.com>
 List-Id: linux-scsi@vger.kernel.org
 
 Instead of requesting a new slot on the ring to the backend early, do
@@ -17,6 +17,8 @@ allocation and ring slot allocation.
 
 Suggested-by: Jan Beulich <jbeulich@suse.com>
 Signed-off-by: Juergen Gross <jgross@suse.com>
+---
+Resend with corrected mail address for Martin Peter
 ---
  drivers/scsi/xen-scsifront.c | 190 +++++++++++++++++++------------------------
  1 file changed, 84 insertions(+), 106 deletions(-)
