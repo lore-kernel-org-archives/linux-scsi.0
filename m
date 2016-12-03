@@ -1,203 +1,100 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 3/6] qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.
-Date: Fri, 2 Dec 2016 13:44:54 -0800
-Message-ID: <1480715097-13611-4-git-send-email-himanshu.madhani@cavium.com>
-References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCHv3] hpsa: fallback to use legacy REPORT PHYS command
+Date: Sat, 3 Dec 2016 00:36:32 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D1941807694@avsrvexchmbx1.microsemi.net>
+References: <1480674973-118250-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0085.outbound.protection.outlook.com ([104.47.36.85]:51184
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0064.outbound.protection.outlook.com ([104.47.34.64]:6864
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751033AbcLCAVq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 2 Dec 2016 19:21:46 -0500
-In-Reply-To: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
+        id S1753080AbcLCAgr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 2 Dec 2016 19:36:47 -0500
+In-Reply-To: <1480674973-118250-1-git-send-email-hare@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.de]
+> Sent: Friday, December 02, 2016 4:36 AM
+> To: Martin K. Petersen
+> Cc: Christoph Hellwig; James Bottomley; Don Brace; linux-
+> scsi@vger.kernel.org; Hannes Reinecke; Hannes Reinecke
+> Subject: [PATCHv3] hpsa: fallback to use legacy REPORT PHYS command
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> Older SmartArray controllers (eg SmartArray 64xx) do
+> not support the extended REPORT PHYS command, so
+> fallback to use the legacy version here.
+>=20
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/hpsa.c | 28 ++++++++++++++++++++++++++--
+>  1 file changed, 26 insertions(+), 2 deletions(-)
+>=20
+> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> index 216c137..3783ef6 100644
+> --- a/drivers/scsi/hpsa.c
+> +++ b/drivers/scsi/hpsa.c
+> @@ -3640,8 +3640,32 @@ static int hpsa_scsi_do_report_luns(struct
+> ctlr_info *h, int logical,
+>  static inline int hpsa_scsi_do_report_phys_luns(struct ctlr_info *h,
+>                 struct ReportExtendedLUNdata *buf, int bufsize)
+>  {
+> -       return hpsa_scsi_do_report_luns(h, 0, buf, bufsize,
+> -                                               HPSA_REPORT_PHYS_EXTENDED=
+);
+> +       int rc;
+> +       struct ReportLUNdata *lbuf;
+> +
+> +       rc =3D hpsa_scsi_do_report_luns(h, 0, buf, bufsize,
+> +                                     HPSA_REPORT_PHYS_EXTENDED);
+> +       if (!rc || !hpsa_allow_any)
+> +               return rc;
+> +
+> +       /* REPORT PHYS EXTENDED is not supported */
+> +       lbuf =3D kzalloc(sizeof(*lbuf), GFP_KERNEL);
+> +       if (!lbuf)
+> +               return -ENOMEM;
+> +
+> +       rc =3D hpsa_scsi_do_report_luns(h, 0, lbuf, sizeof(*lbuf), 0);
+> +       if (!rc) {
+> +               int i;
+> +               u32 nphys;
+> +
+> +               /* Copy ReportLUNdata header */
+> +               memcpy(buf, lbuf, 8);
+> +               nphys =3D be32_to_cpu(*((__be32 *)lbuf->LUNListLength)) /=
+ 8;
+> +               for (i =3D 0; i < nphys; i++)
+> +                       memcpy(buf->LUN[i].lunid, lbuf->LUN[i], 8);
+> +       }
+> +       kfree(lbuf);
+> +       return rc;
+>  }
+>=20
+>  static inline int hpsa_scsi_do_report_log_luns(struct ctlr_info *h,
+> --
+> 1.8.5.6
 
-Replaces the old pci_enable_msi[x]* and pci_disable_msi[x] calls.
+Acked-by: Don Brace <don.brace@microsemi.com>
 
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_def.h |  1 +
- drivers/scsi/qla2xxx/qla_isr.c | 81 +++++++++++++++---------------------------
- 2 files changed, 30 insertions(+), 52 deletions(-)
+Note: there has been zero testing on our end of these ancient controllers w=
+ith the hpsa driver.
+While it might work there is no official support from either us or HPE on t=
+his configuration.
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 9a6ddcb..53021b5 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2748,6 +2748,7 @@ struct qla_msix_entry {
- 	uint32_t vector;
- 	uint16_t entry;
- 	struct rsp_que *rsp;
-+	void *handle;
- 	struct irq_affinity_notify irq_notify;
- 	int cpuid;
- };
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 19f1848..16e7601 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3025,52 +3025,17 @@ struct qla_init_msix_entry {
- 	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
- };
- 
--static void
--qla24xx_disable_msix(struct qla_hw_data *ha)
--{
--	int i;
--	struct qla_msix_entry *qentry;
--	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
--
--	for (i = 0; i < ha->msix_count; i++) {
--		qentry = &ha->msix_entries[i];
--		if (qentry->have_irq) {
--			/* un-register irq cpu affinity notification */
--			irq_set_affinity_notifier(qentry->vector, NULL);
--			free_irq(qentry->vector, qentry->rsp);
--		}
--	}
--	pci_disable_msix(ha->pdev);
--	kfree(ha->msix_entries);
--	ha->msix_entries = NULL;
--	ha->flags.msix_enabled = 0;
--	ql_dbg(ql_dbg_init, vha, 0x0042,
--	    "Disabled the MSI.\n");
--}
--
- static int
- qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- {
- #define MIN_MSIX_COUNT	2
- #define ATIO_VECTOR	2
- 	int i, ret;
--	struct msix_entry *entries;
- 	struct qla_msix_entry *qentry;
- 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
- 
--	entries = kzalloc(sizeof(struct msix_entry) * ha->msix_count,
--			GFP_KERNEL);
--	if (!entries) {
--		ql_log(ql_log_warn, vha, 0x00bc,
--		    "Failed to allocate memory for msix_entry.\n");
--		return -ENOMEM;
--	}
--
--	for (i = 0; i < ha->msix_count; i++)
--		entries[i].entry = i;
--
--	ret = pci_enable_msix_range(ha->pdev,
--				    entries, MIN_MSIX_COUNT, ha->msix_count);
-+	ret = pci_alloc_irq_vectors(ha->pdev,
-+	    MIN_MSIX_COUNT, ha->msix_count, PCI_IRQ_MSIX|PCI_IRQ_AFFINITY);
- 	if (ret < 0) {
- 		ql_log(ql_log_fatal, vha, 0x00c7,
- 		    "MSI-X: Failed to enable support, "
-@@ -3097,10 +3062,10 @@ struct qla_init_msix_entry {
- 
- 	for (i = 0; i < ha->msix_count; i++) {
- 		qentry = &ha->msix_entries[i];
--		qentry->vector = entries[i].vector;
--		qentry->entry = entries[i].entry;
-+		qentry->vector = pci_irq_vector(ha->pdev, i);
-+		qentry->entry = i;
- 		qentry->have_irq = 0;
--		qentry->rsp = NULL;
-+		qentry->handle = NULL;
- 		qentry->irq_notify.notify  = qla_irq_affinity_notify;
- 		qentry->irq_notify.release = qla_irq_affinity_release;
- 		qentry->cpuid = -1;
-@@ -3109,7 +3074,7 @@ struct qla_init_msix_entry {
- 	/* Enable MSI-X vectors for the base queue */
- 	for (i = 0; i < 2; i++) {
- 		qentry = &ha->msix_entries[i];
--		qentry->rsp = rsp;
-+		qentry->handle = rsp;
- 		rsp->msix = qentry;
- 		if (IS_P3P_TYPE(ha))
- 			ret = request_irq(qentry->vector,
-@@ -3142,7 +3107,7 @@ struct qla_init_msix_entry {
- 	 */
- 	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
- 		qentry = &ha->msix_entries[ATIO_VECTOR];
--		qentry->rsp = rsp;
-+		qentry->handle = rsp;
- 		rsp->msix = qentry;
- 		ret = request_irq(qentry->vector,
- 			qla83xx_msix_entries[ATIO_VECTOR].handler,
-@@ -3155,7 +3120,7 @@ struct qla_init_msix_entry {
- 		ql_log(ql_log_fatal, vha, 0x00cb,
- 		    "MSI-X: unable to register handler -- %x/%d.\n",
- 		    qentry->vector, ret);
--		qla24xx_disable_msix(ha);
-+		qla2x00_free_irqs(vha);
- 		ha->mqenable = 0;
- 		goto msix_out;
- 	}
-@@ -3177,7 +3142,6 @@ struct qla_init_msix_entry {
- 	    ha->mqiobase, ha->max_rsp_queues, ha->max_req_queues);
- 
- msix_out:
--	kfree(entries);
- 	return ret;
- }
- 
-@@ -3230,7 +3194,7 @@ struct qla_init_msix_entry {
- 	    !IS_QLA27XX(ha))
- 		goto skip_msi;
- 
--	ret = pci_enable_msi(ha->pdev);
-+	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
- 	if (!ret) {
- 		ql_dbg(ql_dbg_init, vha, 0x0038,
- 		    "MSI: Enabled.\n");
-@@ -3275,6 +3239,8 @@ struct qla_init_msix_entry {
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct rsp_que *rsp;
-+	struct qla_msix_entry *qentry;
-+	int i;
- 
- 	/*
- 	 * We need to check that ha->rsp_q_map is valid in case we are called
-@@ -3284,13 +3250,24 @@ struct qla_init_msix_entry {
- 		return;
- 	rsp = ha->rsp_q_map[0];
- 
--	if (ha->flags.msix_enabled)
--		qla24xx_disable_msix(ha);
--	else if (ha->flags.msi_enabled) {
--		free_irq(ha->pdev->irq, rsp);
--		pci_disable_msi(ha->pdev);
--	} else
--		free_irq(ha->pdev->irq, rsp);
-+	if (ha->flags.msix_enabled) {
-+		for (i = 0; i < ha->msix_count; i++) {
-+			qentry = &ha->msix_entries[i];
-+			if (qentry->have_irq) {
-+				irq_set_affinity_notifier(qentry->vector, NULL);
-+				free_irq(pci_irq_vector(ha->pdev, i), qentry->handle);
-+			}
-+		}
-+		kfree(ha->msix_entries);
-+		ha->msix_entries = NULL;
-+		ha->flags.msix_enabled = 0;
-+		ql_dbg(ql_dbg_init, vha, 0x0042,
-+			"Disabled MSI-X.\n");
-+	} else {
-+		free_irq(pci_irq_vector(ha->pdev, 0), rsp);
-+	}
-+
-+	pci_free_irq_vectors(ha->pdev);
- }
- 
- 
--- 
-1.8.3.1
+Thanks,
+Don Brace
+ESC - Smart Storage
+Microsemi Corporation
+
+
 
