@@ -1,45 +1,51 @@
-From: Pan Bian <bianpan201604@163.com>
-Subject: [PATCH 1/1] scsi: snic: fix improper return value
-Date: Sun,  4 Dec 2016 14:02:41 +0800
-Message-ID: <1480831361-5234-1-git-send-email-bianpan201604@163.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Sun, 04 Dec 2016 20:22:03 +0000
+Message-ID: <bug-151631-11613-Stf3R8ZvJH@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from m50-132.163.com ([123.125.50.132]:58765 "EHLO m50-132.163.com"
+Received: from mail.kernel.org ([198.145.29.136]:59072 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751110AbcLDGE3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 4 Dec 2016 01:04:29 -0500
+        id S1750979AbcLDUWH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 4 Dec 2016 15:22:07 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 87D20202BE
+        for <linux-scsi@vger.kernel.org>; Sun,  4 Dec 2016 20:22:05 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id 7888020272
+        for <linux-scsi@vger.kernel.org>; Sun,  4 Dec 2016 20:22:03 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Narsimhulu Musini <nmusini@cisco.com>, Sesidhar Baddela <sebaddel@cisco.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+To: linux-scsi@vger.kernel.org
 
-From: Pan Bian <bianpan2016@163.com>
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-When the calls to mempool_create_slab_pool() return unexpected values,
-the value of return variable ret is 0. 0 means no error. Thus, the
-caller of fnic_probe() cannot detect the error, and may be misled. This
-patch fixes the bug, assigning "-ENOMEM" to ret before calling
-mempool_create_slab_pool().
+Rich <fr0@bitservices.org.uk> changed:
 
-Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=189061
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |fr0@bitservices.org.uk
 
-Signed-off-by: Pan Bian <bianpan2016@163.com>
----
- drivers/scsi/snic/snic_main.c | 1 +
- 1 file changed, 1 insertion(+)
+--- Comment #7 from Rich <fr0@bitservices.org.uk> ---
+Very similar (if not same) problem happening on my works PC - a Dell Precision
+T1700. I will try and get a screenshot and add it to this thread.
 
-diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-index 396b32d..e8907e6 100644
---- a/drivers/scsi/snic/snic_main.c
-+++ b/drivers/scsi/snic/snic_main.c
-@@ -586,6 +586,7 @@
- 	for (i = 0; i < SNIC_IO_LOCKS; i++)
- 		spin_lock_init(&snic->io_req_lock[i]);
- 
-+	ret = -ENOMEM;
- 	pool = mempool_create_slab_pool(2,
- 				snic_glob->req_cache[SNIC_REQ_CACHE_DFLT_SGL]);
- 	if (!pool) {
+The problem began with Kernel 4.8.6 and is still present (currently running
+Kernel 4.8.11).
+
+Very annoying on shutdown. I have absolutely no idea if the disks' cache is
+actually flushing or not - so data integrity is a concern. Its a magnetic disk
+and I have been running fsck on it regularly (no issues found as of yet) and
+been avoiding shutting the PC down.
+
+Point of this comment: Its still an issue on some PCs. Anyone else finding the
+same?
+
 -- 
-1.9.1
-
-
+You are receiving this mail because:
+You are the assignee for the bug.
