@@ -1,33 +1,34 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mvsas: Replace pci_pool_alloc by pci_pool_zalloc
-Date: Mon, 05 Dec 2016 17:04:13 -0500
-Message-ID: <yq1bmwqvxr6.fsf@sermon.lab.mkp.net>
-References: <20161128112626.GA31859@gnr743-HP-ZBook-15>
-        <CAFqt6zbQn4YivsKG3X5Y2OWK92LaUk5nbe+oUheF111ZONULOw@mail.gmail.com>
-        <CAFqt6zbx45Gx4fN4Hv6PZLGsQB8FEK=mjxwAYVNDEpKbOZR+7g@mail.gmail.com>
+Subject: Re: [PATCH] scsi: hpsa: use %phN for short hex dumps
+Date: Mon, 05 Dec 2016 17:06:05 -0500
+Message-ID: <yq17f7evxo2.fsf@sermon.lab.mkp.net>
+References: <1480545348-32669-1-git-send-email-linux@rasmusvillemoes.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:19098 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:20109 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752602AbcLEWE2 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 17:04:28 -0500
-In-Reply-To: <CAFqt6zbx45Gx4fN4Hv6PZLGsQB8FEK=mjxwAYVNDEpKbOZR+7g@mail.gmail.com>
-        (Souptick Joarder's message of "Mon, 5 Dec 2016 11:56:22 +0530")
+        with ESMTP id S1751998AbcLEWGQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 17:06:16 -0500
+In-Reply-To: <1480545348-32669-1-git-send-email-linux@rasmusvillemoes.dk>
+        (Rasmus Villemoes's message of "Wed, 30 Nov 2016 23:35:47 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Rameshwar Sahu <sahu.rameshwar73@gmail.com>, linux-scsi@vger.kernel.org
+To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Souptick" == Souptick Joarder <jrdr.linux@gmail.com> writes:
+>>>>> "Rasmus" == Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
 
-Souptick,
+Rasmus> Passing one instead of 8 or 16 arguments reduces the size of the
+Rasmus> generated code somewhat:
 
-Souptick> Any comment on this patch?
+Rasmus> add/remove: 2/3 grow/shrink: 1/4 up/down: 1772/-2137 (-365)
 
-The patch looked OK to me when you posted it. However, you need one
-person in addition to me to review it. And you need convince us of the
-merit of a presumably untested change to an unmaintained driver.
+Rasmus> There's one more candidate, unique_id_show, but that uses %02X,
+Rasmus> and I'm not sure it would be ok to start using lowercase there,
+Rasmus> so I've left it alone for now.
+
+Applied to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
