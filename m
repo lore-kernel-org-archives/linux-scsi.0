@@ -1,45 +1,87 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v3 4/6] qla2xxx: Add multiple queue pair functionality.
-Date: Mon, 5 Dec 2016 04:59:08 -0800
-Message-ID: <20161205125908.GC23221@infradead.org>
-References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
- <1480715097-13611-5-git-send-email-himanshu.madhani@cavium.com>
- <64bf8c12-c086-2531-8510-27a95f8f0ef1@suse.de>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: scsi: use-after-free in bio_copy_from_iter
+Date: Mon, 5 Dec 2016 15:31:43 +0100
+Message-ID: <CACT4Y+Z4V=9nm04H-uyy0tA4yXLp7Ld7dqgjLiA5_opeQC_m6A@mail.gmail.com>
+References: <CACT4Y+aBd+1pssnsVx2x145n7Q1nDMU=xc7NAiOCtpy-MA-EDg@mail.gmail.com>
+ <CACT4Y+auCpJbXhmxbr4OmSHbiVkatyWmDxGGShs=WvO=HCXRKA@mail.gmail.com>
+ <20161203103802.dmvqzzquthwa7kd7@linux-x5ow.site> <CACT4Y+bB+oxjPoC0WVCUV_Bq9ePqdV3m_V4snsfUrZ2BSWub2Q@mail.gmail.com>
+ <20161203181948.GA3322@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:60931 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751086AbcLEM7K (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 07:59:10 -0500
-Content-Disposition: inline
-In-Reply-To: <64bf8c12-c086-2531-8510-27a95f8f0ef1@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20161203181948.GA3322@linux-x5ow.site>
+Sender: linux-block-owner@vger.kernel.org
+To: syzkaller <syzkaller@googlegroups.com>
+Cc: Doug Gilbert <dgilbert@interlog.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, axboe@kernel.dk, linux-block@vger.kernel.org, David Rientjes <rientjes@google.com>, Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-[Hannes, can you please stop the damn full quotes?  reading your answers
-is a major pain]
+On Sat, Dec 3, 2016 at 7:19 PM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+> On Sat, Dec 03, 2016 at 04:22:39PM +0100, Dmitry Vyukov wrote:
+>> On Sat, Dec 3, 2016 at 11:38 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
+>> > On Fri, Dec 02, 2016 at 05:50:39PM +0100, Dmitry Vyukov wrote:
+>> >> On Fri, Nov 25, 2016 at 8:08 PM, Dmitry Vyukov <dvyukov@google.com> wrote:
+>
+> [...]
+>
+> Hi Dmitry,
+>
+>>
+>> Thanks for looking into this!
+>>
+>> As I noted I don't think this is use-after-free, more likely it is an
+>> out-of-bounds access against non-slab range.
+>>
+>> Report says that we are copying 0x1000 bytes starting at 0xffff880062c6e02a.
+>> The first bad address is 0xffff880062c6f000, this address was freed
+>> previously and that's why KASAN reports UAF.
+>
+> We're copying 65499 bytes (65535 - sizeof(sg_header)) and we've got 2 order 3
+> page allocations to do this. It fails somewhere in there. I have seen fails at
+> 0x2000, 0xe000 and all (0x1000 aligned) offsets inbetween.
+>
+>> But this is already next page, and KASAN does not insert redzones
+>> around pages (only around slab allocations).
+>> So most likely the code should have not touch 0xffff880062c6f000 as it
+>> is not his memory.
+>> Also I noticed that the report happens after few minutes of repeatedly
+>> running this program, so I would expect that this is some kind of race
+>> -- either between kernel threads, or maybe between user space threads
+>> and kernel.
+>
+> I somehow think it's a race as well, especially as I have to run the
+> reproducer in an endless loop and break out of it once I have the 1st
+> stacktrace in dmesg. This takes between some minutes up to one hour on my
+> setup.
+>
+> But the race against a userspace thread... Could it be that the reproducer has
+> already exited it's threads while the copy_from_iter() is still running?
+> Normally I'd say no, as user-space shouldn't run while the kernel is doing
+> things in it's address space, but this is highly suspicious.
+>
+>> Or maybe it's just that the next page is not always marked
+>> as free, so we just don't detect the bad access.
+>
+> Could be, but I lack the memory management knowledge to say more than a 'could
+> be'.
+>
+>>
+>> Does it all make any sense to you?
+>> Can you think of any additional sanity checks that will ensure that
+>> this code copies only memory it owns?
+>
+> Given that we pass the 0xffff as dxfer_len it thinks it owns all memory, so
+> this is OK, kinda. All that could be would be that user-space has already
+> exited and thus it's memory is already freed.
 
-> Have you modified the irq affinity for this?
-> Typically the irq-affinity changes will treat all vectors identically,
-> and spread them out across the available CPUS.
-> But with this layout vector '0' apparently is the MB irq vector, and as
-> such should _not_ be treated like the others wrt irq affinity, but
-> rather left alone.
-> Christoph put in some changes for that, but they'll be coming in via the
-> tip tree, so not sure if Martin has already taken them in.
-> But in either way, you should be using them to get the irq affinity
-> layout correctly.
 
-The changes are here:
+The crash happens in the context of sendfile syscall, we the address
+space should be alive. But the crash happens on address
+0xffff880062c6f000 which is not a user-space address, right? This is
+something that kernel has allocated previously.
+Do you have CONFIG_DEBUG_PAGEALLOC enabled? I have it enabled. Maybe
+it increases changes of triggering the bug.
 
-https://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/log/?h=irq/for-block
-
-I don't think they are in the SCSI tree yet as I haven't gotten a reply
-to the lpfc conversion yet.  But that conversion is here for reference:
-
-http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/lpfc-msix
-
-qla2xxx would need to use pre_vectors instead of post_vectors, though.
+Do we know where that memory that we are copying was allocated? Is it
+slab or page alloc? We could extend KASAN output with more details.
+E.g. print allocation stack for the _first_ byte of memcpy, or
+memorize page alloc/free stacks in page struct using lib/stackdepot.c.
