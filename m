@@ -1,71 +1,97 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v3 4/6] qla2xxx: Add multiple queue pair functionality.
-Date: Mon, 5 Dec 2016 22:41:07 +0000
-Message-ID: <41A47AE3-F5DE-4AA6-8767-C0C817E985C6@cavium.com>
-References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
- <1480715097-13611-5-git-send-email-himanshu.madhani@cavium.com>
- <20161205162006.GD11206@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0067.outbound.protection.outlook.com ([104.47.41.67]:49216
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752966AbcLEWzi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Dec 2016 17:55:38 -0500
-In-Reply-To: <20161205162006.GD11206@infradead.org>
-Content-Language: en-US
-Content-ID: <B67A69A4D3062641A34DC548AC2714F0@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nicolai Stange <nicstange@gmail.com>
+Subject: [PATCH] sd: make ->no_write_same independent of reported ->max_ws_blocks
+Date: Tue,  6 Dec 2016 00:56:38 +0100
+Message-ID: <20161205235638.11539-1-nicstange@gmail.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Nicolai Stange <nicstange@gmail.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQoNCk9uIDEyLzUvMTYsIDg6MjAgQU0sICJDaHJpc3RvcGggSGVsbHdpZyIgPGhjaEBpbmZyYWRl
-YWQub3JnPiB3cm90ZToNCg0KPj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvcWxh
-Mnh4eC9xbGFfYm90dG9tLmMNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3Fs
-YTJ4eHgvcWxhX21xLmMNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3FsYTJ4
-eHgvcWxhX3RvcC5jDQo+DQo+V2hhdCdzIHRoZSBwb2ludCBvZiB0aHJlZSBuZXcgZmFpcmx5IHNt
-YWxsIGZpbGVzLCB0d28gb2YgdGhlbSB2ZXJ5DQo+b2RkbHkgbmFtZWQ/ICBDYW4ndCB3ZSBrZWVw
-IHRoZSBjb2RlIHRvZ2V0aGVyIGJ5IGxvZ2ljYWwgZ3JvdXBzPw0KDQpBY2suIFdpbGwgbWVyZ2Ug
-Y29kZSANCg0KPg0KPj4gKwkvKiBkaXN0aWxsIHRoZXNlIGZpZWxkcyBkb3duIHRvICdvbmxpbmU9
-MC8xJw0KPj4gKwkgKiBoYS0+ZmxhZ3MuZWVoX2J1c3kNCj4+ICsJICogaGEtPmZsYWdzLnBjaV9j
-aGFubmVsX2lvX3Blcm1fZmFpbHVyZQ0KPj4gKwkgKiBiYXNlX3ZoYS0+bG9vcF9zdGF0ZQ0KPj4g
-KwkgKi8NCj4+ICsJdWludDMyX3Qgb25saW5lOjE7DQo+PiArCS8qIG1vdmUgdmhhLT5mbGFncy5k
-aWZkaXhfc3VwcG9ydGVkIGhlcmUgKi8NCj4+ICsJdWludDMyX3QgZGlmZGl4X3N1cHBvcnRlZDox
-Ow0KPj4gKwl1aW50MzJfdCBkZWxldGVfaW5fcHJvZ3Jlc3M6MTsNCj4NCj5UaGVzZSBwcm9iYWJs
-eSBzaG91bGQgYmUgYXRvbWljIGJpdG9wcy4NCg0KQWNrLiBXaWxsIHVwZGF0ZSBzZW5kIG91dCBz
-ZXJpZXMuIA0KDQo+DQo+PiArI2RlZmluZSBRTEFfVkhBX01BUktfQlVTWShfX3ZoYSwgX19iYWls
-KSBkbyB7CQlcDQo+PiArCWF0b21pY19pbmMoJl9fdmhhLT52cmVmX2NvdW50KTsJCQlcDQo+PiAr
-CW1iKCk7CQkJCQkJXA0KPj4gKwlpZiAoX192aGEtPmZsYWdzLmRlbGV0ZV9wcm9ncmVzcykgewkJ
-XA0KPj4gKwkJYXRvbWljX2RlYygmX192aGEtPnZyZWZfY291bnQpOwkJXA0KPj4gKwkJX19iYWls
-ID0gMTsJCQkJXA0KPj4gKwl9IGVsc2UgewkJCQkJXA0KPj4gKwkJX19iYWlsID0gMDsJCQkJXA0K
-Pj4gKwl9CQkJCQkJXA0KPj4gIH0gd2hpbGUgKDApDQo+DQo+U29tZXRoaW5nIGxpa2UgdGhpcyBz
-aG91bGQgYmUgYW4gaW5saW5lIGZ1bmN0aW9uLCBub3QgYSBtYWNybw0KPnRoYXQgcmV0dXJucyB0
-aHJvdWdoIGFuIGFyZ3VtZW50Lg0KPg0KPihhbmQgbW92ZSB0byBsb3dlciBjYXNlIGl0IHdoaWxl
-IGF0IGl0LCBwbGVhc2UpLg0KPg0KPkJ0dywgdGhlIHdheSB2cmVmX2NvdW50IGlzIHVzZWQgbG9v
-a3MgaW5jcmVkaWJseSBidWdneSwgaW5zdGVhZA0KPm9mIHRoZSBidXN5IHdhaXQganVzdCBhZGQg
-YSB3YWllIHF1ZXVlIHRvIHNsZWVwIG9uIGluDQo+cWxhMjR4eF9kZWFsbG9jYXRlX3ZwX2lkLg0K
-DQpXZeKAmWxsIHdvcmsgb24gdGhpcyBjaGFuZ2UgYW5kIHBvc3QgYXMgYSBzZXBhcmF0ZSBwYXRj
-aC4NCg0KPg0KPj4gKwlRTEFfUVBBSVJfTUFSS19CVVNZKHFwYWlyLCBiYWlsKTsNCj4+ICsJaWYg
-KHVubGlrZWx5KGJhaWwpKQ0KPj4gKwkJcmV0dXJuIE5VTEw7DQo+PiArDQo+PiArCXNwID0gbWVt
-cG9vbF9hbGxvYyhxcGFpci0+c3JiX21lbXBvb2wsIGZsYWcpOw0KPj4gKwlpZiAoIXNwKQ0KPj4g
-KwkJZ290byBkb25lOw0KPj4gKw0KPj4gKwltZW1zZXQoc3AsIDAsIHNpemVvZigqc3ApKTsNCj4+
-ICsJc3AtPmZjcG9ydCA9IGZjcG9ydDsNCj4+ICsJc3AtPmlvY2JzID0gMTsNCj4NCj5GWUksIHRo
-ZSBibGstbXEgbW9kZWwgd291bGQgYmUgdG8gYWxsb2NhdGUgdGhlIHNycHMgYXMgcGFydCBvZiB0
-aGUNCj5zY3NpX2NtZCBieSBzZXR0aW5nIHRoZSBjbWRfc2l6ZSBmaWVsZCBpbiB0aGUgaG9zdCB0
-ZW1wbGF0ZS4gIE5vdGUNCj50aGF0IHRoaXMgaXMgYWxzbyBzdXBwb3J0ZWQgZm9yIHRoZSBub24t
-YmxrLW1xIHBhdGguDQo+DQo+PiArCXFwYWlyLT5kZWxldGVfaW5fcHJvZ3Jlc3MgPSAxOw0KPj4g
-Kwl3aGlsZSAoYXRvbWljX3JlYWQoJnFwYWlyLT5yZWZfY291bnQpKQ0KPj4gKwkJbXNsZWVwKDUw
-MCk7DQo+DQo+UGxlYXNlIHVzZSBhIHdhaXRxdWV1ZSBpbnN0ZWFkIG9mIGEgYnVzeSB3YWl0IGhl
-cmUgYXMgd2VsbC4NCg0KV2XigJlsbCB3b3JrIG9uIGNsZWFudXAgcGF0Y2ggYXMgc2VwYXJhdGUg
-cGF0Y2guDQoNCj4NCj4+ICtpbnQgcWwyeG1xc3VwcG9ydDsNCj4+ICttb2R1bGVfcGFyYW0ocWwy
-eG1xc3VwcG9ydCwgaW50LCBTX0lSVUdPKTsNCj4+ICtNT0RVTEVfUEFSTV9ERVNDKHFsMnhtcXN1
-cHBvcnQsDQo+PiArCQkiRW5hYmxlIG9uIGRlbWFuZCBtdWx0aXBsZSBxdWV1ZSBwYWlycyBzdXBw
-b3J0ICINCj4+ICsJCSJEZWZhdWx0IGlzIDAgZm9yIG5vIHN1cHBvcnQuICINCj4+ICsJCSJTZXQg
-aXQgdG8gMSB0byB0dXJuIG9uIG1xIHFwYWlyIHN1cHBvcnQuIik7DQo+DQo+V2h5IGlzbid0IHRo
-aXMgZW5hYmxlZCBieSBkZWZhdWx0Pw0KDQpBY2suIFdpbGwgZW5hYmxlIGl0IGJ5IGRlZmF1bHQu
-IA0KDQo+DQo+PiArCQloYS0+cXVldWVfcGFpcl9tYXAgPSBremFsbG9jKHNpemVvZihzdHJ1Y3Qg
-cWxhX3FwYWlyICopDQo+PiArCQkJKiBoYS0+bWF4X3FwYWlycywgR0ZQX0tFUk5FTCk7DQo+DQo+
-VXNlIGtjYWxsb2MgaW5zdGVhZC4NCg0KQWNrLiBXaWxsIHVwZGF0ZSB0aGlzLiANCj4NCg==
+Due to reported problems with Write Same on ATA devices,
+commit 0ce1b18c42a5 ("libata: Some drives failing on SCT Write Same")
+strived to report non-support for Write Same on non-zoned ATA devices.
+
+However, due to the following control flow in sd_config_write_same() this
+doesn't always take effect, namely if the ->max_ws_blocks as set in the
+by the ATA Identify Device exceeds SD_WS10_BLOCKS:
+
+  if (sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS)
+    [...]
+  else if (sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes)
+    [...]
+  else {
+    sdkp->device->no_write_same = 1;
+    sdkp->max_ws_blocks = 0;
+  }
+
+Since commit e73c23ff736e ("block: add async variant of
+blkdev_issue_zeroout"), blkdev_issue_zeroout() got a little bit more
+sensitive towards failing Write Sames on devices that claim to support them
+and this results in messages like
+
+  EXT4-fs (dm-1): Delayed block allocation failed for inode 2625094 at
+                  logical offset 2032 with max blocks 2 with error 121
+  EXT4-fs (dm-1): This should not happen!! Data will be lost
+
+The block limits VPD page of the device in question quotes a value of
+0x3fffc0 > 0xffff == SD_MAX_WS10_BLOCKS for the device in question.
+
+The error code 121 is EREMOTEIO which gets asserted by scsi_io_completion()
+in case of invalid requests due to invalid command opcodes.
+
+Fix this by doing the sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS handling
+only if some kind of Write Same support is reported, i.e. only if
+  sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes
+holds. Let the handling code for the non-support case thus take effect,
+if needed.
+
+Fixes: e73c23ff736e ("block: add async variant of blkdev_issue_zeroout")
+Fixes: 0ce1b18c42a5 ("libata: Some drives failing on SCT Write Same")
+Signed-off-by: Nicolai Stange <nicstange@gmail.com>
+---
+Applicable to next-20161202.
+
+ drivers/scsi/sd.c | 27 +++++++++++++++------------
+ 1 file changed, 15 insertions(+), 12 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2cfeb3c..ef1bab5 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -806,18 +806,21 @@ static void sd_config_write_same(struct scsi_disk *sdkp)
+ 		goto out;
+ 	}
+ 
+-	/* Some devices can not handle block counts above 0xffff despite
+-	 * supporting WRITE SAME(16). Consequently we default to 64k
+-	 * blocks per I/O unless the device explicitly advertises a
+-	 * bigger limit.
+-	 */
+-	if (sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS)
+-		sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
+-						   (u32)SD_MAX_WS16_BLOCKS);
+-	else if (sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes)
+-		sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
+-						   (u32)SD_MAX_WS10_BLOCKS);
+-	else {
++	if (sdkp->ws16 || sdkp->ws10 || sdkp->device->no_report_opcodes) {
++		/*
++		 * Some devices can not handle block counts above 0xffff despite
++		 * supporting WRITE SAME(16). Consequently we default to 64k
++		 * blocks per I/O unless the device explicitly advertises a
++		 * bigger limit.
++		 */
++		if (sdkp->max_ws_blocks > SD_MAX_WS10_BLOCKS) {
++			sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
++						(u32)SD_MAX_WS16_BLOCKS);
++		} else {
++			sdkp->max_ws_blocks = min_not_zero(sdkp->max_ws_blocks,
++						(u32)SD_MAX_WS10_BLOCKS);
++		}
++	} else {
+ 		sdkp->device->no_write_same = 1;
+ 		sdkp->max_ws_blocks = 0;
+ 	}
+-- 
+2.10.2
