@@ -1,34 +1,34 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: hpsa: use %phN for short hex dumps
-Date: Mon, 05 Dec 2016 17:06:05 -0500
-Message-ID: <yq17f7evxo2.fsf@sermon.lab.mkp.net>
-References: <1480545348-32669-1-git-send-email-linux@rasmusvillemoes.dk>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v3 4/6] qla2xxx: Add multiple queue pair functionality.
+Date: Mon, 5 Dec 2016 22:08:06 +0000
+Message-ID: <30603FE5-81B7-4116-BF99-39023DF9A3D3@cavium.com>
+References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480715097-13611-5-git-send-email-himanshu.madhani@cavium.com>
+ <64bf8c12-c086-2531-8510-27a95f8f0ef1@suse.de>
+ <9351CE9F-5D4B-4EE0-8C09-8A0F4A4D9B2F@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:20109 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751998AbcLEWGQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 17:06:16 -0500
-In-Reply-To: <1480545348-32669-1-git-send-email-linux@rasmusvillemoes.dk>
-        (Rasmus Villemoes's message of "Wed, 30 Nov 2016 23:35:47 +0100")
+Received: from mail-bl2nam02on0075.outbound.protection.outlook.com ([104.47.38.75]:9920
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752144AbcLEWII (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Dec 2016 17:08:08 -0500
+In-Reply-To: <9351CE9F-5D4B-4EE0-8C09-8A0F4A4D9B2F@cavium.com>
+Content-Language: en-US
+Content-ID: <6BDBBC2C76144449818408C3866A5CB5@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Rasmus Villemoes <linux@rasmusvillemoes.dk>
-Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, iss_storagedev@hp.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Rasmus" == Rasmus Villemoes <linux@rasmusvillemoes.dk> writes:
-
-Rasmus> Passing one instead of 8 or 16 arguments reduces the size of the
-Rasmus> generated code somewhat:
-
-Rasmus> add/remove: 2/3 grow/shrink: 1/4 up/down: 1772/-2137 (-365)
-
-Rasmus> There's one more candidate, unique_id_show, but that uses %02X,
-Rasmus> and I'm not sure it would be ok to start using lowercase there,
-Rasmus> so I've left it alone for now.
-
-Applied to 4.10/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+DQoNCk9uIDEyLzUvMTYsIDEyOjQzIFBNLCAibGludXgtc2NzaS1vd25lckB2Z2VyLmtlcm5lbC5v
+cmcgb24gYmVoYWxmIG9mIE1hZGhhbmksIEhpbWFuc2h1IiA8bGludXgtc2NzaS1vd25lckB2Z2Vy
+Lmtlcm5lbC5vcmcgb24gYmVoYWxmIG9mIEhpbWFuc2h1Lk1hZGhhbmlAY2F2aXVtLmNvbT4gd3Jv
+dGU6DQoNCj4NCj5XZSBuZWVkIHRvIGhhdmUgdGhlIHNwaW5sb2NrIGJlY2F1c2UgY3VycmVudGx5
+IG91ciBOUElWIGltcGxlbWVudGF0aW9uIGRvZXMgbm90IHV0aWxpemVzDQo+US1wYWlyIGZyYW1l
+d29yay4NCg0KTG9va3MgbGlrZSBzZW50IGl0IHByZW1hdHVyZWx5LiBUaGlzIGNvbW1lbnQgc2hv
+dWxkIGJlIHJlYWQgYXMgZm9sbG93aW5nDQoNCldlIG5lZWQgdG8gaGF2ZSB0aGUgc3BpbmxvY2sg
+YmVjYXVzZSBjdXJyZW50bHkgb3VyIE5QSVYgaW1wbGVtZW50YXRpb24gZG9lcyBub3QgdXRpbGl6
+ZXMNCmJsb2NrIG1xIHRhZ2dpbmcgZnJhbWV3b3JrLg0KDQo=
