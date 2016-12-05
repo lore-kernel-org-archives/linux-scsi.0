@@ -1,41 +1,33 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH 12/12] be2iscsi: Update driver version
-Date: Mon,  5 Dec 2016 13:36:51 +0530
-Message-ID: <1480925211-13223-13-git-send-email-jitendra.bhivare@broadcom.com>
-References: <1480925211-13223-1-git-send-email-jitendra.bhivare@broadcom.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v3 3/6] qla2xxx: Utilize
+ pci_alloc_irq_vectors/pci_free_irq_vectors calls.
+Date: Mon, 5 Dec 2016 04:54:30 -0800
+Message-ID: <20161205125430.GA23221@infradead.org>
+References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480715097-13611-4-git-send-email-himanshu.madhani@cavium.com>
+ <91f64303-4677-7740-4c3e-7a0c71f7faca@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:36597 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750849AbcLEIHf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 03:07:35 -0500
-Received: by mail-qt0-f181.google.com with SMTP id w33so306293092qtc.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 Dec 2016 00:07:35 -0800 (PST)
-In-Reply-To: <1480925211-13223-1-git-send-email-jitendra.bhivare@broadcom.com>
+Received: from bombadil.infradead.org ([198.137.202.9]:57919 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbcLEMyd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 07:54:33 -0500
+Content-Disposition: inline
+In-Reply-To: <91f64303-4677-7740-4c3e-7a0c71f7faca@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: cleech@redhat.com, lduncan@suse.com
-Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-Version 11.2.1.0
+> > +	if (ha->flags.msix_enabled) {
+> > +		for (i = 0; i < ha->msix_count; i++) {
+> > +			qentry = &ha->msix_entries[i];
+> > +			if (qentry->have_irq) {
+> > +				irq_set_affinity_notifier(qentry->vector, NULL);
+> Not sure if that's still required; with the new irq affinity framework I
+> guess you can drop it.
 
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
----
- drivers/scsi/be2iscsi/be_main.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 02a9b2d..2188579 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- 
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"11.2.0.0"
-+#define BUILD_STR		"11.2.1.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
--- 
-1.8.3.1
-
+It shouldn't be required in the end, but keeping the switch to the
+new IRQ helpers from the change to the affinity assignment separate
+makes sense.
