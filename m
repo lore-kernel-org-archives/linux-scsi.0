@@ -1,52 +1,75 @@
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [PATCH v2] xen/scsifront: don't request a slot on
- the ring until request is ready
-Date: Mon, 5 Dec 2016 10:32:18 -0500
-Message-ID: <6cbdced5-c4fe-8083-3a90-09c428f3ff8f@oracle.com>
+From: Juergen Gross <jgross@suse.com>
+Subject: Re: [PATCH v2] xen/scsifront: don't request a slot on the ring until
+ request is ready
+Date: Mon, 5 Dec 2016 16:35:13 +0100
+Message-ID: <2f607bd6-f058-34bd-fb92-642e78ee283e@suse.com>
 References: <20161125202650.GK6266@mwanda>
  <20161202061545.14614-1-jgross@suse.com>
+ <6cbdced5-c4fe-8083-3a90-09c428f3ff8f@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <xen-devel-bounces@lists.xen.org>
-In-Reply-To: <20161202061545.14614-1-jgross@suse.com>
-List-Unsubscribe: <https://lists.xen.org/cgi-bin/mailman/options/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=unsubscribe>
-List-Post: <mailto:xen-devel@lists.xen.org>
-List-Help: <mailto:xen-devel-request@lists.xen.org?subject=help>
-List-Subscribe: <https://lists.xen.org/cgi-bin/mailman/listinfo/xen-devel>,
- <mailto:xen-devel-request@lists.xen.org?subject=subscribe>
-Errors-To: xen-devel-bounces@lists.xen.org
-Sender: "Xen-devel" <xen-devel-bounces@lists.xen.org>
-To: Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Cc: lambert.quentin@gmail.com, jejb@linux.vnet.ibm.com, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:45497 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751176AbcLEPfR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Dec 2016 10:35:17 -0500
+In-Reply-To: <6cbdced5-c4fe-8083-3a90-09c428f3ff8f@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Boris Ostrovsky <boris.ostrovsky@oracle.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Cc: lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-T24gMTIvMDIvMjAxNiAwMToxNSBBTSwgSnVlcmdlbiBHcm9zcyB3cm90ZToKPiAgCj4gLXN0YXRp
-YyBzdHJ1Y3QgdnNjc2lpZl9yZXF1ZXN0ICpzY3NpZnJvbnRfcHJlX3JlcShzdHJ1Y3QgdnNjc2lm
-cm50X2luZm8gKmluZm8pCj4gK3N0YXRpYyBpbnQgc2NzaWZyb250X2RvX3JlcXVlc3Qoc3RydWN0
-IHZzY3NpZnJudF9pbmZvICppbmZvLAo+ICsJCQkJc3RydWN0IHZzY3NpZnJudF9zaGFkb3cgKnNo
-YWRvdykKPiAgewo+ICAJc3RydWN0IHZzY3NpaWZfZnJvbnRfcmluZyAqcmluZyA9ICYoaW5mby0+
-cmluZyk7Cj4gIAlzdHJ1Y3QgdnNjc2lpZl9yZXF1ZXN0ICpyaW5nX3JlcTsKPiArCXN0cnVjdCBz
-Y3NpX2NtbmQgKnNjID0gc2hhZG93LT5zYzsKPiAgCXVpbnQzMl90IGlkOwo+ICsJaW50IGksIG5v
-dGlmeTsKPiArCj4gKwlpZiAoUklOR19GVUxMKCZpbmZvLT5yaW5nKSkKPiArCQlyZXR1cm4gLUVC
-VVNZOwo+ICAKPiAgCWlkID0gc2NzaWZyb250X2dldF9ycWlkKGluZm8pOwkvKiB1c2UgaWQgaW4g
-cmVzcG9uc2UgKi8KPiAgCWlmIChpZCA+PSBWU0NTSUlGX01BWF9SRVFTKQo+IC0JCXJldHVybiBO
-VUxMOwo+ICsJCXJldHVybiAtRUJVU1k7Cj4gKwo+ICsJaW5mby0+c2hhZG93W2lkXSA9IHNoYWRv
-dzsKPiArCXNoYWRvdy0+cnFpZCA9IGlkOwo+ICAKPiAgCXJpbmdfcmVxID0gUklOR19HRVRfUkVR
-VUVTVCgmKGluZm8tPnJpbmcpLCByaW5nLT5yZXFfcHJvZF9wdnQpOwo+IC0KPiAgCXJpbmctPnJl
-cV9wcm9kX3B2dCsrOwo+ICAKPiAtCXJpbmdfcmVxLT5ycWlkID0gKHVpbnQxNl90KWlkOwo+ICsJ
-cmluZ19yZXEtPnJxaWQgICAgICAgID0gaWQ7Cj4gKwlyaW5nX3JlcS0+YWN0ICAgICAgICAgPSBz
-aGFkb3ctPmFjdDsKPiArCXJpbmdfcmVxLT5yZWZfcnFpZCAgICA9IHNoYWRvdy0+cmVmX3JxaWQ7
-Cj4gKwlyaW5nX3JlcS0+bnJfc2VnbWVudHMgPSBzaGFkb3ctPm5yX3NlZ21lbnRzOwoKU2hvdWxk
-bid0IHJlcV9wcm9kX3B2dCBiZSBpbmNyZW1lbnRlZCBhZnRlciB5b3UndmUgY29waWVkIGV2ZXJ5
-dGhpbmc/IChJCnJlYWxpemUgdGhhdCB0aGVyZSBpcyBub3QgZXJyb3IgdW50aWwgZXZlcnl0aGlu
-ZyBoYXMgYmVlbiBjb3BpZWQgYnV0IHN0aWxsLikKCgoKPiBAQCAtNDczLDQ0ICs0OTYsMTQgQEAg
-c3RhdGljIGludCBtYXBfZGF0YV9mb3JfcmVxdWVzdChzdHJ1Y3QgdnNjc2lmcm50X2luZm8gKmlu
-Zm8sCj4gIAl9Cj4gIAo+ICAJaWYgKHNlZ19ncmFudHMpCj4gLQkJcmluZ19yZXEtPm5yX3NlZ21l
-bnRzID0gVlNDU0lJRl9TR19HUkFOVCB8IHNlZ19ncmFudHM7Cj4gKwkJc2hhZG93LT5ucl9zZWdt
-ZW50cyA9IFZTQ1NJSUZfU0dfR1JBTlQgfCBzZWdfZ3JhbnRzOwoKQXJlIHdlIGd1YXJhbnRlZWQg
-dGhhdCBzZWdfZ3JhbnRzIGlzIG5vdCBnb2luZyB0byBoYXZlIFZTQ1NJSUZfU0dfR1JBTlQKYml0
-IHNldD8KCi1ib3JpcwoKCgoKX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
-X19fX19fX18KWGVuLWRldmVsIG1haWxpbmcgbGlzdApYZW4tZGV2ZWxAbGlzdHMueGVuLm9yZwpo
-dHRwczovL2xpc3RzLnhlbi5vcmcveGVuLWRldmVsCg==
+On 05/12/16 16:32, Boris Ostrovsky wrote:
+> On 12/02/2016 01:15 AM, Juergen Gross wrote:
+>>  
+>> -static struct vscsiif_request *scsifront_pre_req(struct vscsifrnt_info *info)
+>> +static int scsifront_do_request(struct vscsifrnt_info *info,
+>> +				struct vscsifrnt_shadow *shadow)
+>>  {
+>>  	struct vscsiif_front_ring *ring = &(info->ring);
+>>  	struct vscsiif_request *ring_req;
+>> +	struct scsi_cmnd *sc = shadow->sc;
+>>  	uint32_t id;
+>> +	int i, notify;
+>> +
+>> +	if (RING_FULL(&info->ring))
+>> +		return -EBUSY;
+>>  
+>>  	id = scsifront_get_rqid(info);	/* use id in response */
+>>  	if (id >= VSCSIIF_MAX_REQS)
+>> -		return NULL;
+>> +		return -EBUSY;
+>> +
+>> +	info->shadow[id] = shadow;
+>> +	shadow->rqid = id;
+>>  
+>>  	ring_req = RING_GET_REQUEST(&(info->ring), ring->req_prod_pvt);
+>> -
+>>  	ring->req_prod_pvt++;
+>>  
+>> -	ring_req->rqid = (uint16_t)id;
+>> +	ring_req->rqid        = id;
+>> +	ring_req->act         = shadow->act;
+>> +	ring_req->ref_rqid    = shadow->ref_rqid;
+>> +	ring_req->nr_segments = shadow->nr_segments;
+> 
+> Shouldn't req_prod_pvt be incremented after you've copied everything? (I
+> realize that there is not error until everything has been copied but still.)
+
+That doesn't really matter as it is private.
+
+>> @@ -473,44 +496,14 @@ static int map_data_for_request(struct vscsifrnt_info *info,
+>>  	}
+>>  
+>>  	if (seg_grants)
+>> -		ring_req->nr_segments = VSCSIIF_SG_GRANT | seg_grants;
+>> +		shadow->nr_segments = VSCSIIF_SG_GRANT | seg_grants;
+> 
+> Are we guaranteed that seg_grants is not going to have VSCSIIF_SG_GRANT
+> bit set?
+
+Absolutely, yes. Can't be larger than VSCSIIF_SG_TABLESIZE which is 26.
+
+
+Juergen
