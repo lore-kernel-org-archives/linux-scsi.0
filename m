@@ -1,30 +1,71 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2 v2] scsi: be2iscsi: set errno on error path
-Date: Mon, 05 Dec 2016 17:29:30 -0500
-Message-ID: <yq1twaiui0l.fsf@sermon.lab.mkp.net>
-References: <1480922623-19261-1-git-send-email-bianpan2016@163.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v3 4/6] qla2xxx: Add multiple queue pair functionality.
+Date: Mon, 5 Dec 2016 22:41:07 +0000
+Message-ID: <41A47AE3-F5DE-4AA6-8767-C0C817E985C6@cavium.com>
+References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
+ <1480715097-13611-5-git-send-email-himanshu.madhani@cavium.com>
+ <20161205162006.GD11206@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1480922623-19261-1-git-send-email-bianpan2016@163.com> (Pan
-        Bian's message of "Mon, 5 Dec 2016 15:23:43 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pan Bian <bianpan2016@163.com>
-Cc: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0067.outbound.protection.outlook.com ([104.47.41.67]:49216
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752966AbcLEWzi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 5 Dec 2016 17:55:38 -0500
+In-Reply-To: <20161205162006.GD11206@infradead.org>
+Content-Language: en-US
+Content-ID: <B67A69A4D3062641A34DC548AC2714F0@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Pan" == Pan Bian <bianpan2016@163.com> writes:
-
-Pan> Variable ret is reset in the loop, and its value will be 0 during
-Pan> the after repeat of the loop. Then, if pci_alloc_consistent()
-Pan> returns NULL, the return value is 0. 0 means no error, which may
-Pan> make it impossible for the callers of beiscsi_create_cqs() to
-Pan> detect the memory allocation error. This patch fixes the bug,
-Pan> assigning "-ENOMEM" to ret on the path that the call to
-Pan> pci_alloc_consistent() fails.
-
-What are the differences between v1 and v2 for these patches? I see no
-changelog...
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+DQoNCk9uIDEyLzUvMTYsIDg6MjAgQU0sICJDaHJpc3RvcGggSGVsbHdpZyIgPGhjaEBpbmZyYWRl
+YWQub3JnPiB3cm90ZToNCg0KPj4gIGNyZWF0ZSBtb2RlIDEwMDY0NCBkcml2ZXJzL3Njc2kvcWxh
+Mnh4eC9xbGFfYm90dG9tLmMNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3Fs
+YTJ4eHgvcWxhX21xLmMNCj4+ICBjcmVhdGUgbW9kZSAxMDA2NDQgZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX3RvcC5jDQo+DQo+V2hhdCdzIHRoZSBwb2ludCBvZiB0aHJlZSBuZXcgZmFpcmx5IHNt
+YWxsIGZpbGVzLCB0d28gb2YgdGhlbSB2ZXJ5DQo+b2RkbHkgbmFtZWQ/ICBDYW4ndCB3ZSBrZWVw
+IHRoZSBjb2RlIHRvZ2V0aGVyIGJ5IGxvZ2ljYWwgZ3JvdXBzPw0KDQpBY2suIFdpbGwgbWVyZ2Ug
+Y29kZSANCg0KPg0KPj4gKwkvKiBkaXN0aWxsIHRoZXNlIGZpZWxkcyBkb3duIHRvICdvbmxpbmU9
+MC8xJw0KPj4gKwkgKiBoYS0+ZmxhZ3MuZWVoX2J1c3kNCj4+ICsJICogaGEtPmZsYWdzLnBjaV9j
+aGFubmVsX2lvX3Blcm1fZmFpbHVyZQ0KPj4gKwkgKiBiYXNlX3ZoYS0+bG9vcF9zdGF0ZQ0KPj4g
+KwkgKi8NCj4+ICsJdWludDMyX3Qgb25saW5lOjE7DQo+PiArCS8qIG1vdmUgdmhhLT5mbGFncy5k
+aWZkaXhfc3VwcG9ydGVkIGhlcmUgKi8NCj4+ICsJdWludDMyX3QgZGlmZGl4X3N1cHBvcnRlZDox
+Ow0KPj4gKwl1aW50MzJfdCBkZWxldGVfaW5fcHJvZ3Jlc3M6MTsNCj4NCj5UaGVzZSBwcm9iYWJs
+eSBzaG91bGQgYmUgYXRvbWljIGJpdG9wcy4NCg0KQWNrLiBXaWxsIHVwZGF0ZSBzZW5kIG91dCBz
+ZXJpZXMuIA0KDQo+DQo+PiArI2RlZmluZSBRTEFfVkhBX01BUktfQlVTWShfX3ZoYSwgX19iYWls
+KSBkbyB7CQlcDQo+PiArCWF0b21pY19pbmMoJl9fdmhhLT52cmVmX2NvdW50KTsJCQlcDQo+PiAr
+CW1iKCk7CQkJCQkJXA0KPj4gKwlpZiAoX192aGEtPmZsYWdzLmRlbGV0ZV9wcm9ncmVzcykgewkJ
+XA0KPj4gKwkJYXRvbWljX2RlYygmX192aGEtPnZyZWZfY291bnQpOwkJXA0KPj4gKwkJX19iYWls
+ID0gMTsJCQkJXA0KPj4gKwl9IGVsc2UgewkJCQkJXA0KPj4gKwkJX19iYWlsID0gMDsJCQkJXA0K
+Pj4gKwl9CQkJCQkJXA0KPj4gIH0gd2hpbGUgKDApDQo+DQo+U29tZXRoaW5nIGxpa2UgdGhpcyBz
+aG91bGQgYmUgYW4gaW5saW5lIGZ1bmN0aW9uLCBub3QgYSBtYWNybw0KPnRoYXQgcmV0dXJucyB0
+aHJvdWdoIGFuIGFyZ3VtZW50Lg0KPg0KPihhbmQgbW92ZSB0byBsb3dlciBjYXNlIGl0IHdoaWxl
+IGF0IGl0LCBwbGVhc2UpLg0KPg0KPkJ0dywgdGhlIHdheSB2cmVmX2NvdW50IGlzIHVzZWQgbG9v
+a3MgaW5jcmVkaWJseSBidWdneSwgaW5zdGVhZA0KPm9mIHRoZSBidXN5IHdhaXQganVzdCBhZGQg
+YSB3YWllIHF1ZXVlIHRvIHNsZWVwIG9uIGluDQo+cWxhMjR4eF9kZWFsbG9jYXRlX3ZwX2lkLg0K
+DQpXZeKAmWxsIHdvcmsgb24gdGhpcyBjaGFuZ2UgYW5kIHBvc3QgYXMgYSBzZXBhcmF0ZSBwYXRj
+aC4NCg0KPg0KPj4gKwlRTEFfUVBBSVJfTUFSS19CVVNZKHFwYWlyLCBiYWlsKTsNCj4+ICsJaWYg
+KHVubGlrZWx5KGJhaWwpKQ0KPj4gKwkJcmV0dXJuIE5VTEw7DQo+PiArDQo+PiArCXNwID0gbWVt
+cG9vbF9hbGxvYyhxcGFpci0+c3JiX21lbXBvb2wsIGZsYWcpOw0KPj4gKwlpZiAoIXNwKQ0KPj4g
+KwkJZ290byBkb25lOw0KPj4gKw0KPj4gKwltZW1zZXQoc3AsIDAsIHNpemVvZigqc3ApKTsNCj4+
+ICsJc3AtPmZjcG9ydCA9IGZjcG9ydDsNCj4+ICsJc3AtPmlvY2JzID0gMTsNCj4NCj5GWUksIHRo
+ZSBibGstbXEgbW9kZWwgd291bGQgYmUgdG8gYWxsb2NhdGUgdGhlIHNycHMgYXMgcGFydCBvZiB0
+aGUNCj5zY3NpX2NtZCBieSBzZXR0aW5nIHRoZSBjbWRfc2l6ZSBmaWVsZCBpbiB0aGUgaG9zdCB0
+ZW1wbGF0ZS4gIE5vdGUNCj50aGF0IHRoaXMgaXMgYWxzbyBzdXBwb3J0ZWQgZm9yIHRoZSBub24t
+YmxrLW1xIHBhdGguDQo+DQo+PiArCXFwYWlyLT5kZWxldGVfaW5fcHJvZ3Jlc3MgPSAxOw0KPj4g
+Kwl3aGlsZSAoYXRvbWljX3JlYWQoJnFwYWlyLT5yZWZfY291bnQpKQ0KPj4gKwkJbXNsZWVwKDUw
+MCk7DQo+DQo+UGxlYXNlIHVzZSBhIHdhaXRxdWV1ZSBpbnN0ZWFkIG9mIGEgYnVzeSB3YWl0IGhl
+cmUgYXMgd2VsbC4NCg0KV2XigJlsbCB3b3JrIG9uIGNsZWFudXAgcGF0Y2ggYXMgc2VwYXJhdGUg
+cGF0Y2guDQoNCj4NCj4+ICtpbnQgcWwyeG1xc3VwcG9ydDsNCj4+ICttb2R1bGVfcGFyYW0ocWwy
+eG1xc3VwcG9ydCwgaW50LCBTX0lSVUdPKTsNCj4+ICtNT0RVTEVfUEFSTV9ERVNDKHFsMnhtcXN1
+cHBvcnQsDQo+PiArCQkiRW5hYmxlIG9uIGRlbWFuZCBtdWx0aXBsZSBxdWV1ZSBwYWlycyBzdXBw
+b3J0ICINCj4+ICsJCSJEZWZhdWx0IGlzIDAgZm9yIG5vIHN1cHBvcnQuICINCj4+ICsJCSJTZXQg
+aXQgdG8gMSB0byB0dXJuIG9uIG1xIHFwYWlyIHN1cHBvcnQuIik7DQo+DQo+V2h5IGlzbid0IHRo
+aXMgZW5hYmxlZCBieSBkZWZhdWx0Pw0KDQpBY2suIFdpbGwgZW5hYmxlIGl0IGJ5IGRlZmF1bHQu
+IA0KDQo+DQo+PiArCQloYS0+cXVldWVfcGFpcl9tYXAgPSBremFsbG9jKHNpemVvZihzdHJ1Y3Qg
+cWxhX3FwYWlyICopDQo+PiArCQkJKiBoYS0+bWF4X3FwYWlycywgR0ZQX0tFUk5FTCk7DQo+DQo+
+VXNlIGtjYWxsb2MgaW5zdGVhZC4NCg0KQWNrLiBXaWxsIHVwZGF0ZSB0aGlzLiANCj4NCg==
