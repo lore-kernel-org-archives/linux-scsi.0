@@ -1,29 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCHv3] hpsa: fallback to use legacy REPORT PHYS command
-Date: Mon, 05 Dec 2016 17:14:12 -0500
-Message-ID: <yq137i2vxaj.fsf@sermon.lab.mkp.net>
-References: <1480674973-118250-1-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 1/2] scsi: be2iscsi: set errno on error path
+Date: Mon, 05 Dec 2016 17:24:40 -0500
+Message-ID: <yq1y3zuui8n.fsf@sermon.lab.mkp.net>
+References: <1480828902-4406-1-git-send-email-bianpan201603@163.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28274 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbcLEWOc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 17:14:32 -0500
-In-Reply-To: <1480674973-118250-1-git-send-email-hare@suse.de> (Hannes
-        Reinecke's message of "Fri, 2 Dec 2016 11:36:13 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1480828902-4406-1-git-send-email-bianpan201603@163.com> (Pan
+        Bian's message of "Sun, 4 Dec 2016 13:21:42 +0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Pan Bian <bianpan201603@163.com>
+Cc: Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, Jitendra Bhivare <jitendra.bhivare@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Don Brace <don.brace@microsemi.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
->>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>>>>> "Pan" == Pan Bian <bianpan201603@163.com> writes:
 
-Hannes> Older SmartArray controllers (eg SmartArray 64xx) do not support
-Hannes> the extended REPORT PHYS command, so fallback to use the legacy
-Hannes> version here.
+Pan> Variable ret is reset in the loop, and its value will be 0 during
+Pan> the second and after repeat of the loop. If pci_alloc_consistent()
+Pan> returns a NULL pointer then, it will leaves with return value 0. 0
+Pan> means no error, which is contrary to the fact. This patches fixes
+Pan> the bug, explicitly assigning "-ENOMEM" to return variable ret on
+Pan> the path that the call to pci_alloc_consistent() fails.
 
-Applied to 4.10/scsi-queue.
+Applied patches 1 and 2 to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
