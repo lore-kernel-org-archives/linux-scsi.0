@@ -1,67 +1,49 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: RE: [PATCH 2/2] scsi: be2iscsi: set errno on error path
-Date: Mon, 5 Dec 2016 08:59:23 +0530
-Message-ID: <a0b23485eb4de2555a1b6fe7ad2c48a1@mail.gmail.com>
-References: <1480828984-4484-1-git-send-email-bianpan201603@163.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1480828984-4484-1-git-send-email-bianpan201603@163.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Pan Bian <bianpan201603@163.com>, Subramanian Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 1/4] g_NCR5380: Check for chip presence before calling
+ NCR5380_init()
+Date: Mon,  5 Dec 2016 01:07:19 -0500 (EST)
+Message-ID: <da3aa376f3d93cfef8c7c03793f3ad8a0121e97c.1480917789.git.fthain@telegraphics.com.au>
+References: <cover.1480917789.git.fthain@telegraphics.com.au>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from kvm5.telegraphics.com.au ([98.124.60.144]:50466 "EHLO
+        kvm5.telegraphics.com.au" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751039AbcLEGHW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 5 Dec 2016 01:07:22 -0500
+In-Reply-To: <cover.1480917789.git.fthain@telegraphics.com.au>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Pan Bian [mailto:bianpan201603@163.com]
-> Sent: Sunday, December 04, 2016 10:53 AM
-> To: Subbu Seetharaman; Ketan Mukadam; Jitendra Bhivare; James E.J.
-> Bottomley; Martin K. Petersen; linux-scsi@vger.kernel.org
-> Cc: linux-kernel@vger.kernel.org; Pan Bian
-> Subject: [PATCH 2/2] scsi: be2iscsi: set errno on error path
->
-> From: Pan Bian <bianpan2016@163.com>
->
-> Variable ret is reset in the loop, and its value will be 0 during the
-second and
-> after repeat of the loop. If pci_alloc_consistent() returns a NULL
-pointer then, it
-> will leaves with return value 0. 0 means no error, which is contrary to
-the fact.
-> This patches fixes the bug, explicitly assigning "-ENOMEM" to return
-variable ret
-> on the path that the call to
-> pci_alloc_consistent() fails.
->
-> Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188951
->
-> Signed-off-by: Pan Bian <bianpan2016@163.com>
-> ---
->  drivers/scsi/be2iscsi/be_main.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c
-b/drivers/scsi/be2iscsi/be_main.c
-> index b6c5791..b5112d6 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -3049,8 +3049,10 @@ static int beiscsi_create_eqs(struct beiscsi_hba
-> *phba,
->  		eq_vaddress = pci_alloc_consistent(phba->pcidev,
->  						   num_eq_pages *
-PAGE_SIZE,
->  						   &paddr);
-> -		if (!eq_vaddress)
-> +		if (!eq_vaddress) {
-> +			ret = -ENOMEM;
->  			goto create_eq_error;
-> +		}
->
->  		mem->va = eq_vaddress;
->  		ret = be_fill_queue(eq, phba->params.num_eq_entries,
-> --
-> 1.9.1
->
-[JB] Thanks.
+From: Ondrej Zary <linux@rainbow-software.org>
 
-Reviewed-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+Write and read back mode register to check that a chip is really there.
+If no card is present, reads result in 0xff.
+
+Signed-off-by: Ondrej Zary <linux@rainbow-software.org>
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+ drivers/scsi/g_NCR5380.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index de5147a..76e3745 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -248,6 +248,13 @@ static int generic_NCR5380_init_one(struct scsi_host_template *tpnt,
+ 		}
+ 	}
+ 
++	/* Check for vacant slot */
++	NCR5380_write(MODE_REG, 0);
++	if (NCR5380_read(MODE_REG) != 0) {
++		ret = -ENODEV;
++		goto out_unregister;
++	}
++
+ 	ret = NCR5380_init(instance, flags | FLAG_LATE_DMA_SETUP);
+ 	if (ret)
+ 		goto out_unregister;
+-- 
+2.7.3
+
