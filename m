@@ -1,199 +1,42 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 3/6] qla2xxx: Utilize
- pci_alloc_irq_vectors/pci_free_irq_vectors calls.
-Date: Mon, 5 Dec 2016 08:19:44 +0100
-Message-ID: <91f64303-4677-7740-4c3e-7a0c71f7faca@suse.de>
-References: <1480715097-13611-1-git-send-email-himanshu.madhani@cavium.com>
- <1480715097-13611-4-git-send-email-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58648 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750841AbcLEHUi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 5 Dec 2016 02:20:38 -0500
-In-Reply-To: <1480715097-13611-4-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Pan Bian <bianpan2016@163.com>
+Subject: [PATCH 2/2 v2] scsi: be2iscsi: set errno on error path
+Date: Mon,  5 Dec 2016 15:24:19 +0800
+Message-ID: <1480922659-19308-1-git-send-email-bianpan2016@163.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, Subbu Seetharaman <subbu.seetharaman@broadcom.com>, Ketan Mukadam <ketan.mukadam@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Pan Bian <bianpan2016@163.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
 
-On 12/02/2016 10:44 PM, Himanshu Madhani wrote:
-> From: Michael Hernandez <michael.hernandez@cavium.com>
-> 
-> Replaces the old pci_enable_msi[x]* and pci_disable_msi[x] calls.
-> 
-> Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_def.h |  1 +
->  drivers/scsi/qla2xxx/qla_isr.c | 81 +++++++++++++++---------------------------
->  2 files changed, 30 insertions(+), 52 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> index 9a6ddcb..53021b5 100644
-> --- a/drivers/scsi/qla2xxx/qla_def.h
-> +++ b/drivers/scsi/qla2xxx/qla_def.h
-> @@ -2748,6 +2748,7 @@ struct qla_msix_entry {
->  	uint32_t vector;
->  	uint16_t entry;
->  	struct rsp_que *rsp;
-> +	void *handle;
->  	struct irq_affinity_notify irq_notify;
->  	int cpuid;
->  };
-> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-> index 19f1848..16e7601 100644
-> --- a/drivers/scsi/qla2xxx/qla_isr.c
-> +++ b/drivers/scsi/qla2xxx/qla_isr.c
-> @@ -3025,52 +3025,17 @@ struct qla_init_msix_entry {
->  	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
->  };
->  
-> -static void
-> -qla24xx_disable_msix(struct qla_hw_data *ha)
-> -{
-> -	int i;
-> -	struct qla_msix_entry *qentry;
-> -	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
-> -
-> -	for (i = 0; i < ha->msix_count; i++) {
-> -		qentry = &ha->msix_entries[i];
-> -		if (qentry->have_irq) {
-> -			/* un-register irq cpu affinity notification */
-> -			irq_set_affinity_notifier(qentry->vector, NULL);
-> -			free_irq(qentry->vector, qentry->rsp);
-> -		}
-> -	}
-> -	pci_disable_msix(ha->pdev);
-> -	kfree(ha->msix_entries);
-> -	ha->msix_entries = NULL;
-> -	ha->flags.msix_enabled = 0;
-> -	ql_dbg(ql_dbg_init, vha, 0x0042,
-> -	    "Disabled the MSI.\n");
-> -}
-> -
->  static int
->  qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
->  {
->  #define MIN_MSIX_COUNT	2
->  #define ATIO_VECTOR	2
->  	int i, ret;
-> -	struct msix_entry *entries;
->  	struct qla_msix_entry *qentry;
->  	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
->  
-> -	entries = kzalloc(sizeof(struct msix_entry) * ha->msix_count,
-> -			GFP_KERNEL);
-> -	if (!entries) {
-> -		ql_log(ql_log_warn, vha, 0x00bc,
-> -		    "Failed to allocate memory for msix_entry.\n");
-> -		return -ENOMEM;
-> -	}
-> -
-> -	for (i = 0; i < ha->msix_count; i++)
-> -		entries[i].entry = i;
-> -
-> -	ret = pci_enable_msix_range(ha->pdev,
-> -				    entries, MIN_MSIX_COUNT, ha->msix_count);
-> +	ret = pci_alloc_irq_vectors(ha->pdev,
-> +	    MIN_MSIX_COUNT, ha->msix_count, PCI_IRQ_MSIX|PCI_IRQ_AFFINITY);
->  	if (ret < 0) {
->  		ql_log(ql_log_fatal, vha, 0x00c7,
->  		    "MSI-X: Failed to enable support, "
-> @@ -3097,10 +3062,10 @@ struct qla_init_msix_entry {
->  
->  	for (i = 0; i < ha->msix_count; i++) {
->  		qentry = &ha->msix_entries[i];
-> -		qentry->vector = entries[i].vector;
-> -		qentry->entry = entries[i].entry;
-> +		qentry->vector = pci_irq_vector(ha->pdev, i);
-> +		qentry->entry = i;
->  		qentry->have_irq = 0;
-> -		qentry->rsp = NULL;
-> +		qentry->handle = NULL;
->  		qentry->irq_notify.notify  = qla_irq_affinity_notify;
->  		qentry->irq_notify.release = qla_irq_affinity_release;
->  		qentry->cpuid = -1;
-> @@ -3109,7 +3074,7 @@ struct qla_init_msix_entry {
->  	/* Enable MSI-X vectors for the base queue */
->  	for (i = 0; i < 2; i++) {
->  		qentry = &ha->msix_entries[i];
-> -		qentry->rsp = rsp;
-> +		qentry->handle = rsp;
->  		rsp->msix = qentry;
->  		if (IS_P3P_TYPE(ha))
->  			ret = request_irq(qentry->vector,
-> @@ -3142,7 +3107,7 @@ struct qla_init_msix_entry {
->  	 */
->  	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
->  		qentry = &ha->msix_entries[ATIO_VECTOR];
-> -		qentry->rsp = rsp;
-> +		qentry->handle = rsp;
->  		rsp->msix = qentry;
->  		ret = request_irq(qentry->vector,
->  			qla83xx_msix_entries[ATIO_VECTOR].handler,
-> @@ -3155,7 +3120,7 @@ struct qla_init_msix_entry {
->  		ql_log(ql_log_fatal, vha, 0x00cb,
->  		    "MSI-X: unable to register handler -- %x/%d.\n",
->  		    qentry->vector, ret);
-> -		qla24xx_disable_msix(ha);
-> +		qla2x00_free_irqs(vha);
->  		ha->mqenable = 0;
->  		goto msix_out;
->  	}
-> @@ -3177,7 +3142,6 @@ struct qla_init_msix_entry {
->  	    ha->mqiobase, ha->max_rsp_queues, ha->max_req_queues);
->  
->  msix_out:
-> -	kfree(entries);
->  	return ret;
->  }
->  
-> @@ -3230,7 +3194,7 @@ struct qla_init_msix_entry {
->  	    !IS_QLA27XX(ha))
->  		goto skip_msi;
->  
-> -	ret = pci_enable_msi(ha->pdev);
-> +	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
->  	if (!ret) {
->  		ql_dbg(ql_dbg_init, vha, 0x0038,
->  		    "MSI: Enabled.\n");
-> @@ -3275,6 +3239,8 @@ struct qla_init_msix_entry {
->  {
->  	struct qla_hw_data *ha = vha->hw;
->  	struct rsp_que *rsp;
-> +	struct qla_msix_entry *qentry;
-> +	int i;
->  
->  	/*
->  	 * We need to check that ha->rsp_q_map is valid in case we are called
-> @@ -3284,13 +3250,24 @@ struct qla_init_msix_entry {
->  		return;
->  	rsp = ha->rsp_q_map[0];
->  
-> -	if (ha->flags.msix_enabled)
-> -		qla24xx_disable_msix(ha);
-> -	else if (ha->flags.msi_enabled) {
-> -		free_irq(ha->pdev->irq, rsp);
-> -		pci_disable_msi(ha->pdev);
-> -	} else
-> -		free_irq(ha->pdev->irq, rsp);
-> +	if (ha->flags.msix_enabled) {
-> +		for (i = 0; i < ha->msix_count; i++) {
-> +			qentry = &ha->msix_entries[i];
-> +			if (qentry->have_irq) {
-> +				irq_set_affinity_notifier(qentry->vector, NULL);
-Not sure if that's still required; with the new irq affinity framework I
-guess you can drop it.
+Variable ret is reset in the loop, and its value will be 0 during the
+after repeat of the loop. Then, if pci_alloc_consistent() returns NULL, 
+the return value is 0. 0 means no error, which may make it impossible 
+for the callers of beiscsi_create_eqs() to detect the memory allocation 
+error. This patch fixes the bug, assigning "-ENOMEM" to ret on the path 
+that the call to pci_alloc_consistent() fails.
 
-Cheers,
+Bugzilla: https://bugzilla.kernel.org/show_bug.cgi?id=188951
 
-Hannes
+Signed-off-by: Pan Bian <bianpan2016@163.com>
+---
+ drivers/scsi/be2iscsi/be_main.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
+index b6c5791..b5112d6 100644
+--- a/drivers/scsi/be2iscsi/be_main.c
++++ b/drivers/scsi/be2iscsi/be_main.c
+@@ -3049,8 +3049,10 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
+ 		eq_vaddress = pci_alloc_consistent(phba->pcidev,
+ 						   num_eq_pages * PAGE_SIZE,
+ 						   &paddr);
+-		if (!eq_vaddress)
++		if (!eq_vaddress) {
++			ret = -ENOMEM;
+ 			goto create_eq_error;
++		}
+ 
+ 		mem->va = eq_vaddress;
+ 		ret = be_fill_queue(eq, phba->params.num_eq_entries,
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+1.9.1
