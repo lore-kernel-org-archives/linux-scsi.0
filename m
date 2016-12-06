@@ -1,94 +1,66 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: scsi: use-after-free in bio_copy_from_iter
-Date: Tue, 6 Dec 2016 16:38:38 +0100
-Message-ID: <20161206153838.GA26616@linux-x5ow.site>
-References: <CACT4Y+aBd+1pssnsVx2x145n7Q1nDMU=xc7NAiOCtpy-MA-EDg@mail.gmail.com>
- <CACT4Y+auCpJbXhmxbr4OmSHbiVkatyWmDxGGShs=WvO=HCXRKA@mail.gmail.com>
- <20161203103802.dmvqzzquthwa7kd7@linux-x5ow.site>
- <CACT4Y+bB+oxjPoC0WVCUV_Bq9ePqdV3m_V4snsfUrZ2BSWub2Q@mail.gmail.com>
- <20161203181948.GA3322@linux-x5ow.site>
- <CACT4Y+Z4V=9nm04H-uyy0tA4yXLp7Ld7dqgjLiA5_opeQC_m6A@mail.gmail.com>
- <20161205151753.GI8481@linux-x5ow.site>
- <20161205190339.GK1555@ZenIV.linux.org.uk>
- <20161206093257.GC4818@linux-x5ow.site>
- <CACT4Y+abaYf-o_i-jyGsZiG2RH7eTHtZNYcmao_uZaH-F+T+YQ@mail.gmail.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: [PATCH 00/10] virtio: sparse fixes
+Date: Tue, 6 Dec 2016 17:40:28 +0200
+Message-ID: <1481038106-24899-1-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <CACT4Y+abaYf-o_i-jyGsZiG2RH7eTHtZNYcmao_uZaH-F+T+YQ@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Al Viro <viro@zeniv.linux.org.uk>, syzkaller <syzkaller@googlegroups.com>, Doug Gilbert <dgilbert@interlog.com>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, axboe@kernel.dk, linux-block@vger.kernel.org, David Rientjes <rientjes@google.com>, Hannes Reinecke <hare@suse.de>, Michal Hocko <mhocko@suse.cz>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, kvm@vger.kernel.org, linux-kbuild@vger.kernel.org, netdev@vger.kernel.org, linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, virtualization@lists.linux-foundation.org, Michal Marek <mmarek@suse.com>, linux-crypto@vger.kernel.org, v9fs-developer@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 06, 2016 at 10:43:57AM +0100, Dmitry Vyukov wrote:
-> On Tue, Dec 6, 2016 at 10:32 AM, Johannes Thumshirn <jthumshirn@suse.de> wrote:
-> > On Mon, Dec 05, 2016 at 07:03:39PM +0000, Al Viro wrote:
-> >> On Mon, Dec 05, 2016 at 04:17:53PM +0100, Johannes Thumshirn wrote:
-> >> > 633         hp = &srp->header;
-> >> > [...]
-> >> > 646                 hp->dxferp = (char __user *)buf + cmd_size;
-> >>
-> >> > So the memory for hp->dxferp comes from:
-> >> > 633         hp = &srp->header;
-> >>
-> >> ????
-> >>
-> >> > >From my debug instrumentation I see that the dxferp ends up in the
-> >> > iovec_iter's kvec->iov_base and the faulting address is always dxferp + n *
-> >> > 4k with n in [1, 16] (and we're copying 16 4k pages from the iovec into the
-> >> > bio).
-> >>
-> >> _Address_ of hp->dxferp comes from that assignment; the value is 'buf'
-> >> argument of sg_write() + small offset.  In this case, it should point
-> >> inside a pipe buffer, which is, indeed, at a kernel address.  Who'd
-> >> allocated srp is irrelevant.
-> >
-> > Yes I realized that as well when I had enough distance between me and the
-> > code...
-> >
-> >>
-> >> And if you end up dereferencing more than one page worth there, you do have
-> >> a problem - pipe buffers are not going to be that large.  Could you slap
-> >>       WARN_ON((size_t)input_size > count);
-> >> right after the calculation of input_size in sg_write() and see if it triggers
-> >> on your reproducer?
-> >
-> > I did and it didn't trigger. What triggers is (as expected) a
-> >         WARN_ON((size_t)mxsize > count);
-> > We have count at 80 and mxsize (which ends in hp->dxfer_len) at 65499. But the
-> > 65499 bytes are the len of the data we're suppost to be copying in via the
-> > iov. I'm still rather confused what's happening here, sorry.
-> 
-> 
-> I think the critical piece here is some kind of race or timing
-> condition. Note that the test program executes all of
-> memfd_create/write/open/sendfile twice. Second time the calls race
-> with each other, but they also can race with the first execution of
-> the calls.
+I run latest sparse from git on virtio drivers
+(turns out the version I had was rather outdated).
+This patchset fixes a couple of bugs this uncovered,
+and adds some annotations to make it sparse-clean.
+In particular, endian-ness is often tricky,
+so this patchset enabled endian-ness checks for sparse
+builds.
 
-FWIW I've just run the reproducer once instead of looping it to check how it
-would normally behave and it bailes out at:
+Michael S. Tsirkin (10):
+  virtio_console: drop unused config fields
+  drm/virtio: fix endianness in primary_plane_update
+  drm/virtio: fix lock context imbalance
+  drm/virtio: annotate virtio_gpu_queue_ctrl_buffer_locked
+  vhost: make interval tree static inline
+  vhost: add missing __user annotations
+  vsock/virtio: add a missing __le annotation
+  vsock/virtio: mark an internal function static
+  vsock/virtio: fix src/dst cid format
+  virtio: enable endian checks for sparse builds
 
-604         if (count < (SZ_SG_HEADER + 6))
-605                 return -EIO;    /* The minimum scsi command length is 6 bytes. */
-
-That means, weren't going down the copy_form_iter() road at all. Usually, but
-sometimes we do. And then we try to copy 16 pages from the pipe buffer (is
-this correct?).
-The reproducer does: sendfile("/dev/sg0", memfd, offset_in_memfd, 0x10000);
-
-I don't see how we get there? Could it be random data from the mmap() we point
-the memfd to?
-
-This bug is confusing to be honest.
+ drivers/char/virtio_console.c           | 14 +++++++-------
+ drivers/gpu/drm/virtio/virtgpu_plane.c  |  4 ++--
+ drivers/gpu/drm/virtio/virtgpu_vq.c     |  6 +++++-
+ drivers/vhost/vhost.c                   | 12 ++++++------
+ net/vmw_vsock/virtio_transport.c        |  2 +-
+ net/vmw_vsock/virtio_transport_common.c | 16 ++++++++--------
+ drivers/block/Makefile                  |  1 +
+ drivers/char/Makefile                   |  1 +
+ drivers/char/hw_random/Makefile         |  2 ++
+ drivers/gpu/drm/virtio/Makefile         |  1 +
+ drivers/net/Makefile                    |  3 +++
+ drivers/net/caif/Makefile               |  1 +
+ drivers/rpmsg/Makefile                  |  1 +
+ drivers/s390/virtio/Makefile            |  2 ++
+ drivers/scsi/Makefile                   |  1 +
+ drivers/vhost/Makefile                  |  1 +
+ drivers/virtio/Makefile                 |  3 +++
+ net/9p/Makefile                         |  1 +
+ net/packet/Makefile                     |  1 +
+ net/vmw_vsock/Makefile                  |  2 ++
+ 20 files changed, 50 insertions(+), 25 deletions(-)
 
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+MST
