@@ -1,56 +1,51 @@
-From: John Garry <john.garry@huawei.com>
-Subject: [PATCH] scsi: hisi_sas: support deferred probe for v2 hw
-Date: Tue, 6 Dec 2016 20:44:07 +0800
-Message-ID: <1481028247-196779-1-git-send-email-john.garry@huawei.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: Re: [PATCH] scsi: mvsas: Replace pci_pool_alloc by pci_pool_zalloc
+Date: Tue, 6 Dec 2016 18:53:20 +0530
+Message-ID: <CAFqt6zbOvrbWPjOMcvRaxucjTQ__RBpg5ErCdtaYbYb-z94SGQ@mail.gmail.com>
+References: <20161128112626.GA31859@gnr743-HP-ZBook-15> <CAFqt6zbQn4YivsKG3X5Y2OWK92LaUk5nbe+oUheF111ZONULOw@mail.gmail.com>
+ <CAFqt6zbx45Gx4fN4Hv6PZLGsQB8FEK=mjxwAYVNDEpKbOZR+7g@mail.gmail.com> <yq1bmwqvxr6.fsf@sermon.lab.mkp.net>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:28186 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751932AbcLFMSU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 07:18:20 -0500
+Received: from mail-io0-f175.google.com ([209.85.223.175]:36575 "EHLO
+        mail-io0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751593AbcLFNXW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 08:23:22 -0500
+Received: by mail-io0-f175.google.com with SMTP id l140so38463157iol.3
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2016 05:23:22 -0800 (PST)
+In-Reply-To: <yq1bmwqvxr6.fsf@sermon.lab.mkp.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, zhangfei.gao@linaro.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: jejb@linux.vnet.ibm.com, Rameshwar Sahu <sahu.rameshwar73@gmail.com>, linux-scsi@vger.kernel.org
 
-In the hip06 and hip07 SoCs, the interrupt lines from the
-SAS controllers are connected to mbigen hw module [1].
-The mbigen module is probed with module_init, and, as such,
-is not guaranteed to probe before the SAS driver. So we need
-to support deferred probe.
+Hi Martin,
 
-We check for probe deferral in the hw layer probe, so we not
-probe into the main layer and allocate shost, memories, etc.,
-to later learn that we need to defer the probe.
+On Tue, Dec 6, 2016 at 3:34 AM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Souptick" == Souptick Joarder <jrdr.linux@gmail.com> writes:
+>
+> Souptick,
+>
+> Souptick> Any comment on this patch?
+>
+> The patch looked OK to me when you posted it. However, you need one
+> person in addition to me to review it. And you need convince us of the
+> merit of a presumably untested change to an unmaintained driver.
 
-[1] ./Documentation/devicetree/bindings/interrupt-controller/hisilicon,mbigen-v2.txt
+pci_pool_zalloc() will perform the same as pci_pool_alloc() and memset combined.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
+I have send similar patches to other modules like - dmaengine, scsi,
+net, gpu . Those
+were accepted and merged into respective branches. one similar patch
+you have applied
+previously.
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index c0e7bf2..a179592 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -2971,6 +2971,18 @@ static int hisi_sas_v2_init(struct hisi_hba *hisi_hba)
- 
- static int hisi_sas_v2_probe(struct platform_device *pdev)
- {
-+	/*
-+	 * Check if we should defer the probe before we probe the
-+	 * upper layer, as it's hard to defer later on.
-+	 */
-+	int ret = platform_get_irq(pdev, 0);
-+
-+	if (ret < 0) {
-+		if (ret != -EPROBE_DEFER)
-+			dev_err(&pdev->dev, "cannot obtain irq\n");
-+		return ret;
-+	}
-+
- 	return hisi_sas_probe(pdev, &hisi_sas_v2_hw);
- }
- 
--- 
-1.9.1
+I am sure this patch will work fine even without testing.
 
+>
+> --
+> Martin K. Petersen      Oracle Linux Engineering
+
+Regards
+Souptick
