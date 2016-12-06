@@ -1,142 +1,97 @@
-From: Zhouyi Zhou <zhouzhouyi@gmail.com>
-Subject: [PATCH] net: return value of skb_linearize should be handled in Linux kernel
-Date: Tue,  6 Dec 2016 15:10:33 +0800
-Message-ID: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com>
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: faisal.latif@intel.com, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, jeffrey.t.kirsher@intel.com, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jth@kernel.org, jon.maloy@ericsson.com, ying.xue@windriver.com, davem@davemloft.net, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, tipc-discussion@lists.sourceforge.net
-Cc: Zhouyi Zhou <zhouzhouyi@gmail.com>
+From: Nicolai Stange <nicstange@gmail.com>
+Subject: Re: [PATCH] sd: make ->no_write_same independent of reported ->max_ws_blocks
+Date: Tue, 06 Dec 2016 09:08:19 +0100
+Message-ID: <87lgvteaz0.fsf@gmail.com>
+References: <20161205235638.11539-1-nicstange@gmail.com>
+        <yq1d1h5viob.fsf@sermon.lab.mkp.net>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wj0-f194.google.com ([209.85.210.194]:32887 "EHLO
+        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751685AbcLFIIX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 03:08:23 -0500
+In-Reply-To: <yq1d1h5viob.fsf@sermon.lab.mkp.net> (Martin K. Petersen's
+        message of "Mon, 05 Dec 2016 22:29:56 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Nicolai Stange <nicstange@gmail.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-kmalloc_reserve may fail to allocate memory inside skb_linearize, 
-which means skb_linearize's return value should not be ignored. 
-Following patch correct the uses of skb_linearize.
+Hello Martin,
 
-Compiled in x86_64
+"Martin K. Petersen" <martin.petersen@oracle.com> writes:
 
-Signed-off-by: Zhouyi Zhou <zhouzhouyi@gmail.com>
----
- drivers/infiniband/hw/nes/nes_nic.c           | 5 +++--
- drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c | 6 +++++-
- drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 3 +--
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c             | 7 +++++--
- drivers/scsi/fcoe/fcoe.c                      | 5 ++++-
- net/tipc/link.c                               | 3 ++-
- net/tipc/name_distr.c                         | 5 ++++-
- 7 files changed, 24 insertions(+), 10 deletions(-)
+>>>>>> "Nicolai" == Nicolai Stange <nicstange@gmail.com> writes:
+> Nicolai> Due to reported problems with Write Same on ATA devices, commit
+> Nicolai> 0ce1b18c42a5 ("libata: Some drives failing on SCT Write Same")
+> Nicolai> strived to report non-support for Write Same on non-zoned ATA
+> Nicolai> devices.
+>
+> Nicolai> However, due to the following control flow in
+> Nicolai> sd_config_write_same() this doesn't always take effect, namely
+> Nicolai> if the ->max_ws_blocks as set in the by the ATA Identify Device
+> Nicolai> exceeds SD_WS10_BLOCKS:
+>
+> I'd much prefer for libata to set no_write_same = 1 for non-ZAC devices.
 
-diff --git a/drivers/infiniband/hw/nes/nes_nic.c b/drivers/infiniband/hw/nes/nes_nic.c
-index 2b27d13..69372ea 100644
---- a/drivers/infiniband/hw/nes/nes_nic.c
-+++ b/drivers/infiniband/hw/nes/nes_nic.c
-@@ -662,10 +662,11 @@ static int nes_netdev_start_xmit(struct sk_buff *skb, struct net_device *netdev)
- 				nesnic->sq_head &= nesnic->sq_size-1;
- 			}
- 		} else {
--			nesvnic->linearized_skbs++;
- 			hoffset = skb_transport_header(skb) - skb->data;
- 			nhoffset = skb_network_header(skb) - skb->data;
--			skb_linearize(skb);
-+			if (skb_linearize(skb))
-+				return NETDEV_TX_BUSY;
-+			nesvnic->linearized_skbs++;
- 			skb_set_transport_header(skb, hoffset);
- 			skb_set_network_header(skb, nhoffset);
- 			if (!nes_nic_send(skb, netdev))
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-index 2a653ec..ab787cb 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-@@ -490,7 +490,11 @@ int ixgbe_fcoe_ddp(struct ixgbe_adapter *adapter,
- 	 */
- 	if ((fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA) &&
- 	    (fctl & FC_FC_END_SEQ)) {
--		skb_linearize(skb);
-+		int err = 0;
-+
-+		err = skb_linearize(skb);
-+		if (err)
-+			return err;
- 		crc = (struct fcoe_crc_eof *)skb_put(skb, sizeof(*crc));
- 		crc->fcoe_eof = FC_EOF_T;
- 	}
-diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-index fee1f29..4926d48 100644
---- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-+++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-@@ -2173,8 +2173,7 @@ static int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
- 				total_rx_bytes += ddp_bytes;
- 				total_rx_packets += DIV_ROUND_UP(ddp_bytes,
- 								 mss);
--			}
--			if (!ddp_bytes) {
-+			} else {
- 				dev_kfree_skb_any(skb);
- 				continue;
- 			}
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index f9ddb61..197d02e 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -542,8 +542,11 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
- 		return;
- 	}
- 
--	if (skb_is_nonlinear(skb))
--		skb_linearize(skb);
-+	if (skb_linearize(skb)) {
-+		kfree_skb(skb);
-+		return;
-+	}
-+
- 	mac = eth_hdr(skb)->h_source;
- 	dest_mac = eth_hdr(skb)->h_dest;
- 
-diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-index 9bd41a3..f691b97 100644
---- a/drivers/scsi/fcoe/fcoe.c
-+++ b/drivers/scsi/fcoe/fcoe.c
-@@ -1685,7 +1685,10 @@ static void fcoe_recv_frame(struct sk_buff *skb)
- 			skb->dev ? skb->dev->name : "<NULL>");
- 
- 	port = lport_priv(lport);
--	skb_linearize(skb); /* check for skb_is_nonlinear is within skb_linearize */
-+	if (skb_linearize(skb)) {
-+		kfree_skb(skb);
-+		return;
-+	}
- 
- 	/*
- 	 * Frame length checks and setting up the header pointers
-diff --git a/net/tipc/link.c b/net/tipc/link.c
-index bda89bf..077c570 100644
---- a/net/tipc/link.c
-+++ b/net/tipc/link.c
-@@ -1446,7 +1446,8 @@ static int tipc_link_proto_rcv(struct tipc_link *l, struct sk_buff *skb,
- 	if (tipc_own_addr(l->net) > msg_prevnode(hdr))
- 		l->net_plane = msg_net_plane(hdr);
- 
--	skb_linearize(skb);
-+	if (skb_linearize(skb))
-+		goto exit;
- 	hdr = buf_msg(skb);
- 	data = msg_data(hdr);
- 
-diff --git a/net/tipc/name_distr.c b/net/tipc/name_distr.c
-index c1cfd92..4e05d2a 100644
---- a/net/tipc/name_distr.c
-+++ b/net/tipc/name_distr.c
-@@ -356,7 +356,10 @@ void tipc_named_rcv(struct net *net, struct sk_buff_head *inputq)
- 
- 	spin_lock_bh(&tn->nametbl_lock);
- 	for (skb = skb_dequeue(inputq); skb; skb = skb_dequeue(inputq)) {
--		skb_linearize(skb);
-+		if (skb_linearize(skb)) {
-+			kfree_skb(skb);
-+			continue;
-+		}
- 		msg = buf_msg(skb);
- 		mtype = msg_type(msg);
- 		item = (struct distr_item *)msg_data(msg);
--- 
-1.9.1
+Or just try it once and let the sd layer, i.e. sd_done(), disable it
+once a ILLEGAL COMMAND OPCODE is reported. This works right now and as
+you said below, calling code must cope gracefully with a failing Write
+Same anyway (which doesn't work right now).
+
+>
+> Older SCSI devices have no way to explicitly report that WRITE SAME is
+> supported. So the heuristic is the way it is to permit trying WRITE SAME
+> unless no_write_same has been set by the device driver.
+
+Ok, I didn't see that there might be a heuristic going on.
+
+I've got a couple of questions about this, but they're mainly out of
+curiosity. So feel free to ignore them.
+
+1.) Do these older SCSI devices have a way to report ->max_ws_blocks?
+    Because otherwise the heuristic would not work?
+    Or is it set speculatively somewhere?
+
+2.) If so, what about such older devices having
+    0 < ->max_ws_blocks < SD_MAX_WS10_BLOCKS ?
+    Wouldn't these also be suitable candidates for trying that
+    heuristic on?
+
+3.) Those older devices that have ->max_ws_blocks > SD_MAX_WS10_BLOCKS
+    but ->ws16 == ->ws10 == 0, i.e. the heuristicated ones would
+    always be given WRITE_SAME, not WRITE_SAME_16 commands?
+    C.f. sd_setup_write_same_cmnd(): if ->ws16 is not set, do
+    WRITE_SAME. Isn't this a little bit odd given that the reported 
+    ->max_ws_blocks would be greater than SD_MAX_WS10_BLOCKS?
+    Ok, given that these devices are older anyway, WRITE_SAME seems
+    like the obvious choice to be made over WRITE_SAME_16. Which
+    brings me back to question 2.).
+
+    The answer to this question would possibly affect ATA devices with
+    this heuristic going on as well: according to ata_scsiop_maint_in(),
+    they would only support WRITE_SAME_16, but not WRITE_SAME.
+
+    Heck, this is perhaps the reason why I'm seeing those errors this
+    commit 0ce1b18c42a5 ("libata: Some drives failing on SCT Write
+    Same") effectively turns the heuristics for my ATA device on,
+    i.e. unsets ->ws16, resulting in WRITE_SAME's which are unsupported
+    by libata-scsi, c.f. ata_get_xlat_func()...
+
+>
+> Nicolai> Since commit e73c23ff736e ("block: add async variant of
+> Nicolai> blkdev_issue_zeroout"), blkdev_issue_zeroout() got a little bit
+> Nicolai> more sensitive towards failing Write Sames on devices that
+> Nicolai> claim to support them and this results in messages like
+>
+> That's something that needs to be addressed. blkdev_issue_zeroout() must
+> cope with WRITE SAME failing and fall back to a manual zeroout.
+
+That's very useful information! So this commit really needs a fixup in
+either way.
+
+
+Thank you!
+
+Nicolai
