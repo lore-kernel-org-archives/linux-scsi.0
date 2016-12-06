@@ -1,266 +1,109 @@
 From: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
-Subject: [PATCH V4 08/11] megaraid_sas: Enable or Disable Fast path based on the PCI Threshold Bandwidth
-Date: Tue,  6 Dec 2016 18:00:17 -0500
-Message-ID: <1481065220-18431-9-git-send-email-sasikumar.pc@broadcom.com>
+Subject: [PATCH V4 02/11] megaraid_sas: 128 MSIX Support
+Date: Tue,  6 Dec 2016 18:00:11 -0500
+Message-ID: <1481065220-18431-3-git-send-email-sasikumar.pc@broadcom.com>
 References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f169.google.com ([209.85.216.169]:36671 "EHLO
-        mail-qt0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753075AbcLFXAu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 18:00:50 -0500
-Received: by mail-qt0-f169.google.com with SMTP id w33so361461473qtc.3
-        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2016 15:00:49 -0800 (PST)
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, thenzl@redhat.com, sasikumar.pc@broadcom.com
+List-Id: linux-scsi@vger.kernel.org
 
-Large SEQ IO workload should sent as non fast path commands
+SAS3.5 Generic Megaraid based Controllers will have the support for 128 MSI-X vectors,
+resulting in the need to support 128 reply queues
 
-This patch is depending on patch 7
+This patch is depending on patch 1
 
 Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  8 +++++
- drivers/scsi/megaraid/megaraid_sas_base.c   | 48 +++++++++++++++++++++++++++++
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 11 +++++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 20 +++++++-----
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +-
- 5 files changed, 78 insertions(+), 11 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  1 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 24 +++++++++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  4 ++--
+ 3 files changed, 20 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 3e087ab..eb5be2b 100644
+index 72e16c2..9d4ca8d 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
- #define MFI_1068_FW_HANDSHAKE_OFFSET		0x64
- #define MFI_1068_FW_READY			0xDDDD0000
- 
-+#define MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL HZ
-+
- #define MR_MAX_REPLY_QUEUES_OFFSET              0X0000001F
- #define MR_MAX_REPLY_QUEUES_EXT_OFFSET          0X003FC000
- #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
-@@ -2101,6 +2103,10 @@ struct megasas_instance {
- 	atomic_t ldio_outstanding;
- 	atomic_t fw_reset_no_pci_access;
- 
-+	atomic64_t bytes_wrote; /* used for raid1 fast path enable or disable */
-+	atomic_t r1_write_fp_capable;
-+
-+
- 	struct megasas_instance_template *instancet;
- 	struct tasklet_struct isr_tasklet;
- 	struct work_struct work_init;
-@@ -2143,6 +2149,7 @@ struct megasas_instance {
- 	long reset_flags;
- 	struct mutex reset_mutex;
- 	struct timer_list sriov_heartbeat_timer;
-+	struct timer_list r1_fp_hold_timer;
- 	char skip_heartbeat_timer_del;
- 	u8 requestorId;
- 	char PlasmaFW111;
-@@ -2159,6 +2166,7 @@ struct megasas_instance {
+@@ -2149,6 +2149,7 @@ struct megasas_instance {
+ 	bool dev_handle;
+ 	bool fw_sync_cache_support;
  	bool is_ventura;
- 	bool msix_combined;
- 	u16 max_raid_mapsize;
-+	u64 pci_threshold_bandwidth; /* used to control the fp writes */
++	bool msix_combined;
  };
  struct MR_LD_VF_MAP {
  	u32 size;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 8aafb59..899d25c 100644
+index efccf98..c583e0b 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -1940,6 +1940,9 @@ void megaraid_sas_kill_hba(struct megasas_instance *instance)
+@@ -5086,13 +5086,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			goto fail_ready_state;
  	}
- 	/* Complete outstanding ioctls when adapter is killed */
- 	megasas_complete_outstanding_ioctls(instance);
-+	if (instance->is_ventura)
-+		del_timer_sync(&instance->r1_fp_hold_timer);
-+
- }
  
-  /**
-@@ -2438,6 +2441,24 @@ void megasas_sriov_heartbeat_handler(unsigned long instance_addr)
+-	/*
+-	 * MSI-X host index 0 is common for all adapter.
+-	 * It is used for all MPT based Adapters.
+-	 */
+-	instance->reply_post_host_index_addr[0] =
+-		(u32 __iomem *)((u8 __iomem *)instance->reg_set +
+-		MPI2_REPLY_POST_HOST_INDEX_OFFSET);
++
+ 
+ 	/* Check if MSI-X is supported while in ready state */
+ 	msix_enable = (instance->instancet->read_fw_status_reg(reg_set) &
+@@ -5110,6 +5104,9 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 				instance->msix_vectors = ((scratch_pad_2
+ 					& MR_MAX_REPLY_QUEUES_EXT_OFFSET)
+ 					>> MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT) + 1;
++				if (instance->msix_vectors > 16)
++					instance->msix_combined = true;
++
+ 				if (rdpq_enable)
+ 					instance->is_rdpq = (scratch_pad_2 & MR_RDPQ_MODE_OFFSET) ?
+ 								1 : 0;
+@@ -5143,6 +5140,19 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		else
+ 			instance->msix_vectors = 0;
  	}
- }
- 
-+/*Handler for disabling/enabling raid 1 fast paths*/
-+void megasas_change_r1_fp_status(unsigned long instance_addr)
-+{
-+	struct megasas_instance *instance =
-+			(struct megasas_instance *)instance_addr;
-+	if (atomic64_read(&instance->bytes_wrote) >=
-+					instance->pci_threshold_bandwidth) {
-+
-+		atomic64_set(&instance->bytes_wrote, 0);
-+		atomic_set(&instance->r1_write_fp_capable, 0);
++	/*
++	 * MSI-X host index 0 is common for all adapter.
++	 * It is used for all MPT based Adapters.
++	 */
++	if (instance->msix_combined) {
++		instance->reply_post_host_index_addr[0] =
++				(u32 *)((u8 *)instance->reg_set +
++				MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET);
 +	} else {
-+		atomic64_set(&instance->bytes_wrote, 0);
-+		atomic_set(&instance->r1_write_fp_capable, 1);
++		instance->reply_post_host_index_addr[0] =
++			(u32 *)((u8 *)instance->reg_set +
++			MPI2_REPLY_POST_HOST_INDEX_OFFSET);
 +	}
-+	mod_timer(&instance->r1_fp_hold_timer,
-+	 jiffies + MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
-+}
-+
- /**
-  * megasas_wait_for_outstanding -	Wait for all outstanding cmds
-  * @instance:				Adapter soft state
-@@ -5371,6 +5392,17 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			instance->skip_heartbeat_timer_del = 1;
- 	}
  
-+	if (instance->is_ventura) {
-+		atomic64_set(&instance->bytes_wrote, 0);
-+		atomic_set(&instance->r1_write_fp_capable, 1);
-+		megasas_start_timer(instance,
-+			    &instance->r1_fp_hold_timer,
-+			    megasas_change_r1_fp_status,
-+			    MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
-+				dev_info(&instance->pdev->dev, "starting the raid 1 fp timer with interval %d\n",
-+				MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
-+	}
-+
- 	return 0;
- 
- fail_get_ld_pd_list:
-@@ -6161,6 +6193,9 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
- 		del_timer_sync(&instance->sriov_heartbeat_timer);
- 
-+	if (instance->is_ventura)
-+		del_timer_sync(&instance->r1_fp_hold_timer);
-+
- 	megasas_flush_cache(instance);
- 	megasas_shutdown_controller(instance, MR_DCMD_HIBERNATE_SHUTDOWN);
- 
-@@ -6280,6 +6315,16 @@ static void megasas_shutdown_controller(struct megasas_instance *instance,
- 	megasas_setup_jbod_map(instance);
- 	instance->unload = 0;
- 
-+	if (instance->is_ventura) {
-+		atomic64_set(&instance->bytes_wrote, 0);
-+		atomic_set(&instance->r1_write_fp_capable, 1);
-+		megasas_start_timer(instance,
-+			    &instance->r1_fp_hold_timer,
-+			    megasas_change_r1_fp_status,
-+			    MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
-+	}
-+
-+
- 	/*
- 	 * Initiate AEN (Asynchronous Event Notification)
- 	 */
-@@ -6368,6 +6413,9 @@ static void megasas_detach_one(struct pci_dev *pdev)
- 	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
- 		del_timer_sync(&instance->sriov_heartbeat_timer);
- 
-+	if (instance->is_ventura)
-+		del_timer_sync(&instance->r1_fp_hold_timer);
-+
- 	if (instance->fw_crash_state != UNAVAILABLE)
- 		megasas_free_host_crash_buffer(instance);
- 	scsi_remove_host(instance->host);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index a6957a3..7da4685 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -197,14 +197,19 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 
- 	if (instance->max_raid_mapsize) {
- 		fw_map_dyn = fusion->ld_map[(instance->map_id & 1)];
-+		if (fw_map_dyn->pci_threshold_bandwidth)
-+			instance->pci_threshold_bandwidth =
-+			le64_to_cpu(fw_map_dyn->pci_threshold_bandwidth);
- #if VD_EXT_DEBUG
- 		dev_dbg(&instance->pdev->dev,
- 		" raidMapSize 0x%x fw_map_dyn->descTableOffset 0x%x, "
--		" descTableSize 0x%x descTableNumElements 0x%x\n",
-+		" descTableSize 0x%x descTableNumElements 0x%x, "
-+		" PCIThreasholdBandwidth %llu\n",
- 		le32_to_cpu(fw_map_dyn->raid_map_size),
- 		le32_to_cpu(fw_map_dyn->desc_table_offset),
- 		le32_to_cpu(fw_map_dyn->desc_table_size),
--		le32_to_cpu(fw_map_dyn->desc_table_num_elements));
-+		le32_to_cpu(fw_map_dyn->desc_table_num_elements),
-+		instance->pci_threshold_bandwidth);
- 		dev_dbg(&instance->pdev->dev,
- 		"drv map %p ldCount %d\n", drv_map, fw_map_dyn->ld_count);
- #endif
-@@ -434,6 +439,8 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 			sizeof(struct MR_DEV_HANDLE_INFO) *
- 			MAX_RAIDMAP_PHYSICAL_DEVICES);
- 	}
-+	if (instance->is_ventura && !instance->pci_threshold_bandwidth)
-+		instance->pci_threshold_bandwidth = ULLONG_MAX;
- }
- 
- /*
+ 	dev_info(&instance->pdev->dev,
+ 		"firmware supports msix\t: (%d)", fw_msix_count);
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index f968a23..5992153 100644
+index 8d7a397..413e2030 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -95,6 +95,7 @@ void megasas_start_timer(struct megasas_instance *instance,
- extern unsigned int dual_qdepth_disable;
- static void megasas_free_rdpq_fusion(struct megasas_instance *instance);
- static void megasas_free_reply_fusion(struct megasas_instance *instance);
-+void megasas_change_r1_fp_status(unsigned long instance_addr);
+@@ -2391,7 +2391,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		 * pending to be completed
+ 		 */
+ 		if (threshold_reply_count >= THRESHOLD_REPLY_COUNT) {
+-			if (fusion->adapter_type == INVADER_SERIES)
++			if (instance->msix_combined)
+ 				writel(((MSIxIndex & 0x7) << 24) |
+ 					fusion->last_reply_idx[MSIxIndex],
+ 					instance->reply_post_host_index_addr[MSIxIndex/8]);
+@@ -2407,7 +2407,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		return IRQ_NONE;
  
- 
- 
-@@ -2633,8 +2634,9 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
- 	*	to get new command
- 	*/
- 	if (cmd->is_raid_1_fp_write &&
--		atomic_inc_return(&instance->fw_outstanding) >
--			(instance->host->can_queue)) {
-+		(atomic_inc_return(&instance->fw_outstanding) >
-+			(instance->host->can_queue) ||
-+		(!atomic_read(&instance->r1_write_fp_capable)))) {
- 		megasas_fpio_to_ldio(instance, cmd, cmd->scmd);
- 		atomic_dec(&instance->fw_outstanding);
- 	} else if (cmd->is_raid_1_fp_write) {
-@@ -2643,17 +2645,19 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
- 		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
- 	}
- 
--
- 	/*
--	 * Issue the command to the FW
--	 */
-+	* Issue the command to the FW
-+	*/
-+	if (scmd->sc_data_direction == PCI_DMA_TODEVICE && instance->is_ventura)
-+		atomic64_add(scsi_bufflen(scmd), &instance->bytes_wrote);
- 
- 	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
- 
--	if (r1_cmd)
-+	if (r1_cmd) {
-+		atomic64_add(scsi_bufflen(scmd), &instance->bytes_wrote);
- 		megasas_fire_cmd_fusion(instance, r1_cmd->request_desc,
--				instance->is_ventura);
--
-+			instance->is_ventura);
-+	}
- 
- 	return 0;
- }
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index c39c4ed..da05790 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -977,7 +977,7 @@ struct MR_FW_RAID_MAP_DYNAMIC {
- 	u32 desc_table_size;  /* Total Size of desc table */
- 	/* Total Number of elements in the desc table */
- 	u32 desc_table_num_elements;
--	u64	reserved1;
-+	u64	pci_threshold_bandwidth;
- 	u32	reserved2[3];	/*future use */
- 	/* timeout value used by driver in FP IOs */
- 	u8 fp_pd_io_timeout_sec;
+ 	wmb();
+-	if (fusion->adapter_type == INVADER_SERIES)
++	if (instance->msix_combined)
+ 		writel(((MSIxIndex & 0x7) << 24) |
+ 			fusion->last_reply_idx[MSIxIndex],
+ 			instance->reply_post_host_index_addr[MSIxIndex/8]);
 -- 
 1.8.3.1
-
