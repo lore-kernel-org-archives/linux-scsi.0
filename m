@@ -1,92 +1,49 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 2/4] hpsa: add generate controller NMI on lockup
-Date: Tue, 6 Dec 2016 22:31:54 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D19418093E8@avsrvexchmbx1.microsemi.net>
-References: <147752001094.813.10247306839794156732.stgit@brunhilda>
- <147752051230.813.13699218798744038354.stgit@brunhilda>
- <4b6cf4a2-a9af-dcd2-4412-f292d51513ca@suse.de>
- <4993A297653ECB4581FA5C3C31323D193B0B8FAC@avsrvexchmbx1.microsemi.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
+Subject: [PATCH V4 00/11] megaraid_sas: Updates for scsi-next
+Date: Tue,  6 Dec 2016 18:00:09 -0500
+Message-ID: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0055.outbound.protection.outlook.com ([104.47.41.55]:33824
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753043AbcLFWqk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Dec 2016 17:46:40 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D193B0B8FAC@avsrvexchmbx1.microsemi.net>
-Content-Language: en-US
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:34306 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750953AbcLFXA3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 18:00:29 -0500
+Received: by mail-qk0-f170.google.com with SMTP id q130so208837354qke.1
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2016 15:00:29 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, Hannes Reinecke <hare@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, thenzl@redhat.com, sasikumar.pc@broadcom.com
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIERvbiBCcmFjZQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVyIDExLCAy
-MDE2IDEwOjA5IEFNDQo+IFRvOiBIYW5uZXMgUmVpbmVja2U7IGplamJAbGludXgudm5ldC5pYm0u
-Y29tOyBKb2huIEhhbGw7IEtldmluIEJhcm5ldHQ7DQo+IE1haGVzaCBSYWphc2hla2hhcmE7IGhj
-aEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBWaXN3YXMgRzsgSnVzdGluDQo+IExpbmRsZXk7
-IFNjb3R0IEJlbmVzaDsgZWxsaW90dEBocGUuY29tOyBQT1NXQUxEQHN1c2UuY29tDQo+IENjOiBs
-aW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIDIvNF0gaHBz
-YTogYWRkIGdlbmVyYXRlIGNvbnRyb2xsZXIgTk1JIG9uIGxvY2t1cA0KPiANCj4gRVhURVJOQUwg
-RU1BSUwNCj4gDQo+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTog
-SGFubmVzIFJlaW5lY2tlIFttYWlsdG86aGFyZUBzdXNlLmRlXQ0KPiA+IFNlbnQ6IFRodXJzZGF5
-LCBPY3RvYmVyIDI3LCAyMDE2IDQ6MDMgQU0NCj4gPiBUbzogRG9uIEJyYWNlOyBqZWpiQGxpbnV4
-LnZuZXQuaWJtLmNvbTsgSm9obiBIYWxsOyBLZXZpbiBCYXJuZXR0OyBNYWhlc2gNCj4gPiBSYWph
-c2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBWaXN3YXMgRzsgSnVzdGlu
-IExpbmRsZXk7DQo+IFNjb3R0DQo+ID4gQmVuZXNoOyBlbGxpb3R0QGhwZS5jb207IFBPU1dBTERA
-c3VzZS5jb20NCj4gPiBDYzogbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gPiBTdWJqZWN0
-OiBSZTogW1BBVENIIDIvNF0gaHBzYTogYWRkIGdlbmVyYXRlIGNvbnRyb2xsZXIgTk1JIG9uIGxv
-Y2t1cA0KPiA+DQo+ID4gRVhURVJOQUwgRU1BSUwNCj4gPg0KPiA+DQo+ID4gT24gMTAvMjcvMjAx
-NiAxMjoyMSBBTSwgRG9uIEJyYWNlIHdyb3RlOg0KPiA+ID4gVGVsbCB0aGUgY29udHJvbGxlciB0
-byBOTUkgd2hlbiB0aGUgY29udHJvbGxlciBkZWFkbG9ja3MuDQo+ID4gPg0KPiA+ID4gUmV2aWV3
-ZWQtYnk6IFNjb3R0IEJlbmVzaCA8c2NvdHQuYmVuZXNoQG1pY3Jvc2VtaS5jb20+DQo+ID4gPiBS
-ZXZpZXdlZC1ieTogU2NvdHQgVGVlbCA8c2NvdHQudGVlbEBtaWNyb3NlbWkuY29tPg0KPiA+ID4g
-UmV2aWV3ZWQtYnk6IEtldmluIEJhcm5ldHQgPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT4N
-Cj4gPiA+IFNpZ25lZC1vZmYtYnk6IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+
-DQo+ID4gPiAtLS0NCj4gPiA+ICBkcml2ZXJzL3Njc2kvaHBzYS5jICAgICB8ICAgIDYgKysrKysr
-DQo+ID4gPiAgZHJpdmVycy9zY3NpL2hwc2FfY21kLmggfCAgICAxICsNCj4gPiA+ICAyIGZpbGVz
-IGNoYW5nZWQsIDcgaW5zZXJ0aW9ucygrKQ0KPiA+ID4NCj4gPiA+IGRpZmYgLS1naXQgYS9kcml2
-ZXJzL3Njc2kvaHBzYS5jIGIvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+ID4gaW5kZXggNzk4ZmIy
-MC4uOWZiNzM5YyAxMDA2NDQNCj4gPiA+IC0tLSBhL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiA+
-ICsrKyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiA+IEBAIC04NDUxLDYgKzg0NTEsMTIgQEAg
-c3RhdGljIHZvaWQgY29udHJvbGxlcl9sb2NrdXBfZGV0ZWN0ZWQoc3RydWN0DQo+ID4gY3Rscl9p
-bmZvICpoKQ0KPiA+ID4gICAgICAgICAgICAgICAgICAgICAgICJsb2NrdXAgZGV0ZWN0ZWQgYWZ0
-ZXIgJWQgYnV0IHNjcmF0Y2hwYWQgcmVnaXN0ZXIgaXMgemVyb1xuIiwNCj4gPiA+ICAgICAgICAg
-ICAgICAgICAgICAgICBoLT5oZWFydGJlYXRfc2FtcGxlX2ludGVydmFsIC8gSFopOw0KPiA+ID4g
-ICAgICAgICAgICAgICBsb2NrdXBfZGV0ZWN0ZWQgPSAweGZmZmZmZmZmOw0KPiA+ID4gKyAgICAg
-fSBlbHNlIGlmIChsb2NrdXBfZGV0ZWN0ZWQgPT0gMHhmZmZmMDAwMCkgew0KPiA+ID4gKyAgICAg
-ICAgICAgICAvKg0KPiA+ID4gKyAgICAgICAgICAgICAgKiBSaW5nIGNvbnRyb2xsZXIgTk1JIGRv
-b3JiZWxsDQo+ID4gPiArICAgICAgICAgICAgICAqLw0KPiA+ID4gKyAgICAgICAgICAgICBkZXZf
-d2FybigmaC0+cGRldi0+ZGV2LCAiVGVsbGluZyBjb250cm9sbGVyIHRvIGRvIGFuIE5NSVxuIik7
-DQo+ID4gPiArICAgICAgICAgICAgIHdyaXRlbChET09SQkVMTF9HRU5FUkFURV9OTUksIGgtPnZh
-ZGRyICsgU0E1X0RPT1JCRUxMKTsNCj4gPiA+ICAgICAgIH0NCj4gPiA+ICAgICAgIHNldF9sb2Nr
-dXBfZGV0ZWN0ZWRfZm9yX2FsbF9jcHVzKGgsIGxvY2t1cF9kZXRlY3RlZCk7DQo+ID4gPiAgICAg
-ICBzcGluX3VubG9ja19pcnFyZXN0b3JlKCZoLT5sb2NrLCBmbGFncyk7DQo+ID4gPiBkaWZmIC0t
-Z2l0IGEvZHJpdmVycy9zY3NpL2hwc2FfY21kLmggYi9kcml2ZXJzL3Njc2kvaHBzYV9jbWQuaA0K
-PiA+ID4gaW5kZXggYTU4NGNkZi4uZDE4NmY4MCAxMDA2NDQNCj4gPiA+IC0tLSBhL2RyaXZlcnMv
-c2NzaS9ocHNhX2NtZC5oDQo+ID4gPiArKysgYi9kcml2ZXJzL3Njc2kvaHBzYV9jbWQuaA0KPiA+
-ID4gQEAgLTE0Miw2ICsxNDIsNyBAQA0KPiA+ID4gICNkZWZpbmUgRE9PUkJFTExfQ1RMUl9SRVNF
-VCAgMHgwMDAwMDAwNGwNCj4gPiA+ICAjZGVmaW5lIERPT1JCRUxMX0NUTFJfUkVTRVQyIDB4MDAw
-MDAwMjBsDQo+ID4gPiAgI2RlZmluZSBET09SQkVMTF9DTEVBUl9FVkVOVFMgICAgICAgIDB4MDAw
-MDAwNDBsDQo+ID4gPiArI2RlZmluZSBET09SQkVMTF9HRU5FUkFURV9OTUkgICAgICAgIDB4MDAw
-MDAwODBsDQo+ID4gPg0KPiA+ID4gICNkZWZpbmUgQ0ZHVEJMX1RyYW5zX1NpbXBsZSAgICAgMHgw
-MDAwMDAwMmwNCj4gPiA+ICAjZGVmaW5lIENGR1RCTF9UcmFuc19QZXJmb3JtYW50IDB4MDAwMDAw
-MDRsDQo+ID4gPg0KPiA+IENhcmUgdG8gZWxhYm9yYXRlIGEgYml0IG1vcmUgaGVyZT8NCj4gPiAn
-R2VuZXJhdGluZyBOTUknIHRlbmRzIHRvIHJpbmcgc29tZSBhbGFybSBiZWxscywgc28gSSdkIHJh
-dGhlciBrbm93DQo+ID4gd2hlcmUgdGhlIE5NSSBpcyBhY3R1YWxseSBnZW5lcmF0ZWQsIGFuZCBp
-ZiBpcyBjb3VsZCByZWZsZWN0IGJhY2sgdG8gdGhlDQo+ID4gc3lzdGVtIC4uLg0KPiA+DQo+ID4g
-Q2hlZXJzLA0KPiA+DQo+ID4gSGFubmVzDQo+ID4gLS0NCj4gPiBEci4gSGFubmVzIFJlaW5lY2tl
-ICAgICAgICAgICAgICAgIFRlYW1sZWFkIFN0b3JhZ2UgJiBOZXR3b3JraW5nDQo+ID4gaGFyZUBz
-dXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4
-OA0KPiA+IFNVU0UgTElOVVggR21iSCwgTWF4ZmVsZHN0ci4gNSwgOTA0MDkgTsO8cm5iZXJnDQo+
-ID4gR0Y6IEYuIEltZW5kw7ZyZmZlciwgSi4gU21pdGhhcmQsIEouIEd1aWxkLCBELiBVcG1hbnl1
-LCBHLiBOb3J0b24NCj4gPiBIUkIgMjEyODQgKEFHIE7DvHJuYmVyZykNCj4gDQo+IA0KPiBUaGVy
-ZSBhcmUgc29tZSByYXJlIGNhc2VzIHdoZXJlIHdlIGdldCB0aGlzIGxvY2t1cCBjb2RlIGFuZCB3
-ZQ0KPiBuZWVkIHRvIHRlbGwgdGhlIGNvbnRyb2xsZXIgdG8gZG8gaXRzIG93biBOTUkuIFRoaXMg
-Tk1JIGlzIG9ubHkgZG9uZQ0KPiBvbiB0aGUgY29udHJvbGxlciBhbmQgZG9lcyBub3QgdGVsbCB0
-aGUgT1MgdG8gcGVyZm9ybSBhbiBOTUkuDQo+IA0KPiBUaGFua3MsDQo+IERvbiBCcmFjZQ0KDQpX
-b25kZXJpbmcgd2hhdCBoYXMgaGFwcGVuZWQgdG8gdGhpcyBwYXRjaD8NCg0KVGhhbmtzLA0KRG9u
-IEJyYWNlDQpFU0MgLSBTbWFydCBTdG9yYWdlDQpNaWNyb3NlbWkgQ29ycG9yYXRpb24NCg0KDQo=
+
+Sasikumar Chandrasekaran (11):
+  megaraid_sas: Add new pci device Ids for SAS3.5 Generic Megaraid
+    Controllers
+  megaraid_sas: 128 MSIX Support
+  megaraid_sas: EEDP Escape Mode Support for SAS3.5 Generic Megaraid
+    Controllers
+  megaraid_sas: SAS3.5 Generic Megaraid Controllers Stream Detection and
+    IO Coalescing
+  megaraid_sas: SAS3.5 Generic Megaraid Controllers Fast Path for RAID
+    1/10 Writes
+  megaraid_sas: Dynamic Raid Map Changes for SAS3.5 Generic Megaraid
+    Controllers
+  megaraid_sas: Add the Support for SAS3.5 Generic Megaraid Controllers
+    Capabilities
+  megaraid_sas: Enable or Disable Fast path based on the PCI Threshold
+    Bandwidth
+  megaraid_sas: ldio_outstanding variable is not decremented in
+    completion path
+  megaraid_sas: Implement the PD Map support for SAS3.5 Generic Megaraid
+    Controllers
+  megaraid_sas: driver version upgrade
+
+ drivers/scsi/megaraid/megaraid_sas.h        | 139 +++--
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 240 +++++++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     | 343 +++++++++++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 756 +++++++++++++++++++++++-----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 364 ++++++++++++--
+ 5 files changed, 1564 insertions(+), 278 deletions(-)
+
+-- 
+1.8.3.1
+
