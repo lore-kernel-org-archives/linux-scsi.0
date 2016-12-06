@@ -1,163 +1,92 @@
-From: Yuval Shaia <yuval.shaia-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH] net: return value of skb_linearize should be handled in
- Linux kernel
-Date: Tue, 6 Dec 2016 18:57:21 +0200
-Message-ID: <20161206165721.GB5023@yuval-lap.uk.oracle.com>
-References: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH v4 0/6] qla2xxx: Feature udpates for driver.
+Date: Tue, 6 Dec 2016 11:07:40 -0800
+Message-ID: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Content-Disposition: inline
-In-Reply-To: <1481008233-16777-1-git-send-email-zhouzhouyi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Zhouyi Zhou <zhouzhouyi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: faisal.latif-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org, sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jeffrey.t.kirsher-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org, QLogic-Storage-Upstream-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, jth-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org, jon.maloy-IzeFyvvaP7pWk0Htik3J/w@public.gmane.org, ying.xue-CWA4WttNNZF54TAoqtyWWQ@public.gmane.org, davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, intel-wired-lan-qjLDD68F18P21nG7glBr7A@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, tipc-discussion-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:43583
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751617AbcLFTH7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Dec 2016 14:07:59 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-On Tue, Dec 06, 2016 at 03:10:33PM +0800, Zhouyi Zhou wrote:
-> kmalloc_reserve may fail to allocate memory inside skb_linearize, 
-> which means skb_linearize's return value should not be ignored. 
-> Following patch correct the uses of skb_linearize.
-> 
-> Compiled in x86_64
+Hi Martin, 
 
-FWIW compiled also on SPARC
+Please consider this revised series for inclusion into scsi-misc. 
+This series has incorporated partial changes based on review comments
+from Christop and Hannes. 
 
-Reviewed-by: Yuval Shaia <yuval.shaia-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org>
+There were few changes that are left out of this series as they 
+will need regression testing and we have patches for target infrastucture
+already based on these patch series which I am going to send out soon.
+We will submit additional patches with the changes suggested as soon as
+we have completed regression with them. 
 
-> 
-> Signed-off-by: Zhouyi Zhou <zhouzhouyi-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-> ---
->  drivers/infiniband/hw/nes/nes_nic.c           | 5 +++--
->  drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c | 6 +++++-
->  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 3 +--
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c             | 7 +++++--
->  drivers/scsi/fcoe/fcoe.c                      | 5 ++++-
->  net/tipc/link.c                               | 3 ++-
->  net/tipc/name_distr.c                         | 5 ++++-
->  7 files changed, 24 insertions(+), 10 deletions(-)
-> 
-> diff --git a/drivers/infiniband/hw/nes/nes_nic.c b/drivers/infiniband/hw/nes/nes_nic.c
-> index 2b27d13..69372ea 100644
-> --- a/drivers/infiniband/hw/nes/nes_nic.c
-> +++ b/drivers/infiniband/hw/nes/nes_nic.c
-> @@ -662,10 +662,11 @@ static int nes_netdev_start_xmit(struct sk_buff *skb, struct net_device *netdev)
->  				nesnic->sq_head &= nesnic->sq_size-1;
->  			}
->  		} else {
-> -			nesvnic->linearized_skbs++;
->  			hoffset = skb_transport_header(skb) - skb->data;
->  			nhoffset = skb_network_header(skb) - skb->data;
-> -			skb_linearize(skb);
-> +			if (skb_linearize(skb))
-> +				return NETDEV_TX_BUSY;
-> +			nesvnic->linearized_skbs++;
->  			skb_set_transport_header(skb, hoffset);
->  			skb_set_network_header(skb, nhoffset);
->  			if (!nes_nic_send(skb, netdev))
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-> index 2a653ec..ab787cb 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
-> @@ -490,7 +490,11 @@ int ixgbe_fcoe_ddp(struct ixgbe_adapter *adapter,
->  	 */
->  	if ((fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA) &&
->  	    (fctl & FC_FC_END_SEQ)) {
-> -		skb_linearize(skb);
-> +		int err = 0;
-> +
-> +		err = skb_linearize(skb);
-> +		if (err)
-> +			return err;
->  		crc = (struct fcoe_crc_eof *)skb_put(skb, sizeof(*crc));
->  		crc->fcoe_eof = FC_EOF_T;
->  	}
-> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> index fee1f29..4926d48 100644
-> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
-> @@ -2173,8 +2173,7 @@ static int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
->  				total_rx_bytes += ddp_bytes;
->  				total_rx_packets += DIV_ROUND_UP(ddp_bytes,
->  								 mss);
-> -			}
-> -			if (!ddp_bytes) {
-> +			} else {
->  				dev_kfree_skb_any(skb);
->  				continue;
->  			}
-> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> index f9ddb61..197d02e 100644
-> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-> @@ -542,8 +542,11 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
->  		return;
->  	}
->  
-> -	if (skb_is_nonlinear(skb))
-> -		skb_linearize(skb);
-> +	if (skb_linearize(skb)) {
-> +		kfree_skb(skb);
-> +		return;
-> +	}
-> +
->  	mac = eth_hdr(skb)->h_source;
->  	dest_mac = eth_hdr(skb)->h_dest;
->  
-> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> index 9bd41a3..f691b97 100644
-> --- a/drivers/scsi/fcoe/fcoe.c
-> +++ b/drivers/scsi/fcoe/fcoe.c
-> @@ -1685,7 +1685,10 @@ static void fcoe_recv_frame(struct sk_buff *skb)
->  			skb->dev ? skb->dev->name : "<NULL>");
->  
->  	port = lport_priv(lport);
-> -	skb_linearize(skb); /* check for skb_is_nonlinear is within skb_linearize */
-> +	if (skb_linearize(skb)) {
-> +		kfree_skb(skb);
-> +		return;
-> +	}
->  
->  	/*
->  	 * Frame length checks and setting up the header pointers
-> diff --git a/net/tipc/link.c b/net/tipc/link.c
-> index bda89bf..077c570 100644
-> --- a/net/tipc/link.c
-> +++ b/net/tipc/link.c
-> @@ -1446,7 +1446,8 @@ static int tipc_link_proto_rcv(struct tipc_link *l, struct sk_buff *skb,
->  	if (tipc_own_addr(l->net) > msg_prevnode(hdr))
->  		l->net_plane = msg_net_plane(hdr);
->  
-> -	skb_linearize(skb);
-> +	if (skb_linearize(skb))
-> +		goto exit;
->  	hdr = buf_msg(skb);
->  	data = msg_data(hdr);
->  
-> diff --git a/net/tipc/name_distr.c b/net/tipc/name_distr.c
-> index c1cfd92..4e05d2a 100644
-> --- a/net/tipc/name_distr.c
-> +++ b/net/tipc/name_distr.c
-> @@ -356,7 +356,10 @@ void tipc_named_rcv(struct net *net, struct sk_buff_head *inputq)
->  
->  	spin_lock_bh(&tn->nametbl_lock);
->  	for (skb = skb_dequeue(inputq); skb; skb = skb_dequeue(inputq)) {
-> -		skb_linearize(skb);
-> +		if (skb_linearize(skb)) {
-> +			kfree_skb(skb);
-> +			continue;
-> +		}
->  		msg = buf_msg(skb);
->  		mtype = msg_type(msg);
->  		item = (struct distr_item *)msg_data(msg);
-> -- 
-> 1.9.1
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Here's list of changes that will be posted as seperate series after
+they have gone through regression cycle. 
+
+o Converting uint32_t to bitops and macros to inline function. 
+o Use waitqueue instead of busy wait.
+o Use of srb pool from the scsi_command instead of 
+  allocating/deallocatig mempool in the driver.
+
+Changes from v3 -> v4
+
+o Removed now stale rsp_q refrence from qla_msix_entry. 
+o Merged the multiple files into exsisting code
+o Enabled Mutiqueue by default.
+o Updated to use kcalloc instead of kzalloc
+
+Changes from v2 --> v3
+
+o Added patch to utilize pci_{alloc|free}_irq_vectors call as per
+  Christoph's suggestion.
+o Clean up IRQ affinity and drop num_online_cpu() usage in driver
+  as per review comments from Hannes & Christoph.
+o Added patch description for mailbox starvation patch. Also added
+  Reviewed-by signature from Hannes.
+
+Changes from v1 --> v2
+
+o Split up the patches for Multiqueue into infrastucture changes
+  and support for adding multiqueue capablity in the driver as
+  per Ewan's suggestion.
+o Incorporate new pci_irq_alloc_vector call as per Christoph's suggestion.
+o To address comments related to Mailbox patches by Ewan, I have
+  reworked the patch to clean-up mailbox workqueue.
+
+Himanshu Madhani (1):
+  qla2xxx: Only allow operational MBX to proceed during RESET.
+
+Michael Hernandez (3):
+  qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.
+  qla2xxx: Add multiple queue pair functionality.
+  qla2xxx: Add Block Multi Queue functionality.
+
+Quinn Tran (1):
+  qla2xxx: Fix Target mode handling with Multiqueue changes.
+
+Samy (1):
+  qla2xxx: Fix mailbox command timeout due to starvation
+
+ drivers/scsi/qla2xxx/qla_attr.c   |  36 ++-
+ drivers/scsi/qla2xxx/qla_dbg.c    |   4 +-
+ drivers/scsi/qla2xxx/qla_def.h    | 111 +++++++--
+ drivers/scsi/qla2xxx/qla_gbl.h    |  28 ++-
+ drivers/scsi/qla2xxx/qla_init.c   | 173 +++++++++++++-
+ drivers/scsi/qla2xxx/qla_inline.h |  30 +++
+ drivers/scsi/qla2xxx/qla_iocb.c   | 407 +++++++++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_isr.c    | 223 +++++++++--------
+ drivers/scsi/qla2xxx/qla_mbx.c    | 165 ++++++++++---
+ drivers/scsi/qla2xxx/qla_mid.c    | 116 ++++-----
+ drivers/scsi/qla2xxx/qla_os.c     | 487 ++++++++++++++++++++++++++++----------
+ 11 files changed, 1353 insertions(+), 427 deletions(-)
+
+-- 
+1.8.3.1
+
