@@ -1,37 +1,46 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 4/4] scsi: ufs-qcom: fix bug with read/modify write of UFS_CFG1
-Date: Mon,  5 Dec 2016 19:25:42 -0800
-Message-ID: <1480994742-19737-1-git-send-email-subhashj@codeaurora.org>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] sd: make ->no_write_same independent of reported ->max_ws_blocks
+Date: Mon, 05 Dec 2016 22:29:56 -0500
+Message-ID: <yq1d1h5viob.fsf@sermon.lab.mkp.net>
+References: <20161205235638.11539-1-nicstange@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161205235638.11539-1-nicstange@gmail.com> (Nicolai Stange's
+        message of "Tue, 6 Dec 2016 00:56:38 +0100")
 Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+To: Nicolai Stange <nicstange@gmail.com>
+Cc: Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-ufs_qcom_print_hw_debug_reg_all() function is having a bug
-where it might incorrectly modify undesired bits in UFS_CFG1 register,
-this change fixes it.
+>>>>> "Nicolai" == Nicolai Stange <nicstange@gmail.com> writes:
 
-Reviewed-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufs-qcom.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+Nicolai,
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index 2943a68..abe6173 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1470,7 +1470,8 @@ static void ufs_qcom_print_hw_debug_reg_all(struct ufs_hba *hba,
- 	reg = ufs_qcom_get_debug_reg_offset(host, UFS_UFS_DBG_RD_PRDT_RAM);
- 	print_fn(hba, reg, 64, "UFS_UFS_DBG_RD_PRDT_RAM ", priv);
- 
--	ufshcd_writel(hba, (reg & ~UFS_BIT(17)), REG_UFS_CFG1);
-+	/* clear bit 17 - UTP_DBG_RAMS_EN */
-+	ufshcd_rmwl(hba, UFS_BIT(17), 0, REG_UFS_CFG1);
- 
- 	reg = ufs_qcom_get_debug_reg_offset(host, UFS_DBG_RD_REG_UAWM);
- 	print_fn(hba, reg, 4, "UFS_DBG_RD_REG_UAWM ", priv);
+Nicolai> Due to reported problems with Write Same on ATA devices, commit
+Nicolai> 0ce1b18c42a5 ("libata: Some drives failing on SCT Write Same")
+Nicolai> strived to report non-support for Write Same on non-zoned ATA
+Nicolai> devices.
+
+Nicolai> However, due to the following control flow in
+Nicolai> sd_config_write_same() this doesn't always take effect, namely
+Nicolai> if the ->max_ws_blocks as set in the by the ATA Identify Device
+Nicolai> exceeds SD_WS10_BLOCKS:
+
+I'd much prefer for libata to set no_write_same = 1 for non-ZAC devices.
+
+Older SCSI devices have no way to explicitly report that WRITE SAME is
+supported. So the heuristic is the way it is to permit trying WRITE SAME
+unless no_write_same has been set by the device driver. libata used to
+do this prior to the zoned support going in.
+
+Nicolai> Since commit e73c23ff736e ("block: add async variant of
+Nicolai> blkdev_issue_zeroout"), blkdev_issue_zeroout() got a little bit
+Nicolai> more sensitive towards failing Write Sames on devices that
+Nicolai> claim to support them and this results in messages like
+
+That's something that needs to be addressed. blkdev_issue_zeroout() must
+cope with WRITE SAME failing and fall back to a manual zeroout.
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Martin K. Petersen	Oracle Linux Engineering
