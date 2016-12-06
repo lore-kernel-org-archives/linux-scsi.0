@@ -1,92 +1,123 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v4 0/6] qla2xxx: Feature udpates for driver.
-Date: Tue, 6 Dec 2016 11:07:40 -0800
-Message-ID: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v4 1/6] qla2xxx: Only allow operational MBX to proceed during RESET.
+Date: Tue, 6 Dec 2016 11:07:41 -0800
+Message-ID: <1481051266-32362-2-git-send-email-himanshu.madhani@cavium.com>
+References: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0053.outbound.protection.outlook.com ([104.47.36.53]:43583
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0068.outbound.protection.outlook.com ([104.47.42.68]:48421
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751617AbcLFTH7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Dec 2016 14:07:59 -0500
+        id S1751982AbcLFTIE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 6 Dec 2016 14:08:04 -0500
+In-Reply-To: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-Hi Martin, 
+This patch is allowing only ROM mailbox command which are
+necessary to initialize chip after a reset has been issued.
+In a target environment, there could be a user space daemon
+which can issue statistics and other management mailbox command
+which are non-critical. This patch will timeout non critical
+mailbox commands immediately rather than waiting for timeout,
+if driver detects that chip reset has been issued or chip reset
+is in progress.
 
-Please consider this revised series for inclusion into scsi-misc. 
-This series has incorporated partial changes based on review comments
-from Christop and Hannes. 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 52 ++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 52 insertions(+)
 
-There were few changes that are left out of this series as they 
-will need regression testing and we have patches for target infrastucture
-already based on these patch series which I am going to send out soon.
-We will submit additional patches with the changes suggested as soon as
-we have completed regression with them. 
-
-Here's list of changes that will be posted as seperate series after
-they have gone through regression cycle. 
-
-o Converting uint32_t to bitops and macros to inline function. 
-o Use waitqueue instead of busy wait.
-o Use of srb pool from the scsi_command instead of 
-  allocating/deallocatig mempool in the driver.
-
-Changes from v3 -> v4
-
-o Removed now stale rsp_q refrence from qla_msix_entry. 
-o Merged the multiple files into exsisting code
-o Enabled Mutiqueue by default.
-o Updated to use kcalloc instead of kzalloc
-
-Changes from v2 --> v3
-
-o Added patch to utilize pci_{alloc|free}_irq_vectors call as per
-  Christoph's suggestion.
-o Clean up IRQ affinity and drop num_online_cpu() usage in driver
-  as per review comments from Hannes & Christoph.
-o Added patch description for mailbox starvation patch. Also added
-  Reviewed-by signature from Hannes.
-
-Changes from v1 --> v2
-
-o Split up the patches for Multiqueue into infrastucture changes
-  and support for adding multiqueue capablity in the driver as
-  per Ewan's suggestion.
-o Incorporate new pci_irq_alloc_vector call as per Christoph's suggestion.
-o To address comments related to Mailbox patches by Ewan, I have
-  reworked the patch to clean-up mailbox workqueue.
-
-Himanshu Madhani (1):
-  qla2xxx: Only allow operational MBX to proceed during RESET.
-
-Michael Hernandez (3):
-  qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.
-  qla2xxx: Add multiple queue pair functionality.
-  qla2xxx: Add Block Multi Queue functionality.
-
-Quinn Tran (1):
-  qla2xxx: Fix Target mode handling with Multiqueue changes.
-
-Samy (1):
-  qla2xxx: Fix mailbox command timeout due to starvation
-
- drivers/scsi/qla2xxx/qla_attr.c   |  36 ++-
- drivers/scsi/qla2xxx/qla_dbg.c    |   4 +-
- drivers/scsi/qla2xxx/qla_def.h    | 111 +++++++--
- drivers/scsi/qla2xxx/qla_gbl.h    |  28 ++-
- drivers/scsi/qla2xxx/qla_init.c   | 173 +++++++++++++-
- drivers/scsi/qla2xxx/qla_inline.h |  30 +++
- drivers/scsi/qla2xxx/qla_iocb.c   | 407 +++++++++++++++++++++++++++----
- drivers/scsi/qla2xxx/qla_isr.c    | 223 +++++++++--------
- drivers/scsi/qla2xxx/qla_mbx.c    | 165 ++++++++++---
- drivers/scsi/qla2xxx/qla_mid.c    | 116 ++++-----
- drivers/scsi/qla2xxx/qla_os.c     | 487 ++++++++++++++++++++++++++++----------
- 11 files changed, 1353 insertions(+), 427 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 23698c9..b31c36b 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -10,6 +10,43 @@
+ #include <linux/delay.h>
+ #include <linux/gfp.h>
+ 
++struct rom_cmd {
++	uint16_t cmd;
++} rom_cmds[] = {
++	{ MBC_LOAD_RAM },
++	{ MBC_EXECUTE_FIRMWARE },
++	{ MBC_READ_RAM_WORD },
++	{ MBC_MAILBOX_REGISTER_TEST },
++	{ MBC_VERIFY_CHECKSUM },
++	{ MBC_GET_FIRMWARE_VERSION },
++	{ MBC_LOAD_RISC_RAM },
++	{ MBC_DUMP_RISC_RAM },
++	{ MBC_LOAD_RISC_RAM_EXTENDED },
++	{ MBC_DUMP_RISC_RAM_EXTENDED },
++	{ MBC_WRITE_RAM_WORD_EXTENDED },
++	{ MBC_READ_RAM_EXTENDED },
++	{ MBC_GET_RESOURCE_COUNTS },
++	{ MBC_SET_FIRMWARE_OPTION },
++	{ MBC_MID_INITIALIZE_FIRMWARE },
++	{ MBC_GET_FIRMWARE_STATE },
++	{ MBC_GET_MEM_OFFLOAD_CNTRL_STAT },
++	{ MBC_GET_RETRY_COUNT },
++	{ MBC_TRACE_CONTROL },
++};
++
++static int is_rom_cmd(uint16_t cmd)
++{
++	int i;
++	struct  rom_cmd *wc;
++
++	for (i = 0; i < ARRAY_SIZE(rom_cmds); i++) {
++		wc = rom_cmds + i;
++		if (wc->cmd == cmd)
++			return 1;
++	}
++
++	return 0;
++}
+ 
+ /*
+  * qla2x00_mailbox_command
+@@ -92,6 +129,17 @@
+ 		return QLA_FUNCTION_TIMEOUT;
+ 	}
+ 
++	/* check if ISP abort is active and return cmd with timeout */
++	if ((test_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags) ||
++	    test_bit(ISP_ABORT_RETRY, &base_vha->dpc_flags) ||
++	    test_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags)) &&
++	    !is_rom_cmd(mcp->mb[0])) {
++		ql_log(ql_log_info, vha, 0x1005,
++		    "Cmd 0x%x aborted with timeout since ISP Abort is pending\n",
++		    mcp->mb[0]);
++		return QLA_FUNCTION_TIMEOUT;
++	}
++
+ 	/*
+ 	 * Wait for active mailbox commands to finish by waiting at most tov
+ 	 * seconds. This is to serialize actual issuing of mailbox cmds during
+@@ -178,6 +226,7 @@
+ 			WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
+ 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 
++		wait_time = jiffies;
+ 		if (!wait_for_completion_timeout(&ha->mbx_intr_comp,
+ 		    mcp->tov * HZ)) {
+ 			ql_dbg(ql_dbg_mbx, vha, 0x117a,
+@@ -186,6 +235,9 @@
+ 			clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
+ 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
+ 		}
++		if (time_after(jiffies, wait_time + 5 * HZ))
++			ql_log(ql_log_warn, vha, 0x1015, "cmd=0x%x, waited %d msecs\n",
++			    command, jiffies_to_msecs(jiffies - wait_time));
+ 	} else {
+ 		ql_dbg(ql_dbg_mbx, vha, 0x1011,
+ 		    "Cmd=%x Polling Mode.\n", command);
 -- 
 1.8.3.1
 
