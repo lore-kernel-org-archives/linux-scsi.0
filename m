@@ -1,769 +1,1352 @@
 From: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
-Subject: [PATCH V4 05/11] megaraid_sas: SAS3.5 Generic Megaraid Controllers Fast Path for RAID 1/10 Writes
-Date: Tue,  6 Dec 2016 18:00:14 -0500
-Message-ID: <1481065220-18431-6-git-send-email-sasikumar.pc@broadcom.com>
+Subject: [PATCH V4 06/11] megaraid_sas: Dynamic Raid Map Changes for SAS3.5 Generic Megaraid Controllers
+Date: Tue,  6 Dec 2016 18:00:15 -0500
+Message-ID: <1481065220-18431-7-git-send-email-sasikumar.pc@broadcom.com>
 References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:33595 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753095AbcLFXAr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 18:00:47 -0500
+Received: by mail-qt0-f171.google.com with SMTP id p16so360904666qta.0
+        for <linux-scsi@vger.kernel.org>; Tue, 06 Dec 2016 15:00:46 -0800 (PST)
 In-Reply-To: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: jejb@kernel.org, hch@infradead.org
 Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, thenzl@redhat.com, sasikumar.pc@broadcom.com
-List-Id: linux-scsi@vger.kernel.org
 
-To improve RAID 1/10 Write performance, OS drivers need to issue the required Write
-IOs as Fast Path IOs (after the appropriate checks allowing Fast Path to be used)
-to the appropriate physical drives (translated from the OS logical IO) and wait for
-all Write IOs to complete.  If any of the Write IOs fail or time out, the IO will be
-re issued to FW as an LD IO so FW can perform the error handling.
+SAS3.5 Generic Megaraid Controllers FW will support new dynamic RaidMap to have different
+sizes for different number of supported VDs.
 
-This patch is depending on patch 4
+This patch is depending on patch 5
 
 Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |   1 +
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  31 ++-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 341 ++++++++++++++++++++++++----
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  15 +-
- 4 files changed, 334 insertions(+), 54 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |   7 +
+ drivers/scsi/megaraid/megaraid_sas_base.c   |  61 ++++--
+ drivers/scsi/megaraid/megaraid_sas_fp.c     | 303 ++++++++++++++++++++++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 223 ++++++++++++++++----
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 240 ++++++++++++++++++----
+ 5 files changed, 699 insertions(+), 135 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index d07b3e1..f4d6a94 100644
+index f4d6a94..3e087ab 100644
 --- a/drivers/scsi/megaraid/megaraid_sas.h
 +++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2056,6 +2056,7 @@ struct megasas_instance {
+@@ -1434,6 +1434,12 @@ enum FW_BOOT_CONTEXT {
+ #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
+ #define MR_MAX_MSIX_REG_ARRAY                   16
+ #define MR_RDPQ_MODE_OFFSET			0X00800000
++
++#define MR_MAX_RAID_MAP_SIZE_OFFSET_SHIFT	16
++#define MR_MAX_RAID_MAP_SIZE_MASK		0x1FF
++#define MR_MIN_MAP_SIZE				0x10000
++/* 64k */
++
+ #define MR_CAN_HANDLE_SYNC_CACHE_OFFSET		0X01000000
  
- 	u16 max_num_sge;
- 	u16 max_fw_cmds;
-+	u16 max_mpt_cmds;
- 	u16 max_mfi_cmds;
- 	u16 max_scsi_cmds;
- 	u16 ldio_threshold;
+ /*
+@@ -2152,6 +2158,7 @@ struct megasas_instance {
+ 	bool fw_sync_cache_support;
+ 	bool is_ventura;
+ 	bool msix_combined;
++	u16 max_raid_mapsize;
+ };
+ struct MR_LD_VF_MAP {
+ 	u32 size;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index c52f7be..3f06b57 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -4424,8 +4424,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
+ {
+ 	struct fusion_context *fusion;
+-	u32 old_map_sz;
+-	u32 new_map_sz;
++	u32 ventura_map_sz = 0;
+ 
+ 	fusion = instance->ctrl_context;
+ 	/* For MFI based controllers return dummy success */
+@@ -4455,21 +4454,39 @@ static void megasas_update_ext_vd_details(struct megasas_instance *instance)
+ 		instance->supportmax256vd ? "Extended VD(240 VD)firmware" :
+ 		"Legacy(64 VD) firmware");
+ 
+-	old_map_sz = sizeof(struct MR_FW_RAID_MAP) +
+-				(sizeof(struct MR_LD_SPAN_MAP) *
+-				(instance->fw_supported_vd_count - 1));
+-	new_map_sz = sizeof(struct MR_FW_RAID_MAP_EXT);
+-	fusion->drv_map_sz = sizeof(struct MR_DRV_RAID_MAP) +
+-				(sizeof(struct MR_LD_SPAN_MAP) *
+-				(instance->drv_supported_vd_count - 1));
+-
+-	fusion->max_map_sz = max(old_map_sz, new_map_sz);
++	if (instance->max_raid_mapsize) {
++		ventura_map_sz = instance->max_raid_mapsize *
++						MR_MIN_MAP_SIZE; /* 64k */
++		fusion->current_map_sz = ventura_map_sz;
++		fusion->max_map_sz = ventura_map_sz;
++	} else {
++		fusion->old_map_sz =  sizeof(struct MR_FW_RAID_MAP) +
++					(sizeof(struct MR_LD_SPAN_MAP) *
++					(instance->fw_supported_vd_count - 1));
++		fusion->new_map_sz =  sizeof(struct MR_FW_RAID_MAP_EXT);
+ 
++		fusion->max_map_sz =
++			max(fusion->old_map_sz, fusion->new_map_sz);
+ 
+-	if (instance->supportmax256vd)
+-		fusion->current_map_sz = new_map_sz;
+-	else
+-		fusion->current_map_sz = old_map_sz;
++		if (instance->supportmax256vd)
++			fusion->current_map_sz = fusion->new_map_sz;
++		else
++			fusion->current_map_sz = fusion->old_map_sz;
++	}
++	/* irrespective of FW raid maps, driver raid map is constant */
++	fusion->drv_map_sz = sizeof(struct MR_DRV_RAID_MAP_ALL);
++#if VD_EXT_DEBUG
++	dev_info(&instance->pdev->dev, "instance->max_raid_mapsize 0x%x \n ",
++			instance->max_raid_mapsize);
++	dev_info(&instance->pdev->dev,
++	"new_map_sz = 0x%x, old_map_sz = 0x%x, "
++	"ventura_map_sz = 0x%x, current_map_sz = 0x%x "
++	"fusion->drv_map_sz =0x%x, size of driver raid map 0x%lx\n",
++	fusion->new_map_sz, fusion->old_map_sz,
++	ventura_map_sz, fusion->current_map_sz,
++	fusion->drv_map_sz,
++	sizeof(struct MR_DRV_RAID_MAP_ALL));
++#endif
+ }
+ 
+ /**
+@@ -5010,7 +5027,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ {
+ 	u32 max_sectors_1;
+ 	u32 max_sectors_2;
+-	u32 tmp_sectors, msix_enable, scratch_pad_2;
++	u32 tmp_sectors, msix_enable, scratch_pad_2, scratch_pad_3;
+ 	resource_size_t base_addr;
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct megasas_ctrl_info *ctrl_info = NULL;
+@@ -5086,7 +5103,17 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 			goto fail_ready_state;
+ 	}
+ 
+-
++	if (instance->is_ventura) {
++		scratch_pad_3 =
++			readl(&instance->reg_set->outbound_scratch_pad_3);
++#if VD_EXT_DEBUG
++		dev_info(&instance->pdev->dev, "scratch_pad3 0x%x\n",
++			scratch_pad_3);
++#endif
++		instance->max_raid_mapsize = ((scratch_pad_3 >>
++			MR_MAX_RAID_MAP_SIZE_OFFSET_SHIFT) &
++			MR_MAX_RAID_MAP_SIZE_MASK);
++	}
+ 
+ 	/* Check if MSI-X is supported while in ready state */
+ 	msix_enable = (instance->instancet->read_fw_status_reg(reg_set) &
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index a4e213b..eb9ff44 100644
+index eb9ff44..a6957a3 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -737,7 +737,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 		struct MR_DRV_RAID_MAP_ALL *map)
- {
- 	struct MR_LD_RAID  *raid = MR_LdRaidGet(ld, map);
--	u32     pd, arRef;
-+	u32     pd, arRef, r1_alt_pd;
- 	u8      physArm, span;
- 	u64     row;
- 	u8	retval = TRUE;
-@@ -772,9 +772,16 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	arRef       = MR_LdSpanArrayGet(ld, span, map);
- 	pd          = MR_ArPdGet(arRef, physArm, map);
+@@ -179,18 +179,204 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 	struct fusion_context *fusion = instance->ctrl_context;
+ 	struct MR_FW_RAID_MAP_ALL     *fw_map_old    = NULL;
+ 	struct MR_FW_RAID_MAP         *pFwRaidMap    = NULL;
+-	int i;
++	int i, j;
+ 	u16 ld_count;
++	struct MR_FW_RAID_MAP_DYNAMIC *fw_map_dyn;
++	struct MR_FW_RAID_MAP_EXT *fw_map_ext;
++	struct MR_RAID_MAP_DESC_TABLE *desc_table;
  
--	if (pd != MR_PD_INVALID)
-+	if (pd != MR_PD_INVALID) {
- 		*pDevHandle = MR_PdDevHandleGet(pd, map);
--	else {
-+		/* get second pd also for raid 1/10 fast path writes*/
-+		if (raid->level == 1) {
-+			r1_alt_pd = MR_ArPdGet(arRef, physArm + 1, map);
-+			if (r1_alt_pd != MR_PD_INVALID)
-+				io_info->r1_alt_dev_handle =
-+				MR_PdDevHandleGet(r1_alt_pd, map);
+ 
+ 	struct MR_DRV_RAID_MAP_ALL *drv_map =
+ 			fusion->ld_drv_map[(instance->map_id & 1)];
+ 	struct MR_DRV_RAID_MAP *pDrvRaidMap = &drv_map->raidMap;
++	void *raid_map_data = NULL;
++
++	memset(drv_map, 0, fusion->drv_map_sz);
++	memset(pDrvRaidMap->ldTgtIdToLd,
++		0xff, (sizeof(u16) * MAX_LOGICAL_DRIVES_DYN));
++
++	if (instance->max_raid_mapsize) {
++		fw_map_dyn = fusion->ld_map[(instance->map_id & 1)];
++#if VD_EXT_DEBUG
++		dev_dbg(&instance->pdev->dev,
++		" raidMapSize 0x%x fw_map_dyn->descTableOffset 0x%x, "
++		" descTableSize 0x%x descTableNumElements 0x%x\n",
++		le32_to_cpu(fw_map_dyn->raid_map_size),
++		le32_to_cpu(fw_map_dyn->desc_table_offset),
++		le32_to_cpu(fw_map_dyn->desc_table_size),
++		le32_to_cpu(fw_map_dyn->desc_table_num_elements));
++		dev_dbg(&instance->pdev->dev,
++		"drv map %p ldCount %d\n", drv_map, fw_map_dyn->ld_count);
++#endif
++		desc_table =
++		(struct MR_RAID_MAP_DESC_TABLE *)((void *)fw_map_dyn +
++		le32_to_cpu(fw_map_dyn->desc_table_offset));
++		if (desc_table != fw_map_dyn->raid_map_desc_table) {
++			dev_err(&instance->pdev->dev,
++			"offsets of desc table are not matching returning "
++			" FW raid map has been changed: desc %p original %p\n",
++			desc_table, fw_map_dyn->raid_map_desc_table);
 +		}
-+	} else {
- 		*pDevHandle = cpu_to_le16(MR_PD_INVALID);
- 		if ((raid->level >= 5) &&
++		ld_count = (u16)le16_to_cpu(fw_map_dyn->ld_count);
++		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
++		pDrvRaidMap->fpPdIoTimeoutSec = fw_map_dyn->fp_pd_io_timeout_sec;
++		pDrvRaidMap->totalSize = sizeof(struct MR_DRV_RAID_MAP_ALL);
++		/* point to actual data starting point*/
++		raid_map_data = (void *)fw_map_dyn +
++			le32_to_cpu(fw_map_dyn->desc_table_offset) +
++			le32_to_cpu(fw_map_dyn->desc_table_size);
++
++		for (i = 0; i < le32_to_cpu(fw_map_dyn->desc_table_num_elements); ++i) {
++			if (!desc_table) {
++				dev_err(&instance->pdev->dev,
++				"desc table is null, coming out %p \n", desc_table);
++				return;
++			}
++#if VD_EXT_DEBUG
++			dev_err(&instance->pdev->dev,
++				"desc table %p \n", desc_table);
++			dev_err(&instance->pdev->dev,
++			"raidmap type %d, raidmapOffset 0x%x, "
++			" raid map number of elements 0%x, raidmapsize 0x%x\n",
++			desc_table->raid_map_desc_type,
++			desc_table->raid_map_desc_offset,
++			desc_table->raid_map_desc_elements,
++			desc_table->raid_map_desc_buffer_size);
++#endif
++			switch (le32_to_cpu(desc_table->raid_map_desc_type)) {
++			case RAID_MAP_DESC_TYPE_DEVHDL_INFO:
++				fw_map_dyn->dev_hndl_info = (struct MR_DEV_HANDLE_INFO *)
++				(raid_map_data +
++				le32_to_cpu(desc_table->raid_map_desc_offset));
++#if VD_EXT_DEBUG
++				dev_err(&instance->pdev->dev,
++				"devHndlInfo  address %p\n",
++				 fw_map_dyn->dev_hndl_info);
++#endif
++				memcpy(pDrvRaidMap->devHndlInfo, fw_map_dyn->dev_hndl_info,
++					sizeof(struct MR_DEV_HANDLE_INFO) *
++					le32_to_cpu(desc_table->raid_map_desc_elements));
++			break;
++			case RAID_MAP_DESC_TYPE_TGTID_INFO:
++					fw_map_dyn->ld_tgt_id_to_ld = (u16 *) (raid_map_data +
++					le32_to_cpu(desc_table->raid_map_desc_offset));
++#if VD_EXT_DEBUG
++			dev_err(&instance->pdev->dev,
++				"ldTgtIdToLd  address %p\n",
++					fw_map_dyn->ld_tgt_id_to_ld);
++#endif
++			for (j = 0; j < le32_to_cpu(desc_table->raid_map_desc_elements); j++) {
++				pDrvRaidMap->ldTgtIdToLd[j] =
++					fw_map_dyn->ld_tgt_id_to_ld[j];
++#if VD_EXT_DEBUG
++				dev_err(&instance->pdev->dev,
++					" %d drv ldTgtIdToLd %d\n",
++						j, pDrvRaidMap->ldTgtIdToLd[j]);
++#endif
++			}
++			break;
++			case RAID_MAP_DESC_TYPE_ARRAY_INFO:
++				fw_map_dyn->ar_map_info = (struct MR_ARRAY_INFO *)
++				(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
++#if VD_EXT_DEBUG
++				dev_err(&instance->pdev->dev,
++					"arMapInfo  address %p\n",
++					 fw_map_dyn->ar_map_info);
++#endif
++
++				memcpy(pDrvRaidMap->arMapInfo,
++				fw_map_dyn->ar_map_info,
++				sizeof(struct MR_ARRAY_INFO) *
++				le32_to_cpu(desc_table->raid_map_desc_elements));
++			break;
++			case RAID_MAP_DESC_TYPE_SPAN_INFO:
++				fw_map_dyn->ld_span_map = (struct MR_LD_SPAN_MAP *)
++				(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
++				memcpy(pDrvRaidMap->ldSpanMap,
++				fw_map_dyn->ld_span_map,
++				sizeof(struct MR_LD_SPAN_MAP) *
++				le32_to_cpu(desc_table->raid_map_desc_elements));
++#if VD_EXT_DEBUG
++				dev_err(&instance->pdev->dev,
++					"ldSpanMap  address %p\n",
++						fw_map_dyn->ld_span_map);
++				dev_err(&instance->pdev->dev,
++				"MR_LD_SPAN_MAP size 0x%lx\n", sizeof(struct MR_LD_SPAN_MAP));
++				for (j = 0; j < ld_count; j++) {
++					printk(KERN_DEBUG "megaraid_sas(%d) : fw_map_dyn->ldSpanMap[%d].ldRaid.targetId 0x%x fw_map_dyn->ldSpanMap[%d].ldRaid.seqNum 0x%x size 0x%x\n",
++					j, j, fw_map_dyn->ld_span_map[j].ldRaid.targetId, j,
++					fw_map_dyn->ld_span_map[j].ldRaid.seqNum,
++					(u32)fw_map_dyn->ld_span_map[j].ldRaid.rowSize);
++					printk(KERN_DEBUG "megaraid_sas(%d) :pDrvRaidMap->ldSpanMap[%d].ldRaid.targetId 0x%x pDrvRaidMap->ldSpanMap[%d].ldRaid.seqNum 0x%x size 0x%x\n",
++					j, j, pDrvRaidMap->ldSpanMap[j].ldRaid.targetId, j,
++					pDrvRaidMap->ldSpanMap[j].ldRaid.seqNum,
++					(u32)pDrvRaidMap->ldSpanMap[j].ldRaid.rowSize);
++					printk(KERN_DEBUG "megaraid_sas(%d) : drv raid map all %p raid map %p LD RAID MAP %p/%p\n",
++					instance->unique_id, drv_map, pDrvRaidMap,
++					&fw_map_dyn->ld_span_map[j].ldRaid,
++					&pDrvRaidMap->ldSpanMap[j].ldRaid);
++				}
++#endif
++			break;
++			default:
++				dev_err(&instance->pdev->dev,
++					"wrong number of desctableElements %d\n",
++					fw_map_dyn->desc_table_num_elements);
++			}
++			++desc_table;
++		}
++
++	} else if (instance->supportmax256vd) {
++		fw_map_ext =
++		(struct MR_FW_RAID_MAP_EXT *) fusion->ld_map[(instance->map_id & 1)];
++		ld_count = (u16)le16_to_cpu(fw_map_ext->ldCount);
++		if (ld_count > MAX_LOGICAL_DRIVES_EXT) {
++			printk(KERN_DEBUG "megaraid_sas: LD count exposed in RAID map in not valid\n");
++			return;
++		}
++#if VD_EXT_DEBUG
++		for (i = 0; i < ld_count; i++) {
++			printk(KERN_DEBUG "megaraid_sas(%d) :Index 0x%x Target Id 0x%x Seq Num 0x%x Size 0/%llx\n",
++				instance->unique_id,
++				i, fw_map_ext->ldSpanMap[i].ldRaid.targetId,
++				fw_map_ext->ldSpanMap[i].ldRaid.seqNum,
++				fw_map_ext->ldSpanMap[i].ldRaid.size);
++		}
++#endif
++
++		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
++		pDrvRaidMap->fpPdIoTimeoutSec =
++						fw_map_ext->fpPdIoTimeoutSec;
++		for (i = 0; i < (MAX_LOGICAL_DRIVES_EXT); i++)
++			pDrvRaidMap->ldTgtIdToLd[i] =
++			(u16)fw_map_ext->ldTgtIdToLd[i];
++		memcpy(pDrvRaidMap->ldSpanMap,
++				fw_map_ext->ldSpanMap,
++				sizeof(struct MR_LD_SPAN_MAP) *
++				ld_count);
++#if VD_EXT_DEBUG
++		for (i = 0; i < ld_count; i++) {
++			printk(KERN_DEBUG "megaraid_sas(%d) : fw_map_ext->ldSpanMap[%d].ldRaid.targetId 0x%x fw_map_ext->ldSpanMap[%d].ldRaid.seqNum 0x%x size 0x%x\n",
++			i, i, fw_map_ext->ldSpanMap[i].ldRaid.targetId, i,
++			fw_map_ext->ldSpanMap[i].ldRaid.seqNum,
++			(u32)fw_map_ext->ldSpanMap[i].ldRaid.rowSize);
++			printk(KERN_DEBUG "megaraid_sas(%d) : pDrvRaidMap->ldSpanMap[%d].ldRaid.targetId 0x%x"
++			"pDrvRaidMap->ldSpanMap[%d].ldRaid.seqNum 0x%x size 0x%x\n",
++			i, i, pDrvRaidMap->ldSpanMap[i].ldRaid.targetId, i,
++			pDrvRaidMap->ldSpanMap[i].ldRaid.seqNum,
++			(u32)pDrvRaidMap->ldSpanMap[i].ldRaid.rowSize);
++			printk(KERN_DEBUG "megaraid_sas(%d) : drv raid map all %p raid map %p LD RAID MAP %p %p\n",
++			instance->unique_id, drv_map, pDrvRaidMap,
++			&fw_map_ext->ldSpanMap[i].ldRaid,
++				&pDrvRaidMap->ldSpanMap[i].ldRaid);
++		}
++#endif
++		memcpy(pDrvRaidMap->arMapInfo, fw_map_ext->arMapInfo,
++			sizeof(struct MR_ARRAY_INFO) * MAX_API_ARRAYS_EXT);
++		memcpy(pDrvRaidMap->devHndlInfo, fw_map_ext->devHndlInfo,
++			sizeof(struct MR_DEV_HANDLE_INFO) *
++					MAX_RAIDMAP_PHYSICAL_DEVICES);
+ 
+-	if (instance->supportmax256vd) {
+-		memcpy(fusion->ld_drv_map[instance->map_id & 1],
+-			fusion->ld_map[instance->map_id & 1],
+-			fusion->current_map_sz);
+ 		/* New Raid map will not set totalSize, so keep expected value
+ 		 * for legacy code in ValidateMapInfo
+ 		 */
+@@ -213,16 +399,12 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 		}
+ #endif
+ 
+-		memset(drv_map, 0, fusion->drv_map_sz);
+ 		pDrvRaidMap->totalSize = pFwRaidMap->totalSize;
+ 		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
+ 		pDrvRaidMap->fpPdIoTimeoutSec = pFwRaidMap->fpPdIoTimeoutSec;
+ 		for (i = 0; i < MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS; i++)
+ 			pDrvRaidMap->ldTgtIdToLd[i] =
+ 				(u8)pFwRaidMap->ldTgtIdToLd[i];
+-		for (i = (MAX_RAIDMAP_LOGICAL_DRIVES + MAX_RAIDMAP_VIEWS);
+-			i < MAX_LOGICAL_DRIVES_EXT; i++)
+-			pDrvRaidMap->ldTgtIdToLd[i] = 0xff;
+ 		for (i = 0; i < ld_count; i++) {
+ 			pDrvRaidMap->ldSpanMap[i] = pFwRaidMap->ldSpanMap[i];
+ #if VD_EXT_DEBUG
+@@ -279,7 +461,9 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
+ 	lbInfo = fusion->load_balance_info;
+ 	ldSpanInfo = fusion->log_to_span;
+ 
+-	if (instance->supportmax256vd)
++	if (instance->max_raid_mapsize)
++		expected_size = sizeof(struct MR_DRV_RAID_MAP_ALL);
++	else if (instance->supportmax256vd)
+ 		expected_size = sizeof(struct MR_FW_RAID_MAP_EXT);
+ 	else
+ 		expected_size =
+@@ -287,8 +471,10 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
+ 			(sizeof(struct MR_LD_SPAN_MAP) * le16_to_cpu(pDrvRaidMap->ldCount)));
+ 
+ 	if (le32_to_cpu(pDrvRaidMap->totalSize) != expected_size) {
+-		dev_err(&instance->pdev->dev, "map info structure size 0x%x is not matching with ld count\n",
+-		       (unsigned int) expected_size);
++		dev_err(&instance->pdev->dev, "megasas: map info structure"
++		" size 0x%x is not matching expected size 0x%x\n",
++			le32_to_cpu(pDrvRaidMap->totalSize),
++			(unsigned int) expected_size);
+ 		dev_err(&instance->pdev->dev, "megasas: span map %x, pDrvRaidMap->totalSize : %x\n",
+ 			(unsigned int)sizeof(struct MR_LD_SPAN_MAP),
+ 			le32_to_cpu(pDrvRaidMap->totalSize));
+@@ -787,7 +973,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
  			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
-@@ -819,7 +826,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 		struct MR_DRV_RAID_MAP_ALL *map)
- {
- 	struct MR_LD_RAID  *raid = MR_LdRaidGet(ld, map);
--	u32         pd, arRef;
-+	u32         pd, arRef, r1_alt_pd;
- 	u8          physArm, span;
- 	u64         row;
- 	u8	    retval = TRUE;
-@@ -867,10 +874,17 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	arRef       = MR_LdSpanArrayGet(ld, span, map);
- 	pd          = MR_ArPdGet(arRef, physArm, map); /* Get the pd */
+ 			((fusion->adapter_type == INVADER_SERIES) &&
+ 			(raid->regTypeReqOnRead != REGION_TYPE_UNUSED))))
+-			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
++			pRAID_Context->reg_lock_flags = REGION_TYPE_EXCLUSIVE;
+ 		else if (raid->level == 1) {
+ 			physArm = physArm + 1;
+ 			pd = MR_ArPdGet(arRef, physArm, map);
+@@ -797,9 +983,16 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ 	}
  
--	if (pd != MR_PD_INVALID)
-+	if (pd != MR_PD_INVALID) {
- 		/* Get dev handle from Pd. */
- 		*pDevHandle = MR_PdDevHandleGet(pd, map);
--	else {
-+		/* get second pd also for raid 1/10 fast path writes*/
-+		if (raid->level == 1) {
-+			r1_alt_pd = MR_ArPdGet(arRef, physArm + 1, map);
-+			if (r1_alt_pd != MR_PD_INVALID)
-+				io_info->r1_alt_dev_handle =
-+				MR_PdDevHandleGet(r1_alt_pd, map);
-+		}
+ 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
+-	pRAID_Context->spanArm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) |
+-					physArm;
+-	io_info->span_arm = pRAID_Context->spanArm;
++	if (instance->is_ventura) {
++		((struct RAID_CONTEXT_G35 *) pRAID_Context)->span_arm =
++			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
++		io_info->span_arm =
++			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
 +	} else {
- 		/* set dev handle as invalid. */
- 		*pDevHandle = cpu_to_le16(MR_PD_INVALID);
- 		if ((raid->level >= 5) &&
-@@ -1126,6 +1140,11 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
++		pRAID_Context->span_arm =
++			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
++		io_info->span_arm = pRAID_Context->span_arm;
++	}
+ 	return retval;
+ }
+ 
+@@ -891,7 +1084,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
+ 			((fusion->adapter_type == INVADER_SERIES) &&
+ 			(raid->regTypeReqOnRead != REGION_TYPE_UNUSED))))
+-			pRAID_Context->regLockFlags = REGION_TYPE_EXCLUSIVE;
++			pRAID_Context->reg_lock_flags = REGION_TYPE_EXCLUSIVE;
+ 		else if (raid->level == 1) {
+ 			/* Get alternate Pd. */
+ 			physArm = physArm + 1;
+@@ -903,9 +1096,16 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 	}
+ 
+ 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
+-	pRAID_Context->spanArm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) |
+-		physArm;
+-	io_info->span_arm = pRAID_Context->spanArm;
++	if (instance->is_ventura) {
++		((struct RAID_CONTEXT_G35 *) pRAID_Context)->span_arm =
++				(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
++		io_info->span_arm =
++				(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
++	} else {
++		pRAID_Context->span_arm =
++			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
++		io_info->span_arm = pRAID_Context->span_arm;
++	}
+ 	return retval;
+ }
+ 
+@@ -1109,20 +1309,20 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 			regSize += stripSize;
+ 	}
+ 
+-	pRAID_Context->timeoutValue =
++	pRAID_Context->timeout_value =
+ 		cpu_to_le16(raid->fpIoTimeoutForLd ?
+ 			    raid->fpIoTimeoutForLd :
+ 			    map->raidMap.fpPdIoTimeoutSec);
+ 	if (fusion->adapter_type == INVADER_SERIES)
+-		pRAID_Context->regLockFlags = (isRead) ?
++		pRAID_Context->reg_lock_flags = (isRead) ?
+ 			raid->regTypeReqOnRead : raid->regTypeReqOnWrite;
+-	else
+-		pRAID_Context->regLockFlags = (isRead) ?
++	else if (!instance->is_ventura)
++		pRAID_Context->reg_lock_flags = (isRead) ?
+ 			REGION_TYPE_SHARED_READ : raid->regTypeReqOnWrite;
+-	pRAID_Context->VirtualDiskTgtId = raid->targetId;
+-	pRAID_Context->regLockRowLBA    = cpu_to_le64(regStart);
+-	pRAID_Context->regLockLength    = cpu_to_le32(regSize);
+-	pRAID_Context->configSeqNum	= raid->seqNum;
++	pRAID_Context->virtual_disk_tgt_id = raid->targetId;
++	pRAID_Context->reg_lock_row_lba    = cpu_to_le64(regStart);
++	pRAID_Context->reg_lock_length    = cpu_to_le32(regSize);
++	pRAID_Context->config_seq_num	= raid->seqNum;
+ 	/* save pointer to raid->LUN array */
+ 	*raidLUN = raid->LUN;
+ 
+@@ -1140,6 +1340,14 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
  		/* If IO on an invalid Pd, then FP is not possible.*/
  		if (io_info->devHandle == cpu_to_le16(MR_PD_INVALID))
  			io_info->fpOkForIo = FALSE;
-+		/* set raid 1/10 fast path write capable bit in io_info */
-+		if (io_info->fpOkForIo &&
-+		    (io_info->r1_alt_dev_handle != MR_PD_INVALID) &&
-+		    (raid->level == 1) && !isRead)
-+			io_info->is_raid_1_fp_write = 1;
- 		return retval;
- 	} else if (isRead) {
- 		uint stripIdx;
++		/* if FP possible, set the SLUD bit in
++		*  regLockFlags for ventura
++		*/
++		else if ((instance->is_ventura) && !isRead &&
++				(raid->writeMode == MR_RL_WRITE_BACK_MODE) &&
++				raid->capability.fp_cache_bypass_capable)
++				((struct RAID_CONTEXT_G35 *) pRAID_Context)->routing_flags.bits.sld
++					= 1;
+ 		/* set raid 1/10 fast path write capable bit in io_info */
+ 		if (io_info->fpOkForIo &&
+ 		    (io_info->r1_alt_dev_handle != MR_PD_INVALID) &&
+@@ -1319,6 +1527,7 @@ u8 megasas_get_best_arm_pd(struct megasas_instance *instance,
+ 	struct fusion_context *fusion;
+ 	struct MR_LD_RAID  *raid;
+ 	struct MR_DRV_RAID_MAP_ALL *drv_map;
++	u16	pd1_dev_handle;
+ 	u16     pend0, pend1, ld;
+ 	u64     diff0, diff1;
+ 	u8      bestArm, pd0, pd1, span, arm;
+@@ -1344,23 +1553,37 @@ u8 megasas_get_best_arm_pd(struct megasas_instance *instance,
+ 	pd1 = MR_ArPdGet(arRef, (arm + 1) >= span_row_size ?
+ 		(arm + 1 - span_row_size) : arm + 1, drv_map);
+ 
+-	/* get the pending cmds for the data and mirror arms */
+-	pend0 = atomic_read(&lbInfo->scsi_pending_cmds[pd0]);
+-	pend1 = atomic_read(&lbInfo->scsi_pending_cmds[pd1]);
++	/* Get PD1 Dev Handle */
+ 
+-	/* Determine the disk whose head is nearer to the req. block */
+-	diff0 = ABS_DIFF(block, lbInfo->last_accessed_block[pd0]);
+-	diff1 = ABS_DIFF(block, lbInfo->last_accessed_block[pd1]);
+-	bestArm = (diff0 <= diff1 ? arm : arm ^ 1);
++	pd1_dev_handle = MR_PdDevHandleGet(pd1, drv_map);
+ 
+-	if ((bestArm == arm && pend0 > pend1 + lb_pending_cmds)  ||
++	if (pd1_dev_handle == MR_PD_INVALID) {
++		bestArm = arm;
++	} else {
++		/* get the pending cmds for the data and mirror arms */
++		pend0 = atomic_read(&lbInfo->scsi_pending_cmds[pd0]);
++		pend1 = atomic_read(&lbInfo->scsi_pending_cmds[pd1]);
++
++		/* Determine the disk whose head is nearer to the req. block */
++		diff0 = ABS_DIFF(block, lbInfo->last_accessed_block[pd0]);
++		diff1 = ABS_DIFF(block, lbInfo->last_accessed_block[pd1]);
++		/*bestArm = diff0<=diff1 ? arm : arm ^ 1;*/
++		bestArm = (diff0 <= diff1 ? arm : arm ^ 1);
++
++		/* Make balance count from 16 to 4 to
++		*  keep driver in sync with Firmware
++		*/
++		if ((bestArm == arm && pend0 > pend1 + lb_pending_cmds)  ||
+ 			(bestArm != arm && pend1 > pend0 + lb_pending_cmds))
+-		bestArm ^= 1;
++			bestArm ^= 1;
++
++		/* Update the last accessed block on the correct pd */
++		io_info->span_arm =
++			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | bestArm;
++		io_info->pd_after_lb = (bestArm == arm) ? pd0 : pd1;
++	}
+ 
+-	/* Update the last accessed block on the correct pd */
+-	io_info->pd_after_lb = (bestArm == arm) ? pd0 : pd1;
+ 	lbInfo->last_accessed_block[io_info->pd_after_lb] = block + count - 1;
+-	io_info->span_arm = (span << RAID_CTX_SPANARM_SPAN_SHIFT) | bestArm;
+ #if SPAN_DEBUG
+ 	if (arm != bestArm)
+ 		dev_dbg(&instance->pdev->dev, "LSI Debug R1 Load balance "
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 39dad6d..2fcd5cd 100644
+index 2fcd5cd..58f86aa 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -269,8 +269,15 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 		instance->max_fw_cmds = cur_max_fw_cmds;
- 		instance->ldio_threshold = ldio_threshold;
- 
--		if (!instance->is_rdpq)
--			instance->max_fw_cmds = min_t(u16, instance->max_fw_cmds, 1024);
-+		/*
-+		 * Do not lower Queue Depth for Ventura because RDPQ is not
-+		 * supported. Also NOTE that the driver will fail to load for
-+		 * more than 64 CPUs under Ventura because the maximum
-+		 * contiguous allocation is 4MB, which is only enough for 64
-+		 * MSIx vectors.
-+		 */
-+
-+		instance->max_fw_cmds = min_t(u16, instance->max_fw_cmds, 1024);
- 
- 		if (reset_devices)
- 			instance->max_fw_cmds = min(instance->max_fw_cmds,
-@@ -286,7 +293,14 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 				(MEGASAS_FUSION_INTERNAL_CMDS +
- 				MEGASAS_FUSION_IOCTL_CMDS);
- 		instance->cur_can_queue = instance->max_scsi_cmds;
-+		instance->host->can_queue = instance->cur_can_queue;
- 	}
-+
-+	if (instance->is_ventura)
-+		instance->max_mpt_cmds =
-+		instance->max_fw_cmds * RAID_1_10_RMW_CMDS;
-+	else
-+		instance->max_mpt_cmds = instance->max_fw_cmds;
- }
- /**
-  * megasas_free_cmds_fusion -	Free all the cmds in the free cmd pool
-@@ -300,7 +314,7 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 	struct megasas_cmd_fusion *cmd;
- 
- 	/* SG, Sense */
--	for (i = 0; i < instance->max_fw_cmds; i++) {
-+	for (i = 0; i < instance->max_mpt_cmds; i++) {
- 		cmd = fusion->cmd_list[i];
- 		if (cmd) {
- 			if (cmd->sg_frame)
-@@ -344,7 +358,7 @@ inline void megasas_return_cmd_fusion(struct megasas_instance *instance,
- 
- 
- 	/* cmd_list */
--	for (i = 0; i < instance->max_fw_cmds; i++)
-+	for (i = 0; i < instance->max_mpt_cmds; i++)
- 		kfree(fusion->cmd_list[i]);
- 
- 	kfree(fusion->cmd_list);
-@@ -396,33 +410,49 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 			return -ENOMEM;
- 		}
- 	}
-+
-+	/* create sense buffer for the raid 1/10 fp */
-+	for (i = max_cmd; i < instance->max_mpt_cmds; i++) {
-+		cmd = fusion->cmd_list[i];
-+		cmd->sense = pci_pool_alloc(fusion->sense_dma_pool,
-+			GFP_KERNEL, &cmd->sense_phys_addr);
-+		if (!cmd->sense) {
-+			dev_err(&instance->pdev->dev,
-+				"Failed from %s %d\n",  __func__, __LINE__);
-+			return -ENOMEM;
-+		}
-+	}
-+
- 	return 0;
- }
- 
- int
- megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
+@@ -1834,7 +1834,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 			  struct megasas_cmd_fusion *cmd)
  {
--	u32 max_cmd, i;
-+	u32 max_mpt_cmd, i;
- 	struct fusion_context *fusion;
+ 	u8 fp_possible;
+-	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0;
++	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0, ld;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+ 	struct IO_REQUEST_INFO io_info;
+@@ -1842,16 +1842,18 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+ 	u8 *raidLUN;
+ 	unsigned long spinlock_flags;
++	union RAID_CONTEXT_UNION *praid_context;
++	struct MR_LD_RAID *raid;
+ 
+ 	device_id = MEGASAS_DEV_INDEX(scp);
  
  	fusion = instance->ctrl_context;
  
--	max_cmd = instance->max_fw_cmds;
-+	max_mpt_cmd = instance->max_mpt_cmds;
+ 	io_request = cmd->io_request;
+-	io_request->RaidContext.raid_context.VirtualDiskTgtId =
++	io_request->RaidContext.raid_context.virtual_disk_tgt_id =
+ 		cpu_to_le16(device_id);
+ 	io_request->RaidContext.raid_context.status = 0;
+-	io_request->RaidContext.raid_context.exStatus = 0;
++	io_request->RaidContext.raid_context.ex_status = 0;
  
- 	/*
- 	 * fusion->cmd_list is an array of struct megasas_cmd_fusion pointers.
- 	 * Allocate the dynamic array first and then allocate individual
- 	 * commands.
- 	 */
--	fusion->cmd_list = kzalloc(sizeof(struct megasas_cmd_fusion *) * max_cmd,
--						GFP_KERNEL);
-+	fusion->cmd_list =
-+		kzalloc(sizeof(struct megasas_cmd_fusion *) * max_mpt_cmd,
-+			GFP_KERNEL);
- 	if (!fusion->cmd_list) {
- 		dev_err(&instance->pdev->dev,
- 			"Failed from %s %d\n",  __func__, __LINE__);
- 		return -ENOMEM;
+ 	req_desc = (union MEGASAS_REQUEST_DESCRIPTOR_UNION *)cmd->request_desc;
+ 
+@@ -1920,10 +1922,12 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 		io_info.isRead = 1;
+ 
+ 	local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
++	ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
++	raid = MR_LdRaidGet(ld, local_map_ptr);
+ 
+ 	if ((MR_TargetIdToLdGet(device_id, local_map_ptr) >=
+ 		instance->fw_supported_vd_count) || (!fusion->fast_path_io)) {
+-		io_request->RaidContext.raid_context.regLockFlags  = 0;
++		io_request->RaidContext.raid_context.reg_lock_flags  = 0;
+ 		fp_possible = 0;
+ 	} else {
+ 		if (MR_BuildRaidContext(instance, &io_info,
+@@ -1950,6 +1954,8 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 			fp_possible = false;
  	}
  
--	for (i = 0; i < max_cmd; i++) {
++	praid_context = &io_request->RaidContext;
 +
-+
-+	for (i = 0; i < max_mpt_cmd; i++) {
- 		fusion->cmd_list[i] = kzalloc(sizeof(struct megasas_cmd_fusion),
- 					      GFP_KERNEL);
- 		if (!fusion->cmd_list[i]) {
-@@ -657,13 +687,14 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 	 */
- 
- 	/* SMID 0 is reserved. Set SMID/index from 1 */
--	for (i = 0; i < instance->max_fw_cmds; i++) {
-+	for (i = 0; i < instance->max_mpt_cmds; i++) {
- 		cmd = fusion->cmd_list[i];
- 		offset = MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE * i;
- 		memset(cmd, 0, sizeof(struct megasas_cmd_fusion));
- 		cmd->index = i + 1;
- 		cmd->scmd = NULL;
--		cmd->sync_cmd_idx = (i >= instance->max_scsi_cmds) ?
-+		cmd->sync_cmd_idx =
-+		(i >= instance->max_scsi_cmds && i < instance->max_fw_cmds) ?
- 				(i - instance->max_scsi_cmds) :
- 				(u32)ULONG_MAX; /* Set to Invalid */
- 		cmd->instance = instance;
-@@ -673,6 +704,7 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 		memset(cmd->io_request, 0,
- 		       sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
- 		cmd->io_request_phys_addr = io_req_base_phys + offset;
-+		cmd->is_raid_1_fp_write = 0;
- 	}
- 
- 	if (megasas_create_sg_sense_fusion(instance))
-@@ -1262,12 +1294,12 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
- 	fusion->reply_q_depth = 2 * (((max_cmd + 1 + 15)/16)*16);
- 
- 	fusion->request_alloc_sz =
--		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *max_cmd;
-+	sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) * instance->max_mpt_cmds;
- 	fusion->reply_alloc_sz = sizeof(union MPI2_REPLY_DESCRIPTORS_UNION)
- 		*(fusion->reply_q_depth);
- 	fusion->io_frames_alloc_sz = MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE +
--		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE *
--		 (max_cmd + 1)); /* Extra 1 for SMID 0 */
-+		(MEGA_MPI2_RAID_DEFAULT_IO_FRAME_SIZE
-+		* (instance->max_mpt_cmds + 1)); /* Extra 1 for SMID 0 */
- 
- 	scratch_pad_2 = readl(&instance->reg_set->outbound_scratch_pad_2);
- 	/* If scratch_pad_2 & MEGASAS_MAX_CHAIN_SIZE_UNITS_MASK is set,
-@@ -1403,42 +1435,43 @@ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
-  */
- 
- void
--map_cmd_status(struct megasas_cmd_fusion *cmd, u8 status, u8 ext_status)
-+map_cmd_status(struct fusion_context *fusion,
-+	struct scsi_cmnd *scmd, u8 status, u8 ext_status,
-+			u32 data_length, u8 *sense)
- {
- 
- 	switch (status) {
- 
- 	case MFI_STAT_OK:
--		cmd->scmd->result = DID_OK << 16;
-+		scmd->result = DID_OK << 16;
- 		break;
- 
- 	case MFI_STAT_SCSI_IO_FAILED:
- 	case MFI_STAT_LD_INIT_IN_PROGRESS:
--		cmd->scmd->result = (DID_ERROR << 16) | ext_status;
-+		scmd->result = (DID_ERROR << 16) | ext_status;
- 		break;
- 
- 	case MFI_STAT_SCSI_DONE_WITH_ERROR:
- 
--		cmd->scmd->result = (DID_OK << 16) | ext_status;
-+		scmd->result = (DID_OK << 16) | ext_status;
- 		if (ext_status == SAM_STAT_CHECK_CONDITION) {
--			memset(cmd->scmd->sense_buffer, 0,
-+			memset(scmd->sense_buffer, 0,
- 			       SCSI_SENSE_BUFFERSIZE);
--			memcpy(cmd->scmd->sense_buffer, cmd->sense,
-+			memcpy(scmd->sense_buffer, sense,
- 			       SCSI_SENSE_BUFFERSIZE);
--			cmd->scmd->result |= DRIVER_SENSE << 24;
-+			scmd->result |= DRIVER_SENSE << 24;
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+ 				   local_map_ptr, start_lba_lo);
+@@ -1958,18 +1964,26 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 			(MPI2_REQ_DESCRIPT_FLAGS_FP_IO
+ 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+ 		if (fusion->adapter_type == INVADER_SERIES) {
+-			if (io_request->RaidContext.raid_context.regLockFlags ==
++			if (io_request->RaidContext.raid_context.reg_lock_flags ==
+ 			    REGION_TYPE_UNUSED)
+ 				cmd->request_desc->SCSIIO.RequestFlags =
+ 					(MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK <<
+ 					MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+-			io_request->RaidContext.raid_context.Type
++			io_request->RaidContext.raid_context.type
+ 				= MPI2_TYPE_CUDA;
+ 			io_request->RaidContext.raid_context.nseg = 0x1;
+ 			io_request->IoFlags |= cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
+-			io_request->RaidContext.raid_context.regLockFlags |=
++			io_request->RaidContext.raid_context.reg_lock_flags |=
+ 			  (MR_RL_FLAGS_GRANT_DESTINATION_CUDA |
+ 			   MR_RL_FLAGS_SEQ_NUM_ENABLE);
++		} else if (instance->is_ventura) {
++			io_request->RaidContext.raid_context_g35.type
++				= MPI2_TYPE_CUDA;
++			io_request->RaidContext.raid_context_g35.nseg = 0x1;
++			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn
++				= 1;
++			io_request->IoFlags |=
++			cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
  		}
- 		break;
- 
- 	case MFI_STAT_LD_OFFLINE:
- 	case MFI_STAT_DEVICE_NOT_FOUND:
--		cmd->scmd->result = DID_BAD_TARGET << 16;
-+		scmd->result = DID_BAD_TARGET << 16;
- 		break;
- 	case MFI_STAT_CONFIG_SEQ_MISMATCH:
--		cmd->scmd->result = DID_IMM_RETRY << 16;
-+		scmd->result = DID_IMM_RETRY << 16;
- 		break;
- 	default:
--		dev_printk(KERN_DEBUG, &cmd->instance->pdev->dev, "FW status %#x\n", status);
--		cmd->scmd->result = DID_ERROR << 16;
-+		scmd->result = DID_ERROR << 16;
- 		break;
- 	}
- }
-@@ -1880,6 +1913,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
- 	io_info.ldStartBlock = ((u64)start_lba_hi << 32) | start_lba_lo;
- 	io_info.numBlocks = datalength;
- 	io_info.ldTgtId = device_id;
-+	io_info.r1_alt_dev_handle = MR_PD_INVALID;
- 	io_request->DataLength = cpu_to_le32(scsi_bufflen(scp));
- 
- 	if (scp->sc_data_direction == PCI_DMA_FROMDEVICE)
-@@ -1948,6 +1982,10 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 		if ((fusion->load_balance_info[device_id].loadBalanceFlag) &&
+ 		    (io_info.isRead)) {
+@@ -1979,6 +1993,13 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 					&io_info);
+ 			scp->SCp.Status |= MEGASAS_LOAD_BALANCE_FLAG;
+ 			cmd->pd_r1_lb = io_info.pd_after_lb;
++			if (instance->is_ventura)
++				io_request->RaidContext.raid_context_g35.span_arm
++					= io_info.span_arm;
++			else
++				io_request->RaidContext.raid_context.span_arm
++					= io_info.span_arm;
++
  		} else
  			scp->SCp.Status &= ~MEGASAS_LOAD_BALANCE_FLAG;
  
-+		cmd->is_raid_1_fp_write = io_info.is_raid_1_fp_write;
-+		if (io_info.is_raid_1_fp_write)
-+			cmd->r1_alt_dev_handle = io_info.r1_alt_dev_handle;
-+
- 		if ((raidLUN[0] == 1) &&
- 			(local_map_ptr->raidMap.devHndlInfo[io_info.pd_after_lb].validHandles > 1)) {
- 			instance->dev_handle = !(instance->dev_handle);
-@@ -2271,19 +2309,116 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 	u8 *p;
- 	struct fusion_context *fusion;
- 
--	if (index >= instance->max_fw_cmds) {
-+	if (index >= instance->max_mpt_cmds) {
- 		dev_err(&instance->pdev->dev, "Invalid SMID (0x%x)request for "
- 		       "descriptor for scsi%d\n", index,
- 			instance->host->host_no);
- 		return NULL;
- 	}
- 	fusion = instance->ctrl_context;
--	p = fusion->req_frames_desc
--		+sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *index;
-+	p = fusion->req_frames_desc +
-+		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) * index;
- 
- 	return (union MEGASAS_REQUEST_DESCRIPTOR_UNION *)p;
- }
- 
-+/*
-+ * megasas_fpio_to_ldio-
-+ * This function converts an fp io to ldio
-+*/
-+
-+void megasas_fpio_to_ldio(struct megasas_instance *instance,
-+	struct megasas_cmd_fusion *cmd, struct scsi_cmnd *scmd)
-+{
-+	struct fusion_context *fusion;
-+	fusion = instance->ctrl_context;
-+
-+	cmd->request_desc->SCSIIO.RequestFlags =
-+		(MEGASAS_REQ_DESCRIPT_FLAGS_LD_IO
-+		<< MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-+	cmd->io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
-+	cmd->io_request->DevHandle = cpu_to_le16(MEGASAS_DEV_INDEX(scmd));
-+
-+	/*remove FAST PATH ENABLE bit in IoFlags */
-+	cmd->io_request->IoFlags &=
-+	cpu_to_le16(~MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
-+
-+	/* if the numSGE > max_sge_in_main_sge set the chain offset*/
-+	if (cmd->io_request->RaidContext.raid_context_g35.num_sge >
-+		fusion->max_sge_in_main_msg)
-+		cmd->io_request->ChainOffset = fusion->chain_offset_io_request;
-+	memcpy(cmd->io_request->CDB.CDB32, scmd->cmnd, scmd->cmd_len);
-+	cmd->io_request->CDB.EEDP32.PrimaryReferenceTag = 0;
-+	cmd->io_request->CDB.EEDP32.PrimaryApplicationTagMask = 0;
-+	cmd->io_request->EEDPFlags = 0;
-+	cmd->io_request->Control = 0;
-+	cmd->io_request->EEDPBlockSize = 0;
-+	cmd->is_raid_1_fp_write = 0;
-+}
-+/*megasas_prepate_secondRaid1_IO
-+ * It prepares the raid 1 second IO
-+ * */
-+void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
-+			    struct megasas_cmd_fusion *cmd,
-+			    struct megasas_cmd_fusion *r1_cmd)
-+{
-+	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc, *req_desc2 = NULL;
-+	struct fusion_context *fusion;
-+	fusion = instance->ctrl_context;
-+	req_desc = cmd->request_desc;
-+	if (r1_cmd) {
-+		/* copy the io request frame as well
-+		*  as 8 SGEs data for r1 command
-+		*/
-+		memcpy(r1_cmd->io_request, cmd->io_request,
-+			sizeof(struct MPI2_RAID_SCSI_IO_REQUEST));
-+		memcpy(&r1_cmd->io_request->SGL, &cmd->io_request->SGL,
-+				(fusion->max_sge_in_main_msg *
-+				sizeof(union MPI2_SGE_IO_UNION)));
-+		/*sense buffer is different for r1 command*/
-+		r1_cmd->io_request->SenseBufferLowAddress =
-+				cpu_to_le32(r1_cmd->sense_phys_addr);
-+		r1_cmd->scmd = cmd->scmd;
-+		req_desc2 =
-+		megasas_get_request_descriptor(instance, r1_cmd->index-1);
-+		if (req_desc2) {
-+			req_desc2->Words = 0;
-+			r1_cmd->request_desc = req_desc2;
-+			req_desc2->SCSIIO.SMID =
-+				cpu_to_le16(r1_cmd->index);
-+			req_desc2->SCSIIO.RequestFlags =
-+				req_desc->SCSIIO.RequestFlags;
-+			r1_cmd->is_raid_1_fp_write = 1;
-+			r1_cmd->request_desc->SCSIIO.DevHandle =
-+				cmd->r1_alt_dev_handle;
-+			r1_cmd->io_request->DevHandle = cmd->r1_alt_dev_handle;
-+			cmd->io_request->RaidContext.raid_context_g35.smid.peer_smid =
-+				 cpu_to_le16(r1_cmd->index);
-+			r1_cmd->io_request->RaidContext.raid_context_g35.smid.peer_smid =
-+				cpu_to_le16(cmd->index);
-+			/*MSIxIndex of both commands request
-+			* descriptors should be same
-+			*/
-+			r1_cmd->request_desc->SCSIIO.MSIxIndex =
-+				cmd->request_desc->SCSIIO.MSIxIndex;
-+			/*span arm is different for r1 cmd*/
-+			r1_cmd->io_request->RaidContext.raid_context_g35.span_arm =
-+			cmd->io_request->RaidContext.raid_context_g35.span_arm + 1;
-+		} else {
-+			megasas_return_cmd_fusion(instance, r1_cmd);
-+			dev_info(&instance->pdev->dev,
-+				"unable to get request descriptor, firing as normal IO\n");
-+			atomic_dec(&instance->fw_outstanding);
-+			megasas_fpio_to_ldio(instance, cmd, cmd->scmd);
+@@ -1997,28 +2018,98 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 		io_request->DevHandle = io_info.devHandle;
+ 		/* populate the LUN field */
+ 		memcpy(io_request->LUN, raidLUN, 8);
++		if (instance->is_ventura) {
++			if (io_info.isRead) {
++				if ((raid->cpuAffinity.pdRead.cpu0) &&
++					(raid->cpuAffinity.pdRead.cpu1))
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_FCFS;
++				else if (raid->cpuAffinity.pdRead.cpu1)
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_1;
++				else
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_0;
++			} else {
++			if ((raid->cpuAffinity.pdWrite.cpu0)
++			&& (raid->cpuAffinity.pdWrite.cpu1))
++				praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_FCFS;
++				else if (raid->cpuAffinity.pdWrite.cpu1)
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_1;
++				else
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_0;
++				if (praid_context->raid_context_g35.routing_flags.bits.sld) {
++					praid_context->raid_context_g35.raid_flags
++					= (MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
++					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
++				}
++			}
 +		}
-+	} else {
-+		dev_info(&instance->pdev->dev,
-+			"unable to get command, firing as normal IO\n");
-+		atomic_dec(&instance->fw_outstanding);
-+		megasas_fpio_to_ldio(instance, cmd, cmd->scmd);
-+	}
-+}
+ 	} else {
+-		io_request->RaidContext.raid_context.timeoutValue =
++		io_request->RaidContext.raid_context.timeout_value =
+ 			cpu_to_le16(local_map_ptr->raidMap.fpPdIoTimeoutSec);
+ 		cmd->request_desc->SCSIIO.RequestFlags =
+ 			(MEGASAS_REQ_DESCRIPT_FLAGS_LD_IO
+ 			 << MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+ 		if (fusion->adapter_type == INVADER_SERIES) {
+ 			if (io_info.do_fp_rlbypass ||
+-			(io_request->RaidContext.raid_context.regLockFlags
++			(io_request->RaidContext.raid_context.reg_lock_flags
+ 					== REGION_TYPE_UNUSED))
+ 				cmd->request_desc->SCSIIO.RequestFlags =
+ 					(MEGASAS_REQ_DESCRIPT_FLAGS_NO_LOCK <<
+ 					MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+-			io_request->RaidContext.raid_context.Type
++			io_request->RaidContext.raid_context.type
+ 				= MPI2_TYPE_CUDA;
+-			io_request->RaidContext.raid_context.regLockFlags |=
++			io_request->RaidContext.raid_context.reg_lock_flags |=
+ 				(MR_RL_FLAGS_GRANT_DESTINATION_CPU0 |
+ 				 MR_RL_FLAGS_SEQ_NUM_ENABLE);
+ 			io_request->RaidContext.raid_context.nseg = 0x1;
++		} else if (instance->is_ventura) {
++			io_request->RaidContext.raid_context_g35.type
++			= MPI2_TYPE_CUDA;
++			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn
++			= 1;
++			io_request->RaidContext.raid_context_g35.nseg = 0x1;
+ 		}
+ 		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
+ 		io_request->DevHandle = cpu_to_le16(device_id);
 +
- /**
-  * megasas_build_and_issue_cmd_fusion -Main routine for building and
-  *                                     issuing non IOCTL cmd
-@@ -2294,7 +2429,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 				   struct scsi_cmnd *scmd)
- {
--	struct megasas_cmd_fusion *cmd;
-+	struct megasas_cmd_fusion *cmd, *r1_cmd = NULL;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 	u32 index;
- 	struct fusion_context *fusion;
-@@ -2309,13 +2444,27 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		return SCSI_MLQUEUE_DEVICE_BUSY;
- 	}
- 
-+	if (atomic_inc_return(&instance->fw_outstanding) >
-+			instance->host->can_queue) {
-+		dev_err(&instance->pdev->dev, "Throttle IOs beyond Controller queue depth\n");
-+		atomic_dec(&instance->fw_outstanding);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
++		if (instance->is_ventura) {
++			if (io_info.isRead) {
++				if ((raid->cpuAffinity.ldRead.cpu0)
++				&& (raid->cpuAffinity.ldRead.cpu1))
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_FCFS;
++				else if (raid->cpuAffinity.ldRead.cpu1)
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++						= MR_RAID_CTX_CPUSEL_1;
++				else
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++						= MR_RAID_CTX_CPUSEL_0;
++			} else {
++				if ((raid->cpuAffinity.ldWrite.cpu0) &&
++					(raid->cpuAffinity.ldWrite.cpu1))
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++							= MR_RAID_CTX_CPUSEL_FCFS;
++				else if (raid->cpuAffinity.ldWrite.cpu1)
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++						= MR_RAID_CTX_CPUSEL_1;
++				else
++					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++					= MR_RAID_CTX_CPUSEL_0;
 +
- 	cmd = megasas_get_cmd_fusion(instance, scmd->request->tag);
- 
-+	if (!cmd) {
-+		atomic_dec(&instance->fw_outstanding);
-+		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
-+
- 	index = cmd->index;
- 
- 	req_desc = megasas_get_request_descriptor(instance, index-1);
--	if (!req_desc)
-+	if (!req_desc) {
-+		atomic_dec(&instance->fw_outstanding);
- 		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
- 
- 	req_desc->Words = 0;
- 	cmd->request_desc = req_desc;
-@@ -2324,6 +2473,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		megasas_return_cmd_fusion(instance, cmd);
- 		dev_err(&instance->pdev->dev, "Error building command\n");
- 		cmd->request_desc = NULL;
-+		atomic_dec(&instance->fw_outstanding);
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	}
- 
-@@ -2334,14 +2484,39 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 	    cmd->io_request->ChainOffset != 0xF)
- 		dev_err(&instance->pdev->dev, "The chain offset value is not "
- 		       "correct : %x\n", cmd->io_request->ChainOffset);
-+	/*
-+	*	if it is raid 1/10 fp write capable.
-+	*	try to get second command from pool and construct it.
-+	*	From FW, it has confirmed that lba values of two PDs
-+	*	corresponds to single R1/10 LD are always same
-+	*
-+	*/
-+	/*	driver side count always should be less than max_fw_cmds
-+	*	to get new command
-+	*/
-+	if (cmd->is_raid_1_fp_write &&
-+		atomic_inc_return(&instance->fw_outstanding) >
-+			(instance->host->can_queue)) {
-+		megasas_fpio_to_ldio(instance, cmd, cmd->scmd);
-+		atomic_dec(&instance->fw_outstanding);
-+	} else if (cmd->is_raid_1_fp_write) {
-+		r1_cmd = megasas_get_cmd_fusion(instance,
-+				(scmd->request->tag + instance->max_fw_cmds));
-+		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
-+	}
-+
- 
- 	/*
- 	 * Issue the command to the FW
- 	 */
--	atomic_inc(&instance->fw_outstanding);
- 
- 	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
- 
-+	if (r1_cmd)
-+		megasas_fire_cmd_fusion(instance, r1_cmd->request_desc,
-+				instance->is_ventura);
-+
-+
- 	return 0;
++				if (io_request->RaidContext.raid_context_g35.stream_detected
++				&& (raid->level == 5)
++				&& (raid->writeMode == MR_RL_WRITE_THROUGH_MODE)) {
++					if (praid_context->raid_context_g35.routing_flags.bits.cpu_sel == MR_RAID_CTX_CPUSEL_FCFS)
++						praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++							= MR_RAID_CTX_CPUSEL_0;
++				}
++			}
++		}
+ 	} /* Not FP */
  }
  
-@@ -2358,10 +2533,10 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 	struct MPI2_RAID_SCSI_IO_REQUEST *scsi_io_req;
+@@ -2053,9 +2144,9 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 	/* get RAID_Context pointer */
+ 	pRAID_Context = &io_request->RaidContext.raid_context;
+ 	/* Check with FW team */
+-	pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
+-	pRAID_Context->regLockRowLBA    = 0;
+-	pRAID_Context->regLockLength    = 0;
++	pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
++	pRAID_Context->reg_lock_row_lba    = 0;
++	pRAID_Context->reg_lock_length    = 0;
+ 
+ 	if (fusion->fast_path_io && (
+ 		device_id < instance->fw_supported_vd_count)) {
+@@ -2074,7 +2165,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		io_request->Function  = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
+ 		io_request->DevHandle = cpu_to_le16(device_id);
+ 		io_request->LUN[1] = scmd->device->lun;
+-		pRAID_Context->timeoutValue =
++		pRAID_Context->timeout_value =
+ 			cpu_to_le16 (scmd->request->timeout / HZ);
+ 		cmd->request_desc->SCSIIO.RequestFlags =
+ 			(MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
+@@ -2082,9 +2173,10 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 	} else {
+ 
+ 		/* set RAID context values */
+-		pRAID_Context->configSeqNum = raid->seqNum;
+-		pRAID_Context->regLockFlags = REGION_TYPE_SHARED_READ;
+-		pRAID_Context->timeoutValue = cpu_to_le16(raid->fpIoTimeoutForLd);
++		pRAID_Context->config_seq_num = raid->seqNum;
++		if (!instance->is_ventura)
++			pRAID_Context->reg_lock_flags = REGION_TYPE_SHARED_READ;
++		pRAID_Context->timeout_value = cpu_to_le16(raid->fpIoTimeoutForLd);
+ 
+ 		/* get the DevHandle for the PD (since this is
+ 		   fpNonRWCapable, this is a single disk RAID0) */
+@@ -2139,12 +2231,12 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 	io_request = cmd->io_request;
+ 	/* get RAID_Context pointer */
+ 	pRAID_Context = &io_request->RaidContext.raid_context;
+-	pRAID_Context->regLockFlags = 0;
+-	pRAID_Context->regLockRowLBA = 0;
+-	pRAID_Context->regLockLength = 0;
++	pRAID_Context->reg_lock_flags = 0;
++	pRAID_Context->reg_lock_row_lba = 0;
++	pRAID_Context->reg_lock_length = 0;
+ 	io_request->DataLength = cpu_to_le32(scsi_bufflen(scmd));
+ 	io_request->LUN[1] = scmd->device->lun;
+-	pRAID_Context->RAIDFlags = MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD
++	pRAID_Context->raid_flags = MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD
+ 		<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT;
+ 
+ 	/* If FW supports PD sequence number */
+@@ -2153,24 +2245,28 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		/* TgtId must be incremented by 255 as jbod seq number is index
+ 		 * below raid map
+ 		 */
+-		pRAID_Context->VirtualDiskTgtId =
++		pRAID_Context->virtual_disk_tgt_id =
+ 			cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
+-		pRAID_Context->configSeqNum = pd_sync->seq[pd_index].seqNum;
++		pRAID_Context->config_seq_num = pd_sync->seq[pd_index].seqNum;
+ 		io_request->DevHandle = pd_sync->seq[pd_index].devHandle;
+-		pRAID_Context->regLockFlags |=
++		if (instance->is_ventura)
++			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn
++			= 1;
++		else
++		pRAID_Context->reg_lock_flags |=
+ 			(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
+-		pRAID_Context->Type = MPI2_TYPE_CUDA;
++		pRAID_Context->type = MPI2_TYPE_CUDA;
+ 		pRAID_Context->nseg = 0x1;
+ 	} else if (fusion->fast_path_io) {
+-		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
+-		pRAID_Context->configSeqNum = 0;
++		pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
++		pRAID_Context->config_seq_num = 0;
+ 		local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
+ 		io_request->DevHandle =
+ 			local_map_ptr->raidMap.devHndlInfo[device_id].curDevHdl;
+ 	} else {
+ 		/* Want to send all IO via FW path */
+-		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
+-		pRAID_Context->configSeqNum = 0;
++		pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
++		pRAID_Context->config_seq_num = 0;
+ 		io_request->DevHandle = cpu_to_le16(0xFFFF);
+ 	}
+ 
+@@ -2186,14 +2282,14 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		cmd->request_desc->SCSIIO.RequestFlags =
+ 			(MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
+ 				MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+-		pRAID_Context->timeoutValue = cpu_to_le16(os_timeout_value);
+-		pRAID_Context->VirtualDiskTgtId = cpu_to_le16(device_id);
++		pRAID_Context->timeout_value = cpu_to_le16(os_timeout_value);
++		pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
+ 	} else {
+ 		/* system pd Fast Path */
+ 		io_request->Function = MPI2_FUNCTION_SCSI_IO_REQUEST;
+ 		timeout_limit = (scmd->device->type == TYPE_DISK) ?
+ 				255 : 0xFFFF;
+-		pRAID_Context->timeoutValue =
++		pRAID_Context->timeout_value =
+ 			cpu_to_le16((os_timeout_value > timeout_limit) ?
+ 			timeout_limit : os_timeout_value);
+ 		if (fusion->adapter_type == INVADER_SERIES)
+@@ -2232,8 +2328,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 	io_request->Control = 0;
+ 	io_request->EEDPBlockSize = 0;
+ 	io_request->ChainOffset = 0;
+-	io_request->RaidContext.raid_context.RAIDFlags = 0;
+-	io_request->RaidContext.raid_context.Type = 0;
++	io_request->RaidContext.raid_context.raid_flags = 0;
++	io_request->RaidContext.raid_context.type = 0;
+ 	io_request->RaidContext.raid_context.nseg = 0;
+ 
+ 	memcpy(io_request->CDB.CDB32, scp->cmnd, scp->cmd_len);
+@@ -2278,11 +2374,16 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ 		return 1;
+ 	}
+ 
+-	/* numSGE store lower 8 bit of sge_count.
+-	 * numSGEExt store higher 8 bit of sge_count
+-	 */
+-	io_request->RaidContext.raid_context.numSGE = sge_count;
+-	io_request->RaidContext.raid_context.numSGEExt = (u8)(sge_count >> 8);
++	if (instance->is_ventura)
++		io_request->RaidContext.raid_context_g35.num_sge = sge_count;
++	else {
++		/* numSGE store lower 8 bit of sge_count.
++		 * numSGEExt store higher 8 bit of sge_count
++		 */
++		io_request->RaidContext.raid_context.num_sge = sge_count;
++		io_request->RaidContext.raid_context.num_sge_ext =
++			(u8)(sge_count >> 8);
++	}
+ 
+ 	io_request->SGLFlags = cpu_to_le16(MPI2_SGE_FLAGS_64_BIT_ADDRESSING);
+ 
+@@ -2331,6 +2432,10 @@ void megasas_fpio_to_ldio(struct megasas_instance *instance,
+ 	struct megasas_cmd_fusion *cmd, struct scsi_cmnd *scmd)
+ {
  	struct fusion_context *fusion;
- 	struct megasas_cmd *cmd_mfi;
--	struct megasas_cmd_fusion *cmd_fusion;
-+	struct megasas_cmd_fusion *cmd_fusion, *r1_cmd = NULL;
- 	u16 smid, num_completed;
--	u8 reply_descript_type;
--	u32 status, extStatus, device_id;
-+	u8 reply_descript_type, *sense;
-+	u32 status, extStatus, device_id, data_length;
- 	union desc_value d_val;
- 	struct LD_LOAD_BALANCE_INFO *lbinfo;
- 	int threshold_reply_count = 0;
-@@ -2391,6 +2566,15 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
++	union RAID_CONTEXT_UNION *praid_context;
++	struct MR_LD_RAID *raid;
++	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
++	u32 device_id, ld;
+ 	fusion = instance->ctrl_context;
  
- 	while (d_val.u.low != cpu_to_le32(UINT_MAX) &&
- 	       d_val.u.high != cpu_to_le32(UINT_MAX)) {
-+		   /*
-+		   * Ensure that the peer command is NULL here in case a
-+		   * command has completed but the R1 FP Write peer has
-+		   * not completed yet.If not null, it's possible that
-+		   * another thread will complete the peer
-+		   * command and should not.
-+		   */
-+		r1_cmd = NULL;
+ 	cmd->request_desc->SCSIIO.RequestFlags =
+@@ -2354,6 +2459,35 @@ void megasas_fpio_to_ldio(struct megasas_instance *instance,
+ 	cmd->io_request->Control = 0;
+ 	cmd->io_request->EEDPBlockSize = 0;
+ 	cmd->is_raid_1_fp_write = 0;
 +
- 		smid = le16_to_cpu(reply_desc->SMID);
++	device_id = MEGASAS_DEV_INDEX(cmd->scmd);
++	local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
++	ld = MR_TargetIdToLdGet(device_id, local_map_ptr);
++	raid = MR_LdRaidGet(ld, local_map_ptr);
++	praid_context = &cmd->io_request->RaidContext;
++	if (cmd->scmd->sc_data_direction == PCI_DMA_FROMDEVICE) {
++		if ((raid->cpuAffinity.ldRead.cpu0)
++		&& (raid->cpuAffinity.ldRead.cpu1))
++			praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++			= MR_RAID_CTX_CPUSEL_FCFS;
++		else if (raid->cpuAffinity.ldRead.cpu1)
++			praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++			= MR_RAID_CTX_CPUSEL_1;
++		else
++			praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++			= MR_RAID_CTX_CPUSEL_0;
++	} else {
++	if ((raid->cpuAffinity.ldWrite.cpu0)
++		&& (raid->cpuAffinity.ldWrite.cpu1))
++		praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++			= MR_RAID_CTX_CPUSEL_FCFS;
++	else if (raid->cpuAffinity.ldWrite.cpu1)
++		praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++			= MR_RAID_CTX_CPUSEL_1;
++	else
++		praid_context->raid_context_g35.routing_flags.bits.cpu_sel
++		= MR_RAID_CTX_CPUSEL_0;
++	}
+ }
+ /*megasas_prepate_secondRaid1_IO
+  * It prepares the raid 1 second IO
+@@ -2491,6 +2625,7 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
+ 	*	corresponds to single R1/10 LD are always same
+ 	*
+ 	*/
++
+ 	/*	driver side count always should be less than max_fw_cmds
+ 	*	to get new command
+ 	*/
+@@ -2588,7 +2723,7 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
  
- 		cmd_fusion = fusion->cmd_list[smid - 1];
-@@ -2405,6 +2589,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
  		scmd_local = cmd_fusion->scmd;
  		status = scsi_io_req->RaidContext.raid_context.status;
- 		extStatus = scsi_io_req->RaidContext.raid_context.exStatus;
-+		sense = cmd_fusion->sense;
-+		data_length = scsi_io_req->DataLength;
+-		extStatus = scsi_io_req->RaidContext.raid_context.exStatus;
++		extStatus = scsi_io_req->RaidContext.raid_context.ex_status;
+ 		sense = cmd_fusion->sense;
+ 		data_length = scsi_io_req->DataLength;
  
- 		switch (scsi_io_req->Function) {
- 		case MPI2_FUNCTION_SCSI_TASK_MGMT:
-@@ -2421,12 +2607,28 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 			/* Update load balancing info */
- 			device_id = MEGASAS_DEV_INDEX(scmd_local);
- 			lbinfo = &fusion->load_balance_info[device_id];
--			if (cmd_fusion->scmd->SCp.Status &
--			    MEGASAS_LOAD_BALANCE_FLAG) {
-+			/*
-+			 * check for the raid 1/10 fast path writes
-+			 */
-+			if (!cmd_fusion->is_raid_1_fp_write &&
-+				(cmd_fusion->scmd->SCp.Status &
-+					MEGASAS_LOAD_BALANCE_FLAG)) {
- 				atomic_dec(&lbinfo->scsi_pending_cmds[cmd_fusion->pd_r1_lb]);
- 				cmd_fusion->scmd->SCp.Status &=
- 					~MEGASAS_LOAD_BALANCE_FLAG;
-+			} else if (cmd_fusion->is_raid_1_fp_write) {
-+				/* get peer command */
-+				if (cmd_fusion->index < instance->max_fw_cmds)
-+					r1_cmd = fusion->cmd_list[(cmd_fusion->index +
-+					instance->max_fw_cmds)-1];
-+				else {
-+					r1_cmd =
-+					fusion->cmd_list[(cmd_fusion->index -
-+						 instance->max_fw_cmds)-1];
-+				}
-+				cmd_fusion->cmd_completed = true;
- 			}
-+
- 			if (reply_descript_type ==
- 			    MPI2_RPY_DESCRIPT_FLAGS_SCSI_IO_SUCCESS) {
- 				if (megasas_dbg_lvl == 5)
-@@ -2436,14 +2638,48 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 			/* Fall thru and complete IO */
- 		case MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST: /* LD-IO Path */
- 			/* Map the FW Cmd Status */
--			map_cmd_status(cmd_fusion, status, extStatus);
--			scsi_io_req->RaidContext.raid_context.status = 0;
--			scsi_io_req->RaidContext.raid_context.exStatus = 0;
--			if (megasas_cmd_type(scmd_local) == READ_WRITE_LDIO)
--				atomic_dec(&instance->ldio_outstanding);
--			megasas_return_cmd_fusion(instance, cmd_fusion);
--			scsi_dma_unmap(scmd_local);
--			scmd_local->scsi_done(scmd_local);
-+			/*
-+			* check for the raid 1/10 fast path writes
-+			*/
-+			if (r1_cmd &&  r1_cmd->is_raid_1_fp_write
-+				&& r1_cmd->cmd_completed) {
-+				/*
-+				 * if the peer  Raid  1/10 fast path failed,
-+				 * mark IO as failed to the scsi layer.
-+				 * over write the current status by the failed
-+				 * status makes sure that if any one of
-+				 * command fails,return fail status to
-+				 * scsi layer
-+				 */
-+				if (r1_cmd->io_request->RaidContext.raid_context.status !=
-+								MFI_STAT_OK) {
-+					status =
-+					r1_cmd->io_request->RaidContext.raid_context.status;
-+					extStatus =
-+					r1_cmd->io_request->RaidContext.raid_context.exStatus;
-+					data_length =
-+						r1_cmd->io_request->DataLength;
-+					sense = r1_cmd->sense;
-+				}
-+				r1_cmd->io_request->RaidContext.raid_context.status = 0;
-+				r1_cmd->io_request->RaidContext.raid_context.exStatus = 0;
-+				cmd_fusion->is_raid_1_fp_write = 0;
-+				r1_cmd->is_raid_1_fp_write = 0;
-+				r1_cmd->cmd_completed = false;
-+				cmd_fusion->cmd_completed = false;
-+				megasas_return_cmd_fusion(instance, r1_cmd);
-+			}
-+			if (!cmd_fusion->is_raid_1_fp_write) {
-+				map_cmd_status(fusion, scmd_local, status,
-+					extStatus, data_length, sense);
-+				scsi_io_req->RaidContext.raid_context.status
-+				= 0;
-+				scsi_io_req->RaidContext.raid_context.exStatus
-+				= 0;
-+				megasas_return_cmd_fusion(instance, cmd_fusion);
-+				scsi_dma_unmap(scmd_local);
-+				scmd_local->scsi_done(scmd_local);
-+			}
- 			atomic_dec(&instance->fw_outstanding);
- 
- 			break;
-@@ -3496,7 +3732,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- {
- 	int retval = SUCCESS, i, j, convert = 0;
- 	struct megasas_instance *instance;
--	struct megasas_cmd_fusion *cmd_fusion;
-+	struct megasas_cmd_fusion *cmd_fusion, *mpt_cmd_fusion;
- 	struct fusion_context *fusion;
- 	u32 abs_state, status_reg, reset_adapter;
- 	u32 io_timeout_in_crash_mode = 0;
-@@ -3571,6 +3807,18 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
- 		/* Now return commands back to the OS */
- 		for (i = 0 ; i < instance->max_scsi_cmds; i++) {
- 			cmd_fusion = fusion->cmd_list[i];
-+			/*check for extra commands issued by driver*/
-+			if (instance->is_ventura) {
-+				cmd_fusion->is_raid_1_fp_write = 0;
-+				cmd_fusion->cmd_completed = false;
-+				mpt_cmd_fusion =
-+				fusion->cmd_list[i + instance->max_fw_cmds];
-+				mpt_cmd_fusion->is_raid_1_fp_write = 0;
-+				mpt_cmd_fusion->cmd_completed = false;
-+				if (mpt_cmd_fusion->scmd)
-+					megasas_return_cmd_fusion(instance,
-+						mpt_cmd_fusion);
-+			}
- 			scmd_local = cmd_fusion->scmd;
- 			if (cmd_fusion->scmd) {
- 				scmd_local->result =
-@@ -3581,10 +3829,11 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+@@ -2656,13 +2791,13 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
+ 					status =
+ 					r1_cmd->io_request->RaidContext.raid_context.status;
+ 					extStatus =
+-					r1_cmd->io_request->RaidContext.raid_context.exStatus;
++					r1_cmd->io_request->RaidContext.raid_context.ex_status;
+ 					data_length =
+ 						r1_cmd->io_request->DataLength;
+ 					sense = r1_cmd->sense;
+ 				}
+ 				r1_cmd->io_request->RaidContext.raid_context.status = 0;
+-				r1_cmd->io_request->RaidContext.raid_context.exStatus = 0;
++				r1_cmd->io_request->RaidContext.raid_context.ex_status = 0;
+ 				cmd_fusion->is_raid_1_fp_write = 0;
+ 				r1_cmd->is_raid_1_fp_write = 0;
+ 				r1_cmd->cmd_completed = false;
+@@ -2674,7 +2809,7 @@ void megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
+ 					extStatus, data_length, sense);
+ 				scsi_io_req->RaidContext.raid_context.status
+ 				= 0;
+-				scsi_io_req->RaidContext.raid_context.exStatus
++				scsi_io_req->RaidContext.raid_context.ex_status
+ 				= 0;
  				megasas_return_cmd_fusion(instance, cmd_fusion);
  				scsi_dma_unmap(scmd_local);
- 				scmd_local->scsi_done(scmd_local);
--				atomic_dec(&instance->fw_outstanding);
- 			}
- 		}
- 
-+		atomic_set(&instance->fw_outstanding, 0);
-+
- 		status_reg = instance->instancet->read_fw_status_reg(
- 			instance->reg_set);
- 		abs_state = status_reg & MFI_STATE_MASK;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index ad90a98..5590c1d 100644
+index 5590c1d..cb42655 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -94,6 +94,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
- #define MEGASAS_FP_CMD_LEN	16
- #define MEGASAS_FUSION_IN_RESET 0
- #define THRESHOLD_REPLY_COUNT 50
-+#define RAID_1_10_RMW_CMDS 3
- #define JBOD_MAPS_COUNT	2
+@@ -59,6 +59,8 @@
+ #define	MR_RL_FLAGS_GRANT_DESTINATION_CPU1	    0x10
+ #define	MR_RL_FLAGS_GRANT_DESTINATION_CUDA	    0x80
+ #define MR_RL_FLAGS_SEQ_NUM_ENABLE		    0x8
++#define MR_RL_WRITE_THROUGH_MODE		    0x00
++#define MR_RL_WRITE_BACK_MODE			    0x01
  
- enum MR_FUSION_ADAPTER_TYPE {
-@@ -728,7 +729,9 @@ struct MR_SPAN_BLOCK_INFO {
+ /* T10 PI defines */
+ #define MR_PROT_INFO_TYPE_CONTROLLER                0x8
+@@ -81,6 +83,11 @@
+ enum MR_RAID_FLAGS_IO_SUB_TYPE {
+ 	MR_RAID_FLAGS_IO_SUB_TYPE_NONE = 0,
+ 	MR_RAID_FLAGS_IO_SUB_TYPE_SYSTEM_PD = 1,
++	MR_RAID_FLAGS_IO_SUB_TYPE_RMW_DATA     = 2,
++	MR_RAID_FLAGS_IO_SUB_TYPE_RMW_P        = 3,
++	MR_RAID_FLAGS_IO_SUB_TYPE_RMW_Q        = 4,
++	MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS = 6,
++	MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT = 7
+ };
+ 
+ /*
+@@ -109,29 +116,29 @@ enum MR_FUSION_ADAPTER_TYPE {
+ 
+ struct RAID_CONTEXT {
+ #if   defined(__BIG_ENDIAN_BITFIELD)
+-	u8	nseg:4;
+-	u8	Type:4;
++	u8 nseg:4;
++	u8 type:4;
+ #else
+-	u8	Type:4;
+-	u8	nseg:4;
++	u8 type:4;
++	u8 nseg:4;
+ #endif
+-	u8	resvd0;
+-	__le16	timeoutValue;
+-	u8      regLockFlags;
+-	u8      resvd1;
+-	__le16	VirtualDiskTgtId;
+-	__le64	regLockRowLBA;
+-	__le32	regLockLength;
+-	__le16	nextLMId;
+-	u8      exStatus;
+-	u8      status;
+-	u8      RAIDFlags;
+-	u8      numSGE;
+-	__le16	configSeqNum;
+-	u8      spanArm;
+-	u8      priority;
+-	u8	numSGEExt;
+-	u8      resvd2;
++	u8 resvd0;
++	__le16 timeout_value;
++	u8 reg_lock_flags;
++	u8 resvd1;
++	__le16 virtual_disk_tgt_id;
++	__le64 reg_lock_row_lba;
++	__le32 reg_lock_length;
++	__le16 next_lmid;
++	u8 ex_status;
++	u8 status;
++	u8 raid_flags;
++	u8 num_sge;
++	__le16 config_seq_num;
++	u8 span_arm;
++	u8 priority;
++	u8 num_sge_ext;
++	u8 resvd2;
+ };
+ 
+ /*
+@@ -187,7 +194,7 @@ struct RAID_CONTEXT_G35 {
+ 	} smid;
+ 	u8 ex_status;       /* 0x16 : OUT */
+ 	u8 status;          /* 0x17 status */
+-	u8 RAIDFlags;		/* 0x18 resvd[7:6], ioSubType[5:4],
++	u8 raid_flags;		/* 0x18 resvd[7:6], ioSubType[5:4],
+ 						* resvd[3:1], preferredCpu[0]
+ 						*/
+ 	u8 span_arm;            /* 0x1C span[7:5], arm[4:0] */
+@@ -672,14 +679,17 @@ struct MPI2_IOC_INIT_REQUEST {
+ #define MAX_RAIDMAP_ROW_SIZE (MAX_ROW_SIZE)
+ #define MAX_LOGICAL_DRIVES 64
+ #define MAX_LOGICAL_DRIVES_EXT 256
++#define MAX_LOGICAL_DRIVES_DYN 512
+ #define MAX_RAIDMAP_LOGICAL_DRIVES (MAX_LOGICAL_DRIVES)
+ #define MAX_RAIDMAP_VIEWS (MAX_LOGICAL_DRIVES)
+ #define MAX_ARRAYS 128
+ #define MAX_RAIDMAP_ARRAYS (MAX_ARRAYS)
+ #define MAX_ARRAYS_EXT	256
+ #define MAX_API_ARRAYS_EXT (MAX_ARRAYS_EXT)
++#define MAX_API_ARRAYS_DYN 512
+ #define MAX_PHYSICAL_DEVICES 256
+ #define MAX_RAIDMAP_PHYSICAL_DEVICES (MAX_PHYSICAL_DEVICES)
++#define MAX_RAIDMAP_PHYSICAL_DEVICES_DYN 512
+ #define MR_DCMD_LD_MAP_GET_INFO             0x0300e101
+ #define MR_DCMD_SYSTEM_PD_MAP_GET_INFO      0x0200e102
+ #define MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC  0x010e8485   /* SR-IOV HB alloc*/
+@@ -726,12 +736,56 @@ struct MR_SPAN_BLOCK_INFO {
+ 	struct MR_SPAN_INFO block_span_info;
+ };
+ 
++#define MR_RAID_CTX_CPUSEL_0		0
++#define MR_RAID_CTX_CPUSEL_1		1
++#define MR_RAID_CTX_CPUSEL_2		2
++#define MR_RAID_CTX_CPUSEL_3		3
++#define MR_RAID_CTX_CPUSEL_FCFS		0xF
++
++struct MR_CPU_AFFINITY_MASK {
++	union {
++		struct {
++#ifndef MFI_BIG_ENDIAN
++		u8 hw_path:1;
++		u8 cpu0:1;
++		u8 cpu1:1;
++		u8 cpu2:1;
++		u8 cpu3:1;
++		u8 reserved:3;
++#else
++		u8 reserved:3;
++		u8 cpu3:1;
++		u8 cpu2:1;
++		u8 cpu1:1;
++		u8 cpu0:1;
++		u8 hw_path:1;
++#endif
++		};
++		u8 core_mask;
++	};
++};
++
++struct MR_IO_AFFINITY {
++	union {
++		struct {
++			struct MR_CPU_AFFINITY_MASK pdRead;
++			struct MR_CPU_AFFINITY_MASK pdWrite;
++			struct MR_CPU_AFFINITY_MASK ldRead;
++			struct MR_CPU_AFFINITY_MASK ldWrite;
++			};
++		u32 word;
++		};
++	u8 maxCores;    /* Total cores + HW Path in ROC */
++	u8 reserved[3];
++};
++
  struct MR_LD_RAID {
  	struct {
  #if   defined(__BIG_ENDIAN_BITFIELD)
--		u32     reserved4:5;
-+		u32     reserved4:3;
-+		u32     fp_cache_bypass_capable:1;
-+		u32     fp_rmw_capable:1;
+-		u32     reserved4:3;
+-		u32     fp_cache_bypass_capable:1;
+-		u32     fp_rmw_capable:1;
++		u32 reserved4:2;
++		u32 fp_cache_bypass_capable:1;
++		u32 fp_rmw_capable:1;
++		u32 disable_coalescing:1;
  		u32     fpBypassRegionLock:1;
  		u32     tmCapable:1;
  		u32	fpNonRWCapable:1;
-@@ -756,7 +759,9 @@ struct MR_LD_RAID {
+@@ -759,9 +813,10 @@ struct MR_LD_RAID {
  		u32	fpNonRWCapable:1;
  		u32     tmCapable:1;
  		u32     fpBypassRegionLock:1;
--		u32     reserved4:5;
-+		u32     fp_rmw_capable:1;
-+		u32     fp_cache_bypass_capable:1;
-+		u32     reserved4:3;
+-		u32     fp_rmw_capable:1;
+-		u32     fp_cache_bypass_capable:1;
+-		u32     reserved4:3;
++		u32 disable_coalescing:1;
++		u32 fp_rmw_capable:1;
++		u32 fp_cache_bypass_capable:1;
++		u32 reserved4:2;
  #endif
  	} capability;
  	__le32     reserved6;
-@@ -830,6 +835,8 @@ struct IO_REQUEST_INFO {
- 	u64 start_row;
- 	u8  span_arm;	/* span[7:5], arm[4:0] */
- 	u8  pd_after_lb;
-+	u16 r1_alt_dev_handle; /* raid 1/10 only */
-+	bool is_raid_1_fp_write;
- 	bool ra_capable;
+@@ -788,7 +843,36 @@ struct MR_LD_RAID {
+ 
+ 	u8	LUN[8]; /* 0x24 8 byte LUN field used for SCSI IO's */
+ 	u8	fpIoTimeoutForLd;/*0x2C timeout value used by driver in FP IO*/
+-	u8      reserved3[0x80-0x2D]; /* 0x2D */
++	/* Ox2D This LD accept priority boost of this type */
++	u8 ld_accept_priority_type;
++	u8 reserved2[2];	        /* 0x2E - 0x2F */
++	/* 0x30 - 0x33, Logical block size for the LD */
++	u32 logical_block_length;
++	struct {
++#ifndef MFI_BIG_ENDIAN
++	/* 0x34, P_I_EXPONENT from READ CAPACITY 16 */
++	u32 ld_pi_exp:4;
++	/* 0x34, LOGICAL BLOCKS PER PHYSICAL
++	*  BLOCK EXPONENT from READ CAPACITY 16
++	*/
++	u32 ld_logical_block_exp:4;
++	u32 reserved1:24;           /* 0x34 */
++#else
++	u32 reserved1:24;           /* 0x34 */
++	/* 0x34, LOGICAL BLOCKS PER PHYSICAL
++	*  BLOCK EXPONENT from READ CAPACITY 16
++	*/
++	u32 ld_logical_block_exp:4;
++	/* 0x34, P_I_EXPONENT from READ CAPACITY 16 */
++	u32 ld_pi_exp:4;
++#endif
++	};                               /* 0x34 - 0x37 */
++	 /* 0x38 - 0x3f, This will determine which
++	 *  core will process LD IO and PD IO.
++	 */
++	struct MR_IO_AFFINITY cpuAffinity;
++     /* Bit definiations are specified by MR_IO_AFFINITY */
++	u8 reserved3[0x80-0x40];    /* 0x40 - 0x7f */
  };
  
-@@ -883,6 +890,10 @@ struct megasas_cmd_fusion {
- 	u32 index;
- 	u8 pd_r1_lb;
- 	struct completion done;
-+	bool is_raid_1_fp_write;
-+	u16 r1_alt_dev_handle; /* raid 1/10 only*/
-+	bool cmd_completed;  /* raid 1/10 fp writes status holder */
+ struct MR_LD_SPAN_MAP {
+@@ -846,6 +930,91 @@ struct MR_LD_TARGET_SYNC {
+ 	__le16 seqNum;
+ };
+ 
++/*
++* RAID Map descriptor Types.
++* Each element should uniquely idetify one data structure in the RAID map
++*/
++enum MR_RAID_MAP_DESC_TYPE {
++	/* MR_DEV_HANDLE_INFO data */
++	RAID_MAP_DESC_TYPE_DEVHDL_INFO    = 0x0,
++	/* target to Ld num Index map */
++	RAID_MAP_DESC_TYPE_TGTID_INFO     = 0x1,
++	/* MR_ARRAY_INFO data */
++	RAID_MAP_DESC_TYPE_ARRAY_INFO     = 0x2,
++	/* MR_LD_SPAN_MAP data */
++	RAID_MAP_DESC_TYPE_SPAN_INFO      = 0x3,
++	RAID_MAP_DESC_TYPE_COUNT,
++};
 +
- };
++/*
++* This table defines the offset, size and num elements  of each descriptor
++* type in the RAID Map buffer
++*/
++struct MR_RAID_MAP_DESC_TABLE {
++	/* Raid map descriptor type */
++	u32 raid_map_desc_type;
++	/* Offset into the RAID map buffer where
++	*  descriptor data is saved
++	*/
++	u32 raid_map_desc_offset;
++	/* total size of the
++	* descriptor buffer
++	*/
++	u32 raid_map_desc_buffer_size;
++	/* Number of elements contained in the
++	*  descriptor buffer
++	*/
++	u32 raid_map_desc_elements;
++};
++
++/*
++* Dynamic Raid Map Structure.
++*/
++struct MR_FW_RAID_MAP_DYNAMIC {
++	u32 raid_map_size;   /* total size of RAID Map structure */
++	u32 desc_table_offset;/* Offset of desc table into RAID map*/
++	u32 desc_table_size;  /* Total Size of desc table */
++	/* Total Number of elements in the desc table */
++	u32 desc_table_num_elements;
++	u64	reserved1;
++	u32	reserved2[3];	/*future use */
++	/* timeout value used by driver in FP IOs */
++	u8 fp_pd_io_timeout_sec;
++	u8 reserved3[3];
++	/* when this seqNum increments, driver needs to
++	*  release RMW buffers asap
++	*/
++	u32 rmw_fp_seq_num;
++	u16 ld_count;	/* count of lds. */
++	u16 ar_count;   /* count of arrays */
++	u16 span_count; /* count of spans */
++	u16 reserved4[3];
++/*
++* The below structure of pointers is only to be used by the driver.
++* This is added in the ,API to reduce the amount of code changes
++* needed in the driver to support dynamic RAID map Firmware should
++* not update these pointers while preparing the raid map
++*/
++	union {
++		struct {
++			struct MR_DEV_HANDLE_INFO  *dev_hndl_info;
++			u16 *ld_tgt_id_to_ld;
++			struct MR_ARRAY_INFO *ar_map_info;
++			struct MR_LD_SPAN_MAP *ld_span_map;
++			};
++		u64 ptr_structure_size[RAID_MAP_DESC_TYPE_COUNT];
++		};
++/*
++* RAID Map descriptor table defines the layout of data in the RAID Map.
++* The size of the descriptor table itself could change.
++*/
++	/* Variable Size descriptor Table. */
++	struct MR_RAID_MAP_DESC_TABLE
++			raid_map_desc_table[RAID_MAP_DESC_TYPE_COUNT];
++	/* Variable Size buffer containing all data */
++	u32 raid_map_desc_data[1];
++}; /* Dynamicaly sized RAID MAp structure */
++
+ #define IEEE_SGE_FLAGS_ADDR_MASK            (0x03)
+ #define IEEE_SGE_FLAGS_SYSTEM_ADDR          (0x00)
+ #define IEEE_SGE_FLAGS_IOCDDR_ADDR          (0x01)
+@@ -955,9 +1124,10 @@ struct MR_DRV_RAID_MAP {
+ 	__le16                 spanCount;
+ 	__le16                 reserve3;
  
- struct LD_LOAD_BALANCE_INFO {
+-	struct MR_DEV_HANDLE_INFO  devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES];
+-	u8                  ldTgtIdToLd[MAX_LOGICAL_DRIVES_EXT];
+-	struct MR_ARRAY_INFO       arMapInfo[MAX_API_ARRAYS_EXT];
++	struct MR_DEV_HANDLE_INFO
++		devHndlInfo[MAX_RAIDMAP_PHYSICAL_DEVICES_DYN];
++	u16 ldTgtIdToLd[MAX_LOGICAL_DRIVES_DYN];
++	struct MR_ARRAY_INFO arMapInfo[MAX_API_ARRAYS_DYN];
+ 	struct MR_LD_SPAN_MAP      ldSpanMap[1];
+ 
+ };
+@@ -969,7 +1139,7 @@ struct MR_DRV_RAID_MAP {
+ struct MR_DRV_RAID_MAP_ALL {
+ 
+ 	struct MR_DRV_RAID_MAP raidMap;
+-	struct MR_LD_SPAN_MAP      ldSpanMap[MAX_LOGICAL_DRIVES_EXT - 1];
++	struct MR_LD_SPAN_MAP ldSpanMap[MAX_LOGICAL_DRIVES_DYN - 1];
+ } __packed;
+ 
+ 
+@@ -1088,7 +1258,7 @@ struct fusion_context {
+ 	u8	chain_offset_io_request;
+ 	u8	chain_offset_mfi_pthru;
+ 
+-	struct MR_FW_RAID_MAP_ALL *ld_map[2];
++	struct MR_FW_RAID_MAP_DYNAMIC *ld_map[2];
+ 	dma_addr_t ld_map_phys[2];
+ 
+ 	/*Non dma-able memory. Driver local copy.*/
+@@ -1096,6 +1266,8 @@ struct fusion_context {
+ 
+ 	u32 max_map_sz;
+ 	u32 current_map_sz;
++	u32 old_map_sz;
++	u32 new_map_sz;
+ 	u32 drv_map_sz;
+ 	u32 drv_map_pages;
+ 	struct MR_PD_CFG_SEQ_NUM_SYNC	*pd_seq_sync[JBOD_MAPS_COUNT];
 -- 
 1.8.3.1
+
