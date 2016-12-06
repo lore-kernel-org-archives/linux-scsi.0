@@ -1,41 +1,75 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's request
- queue
-Date: Tue, 6 Dec 2016 15:51:00 +0000
-Message-ID: <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
-References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V3 01/11] megaraid_sas: Add new pci device Ids for SAS3.5
+ Generic Megaraid Controllers
+Date: Tue, 6 Dec 2016 17:01:56 +0100
+Message-ID: <4e332ea6-1285-2d3c-0632-4f608a6ccd9b@redhat.com>
+References: <1480955261-178967-1-git-send-email-sasikumar.pc@broadcom.com>
+ <1480955261-178967-2-git-send-email-sasikumar.pc@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0077.outbound.protection.outlook.com ([104.47.34.77]:18959
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751613AbcLFPvC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 6 Dec 2016 10:51:02 -0500
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1480955261-178967-2-git-send-email-sasikumar.pc@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, sumit.saxena@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Fang <fangwei1@huawei.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tyasui@redhat.com" <tyasui@redhat.com>
 
-On 12/06/16 01:12, Wei Fang wrote:=0A=
-> The scsi device is being setted to the SDEV_RUNNING state at the end of=
-=0A=
-> the scan work. When the remote port reappears, scsi_target_unblock()=0A=
-> will be called, but the QUEUE_FLAG_STOPPED flag will not be cleared,=0A=
-> since scsi_internal_device_unblock() ignores SCSI devices in SDEV_RUNNING=
-=0A=
-> state. It results in a permanent stop of the scsi device's request=0A=
-> queue. Every requests sended to it will be blocked.=0A=
-=0A=
-Hello Wei,=0A=
-=0A=
-scsi_device_set_state() does not allow the transition from =0A=
-SDEV_CREATED_BLOCK to SDEV_RUNNING. If a SCSI device is blocked after it =
-=0A=
-has been added to the __devices list and before scsi_add_lun() finishes =0A=
-then I think the scan code will change its state into SDEV_BLOCK. Are =0A=
-you sure what you described above is what happened?=0A=
-=0A=
-Bart.=0A=
+On 5.12.2016 17:27, Sasikumar Chandrasekaran wrote:
+> This patch contains new pci device ids for SAS3.5 Generic Megaraid Controllers
+>
+> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
+> ---
+>  drivers/scsi/megaraid/megaraid_sas.h        | 11 ++++++++++-
+>  drivers/scsi/megaraid/megaraid_sas_base.c   | 20 ++++++++++++++++++-
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 30 ++++++++++++++++++++++-------
+>  3 files changed, 52 insertions(+), 9 deletions(-)
+>
+> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+> index 0d2625b..f24ce88 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas.h
+> +++ b/drivers/scsi/megaraid/megaraid_sas.h
+> @@ -56,6 +56,14 @@
+>  #define PCI_DEVICE_ID_LSI_INTRUDER_24		0x00cf
+>  #define PCI_DEVICE_ID_LSI_CUTLASS_52		0x0052
+>  #define PCI_DEVICE_ID_LSI_CUTLASS_53		0x0053
+> +#define PCI_DEVICE_ID_LSI_MECTOR		    0x00D4
+> +#define PCI_DEVICE_ID_LSI_VENTURA		    0x0014
+> +#define PCI_DEVICE_ID_LSI_CRUSADER		    0x0015
+
+Nack.
+
+This is not good, my test system panics instead of booting.
+megaraid_sas 0000:02:0e.0: RDPQ mode	: (disabled)
+BUG: unable to handle kernel paging request at 0000000000001e78
+IP: [<ffffffffa0321321>] megasas_issue_init_mfi+0x171/0x270 [megaraid_sas]
+
+
+you are already having a device with same device value in your pci_table  
+(PCI_DEVICE_ID_DELL_PERC5 is also 0x15), so fix the switch in  megasas_probe_one.
+
+Cheers,
+tomash
+
+
+(when sending new fixed versions, please add to the changed patches a text explaining
+what was changed in which version, like so - www.spinics.net/lists/linux-scsi/msg102122.html)
+
+
+>  
+> @@ -5723,6 +5732,15 @@ static int megasas_probe_one(struct pci_dev *pdev,
+>  	instance->pdev = pdev;
+>  
+>  	switch (instance->pdev->device) {
+> +	case PCI_DEVICE_ID_LSI_VENTURA:
+> +	case PCI_DEVICE_ID_LSI_MARLIN:
+> +	case PCI_DEVICE_ID_LSI_MECTOR:
+> +	case PCI_DEVICE_ID_LSI_CRUSADER:
+> +	case PCI_DEVICE_ID_LSI_HARPOON:
+> +	case PCI_DEVICE_ID_LSI_TOMCAT:
+> +	case PCI_DEVICE_ID_LSI_VENTURA_4PORT:
+> +	case PCI_DEVICE_ID_LSI_CRUSADER_4PORT:
+> +	     instance->is_ventura = true;
+>  	case PCI_DEVICE_ID_LSI_FUSION:
+>  	case PCI_DEVICE_ID_LSI_PLASMA:
+>  	case PCI_DEVICE_ID_LSI_INVADER:
