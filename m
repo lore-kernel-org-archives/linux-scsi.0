@@ -1,124 +1,104 @@
-From: Zhouyi Zhou <zhouzhouyi@gmail.com>
-Subject: Re: [PATCH 1/1] scsi: fcoe: return value of skb_linearize should be handled
-Date: Wed, 7 Dec 2016 16:33:29 +0800
-Message-ID: <CAABZP2wJAmN-cpX4x0__284=3-Yos=DHpsD7=hR+crEK8gXOSQ@mail.gmail.com>
-References: <1481097600-25604-1-git-send-email-zhouzhouyi@gmail.com> <20161207082801.GA3688@linux-x5ow.site>
+From: Hannes Reinecke <hare@suse.com>
+Subject: Re: [PATCH 16/22] qla2xxx: Improve RSCN handling in driver
+Date: Wed, 7 Dec 2016 12:32:29 +0100
+Message-ID: <0e7c68c9-1ab5-bd55-2a63-3da1cba1810e@suse.com>
+References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
+ <1481056251-2310-17-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161207082801.GA3688@linux-x5ow.site>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, fcoe-devel@open-fcoe.org, linux-scsi@vger.kernel.org, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Zhouyi Zhou <yizhouzhou@ict.ac.cn>, Chad Dupuis <chad.dupuis@cavium.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1481056251-2310-17-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Thanks Johannes for reviewing, your code is indeeded more elegant
+On 12/06/2016 09:30 PM, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@cavium.com>
+> 
+> - Save NPort ID early in link init.
+> - Add session deletion for TPRLO and send acknowledgement for TPRLO.
+> - Enable FW option to move ABTS, RIDA & PUREX from RSPQ
+>   to ATIOQ.
+> - Move ABTS & RIDA to ATIOQ helps in keeping command ordering and
+>   link up sequence ordering.
+> - Save Nport ID and update VP map so that SCSI CMD/ATIO
+>   won't be dropped.
+> - fcport alloc does the initializes memory to zero. Remove
+>   memset to zero since It migth corrupt link list.
+> - Turn off Registration for State Change MB in loop mode.
+> 
+> Current code blindly do State Change Registration when
+> the link is up. Move SCR behind fabric scan, so AL case
+> would not get erroneous error message.
+> 
+> Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+> ---
+>  drivers/scsi/qla2xxx/qla_def.h    |  12 +-
+>  drivers/scsi/qla2xxx/qla_fw.h     |  59 +++++++---
+>  drivers/scsi/qla2xxx/qla_gbl.h    |   2 +
+>  drivers/scsi/qla2xxx/qla_gs.c     |   4 +-
+>  drivers/scsi/qla2xxx/qla_init.c   | 150 ++++++++++++++++++++----
+>  drivers/scsi/qla2xxx/qla_isr.c    |   6 +-
+>  drivers/scsi/qla2xxx/qla_mbx.c    | 123 ++++++++++++--------
+>  drivers/scsi/qla2xxx/qla_os.c     |  48 ++++----
+>  drivers/scsi/qla2xxx/qla_target.c | 237 ++++++++++++++++++++++++++++++++++----
+>  9 files changed, 501 insertions(+), 140 deletions(-)
+> 
+[ .. ]
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+> index 44be150..3caaf06 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -3655,78 +3656,106 @@ struct tsk_mgmt_cmd {
+[ .. ]
+> -		/* FA-WWN is only for physical port */
+> -		if (!vp_idx) {
+> -			void *wwpn = ha->init_cb->port_name;
+> +		if (rptid_entry->vp_idx == 0) {
+> +			if (rptid_entry->vp_status == VP_STAT_COMPL) {
+>  
+> -			if (!MSB(stat)) {
+> -				if (rptid_entry->vp_idx_map[1] & BIT_6)
+> -					wwpn = rptid_entry->reserved_4 + 8;
+> +#if 0
+> +				/* FA-WWN is only for physical port */
+> +
+> +				/* To Do: For Target Mode, changing WWPN during
+> +				 * runtime cause Target un-config problem.  The FA-WWN
+> +				 * should be saved in separate field.
+> +				 */
+> +				if (rptid_entry->u.f1.flags & VP_FLAGS_NAME_VALID) {
+> +					memcpy(vha->port_name, rptid_entry->u.f1.port_name,
+> +						   WWN_SIZE);
+> +				}
+> +#endif
+> +
+> +				vha->d_id.b.domain = rptid_entry->port_id[2];
+> +				vha->d_id.b.area = rptid_entry->port_id[1];
+> +				vha->d_id.b.al_pa = rptid_entry->port_id[0];
+> +				spin_lock_irqsave(&ha->vport_slock, flags);
+> +				qlt_update_vp_map(vha, SET_AL_PA);
+> +				spin_unlock_irqrestore(&ha->vport_slock, flags);
+>  			}
+> -			memcpy(vha->port_name, wwpn, WWN_SIZE);
+> +
 
-On Wed, Dec 7, 2016 at 4:28 PM, Johannes Thumshirn <jthumshirn@suse.de> wro=
-te:
-> Hi Zhouyi,
-> On Wed, Dec 07, 2016 at 04:00:00PM +0800, Zhouyi Zhou wrote:
->> Return value of skb_linearize should be handled.
->>
->> Signed-off-by: Zhouyi Zhou <yizhouzhou@ict.ac.cn>
->> Reviewed-by: Yuval Shaia <yuval.shaia@oracle.com>
->> ---
->>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 6 ++++--
->>  drivers/scsi/fcoe/fcoe.c          | 5 ++++-
->>  2 files changed, 8 insertions(+), 3 deletions(-)
->>
->> diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx=
-2fc_fcoe.c
->> index f9ddb61..142f7e2 100644
->> --- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
->> +++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
->> @@ -542,8 +542,10 @@ static void bnx2fc_recv_frame(struct sk_buff *skb)
->>               return;
->>       }
->>
->> -     if (skb_is_nonlinear(skb))
->> -             skb_linearize(skb);
->> +     if (skb_linearize(skb)) {
->> +             kfree_skb(skb);
->> +             return;
->> +     }
->>       mac =3D eth_hdr(skb)->h_source;
->>       dest_mac =3D eth_hdr(skb)->h_dest;
->>
->> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
->> index 9bd41a3..4e3499c 100644
->> --- a/drivers/scsi/fcoe/fcoe.c
->> +++ b/drivers/scsi/fcoe/fcoe.c
->> @@ -1685,7 +1685,10 @@ static void fcoe_recv_frame(struct sk_buff *skb)
->>                       skb->dev ? skb->dev->name : "<NULL>");
->>
->>       port =3D lport_priv(lport);
->> -     skb_linearize(skb); /* check for skb_is_nonlinear is within skb_li=
-nearize */
->> +     if (skb_linearize(skb)) {
->> +             kfree_skb(skb);
->> +             return;
->> +     }
->>
->>       /*
->>        * Frame length checks and setting up the header pointers
->> --
->> 1.9.1
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
-> I'd personally prefer something like:
->
-> diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
-> index 9bd41a3..bc6fa6c 100644
-> --- a/drivers/scsi/fcoe/fcoe.c
-> +++ b/drivers/scsi/fcoe/fcoe.c
-> @@ -1673,8 +1673,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
->         lport =3D fr->fr_dev;
->         if (unlikely(!lport)) {
->                 FCOE_NETDEV_DBG(skb->dev, "NULL lport in skb\n");
-> -               kfree_skb(skb);
-> -               return;
-> +               goto free_skb;
->         }
->
->         FCOE_NETDEV_DBG(skb->dev,
-> @@ -1685,8 +1684,8 @@ static void fcoe_recv_frame(struct sk_buff *skb)
->                         skb->dev ? skb->dev->name : "<NULL>");
->
->         port =3D lport_priv(lport);
-> -       skb_linearize(skb); /* check for skb_is_nonlinear is within skb_l=
-inearize */
-> -
-> +       if (skb_linearize(skb))
-> +               goto free_skb;
->         /*
->          * Frame length checks and setting up the header pointers
->          * was done in fcoe_rcv already.
-> @@ -1732,6 +1731,7 @@ static void fcoe_recv_frame(struct sk_buff *skb)
->  drop:
->         stats->ErrorFrames++;
->         put_cpu();
-> +free_skb:
->         kfree_skb(skb);
->  }
->
->
-> For bnx2fc as well if Chad agrees.
->
-> Thanks,
->         Johannes
->
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=C3=BCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
-Thanks
-Zhouyi
+This is a bit odd.
+If you already have code for fixing the to-do, why is the to-do there?
+And if the code doesn't work, what's the point of including it here?
+
+I would suggest removing the code; the comment should be giving enough
+of a hint of what needs to be implemented.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		               zSeries & Storage
+hare@suse.com			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
