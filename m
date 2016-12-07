@@ -1,36 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] megaraid_sas: switch to pci_alloc_irq_vectors
-Date: Wed, 07 Dec 2016 18:58:25 -0500
-Message-ID: <yq1y3zrqoke.fsf@sermon.lab.mkp.net>
-References: <1480679543-79236-1-git-send-email-hare@suse.de>
-        <e52146c76fc211be9739a81f5678ca68@mail.gmail.com>
+Subject: Re: [PATCH v2] qla4xxx: switch to pci_alloc_irq_vectors
+Date: Wed, 07 Dec 2016 18:59:31 -0500
+Message-ID: <yq1twafqoik.fsf@sermon.lab.mkp.net>
+References: <1481032610-31274-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40446 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932434AbcLGX6p (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 18:58:45 -0500
-In-Reply-To: <e52146c76fc211be9739a81f5678ca68@mail.gmail.com> (Sumit Saxena's
-        message of "Tue, 6 Dec 2016 19:11:42 +0530")
+Received: from aserp1040.oracle.com ([141.146.126.69]:36227 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933751AbcLGX7k (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 18:59:40 -0500
+In-Reply-To: <1481032610-31274-1-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Tue, 6 Dec 2016 14:56:50 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sumit Saxena <sumit.saxena@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, Sasikumar PC <sasikumar.pc@broadcom.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Nilesh.Javali@cavium.com, QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
 
->>>>> "Sumit" == Sumit Saxena <sumit.saxena@broadcom.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Sumit,
+Christoph> And simplify the MSI-X logic in general - just request the
+Christoph> two vectors directly instead of going through an indirection
+Christoph> table.
 
-Sumit> Acked by: Sumit Saxena<sumit.saxena@broadcom.com>
-
-Please make sure your acks look like this:
-
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
-
-Otherwise patchwork won't pick them up.
-
-Thanks!
+Applied to 4.10/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
