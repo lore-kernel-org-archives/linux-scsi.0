@@ -1,93 +1,50 @@
-From: Stefan Hajnoczi <stefanha@redhat.com>
-Subject: Re: [PATCH 10/10] virtio: enable endian checks for sparse builds
-Date: Wed, 7 Dec 2016 14:09:33 +0000
-Message-ID: <20161207140933.GF32099@stefanha-x1.localdomain>
-References: <1481038106-24899-1-git-send-email-mst@redhat.com>
-	<1481038106-24899-11-git-send-email-mst@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: LSF/MM 2017: Call for Proposals
+Date: Wed, 07 Dec 2016 06:57:06 -0800
+Message-ID: <1481122626.2354.14.camel@HansenPartnership.com>
+References: <1480601506.2511.7.camel@poochiereds.net>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="===============7466233140133078509=="
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <1481038106-24899-11-git-send-email-mst@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: kvm@vger.kernel.org, Neil Armstrong <narmstrong@baylibre.com>, David Airlie <airlied@linux.ie>, linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, virtualization@lists.linux-foundation.org, linux-s390@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, v9fs-developer@lists.sourceforge.net, Asias He <asias@redhat.com>, Arnd Bergmann <arnd@arndb.de>, linux-kbuild@vger.kernel.org, Jens Axboe <axboe@fb.com>, Michal Marek <mmarek@suse.com>, Matt Mackall <mpm@selenic.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-kernel@vger.kernel.org, linux-crypto@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1480601506.2511.7.camel@poochiereds.net>
+Sender: owner-linux-mm@kvack.org
+To: Jeff Layton <jlayton@poochiereds.net>, linux-block@vger.kernel.org, linux-btrfs@vger.kernel.org, linux-cifs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org, linux-mm@kvack.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, "xfs@oss.sgi.com" <xfs@oss.sgi.com>, ceph-devel@vger.kernel.org, linux-nvme@lists.infradead.org
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
+On Thu, 2016-12-01 at 09:11 -0500, Jeff Layton wrote:
+> 1) Proposals for agenda topics should be sent before January 15th, 
+> 2016 to:
+> 
+>     lsf-pc@lists.linux-foundation.org
+> 
+> and cc the Linux list or lists that are relevant for the topic in
+> question:
+> 
+>     ATA:   linux-ide@vger.kernel.org
+>     Block: linux-block@vger.kernel.org
+>     FS:    linux-fsdevel@vger.kernel.org
+>     MM:    linux-mm@kvack.org
+>     SCSI:  linux-scsi@vger.kernel.org
+>     NVMe:  linux-nvme@lists.infradead.org
+> 
+> Please tag your proposal with [LSF/MM TOPIC] to make it easier to 
+> track.
 
---===============7466233140133078509==
-Content-Type: multipart/signed; micalg=pgp-sha1;
-	protocol="application/pgp-signature"; boundary="GLp9dJVi+aaipsRk"
-Content-Disposition: inline
+Just on this point, since there seems to be a lot of confusion: lsf-pc
+is the list for contacting the programme committee, so you cannot
+subscribe to it.
 
+There is no -discuss equivalent, like kernel summit has, because we
+expect you to cc the relevant existing mailing list and have the
+discussion there instead rather than expecting people to subscribe to a
+new list.
 
---GLp9dJVi+aaipsRk
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+James
 
-On Tue, Dec 06, 2016 at 05:41:05PM +0200, Michael S. Tsirkin wrote:
-> __CHECK_ENDIAN__ isn't on by default presumably because
-> it triggers too many sparse warnings for correct code.
-> But virtio is now clean of these warnings, and
-> we want to keep it this way - enable this for
-> sparse builds.
->=20
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->=20
-> It seems that there should be a better way to do it,
-> but this works too.
->=20
->  drivers/block/Makefile          | 1 +
->  drivers/char/Makefile           | 1 +
->  drivers/char/hw_random/Makefile | 2 ++
->  drivers/gpu/drm/virtio/Makefile | 1 +
->  drivers/net/Makefile            | 3 +++
->  drivers/net/caif/Makefile       | 1 +
->  drivers/rpmsg/Makefile          | 1 +
->  drivers/s390/virtio/Makefile    | 2 ++
->  drivers/scsi/Makefile           | 1 +
->  drivers/vhost/Makefile          | 1 +
->  drivers/virtio/Makefile         | 3 +++
->  net/9p/Makefile                 | 1 +
->  net/packet/Makefile             | 1 +
->  net/vmw_vsock/Makefile          | 2 ++
->  14 files changed, 21 insertions(+)
-
-Reviewed-by: Stefan Hajnoczi <stefanha@redhat.com>
-
---GLp9dJVi+aaipsRk
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iQEcBAEBAgAGBQJYSBgdAAoJEJykq7OBq3PIErIIALcfuXKP5HgamgpQoZkN0Uc0
-2n2uVTdzArmnFB44EWnkmW+iYjCl3HfmHgtoWPwsUKoY/RDBuL8x9wNSrOfDzSMf
-ymjii6GPxe3fJ4xlvzAmueh0F4wfFeKl+jrO7jm3B1vIhJh6NzEgQZJgGxmpNYvE
-X0o9IKPe5pr+x3ZAec1LMzsv9CvtJObwO3bVgAtQQlA7hlvewrbZkxgmKAojibGG
-Mdv+oNGtpp8ePXN9c0EdhLFbPF3MY9YHf0DbirN5CXp7KP1GH9FgWaOKx0n0v8IB
-3KqF7wUADa/eIWrIW1FaSy9DeGfihiwwrWaEcg/c0LoweS6OLwGhCJTXfp45GJk=
-=SL7g
------END PGP SIGNATURE-----
-
---GLp9dJVi+aaipsRk--
-
---===============7466233140133078509==
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Virtualization mailing list
-Virtualization@lists.linux-foundation.org
-https://lists.linuxfoundation.org/mailman/listinfo/virtualization
---===============7466233140133078509==--
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
