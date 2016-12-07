@@ -1,97 +1,56 @@
 From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 16/22] qla2xxx: Improve RSCN handling in driver
-Date: Wed, 7 Dec 2016 12:32:29 +0100
-Message-ID: <0e7c68c9-1ab5-bd55-2a63-3da1cba1810e@suse.com>
+Subject: Re: [PATCH 20/22] qla2xxx: Allow relogin to go through if remote
+ login did not finish
+Date: Wed, 7 Dec 2016 13:05:24 +0100
+Message-ID: <884223e6-5856-057a-2f36-796cf6d0ae16@suse.com>
 References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
- <1481056251-2310-17-git-send-email-himanshu.madhani@cavium.com>
+ <1481056251-2310-21-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1481056251-2310-17-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.nue.novell.com ([195.135.221.5]:38792 "EHLO
+        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751758AbcLGMFv (ORCPT
+        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
+        Wed, 7 Dec 2016 07:05:51 -0500
+In-Reply-To: <1481056251-2310-21-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Himanshu Madhani <himanshu.madhani@cavium.com>, target-devel@vger.kernel.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 On 12/06/2016 09:30 PM, Himanshu Madhani wrote:
 > From: Quinn Tran <quinn.tran@cavium.com>
 > 
-> - Save NPort ID early in link init.
-> - Add session deletion for TPRLO and send acknowledgement for TPRLO.
-> - Enable FW option to move ABTS, RIDA & PUREX from RSPQ
->   to ATIOQ.
-> - Move ABTS & RIDA to ATIOQ helps in keeping command ordering and
->   link up sequence ordering.
-> - Save Nport ID and update VP map so that SCSI CMD/ATIO
->   won't be dropped.
-> - fcport alloc does the initializes memory to zero. Remove
->   memset to zero since It migth corrupt link list.
-> - Turn off Registration for State Change MB in loop mode.
-> 
-> Current code blindly do State Change Registration when
-> the link is up. Move SCR behind fabric scan, so AL case
-> would not get erroneous error message.
-> 
 > Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 > Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 > ---
->  drivers/scsi/qla2xxx/qla_def.h    |  12 +-
->  drivers/scsi/qla2xxx/qla_fw.h     |  59 +++++++---
->  drivers/scsi/qla2xxx/qla_gbl.h    |   2 +
->  drivers/scsi/qla2xxx/qla_gs.c     |   4 +-
->  drivers/scsi/qla2xxx/qla_init.c   | 150 ++++++++++++++++++++----
->  drivers/scsi/qla2xxx/qla_isr.c    |   6 +-
->  drivers/scsi/qla2xxx/qla_mbx.c    | 123 ++++++++++++--------
->  drivers/scsi/qla2xxx/qla_os.c     |  48 ++++----
->  drivers/scsi/qla2xxx/qla_target.c | 237 ++++++++++++++++++++++++++++++++++----
->  9 files changed, 501 insertions(+), 140 deletions(-)
+>  drivers/scsi/qla2xxx/qla_def.h    |  2 ++
+>  drivers/scsi/qla2xxx/qla_init.c   | 14 ++++++++++++--
+>  drivers/scsi/qla2xxx/qla_isr.c    | 25 +++++++++++++++++++------
+>  drivers/scsi/qla2xxx/qla_os.c     |  2 +-
+>  drivers/scsi/qla2xxx/qla_target.c |  2 ++
+>  5 files changed, 36 insertions(+), 9 deletions(-)
 > 
 [ .. ]
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-> index 44be150..3caaf06 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -3655,78 +3656,106 @@ struct tsk_mgmt_cmd {
-[ .. ]
-> -		/* FA-WWN is only for physical port */
-> -		if (!vp_idx) {
-> -			void *wwpn = ha->init_cb->port_name;
-> +		if (rptid_entry->vp_idx == 0) {
-> +			if (rptid_entry->vp_status == VP_STAT_COMPL) {
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index 8137238..3e089c3 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -4512,7 +4512,7 @@ void qla24xx_create_new_sess(struct scsi_qla_host *vha, struct qla_work_evt *e)
+>  			fcport->flags |= FCF_FABRIC_DEVICE;
+>  			fcport->fw_login_state = DSC_LS_PLOGI_PEND;
 >  
-> -			if (!MSB(stat)) {
-> -				if (rptid_entry->vp_idx_map[1] & BIT_6)
-> -					wwpn = rptid_entry->reserved_4 + 8;
-> +#if 0
-> +				/* FA-WWN is only for physical port */
-> +
-> +				/* To Do: For Target Mode, changing WWPN during
-> +				 * runtime cause Target un-config problem.  The FA-WWN
-> +				 * should be saved in separate field.
-> +				 */
-> +				if (rptid_entry->u.f1.flags & VP_FLAGS_NAME_VALID) {
-> +					memcpy(vha->port_name, rptid_entry->u.f1.port_name,
-> +						   WWN_SIZE);
-> +				}
-> +#endif
-> +
-> +				vha->d_id.b.domain = rptid_entry->port_id[2];
-> +				vha->d_id.b.area = rptid_entry->port_id[1];
-> +				vha->d_id.b.al_pa = rptid_entry->port_id[0];
-> +				spin_lock_irqsave(&ha->vport_slock, flags);
-> +				qlt_update_vp_map(vha, SET_AL_PA);
-> +				spin_unlock_irqrestore(&ha->vport_slock, flags);
->  			}
-> -			memcpy(vha->port_name, wwpn, WWN_SIZE);
-> +
-
-This is a bit odd.
-If you already have code for fixing the to-do, why is the to-do there?
-And if the code doesn't work, what's the point of including it here?
-
-I would suggest removing the code; the comment should be giving enough
-of a hint of what needs to be implemented.
+> -			memcpy(&fcport->port_name, e->u.new_sess.port_name,
+> +			memcpy(fcport->port_name, e->u.new_sess.port_name,
+>  				   WWN_SIZE);
+>  		} else {
+>  			ql_dbg(ql_dbg_disc, vha, 0xffff,
+Misplaced hunk, maybe?
+Seems like a genuine fix, and unrelated to the rest of the path.
+Please move to a separate patch (or merge with the original introducing
+this issue, if possible).
 
 Cheers,
 
