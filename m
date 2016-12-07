@@ -1,59 +1,71 @@
-From: ELISA WEBADMIN <kimura@tenant-house.com>
-Subject: kiireellinen webmail tili =?UTF-8?B?UMOkaXZpdHTDpMOk?=
-Date: Thu, 08 Dec 2016 02:12:24 +0900
-Message-ID: <201612071712.uB7HCOBL055177@www2858.sakura.ne.jp>
+From: James Bottomley <jejb@linux.vnet.ibm.com>
+Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's
+ request queue
+Date: Wed, 07 Dec 2016 10:16:05 -0800
+Message-ID: <1481134565.2354.43.camel@linux.vnet.ibm.com>
+References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
+         <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
+         <584763FB.9010602@huawei.com>
+         <BLUPR02MB168364C1D3A8A2C7CF367D5481850@BLUPR02MB1683.namprd02.prod.outlook.com>
+         <584784D7.1070009@huawei.com>
+         <BLUPR02MB1683A85CB4376E9904F1B38881850@BLUPR02MB1683.namprd02.prod.outlook.com>
+         <5847B355.2050100@huawei.com>
+         <9d9b3296-09d8-0f65-f52d-33fc19c4b6c2@sandisk.com>
+         <d5b9960c-b68c-c636-dd1d-dfd056d99e52@sandisk.com>
+         <1481132411.28416.232.camel@localhost.localdomain>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="------_37363357584842f8b3205_"
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from www2858.sakura.ne.jp ([49.212.198.68]:50998 "EHLO
-        www2858.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932166AbcLGSMa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 13:12:30 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50013 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753008AbcLGSQN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 13:16:13 -0500
+Received: from pps.filterd (m0098416.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB7ICt1X025587
+        for <linux-scsi@vger.kernel.org>; Wed, 7 Dec 2016 13:16:12 -0500
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 276n7qyvdc-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Dec 2016 13:16:12 -0500
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
+        Wed, 7 Dec 2016 13:16:12 -0500
+In-Reply-To: <1481132411.28416.232.camel@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: update@elisa.fi
+To: emilne@redhat.com, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Wei Fang <fangwei1@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
---------_37363357584842f8b3205_
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
+On Wed, 2016-12-07 at 12:40 -0500, Ewan D. Milne wrote:
+> On Wed, 2016-12-07 at 08:55 -0800, Bart Van Assche wrote:
+> > On 12/07/2016 08:48 AM, Bart Van Assche wrote:
+> > > It's a known bug. Some time ago I posted a patch that serializes 
+> > > all scsi_device_set_state() calls but I have not yet found it in 
+> > > the list archives. However, that patch has not yet been merged.
+> > 
+> > See also https://www.spinics.net/lists/linux-scsi/msg66966.html.
+> > 
+> > Bart.
+> > 
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux
+> > -scsi" in
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
+> Yes, however that patch does not fix Wei Fang's issue.  In fact I 
+> just received a crash dump that appears to be the same thing.  It 
+> looks like the rport went away right after the initial INQUIRY, so we 
+> set the state to SDEV_BLOCK and stop the queue, and then the scan 
+> code continues and sets the state back to SDEV_RUNNING.
 
-SHl2w6Qgc8OkaGvDtnBvc3RpbiBrw6R5dHTDpGrDpCEKWWh0ZW7DpGlzdMOkbW1lIHPDpGhrw7Zw
-b3N0aXBhbHZlbHVpZGVuIG9taW5haXN1dWtzaWEgdHVvbWFsbGEga2Fpa2tpZW4gYXNpYWtrYWlk
-ZW4ga8OkeXR0w7bDtm4gdXVkZW4gc2VsYWlucG9zdGluIGVsaSB3ZWJtYWlsLXBhbHZlbHVuLgpL
-bGlra2FhIGxpbmtracOkIHDDpGl2aXR0w6TDpCBzw6Roa8O2cG9zdGlpc2k6IGh0dHA6Ly9ndWlh
-cGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApO
-eWt5aW5lbiBzZWxhaW5wb3N0aSBlbGkgd2VibWFpbC1wYWx2ZWx1IGh0dHA6Ly9ndWlhcGFyYWZv
-cnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbCkga29ydmF1
-dHV1IGtva29uYWFuIHV1ZGVsbGEgcGFsdmVsdWxsYS4KTMO2eWTDpHQgdXVkZW4gcGFsdmVsdW4g
-b3NvaXR0ZWVzdGE6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9f
-X3Rhc2s9bG9naW4vbG9naW4uaHRtbApFbnNpbW3DpGlzZW4ga2lyamF1dHVtaXNlbiB5aHRleWRl
-c3PDpCBvc29pdGVraXJqYXNpIHNpc8OkbHTDtiBrb3Bpb2lkYWFuIHV1dGVlbiBwYWx2ZWx1dW4u
-IEh1b20hIEpvcyB0w6Rtw6RuIGrDpGxrZWVuIGxpc8Okw6R0IHZhbmhhc3NhIHdlYm1haWwtcGFs
-dmVsdXNzYSBvc29pdHRlaXRhIG9zb2l0ZWtpcmphYW4sIG5lIGVpdsOkdCBlbsOkw6Qga29waW9p
-ZHUgdXV0ZWVuIHBhbHZlbHV1bi4KSm9zIHRhcnZpdHNldCBrw6R5dMO2bm9wYXN0dXN0YSBzw6Ro
-a8O2cG9zdGlhc2lvaXNzYSwgb2xldGhhbiB5aHRleWRlc3PDpCBFbGlzYW4gT21hZ3VydXVuLiBP
-bWFndXJ1IHBhbHZlbGVlIG51bWVyb3NzYSAwNjAwIDkwMCA1MDAgYXJraXNpbiA44oCTMjEgamEg
-bGF1YW50YWluYSA54oCTMTcgKDIsMTkg4oKsL21pbiArIG1wbS9wdm0pLiBWb2l0IHR1dHVzdHVh
-IHBhbHZlbHV1biBvc29pdHRlZXNzYQpZc3TDpHbDpGxsaXNpbiB0ZXJ2ZWlzaW4sCkVsaXNhCj09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PQpEZWFyIEVsc2EgdXNlciEKV2UgdW5pZnkgZS1tYWlsIHNl
-cnZpY2VzIGNhcGFiaWxpdGllcyBieSBicmluZ2luZyBhbGwgY2xpZW50cyB0byB1c2UgdGhlIG5l
-dyBicm93c2VyIG1haWwsIGllIHdlYm1haWwgc2VydmljZS4KQ2xpY2sgdGhlIGxpbmsgdG8gdXBk
-YXRlIHlvdXIgZW1haWw6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFp
-bC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApDdXJyZW50IHdlYiBtYWlsLCBpZSB3ZWJtYWlsIHNl
-cnZpY2UgKGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9
-bG9naW4vbG9naW4uaHRtbCkgaXMgcmVwbGFjZWQgd2l0aCBhbiBlbnRpcmVseSBuZXcgc2Vydmlj
-ZS4KWW91IHdpbGwgZmluZCB0aGUgbmV3IHNlcnZpY2UgYXQ6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1
-bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApVcG9uIGZpcnN0
-IGxvZ2dpbmcgeW91ciBhZGRyZXNzIGJvb2tzIGNvbnRlbnRzIGFyZSBjb3BpZWQgdG8gdGhlIG5l
-dyBzZXJ2aWNlLiBOQiEgSWYgeW91IHRoZW4gYWRkIGluIHRoZSBvbGQgd2VibWFpbCBzZXJ2aWNl
-IGFkZHJlc3NlcyBpbiB0aGUgYWRkcmVzcyBib29rLCB0aGV5IGFyZSBubyBsb25nZXIgY29waWVk
-IHRvIHRoZSBuZXcgc2VydmljZS4KSWYgeW91IG5lZWQgZ3VpZGFuY2Ugb24gdGhlIHVzZSBvZiBl
-LW1hdHRlcnMsIGluIGNvbm5lY3Rpb24gd2l0aCBFbGlzYSBwbGVhc2UgYmUgT21hZ3VydXVuLiBP
-bWFndXJ1IHNlcnZlcyBpc3N1ZSAwNjAwIDkwMCA1MDAsIHdlZWtkYXlzIDgtMjEgYW5kIFNhdHVy
-ZGF5cyA5LTE3ICgyLjE5IOKCrCAvIG1pbiArIG1vYmlsZSBjYWxsIGNoYXJnZSAvIGxvY2FsIG5l
-dHdvcmsgY2hhcmdlKS4gWW91IGNhbiB2aXNpdCB0aGUgc2VydmljZSBhdApCZXN0IHJlZ2FyZHMs
-CkVsaXNh
+So here's the violation of the state model.  the rport went CREATED
+->BLOCK which is wrong: it should go CREATED->CREATED_BLOCK and then
+the add code would set it to BLOCK instead of RUNNING.
 
---------_37363357584842f8b3205_--
+The question to diagnose is why CREATED->BLOCK worked.
+
+James
+
