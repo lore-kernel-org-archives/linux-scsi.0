@@ -1,34 +1,52 @@
-From: zhangfei <zhangfei.gao@linaro.org>
-Subject: Re: [PATCH] scsi: hisi_sas: support deferred probe for v2 hw
-Date: Wed, 7 Dec 2016 13:57:32 +0800
-Message-ID: <4acc0b8d-f8d3-4649-87aa-4059105ebf2b@linaro.org>
-References: <1481028247-196779-1-git-send-email-john.garry@huawei.com>
+From: Johannes Berg <johannes@sipsolutions.net>
+Subject: Re: [PATCH 10/10] virtio: enable endian checks for sparse builds
+Date: Wed, 07 Dec 2016 07:25:51 +0100
+Message-ID: <1481091951.4092.12.camel@sipsolutions.net>
+References: <1481038106-24899-1-git-send-email-mst@redhat.com>
+	<1481038106-24899-11-git-send-email-mst@redhat.com>
+	(sfid-20161206_164156_647850_329465D7)
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1481028247-196779-1-git-send-email-john.garry@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: john.garry2@mail.dcu.ie, linuxarm@huawei.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <1481038106-24899-11-git-send-email-mst@redhat.com>
+	(sfid-20161206_164156_647850_329465D7)
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: kvm@vger.kernel.org, Neil Armstrong <narmstrong@baylibre.com>, David Airlie <airlied@linux.ie>, linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, virtualization@lists.linux-foundation.org, linux-s390@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, linux-scsi@vger.kernel.org, v9fs-developer@lists.sourceforge.net, Asias He <asias@redhat.com>, Arnd Bergmann <arnd@arndb.de>, linux-kbuild@vger.kernel.org, Jens Axboe <axboe@fb.com>, Michal Marek <mmarek@suse.com>, Stefan Hajnoczi <stefanha@redhat.com>, Matt Mackall <mpm@selenic.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-crypto@vger.kernel.org, netdev@vger.kernel.org, "David S. Miller" <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 2016年12月06日 20:44, John Garry wrote:
-> In the hip06 and hip07 SoCs, the interrupt lines from the
-> SAS controllers are connected to mbigen hw module [1].
-> The mbigen module is probed with module_init, and, as such,
-> is not guaranteed to probe before the SAS driver. So we need
-> to support deferred probe.
->
-> We check for probe deferral in the hw layer probe, so we not
-> probe into the main layer and allocate shost, memories, etc.,
-> to later learn that we need to defer the probe.
->
-> [1] ./Documentation/devicetree/bindings/interrupt-controller/hisilicon,mbigen-v2.txt
->
-> Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Zhangfei Gao <zhangfei.gao@linaro.org>
-
-Thanks
+T24gVHVlLCAyMDE2LTEyLTA2IGF0IDE3OjQxICswMjAwLCBNaWNoYWVsIFMuIFRzaXJraW4gd3Jv
+dGU6Cgo+IEl0IHNlZW1zIHRoYXQgdGhlcmUgc2hvdWxkIGJlIGEgYmV0dGVyIHdheSB0byBkbyBp
+dCwKPiBidXQgdGhpcyB3b3JrcyB0b28uCgpJbiBzb21lIGNhc2VzIHRoZXJlIG1pZ2h0IGJlOgoK
+PiAtLS0gYS9kcml2ZXJzL3MzOTAvdmlydGlvL01ha2VmaWxlCj4gKysrIGIvZHJpdmVycy9zMzkw
+L3ZpcnRpby9NYWtlZmlsZQo+IEBAIC02LDYgKzYsOCBAQAo+IMKgIyBpdCB1bmRlciB0aGUgdGVy
+bXMgb2YgdGhlIEdOVSBHZW5lcmFsIFB1YmxpYyBMaWNlbnNlICh2ZXJzaW9uIDIKPiBvbmx5KQo+
+IMKgIyBhcyBwdWJsaXNoZWQgYnkgdGhlIEZyZWUgU29mdHdhcmUgRm91bmRhdGlvbi4KPiDCoAo+
+ICtDRkxBR1NfdmlydGlvX2Njdy5vICs9IC1EX19DSEVDS19FTkRJQU5fXwo+ICtDRkxBR1Nfa3Zt
+X3ZpcnRpby5vICs9IC1EX19DSEVDS19FTkRJQU5fXwo+IMKgczM5MC12aXJ0aW8tb2JqcyA6PSB2
+aXJ0aW9fY2N3Lm8KPiDCoGlmZGVmIENPTkZJR19TMzkwX0dVRVNUX09MRF9UUkFOU1BPUlQKPiDC
+oHMzOTAtdmlydGlvLW9ianMgKz0ga3ZtX3ZpcnRpby5vCgpIZXJlIHlvdSBjb3VsZCB1c2UKCmNj
+ZmxhZ3MteSArPSAtRF9fQ0hFQ0tfRU5ESUFOX18KCmZvciBleGFtcGxlLCBvciBldmVuCgpzdWJk
+aXItY2NmbGFncy15ICs9IC1EX19DSEVDS19FTkRJQU5fXwoKKGluIGNhc2UgYW55IHN1YmRpcnMg
+ZXZlciBnZXQgYWRkZWQgaGVyZSkKCj4gLS0tIGEvZHJpdmVycy92aG9zdC9NYWtlZmlsZQo+ICsr
+KyBiL2RyaXZlcnMvdmhvc3QvTWFrZWZpbGUKPiBAQCAtMSwzICsxLDQgQEAKPiArY2NmbGFncy15
+IDo9IC1EX19DSEVDS19FTkRJQU5fXwoKTG9va3MgbGlrZSB5b3UgZGlkIHRoYXQgaGVyZSBhbmQg
+aW4gc29tZSBvdGhlciBwbGFjZXMgdGhvdWdoIC0gc28KcGVyaGFwcyB0aGUgczM5MCBvbmUgd2Fz
+IGludGVudGlvbmFsbHkgZGlmZmVyZW50PwoKPiAtLS0gYS9uZXQvcGFja2V0L01ha2VmaWxlCj4g
+KysrIGIvbmV0L3BhY2tldC9NYWtlZmlsZQo+IEBAIC0yLDYgKzIsNyBAQAo+IMKgIyBNYWtlZmls
+ZSBmb3IgdGhlIHBhY2tldCBBRi4KPiDCoCMKPiDCoAo+ICtjY2ZsYWdzLXkgOj0gLURfX0NIRUNL
+X0VORElBTl9fCgpUZWNobmljYWxseSB0aGlzIGlzIHNsaWdodGx5IG1vcmUgdGhhbiBhZHZlcnRp
+c2VkLCBidXQgSSBndWVzcyB0aGF0CnN0aWxsIG1ha2VzIHNlbnNlIGlmIGl0J3MgY2xlYW4gbm93
+LgoKam9oYW5uZXMKCl9fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19fX19f
+X19fClZpcnR1YWxpemF0aW9uIG1haWxpbmcgbGlzdApWaXJ0dWFsaXphdGlvbkBsaXN0cy5saW51
+eC1mb3VuZGF0aW9uLm9yZwpodHRwczovL2xpc3RzLmxpbnV4Zm91bmRhdGlvbi5vcmcvbWFpbG1h
+bi9saXN0aW5mby92aXJ0dWFsaXphdGlvbg==
