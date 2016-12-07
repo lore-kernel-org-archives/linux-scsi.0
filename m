@@ -1,109 +1,49 @@
-From: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
-Subject: [PATCH V4 02/11] megaraid_sas: 128 MSIX Support
-Date: Tue,  6 Dec 2016 18:00:11 -0500
-Message-ID: <1481065220-18431-3-git-send-email-sasikumar.pc@broadcom.com>
-References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, thenzl@redhat.com, sasikumar.pc@broadcom.com
+From: Wei Fang <fangwei1@huawei.com>
+Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's request
+ queue
+Date: Wed, 7 Dec 2016 09:20:59 +0800
+Message-ID: <584763FB.9010602@huawei.com>
+References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
+ <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga02-in.huawei.com ([119.145.14.65]:7150 "EHLO
+        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751266AbcLGBV1 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 6 Dec 2016 20:21:27 -0500
+In-Reply-To: <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tyasui@redhat.com" <tyasui@redhat.com>
 
-SAS3.5 Generic Megaraid based Controllers will have the support for 128 MSI-X vectors,
-resulting in the need to support 128 reply queues
+Hi, Bart,
 
-This patch is depending on patch 1
+On 2016/12/6 23:51, Bart Van Assche wrote:
+> On 12/06/16 01:12, Wei Fang wrote:
+>> The scsi device is being setted to the SDEV_RUNNING state at the end of
+>> the scan work. When the remote port reappears, scsi_target_unblock()
+>> will be called, but the QUEUE_FLAG_STOPPED flag will not be cleared,
+>> since scsi_internal_device_unblock() ignores SCSI devices in SDEV_RUNNING
+>> state. It results in a permanent stop of the scsi device's request
+>> queue. Every requests sended to it will be blocked.
+> 
+> Hello Wei,
+> 
+> scsi_device_set_state() does not allow the transition from 
+> SDEV_CREATED_BLOCK to SDEV_RUNNING. If a SCSI device is blocked after it 
+> has been added to the __devices list and before scsi_add_lun() finishes 
+> then I think the scan code will change its state into SDEV_BLOCK. Are 
+> you sure what you described above is what happened?
 
-Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
----
- drivers/scsi/megaraid/megaraid_sas.h        |  1 +
- drivers/scsi/megaraid/megaraid_sas_base.c   | 24 +++++++++++++++++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  4 ++--
- 3 files changed, 20 insertions(+), 9 deletions(-)
+Yes, we already encountered this case on out machine:
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 72e16c2..9d4ca8d 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2149,6 +2149,7 @@ struct megasas_instance {
- 	bool dev_handle;
- 	bool fw_sync_cache_support;
- 	bool is_ventura;
-+	bool msix_combined;
- };
- struct MR_LD_VF_MAP {
- 	u32 size;
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index efccf98..c583e0b 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5086,13 +5086,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 			goto fail_ready_state;
- 	}
- 
--	/*
--	 * MSI-X host index 0 is common for all adapter.
--	 * It is used for all MPT based Adapters.
--	 */
--	instance->reply_post_host_index_addr[0] =
--		(u32 __iomem *)((u8 __iomem *)instance->reg_set +
--		MPI2_REPLY_POST_HOST_INDEX_OFFSET);
-+
- 
- 	/* Check if MSI-X is supported while in ready state */
- 	msix_enable = (instance->instancet->read_fw_status_reg(reg_set) &
-@@ -5110,6 +5104,9 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 				instance->msix_vectors = ((scratch_pad_2
- 					& MR_MAX_REPLY_QUEUES_EXT_OFFSET)
- 					>> MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT) + 1;
-+				if (instance->msix_vectors > 16)
-+					instance->msix_combined = true;
-+
- 				if (rdpq_enable)
- 					instance->is_rdpq = (scratch_pad_2 & MR_RDPQ_MODE_OFFSET) ?
- 								1 : 0;
-@@ -5143,6 +5140,19 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		else
- 			instance->msix_vectors = 0;
- 	}
-+	/*
-+	 * MSI-X host index 0 is common for all adapter.
-+	 * It is used for all MPT based Adapters.
-+	 */
-+	if (instance->msix_combined) {
-+		instance->reply_post_host_index_addr[0] =
-+				(u32 *)((u8 *)instance->reg_set +
-+				MPI2_SUP_REPLY_POST_HOST_INDEX_OFFSET);
-+	} else {
-+		instance->reply_post_host_index_addr[0] =
-+			(u32 *)((u8 *)instance->reg_set +
-+			MPI2_REPLY_POST_HOST_INDEX_OFFSET);
-+	}
- 
- 	dev_info(&instance->pdev->dev,
- 		"firmware supports msix\t: (%d)", fw_msix_count);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 8d7a397..413e2030 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2391,7 +2391,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		 * pending to be completed
- 		 */
- 		if (threshold_reply_count >= THRESHOLD_REPLY_COUNT) {
--			if (fusion->adapter_type == INVADER_SERIES)
-+			if (instance->msix_combined)
- 				writel(((MSIxIndex & 0x7) << 24) |
- 					fusion->last_reply_idx[MSIxIndex],
- 					instance->reply_post_host_index_addr[MSIxIndex/8]);
-@@ -2407,7 +2407,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
- 		return IRQ_NONE;
- 
- 	wmb();
--	if (fusion->adapter_type == INVADER_SERIES)
-+	if (instance->msix_combined)
- 		writel(((MSIxIndex & 0x7) << 24) |
- 			fusion->last_reply_idx[MSIxIndex],
- 			instance->reply_post_host_index_addr[MSIxIndex/8]);
--- 
-1.8.3.1
+The state of the scsi device first is changed to SDEV_BLOCK in
+scsi_add_lun() as you metioned, then it will be changed to SDEV_RUNNING
+in scsi_sysfs_add_sdev().
+
+Thanks,
+Wei
+
