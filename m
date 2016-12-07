@@ -1,94 +1,133 @@
-From: James Bottomley <jejb@linux.vnet.ibm.com>
-Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's
- request queue
-Date: Wed, 07 Dec 2016 12:09:35 -0800
-Message-ID: <1481141375.2354.53.camel@linux.vnet.ibm.com>
-References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
-         <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
-         <584763FB.9010602@huawei.com>
-         <BLUPR02MB168364C1D3A8A2C7CF367D5481850@BLUPR02MB1683.namprd02.prod.outlook.com>
-         <584784D7.1070009@huawei.com>
-         <BLUPR02MB1683A85CB4376E9904F1B38881850@BLUPR02MB1683.namprd02.prod.outlook.com>
-         <5847B355.2050100@huawei.com>
-         <9d9b3296-09d8-0f65-f52d-33fc19c4b6c2@sandisk.com>
-         <d5b9960c-b68c-c636-dd1d-dfd056d99e52@sandisk.com>
-         <1481132411.28416.232.camel@localhost.localdomain>
-         <1481134565.2354.43.camel@linux.vnet.ibm.com>
-         <1481138661.28416.238.camel@localhost.localdomain>
+From: Douglas Miller <dougmill@linux.vnet.ibm.com>
+Subject: Re: [PATCH RESEND v2 2/2] blk-mq: Avoid memory reclaim when remapping
+ queues
+Date: Wed, 7 Dec 2016 14:10:03 -0600
+Message-ID: <f20ab375-085c-fcec-280e-795431f198ee@linux.vnet.ibm.com>
+References: <1481038304-22502-1-git-send-email-krisman@linux.vnet.ibm.com>
+ <1481038304-22502-2-git-send-email-krisman@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from 001b2d01.pphosted.com ([148.163.156.1]:35526 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932796AbcLGUJo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 15:09:44 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB7K9NQv131563
-        for <linux-scsi@vger.kernel.org>; Wed, 7 Dec 2016 15:09:43 -0500
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:47905 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S932677AbcLGUKI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 15:10:08 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB7K9MEJ097030
+        for <linux-scsi@vger.kernel.org>; Wed, 7 Dec 2016 15:10:08 -0500
 Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 276qsbv12s-1
+        by mx0b-001b2d01.pphosted.com with ESMTP id 276qkjmkn6-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Dec 2016 15:09:43 -0500
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Dec 2016 15:10:08 -0500
 Received: from localhost
         by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <jejb@linux.vnet.ibm.com>;
-        Wed, 7 Dec 2016 13:09:42 -0700
-In-Reply-To: <1481138661.28416.238.camel@localhost.localdomain>
+        for <linux-scsi@vger.kernel.org> from <dougmill@linux.vnet.ibm.com>;
+        Wed, 7 Dec 2016 13:10:07 -0700
+In-Reply-To: <1481038304-22502-2-git-send-email-krisman@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: emilne@redhat.com
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, Wei Fang <fangwei1@huawei.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, axboe@kernel.dk
+Cc: wenxiong@linux.vnet.ibm.com, gpiccoli@linux.vnet.ibm.com, hch@infradead.org, Brian King <brking@linux.vnet.ibm.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, 2016-12-07 at 14:24 -0500, Ewan D. Milne wrote:
-> On Wed, 2016-12-07 at 10:16 -0800, James Bottomley wrote:
-> > On Wed, 2016-12-07 at 12:40 -0500, Ewan D. Milne wrote:
-> > > On Wed, 2016-12-07 at 08:55 -0800, Bart Van Assche wrote:
-> > > > On 12/07/2016 08:48 AM, Bart Van Assche wrote:
-> > > > > It's a known bug. Some time ago I posted a patch that 
-> > > > > serializes all scsi_device_set_state() calls but I have not 
-> > > > > yet found it in the list archives. However, that patch has 
-> > > > > not yet been merged.
-> > > > 
-> > > > See also https://www.spinics.net/lists/linux-scsi/msg66966.html
-> > > > .
-> > > > 
-> > > > Bart.
-> > > > 
-> > > > --
-> > > > To unsubscribe from this list: send the line "unsubscribe linux
-> > > > -scsi" in
-> > > > the body of a message to majordomo@vger.kernel.org
-> > > > More majordomo info at  
-> > > > http://vger.kernel.org/majordomo-info.html
-> > > 
-> > > Yes, however that patch does not fix Wei Fang's issue.  In fact I
-> > > just received a crash dump that appears to be the same thing.  It
-> > > looks like the rport went away right after the initial INQUIRY, 
-> > > so we set the state to SDEV_BLOCK and stop the queue, and then 
-> > > the scan code continues and sets the state back to SDEV_RUNNING.
-> > 
-> > So here's the violation of the state model.  the rport went CREATED
-> > ->BLOCK which is wrong: it should go CREATED->CREATED_BLOCK and 
-> > then the add code would set it to BLOCK instead of RUNNING.
-> > 
-> > The question to diagnose is why CREATED->BLOCK worked.
-> > 
-> > James
-> > 
-> 
-> I believe scsi_add_lun() changed the state from CREATED->RUNNING 
-> which allowed the state to change from RUNNING->BLOCK, and then
-> scsi_sysfs_add_sdev() called scsi_device_set_state() which changed
-> the state from BLOCK->RUNNING.  But did not restart the queue.
-> 
-> I have a debug kernel out to the site that found this to make sure,
-> assuming they can reproduce this, but I don't see any other way it 
-> could have happened.
-
-Hm, it looks like the state set in scsi_sysfs_add_sdev() is bogus.  We
-expect the state to have been properly set before that (in
-scsi_add_lun), so can we not simply remove it?
-
-James
+On 12/06/2016 09:31 AM, Gabriel Krisman Bertazi wrote:
+> While stressing memory and IO at the same time we changed SMT settings,
+> we were able to consistently trigger deadlocks in the mm system, which
+> froze the entire machine.
+>
+> I think that under memory stress conditions, the large allocations
+> performed by blk_mq_init_rq_map may trigger a reclaim, which stalls
+> waiting on the block layer remmaping completion, thus deadlocking the
+> system.  The trace below was collected after the machine stalled,
+> waiting for the hotplug event completion.
+>
+> The simplest fix for this is to make allocations in this path
+> non-reclaimable, with GFP_NOIO.  With this patch, We couldn't hit the
+> issue anymore.
+>
+> This should apply on top of Jen's for-next branch cleanly.
+>
+> Changes since v1:
+>    - Use GFP_NOIO instead of GFP_NOWAIT.
+>
+>   Call Trace:
+> [c000000f0160aaf0] [c000000f0160ab50] 0xc000000f0160ab50 (unreliable)
+> [c000000f0160acc0] [c000000000016624] __switch_to+0x2e4/0x430
+> [c000000f0160ad20] [c000000000b1a880] __schedule+0x310/0x9b0
+> [c000000f0160ae00] [c000000000b1af68] schedule+0x48/0xc0
+> [c000000f0160ae30] [c000000000b1b4b0] schedule_preempt_disabled+0x20/0x30
+> [c000000f0160ae50] [c000000000b1d4fc] __mutex_lock_slowpath+0xec/0x1f0
+> [c000000f0160aed0] [c000000000b1d678] mutex_lock+0x78/0xa0
+> [c000000f0160af00] [d000000019413cac] xfs_reclaim_inodes_ag+0x33c/0x380 [xfs]
+> [c000000f0160b0b0] [d000000019415164] xfs_reclaim_inodes_nr+0x54/0x70 [xfs]
+> [c000000f0160b0f0] [d0000000194297f8] xfs_fs_free_cached_objects+0x38/0x60 [xfs]
+> [c000000f0160b120] [c0000000003172c8] super_cache_scan+0x1f8/0x210
+> [c000000f0160b190] [c00000000026301c] shrink_slab.part.13+0x21c/0x4c0
+> [c000000f0160b2d0] [c000000000268088] shrink_zone+0x2d8/0x3c0
+> [c000000f0160b380] [c00000000026834c] do_try_to_free_pages+0x1dc/0x520
+> [c000000f0160b450] [c00000000026876c] try_to_free_pages+0xdc/0x250
+> [c000000f0160b4e0] [c000000000251978] __alloc_pages_nodemask+0x868/0x10d0
+> [c000000f0160b6f0] [c000000000567030] blk_mq_init_rq_map+0x160/0x380
+> [c000000f0160b7a0] [c00000000056758c] blk_mq_map_swqueue+0x33c/0x360
+> [c000000f0160b820] [c000000000567904] blk_mq_queue_reinit+0x64/0xb0
+> [c000000f0160b850] [c00000000056a16c] blk_mq_queue_reinit_notify+0x19c/0x250
+> [c000000f0160b8a0] [c0000000000f5d38] notifier_call_chain+0x98/0x100
+> [c000000f0160b8f0] [c0000000000c5fb0] __cpu_notify+0x70/0xe0
+> [c000000f0160b930] [c0000000000c63c4] notify_prepare+0x44/0xb0
+> [c000000f0160b9b0] [c0000000000c52f4] cpuhp_invoke_callback+0x84/0x250
+> [c000000f0160ba10] [c0000000000c570c] cpuhp_up_callbacks+0x5c/0x120
+> [c000000f0160ba60] [c0000000000c7cb8] _cpu_up+0xf8/0x1d0
+> [c000000f0160bac0] [c0000000000c7eb0] do_cpu_up+0x120/0x150
+> [c000000f0160bb40] [c0000000006fe024] cpu_subsys_online+0x64/0xe0
+> [c000000f0160bb90] [c0000000006f5124] device_online+0xb4/0x120
+> [c000000f0160bbd0] [c0000000006f5244] online_store+0xb4/0xc0
+> [c000000f0160bc20] [c0000000006f0a68] dev_attr_store+0x68/0xa0
+> [c000000f0160bc60] [c0000000003ccc30] sysfs_kf_write+0x80/0xb0
+> [c000000f0160bca0] [c0000000003cbabc] kernfs_fop_write+0x17c/0x250
+> [c000000f0160bcf0] [c00000000030fe6c] __vfs_write+0x6c/0x1e0
+> [c000000f0160bd90] [c000000000311490] vfs_write+0xd0/0x270
+> [c000000f0160bde0] [c0000000003131fc] SyS_write+0x6c/0x110
+> [c000000f0160be30] [c000000000009204] system_call+0x38/0xec
+>
+> Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+> Cc: Brian King <brking@linux.vnet.ibm.com>
+> Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
+> Cc: linux-block@vger.kernel.org
+> Cc: linux-scsi@vger.kernel.org
+> ---
+>   block/blk-mq.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+>
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 6718f894fbe1..5f4e452eef72 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1605,7 +1605,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+>   	INIT_LIST_HEAD(&tags->page_list);
+>
+>   	tags->rqs = kzalloc_node(set->queue_depth * sizeof(struct request *),
+> -				 GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY,
+> +				 GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY,
+>   				 set->numa_node);
+>   	if (!tags->rqs) {
+>   		blk_mq_free_tags(tags);
+> @@ -1631,7 +1631,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+>
+>   		do {
+>   			page = alloc_pages_node(set->numa_node,
+> -				GFP_KERNEL | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
+> +				GFP_NOIO | __GFP_NOWARN | __GFP_NORETRY | __GFP_ZERO,
+>   				this_order);
+>   			if (page)
+>   				break;
+> @@ -1652,7 +1652,7 @@ static struct blk_mq_tags *blk_mq_init_rq_map(struct blk_mq_tag_set *set,
+>   		 * Allow kmemleak to scan these pages as they contain pointers
+>   		 * to additional allocations like via ops->init_request().
+>   		 */
+> -		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_KERNEL);
+> +		kmemleak_alloc(p, order_to_size(this_order), 1, GFP_NOIO);
+>   		entries_per_page = order_to_size(this_order) / rq_size;
+>   		to_do = min(entries_per_page, set->queue_depth - i);
+>   		left -= to_do * rq_size;
+Reviewed-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
 
