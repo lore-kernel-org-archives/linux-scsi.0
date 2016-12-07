@@ -1,62 +1,55 @@
-From: Zhouyi Zhou <zhouzhouyi@gmail.com>
+From: Eric Dumazet <eric.dumazet@gmail.com>
 Subject: Re: [PATCH] net: return value of skb_linearize should be handled in
  Linux kernel
-Date: Wed, 7 Dec 2016 14:27:00 +0800
-Message-ID: <CAABZP2w_YsXgzZ0tH=r3mnLUbVfpY8Xn3vk9XoS_Hq1r8aeNUQ@mail.gmail.com>
-References: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com> <CAM_iQpX0nA10tCzfZr_q5i6V2hWqfMUkvXdfo+Ro1TWHOEVi_A@mail.gmail.com>
+Date: Tue, 06 Dec 2016 22:51:19 -0800
+Message-ID: <1481093479.18162.639.camel@edumazet-glaptop3.roam.corp.google.com>
+References: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAM_iQpX0nA10tCzfZr_q5i6V2hWqfMUkvXdfo+Ro1TWHOEVi_A@mail.gmail.com>
+In-Reply-To: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Cong Wang <xiyou.wangcong@gmail.com>
-Cc: faisal.latif@intel.com, dledford@redhat.com, sean.hefty@intel.com, Hal Rosenstock <hal.rosenstock@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, jon.maloy@ericsson.com, ying.xue@windriver.com, David Miller <davem@davemloft.net>, linux-rdma@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, intel-wired-lan <intel-wired-lan@lists.osuosl.org>, Linux Kernel Network Developers <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, tipc-discussion@lists.sourceforge.net
+To: Zhouyi Zhou <zhouzhouyi@gmail.com>
+Cc: faisal.latif@intel.com, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, jeffrey.t.kirsher@intel.com, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jth@kernel.org, jon.maloy@ericsson.com, ying.xue@windriver.com, davem@davemloft.net, linux-rdma@vger.kernel.org, linux-kernel@vger.kernel.org, intel-wired-lan@lists.osuosl.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, tipc-discussion@lists.sourceforge.net
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Dec 7, 2016 at 1:02 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
-> On Mon, Dec 5, 2016 at 11:10 PM, Zhouyi Zhou <zhouzhouyi@gmail.com> wrote:
->> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->> index 2a653ec..ab787cb 100644
->> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->> @@ -490,7 +490,11 @@ int ixgbe_fcoe_ddp(struct ixgbe_adapter *adapter,
->>          */
->>         if ((fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA) &&
->>             (fctl & FC_FC_END_SEQ)) {
->> -               skb_linearize(skb);
->> +               int err = 0;
->> +
->> +               err = skb_linearize(skb);
->> +               if (err)
->> +                       return err;
->
->
-> You can reuse 'rc' instead of adding 'err'.
-rc here is meaningful for the length of data being ddped. If using rc
-here, a successful
-skb_linearize will assign rc to 0.
->
->
->
->>                 crc = (struct fcoe_crc_eof *)skb_put(skb, sizeof(*crc));
->>                 crc->fcoe_eof = FC_EOF_T;
->>         }
->> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->> index fee1f29..4926d48 100644
->> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->> @@ -2173,8 +2173,7 @@ static int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
->>                                 total_rx_bytes += ddp_bytes;
->>                                 total_rx_packets += DIV_ROUND_UP(ddp_bytes,
->>                                                                  mss);
->> -                       }
->> -                       if (!ddp_bytes) {
->> +                       } else {
->>                                 dev_kfree_skb_any(skb);
->>                                 continue;
->>                         }
->
->
-> This piece doesn't seem to be related.
-if ddp_bytes is negative there will be some error, I think the skb
-should not pass to upper layer.
+On Tue, 2016-12-06 at 15:10 +0800, Zhouyi Zhou wrote:
+> kmalloc_reserve may fail to allocate memory inside skb_linearize, 
+> which means skb_linearize's return value should not be ignored. 
+> Following patch correct the uses of skb_linearize.
+> 
+> Compiled in x86_64
+> 
+> Signed-off-by: Zhouyi Zhou <zhouzhouyi@gmail.com>
+> ---
+>  drivers/infiniband/hw/nes/nes_nic.c           | 5 +++--
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c | 6 +++++-
+>  drivers/net/ethernet/intel/ixgbe/ixgbe_main.c | 3 +--
+>  drivers/scsi/bnx2fc/bnx2fc_fcoe.c             | 7 +++++--
+>  drivers/scsi/fcoe/fcoe.c                      | 5 ++++-
+>  net/tipc/link.c                               | 3 ++-
+>  net/tipc/name_distr.c                         | 5 ++++-
+>  7 files changed, 24 insertions(+), 10 deletions(-)
+> 
+> diff --git a/drivers/infiniband/hw/nes/nes_nic.c b/drivers/infiniband/hw/nes/nes_nic.c
+> index 2b27d13..69372ea 100644
+> --- a/drivers/infiniband/hw/nes/nes_nic.c
+> +++ b/drivers/infiniband/hw/nes/nes_nic.c
+> @@ -662,10 +662,11 @@ static int nes_netdev_start_xmit(struct sk_buff *skb, struct net_device *netdev)
+>  				nesnic->sq_head &= nesnic->sq_size-1;
+>  			}
+>  		} else {
+> -			nesvnic->linearized_skbs++;
+>  			hoffset = skb_transport_header(skb) - skb->data;
+>  			nhoffset = skb_network_header(skb) - skb->data;
+> -			skb_linearize(skb);
+> +			if (skb_linearize(skb))
+> +				return NETDEV_TX_BUSY;
+
+This would live lock.
+
+Please drop the packet.
+
+You probably should send one patch per driver, to ease code review and
+acceptance.
