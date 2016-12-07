@@ -1,191 +1,103 @@
-From: adam radford <aradford@gmail.com>
-Subject: Re: [PATCH] Update 3ware driver email addresses
-Date: Wed, 7 Dec 2016 12:38:46 -0800
-Message-ID: <CAHtARFGSttsUpJ_gHXxZ-GP4oKL22EGH8ijZe9X=9wxkk8v+wg@mail.gmail.com>
-References: <CAHtARFH_svO-sP6dpDZADcXrf9Oce1FBR=aFriGWmo3OdkyrcA@mail.gmail.com>
+From: Don Brace <don.brace@microsemi.com>
+Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
+Date: Wed, 7 Dec 2016 21:44:08 +0000
+Message-ID: <4993A297653ECB4581FA5C3C31323D194180985F@avsrvexchmbx1.microsemi.net>
+References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
+ <146706367078.29152.14405582249219794335.stgit@brunhilda>
+ <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
+ <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
+ <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
+ <1473359114.2781.38.camel@linux.vnet.ibm.com>
+ <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
+ <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
+ <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wj0-f195.google.com ([209.85.210.195]:36632 "EHLO
-        mail-wj0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752396AbcLGUis (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 15:38:48 -0500
-Received: by mail-wj0-f195.google.com with SMTP id j10so24417476wjb.3
-        for <linux-scsi@vger.kernel.org>; Wed, 07 Dec 2016 12:38:47 -0800 (PST)
-In-Reply-To: <CAHtARFH_svO-sP6dpDZADcXrf9Oce1FBR=aFriGWmo3OdkyrcA@mail.gmail.com>
+Received: from mail-bl2nam02on0089.outbound.protection.outlook.com ([104.47.38.89]:39612
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932423AbcLGVoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 7 Dec 2016 16:44:17 -0500
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi <linux-scsi@vger.kernel.org>
+To: Don Brace <don.brace@microsemi.com>, James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Thu, Nov 10, 2016 at 4:23 PM, adam radford <aradford@gmail.com> wrote:
-> This change updates the 3ware drivers (3w-xxxx, 3w-9xxx, 3w-sas) email
-> addresses from linuxraid@lsi.com to aradford@gmail.com, since the old
-> email address doesn't exist.
->
-> Signed-off-by: Adam Radford <aradford@gmail.com>
-> ---
->  MAINTAINERS            | 2 +-
->  drivers/scsi/3w-9xxx.c | 6 +++---
->  drivers/scsi/3w-9xxx.h | 6 +++---
->  drivers/scsi/3w-sas.c  | 4 ++--
->  drivers/scsi/3w-sas.h  | 4 ++--
->  drivers/scsi/3w-xxxx.c | 4 ++--
->  drivers/scsi/3w-xxxx.h | 4 ++--
->  7 files changed, 15 insertions(+), 15 deletions(-)
->
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index b3a7774..1b5ddd0 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -138,7 +138,7 @@ S:  Maintained
->  F:     drivers/net/ethernet/3com/typhoon*
->
->  3WARE SAS/SATA-RAID SCSI DRIVERS (3W-XXXX, 3W-9XXX, 3W-SAS)
-> -M:     Adam Radford <linuxraid@lsi.com>
-> +M:     Adam Radford <aradford@gmail.com>
->  L:     linux-scsi@vger.kernel.org
->  W:     http://www.lsi.com
->  S:     Supported
-> diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
-> index a56a7b2..6de3cab 100644
-> --- a/drivers/scsi/3w-9xxx.c
-> +++ b/drivers/scsi/3w-9xxx.c
-> @@ -1,8 +1,8 @@
->  /*
->     3w-9xxx.c -- 3ware 9000 Storage Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> -   Modifications By: Tom Couch <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
-> +   Modifications By: Tom Couch
->
->     Copyright (C) 2004-2009 Applied Micro Circuits Corporation.
->     Copyright (C) 2010 LSI Corporation.
-> @@ -41,7 +41,7 @@
->     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
-> index 0fdc83c..5380ce4 100644
-> --- a/drivers/scsi/3w-9xxx.h
-> +++ b/drivers/scsi/3w-9xxx.h
-> @@ -1,8 +1,8 @@
->  /*
->     3w-9xxx.h -- 3ware 9000 Storage Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> -   Modifications By: Tom Couch <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
-> +   Modifications By: Tom Couch
->
->     Copyright (C) 2004-2009 Applied Micro Circuits Corporation.
->     Copyright (C) 2010 LSI Corporation.
-> @@ -41,7 +41,7 @@
->     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
-> index f837485..6840217 100644
-> --- a/drivers/scsi/3w-sas.c
-> +++ b/drivers/scsi/3w-sas.c
-> @@ -1,7 +1,7 @@
->  /*
->     3w-sas.c -- LSI 3ware SAS/SATA-RAID Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
->
->     Copyright (C) 2009 LSI Corporation.
->
-> @@ -43,7 +43,7 @@
->     LSI 3ware 9750 6Gb/s SAS/SATA-RAID
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> diff --git a/drivers/scsi/3w-sas.h b/drivers/scsi/3w-sas.h
-> index fec6449..e7b7aec 100644
-> --- a/drivers/scsi/3w-sas.h
-> +++ b/drivers/scsi/3w-sas.h
-> @@ -1,7 +1,7 @@
->  /*
->     3w-sas.h -- LSI 3ware SAS/SATA-RAID Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
->
->     Copyright (C) 2009 LSI Corporation.
->
-> @@ -39,7 +39,7 @@
->     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
-> index 25aba16..374648d 100644
-> --- a/drivers/scsi/3w-xxxx.c
-> +++ b/drivers/scsi/3w-xxxx.c
-> @@ -1,7 +1,7 @@
->  /*
->     3w-xxxx.c -- 3ware Storage Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
->     Modifications By: Joel Jacobson <linux@3ware.com>
->                      Arnaldo Carvalho de Melo <acme@conectiva.com.br>
->                       Brad Strand <linux@3ware.com>
-> @@ -47,7 +47,7 @@
->     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
-> index 6f65e66..5a5a5d2 100644
-> --- a/drivers/scsi/3w-xxxx.h
-> +++ b/drivers/scsi/3w-xxxx.h
-> @@ -1,7 +1,7 @@
->  /*
->     3w-xxxx.h -- 3ware Storage Controller device driver for Linux.
->
-> -   Written By: Adam Radford <linuxraid@lsi.com>
-> +   Written By: Adam Radford <aradford@gmail.com>
->     Modifications By: Joel Jacobson <linux@3ware.com>
->                      Arnaldo Carvalho de Melo <acme@conectiva.com.br>
->                       Brad Strand <linux@3ware.com>
-> @@ -45,7 +45,7 @@
->     Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
->
->     Bugs/Comments/Suggestions should be mailed to:
-> -   linuxraid@lsi.com
-> +   aradford@gmail.com
->
->     For more information, goto:
->     http://www.lsi.com
-> --
-> 1.8.3.1
-
-This maintainers/email update patch didn't get picked up.  Do I need
-to fix it or re-send ?
-
--Adam
+PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
+ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
+Z10gT24gQmVoYWxmIE9mIERvbiBCcmFjZQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVyIDExLCAy
+MDE2IDg6NDggQU0NCj4gVG86IEphbWVzIEJvdHRvbWxleTsgU2NvdHQgQmVuZXNoOyBKYW1lcyBC
+b3R0b21sZXk7IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBDYzogVmlzd2FzIEc7IE1haGVzaCBSYWph
+c2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBLZXZpbg0KPiBCYXJuZXR0
+OyBKdXN0aW4gTGluZGxleTsgZWxsaW90dEBocGUuY29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVs
+Lm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIFY0IDIvMl0gYWFjcmFpZDogcmVtb3ZlIHdpbGRj
+YXJkIGZvciBzZXJpZXMgOSBjb250cm9sbGVycw0KPiANCj4gRVhURVJOQUwgRU1BSUwNCj4gDQo+
+IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogSmFtZXMgQm90dG9t
+bGV5DQo+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlbnBhcnRuZXJzaGlwLmNvbV0NCj4g
+PiBTZW50OiBUaHVyc2RheSwgU2VwdGVtYmVyIDA4LCAyMDE2IDU6MzggUE0NCj4gPiBUbzogU2Nv
+dHQgQmVuZXNoOyBKYW1lcyBCb3R0b21sZXk7IERvbiBCcmFjZTsgTWFydGluIEsuIFBldGVyc2Vu
+DQo+ID4gQ2M6IFZpc3dhcyBHOyBNYWhlc2ggUmFqYXNoZWtoYXJhOyBoY2hAaW5mcmFkZWFkLm9y
+ZzsgU2NvdHQgVGVlbDsgS2V2aW4NCj4gPiBCYXJuZXR0OyBKdXN0aW4gTGluZGxleTsgZWxsaW90
+dEBocGUuY29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IFN1YmplY3Q6IFJFOiBb
+UEFUQ0ggVjQgMi8yXSBhYWNyYWlkOiByZW1vdmUgd2lsZGNhcmQgZm9yIHNlcmllcyA5DQo+IGNv
+bnRyb2xsZXJzDQo+ID4NCj4gPiBFWFRFUk5BTCBFTUFJTA0KPiA+DQo+ID4NCj4gPiBPbiBTZXB0
+ZW1iZXIgOCwgMjAxNiAyOjMzOjUyIFBNIEVEVCwgU2NvdHQgQmVuZXNoDQo+ID4gPHNjb3R0LmJl
+bmVzaEBtaWNyb3NlbWkuY29tPiB3cm90ZToNCj4gPiA+Pg0KPiA+ID4+IE9uIFRodSwgMjAxNi0w
+OS0wOCBhdCAxODoxNSArMDAwMCwgRG9uIEJyYWNlIHdyb3RlOg0KPiA+ID4+ID4gPiA+IC0gICAg
+eyAweDkwMDUsIDB4MDI4ZiwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgNjUgfSwgLyoN
+Cj4gPiA+PiA+ID4gPiBBZGFwdGVjIFBNQw0KPiA+ID4+ID4gPiA+IFNlcmllcyA5ICovDQo+ID4g
+Pj4gPiA+ID4NCj4gPiA+PiA+ID4gPiBIb3cgYXJlIHBlb3BsZSB0aGF0IGxvYWQgYWFjcmFpZCBp
+biB0aGVpciBpbml0cmQgZ29pbmcgdG8gYm9vdA0KPiA+ID4+ID4gPiA+IGFmdGVyIHRoaXM/DQo+
+ID4gPj4gPiA+ID4NCj4gPiA+PiA+ID4gPiAtLQ0KPiA+ID4+ID4gPiA+IE1hcnRpbiBLLiBQZXRl
+cnNlbiAgICAgIE9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KPiA+ID4+ID4gPg0KPiA+ID4+ID4g
+PiBJIHVwZGF0ZWQgc21hcnRwcWkvS2NvbmZpZyBhbmQgYWRkZWQNCj4gPiA+RG9jdW1lbnRhdGlv
+bi9zY3NpL3NtYXJ0cHFpLnR4dA0KPiA+ID4+ID4gPiB0byBpbmZvcm0gdXNlcnMgb2YgdGhlIG5l
+ZWQgdG8gY29uZmlndXJlIHRoZSBzbWFydHBxaSBkcml2ZXINCj4gPiA+bW92aW5nDQo+ID4gPj4g
+PiA+IGZvcndhcmQgZm9yIGFhY3JhaWQgU2VyaWVzIDkgY29udHJvbGxlcnMuDQo+ID4gPj4gPiA+
+DQo+ID4gPj4gPiA+IEhvcGUgdGhpcyBoZWxwcy4NCj4gPiA+Pg0KPiA+ID4+IFRoYXQncyBub3Qg
+Z29pbmcgdG8gYmUgZW5vdWdoOiB0aGlzIElEIGhhcyBiZWVuIGluIHRoZSBhYWNyaWFkIGRyaXZl
+cg0KPiA+ID5zaW5jZQ0KPiA+ID4+IDIwMTEuICBUaGF0IG1lYW5zIGFueW9uZSB3aG8gZmluYWxs
+eSBnZXRzIGhvbGQgb2Ygb25lIG9mIHRoZXNlIG5ldw0KPiA+ID5jYXJkcw0KPiA+ID4+IGJ1dCB1
+c2VzIGEgZGlzdHJvIHRoYXQgZG9lc24ndCBoYXZlIHRoZSBuZXcgc21hcnRwcWkgZHJpdmVyIHdp
+bGwgYmUNCj4gPiA+YXR0YWNoZWQNCj4gPiA+PiB2aWEgdGhlIGFhY3JhaWQgb25lLg0KPiA+ID4+
+DQo+ID4gPg0KPiA+ID5UaGF0J3Mgb2sgYmVjYXVzZSBmb3IgcHJldmlvdXMgZGlzdHJvcyB0aGUg
+bmV3IGNvbnRyb2xsZXIgd2lsbCB3b3JrDQo+ID4gPndpdGggdGhlIHByZXZpb3VzIGFhY3JhaWQg
+ZHJpdmVyLCBhbHRob3VnaCB3aXRoIG5vbi1vcHRpbWFsDQo+ID4gPnBlcmZvcm1hbmNlLg0KPiA+
+DQo+ID4gTm90IGFmdGVyIHRoaXMgY2hhbmdlIGhpdHMuIFRoZW4gc3lzdGVtcyB0aGF0IG9ubHkg
+aGF2ZSBhYWNyYWlkIGluIHRoZSBpbml0cmQNCj4gPiB3aWxsIGZhaWwgdG8gYm9vdC4NCj4gPg0K
+PiA+ID5XaGF0IHdlIHdhbnQgdG8gZG8gaXMgc3luYyB1cCBhdCA0Ljkgc28gZ29pbmcgZm9yd2Fy
+ZCBvbmx5IHRoZSBuZXcNCj4gPiA+c21hcnRwcWkgZHJpdmVyIHdpbGwgYXR0YWNoIHRvIHRoZXNl
+IG5ldyBjb250cm9sbGVycy4NCj4gPg0KPiA+IFNvIHlvdSBoYXZlIGEgcGxhbiBpbiBwbGFjZSB3
+aXRoIHRoZSBkaXN0cm9zIHRvIG1pZ3JhdGUgdGhlIGluaXRyZCBpbWFnZXM/DQo+ID4gV2l0aG91
+dCBiZWluZyB0b2xkLCBzb21lIHdpbGwgb25seSBpbnN0YWxsIHRoZSBtb2R1bGVzIHRoZSBwcmV2
+aW91cyBpbml0cmQNCj4gd2FzDQo+ID4gY29uZmlndXJlZCBmb3IuDQo+ID4NCj4gPiBKYW1lcw0K
+PiA+DQo+ID4gPlNjb3R0DQo+ID4gPg0KPiA+ID4+IEdpdmVuIHRoYXQgdGhlIGxpZmUgdGltZXMg
+b2YgZW50ZXJwcmlzZSBkaXN0cmlidXRpb25zIGlzIHR3byB5ZWFycw0KPiA+ID5hbmQgeW91J3Jl
+DQo+ID4gPj4gcmVsZWFzaW5nIHRoaXMgc21hcnRwcWkgc29vbiwgdGhlIG92ZXJsYXAgaXMgdW5h
+dm9pZGFibGUuDQo+ID4gPj4NCj4gPiA+PiBKYW1lcw0KPiA+ID4+DQo+ID4NCj4gDQo+IFRoZSBJ
+RCB3ZSB3YW50IHRvIHJlbW92ZSBmcm9tIHRoZSBhYWNyYWlkIGRyaXZlciB3aWxsIG5vdCBiZSBh
+dmFpbGFibGUgdW50aWwNCj4gUTEgbmV4dCB5ZWFyLA0KPiBzbyBubyBjdXN0b21lciBjdXJyZW50
+bHkgaGFzIGl0IHlldC4gSWYgdGhleSBhcmUgcnVubmluZyBhbiBvbGRlciBrZXJuZWwsIHRoZQ0K
+PiBhYWNyYWlkIGRyaXZlcg0KPiB3aWxsIHN1cHBvcnQgdGhpcyBJRCBidXQgaW4gJ3N5bmMnIG1v
+ZGUsIHRoZWlyIHNlcnZlcnMgd2lsbCBjb250aW51ZSB0byBib290Lg0KPiANCj4gSWYgdGhleSB1
+cGdyYWRlIHRvIGEgbmV3ZXIga2VybmVsIGFuZCBkbyBub3Qga25vdyAgdG8gY29uZmlndXJlIHRo
+ZQ0KPiBzbWFydHBxaQ0KPiBkcml2ZXIgYW5kIHRoZSBzeXN0ZW0gZmFpbHMgdG8gYm9vdCwgdGhl
+eSBjYW4gZmFsbCBiYWNrIHRvIHRoZSBwcmV2aW91cw0KPiBrZXJuZWwgYW5kIGNvbmZpZ3VyZSB0
+aGUgc21hcnRwcWkgZHJpdmVyLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBmb3IgbmV3ZXIga2VybmVs
+cyBnb2luZyBmb3J3YXJkLiBXZSBuZWVkIHRvIGVsaW1pbmF0ZSB0aGUNCj4gZHVwbGljYXRpb24g
+Zm9yIG5ld2VyIGtlcm5lbHMuIElmIGJvdGggZHJpdmVycyBzdXBwb3J0IHRoZSBzYW1lIElEDQo+
+IHRoZXkgd2lsbCBoYXZlIHRvIGtub3cgaG93IHRvIHJlYnVpbGQgdGhlaXIgaW5pdHJkIHdpdGgg
+YSBzcGVjaWZpYyBkcml2ZXINCj4gb3JkZXIuIEN1c3RvbWVycyB0aGF0IGhhdmUgc2VydmVycyBj
+b25maWd1cmVkIHdpdGggYm90aCBvbGRlciBhYWNyYWlkDQo+IGRldmljZXMNCj4gYW5kIHRoZSBu
+ZXdlciBzbWFydHBxaSBkZXZpY2VzIHdpbGwgZGVmaW5pdGVseSBoYXZlIHRvIGRvIHRoaXMuIEhh
+dmluZyB0bw0KPiByZWJ1aWxkIHRoZSBrZXJuZWwgd2l0aCBzbWFydHBxaSBlbmFibGVkIHdvdWxk
+IHNlZW0gdG8gYmUgYW4gZWFzaWVyDQo+IGN1c3RvbWVyIGV4cGVyaWVuY2UuDQo+IA0KPiBUaGUg
+b2ZmaWNpYWxseSBzdXBwb3J0ZWQgZHJpdmVyIGZvciB0aGlzIElEIGlzIHNtYXJ0cHFpLg0KPiAN
+Cj4gVGhhbmtzLA0KPiBEb24gQnJhY2UNCj4gDQo+IEVTQyAtIFNtYXJ0IFN0b3JhZ2UNCj4gTWlj
+cm9zZW1pIENvcnBvcmF0aW9uDQo+IA0KPiA+DQpDYW4gdGhlcmUgYmUgYW55IG1vdmVtZW50IG9u
+IHRoaXMgcGF0Y2g/DQoNClRoYW5rcywNCkRvbiBCcmFjZQ0KRVNDIC0gU21hcnQgU3RvcmFnZQ0K
+TWljcm9zZW1pIENvcnBvcmF0aW9uDQoNCg0KDQo=
