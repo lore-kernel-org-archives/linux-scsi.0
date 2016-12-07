@@ -1,62 +1,28 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's request
- queue
-Date: Wed, 7 Dec 2016 14:59:33 +0800
-Message-ID: <5847B355.2050100@huawei.com>
-References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
- <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
- <584763FB.9010602@huawei.com>
- <BLUPR02MB168364C1D3A8A2C7CF367D5481850@BLUPR02MB1683.namprd02.prod.outlook.com>
- <584784D7.1070009@huawei.com>
- <BLUPR02MB1683A85CB4376E9904F1B38881850@BLUPR02MB1683.namprd02.prod.outlook.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 10/10] virtio: enable endian checks for sparse builds
+Date: Tue, 6 Dec 2016 23:30:21 -0800
+Message-ID: <20161207073021.GA26970@infradead.org>
+References: <1481038106-24899-1-git-send-email-mst@redhat.com>
+ <1481038106-24899-11-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:15493 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752423AbcLGHDU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 02:03:20 -0500
-In-Reply-To: <BLUPR02MB1683A85CB4376E9904F1B38881850@BLUPR02MB1683.namprd02.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1481038106-24899-11-git-send-email-mst@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Jason Wang <jasowang@redhat.com>, linux-kbuild@vger.kernel.org, Michal Marek <mmarek@suse.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Matt Mackall <mpm@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Ohad Ben-Cohen <ohad@wizery.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Cornelia Huck <cornelia.huck@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "David S. Miller" <davem@davemloft.net>, Jens Axboe <axboe@fb.com>, Neil Armstrong <narmstrong@baylibre.com>, Stefan Hajnoczi <stefanha@redhat.com>, Asias He <asias@redhat.com>, linux-crypto@vger.kernel.org, dri-devel@lists.freedesktop.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "tyasui@redhat.com" <tyasui@redhat.com>
 
-Hi, Bart,
+On Tue, Dec 06, 2016 at 05:41:05PM +0200, Michael S. Tsirkin wrote:
+> __CHECK_ENDIAN__ isn't on by default presumably because
+> it triggers too many sparse warnings for correct code.
+> But virtio is now clean of these warnings, and
+> we want to keep it this way - enable this for
+> sparse builds.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
 
-On 2016/12/7 12:40, Bart Van Assche wrote:
-> I am aware that commit 5c10e63c943b caused the behavior change. But that 
-> doesn't mean that a fix has to undo the changes introduced by that 
-> commit. We do not only want to make sure that the SCSI core works as 
-> intended but also that the SCSI core code is as easy to comprehend as 
-> reasonably possible. Adding "&& sdev->sdev_state != SDEV_RUNNING" in 
-> scsi_internal_device_unblock() would require a long comment to explain 
-> why that code has been added. I think modifying scsi_sysfs_add_sdev() 
-> such that it does not unblock devices will result in code that is easier 
-> to understand.
-
-Agree that we should make the code easier to comprehend if possible :)
-
-If we modify scsi_sysfs_add_sdev() as below:
-        ...
-        if (scsi_device_created(sdev))
-                error = scsi_device_set_state(sdev, SDEV_RUNNING);
-                if (error)
-                        error = scsi_device_set_state(sdev, SDEV_BLOCK);
-        ...
-there's a chance that the state will be changed to SDEV_RUNNING.
-
-If a SCSI device is blocked after the check of the device's creating
-and before being changed to SDEV_RUNNING state, the state will still
-become SDEV_RUNNING. If we fix this problem in this way, we need
-introduce a way to synchronize those code.
-
-Actually I don't know quite well about the synchronization of
-scsi_device_set_state(). There are so many cases it can be called
-simultaneously, will the state become a unpredictable value, or this
-is tolerated?
-
-Thanks,
-Wei
-
+Nah.  Please just enable it globally when using sparse.  I actually
+had a chat with Linus about that a while ago and he seemed generally
+fine with it, I just didn't manage to actually do it..
