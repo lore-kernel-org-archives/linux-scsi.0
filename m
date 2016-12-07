@@ -1,52 +1,64 @@
-From: "Stewart, Sean" <Sean.Stewart@netapp.com>
-Subject: Re: [PATCH v2] scsi_devinfo: remove synchronous ALUA for NETAPP
- devices
-Date: Wed, 7 Dec 2016 19:35:54 +0000
-Message-ID: <2F2F999B-934D-4D63-A759-2FC777CF16B0@netapp.com>
-References: <20161111164949.2322-1-xose.vazquez@gmail.com>
+From: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH V4 04/11] megaraid_sas: SAS3.5 Generic Megaraid Controllers
+ Stream Detection and IO Coalescing (fwd)
+Date: Wed, 7 Dec 2016 20:58:43 +0100 (CET)
+Message-ID: <alpine.DEB.2.20.1612072056520.2027@hadrien>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx142.netapp.com ([216.240.21.19]:54094 "EHLO mx142.netapp.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753106AbcLGTf6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Dec 2016 14:35:58 -0500
-In-Reply-To: <20161111164949.2322-1-xose.vazquez@gmail.com>
-Content-Language: en-US
-Content-ID: <1DC22D3889FD034483681408C42645FD@namprd06.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+Cc: jejb@kernel.org, hch@infradead.org, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com, thenzl@redhat.com, sasikumar.pc@broadcom.com, kbuild-all@01.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xose Vazquez Perez <xose.vazquez@gmail.com>
-Cc: "George, Martin" <Martin.George@netapp.com>, "Stankey, Robert" <Robert.Stankey@netapp.com>, "Schremmer, Steven" <Steve.Schremmer@netapp.com>, Hannes Reinecke <hare@suse.de>, Christophe Varoqui <christophe.varoqui@opensvc.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, SCSI ML <linux-scsi@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>
 
-T24gMTEvMTEvMTYsIDEwOjQ5IEFNLCAiWG9zZSBWYXpxdWV6IFBlcmV6IiA8eG9zZS52YXpxdWV6
-QGdtYWlsLmNvbT4gd3JvdGU6DQoNCiAgICBOZXRBcHAgZGlkIGNvbmZpcm0gdGhpcyBpcyBub3Qg
-cmVxdWlyZWQuDQogICAgDQogICAgQ2M6IE1hcnRpbiBHZW9yZ2UgPE1hcnRpbi5HZW9yZ2VAbmV0
-YXBwLmNvbT4NCiAgICBDYzogUm9iZXJ0IFN0YW5rZXkgPFJvYmVydC5TdGFua2V5QG5ldGFwcC5j
-b20+DQogICAgQ2M6IFN0ZXZlbiBTY2hyZW1tZXIgPFN0ZXZlbi5TY2hyZW1tZXJAbmV0YXBwLmNv
-bT4NCiAgICBDYzogU2VhbiBTdGV3YXJ0IDxTZWFuLlN0ZXdhcnRAbmV0YXBwLmNvbT4NCiAgICBD
-YzogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuZGU+DQogICAgQ2M6IENocmlzdG9waGUgVmFy
-b3F1aSA8Y2hyaXN0b3BoZS52YXJvcXVpQG9wZW5zdmMuY29tPg0KICAgIENjOiBKYW1lcyBFLkou
-IEJvdHRvbWxleSA8amVqYkBsaW51eC52bmV0LmlibS5jb20+DQogICAgQ2M6IE1hcnRpbiBLLiBQ
-ZXRlcnNlbiA8bWFydGluLnBldGVyc2VuQG9yYWNsZS5jb20+DQogICAgQ2M6IFNDU0kgTUwgPGxp
-bnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg0KICAgIENjOiBkZXZpY2UtbWFwcGVyIGRldmVsb3Bt
-ZW50IDxkbS1kZXZlbEByZWRoYXQuY29tPg0KICAgIFNpZ25lZC1vZmYtYnk6IFhvc2UgVmF6cXVl
-eiBQZXJleiA8eG9zZS52YXpxdWV6QGdtYWlsLmNvbT4NCiAgICAtLS0NCiAgICAgZHJpdmVycy9z
-Y3NpL3Njc2lfZGV2aW5mby5jIHwgMiAtLQ0KICAgICAxIGZpbGUgY2hhbmdlZCwgMiBkZWxldGlv
-bnMoLSkNCiAgICANCiAgICBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5mby5j
-IGIvZHJpdmVycy9zY3NpL3Njc2lfZGV2aW5mby5jDQogICAgaW5kZXggMjQ2NDU2OS4uMjhmZWE4
-MyAxMDA2NDQNCiAgICAtLS0gYS9kcml2ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMNCiAgICArKysg
-Yi9kcml2ZXJzL3Njc2kvc2NzaV9kZXZpbmZvLmMNCiAgICBAQCAtMjIwLDggKzIyMCw2IEBAIHN0
-YXRpYyBzdHJ1Y3Qgew0KICAgICAJeyJOQUtBTUlDSCIsICJNSi01LjE2UyIsIE5VTEwsIEJMSVNU
-X0ZPUkNFTFVOIHwgQkxJU1RfU0lOR0xFTFVOfSwNCiAgICAgCXsiTkVDIiwgIlBELTEgT0RYNjU0
-UCIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVOIHwgQkxJU1RfU0lOR0xFTFVOfSwNCiAgICAgCXsiTkVD
-IiwgImlTdG9yYWdlIiwgTlVMTCwgQkxJU1RfUkVQT1JUTFVOMn0sDQogICAgLQl7Ik5FVEFQUCIs
-ICJMVU4gQy1Nb2RlIiwgTlVMTCwgQkxJU1RfU1lOQ19BTFVBfSwNCiAgICAtCXsiTkVUQVBQIiwg
-IklORi0wMS0wMCIsIE5VTEwsIEJMSVNUX1NZTkNfQUxVQX0sDQogICAgIAl7Ik5SQyIsICJNQlIt
-NyIsIE5VTEwsIEJMSVNUX0ZPUkNFTFVOIHwgQkxJU1RfU0lOR0xFTFVOfSwNCiAgICAgCXsiTlJD
-IiwgIk1CUi03LjQiLCBOVUxMLCBCTElTVF9GT1JDRUxVTiB8IEJMSVNUX1NJTkdMRUxVTn0sDQog
-ICAgIAl7IlBJT05FRVIiLCAiQ0QtUk9NIERSTS02MDAiLCBOVUxMLCBCTElTVF9GT1JDRUxVTiB8
-IEJMSVNUX1NJTkdMRUxVTn0sDQogICAgLS0gDQogICAgMi4xMC4yDQogICAgDQpSZXZpZXdlZC1i
-eTogU2VhbiBTdGV3YXJ0IDxzZWFuLnN0ZXdhcnRAbmV0YXBwLmNvbT4NCg0KVGhhbmtzLA0KU2Vh
-bg0KDQo=
+The code on lines 1744 and 1749 seems to need to be indented more.  1744
+should be lined up with the inside of the first ( and the comment and the
+continue should be indented.
+
+julia
+
+
+
+---------- Forwarded message ----------
+Date: Wed, 7 Dec 2016 12:14:15 +0800
+From: kbuild test robot <fengguang.wu@intel.com>
+To: kbuild@01.org
+Cc: Julia Lawall <julia.lawall@lip6.fr>
+Subject: Re: [PATCH V4 04/11] megaraid_sas: SAS3.5 Generic Megaraid Controllers
+    Stream Detection and IO Coalescing
+
+In-Reply-To: <1481065220-18431-5-git-send-email-sasikumar.pc@broadcom.com>
+
+Hi Sasikumar,
+
+[auto build test WARNING on scsi/for-next]
+[also build test WARNING on next-20161206]
+[cannot apply to v4.9-rc8]
+[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+
+url:    https://github.com/0day-ci/linux/commits/Sasikumar-Chandrasekaran/megaraid_sas-Updates-for-scsi-next/20161207-102153
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+:::::: branch date: 2 hours ago
+:::::: commit date: 2 hours ago
+
+>> drivers/scsi/megaraid/megaraid_sas_fusion.c:1749:3-12: code aligned with following code on line 1750
+
+git remote add linux-review https://github.com/0day-ci/linux
+git remote update linux-review
+git checkout c919127dc789eec06ff5e34e06ebb05ef30dbb5e
+vim +1749 drivers/scsi/megaraid/megaraid_sas_fusion.c
+
+c919127d Sasikumar Chandrasekaran 2016-12-06  1743  			if ((io_info->ldStartBlock != current_sd->next_seq_lba) &&
+c919127d Sasikumar Chandrasekaran 2016-12-06  1744  			((!io_info->isRead) || (!is_read_ahead)))
+c919127d Sasikumar Chandrasekaran 2016-12-06  1745  			/*
+c919127d Sasikumar Chandrasekaran 2016-12-06  1746  			* Once the API availible we need to change this.
+c919127d Sasikumar Chandrasekaran 2016-12-06  1747  			* At this point we are not allowing any gap
+c919127d Sasikumar Chandrasekaran 2016-12-06  1748  			*/
+c919127d Sasikumar Chandrasekaran 2016-12-06 @1749  			continue;
+c919127d Sasikumar Chandrasekaran 2016-12-06 @1750  			cmd->io_request->RaidContext.raid_context_g35.stream_detected
+c919127d Sasikumar Chandrasekaran 2016-12-06  1751  				= true;
+c919127d Sasikumar Chandrasekaran 2016-12-06  1752  			current_sd->next_seq_lba =
+c919127d Sasikumar Chandrasekaran 2016-12-06  1753  			io_info->ldStartBlock + io_info->numBlocks;
+
+---
+0-DAY kernel test infrastructure                Open Source Technology Center
+https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
