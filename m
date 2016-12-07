@@ -1,103 +1,79 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Wed, 7 Dec 2016 21:44:08 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D194180985F@avsrvexchmbx1.microsemi.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
- <146706367078.29152.14405582249219794335.stgit@brunhilda>
- <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
- <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
- <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
- <1473359114.2781.38.camel@linux.vnet.ibm.com>
- <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
- <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
- <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: [PATCH 1/2] ibmvscsi: add vscsi hosts to global list_head
+Date: Wed,  7 Dec 2016 16:04:35 -0600
+Message-ID: <1481148276-5083-1-git-send-email-tyreld@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0089.outbound.protection.outlook.com ([104.47.38.89]:39612
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932423AbcLGVoR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 7 Dec 2016 16:44:17 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
-Content-Language: en-US
+Received: from 001b2d01.pphosted.com ([148.163.156.1]:45788 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932752AbcLGWFf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 17:05:35 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB7M05XJ052912
+        for <linux-scsi@vger.kernel.org>; Wed, 7 Dec 2016 17:05:32 -0500
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 276reeedfe-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 07 Dec 2016 17:05:32 -0500
+Received: from localhost
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Wed, 7 Dec 2016 17:05:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: james.bottomley@hansenpartnership.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBsaW51eC1zY3NpLW93bmVyQHZn
-ZXIua2VybmVsLm9yZyBbbWFpbHRvOmxpbnV4LXNjc2ktDQo+IG93bmVyQHZnZXIua2VybmVsLm9y
-Z10gT24gQmVoYWxmIE9mIERvbiBCcmFjZQ0KPiBTZW50OiBGcmlkYXksIE5vdmVtYmVyIDExLCAy
-MDE2IDg6NDggQU0NCj4gVG86IEphbWVzIEJvdHRvbWxleTsgU2NvdHQgQmVuZXNoOyBKYW1lcyBC
-b3R0b21sZXk7IE1hcnRpbiBLLiBQZXRlcnNlbg0KPiBDYzogVmlzd2FzIEc7IE1haGVzaCBSYWph
-c2hla2hhcmE7IGhjaEBpbmZyYWRlYWQub3JnOyBTY290dCBUZWVsOyBLZXZpbg0KPiBCYXJuZXR0
-OyBKdXN0aW4gTGluZGxleTsgZWxsaW90dEBocGUuY29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZw0KPiBTdWJqZWN0OiBSRTogW1BBVENIIFY0IDIvMl0gYWFjcmFpZDogcmVtb3ZlIHdpbGRj
-YXJkIGZvciBzZXJpZXMgOSBjb250cm9sbGVycw0KPiANCj4gRVhURVJOQUwgRU1BSUwNCj4gDQo+
-IA0KPiA+IC0tLS0tT3JpZ2luYWwgTWVzc2FnZS0tLS0tDQo+ID4gRnJvbTogSmFtZXMgQm90dG9t
-bGV5DQo+IFttYWlsdG86SmFtZXMuQm90dG9tbGV5QEhhbnNlbnBhcnRuZXJzaGlwLmNvbV0NCj4g
-PiBTZW50OiBUaHVyc2RheSwgU2VwdGVtYmVyIDA4LCAyMDE2IDU6MzggUE0NCj4gPiBUbzogU2Nv
-dHQgQmVuZXNoOyBKYW1lcyBCb3R0b21sZXk7IERvbiBCcmFjZTsgTWFydGluIEsuIFBldGVyc2Vu
-DQo+ID4gQ2M6IFZpc3dhcyBHOyBNYWhlc2ggUmFqYXNoZWtoYXJhOyBoY2hAaW5mcmFkZWFkLm9y
-ZzsgU2NvdHQgVGVlbDsgS2V2aW4NCj4gPiBCYXJuZXR0OyBKdXN0aW4gTGluZGxleTsgZWxsaW90
-dEBocGUuY29tOyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiA+IFN1YmplY3Q6IFJFOiBb
-UEFUQ0ggVjQgMi8yXSBhYWNyYWlkOiByZW1vdmUgd2lsZGNhcmQgZm9yIHNlcmllcyA5DQo+IGNv
-bnRyb2xsZXJzDQo+ID4NCj4gPiBFWFRFUk5BTCBFTUFJTA0KPiA+DQo+ID4NCj4gPiBPbiBTZXB0
-ZW1iZXIgOCwgMjAxNiAyOjMzOjUyIFBNIEVEVCwgU2NvdHQgQmVuZXNoDQo+ID4gPHNjb3R0LmJl
-bmVzaEBtaWNyb3NlbWkuY29tPiB3cm90ZToNCj4gPiA+Pg0KPiA+ID4+IE9uIFRodSwgMjAxNi0w
-OS0wOCBhdCAxODoxNSArMDAwMCwgRG9uIEJyYWNlIHdyb3RlOg0KPiA+ID4+ID4gPiA+IC0gICAg
-eyAweDkwMDUsIDB4MDI4ZiwgUENJX0FOWV9JRCwgUENJX0FOWV9JRCwgMCwgMCwgNjUgfSwgLyoN
-Cj4gPiA+PiA+ID4gPiBBZGFwdGVjIFBNQw0KPiA+ID4+ID4gPiA+IFNlcmllcyA5ICovDQo+ID4g
-Pj4gPiA+ID4NCj4gPiA+PiA+ID4gPiBIb3cgYXJlIHBlb3BsZSB0aGF0IGxvYWQgYWFjcmFpZCBp
-biB0aGVpciBpbml0cmQgZ29pbmcgdG8gYm9vdA0KPiA+ID4+ID4gPiA+IGFmdGVyIHRoaXM/DQo+
-ID4gPj4gPiA+ID4NCj4gPiA+PiA+ID4gPiAtLQ0KPiA+ID4+ID4gPiA+IE1hcnRpbiBLLiBQZXRl
-cnNlbiAgICAgIE9yYWNsZSBMaW51eCBFbmdpbmVlcmluZw0KPiA+ID4+ID4gPg0KPiA+ID4+ID4g
-PiBJIHVwZGF0ZWQgc21hcnRwcWkvS2NvbmZpZyBhbmQgYWRkZWQNCj4gPiA+RG9jdW1lbnRhdGlv
-bi9zY3NpL3NtYXJ0cHFpLnR4dA0KPiA+ID4+ID4gPiB0byBpbmZvcm0gdXNlcnMgb2YgdGhlIG5l
-ZWQgdG8gY29uZmlndXJlIHRoZSBzbWFydHBxaSBkcml2ZXINCj4gPiA+bW92aW5nDQo+ID4gPj4g
-PiA+IGZvcndhcmQgZm9yIGFhY3JhaWQgU2VyaWVzIDkgY29udHJvbGxlcnMuDQo+ID4gPj4gPiA+
-DQo+ID4gPj4gPiA+IEhvcGUgdGhpcyBoZWxwcy4NCj4gPiA+Pg0KPiA+ID4+IFRoYXQncyBub3Qg
-Z29pbmcgdG8gYmUgZW5vdWdoOiB0aGlzIElEIGhhcyBiZWVuIGluIHRoZSBhYWNyaWFkIGRyaXZl
-cg0KPiA+ID5zaW5jZQ0KPiA+ID4+IDIwMTEuICBUaGF0IG1lYW5zIGFueW9uZSB3aG8gZmluYWxs
-eSBnZXRzIGhvbGQgb2Ygb25lIG9mIHRoZXNlIG5ldw0KPiA+ID5jYXJkcw0KPiA+ID4+IGJ1dCB1
-c2VzIGEgZGlzdHJvIHRoYXQgZG9lc24ndCBoYXZlIHRoZSBuZXcgc21hcnRwcWkgZHJpdmVyIHdp
-bGwgYmUNCj4gPiA+YXR0YWNoZWQNCj4gPiA+PiB2aWEgdGhlIGFhY3JhaWQgb25lLg0KPiA+ID4+
-DQo+ID4gPg0KPiA+ID5UaGF0J3Mgb2sgYmVjYXVzZSBmb3IgcHJldmlvdXMgZGlzdHJvcyB0aGUg
-bmV3IGNvbnRyb2xsZXIgd2lsbCB3b3JrDQo+ID4gPndpdGggdGhlIHByZXZpb3VzIGFhY3JhaWQg
-ZHJpdmVyLCBhbHRob3VnaCB3aXRoIG5vbi1vcHRpbWFsDQo+ID4gPnBlcmZvcm1hbmNlLg0KPiA+
-DQo+ID4gTm90IGFmdGVyIHRoaXMgY2hhbmdlIGhpdHMuIFRoZW4gc3lzdGVtcyB0aGF0IG9ubHkg
-aGF2ZSBhYWNyYWlkIGluIHRoZSBpbml0cmQNCj4gPiB3aWxsIGZhaWwgdG8gYm9vdC4NCj4gPg0K
-PiA+ID5XaGF0IHdlIHdhbnQgdG8gZG8gaXMgc3luYyB1cCBhdCA0Ljkgc28gZ29pbmcgZm9yd2Fy
-ZCBvbmx5IHRoZSBuZXcNCj4gPiA+c21hcnRwcWkgZHJpdmVyIHdpbGwgYXR0YWNoIHRvIHRoZXNl
-IG5ldyBjb250cm9sbGVycy4NCj4gPg0KPiA+IFNvIHlvdSBoYXZlIGEgcGxhbiBpbiBwbGFjZSB3
-aXRoIHRoZSBkaXN0cm9zIHRvIG1pZ3JhdGUgdGhlIGluaXRyZCBpbWFnZXM/DQo+ID4gV2l0aG91
-dCBiZWluZyB0b2xkLCBzb21lIHdpbGwgb25seSBpbnN0YWxsIHRoZSBtb2R1bGVzIHRoZSBwcmV2
-aW91cyBpbml0cmQNCj4gd2FzDQo+ID4gY29uZmlndXJlZCBmb3IuDQo+ID4NCj4gPiBKYW1lcw0K
-PiA+DQo+ID4gPlNjb3R0DQo+ID4gPg0KPiA+ID4+IEdpdmVuIHRoYXQgdGhlIGxpZmUgdGltZXMg
-b2YgZW50ZXJwcmlzZSBkaXN0cmlidXRpb25zIGlzIHR3byB5ZWFycw0KPiA+ID5hbmQgeW91J3Jl
-DQo+ID4gPj4gcmVsZWFzaW5nIHRoaXMgc21hcnRwcWkgc29vbiwgdGhlIG92ZXJsYXAgaXMgdW5h
-dm9pZGFibGUuDQo+ID4gPj4NCj4gPiA+PiBKYW1lcw0KPiA+ID4+DQo+ID4NCj4gDQo+IFRoZSBJ
-RCB3ZSB3YW50IHRvIHJlbW92ZSBmcm9tIHRoZSBhYWNyYWlkIGRyaXZlciB3aWxsIG5vdCBiZSBh
-dmFpbGFibGUgdW50aWwNCj4gUTEgbmV4dCB5ZWFyLA0KPiBzbyBubyBjdXN0b21lciBjdXJyZW50
-bHkgaGFzIGl0IHlldC4gSWYgdGhleSBhcmUgcnVubmluZyBhbiBvbGRlciBrZXJuZWwsIHRoZQ0K
-PiBhYWNyYWlkIGRyaXZlcg0KPiB3aWxsIHN1cHBvcnQgdGhpcyBJRCBidXQgaW4gJ3N5bmMnIG1v
-ZGUsIHRoZWlyIHNlcnZlcnMgd2lsbCBjb250aW51ZSB0byBib290Lg0KPiANCj4gSWYgdGhleSB1
-cGdyYWRlIHRvIGEgbmV3ZXIga2VybmVsIGFuZCBkbyBub3Qga25vdyAgdG8gY29uZmlndXJlIHRo
-ZQ0KPiBzbWFydHBxaQ0KPiBkcml2ZXIgYW5kIHRoZSBzeXN0ZW0gZmFpbHMgdG8gYm9vdCwgdGhl
-eSBjYW4gZmFsbCBiYWNrIHRvIHRoZSBwcmV2aW91cw0KPiBrZXJuZWwgYW5kIGNvbmZpZ3VyZSB0
-aGUgc21hcnRwcWkgZHJpdmVyLg0KPiANCj4gVGhpcyBwYXRjaCBpcyBmb3IgbmV3ZXIga2VybmVs
-cyBnb2luZyBmb3J3YXJkLiBXZSBuZWVkIHRvIGVsaW1pbmF0ZSB0aGUNCj4gZHVwbGljYXRpb24g
-Zm9yIG5ld2VyIGtlcm5lbHMuIElmIGJvdGggZHJpdmVycyBzdXBwb3J0IHRoZSBzYW1lIElEDQo+
-IHRoZXkgd2lsbCBoYXZlIHRvIGtub3cgaG93IHRvIHJlYnVpbGQgdGhlaXIgaW5pdHJkIHdpdGgg
-YSBzcGVjaWZpYyBkcml2ZXINCj4gb3JkZXIuIEN1c3RvbWVycyB0aGF0IGhhdmUgc2VydmVycyBj
-b25maWd1cmVkIHdpdGggYm90aCBvbGRlciBhYWNyYWlkDQo+IGRldmljZXMNCj4gYW5kIHRoZSBu
-ZXdlciBzbWFydHBxaSBkZXZpY2VzIHdpbGwgZGVmaW5pdGVseSBoYXZlIHRvIGRvIHRoaXMuIEhh
-dmluZyB0bw0KPiByZWJ1aWxkIHRoZSBrZXJuZWwgd2l0aCBzbWFydHBxaSBlbmFibGVkIHdvdWxk
-IHNlZW0gdG8gYmUgYW4gZWFzaWVyDQo+IGN1c3RvbWVyIGV4cGVyaWVuY2UuDQo+IA0KPiBUaGUg
-b2ZmaWNpYWxseSBzdXBwb3J0ZWQgZHJpdmVyIGZvciB0aGlzIElEIGlzIHNtYXJ0cHFpLg0KPiAN
-Cj4gVGhhbmtzLA0KPiBEb24gQnJhY2UNCj4gDQo+IEVTQyAtIFNtYXJ0IFN0b3JhZ2UNCj4gTWlj
-cm9zZW1pIENvcnBvcmF0aW9uDQo+IA0KPiA+DQpDYW4gdGhlcmUgYmUgYW55IG1vdmVtZW50IG9u
-IHRoaXMgcGF0Y2g/DQoNClRoYW5rcywNCkRvbiBCcmFjZQ0KRVNDIC0gU21hcnQgU3RvcmFnZQ0K
-TWljcm9zZW1pIENvcnBvcmF0aW9uDQoNCg0KDQo=
+Add each vscsi host adatper to a new global list_head named
+ibmvscsi_head. There is no functional change. This is meant primarily
+as a convience for locating adatpers from within the debugger or crash
+utility.
+
+Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+---
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 3 +++
+ drivers/scsi/ibmvscsi/ibmvscsi.h | 1 +
+ 2 files changed, 4 insertions(+)
+
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index d9534ee..a0ee16f 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -95,6 +95,7 @@ static int fast_fail = 1;
+ static int client_reserve = 1;
+ static char partition_name[97] = "UNKNOWN";
+ static unsigned int partition_number = -1;
++static LIST_HEAD(ibmvscsi_head);
+ 
+ static struct scsi_transport_template *ibmvscsi_transport_template;
+ 
+@@ -2270,6 +2271,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ 	}
+ 
+ 	dev_set_drvdata(&vdev->dev, hostdata);
++	list_add_tail(&hostdata->host_list, &ibmvscsi_head);
+ 	return 0;
+ 
+       add_srp_port_failed:
+@@ -2291,6 +2293,7 @@ static int ibmvscsi_probe(struct vio_dev *vdev, const struct vio_device_id *id)
+ static int ibmvscsi_remove(struct vio_dev *vdev)
+ {
+ 	struct ibmvscsi_host_data *hostdata = dev_get_drvdata(&vdev->dev);
++	list_del(&hostdata->host_list);
+ 	unmap_persist_bufs(hostdata);
+ 	release_event_pool(&hostdata->pool, hostdata);
+ 	ibmvscsi_release_crq_queue(&hostdata->queue, hostdata,
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.h b/drivers/scsi/ibmvscsi/ibmvscsi.h
+index e0f6c3a..3a78755 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.h
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.h
+@@ -90,6 +90,7 @@ struct event_pool {
+ 
+ /* all driver data associated with a host adapter */
+ struct ibmvscsi_host_data {
++	struct list_head host_list;
+ 	atomic_t request_limit;
+ 	int client_migrated;
+ 	int reset_crq;
+-- 
+1.8.3.1
+
