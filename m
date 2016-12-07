@@ -1,72 +1,59 @@
-From: Cong Wang <xiyou.wangcong@gmail.com>
-Subject: Re: [PATCH] net: return value of skb_linearize should be handled in
- Linux kernel
-Date: Wed, 7 Dec 2016 09:57:45 -0800
-Message-ID: <CAM_iQpWPkUnMhNykQtg3fSh6-SnB893p0j6-m0E0fZUgTUBw0g@mail.gmail.com>
-References: <1481008233-16777-1-git-send-email-zhouzhouyi@gmail.com>
- <CAM_iQpX0nA10tCzfZr_q5i6V2hWqfMUkvXdfo+Ro1TWHOEVi_A@mail.gmail.com> <CAABZP2w_YsXgzZ0tH=r3mnLUbVfpY8Xn3vk9XoS_Hq1r8aeNUQ@mail.gmail.com>
+From: ELISA WEBADMIN <kimura@tenant-house.com>
+Subject: kiireellinen webmail tili =?UTF-8?B?UMOkaXZpdHTDpMOk?=
+Date: Thu, 08 Dec 2016 02:12:24 +0900
+Message-ID: <201612071712.uB7HCOBL055177@www2858.sakura.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <CAABZP2w_YsXgzZ0tH=r3mnLUbVfpY8Xn3vk9XoS_Hq1r8aeNUQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Zhouyi Zhou <zhouzhouyi@gmail.com>
-Cc: faisal.latif@intel.com, dledford@redhat.com, sean.hefty@intel.com, Hal Rosenstock <hal.rosenstock@gmail.com>, Jeff Kirsher <jeffrey.t.kirsher@intel.com>, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jth@kernel.org>, jon.maloy@ericsson.com, ying.xue@windriver.com, David Miller <davem@davemloft.net>, linux-rdma@vger.kernel.org, LKML <linux-kernel@vger.kernel.org>, intel-wired-lan <intel-wired-lan@lists.osuosl.org>, Linux Kernel Network Developers <netdev@vger.kernel.org>, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, tipc-discussion@lists.sourceforge.net
+Content-Type: multipart/mixed; boundary="------_37363357584842f8b3205_"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www2858.sakura.ne.jp ([49.212.198.68]:50998 "EHLO
+        www2858.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932166AbcLGSMa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 13:12:30 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: update@elisa.fi
 
-On Tue, Dec 6, 2016 at 10:27 PM, Zhouyi Zhou <zhouzhouyi@gmail.com> wrote:
-> On Wed, Dec 7, 2016 at 1:02 PM, Cong Wang <xiyou.wangcong@gmail.com> wrote:
->> On Mon, Dec 5, 2016 at 11:10 PM, Zhouyi Zhou <zhouzhouyi@gmail.com> wrote:
->>> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->>> index 2a653ec..ab787cb 100644
->>> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->>> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_fcoe.c
->>> @@ -490,7 +490,11 @@ int ixgbe_fcoe_ddp(struct ixgbe_adapter *adapter,
->>>          */
->>>         if ((fh->fh_r_ctl == FC_RCTL_DD_SOL_DATA) &&
->>>             (fctl & FC_FC_END_SEQ)) {
->>> -               skb_linearize(skb);
->>> +               int err = 0;
->>> +
->>> +               err = skb_linearize(skb);
->>> +               if (err)
->>> +                       return err;
->>
->>
->> You can reuse 'rc' instead of adding 'err'.
-> rc here is meaningful for the length of data being ddped. If using rc
-> here, a successful
-> skb_linearize will assign rc to 0.
+--------_37363357584842f8b3205_
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 
-Right, I thought it returns 0 on success.
+SHl2w6Qgc8OkaGvDtnBvc3RpbiBrw6R5dHTDpGrDpCEKWWh0ZW7DpGlzdMOkbW1lIHPDpGhrw7Zw
+b3N0aXBhbHZlbHVpZGVuIG9taW5haXN1dWtzaWEgdHVvbWFsbGEga2Fpa2tpZW4gYXNpYWtrYWlk
+ZW4ga8OkeXR0w7bDtm4gdXVkZW4gc2VsYWlucG9zdGluIGVsaSB3ZWJtYWlsLXBhbHZlbHVuLgpL
+bGlra2FhIGxpbmtracOkIHDDpGl2aXR0w6TDpCBzw6Roa8O2cG9zdGlpc2k6IGh0dHA6Ly9ndWlh
+cGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApO
+eWt5aW5lbiBzZWxhaW5wb3N0aSBlbGkgd2VibWFpbC1wYWx2ZWx1IGh0dHA6Ly9ndWlhcGFyYWZv
+cnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbCkga29ydmF1
+dHV1IGtva29uYWFuIHV1ZGVsbGEgcGFsdmVsdWxsYS4KTMO2eWTDpHQgdXVkZW4gcGFsdmVsdW4g
+b3NvaXR0ZWVzdGE6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9f
+X3Rhc2s9bG9naW4vbG9naW4uaHRtbApFbnNpbW3DpGlzZW4ga2lyamF1dHVtaXNlbiB5aHRleWRl
+c3PDpCBvc29pdGVraXJqYXNpIHNpc8OkbHTDtiBrb3Bpb2lkYWFuIHV1dGVlbiBwYWx2ZWx1dW4u
+IEh1b20hIEpvcyB0w6Rtw6RuIGrDpGxrZWVuIGxpc8Okw6R0IHZhbmhhc3NhIHdlYm1haWwtcGFs
+dmVsdXNzYSBvc29pdHRlaXRhIG9zb2l0ZWtpcmphYW4sIG5lIGVpdsOkdCBlbsOkw6Qga29waW9p
+ZHUgdXV0ZWVuIHBhbHZlbHV1bi4KSm9zIHRhcnZpdHNldCBrw6R5dMO2bm9wYXN0dXN0YSBzw6Ro
+a8O2cG9zdGlhc2lvaXNzYSwgb2xldGhhbiB5aHRleWRlc3PDpCBFbGlzYW4gT21hZ3VydXVuLiBP
+bWFndXJ1IHBhbHZlbGVlIG51bWVyb3NzYSAwNjAwIDkwMCA1MDAgYXJraXNpbiA44oCTMjEgamEg
+bGF1YW50YWluYSA54oCTMTcgKDIsMTkg4oKsL21pbiArIG1wbS9wdm0pLiBWb2l0IHR1dHVzdHVh
+IHBhbHZlbHV1biBvc29pdHRlZXNzYQpZc3TDpHbDpGxsaXNpbiB0ZXJ2ZWlzaW4sCkVsaXNhCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQpEZWFyIEVsc2EgdXNlciEKV2UgdW5pZnkgZS1tYWlsIHNl
+cnZpY2VzIGNhcGFiaWxpdGllcyBieSBicmluZ2luZyBhbGwgY2xpZW50cyB0byB1c2UgdGhlIG5l
+dyBicm93c2VyIG1haWwsIGllIHdlYm1haWwgc2VydmljZS4KQ2xpY2sgdGhlIGxpbmsgdG8gdXBk
+YXRlIHlvdXIgZW1haWw6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFp
+bC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApDdXJyZW50IHdlYiBtYWlsLCBpZSB3ZWJtYWlsIHNl
+cnZpY2UgKGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9
+bG9naW4vbG9naW4uaHRtbCkgaXMgcmVwbGFjZWQgd2l0aCBhbiBlbnRpcmVseSBuZXcgc2Vydmlj
+ZS4KWW91IHdpbGwgZmluZCB0aGUgbmV3IHNlcnZpY2UgYXQ6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1
+bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApVcG9uIGZpcnN0
+IGxvZ2dpbmcgeW91ciBhZGRyZXNzIGJvb2tzIGNvbnRlbnRzIGFyZSBjb3BpZWQgdG8gdGhlIG5l
+dyBzZXJ2aWNlLiBOQiEgSWYgeW91IHRoZW4gYWRkIGluIHRoZSBvbGQgd2VibWFpbCBzZXJ2aWNl
+IGFkZHJlc3NlcyBpbiB0aGUgYWRkcmVzcyBib29rLCB0aGV5IGFyZSBubyBsb25nZXIgY29waWVk
+IHRvIHRoZSBuZXcgc2VydmljZS4KSWYgeW91IG5lZWQgZ3VpZGFuY2Ugb24gdGhlIHVzZSBvZiBl
+LW1hdHRlcnMsIGluIGNvbm5lY3Rpb24gd2l0aCBFbGlzYSBwbGVhc2UgYmUgT21hZ3VydXVuLiBP
+bWFndXJ1IHNlcnZlcyBpc3N1ZSAwNjAwIDkwMCA1MDAsIHdlZWtkYXlzIDgtMjEgYW5kIFNhdHVy
+ZGF5cyA5LTE3ICgyLjE5IOKCrCAvIG1pbiArIG1vYmlsZSBjYWxsIGNoYXJnZSAvIGxvY2FsIG5l
+dHdvcmsgY2hhcmdlKS4gWW91IGNhbiB2aXNpdCB0aGUgc2VydmljZSBhdApCZXN0IHJlZ2FyZHMs
+CkVsaXNh
 
-
->>
->>
->>
->>>                 crc = (struct fcoe_crc_eof *)skb_put(skb, sizeof(*crc));
->>>                 crc->fcoe_eof = FC_EOF_T;
->>>         }
->>> diff --git a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->>> index fee1f29..4926d48 100644
->>> --- a/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->>> +++ b/drivers/net/ethernet/intel/ixgbe/ixgbe_main.c
->>> @@ -2173,8 +2173,7 @@ static int ixgbe_clean_rx_irq(struct ixgbe_q_vector *q_vector,
->>>                                 total_rx_bytes += ddp_bytes;
->>>                                 total_rx_packets += DIV_ROUND_UP(ddp_bytes,
->>>                                                                  mss);
->>> -                       }
->>> -                       if (!ddp_bytes) {
->>> +                       } else {
->>>                                 dev_kfree_skb_any(skb);
->>>                                 continue;
->>>                         }
->>
->>
->> This piece doesn't seem to be related.
-> if ddp_bytes is negative there will be some error, I think the skb
-> should not pass to upper layer.
-
-You misunderstand my point, this return value is for ixgbe_fcoe_ddp()
-not skb_linearize(), you need to make it a separate patch because this
-patch, as in $subject, only fixes skb_linearize().
+--------_37363357584842f8b3205_--
