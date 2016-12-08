@@ -1,25 +1,47 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: remove wildcard for series 9 controllers
-Date: Thu, 08 Dec 2016 17:10:00 -0500
-Message-ID: <yq1fulyoyx3.fsf@sermon.lab.mkp.net>
-References: <148121456881.26136.5279334565466197341.stgit@brunhilda>
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: [PATCH 0/4] g_NCR5380: Bug fix and some enhancements
+Date: Fri, 9 Dec 2016 09:27:29 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1612090914480.2773@nippy.intranet>
+References: <cover.1480917789.git.fthain@telegraphics.com.au> <201612081945.02906.linux@rainbow-software.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:37045 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752139AbcLHWMi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 17:12:38 -0500
-In-Reply-To: <148121456881.26136.5279334565466197341.stgit@brunhilda> (Don
-        Brace's message of "Thu, 8 Dec 2016 10:29:29 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201612081945.02906.linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Applied to 4.10/scsi-queue.
+On Thu, 8 Dec 2016, Ondrej Zary wrote:
+
+> On Monday 05 December 2016 07:07:19 Finn Thain wrote:
+> > This patch series is based on the one submitted recently by Ondrej 
+> > Zary.
+> >
+> > This version has a different irq probing fix for HP C2502 boards and a 
+> > more comprehensive patch to change the default irq parameter.
+> >
+> > It needs testing on actual ISA hardware.
+> 
+> Tested on HP C2502 (53C400A chip), Canon FG2-5202 (53C400 chip), 
+> DTC-3181L (DTCT-436P chip) and MS-PNR (53C400A chip) ISA cards - 
+> everything works fine!
+> 
+> Thanks.
+> 
+
+Thanks for testing! I don't recall the MS-PNR board -- some additional 
+test coverage is always good.
+
+> Tested-by: Ondrej Zary <linux@rainbow-software.org>
+> 
+> BTW. The release-region fix (my previous patch 6/6) has disappeared 
+> somehow. Should I resubmit?
+> 
+
+No need to resubmit it. The patch appears in jejb-scsi/for-next and 
+mkp-scsi/4.10/scsi-queue. It fixes a resource leak on an error path, so 
+presumably it wasn't important enough for -stable or 4.9-rc.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
