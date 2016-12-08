@@ -1,32 +1,29 @@
-From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
-Subject: Re: [PATCH v2] xen/scsifront: don't request a slot on the ring until
- request is ready
-Date: Thu, 8 Dec 2016 09:56:44 -0500
-Message-ID: <a38a0e53-2ac2-d0ed-93b4-cf5cc0d8b66d@oracle.com>
-References: <20161125202650.GK6266@mwanda>
- <20161202061545.14614-1-jgross@suse.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V4 01/11] megaraid_sas: Add new pci device Ids for SAS3.5
+ Generic Megaraid Controllers
+Date: Thu, 8 Dec 2016 16:17:54 +0100
+Message-ID: <fe411db7-ad16-77b4-16c0-49c98e8a3799@redhat.com>
+References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
+ <1481065220-18431-2-git-send-email-sasikumar.pc@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161202061545.14614-1-jgross@suse.com>
+In-Reply-To: <1481065220-18431-2-git-send-email-sasikumar.pc@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Cc: lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-
-
-On 12/02/2016 01:15 AM, Juergen Gross wrote:
-> Instead of requesting a new slot on the ring to the backend early, do
-> so only after all has been setup for the request to be sent. This
-> makes error handling easier as we don't need to undo the request id
-> allocation and ring slot allocation.
+On 7.12.2016 00:00, Sasikumar Chandrasekaran wrote:
+> This patch contains new pci device ids for SAS3.5 Generic Megaraid Controllers
 >
-> Suggested-by: Jan Beulich <jbeulich@suse.com>
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+> V4: Removed the not supported PCI Device Ids
+>
+> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 
-Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+The V4 does not panic my machine like the V3.
 
-(although it would be good to have someone familiar with this code look 
-at this as well).
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+
+Tomas
