@@ -1,24 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/4] g_NCR5380: Bug fix and some enhancements
-Date: Thu, 08 Dec 2016 16:59:02 -0500
-Message-ID: <yq1shpyozfd.fsf@sermon.lab.mkp.net>
-References: <cover.1480917789.git.fthain@telegraphics.com.au>
+Subject: Re: [PATCH v1 0/4] scsi: ufs: bug fixes, device quirk, HCI 2.1 support
+Date: Thu, 08 Dec 2016 17:00:56 -0500
+Message-ID: <yq1oa0mozc7.fsf@sermon.lab.mkp.net>
+References: <1480994652-19573-1-git-send-email-subhashj@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <cover.1480917789.git.fthain@telegraphics.com.au> (Finn Thain's
-        message of "Mon, 5 Dec 2016 01:07:19 -0500 (EST)")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Ondrej Zary <linux@rainbow-software.org>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32136 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750906AbcLHWBE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 17:01:04 -0500
+In-Reply-To: <1480994652-19573-1-git-send-email-subhashj@codeaurora.org>
+        (Subhash Jadavani's message of "Mon, 5 Dec 2016 19:24:12 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+>>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
 
-Finn> This patch series is based on the one submitted recently by Ondrej
-Finn> Zary.  This version has a different irq probing fix for HP C2502
-Finn> boards and a more comprehensive patch to change the default irq
-Finn> parameter.
+Subhash> This series has 2 bug fixes, 1 change related to device quirk
+Subhash> and 1 change to add UFS HCI 2.1 revision support.
 
 Applied to 4.10/scsi-queue.
 
