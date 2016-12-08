@@ -1,138 +1,44 @@
-From: Wei Fang <fangwei1@huawei.com>
-Subject: Re: [PATCH] scsi: avoid a permanent stop of the scsi device's request
- queue
-Date: Thu, 8 Dec 2016 11:22:45 +0800
-Message-ID: <5848D205.8060007@huawei.com>
-References: <1481015547-23474-1-git-send-email-fangwei1@huawei.com>
- <BLUPR02MB16838CCF3E631720279B921781820@BLUPR02MB1683.namprd02.prod.outlook.com>
- <584763FB.9010602@huawei.com>
- <BLUPR02MB168364C1D3A8A2C7CF367D5481850@BLUPR02MB1683.namprd02.prod.outlook.com>
- <584784D7.1070009@huawei.com>
- <BLUPR02MB1683A85CB4376E9904F1B38881850@BLUPR02MB1683.namprd02.prod.outlook.com>
- <5847B355.2050100@huawei.com>
- <9d9b3296-09d8-0f65-f52d-33fc19c4b6c2@sandisk.com>
- <d5b9960c-b68c-c636-dd1d-dfd056d99e52@sandisk.com>
- <1481132411.28416.232.camel@localhost.localdomain>
- <1481134565.2354.43.camel@linux.vnet.ibm.com>
- <1481138661.28416.238.camel@localhost.localdomain>
- <1481141375.2354.53.camel@linux.vnet.ibm.com>
- <1481142648.28416.244.camel@localhost.localdomain>
- <1481154187.2354.67.camel@linux.vnet.ibm.com> <5848C535.5010408@huawei.com>
- <1481164381.2354.81.camel@linux.vnet.ibm.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] linux/types.h: enable endian checks for all sparse builds
+Date: Thu, 8 Dec 2016 05:21:47 +0000
+Message-ID: <BLUPR02MB168374E98A6C86E43DF0BCFE81840@BLUPR02MB1683.namprd02.prod.outlook.com>
+References: <1481164052-28036-1-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:18064 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932972AbcLHD0v (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 22:26:51 -0500
-In-Reply-To: <1481164381.2354.81.camel@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Language: en-US
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@infradead.org>
+Cc: Jason Wang <jasowang@redhat.com>, "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>, Michal Marek <mmarek@suse.com>, Arnd Bergmann <arnd@arndb.de>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Matt Mackall <mpm@selenic.com>, Herbert Xu <herbert@gondor.apana.org.au>, David Airlie <airlied@linux.ie>, Gerd Hoffmann <kraxel@redhat.com>, Ohad Ben-Cohen <ohad@wizery.com>, Christian Borntraeger <borntraeger@de.ibm.com>, Cornelia Huck <cornelia.huck@de.ibm.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "David S. Miller" <davem@davemloft.net>, Jens Axboe <axboe@fb.com>, Neil Armstrong <narmstrong@baylibre.com>, Stefan Hajnoczi <stefanha@redhat.com>, Asias He <asias@redhat.com>, "linux-crypto@vger.kernel.org" <linux-crypto@vg>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <jejb@linux.vnet.ibm.com>, emilne@redhat.com
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, chenzengxi@huawei.com
 
-Hi, James, Ewan,
-
-On 2016/12/8 10:33, James Bottomley wrote:
-> On Thu, 2016-12-08 at 10:28 +0800, Wei Fang wrote:
->> Hi, James, Ewan,
->>
->> On 2016/12/8 7:43, James Bottomley wrote:
->>> On Wed, 2016-12-07 at 15:30 -0500, Ewan D. Milne wrote:
->>>> On Wed, 2016-12-07 at 12:09 -0800, James Bottomley wrote:
->>>>> Hm, it looks like the state set in scsi_sysfs_add_sdev() is
->>>>> bogus. 
->>>>>  We expect the state to have been properly set before that (in
->>>>> scsi_add_lun), so can we not simply remove it?
->>>>>
->>>>> James
->>>>>
->>>>
->>>> I was considering that, but...
->>>>
->>>> enum scsi_device_state {
->>>>         SDEV_CREATED = 1,       /* device created but not added
->>>> to
->>>> sysfs                                                            
->>>>     
->>>>                                                                  
->>>>     
->>>>       
->>>>                                  * Only internal commands allowed
->>>> (for inq) */
->>>>
->>>> So it seems the intent was for the state to not change until
->>>> then.
->>>
->>> I think this is historical.  There was a change somewhere that
->>> moved
->>> the sysfs state handling out of the sdev stat to is_visible, so the
->>> sdev state no-longer reflects  it.
->>>
->>>> The call to set the SDEV_RUNNING state earlier in scsi_add_lun()
->>>> was added with:
->>>>
->>>> commit 6f4267e3bd1211b3d09130e626b0b3d885077610
->>>> Author: James Bottomley <James.Bottomley@HansenPartnership.com>
->>>> Date:   Fri Aug 22 16:53:31 2008 -0500
->>>>
->>>>     [SCSI] Update the SCSI state model to allow blocking in the
->>>> created state
->>>>
->>>> Which allows the device to go into ->BLOCK (which is needed,
->>>> since it
->>>> actually happens).
->>>>
->>>> Should we remove the call from scsi_sysfs_add_sdev() and change
->>>> the
->>>> comment in scsi_device.h to reflect the intent?
->>
->> This sounds reasonable.
->>
->>> Assuming someone with the problem actually tests it, yes.
->>
->> This problem can be stably reproduced on Zengxi Chen's machine, who
->> reported the bug. We can test it on this machine.
->>
->> The patch is as below, just for sure:
->>
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index 0734927..82dfe07 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1204,10 +1204,6 @@ int scsi_sysfs_add_sdev(struct scsi_device
->> *sdev)
->>         struct request_queue *rq = sdev->request_queue;
->>         struct scsi_target *starget = sdev->sdev_target;
->>
->> -       error = scsi_device_set_state(sdev, SDEV_RUNNING);
->> -       if (error)
->> -               return error;
->> -
-
-I looked through those code and found that if we fix this bug
-by removing setting the state in scsi_sysfs_add_sdev(), it
-can't be fixed completely:
-
-scsi_device_set_state(sdev, SDEV_RUNNING) in scsi_add_lun() and
-scsi_device_set_state(sdev, SDEV_CREATED_BLOCK) in scsi_internal_device_block()
-can be called simultaneously. Because there is no synchronization
-between scsi_device_set_state(), those calls may both return
-success, and the state may be SDEV_RUNNING after that, and the
-device queue is stopped.
-
-Thanks,
-Wei
-
-> That's it, although not the second hunk: CREATED still means device not
-> added to sysfs.  It's just that RUNNING now doesn't mean it is.
-> 
-> James
-> 
-> 
-> 
-> .
-> 
-
+On 12/07/16 18:29, Michael S. Tsirkin wrote:=0A=
+> By now, linux is mostly endian-clean. Enabling endian-ness=0A=
+> checks for everyone produces about 200 new sparse warnings for me -=0A=
+> less than 10% over the 2000 sparse warnings already there.=0A=
+>=0A=
+> Not a big deal, OTOH enabling this helps people notice=0A=
+> they are introducing new bugs.=0A=
+>=0A=
+> So let's just drop __CHECK_ENDIAN__. Follow-up patches=0A=
+> can drop distinction between __bitwise and __bitwise__.=0A=
+=0A=
+Hello Michael,=0A=
+=0A=
+This patch makes a whole bunch of ccflags-y +=3D -D__CHECK_ENDIAN__ =0A=
+statements obsolete. Have you considered to remove these statements?=0A=
+=0A=
+Additionally, there are notable exceptions to the rule that most drivers =
+=0A=
+are endian-clean, e.g. drivers/scsi/qla2xxx. I would appreciate it if it =
+=0A=
+would remain possible to check such drivers with sparse without enabling =
+=0A=
+endianness checks. Have you considered to change #ifdef __CHECK_ENDIAN__ =
+=0A=
+into e.g. #ifndef __DONT_CHECK_ENDIAN__?=0A=
+=0A=
+Thanks,=0A=
+=0A=
+Bart.=0A=
