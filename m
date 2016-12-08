@@ -1,58 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v4 4/6] qla2xxx: Add multiple queue pair functionality.
-Date: Thu, 8 Dec 2016 15:29:40 +0100
-Message-ID: <98b4db8a-91de-d928-bf50-68088ef260c2@suse.de>
-References: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
- <1481051266-32362-5-git-send-email-himanshu.madhani@cavium.com>
+From: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+Subject: Re: [PATCH v2] xen/scsifront: don't request a slot on the ring until
+ request is ready
+Date: Thu, 8 Dec 2016 09:56:44 -0500
+Message-ID: <a38a0e53-2ac2-d0ed-93b4-cf5cc0d8b66d@oracle.com>
+References: <20161125202650.GK6266@mwanda>
+ <20161202061545.14614-1-jgross@suse.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42005 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752447AbcLHOhI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 8 Dec 2016 09:37:08 -0500
-In-Reply-To: <1481051266-32362-5-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161202061545.14614-1-jgross@suse.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Juergen Gross <jgross@suse.com>, linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
+Cc: lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org
 
-On 12/06/2016 08:07 PM, Himanshu Madhani wrote:
-> From: Michael Hernandez <michael.hernandez@cavium.com>
->
-> Replaced existing multiple queue functionality with framework
-> that allows for the creation of pairs of request and response queues,
-> either at start of day or dynamically.
->
-> Queue pair creation depend on module parameter "ql2xmqsupport",
-> which need to be enabled to create queue pair.
->
-> Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
-> Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_attr.c   |  36 ++--
->  drivers/scsi/qla2xxx/qla_dbg.c    |   4 +-
->  drivers/scsi/qla2xxx/qla_def.h    | 105 ++++++++--
->  drivers/scsi/qla2xxx/qla_gbl.h    |  28 ++-
->  drivers/scsi/qla2xxx/qla_init.c   | 173 +++++++++++++++-
->  drivers/scsi/qla2xxx/qla_inline.h |  30 +++
->  drivers/scsi/qla2xxx/qla_iocb.c   | 407 ++++++++++++++++++++++++++++++++++----
->  drivers/scsi/qla2xxx/qla_isr.c    | 122 +++++++-----
->  drivers/scsi/qla2xxx/qla_mbx.c    |  33 ++--
->  drivers/scsi/qla2xxx/qla_mid.c    | 114 ++++++-----
->  drivers/scsi/qla2xxx/qla_os.c     | 395 ++++++++++++++++++++++++------------
->  11 files changed, 1113 insertions(+), 334 deletions(-)
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+On 12/02/2016 01:15 AM, Juergen Gross wrote:
+> Instead of requesting a new slot on the ring to the backend early, do
+> so only after all has been setup for the request to be sent. This
+> makes error handling easier as we don't need to undo the request id
+> allocation and ring slot allocation.
+>
+> Suggested-by: Jan Beulich <jbeulich@suse.com>
+> Signed-off-by: Juergen Gross <jgross@suse.com>
+
+Reviewed-by: Boris Ostrovsky <boris.ostrovsky@oracle.com>
+
+(although it would be good to have someone familiar with this code look 
+at this as well).
