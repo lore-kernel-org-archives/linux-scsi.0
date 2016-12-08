@@ -1,59 +1,59 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] linux/types.h: enable endian checks for all sparse builds
-Date: Thu, 8 Dec 2016 07:53:59 +0200
-Message-ID: <20161208075152-mutt-send-email-mst@kernel.org>
-References: <1481164052-28036-1-git-send-email-mst@redhat.com>
-	<BLUPR02MB168374E98A6C86E43DF0BCFE81840@BLUPR02MB1683.namprd02.prod.outlook.com>
+From: ELISA WEBADMIN <kimura@tenant-house.com>
+Subject: kiireellinen webmail tili =?UTF-8?B?UMOkaXZpdHTDpMOk?=
+Date: Thu, 08 Dec 2016 15:06:42 +0900
+Message-ID: <201612080606.uB866g2b088666@www2858.sakura.ne.jp>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/mixed; boundary="------_4563544255848f872c5ad6_"
 Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <BLUPR02MB168374E98A6C86E43DF0BCFE81840@BLUPR02MB1683.namprd02.prod.outlook.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "kvm@vger.kernel.org" <kvm@vger.kernel.org>, Neil Armstrong <narmstrong@baylibre.com>, David Airlie <airlied@linux.ie>, "linux-remoteproc@vger.kernel.org" <linux-remoteproc@vger.kernel.org>, "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>, "virtualization@lists.linux-foundation.org" <virtualization@lists.linux-foundation.org>, "linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Herbert Xu <herbert@gondor.apana.org.au>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "v9fs-developer@lists.sourceforge.net" <v9fs-developer@lists.sourceforge.net>, Asias He <asias@redhat.com>, Arnd Bergmann <arnd@arndb.de>, "linux-kbuild@vger.kernel.org" <linux-kbuild@vger.kernel.org>, Jens Axboe <axboe@fb.com>, Michal Marek <mmarek@suse.com>, Stefan Hajnoczi <stef>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from www2858.sakura.ne.jp ([49.212.198.68]:17757 "EHLO
+        www2858.sakura.ne.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750800AbcLHGGp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 01:06:45 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: update@elisa.fi
 
-On Thu, Dec 08, 2016 at 05:21:47AM +0000, Bart Van Assche wrote:
-> On 12/07/16 18:29, Michael S. Tsirkin wrote:
-> > By now, linux is mostly endian-clean. Enabling endian-ness
-> > checks for everyone produces about 200 new sparse warnings for me -
-> > less than 10% over the 2000 sparse warnings already there.
-> >
-> > Not a big deal, OTOH enabling this helps people notice
-> > they are introducing new bugs.
-> >
-> > So let's just drop __CHECK_ENDIAN__. Follow-up patches
-> > can drop distinction between __bitwise and __bitwise__.
-> 
-> Hello Michael,
-> 
-> This patch makes a whole bunch of ccflags-y += -D__CHECK_ENDIAN__ 
-> statements obsolete. Have you considered to remove these statements?
+--------_4563544255848f872c5ad6_
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
 
-Absolutely. Just waiting for feedback on the idea.
+SHl2w6Qgc8OkaGvDtnBvc3RpbiBrw6R5dHTDpGrDpCEKWWh0ZW7DpGlzdMOkbW1lIHPDpGhrw7Zw
+b3N0aXBhbHZlbHVpZGVuIG9taW5haXN1dWtzaWEgdHVvbWFsbGEga2Fpa2tpZW4gYXNpYWtrYWlk
+ZW4ga8OkeXR0w7bDtm4gdXVkZW4gc2VsYWlucG9zdGluIGVsaSB3ZWJtYWlsLXBhbHZlbHVuLgpL
+bGlra2FhIGxpbmtracOkIHDDpGl2aXR0w6TDpCBzw6Roa8O2cG9zdGlpc2k6IGh0dHA6Ly9ndWlh
+cGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApO
+eWt5aW5lbiBzZWxhaW5wb3N0aSBlbGkgd2VibWFpbC1wYWx2ZWx1IGh0dHA6Ly9ndWlhcGFyYWZv
+cnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbCkga29ydmF1
+dHV1IGtva29uYWFuIHV1ZGVsbGEgcGFsdmVsdWxsYS4KTMO2eWTDpHQgdXVkZW4gcGFsdmVsdW4g
+b3NvaXR0ZWVzdGE6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9f
+X3Rhc2s9bG9naW4vbG9naW4uaHRtbApFbnNpbW3DpGlzZW4ga2lyamF1dHVtaXNlbiB5aHRleWRl
+c3PDpCBvc29pdGVraXJqYXNpIHNpc8OkbHTDtiBrb3Bpb2lkYWFuIHV1dGVlbiBwYWx2ZWx1dW4u
+IEh1b20hIEpvcyB0w6Rtw6RuIGrDpGxrZWVuIGxpc8Okw6R0IHZhbmhhc3NhIHdlYm1haWwtcGFs
+dmVsdXNzYSBvc29pdHRlaXRhIG9zb2l0ZWtpcmphYW4sIG5lIGVpdsOkdCBlbsOkw6Qga29waW9p
+ZHUgdXV0ZWVuIHBhbHZlbHV1bi4KSm9zIHRhcnZpdHNldCBrw6R5dMO2bm9wYXN0dXN0YSBzw6Ro
+a8O2cG9zdGlhc2lvaXNzYSwgb2xldGhhbiB5aHRleWRlc3PDpCBFbGlzYW4gT21hZ3VydXVuLiBP
+bWFndXJ1IHBhbHZlbGVlIG51bWVyb3NzYSAwNjAwIDkwMCA1MDAgYXJraXNpbiA44oCTMjEgamEg
+bGF1YW50YWluYSA54oCTMTcgKDIsMTkg4oKsL21pbiArIG1wbS9wdm0pLiBWb2l0IHR1dHVzdHVh
+IHBhbHZlbHV1biBvc29pdHRlZXNzYQpZc3TDpHbDpGxsaXNpbiB0ZXJ2ZWlzaW4sCkVsaXNhCj09
+PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09PT09PQpEZWFyIEVsc2EgdXNlciEKV2UgdW5pZnkgZS1tYWlsIHNl
+cnZpY2VzIGNhcGFiaWxpdGllcyBieSBicmluZ2luZyBhbGwgY2xpZW50cyB0byB1c2UgdGhlIG5l
+dyBicm93c2VyIG1haWwsIGllIHdlYm1haWwgc2VydmljZS4KQ2xpY2sgdGhlIGxpbmsgdG8gdXBk
+YXRlIHlvdXIgZW1haWw6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFp
+bC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApDdXJyZW50IHdlYiBtYWlsLCBpZSB3ZWJtYWlsIHNl
+cnZpY2UgKGh0dHA6Ly9ndWlhcGFyYWZvcnR1bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9
+bG9naW4vbG9naW4uaHRtbCkgaXMgcmVwbGFjZWQgd2l0aCBhbiBlbnRpcmVseSBuZXcgc2Vydmlj
+ZS4KWW91IHdpbGwgZmluZCB0aGUgbmV3IHNlcnZpY2UgYXQ6IGh0dHA6Ly9ndWlhcGFyYWZvcnR1
+bmEuY29tL2ZpL0VsaXNhd2VibWFpbC9fX3Rhc2s9bG9naW4vbG9naW4uaHRtbApVcG9uIGZpcnN0
+IGxvZ2dpbmcgeW91ciBhZGRyZXNzIGJvb2tzIGNvbnRlbnRzIGFyZSBjb3BpZWQgdG8gdGhlIG5l
+dyBzZXJ2aWNlLiBOQiEgSWYgeW91IHRoZW4gYWRkIGluIHRoZSBvbGQgd2VibWFpbCBzZXJ2aWNl
+IGFkZHJlc3NlcyBpbiB0aGUgYWRkcmVzcyBib29rLCB0aGV5IGFyZSBubyBsb25nZXIgY29waWVk
+IHRvIHRoZSBuZXcgc2VydmljZS4KSWYgeW91IG5lZWQgZ3VpZGFuY2Ugb24gdGhlIHVzZSBvZiBl
+LW1hdHRlcnMsIGluIGNvbm5lY3Rpb24gd2l0aCBFbGlzYSBwbGVhc2UgYmUgT21hZ3VydXVuLiBP
+bWFndXJ1IHNlcnZlcyBpc3N1ZSAwNjAwIDkwMCA1MDAsIHdlZWtkYXlzIDgtMjEgYW5kIFNhdHVy
+ZGF5cyA5LTE3ICgyLjE5IOKCrCAvIG1pbiArIG1vYmlsZSBjYWxsIGNoYXJnZSAvIGxvY2FsIG5l
+dHdvcmsgY2hhcmdlKS4gWW91IGNhbiB2aXNpdCB0aGUgc2VydmljZSBhdApCZXN0IHJlZ2FyZHMs
+CkVsaXNh
 
-> Additionally, there are notable exceptions to the rule that most drivers 
-> are endian-clean, e.g. drivers/scsi/qla2xxx. I would appreciate it if it 
-> would remain possible to check such drivers with sparse without enabling 
-> endianness checks. Have you considered to change #ifdef __CHECK_ENDIAN__ 
-> into e.g. #ifndef __DONT_CHECK_ENDIAN__?
-> 
-> Thanks,
-> 
-> Bart.
-
-The right thing is probably just to fix these, isn't it?
-Until then, why not just ignore the warnings?
-
--- 
-MST
+--------_4563544255848f872c5ad6_--
