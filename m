@@ -1,47 +1,69 @@
 From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH v2] lpfc: Fix possible NULL pointer dereference
-Date: Thu, 08 Dec 2016 11:01:30 -0800
-Message-ID: <1481223690.2361.13.camel@HansenPartnership.com>
-References: <1469799056-7708-1-git-send-email-jthumshirn@suse.de>
-         <yq1ziovn40r.fsf@sermon.lab.mkp.net>
+Subject: [GIT PULL] SCSI fixes for 4.9-rc8
+Date: Thu, 08 Dec 2016 11:02:07 -0800
+Message-ID: <1481223727.2361.14.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53184 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1753769AbcLHTBd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 14:01:33 -0500
-In-Reply-To: <yq1ziovn40r.fsf@sermon.lab.mkp.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Tyrel Datwyler <turtle.in.the.kernel@gmail.com>, James Smart <james.smart@broadcom.com>
 
-On Tue, 2016-08-02 at 01:17 -0400, Martin K. Petersen wrote:
-> > > > > > "Johannes" == Johannes Thumshirn <jthumshirn@suse.de>
-> > > > > > writes:
-> 
-> Johannes> Check for the existence of piocb->vport before accessing
-> it.
-> 
-> Applied to 4.8/scsi-queue.
+One small fix for a regression in a prior fix (again).  This time the
+condition in the prior fix BUG_ON proved to be wrong under certain
+circumstances causing a BUG to trigger where it shouldn't in the lpfc
+driver.
 
-OK, now that this has caused problems, could learn the lessons from it?
+The patch is available here:
 
-Lines like this:
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-+       BUG_ON(!piocb || !piocb->vport);
+The short changelog is:
 
-Should never appear in code.  They only have the potential to cause
-problems if the condition is inexact and they provide precisely no
-information over what a NULL deref in the kernel is going to tell us
-anyway ... this one even obscures information because you don't know if
-pciob was null or pciob->vport when it triggers.
+Mauricio Faria de Oliveira (1):
+      scsi: lpfc: fix oops/BUG in lpfc_sli_ringtxcmpl_put()
 
-The rule is never BUG_ON a NULL pointer unless you have an extremely
-good reason why the kernel NULL deref handler isn't adequate (which
-should be documented in the commit log).
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc_sli.c | 14 ++++++++------
+ 1 file changed, 8 insertions(+), 6 deletions(-)
+
+With full diff below.
 
 James
 
+---
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index c532605..f4f77c5 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -1323,18 +1323,20 @@ lpfc_sli_ringtxcmpl_put(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ {
+ 	lockdep_assert_held(&phba->hbalock);
+ 
+-	BUG_ON(!piocb || !piocb->vport);
++	BUG_ON(!piocb);
+ 
+ 	list_add_tail(&piocb->list, &pring->txcmplq);
+ 	piocb->iocb_flag |= LPFC_IO_ON_TXCMPLQ;
+ 
+ 	if ((unlikely(pring->ringno == LPFC_ELS_RING)) &&
+ 	   (piocb->iocb.ulpCommand != CMD_ABORT_XRI_CN) &&
+-	   (piocb->iocb.ulpCommand != CMD_CLOSE_XRI_CN) &&
+-	    (!(piocb->vport->load_flag & FC_UNLOADING)))
+-		mod_timer(&piocb->vport->els_tmofunc,
+-			  jiffies +
+-			  msecs_to_jiffies(1000 * (phba->fc_ratov << 1)));
++	   (piocb->iocb.ulpCommand != CMD_CLOSE_XRI_CN)) {
++		BUG_ON(!piocb->vport);
++		if (!(piocb->vport->load_flag & FC_UNLOADING))
++			mod_timer(&piocb->vport->els_tmofunc,
++				  jiffies +
++				  msecs_to_jiffies(1000 * (phba->fc_ratov << 1)));
++	}
+ 
+ 	return 0;
+ }
