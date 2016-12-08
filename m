@@ -1,40 +1,44 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V4 2/2] aacraid: remove wildcard for series 9 controllers
-Date: Wed, 07 Dec 2016 19:10:01 -0500
-Message-ID: <yq1pol3qo12.fsf@sermon.lab.mkp.net>
-References: <146706289746.29152.13840476577189238722.stgit@brunhilda>
-        <146706367078.29152.14405582249219794335.stgit@brunhilda>
-        <yq1a8ghoim3.fsf@sermon.lab.mkp.net>
-        <4993A297653ECB4581FA5C3C31323D191639AC20@avsrvexchmbx1.microsemi.net>
-        <4993A297653ECB4581FA5C3C31323D191639AE64@avsrvexchmbx1.microsemi.net>
-        <1473359114.2781.38.camel@linux.vnet.ibm.com>
-        <48C22F0C33E45A4F83E15DF49719341D38F495F6@avsrvexchmbx1.microsemi.net>
-        <ea9150f3-de17-4baf-b8f2-2fb1e8f9b990@email.android.com>
-        <4993A297653ECB4581FA5C3C31323D193B0B8DA3@avsrvexchmbx1.microsemi.net>
-        <4993A297653ECB4581FA5C3C31323D194180985F@avsrvexchmbx1.microsemi.net>
+Subject: Re: [PATCH] sd: make ->no_write_same independent of reported ->max_ws_blocks
+Date: Wed, 07 Dec 2016 19:18:31 -0500
+Message-ID: <yq1lgvrqnmw.fsf@sermon.lab.mkp.net>
+References: <20161205235638.11539-1-nicstange@gmail.com>
+        <yq1d1h5viob.fsf@sermon.lab.mkp.net> <87lgvteaz0.fsf@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:44317 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932478AbcLHAKs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 7 Dec 2016 19:10:48 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D194180985F@avsrvexchmbx1.microsemi.net>
-        (Don Brace's message of "Wed, 7 Dec 2016 21:44:08 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <87lgvteaz0.fsf@gmail.com> (Nicolai Stange's message of "Tue, 06
+        Dec 2016 09:08:19 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Nicolai Stange <nicstange@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Shaun Tancheff <shaun.tancheff@seagate.com>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, Christoph Hellwig <hch@infradead.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: James Bottomley <James.Bottomley@Hansenpartnership.com>, Scott Benesh <scott.benesh@microsemi.com>, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Viswas G <viswas.g@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "Nicolai" == Nicolai Stange <nicstange@gmail.com> writes:
 
-Don,
+Nicolai,
 
->> The officially supported driver for this ID is smartpqi.
+Nicolai> 1.) Do these older SCSI devices have a way to report
+Nicolai>     ->max_ws_blocks?
 
-Don> Can there be any movement on this patch?
+I'm afraid not.
 
-It's been more than a couple of weeks. Please repost.
+Nicolai> 3.) Those older devices that have ->max_ws_blocks >
+Nicolai>     SD_MAX_WS10_BLOCKS but ->ws16 == ->ws10 == 0, i.e. the
+Nicolai>     heuristicated ones would always be given WRITE_SAME, not
+Nicolai>     WRITE_SAME_16 commands?  C.f. sd_setup_write_same_cmnd():
+Nicolai>     if ->ws16 is not set, do WRITE_SAME. Isn't this a little
+Nicolai>     bit odd given that the reported -> max_ws_blocks would be
+Nicolai>     greater than SD_MAX_WS10_BLOCKS?
+
+The check looks confusing because it caps the number of blocks to 0xFFFF
+(the WRITE SAME(10) limit) for WRITE SAME(16) commands. Several older
+devices accept the 16-byte command which allows for a bigger block range
+but they only actually check the lower two bytes. This will cause data
+corruption as parts of a block range may not be zeroed as requested.
+
+FWIW, I'm in agreement with your patch to disable write same in libata
+as a quick fix for 4.9.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
