@@ -1,113 +1,328 @@
 From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 2/3] zfcp: do not trace pure benign residual HBA responses at default level
-Date: Fri,  9 Dec 2016 17:16:32 +0100
-Message-ID: <20161209161633.72445-3-maier@linux.vnet.ibm.com>
+Subject: [PATCH 3/3] zfcp: fix rport unblock race with LUN recovery
+Date: Fri,  9 Dec 2016 17:16:33 +0100
+Message-ID: <20161209161633.72445-4-maier@linux.vnet.ibm.com>
 References: <20161209161633.72445-1-maier@linux.vnet.ibm.com>
 Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20161209161633.72445-1-maier@linux.vnet.ibm.com>
 Sender: stable-owner@vger.kernel.org
 To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 37+" <stable@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 32+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Since quite a while, Linux issues enough SCSI commands per scsi_device
-which successfully return with FCP_RESID_UNDER, FSF_FCP_RSP_AVAILABLE,
-and SAM_STAT_GOOD.
-This floods the HBA trace area and we cannot see other and
-important HBA trace records long enough.
+It is unavoidable that zfcp_scsi_queuecommand() has to finish
+requests with DID_IMM_RETRY (like fc_remote_port_chkready())
+during the time window when zfcp detected an unavailable rport but
+fc_remote_port_delete(), which is asynchronous via
+zfcp_scsi_schedule_rport_block(), has not yet blocked the rport.
 
-Therefore, do not trace HBA response errors for pure
-benign residual under counts at the default trace level.
+However, for the case when the rport becomes available again,
+we should prevent unblocking the rport too early.
+In contrast to other FCP LLDDs, zfcp has to open each LUN with the
+FCP channel hardware before it can send I/O to a LUN.
+So if a port already has LUNs attached and we unblock the rport just
+after port recovery, recoveries of LUNs behind this port can still be
+pending which in turn force zfcp_scsi_queuecommand() to unnecessarily
+finish requests with DID_IMM_RETRY.
 
-This excludes benign residual under count combined with other
-validity bits set in FCP_RSP_IU, such as FCP_SNS_LEN_VAL.
-For all those other cases, we still do want to see
-both the HBA record and the corresponding SCSI record by default.
+This also opens a time window with unblocked rport
+(until the followup LUN reopen recovery has finished).
+If a scsi_cmnd timeout occurs during this time window
+fc_timed_out() cannot work as desired and such command
+would indeed time out and trigger scsi_eh. This prevents
+a clean and timely path failover.
+This should not happen if the path issue can be recovered
+on FC transport layer such as path issues involving RSCNs.
+
+Fix this by only calling zfcp_scsi_schedule_rport_register(),
+to asynchronously trigger fc_remote_port_add(),
+after all LUN recoveries as children of the rport have finished
+and no new recoveries of equal or higher order were triggered meanwhile.
+Finished intentionally includes any recovery result no matter if
+successful or failed (still unblock rport so other successful LUNs work).
+For simplicity, we check after each finished LUN recovery if there
+is another LUN recovery pending on the same port and then do nothing.
+We handle the special case of a successful recovery of a port
+without LUN children the same way without changing this case's semantics.
+
+For debugging we introduce 2 new trace records written if the rport
+unblock attempt was aborted due to still unfinished or freshly triggered
+recovery. The records are only written above the default trace level.
+
+Benjamin noticed the important special case of new recovery that can be
+triggered between having given up the erp_lock and before calling
+zfcp_erp_action_cleanup() within zfcp_erp_strategy().
+We must avoid the following sequence:
+
+ERP thread                 rport_work      other context
+-------------------------  --------------  --------------------------------
+port is unblocked, rport still blocked,
+ due to pending/running ERP action,
+ so ((port->status & ...UNBLOCK) != 0)
+ and (port->rport == NULL)
+unlock ERP
+zfcp_erp_action_cleanup()
+case ZFCP_ERP_ACTION_REOPEN_LUN:
+zfcp_erp_try_rport_unblock()
+((status & ...UNBLOCK) != 0) [OLD!]
+                                           zfcp_erp_port_reopen()
+                                           lock ERP
+                                           zfcp_erp_port_block()
+                                           port->status clear ...UNBLOCK
+                                           unlock ERP
+                                           zfcp_scsi_schedule_rport_block()
+                                           port->rport_task = RPORT_DEL
+                                           queue_work(rport_work)
+                           zfcp_scsi_rport_work()
+                           (port->rport_task != RPORT_ADD)
+                           port->rport_task = RPORT_NONE
+                           zfcp_scsi_rport_block()
+                           if (!port->rport) return
+zfcp_scsi_schedule_rport_register()
+port->rport_task = RPORT_ADD
+queue_work(rport_work)
+                           zfcp_scsi_rport_work()
+                           (port->rport_task == RPORT_ADD)
+                           port->rport_task = RPORT_NONE
+                           zfcp_scsi_rport_register()
+                           (port->rport == NULL)
+                           rport = fc_remote_port_add()
+                           port->rport = rport;
+
+Now the rport was erroneously unblocked while the zfcp_port is blocked.
+This is another situation we want to avoid due to scsi_eh potential. This
+state would at least remain until the new recovery from the other context
+finished successfully, or potentially forever if it failed.
+In order to close this race, we take the erp_lock inside
+zfcp_erp_try_rport_unblock() when checking the status of zfcp_port or LUN.
+With that, the possible corresponding rport state sequences would be:
+(unblock[ERP thread],block[other context]) if the ERP thread gets erp_lock
+first and still sees ((port->status & ...UNBLOCK) != 0),
+(block[other context],NOP[ERP thread]) if the ERP thread gets erp_lock
+after the other context has already cleard ...UNBLOCK from port->status.
+
+Since checking fields of struct erp_action is unsafe because they could
+have been overwritten (re-used for new recovery) meanwhile, we only check
+status of zfcp_port and LUN since these are only changed under erp_lock
+elsewhere. Regarding the check of the proper status flags
+(port or port_forced are similar to the shown adapter recovery):
+
+[zfcp_erp_adapter_shutdown()]
+zfcp_erp_adapter_reopen()
+ zfcp_erp_adapter_block()
+  * clear UNBLOCK ---------------------------------------+
+ zfcp_scsi_schedule_rports_block()                       |
+ write_lock_irqsave(&adapter->erp_lock, flags);-------+  |
+ zfcp_erp_action_enqueue()                            |  |
+  zfcp_erp_setup_act()                                |  |
+   * set ERP_INUSE -----------------------------------|--|--+
+ write_unlock_irqrestore(&adapter->erp_lock, flags);--+  |  |
+.context-switch.                                         |  |
+zfcp_erp_thread()                                        |  |
+ zfcp_erp_strategy()                                     |  |
+  write_lock_irqsave(&adapter->erp_lock, flags);------+  |  |
+  ...                                                 |  |  |
+  zfcp_erp_strategy_check_target()                    |  |  |
+   zfcp_erp_strategy_check_adapter()                  |  |  |
+    zfcp_erp_adapter_unblock()                        |  |  |
+     * set UNBLOCK -----------------------------------|--+  |
+  zfcp_erp_action_dequeue()                           |     |
+   * clear ERP_INUSE ---------------------------------|-----+
+  ...                                                 |
+  write_unlock_irqrestore(&adapter->erp_lock, flags);-+
+
+Hence, we should check for both UNBLOCK and ERP_INUSE because they are
+interleaved.
+Also we need to explicitly check ERP_FAILED for the link down case
+which currently does not clear the UNBLOCK flag in
+zfcp_fsf_link_down_info_eval().
 
 Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Fixes: a54ca0f62f95 ("[SCSI] zfcp: Redesign of the debug tracing for HBA records.")
-Cc: <stable@vger.kernel.org> #2.6.37+
+Fixes: 8830271c4819 ("[SCSI] zfcp: Dont fail SCSI commands when transitioning to blocked fc_rport")
+Fixes: a2fa0aede07c ("[SCSI] zfcp: Block FC transport rports early on errors")
+Fixes: 5f852be9e11d ("[SCSI] zfcp: Fix deadlock between zfcp ERP and SCSI")
+Fixes: 338151e06608 ("[SCSI] zfcp: make use of fc_remote_port_delete when target port is unavailable")
+Fixes: 3859f6a248cb ("[PATCH] zfcp: add rports to enable scsi_add_device to work again")
+Cc: <stable@vger.kernel.org> #2.6.32+
 Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
 ---
- drivers/s390/scsi/zfcp_dbf.h | 30 ++++++++++++++++++++++++++++--
- drivers/s390/scsi/zfcp_fsf.h |  3 ++-
- 2 files changed, 30 insertions(+), 3 deletions(-)
+ drivers/s390/scsi/zfcp_dbf.c  | 17 +++++++++---
+ drivers/s390/scsi/zfcp_erp.c  | 61 +++++++++++++++++++++++++++++++++++++++++--
+ drivers/s390/scsi/zfcp_ext.h  |  4 ++-
+ drivers/s390/scsi/zfcp_scsi.c |  4 +--
+ 4 files changed, 77 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.h b/drivers/s390/scsi/zfcp_dbf.h
-index 2d06b5d2c05b..db186d44cfaf 100644
---- a/drivers/s390/scsi/zfcp_dbf.h
-+++ b/drivers/s390/scsi/zfcp_dbf.h
-@@ -2,7 +2,7 @@
-  * zfcp device driver
-  * debug feature declarations
-  *
-- * Copyright IBM Corp. 2008, 2015
-+ * Copyright IBM Corp. 2008, 2016
+diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
+index 581001989937..d5bf36ec8a75 100644
+--- a/drivers/s390/scsi/zfcp_dbf.c
++++ b/drivers/s390/scsi/zfcp_dbf.c
+@@ -289,11 +289,12 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
+ 
+ 
+ /**
+- * zfcp_dbf_rec_run - trace event related to running recovery
++ * zfcp_dbf_rec_run_lvl - trace event related to running recovery
++ * @level: trace level to be used for event
+  * @tag: identifier for event
+  * @erp: erp_action running
   */
+-void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
++void zfcp_dbf_rec_run_lvl(int level, char *tag, struct zfcp_erp_action *erp)
+ {
+ 	struct zfcp_dbf *dbf = erp->adapter->dbf;
+ 	struct zfcp_dbf_rec *rec = &dbf->rec_buf;
+@@ -319,11 +320,21 @@ void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
+ 	else
+ 		rec->u.run.rec_count = atomic_read(&erp->adapter->erp_counter);
  
- #ifndef ZFCP_DBF_H
-@@ -283,6 +283,30 @@ struct zfcp_dbf {
- 	struct zfcp_dbf_scsi		scsi_buf;
- };
+-	debug_event(dbf->rec, 1, rec, sizeof(*rec));
++	debug_event(dbf->rec, level, rec, sizeof(*rec));
+ 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
+ }
  
-+/**
-+ * zfcp_dbf_hba_fsf_resp_suppress - true if we should not trace by default
-+ * @req: request that has been completed
-+ *
-+ * Returns true if FCP response with only benign residual under count.
+ /**
++ * zfcp_dbf_rec_run - trace event related to running recovery
++ * @tag: identifier for event
++ * @erp: erp_action running
 + */
-+static inline
-+bool zfcp_dbf_hba_fsf_resp_suppress(struct zfcp_fsf_req *req)
++void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
 +{
-+	struct fsf_qtcb *qtcb = req->qtcb;
-+	u32 fsf_stat = qtcb->header.fsf_status;
-+	struct fcp_resp *fcp_rsp;
-+	u8 rsp_flags, fr_status;
-+
-+	if (qtcb->prefix.qtcb_type != FSF_IO_COMMAND)
-+		return false; /* not an FCP response */
-+	fcp_rsp = (struct fcp_resp *)&qtcb->bottom.io.fcp_rsp;
-+	rsp_flags = fcp_rsp->fr_flags;
-+	fr_status = fcp_rsp->fr_status;
-+	return (fsf_stat == FSF_FCP_RSP_AVAILABLE) &&
-+		(rsp_flags == FCP_RESID_UNDER) &&
-+		(fr_status == SAM_STAT_GOOD);
++	zfcp_dbf_rec_run_lvl(1, tag, erp);
 +}
 +
- static inline
- void zfcp_dbf_hba_fsf_resp(char *tag, int level, struct zfcp_fsf_req *req)
- {
-@@ -304,7 +328,9 @@ void zfcp_dbf_hba_fsf_response(struct zfcp_fsf_req *req)
- 		zfcp_dbf_hba_fsf_resp("fs_perr", 1, req);
- 
- 	} else if (qtcb->header.fsf_status != FSF_GOOD) {
--		zfcp_dbf_hba_fsf_resp("fs_ferr", 1, req);
-+		zfcp_dbf_hba_fsf_resp("fs_ferr",
-+				      zfcp_dbf_hba_fsf_resp_suppress(req)
-+				      ? 5 : 1, req);
- 
- 	} else if ((req->fsf_command == FSF_QTCB_OPEN_PORT_WITH_DID) ||
- 		   (req->fsf_command == FSF_QTCB_OPEN_LUN)) {
-diff --git a/drivers/s390/scsi/zfcp_fsf.h b/drivers/s390/scsi/zfcp_fsf.h
-index be1c04b334c5..ea3c76ac0de1 100644
---- a/drivers/s390/scsi/zfcp_fsf.h
-+++ b/drivers/s390/scsi/zfcp_fsf.h
++/**
+  * zfcp_dbf_rec_run_wka - trace wka port event with info like running recovery
+  * @tag: identifier for event
+  * @wka_port: well known address port
+diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
+index a59d678125bd..7ccfce559034 100644
+--- a/drivers/s390/scsi/zfcp_erp.c
++++ b/drivers/s390/scsi/zfcp_erp.c
 @@ -3,7 +3,7 @@
   *
-  * Interface to the FSF support functions.
+  * Error Recovery Procedures (ERP).
   *
 - * Copyright IBM Corp. 2002, 2015
 + * Copyright IBM Corp. 2002, 2016
   */
  
- #ifndef FSF_H
-@@ -78,6 +78,7 @@
- #define FSF_APP_TAG_CHECK_FAILURE		0x00000082
- #define FSF_REF_TAG_CHECK_FAILURE		0x00000083
- #define FSF_ADAPTER_STATUS_AVAILABLE		0x000000AD
-+#define FSF_FCP_RSP_AVAILABLE			0x000000AF
- #define FSF_UNKNOWN_COMMAND			0x000000E2
- #define FSF_UNKNOWN_OP_SUBTYPE                  0x000000E3
- #define FSF_INVALID_COMMAND_OPTION              0x000000E5
+ #define KMSG_COMPONENT "zfcp"
+@@ -1204,6 +1204,62 @@ static void zfcp_erp_action_dequeue(struct zfcp_erp_action *erp_action)
+ 	}
+ }
+ 
++/**
++ * zfcp_erp_try_rport_unblock - unblock rport if no more/new recovery
++ * @port: zfcp_port whose fc_rport we should try to unblock
++ */
++static void zfcp_erp_try_rport_unblock(struct zfcp_port *port)
++{
++	unsigned long flags;
++	struct zfcp_adapter *adapter = port->adapter;
++	int port_status;
++	struct Scsi_Host *shost = adapter->scsi_host;
++	struct scsi_device *sdev;
++
++	write_lock_irqsave(&adapter->erp_lock, flags);
++	port_status = atomic_read(&port->status);
++	if ((port_status & ZFCP_STATUS_COMMON_UNBLOCKED)    == 0 ||
++	    (port_status & (ZFCP_STATUS_COMMON_ERP_INUSE |
++			    ZFCP_STATUS_COMMON_ERP_FAILED)) != 0) {
++		/* new ERP of severity >= port triggered elsewhere meanwhile or
++		 * local link down (adapter erp_failed but not clear unblock)
++		 */
++		zfcp_dbf_rec_run_lvl(4, "ertru_p", &port->erp_action);
++		write_unlock_irqrestore(&adapter->erp_lock, flags);
++		return;
++	}
++	spin_lock(shost->host_lock);
++	__shost_for_each_device(sdev, shost) {
++		struct zfcp_scsi_dev *zsdev = sdev_to_zfcp(sdev);
++		int lun_status;
++
++		if (zsdev->port != port)
++			continue;
++		/* LUN under port of interest */
++		lun_status = atomic_read(&zsdev->status);
++		if ((lun_status & ZFCP_STATUS_COMMON_ERP_FAILED) != 0)
++			continue; /* unblock rport despite failed LUNs */
++		/* LUN recovery not given up yet [maybe follow-up pending] */
++		if ((lun_status & ZFCP_STATUS_COMMON_UNBLOCKED) == 0 ||
++		    (lun_status & ZFCP_STATUS_COMMON_ERP_INUSE) != 0) {
++			/* LUN blocked:
++			 * not yet unblocked [LUN recovery pending]
++			 * or meanwhile blocked [new LUN recovery triggered]
++			 */
++			zfcp_dbf_rec_run_lvl(4, "ertru_l", &zsdev->erp_action);
++			spin_unlock(shost->host_lock);
++			write_unlock_irqrestore(&adapter->erp_lock, flags);
++			return;
++		}
++	}
++	/* now port has no child or all children have completed recovery,
++	 * and no ERP of severity >= port was meanwhile triggered elsewhere
++	 */
++	zfcp_scsi_schedule_rport_register(port);
++	spin_unlock(shost->host_lock);
++	write_unlock_irqrestore(&adapter->erp_lock, flags);
++}
++
+ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
+ {
+ 	struct zfcp_adapter *adapter = act->adapter;
+@@ -1214,6 +1270,7 @@ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
+ 	case ZFCP_ERP_ACTION_REOPEN_LUN:
+ 		if (!(act->status & ZFCP_STATUS_ERP_NO_REF))
+ 			scsi_device_put(sdev);
++		zfcp_erp_try_rport_unblock(port);
+ 		break;
+ 
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT:
+@@ -1224,7 +1281,7 @@ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
+ 		 */
+ 		if (act->step != ZFCP_ERP_STEP_UNINITIALIZED)
+ 			if (result == ZFCP_ERP_SUCCEEDED)
+-				zfcp_scsi_schedule_rport_register(port);
++				zfcp_erp_try_rport_unblock(port);
+ 		/* fall through */
+ 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
+ 		put_device(&port->dev);
+diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
+index c8fed9fa1cca..21c8c689b02b 100644
+--- a/drivers/s390/scsi/zfcp_ext.h
++++ b/drivers/s390/scsi/zfcp_ext.h
+@@ -3,7 +3,7 @@
+  *
+  * External function declarations.
+  *
+- * Copyright IBM Corp. 2002, 2015
++ * Copyright IBM Corp. 2002, 2016
+  */
+ 
+ #ifndef ZFCP_EXT_H
+@@ -35,6 +35,8 @@ extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
+ extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
+ 			      struct zfcp_port *, struct scsi_device *, u8, u8);
+ extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
++extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
++				 struct zfcp_erp_action *erp);
+ extern void zfcp_dbf_rec_run_wka(char *, struct zfcp_fc_wka_port *, u64);
+ extern void zfcp_dbf_hba_fsf_uss(char *, struct zfcp_fsf_req *);
+ extern void zfcp_dbf_hba_fsf_res(char *, int, struct zfcp_fsf_req *);
+diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
+index 11cd18c134c1..07ffdbb5107f 100644
+--- a/drivers/s390/scsi/zfcp_scsi.c
++++ b/drivers/s390/scsi/zfcp_scsi.c
+@@ -88,9 +88,7 @@ int zfcp_scsi_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scpnt)
+ 	}
+ 
+ 	if (unlikely(!(status & ZFCP_STATUS_COMMON_UNBLOCKED))) {
+-		/* This could be either
+-		 * open LUN pending: this is temporary, will result in
+-		 *	open LUN or ERP_FAILED, so retry command
++		/* This could be
+ 		 * call to rport_delete pending: mimic retry from
+ 		 * 	fc_remote_port_chkready until rport is BLOCKED
+ 		 */
 -- 
 2.8.4
