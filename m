@@ -1,328 +1,203 @@
-From: Steffen Maier <maier@linux.vnet.ibm.com>
-Subject: [PATCH 3/3] zfcp: fix rport unblock race with LUN recovery
-Date: Fri,  9 Dec 2016 17:16:33 +0100
-Message-ID: <20161209161633.72445-4-maier@linux.vnet.ibm.com>
-References: <20161209161633.72445-1-maier@linux.vnet.ibm.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20161209161633.72445-1-maier@linux.vnet.ibm.com>
-Sender: stable-owner@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, Steffen Maier <maier@linux.vnet.ibm.com>, "#2 . 6 . 32+" <stable@vger.kernel.org>
+From: adam radford <aradford@gmail.com>
+Subject: [PATCH RESEND] Update 3ware driver email addresses
+Date: Fri, 9 Dec 2016 11:08:05 -0800
+Message-ID: <CAHtARFHmfvhDeO93L30dO+uRdqZLS0vNY5RopZRxzdW9T+_xVg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:35186 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932197AbcLITII (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2016 14:08:08 -0500
+Received: by mail-wm0-f68.google.com with SMTP id a20so5447398wme.2
+        for <linux-scsi@vger.kernel.org>; Fri, 09 Dec 2016 11:08:07 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi <linux-scsi@vger.kernel.org>
 
-It is unavoidable that zfcp_scsi_queuecommand() has to finish
-requests with DID_IMM_RETRY (like fc_remote_port_chkready())
-during the time window when zfcp detected an unavailable rport but
-fc_remote_port_delete(), which is asynchronous via
-zfcp_scsi_schedule_rport_block(), has not yet blocked the rport.
+This change updates the 3ware drivers (3w-xxxx, 3w-9xxx, 3w-sas) email
+addresses from linuxraid@lsi.com to aradford@gmail.com, since the old
+email address doesn't exist.
 
-However, for the case when the rport becomes available again,
-we should prevent unblocking the rport too early.
-In contrast to other FCP LLDDs, zfcp has to open each LUN with the
-FCP channel hardware before it can send I/O to a LUN.
-So if a port already has LUNs attached and we unblock the rport just
-after port recovery, recoveries of LUNs behind this port can still be
-pending which in turn force zfcp_scsi_queuecommand() to unnecessarily
-finish requests with DID_IMM_RETRY.
+This patch was updated to remove www.lsi.com text.
 
-This also opens a time window with unblocked rport
-(until the followup LUN reopen recovery has finished).
-If a scsi_cmnd timeout occurs during this time window
-fc_timed_out() cannot work as desired and such command
-would indeed time out and trigger scsi_eh. This prevents
-a clean and timely path failover.
-This should not happen if the path issue can be recovered
-on FC transport layer such as path issues involving RSCNs.
-
-Fix this by only calling zfcp_scsi_schedule_rport_register(),
-to asynchronously trigger fc_remote_port_add(),
-after all LUN recoveries as children of the rport have finished
-and no new recoveries of equal or higher order were triggered meanwhile.
-Finished intentionally includes any recovery result no matter if
-successful or failed (still unblock rport so other successful LUNs work).
-For simplicity, we check after each finished LUN recovery if there
-is another LUN recovery pending on the same port and then do nothing.
-We handle the special case of a successful recovery of a port
-without LUN children the same way without changing this case's semantics.
-
-For debugging we introduce 2 new trace records written if the rport
-unblock attempt was aborted due to still unfinished or freshly triggered
-recovery. The records are only written above the default trace level.
-
-Benjamin noticed the important special case of new recovery that can be
-triggered between having given up the erp_lock and before calling
-zfcp_erp_action_cleanup() within zfcp_erp_strategy().
-We must avoid the following sequence:
-
-ERP thread                 rport_work      other context
--------------------------  --------------  --------------------------------
-port is unblocked, rport still blocked,
- due to pending/running ERP action,
- so ((port->status & ...UNBLOCK) != 0)
- and (port->rport == NULL)
-unlock ERP
-zfcp_erp_action_cleanup()
-case ZFCP_ERP_ACTION_REOPEN_LUN:
-zfcp_erp_try_rport_unblock()
-((status & ...UNBLOCK) != 0) [OLD!]
-                                           zfcp_erp_port_reopen()
-                                           lock ERP
-                                           zfcp_erp_port_block()
-                                           port->status clear ...UNBLOCK
-                                           unlock ERP
-                                           zfcp_scsi_schedule_rport_block()
-                                           port->rport_task = RPORT_DEL
-                                           queue_work(rport_work)
-                           zfcp_scsi_rport_work()
-                           (port->rport_task != RPORT_ADD)
-                           port->rport_task = RPORT_NONE
-                           zfcp_scsi_rport_block()
-                           if (!port->rport) return
-zfcp_scsi_schedule_rport_register()
-port->rport_task = RPORT_ADD
-queue_work(rport_work)
-                           zfcp_scsi_rport_work()
-                           (port->rport_task == RPORT_ADD)
-                           port->rport_task = RPORT_NONE
-                           zfcp_scsi_rport_register()
-                           (port->rport == NULL)
-                           rport = fc_remote_port_add()
-                           port->rport = rport;
-
-Now the rport was erroneously unblocked while the zfcp_port is blocked.
-This is another situation we want to avoid due to scsi_eh potential. This
-state would at least remain until the new recovery from the other context
-finished successfully, or potentially forever if it failed.
-In order to close this race, we take the erp_lock inside
-zfcp_erp_try_rport_unblock() when checking the status of zfcp_port or LUN.
-With that, the possible corresponding rport state sequences would be:
-(unblock[ERP thread],block[other context]) if the ERP thread gets erp_lock
-first and still sees ((port->status & ...UNBLOCK) != 0),
-(block[other context],NOP[ERP thread]) if the ERP thread gets erp_lock
-after the other context has already cleard ...UNBLOCK from port->status.
-
-Since checking fields of struct erp_action is unsafe because they could
-have been overwritten (re-used for new recovery) meanwhile, we only check
-status of zfcp_port and LUN since these are only changed under erp_lock
-elsewhere. Regarding the check of the proper status flags
-(port or port_forced are similar to the shown adapter recovery):
-
-[zfcp_erp_adapter_shutdown()]
-zfcp_erp_adapter_reopen()
- zfcp_erp_adapter_block()
-  * clear UNBLOCK ---------------------------------------+
- zfcp_scsi_schedule_rports_block()                       |
- write_lock_irqsave(&adapter->erp_lock, flags);-------+  |
- zfcp_erp_action_enqueue()                            |  |
-  zfcp_erp_setup_act()                                |  |
-   * set ERP_INUSE -----------------------------------|--|--+
- write_unlock_irqrestore(&adapter->erp_lock, flags);--+  |  |
-.context-switch.                                         |  |
-zfcp_erp_thread()                                        |  |
- zfcp_erp_strategy()                                     |  |
-  write_lock_irqsave(&adapter->erp_lock, flags);------+  |  |
-  ...                                                 |  |  |
-  zfcp_erp_strategy_check_target()                    |  |  |
-   zfcp_erp_strategy_check_adapter()                  |  |  |
-    zfcp_erp_adapter_unblock()                        |  |  |
-     * set UNBLOCK -----------------------------------|--+  |
-  zfcp_erp_action_dequeue()                           |     |
-   * clear ERP_INUSE ---------------------------------|-----+
-  ...                                                 |
-  write_unlock_irqrestore(&adapter->erp_lock, flags);-+
-
-Hence, we should check for both UNBLOCK and ERP_INUSE because they are
-interleaved.
-Also we need to explicitly check ERP_FAILED for the link down case
-which currently does not clear the UNBLOCK flag in
-zfcp_fsf_link_down_info_eval().
-
-Signed-off-by: Steffen Maier <maier@linux.vnet.ibm.com>
-Fixes: 8830271c4819 ("[SCSI] zfcp: Dont fail SCSI commands when transitioning to blocked fc_rport")
-Fixes: a2fa0aede07c ("[SCSI] zfcp: Block FC transport rports early on errors")
-Fixes: 5f852be9e11d ("[SCSI] zfcp: Fix deadlock between zfcp ERP and SCSI")
-Fixes: 338151e06608 ("[SCSI] zfcp: make use of fc_remote_port_delete when target port is unavailable")
-Fixes: 3859f6a248cb ("[PATCH] zfcp: add rports to enable scsi_add_device to work again")
-Cc: <stable@vger.kernel.org> #2.6.32+
-Reviewed-by: Benjamin Block <bblock@linux.vnet.ibm.com>
+Signed-off-by: Adam Radford <aradford@gmail.com>
 ---
- drivers/s390/scsi/zfcp_dbf.c  | 17 +++++++++---
- drivers/s390/scsi/zfcp_erp.c  | 61 +++++++++++++++++++++++++++++++++++++++++--
- drivers/s390/scsi/zfcp_ext.h  |  4 ++-
- drivers/s390/scsi/zfcp_scsi.c |  4 +--
- 4 files changed, 77 insertions(+), 9 deletions(-)
+ MAINTAINERS            | 2 +-
+ drivers/scsi/3w-9xxx.c | 9 +++------
+ drivers/scsi/3w-9xxx.h | 9 +++------
+ drivers/scsi/3w-sas.c  | 7 ++-----
+ drivers/scsi/3w-sas.h  | 7 ++-----
+ drivers/scsi/3w-xxxx.c | 7 ++-----
+ drivers/scsi/3w-xxxx.h | 7 ++-----
+ 7 files changed, 15 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/s390/scsi/zfcp_dbf.c b/drivers/s390/scsi/zfcp_dbf.c
-index 581001989937..d5bf36ec8a75 100644
---- a/drivers/s390/scsi/zfcp_dbf.c
-+++ b/drivers/s390/scsi/zfcp_dbf.c
-@@ -289,11 +289,12 @@ void zfcp_dbf_rec_trig(char *tag, struct zfcp_adapter *adapter,
- 
- 
- /**
-- * zfcp_dbf_rec_run - trace event related to running recovery
-+ * zfcp_dbf_rec_run_lvl - trace event related to running recovery
-+ * @level: trace level to be used for event
-  * @tag: identifier for event
-  * @erp: erp_action running
-  */
--void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
-+void zfcp_dbf_rec_run_lvl(int level, char *tag, struct zfcp_erp_action *erp)
- {
- 	struct zfcp_dbf *dbf = erp->adapter->dbf;
- 	struct zfcp_dbf_rec *rec = &dbf->rec_buf;
-@@ -319,11 +320,21 @@ void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
- 	else
- 		rec->u.run.rec_count = atomic_read(&erp->adapter->erp_counter);
- 
--	debug_event(dbf->rec, 1, rec, sizeof(*rec));
-+	debug_event(dbf->rec, level, rec, sizeof(*rec));
- 	spin_unlock_irqrestore(&dbf->rec_lock, flags);
- }
- 
- /**
-+ * zfcp_dbf_rec_run - trace event related to running recovery
-+ * @tag: identifier for event
-+ * @erp: erp_action running
-+ */
-+void zfcp_dbf_rec_run(char *tag, struct zfcp_erp_action *erp)
-+{
-+	zfcp_dbf_rec_run_lvl(1, tag, erp);
-+}
-+
-+/**
-  * zfcp_dbf_rec_run_wka - trace wka port event with info like running recovery
-  * @tag: identifier for event
-  * @wka_port: well known address port
-diff --git a/drivers/s390/scsi/zfcp_erp.c b/drivers/s390/scsi/zfcp_erp.c
-index a59d678125bd..7ccfce559034 100644
---- a/drivers/s390/scsi/zfcp_erp.c
-+++ b/drivers/s390/scsi/zfcp_erp.c
-@@ -3,7 +3,7 @@
-  *
-  * Error Recovery Procedures (ERP).
-  *
-- * Copyright IBM Corp. 2002, 2015
-+ * Copyright IBM Corp. 2002, 2016
-  */
- 
- #define KMSG_COMPONENT "zfcp"
-@@ -1204,6 +1204,62 @@ static void zfcp_erp_action_dequeue(struct zfcp_erp_action *erp_action)
- 	}
- }
- 
-+/**
-+ * zfcp_erp_try_rport_unblock - unblock rport if no more/new recovery
-+ * @port: zfcp_port whose fc_rport we should try to unblock
-+ */
-+static void zfcp_erp_try_rport_unblock(struct zfcp_port *port)
-+{
-+	unsigned long flags;
-+	struct zfcp_adapter *adapter = port->adapter;
-+	int port_status;
-+	struct Scsi_Host *shost = adapter->scsi_host;
-+	struct scsi_device *sdev;
-+
-+	write_lock_irqsave(&adapter->erp_lock, flags);
-+	port_status = atomic_read(&port->status);
-+	if ((port_status & ZFCP_STATUS_COMMON_UNBLOCKED)    == 0 ||
-+	    (port_status & (ZFCP_STATUS_COMMON_ERP_INUSE |
-+			    ZFCP_STATUS_COMMON_ERP_FAILED)) != 0) {
-+		/* new ERP of severity >= port triggered elsewhere meanwhile or
-+		 * local link down (adapter erp_failed but not clear unblock)
-+		 */
-+		zfcp_dbf_rec_run_lvl(4, "ertru_p", &port->erp_action);
-+		write_unlock_irqrestore(&adapter->erp_lock, flags);
-+		return;
-+	}
-+	spin_lock(shost->host_lock);
-+	__shost_for_each_device(sdev, shost) {
-+		struct zfcp_scsi_dev *zsdev = sdev_to_zfcp(sdev);
-+		int lun_status;
-+
-+		if (zsdev->port != port)
-+			continue;
-+		/* LUN under port of interest */
-+		lun_status = atomic_read(&zsdev->status);
-+		if ((lun_status & ZFCP_STATUS_COMMON_ERP_FAILED) != 0)
-+			continue; /* unblock rport despite failed LUNs */
-+		/* LUN recovery not given up yet [maybe follow-up pending] */
-+		if ((lun_status & ZFCP_STATUS_COMMON_UNBLOCKED) == 0 ||
-+		    (lun_status & ZFCP_STATUS_COMMON_ERP_INUSE) != 0) {
-+			/* LUN blocked:
-+			 * not yet unblocked [LUN recovery pending]
-+			 * or meanwhile blocked [new LUN recovery triggered]
-+			 */
-+			zfcp_dbf_rec_run_lvl(4, "ertru_l", &zsdev->erp_action);
-+			spin_unlock(shost->host_lock);
-+			write_unlock_irqrestore(&adapter->erp_lock, flags);
-+			return;
-+		}
-+	}
-+	/* now port has no child or all children have completed recovery,
-+	 * and no ERP of severity >= port was meanwhile triggered elsewhere
-+	 */
-+	zfcp_scsi_schedule_rport_register(port);
-+	spin_unlock(shost->host_lock);
-+	write_unlock_irqrestore(&adapter->erp_lock, flags);
-+}
-+
- static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
- {
- 	struct zfcp_adapter *adapter = act->adapter;
-@@ -1214,6 +1270,7 @@ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
- 	case ZFCP_ERP_ACTION_REOPEN_LUN:
- 		if (!(act->status & ZFCP_STATUS_ERP_NO_REF))
- 			scsi_device_put(sdev);
-+		zfcp_erp_try_rport_unblock(port);
- 		break;
- 
- 	case ZFCP_ERP_ACTION_REOPEN_PORT:
-@@ -1224,7 +1281,7 @@ static void zfcp_erp_action_cleanup(struct zfcp_erp_action *act, int result)
- 		 */
- 		if (act->step != ZFCP_ERP_STEP_UNINITIALIZED)
- 			if (result == ZFCP_ERP_SUCCEEDED)
--				zfcp_scsi_schedule_rport_register(port);
-+				zfcp_erp_try_rport_unblock(port);
- 		/* fall through */
- 	case ZFCP_ERP_ACTION_REOPEN_PORT_FORCED:
- 		put_device(&port->dev);
-diff --git a/drivers/s390/scsi/zfcp_ext.h b/drivers/s390/scsi/zfcp_ext.h
-index c8fed9fa1cca..21c8c689b02b 100644
---- a/drivers/s390/scsi/zfcp_ext.h
-+++ b/drivers/s390/scsi/zfcp_ext.h
-@@ -3,7 +3,7 @@
-  *
-  * External function declarations.
-  *
-- * Copyright IBM Corp. 2002, 2015
-+ * Copyright IBM Corp. 2002, 2016
-  */
- 
- #ifndef ZFCP_EXT_H
-@@ -35,6 +35,8 @@ extern void zfcp_dbf_adapter_unregister(struct zfcp_adapter *);
- extern void zfcp_dbf_rec_trig(char *, struct zfcp_adapter *,
- 			      struct zfcp_port *, struct scsi_device *, u8, u8);
- extern void zfcp_dbf_rec_run(char *, struct zfcp_erp_action *);
-+extern void zfcp_dbf_rec_run_lvl(int level, char *tag,
-+				 struct zfcp_erp_action *erp);
- extern void zfcp_dbf_rec_run_wka(char *, struct zfcp_fc_wka_port *, u64);
- extern void zfcp_dbf_hba_fsf_uss(char *, struct zfcp_fsf_req *);
- extern void zfcp_dbf_hba_fsf_res(char *, int, struct zfcp_fsf_req *);
-diff --git a/drivers/s390/scsi/zfcp_scsi.c b/drivers/s390/scsi/zfcp_scsi.c
-index 11cd18c134c1..07ffdbb5107f 100644
---- a/drivers/s390/scsi/zfcp_scsi.c
-+++ b/drivers/s390/scsi/zfcp_scsi.c
-@@ -88,9 +88,7 @@ int zfcp_scsi_queuecommand(struct Scsi_Host *shost, struct scsi_cmnd *scpnt)
- 	}
- 
- 	if (unlikely(!(status & ZFCP_STATUS_COMMON_UNBLOCKED))) {
--		/* This could be either
--		 * open LUN pending: this is temporary, will result in
--		 *	open LUN or ERP_FAILED, so retry command
-+		/* This could be
- 		 * call to rport_delete pending: mimic retry from
- 		 * 	fc_remote_port_chkready until rport is BLOCKED
- 		 */
--- 
-2.8.4
+diff --git a/MAINTAINERS b/MAINTAINERS
+index b3a7774..1b5ddd0 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -138,7 +138,7 @@ S:  Maintained
+ F:     drivers/net/ethernet/3com/typhoon*
+
+ 3WARE SAS/SATA-RAID SCSI DRIVERS (3W-XXXX, 3W-9XXX, 3W-SAS)
+-M:     Adam Radford <linuxraid@lsi.com>
++M:     Adam Radford <aradford@gmail.com>
+ L:     linux-scsi@vger.kernel.org
+ W:     http://www.lsi.com
+ S:     Supported
+diff --git a/drivers/scsi/3w-9xxx.c b/drivers/scsi/3w-9xxx.c
+index a56a7b2..316f87f 100644
+--- a/drivers/scsi/3w-9xxx.c
++++ b/drivers/scsi/3w-9xxx.c
+@@ -1,8 +1,8 @@
+ /*
+    3w-9xxx.c -- 3ware 9000 Storage Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
+-   Modifications By: Tom Couch <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
++   Modifications By: Tom Couch
+
+    Copyright (C) 2004-2009 Applied Micro Circuits Corporation.
+    Copyright (C) 2010 LSI Corporation.
+@@ -41,10 +41,7 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+
+    Note: This version of the driver does not contain a bundled firmware
+          image.
+diff --git a/drivers/scsi/3w-9xxx.h b/drivers/scsi/3w-9xxx.h
+index 0fdc83c..b6c208c 100644
+--- a/drivers/scsi/3w-9xxx.h
++++ b/drivers/scsi/3w-9xxx.h
+@@ -1,8 +1,8 @@
+ /*
+    3w-9xxx.h -- 3ware 9000 Storage Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
+-   Modifications By: Tom Couch <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
++   Modifications By: Tom Couch
+
+    Copyright (C) 2004-2009 Applied Micro Circuits Corporation.
+    Copyright (C) 2010 LSI Corporation.
+@@ -41,10 +41,7 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+ */
+
+ #ifndef _3W_9XXX_H
+diff --git a/drivers/scsi/3w-sas.c b/drivers/scsi/3w-sas.c
+index f837485..970d8fa 100644
+--- a/drivers/scsi/3w-sas.c
++++ b/drivers/scsi/3w-sas.c
+@@ -1,7 +1,7 @@
+ /*
+    3w-sas.c -- LSI 3ware SAS/SATA-RAID Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
+
+    Copyright (C) 2009 LSI Corporation.
+
+@@ -43,10 +43,7 @@
+    LSI 3ware 9750 6Gb/s SAS/SATA-RAID
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+
+    History
+    -------
+diff --git a/drivers/scsi/3w-sas.h b/drivers/scsi/3w-sas.h
+index fec6449..05e77d8 100644
+--- a/drivers/scsi/3w-sas.h
++++ b/drivers/scsi/3w-sas.h
+@@ -1,7 +1,7 @@
+ /*
+    3w-sas.h -- LSI 3ware SAS/SATA-RAID Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
+
+    Copyright (C) 2009 LSI Corporation.
+
+@@ -39,10 +39,7 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+ */
+
+ #ifndef _3W_SAS_H
+diff --git a/drivers/scsi/3w-xxxx.c b/drivers/scsi/3w-xxxx.c
+index 25aba16..26ab5c0 100644
+--- a/drivers/scsi/3w-xxxx.c
++++ b/drivers/scsi/3w-xxxx.c
+@@ -1,7 +1,7 @@
+ /*
+    3w-xxxx.c -- 3ware Storage Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
+    Modifications By: Joel Jacobson <linux@3ware.com>
+                     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+                      Brad Strand <linux@3ware.com>
+@@ -47,10 +47,7 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+
+    History
+    -------
+diff --git a/drivers/scsi/3w-xxxx.h b/drivers/scsi/3w-xxxx.h
+index 6f65e66..c2575c0 100644
+--- a/drivers/scsi/3w-xxxx.h
++++ b/drivers/scsi/3w-xxxx.h
+@@ -1,7 +1,7 @@
+ /*
+    3w-xxxx.h -- 3ware Storage Controller device driver for Linux.
+
+-   Written By: Adam Radford <linuxraid@lsi.com>
++   Written By: Adam Radford <aradford@gmail.com>
+    Modifications By: Joel Jacobson <linux@3ware.com>
+                     Arnaldo Carvalho de Melo <acme@conectiva.com.br>
+                      Brad Strand <linux@3ware.com>
+@@ -45,10 +45,7 @@
+    Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+
+    Bugs/Comments/Suggestions should be mailed to:
+-   linuxraid@lsi.com
+-
+-   For more information, goto:
+-   http://www.lsi.com
++   aradford@gmail.com
+ */
+
+ #ifndef _3W_XXXX_H
+--
+1.8.3.1
