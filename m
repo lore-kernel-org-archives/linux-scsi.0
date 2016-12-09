@@ -1,29 +1,36 @@
-From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 Subject: Re: [PATCH] ibmvscsi: add write memory barrier to CRQ processing
-Date: Thu, 8 Dec 2016 18:52:34 -0800
-Message-ID: <7be3f12a-3d21-9160-983b-d794c77a07ad@gmail.com>
+Date: Thu, 8 Dec 2016 18:56:14 -0800
+Message-ID: <94f1d954-a47c-3354-c1c8-fc79a82eaa77@linux.vnet.ibm.com>
 References: <1481153486-5185-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <272a1724-be64-9e5f-c5bb-3b71f389f029@redhat.com>
+ <20161208090643.GC4789@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f194.google.com ([209.85.220.194]:36489 "EHLO
-        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750982AbcLICwi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 21:52:38 -0500
-Received: by mail-qk0-f194.google.com with SMTP id h201so611131qke.3
-        for <linux-scsi@vger.kernel.org>; Thu, 08 Dec 2016 18:52:38 -0800 (PST)
-In-Reply-To: <272a1724-be64-9e5f-c5bb-3b71f389f029@redhat.com>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:52551 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752110AbcLIC4W (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 21:56:22 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uB92s7fL119592
+        for <linux-scsi@vger.kernel.org>; Thu, 8 Dec 2016 21:56:21 -0500
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 277gu7393k-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Dec 2016 21:56:21 -0500
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Thu, 8 Dec 2016 21:56:21 -0500
+In-Reply-To: <20161208090643.GC4789@linux-x5ow.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paolo Bonzini <pbonzini@redhat.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
-Cc: brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+To: Johannes Thumshirn <jthumshirn@suse.de>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Cc: james.bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com
 
-On 12/08/2016 03:29 PM, Paolo Bonzini wrote:
-> 
-> 
-> On 08/12/2016 00:31, Tyrel Datwyler wrote:
+On 12/08/2016 01:06 AM, Johannes Thumshirn wrote:
+> On Wed, Dec 07, 2016 at 05:31:26PM -0600, Tyrel Datwyler wrote:
 >> The first byte of each CRQ entry is used to indicate whether an entry is
 >> a valid response or free for the VIOS to use. After processing a
 >> response the driver sets the valid byte to zero to indicate the entry is
@@ -52,18 +59,23 @@ On 12/08/2016 03:29 PM, Paolo Bonzini wrote:
 >>  			ibmvscsi_handle_crq(crq, hostdata);
 >>  			crq->valid = VIOSRP_CRQ_FREE;
 >> +			wmb();
+>>  		} else {
+>>  			done = 1;
+>>  		}
 > 
-> Should this driver use virt_wmb instead?
+> Is this something you have seen in the wild or just a "better save than sorry"
+> barrier?
 
-Both virt_wmb and wmb reduce to a lwsync instruction under PowerPC.
+I myself have not observed or heard of anybody hitting an issue here.
+However, based on conversation with the VIOS developers, who have
+indicated it is required, this is a "better safe than sorry" scenario.
+Further, it matches what we already do in the ibmvfc driver for the CRQ
+processing logic.
 
 -Tyrel
 
 > 
-> Paolo
+> Thanks,
+> 	Johannes
 > 
->>  		} else {
->>  			done = 1;
->>  		}
->>
 
