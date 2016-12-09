@@ -1,46 +1,39 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH] aacraid: remove wildcard for series 9 controllers
-Date: Fri, 9 Dec 2016 21:13:09 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D194180A257@avsrvexchmbx1.microsemi.net>
-References: <148121456881.26136.5279334565466197341.stgit@brunhilda>
- <yq1fulyoyx3.fsf@sermon.lab.mkp.net>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v4 4/6] qla2xxx: Add multiple queue pair functionality.
+Date: Fri, 9 Dec 2016 21:42:06 +0000
+Message-ID: <06FF934D-B3F7-49B3-95D9-DA453AC0DD95@cavium.com>
+References: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
+ <1481051266-32362-5-git-send-email-himanshu.madhani@cavium.com>
+ <20161207190502.GB29031@infradead.org>
+ <693AAE59-413D-4416-837A-8E60A7C73455@cavium.com>
+ <20161209131016.GA15254@infradead.org>
+ <E9B6495D-31D5-4A48-BD75-F26C72AA3531@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0074.outbound.protection.outlook.com ([104.47.41.74]:48494
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0083.outbound.protection.outlook.com ([104.47.34.83]:22212
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753129AbcLIV3N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 9 Dec 2016 16:29:13 -0500
-In-Reply-To: <yq1fulyoyx3.fsf@sermon.lab.mkp.net>
+        id S1752829AbcLIVmI (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 9 Dec 2016 16:42:08 -0500
+In-Reply-To: <E9B6495D-31D5-4A48-BD75-F26C72AA3531@cavium.com>
 Content-Language: en-US
+Content-ID: <01D7D92273310745A1EFFC5419A9E680@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali-saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: Christoph Hellwig <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Thursday, December 08, 2016 4:10 PM
-> To: Don Brace
-> Cc: jejb@linux.vnet.ibm.com; John Hall; Kevin Barnett; Mahesh
-> Rajashekhara; Bader Ali-saleh; hch@infradead.org; Scott Teel; Viswas G;
-> Justin Lindley; Scott Benesh; elliott@hpe.com; POSWALD@suse.com; linux-
-> scsi@vger.kernel.org
-> Subject: Re: [PATCH] aacraid: remove wildcard for series 9 controllers
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> >>>>> "Don" =3D=3D Don Brace <don.brace@microsemi.com> writes:
->=20
-> Applied to 4.10/scsi-queue.
->=20
-> --
-> Martin K. Petersen      Oracle Linux Engineering
-
-Can this patch still make into 4.9?
-Thanks,
-Don Brace
-
+SGkgTWFydGluLCANCg0KDQoNCk9uIDEyLzkvMTYsIDExOjM5IEFNLCAiTWFkaGFuaSwgSGltYW5z
+aHUiIDxIaW1hbnNodS5NYWRoYW5pQGNhdml1bS5jb20+IHdyb3RlOg0KDQo+DQo+T24gMTIvOS8x
+NiwgNToxMCBBTSwgIkNocmlzdG9waCBIZWxsd2lnIiA8aGNoQGluZnJhZGVhZC5vcmc+IHdyb3Rl
+Og0KPg0KPj5Pay4gIFdlJ2xsIHN0aWxsIG5lZWQgdG8gdXNlIFBDSV9JUlFfQUZGSU5JVFkgaGVy
+ZSBhZnRlciBpdCdzIHJlbW92ZWQNCj4+aSBudGhlIHByZXZpb3VzIHBhdGNoLCBidXQgd2l0aCBw
+Y2lfaXJxX2FsbG9jX3ZlY3RvcnNfYWZmaW5pdHkgc28gdGhhdA0KPj53ZSBjYW4gZ2V0IHRoZSBz
+ZXBhcmF0ZSBub24tYXNzaWdubWVudCB2ZWN0b3IgcmlnaHQgYXMgaW4gdGhlIHByZXZpb3VzDQo+
+PmRpc2N1c3Npb24uDQo+DQo+QWNrLiBXaWxsIGZpeCB1cCBwYXRjaCBhbmQgcmVzZW5kIHNlcmll
+cy4NCg0KV291bGQgeW91IGJlIHB1bGxpbmcgY2hhbmdlcyBmb3IgdGhpcyBuZXcgY2FsbCBpbnRv
+IHNjc2kgdHJlZSBhbnl0aW1lIHNvb24NCg0KaHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xp
+bnV4L2tlcm5lbC9naXQvdGlwL3RpcC5naXQvbG9nLz9oPWlycS9mb3ItYmxvY2sNCg0KPg0KPlRo
+YW5rcywNCj4tIEhpbWFuc2h1DQo+DQoNCg0KPg0K
