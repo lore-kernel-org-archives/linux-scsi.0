@@ -1,31 +1,31 @@
-From: Juergen Gross <jgross@suse.com>
-Subject: Re: [PATCH v2] xen/scsifront: don't request a slot on the ring until
- request is ready
-Date: Fri, 9 Dec 2016 11:13:34 +0100
-Message-ID: <f8632b39-e793-1e8a-990c-5d612fbdb7b0@suse.com>
-References: <20161125202650.GK6266@mwanda>
- <20161202061545.14614-1-jgross@suse.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V4 05/11] megaraid_sas: SAS3.5 Generic Megaraid
+ Controllers Fast Path for RAID 1/10 Writes
+Date: Fri, 9 Dec 2016 11:54:43 +0100
+Message-ID: <fa806409-b63d-d365-27a6-36838991434c@redhat.com>
+References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
+ <1481065220-18431-6-git-send-email-sasikumar.pc@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161202061545.14614-1-jgross@suse.com>
+In-Reply-To: <1481065220-18431-6-git-send-email-sasikumar.pc@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, xen-devel@lists.xenproject.org
-Cc: boris.ostrovsky@oracle.com, lambert.quentin@gmail.com, linux-scsi@vger.kernel.org, dan.carpenter@oracle.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/12/16 07:15, Juergen Gross wrote:
-> Instead of requesting a new slot on the ring to the backend early, do
-> so only after all has been setup for the request to be sent. This
-> makes error handling easier as we don't need to undo the request id
-> allocation and ring slot allocation.
-> 
-> Suggested-by: Jan Beulich <jbeulich@suse.com>
-> Signed-off-by: Juergen Gross <jgross@suse.com>
+On 7.12.2016 00:00, Sasikumar Chandrasekaran wrote:
+> To improve RAID 1/10 Write performance, OS drivers need to issue the required Write
+> IOs as Fast Path IOs (after the appropriate checks allowing Fast Path to be used)
+> to the appropriate physical drives (translated from the OS logical IO) and wait for
+> all Write IOs to complete.  If any of the Write IOs fail or time out, the IO will be
+> re issued to FW as an LD IO so FW can perform the error handling.
+>
+> This patch is depending on patch 4
+>
+> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
-Commited to xen/tip.git for-linus-4.10
-
-
-Juergen
+Tomas
