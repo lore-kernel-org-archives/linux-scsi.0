@@ -1,25 +1,69 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: [LSF/MM TOPIC ATTEND] multipath for NVMe over Fabrics
-Date: Thu, 8 Dec 2016 20:16:56 -0500
-Message-ID: <20161209011656.GA320@redhat.com>
+From: Tyrel Datwyler <turtle.in.the.kernel@gmail.com>
+Subject: Re: [PATCH] ibmvscsi: add write memory barrier to CRQ processing
+Date: Thu, 8 Dec 2016 18:52:34 -0800
+Message-ID: <7be3f12a-3d21-9160-983b-d794c77a07ad@gmail.com>
+References: <1481153486-5185-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <272a1724-be64-9e5f-c5bb-3b71f389f029@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: linux-block-owner@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f194.google.com ([209.85.220.194]:36489 "EHLO
+        mail-qk0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750982AbcLICwi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 8 Dec 2016 21:52:38 -0500
+Received: by mail-qk0-f194.google.com with SMTP id h201so611131qke.3
+        for <linux-scsi@vger.kernel.org>; Thu, 08 Dec 2016 18:52:38 -0800 (PST)
+In-Reply-To: <272a1724-be64-9e5f-c5bb-3b71f389f029@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Paolo Bonzini <pbonzini@redhat.com>, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
+Cc: brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 
-I'd like to discuss $subject.  I haven't heard of much progress on this
-(but I'm also not tracking NVMe development at the moment).
+On 12/08/2016 03:29 PM, Paolo Bonzini wrote:
+> 
+> 
+> On 08/12/2016 00:31, Tyrel Datwyler wrote:
+>> The first byte of each CRQ entry is used to indicate whether an entry is
+>> a valid response or free for the VIOS to use. After processing a
+>> response the driver sets the valid byte to zero to indicate the entry is
+>> now free to be reused. Add a memory barrier after this write to ensure
+>> no other stores are reordered when updating the valid byte.
+>>
+>> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+>> ---
+>>  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> index d9534ee..2f5b07e 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> @@ -232,6 +232,7 @@ static void ibmvscsi_task(void *data)
+>>  		while ((crq = crq_queue_next_crq(&hostdata->queue)) != NULL) {
+>>  			ibmvscsi_handle_crq(crq, hostdata);
+>>  			crq->valid = VIOSRP_CRQ_FREE;
+>> +			wmb();
+>>  		}
+>>  
+>>  		vio_enable_interrupts(vdev);
+>> @@ -240,6 +241,7 @@ static void ibmvscsi_task(void *data)
+>>  			vio_disable_interrupts(vdev);
+>>  			ibmvscsi_handle_crq(crq, hostdata);
+>>  			crq->valid = VIOSRP_CRQ_FREE;
+>> +			wmb();
+> 
+> Should this driver use virt_wmb instead?
 
-Last I heard about getting DM multipath to work with NVMe over Fabrics
-was this: https://patchwork.kernel.org/patch/9208997/
+Both virt_wmb and wmb reduce to a lwsync instruction under PowerPC.
 
-I've reintroduced bio-based support for the DM multipath target.
-Between now and LSF I hope to come to terms with what the various work
-items are for making DM multipath work for NVMeoF.  I welcome any
-ideas/thoughts others might have.
+-Tyrel
 
-Mike
+> 
+> Paolo
+> 
+>>  		} else {
+>>  			done = 1;
+>>  		}
+>>
+
