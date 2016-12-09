@@ -1,27 +1,26 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V4 07/11] megaraid_sas: Add the Support for SAS3.5 Generic
- Megaraid Controllers Capabilities
-Date: Fri, 9 Dec 2016 14:05:29 +0100
-Message-ID: <8d4b12bc-ba45-c6b4-b57d-87138f15c9e6@redhat.com>
-References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
- <1481065220-18431-8-git-send-email-sasikumar.pc@broadcom.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v4 4/6] qla2xxx: Add multiple queue pair functionality.
+Date: Fri, 9 Dec 2016 05:10:16 -0800
+Message-ID: <20161209131016.GA15254@infradead.org>
+References: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
+ <1481051266-32362-5-git-send-email-himanshu.madhani@cavium.com>
+ <20161207190502.GB29031@infradead.org>
+ <693AAE59-413D-4416-837A-8E60A7C73455@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1481065220-18431-8-git-send-email-sasikumar.pc@broadcom.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:45801 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932474AbcLINKT (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 9 Dec 2016 08:10:19 -0500
+Content-Disposition: inline
+In-Reply-To: <693AAE59-413D-4416-837A-8E60A7C73455@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 7.12.2016 00:00, Sasikumar Chandrasekaran wrote:
-> The Megaraid driver has to support the SAS3.5 Generic Megaraid Controllers Firmware functionality.
->
-> This patch is depending on patch 6
->
-> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
-
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-
-Tomas
+Ok.  We'll still need to use PCI_IRQ_AFFINITY here after it's removed
+i nthe previous patch, but with pci_irq_alloc_vectors_affinity so that
+we can get the separate non-assignment vector right as in the previous
+discussion.
