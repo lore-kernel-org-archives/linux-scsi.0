@@ -1,58 +1,39 @@
-From: "Michael S. Tsirkin" <mst@redhat.com>
-Subject: Re: [PATCH] scsi/qla2xxx: label endian-ness for many fields
-Date: Sun, 11 Dec 2016 04:02:07 +0200
-Message-ID: <20161211035822-mutt-send-email-mst@kernel.org>
-References: <20161209224216-mutt-send-email-mst@kernel.org>
- <1481348968.5946.48.camel@perches.com>
+From: Sasikumar PC <sasikumar.pc@broadcom.com>
+Subject: RE: [PATCH V4 00/11] megaraid_sas: Updates for scsi-next
+Date: Sun, 11 Dec 2016 09:04:15 -0500
+Message-ID: <31821eea883f75e4345984d6a5761d82@mail.gmail.com>
+References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com> <20161207073122.GB26970@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1481348968.5946.48.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Joe Perches <joe@perches.com>
-Cc: qla2xxx-upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu.Madhani@cavium.com, Bart.VanAssche@sandisk.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f46.google.com ([74.125.82.46]:38851 "EHLO
+        mail-wm0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752745AbcLKOES (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 11 Dec 2016 09:04:18 -0500
+Received: by mail-wm0-f46.google.com with SMTP id f82so30600287wmf.1
+        for <linux-scsi@vger.kernel.org>; Sun, 11 Dec 2016 06:04:17 -0800 (PST)
+In-Reply-To: <20161207073122.GB26970@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: jejb@kernel.org, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, Christopher Owens <christopher.owens@broadcom.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>, thenzl@redhat.com
 
-On Fri, Dec 09, 2016 at 09:49:28PM -0800, Joe Perches wrote:
-> On Fri, 2016-12-09 at 22:45 +0200, Michael S. Tsirkin wrote:
-> > This adds endian-ness labels for lots of qla structs.
-> > Doing this cuts down number of sparse warnings from ~1700 to ~1400.
-> > Will help find and resolve some of real issues down the road.
-> > 
-> > Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> > 
-> > ---
-> > 
-> > Compile-tested only.
-> > 
-> > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-> > index 73b12e4..a4d3071 100644
-> > --- a/drivers/scsi/qla2xxx/qla_def.h
-> > +++ b/drivers/scsi/qla2xxx/qla_def.h
-> > @@ -1159,28 +1159,28 @@ typedef struct {
-> >  	 */
-> >  	uint8_t  firmware_options[2];
-> >  
-> > -	uint16_t frame_payload_size;
-> > -	uint16_t max_iocb_allocation;
-> > -	uint16_t execution_throttle;
-> > +	__le16 frame_payload_size;
-> > +	__le16 max_iocb_allocation;
-> > +	__le16 execution_throttle;
-> 
-> Shouldn't all these _not_ have the leading __?
+Hi Chris,
 
-[linux]$ git grep le32 include/linux/|grep -v _le32|grep -v le32_
-[linux]$ 
+I will be rebasing to include " pci_alloc_irq_vectors conversion from
+Hannes" in the next version of the patch
 
+Thanks
+sasi
 
-> Perhaps the uint8_t uses should be converted to u8 as well.
-> 
-> [etc...]
+-----Original Message-----
+From: Christoph Hellwig [mailto:hch@infradead.org]
+Sent: Wednesday, December 07, 2016 2:31 AM
+To: Sasikumar Chandrasekaran
+Cc: jejb@kernel.org; hch@infradead.org; linux-scsi@vger.kernel.org;
+Sathya.Prakash@broadcom.com; linux-kernel@vger.kernel.org;
+christopher.owens@broadcom.com; kiran-kumar.kasturi@broadcom.com;
+thenzl@redhat.com
+Subject: Re: [PATCH V4 00/11] megaraid_sas: Updates for scsi-next
 
-Sure.  It's up to maintainers to clean up this driver though. I merely
-posted this to show that proper tagging of endian-ness is not hard.
-
--- 
-MST
+This seems to be missing the pci_alloc_irq_vectors conversion from Hannes?
