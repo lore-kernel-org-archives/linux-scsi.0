@@ -1,153 +1,81 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v5 4/5] qla2xxx: Add Block Multi Queue functionality.
-Date: Mon, 12 Dec 2016 14:40:08 -0800
-Message-ID: <1481582409-22027-5-git-send-email-himanshu.madhani@cavium.com>
-References: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 00/22] qla2xxx: Target code enhancemets and feature update
+Date: Mon, 12 Dec 2016 23:10:07 +0000
+Message-ID: <BE1203E8-9F6A-47C1-9E13-354E4E44332D@cavium.com>
+References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0084.outbound.protection.outlook.com ([104.47.34.84]:8944
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0051.outbound.protection.outlook.com ([104.47.40.51]:31136
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751697AbcLLWkm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Dec 2016 17:40:42 -0500
-In-Reply-To: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
+        id S1751845AbcLLXKL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Dec 2016 18:10:11 -0500
+In-Reply-To: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <C4FC7C75C587144EB6F20C98B3097DF2@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
-
-Tell the SCSI layer how many hardware queues we have based on the number
-of max queue pairs created. The number of max queue pairs created will
-depend on number of MSI-X vector count.
-
-This feature can be turned on via CONFIG_SCSI_MQ_DEFAULT or passing
-scsi_mod.use_blk_mq=Y as a parameter to the kernel
-
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 47 ++++++++++++++++++++++++++++++++++++++-----
- 1 file changed, 42 insertions(+), 5 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 6ef32c9..d10a876 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -13,6 +13,7 @@
- #include <linux/mutex.h>
- #include <linux/kobject.h>
- #include <linux/slab.h>
-+#include <linux/blk-mq-pci.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
- #include <scsi/scsi_transport.h>
-@@ -254,6 +255,7 @@
- static void qla2x00_clear_drv_active(struct qla_hw_data *);
- static void qla2x00_free_device(scsi_qla_host_t *);
- static void qla83xx_disable_laser(scsi_qla_host_t *vha);
-+static int qla2xxx_map_queues(struct Scsi_Host *shost);
- 
- struct scsi_host_template qla2xxx_driver_template = {
- 	.module			= THIS_MODULE,
-@@ -273,6 +275,7 @@ struct scsi_host_template qla2xxx_driver_template = {
- 	.scan_finished		= qla2xxx_scan_finished,
- 	.scan_start		= qla2xxx_scan_start,
- 	.change_queue_depth	= scsi_change_queue_depth,
-+	.map_queues             = qla2xxx_map_queues,
- 	.this_id		= -1,
- 	.cmd_per_lun		= 3,
- 	.use_clustering		= ENABLE_CLUSTERING,
-@@ -738,16 +741,26 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
- 	srb_t *sp;
- 	int rval;
--	struct qla_qpair *qpair;
-+	struct qla_qpair *qpair = NULL;
-+	uint32_t tag;
-+	uint16_t hwq;
- 
- 	if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags))) {
- 		cmd->result = DID_NO_CONNECT << 16;
- 		goto qc24_fail_command;
- 	}
- 
--	if (vha->vp_idx && vha->qpair) {
--		qpair = vha->qpair;
--		return qla2xxx_mqueuecommand(host, cmd, qpair);
-+	if (ha->mqenable) {
-+		if (shost_use_blk_mq(vha->host)) {
-+			tag = blk_mq_unique_tag(cmd->request);
-+			hwq = blk_mq_unique_tag_to_hwq(tag);
-+			qpair = ha->queue_pair_map[hwq];
-+		} else if (vha->vp_idx && vha->qpair) {
-+			qpair = vha->qpair;
-+		}
-+
-+		if (qpair)
-+			return qla2xxx_mqueuecommand(host, cmd, qpair);
- 	}
- 
- 	if (ha->flags.eeh_busy) {
-@@ -2509,6 +2522,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 	uint16_t req_length = 0, rsp_length = 0;
- 	struct req_que *req = NULL;
- 	struct rsp_que *rsp = NULL;
-+	int i;
- 
- 	bars = pci_select_bars(pdev, IORESOURCE_MEM | IORESOURCE_IO);
- 	sht = &qla2xxx_driver_template;
-@@ -2874,6 +2888,16 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 		goto probe_init_failed;
- 	}
- 
-+	if (ha->mqenable && shost_use_blk_mq(host)) {
-+		/* number of hardware queues supported by blk/scsi-mq*/
-+		host->nr_hw_queues = ha->max_qpairs;
-+
-+		ql_dbg(ql_dbg_init, base_vha, 0x0192,
-+			"blk/scsi-mq enabled, HW queues = %d.\n", host->nr_hw_queues);
-+	} else
-+		ql_dbg(ql_dbg_init, base_vha, 0x0193,
-+			"blk/scsi-mq disabled.\n");
-+
- 	qlt_probe_one_stage1(base_vha, ha);
- 
- 	pci_save_state(pdev);
-@@ -2965,8 +2989,14 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 	    host->can_queue, base_vha->req,
- 	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
- 
--	if (ha->mqenable)
-+	if (ha->mqenable) {
- 		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 1);
-+		/* Create start of day qpairs for Block MQ */
-+		if (shost_use_blk_mq(host)) {
-+			for (i = 0; i < ha->max_qpairs; i++)
-+				qla2xxx_create_qpair(base_vha, 5, 0);
-+		}
-+	}
- 
- 	if (ha->flags.running_gold_fw)
- 		goto skip_dpc;
-@@ -6109,6 +6139,13 @@ struct fw_blob *
- 	qla83xx_wr_reg(vha, reg, data);
- }
- 
-+static int qla2xxx_map_queues(struct Scsi_Host *shost)
-+{
-+	scsi_qla_host_t *vha = (scsi_qla_host_t *)shost->hostdata;
-+
-+	return blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
-+}
-+
- static const struct pci_error_handlers qla2xxx_err_handler = {
- 	.error_detected = qla2xxx_pci_error_detected,
- 	.mmio_enabled = qla2xxx_pci_mmio_enabled,
--- 
-1.8.3.1
-
+SGkgTmljLCANCg0KDQoNCk9uIDEyLzYvMTYsIDEyOjMwIFBNLCAiSGltYW5zaHUgTWFkaGFuaSIg
+PGhpbWFuc2h1Lm1hZGhhbmlAY2F2aXVtLmNvbT4gd3JvdGU6DQoNCj5IaSBOaWMsIA0KPg0KPlBs
+ZWFzZSBjb25zaWRlciB0aGlzIHNlcmllcyBmb3IgdGFyZ2V0LXBlbmRpbmcuIFRoaXMgc2VyaWVz
+IGlzIGJhc2VkIG9uDQo+c2NzaS1taXNjIHNlcmllcyB0aGF0IHdhcyBzdWJtaXR0ZWQgZWFybGll
+ciB0b2RheS4NCj4NCj5IZXJlJ3MgbGluayBmb3IgdGhhdCBzZXJpZXMNCj4gaHR0cDovL21hcmMu
+aW5mby8/bD1saW51eC1zY3NpJm09MTQ4MTA1MTI4MjEwMDkwJnc9MiANCj4NCj5UaGlzIHNlcmll
+cyBjb250YWlucyBmb2xsb3dpbmcgY2hhbmdlcw0KPg0KPm8gQ2xlYW4gdXAgVGFyZ2V0IGNvZGUg
+YW5kIHRjbV9xbGEyeHh4IGZvciBjbGVhbmVyIGludGVyYWN0aW9uLg0KPm8gRW5oYW5jZWQgYW5k
+IHN0cmVuZ3RoZW4gc3VwcG9ydCBmb3IgVDEwLURJRi9QSS4NCj5vIFJlbmFtZWQgcWxpbmlfbW9k
+ZSB0byBxbG9wX21vZGUgZm9yIGJldHRlciByZWFkYmlsaXR5Lg0KPm8gSW1wcm92ZSBkcml2ZXIg
+Y2FwYWJpbGl0eSB0byBtYW5hZ2UgZHVhbCBwZXJzb25hbGl0eSANCj4gIChpLmUuIEluaXRpYXRv
+ciBhbmQgVGFyZ2V0KSBzaW11bHRhbmVvdXNseS4NCj5vIEFkZGVkIGNhcGFiaWxpdHkgdG8gc2Vu
+ZCBub24tY3JpdGljYWwgTUJYIHZpYSBJT0NCIHBhdGguIA0KPm8gU29tZSBvZiB0aGUgcGVuZGlu
+ZyBidWctZml4ZXMgZm9yIHRhcmdldCBjb2RlLg0KPg0KPlRoYW5rcywgDQo+SGltYW5zaHUNCj4N
+Cj5IaW1hbnNodSBNYWRoYW5pICgzKToNCj4gIHFsYTJ4eHg6IEluY2x1ZGUgQVRJTyBxdWV1ZSBp
+biBmaXJtd2FyZSBkdW1wIHdoZW4gaW4gdGFyZ2V0IG1vZGUNCj4gIHFsYTJ4eHg6IFNldCB0Y21f
+cWxhMnh4eCB2ZXJzaW9uIHRvIGF1dG9tYXRpY2FsbHkgdHJhY2sgcWxhMnh4eA0KPiAgICB2ZXJz
+aW9uLg0KPiAgcWxhMnh4eDogQ2xlYXIgQklUIDE1IGluIE5WUkFNIGR1cmluZyBpbml0aWFsaXph
+dGlvbi4NCj4NCj5Kb2UgQ2FybnVjY2lvICgxKToNCj4gIHFsYTJ4eHg6IFJlcmZhY3RvciB1c2Ug
+b2Ygc3AgY29udGV4dA0KPg0KPlF1aW5uIFRyYW4gKDE4KToNCj4gIHFsYTJ4eHg6IEZpeCB3cm9u
+ZyBJT0NCIHR5cGUgYXNzdW1wdGlvbi4NCj4gIHFsYTJ4eHg6IEFkZCBEZWJ1Z0ZTIG5vZGUgb2Yg
+aXJxIHZlY3RvciBjcHVpZA0KPiAgcWxhMnh4eDogQ29sbGVjdCBhZGR0aW9uYWwgZGVidWcgZGF0
+YSBmb3IgRlcNCj4gIHFsYTJ4eHg6IEZpeCBjcmFzaCBkdWUgdG8gbnVsbCBwb2ludGVyIGFjY2Vz
+cy4NCj4gIHFsYTJ4eHg6IFJlZmFjdG9yZSB0YXJnZXQgY29kZSB0byByZW1vdmUgc3ltYm9sIGRl
+cGVuZGVuY3kNCj4gIHFsYTJ4eHg6IFJlZmFjdG9yIFQxMC1ESUYgUEkgc3VwcG9ydA0KPiAgcWxh
+Mnh4eDogQWRkIGZyYW1ld29yayBmb3IgQXN5bmMgZmFicmljIGRpc2NvdmVyeS4NCj4gIHFsYTJ4
+eHg6IFJlZmFjdG9yIHNlc3Npb24gbWFuYWdlbWVudCBjb2RlLg0KPiAgcWxhMnh4eDogQWRkIER1
+YWwgbW9kZSBzdXBwb3J0IGluIHRoZSBkcml2ZXINCj4gIHFsYTJ4eHg6IEZpeCBpbnZhbGlkIGhh
+bmRsZSBlcnJvbmVvdXMgbWVzc2FnZS4NCj4gIHFsYTJ4eHg6IEFkZCBpbnRlcnJ1cHQgcG9sbGlu
+ZyBtZWNoYW5pc20NCj4gIHFsYTJ4eHg6IFJlbmFtZSBxbGluaV9tb2RlIHBhcmFtZXRlcg0KPiAg
+cWxhMnh4eDogSW1wcm92ZSBSU0NOIGhhbmRsaW5nIGluIGRyaXZlcg0KPiAgcWxhMnh4eDogRml4
+IHNsb3cgbWVtIGFsbG9jIGJlaGluZCBsb2NrDQo+ICBxbGEyeHh4OiBSZWR1Y2UgZXhlc3Mgd2Fp
+dCBkdXJpbmcgY2hpcCByZXNldA0KPiAgcWxhMnh4eDogQWxsb3cgcmVsb2dpbiB0byBnbyB0aHJv
+dWdoIGlmIHJlbW90ZSBsb2dpbiBkaWQgbm90IGZpbmlzaA0KPiAgcWxhMnh4eDogSW1wcm92ZSBz
+dWJtaXNzaW9uIG9mIG5vbiBjcml0aWNhbCBNQiBpbnRlcmZhY2UuDQo+ICBxbGEyeHh4OiBBZGQg
+Y2hlY2sgZm9yIGNvcnJ1cHQgQVRJTy4NCj4NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0
+dHIuYyAgICB8ICAzNjYgKysrKy0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jICAg
+ICB8ICAgMjEgKy0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RiZy5jICAgICB8ICAgIDIg
+Ky0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RiZy5oICAgICB8ICAgIDEgKw0KPiBkcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGVmLmggICAgIHwgIDI4NyArKystDQo+IGRyaXZlcnMvc2Nz
+aS9xbGEyeHh4L3FsYV9kZnMuYyAgICAgfCAgMjM3ICsrLQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4
+eC9xbGFfZncuaCAgICAgIHwgIDEwNyArLQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ2Js
+LmggICAgIHwgICA4NiArLQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ3MuYyAgICAgIHwg
+IDczMyArKysrKysrKy0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2luaXQuYyAgICB8IDE2
+MDQgKysrKysrKysrKysrKysrLS0tLS0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lubGlu
+ZS5oICB8ICAgMzQgKy0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lvY2IuYyAgICB8ICAx
+NzIgKystDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYyAgICAgfCAgNDE0ICsrKyst
+LQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMgICAgIHwgIDU1MyArKysrKy0tDQo+
+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9taWQuYyAgICAgfCAgIDE1ICstDQo+IGRyaXZlcnMv
+c2NzaS9xbGEyeHh4L3FsYV9tci5jICAgICAgfCAgIDUyICstDQo+IGRyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9vcy5jICAgICAgfCAgNDU0ICsrKystLQ0KPiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfdGFyZ2V0LmMgIHwgMjg5MCArKysrKysrKysrKysrKysrKysrKystLS0tLS0tLS0tLS0tLS0N
+Cj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5oICB8ICAyNTcgKystLQ0KPiBkcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdG1wbC5jICAgIHwgICAyNCArDQo+IGRyaXZlcnMvc2NzaS9x
+bGEyeHh4L3RjbV9xbGEyeHh4LmMgfCAgNzUzICsrKysrKysrLS0NCj4gZHJpdmVycy9zY3NpL3Fs
+YTJ4eHgvdGNtX3FsYTJ4eHguaCB8ICAgMTYgKy0NCj4gMjIgZmlsZXMgY2hhbmdlZCwgNjY1OCBp
+bnNlcnRpb25zKCspLCAyNDIwIGRlbGV0aW9ucygtKQ0KPg0KPi0tIA0KPjEuOC4zLjENCj4NCg0K
+V291bGQgeW91IHBsZWFzZSByZXZpZXcvY29tbWVudCBvbiB0aGVzZSBwYXRjaGVzLiANCg0KVGhh
+bmtzLA0KSGltYW5zaHUNCj4NCg==
