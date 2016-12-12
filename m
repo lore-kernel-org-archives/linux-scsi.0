@@ -1,123 +1,251 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v5 1/5] qla2xxx: Only allow operational MBX to proceed during RESET.
-Date: Mon, 12 Dec 2016 14:40:05 -0800
-Message-ID: <1481582409-22027-2-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v5 2/5] qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.
+Date: Mon, 12 Dec 2016 14:40:06 -0800
+Message-ID: <1481582409-22027-3-git-send-email-himanshu.madhani@cavium.com>
 References: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0052.outbound.protection.outlook.com ([104.47.33.52]:58272
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0072.outbound.protection.outlook.com ([104.47.42.72]:65446
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751697AbcLLWkT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Dec 2016 17:40:19 -0500
+        id S1751697AbcLLWk1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Dec 2016 17:40:27 -0500
 In-Reply-To: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-This patch is allowing only ROM mailbox command which are
-necessary to initialize chip after a reset has been issued.
-In a target environment, there could be a user space daemon
-which can issue statistics and other management mailbox command
-which are non-critical. This patch will timeout non critical
-mailbox commands immediately rather than waiting for timeout,
-if driver detects that chip reset has been issued or chip reset
-is in progress.
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Christoph Hellwig <hch@infradead.org>
+Replaces the old pci_enable_msi[x]* and pci_disable_msi[x] calls.
+
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_mbx.c | 52 ++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 52 insertions(+)
+ drivers/scsi/qla2xxx/qla_def.h |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c | 89 ++++++++++++++++--------------------------
+ drivers/scsi/qla2xxx/qla_mid.c |  2 +-
+ 3 files changed, 36 insertions(+), 57 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 23698c9..b31c36b 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -10,6 +10,43 @@
- #include <linux/delay.h>
- #include <linux/gfp.h>
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 5236e3f..d38c205 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2747,7 +2747,7 @@ struct qla_msix_entry {
+ 	int have_irq;
+ 	uint32_t vector;
+ 	uint16_t entry;
+-	struct rsp_que *rsp;
++	void *handle;
+ 	struct irq_affinity_notify irq_notify;
+ 	int cpuid;
+ };
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 19f1848..ad5304c 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3025,52 +3025,17 @@ struct qla_init_msix_entry {
+ 	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
+ };
  
-+struct rom_cmd {
-+	uint16_t cmd;
-+} rom_cmds[] = {
-+	{ MBC_LOAD_RAM },
-+	{ MBC_EXECUTE_FIRMWARE },
-+	{ MBC_READ_RAM_WORD },
-+	{ MBC_MAILBOX_REGISTER_TEST },
-+	{ MBC_VERIFY_CHECKSUM },
-+	{ MBC_GET_FIRMWARE_VERSION },
-+	{ MBC_LOAD_RISC_RAM },
-+	{ MBC_DUMP_RISC_RAM },
-+	{ MBC_LOAD_RISC_RAM_EXTENDED },
-+	{ MBC_DUMP_RISC_RAM_EXTENDED },
-+	{ MBC_WRITE_RAM_WORD_EXTENDED },
-+	{ MBC_READ_RAM_EXTENDED },
-+	{ MBC_GET_RESOURCE_COUNTS },
-+	{ MBC_SET_FIRMWARE_OPTION },
-+	{ MBC_MID_INITIALIZE_FIRMWARE },
-+	{ MBC_GET_FIRMWARE_STATE },
-+	{ MBC_GET_MEM_OFFLOAD_CNTRL_STAT },
-+	{ MBC_GET_RETRY_COUNT },
-+	{ MBC_TRACE_CONTROL },
-+};
-+
-+static int is_rom_cmd(uint16_t cmd)
-+{
-+	int i;
-+	struct  rom_cmd *wc;
-+
-+	for (i = 0; i < ARRAY_SIZE(rom_cmds); i++) {
-+		wc = rom_cmds + i;
-+		if (wc->cmd == cmd)
-+			return 1;
-+	}
-+
-+	return 0;
-+}
+-static void
+-qla24xx_disable_msix(struct qla_hw_data *ha)
+-{
+-	int i;
+-	struct qla_msix_entry *qentry;
+-	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+-
+-	for (i = 0; i < ha->msix_count; i++) {
+-		qentry = &ha->msix_entries[i];
+-		if (qentry->have_irq) {
+-			/* un-register irq cpu affinity notification */
+-			irq_set_affinity_notifier(qentry->vector, NULL);
+-			free_irq(qentry->vector, qentry->rsp);
+-		}
+-	}
+-	pci_disable_msix(ha->pdev);
+-	kfree(ha->msix_entries);
+-	ha->msix_entries = NULL;
+-	ha->flags.msix_enabled = 0;
+-	ql_dbg(ql_dbg_init, vha, 0x0042,
+-	    "Disabled the MSI.\n");
+-}
+-
+ static int
+ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ {
+ #define MIN_MSIX_COUNT	2
+ #define ATIO_VECTOR	2
+ 	int i, ret;
+-	struct msix_entry *entries;
+ 	struct qla_msix_entry *qentry;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
  
- /*
-  * qla2x00_mailbox_command
-@@ -92,6 +129,17 @@
- 		return QLA_FUNCTION_TIMEOUT;
+-	entries = kzalloc(sizeof(struct msix_entry) * ha->msix_count,
+-			GFP_KERNEL);
+-	if (!entries) {
+-		ql_log(ql_log_warn, vha, 0x00bc,
+-		    "Failed to allocate memory for msix_entry.\n");
+-		return -ENOMEM;
+-	}
+-
+-	for (i = 0; i < ha->msix_count; i++)
+-		entries[i].entry = i;
+-
+-	ret = pci_enable_msix_range(ha->pdev,
+-				    entries, MIN_MSIX_COUNT, ha->msix_count);
++	ret = pci_alloc_irq_vectors(ha->pdev, MIN_MSIX_COUNT, ha->msix_count,
++				    PCI_IRQ_MSIX);
+ 	if (ret < 0) {
+ 		ql_log(ql_log_fatal, vha, 0x00c7,
+ 		    "MSI-X: Failed to enable support, "
+@@ -3097,10 +3062,10 @@ struct qla_init_msix_entry {
+ 
+ 	for (i = 0; i < ha->msix_count; i++) {
+ 		qentry = &ha->msix_entries[i];
+-		qentry->vector = entries[i].vector;
+-		qentry->entry = entries[i].entry;
++		qentry->vector = pci_irq_vector(ha->pdev, i);
++		qentry->entry = i;
+ 		qentry->have_irq = 0;
+-		qentry->rsp = NULL;
++		qentry->handle = NULL;
+ 		qentry->irq_notify.notify  = qla_irq_affinity_notify;
+ 		qentry->irq_notify.release = qla_irq_affinity_release;
+ 		qentry->cpuid = -1;
+@@ -3109,7 +3074,7 @@ struct qla_init_msix_entry {
+ 	/* Enable MSI-X vectors for the base queue */
+ 	for (i = 0; i < 2; i++) {
+ 		qentry = &ha->msix_entries[i];
+-		qentry->rsp = rsp;
++		qentry->handle = rsp;
+ 		rsp->msix = qentry;
+ 		if (IS_P3P_TYPE(ha))
+ 			ret = request_irq(qentry->vector,
+@@ -3142,7 +3107,7 @@ struct qla_init_msix_entry {
+ 	 */
+ 	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
+ 		qentry = &ha->msix_entries[ATIO_VECTOR];
+-		qentry->rsp = rsp;
++		qentry->handle = rsp;
+ 		rsp->msix = qentry;
+ 		ret = request_irq(qentry->vector,
+ 			qla83xx_msix_entries[ATIO_VECTOR].handler,
+@@ -3155,7 +3120,7 @@ struct qla_init_msix_entry {
+ 		ql_log(ql_log_fatal, vha, 0x00cb,
+ 		    "MSI-X: unable to register handler -- %x/%d.\n",
+ 		    qentry->vector, ret);
+-		qla24xx_disable_msix(ha);
++		qla2x00_free_irqs(vha);
+ 		ha->mqenable = 0;
+ 		goto msix_out;
  	}
+@@ -3177,7 +3142,6 @@ struct qla_init_msix_entry {
+ 	    ha->mqiobase, ha->max_rsp_queues, ha->max_req_queues);
  
-+	/* check if ISP abort is active and return cmd with timeout */
-+	if ((test_bit(ABORT_ISP_ACTIVE, &base_vha->dpc_flags) ||
-+	    test_bit(ISP_ABORT_RETRY, &base_vha->dpc_flags) ||
-+	    test_bit(ISP_ABORT_NEEDED, &base_vha->dpc_flags)) &&
-+	    !is_rom_cmd(mcp->mb[0])) {
-+		ql_log(ql_log_info, vha, 0x1005,
-+		    "Cmd 0x%x aborted with timeout since ISP Abort is pending\n",
-+		    mcp->mb[0]);
-+		return QLA_FUNCTION_TIMEOUT;
+ msix_out:
+-	kfree(entries);
+ 	return ret;
+ }
+ 
+@@ -3230,7 +3194,7 @@ struct qla_init_msix_entry {
+ 	    !IS_QLA27XX(ha))
+ 		goto skip_msi;
+ 
+-	ret = pci_enable_msi(ha->pdev);
++	ret = pci_alloc_irq_vectors(ha->pdev, 1, 1, PCI_IRQ_MSI);
+ 	if (!ret) {
+ 		ql_dbg(ql_dbg_init, vha, 0x0038,
+ 		    "MSI: Enabled.\n");
+@@ -3275,6 +3239,8 @@ struct qla_init_msix_entry {
+ {
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct rsp_que *rsp;
++	struct qla_msix_entry *qentry;
++	int i;
+ 
+ 	/*
+ 	 * We need to check that ha->rsp_q_map is valid in case we are called
+@@ -3284,13 +3250,24 @@ struct qla_init_msix_entry {
+ 		return;
+ 	rsp = ha->rsp_q_map[0];
+ 
+-	if (ha->flags.msix_enabled)
+-		qla24xx_disable_msix(ha);
+-	else if (ha->flags.msi_enabled) {
+-		free_irq(ha->pdev->irq, rsp);
+-		pci_disable_msi(ha->pdev);
+-	} else
+-		free_irq(ha->pdev->irq, rsp);
++	if (ha->flags.msix_enabled) {
++		for (i = 0; i < ha->msix_count; i++) {
++			qentry = &ha->msix_entries[i];
++			if (qentry->have_irq) {
++				irq_set_affinity_notifier(qentry->vector, NULL);
++				free_irq(pci_irq_vector(ha->pdev, i), qentry->handle);
++			}
++		}
++		kfree(ha->msix_entries);
++		ha->msix_entries = NULL;
++		ha->flags.msix_enabled = 0;
++		ql_dbg(ql_dbg_init, vha, 0x0042,
++			"Disabled MSI-X.\n");
++	} else {
++		free_irq(pci_irq_vector(ha->pdev, 0), rsp);
 +	}
 +
- 	/*
- 	 * Wait for active mailbox commands to finish by waiting at most tov
- 	 * seconds. This is to serialize actual issuing of mailbox cmds during
-@@ -178,6 +226,7 @@
- 			WRT_REG_WORD(&reg->isp.hccr, HCCR_SET_HOST_INT);
- 		spin_unlock_irqrestore(&ha->hardware_lock, flags);
++	pci_free_irq_vectors(ha->pdev);
+ }
  
-+		wait_time = jiffies;
- 		if (!wait_for_completion_timeout(&ha->mbx_intr_comp,
- 		    mcp->tov * HZ)) {
- 			ql_dbg(ql_dbg_mbx, vha, 0x117a,
-@@ -186,6 +235,9 @@
- 			clear_bit(MBX_INTR_WAIT, &ha->mbx_cmd_flags);
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		}
-+		if (time_after(jiffies, wait_time + 5 * HZ))
-+			ql_log(ql_log_warn, vha, 0x1015, "cmd=0x%x, waited %d msecs\n",
-+			    command, jiffies_to_msecs(jiffies - wait_time));
- 	} else {
- 		ql_dbg(ql_dbg_mbx, vha, 0x1011,
- 		    "Cmd=%x Polling Mode.\n", command);
+ 
+@@ -3310,7 +3287,7 @@ int qla25xx_request_irq(struct rsp_que *rsp)
+ 		return ret;
+ 	}
+ 	msix->have_irq = 1;
+-	msix->rsp = rsp;
++	msix->handle = rsp;
+ 	return ret;
+ }
+ 
+@@ -3323,11 +3300,12 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *notify,
+ 		container_of(notify, struct qla_msix_entry, irq_notify);
+ 	struct qla_hw_data *ha;
+ 	struct scsi_qla_host *base_vha;
++	struct rsp_que *rsp = e->handle;
+ 
+ 	/* user is recommended to set mask to just 1 cpu */
+ 	e->cpuid = cpumask_first(mask);
+ 
+-	ha = e->rsp->hw;
++	ha = rsp->hw;
+ 	base_vha = pci_get_drvdata(ha->pdev);
+ 
+ 	ql_dbg(ql_dbg_init, base_vha, 0xffff,
+@@ -3351,7 +3329,8 @@ static void qla_irq_affinity_release(struct kref *ref)
+ 		container_of(ref, struct irq_affinity_notify, kref);
+ 	struct qla_msix_entry *e =
+ 		container_of(notify, struct qla_msix_entry, irq_notify);
+-	struct scsi_qla_host *base_vha = pci_get_drvdata(e->rsp->hw->pdev);
++	struct rsp_que *rsp = e->handle;
++	struct scsi_qla_host *base_vha = pci_get_drvdata(rsp->hw->pdev);
+ 
+ 	ql_dbg(ql_dbg_init, base_vha, 0xffff,
+ 	    "%s: host%ld: vector %d cpu %d \n", __func__,
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index cf7ba52..8e406fc 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -542,7 +542,7 @@
+ 	if (rsp->msix && rsp->msix->have_irq) {
+ 		free_irq(rsp->msix->vector, rsp);
+ 		rsp->msix->have_irq = 0;
+-		rsp->msix->rsp = NULL;
++		rsp->msix->handle = NULL;
+ 	}
+ 	dma_free_coherent(&ha->pdev->dev, (rsp->length + 1) *
+ 		sizeof(response_t), rsp->ring, rsp->dma);
 -- 
 1.8.3.1
 
