@@ -1,268 +1,153 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v5 5/5] qla2xxx: Fix Target mode handling with Multiqueue changes.
-Date: Mon, 12 Dec 2016 14:40:09 -0800
-Message-ID: <1481582409-22027-6-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v5 4/5] qla2xxx: Add Block Multi Queue functionality.
+Date: Mon, 12 Dec 2016 14:40:08 -0800
+Message-ID: <1481582409-22027-5-git-send-email-himanshu.madhani@cavium.com>
 References: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0088.outbound.protection.outlook.com ([104.47.38.88]:60128
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0084.outbound.protection.outlook.com ([104.47.34.84]:8944
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751697AbcLLWkk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 12 Dec 2016 17:40:40 -0500
+        id S1751697AbcLLWkm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 12 Dec 2016 17:40:42 -0500
 In-Reply-To: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
-- Fix race condition between dpc_thread accessing Multiqueue resources
-  and qla2x00_remove_one thread trying to free resource.
-- Fix out of order free for Multiqueue resources. Also, Multiqueue
-  interrupts needs a workqueue. Interrupt needed to stop before
-  the wq can be destroyed.
+Tell the SCSI layer how many hardware queues we have based on the number
+of max queue pairs created. The number of max queue pairs created will
+depend on number of MSI-X vector count.
+
+This feature can be turned on via CONFIG_SCSI_MQ_DEFAULT or passing
+scsi_mod.use_blk_mq=Y as a parameter to the kernel
 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Sawan Chandak <sawan.chandak@cavium.com>
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h  |  3 ++-
- drivers/scsi/qla2xxx/qla_init.c |  2 +-
- drivers/scsi/qla2xxx/qla_isr.c  | 20 +++++++---------
- drivers/scsi/qla2xxx/qla_os.c   | 53 ++++++++++++++++++++++++++++++-----------
- 4 files changed, 50 insertions(+), 28 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c | 47 ++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 42 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index d60cd17..f7df01b 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2734,7 +2734,8 @@ struct isp_operations {
- 
- #define QLA_MSIX_DEFAULT		0x00
- #define QLA_MSIX_RSP_Q			0x01
--#define QLA_MSIX_QPAIR_MULTIQ_RSP_Q	0x02
-+#define QLA_ATIO_VECTOR		0x02
-+#define QLA_MSIX_QPAIR_MULTIQ_RSP_Q	0x03
- 
- #define QLA_MIDX_DEFAULT	0
- #define QLA_MIDX_RSP_Q		1
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 400ffd1..632d5f3 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -6764,7 +6764,7 @@ struct qla_qpair *qla2xxx_create_qpair(struct scsi_qla_host *vha, int qos, int v
- 		qpair->vp_idx = vp_idx;
- 
- 		for (i = 0; i < ha->msix_count; i++) {
--			msix = &ha->msix_entries[i + 2];
-+			msix = &ha->msix_entries[i];
- 			if (msix->in_use)
- 				continue;
- 			qpair->msix = msix;
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index d27019b..af840bf 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3005,6 +3005,7 @@ struct qla_init_msix_entry {
- static struct qla_init_msix_entry msix_entries[] = {
- 	{ "qla2xxx (default)", qla24xx_msix_default },
- 	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
-+	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
- 	{ "qla2xxx (qpair_multiq)", qla2xxx_msix_rsp_q },
- };
- 
-@@ -3013,17 +3014,10 @@ struct qla_init_msix_entry {
- 	{ "qla2xxx (rsp_q)", qla82xx_msix_rsp_q },
- };
- 
--static struct qla_init_msix_entry qla83xx_msix_entries[] = {
--	{ "qla2xxx (default)", qla24xx_msix_default },
--	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
--	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
--};
--
- static int
- qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- {
- #define MIN_MSIX_COUNT	2
--#define ATIO_VECTOR	2
- 	int i, ret;
- 	struct qla_msix_entry *qentry;
- 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
-@@ -3080,7 +3074,7 @@ struct qla_init_msix_entry {
- 	}
- 
- 	/* Enable MSI-X vectors for the base queue */
--	for (i = 0; i < 2; i++) {
-+	for (i = 0; i < (QLA_MSIX_RSP_Q + 1); i++) {
- 		qentry = &ha->msix_entries[i];
- 		qentry->handle = rsp;
- 		rsp->msix = qentry;
-@@ -3097,6 +3091,7 @@ struct qla_init_msix_entry {
- 		if (ret)
- 			goto msix_register_fail;
- 		qentry->have_irq = 1;
-+		qentry->in_use = 1;
- 
- 		/* Register for CPU affinity notification. */
- 		irq_set_affinity_notifier(qentry->vector, &qentry->irq_notify);
-@@ -3116,14 +3111,15 @@ struct qla_init_msix_entry {
- 	 * queue.
- 	 */
- 	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
--		qentry = &ha->msix_entries[ATIO_VECTOR];
-+		qentry = &ha->msix_entries[QLA_ATIO_VECTOR];
- 		rsp->msix = qentry;
- 		qentry->handle = rsp;
- 		scnprintf(qentry->name, sizeof(qentry->name),
--		    qla83xx_msix_entries[ATIO_VECTOR].name);
-+		    msix_entries[QLA_ATIO_VECTOR].name);
-+		qentry->in_use = 1;
- 		ret = request_irq(qentry->vector,
--			qla83xx_msix_entries[ATIO_VECTOR].handler,
--			0, qla83xx_msix_entries[ATIO_VECTOR].name, rsp);
-+			msix_entries[QLA_ATIO_VECTOR].handler,
-+			0, msix_entries[QLA_ATIO_VECTOR].name, rsp);
- 		qentry->have_irq = 1;
- 	}
- 
 diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d10a876..8521cfe 100644
+index 6ef32c9..d10a876 100644
 --- a/drivers/scsi/qla2xxx/qla_os.c
 +++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -439,24 +439,41 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
- 	struct req_que *req;
- 	struct rsp_que *rsp;
- 	int cnt;
-+	unsigned long flags;
+@@ -13,6 +13,7 @@
+ #include <linux/mutex.h>
+ #include <linux/kobject.h>
+ #include <linux/slab.h>
++#include <linux/blk-mq-pci.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
+ #include <scsi/scsi_transport.h>
+@@ -254,6 +255,7 @@
+ static void qla2x00_clear_drv_active(struct qla_hw_data *);
+ static void qla2x00_free_device(scsi_qla_host_t *);
+ static void qla83xx_disable_laser(scsi_qla_host_t *vha);
++static int qla2xxx_map_queues(struct Scsi_Host *shost);
  
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	for (cnt = 0; cnt < ha->max_req_queues; cnt++) {
- 		if (!test_bit(cnt, ha->req_qid_map))
- 			continue;
+ struct scsi_host_template qla2xxx_driver_template = {
+ 	.module			= THIS_MODULE,
+@@ -273,6 +275,7 @@ struct scsi_host_template qla2xxx_driver_template = {
+ 	.scan_finished		= qla2xxx_scan_finished,
+ 	.scan_start		= qla2xxx_scan_start,
+ 	.change_queue_depth	= scsi_change_queue_depth,
++	.map_queues             = qla2xxx_map_queues,
+ 	.this_id		= -1,
+ 	.cmd_per_lun		= 3,
+ 	.use_clustering		= ENABLE_CLUSTERING,
+@@ -738,16 +741,26 @@ static void qla2x00_free_queues(struct qla_hw_data *ha)
+ 	struct scsi_qla_host *base_vha = pci_get_drvdata(ha->pdev);
+ 	srb_t *sp;
+ 	int rval;
+-	struct qla_qpair *qpair;
++	struct qla_qpair *qpair = NULL;
++	uint32_t tag;
++	uint16_t hwq;
  
- 		req = ha->req_q_map[cnt];
-+		clear_bit(cnt, ha->req_qid_map);
-+		ha->req_q_map[cnt] = NULL;
-+
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		qla2x00_free_req_que(ha, req);
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	if (unlikely(test_bit(UNLOADING, &base_vha->dpc_flags))) {
+ 		cmd->result = DID_NO_CONNECT << 16;
+ 		goto qc24_fail_command;
  	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
- 	kfree(ha->req_q_map);
- 	ha->req_q_map = NULL;
  
+-	if (vha->vp_idx && vha->qpair) {
+-		qpair = vha->qpair;
+-		return qla2xxx_mqueuecommand(host, cmd, qpair);
++	if (ha->mqenable) {
++		if (shost_use_blk_mq(vha->host)) {
++			tag = blk_mq_unique_tag(cmd->request);
++			hwq = blk_mq_unique_tag_to_hwq(tag);
++			qpair = ha->queue_pair_map[hwq];
++		} else if (vha->vp_idx && vha->qpair) {
++			qpair = vha->qpair;
++		}
 +
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	for (cnt = 0; cnt < ha->max_rsp_queues; cnt++) {
- 		if (!test_bit(cnt, ha->rsp_qid_map))
- 			continue;
- 
- 		rsp = ha->rsp_q_map[cnt];
-+		clear_bit(cnt, ha->req_qid_map);
-+		ha->rsp_q_map[cnt] =  NULL;
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 		qla2x00_free_rsp_que(ha, rsp);
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
++		if (qpair)
++			return qla2xxx_mqueuecommand(host, cmd, qpair);
  	}
-+	spin_unlock_irqrestore(&ha->hardware_lock, flags);
-+
- 	kfree(ha->rsp_q_map);
- 	ha->rsp_q_map = NULL;
- }
-@@ -1890,17 +1907,22 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 		pci_read_config_word(ha->pdev,
- 		    QLA_83XX_PCI_MSIX_CONTROL, &msix);
- 		ha->msix_count = msix + 1;
--		/* Max queues are bounded by available msix vectors */
--		/* queue 0 uses two msix vectors */
-+		/*
-+		 * By default, driver uses at least two msix vectors
-+		 * (default & rspq)
-+		 */
- 		if (ql2xmqsupport) {
- 			/* MB interrupt uses 1 vector */
- 			ha->max_req_queues = ha->msix_count - 1;
- 			ha->max_rsp_queues = ha->max_req_queues;
-+
-+			/* ATIOQ needs 1 vector. That's 1 less QPair */
-+			if (QLA_TGT_MODE_ENABLED())
-+				ha->max_req_queues--;
-+
- 			/* Queue pairs is the max value minus
- 			 * the base queue pair */
- 			ha->max_qpairs = ha->max_req_queues - 1;
--			ql_dbg_pci(ql_dbg_multiq, ha->pdev, 0xc010,
--			    "Max no of queues pairs: %d.\n", ha->max_qpairs);
- 			ql_dbg_pci(ql_dbg_init, ha->pdev, 0x0190,
- 			    "Max no of queues pairs: %d.\n", ha->max_qpairs);
- 		}
-@@ -1912,6 +1934,8 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
  
- mqiobase_exit:
- 	ha->msix_count = ha->max_rsp_queues + 1;
-+	if (QLA_TGT_MODE_ENABLED())
-+		ha->msix_count++;
+ 	if (ha->flags.eeh_busy) {
+@@ -2509,6 +2522,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 	uint16_t req_length = 0, rsp_length = 0;
+ 	struct req_que *req = NULL;
+ 	struct rsp_que *rsp = NULL;
++	int i;
  
- 	qlt_83xx_iospace_config(ha);
+ 	bars = pci_select_bars(pdev, IORESOURCE_MEM | IORESOURCE_IO);
+ 	sht = &qla2xxx_driver_template;
+@@ -2874,6 +2888,16 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 		goto probe_init_failed;
+ 	}
  
-@@ -2989,7 +3013,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
++	if (ha->mqenable && shost_use_blk_mq(host)) {
++		/* number of hardware queues supported by blk/scsi-mq*/
++		host->nr_hw_queues = ha->max_qpairs;
++
++		ql_dbg(ql_dbg_init, base_vha, 0x0192,
++			"blk/scsi-mq enabled, HW queues = %d.\n", host->nr_hw_queues);
++	} else
++		ql_dbg(ql_dbg_init, base_vha, 0x0193,
++			"blk/scsi-mq disabled.\n");
++
+ 	qlt_probe_one_stage1(base_vha, ha);
+ 
+ 	pci_save_state(pdev);
+@@ -2965,8 +2989,14 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
  	    host->can_queue, base_vha->req,
  	    base_vha->mgmt_svr_loop_id, host->sg_tablesize);
  
--	if (ha->mqenable) {
-+	if (ha->mqenable && qla_ini_mode_enabled(base_vha)) {
+-	if (ha->mqenable)
++	if (ha->mqenable) {
  		ha->wq = alloc_workqueue("qla2xxx_wq", WQ_MEM_RECLAIM, 1);
- 		/* Create start of day qpairs for Block MQ */
- 		if (shost_use_blk_mq(host)) {
-@@ -3263,13 +3287,6 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- static void
- qla2x00_destroy_deferred_work(struct qla_hw_data *ha)
- {
--	/* Flush the work queue and remove it */
--	if (ha->wq) {
--		flush_workqueue(ha->wq);
--		destroy_workqueue(ha->wq);
--		ha->wq = NULL;
--	}
--
- 	/* Cancel all work and destroy DPC workqueues */
- 	if (ha->dpc_lp_wq) {
- 		cancel_work_sync(&ha->idc_aen);
-@@ -3465,9 +3482,17 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 		ha->isp_ops->disable_intrs(ha);
- 	}
- 
-+	qla2x00_free_fcports(vha);
-+
- 	qla2x00_free_irqs(vha);
- 
--	qla2x00_free_fcports(vha);
-+	/* Flush the work queue and remove it */
-+	if (ha->wq) {
-+		flush_workqueue(ha->wq);
-+		destroy_workqueue(ha->wq);
-+		ha->wq = NULL;
++		/* Create start of day qpairs for Block MQ */
++		if (shost_use_blk_mq(host)) {
++			for (i = 0; i < ha->max_qpairs; i++)
++				qla2xxx_create_qpair(base_vha, 5, 0);
++		}
 +	}
+ 
+ 	if (ha->flags.running_gold_fw)
+ 		goto skip_dpc;
+@@ -6109,6 +6139,13 @@ struct fw_blob *
+ 	qla83xx_wr_reg(vha, reg, data);
+ }
+ 
++static int qla2xxx_map_queues(struct Scsi_Host *shost)
++{
++	scsi_qla_host_t *vha = (scsi_qla_host_t *)shost->hostdata;
 +
- 
- 	qla2x00_mem_free(ha);
- 
-@@ -5187,8 +5212,8 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
- 
- 	base_vha->flags.init_done = 0;
- 	qla25xx_delete_queues(base_vha);
--	qla2x00_free_irqs(base_vha);
- 	qla2x00_free_fcports(base_vha);
-+	qla2x00_free_irqs(base_vha);
- 	qla2x00_mem_free(ha);
- 	qla82xx_md_free(base_vha);
- 	qla2x00_free_queues(ha);
++	return blk_mq_pci_map_queues(&shost->tag_set, vha->hw->pdev);
++}
++
+ static const struct pci_error_handlers qla2xxx_err_handler = {
+ 	.error_detected = qla2xxx_pci_error_detected,
+ 	.mmio_enabled = qla2xxx_pci_mmio_enabled,
 -- 
 1.8.3.1
 
