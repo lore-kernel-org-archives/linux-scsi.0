@@ -1,245 +1,491 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v2 05/12] scsi: ufs: Add sysfs node to dynamically control clock scaling
-Date: Tue, 13 Dec 2016 11:50:05 -0800
-Message-ID: <1481658605-31970-1-git-send-email-subhashj@codeaurora.org>
+Subject: [PATCH v2 02/12] scsi: ufs: add tracing support
+Date: Tue, 13 Dec 2016 11:48:45 -0800
+Message-ID: <1481658529-31807-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Sahitya Tummala <stummala@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Sahitya Tummala <stummala@codeaurora.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Sahitya Tummala <stummala@codeaurora.org>
+This change adds the ftrace support for following:
+1. UFS initialization time
+2. Clock gating states
+3. Clock scaling states
+4. Power management APIs latency
+5. BKOPs enable/disable
 
-Provide an option to enable/disable clock scaling during runtime.
-Write 1/0 to "clkscale_enable" sysfs node to enable/disable clock
-scaling.
+Usage:
+	echo 1 > /sys/kernel/debug/tracing/events/ufs/enable
+	cat /sys/kernel/debug/tracing/trace_pipe
 
-Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
+Reviewed-by: Sahitya Tummala <stummala@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 95 +++++++++++++++++++++++++++++++++++++++--------
- drivers/scsi/ufs/ufshcd.h |  4 +-
- 2 files changed, 82 insertions(+), 17 deletions(-)
+ drivers/scsi/ufs/ufshcd.c  | 133 ++++++++++++++++++++++++++++++++++++----
+ include/trace/events/ufs.h | 149 +++++++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 270 insertions(+), 12 deletions(-)
+ create mode 100644 include/trace/events/ufs.h
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index ccf54c1..3fa3ca3 100644
+index fe516b2..73c5937 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -230,6 +230,9 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- static int ufshcd_uic_hibern8_enter(struct ufs_hba *hba);
- static inline void ufshcd_add_delay_before_dme_cmd(struct ufs_hba *hba);
- static int ufshcd_host_reset_and_restore(struct ufs_hba *hba);
-+static void ufshcd_resume_clkscaling(struct ufs_hba *hba);
-+static void ufshcd_suspend_clkscaling(struct ufs_hba *hba);
-+static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up);
- static irqreturn_t ufshcd_intr(int irq, void *__hba);
- static int ufshcd_config_pwr_mode(struct ufs_hba *hba,
- 		struct ufs_pa_layer_attr *desired_pwr_mode);
-@@ -713,16 +716,58 @@ static bool ufshcd_is_unipro_pa_params_tuning_req(struct ufs_hba *hba)
+@@ -45,6 +45,9 @@
+ #include "ufs_quirks.h"
+ #include "unipro.h"
  
- static void ufshcd_suspend_clkscaling(struct ufs_hba *hba)
- {
--	if (ufshcd_is_clkscaling_enabled(hba)) {
--		devfreq_suspend_device(hba->devfreq);
--		hba->clk_scaling.window_start_t = 0;
--	}
-+	if (!ufshcd_is_clkscaling_supported(hba))
-+		return;
++#define CREATE_TRACE_POINTS
++#include <trace/events/ufs.h>
 +
-+	devfreq_suspend_device(hba->devfreq);
-+	hba->clk_scaling.window_start_t = 0;
+ #define UFSHCD_REQ_SENSE_SIZE	18
+ 
+ #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
+@@ -721,6 +724,40 @@ static void ufshcd_resume_clkscaling(struct ufs_hba *hba)
+ 		devfreq_resume_device(hba->devfreq);
  }
  
- static void ufshcd_resume_clkscaling(struct ufs_hba *hba)
- {
--	if (ufshcd_is_clkscaling_enabled(hba))
--		devfreq_resume_device(hba->devfreq);
-+	devfreq_resume_device(hba->devfreq);
-+}
-+
-+static ssize_t ufshcd_clkscale_enable_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
++static const char *ufschd_uic_link_state_to_string(
++			enum uic_link_state state)
 +{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+
-+	return snprintf(buf, PAGE_SIZE, "%d\n", hba->clk_scaling.is_allowed);
-+}
-+
-+static ssize_t ufshcd_clkscale_enable_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	u32 value;
-+	int err;
-+
-+	if (kstrtou32(buf, 0, &value))
-+		return -EINVAL;
-+
-+	value = !!value;
-+	if (value == hba->clk_scaling.is_allowed)
-+		goto out;
-+
-+	pm_runtime_get_sync(hba->dev);
-+	ufshcd_hold(hba, false);
-+
-+	if (value) {
-+		ufshcd_resume_clkscaling(hba);
-+	} else {
-+		ufshcd_suspend_clkscaling(hba);
-+		err = ufshcd_scale_clks(hba, true);
-+		if (err)
-+			dev_err(hba->dev, "%s: failed to scale clocks up %d\n",
-+					__func__, err);
++	switch (state) {
++	case UIC_LINK_OFF_STATE:	return "UIC_LINK_OFF_STATE";
++	case UIC_LINK_ACTIVE_STATE:	return "UIC_LINK_ACTIVE_STATE";
++	case UIC_LINK_HIBERN8_STATE:	return "UIC_LINK_HIBERN8_STATE";
++	default:			return "UNKNOWN_STATE";
 +	}
-+	hba->clk_scaling.is_allowed = value;
-+
-+	ufshcd_release(hba);
-+	pm_runtime_put_sync(hba->dev);
-+out:
-+	return count;
- }
- 
- static const char *ufschd_uic_link_state_to_string(
-@@ -792,7 +837,8 @@ static void ufshcd_ungate_work(struct work_struct *work)
- 		hba->clk_gating.is_suspended = false;
- 	}
- unblock_reqs:
--	ufshcd_resume_clkscaling(hba);
-+	if (hba->clk_scaling.is_allowed)
-+		ufshcd_resume_clkscaling(hba);
- 	scsi_unblock_requests(hba->host);
- }
- 
-@@ -1087,7 +1133,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
- /* Must be called with host lock acquired */
- static void ufshcd_clk_scaling_start_busy(struct ufs_hba *hba)
- {
--	if (!ufshcd_is_clkscaling_enabled(hba))
-+	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
- 
- 	if (!hba->clk_scaling.is_busy_started) {
-@@ -1100,7 +1146,7 @@ static void ufshcd_clk_scaling_update_busy(struct ufs_hba *hba)
- {
- 	struct ufs_clk_scaling *scaling = &hba->clk_scaling;
- 
--	if (!ufshcd_is_clkscaling_enabled(hba))
-+	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
- 
- 	if (!hba->outstanding_reqs && scaling->is_busy_started) {
-@@ -5567,12 +5613,15 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
- 		pm_runtime_put_sync(hba->dev);
- 	}
- 
-+	/* Resume devfreq after UFS device is detected */
-+	if (ufshcd_is_clkscaling_supported(hba)) {
-+		ufshcd_resume_clkscaling(hba);
-+		hba->clk_scaling.is_allowed = true;
-+	}
-+
- 	if (!hba->is_init_prefetch)
- 		hba->is_init_prefetch = true;
- 
--	/* Resume devfreq after UFS device is detected */
--	ufshcd_resume_clkscaling(hba);
--
- out:
- 	/*
- 	 * If we failed to initialize the device or the device is not
-@@ -6528,7 +6577,8 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	ufshcd_urgent_bkops(hba);
- 	hba->clk_gating.is_suspended = false;
- 
--	ufshcd_resume_clkscaling(hba);
-+	if (hba->clk_scaling.is_allowed)
-+		ufshcd_resume_clkscaling(hba);
- 
- 	/* Schedule clock gating in case of no access to UFS device yet */
- 	ufshcd_release(hba);
-@@ -6750,6 +6800,8 @@ void ufshcd_remove(struct ufs_hba *hba)
- 	ufshcd_hba_stop(hba, true);
- 
- 	ufshcd_exit_clk_gating(hba);
-+	if (ufshcd_is_clkscaling_supported(hba))
-+		device_remove_file(hba->dev, &hba->clk_scaling.enable_attr);
- 	ufshcd_hba_exit(hba);
- }
- EXPORT_SYMBOL_GPL(ufshcd_remove);
-@@ -6883,7 +6935,7 @@ static int ufshcd_devfreq_target(struct device *dev,
- 	bool release_clk_hold = false;
- 	unsigned long irq_flags;
- 
--	if (!ufshcd_is_clkscaling_enabled(hba))
-+	if (!ufshcd_is_clkscaling_supported(hba))
- 		return -EINVAL;
- 
- 	spin_lock_irqsave(hba->host->host_lock, irq_flags);
-@@ -6931,7 +6983,7 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 	struct ufs_clk_scaling *scaling = &hba->clk_scaling;
- 	unsigned long flags;
- 
--	if (!ufshcd_is_clkscaling_enabled(hba))
-+	if (!ufshcd_is_clkscaling_supported(hba))
- 		return -EINVAL;
- 
- 	memset(stat, 0, sizeof(*stat));
-@@ -6967,6 +7019,16 @@ static int ufshcd_devfreq_get_dev_status(struct device *dev,
- 	.target		= ufshcd_devfreq_target,
- 	.get_dev_status	= ufshcd_devfreq_get_dev_status,
- };
-+static void ufshcd_clkscaling_init_sysfs(struct ufs_hba *hba)
-+{
-+	hba->clk_scaling.enable_attr.show = ufshcd_clkscale_enable_show;
-+	hba->clk_scaling.enable_attr.store = ufshcd_clkscale_enable_store;
-+	sysfs_attr_init(&hba->clk_scaling.enable_attr.attr);
-+	hba->clk_scaling.enable_attr.attr.name = "clkscale_enable";
-+	hba->clk_scaling.enable_attr.attr.mode = 0644;
-+	if (device_create_file(hba->dev, &hba->clk_scaling.enable_attr))
-+		dev_err(hba->dev, "Failed to create sysfs for clkscale_enable\n");
 +}
- 
- /**
-  * ufshcd_init - Driver initialization routine
-@@ -7093,7 +7155,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		goto out_remove_scsi_host;
- 	}
- 
--	if (ufshcd_is_clkscaling_enabled(hba)) {
-+	if (ufshcd_is_clkscaling_supported(hba)) {
- 		hba->devfreq = devm_devfreq_add_device(dev, &ufs_devfreq_profile,
- 						   "simple_ondemand", NULL);
- 		if (IS_ERR(hba->devfreq)) {
-@@ -7104,6 +7166,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
++
++static const char *ufschd_ufs_dev_pwr_mode_to_string(
++			enum ufs_dev_pwr_mode state)
++{
++	switch (state) {
++	case UFS_ACTIVE_PWR_MODE:	return "UFS_ACTIVE_PWR_MODE";
++	case UFS_SLEEP_PWR_MODE:	return "UFS_SLEEP_PWR_MODE";
++	case UFS_POWERDOWN_PWR_MODE:	return "UFS_POWERDOWN_PWR_MODE";
++	default:			return "UNKNOWN_STATE";
++	}
++}
++
++static const char *ufschd_clk_gating_state_to_string(
++			enum clk_gating_state state)
++{
++	switch (state) {
++	case CLKS_OFF:		return "CLKS_OFF";
++	case CLKS_ON:		return "CLKS_ON";
++	case REQ_CLKS_OFF:	return "REQ_CLKS_OFF";
++	case REQ_CLKS_ON:	return "REQ_CLKS_ON";
++	default:		return "UNKNOWN_STATE";
++	}
++}
++
+ static void ufshcd_ungate_work(struct work_struct *work)
+ {
+ 	int ret;
+@@ -801,6 +838,9 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 	case REQ_CLKS_OFF:
+ 		if (cancel_delayed_work(&hba->clk_gating.gate_work)) {
+ 			hba->clk_gating.state = CLKS_ON;
++			trace_ufshcd_clk_gating(dev_name(hba->dev),
++				ufschd_clk_gating_state_to_string(
++					hba->clk_gating.state));
+ 			break;
  		}
- 		/* Suspend devfreq until the UFS device is detected */
- 		ufshcd_suspend_clkscaling(hba);
-+		ufshcd_clkscaling_init_sysfs(hba);
+ 		/*
+@@ -811,6 +851,9 @@ int ufshcd_hold(struct ufs_hba *hba, bool async)
+ 	case CLKS_OFF:
+ 		scsi_block_requests(hba->host);
+ 		hba->clk_gating.state = REQ_CLKS_ON;
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++			ufschd_clk_gating_state_to_string(
++				hba->clk_gating.state));
+ 		schedule_work(&hba->clk_gating.ungate_work);
+ 		/*
+ 		 * fall through to check if we should wait for this
+@@ -855,6 +898,9 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	if (hba->clk_gating.is_suspended ||
+ 		(hba->clk_gating.state == REQ_CLKS_ON)) {
+ 		hba->clk_gating.state = CLKS_ON;
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++				ufschd_clk_gating_state_to_string(
++					hba->clk_gating.state));
+ 		goto rel_lock;
  	}
  
- 	/* Hold auto suspend until async scan completes */
-diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index 0882ba6..bdd2284 100644
---- a/drivers/scsi/ufs/ufshcd.h
-+++ b/drivers/scsi/ufs/ufshcd.h
-@@ -342,6 +342,8 @@ struct ufs_clk_scaling {
- 	bool is_busy_started;
- 	unsigned long  tot_busy_t;
- 	unsigned long window_start_t;
-+	struct device_attribute enable_attr;
-+	bool is_allowed;
- };
+@@ -870,6 +916,9 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	if (ufshcd_can_hibern8_during_gating(hba)) {
+ 		if (ufshcd_uic_hibern8_enter(hba)) {
+ 			hba->clk_gating.state = CLKS_ON;
++			trace_ufshcd_clk_gating(dev_name(hba->dev),
++					ufschd_clk_gating_state_to_string(
++						hba->clk_gating.state));
+ 			goto out;
+ 		}
+ 		ufshcd_set_link_hibern8(hba);
+@@ -893,9 +942,12 @@ static void ufshcd_gate_work(struct work_struct *work)
+ 	 * new requests arriving before the current cancel work is done.
+ 	 */
+ 	spin_lock_irqsave(hba->host->host_lock, flags);
+-	if (hba->clk_gating.state == REQ_CLKS_OFF)
++	if (hba->clk_gating.state == REQ_CLKS_OFF) {
+ 		hba->clk_gating.state = CLKS_OFF;
+-
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++				ufschd_clk_gating_state_to_string(
++					hba->clk_gating.state));
++	}
+ rel_lock:
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ out:
+@@ -918,6 +970,9 @@ static void __ufshcd_release(struct ufs_hba *hba)
+ 		return;
  
- /**
-@@ -580,7 +582,7 @@ static inline bool ufshcd_can_hibern8_during_gating(struct ufs_hba *hba)
- {
- 	return hba->caps & UFSHCD_CAP_HIBERN8_WITH_CLK_GATING;
+ 	hba->clk_gating.state = REQ_CLKS_OFF;
++	trace_ufshcd_clk_gating(dev_name(hba->dev),
++			ufschd_clk_gating_state_to_string(
++				hba->clk_gating.state));
+ 	schedule_delayed_work(&hba->clk_gating.gate_work,
+ 			msecs_to_jiffies(hba->clk_gating.delay_ms));
  }
--static inline int ufshcd_is_clkscaling_enabled(struct ufs_hba *hba)
-+static inline int ufshcd_is_clkscaling_supported(struct ufs_hba *hba)
- {
- 	return hba->caps & UFSHCD_CAP_CLK_SCALING;
+@@ -3932,6 +3987,7 @@ static int ufshcd_enable_auto_bkops(struct ufs_hba *hba)
+ 	}
+ 
+ 	hba->auto_bkops_enabled = true;
++	trace_ufshcd_auto_bkops_state(dev_name(hba->dev), "Enabled");
+ 
+ 	/* No need of URGENT_BKOPS exception from the device */
+ 	err = ufshcd_disable_ee(hba, MASK_EE_URGENT_BKOPS);
+@@ -3982,6 +4038,7 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
+ 	}
+ 
+ 	hba->auto_bkops_enabled = false;
++	trace_ufshcd_auto_bkops_state(dev_name(hba->dev), "Disabled");
+ out:
+ 	return err;
  }
+@@ -5377,6 +5434,7 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
+ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ {
+ 	int ret;
++	ktime_t start = ktime_get();
+ 
+ 	ret = ufshcd_link_startup(hba);
+ 	if (ret)
+@@ -5468,6 +5526,10 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
+ 		ufshcd_hba_exit(hba);
+ 	}
+ 
++	trace_ufshcd_init(dev_name(hba->dev), ret,
++		ktime_to_us(ktime_sub(ktime_get(), start)),
++		ufschd_uic_link_state_to_string(hba->uic_link_state),
++		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode));
+ 	return ret;
+ }
+ 
+@@ -5817,11 +5879,15 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
+ 			if (!IS_ERR_OR_NULL(clki->clk) && clki->enabled)
+ 				clk_disable_unprepare(clki->clk);
+ 		}
+-	} else if (on) {
++	} else if (!ret && on) {
+ 		spin_lock_irqsave(hba->host->host_lock, flags);
+ 		hba->clk_gating.state = CLKS_ON;
++		trace_ufshcd_clk_gating(dev_name(hba->dev),
++				ufschd_clk_gating_state_to_string(
++					hba->clk_gating.state));
+ 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	}
++
+ 	return ret;
+ }
+ 
+@@ -6304,6 +6370,8 @@ static int ufshcd_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 		__ufshcd_setup_clocks(hba, false, true);
+ 
+ 	hba->clk_gating.state = CLKS_OFF;
++	trace_ufshcd_clk_gating(dev_name(hba->dev),
++		ufschd_clk_gating_state_to_string(hba->clk_gating.state));
+ 	/*
+ 	 * Disable the host irq as host controller as there won't be any
+ 	 * host controller transaction expected till resume.
+@@ -6436,6 +6504,7 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ int ufshcd_system_suspend(struct ufs_hba *hba)
+ {
+ 	int ret = 0;
++	ktime_t start = ktime_get();
+ 
+ 	if (!hba || !hba->is_powered)
+ 		return 0;
+@@ -6462,6 +6531,10 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 
+ 	ret = ufshcd_suspend(hba, UFS_SYSTEM_PM);
+ out:
++	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
++		ktime_to_us(ktime_sub(ktime_get(), start)),
++		ufschd_uic_link_state_to_string(hba->uic_link_state),
++		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode));
+ 	if (!ret)
+ 		hba->is_sys_suspended = true;
+ 	return ret;
+@@ -6477,6 +6550,9 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
+ 
+ int ufshcd_system_resume(struct ufs_hba *hba)
+ {
++	int ret = 0;
++	ktime_t start = ktime_get();
++
+ 	if (!hba)
+ 		return -EINVAL;
+ 
+@@ -6485,9 +6561,15 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+ 		 * Let the runtime resume take care of resuming
+ 		 * if runtime suspended.
+ 		 */
+-		return 0;
+-
+-	return ufshcd_resume(hba, UFS_SYSTEM_PM);
++		goto out;
++	else
++		ret = ufshcd_resume(hba, UFS_SYSTEM_PM);
++out:
++	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
++		ktime_to_us(ktime_sub(ktime_get(), start)),
++		ufschd_uic_link_state_to_string(hba->uic_link_state),
++		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode));
++	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_system_resume);
+ 
+@@ -6501,13 +6583,22 @@ int ufshcd_system_resume(struct ufs_hba *hba)
+  */
+ int ufshcd_runtime_suspend(struct ufs_hba *hba)
+ {
++	int ret = 0;
++	ktime_t start = ktime_get();
++
+ 	if (!hba)
+ 		return -EINVAL;
+ 
+ 	if (!hba->is_powered)
+-		return 0;
+-
+-	return ufshcd_suspend(hba, UFS_RUNTIME_PM);
++		goto out;
++	else
++		ret = ufshcd_suspend(hba, UFS_RUNTIME_PM);
++out:
++	trace_ufshcd_runtime_suspend(dev_name(hba->dev), ret,
++		ktime_to_us(ktime_sub(ktime_get(), start)),
++		ufschd_uic_link_state_to_string(hba->uic_link_state),
++		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode));
++	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_runtime_suspend);
+ 
+@@ -6534,13 +6625,22 @@ int ufshcd_runtime_suspend(struct ufs_hba *hba)
+  */
+ int ufshcd_runtime_resume(struct ufs_hba *hba)
+ {
++	int ret = 0;
++	ktime_t start = ktime_get();
++
+ 	if (!hba)
+ 		return -EINVAL;
+ 
+ 	if (!hba->is_powered)
+-		return 0;
+-
+-	return ufshcd_resume(hba, UFS_RUNTIME_PM);
++		goto out;
++	else
++		ret = ufshcd_resume(hba, UFS_RUNTIME_PM);
++out:
++	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
++		ktime_to_us(ktime_sub(ktime_get(), start)),
++		ufschd_uic_link_state_to_string(hba->uic_link_state),
++		ufschd_ufs_dev_pwr_mode_to_string(hba->curr_dev_pwr_mode));
++	return ret;
+ }
+ EXPORT_SYMBOL(ufshcd_runtime_resume);
+ 
+@@ -6684,6 +6784,11 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 						clki->max_freq, ret);
+ 					break;
+ 				}
++				trace_ufshcd_clk_scaling(dev_name(hba->dev),
++						"scaled up", clki->name,
++						clki->curr_freq,
++						clki->max_freq);
++
+ 				clki->curr_freq = clki->max_freq;
+ 
+ 			} else if (!scale_up && clki->min_freq) {
+@@ -6696,6 +6801,10 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
+ 						clki->min_freq, ret);
+ 					break;
+ 				}
++				trace_ufshcd_clk_scaling(dev_name(hba->dev),
++						"scaled down", clki->name,
++						clki->curr_freq,
++						clki->min_freq);
+ 				clki->curr_freq = clki->min_freq;
+ 			}
+ 		}
+diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+new file mode 100644
+index 0000000..7b3d9e1
+--- /dev/null
++++ b/include/trace/events/ufs.h
+@@ -0,0 +1,149 @@
++/*
++ * Copyright (c) 2013-2014, The Linux Foundation. All rights reserved.
++ *
++ * This program is free software; you can redistribute it and/or modify
++ * it under the terms of the GNU General Public License version 2 and
++ * only version 2 as published by the Free Software Foundation.
++ *
++ * This program is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
++ * GNU General Public License for more details.
++ */
++
++#undef TRACE_SYSTEM
++#define TRACE_SYSTEM ufs
++
++#if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ)
++#define _TRACE_UFS_H
++
++#include <linux/tracepoint.h>
++
++TRACE_EVENT(ufshcd_clk_gating,
++
++	TP_PROTO(const char *dev_name, const char *state),
++
++	TP_ARGS(dev_name, state),
++
++	TP_STRUCT__entry(
++		__string(dev_name, dev_name)
++		__string(state, state)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__assign_str(state, state);
++	),
++
++	TP_printk("%s: gating state changed to %s",
++		__get_str(dev_name), __get_str(state))
++);
++
++TRACE_EVENT(ufshcd_clk_scaling,
++
++	TP_PROTO(const char *dev_name, const char *state, const char *clk,
++		u32 prev_state, u32 curr_state),
++
++	TP_ARGS(dev_name, state, clk, prev_state, curr_state),
++
++	TP_STRUCT__entry(
++		__string(dev_name, dev_name)
++		__string(state, state)
++		__string(clk, clk)
++		__field(u32, prev_state)
++		__field(u32, curr_state)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__assign_str(state, state);
++		__assign_str(clk, clk);
++		__entry->prev_state = prev_state;
++		__entry->curr_state = curr_state;
++	),
++
++	TP_printk("%s: %s %s from %u to %u Hz",
++		__get_str(dev_name), __get_str(state), __get_str(clk),
++		__entry->prev_state, __entry->curr_state)
++);
++
++TRACE_EVENT(ufshcd_auto_bkops_state,
++
++	TP_PROTO(const char *dev_name, const char *state),
++
++	TP_ARGS(dev_name, state),
++
++	TP_STRUCT__entry(
++		__string(dev_name, dev_name)
++		__string(state, state)
++	),
++
++	TP_fast_assign(
++		__assign_str(dev_name, dev_name);
++		__assign_str(state, state);
++	),
++
++	TP_printk("%s: auto bkops - %s",
++		__get_str(dev_name), __get_str(state))
++);
++
++DECLARE_EVENT_CLASS(ufshcd_template,
++	TP_PROTO(const char *dev_name, int err, s64 usecs,
++		 const char *dev_state, const char *link_state),
++
++	TP_ARGS(dev_name, err, usecs, dev_state, link_state),
++
++	TP_STRUCT__entry(
++		__field(s64, usecs)
++		__field(int, err)
++		__string(dev_name, dev_name)
++		__string(dev_state, dev_state)
++		__string(link_state, link_state)
++	),
++
++	TP_fast_assign(
++		__entry->usecs = usecs;
++		__entry->err = err;
++		__assign_str(dev_name, dev_name);
++		__assign_str(dev_state, dev_state);
++		__assign_str(link_state, link_state);
++	),
++
++	TP_printk(
++		"%s: took %lld usecs, dev_state: %s, link_state: %s, err %d",
++		__get_str(dev_name),
++		__entry->usecs,
++		__get_str(dev_state),
++		__get_str(link_state),
++		__entry->err
++	)
++);
++
++DEFINE_EVENT(ufshcd_template, ufshcd_system_suspend,
++	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++		      const char *dev_state, const char *link_state),
++	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++
++DEFINE_EVENT(ufshcd_template, ufshcd_system_resume,
++	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++		      const char *dev_state, const char *link_state),
++	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++
++DEFINE_EVENT(ufshcd_template, ufshcd_runtime_suspend,
++	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++		      const char *dev_state, const char *link_state),
++	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++
++DEFINE_EVENT(ufshcd_template, ufshcd_runtime_resume,
++	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++		      const char *dev_state, const char *link_state),
++	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++
++DEFINE_EVENT(ufshcd_template, ufshcd_init,
++	     TP_PROTO(const char *dev_name, int err, s64 usecs,
++		      const char *dev_state, const char *link_state),
++	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
++#endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
++
++/* This part must be outside protection */
++#include <trace/define_trace.h>
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
