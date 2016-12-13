@@ -1,176 +1,169 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v2 06/12] scsi: ufs: provide sysfs attribute to select the PM level
-Date: Tue, 13 Dec 2016 11:50:29 -0800
-Message-ID: <1481658630-32009-1-git-send-email-subhashj@codeaurora.org>
+Subject: [PATCH v2 07/12] scsi: ufs: add option to change default UFS power management level
+Date: Tue, 13 Dec 2016 11:51:12 -0800
+Message-ID: <1481658674-32092-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Rob Herring <robh+dt@kernel.org>, Mark Rutland <mark.rutland@arm.com>, Hannes Reinecke <hare@suse.com>, Yaniv Gardi <ygardi@codeaurora.org>, Gilad Broner <gbroner@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, "open list:OPEN FIRMWARE AND FLATTENED
+        DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch provides the sysfs attribute to choose the power management
-level for UFS runtime and system suspend.
+UFS device and link can be put in multiple different low power modes hence
+UFS driver supports multiple different low power modes. By default UFS
+driver selects the default (optimal) low power mode (which gives moderate
+power savings and have relatively less enter and exit latencies) but
+we might have to tune this default power mode for different chipset
+platforms to meet the low power requirements/goals. Hence this patch
+adds option to change default UFS low power mode (level).
 
-Reviewed-by: Sujit Reddy Thumma <sthumma@codeaurora.org>
+Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c | 122 ++++++++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/ufs/ufshcd.h |   2 +
- 2 files changed, 124 insertions(+)
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 10 ++++++
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 ++++++++
+ drivers/scsi/ufs/ufshcd.c                          | 39 ++++++++++++++++++++++
+ drivers/scsi/ufs/ufshcd.h                          |  4 +--
+ 4 files changed, 65 insertions(+), 2 deletions(-)
 
+diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+index a99ed55..c3836c5 100644
+--- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
++++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+@@ -41,6 +41,14 @@ Optional properties:
+ -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
+ 			  Note that it is assume same number of lanes is used both
+ 			  directions at once. If not specified, default is 2 lanes per direction.
++- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
++			  0 - Both UFS device and Link in active state (Highest power consumption)
++			  1 - UFS device in active state but Link in Hibern8 state
++			  2 - UFS device in Sleep state but Link in active state
++			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
++			  4 - UFS device in Power-down state and Link in Hibern8 state
++			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
++- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
+ 
+ Note: If above properties are not defined it can be assumed that the supply
+ regulators or clocks are always on.
+@@ -66,4 +74,6 @@ Example:
+ 		freq-table-hz = <100000000 200000000>, <0 0>, <0 0>;
+ 		phys = <&ufsphy1>;
+ 		phy-names = "ufsphy";
++		rpm-level = <3>;
++		spm-level = <5>;
+ 	};
+diff --git a/drivers/scsi/ufs/ufshcd-pltfrm.c b/drivers/scsi/ufs/ufshcd-pltfrm.c
+index a72a4ba..896943d 100644
+--- a/drivers/scsi/ufs/ufshcd-pltfrm.c
++++ b/drivers/scsi/ufs/ufshcd-pltfrm.c
+@@ -223,6 +223,19 @@ static int ufshcd_parse_regulator_info(struct ufs_hba *hba)
+ 	return err;
+ }
+ 
++static void ufshcd_parse_pm_levels(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	struct device_node *np = dev->of_node;
++
++	if (np) {
++		if (of_property_read_u32(np, "rpm-level", &hba->rpm_lvl))
++			hba->rpm_lvl = -1;
++		if (of_property_read_u32(np, "spm-level", &hba->spm_lvl))
++			hba->spm_lvl = -1;
++	}
++}
++
+ #ifdef CONFIG_PM
+ /**
+  * ufshcd_pltfrm_suspend - suspend power management function
+@@ -342,6 +355,7 @@ int ufshcd_pltfrm_init(struct platform_device *pdev,
+ 		goto dealloc_host;
+ 	}
+ 
++	ufshcd_parse_pm_levels(hba);
+ 	pm_runtime_set_active(&pdev->dev);
+ 	pm_runtime_enable(&pdev->dev);
+ 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 3fa3ca3..982802c 100644
+index 982802c..c5e4b86 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -6757,6 +6757,127 @@ int ufshcd_runtime_idle(struct ufs_hba *hba)
+@@ -191,6 +191,22 @@ enum {
+ 	return ufs_pm_lvl_states[lvl].link_state;
  }
- EXPORT_SYMBOL(ufshcd_runtime_idle);
  
-+static inline ssize_t ufshcd_pm_lvl_store(struct device *dev,
-+					   struct device_attribute *attr,
-+					   const char *buf, size_t count,
-+					   bool rpm)
++static inline enum ufs_pm_level
++ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
++					enum uic_link_state link_state)
 +{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	unsigned long flags, value;
++	enum ufs_pm_level lvl;
 +
-+	if (kstrtoul(buf, 0, &value))
-+		return -EINVAL;
++	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++) {
++		if ((ufs_pm_lvl_states[lvl].dev_state == dev_state) &&
++			(ufs_pm_lvl_states[lvl].link_state == link_state))
++			return lvl;
++	}
 +
-+	if ((value < UFS_PM_LVL_0) || (value >= UFS_PM_LVL_MAX))
-+		return -EINVAL;
++	/* if no match found, return the level 0 */
++	return UFS_PM_LVL_0;
++}
 +
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	if (rpm)
-+		hba->rpm_lvl = value;
+ static struct ufs_dev_fix ufs_fixups[] = {
+ 	/* UFS cards deviations table */
+ 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
+@@ -215,6 +231,14 @@ enum {
+ 	END_FIX
+ };
+ 
++static inline bool ufshcd_is_valid_pm_lvl(int lvl)
++{
++	if (lvl >= 0 && lvl < ARRAY_SIZE(ufs_pm_lvl_states))
++		return true;
 +	else
-+		hba->spm_lvl = value;
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+	return count;
++		return false;
 +}
 +
-+static ssize_t ufshcd_rpm_lvl_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int curr_len;
-+	u8 lvl;
-+
-+	curr_len = snprintf(buf, PAGE_SIZE,
-+			    "\nCurrent Runtime PM level [%d] => dev_state [%s] link_state [%s]\n",
-+			    hba->rpm_lvl,
-+			    ufschd_ufs_dev_pwr_mode_to_string(
-+				ufs_pm_lvl_states[hba->rpm_lvl].dev_state),
-+			    ufschd_uic_link_state_to_string(
-+				ufs_pm_lvl_states[hba->rpm_lvl].link_state));
-+
-+	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-+			     "\nAll available Runtime PM levels info:\n");
-+	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-+		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-+				     "\tRuntime PM level [%d] => dev_state [%s] link_state [%s]\n",
-+				    lvl,
-+				    ufschd_ufs_dev_pwr_mode_to_string(
-+					ufs_pm_lvl_states[lvl].dev_state),
-+				    ufschd_uic_link_state_to_string(
-+					ufs_pm_lvl_states[lvl].link_state));
-+
-+	return curr_len;
-+}
-+
-+static ssize_t ufshcd_rpm_lvl_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	return ufshcd_pm_lvl_store(dev, attr, buf, count, true);
-+}
-+
-+static void ufshcd_add_rpm_lvl_sysfs_nodes(struct ufs_hba *hba)
-+{
-+	hba->rpm_lvl_attr.show = ufshcd_rpm_lvl_show;
-+	hba->rpm_lvl_attr.store = ufshcd_rpm_lvl_store;
-+	sysfs_attr_init(&hba->rpm_lvl_attr.attr);
-+	hba->rpm_lvl_attr.attr.name = "rpm_lvl";
-+	hba->rpm_lvl_attr.attr.mode = 0644;
-+	if (device_create_file(hba->dev, &hba->rpm_lvl_attr))
-+		dev_err(hba->dev, "Failed to create sysfs for rpm_lvl\n");
-+}
-+
-+static ssize_t ufshcd_spm_lvl_show(struct device *dev,
-+		struct device_attribute *attr, char *buf)
-+{
-+	struct ufs_hba *hba = dev_get_drvdata(dev);
-+	int curr_len;
-+	u8 lvl;
-+
-+	curr_len = snprintf(buf, PAGE_SIZE,
-+			    "\nCurrent System PM level [%d] => dev_state [%s] link_state [%s]\n",
-+			    hba->spm_lvl,
-+			    ufschd_ufs_dev_pwr_mode_to_string(
-+				ufs_pm_lvl_states[hba->spm_lvl].dev_state),
-+			    ufschd_uic_link_state_to_string(
-+				ufs_pm_lvl_states[hba->spm_lvl].link_state));
-+
-+	curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-+			     "\nAll available System PM levels info:\n");
-+	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++)
-+		curr_len += snprintf((buf + curr_len), (PAGE_SIZE - curr_len),
-+				     "\tSystem PM level [%d] => dev_state [%s] link_state [%s]\n",
-+				    lvl,
-+				    ufschd_ufs_dev_pwr_mode_to_string(
-+					ufs_pm_lvl_states[lvl].dev_state),
-+				    ufschd_uic_link_state_to_string(
-+					ufs_pm_lvl_states[lvl].link_state));
-+
-+	return curr_len;
-+}
-+
-+static ssize_t ufshcd_spm_lvl_store(struct device *dev,
-+		struct device_attribute *attr, const char *buf, size_t count)
-+{
-+	return ufshcd_pm_lvl_store(dev, attr, buf, count, false);
-+}
-+
-+static void ufshcd_add_spm_lvl_sysfs_nodes(struct ufs_hba *hba)
-+{
-+	hba->spm_lvl_attr.show = ufshcd_spm_lvl_show;
-+	hba->spm_lvl_attr.store = ufshcd_spm_lvl_store;
-+	sysfs_attr_init(&hba->spm_lvl_attr.attr);
-+	hba->spm_lvl_attr.attr.name = "spm_lvl";
-+	hba->spm_lvl_attr.attr.mode = 0644;
-+	if (device_create_file(hba->dev, &hba->spm_lvl_attr))
-+		dev_err(hba->dev, "Failed to create sysfs for spm_lvl\n");
-+}
-+
-+static inline void ufshcd_add_sysfs_nodes(struct ufs_hba *hba)
-+{
-+	ufshcd_add_rpm_lvl_sysfs_nodes(hba);
-+	ufshcd_add_spm_lvl_sysfs_nodes(hba);
-+}
-+
- /**
-  * ufshcd_shutdown - shutdown routine
-  * @hba: per adapter instance
-@@ -7181,6 +7302,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	ufshcd_set_ufs_dev_active(hba);
+ static void ufshcd_tmc_handler(struct ufs_hba *hba);
+ static void ufshcd_async_scan(void *data, async_cookie_t cookie);
+ static int ufshcd_reset_and_restore(struct ufs_hba *hba);
+@@ -7290,6 +7314,21 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+ 		ufshcd_clkscaling_init_sysfs(hba);
+ 	}
  
- 	async_schedule(ufshcd_async_scan, hba);
-+	ufshcd_add_sysfs_nodes(hba);
- 
- 	return 0;
++	/*
++	 * If rpm_lvl and and spm_lvl are not already set to valid levels,
++	 * set the default power management level for UFS runtime and system
++	 * suspend. Default power saving mode selected is keeping UFS link in
++	 * Hibern8 state and UFS device in sleep.
++	 */
++	if (!ufshcd_is_valid_pm_lvl(hba->rpm_lvl))
++		hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
++							UFS_SLEEP_PWR_MODE,
++							UIC_LINK_HIBERN8_STATE);
++	if (!ufshcd_is_valid_pm_lvl(hba->spm_lvl))
++		hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
++							UFS_SLEEP_PWR_MODE,
++							UIC_LINK_HIBERN8_STATE);
++
+ 	/* Hold auto suspend until async scan completes */
+ 	pm_runtime_get_sync(dev);
  
 diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
-index bdd2284..787323b 100644
+index 787323b..97fbe4a 100644
 --- a/drivers/scsi/ufs/ufshcd.h
 +++ b/drivers/scsi/ufs/ufshcd.h
-@@ -435,6 +435,8 @@ struct ufs_hba {
- 	enum ufs_pm_level rpm_lvl;
+@@ -432,9 +432,9 @@ struct ufs_hba {
+ 	enum ufs_dev_pwr_mode curr_dev_pwr_mode;
+ 	enum uic_link_state uic_link_state;
+ 	/* Desired UFS power management level during runtime PM */
+-	enum ufs_pm_level rpm_lvl;
++	int rpm_lvl;
  	/* Desired UFS power management level during system PM */
- 	enum ufs_pm_level spm_lvl;
-+	struct device_attribute rpm_lvl_attr;
-+	struct device_attribute spm_lvl_attr;
+-	enum ufs_pm_level spm_lvl;
++	int spm_lvl;
+ 	struct device_attribute rpm_lvl_attr;
+ 	struct device_attribute spm_lvl_attr;
  	int pm_op_in_progress;
- 
- 	struct ufshcd_lrb *lrb;
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
