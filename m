@@ -1,213 +1,92 @@
-From: Steven Rostedt <rostedt@goodmis.org>
-Subject: Re: [PATCH v2 02/12] scsi: ufs: add tracing support
-Date: Tue, 13 Dec 2016 15:10:21 -0500
-Message-ID: <20161213151021.217fef28@gandalf.local.home>
-References: <1481658529-31807-1-git-send-email-subhashj@codeaurora.org>
+From: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+Subject: Re: [PATCH v1 07/12] scsi: ufs: add option to change default UFS
+ power management level
+Date: Tue, 13 Dec 2016 12:16:55 -0800
+Message-ID: <b326fb4217bb894295e83fe252aa7bf1@codeaurora.org>
+References: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
+ <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: text/plain; charset=US-ASCII;
+ format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1481658529-31807-1-git-send-email-subhashj@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Ingo Molnar <mingo@redhat.com>, Sahitya Tummala <stummala@codeaurora.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
+Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
+Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 13 Dec 2016 11:48:45 -0800
-Subhash Jadavani <subhashj@codeaurora.org> wrote:
-
-> This change adds the ftrace support for following:
-> 1. UFS initialization time
-> 2. Clock gating states
-> 3. Clock scaling states
-> 4. Power management APIs latency
-> 5. BKOPs enable/disable
+On 2016-12-13 12:04, Rob Herring wrote:
+> On Mon, Dec 12, 2016 at 04:54:20PM -0800, Subhash Jadavani wrote:
+>> UFS device and link can be put in multiple different low power modes 
+>> hence
+>> UFS driver supports multiple different low power modes. By default UFS
+>> driver selects the default (optimal) low power mode (which gives 
+>> moderate
+>> power savings and have relatively less enter and exit latencies) but
+>> we might have to tune this default power mode for different chipset
+>> platforms to meet the low power requirements/goals. Hence this patch
+>> adds option to change default UFS low power mode (level).
+>> 
+>> Reviewed-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+>> Signed-off-by: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
+>> ---
+>>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 10 ++++++
+>>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 ++++++++
+>>  drivers/scsi/ufs/ufshcd.c                          | 39 
+>> ++++++++++++++++++++++
+>>  drivers/scsi/ufs/ufshcd.h                          |  4 +--
+>>  4 files changed, 65 insertions(+), 2 deletions(-)
+>> 
+>> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt 
+>> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> index a99ed55..c3836c5 100644
+>> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+>> @@ -41,6 +41,14 @@ Optional properties:
+>>  -lanes-per-direction	: number of lanes available per direction - 
+>> either 1 or 2.
+>>  			  Note that it is assume same number of lanes is used both
+>>  			  directions at once. If not specified, default is 2 lanes per 
+>> direction.
+>> +- rpm-level		: UFS Runtime power management level. Following PM 
+>> levels are supported:
+>> +			  0 - Both UFS device and Link in active state (Highest power 
+>> consumption)
+>> +			  1 - UFS device in active state but Link in Hibern8 state
+>> +			  2 - UFS device in Sleep state but Link in active state
+>> +			  3 - UFS device in Sleep state and Link in hibern8 state (default 
+>> PM level)
+>> +			  4 - UFS device in Power-down state and Link in Hibern8 state
+>> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest 
+>> power consumption)
+>> +- spm-level		: UFS System power management level. Allowed PM levels 
+>> are same as rpm-level.
 > 
-> Usage:
-> 	echo 1 > /sys/kernel/debug/tracing/events/ufs/enable
-> 	cat /sys/kernel/debug/tracing/trace_pipe
+> This looks like you are putting policy for Linux into DT.
 > 
-> Reviewed-by: Sahitya Tummala <stummala@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c  | 133 ++++++++++++++++++++++++++++++++++++----
->  include/trace/events/ufs.h | 149 +++++++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 270 insertions(+), 12 deletions(-)
->  create mode 100644 include/trace/events/ufs.h
+> What I would expect to see here is disabling of states that don't work
+> due to some h/w limitation. Otherwise, it is a user decision for what
+> modes to go into. Also, I think link and device states should be
+> separate.
+
+Yes, generally default level (3) is good enough (and recommended) for 
+all platforms and most likely user is only expected to change this if 
+they see issues (most H/W) on their platform or they want even more 
+aggressive power state (level-4 or level-5) and ready to take the 
+performance hit associated with resume latencies.
+
+Also, I think it is better to keep Link and device states tied, one 
+reason is that we can't keep device in sleep/active state when Link is 
+in OFF state.
+
 > 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index fe516b2..73c5937 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -45,6 +45,9 @@
->  #include "ufs_quirks.h"
->  #include "unipro.h"
->  
-> +#define CREATE_TRACE_POINTS
-> +#include <trace/events/ufs.h>
-> +
->  #define UFSHCD_REQ_SENSE_SIZE	18
->  
->  #define UFSHCD_ENABLE_INTRS	(UTP_TRANSFER_REQ_COMPL |\
-> @@ -721,6 +724,40 @@ static void ufshcd_resume_clkscaling(struct ufs_hba *hba)
->  		devfreq_resume_device(hba->devfreq);
->  }
->  
-> +static const char *ufschd_uic_link_state_to_string(
-> +			enum uic_link_state state)
-> +{
-> +	switch (state) {
-> +	case UIC_LINK_OFF_STATE:	return "UIC_LINK_OFF_STATE";
-> +	case UIC_LINK_ACTIVE_STATE:	return "UIC_LINK_ACTIVE_STATE";
-> +	case UIC_LINK_HIBERN8_STATE:	return "UIC_LINK_HIBERN8_STATE";
-> +	default:			return "UNKNOWN_STATE";
-> +	}
-> +}
-> +
-> +static const char *ufschd_ufs_dev_pwr_mode_to_string(
-> +			enum ufs_dev_pwr_mode state)
-> +{
-> +	switch (state) {
-> +	case UFS_ACTIVE_PWR_MODE:	return "UFS_ACTIVE_PWR_MODE";
-> +	case UFS_SLEEP_PWR_MODE:	return "UFS_SLEEP_PWR_MODE";
-> +	case UFS_POWERDOWN_PWR_MODE:	return "UFS_POWERDOWN_PWR_MODE";
-> +	default:			return "UNKNOWN_STATE";
-> +	}
-> +}
-> +
-> +static const char *ufschd_clk_gating_state_to_string(
-> +			enum clk_gating_state state)
-> +{
-> +	switch (state) {
-> +	case CLKS_OFF:		return "CLKS_OFF";
-> +	case CLKS_ON:		return "CLKS_ON";
-> +	case REQ_CLKS_OFF:	return "REQ_CLKS_OFF";
-> +	case REQ_CLKS_ON:	return "REQ_CLKS_ON";
-> +	default:		return "UNKNOWN_STATE";
-> +	}
-> +}
-> +
+> Rob
 
-A much better way than the above is to use the TRACE_DEFINE_ENUM()
-macros in the include/trace/events/ufs.h header. In fact, that's what
-it was made for. Not only will it be much faster to record, it wont
-waste as much space in the ring buffer.
-
-.e.g.
-
-#define UFS_LINK_STATES	\
-	EM( UIC_LINK_OFF_STATE ) \
-	EM( UIC_LINK_ACTIVE_STATE ) \
-	EMe(UIC_LINK_HIBERN8_STATE )
-
-#define UFS_PWR_MODES \
-	EM( UFS_ACTIVE_PWR_MODE ) \
-	EM( UFS_SLEEP_PWR_MODE ) \
-	EM( UFS_POWERDOWN_PWR_MODE) \
-	EMe(UFS_POWERDOWN_PWR_MODE)
-
-#define UFSCHD_CLK_GATING_STATES \
-	EM( CLKS_OFF) \
-	EM( CLKS_ON) \
-	EM( REQ_CLKS_OFF) \
-	EMe(REQ_CLKS_ON)
-
-#undef EM
-#undef EMe
-
-#define EM(a)	TRACE_DEFINE_ENUM(a);
-#define EMe(a)	TRACE_DEFINE_ENUM(a);
-
-UFS_LINK_STATES
-UFS_PWR_MODES
-UFSCHD_CLK_GATING_STATES
-
-#undef EM
-#undef EMe
-
-#define EM(a)	{ a, #a },
-#define EMe(a)	{ a, #a }
-
-
-DECLARE_EVENT_CLASS(ufshcd_template,
-	TP_PROTO(const char *dev_name int err, s64 usecs,
-		 int state, int link_state);
-
-	[..]
-
-	TP_printk(
-		"%s: took %lld, dev_state: %s, link_state: %s, err %d",
-		get_str(dev_name),
-		__entry->usecs,
-		__print_symbolic(__entry->state, UFS_PWR_MODES),
-		__print_symbolic(__entry->link_state, UFS_LINK_STATES),
-		__entry->err
-	)
-
-Not to mention, I think some of the strings may not be matching what
-was passed in.
-
--- Steve
-
-
-
-> +DECLARE_EVENT_CLASS(ufshcd_template,
-> +	TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		 const char *dev_state, const char *link_state),
-> +
-> +	TP_ARGS(dev_name, err, usecs, dev_state, link_state),
-> +
-> +	TP_STRUCT__entry(
-> +		__field(s64, usecs)
-> +		__field(int, err)
-> +		__string(dev_name, dev_name)
-> +		__string(dev_state, dev_state)
-> +		__string(link_state, link_state)
-> +	),
-> +
-> +	TP_fast_assign(
-> +		__entry->usecs = usecs;
-> +		__entry->err = err;
-> +		__assign_str(dev_name, dev_name);
-> +		__assign_str(dev_state, dev_state);
-> +		__assign_str(link_state, link_state);
-> +	),
-> +
-> +	TP_printk(
-> +		"%s: took %lld usecs, dev_state: %s, link_state: %s, err %d",
-> +		__get_str(dev_name),
-> +		__entry->usecs,
-> +		__get_str(dev_state),
-> +		__get_str(link_state),
-> +		__entry->err
-> +	)
-> +);
-> +
-> +DEFINE_EVENT(ufshcd_template, ufshcd_system_suspend,
-> +	     TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		      const char *dev_state, const char *link_state),
-> +	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
-> +
-> +DEFINE_EVENT(ufshcd_template, ufshcd_system_resume,
-> +	     TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		      const char *dev_state, const char *link_state),
-> +	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
-> +
-> +DEFINE_EVENT(ufshcd_template, ufshcd_runtime_suspend,
-> +	     TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		      const char *dev_state, const char *link_state),
-> +	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
-> +
-> +DEFINE_EVENT(ufshcd_template, ufshcd_runtime_resume,
-> +	     TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		      const char *dev_state, const char *link_state),
-> +	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
-> +
-> +DEFINE_EVENT(ufshcd_template, ufshcd_init,
-> +	     TP_PROTO(const char *dev_name, int err, s64 usecs,
-> +		      const char *dev_state, const char *link_state),
-> +	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
-> +#endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
-> +
-> +/* This part must be outside protection */
-> +#include <trace/define_trace.h>
+-- 
+The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
+a Linux Foundation Collaborative Project
+--
+To unsubscribe from this list: send the line "unsubscribe devicetree" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
