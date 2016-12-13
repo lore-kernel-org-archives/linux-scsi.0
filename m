@@ -1,41 +1,193 @@
-From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 13/13] be2iscsi: Update driver version
-Date: Tue, 13 Dec 2016 15:56:06 +0530
-Message-ID: <1481624766-13846-14-git-send-email-jitendra.bhivare@broadcom.com>
-References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH v2] mpt3sas: Recognize and act on iopriority info
+Date: Tue, 13 Dec 2016 15:57:28 +0530
+Message-ID: <CAK=zhgq4tKYjOsOf_JK6jWMKyUV8xOrc69FZjTcuJY9zeSQBag@mail.gmail.com>
+References: <1481589100-3342-1-git-send-email-adam.manzanares@hgst.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f172.google.com ([209.85.216.172]:33055 "EHLO
-        mail-qt0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932635AbcLMK1W (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 05:27:22 -0500
-Received: by mail-qt0-f172.google.com with SMTP id p16so102147860qta.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2016 02:27:21 -0800 (PST)
-In-Reply-To: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
+Received: from mail-qk0-f176.google.com ([209.85.220.176]:36627 "EHLO
+        mail-qk0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752461AbcLMK13 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 05:27:29 -0500
+Received: by mail-qk0-f176.google.com with SMTP id n21so111452383qka.3
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2016 02:27:29 -0800 (PST)
+In-Reply-To: <1481589100-3342-1-git-send-email-adam.manzanares@hgst.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: cleech@redhat.com, lduncan@suse.com
-Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+To: Adam Manzanares <adam.manzanares@hgst.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Adam Manzanares <adam.manzanares@wdc.com>
 
-Version 11.2.1.0
+On Tue, Dec 13, 2016 at 6:01 AM, Adam Manzanares
+<adam.manzanares@hgst.com> wrote:
+> From: Adam Manzanares <adam.manzanares@wdc.com>
+>
+> This patch adds support for request iopriority handling in the
+> mpt3sas layer. This works only when a ATA device is behind the
+> SATL. The ATA device also has to indicate that it supports
+> command priorities in the identify information that is pulled from
+> the SATL.
+>
+> This patch depends on block: Add iocontext priority to request
+>
+> v2:
+>  - Get iopriority class only if sysfs variable is set.
+>
+> Signed-off-by: Adam Manzanares <adam.manzanares@wdc.com>
 
-Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
----
- drivers/scsi/be2iscsi/be_main.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 02a9b2d..2188579 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -36,7 +36,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- 
- #define DRV_NAME		"be2iscsi"
--#define BUILD_STR		"11.2.0.0"
-+#define BUILD_STR		"11.2.1.0"
- #define BE_NAME			"Emulex OneConnect" \
- 				"Open-iSCSI Driver version" BUILD_STR
- #define DRV_DESC		BE_NAME " " "Driver"
--- 
-2.7.4
-
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.h  |  6 +++++
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c   | 43 ++++++++++++++++++++++++++++++++++--
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 34 +++++++++++++++++++++++++++-
+>  3 files changed, 80 insertions(+), 3 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index 3e71bc1..354cdc7 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -402,6 +402,9 @@ struct MPT3SAS_DEVICE {
+>         u8      block;
+>         u8      tlr_snoop_check;
+>         u8      ignore_delay_remove;
+> +       /* Iopriority Command Handling */
+> +       u8      ncq_prio_enable;
+> +
+>  };
+>
+>  #define MPT3_CMD_NOT_USED      0x8000  /* free */
+> @@ -1449,4 +1452,7 @@ mpt3sas_setup_direct_io(struct MPT3SAS_ADAPTER *ioc, struct scsi_cmnd *scmd,
+>         struct _raid_device *raid_device, Mpi2SCSIIORequest_t *mpi_request,
+>         u16 smid);
+>
+> +/* NCQ Prio Handling Check */
+> +bool scsih_ncq_prio_supp(struct scsi_device *sdev);
+> +
+>  #endif /* MPT3SAS_BASE_H_INCLUDED */
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> index 26cdc12..3ad8339 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+> @@ -3290,8 +3290,6 @@ static DEVICE_ATTR(diag_trigger_mpi, S_IRUGO | S_IWUSR,
+>
+>  /*********** diagnostic trigger suppport *** END ****************************/
+>
+> -
+> -
+>  /*****************************************/
+>
+>  struct device_attribute *mpt3sas_host_attrs[] = {
+> @@ -3367,9 +3365,50 @@ _ctl_device_handle_show(struct device *dev, struct device_attribute *attr,
+>  }
+>  static DEVICE_ATTR(sas_device_handle, S_IRUGO, _ctl_device_handle_show, NULL);
+>
+> +/**
+> + * _ctl_device_ncq_io_prio_show - send prioritized io commands to device
+> + * @dev - pointer to embedded device
+> + * @buf - the buffer returned
+> + *
+> + * A sysfs 'read/write' sdev attribute, only works with SATA
+> + */
+> +static ssize_t
+> +_ctl_device_ncq_prio_enable_show(struct device *dev,
+> +                                struct device_attribute *attr, char *buf)
+> +{
+> +       struct scsi_device *sdev = to_scsi_device(dev);
+> +       struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+> +
+> +       return snprintf(buf, PAGE_SIZE, "%d\n",
+> +                       sas_device_priv_data->ncq_prio_enable);
+> +}
+> +
+> +static ssize_t
+> +_ctl_device_ncq_prio_enable_store(struct device *dev,
+> +                                 struct device_attribute *attr,
+> +                                 const char *buf, size_t count)
+> +{
+> +       struct scsi_device *sdev = to_scsi_device(dev);
+> +       struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+> +       bool ncq_prio_enable = 0;
+> +
+> +       if (kstrtobool(buf, &ncq_prio_enable))
+> +               return -EINVAL;
+> +
+> +       if (!scsih_ncq_prio_supp(sdev))
+> +               return -EINVAL;
+> +
+> +       sas_device_priv_data->ncq_prio_enable = ncq_prio_enable;
+> +       return strlen(buf);
+> +}
+> +static DEVICE_ATTR(sas_ncq_prio_enable, S_IRUGO | S_IWUSR,
+> +                  _ctl_device_ncq_prio_enable_show,
+> +                  _ctl_device_ncq_prio_enable_store);
+> +
+>  struct device_attribute *mpt3sas_dev_attrs[] = {
+>         &dev_attr_sas_address,
+>         &dev_attr_sas_device_handle,
+> +       &dev_attr_sas_ncq_prio_enable,
+>         NULL,
+>  };
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 209a969..a6d1045 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -4030,6 +4030,8 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>         struct MPT3SAS_DEVICE *sas_device_priv_data;
+>         struct MPT3SAS_TARGET *sas_target_priv_data;
+>         struct _raid_device *raid_device;
+> +       struct request *rq = scmd->request;
+> +       int class;
+>         Mpi2SCSIIORequest_t *mpi_request;
+>         u32 mpi_control;
+>         u16 smid;
+> @@ -4085,7 +4087,12 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+>
+>         /* set tags */
+>         mpi_control |= MPI2_SCSIIO_CONTROL_SIMPLEQ;
+> -
+> +       /* NCQ Prio supported, make sure control indicated high priority */
+> +       if (sas_device_priv_data->ncq_prio_enable) {
+> +               class = IOPRIO_PRIO_CLASS(req_get_ioprio(rq));
+> +               if (class == IOPRIO_CLASS_RT)
+> +                       mpi_control |= 1 << MPI2_SCSIIO_CONTROL_CMDPRI_SHIFT;
+> +       }
+>         /* Make sure Device is not raid volume.
+>          * We do not expose raid functionality to upper layer for warpdrive.
+>          */
+> @@ -9031,6 +9038,31 @@ scsih_pci_mmio_enabled(struct pci_dev *pdev)
+>         return PCI_ERS_RESULT_RECOVERED;
+>  }
+>
+> +/**
+> + * scsih__ncq_prio_supp - Check for NCQ command priority support
+> + * @sdev: scsi device struct
+> + *
+> + * This is called when a user indicates they would like to enable
+> + * ncq command priorities. This works only on SATA devices.
+> + */
+> +bool scsih_ncq_prio_supp(struct scsi_device *sdev)
+> +{
+> +       unsigned char *buf;
+> +       bool ncq_prio_supp = false;
+> +
+> +       if (!scsi_device_supports_vpd(sdev))
+> +               return ncq_prio_supp;
+> +
+> +       buf = kmalloc(SCSI_VPD_PG_LEN, GFP_KERNEL);
+> +       if (!buf)
+> +               return ncq_prio_supp;
+> +
+> +       if (!scsi_get_vpd_page(sdev, 0x89, buf, SCSI_VPD_PG_LEN))
+> +               ncq_prio_supp = (buf[213] >> 4) & 1;
+> +
+> +       kfree(buf);
+> +       return ncq_prio_supp;
+> +}
+>  /*
+>   * The pci device ids are defined in mpi/mpi2_cnfg.h.
+>   */
+> --
+> 2.7.4
+>
