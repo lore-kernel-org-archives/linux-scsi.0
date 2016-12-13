@@ -1,88 +1,59 @@
-From: Jiri Slaby <jslaby@suse.cz>
-Subject: [PATCH 3.12 14/38] scsi: mpt3sas: Fix secure erase premature termination
-Date: Tue, 13 Dec 2016 20:52:40 +0100
-Message-ID: <940aeba5f936112e02425e5bf0ca32f7264ba0b3.1481658746.git.jslaby@suse.cz>
-References: <15034b96ec06ee859b67c6cd4e3be569a4ef286b.1481658746.git.jslaby@suse.cz>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <15034b96ec06ee859b67c6cd4e3be569a4ef286b.1481658746.git.jslaby@suse.cz>
-In-Reply-To: <cover.1481658746.git.jslaby@suse.cz>
-References: <cover.1481658746.git.jslaby@suse.cz>
-Sender: stable-owner@vger.kernel.org
-To: stable@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>, Jiri Slaby <jslaby@suse.cz>
+From: Rob Herring <robh@kernel.org>
+Subject: Re: [PATCH v1 07/12] scsi: ufs: add option to change default UFS
+ power management level
+Date: Tue, 13 Dec 2016 14:04:27 -0600
+Message-ID: <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
+References: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Hannes Reinecke <hare@suse.com>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Andrey Grodzovsky <andrey2805@gmail.com>
+On Mon, Dec 12, 2016 at 04:54:20PM -0800, Subhash Jadavani wrote:
+> UFS device and link can be put in multiple different low power modes hence
+> UFS driver supports multiple different low power modes. By default UFS
+> driver selects the default (optimal) low power mode (which gives moderate
+> power savings and have relatively less enter and exit latencies) but
+> we might have to tune this default power mode for different chipset
+> platforms to meet the low power requirements/goals. Hence this patch
+> adds option to change default UFS low power mode (level).
+> 
+> Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> ---
+>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 10 ++++++
+>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 ++++++++
+>  drivers/scsi/ufs/ufshcd.c                          | 39 ++++++++++++++++++++++
+>  drivers/scsi/ufs/ufshcd.h                          |  4 +--
+>  4 files changed, 65 insertions(+), 2 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> index a99ed55..c3836c5 100644
+> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
+> @@ -41,6 +41,14 @@ Optional properties:
+>  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
+>  			  Note that it is assume same number of lanes is used both
+>  			  directions at once. If not specified, default is 2 lanes per direction.
+> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
+> +			  0 - Both UFS device and Link in active state (Highest power consumption)
+> +			  1 - UFS device in active state but Link in Hibern8 state
+> +			  2 - UFS device in Sleep state but Link in active state
+> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
+> +			  4 - UFS device in Power-down state and Link in Hibern8 state
+> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
+> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
 
-3.12-stable review patch.  If anyone has any objections, please let me know.
+This looks like you are putting policy for Linux into DT.
 
-===============
+What I would expect to see here is disabling of states that don't work 
+due to some h/w limitation. Otherwise, it is a user decision for what 
+modes to go into. Also, I think link and device states should be 
+separate.
 
-commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
-
-This is a work around for a bug with LSI Fusion MPT SAS2 when perfoming
-secure erase. Due to the very long time the operation takes, commands
-issued during the erase will time out and will trigger execution of the
-abort hook. Even though the abort hook is called for the specific
-command which timed out, this leads to entire device halt
-(scsi_state terminated) and premature termination of the secure erase.
-
-Set device state to busy while ATA passthrough commands are in progress.
-
-[mkp: hand applied to 4.9/scsi-fixes, tweaked patch description]
-
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Jiri Slaby <jslaby@suse.cz>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index a961fe11b527..ae1db5499ca6 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3516,6 +3516,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
- 
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+{
-+	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+}
- 
- /**
-  * _scsih_qcmd_lck - main scsi request entry point
-@@ -3544,6 +3548,13 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 		scsi_print_command(scmd);
- #endif
- 
-+	/*
-+	 * Lock the device for any subsequent command until command is
-+	 * done.
-+	 */
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
- 	scmd->scsi_done = done;
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
-@@ -4047,6 +4058,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
- 
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
--- 
-2.11.0
+Rob
