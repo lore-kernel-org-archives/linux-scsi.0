@@ -1,48 +1,127 @@
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Subject: Re: version 3.18.44 to 3.18.45 introduced a bug in
- "drivers/scsi/megaraid/megaraid_sas_base.c"
-Date: Tue, 13 Dec 2016 08:47:33 -0800
-Message-ID: <20161213164733.GA21910@kroah.com>
-References: <23B7B563BA4E9446B962B142C86EF24ADB6F24@CNMAILEX03.lenovo.com>
- <a9788b9c-6361-f79e-f851-e8c4871571cb@infradead.org>
- <20161213163013.GB20693@kroah.com>
- <f08db306-7e67-ff4d-979d-8baa82c40671@infradead.org>
- <1481647421.2473.36.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1481647421.2473.36.camel@HansenPartnership.com>
-Sender: stable-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Randy Dunlap <rdunlap@infradead.org>, Dashi DS1 Cao <caods1@lenovo.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, stable <stable@vger.kernel.org>, Sasha Levin <alexander.levin@verizon.com>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: [PATCH v2 04/12] scsi: ufs: Add sysfs node to dynamically control clock gating
+Date: Tue, 13 Dec 2016 11:49:45 -0800
+Message-ID: <1481658586-31891-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Sahitya Tummala <stummala@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Dec 13, 2016 at 08:43:41AM -0800, James Bottomley wrote:
-> On Tue, 2016-12-13 at 08:33 -0800, Randy Dunlap wrote:
-> > On 12/13/16 08:30, Greg Kroah-Hartman wrote:
-> > > I don't maintain 3.18-stable :)
-> > > 
-> > > thanks,
-> > > 
-> > > greg k-h
-> > > 
-> > 
-> > Thanks. My bad.
-> > 
-> > adding Sasha.
-> 
-> This was all covered here:
-> 
-> https://www.spinics.net/lists/stable/msg150608.html
-> 
-> How did it get missed, and what should the process be?
+From: Sahitya Tummala <stummala@codeaurora.org>
 
-I don't know how that got missed, did the "fixup" patch never make it
-into 3.18-stable?  I know Sasha has been slow on that kernel, and it's
-about to go end-of-life, so perhaps he's just releasing them on a slower
-cycle at the moment...
+Provide an option to enable/disable clock gating during runtime.
+Write 1 or 0 to "clkgate_enable" sysfs node to enable/disable
+clock gating.
 
-thanks,
+Signed-off-by: Sahitya Tummala <stummala@codeaurora.org>
+Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+---
+ drivers/scsi/ufs/ufshcd.c | 48 ++++++++++++++++++++++++++++++++++++++++++++++-
+ drivers/scsi/ufs/ufshcd.h |  4 ++++
+ 2 files changed, 51 insertions(+), 1 deletion(-)
 
-greg k-h
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index f4cf66a..ccf54c1 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -1011,6 +1011,41 @@ static ssize_t ufshcd_clkgate_delay_store(struct device *dev,
+ 	return count;
+ }
+ 
++static ssize_t ufshcd_clkgate_enable_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return snprintf(buf, PAGE_SIZE, "%d\n", hba->clk_gating.is_enabled);
++}
++
++static ssize_t ufshcd_clkgate_enable_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	unsigned long flags;
++	u32 value;
++
++	if (kstrtou32(buf, 0, &value))
++		return -EINVAL;
++
++	value = !!value;
++	if (value == hba->clk_gating.is_enabled)
++		goto out;
++
++	if (value) {
++		ufshcd_release(hba);
++	} else {
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		hba->clk_gating.active_reqs++;
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	}
++
++	hba->clk_gating.is_enabled = value;
++out:
++	return count;
++}
++
+ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ {
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+@@ -1020,13 +1055,23 @@ static void ufshcd_init_clk_gating(struct ufs_hba *hba)
+ 	INIT_DELAYED_WORK(&hba->clk_gating.gate_work, ufshcd_gate_work);
+ 	INIT_WORK(&hba->clk_gating.ungate_work, ufshcd_ungate_work);
+ 
++	hba->clk_gating.is_enabled = true;
++
+ 	hba->clk_gating.delay_attr.show = ufshcd_clkgate_delay_show;
+ 	hba->clk_gating.delay_attr.store = ufshcd_clkgate_delay_store;
+ 	sysfs_attr_init(&hba->clk_gating.delay_attr.attr);
+ 	hba->clk_gating.delay_attr.attr.name = "clkgate_delay_ms";
+-	hba->clk_gating.delay_attr.attr.mode = S_IRUGO | S_IWUSR;
++	hba->clk_gating.delay_attr.attr.mode = 0644;
+ 	if (device_create_file(hba->dev, &hba->clk_gating.delay_attr))
+ 		dev_err(hba->dev, "Failed to create sysfs for clkgate_delay\n");
++
++	hba->clk_gating.enable_attr.show = ufshcd_clkgate_enable_show;
++	hba->clk_gating.enable_attr.store = ufshcd_clkgate_enable_store;
++	sysfs_attr_init(&hba->clk_gating.enable_attr.attr);
++	hba->clk_gating.enable_attr.attr.name = "clkgate_enable";
++	hba->clk_gating.enable_attr.attr.mode = 0644;
++	if (device_create_file(hba->dev, &hba->clk_gating.enable_attr))
++		dev_err(hba->dev, "Failed to create sysfs for clkgate_enable\n");
+ }
+ 
+ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+@@ -1034,6 +1079,7 @@ static void ufshcd_exit_clk_gating(struct ufs_hba *hba)
+ 	if (!ufshcd_is_clkgating_allowed(hba))
+ 		return;
+ 	device_remove_file(hba->dev, &hba->clk_gating.delay_attr);
++	device_remove_file(hba->dev, &hba->clk_gating.enable_attr);
+ 	cancel_work_sync(&hba->clk_gating.ungate_work);
+ 	cancel_delayed_work_sync(&hba->clk_gating.gate_work);
+ }
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 08cd26e..0882ba6 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -320,6 +320,8 @@ enum clk_gating_state {
+  * @is_suspended: clk gating is suspended when set to 1 which can be used
+  * during suspend/resume
+  * @delay_attr: sysfs attribute to control delay_attr
++ * @enable_attr: sysfs attribute to enable/disable clock gating
++ * @is_enabled: Indicates the current status of clock gating
+  * @active_reqs: number of requests that are pending and should be waited for
+  * completion before gating clocks.
+  */
+@@ -330,6 +332,8 @@ struct ufs_clk_gating {
+ 	unsigned long delay_ms;
+ 	bool is_suspended;
+ 	struct device_attribute delay_attr;
++	struct device_attribute enable_attr;
++	bool is_enabled;
+ 	int active_reqs;
+ };
+ 
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
