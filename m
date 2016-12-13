@@ -1,92 +1,210 @@
-From: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
-Subject: Re: [PATCH v1 07/12] scsi: ufs: add option to change default UFS
- power management level
-Date: Tue, 13 Dec 2016 12:16:55 -0800
-Message-ID: <b326fb4217bb894295e83fe252aa7bf1@codeaurora.org>
-References: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
- <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
+From: Steven Rostedt <rostedt@goodmis.org>
+Subject: Re: [PATCH v2 11/12] scsi: ufs: add trace event for ufs commands
+Date: Tue, 13 Dec 2016 15:22:06 -0500
+Message-ID: <20161213152206.79e78435@gandalf.local.home>
+References: <1481658740-32292-1-git-send-email-subhashj@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
+Content-Type: text/plain; charset=US-ASCII
 Content-Transfer-Encoding: 7bit
-Return-path: <devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
-Sender: devicetree-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Rob Herring <robh-DgEjT+Ai2ygdnm+yROfE0A@public.gmane.org>
-Cc: vinholikatti-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org, jejb-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Mark Rutland <mark.rutland-5wv7dgnIgG8@public.gmane.org>, Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>, Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>, Joao Pinto <Joao.Pinto-HKixBCOQz3hWk0Htik3J/w@public.gmane.org>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, open list <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1481658740-32292-1-git-send-email-subhashj@codeaurora.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Lee Susman <lsusman@codeaurora.org>, Ingo Molnar <mingo@redhat.com>, Sahitya Tummala <stummala@codeaurora.org>, Venkat Gopalakrishnan <venkatg@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 2016-12-13 12:04, Rob Herring wrote:
-> On Mon, Dec 12, 2016 at 04:54:20PM -0800, Subhash Jadavani wrote:
->> UFS device and link can be put in multiple different low power modes 
->> hence
->> UFS driver supports multiple different low power modes. By default UFS
->> driver selects the default (optimal) low power mode (which gives 
->> moderate
->> power savings and have relatively less enter and exit latencies) but
->> we might have to tune this default power mode for different chipset
->> platforms to meet the low power requirements/goals. Hence this patch
->> adds option to change default UFS low power mode (level).
->> 
->> Reviewed-by: Yaniv Gardi <ygardi-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
->> Signed-off-by: Subhash Jadavani <subhashj-sgV2jX0FEOL9JmXXK+q4OQ@public.gmane.org>
->> ---
->>  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 10 ++++++
->>  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 ++++++++
->>  drivers/scsi/ufs/ufshcd.c                          | 39 
->> ++++++++++++++++++++++
->>  drivers/scsi/ufs/ufshcd.h                          |  4 +--
->>  4 files changed, 65 insertions(+), 2 deletions(-)
->> 
->> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt 
->> b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> index a99ed55..c3836c5 100644
->> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
->> @@ -41,6 +41,14 @@ Optional properties:
->>  -lanes-per-direction	: number of lanes available per direction - 
->> either 1 or 2.
->>  			  Note that it is assume same number of lanes is used both
->>  			  directions at once. If not specified, default is 2 lanes per 
->> direction.
->> +- rpm-level		: UFS Runtime power management level. Following PM 
->> levels are supported:
->> +			  0 - Both UFS device and Link in active state (Highest power 
->> consumption)
->> +			  1 - UFS device in active state but Link in Hibern8 state
->> +			  2 - UFS device in Sleep state but Link in active state
->> +			  3 - UFS device in Sleep state and Link in hibern8 state (default 
->> PM level)
->> +			  4 - UFS device in Power-down state and Link in Hibern8 state
->> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest 
->> power consumption)
->> +- spm-level		: UFS System power management level. Allowed PM levels 
->> are same as rpm-level.
+On Tue, 13 Dec 2016 11:52:16 -0800
+Subhash Jadavani <subhashj@codeaurora.org> wrote:
+
+> From: Lee Susman <lsusman@codeaurora.org>
 > 
-> This looks like you are putting policy for Linux into DT.
+> Use the ftrace infrastructure to conditionally trace ufs command events.
+> New trace event is created, which samples the following ufs command data:
+> - device name
+> - optional identification string
+> - task tag
+> - doorbell register
+> - number of transfer bytes
+> - interrupt status register
+> - request start LBA
+> - command opcode
 > 
-> What I would expect to see here is disabling of states that don't work
-> due to some h/w limitation. Otherwise, it is a user decision for what
-> modes to go into. Also, I think link and device states should be
-> separate.
-
-Yes, generally default level (3) is good enough (and recommended) for 
-all platforms and most likely user is only expected to change this if 
-they see issues (most H/W) on their platform or they want even more 
-aggressive power state (level-4 or level-5) and ready to take the 
-performance hit associated with resume latencies.
-
-Also, I think it is better to keep Link and device states tied, one 
-reason is that we can't keep device in sleep/active state when Link is 
-in OFF state.
-
+> Currently we only fully trace read(10) and write(10) commands.
+> All other commands which pass through ufshcd_send_command() will be
+> printed with "-1" in the lba and transfer_len fields.
 > 
-> Rob
+> Usage:
+> 	echo 1 > /sys/kernel/debug/tracing/events/ufs/enable
+> 	cat /sys/kernel/debug/tracing/trace_pipe
+> 
+> Signed-off-by: Lee Susman <lsusman@codeaurora.org>
+> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
+> ---
+>  drivers/scsi/ufs/ufshcd.c  | 52 +++++++++++++++++++++++++++++++++++++++++++++-
+>  include/trace/events/ufs.h | 38 +++++++++++++++++++++++++++++++++
+>  2 files changed, 89 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+> index 33f3947..926d1ef 100644
+> --- a/drivers/scsi/ufs/ufshcd.c
+> +++ b/drivers/scsi/ufs/ufshcd.c
+> @@ -301,6 +301,51 @@ static inline void ufshcd_remove_non_printable(char *val)
+>  		*val = ' ';
+>  }
+>  
+> +#ifdef CONFIG_TRACEPOINTS
+> +static void ufshcd_add_command_trace(struct ufs_hba *hba,
+> +		unsigned int tag, const char *str)
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
---
-To unsubscribe from this list: send the line "unsubscribe devicetree" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Is this function only to use if you enable the tracepoint? Is there
+anything here doing something that wouldn't be enabled if tracing
+wasn't configured in?
+
+Also, if this is in a code execution path, it appears that you do this
+work regardless if the tracer is running or not.
+
+> +{
+> +	sector_t lba = -1;
+> +	u8 opcode = 0;
+> +	u32 intr, doorbell;
+> +	struct ufshcd_lrb *lrbp;
+> +	int transfer_len = -1;
+> +
+> +	lrbp = &hba->lrb[tag];
+> +
+> +	if (lrbp->cmd) { /* data phase exists */
+> +		opcode = (u8)(*lrbp->cmd->cmnd);
+> +		if ((opcode == READ_10) || (opcode == WRITE_10)) {
+> +			/*
+> +			 * Currently we only fully trace read(10) and write(10)
+> +			 * commands
+> +			 */
+> +			if (lrbp->cmd->request && lrbp->cmd->request->bio)
+> +				lba =
+> +				  lrbp->cmd->request->bio->bi_iter.bi_sector;
+> +			transfer_len = be32_to_cpu(
+> +				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
+> +		}
+> +	}
+> +
+> +	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
+> +	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+> +	trace_ufshcd_command(dev_name(hba->dev), str, tag,
+> +				doorbell, transfer_len, intr, lba, opcode);
+> +}
+> +
+> +static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
+> +					unsigned int tag, const char *str)
+> +{
+> +	ufshcd_add_command_trace(hba, tag, str);
+> +}
+> +#else
+> +static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
+> +					unsigned int tag, const char *str)
+> +{
+> +}
+> +#endif
+
+If my above assumptions are correct, I recommend removing the above
+#if, and have it always configured. Then...
+
+> +
+>  static void ufshcd_print_host_regs(struct ufs_hba *hba)
+>  {
+>  	/*
+> @@ -1193,6 +1238,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+>  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+>  	/* Make sure that doorbell is committed immediately */
+>  	wmb();
+
+Add:
+
+	if (trace_ufshcd_command_enabled())
+		ufshcd_cond_add_cmd_trace(hba, task_tag, "send");
+
+For one thing, the function only gets called if the tracepoint
+ufshcd_command is enabled.
+
+Now if CONFIG_TRACEPOINTS is not configured in, then the
+trace_ufshcd_command_enabled() turns into a "return false;" which one
+would hope that gcc will take that as a if (0) and optimized the entire
+function out of existence.
+
+This would make the code a bit cleaner and accomplish the same.
+
+-- Steve
+
+
+>  }
+>  
+>  /**
+> @@ -3982,6 +4028,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>  		lrbp = &hba->lrb[index];
+>  		cmd = lrbp->cmd;
+>  		if (cmd) {
+> +			ufshcd_cond_add_cmd_trace(hba, index, "complete");
+>  			result = ufshcd_transfer_rsp_status(hba, lrbp);
+>  			scsi_dma_unmap(cmd);
+>  			cmd->result = result;
+> @@ -3993,8 +4040,11 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+>  			__ufshcd_release(hba);
+>  		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
+>  			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+> -			if (hba->dev_cmd.complete)
+> +			if (hba->dev_cmd.complete) {
+> +				ufshcd_cond_add_cmd_trace(hba, index,
+> +						"dev_complete");
+>  				complete(hba->dev_cmd.complete);
+> +			}
+>  		}
+>  	}
+>  
+> diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
+> index 8bce504..d0ed0cf 100644
+> --- a/include/trace/events/ufs.h
+> +++ b/include/trace/events/ufs.h
+> @@ -183,6 +183,44 @@
+>  	     TP_PROTO(const char *dev_name, int err, s64 usecs,
+>  		      const char *dev_state, const char *link_state),
+>  	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
+> +
+> +TRACE_EVENT(ufshcd_command,
+> +	TP_PROTO(const char *dev_name, const char *str, unsigned int tag,
+> +			u32 doorbell, int transfer_len, u32 intr, u64 lba,
+> +			u8 opcode),
+> +
+> +	TP_ARGS(dev_name, str, tag, doorbell, transfer_len, intr, lba, opcode),
+> +
+> +	TP_STRUCT__entry(
+> +		__string(dev_name, dev_name)
+> +		__string(str, str)
+> +		__field(unsigned int, tag)
+> +		__field(u32, doorbell)
+> +		__field(int, transfer_len)
+> +		__field(u32, intr)
+> +		__field(u64, lba)
+> +		__field(u8, opcode)
+> +	),
+> +
+> +	TP_fast_assign(
+> +		__assign_str(dev_name, dev_name);
+> +		__assign_str(str, str);
+> +		__entry->tag = tag;
+> +		__entry->doorbell = doorbell;
+> +		__entry->transfer_len = transfer_len;
+> +		__entry->intr = intr;
+> +		__entry->lba = lba;
+> +		__entry->opcode = opcode;
+> +	),
+> +
+> +	TP_printk(
+> +		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x",
+> +		__get_str(str), __get_str(dev_name), __entry->tag,
+> +		__entry->doorbell, __entry->transfer_len,
+> +		__entry->intr, __entry->lba, (u32)__entry->opcode
+> +	)
+> +);
+> +
+>  #endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
+>  
+>  /* This part must be outside protection */
