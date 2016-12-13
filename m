@@ -1,83 +1,116 @@
 From: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Subject: [PATCH v2 04/13] be2iscsi: Set WRB invalid bit for SkyHawk
-Date: Tue, 13 Dec 2016 15:55:57 +0530
-Message-ID: <1481624766-13846-5-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: [PATCH v2 05/13] be2iscsi: Add checks to validate completions
+Date: Tue, 13 Dec 2016 15:55:58 +0530
+Message-ID: <1481624766-13846-6-git-send-email-jitendra.bhivare@broadcom.com>
 References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f181.google.com ([209.85.216.181]:32833 "EHLO
-        mail-qt0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S932220AbcLMK0t (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 05:26:49 -0500
-Received: by mail-qt0-f181.google.com with SMTP id p16so102138242qta.0
-        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2016 02:26:49 -0800 (PST)
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:34164 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932220AbcLMK0x (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 05:26:53 -0500
+Received: by mail-qk0-f172.google.com with SMTP id q130so111369092qke.1
+        for <linux-scsi@vger.kernel.org>; Tue, 13 Dec 2016 02:26:52 -0800 (PST)
 In-Reply-To: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org, Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 
-invalid bit in WRB indicates to FW that IO was invalidated before WRB
-was fetched from host memory.
+Added check in beiscsi_process_cq for pio_handle.
+pio_handle is cleared in beiscsi_put_wrb_handle.
+This catches any case where task gets cleaned up just before completion.
 
-For SkyHawk, this invalid bit in WRB is at a different offset.
-Use amap_iscsi_wrb_v2 to mark invalid bit for SkyHawk.
+Use back_lock before accessing pio_handle.
 
 Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 ---
- drivers/scsi/be2iscsi/be_main.c | 19 ++++++++++++++-----
- drivers/scsi/be2iscsi/be_main.h |  2 +-
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/scsi/be2iscsi/be_main.c | 28 +++++++++++++++++++++-------
+ 1 file changed, 21 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 260842a..b509acd 100644
+index b509acd..832d4f0 100644
 --- a/drivers/scsi/be2iscsi/be_main.c
 +++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -244,8 +244,13 @@ static int beiscsi_eh_abort(struct scsi_cmnd *sc)
- 	beiscsi_conn = conn->dd_data;
- 	phba = beiscsi_conn->phba;
- 	/* mark WRB invalid which have been not processed by FW yet */
--	AMAP_SET_BITS(struct amap_iscsi_wrb, invld,
--		      abrt_io_task->pwrb_handle->pwrb, 1);
-+	if (is_chip_be2_be3r(phba)) {
-+		AMAP_SET_BITS(struct amap_iscsi_wrb, invld,
-+			      abrt_io_task->pwrb_handle->pwrb, 1);
-+	} else {
-+		AMAP_SET_BITS(struct amap_iscsi_wrb_v2, invld,
-+			      abrt_io_task->pwrb_handle->pwrb, 1);
-+	}
- 	inv_tbl.cid = beiscsi_conn->beiscsi_conn_cid;
- 	inv_tbl.icd = abrt_io_task->psgl_handle->sgl_index;
- 	spin_unlock_bh(&session->back_lock);
-@@ -321,9 +326,13 @@ static int beiscsi_eh_device_reset(struct scsi_cmnd *sc)
- 		__iscsi_get_task(task);
- 		io_task = task->dd_data;
- 		/* mark WRB invalid which have been not processed by FW yet */
--		AMAP_SET_BITS(struct amap_iscsi_wrb, invld,
--			      io_task->pwrb_handle->pwrb,
--			      1);
-+		if (is_chip_be2_be3r(phba)) {
-+			AMAP_SET_BITS(struct amap_iscsi_wrb, invld,
-+				      io_task->pwrb_handle->pwrb, 1);
-+		} else {
-+			AMAP_SET_BITS(struct amap_iscsi_wrb_v2, invld,
-+				      io_task->pwrb_handle->pwrb, 1);
-+		}
+@@ -960,6 +960,10 @@ beiscsi_get_wrb_handle(struct hwi_wrb_context *pwrb_context,
+ 	unsigned long flags;
  
- 		inv_tbl->tbl[nents].cid = beiscsi_conn->beiscsi_conn_cid;
- 		inv_tbl->tbl[nents].icd = io_task->psgl_handle->sgl_index;
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index f869e37..8ba8c12 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -840,7 +840,7 @@ struct amap_iscsi_wrb_v2 {
- 	u8 diff_enbl;   /* DWORD 11 */
- 	u8 u_run;       /* DWORD 11 */
- 	u8 o_run;       /* DWORD 11 */
--	u8 invalid;     /* DWORD 11 */
-+	u8 invld;     /* DWORD 11 */
- 	u8 dsp;         /* DWORD 11 */
- 	u8 dmsg;        /* DWORD 11 */
- 	u8 rsvd4;       /* DWORD 11 */
+ 	spin_lock_irqsave(&pwrb_context->wrb_lock, flags);
++	if (!pwrb_context->wrb_handles_available) {
++		spin_unlock_irqrestore(&pwrb_context->wrb_lock, flags);
++		return NULL;
++	}
+ 	pwrb_handle = pwrb_context->pwrb_handle_base[pwrb_context->alloc_index];
+ 	pwrb_context->wrb_handles_available--;
+ 	if (pwrb_context->alloc_index == (wrbs_per_cxn - 1))
+@@ -1010,6 +1014,7 @@ beiscsi_put_wrb_handle(struct hwi_wrb_context *pwrb_context,
+ 		pwrb_context->free_index = 0;
+ 	else
+ 		pwrb_context->free_index++;
++	pwrb_handle->pio_handle = NULL;
+ 	spin_unlock_irqrestore(&pwrb_context->wrb_lock, flags);
+ }
+ 
+@@ -1220,6 +1225,7 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
+ 	uint16_t wrb_index, cid, cri_index;
+ 	struct hwi_controller *phwi_ctrlr;
+ 	struct wrb_handle *pwrb_handle;
++	struct iscsi_session *session;
+ 	struct iscsi_task *task;
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+@@ -1238,8 +1244,12 @@ hwi_complete_drvr_msgs(struct beiscsi_conn *beiscsi_conn,
+ 	cri_index = BE_GET_CRI_FROM_CID(cid);
+ 	pwrb_context = &phwi_ctrlr->wrb_context[cri_index];
+ 	pwrb_handle = pwrb_context->pwrb_handle_basestd[wrb_index];
++	session = beiscsi_conn->conn->session;
++	spin_lock_bh(&session->back_lock);
+ 	task = pwrb_handle->pio_handle;
+-	iscsi_put_task(task);
++	if (task)
++		__iscsi_put_task(task);
++	spin_unlock_bh(&session->back_lock);
+ }
+ 
+ static void
+@@ -1319,16 +1329,16 @@ static void adapter_get_sol_cqe(struct beiscsi_hba *phba,
+ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
+ 			     struct beiscsi_hba *phba, struct sol_cqe *psol)
+ {
++	struct iscsi_conn *conn = beiscsi_conn->conn;
++	struct iscsi_session *session = conn->session;
++	struct common_sol_cqe csol_cqe = {0};
+ 	struct hwi_wrb_context *pwrb_context;
++	struct hwi_controller *phwi_ctrlr;
+ 	struct wrb_handle *pwrb_handle;
+ 	struct iscsi_wrb *pwrb = NULL;
+-	struct hwi_controller *phwi_ctrlr;
+ 	struct iscsi_task *task;
+-	unsigned int type;
+-	struct iscsi_conn *conn = beiscsi_conn->conn;
+-	struct iscsi_session *session = conn->session;
+-	struct common_sol_cqe csol_cqe = {0};
+ 	uint16_t cri_index = 0;
++	uint8_t type;
+ 
+ 	phwi_ctrlr = phba->phwi_ctrlr;
+ 
+@@ -1341,11 +1351,15 @@ static void hwi_complete_cmd(struct beiscsi_conn *beiscsi_conn,
+ 	pwrb_handle = pwrb_context->pwrb_handle_basestd[
+ 		      csol_cqe.wrb_index];
+ 
++	spin_lock_bh(&session->back_lock);
+ 	task = pwrb_handle->pio_handle;
++	if (!task) {
++		spin_unlock_bh(&session->back_lock);
++		return;
++	}
+ 	pwrb = pwrb_handle->pwrb;
+ 	type = ((struct beiscsi_io_task *)task->dd_data)->wrb_type;
+ 
+-	spin_lock_bh(&session->back_lock);
+ 	switch (type) {
+ 	case HWH_TYPE_IO:
+ 	case HWH_TYPE_IO_RD:
 -- 
 2.7.4
 
