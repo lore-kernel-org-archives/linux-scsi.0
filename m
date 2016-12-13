@@ -1,59 +1,60 @@
-From: Rob Herring <robh@kernel.org>
-Subject: Re: [PATCH v1 07/12] scsi: ufs: add option to change default UFS
- power management level
-Date: Tue, 13 Dec 2016 14:04:27 -0600
-Message-ID: <20161213200427.vzdwyzajcftvvcgu@rob-hp-laptop>
-References: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1481590462-9981-1-git-send-email-subhashj@codeaurora.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Mark Rutland <mark.rutland@arm.com>, Hannes Reinecke <hare@suse.com>, Yaniv Gardi <ygardi@codeaurora.org>, Joao Pinto <Joao.Pinto@synopsys.com>, "open list:OPEN FIRMWARE AND FLATTENED DEVICE TREE BINDINGS" <devicetree@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: [PATCH v2 00/12] scsi: ufs: add trace/debug support, sysfs controls and few fixes
+Date: Tue, 13 Dec 2016 11:48:06 -0800
+Message-ID: <1481658486-31726-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59020 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752336AbcLMTsf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 14:48:35 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>
 
-On Mon, Dec 12, 2016 at 04:54:20PM -0800, Subhash Jadavani wrote:
-> UFS device and link can be put in multiple different low power modes hence
-> UFS driver supports multiple different low power modes. By default UFS
-> driver selects the default (optimal) low power mode (which gives moderate
-> power savings and have relatively less enter and exit latencies) but
-> we might have to tune this default power mode for different chipset
-> platforms to meet the low power requirements/goals. Hence this patch
-> adds option to change default UFS low power mode (level).
-> 
-> Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> ---
->  .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      | 10 ++++++
->  drivers/scsi/ufs/ufshcd-pltfrm.c                   | 14 ++++++++
->  drivers/scsi/ufs/ufshcd.c                          | 39 ++++++++++++++++++++++
->  drivers/scsi/ufs/ufshcd.h                          |  4 +--
->  4 files changed, 65 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> index a99ed55..c3836c5 100644
-> --- a/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> +++ b/Documentation/devicetree/bindings/ufs/ufshcd-pltfrm.txt
-> @@ -41,6 +41,14 @@ Optional properties:
->  -lanes-per-direction	: number of lanes available per direction - either 1 or 2.
->  			  Note that it is assume same number of lanes is used both
->  			  directions at once. If not specified, default is 2 lanes per direction.
-> +- rpm-level		: UFS Runtime power management level. Following PM levels are supported:
-> +			  0 - Both UFS device and Link in active state (Highest power consumption)
-> +			  1 - UFS device in active state but Link in Hibern8 state
-> +			  2 - UFS device in Sleep state but Link in active state
-> +			  3 - UFS device in Sleep state and Link in hibern8 state (default PM level)
-> +			  4 - UFS device in Power-down state and Link in Hibern8 state
-> +			  5 - UFS device in Power-down state and Link in OFF state (Lowest power consumption)
-> +- spm-level		: UFS System power management level. Allowed PM levels are same as rpm-level.
+This patch series adds following things:
+ - ftrace support to trace important events in UFS driver.
+ - debug dumps following failures to ease the debugging
+ - sysfs node to control clock gating, clock scaling and PM
+ - few fixes
 
-This looks like you are putting policy for Linux into DT.
+---
+Changes v1 -> v2:
+ - Added explicit new line character at the end of the printk messages
+   for patch #1 & #12
+ - Fixed couple of checkpatch warnings for patch #1
+---
 
-What I would expect to see here is disabling of states that don't work 
-due to some h/w limitation. Otherwise, it is a user decision for what 
-modes to go into. Also, I think link and device states should be 
-separate.
+Dolev Raviv (3):
+  scsi: ufs: dump debug info during failures
+  scsi: ufs: fix multiple ufs spec violation
+  scsi: ufs: Improve fatal error logs
 
-Rob
+Lee Susman (1):
+  scsi: ufs: add trace event for ufs commands
+
+Sahitya Tummala (2):
+  scsi: ufs: Add sysfs node to dynamically control clock gating
+  scsi: ufs: Add sysfs node to dynamically control clock scaling
+
+Subhash Jadavani (6):
+  scsi: ufs: add tracing support
+  scsi: ufs: provide sysfs attribute to select the PM level
+  scsi: ufs: add option to change default UFS power management level
+  scsi: ufs: add capability to keep auto bkops always enabled
+  scsi: ufs: fix setting init power mode
+  scsi: ufs: add time profiling support
+
+ .../devicetree/bindings/ufs/ufshcd-pltfrm.txt      |  10 +
+ drivers/scsi/ufs/ufshcd-pltfrm.c                   |  14 +
+ drivers/scsi/ufs/ufshcd.c                          | 832 +++++++++++++++++++--
+ drivers/scsi/ufs/ufshcd.h                          |  74 +-
+ drivers/scsi/ufs/ufshci.h                          |   3 +
+ include/trace/events/ufs.h                         | 227 ++++++
+ 6 files changed, 1103 insertions(+), 57 deletions(-)
+ create mode 100644 include/trace/events/ufs.h
+
+-- 
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
+
