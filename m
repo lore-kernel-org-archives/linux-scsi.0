@@ -1,175 +1,180 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 10/12] scsi: ufs: add time profiling support
-Date: Mon, 12 Dec 2016 16:55:55 -0800
-Message-ID: <1481590558-7894-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Gilad Broner <gbroner@codeaurora.org>, Lee Susman <lsusman@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+Subject: [PATCH v1 11/12] scsi: ufs: add trace event for ufs commands
+Date: Mon, 12 Dec 2016 16:56:18 -0800
+Message-ID: <1481590582-14679-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.codeaurora.org ([198.145.29.96]:59528 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932565AbcLMA4b (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 12 Dec 2016 19:56:31 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Lee Susman <lsusman@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, Steven Rostedt <rostedt@goodmis.org>, Ingo Molnar <mingo@redhat.com>, Gilad Broner <gbroner@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-This patch adds the profiling support for some of the time critical
-operations like hibern8 enter/exit, clock gating & clock scaling.
+From: Lee Susman <lsusman@codeaurora.org>
 
-Reviewed-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+Use the ftrace infrastructure to conditionally trace ufs command events.
+New trace event is created, which samples the following ufs command data:
+- device name
+- optional identification string
+- task tag
+- doorbell register
+- number of transfer bytes
+- interrupt status register
+- request start LBA
+- command opcode
+
+Currently we only fully trace read(10) and write(10) commands.
+All other commands which pass through ufshcd_send_command() will be
+printed with "-1" in the lba and transfer_len fields.
+
+Usage:
+	echo 1 > /sys/kernel/debug/tracing/events/ufs/enable
+	cat /sys/kernel/debug/tracing/trace_pipe
+
+Signed-off-by: Lee Susman <lsusman@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
- drivers/scsi/ufs/ufshcd.c  | 24 ++++++++++++++++++++++++
- include/trace/events/ufs.h | 40 ++++++++++++++++++++++++++++++++++++++++
- 2 files changed, 64 insertions(+)
+ drivers/scsi/ufs/ufshcd.c  | 52 +++++++++++++++++++++++++++++++++++++++++++++-
+ include/trace/events/ufs.h | 38 +++++++++++++++++++++++++++++++++
+ 2 files changed, 89 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 422ba91..531e690 100644
+index 531e690..c19cf40 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3048,11 +3048,14 @@ static int __ufshcd_uic_hibern8_enter(struct ufs_hba *hba)
- {
- 	int ret;
- 	struct uic_command uic_cmd = {0};
-+	ktime_t start = ktime_get();
+@@ -301,6 +301,51 @@ static inline void ufshcd_remove_non_printable(char *val)
+ 		*val = ' ';
+ }
  
- 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_ENTER, PRE_CHANGE);
- 
- 	uic_cmd.command = UIC_CMD_DME_HIBER_ENTER;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "enter",
-+			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 
- 	if (ret) {
- 		dev_err(hba->dev, "%s: hibern8 enter failed. ret = %d\n",
-@@ -3088,11 +3091,15 @@ static int ufshcd_uic_hibern8_exit(struct ufs_hba *hba)
- {
- 	struct uic_command uic_cmd = {0};
- 	int ret;
-+	ktime_t start = ktime_get();
- 
- 	ufshcd_vops_hibern8_notify(hba, UIC_CMD_DME_HIBER_EXIT, PRE_CHANGE);
- 
- 	uic_cmd.command = UIC_CMD_DME_HIBER_EXIT;
- 	ret = ufshcd_uic_pwr_ctrl(hba, &uic_cmd);
-+	trace_ufshcd_profile_hibern8(dev_name(hba->dev), "exit",
-+			     ktime_to_us(ktime_sub(ktime_get(), start)), ret);
++#ifdef CONFIG_TRACEPOINTS
++static void ufshcd_add_command_trace(struct ufs_hba *hba,
++		unsigned int tag, const char *str)
++{
++	sector_t lba = -1;
++	u8 opcode = 0;
++	u32 intr, doorbell;
++	struct ufshcd_lrb *lrbp;
++	int transfer_len = -1;
 +
- 	if (ret) {
- 		dev_err(hba->dev, "%s: hibern8 exit failed. ret = %d\n",
- 			__func__, ret);
-@@ -5978,6 +5985,8 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 	struct ufs_clk_info *clki;
- 	struct list_head *head = &hba->clk_list_head;
- 	unsigned long flags;
-+	ktime_t start = ktime_get();
-+	bool clk_state_changed = false;
++	lrbp = &hba->lrb[tag];
++
++	if (lrbp->cmd) { /* data phase exists */
++		opcode = (u8)(*lrbp->cmd->cmnd);
++		if ((opcode == READ_10) || (opcode == WRITE_10)) {
++			/*
++			 * Currently we only fully trace read(10) and write(10)
++			 * commands
++			 */
++			if (lrbp->cmd->request && lrbp->cmd->request->bio)
++				lba =
++				  lrbp->cmd->request->bio->bi_iter.bi_sector;
++			transfer_len = be32_to_cpu(
++				lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
++		}
++	}
++
++	intr = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
++	doorbell = ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
++	trace_ufshcd_command(dev_name(hba->dev), str, tag,
++				doorbell, transfer_len, intr, lba, opcode);
++}
++
++static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
++					unsigned int tag, const char *str)
++{
++	ufshcd_add_command_trace(hba, tag, str);
++}
++#else
++static inline void ufshcd_cond_add_cmd_trace(struct ufs_hba *hba,
++					unsigned int tag, const char *str)
++{
++}
++#endif
++
+ static void ufshcd_print_host_regs(struct ufs_hba *hba)
+ {
+ 	/*
+@@ -1193,6 +1238,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag)
+ 	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+ 	/* Make sure that doorbell is committed immediately */
+ 	wmb();
++	ufshcd_cond_add_cmd_trace(hba, task_tag, "send");
+ }
  
- 	if (!head || list_empty(head))
- 		goto out;
-@@ -5991,6 +6000,7 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 			if (skip_ref_clk && !strcmp(clki->name, "ref_clk"))
- 				continue;
- 
-+			clk_state_changed = on ^ clki->enabled;
- 			if (on && !clki->enabled) {
- 				ret = clk_prepare_enable(clki->clk);
- 				if (ret) {
-@@ -6026,6 +6036,10 @@ static int __ufshcd_setup_clocks(struct ufs_hba *hba, bool on,
- 		spin_unlock_irqrestore(hba->host->host_lock, flags);
+ /**
+@@ -3982,6 +4028,7 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 		lrbp = &hba->lrb[index];
+ 		cmd = lrbp->cmd;
+ 		if (cmd) {
++			ufshcd_cond_add_cmd_trace(hba, index, "complete");
+ 			result = ufshcd_transfer_rsp_status(hba, lrbp);
+ 			scsi_dma_unmap(cmd);
+ 			cmd->result = result;
+@@ -3993,8 +4040,11 @@ static void __ufshcd_transfer_req_compl(struct ufs_hba *hba,
+ 			__ufshcd_release(hba);
+ 		} else if (lrbp->command_type == UTP_CMD_TYPE_DEV_MANAGE ||
+ 			lrbp->command_type == UTP_CMD_TYPE_UFS_STORAGE) {
+-			if (hba->dev_cmd.complete)
++			if (hba->dev_cmd.complete) {
++				ufshcd_cond_add_cmd_trace(hba, index,
++						"dev_complete");
+ 				complete(hba->dev_cmd.complete);
++			}
+ 		}
  	}
  
-+	if (clk_state_changed)
-+		trace_ufshcd_profile_clk_gating(dev_name(hba->dev),
-+			(on ? "on" : "off"),
-+			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 	return ret;
- }
- 
-@@ -7030,6 +7044,8 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 	int ret = 0;
- 	struct ufs_clk_info *clki;
- 	struct list_head *head = &hba->clk_list_head;
-+	ktime_t start = ktime_get();
-+	bool clk_state_changed = false;
- 
- 	if (!head || list_empty(head))
- 		goto out;
-@@ -7043,6 +7059,8 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 			if (scale_up && clki->max_freq) {
- 				if (clki->curr_freq == clki->max_freq)
- 					continue;
-+
-+				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->max_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -7060,6 +7078,8 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 			} else if (!scale_up && clki->min_freq) {
- 				if (clki->curr_freq == clki->min_freq)
- 					continue;
-+
-+				clk_state_changed = true;
- 				ret = clk_set_rate(clki->clk, clki->min_freq);
- 				if (ret) {
- 					dev_err(hba->dev, "%s: %s clk set rate(%dHz) failed, %d\n",
-@@ -7081,6 +7101,10 @@ static int ufshcd_scale_clks(struct ufs_hba *hba, bool scale_up)
- 	ret = ufshcd_vops_clk_scale_notify(hba, scale_up, POST_CHANGE);
- 
- out:
-+	if (clk_state_changed)
-+		trace_ufshcd_profile_clk_scaling(dev_name(hba->dev),
-+			(scale_up ? "up" : "down"),
-+			ktime_to_us(ktime_sub(ktime_get(), start)), ret);
- 	return ret;
- }
- 
 diff --git a/include/trace/events/ufs.h b/include/trace/events/ufs.h
-index 7b3d9e1..8bce504 100644
+index 8bce504..d0ed0cf 100644
 --- a/include/trace/events/ufs.h
 +++ b/include/trace/events/ufs.h
-@@ -87,6 +87,46 @@
- 		__get_str(dev_name), __get_str(state))
- );
- 
-+DECLARE_EVENT_CLASS(ufshcd_profiling_template,
-+	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
-+		 int err),
+@@ -183,6 +183,44 @@
+ 	     TP_PROTO(const char *dev_name, int err, s64 usecs,
+ 		      const char *dev_state, const char *link_state),
+ 	     TP_ARGS(dev_name, err, usecs, dev_state, link_state));
 +
-+	TP_ARGS(dev_name, profile_info, time_us, err),
++TRACE_EVENT(ufshcd_command,
++	TP_PROTO(const char *dev_name, const char *str, unsigned int tag,
++			u32 doorbell, int transfer_len, u32 intr, u64 lba,
++			u8 opcode),
++
++	TP_ARGS(dev_name, str, tag, doorbell, transfer_len, intr, lba, opcode),
 +
 +	TP_STRUCT__entry(
 +		__string(dev_name, dev_name)
-+		__string(profile_info, profile_info)
-+		__field(s64, time_us)
-+		__field(int, err)
++		__string(str, str)
++		__field(unsigned int, tag)
++		__field(u32, doorbell)
++		__field(int, transfer_len)
++		__field(u32, intr)
++		__field(u64, lba)
++		__field(u8, opcode)
 +	),
 +
 +	TP_fast_assign(
 +		__assign_str(dev_name, dev_name);
-+		__assign_str(profile_info, profile_info);
-+		__entry->time_us = time_us;
-+		__entry->err = err;
++		__assign_str(str, str);
++		__entry->tag = tag;
++		__entry->doorbell = doorbell;
++		__entry->transfer_len = transfer_len;
++		__entry->intr = intr;
++		__entry->lba = lba;
++		__entry->opcode = opcode;
 +	),
 +
-+	TP_printk("%s: %s: took %lld usecs, err %d",
-+		__get_str(dev_name), __get_str(profile_info),
-+		__entry->time_us, __entry->err)
++	TP_printk(
++		"%s: %s: tag: %u, DB: 0x%x, size: %d, IS: %u, LBA: %llu, opcode: 0x%x",
++		__get_str(str), __get_str(dev_name), __entry->tag,
++		__entry->doorbell, __entry->transfer_len,
++		__entry->intr, __entry->lba, (u32)__entry->opcode
++	)
 +);
 +
-+DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_hibern8,
-+	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
-+		 int err),
-+	TP_ARGS(dev_name, profile_info, time_us, err));
-+
-+DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_clk_gating,
-+	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
-+		 int err),
-+	TP_ARGS(dev_name, profile_info, time_us, err));
-+
-+DEFINE_EVENT(ufshcd_profiling_template, ufshcd_profile_clk_scaling,
-+	TP_PROTO(const char *dev_name, const char *profile_info, s64 time_us,
-+		 int err),
-+	TP_ARGS(dev_name, profile_info, time_us, err));
-+
- DECLARE_EVENT_CLASS(ufshcd_template,
- 	TP_PROTO(const char *dev_name, int err, s64 usecs,
- 		 const char *dev_state, const char *link_state),
+ #endif /* if !defined(_TRACE_UFS_H) || defined(TRACE_HEADER_MULTI_READ) */
+ 
+ /* This part must be outside protection */
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
+
