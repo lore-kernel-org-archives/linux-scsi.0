@@ -1,45 +1,29 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3] blk-mq: Fix failed allocation path when mapping queues
-Date: Wed, 14 Dec 2016 13:58:20 -0700
-Message-ID: <ef5a4111-e52e-7d33-57bd-d3ef9f23e3f8@kernel.dk>
-References: <1481748516-19982-1-git-send-email-gabriel@krisman.be>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 09/22] qla2xxx: Refactor T10-DIF PI support
+Date: Wed, 14 Dec 2016 13:03:42 -0800
+Message-ID: <20161214210342.GA1011@infradead.org>
+References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
+ <1481056251-2310-10-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1481748516-19982-1-git-send-email-gabriel@krisman.be>
-Sender: linux-block-owner@vger.kernel.org
-To: Gabriel Krisman Bertazi <gabriel@krisman.be>
-Cc: linux-block@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1481056251-2310-10-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/14/2016 01:48 PM, Gabriel Krisman Bertazi wrote:
-> From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+On Tue, Dec 06, 2016 at 12:30:38PM -0800, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@cavium.com>
 > 
-> In blk_mq_map_swqueue, there is a memory optimization that frees the
-> tags of a queue that has gone unmapped.  Later, if that hctx is remapped
-> after another topology change, the tags need to be reallocated.
-> 
-> If this allocation fails, a simple WARN_ON triggers, but the block layer
-> ends up with an active hctx without any corresponding set of tags.
-> Then, any income IO to that hctx can trigger an Oops.
-> 
-> I can reproduce it consistently by running IO, flipping CPUs on and off
-> and eventually injecting a memory allocation failure in that path.
-> 
-> In the fix below, if the system experiences a failed allocation of any
-> hctx's tags, we remap all the ctxs of that queue to the hctx_0, which
-> should always keep it's tags.  There is a minor performance hit, since
-> our mapping just got worse after the error path, but this is
-> the simplest solution to handle this error path.  The performance hit
-> will disappear after another successful remap.
-> 
-> I considered dropping the memory optimization all together, but it
-> seemed a bad trade-off to handle this very specific error case.
+> qla2xxx currently access T10-DIF protection opcode and type
+> field in se_cmd struct. Add translation code so qla2xxx driver
+> would not acces private TCM data structure.
 
-Thanks, this looks fine to me now. Both of your patches are queued
-up for inclusion in 4.10.
+And what's the point of doing that?
 
--- 
-Jens Axboe
+>  11 files changed, 661 insertions(+), 242 deletions(-)
 
+And independent of the above a "cleanup" that adds over 400 lines of
+code is simply not acceptable.
