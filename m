@@ -1,31 +1,40 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: remove wildcard for series 9 controllers
-Date: Tue, 13 Dec 2016 21:03:48 -0500
-Message-ID: <yq1eg1be06z.fsf@sermon.lab.mkp.net>
-References: <148121456881.26136.5279334565466197341.stgit@brunhilda>
-        <yq1fulyoyx3.fsf@sermon.lab.mkp.net>
-        <4993A297653ECB4581FA5C3C31323D194180A257@avsrvexchmbx1.microsemi.net>
+Subject: Re: [PATCH v4 4/6] qla2xxx: Add multiple queue pair functionality.
+Date: Tue, 13 Dec 2016 21:07:00 -0500
+Message-ID: <yq1a8bze01n.fsf@sermon.lab.mkp.net>
+References: <1481051266-32362-1-git-send-email-himanshu.madhani@cavium.com>
+        <1481051266-32362-5-git-send-email-himanshu.madhani@cavium.com>
+        <20161207190502.GB29031@infradead.org>
+        <693AAE59-413D-4416-837A-8E60A7C73455@cavium.com>
+        <20161209131016.GA15254@infradead.org>
+        <E9B6495D-31D5-4A48-BD75-F26C72AA3531@cavium.com>
+        <06FF934D-B3F7-49B3-95D9-DA453AC0DD95@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38963 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:39479 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753331AbcLNCFp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 21:05:45 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D194180A257@avsrvexchmbx1.microsemi.net>
-        (Don Brace's message of "Fri, 9 Dec 2016 21:13:09 +0000")
+        with ESMTP id S1750999AbcLNCH3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 21:07:29 -0500
+In-Reply-To: <06FF934D-B3F7-49B3-95D9-DA453AC0DD95@cavium.com> (Himanshu
+        Madhani's message of "Fri, 9 Dec 2016 21:42:06 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali-saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Cc: Christoph Hellwig <hch@infradead.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "Himanshu" == Madhani, Himanshu <Himanshu.Madhani@cavium.com> writes:
 
->> Applied to 4.10/scsi-queue.
+Himanshu> Would you be pulling changes for this new call into scsi tree
+Himanshu> anytime soon
 
-Don> Can this patch still make into 4.9?
+Himanshu> https://git.kernel.org/cgit/linux/kernel/git/tip/tip.git/log/?h=irq/for-block
 
-Too late. But you can send it to stable.
+James just sent the first batch of 4.10 to Linus.
+
+Once Linus merges I'll start the 4.10/scsi-fixes branch. We have a few
+patches that depend on block layer changes and they'll go in first
+thing.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
