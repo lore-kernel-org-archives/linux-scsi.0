@@ -1,35 +1,38 @@
-From: Hans Verkuil <hverkuil@xs4all.nl>
-Subject: Re: [PATCH 6/6] media/cobalt: use pci_irq_allocate_vectors
-Date: Wed, 14 Dec 2016 11:37:17 +0100
-Message-ID: <c5453c65-1256-338f-0ff1-6499d11987af@xs4all.nl>
-References: <1473600688-24043-1-git-send-email-hch@lst.de>
- <1473600688-24043-7-git-send-email-hch@lst.de>
- <1c24ae65-067f-52fc-edfa-af2d0e222a19@xs4all.nl>
- <20161214102913.GA30236@lst.de>
+From: Mr Friedrich Mayrhofer <esanchezsarmiento@buenosaires.gob.ar>
+Subject: (unknown)
+Date: Wed, 14 Dec 2016 06:45:50 -0300
+Message-ID: <20161214064550.773123hiagcnje1a__27770.9430702545$1481712456$gmane$org@webmail.buenosaires.gob.ar>
+Reply-To: friedrichmayehofer@yeah.net
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain;
+ charset=windows-1256;
+ DelSp="Yes";
+ format="flowed"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161214102913.GA30236@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: hans.verkuil@cisco.com, brking@us.ibm.com, haver@linux.vnet.ibm.com, ching2048@areca.com.tw, axboe@fb.com, alex.williamson@redhat.com, kvm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org, linux-media@vger.kernel.org, linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtpgcba5.buenosaires.gob.ar ([200.16.89.92]:40777 "EHLO
+        smtpgcba5.buenosaires.gob.ar" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1754789AbcLNKrN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Dec 2016 05:47:13 -0500
+Subject: 
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-On 14/12/16 11:29, Christoph Hellwig wrote:
-> Hi Hans,
->
-> just checked the current Linux tree and cobalt still uses the old
-> pci_enable_msi_range call.  Did you queue this patch up for 4.10?
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-media" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
 
-Completely forgot this. Is it OK to queue it for 4.11? Or is it blocking
-other follow-up work you want to do for 4.10?
+Good Day,
 
-Regards,
+This is the second time i am sending you this mail.
 
-	Hans
+I, Friedrich Mayrhofer Donate $ 1,000,000.00 to You, Email Me
+personally for more details.
+
+Regards.
+Friedrich Mayrhofer
+
+
+
+
+
+
