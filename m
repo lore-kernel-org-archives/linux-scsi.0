@@ -1,143 +1,40 @@
-From: Gabriel Krisman Bertazi <gabriel@krisman.be>
-Subject: [PATCH v3] blk-mq: Fix failed allocation path when mapping queues
-Date: Wed, 14 Dec 2016 18:48:36 -0200
-Message-ID: <1481748516-19982-1-git-send-email-gabriel@krisman.be>
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: axboe@kernel.dk
-Cc: linux-block@vger.kernel.org, Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, Douglas Miller <dougmill@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v4] scsi: avoid a permanent stop of the scsi device's request queue
+Date: Wed, 14 Dec 2016 15:52:11 -0500
+Message-ID: <yq137hqb5dw.fsf@sermon.lab.mkp.net>
+References: <1481592321-10796-1-git-send-email-fangwei1@huawei.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:28686 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753022AbcLNUwd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:52:33 -0500
+In-Reply-To: <1481592321-10796-1-git-send-email-fangwei1@huawei.com> (Wei
+        Fang's message of "Tue, 13 Dec 2016 09:25:21 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Wei Fang <fangwei1@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, bart.vanassche@sandisk.com, emilne@redhat.com, chenzengxi@huawei.com
 
-From: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
+>>>>> "Wei" == Wei Fang <fangwei1@huawei.com> writes:
 
-In blk_mq_map_swqueue, there is a memory optimization that frees the
-tags of a queue that has gone unmapped.  Later, if that hctx is remapped
-after another topology change, the tags need to be reallocated.
+Wei> A race between scanning and fc_remote_port_delete() may result in a
+Wei> permanent stop if the device gets blocked before
+Wei> scsi_sysfs_add_sdev() and unblocked after.  The reason is that
+Wei> blocking a device sets both the SDEV_BLOCKED state and the
+Wei> QUEUE_FLAG_STOPPED.  However, scsi_sysfs_add_sdev() unconditionally
+Wei> sets SDEV_RUNNING which causes the device to be ignored by
+Wei> scsi_target_unblock() and thus never have its QUEUE_FLAG_STOPPED
+Wei> cleared leading to a device which is apparently running but has a
+Wei> stopped queue.
 
-If this allocation fails, a simple WARN_ON triggers, but the block layer
-ends up with an active hctx without any corresponding set of tags.
-Then, any income IO to that hctx can trigger an Oops.
+Wei> We actually have two places where SDEV_RUNNING is set: once in
+Wei> scsi_add_lun() which respects the blocked flag and once in
+Wei> scsi_sysfs_add_sdev() which doesn't.  Since the second set is
+Wei> entirely spurious, simply remove it to fix the problem.
 
-I can reproduce it consistently by running IO, flipping CPUs on and off
-and eventually injecting a memory allocation failure in that path.
+Applied to 4.10/scsi-fixes.
 
-In the fix below, if the system experiences a failed allocation of any
-hctx's tags, we remap all the ctxs of that queue to the hctx_0, which
-should always keep it's tags.  There is a minor performance hit, since
-our mapping just got worse after the error path, but this is
-the simplest solution to handle this error path.  The performance hit
-will disappear after another successful remap.
-
-I considered dropping the memory optimization all together, but it
-seemed a bad trade-off to handle this very specific error case.
-
-This should apply cleanly on top of Jens' for-next branch.
-
-The Oops is the one below:
-
-SP (3fff935ce4d0) is in userspace
-1:mon> e
-cpu 0x1: Vector: 300 (Data Access) at [c000000fe99eb110]
-    pc: c0000000005e868c: __sbitmap_queue_get+0x2c/0x180
-    lr: c000000000575328: __bt_get+0x48/0xd0
-    sp: c000000fe99eb390
-   msr: 900000010280b033
-   dar: 28
- dsisr: 40000000
-  current = 0xc000000fe9966800
-  paca    = 0xc000000007e80300   softe: 0        irq_happened: 0x01
-    pid   = 11035, comm = aio-stress
-Linux version 4.8.0-rc6+ (root@bean) (gcc version 5.4.0 20160609
-(Ubuntu/IBM 5.4.0-6ubuntu1~16.04.2) ) #3 SMP Mon Oct 10 20:16:53 CDT 2016
-1:mon> s
-[c000000fe99eb3d0] c000000000575328 __bt_get+0x48/0xd0
-[c000000fe99eb400] c000000000575838 bt_get.isra.1+0x78/0x2d0
-[c000000fe99eb480] c000000000575cb4 blk_mq_get_tag+0x44/0x100
-[c000000fe99eb4b0] c00000000056f6f4 __blk_mq_alloc_request+0x44/0x220
-[c000000fe99eb500] c000000000570050 blk_mq_map_request+0x100/0x1f0
-[c000000fe99eb580] c000000000574650 blk_mq_make_request+0xf0/0x540
-[c000000fe99eb640] c000000000561c44 generic_make_request+0x144/0x230
-[c000000fe99eb690] c000000000561e00 submit_bio+0xd0/0x200
-[c000000fe99eb740] c0000000003ef740 ext4_io_submit+0x90/0xb0
-[c000000fe99eb770] c0000000003e95d8 ext4_writepages+0x588/0xdd0
-[c000000fe99eb910] c00000000025a9f0 do_writepages+0x60/0xc0
-[c000000fe99eb940] c000000000246c88 __filemap_fdatawrite_range+0xf8/0x180
-[c000000fe99eb9e0] c000000000246f90 filemap_write_and_wait_range+0x70/0xf0
-[c000000fe99eba20] c0000000003dd844 ext4_sync_file+0x214/0x540
-[c000000fe99eba80] c000000000364718 vfs_fsync_range+0x78/0x130
-[c000000fe99ebad0] c0000000003dd46c ext4_file_write_iter+0x35c/0x430
-[c000000fe99ebb90] c00000000038c280 aio_run_iocb+0x3b0/0x450
-[c000000fe99ebce0] c00000000038dc28 do_io_submit+0x368/0x730
-[c000000fe99ebe30] c000000000009404 system_call+0x38/0xec
-
-Signed-off-by: Gabriel Krisman Bertazi <krisman@linux.vnet.ibm.com>
-Cc: Brian King <brking@linux.vnet.ibm.com>
-Cc: Douglas Miller <dougmill@linux.vnet.ibm.com>
-Cc: linux-block@vger.kernel.org
-Cc: linux-scsi@vger.kernel.org
-Reviewed-by: Douglas Miller <dougmill@linux.vnet.ibm.com>
----
- block/blk-mq.c | 26 +++++++++++++++++++++-----
- 1 file changed, 21 insertions(+), 5 deletions(-)
-
-diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 4a052dd..2493b5d 100644
---- a/block/blk-mq.c
-+++ b/block/blk-mq.c
-@@ -1884,7 +1884,7 @@ static void blk_mq_init_cpu_queues(struct request_queue *q,
- static void blk_mq_map_swqueue(struct request_queue *q,
- 			       const struct cpumask *online_mask)
- {
--	unsigned int i;
-+	unsigned int i, hctx_idx;
- 	struct blk_mq_hw_ctx *hctx;
- 	struct blk_mq_ctx *ctx;
- 	struct blk_mq_tag_set *set = q->tag_set;
-@@ -1907,6 +1907,21 @@ static void blk_mq_map_swqueue(struct request_queue *q,
- 		if (!cpumask_test_cpu(i, online_mask))
- 			continue;
- 
-+		hctx_idx = q->mq_map[i];
-+		/* unmapped hw queue can be remapped after CPU topo changed */
-+		if (!set->tags[hctx_idx]) {
-+			set->tags[hctx_idx] = blk_mq_init_rq_map(set, hctx_idx);
-+
-+			/*
-+			 * If tags initialization fail for some hctx,
-+			 * that hctx won't be brought online.  In this
-+			 * case, remap the current ctx to hctx[0] which
-+			 * is guaranteed to always have tags allocated
-+			 */
-+			if (!set->tags[hctx_idx])
-+				q->mq_map[i] = 0;
-+		}
-+
- 		ctx = per_cpu_ptr(q->queue_ctx, i);
- 		hctx = blk_mq_map_queue(q, i);
- 
-@@ -1923,7 +1938,11 @@ static void blk_mq_map_swqueue(struct request_queue *q,
- 		 * disable it and free the request entries.
- 		 */
- 		if (!hctx->nr_ctx) {
--			if (set->tags[i]) {
-+			/* Never unmap queue 0.  We need it as a
-+			 * fallback in case of a new remap fails
-+			 * allocation
-+			 */
-+			if (i && set->tags[i]) {
- 				blk_mq_free_rq_map(set, set->tags[i], i);
- 				set->tags[i] = NULL;
- 			}
-@@ -1931,9 +1950,6 @@ static void blk_mq_map_swqueue(struct request_queue *q,
- 			continue;
- 		}
- 
--		/* unmapped hw queue can be remapped after CPU topo changed */
--		if (!set->tags[i])
--			set->tags[i] = blk_mq_init_rq_map(set, i);
- 		hctx->tags = set->tags[i];
- 		WARN_ON(!hctx->tags);
- 
 -- 
-2.7.4
-
+Martin K. Petersen	Oracle Linux Engineering
