@@ -1,31 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH RESEND] Update 3ware driver email addresses
-Date: Wed, 14 Dec 2016 15:27:14 -0500
-Message-ID: <yq1vaumb6jh.fsf@sermon.lab.mkp.net>
-References: <CAHtARFHmfvhDeO93L30dO+uRdqZLS0vNY5RopZRxzdW9T+_xVg@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: hpsa: remove memory allocate failure message
+Date: Wed, 14 Dec 2016 15:35:27 -0500
+Message-ID: <yq1k2b2b65s.fsf@sermon.lab.mkp.net>
+References: <1481540661-18493-1-git-send-email-kushwaha.a@samsung.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50212 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:19370 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933343AbcLNU1T (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:27:19 -0500
-In-Reply-To: <CAHtARFHmfvhDeO93L30dO+uRdqZLS0vNY5RopZRxzdW9T+_xVg@mail.gmail.com>
-        (adam radford's message of "Fri, 9 Dec 2016 11:08:05 -0800")
+        with ESMTP id S1753849AbcLNUgH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:36:07 -0500
+In-Reply-To: <1481540661-18493-1-git-send-email-kushwaha.a@samsung.com>
+        (kushwaha a.'s message of "Mon, 12 Dec 2016 16:34:21 +0530")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: adam radford <aradford@gmail.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>
+To: kushwaha.a@samsung.com
+Cc: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, akkushwaha9896@gmail.com, vidushi.koul@samsung.com
 
->>>>> "Adam" == adam radford <aradford@gmail.com> writes:
+>>>>> "Amit" == kushwaha a <kushwaha.a@samsung.com> writes:
 
-Adam> This change updates the 3ware drivers (3w-xxxx, 3w-9xxx, 3w-sas)
-Adam> email addresses from linuxraid@lsi.com to aradford@gmail.com,
-Adam> since the old email address doesn't exist.
+Amit> This patch cleanup warning reported by checkpatch.pl WARNING:
+Amit> Possible unnecessary 'out of memory' message With no available
+Amit> memory, a warn on message already gets printed by page alloc apis
+Amit> and modified goto use if memory unallocated.
 
 Applied to 4.10/scsi-fixes.
-
-Thanks for doing this!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
