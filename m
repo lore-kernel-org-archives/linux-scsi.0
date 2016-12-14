@@ -1,58 +1,31 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mvsas: Replace pci_pool_alloc by pci_pool_zalloc
-Date: Tue, 13 Dec 2016 20:52:30 -0500
-Message-ID: <yq1oa0fe0pt.fsf@sermon.lab.mkp.net>
-References: <20161128112626.GA31859@gnr743-HP-ZBook-15>
-        <20161206132808.GD4818@linux-x5ow.site>
-        <CAFqt6zZLJyDJzwQZ6U3T9XG2JwQEOrEQEMYL0yLrbOnjH=yO_A@mail.gmail.com>
+Subject: Re: [PATCH] aacraid: remove wildcard for series 9 controllers
+Date: Tue, 13 Dec 2016 21:03:48 -0500
+Message-ID: <yq1eg1be06z.fsf@sermon.lab.mkp.net>
+References: <148121456881.26136.5279334565466197341.stgit@brunhilda>
+        <yq1fulyoyx3.fsf@sermon.lab.mkp.net>
+        <4993A297653ECB4581FA5C3C31323D194180A257@avsrvexchmbx1.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:40063 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752185AbcLNBwn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 20:52:43 -0500
-In-Reply-To: <CAFqt6zZLJyDJzwQZ6U3T9XG2JwQEOrEQEMYL0yLrbOnjH=yO_A@mail.gmail.com>
-        (Souptick Joarder's message of "Mon, 12 Dec 2016 10:14:29 +0530")
+Received: from aserp1040.oracle.com ([141.146.126.69]:38963 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753331AbcLNCFp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 13 Dec 2016 21:05:45 -0500
+In-Reply-To: <4993A297653ECB4581FA5C3C31323D194180A257@avsrvexchmbx1.microsemi.net>
+        (Don Brace's message of "Fri, 9 Dec 2016 21:13:09 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Souptick Joarder <jrdr.linux@gmail.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, Rameshwar Sahu <sahu.rameshwar73@gmail.com>, linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, Bader Ali-saleh <bader.alisaleh@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Souptick" == Souptick Joarder <jrdr.linux@gmail.com> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Souptick,
+>> Applied to 4.10/scsi-queue.
 
-Sorry about the delay. Been out for a few days.
+Don> Can this patch still make into 4.9?
 
->>> Inside mvs_task_prep(), pci_pool_alloc() followed by memset will be
->>> replaced by pci_pool_zalloc()
-
-Souptick> Any further comment on this ?
-
-I took one of your other patches because the driver maintainer acked it,
-thus assuming responsibility for testing it and fixing any regressions
-it may cause.
-
-The failure rate on these "trivial" patches to old and unmaintained
-drivers is very high. And since you are not fixing any bugs and your
-change is functionally identical what the code already does, why would
-we merge it and risk a regression? (for changes like this, a Tested-by:
-from somebody with actual hardware is worth a thousand Reviewed-by:
-tags).
-
-Also, I'm not really convinced that this constant churn of new and
-"improved" kernel interface helper functions is really solving anything.
-Quite the contrary. Real bug fixes for drivers adopting the
-pci_pool_zalloc() interface will now potentially be harder to backport
-to stable releases predating 4.4 or whenever that call was introduced.
-
-So in summary, I don't see any actual benefits to your proposed
-change. It's probably fine, but why would I risk merging it?
-
-Hope that all makes sense...
-
-Thanks!
+Too late. But you can send it to stable.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
