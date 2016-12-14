@@ -1,29 +1,87 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5 0/5] qla2xxx: Feature updaes for driver.
-Date: Wed, 14 Dec 2016 15:38:47 -0500
-Message-ID: <yq1fulqb608.fsf@sermon.lab.mkp.net>
-References: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 00/22] qla2xxx: Target code enhancemets and feature update
+Date: Wed, 14 Dec 2016 20:24:19 +0000
+Message-ID: <DFE92663-19BD-48D3-B0F9-47665FBF1567@cavium.com>
+References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
+ <BE1203E8-9F6A-47C1-9E13-354E4E44332D@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:23900 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1756681AbcLNUjA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:39:00 -0500
-In-Reply-To: <1481582409-22027-1-git-send-email-himanshu.madhani@cavium.com>
-        (Himanshu Madhani's message of "Mon, 12 Dec 2016 14:40:04 -0800")
+Received: from mail-sn1nam01on0081.outbound.protection.outlook.com ([104.47.32.81]:21707
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752040AbcLNUkq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 14 Dec 2016 15:40:46 -0500
+In-Reply-To: <BE1203E8-9F6A-47C1-9E13-354E4E44332D@cavium.com>
+Content-Language: en-US
+Content-ID: <A75B2D51D089B8499636316468F00DD9@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Himanshu" == Himanshu Madhani <himanshu.madhani@cavium.com> writes:
-
-Himanshu> Please consider this revised series for inclusion into
-Himanshu> scsi-misc.  This series has incorporated partial changes based
-Himanshu> on review comments from Christoph and Hannes.
-
-Applied to 4.10/scsi-fixes.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+SGkgQmFydCwgDQoNCg0KDQoNCk9uIDEyLzEyLzE2LCAzOjEwIFBNLCAiTWFkaGFuaSwgSGltYW5z
+aHUiIDxIaW1hbnNodS5NYWRoYW5pQGNhdml1bS5jb20+IHdyb3RlOg0KDQo+SGkgTmljLCANCj4N
+Cj4NCj4NCj5PbiAxMi82LzE2LCAxMjozMCBQTSwgIkhpbWFuc2h1IE1hZGhhbmkiIDxoaW1hbnNo
+dS5tYWRoYW5pQGNhdml1bS5jb20+IHdyb3RlOg0KPg0KPj5IaSBOaWMsIA0KPj4NCj4+UGxlYXNl
+IGNvbnNpZGVyIHRoaXMgc2VyaWVzIGZvciB0YXJnZXQtcGVuZGluZy4gVGhpcyBzZXJpZXMgaXMg
+YmFzZWQgb24NCj4+c2NzaS1taXNjIHNlcmllcyB0aGF0IHdhcyBzdWJtaXR0ZWQgZWFybGllciB0
+b2RheS4NCj4+DQo+PkhlcmUncyBsaW5rIGZvciB0aGF0IHNlcmllcw0KPj4gaHR0cDovL21hcmMu
+aW5mby8/bD1saW51eC1zY3NpJm09MTQ4MTA1MTI4MjEwMDkwJnc9MiANCj4+DQo+PlRoaXMgc2Vy
+aWVzIGNvbnRhaW5zIGZvbGxvd2luZyBjaGFuZ2VzDQo+Pg0KPj5vIENsZWFuIHVwIFRhcmdldCBj
+b2RlIGFuZCB0Y21fcWxhMnh4eCBmb3IgY2xlYW5lciBpbnRlcmFjdGlvbi4NCj4+byBFbmhhbmNl
+ZCBhbmQgc3RyZW5ndGhlbiBzdXBwb3J0IGZvciBUMTAtRElGL1BJLg0KPj5vIFJlbmFtZWQgcWxp
+bmlfbW9kZSB0byBxbG9wX21vZGUgZm9yIGJldHRlciByZWFkYmlsaXR5Lg0KPj5vIEltcHJvdmUg
+ZHJpdmVyIGNhcGFiaWxpdHkgdG8gbWFuYWdlIGR1YWwgcGVyc29uYWxpdHkgDQo+PiAgKGkuZS4g
+SW5pdGlhdG9yIGFuZCBUYXJnZXQpIHNpbXVsdGFuZW91c2x5Lg0KPj5vIEFkZGVkIGNhcGFiaWxp
+dHkgdG8gc2VuZCBub24tY3JpdGljYWwgTUJYIHZpYSBJT0NCIHBhdGguIA0KPj5vIFNvbWUgb2Yg
+dGhlIHBlbmRpbmcgYnVnLWZpeGVzIGZvciB0YXJnZXQgY29kZS4NCj4+DQo+PlRoYW5rcywgDQo+
+PkhpbWFuc2h1DQo+Pg0KPj5IaW1hbnNodSBNYWRoYW5pICgzKToNCj4+ICBxbGEyeHh4OiBJbmNs
+dWRlIEFUSU8gcXVldWUgaW4gZmlybXdhcmUgZHVtcCB3aGVuIGluIHRhcmdldCBtb2RlDQo+PiAg
+cWxhMnh4eDogU2V0IHRjbV9xbGEyeHh4IHZlcnNpb24gdG8gYXV0b21hdGljYWxseSB0cmFjayBx
+bGEyeHh4DQo+PiAgICB2ZXJzaW9uLg0KPj4gIHFsYTJ4eHg6IENsZWFyIEJJVCAxNSBpbiBOVlJB
+TSBkdXJpbmcgaW5pdGlhbGl6YXRpb24uDQo+Pg0KPj5Kb2UgQ2FybnVjY2lvICgxKToNCj4+ICBx
+bGEyeHh4OiBSZXJmYWN0b3IgdXNlIG9mIHNwIGNvbnRleHQNCj4+DQo+PlF1aW5uIFRyYW4gKDE4
+KToNCj4+ICBxbGEyeHh4OiBGaXggd3JvbmcgSU9DQiB0eXBlIGFzc3VtcHRpb24uDQo+PiAgcWxh
+Mnh4eDogQWRkIERlYnVnRlMgbm9kZSBvZiBpcnEgdmVjdG9yIGNwdWlkDQo+PiAgcWxhMnh4eDog
+Q29sbGVjdCBhZGR0aW9uYWwgZGVidWcgZGF0YSBmb3IgRlcNCj4+ICBxbGEyeHh4OiBGaXggY3Jh
+c2ggZHVlIHRvIG51bGwgcG9pbnRlciBhY2Nlc3MuDQo+PiAgcWxhMnh4eDogUmVmYWN0b3JlIHRh
+cmdldCBjb2RlIHRvIHJlbW92ZSBzeW1ib2wgZGVwZW5kZW5jeQ0KPj4gIHFsYTJ4eHg6IFJlZmFj
+dG9yIFQxMC1ESUYgUEkgc3VwcG9ydA0KPj4gIHFsYTJ4eHg6IEFkZCBmcmFtZXdvcmsgZm9yIEFz
+eW5jIGZhYnJpYyBkaXNjb3ZlcnkuDQo+PiAgcWxhMnh4eDogUmVmYWN0b3Igc2Vzc2lvbiBtYW5h
+Z2VtZW50IGNvZGUuDQo+PiAgcWxhMnh4eDogQWRkIER1YWwgbW9kZSBzdXBwb3J0IGluIHRoZSBk
+cml2ZXINCj4+ICBxbGEyeHh4OiBGaXggaW52YWxpZCBoYW5kbGUgZXJyb25lb3VzIG1lc3NhZ2Uu
+DQo+PiAgcWxhMnh4eDogQWRkIGludGVycnVwdCBwb2xsaW5nIG1lY2hhbmlzbQ0KPj4gIHFsYTJ4
+eHg6IFJlbmFtZSBxbGluaV9tb2RlIHBhcmFtZXRlcg0KPj4gIHFsYTJ4eHg6IEltcHJvdmUgUlND
+TiBoYW5kbGluZyBpbiBkcml2ZXINCj4+ICBxbGEyeHh4OiBGaXggc2xvdyBtZW0gYWxsb2MgYmVo
+aW5kIGxvY2sNCj4+ICBxbGEyeHh4OiBSZWR1Y2UgZXhlc3Mgd2FpdCBkdXJpbmcgY2hpcCByZXNl
+dA0KPj4gIHFsYTJ4eHg6IEFsbG93IHJlbG9naW4gdG8gZ28gdGhyb3VnaCBpZiByZW1vdGUgbG9n
+aW4gZGlkIG5vdCBmaW5pc2gNCj4+ICBxbGEyeHh4OiBJbXByb3ZlIHN1Ym1pc3Npb24gb2Ygbm9u
+IGNyaXRpY2FsIE1CIGludGVyZmFjZS4NCj4+ICBxbGEyeHh4OiBBZGQgY2hlY2sgZm9yIGNvcnJ1
+cHQgQVRJTy4NCj4+DQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYXR0ci5jICAgIHwgIDM2
+NiArKysrLQ0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2JzZy5jICAgICB8ICAgMjEgKy0N
+Cj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kYmcuYyAgICAgfCAgICAyICstDQo+PiBkcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGJnLmggICAgIHwgICAgMSArDQo+PiBkcml2ZXJzL3Njc2kv
+cWxhMnh4eC9xbGFfZGVmLmggICAgIHwgIDI4NyArKystDQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4
+eC9xbGFfZGZzLmMgICAgIHwgIDIzNyArKy0NCj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9m
+dy5oICAgICAgfCAgMTA3ICstDQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ2JsLmggICAg
+IHwgICA4NiArLQ0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2dzLmMgICAgICB8ICA3MzMg
+KysrKysrKystDQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5jICAgIHwgMTYwNCAr
+KysrKysrKysrKysrKystLS0tLQ0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lubGluZS5o
+ICB8ICAgMzQgKy0NCj4+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pb2NiLmMgICAgfCAgMTcy
+ICsrLQ0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jICAgICB8ICA0MTQgKysrKy0t
+DQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWJ4LmMgICAgIHwgIDU1MyArKysrKy0tDQo+
+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfbWlkLmMgICAgIHwgICAxNSArLQ0KPj4gZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX21yLmMgICAgICB8ICAgNTIgKy0NCj4+IGRyaXZlcnMvc2NzaS9x
+bGEyeHh4L3FsYV9vcy5jICAgICAgfCAgNDU0ICsrKystLQ0KPj4gZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX3RhcmdldC5jICB8IDI4OTAgKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0t
+LS0tDQo+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmggIHwgIDI1NyArKy0tDQo+
+PiBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdG1wbC5jICAgIHwgICAyNCArDQo+PiBkcml2ZXJz
+L3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jIHwgIDc1MyArKysrKysrKy0tDQo+PiBkcml2ZXJz
+L3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5oIHwgICAxNiArLQ0KPj4gMjIgZmlsZXMgY2hhbmdl
+ZCwgNjY1OCBpbnNlcnRpb25zKCspLCAyNDIwIGRlbGV0aW9ucygtKQ0KPj4NCj4+LS0gDQo+PjEu
+OC4zLjENCj4+DQo+DQo+V291bGQgeW91IHBsZWFzZSByZXZpZXcvY29tbWVudCBvbiB0aGVzZSBw
+YXRjaGVzLiANCj4NCj5UaGFua3MsDQo+SGltYW5zaHUNCj4+DQoNCkNhbiB3ZSBnZXQgc29tZSBy
+ZXZpZXcgY29tbWVudHMgc28gdGhhdCBJIGNhbiBhZGRyZXNzIHRoZW0gYmVmb3JlIHNlbmRpbmcg
+dXBkYXRlZCBzZXJpZXMuIA0KDQpUaGFua3MsDQotIEhpbWFuc2h1DQo+DQo=
