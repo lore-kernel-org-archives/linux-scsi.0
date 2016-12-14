@@ -1,27 +1,31 @@
-From: Vasiliy Tolstov <v.tolstov@selfip.ru>
-Subject: Re: Samsung SSD 1.92TB PM863 Enterprise 2.5" SATA3 errors withc
- stable 4.4.34
-Date: Wed, 14 Dec 2016 23:20:16 +0300
-Message-ID: <CACaajQsxGZtA4joPanLsSEBbF9YNFXmJ1KRqUME86QuxVxnDVQ@mail.gmail.com>
-References: <CACaajQsKcHJsaUvNo_YTf6UNYR4F2Vi0E6pMUmB1zLpAQg=4ug@mail.gmail.com>
- <20161214124840.GA4759@kroah.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH RESEND] Update 3ware driver email addresses
+Date: Wed, 14 Dec 2016 15:27:14 -0500
+Message-ID: <yq1vaumb6jh.fsf@sermon.lab.mkp.net>
+References: <CAHtARFHmfvhDeO93L30dO+uRdqZLS0vNY5RopZRxzdW9T+_xVg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20161214124840.GA4759@kroah.com>
-Sender: stable-owner@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: linux-kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:50212 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933343AbcLNU1T (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:27:19 -0500
+In-Reply-To: <CAHtARFHmfvhDeO93L30dO+uRdqZLS0vNY5RopZRxzdW9T+_xVg@mail.gmail.com>
+        (adam radford's message of "Fri, 9 Dec 2016 11:08:05 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: adam radford <aradford@gmail.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>
 
-2016-12-14 15:48 GMT+03:00 Greg KH <gregkh@linuxfoundation.org>:
-> Do you also have problems with this on the 4.9 kernel release?  We can't
-> add any changes to 4.4 that is not already made in 4.9.
+>>>>> "Adam" == adam radford <aradford@gmail.com> writes:
 
+Adam> This change updates the 3ware drivers (3w-xxxx, 3w-9xxx, 3w-sas)
+Adam> email addresses from linuxraid@lsi.com to aradford@gmail.com,
+Adam> since the old email address doesn't exist.
 
-Thanks, i'm try to create reproducible fio test on 4.4.x and after
-that go to 4.9
+Applied to 4.10/scsi-fixes.
+
+Thanks for doing this!
 
 -- 
-Vasiliy Tolstov,
-e-mail: v.tolstov@selfip.ru
+Martin K. Petersen	Oracle Linux Engineering
