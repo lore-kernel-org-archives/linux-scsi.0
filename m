@@ -1,31 +1,33 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] zfcp fixes
-Date: Wed, 14 Dec 2016 15:18:39 -0500
-Message-ID: <yq1zijyb6xs.fsf@sermon.lab.mkp.net>
-References: <20161209161633.72445-1-maier@linux.vnet.ibm.com>
+From: Vasiliy Tolstov <v.tolstov@selfip.ru>
+Subject: Re: Samsung SSD 1.92TB PM863 Enterprise 2.5" SATA3 errors withc
+ stable 4.4.34
+Date: Wed, 14 Dec 2016 23:19:30 +0300
+Message-ID: <CACaajQvx05m_WVY2vdxFxmJZcCS1a3gRBFzRkmLRNzPo6os_YQ@mail.gmail.com>
+References: <CACaajQsKcHJsaUvNo_YTf6UNYR4F2Vi0E6pMUmB1zLpAQg=4ug@mail.gmail.com>
+ <20161214122201.GB6279@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:45232 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751845AbcLNUTQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 14 Dec 2016 15:19:16 -0500
-In-Reply-To: <20161209161633.72445-1-maier@linux.vnet.ibm.com> (Steffen
-        Maier's message of "Fri, 9 Dec 2016 17:16:30 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161214122201.GB6279@linux-x5ow.site>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-kernel <linux-kernel@vger.kernel.org>, stable@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Steffen Maier <maier@linux.vnet.ibm.com>
-Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>
 
->>>>> "Steffen" == Steffen Maier <maier@linux.vnet.ibm.com> writes:
+2016-12-14 15:22 GMT+03:00 Johannes Thumshirn <jthumshirn@suse.de>:
+> Random shot in the dark, have you tried changing the cable?
+> HostInt: HBA Internal error
+> PHYRdyChg: PhyRdy signal changed state
+> 10B8B: 10b to 8b decoding error occurred
+> DevExch: Device presence has changed
+>
+> This could indicate a problem with the cabling and/or connectors.
 
-Steffen,
 
-Steffen> here is a series of important zfcp fixes all marked for stable.
-Steffen> They apply to the fixes branch of James' scsi.git or to
-Steffen> v4.9-rc8.
-
-Applied to 4.10/scsi-fixes.
+This can happening, but i don't have cables - all disk attached to
+motherboard via internal drive bay. And also - ssd is new and this
+problem persists across many servers.
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Vasiliy Tolstov,
+e-mail: v.tolstov@selfip.ru
