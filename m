@@ -1,36 +1,63 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 15/22] qla2xxx: Rename qlini_mode parameter
-Date: Thu, 15 Dec 2016 17:21:33 +0000
-Message-ID: <ED0C7155-410F-4F4E-835B-17E239E46B19@cavium.com>
-References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
- <1481056251-2310-16-git-send-email-himanshu.madhani@cavium.com>
- <20161214210710.GD1011@infradead.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Date: Thu, 15 Dec 2016 19:28:39 +0200
+Message-ID: <20161215172839.GA6520@kozik-lap>
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-6-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0068.outbound.protection.outlook.com ([104.47.34.68]:61568
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755134AbcLORVg (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Dec 2016 12:21:36 -0500
-In-Reply-To: <20161214210710.GD1011@infradead.org>
-Content-Language: en-US
-Content-ID: <90C6983236F01F4CA9501712E43F1D79@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Javier Martinez Canillas <javier@osg.samsung.com>, Russell King <linux@armlinux.org.uk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Luca Coelho <luciano.coelho@intel.com>, Intel Linux Wireless <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jason Wang <jasowang@redhat.com>, Alexander Aring <aar@pengutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpPbiAxMi8xNC8xNiwgMTowNyBQTSwgIkNocmlzdG9waCBIZWxsd2lnIiA8aGNoQGluZnJhZGVh
-ZC5vcmc+IHdyb3RlOg0KDQo+T24gVHVlLCBEZWMgMDYsIDIwMTYgYXQgMTI6MzA6NDRQTSAtMDgw
-MCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IEZyb206IFF1aW5uIFRyYW4gPHF1aW5uLnRy
-YW5AY2F2aXVtLmNvbT4NCj4+IA0KPj4gUWxvZ2ljJ3MgYWRhcHRlciBpcyBhYmxlIHRvIGJlaGF2
-ZSBpbiBtdWx0aXBsZSBtb2RlczoNCj4+IGluaXRpYXRvciwgdGFyZ2V0LCBleGNsdXNpdmUvZWl0
-aGVyLCBhbmQgZHVhbC9ib3RoLg0KPj4gDQo+PiBUaGlzIHBhdGNoIHJlbmFtZXMgdGhlIHFsaW5p
-X21vZGUgLT4gcWxvcF9tb2RlIGFuZCBhbGxvdw0KPj4gZGlmZmVyZW50IHNldHRpbmcgZm9yIGVh
-Y2ggcG9ydCBhbmQgZXhjaGFuZ2UgcmVzb3VyY2UgY29udHJvbC4NCj4NCj5SZW1vdmluZyBhbiBv
-bGQgbW9kdWxlIHBhcmFtZXRlciB3aWxsIGJyZWFrIGV4aXN0aW5nIHNldHVwcy4gIFBsZWFzZQ0K
-PmFkZCB0aGUgbmV3IG9uZSBvdmVycmlkaW5nIHRoZSBvbGQgcGFyYW1ldGVyLCBidXQgZG9uJ3Qg
-cmVtb3ZlIHRoZSBvbGQNCj5vbmUuDQoNCkFjay4gV2lsbCByZXZpc2UgcGF0Y2ggdG8gcHJlc2Vy
-dmUgb2xkIHBhcmFtZXRlci4NCg0KPg0K
+On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
+>  include/linux/mmzone.h                           | 2 +-
+>  include/linux/serial_core.h                      | 4 ++--
+>  include/linux/types.h                            | 4 ++--
+>  include/scsi/iscsi_proto.h                       | 2 +-
+>  include/target/target_core_base.h                | 2 +-
+>  include/uapi/linux/virtio_types.h                | 6 +++---
+>  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
+>  net/mac80211/ieee80211_i.h                       | 4 ++--
+>  12 files changed, 20 insertions(+), 20 deletions(-)
+> 
+> diff --git a/arch/arm/plat-samsung/include/plat/gpio-cfg.h b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> index 21391fa..e55d1f5 100644
+> --- a/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> +++ b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
+> @@ -26,7 +26,7 @@
+>  
+>  #include <linux/types.h>
+>  
+> -typedef unsigned int __bitwise__ samsung_gpio_pull_t;
+> +typedef unsigned int __bitwise samsung_gpio_pull_t;
+>  
+>  /* forward declaration if gpio-core.h hasn't been included */
+>  struct samsung_gpio_chip;
+
+For plat-samsung:
+Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+
+Best regards,
+Krzysztof
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
