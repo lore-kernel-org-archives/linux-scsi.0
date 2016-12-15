@@ -1,35 +1,47 @@
-From: Bart Van Assche <bart.vanassche@gmail.com>
-Subject: Re: [PATCH 14/22] qla2xxx: Add interrupt polling mechanism
-Date: Thu, 15 Dec 2016 10:27:05 +0100
-Message-ID: <0ae46bd0-a5f1-c962-2b86-5b95d815095f@acm.org>
-References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
- <1481056251-2310-15-git-send-email-himanshu.madhani@cavium.com>
- <20161214210635.GC1011@infradead.org>
+From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Date: Thu, 15 Dec 2016 03:51:46 -0800
+Message-ID: <20161215115146.GB22750@kroah.com>
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+ <1481778865-27667-6-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20161214210635.GC1011@infradead.org>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: target-devel@vger.kernel.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <owner-linux-mm@kvack.org>
+Content-Disposition: inline
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Javier Martinez Canillas <javier@osg.samsung.com>, Russell King <linux@armlinux.org.uk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Luca Coelho <luciano.coelho@intel.com>, Intel Linux Wireless <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jason Wang <jasowang@redhat.com>, Alexander Aring <aar@pengutronix.de>, Stefan Schmidt <stefan@osg.samsung.com>, Davi
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/14/2016 10:06 PM, Christoph Hellwig wrote:
-> On Tue, Dec 06, 2016 at 12:30:43PM -0800, Himanshu Madhani wrote:
->> From: Quinn Tran <quinn.tran@cavium.com>
->>
->> This patch adds capability to poll for an interrupt, If hardware
->> does not generate any interrupt for 2 seconds.
+On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
 > 
-> This description sounds like the hardware might be buggy and not
-> generate interrupts, in which case 2 seconds is a very long time.
-> 
-> Can you explain the intention a bit better?
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
+>  include/linux/mmzone.h                           | 2 +-
+>  include/linux/serial_core.h                      | 4 ++--
+>  include/linux/types.h                            | 4 ++--
+>  include/scsi/iscsi_proto.h                       | 2 +-
+>  include/target/target_core_base.h                | 2 +-
+>  include/uapi/linux/virtio_types.h                | 6 +++---
+>  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
+>  net/mac80211/ieee80211_i.h                       | 4 ++--
+>  12 files changed, 20 insertions(+), 20 deletions(-)
 
-In addition to Christoph's question: is this a workaround for a hardware
-bug or for a firmware bug? If it is a workaround for a firmware bug,
-since the qla2xxx firmware can be upgraded, why is an interrupt polling
-mechanism added to the kernel driver instead of fixing the firmware?
+for include/linux/serial_core.h:
 
-Bart.
+Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
