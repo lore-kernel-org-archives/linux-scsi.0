@@ -1,63 +1,97 @@
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
-Date: Thu, 15 Dec 2016 19:28:39 +0200
-Message-ID: <20161215172839.GA6520@kozik-lap>
-References: <1481778865-27667-1-git-send-email-mst@redhat.com>
- <1481778865-27667-6-git-send-email-mst@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Return-path: <owner-linux-mm@kvack.org>
-Content-Disposition: inline
-In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
-Sender: owner-linux-mm@kvack.org
-To: "Michael S. Tsirkin" <mst@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Javier Martinez Canillas <javier@osg.samsung.com>, Russell King <linux@armlinux.org.uk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Luca Coelho <luciano.coelho@intel.com>, Intel Linux Wireless <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jason Wang <jasowang@redhat.com>, Alexander Aring <aar@pengutronix.de>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH RESEND] block: allow WRITE_SAME commands with the SG_IO ioctl
+Date: Thu, 15 Dec 2016 11:48:18 -0600
+Message-ID: <1481824098-5555-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:54947 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1753101AbcLORs3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 15 Dec 2016 12:48:29 -0500
+Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id uBFHi8Gs085978
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2016 12:48:28 -0500
+Received: from e24smtp03.br.ibm.com (e24smtp03.br.ibm.com [32.104.18.24])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 27bupnkgqn-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 15 Dec 2016 12:48:28 -0500
+Received: from localhost
+        by e24smtp03.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <mauricfo@linux.vnet.ibm.com>;
+        Thu, 15 Dec 2016 15:48:26 -0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: axboe@kernel.dk, linux-block@vger.kernel.org
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, pbonzini@redhat.com, latha@linux.vnet.ibm.com, manjuhr1@in.ibm.com
 
-On Thu, Dec 15, 2016 at 07:15:20AM +0200, Michael S. Tsirkin wrote:
-> __bitwise__ used to mean "yes, please enable sparse checks
-> unconditionally", but now that we dropped __CHECK_ENDIAN__
-> __bitwise is exactly the same.
-> There aren't many users, replace it by __bitwise everywhere.
-> 
-> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
-> ---
->  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
->  drivers/md/dm-cache-block-types.h                | 6 +++---
->  drivers/net/ethernet/sun/sunhme.h                | 2 +-
->  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
->  include/linux/mmzone.h                           | 2 +-
->  include/linux/serial_core.h                      | 4 ++--
->  include/linux/types.h                            | 4 ++--
->  include/scsi/iscsi_proto.h                       | 2 +-
->  include/target/target_core_base.h                | 2 +-
->  include/uapi/linux/virtio_types.h                | 6 +++---
->  net/ieee802154/6lowpan/6lowpan_i.h               | 2 +-
->  net/mac80211/ieee80211_i.h                       | 4 ++--
->  12 files changed, 20 insertions(+), 20 deletions(-)
-> 
-> diff --git a/arch/arm/plat-samsung/include/plat/gpio-cfg.h b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
-> index 21391fa..e55d1f5 100644
-> --- a/arch/arm/plat-samsung/include/plat/gpio-cfg.h
-> +++ b/arch/arm/plat-samsung/include/plat/gpio-cfg.h
-> @@ -26,7 +26,7 @@
->  
->  #include <linux/types.h>
->  
-> -typedef unsigned int __bitwise__ samsung_gpio_pull_t;
-> +typedef unsigned int __bitwise samsung_gpio_pull_t;
->  
->  /* forward declaration if gpio-core.h hasn't been included */
->  struct samsung_gpio_chip;
+The WRITE_SAME commands are not present in the blk_default_cmd_filter
+write_ok list, and thus are failed with -EPERM when the SG_IO ioctl()
+is executed without CAP_SYS_RAWIO capability (e.g., unprivileged users).
+[ sg_io() -> blk_fill_sghdr_rq() > blk_verify_command() -> -EPERM ]
 
-For plat-samsung:
-Acked-by: Krzysztof Kozlowski <krzk@kernel.org>
+The problem can be reproduced with the sg_write_same command
 
-Best regards,
-Krzysztof
+  # sg_write_same --num 1 --xferlen 512 /dev/sda
+  #
 
---
-To unsubscribe, send a message with 'unsubscribe linux-mm' in
-the body to majordomo@kvack.org.  For more info on Linux MM,
-see: http://www.linux-mm.org/ .
-Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
+  # capsh --drop=cap_sys_rawio -- -c \
+    'sg_write_same --num 1 --xferlen 512 /dev/sda'
+    Write same: pass through os error: Operation not permitted
+  #
+
+For comparison, the WRITE_VERIFY command does not observe this problem,
+since it is in that list:
+
+  # capsh --drop=cap_sys_rawio -- -c \
+    'sg_write_verify --num 1 --ilen 512 --lba 0 /dev/sda'
+  #
+
+So, this patch adds the WRITE_SAME commands to the list, in order
+for the SG_IO ioctl to finish successfully:
+
+  # capsh --drop=cap_sys_rawio -- -c \
+    'sg_write_same --num 1 --xferlen 512 /dev/sda'
+  #
+
+That case happens to be exercised by QEMU KVM guests with 'scsi-block' devices
+(qemu "-device scsi-block" [1], libvirt "<disk type='block' device='lun'>" [2]),
+which employs the SG_IO ioctl() and runs as an unprivileged user (libvirt-qemu).
+
+In that scenario, when a filesystem (e.g., ext4) performs its zero-out calls,
+which are translated to write-same calls in the guest kernel, and then into
+SG_IO ioctls to the host kernel, SCSI I/O errors may be observed in the guest:
+
+  [...] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_OK driverbyte=DRIVER_SENSE
+  [...] sd 0:0:0:0: [sda] tag#0 Sense Key : Aborted Command [current]
+  [...] sd 0:0:0:0: [sda] tag#0 Add. Sense: I/O process terminated
+  [...] sd 0:0:0:0: [sda] tag#0 CDB: Write Same(10) 41 00 01 04 e0 78 00 00 08 00
+  [...] blk_update_request: I/O error, dev sda, sector 17096824
+
+Links:
+[1] http://git.qemu.org/?p=qemu.git;a=commit;h=336a6915bc7089fb20fea4ba99972ad9a97c5f52
+[2] https://libvirt.org/formatdomain.html#elementsDisks (see 'disk' -> 'device')
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Signed-off-by: Brahadambal Srinivasan <latha@linux.vnet.ibm.com>
+Reported-by: Manjunatha H R <manjuhr1@in.ibm.com>
+---
+ block/scsi_ioctl.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/block/scsi_ioctl.c b/block/scsi_ioctl.c
+index 0774799..c6fee74 100644
+--- a/block/scsi_ioctl.c
++++ b/block/scsi_ioctl.c
+@@ -182,6 +182,9 @@ static void blk_set_cmd_filter_defaults(struct blk_cmd_filter *filter)
+ 	__set_bit(WRITE_16, filter->write_ok);
+ 	__set_bit(WRITE_LONG, filter->write_ok);
+ 	__set_bit(WRITE_LONG_2, filter->write_ok);
++	__set_bit(WRITE_SAME, filter->write_ok);
++	__set_bit(WRITE_SAME_16, filter->write_ok);
++	__set_bit(WRITE_SAME_32, filter->write_ok);
+ 	__set_bit(ERASE, filter->write_ok);
+ 	__set_bit(GPCMD_MODE_SELECT_10, filter->write_ok);
+ 	__set_bit(MODE_SELECT, filter->write_ok);
+-- 
+2.7.4
+
