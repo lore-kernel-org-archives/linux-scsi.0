@@ -1,81 +1,30 @@
-From: "Tran, Quinn" <Quinn.Tran@cavium.com>
-Subject: Re: [PATCH 08/22] qla2xxx: Refactore target code to remove symbol
- dependency
-Date: Thu, 15 Dec 2016 20:50:39 +0000
-Message-ID: <323E0F97-56EE-4EB4-A204-B824BDE8B1D5@cavium.com>
-References: <1481056251-2310-1-git-send-email-himanshu.madhani@cavium.com>
- <1481056251-2310-9-git-send-email-himanshu.madhani@cavium.com>
- <20161214211823.GC14133@infradead.org>
- <8A5A0387-B871-4E64-9439-5C936947E1F8@cavium.com>
+From: Vladislav Bolkhovitin <vst@vlnb.net>
+Subject: [ANNOUNCE]: SCST 3.2 released
+Date: Thu, 15 Dec 2016 20:44:47 -0800
+Message-ID: <5853713F.6000200@vlnb.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0052.outbound.protection.outlook.com ([104.47.42.52]:58176
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752952AbcLOVXO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 15 Dec 2016 16:23:14 -0500
-In-Reply-To: <8A5A0387-B871-4E64-9439-5C936947E1F8@cavium.com>
-Content-Language: en-US
-Content-ID: <1E6B90259EFAAF45ABF5D1A0E7A3A0AD@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: scst-devel <scst-devel@lists.sourceforge.net>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, Christoph Hellwig <hch@infradead.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Q2hyaXN0b3BoLA0KDQpRbG9naWMgd2FzIGFza2VkIHRvIHN1cHBvcnQgb3RoZXIgVGFyZ2V0IFN0
-YWNrIChTQyBTVCkgdXNpbmcgdGhlIHNhbWUgcWxhMnh4eC5rbyB1cHN0cmVhbSBkcml2ZXIuICBJ
-IGhhZCBtZW50aW9uZWQgdGhpcyBkdXJpbmcgdGhlIGxhc3QgMjAxNSBMU0YgZ2V0IHRvZ2V0aGVy
-LiAgSG9wZWZ1bGx5LCB0aGF0IGdpdmVzIGEgYmV0dGVyIGNvbnRleHQuICBUaGUgdW5kZXJzdGFu
-ZGluZyB0aGF0IGNhbWUgYXdheSB3YXMg4oCcUWxvZ2ljIGRvIHdoYXQgaXMgbmVlZGVkIHRvIHBy
-b3ZpZGUgdGhpcyBzdXBwb3J0IHdpdGhvdXQgY3JlYXRpbmcgYW55IGRlYWQgY29kZeKAnS4NCg0K
-QXMgZm9yIHRoZSBjbGVhbnVwIHBhdGNoKGVzKSwgd2UgZmFpbCB0byBtZW50aW9uIHRoYXQgY29u
-dmVyc2F0aW9uLiAgVGhlIHBhdGNoIGF0dGVtcHRzIHRvIHJlbW92ZSBhbnkga25vd2xlZGdlIG9m
-IFRDTeKAmXMgc3BlY2lmaWMgc3ltYm9sIGFuZCB0cnkgdG8gZm9ybWFsaXplIHRoZSBpbnRlcmZh
-Y2UuICBRbGEyeHh4IGRyaXZlciB3aWxsIGJlaGF2ZSBpbiBhIG1vcmUgZ2VuZXJpYyBtYW5uZXIg
-d2hlbiBpdCBjb21lcyB0byBUYXJnZXQgTW9kZS4gIEFsbCBUQ00ga25vd2xlZGdlIHdpbGwgYmUg
-Y29uZmluZWQgdG8gdGhlIHRjbV9xbGEyeHh4IGRyaXZlciBiZWZvcmUgY29tbXVuaWNhdGluZyB3
-aXRoIFFMQSBkcml2ZXIuICAgVGhlIHNhbWUgZ29lcyBmb3Igb3RoZXIgdGFyZ2V0IHN0YWNrLg0K
-DQpUaGUgcGF0Y2hlcyBsb29rIGxpa2UgaXRzIGNvcHlpbmcgYSBsb3Qgb2YgZmllbGRzIHdpdGhv
-dXQgZG9pbmcgYSB3aG9sZSBsb3QsIGluc3RlYWQgdGhlIHBhdGNoZXMgYXJlIHRyYW5zbGF0aW5n
-IHRoZSByZXF1ZXN0IGZyb20gdGNtX3FsYTJ4eHggdG8gcWxhMnh4eC4NCg0KQXMgZm9yIFQxMC1Q
-SSBjaGFuZ2UgaW4gdGhpcyBzZXJpZXMsIHRoZSBnb2FsIHdlcmUgdGhlIHNhbWUgOiAxKSByZW1v
-dmUgVENNIGtub3dsZWRnZS9jbGVhbnVwLCAyKSBhZGRpdGlvbmFsIGJ1ZyBmaXhlcyB3ZXJlIG5l
-ZWRlZCB3aGlsZSB0ZXN0aW5nIHdpdGggb3RoZXIgc3RhY2tzLiANCg0KUmVnYXJkcywNClF1aW5u
-IFRyYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCkZyb206IDxsaW51eC1zY3NpLW93
-bmVyQHZnZXIua2VybmVsLm9yZz4gb24gYmVoYWxmIG9mICJNYWRoYW5pLCBIaW1hbnNodSIgPEhp
-bWFuc2h1Lk1hZGhhbmlAY2F2aXVtLmNvbT4NCkRhdGU6IFRodXJzZGF5LCBEZWNlbWJlciAxNSwg
-MjAxNiBhdCAxMToyOSBBTQ0KVG86IENocmlzdG9waCBIZWxsd2lnIDxoY2hAaW5mcmFkZWFkLm9y
-Zz4NCkNjOiB0YXJnZXQtZGV2ZWwgPHRhcmdldC1kZXZlbEB2Z2VyLmtlcm5lbC5vcmc+LCBOaWNo
-b2xhcyBCZWxsaW5nZXIgPG5hYkBsaW51eC1pc2NzaS5vcmc+LCAiTWFsYXZhbGksIEdpcmlkaGFy
-IiA8R2lyaWRoYXIuTWFsYXZhbGlAY2F2aXVtLmNvbT4sICJsaW51eC1zY3NpQHZnZXIua2VybmVs
-Lm9yZyIgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDogUmU6IFtQQVRDSCAw
-OC8yMl0gcWxhMnh4eDogUmVmYWN0b3JlIHRhcmdldCBjb2RlIHRvIHJlbW92ZSBzeW1ib2wgZGVw
-ZW5kZW5jeQ0KUmVzZW50LUZyb206IDxxdWlubi50cmFuQHFsb2dpYy5jb20+DQoNCiAgICBIaSBD
-aHJpc3RvcGgsIA0KICAgIA0KICAgIA0KICAgIA0KICAgIE9uIDEyLzE0LzE2LCAxOjE4IFBNLCAi
-Q2hyaXN0b3BoIEhlbGx3aWciIDxoY2hAaW5mcmFkZWFkLm9yZz4gd3JvdGU6DQogICAgDQogICAg
-PiAtIHRoZSBuZXcgcWxhMngwMF9mcmVlX2ZjcG9ydCBpcyBlbnRpcmVseSBwb2ludGxlc3MsIHBs
-ZWFzZSBkcm9wDQogICAgPiAgIHRoYXQgcGFydCBvZiB0aGUgcGF0Y2ggKGFuZCBldmVuIGlmIGl0
-IHdhc24ndCBwb2ludGxlc3MgaXQgc2hvdWxkDQogICAgPiAgIGhhdmUgYmVlbiBhIHBhdGNoIG9u
-IGl0J3Mgb3duKQ0KICAgID4gLSBwbGVhc2UgdXNlIHN0cnVjdCBuYW1lcyBhbmQgbm90IHR5cGVk
-ZWZzIGZvciB5b3VyIG5ldyBzdHJ1Y3R1cmVzDQogICAgPiAtIHByZXR0eSBtdWNoIGF2ZXJ5IHNp
-bmdsZSBpdGVtcyBpbiB5b3VyIGxpc3Qgc2hvdWxkIGJlIGEgc2VwYXJhdGUNCiAgICA+ICAgcGF0
-Y2guICBBbmQgc29tZSBvZiB0aGVtIGFyZSBhY3RpdmVseSBjb3VudGVycHJvZHVjdGl2ZSBhbmQg
-c2hvdWxkDQogICAgPiAgIGJlIGRyb3BwZWQ6DQogICAgPg0KICAgID4gICAgICAgIC0gUmVtb3Zl
-IGRpcmVjdCBhY2Nlc3Mgb2Ygc2NzaV9zdGF0dXMgZmllbGQgaW4gc2VfY21kDQogICAgPgktIFJl
-bW92ZSBzZV9jbWQgZnJvbSBxbHRfZG9fY3Rpb19jb21wbGV0aW9uDQogICAgPgktIFJlbW92ZSBz
-ZV9jbWQgYWNjZXNzIGluIHNyciBjb2RlIHNlY3Rpb24NCiAgICA+CS0gTW92ZSBzZV9jbWQgc3Ry
-dWN0IG91dHNpZGUgb2YgcWxhX3RndF9jbWQvcWxhX3RndF9tZ210X2NtZC4NCiAgICANCiAgICBX
-ZSBjb21iaW5lZCB0aGUgcGF0Y2hlcyB3aGljaCBpbmNsdWRlcyBmaXhlcywgZW5oYW5jZW1lbnRz
-IGFuZCBjbGVhbnVwcyB0byANCiAgICBTdXBwb3J0IG11bHRpcGxlIHRhcmdldCBzdGFja3MsIHJl
-dmlld3MgZnJvbSBjdXN0b21lciwgYW5kIHRvIGltcHJvdmUgY29kZQ0KICAgIG1haW50YWluYWJp
-bGl0eS4gVGhpcyBwYXRjaCB0cmllcyB0byBvcmdhbml6ZSBjb2RlIGxvZ2ljYWxseSB3aGljaCBp
-cyBzcHJlYWQNCiAgICBhY3Jvc3MgcWxhX3RhcmdldCBhbmQgdGNtX3FsYTJ4eHguIFdlIHdpbGwg
-c3BsaXQgdGhpcyBwYXRjaCBpbnRvIG11bHRpcGxlIA0KICAgIHN1YnNldCBhbmQgcmVzdWJtaXQg
-dGhlIHNlcmllcy4gDQogICAgDQogICAgVGhhbmtzLCANCiAgICAtIEhpbWFuc2h1DQogICAgPg0K
-ICAgID/vv717Lm7vv70r77+977+977+977+977+977+977+9KyXvv73vv71sendt77+977+9Yu+/
-veunsu+/ve+/vXLvv73vv716WO+/ve+/vT8/77+9KO+/ve+/vT/vv73vv73cqH3vv73vv73vv73G
-oHrvv70majordu+/ve+/ve+/vT/vv73vv73vv73vv716Wivvv73vv70rembvv73vv73vv71o77+9
-77+977+9fu+/ve+/ve+/ve+/vWnvv73vv73vv71677+9P++/vXfvv73vv73vv70/77+977+977+9
-77+9Ju+/vSnfoj9mDQoNCg==
+Hi All,
+
+I'm glad to announce SCST 3.2 has just been released
+
+You can download it from http://scst.sourceforge.net/downloads.html
+
+SCST is alternative SCSI target stack for Linux. SCST allows creation of sophisticated
+storage devices, which can provide advanced functionality, like replication, thin
+provisioning, deduplication, high availability, automatic backup, etc. Many of modern
+SAN appliances, especially higher end ones, are SCST based. It might well be that your
+favorite storage appliance running SCST in the firmware.
+
+More info about SCST and its modules you can find on: http://scst.sourceforge.net
+
+Thanks to all who made it happen, especially to SanDisk/WDC for the great support!
+
+Vlad
