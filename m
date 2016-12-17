@@ -1,101 +1,95 @@
 From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] scsi: esas2r: Fix format string type mistakes
-Date: Fri, 16 Dec 2016 13:50:30 -0800
-Message-ID: <20161216215030.GA96735@beast>
+Subject: [PATCH] hpsa: use designated initializers
+Date: Fri, 16 Dec 2016 17:04:49 -0800
+Message-ID: <20161217010449.GA140636@beast>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f173.google.com ([209.85.192.173]:34125 "EHLO
-        mail-pf0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757707AbcLPVuc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2016 16:50:32 -0500
-Received: by mail-pf0-f173.google.com with SMTP id c4so15896783pfb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2016 13:50:32 -0800 (PST)
+Received: from mail-pg0-f47.google.com ([74.125.83.47]:35382 "EHLO
+        mail-pg0-f47.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S935117AbcLQBEv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2016 20:04:51 -0500
+Received: by mail-pg0-f47.google.com with SMTP id p66so37726746pga.2
+        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2016 17:04:51 -0800 (PST)
 Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bradley Grove <linuxdrivers@attotech.com>
-Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Emese Revfy <re.emese@gmail.com>, linux-scsi@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 
-From: Emese Revfy <re.emese@gmail.com>
+Prepare to mark sensitive kernel structures for randomization by making
+sure they're using designated initializers. These were identified during
+allyesconfig builds of x86, arm, and arm64, with most initializer fixes
+extracted from grsecurity.
 
-This adds the missing __printf attribute which allows compile time
-format string checking (and will be used by the coming initify gcc
-plugin). Additionally, this fixes the warnings exposed by the attribute.
-
-Signed-off-by: Emese Revfy <re.emese@gmail.com>
-[kees: split scsi/acpi, merged attr and fix, new commit messages]
 Signed-off-by: Kees Cook <keescook@chromium.org>
 ---
- drivers/scsi/esas2r/esas2r_init.c  | 2 +-
- drivers/scsi/esas2r/esas2r_ioctl.c | 2 +-
- drivers/scsi/esas2r/esas2r_log.h   | 4 ++--
- drivers/scsi/esas2r/esas2r_main.c  | 4 ++--
- 4 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/hpsa.h | 40 ++++++++++++++++++++--------------------
+ 1 file changed, 20 insertions(+), 20 deletions(-)
 
-diff --git a/drivers/scsi/esas2r/esas2r_init.c b/drivers/scsi/esas2r/esas2r_init.c
-index d6e53aee2295..6432a50b26d8 100644
---- a/drivers/scsi/esas2r/esas2r_init.c
-+++ b/drivers/scsi/esas2r/esas2r_init.c
-@@ -237,7 +237,7 @@ static void esas2r_claim_interrupts(struct esas2r_adapter *a)
- 		flags |= IRQF_SHARED;
+diff --git a/drivers/scsi/hpsa.h b/drivers/scsi/hpsa.h
+index 64e98295b707..bf6cdc106654 100644
+--- a/drivers/scsi/hpsa.h
++++ b/drivers/scsi/hpsa.h
+@@ -578,38 +578,38 @@ static unsigned long SA5_ioaccel_mode1_completed(struct ctlr_info *h, u8 q)
+ }
  
- 	esas2r_log(ESAS2R_LOG_INFO,
--		   "esas2r_claim_interrupts irq=%d (%p, %s, %x)",
-+		   "esas2r_claim_interrupts irq=%d (%p, %s, %lx)",
- 		   a->pcid->irq, a, a->name, flags);
- 
- 	if (request_irq(a->pcid->irq,
-diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
-index 3e8483410f61..34976f9a1a10 100644
---- a/drivers/scsi/esas2r/esas2r_ioctl.c
-+++ b/drivers/scsi/esas2r/esas2r_ioctl.c
-@@ -1301,7 +1301,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
- 	ioctl = kzalloc(sizeof(struct atto_express_ioctl), GFP_KERNEL);
- 	if (ioctl == NULL) {
- 		esas2r_log(ESAS2R_LOG_WARN,
--			   "ioctl_handler kzalloc failed for %d bytes",
-+			   "ioctl_handler kzalloc failed for %lu bytes",
- 			   sizeof(struct atto_express_ioctl));
- 		return -ENOMEM;
- 	}
-diff --git a/drivers/scsi/esas2r/esas2r_log.h b/drivers/scsi/esas2r/esas2r_log.h
-index 7b6397bb5b94..75b9d23cd736 100644
---- a/drivers/scsi/esas2r/esas2r_log.h
-+++ b/drivers/scsi/esas2r/esas2r_log.h
-@@ -61,8 +61,8 @@ enum {
- #endif
+ static struct access_method SA5_access = {
+-	SA5_submit_command,
+-	SA5_intr_mask,
+-	SA5_intr_pending,
+-	SA5_completed,
++	.submit_command = SA5_submit_command,
++	.set_intr_mask = SA5_intr_mask,
++	.intr_pending = SA5_intr_pending,
++	.command_completed = SA5_completed,
  };
  
--int esas2r_log(const long level, const char *format, ...);
--int esas2r_log_dev(const long level,
-+__printf(2, 3) int esas2r_log(const long level, const char *format, ...);
-+__printf(3, 4) int esas2r_log_dev(const long level,
- 		   const struct device *dev,
- 		   const char *format,
- 		   ...);
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 5092c821d088..072d07b45043 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -198,7 +198,7 @@ static ssize_t write_hw(struct file *file, struct kobject *kobj,
- 					      GFP_KERNEL);
- 		if (a->local_atto_ioctl == NULL) {
- 			esas2r_log(ESAS2R_LOG_WARN,
--				   "write_hw kzalloc failed for %d bytes",
-+				   "write_hw kzalloc failed for %lu bytes",
- 				   sizeof(struct atto_ioctl));
- 			return -ENOMEM;
- 		}
-@@ -1186,7 +1186,7 @@ static int esas2r_dev_targ_reset(struct scsi_cmnd *cmd, bool target_reset)
- 		} else {
- 			esas2r_log(ESAS2R_LOG_CRIT,
- 				   "unable to allocate a request for a "
--				   "device reset (%d:%d)!",
-+				   "device reset (%d:%llu)!",
- 				   cmd->device->id,
- 				   cmd->device->lun);
- 		}
+ static struct access_method SA5_ioaccel_mode1_access = {
+-	SA5_submit_command,
+-	SA5_performant_intr_mask,
+-	SA5_ioaccel_mode1_intr_pending,
+-	SA5_ioaccel_mode1_completed,
++	.submit_command = SA5_submit_command,
++	.set_intr_mask = SA5_performant_intr_mask,
++	.intr_pending = SA5_ioaccel_mode1_intr_pending,
++	.command_completed = SA5_ioaccel_mode1_completed,
+ };
+ 
+ static struct access_method SA5_ioaccel_mode2_access = {
+-	SA5_submit_command_ioaccel2,
+-	SA5_performant_intr_mask,
+-	SA5_performant_intr_pending,
+-	SA5_performant_completed,
++	.submit_command = SA5_submit_command_ioaccel2,
++	.set_intr_mask = SA5_performant_intr_mask,
++	.intr_pending = SA5_performant_intr_pending,
++	.command_completed = SA5_performant_completed,
+ };
+ 
+ static struct access_method SA5_performant_access = {
+-	SA5_submit_command,
+-	SA5_performant_intr_mask,
+-	SA5_performant_intr_pending,
+-	SA5_performant_completed,
++	.submit_command = SA5_submit_command,
++	.set_intr_mask = SA5_performant_intr_mask,
++	.intr_pending = SA5_performant_intr_pending,
++	.command_completed = SA5_performant_completed,
+ };
+ 
+ static struct access_method SA5_performant_access_no_read = {
+-	SA5_submit_command_no_read,
+-	SA5_performant_intr_mask,
+-	SA5_performant_intr_pending,
+-	SA5_performant_completed,
++	.submit_command = SA5_submit_command_no_read,
++	.set_intr_mask = SA5_performant_intr_mask,
++	.intr_pending = SA5_performant_intr_pending,
++	.command_completed = SA5_performant_completed,
+ };
+ 
+ struct board_type {
 -- 
 2.7.4
 
