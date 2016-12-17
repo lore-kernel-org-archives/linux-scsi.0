@@ -1,83 +1,33 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: [PATCH] cciss: use designated initializers
-Date: Fri, 16 Dec 2016 17:05:30 -0800
-Message-ID: <20161217010530.GA140708@beast>
+From: Bart Van Assche <bart.vanassche@gmail.com>
+Subject: Re: [PATCH] scsi: esas2r: Fix format string type mistakes
+Date: Sat, 17 Dec 2016 09:34:57 +0100
+Message-ID: <92483e45-c522-f7d5-e10d-9693d2675697@acm.org>
+References: <20161216215030.GA96735@beast>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f176.google.com ([209.85.192.176]:35571 "EHLO
-        mail-pf0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S935967AbcLQBFc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 16 Dec 2016 20:05:32 -0500
-Received: by mail-pf0-f176.google.com with SMTP id i88so16311055pfk.2
-        for <linux-scsi@vger.kernel.org>; Fri, 16 Dec 2016 17:05:32 -0800 (PST)
-Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161216215030.GA96735@beast>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>, Bradley Grove <linuxdrivers@attotech.com>
+Cc: linux-kernel@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Emese Revfy <re.emese@gmail.com>, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-kernel@vger.kernel.org
-Cc: Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 
-Prepare to mark sensitive kernel structures for randomization by making
-sure they're using designated initializers. These were identified during
-allyesconfig builds of x86, arm, and arm64, with most initializer fixes
-extracted from grsecurity.
+On 12/16/2016 10:50 PM, Kees Cook wrote:
+> diff --git a/drivers/scsi/esas2r/esas2r_ioctl.c b/drivers/scsi/esas2r/esas2r_ioctl.c
+> index 3e8483410f61..34976f9a1a10 100644
+> --- a/drivers/scsi/esas2r/esas2r_ioctl.c
+> +++ b/drivers/scsi/esas2r/esas2r_ioctl.c
+> @@ -1301,7 +1301,7 @@ int esas2r_ioctl_handler(void *hostdata, int cmd, void __user *arg)
+>  	ioctl = kzalloc(sizeof(struct atto_express_ioctl), GFP_KERNEL);
+>  	if (ioctl == NULL) {
+>  		esas2r_log(ESAS2R_LOG_WARN,
+> -			   "ioctl_handler kzalloc failed for %d bytes",
+> +			   "ioctl_handler kzalloc failed for %lu bytes",
+>  			   sizeof(struct atto_express_ioctl));
+>  		return -ENOMEM;
+>  	}
 
-Signed-off-by: Kees Cook <keescook@chromium.org>
----
- drivers/block/cciss.h | 30 +++++++++++++++---------------
- 1 file changed, 15 insertions(+), 15 deletions(-)
+Please use %zu to format size_t.
 
-diff --git a/drivers/block/cciss.h b/drivers/block/cciss.h
-index 7fda30e4a241..428766d1ce80 100644
---- a/drivers/block/cciss.h
-+++ b/drivers/block/cciss.h
-@@ -402,27 +402,27 @@ static bool SA5_performant_intr_pending(ctlr_info_t *h)
- }
- 
- static struct access_method SA5_access = {
--	SA5_submit_command,
--	SA5_intr_mask,
--	SA5_fifo_full,
--	SA5_intr_pending,
--	SA5_completed,
-+	.submit_command = SA5_submit_command,
-+	.set_intr_mask = SA5_intr_mask,
-+	.fifo_full = SA5_fifo_full,
-+	.intr_pending = SA5_intr_pending,
-+	.command_completed = SA5_completed,
- };
- 
- static struct access_method SA5B_access = {
--        SA5_submit_command,
--        SA5B_intr_mask,
--        SA5_fifo_full,
--        SA5B_intr_pending,
--        SA5_completed,
-+	.submit_command = SA5_submit_command,
-+	.set_intr_mask = SA5B_intr_mask,
-+	.fifo_full = SA5_fifo_full,
-+	.intr_pending = SA5B_intr_pending,
-+	.command_completed = SA5_completed,
- };
- 
- static struct access_method SA5_performant_access = {
--	SA5_submit_command,
--	SA5_performant_intr_mask,
--	SA5_fifo_full,
--	SA5_performant_intr_pending,
--	SA5_performant_completed,
-+	.submit_command = SA5_submit_command,
-+	.set_intr_mask = SA5_performant_intr_mask,
-+	.fifo_full = SA5_fifo_full,
-+	.intr_pending = SA5_performant_intr_pending,
-+	.command_completed = SA5_performant_completed,
- };
- 
- struct board_type {
--- 
-2.7.4
-
-
--- 
-Kees Cook
-Nexus Security
+Bart.
