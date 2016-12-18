@@ -1,24 +1,40 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 6/9] qla2xxx: Remove direct access of scsi_status field
- in se_cmd
-Date: Sun, 18 Dec 2016 01:55:05 -0800
-Message-ID: <20161218095505.GI23338@infradead.org>
-References: <1482051769-22941-1-git-send-email-himanshu.madhani@cavium.com>
- <1482051769-22941-7-git-send-email-himanshu.madhani@cavium.com>
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: Uninitialized variable in bfad_im_bsg_els_ct_request
+Date: Sun, 18 Dec 2016 21:44:27 +0100
+Message-ID: <a79c1e83-d5d4-ae9b-083c-ca72c3d8c62a@m4x.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:36438 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757418AbcLRJzG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2016 04:55:06 -0500
-Content-Disposition: inline
-In-Reply-To: <1482051769-22941-7-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 
-Looks fine,
+Hello,
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Currently on Linus master tree and in linux-next [1],
+bfad_im_bsg_els_ct_request() code starts with the following code:
+
+int
+bfad_im_bsg_els_ct_request(struct bsg_job *job)
+{
+	/*...*/
+	struct fc_bsg_request *bsg_request = bsg_request;
+	struct fc_bsg_reply *bsg_reply = job->reply;
+	uint32_t command_type = bsg_request->msgcode;
+
+The local variable "bsg_request" is initialized to itself (which would
+usually mean it is uninitialized) but it is dereferenced in order to get
+its "msgcode" field. As I am quite new to the kernel code and
+dereferencing self-initialized local variables looks black magic to me,
+could you please describe why this code is valid?
+
+It has recently been introduced by commit 01e0e15c8b3b ("scsi: don't use
+fc_bsg_job::request and fc_bsg_job::reply directly").
+
+Thanks,
+Nicolas Iooss
+
+[1]
+https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/bfa/bfad_bsg.c?id=06548160dfecd1983ffd9d6795242a5cda095da5#n3356
