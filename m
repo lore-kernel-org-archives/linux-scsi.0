@@ -1,15 +1,19 @@
 From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 Subject: Uninitialized variable in bfad_im_bsg_els_ct_request
-Date: Sun, 18 Dec 2016 21:44:27 +0100
-Message-ID: <a79c1e83-d5d4-ae9b-083c-ca72c3d8c62a@m4x.org>
+Date: Sun, 18 Dec 2016 21:44:33 +0100
+Message-ID: <f34ede68-3f7d-6c2e-c0fa-9d7c273ae3c2@m4x.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wj0-f194.google.com ([209.85.210.194]:35814 "EHLO
+        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753817AbcLRUog (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2016 15:44:36 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
 
 Hello,
 
