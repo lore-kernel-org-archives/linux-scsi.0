@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 6/9] qla2xxx: Remove direct access of scsi_status field in se_cmd
-Date: Sun, 18 Dec 2016 01:02:46 -0800
-Message-ID: <1482051769-22941-7-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 5/9] qla2xxx: Move Command residual check from qla2xxx to tcm_qla2xxx
+Date: Sun, 18 Dec 2016 01:02:45 -0800
+Message-ID: <1482051769-22941-6-git-send-email-himanshu.madhani@cavium.com>
 References: <1482051769-22941-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -17,34 +17,86 @@ From: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    | 1 +
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 2 files changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c  |  8 ++++----
+ drivers/scsi/qla2xxx/qla_target.h  |  1 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 14 ++++++++++++++
+ 3 files changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f7df01b..1f9d2b9 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1793,6 +1793,7 @@ struct crc_context {
- #define SS_RESIDUAL_OVER		BIT_10
- #define SS_SENSE_LEN_VALID		BIT_9
- #define SS_RESPONSE_INFO_LEN_VALID	BIT_8
-+#define SS_SCSI_STATUS_BYTE	0xff
- 
- #define SS_RESERVE_CONFLICT		(BIT_4 | BIT_3)
- #define SS_BUSY_CONDITION		BIT_3
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 20f1b50..1690794 100644
+index 8640561..20f1b50 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2277,7 +2277,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
- 		int i;
+@@ -2123,16 +2123,16 @@ static int qlt_pre_xmit_response(struct qla_tgt_cmd *cmd,
  
- 		if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 1)) {
--			if (prm->cmd->se_cmd.scsi_status != 0) {
-+			if ((prm->rq_result & SS_SCSI_STATUS_BYTE) != 0) {
- 				ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe017,
- 				    "Skipping EXPLICIT_CONFORM and "
- 				    "CTIO7_FLAGS_CONFORM_REQ for FCP READ w/ "
+ 	*full_req_cnt = prm->req_cnt;
+ 
+-	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT) {
+-		prm->residual = se_cmd->residual_count;
++	if (cmd->residual < 0) {
++		prm->residual = -(cmd->residual);
+ 		ql_dbg(ql_dbg_io + ql_dbg_verbose, vha, 0x305c,
+ 		    "Residual underflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
+ 		       prm->residual, se_cmd->tag,
+ 		       se_cmd->t_task_cdb ? se_cmd->t_task_cdb[0] : 0,
+ 		       cmd->bufflen, prm->rq_result);
+ 		prm->rq_result |= SS_RESIDUAL_UNDER;
+-	} else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT) {
+-		prm->residual = se_cmd->residual_count;
++	} else if (cmd->residual > 0) {
++		prm->residual = cmd->residual;
+ 		ql_dbg(ql_dbg_io, vha, 0x305d,
+ 		    "Residual overflow: %d (tag %lld, op %x, bufflen %d, rq_result %x)\n",
+ 		       prm->residual, se_cmd->tag, se_cmd->t_task_cdb ?
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 027bed3..305b798 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -1007,6 +1007,7 @@ struct qla_tgt_cmd {
+ 	uint32_t unpacked_lun;
+ 	enum dma_data_direction dma_data_direction;
+ 	uint32_t reset_count;
++	int residual;				/* + = over, - = under */
+ 
+ 	uint16_t loop_id;	/* to save extra sess dereferences */
+ 	struct qla_tgt *tgt;	/* to save extra sess dereferences */
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 7026f3e..ecb4067 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -265,6 +265,15 @@ static void tcm_qla2xxx_complete_mcmd(struct work_struct *work)
+ 	transport_generic_free_cmd(&mcmd->se_cmd, 0);
+ }
+ 
++static void tcm_qla2xxx_check_resid(struct se_cmd *se_cmd,
++    struct qla_tgt_cmd *cmd)
++{
++	if (se_cmd->se_cmd_flags & SCF_UNDERFLOW_BIT)
++		cmd->residual = -(se_cmd->residual_count);
++	else if (se_cmd->se_cmd_flags & SCF_OVERFLOW_BIT)
++		cmd->residual = se_cmd->residual_count;
++}
++
+ /*
+  * Called from qla_target_template->free_mcmd(), and will call
+  * tcm_qla2xxx_release_cmd() via normal struct target_core_fabric_ops
+@@ -701,6 +710,8 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+ 	cmd->blk_sz  = se_cmd->se_dev->dev_attrib.block_size;
+ 	se_cmd->pi_err = 0;
+ 
++	tcm_qla2xxx_check_resid(se_cmd, cmd);
++
+ 	/*
+ 	 * Now queue completed DATA_IN the qla2xxx LLD and response ring
+ 	 */
+@@ -739,6 +750,9 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
+ 
+ 		cmd->bufflen = 0;
+ 	}
++
++	tcm_qla2xxx_check_resid(se_cmd, cmd);
++
+ 	/*
+ 	 * Now queue status response to qla2xxx LLD code and response ring
+ 	 */
 -- 
 1.8.3.1
