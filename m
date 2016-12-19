@@ -1,23 +1,43 @@
-From: Timothy Connor <willsonlarry893@gmail.com>
-Subject: KREDITANGEBOTE
-Date: Sun, 18 Dec 2016 23:17:46 -0800
-Message-ID: <CABJ3x5hX0V5spR8=X-LC6CMoqpmy1K0JbKvFMHjZvy-eUPLM=w__3589.84300769425$1482131894$gmane$org@mail.gmail.com>
-Reply-To: mkfinancial.online@gmail.com
+From: Luca Coelho <luca@coelho.fi>
+Subject: Re: [PATCH 5/8] linux: drop __bitwise__ everywhere
+Date: Mon, 19 Dec 2016 11:09:28 +0200
+Message-ID: <1482138568.26174.8.camel@coelho.fi>
+References: <1481778865-27667-1-git-send-email-mst@redhat.com>
+	 <1481778865-27667-6-git-send-email-mst@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-vk0-f66.google.com ([209.85.213.66]:36262 "EHLO
-        mail-vk0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753271AbcLSHSG (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 02:18:06 -0500
-Received: by mail-vk0-f66.google.com with SMTP id w194so12678770vkw.3
-        for <linux-scsi@vger.kernel.org>; Sun, 18 Dec 2016 23:18:05 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <owner-linux-mm@kvack.org>
+In-Reply-To: <1481778865-27667-6-git-send-email-mst@redhat.com>
+Sender: owner-linux-mm@kvack.org
+To: "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org
+Cc: Kukjin Kim <kgene@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, Javier Martinez Canillas <javier@osg.samsung.com>, Russell King <linux@armlinux.org.uk>, Alasdair Kergon <agk@redhat.com>, Mike Snitzer <snitzer@redhat.com>, dm-devel@redhat.com, Shaohua Li <shli@kernel.org>, Johannes Berg <johannes.berg@intel.com>, Emmanuel Grumbach <emmanuel.grumbach@intel.com>, Intel Linux Wireless <linuxwifi@intel.com>, Kalle Valo <kvalo@codeaurora.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Jiri Slaby <jslaby@suse.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "James E.J.
+ Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Jason Wang <jasowang@redhat.com>, Alexander Aring <aar@pengutronix.de>, Stefan Schmidt <stefan@osg.samsung.com>, "David S.
+ Miller" <davem@d>
 List-Id: linux-scsi@vger.kernel.org
 
---=20
-Darlehen f=C3=BCr alle m=C3=B6glichen Zwecke
-Wir bieten Ihnen zwischen =E2=82=AC 5000 und =E2=82=AC 20 Millionen, k=C3=
-=B6nnen Sie Ihre
-Anfrage direkt per E-Mail: mkfinancial.online@gmail.com
+On Thu, 2016-12-15 at 07:15 +0200, Michael S. Tsirkin wrote:
+> __bitwise__ used to mean "yes, please enable sparse checks
+> unconditionally", but now that we dropped __CHECK_ENDIAN__
+> __bitwise is exactly the same.
+> There aren't many users, replace it by __bitwise everywhere.
+> 
+> Signed-off-by: Michael S. Tsirkin <mst@redhat.com>
+> ---
+>  arch/arm/plat-samsung/include/plat/gpio-cfg.h    | 2 +-
+>  drivers/md/dm-cache-block-types.h                | 6 +++---
+>  drivers/net/ethernet/sun/sunhme.h                | 2 +-
+>  drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h | 4 ++--
+
+For drivers/net/wireless/intel/iwlwifi/iwl-fw-file.h:
+
+Acked-by: Luca Coelho <luciano.coelho@intel.com>
+
+--
+Luca.
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
