@@ -1,76 +1,53 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v2 01/11] lpfc: Clear the VendorVersion in the PLOGI/PLOGI ACC payload
-Date: Mon, 19 Dec 2016 15:07:20 -0800
-Message-ID: <58586828.M1b42wtxZQTqdEkh%james.smart@broadcom.com>
+Subject: [PATCH v2 10/11] lpfc: Add missing memory barrier
+Date: Mon, 19 Dec 2016 15:07:30 -0800
+Message-ID: <58586832.woeJM8e1raA2NxNi%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lpdvsmtp02.broadcom.com ([192.19.219.146]:42868 "EHLO
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:50954 "EHLO
         relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754767AbcLSXHZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 18:07:25 -0500
+        with ESMTP id S1756366AbcLSXHe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 18:07:34 -0500
 Received: from flash (fx9xs32.lab.emulex.com [138.239.87.14])
-        by relay.smtp.broadcom.com (Postfix) with SMTP id 1CEB3260002
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 15:07:22 -0800 (PST)
+        by relay.smtp.broadcom.com (Postfix) with SMTP id B1BA9280415
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 15:07:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Clear the VendorVersion in the PLOGI/PLOGI ACC payload
+On loosely ordered memory systems (PPC for example), the WQE elements
+were being updated in memory, but not necessarily flushed before the
+separate doorbell was written to hw which would cause hw to dma the
+WQE element. Thus, the hardware occasionally received partially
+updated WQE data.
 
-Vendor version info may have been set on fabric login. Before sending
-PLOGI payloads, ensure that it's cleared.
+Add the memory barrier after updating the WQE memory.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 6 ++++++
- drivers/scsi/lpfc/lpfc_hw.h  | 6 ++++++
- 2 files changed, 12 insertions(+)
+v2:
+  revised for checkpatch warning - comment before wmb()
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 236e4e5..27f0cbb 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1999,6 +1999,9 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- 	if (sp->cmn.fcphHigh < FC_PH3)
- 		sp->cmn.fcphHigh = FC_PH3;
+ drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index d0ffcf3..5c8663f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -120,6 +120,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+ 	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
+ 		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
+ 	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
++	/* ensure WQE bcopy flushed before doorbell write */
++	wmb();
  
-+	sp->cmn.valid_vendor_ver_level = 0;
-+	memset(sp->vendorVersion, 0, sizeof(sp->vendorVersion));
-+
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
- 		"Issue PLOGI:     did:x%x",
- 		did, 0, 0);
-@@ -3988,6 +3991,9 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		} else {
- 			memcpy(pcmd, &vport->fc_sparam,
- 			       sizeof(struct serv_parm));
-+
-+			sp->cmn.valid_vendor_ver_level = 0;
-+			memset(sp->vendorVersion, 0, sizeof(sp->vendorVersion));
- 		}
- 
- 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_RSP,
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index 8226543..3b970d37 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -360,6 +360,12 @@ struct csp {
-  * Word 1 Bit 30 in PLOGI request is random offset
-  */
- #define virtual_fabric_support randomOffset /* Word 1, bit 30 */
-+/*
-+ * Word 1 Bit 29 in common service parameter is overloaded.
-+ * Word 1 Bit 29 in FLOGI response is multiple NPort assignment
-+ * Word 1 Bit 29 in FLOGI/PLOGI request is Valid Vendor Version Level
-+ */
-+#define valid_vendor_ver_level response_multiple_NPort /* Word 1, bit 29 */
- #ifdef __BIG_ENDIAN_BITFIELD
- 	uint16_t request_multiple_Nport:1;	/* FC Word 1, bit 31 */
- 	uint16_t randomOffset:1;	/* FC Word 1, bit 30 */
+ 	/* Update the host index before invoking device */
+ 	host_index = q->host_index;
 -- 
 2.5.0
 
