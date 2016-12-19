@@ -1,46 +1,26 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 1/9] qla2xxx: Move cmd search out of qla during ABTS
-Date: Mon, 19 Dec 2016 15:33:27 +0000
-Message-ID: <1482161586.25336.3.camel@sandisk.com>
-References: <1482051769-22941-1-git-send-email-himanshu.madhani@cavium.com>
-         <1482051769-22941-2-git-send-email-himanshu.madhani@cavium.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [PATCH RESEND] block: allow WRITE_SAME commands with the SG_IO
+ ioctl
+Date: Mon, 19 Dec 2016 08:34:33 -0700
+Message-ID: <b62fd71d-0831-c402-1d09-c78779dee060@kernel.dk>
+References: <1481824098-5555-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1482051769-22941-2-git-send-email-himanshu.madhani@cavium.com>
-Content-Language: en-US
-Content-ID: <82D167E4F6F3F24AAFBFF4D5C1946958@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1481824098-5555-1-git-send-email-mauricfo@linux.vnet.ibm.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, linux-block@vger.kernel.org
+Cc: hch@infradead.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, pbonzini@redhat.com, latha@linux.vnet.ibm.com, manjuhr1@in.ibm.com
 List-Id: linux-scsi@vger.kernel.org
 
-T24gU3VuLCAyMDE2LTEyLTE4IGF0IDAxOjAyIC0wODAwLCBIaW1hbnNodSBNYWRoYW5pIHdyb3Rl
-Og0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYyBiL2Ry
-aXZlcnMvc2NzaS9xbGEyeHh4L3RjbV9xbGEyeHh4LmMNCj4gaW5kZXggNjY0M2Y2Zi4uOTI3NWYz
-NiAxMDA2NDQNCj4gLS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYw0KPiAr
-KysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC90Y21fcWxhMnh4eC5jDQo+IEBAIC01NjcsNiArNTY3
-LDMwIEBAIHN0YXRpYyBpbnQgdGNtX3FsYTJ4eHhfaGFuZGxlX3RtcihzdHJ1Y3QgcWxhX3RndF9t
-Z210X2NtZCAqbWNtZCwgdWludDMyX3QgbHVuLA0KPiAgew0KPiAgCXN0cnVjdCBxbGFfdGd0X3Nl
-c3MgKnNlc3MgPSBtY21kLT5zZXNzOw0KPiAgCXN0cnVjdCBzZV9jbWQgKnNlX2NtZCA9ICZtY21k
-LT5zZV9jbWQ7DQo+ICsJc3RydWN0IHNlX3Nlc3Npb24gKnNlX3Nlc3MgPSBzZXNzLT5zZV9zZXNz
-Ow0KPiArCWJvb2wgZm91bmRfbHVuID0gZmFsc2U7DQo+ICsNCj4gKwlzd2l0Y2ggKHRtcl9mdW5j
-KSB7DQo+ICsJY2FzZSBUTVJfQUJPUlRfVEFTSzoNCj4gKwkJc3Bpbl9sb2NrKCZzZV9zZXNzLT5z
-ZXNzX2NtZF9sb2NrKTsNCj4gKwkJbGlzdF9mb3JfZWFjaF9lbnRyeShzZV9jbWQsICZzZV9zZXNz
-LT5zZXNzX2NtZF9saXN0LCBzZV9jbWRfbGlzdCkgew0KPiArCQkJc3RydWN0IHFsYV90Z3RfY21k
-ICpjbWQgPQ0KPiArCQkJCWNvbnRhaW5lcl9vZihzZV9jbWQsIHN0cnVjdCBxbGFfdGd0X2NtZCwg
-c2VfY21kKTsNCj4gKwkJCXN0cnVjdCBhYnRzX3JlY3ZfZnJvbV8yNHh4ICphYnRzID0gJm1jbWQt
-Pm9yaWdfaW9jYi5hYnRzOw0KPiArDQo+ICsJCQlpZiAoc2VfY21kLT50YWcgPT0gYWJ0cy0+ZXhj
-aGFuZ2VfYWRkcl90b19hYm9ydCkgew0KPiArCQkJCWx1biA9IGNtZC0+dW5wYWNrZWRfbHVuOw0K
-PiArCQkJCWZvdW5kX2x1biA9IHRydWU7DQo+ICsJCQkJYnJlYWs7DQo+ICsJCQl9DQo+ICsJCX0N
-Cj4gKwkJc3Bpbl91bmxvY2soJnNlX3Nlc3MtPnNlc3NfY21kX2xvY2spOw0KPiArCQlpZiAoIWZv
-dW5kX2x1bikNCj4gKwkJCXJldHVybiAtRU5PQlVGUzsNCj4gKwkJYnJlYWs7DQo+ICsJZGVmYXVs
-dDoNCj4gKwkJYnJlYWs7DQo+ICsJfQ0KPiAgDQo+ICAJcmV0dXJuIHRhcmdldF9zdWJtaXRfdG1y
-KHNlX2NtZCwgc2Vzcy0+c2Vfc2VzcywgTlVMTCwgbHVuLCBtY21kLA0KPiAgCQkJdG1yX2Z1bmMs
-IEdGUF9BVE9NSUMsIHRhZywgVEFSR0VUX1NDRl9BQ0tfS1JFRik7DQoNCkhlbGxvIEhpbWFuc2h1
-LA0KDQpQbGVhc2UgY29uc2lkZXIgcmVtb3ZpbmcgdGhlIHNlc3NfY21kX2xpc3QgbG9vcC4gQW55
-IGxvb2t1cHMgaW4NCnNlc3NfY21kX2xpc3Qgc2hvdWxkIGJlIHBlcmZvcm1lZCBieSB0aGUgdGFy
-Z2V0IGNvcmUgYW5kIG5vdCBieSBhDQp0YXJnZXQgZHJpdmVyLiBBcmUgeW91IGF3YXJlIHRoYXQg
-Y29yZV90bXJfYWJvcnRfdGFzaygpIHBlcmZvcm1zIGEgdmVyeQ0Kc2ltaWxhciBsb29rdXAgdG8g
-dGhlIG9uZSBhYm92ZT8NCg0KQmFydC4=
+On 12/15/2016 10:48 AM, Mauricio Faria de Oliveira wrote:
+> The WRITE_SAME commands are not present in the blk_default_cmd_filter
+> write_ok list, and thus are failed with -EPERM when the SG_IO ioctl()
+> is executed without CAP_SYS_RAWIO capability (e.g., unprivileged users).
+> [ sg_io() -> blk_fill_sghdr_rq() > blk_verify_command() -> -EPERM ]
+
+Added for 4.10, thanks.
+
+-- 
+Jens Axboe
