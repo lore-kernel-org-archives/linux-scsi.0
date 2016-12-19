@@ -1,44 +1,49 @@
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: Uninitialized variable in bfad_im_bsg_els_ct_request
-Date: Sun, 18 Dec 2016 21:44:33 +0100
-Message-ID: <f34ede68-3f7d-6c2e-c0fa-9d7c273ae3c2@m4x.org>
+From: Cao jin <caoj.fnst@cn.fujitsu.com>
+Subject: [PATCH] scsi/qla4: comments correction
+Date: Mon, 19 Dec 2016 14:20:29 +0800
+Message-ID: <1482128429-17975-1-git-send-email-caoj.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wj0-f194.google.com ([209.85.210.194]:35814 "EHLO
-        mail-wj0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753817AbcLRUog (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 18 Dec 2016 15:44:36 -0500
+Received: from cn.fujitsu.com ([59.151.112.132]:11138 "EHLO
+        heian.cn.fujitsu.com" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1750763AbcLSGQJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 01:16:09 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Johannes Thumshirn <jthumshirn@suse.de>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-Hello,
+Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
+---
+ drivers/scsi/qla4xxx/ql4_os.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-Currently on Linus master tree and in linux-next [1],
-bfad_im_bsg_els_ct_request() code starts with the following code:
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 01c3610a60cf..fc60e0a1043e 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -9546,15 +9546,15 @@ static int qla4xxx_host_reset(struct Scsi_Host *shost, int reset_type)
+  * driver calls the following device driver's callbacks
+  *
+  * - Fatal Errors - link_reset
+- * - Non-Fatal Errors - driver's pci_error_detected() which
++ * - Non-Fatal Errors - driver's error_detected() which
+  * returns CAN_RECOVER, NEED_RESET or DISCONNECT.
+  *
+  * PCI AER driver calls
+- * CAN_RECOVER - driver's pci_mmio_enabled(), mmio_enabled
++ * CAN_RECOVER - driver's mmio_enabled(), mmio_enabled()
+  *               returns RECOVERED or NEED_RESET if fw_hung
+  * NEED_RESET - driver's slot_reset()
+  * DISCONNECT - device is dead & cannot recover
+- * RECOVERED - driver's pci_resume()
++ * RECOVERED - driver's resume()
+  */
+ static pci_ers_result_t
+ qla4xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
+-- 
+2.1.0
 
-int
-bfad_im_bsg_els_ct_request(struct bsg_job *job)
-{
-	/*...*/
-	struct fc_bsg_request *bsg_request = bsg_request;
-	struct fc_bsg_reply *bsg_reply = job->reply;
-	uint32_t command_type = bsg_request->msgcode;
 
-The local variable "bsg_request" is initialized to itself (which would
-usually mean it is uninitialized) but it is dereferenced in order to get
-its "msgcode" field. As I am quite new to the kernel code and
-dereferencing self-initialized local variables looks black magic to me,
-could you please describe why this code is valid?
 
-It has recently been introduced by commit 01e0e15c8b3b ("scsi: don't use
-fc_bsg_job::request and fc_bsg_job::reply directly").
-
-Thanks,
-Nicolas Iooss
-
-[1]
-https://git.kernel.org/cgit/linux/kernel/git/next/linux-next.git/tree/drivers/scsi/bfa/bfad_bsg.c?id=06548160dfecd1983ffd9d6795242a5cda095da5#n3356
