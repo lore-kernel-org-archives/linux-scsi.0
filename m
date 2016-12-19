@@ -1,73 +1,46 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH v2 05/11] lpfc: Correct host name in symbolic_name field
-Date: Mon, 19 Dec 2016 15:07:24 -0800
-Message-ID: <5858682c.KSP+2UL8attjRczU%james.smart@broadcom.com>
+Subject: [PATCH v2 02/11] lpfc: Correct error in setting OS Driver Version with FW
+Date: Mon, 19 Dec 2016 15:07:21 -0800
+Message-ID: <58586829./7yJcDGJNc37wnHv%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lpdvsmtp02.broadcom.com ([192.19.219.146]:42871 "EHLO
+Received: from lpdvsmtp01.broadcom.com ([192.19.211.62]:50947 "EHLO
         relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754767AbcLSXH1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 18:07:27 -0500
+        with ESMTP id S1755871AbcLSXHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 18:07:31 -0500
 Received: from flash (fx9xs32.lab.emulex.com [138.239.87.14])
-        by relay.smtp.broadcom.com (Postfix) with SMTP id D9B67260002
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 15:07:25 -0800 (PST)
+        by relay.smtp.broadcom.com (Postfix) with SMTP id 98B8828040F
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 15:07:23 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Correct host name in symbolic_name field of nameserver registrations
+Correct error in setting OS Driver Version with FW.  Prior length was
+too short.
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_attr.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 98c40a7..f3250ad 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -4847,6 +4847,19 @@ lpfc_free_sysfs_attr(struct lpfc_vport *vport)
-  */
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 27cbd68..230f924 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -6304,7 +6304,8 @@ lpfc_set_host_data(struct lpfc_hba *phba, LPFC_MBOXQ_t *mbox)
+ 			 LPFC_SLI4_MBX_EMBED);
  
- /**
-+ * lpfc_get_host_symbolic_name - Copy symbolic name into the scsi host
-+ * @shost: kernel scsi host pointer.
-+ **/
-+static void
-+lpfc_get_host_symbolic_name(struct Scsi_Host *shost)
-+{
-+	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
-+
-+	lpfc_vport_symbolic_node_name(vport, fc_host_symbolic_name(shost),
-+				      sizeof fc_host_symbolic_name(shost));
-+}
-+
-+/**
-  * lpfc_get_host_port_id - Copy the vport DID into the scsi host port id
-  * @shost: kernel scsi host pointer.
-  **/
-@@ -5383,6 +5396,8 @@ struct fc_function_template lpfc_transport_functions = {
- 	.show_host_supported_fc4s = 1,
- 	.show_host_supported_speeds = 1,
- 	.show_host_maxframe_size = 1,
-+
-+	.get_host_symbolic_name = lpfc_get_host_symbolic_name,
- 	.show_host_symbolic_name = 1,
- 
- 	/* dynamic attributes the driver supports */
-@@ -5450,6 +5465,8 @@ struct fc_function_template lpfc_vport_transport_functions = {
- 	.show_host_supported_fc4s = 1,
- 	.show_host_supported_speeds = 1,
- 	.show_host_maxframe_size = 1,
-+
-+	.get_host_symbolic_name = lpfc_get_host_symbolic_name,
- 	.show_host_symbolic_name = 1,
- 
- 	/* dynamic attributes the driver supports */
+ 	mbox->u.mqe.un.set_host_data.param_id = LPFC_SET_HOST_OS_DRIVER_VERSION;
+-	mbox->u.mqe.un.set_host_data.param_len = 8;
++	mbox->u.mqe.un.set_host_data.param_len =
++					LPFC_HOST_OS_DRIVER_VERSION_SIZE;
+ 	snprintf(mbox->u.mqe.un.set_host_data.data,
+ 		 LPFC_HOST_OS_DRIVER_VERSION_SIZE,
+ 		 "Linux %s v"LPFC_DRIVER_VERSION,
 -- 
 2.5.0
 
