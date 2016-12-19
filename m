@@ -1,77 +1,73 @@
 From: james.smart@broadcom.com (James Smart)
-Subject: [PATCH 01/11] lpfc: Clear the VendorVersion in the PLOGI/PLOGI
- ACC payload
-Date: Mon, 19 Dec 2016 14:35:23 -0800
-Message-ID: <585860ab.R6C0XtAxSB4BBKzp%james.smart@broadcom.com>
+Subject: [PATCH 05/11] lpfc: Correct host name in symbolic_name field
+Date: Mon, 19 Dec 2016 14:35:27 -0800
+Message-ID: <585860af.V22mjrwTgPkl5f0h%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from lpdvsmtp02.broadcom.com ([192.19.219.146]:40395 "EHLO
+Received: from lpdvsmtp02.broadcom.com ([192.19.219.146]:40396 "EHLO
         relay.smtp.broadcom.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933314AbcLSWkx (ORCPT
+        with ESMTP id S933316AbcLSWkx (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 17:40:53 -0500
 Received: from flash (fx9xs32.lab.emulex.com [138.239.87.14])
-        by relay.smtp.broadcom.com (Postfix) with SMTP id 180F6260002
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 14:35:25 -0800 (PST)
+        by relay.smtp.broadcom.com (Postfix) with SMTP id AE178260004
+        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 14:35:29 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
 
-Clear the VendorVersion in the PLOGI/PLOGI ACC payload
-
-Vendor version info may have been set on fabric login. Before sending
-PLOGI payloads, ensure that it's cleared.
+Correct host name in symbolic_name field of nameserver registrations
 
 Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c | 6 ++++++
- drivers/scsi/lpfc/lpfc_hw.h  | 6 ++++++
- 2 files changed, 12 insertions(+)
+ drivers/scsi/lpfc/lpfc_attr.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 236e4e5..27f0cbb 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1999,6 +1999,9 @@ lpfc_issue_els_plogi(struct lpfc_vport *vport, uint32_t did, uint8_t retry)
- 	if (sp->cmn.fcphHigh < FC_PH3)
- 		sp->cmn.fcphHigh = FC_PH3;
- 
-+	sp->cmn.valid_vendor_ver_level = 0;
-+	memset(sp->vendorVersion, 0, sizeof(sp->vendorVersion));
-+
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
- 		"Issue PLOGI:     did:x%x",
- 		did, 0, 0);
-@@ -3988,6 +3991,9 @@ lpfc_els_rsp_acc(struct lpfc_vport *vport, uint32_t flag,
- 		} else {
- 			memcpy(pcmd, &vport->fc_sparam,
- 			       sizeof(struct serv_parm));
-+
-+			sp->cmn.valid_vendor_ver_level = 0;
-+			memset(sp->vendorVersion, 0, sizeof(sp->vendorVersion));
- 		}
- 
- 		lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_RSP,
-diff --git a/drivers/scsi/lpfc/lpfc_hw.h b/drivers/scsi/lpfc/lpfc_hw.h
-index 8226543..3b970d37 100644
---- a/drivers/scsi/lpfc/lpfc_hw.h
-+++ b/drivers/scsi/lpfc/lpfc_hw.h
-@@ -360,6 +360,12 @@ struct csp {
-  * Word 1 Bit 30 in PLOGI request is random offset
+diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
+index 98c40a7..f3250ad 100644
+--- a/drivers/scsi/lpfc/lpfc_attr.c
++++ b/drivers/scsi/lpfc/lpfc_attr.c
+@@ -4847,6 +4847,19 @@ lpfc_free_sysfs_attr(struct lpfc_vport *vport)
   */
- #define virtual_fabric_support randomOffset /* Word 1, bit 30 */
-+/*
-+ * Word 1 Bit 29 in common service parameter is overloaded.
-+ * Word 1 Bit 29 in FLOGI response is multiple NPort assignment
-+ * Word 1 Bit 29 in FLOGI/PLOGI request is Valid Vendor Version Level
-+ */
-+#define valid_vendor_ver_level response_multiple_NPort /* Word 1, bit 29 */
- #ifdef __BIG_ENDIAN_BITFIELD
- 	uint16_t request_multiple_Nport:1;	/* FC Word 1, bit 31 */
- 	uint16_t randomOffset:1;	/* FC Word 1, bit 30 */
+ 
+ /**
++ * lpfc_get_host_symbolic_name - Copy symbolic name into the scsi host
++ * @shost: kernel scsi host pointer.
++ **/
++static void
++lpfc_get_host_symbolic_name(struct Scsi_Host *shost)
++{
++	struct lpfc_vport *vport = (struct lpfc_vport *)shost->hostdata;
++
++	lpfc_vport_symbolic_node_name(vport, fc_host_symbolic_name(shost),
++				      sizeof fc_host_symbolic_name(shost));
++}
++
++/**
+  * lpfc_get_host_port_id - Copy the vport DID into the scsi host port id
+  * @shost: kernel scsi host pointer.
+  **/
+@@ -5383,6 +5396,8 @@ struct fc_function_template lpfc_transport_functions = {
+ 	.show_host_supported_fc4s = 1,
+ 	.show_host_supported_speeds = 1,
+ 	.show_host_maxframe_size = 1,
++
++	.get_host_symbolic_name = lpfc_get_host_symbolic_name,
+ 	.show_host_symbolic_name = 1,
+ 
+ 	/* dynamic attributes the driver supports */
+@@ -5450,6 +5465,8 @@ struct fc_function_template lpfc_vport_transport_functions = {
+ 	.show_host_supported_fc4s = 1,
+ 	.show_host_supported_speeds = 1,
+ 	.show_host_maxframe_size = 1,
++
++	.get_host_symbolic_name = lpfc_get_host_symbolic_name,
+ 	.show_host_symbolic_name = 1,
+ 
+ 	/* dynamic attributes the driver supports */
 -- 
 2.5.0
 
