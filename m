@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 07/10] qla2xxx: Terminate exchange if corrputed.
-Date: Mon, 19 Dec 2016 20:33:41 -0800
-Message-ID: <1482208424-12358-8-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 09/10] qla2xxx: Fix invalid handle erroneous message.
+Date: Mon, 19 Dec 2016 20:33:43 -0800
+Message-ID: <1482208424-12358-10-git-send-email-himanshu.madhani@cavium.com>
 References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,102 +14,48 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Corrupted ATIO is defined as length of fcp_header & fcp_cmd
-payload is less than 0x38. It's the minimum size for a frame to
-carry 8..16 bytes SCSI CDB. The exchange will be dropped or
-terminated if corrupted.
+Termination of Immediate Notify IOCB was using wrong
+IOCB handle. IOCB completion code was unable to find
+appropriate code path due to wrong handle.
+
+Following message is seen in the logs.
+
+"Error entry - invalid handle/queue (ffff)."
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |  3 ++-
- drivers/scsi/qla2xxx/qla_target.c | 22 +++++++++++++++++++---
- drivers/scsi/qla2xxx/qla_target.h | 17 ++++++++++++++++-
- 3 files changed, 37 insertions(+), 5 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c    | 4 ++++
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 2 files changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f7df01b..b14455e 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1556,7 +1556,8 @@ struct link_statistics {
- struct atio {
- 	uint8_t		entry_type;		/* Entry type. */
- 	uint8_t		entry_count;		/* Entry count. */
--	uint8_t		data[58];
-+	uint16_t	attr_n_length;
-+	uint8_t		data[56];
- 	uint32_t	signature;
- #define ATIO_PROCESSED 0xDEADDEAD		/* Signature */
- };
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index af840bf..16bc948 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -2495,6 +2495,10 @@ struct scsi_dif_tuple {
+ 	if (pkt->entry_status & RF_BUSY)
+ 		res = DID_BUS_BUSY << 16;
+ 
++	if ((pkt->entry_type == NOTIFY_ACK_TYPE) &&
++	    (pkt->handle == QLA_TGT_SKIP_HANDLE))
++		return;
++
+ 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
+ 	if (sp) {
+ 		sp->done(ha, sp, res);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 5037b51..7ae179a 100644
+index 7ae179a..64e9abb 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6451,12 +6451,28 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
- 	if (!vha->flags.online)
- 		return;
+@@ -3061,7 +3061,7 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
  
--	while (ha->tgt.atio_ring_ptr->signature != ATIO_PROCESSED) {
-+	while ((ha->tgt.atio_ring_ptr->signature != ATIO_PROCESSED) ||
-+		   FCPCMD_IS_CORRUPTED(ha->tgt.atio_ring_ptr)) {
- 		pkt = (struct atio_from_isp *)ha->tgt.atio_ring_ptr;
- 		cnt = pkt->u.raw.entry_count;
+ 	pkt->entry_type = NOTIFY_ACK_TYPE;
+ 	pkt->entry_count = 1;
+-	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
++	pkt->handle = QLA_TGT_SKIP_HANDLE;
  
--		qlt_24xx_atio_pkt_all_vps(vha, (struct atio_from_isp *)pkt,
--		    ha_locked);
-+		if (unlikely(FCPCMD_IS_CORRUPTED(ha->tgt.atio_ring_ptr))) {
-+			/* This packet is corrupted.  The header + payload
-+			 * can not be trusted.  There is no point in passing
-+			 * it further up.
-+			 */
-+			ql_log(ql_log_warn, vha, 0xffff,
-+			    "corrupted fcp frame SID[%3phN] OXID[%04x] EXCG[%x] %64phN\n",
-+			    pkt->u.isp24.fcp_hdr.s_id,
-+			    be16_to_cpu(pkt->u.isp24.fcp_hdr.ox_id),
-+			    le32_to_cpu(pkt->u.isp24.exchange_addr), pkt);
-+
-+			ADJ_CORRUPTED_ATIO(pkt);
-+			qlt_send_term_exchange(vha, NULL, pkt, ha_locked, 0);
-+		} else {
-+			qlt_24xx_atio_pkt_all_vps(vha,
-+			    (struct atio_from_isp *)pkt, ha_locked);
-+		}
- 
- 		for (i = 0; i < cnt; i++) {
- 			ha->tgt.atio_ring_index++;
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index f26c5f6..15359f0 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -427,13 +427,28 @@ struct atio_from_isp {
- 		struct {
- 			uint8_t  entry_type;	/* Entry type. */
- 			uint8_t  entry_count;	/* Entry count. */
--			uint8_t  data[58];
-+			uint16_t attr_n_length;
-+#define FCP_CMD_LENTH_MASK 0x0fff
-+#define FCP_CMD_LENTH_MIN  0x38
-+			uint8_t  data[56];
- 			uint32_t signature;
- #define ATIO_PROCESSED 0xDEADDEAD		/* Signature */
- 		} raw;
- 	} u;
- } __packed;
- 
-+#define FCPCMD_IS_CORRUPTED(_a)						\
-+	((_a->entry_type == ATIO_TYPE7) && 				\
-+	 ((le16_to_cpu(_a->attr_n_length) & FCP_CMD_LENTH_MASK) < 	\
-+	  FCP_CMD_LENTH_MIN))
-+
-+/* adjust corrupted atio so we won't trip over the same entry again. */
-+#define ADJ_CORRUPTED_ATIO(_a)						\
-+{									\
-+	_a->u.raw.attr_n_length = cpu_to_le16(FCP_CMD_LENTH_MIN);	\
-+	((struct atio_from_isp *)_a)->u.isp24.fcp_cmnd.add_cdb_len = 0;	\
-+}
-+
- #define CTIO_TYPE7 0x12 /* Continue target I/O entry (for 24xx) */
- 
- /*
+ 	nack = (struct nack_to_isp *)pkt;
+ 	nack->ox_id = ntfy->ox_id;
 -- 
 1.8.3.1
