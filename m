@@ -1,379 +1,324 @@
-From: Sasikumar PC <sasikumar.pc@broadcom.com>
-Subject: RE: [PATCH V4 08/11] megaraid_sas: Enable or Disable Fast path based
- on the PCI Threshold Bandwidth
-Date: Mon, 19 Dec 2016 20:51:40 -0500
-Message-ID: <253204edbcd5836c84a89f9460bc4a83@mail.gmail.com>
-References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
- <1481065220-18431-9-git-send-email-sasikumar.pc@broadcom.com>
- <5e8d0157-51e1-1727-6ebb-2917b0d333c5@redhat.com> <459befddaf0e9f9ad1f597f1037f82ba@mail.gmail.com>
- <e604955b-86a3-e510-67ab-9632cf16e667@redhat.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: [PATCH] scsi: do not requeue requests unaligned with device sector size
+Date: Tue, 20 Dec 2016 00:02:27 -0200
+Message-ID: <1482199347-9128-1-git-send-email-mauricfo@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f51.google.com ([209.85.215.51]:34896 "EHLO
-        mail-lf0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754845AbcLTBvo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 19 Dec 2016 20:51:44 -0500
-Received: by mail-lf0-f51.google.com with SMTP id b14so66258002lfg.2
-        for <linux-scsi@vger.kernel.org>; Mon, 19 Dec 2016 17:51:43 -0800 (PST)
-In-Reply-To: <e604955b-86a3-e510-67ab-9632cf16e667@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org, linux-kernel@vger.kernel.org, gpiccoli@linux.vnet.ibm.com
 List-Id: linux-scsi@vger.kernel.org
-To: Tomas Henzl <thenzl@redhat.com>, jejb@kernel.org, hch@infradead.org
-Cc: linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, Christopher Owens <christopher.owens@broadcom.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
 
-Hi Tomas,
+When a SCSI command (e.g., read operation) is partially completed
+with good status and residual bytes (i.e., not all the bytes from
+the specified transfer length were transferred) the SCSI midlayer
+will update the request/bios with the completed bytes and requeue
+the request in order to complete the remainder/pending bytes.
 
-Please see my response inline
+However, when the device sector size is greater than the 512-byte
+default/kernel sector size, alignment restrictions and validation
+apply (both to the starting logical block address, and the number
+of logical blocks to transfer) -- values must be multiples of the
+device sector size, otherwise the kernel fails the request in the
+preparation stage (e.g., sd_setup_read_write_cmnd() at sd.c file):
 
-Thanks
-sasi
+  [...] sd 0:0:0:0: [sda] Bad block number requested
 
------Original Message-----
-From: Tomas Henzl [mailto:thenzl@redhat.com]
-Sent: Thursday, December 15, 2016 10:10 AM
-To: Sasikumar PC; jejb@kernel.org; hch@infradead.org
-Cc: linux-scsi@vger.kernel.org; Sathya Prakash Veerichetty;
-linux-kernel@vger.kernel.org; Christopher Owens; Kiran Kumar Kasturi
-Subject: Re: [PATCH V4 08/11] megaraid_sas: Enable or Disable Fast path
-based on the PCI Threshold Bandwidth
+Hence, this error message (and the respective failed request) can
+be observed on devices with larger sector sizes which may respond
+the SCSI command with a SCSI residual size that is unaligned with
+the device sector size -- because the requeued request's starting
+logical block and number of logical blocks are based on the value
+of the remainder/pending bytes.
 
-On 14.12.2016 22:54, Sasikumar PC wrote:
-> Hi Tomas,
->
-> Please see my response inline
->
-> Thanks
-> sasi
->
-> -----Original Message-----
-> From: Tomas Henzl [mailto:thenzl@redhat.com]
-> Sent: Friday, December 09, 2016 8:59 AM
-> To: Sasikumar Chandrasekaran; jejb@kernel.org; hch@infradead.org
-> Cc: linux-scsi@vger.kernel.org; Sathya.Prakash@broadcom.com;
-> linux-kernel@vger.kernel.org; christopher.owens@broadcom.com;
-> kiran-kumar.kasturi@broadcom.com
-> Subject: Re: [PATCH V4 08/11] megaraid_sas: Enable or Disable Fast
-> path based on the PCI Threshold Bandwidth
->
-> On 7.12.2016 00:00, Sasikumar Chandrasekaran wrote:
->> Large SEQ IO workload should sent as non fast path commands
->>
->> This patch is depending on patch 7
->>
->> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
->> ---
->>  drivers/scsi/megaraid/megaraid_sas.h        |  8 +++++
->>  drivers/scsi/megaraid/megaraid_sas_base.c   | 48
-> +++++++++++++++++++++++++++++
->>  drivers/scsi/megaraid/megaraid_sas_fp.c     | 11 +++++--
->>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 20 +++++++-----
->> drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +-
->>  5 files changed, 78 insertions(+), 11 deletions(-)
->>
->> diff --git a/drivers/scsi/megaraid/megaraid_sas.h
->> b/drivers/scsi/megaraid/megaraid_sas.h
->> index 3e087ab..eb5be2b 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas.h
->> +++ b/drivers/scsi/megaraid/megaraid_sas.h
->> @@ -1429,6 +1429,8 @@ enum FW_BOOT_CONTEXT {
->>  #define MFI_1068_FW_HANDSHAKE_OFFSET		0x64
->>  #define MFI_1068_FW_READY			0xDDDD0000
->>
->> +#define MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL HZ
->> +
->>  #define MR_MAX_REPLY_QUEUES_OFFSET              0X0000001F
->>  #define MR_MAX_REPLY_QUEUES_EXT_OFFSET          0X003FC000
->>  #define MR_MAX_REPLY_QUEUES_EXT_OFFSET_SHIFT    14
->> @@ -2101,6 +2103,10 @@ struct megasas_instance {
->>  	atomic_t ldio_outstanding;
->>  	atomic_t fw_reset_no_pci_access;
->>
->> +	atomic64_t bytes_wrote; /* used for raid1 fast path enable or
-> disable */
->> +	atomic_t r1_write_fp_capable;
-> Is a an atomic variable needed for a just boolean variable?
-> Sasi - As we need to synchronize timer thread and IO issue threads,
-> With atomic, at any point of time the value will be definitive.
-> With boolean, it depends, the value could be in transit while one
-> thread is reading and other is writing.
+In order to address this problem, introduce a check for this case
+in scsi_io_completion() (before it calls scsi_end_request() which
+in turn calls blk_update_request() which is the site that changes
+the request's __sector and __data_len fields, which are validated
+by sd_setup_read_write_cmnd()).
 
-This explanation is I think not good enough, as a write of a char value is
-atomic on all architectures. If you need synchronisation you probably need a
-spinlock.
-Tomash
+This check verifies whether there is any residual/remainder bytes
+in the (potentially partially) completed requested and calculates
+the correctly aligned values for the number of completed bytes to
+pass up to scsi_end_request()/blk_update_request() that guarantee
+that the requeued request is aligned with the device sector size.
 
-boolean may not be a char in all architectures/implementations. It could be
-implementation specific isn't it ?
-Spin_Lock is heavier as the check is in IO path.We need it to be consistent
-non-transient value, not an exact synchronization.
-There could be more values that we may set this variable to, to make
-different decisions and value can be set in more places in future.
-Atomic will help it keep consistent and extensible.
+The corner case is when one sector is requested and the response
+is partially complete, for which the remainder/pending bytes are
+unaligned and no further request would be valid.  On such a case,
+the original request is retried after a delay (in case the error
+is hopefully due to a temporary condition in the device), but up
+to the retry limit (in case the condition is permanent, e.g. bad
+sector in the medium), after which the request is finally failed.
 
-sasi
+In order to reproduce and verify this problem, the virtio_scsi.c
+file can be modified to respond to 3 'special' SCSI commands, on
+which partial completions are introduced (described in the patch).
 
->
->> +
->> +
->>  	struct megasas_instance_template *instancet;
->>  	struct tasklet_struct isr_tasklet;
->>  	struct work_struct work_init;
->> @@ -2143,6 +2149,7 @@ struct megasas_instance {
->>  	long reset_flags;
->>  	struct mutex reset_mutex;
->>  	struct timer_list sriov_heartbeat_timer;
->> +	struct timer_list r1_fp_hold_timer;
->>  	char skip_heartbeat_timer_del;
->>  	u8 requestorId;
->>  	char PlasmaFW111;
->> @@ -2159,6 +2166,7 @@ struct megasas_instance {
->>  	bool is_ventura;
->>  	bool msix_combined;
->>  	u16 max_raid_mapsize;
->> +	u64 pci_threshold_bandwidth; /* used to control the fp writes */
->>  };
->>  struct MR_LD_VF_MAP {
->>  	u32 size;
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->> b/drivers/scsi/megaraid/megaraid_sas_base.c
->> index 8aafb59..899d25c 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->> @@ -1940,6 +1940,9 @@ void megaraid_sas_kill_hba(struct
->> megasas_instance
-> *instance)
->>  	}
->>  	/* Complete outstanding ioctls when adapter is killed */
->>  	megasas_complete_outstanding_ioctls(instance);
->> +	if (instance->is_ventura)
->> +		del_timer_sync(&instance->r1_fp_hold_timer);
->> +
->>  }
->>
->>   /**
->> @@ -2438,6 +2441,24 @@ void megasas_sriov_heartbeat_handler(unsigned
-> long instance_addr)
->>  	}
->>  }
->>
->> +/*Handler for disabling/enabling raid 1 fast paths*/ void
->> +megasas_change_r1_fp_status(unsigned long instance_addr) {
->> +	struct megasas_instance *instance =
->> +			(struct megasas_instance *)instance_addr;
->> +	if (atomic64_read(&instance->bytes_wrote) >=
->> +					instance->pci_threshold_bandwidth)
-> {
->> +
->> +		atomic64_set(&instance->bytes_wrote, 0);
->> +		atomic_set(&instance->r1_write_fp_capable, 0);
->> +	} else {
->> +		atomic64_set(&instance->bytes_wrote, 0);
->> +		atomic_set(&instance->r1_write_fp_capable, 1);
->> +	}
->> +	mod_timer(&instance->r1_fp_hold_timer,
->> +	 jiffies + MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
->> +}
->> +
->>  /**
->>   * megasas_wait_for_outstanding -	Wait for all outstanding cmds
->>   * @instance:				Adapter soft state
->> @@ -5371,6 +5392,17 @@ static int megasas_init_fw(struct
-> megasas_instance *instance)
->>  			instance->skip_heartbeat_timer_del = 1;
->>  	}
->>
->> +	if (instance->is_ventura) {
->> +		atomic64_set(&instance->bytes_wrote, 0);
->> +		atomic_set(&instance->r1_write_fp_capable, 1);
->> +		megasas_start_timer(instance,
->> +			    &instance->r1_fp_hold_timer,
->> +			    megasas_change_r1_fp_status,
->> +
-> MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
->> +				dev_info(&instance->pdev->dev, "starting
-> the raid 1 fp timer with interval %d\n",
->> +
-> MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
->> +	}
->> +
->>  	return 0;
->>
->>  fail_get_ld_pd_list:
->> @@ -6161,6 +6193,9 @@ static void megasas_shutdown_controller(struct
-> megasas_instance *instance,
->>  	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
->>  		del_timer_sync(&instance->sriov_heartbeat_timer);
->>
->> +	if (instance->is_ventura)
->> +		del_timer_sync(&instance->r1_fp_hold_timer);
->> +
->>  	megasas_flush_cache(instance);
->>  	megasas_shutdown_controller(instance, MR_DCMD_HIBERNATE_SHUTDOWN);
->>
->> @@ -6280,6 +6315,16 @@ static void megasas_shutdown_controller(struct
-> megasas_instance *instance,
->>  	megasas_setup_jbod_map(instance);
->>  	instance->unload = 0;
->>
->> +	if (instance->is_ventura) {
->> +		atomic64_set(&instance->bytes_wrote, 0);
->> +		atomic_set(&instance->r1_write_fp_capable, 1);
->> +		megasas_start_timer(instance,
->> +			    &instance->r1_fp_hold_timer,
->> +			    megasas_change_r1_fp_status,
->> +
-> MEGASAS_RAID1_FAST_PATH_STATUS_CHECK_INTERVAL);
->> +	}
->> +
->> +
->>  	/*
->>  	 * Initiate AEN (Asynchronous Event Notification)
->>  	 */
->> @@ -6368,6 +6413,9 @@ static void megasas_detach_one(struct pci_dev
-> *pdev)
->>  	if (instance->requestorId && !instance->skip_heartbeat_timer_del)
->>  		del_timer_sync(&instance->sriov_heartbeat_timer);
->>
->> +	if (instance->is_ventura)
->> +		del_timer_sync(&instance->r1_fp_hold_timer);
->> +
->>  	if (instance->fw_crash_state != UNAVAILABLE)
->>  		megasas_free_host_crash_buffer(instance);
->>  	scsi_remove_host(instance->host);
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c
->> b/drivers/scsi/megaraid/megaraid_sas_fp.c
->> index a6957a3..7da4685 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
->> @@ -197,14 +197,19 @@ void MR_PopulateDrvRaidMap(struct
->> megasas_instance *instance)
->>
->>  	if (instance->max_raid_mapsize) {
->>  		fw_map_dyn = fusion->ld_map[(instance->map_id & 1)];
->> +		if (fw_map_dyn->pci_threshold_bandwidth)
->> +			instance->pci_threshold_bandwidth =
->> +			le64_to_cpu(fw_map_dyn->pci_threshold_bandwidth);
->>  #if VD_EXT_DEBUG
->>  		dev_dbg(&instance->pdev->dev,
->>  		" raidMapSize 0x%x fw_map_dyn->descTableOffset 0x%x, "
->> -		" descTableSize 0x%x descTableNumElements 0x%x\n",
->> +		" descTableSize 0x%x descTableNumElements 0x%x, "
->> +		" PCIThreasholdBandwidth %llu\n",
->>  		le32_to_cpu(fw_map_dyn->raid_map_size),
->>  		le32_to_cpu(fw_map_dyn->desc_table_offset),
->>  		le32_to_cpu(fw_map_dyn->desc_table_size),
->> -		le32_to_cpu(fw_map_dyn->desc_table_num_elements));
->> +		le32_to_cpu(fw_map_dyn->desc_table_num_elements),
->> +		instance->pci_threshold_bandwidth);
->>  		dev_dbg(&instance->pdev->dev,
->>  		"drv map %p ldCount %d\n", drv_map, fw_map_dyn->ld_count);
-> #endif
->> @@ -434,6 +439,8 @@ void MR_PopulateDrvRaidMap(struct
->> megasas_instance
-> *instance)
->>  			sizeof(struct MR_DEV_HANDLE_INFO) *
->>  			MAX_RAIDMAP_PHYSICAL_DEVICES);
->>  	}
->> +	if (instance->is_ventura && !instance->pci_threshold_bandwidth)
->> +		instance->pci_threshold_bandwidth = ULLONG_MAX;
->>  }
->>
->>  /*
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> index f968a23..5992153 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
->> @@ -95,6 +95,7 @@ void megasas_start_timer(struct megasas_instance
->> *instance,  extern unsigned int dual_qdepth_disable;  static void
->> megasas_free_rdpq_fusion(struct megasas_instance *instance);  static
->> void megasas_free_reply_fusion(struct megasas_instance *instance);
->> +void megasas_change_r1_fp_status(unsigned long instance_addr);
->>
->>
->>
->> @@ -2633,8 +2634,9 @@ void megasas_prepare_secondRaid1_IO(struct
-> megasas_instance *instance,
->>  	*	to get new command
->>  	*/
->>  	if (cmd->is_raid_1_fp_write &&
->> -		atomic_inc_return(&instance->fw_outstanding) >
->> -			(instance->host->can_queue)) {
->> +		(atomic_inc_return(&instance->fw_outstanding) >
->> +			(instance->host->can_queue) ||
->> +		(!atomic_read(&instance->r1_write_fp_capable)))) {
->>  		megasas_fpio_to_ldio(instance, cmd, cmd->scmd);
->>  		atomic_dec(&instance->fw_outstanding);
->>  	} else if (cmd->is_raid_1_fp_write) { @@ -2643,17 +2645,19 @@ void
->> megasas_prepare_secondRaid1_IO(struct megasas_instance *instance,
->>  		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
->>  	}
->>
->> -
->>  	/*
->> -	 * Issue the command to the FW
->> -	 */
->> +	* Issue the command to the FW
->> +	*/
->> +	if (scmd->sc_data_direction == PCI_DMA_TODEVICE &&
-> instance->is_ventura)
->> +		atomic64_add(scsi_bufflen(scmd), &instance->bytes_wrote);
-> You count the bytes written to the ventura card and based on that it
-> is asynchronously decided whether the r1_write_fp_capable bit is set
-> in a timer function.
-> Please explain what should be achieved with this.
+This is the guest's disk test image and libvirt XML snippets for
+the 4k-sector disk using the virtio scsi driver:
 
-Certain write IOs can be sent to Firmware on ventura adapter or bypass
-Firmware and sent to drives, through hardware.
-When the driver sends write IOs in the second path, it needs to send two
-such IOs one for each physical drive, in case RAID 1 logical devices.
-When two IOs are sent with the same payload, the payload need to cross PCI
-twice consuming twice the bandwidth for the same payload which affects the
-performance.
-The idea here is to make a decision of when to bypass firmware and when not,
-based on write bandwidth that can be handled by adapter and to meet
-performance goals.
-That's the reason write payload is monitored.
+    # qemu-img create -f qcow2 /var/lib/libvirt/images/test.qcow2 128G
 
-Sasi
->
-> Sasi - I am working on this and will be posting the update soon
->
-> Thanks,
-> Tomas
->
->
->
->
->>  	megasas_fire_cmd_fusion(instance, req_desc, instance->is_ventura);
->>
->> -	if (r1_cmd)
->> +	if (r1_cmd) {
->> +		atomic64_add(scsi_bufflen(scmd), &instance->bytes_wrote);
->>  		megasas_fire_cmd_fusion(instance, r1_cmd->request_desc,
->> -				instance->is_ventura);
->> -
->> +			instance->is_ventura);
->> +	}
->>
->>  	return 0;
->>  }
->> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h
->> b/drivers/scsi/megaraid/megaraid_sas_fusion.h
->> index c39c4ed..da05790 100644
->> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
->> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
->> @@ -977,7 +977,7 @@ struct MR_FW_RAID_MAP_DYNAMIC {
->>  	u32 desc_table_size;  /* Total Size of desc table */
->>  	/* Total Number of elements in the desc table */
->>  	u32 desc_table_num_elements;
->> -	u64	reserved1;
->> +	u64	pci_threshold_bandwidth;
->>  	u32	reserved2[3];	/*future use */
->>  	/* timeout value used by driver in FP IOs */
->>  	u8 fp_pd_io_timeout_sec;
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi"
-> in the body of a message to majordomo@vger.kernel.org More majordomo
-> info at  http://vger.kernel.org/majordomo-info.html
+    <disk type='file' device='disk'>
+      <driver name='qemu' type='qcow2'/>
+      <source file='/var/lib/libvirt/images/test.qcow2'/>
+      <blockio logical_block_size='4096' physical_block_size='4096'/>
+      <target dev='sda' bus='scsi'/>
+      <address type='drive' controller='0' bus='0' target='0' unit='0'/>
+    </disk>
+
+    <controller type='scsi' index='0' model='virtio-scsi'>
+      <address type='pci' domain='0x0000' bus='0x00' slot='0x05'
+function='0x0'/>
+    </controller>
+
+And the verification in the guest:
+
+    # cat /sys/block/sda/queue/physical_block_size
+    4096
+
+    # cat /sys/block/sda/queue/hw_sector_size
+    4096
+
+This is the patch to virtio_scsi.c (lines prefixed with ' ___ '):
+
+ ___ --- a/drivers/scsi/virtio_scsi.c
+ ___ +++ b/drivers/scsi/virtio_scsi.c
+ ___ @@ -153,11 +153,45 @@
+ ___  	struct virtio_scsi_cmd_resp *resp = &cmd->resp.cmd;
+ ___  	struct virtio_scsi_target_state *tgt =
+ ___  				scsi_target(sc->device)->hostdata;
+ ___ +	static int debug_failures = 0;
+ ___
+ ___  	dev_dbg(&sc->device->sdev_gendev,
+ ___  		"cmd %p response %u status %#02x sense_len %u\n",
+ ___  		sc, resp->response, resp->status, resp->sense_len);
+ ___
+ ___ +	// DEBUG: filter this CDB for testing purposes.
+ ___ +	// CDB: Read(10) 28 00 01 02 03 xx 00 00 yy 00
+ ___ +	// (xx: LSB of the LBA, and yy: LSB of the LEN)
+ ___ +	if ((sc->cmnd[0] == 0x28) && (sc->cmnd[1] == 0x00)
+ ___ +	&&  (sc->cmnd[2] == 0x01) && (sc->cmnd[3] == 0x02)
+ ___ +	&&  (sc->cmnd[4] == 0x03) && (sc->cmnd[6] == 0x00)
+ ___ +	&&  (sc->cmnd[7] == 0x00) && (sc->cmnd[9] == 0x00)) {
+ ___ +
+ ___ +		// Test 1:
+ ___ +		// - LBA: 01 02 03 _04_
+ ___ +		// - LEN: two sectors (2 * 4k = 8k)
+ ___ +		// - Action: complete 5k out of 8k (3k residual)
+ ___ +		if ((sc->cmnd[5] == 0x04) && (sc->cmnd[8] == 0x02))
+ ___ +			resp->resid = 6 * 512;
+ ___ +
+ ___ +		// Test 2:
+ ___ +		// - LBA: 01 02 03 _04_
+ ___ +		// - LEN: one sector (1 * 4k = 4k)
+ ___ +		// - Action: complete 3k out of 4k (1k residual)
+ ___ +		//           always.
+ ___ +		if ((sc->cmnd[5] == 0x04) && (sc->cmnd[8] == 0x01))
+ ___ +			resp->resid = 2 * 512;
+ ___ +
+ ___ +		// Test 3:
+ ___ +		// - LBA: 01 02 03 _08_
+ ___ +		// - LEN: one sector (1 * 4k = 4k)
+ ___ +		// - Action: complete 3k out of 4k (1k residual)
+ ___ +		//           but on every 4th attempt (complete 4k)
+ ___ +		if ((sc->cmnd[5] == 0x08) &&  (sc->cmnd[8] == 0x01)
+ ___ +		&&  (++debug_failures % 4 != 0))
+ ___ +			resp->resid = 2 * 512;
+ ___ +	}
+ ___ +
+ ___  	sc->result = resp->status;
+ ___  	virtscsi_compute_resid(sc, virtio32_to_cpu(vscsi->vdev,
+ ___ resp->resid));
+ ___  	switch (resp->response) {
+
+Without this patch all the 3 tests fail w/ 'Bad block number requested'.
+
+  Test 1)
+
+  # dd if=/dev/sda of=/dev/null bs=8192 count=1 skip=8454530 iflag=direct
+  dd: error reading ‘/dev/sda’: Input/output error
+  0+0 records in
+  0+0 records out
+  0 bytes (0 B) copied, 0.00260138 s, 0.0 kB/s
+
+  # dmesg
+  [...] sd 0:0:0:0: [sda] Bad block number requested
+
+And if you look with more detail using scsi_logging_level (HLQUEUE = 2
+and HLCOMPLETE = 2) the unaligned requeued request is clearly visible
+(on a 4k-sector device, block/count must be multiples of 8 512-byte sectors)
+then it fails:
+
+    # echo $(( (2<<21) + (2<<24) )) > /proc/sys/dev/scsi/logging_level;
+
+    Test 1)
+
+    # dmesg -c >/dev/null; dd if=/dev/sda of=/dev/null bs=8192 count=1
+      skip=8454530 iflag=direct 2>/dev/null; dmesg
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272480, count=16
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 8192 of 8192 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 16 sectors total, 5120 bytes done.
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272490, count=6
+    [...] sd 0:0:0:0: [sda] Bad block number requested
+    [...] sd 0:0:0:0: tag#0 0 sectors total, 0 bytes done.
+
+With the patch, this happily changes into another 4k-sized request:
+
+    # dmesg -c >/dev/null; dd if=/dev/sda of=/dev/null bs=8192 count=1
+      skip=8454530 iflag=direct 2>/dev/null; dmesg
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272480, count=16
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 8192 of 8192 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 16 sectors total, 5120 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 5120 bytes for alignment
+                            (sector size 4096, remainder 1024, resid 3072)
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272488, count=8
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 4096 bytes done.
+    [...] sd 0:0:0:0: tag#0 0 sectors total, 0 bytes done.
+
+And verifying the one sector corner case in which all retries are failed
+by the driver (when we must finally fail the request up the stack), we
+observe the original request plus five retries, then the I/O error occurs:
+
+    Test 2)
+
+    # dmesg -c >/dev/null; dd if=/dev/sda of=/dev/null bs=4096 count=1
+      skip=16909060 iflag=direct 2>/dev/null; dmesg
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272480, count=8
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                            (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 FAILED Result: hostbyte=DID_TIME_OUT driverbyte=DRIVER_OK
+    [...] sd 0:0:0:0: [sda] tag#0 CDB: Read(10) 28 00 01 02 03 04 00 00 01 00
+    [...] blk_update_request: I/O error, dev sda, sector 135272480
+    [...] sd 0:0:0:0: tag#0 0 sectors total, 0 bytes done.
+
+And now the one sector corner case when eventually one retry succeeds
+(the original request plus three retries, of which the last retry passes)
+and the request is successfully passed up the stack and finished:
+
+    Test 3)
+
+    # dmesg -c >/dev/null; dd if=/dev/sda of=/dev/null bs=4096 count=1
+      skip=16909064 iflag=direct 2>/dev/null; dmesg
+    [...] sd 0:0:0:0: [sda] sd_setup_read_write_cmnd: block=135272512, count=8
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                      (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                      (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 3072 bytes done.
+    [...] sd 0:0:0:0: [sda] tag#0 checking 3072 bytes for alignment
+                      (sector size 4096, remainder 3072, resid 1024)
+    [...] sd 0:0:0:0: [sda] tag#0 sd_done: completed 4096 of 4096 bytes
+    [...] sd 0:0:0:0: [sda] tag#0 8 sectors total, 4096 bytes done.
+    [...] sd 0:0:0:0: tag#0 0 sectors total, 0 bytes done.
+
+Apologies for the ridiculously long commit message with description and
+test-cases, but this problem has been relatively difficult to reproduce
+and understand, so I thought the documentation/instructions for working
+with that could be helpful for others too.
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+---
+ drivers/scsi/scsi_lib.c | 41 +++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 41 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 2cca9cffc63f..190ab28cfb2d 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -821,6 +821,45 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	}
+ 
+ 	/*
++	 * If the SCSI command is successful but has residual bytes,
++	 * align good_bytes to the device sector size to ensure the
++	 * requeued request (to complete the remainder transfer) is
++	 * also aligned and does not fail alignment/size validation.
++	 */
++	if (unlikely(!result && scsi_get_resid(cmd) &&
++		     req->cmd_type == REQ_TYPE_FS)) {
++
++		unsigned int sector_size = cmd->device->sector_size;
++		unsigned int remainder = good_bytes % sector_size;
++		int resid = scsi_get_resid(cmd);
++
++		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, cmd,
++			"checking %d bytes for alignment "
++			"(sector size %u, remainder %u, resid %d)\n",
++			good_bytes, sector_size, remainder, resid));
++
++		if (remainder) {
++			good_bytes -= remainder;
++			resid += remainder;
++			scsi_set_resid(cmd, resid);
++
++			/*
++			 * If less than one device sector has completed, retry the
++			 * request after delay (up to the retry limit) or timeout.
++			 */
++			if (!good_bytes) {
++				if ((++cmd->retries) <= cmd->allowed
++				&& !scsi_noretry_cmd(cmd)) {
++					goto delayed_retry;
++				} else {
++					set_host_byte(cmd, DID_TIME_OUT);
++					goto error;
++				}
++			}
++		}
++	}
++
++	/*
+ 	 * special case: failed zero length commands always need to
+ 	 * drop down into the retry code. Otherwise, if we finished
+ 	 * all bytes in the request we are done now.
+@@ -845,6 +884,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 	if (result == 0)
+ 		goto requeue;
+ 
++	error:
+ 	error = __scsi_error_from_host_byte(cmd, result);
+ 
+ 	if (host_byte(result) == DID_RESET) {
+@@ -985,6 +1025,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_EH_RETRY, 0);
+ 		break;
+ 	case ACTION_DELAYED_RETRY:
++	delayed_retry:
+ 		/* Retry the same command after a delay */
+ 		__scsi_queue_insert(cmd, SCSI_MLQUEUE_DEVICE_BUSY, 0);
+ 		break;
+-- 
+1.8.3.1
+
