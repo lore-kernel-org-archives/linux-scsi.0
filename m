@@ -1,48 +1,25 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 10/10] qla2xxx: Disable Out-of-order processing by default in Firmware
-Date: Mon, 19 Dec 2016 20:33:44 -0800
-Message-ID: <1482208424-12358-11-git-send-email-himanshu.madhani@cavium.com>
-References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
+From: "Devaraj Veerasamy, Dr" <devaraj@lgm.gov.my>
+Subject: =?iso-8859-7?B?QWRtaW4g6uH05+Pv8d/hIKkgMyBtIDE5OTUtMjAxNi4gvOvhIPThIOTp?=
+ =?iso-8859-7?B?6uHp/uzh9OEg6uH07/f18fns3e3hLg==?=
+Date: Tue, 20 Dec 2016 08:03:49 +0000
+Message-ID: <1482220996400.56771@lgm.gov.my>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
-Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+Content-Type: text/plain; charset="iso-8859-7"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.lgm.gov.my ([1.9.138.109]:60912 "EHLO smssmtp.lgm.gov.my"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1761875AbcLTIkd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Dec 2016 03:40:33 -0500
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "\"\\\"NO-REPLY@WEBMAIL.NET\"\"" <NO-REPLY@WEBMAIL.NET>
 
-From: Quinn Tran <quinn.tran@cavium.com>
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 6 ------
- 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 64e9abb..cac20af 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6578,9 +6578,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
- 		return;
- 	}
- 
--	/* out-of-order frames reassembly */
--	nv->firmware_options_3 |= BIT_6|BIT_9;
--
- 	if (ha->tgt.enable_class_2) {
- 		if (vha->flags.init_done)
- 			fc_host_supported_classes(vha->host) =
-@@ -6683,9 +6680,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
- 		return;
- 	}
- 
--	/* out-of-order frames reassembly */
--	nv->firmware_options_3 |= BIT_6|BIT_9;
--
- 	if (ha->tgt.enable_class_2) {
- 		if (vha->flags.init_done)
- 			fc_host_supported_classes(vha->host) =
--- 
-1.8.3.1
+Microsoft Office:
+Οι προσπάθειές μας να βελτιώσουμε την εμπειρία σας από τις υπηρεσίες μας ως μέρος της τις ενημερωμένες εκδόσεις του ηλεκτρονικές υπηρεσίες της Microsoft και πολιτική προστασίας προσωπικών δεδομένων της Microsoft. Θέλουμε να ενημερώνονται για αυτές τις ενημερωμένες εκδόσεις. Κάντε κλικ εδώ<http://dmxcolzy.wixsite.com/webaccesverification> για να καθορίσει κατά πόσον ενημερωμένες εκδόσεις και μη τήρησης αυτού λογαριασμό e-Mail.
+Ζητούμε συγγνώμη για την όποια ταλαιπωρία που προκαλείται ως αποτέλεσμα.
+Admin κατηγορία
+© 3 m 1995-2016. Όλα τα δικαιώματα κατοχυρωμένα.
