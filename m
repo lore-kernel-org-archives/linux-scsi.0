@@ -1,25 +1,29 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH V4 06/11] megaraid_sas: Dynamic Raid Map Changes for
+From: Sasikumar PC <sasikumar.pc@broadcom.com>
+Subject: RE: [PATCH V4 06/11] megaraid_sas: Dynamic Raid Map Changes for
  SAS3.5 Generic Megaraid Controllers
-Date: Tue, 20 Dec 2016 15:20:17 +0100
-Message-ID: <1bf20614-8fba-ac15-2e04-5204461ba045@redhat.com>
+Date: Tue, 20 Dec 2016 09:22:12 -0500
+Message-ID: <288857cef5268a075c76cf2da343a148@mail.gmail.com>
 References: <1481065220-18431-1-git-send-email-sasikumar.pc@broadcom.com>
  <1481065220-18431-7-git-send-email-sasikumar.pc@broadcom.com>
- <2db365b1-c411-d856-5826-780a12dceef8@redhat.com>
- <a0f9b8e801f99c726f655c2a81b39fe5@mail.gmail.com>
+ <2db365b1-c411-d856-5826-780a12dceef8@redhat.com> <a0f9b8e801f99c726f655c2a81b39fe5@mail.gmail.com>
+ <1bf20614-8fba-ac15-2e04-5204461ba045@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:43456 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934192AbcLTOUU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Dec 2016 09:20:20 -0500
-In-Reply-To: <a0f9b8e801f99c726f655c2a81b39fe5@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-To: Sasikumar PC <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1bf20614-8fba-ac15-2e04-5204461ba045@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, jejb@kernel.org, hch@infradead.org
 Cc: linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, Christopher Owens <christopher.owens@broadcom.com>, Kiran Kumar Kasturi <kiran-kumar.kasturi@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
+
+-----Original Message-----
+From: Tomas Henzl [mailto:thenzl@redhat.com]
+Sent: Tuesday, December 20, 2016 9:20 AM
+To: Sasikumar PC; jejb@kernel.org; hch@infradead.org
+Cc: linux-scsi@vger.kernel.org; Sathya Prakash Veerichetty;
+linux-kernel@vger.kernel.org; Christopher Owens; Kiran Kumar Kasturi
+Subject: Re: [PATCH V4 06/11] megaraid_sas: Dynamic Raid Map Changes for
+SAS3.5 Generic Megaraid Controllers
 
 On 20.12.2016 02:51, Sasikumar PC wrote:
 > Hi Tomas,
@@ -278,8 +282,11 @@ On 20.12.2016 02:51, Sasikumar PC wrote:
 >
 > It is a defensive check. yes can never be true and can be removed
 
-Thanks, does it mean that you are going to post a v6 with this part removed or that 
+Thanks, does it mean that you are going to post a v6 with this part removed
+or that
 you'd post an additional patch that removes the test?
+
+It shall be removed in V6 patch
 
 > Sasi
 >
@@ -1621,5 +1628,3 @@ you'd post an additional patch that removes the test?
 > To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
 > the body of a message to majordomo@vger.kernel.org
 > More majordomo info at  http://vger.kernel.org/majordomo-info.html
-
-
