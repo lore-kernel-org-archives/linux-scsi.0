@@ -1,63 +1,55 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 09/11] lpfc: Correct oops on vport port resets
-Date: Tue, 20 Dec 2016 14:47:01 +0100
-Message-ID: <79712a55-ff54-0c08-9cc6-28f96a421101@suse.de>
-References: <58586831.FyDLkYbAFDWuYypA%james.smart@broadcom.com>
+Subject: Re: [PATCH v2 10/11] lpfc: Add missing memory barrier
+Date: Tue, 20 Dec 2016 14:47:20 +0100
+Message-ID: <313785cf-8fbc-0b7b-3227-ad6695ec7cfc@suse.de>
+References: <58586832.woeJM8e1raA2NxNi%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33889 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33912 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754717AbcLTNrE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Dec 2016 08:47:04 -0500
-In-Reply-To: <58586831.FyDLkYbAFDWuYypA%james.smart@broadcom.com>
+        id S1755408AbcLTNrW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Dec 2016 08:47:22 -0500
+In-Reply-To: <58586832.woeJM8e1raA2NxNi%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
 On 12/20/2016 12:07 AM, James Smart wrote:
 > 
-> Correct oops on vport port resets. Incorrect WQE type, thus the clearing
-> code actually overstepped the WQE.
+> On loosely ordered memory systems (PPC for example), the WQE elements
+> were being updated in memory, but not necessarily flushed before the
+> separate doorbell was written to hw which would cause hw to dma the
+> WQE element. Thus, the hardware occasionally received partially
+> updated WQE data.
+> 
+> Add the memory barrier after updating the WQE memory.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_sli.c | 7 ++++---
->  1 file changed, 4 insertions(+), 3 deletions(-)
+> v2:
+>   revised for checkpatch warning - comment before wmb()
+> 
+>  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
+>  1 file changed, 2 insertions(+)
 > 
 > diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 47b5520..d0ffcf3 100644
+> index d0ffcf3..5c8663f 100644
 > --- a/drivers/scsi/lpfc/lpfc_sli.c
 > +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -17219,7 +17219,8 @@ lpfc_drain_txq(struct lpfc_hba *phba)
->  	unsigned long iflags = 0;
->  	char *fail_msg = NULL;
->  	struct lpfc_sglq *sglq;
-> -	union lpfc_wqe wqe;
-> +	union lpfc_wqe128 wqe128;
-> +	union lpfc_wqe *wqe = (union lpfc_wqe *) &wqe128;
->  	uint32_t txq_cnt = 0;
+> @@ -120,6 +120,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
+>  	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
+>  		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
+>  	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
+> +	/* ensure WQE bcopy flushed before doorbell write */
+> +	wmb();
 >  
->  	spin_lock_irqsave(&pring->ring_lock, iflags);
-> @@ -17258,9 +17259,9 @@ lpfc_drain_txq(struct lpfc_hba *phba)
->  		piocbq->sli4_xritag = sglq->sli4_xritag;
->  		if (NO_XRI == lpfc_sli4_bpl2sgl(phba, piocbq, sglq))
->  			fail_msg = "to convert bpl to sgl";
-> -		else if (lpfc_sli4_iocb2wqe(phba, piocbq, &wqe))
-> +		else if (lpfc_sli4_iocb2wqe(phba, piocbq, wqe))
->  			fail_msg = "to convert iocb to wqe";
-> -		else if (lpfc_sli4_wq_put(phba->sli4_hba.els_wq, &wqe))
-> +		else if (lpfc_sli4_wq_put(phba->sli4_hba.els_wq, wqe))
->  			fail_msg = " - Wq is full";
->  		else
->  			lpfc_sli_ringtxcmpl_put(phba, pring, piocbq);
+>  	/* Update the host index before invoking device */
+>  	host_index = q->host_index;
 > 
-Now that is what I call a dodgy interface.
-Casting a 128-bit structure to a 64-bit structure, only to call a memset
-on the 128-bit structure in lpfc_sli4_iocb2wqe() is positively evil.
-Can't you clear up this mess by generally passing in a wqe128?
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
 
