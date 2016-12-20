@@ -1,24 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] cciss: use designated initializers
-Date: Tue, 20 Dec 2016 17:42:35 -0500
-Message-ID: <yq1h95y2pes.fsf@sermon.lab.mkp.net>
-References: <20161217010530.GA140708@beast>
+Subject: Re: [PATCH v2 00/11] lpfc: Update driver to version 11.2.0.4
+Date: Tue, 20 Dec 2016 17:43:04 -0500
+Message-ID: <yq1d1gm2pdz.fsf@sermon.lab.mkp.net>
+References: <58586827.ZTU5SzwfcivTVxeE%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161217010530.GA140708@beast> (Kees Cook's message of "Fri, 16
-        Dec 2016 17:05:30 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:29613 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932586AbcLTWnJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2016 17:43:09 -0500
+In-Reply-To: <58586827.ZTU5SzwfcivTVxeE%james.smart@broadcom.com> (James
+        Smart's message of "Mon, 19 Dec 2016 15:07:19 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org
 
->>>>> "Kees" == Kees Cook <keescook@chromium.org> writes:
+>>>>> "James" == James Smart <james.smart@broadcom.com> writes:
 
-Kees> Prepare to mark sensitive kernel structures for randomization by
-Kees> making sure they're using designated initializers. These were
-Kees> identified during allyesconfig builds of x86, arm, and arm64, with
-Kees> most initializer fixes extracted from grsecurity.
+James> This patch set updates the lpfc driver to revision 11.2.0.4
 
 Applied to 4.11/scsi-queue.
 
