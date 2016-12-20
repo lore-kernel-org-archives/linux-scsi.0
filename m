@@ -1,56 +1,73 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 01/10] qla2xxx: Fix wrong IOCB type assumption.
-Date: Mon, 19 Dec 2016 20:33:35 -0800
-Message-ID: <1482208424-12358-2-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 02/10] qla2xxx: Include ATIO queue in firmware dump when in target mode
+Date: Mon, 19 Dec 2016 20:33:36 -0800
+Message-ID: <1482208424-12358-3-git-send-email-himanshu.madhani@cavium.com>
 References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bl2nam02on0068.outbound.protection.outlook.com ([104.47.38.68]:18498
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751432AbcLTEd7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 19 Dec 2016 23:33:59 -0500
 In-Reply-To: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+Include ATIO queue for ISP27XX when firmware dump is collected
+for target mode.
 
-qlt_reset is called with Immedidate Notify IOCB only.
-Current code wrongly cast it as ATIO IOCB.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_tmpl.c | 24 ++++++++++++++++++++++++
+ 1 file changed, 24 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index bff9689..b9c559c 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -668,11 +668,9 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt_sess *sess = NULL;
--	uint32_t unpacked_lun, lun = 0;
- 	uint16_t loop_id;
- 	int res = 0;
- 	struct imm_ntfy_from_isp *n = (struct imm_ntfy_from_isp *)iocb;
--	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
- 	unsigned long flags;
- 
- 	loop_id = le16_to_cpu(n->u.isp24.nport_handle);
-@@ -725,11 +723,7 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- 	    "loop_id %d)\n", vha->host_no, sess, sess->port_name,
- 	    mcmd, loop_id);
- 
--	lun = a->u.isp24.fcp_cmnd.lun;
--	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
--
--	return qlt_issue_task_mgmt(sess, unpacked_lun, mcmd,
--	    iocb, QLA24XX_MGMT_SEND_NACK);
-+	return qlt_issue_task_mgmt(sess, 0, mcmd, iocb, QLA24XX_MGMT_SEND_NACK);
- }
- 
- /* ha->tgt.sess_lock supposed to be held on entry */
+diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
+index 36935c9..a38d38a6c 100644
+--- a/drivers/scsi/qla2xxx/qla_tmpl.c
++++ b/drivers/scsi/qla2xxx/qla_tmpl.c
+@@ -433,6 +433,18 @@ static inline void (*qla27xx_read_vector(uint width))(void __iomem*, void *, ulo
+ 				count++;
+ 			}
+ 		}
++	} else if (QLA_TGT_MODE_ENABLED() &&
++	    (ent->t263.queue_type == T263_QUEUE_TYPE_ATIO)) {
++		struct qla_hw_data *ha = vha->hw;
++		struct atio *atr = ha->tgt.atio_ring;
++
++		if (atr || !buf) {
++			length = ha->tgt.atio_q_length;
++			qla27xx_insert16(0, buf, len);
++			qla27xx_insert16(length, buf, len);
++			qla27xx_insertbuf(atr, length * sizeof(*atr), buf, len);
++			count++;
++		}
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd026,
+ 		    "%s: unknown queue %x\n", __func__, ent->t263.queue_type);
+@@ -676,6 +688,18 @@ static inline void (*qla27xx_read_vector(uint width))(void __iomem*, void *, ulo
+ 				count++;
+ 			}
+ 		}
++	} else if (QLA_TGT_MODE_ENABLED() &&
++	    (ent->t274.queue_type == T274_QUEUE_TYPE_ATIO_SHAD)) {
++		struct qla_hw_data *ha = vha->hw;
++		struct atio *atr = ha->tgt.atio_ring_ptr;
++
++		if (atr || !buf) {
++			qla27xx_insert16(0, buf, len);
++			qla27xx_insert16(1, buf, len);
++			qla27xx_insert32(ha->tgt.atio_q_in ?
++			    *ha->tgt.atio_q_in : 0, buf, len);
++			count++;
++		}
+ 	} else {
+ 		ql_dbg(ql_dbg_misc, vha, 0xd02f,
+ 		    "%s: unknown queue %x\n", __func__, ent->t274.queue_type);
 -- 
 1.8.3.1
+
