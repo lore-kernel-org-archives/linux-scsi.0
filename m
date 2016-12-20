@@ -1,31 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] SRP transport, scsi-mq: Wait for .queue_rq() if necessary
-Date: Tue, 20 Dec 2016 17:14:53 -0500
-Message-ID: <yq1pokm2qoy.fsf@sermon.lab.mkp.net>
-References: <39d8cb23-0406-e8c3-6e3a-a467ebe41470@sandisk.com>
-        <7c9a22c1-9940-7a8d-a479-c8cc5d274c60@sandisk.com>
-        <6c4aa0b2-20ec-3ad8-065d-7288cf78fc23@sandisk.com>
+Subject: Re: [PATCH] hpsa: use designated initializers
+Date: Tue, 20 Dec 2016 17:41:20 -0500
+Message-ID: <yq1lgva2pgv.fsf@sermon.lab.mkp.net>
+References: <20161217010449.GA140636@beast>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28576 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752686AbcLTWPP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2016 17:15:15 -0500
-In-Reply-To: <6c4aa0b2-20ec-3ad8-065d-7288cf78fc23@sandisk.com> (Bart Van
-        Assche's message of "Fri, 16 Dec 2016 13:39:52 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161217010449.GA140636@beast> (Kees Cook's message of "Fri, 16
+        Dec 2016 17:04:49 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Kees Cook <keescook@chromium.org>
+Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <jejb@linux.vnet.ibm.com>, Doug Ledford <dledford@redhat.com>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, Max Gurtovoy <maxg@mellanox.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@gmail.com> writes:
+>>>>> "Kees" == Kees Cook <keescook@chromium.org> writes:
 
-Bart> It seems like patch 1/2 of this series is already present in
-Bart> Linus' tree but patch 2/2 not yet? Can you queue this patch for
-Bart> the next pull request that will be sent to Linus?
+Kees> Prepare to mark sensitive kernel structures for randomization by
+Kees> making sure they're using designated initializers. These were
+Kees> identified during allyesconfig builds of x86, arm, and arm64, with
+Kees> most initializer fixes extracted from grsecurity.
 
-Applied to 4.10/scsi-fixes.
+Applied to 4.11/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
