@@ -1,39 +1,120 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH v2 09/11] lpfc: Correct oops on vport port resets
-Date: Tue, 20 Dec 2016 08:51:00 -0800
-Message-ID: <1529c8e5-82ad-152d-c7e8-3e5a43871c2d@broadcom.com>
-References: <58586831.FyDLkYbAFDWuYypA%james.smart@broadcom.com>
- <79712a55-ff54-0c08-9cc6-28f96a421101@suse.de>
+From: Peter Chang <dpf@google.com>
+Subject: [PATCH] set a base index for libsas based ata devices
+Date: Tue, 20 Dec 2016 10:15:23 -0800
+Message-ID: <CAF2xp_F3ea-n4R8jG8UpHEE3YmvKN7UWBAn36_QXMg-e34tY_w@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/mixed; boundary=94eb2c0325944fcc8005441b0696
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f169.google.com ([209.85.220.169]:35461 "EHLO
-        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752837AbcLTQvi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2016 11:51:38 -0500
-Received: by mail-qk0-f169.google.com with SMTP id u25so43799657qki.2
-        for <linux-scsi@vger.kernel.org>; Tue, 20 Dec 2016 08:51:03 -0800 (PST)
-In-Reply-To: <79712a55-ff54-0c08-9cc6-28f96a421101@suse.de>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:33202 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754784AbcLTSPp (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 20 Dec 2016 13:15:45 -0500
+Received: by mail-oi0-f53.google.com with SMTP id w63so186301857oiw.0
+        for <linux-scsi@vger.kernel.org>; Tue, 20 Dec 2016 10:15:44 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, linux-ide@vger.kernel.org
 
+--94eb2c0325944fcc8005441b0696
+Content-Type: text/plain; charset=UTF-8
 
+we discovered this when futzing w/ the queue depth parameter for ata
+disks behind the pm8006 controller. setting depth == 1 should disable
+ncq, but the sysfs part silently fails and we continue sending the
+fpdma command variants. no one else probably cares about the disabling
+ncq path, but we do like to test.
 
-On 12/20/2016 5:47 AM, Hannes Reinecke wrote:
->
-> Now that is what I call a dodgy interface.
-> Casting a 128-bit structure to a 64-bit structure, only to call a memset
-> on the 128-bit structure in lpfc_sli4_iocb2wqe() is positively evil.
-> Can't you clear up this mess by generally passing in a wqe128?
->
-> Cheers,
->
-> Hannes
+anyway, adding both the ide and scsi lists because i'm not quite sure
+there's a separate libsas list and a single commit seems better for
+this.
 
-Completely agree. Wanted to get this in now to avoid the issue, and the 
-better clean up done afterward as its a bit more involved.
+\p
 
--- james
+--94eb2c0325944fcc8005441b0696
+Content-Type: text/x-patch; charset=US-ASCII;
+	name="0001-set-a-base-index-for-libsas-based-ata-devices.patch"
+Content-Disposition: attachment;
+	filename="0001-set-a-base-index-for-libsas-based-ata-devices.patch"
+Content-Transfer-Encoding: base64
+X-Attachment-Id: f_iwxtewig0
 
+RnJvbSA2YmRmY2IzNWEwNzRkOWM1OGMxODBmOGM1MTI3MDZmYWY3ZDZjN2NiIE1vbiBTZXAgMTcg
+MDA6MDA6MDAgMjAwMQpGcm9tOiBwZXRlciBjaGFuZyA8ZHBmQGdvb2dsZS5jb20+CkRhdGU6IFR1
+ZSwgMjAgRGVjIDIwMTYgMDk6NDg6NDUgLTA4MDAKU3ViamVjdDogW1BBVENIXSBzZXQgYSBiYXNl
+IGluZGV4IGZvciBsaWJzYXMgYmFzZWQgYXRhIGRldmljZXMKCmxpYnNhcyBob3N0cyBhbGxvdyBt
+dWx0aXBsZSBsaW5rcywgYnV0IHdoZW4gdGhlIGNvbnRyb2xsZXIKc3VwcG9ydHMgU0FUQSBkZXZp
+Y2VzIGNvbnRyb2wgaXMgaGFuZGVkIHRvIGxpYmF0YS4gdGhpcyBtZWFucwp0aGF0IGFuIGF0dGFj
+aGVkIHNjc2kgZGV2aWNlIHdpbGwgYmUgc2V0dXAgcHJvcGVybHksIGJ1dCBkZXZpY2UKbWFuYWdl
+bWVudCByZXF1ZXN0cyBhbmQgc3lzZnMgZnV0emluZyBkb24ndCBnZXQgcm91dGVkIGNvcnJlY3Rs
+eQpiZWNhdXNlIHRoZSBkZXZpY2UgbG9va3VwIGZhaWxzLgoKVGVzdGVkOgotIHByZS1wYXRjaDoK
+amtnZzcwOn4jIGxzIC1kIC9zeXMvYmxvY2svc2QqCi9zeXMvYmxvY2svc2RhCmprZ2c3MDp+IyBt
+b2Rwcm9iZSBwbTgweHgKamtnZzcwOn4jIGNhdCAvc3lzL2Jsb2NrL3NkYi9kZXZpY2UvcXVldWVf
+ZGVwdGgKMzEKamtnZzcwOn4jIGVjaG8gMSA+IC9zeXMvYmxvY2svc2RiL2RldmljZS9xdWV1ZV9k
+ZXB0aApqa2dnNzA6fiMgY2F0IC9zeXMvYmxvY2svc2RiL2RldmljZS9xdWV1ZV9kZXB0aAozMQot
+IHBvc3QtcGF0Y2g6CmprZ2c3MDp+IyBtb2Rwcm9iZSBwbTgweHgKamtnZzcwOn4jIGNhdCAvc3lz
+L2Jsb2NrL3NkYi9kZXZpY2UvcXVldWVfZGVwdGgKMzEKamtnZzcwOn4jIGVjaG8gMSA+IC9zeXMv
+YmxvY2svc2RiL2RldmljZS9xdWV1ZV9kZXB0aApqa2dnNzA6fiMgY2F0IC9zeXMvYmxvY2svc2Ri
+L2RldmljZS9xdWV1ZV9kZXB0aAoxCgpTaWduZWQtb2ZmLWJ5OiBwZXRlciBjaGFuZyA8ZHBmQGdv
+b2dsZS5jb20+Ci0tLQogZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYyAgICAgICAgICAgfCAzMyAr
+KysrKysrKysrKysrKysrKysrKysrKysrKysrKysrKy0KIGRyaXZlcnMvc2NzaS9saWJzYXMvc2Fz
+X3Njc2lfaG9zdC5jIHwgIDQgKysrKwogaW5jbHVkZS9saW51eC9saWJhdGEuaCAgICAgICAgICAg
+ICAgfCAgMyArKysKIDMgZmlsZXMgY2hhbmdlZCwgMzkgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlv
+bigtKQoKZGlmZiAtLWdpdCBhL2RyaXZlcnMvYXRhL2xpYmF0YS1zY3NpLmMgYi9kcml2ZXJzL2F0
+YS9saWJhdGEtc2NzaS5jCmluZGV4IDFmODYzZTcuLjM0MGYxNDQgMTAwNjQ0Ci0tLSBhL2RyaXZl
+cnMvYXRhL2xpYmF0YS1zY3NpLmMKKysrIGIvZHJpdmVycy9hdGEvbGliYXRhLXNjc2kuYwpAQCAt
+MTA4OCw3ICsxMDg4LDcgQEAgc3RhdGljIHZvaWQgYXRhX3RvX3NlbnNlX2Vycm9yKHVuc2lnbmVk
+IGlkLCB1OCBkcnZfc3RhdCwgdTggZHJ2X2VyciwgdTggKnNrLAogICoJcGFzc3Rocm91Z2ggY29t
+bWFuZCwgc28gd2UgdXNlIHRoZSBmb2xsb3dpbmcgc2Vuc2UgZGF0YToKICAqCXNrID0gUkVDT1ZF
+UkVEIEVSUk9SCiAgKglhc2MsYXNjcSA9IEFUQSBQQVNTLVRIUk9VR0ggSU5GT1JNQVRJT04gQVZB
+SUxBQkxFCi0gKiAgICAgIAorICoKICAqCiAgKglMT0NLSU5HOgogICoJTm9uZS4KQEAgLTMwNTIs
+NiArMzA1MiwxNiBAQCBzdGF0aWMgdW5zaWduZWQgaW50IGF0YXBpX3hsYXQoc3RydWN0IGF0YV9x
+dWV1ZWRfY21kICpxYykKIAogc3RhdGljIHN0cnVjdCBhdGFfZGV2aWNlICphdGFfZmluZF9kZXYo
+c3RydWN0IGF0YV9wb3J0ICphcCwgaW50IGRldm5vKQogeworCS8qIGFkanVzdCBpZiB0aGlzIHBv
+cnQgaXMgYmVoaW5kIGEgbGlic2FzIGhvc3QgcmF0aGVyIHRoYW4gYQorCSAqIGRpcmVjdCBsaWJh
+dGEgaG9zdC4gd2FybiBhbmQgZmFpbCBpZiBzb21laG93IHdlIGdvdCBvdXQgb2YKKwkgKiBzeW5j
+IGFuZCB3ZSd2ZSBhIG5lZ2F0aXZlIGRldmljZSBudW1iZXIuCisJICovCisJZGV2bm8gLT0gYXAt
+Pmxpbmsuc2FzX2hvc3RfYmFzZTsKKwlpZiAodW5saWtlbHkoZGV2bm8gPCAwKSkgeworCQlXQVJO
+X09OKGRldm5vIDwgMCk7CisJCXJldHVybiBOVUxMOworCX0KKwogCWlmICghc2F0YV9wbXBfYXR0
+YWNoZWQoYXApKSB7CiAJCWlmIChsaWtlbHkoZGV2bm8gPCBhdGFfbGlua19tYXhfZGV2aWNlcygm
+YXAtPmxpbmspKSkKIAkJCXJldHVybiAmYXAtPmxpbmsuZGV2aWNlW2Rldm5vXTsKQEAgLTQzMzIs
+NiArNDM0MiwyNyBAQCBpbnQgYXRhX3Njc2lfcXVldWVjbWQoc3RydWN0IFNjc2lfSG9zdCAqc2hv
+c3QsIHN0cnVjdCBzY3NpX2NtbmQgKmNtZCkKIH0KIAogLyoqCisgKglhdGFfc2FzX3NldF9saW5r
+X2Jhc2UgLSBzZXQgdGhlIGxpYmF0YSBsaW5rJ3MgJ2Jhc2UnIGJlY2F1c2UKKyAqCWxpYnNhcyBo
+b3N0cyBoYXZlIG1vcmUgcG9ydHMgLyBsaW5rcy4KKyAqCUBhcDogQVRBIHBvcnQgdG8gd2hpY2gg
+dGhlIHRhcmdldCBpcyBhdHRhY2hlZAorICoJQHN0YXJnZXQ6IFNDU0kgdGFyZ2V0IGJlaW5nIGF0
+dGFjaGVkCisgKi8KK3ZvaWQgYXRhX3Nhc19zZXRfbGlua19iYXNlKHN0cnVjdCBhdGFfcG9ydCAq
+YXAsIHN0cnVjdCBzY3NpX3RhcmdldCAqc3RhcmdldCkKK3sKKwl1bnNpZ25lZCBpbnQgaG9zdF9i
+YXNlOworCisJaWYgKCFzYXRhX3BtcF9hdHRhY2hlZChhcCkpIHsKKwkJV0FSTl9PTihzdGFyZ2V0
+LT5jaGFubmVsKTsKKwkJaG9zdF9iYXNlID0gc3RhcmdldC0+aWQ7CisJfSBlbHNlIHsKKwkJV0FS
+Tl9PTihzdGFyZ2V0LT5pZCk7CisJCWhvc3RfYmFzZSA9IHN0YXJnZXQtPmNoYW5uZWw7CisJfQor
+CWFwLT5saW5rLnNhc19ob3N0X2Jhc2UgPSBob3N0X2Jhc2U7Cit9CitFWFBPUlRfU1lNQk9MX0dQ
+TChhdGFfc2FzX3NldF9saW5rX2Jhc2UpOworCisvKioKICAqCWF0YV9zY3NpX3NpbXVsYXRlIC0g
+c2ltdWxhdGUgU0NTSSBjb21tYW5kIG9uIEFUQSBkZXZpY2UKICAqCUBkZXY6IHRoZSB0YXJnZXQg
+ZGV2aWNlCiAgKglAY21kOiBTQ1NJIGNvbW1hbmQgYmVpbmcgc2VudCB0byBkZXZpY2UuCmRpZmYg
+LS1naXQgYS9kcml2ZXJzL3Njc2kvbGlic2FzL3Nhc19zY3NpX2hvc3QuYyBiL2RyaXZlcnMvc2Nz
+aS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jCmluZGV4IDUxOWRhYzQuLmQ4MzAwYmMgMTAwNjQ0Ci0t
+LSBhL2RyaXZlcnMvc2NzaS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jCisrKyBiL2RyaXZlcnMvc2Nz
+aS9saWJzYXMvc2FzX3Njc2lfaG9zdC5jCkBAIC04NTksNiArODU5LDEwIEBAIGludCBzYXNfdGFy
+Z2V0X2FsbG9jKHN0cnVjdCBzY3NpX3RhcmdldCAqc3RhcmdldCkKIAogCWtyZWZfZ2V0KCZmb3Vu
+ZF9kZXYtPmtyZWYpOwogCXN0YXJnZXQtPmhvc3RkYXRhID0gZm91bmRfZGV2OworCisJaWYgKGRl
+dl9pc19zYXRhKGZvdW5kX2RldikpCisJCWF0YV9zYXNfc2V0X2xpbmtfYmFzZShmb3VuZF9kZXYt
+PnNhdGFfZGV2LmFwLCBzdGFyZ2V0KTsKKwogCXJldHVybiAwOwogfQogCmRpZmYgLS1naXQgYS9p
+bmNsdWRlL2xpbnV4L2xpYmF0YS5oIGIvaW5jbHVkZS9saW51eC9saWJhdGEuaAppbmRleCBjMTcw
+YmU1Li4zMjM4MTFmIDEwMDY0NAotLS0gYS9pbmNsdWRlL2xpbnV4L2xpYmF0YS5oCisrKyBiL2lu
+Y2x1ZGUvbGludXgvbGliYXRhLmgKQEAgLTc5MSw2ICs3OTEsNyBAQCBzdHJ1Y3QgYXRhX2FjcGlf
+Z3RtIHsKIHN0cnVjdCBhdGFfbGluayB7CiAJc3RydWN0IGF0YV9wb3J0CQkqYXA7CiAJaW50CQkJ
+cG1wOwkJLyogcG9ydCBtdWx0aXBsaWVyIHBvcnQgIyAqLworCWludAkJCXNhc19ob3N0X2Jhc2U7
+CS8qIGhvc3QgcmVsYXRpdmUgaWQgKi8KIAogCXN0cnVjdCBkZXZpY2UJCXRkZXY7CiAJdW5zaWdu
+ZWQgaW50CQlhY3RpdmVfdGFnOwkvKiBhY3RpdmUgdGFnIG9uIHRoaXMgbGluayAqLwpAQCAtMTEz
+MCw2ICsxMTMxLDggQEAgZXh0ZXJuIGludCBhdGFfc2FzX3BvcnRfc3RhcnQoc3RydWN0IGF0YV9w
+b3J0ICphcCk7CiBleHRlcm4gdm9pZCBhdGFfc2FzX3BvcnRfc3RvcChzdHJ1Y3QgYXRhX3BvcnQg
+KmFwKTsKIGV4dGVybiBpbnQgYXRhX3Nhc19zbGF2ZV9jb25maWd1cmUoc3RydWN0IHNjc2lfZGV2
+aWNlICosIHN0cnVjdCBhdGFfcG9ydCAqKTsKIGV4dGVybiBpbnQgYXRhX3Nhc19xdWV1ZWNtZChz
+dHJ1Y3Qgc2NzaV9jbW5kICpjbWQsIHN0cnVjdCBhdGFfcG9ydCAqYXApOworZXh0ZXJuIHZvaWQg
+YXRhX3Nhc19zZXRfbGlua19iYXNlKHN0cnVjdCBhdGFfcG9ydCAqYXAsCisJCQkJICBzdHJ1Y3Qg
+c2NzaV90YXJnZXQgKnN0YXJnZXQpOwogZXh0ZXJuIGludCBzYXRhX3Njcl92YWxpZChzdHJ1Y3Qg
+YXRhX2xpbmsgKmxpbmspOwogZXh0ZXJuIGludCBzYXRhX3Njcl9yZWFkKHN0cnVjdCBhdGFfbGlu
+ayAqbGluaywgaW50IHJlZywgdTMyICp2YWwpOwogZXh0ZXJuIGludCBzYXRhX3Njcl93cml0ZShz
+dHJ1Y3QgYXRhX2xpbmsgKmxpbmssIGludCByZWcsIHUzMiB2YWwpOwotLSAKMi44LjAucmMzLjIy
+Ni5nMzlkNDAyMAoK
+--94eb2c0325944fcc8005441b0696--
