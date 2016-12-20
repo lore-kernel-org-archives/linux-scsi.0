@@ -1,32 +1,23 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] storvsc: Miscellaneous fixes and enhancements
-Date: Tue, 20 Dec 2016 17:43:39 -0500
-Message-ID: <yq160me2pd0.fsf@sermon.lab.mkp.net>
-References: <1481769928-2026-1-git-send-email-kys@exchange.microsoft.com>
+Subject: Re: [patch] scsi: dpt_i2o: double free if adpt_i2o_online_hba() fails
+Date: Tue, 20 Dec 2016 17:46:55 -0500
+Message-ID: <yq11sx22p7k.fsf@sermon.lab.mkp.net>
+References: <20161216093539.GC13942@elgon.mountain>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1481769928-2026-1-git-send-email-kys@exchange.microsoft.com>
- (kys@exchange.microsoft.com's message of "Wed, 14 Dec 2016 18:45:28
- -0800")
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: kys@exchange.microsoft.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, jasowang@redhat.com, linux-kernel@vger.kernel.org, ohering@suse.com, James.Bottomley@HansenPartnership.com, hare@suse.de, apw@canonical.com, devel@linuxdriverproject.org
+Content-Type: text/plain
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20161216093539.GC13942@elgon.mountain> (Dan Carpenter's message
+        of "Fri, 16 Dec 2016 12:35:39 +0300")
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: Adaptec OEM Raid Solutions <aacraid@adaptec.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "kys" == kys  <kys@exchange.microsoft.com> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-kys> From: K. Y. Srinivasan <kys@microsoft.com> Miscellaneous fixes and
-kys> enhancements.
+Dan> There are two places where adpt_i2o_online_hba() is called.  Both
+Dan> callers call adpt_i2o_delete_hba(pHba) if adpt_i2o_online_hba()
+Dan> fails and since we also free it here that causes a double free bug.
 
 Applied to 4.11/scsi-queue.
 
