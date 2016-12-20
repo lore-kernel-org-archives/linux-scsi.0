@@ -1,16 +1,16 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] hpsa: use designated initializers
-Date: Tue, 20 Dec 2016 17:41:20 -0500
-Message-ID: <yq1lgva2pgv.fsf@sermon.lab.mkp.net>
-References: <20161217010449.GA140636@beast>
+Subject: Re: [PATCH] cciss: use designated initializers
+Date: Tue, 20 Dec 2016 17:42:35 -0500
+Message-ID: <yq1h95y2pes.fsf@sermon.lab.mkp.net>
+References: <20161217010530.GA140708@beast>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161217010449.GA140636@beast> (Kees Cook's message of "Fri, 16
-        Dec 2016 17:04:49 -0800")
+In-Reply-To: <20161217010530.GA140708@beast> (Kees Cook's message of "Fri, 16
+        Dec 2016 17:05:30 -0800")
 Sender: linux-kernel-owner@vger.kernel.org
 To: Kees Cook <keescook@chromium.org>
-Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Don Brace <don.brace@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 >>>>> "Kees" == Kees Cook <keescook@chromium.org> writes:
