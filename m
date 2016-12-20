@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 04/10] qla2xxx: Reset reserved field in firmware options to 0.
-Date: Mon, 19 Dec 2016 20:33:38 -0800
-Message-ID: <1482208424-12358-5-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 03/10] qla2xxx: Set tcm_qla2xxx version to automatically track qla2xxx version.
+Date: Mon, 19 Dec 2016 20:33:37 -0800
+Message-ID: <1482208424-12358-4-git-send-email-himanshu.madhani@cavium.com>
 References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,53 +12,46 @@ To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, n
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
-During NVRAM initialization in target mode, reset reserved
-fields in firmware options to Zero (BIT 15)
-
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 17 ++++++++++++++++-
- 1 file changed, 16 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 ++--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b9c559c..5037b51 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -6539,6 +6539,14 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 6643f6f..d925910 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1800,7 +1800,7 @@ static ssize_t tcm_qla2xxx_wwn_version_show(struct config_item *item,
+ {
+ 	return sprintf(page,
+ 	    "TCM QLOGIC QLA2XXX NPIV capable fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+ 	    utsname()->machine);
+ }
  
- 		/* Disable Full Login after LIP */
- 		nv->host_p &= cpu_to_le32(~BIT_10);
-+
-+		/*
-+		 * clear BIT 15 explicitly as we have seen at least
-+		 * a couple of instances where this was set and this
-+		 * was causing the firmware to not be initialized.
-+		 */
-+		nv->firmware_options_1 &=
-+		    __constant_cpu_to_le32(~BIT_15);
- 		/* Enable target PRLI control */
- 		nv->firmware_options_2 |= cpu_to_le32(BIT_14);
- 	} else {
-@@ -6623,11 +6631,18 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
- 		/* Disable ini mode, if requested */
- 		if (!qla_ini_mode_enabled(vha))
- 			nv->firmware_options_1 |= cpu_to_le32(BIT_5);
--
- 		/* Disable Full Login after LIP */
- 		nv->firmware_options_1 &= cpu_to_le32(~BIT_13);
- 		/* Enable initial LIP */
- 		nv->firmware_options_1 &= cpu_to_le32(~BIT_9);
-+		/*
-+		 * clear BIT 15 explicitly as we have seen at
-+		 * least a couple of instances where this was set
-+		 * and this was causing the firmware to not be
-+		 * initialized.
-+		 */
-+		nv->firmware_options_1 &=
-+		    __constant_cpu_to_le32(~BIT_15);
- 		if (ql2xtgt_tape_enable)
- 			/* Enable FC tape support */
- 			nv->firmware_options_2 |= cpu_to_le32(BIT_12);
+@@ -1906,7 +1906,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	int ret;
+ 
+ 	pr_debug("TCM QLOGIC QLA2XXX fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+ 	    utsname()->machine);
+ 
+ 	ret = target_register_template(&tcm_qla2xxx_ops);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 37e026a..cf8430b 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -1,7 +1,6 @@
+ #include <target/target_core_base.h>
+ #include <linux/btree.h>
+ 
+-#define TCM_QLA2XXX_VERSION	"v0.1"
+ /* length of ASCII WWPNs including pad */
+ #define TCM_QLA2XXX_NAMELEN	32
+ /*
 -- 
 1.8.3.1
