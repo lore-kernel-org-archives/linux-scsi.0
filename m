@@ -1,53 +1,44 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 10/11] lpfc: Add missing memory barrier
-Date: Tue, 20 Dec 2016 14:47:20 +0100
-Message-ID: <313785cf-8fbc-0b7b-3227-ad6695ec7cfc@suse.de>
-References: <58586832.woeJM8e1raA2NxNi%james.smart@broadcom.com>
+Subject: Re: [PATCH v2 11/11] lpfc: lpfc version change to 11.2.0.4
+Date: Tue, 20 Dec 2016 14:47:38 +0100
+Message-ID: <aa124065-2f64-e9dd-f3fd-893de3f4b471@suse.de>
+References: <58586833.TGdmjx6cXLH8kWHl%james.smart@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33912 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:33933 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755408AbcLTNrW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Dec 2016 08:47:22 -0500
-In-Reply-To: <58586832.woeJM8e1raA2NxNi%james.smart@broadcom.com>
+        id S1757471AbcLTNrp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 20 Dec 2016 08:47:45 -0500
+In-Reply-To: <58586833.TGdmjx6cXLH8kWHl%james.smart@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
 On 12/20/2016 12:07 AM, James Smart wrote:
 > 
-> On loosely ordered memory systems (PPC for example), the WQE elements
-> were being updated in memory, but not necessarily flushed before the
-> separate doorbell was written to hw which would cause hw to dma the
-> WQE element. Thus, the hardware occasionally received partially
-> updated WQE data.
-> 
-> Add the memory barrier after updating the WQE memory.
+> lpfc version change to 11.2.0.4
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
-> v2:
->   revised for checkpatch warning - comment before wmb()
+>  drivers/scsi/lpfc/lpfc_version.h | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
->  drivers/scsi/lpfc/lpfc_sli.c | 2 ++
->  1 file changed, 2 insertions(+)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index d0ffcf3..5c8663f 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -120,6 +120,8 @@ lpfc_sli4_wq_put(struct lpfc_queue *q, union lpfc_wqe *wqe)
->  	if (q->phba->sli3_options & LPFC_SLI4_PHWQ_ENABLED)
->  		bf_set(wqe_wqid, &wqe->generic.wqe_com, q->queue_id);
->  	lpfc_sli_pcimem_bcopy(wqe, temp_wqe, q->entry_size);
-> +	/* ensure WQE bcopy flushed before doorbell write */
-> +	wmb();
+> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+> index 50bfc43..0ee0623 100644
+> --- a/drivers/scsi/lpfc/lpfc_version.h
+> +++ b/drivers/scsi/lpfc/lpfc_version.h
+> @@ -18,7 +18,7 @@
+>   * included with this package.                                     *
+>   *******************************************************************/
 >  
->  	/* Update the host index before invoking device */
->  	host_index = q->host_index;
+> -#define LPFC_DRIVER_VERSION "11.2.0.2"
+> +#define LPFC_DRIVER_VERSION "11.2.0.4"
+>  #define LPFC_DRIVER_NAME		"lpfc"
+>  
+>  /* Used for SLI 2/3 */
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
