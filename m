@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 09/10] qla2xxx: Fix invalid handle erroneous message.
-Date: Mon, 19 Dec 2016 20:33:43 -0800
-Message-ID: <1482208424-12358-10-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 10/10] qla2xxx: Disable Out-of-order processing by default in Firmware
+Date: Mon, 19 Dec 2016 20:33:44 -0800
+Message-ID: <1482208424-12358-11-git-send-email-himanshu.madhani@cavium.com>
 References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,48 +14,35 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Termination of Immediate Notify IOCB was using wrong
-IOCB handle. IOCB completion code was unable to find
-appropriate code path due to wrong handle.
-
-Following message is seen in the logs.
-
-"Error entry - invalid handle/queue (ffff)."
-
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c    | 4 ++++
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_target.c | 6 ------
+ 1 file changed, 6 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index af840bf..16bc948 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2495,6 +2495,10 @@ struct scsi_dif_tuple {
- 	if (pkt->entry_status & RF_BUSY)
- 		res = DID_BUS_BUSY << 16;
- 
-+	if ((pkt->entry_type == NOTIFY_ACK_TYPE) &&
-+	    (pkt->handle == QLA_TGT_SKIP_HANDLE))
-+		return;
-+
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
- 		sp->done(ha, sp, res);
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 7ae179a..64e9abb 100644
+index 64e9abb..cac20af 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3061,7 +3061,7 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+@@ -6578,9 +6578,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 		return;
+ 	}
  
- 	pkt->entry_type = NOTIFY_ACK_TYPE;
- 	pkt->entry_count = 1;
--	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	pkt->handle = QLA_TGT_SKIP_HANDLE;
+-	/* out-of-order frames reassembly */
+-	nv->firmware_options_3 |= BIT_6|BIT_9;
+-
+ 	if (ha->tgt.enable_class_2) {
+ 		if (vha->flags.init_done)
+ 			fc_host_supported_classes(vha->host) =
+@@ -6683,9 +6680,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 		return;
+ 	}
  
- 	nack = (struct nack_to_isp *)pkt;
- 	nack->ox_id = ntfy->ox_id;
+-	/* out-of-order frames reassembly */
+-	nv->firmware_options_3 |= BIT_6|BIT_9;
+-
+ 	if (ha->tgt.enable_class_2) {
+ 		if (vha->flags.init_done)
+ 			fc_host_supported_classes(vha->host) =
 -- 
 1.8.3.1
