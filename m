@@ -1,53 +1,28 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 11/11] lpfc: lpfc version change to 11.2.0.4
-Date: Tue, 20 Dec 2016 14:47:38 +0100
-Message-ID: <aa124065-2f64-e9dd-f3fd-893de3f4b471@suse.de>
-References: <58586833.TGdmjx6cXLH8kWHl%james.smart@broadcom.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 01/10] qla2xxx: Fix wrong IOCB type assumption.
+Date: Tue, 20 Dec 2016 06:10:15 -0800
+Message-ID: <20161220141015.GA16487@infradead.org>
+References: <1482208424-12358-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482208424-12358-2-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:33933 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757471AbcLTNrp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 20 Dec 2016 08:47:45 -0500
-In-Reply-To: <58586833.TGdmjx6cXLH8kWHl%james.smart@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1482208424-12358-2-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>, linux-scsi@vger.kernel.org
 
-On 12/20/2016 12:07 AM, James Smart wrote:
+On Mon, Dec 19, 2016 at 08:33:35PM -0800, Himanshu Madhani wrote:
+> From: Quinn Tran <quinn.tran@cavium.com>
 > 
-> lpfc version change to 11.2.0.4
+> qlt_reset is called with Immedidate Notify IOCB only.
+> Current code wrongly cast it as ATIO IOCB.
 > 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-> index 50bfc43..0ee0623 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -18,7 +18,7 @@
->   * included with this package.                                     *
->   *******************************************************************/
->  
-> -#define LPFC_DRIVER_VERSION "11.2.0.2"
-> +#define LPFC_DRIVER_VERSION "11.2.0.4"
->  #define LPFC_DRIVER_NAME		"lpfc"
->  
->  /* Used for SLI 2/3 */
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 
-Cheers,
+Looks fine,
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Reviewed-by: Christoph Hellwig <hch@lst.de>
