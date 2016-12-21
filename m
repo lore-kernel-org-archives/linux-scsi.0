@@ -1,73 +1,70 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 02/10] qla2xxx: Include ATIO queue in firmware dump when in target mode
-Date: Wed, 21 Dec 2016 13:57:31 -0800
-Message-ID: <1482357459-31079-3-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 04/10] qla2xxx: Reset reserved field in firmware options to 0.
+Date: Wed, 21 Dec 2016 13:57:33 -0800
+Message-ID: <1482357459-31079-5-git-send-email-himanshu.madhani@cavium.com>
 References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0057.outbound.protection.outlook.com ([104.47.42.57]:37600
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0074.outbound.protection.outlook.com ([104.47.37.74]:55405
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752789AbcLUV6R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Dec 2016 16:58:17 -0500
+        id S1759680AbcLUV6V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Dec 2016 16:58:21 -0500
 In-Reply-To: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-Include ATIO queue for ISP27XX when firmware dump is collected
-for target mode.
+During NVRAM initialization in target mode, reset reserved
+fields in firmware options to Zero (BIT 15)
 
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_tmpl.c | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ drivers/scsi/qla2xxx/qla_target.c | 17 ++++++++++++++++-
+ 1 file changed, 16 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_tmpl.c b/drivers/scsi/qla2xxx/qla_tmpl.c
-index 36935c9..d356ed0 100644
---- a/drivers/scsi/qla2xxx/qla_tmpl.c
-+++ b/drivers/scsi/qla2xxx/qla_tmpl.c
-@@ -433,6 +433,18 @@ static inline void (*qla27xx_read_vector(uint width))(void __iomem*, void *, ulo
- 				count++;
- 			}
- 		}
-+	} else if (QLA_TGT_MODE_ENABLED() &&
-+	    ent->t263.queue_type == T263_QUEUE_TYPE_ATIO) {
-+		struct qla_hw_data *ha = vha->hw;
-+		struct atio *atr = ha->tgt.atio_ring;
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index b9c559c..5037b51 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -6539,6 +6539,14 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 
+ 		/* Disable Full Login after LIP */
+ 		nv->host_p &= cpu_to_le32(~BIT_10);
 +
-+		if (atr || !buf) {
-+			length = ha->tgt.atio_q_length;
-+			qla27xx_insert16(0, buf, len);
-+			qla27xx_insert16(length, buf, len);
-+			qla27xx_insertbuf(atr, length * sizeof(*atr), buf, len);
-+			count++;
-+		}
++		/*
++		 * clear BIT 15 explicitly as we have seen at least
++		 * a couple of instances where this was set and this
++		 * was causing the firmware to not be initialized.
++		 */
++		nv->firmware_options_1 &=
++		    __constant_cpu_to_le32(~BIT_15);
+ 		/* Enable target PRLI control */
+ 		nv->firmware_options_2 |= cpu_to_le32(BIT_14);
  	} else {
- 		ql_dbg(ql_dbg_misc, vha, 0xd026,
- 		    "%s: unknown queue %x\n", __func__, ent->t263.queue_type);
-@@ -676,6 +688,18 @@ static inline void (*qla27xx_read_vector(uint width))(void __iomem*, void *, ulo
- 				count++;
- 			}
- 		}
-+	} else if (QLA_TGT_MODE_ENABLED() &&
-+	    ent->t274.queue_type == T274_QUEUE_TYPE_ATIO_SHAD) {
-+		struct qla_hw_data *ha = vha->hw;
-+		struct atio *atr = ha->tgt.atio_ring_ptr;
-+
-+		if (atr || !buf) {
-+			qla27xx_insert16(0, buf, len);
-+			qla27xx_insert16(1, buf, len);
-+			qla27xx_insert32(ha->tgt.atio_q_in ?
-+			    *ha->tgt.atio_q_in : 0, buf, len);
-+			count++;
-+		}
- 	} else {
- 		ql_dbg(ql_dbg_misc, vha, 0xd02f,
- 		    "%s: unknown queue %x\n", __func__, ent->t274.queue_type);
+@@ -6623,11 +6631,18 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 		/* Disable ini mode, if requested */
+ 		if (!qla_ini_mode_enabled(vha))
+ 			nv->firmware_options_1 |= cpu_to_le32(BIT_5);
+-
+ 		/* Disable Full Login after LIP */
+ 		nv->firmware_options_1 &= cpu_to_le32(~BIT_13);
+ 		/* Enable initial LIP */
+ 		nv->firmware_options_1 &= cpu_to_le32(~BIT_9);
++		/*
++		 * clear BIT 15 explicitly as we have seen at
++		 * least a couple of instances where this was set
++		 * and this was causing the firmware to not be
++		 * initialized.
++		 */
++		nv->firmware_options_1 &=
++		    __constant_cpu_to_le32(~BIT_15);
+ 		if (ql2xtgt_tape_enable)
+ 			/* Enable FC tape support */
+ 			nv->firmware_options_2 |= cpu_to_le32(BIT_12);
 -- 
 1.8.3.1
 
