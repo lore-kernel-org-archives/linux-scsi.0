@@ -1,56 +1,61 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 01/10] qla2xxx: Fix wrong IOCB type assumption.
-Date: Wed, 21 Dec 2016 13:57:30 -0800
-Message-ID: <1482357459-31079-2-git-send-email-himanshu.madhani@cavium.com>
-References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 00/10] qla2xxx: Bug fixes for driver.
+Date: Wed, 21 Dec 2016 13:57:29 -0800
+Message-ID: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:31104
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754340AbcLUV6P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Dec 2016 16:58:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+Hi Christoph, Bart,
 
-qlt_reset is called with Immedidate Notify IOCB only.
-Current code wrongly cast it as ATIO IOCB.
+Here's updated series of bug fixes for target code in the driver.
+Please consider this for target-pending.
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+Changes from v1 --> v2
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index bff9689..b9c559c 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -668,11 +668,9 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	struct qla_tgt_sess *sess = NULL;
--	uint32_t unpacked_lun, lun = 0;
- 	uint16_t loop_id;
- 	int res = 0;
- 	struct imm_ntfy_from_isp *n = (struct imm_ntfy_from_isp *)iocb;
--	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
- 	unsigned long flags;
- 
- 	loop_id = le16_to_cpu(n->u.isp24.nport_handle);
-@@ -725,11 +723,7 @@ static int qlt_reset(struct scsi_qla_host *vha, void *iocb, int mcmd)
- 	    "loop_id %d)\n", vha->host_no, sess, sess->port_name,
- 	    mcmd, loop_id);
- 
--	lun = a->u.isp24.fcp_cmnd.lun;
--	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
--
--	return qlt_issue_task_mgmt(sess, unpacked_lun, mcmd,
--	    iocb, QLA24XX_MGMT_SEND_NACK);
-+	return qlt_issue_task_mgmt(sess, 0, mcmd, iocb, QLA24XX_MGMT_SEND_NACK);
- }
- 
- /* ha->tgt.sess_lock supposed to be held on entry */
+o Updated patches to remove braces. 
+o Added description for the patch reqeusted.
+
+Thanks,
+Himanshu
+
+Himanshu Madhani (3):
+  qla2xxx: Include ATIO queue in firmware dump when in target mode
+  qla2xxx: Set tcm_qla2xxx version to automatically track qla2xxx
+    version.
+  qla2xxx: Reset reserved field in firmware options to 0.
+
+Quinn Tran (7):
+  qla2xxx: Fix wrong IOCB type assumption.
+  qla2xxx: Collect additional information to debug fw dump.
+  qla2xxx: Fix crash due to null pointer access.
+  qla2xxx: Terminate exchange if corrputed.
+  qla2xxx: Reduce exess wait during chip reset
+  qla2xxx: Fix invalid handle erroneous message.
+  qla2xxx: Disable Out-of-order processing by default in Firmware
+
+ drivers/scsi/qla2xxx/qla_def.h     |  3 ++-
+ drivers/scsi/qla2xxx/qla_init.c    |  4 +--
+ drivers/scsi/qla2xxx/qla_isr.c     |  4 +++
+ drivers/scsi/qla2xxx/qla_mbx.c     | 27 ++++++++++++++-----
+ drivers/scsi/qla2xxx/qla_os.c      | 23 +++++++++++++---
+ drivers/scsi/qla2xxx/qla_target.c  | 55 +++++++++++++++++++++++++-------------
+ drivers/scsi/qla2xxx/qla_target.h  | 22 ++++++++++++++-
+ drivers/scsi/qla2xxx/qla_tmpl.c    | 24 +++++++++++++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  4 +--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |  1 -
+ 10 files changed, 131 insertions(+), 36 deletions(-)
+
 -- 
 1.8.3.1
+
