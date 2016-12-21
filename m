@@ -1,92 +1,174 @@
-From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
-Subject: Re: [PATCH] ibmvscsi: add write memory barrier to CRQ processing
-Date: Wed, 21 Dec 2016 09:35:30 -0800
-Message-ID: <f39396cb-995e-acbb-5a17-e67924adfaa9@linux.vnet.ibm.com>
-References: <1481153486-5185-1-git-send-email-tyreld@linux.vnet.ibm.com>
- <1481318452.17253.27.camel@au1.ibm.com>
+From: Thomas Gleixner <tglx@linutronix.de>
+Subject: [patch 04/10] scsi/bnx2i: Convert to hotplug state machine
+Date: Wed, 21 Dec 2016 20:19:51 +0100
+Message-ID: <20161221192111.836895753@linutronix.de>
+References: <20161221191947.089046759@linutronix.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-In-Reply-To: <1481318452.17253.27.camel@au1.ibm.com>
-List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
-List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
-List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
-List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
-List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
- <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
-Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
-Sender: "Linuxppc-dev"
- <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
-To: benh@au1.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
-Cc: brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Content-Type: text/plain; charset=ISO-8859-15
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline;
+ filename=scsibnx2i_Convert_to_hotplug_state_machine.patch
+Sender: linux-kernel-owner@vger.kernel.org
+To: LKML <linux-kernel@vger.kernel.org>
+Cc: Sebastian Siewior <bigeasy@linutronix.de>, Ingo Molnar <mingo@kernel.org>, Peter Zijlstra <peterz@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, Chad Dupuis <chad.dupuis@qlogic.com>, QLogic-Storage-Upstream@qlogic.com, Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/09/2016 01:20 PM, Benjamin Herrenschmidt wrote:
-> On Wed, 2016-12-07 at 17:31 -0600, Tyrel Datwyler wrote:
->> The first byte of each CRQ entry is used to indicate whether an entry is
->> a valid response or free for the VIOS to use. After processing a
->> response the driver sets the valid byte to zero to indicate the entry is
->> now free to be reused. Add a memory barrier after this write to ensure
->> no other stores are reordered when updating the valid byte.
-> 
-> Which "other stores" specifically ? This smells fishy without that
-> precision. It's important to always understand what exactly barriers
-> order with.
+From: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
 
-So, this patch initially came about while chasing a data integrity issue
-based on the observation that we were already doing this same write
-barrier in the virtual fibre channel driver.
+Install the callbacks via the state machine. No functional change.
 
-However, the more I stare at it I agree it does seem fishy and I can't
-see any other stores that we need to order with here. In terms of the
-16byte CRQ entries we only ever write to the first byte as a sort of
-doorbell to tell the VIOS that we have processed the data and the entry
-is free to be re-used. The remainder of the CRQ is only ever read from.
+This is the minimal fixup so we can remove the hotplug notifier mess
+completely.
 
-The wmb() in the ibmvfc driver was part of a commit from Brian that also
-involved a necessary rmb() that prevented stale data from load
-re-ordering by ensuring that a read from the first byte completed and
-contained a valid value prior to doing any other reads of the CRQ entry.
+The real rework of this driver to use work queues is still stuck in
+review/testing on the SCSI mailing list.
 
-I'd have to defer to Brian as to whether he remembers a legitimate
-reason for the wmb().
+Signed-off-by: Sebastian Andrzej Siewior <bigeasy@linutronix.de>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
+Cc: James E.J. Bottomley <jejb@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Chad Dupuis <chad.dupuis@qlogic.com>
+Cc: QLogic-Storage-Upstream@qlogic.com
+Cc: Johannes Thumshirn <jth@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
 
--Tyrel
+---
+ drivers/scsi/bnx2i/bnx2i_init.c |   80 +++++++++++++++-------------------------
+ include/linux/cpuhotplug.h      |    1 
+ 2 files changed, 32 insertions(+), 49 deletions(-)
 
-> 
-> Cheers,
-> Ben.
-> 
->> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
->> ---
->>  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
->>  1 file changed, 2 insertions(+)
->>
->> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> index d9534ee..2f5b07e 100644
->> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
->> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
->> @@ -232,6 +232,7 @@ static void ibmvscsi_task(void *data)
->>>  		while ((crq = crq_queue_next_crq(&hostdata->queue)) != NULL) {
->>>  			ibmvscsi_handle_crq(crq, hostdata);
->>>  			crq->valid = VIOSRP_CRQ_FREE;
->>> +			wmb();
->>>  		}
->>  
->>>  		vio_enable_interrupts(vdev);
->> @@ -240,6 +241,7 @@ static void ibmvscsi_task(void *data)
->>>  			vio_disable_interrupts(vdev);
->>>  			ibmvscsi_handle_crq(crq, hostdata);
->>>  			crq->valid = VIOSRP_CRQ_FREE;
->>> +			wmb();
->>>  		} else {
->>>  			done = 1;
->>>  		}
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+--- a/drivers/scsi/bnx2i/bnx2i_init.c
++++ b/drivers/scsi/bnx2i/bnx2i_init.c
+@@ -70,14 +70,6 @@ u64 iscsi_error_mask = 0x00;
+ 
+ DEFINE_PER_CPU(struct bnx2i_percpu_s, bnx2i_percpu);
+ 
+-static int bnx2i_cpu_callback(struct notifier_block *nfb,
+-			      unsigned long action, void *hcpu);
+-/* notification function for CPU hotplug events */
+-static struct notifier_block bnx2i_cpu_notifier = {
+-	.notifier_call = bnx2i_cpu_callback,
+-};
+-
+-
+ /**
+  * bnx2i_identify_device - identifies NetXtreme II device type
+  * @hba: 		Adapter structure pointer
+@@ -461,41 +453,21 @@ static void bnx2i_percpu_thread_destroy(
+ 		kthread_stop(thread);
+ }
+ 
+-
+-/**
+- * bnx2i_cpu_callback - Handler for CPU hotplug events
+- *
+- * @nfb:	The callback data block
+- * @action:	The event triggering the callback
+- * @hcpu:	The index of the CPU that the event is for
+- *
+- * This creates or destroys per-CPU data for iSCSI
+- *
+- * Returns NOTIFY_OK always.
+- */
+-static int bnx2i_cpu_callback(struct notifier_block *nfb,
+-			      unsigned long action, void *hcpu)
++static int bnx2i_cpu_online(unsigned int cpu)
+ {
+-	unsigned cpu = (unsigned long)hcpu;
++	pr_info("bnx2i: CPU %x online: Create Rx thread\n", cpu);
++	bnx2i_percpu_thread_create(cpu);
++	return 0;
++}
+ 
+-	switch (action) {
+-	case CPU_ONLINE:
+-	case CPU_ONLINE_FROZEN:
+-		printk(KERN_INFO "bnx2i: CPU %x online: Create Rx thread\n",
+-			cpu);
+-		bnx2i_percpu_thread_create(cpu);
+-		break;
+-	case CPU_DEAD:
+-	case CPU_DEAD_FROZEN:
+-		printk(KERN_INFO "CPU %x offline: Remove Rx thread\n", cpu);
+-		bnx2i_percpu_thread_destroy(cpu);
+-		break;
+-	default:
+-		break;
+-	}
+-	return NOTIFY_OK;
++static int bnx2i_cpu_dead(unsigned int cpu)
++{
++	pr_info("CPU %x offline: Remove Rx thread\n", cpu);
++	bnx2i_percpu_thread_destroy(cpu);
++	return 0;
+ }
+ 
++static enum cpuhp_state bnx2i_online_state;
+ 
+ /**
+  * bnx2i_mod_init - module init entry point
+@@ -539,18 +511,28 @@ static int __init bnx2i_mod_init(void)
+ 		p->iothread = NULL;
+ 	}
+ 
+-	cpu_notifier_register_begin();
++	get_online_cpus();
+ 
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_create(cpu);
+ 
+-	/* Initialize per CPU interrupt thread */
+-	__register_hotcpu_notifier(&bnx2i_cpu_notifier);
+-
+-	cpu_notifier_register_done();
+-
++	err = cpuhp_setup_state_nocalls(CPUHP_AP_ONLINE_DYN,
++				       "scsi/bnx2i:online",
++				       bnx2i_cpu_online, NULL);
++	if (err < 0)
++		goto remove_threads;
++	bnx2i_online_state = err;
++
++	cpuhp_setup_state_nocalls(CPUHP_SCSI_BNX2I_DEAD, "scsi/bnx2i:dead",
++				  NULL, bnx2i_cpu_dead);
++	put_online_cpus();
+ 	return 0;
+ 
++remove_threads:
++	for_each_online_cpu(cpu)
++		bnx2i_percpu_thread_destroy(cpu);
++	put_online_cpus();
++	cnic_unregister_driver(CNIC_ULP_ISCSI);
+ unreg_xport:
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ out:
+@@ -587,14 +569,14 @@ static void __exit bnx2i_mod_exit(void)
+ 	}
+ 	mutex_unlock(&bnx2i_dev_lock);
+ 
+-	cpu_notifier_register_begin();
++	get_online_cpus();
+ 
+ 	for_each_online_cpu(cpu)
+ 		bnx2i_percpu_thread_destroy(cpu);
+ 
+-	__unregister_hotcpu_notifier(&bnx2i_cpu_notifier);
+-
+-	cpu_notifier_register_done();
++	cpuhp_remove_state_nocalls(bnx2i_online_state);
++	cpuhp_remove_state_nocalls(CPUHP_SCSI_BNX2I_DEAD);
++	put_online_cpus();
+ 
+ 	iscsi_unregister_transport(&bnx2i_iscsi_transport);
+ 	cnic_unregister_driver(CNIC_ULP_ISCSI);
+--- a/include/linux/cpuhotplug.h
++++ b/include/linux/cpuhotplug.h
+@@ -42,6 +42,7 @@ enum cpuhp_state {
+ 	CPUHP_PCI_XGENE_DEAD,
+ 	CPUHP_IOMMU_INTEL_DEAD,
+ 	CPUHP_SCSI_BNX2FC_DEAD,
++	CPUHP_SCSI_BNX2I_DEAD,
+ 	CPUHP_WORKQUEUE_PREP,
+ 	CPUHP_POWER_NUMA_PREPARE,
+ 	CPUHP_HRTIMERS_PREPARE,
