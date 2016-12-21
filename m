@@ -1,44 +1,46 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
-Date: Wed, 21 Dec 2016 09:20:30 +0000
-Message-ID: <bug-176951-11613-1Q6LUCzSTG@https.bugzilla.kernel.org/>
-References: <bug-176951-11613@https.bugzilla.kernel.org/>
+From: Oliver Neukum <oneukum@suse.com>
+Subject: Re: JMS56x not working reliably with uas driver
+Date: Wed, 21 Dec 2016 12:42:27 +0100
+Message-ID: <1482320547.7638.7.camel@suse.com>
+References: <585A69E6.6040009@caviumnetworks.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:50080 "EHLO mail.kernel.org"
+Received: from mx2.suse.de ([195.135.220.15]:57712 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750750AbcLUJUd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Dec 2016 04:20:33 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id B765D20374
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2016 09:20:31 +0000 (UTC)
-Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
-        by mail.kernel.org (Postfix) with ESMTP id A370D20328
-        for <linux-scsi@vger.kernel.org>; Wed, 21 Dec 2016 09:20:30 +0000 (UTC)
-In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+        id S1751463AbcLULsv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Dec 2016 06:48:51 -0500
+In-Reply-To: <585A69E6.6040009@caviumnetworks.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: George Cherian <gcherian@caviumnetworks.com>
+Cc: hdegoede@redhat.com, stern@rowland.harvard.edu, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=176951
+On Wed, 2016-12-21 at 17:09 +0530, George Cherian wrote:
+> Hi Oliver,
+> 
+> I was working with this JMicron device and using the uas driver.
+> I am seeing the following 2 issues.
+> 
+> 1) On connect I see the following messages.
 
-Martin Goyot <martin@piwany.com> changed:
+Thanks. Do you want to submit it to Greg?
+The patch is fine.
 
-           What    |Removed                     |Added
-----------------------------------------------------------------------------
-                 CC|                            |martin@piwany.com
+> 2) On disconnect I am seeing the following issue
+> 
+>   scsi host4: uas_post_reset: alloc streams error -19 after reset
+>   sd 4:0:0:0: [sdb] Synchronizing SCSI cache
+> 
+> This is more fatal because after these messages the USB port becomes 
+> unusable. Even an lsusb invocation hangs for ever.
 
---- Comment #8 from Martin Goyot <martin@piwany.com> ---
-I confirm, I have this exact same problem with TravelMate X349-M.
+Ouch. That points to a logic error. We should not reset if
+a device is gone.
+Could you send dmesg of such a case?
 
-Fedora 25 32-Bit Live system working, but impossible to boot the x64 version,
-black frozen screen after boot menu.
+	Regards
+		Oliver
 
-I cannot confirm for the BIOS update because of course I don't have windows
-anymore so I don't know how I will install it...
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
