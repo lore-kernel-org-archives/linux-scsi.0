@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 09/10] qla2xxx: Fix invalid handle erroneous message.
-Date: Wed, 21 Dec 2016 13:57:38 -0800
-Message-ID: <1482357459-31079-10-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 06/10] qla2xxx: Fix crash due to null pointer access.
+Date: Wed, 21 Dec 2016 13:57:35 -0800
+Message-ID: <1482357459-31079-7-git-send-email-himanshu.madhani@cavium.com>
 References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,48 +14,96 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Termination of Immediate Notify IOCB was using wrong
-IOCB handle. IOCB completion code was unable to find
-appropriate code path due to wrong handle.
+This patch fixes crash due to NULL pointer access.
 
-Following message is seen in the logs.
+Following stack trace will be seen.
 
-"Error entry - invalid handle/queue (ffff)."
+[1469877.797315] Call Trace:
+[1469877.799940]  [<ffffffffa03ab6e9>] qla2x00_mem_alloc+0xb09/0x10c0 [qla2xxx]
+[1469877.806980]  [<ffffffffa03ac50a>] qla2x00_probe_one+0x86a/0x1b50 [qla2xxx]
+[1469877.814013]  [<ffffffff813b6d01>] ? __pm_runtime_resume+0x51/0xa0
+[1469877.820265]  [<ffffffff8157c1f5>] ? _raw_spin_lock_irqsave+0x25/0x90
+[1469877.826776]  [<ffffffff8157cd2d>] ? _raw_spin_unlock_irqrestore+0x6d/0x80
+[1469877.833720]  [<ffffffff810741d1>] ? preempt_count_sub+0xb1/0x100
+[1469877.839885]  [<ffffffff8157cd0c>] ? _raw_spin_unlock_irqrestore+0x4c/0x80
+[1469877.846830]  [<ffffffff81319b9c>] local_pci_probe+0x4c/0xb0
+[1469877.852562]  [<ffffffff810741d1>] ? preempt_count_sub+0xb1/0x100
+[1469877.858727]  [<ffffffff81319c89>] pci_call_probe+0x89/0xb0
 
+Cc: <stable@vger.kernel.org>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c    | 4 ++++
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/qla_os.c | 23 +++++++++++++++++++----
+ 1 file changed, 19 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index af840bf..eefcf2f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2495,6 +2495,10 @@ struct scsi_dif_tuple {
- 	if (pkt->entry_status & RF_BUSY)
- 		res = DID_BUS_BUSY << 16;
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 8521cfe..df57fb3 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3662,7 +3662,7 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
+ 				sizeof(struct ct6_dsd), 0,
+ 				SLAB_HWCACHE_ALIGN, NULL);
+ 			if (!ctx_cachep)
+-				goto fail_free_gid_list;
++				goto fail_free_srb_mempool;
+ 		}
+ 		ha->ctx_mempool = mempool_create_slab_pool(SRB_MIN_REQ,
+ 			ctx_cachep);
+@@ -3815,7 +3815,7 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
+ 	ha->loop_id_map = kzalloc(BITS_TO_LONGS(LOOPID_MAP_SIZE) * sizeof(long),
+ 	    GFP_KERNEL);
+ 	if (!ha->loop_id_map)
+-		goto fail_async_pd;
++		goto fail_loop_id_map;
+ 	else {
+ 		qla2x00_set_reserved_loop_ids(ha);
+ 		ql_dbg_pci(ql_dbg_init, ha->pdev, 0x0123,
+@@ -3824,10 +3824,15 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
  
-+	if (pkt->entry_type == NOTIFY_ACK_TYPE &&
-+	    pkt->handle == QLA_TGT_SKIP_HANDLE)
-+		return;
+ 	return 0;
+ 
++fail_loop_id_map:
++	dma_pool_free(ha->s_dma_pool, ha->async_pd, ha->async_pd_dma);
++	ha->async_pd = NULL;
+ fail_async_pd:
+ 	dma_pool_free(ha->s_dma_pool, ha->ex_init_cb, ha->ex_init_cb_dma);
++	ha->ex_init_cb = NULL;
+ fail_ex_init_cb:
+ 	kfree(ha->npiv_info);
++	ha->npiv_info = NULL;
+ fail_npiv_info:
+ 	dma_free_coherent(&ha->pdev->dev, ((*rsp)->length + 1) *
+ 		sizeof(response_t), (*rsp)->ring, (*rsp)->dma);
+@@ -3851,6 +3856,14 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
+ 	dma_pool_free(ha->s_dma_pool, ha->ms_iocb, ha->ms_iocb_dma);
+ 	ha->ms_iocb = NULL;
+ 	ha->ms_iocb_dma = 0;
 +
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
- 		sp->done(ha, sp, res);
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 9252694..c02f31a 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3061,7 +3061,7 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
- 
- 	pkt->entry_type = NOTIFY_ACK_TYPE;
- 	pkt->entry_count = 1;
--	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	pkt->handle = QLA_TGT_SKIP_HANDLE;
- 
- 	nack = (struct nack_to_isp *)pkt;
- 	nack->ox_id = ntfy->ox_id;
++	if (ha->sns_cmd) {
++		dma_free_coherent(&ha->pdev->dev, sizeof(struct sns_cmd_pkt),
++		    ha->sns_cmd, ha->sns_cmd_dma);
++		ha->sns_cmd_dma = 0;
++		ha->sns_cmd = NULL;
++	}
++
+ fail_dma_pool:
+ 	if (IS_QLA82XX(ha) || ql2xenabledif) {
+ 		dma_pool_destroy(ha->fcp_cmnd_dma_pool);
+@@ -3868,10 +3881,12 @@ void qla2x00_mark_device_lost(scsi_qla_host_t *vha, fc_port_t *fcport,
+ 	kfree(ha->nvram);
+ 	ha->nvram = NULL;
+ fail_free_ctx_mempool:
+-	mempool_destroy(ha->ctx_mempool);
++	if (ha->ctx_mempool)
++		mempool_destroy(ha->ctx_mempool);
+ 	ha->ctx_mempool = NULL;
+ fail_free_srb_mempool:
+-	mempool_destroy(ha->srb_mempool);
++	if (ha->srb_mempool)
++		mempool_destroy(ha->srb_mempool);
+ 	ha->srb_mempool = NULL;
+ fail_free_gid_list:
+ 	dma_free_coherent(&ha->pdev->dev, qla2x00_gid_list_size(ha),
 -- 
 1.8.3.1
