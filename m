@@ -1,67 +1,69 @@
-From: Oliver Neukum <oneukum-IBi9RG/b67k@public.gmane.org>
-Subject: Re: JMS56x not working reliably with uas driver
-Date: Wed, 21 Dec 2016 15:39:45 +0100
-Message-ID: <1482331185.7638.14.camel@suse.com>
-References: <585A69E6.6040009@caviumnetworks.com>
-         <1482320547.7638.7.camel@suse.com> <585A7073.3060904@caviumnetworks.com>
-         <931b00cf-e273-6d07-8a99-71916376af67@redhat.com>
-         <585A79F5.7080701@caviumnetworks.com>
+From: "Narsimhulu Musini (nmusini)" <nmusini@cisco.com>
+Subject: Re: [PATCH] snic: Return error code on memory allocation failure
+Date: Wed, 21 Dec 2016 15:07:33 +0000
+Message-ID: <D4809831.79AA7%nmusini@cisco.com>
+References: <1482327953-4140-1-git-send-email-burak-kernel@bur0k.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="=-ILmmduW1FV6mQ/2VsrB1"
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <585A79F5.7080701-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: George Cherian <gcherian-M3mlKVOIwJVv6pq1l3V1OdBPR1lH4CV8@public.gmane.org>
-Cc: George.Cherian-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, Hans de Goede <hdegoede-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1482327953-4140-1-git-send-email-burak-kernel@bur0k.de>
+Content-Language: en-US
+Content-ID: <E32A1F419932EB42B82787BFCBD70DFB@emea.cisco.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Burak Ok <burak-kernel@bur0k.de>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Martin K Petersen <martin.petersen@oracle.com>, James E J Bottomley <jejb@linux.vnet.ibm.com>, "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>, "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>, "linux-kernel@i4.cs.fau.de" <linux-kernel@i4.cs.fau.de>, Andreas Schaertl <andreas.schaertl@fau.de>
 List-Id: linux-scsi@vger.kernel.org
 
 
---=-ILmmduW1FV6mQ/2VsrB1
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+On 21/12/16 7:15 pm, "Burak Ok" <burak-kernel@bur0k.de> wrote:
 
-On Wed, 2016-12-21 at 18:17 +0530, George Cherian wrote:
-> [  843.149653] scsi host5: uas_post_reset: alloc streams error -19
-> after 
-> reset
-
-That would mean the endpoints are gone. Which is odd.
-
-> [  843.157268] sd 5:0:0:0: [sdb] Synchronizing SCSI cache
-
-Could you try the attached patch and do a SCSI log of the enumeration?
-
-	Regards
-		Oliver
-
-
---=-ILmmduW1FV6mQ/2VsrB1
-Content-Disposition: attachment; filename="0001-uas-device-crashes-on-reset.patch"
-Content-Transfer-Encoding: base64
-Content-Type: text/x-patch; name="0001-uas-device-crashes-on-reset.patch";
-	charset="UTF-8"
-
-RnJvbSBkNGRkYWM4OGJiZjljYjE1ZTdkODYzODU4MmY5NmQzMWUyNDVmMTViIE1vbiBTZXAgMTcg
-MDA6MDA6MDAgMjAwMQpGcm9tOiBPbGl2ZXIgTmV1a3VtIDxvbmV1a3VtQHN1c2UuY29tPgpEYXRl
-OiBXZWQsIDIxIERlYyAyMDE2IDE1OjM0OjU0ICswMTAwClN1YmplY3Q6IFtQQVRDSF0gdWFzOiBk
-ZXZpY2UgY3Jhc2hlcyBvbiByZXNldAoKV2UgYXZvaWQgcmVzZXR0aW5nIGl0LgoKU2lnbmVkLW9m
-Zi1ieTogT2xpdmVyIE5ldWt1bSA8b25ldWt1bUBzdXNlLmNvbT4KLS0tCiBkcml2ZXJzL3VzYi9j
-b3JlL3F1aXJrcy5jIHwgMiArKwogMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKQoKZGlm
-ZiAtLWdpdCBhL2RyaXZlcnMvdXNiL2NvcmUvcXVpcmtzLmMgYi9kcml2ZXJzL3VzYi9jb3JlL3F1
-aXJrcy5jCmluZGV4IGQyZTUwYTIuLjUyNDgzZmIgMTAwNjQ0Ci0tLSBhL2RyaXZlcnMvdXNiL2Nv
-cmUvcXVpcmtzLmMKKysrIGIvZHJpdmVycy91c2IvY29yZS9xdWlya3MuYwpAQCAtMTk0LDYgKzE5
-NCw4IEBAIHN0YXRpYyBjb25zdCBzdHJ1Y3QgdXNiX2RldmljZV9pZCB1c2JfcXVpcmtfbGlzdFtd
-ID0gewogCXsgVVNCX0RFVklDRSgweDE1MzIsIDB4MDExNiksIC5kcml2ZXJfaW5mbyA9CiAJCQlV
-U0JfUVVJUktfTElORUFSX1VGUkFNRV9JTlRSX0JJTlRFUlZBTCB9LAogCisJeyBVU0JfREVWSUNF
-KDB4MTUyZCwgMHg5NTYxKSwgLmRyaXZlcl9pbmZvID0gVVNCX1FVSVJLX1JFU0VUIH0sCisKIAkv
-KiBCVUlMRFdJTiBQaG90byBGcmFtZSAqLwogCXsgVVNCX0RFVklDRSgweDE5MDgsIDB4MTMxNSks
-IC5kcml2ZXJfaW5mbyA9CiAJCQlVU0JfUVVJUktfSE9OT1JfQk5VTUlOVEVSRkFDRVMgfSwKLS0g
-CjIuMS40Cgo=
-
-
---=-ILmmduW1FV6mQ/2VsrB1--
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>If a call to mempool_create_slab_pool() in snic_probe() returns NULL,
+>return -ENOMEM to indicate failure. mempool_creat_slab_pool() only fails
+>if
+>it cannot allocate memory.
+>
+>https://bugzilla.kernel.org/show_bug.cgi?id=3D189061
+>
+>Reported-by: bianpan2010@ruc.edu.cn
+>Signed-off-by: Burak Ok <burak-kernel@bur0k.de>
+>Signed-off-by: Andreas Schaertl <andreas.schaertl@fau.de>
+Acked-by: Narsimhulu Musini <nmusini@cisco.com>
+>---
+> drivers/scsi/snic/snic_main.c | 3 +++
+> 1 file changed, 3 insertions(+)
+>
+>diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+>index 396b32d..7cf70aa 100644
+>--- a/drivers/scsi/snic/snic_main.c
+>+++ b/drivers/scsi/snic/snic_main.c
+>@@ -591,6 +591,7 @@ snic_probe(struct pci_dev *pdev, const struct
+>pci_device_id *ent)
+> 	if (!pool) {
+> 		SNIC_HOST_ERR(shost, "dflt sgl pool creation failed\n");
+>=20
+>+		ret =3D -ENOMEM;
+> 		goto err_free_res;
+> 	}
+>=20
+>@@ -601,6 +602,7 @@ snic_probe(struct pci_dev *pdev, const struct
+>pci_device_id *ent)
+> 	if (!pool) {
+> 		SNIC_HOST_ERR(shost, "max sgl pool creation failed\n");
+>=20
+>+		ret =3D -ENOMEM;
+> 		goto err_free_dflt_sgl_pool;
+> 	}
+>=20
+>@@ -611,6 +613,7 @@ snic_probe(struct pci_dev *pdev, const struct
+>pci_device_id *ent)
+> 	if (!pool) {
+> 		SNIC_HOST_ERR(shost, "snic tmreq info pool creation failed.\n");
+>=20
+>+		ret =3D -ENOMEM;
+> 		goto err_free_max_sgl_pool;
+> 	}
+>=20
+>--=20
+>2.7.4
+>
