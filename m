@@ -1,66 +1,92 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: Re: [PATCH] snic: Return error code on memory allocation failure
-Date: Wed, 21 Dec 2016 11:31:37 -0500
-Message-ID: <1482337897.8200.83.camel@localhost.localdomain>
-References: <1482327953-4140-1-git-send-email-burak-kernel@bur0k.de>
-Reply-To: emilne@redhat.com
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsi: add write memory barrier to CRQ processing
+Date: Wed, 21 Dec 2016 09:35:30 -0800
+Message-ID: <f39396cb-995e-acbb-5a17-e67924adfaa9@linux.vnet.ibm.com>
+References: <1481153486-5185-1-git-send-email-tyreld@linux.vnet.ibm.com>
+ <1481318452.17253.27.camel@au1.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53002 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750919AbcLUQbk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Dec 2016 11:31:40 -0500
-In-Reply-To: <1482327953-4140-1-git-send-email-burak-kernel@bur0k.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <1481318452.17253.27.camel@au1.ibm.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: benh@au1.ibm.com, Tyrel Datwyler <tyreld@linux.vnet.ibm.com>, james.bottomley@hansenpartnership.com
+Cc: brking@linux.vnet.ibm.com, nfont@linux.vnet.ibm.com, linuxppc-dev@lists.ozlabs.org, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: Burak Ok <burak-kernel@bur0k.de>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, Martin K Petersen <martin.petersen@oracle.com>, James E J Bottomley <jejb@linux.vnet.ibm.com>, Sesidhar Baddela <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>, Narsimhulu Musini <nmusini@cisco.com>, linux-kernel@i4.cs.fau.de, Andreas Schaertl <andreas.schaertl@fau.de>
 
-On Wed, 2016-12-21 at 14:45 +0100, Burak Ok wrote:
-> If a call to mempool_create_slab_pool() in snic_probe() returns NULL,
-> return -ENOMEM to indicate failure. mempool_creat_slab_pool() only fails if
-> it cannot allocate memory.
+On 12/09/2016 01:20 PM, Benjamin Herrenschmidt wrote:
+> On Wed, 2016-12-07 at 17:31 -0600, Tyrel Datwyler wrote:
+>> The first byte of each CRQ entry is used to indicate whether an entry is
+>> a valid response or free for the VIOS to use. After processing a
+>> response the driver sets the valid byte to zero to indicate the entry is
+>> now free to be reused. Add a memory barrier after this write to ensure
+>> no other stores are reordered when updating the valid byte.
 > 
-> https://bugzilla.kernel.org/show_bug.cgi?id=189061
+> Which "other stores" specifically ? This smells fishy without that
+> precision. It's important to always understand what exactly barriers
+> order with.
+
+So, this patch initially came about while chasing a data integrity issue
+based on the observation that we were already doing this same write
+barrier in the virtual fibre channel driver.
+
+However, the more I stare at it I agree it does seem fishy and I can't
+see any other stores that we need to order with here. In terms of the
+16byte CRQ entries we only ever write to the first byte as a sort of
+doorbell to tell the VIOS that we have processed the data and the entry
+is free to be re-used. The remainder of the CRQ is only ever read from.
+
+The wmb() in the ibmvfc driver was part of a commit from Brian that also
+involved a necessary rmb() that prevented stale data from load
+re-ordering by ensuring that a read from the first byte completed and
+contained a valid value prior to doing any other reads of the CRQ entry.
+
+I'd have to defer to Brian as to whether he remembers a legitimate
+reason for the wmb().
+
+-Tyrel
+
 > 
-> Reported-by: bianpan2010@ruc.edu.cn
-> Signed-off-by: Burak Ok <burak-kernel@bur0k.de>
-> Signed-off-by: Andreas Schaertl <andreas.schaertl@fau.de>
-> ---
->  drivers/scsi/snic/snic_main.c | 3 +++
->  1 file changed, 3 insertions(+)
+> Cheers,
+> Ben.
 > 
-> diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
-> index 396b32d..7cf70aa 100644
-> --- a/drivers/scsi/snic/snic_main.c
-> +++ b/drivers/scsi/snic/snic_main.c
-> @@ -591,6 +591,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (!pool) {
->  		SNIC_HOST_ERR(shost, "dflt sgl pool creation failed\n");
->  
-> +		ret = -ENOMEM;
->  		goto err_free_res;
->  	}
->  
-> @@ -601,6 +602,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (!pool) {
->  		SNIC_HOST_ERR(shost, "max sgl pool creation failed\n");
->  
-> +		ret = -ENOMEM;
->  		goto err_free_dflt_sgl_pool;
->  	}
->  
-> @@ -611,6 +613,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
->  	if (!pool) {
->  		SNIC_HOST_ERR(shost, "snic tmreq info pool creation failed.\n");
->  
-> +		ret = -ENOMEM;
->  		goto err_free_max_sgl_pool;
->  	}
->  
-
-Reviewed-by: Ewan D. Milne <emilne@redhat.com>
-
-
+>> Signed-off-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+>> ---
+>>  drivers/scsi/ibmvscsi/ibmvscsi.c | 2 ++
+>>  1 file changed, 2 insertions(+)
+>>
+>> diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> index d9534ee..2f5b07e 100644
+>> --- a/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> +++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+>> @@ -232,6 +232,7 @@ static void ibmvscsi_task(void *data)
+>>>  		while ((crq = crq_queue_next_crq(&hostdata->queue)) != NULL) {
+>>>  			ibmvscsi_handle_crq(crq, hostdata);
+>>>  			crq->valid = VIOSRP_CRQ_FREE;
+>>> +			wmb();
+>>>  		}
+>>  
+>>>  		vio_enable_interrupts(vdev);
+>> @@ -240,6 +241,7 @@ static void ibmvscsi_task(void *data)
+>>>  			vio_disable_interrupts(vdev);
+>>>  			ibmvscsi_handle_crq(crq, hostdata);
+>>>  			crq->valid = VIOSRP_CRQ_FREE;
+>>> +			wmb();
+>>>  		} else {
+>>>  			done = 1;
+>>>  		}
+> 
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
