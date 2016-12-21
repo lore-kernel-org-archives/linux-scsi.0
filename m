@@ -1,61 +1,75 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 00/10] qla2xxx: Bug fixes for driver.
-Date: Wed, 21 Dec 2016 13:57:29 -0800
-Message-ID: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 05/10] qla2xxx: Collect additional information to debug fw dump.
+Date: Wed, 21 Dec 2016 13:57:34 -0800
+Message-ID: <1482357459-31079-6-git-send-email-himanshu.madhani@cavium.com>
+References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0069.outbound.protection.outlook.com ([104.47.37.69]:31104
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0051.outbound.protection.outlook.com ([104.47.36.51]:3236
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754340AbcLUV6P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 21 Dec 2016 16:58:15 -0500
+        id S1759739AbcLUV6X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 21 Dec 2016 16:58:23 -0500
+In-Reply-To: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-Hi Christoph, Bart,
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Here's updated series of bug fixes for target code in the driver.
-Please consider this for target-pending.
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_mbx.c | 27 ++++++++++++++++++++-------
+ 1 file changed, 20 insertions(+), 7 deletions(-)
 
-Changes from v1 --> v2
-
-o Updated patches to remove braces. 
-o Added description for the patch reqeusted.
-
-Thanks,
-Himanshu
-
-Himanshu Madhani (3):
-  qla2xxx: Include ATIO queue in firmware dump when in target mode
-  qla2xxx: Set tcm_qla2xxx version to automatically track qla2xxx
-    version.
-  qla2xxx: Reset reserved field in firmware options to 0.
-
-Quinn Tran (7):
-  qla2xxx: Fix wrong IOCB type assumption.
-  qla2xxx: Collect additional information to debug fw dump.
-  qla2xxx: Fix crash due to null pointer access.
-  qla2xxx: Terminate exchange if corrputed.
-  qla2xxx: Reduce exess wait during chip reset
-  qla2xxx: Fix invalid handle erroneous message.
-  qla2xxx: Disable Out-of-order processing by default in Firmware
-
- drivers/scsi/qla2xxx/qla_def.h     |  3 ++-
- drivers/scsi/qla2xxx/qla_init.c    |  4 +--
- drivers/scsi/qla2xxx/qla_isr.c     |  4 +++
- drivers/scsi/qla2xxx/qla_mbx.c     | 27 ++++++++++++++-----
- drivers/scsi/qla2xxx/qla_os.c      | 23 +++++++++++++---
- drivers/scsi/qla2xxx/qla_target.c  | 55 +++++++++++++++++++++++++-------------
- drivers/scsi/qla2xxx/qla_target.h  | 22 ++++++++++++++-
- drivers/scsi/qla2xxx/qla_tmpl.c    | 24 +++++++++++++++++
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  4 +--
- drivers/scsi/qla2xxx/tcm_qla2xxx.h |  1 -
- 10 files changed, 131 insertions(+), 36 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 2819ceb..b4386fc 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -323,20 +323,33 @@ static int is_rom_cmd(uint16_t cmd)
+ 		}
+ 	} else {
+ 
+-		uint16_t mb0;
+-		uint32_t ictrl;
++		uint16_t mb[8];
++		uint32_t ictrl, host_status, hccr;
+ 		uint16_t        w;
+ 
+ 		if (IS_FWI2_CAPABLE(ha)) {
+-			mb0 = RD_REG_WORD(&reg->isp24.mailbox0);
++			mb[0] = RD_REG_WORD(&reg->isp24.mailbox0);
++			mb[1] = RD_REG_WORD(&reg->isp24.mailbox1);
++			mb[2] = RD_REG_WORD(&reg->isp24.mailbox2);
++			mb[3] = RD_REG_WORD(&reg->isp24.mailbox3);
++			mb[7] = RD_REG_WORD(&reg->isp24.mailbox7);
+ 			ictrl = RD_REG_DWORD(&reg->isp24.ictrl);
++			host_status = RD_REG_DWORD(&reg->isp24.host_status);
++			hccr = RD_REG_DWORD(&reg->isp24.hccr);
++
++			ql_log(ql_log_warn, vha, 0x1119,
++			    "MBX Command timeout for cmd %x, iocontrol=%x jiffies=%lx "
++			    "mb[0-3]=[0x%x 0x%x 0x%x 0x%x] mb7 0x%x host_status 0x%x hccr 0x%x\n",
++			    command, ictrl, jiffies, mb[0], mb[1], mb[2], mb[3],
++			    mb[7], host_status, hccr);
++
+ 		} else {
+-			mb0 = RD_MAILBOX_REG(ha, &reg->isp, 0);
++			mb[0] = RD_MAILBOX_REG(ha, &reg->isp, 0);
+ 			ictrl = RD_REG_WORD(&reg->isp.ictrl);
++			ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1119,
++			    "MBX Command timeout for cmd %x, iocontrol=%x jiffies=%lx "
++			    "mb[0]=0x%x\n", command, ictrl, jiffies, mb[0]);
+ 		}
+-		ql_dbg(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1119,
+-		    "MBX Command timeout for cmd %x, iocontrol=%x jiffies=%lx "
+-		    "mb[0]=0x%x\n", command, ictrl, jiffies, mb0);
+ 		ql_dump_regs(ql_dbg_mbx + ql_dbg_buffer, vha, 0x1019);
+ 
+ 		/* Capture FW dump only, if PCI device active */
 -- 
 1.8.3.1
 
