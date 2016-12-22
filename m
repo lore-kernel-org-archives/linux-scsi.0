@@ -1,123 +1,88 @@
-From: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: Testing latest linux-next 4.9 ib_srp and ib_srpt sees I/O
- capped at 1MB and no merging
-Date: Thu, 22 Dec 2016 12:59:59 -0500 (EST)
-Message-ID: <1357936316.8619285.1482429599286.JavaMail.zimbra@redhat.com>
-References: <07c07529-4636-fafb-2598-7358d8a1460d@sandisk.com> <1668746735.8200653.1482266682585.JavaMail.zimbra@redhat.com> <120559766.8215321.1482291094018.JavaMail.zimbra@redhat.com> <1928955380.8220327.1482302041315.JavaMail.zimbra@redhat.com> <1337539588.8422488.1482372617094.JavaMail.zimbra@redhat.com> <20161222062321.GA30326@infradead.org> <1661819060.8462293.1482412678092.JavaMail.zimbra@redhat.com> <20161222154049.GA4638@infradead.org>
+From: Chris Leech <cleech@redhat.com>
+Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
+ iscsi_tcp_segment_done+0x20d/0x2e0
+Date: Thu, 22 Dec 2016 10:50:30 -0800
+Message-ID: <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org>
+References: <20161214222411.GH4326@dastard>
+ <20161214222953.GI4326@dastard>
+ <20161216185906.t2wmrr6wqjdsrduw@straylight.hirudinean.org>
+ <20161221221638.GD4758@dastard>
+ <CA+55aFyb1jcdpavyZgZ4nedA0=6tLognyWcJXfOJjMPFTm5GWA@mail.gmail.com>
+ <20161222001303.nvrtm22szn3hgxar@straylight.hirudinean.org>
+ <20161222051322.GF4758@dastard>
+ <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com>
+ <20161222065012.GI4758@dastard>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <20161222154049.GA4638-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Christoph Hellwig <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-Cc: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20161222065012.GI4758@dastard>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dave Chinner <david@fromorbit.com>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>, Johannes Weiner <hannes@cmpxchg.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-
------ Original Message -----
-> From: "Christoph Hellwig" <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>
-> To: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> Cc: "Christoph Hellwig" <hch-wEGCiKHe2LqWVfeAwA7xHQ@public.gmane.org>, "Bart Van Assche" <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>,
-> linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> Sent: Thursday, December 22, 2016 10:40:49 AM
-> Subject: Re: Testing latest linux-next 4.9 ib_srp and ib_srpt sees I/O capped at 1MB and no merging
+On Thu, Dec 22, 2016 at 05:50:12PM +1100, Dave Chinner wrote:
+> On Wed, Dec 21, 2016 at 09:46:37PM -0800, Linus Torvalds wrote:
+> > On Wed, Dec 21, 2016 at 9:13 PM, Dave Chinner <david@fromorbit.com> wrote:
+> > >
+> > > There may be deeper issues. I just started running scalability tests
+> > > (e.g. 16-way fsmark create tests) and about a minute in I got a
+> > > directory corruption reported - something I hadn't seen in the dev
+> > > cycle at all.
+> > 
+> > By "in the dev cycle", do you mean your XFS changes, or have you been
+> > tracking the merge cycle at least for some testing?
 > 
-> Hi Laurance,
+> I mean the three months leading up to the 4.10 merge, when all the
+> XFS changes were being tested against 4.9-rc kernels.
 > 
-> please try the patch below:
+> The iscsi problem showed up when I updated the base kernel from
+> 4.9 to 4.10-current last week to test the pullreq I was going to
+> send you. I've been bust with other stuff until now, so I didn't
+> upgrade my working trees again until today in the hope the iscsi
+> problem had already been found and fixed.
 > 
-> ---
-> From 69febe1cfb55844862f768447432249781001f9c Mon Sep 17 00:00:00 2001
-> From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> Date: Thu, 22 Dec 2016 16:38:29 +0100
-> Subject: block: add back plugging in __blkdev_direct_IO
+> > > I unmounted the fs, mkfs'd it again, ran the
+> > > workload again and about a minute in this fired:
+> > >
+> > > [628867.607417] ------------[ cut here ]------------
+> > > [628867.608603] WARNING: CPU: 2 PID: 16925 at mm/workingset.c:461 shadow_lru_isolate+0x171/0x220
+> > 
+> > Well, part of the changes during the merge window were the shadow
+> > entry tracking changes that came in through Andrew's tree. Adding
+> > Johannes Weiner to the participants.
+> > 
+> > > Now, this workload does not touch the page cache at all - it's
+> > > entirely an XFS metadata workload, so it should not really be
+> > > affecting the working set code.
+> > 
+> > Well, I suspect that anything that creates memory pressure will end up
+> > triggering the working set code, so ..
+> > 
+> > That said, obviously memory corruption could be involved and result in
+> > random issues too, but I wouldn't really expect that in this code.
+> > 
+> > It would probably be really useful to get more data points - is the
+> > problem reliably in this area, or is it going to be random and all
+> > over the place.
 > 
-> This allows sending larger than 1 MB requess to devices that support
-> large I/O sizes.
+> The iscsi problem is 100% reproducable. create a pair of iscsi luns,
+> mkfs, run xfstests on them. iscsi fails a second after xfstests mounts
+> the filesystems.
 > 
-> Signed-off-by: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-> Reported-by: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-> ---
->  fs/block_dev.c | 3 +++
->  fs/iomap.c     | 1 -
->  2 files changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/fs/block_dev.c b/fs/block_dev.c
-> index 7c45072..206a92a 100644
-> --- a/fs/block_dev.c
-> +++ b/fs/block_dev.c
-> @@ -328,6 +328,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter
-> *iter, int nr_pages)
->  	struct file *file = iocb->ki_filp;
->  	struct inode *inode = bdev_file_inode(file);
->  	struct block_device *bdev = I_BDEV(inode);
-> +	struct blk_plug plug;
->  	struct blkdev_dio *dio;
->  	struct bio *bio;
->  	bool is_read = (iov_iter_rw(iter) == READ);
-> @@ -353,6 +354,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter
-> *iter, int nr_pages)
->  	dio->multi_bio = false;
->  	dio->should_dirty = is_read && (iter->type == ITER_IOVEC);
->  
-> +	blk_start_plug(&plug);
->  	for (;;) {
->  		bio->bi_bdev = bdev;
->  		bio->bi_iter.bi_sector = pos >> 9;
-> @@ -394,6 +396,7 @@ __blkdev_direct_IO(struct kiocb *iocb, struct iov_iter
-> *iter, int nr_pages)
->  		submit_bio(bio);
->  		bio = bio_alloc(GFP_KERNEL, nr_pages);
->  	}
-> +	blk_finish_plug(&plug);
->  
->  	if (!dio->is_sync)
->  		return -EIOCBQUEUED;
-> diff --git a/fs/iomap.c b/fs/iomap.c
-> index 354a123..3adf1e1 100644
-> --- a/fs/iomap.c
-> +++ b/fs/iomap.c
-> @@ -844,7 +844,6 @@ iomap_dio_rw(struct kiocb *iocb, struct iov_iter *iter,
-> struct iomap_ops *ops,
->  	size_t count = iov_iter_count(iter);
->  	loff_t pos = iocb->ki_pos, end = iocb->ki_pos + count - 1, ret = 0;
->  	unsigned int flags = IOMAP_DIRECT;
-> -	struct blk_plug plug;
->  	struct iomap_dio *dio;
->  
->  	lockdep_assert_held(&inode->i_rwsem);
-> --
-> 2.1.4
-> 
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+> The test machine I'm having all these other problems on? stable and
+> steady as a rock using PMEM devices. Moment I go to use /dev/vdc
+> (i.e. run load/perf benchmarks) it starts falling over left, right
+> and center.
 
-Hello Christoph
+I'm not reproducing any problems with xfstests running over iscsi_tcp
+right now.  Two 10G luns exported from an LIO target, attached directly
+to a test VM as sda/sdb and xfstests configured to use sda1/sdb1 as
+TEST_DEV and SCRATCH_DEV.
 
-The patch works and I now see 4MB I/O
+The virtio scatterlist issue that popped right away for me is triggered
+by an hdparm ioctl, which is being run by tuned on Fedora.  And that
+actually seems to happen back on 4.9 as well :(
 
-# DISK STATISTICS (/sec)
-#                   <---------reads---------><---------writes---------><--------averages--------> Pct
-#Time     Name       KBytes Merged  IOs Size  KBytes Merged  IOs Size  RWSize  QLen  Wait SvcTim Util
-11:53:58 sdah        143360    105   35 4096       0      0    0    0    4096     1    28     28   99
-11:53:59 sdah        139264    102   34 4096       0      0    0    0    4096     1    29     29   99
-11:54:00 sdah        143360    105   35 4096       0      0    0    0    4096     1    28     28   99
-
-I think you forgot to remove calls to blk_start_plug and blk_finish_plug in fs/iomap.c in your patch.
-I took them out and built the test kernel that way.
-
-Let me know if you will just remove those in the final or want a patch.
-
-
-Thanks fo rthe super quick response
-
-Regards
-Laurence
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Chris
