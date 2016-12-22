@@ -1,85 +1,47 @@
-From: Souptick Joarder <jrdr.linux@gmail.com>
-Subject: [PATCH v2] scsi: qla4xxx: Use dma_pool_zalloc
-Date: Thu, 22 Dec 2016 17:42:58 +0530
-Message-ID: <20161222121258.GA8278@gnr743-HP-ZBook-15>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH v2 01/13] be2iscsi: Fix use of invalidate command table
+ req
+Date: Thu, 22 Dec 2016 13:51:29 +0100
+Message-ID: <1403d528-7f35-c41e-f7e8-c5bf62f5828e@suse.de>
+References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
+ <1481624766-13846-2-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f65.google.com ([74.125.83.65]:34767 "EHLO
-        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S938786AbcLVMNt (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2016 07:13:49 -0500
-Received: by mail-pg0-f65.google.com with SMTP id b1so19951440pgc.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2016 04:13:01 -0800 (PST)
-Content-Disposition: inline
+Received: from mx2.suse.de ([195.135.220.15]:41067 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752092AbcLVMvc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Dec 2016 07:51:32 -0500
+In-Reply-To: <1481624766-13846-2-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Nilesh.Javali@cavium.com, QLogic-Storage-Upstream@qlogic.com
-Cc: linux-scsi@vger.kernel.org, sahu.rameshwar73@gmail.com
+To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, cleech@redhat.com, lduncan@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-We should use dma_pool_zalloc instead of dma_pool_alloc/memset
+On 12/13/2016 11:25 AM, Jitendra Bhivare wrote:
+> Remove shared structure inv_tbl in phba for all sessions to post
+> invalidation IOCTL.
+> Always allocate and then free the table after use in reset handler.
+> Abort handler needs just one instance so define it on stack.
+> Add checks for BE_INVLDT_CMD_TBL_SZ to not exceed invalidation
+> command table size in IOCTL.
+>
+> Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
+> ---
+>  drivers/scsi/be2iscsi/be_main.c | 85 ++++++++++++++++++++++++-----------------
+>  drivers/scsi/be2iscsi/be_main.h | 16 ++++----
+>  drivers/scsi/be2iscsi/be_mgmt.c | 12 +++---
+>  drivers/scsi/be2iscsi/be_mgmt.h | 40 +++++++++----------
+>  4 files changed, 83 insertions(+), 70 deletions(-)
+>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
----
-v2 changes:
-   - Address comment from Nilesh to make same change in
-     all applicable places inside qla4xxx source
+Cheers,
 
- drivers/scsi/qla4xxx/ql4_mbx.c | 6 ++----
- drivers/scsi/qla4xxx/ql4_os.c  | 4 +---
- 2 files changed, 3 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
-index c291fdf..8f97839 100644
---- a/drivers/scsi/qla4xxx/ql4_mbx.c
-+++ b/drivers/scsi/qla4xxx/ql4_mbx.c
-@@ -1587,12 +1587,11 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
- 	struct ql4_chap_table *chap_table;
- 	dma_addr_t chap_dma;
-
--	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-+	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL)
- 		return -ENOMEM;
-
- 	chap_size = sizeof(struct ql4_chap_table);
--	memset(chap_table, 0, chap_size);
-
- 	if (is_qla40XX(ha))
- 		offset = FLASH_CHAP_OFFSET | (idx * chap_size);
-@@ -1651,13 +1650,12 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
- 	uint32_t chap_size = 0;
- 	dma_addr_t chap_dma;
-
--	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-+	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL) {
- 		ret =  -ENOMEM;
- 		goto exit_set_chap;
- 	}
-
--	memset(chap_table, 0, sizeof(struct ql4_chap_table));
- 	if (bidi)
- 		chap_table->flags |= BIT_6; /* peer */
- 	else
-diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
-index 01c3610..0c91c89 100644
---- a/drivers/scsi/qla4xxx/ql4_os.c
-+++ b/drivers/scsi/qla4xxx/ql4_os.c
-@@ -825,12 +825,10 @@ static int qla4xxx_delete_chap(struct Scsi_Host *shost, uint16_t chap_tbl_idx)
- 	uint32_t chap_size;
- 	int ret = 0;
-
--	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
-+	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
- 	if (chap_table == NULL)
- 		return -ENOMEM;
-
--	memset(chap_table, 0, sizeof(struct ql4_chap_table));
--
- 	if (is_qla80XX(ha))
- 		max_chap_entries = (ha->hw.flt_chap_size / 2) /
- 				   sizeof(struct ql4_chap_table);
---
-1.9.1
-
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
