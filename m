@@ -1,63 +1,85 @@
-From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
-Subject: Re: [PATCH] scsi/qla4: comments correction
-Date: Thu, 22 Dec 2016 11:34:35 +0000
-Message-ID: <D481B7C0.43953%nilesh.javali@cavium.com>
-References: <1482128429-17975-1-git-send-email-caoj.fnst@cn.fujitsu.com>
+From: Souptick Joarder <jrdr.linux@gmail.com>
+Subject: [PATCH v2] scsi: qla4xxx: Use dma_pool_zalloc
+Date: Thu, 22 Dec 2016 17:42:58 +0530
+Message-ID: <20161222121258.GA8278@gnr743-HP-ZBook-15>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0053.outbound.protection.outlook.com ([104.47.38.53]:16704
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754241AbcLVLtt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Dec 2016 06:49:49 -0500
-In-Reply-To: <1482128429-17975-1-git-send-email-caoj.fnst@cn.fujitsu.com>
-Content-Language: en-US
-Content-ID: <3226E286A0CF9847B77700FD5AC2C7E3@namprd07.prod.outlook.com>
+Received: from mail-pg0-f65.google.com ([74.125.83.65]:34767 "EHLO
+        mail-pg0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S938786AbcLVMNt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2016 07:13:49 -0500
+Received: by mail-pg0-f65.google.com with SMTP id b1so19951440pgc.1
+        for <linux-scsi@vger.kernel.org>; Thu, 22 Dec 2016 04:13:01 -0800 (PST)
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Cao jin <caoj.fnst@cn.fujitsu.com>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+To: Nilesh.Javali@cavium.com, QLogic-Storage-Upstream@qlogic.com
+Cc: linux-scsi@vger.kernel.org, sahu.rameshwar73@gmail.com
 
+We should use dma_pool_zalloc instead of dma_pool_alloc/memset
 
+Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
+---
+v2 changes:
+   - Address comment from Nilesh to make same change in
+     all applicable places inside qla4xxx source
 
-On 19/12/16, 11:50 AM, "linux-scsi-owner@vger.kernel.org on behalf of Cao
-jin" <linux-scsi-owner@vger.kernel.org on behalf of
-caoj.fnst@cn.fujitsu.com> wrote:
+ drivers/scsi/qla4xxx/ql4_mbx.c | 6 ++----
+ drivers/scsi/qla4xxx/ql4_os.c  | 4 +---
+ 2 files changed, 3 insertions(+), 7 deletions(-)
 
->Signed-off-by: Cao jin <caoj.fnst@cn.fujitsu.com>
->---
-> drivers/scsi/qla4xxx/ql4_os.c | 6 +++---
-> 1 file changed, 3 insertions(+), 3 deletions(-)
->
->diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
->index 01c3610a60cf..fc60e0a1043e 100644
->--- a/drivers/scsi/qla4xxx/ql4_os.c
->+++ b/drivers/scsi/qla4xxx/ql4_os.c
->@@ -9546,15 +9546,15 @@ static int qla4xxx_host_reset(struct Scsi_Host
->*shost, int reset_type)
->  * driver calls the following device driver's callbacks
->  *
->  * - Fatal Errors - link_reset
->- * - Non-Fatal Errors - driver's pci_error_detected() which
->+ * - Non-Fatal Errors - driver's error_detected() which
->  * returns CAN_RECOVER, NEED_RESET or DISCONNECT.
->  *
->  * PCI AER driver calls
->- * CAN_RECOVER - driver's pci_mmio_enabled(), mmio_enabled
->+ * CAN_RECOVER - driver's mmio_enabled(), mmio_enabled()
->  *               returns RECOVERED or NEED_RESET if fw_hung
->  * NEED_RESET - driver's slot_reset()
->  * DISCONNECT - device is dead & cannot recover
->- * RECOVERED - driver's pci_resume()
->+ * RECOVERED - driver's resume()
->  */
-> static pci_ers_result_t
-> qla4xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t
->state)
->--=20
->2.1.0
+diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c b/drivers/scsi/qla4xxx/ql4_mbx.c
+index c291fdf..8f97839 100644
+--- a/drivers/scsi/qla4xxx/ql4_mbx.c
++++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+@@ -1587,12 +1587,11 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha, char *username, char *password,
+ 	struct ql4_chap_table *chap_table;
+ 	dma_addr_t chap_dma;
 
-Acked-by: Nilesh Javali <nilesh.javali@cavium.com>
+-	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
++	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
+ 	if (chap_table == NULL)
+ 		return -ENOMEM;
+
+ 	chap_size = sizeof(struct ql4_chap_table);
+-	memset(chap_table, 0, chap_size);
+
+ 	if (is_qla40XX(ha))
+ 		offset = FLASH_CHAP_OFFSET | (idx * chap_size);
+@@ -1651,13 +1650,12 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha, char *username, char *password,
+ 	uint32_t chap_size = 0;
+ 	dma_addr_t chap_dma;
+
+-	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
++	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
+ 	if (chap_table == NULL) {
+ 		ret =  -ENOMEM;
+ 		goto exit_set_chap;
+ 	}
+
+-	memset(chap_table, 0, sizeof(struct ql4_chap_table));
+ 	if (bidi)
+ 		chap_table->flags |= BIT_6; /* peer */
+ 	else
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 01c3610..0c91c89 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -825,12 +825,10 @@ static int qla4xxx_delete_chap(struct Scsi_Host *shost, uint16_t chap_tbl_idx)
+ 	uint32_t chap_size;
+ 	int ret = 0;
+
+-	chap_table = dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
++	chap_table = dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL, &chap_dma);
+ 	if (chap_table == NULL)
+ 		return -ENOMEM;
+
+-	memset(chap_table, 0, sizeof(struct ql4_chap_table));
+-
+ 	if (is_qla80XX(ha))
+ 		max_chap_entries = (ha->hw.flt_chap_size / 2) /
+ 				   sizeof(struct ql4_chap_table);
+--
+1.9.1
 
