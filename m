@@ -1,38 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 11/13] be2iscsi: Reinit SGL handle, CID tables after
- TPE
-Date: Thu, 22 Dec 2016 14:05:07 +0100
-Message-ID: <7f4245c8-8e87-317c-3211-4ddb8cdb11df@suse.de>
+Subject: Re: [PATCH v2 12/13] be2iscsi: Add warning message for unsupported
+ adapter
+Date: Thu, 22 Dec 2016 14:06:07 +0100
+Message-ID: <38eb6be2-e849-11e3-2f58-0676c9bd0b76@suse.de>
 References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1481624766-13846-12-git-send-email-jitendra.bhivare@broadcom.com>
+ <1481624766-13846-13-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42069 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42190 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1757527AbcLVNFK (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Dec 2016 08:05:10 -0500
-In-Reply-To: <1481624766-13846-12-git-send-email-jitendra.bhivare@broadcom.com>
+        id S934354AbcLVNGS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Dec 2016 08:06:18 -0500
+In-Reply-To: <1481624766-13846-13-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, cleech@redhat.com, lduncan@suse.com
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Ketan Mukadam <ketan.mukadam@avagotech.com>
 
 On 12/13/2016 11:26 AM, Jitendra Bhivare wrote:
-> After TPE recovery, CID table needs to be repopulated as per CIDs in
-> WRBQ creation responses.
+> From: Ketan Mukadam <ketan.mukadam@avagotech.com>
 >
-> SGL handles table needs to be recreated for posting and its indices need
-> to be resetted.
+> Add a warning message to indicate obsolete/unsupported
+> BE2 Adapter Family devices
 >
-> This is achieved by calling beiscsi_cleanup_port when disabling and
-> beiscsi_init_port in enabling port.
->
+> Signed-off-by: Ketan Mukadam <ketan.mukadam@avagotech.com>
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 > ---
->  drivers/scsi/be2iscsi/be_main.c | 61 ++++++++++++++---------------------------
->  1 file changed, 20 insertions(+), 41 deletions(-)
+>  drivers/scsi/be2iscsi/be_main.c | 2 ++
+>  drivers/scsi/be2iscsi/be_mgmt.c | 3 ++-
+>  2 files changed, 4 insertions(+), 1 deletion(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
