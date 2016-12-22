@@ -1,180 +1,124 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] final round of SCSI updates for the 4.9+ merge window
-Date: Thu, 22 Dec 2016 12:47:08 -0800
-Message-ID: <1482439628.2415.65.camel@HansenPartnership.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: [PATCH ] tcm_qla2xxx - Enhancements to the tcm_debug jammer code to
+ jam only data movement commands
+Date: Thu, 22 Dec 2016 16:46:02 -0500 (EST)
+Message-ID: <416360573.9077781.1482443162576.JavaMail.zimbra@redhat.com>
+References: <1631152442.9077031.1482442562064.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:53730 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1756289AbcLVUrQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Dec 2016 15:47:16 -0500
+Received: from mx6-phx2.redhat.com ([209.132.183.39]:44301 "EHLO
+        mx6-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1758367AbcLVVqG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2016 16:46:06 -0500
+In-Reply-To: <1631152442.9077031.1482442562064.JavaMail.zimbra@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, nab <nab@daterainc.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-This is mostly stuff which missed the initial pull.  There's a new
-driver: qedi, some ufs, ibmvscsis and ncr5380 updates plus some
-assorted driver fixes and also a fix for the bug where if a device goes
-into a blocked state between configuration and sysfs device add (which
-can be a long time under async probing) it would become permanently
-blocked.
+Hello Himanshu and Nicholas,
 
-The patch is available here:
+Was going over my patches and remembered this one got lost.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-for-linus
+Himanshu, you acked this already at some point.
+Nicholas can we get this on next submission maybe.
 
-The short changelog is:
+Thanks
+Laurence
 
-Adam Manzanares (1):
-      scsi: mpt3sas: Recognize and act on iopriority info
+Added the possibility of blocking only specific SCSI data movement commands
+but allowing TUR'S to pass.
+This has been helpful for debugging many driver/array interoperabilty
+issues.
 
-Adam Radford (1):
-      scsi: Update 3ware driver email addresses
+Folded documentation and code into single patch now
 
-Amit Kushwaha (1):
-      scsi: hpsa: remove memory allocate failure message
+Tested by: Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
 
-Benjamin Block (1):
-      scsi: zfcp: fix use-after-"free" in FC ingress path after TMF
+ Documentation/scsi/tcm_qla2xxx.txt | 16 ++++++++++++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  7 +++++++
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |  1 +
+ 3 files changed, 24 insertions(+)
 
-Finn Thain (2):
-      scsi: g_NCR5380: Autoprobe board IRQ by default
-      scsi: g_NCR5380: Fix automatic IRQ on HP C2502 cards
+diff --git a/Documentation/scsi/tcm_qla2xxx.txt b/Documentation/scsi/tcm_qla2xxx.txt
+index c3a670a..8d26d29 100644
+--- a/Documentation/scsi/tcm_qla2xxx.txt
++++ b/Documentation/scsi/tcm_qla2xxx.txt
+@@ -20,3 +20,19 @@ echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib
+ 
+ Disable jamming on host 4
+ echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++
++New feature added with a new attribute called jam_data.
++
++Setting a boolean of 1 for jam_data will allow the allow the dropping of data-only SCSI 
++ commands but allow TUR commands to pass.
++Note that for this to work jam_host needs to be set to 0
++
++This has proven very useful for testing Low Level driver response.
++
++Enable host 4 for only data commands to be jammed
++echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++echo 1 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
++
++Disable jamming on host 4
++echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_host
++echo 0 > /sys/kernel/config/target/qla2xxx/21:00:00:24:ff:27:8f:ae/tpgt_1/attrib/jam_data
 
-Kevin Barnett (1):
-      scsi: aacraid: remove wildcard for series 9 controllers
-
-Manish Rangankar (1):
-      scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.
-
-Michael Hernandez (3):
-      scsi: qla2xxx: Add Block Multi Queue functionality.
-      scsi: qla2xxx: Add multiple queue pair functionality.
-      scsi: qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls.
-
-Ondrej Zary (2):
-      scsi: g_NCR5380: Use probe_irq_*() for IRQ probing
-      scsi: g_NCR5380: Check for chip presence before calling NCR5380_init()
-
-Quinn Tran (1):
-      scsi: qla2xxx: Fix Target mode handling with Multiqueue changes.
-
-Steffen Maier (2):
-      scsi: zfcp: fix rport unblock race with LUN recovery
-      scsi: zfcp: do not trace pure benign residual HBA responses at default level
-
-Subhash Jadavani (2):
-      scsi: ufs-qcom: fix bug with read/modify write of UFS_CFG1
-      scsi: ufs: add quirk to increase host PA_SaveConfigTime
-
-Tyrel Datwyler (3):
-      scsi: ibmvscsi: add write memory barrier to CRQ processing
-      scsi: ibmvscsi: log bad SRP response opcode in hex format
-      scsi: ibmvscsi: add vscsi hosts to global list_head
-
-Varun Prakash (5):
-      scsi: libcxgbi: return error if interface is not up
-      scsi: cxgb4i: libcxgbi: add missing module_put()
-      scsi: cxgb4i: libcxgbi: cxgb4: add T6 iSCSI completion feature
-      scsi: cxgb4i: libcxgbi: add active open cmd for T6 adapters
-      scsi: cxgb4i: use cxgb4_tp_smt_idx() to get smt_idx
-
-Wei Fang (1):
-      scsi: avoid a permanent stop of the scsi device's request queue
-
-Yaniv Gardi (2):
-      scsi: ufs-qcom: add probe_defer in case phy driver not probed yet
-      scsi: ufs: add support for UFS HCI 2.1
-
-himanshu.madhani@cavium.com (1):
-      scsi: qla2xxx: Only allow operational MBX to proceed during RESET.
-
-and the diffstat:
-
- Documentation/scsi/g_NCR5380.txt            |   46 +-
- MAINTAINERS                                 |    8 +-
- drivers/net/ethernet/chelsio/cxgb4/t4_msg.h |   13 +
- drivers/s390/scsi/zfcp_dbf.c                |   17 +-
- drivers/s390/scsi/zfcp_dbf.h                |   41 +-
- drivers/s390/scsi/zfcp_erp.c                |   61 +-
- drivers/s390/scsi/zfcp_ext.h                |    4 +-
- drivers/s390/scsi/zfcp_fsf.h                |    3 +-
- drivers/s390/scsi/zfcp_reqlist.h            |   30 +-
- drivers/s390/scsi/zfcp_scsi.c               |   61 +-
- drivers/scsi/3w-9xxx.c                      |    9 +-
- drivers/scsi/3w-9xxx.h                      |    9 +-
- drivers/scsi/3w-sas.c                       |    7 +-
- drivers/scsi/3w-sas.h                       |    7 +-
- drivers/scsi/3w-xxxx.c                      |    7 +-
- drivers/scsi/3w-xxxx.h                      |    5 +-
- drivers/scsi/Kconfig                        |    1 +
- drivers/scsi/Makefile                       |    1 +
- drivers/scsi/NCR5380.c                      |   77 +-
- drivers/scsi/NCR5380.h                      |   11 -
- drivers/scsi/aacraid/linit.c                |    2 -
- drivers/scsi/cxgbi/cxgb4i/cxgb4i.c          |  320 +++-
- drivers/scsi/cxgbi/libcxgbi.c               |   40 +-
- drivers/scsi/cxgbi/libcxgbi.h               |    2 +
- drivers/scsi/g_NCR5380.c                    |  153 +-
- drivers/scsi/g_NCR5380.h                    |    2 +
- drivers/scsi/hpsa.c                         |   37 +-
- drivers/scsi/ibmvscsi/ibmvscsi.c            |    7 +-
- drivers/scsi/ibmvscsi/ibmvscsi.h            |    1 +
- drivers/scsi/mpt3sas/mpt3sas_base.h         |    6 +
- drivers/scsi/mpt3sas/mpt3sas_ctl.c          |   43 +-
- drivers/scsi/mpt3sas/mpt3sas_scsih.c        |   34 +-
- drivers/scsi/qedi/Kconfig                   |   10 +
- drivers/scsi/qedi/Makefile                  |    5 +
- drivers/scsi/qedi/qedi.h                    |  364 ++++
- drivers/scsi/qedi/qedi_dbg.c                |  143 ++
- drivers/scsi/qedi/qedi_dbg.h                |  144 ++
- drivers/scsi/qedi/qedi_debugfs.c            |  244 +++
- drivers/scsi/qedi/qedi_fw.c                 | 2378 +++++++++++++++++++++++++++
- drivers/scsi/qedi/qedi_gbl.h                |   73 +
- drivers/scsi/qedi/qedi_hsi.h                |   52 +
- drivers/scsi/qedi/qedi_iscsi.c              | 1624 ++++++++++++++++++
- drivers/scsi/qedi/qedi_iscsi.h              |  232 +++
- drivers/scsi/qedi/qedi_main.c               | 2127 ++++++++++++++++++++++++
- drivers/scsi/qedi/qedi_sysfs.c              |   52 +
- drivers/scsi/qedi/qedi_version.h            |   14 +
- drivers/scsi/qla2xxx/qla_attr.c             |   36 +-
- drivers/scsi/qla2xxx/qla_dbg.c              |    4 +-
- drivers/scsi/qla2xxx/qla_def.h              |  108 +-
- drivers/scsi/qla2xxx/qla_gbl.h              |   28 +-
- drivers/scsi/qla2xxx/qla_init.c             |  173 +-
- drivers/scsi/qla2xxx/qla_inline.h           |   30 +
- drivers/scsi/qla2xxx/qla_iocb.c             |  407 ++++-
- drivers/scsi/qla2xxx/qla_isr.c              |  223 ++-
- drivers/scsi/qla2xxx/qla_mbx.c              |   85 +-
- drivers/scsi/qla2xxx/qla_mid.c              |  116 +-
- drivers/scsi/qla2xxx/qla_os.c               |  475 ++++--
- drivers/scsi/scsi_sysfs.c                   |    4 -
- drivers/scsi/ufs/ufs-qcom.c                 |   44 +-
- drivers/scsi/ufs/ufs-qcom.h                 |    1 +
- drivers/scsi/ufs/ufs_quirks.h               |   30 +-
- drivers/scsi/ufs/ufshcd.c                   |   55 +-
- drivers/scsi/ufs/ufshcd.h                   |   12 +-
- drivers/scsi/ufs/ufshci.h                   |    7 +
- 64 files changed, 9670 insertions(+), 695 deletions(-)
- create mode 100644 drivers/scsi/qedi/Kconfig
- create mode 100644 drivers/scsi/qedi/Makefile
- create mode 100644 drivers/scsi/qedi/qedi.h
- create mode 100644 drivers/scsi/qedi/qedi_dbg.c
- create mode 100644 drivers/scsi/qedi/qedi_dbg.h
- create mode 100644 drivers/scsi/qedi/qedi_debugfs.c
- create mode 100644 drivers/scsi/qedi/qedi_fw.c
- create mode 100644 drivers/scsi/qedi/qedi_gbl.h
- create mode 100644 drivers/scsi/qedi/qedi_hsi.h
- create mode 100644 drivers/scsi/qedi/qedi_iscsi.c
- create mode 100644 drivers/scsi/qedi/qedi_iscsi.h
- create mode 100644 drivers/scsi/qedi/qedi_main.c
- create mode 100644 drivers/scsi/qedi/qedi_sysfs.c
- create mode 100644 drivers/scsi/qedi/qedi_version.h
-
-James
-
-
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 6643f6f..1cb3f02 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -473,6 +473,10 @@ static int tcm_qla2xxx_handle_cmd(scsi_qla_host_t *vha, struct qla_tgt_cmd *cmd,
+ 		/* return, and dont run target_submit_cmd,discarding command */
+ 		return 0;
+ 	}
++	if (unlikely(tpg->tpg_attrib.jam_data && (cdb[0]==0x08 || cdb[0]==0x0A || cdb[0]==0x28 || cdb[0]==0x2A))) {
++                /* return, and dont run target_submit_cmd,discarding command if not TUR*/
++                return 0;
++        }
+ #endif
+ 
+ 	cmd->vha->tgt_counters.qla_core_sbt_cmd++;
+@@ -827,6 +831,7 @@ DEF_QLA_TPG_ATTRIB(prod_mode_write_protect);
+ DEF_QLA_TPG_ATTRIB(demo_mode_login_only);
+ #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+ DEF_QLA_TPG_ATTRIB(jam_host);
++DEF_QLA_TPG_ATTRIB(jam_data);
+ #endif
+ 
+ static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
+@@ -837,6 +842,7 @@ static struct configfs_attribute *tcm_qla2xxx_tpg_attrib_attrs[] = {
+ 	&tcm_qla2xxx_tpg_attrib_attr_demo_mode_login_only,
+ #ifdef CONFIG_TCM_QLA2XXX_DEBUG
+ 	&tcm_qla2xxx_tpg_attrib_attr_jam_host,
++	&tcm_qla2xxx_tpg_attrib_attr_jam_data,
+ #endif
+ 	NULL,
+ };
+@@ -1011,6 +1017,7 @@ static struct se_portal_group *tcm_qla2xxx_make_tpg(
+ 	tpg->tpg_attrib.cache_dynamic_acls = 1;
+ 	tpg->tpg_attrib.demo_mode_login_only = 1;
+ 	tpg->tpg_attrib.jam_host = 0;
++	tpg->tpg_attrib.jam_data = 0;
+ 
+ 	ret = core_tpg_register(wwn, &tpg->se_tpg, SCSI_PROTOCOL_FCP);
+ 	if (ret < 0) {
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 37e026a..789bdeb 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -35,6 +35,7 @@ struct tcm_qla2xxx_tpg_attrib {
+ 	int demo_mode_login_only;
+ 	int fabric_prot_type;
+ 	int jam_host;
++	int jam_data;
+ };
+ 
+ struct tcm_qla2xxx_tpg {
+-- 
+2.5.5
+--
