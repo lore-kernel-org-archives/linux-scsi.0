@@ -1,37 +1,45 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH v2 00/10] qla2xxx: Bug fixes for driver.
-Date: Thu, 22 Dec 2016 17:02:27 +0000
-Message-ID: <1482426125.2682.10.camel@sandisk.com>
+Date: Thu, 22 Dec 2016 17:27:43 +0000
+Message-ID: <D2F785EA-8703-4D99-A20F-3C9E8CDD3063@cavium.com>
 References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
-         <20161222092511.GC32005@infradead.org>
-         <64BCB410-5E5F-4BC8-8B49-7D4F2E32C816@cavium.com>
+ <20161222092511.GC32005@infradead.org>
+ <64BCB410-5E5F-4BC8-8B49-7D4F2E32C816@cavium.com>
+ <1482426125.2682.10.camel@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0054.outbound.protection.outlook.com ([104.47.33.54]:36672
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0049.outbound.protection.outlook.com ([104.47.42.49]:44960
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S966340AbcLVRCf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Dec 2016 12:02:35 -0500
-In-Reply-To: <64BCB410-5E5F-4BC8-8B49-7D4F2E32C816@cavium.com>
+        id S1757556AbcLVR1q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Dec 2016 12:27:46 -0500
+In-Reply-To: <1482426125.2682.10.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <BD9FB507C626784E9AC9EE7E7E2ACE1F@sandisk.com>
+Content-ID: <01FB0A3E8FC1304593A48F8785F34418@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "Himanshu.Madhani@cavium.com" <Himanshu.Madhani@cavium.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Giridhar.Malavali@cavium.com" <Giridhar.Malavali@cavium.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 
-T24gVGh1LCAyMDE2LTEyLTIyIGF0IDE2OjQ0ICswMDAwLCBNYWRoYW5pLCBIaW1hbnNodSB3cm90
-ZToNCj4gRG8geW91IHdhbnQgbWUgdG8gc2VuZCBzZXJpZXMgdXBkYXRpbmcgUmV2aWV3ZWQtYnkg
-VGFnIG9yIHdvdWxkIHlvdSBiZSBhYmxlIHRvIHVwZGF0ZSANCj4gd2hpbGUgYXBwbHlpbmcgdG8g
-dGFyZ2V0LXBlbmRpbmcgdHJlZT8gDQoNCkhlbGxvIEhpbWFuc2h1LA0KDQpUaGUgcGFzdCB0aHJl
-ZSBkYXlzIEkgaGF2ZSBiZWVuIGJ1c3kgd2l0aCByZXdyaXRpbmcgdGhlIGJsay1tcS1zY2hlZCBj
-b2RlIHNvIEkgaGF2ZQ0Kbm90IHlldCBoYWQgdGhlIHRpbWUgdG8gcmV2aWV3IHRoaXMgcGF0Y2gg
-c2VyaWVzLiBJIHBsYW4gdG8gZG8gdGhpcyB0b21vcnJvdy4NCg0KQlRXLCBpdCBpcyBhIGdvb2Qg
-aWRlYSB0byB3YWl0IGZvciBmZWVkYmFjayBmcm9tIGV2ZXJ5b25lIHdobyBpcyBsaWtlbHkgdG8g
-cG9zdA0KZmVlZGJhY2sgYmVmb3JlIHJlcG9zdGluZyBhIHBhdGNoIHNlcmllcyBzdWNoIHRoYXQg
-YWxsIHJldmlldyBjb21tZW50cyBjYW4gYmUNCmFkZHJlc3NlZCBhdCBvbmNlLiBBZGRpdGlvbmFs
-bHksIHNpbmNlIHYyIG9mIHRoaXMgcGF0Y2ggc2VyaWVzIHdhcyBwb3N0ZWQgbGVzcyB0aGFuDQoy
-NCBob3VycyBhZ28gaXQgaXMgdG9vIGVhcmx5IGFueXdheSB0byByZXBvc3QgdGhpcyBwYXRjaCBz
-ZXJpZXMuDQoNCkJhcnQu
+SGkgQmFydCwgDQoNCg0KDQpPbiAxMi8yMi8xNiwgOTowMiBBTSwgIkJhcnQgVmFuIEFzc2NoZSIg
+PEJhcnQuVmFuQXNzY2hlQHNhbmRpc2suY29tPiB3cm90ZToNCg0KPk9uIFRodSwgMjAxNi0xMi0y
+MiBhdCAxNjo0NCArMDAwMCwgTWFkaGFuaSwgSGltYW5zaHUgd3JvdGU6DQo+PiBEbyB5b3Ugd2Fu
+dCBtZSB0byBzZW5kIHNlcmllcyB1cGRhdGluZyBSZXZpZXdlZC1ieSBUYWcgb3Igd291bGQgeW91
+IGJlIGFibGUgdG8gdXBkYXRlIA0KPj4gd2hpbGUgYXBwbHlpbmcgdG8gdGFyZ2V0LXBlbmRpbmcg
+dHJlZT8gDQo+DQo+SGVsbG8gSGltYW5zaHUsDQo+DQo+VGhlIHBhc3QgdGhyZWUgZGF5cyBJIGhh
+dmUgYmVlbiBidXN5IHdpdGggcmV3cml0aW5nIHRoZSBibGstbXEtc2NoZWQgY29kZSBzbyBJIGhh
+dmUNCj5ub3QgeWV0IGhhZCB0aGUgdGltZSB0byByZXZpZXcgdGhpcyBwYXRjaCBzZXJpZXMuIEkg
+cGxhbiB0byBkbyB0aGlzIHRvbW9ycm93Lg0KPg0KPkJUVywgaXQgaXMgYSBnb29kIGlkZWEgdG8g
+d2FpdCBmb3IgZmVlZGJhY2sgZnJvbSBldmVyeW9uZSB3aG8gaXMgbGlrZWx5IHRvIHBvc3QNCj5m
+ZWVkYmFjayBiZWZvcmUgcmVwb3N0aW5nIGEgcGF0Y2ggc2VyaWVzIHN1Y2ggdGhhdCBhbGwgcmV2
+aWV3IGNvbW1lbnRzIGNhbiBiZQ0KPmFkZHJlc3NlZCBhdCBvbmNlLiBBZGRpdGlvbmFsbHksIHNp
+bmNlIHYyIG9mIHRoaXMgcGF0Y2ggc2VyaWVzIHdhcyBwb3N0ZWQgbGVzcyB0aGFuDQo+MjQgaG91
+cnMgYWdvIGl0IGlzIHRvbyBlYXJseSBhbnl3YXkgdG8gcmVwb3N0IHRoaXMgcGF0Y2ggc2VyaWVz
+Lg0KPg0KPkJhcnQuDQoNClVuZGVyc3Rvb2QuIEnigJlsbCBob2xkIG9mZiBvbiBzZW5kaW5nIHVw
+ZGF0ZSB0byB0aGlzIHNlcmllcy4gDQoNCkkgYW0gZ29pbmcgdG8gcG9zdCBzZXJpZXMgd2hlcmUg
+d2UgaGF2ZSBkb25lIGFkZGl0aW9uYWwgaW1wcm92ZW1lbnRzIGFuZCBhZGRlZCBuZXcgZmVhdHVy
+ZXMuDQpJIHdhbnRlZCB0byBnZXQgcmV2aWV3IGNvbW1lbnRzIGJlZm9yZSBtb3N0IG9mIHRoZSBm
+b2xrcyB0YWtlIHNvbWUgdGltZSBvZmYgbmV4dCB3ZWVrLg0KDQpUaGFua3MsDQpIaW1hbnNodQ0K
+DQoNCg0K
