@@ -1,51 +1,37 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v2 07/13] be2iscsi: Remove redundant receive buffers
- posting
-Date: Thu, 22 Dec 2016 13:57:46 +0100
-Message-ID: <39ac0555-d6e2-f814-6988-a880136c8318@suse.de>
+Subject: Re: [PATCH v2 08/13] be2iscsi: Remove unused struct members
+Date: Thu, 22 Dec 2016 13:59:09 +0100
+Message-ID: <7fbb0902-1c54-c42f-aa55-4c8cb26556eb@suse.de>
 References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
- <1481624766-13846-8-git-send-email-jitendra.bhivare@broadcom.com>
+ <1481624766-13846-9-git-send-email-jitendra.bhivare@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41475 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41520 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752567AbcLVM5s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 22 Dec 2016 07:57:48 -0500
-In-Reply-To: <1481624766-13846-8-git-send-email-jitendra.bhivare@broadcom.com>
+        id S1752855AbcLVNAE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 22 Dec 2016 08:00:04 -0500
+In-Reply-To: <1481624766-13846-9-git-send-email-jitendra.bhivare@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>, cleech@redhat.com, lduncan@suse.com
 Cc: linux-scsi@vger.kernel.org
 
 On 12/13/2016 11:26 AM, Jitendra Bhivare wrote:
-> This duplicate code got added during manual merging.
+> Fix errors reported in static analysis.
 >
 > Signed-off-by: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
 > ---
->  drivers/scsi/be2iscsi/be_main.c | 8 --------
->  1 file changed, 8 deletions(-)
->
-> diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-> index 1b5a07f..c6af6e5 100644
-> --- a/drivers/scsi/be2iscsi/be_main.c
-> +++ b/drivers/scsi/be2iscsi/be_main.c
-> @@ -3859,14 +3859,6 @@ static int hwi_init_port(struct beiscsi_hba *phba)
->  					phwi_ctrlr->wrb_context[cri].cid] =
->  					async_arr_idx++;
->  			}
-> -			/**
-> -			 * Now that the default PDU rings have been created,
-> -			 * let EP know about it.
-> -			 */
-> -			beiscsi_hdq_post_handles(phba, BEISCSI_DEFQ_HDR,
-> -						 ulp_num);
-> -			beiscsi_hdq_post_handles(phba, BEISCSI_DEFQ_DATA,
-> -						 ulp_num);
->  		}
->  	}
->
+>  drivers/scsi/be2iscsi/be.h       |  3 --
+>  drivers/scsi/be2iscsi/be_cmds.c  |  8 +++---
+>  drivers/scsi/be2iscsi/be_cmds.h  | 17 ++++++------
+>  drivers/scsi/be2iscsi/be_iscsi.c |  2 +-
+>  drivers/scsi/be2iscsi/be_main.c  | 24 +++-------------
+>  drivers/scsi/be2iscsi/be_main.h  | 22 ---------------
+>  drivers/scsi/be2iscsi/be_mgmt.c  |  9 ++----
+>  drivers/scsi/be2iscsi/be_mgmt.h  | 60 ----------------------------------------
+>  8 files changed, 21 insertions(+), 124 deletions(-)
 >
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
