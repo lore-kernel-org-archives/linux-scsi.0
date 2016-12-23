@@ -1,73 +1,25 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: JMS56x not working reliably with uas driver
-Date: Fri, 23 Dec 2016 09:22:34 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1612230918500.31927-100000@netrider.rowland.org>
-References: <64608b5d-e90f-3839-eb80-7e3cd042a887@caviumnetworks.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH V6 02/11] megaraid_sas: 128 MSIX Support
+Date: Fri, 23 Dec 2016 16:09:24 +0100
+Message-ID: <de2ecdc1-8a88-9dc7-57a9-a399412566bc@redhat.com>
+References: <1482455994-8047-1-git-send-email-sasikumar.pc@broadcom.com>
+ <1482455994-8047-3-git-send-email-sasikumar.pc@broadcom.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from netrider.rowland.org ([192.131.102.5]:42989 "HELO
-        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S936747AbcLWOWg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2016 09:22:36 -0500
-In-Reply-To: <64608b5d-e90f-3839-eb80-7e3cd042a887@caviumnetworks.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1482455994-8047-3-git-send-email-sasikumar.pc@broadcom.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, jejb@kernel.org, hch@infradead.org
+Cc: linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, linux-kernel@vger.kernel.org, christopher.owens@broadcom.com, kiran-kumar.kasturi@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
-To: George Cherian <gcherian@caviumnetworks.com>
-Cc: oneukum@suse.com, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, hdegoede@redhat.com
 
-On Fri, 23 Dec 2016, George Cherian wrote:
+On 23.12.2016 02:19, Sasikumar Chandrasekaran wrote:
+> SAS3.5 Generic Megaraid based Controllers will have the support for 128 MSI-X vectors,
+> resulting in the need to support 128 reply queues
+>
+> This patch is depending on patch 1 and same as V5
+>
+> Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 
-> >> 2) On disconnect I am seeing the following issue
-> >>
-> >>    scsi host4: uas_post_reset: alloc streams error -19 after reset
-> >>    sd 4:0:0:0: [sdb] Synchronizing SCSI cache
-> >>
-> >> This is more fatal because after these messages the USB port becomes
-> >> unusable. Even an lsusb invocation hangs for ever.
-> > This problem looks pretty simple.  uas doesn't check properly to see if
-> > the device was disconnected following a reset.
-> >
-> > Try changing the line in uas_post_reset() that says:
-> >
-> > 	if (devinfo->shutdown)
-> >
-> > to:
-> >
-> > 	if (devinfo->shutdown ||
-> > 			devinfo->udev->state == USB_STATE_NOTATTACHED)
-> Yes this works for me but with a little bit change as follows, But am 
-> not sure whether we should goto reset_scsi in case of shutdown.
-> Please advice.
-> 
-> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-> index 5ef014b..24db3fd 100644
-> --- a/drivers/usb/storage/uas.c
-> +++ b/drivers/usb/storage/uas.c
-> @@ -1072,8 +1072,8 @@ static int uas_post_reset(struct usb_interface *intf)
->          unsigned long flags;
->          int err;
-> 
-> -       if (devinfo->shutdown)
-> -               return 0;
-> +       if (devinfo->shutdown || devinfo->udev->state == 
-> USB_STATE_NOTATTACHED)
-> +               goto reset_scsi;
-> 
->          err = uas_configure_endpoints(devinfo);
->          if (err) {
-> @@ -1083,6 +1083,7 @@ static int uas_post_reset(struct usb_interface *intf)
->                  return 1;
->          }
-> 
-> +reset_scsi:
->          spin_lock_irqsave(shost->host_lock, flags);
->          scsi_report_bus_reset(shost, 0);
->          spin_unlock_irqrestore(shost->host_lock, flags);
-
-As far as I can tell, adding the "goto reset_scsi" line does not help 
-at all.  There's no reason to report that the bus has been reset after 
-the device is gone.
-
-Alan Stern
-
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
