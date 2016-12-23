@@ -1,82 +1,116 @@
 From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v3 07/12] scsi: ufs: set default UFS power management level
-Date: Thu, 22 Dec 2016 18:41:11 -0800
-Message-ID: <1482460871-6210-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46610 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1758186AbcLWClR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 22 Dec 2016 21:41:17 -0500
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Subject: [PATCH v3 08/12] scsi: ufs: add capability to keep auto bkops always enabled
+Date: Thu, 22 Dec 2016 18:41:22 -0800
+Message-ID: <1482460882-6250-1-git-send-email-subhashj@codeaurora.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-UFS device and link can be put in multiple different low power modes hence
-UFS driver supports multiple different low power modes.
-This change sets the default UFS power management level which should put
-the link hibernate state and device in sleep state. This default power
-management level gives good  power savings with relatively less enter/exit
-latencies.
+UFS device requires to perform bkops (back ground operations) periodically
+but host can control (via auto-bkops parameter of device) when device can
+perform bkops based on its performance requirements. In general, host
+would like to enable the device's auto-bkops only when it's not doing any
+regular data transfer but sometimes device may not behave properly if host
+keeps the auto-bkops disabled. This change adds the capability to let the
+device auto-bkops always enabled except suspend.
 
-Reviewed-by: Yaniv Gardi <ygardi@codeaurora.org>
+Reviewed-by: Sahitya Tummala <stummala@codeaurora.org>
 Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
 ---
-Changes from v2 -> v3:
- - Simplified patch to just set the default power management level.
-   Device tree capability to specify broken hardware will be taken up as
-   separate patch in different patch series than current one.
----
- drivers/scsi/ufs/ufshcd.c | 28 ++++++++++++++++++++++++++++
- 1 file changed, 28 insertions(+)
+ drivers/scsi/ufs/ufshcd.c | 33 ++++++++++++++++++++++-----------
+ drivers/scsi/ufs/ufshcd.h | 13 +++++++++++++
+ 2 files changed, 35 insertions(+), 11 deletions(-)
 
 diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index 30ee04a..12a2250 100644
+index 12a2250..a647bcf 100644
 --- a/drivers/scsi/ufs/ufshcd.c
 +++ b/drivers/scsi/ufs/ufshcd.c
-@@ -191,6 +191,22 @@ enum {
- 	return ufs_pm_lvl_states[lvl].link_state;
+@@ -4134,18 +4134,25 @@ static int ufshcd_disable_auto_bkops(struct ufs_hba *hba)
  }
  
-+static inline enum ufs_pm_level
-+ufs_get_desired_pm_lvl_for_dev_link_state(enum ufs_dev_pwr_mode dev_state,
-+					enum uic_link_state link_state)
-+{
-+	enum ufs_pm_level lvl;
-+
-+	for (lvl = UFS_PM_LVL_0; lvl < UFS_PM_LVL_MAX; lvl++) {
-+		if ((ufs_pm_lvl_states[lvl].dev_state == dev_state) &&
-+			(ufs_pm_lvl_states[lvl].link_state == link_state))
-+			return lvl;
+ /**
+- * ufshcd_force_reset_auto_bkops - force enable of auto bkops
++ * ufshcd_force_reset_auto_bkops - force reset auto bkops state
+  * @hba: per adapter instance
+  *
+  * After a device reset the device may toggle the BKOPS_EN flag
+  * to default value. The s/w tracking variables should be updated
+- * as well. Do this by forcing enable of auto bkops.
++ * as well. This function would change the auto-bkops state based on
++ * UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND.
+  */
+-static void  ufshcd_force_reset_auto_bkops(struct ufs_hba *hba)
++static void ufshcd_force_reset_auto_bkops(struct ufs_hba *hba)
+ {
+-	hba->auto_bkops_enabled = false;
+-	hba->ee_ctrl_mask |= MASK_EE_URGENT_BKOPS;
+-	ufshcd_enable_auto_bkops(hba);
++	if (ufshcd_keep_autobkops_enabled_except_suspend(hba)) {
++		hba->auto_bkops_enabled = false;
++		hba->ee_ctrl_mask |= MASK_EE_URGENT_BKOPS;
++		ufshcd_enable_auto_bkops(hba);
++	} else {
++		hba->auto_bkops_enabled = true;
++		hba->ee_ctrl_mask &= ~MASK_EE_URGENT_BKOPS;
++		ufshcd_disable_auto_bkops(hba);
 +	}
-+
-+	/* if no match found, return the level 0 */
-+	return UFS_PM_LVL_0;
-+}
-+
- static struct ufs_dev_fix ufs_fixups[] = {
- 	/* UFS cards deviations table */
- 	UFS_FIX(UFS_VENDOR_SAMSUNG, UFS_ANY_MODEL,
-@@ -7264,6 +7280,18 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 		ufshcd_clkscaling_init_sysfs(hba);
+ }
+ 
+ static inline int ufshcd_get_bkops_status(struct ufs_hba *hba, u32 *status)
+@@ -6564,11 +6571,15 @@ static int ufshcd_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 			goto set_old_link_state;
  	}
  
-+	/*
-+	 * Set the default power management level for runtime and system PM.
-+	 * Default power saving mode is to keep UFS link in Hibern8 state
-+	 * and UFS device in sleep state.
-+	 */
-+	hba->rpm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-+						UFS_SLEEP_PWR_MODE,
-+						UIC_LINK_HIBERN8_STATE);
-+	hba->spm_lvl = ufs_get_desired_pm_lvl_for_dev_link_state(
-+						UFS_SLEEP_PWR_MODE,
-+						UIC_LINK_HIBERN8_STATE);
+-	/*
+-	 * If BKOPs operations are urgently needed at this moment then
+-	 * keep auto-bkops enabled or else disable it.
+-	 */
+-	ufshcd_urgent_bkops(hba);
++	if (ufshcd_keep_autobkops_enabled_except_suspend(hba))
++		ufshcd_enable_auto_bkops(hba);
++	else
++		/*
++		 * If BKOPs operations are urgently needed at this moment then
++		 * keep auto-bkops enabled or else disable it.
++		 */
++		ufshcd_urgent_bkops(hba);
 +
- 	/* Hold auto suspend until async scan completes */
- 	pm_runtime_get_sync(dev);
+ 	hba->clk_gating.is_suspended = false;
  
+ 	if (hba->clk_scaling.is_allowed)
+diff --git a/drivers/scsi/ufs/ufshcd.h b/drivers/scsi/ufs/ufshcd.h
+index 787323b..f25d468 100644
+--- a/drivers/scsi/ufs/ufshcd.h
++++ b/drivers/scsi/ufs/ufshcd.h
+@@ -566,6 +566,14 @@ struct ufs_hba {
+ 	 * CAUTION: Enabling this might reduce overall UFS throughput.
+ 	 */
+ #define UFSHCD_CAP_INTR_AGGR (1 << 4)
++	/*
++	 * This capability allows the device auto-bkops to be always enabled
++	 * except during suspend (both runtime and suspend).
++	 * Enabling this capability means that device will always be allowed
++	 * to do background operation when it's active but it might degrade
++	 * the performance of ongoing read/write operations.
++	 */
++#define UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND (1 << 5)
+ 
+ 	struct devfreq *devfreq;
+ 	struct ufs_clk_scaling clk_scaling;
+@@ -663,6 +671,11 @@ static inline void *ufshcd_get_variant(struct ufs_hba *hba)
+ 	BUG_ON(!hba);
+ 	return hba->priv;
+ }
++static inline bool ufshcd_keep_autobkops_enabled_except_suspend(
++							struct ufs_hba *hba)
++{
++	return hba->caps & UFSHCD_CAP_KEEP_AUTO_BKOPS_ENABLED_EXCEPT_SUSPEND;
++}
+ 
+ extern int ufshcd_runtime_suspend(struct ufs_hba *hba);
+ extern int ufshcd_runtime_resume(struct ufs_hba *hba);
 -- 
 The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
 a Linux Foundation Collaborative Project
-
