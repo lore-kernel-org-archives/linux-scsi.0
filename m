@@ -1,96 +1,49 @@
-From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-Subject: [PATCH RFC 0/5] Add QLogic FastLinQ FCoE (qedf) driver
-Date: Fri, 23 Dec 2016 11:17:03 -0800
-Message-ID: <1482520628-24207-1-git-send-email-chad.dupuis@cavium.com>
+From: Linus Torvalds <torvalds@linux-foundation.org>
+Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at iscsi_tcp_segment_done+0x20d/0x2e0
+Date: Fri, 23 Dec 2016 11:42:45 -0800
+Message-ID: <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com>
+References: <20161216185906.t2wmrr6wqjdsrduw@straylight.hirudinean.org>
+ <20161221221638.GD4758@dastard> <CA+55aFyb1jcdpavyZgZ4nedA0=6tLognyWcJXfOJjMPFTm5GWA@mail.gmail.com>
+ <20161222001303.nvrtm22szn3hgxar@straylight.hirudinean.org>
+ <20161222051322.GF4758@dastard> <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com>
+ <20161222065012.GI4758@dastard> <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org>
+ <CACVXFVOGoh+AEGSSMsbxfdAjZQS5k_t+7uR-+qwusm0vfauHEA@mail.gmail.com>
+ <20161223000356.dxwkgsei32w7hc4f@straylight.hirudinean.org> <20161223100014.GA29467@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161223100014.GA29467@lst.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Chris Leech <cleech@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Dave Chinner <david@fromorbit.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, Jens Axboe <axboe@fb.com>, "Michael S. Tsirkin" <mst@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+On Fri, Dec 23, 2016 at 2:00 AM, Christoph Hellwig <hch@lst.de> wrote:
+>
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Fri, 23 Dec 2016 10:57:06 +0100
+> Subject: virtio_blk: avoid DMA to stack for the sense buffer
+>
+> Most users of BLOCK_PC requests allocate the sense buffer on the stack,
+> so to avoid DMA to the stack copy them to a field in the heap allocated
+> virtblk_req structure.  Without that any attempt at SCSI passthrough I/O,
+> including the SG_IO ioctl from userspace will crash the kernel.  Note that
+> this includes running tools like hdparm even when the host does not have
+> SCSI passthrough enabled.
 
-This series introduces the hardware offload FCoE initiator driver for the
-41000 Series Converged Network Adapters (579xx chip) by QLogic. The overall
-driver design includes a common module ('qed') and protocol specific
-dependent modules ('qedf' for FCoE).
+Ugh. This patch is nasty.
 
-This driver uses the kernel components of libfc and libfcoe as is and does not
-Make use of the open-fcoe user space components.  Therefore, no changes will need to be
-Made to any open-fcoe components.
+I think we should just fix blk_execute_rq() instead.
 
-The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
-enhanced with functionality required for FCoE support.
+But from a quick look, we also have at least sg_scsi_ioctl() and
+sg_io() doing the same thing.
 
-Arun Easi (1):
-  qed: Add support for hardware offloaded FCoE.
+And the SG_IO thing in bsg_ioctl(). And spi_execute() in scsi_transport_spi.c
 
-Dupuis, Chad (4):
-  qedf: Add QLogic FastLinQ offload FCoE driver framework.
-  qedf: Add offloaded I/O request functions.
-  qedf: Add offload ELS request handling.
-  qedf: Add FIP request handling.qdevelop_dec13_qedf
+And resp_requests() in scsi_debug.c.
 
- MAINTAINERS                                       |    6 +
- drivers/net/ethernet/qlogic/Kconfig               |    3 +
- drivers/net/ethernet/qlogic/qed/Makefile          |    1 +
- drivers/net/ethernet/qlogic/qed/qed.h             |   11 +
- drivers/net/ethernet/qlogic/qed/qed_cxt.c         |   98 +-
- drivers/net/ethernet/qlogic/qed/qed_cxt.h         |    3 +
- drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |   11 +
- drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |    1 +
- drivers/net/ethernet/qlogic/qed/qed_dev.c         |  205 +-
- drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |   42 +
- drivers/net/ethernet/qlogic/qed/qed_fcoe.c        |  990 ++++++
- drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |   52 +
- drivers/net/ethernet/qlogic/qed/qed_hsi.h         |  781 ++++-
- drivers/net/ethernet/qlogic/qed/qed_hw.c          |    3 +
- drivers/net/ethernet/qlogic/qed/qed_ll2.c         |   25 +
- drivers/net/ethernet/qlogic/qed/qed_ll2.h         |    2 +-
- drivers/net/ethernet/qlogic/qed/qed_main.c        |    7 +
- drivers/net/ethernet/qlogic/qed/qed_mcp.c         |    3 +
- drivers/net/ethernet/qlogic/qed/qed_mcp.h         |    1 +
- drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |    8 +
- drivers/net/ethernet/qlogic/qed/qed_sp.h          |    4 +
- drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |    3 +
- drivers/scsi/Kconfig                              |    1 +
- drivers/scsi/qedf/Kconfig                         |   11 +
- drivers/scsi/qedf/Makefile                        |    5 +
- drivers/scsi/qedf/qedf.h                          |  555 ++++
- drivers/scsi/qedf/qedf_attr.c                     |  165 +
- drivers/scsi/qedf/qedf_dbg.c                      |  192 ++
- drivers/scsi/qedf/qedf_dbg.h                      |  153 +
- drivers/scsi/qedf/qedf_debugfs.c                  |  472 +++
- drivers/scsi/qedf/qedf_els.c                      |  984 ++++++
- drivers/scsi/qedf/qedf_fip.c                      |  267 ++
- drivers/scsi/qedf/qedf_hsi.h                      |  427 +++
- drivers/scsi/qedf/qedf_io.c                       | 2303 ++++++++++++++
- drivers/scsi/qedf/qedf_main.c                     | 3519 +++++++++++++++++++++
- drivers/scsi/qedf/qedf_version.h                  |   15 +
- include/linux/qed/common_hsi.h                    |   10 +-
- include/linux/qed/fcoe_common.h                   |  715 +++++
- include/linux/qed/qed_fcoe_if.h                   |  145 +
- include/linux/qed/qed_if.h                        |   39 +
- 40 files changed, 12227 insertions(+), 11 deletions(-)
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
- create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
- create mode 100644 drivers/scsi/qedf/Kconfig
- create mode 100644 drivers/scsi/qedf/Makefile
- create mode 100644 drivers/scsi/qedf/qedf.h
- create mode 100644 drivers/scsi/qedf/qedf_attr.c
- create mode 100644 drivers/scsi/qedf/qedf_dbg.c
- create mode 100644 drivers/scsi/qedf/qedf_dbg.h
- create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
- create mode 100644 drivers/scsi/qedf/qedf_els.c
- create mode 100644 drivers/scsi/qedf/qedf_fip.c
- create mode 100644 drivers/scsi/qedf/qedf_hsi.h
- create mode 100644 drivers/scsi/qedf/qedf_io.c
- create mode 100644 drivers/scsi/qedf/qedf_main.c
- create mode 100644 drivers/scsi/qedf/qedf_version.h
- create mode 100644 include/linux/qed/fcoe_common.h
- create mode 100644 include/linux/qed/qed_fcoe_if.h
+So I guess ugly it may need to be, and the rule is that the sense
+buffer really can be on the stack and you can't DMA to/from it.
+Comments from others?
 
--- 
-1.8.5.6
+                Linus
