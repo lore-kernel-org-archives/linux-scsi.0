@@ -1,73 +1,63 @@
-From: Johannes Weiner <hannes@cmpxchg.org>
-Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
- iscsi_tcp_segment_done+0x20d/0x2e0
-Date: Fri, 23 Dec 2016 03:33:29 -0500
-Message-ID: <20161223083329.GA13952@cmpxchg.org>
-References: <20161214222411.GH4326@dastard>
- <20161214222953.GI4326@dastard>
- <20161216185906.t2wmrr6wqjdsrduw@straylight.hirudinean.org>
- <20161221221638.GD4758@dastard>
- <CA+55aFyb1jcdpavyZgZ4nedA0=6tLognyWcJXfOJjMPFTm5GWA@mail.gmail.com>
- <20161222001303.nvrtm22szn3hgxar@straylight.hirudinean.org>
- <20161222051322.GF4758@dastard>
- <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com>
- <alpine.LSU.2.11.1612221204510.4476@eggly.anvils>
- <20161223073241.GA13584@cmpxchg.org>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2 04/10] qla2xxx: Reset reserved field in firmware
+ options to 0.
+Date: Fri, 23 Dec 2016 08:37:38 +0000
+Message-ID: <1482482240.3510.5.camel@sandisk.com>
+References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
+         <1482357459-31079-5-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20161223073241.GA13584@cmpxchg.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hugh Dickins <hughd@google.com>
-Cc: Linus Torvalds <torvalds@linux-foundation.org>, Dave Chinner <david@fromorbit.com>, Chris Leech <cleech@redhat.com>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0057.outbound.protection.outlook.com ([104.47.36.57]:15840
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750849AbcLWIhn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Dec 2016 03:37:43 -0500
+In-Reply-To: <1482357459-31079-5-git-send-email-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <A57E4854A6959F4990E8C39F333B237E@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-On Fri, Dec 23, 2016 at 02:32:41AM -0500, Johannes Weiner wrote:
-> On Thu, Dec 22, 2016 at 12:22:27PM -0800, Hugh Dickins wrote:
-> > On Wed, 21 Dec 2016, Linus Torvalds wrote:
-> > > On Wed, Dec 21, 2016 at 9:13 PM, Dave Chinner <david@fromorbit.com> wrote:
-> > > > I unmounted the fs, mkfs'd it again, ran the
-> > > > workload again and about a minute in this fired:
-> > > >
-> > > > [628867.607417] ------------[ cut here ]------------
-> > > > [628867.608603] WARNING: CPU: 2 PID: 16925 at mm/workingset.c:461 shadow_lru_isolate+0x171/0x220
-> > > 
-> > > Well, part of the changes during the merge window were the shadow
-> > > entry tracking changes that came in through Andrew's tree. Adding
-> > > Johannes Weiner to the participants.
-> > > 
-> > > > Now, this workload does not touch the page cache at all - it's
-> > > > entirely an XFS metadata workload, so it should not really be
-> > > > affecting the working set code.
-> > > 
-> > > Well, I suspect that anything that creates memory pressure will end up
-> > > triggering the working set code, so ..
-> > > 
-> > > That said, obviously memory corruption could be involved and result in
-> > > random issues too, but I wouldn't really expect that in this code.
-> > > 
-> > > It would probably be really useful to get more data points - is the
-> > > problem reliably in this area, or is it going to be random and all
-> > > over the place.
-> > 
-> > Data point: kswapd got WARNING on mm/workingset.c:457 in shadow_lru_isolate,
-> > soon followed by NULL pointer deref in list_lru_isolate, one time when
-> > I tried out Sunday's git tree.  Not seen since, I haven't had time to
-> > investigate, just set it aside as something to worry about if it happens
-> > again.  But it looks like shadow_lru_isolate() has issues beyond Dave's
-> > case (I've no XFS and no iscsi), suspect unrelated to his other problems.
-> 
-> This seems consistent with what Dave observed: we encounter regular
-> pages in radix tree nodes on the shadow LRU that should only contain
-> nodes full of exceptional shadow entries. It could be an issue in the
-> new slot replacement code and the node tracking callback.
-
-Both encounters seem to indicate use-after-free. Dave's node didn't
-warn about an unexpected node->count / node->exceptional state, but
-had entries that were inconsistent with that. Hugh got the counter
-warning but crashed on a list_head that's not NULLed in a live node.
-
-workingset_update_node() should be called on page cache radix tree
-leaf nodes that go empty. I must be missing an update_node callback
-where a leaf node gets freed somewhere.
+T24gV2VkLCAyMDE2LTEyLTIxIGF0IDEzOjU3IC0wODAwLCBIaW1hbnNodSBNYWRoYW5pIHdyb3Rl
+Og0KPiBEdXJpbmcgTlZSQU0gaW5pdGlhbGl6YXRpb24gaW4gdGFyZ2V0IG1vZGUsIHJlc2V0IHJl
+c2VydmVkDQo+IGZpZWxkcyBpbiBmaXJtd2FyZSBvcHRpb25zIHRvIFplcm8gKEJJVCAxNSkNCj4g
+DQo+IFNpZ25lZC1vZmYtYnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAY2F2
+aXVtLmNvbT4NCj4gU2lnbmVkLW9mZi1ieTogR2lyaWRoYXIgTWFsYXZhbGkgPGdpcmlkaGFyLm1h
+bGF2YWxpQGNhdml1bS5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3Rh
+cmdldC5jIHwgMTcgKysrKysrKysrKysrKysrKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxNiBpbnNl
+cnRpb25zKCspLCAxIGRlbGV0aW9uKC0pDQo+IA0KPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L3FsYTJ4eHgvcWxhX3RhcmdldC5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5j
+DQo+IGluZGV4IGI5YzU1OWMuLjUwMzdiNTEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9x
+bGEyeHh4L3FsYV90YXJnZXQuYw0KPiArKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFy
+Z2V0LmMNCj4gQEAgLTY1MzksNiArNjUzOSwxNCBAQCBzdGF0aWMgdm9pZCBxbHRfZGlzYWJsZV92
+aGEoc3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSkNCj4gIA0KPiAgCQkvKiBEaXNhYmxlIEZ1bGwg
+TG9naW4gYWZ0ZXIgTElQICovDQo+ICAJCW52LT5ob3N0X3AgJj0gY3B1X3RvX2xlMzIofkJJVF8x
+MCk7DQo+ICsNCj4gKwkJLyoNCj4gKwkJICogY2xlYXIgQklUIDE1IGV4cGxpY2l0bHkgYXMgd2Ug
+aGF2ZSBzZWVuIGF0IGxlYXN0DQo+ICsJCSAqIGEgY291cGxlIG9mIGluc3RhbmNlcyB3aGVyZSB0
+aGlzIHdhcyBzZXQgYW5kIHRoaXMNCj4gKwkJICogd2FzIGNhdXNpbmcgdGhlIGZpcm13YXJlIHRv
+IG5vdCBiZSBpbml0aWFsaXplZC4NCj4gKwkJICovDQo+ICsJCW52LT5maXJtd2FyZV9vcHRpb25z
+XzEgJj0NCj4gKwkJICAgIF9fY29uc3RhbnRfY3B1X3RvX2xlMzIofkJJVF8xNSk7DQo+ICAJCS8q
+IEVuYWJsZSB0YXJnZXQgUFJMSSBjb250cm9sICovDQo+ICAJCW52LT5maXJtd2FyZV9vcHRpb25z
+XzIgfD0gY3B1X3RvX2xlMzIoQklUXzE0KTsNCj4gIAl9IGVsc2Ugew0KPiBAQCAtNjYyMywxMSAr
+NjYzMSwxOCBAQCBzdGF0aWMgdm9pZCBxbHRfZGlzYWJsZV92aGEoc3RydWN0IHNjc2lfcWxhX2hv
+c3QgKnZoYSkNCj4gIAkJLyogRGlzYWJsZSBpbmkgbW9kZSwgaWYgcmVxdWVzdGVkICovDQo+ICAJ
+CWlmICghcWxhX2luaV9tb2RlX2VuYWJsZWQodmhhKSkNCj4gIAkJCW52LT5maXJtd2FyZV9vcHRp
+b25zXzEgfD0gY3B1X3RvX2xlMzIoQklUXzUpOw0KPiAtDQo+ICAJCS8qIERpc2FibGUgRnVsbCBM
+b2dpbiBhZnRlciBMSVAgKi8NCj4gIAkJbnYtPmZpcm13YXJlX29wdGlvbnNfMSAmPSBjcHVfdG9f
+bGUzMih+QklUXzEzKTsNCj4gIAkJLyogRW5hYmxlIGluaXRpYWwgTElQICovDQo+ICAJCW52LT5m
+aXJtd2FyZV9vcHRpb25zXzEgJj0gY3B1X3RvX2xlMzIofkJJVF85KTsNCj4gKwkJLyoNCj4gKwkJ
+ICogY2xlYXIgQklUIDE1IGV4cGxpY2l0bHkgYXMgd2UgaGF2ZSBzZWVuIGF0DQo+ICsJCSAqIGxl
+YXN0IGEgY291cGxlIG9mIGluc3RhbmNlcyB3aGVyZSB0aGlzIHdhcyBzZXQNCj4gKwkJICogYW5k
+IHRoaXMgd2FzIGNhdXNpbmcgdGhlIGZpcm13YXJlIHRvIG5vdCBiZQ0KPiArCQkgKiBpbml0aWFs
+aXplZC4NCj4gKwkJICovDQo+ICsJCW52LT5maXJtd2FyZV9vcHRpb25zXzEgJj0NCj4gKwkJICAg
+IF9fY29uc3RhbnRfY3B1X3RvX2xlMzIofkJJVF8xNSk7DQo+ICAJCWlmIChxbDJ4dGd0X3RhcGVf
+ZW5hYmxlKQ0KPiAgCQkJLyogRW5hYmxlIEZDIHRhcGUgc3VwcG9ydCAqLw0KPiAgCQkJbnYtPmZp
+cm13YXJlX29wdGlvbnNfMiB8PSBjcHVfdG9fbGUzMihCSVRfMTIpOw0KDQpIZWxsbyBIaW1hbnNo
+dSwNCg0KUGxlYXNlIHVzZSBjcHVfdG9fbGUzMigpIGluIG5ldyBjb2RlIGluc3RlYWQgb2YgX19j
+b25zdGFudF9jcHVfdG9fbGUzMigpLg0KZ2NjIGdlbmVyYXRlcyB0aGUgc2FtZSBjb2RlIGZvciBi
+b3RoIGNvbnZlcnNpb24gZnVuY3Rpb25zIGJ1dCB0aGUgZm9ybWVyDQpmdW5jdGlvbiBtYWtlcyBz
+b3VyY2UgY29kZSBlYXNpZXIgdG8gcmVhZC4NCg0KQmFydC4=
