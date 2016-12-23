@@ -1,51 +1,73 @@
-From: Shyam Saini <mayhs11saini@gmail.com>
-Subject: [PATCH] drivers: scsi: esas2r: Use setup_timer() and mod_timer()
-Date: Fri, 23 Dec 2016 17:09:35 +0530
-Message-ID: <1482493175-10179-1-git-send-email-mayhs11saini@gmail.com>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: JMS56x not working reliably with uas driver
+Date: Fri, 23 Dec 2016 09:22:34 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1612230918500.31927-100000@netrider.rowland.org>
+References: <64608b5d-e90f-3839-eb80-7e3cd042a887@caviumnetworks.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34084 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753453AbcLWLkB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2016 06:40:01 -0500
-Received: by mail-pf0-f196.google.com with SMTP id y68so13885245pfb.1
-        for <linux-scsi@vger.kernel.org>; Fri, 23 Dec 2016 03:40:01 -0800 (PST)
+Received: from netrider.rowland.org ([192.131.102.5]:42989 "HELO
+        netrider.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S936747AbcLWOWg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 23 Dec 2016 09:22:36 -0500
+In-Reply-To: <64608b5d-e90f-3839-eb80-7e3cd042a887@caviumnetworks.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linuxdrivers@attotech.com
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Shyam Saini <mayhs11saini@gmail.com>
+To: George Cherian <gcherian@caviumnetworks.com>
+Cc: oneukum@suse.com, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, hdegoede@redhat.com
 
-Use setup_timer instead of structure field assignments
-to initialize a timer.
+On Fri, 23 Dec 2016, George Cherian wrote:
 
-mod_timer is a more efficient way to update the expire field of
-an active timer (if the timer is inactive it will be activated)
+> >> 2) On disconnect I am seeing the following issue
+> >>
+> >>    scsi host4: uas_post_reset: alloc streams error -19 after reset
+> >>    sd 4:0:0:0: [sdb] Synchronizing SCSI cache
+> >>
+> >> This is more fatal because after these messages the USB port becomes
+> >> unusable. Even an lsusb invocation hangs for ever.
+> > This problem looks pretty simple.  uas doesn't check properly to see if
+> > the device was disconnected following a reset.
+> >
+> > Try changing the line in uas_post_reset() that says:
+> >
+> > 	if (devinfo->shutdown)
+> >
+> > to:
+> >
+> > 	if (devinfo->shutdown ||
+> > 			devinfo->udev->state == USB_STATE_NOTATTACHED)
+> Yes this works for me but with a little bit change as follows, But am 
+> not sure whether we should goto reset_scsi in case of shutdown.
+> Please advice.
+> 
+> diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+> index 5ef014b..24db3fd 100644
+> --- a/drivers/usb/storage/uas.c
+> +++ b/drivers/usb/storage/uas.c
+> @@ -1072,8 +1072,8 @@ static int uas_post_reset(struct usb_interface *intf)
+>          unsigned long flags;
+>          int err;
+> 
+> -       if (devinfo->shutdown)
+> -               return 0;
+> +       if (devinfo->shutdown || devinfo->udev->state == 
+> USB_STATE_NOTATTACHED)
+> +               goto reset_scsi;
+> 
+>          err = uas_configure_endpoints(devinfo);
+>          if (err) {
+> @@ -1083,6 +1083,7 @@ static int uas_post_reset(struct usb_interface *intf)
+>                  return 1;
+>          }
+> 
+> +reset_scsi:
+>          spin_lock_irqsave(shost->host_lock, flags);
+>          scsi_report_bus_reset(shost, 0);
+>          spin_unlock_irqrestore(shost->host_lock, flags);
 
-Signed-off-by: Shyam Saini <mayhs11saini@gmail.com>
----
- drivers/scsi/esas2r/esas2r_main.c | 10 ++--------
- 1 file changed, 2 insertions(+), 8 deletions(-)
+As far as I can tell, adding the "goto reset_scsi" line does not help 
+at all.  There's no reason to report that the bus has been reset after 
+the device is gone.
 
-diff --git a/drivers/scsi/esas2r/esas2r_main.c b/drivers/scsi/esas2r/esas2r_main.c
-index 5092c82..6ee4315 100644
---- a/drivers/scsi/esas2r/esas2r_main.c
-+++ b/drivers/scsi/esas2r/esas2r_main.c
-@@ -1635,14 +1635,8 @@ static void esas2r_timer_callback(unsigned long context);
- 
- void esas2r_kickoff_timer(struct esas2r_adapter *a)
- {
--	init_timer(&a->timer);
--
--	a->timer.function = esas2r_timer_callback;
--	a->timer.data = (unsigned long)a;
--	a->timer.expires = jiffies +
--			   msecs_to_jiffies(100);
--
--	add_timer(&a->timer);
-+	setup_timer(&a->timer, esas2r_timer_callback, (unsigned long)a);
-+	mod_timer(&a->timer, jiffies + msecs_to_jiffies(100));
- }
- 
- static void esas2r_timer_callback(unsigned long context)
--- 
-2.7.4
+Alan Stern
 
