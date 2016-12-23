@@ -1,74 +1,66 @@
-From: Benjamin Poirier <bpoirier@suse.com>
-Subject: [PATCH] scsi: bfa: Increase requested firmware version to 3.2.5.1
-Date: Fri, 23 Dec 2016 14:01:28 -0800
-Message-ID: <20161223220128.1226-1-bpoirier@suse.com>
-Return-path: <netdev-owner@vger.kernel.org>
-Sender: netdev-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tim Ehlers <tehlers@gwdg.de>, Rasesh Mody <rasesh.mody@qlogic.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH v2 07/10] qla2xxx: Terminate exchange if corrputed.
+Date: Fri, 23 Dec 2016 23:55:37 +0000
+Message-ID: <B8DE857F-4071-4F07-955B-C8E4226A24FD@cavium.com>
+References: <1482357459-31079-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482357459-31079-8-git-send-email-himanshu.madhani@cavium.com>
+ <1482483679.3510.9.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1482483679.3510.9.camel@sandisk.com>
+Content-Language: en-US
+Content-ID: <DB73A7F894B5A24AB17626FD239D995D@namprd07.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
 
-bna & bfa firmware version 3.2.5.1 was submitted to linux-firmware on Tue
-Feb 17 19:10:20 2015 -0500 in 0ab54ff1dc ("linux-firmware: Add QLogic BR
-Series Adapter Firmware").
-
-bna was updated to use the newer firmware on Thu, 19 Feb 2015 16:02:32
--0500 in 3f307c3d70 ("bna: Update the Driver and Firmware Version")
-
-bfa was not updated. I presume this was an oversight but it broke support
-for bfa+bna cards such as the following
-	04:00.0 Fibre Channel [0c04]: Brocade Communications Systems, Inc.
-		1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.1 Fibre Channel [0c04]: Brocade Communications Systems, Inc.
-		1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.2 Ethernet controller [0200]: Brocade Communications Systems,
-		Inc. 1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.3 Ethernet controller [0200]: Brocade Communications Systems,
-		Inc. 1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-
-Currently, if the bfa module is loaded first, bna fails to probe the
-respective devices with
-[  215.026787] bna: QLogic BR-series 10G Ethernet driver - version: 3.2.25.1
-[  215.043707] bna 0000:04:00.2: bar0 mapped to ffffc90001fc0000, len 262144
-[  215.060656] bna 0000:04:00.2: initialization failed err=1
-[  215.073893] bna 0000:04:00.3: bar0 mapped to ffffc90002040000, len 262144
-[  215.090644] bna 0000:04:00.3: initialization failed err=1
-
-Whereas if bna is loaded first, bfa fails with
-[  249.592109] QLogic BR-series BFA FC/FCOE SCSI driver - version: 3.2.25.0
-[  249.610738] bfa 0000:04:00.0: Running firmware version is incompatible with the driver version
-[  249.833513] bfa 0000:04:00.0: bfa init failed
-[  249.833919] scsi host6: QLogic BR-series FC/FCOE Adapter, hwpath: 0000:04:00.0 driver: 3.2.25.0
-[  249.841446] bfa 0000:04:00.1: Running firmware version is incompatible with the driver version
-[  250.045449] bfa 0000:04:00.1: bfa init failed
-[  250.045962] scsi host7: QLogic BR-series FC/FCOE Adapter, hwpath: 0000:04:00.1 driver: 3.2.25.0
-
-Increase bfa's requested firmware version.
-I only tested that all of the devices probe without error.
-
-Cc: Rasesh Mody <rasesh.mody@qlogic.com>
-Reported-by: Tim Ehlers <tehlers@gwdg.de>
-Signed-off-by: Benjamin Poirier <bpoirier@suse.com>
----
- drivers/scsi/bfa/bfad.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 9d253cb..e70410b 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -64,9 +64,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
- u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
- u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
- 
--#define BFAD_FW_FILE_CB		"cbfw-3.2.3.0.bin"
--#define BFAD_FW_FILE_CT		"ctfw-3.2.3.0.bin"
--#define BFAD_FW_FILE_CT2	"ct2fw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CB		"cbfw-3.2.5.1.bin"
-+#define BFAD_FW_FILE_CT		"ctfw-3.2.5.1.bin"
-+#define BFAD_FW_FILE_CT2	"ct2fw-3.2.5.1.bin"
- 
- static u32 *bfad_load_fwimg(struct pci_dev *pdev);
- static void bfad_free_fwimg(void);
--- 
-2.10.2
+DQoNCk9uIDEyLzIzLzE2LCAxOjAxIEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8QmFydC5WYW5Bc3Nj
+aGVAc2FuZGlzay5jb20+IHdyb3RlOg0KDQo+T24gV2VkLCAyMDE2LTEyLTIxIGF0IDEzOjU3IC0w
+ODAwLCBIaW1hbnNodSBNYWRoYW5pIHdyb3RlOg0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
+aS9xbGEyeHh4L3FsYV9kZWYuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kZWYuaA0KPj4g
+aW5kZXggZjdkZjAxYi4uYjE0NDU1ZSAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEy
+eHh4L3FsYV9kZWYuaA0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oDQo+
+PiBAQCAtMTU1Niw3ICsxNTU2LDggQEAgc3RydWN0IGxpbmtfc3RhdGlzdGljcyB7DQo+PiAgc3Ry
+dWN0IGF0aW8gew0KPj4gIAl1aW50OF90CQllbnRyeV90eXBlOwkJLyogRW50cnkgdHlwZS4gKi8N
+Cj4+ICAJdWludDhfdAkJZW50cnlfY291bnQ7CQkvKiBFbnRyeSBjb3VudC4gKi8NCj4+IC0JdWlu
+dDhfdAkJZGF0YVs1OF07DQo+PiArCXVpbnQxNl90CWF0dHJfbl9sZW5ndGg7DQo+PiArCXVpbnQ4
+X3QJCWRhdGFbNTZdOw0KPj4gIAl1aW50MzJfdAlzaWduYXR1cmU7DQo+PiAgI2RlZmluZSBBVElP
+X1BST0NFU1NFRCAweERFQURERUFECQkvKiBTaWduYXR1cmUgKi8NCj4+IH07DQo+DQo+QXJlIHN0
+cnVjdCBhdGlvIGFuZC9vciBzdHJ1Y3QgYXRpb19mcm9tX2lzcCB0aGUgZGVzY3JpcHRpb24gb2Yg
+YSBmaXJtd2FyZQ0KPmRhdGEgc3RydWN0dXJlPyBJZiBzbywgZG8gYWxsIGZpcm13YXJlIHZlcnNp
+b25zIGluaXRpYWxpemUgdGhlIGF0dHJfbl9sZW5ndGgNCj5maWVsZCBvciBpcyB0aGVyZSBhIG1p
+bmltdW0gZmlybXdhcmUgdmVyc2lvbiByZXF1aXJlZCBmb3IgdGhpcyBmaWVsZCB0byBiZQ0KPnZh
+bGlkPyBQbGVhc2UgbWVudGlvbiBhbnkgY2hhbmdlZCBkZXBlbmRlbmNpZXMgb24gdGhlIGZpcm13
+YXJlIHZlcnNpb24gaW4gdGhlDQo+cGF0Y2ggZGVzY3JpcHRpb24uIFBsZWFzZSBhbHNvIGZpeCB0
+aGUgdHlwbyBpbiB0aGUgcGF0Y2ggdGl0bGUgd2hlbiByZXBvc3RpbmcNCj50aGlzIHBhdGNoICgi
+Y29ycnB1dGVkIikuDQoNClRoZXkgcmVwcmVzZW50IHNhbWUgZGF0YSBzdHJ1Y3R1cmUgZnJvbSBm
+aXJtd2FyZS4gV2Ugd2lsbCBzZW5kIGZvbGxvdyB1cCBwYXRjaCB0bw0KQ2xlYW4gdXAgcmVkdW5k
+YW50IHN0cnVjdHVyZS4NCg0KPg0KPj4gKwkJCS8qIFRoaXMgcGFja2V0IGlzIGNvcnJ1cHRlZC4g
+VGhlIGhlYWRlciArIHBheWxvYWQNCj4+ICsJCQkgKiBjYW4gbm90IGJlIHRydXN0ZWQuIFRoZXJl
+IGlzIG5vIHBvaW50IGluIHBhc3NpbmcNCj4+ICsJCQkgKiBpdCBmdXJ0aGVyIHVwLg0KPj4gKwkJ
+CSAqLw0KPg0KPlRoaXMgaXMgbm90IHRoZSBwcm9wZXIgTGludXgga2VybmVsIGNvbW1lbnQgc3R5
+bGUgKHNlZSBhbHNvDQo+RG9jdW1lbnRhdGlvbi9wcm9jZXNzL2NvZGluZy1zdHlsZS5yc3QpLg0K
+DQpBY2suIFdpbGwgdXBkYXRlIHBhdGNoIHdpdGggY29ycmVjdCBmb3JtYXQuDQoNCj4NCj4+IGRp
+ZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmggYi9kcml2ZXJzL3Nj
+c2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmgNCj4+IGluZGV4IGYyNmM1ZjYuLmYzMWQzNDMgMTAwNjQ0
+DQo+PiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmgNCj4+ICsrKyBiL2Ry
+aXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuaA0KPj4gQEAgLTQyNywxMyArNDI3LDMzIEBA
+IHN0cnVjdCBhdGlvX2Zyb21faXNwIHsNCj4+ICAJCXN0cnVjdCB7DQo+PiAgCQkJdWludDhfdCAg
+ZW50cnlfdHlwZTsJLyogRW50cnkgdHlwZS4gKi8NCj4+ICAJCQl1aW50OF90ICBlbnRyeV9jb3Vu
+dDsJLyogRW50cnkgY291bnQuICovDQo+PiAtCQkJdWludDhfdCAgZGF0YVs1OF07DQo+PiArCQkJ
+dWludDE2X3QgYXR0cl9uX2xlbmd0aDsNCj4+ICsjZGVmaW5lIEZDUF9DTURfTEVOR1RIX01BU0sg
+MHgwZmZmDQo+PiArI2RlZmluZSBGQ1BfQ01EX0xFTkdUSF9NSU4gIDB4MzgNCj4+ICsJCQl1aW50
+OF90ICBkYXRhWzU2XTsNCj4+ICAJCQl1aW50MzJfdCBzaWduYXR1cmU7DQo+PiAgI2RlZmluZSBB
+VElPX1BST0NFU1NFRCAweERFQURERUFECQkvKiBTaWduYXR1cmUgKi8NCj4+ICAJCX0gcmF3Ow0K
+Pj4gIAl9IHU7DQo+PiAgfSBfX3BhY2tlZDsNCj4+ICANCj4+ICtzdGF0aWMgaW5saW5lIGludCBm
+Y3BjbWRfaXNfY29ycnVwdGVkKHN0cnVjdCBhdGlvICphdGlvKQ0KPj4gK3sNCj4+ICsJaWYgKGF0
+aW8tPmVudHJ5X3R5cGUgPT0gQVRJT19UWVBFNyAmJg0KPj4gKwkgICAgKGxlMTZfdG9fY3B1KGF0
+aW8tPmF0dHJfbl9sZW5ndGggJiBGQ1BfQ01EX0xFTkdUSF9NQVNLKSA8DQo+PiArCSAgICBGQ1Bf
+Q01EX0xFTkdUSF9NSU4pKQ0KPj4gKwkJcmV0dXJuIDE7DQo+PiArCWVsc2UNCj4+ICsJCXJldHVy
+biAwOw0KPj4gK30NCj4NCj5UaGUgYWJvdmUgY29kZSBzaG93cyB0aGF0IGF0dHJfbl9sZW5ndGgg
+aXMgYSBsaXR0bGUgZW5kaWFuIGZpZWxkIHNvIHBsZWFzZQ0KPmRlY2xhcmUgaXQgYXMgbGl0dGxl
+IGVuZGlhbiB3aGVyZSBhcHByb3ByaWF0ZSAoX19sZTE2IGluc3RlYWQgb2YgdWludDE2X3QpLg0K
+DQpBY2suIFdpbGwgdXBkYXRlIHRoZSBwYXRjaA0KDQo+DQo+QmFydC4NCg==
