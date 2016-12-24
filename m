@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 05/11] qla2xxx: Fix wrong argument in sp done callback.
-Date: Fri, 23 Dec 2016 20:23:33 -0800
-Message-ID: <1482553419-4117-6-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 10/11] qla2xxx: Remove unused reverse_ini_mode.
+Date: Fri, 23 Dec 2016 20:23:38 -0800
+Message-ID: <1482553419-4117-11-git-send-email-himanshu.madhani@cavium.com>
 References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -12,102 +12,86 @@ To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, n
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+With support for dual mode in the driver, this mode becomes
+dead code. Remove reverse_ini_mode from code.
 
-Callback for sp->done expects scsi_qla_host is passed in as argument,
-Instead qla_hw_data is passed in.
-
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 8 ++++----
- drivers/scsi/qla2xxx/qla_mr.c  | 6 +++---
- drivers/scsi/qla2xxx/qla_os.c  | 2 +-
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  1 -
+ drivers/scsi/qla2xxx/qla_target.c | 10 ----------
+ drivers/scsi/qla2xxx/qla_target.h |  8 --------
+ 3 files changed, 19 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index eefcf2f..d745307 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1215,7 +1215,7 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
- 		req->outstanding_cmds[index] = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index ce3b946..d85066f 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3160,7 +3160,6 @@ struct qlt_hw_data {
+ 	/* Protected by hw lock */
+ 	uint32_t enable_class_2:1;
+ 	uint32_t enable_explicit_conf:1;
+-	uint32_t ini_mode_force_reverse:1;
+ 	uint32_t node_name_set:1;
  
- 		/* Save ISP completion status */
--		sp->done(ha, sp, DID_OK << 16);
-+		sp->done(vha, sp, DID_OK << 16);
- 	} else {
- 		ql_log(ql_log_warn, vha, 0x3016, "Invalid SCSI SRB.\n");
- 
-@@ -2408,7 +2408,7 @@ struct scsi_dif_tuple {
- 		    resid_len, fw_resid_len, sp, cp);
- 
- 	if (rsp->status_srb == NULL)
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
+ 	dma_addr_t atio_dma;	/* Physical address. */
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 0fc6da5..d2ca518 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -5865,8 +5865,6 @@ void qlt_lport_deregister(struct scsi_qla_host *vha)
+ /* Must be called under HW lock */
+ static void qlt_set_mode(struct scsi_qla_host *vha)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+-
+ 	switch (ql2x_ini_mode) {
+ 	case QLA2XXX_INI_MODE_DISABLED:
+ 	case QLA2XXX_INI_MODE_EXCLUSIVE:
+@@ -5881,16 +5879,11 @@ static void qlt_set_mode(struct scsi_qla_host *vha)
+ 	default:
+ 		break;
+ 	}
+-
+-	if (ha->tgt.ini_mode_force_reverse)
+-		qla_reverse_ini_mode(vha);
  }
  
- /**
-@@ -2465,7 +2465,7 @@ struct scsi_dif_tuple {
- 	/* Place command on done queue. */
- 	if (sense_len == 0) {
- 		rsp->status_srb = NULL;
--		sp->done(ha, sp, cp->result);
-+		sp->done(vha, sp, cp->result);
+ /* Must be called under HW lock */
+ static void qlt_clear_mode(struct scsi_qla_host *vha)
+ {
+-	struct qla_hw_data *ha = vha->hw;
+-
+ 	switch (ql2x_ini_mode) {
+ 	case QLA2XXX_INI_MODE_DISABLED:
+ 		vha->host->active_mode = MODE_UNKNOWN;
+@@ -5905,9 +5898,6 @@ static void qlt_clear_mode(struct scsi_qla_host *vha)
+ 	default:
+ 		break;
  	}
+-
+-	if (ha->tgt.ini_mode_force_reverse)
+-		qla_reverse_ini_mode(vha);
  }
  
-@@ -2501,7 +2501,7 @@ struct scsi_dif_tuple {
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- 		return;
- 	}
- fatal:
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 02f1de1..d38bc64 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -2537,7 +2537,7 @@
- 		    par_sense_len, rsp_info_len);
- 
- 	if (rsp->status_srb == NULL)
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
+ /*
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 5ebd7fb..2569216 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -1073,14 +1073,6 @@ static inline bool qla_dual_mode_enabled(struct scsi_qla_host *ha)
+ 	return (ha->host->active_mode == MODE_DUAL);
  }
  
- /**
-@@ -2614,7 +2614,7 @@
- 	/* Place command on done queue. */
- 	if (sense_len == 0) {
- 		rsp->status_srb = NULL;
--		sp->done(ha, sp, cp->result);
-+		sp->done(vha, sp, cp->result);
- 	}
- }
- 
-@@ -2695,7 +2695,7 @@
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 074dcca..65eca89 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1203,7 +1203,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 	}
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	sp->done(ha, sp, 0);
-+	sp->done(vha, sp, 0);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	/* Did the command return during mailbox execution? */
+-static inline void qla_reverse_ini_mode(struct scsi_qla_host *ha)
+-{
+-	if (ha->host->active_mode & MODE_INITIATOR)
+-		ha->host->active_mode &= ~MODE_INITIATOR;
+-	else
+-		ha->host->active_mode |= MODE_INITIATOR;
+-}
+-
+ static inline uint32_t sid_to_key(const uint8_t *s_id)
+ {
+ 	uint32_t key;
 -- 
 1.8.3.1
