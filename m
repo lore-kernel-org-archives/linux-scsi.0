@@ -1,94 +1,44 @@
-From: Benjamin Poirier <bpoirier@suse.com>
-Subject: [PATCH v2] scsi: bfa: Increase requested firmware version to 3.2.5.1
-Date: Fri, 23 Dec 2016 20:40:19 -0800
-Message-ID: <20161224044019.13797-1-bpoirier@suse.com>
-References: <BLUPR0701MB15724638DA0BB8FB5CB9B3CF9F940@BLUPR0701MB1572.namprd07.prod.outlook.com>
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <BLUPR0701MB15724638DA0BB8FB5CB9B3CF9F940@BLUPR0701MB1572.namprd07.prod.outlook.com>
-Sender: netdev-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Tim Ehlers <tehlers@gwdg.de>, Rasesh Mody <rasesh.mody@cavium.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
+	iscsi_tcp_segment_done+0x20d/0x2e0
+Date: Sat, 24 Dec 2016 10:49:05 +0100
+Message-ID: <20161224094905.GA16518@lst.de>
+References: <20161222001303.nvrtm22szn3hgxar@straylight.hirudinean.org> <20161222051322.GF4758@dastard> <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com> <20161222065012.GI4758@dastard> <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org> <CACVXFVOGoh+AEGSSMsbxfdAjZQS5k_t+7uR-+qwusm0vfauHEA@mail.gmail.com> <20161223000356.dxwkgsei32w7hc4f@straylight.hirudinean.org> <20161223100014.GA29467@lst.de> <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com> <fadbf3d2-23c1-f822-cf0f-50182227a2dc@fb.com>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Mime-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBEUJ7HBAKGQEZ63XILY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+Content-Disposition: inline
+In-Reply-To: <fadbf3d2-23c1-f822-cf0f-50182227a2dc-b10kYP2dOMg@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>
+Cc: Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-bna & bfa firmware version 3.2.5.1 was submitted to linux-firmware on
-Feb 17 19:10:20 2015 -0500 in 0ab54ff1dc ("linux-firmware: Add QLogic BR
-Series Adapter Firmware").
+On Fri, Dec 23, 2016 at 07:45:45PM -0700, Jens Axboe wrote:
+> It's not that it's technically hard to fix up, it's more that it's a
+> pain in the ass to have to do it. For instance, for blk_execute_rq(), we
+> either should enforce that the caller allocates it dynamically and then
+> free it, or we need nasty hack where the caller needs to know he has to
+> free it. Pretty obvious what I would prefer there.
+> 
+> And yes, there would be a good chunk of other places where this would
+> nede to be fixed up...
 
-bna was updated to use the newer firmware on Feb 19 16:02:32 2015 -0500 in
-3f307c3d70 ("bna: Update the Driver and Firmware Version")
+My planned rework for the BLOCK_PC code (split all fields for them out
+of struct request and move them into a separate, driver-allocate structure)
+would fix this up as a side-effect.  I really wanted to get it into 4.10,
+but I didn't manage to fix it up.  I'll try to get it into 4.11 early.
 
-bfa was not updated. I presume this was an oversight but it broke support
-for bfa+bna cards such as the following
-	04:00.0 Fibre Channel [0c04]: Brocade Communications Systems, Inc.
-		1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.1 Fibre Channel [0c04]: Brocade Communications Systems, Inc.
-		1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.2 Ethernet controller [0200]: Brocade Communications Systems,
-		Inc. 1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-	04:00.3 Ethernet controller [0200]: Brocade Communications Systems,
-		Inc. 1010/1020/1007/1741 10Gbps CNA [1657:0014] (rev 01)
-
-Currently, if the bfa module is loaded first, bna fails to probe the
-respective devices with
-[  215.026787] bna: QLogic BR-series 10G Ethernet driver - version: 3.2.25.1
-[  215.043707] bna 0000:04:00.2: bar0 mapped to ffffc90001fc0000, len 262144
-[  215.060656] bna 0000:04:00.2: initialization failed err=1
-[  215.073893] bna 0000:04:00.3: bar0 mapped to ffffc90002040000, len 262144
-[  215.090644] bna 0000:04:00.3: initialization failed err=1
-
-Whereas if bna is loaded first, bfa fails with
-[  249.592109] QLogic BR-series BFA FC/FCOE SCSI driver - version: 3.2.25.0
-[  249.610738] bfa 0000:04:00.0: Running firmware version is incompatible with the driver version
-[  249.833513] bfa 0000:04:00.0: bfa init failed
-[  249.833919] scsi host6: QLogic BR-series FC/FCOE Adapter, hwpath: 0000:04:00.0 driver: 3.2.25.0
-[  249.841446] bfa 0000:04:00.1: Running firmware version is incompatible with the driver version
-[  250.045449] bfa 0000:04:00.1: bfa init failed
-[  250.045962] scsi host7: QLogic BR-series FC/FCOE Adapter, hwpath: 0000:04:00.1 driver: 3.2.25.0
-
-Increase bfa's requested firmware version. Also increase the driver
-version.
-I only tested that all of the devices probe without error.
-
-Reported-by: Tim Ehlers <tehlers@gwdg.de>
-Signed-off-by: Benjamin Poirier <bpoirier@suse.com>
-Acked-by: Rasesh Mody <rasesh.mody@cavium.com>
----
- drivers/scsi/bfa/bfad.c     | 6 +++---
- drivers/scsi/bfa/bfad_drv.h | 2 +-
- 2 files changed, 4 insertions(+), 4 deletions(-)
-
-Changes v1-v2:
-Also increase the driver version
-
-diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
-index 9d253cb..e70410b 100644
---- a/drivers/scsi/bfa/bfad.c
-+++ b/drivers/scsi/bfa/bfad.c
-@@ -64,9 +64,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
- u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
- u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
- 
--#define BFAD_FW_FILE_CB		"cbfw-3.2.3.0.bin"
--#define BFAD_FW_FILE_CT		"ctfw-3.2.3.0.bin"
--#define BFAD_FW_FILE_CT2	"ct2fw-3.2.3.0.bin"
-+#define BFAD_FW_FILE_CB		"cbfw-3.2.5.1.bin"
-+#define BFAD_FW_FILE_CT		"ctfw-3.2.5.1.bin"
-+#define BFAD_FW_FILE_CT2	"ct2fw-3.2.5.1.bin"
- 
- static u32 *bfad_load_fwimg(struct pci_dev *pdev);
- static void bfad_free_fwimg(void);
-diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
-index f9e8620..cfcfff4 100644
---- a/drivers/scsi/bfa/bfad_drv.h
-+++ b/drivers/scsi/bfa/bfad_drv.h
-@@ -58,7 +58,7 @@
- #ifdef BFA_DRIVER_VERSION
- #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
- #else
--#define BFAD_DRIVER_VERSION    "3.2.25.0"
-+#define BFAD_DRIVER_VERSION    "3.2.25.1"
- #endif
- 
- #define BFAD_PROTO_NAME FCPI_NAME
 -- 
-2.10.2
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
