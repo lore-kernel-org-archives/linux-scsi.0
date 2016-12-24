@@ -1,233 +1,81 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 02/11] qla2xxx: Cleanup TMF code translation from qla_target.
-Date: Fri, 23 Dec 2016 20:23:30 -0800
-Message-ID: <1482553419-4117-3-git-send-email-himanshu.madhani@cavium.com>
-References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 00/11] qla2xxx: Feature updates for target.
+Date: Fri, 23 Dec 2016 20:23:28 -0800
+Message-ID: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:16480
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932806AbcLXEXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Dec 2016 23:23:52 -0500
-In-Reply-To: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+Hi Bart, Christoph, 
 
-Move code code which converts Task Mgmt Command flags for
-ATIO to TCM #defines, from qla2xxx driver to tcm_qla2xxx
-driver.
+We have added new features to the qla2xxx target driver. This patch series
+enables simultaneous initiator and target mode in the driver. As part of
+supporting simultaneous initator and target mode we also improved Fabric
+discovery which relies heavily on newly added dual mode code. We also have
+improved RSCN handling in fabric mode. 
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_target.c  | 75 ++++----------------------------------
- drivers/scsi/qla2xxx/qla_target.h  |  6 ++-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 39 +++++++++++++++++++-
- 3 files changed, 49 insertions(+), 71 deletions(-)
+To support simplified fabric discovery we restructured I-T nexus into single
+fc_port struct, so that we can manage fc_port more efficiently in the driver,
+while operating in an initator, target or dual mode.
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 47acc26..6e58848 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1592,8 +1592,9 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
- 	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->tmr_func = QLA_TGT_ABTS;
- 
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, mcmd->tmr_func,
- 	    abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
-@@ -4048,7 +4049,6 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
- 	struct qla_tgt_mgmt_cmd *mcmd;
- 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
- 	int res;
--	uint8_t tmr_func;
- 
- 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
- 	if (!mcmd) {
-@@ -4070,74 +4070,12 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
- 	mcmd->reset_count = vha->hw->chip_reset;
- 
- 	switch (fn) {
--	case QLA_TGT_CLEAR_ACA:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10000,
--		    "qla_target(%d): CLEAR_ACA received\n", sess->vha->vp_idx);
--		tmr_func = TMR_CLEAR_ACA;
--		break;
--
--	case QLA_TGT_TARGET_RESET:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10001,
--		    "qla_target(%d): TARGET_RESET received\n",
--		    sess->vha->vp_idx);
--		tmr_func = TMR_TARGET_WARM_RESET;
--		break;
--
- 	case QLA_TGT_LUN_RESET:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10002,
--		    "qla_target(%d): LUN_RESET received\n", sess->vha->vp_idx);
--		tmr_func = TMR_LUN_RESET;
--		abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
--		break;
--
--	case QLA_TGT_CLEAR_TS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10003,
--		    "qla_target(%d): CLEAR_TS received\n", sess->vha->vp_idx);
--		tmr_func = TMR_CLEAR_TASK_SET;
--		break;
--
--	case QLA_TGT_ABORT_TS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10004,
--		    "qla_target(%d): ABORT_TS received\n", sess->vha->vp_idx);
--		tmr_func = TMR_ABORT_TASK_SET;
--		break;
--#if 0
--	case QLA_TGT_ABORT_ALL:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10005,
--		    "qla_target(%d): Doing ABORT_ALL_TASKS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_ABORT_ALL_SESS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10006,
--		    "qla_target(%d): Doing ABORT_ALL_TASKS_SESS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_NEXUS_LOSS_SESS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10007,
--		    "qla_target(%d): Doing NEXUS_LOSS_SESS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_NEXUS_LOSS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10008,
--		    "qla_target(%d): Doing NEXUS_LOSS\n", sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--#endif
--	default:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000a,
--		    "qla_target(%d): Unknown task mgmt fn 0x%x\n",
--		    sess->vha->vp_idx, fn);
--		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
--		return -ENOSYS;
-+	    abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
-+	    break;
- 	}
- 
--	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, tmr_func, 0);
-+	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func, 0);
- 	if (res != 0) {
- 		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000b,
- 		    "qla_target(%d): tgt.tgt_ops->handle_tmr() failed: %d\n",
-@@ -4212,8 +4150,9 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 	lun = a->u.isp24.fcp_cmnd.lun;
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
- 	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
- 
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, TMR_ABORT_TASK,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, mcmd->tmr_func,
- 	    le16_to_cpu(iocb->u.isp2x.seq_id));
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf060,
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 0824a81..14f2e24 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -744,7 +744,7 @@ struct qla_tgt_func_tmpl {
- 			unsigned char *, uint32_t, int, int, int);
- 	void (*handle_data)(struct qla_tgt_cmd *);
- 	void (*handle_dif_err)(struct qla_tgt_cmd *);
--	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t,
-+	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint16_t,
- 			uint32_t);
- 	void (*free_cmd)(struct qla_tgt_cmd *);
- 	void (*free_mcmd)(struct qla_tgt_mgmt_cmd *);
-@@ -795,6 +795,8 @@ struct qla_tgt_func_tmpl {
- #define QLA_TGT_ABORT_ALL               0xFFFE
- #define QLA_TGT_NEXUS_LOSS_SESS         0xFFFD
- #define QLA_TGT_NEXUS_LOSS              0xFFFC
-+#define QLA_TGT_ABTS					0xFFFB
-+#define QLA_TGT_2G_ABORT_TASK			0xFFFA
- 
- /* Notify Acknowledge flags */
- #define NOTIFY_ACK_RES_COUNT        BIT_8
-@@ -1056,7 +1058,7 @@ struct qla_tgt_sess_work_param {
- };
- 
- struct qla_tgt_mgmt_cmd {
--	uint8_t tmr_func;
-+	uint16_t tmr_func;
- 	uint8_t fc_tm_rsp;
- 	struct qla_tgt_sess *sess;
- 	struct se_cmd se_cmd;
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index d925910..183a459 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -563,10 +563,47 @@ static void tcm_qla2xxx_handle_dif_err(struct qla_tgt_cmd *cmd)
-  * Called from qla_target.c:qlt_issue_task_mgmt()
-  */
- static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
--	uint8_t tmr_func, uint32_t tag)
-+	uint16_t tmr_func, uint32_t tag)
- {
- 	struct qla_tgt_sess *sess = mcmd->sess;
- 	struct se_cmd *se_cmd = &mcmd->se_cmd;
-+	int transl_tmr_func;
-+
-+	switch (tmr_func) {
-+	case QLA_TGT_ABTS:
-+		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK;
-+		break;
-+	case QLA_TGT_2G_ABORT_TASK:
-+		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK;
-+		break;
-+	case QLA_TGT_CLEAR_ACA:
-+		pr_debug("%ld: CLEAR_ACA received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_CLEAR_ACA;
-+		break;
-+	case QLA_TGT_TARGET_RESET:
-+		pr_debug("%ld: TARGET_RESET received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_TARGET_WARM_RESET;
-+		break;
-+	case QLA_TGT_LUN_RESET:
-+		pr_debug("%ld: LUN_RESET received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_LUN_RESET;
-+		break;
-+	case QLA_TGT_CLEAR_TS:
-+		pr_debug("%ld: CLEAR_TS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_CLEAR_TASK_SET;
-+		break;
-+	case QLA_TGT_ABORT_TS:
-+		pr_debug("%ld: ABORT_TS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK_SET;
-+		break;
-+	default:
-+		pr_debug("%ld: Unknown task mgmt fn 0x%x\n",
-+		    sess->vha->host_no, tmr_func);
-+		return -ENOSYS;
-+		break;
-+	}
- 
- 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
- 			tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
+Asynchronous fabric discovery patch also prepared code for simultaneous intiator
+and target mode enablement in the driver. Also with addition of dual mode support,
+I have added a seperate patch which cleans up unused reverse_ini_mode(). 
+
+SRR related code cleanup was submitted earlier as part of another patch. I have 
+now split SRR cleanup into patch by itself and have included here for cosiderations. 
+
+Trace readabilty improvement is a small subset which was missed in earlier bug-fixes
+patch series. I've included that as part of this series. 
+
+This patch series is based on the earlier bug-fixes series that I posted today. 
+
+Here's link for that series 
+
+http://marc.info/?l=linux-scsi&m=148254518825278&w=2
+
+Please consider this series for target-pending. 
+
+Thanks, 
+Himanshu
+
+Himanshu Madhani (2):
+  qla2xxx: Cleanup SRR code.
+  qla2xxx: Remove unused reverse_ini_mode.
+
+Quinn Tran (9):
+  qla2xxx: Remove direct access of scsi_status field in se_cmd
+  qla2xxx: Cleanup TMF code translation from qla_target.
+  qla2xxx: Make trace flags more readable.
+  qla2xxx: Fix wrong argument in sp done callback.
+  qla2xxx: Use d_id instead of s_id for more clarity.
+  qla2xxx: Track I-T nexus as single fc_port struct.
+  qla2xxx: Add framework for Async fabric discovery.
+  qla2xxx: Add Dual mode support in the driver
+  qla2xxx: Improve RSCN handling in driver
+
+ drivers/scsi/qla2xxx/qla_attr.c    |    3 +
+ drivers/scsi/qla2xxx/qla_def.h     |  221 +++-
+ drivers/scsi/qla2xxx/qla_dfs.c     |   10 +-
+ drivers/scsi/qla2xxx/qla_fw.h      |   90 +-
+ drivers/scsi/qla2xxx/qla_gbl.h     |   58 +-
+ drivers/scsi/qla2xxx/qla_gs.c      |  726 +++++++++--
+ drivers/scsi/qla2xxx/qla_init.c    | 1547 +++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_inline.h  |    7 +-
+ drivers/scsi/qla2xxx/qla_iocb.c    |   73 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |  290 +++--
+ drivers/scsi/qla2xxx/qla_mbx.c     |  214 ++--
+ drivers/scsi/qla2xxx/qla_mr.c      |    6 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  296 +++--
+ drivers/scsi/qla2xxx/qla_target.c  | 2359 +++++++++++++++++-------------------
+ drivers/scsi/qla2xxx/qla_target.h  |  176 +--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  238 ++--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h |    4 +-
+ 17 files changed, 4042 insertions(+), 2276 deletions(-)
+
 -- 
 1.8.3.1
-
