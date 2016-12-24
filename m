@@ -1,38 +1,117 @@
-From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
-Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
-	iscsi_tcp_segment_done+0x20d/0x2e0
-Date: Sat, 24 Dec 2016 14:19:48 +0100
-Message-ID: <20161224131948.GA18948@lst.de>
-References: <20161222051322.GF4758@dastard> <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com> <20161222065012.GI4758@dastard> <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org> <CACVXFVOGoh+AEGSSMsbxfdAjZQS5k_t+7uR-+qwusm0vfauHEA@mail.gmail.com> <20161223000356.dxwkgsei32w7hc4f@straylight.hirudinean.org> <20161223100014.GA29467@lst.de> <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com> <20161224100756.GA16741@lst.de> <a9fc4c0b-8521-84cc-66f6-48396c095539@suse.de>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Milan P. Gandhi" <mgandhi@redhat.com>
+Subject: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
+Date: Sat, 24 Dec 2016 22:02:46 +0530
+Message-ID: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
+Reply-To: mgandhi@redhat.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBDUNBGN3R4KRB5PL7HBAKGQEOWZG4JI-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Content-Disposition: inline
-In-Reply-To: <a9fc4c0b-8521-84cc-66f6-48396c095539-l3A5Bk7waGM@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f169.google.com ([209.85.220.169]:33446 "EHLO
+        mail-qk0-f169.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751995AbcLXQcx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Dec 2016 11:32:53 -0500
+Received: by mail-qk0-f169.google.com with SMTP id t184so168458608qkd.0
+        for <linux-scsi@vger.kernel.org>; Sat, 24 Dec 2016 08:32:53 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: Laurence Oberman <loberman@redhat.com>, chad.dupuis@cavium.com
 
-On Sat, Dec 24, 2016 at 02:17:26PM +0100, Hannes Reinecke wrote:
-> Christoph, do you have a pointer to your patchset?
-> Not that I'll be able to do any meaningful work until next year, but having 
-> a look would be nice. Just to get a feeling where you want to head to; I 
-> might be able to work on this start of January.
+Hello,
 
-I'll push out a branch once it's revieable and not my current unbisectable
-mess, should be soon.
+There is a race condition with qla2xxx optrom functions where
+one thread might modify optrom buffer, optrom_state while 
+other thread is still reading from it.
 
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+In couple of crashes, it was found that we had successfully 
+passed the following 'if' check where we confirm optrom_state 
+to be QLA_SREADING. But by the time we acquired mutex lock 
+to proceed with memory_read_from_buffer function, some other 
+thread/process had already modified that option rom buffer  
+and optrom_state from QLA_SREADING to QLA_SWAITING. Then 
+we got ha->optrom_buffer 0x0 and crashed the system: 
+
+        if (ha->optrom_state != QLA_SREADING)
+                return 0;
+
+        mutex_lock(&ha->optrom_mutex);
+        rval = memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
+            ha->optrom_region_size);
+        mutex_unlock(&ha->optrom_mutex);
+
+
+With current optrom function we get following crash due to 
+a race condition:
+
+[ 1479.466679] BUG: unable to handle kernel NULL pointer dereference at           (null)
+[ 1479.466707] IP: [<ffffffff81326756>] memcpy+0x6/0x110
+[...]
+[ 1479.473673] Call Trace:
+[ 1479.474296]  [<ffffffff81225cbc>] ? memory_read_from_buffer+0x3c/0x60
+[ 1479.474941]  [<ffffffffa01574dc>] qla2x00_sysfs_read_optrom+0x9c/0xc0 [qla2xxx]
+[ 1479.475571]  [<ffffffff8127e76b>] read+0xdb/0x1f0
+[ 1479.476206]  [<ffffffff811fdf9e>] vfs_read+0x9e/0x170
+[ 1479.476839]  [<ffffffff811feb6f>] SyS_read+0x7f/0xe0
+[ 1479.477466]  [<ffffffff816964c9>] system_call_fastpath+0x16/0x1b
+
+
+Below patch modifies qla2x00_sysfs_read_optrom,
+qla2x00_sysfs_write_optrom functions to get the mutex_lock 
+before checking ha->optrom_state to avoid similar crashes.
+
+The patch was applied and tested and same crashes were no 
+longer observed again.
+
+
+Tested-by: Milan P. Gandhi <mgandhi@redhat.com>
+Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
+---
+ drivers/scsi/qla2xxx/qla_attr.c | 18 +++++++++++++-----
+ 1 file changed, 13 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index da5ae11..47ea164 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -329,12 +329,15 @@ qla2x00_sysfs_read_optrom(struct file *filp, struct kobject *kobj,
+ 	struct qla_hw_data *ha = vha->hw;
+ 	ssize_t rval = 0;
+ 
++	mutex_lock(&ha->optrom_mutex);
++
+ 	if (ha->optrom_state != QLA_SREADING)
+-		return 0;
++		goto out;
+ 
+-	mutex_lock(&ha->optrom_mutex);
+ 	rval = memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
+ 	    ha->optrom_region_size);
++
++out:
+ 	mutex_unlock(&ha->optrom_mutex);
+ 
+ 	return rval;
+@@ -349,14 +352,19 @@ qla2x00_sysfs_write_optrom(struct file *filp, struct kobject *kobj,
+ 	    struct device, kobj)));
+ 	struct qla_hw_data *ha = vha->hw;
+ 
+-	if (ha->optrom_state != QLA_SWRITING)
++	mutex_lock(&ha->optrom_mutex);
++
++	if (ha->optrom_state != QLA_SWRITING) {
++		mutex_unlock(&ha->optrom_mutex);
+ 		return -EINVAL;
+-	if (off > ha->optrom_region_size)
++	}
++	if (off > ha->optrom_region_size) {
++		mutex_unlock(&ha->optrom_mutex);
+ 		return -ERANGE;
++	}
+ 	if (off + count > ha->optrom_region_size)
+ 		count = ha->optrom_region_size - off;
+ 
+-	mutex_lock(&ha->optrom_mutex);
+ 	memcpy(&ha->optrom_buffer[off], buf, count);
+ 	mutex_unlock(&ha->optrom_mutex);
+ 
