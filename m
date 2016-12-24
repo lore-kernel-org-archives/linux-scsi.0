@@ -1,68 +1,64 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 09/10] qla2xxx: Fix invalid handle erroneous message.
-Date: Fri, 23 Dec 2016 18:06:13 -0800
-Message-ID: <1482545174-811-10-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 03/10] qla2xxx: Set tcm_qla2xxx version to automatically track qla2xxx version.
+Date: Fri, 23 Dec 2016 18:06:07 -0800
+Message-ID: <1482545174-811-4-git-send-email-himanshu.madhani@cavium.com>
 References: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0047.outbound.protection.outlook.com ([104.47.37.47]:63228
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0086.outbound.protection.outlook.com ([104.47.40.86]:38080
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S932520AbcLXCGj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 23 Dec 2016 21:06:39 -0500
+        id S1751567AbcLXCWB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Dec 2016 21:22:01 -0500
 In-Reply-To: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-From: Quinn Tran <quinn.tran@cavium.com>
-
-Termination of Immediate Notify IOCB was using wrong
-IOCB handle. IOCB completion code was unable to find
-appropriate code path due to wrong handle.
-
-Following message is seen in the logs.
-
-"Error entry - invalid handle/queue (ffff)."
-
 Reviewed-by: Christoph Hellwig <hch@lst.de>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c    | 4 ++++
- drivers/scsi/qla2xxx/qla_target.c | 2 +-
- 2 files changed, 5 insertions(+), 1 deletion(-)
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 4 ++--
+ drivers/scsi/qla2xxx/tcm_qla2xxx.h | 1 -
+ 2 files changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index af840bf..eefcf2f 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -2495,6 +2495,10 @@ struct scsi_dif_tuple {
- 	if (pkt->entry_status & RF_BUSY)
- 		res = DID_BUS_BUSY << 16;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index 6643f6f..d925910 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -1800,7 +1800,7 @@ static ssize_t tcm_qla2xxx_wwn_version_show(struct config_item *item,
+ {
+ 	return sprintf(page,
+ 	    "TCM QLOGIC QLA2XXX NPIV capable fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+ 	    utsname()->machine);
+ }
  
-+	if (pkt->entry_type == NOTIFY_ACK_TYPE &&
-+	    pkt->handle == QLA_TGT_SKIP_HANDLE)
-+		return;
-+
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
- 		sp->done(ha, sp, res);
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2c04f42..5e4248f 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3061,7 +3061,7 @@ static int __qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+@@ -1906,7 +1906,7 @@ static int tcm_qla2xxx_register_configfs(void)
+ 	int ret;
  
- 	pkt->entry_type = NOTIFY_ACK_TYPE;
- 	pkt->entry_count = 1;
--	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	pkt->handle = QLA_TGT_SKIP_HANDLE;
+ 	pr_debug("TCM QLOGIC QLA2XXX fabric module %s on %s/%s on "
+-	    UTS_RELEASE"\n", TCM_QLA2XXX_VERSION, utsname()->sysname,
++	    UTS_RELEASE"\n", QLA2XXX_VERSION, utsname()->sysname,
+ 	    utsname()->machine);
  
- 	nack = (struct nack_to_isp *)pkt;
- 	nack->ox_id = ntfy->ox_id;
+ 	ret = target_register_template(&tcm_qla2xxx_ops);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.h b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+index 37e026a..cf8430b 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.h
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.h
+@@ -1,7 +1,6 @@
+ #include <target/target_core_base.h>
+ #include <linux/btree.h>
+ 
+-#define TCM_QLA2XXX_VERSION	"v0.1"
+ /* length of ASCII WWPNs including pad */
+ #define TCM_QLA2XXX_NAMELEN	32
+ /*
 -- 
 1.8.3.1
 
