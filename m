@@ -1,135 +1,17 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
-Date: Sat, 24 Dec 2016 11:38:37 -0500 (EST)
-Message-ID: <128624601.9139938.1482597517537.JavaMail.zimbra@redhat.com>
-References: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
+From: "128associatedepress@gmail.com" <prodawez391@gmail.com>
+Subject: Soberem dlja Vas po internet telefonnye i email bazy dannyh v techenie sutok v ogromnom kolichestve Uznajte podrobnee esli chto to prodaete!  tel +79139230330 (whatsapp\viber\telegram) Skype: prodawez390 Email: prodawez392@gmail.com
+Date: Sat, 24 Dec 2016 21:00:43 +0300
+Message-ID: <0207B1E2E93D13A07C79308C9884051F@gmail.com>
+Reply-To: "128associatedepress@gmail.com" <prodawez392@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8";
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5-phx2.redhat.com ([209.132.183.37]:55687 "EHLO
-        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753004AbcLXQj0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 24 Dec 2016 11:39:26 -0500
-In-Reply-To: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
+Received: from 177-55-158-19.n4telecom.com.br ([177.55.158.19]:43329 "EHLO
+        frwsilcar.localdomain" rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751396AbcLYHfw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 25 Dec 2016 02:35:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: mgandhi@redhat.com
-Cc: linux-scsi@vger.kernel.org, chad dupuis <chad.dupuis@cavium.com>
 
-
-
------ Original Message -----
-> From: "Milan P. Gandhi" <mgandhi@redhat.com>
-> To: linux-scsi@vger.kernel.org
-> Cc: "Laurence Oberman" <loberman@redhat.com>, "chad dupuis" <chad.dupuis@cavium.com>
-> Sent: Saturday, December 24, 2016 11:32:46 AM
-> Subject: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
-> 
-> Hello,
-> 
-> There is a race condition with qla2xxx optrom functions where
-> one thread might modify optrom buffer, optrom_state while
-> other thread is still reading from it.
-> 
-> In couple of crashes, it was found that we had successfully
-> passed the following 'if' check where we confirm optrom_state
-> to be QLA_SREADING. But by the time we acquired mutex lock
-> to proceed with memory_read_from_buffer function, some other
-> thread/process had already modified that option rom buffer
-> and optrom_state from QLA_SREADING to QLA_SWAITING. Then
-> we got ha->optrom_buffer 0x0 and crashed the system:
-> 
->         if (ha->optrom_state != QLA_SREADING)
->                 return 0;
-> 
->         mutex_lock(&ha->optrom_mutex);
->         rval = memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
->             ha->optrom_region_size);
->         mutex_unlock(&ha->optrom_mutex);
-> 
-> 
-> With current optrom function we get following crash due to
-> a race condition:
-> 
-> [ 1479.466679] BUG: unable to handle kernel NULL pointer dereference at
-> (null)
-> [ 1479.466707] IP: [<ffffffff81326756>] memcpy+0x6/0x110
-> [...]
-> [ 1479.473673] Call Trace:
-> [ 1479.474296]  [<ffffffff81225cbc>] ? memory_read_from_buffer+0x3c/0x60
-> [ 1479.474941]  [<ffffffffa01574dc>] qla2x00_sysfs_read_optrom+0x9c/0xc0
-> [qla2xxx]
-> [ 1479.475571]  [<ffffffff8127e76b>] read+0xdb/0x1f0
-> [ 1479.476206]  [<ffffffff811fdf9e>] vfs_read+0x9e/0x170
-> [ 1479.476839]  [<ffffffff811feb6f>] SyS_read+0x7f/0xe0
-> [ 1479.477466]  [<ffffffff816964c9>] system_call_fastpath+0x16/0x1b
-> 
-> 
-> Below patch modifies qla2x00_sysfs_read_optrom,
-> qla2x00_sysfs_write_optrom functions to get the mutex_lock
-> before checking ha->optrom_state to avoid similar crashes.
-> 
-> The patch was applied and tested and same crashes were no
-> longer observed again.
-> 
-> 
-> Tested-by: Milan P. Gandhi <mgandhi@redhat.com>
-> Signed-off-by: Milan P. Gandhi <mgandhi@redhat.com>
-> ---
->  drivers/scsi/qla2xxx/qla_attr.c | 18 +++++++++++++-----
->  1 file changed, 13 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_attr.c
-> b/drivers/scsi/qla2xxx/qla_attr.c
-> index da5ae11..47ea164 100644
-> --- a/drivers/scsi/qla2xxx/qla_attr.c
-> +++ b/drivers/scsi/qla2xxx/qla_attr.c
-> @@ -329,12 +329,15 @@ qla2x00_sysfs_read_optrom(struct file *filp, struct
-> kobject *kobj,
->  	struct qla_hw_data *ha = vha->hw;
->  	ssize_t rval = 0;
->  
-> +	mutex_lock(&ha->optrom_mutex);
-> +
->  	if (ha->optrom_state != QLA_SREADING)
-> -		return 0;
-> +		goto out;
->  
-> -	mutex_lock(&ha->optrom_mutex);
->  	rval = memory_read_from_buffer(buf, count, &off, ha->optrom_buffer,
->  	    ha->optrom_region_size);
-> +
-> +out:
->  	mutex_unlock(&ha->optrom_mutex);
->  
->  	return rval;
-> @@ -349,14 +352,19 @@ qla2x00_sysfs_write_optrom(struct file *filp, struct
-> kobject *kobj,
->  	    struct device, kobj)));
->  	struct qla_hw_data *ha = vha->hw;
->  
-> -	if (ha->optrom_state != QLA_SWRITING)
-> +	mutex_lock(&ha->optrom_mutex);
-> +
-> +	if (ha->optrom_state != QLA_SWRITING) {
-> +		mutex_unlock(&ha->optrom_mutex);
->  		return -EINVAL;
-> -	if (off > ha->optrom_region_size)
-> +	}
-> +	if (off > ha->optrom_region_size) {
-> +		mutex_unlock(&ha->optrom_mutex);
->  		return -ERANGE;
-> +	}
->  	if (off + count > ha->optrom_region_size)
->  		count = ha->optrom_region_size - off;
->  
-> -	mutex_lock(&ha->optrom_mutex);
->  	memcpy(&ha->optrom_buffer[off], buf, count);
->  	mutex_unlock(&ha->optrom_mutex);
->  
-> 
-Looks good, and I know it fixed the issue.
-Milan, Thank you for this work.
-
-Reviewed-by: Laurence Oberman <loberman@redhat.com> 
+Soberem dlja Vas po internet telefonnye i email bazy dannyh v techenie sutok v ogromnom kolichestve Uznajte podrobnee esli chto to prodaete!  tel +79139230330 (whatsapp\viber\telegram) Skype: prodawez390 Email: prodawez392@gmail.com
