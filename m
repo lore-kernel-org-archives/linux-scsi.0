@@ -1,74 +1,233 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
- iscsi_tcp_segment_done+0x20d/0x2e0
-Date: Fri, 23 Dec 2016 19:45:45 -0700
-Message-ID: <fadbf3d2-23c1-f822-cf0f-50182227a2dc@fb.com>
-References: <20161216185906.t2wmrr6wqjdsrduw@straylight.hirudinean.org>
- <20161221221638.GD4758@dastard>
- <CA+55aFyb1jcdpavyZgZ4nedA0=6tLognyWcJXfOJjMPFTm5GWA@mail.gmail.com>
- <20161222001303.nvrtm22szn3hgxar@straylight.hirudinean.org>
- <20161222051322.GF4758@dastard>
- <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com>
- <20161222065012.GI4758@dastard>
- <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org>
- <CACVXFVOGoh+AEGSSMsbxfdAjZQS5k_t+7uR-+qwusm0vfauHEA@mail.gmail.com>
- <20161223000356.dxwkgsei32w7hc4f@straylight.hirudinean.org>
- <20161223100014.GA29467@lst.de>
- <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 02/11] qla2xxx: Cleanup TMF code translation from qla_target.
+Date: Fri, 23 Dec 2016 20:23:30 -0800
+Message-ID: <1482553419-4117-3-git-send-email-himanshu.madhani@cavium.com>
+References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>, Christoph Hellwig <hch@lst.de>
-Cc: Chris Leech <cleech@redhat.com>, Ming Lei <tom.leiming@gmail.com>, Dave Chinner <david@fromorbit.com>, Johannes Weiner <hannes@cmpxchg.org>, Linux Kernel Mailing List <linux-kernel@vger.kernel.org>, Lee Duncan <lduncan@suse.com>, open-iscsi@googlegroups.com, Linux SCSI List <linux-scsi@vger.kernel.org>, linux-block <linux-block@vger.kernel.org>, "Michael S. Tsirkin" <mst@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:16480
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932806AbcLXEXw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 23 Dec 2016 23:23:52 -0500
+In-Reply-To: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-On 12/23/2016 12:42 PM, Linus Torvalds wrote:
-> On Fri, Dec 23, 2016 at 2:00 AM, Christoph Hellwig <hch@lst.de> wrote:
->>
->> From: Christoph Hellwig <hch@lst.de>
->> Date: Fri, 23 Dec 2016 10:57:06 +0100
->> Subject: virtio_blk: avoid DMA to stack for the sense buffer
->>
->> Most users of BLOCK_PC requests allocate the sense buffer on the stack,
->> so to avoid DMA to the stack copy them to a field in the heap allocated
->> virtblk_req structure.  Without that any attempt at SCSI passthrough I/O,
->> including the SG_IO ioctl from userspace will crash the kernel.  Note that
->> this includes running tools like hdparm even when the host does not have
->> SCSI passthrough enabled.
-> 
-> Ugh. This patch is nasty.
-> 
-> I think we should just fix blk_execute_rq() instead.
-> 
-> But from a quick look, we also have at least sg_scsi_ioctl() and
-> sg_io() doing the same thing.
-> 
-> And the SG_IO thing in bsg_ioctl(). And spi_execute() in scsi_transport_spi.c
-> 
-> And resp_requests() in scsi_debug.c.
+From: Quinn Tran <quinn.tran@cavium.com>
 
-It's not that it's technically hard to fix up, it's more that it's a
-pain in the ass to have to do it. For instance, for blk_execute_rq(), we
-either should enforce that the caller allocates it dynamically and then
-free it, or we need nasty hack where the caller needs to know he has to
-free it. Pretty obvious what I would prefer there.
+Move code code which converts Task Mgmt Command flags for
+ATIO to TCM #defines, from qla2xxx driver to tcm_qla2xxx
+driver.
 
-And yes, there would be a good chunk of other places where this would
-nede to be fixed up...
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c  | 75 ++++----------------------------------
+ drivers/scsi/qla2xxx/qla_target.h  |  6 ++-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c | 39 +++++++++++++++++++-
+ 3 files changed, 49 insertions(+), 71 deletions(-)
 
-> So I guess ugly it may need to be, and the rule is that the sense
-> buffer really can be on the stack and you can't DMA to/from it.
-> Comments from others?
-
-I'm just wondering why this is being hit now, we have a 4.9 release with
-this issue and nobody reported it (that I saw)... Which is pretty sad.
-
-If no one beats me to it, I'll try and get a patch done on Sunday. We're
-in the midst of the holidays here.
-
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 47acc26..6e58848 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -1592,8 +1592,9 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
+ 	mcmd->sess = sess;
+ 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
+ 	mcmd->reset_count = vha->hw->chip_reset;
++	mcmd->tmr_func = QLA_TGT_ABTS;
+ 
+-	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
++	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, 0, mcmd->tmr_func,
+ 	    abts->exchange_addr_to_abort);
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
+@@ -4048,7 +4049,6 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
+ 	struct qla_tgt_mgmt_cmd *mcmd;
+ 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
+ 	int res;
+-	uint8_t tmr_func;
+ 
+ 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
+ 	if (!mcmd) {
+@@ -4070,74 +4070,12 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
+ 	mcmd->reset_count = vha->hw->chip_reset;
+ 
+ 	switch (fn) {
+-	case QLA_TGT_CLEAR_ACA:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10000,
+-		    "qla_target(%d): CLEAR_ACA received\n", sess->vha->vp_idx);
+-		tmr_func = TMR_CLEAR_ACA;
+-		break;
+-
+-	case QLA_TGT_TARGET_RESET:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10001,
+-		    "qla_target(%d): TARGET_RESET received\n",
+-		    sess->vha->vp_idx);
+-		tmr_func = TMR_TARGET_WARM_RESET;
+-		break;
+-
+ 	case QLA_TGT_LUN_RESET:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10002,
+-		    "qla_target(%d): LUN_RESET received\n", sess->vha->vp_idx);
+-		tmr_func = TMR_LUN_RESET;
+-		abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
+-		break;
+-
+-	case QLA_TGT_CLEAR_TS:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10003,
+-		    "qla_target(%d): CLEAR_TS received\n", sess->vha->vp_idx);
+-		tmr_func = TMR_CLEAR_TASK_SET;
+-		break;
+-
+-	case QLA_TGT_ABORT_TS:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10004,
+-		    "qla_target(%d): ABORT_TS received\n", sess->vha->vp_idx);
+-		tmr_func = TMR_ABORT_TASK_SET;
+-		break;
+-#if 0
+-	case QLA_TGT_ABORT_ALL:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10005,
+-		    "qla_target(%d): Doing ABORT_ALL_TASKS\n",
+-		    sess->vha->vp_idx);
+-		tmr_func = 0;
+-		break;
+-
+-	case QLA_TGT_ABORT_ALL_SESS:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10006,
+-		    "qla_target(%d): Doing ABORT_ALL_TASKS_SESS\n",
+-		    sess->vha->vp_idx);
+-		tmr_func = 0;
+-		break;
+-
+-	case QLA_TGT_NEXUS_LOSS_SESS:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10007,
+-		    "qla_target(%d): Doing NEXUS_LOSS_SESS\n",
+-		    sess->vha->vp_idx);
+-		tmr_func = 0;
+-		break;
+-
+-	case QLA_TGT_NEXUS_LOSS:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10008,
+-		    "qla_target(%d): Doing NEXUS_LOSS\n", sess->vha->vp_idx);
+-		tmr_func = 0;
+-		break;
+-#endif
+-	default:
+-		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000a,
+-		    "qla_target(%d): Unknown task mgmt fn 0x%x\n",
+-		    sess->vha->vp_idx, fn);
+-		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
+-		return -ENOSYS;
++	    abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
++	    break;
+ 	}
+ 
+-	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, tmr_func, 0);
++	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func, 0);
+ 	if (res != 0) {
+ 		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000b,
+ 		    "qla_target(%d): tgt.tgt_ops->handle_tmr() failed: %d\n",
+@@ -4212,8 +4150,9 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
+ 	lun = a->u.isp24.fcp_cmnd.lun;
+ 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
+ 	mcmd->reset_count = vha->hw->chip_reset;
++	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
+ 
+-	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, TMR_ABORT_TASK,
++	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, mcmd->tmr_func,
+ 	    le16_to_cpu(iocb->u.isp2x.seq_id));
+ 	if (rc != 0) {
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf060,
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 0824a81..14f2e24 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -744,7 +744,7 @@ struct qla_tgt_func_tmpl {
+ 			unsigned char *, uint32_t, int, int, int);
+ 	void (*handle_data)(struct qla_tgt_cmd *);
+ 	void (*handle_dif_err)(struct qla_tgt_cmd *);
+-	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t,
++	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint16_t,
+ 			uint32_t);
+ 	void (*free_cmd)(struct qla_tgt_cmd *);
+ 	void (*free_mcmd)(struct qla_tgt_mgmt_cmd *);
+@@ -795,6 +795,8 @@ struct qla_tgt_func_tmpl {
+ #define QLA_TGT_ABORT_ALL               0xFFFE
+ #define QLA_TGT_NEXUS_LOSS_SESS         0xFFFD
+ #define QLA_TGT_NEXUS_LOSS              0xFFFC
++#define QLA_TGT_ABTS					0xFFFB
++#define QLA_TGT_2G_ABORT_TASK			0xFFFA
+ 
+ /* Notify Acknowledge flags */
+ #define NOTIFY_ACK_RES_COUNT        BIT_8
+@@ -1056,7 +1058,7 @@ struct qla_tgt_sess_work_param {
+ };
+ 
+ struct qla_tgt_mgmt_cmd {
+-	uint8_t tmr_func;
++	uint16_t tmr_func;
+ 	uint8_t fc_tm_rsp;
+ 	struct qla_tgt_sess *sess;
+ 	struct se_cmd se_cmd;
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index d925910..183a459 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -563,10 +563,47 @@ static void tcm_qla2xxx_handle_dif_err(struct qla_tgt_cmd *cmd)
+  * Called from qla_target.c:qlt_issue_task_mgmt()
+  */
+ static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+-	uint8_t tmr_func, uint32_t tag)
++	uint16_t tmr_func, uint32_t tag)
+ {
+ 	struct qla_tgt_sess *sess = mcmd->sess;
+ 	struct se_cmd *se_cmd = &mcmd->se_cmd;
++	int transl_tmr_func;
++
++	switch (tmr_func) {
++	case QLA_TGT_ABTS:
++		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_ABORT_TASK;
++		break;
++	case QLA_TGT_2G_ABORT_TASK:
++		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_ABORT_TASK;
++		break;
++	case QLA_TGT_CLEAR_ACA:
++		pr_debug("%ld: CLEAR_ACA received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_CLEAR_ACA;
++		break;
++	case QLA_TGT_TARGET_RESET:
++		pr_debug("%ld: TARGET_RESET received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_TARGET_WARM_RESET;
++		break;
++	case QLA_TGT_LUN_RESET:
++		pr_debug("%ld: LUN_RESET received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_LUN_RESET;
++		break;
++	case QLA_TGT_CLEAR_TS:
++		pr_debug("%ld: CLEAR_TS received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_CLEAR_TASK_SET;
++		break;
++	case QLA_TGT_ABORT_TS:
++		pr_debug("%ld: ABORT_TS received\n", sess->vha->host_no);
++		transl_tmr_func = TMR_ABORT_TASK_SET;
++		break;
++	default:
++		pr_debug("%ld: Unknown task mgmt fn 0x%x\n",
++		    sess->vha->host_no, tmr_func);
++		return -ENOSYS;
++		break;
++	}
+ 
+ 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
+ 			tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
 -- 
-Jens Axboe
+1.8.3.1
 
