@@ -1,68 +1,52 @@
 From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH 1/2] scsi: qla2xxx: silent -Wformat-security warning
-Date: Mon, 26 Dec 2016 14:23:09 +0100
-Message-ID: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
+Subject: [PATCH 2/2] scsi: qla2xxx: make msix_entries const
+Date: Mon, 26 Dec 2016 14:23:10 +0100
+Message-ID: <20161226132310.3204-2-nicolas.iooss_linux@m4x.org>
+References: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Cc: linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 List-Id: linux-scsi@vger.kernel.org
 
-qla24xx_enable_msix() calls scnprintf() with a non-literal format
-string. This makes clang report -Wformat-security warnings when
-compiling this function:
-
-    drivers/scsi/qla2xxx/qla_isr.c:3083:7: error: format string is not a
-    string literal (potentially insecure) [-Werror,-Wformat-security]
-                        msix_entries[i].name);
-                        ^~~~~~~~~~~~~~~~~~~~
-    drivers/scsi/qla2xxx/qla_isr.c:3083:7: note: treat the string as an
-    argument to avoid this
-                        msix_entries[i].name);
-                        ^
-                        "%s",
-    drivers/scsi/qla2xxx/qla_isr.c:3119:7: error: format string is not a
-    string literal (potentially insecure) [-Werror,-Wformat-security]
-                        msix_entries[QLA_ATIO_VECTOR].name);
-                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    drivers/scsi/qla2xxx/qla_isr.c:3119:7: note: treat the string as an
-    argument to avoid this
-                        msix_entries[QLA_ATIO_VECTOR].name);
-                        ^
-                        "%s",
-
-Even though msix_entries[...].name are initialized as literal strings
-with no % character and are never modified, introduce a "%s" format
-parameter in order to silent this -Wformat-security warning and make
-clang able to detect at compile time real bugs related to string
-formatting.
+msix_entries and qla82xx_msix_entries arrays are never modified in
+drivers/scsi/qla2xxx/qla_isr.c. Move their contents to read-only data.
 
 Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_isr.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 5093ca9b02ec..474b415217df 100644
+index 474b415217df..b9c113e47346 100644
 --- a/drivers/scsi/qla2xxx/qla_isr.c
 +++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3080,7 +3080,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		qentry->handle = rsp;
- 		rsp->msix = qentry;
- 		scnprintf(qentry->name, sizeof(qentry->name),
--		    msix_entries[i].name);
-+		    "%s", msix_entries[i].name);
- 		if (IS_P3P_TYPE(ha))
- 			ret = request_irq(qentry->vector,
- 				qla82xx_msix_entries[i].handler,
-@@ -3116,7 +3116,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
- 		rsp->msix = qentry;
- 		qentry->handle = rsp;
- 		scnprintf(qentry->name, sizeof(qentry->name),
--		    msix_entries[QLA_ATIO_VECTOR].name);
-+		    "%s", msix_entries[QLA_ATIO_VECTOR].name);
- 		qentry->in_use = 1;
- 		ret = request_irq(qentry->vector,
- 			msix_entries[QLA_ATIO_VECTOR].handler,
+@@ -3003,14 +3003,14 @@ struct qla_init_msix_entry {
+ 	irq_handler_t handler;
+ };
+ 
+-static struct qla_init_msix_entry msix_entries[] = {
++static const struct qla_init_msix_entry msix_entries[] = {
+ 	{ "qla2xxx (default)", qla24xx_msix_default },
+ 	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
+ 	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
+ 	{ "qla2xxx (qpair_multiq)", qla2xxx_msix_rsp_q },
+ };
+ 
+-static struct qla_init_msix_entry qla82xx_msix_entries[] = {
++static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
+ 	{ "qla2xxx (default)", qla82xx_msix_default },
+ 	{ "qla2xxx (rsp_q)", qla82xx_msix_rsp_q },
+ };
+@@ -3284,7 +3284,7 @@ qla2x00_free_irqs(scsi_qla_host_t *vha)
+ int qla25xx_request_irq(struct qla_hw_data *ha, struct qla_qpair *qpair,
+ 	struct qla_msix_entry *msix, int vector_type)
+ {
+-	struct qla_init_msix_entry *intr = &msix_entries[vector_type];
++	const struct qla_init_msix_entry *intr = &msix_entries[vector_type];
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 	int ret;
+ 
 -- 
 2.11.0
