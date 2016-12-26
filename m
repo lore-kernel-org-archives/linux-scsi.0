@@ -1,149 +1,68 @@
-From: IW News <news@imagedworld.com>
-Subject: Fwd: SAS disk from RAID card (no RAID mode) problems
-Date: Mon, 26 Dec 2016 11:07:26 +0100
-Message-ID: <cf8d3da2-12b7-8f36-bca2-503db9ff0fe5@imagedworld.com>
-References: <55fe0984-bfae-7f39-51f4-d110a4a815d4@imagedworld.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hathor.lunarpages.com ([74.50.26.40]:47396 "EHLO
-        hathor.lunarpages.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750713AbcLZKHa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 26 Dec 2016 05:07:30 -0500
-Received: from 171.pool80-103-211.dynamic.orange.es ([80.103.211.171]:55048 helo=[192.168.123.100])
-        by hathor.lunarpages.com with esmtpa (Exim 4.87)
-        (envelope-from <news@imagedworld.com>)
-        id 1cLSBk-002s41-Ni
-        for linux-scsi@vger.kernel.org; Mon, 26 Dec 2016 02:07:29 -0800
-In-Reply-To: <55fe0984-bfae-7f39-51f4-d110a4a815d4@imagedworld.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Subject: [PATCH 1/2] scsi: qla2xxx: silent -Wformat-security warning
+Date: Mon, 26 Dec 2016 14:23:09 +0100
+Message-ID: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-No comments?
+qla24xx_enable_msix() calls scnprintf() with a non-literal format
+string. This makes clang report -Wformat-security warnings when
+compiling this function:
 
-I'm really stuck with this.
+    drivers/scsi/qla2xxx/qla_isr.c:3083:7: error: format string is not a
+    string literal (potentially insecure) [-Werror,-Wformat-security]
+                        msix_entries[i].name);
+                        ^~~~~~~~~~~~~~~~~~~~
+    drivers/scsi/qla2xxx/qla_isr.c:3083:7: note: treat the string as an
+    argument to avoid this
+                        msix_entries[i].name);
+                        ^
+                        "%s",
+    drivers/scsi/qla2xxx/qla_isr.c:3119:7: error: format string is not a
+    string literal (potentially insecure) [-Werror,-Wformat-security]
+                        msix_entries[QLA_ATIO_VECTOR].name);
+                        ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    drivers/scsi/qla2xxx/qla_isr.c:3119:7: note: treat the string as an
+    argument to avoid this
+                        msix_entries[QLA_ATIO_VECTOR].name);
+                        ^
+                        "%s",
 
+Even though msix_entries[...].name are initialized as literal strings
+with no % character and are never modified, introduce a "%s" format
+parameter in order to silent this -Wformat-security warning and make
+clang able to detect at compile time real bugs related to string
+formatting.
 
-Iñigo.
+Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-
-
--------- Forwarded Message --------
-Subject: 	SAS disk from RAID card (no RAID mode) problems
-Date: 	Fri, 23 Dec 2016 19:59:23 +0100
-From: 	IW News <news@imagedworld.com>
-To: 	linux-scsi@vger.kernel.org
-
-
-
-Hello,
-
-First message here.
-
-After looking for a solution without any luck I have found this list. I
-hope someone can help me with this.
-
-I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
-There are to identical 400GB SAS SSD drives attached to it. One of them
-has a Windows 10 installation, the other one Linux.
-Grub is installed on the second disk.
-
-Windows works as expected, but I have problems with the Linux
-installation: the desktop environment freezes for some second once in a
-while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and Manjaro
-KDE. All of them are current installations. I'm now working in up to
-date Manjaro KDE (kernel 4.9.0).
-When the temporary freezes occur the mouse pointer moves, some windows
-are updated correctly, other do not and DE stops working.
-When this happens always I have a system log like this:
-
-______________________________________________________
-23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 6
-failed: 6
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd900
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bd900
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bd900 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bd900 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bce00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bce00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bce00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bce00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd700
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bd700
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bd700 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bd700 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bde00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bde00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bde00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bde00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bdc00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bdc00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bdc00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bdc00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdcb0298800
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdcb0298800
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdcb0298800 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdcb0298800 is done
-23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
-failed: 6 tries: 1
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 2
-failed: 2
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453ae00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdb9453ae00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdb9453ae00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdb9453ae00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453b000
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdb9453b000
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdb9453b000 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdb9453b000 is done
-23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
-failed: 2 tries: 1
-__________________________________________________________________________________________
-
-
-Sometimes shorter sometimes larger.
-It looks like a controller/drive/cable problem?
-Any thoughts?
-
-Thanks in advance.
-
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 5093ca9b02ec..474b415217df 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3080,7 +3080,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		qentry->handle = rsp;
+ 		rsp->msix = qentry;
+ 		scnprintf(qentry->name, sizeof(qentry->name),
+-		    msix_entries[i].name);
++		    "%s", msix_entries[i].name);
+ 		if (IS_P3P_TYPE(ha))
+ 			ret = request_irq(qentry->vector,
+ 				qla82xx_msix_entries[i].handler,
+@@ -3116,7 +3116,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 		rsp->msix = qentry;
+ 		qentry->handle = rsp;
+ 		scnprintf(qentry->name, sizeof(qentry->name),
+-		    msix_entries[QLA_ATIO_VECTOR].name);
++		    "%s", msix_entries[QLA_ATIO_VECTOR].name);
+ 		qentry->in_use = 1;
+ 		ret = request_irq(qentry->vector,
+ 			msix_entries[QLA_ATIO_VECTOR].handler,
+-- 
+2.11.0
