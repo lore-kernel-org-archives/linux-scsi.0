@@ -1,52 +1,65 @@
-From: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Subject: [PATCH 2/2] scsi: qla2xxx: make msix_entries const
-Date: Mon, 26 Dec 2016 14:23:10 +0100
-Message-ID: <20161226132310.3204-2-nicolas.iooss_linux@m4x.org>
-References: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+From: IW News <news@imagedworld.com>
+Subject: Fwd: Re: SAS disk from RAID card (no RAID mode) problems
+Date: Tue, 27 Dec 2016 09:01:34 +0100
+Message-ID: <b7eb1617-ae24-996b-d0ee-9277b9052064@imagedworld.com>
+References: <ed04b869-cc0f-b099-95a8-fc1ce08a1427@imagedworld.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from hathor.lunarpages.com ([74.50.26.40]:49742 "EHLO
+        hathor.lunarpages.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751583AbcL0ICD (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2016 03:02:03 -0500
+Received: from 171.pool80-103-211.dynamic.orange.es ([80.103.211.171]:33024 helo=[192.168.123.100])
+        by hathor.lunarpages.com with esmtpa (Exim 4.87)
+        (envelope-from <news@imagedworld.com>)
+        id 1cLmhu-000I4A-7I
+        for linux-scsi@vger.kernel.org; Tue, 27 Dec 2016 00:02:02 -0800
+In-Reply-To: <ed04b869-cc0f-b099-95a8-fc1ce08a1427@imagedworld.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-msix_entries and qla82xx_msix_entries arrays are never modified in
-drivers/scsi/qla2xxx/qla_isr.c. Move their contents to read-only data.
+On 26/12/16 22:25, Thomas Fjellstrom wrote:
 
-Signed-off-by: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
----
- drivers/scsi/qla2xxx/qla_isr.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+> On Friday, December 23, 2016 9:01:40 AM MST IW News wrote:
+>> Hello,
+>>
+>> First message here.
+>>
+>> After looking for a solution without any luck I have found this list. I
+>> hope someone can help me with this.
+>>
+>> I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
+>> There are to identical 400GB SAS SSD drives attached to it. One of them
+>> has a Windows 10 installation, the other one Linux.
+>> Grub is installed on the second disk.
+>>
+>> Windows works as expected, but I have problems with the Linux
+>> installation: the desktop environment freezes for some second once in a
+>> while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and Manjaro
+>> KDE. All of them are current installations. I'm now working in up to
+>> date Manjaro KDE (kernel 4.9.0).
+>> When the temporary freezes occur the mouse pointer moves, some windows
+>> are updated correctly, other do not and DE stops working.
+>> When this happens always I have a system log like this:
+> If thats the mvsas driver, god help you. I had nothing but troubles with it
+> for a good year or two or possibly more and it was never fixed or really
+> acknowledged, so I sold that card (a supermicro aoc-saslp-mv8) and picked up a
+> IBM m1015 (LSI 9211-8i a-like) and haven't looked back.
+>
+> Basically it would reset a lot, and lock up. AND I believe it caused a lot of
+> silent corruption as well.
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 474b415217df..b9c113e47346 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3003,14 +3003,14 @@ struct qla_init_msix_entry {
- 	irq_handler_t handler;
- };
- 
--static struct qla_init_msix_entry msix_entries[] = {
-+static const struct qla_init_msix_entry msix_entries[] = {
- 	{ "qla2xxx (default)", qla24xx_msix_default },
- 	{ "qla2xxx (rsp_q)", qla24xx_msix_rsp_q },
- 	{ "qla2xxx (atio_q)", qla83xx_msix_atio_q },
- 	{ "qla2xxx (qpair_multiq)", qla2xxx_msix_rsp_q },
- };
- 
--static struct qla_init_msix_entry qla82xx_msix_entries[] = {
-+static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
- 	{ "qla2xxx (default)", qla82xx_msix_default },
- 	{ "qla2xxx (rsp_q)", qla82xx_msix_rsp_q },
- };
-@@ -3284,7 +3284,7 @@ qla2x00_free_irqs(scsi_qla_host_t *vha)
- int qla25xx_request_irq(struct qla_hw_data *ha, struct qla_qpair *qpair,
- 	struct qla_msix_entry *msix, int vector_type)
- {
--	struct qla_init_msix_entry *intr = &msix_entries[vector_type];
-+	const struct qla_init_msix_entry *intr = &msix_entries[vector_type];
- 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
- 	int ret;
- 
--- 
-2.11.0
+Hi,
+
+So there is no support for the mvsas driver?
+
+The controller is integrated in the motherboard. I could by a PCIe one
+but, what's the deal them?
+
+Thank you.
+
+Iñigo.
+
