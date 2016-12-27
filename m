@@ -1,65 +1,31 @@
-From: IW News <news@imagedworld.com>
-Subject: Fwd: Re: SAS disk from RAID card (no RAID mode) problems
-Date: Tue, 27 Dec 2016 09:01:34 +0100
-Message-ID: <b7eb1617-ae24-996b-d0ee-9277b9052064@imagedworld.com>
-References: <ed04b869-cc0f-b099-95a8-fc1ce08a1427@imagedworld.com>
+From: Oliver Neukum <oneukum@suse.com>
+Subject: Re: JMS56x not working reliably with uas driver
+Date: Tue, 27 Dec 2016 15:34:15 +0100
+Message-ID: <1482849255.1731.1.camel@suse.com>
+References: <Pine.LNX.4.44L0.1612221734120.15794-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hathor.lunarpages.com ([74.50.26.40]:49742 "EHLO
-        hathor.lunarpages.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751583AbcL0ICD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 27 Dec 2016 03:02:03 -0500
-Received: from 171.pool80-103-211.dynamic.orange.es ([80.103.211.171]:33024 helo=[192.168.123.100])
-        by hathor.lunarpages.com with esmtpa (Exim 4.87)
-        (envelope-from <news@imagedworld.com>)
-        id 1cLmhu-000I4A-7I
-        for linux-scsi@vger.kernel.org; Tue, 27 Dec 2016 00:02:02 -0800
-In-Reply-To: <ed04b869-cc0f-b099-95a8-fc1ce08a1427@imagedworld.com>
+Received: from mx2.suse.de ([195.135.220.15]:38580 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S932449AbcL0OlN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 27 Dec 2016 09:41:13 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1612221734120.15794-100000@netrider.rowland.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: George Cherian <gcherian@caviumnetworks.com>, hdegoede@redhat.com, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On 26/12/16 22:25, Thomas Fjellstrom wrote:
+On Thu, 2016-12-22 at 17:44 -0500, Alan Stern wrote:
+> I don't see how this patch fixes anything.  Unless I'm mistaken, it
+> just avoids the problem by preventing the system from issuing the
+> command that provokes the error, rather than really fixing the
+> underlying error.
 
-> On Friday, December 23, 2016 9:01:40 AM MST IW News wrote:
->> Hello,
->>
->> First message here.
->>
->> After looking for a solution without any luck I have found this list. I
->> hope someone can help me with this.
->>
->> I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
->> There are to identical 400GB SAS SSD drives attached to it. One of them
->> has a Windows 10 installation, the other one Linux.
->> Grub is installed on the second disk.
->>
->> Windows works as expected, but I have problems with the Linux
->> installation: the desktop environment freezes for some second once in a
->> while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and Manjaro
->> KDE. All of them are current installations. I'm now working in up to
->> date Manjaro KDE (kernel 4.9.0).
->> When the temporary freezes occur the mouse pointer moves, some windows
->> are updated correctly, other do not and DE stops working.
->> When this happens always I have a system log like this:
-> If thats the mvsas driver, god help you. I had nothing but troubles with it
-> for a good year or two or possibly more and it was never fixed or really
-> acknowledged, so I sold that card (a supermicro aoc-saslp-mv8) and picked up a
-> IBM m1015 (LSI 9211-8i a-like) and haven't looked back.
->
-> Basically it would reset a lot, and lock up. AND I believe it caused a lot of
-> silent corruption as well.
+Please clarify. If a reset leads to a disconnect, isn't that
+exactly what we want?
 
-Hi,
-
-So there is no support for the mvsas driver?
-
-The controller is integrated in the motherboard. I could by a PCIe one
-but, what's the deal them?
-
-Thank you.
-
-Iñigo.
+	Regards
+		Oliver
 
