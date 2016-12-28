@@ -1,89 +1,53 @@
-From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH RFC 5/5] qedf: Add FIP request handling
-Date: Wed, 28 Dec 2016 10:11:55 +0100
-Message-ID: <a076b54b-966b-d652-7a0f-6b84aacb0ded@suse.de>
-References: <1482520628-24207-1-git-send-email-chad.dupuis@cavium.com>
- <1482520628-24207-6-git-send-email-chad.dupuis@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1482520628-24207-6-git-send-email-chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
-Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yuval.mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, QLogic-Storage-Upstream-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
+From: ojab <ojab@ojab.ru>
+Subject: [PATCH] mpt3sas: disable ASPM for MPI2 controllers
+Date: Wed, 28 Dec 2016 11:00:56 +0000
+Message-ID: <20161228110056.6250-1-ojab@ojab.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f68.google.com ([209.85.215.68]:33933 "EHLO
+        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751292AbcL1LB2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2016 06:01:28 -0500
+Received: by mail-lf0-f68.google.com with SMTP id d16so17340782lfb.1
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 03:01:26 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, ojab <ojab@ojab.ru>
 
-On 12/23/2016 08:17 PM, Dupuis, Chad wrote:
-> From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> =
+MPI2 controllers sometimes got lost (i. e. disappears from
+/sys/bus/pci/devices) if ASMP is enabled.
 
-> This patch adds handling for FIP requests and responses that are handled =
-by
-> the driver itself and not by libfcoe.
-> =
+Signed-off-by: ojab <ojab@ojab.ru>
+Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=60644
+---
+Not sure if it's a complete fix, but at least I can't reproduce the issue
+locally with it applied.
 
-> Signed-off-by: Nilesh Javali <nilesh.javali-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Manish Rangankar <manish.rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Saurav Kashyap <saurav.kashyap-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Chad Dupuis <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> ---
->  drivers/scsi/qedf/qedf_fip.c | 267 +++++++++++++++++++++++++++++++++++++=
-++++++
->  1 file changed, 267 insertions(+)
->  create mode 100644 drivers/scsi/qedf/qedf_fip.c
-> =
+Also it's my first patch, so I've surely screwed up some formatting etc.
 
-> diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
-> new file mode 100644
-> index 0000000..4f185c6
-> --- /dev/null
-> +++ b/drivers/scsi/qedf/qedf_fip.c
-> @@ -0,0 +1,267 @@
-> +/*
-> + *  QLogic FCoE Offload Driver
-> + *  Copyright (c) 2016 Cavium Inc.
-> + *
-> + *  This software is available under the terms of the GNU General Public=
- License
-> + *  (GPL) Version 2, available from the file COPYING in the main directo=
-ry of
-> + *  this source tree.
-> + */
-> +#include <linux/if_ether.h>
-> +#include <linux/if_vlan.h>
-> +#include "qedf.h"
-> +
-> +extern const struct qed_fcoe_ops *qed_ops;
-> +/*
-> + * FIP VLAN functions that will eventually move to libfcoe.
-> + */
-> +
-> +void qedf_fcoe_send_vlan_req(struct qedf_ctx *qedf)
-> +{
-> +	struct sk_buff *skb;
-> +	char *eth_fr;
-> +	int fr_len;
-> +	struct fip_vlan *vlan;
-> +#define MY_FIP_ALL_FCF_MACS        ((__u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
-> +	static u8 my_fcoe_all_fcfs[ETH_ALEN] =3D MY_FIP_ALL_FCF_MACS;
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-Do you support VN2VN, too?
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b5c966e..203651a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -51,6 +51,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/delay.h>
+ #include <linux/pci.h>
++#include <linux/pci-aspm.h>
+ #include <linux/interrupt.h>
+ #include <linux/aer.h>
+ #include <linux/raid_class.h>
+@@ -8734,6 +8735,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
 
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		      zSeries & Storage
-hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+ 	switch (hba_mpi_version) {
+ 	case MPI2_VERSION:
++		pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S |
++			PCIE_LINK_STATE_L1 | PCIE_LINK_STATE_CLKPM);
+ 		/* Use mpt2sas driver host template for SAS 2.0 HBA's */
+ 		shost = scsi_host_alloc(&mpt2sas_driver_template,
+ 		  sizeof(struct MPT3SAS_ADAPTER));
+--
+2.10.0
