@@ -1,149 +1,40 @@
-From: IW News <news@imagedworld.com>
-Subject: Fwd: Fwd: SAS disk from RAID card (no RAID mode) problems
-Date: Wed, 28 Dec 2016 18:16:21 +0100
-Message-ID: <0a5c11db-f1cc-53ed-018b-8a0a3069f919@imagedworld.com>
-References: <cf8d3da2-12b7-8f36-bca2-503db9ff0fe5@imagedworld.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH v2 03/11] lpfc: Deprecate lpfc_soft_wwn parameter
+Date: Wed, 28 Dec 2016 19:38:32 +0100
+Message-ID: <20161228193832.00000ba9@gmx.de>
+References: <5858682a.Twfv0+hfi3tqtT1c%james.smart@broadcom.com>
+        <20161222230059.000006e1@gmx.de>
+        <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from hathor.lunarpages.com ([74.50.26.40]:54708 "EHLO
-        hathor.lunarpages.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751059AbcL1RQY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2016 12:16:24 -0500
-Received: from 171.pool80-103-211.dynamic.orange.es ([80.103.211.171]:47684 helo=[192.168.123.100])
-        by hathor.lunarpages.com with esmtpa (Exim 4.87)
-        (envelope-from <news@imagedworld.com>)
-        id 1cMHpo-003C2e-9g
-        for linux-scsi@vger.kernel.org; Wed, 28 Dec 2016 09:16:16 -0800
-In-Reply-To: <cf8d3da2-12b7-8f36-bca2-503db9ff0fe5@imagedworld.com>
+Received: from mout.gmx.net ([212.227.17.20]:54889 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751475AbcL1Sjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Dec 2016 13:39:40 -0500
+In-Reply-To: <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-Hi again,
+James Smart wrote:
+> I competes, without reasonable solutions to resolve which should be
+> what at what time, with things like fabric-assigned wwn's as well as 
+> platform-oem name assignments via platform mechanisms.  Too many
+> admin planes competing.
+> 
+> -- james
 
-Can anyone point me to another mailing list or Github branch where to 
-look for help?
-Thank you.
+FA-WWN seems to be fabric (and Brocade?) only and "platform mechanisms"
+are likely not portable. Soft wwn is a simple and flexible solution
+which works in fabric and loop configurations and is platform and
+server vendor agnostic. It already works with existing HBAs on x86 and
+should also work on PowerPC or SPARC systems.
+It is useful for initiators (hardware independence/mobility) and
+targets (transparent failover/floating wwn).
+Therefore I like to ask you to revert this patch and not introduce this
+functional regression.
 
-Iñigo.
-
-
--------- Forwarded Message --------
-Subject: 	SAS disk from RAID card (no RAID mode) problems
-Date: 	Fri, 23 Dec 2016 19:59:23 +0100
-From: 	IW News <news@imagedworld.com>
-To: 	linux-scsi@vger.kernel.org
-
-
-
-Hello,
-
-First message here.
-
-After looking for a solution without any luck I have found this list. I
-hope someone can help me with this.
-
-I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
-There are to identical 400GB SAS SSD drives attached to it. One of them
-has a Windows 10 installation, the other one Linux.
-Grub is installed on the second disk.
-
-Windows works as expected, but I have problems with the Linux
-installation: the desktop environment freezes for some second once in a
-while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and Manjaro
-KDE. All of them are current installations. I'm now working in up to
-date Manjaro KDE (kernel 4.9.0).
-When the temporary freezes occur the mouse pointer moves, some windows
-are updated correctly, other do not and DE stops working.
-When this happens always I have a system log like this:
-
-______________________________________________________
-23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 6
-failed: 6
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd900
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bd900
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bd900 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bd900 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bce00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bce00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bce00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bce00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd700
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bd700
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bd700 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bd700 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bde00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bde00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bde00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bde00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bdc00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bda8d2bdc00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bda8d2bdc00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bda8d2bdc00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdcb0298800
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdcb0298800
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdcb0298800 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdcb0298800 is done
-23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
-failed: 6 tries: 1
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
-slot, retry command.
-23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 2
-failed: 2
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453ae00
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdb9453ae00
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdb9453ae00 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdb9453ae00 is done
-23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453b000
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
-0xffff8bdb9453b000
-23/12/16 8:29    kernel    sas: task done but aborted
-23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
-0xffff8bdb9453b000 is done
-23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
-0xffff8bdb9453b000 is done
-23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
-failed: 2 tries: 1
-__________________________________________________________________________________________
-
-
-Sometimes shorter sometimes larger.
-It looks like a controller/drive/cable problem?
-Any thoughts?
-
-Thanks in advance.
-
+Sebastian
