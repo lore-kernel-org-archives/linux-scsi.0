@@ -1,83 +1,149 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 191381] New: LIO ignores XCOPY source and destination
- descriptor IDs
-Date: Wed, 28 Dec 2016 17:10:29 +0000
-Message-ID: <bug-191381-11613@https.bugzilla.kernel.org/>
+From: IW News <news@imagedworld.com>
+Subject: Fwd: Fwd: SAS disk from RAID card (no RAID mode) problems
+Date: Wed, 28 Dec 2016 18:16:21 +0100
+Message-ID: <0a5c11db-f1cc-53ed-018b-8a0a3069f919@imagedworld.com>
+References: <cf8d3da2-12b7-8f36-bca2-503db9ff0fe5@imagedworld.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:44636 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750976AbcL1RKd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Dec 2016 12:10:33 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id A1536203DA
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 17:10:31 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 46A18203C2
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 17:10:30 +0000 (UTC)
+Received: from hathor.lunarpages.com ([74.50.26.40]:54708 "EHLO
+        hathor.lunarpages.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751059AbcL1RQY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2016 12:16:24 -0500
+Received: from 171.pool80-103-211.dynamic.orange.es ([80.103.211.171]:47684 helo=[192.168.123.100])
+        by hathor.lunarpages.com with esmtpa (Exim 4.87)
+        (envelope-from <news@imagedworld.com>)
+        id 1cMHpo-003C2e-9g
+        for linux-scsi@vger.kernel.org; Wed, 28 Dec 2016 09:16:16 -0800
+In-Reply-To: <cf8d3da2-12b7-8f36-bca2-503db9ff0fe5@imagedworld.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=191381
+Hi again,
 
-            Bug ID: 191381
-           Summary: LIO ignores XCOPY source and destination descriptor
-                    IDs
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 4.9.0
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: ddiss.dev@gmail.com
-        Regression: No
+Can anyone point me to another mailing list or Github branch where to 
+look for help?
+Thank you.
 
-The EXTENDED COPY SCSI command (XCOPY) is used extensively by VMware ESX
-initiators, to offload to the iSCSI target, the process of copying data between
-a source and destination LU region.
-XCOPY is also supported by other initiators, such as ddpt
-(http://sg.danny.cz/sg/ddpt.html), libiscsi, etc.
+Iñigo.
 
-The XCOPY specification in SPC-4 (revision 37) states that the XCOPY source and
-destination device(s) should be derived from the copy source and copy
-destination descriptor (CSCD) IDs in the XCOPY segment descriptor. The CSCD IDs
-are generally (for block -> block copies), indexes into the corresponding CSCD
-list, i.e.
 
-=================================
-XCOPY Header    
-=================================
-CSCD List
-- entry 0
-  + LU ID
-- entry 2
-  + LU ID
-=================================
-Segment Descriptor List
-- segment 0
-  + src CSCD ID = (CSCD entry 0)
-  + dest CSCD ID = (CSCD entry 1)
-  + len
-  + src lba
-  + dest lba
-=================================
+-------- Forwarded Message --------
+Subject: 	SAS disk from RAID card (no RAID mode) problems
+Date: 	Fri, 23 Dec 2016 19:59:23 +0100
+From: 	IW News <news@imagedworld.com>
+To: 	linux-scsi@vger.kernel.org
 
-Currently LIO completely ignores the src and dest CSCD IDs in the Segment
-Descriptor List, and instead assumes that the first entry in the CSCD list
-corresponds to the source, and the second to the destination.
 
-This assumption appears to stand true for XCOPY requests from ESXi initiators.
-However, deviation from the spec may break other initiators - it causes a
-number of libiscsi tests to fail.
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+Hello,
+
+First message here.
+
+After looking for a solution without any luck I have found this list. I
+hope someone can help me with this.
+
+I have an ASUS P6T Deluxe with a MARVELL 88SE63xx SAS RAID controller.
+There are to identical 400GB SAS SSD drives attached to it. One of them
+has a Windows 10 installation, the other one Linux.
+Grub is installed on the second disk.
+
+Windows works as expected, but I have problems with the Linux
+installation: the desktop environment freezes for some second once in a
+while. This occurs with Mint Cinnamon, OpenSuSe KDE, Ubuntu and Manjaro
+KDE. All of them are current installations. I'm now working in up to
+date Manjaro KDE (kernel 4.9.0).
+When the temporary freezes occur the mouse pointer moves, some windows
+are updated correctly, other do not and DE stops working.
+When this happens always I have a system log like this:
+
+______________________________________________________
+23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 6
+failed: 6
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd900
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bda8d2bd900
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bda8d2bd900 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bda8d2bd900 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bce00
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bda8d2bce00
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bda8d2bce00 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bda8d2bce00 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bd700
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bda8d2bd700
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bda8d2bd700 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bda8d2bd700 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bde00
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bda8d2bde00
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bda8d2bde00 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bda8d2bde00 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bda8d2bdc00
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bda8d2bdc00
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bda8d2bdc00 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bda8d2bdc00 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdcb0298800
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bdcb0298800
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bdcb0298800 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bdcb0298800 is done
+23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
+failed: 6 tries: 1
+23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
+slot, retry command.
+23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
+slot, retry command.
+23/12/16 8:29    kernel    drivers/scsi/mvsas/mv_sas.c 1694:reuse same
+slot, retry command.
+23/12/16 8:29    kernel    sas: Enter sas_scsi_recover_host busy: 2
+failed: 2
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453ae00
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bdb9453ae00
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bdb9453ae00 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bdb9453ae00 is done
+23/12/16 8:29    kernel    sas: trying to find task 0xffff8bdb9453b000
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: aborting task
+0xffff8bdb9453b000
+23/12/16 8:29    kernel    sas: task done but aborted
+23/12/16 8:29    kernel    sas: sas_scsi_find_task: task
+0xffff8bdb9453b000 is done
+23/12/16 8:29    kernel    sas: sas_eh_handle_sas_errors: task
+0xffff8bdb9453b000 is done
+23/12/16 8:29    kernel    sas: --- Exit sas_scsi_recover_host: busy: 0
+failed: 2 tries: 1
+__________________________________________________________________________________________
+
+
+Sometimes shorter sometimes larger.
+It looks like a controller/drive/cable problem?
+Any thoughts?
+
+Thanks in advance.
+
