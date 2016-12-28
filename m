@@ -1,55 +1,44 @@
-From: ojab <ojab@ojab.ru>
-Subject: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
-Date: Wed, 28 Dec 2016 11:05:24 +0000
-Message-ID: <20161228110524.7516-1-ojab@ojab.ru>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
+Date: Wed, 28 Dec 2016 11:15:18 +0000
+Message-ID: <bug-60644-11613-oZokFhIjWG@https.bugzilla.kernel.org/>
+References: <bug-60644-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f68.google.com ([209.85.215.68]:32861 "EHLO
-        mail-lf0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751292AbcL1LFb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 28 Dec 2016 06:05:31 -0500
-Received: by mail-lf0-f68.google.com with SMTP id y21so29684238lfa.0
-        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 03:05:31 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:40802 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751078AbcL1LPZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 28 Dec 2016 06:15:25 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 6017220519
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 11:15:23 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id A795C204D8
+        for <linux-scsi@vger.kernel.org>; Wed, 28 Dec 2016 11:15:21 +0000 (UTC)
+In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, ojab <ojab@ojab.ru>
+To: linux-scsi@vger.kernel.org
 
-MPI2 controllers sometimes got lost (i. e. disappears from
-/sys/bus/pci/devices) if ASMP is enabled.
+https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-Signed-off-by: Slava Kardakov <ojab@ojab.ru>
-Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=60644
----
-V2: use name in Signed-off-by
+ojab@ojab.ru changed:
 
-Not sure if it's a complete fix, but at least I can't reproduce the issue
-locally with it applied.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |ojab@ojab.ru
 
-Also it's my first patch, so I've surely screwed up some formatting etc.
+--- Comment #50 from ojab@ojab.ru ---
+Created attachment 248831
+  --> https://bugzilla.kernel.org/attachment.cgi?id=248831&action=edit
+Possible fix
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
- 1 file changed, 3 insertions(+)
+This patch disables ASPM powersave for controller's pci link.
+I can't reproduce the isse with ASPM enabled and this patch applied (4.9
+kernel, LSI SAS 9217-8i HBA), but more testing will not hurt.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b5c966e..203651a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -51,6 +51,7 @@
- #include <linux/workqueue.h>
- #include <linux/delay.h>
- #include <linux/pci.h>
-+#include <linux/pci-aspm.h>
- #include <linux/interrupt.h>
- #include <linux/aer.h>
- #include <linux/raid_class.h>
-@@ -8734,6 +8735,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
-
- 	switch (hba_mpi_version) {
- 	case MPI2_VERSION:
-+		pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S |
-+			PCIE_LINK_STATE_L1 | PCIE_LINK_STATE_CLKPM);
- 		/* Use mpt2sas driver host template for SAS 2.0 HBA's */
- 		shost = scsi_host_alloc(&mpt2sas_driver_template,
- 		  sizeof(struct MPT3SAS_ADAPTER));
---
-2.10.0
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
