@@ -1,40 +1,89 @@
-From: Sebastian Herbszt <herbszt@gmx.de>
-Subject: Re: [PATCH v2 03/11] lpfc: Deprecate lpfc_soft_wwn parameter
-Date: Wed, 28 Dec 2016 19:38:32 +0100
-Message-ID: <20161228193832.00000ba9@gmx.de>
-References: <5858682a.Twfv0+hfi3tqtT1c%james.smart@broadcom.com>
-        <20161222230059.000006e1@gmx.de>
-        <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
+From: David Miller <davem@davemloft.net>
+Subject: Bootup regression from srp_transport queuecommand() change...
+Date: Wed, 28 Dec 2016 15:27:00 -0500 (EST)
+Message-ID: <20161228.152700.56383949697289644.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.gmx.net ([212.227.17.20]:54889 "EHLO mout.gmx.net"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751475AbcL1Sjk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 28 Dec 2016 13:39:40 -0500
-In-Reply-To: <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: bart.vanassche@sandisk.com
+Cc: linux-scsi@vger.kernel.org, sparclinux@vger.kernel.org, linux-kernel@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-James Smart wrote:
-> I competes, without reasonable solutions to resolve which should be
-> what at what time, with things like fabric-assigned wwn's as well as 
-> platform-oem name assignments via platform mechanisms.  Too many
-> admin planes competing.
-> 
-> -- james
 
-FA-WWN seems to be fabric (and Brocade?) only and "platform mechanisms"
-are likely not portable. Soft wwn is a simple and flexible solution
-which works in fabric and loop configurations and is platform and
-server vendor agnostic. It already works with existing HBAs on x86 and
-should also work on PowerPC or SPARC systems.
-It is useful for initiators (hardware independence/mobility) and
-targets (transparent failover/floating wwn).
-Therefore I like to ask you to revert this patch and not introduce this
-functional regression.
+Commit 669f044170d8933c3d66d231b69ea97cb8447338 ("scsi: srp_transport:
+Move queuecommand() wait code to SCSI core") causes my sparc64 T4-2
+machine to stop booting properly.
 
-Sebastian
+It gets past mounting root but then the disk seems to wedge and scsi
+command resets don't seem to improve the situation.
+
+The controller on this machine is an mpt2sas:
+
+[  988.085192] mpt3sas version 14.101.00.00 loaded
+[  988.094440] mpt2sas_cm0: 32 BIT PCI BUS DMA ADDRESSING SUPPORTED, total mem (265775888 kB)
+[  988.165492] mpt2sas_cm0: MSI-X vectors supported: 1, no of cores: 128, max_msix_vectors: -1
+[  988.182124] mpt2sas0-msix0: PCI-MSI-X enabled: IRQ 166
+[  988.192152] mpt2sas_cm0: iomem(0x0000084001200000), mapped(0x0000084001200000), size(16384)
+[  988.208816] mpt2sas_cm0: ioport(0x0000085100002000), size(256)
+[  988.305669] mpt2sas_cm0: Allocated physical memory: size(2324 kB)
+[  988.317563] mpt2sas_cm0: Current Controller Queue Depth(1529),Max Controller Queue Depth(1600)
+[  988.334753] mpt2sas_cm0: Scatter Gather Elements per IO(128)
+[  988.396240] mpt2sas_cm0: LSISAS2008: FWVersion(09.00.00.00), ChipRevision(0x03), BiosVersion(00.00.00.00)
+[  988.415087] mpt2sas_cm0: Protocol=(
+[  988.415089] Initiator
+[  988.422032] ,Target
+[  988.426532] ), 
+[  988.430707] Capabilities=(
+[  988.434167] Raid
+[  988.439558] ,TLR
+[  988.443212] ,EEDP
+[  988.446853] ,Snapshot Buffer
+[  988.450676] ,Diag Trace Buffer
+[  988.456409] ,Task Set Full
+[  988.462487] ,NCQ
+[  988.467874] )
+[  988.474803] scsi host0: Fusion MPT SAS Host
+[  988.484310] mpt2sas_cm0: sending port enable !!
+[  990.014651] mpt2sas_cm0: host_add: handle(0x0001), sas_addr(0x5080020000f7b908), phys(8)
+[  996.139132] mpt2sas_cm0: port enable: SUCCESS
+[  996.170653] scsi 0:0:0:0: Direct-Access     ATA      INTEL SSDSC2CW48 400i PQ: 0 ANSI: 5
+[  996.186607] scsi 0:0:0:0: SATA: handle(0x0009), sas_addr(0x4433221100000000), phy(0), device_name(0x517b5001f9f6b27f)
+[  996.207728] scsi 0:0:0:0: SATA: enclosure_logical_id(0x5080020000f7b908), slot(0)
+[  996.222818] scsi 0:0:0:0: atapi(n), ncq(y), asyn_notify(n), smart(y), fua(y), sw_preserve(y)
+[  996.344371] scsi 0:0:1:0: CD-ROM            TEAC     DV-W28SS-R       1.0C PQ: 0 ANSI: 0
+[  996.360272] scsi 0:0:1:0: SATA: handle(0x000a), sas_addr(0x4433221107000000), phy(7), device_name(0x0000000000000000)
+[  996.381442] scsi 0:0:1:0: SATA: enclosure_logical_id(0x5080020000f7b908), slot(7)
+
+It was not easy to track this down.
+
+Initial bisect hit the scsi-misc merge itself, bisecting within the
+merge doesn't find the commit mentioned above.
+
+So I went throught the commits in the scsi-misc merge one by one,
+adding them on top of vanilla v4.9 until I hit the problem.
+
+This means the above commit doesn't introduce the regression in the
+context in which it was made.
+
+The commit message mentions blockability.  So I tried to look at
+mpt3sas driver changes that happened in mainline meanwhile.  And
+I came upon commit 18f6084a989ba1b38702f9af37a2e4049a924be6
+("scsi: mpt3sas: Fix secure erase premature termination")
+
+And this, indeed, adds a new call to scsi_internal_device_block()
+inside of the queuecommand() method of the mpt3sas driver.
+
+This seems to invalidate the analysis done in the commit message of
+669f044170d8933c3d66d231b69ea97cb8447338 ("scsi: srp_transport: Move
+queuecommand() wait code to SCSI core").
+
+I guess some userland information gathering tool, udev, or similar is
+doing the passthru ATA command to the devices behind my mpt2sas host,
+triggering the logic there to call scsi_internal_device_block().
+
+I'm happy to test any changes, and would really like to see this bug
+fixed.
+
+Thanks!
