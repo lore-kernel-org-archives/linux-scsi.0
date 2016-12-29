@@ -1,41 +1,71 @@
-From: David Miller <davem@davemloft.net>
-Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Thu, 29 Dec 2016 11:16:51 -0500 (EST)
-Message-ID: <20161229.111651.1486287401918317471.davem@davemloft.net>
-References: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
+From: "Mintz, Yuval" <Yuval.Mintz@cavium.com>
+Subject: RE: [Open-FCoE] [PATCH RFC net-next 1/5] qed: Add support for
+ hardware offloaded FCoE.
+Date: Thu, 29 Dec 2016 17:28:36 +0000
+Message-ID: <BL2PR07MB2306CCCE99C9CEB761ADF5A08D6B0@BL2PR07MB2306.namprd07.prod.outlook.com>
+References: <1482520628-24207-1-git-send-email-chad.dupuis@cavium.com>
+ <1482520628-24207-2-git-send-email-chad.dupuis@cavium.com>
+ <371bc2ac-c630-0e95-29aa-3fa16fe0c764@suse.de>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jbaron@akamai.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, Sreekanth.Reddy@broadcom.com, hare@suse.de, martin.petersen@oracle.com, bart.vanassche@sandisk.com, sagi@grimberg.me, jejb@linux.vnet.ibm.com, hch@lst.de, dledford@redhat.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <371bc2ac-c630-0e95-29aa-3fa16fe0c764@suse.de>
+Content-Language: en-US
+Sender: netdev-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "fcoe-devel@open-fcoe.org" <fcoe-devel@open-fcoe.org>, "netdev@vger.kernel.org" <netdev@vger.kernel.org>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-From: Jason Baron <jbaron@akamai.com>
-Date: Wed, 28 Dec 2016 23:30:24 -0500
+> > +struct fcoe_tstorm_fcoe_task_st_ctx_read_write {
+> > +	union fcoe_cleanup_addr_exp_ro_union
+> cleanup_addr_exp_ro_union;
+> > +	__le16 flags;
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_RX_SGL_MODE_MASK
+> 0x7
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_RX_SGL_MODE_SHIFT      0
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME_MASK
+> 0x1
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_EXP_FIRST_FRAME_SHIFT
+> 3
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SEQ_ACTIVE_MASK
+> 0x1
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SEQ_ACTIVE_SHIFT       4
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SEQ_TIMEOUT_MASK
+> 0x1
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SEQ_TIMEOUT_SHIFT      5
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SINGLE_PKT_IN_EX_MASK
+> 0x1
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_SINGLE_PKT_IN_EX_SHIFT
+> 6
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_OOO_RX_SEQ_STAT_MAS
+> K   0x1
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_OOO_RX_SEQ_STAT_SHIFT
+> 7
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_CQ_ADD_ADV_MASK
+> 0x3
+> > +#define
+> FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_CQ_ADD_ADV_SHIFT       8
+> > +#define FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_RSRV1_MASK
+> 0x3F
+> > +#define FCOE_TSTORM_FCOE_TASK_ST_CTX_READ_WRITE_RSRV1_SHIFT
+> 10
+>=20
+> A very odd way of defining a bitfield ...
+> Why not use a 'normal' bitfield here?
 
-> On ata passthru commands scsih_qcmd() ends up spinning in
-> scsi_wait_for_queuecommand() indefinitely. scsih_qcmd() is called from
-> __blk_run_queue_uncond() which first increments request_fn_active to a
-> non-zero value. Thus, scsi_wait_for_queuecommand() never completes because
-> its spinning waiting for request_fn_active to become 0.
-> 
-> Two patches interact here. The first:
-> 
-> commit 18f6084a989b ("scsi: mpt3sas: Fix secure erase premature
-> termination") calls scsi_internal_device_block() for ata passthru commands.
-> 
-> The second patch:
-> 
-> commit 669f044170d8 ("scsi: srp_transport: Move queuecommand() wait code
-> to SCSI core") adds a call to scsi_wait_for_queuecommand() from
-> scsi_internal_device_block().
-> 
-> Add a new parameter to scsi_internal_device_block() to decide whether
-> or not to invoke scsi_wait_for_queuecommand().
-> 
-> Signed-off-by: Jason Baron <jbaron@akamai.com>
-
-Tested-by: David S. Miller <davem@davemloft.net>
+This is the format of our generated firmware HSI; We already have
+Thousands of definitions using this same format.
