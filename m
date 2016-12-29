@@ -1,33 +1,30 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH v2 03/11] lpfc: Deprecate lpfc_soft_wwn parameter
-Date: Wed, 28 Dec 2016 23:41:09 -0800
-Message-ID: <20161229074109.GA3322@infradead.org>
-References: <5858682a.Twfv0+hfi3tqtT1c%james.smart@broadcom.com>
- <20161222230059.000006e1@gmx.de>
- <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
- <20161228193832.00000ba9@gmx.de>
- <f9fa4cfd-9a16-de65-ab71-65369791a29c@broadcom.com>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
+Date: Thu, 29 Dec 2016 00:02:50 -0800
+Message-ID: <20161229080250.GA11605@infradead.org>
+References: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:34220 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752532AbcL2HlM (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 29 Dec 2016 02:41:12 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <f9fa4cfd-9a16-de65-ab71-65369791a29c@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Jason Baron <jbaron@akamai.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>, David Miller <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <james.smart@broadcom.com>
-Cc: Sebastian Herbszt <herbszt@gmx.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-Hi James,
+On Wed, Dec 28, 2016 at 11:30:24PM -0500, Jason Baron wrote:
+> Add a new parameter to scsi_internal_device_block() to decide whether
+> or not to invoke scsi_wait_for_queuecommand().
 
-in Linux we have a pretty clear policy to avoid breaking existing real
-life userspace.  Given that Sebastian (and probably other users as well)
-make use of the soft WWN feature we can't just remove it.
+We'll also need to deal with the blk-mq wait path that Bart has been
+working on (I think it's already in the scsi tree, but I'd have to
+check).
 
-Which btw is what this patch does - deprecating is telling people to
-not use if, with the hopes of removing it in the future.  I think it
-would be fine to deprecate it with your above rational and print a
-warning to the kernel log, but we can't simply remove it.
+Also adding a bool flag for the last call in a function is style that's
+a little annoying.
+
+I'd prefer to add a scsi_internal_device_block_nowait that contains
+all the code except for the waiting, and then make
+scsi_internal_device_block_nowait a wrapper around it.  Or drop the
+annoying internal for both while we're at it :)
