@@ -1,60 +1,65 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 191471] New: Mp2Sas and Mpt3Sas (now mpxsas) drivers are
- spinning forever in the IRQ handler under load condition
-Date: Thu, 29 Dec 2016 15:16:46 +0000
-Message-ID: <bug-191471-11613@https.bugzilla.kernel.org/>
+From: Jason Baron <jbaron@akamai.com>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
+Date: Thu, 29 Dec 2016 11:02:58 -0500
+Message-ID: <c67108d8-8aee-012d-047f-96267b289071@akamai.com>
+References: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
+ <20161229080250.GA11605@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.kernel.org ([198.145.29.136]:54546 "EHLO mail.kernel.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752311AbcL2PQt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 29 Dec 2016 10:16:49 -0500
-Received: from mail.kernel.org (localhost [127.0.0.1])
-        by mail.kernel.org (Postfix) with ESMTP id 3C81320519
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2016 15:16:48 +0000 (UTC)
-Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
-        by mail.kernel.org (Postfix) with ESMTP id 36BE4204A2
-        for <linux-scsi@vger.kernel.org>; Thu, 29 Dec 2016 15:16:47 +0000 (UTC)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161229080250.GA11605@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>, David Miller <davem@davemloft.net>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=191471
+On 12/29/2016 03:02 AM, Christoph Hellwig wrote:
 
-            Bug ID: 191471
-           Summary: Mp2Sas and Mpt3Sas (now mpxsas) drivers are spinning
-                    forever in the IRQ handler under load condition
-           Product: IO/Storage
-           Version: 2.5
-    Kernel Version: 4.7
-          Hardware: All
-                OS: Linux
-              Tree: Mainline
-            Status: NEW
-          Severity: normal
-          Priority: P1
-         Component: SCSI
-          Assignee: linux-scsi@vger.kernel.org
-          Reporter: okaya@codeaurora.org
-        Regression: No
+> On Wed, Dec 28, 2016 at 11:30:24PM -0500, Jason Baron wrote:
+>> Add a new parameter to scsi_internal_device_block() to decide whether
+>> or not to invoke scsi_wait_for_queuecommand().
+> We'll also need to deal with the blk-mq wait path that Bart has been
+> working on (I think it's already in the scsi tree, but I'd have to
+> check).
+Ok, I'm not sure either.
 
-When there are a lot of IO requests queued for the HW, the IRQ handler of the
-mpxsas driver spins forever until all requests are serviced. 
+> Also adding a bool flag for the last call in a function is style that's
+> a little annoying.
+>
+> I'd prefer to add a scsi_internal_device_block_nowait that contains
+> all the code except for the waiting, and then make
+> scsi_internal_device_block_nowait a wrapper around it.  Or drop the
+> annoying internal for both while we're at it :)
 
-Spinning in the IRQ handler forever is a bad design and causes stalls on the
-other cores that is unrelated to this request.
+The proposed patch brings the code in-line with what is in 4.8 stable
+where scsi_internal_device_block() does not call
+scsi_wait_for_queuecommand(). So I saw it as a minimal fix to make
+my system boot again :)
 
-A simple solution has been posted here but rejected by the maintainer as the
-maintainer has been looking to offload only the slow path to task context.
+I was wondering if the original fix is racy in that there could be multiple
+threads in the queuecommand. Perhaps we should do something like:
+       
+    if (ata_12_16_cmd(scmd))
+{                                                                                                                                   
 
-https://patchwork.kernel.org/patch/7579951/
+                if (!test_and_set_bit(MPT_DEVICE_EXCLUSIVE,
+&sas_device_priv_data->flags))
+{                                                                         
+                       
+scsi_internal_device_block(scmd->device);                                                                                                    
 
-Further requests for details to resolve the issue has been unanswered.
+                }
+else                                                                                                                                               
 
-Logging the issue here for awareness.
+                        return
+SCSI_MLQUEUE_HOST_BUSY;                                                                                                               
 
--- 
-You are receiving this mail because:
-You are the assignee for the bug.
+        }        
+
+where scsi_internal_device_block() could be taught to wait for
+request_fn_active becoming 1 instead of 0.
+
+Thanks,
+
+-Jason
