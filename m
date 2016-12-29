@@ -1,65 +1,41 @@
-From: Jason Baron <jbaron@akamai.com>
+From: David Miller <davem@davemloft.net>
 Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Thu, 29 Dec 2016 11:02:58 -0500
-Message-ID: <c67108d8-8aee-012d-047f-96267b289071@akamai.com>
+Date: Thu, 29 Dec 2016 11:16:51 -0500 (EST)
+Message-ID: <20161229.111651.1486287401918317471.davem@davemloft.net>
 References: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
- <20161229080250.GA11605@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: Text/Plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161229080250.GA11605@infradead.org>
+In-Reply-To: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>, David Miller <davem@davemloft.net>
+To: jbaron@akamai.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, Sreekanth.Reddy@broadcom.com, hare@suse.de, martin.petersen@oracle.com, bart.vanassche@sandisk.com, sagi@grimberg.me, jejb@linux.vnet.ibm.com, hch@lst.de, dledford@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/29/2016 03:02 AM, Christoph Hellwig wrote:
+From: Jason Baron <jbaron@akamai.com>
+Date: Wed, 28 Dec 2016 23:30:24 -0500
 
-> On Wed, Dec 28, 2016 at 11:30:24PM -0500, Jason Baron wrote:
->> Add a new parameter to scsi_internal_device_block() to decide whether
->> or not to invoke scsi_wait_for_queuecommand().
-> We'll also need to deal with the blk-mq wait path that Bart has been
-> working on (I think it's already in the scsi tree, but I'd have to
-> check).
-Ok, I'm not sure either.
+> On ata passthru commands scsih_qcmd() ends up spinning in
+> scsi_wait_for_queuecommand() indefinitely. scsih_qcmd() is called from
+> __blk_run_queue_uncond() which first increments request_fn_active to a
+> non-zero value. Thus, scsi_wait_for_queuecommand() never completes because
+> its spinning waiting for request_fn_active to become 0.
+> 
+> Two patches interact here. The first:
+> 
+> commit 18f6084a989b ("scsi: mpt3sas: Fix secure erase premature
+> termination") calls scsi_internal_device_block() for ata passthru commands.
+> 
+> The second patch:
+> 
+> commit 669f044170d8 ("scsi: srp_transport: Move queuecommand() wait code
+> to SCSI core") adds a call to scsi_wait_for_queuecommand() from
+> scsi_internal_device_block().
+> 
+> Add a new parameter to scsi_internal_device_block() to decide whether
+> or not to invoke scsi_wait_for_queuecommand().
+> 
+> Signed-off-by: Jason Baron <jbaron@akamai.com>
 
-> Also adding a bool flag for the last call in a function is style that's
-> a little annoying.
->
-> I'd prefer to add a scsi_internal_device_block_nowait that contains
-> all the code except for the waiting, and then make
-> scsi_internal_device_block_nowait a wrapper around it.  Or drop the
-> annoying internal for both while we're at it :)
-
-The proposed patch brings the code in-line with what is in 4.8 stable
-where scsi_internal_device_block() does not call
-scsi_wait_for_queuecommand(). So I saw it as a minimal fix to make
-my system boot again :)
-
-I was wondering if the original fix is racy in that there could be multiple
-threads in the queuecommand. Perhaps we should do something like:
-       
-    if (ata_12_16_cmd(scmd))
-{                                                                                                                                   
-
-                if (!test_and_set_bit(MPT_DEVICE_EXCLUSIVE,
-&sas_device_priv_data->flags))
-{                                                                         
-                       
-scsi_internal_device_block(scmd->device);                                                                                                    
-
-                }
-else                                                                                                                                               
-
-                        return
-SCSI_MLQUEUE_HOST_BUSY;                                                                                                               
-
-        }        
-
-where scsi_internal_device_block() could be taught to wait for
-request_fn_active becoming 1 instead of 0.
-
-Thanks,
-
--Jason
+Tested-by: David S. Miller <davem@davemloft.net>
