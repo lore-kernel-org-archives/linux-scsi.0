@@ -1,30 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Thu, 29 Dec 2016 00:02:50 -0800
-Message-ID: <20161229080250.GA11605@infradead.org>
-References: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
+From: Oliver Neukum <oneukum@suse.com>
+Subject: Re: JMS56x not working reliably with uas driver
+Date: Thu, 29 Dec 2016 09:28:04 +0100
+Message-ID: <1483000084.4506.1.camel@suse.com>
+References: <Pine.LNX.4.44L0.1612272109450.3821-100000@netrider.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1482985824-7270-1-git-send-email-jbaron@akamai.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Jason Baron <jbaron@akamai.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, James Bottomley <jejb@linux.vnet.ibm.com>, Christoph Hellwig <hch@lst.de>, Doug Ledford <dledford@redhat.com>, David Miller <davem@davemloft.net>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52314 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751167AbcL2Iec (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Dec 2016 03:34:32 -0500
+In-Reply-To: <Pine.LNX.4.44L0.1612272109450.3821-100000@netrider.rowland.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Alan Stern <stern@rowland.harvard.edu>
+Cc: George Cherian <gcherian@caviumnetworks.com>, hdegoede@redhat.com, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org
 
-On Wed, Dec 28, 2016 at 11:30:24PM -0500, Jason Baron wrote:
-> Add a new parameter to scsi_internal_device_block() to decide whether
-> or not to invoke scsi_wait_for_queuecommand().
+On Tue, 2016-12-27 at 21:19 -0500, Alan Stern wrote:
+> On Tue, 27 Dec 2016, George Cherian wrote:
 
-We'll also need to deal with the blk-mq wait path that Bart has been
-working on (I think it's already in the scsi tree, but I'd have to
-check).
+> > True. I am afraid that there necessarily is a window for resetting a
+> > disconnected device. But the check you proposed is better.
+> > however, I'd like to encapsulate that together with a test for
+> > logical disconnect. Uas is unlikely to be the only driver that has
+> > this issue.
+> 
+> True enough.  We could have a usb_device_is_disconnected() inline
+> helper for this purpose.  There's no need to try to distinguish 
+> between physical and logical disconnects, as far as I can see.
 
-Also adding a bool flag for the last call in a function is style that's
-a little annoying.
+There is no such need. There is a need for both checks though.
 
-I'd prefer to add a scsi_internal_device_block_nowait that contains
-all the code except for the waiting, and then make
-scsi_internal_device_block_nowait a wrapper around it.  Or drop the
-annoying internal for both while we're at it :)
+> However, as George points out, the "Transfer event" error has nothing 
+> to do with disconnection.  It was triggered by the device's bogus 
+> response to a REPORT OPCODES command, or something of the sort.  We 
+> should be able to handle bogus responses without logging ERROR 
+> messages, because such messages indicate a bug in a kernel driver.
+
+Indeed. We have two independent issues. We should have two independent
+fixes.
+
+	Regards
+		Oliver
+
+
+
