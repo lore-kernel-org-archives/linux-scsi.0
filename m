@@ -1,70 +1,64 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] qla2xxx: rename {vendor|hba}_indentifer to {vendor|hba}_identifer
-Date: Thu, 29 Dec 2016 22:20:38 +0000
-Message-ID: <20161229222038.29984-1-colin.king@canonical.com>
+From: Sebastian Herbszt <herbszt@gmx.de>
+Subject: Re: [PATCH v2 03/11] lpfc: Deprecate lpfc_soft_wwn parameter
+Date: Fri, 30 Dec 2016 00:31:52 +0100
+Message-ID: <20161230003152.000056b7@gmx.de>
+References: <5858682a.Twfv0+hfi3tqtT1c%james.smart@broadcom.com>
+        <20161222230059.000006e1@gmx.de>
+        <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
+        <20161228193832.00000ba9@gmx.de>
+        <f9fa4cfd-9a16-de65-ab71-65369791a29c@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.gmx.net ([212.227.15.19]:49920 "EHLO mout.gmx.net"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751416AbcL2XcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 29 Dec 2016 18:32:15 -0500
+In-Reply-To: <f9fa4cfd-9a16-de65-ab71-65369791a29c@broadcom.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <james.smart@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sebastian Herbszt <herbszt@gmx.de>
 
-From: Colin Ian King <colin.king@canonical.com>
+James,
 
-Rename the vendor_indentifer and hba_indentifer fields to correct spelling.
+thank you for taking the time to answer me.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/qla2xxx/qla_def.h | 4 ++--
- drivers/scsi/qla2xxx/qla_gs.c  | 6 +++---
- 2 files changed, 5 insertions(+), 5 deletions(-)
+James Smart wrote:
+> Sebastian,
+> 
+> "not portable" isn't the right way to describe it. It's not a 
+> chip-architecture issue, but rather that some oem platforms have 
+> side-band management that overrides anything that could have been
+> done in the os, and in ways that may not be easy to communicate back
+> to the driver.
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index f7df01b..ef699b6 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2247,7 +2247,7 @@ struct ct_fdmiv2_hba_attr {
- 		uint32_t num_ports;
- 		uint8_t fabric_name[WWN_SIZE];
- 		uint8_t bios_name[32];
--		uint8_t vendor_indentifer[8];
-+		uint8_t vendor_identifier[8];
- 	} a;
- };
- 
-@@ -2422,7 +2422,7 @@ struct ct_sns_req {
- 		} rsnn_nn;
- 
- 		struct {
--			uint8_t hba_indentifier[8];
-+			uint8_t hba_identifier[8];
- 		} ghat;
- 
- 		struct {
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index 94e8a85..ee3df87 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -1939,15 +1939,15 @@ qla2x00_fdmiv2_rhba(scsi_qla_host_t *vha)
- 	/* Vendor Identifier */
- 	eiter = entries + size;
- 	eiter->type = cpu_to_be16(FDMI_HBA_TYPE_VENDOR_IDENTIFIER);
--	snprintf(eiter->a.vendor_indentifer, sizeof(eiter->a.vendor_indentifer),
-+	snprintf(eiter->a.vendor_identifier, sizeof(eiter->a.vendor_identifier),
- 	    "%s", "QLGC");
--	alen = strlen(eiter->a.vendor_indentifer);
-+	alen = strlen(eiter->a.vendor_identifier);
- 	alen += 4 - (alen & 3);
- 	eiter->len = cpu_to_be16(4 + alen);
- 	size += 4 + alen;
- 
- 	ql_dbg(ql_dbg_disc, vha, 0x20b1,
--	    "Vendor Identifier = %s.\n", eiter->a.vendor_indentifer);
-+	    "Vendor Identifier = %s.\n", eiter->a.vendor_identifier);
- 
- 	/* Update MS request size. */
- 	qla2x00_update_ms_fdmi_iocb(vha, size + 16);
--- 
-2.10.2
+"not portable" might not be the term I actually meant. Let's call it
+server vendor dependent.
+Can you please elaborate on the oem platforms and side-band management
+you mean? I know of a solution called "ServerView Virtual-IO Manager"
+by Fujitsu which might fit. AFAIK it is a piece of software which
+communicates with the BMC and allows to change the MAC address and WWN.
+Of course it only works with Fujitsu servers and supported cards.
+I think I heard that for NICs it just changes the MAC address in the
+eeprom. This is not done "online" but when the server is powered on.
+Even though this might be a comparable case (external MAC address
+configuration) I think the ability to change the MAC address by the
+means of "ip link set dev ethX address" was not removed.
+
+> FAWN - true Brocade only - but that is the 70+%
+> market share of the FC switches. The current implementation already
+> doesn't work many situations - so there's no clear winner for having
+> it work everywhere. Given the inability for it always to work, the
+> decision was to deprecate the attribute.
+> 
+> -- james
+
+How do you choose the desired WWN between the possible options
+(factory set, oem platform set, FA-WWN)?
+And wouldn't soft wwn always win because it is applied at last?
+However it might compete with FA-WWN. I wasn't yet able to
+find details on how it works.
+
+Sebastian
