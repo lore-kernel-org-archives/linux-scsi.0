@@ -1,61 +1,53 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH v2 03/11] lpfc: Deprecate lpfc_soft_wwn parameter
-Date: Fri, 30 Dec 2016 07:21:34 -0800
-Message-ID: <140c5c03-8515-8a20-6823-4f7ac16bed52@broadcom.com>
-References: <5858682a.Twfv0+hfi3tqtT1c%james.smart@broadcom.com>
- <20161222230059.000006e1@gmx.de>
- <1a6d026b-f896-84a9-2c81-9a3bfebd01dd@broadcom.com>
- <20161228193832.00000ba9@gmx.de>
- <f9fa4cfd-9a16-de65-ab71-65369791a29c@broadcom.com>
- <20161230003152.000056b7@gmx.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Fri, 30 Dec 2016 15:32:55 +0000
+Message-ID: <bug-176951-11613-ATNyD7x73H@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f182.google.com ([209.85.216.182]:35325 "EHLO
-        mail-qt0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754167AbcL3PVj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 30 Dec 2016 10:21:39 -0500
-Received: by mail-qt0-f182.google.com with SMTP id c47so396742114qtc.2
-        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2016 07:21:38 -0800 (PST)
-In-Reply-To: <20161230003152.000056b7@gmx.de>
+Received: from mail.kernel.org ([198.145.29.136]:39198 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752421AbcL3Pc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 30 Dec 2016 10:32:59 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 09727205B7
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2016 15:32:58 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 130F62057F
+        for <linux-scsi@vger.kernel.org>; Fri, 30 Dec 2016 15:32:56 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sebastian Herbszt <herbszt@gmx.de>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-On 12/29/2016 3:31 PM, Sebastian Herbszt wrote:
-> "not portable" might not be the term I actually meant. Let's call it
-> server vendor dependent.
-> Can you please elaborate on the oem platforms and side-band management
-> you mean? I know of a solution called "ServerView Virtual-IO Manager"
-> by Fujitsu which might fit. AFAIK it is a piece of software which
-> communicates with the BMC and allows to change the MAC address and WWN.
-> Of course it only works with Fujitsu servers and supported cards.
-> I think I heard that for NICs it just changes the MAC address in the
-> eeprom. This is not done "online" but when the server is powered on.
-> Even though this might be a comparable case (external MAC address
-> configuration) I think the ability to change the MAC address by the
-> means of "ip link set dev ethX address" was not removed.
+matteo.terruzzi@gmail.com changed:
 
-Unfortunately, I can't elaborate on the platforms. Yes, there are things 
-similar to what you describe above. Also realize that persisting the 
-value across different cold/hot/flr resets affects boot and dump.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |matteo.terruzzi@gmail.com
 
-> How do you choose the desired WWN between the possible options
-> (factory set, oem platform set, FA-WWN)?
-> And wouldn't soft wwn always win because it is applied at last?
-> However it might compete with FA-WWN. I wasn't yet able to
-> find details on how it works.
->
-> Sebastian
+--- Comment #13 from matteo.terruzzi@gmail.com ---
+I'm reporting the same problem with Acer Travelmate X349-M, BIOS v1.07, 64bit
+in all tests.
 
-Unfortunately, I can't comment on that either.  It's not always last 
-wins and that's one of the issues.
+Also, I can get to the login prompt of gdm with everything working good
+(including battery status, touchpad, wifi, special keys...) using Arch Linux
+with replaced Kernel 4.10r1 from Ubuntu distribution and `acpi=force
+acpi_osi='!Windows 2012'`,
+but (unless acpi=off) it freezes on black screen just after successfull login
+(the same with GNOME, GNOME Classic, GNOME Xorg).
 
-I've submitted a patch to reinstated the feature - it works as well as 
-it did before.
+Tried Kernel 4.0.9 from Ubuntu with acpi on, and it worked good for 10 minutes
+on GNOME, but then stopped and didn't work at all for the following tries.
+Tried Kernel 4.4.0: acpi=off, login ok; acpi on, crash with stack traces at
+boot, behavior similar to 4.0.9.
+Also note that Ubuntu 16.10 Live official image (linux-image-4.8.0-22-generic)
+works perfectly.
 
--- james
-
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
