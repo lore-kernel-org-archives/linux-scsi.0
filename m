@@ -1,33 +1,30 @@
-From: Kees Cook <keescook@chromium.org>
-Subject: Re: [PATCH] scsi/bfa: use designated initializers
-Date: Tue, 3 Jan 2017 15:25:22 -0800
-Message-ID: <CAGXu5jJM-B3r7tF2Mdm3HjY_74_Jme=W7=L9-bvRNKM6eN7XJA@mail.gmail.com>
-References: <20161217010515.GA140673@beast> <20161221083350.GA30130@infradead.org>
+From: Lee Duncan <lduncan@suse.com>
+Subject: [LSF/MM TOPIC ATTEND] kernel booting using remote storage is a mess
+Date: Tue, 3 Jan 2017 15:44:48 -0800
+Message-ID: <ee864cdd-11c3-63d6-51b7-b23b984fdbc6@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161221083350.GA30130@infradead.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: LKML <linux-kernel@vger.kernel.org>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:60915 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S964901AbdACXsO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 3 Jan 2017 18:48:14 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Wed, Dec 21, 2016 at 12:33 AM, Christoph Hellwig <hch@infradead.org> wrote:
-> On Fri, Dec 16, 2016 at 05:05:15PM -0800, Kees Cook wrote:
->> Prepare to mark sensitive kernel structures for randomization by making
->> sure they're using designated initializers. These were identified during
->> allyesconfig builds of x86, arm, and arm64, with most initializer fixes
->> extracted from grsecurity.
->
-> Instead of further bloating the idiotic dispatch table just kill it off
-> entirely:
+The process of booting a Linux kernel with remote storage (such as iSCSI
+or FCoE) seems unnecessarily complicated if end users can even figure
+out how to do it. This is of course exacerbated by the fact that every
+company seems to CNA cards differently despite the iBFT standard.
 
-Sounds fine to me! Is this going via your tree?
+If you add DM-Multipath on top of that, most bets are off on your
+chances of getting it to reliably work.
 
-Thanks!
-
--Kees
-
+I'd like to discuss how we can get this to work in a general way given
+the world of systemd that we live in now.
 -- 
-Kees Cook
-Nexus Security
+Lee Duncan
+SUSE Labs
