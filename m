@@ -1,37 +1,55 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [LSF/MM TOPIC] blk-trace update vs API stability
-Date: Wed, 4 Jan 2017 09:49:33 +0100
-Message-ID: <62463a62-2dcb-639c-364c-3cc8b50628d2@suse.de>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH] target/user: Fix use-after-free cmd->se_cmd if the cmd
+ isexpired
+Date: Wed, 4 Jan 2017 16:51:49 +0800
+Message-ID: <e4c25855-8570-dd54-50e5-7e23791b22f4@cmss.chinamobile.com>
+References: <1483433176-21063-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <586C5004.5030909@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Sender: linux-block-owner@vger.kernel.org
-To: lsf-pc@lists.linux-foundation.org
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <586C5004.5030909@redhat.com>
+Sender: stable-owner@vger.kernel.org
+To: Mike Christie <mchristi@redhat.com>, bart.vanassche@sandisk.com
+Cc: varun@chelsio.com, agrover@redhat.com, bgly@us.ibm.com, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, namei.unix@gmail.com, stable@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>
 List-Id: linux-scsi@vger.kernel.org
 
-Hi all,
 
-during investigating performance issues I frequently have the need to
-include the request tag in the scsi tracepoints. While this can be
-easily done for scsi, including it in block trace output is not that
-easy due to the interdependency with the blktrace utilities.
+Hi Mike
 
-Also there had been some discussion on KS last year, but with no
-conclusive result IIRC.
+Thanks very much for your analysis.
 
-At LSF I'd like to discuss
-- Do we consider blktrace (and any other tracepoint in eg SCSI) as a
-stable API?
-- How do we go about modifying blktrace? Is this even desired?
-  Or should any trace event modification be opaque to blktrace output?
+>> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
+>> index 2e33100..6396581 100644
+>> --- a/drivers/target/target_core_user.c
+>> +++ b/drivers/target/target_core_user.c
+>> @@ -684,7 +684,6 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
+>>   
+>>   	set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
+>>   	target_complete_cmd(cmd->se_cmd, SAM_STAT_CHECK_CONDITION);
+>> -	cmd->se_cmd = NULL;
+>>   
+> How did tcmu_handle_completion get to a point it was accessing the
+> se_cmd if the TCMU_CMD_BIT_EXPIRED bit was set?
+> Were memory accesses out
+> of order?
+No, even using the -O3, becuase has there memory dependency ?
 
-Cheers,
+> CPU1 set the TCMU_CMD_BIT_EXPIRED bit then cleared
+> cmd->se_cmd, but CPU2 copied cmd->se_cmd to se_cmd and saw it was NULL
+> but did not yet see the TCMU_CMD_BIT_EXPIRED bit set?
 
-Hannes
--- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+Because the debug rpms for my kernel version were lost, and the crash
+tools couldn't be used to have a more accurate analysis.
+>
+> It looks like, if you do the above patch, the above function will call
+> target_complete_cmd and tcmu_handle_completion will call it again, so we
+> will have a double free issue.
+Maybe the best resolution is to move tcmu_handle_completion() between
+spin_lock(&udev->commands_lock) and spin_unlock(&udev->commands_lock)?
+
+Thanks.
+
+BRs
+Xiubo Li
