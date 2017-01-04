@@ -1,57 +1,38 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [bug report] [SCSI] mpt3sas: add new driver supporting 12GB SAS
-Date: Wed, 4 Jan 2017 16:52:14 +0300
-Message-ID: <20170104135214.GC13702@mwanda>
-References: <20170104133315.GA19973@elgon.mountain>
+From: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+Subject: Re: [4.10, panic, regression] iscsi: null pointer deref at
+	iscsi_tcp_segment_done+0x20d/0x2e0
+Date: Wed, 4 Jan 2017 15:07:17 +0100
+Message-ID: <20170104140717.GA24608@lst.de>
+References: <20161222051322.GF4758@dastard> <CA+55aFza=cv6TGYh+Be1xz2x-G-U=vruhbmfGpHSqY1ocZrBeg@mail.gmail.com> <20161222065012.GI4758@dastard> <20161222185030.so4btkuzzkih3owz@straylight.hirudinean.org> <CACVXFVOGoh+AEGSSMsbxfdAjZQS5k_t+7uR-+qwusm0vfauHEA@mail.gmail.com> <20161223000356.dxwkgsei32w7hc4f@straylight.hirudinean.org> <20161223100014.GA29467@lst.de> <CA+55aFxA1LE+4jdR8YXZyRVJ-MpOCUVob=ESBsMPuW=Qb=px-A@mail.gmail.com> <20161224100756.GA16741@lst.de> <a9fc4c0b-8521-84cc-66f6-48396c095539@suse.de>
+Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:30789 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753836AbdADNyD (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2017 08:54:03 -0500
+Content-Type: text/plain; charset=UTF-8
+Return-path: <open-iscsi+bncBDUNBGN3R4KRBFUDWTBQKGQEASAU46Y-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
 Content-Disposition: inline
-In-Reply-To: <20170104133315.GA19973@elgon.mountain>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <a9fc4c0b-8521-84cc-66f6-48396c095539-l3A5Bk7waGM@public.gmane.org>
+List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Archive: <https://groups.google.com/group/open-iscsi
+List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
+List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
+ <https://groups.google.com/group/open-iscsi/subscribe>
+To: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Cc: Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>, Linus Torvalds <torvalds-de/tnXTf+JLsfHDXvbKv3WD2FQJk+8+b@public.gmane.org>, Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Ming Lei <tom.leiming-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dave Chinner <david-FqsqvQoI3Ljby3iVrkZq2A@public.gmane.org>, Johannes Weiner <hannes-druUgvl0LCNAfugRpC6u6w@public.gmane.org>, Linux Kernel Mailing List <linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Lee Duncan <lduncan-IBi9RG/b67k@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Linux SCSI List <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-block <linux-block-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Jens Axboe <axboe-b10kYP2dOMg@public.gmane.org>, "Michael S. Tsirkin" <mst-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth.Reddy@lsi.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
 
-Oops...  This one is really old.  I didn't look carefully at it before I
-hit send.  Sorry about that.
+On Sat, Dec 24, 2016 at 02:17:26PM +0100, Hannes Reinecke wrote:
+> Christoph, do you have a pointer to your patchset?
 
-regards,
-dan carpenter
+Here is a pointer to the current one after splitting it into properly
+bisectable chunks.  Besides proper changelogs the biggest item left
+is fixing up dm-mpath to not allocate its own request structures.
 
+http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/block-pc-refactor
 
-On Wed, Jan 04, 2017 at 04:33:16PM +0300, Dan Carpenter wrote:
-> Hello Sreekanth Reddy,
-> 
-> The patch f92363d12359: "[SCSI] mpt3sas: add new driver supporting
-> 12GB SAS" from Nov 30, 2012, leads to the following static checker
-> warning:
-> 
-> 	drivers/scsi/mpt3sas/mpt3sas_base.c:620 _base_display_event_data()
-> 	warn: curly braces intended?
-> 
-> drivers/scsi/mpt3sas/mpt3sas_base.c
->    610          case MPI2_EVENT_SAS_DISCOVERY:
->    611          {
->    612                  Mpi2EventDataSasDiscovery_t *event_data =
->    613                      (Mpi2EventDataSasDiscovery_t *)mpi_reply->EventData;
->    614                  pr_info(MPT3SAS_FMT "Discovery: (%s)", ioc->name,
->    615                      (event_data->ReasonCode == MPI2_EVENT_SAS_DISC_RC_STARTED) ?
->    616                      "start" : "stop");
->    617                  if (event_data->DiscoveryStatus)
->    618                          pr_info("discovery_status(0x%08x)",
->    619                              le32_to_cpu(event_data->DiscoveryStatus));
->    620                          pr_info("\n");
-> 
-> The indenting is messed up here and also this should be using pr_cont()
-> because pr_info() will put a bunch of crap in the middle of the line.
-> 
->    621                  return;
->    622          }
-> 
-> regards,
-> dan carpenter
+-- 
+You received this message because you are subscribed to the Google Groups "open-iscsi" group.
+To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
+Visit this group at https://groups.google.com/group/open-iscsi.
+For more options, visit https://groups.google.com/d/optout.
