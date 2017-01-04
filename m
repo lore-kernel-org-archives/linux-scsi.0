@@ -1,55 +1,91 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH] target/user: Fix use-after-free cmd->se_cmd if the cmd
- isexpired
-Date: Wed, 4 Jan 2017 16:51:49 +0800
-Message-ID: <e4c25855-8570-dd54-50e5-7e23791b22f4@cmss.chinamobile.com>
-References: <1483433176-21063-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <586C5004.5030909@redhat.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH] mpt3sas: Force request partial completion alignment
+Date: Wed, 4 Jan 2017 17:03:19 +0530
+Message-ID: <CAK=zhgqM6ffZ0yQMutc6BHJF_v268vx8RE7fiPo25NWwwR6Fgw@mail.gmail.com>
+References: <1482929480-16688-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <586C5004.5030909@redhat.com>
-Sender: stable-owner@vger.kernel.org
-To: Mike Christie <mchristi@redhat.com>, bart.vanassche@sandisk.com
-Cc: varun@chelsio.com, agrover@redhat.com, bgly@us.ibm.com, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, namei.unix@gmail.com, stable@vger.kernel.org, Jianfei Hu <hujianfei@cmss.chinamobile.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:36518 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S967212AbdADLdV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 4 Jan 2017 06:33:21 -0500
+Received: by mail-qk0-f178.google.com with SMTP id n21so397602689qka.3
+        for <linux-scsi@vger.kernel.org>; Wed, 04 Jan 2017 03:33:20 -0800 (PST)
+In-Reply-To: <1482929480-16688-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Brian King <brking@linux.vnet.ibm.com>, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com
 
+Hi Guilherme,
 
-Hi Mike
+Can please share us the driver logs (with driver logging_level set to
+0x3f8) for the original issue (i.e. without this patch changes) and
+the HBA firmware version you have used.
 
-Thanks very much for your analysis.
+Also can you please share us the steps you have followed to reproduce
+this issue, so that I can try on my setup.
 
->> diff --git a/drivers/target/target_core_user.c b/drivers/target/target_core_user.c
->> index 2e33100..6396581 100644
->> --- a/drivers/target/target_core_user.c
->> +++ b/drivers/target/target_core_user.c
->> @@ -684,7 +684,6 @@ static int tcmu_check_expired_cmd(int id, void *p, void *data)
->>   
->>   	set_bit(TCMU_CMD_BIT_EXPIRED, &cmd->flags);
->>   	target_complete_cmd(cmd->se_cmd, SAM_STAT_CHECK_CONDITION);
->> -	cmd->se_cmd = NULL;
->>   
-> How did tcmu_handle_completion get to a point it was accessing the
-> se_cmd if the TCMU_CMD_BIT_EXPIRED bit was set?
-> Were memory accesses out
-> of order?
-No, even using the -O3, becuase has there memory dependency ?
+Thanks,
+Sreekanth
 
-> CPU1 set the TCMU_CMD_BIT_EXPIRED bit then cleared
-> cmd->se_cmd, but CPU2 copied cmd->se_cmd to se_cmd and saw it was NULL
-> but did not yet see the TCMU_CMD_BIT_EXPIRED bit set?
-
-Because the debug rpms for my kernel version were lost, and the crash
-tools couldn't be used to have a more accurate analysis.
+On Wed, Dec 28, 2016 at 6:21 PM, Guilherme G. Piccoli
+<gpiccoli@linux.vnet.ibm.com> wrote:
+> From: Ram Pai <linuxram@us.ibm.com>
 >
-> It looks like, if you do the above patch, the above function will call
-> target_complete_cmd and tcmu_handle_completion will call it again, so we
-> will have a double free issue.
-Maybe the best resolution is to move tcmu_handle_completion() between
-spin_lock(&udev->commands_lock) and spin_unlock(&udev->commands_lock)?
-
-Thanks.
-
-BRs
-Xiubo Li
+> The firmware or device, possibly under a heavy I/O load, can return
+> on a partial unaligned boundary. Scsi-ml expects these requests to be
+> completed on an alignment boundary. Scsi-ml blindly requeues the I/O
+> without checking the alignment boundary of the I/O request for the
+> remaining bytes. This leads to errors, since devices cannot perform
+> non-aligned read/write operations.
+>
+> This patch fixes the issue in the driver. It aligns unaligned
+> completions of FS requests, by truncating them to the nearest
+> alignment boundary.
+>
+> Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index b5c966e..55332a3 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -4644,6 +4644,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>         struct MPT3SAS_DEVICE *sas_device_priv_data;
+>         u32 response_code = 0;
+>         unsigned long flags;
+> +       unsigned int sector_sz;
+> +       struct request *req;
+>
+>         mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+>         scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+> @@ -4703,6 +4705,20 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>         }
+>
+>         xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+> +
+> +       /* In case of bogus fw or device, we could end up having
+> +        * unaligned partial completion. We can force alignment here,
+> +        * then scsi-ml does not need to handle this misbehavior.
+> +        */
+> +       sector_sz = scmd->device->sector_size;
+> +       req = scmd->request;
+> +       if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
+> +                   (xfer_cnt % sector_sz))) {
+> +               sdev_printk(KERN_INFO, scmd->device,
+> +                           "unaligned partial completion avoided\n");
+> +               xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
+> +       }
+> +
+>         scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+>         if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+>                 log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+> --
+> 2.1.0
+>
