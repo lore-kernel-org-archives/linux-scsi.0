@@ -1,36 +1,37 @@
-From: Hanjun Guo <hanjun.guo@linaro.org>
-Subject: Re: [PATCH 0/3] hisi_sas: some CQ processing fixes
-Date: Wed, 4 Jan 2017 10:14:53 +0800
-Message-ID: <52fd4c87-a1e7-8a7e-835c-03297f7b1737@linaro.org>
-References: <1483446290-185084-1-git-send-email-john.garry@huawei.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [LSF/MM TOPIC] blk-trace update vs API stability
+Date: Wed, 4 Jan 2017 09:49:33 +0100
+Message-ID: <62463a62-2dcb-639c-364c-3cc8b50628d2@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f51.google.com ([74.125.83.51]:32981 "EHLO
-        mail-pg0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754827AbdADCWH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2017 21:22:07 -0500
-Received: by mail-pg0-f51.google.com with SMTP id g1so182128913pgn.0
-        for <linux-scsi@vger.kernel.org>; Tue, 03 Jan 2017 18:22:07 -0800 (PST)
-In-Reply-To: <1483446290-185084-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On 2017/1/3 20:24, John Garry wrote:
-> This patchset fixes some issues related to servicing of the
-> completion queue interrupt.
-> The major fix is that sensitive hisi_hba structures need to be
-> locked when free'ing a slot.
-> Another modification is that the v2 hw completion queue irq is
-> now serviced with a tasklet, as too much work was being done in
-> the ISR.
+Hi all,
 
-Tested on v2 based sas hardware and the crashes are gone,
+during investigating performance issues I frequently have the need to
+include the request tag in the scsi tracepoints. While this can be
+easily done for scsi, including it in block trace output is not that
+easy due to the interdependency with the blktrace utilities.
 
-Tested-by: Hanjun Guo <hanjun.guo@linaro.org>
+Also there had been some discussion on KS last year, but with no
+conclusive result IIRC.
 
-Thanks
-Hanjun
+At LSF I'd like to discuss
+- Do we consider blktrace (and any other tracepoint in eg SCSI) as a
+stable API?
+- How do we go about modifying blktrace? Is this even desired?
+  Or should any trace event modification be opaque to blktrace output?
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		      zSeries & Storage
+hare@suse.de			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
