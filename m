@@ -1,67 +1,30 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: Re: [PATCH] scsi: ufs-qcom: Fix module autoload
-Date: Tue, 03 Jan 2017 17:06:31 -0800
-Message-ID: <2e6c48e44bf0af257f11c2ca4007c705@codeaurora.org>
-References: <1483365898-30166-1-git-send-email-javier@osg.samsung.com>
+From: zhangfei <zhangfei.gao@linaro.org>
+Subject: Re: [PATCH 1/3] scsi: hisi_sas: service v2 hw CQ ISR with tasklet
+Date: Wed, 4 Jan 2017 09:18:36 +0800
+Message-ID: <a103003d-51a0-eb2f-8a3d-0b75b24634d6@linaro.org>
+References: <1483446290-185084-1-git-send-email-john.garry@huawei.com>
+ <1483446290-185084-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:46442 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753267AbdADBOb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 3 Jan 2017 20:14:31 -0500
-In-Reply-To: <1483365898-30166-1-git-send-email-javier@osg.samsung.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1483446290-185084-2-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hanjun.guo@linaro.org
 List-Id: linux-scsi@vger.kernel.org
-To: Javier Martinez Canillas <javier@osg.samsung.com>
-Cc: linux-kernel@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>, Vinayak Holikatti <vinholikatti@gmail.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi-owner@vger.kernel.org
 
-On 2017-01-02 06:04, Javier Martinez Canillas wrote:
-> If the driver is built as a module, autoload won't work because the 
-> module
-> alias information is not filled. So user-space can't match the 
-> registered
-> device with the corresponding module.
-> 
-> Export the module alias information using the MODULE_DEVICE_TABLE() 
-> macro.
-> 
-> Before this patch:
-> 
-> $ modinfo drivers/scsi/ufs/ufs-qcom.ko | grep alias
-> $
-> 
-> After this patch:
-> 
-> $ modinfo drivers/scsi/ufs/ufs-qcom.ko | grep alias
-> alias:          of:N*T*Cqcom,ufshcC*
-> alias:          of:N*T*Cqcom,ufshc
-> 
-> Signed-off-by: Javier Martinez Canillas <javier@osg.samsung.com>
-> ---
-> 
->  drivers/scsi/ufs/ufs-qcom.c | 1 +
->  1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-> index abe617372661..5ff8a6bf6fd3 100644
-> --- a/drivers/scsi/ufs/ufs-qcom.c
-> +++ b/drivers/scsi/ufs/ufs-qcom.c
-> @@ -1692,6 +1692,7 @@ static const struct of_device_id 
-> ufs_qcom_of_match[] = {
->  	{ .compatible = "qcom,ufshc"},
->  	{},
->  };
-> +MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
-> 
->  static const struct dev_pm_ops ufs_qcom_pm_ops = {
->  	.suspend	= ufshcd_pltfrm_suspend,
 
-Looks good to me.
-Reviewed-by: Subhash Jadavani <subhashj@codeaurora.org>
 
--- 
-The Qualcomm Innovation Center, Inc. is a member of Code Aurora Forum,
-a Linux Foundation Collaborative Project
+On 2017年01月03日 20:24, John Garry wrote:
+> Currently the all the slot processing for the completion
+> queue is done in ISR context. It is judged that the slot
+> processing can take a long time, especially when a SATA
+> NCQ completes (upto 32 slots).
+>
+> So, as a solution, defer the bulk of the ISR processing
+> to tasklet context. Each CQ will have its down tasklet.
+>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
+Reviewed-by: Zhangfei Gao <zhangfei.gao@linaro.org>
