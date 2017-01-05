@@ -1,37 +1,31 @@
-From: Ric Wheeler <ricwheeler@gmail.com>
-Subject: Linux Foundation's open source file & storage conference
-	CFP
-Date: Thu, 5 Jan 2017 17:30:06 -0500
-Message-ID: <6e0276dd-7388-c6bf-ed6e-02649bd4f464@gmail.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH v3 00/12] scsi: ufs: add trace/debug support, sysfs controls and few fixes
+Date: Thu, 05 Jan 2017 18:20:04 -0500
+Message-ID: <yq1vattjdqz.fsf@oracle.com>
+References: <1482460773-5931-1-git-send-email-subhashj@codeaurora.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"; Format="flowed"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: linux-xfs@vger.kernel.org, linux-ext4@vger.kernel.org, linux-nfs@vger.kernel.org, linux-btrfs@vger.kernel.org, dm-devel@redhat.com, linux-scsi@vger.kernel.org, samba-devel@redhat.com, linux-raid@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:34404 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1030936AbdAEXUh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 18:20:37 -0500
+In-Reply-To: <1482460773-5931-1-git-send-email-subhashj@codeaurora.org>
+        (Subhash Jadavani's message of "Thu, 22 Dec 2016 18:39:33 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-Hi all,
+>>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
 
-The CFP for the Linux Foundation's Vault conference is coming close to an end. 
-The event is being held this year in Cambridge, Massachusetts on the days 
-following the LSF/MM summit.
+Subhash> This patch series adds following things:
+Subhash>  - ftrace support to trace important events in UFS driver.
+Subhash>  - debug dumps following failures to ease the debugging
+Subhash>  - sysfs node to control clock gating, clock scaling and PM
+Subhash>  - few fixes
 
-The first two year's events have been solid, focused events in my (slightly 
-biased) opinion, so worth submitting to and definitely worth attending.
+Applied to 4.11/scsi-queue.
 
-Submit a Proposal to Speak at Vault, Linux Storage and Filesystems Conference. 
-Vault will be held alongside LSF-MM Summit on March 22 & 23 in Cambridge, MA. To 
-submit (by 1/14) visit http://events.linuxfoundation.org/events/vault/program/cfp
-
-Happy to answer any questions about the event.
-
-Ric
+-- 
+Martin K. Petersen	Oracle Linux Engineering
