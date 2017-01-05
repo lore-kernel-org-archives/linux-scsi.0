@@ -1,58 +1,51 @@
-From: Emmanuel Florac <eflorac@intellique.com>
-Subject: Re: SAS disk from RAID card (no RAID mode) problems
-Date: Thu, 5 Jan 2017 17:41:32 +0100
-Message-ID: <20170105174132.2418443f@harpe.intellique.com>
-References: <ed04b869-cc0f-b099-95a8-fc1ce08a1427@imagedworld.com>
-        <b7eb1617-ae24-996b-d0ee-9277b9052064@imagedworld.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Thu, 05 Jan 2017 19:37:55 +0000
+Message-ID: <bug-176951-11613-RJGsNdq6Ca@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha1;
- boundary="Sig_//+Hs7pQQXf=3Rl6YY2qcBh3"; protocol="application/pgp-signature"
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail1.g1.pair.com ([66.39.3.162]:20780 "EHLO mail1.g1.pair.com"
+Received: from mail.kernel.org ([198.145.29.136]:54944 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752685AbdAEQvv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 5 Jan 2017 11:51:51 -0500
-In-Reply-To: <b7eb1617-ae24-996b-d0ee-9277b9052064@imagedworld.com>
+        id S1754555AbdAETiA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 5 Jan 2017 14:38:00 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 0B81F205E1
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Jan 2017 19:37:57 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 0848D205D3
+        for <linux-scsi@vger.kernel.org>; Thu,  5 Jan 2017 19:37:56 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: IW News <news@imagedworld.com>
-Cc: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
---Sig_//+Hs7pQQXf=3Rl6YY2qcBh3
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-Le Tue, 27 Dec 2016 09:01:34 +0100
-IW News <news@imagedworld.com> =C3=A9crivait:
+--- Comment #16 from mus.svz@gmail.com ---
+Created attachment 250411
+  --> https://bugzilla.kernel.org/attachment.cgi?id=250411&action=edit
+dmesg with ACPI errors (kernel 4.10rc2)
 
-> Hi,
->=20
-> So there is no support for the mvsas driver?
->=20
-> The controller is integrated in the motherboard. I could by a PCIe one
-> but, what's the deal them?
+Bisecting this is really frustrating because it randomly works in different
+combinations, depending on whether UEFI or Legacy boot is enabled in BIOS and
+whether you boot via USB or SSD and sometimes pure chance...
 
-You didn't even say what's the SSD drive model. Maybe the drive is
-faulty? The cabling?
+The good(?) news is: kernel 4.10rc2 boots in almost all circumstances. But the
+only combination that is actually stable is the same one that already works
+with 4.8 and 4.9: booting with legacy mode enabled from the internal SSD.
 
---=20
-------------------------------------------------------------------------
-Emmanuel Florac     |   Direction technique
-                    |   Intellique
-                    |	<eflorac@intellique.com>
-                    |   +33 1 78 94 84 02
-------------------------------------------------------------------------
+When I boot 4.10rc2 with UEFI mode enabled in BIOS or via USB, the system
+doesn't hang like with previous kernels. Instead I get quite a few ACPI errors
+and the system manages to boot completely most of the time, but freezes
+completely after a few seconds.
 
---Sig_//+Hs7pQQXf=3Rl6YY2qcBh3
-Content-Type: application/pgp-signature
-Content-Description: Signature digitale OpenPGP
+The full dmesg is attached. This is with UEFI mode enabled in BIOS and booting
+4.10rc2 from the internal SSD. Hopefully the ACPI warnings and errors help
+narrow this down...
 
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v2
-
-iEYEARECAAYFAlhudzwACgkQX3jQXNUicVa3OQCgsK7yPeu3DvXYZcJdkVmQn5Jg
-Q7EAoJXzI/WMEToDncPKqBotkIxzsfdH
-=PBJN
------END PGP SIGNATURE-----
-
---Sig_//+Hs7pQQXf=3Rl6YY2qcBh3--
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
