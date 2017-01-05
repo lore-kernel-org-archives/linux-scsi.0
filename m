@@ -1,27 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: qedi: return via va_end to match corresponding va_start
-Date: Thu, 05 Jan 2017 00:32:04 -0500
-Message-ID: <yq1d1g2kr6z.fsf@oracle.com>
-References: <20161216141043.22324-1-colin.king@canonical.com>
+Subject: Re: [PATCH] scsi/qla4: comments correction
+Date: Thu, 05 Jan 2017 00:34:48 -0500
+Message-ID: <yq18tqqkr2f.fsf@oracle.com>
+References: <1482128429-17975-1-git-send-email-caoj.fnst@cn.fujitsu.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161216141043.22324-1-colin.king@canonical.com> (Colin King's
-        message of "Fri, 16 Dec 2016 14:10:43 +0000")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:25897 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S937861AbdAEFf7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 00:35:59 -0500
+In-Reply-To: <1482128429-17975-1-git-send-email-caoj.fnst@cn.fujitsu.com> (Cao
+        jin's message of "Mon, 19 Dec 2016 14:20:29 +0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Cao jin <caoj.fnst@cn.fujitsu.com>
+Cc: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Cao" == Cao jin <caoj.fnst@cn.fujitsu.com> writes:
 
-Colin> Although on most systems va_end is a no-op, it is good practice
-Colin> to use va_end on the function return path, especially since the
-Colin> va_start documenation states:
-
-Colin>   "Each invocation of va_start() must be matched by a
-Colin>   corresponding
-Colin>    invocation of va_end() in the same function."
+Cao>  drivers/scsi/qla4xxx/ql4_os.c | 6 +++--- 1 file changed, 3
+Cao>  insertions(+), 3 deletions(-)
 
 Applied to 4.11/scsi-queue.
 
