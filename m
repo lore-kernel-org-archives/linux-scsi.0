@@ -1,45 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2 00/13] be2iscsi: driver update 11.2.1.0
-Date: Thu, 05 Jan 2017 00:17:51 -0500
-Message-ID: <yq1h95ekruo.fsf@oracle.com>
-References: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
+Subject: Re: [PATCH] scsi: qedi: return via va_end to match corresponding va_start
+Date: Thu, 05 Jan 2017 00:32:04 -0500
+Message-ID: <yq1d1g2kr6z.fsf@oracle.com>
+References: <20161216141043.22324-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1050.oracle.com ([141.146.126.70]:30276 "EHLO
-        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1759877AbdAEFT1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 00:19:27 -0500
-Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
-        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v055J2xi027176
-        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
-        for <linux-scsi@vger.kernel.org>; Thu, 5 Jan 2017 05:19:02 GMT
-In-Reply-To: <1481624766-13846-1-git-send-email-jitendra.bhivare@broadcom.com>
-        (Jitendra Bhivare's message of "Tue, 13 Dec 2016 15:55:53 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20161216141043.22324-1-colin.king@canonical.com> (Colin King's
+        message of "Fri, 16 Dec 2016 14:10:43 +0000")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>
+Cc: QLogic-Storage-Upstream@cavium.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jitendra Bhivare <jitendra.bhivare@broadcom.com>
-Cc: cleech@redhat.com, lduncan@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Jitendra" == Jitendra Bhivare <jitendra.bhivare@broadcom.com> writes:
+>>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
 
-Jitendra> This patch is generated against for-next branch.  v2 changes:
-Jitendra>   +be2iscsi: Reinit SGL handle, CID tables after TPE
+Colin> Although on most systems va_end is a no-op, it is good practice
+Colin> to use va_end on the function return path, especially since the
+Colin> va_start documenation states:
 
-Jitendra> Jitendra Bhivare (12):
-Jitendra>   be2iscsi: Fix use of invalidate command table req be2iscsi:
-Jitendra>   Fix for crash in beiscsi_eh_device_reset be2iscsi: Take
-Jitendra>   iscsi_task ref in abort handler be2iscsi: Set WRB invalid
-Jitendra>   bit for SkyHawk be2iscsi: Add checks to validate completions
-Jitendra>   be2iscsi: Fix iSCSI cmd cleanup IOCTL be2iscsi: Remove
-Jitendra>   redundant receive buffers posting be2iscsi: Remove unused
-Jitendra>   struct members be2iscsi: Remove wq_name from beiscsi_hba
-Jitendra>   be2iscsi: Add checks to validate CID alloc/free be2iscsi:
-Jitendra>   Reinit SGL handle, CID tables after TPE be2iscsi: Update
-Jitendra>   driver version
-
-Jitendra> Ketan Mukadam (1):
-Jitendra>   be2iscsi: Add warning message for unsupported adapter
+Colin>   "Each invocation of va_start() must be matched by a
+Colin>   corresponding
+Colin>    invocation of va_end() in the same function."
 
 Applied to 4.11/scsi-queue.
 
