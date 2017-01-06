@@ -1,30 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: bfa: Increase requested firmware version to 3.2.5.1
-Date: Thu, 05 Jan 2017 20:48:33 -0500
-Message-ID: <yq1o9zlhsb2.fsf@oracle.com>
-References: <BLUPR0701MB15724638DA0BB8FB5CB9B3CF9F940@BLUPR0701MB1572.namprd07.prod.outlook.com>
-        <20161224044019.13797-1-bpoirier@suse.com>
+Subject: Re: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
+Date: Thu, 05 Jan 2017 20:49:17 -0500
+Message-ID: <yq1k2a9hs9u.fsf@oracle.com>
+References: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20161224044019.13797-1-bpoirier@suse.com> (Benjamin Poirier's
-        message of "Fri, 23 Dec 2016 20:40:19 -0800")
-Sender: netdev-owner@vger.kernel.org
-To: Benjamin Poirier <bpoirier@suse.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Tim Ehlers <tehlers@gwdg.de>, Rasesh Mody <rasesh.mody@cavium.com>, Anil Gurumurthy <anil.gurumurthy@qlogic.com>, Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, netdev@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:48348 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752844AbdAFBty (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:49:54 -0500
+In-Reply-To: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com> (Milan
+        P. Gandhi's message of "Sat, 24 Dec 2016 22:02:46 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Milan P. Gandhi" <mgandhi@redhat.com>
+Cc: linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, chad.dupuis@cavium.com
 
->>>>> "Benjamin" == Benjamin Poirier <bpoirier@suse.com> writes:
+>>>>> "Milan" == Milan P Gandhi <mgandhi@redhat.com> writes:
 
-Benjamin> bna & bfa firmware version 3.2.5.1 was submitted to
-Benjamin> linux-firmware on Feb 17 19:10:20 2015 -0500 in 0ab54ff1dc
-Benjamin> ("linux-firmware: Add QLogic BR Series Adapter Firmware").
+Milan> Hello, There is a race condition with qla2xxx optrom functions
+Milan> where one thread might modify optrom buffer, optrom_state while
+Milan> other thread is still reading from it.
 
-Benjamin> Increase bfa's requested firmware version. Also increase the
-Benjamin> driver version.  I only tested that all of the devices probe
-Benjamin> without error.
-
-Applied to 4.10/scsi-fixes.
+Chad?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
