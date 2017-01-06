@@ -1,185 +1,92 @@
-From: Robert LeBlanc <robert@leblancnet.us>
-Subject: Re: iscsi_trx going into D state
-Date: Fri, 6 Jan 2017 12:12:58 -0700
-Message-ID: <CAANLjFocE2fbO_oWRiEVCt0=mfmgrLy9qWqqg=TH_jZS3PXn0g@mail.gmail.com>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
- <CAANLjFqvtqFu85Aivg6K8XB0rMub03KbBSCq8Kj=Cg+ybxu3pw@mail.gmail.com>
- <CAANLjFpbE9-B8qWtU5nDfg4+t+kD8TSVy0JOfN+zuFYsZ05_Dg@mail.gmail.com>
- <CAANLjFpEpJ4647u9R-7phf68fw--pOfThbp5Sntd4c7DdRSwwQ@mail.gmail.com>
- <CAANLjFooGrt51a9rOy8TKMyXyxBYmGEPm=h1YJm81Nj6YS=5yg@mail.gmail.com>
- <CAANLjFrZrTPUuzP_NjkgG5h_YwwYKEWT-KzVjTvuXZ1d04z6Fg@mail.gmail.com>
- <CAANLjFpSnQ7ApOK5HDRHXQQeQNGWLUv4e+2N=_e-zBeziYm5tw@mail.gmail.com>
- <CAANLjForEkO6RXw7KJYrTJD=f0S8FE73vvwNQcL_ARFdFoDQqg@mail.gmail.com> <1030906614.13148012.1483722413675.JavaMail.zimbra@redhat.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
+Date: Fri, 6 Jan 2017 20:07:48 +0000
+Message-ID: <911085AE-ED24-48A7-AA16-34E06AE4F7B8@cavium.com>
+References: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f66.google.com ([209.85.218.66]:34995 "EHLO
-        mail-oi0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1033001AbdAFTNA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2017 14:13:00 -0500
-Received: by mail-oi0-f66.google.com with SMTP id x84so4273391oix.2
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2017 11:12:59 -0800 (PST)
-In-Reply-To: <1030906614.13148012.1483722413675.JavaMail.zimbra@redhat.com>
+Received: from mail-sn1nam02on0046.outbound.protection.outlook.com ([104.47.36.46]:38368
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S938036AbdAFUHy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 6 Jan 2017 15:07:54 -0500
+In-Reply-To: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
+Content-Language: en-US
+Content-ID: <351FC956C7AD7B43A6F1B0E0A98CBBA4@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Laurence Oberman <loberman@redhat.com>
-Cc: Doug Ledford <dledford@redhat.com>, "Nicholas A. Bellinger" <nab@linux-iscsi.org>, Zhu Lingshan <lszhu@suse.com>, linux-rdma <linux-rdma@vger.kernel.org>, linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>, Christoph Hellwig <hch@lst.de>
+To: "mgandhi@redhat.com" <mgandhi@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Laurence Oberman <loberman@redhat.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>
 
-Laurence,
-
-Since the summary may be helpful to others, I'm just going to send it
-to the list.
-
-I've been able to reproduce the D state problem on both Infiniband and
-RoCE, but it is much easier to reproduce on RoCE due to another bug
-and doesn't require being at the server to yank the cable (remote
-power control of a switch may work as well). The bug seems to be
-triggered by an abrupt and unexpected break in communications
-
-Common config between both Infiniband and RoCE:
-====
-* Linux kernel 4.9 (using only inbox drivers, no OFED)
-* Target and initiator both configured on the same subnet
-* 100 GB ram disk exported by iser [1]
-* Iser volume imported on client and the whole block device formatted ext4.
-* FIO run on iser volume on the client [2]
-* Anything not mentioned in this document should be default (it is a
-pretty simple config)
-
-Infiniband specific config:
-====
-* Any IB cards should work (my config has ConnectX-3, but has also
-been seen on Connect-IB in our environment)
-* Back to back (my config) or connected to a switch
-* OpenSM running on the target (my config), or on a separate host (not
-sure how cutting power to the switch may impact triggering the bug, I
-believe it will still trigger ok)
-* While running the fio job, pull the cable on the initiator side.
-After about 120 seconds the fio job will fail and the iscsi processes
-should be in D state on the target.
-
-RoCE specific config:
-====
-* Only tested with ConnectX-4-LX cards (I don't know if others will
-trigger the problem, pulling the cable like in the Infiniband section,
-may also trigger the bug if it doesn't trigger automatically)
-* Hosts must be connected by a switch or a Linux bridge that doesn't
-have RoCE offload. I was able to trigger the bugs with a back to back
-connection if the target clamps the speed to 10 Gb [3].
-* Running the fio job should be enough to trigger the RoCE card to
-unexpectedly drop the RDMA connection and that should then cause the
-target iscsci processes to go into D state.
-
-For either the Infiniband or RoCE setup, the bug can be triggered with
-only two hosts connected back to back. If something is still not
-clear, please let me know.
-
-[1] /etc/saveconfig.json
-```json
-{
-  "fabric_modules": [],
-  "storage_objects": [
-    {
-      "attributes": {
-        "block_size": 512,
-        "emulate_3pc": 1,
-        "emulate_caw": 1,
-        "emulate_dpo": 0,
-        "emulate_fua_read": 0,
-        "emulate_fua_write": 1,
-        "emulate_model_alias": 1,
-        "emulate_rest_reord": 0,
-        "emulate_tas": 1,
-        "emulate_tpu": 0,
-        "emulate_tpws": 0,
-        "emulate_ua_intlck_ctrl": 0,
-        "emulate_write_cache": 0,
-        "enforce_pr_isids": 1,
-        "force_pr_aptpl": 0,
-        "is_nonrot": 1,
-        "max_unmap_block_desc_count": 0,
-        "max_unmap_lba_count": 0,
-        "max_write_same_len": 0,
-        "optimal_sectors": 4294967288,
-        "pi_prot_format": 0,
-        "pi_prot_type": 0,
-        "queue_depth": 128,
-        "unmap_granularity": 0,
-        "unmap_granularity_alignment": 0
-      },
-      "name": "test1",
-      "plugin": "ramdisk",
-      "size": 107374182400,
-      "wwn": "7486ed41-585e-400f-8799-ac605485b221"
-    }
-  ],
-  "targets": [
-    {
-      "fabric": "iscsi",
-      "tpgs": [
-        {
-          "attributes": {
-            "authentication": 0,
-            "cache_dynamic_acls": 1,
-            "default_cmdsn_depth": 64,
-            "default_erl": 0,
-            "demo_mode_discovery": 1,
-            "demo_mode_write_protect": 0,
-            "generate_node_acls": 1,
-            "login_timeout": 15,
-            "netif_timeout": 2,
-            "prod_mode_write_protect": 0,
-            "t10_pi": 0
-          },
-          "enable": true,
-          "luns": [
-            {
-              "index": 0,
-              "storage_object": "/backstores/ramdisk/test1"
-            }
-          ],
-          "node_acls": [],
-          "parameters": {
-            "AuthMethod": "CHAP,None",
-            "DataDigest": "CRC32C,None",
-            "DataPDUInOrder": "Yes",
-            "DataSequenceInOrder": "Yes",
-            "DefaultTime2Retain": "20",
-            "DefaultTime2Wait": "2",
-            "ErrorRecoveryLevel": "0",
-            "FirstBurstLength": "65536",
-            "HeaderDigest": "CRC32C,None",
-            "IFMarkInt": "Reject",
-            "IFMarker": "No",
-            "ImmediateData": "Yes",
-            "InitialR2T": "Yes",
-            "MaxBurstLength": "262144",
-            "MaxConnections": "1",
-            "MaxOutstandingR2T": "1",
-            "MaxRecvDataSegmentLength": "8192",
-            "MaxXmitDataSegmentLength": "262144",
-            "OFMarkInt": "Reject",
-            "OFMarker": "No",
-            "TargetAlias": "LIO Target"
-          },
-          "portals": [
-            {
-              "ip_address": "0.0.0.0",
-              "iser": true,
-              "port": 3260
-            }
-          ],
-          "tag": 1
-        }
-      ],
-      "wwn": "iqn.2016-12.com.betterservers"
-    }
-  ]
-}
-```
-[2] echo "3" > /proc/sys/vm/drop_caches; fio --rw=read --bs=4K
---size=1G --numjobs=40 --name=worker.matt --group_reporting
-[3] ethtool -s eth3 speed 10000 advertise 0x80000
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+SGkgTWlsYW4sDQoNCg0KDQpPbiAxMi8yNC8xNiwgODozMiBBTSwgImxpbnV4LXNjc2ktb3duZXJA
+dmdlci5rZXJuZWwub3JnIG9uIGJlaGFsZiBvZiBNaWxhbiBQLiBHYW5kaGkiIDxsaW51eC1zY3Np
+LW93bmVyQHZnZXIua2VybmVsLm9yZyBvbiBiZWhhbGYgb2YgbWdhbmRoaUByZWRoYXQuY29tPiB3
+cm90ZToNCg0KPkhlbGxvLA0KPg0KPlRoZXJlIGlzIGEgcmFjZSBjb25kaXRpb24gd2l0aCBxbGEy
+eHh4IG9wdHJvbSBmdW5jdGlvbnMgd2hlcmUNCj5vbmUgdGhyZWFkIG1pZ2h0IG1vZGlmeSBvcHRy
+b20gYnVmZmVyLCBvcHRyb21fc3RhdGUgd2hpbGUgDQo+b3RoZXIgdGhyZWFkIGlzIHN0aWxsIHJl
+YWRpbmcgZnJvbSBpdC4NCj4NCj5JbiBjb3VwbGUgb2YgY3Jhc2hlcywgaXQgd2FzIGZvdW5kIHRo
+YXQgd2UgaGFkIHN1Y2Nlc3NmdWxseSANCj5wYXNzZWQgdGhlIGZvbGxvd2luZyAnaWYnIGNoZWNr
+IHdoZXJlIHdlIGNvbmZpcm0gb3B0cm9tX3N0YXRlIA0KPnRvIGJlIFFMQV9TUkVBRElORy4gQnV0
+IGJ5IHRoZSB0aW1lIHdlIGFjcXVpcmVkIG11dGV4IGxvY2sgDQo+dG8gcHJvY2VlZCB3aXRoIG1l
+bW9yeV9yZWFkX2Zyb21fYnVmZmVyIGZ1bmN0aW9uLCBzb21lIG90aGVyIA0KPnRocmVhZC9wcm9j
+ZXNzIGhhZCBhbHJlYWR5IG1vZGlmaWVkIHRoYXQgb3B0aW9uIHJvbSBidWZmZXIgIA0KPmFuZCBv
+cHRyb21fc3RhdGUgZnJvbSBRTEFfU1JFQURJTkcgdG8gUUxBX1NXQUlUSU5HLiBUaGVuIA0KPndl
+IGdvdCBoYS0+b3B0cm9tX2J1ZmZlciAweDAgYW5kIGNyYXNoZWQgdGhlIHN5c3RlbTogDQo+DQo+
+ICAgICAgICBpZiAoaGEtPm9wdHJvbV9zdGF0ZSAhPSBRTEFfU1JFQURJTkcpDQo+ICAgICAgICAg
+ICAgICAgIHJldHVybiAwOw0KPg0KPiAgICAgICAgbXV0ZXhfbG9jaygmaGEtPm9wdHJvbV9tdXRl
+eCk7DQo+ICAgICAgICBydmFsID0gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIoYnVmLCBjb3VudCwg
+Jm9mZiwgaGEtPm9wdHJvbV9idWZmZXIsDQo+ICAgICAgICAgICAgaGEtPm9wdHJvbV9yZWdpb25f
+c2l6ZSk7DQo+ICAgICAgICBtdXRleF91bmxvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0KPg0KPg0K
+PldpdGggY3VycmVudCBvcHRyb20gZnVuY3Rpb24gd2UgZ2V0IGZvbGxvd2luZyBjcmFzaCBkdWUg
+dG8gDQo+YSByYWNlIGNvbmRpdGlvbjoNCj4NCj5bIDE0NzkuNDY2Njc5XSBCVUc6IHVuYWJsZSB0
+byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAgICAgICAgICAgKG51
+bGwpDQo+WyAxNDc5LjQ2NjcwN10gSVA6IFs8ZmZmZmZmZmY4MTMyNjc1Nj5dIG1lbWNweSsweDYv
+MHgxMTANCj5bLi4uXQ0KPlsgMTQ3OS40NzM2NzNdIENhbGwgVHJhY2U6DQo+WyAxNDc5LjQ3NDI5
+Nl0gIFs8ZmZmZmZmZmY4MTIyNWNiYz5dID8gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIrMHgzYy8w
+eDYwDQo+WyAxNDc5LjQ3NDk0MV0gIFs8ZmZmZmZmZmZhMDE1NzRkYz5dIHFsYTJ4MDBfc3lzZnNf
+cmVhZF9vcHRyb20rMHg5Yy8weGMwIFtxbGEyeHh4XQ0KPlsgMTQ3OS40NzU1NzFdICBbPGZmZmZm
+ZmZmODEyN2U3NmI+XSByZWFkKzB4ZGIvMHgxZjANCj5bIDE0NzkuNDc2MjA2XSAgWzxmZmZmZmZm
+ZjgxMWZkZjllPl0gdmZzX3JlYWQrMHg5ZS8weDE3MA0KPlsgMTQ3OS40NzY4MzldICBbPGZmZmZm
+ZmZmODExZmViNmY+XSBTeVNfcmVhZCsweDdmLzB4ZTANCj5bIDE0NzkuNDc3NDY2XSAgWzxmZmZm
+ZmZmZjgxNjk2NGM5Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiDQo+DQo+DQo+QmVs
+b3cgcGF0Y2ggbW9kaWZpZXMgcWxhMngwMF9zeXNmc19yZWFkX29wdHJvbSwNCj5xbGEyeDAwX3N5
+c2ZzX3dyaXRlX29wdHJvbSBmdW5jdGlvbnMgdG8gZ2V0IHRoZSBtdXRleF9sb2NrIA0KPmJlZm9y
+ZSBjaGVja2luZyBoYS0+b3B0cm9tX3N0YXRlIHRvIGF2b2lkIHNpbWlsYXIgY3Jhc2hlcy4NCj4N
+Cj5UaGUgcGF0Y2ggd2FzIGFwcGxpZWQgYW5kIHRlc3RlZCBhbmQgc2FtZSBjcmFzaGVzIHdlcmUg
+bm8gDQo+bG9uZ2VyIG9ic2VydmVkIGFnYWluLg0KPg0KPg0KPlRlc3RlZC1ieTogTWlsYW4gUC4g
+R2FuZGhpIDxtZ2FuZGhpQHJlZGhhdC5jb20+DQo+U2lnbmVkLW9mZi1ieTogTWlsYW4gUC4gR2Fu
+ZGhpIDxtZ2FuZGhpQHJlZGhhdC5jb20+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
+YV9hdHRyLmMgfCAxOCArKysrKysrKysrKysrLS0tLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDEzIGlu
+c2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pDQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
+aS9xbGEyeHh4L3FsYV9hdHRyLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYXR0ci5jDQo+
+aW5kZXggZGE1YWUxMS4uNDdlYTE2NCAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4
+eC9xbGFfYXR0ci5jDQo+KysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0dHIuYw0KPkBA
+IC0zMjksMTIgKzMyOSwxNSBAQCBxbGEyeDAwX3N5c2ZzX3JlYWRfb3B0cm9tKHN0cnVjdCBmaWxl
+ICpmaWxwLCBzdHJ1Y3Qga29iamVjdCAqa29iaiwNCj4gCXN0cnVjdCBxbGFfaHdfZGF0YSAqaGEg
+PSB2aGEtPmh3Ow0KPiAJc3NpemVfdCBydmFsID0gMDsNCj4gDQo+KwltdXRleF9sb2NrKCZoYS0+
+b3B0cm9tX211dGV4KTsNCj4rDQo+IAlpZiAoaGEtPm9wdHJvbV9zdGF0ZSAhPSBRTEFfU1JFQURJ
+TkcpDQo+LQkJcmV0dXJuIDA7DQo+KwkJZ290byBvdXQ7DQo+IA0KPi0JbXV0ZXhfbG9jaygmaGEt
+Pm9wdHJvbV9tdXRleCk7DQo+IAlydmFsID0gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIoYnVmLCBj
+b3VudCwgJm9mZiwgaGEtPm9wdHJvbV9idWZmZXIsDQo+IAkgICAgaGEtPm9wdHJvbV9yZWdpb25f
+c2l6ZSk7DQo+Kw0KPitvdXQ6DQo+IAltdXRleF91bmxvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0K
+PiANCj4gCXJldHVybiBydmFsOw0KPkBAIC0zNDksMTQgKzM1MiwxOSBAQCBxbGEyeDAwX3N5c2Zz
+X3dyaXRlX29wdHJvbShzdHJ1Y3QgZmlsZSAqZmlscCwgc3RydWN0IGtvYmplY3QgKmtvYmosDQo+
+IAkgICAgc3RydWN0IGRldmljZSwga29iaikpKTsNCj4gCXN0cnVjdCBxbGFfaHdfZGF0YSAqaGEg
+PSB2aGEtPmh3Ow0KPiANCj4tCWlmIChoYS0+b3B0cm9tX3N0YXRlICE9IFFMQV9TV1JJVElORykN
+Cj4rCW11dGV4X2xvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0KPisNCj4rCWlmIChoYS0+b3B0cm9t
+X3N0YXRlICE9IFFMQV9TV1JJVElORykgew0KPisJCW11dGV4X3VubG9jaygmaGEtPm9wdHJvbV9t
+dXRleCk7DQo+IAkJcmV0dXJuIC1FSU5WQUw7DQo+LQlpZiAob2ZmID4gaGEtPm9wdHJvbV9yZWdp
+b25fc2l6ZSkNCj4rCX0NCj4rCWlmIChvZmYgPiBoYS0+b3B0cm9tX3JlZ2lvbl9zaXplKSB7DQo+
+KwkJbXV0ZXhfdW5sb2NrKCZoYS0+b3B0cm9tX211dGV4KTsNCj4gCQlyZXR1cm4gLUVSQU5HRTsN
+Cj4rCX0NCj4gCWlmIChvZmYgKyBjb3VudCA+IGhhLT5vcHRyb21fcmVnaW9uX3NpemUpDQo+IAkJ
+Y291bnQgPSBoYS0+b3B0cm9tX3JlZ2lvbl9zaXplIC0gb2ZmOw0KPiANCj4tCW11dGV4X2xvY2so
+JmhhLT5vcHRyb21fbXV0ZXgpOw0KPiAJbWVtY3B5KCZoYS0+b3B0cm9tX2J1ZmZlcltvZmZdLCBi
+dWYsIGNvdW50KTsNCj4gCW11dGV4X3VubG9jaygmaGEtPm9wdHJvbV9tdXRleCk7DQo+IA0KPi0t
+DQoNClRoYW5rcyBmb3IgdGhlIFBhdGNoLiBUaGlzIGxvb2tzIGdvb2QuDQoNCkFja2VkLWJ5OiBI
+aW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQoNCj5UbyB1bnN1
+YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgt
+c2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
+Lm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
+b3Jkb21vLWluZm8uaHRtbA0K
