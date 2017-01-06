@@ -1,30 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: scsi: qla2xxx: Fix apparent cut-n-paste error.
-Date: Thu, 05 Jan 2017 20:52:07 -0500
-Message-ID: <yq1bmvlhs54.fsf@oracle.com>
-References: <20161227181321.35xf5hm4qz3uajmp@codemonkey.org.uk>
+Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
+Date: Thu, 05 Jan 2017 20:54:14 -0500
+Message-ID: <yq17f69hs1l.fsf@oracle.com>
+References: <20161228110524.7516-1-ojab@ojab.ru>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:38220 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753540AbdAFBwS (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:52:18 -0500
-In-Reply-To: <20161227181321.35xf5hm4qz3uajmp@codemonkey.org.uk> (Dave Jones's
-        message of "Tue, 27 Dec 2016 13:13:21 -0500")
+Received: from aserp1040.oracle.com ([141.146.126.69]:49472 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753564AbdAFBy3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:54:29 -0500
+In-Reply-To: <20161228110524.7516-1-ojab@ojab.ru> (ojab@ojab.ru's message of
+        "Wed, 28 Dec 2016 11:05:24 +0000")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Jones <davej@codemonkey.org.uk>
-Cc: linux-scsi@vger.kernel.org, Quinn Tran <quinn.tran@cavium.com>
+To: ojab <ojab@ojab.ru>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 
->>>>> "Dave" == Dave Jones <davej@codemonkey.org.uk> writes:
+>>>>> "ojab" == ojab  <ojab@ojab.ru> writes:
 
-Dave> commit 093df73771bac8a37d607c0e705d157a8cef4c5c introduces two
-Dave> bodies of code that look similar but with s/req/rsp/ in the second
-Dave> instance.  But in one case, it looks like this conversion was
-Dave> missed.
+ojab> MPI2 controllers sometimes got lost (i. e. disappears from
+ojab> /sys/bus/pci/devices) if ASMP is enabled.
 
-Quinn?
+Broadcom folks: Please comment!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
