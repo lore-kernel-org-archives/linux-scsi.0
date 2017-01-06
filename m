@@ -1,30 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/1] scsi:fnic Avoid sending reset to fnic firmware when another reset is already in progress
-Date: Thu, 05 Jan 2017 20:42:32 -0500
-Message-ID: <yq11swhj75j.fsf@oracle.com>
-References: <1481750441-15755-1-git-send-email-satishkh@cisco.com>
+Subject: Re: [PATCHv2] mpt3sas: switch to pci_alloc_irq_vectors
+Date: Thu, 05 Jan 2017 20:43:50 -0500
+Message-ID: <yq1wpe9hsix.fsf@oracle.com>
+References: <1482240421-14847-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:35856 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752624AbdAFBmy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:42:54 -0500
-In-Reply-To: <1481750441-15755-1-git-send-email-satishkh@cisco.com> (Satish
-        Kharat's message of "Wed, 14 Dec 2016 13:20:41 -0800")
+Received: from aserp1040.oracle.com ([141.146.126.69]:47117 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752629AbdAFBoI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:44:08 -0500
+In-Reply-To: <1482240421-14847-1-git-send-email-hare@suse.de> (Hannes
+        Reinecke's message of "Tue, 20 Dec 2016 14:27:01 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Satish Kharat <satishkh@cisco.com>
-Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
->>>>> "Satish" == Satish Kharat <satishkh@cisco.com> writes:
+>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
 
-Satish,
+Hannes> Cleanup the MSI-X handling allowing us to use the PCI-layer
+Hannes> provided vector allocation.
 
-Satish> This fix is to avoid calling fnic_fw_reset_handler through
-Satish> fnic_host_reset when a finc reset is alreay in progress.
-
-Applied to 4.10/scsi-fixes.
+Sreekanth, Sathya: Please review!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
