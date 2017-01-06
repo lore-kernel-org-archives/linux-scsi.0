@@ -1,24 +1,24 @@
 From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Subject: [PATCH 1/4] cxlflash: Refactor context reset to share reset logic
-Date: Fri,  6 Jan 2017 08:04:50 -0600
-Message-ID: <1483711490-18230-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH 3/4] cxlflash: Cleanup prints
+Date: Fri,  6 Jan 2017 08:05:18 -0600
+Message-ID: <1483711518-18302-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 References: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46481 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:49964 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1751807AbdAFOFQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2017 09:05:16 -0500
-Received: from pps.filterd (m0098417.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v06E3ZpQ002786
-        for <linux-scsi@vger.kernel.org>; Fri, 6 Jan 2017 09:05:06 -0500
-Received: from e34.co.us.ibm.com (e34.co.us.ibm.com [32.97.110.152])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 27t9wxe81b-1
+        by vger.kernel.org with ESMTP id S1753187AbdAFOFe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2017 09:05:34 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v06E3m3F069461
+        for <linux-scsi@vger.kernel.org>; Fri, 6 Jan 2017 09:05:33 -0500
+Received: from e17.ny.us.ibm.com (e17.ny.us.ibm.com [129.33.205.207])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27t8as1mcr-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2017 09:05:05 -0500
+        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2017 09:05:32 -0500
 Received: from localhost
-        by e34.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e17.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
-        Fri, 6 Jan 2017 07:05:03 -0700
+        Fri, 6 Jan 2017 09:05:32 -0500
 In-Reply-To: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -27,65 +27,2306 @@ Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian M
 
 From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-As staging for supporting hardware with different context reset
-registers but a similar reset procedure, refactor the existing context
-reset routine to move the reset logic to a common routine. This will
-allow hardware with a different reset register to leverage existing
-code.
+The usage of prints within the cxlflash driver is inconsistent. This
+hinders debug and makes the driver source and log output appear sloppy.
+
+The following cleanups help unify the prints within cxlflash:
+ - move all prints to dev-* where possible
+ - transition all hex prints to lowercase
+ - standardize variable prints in debug output
+ - derive pointers in a consistent manner
+ - remove superfluous data from prints and print statements that do not
+   make sense
 
 Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
 ---
- drivers/scsi/cxlflash/main.c | 20 ++++++++++++++++----
- 1 file changed, 16 insertions(+), 4 deletions(-)
+ drivers/scsi/cxlflash/lunmgt.c    |  31 ++--
+ drivers/scsi/cxlflash/main.c      | 319 ++++++++++++++++++--------------------
+ drivers/scsi/cxlflash/superpipe.c | 165 ++++++++++----------
+ drivers/scsi/cxlflash/vlun.c      | 169 ++++++++++----------
+ 4 files changed, 346 insertions(+), 338 deletions(-)
 
+diff --git a/drivers/scsi/cxlflash/lunmgt.c b/drivers/scsi/cxlflash/lunmgt.c
+index 6c318db9..0efed17 100644
+--- a/drivers/scsi/cxlflash/lunmgt.c
++++ b/drivers/scsi/cxlflash/lunmgt.c
+@@ -32,11 +32,13 @@
+  */
+ static struct llun_info *create_local(struct scsi_device *sdev, u8 *wwid)
+ {
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = NULL;
+ 
+ 	lli = kzalloc(sizeof(*lli), GFP_KERNEL);
+ 	if (unlikely(!lli)) {
+-		pr_err("%s: could not allocate lli\n", __func__);
++		dev_err(dev, "%s: could not allocate lli\n", __func__);
+ 		goto out;
+ 	}
+ 
+@@ -58,11 +60,13 @@ static struct llun_info *create_local(struct scsi_device *sdev, u8 *wwid)
+  */
+ static struct glun_info *create_global(struct scsi_device *sdev, u8 *wwid)
+ {
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct glun_info *gli = NULL;
+ 
+ 	gli = kzalloc(sizeof(*gli), GFP_KERNEL);
+ 	if (unlikely(!gli)) {
+-		pr_err("%s: could not allocate gli\n", __func__);
++		dev_err(dev, "%s: could not allocate gli\n", __func__);
+ 		goto out;
+ 	}
+ 
+@@ -129,10 +133,10 @@ static struct glun_info *lookup_global(u8 *wwid)
+  */
+ static struct llun_info *find_and_create_lun(struct scsi_device *sdev, u8 *wwid)
+ {
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = NULL;
+ 	struct glun_info *gli = NULL;
+-	struct Scsi_Host *shost = sdev->host;
+-	struct cxlflash_cfg *cfg = shost_priv(shost);
+ 
+ 	if (unlikely(!wwid))
+ 		goto out;
+@@ -165,7 +169,7 @@ static struct llun_info *find_and_create_lun(struct scsi_device *sdev, u8 *wwid)
+ 	list_add(&gli->list, &global.gluns);
+ 
+ out:
+-	pr_debug("%s: returning %p\n", __func__, lli);
++	dev_dbg(dev, "%s: returning lli=%p, gli=%p\n", __func__, lli, gli);
+ 	return lli;
+ }
+ 
+@@ -225,17 +229,18 @@ void cxlflash_term_global_luns(void)
+ int cxlflash_manage_lun(struct scsi_device *sdev,
+ 			struct dk_cxlflash_manage_lun *manage)
+ {
+-	int rc = 0;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = NULL;
++	int rc = 0;
+ 	u64 flags = manage->hdr.flags;
+ 	u32 chan = sdev->channel;
+ 
+ 	mutex_lock(&global.mutex);
+ 	lli = find_and_create_lun(sdev, manage->wwid);
+-	pr_debug("%s: ENTER: WWID = %016llX%016llX, flags = %016llX li = %p\n",
+-		 __func__, get_unaligned_be64(&manage->wwid[0]),
+-		 get_unaligned_be64(&manage->wwid[8]),
+-		 manage->hdr.flags, lli);
++	dev_dbg(dev, "%s: WWID=%016llx%016llx, flags=%016llx lli=%p\n",
++		__func__, get_unaligned_be64(&manage->wwid[0]),
++		get_unaligned_be64(&manage->wwid[8]), manage->hdr.flags, lli);
+ 	if (unlikely(!lli)) {
+ 		rc = -ENOMEM;
+ 		goto out;
+@@ -265,11 +270,11 @@ int cxlflash_manage_lun(struct scsi_device *sdev,
+ 		}
+ 	}
+ 
+-	pr_debug("%s: port_sel = %08X chan = %u lun_id = %016llX\n", __func__,
+-		 lli->port_sel, chan, lli->lun_id[chan]);
++	dev_dbg(dev, "%s: port_sel=%08x chan=%u lun_id=%016llx\n",
++		__func__, lli->port_sel, chan, lli->lun_id[chan]);
+ 
+ out:
+ 	mutex_unlock(&global.mutex);
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
 diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
-index b17ebf6..a990efb 100644
+index d2bac4b..ab38bca 100644
 --- a/drivers/scsi/cxlflash/main.c
 +++ b/drivers/scsi/cxlflash/main.c
-@@ -188,10 +188,11 @@ static void cmd_complete(struct afu_cmd *cmd)
- }
- 
- /**
-- * context_reset_ioarrin() - reset command owner context via IOARRIN register
-+ * context_reset() - reset command owner context via specified register
-  * @cmd:	AFU command that timed out.
-+ * @reset_reg:	MMIO register to perform reset.
+@@ -43,6 +43,9 @@ MODULE_LICENSE("GPL");
   */
--static void context_reset_ioarrin(struct afu_cmd *cmd)
-+static void context_reset(struct afu_cmd *cmd, __be64 __iomem *reset_reg)
+ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
  {
- 	int nretry = 0;
- 	u64 rrin = 0x1;
-@@ -201,9 +202,9 @@ static void context_reset_ioarrin(struct afu_cmd *cmd)
++	struct afu *afu = cmd->parent;
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_ioarcb *ioarcb;
+ 	struct sisl_ioasa *ioasa;
+ 	u32 resid;
+@@ -56,21 +59,20 @@ static void process_cmd_err(struct afu_cmd *cmd, struct scsi_cmnd *scp)
+ 	if (ioasa->rc.flags & SISL_RC_FLAGS_UNDERRUN) {
+ 		resid = ioasa->resid;
+ 		scsi_set_resid(scp, resid);
+-		pr_debug("%s: cmd underrun cmd = %p scp = %p, resid = %d\n",
+-			 __func__, cmd, scp, resid);
++		dev_dbg(dev, "%s: cmd underrun cmd = %p scp = %p, resid = %d\n",
++			__func__, cmd, scp, resid);
+ 	}
  
- 	pr_debug("%s: cmd=%p\n", __func__, cmd);
+ 	if (ioasa->rc.flags & SISL_RC_FLAGS_OVERRUN) {
+-		pr_debug("%s: cmd underrun cmd = %p scp = %p\n",
+-			 __func__, cmd, scp);
++		dev_dbg(dev, "%s: cmd underrun cmd = %p scp = %p\n",
++			__func__, cmd, scp);
+ 		scp->result = (DID_ERROR << 16);
+ 	}
  
--	writeq_be(rrin, &afu->host_map->ioarrin);
-+	writeq_be(rrin, reset_reg);
+-	pr_debug("%s: cmd failed afu_rc=%d scsi_rc=%d fc_rc=%d "
+-		 "afu_extra=0x%X, scsi_extra=0x%X, fc_extra=0x%X\n",
+-		 __func__, ioasa->rc.afu_rc, ioasa->rc.scsi_rc,
+-		 ioasa->rc.fc_rc, ioasa->afu_extra, ioasa->scsi_extra,
+-		 ioasa->fc_extra);
++	dev_dbg(dev, "%s: cmd failed afu_rc=%02x scsi_rc=%02x fc_rc=%02x "
++		"afu_extra=%02x scsi_extra=%02x fc_extra=%02x\n", __func__,
++		ioasa->rc.afu_rc, ioasa->rc.scsi_rc, ioasa->rc.fc_rc,
++		ioasa->afu_extra, ioasa->scsi_extra, ioasa->fc_extra);
+ 
+ 	if (ioasa->rc.scsi_rc) {
+ 		/* We have a SCSI status */
+@@ -159,6 +161,7 @@ static void cmd_complete(struct afu_cmd *cmd)
+ 	ulong lock_flags;
+ 	struct afu *afu = cmd->parent;
+ 	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	bool cmd_is_tmf;
+ 
+ 	if (cmd->scp) {
+@@ -170,9 +173,8 @@ static void cmd_complete(struct afu_cmd *cmd)
+ 
+ 		cmd_is_tmf = cmd->cmd_tmf;
+ 
+-		pr_debug_ratelimited("%s: calling scsi_done scp=%p result=%X "
+-				     "ioasc=%d\n", __func__, scp, scp->result,
+-				     cmd->sa.ioasc);
++		dev_dbg_ratelimited(dev, "%s:scp=%p result=%08x ioasc=%08x\n",
++				    __func__, scp, scp->result, cmd->sa.ioasc);
+ 
+ 		scsi_dma_unmap(scp);
+ 		scp->scsi_done(scp);
+@@ -200,7 +202,7 @@ static void context_reset(struct afu_cmd *cmd, __be64 __iomem *reset_reg)
+ 	struct cxlflash_cfg *cfg = afu->parent;
+ 	struct device *dev = &cfg->dev->dev;
+ 
+-	pr_debug("%s: cmd=%p\n", __func__, cmd);
++	dev_dbg(dev, "%s: cmd=%p\n", __func__, cmd);
+ 
+ 	writeq_be(rrin, reset_reg);
  	do {
--		rrin = readq_be(&afu->host_map->ioarrin);
-+		rrin = readq_be(reset_reg);
- 		if (rrin != 0x1)
- 			break;
- 		/* Double delay each time */
-@@ -215,6 +216,17 @@ static void context_reset_ioarrin(struct afu_cmd *cmd)
+@@ -211,7 +213,7 @@ static void context_reset(struct afu_cmd *cmd, __be64 __iomem *reset_reg)
+ 		udelay(1 << nretry);
+ 	} while (nretry++ < MC_ROOM_RETRY_CNT);
+ 
+-	dev_dbg(dev, "%s: returning rrin=0x%016llX nretry=%d\n",
++	dev_dbg(dev, "%s: returning rrin=%016llx nretry=%d\n",
+ 		__func__, rrin, nretry);
+ }
+ 
+@@ -274,8 +276,8 @@ static int send_cmd_ioarrin(struct afu *afu, struct afu_cmd *cmd)
+ 	writeq_be((u64)&cmd->rcb, &afu->host_map->ioarrin);
+ out:
+ 	spin_unlock_irqrestore(&afu->rrin_slock, lock_flags);
+-	pr_devel("%s: cmd=%p len=%d ea=%p rc=%d\n", __func__, cmd,
+-		 cmd->rcb.data_len, (void *)cmd->rcb.data_ea, rc);
++	dev_dbg(dev, "%s: cmd=%p len=%u ea=%016llx rc=%d\n", __func__,
++		cmd, cmd->rcb.data_len, cmd->rcb.data_ea, rc);
+ 	return rc;
+ }
+ 
+@@ -314,9 +316,9 @@ static int send_cmd_sq(struct afu *afu, struct afu_cmd *cmd)
+ 
+ 	spin_unlock_irqrestore(&afu->hsq_slock, lock_flags);
+ out:
+-	dev_dbg(dev, "%s: cmd=%p len=%d ea=%p ioasa=%p rc=%d curr=%p "
+-	       "head=%016llX tail=%016llX\n", __func__, cmd, cmd->rcb.data_len,
+-	       (void *)cmd->rcb.data_ea, cmd->rcb.ioasa, rc, afu->hsq_curr,
++	dev_dbg(dev, "%s: cmd=%p len=%u ea=%016llx ioasa=%p rc=%d curr=%p "
++	       "head=%016llx tail=%016llx\n", __func__, cmd, cmd->rcb.data_len,
++	       cmd->rcb.data_ea, cmd->rcb.ioasa, rc, afu->hsq_curr,
+ 	       readq_be(&afu->host_map->sq_head),
+ 	       readq_be(&afu->host_map->sq_tail));
+ 	return rc;
+@@ -332,6 +334,8 @@ static int send_cmd_sq(struct afu *afu, struct afu_cmd *cmd)
+  */
+ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ {
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
+ 	ulong timeout = msecs_to_jiffies(cmd->rcb.timeout * 2 * 1000);
+ 
+@@ -342,10 +346,8 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ 	}
+ 
+ 	if (unlikely(cmd->sa.ioasc != 0)) {
+-		pr_err("%s: CMD 0x%X failed, IOASC: flags 0x%X, afu_rc 0x%X, "
+-		       "scsi_rc 0x%X, fc_rc 0x%X\n", __func__, cmd->rcb.cdb[0],
+-		       cmd->sa.rc.flags, cmd->sa.rc.afu_rc, cmd->sa.rc.scsi_rc,
+-		       cmd->sa.rc.fc_rc);
++		dev_err(dev, "%s: cmd %02x failed, ioasc=%08x\n",
++			__func__, cmd->rcb.cdb[0], cmd->sa.ioasc);
+ 		rc = -1;
+ 	}
+ 
+@@ -364,8 +366,7 @@ static int wait_resp(struct afu *afu, struct afu_cmd *cmd)
+ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ {
+ 	u32 port_sel = scp->device->channel + 1;
+-	struct Scsi_Host *host = scp->device->host;
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(scp->device->host);
+ 	struct afu_cmd *cmd = sc_to_afucz(scp);
+ 	struct device *dev = &cfg->dev->dev;
+ 	ulong lock_flags;
+@@ -410,7 +411,7 @@ static int send_tmf(struct afu *afu, struct scsi_cmnd *scp, u64 tmfcmd)
+ 						       to);
+ 	if (!to) {
+ 		cfg->tmf_active = false;
+-		dev_err(dev, "%s: TMF timed out!\n", __func__);
++		dev_err(dev, "%s: TMF timed out\n", __func__);
+ 		rc = -1;
+ 	}
+ 	spin_unlock_irqrestore(&cfg->tmf_slock, lock_flags);
+@@ -448,7 +449,7 @@ static const char *cxlflash_driver_info(struct Scsi_Host *host)
+  */
+ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(host);
+ 	struct afu *afu = cfg->afu;
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu_cmd *cmd = sc_to_afucz(scp);
+@@ -461,7 +462,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	int kref_got = 0;
+ 
+ 	dev_dbg_ratelimited(dev, "%s: (scp=%p) %d/%d/%d/%llu "
+-			    "cdb=(%08X-%08X-%08X-%08X)\n",
++			    "cdb=(%08x-%08x-%08x-%08x)\n",
+ 			    __func__, scp, host->host_no, scp->device->channel,
+ 			    scp->device->id, scp->device->lun,
+ 			    get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
+@@ -483,11 +484,11 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 
+ 	switch (cfg->state) {
+ 	case STATE_RESET:
+-		dev_dbg_ratelimited(dev, "%s: device is in reset!\n", __func__);
++		dev_dbg_ratelimited(dev, "%s: device is in reset\n", __func__);
+ 		rc = SCSI_MLQUEUE_HOST_BUSY;
+ 		goto out;
+ 	case STATE_FAILTERM:
+-		dev_dbg_ratelimited(dev, "%s: device has failed!\n", __func__);
++		dev_dbg_ratelimited(dev, "%s: device has failed\n", __func__);
+ 		scp->result = (DID_NO_CONNECT << 16);
+ 		scp->scsi_done(scp);
+ 		rc = 0;
+@@ -502,7 +503,7 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ 	if (likely(sg)) {
+ 		nseg = scsi_dma_map(scp);
+ 		if (unlikely(nseg < 0)) {
+-			dev_err(dev, "%s: Fail DMA map!\n", __func__);
++			dev_err(dev, "%s: Fail DMA map\n", __func__);
+ 			rc = SCSI_MLQUEUE_HOST_BUSY;
+ 			goto out;
+ 		}
+@@ -531,7 +532,6 @@ static int cxlflash_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scp)
+ out:
+ 	if (kref_got)
+ 		kref_put(&afu->mapcount, afu_unmap);
+-	pr_devel("%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -651,6 +651,8 @@ static void term_mc(struct cxlflash_cfg *cfg)
+  */
+ static void term_afu(struct cxlflash_cfg *cfg)
+ {
++	struct device *dev = &cfg->dev->dev;
++
+ 	/*
+ 	 * Tear down is carefully orchestrated to ensure
+ 	 * no interrupts can come in when the problem state
+@@ -666,7 +668,7 @@ static void term_afu(struct cxlflash_cfg *cfg)
+ 
+ 	term_mc(cfg);
+ 
+-	pr_debug("%s: returning\n", __func__);
++	dev_dbg(dev, "%s: returning\n", __func__);
  }
  
  /**
-+ * context_reset_ioarrin() - reset command owner context via IOARRIN register
-+ * @cmd:	AFU command that timed out.
-+ */
-+static void context_reset_ioarrin(struct afu_cmd *cmd)
-+{
-+	struct afu *afu = cmd->parent;
+@@ -693,8 +695,7 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
+ 		return;
+ 
+ 	if (!afu || !afu->afu_map) {
+-		dev_dbg(dev, "%s: The problem state area is not mapped\n",
+-			__func__);
++		dev_dbg(dev, "%s: Problem state area not mapped\n", __func__);
+ 		return;
+ 	}
+ 
+@@ -736,10 +737,11 @@ static void notify_shutdown(struct cxlflash_cfg *cfg, bool wait)
+ static void cxlflash_remove(struct pci_dev *pdev)
+ {
+ 	struct cxlflash_cfg *cfg = pci_get_drvdata(pdev);
++	struct device *dev = &pdev->dev;
+ 	ulong lock_flags;
+ 
+ 	if (!pci_is_enabled(pdev)) {
+-		pr_debug("%s: Device is disabled\n", __func__);
++		dev_dbg(dev, "%s: Device is disabled\n", __func__);
+ 		return;
+ 	}
+ 
+@@ -775,7 +777,7 @@ static void cxlflash_remove(struct pci_dev *pdev)
+ 		break;
+ 	}
+ 
+-	pr_debug("%s: returning\n", __func__);
++	dev_dbg(dev, "%s: returning\n", __func__);
+ }
+ 
+ /**
+@@ -817,6 +819,7 @@ static int alloc_mem(struct cxlflash_cfg *cfg)
+ static int init_pci(struct cxlflash_cfg *cfg)
+ {
+ 	struct pci_dev *pdev = cfg->dev;
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
+ 
+ 	rc = pci_enable_device(pdev);
+@@ -827,15 +830,14 @@ static int init_pci(struct cxlflash_cfg *cfg)
+ 		}
+ 
+ 		if (rc) {
+-			dev_err(&pdev->dev, "%s: Cannot enable adapter\n",
+-				__func__);
++			dev_err(dev, "%s: Cannot enable adapter\n", __func__);
+ 			cxlflash_wait_for_pci_err_recovery(cfg);
+ 			goto out;
+ 		}
+ 	}
+ 
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -848,19 +850,19 @@ static int init_pci(struct cxlflash_cfg *cfg)
+ static int init_scsi(struct cxlflash_cfg *cfg)
+ {
+ 	struct pci_dev *pdev = cfg->dev;
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
+ 
+ 	rc = scsi_add_host(cfg->host, &pdev->dev);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "%s: scsi_add_host failed (rc=%d)\n",
+-			__func__, rc);
++		dev_err(dev, "%s: scsi_add_host failed rc=%d\n", __func__, rc);
+ 		goto out;
+ 	}
+ 
+ 	scsi_scan_host(cfg->host);
+ 
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -910,16 +912,12 @@ static void set_port_offline(__be64 __iomem *fc_regs)
+  * Return:
+  *	TRUE (1) when the specified port is online
+  *	FALSE (0) when the specified port fails to come online after timeout
+- *	-EINVAL when @delay_us is less than 1000
+  */
+-static int wait_port_online(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
++static bool wait_port_online(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
+ {
+ 	u64 status;
+ 
+-	if (delay_us < 1000) {
+-		pr_err("%s: invalid delay specified %d\n", __func__, delay_us);
+-		return -EINVAL;
+-	}
++	WARN_ON(delay_us < 1000);
+ 
+ 	do {
+ 		msleep(delay_us / 1000);
+@@ -943,16 +941,12 @@ static int wait_port_online(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
+  * Return:
+  *	TRUE (1) when the specified port is offline
+  *	FALSE (0) when the specified port fails to go offline after timeout
+- *	-EINVAL when @delay_us is less than 1000
+  */
+-static int wait_port_offline(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
++static bool wait_port_offline(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
+ {
+ 	u64 status;
+ 
+-	if (delay_us < 1000) {
+-		pr_err("%s: invalid delay specified %d\n", __func__, delay_us);
+-		return -EINVAL;
+-	}
++	WARN_ON(delay_us < 1000);
+ 
+ 	do {
+ 		msleep(delay_us / 1000);
+@@ -981,11 +975,14 @@ static int wait_port_offline(__be64 __iomem *fc_regs, u32 delay_us, u32 nretry)
+ static void afu_set_wwpn(struct afu *afu, int port, __be64 __iomem *fc_regs,
+ 			 u64 wwpn)
+ {
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
 +
-+	context_reset(cmd, &afu->host_map->ioarrin);
-+}
+ 	set_port_offline(fc_regs);
+ 	if (!wait_port_offline(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
+ 			       FC_PORT_STATUS_RETRY_CNT)) {
+-		pr_debug("%s: wait on port %d to go offline timed out\n",
+-			 __func__, port);
++		dev_dbg(dev, "%s: wait on port %d to go offline timed out\n",
++			__func__, port);
+ 	}
+ 
+ 	writeq_be(wwpn, &fc_regs[FC_PNAME / 8]);
+@@ -993,8 +990,8 @@ static void afu_set_wwpn(struct afu *afu, int port, __be64 __iomem *fc_regs,
+ 	set_port_online(fc_regs);
+ 	if (!wait_port_online(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
+ 			      FC_PORT_STATUS_RETRY_CNT)) {
+-		pr_debug("%s: wait on port %d to go online timed out\n",
+-			 __func__, port);
++		dev_dbg(dev, "%s: wait on port %d to go online timed out\n",
++			__func__, port);
+ 	}
+ }
+ 
+@@ -1013,6 +1010,8 @@ static void afu_set_wwpn(struct afu *afu, int port, __be64 __iomem *fc_regs,
+  */
+ static void afu_link_reset(struct afu *afu, int port, __be64 __iomem *fc_regs)
+ {
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	u64 port_sel;
+ 
+ 	/* first switch the AFU to the other links, if any */
+@@ -1024,21 +1023,21 @@ static void afu_link_reset(struct afu *afu, int port, __be64 __iomem *fc_regs)
+ 	set_port_offline(fc_regs);
+ 	if (!wait_port_offline(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
+ 			       FC_PORT_STATUS_RETRY_CNT))
+-		pr_err("%s: wait on port %d to go offline timed out\n",
+-		       __func__, port);
++		dev_err(dev, "%s: wait on port %d to go offline timed out\n",
++			__func__, port);
+ 
+ 	set_port_online(fc_regs);
+ 	if (!wait_port_online(fc_regs, FC_PORT_STATUS_RETRY_INTERVAL_US,
+ 			      FC_PORT_STATUS_RETRY_CNT))
+-		pr_err("%s: wait on port %d to go online timed out\n",
+-		       __func__, port);
++		dev_err(dev, "%s: wait on port %d to go online timed out\n",
++			__func__, port);
+ 
+ 	/* switch back to include this port */
+ 	port_sel |= (1ULL << port);
+ 	writeq_be(port_sel, &afu->afu_map->global.regs.afu_port_sel);
+ 	cxlflash_afu_sync(afu, 0, 0, AFU_GSYNC);
+ 
+-	pr_debug("%s: returning port_sel=%lld\n", __func__, port_sel);
++	dev_dbg(dev, "%s: returning port_sel=%016llx\n", __func__, port_sel);
+ }
+ 
+ /*
+@@ -1148,6 +1147,8 @@ static void afu_err_intr_init(struct afu *afu)
+ static irqreturn_t cxlflash_sync_err_irq(int irq, void *data)
+ {
+ 	struct afu *afu = (struct afu *)data;
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	u64 reg;
+ 	u64 reg_unmasked;
+ 
+@@ -1155,18 +1156,17 @@ static irqreturn_t cxlflash_sync_err_irq(int irq, void *data)
+ 	reg_unmasked = (reg & SISL_ISTATUS_UNMASK);
+ 
+ 	if (reg_unmasked == 0UL) {
+-		pr_err("%s: %llX: spurious interrupt, intr_status %016llX\n",
+-		       __func__, (u64)afu, reg);
++		dev_err(dev, "%s: spurious interrupt, intr_status=%016llx\n",
++			__func__, reg);
+ 		goto cxlflash_sync_err_irq_exit;
+ 	}
+ 
+-	pr_err("%s: %llX: unexpected interrupt, intr_status %016llX\n",
+-	       __func__, (u64)afu, reg);
++	dev_err(dev, "%s: unexpected interrupt, intr_status=%016llx\n",
++		__func__, reg);
+ 
+ 	writeq_be(reg_unmasked, &afu->host_map->intr_clear);
+ 
+ cxlflash_sync_err_irq_exit:
+-	pr_debug("%s: returning rc=%d\n", __func__, IRQ_HANDLED);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1248,7 +1248,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 	reg_unmasked = (reg & SISL_ASTATUS_UNMASK);
+ 
+ 	if (reg_unmasked == 0) {
+-		dev_err(dev, "%s: spurious interrupt, aintr_status 0x%016llX\n",
++		dev_err(dev, "%s: spurious interrupt, aintr_status=%016llx\n",
+ 			__func__, reg);
+ 		goto out;
+ 	}
+@@ -1264,7 +1264,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 
+ 		port = info->port;
+ 
+-		dev_err(dev, "%s: FC Port %d -> %s, fc_status 0x%08llX\n",
++		dev_err(dev, "%s: FC Port %d -> %s, fc_status=%016llx\n",
+ 			__func__, port, info->desc,
+ 		       readq_be(&global->fc_regs[port][FC_STATUS / 8]));
+ 
+@@ -1289,7 +1289,7 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 			 * should be the same and tracing one is sufficient.
+ 			 */
+ 
+-			dev_err(dev, "%s: fc %d: clearing fc_error 0x%08llX\n",
++			dev_err(dev, "%s: fc %d: clearing fc_error=%016llx\n",
+ 				__func__, port, reg);
+ 
+ 			writeq_be(reg, &global->fc_regs[port][FC_ERROR / 8]);
+@@ -1304,7 +1304,6 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+ 	}
+ 
+ out:
+-	dev_dbg(dev, "%s: returning IRQ_HANDLED, afu=%p\n", __func__, afu);
+ 	return IRQ_HANDLED;
+ }
+ 
+@@ -1316,13 +1315,14 @@ static irqreturn_t cxlflash_async_err_irq(int irq, void *data)
+  */
+ static int start_context(struct cxlflash_cfg *cfg)
+ {
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
+ 
+ 	rc = cxl_start_context(cfg->mcctx,
+ 			       cfg->afu->work.work_element_descriptor,
+ 			       NULL);
+ 
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1335,7 +1335,8 @@ static int start_context(struct cxlflash_cfg *cfg)
+  */
+ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ {
+-	struct pci_dev *dev = cfg->dev;
++	struct device *dev = &cfg->dev->dev;
++	struct pci_dev *pdev = cfg->dev;
+ 	int rc = 0;
+ 	int ro_start, ro_size, i, j, k;
+ 	ssize_t vpd_size;
+@@ -1344,10 +1345,10 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 	char *wwpn_vpd_tags[NUM_FC_PORTS] = { "V5", "V6" };
+ 
+ 	/* Get the VPD data from the device */
+-	vpd_size = cxl_read_adapter_vpd(dev, vpd_data, sizeof(vpd_data));
++	vpd_size = cxl_read_adapter_vpd(pdev, vpd_data, sizeof(vpd_data));
+ 	if (unlikely(vpd_size <= 0)) {
+-		dev_err(&dev->dev, "%s: Unable to read VPD (size = %ld)\n",
+-		       __func__, vpd_size);
++		dev_err(dev, "%s: Unable to read VPD (size = %ld)\n",
++			__func__, vpd_size);
+ 		rc = -ENODEV;
+ 		goto out;
+ 	}
+@@ -1356,8 +1357,7 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 	ro_start = pci_vpd_find_tag(vpd_data, 0, vpd_size,
+ 				    PCI_VPD_LRDT_RO_DATA);
+ 	if (unlikely(ro_start < 0)) {
+-		dev_err(&dev->dev, "%s: VPD Read-only data not found\n",
+-			__func__);
++		dev_err(dev, "%s: VPD Read-only data not found\n", __func__);
+ 		rc = -ENODEV;
+ 		goto out;
+ 	}
+@@ -1367,8 +1367,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 	j = ro_size;
+ 	i = ro_start + PCI_VPD_LRDT_TAG_SIZE;
+ 	if (unlikely((i + j) > vpd_size)) {
+-		pr_debug("%s: Might need to read more VPD (%d > %ld)\n",
+-			 __func__, (i + j), vpd_size);
++		dev_dbg(dev, "%s: Might need to read more VPD (%d > %ld)\n",
++			__func__, (i + j), vpd_size);
+ 		ro_size = vpd_size - i;
+ 	}
+ 
+@@ -1386,8 +1386,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 
+ 		i = pci_vpd_find_info_keyword(vpd_data, i, j, wwpn_vpd_tags[k]);
+ 		if (unlikely(i < 0)) {
+-			dev_err(&dev->dev, "%s: Port %d WWPN not found "
+-				"in VPD\n", __func__, k);
++			dev_err(dev, "%s: Port %d WWPN not found in VPD\n",
++				__func__, k);
+ 			rc = -ENODEV;
+ 			goto out;
+ 		}
+@@ -1395,9 +1395,8 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 		j = pci_vpd_info_field_size(&vpd_data[i]);
+ 		i += PCI_VPD_INFO_FLD_HDR_SIZE;
+ 		if (unlikely((i + j > vpd_size) || (j != WWPN_LEN))) {
+-			dev_err(&dev->dev, "%s: Port %d WWPN incomplete or "
+-				"VPD corrupt\n",
+-			       __func__, k);
++			dev_err(dev, "%s: Port %d WWPN incomplete or bad VPD\n",
++				__func__, k);
+ 			rc = -ENODEV;
+ 			goto out;
+ 		}
+@@ -1405,15 +1404,15 @@ static int read_vpd(struct cxlflash_cfg *cfg, u64 wwpn[])
+ 		memcpy(tmp_buf, &vpd_data[i], WWPN_LEN);
+ 		rc = kstrtoul(tmp_buf, WWPN_LEN, (ulong *)&wwpn[k]);
+ 		if (unlikely(rc)) {
+-			dev_err(&dev->dev, "%s: Fail to convert port %d WWPN "
+-				"to integer\n", __func__, k);
++			dev_err(dev, "%s: WWPN conversion failed for port %d\n",
++				__func__, k);
+ 			rc = -ENODEV;
+ 			goto out;
+ 		}
+ 	}
+ 
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1467,7 +1466,8 @@ static int init_global(struct cxlflash_cfg *cfg)
+ 		goto out;
+ 	}
+ 
+-	pr_debug("%s: wwpn0=0x%llX wwpn1=0x%llX\n", __func__, wwpn[0], wwpn[1]);
++	dev_dbg(dev, "%s: wwpn0=%016llx wwpn1=%016llx\n",
++		__func__, wwpn[0], wwpn[1]);
+ 
+ 	/* Set up RRQ and SQ in AFU for master issued cmds */
+ 	writeq_be((u64) afu->hrrq_start, &afu->host_map->rrq_start);
+@@ -1527,7 +1527,6 @@ static int init_global(struct cxlflash_cfg *cfg)
+ 		  &afu->ctrl_map->ctx_cap);
+ 	/* Initialize heartbeat */
+ 	afu->hb = readq_be(&afu->afu_map->global.regs.afu_hb);
+-
+ out:
+ 	return rc;
+ }
+@@ -1539,6 +1538,7 @@ static int init_global(struct cxlflash_cfg *cfg)
+ static int start_afu(struct cxlflash_cfg *cfg)
+ {
+ 	struct afu *afu = cfg->afu;
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
+ 
+ 	init_pcr(cfg);
+@@ -1565,7 +1565,7 @@ static int start_afu(struct cxlflash_cfg *cfg)
+ 
+ 	rc = init_global(cfg);
+ 
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1585,7 +1585,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+ 
+ 	rc = cxl_allocate_afu_irqs(ctx, 3);
+ 	if (unlikely(rc)) {
+-		dev_err(dev, "%s: call to allocate_afu_irqs failed rc=%d!\n",
++		dev_err(dev, "%s: allocate_afu_irqs failed rc=%d\n",
+ 			__func__, rc);
+ 		level = UNDO_NOOP;
+ 		goto out;
+@@ -1594,8 +1594,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+ 	rc = cxl_map_afu_irq(ctx, 1, cxlflash_sync_err_irq, afu,
+ 			     "SISL_MSI_SYNC_ERROR");
+ 	if (unlikely(rc <= 0)) {
+-		dev_err(dev, "%s: IRQ 1 (SISL_MSI_SYNC_ERROR) map failed!\n",
+-			__func__);
++		dev_err(dev, "%s: SISL_MSI_SYNC_ERROR map failed\n", __func__);
+ 		level = FREE_IRQ;
+ 		goto out;
+ 	}
+@@ -1603,8 +1602,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+ 	rc = cxl_map_afu_irq(ctx, 2, cxlflash_rrq_irq, afu,
+ 			     "SISL_MSI_RRQ_UPDATED");
+ 	if (unlikely(rc <= 0)) {
+-		dev_err(dev, "%s: IRQ 2 (SISL_MSI_RRQ_UPDATED) map failed!\n",
+-			__func__);
++		dev_err(dev, "%s: SISL_MSI_RRQ_UPDATED map failed\n", __func__);
+ 		level = UNMAP_ONE;
+ 		goto out;
+ 	}
+@@ -1612,8 +1610,7 @@ static enum undo_level init_intr(struct cxlflash_cfg *cfg,
+ 	rc = cxl_map_afu_irq(ctx, 3, cxlflash_async_err_irq, afu,
+ 			     "SISL_MSI_ASYNC_ERROR");
+ 	if (unlikely(rc <= 0)) {
+-		dev_err(dev, "%s: IRQ 3 (SISL_MSI_ASYNC_ERROR) map failed!\n",
+-			__func__);
++		dev_err(dev, "%s: SISL_MSI_ASYNC_ERROR map failed\n", __func__);
+ 		level = UNMAP_TWO;
+ 		goto out;
+ 	}
+@@ -1647,15 +1644,13 @@ static int init_mc(struct cxlflash_cfg *cfg)
+ 	/* During initialization reset the AFU to start from a clean slate */
+ 	rc = cxl_afu_reset(cfg->mcctx);
+ 	if (unlikely(rc)) {
+-		dev_err(dev, "%s: initial AFU reset failed rc=%d\n",
+-			__func__, rc);
++		dev_err(dev, "%s: AFU reset failed rc=%d\n", __func__, rc);
+ 		goto ret;
+ 	}
+ 
+ 	level = init_intr(cfg, ctx);
+ 	if (unlikely(level)) {
+-		dev_err(dev, "%s: setting up interrupts failed rc=%d\n",
+-			__func__, rc);
++		dev_err(dev, "%s: interrupt init failed rc=%d\n", __func__, rc);
+ 		goto out;
+ 	}
+ 
+@@ -1670,7 +1665,7 @@ static int init_mc(struct cxlflash_cfg *cfg)
+ 		goto out;
+ 	}
+ ret:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ out:
+ 	term_intr(cfg, level);
+@@ -1697,7 +1692,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 
+ 	rc = init_mc(cfg);
+ 	if (rc) {
+-		dev_err(dev, "%s: call to init_mc failed, rc=%d!\n",
++		dev_err(dev, "%s: init_mc failed rc=%d\n",
+ 			__func__, rc);
+ 		goto out;
+ 	}
+@@ -1705,7 +1700,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 	/* Map the entire MMIO space of the AFU */
+ 	afu->afu_map = cxl_psa_map(cfg->mcctx);
+ 	if (!afu->afu_map) {
+-		dev_err(dev, "%s: call to cxl_psa_map failed!\n", __func__);
++		dev_err(dev, "%s: cxl_psa_map failed\n", __func__);
+ 		rc = -ENOMEM;
+ 		goto err1;
+ 	}
+@@ -1717,8 +1712,8 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 	afu->interface_version =
+ 	    readq_be(&afu->afu_map->global.regs.interface_version);
+ 	if ((afu->interface_version + 1) == 0) {
+-		pr_err("Back level AFU, please upgrade. AFU version %s "
+-		       "interface version 0x%llx\n", afu->version,
++		dev_err(dev, "Back level AFU, please upgrade. AFU version %s "
++			"interface version %016llx\n", afu->version,
+ 		       afu->interface_version);
+ 		rc = -EINVAL;
+ 		goto err2;
+@@ -1732,13 +1727,12 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 		afu->context_reset = context_reset_ioarrin;
+ 	}
+ 
+-	pr_debug("%s: afu version %s, interface version 0x%llX\n", __func__,
+-		 afu->version, afu->interface_version);
++	dev_dbg(dev, "%s: afu_ver=%s interface_ver=%016llx\n", __func__,
++		afu->version, afu->interface_version);
+ 
+ 	rc = start_afu(cfg);
+ 	if (rc) {
+-		dev_err(dev, "%s: call to start_afu failed, rc=%d!\n",
+-			__func__, rc);
++		dev_err(dev, "%s: start_afu failed, rc=%d\n", __func__, rc);
+ 		goto err2;
+ 	}
+ 
+@@ -1749,7 +1743,7 @@ static int init_afu(struct cxlflash_cfg *cfg)
+ 	/* Restore the LUN mappings */
+ 	cxlflash_restore_luntable(cfg);
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ 
+ err2:
+@@ -1793,7 +1787,8 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	static DEFINE_MUTEX(sync_active);
+ 
+ 	if (cfg->state != STATE_NORMAL) {
+-		pr_debug("%s: Sync not required! (%u)\n", __func__, cfg->state);
++		dev_dbg(dev, "%s: Sync not required state=%u\n",
++			__func__, cfg->state);
+ 		return 0;
+ 	}
+ 
+@@ -1810,7 +1805,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	init_completion(&cmd->cevent);
+ 	cmd->parent = afu;
+ 
+-	pr_debug("%s: afu=%p cmd=%p %d\n", __func__, afu, cmd, ctx_hndl_u);
++	dev_dbg(dev, "%s: afu=%p cmd=%p %d\n", __func__, afu, cmd, ctx_hndl_u);
+ 
+ 	cmd->rcb.req_flags = SISL_REQ_FLAGS_AFU_CMD;
+ 	cmd->rcb.ctx_id = afu->ctx_hndl;
+@@ -1835,7 +1830,7 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+ 	atomic_dec(&afu->cmds_active);
+ 	mutex_unlock(&sync_active);
+ 	kfree(buf);
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1847,16 +1842,17 @@ int cxlflash_afu_sync(struct afu *afu, ctx_hndl_t ctx_hndl_u,
+  */
+ static int afu_reset(struct cxlflash_cfg *cfg)
+ {
++	struct device *dev = &cfg->dev->dev;
+ 	int rc = 0;
 +
-+/**
-  * send_cmd_ioarrin() - sends an AFU command via IOARRIN register
-  * @afu:	AFU associated with the host.
-  * @cmd:	AFU command to send.
+ 	/* Stop the context before the reset. Since the context is
+ 	 * no longer available restart it after the reset is complete
+ 	 */
+-
+ 	term_afu(cfg);
+ 
+ 	rc = init_afu(cfg);
+ 
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1885,18 +1881,18 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+ {
+ 	int rc = SUCCESS;
+ 	struct Scsi_Host *host = scp->device->host;
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct afu *afu = cfg->afu;
+ 	int rcr = 0;
+ 
+-	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
+-		 "cdb=(%08X-%08X-%08X-%08X)\n", __func__, scp,
+-		 host->host_no, scp->device->channel,
+-		 scp->device->id, scp->device->lun,
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
++	dev_dbg(dev, "%s: (scp=%p) %d/%d/%d/%llu "
++		"cdb=(%08x-%08x-%08x-%08x)\n", __func__, scp, host->host_no,
++		scp->device->channel, scp->device->id, scp->device->lun,
++		get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 
+ retry:
+ 	switch (cfg->state) {
+@@ -1913,7 +1909,7 @@ static int cxlflash_eh_device_reset_handler(struct scsi_cmnd *scp)
+ 		break;
+ 	}
+ 
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -1935,16 +1931,16 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 	int rc = SUCCESS;
+ 	int rcr = 0;
+ 	struct Scsi_Host *host = scp->device->host;
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(host);
++	struct device *dev = &cfg->dev->dev;
+ 
+-	pr_debug("%s: (scp=%p) %d/%d/%d/%llu "
+-		 "cdb=(%08X-%08X-%08X-%08X)\n", __func__, scp,
+-		 host->host_no, scp->device->channel,
+-		 scp->device->id, scp->device->lun,
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
+-		 get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
++	dev_dbg(dev, "%s: (scp=%p) %d/%d/%d/%llu "
++		"cdb=(%08x-%08x-%08x-%08x)\n", __func__, scp, host->host_no,
++		scp->device->channel, scp->device->id, scp->device->lun,
++		get_unaligned_be32(&((u32 *)scp->cmnd)[0]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[1]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[2]),
++		get_unaligned_be32(&((u32 *)scp->cmnd)[3]));
+ 
+ 	switch (cfg->state) {
+ 	case STATE_NORMAL:
+@@ -1970,7 +1966,7 @@ static int cxlflash_eh_host_reset_handler(struct scsi_cmnd *scp)
+ 		break;
+ 	}
+ 
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -2036,8 +2032,7 @@ static ssize_t port0_show(struct device *dev,
+ 			  struct device_attribute *attr,
+ 			  char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
+ 	struct afu *afu = cfg->afu;
+ 
+ 	return cxlflash_show_port_status(0, afu, buf);
+@@ -2055,8 +2050,7 @@ static ssize_t port1_show(struct device *dev,
+ 			  struct device_attribute *attr,
+ 			  char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
+ 	struct afu *afu = cfg->afu;
+ 
+ 	return cxlflash_show_port_status(1, afu, buf);
+@@ -2073,8 +2067,7 @@ static ssize_t port1_show(struct device *dev,
+ static ssize_t lun_mode_show(struct device *dev,
+ 			     struct device_attribute *attr, char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
+ 	struct afu *afu = cfg->afu;
+ 
+ 	return scnprintf(buf, PAGE_SIZE, "%u\n", afu->internal_lun);
+@@ -2107,7 +2100,7 @@ static ssize_t lun_mode_store(struct device *dev,
+ 			      const char *buf, size_t count)
+ {
+ 	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(shost);
+ 	struct afu *afu = cfg->afu;
+ 	int rc;
+ 	u32 lun_mode;
+@@ -2169,7 +2162,7 @@ static ssize_t cxlflash_show_port_lun_table(u32 port,
+ 
+ 	for (i = 0; i < CXLFLASH_NUM_VLUNS; i++)
+ 		bytes += scnprintf(buf + bytes, PAGE_SIZE - bytes,
+-				   "%03d: %016llX\n", i, readq_be(&fc_port[i]));
++				   "%03d: %016llx\n", i, readq_be(&fc_port[i]));
+ 	return bytes;
+ }
+ 
+@@ -2185,8 +2178,7 @@ static ssize_t port0_lun_table_show(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
+ 	struct afu *afu = cfg->afu;
+ 
+ 	return cxlflash_show_port_lun_table(0, afu, buf);
+@@ -2204,8 +2196,7 @@ static ssize_t port1_lun_table_show(struct device *dev,
+ 				    struct device_attribute *attr,
+ 				    char *buf)
+ {
+-	struct Scsi_Host *shost = class_to_shost(dev);
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)shost->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(class_to_shost(dev));
+ 	struct afu *afu = cfg->afu;
+ 
+ 	return cxlflash_show_port_lun_table(1, afu, buf);
+@@ -2365,6 +2356,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ {
+ 	struct Scsi_Host *host;
+ 	struct cxlflash_cfg *cfg = NULL;
++	struct device *dev = &pdev->dev;
+ 	struct dev_dependent_vals *ddv;
+ 	int rc = 0;
+ 
+@@ -2376,8 +2368,7 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 
+ 	host = scsi_host_alloc(&driver_template, sizeof(struct cxlflash_cfg));
+ 	if (!host) {
+-		dev_err(&pdev->dev, "%s: call to scsi_host_alloc failed!\n",
+-			__func__);
++		dev_err(dev, "%s: scsi_host_alloc failed\n", __func__);
+ 		rc = -ENOMEM;
+ 		goto out;
+ 	}
+@@ -2388,12 +2379,11 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 	host->unique_id = host->host_no;
+ 	host->max_cmd_len = CXLFLASH_MAX_CDB_LEN;
+ 
+-	cfg = (struct cxlflash_cfg *)host->hostdata;
++	cfg = shost_priv(host);
+ 	cfg->host = host;
+ 	rc = alloc_mem(cfg);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "%s: call to alloc_mem failed!\n",
+-			__func__);
++		dev_err(dev, "%s: alloc_mem failed\n", __func__);
+ 		rc = -ENOMEM;
+ 		scsi_host_put(cfg->host);
+ 		goto out;
+@@ -2434,30 +2424,27 @@ static int cxlflash_probe(struct pci_dev *pdev,
+ 
+ 	rc = init_pci(cfg);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "%s: call to init_pci "
+-			"failed rc=%d!\n", __func__, rc);
++		dev_err(dev, "%s: init_pci failed rc=%d\n", __func__, rc);
+ 		goto out_remove;
+ 	}
+ 	cfg->init_state = INIT_STATE_PCI;
+ 
+ 	rc = init_afu(cfg);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "%s: call to init_afu "
+-			"failed rc=%d!\n", __func__, rc);
++		dev_err(dev, "%s: init_afu failed rc=%d\n", __func__, rc);
+ 		goto out_remove;
+ 	}
+ 	cfg->init_state = INIT_STATE_AFU;
+ 
+ 	rc = init_scsi(cfg);
+ 	if (rc) {
+-		dev_err(&pdev->dev, "%s: call to init_scsi "
+-			"failed rc=%d!\n", __func__, rc);
++		dev_err(dev, "%s: init_scsi failed rc=%d\n", __func__, rc);
+ 		goto out_remove;
+ 	}
+ 	cfg->init_state = INIT_STATE_SCSI;
+ 
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ 
+ out_remove:
+@@ -2495,7 +2482,7 @@ static pci_ers_result_t cxlflash_pci_error_detected(struct pci_dev *pdev,
+ 		drain_ioctls(cfg);
+ 		rc = cxlflash_mark_contexts_error(cfg);
+ 		if (unlikely(rc))
+-			dev_err(dev, "%s: Failed to mark user contexts!(%d)\n",
++			dev_err(dev, "%s: Failed to mark user contexts rc=%d\n",
+ 				__func__, rc);
+ 		term_afu(cfg);
+ 		return PCI_ERS_RESULT_NEED_RESET;
+@@ -2529,7 +2516,7 @@ static pci_ers_result_t cxlflash_pci_slot_reset(struct pci_dev *pdev)
+ 
+ 	rc = init_afu(cfg);
+ 	if (unlikely(rc)) {
+-		dev_err(dev, "%s: EEH recovery failed! (%d)\n", __func__, rc);
++		dev_err(dev, "%s: EEH recovery failed rc=%d\n", __func__, rc);
+ 		return PCI_ERS_RESULT_DISCONNECT;
+ 	}
+ 
+@@ -2577,8 +2564,6 @@ static struct pci_driver cxlflash_driver = {
+  */
+ static int __init init_cxlflash(void)
+ {
+-	pr_info("%s: %s\n", __func__, CXLFLASH_ADAPTER_NAME);
+-
+ 	cxlflash_list_init();
+ 
+ 	return pci_register_driver(&cxlflash_driver);
+diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
+index 42674ae..90869ce 100644
+--- a/drivers/scsi/cxlflash/superpipe.c
++++ b/drivers/scsi/cxlflash/superpipe.c
+@@ -212,7 +212,7 @@ struct ctx_info *get_context(struct cxlflash_cfg *cfg, u64 rctxid,
+ 	}
+ 
+ out:
+-	dev_dbg(dev, "%s: rctxid=%016llX ctxinfo=%p ctxpid=%u pid=%u "
++	dev_dbg(dev, "%s: rctxid=%016llx ctxinfo=%p ctxpid=%u pid=%u "
+ 		"ctx_ctrl=%u\n", __func__, rctxid, ctxi, ctxpid, pid,
+ 		ctx_ctrl);
+ 
+@@ -260,7 +260,7 @@ static int afu_attach(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
+ 	writeq_be(val, &ctrl_map->ctx_cap);
+ 	val = readq_be(&ctrl_map->ctx_cap);
+ 	if (val != (SISL_CTX_CAP_READ_CMD | SISL_CTX_CAP_WRITE_CMD)) {
+-		dev_err(dev, "%s: ctx may be closed val=%016llX\n",
++		dev_err(dev, "%s: ctx may be closed val=%016llx\n",
+ 			__func__, val);
+ 		rc = -EAGAIN;
+ 		goto out;
+@@ -302,7 +302,7 @@ static int afu_attach(struct cxlflash_cfg *cfg, struct ctx_info *ctxi)
+  */
+ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct glun_info *gli = lli->parent;
+ 	u8 *cmd_buf = NULL;
+@@ -326,7 +326,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	scsi_cmd[1] = SAI_READ_CAPACITY_16;	/* service action */
+ 	put_unaligned_be32(CMD_BUFSIZE, &scsi_cmd[10]);
+ 
+-	dev_dbg(dev, "%s: %ssending cmd(0x%x)\n", __func__,
++	dev_dbg(dev, "%s: %ssending cmd(%02x)\n", __func__,
+ 		retry_cnt ? "re" : "", scsi_cmd[0]);
+ 
+ 	/* Drop the ioctl read semahpore across lengthy call */
+@@ -336,7 +336,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	down_read(&cfg->ioctl_rwsem);
+ 	rc = check_state(cfg);
+ 	if (rc) {
+-		dev_err(dev, "%s: Failed state! result=0x08%X\n",
++		dev_err(dev, "%s: Failed state result=%08x\n",
+ 			__func__, result);
+ 		rc = -ENODEV;
+ 		goto out;
+@@ -378,7 +378,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ 	}
+ 
+ 	if (result) {
+-		dev_err(dev, "%s: command failed, result=0x%x\n",
++		dev_err(dev, "%s: command failed, result=%08x\n",
+ 			__func__, result);
+ 		rc = -EIO;
+ 		goto out;
+@@ -415,29 +415,32 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
+ struct sisl_rht_entry *get_rhte(struct ctx_info *ctxi, res_hndl_t rhndl,
+ 				struct llun_info *lli)
+ {
++	struct cxlflash_cfg *cfg = ctxi->cfg;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_rht_entry *rhte = NULL;
+ 
+ 	if (unlikely(!ctxi->rht_start)) {
+-		pr_debug("%s: Context does not have allocated RHT!\n",
++		dev_dbg(dev, "%s: Context does not have allocated RHT\n",
+ 			 __func__);
+ 		goto out;
+ 	}
+ 
+ 	if (unlikely(rhndl >= MAX_RHT_PER_CONTEXT)) {
+-		pr_debug("%s: Bad resource handle! (%d)\n", __func__, rhndl);
++		dev_dbg(dev, "%s: Bad resource handle rhndl=%d\n",
++			__func__, rhndl);
+ 		goto out;
+ 	}
+ 
+ 	if (unlikely(ctxi->rht_lun[rhndl] != lli)) {
+-		pr_debug("%s: Bad resource handle LUN! (%d)\n",
+-			 __func__, rhndl);
++		dev_dbg(dev, "%s: Bad resource handle LUN rhndl=%d\n",
++			__func__, rhndl);
+ 		goto out;
+ 	}
+ 
+ 	rhte = &ctxi->rht_start[rhndl];
+ 	if (unlikely(rhte->nmask == 0)) {
+-		pr_debug("%s: Unopened resource handle! (%d)\n",
+-			 __func__, rhndl);
++		dev_dbg(dev, "%s: Unopened resource handle rhndl=%d\n",
++			__func__, rhndl);
+ 		rhte = NULL;
+ 		goto out;
+ 	}
+@@ -456,6 +459,8 @@ struct sisl_rht_entry *get_rhte(struct ctx_info *ctxi, res_hndl_t rhndl,
+ struct sisl_rht_entry *rhte_checkout(struct ctx_info *ctxi,
+ 				     struct llun_info *lli)
+ {
++	struct cxlflash_cfg *cfg = ctxi->cfg;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_rht_entry *rhte = NULL;
+ 	int i;
+ 
+@@ -470,7 +475,7 @@ struct sisl_rht_entry *rhte_checkout(struct ctx_info *ctxi,
+ 	if (likely(rhte))
+ 		ctxi->rht_lun[i] = lli;
+ 
+-	pr_debug("%s: returning rhte=%p (%d)\n", __func__, rhte, i);
++	dev_dbg(dev, "%s: returning rhte=%p index=%d\n", __func__, rhte, i);
+ 	return rhte;
+ }
+ 
+@@ -547,7 +552,7 @@ int cxlflash_lun_attach(struct glun_info *gli, enum lun_mode mode, bool locked)
+ 	if (gli->mode == MODE_NONE)
+ 		gli->mode = mode;
+ 	else if (gli->mode != mode) {
+-		pr_debug("%s: LUN operating in mode %d, requested mode %d\n",
++		pr_debug("%s: gli_mode=%d requested_mode=%d\n",
+ 			 __func__, gli->mode, mode);
+ 		rc = -EINVAL;
+ 		goto out;
+@@ -605,7 +610,7 @@ int _cxlflash_disk_release(struct scsi_device *sdev,
+ 			   struct ctx_info *ctxi,
+ 			   struct dk_cxlflash_release *release)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -622,13 +627,13 @@ int _cxlflash_disk_release(struct scsi_device *sdev,
+ 	struct sisl_rht_entry *rhte;
+ 	struct sisl_rht_entry_f1 *rhte_f1;
+ 
+-	dev_dbg(dev, "%s: ctxid=%llu rhndl=0x%llx gli->mode=%u gli->users=%u\n",
++	dev_dbg(dev, "%s: ctxid=%llu rhndl=%llu gli->mode=%u gli->users=%u\n",
+ 		__func__, ctxid, release->rsrc_handle, gli->mode, gli->users);
+ 
+ 	if (!ctxi) {
+ 		ctxi = get_context(cfg, rctxid, lli, CTX_CTRL_ERR_FALLBACK);
+ 		if (unlikely(!ctxi)) {
+-			dev_dbg(dev, "%s: Bad context! (%llu)\n",
++			dev_dbg(dev, "%s: Bad context ctxid=%llu\n",
+ 				__func__, ctxid);
+ 			rc = -EINVAL;
+ 			goto out;
+@@ -639,7 +644,7 @@ int _cxlflash_disk_release(struct scsi_device *sdev,
+ 
+ 	rhte = get_rhte(ctxi, rhndl, lli);
+ 	if (unlikely(!rhte)) {
+-		dev_dbg(dev, "%s: Bad resource handle! (%d)\n",
++		dev_dbg(dev, "%s: Bad resource handle rhndl=%d\n",
+ 			__func__, rhndl);
+ 		rc = -EINVAL;
+ 		goto out;
+@@ -758,13 +763,13 @@ static struct ctx_info *create_context(struct cxlflash_cfg *cfg)
+ 	lli = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*lli)), GFP_KERNEL);
+ 	ws = kzalloc((MAX_RHT_PER_CONTEXT * sizeof(*ws)), GFP_KERNEL);
+ 	if (unlikely(!ctxi || !lli || !ws)) {
+-		dev_err(dev, "%s: Unable to allocate context!\n", __func__);
++		dev_err(dev, "%s: Unable to allocate context\n", __func__);
+ 		goto err;
+ 	}
+ 
+ 	rhte = (struct sisl_rht_entry *)get_zeroed_page(GFP_KERNEL);
+ 	if (unlikely(!rhte)) {
+-		dev_err(dev, "%s: Unable to allocate RHT!\n", __func__);
++		dev_err(dev, "%s: Unable to allocate RHT\n", __func__);
+ 		goto err;
+ 	}
+ 
+@@ -858,7 +863,7 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
+ 				 struct ctx_info *ctxi,
+ 				 struct dk_cxlflash_detach *detach)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct lun_access *lun_access, *t;
+@@ -875,7 +880,7 @@ static int _cxlflash_disk_detach(struct scsi_device *sdev,
+ 	if (!ctxi) {
+ 		ctxi = get_context(cfg, rctxid, lli, CTX_CTRL_ERR_FALLBACK);
+ 		if (unlikely(!ctxi)) {
+-			dev_dbg(dev, "%s: Bad context! (%llu)\n",
++			dev_dbg(dev, "%s: Bad context ctxid=%llu\n",
+ 				__func__, ctxid);
+ 			rc = -EINVAL;
+ 			goto out;
+@@ -964,7 +969,7 @@ static int cxlflash_cxl_release(struct inode *inode, struct file *file)
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely(ctxid < 0)) {
+-		dev_err(dev, "%s: Context %p was closed! (%d)\n",
++		dev_err(dev, "%s: Context %p was closed ctxid=%d\n",
+ 			__func__, ctx, ctxid);
+ 		goto out;
+ 	}
+@@ -973,18 +978,18 @@ static int cxlflash_cxl_release(struct inode *inode, struct file *file)
+ 	if (unlikely(!ctxi)) {
+ 		ctxi = get_context(cfg, ctxid, file, ctrl | CTX_CTRL_CLONE);
+ 		if (!ctxi) {
+-			dev_dbg(dev, "%s: Context %d already free!\n",
++			dev_dbg(dev, "%s: ctxid=%d already free\n",
+ 				__func__, ctxid);
+ 			goto out_release;
+ 		}
+ 
+-		dev_dbg(dev, "%s: Another process owns context %d!\n",
++		dev_dbg(dev, "%s: Another process owns ctxid=%d\n",
+ 			__func__, ctxid);
+ 		put_context(ctxi);
+ 		goto out;
+ 	}
+ 
+-	dev_dbg(dev, "%s: close for context %d\n", __func__, ctxid);
++	dev_dbg(dev, "%s: close for ctxid=%d\n", __func__, ctxid);
+ 
+ 	detach.context_id = ctxi->ctxid;
+ 	list_for_each_entry_safe(lun_access, t, &ctxi->luns, list)
+@@ -1011,17 +1016,20 @@ static void unmap_context(struct ctx_info *ctxi)
+ 
+ /**
+  * get_err_page() - obtains and allocates the error notification page
++ * @cfg:	Internal structure associated with the host.
+  *
+  * Return: error notification page on success, NULL on failure
+  */
+-static struct page *get_err_page(void)
++static struct page *get_err_page(struct cxlflash_cfg *cfg)
+ {
+ 	struct page *err_page = global.err_page;
++	struct device *dev = &cfg->dev->dev;
+ 
+ 	if (unlikely(!err_page)) {
+ 		err_page = alloc_page(GFP_KERNEL);
+ 		if (unlikely(!err_page)) {
+-			pr_err("%s: Unable to allocate err_page!\n", __func__);
++			dev_err(dev, "%s: Unable to allocate err_page\n",
++				__func__);
+ 			goto out;
+ 		}
+ 
+@@ -1039,7 +1047,7 @@ static struct page *get_err_page(void)
+ 	}
+ 
+ out:
+-	pr_debug("%s: returning err_page=%p\n", __func__, err_page);
++	dev_dbg(dev, "%s: returning err_page=%p\n", __func__, err_page);
+ 	return err_page;
+ }
+ 
+@@ -1074,14 +1082,14 @@ static int cxlflash_mmap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely(ctxid < 0)) {
+-		dev_err(dev, "%s: Context %p was closed! (%d)\n",
++		dev_err(dev, "%s: Context %p was closed ctxid=%d\n",
+ 			__func__, ctx, ctxid);
+ 		goto err;
+ 	}
+ 
+ 	ctxi = get_context(cfg, ctxid, file, ctrl);
+ 	if (unlikely(!ctxi)) {
+-		dev_dbg(dev, "%s: Bad context! (%d)\n", __func__, ctxid);
++		dev_dbg(dev, "%s: Bad context ctxid=%d\n", __func__, ctxid);
+ 		goto err;
+ 	}
+ 
+@@ -1091,13 +1099,12 @@ static int cxlflash_mmap_fault(struct vm_area_struct *vma, struct vm_fault *vmf)
+ 		vma->vm_page_prot = pgprot_noncached(vma->vm_page_prot);
+ 		rc = ctxi->cxl_mmap_vmops->fault(vma, vmf);
+ 	} else {
+-		dev_dbg(dev, "%s: err recovery active, use err_page!\n",
++		dev_dbg(dev, "%s: err recovery active, use err_page\n",
+ 			__func__);
+ 
+-		err_page = get_err_page();
++		err_page = get_err_page(cfg);
+ 		if (unlikely(!err_page)) {
+-			dev_err(dev, "%s: Could not obtain error page!\n",
+-				__func__);
++			dev_err(dev, "%s: Could not get err_page\n", __func__);
+ 			rc = VM_FAULT_RETRY;
+ 			goto out;
+ 		}
+@@ -1147,7 +1154,7 @@ static int cxlflash_cxl_mmap(struct file *file, struct vm_area_struct *vma)
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely(ctxid < 0)) {
+-		dev_err(dev, "%s: Context %p was closed! (%d)\n",
++		dev_err(dev, "%s: Context %p was closed ctxid=%d\n",
+ 			__func__, ctx, ctxid);
+ 		rc = -EIO;
+ 		goto out;
+@@ -1155,7 +1162,7 @@ static int cxlflash_cxl_mmap(struct file *file, struct vm_area_struct *vma)
+ 
+ 	ctxi = get_context(cfg, ctxid, file, ctrl);
+ 	if (unlikely(!ctxi)) {
+-		dev_dbg(dev, "%s: Bad context! (%d)\n", __func__, ctxid);
++		dev_dbg(dev, "%s: Bad context ctxid=%d\n", __func__, ctxid);
+ 		rc = -EIO;
+ 		goto out;
+ 	}
+@@ -1251,7 +1258,7 @@ int check_state(struct cxlflash_cfg *cfg)
+ 			break;
+ 		goto retry;
+ 	case STATE_FAILTERM:
+-		dev_dbg(dev, "%s: Failed/Terminating!\n", __func__);
++		dev_dbg(dev, "%s: Failed/Terminating\n", __func__);
+ 		rc = -ENODEV;
+ 		break;
+ 	default:
+@@ -1276,7 +1283,7 @@ int check_state(struct cxlflash_cfg *cfg)
+ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 				struct dk_cxlflash_attach *attach)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu *afu = cfg->afu;
+ 	struct llun_info *lli = sdev->hostdata;
+@@ -1303,24 +1310,24 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 	}
+ 
+ 	if (gli->max_lba == 0) {
+-		dev_dbg(dev, "%s: No capacity info for this LUN (%016llX)\n",
++		dev_dbg(dev, "%s: No capacity info for LUN=%016llx\n",
+ 			__func__, lli->lun_id[sdev->channel]);
+ 		rc = read_cap16(sdev, lli);
+ 		if (rc) {
+-			dev_err(dev, "%s: Invalid device! (%d)\n",
++			dev_err(dev, "%s: Invalid device rc=%d\n",
+ 				__func__, rc);
+ 			rc = -ENODEV;
+ 			goto out;
+ 		}
+-		dev_dbg(dev, "%s: LBA = %016llX\n", __func__, gli->max_lba);
+-		dev_dbg(dev, "%s: BLK_LEN = %08X\n", __func__, gli->blk_len);
++		dev_dbg(dev, "%s: LBA = %016llx\n", __func__, gli->max_lba);
++		dev_dbg(dev, "%s: BLK_LEN = %08x\n", __func__, gli->blk_len);
+ 	}
+ 
+ 	if (attach->hdr.flags & DK_CXLFLASH_ATTACH_REUSE_CONTEXT) {
+ 		rctxid = attach->context_id;
+ 		ctxi = get_context(cfg, rctxid, NULL, 0);
+ 		if (!ctxi) {
+-			dev_dbg(dev, "%s: Bad context! (%016llX)\n",
++			dev_dbg(dev, "%s: Bad context rctxid=%016llx\n",
+ 				__func__, rctxid);
+ 			rc = -EINVAL;
+ 			goto out;
+@@ -1328,7 +1335,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 
+ 		list_for_each_entry(lun_access, &ctxi->luns, list)
+ 			if (lun_access->lli == lli) {
+-				dev_dbg(dev, "%s: Already attached!\n",
++				dev_dbg(dev, "%s: Already attached\n",
+ 					__func__);
+ 				rc = -EINVAL;
+ 				goto out;
+@@ -1337,13 +1344,13 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 
+ 	rc = scsi_device_get(sdev);
+ 	if (unlikely(rc)) {
+-		dev_err(dev, "%s: Unable to get sdev reference!\n", __func__);
++		dev_err(dev, "%s: Unable to get sdev reference\n", __func__);
+ 		goto out;
+ 	}
+ 
+ 	lun_access = kzalloc(sizeof(*lun_access), GFP_KERNEL);
+ 	if (unlikely(!lun_access)) {
+-		dev_err(dev, "%s: Unable to allocate lun_access!\n", __func__);
++		dev_err(dev, "%s: Unable to allocate lun_access\n", __func__);
+ 		rc = -ENOMEM;
+ 		goto err;
+ 	}
+@@ -1353,7 +1360,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 
+ 	/* Non-NULL context indicates reuse (another context reference) */
+ 	if (ctxi) {
+-		dev_dbg(dev, "%s: Reusing context for LUN! (%016llX)\n",
++		dev_dbg(dev, "%s: Reusing context for LUN rctxid=%016llx\n",
+ 			__func__, rctxid);
+ 		kref_get(&ctxi->kref);
+ 		list_add(&lun_access->list, &ctxi->luns);
+@@ -1362,7 +1369,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 
+ 	ctxi = create_context(cfg);
+ 	if (unlikely(!ctxi)) {
+-		dev_err(dev, "%s: Failed to create context! (%d)\n",
++		dev_err(dev, "%s: Failed to create context ctxid=%d\n",
+ 			__func__, ctxid);
+ 		goto err;
+ 	}
+@@ -1388,7 +1395,7 @@ static int cxlflash_disk_attach(struct scsi_device *sdev,
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+-		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
++		dev_err(dev, "%s: ctxid=%d invalid\n", __func__, ctxid);
+ 		rc = -EPERM;
+ 		goto err;
+ 	}
+@@ -1522,7 +1529,7 @@ static int recover_context(struct cxlflash_cfg *cfg,
+ 
+ 	ctxid = cxl_process_element(ctx);
+ 	if (unlikely((ctxid >= MAX_CONTEXT) || (ctxid < 0))) {
+-		dev_err(dev, "%s: ctxid (%d) invalid!\n", __func__, ctxid);
++		dev_err(dev, "%s: ctxid=%d invalid\n", __func__, ctxid);
+ 		rc = -EPERM;
+ 		goto err2;
+ 	}
+@@ -1613,7 +1620,7 @@ static int recover_context(struct cxlflash_cfg *cfg,
+ static int cxlflash_afu_recover(struct scsi_device *sdev,
+ 				struct dk_cxlflash_recover_afu *recover)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct afu *afu = cfg->afu;
+@@ -1635,19 +1642,19 @@ static int cxlflash_afu_recover(struct scsi_device *sdev,
+ 		goto out;
+ 	rc = check_state(cfg);
+ 	if (rc) {
+-		dev_err(dev, "%s: Failed state! rc=%d\n", __func__, rc);
++		dev_err(dev, "%s: Failed state rc=%d\n", __func__, rc);
+ 		rc = -ENODEV;
+ 		goto out;
+ 	}
+ 
+-	dev_dbg(dev, "%s: reason 0x%016llX rctxid=%016llX\n",
++	dev_dbg(dev, "%s: reason=%016llx rctxid=%016llx\n",
+ 		__func__, recover->reason, rctxid);
+ 
+ retry:
+ 	/* Ensure that this process is attached to the context */
+ 	ctxi = get_context(cfg, rctxid, lli, CTX_CTRL_ERR_FALLBACK);
+ 	if (unlikely(!ctxi)) {
+-		dev_dbg(dev, "%s: Bad context! (%llu)\n", __func__, ctxid);
++		dev_dbg(dev, "%s: Bad context ctxid=%llu\n", __func__, ctxid);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+@@ -1656,12 +1663,12 @@ static int cxlflash_afu_recover(struct scsi_device *sdev,
+ retry_recover:
+ 		rc = recover_context(cfg, ctxi, &new_adap_fd);
+ 		if (unlikely(rc)) {
+-			dev_err(dev, "%s: Recovery failed for context %llu (rc=%d)\n",
++			dev_err(dev, "%s: Recovery failed ctxid=%llu rc=%d\n",
+ 				__func__, ctxid, rc);
+ 			if ((rc == -ENODEV) &&
+ 			    ((atomic_read(&cfg->recovery_threads) > 1) ||
+ 			     (lretry--))) {
+-				dev_dbg(dev, "%s: Going to try again!\n",
++				dev_dbg(dev, "%s: Going to try again\n",
+ 					__func__);
+ 				mutex_unlock(mutex);
+ 				msleep(100);
+@@ -1707,7 +1714,7 @@ static int cxlflash_afu_recover(struct scsi_device *sdev,
+ 		goto retry;
+ 	}
+ 
+-	dev_dbg(dev, "%s: MMIO working, no recovery required!\n", __func__);
++	dev_dbg(dev, "%s: MMIO working, no recovery required\n", __func__);
+ out:
+ 	if (likely(ctxi))
+ 		put_context(ctxi);
+@@ -1726,7 +1733,7 @@ static int cxlflash_afu_recover(struct scsi_device *sdev,
+ static int process_sense(struct scsi_device *sdev,
+ 			 struct dk_cxlflash_verify *verify)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -1737,7 +1744,7 @@ static int process_sense(struct scsi_device *sdev,
+ 	rc = scsi_normalize_sense((const u8 *)&verify->sense_data,
+ 				  DK_CXLFLASH_VERIFY_SENSE_LEN, &sshdr);
+ 	if (!rc) {
+-		dev_err(dev, "%s: Failed to normalize sense data!\n", __func__);
++		dev_err(dev, "%s: Failed to normalize sense data\n", __func__);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+@@ -1793,7 +1800,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+ {
+ 	int rc = 0;
+ 	struct ctx_info *ctxi = NULL;
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -1803,20 +1810,20 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+ 	    rctxid = verify->context_id;
+ 	u64 last_lba = 0;
+ 
+-	dev_dbg(dev, "%s: ctxid=%llu rhndl=%016llX, hint=%016llX, "
+-		"flags=%016llX\n", __func__, ctxid, verify->rsrc_handle,
++	dev_dbg(dev, "%s: ctxid=%llu rhndl=%016llx, hint=%016llx, "
++		"flags=%016llx\n", __func__, ctxid, verify->rsrc_handle,
+ 		verify->hint, verify->hdr.flags);
+ 
+ 	ctxi = get_context(cfg, rctxid, lli, 0);
+ 	if (unlikely(!ctxi)) {
+-		dev_dbg(dev, "%s: Bad context! (%llu)\n", __func__, ctxid);
++		dev_dbg(dev, "%s: Bad context ctxid=%llu\n", __func__, ctxid);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+ 
+ 	rhte = get_rhte(ctxi, rhndl, lli);
+ 	if (unlikely(!rhte)) {
+-		dev_dbg(dev, "%s: Bad resource handle! (%d)\n",
++		dev_dbg(dev, "%s: Bad resource handle rhndl=%d\n",
+ 			__func__, rhndl);
+ 		rc = -EINVAL;
+ 		goto out;
+@@ -1863,7 +1870,7 @@ static int cxlflash_disk_verify(struct scsi_device *sdev,
+ out:
+ 	if (likely(ctxi))
+ 		put_context(ctxi);
+-	dev_dbg(dev, "%s: returning rc=%d llba=%llX\n",
++	dev_dbg(dev, "%s: returning rc=%d llba=%llx\n",
+ 		__func__, rc, verify->last_lba);
+ 	return rc;
+ }
+@@ -1915,7 +1922,7 @@ static char *decode_ioctl(int cmd)
+  */
+ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu *afu = cfg->afu;
+ 	struct llun_info *lli = sdev->hostdata;
+@@ -1935,25 +1942,25 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+ 	struct ctx_info *ctxi = NULL;
+ 	struct sisl_rht_entry *rhte = NULL;
+ 
+-	pr_debug("%s: ctxid=%llu ls=0x%llx\n", __func__, ctxid, lun_size);
++	dev_dbg(dev, "%s: ctxid=%llu ls=%llu\n", __func__, ctxid, lun_size);
+ 
+ 	rc = cxlflash_lun_attach(gli, MODE_PHYSICAL, false);
+ 	if (unlikely(rc)) {
+-		dev_dbg(dev, "%s: Failed to attach to LUN! (PHYSICAL)\n",
+-			__func__);
++		dev_dbg(dev, "%s: Failed attach to LUN (PHYSICAL)\n", __func__);
+ 		goto out;
+ 	}
+ 
+ 	ctxi = get_context(cfg, rctxid, lli, 0);
+ 	if (unlikely(!ctxi)) {
+-		dev_dbg(dev, "%s: Bad context! (%llu)\n", __func__, ctxid);
++		dev_dbg(dev, "%s: Bad context ctxid=%llu\n", __func__, ctxid);
+ 		rc = -EINVAL;
+ 		goto err1;
+ 	}
+ 
+ 	rhte = rhte_checkout(ctxi, lli);
+ 	if (unlikely(!rhte)) {
+-		dev_dbg(dev, "%s: too many opens for this context\n", __func__);
++		dev_dbg(dev, "%s: Too many opens ctxid=%lld\n",
++			__func__, ctxid);
+ 		rc = -EMFILE;	/* too many opens  */
+ 		goto err1;
+ 	}
+@@ -1971,7 +1978,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+ out:
+ 	if (likely(ctxi))
+ 		put_context(ctxi);
+-	dev_dbg(dev, "%s: returning handle 0x%llx rc=%d llba %lld\n",
++	dev_dbg(dev, "%s: returning handle=%llu rc=%d llba=%llu\n",
+ 		__func__, rsrc_handle, rc, last_lba);
+ 	return rc;
+ 
+@@ -1993,7 +2000,7 @@ static int cxlflash_disk_direct_open(struct scsi_device *sdev, void *arg)
+  */
+ static int ioctl_common(struct scsi_device *sdev, int cmd)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	int rc = 0;
+@@ -2010,7 +2017,7 @@ static int ioctl_common(struct scsi_device *sdev, int cmd)
+ 		case DK_CXLFLASH_VLUN_RESIZE:
+ 		case DK_CXLFLASH_RELEASE:
+ 		case DK_CXLFLASH_DETACH:
+-			dev_dbg(dev, "%s: Command override! (%d)\n",
++			dev_dbg(dev, "%s: Command override rc=%d\n",
+ 				__func__, rc);
+ 			rc = 0;
+ 			break;
+@@ -2040,7 +2047,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ {
+ 	typedef int (*sioctl) (struct scsi_device *, void *);
+ 
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct afu *afu = cfg->afu;
+ 	struct dk_cxlflash_hdr *hdr;
+@@ -2119,7 +2126,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	}
+ 
+ 	if (unlikely(copy_from_user(&buf, arg, size))) {
+-		dev_err(dev, "%s: copy_from_user() fail! "
++		dev_err(dev, "%s: copy_from_user() fail "
+ 			"size=%lu cmd=%d (%s) arg=%p\n",
+ 			__func__, size, cmd, decode_ioctl(cmd), arg);
+ 		rc = -EFAULT;
+@@ -2135,7 +2142,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	}
+ 
+ 	if (hdr->rsvd[0] || hdr->rsvd[1] || hdr->rsvd[2] || hdr->return_flags) {
+-		dev_dbg(dev, "%s: Reserved/rflags populated!\n", __func__);
++		dev_dbg(dev, "%s: Reserved/rflags populated\n", __func__);
+ 		rc = -EINVAL;
+ 		goto cxlflash_ioctl_exit;
+ 	}
+@@ -2143,7 +2150,7 @@ int cxlflash_ioctl(struct scsi_device *sdev, int cmd, void __user *arg)
+ 	rc = do_ioctl(sdev, (void *)&buf);
+ 	if (likely(!rc))
+ 		if (unlikely(copy_to_user(arg, &buf, size))) {
+-			dev_err(dev, "%s: copy_to_user() fail! "
++			dev_err(dev, "%s: copy_to_user() fail "
+ 				"size=%lu cmd=%d (%s) arg=%p\n",
+ 				__func__, size, cmd, decode_ioctl(cmd), arg);
+ 			rc = -EFAULT;
+diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
+index 90c5d7f..8fcc804 100644
+--- a/drivers/scsi/cxlflash/vlun.c
++++ b/drivers/scsi/cxlflash/vlun.c
+@@ -66,8 +66,8 @@ static int ba_init(struct ba_lun *ba_lun)
+ 	int last_word_underflow = 0;
+ 	u64 *lam;
+ 
+-	pr_debug("%s: Initializing LUN: lun_id = %llX, "
+-		 "ba_lun->lsize = %lX, ba_lun->au_size = %lX\n",
++	pr_debug("%s: Initializing LUN: lun_id=%016llx "
++		 "ba_lun->lsize=%lx ba_lun->au_size=%lX\n",
+ 		__func__, ba_lun->lun_id, ba_lun->lsize, ba_lun->au_size);
+ 
+ 	/* Calculate bit map size */
+@@ -80,7 +80,7 @@ static int ba_init(struct ba_lun *ba_lun)
+ 	/* Allocate lun information container */
+ 	bali = kzalloc(sizeof(struct ba_lun_info), GFP_KERNEL);
+ 	if (unlikely(!bali)) {
+-		pr_err("%s: Failed to allocate lun_info for lun_id %llX\n",
++		pr_err("%s: Failed to allocate lun_info lun_id=%016llx\n",
+ 		       __func__, ba_lun->lun_id);
+ 		return -ENOMEM;
+ 	}
+@@ -96,7 +96,7 @@ static int ba_init(struct ba_lun *ba_lun)
+ 				      GFP_KERNEL);
+ 	if (unlikely(!bali->lun_alloc_map)) {
+ 		pr_err("%s: Failed to allocate lun allocation map: "
+-		       "lun_id = %llX\n", __func__, ba_lun->lun_id);
++		       "lun_id=%016llx\n", __func__, ba_lun->lun_id);
+ 		kfree(bali);
+ 		return -ENOMEM;
+ 	}
+@@ -125,7 +125,7 @@ static int ba_init(struct ba_lun *ba_lun)
+ 	bali->aun_clone_map = kzalloc((bali->total_aus * sizeof(u8)),
+ 				      GFP_KERNEL);
+ 	if (unlikely(!bali->aun_clone_map)) {
+-		pr_err("%s: Failed to allocate clone map: lun_id = %llX\n",
++		pr_err("%s: Failed to allocate clone map: lun_id=%016llx\n",
+ 		       __func__, ba_lun->lun_id);
+ 		kfree(bali->lun_alloc_map);
+ 		kfree(bali);
+@@ -136,7 +136,7 @@ static int ba_init(struct ba_lun *ba_lun)
+ 	ba_lun->ba_lun_handle = bali;
+ 
+ 	pr_debug("%s: Successfully initialized the LUN: "
+-		 "lun_id = %llX, bitmap size = %X, free_aun_cnt = %llX\n",
++		 "lun_id=%016llx bitmap size=%x, free_aun_cnt=%llx\n",
+ 		__func__, ba_lun->lun_id, bali->lun_bmap_size,
+ 		bali->free_aun_cnt);
+ 	return 0;
+@@ -165,10 +165,9 @@ static int find_free_range(u32 low,
+ 			num_bits = (sizeof(*lam) * BITS_PER_BYTE);
+ 			bit_pos = find_first_bit(lam, num_bits);
+ 
+-			pr_devel("%s: Found free bit %llX in LUN "
+-				 "map entry %llX at bitmap index = %X\n",
+-				 __func__, bit_pos, bali->lun_alloc_map[i],
+-				 i);
++			pr_devel("%s: Found free bit %llu in LUN "
++				 "map entry %016llx at bitmap index = %d\n",
++				 __func__, bit_pos, bali->lun_alloc_map[i], i);
+ 
+ 			*bit_word = i;
+ 			bali->free_aun_cnt--;
+@@ -194,11 +193,11 @@ static u64 ba_alloc(struct ba_lun *ba_lun)
+ 	bali = ba_lun->ba_lun_handle;
+ 
+ 	pr_debug("%s: Received block allocation request: "
+-		 "lun_id = %llX, free_aun_cnt = %llX\n",
++		 "lun_id=%016llx free_aun_cnt=%llx\n",
+ 		 __func__, ba_lun->lun_id, bali->free_aun_cnt);
+ 
+ 	if (bali->free_aun_cnt == 0) {
+-		pr_debug("%s: No space left on LUN: lun_id = %llX\n",
++		pr_debug("%s: No space left on LUN: lun_id=%016llx\n",
+ 			 __func__, ba_lun->lun_id);
+ 		return -1ULL;
+ 	}
+@@ -212,7 +211,7 @@ static u64 ba_alloc(struct ba_lun *ba_lun)
+ 					  bali, &bit_word);
+ 		if (bit_pos == -1) {
+ 			pr_debug("%s: Could not find an allocation unit on LUN:"
+-				 " lun_id = %llX\n", __func__, ba_lun->lun_id);
++				 " lun_id=%016llx\n", __func__, ba_lun->lun_id);
+ 			return -1ULL;
+ 		}
+ 	}
+@@ -223,8 +222,8 @@ static u64 ba_alloc(struct ba_lun *ba_lun)
+ 	else
+ 		bali->free_curr_idx = bit_word;
+ 
+-	pr_debug("%s: Allocating AU number %llX, on lun_id %llX, "
+-		 "free_aun_cnt = %llX\n", __func__,
++	pr_debug("%s: Allocating AU number=%llx lun_id=%016llx "
++		 "free_aun_cnt=%llx\n", __func__,
+ 		 ((bit_word * BITS_PER_LONG) + bit_pos), ba_lun->lun_id,
+ 		 bali->free_aun_cnt);
+ 
+@@ -266,18 +265,18 @@ static int ba_free(struct ba_lun *ba_lun, u64 to_free)
+ 	bali = ba_lun->ba_lun_handle;
+ 
+ 	if (validate_alloc(bali, to_free)) {
+-		pr_debug("%s: The AUN %llX is not allocated on lun_id %llX\n",
++		pr_debug("%s: AUN %llx is not allocated on lun_id=%016llx\n",
+ 			 __func__, to_free, ba_lun->lun_id);
+ 		return -1;
+ 	}
+ 
+-	pr_debug("%s: Received a request to free AU %llX on lun_id %llX, "
+-		 "free_aun_cnt = %llX\n", __func__, to_free, ba_lun->lun_id,
++	pr_debug("%s: Received a request to free AU=%llx lun_id=%016llx "
++		 "free_aun_cnt=%llx\n", __func__, to_free, ba_lun->lun_id,
+ 		 bali->free_aun_cnt);
+ 
+ 	if (bali->aun_clone_map[to_free] > 0) {
+-		pr_debug("%s: AUN %llX on lun_id %llX has been cloned. Clone "
+-			 "count = %X\n", __func__, to_free, ba_lun->lun_id,
++		pr_debug("%s: AUN %llx lun_id=%016llx cloned. Clone count=%x\n",
++			 __func__, to_free, ba_lun->lun_id,
+ 			 bali->aun_clone_map[to_free]);
+ 		bali->aun_clone_map[to_free]--;
+ 		return 0;
+@@ -294,8 +293,8 @@ static int ba_free(struct ba_lun *ba_lun, u64 to_free)
+ 	else if (idx > bali->free_high_idx)
+ 		bali->free_high_idx = idx;
+ 
+-	pr_debug("%s: Successfully freed AU at bit_pos %X, bit map index %X on "
+-		 "lun_id %llX, free_aun_cnt = %llX\n", __func__, bit_pos, idx,
++	pr_debug("%s: Successfully freed AU bit_pos=%x bit map index=%x "
++		 "lun_id=%016llx free_aun_cnt=%llx\n", __func__, bit_pos, idx,
+ 		 ba_lun->lun_id, bali->free_aun_cnt);
+ 
+ 	return 0;
+@@ -313,16 +312,16 @@ static int ba_clone(struct ba_lun *ba_lun, u64 to_clone)
+ 	struct ba_lun_info *bali = ba_lun->ba_lun_handle;
+ 
+ 	if (validate_alloc(bali, to_clone)) {
+-		pr_debug("%s: AUN %llX is not allocated on lun_id %llX\n",
++		pr_debug("%s: AUN=%llx not allocated on lun_id=%016llx\n",
+ 			 __func__, to_clone, ba_lun->lun_id);
+ 		return -1;
+ 	}
+ 
+-	pr_debug("%s: Received a request to clone AUN %llX on lun_id %llX\n",
++	pr_debug("%s: Received a request to clone AUN %llx on lun_id=%016llx\n",
+ 		 __func__, to_clone, ba_lun->lun_id);
+ 
+ 	if (bali->aun_clone_map[to_clone] == MAX_AUN_CLONE_CNT) {
+-		pr_debug("%s: AUN %llX on lun_id %llX hit max clones already\n",
++		pr_debug("%s: AUN %llx on lun_id=%016llx hit max clones already\n",
+ 			 __func__, to_clone, ba_lun->lun_id);
+ 		return -1;
+ 	}
+@@ -433,7 +432,7 @@ static int write_same16(struct scsi_device *sdev,
+ 	u64 offset = lba;
+ 	int left = nblks;
+ 	u32 to = sdev->request_queue->rq_timeout;
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 
+ 	cmd_buf = kzalloc(CMD_BUFSIZE, GFP_KERNEL);
+@@ -459,7 +458,7 @@ static int write_same16(struct scsi_device *sdev,
+ 		down_read(&cfg->ioctl_rwsem);
+ 		rc = check_state(cfg);
+ 		if (rc) {
+-			dev_err(dev, "%s: Failed state! result=0x08%X\n",
++			dev_err(dev, "%s: Failed state result=%08x\n",
+ 				__func__, result);
+ 			rc = -ENODEV;
+ 			goto out;
+@@ -467,7 +466,7 @@ static int write_same16(struct scsi_device *sdev,
+ 
+ 		if (result) {
+ 			dev_err_ratelimited(dev, "%s: command failed for "
+-					    "offset %lld result=0x%x\n",
++					    "offset=%lld result=%08x\n",
+ 					    __func__, offset, result);
+ 			rc = -EIO;
+ 			goto out;
+@@ -480,7 +479,7 @@ static int write_same16(struct scsi_device *sdev,
+ 	kfree(cmd_buf);
+ 	kfree(scsi_cmd);
+ 	kfree(sense_buf);
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -508,6 +507,8 @@ static int grow_lxt(struct afu *afu,
+ 		    struct sisl_rht_entry *rhte,
+ 		    u64 *new_size)
+ {
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_lxt_entry *lxt = NULL, *lxt_old = NULL;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -527,7 +528,8 @@ static int grow_lxt(struct afu *afu,
+ 	mutex_lock(&blka->mutex);
+ 	av_size = ba_space(&blka->ba_lun);
+ 	if (unlikely(av_size <= 0)) {
+-		pr_debug("%s: ba_space error: av_size %d\n", __func__, av_size);
++		dev_dbg(dev, "%s: ba_space error av_size=%d\n",
++			__func__, av_size);
+ 		mutex_unlock(&blka->mutex);
+ 		rc = -ENOSPC;
+ 		goto out;
+@@ -568,8 +570,8 @@ static int grow_lxt(struct afu *afu,
+ 		 */
+ 		aun = ba_alloc(&blka->ba_lun);
+ 		if ((aun == -1ULL) || (aun >= blka->nchunk))
+-			pr_debug("%s: ba_alloc error: allocated chunk# %llX, "
+-				 "max %llX\n", __func__, aun, blka->nchunk - 1);
++			dev_dbg(dev, "%s: ba_alloc error allocated chunk=%llu "
++				"max=%llu\n", __func__, aun, blka->nchunk - 1);
+ 
+ 		/* select both ports, use r/w perms from RHT */
+ 		lxt[i].rlba_base = ((aun << MC_CHUNK_SHIFT) |
+@@ -599,7 +601,7 @@ static int grow_lxt(struct afu *afu,
+ 		kfree(lxt_old);
+ 	*new_size = my_new_size;
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -621,6 +623,8 @@ static int shrink_lxt(struct afu *afu,
+ 		      struct ctx_info *ctxi,
+ 		      u64 *new_size)
+ {
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_lxt_entry *lxt, *lxt_old;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -706,7 +710,7 @@ static int shrink_lxt(struct afu *afu,
+ 		kfree(lxt_old);
+ 	*new_size = my_new_size;
+ out:
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -728,7 +732,8 @@ int _cxlflash_vlun_resize(struct scsi_device *sdev,
+ 			  struct ctx_info *ctxi,
+ 			  struct dk_cxlflash_resize *resize)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+ 	struct afu *afu = cfg->afu;
+@@ -751,13 +756,13 @@ int _cxlflash_vlun_resize(struct scsi_device *sdev,
+ 	nsectors = (resize->req_size * CXLFLASH_BLOCK_SIZE) / gli->blk_len;
+ 	new_size = DIV_ROUND_UP(nsectors, MC_CHUNK_SIZE);
+ 
+-	pr_debug("%s: ctxid=%llu rhndl=0x%llx, req_size=0x%llx,"
+-		 "new_size=%llx\n", __func__, ctxid, resize->rsrc_handle,
+-		 resize->req_size, new_size);
++	dev_dbg(dev, "%s: ctxid=%llu rhndl=%llu req_size=%llu new_size=%llu\n",
++		__func__, ctxid, resize->rsrc_handle, resize->req_size,
++		new_size);
+ 
+ 	if (unlikely(gli->mode != MODE_VIRTUAL)) {
+-		pr_debug("%s: LUN mode does not support resize! (%d)\n",
+-			 __func__, gli->mode);
++		dev_dbg(dev, "%s: LUN mode does not support resize mode=%d\n",
++			__func__, gli->mode);
+ 		rc = -EINVAL;
+ 		goto out;
+ 
+@@ -766,7 +771,8 @@ int _cxlflash_vlun_resize(struct scsi_device *sdev,
+ 	if (!ctxi) {
+ 		ctxi = get_context(cfg, rctxid, lli, CTX_CTRL_ERR_FALLBACK);
+ 		if (unlikely(!ctxi)) {
+-			pr_debug("%s: Bad context! (%llu)\n", __func__, ctxid);
++			dev_dbg(dev, "%s: Bad context ctxid=%llu\n",
++				__func__, ctxid);
+ 			rc = -EINVAL;
+ 			goto out;
+ 		}
+@@ -776,7 +782,8 @@ int _cxlflash_vlun_resize(struct scsi_device *sdev,
+ 
+ 	rhte = get_rhte(ctxi, rhndl, lli);
+ 	if (unlikely(!rhte)) {
+-		pr_debug("%s: Bad resource handle! (%u)\n", __func__, rhndl);
++		dev_dbg(dev, "%s: Bad resource handle rhndl=%u\n",
++			__func__, rhndl);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+@@ -794,8 +801,8 @@ int _cxlflash_vlun_resize(struct scsi_device *sdev,
+ out:
+ 	if (put_ctx)
+ 		put_context(ctxi);
+-	pr_debug("%s: resized to %lld returning rc=%d\n",
+-		 __func__, resize->last_lba, rc);
++	dev_dbg(dev, "%s: resized to %llu returning rc=%d\n",
++		__func__, resize->last_lba, rc);
+ 	return rc;
+ }
+ 
+@@ -815,6 +822,7 @@ void cxlflash_restore_luntable(struct cxlflash_cfg *cfg)
+ 	u32 chan;
+ 	u32 lind;
+ 	struct afu *afu = cfg->afu;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_global_map __iomem *agm = &afu->afu_map->global;
+ 
+ 	mutex_lock(&global.mutex);
+@@ -828,15 +836,15 @@ void cxlflash_restore_luntable(struct cxlflash_cfg *cfg)
+ 		if (lli->port_sel == BOTH_PORTS) {
+ 			writeq_be(lli->lun_id[0], &agm->fc_port[0][lind]);
+ 			writeq_be(lli->lun_id[1], &agm->fc_port[1][lind]);
+-			pr_debug("%s: Virtual LUN on slot %d  id0=%llx, "
+-				 "id1=%llx\n", __func__, lind,
+-				 lli->lun_id[0], lli->lun_id[1]);
++			dev_dbg(dev, "%s: Virtual LUN on slot %d  id0=%llx "
++				"id1=%llx\n", __func__, lind,
++				lli->lun_id[0], lli->lun_id[1]);
+ 		} else {
+ 			chan = PORT2CHAN(lli->port_sel);
+ 			writeq_be(lli->lun_id[chan], &agm->fc_port[chan][lind]);
+-			pr_debug("%s: Virtual LUN on slot %d chan=%d, "
+-				 "id=%llx\n", __func__, lind, chan,
+-				 lli->lun_id[chan]);
++			dev_dbg(dev, "%s: Virtual LUN on slot %d chan=%d "
++				"id=%llx\n", __func__, lind, chan,
++				lli->lun_id[chan]);
+ 		}
+ 	}
+ 
+@@ -860,6 +868,7 @@ static int init_luntable(struct cxlflash_cfg *cfg, struct llun_info *lli)
+ 	u32 lind;
+ 	int rc = 0;
+ 	struct afu *afu = cfg->afu;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_global_map __iomem *agm = &afu->afu_map->global;
+ 
+ 	mutex_lock(&global.mutex);
+@@ -882,8 +891,8 @@ static int init_luntable(struct cxlflash_cfg *cfg, struct llun_info *lli)
+ 		writeq_be(lli->lun_id[0], &agm->fc_port[0][lind]);
+ 		writeq_be(lli->lun_id[1], &agm->fc_port[1][lind]);
+ 		cfg->promote_lun_index++;
+-		pr_debug("%s: Virtual LUN on slot %d  id0=%llx, id1=%llx\n",
+-			 __func__, lind, lli->lun_id[0], lli->lun_id[1]);
++		dev_dbg(dev, "%s: Virtual LUN on slot %d  id0=%llx id1=%llx\n",
++			__func__, lind, lli->lun_id[0], lli->lun_id[1]);
+ 	} else {
+ 		/*
+ 		 * If this LUN is visible only from one port, we will put
+@@ -898,14 +907,14 @@ static int init_luntable(struct cxlflash_cfg *cfg, struct llun_info *lli)
+ 		lind = lli->lun_index = cfg->last_lun_index[chan];
+ 		writeq_be(lli->lun_id[chan], &agm->fc_port[chan][lind]);
+ 		cfg->last_lun_index[chan]--;
+-		pr_debug("%s: Virtual LUN on slot %d  chan=%d, id=%llx\n",
+-			 __func__, lind, chan, lli->lun_id[chan]);
++		dev_dbg(dev, "%s: Virtual LUN on slot %d  chan=%d id=%llx\n",
++			__func__, lind, chan, lli->lun_id[chan]);
+ 	}
+ 
+ 	lli->in_table = true;
+ out:
+ 	mutex_unlock(&global.mutex);
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ }
+ 
+@@ -923,7 +932,7 @@ static int init_luntable(struct cxlflash_cfg *cfg, struct llun_info *lli)
+  */
+ int cxlflash_disk_virtual_open(struct scsi_device *sdev, void *arg)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
+ 	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+@@ -942,14 +951,14 @@ int cxlflash_disk_virtual_open(struct scsi_device *sdev, void *arg)
+ 	struct ctx_info *ctxi = NULL;
+ 	struct sisl_rht_entry *rhte = NULL;
+ 
+-	pr_debug("%s: ctxid=%llu ls=0x%llx\n", __func__, ctxid, lun_size);
++	dev_dbg(dev, "%s: ctxid=%llu ls=%llu\n", __func__, ctxid, lun_size);
+ 
+ 	/* Setup the LUNs block allocator on first call */
+ 	mutex_lock(&gli->mutex);
+ 	if (gli->mode == MODE_NONE) {
+ 		rc = init_vlun(lli);
+ 		if (rc) {
+-			dev_err(dev, "%s: call to init_vlun failed rc=%d!\n",
++			dev_err(dev, "%s: init_vlun failed rc=%d\n",
+ 				__func__, rc);
+ 			rc = -ENOMEM;
+ 			goto err0;
+@@ -958,29 +967,28 @@ int cxlflash_disk_virtual_open(struct scsi_device *sdev, void *arg)
+ 
+ 	rc = cxlflash_lun_attach(gli, MODE_VIRTUAL, true);
+ 	if (unlikely(rc)) {
+-		dev_err(dev, "%s: Failed to attach to LUN! (VIRTUAL)\n",
+-			__func__);
++		dev_err(dev, "%s: Failed attach to LUN (VIRTUAL)\n", __func__);
+ 		goto err0;
+ 	}
+ 	mutex_unlock(&gli->mutex);
+ 
+ 	rc = init_luntable(cfg, lli);
+ 	if (rc) {
+-		dev_err(dev, "%s: call to init_luntable failed rc=%d!\n",
+-			__func__, rc);
++		dev_err(dev, "%s: init_luntable failed rc=%d\n", __func__, rc);
+ 		goto err1;
+ 	}
+ 
+ 	ctxi = get_context(cfg, rctxid, lli, 0);
+ 	if (unlikely(!ctxi)) {
+-		dev_err(dev, "%s: Bad context! (%llu)\n", __func__, ctxid);
++		dev_err(dev, "%s: Bad context ctxid=%llu\n", __func__, ctxid);
+ 		rc = -EINVAL;
+ 		goto err1;
+ 	}
+ 
+ 	rhte = rhte_checkout(ctxi, lli);
+ 	if (unlikely(!rhte)) {
+-		dev_err(dev, "%s: too many opens for this context\n", __func__);
++		dev_err(dev, "%s: too many opens ctxid=%llu\n",
++			__func__, ctxid);
+ 		rc = -EMFILE;	/* too many opens  */
+ 		goto err1;
+ 	}
+@@ -996,7 +1004,7 @@ int cxlflash_disk_virtual_open(struct scsi_device *sdev, void *arg)
+ 	resize.rsrc_handle = rsrc_handle;
+ 	rc = _cxlflash_vlun_resize(sdev, ctxi, &resize);
+ 	if (rc) {
+-		dev_err(dev, "%s: resize failed rc %d\n", __func__, rc);
++		dev_err(dev, "%s: resize failed rc=%d\n", __func__, rc);
+ 		goto err2;
+ 	}
+ 	last_lba = resize.last_lba;
+@@ -1013,8 +1021,8 @@ int cxlflash_disk_virtual_open(struct scsi_device *sdev, void *arg)
+ out:
+ 	if (likely(ctxi))
+ 		put_context(ctxi);
+-	pr_debug("%s: returning handle 0x%llx rc=%d llba %lld\n",
+-		 __func__, rsrc_handle, rc, last_lba);
++	dev_dbg(dev, "%s: returning handle=%llu rc=%d llba=%llu\n",
++		__func__, rsrc_handle, rc, last_lba);
+ 	return rc;
+ 
+ err2:
+@@ -1047,6 +1055,8 @@ static int clone_lxt(struct afu *afu,
+ 		     struct sisl_rht_entry *rhte,
+ 		     struct sisl_rht_entry *rhte_src)
+ {
++	struct cxlflash_cfg *cfg = afu->parent;
++	struct device *dev = &cfg->dev->dev;
+ 	struct sisl_lxt_entry *lxt;
+ 	u32 ngrps;
+ 	u64 aun;		/* chunk# allocated by block allocator */
+@@ -1101,7 +1111,7 @@ static int clone_lxt(struct afu *afu,
+ 
+ 	cxlflash_afu_sync(afu, ctxid, rhndl, AFU_LW_SYNC);
+ 
+-	pr_debug("%s: returning\n", __func__);
++	dev_dbg(dev, "%s: returning\n", __func__);
+ 	return 0;
+ }
+ 
+@@ -1120,7 +1130,8 @@ static int clone_lxt(struct afu *afu,
+ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 			struct dk_cxlflash_clone *clone)
+ {
+-	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
++	struct cxlflash_cfg *cfg = shost_priv(sdev->host);
++	struct device *dev = &cfg->dev->dev;
+ 	struct llun_info *lli = sdev->hostdata;
+ 	struct glun_info *gli = lli->parent;
+ 	struct blka *blka = &gli->blka;
+@@ -1140,8 +1151,8 @@ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 	bool found;
+ 	LIST_HEAD(sidecar);
+ 
+-	pr_debug("%s: ctxid_src=%llu ctxid_dst=%llu\n",
+-		 __func__, ctxid_src, ctxid_dst);
++	dev_dbg(dev, "%s: ctxid_src=%llu ctxid_dst=%llu\n",
++		__func__, ctxid_src, ctxid_dst);
+ 
+ 	/* Do not clone yourself */
+ 	if (unlikely(rctxid_src == rctxid_dst)) {
+@@ -1151,16 +1162,16 @@ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 
+ 	if (unlikely(gli->mode != MODE_VIRTUAL)) {
+ 		rc = -EINVAL;
+-		pr_debug("%s: Clone not supported on physical LUNs! (%d)\n",
+-			 __func__, gli->mode);
++		dev_dbg(dev, "%s: Only supported on virtual LUNs mode=%u\n",
++			__func__, gli->mode);
+ 		goto out;
+ 	}
+ 
+ 	ctxi_src = get_context(cfg, rctxid_src, lli, CTX_CTRL_CLONE);
+ 	ctxi_dst = get_context(cfg, rctxid_dst, lli, 0);
+ 	if (unlikely(!ctxi_src || !ctxi_dst)) {
+-		pr_debug("%s: Bad context! (%llu,%llu)\n", __func__,
+-			 ctxid_src, ctxid_dst);
++		dev_dbg(dev, "%s: Bad context ctxid_src=%llu ctxid_dst=%llu\n",
++			__func__, ctxid_src, ctxid_dst);
+ 		rc = -EINVAL;
+ 		goto out;
+ 	}
+@@ -1185,8 +1196,8 @@ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 			lun_access_dst = kzalloc(sizeof(*lun_access_dst),
+ 						 GFP_KERNEL);
+ 			if (unlikely(!lun_access_dst)) {
+-				pr_err("%s: Unable to allocate lun_access!\n",
+-				       __func__);
++				dev_err(dev, "%s: lun_access allocation fail\n",
++					__func__);
+ 				rc = -ENOMEM;
+ 				goto out;
+ 			}
+@@ -1197,7 +1208,7 @@ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 	}
+ 
+ 	if (unlikely(!ctxi_src->rht_out)) {
+-		pr_debug("%s: Nothing to clone!\n", __func__);
++		dev_dbg(dev, "%s: Nothing to clone\n", __func__);
+ 		goto out_success;
+ 	}
+ 
+@@ -1256,7 +1267,7 @@ int cxlflash_disk_clone(struct scsi_device *sdev,
+ 		put_context(ctxi_src);
+ 	if (ctxi_dst)
+ 		put_context(ctxi_dst);
+-	pr_debug("%s: returning rc=%d\n", __func__, rc);
++	dev_dbg(dev, "%s: returning rc=%d\n", __func__, rc);
+ 	return rc;
+ 
+ err:
 -- 
 2.1.0
 
