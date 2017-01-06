@@ -1,29 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
-Date: Thu, 05 Jan 2017 20:49:17 -0500
-Message-ID: <yq1k2a9hs9u.fsf@oracle.com>
-References: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: qla2xxx: silent -Wformat-security warning
+Date: Thu, 05 Jan 2017 20:51:26 -0500
+Message-ID: <yq1fukxhs69.fsf@oracle.com>
+References: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:48348 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:48769 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752844AbdAFBty (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:49:54 -0500
-In-Reply-To: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com> (Milan
-        P. Gandhi's message of "Sat, 24 Dec 2016 22:02:46 +0530")
+        with ESMTP id S1753392AbdAFBvh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:51:37 -0500
+In-Reply-To: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org> (Nicolas
+        Iooss's message of "Mon, 26 Dec 2016 14:23:09 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Milan P. Gandhi" <mgandhi@redhat.com>
-Cc: linux-scsi@vger.kernel.org, Laurence Oberman <loberman@redhat.com>, chad.dupuis@cavium.com
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Himanshu Madhani <himanshu.madhani@qlogic.com>
 
->>>>> "Milan" == Milan P Gandhi <mgandhi@redhat.com> writes:
+>>>>> "Nicolas" == Nicolas Iooss <nicolas.iooss_linux@m4x.org> writes:
 
-Milan> Hello, There is a race condition with qla2xxx optrom functions
-Milan> where one thread might modify optrom buffer, optrom_state while
-Milan> other thread is still reading from it.
+Nicolas> qla24xx_enable_msix() calls scnprintf() with a non-literal
+Nicolas> format string. This makes clang report -Wformat-security
+Nicolas> warnings when compiling this function:
 
-Chad?
+Himanshu: Please review these two patches!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
