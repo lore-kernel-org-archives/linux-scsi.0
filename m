@@ -1,39 +1,70 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCHv2] mpt3sas: switch to pci_alloc_irq_vectors
-Date: Fri, 6 Jan 2017 21:19:31 +0530
-Message-ID: <CAK=zhgp63d3z5kBD+F6SKuWneiqByPH43BcrkoEywfqjM0tkAA@mail.gmail.com>
-References: <1482240421-14847-1-git-send-email-hare@suse.de> <yq1wpe9hsix.fsf@oracle.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/2] scsi: qla2xxx: silent -Wformat-security warning
+Date: Fri, 6 Jan 2017 17:02:48 +0000
+Message-ID: <E07E664C-8EDE-45D4-A74E-DBDA32F656BD@cavium.com>
+References: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f172.google.com ([209.85.220.172]:34070 "EHLO
-        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S936231AbdAFPtd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 6 Jan 2017 10:49:33 -0500
-Received: by mail-qk0-f172.google.com with SMTP id a20so79006840qkc.1
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jan 2017 07:49:32 -0800 (PST)
-In-Reply-To: <yq1wpe9hsix.fsf@oracle.com>
+Received: from mail-cys01nam02on0054.outbound.protection.outlook.com ([104.47.37.54]:45578
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S937101AbdAFRCu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 6 Jan 2017 12:02:50 -0500
+In-Reply-To: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
+Content-Language: en-US
+Content-ID: <9E69EDF18C323C4585EBB47E2F309301@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
+To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-On Fri, Jan 6, 2017 at 7:13 AM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
->
-> Hannes> Cleanup the MSI-X handling allowing us to use the PCI-layer
-> Hannes> provided vector allocation.
->
-> Sreekanth, Sathya: Please review!
-
-Martin,
-
-We have started some testing on this patch and we will provide our
-review comments by end of next week.
-
-Thanks,
-Sreekanth
->
-> --
-> Martin K. Petersen      Oracle Linux Engineering
+DQoNCk9uIDEyLzI2LzE2LCA1OjIzIEFNLCAiTmljb2xhcyBJb29zcyIgPG5pY29sYXMuaW9vc3Nf
+bGludXhAbTR4Lm9yZz4gd3JvdGU6DQoNCj5xbGEyNHh4X2VuYWJsZV9tc2l4KCkgY2FsbHMgc2Nu
+cHJpbnRmKCkgd2l0aCBhIG5vbi1saXRlcmFsIGZvcm1hdA0KPnN0cmluZy4gVGhpcyBtYWtlcyBj
+bGFuZyByZXBvcnQgLVdmb3JtYXQtc2VjdXJpdHkgd2FybmluZ3Mgd2hlbg0KPmNvbXBpbGluZyB0
+aGlzIGZ1bmN0aW9uOg0KPg0KPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6MzA4
+Mzo3OiBlcnJvcjogZm9ybWF0IHN0cmluZyBpcyBub3QgYQ0KPiAgICBzdHJpbmcgbGl0ZXJhbCAo
+cG90ZW50aWFsbHkgaW5zZWN1cmUpIFstV2Vycm9yLC1XZm9ybWF0LXNlY3VyaXR5XQ0KPiAgICAg
+ICAgICAgICAgICAgICAgICAgIG1zaXhfZW50cmllc1tpXS5uYW1lKTsNCj4gICAgICAgICAgICAg
+ICAgICAgICAgICBefn5+fn5+fn5+fn5+fn5+fn5+fg0KPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4
+eC9xbGFfaXNyLmM6MzA4Mzo3OiBub3RlOiB0cmVhdCB0aGUgc3RyaW5nIGFzIGFuDQo+ICAgIGFy
+Z3VtZW50IHRvIGF2b2lkIHRoaXMNCj4gICAgICAgICAgICAgICAgICAgICAgICBtc2l4X2VudHJp
+ZXNbaV0ubmFtZSk7DQo+ICAgICAgICAgICAgICAgICAgICAgICAgXg0KPiAgICAgICAgICAgICAg
+ICAgICAgICAgICIlcyIsDQo+ICAgIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3IuYzozMTE5
+Ojc6IGVycm9yOiBmb3JtYXQgc3RyaW5nIGlzIG5vdCBhDQo+ICAgIHN0cmluZyBsaXRlcmFsIChw
+b3RlbnRpYWxseSBpbnNlY3VyZSkgWy1XZXJyb3IsLVdmb3JtYXQtc2VjdXJpdHldDQo+ICAgICAg
+ICAgICAgICAgICAgICAgICAgbXNpeF9lbnRyaWVzW1FMQV9BVElPX1ZFQ1RPUl0ubmFtZSk7DQo+
+ICAgICAgICAgICAgICAgICAgICAgICAgXn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+fn5+
+fg0KPiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmM6MzExOTo3OiBub3RlOiB0cmVh
+dCB0aGUgc3RyaW5nIGFzIGFuDQo+ICAgIGFyZ3VtZW50IHRvIGF2b2lkIHRoaXMNCj4gICAgICAg
+ICAgICAgICAgICAgICAgICBtc2l4X2VudHJpZXNbUUxBX0FUSU9fVkVDVE9SXS5uYW1lKTsNCj4g
+ICAgICAgICAgICAgICAgICAgICAgICBeDQo+ICAgICAgICAgICAgICAgICAgICAgICAgIiVzIiwN
+Cj4NCj5FdmVuIHRob3VnaCBtc2l4X2VudHJpZXNbLi4uXS5uYW1lIGFyZSBpbml0aWFsaXplZCBh
+cyBsaXRlcmFsIHN0cmluZ3MNCj53aXRoIG5vICUgY2hhcmFjdGVyIGFuZCBhcmUgbmV2ZXIgbW9k
+aWZpZWQsIGludHJvZHVjZSBhICIlcyIgZm9ybWF0DQo+cGFyYW1ldGVyIGluIG9yZGVyIHRvIHNp
+bGVudCB0aGlzIC1XZm9ybWF0LXNlY3VyaXR5IHdhcm5pbmcgYW5kIG1ha2UNCj5jbGFuZyBhYmxl
+IHRvIGRldGVjdCBhdCBjb21waWxlIHRpbWUgcmVhbCBidWdzIHJlbGF0ZWQgdG8gc3RyaW5nDQo+
+Zm9ybWF0dGluZy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBOaWNvbGFzIElvb3NzIDxuaWNvbGFzLmlv
+b3NzX2xpbnV4QG00eC5vcmc+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9pc3Iu
+YyB8IDQgKystLQ0KPiAxIGZpbGUgY2hhbmdlZCwgMiBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9u
+cygtKQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgYi9k
+cml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj5pbmRleCA1MDkzY2E5YjAyZWMuLjQ3NGI0
+MTUyMTdkZiAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj4r
+KysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj5AQCAtMzA4MCw3ICszMDgwLDcg
+QEAgcWxhMjR4eF9lbmFibGVfbXNpeChzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhLCBzdHJ1Y3QgcnNw
+X3F1ZSAqcnNwKQ0KPiAJCXFlbnRyeS0+aGFuZGxlID0gcnNwOw0KPiAJCXJzcC0+bXNpeCA9IHFl
+bnRyeTsNCj4gCQlzY25wcmludGYocWVudHJ5LT5uYW1lLCBzaXplb2YocWVudHJ5LT5uYW1lKSwN
+Cj4tCQkgICAgbXNpeF9lbnRyaWVzW2ldLm5hbWUpOw0KPisJCSAgICAiJXMiLCBtc2l4X2VudHJp
+ZXNbaV0ubmFtZSk7DQo+IAkJaWYgKElTX1AzUF9UWVBFKGhhKSkNCj4gCQkJcmV0ID0gcmVxdWVz
+dF9pcnEocWVudHJ5LT52ZWN0b3IsDQo+IAkJCQlxbGE4Mnh4X21zaXhfZW50cmllc1tpXS5oYW5k
+bGVyLA0KPkBAIC0zMTE2LDcgKzMxMTYsNyBAQCBxbGEyNHh4X2VuYWJsZV9tc2l4KHN0cnVjdCBx
+bGFfaHdfZGF0YSAqaGEsIHN0cnVjdCByc3BfcXVlICpyc3ApDQo+IAkJcnNwLT5tc2l4ID0gcWVu
+dHJ5Ow0KPiAJCXFlbnRyeS0+aGFuZGxlID0gcnNwOw0KPiAJCXNjbnByaW50ZihxZW50cnktPm5h
+bWUsIHNpemVvZihxZW50cnktPm5hbWUpLA0KPi0JCSAgICBtc2l4X2VudHJpZXNbUUxBX0FUSU9f
+VkVDVE9SXS5uYW1lKTsNCj4rCQkgICAgIiVzIiwgbXNpeF9lbnRyaWVzW1FMQV9BVElPX1ZFQ1RP
+Ul0ubmFtZSk7DQo+IAkJcWVudHJ5LT5pbl91c2UgPSAxOw0KPiAJCXJldCA9IHJlcXVlc3RfaXJx
+KHFlbnRyeS0+dmVjdG9yLA0KPiAJCQltc2l4X2VudHJpZXNbUUxBX0FUSU9fVkVDVE9SXS5oYW5k
+bGVyLA0KPi0tIA0KPjIuMTEuMA0KPg0KTG9va3MgR29vZC4gDQoNCkFja2VkLWJ5OiBIaW1hbnNo
+dSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQoNCj4NCg==
