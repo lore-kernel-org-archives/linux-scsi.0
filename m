@@ -1,28 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/3] hisi_sas: some CQ processing fixes
-Date: Thu, 05 Jan 2017 18:22:12 -0500
-Message-ID: <yq1mvf5jdnf.fsf@oracle.com>
-References: <1483446290-185084-1-git-send-email-john.garry@huawei.com>
+Subject: Re: [PATCH 1/1] scsi:fnic Avoid sending reset to fnic firmware when another reset is already in progress
+Date: Thu, 05 Jan 2017 20:42:32 -0500
+Message-ID: <yq11swhj75j.fsf@oracle.com>
+References: <1481750441-15755-1-git-send-email-satishkh@cisco.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1483446290-185084-1-git-send-email-john.garry@huawei.com> (John
-        Garry's message of "Tue, 3 Jan 2017 20:24:47 +0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hanjun.guo@linaro.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:35856 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752624AbdAFBmy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 5 Jan 2017 20:42:54 -0500
+In-Reply-To: <1481750441-15755-1-git-send-email-satishkh@cisco.com> (Satish
+        Kharat's message of "Wed, 14 Dec 2016 13:20:41 -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Satish Kharat <satishkh@cisco.com>
+Cc: linux-scsi@vger.kernel.org, Sesidhar Baddela <sebaddel@cisco.com>
 
->>>>> "John" == John Garry <john.garry@huawei.com> writes:
+>>>>> "Satish" == Satish Kharat <satishkh@cisco.com> writes:
 
-John> This patchset fixes some issues related to servicing of the
-John> completion queue interrupt.  The major fix is that sensitive
-John> hisi_hba structures need to be locked when free'ing a slot.
-John> Another modification is that the v2 hw completion queue irq is now
-John> serviced with a tasklet, as too much work was being done in the
-John> ISR.
+Satish,
 
-Applied to 4.11/scsi-queue.
+Satish> This fix is to avoid calling fnic_fw_reset_handler through
+Satish> fnic_host_reset when a finc reset is alreay in progress.
+
+Applied to 4.10/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
