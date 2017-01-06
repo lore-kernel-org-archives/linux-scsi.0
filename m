@@ -1,92 +1,72 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH] qla2xxx: Get mutex lock before checking optrom_state
-Date: Fri, 6 Jan 2017 20:07:48 +0000
-Message-ID: <911085AE-ED24-48A7-AA16-34E06AE4F7B8@cavium.com>
-References: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0046.outbound.protection.outlook.com ([104.47.36.46]:38368
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S938036AbdAFUHy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 6 Jan 2017 15:07:54 -0500
-In-Reply-To: <288dbcf8-29b5-8156-aba8-049edfed1dde@redhat.com>
-Content-Language: en-US
-Content-ID: <351FC956C7AD7B43A6F1B0E0A98CBBA4@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Andreas Dilger <adilger@dilger.ca>
+Subject: Re: [LSF/MM TOPIC] status update on stream IDs
+Date: Fri, 6 Jan 2017 16:58:43 -0700
+Message-ID: <7B0B6B53-D692-4084-AC63-55138132F509@dilger.ca>
+References: <E86FC13D-0058-473C-B9D6-36B988ABEFFE@dilger.ca>
+Mime-Version: 1.0 (Mac OS X Mail 9.3 \(3124\))
+Content-Type: multipart/signed; boundary="Apple-Mail=_740B886B-92C7-4B32-8221-08D49D933AD6"; protocol="application/pgp-signature"; micalg=pgp-sha256
+Return-path: <linux-fsdevel-owner@vger.kernel.org>
+In-Reply-To: <E86FC13D-0058-473C-B9D6-36B988ABEFFE@dilger.ca>
+Sender: linux-fsdevel-owner@vger.kernel.org
+To: lsf-pc@lists.linux-foundation.org
+Cc: linux-fsdevel <linux-fsdevel@vger.kernel.org>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-ide@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "mgandhi@redhat.com" <mgandhi@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Laurence Oberman <loberman@redhat.com>, "Dupuis, Chad" <Chad.Dupuis@cavium.com>
 
-SGkgTWlsYW4sDQoNCg0KDQpPbiAxMi8yNC8xNiwgODozMiBBTSwgImxpbnV4LXNjc2ktb3duZXJA
-dmdlci5rZXJuZWwub3JnIG9uIGJlaGFsZiBvZiBNaWxhbiBQLiBHYW5kaGkiIDxsaW51eC1zY3Np
-LW93bmVyQHZnZXIua2VybmVsLm9yZyBvbiBiZWhhbGYgb2YgbWdhbmRoaUByZWRoYXQuY29tPiB3
-cm90ZToNCg0KPkhlbGxvLA0KPg0KPlRoZXJlIGlzIGEgcmFjZSBjb25kaXRpb24gd2l0aCBxbGEy
-eHh4IG9wdHJvbSBmdW5jdGlvbnMgd2hlcmUNCj5vbmUgdGhyZWFkIG1pZ2h0IG1vZGlmeSBvcHRy
-b20gYnVmZmVyLCBvcHRyb21fc3RhdGUgd2hpbGUgDQo+b3RoZXIgdGhyZWFkIGlzIHN0aWxsIHJl
-YWRpbmcgZnJvbSBpdC4NCj4NCj5JbiBjb3VwbGUgb2YgY3Jhc2hlcywgaXQgd2FzIGZvdW5kIHRo
-YXQgd2UgaGFkIHN1Y2Nlc3NmdWxseSANCj5wYXNzZWQgdGhlIGZvbGxvd2luZyAnaWYnIGNoZWNr
-IHdoZXJlIHdlIGNvbmZpcm0gb3B0cm9tX3N0YXRlIA0KPnRvIGJlIFFMQV9TUkVBRElORy4gQnV0
-IGJ5IHRoZSB0aW1lIHdlIGFjcXVpcmVkIG11dGV4IGxvY2sgDQo+dG8gcHJvY2VlZCB3aXRoIG1l
-bW9yeV9yZWFkX2Zyb21fYnVmZmVyIGZ1bmN0aW9uLCBzb21lIG90aGVyIA0KPnRocmVhZC9wcm9j
-ZXNzIGhhZCBhbHJlYWR5IG1vZGlmaWVkIHRoYXQgb3B0aW9uIHJvbSBidWZmZXIgIA0KPmFuZCBv
-cHRyb21fc3RhdGUgZnJvbSBRTEFfU1JFQURJTkcgdG8gUUxBX1NXQUlUSU5HLiBUaGVuIA0KPndl
-IGdvdCBoYS0+b3B0cm9tX2J1ZmZlciAweDAgYW5kIGNyYXNoZWQgdGhlIHN5c3RlbTogDQo+DQo+
-ICAgICAgICBpZiAoaGEtPm9wdHJvbV9zdGF0ZSAhPSBRTEFfU1JFQURJTkcpDQo+ICAgICAgICAg
-ICAgICAgIHJldHVybiAwOw0KPg0KPiAgICAgICAgbXV0ZXhfbG9jaygmaGEtPm9wdHJvbV9tdXRl
-eCk7DQo+ICAgICAgICBydmFsID0gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIoYnVmLCBjb3VudCwg
-Jm9mZiwgaGEtPm9wdHJvbV9idWZmZXIsDQo+ICAgICAgICAgICAgaGEtPm9wdHJvbV9yZWdpb25f
-c2l6ZSk7DQo+ICAgICAgICBtdXRleF91bmxvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0KPg0KPg0K
-PldpdGggY3VycmVudCBvcHRyb20gZnVuY3Rpb24gd2UgZ2V0IGZvbGxvd2luZyBjcmFzaCBkdWUg
-dG8gDQo+YSByYWNlIGNvbmRpdGlvbjoNCj4NCj5bIDE0NzkuNDY2Njc5XSBCVUc6IHVuYWJsZSB0
-byBoYW5kbGUga2VybmVsIE5VTEwgcG9pbnRlciBkZXJlZmVyZW5jZSBhdCAgICAgICAgICAgKG51
-bGwpDQo+WyAxNDc5LjQ2NjcwN10gSVA6IFs8ZmZmZmZmZmY4MTMyNjc1Nj5dIG1lbWNweSsweDYv
-MHgxMTANCj5bLi4uXQ0KPlsgMTQ3OS40NzM2NzNdIENhbGwgVHJhY2U6DQo+WyAxNDc5LjQ3NDI5
-Nl0gIFs8ZmZmZmZmZmY4MTIyNWNiYz5dID8gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIrMHgzYy8w
-eDYwDQo+WyAxNDc5LjQ3NDk0MV0gIFs8ZmZmZmZmZmZhMDE1NzRkYz5dIHFsYTJ4MDBfc3lzZnNf
-cmVhZF9vcHRyb20rMHg5Yy8weGMwIFtxbGEyeHh4XQ0KPlsgMTQ3OS40NzU1NzFdICBbPGZmZmZm
-ZmZmODEyN2U3NmI+XSByZWFkKzB4ZGIvMHgxZjANCj5bIDE0NzkuNDc2MjA2XSAgWzxmZmZmZmZm
-ZjgxMWZkZjllPl0gdmZzX3JlYWQrMHg5ZS8weDE3MA0KPlsgMTQ3OS40NzY4MzldICBbPGZmZmZm
-ZmZmODExZmViNmY+XSBTeVNfcmVhZCsweDdmLzB4ZTANCj5bIDE0NzkuNDc3NDY2XSAgWzxmZmZm
-ZmZmZjgxNjk2NGM5Pl0gc3lzdGVtX2NhbGxfZmFzdHBhdGgrMHgxNi8weDFiDQo+DQo+DQo+QmVs
-b3cgcGF0Y2ggbW9kaWZpZXMgcWxhMngwMF9zeXNmc19yZWFkX29wdHJvbSwNCj5xbGEyeDAwX3N5
-c2ZzX3dyaXRlX29wdHJvbSBmdW5jdGlvbnMgdG8gZ2V0IHRoZSBtdXRleF9sb2NrIA0KPmJlZm9y
-ZSBjaGVja2luZyBoYS0+b3B0cm9tX3N0YXRlIHRvIGF2b2lkIHNpbWlsYXIgY3Jhc2hlcy4NCj4N
-Cj5UaGUgcGF0Y2ggd2FzIGFwcGxpZWQgYW5kIHRlc3RlZCBhbmQgc2FtZSBjcmFzaGVzIHdlcmUg
-bm8gDQo+bG9uZ2VyIG9ic2VydmVkIGFnYWluLg0KPg0KPg0KPlRlc3RlZC1ieTogTWlsYW4gUC4g
-R2FuZGhpIDxtZ2FuZGhpQHJlZGhhdC5jb20+DQo+U2lnbmVkLW9mZi1ieTogTWlsYW4gUC4gR2Fu
-ZGhpIDxtZ2FuZGhpQHJlZGhhdC5jb20+DQo+LS0tDQo+IGRyaXZlcnMvc2NzaS9xbGEyeHh4L3Fs
-YV9hdHRyLmMgfCAxOCArKysrKysrKysrKysrLS0tLS0NCj4gMSBmaWxlIGNoYW5nZWQsIDEzIGlu
-c2VydGlvbnMoKyksIDUgZGVsZXRpb25zKC0pDQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2Nz
-aS9xbGEyeHh4L3FsYV9hdHRyLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfYXR0ci5jDQo+
-aW5kZXggZGE1YWUxMS4uNDdlYTE2NCAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfYXR0ci5jDQo+KysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2F0dHIuYw0KPkBA
-IC0zMjksMTIgKzMyOSwxNSBAQCBxbGEyeDAwX3N5c2ZzX3JlYWRfb3B0cm9tKHN0cnVjdCBmaWxl
-ICpmaWxwLCBzdHJ1Y3Qga29iamVjdCAqa29iaiwNCj4gCXN0cnVjdCBxbGFfaHdfZGF0YSAqaGEg
-PSB2aGEtPmh3Ow0KPiAJc3NpemVfdCBydmFsID0gMDsNCj4gDQo+KwltdXRleF9sb2NrKCZoYS0+
-b3B0cm9tX211dGV4KTsNCj4rDQo+IAlpZiAoaGEtPm9wdHJvbV9zdGF0ZSAhPSBRTEFfU1JFQURJ
-TkcpDQo+LQkJcmV0dXJuIDA7DQo+KwkJZ290byBvdXQ7DQo+IA0KPi0JbXV0ZXhfbG9jaygmaGEt
-Pm9wdHJvbV9tdXRleCk7DQo+IAlydmFsID0gbWVtb3J5X3JlYWRfZnJvbV9idWZmZXIoYnVmLCBj
-b3VudCwgJm9mZiwgaGEtPm9wdHJvbV9idWZmZXIsDQo+IAkgICAgaGEtPm9wdHJvbV9yZWdpb25f
-c2l6ZSk7DQo+Kw0KPitvdXQ6DQo+IAltdXRleF91bmxvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0K
-PiANCj4gCXJldHVybiBydmFsOw0KPkBAIC0zNDksMTQgKzM1MiwxOSBAQCBxbGEyeDAwX3N5c2Zz
-X3dyaXRlX29wdHJvbShzdHJ1Y3QgZmlsZSAqZmlscCwgc3RydWN0IGtvYmplY3QgKmtvYmosDQo+
-IAkgICAgc3RydWN0IGRldmljZSwga29iaikpKTsNCj4gCXN0cnVjdCBxbGFfaHdfZGF0YSAqaGEg
-PSB2aGEtPmh3Ow0KPiANCj4tCWlmIChoYS0+b3B0cm9tX3N0YXRlICE9IFFMQV9TV1JJVElORykN
-Cj4rCW11dGV4X2xvY2soJmhhLT5vcHRyb21fbXV0ZXgpOw0KPisNCj4rCWlmIChoYS0+b3B0cm9t
-X3N0YXRlICE9IFFMQV9TV1JJVElORykgew0KPisJCW11dGV4X3VubG9jaygmaGEtPm9wdHJvbV9t
-dXRleCk7DQo+IAkJcmV0dXJuIC1FSU5WQUw7DQo+LQlpZiAob2ZmID4gaGEtPm9wdHJvbV9yZWdp
-b25fc2l6ZSkNCj4rCX0NCj4rCWlmIChvZmYgPiBoYS0+b3B0cm9tX3JlZ2lvbl9zaXplKSB7DQo+
-KwkJbXV0ZXhfdW5sb2NrKCZoYS0+b3B0cm9tX211dGV4KTsNCj4gCQlyZXR1cm4gLUVSQU5HRTsN
-Cj4rCX0NCj4gCWlmIChvZmYgKyBjb3VudCA+IGhhLT5vcHRyb21fcmVnaW9uX3NpemUpDQo+IAkJ
-Y291bnQgPSBoYS0+b3B0cm9tX3JlZ2lvbl9zaXplIC0gb2ZmOw0KPiANCj4tCW11dGV4X2xvY2so
-JmhhLT5vcHRyb21fbXV0ZXgpOw0KPiAJbWVtY3B5KCZoYS0+b3B0cm9tX2J1ZmZlcltvZmZdLCBi
-dWYsIGNvdW50KTsNCj4gCW11dGV4X3VubG9jaygmaGEtPm9wdHJvbV9tdXRleCk7DQo+IA0KPi0t
-DQoNClRoYW5rcyBmb3IgdGhlIFBhdGNoLiBUaGlzIGxvb2tzIGdvb2QuDQoNCkFja2VkLWJ5OiBI
-aW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQoNCj5UbyB1bnN1
-YnNjcmliZSBmcm9tIHRoaXMgbGlzdDogc2VuZCB0aGUgbGluZSAidW5zdWJzY3JpYmUgbGludXgt
-c2NzaSIgaW4NCj50aGUgYm9keSBvZiBhIG1lc3NhZ2UgdG8gbWFqb3Jkb21vQHZnZXIua2VybmVs
-Lm9yZw0KPk1vcmUgbWFqb3Jkb21vIGluZm8gYXQgIGh0dHA6Ly92Z2VyLmtlcm5lbC5vcmcvbWFq
-b3Jkb21vLWluZm8uaHRtbA0K
+
+--Apple-Mail=_740B886B-92C7-4B32-8221-08D49D933AD6
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
+
+[resend to include other relevant lists]
+
+On Jan 6, 2017, at 4:54 PM, Andreas Dilger <adilger@dilger.ca> wrote:
+>=20
+> At LSF/MM'16 and Linux FAST (https://lwn.net/Articles/685499/) there =
+were
+> discussions about adding stream IDs to the block/device layer to allow =
+higher
+> layers (filesystems, applications) to identify IO streams so lower =
+layers
+> (SSDs, hybrid storage, etc.) can make better allocation/placement =
+decisions.
+>=20
+> It would be useful to get an update on the state of this work, and =
+discuss
+> any obstacles that need to be resolved for getting this code landed.
+
+
+Cheers, Andreas
+
+
+
+
+
+
+--Apple-Mail=_740B886B-92C7-4B32-8221-08D49D933AD6
+Content-Transfer-Encoding: 7bit
+Content-Disposition: attachment;
+	filename=signature.asc
+Content-Type: application/pgp-signature;
+	name=signature.asc
+Content-Description: Message signed with OpenPGP using GPGMail
+
+-----BEGIN PGP SIGNATURE-----
+Comment: GPGTools - http://gpgtools.org
+
+iQIVAwUBWHAvM3Kl2rkXzB/gAQgqsBAArtsTzEdg40ycfKoGyOPpQ865W4Y9A0R8
+7jI8Zyc22LLEsadZIVXWIeaQH3wzUqr7lzXg2dRgdUGvL1GYVB2UH4rktwRizo1k
+pnOfm6vJTAGZfe8nPXg2vg8hagSGIfjn+we/Id/qx0EhjX2p4RE7grWlmInKX59B
+WDnyUa7xeN2I8BNlKaZOIbtpvfAa2nPVCv6B4mJOvPkPPtXZFvXTaWUaKk2lXIIt
+xtV45Ee4u8p7SOM6OP9Fagb9ONQgJ5Vnz0jiF8Slykork/T9ZUqV4A4pX1fd0gL/
+CEEJPsRRuL9TO1IUPMn3rR7FJoc6VuTKKkefT8IcEONwSbPYqKIi7Dv7f8CkWq4r
+Vc4I/sB7WS34UOPKjk+EQNddRj25g3zI/Ff57EMUt81WsTV89HywIHrDZa/1Axnq
+kDl+HN3nt94ptBQnBMzPYAV+9+2q3auQ7zTtZu0GHY9/49Z3IJJAMxg9MTek4vi1
+AXuV0YpYf2ExU13odNxJpyR0DTcML+wQ3JH8AVyZliVu2Qiz5DhSk2E1/1+LhwA8
+nveZLZ8RZdDIDBBDNApAJfSRRv5AKcEGRjLL1sMix5c0TarHE58LcPN9wAMH7ufx
+KrU+Xem8Q+23EA81yMgbP1f/33mj8RzLR4oBL3xiacsAl/tHlKH/kVjAUCOAggJH
+eOqm/E2EVxI=
+=1v4F
+-----END PGP SIGNATURE-----
+
+--Apple-Mail=_740B886B-92C7-4B32-8221-08D49D933AD6--
