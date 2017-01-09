@@ -1,49 +1,60 @@
-From: "Ewan D. Milne" <emilne@redhat.com>
-Subject: [PATCH] ses: Fix SAS device detection in enclosure
-Date: Mon,  9 Jan 2017 16:33:36 -0500
-Message-ID: <1483997616-18900-1-git-send-email-emilne@redhat.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH] qla2xxx: rename {vendor|hba}_indentifer to
+ {vendor|hba}_identifer
+Date: Mon, 9 Jan 2017 23:22:52 +0000
+Message-ID: <9325F928-2A19-448A-8C15-1641DF5BBDB0@cavium.com>
+References: <20161229222038.29984-1-colin.king@canonical.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:35220 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932800AbdAIVdi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Jan 2017 16:33:38 -0500
-Received: from int-mx11.intmail.prod.int.phx2.redhat.com (int-mx11.intmail.prod.int.phx2.redhat.com [10.5.11.24])
-        (using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-        (No client certificate requested)
-        by mx1.redhat.com (Postfix) with ESMTPS id 99A7531B31F
-        for <linux-scsi@vger.kernel.org>; Mon,  9 Jan 2017 21:33:38 +0000 (UTC)
-Received: from emilne.csb (dhcp-25-104.bos.redhat.com [10.18.25.104])
-        by int-mx11.intmail.prod.int.phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v09LXc1w007745
-        for <linux-scsi@vger.kernel.org>; Mon, 9 Jan 2017 16:33:38 -0500
+Received: from mail-dm3nam03on0084.outbound.protection.outlook.com ([104.47.41.84]:48213
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753839AbdAIXWy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Jan 2017 18:22:54 -0500
+In-Reply-To: <20161229222038.29984-1-colin.king@canonical.com>
+Content-Language: en-US
+Content-ID: <19396BD7959CDE41AE4B5CB717D73C87@namprd07.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, "qla2xxx-upstream@qlogic.com" <qla2xxx-upstream@qlogic.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 
-From: "Ewan D. Milne" <emilne@redhat.com>
-
-The call to scsi_is_sas_rphy() needs to be made on the
-SAS end_device, not on the SCSI device.
-
-Fixes: 835831c57e9b ("ses: use scsi_is_sas_rphy instead of is_sas_attached")
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/ses.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c
-index 8c9a35c..50adabb 100644
---- a/drivers/scsi/ses.c
-+++ b/drivers/scsi/ses.c
-@@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct enclosure_device *edev,
- 
- 	ses_enclosure_data_process(edev, to_scsi_device(edev->edev.parent), 0);
- 
--	if (scsi_is_sas_rphy(&sdev->sdev_gendev))
-+	if (scsi_is_sas_rphy(sdev->sdev_target->dev.parent))
- 		efd.addr = sas_get_address(sdev);
- 
- 	if (efd.addr) {
--- 
-1.8.3.1
-
+DQpPbiAxMi8yOS8xNiwgMjoyMCBQTSwgIkNvbGluIEtpbmciIDxjb2xpbi5raW5nQGNhbm9uaWNh
+bC5jb20+IHdyb3RlOg0KDQo+RnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25p
+Y2FsLmNvbT4NCj4NCj5SZW5hbWUgdGhlIHZlbmRvcl9pbmRlbnRpZmVyIGFuZCBoYmFfaW5kZW50
+aWZlciBmaWVsZHMgdG8gY29ycmVjdCBzcGVsbGluZy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBDb2xp
+biBJYW4gS2luZyA8Y29saW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPi0tLQ0KPiBkcml2ZXJzL3Nj
+c2kvcWxhMnh4eC9xbGFfZGVmLmggfCA0ICsrLS0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxh
+X2dzLmMgIHwgNiArKystLS0NCj4gMiBmaWxlcyBjaGFuZ2VkLCA1IGluc2VydGlvbnMoKyksIDUg
+ZGVsZXRpb25zKC0pDQo+DQo+ZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9k
+ZWYuaCBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9kZWYuaA0KPmluZGV4IGY3ZGYwMWIuLmVm
+Njk5YjYgMTAwNjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oDQo+Kysr
+IGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oDQo+QEAgLTIyNDcsNyArMjI0Nyw3IEBA
+IHN0cnVjdCBjdF9mZG1pdjJfaGJhX2F0dHIgew0KPiAJCXVpbnQzMl90IG51bV9wb3J0czsNCj4g
+CQl1aW50OF90IGZhYnJpY19uYW1lW1dXTl9TSVpFXTsNCj4gCQl1aW50OF90IGJpb3NfbmFtZVsz
+Ml07DQo+LQkJdWludDhfdCB2ZW5kb3JfaW5kZW50aWZlcls4XTsNCj4rCQl1aW50OF90IHZlbmRv
+cl9pZGVudGlmaWVyWzhdOw0KPiAJfSBhOw0KPiB9Ow0KPiANCj5AQCAtMjQyMiw3ICsyNDIyLDcg
+QEAgc3RydWN0IGN0X3Nuc19yZXEgew0KPiAJCX0gcnNubl9ubjsNCj4gDQo+IAkJc3RydWN0IHsN
+Cj4tCQkJdWludDhfdCBoYmFfaW5kZW50aWZpZXJbOF07DQo+KwkJCXVpbnQ4X3QgaGJhX2lkZW50
+aWZpZXJbOF07DQo+IAkJfSBnaGF0Ow0KPiANCj4gCQlzdHJ1Y3Qgew0KPmRpZmYgLS1naXQgYS9k
+cml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZ3MuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9n
+cy5jDQo+aW5kZXggOTRlOGE4NS4uZWUzZGY4NyAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kv
+cWxhMnh4eC9xbGFfZ3MuYw0KPisrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9ncy5jDQo+
+QEAgLTE5MzksMTUgKzE5MzksMTUgQEAgcWxhMngwMF9mZG1pdjJfcmhiYShzY3NpX3FsYV9ob3N0
+X3QgKnZoYSkNCj4gCS8qIFZlbmRvciBJZGVudGlmaWVyICovDQo+IAllaXRlciA9IGVudHJpZXMg
+KyBzaXplOw0KPiAJZWl0ZXItPnR5cGUgPSBjcHVfdG9fYmUxNihGRE1JX0hCQV9UWVBFX1ZFTkRP
+Ul9JREVOVElGSUVSKTsNCj4tCXNucHJpbnRmKGVpdGVyLT5hLnZlbmRvcl9pbmRlbnRpZmVyLCBz
+aXplb2YoZWl0ZXItPmEudmVuZG9yX2luZGVudGlmZXIpLA0KPisJc25wcmludGYoZWl0ZXItPmEu
+dmVuZG9yX2lkZW50aWZpZXIsIHNpemVvZihlaXRlci0+YS52ZW5kb3JfaWRlbnRpZmllciksDQo+
+IAkgICAgIiVzIiwgIlFMR0MiKTsNCj4tCWFsZW4gPSBzdHJsZW4oZWl0ZXItPmEudmVuZG9yX2lu
+ZGVudGlmZXIpOw0KPisJYWxlbiA9IHN0cmxlbihlaXRlci0+YS52ZW5kb3JfaWRlbnRpZmllcik7
+DQo+IAlhbGVuICs9IDQgLSAoYWxlbiAmIDMpOw0KPiAJZWl0ZXItPmxlbiA9IGNwdV90b19iZTE2
+KDQgKyBhbGVuKTsNCj4gCXNpemUgKz0gNCArIGFsZW47DQo+IA0KPiAJcWxfZGJnKHFsX2RiZ19k
+aXNjLCB2aGEsIDB4MjBiMSwNCj4tCSAgICAiVmVuZG9yIElkZW50aWZpZXIgPSAlcy5cbiIsIGVp
+dGVyLT5hLnZlbmRvcl9pbmRlbnRpZmVyKTsNCj4rCSAgICAiVmVuZG9yIElkZW50aWZpZXIgPSAl
+cy5cbiIsIGVpdGVyLT5hLnZlbmRvcl9pZGVudGlmaWVyKTsNCj4gDQo+IAkvKiBVcGRhdGUgTVMg
+cmVxdWVzdCBzaXplLiAqLw0KPiAJcWxhMngwMF91cGRhdGVfbXNfZmRtaV9pb2NiKHZoYSwgc2l6
+ZSArIDE2KTsNCj4tLSANCj4yLjEwLjINCg0KTG9va3MgZ29vZA0KDQpBY2tlZC1ieTogSGltYW5z
+aHUgTWFkaGFuaSA8aGltYW5zaHUubWFkaGFuaUBjYXZpdW0uY29tPg0KPg0K
