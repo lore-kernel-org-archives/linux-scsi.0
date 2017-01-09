@@ -1,36 +1,28 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] bfa: remove bfa_fcs_mod_s
-Date: Mon, 9 Jan 2017 10:47:37 +0100
-Message-ID: <e7c94bd1-75f5-8cbd-37cc-5acc4e6a5db4@suse.de>
-References: <1483868475-2949-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH] pmcraid: switch to pci_alloc_irq_vectors
+Date: Mon, 9 Jan 2017 10:54:35 +0100
+Message-ID: <871f8035-e24e-1267-2390-76805f8ed3dc@suse.de>
+References: <1479450496-14331-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41467 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:42589 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754315AbdAIJrj (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Jan 2017 04:47:39 -0500
-In-Reply-To: <1483868475-2949-1-git-send-email-hch@lst.de>
+        id S1754876AbdAIJzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 9 Jan 2017 04:55:47 -0500
+In-Reply-To: <1479450496-14331-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
-Cc: anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, keescook@chromium.org
 
-On 01/08/2017 10:41 AM, Christoph Hellwig wrote:
-> Just call the functions directly instead of obsfucating the call chain.
-> This was in reply to a patch from Kees Cook to constify the function
-> pointer struct bfa_fcs_mod_s, but it turns out there is no reason to
-> have this indirection at all.
->
+On 11/18/2016 07:28 AM, Christoph Hellwig wrote:
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/scsi/bfa/bfa_fcs.c | 181 ++++++++++++---------------------------------
->  drivers/scsi/bfa/bfa_fcs.h |   4 -
->  2 files changed, 46 insertions(+), 139 deletions(-)
+>  drivers/scsi/pmcraid.c | 92 ++++++++++++++++++++++----------------------------
+>  drivers/scsi/pmcraid.h |  1 -
+>  2 files changed, 41 insertions(+), 52 deletions(-)
 >
-Any cleanup of the bfa driver is a good cleanup.
-
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
