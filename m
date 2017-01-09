@@ -1,21 +1,25 @@
-From: anthonia <ellha1paul@gmail.com>
-Subject: (unknown)
-Date: Mon, 9 Jan 2017 12:18:03 +0000
-Message-ID: <CAEnvP=eJGKHAZkN1Mn5DQvMxPnUFuNhJA=12xTtQBuFkuyKnhA@mail.gmail.com>
-Reply-To: anthonia.ebe2017@gmail.com
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 04/11] qla2xxx: Cleanup SRR code.
+Date: Mon, 9 Jan 2017 05:13:50 -0800
+Message-ID: <20170109131350.GB4438@infradead.org>
+References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482553419-4117-5-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-io0-f196.google.com ([209.85.223.196]:36393 "EHLO
-        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1760307AbdAIMSE (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 07:18:04 -0500
-Received: by mail-io0-f196.google.com with SMTP id q20so7949187ioi.3
-        for <linux-scsi@vger.kernel.org>; Mon, 09 Jan 2017 04:18:04 -0800 (PST)
-Subject: 
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <target-devel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1482553419-4117-5-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Bitte tut mir leid, dass ich Sie st=C3=B6ren kann, k=C3=B6nnen Sie mich auf
-E-Mail-Adresse, so dass ich in der Lage, Ihnen meine Bilder
+s/Cleanup/Remove/ ?
+
+Maybe add a little blurb on why we even had this huge pile of dead code
+despite not using selective retransmissions, and why you don't plan to
+use it any time soon.
+
+Otherwise looks fine:
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
