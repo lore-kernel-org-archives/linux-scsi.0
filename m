@@ -1,36 +1,21 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] pmcraid: switch to pci_alloc_irq_vectors
-Date: Mon, 9 Jan 2017 10:54:35 +0100
-Message-ID: <871f8035-e24e-1267-2390-76805f8ed3dc@suse.de>
-References: <1479450496-14331-1-git-send-email-hch@lst.de>
+From: anthonia <ellha1paul@gmail.com>
+Subject: (unknown)
+Date: Mon, 9 Jan 2017 12:18:03 +0000
+Message-ID: <CAEnvP=eJGKHAZkN1Mn5DQvMxPnUFuNhJA=12xTtQBuFkuyKnhA@mail.gmail.com>
+Reply-To: anthonia.ebe2017@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42589 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754876AbdAIJzr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Jan 2017 04:55:47 -0500
-In-Reply-To: <1479450496-14331-1-git-send-email-hch@lst.de>
+Received: from mail-io0-f196.google.com ([209.85.223.196]:36393 "EHLO
+        mail-io0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1760307AbdAIMSE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 07:18:04 -0500
+Received: by mail-io0-f196.google.com with SMTP id q20so7949187ioi.3
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Jan 2017 04:18:04 -0800 (PST)
+Subject: 
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-On 11/18/2016 07:28 AM, Christoph Hellwig wrote:
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/pmcraid.c | 92 ++++++++++++++++++++++----------------------------
->  drivers/scsi/pmcraid.h |  1 -
->  2 files changed, 41 insertions(+), 52 deletions(-)
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Bitte tut mir leid, dass ich Sie st=C3=B6ren kann, k=C3=B6nnen Sie mich auf
+E-Mail-Adresse, so dass ich in der Lage, Ihnen meine Bilder
