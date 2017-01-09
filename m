@@ -1,78 +1,42 @@
-From: Chad Dupuis <chad.dupuis@cavium.com>
-Subject: Re: [Open-FCoE] [PATCH RFC 5/5] qedf: Add FIP request handling
-Date: Mon, 9 Jan 2017 11:47:23 -0500
-Message-ID: <alpine.OSX.2.00.1701091147040.1044@administrators-macbook-pro.local>
-References: <1482520628-24207-1-git-send-email-chad.dupuis@cavium.com> <1482520628-24207-6-git-send-email-chad.dupuis@cavium.com> <a076b54b-966b-d652-7a0f-6b84aacb0ded@suse.de>
+From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
+Subject: Re: [PATCH] ibmvscsis: Fix srp_transfer_data fail return code
+Date: Mon, 9 Jan 2017 11:23:23 -0600
+Message-ID: <6b74ee38-4490-79df-8311-4d7349749cbf@linux.vnet.ibm.com>
+References: <1483978880-93705-1-git-send-email-bryantly@linux.vnet.ibm.com>
+ <20170109164748.GA21437@kroah.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0056.outbound.protection.outlook.com ([104.47.41.56]:52480
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1762834AbdAIQrh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 9 Jan 2017 11:47:37 -0500
-In-Reply-To: <a076b54b-966b-d652-7a0f-6b84aacb0ded@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170109164748.GA21437@kroah.com>
+Sender: stable-owner@vger.kernel.org
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: nab@linux-iscsi.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, Bart.VanAssche@sandisk.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, linux-kernel@vger.kernel.org, stable@vger.kernel.org, "Bryant G. Ly" <bgly@us.ibm.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: martin.petersen@oracle.com, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, QLogic-Storage-Upstream@cavium.com, linux-scsi@vger.kernel.org, yuval.mintz@cavium.com
 
+On 1/9/17 10:47 AM, Greg KH wrote:
 
-On Wed, 28 Dec 2016, 9:11am -0000, Hannes Reinecke wrote:
+> On Mon, Jan 09, 2017 at 10:21:20AM -0600, Bryant G. Ly wrote:
+>> From: "Bryant G. Ly" <bgly@us.ibm.com>
+>>
+>> If srp_transfer_data fails within ibmvscsis_write_pending, then
+>> the most likely scenario is that the client timed out the op and
+>> removed the TCE mapping. Thus it will loop forever retrying the
+>> op that is pretty much guaranteed to fail forever. A better return
+>> code would be EIO instead of EAGAIN.
+>>
+>> Cc: stable@vger.kernel.org
+>> Reported-by: Steven Royer <seroyer@linux.vnet.ibm.com>
+>> Tested-by: Steven Royer <seroyer@linux.vnet.ibm.com>
+>> Signed-off-by: Bryant G. Ly <bgly@us.ibm.com>
+>> ---
+>>   drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
+>>   1 file changed, 1 insertion(+), 1 deletion(-)
+> Why are you sending this to me?
+>
+> confused,
+>
+> greg k-h
+Sorry I meant to put --to target-devel@vger.kernel.org, and just --cc you.
 
-> On 12/23/2016 08:17 PM, Dupuis, Chad wrote:
-> > From: "Dupuis, Chad" <chad.dupuis@cavium.com>
-> > 
-> > This patch adds handling for FIP requests and responses that are handled by
-> > the driver itself and not by libfcoe.
-> > 
-> > Signed-off-by: Nilesh Javali <nilesh.javali@cavium.com>
-> > Signed-off-by: Manish Rangankar <manish.rangankar@cavium.com>
-> > Signed-off-by: Saurav Kashyap <saurav.kashyap@cavium.com>
-> > Signed-off-by: Chad Dupuis <chad.dupuis@cavium.com>
-> > ---
-> >  drivers/scsi/qedf/qedf_fip.c | 267 +++++++++++++++++++++++++++++++++++++++++++
-> >  1 file changed, 267 insertions(+)
-> >  create mode 100644 drivers/scsi/qedf/qedf_fip.c
-> > 
-> > diff --git a/drivers/scsi/qedf/qedf_fip.c b/drivers/scsi/qedf/qedf_fip.c
-> > new file mode 100644
-> > index 0000000..4f185c6
-> > --- /dev/null
-> > +++ b/drivers/scsi/qedf/qedf_fip.c
-> > @@ -0,0 +1,267 @@
-> > +/*
-> > + *  QLogic FCoE Offload Driver
-> > + *  Copyright (c) 2016 Cavium Inc.
-> > + *
-> > + *  This software is available under the terms of the GNU General Public License
-> > + *  (GPL) Version 2, available from the file COPYING in the main directory of
-> > + *  this source tree.
-> > + */
-> > +#include <linux/if_ether.h>
-> > +#include <linux/if_vlan.h>
-> > +#include "qedf.h"
-> > +
-> > +extern const struct qed_fcoe_ops *qed_ops;
-> > +/*
-> > + * FIP VLAN functions that will eventually move to libfcoe.
-> > + */
-> > +
-> > +void qedf_fcoe_send_vlan_req(struct qedf_ctx *qedf)
-> > +{
-> > +	struct sk_buff *skb;
-> > +	char *eth_fr;
-> > +	int fr_len;
-> > +	struct fip_vlan *vlan;
-> > +#define MY_FIP_ALL_FCF_MACS        ((__u8[6]) { 1, 0x10, 0x18, 1, 0, 2 })
-> > +	static u8 my_fcoe_all_fcfs[ETH_ALEN] = MY_FIP_ALL_FCF_MACS;
-> 
-> Do you support VN2VN, too?
-
-Not currently, no.
-
-> 
-> Cheers,
-> 
-> Hannes
-> 
+-Bryant
