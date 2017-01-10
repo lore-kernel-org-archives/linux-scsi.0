@@ -1,25 +1,30 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] scsi: qla2xxx: silent -Wformat-security warning
-Date: Mon, 09 Jan 2017 23:21:38 -0500
-Message-ID: <yq1a8azee99.fsf@oracle.com>
-References: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org>
+Subject: Re: scsi: qla2xxx: Fix apparent cut-n-paste error.
+Date: Mon, 09 Jan 2017 23:24:43 -0500
+Message-ID: <yq160lnee44.fsf@oracle.com>
+References: <20161227181321.35xf5hm4qz3uajmp@codemonkey.org.uk>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20161226132310.3204-1-nicolas.iooss_linux@m4x.org> (Nicolas
-        Iooss's message of "Mon, 26 Dec 2016 14:23:09 +0100")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Nicolas Iooss <nicolas.iooss_linux@m4x.org>
-Cc: qla2xxx-upstream@qlogic.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:45196 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751860AbdAJEY7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 23:24:59 -0500
+In-Reply-To: <20161227181321.35xf5hm4qz3uajmp@codemonkey.org.uk> (Dave Jones's
+        message of "Tue, 27 Dec 2016 13:13:21 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dave Jones <davej@codemonkey.org.uk>
+Cc: linux-scsi@vger.kernel.org, Quinn Tran <quinn.tran@cavium.com>
 
->>>>> "Nicolas" == Nicolas Iooss <nicolas.iooss_linux@m4x.org> writes:
+>>>>> "Dave" == Dave Jones <davej@codemonkey.org.uk> writes:
 
-Nicolas> qla24xx_enable_msix() calls scnprintf() with a non-literal
-Nicolas> format string. This makes clang report -Wformat-security
-Nicolas> warnings when compiling this function:
+Dave> commit 093df73771bac8a37d607c0e705d157a8cef4c5c introduces two
+Dave> bodies of code that look similar but with s/req/rsp/ in the second
+Dave> instance.  But in one case, it looks like this conversion was
+Dave> missed.
 
-Applied 1+2 to 4.11/scsi-queue.
+Applied to 4.10/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
