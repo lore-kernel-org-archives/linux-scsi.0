@@ -1,53 +1,93 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 01/15] virtio_blk: avoid DMA to stack for the sense buffer
-Date: Tue, 10 Jan 2017 16:06:06 +0100
-Message-ID: <1484060780-15592-2-git-send-email-hch@lst.de>
+Subject: [PATCH 09/15] scsi: remove gfp_flags member in scsi_host_cmd_pool
+Date: Tue, 10 Jan 2017 16:06:14 +0100
+Message-ID: <1484060780-15592-10-git-send-email-hch@lst.de>
 References: <1484060780-15592-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:52716 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:53298 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1765191AbdAJPGd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2017 10:06:33 -0500
+        with ESMTP id S1765606AbdAJPGu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2017 10:06:50 -0500
 In-Reply-To: <1484060780-15592-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
 Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-Most users of BLOCK_PC requests allocate the sense buffer on the stack,
-so to avoid DMA to the stack copy them to a field in the heap allocated
-virtblk_req structure.  Without that any attempt at SCSI passthrough I/O,
-including the SG_IO ioctl from userspace will crash the kernel.  Note that
-this includes running tools like hdparm even when the host does not have
-SCSI passthrough enabled.
+When using the slab allocator we already decide at cache creation time if
+an allocation comes from a GFP_DMA pool using the SLAB_CACHE_DMA flag,
+and there is no point passing the kmalloc-family only GFP_DMA flag to
+kmem_cache_alloc.  Drop all the infrastructure for doing so.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/virtio_blk.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi.c | 14 ++++----------
+ 1 file changed, 4 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 5545a67..3c3b8f6 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -56,6 +56,7 @@ struct virtblk_req {
- 	struct virtio_blk_outhdr out_hdr;
- 	struct virtio_scsi_inhdr in_hdr;
- 	u8 status;
-+	u8 sense[SCSI_SENSE_BUFFERSIZE];
- 	struct scatterlist sg[];
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 75455d4..0f93892 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -105,7 +105,6 @@ struct scsi_host_cmd_pool {
+ 	char			*cmd_name;
+ 	char			*sense_name;
+ 	unsigned int		slab_flags;
+-	gfp_t			gfp_mask;
  };
  
-@@ -102,7 +103,8 @@ static int __virtblk_add_req(struct virtqueue *vq,
+ static struct scsi_host_cmd_pool scsi_cmd_pool = {
+@@ -118,7 +117,6 @@ static struct scsi_host_cmd_pool scsi_cmd_dma_pool = {
+ 	.cmd_name	= "scsi_cmd_cache(DMA)",
+ 	.sense_name	= "scsi_sense_cache(DMA)",
+ 	.slab_flags	= SLAB_HWCACHE_ALIGN|SLAB_CACHE_DMA,
+-	.gfp_mask	= __GFP_DMA,
+ };
+ 
+ static DEFINE_MUTEX(host_cmd_pool_mutex);
+@@ -156,12 +154,11 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ 	struct scsi_host_cmd_pool *pool = shost->cmd_pool;
+ 	struct scsi_cmnd *cmd;
+ 
+-	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
++	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask);
+ 	if (!cmd)
+ 		goto fail;
+ 
+-	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
+-					     gfp_mask | pool->gfp_mask);
++	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab, gfp_mask);
+ 	if (!cmd->sense_buffer)
+ 		goto fail_free_cmd;
+ 
+@@ -327,10 +324,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
  	}
  
- 	if (type == cpu_to_virtio32(vq->vdev, VIRTIO_BLK_T_SCSI_CMD)) {
--		sg_init_one(&sense, vbr->req->sense, SCSI_SENSE_BUFFERSIZE);
-+		memcpy(vbr->sense, vbr->req->sense, SCSI_SENSE_BUFFERSIZE);
-+		sg_init_one(&sense, vbr->sense, SCSI_SENSE_BUFFERSIZE);
- 		sgs[num_out + num_in++] = &sense;
- 		sg_init_one(&inhdr, &vbr->in_hdr, sizeof(vbr->in_hdr));
- 		sgs[num_out + num_in++] = &inhdr;
+ 	pool->slab_flags = SLAB_HWCACHE_ALIGN;
+-	if (shost->unchecked_isa_dma) {
++	if (shost->unchecked_isa_dma)
+ 		pool->slab_flags |= SLAB_CACHE_DMA;
+-		pool->gfp_mask = __GFP_DMA;
+-	}
+ 
+ 	if (hostt->cmd_size)
+ 		hostt->cmd_pool = pool;
+@@ -424,7 +419,6 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
+  */
+ int scsi_setup_command_freelist(struct Scsi_Host *shost)
+ {
+-	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
+ 	struct scsi_cmnd *cmd;
+ 
+ 	spin_lock_init(&shost->free_list_lock);
+@@ -437,7 +431,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
+ 	/*
+ 	 * Get one backup command for this host.
+ 	 */
+-	cmd = scsi_host_alloc_command(shost, gfp_mask);
++	cmd = scsi_host_alloc_command(shost, GFP_KERNEL);
+ 	if (!cmd) {
+ 		scsi_put_host_cmd_pool(shost);
+ 		shost->cmd_pool = NULL;
 -- 
 2.1.4
 
