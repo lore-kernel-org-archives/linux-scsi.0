@@ -1,46 +1,34 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [LSF/MM TOPIC ATTEND] kernel booting using remote storage is a
- mess
-Date: Tue, 10 Jan 2017 15:02:49 +0100
-Message-ID: <20170110140249.GC3721@linux-x5ow.site>
-References: <ee864cdd-11c3-63d6-51b7-b23b984fdbc6@suse.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43478 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S938830AbdAJOC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 10 Jan 2017 09:02:57 -0500
-Content-Disposition: inline
-In-Reply-To: <ee864cdd-11c3-63d6-51b7-b23b984fdbc6@suse.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Christoph Hellwig <hch@lst.de>
+Subject: RFC: split scsi passthrough fields out of struct request
+Date: Tue, 10 Jan 2017 16:06:05 +0100
+Message-ID: <1484060780-15592-1-git-send-email-hch@lst.de>
+Return-path: <linux-block-owner@vger.kernel.org>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Lee Duncan <lduncan@suse.com>
-Cc: lsf-pc@lists.linux-foundation.org, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 03, 2017 at 03:44:48PM -0800, Lee Duncan wrote:
-> The process of booting a Linux kernel with remote storage (such as iSCSI
-> or FCoE) seems unnecessarily complicated if end users can even figure
-> out how to do it. This is of course exacerbated by the fact that every
-> company seems to CNA cards differently despite the iBFT standard.
-> 
-> If you add DM-Multipath on top of that, most bets are off on your
-> chances of getting it to reliably work.
-> 
-> I'd like to discuss how we can get this to work in a general way given
-> the world of systemd that we live in now.
+Hi all,
 
-As this applies to FCoE as well as iSCSI I'd be very interested in this
-session as well.
+this series splits the support for SCSI passthrough commands from the
+main struct request used all over the block layer into a separate
+scsi_request structure that drivers that want to support SCSI passthough
+need to embedded as the first thing into their request-private data,
+similar to how we handle NVMe passthrough commands.
 
-Byte,
-	Johannes
+To support this I've added support for that the private data after
+request structure to the legacy request path instead, so that it can
+be treated the same way as the blk-mq path.  Compare to the current
+scsi_cmnd allocator that actually is a major simplification.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+There is one major show-stopper for the series as-is:  Request-based
+device mapper currently allocate the request structures in the stacking
+driver without a knowledge of the queue it's going to be submitte on
+for the legacy request path.  It managed to avoid that issue for the
+blk-mq path, but that currently can't be used on legacy request devices
+for reasons I don't fully understand.  We'll need to figure out how
+sort this out, but maybe that's a good opportunity to drop one or two
+of the three different dm-mpath I/O paths? :)
+
+Note that the first two patches are 4.10 material and have already
+been submitted independently.
