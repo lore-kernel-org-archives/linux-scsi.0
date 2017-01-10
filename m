@@ -1,56 +1,32 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] ibmvscsis: Fix srp_transfer_data fail return code
-Date: Tue, 10 Jan 2017 17:36:11 +0000
-Message-ID: <1484069756.2588.12.camel@sandisk.com>
-References: <1483978880-93705-1-git-send-email-bryantly@linux.vnet.ibm.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 04/11] qla2xxx: Cleanup SRR code.
+Date: Tue, 10 Jan 2017 17:55:38 +0000
+Message-ID: <8C26FF5B-B127-4473-9B5E-C1FF7FC268BA@cavium.com>
+References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482553419-4117-5-git-send-email-himanshu.madhani@cavium.com>
+ <20170109131350.GB4438@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1483978880-93705-1-git-send-email-bryantly@linux.vnet.ibm.com>
+In-Reply-To: <20170109131350.GB4438@infradead.org>
 Content-Language: en-US
-Content-ID: <48EA6ABE91D2BB42B14DC35268FDCB70@sandisk.com>
+Content-ID: <F81E3106AB39F448936954CE38FAF298@namprd07.prod.outlook.com>
 Sender: target-devel-owner@vger.kernel.org
-To: "bryantly@linux.vnet.ibm.com" <bryantly@linux.vnet.ibm.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "bgly@us.ibm.com" <bgly@us.ibm.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "bart.vanassche@gmail.com" <bart.vanassche@gmail.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, 2017-01-09 at 10:21 -0600, Bryant G. Ly wrote:
-> From: "Bryant G. Ly" <bgly@us.ibm.com>
->=20
-> If srp_transfer_data fails within ibmvscsis_write_pending, then
-> the most likely scenario is that the client timed out the op and
-> removed the TCE mapping. Thus it will loop forever retrying the
-> op that is pretty much guaranteed to fail forever. A better return
-> code would be EIO instead of EAGAIN.
->=20
-> Cc: stable@vger.kernel.org
-> Reported-by: Steven Royer <seroyer@linux.vnet.ibm.com>
-> Tested-by: Steven Royer <seroyer@linux.vnet.ibm.com>
-> Signed-off-by: Bryant G. Ly <bgly@us.ibm.com>
-> ---
-> =A0drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 2 +-
-> =A01 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmv=
-scsi_tgt/ibmvscsi_tgt.c
-> index 3d3768a..8fb5c54 100644
-> --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-> @@ -3585,7 +3585,7 @@ static int ibmvscsis_write_pending(struct se_cmd *s=
-e_cmd)
-> =A0			=A0=A0=A0=A0=A0=A0=A01, 1);
-> =A0	if (rc) {
-> =A0		pr_err("srp_transfer_data() failed: %d\n", rc);
-> -		return -EAGAIN;
-> +		return -EIO;
-> =A0	}
-> =A0	/*
-> =A0	=A0* We now tell TCM to add this WRITE CDB directly into the TCM stor=
-age
-
-Using the "Cc: stable@vger.kernel.org" tag is fine but please do not
-add stable@vger.kernel.org to the CC-list of the e-mail header. Anyway,
-thanks for the patch. It has been applied on my for-v4.10 branch.
-
-Bart.=
+SGkgQ2hyaXN0b3BoLCANCg0KDQoNCk9uIDEvOS8xNywgNToxMyBBTSwgIkNocmlzdG9waCBIZWxs
+d2lnIiA8aGNoQGluZnJhZGVhZC5vcmc+IHdyb3RlOg0KDQo+cy9DbGVhbnVwL1JlbW92ZS8gPw0K
+Pg0KPk1heWJlIGFkZCBhIGxpdHRsZSBibHVyYiBvbiB3aHkgd2UgZXZlbiBoYWQgdGhpcyBodWdl
+IHBpbGUgb2YgZGVhZCBjb2RlDQo+ZGVzcGl0ZSBub3QgdXNpbmcgc2VsZWN0aXZlIHJldHJhbnNt
+aXNzaW9ucywgYW5kIHdoeSB5b3UgZG9uJ3QgcGxhbiB0bw0KPnVzZSBpdCBhbnkgdGltZSBzb29u
+Lg0KPg0KPk90aGVyd2lzZSBsb29rcyBmaW5lOg0KPg0KPlJldmlld2VkLWJ5OiBDaHJpc3RvcGgg
+SGVsbHdpZyA8aGNoQGxzdC5kZT4NCg0KVGhhbmtzIGZvciByZXZpZXcuIER1cmluZyBpbml0aWFs
+IGltcGxlbWVudGF0aW9uLCB0YXBlIHN1cHBvcnQgd2FzIGluY2x1ZGVkDQpidXQgbm90IGVuYWJs
+ZWQgYnkgZGVmYXVsdCBvbiB0YXJnZXQuIFNvIGZhciwgd2UgZG9u4oCZdCBzZWUgYW55IHRhcmdl
+dCBjdXN0b21lcnMNClJlcXVlc3RpbmcgdGhpcyBzdXBwb3J0LiBTaW5jZSB0aGlzIGNvZGUgaXMg
+bm90IGJlaW5nIHVzZWQgYWN0aXZlbHkgd2Ugd2FudA0KdG8gcmVtb3ZlIGl0IGFuZCB3ZSB3aWxs
+IGFkZCBiYWNrIGlmIHRoZXJlIGFyZSBhbnkgcmVxdWVzdCBpbiBmdXR1cmUgZm9yIFNSUg0KU3Vw
+cG9ydA0KDQpUaGFua3MsDQpIaW1hbnNodQ0KPg0K
