@@ -1,26 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] qla2xxx: rename {vendor|hba}_indentifer to {vendor|hba}_identifer
-Date: Mon, 09 Jan 2017 23:26:03 -0500
-Message-ID: <yq11swbee1w.fsf@oracle.com>
-References: <20161229222038.29984-1-colin.king@canonical.com>
+Subject: Re: [PATCH] bfa: remove bfa_fcs_mod_s
+Date: Mon, 09 Jan 2017 23:35:49 -0500
+Message-ID: <yq1tw97cz16.fsf@oracle.com>
+References: <1483868475-2949-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:18431 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752779AbdAJE0P (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 23:26:15 -0500
-In-Reply-To: <20161229222038.29984-1-colin.king@canonical.com> (Colin King's
-        message of "Thu, 29 Dec 2016 22:20:38 +0000")
+Received: from userp1040.oracle.com ([156.151.31.81]:47939 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751759AbdAJEf7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 23:35:59 -0500
+In-Reply-To: <1483868475-2949-1-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Sun, 8 Jan 2017 10:41:15 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: qla2xxx-upstream@qlogic.com, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-scsi@vger.kernel.org, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, keescook@chromium.org
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Colin> Rename the Colin> vendor_indentifer and hba_indentifer fields to
-correct spelling.
+Christoph> Just call the functions directly instead of obsfucating the
+Christoph> call chain.  This was in reply to a patch from Kees Cook to
+Christoph> constify the function pointer struct bfa_fcs_mod_s, but it
+Christoph> turns out there is no reason to have this indirection at all.
 
 Applied to 4.11/scsi-queue.
 
