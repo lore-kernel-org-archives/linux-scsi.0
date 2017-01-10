@@ -1,32 +1,43 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 04/11] qla2xxx: Cleanup SRR code.
-Date: Tue, 10 Jan 2017 17:55:38 +0000
-Message-ID: <8C26FF5B-B127-4473-9B5E-C1FF7FC268BA@cavium.com>
-References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
- <1482553419-4117-5-git-send-email-himanshu.madhani@cavium.com>
- <20170109131350.GB4438@infradead.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] scsi: qedi: select UIO
+Date: Tue, 10 Jan 2017 19:44:30 +0100
+Message-ID: <20170110184430.GA4156@linux-x5ow.site>
+References: <20170110152744.3139180-1-arnd@arndb.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <20170109131350.GB4438@infradead.org>
-Content-Language: en-US
-Content-ID: <F81E3106AB39F448936954CE38FAF298@namprd07.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "bart.vanassche@gmail.com" <bart.vanassche@gmail.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170110152744.3139180-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, QLogic-Storage-Upstream@cavium.com, Nilesh Javali <nilesh.javali@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Manish Rangankar <manish.rangankar@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgQ2hyaXN0b3BoLCANCg0KDQoNCk9uIDEvOS8xNywgNToxMyBBTSwgIkNocmlzdG9waCBIZWxs
-d2lnIiA8aGNoQGluZnJhZGVhZC5vcmc+IHdyb3RlOg0KDQo+cy9DbGVhbnVwL1JlbW92ZS8gPw0K
-Pg0KPk1heWJlIGFkZCBhIGxpdHRsZSBibHVyYiBvbiB3aHkgd2UgZXZlbiBoYWQgdGhpcyBodWdl
-IHBpbGUgb2YgZGVhZCBjb2RlDQo+ZGVzcGl0ZSBub3QgdXNpbmcgc2VsZWN0aXZlIHJldHJhbnNt
-aXNzaW9ucywgYW5kIHdoeSB5b3UgZG9uJ3QgcGxhbiB0bw0KPnVzZSBpdCBhbnkgdGltZSBzb29u
-Lg0KPg0KPk90aGVyd2lzZSBsb29rcyBmaW5lOg0KPg0KPlJldmlld2VkLWJ5OiBDaHJpc3RvcGgg
-SGVsbHdpZyA8aGNoQGxzdC5kZT4NCg0KVGhhbmtzIGZvciByZXZpZXcuIER1cmluZyBpbml0aWFs
-IGltcGxlbWVudGF0aW9uLCB0YXBlIHN1cHBvcnQgd2FzIGluY2x1ZGVkDQpidXQgbm90IGVuYWJs
-ZWQgYnkgZGVmYXVsdCBvbiB0YXJnZXQuIFNvIGZhciwgd2UgZG9u4oCZdCBzZWUgYW55IHRhcmdl
-dCBjdXN0b21lcnMNClJlcXVlc3RpbmcgdGhpcyBzdXBwb3J0LiBTaW5jZSB0aGlzIGNvZGUgaXMg
-bm90IGJlaW5nIHVzZWQgYWN0aXZlbHkgd2Ugd2FudA0KdG8gcmVtb3ZlIGl0IGFuZCB3ZSB3aWxs
-IGFkZCBiYWNrIGlmIHRoZXJlIGFyZSBhbnkgcmVxdWVzdCBpbiBmdXR1cmUgZm9yIFNSUg0KU3Vw
-cG9ydA0KDQpUaGFua3MsDQpIaW1hbnNodQ0KPg0K
+On Tue, Jan 10, 2017 at 04:27:29PM +0100, Arnd Bergmann wrote:
+> The newly added qedi driver links against the UIO framework, but can
+> be built without that:
+> 
+> drivers/scsi/qedi/qedi_main.o: In function `qedi_free_uio':
+> qedi_main.c:(.text.qedi_free_uio+0x78): undefined reference to `uio_unregister_device'
+> drivers/scsi/qedi/qedi_main.o: In function `qedi_ll2_recv_thread':
+> qedi_main.c:(.text.qedi_ll2_recv_thread+0x18c): undefined reference to `uio_event_notify'
+> drivers/scsi/qedi/qedi_main.o: In function `__qedi_probe.constprop.1':
+> qedi_main.c:(.text.__qedi_probe.constprop.1+0x1368): undefined reference to `__uio_register_device'
+> 
+> This adds a compile-time dependency.
+> 
+> Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+
+Looks OK,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
