@@ -1,57 +1,52 @@
-From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Tue, 10 Jan 2017 21:12:08 +0100
-Message-ID: <201701102112.08656@pali>
-References: <Pine.LNX.4.44L0.1701101457390.2462-100000@iolanthe.rowland.org>
+From: "Ewan D. Milne" <emilne@redhat.com>
+Subject: Re: [PATCH] scsi: qedi: select UIO
+Date: Tue, 10 Jan 2017 15:19:34 -0500
+Message-ID: <1484079574.15161.91.camel@localhost.localdomain>
+References: <20170110152744.3139180-1-arnd@arndb.de>
+Reply-To: emilne@redhat.com
 Mime-Version: 1.0
-Content-Type: multipart/signed;
-  boundary="nextPart12911033.iJUCitiJ0o";
-  protocol="application/pgp-signature";
-  micalg=pgp-sha1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <Pine.LNX.4.44L0.1701101457390.2462-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dainius =?utf-8?q?Masili=C5=ABnas?= <pastas4-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170110152744.3139180-1-arnd@arndb.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Arnd Bergmann <arnd@arndb.de>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, QLogic-Storage-Upstream@cavium.com, Johannes Thumshirn <jthumshirn@suse.de>, Nilesh Javali <nilesh.javali@cavium.com>, Adheer Chandravanshi <adheer.chandravanshi@qlogic.com>, Manish Rangankar <manish.rangankar@cavium.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
---nextPart12911033.iJUCitiJ0o
-Content-Type: Text/Plain;
-  charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
+On Tue, 2017-01-10 at 16:27 +0100, Arnd Bergmann wrote:
+> The newly added qedi driver links against the UIO framework, but can
+> be built without that:
+> 
+> drivers/scsi/qedi/qedi_main.o: In function `qedi_free_uio':
+> qedi_main.c:(.text.qedi_free_uio+0x78): undefined reference to `uio_unregister_device'
+> drivers/scsi/qedi/qedi_main.o: In function `qedi_ll2_recv_thread':
+> qedi_main.c:(.text.qedi_ll2_recv_thread+0x18c): undefined reference to `uio_event_notify'
+> drivers/scsi/qedi/qedi_main.o: In function `__qedi_probe.constprop.1':
+> qedi_main.c:(.text.__qedi_probe.constprop.1+0x1368): undefined reference to `__uio_register_device'
+> 
+> This adds a compile-time dependency.
+> 
+> Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI driver framework.")
+> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+> ---
+>  drivers/scsi/qedi/Kconfig | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/qedi/Kconfig b/drivers/scsi/qedi/Kconfig
+> index 23ca8a274586..913610f3d274 100644
+> --- a/drivers/scsi/qedi/Kconfig
+> +++ b/drivers/scsi/qedi/Kconfig
+> @@ -2,6 +2,7 @@ config QEDI
+>  	tristate "QLogic QEDI 25/40/100Gb iSCSI Initiator Driver Support"
+>  	depends on PCI && SCSI
+>  	depends on QED
+> +	depends on UIO
+>  	select SCSI_ISCSI_ATTRS
+>  	select QED_LL2
+>  	select QED_ISCSI
 
-On Tuesday 10 January 2017 21:02:09 Alan Stern wrote:
-> Quick summary: READ CAPACITY(10) does not include physical sector
-> size information whereas READ CAPACITY(16) does.  But the kernel
-> uses READ CAPACITY(10) by default for USB drives, because quite a
-> few of them die when given a READ CAPACITY(16) command.
+Randy posted a similar patch back in December but I don't think there
+was ever a reply to Christoph's question about why qedi depends on uio.
 
-Ah :-( Are there lot of "broken" devices for creating blacklist?
-
-> If you can suggest a way to fix this, we'll be glad to hear it.
-
-Tom Yan wrote that smartctl/hdparm "works" because they use the SCSI ATA=20
-PASSTHROUGH command. It is not an option for kernel?
-
-=2D-=20
-Pali Roh=C3=A1r
-pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
-
---nextPart12911033.iJUCitiJ0o
-Content-Type: application/pgp-signature; name=signature.asc 
-Content-Description: This is a digitally signed message part.
-
------BEGIN PGP SIGNATURE-----
-Version: GnuPG v1.4.11 (GNU/Linux)
-
-iEYEABECAAYFAlh1QBgACgkQi/DJPQPkQ1LLsQCgyKWaP5dAh8tcA6lavPdMb24g
-3CQAoI3KVYojQqin/apnY2uaUzcWT/Ks
-=BqmP
------END PGP SIGNATURE-----
-
---nextPart12911033.iJUCitiJ0o--
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+-Ewan
