@@ -1,27 +1,39 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v2] scsi: esas2r: Fix format string type mistakes
-Date: Mon, 09 Jan 2017 23:52:52 -0500
-Message-ID: <yq1a8azcy8r.fsf@oracle.com>
-References: <20170104000140.GA120826@beast>
+Subject: Re: [PATCH 0/4] cxlflash: Enhancements, cleanup and fixes
+Date: Tue, 10 Jan 2017 00:00:55 -0500
+Message-ID: <yq1ziizbjaw.fsf@oracle.com>
+References: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170104000140.GA120826@beast> (Kees Cook's message of "Tue, 3
-        Jan 2017 16:01:40 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Kees Cook <keescook@chromium.org>
-Cc: Bart Van Assche <bart.vanassche@gmail.com>, Bradley Grove <linuxdrivers@attotech.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Emese Revfy <re.emese@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26078 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751168AbdAJFBJ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2017 00:01:09 -0500
+In-Reply-To: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+        (Uma Krishnan's message of "Fri, 6 Jan 2017 08:02:59 -0600")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
->>>>> "Kees" == Kees Cook <keescook@chromium.org> writes:
+>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
 
-Kees> From: Emese Revfy <re.emese@gmail.com> This adds the missing
-Kees> __printf attribute which allows compile time format string
-Kees> checking (and will be used by the coming initify gcc
-Kees> plugin). Additionally, this fixes the warnings exposed by the
-Kees> attribute.
+Uma,
 
-Applied to 4.11/scsi-queue.
+Uma> This patch series includes an enhancement to support a new command
+Uma> queuing model and also cleans up prints throughout the driver. The
+Uma> last patch in the series fixes a racing issue.
+
+Uma> The series is based upon v4.10-rc2, intended for 4.11 and is
+Uma> bisectable.
+
+Uma> Matthew R. Ochs (3):
+Uma>   cxlflash: Refactor context reset to share reset logic cxlflash:
+Uma>   Support SQ Command Mode cxlflash: Cleanup prints
+
+The first three patches in the series were submitted by you but do not
+carry your Signed-off-by:...
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
