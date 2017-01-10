@@ -1,28 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bfa: remove bfa_fcs_mod_s
-Date: Mon, 09 Jan 2017 23:35:49 -0500
-Message-ID: <yq1tw97cz16.fsf@oracle.com>
-References: <1483868475-2949-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH] pmcraid: switch to pci_alloc_irq_vectors
+Date: Mon, 09 Jan 2017 23:47:33 -0500
+Message-ID: <yq1lgujcyhm.fsf@oracle.com>
+References: <1479450496-14331-1-git-send-email-hch@lst.de>
+        <yq1vav6nsp0.fsf@sermon.lab.mkp.net>
+        <20170108150043.GA8072@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:47939 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751759AbdAJEf7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 23:35:59 -0500
-In-Reply-To: <1483868475-2949-1-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Sun, 8 Jan 2017 10:41:15 +0100")
+Received: from aserp1040.oracle.com ([141.146.126.69]:23234 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751759AbdAJEsQ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 9 Jan 2017 23:48:16 -0500
+In-Reply-To: <20170108150043.GA8072@infradead.org> (Christoph Hellwig's
+        message of "Sun, 8 Jan 2017 07:00:43 -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, anil.gurumurthy@qlogic.com, sudarsana.kalluru@qlogic.com, keescook@chromium.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
 
-Christoph> Just call the functions directly instead of obsfucating the
-Christoph> call chain.  This was in reply to a patch from Kees Cook to
-Christoph> constify the function pointer struct bfa_fcs_mod_s, but it
-Christoph> turns out there is no reason to have this indirection at all.
+Christoph> On Tue, Nov 29, 2016 at 11:42:35AM -0500, Martin K. Petersen wrote:
+>> >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>> 
+>> Somebody please review.
+
+Christoph> review ping^2
 
 Applied to 4.11/scsi-queue.
 
