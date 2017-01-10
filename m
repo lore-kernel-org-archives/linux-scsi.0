@@ -1,52 +1,46 @@
-From: Hanjun Guo <guohanjun@huawei.com>
-Subject: [PATCH v2] scsi: remove useless acpi functions in the header file
-Date: Tue, 10 Jan 2017 20:16:43 +0800
-Message-ID: <1484050603-5246-1-git-send-email-guohanjun@huawei.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [LSF/MM TOPIC ATTEND] kernel booting using remote storage is a
+ mess
+Date: Tue, 10 Jan 2017 15:02:49 +0100
+Message-ID: <20170110140249.GC3721@linux-x5ow.site>
+References: <ee864cdd-11c3-63d6-51b7-b23b984fdbc6@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, john.garry@huawei.com, Johannes Thumshirn <jthumshirn@suse.de>, Hanjun Guo <hanjun.guo@linaro.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:43478 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S938830AbdAJOC5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Jan 2017 09:02:57 -0500
+Content-Disposition: inline
+In-Reply-To: <ee864cdd-11c3-63d6-51b7-b23b984fdbc6@suse.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Lee Duncan <lduncan@suse.com>
+Cc: lsf-pc@lists.linux-foundation.org, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>
 
-From: Hanjun Guo <hanjun.guo@linaro.org>
+On Tue, Jan 03, 2017 at 03:44:48PM -0800, Lee Duncan wrote:
+> The process of booting a Linux kernel with remote storage (such as iSCSI
+> or FCoE) seems unnecessarily complicated if end users can even figure
+> out how to do it. This is of course exacerbated by the fact that every
+> company seems to CNA cards differently despite the iBFT standard.
+> 
+> If you add DM-Multipath on top of that, most bets are off on your
+> chances of getting it to reliably work.
+> 
+> I'd like to discuss how we can get this to work in a general way given
+> the world of systemd that we live in now.
 
-commit f1bc1e4c44b1 ("ata: acpi: rework the ata acpi bind support")
-removed scsi_register_acpi_bus_type() and scsi_unregister_acpi_bus_type(),
-but forgot to remove them in the header file, do it now.
+As this applies to FCoE as well as iSCSI I'd be very interested in this
+session as well.
 
-Reviewed-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
----
-v1 -> v2:
- - fix s/head/header
- - add review tags
+Byte,
+	Johannes
 
- include/scsi/scsi.h | 10 ----------
- 1 file changed, 10 deletions(-)
-
-diff --git a/include/scsi/scsi.h b/include/scsi/scsi.h
-index 8ec7c30..a1e1930 100644
---- a/include/scsi/scsi.h
-+++ b/include/scsi/scsi.h
-@@ -29,16 +29,6 @@ enum scsi_timeouts {
-  */
- #define SCAN_WILD_CARD	~0
- 
--#ifdef CONFIG_ACPI
--struct acpi_bus_type;
--
--extern int
--scsi_register_acpi_bus_type(struct acpi_bus_type *bus);
--
--extern void
--scsi_unregister_acpi_bus_type(struct acpi_bus_type *bus);
--#endif
--
- /** scsi_status_is_good - check the status return.
-  *
-  * @status: the status passed up from the driver (including host and
 -- 
-1.7.12.4
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
