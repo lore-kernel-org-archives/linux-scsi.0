@@ -1,21 +1,57 @@
-From: =?UTF-8?Q?Dainius_Masili=C5=ABnas?= <pastas4@gmail.com>
+From: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Tue, 10 Jan 2017 20:09:50 +0000
-Message-ID: <CABhjJhMN31Ooq5ewpBft97w2+UpYM8S_hkpgwWm3a0wBhXW14g@mail.gmail.com>
-References: <201701102031.42361@pali> <Pine.LNX.4.44L0.1701101457390.2462-100000@iolanthe.rowland.org>
+Date: Tue, 10 Jan 2017 21:12:08 +0100
+Message-ID: <201701102112.08656@pali>
+References: <Pine.LNX.4.44L0.1701101457390.2462-100000@iolanthe.rowland.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f49.google.com ([209.85.214.49]:35910 "EHLO
-        mail-it0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S965422AbdAJUJv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2017 15:09:51 -0500
-In-Reply-To: <Pine.LNX.4.44L0.1701101457390.2462-100000@iolanthe.rowland.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/signed;
+  boundary="nextPart12911033.iJUCitiJ0o";
+  protocol="application/pgp-signature";
+  micalg=pgp-sha1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <Pine.LNX.4.44L0.1701101457390.2462-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
+Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
+Cc: SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Dainius =?utf-8?q?Masili=C5=ABnas?= <pastas4-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Alan Stern <stern@rowland.harvard.edu>
-Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-Huh, intersting to know. Why would they die on 16 and not on 10? Also,
-wouldn't the right way to handle it be to use a quirk for broken
-models, then? Since my disk seems to work fine in that regard.
+--nextPart12911033.iJUCitiJ0o
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+
+On Tuesday 10 January 2017 21:02:09 Alan Stern wrote:
+> Quick summary: READ CAPACITY(10) does not include physical sector
+> size information whereas READ CAPACITY(16) does.  But the kernel
+> uses READ CAPACITY(10) by default for USB drives, because quite a
+> few of them die when given a READ CAPACITY(16) command.
+
+Ah :-( Are there lot of "broken" devices for creating blacklist?
+
+> If you can suggest a way to fix this, we'll be glad to hear it.
+
+Tom Yan wrote that smartctl/hdparm "works" because they use the SCSI ATA=20
+PASSTHROUGH command. It is not an option for kernel?
+
+=2D-=20
+Pali Roh=C3=A1r
+pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
+
+--nextPart12911033.iJUCitiJ0o
+Content-Type: application/pgp-signature; name=signature.asc 
+Content-Description: This is a digitally signed message part.
+
+-----BEGIN PGP SIGNATURE-----
+Version: GnuPG v1.4.11 (GNU/Linux)
+
+iEYEABECAAYFAlh1QBgACgkQi/DJPQPkQ1LLsQCgyKWaP5dAh8tcA6lavPdMb24g
+3CQAoI3KVYojQqin/apnY2uaUzcWT/Ks
+=BqmP
+-----END PGP SIGNATURE-----
+
+--nextPart12911033.iJUCitiJ0o--
+--
+To unsubscribe from this list: send the line "unsubscribe linux-usb" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
