@@ -1,39 +1,35 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
+From: Andrew Donnellan <andrew.donnellan@au1.ibm.com>
 Subject: Re: [PATCH 0/4] cxlflash: Enhancements, cleanup and fixes
-Date: Tue, 10 Jan 2017 00:00:55 -0500
-Message-ID: <yq1ziizbjaw.fsf@oracle.com>
+Date: Tue, 10 Jan 2017 16:08:30 +1100
+Message-ID: <d31cdd45-9e6b-466b-d130-1d63995d86d7@au1.ibm.com>
 References: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <yq1ziizbjaw.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26078 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751168AbdAJFBJ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 10 Jan 2017 00:01:09 -0500
-In-Reply-To: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
-        (Uma Krishnan's message of "Fri, 6 Jan 2017 08:02:59 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+In-Reply-To: <yq1ziizbjaw.fsf@oracle.com>
+List-Unsubscribe: <https://lists.ozlabs.org/options/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=unsubscribe>
+List-Archive: <http://lists.ozlabs.org/pipermail/linuxppc-dev/>
+List-Post: <mailto:linuxppc-dev@lists.ozlabs.org>
+List-Help: <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=help>
+List-Subscribe: <https://lists.ozlabs.org/listinfo/linuxppc-dev>,
+ <mailto:linuxppc-dev-request@lists.ozlabs.org?subject=subscribe>
+Errors-To: linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org
+Sender: "Linuxppc-dev"
+ <linuxppc-dev-bounces+glppe-linuxppc-embedded-2=m.gmane.org@lists.ozlabs.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>, linux-scsi@vger.kernel.org, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Ian Munsie <imunsie@au1.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org
 List-Id: linux-scsi@vger.kernel.org
-To: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
->>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+On 10/01/17 16:00, Martin K. Petersen wrote:
+> The first three patches in the series were submitted by you but do not
+> carry your Signed-off-by:...
 
-Uma,
-
-Uma> This patch series includes an enhancement to support a new command
-Uma> queuing model and also cleans up prints throughout the driver. The
-Uma> last patch in the series fixes a racing issue.
-
-Uma> The series is based upon v4.10-rc2, intended for 4.11 and is
-Uma> bisectable.
-
-Uma> Matthew R. Ochs (3):
-Uma>   cxlflash: Refactor context reset to share reset logic cxlflash:
-Uma>   Support SQ Command Mode cxlflash: Cleanup prints
-
-The first three patches in the series were submitted by you but do not
-carry your Signed-off-by:...
+hmm, over in linuxppc-land I don't think we particularly enforce this. 
+Thanks for the reminder!
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+Andrew Donnellan              OzLabs, ADL Canberra
+andrew.donnellan@au1.ibm.com  IBM Australia Limited
