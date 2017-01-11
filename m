@@ -1,102 +1,75 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: [PATCH RFC] sas: convert to bsg-lib
-Date: Wed, 11 Jan 2017 14:54:54 +0100
-Message-ID: <20170111135454.23907-1-jthumshirn@suse.de>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Advanced Format SAT devices show incorrect physical block size
+Date: Wed, 11 Jan 2017 09:54:01 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1701110947410.1900-100000@iolanthe.rowland.org>
+References: <CABhjJhPCFRgpxcBDDCrkcCq0KMenUoOo0+J7je1Q=RM0Rdp+kg@mail.gmail.com>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=UTF-8
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57888 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966936AbdAKN5A (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:57:00 -0500
+Received: from iolanthe.rowland.org ([192.131.102.54]:56836 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S1754338AbdAKOyC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 09:54:02 -0500
+In-Reply-To: <CABhjJhPCFRgpxcBDDCrkcCq0KMenUoOo0+J7je1Q=RM0Rdp+kg@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jthumshirn@suse.de>
+To: =?UTF-8?Q?Dainius_Masili=C5=ABnas?= <pastas4@gmail.com>
+Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-Convert the SAS transport class over to using bsg-lib instead of doing "raw"
-bsg access.
+On Tue, 10 Jan 2017, Dainius Masiliūnas wrote:
 
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi_transport_sas.c | 41 +++++++++++++++------------------------
- 1 file changed, 16 insertions(+), 25 deletions(-)
+> On Tue, Jan 10, 2017 at 9:00 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
+> > It is used for preventing the kernel from issuing a READ CAPACITY(16)
+> > command to the device.  Normally the kernel would do this if the reply
+> > to READ CAPACITY(10) indicated there were more than 2^32 blocks (about
+> > 2 TB).
+> 
+> Ah, OK, that makes sense. Though that's still not a proper solution,
+> and if anything it's confusing for the users: if they plug in a >2 TiB
+> drive and it breaks, the user will assume that it's the fault of the
+> drive and not the USB case, or that the case is incapable of handling
+> such large drives, whereas the true reason is completely different.
 
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 60b651b..b87edfe 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -187,25 +187,19 @@ static void sas_smp_request(struct request_queue *q, struct Scsi_Host *shost,
- 	}
- }
- 
--static void sas_host_smp_request(struct request_queue *q)
--{
--	sas_smp_request(q, (struct Scsi_Host *)q->queuedata, NULL);
--}
--
--static void sas_non_host_smp_request(struct request_queue *q)
--{
--	struct sas_rphy *rphy = q->queuedata;
--	sas_smp_request(q, rphy_to_shost(rphy), rphy);
--}
--
--static void sas_host_release(struct device *dev)
-+static int sas_bsg_dispatch(struct bsg_job *job)
- {
-+	struct device *dev = job->dev;
- 	struct Scsi_Host *shost = dev_to_shost(dev);
--	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
--	struct request_queue *q = sas_host->q;
-+	struct sas_rphy *rphy = dev_to_rphy(dev);
-+	struct request_queue *q = job->req->q;
- 
--	if (q)
--		blk_cleanup_queue(q);
-+	if (rphy)
-+		sas_smp_request(q, rphy_to_shost(rphy), rphy);
-+	else
-+		sas_smp_request(q, shost, NULL);
-+
-+	return 0;
- }
- 
- static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
-@@ -215,7 +209,6 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 	struct device *dev;
- 	char namebuf[20];
- 	const char *name;
--	void (*release)(struct device *);
- 
- 	if (!to_sas_internal(shost->transportt)->f->smp_handler) {
- 		printk("%s can't handle SMP requests\n", shost->hostt->name);
-@@ -223,22 +216,20 @@ static int sas_bsg_initialize(struct Scsi_Host *shost, struct sas_rphy *rphy)
- 	}
- 
- 	if (rphy) {
--		q = blk_init_queue(sas_non_host_smp_request, NULL);
- 		dev = &rphy->dev;
- 		name = dev_name(dev);
--		release = NULL;
- 	} else {
--		q = blk_init_queue(sas_host_smp_request, NULL);
- 		dev = &shost->shost_gendev;
--		snprintf(namebuf, sizeof(namebuf),
--			 "sas_host%d", shost->host_no);
--		name = namebuf;
--		release = sas_host_release;
-+		name = kasprintf(GFP_KERNEL, "sas_host%d", shost->host_no);
-+		if (!name)
-+			return -ENOMEM;
- 	}
-+
-+	q = __scsi_alloc_queue(shost, bsg_request_fn);
- 	if (!q)
- 		return -ENOMEM;
- 
--	error = bsg_register_queue(q, dev, name, release);
-+	error = bsg_setup_queue(dev, queue, name, sas_bsg_dispatch, 0);
- 	if (error) {
- 		blk_cleanup_queue(q);
- 		return -ENOMEM;
--- 
-2.10.2
+I'm not sure what you mean.  If the quirk flag is set and the user 
+plugs in a >2-TB drive, it won't break.  It just won't report the 
+correct size, but at least it will continue to work in a degraded 
+fashion.
+
+> > In theory, I suppose we could change the kernel so that it would
+> > default to READ CAPACITY(16) for devices that report a SCSI level >= 3,
+> > or something along those lines.  In general we hesitate to make changes
+> > of this sort, because they almost always end up breaking _some_
+> > devices -- and if that happens then the change is reverted, with no
+> > exceptions.  Linus has a very strict rule about not breaking working
+> > systems.
+> 
+> Well, the problems are 1) we don't really know how many such
+> misbehaving drives there are, since only those with >2 TiB drives
+> experience it, thus it's hard to know what effect such change would
+> have, and 2) there is no way to make the kernel output the true value
+> even if you know your drive is working fine.
+
+We could add that easily enough: a usb-storage quirk to set the 
+NEEDS_CAP16 flag.  But it would be better if this wasn't necessary.
+
+> And when a drive breaks due to the 16 command, is there a way to
+> revive it, perhaps by trying to reconnect? That would allow the kernel
+> to try it first, see that it failed after that command was sent, then
+> issue a warning in the log saying that this device should have a
+> quirk, reset and continue with the quirk applied.
+
+I'm not sure what you mean by "trying to reconnect".  The recovery
+method most likely to work is to unplug the USB cable and then
+re-attach it.  Issuing a reset might work in some cases and not in 
+others; we have seen examples of devices that crash extremely hard when 
+given something they don't know how to handle.
+
+> Also, is `sg_readcap -16` a proper test to determine whether the
+> device works as expected?
+
+You mean, to determine whether the device can handle a READ 
+CAPACITY(16) command?  Yes, since that is the command it sends.
+
+Alan Stern
 
