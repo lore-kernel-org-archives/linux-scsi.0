@@ -1,94 +1,56 @@
-From: Colin Ian King <colin.king@canonical.com>
-Subject: Re: [PATCH v1] scsi: ufs: fix arguments order some trace calls
-Date: Wed, 11 Jan 2017 09:30:35 +0000
-Message-ID: <bda68aed-312b-cc46-ab97-6368a50d94d4@canonical.com>
-References: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 14/15] block/bsg: move queue creation into bsg_setup_queue
+Date: Wed, 11 Jan 2017 10:37:13 +0100
+Message-ID: <69ad74c4-2741-058a-97fa-3aa2b69571f4@suse.de>
+References: <1484060780-15592-1-git-send-email-hch@lst.de>
+ <1484060780-15592-15-git-send-email-hch@lst.de>
+ <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de>
+ <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de> <20170111090112.GA7239@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from youngberry.canonical.com ([91.189.89.112]:46561 "EHLO
-        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1763229AbdAKJbf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 04:31:35 -0500
-In-Reply-To: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170111090112.GA7239@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>, vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, open list <linux-kernel@vger.kernel.org>
 
-On 11/01/17 00:48, Subhash Jadavani wrote:
-> Colin Ian King <colin.king@canonical.com> reported that with
-> commit 7ff5ab473633 ("scsi: ufs: add tracing support") static analysis
-> is reporting that we may have swapped arguments on calls to:
->     trace_ufshcd_runtime_resume,
->     trace_ufshcd_runtime_suspend,
->     trace_ufshcd_system_suspend,
->     trace_ufshcd_system_resume,
-> and trace_ufshcd_init
+On 01/11/2017 10:01 AM, Christoph Hellwig wrote:
+> On Wed, Jan 11, 2017 at 09:59:17AM +0100, Hannes Reinecke wrote:
+>> I'd advocate to discuss this at LSF.
+>> Now that Mike moved the bio-based mpath stuff back in things got even
+>> more complex.
 > 
-> Where:
->     hba->uic_link_state is passed to dev_state
->     hba->curr_dev_pwr_mode is passed to link_state
+> Yeah.  If we'd _only_ have bio based support it would simplify things
+> a lot, but as a third parallel path it's not exactly making things easier.
 > 
-> This wasn't intentional so it's a bug. This change fixed this bug.
+>> I'll be posting a patchset for reimplementing multipath as a stand-alone
+>> driver shortly; that'll give us a good starting point on how we want
+>> multipath to evolve.
+>>
+>> Who knows; we might even manage to move multipath out of device-mapper
+>> altogether.
+>> That would make Mike very happy, and I wouldn't mind, either :-)
 > 
-> Reported-by: Colin Ian King <colin.king@canonical.com>
-> Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
-> ---
->  drivers/scsi/ufs/ufshcd.c | 10 +++++-----
->  1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-> index be6322e..6b56eb0 100644
-> --- a/drivers/scsi/ufs/ufshcd.c
-> +++ b/drivers/scsi/ufs/ufshcd.c
-> @@ -5805,7 +5805,7 @@ static int ufshcd_probe_hba(struct ufs_hba *hba)
->  
->  	trace_ufshcd_init(dev_name(hba->dev), ret,
->  		ktime_to_us(ktime_sub(ktime_get(), start)),
-> -		hba->uic_link_state, hba->curr_dev_pwr_mode);
-> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	return ret;
->  }
->  
-> @@ -6819,7 +6819,7 @@ int ufshcd_system_suspend(struct ufs_hba *hba)
->  out:
->  	trace_ufshcd_system_suspend(dev_name(hba->dev), ret,
->  		ktime_to_us(ktime_sub(ktime_get(), start)),
-> -		hba->uic_link_state, hba->curr_dev_pwr_mode);
-> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	if (!ret)
->  		hba->is_sys_suspended = true;
->  	return ret;
-> @@ -6852,7 +6852,7 @@ int ufshcd_system_resume(struct ufs_hba *hba)
->  out:
->  	trace_ufshcd_system_resume(dev_name(hba->dev), ret,
->  		ktime_to_us(ktime_sub(ktime_get(), start)),
-> -		hba->uic_link_state, hba->curr_dev_pwr_mode);
-> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_system_resume);
-> @@ -6880,7 +6880,7 @@ int ufshcd_runtime_suspend(struct ufs_hba *hba)
->  out:
->  	trace_ufshcd_runtime_suspend(dev_name(hba->dev), ret,
->  		ktime_to_us(ktime_sub(ktime_get(), start)),
-> -		hba->uic_link_state, hba->curr_dev_pwr_mode);
-> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_runtime_suspend);
-> @@ -6921,7 +6921,7 @@ int ufshcd_runtime_resume(struct ufs_hba *hba)
->  out:
->  	trace_ufshcd_runtime_resume(dev_name(hba->dev), ret,
->  		ktime_to_us(ktime_sub(ktime_get(), start)),
-> -		hba->uic_link_state, hba->curr_dev_pwr_mode);
-> +		hba->curr_dev_pwr_mode, hba->uic_link_state);
->  	return ret;
->  }
->  EXPORT_SYMBOL(ufshcd_runtime_resume);
-> 
-Thanks, looks good to me.
+> Heh.  I'm curious how you want to do that while keeping existing setups
+> working, though.
 
-Acked-by: Colin Ian King <colin.king@canonical.com>
+which will become challenging, indeed.
+
+ATM it's just a testbed on how things could work; we've got most of the
+required infrastucture in the kernel nowadays, so that we can just drop
+most of the complexity from the present multipath-tools mess.
+
+In the end it might even boil down to update the existing device-mapper
+multipath implementation. We'll see.
+
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
