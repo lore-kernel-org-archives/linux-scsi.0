@@ -1,72 +1,73 @@
-From: James Smart <james.smart@broadcom.com>
-Subject: Re: [PATCH] lpfc: avoid double free of resource identifiers
-Date: Wed, 11 Jan 2017 11:47:49 -0800
-Message-ID: <43af5f62-2e79-62c6-c045-5da0cff18e10@broadcom.com>
-References: <20170111100642.18573-1-jthumshirn@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH 02/11] qla2xxx: Cleanup TMF code translation from
+ qla_target.
+Date: Wed, 11 Jan 2017 12:05:17 -0800
+Message-ID: <c4a6fb9b-5523-5070-50ed-b869a4686262@sandisk.com>
+References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482553419-4117-3-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wj0-f176.google.com ([209.85.210.176]:36213 "EHLO
-        mail-wj0-f176.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1757098AbdAKTy1 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 14:54:27 -0500
-Received: by mail-wj0-f176.google.com with SMTP id ew7so96466367wjc.3
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 11:54:26 -0800 (PST)
-In-Reply-To: <20170111100642.18573-1-jthumshirn@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1482553419-4117-3-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, target-devel@vger.kernel.org, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dick Kennedy <dick.kennedy@broadcom.com>, Roberto Sassu <rsassu@suse.de>
 
-looks good. Thanks
+On 12/23/2016 08:23 PM, Himanshu Madhani wrote:
+>  static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
+> -	uint8_t tmr_func, uint32_t tag)
+> +	uint16_t tmr_func, uint32_t tag)
+>  {
+>  	struct qla_tgt_sess *sess = mcmd->sess;
+>  	struct se_cmd *se_cmd = &mcmd->se_cmd;
+> +	int transl_tmr_func;
+> +
+> +	switch (tmr_func) {
+> +	case QLA_TGT_ABTS:
+> +		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_ABORT_TASK;
+> +		break;
+> +	case QLA_TGT_2G_ABORT_TASK:
+> +		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_ABORT_TASK;
+> +		break;
+> +	case QLA_TGT_CLEAR_ACA:
+> +		pr_debug("%ld: CLEAR_ACA received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_CLEAR_ACA;
+> +		break;
+> +	case QLA_TGT_TARGET_RESET:
+> +		pr_debug("%ld: TARGET_RESET received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_TARGET_WARM_RESET;
+> +		break;
+> +	case QLA_TGT_LUN_RESET:
+> +		pr_debug("%ld: LUN_RESET received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_LUN_RESET;
+> +		break;
+> +	case QLA_TGT_CLEAR_TS:
+> +		pr_debug("%ld: CLEAR_TS received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_CLEAR_TASK_SET;
+> +		break;
+> +	case QLA_TGT_ABORT_TS:
+> +		pr_debug("%ld: ABORT_TS received\n", sess->vha->host_no);
+> +		transl_tmr_func = TMR_ABORT_TASK_SET;
+> +		break;
+> +	default:
+> +		pr_debug("%ld: Unknown task mgmt fn 0x%x\n",
+> +		    sess->vha->host_no, tmr_func);
+> +		return -ENOSYS;
+> +		break;
+> +	}
+>  
+>  	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
+>  			tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
+Hello Himanshu and Quinn,
 
--- james
+This patch introduces a new compiler warning when building with W=1,
+namely that transl_tmr_func is set but not used. Please review the code.
 
+Thanks,
 
-On 1/11/2017 2:06 AM, Johannes Thumshirn wrote:
-> From: Roberto Sassu <rsassu@suse.de>
->
-> Set variables initialized in lpfc_sli4_alloc_resource_identifiers() to NULL
-> if an error occurred. Otherwise, lpfc_sli4_driver_resource_unset() attempts
-> to free the memory again.
->
-> Signed-off-by: Roberto Sassu <rsassu@suse.de>
-> Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
-> ---
->   drivers/scsi/lpfc/lpfc_sli.c | 7 +++++++
->   1 file changed, 7 insertions(+)
->
-> diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-> index 4faa767..a78a3df 100644
-> --- a/drivers/scsi/lpfc/lpfc_sli.c
-> +++ b/drivers/scsi/lpfc/lpfc_sli.c
-> @@ -5954,18 +5954,25 @@ lpfc_sli4_alloc_resource_identifiers(struct lpfc_hba *phba)
->   
->    free_vfi_bmask:
->   	kfree(phba->sli4_hba.vfi_bmask);
-> +	phba->sli4_hba.vfi_bmask = NULL;
->    free_xri_ids:
->   	kfree(phba->sli4_hba.xri_ids);
-> +	phba->sli4_hba.xri_ids = NULL;
->    free_xri_bmask:
->   	kfree(phba->sli4_hba.xri_bmask);
-> +	phba->sli4_hba.xri_bmask = NULL;
->    free_vpi_ids:
->   	kfree(phba->vpi_ids);
-> +	phba->vpi_ids = NULL;
->    free_vpi_bmask:
->   	kfree(phba->vpi_bmask);
-> +	phba->vpi_bmask = NULL;
->    free_rpi_ids:
->   	kfree(phba->sli4_hba.rpi_ids);
-> +	phba->sli4_hba.rpi_ids = NULL;
->    free_rpi_bmask:
->   	kfree(phba->sli4_hba.rpi_bmask);
-> +	phba->sli4_hba.rpi_bmask = NULL;
->    err_exit:
->   	return rc;
->   }
-
+Bart.
