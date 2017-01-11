@@ -1,46 +1,67 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: [PATCH] ibmvscsis: Fix max transfer length
-Date: Wed, 11 Jan 2017 13:32:06 -0600
-Message-ID: <1484163126-65727-1-git-send-email-bryantly@linux.vnet.ibm.com>
-References: <1484161010.2619.16.camel@sandisk.com>
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1484161010.2619.16.camel@sandisk.com>
-Sender: stable-owner@vger.kernel.org
-To: Bart.VanAssche@sandisk.com
-Cc: nab@linux-iscsi.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 1/2] qla2xxx: fix MSI-X vector affinity
+Date: Wed, 11 Jan 2017 19:35:45 +0000
+Message-ID: <B1B3E24D-A3BF-4F99-A0CC-3EAA46F5F15C@cavium.com>
+References: <1484153746-19406-1-git-send-email-hch@lst.de>
+ <1484153746-19406-2-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0053.outbound.protection.outlook.com ([104.47.41.53]:14112
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932192AbdAKTfs (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Jan 2017 14:35:48 -0500
+In-Reply-To: <1484153746-19406-2-git-send-email-hch@lst.de>
+Content-Language: en-US
+Content-ID: <63E12685759913429060082F09BE5CE4@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Current code incorrectly calculates the max transfer length, since
-it is assuming a 4k page table, but ppc64 all run on 64k page tables.
-
-Cc: stable@vger.kernel.org
-Reported-by: Steven Royer <seroyer@linux.vnet.ibm.com>
-Tested-by: Steven Royer <seroyer@linux.vnet.ibm.com>
-Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
----
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 8fb5c54..3b4d36b 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -46,6 +46,7 @@
- 
- #define	INITIAL_SRP_LIMIT	800
- #define	DEFAULT_MAX_SECTORS	256
-+#define MAX_TXU			1024
- 
- static uint max_vdma_size = MAX_H_COPY_RDMA;
- 
-@@ -1443,7 +1444,7 @@ static long ibmvscsis_adapter_info(struct scsi_info *vscsi,
- 	info->mad_version = cpu_to_be32(MAD_VERSION_1);
- 	info->os_type = cpu_to_be32(LINUX);
- 	memset(&info->port_max_txu[0], 0, sizeof(info->port_max_txu));
--	info->port_max_txu[0] = cpu_to_be32(128 * PAGE_SIZE);
-+	info->port_max_txu[0] = cpu_to_be32(MAX_TXU);
- 
- 	dma_wmb();
- 	rc = h_copy_rdma(sizeof(*info), vscsi->dds.window[LOCAL].liobn,
--- 
-2.5.4 (Apple Git-61)
+T24gMS8xMS8xNywgODo1NSBBTSwgIkNocmlzdG9waCBIZWxsd2lnIiA8aGNoQGxzdC5kZT4gd3Jv
+dGU6DQoNCg0KPlRoZSBmaXJzdCB0d28gb3IgdGhyZWUgdmVjdG9ycyBpbiBxbGEyeHh4IGFkYXB0
+ZXIgYXJlIGdsb2JhbCBhbmQNCj5ub3QgYXNzb2NpYXRlZCB3aXRoIGEgc3BlY2lmaWMgcXVldWUu
+ICBUaGV5IHNob3VsZCBub3QgaGF2ZSBJUlENCj5hZmZpbml0eSBhc3NpZ25lZC4NCj4NCj5TaWdu
+ZWQtb2ZmLWJ5OiBDaHJpc3RvcGggSGVsbHdpZyA8aGNoQGxzdC5kZT4NCj4tLS0NCj4gZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oIHwgIDIgKy0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgv
+cWxhX2lzci5jIHwgMTUgKysrKysrKysrKystLS0tDQo+IDIgZmlsZXMgY2hhbmdlZCwgMTIgaW5z
+ZXJ0aW9ucygrKSwgNSBkZWxldGlvbnMoLSkNCj4NCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3Np
+L3FsYTJ4eHgvcWxhX2RlZi5oIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oDQo+aW5k
+ZXggZWY2OTliNi4uZTVlMDMwMSAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfZGVmLmgNCj4rKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGVmLmgNCj5AQCAtMjcz
+Miw3ICsyNzMyLDcgQEAgc3RydWN0IGlzcF9vcGVyYXRpb25zIHsNCj4gI2RlZmluZSBRTEFfTVNJ
+WF9GV19NT0RFKG0pCSgoKG0pICYgKEJJVF83fEJJVF84fEJJVF85KSkgPj4gNykNCj4gI2RlZmlu
+ZSBRTEFfTVNJWF9GV19NT0RFXzEobSkJKFFMQV9NU0lYX0ZXX01PREUobSkgPT0gMSkNCj4gDQo+
+LSNkZWZpbmUgUUxBX01TSVhfREVGQVVMVAkJMHgwMA0KPisjZGVmaW5lIFFMQV9CQVNFX1ZFQ1RP
+UlMJMiAvKiBkZWZhdWx0ICsgUlNQICovDQo+ICNkZWZpbmUgUUxBX01TSVhfUlNQX1EJCQkweDAx
+DQo+ICNkZWZpbmUgUUxBX0FUSU9fVkVDVE9SCQkweDAyDQo+ICNkZWZpbmUgUUxBX01TSVhfUVBB
+SVJfTVVMVElRX1JTUF9RCTB4MDMNCj5kaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgv
+cWxhX2lzci5jIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5jDQo+aW5kZXggYjljMTEz
+ZS4uNWYzODlhMyAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMN
+Cj4rKysgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj5AQCAtMzAxOCwxMyArMzAx
+OCwyMCBAQCBzdGF0aWMgY29uc3Qgc3RydWN0IHFsYV9pbml0X21zaXhfZW50cnkgcWxhODJ4eF9t
+c2l4X2VudHJpZXNbXSA9IHsNCj4gc3RhdGljIGludA0KPiBxbGEyNHh4X2VuYWJsZV9tc2l4KHN0
+cnVjdCBxbGFfaHdfZGF0YSAqaGEsIHN0cnVjdCByc3BfcXVlICpyc3ApDQo+IHsNCj4tI2RlZmlu
+ZSBNSU5fTVNJWF9DT1VOVAkyDQo+IAlpbnQgaSwgcmV0Ow0KPiAJc3RydWN0IHFsYV9tc2l4X2Vu
+dHJ5ICpxZW50cnk7DQo+IAlzY3NpX3FsYV9ob3N0X3QgKnZoYSA9IHBjaV9nZXRfZHJ2ZGF0YSho
+YS0+cGRldik7DQo+KwlzdHJ1Y3QgaXJxX2FmZmluaXR5IGRlc2MgPSB7DQo+KwkJLnByZV92ZWN0
+b3JzID0gUUxBX0JBU0VfVkVDVE9SUywNCj4rCX07DQo+Kw0KPisJaWYgKFFMQV9UR1RfTU9ERV9F
+TkFCTEVEKCkgJiYgSVNfQVRJT19NU0lYX0NBUEFCTEUoaGEpKQ0KPisJCWRlc2MucHJlX3ZlY3Rv
+cnMrKzsNCj4rDQo+KwlyZXQgPSBwY2lfYWxsb2NfaXJxX3ZlY3RvcnNfYWZmaW5pdHkoaGEtPnBk
+ZXYsIFFMQV9CQVNFX1ZFQ1RPUlMsDQo+KwkJCWhhLT5tc2l4X2NvdW50LCBQQ0lfSVJRX01TSVgg
+fCBQQ0lfSVJRX0FGRklOSVRZLA0KPisJCQkmZGVzYyk7DQo+IA0KPi0JcmV0ID0gcGNpX2FsbG9j
+X2lycV92ZWN0b3JzKGhhLT5wZGV2LCBNSU5fTVNJWF9DT1VOVCwgaGEtPm1zaXhfY291bnQsDQo+
+LQkJCQkgICAgUENJX0lSUV9NU0lYIHwgUENJX0lSUV9BRkZJTklUWSk7DQo+IAlpZiAocmV0IDwg
+MCkgew0KPiAJCXFsX2xvZyhxbF9sb2dfZmF0YWwsIHZoYSwgMHgwMGM3LA0KPiAJCSAgICAiTVNJ
+LVg6IEZhaWxlZCB0byBlbmFibGUgc3VwcG9ydCwgIg0KPkBAIC0zMDc1LDcgKzMwODIsNyBAQCBx
+bGEyNHh4X2VuYWJsZV9tc2l4KHN0cnVjdCBxbGFfaHdfZGF0YSAqaGEsIHN0cnVjdCByc3BfcXVl
+ICpyc3ApDQo+IAl9DQo+IA0KPiAJLyogRW5hYmxlIE1TSS1YIHZlY3RvcnMgZm9yIHRoZSBiYXNl
+IHF1ZXVlICovDQo+LQlmb3IgKGkgPSAwOyBpIDwgKFFMQV9NU0lYX1JTUF9RICsgMSk7IGkrKykg
+ew0KPisJZm9yIChpID0gMDsgaSA8IFFMQV9CQVNFX1ZFQ1RPUlM7IGkrKykgew0KPiAJCXFlbnRy
+eSA9ICZoYS0+bXNpeF9lbnRyaWVzW2ldOw0KPiAJCXFlbnRyeS0+aGFuZGxlID0gcnNwOw0KPiAJ
+CXJzcC0+bXNpeCA9IHFlbnRyeTsNCj4tLSANCj4yLjEuNA0KPg0KDQpUaGFua3MgZm9yIGNsZWFu
+dXAuIExvb2tzIEdvb2QuDQoNCkFja2VkLWJ5OiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5t
+YWRoYW5pQGNhdml1bS5jb20+DQo+DQo=
