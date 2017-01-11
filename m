@@ -1,34 +1,47 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 14/15] block/bsg: move queue creation into
-        bsg_setup_queue
-Date: Wed, 11 Jan 2017 10:01:12 +0100
-Message-ID: <20170111090112.GA7239@lst.de>
-References: <1484060780-15592-1-git-send-email-hch@lst.de> <1484060780-15592-15-git-send-email-hch@lst.de> <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de> <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de>
+From: John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH] libsas: fix \"sysfs group not found\" warnings at port
+ teardown time
+Date: Wed, 11 Jan 2017 09:10:56 +0000
+Message-ID: <e0b131de-baa8-f6fe-6bf0-47f140df6a82@huawei.com>
+References: <20150520220858.15073.8982.stgit@dwillia2-desk3.amr.corp.intel.com>
+ <a0be3adc-b9e9-86cc-773d-d209834183a9@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset="utf-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from szxga03-in.huawei.com ([119.145.14.66]:8834 "EHLO
+        szxga03-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1756370AbdAKJLR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 04:11:17 -0500
+In-Reply-To: <a0be3adc-b9e9-86cc-773d-d209834183a9@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: seeteena <s1seetee@linux.vnet.ibm.com>, dan.j.williams@intel.com, linux-scsi@vger.kernel.org
+Cc: Yijing Wang <wangyijing@huawei.com>
 
-On Wed, Jan 11, 2017 at 09:59:17AM +0100, Hannes Reinecke wrote:
-> I'd advocate to discuss this at LSF.
-> Now that Mike moved the bio-based mpath stuff back in things got even
-> more complex.
+On 11/01/2017 06:29, seeteena wrote:
+> Hi All,
+>
+> Let me know if this patch is accepted in Upsteam? let me know the commit id
+>
 
-Yeah.  If we'd _only_ have bio based support it would simplify things
-a lot, but as a third parallel path it's not exactly making things easier.
+If it is the patch I think it is then it is not upstream 
+(https://patchwork.kernel.org/patch/6450731/).
 
-> I'll be posting a patchset for reimplementing multipath as a stand-alone
-> driver shortly; that'll give us a good starting point on how we want
-> multipath to evolve.
-> 
-> Who knows; we might even manage to move multipath out of device-mapper
-> altogether.
-> That would make Mike very happy, and I wouldn't mind, either :-)
+I did propose a patch at the end of last year which fixed the warn, but 
+it introduced some other potential hotplug issue.
 
-Heh.  I'm curious how you want to do that while keeping existing setups
-working, though.
+An engineer in my organisation proposed a re-work of libsas to fix all 
+the hotplug issues, but it was not pushed and never got far:
+https://lkml.org/lkml/2016/9/12/1225
+
+John
+
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>
+>
+
+
