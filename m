@@ -1,120 +1,79 @@
 From: Eric Farman <farman@linux.vnet.ibm.com>
 Subject: [PATCH] virtio_scsi: Reject commands when virtqueue is broken
-Date: Wed, 11 Jan 2017 17:02:02 -0500
-Message-ID: <1484172122-18882-2-git-send-email-farman@linux.vnet.ibm.com>
-References: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
+Date: Wed, 11 Jan 2017 17:02:01 -0500
+Message-ID: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42207 "EHLO
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:43226 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S935077AbdAKWCM (ORCPT
+        by vger.kernel.org with ESMTP id S935077AbdAKWCJ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 17:02:12 -0500
-Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0BLvRtM013890
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:11 -0500
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27wsxxq8md-1
+        Wed, 11 Jan 2017 17:02:09 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0BLra0p135580
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:08 -0500
+Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27wsfd933k-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:11 -0500
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:08 -0500
 Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <farman@linux.vnet.ibm.com>;
-        Wed, 11 Jan 2017 15:02:10 -0700
-In-Reply-To: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
+        Wed, 11 Jan 2017 17:02:08 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, Eric Farman <farman@linux.vnet.ibm.com>
 
-In the case of a graceful set of detaches, where the virtio-scsi-ccw
-disk is removed from the guest prior to the controller, the guest
-behaves quite normally.  Specifically, the detach gets us into
-sd_sync_cache to issue a Synchronize Cache(10) command, which
-immediately fails (and is retried a couple of times) because the
-device has been removed.  Later, the removal of the controller
-sees two CRWs presented, but there's no further indication of the
-removal from the guest viewpoint.
+While doing some disruptive testing with QEMU/KVM, I have encountered some
+guest problems during hot unplug of virtio-scsi devices depending on the
+order of operations in which they are performed.  The following notes
+describe my setup (s390x), and how I'm able to reproduce the error and
+test the attached fix.
 
- [   17.217458] sd 0:0:0:0: [sda] Synchronizing SCSI cache
- [   17.219257] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
- [   21.449400] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
- [   21.449406] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
+In both the "working" and "failing" case, the detaches appear to work
+just fine.  Any sign of problems only begin to appear later based on
+other actions I may perform, such as powering off the guest system.
 
-However, on s390, the SCSI disks can be removed "by surprise" when
-an entire controller (host) is removed and all associated disks
-are removed via the loop in scsi_forget_host.  The same call to
-sd_sync_cache is made, but because the controller has already
-been removed, the Synchronize Cache(10) command is neither issued
-(and then failed) nor rejected.
+Host:
+ # lsscsi -g | grep sg6
+ [6:0:6:1074151456]disk    IBM      2107900          .217  /dev/sdg   /dev/sg6 
 
-That the I/O isn't returned means the guest cannot have other devices
-added nor removed, and other tasks (such as shutdown or reboot) issued
-by the guest will not complete either.  The virtio ring has already
-been marked as broken (via virtio_break_device in virtio_ccw_remove),
-but we still attempt to queue the command only to have it remain there.
-The calling sequence provides a bit of distinction for us:
+QEMU:
+ - Include the following parameters
+    -device virtio-scsi-ccw,id=scsi0
+    -drive file=/dev/sg6,if=none,id=drive0,format=raw
+    -device scsi-generic,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=drive0,id=hostdev6
+ - QMP commands (working)
+    - device_del hostdev6
+    - device_del scsi0
+ - QMP commands (failing)
+    - device_del scsi0
 
-  virtscsi_queuecommand()
-   -> virtscsi_kick_cmd()
-    -> virtscsi_add_cmd()
-     -> virtqueue_add_sgs()
-      -> virtqueue_add()
-         if success
-           return 0
-         elseif vq->broken or vring_mapping_error()
-           return -EIO
-         else
-           return -ENOSPC
+Libvirt:
+ - Note: A preventative fix went into Libvirt 2.5.0
+   (libvirt commit 655429a0d4a5 ("qemu: Prevent detaching SCSI controller used by hostdev"))
+ - Include the following XML
+    # cat scsicontroller.xml 
+        <controller type='scsi' model='virtio-scsi' index='0'/>
+    # cat scsihostdev.xml 
+        <hostdev mode='subsystem' type='scsi'>
+          <source>
+            <adapter name='scsi_host6'/>
+            <address bus='0' target='6' unit='1074151456'/>
+          </source>
+        </hostdev>
+ - virsh commands (working)
+    - virsh detach-device guest scsihostdev.xml
+    - virsh detach-device guest scsicontroller.xml
+ - virsh commands (failing)
+    - virsh detach-device guest scsicontroller.xml
 
-A return of ENOSPC is generally a temporary condition, so returning
-"host busy" from virtscsi_queuecommand makes sense here, to have it
-redriven in a moment or two.  But the EIO return code is more of a
-permanent error and so it would be wise to return the I/O itself and
-allow the calling thread to finish gracefully.  The result is these
-four kernel messages in the guest (the fourth one does not occur
-prior to this patch):
+Eric Farman (1):
+  virtio_scsi: Reject commands when virtqueue is broken
 
- [   22.921562] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
- [   22.921580] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
- [   22.921978] sd 0:0:0:0: [sda] Synchronizing SCSI cache
- [   22.921993] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-
-I opted to fill in the same response data that is returned from the
-more graceful device detach, where the disk device is removed prior
-to the controller device.
-
-Signed-off-by: Eric Farman <farman@linux.vnet.ibm.com>
----
  drivers/scsi/virtio_scsi.c | 8 +++++++-
  1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index ec91bd0..78d50ca 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -535,6 +535,7 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
- 	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
- 	int req_size;
-+	int ret;
- 
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
- 
-@@ -562,8 +563,13 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 		req_size = sizeof(cmd->req.cmd);
- 	}
- 
--	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
-+	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
-+	if (ret == -EIO) {
-+		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
-+		virtscsi_complete_cmd(vscsi, cmd);
-+	} else if (ret != 0) {
- 		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
- 	return 0;
- }
- 
 -- 
 1.9.1
 
