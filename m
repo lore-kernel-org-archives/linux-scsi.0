@@ -1,51 +1,79 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Wed, 11 Jan 2017 17:45:08 +0100
-Message-ID: <28c79600-3ed2-727d-7c5a-354c2684ace6@suse.de>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <1484150893.2619.1.camel@sandisk.com> <20170111161238.GA18881@infradead.org>
- <2aff05af-5e83-7d3d-f879-2cce02b6d88c@suse.de>
- <1484151982.2619.6.camel@sandisk.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1484151982.2619.6.camel@sandisk.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>
-Cc: "Linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "keith.busch@intel.com" <keith.busch@intel.com>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "sagi@grimberg.me" <sagi@grimberg.me>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 1/2] qla2xxx: fix MSI-X vector affinity
+Date: Wed, 11 Jan 2017 17:55:45 +0100
+Message-ID: <1484153746-19406-2-git-send-email-hch@lst.de>
+References: <1484153746-19406-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([198.137.202.9]:35112 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1755866AbdAKQzx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 11:55:53 -0500
+In-Reply-To: <1484153746-19406-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: himanshu.madhani@cavium.com
+Cc: linux-scsi@vger.kernel.org
 
-On 01/11/2017 05:26 PM, Bart Van Assche wrote:
-> On Wed, 2017-01-11 at 17:22 +0100, Hannes Reinecke wrote:
->> On 01/11/2017 05:12 PM, hch@infradead.org wrote:
->>> On Wed, Jan 11, 2017 at 04:08:31PM +0000, Bart Van Assche wrote:
->>>> A typical Ethernet network adapter delays the generation of an
->>>> interrupt
->>>> after it has received a packet. A typical block device or HBA does not
->>>> delay
->>>> the generation of an interrupt that reports an I/O completion.
->>>
->>> NVMe allows for configurable interrupt coalescing, as do a few modern
->>> SCSI HBAs.
->>
->> Essentially every modern SCSI HBA does interrupt coalescing; otherwise
->> the queuing interface won't work efficiently.
-> 
-> Hello Hannes,
-> 
-> The first e-mail in this e-mail thread referred to measurements against a
-> block device for which interrupt coalescing was not enabled. I think that
-> the measurements have to be repeated against a block device for which
-> interrupt coalescing is enabled.
-> 
-Guess what we'll be doing in the next few days ...
+The first two or three vectors in qla2xxx adapter are global and
+not associated with a specific queue.  They should not have IRQ
+affinity assigned.
 
-Cheers,
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/qla2xxx/qla_def.h |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c | 15 +++++++++++----
+ 2 files changed, 12 insertions(+), 5 deletions(-)
 
-Hannes
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index ef699b6..e5e0301 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2732,7 +2732,7 @@ struct isp_operations {
+ #define QLA_MSIX_FW_MODE(m)	(((m) & (BIT_7|BIT_8|BIT_9)) >> 7)
+ #define QLA_MSIX_FW_MODE_1(m)	(QLA_MSIX_FW_MODE(m) == 1)
+ 
+-#define QLA_MSIX_DEFAULT		0x00
++#define QLA_BASE_VECTORS	2 /* default + RSP */
+ #define QLA_MSIX_RSP_Q			0x01
+ #define QLA_ATIO_VECTOR		0x02
+ #define QLA_MSIX_QPAIR_MULTIQ_RSP_Q	0x03
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index b9c113e..5f389a3 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3018,13 +3018,20 @@ static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
+ static int
+ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ {
+-#define MIN_MSIX_COUNT	2
+ 	int i, ret;
+ 	struct qla_msix_entry *qentry;
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
++	struct irq_affinity desc = {
++		.pre_vectors = QLA_BASE_VECTORS,
++	};
++
++	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha))
++		desc.pre_vectors++;
++
++	ret = pci_alloc_irq_vectors_affinity(ha->pdev, QLA_BASE_VECTORS,
++			ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
++			&desc);
+ 
+-	ret = pci_alloc_irq_vectors(ha->pdev, MIN_MSIX_COUNT, ha->msix_count,
+-				    PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
+ 	if (ret < 0) {
+ 		ql_log(ql_log_fatal, vha, 0x00c7,
+ 		    "MSI-X: Failed to enable support, "
+@@ -3075,7 +3082,7 @@ qla24xx_enable_msix(struct qla_hw_data *ha, struct rsp_que *rsp)
+ 	}
+ 
+ 	/* Enable MSI-X vectors for the base queue */
+-	for (i = 0; i < (QLA_MSIX_RSP_Q + 1); i++) {
++	for (i = 0; i < QLA_BASE_VECTORS; i++) {
+ 		qentry = &ha->msix_entries[i];
+ 		qentry->handle = rsp;
+ 		rsp->msix = qentry;
 -- 
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+2.1.4
+
