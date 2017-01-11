@@ -1,74 +1,52 @@
-From: Alan Stern <stern@rowland.harvard.edu>
-Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Wed, 11 Jan 2017 10:23:29 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1701110954060.1900-100000@iolanthe.rowland.org>
-References: <1484086345.2518.9.camel@HansenPartnership.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
+Date: Wed, 11 Jan 2017 16:08:31 +0000
+Message-ID: <1484150893.2619.1.camel@sandisk.com>
+References: <20170111134312.GH6286@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=US-ASCII
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:57086 "HELO
-        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S935779AbdAKPYO (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 10:24:14 -0500
-In-Reply-To: <1484086345.2518.9.camel@HansenPartnership.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170111134312.GH6286@linux-x5ow.site>
+Content-Language: en-US
+Content-ID: <1E81A403EF88A24CB57CFF6E30F3B5CD@sandisk.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "jthumshirn@suse.de" <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "Linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "keith.busch@intel.com" <keith.busch@intel.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "sagi@grimberg.me" <sagi@grimberg.me>
 List-Id: linux-scsi@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Dainius =?UTF-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>, Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On Tue, 10 Jan 2017, James Bottomley wrote:
+On Wed, 2017-01-11 at 14:43 +0100, Johannes Thumshirn wrote:
+> I'd like to attend LSF/MM and would like to discuss polling for block
+> drivers.
+>=20
+> Currently there is blk-iopoll but it is neither as widely used as NAPI in
+> the networking field and accoring to Sagi's findings in [1] performance
+> with polling is not on par with IRQ usage.
+>=20
+> On LSF/MM I'd like to whether it is desirable to have NAPI like polling i=
+n
+> more block drivers and how to overcome the currently seen performance
+> issues.
+>=20
+> [1] http://lists.infradead.org/pipermail/linux-nvme/2016-October/006975.h=
+t
+> ml
 
-> On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
-> > In theory, I suppose we could change the kernel so that it would 
-> > default to READ CAPACITY(16) for devices that report a SCSI level >= 
-> > 3, or something along those lines.  In general we hesitate to make
-> > changes of this sort, because they almost always end up breaking 
-> > _some_ devices -- and if that happens then the change is reverted, 
-> > with no exceptions.  Linus has a very strict rule about not breaking 
-> > working systems.
-> 
-> You shouldn't have to change anything: it already does (otherwise how
-> else would we detect physical exponent for proper SCSI devices) see
-> sd.c:sd_try_rc16_first().  It always returns false for USB because you
-> set sdev->try_rc_10_first
+A typical Ethernet network adapter delays the generation of an interrupt
+after it has received a packet. A typical block device or HBA does not dela=
+y
+the generation of an interrupt that reports an I/O completion. I think that
+is why polling is more effective for network adapters than for block
+devices. I'm not sure whether it is possible to achieve benefits similar to
+NAPI for block devices without implementing interrupt coalescing in the
+block device firmware. Note: for block device implementations that use the
+RDMA API, the RDMA API supports interrupt coalescing (see also
+ib_modify_cq()).
 
-In fact, this approach probably won't work.  See Bugzilla entries
-#43265 and #43391.  The devices in those reports claimed to be ANSI
-level 4, but they failed anyway.
+An example of the interrupt coalescing parameters for a network adapter:
 
-If you guys want to try the quirk flag, you can apply the patch below.  
-Then set the usb-storage module parameter quirks=vvvv:pppp:k where
-vvvv and pppp are the Vendor and Product ID codes for your device (as 4 
-hex digits).
+# ethtool -c em1 | grep -E 'rx-usecs:|tx-usecs:'
+rx-usecs: 3
+tx-usecs: 0
 
-In the long run, however, this is not a viable approach.  We'd be 
-better off with an explicit blacklist.
-
-Alan Stern
-
-
-
-Index: usb-4.x/drivers/usb/storage/usb.c
-===================================================================
---- usb-4.x.orig/drivers/usb/storage/usb.c
-+++ usb-4.x/drivers/usb/storage/usb.c
-@@ -498,7 +498,7 @@ void usb_stor_adjust_quirks(struct usb_d
- 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
- 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
- 			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
--			US_FL_ALWAYS_SYNC);
-+			US_FL_ALWAYS_SYNC | US_FL_NEEDS_CAP16);
- 
- 	p = quirks;
- 	while (*p) {
-@@ -551,6 +551,9 @@ void usb_stor_adjust_quirks(struct usb_d
- 		case 'j':
- 			f |= US_FL_NO_REPORT_LUNS;
- 			break;
-+		case 'k':
-+			f |= US_FL_NEEDS_CAP16;
-+			break;
- 		case 'l':
- 			f |= US_FL_NOT_LOCKABLE;
- 			break;
-
+Bart.=
