@@ -1,36 +1,42 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] qla4xxx: remove two unused MSI-X related #defines
-Date: Wed, 11 Jan 2017 14:29:21 +0100
-Message-ID: <20170111132905.GG6286@linux-x5ow.site>
-References: <1484141212-8637-1-git-send-email-hch@lst.de>
+From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Subject: Re: Advanced Format SAT devices show incorrect physical block size
+Date: Wed, 11 Jan 2017 14:33:17 +0100
+Message-ID: <20170111133317.GA31565@pali>
+References: <Pine.LNX.4.44L0.1701101551591.2462-100000@iolanthe.rowland.org>
+ <1484086345.2518.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53802 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S966603AbdAKN32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 08:29:28 -0500
+Received: from mail-wj0-f196.google.com ([209.85.210.196]:34948 "EHLO
+        mail-wj0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932177AbdAKNdZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 08:33:25 -0500
 Content-Disposition: inline
-In-Reply-To: <1484141212-8637-1-git-send-email-hch@lst.de>
+In-Reply-To: <1484086345.2518.9.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: QLogic-Storage-Upstream@qlogic.com, linux-scsi@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>, Dainius =?utf-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On Wed, Jan 11, 2017 at 02:26:52PM +0100, Christoph Hellwig wrote:
-> Spotted while preparing qla2xxx changes as the symbols exist in both
-> drivers (sigh..).
+On Tuesday 10 January 2017 14:12:25 James Bottomley wrote:
+> On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
+> > In theory, I suppose we could change the kernel so that it would 
+> > default to READ CAPACITY(16) for devices that report a SCSI level >= 
+> > 3, or something along those lines.  In general we hesitate to make
+> > changes of this sort, because they almost always end up breaking 
+> > _some_ devices -- and if that happens then the change is reverted, 
+> > with no exceptions.  Linus has a very strict rule about not breaking 
+> > working systems.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
+> You shouldn't have to change anything: it already does (otherwise how
+> else would we detect physical exponent for proper SCSI devices) see
+> sd.c:sd_try_rc16_first().  It always returns false for USB because you
+> set sdev->try_rc_10_first
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+So.. what does it mean? Can we enable READ CAPACITY(16) for some USB
+devices?
+
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Pali RohÃ¡r
+pali.rohar@gmail.com
