@@ -1,34 +1,49 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 03/11] qla2xxx: Make trace flags more readable.
-Date: Wed, 11 Jan 2017 20:54:12 +0000
-Message-ID: <9AA8855F-0C9D-4A78-B9D7-D0FBB0A75CD1@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 11/11] qla2xxx: Improve RSCN handling in driver
+Date: Wed, 11 Jan 2017 21:05:14 +0000
+Message-ID: <1484168700.2619.26.camel@sandisk.com>
 References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
- <1482553419-4117-4-git-send-email-himanshu.madhani@cavium.com>
- <1484167606.2619.23.camel@sandisk.com>
+         <1482553419-4117-12-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0055.outbound.protection.outlook.com ([104.47.32.55]:27213
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752358AbdAKUyP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 15:54:15 -0500
-In-Reply-To: <1484167606.2619.23.camel@sandisk.com>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1482553419-4117-12-git-send-email-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <05AB8C600F26754E8C649A3E17B630AD@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-ID: <34D1FB944733304BACD9B7F331953BA4@sandisk.com>
+Sender: target-devel-owner@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "bart.vanassche@gmail.com" <bart.vanassche@gmail.com>, "hch@infradead.org" <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 
-DQpPbiAxLzExLzE3LCAxMjo0NyBQTSwgIkJhcnQgVmFuIEFzc2NoZSIgPEJhcnQuVmFuQXNzY2hl
-QHNhbmRpc2suY29tPiB3cm90ZToNCg0KPk9uIEZyaSwgMjAxNi0xMi0yMyBhdCAyMDoyMyAtMDgw
-MCwgSGltYW5zaHUgTWFkaGFuaSB3cm90ZToNCj4+IEZyb206IFF1aW5uIFRyYW4gPHF1aW5uLnRy
-YW5AY2F2aXVtLmNvbT4NCj4+IA0KPj4gVGhpcyBwYXRjaCBkb2VzIG5vdCBjaGFuZ2UgYW55IGZ1
-bmN0aW9uYWxpdHkuDQo+DQo+UGxlYXNlIGFsc28gbWVudGlvbiBpbiB0aGUgcGF0Y2ggZGVzY3Jp
-cHRpb24gd2hhdCB0aGUgcHVycG9zZSBvZiBjbWRfZmxhZ3MNCj5pcy4gSWYgSSByZW1lbWJlciBj
-b3JyZWN0bHkgdGhlIG9ubHkgcHVycG9zZSBvZiBtb3N0IGZsYWdzIGlzIHRvIG1ha2UNCj5hbmFs
-eXppbmcgY3Jhc2ggZHVtcHMgZWFzaWVyPw0KDQpZZXMuIFlvdSBhcmUgY29ycmVjdC4gSSB3aWxs
-IGFkZCBibHVyYiBhYm91dCBuZWVkIGZvciBoYXZpbmcgdHJjX2ZsYWdzIGluIHRoZSBwYXRjaCBj
-b21taXQgbWVzc2FnZQ0KDQo+DQo+QmFydC4NCg==
+On Fri, 2016-12-23 at 20:23 -0800, Himanshu Madhani wrote:
+> +void qlt_unknown_atio_work_fn(struct delayed_work *work)
+> +{
+> +	struct scsi_qla_host *vha =3D container_of(work, struct scsi_qla_host,
+> +		unknown_atio_work);
+> +	qlt_try_to_dequeue_unknown_atios(vha, 0);
+> +	return;
+> +}
+> +
+> [ ... ]
+> +	INIT_DELAYED_WORK(&base_vha->unknown_atio_work,
+> +		(void (*)(struct work_struct *))qlt_unknown_atio_work_fn);
+
+Hello Himanshu and Quinn,
+
+Please follow the approach for delayed work that is followed elsewhere in
+the kernel, namely:
+* Use struct work_struct * for the argument type of delayed work functions.
+* Do not use a function pointer cast in the INIT_DELAYED_WORK() macro.
+
+This change will require to modify the container_of() expression. Here are
+two examples from other kernel drivers:
+
+	hctx =3D container_of(work, struct blk_mq_hw_ctx, delay_work.work);
+
+	struct srp_rport *rport =3D container_of(to_delayed_work(work),
+					struct srp_rport, reconnect_work);
+
+Thanks,
+
+Bart.=
