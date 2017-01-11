@@ -1,53 +1,50 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: RFC: split scsi passthrough fields out of struct request
-Date: Wed, 11 Jan 2017 17:41:42 -0500
-Message-ID: <20170111224142.GA19238@redhat.com>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
+Subject: Re: [PATCH 02/11] qla2xxx: Cleanup TMF code translation from
+ qla_target.
+Date: Wed, 11 Jan 2017 23:01:14 +0000
+Message-ID: <56BCC6A6-FEAC-4BBD-82BD-25060805ACBE@cavium.com>
+References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
+ <1482553419-4117-3-git-send-email-himanshu.madhani@cavium.com>
+ <c749caca-08f2-4f47-f021-ce8cc5ec9c8f@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58086 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751498AbdAKWln (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 17:41:43 -0500
-Content-Disposition: inline
-In-Reply-To: <1484060780-15592-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <c749caca-08f2-4f47-f021-ce8cc5ec9c8f@sandisk.com>
+Content-Language: en-US
+Content-ID: <AD6F9559599A8D4EA83CA9FD3D2166C6@namprd07.prod.outlook.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Tue, Jan 10 2017 at 10:06am -0500,
-Christoph Hellwig <hch@lst.de> wrote:
-
-> Hi all,
-> 
-> this series splits the support for SCSI passthrough commands from the
-> main struct request used all over the block layer into a separate
-> scsi_request structure that drivers that want to support SCSI passthough
-> need to embedded as the first thing into their request-private data,
-> similar to how we handle NVMe passthrough commands.
-> 
-> To support this I've added support for that the private data after
-> request structure to the legacy request path instead, so that it can
-> be treated the same way as the blk-mq path.  Compare to the current
-> scsi_cmnd allocator that actually is a major simplification.
-> 
-> There is one major show-stopper for the series as-is:  Request-based
-> device mapper currently allocate the request structures in the stacking
-> driver without a knowledge of the queue it's going to be submitte on
-> for the legacy request path.  It managed to avoid that issue for the
-> blk-mq path, but that currently can't be used on legacy request devices
-> for reasons I don't fully understand.  We'll need to figure out how
-> sort this out, but maybe that's a good opportunity to drop one or two
-> of the three different dm-mpath I/O paths? :)
-
-Ah, should've read the 0th patch earlier..
-
-I removed blk-mq on request_fn paths support because it was one of the
-permutations that I felt least useful/stable (see commit c5248f79f3 "dm:
-remove support for stacking dm-mq on .request_fn device(s)")
-
-As for all of the different IO paths.  I've always liked the idea of
-blk-mq ruling the world.  With Jens' blk-mq IO scheduling advances maybe
-we're closer!
+DQpPbiAxLzExLzE3LCAxOjA4IFBNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVA
+c2FuZGlzay5jb20+IHdyb3RlOg0KDQo+T24gMTIvMjMvMjAxNiAwODoyMyBQTSwgSGltYW5zaHUg
+TWFkaGFuaSB3cm90ZToNCj4+IEZyb206IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AY2F2aXVtLmNv
+bT4NCj4+IA0KPj4gTW92ZSBjb2RlIGNvZGUgd2hpY2ggY29udmVydHMgVGFzayBNZ210IENvbW1h
+bmQgZmxhZ3MgZm9yDQo+PiBBVElPIHRvIFRDTSAjZGVmaW5lcywgZnJvbSBxbGEyeHh4IGRyaXZl
+ciB0byB0Y21fcWxhMnh4eA0KPj4gZHJpdmVyLg0KPj4gDQo+PiBSZXZpZXdlZC1ieTogQ2hyaXN0
+b3BoIEhlbGx3aWcgPGhjaEBsc3QuZGU+DQo+PiBTaWduZWQtb2ZmLWJ5OiBRdWlubiBUcmFuIDxx
+dWlubi50cmFuQGNhdml1bS5jb20+DQo+PiBTaWduZWQtb2ZmLWJ5OiBIaW1hbnNodSBNYWRoYW5p
+IDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+DQo+PiAtLS0NCj4+ICBkcml2ZXJzL3Njc2kv
+cWxhMnh4eC9xbGFfdGFyZ2V0LmMgIHwgNzUgKysrKy0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0t
+LS0tLS0tLS0NCj4+ICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmggIHwgIDYgKyst
+DQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYyB8IDM5ICsrKysrKysrKysr
+KysrKysrKystDQo+PiAgMyBmaWxlcyBjaGFuZ2VkLCA0OSBpbnNlcnRpb25zKCspLCA3MSBkZWxl
+dGlvbnMoLSkNCj4+IA0KPj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90
+YXJnZXQuYyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KPj4gaW5kZXggNDdh
+Y2MyNi4uNmU1ODg0OCAxMDA2NDQNCj4+IC0tLSBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90
+YXJnZXQuYw0KPj4gKysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5jDQo+PiBA
+QCAtMTU5Miw4ICsxNTkyLDkgQEAgc3RhdGljIGludCBfX3FsdF8yNHh4X2hhbmRsZV9hYnRzKHN0
+cnVjdCBzY3NpX3FsYV9ob3N0ICp2aGEsDQo+PiAgCW1jbWQtPnNlc3MgPSBzZXNzOw0KPj4gIAlt
+ZW1jcHkoJm1jbWQtPm9yaWdfaW9jYi5hYnRzLCBhYnRzLCBzaXplb2YobWNtZC0+b3JpZ19pb2Ni
+LmFidHMpKTsNCj4+ICAJbWNtZC0+cmVzZXRfY291bnQgPSB2aGEtPmh3LT5jaGlwX3Jlc2V0Ow0K
+Pj4gKwltY21kLT50bXJfZnVuYyA9IFFMQV9UR1RfQUJUUzsNCj4+ICANCj4+IC0JcmMgPSBoYS0+
+dGd0LnRndF9vcHMtPmhhbmRsZV90bXIobWNtZCwgbHVuLCBUTVJfQUJPUlRfVEFTSywNCj4+ICsJ
+cmMgPSBoYS0+dGd0LnRndF9vcHMtPmhhbmRsZV90bXIobWNtZCwgMCwgbWNtZC0+dG1yX2Z1bmMs
+DQo+PiAgCSAgICBhYnRzLT5leGNoYW5nZV9hZGRyX3RvX2Fib3J0KTsNCj4NCj5Eb2VzIHRoaXMg
+Y2hhbmdlIHJlbW92ZSB0aGUgbGFzdCB1c2VyIG9mIHRoZSAnbHVuJyB2YXJpYWJsZSBmcm9tIHRo
+aXMNCj5mdW5jdGlvbj8gSWYgc28sIHBsZWFzZSByZW1vdmUgdGhhdCB2YXJpYWJsZSBlbnRpcmVs
+eS4NCg0KV2Ugd2lsbCBuZWVkIHRvIHByZXNlcnZlIGx1biB2YXJpYWJsZSwgc2luY2UgaGFuZGxl
+X3RtciBpcyBhbHNvIGNhbGxlZCBmcm9tIA0KcWx0X2lzc3VlX3Rhc2tfbWdtdCBhbmQgcWx0X2hh
+bmRsZV90YXNrX21nbXQuDQoNCj4NCj5UaGFua3MsDQo+DQo+QmFydC4NCg==
