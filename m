@@ -1,42 +1,54 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [LSF/MM TOPIC][LSF/MM ATTEND] multipath redesign
-Date: Wed, 11 Jan 2017 10:44:08 +0100
-Message-ID: <00700606-3005-c82b-ee37-127417fbd201@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48694 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934256AbdAKJoL (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 04:44:11 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [PATCH] lpfc: avoid double free of resource identifiers
+Date: Wed, 11 Jan 2017 11:06:42 +0100
+Message-ID: <20170111100642.18573-1-jthumshirn@suse.de>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dick Kennedy <dick.kennedy@broadcom.com>, Roberto Sassu <rsassu@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
 List-Id: linux-scsi@vger.kernel.org
-To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: device-mapper development <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>
 
-Hi all,
+From: Roberto Sassu <rsassu@suse.de>
 
-I'd like to attend LSF/MM this year, and would like to discuss a
-redesign of the multipath handling.
+Set variables initialized in lpfc_sli4_alloc_resource_identifiers() to NULL
+if an error occurred. Otherwise, lpfc_sli4_driver_resource_unset() attempts
+to free the memory again.
 
-With recent kernels we've got quite some functionality required for
-multipathing already implemented, making some design decisions of the
-original multipath-tools implementation quite pointless.
+Signed-off-by: Roberto Sassu <rsassu@suse.de>
+Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-I'm working on a proof-of-concept implementation which just uses a
-simple configfs interface and doesn't require a daemon altogether.
-
-At LSF/MM I'd like to discuss how to move forward here, and whether we'd
-like to stay with the current device-mapper integration or move away
-from that towards a stand-alone implementation.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 4faa767..a78a3df 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -5954,18 +5954,25 @@ lpfc_sli4_alloc_resource_identifiers(struct lpfc_hba *phba)
+ 
+  free_vfi_bmask:
+ 	kfree(phba->sli4_hba.vfi_bmask);
++	phba->sli4_hba.vfi_bmask = NULL;
+  free_xri_ids:
+ 	kfree(phba->sli4_hba.xri_ids);
++	phba->sli4_hba.xri_ids = NULL;
+  free_xri_bmask:
+ 	kfree(phba->sli4_hba.xri_bmask);
++	phba->sli4_hba.xri_bmask = NULL;
+  free_vpi_ids:
+ 	kfree(phba->vpi_ids);
++	phba->vpi_ids = NULL;
+  free_vpi_bmask:
+ 	kfree(phba->vpi_bmask);
++	phba->vpi_bmask = NULL;
+  free_rpi_ids:
+ 	kfree(phba->sli4_hba.rpi_ids);
++	phba->sli4_hba.rpi_ids = NULL;
+  free_rpi_bmask:
+ 	kfree(phba->sli4_hba.rpi_bmask);
++	phba->sli4_hba.rpi_bmask = NULL;
+  err_exit:
+ 	return rc;
+ }
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.10.2
