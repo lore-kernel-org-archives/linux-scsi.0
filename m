@@ -1,43 +1,54 @@
-From: Aaron Lu <aaron.lu@intel.com>
-Subject: Re: [PATCH] scsi: remove useless acpi functions in the head file
-Date: Wed, 11 Jan 2017 10:30:15 +0800
-Message-ID: <fa9e93f8-157e-b012-0e30-c621c505cc99@intel.com>
-References: <1484036044-9514-1-git-send-email-guohanjun@huawei.com>
- <e1478c4b-28eb-a10b-f359-eab1f822271d@huawei.com>
- <2e748ead-9118-9a00-d9e7-711fc2cd85c3@intel.com>
- <58759557.7060405@huawei.com>
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: Re: [PATCH 0/4] cxlflash: Enhancements, cleanup and fixes
+Date: Tue, 10 Jan 2017 21:33:52 -0600
+Message-ID: <0704aa9b-c671-420b-efd9-9627cf9c5636@linux.vnet.ibm.com>
+References: <1483711379-18188-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+ <yq1ziizbjaw.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <58759557.7060405@huawei.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Hanjun Guo <guohanjun@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, John Garry <john.garry@huawei.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Hanjun Guo <hanjun.guo@linaro.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:50170 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1757166AbdAKDd7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 10 Jan 2017 22:33:59 -0500
+Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0B3Xv2i063179
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2017 22:33:58 -0500
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27w956fs9f-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 10 Jan 2017 22:33:58 -0500
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Tue, 10 Jan 2017 22:33:58 -0500
+In-Reply-To: <yq1ziizbjaw.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>, Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On 01/11/2017 10:15 AM, Hanjun Guo wrote:
-> On 2017/1/11 9:50, Aaron Lu wrote:
->> On 01/10/2017 07:44 PM, John Garry wrote:
->>> On 10/01/2017 08:14, Hanjun Guo wrote:
->>>> From: Hanjun Guo <hanjun.guo@linaro.org>
->>>>
->>>> commit f1bc1e4c44b1 ("ata: acpi: rework the ata acpi bind support")
->>>> removed scsi_register_acpi_bus_type() and scsi_unregister_acpi_bus_type(),
->>>> but forgot to remove them in the head file, do it now.
->>>>
->>>> Signed-off-by: Hanjun Guo <hanjun.guo@linaro.org>
->> Reviewed-by: Aaron Lu <aaron.lu@intel.com>
->>
->> Just out of curiosity, did you find this by some tool? If so, can you
->> please let me know the tool name so that I can avoid such problems in
->> the future? Thanks.
-> 
-> No, not found by tool. I was working on a patch set which tried to
-> introduce a new acpi bus type [1], so I greped the usage of
-> "struct acpi_bus_type" then found this issue :)
+On 1/9/2017 11:00 PM, Martin K. Petersen wrote:
+>>>>>> "Uma" == Uma Krishnan <ukrishn@linux.vnet.ibm.com> writes:
+>
+> Uma,
+>
+> Uma> This patch series includes an enhancement to support a new command
+> Uma> queuing model and also cleans up prints throughout the driver. The
+> Uma> last patch in the series fixes a racing issue.
+>
+> Uma> The series is based upon v4.10-rc2, intended for 4.11 and is
+> Uma> bisectable.
+>
+> Uma> Matthew R. Ochs (3):
+> Uma>   cxlflash: Refactor context reset to share reset logic cxlflash:
+> Uma>   Support SQ Command Mode cxlflash: Cleanup prints
+>
+> The first three patches in the series were submitted by you but do not
+> carry your Signed-off-by:...
+>
 
-I see, thanks for the cleanup.
+I will send out a V2 with the SOBs soon. Thanks for pointing out!
 
-Regards,
-Aaron
