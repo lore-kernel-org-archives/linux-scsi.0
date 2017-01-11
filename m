@@ -1,59 +1,53 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] multipath redesign
-Date: Wed, 11 Jan 2017 17:23:39 -0500
-Message-ID: <20170111222339.GC19051@redhat.com>
-References: <00700606-3005-c82b-ee37-127417fbd201@suse.de>
+Subject: Re: RFC: split scsi passthrough fields out of struct request
+Date: Wed, 11 Jan 2017 17:41:42 -0500
+Message-ID: <20170111224142.GA19238@redhat.com>
+References: <1484060780-15592-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:58086 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751498AbdAKWln (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Jan 2017 17:41:43 -0500
 Content-Disposition: inline
-In-Reply-To: <00700606-3005-c82b-ee37-127417fbd201@suse.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+In-Reply-To: <1484060780-15592-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, Jan 11 2017 at  4:44am -0500,
-Hannes Reinecke <hare@suse.de> wrote:
+On Tue, Jan 10 2017 at 10:06am -0500,
+Christoph Hellwig <hch@lst.de> wrote:
 
 > Hi all,
 > 
-> I'd like to attend LSF/MM this year, and would like to discuss a
-> redesign of the multipath handling.
+> this series splits the support for SCSI passthrough commands from the
+> main struct request used all over the block layer into a separate
+> scsi_request structure that drivers that want to support SCSI passthough
+> need to embedded as the first thing into their request-private data,
+> similar to how we handle NVMe passthrough commands.
 > 
-> With recent kernels we've got quite some functionality required for
-> multipathing already implemented, making some design decisions of the
-> original multipath-tools implementation quite pointless.
+> To support this I've added support for that the private data after
+> request structure to the legacy request path instead, so that it can
+> be treated the same way as the blk-mq path.  Compare to the current
+> scsi_cmnd allocator that actually is a major simplification.
 > 
-> I'm working on a proof-of-concept implementation which just uses a
-> simple configfs interface and doesn't require a daemon altogether.
-> 
-> At LSF/MM I'd like to discuss how to move forward here, and whether we'd
-> like to stay with the current device-mapper integration or move away
-> from that towards a stand-alone implementation.
+> There is one major show-stopper for the series as-is:  Request-based
+> device mapper currently allocate the request structures in the stacking
+> driver without a knowledge of the queue it's going to be submitte on
+> for the legacy request path.  It managed to avoid that issue for the
+> blk-mq path, but that currently can't be used on legacy request devices
+> for reasons I don't fully understand.  We'll need to figure out how
+> sort this out, but maybe that's a good opportunity to drop one or two
+> of the three different dm-mpath I/O paths? :)
 
-I'd really like open exchange of the problems you're having with the
-current multipath-tools and DM multipath _before LSF_.  Last LSF only
-scratched the surface on people having disdain for the complexity that is
-the multipath-tools userspace.  But considering how much of the
-multipath-tools you've written I find it fairly comical that you're the
-person advocating switching away from it.
+Ah, should've read the 0th patch earlier..
 
-But if less userspace involvement is needed then fix userspace.  Fail to
-see how configfs is any different than the established DM ioctl interface.
+I removed blk-mq on request_fn paths support because it was one of the
+permutations that I felt least useful/stable (see commit c5248f79f3 "dm:
+remove support for stacking dm-mq on .request_fn device(s)")
 
-As I just said in another email DM multipath could benefit from
-factoring out the SCSI-specific bits so that they are nicely optimized
-away if using new transports (e.g. NVMEoF).
-
-Could be lessons can be learned from your approach but I'd prefer we
-provably exhaust the utility of the current DM multipath kernel
-implementation.  DM multipath is one of the most actively maintained and
-updated DM targets (aside from thinp and cache).  As you know DM
-multipath has grown blk-mq support which yielded serious performance
-improvement.  You also noted (in an earlier email) that I reintroduced
-bio-based DM multipath.  On a data path level we have all possible block
-core interfaces plumbed.  And yes, they all involve cloning due to the
-underlying Device Mapper core.  Open to any ideas on optimization.  If
-DM is imposing some inherent performance limitation then please report
-it accordingly.
+As for all of the different IO paths.  I've always liked the idea of
+blk-mq ruling the world.  With Jens' blk-mq IO scheduling advances maybe
+we're closer!
