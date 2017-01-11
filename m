@@ -1,49 +1,120 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 14/15] block/bsg: move queue creation into bsg_setup_queue
-Date: Wed, 11 Jan 2017 17:01:22 -0500
-Message-ID: <20170111220122.GA19051@redhat.com>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
- <1484060780-15592-15-git-send-email-hch@lst.de>
- <20170111084218.GB6286@linux-x5ow.site>
- <20170111084512.GA6937@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170111084512.GA6937@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+From: Eric Farman <farman@linux.vnet.ibm.com>
+Subject: [PATCH] virtio_scsi: Reject commands when virtqueue is broken
+Date: Wed, 11 Jan 2017 17:02:02 -0500
+Message-ID: <1484172122-18882-2-git-send-email-farman@linux.vnet.ibm.com>
+References: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:42207 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S935077AbdAKWCM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Jan 2017 17:02:12 -0500
+Received: from pps.filterd (m0098419.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0BLvRtM013890
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:11 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27wsxxq8md-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:02:11 -0500
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <farman@linux.vnet.ibm.com>;
+        Wed, 11 Jan 2017 15:02:10 -0700
+In-Reply-To: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, Eric Farman <farman@linux.vnet.ibm.com>
 
-On Wed, Jan 11 2017 at  3:45am -0500,
-Christoph Hellwig <hch@lst.de> wrote:
+In the case of a graceful set of detaches, where the virtio-scsi-ccw
+disk is removed from the guest prior to the controller, the guest
+behaves quite normally.  Specifically, the detach gets us into
+sd_sync_cache to issue a Synchronize Cache(10) command, which
+immediately fails (and is retried a couple of times) because the
+device has been removed.  Later, the removal of the controller
+sees two CRWs presented, but there's no further indication of the
+removal from the guest viewpoint.
 
-> On Wed, Jan 11, 2017 at 09:42:44AM +0100, Johannes Thumshirn wrote:
-> > On Tue, Jan 10, 2017 at 04:06:19PM +0100, Christoph Hellwig wrote:
-> > > Simply the boilerplate code needed for bsg nodes a bit.
-> > > 
-> > > Signed-off-by: Christoph Hellwig <hch@lst.de>
-> > > ---
-> > 
-> > that reminds me of posting my SAS bsg-lib patch...
-> 
-> Yes.  Having SAS use bsg-lib, and bsg-lib switched away from abusing
-> struct request_queue would make this series a lot cleaner.
-> 
-> So maybe we should get that into the scsi tree for 4.10 together
-> with the prep patches in this series as a priority and defer the actual
-> struct request changes once again.  That should also give us some more
-> time to sort out the dm-mpath story..
+ [   17.217458] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+ [   17.219257] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+ [   21.449400] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
+ [   21.449406] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
 
-I'm not aware of the story you're referring to.  I'm missing the actual
-challenge you're facing.
+However, on s390, the SCSI disks can be removed "by surprise" when
+an entire controller (host) is removed and all associated disks
+are removed via the loop in scsi_forget_host.  The same call to
+sd_sync_cache is made, but because the controller has already
+been removed, the Synchronize Cache(10) command is neither issued
+(and then failed) nor rejected.
 
-But I've seen you reference the need to stop multipath from allocating
-its own requests.  Are you referring to old request_fn request-based
-multipath's clone_old_rq:alloc_old_clone_request?
+That the I/O isn't returned means the guest cannot have other devices
+added nor removed, and other tasks (such as shutdown or reboot) issued
+by the guest will not complete either.  The virtio ring has already
+been marked as broken (via virtio_break_device in virtio_ccw_remove),
+but we still attempt to queue the command only to have it remain there.
+The calling sequence provides a bit of distinction for us:
 
-Or how blk-mq request-based multipath gets a request from the blk-mq tag
-space (via blk_mq_alloc_request)?
+  virtscsi_queuecommand()
+   -> virtscsi_kick_cmd()
+    -> virtscsi_add_cmd()
+     -> virtqueue_add_sgs()
+      -> virtqueue_add()
+         if success
+           return 0
+         elseif vq->broken or vring_mapping_error()
+           return -EIO
+         else
+           return -ENOSPC
 
-Or both?  How is that holding you back?
+A return of ENOSPC is generally a temporary condition, so returning
+"host busy" from virtscsi_queuecommand makes sense here, to have it
+redriven in a moment or two.  But the EIO return code is more of a
+permanent error and so it would be wise to return the I/O itself and
+allow the calling thread to finish gracefully.  The result is these
+four kernel messages in the guest (the fourth one does not occur
+prior to this patch):
+
+ [   22.921562] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
+ [   22.921580] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
+ [   22.921978] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+ [   22.921993] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+
+I opted to fill in the same response data that is returned from the
+more graceful device detach, where the disk device is removed prior
+to the controller device.
+
+Signed-off-by: Eric Farman <farman@linux.vnet.ibm.com>
+---
+ drivers/scsi/virtio_scsi.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+index ec91bd0..78d50ca 100644
+--- a/drivers/scsi/virtio_scsi.c
++++ b/drivers/scsi/virtio_scsi.c
+@@ -535,6 +535,7 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+ 	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
+ 	int req_size;
++	int ret;
+ 
+ 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
+ 
+@@ -562,8 +563,13 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+ 		req_size = sizeof(cmd->req.cmd);
+ 	}
+ 
+-	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
++	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
++	if (ret == -EIO) {
++		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
++		virtscsi_complete_cmd(vscsi, cmd);
++	} else if (ret != 0) {
+ 		return SCSI_MLQUEUE_HOST_BUSY;
++	}
+ 	return 0;
+ }
+ 
+-- 
+1.9.1
+
