@@ -1,49 +1,46 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 14/15] block/bsg: move queue creation into bsg_setup_queue
-Date: Wed, 11 Jan 2017 10:37:13 +0100
-Message-ID: <69ad74c4-2741-058a-97fa-3aa2b69571f4@suse.de>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
- <1484060780-15592-15-git-send-email-hch@lst.de>
- <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de>
- <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de> <20170111090112.GA7239@lst.de>
+Subject: Re: [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and Driver Testing
+ methodology.
+Date: Wed, 11 Jan 2017 10:40:41 +0100
+Message-ID: <0ac6509a-738b-e1f4-871c-13fd62cf9cca@suse.de>
+References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
+ <CO2PR04MB2184DB653C04FB620B41435486670@CO2PR04MB2184.namprd04.prod.outlook.com>
+ <20170111091945.GD6286@linux-x5ow.site>
+ <20170111092447.GA13600@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170111090112.GA7239@lst.de>
+In-Reply-To: <20170111092447.GA13600@infradead.org>
 Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: Christoph Hellwig <hch@infradead.org>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/11/2017 10:01 AM, Christoph Hellwig wrote:
-> On Wed, Jan 11, 2017 at 09:59:17AM +0100, Hannes Reinecke wrote:
->> I'd advocate to discuss this at LSF.
->> Now that Mike moved the bio-based mpath stuff back in things got even
->> more complex.
+On 01/11/2017 10:24 AM, Christoph Hellwig wrote:
+> On Wed, Jan 11, 2017 at 10:19:45AM +0100, Johannes Thumshirn wrote:
+>> Well, something I was thinking about but didn't find enough time to actually
+>> implement is making a xfstestes like test suite written using sg3_utils for
+>> SCSI.
 > 
-> Yeah.  If we'd _only_ have bio based support it would simplify things
-> a lot, but as a third parallel path it's not exactly making things easier.
+> Ronnie's libiscsi testsuite can use SG_IO for a new years now:
 > 
->> I'll be posting a patchset for reimplementing multipath as a stand-alone
->> driver shortly; that'll give us a good starting point on how we want
->> multipath to evolve.
->>
->> Who knows; we might even manage to move multipath out of device-mapper
->> altogether.
->> That would make Mike very happy, and I wouldn't mind, either :-)
+> https://github.com/sahlberg/libiscsi/tree/master/test-tool
 > 
-> Heh.  I'm curious how you want to do that while keeping existing setups
-> working, though.
+> and has been very useful to find bus in various protocol
+> implementations.
+> 
+>> This idea could very well be extented to NVMe
+> 
+> Chaitanya suite is doing something similar for NVMe, although the
+> coverage is still much more limited so far.
+> 
+One of the discussion points here indeed would be if we want to go in
+the direction of a protocol-specific testsuites (of which we already
+have several) or if it makes sense to move to functional testing.
 
-which will become challenging, indeed.
-
-ATM it's just a testbed on how things could work; we've got most of the
-required infrastucture in the kernel nowadays, so that we can just drop
-most of the complexity from the present multipath-tools mess.
-
-In the end it might even boil down to update the existing device-mapper
-multipath implementation. We'll see.
+And if we can have a common interface / documentation on how these
+things should run.
 
 Cheers,
 
