@@ -1,43 +1,34 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [PATCH] scsi: qedi: select UIO
-Date: Wed, 11 Jan 2017 09:00:54 +0000
-Message-ID: <D49BF0E9.3633C%manish.rangankar@cavium.com>
-References: <20170110152744.3139180-1-arnd@arndb.de>
- <1484079574.15161.91.camel@localhost.localdomain>
- <yq137gqs0cd.fsf@oracle.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 14/15] block/bsg: move queue creation into
+        bsg_setup_queue
+Date: Wed, 11 Jan 2017 10:01:12 +0100
+Message-ID: <20170111090112.GA7239@lst.de>
+References: <1484060780-15592-1-git-send-email-hch@lst.de> <1484060780-15592-15-git-send-email-hch@lst.de> <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de> <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq137gqs0cd.fsf@oracle.com>
-Content-Language: en-US
-Content-ID: <59E670F8074C244CB20BC125B7D3865D@namprd07.prod.outlook.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, "Ewan D. Milne" <emilne@redhat.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Javali, Nilesh" <Nilesh.Javali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
+On Wed, Jan 11, 2017 at 09:59:17AM +0100, Hannes Reinecke wrote:
+> I'd advocate to discuss this at LSF.
+> Now that Mike moved the bio-based mpath stuff back in things got even
+> more complex.
 
-On 11/01/17 9:40 AM, "Martin K. Petersen" <martin.petersen@oracle.com>
-wrote:
+Yeah.  If we'd _only_ have bio based support it would simplify things
+a lot, but as a third parallel path it's not exactly making things easier.
 
->>>>>> "Ewan" =3D=3D Ewan D Milne <emilne@redhat.com> writes:
->
->Ewan> Randy posted a similar patch back in December but I don't think
->Ewan> there was ever a reply to Christoph's question about why qedi
->Ewan> depends on uio.
->
->I did queue up Randy's patch to shut up the build warnings. But we're
->still looking for a long term fix or an explanation as to why UIO is
->needed in the first place.
+> I'll be posting a patchset for reimplementing multipath as a stand-alone
+> driver shortly; that'll give us a good starting point on how we want
+> multipath to evolve.
+> 
+> Who knows; we might even manage to move multipath out of device-mapper
+> altogether.
+> That would make Mike very happy, and I wouldn't mind, either :-)
 
-Similar to bnx2i driver, qedi driver also has a dependency over iscsiuio
-to provide ARP and DHCP functionality for iscsi offload, and the
-communication to the
-driver is done via uio interface.
-
-https://github.com/open-iscsi/open-iscsi/blob/master/iscsiuio/README
-
-
-Thanks,
-Manish
+Heh.  I'm curious how you want to do that while keeping existing setups
+working, though.
