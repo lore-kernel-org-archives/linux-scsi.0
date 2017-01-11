@@ -1,13 +1,13 @@
 From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
 Subject: [PATCH] ibmvscsis: Fix max transfer length
-Date: Wed, 11 Jan 2017 13:51:03 -0600
-Message-ID: <1484164263-66447-1-git-send-email-bryantly@linux.vnet.ibm.com>
+Date: Wed, 11 Jan 2017 13:52:27 -0600
+Message-ID: <1484164347-66581-1-git-send-email-bryantly@linux.vnet.ibm.com>
 References: <1484163851.2619.21.camel@sandisk.com>
-Return-path: <stable-owner@vger.kernel.org>
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1484163851.2619.21.camel@sandisk.com>
-Sender: stable-owner@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: Bart.VanAssche@sandisk.com
-Cc: nab@linux-iscsi.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 Current code incorrectly calculates the max transfer length, since
@@ -22,14 +22,14 @@ Signed-off-by: Bryant G. Ly <bryantly@linux.vnet.ibm.com>
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 8fb5c54..3b4d36b 100644
+index 8fb5c54..9c91e75 100644
 --- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 +++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
 @@ -46,6 +46,7 @@
  
  #define	INITIAL_SRP_LIMIT	800
  #define	DEFAULT_MAX_SECTORS	256
-+#define MAX_TXU			1024
++#define MAX_TXU			1024 * 1024
  
  static uint max_vdma_size = MAX_H_COPY_RDMA;
  
