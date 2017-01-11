@@ -1,48 +1,74 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Wed, 11 Jan 2017 16:16:56 +0100
-Message-ID: <9d23f03f-5094-98bc-3c6d-e263801bed61@suse.de>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+From: Alan Stern <stern@rowland.harvard.edu>
+Subject: Re: Advanced Format SAT devices show incorrect physical block size
+Date: Wed, 11 Jan 2017 10:23:29 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1701110954060.1900-100000@iolanthe.rowland.org>
+References: <1484086345.2518.9.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: TEXT/PLAIN; charset=US-ASCII
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:35803 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1765313AbdAKPRA (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 10:17:00 -0500
-In-Reply-To: <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+Received: from iolanthe.rowland.org ([192.131.102.54]:57086 "HELO
+        iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with SMTP id S935779AbdAKPYO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 10:24:14 -0500
+In-Reply-To: <1484086345.2518.9.camel@HansenPartnership.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: linux-block@vger.kernel.org, Linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dainius =?UTF-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>, Pali =?ISO-8859-1?Q?Roh=E1r?= <pali.rohar@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On 01/11/2017 04:07 PM, Jens Axboe wrote:
-> On 01/11/2017 06:43 AM, Johannes Thumshirn wrote:
->> Hi all,
->>
->> I'd like to attend LSF/MM and would like to discuss polling for block drivers.
->>
->> Currently there is blk-iopoll but it is neither as widely used as NAPI in the
->> networking field and accoring to Sagi's findings in [1] performance with
->> polling is not on par with IRQ usage.
->>
->> On LSF/MM I'd like to whether it is desirable to have NAPI like polling in
->> more block drivers and how to overcome the currently seen performance issues.
+On Tue, 10 Jan 2017, James Bottomley wrote:
+
+> On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
+> > In theory, I suppose we could change the kernel so that it would 
+> > default to READ CAPACITY(16) for devices that report a SCSI level >= 
+> > 3, or something along those lines.  In general we hesitate to make
+> > changes of this sort, because they almost always end up breaking 
+> > _some_ devices -- and if that happens then the change is reverted, 
+> > with no exceptions.  Linus has a very strict rule about not breaking 
+> > working systems.
 > 
-> It would be an interesting topic to discuss, as it is a shame that blk-iopoll
-> isn't used more widely.
-> 
-Indeed; some drivers like lpfc already _have_ a polling mode, but not
-hooked up to blk-iopoll. Would be really cool to get that going.
+> You shouldn't have to change anything: it already does (otherwise how
+> else would we detect physical exponent for proper SCSI devices) see
+> sd.c:sd_try_rc16_first().  It always returns false for USB because you
+> set sdev->try_rc_10_first
 
-Cheers,
+In fact, this approach probably won't work.  See Bugzilla entries
+#43265 and #43391.  The devices in those reports claimed to be ANSI
+level 4, but they failed anyway.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+If you guys want to try the quirk flag, you can apply the patch below.  
+Then set the usb-storage module parameter quirks=vvvv:pppp:k where
+vvvv and pppp are the Vendor and Product ID codes for your device (as 4 
+hex digits).
+
+In the long run, however, this is not a viable approach.  We'd be 
+better off with an explicit blacklist.
+
+Alan Stern
+
+
+
+Index: usb-4.x/drivers/usb/storage/usb.c
+===================================================================
+--- usb-4.x.orig/drivers/usb/storage/usb.c
++++ usb-4.x/drivers/usb/storage/usb.c
+@@ -498,7 +498,7 @@ void usb_stor_adjust_quirks(struct usb_d
+ 			US_FL_INITIAL_READ10 | US_FL_WRITE_CACHE |
+ 			US_FL_NO_ATA_1X | US_FL_NO_REPORT_OPCODES |
+ 			US_FL_MAX_SECTORS_240 | US_FL_NO_REPORT_LUNS |
+-			US_FL_ALWAYS_SYNC);
++			US_FL_ALWAYS_SYNC | US_FL_NEEDS_CAP16);
+ 
+ 	p = quirks;
+ 	while (*p) {
+@@ -551,6 +551,9 @@ void usb_stor_adjust_quirks(struct usb_d
+ 		case 'j':
+ 			f |= US_FL_NO_REPORT_LUNS;
+ 			break;
++		case 'k':
++			f |= US_FL_NEEDS_CAP16;
++			break;
+ 		case 'l':
+ 			f |= US_FL_NOT_LOCKABLE;
+ 			break;
+
