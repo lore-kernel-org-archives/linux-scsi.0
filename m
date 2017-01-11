@@ -1,24 +1,43 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 14/15] block/bsg: move queue creation into
-        bsg_setup_queue
-Date: Wed, 11 Jan 2017 09:59:34 +0100
-Message-ID: <20170111085934.GA7200@lst.de>
-References: <1484060780-15592-1-git-send-email-hch@lst.de> <1484060780-15592-15-git-send-email-hch@lst.de> <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de> <20170111085601.GC6286@linux-x5ow.site>
+From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
+Subject: Re: [PATCH] scsi: qedi: select UIO
+Date: Wed, 11 Jan 2017 09:00:54 +0000
+Message-ID: <D49BF0E9.3633C%manish.rangankar@cavium.com>
+References: <20170110152744.3139180-1-arnd@arndb.de>
+ <1484079574.15161.91.camel@localhost.localdomain>
+ <yq137gqs0cd.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170111085601.GC6286@linux-x5ow.site>
-Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <yq137gqs0cd.fsf@oracle.com>
+Content-Language: en-US
+Content-ID: <59E670F8074C244CB20BC125B7D3865D@namprd07.prod.outlook.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, "Ewan D. Milne" <emilne@redhat.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Javali, Nilesh" <Nilesh.Javali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 11, 2017 at 09:56:01AM +0100, Johannes Thumshirn wrote:
-> I'll dig it up and RFC post it. It's currently untested though as I
-> currently don't have a SMP capable SAS HBA here.
-> 
-> Do you have an mptXsas available? 
 
-Unfortunately not.  But I think Hannes has, he has recently played
-around with the interrupt handling for the driver.
+On 11/01/17 9:40 AM, "Martin K. Petersen" <martin.petersen@oracle.com>
+wrote:
+
+>>>>>> "Ewan" =3D=3D Ewan D Milne <emilne@redhat.com> writes:
+>
+>Ewan> Randy posted a similar patch back in December but I don't think
+>Ewan> there was ever a reply to Christoph's question about why qedi
+>Ewan> depends on uio.
+>
+>I did queue up Randy's patch to shut up the build warnings. But we're
+>still looking for a long term fix or an explanation as to why UIO is
+>needed in the first place.
+
+Similar to bnx2i driver, qedi driver also has a dependency over iscsiuio
+to provide ARP and DHCP functionality for iscsi offload, and the
+communication to the
+driver is done via uio interface.
+
+https://github.com/open-iscsi/open-iscsi/blob/master/iscsiuio/README
+
+
+Thanks,
+Manish
