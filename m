@@ -1,72 +1,59 @@
 From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 14/15] block/bsg: move queue creation into bsg_setup_queue
-Date: Wed, 11 Jan 2017 17:08:14 -0500
-Message-ID: <20170111220813.GB19051@redhat.com>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
- <1484060780-15592-15-git-send-email-hch@lst.de>
- <20170111084218.GB6286@linux-x5ow.site>
- <20170111084512.GA6937@lst.de>
- <8810984d-9929-8937-e82c-94639fd0b8ea@suse.de>
- <20170111090112.GA7239@lst.de>
- <69ad74c4-2741-058a-97fa-3aa2b69571f4@suse.de>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] multipath redesign
+Date: Wed, 11 Jan 2017 17:23:39 -0500
+Message-ID: <20170111222339.GC19051@redhat.com>
+References: <00700606-3005-c82b-ee37-127417fbd201@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:56638 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752234AbdAKWIO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 17:08:14 -0500
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <69ad74c4-2741-058a-97fa-3aa2b69571f4@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <00700606-3005-c82b-ee37-127417fbd201@suse.de>
+Sender: linux-block-owner@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Cc: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, device-mapper development <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 11 2017 at  4:37am -0500,
+On Wed, Jan 11 2017 at  4:44am -0500,
 Hannes Reinecke <hare@suse.de> wrote:
 
-> On 01/11/2017 10:01 AM, Christoph Hellwig wrote:
-> > On Wed, Jan 11, 2017 at 09:59:17AM +0100, Hannes Reinecke wrote:
-> >> I'd advocate to discuss this at LSF.
-> >> Now that Mike moved the bio-based mpath stuff back in things got even
-> >> more complex.
-> > 
-> > Yeah.  If we'd _only_ have bio based support it would simplify things
-> > a lot, but as a third parallel path it's not exactly making things easier.
-> > 
-> >> I'll be posting a patchset for reimplementing multipath as a stand-alone
-> >> driver shortly; that'll give us a good starting point on how we want
-> >> multipath to evolve.
-> >>
-> >> Who knows; we might even manage to move multipath out of device-mapper
-> >> altogether.
-> >> That would make Mike very happy, and I wouldn't mind, either :-)
-> > 
-> > Heh.  I'm curious how you want to do that while keeping existing setups
-> > working, though.
+> Hi all,
 > 
-> which will become challenging, indeed.
+> I'd like to attend LSF/MM this year, and would like to discuss a
+> redesign of the multipath handling.
 > 
-> ATM it's just a testbed on how things could work; we've got most of the
-> required infrastucture in the kernel nowadays, so that we can just drop
-> most of the complexity from the present multipath-tools mess.
+> With recent kernels we've got quite some functionality required for
+> multipathing already implemented, making some design decisions of the
+> original multipath-tools implementation quite pointless.
 > 
-> In the end it might even boil down to update the existing device-mapper
-> multipath implementation. We'll see.
+> I'm working on a proof-of-concept implementation which just uses a
+> simple configfs interface and doesn't require a daemon altogether.
+> 
+> At LSF/MM I'd like to discuss how to move forward here, and whether we'd
+> like to stay with the current device-mapper integration or move away
+> from that towards a stand-alone implementation.
 
-Honestly, at this point I'm pretty confident you guys will never
-actually produce a new NIH multipath.  You'll just threaten to for
-_years_.
+I'd really like open exchange of the problems you're having with the
+current multipath-tools and DM multipath _before LSF_.  Last LSF only
+scratched the surface on people having disdain for the complexity that is
+the multipath-tools userspace.  But considering how much of the
+multipath-tools you've written I find it fairly comical that you're the
+person advocating switching away from it.
 
-Joking aside, I think DM multipath would benefit from a more focused
-separation from all the SCSI cruft that wormed its way in.  Factoring
-that stuff out so that multipath can be more easily adapted/optimized
-for use with leaner transports like NVMe-over-fabrics.
+But if less userspace involvement is needed then fix userspace.  Fail to
+see how configfs is any different than the established DM ioctl interface.
 
-But NVMe-over-fabrics setups are still pretty rare (only a handful of
-vendors are stepping up with requirements to support it) so details on
-what change is needed to DM multipath is largely unknown to me.  But may
-become clearer in the coming month.
+As I just said in another email DM multipath could benefit from
+factoring out the SCSI-specific bits so that they are nicely optimized
+away if using new transports (e.g. NVMEoF).
 
-Mike
+Could be lessons can be learned from your approach but I'd prefer we
+provably exhaust the utility of the current DM multipath kernel
+implementation.  DM multipath is one of the most actively maintained and
+updated DM targets (aside from thinp and cache).  As you know DM
+multipath has grown blk-mq support which yielded serious performance
+improvement.  You also noted (in an earlier email) that I reintroduced
+bio-based DM multipath.  On a data path level we have all possible block
+core interfaces plumbed.  And yes, they all involve cloning due to the
+underlying Device Mapper core.  Open to any ideas on optimization.  If
+DM is imposing some inherent performance limitation then please report
+it accordingly.
