@@ -1,43 +1,37 @@
-From: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Wed, 11 Jan 2017 14:36:43 +0100
-Message-ID: <20170111133643.GB31565@pali>
-References: <CABhjJhMN31Ooq5ewpBft97w2+UpYM8S_hkpgwWm3a0wBhXW14g@mail.gmail.com>
- <Pine.LNX.4.44L0.1701101520510.2462-100000@iolanthe.rowland.org>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
+Date: Wed, 11 Jan 2017 14:43:12 +0100
+Message-ID: <20170111134312.GH6286@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <Pine.LNX.4.44L0.1701101520510.2462-100000-IYeN2dnnYyZXsRXLowluHWD2FQJk+8+b@public.gmane.org>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Cc: Dainius =?utf-8?Q?Masili=C5=ABnas?= <pastas4-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Sender: linux-block-owner@vger.kernel.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: linux-block@vger.kernel.org, Linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tuesday 10 January 2017 15:29:23 Alan Stern wrote:
-> > Tom Yan wrote that smartctl/hdparm "works" because they use the SCSI ATA
-> > PASSTHROUGH command. It is not an option for kernel?
-> 
-> No, because many devices do not implement SCSI ATA PASSTHROUGH.  
-> (Consider devices whose underlying technology does not use ATA or SATA,
-> for example.)  And some of the ones that don't implement it will die if
-> you try to send them an ATA PASSTHROUGH command.
+Hi all,
 
-It is not possible to detect if underlaying device is ATA?
+I'd like to attend LSF/MM and would like to discuss polling for block drivers.
 
-> You have to understand that consumer USB storage really is very
-> low quality in many cases.  Vendors aim for low cost rather than high 
-> reliability or correctness.
+Currently there is blk-iopoll but it is neither as widely used as NAPI in the
+networking field and accoring to Sagi's findings in [1] performance with
+polling is not on par with IRQ usage.
 
-Understood. But lot of distributions call hdparm for inserted disks and
-also set some APM (or at least check it)... That means there is already
-some way how to deal with these problems (in userspace).
+On LSF/MM I'd like to whether it is desirable to have NAPI like polling in
+more block drivers and how to overcome the currently seen performance issues.
+
+[1] http://lists.infradead.org/pipermail/linux-nvme/2016-October/006975.html
+
+Byte,
+	Johannes
 
 -- 
-Pali RohÃ¡r
-pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
