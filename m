@@ -1,75 +1,49 @@
 From: Alan Stern <stern@rowland.harvard.edu>
 Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Wed, 11 Jan 2017 09:54:01 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1701110947410.1900-100000@iolanthe.rowland.org>
-References: <CABhjJhPCFRgpxcBDDCrkcCq0KMenUoOo0+J7je1Q=RM0Rdp+kg@mail.gmail.com>
+Date: Wed, 11 Jan 2017 10:10:24 -0500 (EST)
+Message-ID: <Pine.LNX.4.44L0.1701111008530.1900-100000@iolanthe.rowland.org>
+References: <20170111133643.GB31565@pali>
 Mime-Version: 1.0
 Content-Type: TEXT/PLAIN; charset=UTF-8
 Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from iolanthe.rowland.org ([192.131.102.54]:56836 "HELO
+Received: from iolanthe.rowland.org ([192.131.102.54]:57032 "HELO
         iolanthe.rowland.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with SMTP id S1754338AbdAKOyC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 09:54:02 -0500
-In-Reply-To: <CABhjJhPCFRgpxcBDDCrkcCq0KMenUoOo0+J7je1Q=RM0Rdp+kg@mail.gmail.com>
+        with SMTP id S1758763AbdAKPKZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 10:10:25 -0500
+In-Reply-To: <20170111133643.GB31565@pali>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: =?UTF-8?Q?Dainius_Masili=C5=ABnas?= <pastas4@gmail.com>
-Cc: =?UTF-8?Q?Pali_Roh=C3=A1r?= <pali.rohar@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
+To: Pali =?utf-8?B?Um9ow6Fy?= <pali.rohar@gmail.com>
+Cc: Dainius =?utf-8?Q?Masili=C5=ABnas?= <pastas4@gmail.com>, SCSI development list <linux-scsi@vger.kernel.org>, USB list <linux-usb@vger.kernel.org>, Tom Yan <tom.ty89@gmail.com>
 
-On Tue, 10 Jan 2017, Dainius Masiliūnas wrote:
+On Wed, 11 Jan 2017, Pali Rohár wrote:
 
-> On Tue, Jan 10, 2017 at 9:00 PM, Alan Stern <stern@rowland.harvard.edu> wrote:
-> > It is used for preventing the kernel from issuing a READ CAPACITY(16)
-> > command to the device.  Normally the kernel would do this if the reply
-> > to READ CAPACITY(10) indicated there were more than 2^32 blocks (about
-> > 2 TB).
+> On Tuesday 10 January 2017 15:29:23 Alan Stern wrote:
+> > > Tom Yan wrote that smartctl/hdparm "works" because they use the SCSI ATA
+> > > PASSTHROUGH command. It is not an option for kernel?
+> > 
+> > No, because many devices do not implement SCSI ATA PASSTHROUGH.  
+> > (Consider devices whose underlying technology does not use ATA or SATA,
+> > for example.)  And some of the ones that don't implement it will die if
+> > you try to send them an ATA PASSTHROUGH command.
 > 
-> Ah, OK, that makes sense. Though that's still not a proper solution,
-> and if anything it's confusing for the users: if they plug in a >2 TiB
-> drive and it breaks, the user will assume that it's the fault of the
-> drive and not the USB case, or that the case is incapable of handling
-> such large drives, whereas the true reason is completely different.
+> It is not possible to detect if underlaying device is ATA?
 
-I'm not sure what you mean.  If the quirk flag is set and the user 
-plugs in a >2-TB drive, it won't break.  It just won't report the 
-correct size, but at least it will continue to work in a degraded 
-fashion.
+I don't know any reliable way to do it.  Besides, even if the device is
+ATA, you're still out of luck if the USB-SATA bridge doesn't support
+ATA PASSTHROUGH.
 
-> > In theory, I suppose we could change the kernel so that it would
-> > default to READ CAPACITY(16) for devices that report a SCSI level >= 3,
-> > or something along those lines.  In general we hesitate to make changes
-> > of this sort, because they almost always end up breaking _some_
-> > devices -- and if that happens then the change is reverted, with no
-> > exceptions.  Linus has a very strict rule about not breaking working
-> > systems.
+> > You have to understand that consumer USB storage really is very
+> > low quality in many cases.  Vendors aim for low cost rather than high 
+> > reliability or correctness.
 > 
-> Well, the problems are 1) we don't really know how many such
-> misbehaving drives there are, since only those with >2 TiB drives
-> experience it, thus it's hard to know what effect such change would
-> have, and 2) there is no way to make the kernel output the true value
-> even if you know your drive is working fine.
+> Understood. But lot of distributions call hdparm for inserted disks and
+> also set some APM (or at least check it)... That means there is already
+> some way how to deal with these problems (in userspace).
 
-We could add that easily enough: a usb-storage quirk to set the 
-NEEDS_CAP16 flag.  But it would be better if this wasn't necessary.
-
-> And when a drive breaks due to the 16 command, is there a way to
-> revive it, perhaps by trying to reconnect? That would allow the kernel
-> to try it first, see that it failed after that command was sent, then
-> issue a warning in the log saying that this device should have a
-> quirk, reset and continue with the quirk applied.
-
-I'm not sure what you mean by "trying to reconnect".  The recovery
-method most likely to work is to unplug the USB cable and then
-re-attach it.  Issuing a reset might work in some cases and not in 
-others; we have seen examples of devices that crash extremely hard when 
-given something they don't know how to handle.
-
-> Also, is `sg_readcap -16` a proper test to determine whether the
-> device works as expected?
-
-You mean, to determine whether the device can handle a READ 
-CAPACITY(16) command?  Yes, since that is the command it sends.
+Maybe.  Or maybe users simply don't use hdparm if it causes problems 
+for them.  You don't have a similar option with the kernel.
 
 Alan Stern
 
