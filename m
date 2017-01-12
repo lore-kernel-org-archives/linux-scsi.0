@@ -1,56 +1,63 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: [PATCH 15/15] block: split scsi_request out of struct request
-Date: Wed, 11 Jan 2017 20:59:11 -0700
-Message-ID: <20170112035911.GB27546@kernel.dk>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
- <1484060780-15592-16-git-send-email-hch@lst.de>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
+Date: Wed, 11 Jan 2017 21:44:05 -0700
+Message-ID: <43b42605-0c97-ca33-2e39-5ec58b441bcc@kernel.dk>
+References: <20170111134312.GH6286@linux-x5ow.site>
+ <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+ <43b3038b57ed5c00a73ebc5457d048d5.squirrel@webmail.raithlin.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-00082601.pphosted.com ([67.231.153.30]:35614 "EHLO
-        mx0b-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750779AbdALD7R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 22:59:17 -0500
-Content-Disposition: inline
-In-Reply-To: <1484060780-15592-16-git-send-email-hch@lst.de>
+Received: from mail-pf0-f182.google.com ([209.85.192.182]:35377 "EHLO
+        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750809AbdALEoW (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 23:44:22 -0500
+Received: by mail-pf0-f182.google.com with SMTP id f144so6010956pfa.2
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 20:44:10 -0800 (PST)
+In-Reply-To: <43b3038b57ed5c00a73ebc5457d048d5.squirrel@webmail.raithlin.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+To: Stephen Bates <sbates@raithlin.com>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>
 
-On Tue, Jan 10 2017, Christoph Hellwig wrote:
-> And require all drivers that want to support BLOCK_PC to allocate it
-> as the first thing of their private data.  To support this the legacy
-> IDE and BSG code is switched to set cmd_size on their queues to let
-> the block layer allocate the additional space.
+On 01/11/2017 09:36 PM, Stephen Bates wrote:
+>>>
+>>> I'd like to attend LSF/MM and would like to discuss polling for block
+>>> drivers.
+>>>
+>>> Currently there is blk-iopoll but it is neither as widely used as NAPI
+>>> in the networking field and accoring to Sagi's findings in [1]
+>>> performance with polling is not on par with IRQ usage.
+>>>
+>>> On LSF/MM I'd like to whether it is desirable to have NAPI like polling
+>>> in more block drivers and how to overcome the currently seen performance
+>>> issues.
+>>
+>> It would be an interesting topic to discuss, as it is a shame that
+>> blk-iopoll isn't used more widely.
+>>
+>> --
+>> Jens Axboe
+>>
+> 
+> I'd also be interested in this topic. Given that iopoll only really makes
+> sense for low-latency, low queue depth environments (i.e. down below
+> 10-20us) I'd like to discuss which drivers we think will need/want to be
+> upgraded (aside from NVMe ;-)).
+> 
+> I'd also be interested in discussing how best to enable and disable
+> polling. In the past some of us have pushed for a "big hammer" to turn
+> polling on for a given device or HW queue [1]. I'd like to discuss this
+> again as well as looking at other methods above and beyond the preadv2
+> system call and the HIPRI flag.
 
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index be23859..499728d 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -225,17 +225,7 @@ struct request {
->  	int tag;
->  	int errors;
->  
-> -	/*
-> -	 * when request is used as a packet command carrier
-> -	 */
-> -	unsigned char __cmd[BLK_MAX_CDB];
-> -	unsigned char *cmd;
-> -	unsigned short cmd_len;
-> -
->  	unsigned int extra_len;	/* length of alignment and padding */
-> -	unsigned int sense_len;
-> -	unsigned int resid_len;	/* residual count */
-> -	void *sense;
+This is a separate topic. The initial proposal is for polling for
+interrupt mitigation, you are talking about polling in the context of
+polling for completion of an IO.
 
-Oh yes, my mouth is watering. I've wanted to kill off ->cmd and friends
-with fire for years.
-
-On the block front, I think the solution is fine with mimicking the mq
-solution of carrying an rq payload, and the implementation for the
-legacy path looks fine.
+We can definitely talk about this form of polling as well, but it should
+be a separate topic and probably proposed independently.
 
 -- 
 Jens Axboe
