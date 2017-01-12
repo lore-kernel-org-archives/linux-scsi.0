@@ -1,58 +1,68 @@
-From: "Gustavo A. R. Silva" <garsilva@embeddedor.com>
-Subject: Re: [PATCH] drivers: block: Remove unnecessary cast
-Date: Wed, 11 Jan 2017 17:44:08 -0600
-Message-ID: <20170111174408.Horde.jhUrOBQ9W11ivhR3LHCArVC@gator4166.hostgator.com>
-References: <20170111184105.GA10766@embeddedgus>
- <20170111200418.GA16314@kroah.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 05/15] dm: remove incomple BLOCK_PC support
+Date: Wed, 11 Jan 2017 20:09:37 -0500
+Message-ID: <20170112010936.GA19953@redhat.com>
+References: <1484060780-15592-1-git-send-email-hch@lst.de>
+ <1484060780-15592-6-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed; DelSp=Yes
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway32.websitewelcome.com ([192.185.145.123]:60755 "EHLO
-        gateway32.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1758973AbdALAEc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 11 Jan 2017 19:04:32 -0500
-Received: from cm6.websitewelcome.com (cm6.websitewelcome.com [108.167.139.19])
-        by gateway32.websitewelcome.com (Postfix) with ESMTP id 84022C1267
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 17:44:09 -0600 (CST)
-In-Reply-To: <20170111200418.GA16314@kroah.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1484060780-15592-6-git-send-email-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Greg KH <gregkh@linuxfoundation.org>
-Cc: don.brace@microsemi.com, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
+On Tue, Jan 10 2017 at 10:06am -0500,
+Christoph Hellwig <hch@lst.de> wrote:
 
-Quoting Greg KH <gregkh@linuxfoundation.org>:
+> DM tries to copy a few fields around for BLOCK_PC requests, but given
+> that no dm-target ever wires up scsi_cmd_ioctl BLOCK_PC can't actually
+> be sent to dm.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/md/dm-rq.c | 16 ----------------
+>  1 file changed, 16 deletions(-)
+> 
+> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+> index 93f6e9f..3f12916 100644
+> --- a/drivers/md/dm-rq.c
+> +++ b/drivers/md/dm-rq.c
+> @@ -270,19 +270,6 @@ static void dm_end_request(struct request *clone, int error)
+>  	struct mapped_device *md = tio->md;
+>  	struct request *rq = tio->orig;
+>  
+> -	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
+> -		rq->errors = clone->errors;
+> -		rq->resid_len = clone->resid_len;
+> -
+> -		if (rq->sense)
+> -			/*
+> -			 * We are using the sense buffer of the original
+> -			 * request.
+> -			 * So setting the length of the sense data is enough.
+> -			 */
+> -			rq->sense_len = clone->sense_len;
+> -	}
+> -
+>  	free_rq_clone(clone);
+>  	rq_end_stats(md, rq);
+>  	if (!rq->q->mq_ops)
+> @@ -511,9 +498,6 @@ static int setup_clone(struct request *clone, struct request *rq,
+>  	if (r)
+>  		return r;
+>  
+> -	clone->cmd = rq->cmd;
+> -	clone->cmd_len = rq->cmd_len;
+> -	clone->sense = rq->sense;
+>  	clone->end_io = end_clone_request;
+>  	clone->end_io_data = tio;
+>  
 
-> On Wed, Jan 11, 2017 at 12:41:05PM -0600, Gustavo A. R. Silva wrote:
->> This issue was detected using Coccinelle and the following semantic patch:
->>
->> @@
->> expression * e;
->> expression arg1, arg2;
->> type T;
->> @@
->>
->> - e = (T *)
->> + e =
->> kmalloc(arg1, arg2);
->>
->> Signed-off-by: Gustavo A. R. Silva <garsilva@embeddedor.com>
->> ---
->>  drivers/block/cciss_scsi.c | 3 +--
->>  1 file changed, 1 insertion(+), 2 deletions(-)
->
-> Why send this to me?
+I'm not following your reasoning.
 
-Oops... Sorry... I was also working with the Staging tree, so it seems  
-your e-mail address got in the middle at some point.
-
---
-Gustavo A. R. Silva
-
-
-
-
-
-
+dm_blk_ioctl calls __blkdev_driver_ioctl and will call scsi_cmd_ioctl
+(sd_ioctl -> scsi_cmd_blk_ioctl -> scsi_cmd_ioctl) if DM's underlying
+block device is a scsi device.
