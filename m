@@ -1,83 +1,54 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] scsi: megaraid_sas: SAS3.5 Generic Megaraid Controllers
- Stream Detection and IO Coalescing
-Date: Thu, 12 Jan 2017 21:49:34 +0300
-Message-ID: <20170112184934.GA12420@mwanda>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [Lsf-pc] [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block
+ drivers
+Date: Thu, 12 Jan 2017 19:59:34 +0100
+Message-ID: <20170112185933.GA3554@linux-x5ow.site>
+References: <20170111134312.GH6286@linux-x5ow.site>
+ <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+ <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
+ <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
+ <20170112100251.GB3598@linux-x5ow.site>
+ <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
+ <20170112125338.GH3598@linux-x5ow.site>
+ <91262998-8dd7-107a-06e7-6f333df59a91@grimberg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25400 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750874AbdALSts (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 13:49:48 -0500
+Received: from mx2.suse.de ([195.135.220.15]:53317 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750707AbdALS7s (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
+        Thu, 12 Jan 2017 13:59:48 -0500
 Content-Disposition: inline
+In-Reply-To: <91262998-8dd7-107a-06e7-6f333df59a91@grimberg.me>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: sasikumar.pc@broadcom.com
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 
-Hello Sasikumar Chandrasekaran,
+On Thu, Jan 12, 2017 at 04:41:00PM +0200, Sagi Grimberg wrote:
+> 
+> >>**Note: when I ran multiple threads on more cpus the performance
+> >>degradation phenomenon disappeared, but I tested on a VM with
+> >>qemu emulation backed by null_blk so I figured I had some other
+> >>bottleneck somewhere (that's why I asked for some more testing).
+> >
+> >That could be because of the vmexits as every MMIO access in the guest
+> >triggers a vmexit and if you poll with a low budget you do more MMIOs hence
+> >you have more vmexits.
+> >
+> >Did you do testing only in qemu or with real H/W as well?
+> 
+> I tried once. IIRC, I saw the same phenomenons...
 
-The patch fdd84e2514b0: "scsi: megaraid_sas: SAS3.5 Generic Megaraid
-Controllers Stream Detection and IO Coalescing" from Jan 10, 2017,
-leads to the following static checker warning:
+JFTR I tried my AHCI irq_poll patch on the Qemu emulation and the read
+throughput dropped from ~1GB/s to ~350MB/s. But this can be related to
+Qemu's I/O wiredness as well I think. I'll try on real hardware tomorrow.
 
-	drivers/scsi/megaraid/megaraid_sas_fusion.c:1771 megasas_stream_detect()
-	warn: inconsistent indenting
-
-drivers/scsi/megaraid/megaraid_sas_fusion.c
-  1747  static void megasas_stream_detect(struct megasas_instance *instance,
-  1748                                  struct megasas_cmd_fusion *cmd,
-  1749                                  struct IO_REQUEST_INFO *io_info)
-  1750  {
-  1751          struct fusion_context *fusion = instance->ctrl_context;
-  1752          u32 device_id = io_info->ldTgtId;
-  1753          struct LD_STREAM_DETECT *current_ld_sd
-  1754                  = fusion->stream_detect_by_ld[device_id];
-  1755          u32 *track_stream = &current_ld_sd->mru_bit_map, stream_num;
-  1756          u32 shifted_values, unshifted_values;
-  1757          u32 index_value_mask, shifted_values_mask;
-  1758          int i;
-  1759          bool is_read_ahead = false;
-  1760          struct STREAM_DETECT *current_sd;
-  1761          /* find possible stream */
-  1762          for (i = 0; i < MAX_STREAMS_TRACKED; ++i) {
-  1763                  stream_num =
-  1764                  (*track_stream >> (i * BITS_PER_INDEX_STREAM)) &
-  1765                          STREAM_MASK;
-  1766                  current_sd = &current_ld_sd->stream_track[stream_num];
-  1767          /* if we found a stream, update the raid
-  1768           *  context and also update the mruBitMap
-  1769           */
-  1770          /*      boundary condition */
-  1771          if ((current_sd->next_seq_lba) &&
-
-We're still inside the for loop.  This isn't indented far enough.
-
-  1772                  (io_info->ldStartBlock >= current_sd->next_seq_lba) &&
-  1773                  (io_info->ldStartBlock <= (current_sd->next_seq_lba+32)) &&
-  1774                  (current_sd->is_read == io_info->isRead)) {
-  1775  
-  1776                  if ((io_info->ldStartBlock != current_sd->next_seq_lba)
-  1777                          && ((!io_info->isRead) || (!is_read_ahead)))
-  1778                          /*
-  1779                           * Once the API availible we need to change this.
-  1780                           * At this point we are not allowing any gap
-  1781                           */
-  1782                          continue;
-  1783  
-  1784                  cmd->io_request->RaidContext.raid_context_g35.stream_detected = true;
-  1785                  current_sd->next_seq_lba =
-  1786                  io_info->ldStartBlock + io_info->numBlocks;
-  1787                  /*
-  1788                   *      update the mruBitMap LRU
-  1789                   */
-
-
-See also:
-
-drivers/scsi/megaraid/megaraid_sas_base.c:5396 megasas_init_fw() warn: inconsistent indenting
-drivers/scsi/megaraid/megaraid_sas_fusion.c:4060 megasas_reset_fusion() warn: inconsistent indenting
-
-regards,
-dan carpenter
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
