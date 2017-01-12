@@ -1,68 +1,289 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Thu, 12 Jan 2017 13:44:05 +0200
-Message-ID: <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
- <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
- <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
- <20170112100251.GB3598@linux-x5ow.site>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCHv2] mpt3sas: switch to pci_alloc_irq_vectors
+Date: Thu, 12 Jan 2017 17:53:31 +0530
+Message-ID: <CAK=zhgop+tsMMwiYqYVR3CRZ_Br6uW4pgkNXb4LOrs3GUbA8WA@mail.gmail.com>
+References: <1482240421-14847-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170112100251.GB3598@linux-x5ow.site>
-Sender: linux-block-owner@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, linux-nvme@lists.infradead.org, Linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f180.google.com ([209.85.220.180]:35317 "EHLO
+        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750755AbdALMXd (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 07:23:33 -0500
+Received: by mail-qk0-f180.google.com with SMTP id u25so18152906qki.2
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 04:23:32 -0800 (PST)
+In-Reply-To: <1482240421-14847-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
-
->> I agree with Jens that we'll need some analysis if we want the
->> discussion to be affective, and I can spend some time this if I
->> can find volunteers with high-end nvme devices (I only have access
->> to client nvme devices.
+On Tue, Dec 20, 2016 at 6:57 PM, Hannes Reinecke <hare@suse.de> wrote:
+> Cleanup the MSI-X handling allowing us to use
+> the PCI-layer provided vector allocation.
 >
-> I have a P3700 but somehow burned the FW. Let me see if I can bring it back to
-> live.
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 >
-> I also have converted AHCI to the irq_poll interface and will run some tests.
-> I do also have some hpsa devices on which I could run tests once the driver is
-> adopted.
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index a1a5ceb..75149f0 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -1129,7 +1129,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>                 /* TMs are on msix_index == 0 */
+>                 if (reply_q->msix_index == 0)
+>                         continue;
+> -               synchronize_irq(reply_q->vector);
+> +               synchronize_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index));
+>         }
+>  }
 >
-> But can we come to a common testing methology not to compare apples with
-> oranges? Sagi do you still have the fio job file from your last tests laying
-> somewhere and if yes could you share it?
+> @@ -1818,11 +1818,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>
+>         list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
+>                 list_del(&reply_q->list);
+> -               if (smp_affinity_enable) {
+> -                       irq_set_affinity_hint(reply_q->vector, NULL);
+> -                       free_cpumask_var(reply_q->affinity_hint);
+> -               }
+> -               free_irq(reply_q->vector, reply_q);
+> +               free_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index),
+> +                        reply_q);
+>                 kfree(reply_q);
+>         }
+>  }
+> @@ -1831,13 +1828,13 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>   * _base_request_irq - request irq
+>   * @ioc: per adapter object
+>   * @index: msix index into vector table
+> - * @vector: irq vector
+>   *
+>   * Inserting respective reply_queue into the list.
+>   */
+>  static int
+> -_base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
+> +_base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index)
+>  {
+> +       struct pci_dev *pdev = ioc->pdev;
+>         struct adapter_reply_queue *reply_q;
+>         int r;
+>
+> @@ -1849,14 +1846,6 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>         }
+>         reply_q->ioc = ioc;
+>         reply_q->msix_index = index;
+> -       reply_q->vector = vector;
+> -
+> -       if (smp_affinity_enable) {
+> -               if (!zalloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL)) {
+> -                       kfree(reply_q);
+> -                       return -ENOMEM;
+> -               }
+> -       }
+>
+>         atomic_set(&reply_q->busy, 0);
+>         if (ioc->msix_enable)
+> @@ -1865,12 +1854,11 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>         else
+>                 snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d",
+>                     ioc->driver_name, ioc->id);
+> -       r = request_irq(vector, _base_interrupt, IRQF_SHARED, reply_q->name,
+> -           reply_q);
+> +       r = request_irq(pci_irq_vector(pdev, index), _base_interrupt,
+> +                       IRQF_SHARED, reply_q->name, reply_q);
+>         if (r) {
+>                 pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
+> -                   reply_q->name, vector);
+> -               free_cpumask_var(reply_q->affinity_hint);
+> +                      reply_q->name, pci_irq_vector(pdev, index));
+>                 kfree(reply_q);
+>                 return -EBUSY;
+>         }
+> @@ -1892,7 +1880,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>  static void
+>  _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
+>  {
+> -       unsigned int cpu, nr_cpus, nr_msix, index = 0;
+> +       unsigned int cpu, nr_msix;
+>         struct adapter_reply_queue *reply_q;
+>
+>         if (!_base_is_controller_msix_enabled(ioc))
+> @@ -1900,38 +1888,21 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>
+>         memset(ioc->cpu_msix_table, 0, ioc->cpu_msix_table_sz);
+>
+> -       nr_cpus = num_online_cpus();
+>         nr_msix = ioc->reply_queue_count = min(ioc->reply_queue_count,
+>                                                ioc->facts.MaxMSIxVectors);
+>         if (!nr_msix)
+>                 return;
+> -
+> -       cpu = cpumask_first(cpu_online_mask);
+> -
+>         list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
+> -
+> -               unsigned int i, group = nr_cpus / nr_msix;
+> -
+> -               if (cpu >= nr_cpus)
+> -                       break;
+> -
+> -               if (index < nr_cpus % nr_msix)
+> -                       group++;
+> -
+> -               for (i = 0 ; i < group ; i++) {
+> -                       ioc->cpu_msix_table[cpu] = index;
+> -                       if (smp_affinity_enable)
+> -                               cpumask_or(reply_q->affinity_hint,
+> -                                  reply_q->affinity_hint, get_cpu_mask(cpu));
+> -                       cpu = cpumask_next(cpu, cpu_online_mask);
+> +               const cpumask_t *mask = pci_irq_get_affinity(ioc->pdev,
+> +                                                     reply_q->msix_index);
+> +               if (!mask) {
+> +                       pr_warn(MPT3SAS_FMT "no affinity for msi %x\n",
+> +                               ioc->name, reply_q->msix_index);
+> +                       continue;
+>                 }
+> -               if (smp_affinity_enable)
+> -                       if (irq_set_affinity_hint(reply_q->vector,
+> -                                          reply_q->affinity_hint))
+> -                               dinitprintk(ioc, pr_info(MPT3SAS_FMT
+> -                                "Err setting affinity hint to irq vector %d\n",
+> -                                ioc->name, reply_q->vector));
+> -               index++;
+> +
+> +               for_each_cpu(cpu, mask)
+> +                       ioc->cpu_msix_table[cpu] = reply_q->msix_index;
+>         }
+>  }
+>
 
-Its pretty basic:
---
-[global]
-group_reporting
-cpus_allowed=0
-cpus_allowed_policy=split
-rw=randrw
-bs=4k
-numjobs=4
-iodepth=32
-runtime=60
-time_based
-loops=1
-ioengine=libaio
-direct=1
-invalidate=1
-randrepeat=1
-norandommap
-exitall
+When PCI_IRQ_AFFINITY is not enabled (suppose when
+'smp_affinity_enable' module parameter is disabled) while allocation
+MSI-X vectors then I observe that only one MSI-X vector (that too zero
+msix indexed vector) is used and remaining MSI-X won't be used at all.
+Since here cpu_msix_table is not populated and it was just initialized
+to zero. So only zero msix indexed MSI-X vector is used for IOs.
 
-[job]
---
+Apart from this, This patch looks good.
 
-**Note: when I ran multiple threads on more cpus the performance
-degradation phenomenon disappeared, but I tested on a VM with
-qemu emulation backed by null_blk so I figured I had some other
-bottleneck somewhere (that's why I asked for some more testing).
 
-Note that I ran randrw because I was backed with null_blk, testing
-with a real nvme device, you should either run randread or write, and
-if you do a write, you can't run it multi-threaded (well you can, but
-you'll get unpredictable performance...).
+> @@ -1957,10 +1928,10 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>  static int
+>  _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+>  {
+> -       struct msix_entry *entries, *a;
+>         int r;
+>         int i;
+>         u8 try_msix = 0;
+> +       unsigned int irq_flags = PCI_IRQ_MSIX;
+>
+>         if (msix_disable == -1 || msix_disable == 0)
+>                 try_msix = 1;
+> @@ -1972,7 +1943,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>                 goto try_ioapic;
+>
+>         ioc->reply_queue_count = min_t(int, ioc->cpu_count,
+> -           ioc->msix_vector_count);
+> +               ioc->msix_vector_count);
+>
+>         printk(MPT3SAS_FMT "MSI-X vectors supported: %d, no of cores"
+>           ": %d, max_msix_vectors: %d\n", ioc->name, ioc->msix_vector_count,
+> @@ -1991,46 +1962,42 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>         if (ioc->msix_vector_count < ioc->cpu_count)
+>                 smp_affinity_enable = 0;
+>
+> -       entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
+> -           GFP_KERNEL);
+> -       if (!entries) {
+> -               dfailprintk(ioc, pr_info(MPT3SAS_FMT
+> -                       "kcalloc failed @ at %s:%d/%s() !!!\n",
+> -                       ioc->name, __FILE__, __LINE__, __func__));
+> -               goto try_ioapic;
+> -       }
+> -
+> -       for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
+> -               a->entry = i;
+> +       if (smp_affinity_enable)
+> +               irq_flags |= PCI_IRQ_AFFINITY;
+>
+> -       r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
+> -       if (r) {
+> +       r = pci_alloc_irq_vectors(ioc->pdev, 1, ioc->msix_vector_count,
+> +                                 irq_flags);
+> +       if (r < 0) {
+>                 dfailprintk(ioc, pr_info(MPT3SAS_FMT
+> -                       "pci_enable_msix_exact failed (r=%d) !!!\n",
+> +                       "pci_alloc_irq_vectors failed (r=%d) !!!\n",
+>                         ioc->name, r));
+> -               kfree(entries);
+>                 goto try_ioapic;
+>         }
+>
+>         ioc->msix_enable = 1;
+> -       for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++) {
+> -               r = _base_request_irq(ioc, i, a->vector);
+> +       ioc->msix_vector_count = r;
+> +       for (i = 0; i < ioc->msix_vector_count; i++) {
+> +               r = _base_request_irq(ioc, i);
+>                 if (r) {
+>                         _base_free_irq(ioc);
+>                         _base_disable_msix(ioc);
+> -                       kfree(entries);
+>                         goto try_ioapic;
+>                 }
+>         }
+>
+> -       kfree(entries);
+>         return 0;
+>
+>  /* failback to io_apic interrupt routing */
+>   try_ioapic:
+>
+>         ioc->reply_queue_count = 1;
+> -       r = _base_request_irq(ioc, 0, ioc->pdev->irq);
+> +       r = pci_alloc_irq_vectors(ioc->pdev, 1, 1, PCI_IRQ_LEGACY);
+> +       if (r < 0) {
+> +               dfailprintk(ioc, pr_info(MPT3SAS_FMT
+> +                       "pci_alloc_irq_vector(legacy) failed (r=%d) !!!\n",
+> +                       ioc->name, r));
+> +       } else
+> +               r = _base_request_irq(ioc, 0);
+>
+>         return r;
+>  }
+> @@ -2201,7 +2168,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>         list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
+>                 pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
+>                     reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
+> -                   "IO-APIC enabled"), reply_q->vector);
+> +                   "IO-APIC enabled"),
+> +                   pci_irq_vector(ioc->pdev, reply_q->msix_index));
+>
+>         pr_info(MPT3SAS_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
+>             ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
+> @@ -5245,7 +5213,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>                     sizeof(resource_size_t *), GFP_KERNEL);
+>                 if (!ioc->reply_post_host_index) {
+>                         dfailprintk(ioc, pr_info(MPT3SAS_FMT "allocation "
+> -                               "for cpu_msix_table failed!!!\n", ioc->name));
+> +                               "for reply_post_host_index failed!!!\n",
+> +                               ioc->name));
+>                         r = -ENOMEM;
+>                         goto out_free_resources;
+>                 }
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> index 3e71bc1..1187e66 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+> @@ -716,12 +716,10 @@ struct _event_ack_list {
+>  struct adapter_reply_queue {
+>         struct MPT3SAS_ADAPTER  *ioc;
+>         u8                      msix_index;
+> -       unsigned int            vector;
+>         u32                     reply_post_host_index;
+>         Mpi2ReplyDescriptorsUnion_t *reply_post_free;
+>         char                    name[MPT_NAME_LENGTH];
+>         atomic_t                busy;
+> -       cpumask_var_t           affinity_hint;
+>         struct list_head        list;
+>  };
+>
