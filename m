@@ -1,289 +1,113 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCHv2] mpt3sas: switch to pci_alloc_irq_vectors
-Date: Thu, 12 Jan 2017 17:53:31 +0530
-Message-ID: <CAK=zhgop+tsMMwiYqYVR3CRZ_Br6uW4pgkNXb4LOrs3GUbA8WA@mail.gmail.com>
-References: <1482240421-14847-1-git-send-email-hare@suse.de>
+From: Jelle de Jong <jelledejong@powercraft.nl>
+Subject: Re: ata mapping mvsas driver question
+Date: Thu, 12 Jan 2017 13:41:06 +0100
+Message-ID: <c9684a81-901d-03ea-e322-c27089c4b204@powercraft.nl>
+References: <362cdbe9-3633-499e-9ee4-b1a8afed2e40@powercraft.nl>
+ <2d56a20b-628f-d621-6c9b-ba5cdf8bf6a0@powercraft.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f180.google.com ([209.85.220.180]:35317 "EHLO
-        mail-qk0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750755AbdALMXd (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 07:23:33 -0500
-Received: by mail-qk0-f180.google.com with SMTP id u25so18152906qki.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 04:23:32 -0800 (PST)
-In-Reply-To: <1482240421-14847-1-git-send-email-hare@suse.de>
+Received: from relay02.cambriumhosting.nl ([217.19.16.174]:53634 "EHLO
+        relay02.cambriumhosting.nl" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750819AbdALMlO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Jan 2017 07:41:14 -0500
+Received: from relay02.cambriumhosting.nl (localhost [127.0.0.1])
+        by relay02.cambriumhosting.nl (Postfix) with ESMTP id 8AEA8805C1
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 13:41:11 +0100 (CET)
+Received: from yessica.powercraft.nl (ebony.powercraft.nl [84.245.27.193])
+        by relay02.cambriumhosting.nl (Postfix) with ESMTP id 7E48580570
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 13:41:11 +0100 (CET)
+Received: from [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4] (unknown [IPv6:2a02:58:5:2e00:a9e:1ff:fe32:7cf4])
+        by yessica.powercraft.nl (Postfix) with ESMTPSA id 7D12C20B35
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 13:39:41 +0100 (CET)
+In-Reply-To: <2d56a20b-628f-d621-6c9b-ba5cdf8bf6a0@powercraft.nl>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Hannes Reinecke <hare@suse.com>
+To: linux-scsi@vger.kernel.org
 
-On Tue, Dec 20, 2016 at 6:57 PM, Hannes Reinecke <hare@suse.de> wrote:
-> Cleanup the MSI-X handling allowing us to use
-> the PCI-layer provided vector allocation.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index a1a5ceb..75149f0 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -1129,7 +1129,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->                 /* TMs are on msix_index == 0 */
->                 if (reply_q->msix_index == 0)
->                         continue;
-> -               synchronize_irq(reply_q->vector);
-> +               synchronize_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index));
->         }
->  }
->
-> @@ -1818,11 +1818,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->
->         list_for_each_entry_safe(reply_q, next, &ioc->reply_queue_list, list) {
->                 list_del(&reply_q->list);
-> -               if (smp_affinity_enable) {
-> -                       irq_set_affinity_hint(reply_q->vector, NULL);
-> -                       free_cpumask_var(reply_q->affinity_hint);
-> -               }
-> -               free_irq(reply_q->vector, reply_q);
-> +               free_irq(pci_irq_vector(ioc->pdev, reply_q->msix_index),
-> +                        reply_q);
->                 kfree(reply_q);
->         }
->  }
-> @@ -1831,13 +1828,13 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->   * _base_request_irq - request irq
->   * @ioc: per adapter object
->   * @index: msix index into vector table
-> - * @vector: irq vector
->   *
->   * Inserting respective reply_queue into the list.
->   */
->  static int
-> -_base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index, u32 vector)
-> +_base_request_irq(struct MPT3SAS_ADAPTER *ioc, u8 index)
->  {
-> +       struct pci_dev *pdev = ioc->pdev;
->         struct adapter_reply_queue *reply_q;
->         int r;
->
-> @@ -1849,14 +1846,6 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->         }
->         reply_q->ioc = ioc;
->         reply_q->msix_index = index;
-> -       reply_q->vector = vector;
-> -
-> -       if (smp_affinity_enable) {
-> -               if (!zalloc_cpumask_var(&reply_q->affinity_hint, GFP_KERNEL)) {
-> -                       kfree(reply_q);
-> -                       return -ENOMEM;
-> -               }
-> -       }
->
->         atomic_set(&reply_q->busy, 0);
->         if (ioc->msix_enable)
-> @@ -1865,12 +1854,11 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->         else
->                 snprintf(reply_q->name, MPT_NAME_LENGTH, "%s%d",
->                     ioc->driver_name, ioc->id);
-> -       r = request_irq(vector, _base_interrupt, IRQF_SHARED, reply_q->name,
-> -           reply_q);
-> +       r = request_irq(pci_irq_vector(pdev, index), _base_interrupt,
-> +                       IRQF_SHARED, reply_q->name, reply_q);
->         if (r) {
->                 pr_err(MPT3SAS_FMT "unable to allocate interrupt %d!\n",
-> -                   reply_q->name, vector);
-> -               free_cpumask_var(reply_q->affinity_hint);
-> +                      reply_q->name, pci_irq_vector(pdev, index));
->                 kfree(reply_q);
->                 return -EBUSY;
->         }
-> @@ -1892,7 +1880,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->  static void
->  _base_assign_reply_queues(struct MPT3SAS_ADAPTER *ioc)
->  {
-> -       unsigned int cpu, nr_cpus, nr_msix, index = 0;
-> +       unsigned int cpu, nr_msix;
->         struct adapter_reply_queue *reply_q;
->
->         if (!_base_is_controller_msix_enabled(ioc))
-> @@ -1900,38 +1888,21 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->
->         memset(ioc->cpu_msix_table, 0, ioc->cpu_msix_table_sz);
->
-> -       nr_cpus = num_online_cpus();
->         nr_msix = ioc->reply_queue_count = min(ioc->reply_queue_count,
->                                                ioc->facts.MaxMSIxVectors);
->         if (!nr_msix)
->                 return;
-> -
-> -       cpu = cpumask_first(cpu_online_mask);
-> -
->         list_for_each_entry(reply_q, &ioc->reply_queue_list, list) {
-> -
-> -               unsigned int i, group = nr_cpus / nr_msix;
-> -
-> -               if (cpu >= nr_cpus)
-> -                       break;
-> -
-> -               if (index < nr_cpus % nr_msix)
-> -                       group++;
-> -
-> -               for (i = 0 ; i < group ; i++) {
-> -                       ioc->cpu_msix_table[cpu] = index;
-> -                       if (smp_affinity_enable)
-> -                               cpumask_or(reply_q->affinity_hint,
-> -                                  reply_q->affinity_hint, get_cpu_mask(cpu));
-> -                       cpu = cpumask_next(cpu, cpu_online_mask);
-> +               const cpumask_t *mask = pci_irq_get_affinity(ioc->pdev,
-> +                                                     reply_q->msix_index);
-> +               if (!mask) {
-> +                       pr_warn(MPT3SAS_FMT "no affinity for msi %x\n",
-> +                               ioc->name, reply_q->msix_index);
-> +                       continue;
->                 }
-> -               if (smp_affinity_enable)
-> -                       if (irq_set_affinity_hint(reply_q->vector,
-> -                                          reply_q->affinity_hint))
-> -                               dinitprintk(ioc, pr_info(MPT3SAS_FMT
-> -                                "Err setting affinity hint to irq vector %d\n",
-> -                                ioc->name, reply_q->vector));
-> -               index++;
-> +
-> +               for_each_cpu(cpu, mask)
-> +                       ioc->cpu_msix_table[cpu] = reply_q->msix_index;
->         }
->  }
->
+Anyone that know how to figure out the mapping?
 
-When PCI_IRQ_AFFINITY is not enabled (suppose when
-'smp_affinity_enable' module parameter is disabled) while allocation
-MSI-X vectors then I observe that only one MSI-X vector (that too zero
-msix indexed vector) is used and remaining MSI-X won't be used at all.
-Since here cpu_msix_table is not populated and it was just initialized
-to zero. So only zero msix indexed MSI-X vector is used for IOs.
+Kind regards,
 
-Apart from this, This patch looks good.
+Jelle de Jong
 
-
-> @@ -1957,10 +1928,10 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->  static int
->  _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
->  {
-> -       struct msix_entry *entries, *a;
->         int r;
->         int i;
->         u8 try_msix = 0;
-> +       unsigned int irq_flags = PCI_IRQ_MSIX;
+On 08/12/16 13:57, Jelle de Jong wrote:
+> Hello everybody,
 >
->         if (msix_disable == -1 || msix_disable == 0)
->                 try_msix = 1;
-> @@ -1972,7 +1943,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->                 goto try_ioapic;
+> Can anyone help me out with my question?
 >
->         ioc->reply_queue_count = min_t(int, ioc->cpu_count,
-> -           ioc->msix_vector_count);
-> +               ioc->msix_vector_count);
+> Thank you in advance.
 >
->         printk(MPT3SAS_FMT "MSI-X vectors supported: %d, no of cores"
->           ": %d, max_msix_vectors: %d\n", ioc->name, ioc->msix_vector_count,
-> @@ -1991,46 +1962,42 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->         if (ioc->msix_vector_count < ioc->cpu_count)
->                 smp_affinity_enable = 0;
+> Kind regards,
 >
-> -       entries = kcalloc(ioc->reply_queue_count, sizeof(struct msix_entry),
-> -           GFP_KERNEL);
-> -       if (!entries) {
-> -               dfailprintk(ioc, pr_info(MPT3SAS_FMT
-> -                       "kcalloc failed @ at %s:%d/%s() !!!\n",
-> -                       ioc->name, __FILE__, __LINE__, __func__));
-> -               goto try_ioapic;
-> -       }
-> -
-> -       for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++)
-> -               a->entry = i;
-> +       if (smp_affinity_enable)
-> +               irq_flags |= PCI_IRQ_AFFINITY;
+> Jelle de Jong
 >
-> -       r = pci_enable_msix_exact(ioc->pdev, entries, ioc->reply_queue_count);
-> -       if (r) {
-> +       r = pci_alloc_irq_vectors(ioc->pdev, 1, ioc->msix_vector_count,
-> +                                 irq_flags);
-> +       if (r < 0) {
->                 dfailprintk(ioc, pr_info(MPT3SAS_FMT
-> -                       "pci_enable_msix_exact failed (r=%d) !!!\n",
-> +                       "pci_alloc_irq_vectors failed (r=%d) !!!\n",
->                         ioc->name, r));
-> -               kfree(entries);
->                 goto try_ioapic;
->         }
->
->         ioc->msix_enable = 1;
-> -       for (i = 0, a = entries; i < ioc->reply_queue_count; i++, a++) {
-> -               r = _base_request_irq(ioc, i, a->vector);
-> +       ioc->msix_vector_count = r;
-> +       for (i = 0; i < ioc->msix_vector_count; i++) {
-> +               r = _base_request_irq(ioc, i);
->                 if (r) {
->                         _base_free_irq(ioc);
->                         _base_disable_msix(ioc);
-> -                       kfree(entries);
->                         goto try_ioapic;
->                 }
->         }
->
-> -       kfree(entries);
->         return 0;
->
->  /* failback to io_apic interrupt routing */
->   try_ioapic:
->
->         ioc->reply_queue_count = 1;
-> -       r = _base_request_irq(ioc, 0, ioc->pdev->irq);
-> +       r = pci_alloc_irq_vectors(ioc->pdev, 1, 1, PCI_IRQ_LEGACY);
-> +       if (r < 0) {
-> +               dfailprintk(ioc, pr_info(MPT3SAS_FMT
-> +                       "pci_alloc_irq_vector(legacy) failed (r=%d) !!!\n",
-> +                       ioc->name, r));
-> +       } else
-> +               r = _base_request_irq(ioc, 0);
->
->         return r;
->  }
-> @@ -2201,7 +2168,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->         list_for_each_entry(reply_q, &ioc->reply_queue_list, list)
->                 pr_info(MPT3SAS_FMT "%s: IRQ %d\n",
->                     reply_q->name,  ((ioc->msix_enable) ? "PCI-MSI-X enabled" :
-> -                   "IO-APIC enabled"), reply_q->vector);
-> +                   "IO-APIC enabled"),
-> +                   pci_irq_vector(ioc->pdev, reply_q->msix_index));
->
->         pr_info(MPT3SAS_FMT "iomem(0x%016llx), mapped(0x%p), size(%d)\n",
->             ioc->name, (unsigned long long)chip_phys, ioc->chip, memap_sz);
-> @@ -5245,7 +5213,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->                     sizeof(resource_size_t *), GFP_KERNEL);
->                 if (!ioc->reply_post_host_index) {
->                         dfailprintk(ioc, pr_info(MPT3SAS_FMT "allocation "
-> -                               "for cpu_msix_table failed!!!\n", ioc->name));
-> +                               "for reply_post_host_index failed!!!\n",
-> +                               ioc->name));
->                         r = -ENOMEM;
->                         goto out_free_resources;
->                 }
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index 3e71bc1..1187e66 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -716,12 +716,10 @@ struct _event_ack_list {
->  struct adapter_reply_queue {
->         struct MPT3SAS_ADAPTER  *ioc;
->         u8                      msix_index;
-> -       unsigned int            vector;
->         u32                     reply_post_host_index;
->         Mpi2ReplyDescriptorsUnion_t *reply_post_free;
->         char                    name[MPT_NAME_LENGTH];
->         atomic_t                busy;
-> -       cpumask_var_t           affinity_hint;
->         struct list_head        list;
->  };
->
+> On 26/11/16 21:43, Jelle de Jong wrote:
+>> Hello everybody,
+>>
+>> I am trying to find the mapping for ata22.00. due to some repeated
+>> issues:
+>>
+>> # 3.16.36-1+deb8u2~bpo70+1 crazing down
+>> http://paste.debian.net/hidden/54c12fae/
+>>
+>> # smart status 16 disks WDC 1TB RE SATA
+>> http://paste.debian.net/hidden/8bfe8d2f/
+>>
+>> "[473315.445703] ata22.00: exception Emask 0x0 SAct 0x7fe00007 SErr 0x0
+>> action 0x6 frozen"
+>>
+>> lsscsi --verbose doesn’t provide me with the ata details?
+>> http://paste.debian.net/hidden/430599a0/
+>>
+>> root@shirley:~# lsscsi --verbose
+>> [0:0:0:0]    disk    ATA      WDC WD1003FBYX-0 1V01  /dev/sdc
+>>   dir: /sys/bus/scsi/devices/0:0:0:0
+>> [/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:0/end_device-0:0:0/target0:0:0/0:0:0:0]
+>>
+>>
+>>
+>> I can not find any useful unique_id with the mvsas driver...
+>> find /sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/ -iname
+>> unique_id
+>>
+>> grep ata22 /var/log/messages indicates it is really mapped somewhere...
+>>
+>> root@shirley:~# readlink /sys/block/sdm
+>> ../devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:10/end_device-0:0:10/target0:0:10/0:0:10:0/block/sdm
+>>
+>>
+>>
+>> Best I came up with with no results:
+>>
+>> root@shirley:~# find
+>> /sys/devices/pci0000\:00/0000\:00\:1c.0/0000\:08\:00.0/host0/port-0\:0/expander-0\:0/port-0\:0\:10/end_device-0\:0\:10/target0\:0\:10/0\:0\:10\:0/
+>>
+>> -type f  -exec grep -i ata {} \;
+>>
+>> Linux shirley 3.16.0-0.bpo.4-amd64 #1 SMP Debian
+>> 3.16.36-1+deb8u2~bpo70+1 (2016-10-19) x86_64 GNU/Linux
+>> root@shirley:~# lsmod mvsas
+>> Usage: lsmod
+>>
+>> root@shirley:~# modinfo mvsas
+>> filename:
+>> /lib/modules/3.16.0-0.bpo.4-amd64/kernel/drivers/scsi/mvsas/mvsas.ko
+>> license:        GPL
+>> version:        0.8.16
+>>
+>> Thank you in advance!
+>>
+>> Kind regards,
+>>
+>> Jelle de Jong
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
