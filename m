@@ -1,46 +1,63 @@
-From: "Stephen Bates" <sbates@raithlin.com>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Wed, 11 Jan 2017 22:56:12 -0600
-Message-ID: <466066478645ecdc414e0d5de4178c41.squirrel@webmail.raithlin.com>
-References: <20170111134312.GH6286@linux-x5ow.site>
-    <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
-    <43b3038b57ed5c00a73ebc5457d048d5.squirrel@webmail.raithlin.com>
-    <43b42605-0c97-ca33-2e39-5ec58b441bcc@kernel.dk>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 2/2] sd: Ignore zoned field for host-managed devices
+Date: Thu, 12 Jan 2017 15:25:11 +0900
+Message-ID: <20170112062511.20261-3-damien.lemoal@wdc.com>
+References: <20170112062511.20261-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7BIT
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gateway22.websitewelcome.com ([192.185.47.168]:51845 "EHLO
-        gateway22.websitewelcome.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750698AbdALFo5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Jan 2017 00:44:57 -0500
-Received: from cm1.websitewelcome.com (cm.websitewelcome.com [192.185.0.102])
-        by gateway22.websitewelcome.com (Postfix) with ESMTP id 562091461D
-        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 22:56:14 -0600 (CST)
-In-Reply-To: <43b42605-0c97-ca33-2e39-5ec58b441bcc@kernel.dk>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:13341 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750707AbdALGZ3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 01:25:29 -0500
+In-Reply-To: <20170112062511.20261-1-damien.lemoal@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, Christoph Hellwig <hch@infradead.org>, Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, Hannes Reinecke <hare@suse.de>, Damien Le Moal <damien.lemoal@wdc.com>
 
->
-> This is a separate topic. The initial proposal is for polling for
-> interrupt mitigation, you are talking about polling in the context of
-> polling for completion of an IO.
->
-> We can definitely talk about this form of polling as well, but it should
-> be a separate topic and probably proposed independently.
->
-> --
-> Jens Axboe
->
->
+There is no good match of the zoned filed of the block device
+characteristics page for host-managed devices. For these devices, the
+zoning model is derived directly from the device type. So ignore the
+zoned field for these drives.
 
-Jens
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/sd.c | 20 ++++++++++++++------
+ 1 file changed, 14 insertions(+), 6 deletions(-)
 
-Oh thanks for the clarification. I will propose this as a separate topic.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index d7aaacf..6e6d4a4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2784,13 +2784,21 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
+ 		queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, q);
+ 	}
+ 
+-	sdkp->zoned = (buffer[8] >> 4) & 3;
+-	if (sdkp->zoned == 1)
+-		q->limits.zoned = BLK_ZONED_HA;
+-	else if (sdkp->device->type == TYPE_ZBC)
++	if (sdkp->device->type == TYPE_ZBC) {
++		/* Host-managed */
+ 		q->limits.zoned = BLK_ZONED_HM;
+-	else
+-		q->limits.zoned = BLK_ZONED_NONE;
++	} else {
++		sdkp->zoned = (buffer[8] >> 4) & 3;
++		if (sdkp->zoned == 1)
++			/* Host-aware */
++			q->limits.zoned = BLK_ZONED_HA;
++		else
++			/*
++			 * Treat drive-managed devices as
++			 * regular block devices.
++			 */
++			q->limits.zoned = BLK_ZONED_NONE;
++	}
+ 	if (blk_queue_is_zoned(q) && sdkp->first_scan)
+ 		sd_printk(KERN_NOTICE, sdkp, "Host-%s zoned block device\n",
+ 		      q->limits.zoned == BLK_ZONED_HM ? "managed" : "aware");
+-- 
+2.9.3
 
-Thanks
-
-Stephen
