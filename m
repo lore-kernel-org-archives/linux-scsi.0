@@ -1,84 +1,68 @@
 From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [Lsf-pc] [LFS/MM TOPIC][LFS/MM ATTEND]: - Storage Stack and
- Driver Testing methodology.
-Date: Thu, 12 Jan 2017 13:01:35 +0200
-Message-ID: <74f07f96-4741-1bbc-d570-1aea0a31b41e@grimberg.me>
-References: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
+Date: Thu, 12 Jan 2017 13:44:05 +0200
+Message-ID: <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
+References: <20170111134312.GH6286@linux-x5ow.site>
+ <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+ <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
+ <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
+ <20170112100251.GB3598@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-ide-owner@vger.kernel.org>
-In-Reply-To: <CO2PR04MB218427BF42159B20FB26F74186670@CO2PR04MB2184.namprd04.prod.outlook.com>
-Sender: linux-ide-owner@vger.kernel.org
-To: Chaitanya Kulkarni <Chaitanya.Kulkarni@wdc.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170112100251.GB3598@linux-x5ow.site>
+Sender: linux-block-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, linux-nvme@lists.infradead.org, Linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
 
-> Hi Folks,
+>> I agree with Jens that we'll need some analysis if we want the
+>> discussion to be affective, and I can spend some time this if I
+>> can find volunteers with high-end nvme devices (I only have access
+>> to client nvme devices.
 >
-> I would like to propose a general discussion on Storage stack and device driver testing.
-
-I think its very useful and needed.
-
-> Purpose:-
-> -------------
-> The main objective of this discussion is to address the need for
-> a Unified Test Automation Framework which can be used by different subsystems
-> in the kernel in order to improve the overall development and stability
-> of the storage stack.
+> I have a P3700 but somehow burned the FW. Let me see if I can bring it back to
+> live.
 >
-> For Example:-
-> From my previous experience, I've worked on the NVMe driver testing last year and we
-> have developed simple unit test framework
->  (https://github.com/linux-nvme/nvme-cli/tree/master/tests).
-> In current implementation Upstream NVMe Driver supports following subsystems:-
-> 1. PCI Host.
-> 2. RDMA Target.
-> 3. Fiber Channel Target (in progress).
-> Today due to lack of centralized automated test framework NVMe Driver testing is
-> scattered and performed using the combination of various utilities like nvme-cli/tests,
-> nvmet-cli, shell scripts (git://git.infradead.org/nvme-fabrics.git nvmf-selftests) etc.
+> I also have converted AHCI to the irq_poll interface and will run some tests.
+> I do also have some hpsa devices on which I could run tests once the driver is
+> adopted.
 >
-> In order to improve overall driver stability with various subsystems, it will be beneficial
-> to have a Unified Test Automation Framework (UTAF) which will centralize overall
-> testing.
->
-> This topic will allow developers from various subsystem engage in the discussion about
-> how to collaborate efficiently instead of having discussions on lengthy email threads.
+> But can we come to a common testing methology not to compare apples with
+> oranges? Sagi do you still have the fio job file from your last tests laying
+> somewhere and if yes could you share it?
 
-While a unified test framework for all sounds great, I suspect that the
-difference might be too large. So I think that for this framework to be
-maintainable, it needs to be carefully designed such that we don't have
-too much code churn.
+Its pretty basic:
+--
+[global]
+group_reporting
+cpus_allowed=0
+cpus_allowed_policy=split
+rw=randrw
+bs=4k
+numjobs=4
+iodepth=32
+runtime=60
+time_based
+loops=1
+ioengine=libaio
+direct=1
+invalidate=1
+randrepeat=1
+norandommap
+exitall
 
-For example we should start by classifying tests and then see where
-sharing is feasible:
+[job]
+--
 
-1. basic management - I think not a lot can be shared
-2. spec compliance - again, not much sharing here
-3. data-verification - probably everything can be shared
-4. basic performance - probably a lot can be shared
-5. vectored-io - probably everything can be shared
-6. error handling - I can think of some sharing that can be used.
+**Note: when I ran multiple threads on more cpus the performance
+degradation phenomenon disappeared, but I tested on a VM with
+qemu emulation backed by null_blk so I figured I had some other
+bottleneck somewhere (that's why I asked for some more testing).
 
-This repository can also store some useful tracing scripts (ebpf and
-friends) that are useful for performance analysis.
-
-So I think that for this to happen, we can start with the shared
-test under block/, then migrate proto specific tests into
-scsi/, nvme/, and then add transport specific tests so
-we can have something like:
-
-├── block
-├── lib
-├── nvme
-│   ├── fabrics
-│   │   ├── loop
-│   │   └── rdma
-│   └── pci
-└── scsi
-     ├── fc
-     └── iscsi
-
-Thoughts?
+Note that I ran randrw because I was backed with null_blk, testing
+with a real nvme device, you should either run randread or write, and
+if you do a write, you can't run it multi-threaded (well you can, but
+you'll get unpredictable performance...).
