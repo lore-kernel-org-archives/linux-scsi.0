@@ -1,39 +1,31 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [Lsf-pc] [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block
- drivers
-Date: Thu, 12 Jan 2017 16:41:00 +0200
-Message-ID: <91262998-8dd7-107a-06e7-6f333df59a91@grimberg.me>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
- <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
- <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
- <20170112100251.GB3598@linux-x5ow.site>
- <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
- <20170112125338.GH3598@linux-x5ow.site>
+From: Jeff Moyer <jmoyer@redhat.com>
+Subject: Re: RFC: 512e ZBC host-managed disks
+Date: Thu, 12 Jan 2017 10:02:55 -0500
+Message-ID: <x49eg08codc.fsf@segfault.boston.devel.redhat.com>
+References: <38404478-7b9a-35ed-8148-81a05bd01ac8@wdc.com>
+        <20170112082048.GA8276@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from merlin.infradead.org ([205.233.59.134]:44192 "EHLO
-        merlin.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750720AbdALOlK (ORCPT
-        <rfc822;Linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 09:41:10 -0500
-In-Reply-To: <20170112125338.GH3598@linux-x5ow.site>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <20170112082048.GA8276@lst.de> (Christoph Hellwig's message of
+        "Thu, 12 Jan 2017 09:20:48 +0100")
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <damien.lemoal@wdc.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <keith.busch@intel.com>, Linux-scsi@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 
+Christoph Hellwig <hch@lst.de> writes:
 
->> **Note: when I ran multiple threads on more cpus the performance
->> degradation phenomenon disappeared, but I tested on a VM with
->> qemu emulation backed by null_blk so I figured I had some other
->> bottleneck somewhere (that's why I asked for some more testing).
+> On Thu, Jan 12, 2017 at 05:13:52PM +0900, Damien Le Moal wrote:
+>> (3) Any other idea ?
 >
-> That could be because of the vmexits as every MMIO access in the guest
-> triggers a vmexit and if you poll with a low budget you do more MMIOs hence
-> you have more vmexits.
+> Do nothing and ignore the problem.  This whole idea so braindead that
+> the person coming up with the T10 language should be shot.  Either a device
+> has 511 logical sectors or 4k but not this crazy mix.
 >
-> Did you do testing only in qemu or with real H/W as well?
+> And make sure no one ships such a piece of crap because we are hell
+> not going to support it.
 
-I tried once. IIRC, I saw the same phenomenons...
+Agreed.  This is insane.
+
+-Jeff
