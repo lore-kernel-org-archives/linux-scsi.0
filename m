@@ -1,78 +1,150 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Thu, 12 Jan 2017 13:53:38 +0100
-Message-ID: <20170112125338.GH3598@linux-x5ow.site>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
- <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
- <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
- <20170112100251.GB3598@linux-x5ow.site>
- <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
+From: Eric Farman <farman@linux.vnet.ibm.com>
+Subject: Re: [PATCH] virtio_scsi: Reject commands when virtqueue is broken
+Date: Thu, 12 Jan 2017 08:28:42 -0500
+Message-ID: <aa461af2-6fc2-9ece-3b8f-9b6e07268c2f@linux.vnet.ibm.com>
+References: <1484172122-18882-1-git-send-email-farman@linux.vnet.ibm.com>
+ <1484172122-18882-2-git-send-email-farman@linux.vnet.ibm.com>
+ <20170112031159.GD26504@lemon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38752 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750856AbdALMxp (ORCPT <rfc822;Linux-scsi@vger.kernel.org>);
-        Thu, 12 Jan 2017 07:53:45 -0500
-Content-Disposition: inline
-In-Reply-To: <879a91ba-eff7-682d-12a9-5d83f26e7e09@grimberg.me>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35980 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751339AbdALN2s (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 12 Jan 2017 08:28:48 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0CDO67N039012
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 08:28:47 -0500
+Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 27x9h8b0ts-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jan 2017 08:28:47 -0500
+Received: from localhost
+        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <farman@linux.vnet.ibm.com>;
+        Thu, 12 Jan 2017 08:28:46 -0500
+In-Reply-To: <20170112031159.GD26504@lemon>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Jens Axboe <axboe@kernel.dk>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-block@vger.kernel.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, linux-nvme@lists.infradead.org, Linux-scsi@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>
+Cc: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On Thu, Jan 12, 2017 at 01:44:05PM +0200, Sagi Grimberg wrote:
-[...]
-> Its pretty basic:
-> --
-> [global]
-> group_reporting
-> cpus_allowed=0
-> cpus_allowed_policy=split
-> rw=randrw
-> bs=4k
-> numjobs=4
-> iodepth=32
-> runtime=60
-> time_based
-> loops=1
-> ioengine=libaio
-> direct=1
-> invalidate=1
-> randrepeat=1
-> norandommap
-> exitall
-> 
-> [job]
-> --
-> 
-> **Note: when I ran multiple threads on more cpus the performance
-> degradation phenomenon disappeared, but I tested on a VM with
-> qemu emulation backed by null_blk so I figured I had some other
-> bottleneck somewhere (that's why I asked for some more testing).
 
-That could be because of the vmexits as every MMIO access in the guest
-triggers a vmexit and if you poll with a low budget you do more MMIOs hence
-you have more vmexits.
 
-Did you do testing only in qemu or with real H/W as well?
+On 01/11/2017 10:11 PM, Fam Zheng wrote:
+> On Wed, 01/11 17:02, Eric Farman wrote:
+>> In the case of a graceful set of detaches, where the virtio-scsi-ccw
+>> disk is removed from the guest prior to the controller, the guest
+>> behaves quite normally.  Specifically, the detach gets us into
+>> sd_sync_cache to issue a Synchronize Cache(10) command, which
+>> immediately fails (and is retried a couple of times) because the
+>> device has been removed.  Later, the removal of the controller
+>> sees two CRWs presented, but there's no further indication of the
+>> removal from the guest viewpoint.
+>>
+>>  [   17.217458] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>>  [   17.219257] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+>>  [   21.449400] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
+>>  [   21.449406] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
+>>
+>> However, on s390, the SCSI disks can be removed "by surprise" when
+>> an entire controller (host) is removed and all associated disks
+>> are removed via the loop in scsi_forget_host.  The same call to
+>> sd_sync_cache is made, but because the controller has already
+>> been removed, the Synchronize Cache(10) command is neither issued
+>> (and then failed) nor rejected.
+>>
+>> That the I/O isn't returned means the guest cannot have other devices
+>> added nor removed, and other tasks (such as shutdown or reboot) issued
+>> by the guest will not complete either.  The virtio ring has already
+>> been marked as broken (via virtio_break_device in virtio_ccw_remove),
+>> but we still attempt to queue the command only to have it remain there.
+>> The calling sequence provides a bit of distinction for us:
+>>
+>>   virtscsi_queuecommand()
+>>    -> virtscsi_kick_cmd()
+>>     -> virtscsi_add_cmd()
+>>      -> virtqueue_add_sgs()
+>>       -> virtqueue_add()
+>>          if success
+>>            return 0
+>>          elseif vq->broken or vring_mapping_error()
+>>            return -EIO
+>>          else
+>>            return -ENOSPC
+>>
+>> A return of ENOSPC is generally a temporary condition, so returning
+>> "host busy" from virtscsi_queuecommand makes sense here, to have it
+>> redriven in a moment or two.  But the EIO return code is more of a
+>> permanent error and so it would be wise to return the I/O itself and
+>> allow the calling thread to finish gracefully.  The result is these
+>> four kernel messages in the guest (the fourth one does not occur
+>> prior to this patch):
+>>
+>>  [   22.921562] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
+>>  [   22.921580] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
+>>  [   22.921978] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+>>  [   22.921993] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+>>
+>> I opted to fill in the same response data that is returned from the
+>> more graceful device detach, where the disk device is removed prior
+>> to the controller device.
+>>
+>> Signed-off-by: Eric Farman <farman@linux.vnet.ibm.com>
+>> ---
+>>  drivers/scsi/virtio_scsi.c | 8 +++++++-
+>>  1 file changed, 7 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+>> index ec91bd0..78d50ca 100644
+>> --- a/drivers/scsi/virtio_scsi.c
+>> +++ b/drivers/scsi/virtio_scsi.c
+>> @@ -535,6 +535,7 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>>  	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
+>>  	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
+>>  	int req_size;
+>> +	int ret;
+>>
+>>  	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
+>>
+>> @@ -562,8 +563,13 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
+>>  		req_size = sizeof(cmd->req.cmd);
+>>  	}
+>>
+>> -	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
+>> +	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
+>> +	if (ret == -EIO) {
+>> +		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
+>> +		virtscsi_complete_cmd(vscsi, cmd);
+>
+> Is this safe? Calling virtscsi_complete_cmd requires vq_lock but we don't seem
+> to have it here.
 
-> 
-> Note that I ran randrw because I was backed with null_blk, testing
-> with a real nvme device, you should either run randread or write, and
-> if you do a write, you can't run it multi-threaded (well you can, but
-> you'll get unpredictable performance...).
+Hrm...  Didn't notice that, and can't speak to its safety.  I had a bit 
+of an I/O workload going to other disks, and things seemed okay, but it 
+was by no means an exhaustive test.
 
-Noted, thanks.
+I can't use virtscsi_vq_done, which normally handles that 
+acquire/release.  It calls virtqueue_get_buf prior to calling 
+virtscsi_complete_cmd, which returns NULL because the virtqueue is 
+broken.    Thus, no call to virtscsi_complete_cmd.
 
-Byte,
-	Johannes
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Can I mock up a wrapping routine that only handles the lock and 
+complete_cmd call, and ignore the virtqueue components that 
+virtscsi_vq_done does?  Or do I need to consider that somehow despite it 
+all being broken?
+
+Eric
+
+>
+> Fam
+>
+>> +	} else if (ret != 0) {
+>>  		return SCSI_MLQUEUE_HOST_BUSY;
+>> +	}
+>>  	return 0;
+>>  }
+>
+
