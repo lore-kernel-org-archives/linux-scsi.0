@@ -1,75 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/2] sd: Ignore zoned field for host-managed devices
-Date: Thu, 12 Jan 2017 07:53:36 +0100
-Message-ID: <5ac0d474-9613-6edc-9bac-92b9e9b26d8b@suse.de>
-References: <20170112062511.20261-1-damien.lemoal@wdc.com>
- <20170112062511.20261-3-damien.lemoal@wdc.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 14/15] block/bsg: move queue creation into
+        bsg_setup_queue
+Date: Thu, 12 Jan 2017 08:57:54 +0100
+Message-ID: <20170112075754.GB7567@lst.de>
+References: <1484060780-15592-1-git-send-email-hch@lst.de> <1484060780-15592-15-git-send-email-hch@lst.de> <20170111084218.GB6286@linux-x5ow.site> <20170111084512.GA6937@lst.de> <20170111220122.GA19051@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58961 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750777AbdALGxi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 12 Jan 2017 01:53:38 -0500
-In-Reply-To: <20170112062511.20261-3-damien.lemoal@wdc.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170111220122.GA19051@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Johannes Thumshirn <jthumshirn@suse.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>
 
-On 01/12/2017 07:25 AM, Damien Le Moal wrote:
-> There is no good match of the zoned filed of the block device
-> characteristics page for host-managed devices. For these devices, the
-> zoning model is derived directly from the device type. So ignore the
-> zoned field for these drives.
->
-> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
-> ---
->  drivers/scsi/sd.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
->
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index d7aaacf..6e6d4a4 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -2784,13 +2784,21 @@ static void sd_read_block_characteristics(struct scsi_disk *sdkp)
->  		queue_flag_clear_unlocked(QUEUE_FLAG_ADD_RANDOM, q);
->  	}
->
-> -	sdkp->zoned = (buffer[8] >> 4) & 3;
-> -	if (sdkp->zoned == 1)
-> -		q->limits.zoned = BLK_ZONED_HA;
-> -	else if (sdkp->device->type == TYPE_ZBC)
-> +	if (sdkp->device->type == TYPE_ZBC) {
-> +		/* Host-managed */
->  		q->limits.zoned = BLK_ZONED_HM;
-> -	else
-> -		q->limits.zoned = BLK_ZONED_NONE;
-> +	} else {
-> +		sdkp->zoned = (buffer[8] >> 4) & 3;
-> +		if (sdkp->zoned == 1)
-> +			/* Host-aware */
-> +			q->limits.zoned = BLK_ZONED_HA;
-> +		else
-> +			/*
-> +			 * Treat drive-managed devices as
-> +			 * regular block devices.
-> +			 */
-> +			q->limits.zoned = BLK_ZONED_NONE;
-> +	}
->  	if (blk_queue_is_zoned(q) && sdkp->first_scan)
->  		sd_printk(KERN_NOTICE, sdkp, "Host-%s zoned block device\n",
->  		      q->limits.zoned == BLK_ZONED_HM ? "managed" : "aware");
->
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Wed, Jan 11, 2017 at 05:01:22PM -0500, Mike Snitzer wrote:
+> But I've seen you reference the need to stop multipath from allocating
+> its own requests.  Are you referring to old request_fn request-based
+> multipath's clone_old_rq:alloc_old_clone_request?
 
-Cheers,
+Yes, that one is the issue.  It allocates a struct request "blind",
+that is without known what queue it goes to.  With this queue (or blk-mq
+for that matter) we need to know the queue, because the request structures
+might have additional data behind it and require additional initialization
+for drivers that require per-request data.  We make use of the per-request
+data for SCSI passthrough in this patch.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+> Or how blk-mq request-based multipath gets a request from the blk-mq tag
+> space (via blk_mq_alloc_request)?
+
+That's fine because it works on the queue of the device that I/O is
+submitted to.
