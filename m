@@ -1,29 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] vmw_pvscsi: switch to pci_alloc_irq_vectors
-Date: Wed, 11 Jan 2017 22:31:32 -0500
-Message-ID: <yq1y3yhnecr.fsf@oracle.com>
-References: <1479448958-6653-1-git-send-email-hch@lst.de>
-        <yq17f7mp7gc.fsf@sermon.lab.mkp.net>
-        <20170108150751.GA10308@infradead.org>
+Subject: Re: [PATCH v1] scsi: ufs: fix arguments order some trace calls
+Date: Wed, 11 Jan 2017 22:36:00 -0500
+Message-ID: <yq1tw95ne5b.fsf@oracle.com>
+References: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:50779 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750819AbdALDcR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 22:32:17 -0500
-In-Reply-To: <20170108150751.GA10308@infradead.org> (Christoph Hellwig's
-        message of "Sun, 8 Jan 2017 07:07:51 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
+        (Subhash Jadavani's message of "Tue, 10 Jan 2017 16:48:25 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Subhash Jadavani <subhashj@codeaurora.org>
+Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, colin.king@canonical.com, open list <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, jgill@vmware.com, Christoph Hellwig <hch@lst.de>, pv-drivers@vmware.com, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@infradead.org> writes:
+>>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
 
-Christoph> And simply the interrupt handler by splitting the INTx case
-Christoph> that needs to deal with shared interrupts into a separate
-Christoph> helper.
+Subhash> Colin Ian King <colin.king@canonical.com> reported that with
+Subhash> commit 7ff5ab473633 ("scsi: ufs: add tracing support") static
+Subhash> analysis is reporting that we may have swapped arguments on
+Subhash> calls to:
+
+[...]
 
 Applied to 4.11/scsi-queue.
 
