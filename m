@@ -1,68 +1,55 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 05/15] dm: remove incomple BLOCK_PC support
-Date: Wed, 11 Jan 2017 20:09:37 -0500
-Message-ID: <20170112010936.GA19953@redhat.com>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
- <1484060780-15592-6-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1484060780-15592-6-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH v2 0/4] cxlflash: Enhancements, cleanup and fixes
+Date: Wed, 11 Jan 2017 19:18:18 -0600
+Message-ID: <1484183898-22714-1-git-send-email-ukrishn@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:34023 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1752176AbdALBSl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 11 Jan 2017 20:18:41 -0500
+Received: from pps.filterd (m0098421.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0C15JWi017626
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 20:18:40 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 27wyu2rcxw-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jan 2017 20:18:40 -0500
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Wed, 11 Jan 2017 18:18:39 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: Brian King <brking@linux.vnet.ibm.com>, linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-On Tue, Jan 10 2017 at 10:06am -0500,
-Christoph Hellwig <hch@lst.de> wrote:
+This patch series includes an enhancement to support a new command queuing
+model and also cleans up prints throughout the driver. The last patch in
+the series fixes a racing issue.
 
-> DM tries to copy a few fields around for BLOCK_PC requests, but given
-> that no dm-target ever wires up scsi_cmd_ioctl BLOCK_PC can't actually
-> be sent to dm.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/md/dm-rq.c | 16 ----------------
->  1 file changed, 16 deletions(-)
-> 
-> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-> index 93f6e9f..3f12916 100644
-> --- a/drivers/md/dm-rq.c
-> +++ b/drivers/md/dm-rq.c
-> @@ -270,19 +270,6 @@ static void dm_end_request(struct request *clone, int error)
->  	struct mapped_device *md = tio->md;
->  	struct request *rq = tio->orig;
->  
-> -	if (rq->cmd_type == REQ_TYPE_BLOCK_PC) {
-> -		rq->errors = clone->errors;
-> -		rq->resid_len = clone->resid_len;
-> -
-> -		if (rq->sense)
-> -			/*
-> -			 * We are using the sense buffer of the original
-> -			 * request.
-> -			 * So setting the length of the sense data is enough.
-> -			 */
-> -			rq->sense_len = clone->sense_len;
-> -	}
-> -
->  	free_rq_clone(clone);
->  	rq_end_stats(md, rq);
->  	if (!rq->q->mq_ops)
-> @@ -511,9 +498,6 @@ static int setup_clone(struct request *clone, struct request *rq,
->  	if (r)
->  		return r;
->  
-> -	clone->cmd = rq->cmd;
-> -	clone->cmd_len = rq->cmd_len;
-> -	clone->sense = rq->sense;
->  	clone->end_io = end_clone_request;
->  	clone->end_io_data = tio;
->  
+The series is based upon v4.10-rc2, intended for 4.11 and is bisectable.
 
-I'm not following your reasoning.
+v2 Changes:
+- Fixed SOBs for all the submitted patches
 
-dm_blk_ioctl calls __blkdev_driver_ioctl and will call scsi_cmd_ioctl
-(sd_ioctl -> scsi_cmd_blk_ioctl -> scsi_cmd_ioctl) if DM's underlying
-block device is a scsi device.
+Matthew R. Ochs (3):
+  cxlflash: Refactor context reset to share reset logic
+  cxlflash: Support SQ Command Mode
+  cxlflash: Cleanup prints
+
+Uma Krishnan (1):
+  cxlflash: Cancel scheduled workers before stopping AFU
+
+ drivers/scsi/cxlflash/common.h     |  32 ++-
+ drivers/scsi/cxlflash/lunmgt.c     |  31 +--
+ drivers/scsi/cxlflash/main.c       | 465 +++++++++++++++++++++----------------
+ drivers/scsi/cxlflash/sislite.h    |  19 +-
+ drivers/scsi/cxlflash/superpipe.c  | 183 ++++++++-------
+ drivers/scsi/cxlflash/vlun.c       | 169 +++++++-------
+ include/uapi/scsi/cxlflash_ioctl.h |   1 +
+ 7 files changed, 518 insertions(+), 382 deletions(-)
+
+-- 
+2.1.0
+
