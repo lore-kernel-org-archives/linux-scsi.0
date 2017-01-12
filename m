@@ -1,28 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v1] scsi: ufs: fix arguments order some trace calls
-Date: Wed, 11 Jan 2017 22:36:00 -0500
-Message-ID: <yq1tw95ne5b.fsf@oracle.com>
-References: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
+Subject: Re: two fixes for the qla2xxx MSI-X changes in 4.10-rc
+Date: Wed, 11 Jan 2017 22:50:29 -0500
+Message-ID: <yq1pojtndh6.fsf@oracle.com>
+References: <1484153746-19406-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1484095705-3962-1-git-send-email-subhashj@codeaurora.org>
-        (Subhash Jadavani's message of "Tue, 10 Jan 2017 16:48:25 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Subhash Jadavani <subhashj@codeaurora.org>
-Cc: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, colin.king@canonical.com, open list <linux-kernel@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:19092 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751453AbdALDuk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 11 Jan 2017 22:50:40 -0500
+In-Reply-To: <1484153746-19406-1-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Wed, 11 Jan 2017 17:55:44 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
->>>>> "Subhash" == Subhash Jadavani <subhashj@codeaurora.org> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Subhash> Colin Ian King <colin.king@canonical.com> reported that with
-Subhash> commit 7ff5ab473633 ("scsi: ufs: add tracing support") static
-Subhash> analysis is reporting that we may have swapped arguments on
-Subhash> calls to:
+Christoph> Hi Himanshu, two small updates to to a) fix the way affinity
+Christoph> is assigned for qla2xxx, and b) remove the dead interrupt
+Christoph> affinity notifiers.
 
-[...]
-
-Applied to 4.11/scsi-queue.
+Applied to 4.10/scsi-fixes.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
