@@ -1,51 +1,38 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: RFC: 512e ZBC host-managed disks
-Date: Fri, 13 Jan 2017 09:14:41 +0900
-Message-ID: <1f93b23c-fc62-4e07-0550-3b6eefe2a7dc@wdc.com>
-References: <38404478-7b9a-35ed-8148-81a05bd01ac8@wdc.com>
- <20170112082048.GA8276@lst.de>
- <x49eg08codc.fsf@segfault.boston.devel.redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:63054 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750781AbdAMAOs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 12 Jan 2017 19:14:48 -0500
-In-Reply-To: <x49eg08codc.fsf@segfault.boston.devel.redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH] libfc: Fix variable name in fc_set_wwpn
+Date: Fri, 13 Jan 2017 11:40:01 +0800
+Message-ID: <20170113034001.29202-1-famz@redhat.com>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org
+Cc: famz@redhat.com, Johannes Thumshirn <jth@kernel.org>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, fcoe-devel@open-fcoe.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jeff Moyer <jmoyer@redhat.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Hannes Reinecke <hare@suse.de>, Shaun Tancheff <shaun@tancheff.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>
 
+The parameter name should be wwpn instead of wwnn.
 
+Signed-off-by: Fam Zheng <famz@redhat.com>
+---
+ include/scsi/libfc.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-On 1/13/17 00:02, Jeff Moyer wrote:
-> Christoph Hellwig <hch@lst.de> writes:
-> 
->> On Thu, Jan 12, 2017 at 05:13:52PM +0900, Damien Le Moal wrote:
->>> (3) Any other idea ?
->>
->> Do nothing and ignore the problem.  This whole idea so braindead that
->> the person coming up with the T10 language should be shot.  Either a device
->> has 511 logical sectors or 4k but not this crazy mix.
->>
->> And make sure no one ships such a piece of crap because we are hell
->> not going to support it.
-> 
-> Agreed.  This is insane.
-
-Christoph, Jeff,
-
-Thank you for the feedback.
-
+diff --git a/include/scsi/libfc.h b/include/scsi/libfc.h
+index 96dd0b3..da5033d 100644
+--- a/include/scsi/libfc.h
++++ b/include/scsi/libfc.h
+@@ -809,11 +809,11 @@ static inline void fc_set_wwnn(struct fc_lport *lport, u64 wwnn)
+ /**
+  * fc_set_wwpn() - Set the World Wide Port Name of a local port
+  * @lport: The local port whose WWPN is to be set
+- * @wwnn:  The new WWPN
++ * @wwpn:  The new WWPN
+  */
+-static inline void fc_set_wwpn(struct fc_lport *lport, u64 wwnn)
++static inline void fc_set_wwpn(struct fc_lport *lport, u64 wwpn)
+ {
+-	lport->wwpn = wwnn;
++	lport->wwpn = wwpn;
+ }
+ 
+ /**
 -- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+2.9.3
