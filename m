@@ -1,31 +1,34 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 09/11] qla2xxx: Add Dual mode support in the driver
-Date: Fri, 13 Jan 2017 22:13:59 +0000
-Message-ID: <7FEFABE6-1896-40E0-A857-8C001B5304EE@cavium.com>
-References: <1482553419-4117-1-git-send-email-himanshu.madhani@cavium.com>
- <1482553419-4117-10-git-send-email-himanshu.madhani@cavium.com>
- <d04e3282-68b8-4541-58e8-ad972b069bfb@sandisk.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: fix data transfer size caculation for special payload requests
+Date: Fri, 13 Jan 2017 15:17:20 -0700
+Message-ID: <20170113221720.GA16425@kernel.dk>
+References: <1484306953-3194-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <d04e3282-68b8-4541-58e8-ad972b069bfb@sandisk.com>
-Content-Language: en-US
-Content-ID: <61AED1249B7CED45AB054B1B1D7FFEE9@namprd07.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-io0-f173.google.com ([209.85.223.173]:32822 "EHLO
+        mail-io0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751385AbdAMWRY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2017 17:17:24 -0500
+Received: by mail-io0-f173.google.com with SMTP id v96so54241930ioi.0
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 14:17:24 -0800 (PST)
+Content-Disposition: inline
+In-Reply-To: <1484306953-3194-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Dexuan Cui <decui@microsoft.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
 
-DQoNCk9uIDEvMTEvMTcsIDExOjUxIEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3Nj
-aGVAc2FuZGlzay5jb20+IHdyb3RlOg0KDQo+T24gMTIvMjMvMjAxNiAwODoyMyBQTSwgSGltYW5z
-aHUgTWFkaGFuaSB3cm90ZToNCj4+IC0jZGVmaW5lIFFMQV9UR1RfTU9ERV9FTkFCTEVEKCkgKHFs
-MnhfaW5pX21vZGUgIT0gUUxBMlhYWF9JTklfTU9ERV9FTkFCTEVEKQ0KPj4gKyNkZWZpbmUgUUxB
-X1RHVF9NT0RFX0VOQUJMRUQoKSBcDQo+PiArCSgocWwyeF9pbmlfbW9kZSAhPSBRTEEyWFhYX0lO
-SV9NT0RFX0VOQUJMRUQpIHx8IFwNCj4+ICsJIChxbDJ4X2luaV9tb2RlID09IFFMQTJYWFhfSU5J
-X01PREVfRFVBTCkpDQo+DQo+SGVsbG8gSGltYW5zaHUgYW5kIFF1aW5uLA0KPg0KPklzIHRoaXMg
-Y2hhbmdlIG5lZWRlZD8gSXQgbG9va3MgcmVkdW5kYW50IHRvIG1lLiBGb3IgYWxsIHBvc3NpYmxl
-DQo+cWwyeF9pbmlfbW9kZSB2YWx1ZXMgYm90aCB0aGUgb2xkIGFuZCB0aGUgbmV3IGV4cHJlc3Np
-b24gd2lsbCB5aWVsZCB0aGUNCj5zYW1lIHZhbHVlLg0KDQpBZ3JlZS4gVGhpcyBpcyByZWR1bmRh
-bnQuIEnigJlsbCByZW1vdmUgaXQuDQoNCj4NCj5Bbnl3YXksIGR1YWwgbW9kZSBpcyBhIHdlbGNv
-bWUgaW1wcm92ZW1lbnQhDQo+DQo+QmFydC4NCg==
+On Fri, Jan 13 2017, Christoph Hellwig wrote:
+> Hi all,
+> 
+> the first two fixes fix a regression in 4.10-rc1 where the data transfer
+> size for discard commands wasn't set properly, leading to hangs with
+> Hyper-V VMs.  The use the new data transfer size helper added in patch 1
+> more widely.
+
+Added for this series, thanks.
+
+-- 
+Jens Axboe
+
