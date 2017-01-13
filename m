@@ -1,76 +1,186 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: RE: [PATCH 3/4] hpsa: remove coalescing settings for ioaccel2
-Date: Fri, 13 Jan 2017 14:58:24 +0000
-Message-ID: <4993A297653ECB4581FA5C3C31323D194181F0AC@avsrvexchmbx2.microsemi.net>
-References: <147752001094.813.10247306839794156732.stgit@brunhilda>
- <147752051865.813.13621083415298379753.stgit@brunhilda>
- <38a10a15-a441-cfcb-bc06-0cbe27863c24@suse.de>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 4.10-rc3
+Date: Fri, 13 Jan 2017 07:02:07 -0800
+Message-ID: <1484319727.2527.8.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0075.outbound.protection.outlook.com ([104.47.41.75]:11647
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751739AbdAMO6z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Jan 2017 09:58:55 -0500
-In-Reply-To: <38a10a15-a441-cfcb-bc06-0cbe27863c24@suse.de>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-PiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBIYW5uZXMgUmVpbmVja2UgW21h
-aWx0bzpoYXJlQHN1c2UuZGVdDQo+IFNlbnQ6IFRodXJzZGF5LCBPY3RvYmVyIDI3LCAyMDE2IDQ6
-MDQgQU0NCj4gVG86IERvbiBCcmFjZSA8ZG9uLmJyYWNlQG1pY3Jvc2VtaS5jb20+OyBqZWpiQGxp
-bnV4LnZuZXQuaWJtLmNvbTsgSm9obg0KPiBIYWxsIDxKb2huLkhhbGxAbWljcm9zZW1pLmNvbT47
-IEtldmluIEJhcm5ldHQNCj4gPGtldmluLmJhcm5ldHRAbWljcm9zZW1pLmNvbT47IE1haGVzaCBS
-YWphc2hla2hhcmENCj4gPG1haGVzaC5yYWphc2hla2hhcmFAbWljcm9zZW1pLmNvbT47IGhjaEBp
-bmZyYWRlYWQub3JnOyBTY290dCBUZWVsDQo+IDxzY290dC50ZWVsQG1pY3Jvc2VtaS5jb20+OyBW
-aXN3YXMgRyA8dmlzd2FzLmdAbWljcm9zZW1pLmNvbT47IEp1c3Rpbg0KPiBMaW5kbGV5IDxqdXN0
-aW4ubGluZGxleUBtaWNyb3NlbWkuY29tPjsgU2NvdHQgQmVuZXNoDQo+IDxzY290dC5iZW5lc2hA
-bWljcm9zZW1pLmNvbT47IGVsbGlvdHRAaHBlLmNvbTsgUE9TV0FMREBzdXNlLmNvbQ0KPiBDYzog
-bGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gU3ViamVjdDogUmU6IFtQQVRDSCAzLzRdIGhw
-c2E6IHJlbW92ZSBjb2FsZXNjaW5nIHNldHRpbmdzIGZvciBpb2FjY2VsMg0KPiANCj4gRVhURVJO
-QUwgRU1BSUwNCj4gDQo+IA0KPiBPbiAxMC8yNy8yMDE2IDEyOjIxIEFNLCBEb24gQnJhY2Ugd3Jv
-dGU6DQo+ID4gLSBTZXR0aW5nIGNvYWxlc2NpbmcgaGFzIGEgc2lnbmlmaWNhbnQgbmVnYXRpdmUN
-Cj4gPiAgIGltcGFjdCBvbiBsb3cgcXVldWUtZGVwdGggcGVyZm9ybWFuY2UuDQo+ID4gLSBEb2Vz
-IG5vdCBoZWxwIGhpZ2ggcXVldWUtZGVwdGggcGVyZm9ybWFuY2UuDQo+ID4NCj4gPiBSZXZpZXdl
-ZC1ieTogU2NvdHQgQmVuZXNoIDxzY290dC5iZW5lc2hAbWljcm9zZW1pLmNvbT4NCj4gPiBSZXZp
-ZXdlZC1ieTogU2NvdHQgVGVlbCA8c2NvdHQudGVlbEBtaWNyb3NlbWkuY29tPg0KPiA+IFJldmll
-d2VkLWJ5OiBLZXZpbiBCYXJuZXR0IDxrZXZpbi5iYXJuZXR0QG1pY3Jvc2VtaS5jb20+DQo+ID4g
-U2lnbmVkLW9mZi1ieTogRG9uIEJyYWNlIDxkb24uYnJhY2VAbWljcm9zZW1pLmNvbT4NCj4gPiAt
-LS0NCj4gPiAgZHJpdmVycy9zY3NpL2hwc2EuYyB8ICAgIDggKystLS0tLS0NCj4gPiAgMSBmaWxl
-IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgNiBkZWxldGlvbnMoLSkNCj4gPg0KPiA+IGRpZmYg
-LS1naXQgYS9kcml2ZXJzL3Njc2kvaHBzYS5jIGIvZHJpdmVycy9zY3NpL2hwc2EuYw0KPiA+IGlu
-ZGV4IDlmYjczOWMuLjgxMGMzMDAgMTAwNjQ0DQo+ID4gLS0tIGEvZHJpdmVycy9zY3NpL2hwc2Eu
-Yw0KPiA+ICsrKyBiL2RyaXZlcnMvc2NzaS9ocHNhLmMNCj4gPiBAQCAtOTI3NywxMyArOTI3Nyw5
-IEBAIHN0YXRpYyBpbnQgaHBzYV9lbnRlcl9wZXJmb3JtYW50X21vZGUoc3RydWN0DQo+IGN0bHJf
-aW5mbyAqaCwgdTMyIHRyYW5zX3N1cHBvcnQpDQo+ID4gICAgICAgICAgICAgICBhY2Nlc3MgPSBT
-QTVfaW9hY2NlbF9tb2RlMV9hY2Nlc3M7DQo+ID4gICAgICAgICAgICAgICB3cml0ZWwoMTAsICZo
-LT5jZmd0YWJsZS0+SG9zdFdyaXRlLkNvYWxJbnREZWxheSk7DQo+ID4gICAgICAgICAgICAgICB3
-cml0ZWwoNCwgJmgtPmNmZ3RhYmxlLT5Ib3N0V3JpdGUuQ29hbEludENvdW50KTsNCj4gPiAtICAg
-ICB9IGVsc2Ugew0KPiA+IC0gICAgICAgICAgICAgaWYgKHRyYW5zX3N1cHBvcnQgJiBDRkdUQkxf
-VHJhbnNfaW9fYWNjZWwyKSB7DQo+ID4gKyAgICAgfSBlbHNlDQo+ID4gKyAgICAgICAgICAgICBp
-ZiAodHJhbnNfc3VwcG9ydCAmIENGR1RCTF9UcmFuc19pb19hY2NlbDIpDQo+ID4gICAgICAgICAg
-ICAgICAgICAgICAgIGFjY2VzcyA9IFNBNV9pb2FjY2VsX21vZGUyX2FjY2VzczsNCj4gPiAtICAg
-ICAgICAgICAgICAgICAgICAgd3JpdGVsKDEwLCAmaC0+Y2ZndGFibGUtPkhvc3RXcml0ZS5Db2Fs
-SW50RGVsYXkpOw0KPiA+IC0gICAgICAgICAgICAgICAgICAgICB3cml0ZWwoNCwgJmgtPmNmZ3Rh
-YmxlLT5Ib3N0V3JpdGUuQ29hbEludENvdW50KTsNCj4gPiAtICAgICAgICAgICAgIH0NCj4gPiAt
-ICAgICB9DQo+ID4gICAgICAgd3JpdGVsKENGR1RCTF9DaGFuZ2VSZXEsIGgtPnZhZGRyICsgU0E1
-X0RPT1JCRUxMKTsNCj4gPiAgICAgICBpZiAoaHBzYV93YWl0X2Zvcl9tb2RlX2NoYW5nZV9hY2so
-aCkpIHsNCj4gPiAgICAgICAgICAgICAgIGRldl9lcnIoJmgtPnBkZXYtPmRldiwNCj4gPg0KPiA+
-IC0tDQo+ID4gVG8gdW5zdWJzY3JpYmUgZnJvbSB0aGlzIGxpc3Q6IHNlbmQgdGhlIGxpbmUgInVu
-c3Vic2NyaWJlIGxpbnV4LXNjc2kiIGluDQo+ID4gdGhlIGJvZHkgb2YgYSBtZXNzYWdlIHRvIG1h
-am9yZG9tb0B2Z2VyLmtlcm5lbC5vcmcNCj4gPiBNb3JlIG1ham9yZG9tbyBpbmZvIGF0ICBodHRw
-Oi8vdmdlci5rZXJuZWwub3JnL21ham9yZG9tby1pbmZvLmh0bWwNCj4gPg0KPiBSZXZpZXdlZC1i
-eTogSGFubmVzIFJlaW5lY2tlIDxoYXJlQHN1c2UuY29tPg0KPiANCj4gQ2hlZXJzLA0KPiANCj4g
-SGFubmVzDQo+IC0tDQo+IERyLiBIYW5uZXMgUmVpbmVja2UgICAgICAgICAgICAgICAgVGVhbWxl
-YWQgU3RvcmFnZSAmIE5ldHdvcmtpbmcNCj4gaGFyZUBzdXNlLmRlICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICArNDkgOTExIDc0MDUzIDY4OA0KPiBTVVNFIExJTlVYIEdtYkgsIE1h
-eGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJuYmVyZw0KPiBHRjogRi4gSW1lbmTDtnJmZmVyLCBKLiBT
-bWl0aGFyZCwgSi4gR3VpbGQsIEQuIFVwbWFueXUsIEcuIE5vcnRvbg0KPiBIUkIgMjEyODQgKEFH
-IE7DvHJuYmVyZykNCg0KV29uZGVyaW5nIHdoYXQgaGFzIGhhcHBlbmVkIHRvIHRoaXMgcGF0Y2g/
-DQoNClRoYW5rcywNCkRvbiBCcmFjZQ0KDQpFU0MgLSBTbWFydCBTdG9yYWdlDQpNaWNyb3NlbWkg
-Q29ycG9yYXRpb24NCg0KDQo=
+The major fix is the bfa firmware, since the latest 10Gb cards fail
+probing with the current firmware.  The rest is a set of minor fixes:
+one missed Kconfig dependency causing randconfig failures, a missed
+error return on an error leg, a change for how multiqueue waits on a
+blocked device and a don't reset while in reset fix.
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Bart Van Assche (1):
+      scsi: scsi-mq: Wait for .queue_rq() if necessary
+
+Benjamin Poirier (1):
+      scsi: bfa: Increase requested firmware version to 3.2.5.1
+
+Burak Ok (1):
+      scsi: snic: Return error code on memory allocation failure
+
+Randy Dunlap (1):
+      scsi: qedi: fix build, depends on UIO
+
+Satish Kharat (1):
+      scsi: fnic: Avoid sending reset to firmware when another reset is in progress
+
+And the diffstat:
+
+ drivers/scsi/bfa/bfad.c       |  6 +++---
+ drivers/scsi/bfa/bfad_drv.h   |  2 +-
+ drivers/scsi/fnic/fnic.h      |  1 +
+ drivers/scsi/fnic/fnic_scsi.c | 16 ++++++++++++++++
+ drivers/scsi/qedi/Kconfig     |  2 +-
+ drivers/scsi/scsi_lib.c       |  2 +-
+ drivers/scsi/snic/snic_main.c |  3 +++
+ 7 files changed, 26 insertions(+), 6 deletions(-)
+
+With full diff below.
+
+James
+
+---
+
+diff --git a/drivers/scsi/bfa/bfad.c b/drivers/scsi/bfa/bfad.c
+index d9e1521..5caf5f3 100644
+--- a/drivers/scsi/bfa/bfad.c
++++ b/drivers/scsi/bfa/bfad.c
+@@ -64,9 +64,9 @@ int		max_rport_logins = BFA_FCS_MAX_RPORT_LOGINS;
+ u32	bfi_image_cb_size, bfi_image_ct_size, bfi_image_ct2_size;
+ u32	*bfi_image_cb, *bfi_image_ct, *bfi_image_ct2;
+ 
+-#define BFAD_FW_FILE_CB		"cbfw-3.2.3.0.bin"
+-#define BFAD_FW_FILE_CT		"ctfw-3.2.3.0.bin"
+-#define BFAD_FW_FILE_CT2	"ct2fw-3.2.3.0.bin"
++#define BFAD_FW_FILE_CB		"cbfw-3.2.5.1.bin"
++#define BFAD_FW_FILE_CT		"ctfw-3.2.5.1.bin"
++#define BFAD_FW_FILE_CT2	"ct2fw-3.2.5.1.bin"
+ 
+ static u32 *bfad_load_fwimg(struct pci_dev *pdev);
+ static void bfad_free_fwimg(void);
+diff --git a/drivers/scsi/bfa/bfad_drv.h b/drivers/scsi/bfa/bfad_drv.h
+index f9e8620..cfcfff4 100644
+--- a/drivers/scsi/bfa/bfad_drv.h
++++ b/drivers/scsi/bfa/bfad_drv.h
+@@ -58,7 +58,7 @@
+ #ifdef BFA_DRIVER_VERSION
+ #define BFAD_DRIVER_VERSION    BFA_DRIVER_VERSION
+ #else
+-#define BFAD_DRIVER_VERSION    "3.2.25.0"
++#define BFAD_DRIVER_VERSION    "3.2.25.1"
+ #endif
+ 
+ #define BFAD_PROTO_NAME FCPI_NAME
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 9ddc920..9e4b770 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -248,6 +248,7 @@ struct fnic {
+ 	struct completion *remove_wait; /* device remove thread blocks */
+ 
+ 	atomic_t in_flight;		/* io counter */
++	bool internal_reset_inprogress;
+ 	u32 _reserved;			/* fill hole */
+ 	unsigned long state_flags;	/* protected by host lock */
+ 	enum fnic_state state;
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 2544a37..adb3d58 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -2581,6 +2581,19 @@ int fnic_host_reset(struct scsi_cmnd *sc)
+ 	unsigned long wait_host_tmo;
+ 	struct Scsi_Host *shost = sc->device->host;
+ 	struct fc_lport *lp = shost_priv(shost);
++	struct fnic *fnic = lport_priv(lp);
++	unsigned long flags;
++
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	if (fnic->internal_reset_inprogress == 0) {
++		fnic->internal_reset_inprogress = 1;
++	} else {
++		spin_unlock_irqrestore(&fnic->fnic_lock, flags);
++		FNIC_SCSI_DBG(KERN_DEBUG, fnic->lport->host,
++			"host reset in progress skipping another host reset\n");
++		return SUCCESS;
++	}
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 
+ 	/*
+ 	 * If fnic_reset is successful, wait for fabric login to complete
+@@ -2601,6 +2614,9 @@ int fnic_host_reset(struct scsi_cmnd *sc)
+ 		}
+ 	}
+ 
++	spin_lock_irqsave(&fnic->fnic_lock, flags);
++	fnic->internal_reset_inprogress = 0;
++	spin_unlock_irqrestore(&fnic->fnic_lock, flags);
+ 	return ret;
+ }
+ 
+diff --git a/drivers/scsi/qedi/Kconfig b/drivers/scsi/qedi/Kconfig
+index 23ca8a2..2133145 100644
+--- a/drivers/scsi/qedi/Kconfig
++++ b/drivers/scsi/qedi/Kconfig
+@@ -1,6 +1,6 @@
+ config QEDI
+ 	tristate "QLogic QEDI 25/40/100Gb iSCSI Initiator Driver Support"
+-	depends on PCI && SCSI
++	depends on PCI && SCSI && UIO
+ 	depends on QED
+ 	select SCSI_ISCSI_ATTRS
+ 	select QED_LL2
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c35b6de..9fd9a97 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2893,7 +2893,7 @@ scsi_internal_device_block(struct scsi_device *sdev)
+ 	 * request queue. 
+ 	 */
+ 	if (q->mq_ops) {
+-		blk_mq_stop_hw_queues(q);
++		blk_mq_quiesce_queue(q);
+ 	} else {
+ 		spin_lock_irqsave(q->queue_lock, flags);
+ 		blk_stop_queue(q);
+diff --git a/drivers/scsi/snic/snic_main.c b/drivers/scsi/snic/snic_main.c
+index 396b32d..7cf70aa 100644
+--- a/drivers/scsi/snic/snic_main.c
++++ b/drivers/scsi/snic/snic_main.c
+@@ -591,6 +591,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!pool) {
+ 		SNIC_HOST_ERR(shost, "dflt sgl pool creation failed\n");
+ 
++		ret = -ENOMEM;
+ 		goto err_free_res;
+ 	}
+ 
+@@ -601,6 +602,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!pool) {
+ 		SNIC_HOST_ERR(shost, "max sgl pool creation failed\n");
+ 
++		ret = -ENOMEM;
+ 		goto err_free_dflt_sgl_pool;
+ 	}
+ 
+@@ -611,6 +613,7 @@ snic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
+ 	if (!pool) {
+ 		SNIC_HOST_ERR(shost, "snic tmreq info pool creation failed.\n");
+ 
++		ret = -ENOMEM;
+ 		goto err_free_max_sgl_pool;
+ 	}
+ 
