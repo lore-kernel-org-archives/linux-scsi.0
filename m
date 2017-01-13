@@ -1,65 +1,66 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 05/15] dm: remove incomple BLOCK_PC support
-Date: Fri, 13 Jan 2017 09:14:16 +0100
-Message-ID: <20170113081416.GA26337@lst.de>
-References: <1484060780-15592-1-git-send-email-hch@lst.de>
-	<1484060780-15592-6-git-send-email-hch@lst.de>
-	<20170112010936.GA19953@redhat.com> <20170112080054.GD7567@lst.de>
-	<20170112222845.GA25349@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20170112222845.GA25349@redhat.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
+From: Shyam Saini <mayhs11saini@gmail.com>
+Subject: [PATCH] scsi: qla4xxx: Remove redundant memset before memcpy
+Date: Fri, 13 Jan 2017 15:34:50 +0530
+Message-ID: <1484301890-22207-1-git-send-email-mayhs11saini@gmail.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35099 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751380AbdAMKFH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2017 05:05:07 -0500
+Received: by mail-pf0-f196.google.com with SMTP id f144so7792769pfa.2
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 02:05:07 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: anil.gurumurthy@qlogic.com
+Cc: sudarsana.kalluru@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, shivasharan.srikanteshwara@broadcom.com, linux-scsi@vger.kernel.org, Shyam Saini <mayhs11saini@gmail.com>
 
-On Thu, Jan 12, 2017 at 05:28:45PM -0500, Mike Snitzer wrote:
-> What is "incomplete" about request-based DM's BLOCK_PC support?
+The region set by the call to memset, immediately overwritten by the
+subsequent call to memcpy and thus makes the  memset redundant
 
-BLOCK_PC requests are always aomething issued by the driver itself
-(for a broad defintion of the driver, aka everything under the block
-layer that works together is a driver for this purpose, e.g. all
-of the SCSI subsystem).  If a driver doesn't issue BLOCK_PC
-requests itself or through library functions only called from the
-driver (e.g. scsi_cmd_ioctl) it is incomplete because it can't
-be used.
+Signed-off-by: Shyam Saini <mayhs11saini@gmail.com>
+---
+ drivers/scsi/bfa/bfa_ioc.c                  | 1 -
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 --
+ drivers/scsi/qla4xxx/ql4_os.c               | 1 -
+ 3 files changed, 4 deletions(-)
 
-> I'm also missing how you're saying the new blk-mq request-based DM will
-> work with your new model.  I appreciate that we get the request from the
-> underlying blk-mq request_queue and it'll be properly sized.  But
-> wouldn't we need to pass data back up for these SCSI pass-through
-> requests?  So wouldn't the top-level multipath request_queue need to
-> setup cmd_size?
+diff --git a/drivers/scsi/bfa/bfa_ioc.c b/drivers/scsi/bfa/bfa_ioc.c
+index a1ada4a..a3aa8d3 100644
+--- a/drivers/scsi/bfa/bfa_ioc.c
++++ b/drivers/scsi/bfa/bfa_ioc.c
+@@ -2763,7 +2763,6 @@ bfa_ioc_get_type(struct bfa_ioc_s *ioc)
+ void
+ bfa_ioc_get_adapter_serial_num(struct bfa_ioc_s *ioc, char *serial_num)
+ {
+-	memset((void *)serial_num, 0, BFA_ADAPTER_SERIAL_NUM_LEN);
+ 	memcpy((void *)serial_num,
+ 			(void *)ioc->attr->brcd_serialnum,
+ 			BFA_ADAPTER_SERIAL_NUM_LEN);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 24778ba..32102f6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -1406,8 +1406,6 @@ map_cmd_status(struct megasas_cmd_fusion *cmd, u8 status, u8 ext_status)
+ 
+ 		cmd->scmd->result = (DID_OK << 16) | ext_status;
+ 		if (ext_status == SAM_STAT_CHECK_CONDITION) {
+-			memset(cmd->scmd->sense_buffer, 0,
+-			       SCSI_SENSE_BUFFERSIZE);
+ 			memcpy(cmd->scmd->sense_buffer, cmd->sense,
+ 			       SCSI_SENSE_BUFFERSIZE);
+ 			cmd->scmd->result |= DRIVER_SENSE << 24;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index 9fbb33f..21c1c78 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -619,7 +619,6 @@ static void qla4xxx_create_chap_list(struct scsi_qla_host *ha)
+ 		goto exit_chap_list;
+ 	}
+ 
+-	memset(ha->chap_list, 0, chap_size);
+ 	memcpy(ha->chap_list, chap_flash_data, chap_size);
+ 
+ exit_chap_list:
+-- 
+2.7.4
 
-As said above - supporting BLOCK_PC for dm does not make sense, as
-it's an internal passthrough mechanism for driver internal use.
-It just happened we standardized it at the block layer because SCSI
-commands are a standard supported by a few different drivers, e.g.
-SCSI itself, the old ide code for ATAPI and CCISS and virtio_blk
-which primarily are block drivers but allow some SCSI passthrough.
-
-To be honest I'd love to just fold BLOCK_PC into the SCSI layer sooner
-or later - the old IDE code and CCISS should die off sooner or later,
-and virtio_blk scsi passthrough was a horrible idea to start with
-(and I say that as the person who had the idea back then and implemented
-it..)
-
-> Sorry for the naive questions (that clearly speak to me not
-> understanding how this aspect of the block and SCSI code work).. but I'd
-> like to understand where DM will be lacking going forward.
-
-At least in terms of BLOCK_PC nothing will change for dm, the code
-was simply dead on arrival.  Maybe I should change the subject
-to say that more clearly.
