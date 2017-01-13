@@ -1,36 +1,65 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 3/4] nvme: use blk_rq_payload_bytes
-Date: Fri, 13 Jan 2017 12:43:55 +0100
-Message-ID: <bd744e72-35ca-4b98-e037-0abe30a5059d@suse.de>
+Subject: Re: [PATCH 4/4] sd: remove __data_len hack for WRITE SAME
+Date: Fri, 13 Jan 2017 12:44:16 +0100
+Message-ID: <c44e21a1-ed63-dca6-daec-f42b4d62691c@suse.de>
 References: <1484306953-3194-1-git-send-email-hch@lst.de>
- <1484306953-3194-4-git-send-email-hch@lst.de>
+ <1484306953-3194-5-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:58386 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751950AbdAMLn5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Jan 2017 06:43:57 -0500
-In-Reply-To: <1484306953-3194-4-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1484306953-3194-5-git-send-email-hch@lst.de>
+Sender: linux-block-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
 Cc: Dexuan Cui <decui@microsoft.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+List-Id: linux-scsi@vger.kernel.org
 
 On 01/13/2017 12:29 PM, Christoph Hellwig wrote:
-> The new blk_rq_payload_bytes generalizes the payload length hacks
-> that nvme_map_len did before.
+> Now that we have the blk_rq_payload_bytes helper available to determine
+> the actual I/O size we don't need to mess around with __data_len for
+> WRITE SAME.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/nvme/host/fc.c   |  5 ++---
->  drivers/nvme/host/nvme.h |  8 --------
->  drivers/nvme/host/pci.c  | 19 ++++++++-----------
->  drivers/nvme/host/rdma.c | 13 +++++--------
->  4 files changed, 15 insertions(+), 30 deletions(-)
+>  drivers/scsi/sd.c | 17 +----------------
+>  1 file changed, 1 insertion(+), 16 deletions(-)
 > 
-[ .. ]
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index b193304..1fbb1ec 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -836,7 +836,6 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+>  	struct bio *bio = rq->bio;
+>  	sector_t sector = blk_rq_pos(rq);
+>  	unsigned int nr_sectors = blk_rq_sectors(rq);
+> -	unsigned int nr_bytes = blk_rq_bytes(rq);
+>  	int ret;
+>  
+>  	if (sdkp->device->no_write_same)
+> @@ -869,21 +868,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
+>  
+>  	cmd->transfersize = sdp->sector_size;
+>  	cmd->allowed = SD_MAX_RETRIES;
+> -
+> -	/*
+> -	 * For WRITE_SAME the data transferred in the DATA IN buffer is
+> -	 * different from the amount of data actually written to the target.
+> -	 *
+> -	 * We set up __data_len to the amount of data transferred from the
+> -	 * DATA IN buffer so that blk_rq_map_sg set up the proper S/G list
+> -	 * to transfer a single sector of data first, but then reset it to
+> -	 * the amount of data to be written right after so that the I/O path
+> -	 * knows how much to actually write.
+> -	 */
+> -	rq->__data_len = sdp->sector_size;
+> -	ret = scsi_init_io(cmd);
+> -	rq->__data_len = nr_bytes;
+> -	return ret;
+> +	return scsi_init_io(cmd);
+>  }
+>  
+>  static int sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
+> 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
