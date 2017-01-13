@@ -1,328 +1,313 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] be2iscsi: switch to pci_alloc_irq_vectors
-Date: Fri, 13 Jan 2017 17:29:48 +0100
-Message-ID: <1484324988-30962-1-git-send-email-hch@lst.de>
+Subject: [PATCH] csiostor: switch to pci_alloc_irq_vectors
+Date: Fri, 13 Jan 2017 17:30:46 +0100
+Message-ID: <1484325046-31032-1-git-send-email-hch@lst.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([198.137.202.9]:41796 "EHLO
+Received: from bombadil.infradead.org ([198.137.202.9]:41856 "EHLO
         bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751036AbdAMQ3y (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2017 11:29:54 -0500
+        with ESMTP id S1751063AbdAMQav (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 13 Jan 2017 11:30:51 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: subbu.seetharaman@broadcom.com, ketan.mukadam@broadcom.com, jitendra.bhivare@broadcom.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: hariprasad@chelsio.com, praveenm@chelsio.com
 
 And get automatic MSI-X affinity for free.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/be2iscsi/be_main.c | 127 +++++++++++++---------------------------
- drivers/scsi/be2iscsi/be_main.h |   2 -
- 2 files changed, 42 insertions(+), 87 deletions(-)
+ drivers/scsi/csiostor/csio_hw.h   |   4 +-
+ drivers/scsi/csiostor/csio_init.c |   9 +--
+ drivers/scsi/csiostor/csio_isr.c  | 127 +++++++++++++-------------------------
+ 3 files changed, 51 insertions(+), 89 deletions(-)
 
-diff --git a/drivers/scsi/be2iscsi/be_main.c b/drivers/scsi/be2iscsi/be_main.c
-index 6372613..03faca8 100644
---- a/drivers/scsi/be2iscsi/be_main.c
-+++ b/drivers/scsi/be2iscsi/be_main.c
-@@ -801,12 +801,12 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 	struct pci_dev *pcidev = phba->pcidev;
- 	struct hwi_controller *phwi_ctrlr;
- 	struct hwi_context_memory *phwi_context;
--	int ret, msix_vec, i, j;
-+	int ret, i, j;
+diff --git a/drivers/scsi/csiostor/csio_hw.h b/drivers/scsi/csiostor/csio_hw.h
+index 029bef8..a084d83 100644
+--- a/drivers/scsi/csiostor/csio_hw.h
++++ b/drivers/scsi/csiostor/csio_hw.h
+@@ -95,7 +95,6 @@ enum {
+ };
  
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
+ struct csio_msix_entries {
+-	unsigned short	vector;		/* Assigned MSI-X vector */
+ 	void		*dev_id;	/* Priv object associated w/ this msix*/
+ 	char		desc[24];	/* Description of this vector */
+ };
+@@ -591,8 +590,9 @@ int csio_enqueue_evt(struct csio_hw *, enum csio_evt, void *, uint16_t);
+ void csio_evtq_flush(struct csio_hw *hw);
  
--	if (phba->msix_enabled) {
-+	if (pcidev->msix_enabled) {
- 		for (i = 0; i < phba->num_cpus; i++) {
- 			phba->msi_name[i] = kzalloc(BEISCSI_MSI_NAME,
- 						    GFP_KERNEL);
-@@ -817,9 +817,8 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ int csio_request_irqs(struct csio_hw *);
++void csio_free_irqs(struct csio_hw *);
+ void csio_intr_enable(struct csio_hw *);
+-void csio_intr_disable(struct csio_hw *, bool);
++void csio_intr_disable(struct csio_hw *);
+ void csio_hw_fatal_err(struct csio_hw *);
  
- 			sprintf(phba->msi_name[i], "beiscsi_%02x_%02x",
- 				phba->shost->host_no, i);
--			msix_vec = phba->msix_entries[i].vector;
--			ret = request_irq(msix_vec, be_isr_msix, 0,
--					  phba->msi_name[i],
-+			ret = request_irq(pci_irq_vector(pcidev, i),
-+					  be_isr_msix, 0, phba->msi_name[i],
- 					  &phwi_context->be_eq[i]);
- 			if (ret) {
- 				beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT,
-@@ -837,9 +836,8 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
- 		}
- 		sprintf(phba->msi_name[i], "beiscsi_mcc_%02x",
- 			phba->shost->host_no);
--		msix_vec = phba->msix_entries[i].vector;
--		ret = request_irq(msix_vec, be_isr_mcc, 0, phba->msi_name[i],
--				  &phwi_context->be_eq[i]);
-+		ret = request_irq(pci_irq_vector(pcidev, i), be_isr_mcc, 0,
-+				  phba->msi_name[i], &phwi_context->be_eq[i]);
- 		if (ret) {
- 			beiscsi_log(phba, KERN_ERR, BEISCSI_LOG_INIT ,
- 				    "BM_%d : beiscsi_init_irqs-"
-@@ -861,9 +859,8 @@ static int beiscsi_init_irqs(struct beiscsi_hba *phba)
+ struct csio_lnode *csio_lnode_alloc(struct csio_hw *);
+diff --git a/drivers/scsi/csiostor/csio_init.c b/drivers/scsi/csiostor/csio_init.c
+index dbe416f..7e60699 100644
+--- a/drivers/scsi/csiostor/csio_init.c
++++ b/drivers/scsi/csiostor/csio_init.c
+@@ -461,8 +461,7 @@ csio_config_queues(struct csio_hw *hw)
  	return 0;
- free_msix_irqs:
- 	for (j = i - 1; j >= 0; j--) {
-+		free_irq(pci_irq_vector(pcidev, i), &phwi_context->be_eq[j]);
- 		kfree(phba->msi_name[j]);
--		msix_vec = phba->msix_entries[j].vector;
--		free_irq(msix_vec, &phwi_context->be_eq[j]);
- 	}
- 	return ret;
- }
-@@ -3039,7 +3036,7 @@ static int beiscsi_create_eqs(struct beiscsi_hba *phba,
- 	num_eq_pages = PAGES_REQUIRED(phba->params.num_eq_entries * \
- 				      sizeof(struct be_eq_entry));
  
--	if (phba->msix_enabled)
-+	if (phba->pcidev->msix_enabled)
- 		eq_for_mcc = 1;
- 	else
- 		eq_for_mcc = 0;
-@@ -3549,7 +3546,7 @@ static int be_mcc_queues_create(struct beiscsi_hba *phba,
- 			sizeof(struct be_mcc_compl)))
- 		goto err;
- 	/* Ask BE to create MCC compl queue; */
--	if (phba->msix_enabled) {
-+	if (phba->pcidev->msix_enabled) {
- 		if (beiscsi_cmd_cq_create(ctrl, cq, &phwi_context->be_eq
- 					 [phba->num_cpus].q, false, true, 0))
- 		goto mcc_cq_free;
-@@ -3580,42 +3577,35 @@ static int be_mcc_queues_create(struct beiscsi_hba *phba,
- 	return -ENOMEM;
+ intr_disable:
+-	csio_intr_disable(hw, false);
+-
++	csio_intr_disable(hw);
+ 	return -EINVAL;
  }
  
--/**
-- * find_num_cpus()- Get the CPU online count
-- * @phba: ptr to priv structure
-- *
-- * CPU count is used for creating EQ.
-- **/
--static void find_num_cpus(struct beiscsi_hba *phba)
-+static void be2iscsi_enable_msix(struct beiscsi_hba *phba)
+@@ -575,7 +574,8 @@ static struct csio_hw *csio_hw_alloc(struct pci_dev *pdev)
+ static void
+ csio_hw_free(struct csio_hw *hw)
  {
--	int  num_cpus = 0;
--
--	num_cpus = num_online_cpus();
-+	int nvec = 1;
+-	csio_intr_disable(hw, true);
++	csio_free_irqs(hw);
++	csio_intr_disable(hw);
+ 	csio_hw_exit_workers(hw);
+ 	csio_hw_exit(hw);
+ 	iounmap(hw->regstart);
+@@ -1068,7 +1068,8 @@ csio_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
+ 	spin_unlock_irq(&hw->lock);
+ 	csio_lnodes_unblock_request(hw);
+ 	csio_lnodes_exit(hw, 0);
+-	csio_intr_disable(hw, true);
++	csio_free_irqs(hw);
++	csio_intr_disable(hw);
+ 	pci_disable_device(pdev);
+ 	return state == pci_channel_io_perm_failure ?
+ 		PCI_ERS_RESULT_DISCONNECT : PCI_ERS_RESULT_NEED_RESET;
+diff --git a/drivers/scsi/csiostor/csio_isr.c b/drivers/scsi/csiostor/csio_isr.c
+index 2fb71c6..a5bf51b7 100644
+--- a/drivers/scsi/csiostor/csio_isr.c
++++ b/drivers/scsi/csiostor/csio_isr.c
+@@ -383,17 +383,15 @@ csio_request_irqs(struct csio_hw *hw)
+ 	int rv, i, j, k = 0;
+ 	struct csio_msix_entries *entryp = &hw->msix_entries[0];
+ 	struct csio_scsi_cpu_info *info;
++	struct pci_dev *pdev = hw->pdev;
  
- 	switch (phba->generation) {
- 	case BE_GEN2:
- 	case BE_GEN3:
--		phba->num_cpus = (num_cpus > BEISCSI_MAX_NUM_CPUS) ?
--				  BEISCSI_MAX_NUM_CPUS : num_cpus;
-+		nvec = BEISCSI_MAX_NUM_CPUS + 1;
- 		break;
- 	case BE_GEN4:
--		/*
--		 * If eqid_count == 1 fall back to
--		 * INTX mechanism
--		 **/
--		if (phba->fw_config.eqid_count == 1) {
--			enable_msix = 0;
--			phba->num_cpus = 1;
--			return;
--		}
--
--		phba->num_cpus =
--			(num_cpus > (phba->fw_config.eqid_count - 1)) ?
--			(phba->fw_config.eqid_count - 1) : num_cpus;
-+		nvec = phba->fw_config.eqid_count;
- 		break;
- 	default:
--		phba->num_cpus = 1;
-+		nvec = 2;
-+		break;
-+	}
-+
-+	/* if eqid_count == 1 fall back to INTX */
-+	if (enable_msix && nvec > 1) {
-+		const struct irq_affinity desc = { .post_vectors = 1 };
-+
-+		if (pci_alloc_irq_vectors_affinity(phba->pcidev, 2, nvec,
-+				PCI_IRQ_MSIX | PCI_IRQ_AFFINITY, &desc) < 0) {
-+			phba->num_cpus = nvec - 1;
-+			return;
-+		}
+ 	if (hw->intr_mode != CSIO_IM_MSIX) {
+-		rv = request_irq(hw->pdev->irq, csio_fcoe_isr,
+-					(hw->intr_mode == CSIO_IM_MSI) ?
+-							0 : IRQF_SHARED,
+-					KBUILD_MODNAME, hw);
++		rv = request_irq(pci_irq_vector(pdev, 0), csio_fcoe_isr,
++				hw->intr_mode == CSIO_IM_MSI ? 0 : IRQF_SHARED,
++				KBUILD_MODNAME, hw);
+ 		if (rv) {
+-			if (hw->intr_mode == CSIO_IM_MSI)
+-				pci_disable_msi(hw->pdev);
+ 			csio_err(hw, "Failed to allocate interrupt line.\n");
+-			return -EINVAL;
++			goto out_free_irqs;
+ 		}
+ 
+ 		goto out;
+@@ -402,22 +400,22 @@ csio_request_irqs(struct csio_hw *hw)
+ 	/* Add the MSIX vector descriptions */
+ 	csio_add_msix_desc(hw);
+ 
+-	rv = request_irq(entryp[k].vector, csio_nondata_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_nondata_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
  	}
-+
-+	phba->num_cpus = 1;
+ 
+-	entryp[k++].dev_id = (void *)hw;
++	entryp[k++].dev_id = hw;
+ 
+-	rv = request_irq(entryp[k].vector, csio_fwevt_isr, 0,
++	rv = request_irq(pci_irq_vector(pdev, k), csio_fwevt_isr, 0,
+ 			 entryp[k].desc, hw);
+ 	if (rv) {
+ 		csio_err(hw, "IRQ request failed for vec %d err:%d\n",
+-			 entryp[k].vector, rv);
+-		goto err;
++			 pci_irq_vector(pdev, k), rv);
++		goto out_free_irqs;
+ 	}
+ 
+ 	entryp[k++].dev_id = (void *)hw;
+@@ -429,51 +427,31 @@ csio_request_irqs(struct csio_hw *hw)
+ 			struct csio_scsi_qset *sqset = &hw->sqset[i][j];
+ 			struct csio_q *q = hw->wrm.q_arr[sqset->iq_idx];
+ 
+-			rv = request_irq(entryp[k].vector, csio_scsi_isr, 0,
++			rv = request_irq(pci_irq_vector(pdev, k), csio_scsi_isr, 0,
+ 					 entryp[k].desc, q);
+ 			if (rv) {
+ 				csio_err(hw,
+ 				       "IRQ request failed for vec %d err:%d\n",
+-				       entryp[k].vector, rv);
+-				goto err;
++				       pci_irq_vector(pdev, k), rv);
++				goto out_free_irqs;
+ 			}
+ 
+-			entryp[k].dev_id = (void *)q;
++			entryp[k].dev_id = q;
+ 
+ 		} /* for all scsi cpus */
+ 	} /* for all ports */
+ 
+ out:
+ 	hw->flags |= CSIO_HWF_HOST_INTR_ENABLED;
+-
+ 	return 0;
+ 
+-err:
+-	for (i = 0; i < k; i++) {
+-		entryp = &hw->msix_entries[i];
+-		free_irq(entryp->vector, entryp->dev_id);
+-	}
+-	pci_disable_msix(hw->pdev);
+-
++out_free_irqs:
++	for (i = 0; i < k; i++)
++		free_irq(pci_irq_vector(pdev, i), hw->msix_entries[i].dev_id);
++	pci_free_irq_vectors(hw->pdev);
+ 	return -EINVAL;
  }
  
- static void hwi_purge_eq(struct beiscsi_hba *phba)
-@@ -3632,7 +3622,7 @@ static void hwi_purge_eq(struct beiscsi_hba *phba)
- 
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
--	if (phba->msix_enabled)
-+	if (phba->pcidev->msix_enabled)
- 		eq_msix = 1;
- 	else
- 		eq_msix = 0;
-@@ -3710,7 +3700,7 @@ static void hwi_cleanup_port(struct beiscsi_hba *phba)
- 	}
- 
- 	be_mcc_queues_destroy(phba);
--	if (phba->msix_enabled)
-+	if (phba->pcidev->msix_enabled)
- 		eq_for_mcc = 1;
- 	else
- 		eq_for_mcc = 0;
-@@ -4156,7 +4146,7 @@ static void hwi_enable_intr(struct beiscsi_hba *phba)
- 		iowrite32(reg, addr);
- 	}
- 
--	if (!phba->msix_enabled) {
-+	if (!phba->pcidev->msix_enabled) {
- 		eq = &phwi_context->be_eq[0].q;
- 		beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 			    "BM_%d : eq->id=%d\n", eq->id);
-@@ -5279,19 +5269,6 @@ static void beiscsi_eqd_update_work(struct work_struct *work)
- 			      msecs_to_jiffies(BEISCSI_EQD_UPDATE_INTERVAL));
- }
- 
--static void beiscsi_msix_enable(struct beiscsi_hba *phba)
+-static void
+-csio_disable_msix(struct csio_hw *hw, bool free)
 -{
--	int i, status;
+-	int i;
+-	struct csio_msix_entries *entryp;
+-	int cnt = hw->num_sqsets + CSIO_EXTRA_VECS;
 -
--	for (i = 0; i <= phba->num_cpus; i++)
--		phba->msix_entries[i].entry = i;
--
--	status = pci_enable_msix_range(phba->pcidev, phba->msix_entries,
--				       phba->num_cpus + 1, phba->num_cpus + 1);
--	if (status > 0)
--		phba->msix_enabled = true;
+-	if (free) {
+-		for (i = 0; i < cnt; i++) {
+-			entryp = &hw->msix_entries[i];
+-			free_irq(entryp->vector, entryp->dev_id);
+-		}
+-	}
+-	pci_disable_msix(hw->pdev);
 -}
 -
- static void beiscsi_hw_tpe_check(unsigned long ptr)
+ /* Reduce per-port max possible CPUs */
+ static void
+ csio_reduce_sqsets(struct csio_hw *hw, int cnt)
+@@ -500,10 +478,9 @@ static int
+ csio_enable_msix(struct csio_hw *hw)
  {
- 	struct beiscsi_hba *phba;
-@@ -5359,15 +5336,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 	if (ret)
- 		return ret;
+ 	int i, j, k, n, min, cnt;
+-	struct csio_msix_entries *entryp;
+-	struct msix_entry *entries;
+ 	int extra = CSIO_EXTRA_VECS;
+ 	struct csio_scsi_cpu_info *info;
++	struct irq_affinity desc = { .pre_vectors = 2 };
  
--	if (enable_msix)
--		find_num_cpus(phba);
--	else
--		phba->num_cpus = 1;
--	if (enable_msix) {
--		beiscsi_msix_enable(phba);
--		if (!phba->msix_enabled)
--			phba->num_cpus = 1;
+ 	min = hw->num_pports + extra;
+ 	cnt = hw->num_sqsets + extra;
+@@ -512,50 +489,35 @@ csio_enable_msix(struct csio_hw *hw)
+ 	if (hw->flags & CSIO_HWF_USING_SOFT_PARAMS || !csio_is_hw_master(hw))
+ 		cnt = min_t(uint8_t, hw->cfg_niq, cnt);
+ 
+-	entries = kzalloc(sizeof(struct msix_entry) * cnt, GFP_KERNEL);
+-	if (!entries)
+-		return -ENOMEM;
+-
+-	for (i = 0; i < cnt; i++)
+-		entries[i].entry = (uint16_t)i;
+-
+ 	csio_dbg(hw, "FW supp #niq:%d, trying %d msix's\n", hw->cfg_niq, cnt);
+ 
+-	cnt = pci_enable_msix_range(hw->pdev, entries, min, cnt);
+-	if (cnt < 0) {
+-		kfree(entries);
++	cnt = pci_alloc_irq_vectors_affinity(hw->pdev, min, cnt, PCI_IRQ_MSIX,
++			&desc);
++	if (cnt < 0)
+ 		return cnt;
 -	}
-+	be2iscsi_enable_msix(phba);
  
- 	beiscsi_get_params(phba);
- 	/* Re-enable UER. If different TPE occurs then it is recoverable. */
-@@ -5396,7 +5365,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget, be_iopoll);
+ 	if (cnt < (hw->num_sqsets + extra)) {
+ 		csio_dbg(hw, "Reducing sqsets to %d\n", cnt - extra);
+ 		csio_reduce_sqsets(hw, cnt - extra);
  	}
  
--	i = (phba->msix_enabled) ? i : 0;
-+	i = (phba->pcidev->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
- 	pbe_eq = &phwi_context->be_eq[i];
- 	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
-@@ -5434,9 +5403,7 @@ static int beiscsi_enable_port(struct beiscsi_hba *phba)
- 	hwi_cleanup_port(phba);
- 
- disable_msix:
--	if (phba->msix_enabled)
--		pci_disable_msix(phba->pcidev);
+-	/* Save off vectors */
+-	for (i = 0; i < cnt; i++) {
+-		entryp = &hw->msix_entries[i];
+-		entryp->vector = entries[i].vector;
+-	}
 -
-+	pci_free_irq_vectors(phba->pcidev);
- 	return ret;
+ 	/* Distribute vectors */
+ 	k = 0;
+-	csio_set_nondata_intr_idx(hw, entries[k].entry);
+-	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), entries[k++].entry);
+-	csio_set_fwevt_intr_idx(hw, entries[k++].entry);
++	csio_set_nondata_intr_idx(hw, k);
++	csio_set_mb_intr_idx(csio_hw_to_mbm(hw), k++);
++	csio_set_fwevt_intr_idx(hw, k++);
+ 
+ 	for (i = 0; i < hw->num_pports; i++) {
+ 		info = &hw->scsi_cpu_info[i];
+ 
+ 		for (j = 0; j < hw->num_scsi_msix_cpus; j++) {
+ 			n = (j % info->max_cpus) +  k;
+-			hw->sqset[i][j].intr_idx = entries[n].entry;
++			hw->sqset[i][j].intr_idx = n;
+ 		}
+ 
+ 		k += info->max_cpus;
+ 	}
+ 
+-	kfree(entries);
+ 	return 0;
  }
  
-@@ -5453,7 +5420,7 @@ static void beiscsi_disable_port(struct beiscsi_hba *phba, int unload)
- 	struct hwi_context_memory *phwi_context;
- 	struct hwi_controller *phwi_ctrlr;
- 	struct be_eq_obj *pbe_eq;
--	unsigned int i, msix_vec;
-+	unsigned int i;
+@@ -593,26 +555,25 @@ csio_intr_enable(struct csio_hw *hw)
+ }
  
- 	if (!test_and_clear_bit(BEISCSI_HBA_ONLINE, &phba->state))
- 		return;
-@@ -5461,16 +5428,16 @@ static void beiscsi_disable_port(struct beiscsi_hba *phba, int unload)
- 	phwi_ctrlr = phba->phwi_ctrlr;
- 	phwi_context = phwi_ctrlr->phwi_ctxt;
- 	hwi_disable_intr(phba);
--	if (phba->msix_enabled) {
-+	if (phba->pcidev->msix_enabled) {
- 		for (i = 0; i <= phba->num_cpus; i++) {
--			msix_vec = phba->msix_entries[i].vector;
--			free_irq(msix_vec, &phwi_context->be_eq[i]);
-+			free_irq(pci_irq_vector(phba->pcidev, i),
-+				&phwi_context->be_eq[i]);
- 			kfree(phba->msi_name[i]);
- 		}
- 	} else
- 		if (phba->pcidev->irq)
- 			free_irq(phba->pcidev->irq, phba);
--	pci_disable_msix(phba->pcidev);
-+	pci_free_irq_vectors(phba->pcidev);
+ void
+-csio_intr_disable(struct csio_hw *hw, bool free)
++csio_free_irqs(struct csio_hw *hw)
+ {
+-	csio_hw_intr_disable(hw);
++	if (hw->intr_mode == CSIO_IM_MSIX) {
++		int i;
  
- 	for (i = 0; i < phba->num_cpus; i++) {
- 		pbe_eq = &phwi_context->be_eq[i];
-@@ -5680,21 +5647,12 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 	beiscsi_get_params(phba);
- 	beiscsi_set_uer_feature(phba);
- 
--	if (enable_msix)
--		find_num_cpus(phba);
--	else
--		phba->num_cpus = 1;
-+	be2iscsi_enable_msix(phba);
- 
- 	beiscsi_log(phba, KERN_INFO, BEISCSI_LOG_INIT,
- 		    "BM_%d : num_cpus = %d\n",
- 		    phba->num_cpus);
- 
--	if (enable_msix) {
--		beiscsi_msix_enable(phba);
--		if (!phba->msix_enabled)
--			phba->num_cpus = 1;
--	}
--
- 	phba->shost->max_id = phba->params.cxns_per_ctrl;
- 	phba->shost->can_queue = phba->params.ios_per_ctrl;
- 	ret = beiscsi_get_memory(phba);
-@@ -5744,7 +5702,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 		irq_poll_init(&pbe_eq->iopoll, be_iopoll_budget, be_iopoll);
+-	switch (hw->intr_mode) {
+-	case CSIO_IM_MSIX:
+-		csio_disable_msix(hw, free);
+-		break;
+-	case CSIO_IM_MSI:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		pci_disable_msi(hw->pdev);
+-		break;
+-	case CSIO_IM_INTX:
+-		if (free)
+-			free_irq(hw->pdev->irq, hw);
+-		break;
+-	default:
+-		break;
++		for (i = 0; i < hw->num_sqsets + CSIO_EXTRA_VECS; i++) {
++			free_irq(pci_irq_vector(hw->pdev, i),
++					hw->msix_entries[i].dev_id);
++		}
++	} else {
++		free_irq(pci_irq_vector(hw->pdev, 0), hw);
  	}
- 
--	i = (phba->msix_enabled) ? i : 0;
-+	i = (phba->pcidev->msix_enabled) ? i : 0;
- 	/* Work item for MCC handling */
- 	pbe_eq = &phwi_context->be_eq[i];
- 	INIT_WORK(&pbe_eq->mcc_work, beiscsi_mcc_work);
-@@ -5815,8 +5773,7 @@ static int beiscsi_dev_probe(struct pci_dev *pcidev,
- 			   phba->ctrl.mbox_mem_alloced.dma);
- 	beiscsi_unmap_pci_function(phba);
- hba_free:
--	if (phba->msix_enabled)
--		pci_disable_msix(phba->pcidev);
-+	pci_disable_msix(phba->pcidev);
- 	pci_dev_put(phba->pcidev);
- 	iscsi_host_free(phba->shost);
- 	pci_set_drvdata(pcidev, NULL);
-diff --git a/drivers/scsi/be2iscsi/be_main.h b/drivers/scsi/be2iscsi/be_main.h
-index 2188579..d1d03ee 100644
---- a/drivers/scsi/be2iscsi/be_main.h
-+++ b/drivers/scsi/be2iscsi/be_main.h
-@@ -323,9 +323,7 @@ struct beiscsi_hba {
- 	struct pci_dev *pcidev;
- 	unsigned int num_cpus;
- 	unsigned int nxt_cqid;
--	struct msix_entry msix_entries[MAX_CPUS];
- 	char *msi_name[MAX_CPUS];
--	bool msix_enabled;
- 	struct be_mem_descriptor *init_mem;
- 
- 	unsigned short io_sgl_alloc_index;
++}
++
++void
++csio_intr_disable(struct csio_hw *hw)
++{
++	csio_hw_intr_disable(hw);
++	pci_free_irq_vectors(hw->pdev);
+ 	hw->intr_mode = CSIO_IM_NONE;
+ 	hw->flags &= ~CSIO_HWF_HOST_INTR_ENABLED;
+ }
 -- 
 2.1.4
 
