@@ -1,73 +1,119 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/4] sd: remove __data_len hack for WRITE SAME
-Date: Fri, 13 Jan 2017 12:44:16 +0100
-Message-ID: <c44e21a1-ed63-dca6-daec-f42b4d62691c@suse.de>
-References: <1484306953-3194-1-git-send-email-hch@lst.de>
- <1484306953-3194-5-git-send-email-hch@lst.de>
+From: "Javali, Nilesh" <Nilesh.Javali@cavium.com>
+Subject: Re: [PATCH v2] scsi: qla4xxx: Use dma_pool_zalloc
+Date: Fri, 13 Jan 2017 11:45:30 +0000
+Message-ID: <D49EBA4A.43ECD%nilesh.javali@cavium.com>
+References: <20161222121258.GA8278@gnr743-HP-ZBook-15>
+ <CAFqt6zaGvYZ3ncdXtbrSphCMtyj+F=xtM5_dma3uEvDKODgdBw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1484306953-3194-5-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
-Cc: Dexuan Cui <decui@microsoft.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0054.outbound.protection.outlook.com ([104.47.36.54]:64224
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751406AbdAMLpd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Jan 2017 06:45:33 -0500
+In-Reply-To: <CAFqt6zaGvYZ3ncdXtbrSphCMtyj+F=xtM5_dma3uEvDKODgdBw@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <0891F6B83C9E194E8769E943F11C5A0C@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Souptick Joarder <jrdr.linux@gmail.com>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Rameshwar Sahu <sahu.rameshwar73@gmail.com>
 
-On 01/13/2017 12:29 PM, Christoph Hellwig wrote:
-> Now that we have the blk_rq_payload_bytes helper available to determine
-> the actual I/O size we don't need to mess around with __data_len for
-> WRITE SAME.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  drivers/scsi/sd.c | 17 +----------------
->  1 file changed, 1 insertion(+), 16 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index b193304..1fbb1ec 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -836,7 +836,6 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
->  	struct bio *bio = rq->bio;
->  	sector_t sector = blk_rq_pos(rq);
->  	unsigned int nr_sectors = blk_rq_sectors(rq);
-> -	unsigned int nr_bytes = blk_rq_bytes(rq);
->  	int ret;
->  
->  	if (sdkp->device->no_write_same)
-> @@ -869,21 +868,7 @@ static int sd_setup_write_same_cmnd(struct scsi_cmnd *cmd)
->  
->  	cmd->transfersize = sdp->sector_size;
->  	cmd->allowed = SD_MAX_RETRIES;
-> -
-> -	/*
-> -	 * For WRITE_SAME the data transferred in the DATA IN buffer is
-> -	 * different from the amount of data actually written to the target.
-> -	 *
-> -	 * We set up __data_len to the amount of data transferred from the
-> -	 * DATA IN buffer so that blk_rq_map_sg set up the proper S/G list
-> -	 * to transfer a single sector of data first, but then reset it to
-> -	 * the amount of data to be written right after so that the I/O path
-> -	 * knows how much to actually write.
-> -	 */
-> -	rq->__data_len = sdp->sector_size;
-> -	ret = scsi_init_io(cmd);
-> -	rq->__data_len = nr_bytes;
-> -	return ret;
-> +	return scsi_init_io(cmd);
->  }
->  
->  static int sd_setup_flush_cmnd(struct scsi_cmnd *cmd)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+On 02/01/17, 11:10 AM, "Souptick Joarder" <jrdr.linux@gmail.com> wrote:
+
+>Hi Nilesh,
+>
+>On Thu, Dec 22, 2016 at 5:42 PM, Souptick Joarder <jrdr.linux@gmail.com>
+>wrote:
+>> We should use dma_pool_zalloc instead of dma_pool_alloc/memset
+>>
+>> Signed-off-by: Souptick joarder <jrdr.linux@gmail.com>
+>> ---
+>> v2 changes:
+>>    - Address comment from Nilesh to make same change in
+>>      all applicable places inside qla4xxx source
+>>
+>>  drivers/scsi/qla4xxx/ql4_mbx.c | 6 ++----
+>>  drivers/scsi/qla4xxx/ql4_os.c  | 4 +---
+>>  2 files changed, 3 insertions(+), 7 deletions(-)
+>>
+>> diff --git a/drivers/scsi/qla4xxx/ql4_mbx.c
+>>b/drivers/scsi/qla4xxx/ql4_mbx.c
+>> index c291fdf..8f97839 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_mbx.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_mbx.c
+>> @@ -1587,12 +1587,11 @@ int qla4xxx_get_chap(struct scsi_qla_host *ha,
+>>char *username, char *password,
+>>         struct ql4_chap_table *chap_table;
+>>         dma_addr_t chap_dma;
+>>
+>> -       chap_table =3D dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>> +       chap_table =3D dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>>         if (chap_table =3D=3D NULL)
+>>                 return -ENOMEM;
+>>
+>>         chap_size =3D sizeof(struct ql4_chap_table);
+>> -       memset(chap_table, 0, chap_size);
+>>
+>>         if (is_qla40XX(ha))
+>>                 offset =3D FLASH_CHAP_OFFSET | (idx * chap_size);
+>> @@ -1651,13 +1650,12 @@ int qla4xxx_set_chap(struct scsi_qla_host *ha,
+>>char *username, char *password,
+>>         uint32_t chap_size =3D 0;
+>>         dma_addr_t chap_dma;
+>>
+>> -       chap_table =3D dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>> +       chap_table =3D dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>>         if (chap_table =3D=3D NULL) {
+>>                 ret =3D  -ENOMEM;
+>>                 goto exit_set_chap;
+>>         }
+>>
+>> -       memset(chap_table, 0, sizeof(struct ql4_chap_table));
+>>         if (bidi)
+>>                 chap_table->flags |=3D BIT_6; /* peer */
+>>         else
+>> diff --git a/drivers/scsi/qla4xxx/ql4_os.c
+>>b/drivers/scsi/qla4xxx/ql4_os.c
+>> index 01c3610..0c91c89 100644
+>> --- a/drivers/scsi/qla4xxx/ql4_os.c
+>> +++ b/drivers/scsi/qla4xxx/ql4_os.c
+>> @@ -825,12 +825,10 @@ static int qla4xxx_delete_chap(struct Scsi_Host
+>>*shost, uint16_t chap_tbl_idx)
+>>         uint32_t chap_size;
+>>         int ret =3D 0;
+>>
+>> -       chap_table =3D dma_pool_alloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>> +       chap_table =3D dma_pool_zalloc(ha->chap_dma_pool, GFP_KERNEL,
+>>&chap_dma);
+>>         if (chap_table =3D=3D NULL)
+>>                 return -ENOMEM;
+>>
+>> -       memset(chap_table, 0, sizeof(struct ql4_chap_table));
+>> -
+>>         if (is_qla80XX(ha))
+>>                 max_chap_entries =3D (ha->hw.flt_chap_size / 2) /
+>>                                    sizeof(struct ql4_chap_table);
+>> --
+>> 1.9.1
+>>
+>
+>Any further comment on this patch ?
+
+Any reason for handling this only for CHAP related code and not take care
+at all other places within ql4_os.c and ql4_init.c.
+According to me the change should be consistent across all the affecting
+files unless you think otherwise.
+
+Thanks,
+Nilesh
+
