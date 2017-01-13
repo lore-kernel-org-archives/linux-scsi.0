@@ -1,102 +1,82 @@
-From: Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
-Subject: Re: iscsi_trx going into D state
-Date: Fri, 13 Jan 2017 16:38:33 -0700
-Message-ID: <CAANLjFrFxasp6e=jWq4FwPFjRLgX-nwHc5n+eYRTz9EjTCAQ5g@mail.gmail.com>
-References: <CAANLjFoj9-qscJOSf2jtKYt2+4cQxMHNJ9q2QTey4wyG5OTSAA@mail.gmail.com>
- <CAANLjFrZrTPUuzP_NjkgG5h_YwwYKEWT-KzVjTvuXZ1d04z6Fg@mail.gmail.com>
- <CAANLjFpSnQ7ApOK5HDRHXQQeQNGWLUv4e+2N=_e-zBeziYm5tw@mail.gmail.com>
- <CAANLjForEkO6RXw7KJYrTJD=f0S8FE73vvwNQcL_ARFdFoDQqg@mail.gmail.com>
- <1030906614.13148012.1483722413675.JavaMail.zimbra@redhat.com>
- <CAANLjFocE2fbO_oWRiEVCt0=mfmgrLy9qWqqg=TH_jZS3PXn0g@mail.gmail.com>
- <CAANLjFpRCwGSh=HV12dc_OtFKgcjQqERSPirqxWD1w0N-G_mCg@mail.gmail.com>
- <CAANLjFotqoC8TKGypD2uqoADRq5NxDmXgz-B7THKy_HH_7u9hg@mail.gmail.com> <1449740553.15880491.1484320214006.JavaMail.zimbra@redhat.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <1449740553.15880491.1484320214006.JavaMail.zimbra-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Sender: linux-rdma-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Cc: Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, Zhu Lingshan <lszhu-IBi9RG/b67k@public.gmane.org>, linux-rdma <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Sagi Grimberg <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, Christoph Hellwig <hch-jcswGhMUV9g@public.gmane.org>
+From: Eric Farman <farman@linux.vnet.ibm.com>
+Subject: [PATCH v2] virtio_scsi: Reject commands when virtqueue is broken
+Date: Fri, 13 Jan 2017 12:48:05 -0500
+Message-ID: <1484329686-21553-1-git-send-email-farman@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:37795 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
+        by vger.kernel.org with ESMTP id S1750713AbdANAUI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 13 Jan 2017 19:20:08 -0500
+Received: from pps.filterd (m0098414.ppops.net [127.0.0.1])
+        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0DHhvXK002866
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 12:48:14 -0500
+Received: from e37.co.us.ibm.com (e37.co.us.ibm.com [32.97.110.158])
+        by mx0b-001b2d01.pphosted.com with ESMTP id 27xygj2n0g-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 12:48:13 -0500
+Received: from localhost
+        by e37.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <farman@linux.vnet.ibm.com>;
+        Fri, 13 Jan 2017 10:48:13 -0700
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, famz@redhat.com, Eric Farman <farman@linux.vnet.ibm.com>
 
-Laurance,
+While doing some disruptive testing with QEMU/KVM, I have encountered some
+guest problems during hot unplug of virtio-scsi devices depending on the
+order of operations in which they are performed.  The following notes
+describe my setup (s390x), and how I'm able to reproduce the error and
+test the attached fix.
 
-I'm really starting to think that the stars aligned with the phase of
-the moon or something when I reproduced this in my lab before because
-I've been unable to reproduce it on Infiniband the last two days. The
-problem with this issue is that it is so hard to trigger, but causes a
-lot of problems when it does happen. I really hate wasting people's
-time when I can't reproduce it myself reliably. Please don't waste too
-much time if you can't get it reproduced on Infiniband, I'll have to
-wait until someone with the ConnectX-4-LX cards can replicate it.
+In both the "working" and "failing" case, the detaches appear to work
+just fine.  Any sign of problems only begin to appear later based on
+other actions I may perform, such as powering off the guest system.
 
-Hmmm.... you do have ConnectX-4 cards which may have the same bug it
-Ethernet mode. I don't see the RoCE bug on my ConnectX-3 cards, but
-your ConnectX-4 cards may work. Try putting the cards into Ethernet
-mode, set the speed and advertised speed to something lower than the
-max speed and verify that the link speed is that (ethtool). On the
-ConnectX-4-LX cards, I just had to set both interfaces down and then
-back up at the same time, on the ConnectX-3 I had to pull the cable
-(shutting down the client might have worked). Then set up target and
-client with iSER, format and run the test and it should trigger
-automatically.
+Host:
+ # lsscsi -g | grep sg6
+ [6:0:6:1074151456]disk    IBM      2107900          .217  /dev/sdg   /dev/sg6 
 
-Looking at release notes on the ConnectX-4-LX cards, the latest
-firmware may fix the bug that so easily exposes the problem with that
-card. My cards are SuperMicro branded cards and don't have the new
-firmware available yet.
+QEMU:
+ - Include the following parameters
+    -device virtio-scsi-ccw,id=scsi0
+    -drive file=/dev/sg6,if=none,id=drive0,format=raw
+    -device scsi-generic,bus=scsi0.0,channel=0,scsi-id=0,lun=0,drive=drive0,id=hostdev6
+ - QMP commands (working)
+    - device_del hostdev6
+    - device_del scsi0
+ - QMP commands (failing)
+    - device_del scsi0
 
-Good luck.
-----------------
-Robert LeBlanc
-PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
+Libvirt:
+ - Note: A preventative fix went into Libvirt 2.5.0
+   (libvirt commit 655429a0d4a5 ("qemu: Prevent detaching SCSI controller used by hostdev"))
+ - Include the following XML
+    # cat scsicontroller.xml 
+        <controller type='scsi' model='virtio-scsi' index='0'/>
+    # cat scsihostdev.xml 
+        <hostdev mode='subsystem' type='scsi'>
+          <source>
+            <adapter name='scsi_host6'/>
+            <address bus='0' target='6' unit='1074151456'/>
+          </source>
+        </hostdev>
+ - virsh commands (working)
+    - virsh detach-device guest scsihostdev.xml
+    - virsh detach-device guest scsicontroller.xml
+ - virsh commands (failing)
+    - virsh detach-device guest scsicontroller.xml
 
+v1->v2:
+ - Hold vq_lock across virtscsi_complete_cmd call (Fam Zheng)
 
-On Fri, Jan 13, 2017 at 8:10 AM, Laurence Oberman <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org> wrote:
->
->
-> ----- Original Message -----
->> From: "Robert LeBlanc" <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org>
->> To: "Laurence Oberman" <loberman-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
->> Cc: "Doug Ledford" <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, "Nicholas A. Bellinger" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>, "Zhu Lingshan"
->> <lszhu-IBi9RG/b67k@public.gmane.org>, "linux-rdma" <linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "Sagi Grimberg"
->> <sagi-NQWnxTmZq1alnMjI0IkVqw@public.gmane.org>, "Christoph Hellwig" <hch-jcswGhMUV9g@public.gmane.org>
->> Sent: Thursday, January 12, 2017 4:26:05 PM
->> Subject: Re: iscsi_trx going into D state
->>
->> Sorry sent prematurely...
->>
->> On Thu, Jan 12, 2017 at 2:22 PM, Robert LeBlanc <robert-4JaGZRWAfWbajFs6igw21g@public.gmane.org> wrote:
->> > I'm having trouble replicating the D state issue on Infiniband (I was
->> > able to trigger it reliably a couple weeks back, I don't know if OFED
->> > to verify the same results happen there as well.
->>
->> I'm having trouble replicating the D state issue on Infiniband (I was
->> able to trigger it reliably a couple weeks back, I don't know if OFED
->> being installed is altering things but it only installed for 3.10. The
->> ConnectX-4-LX exposes the issue easily if you have those cards.) to
->> verify the same results happen there as well.
->>
->> ----------------
->> Robert LeBlanc
->> PGP Fingerprint 79A2 9CA4 6CC4 45DD A904  C70E E654 3BB2 FA62 B9F1
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> I am only back in the office next Wednesday.
-> I have this all setup using ConnectX-4 with IB/ISER but have no way of remotely creating the disconnect as I currently have it back-to-back.
-> Have run multiple tests with IB and ISER hard resting the client to break the IB connection but have not been able to reproduce as yet.
-> So it will have to wait until I can pull cables next week as that seemed to be the way you have been reproducing this.
->
-> This is in a code area I also don't have a lot of knowledge of the flow but have started trying to understand it better.
->
-> Thanks
-> Laurence
->
---
-To unsubscribe from this list: send the line "unsubscribe linux-rdma" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Eric Farman (1):
+  virtio_scsi: Reject commands when virtqueue is broken
+
+ drivers/scsi/virtio_scsi.c | 11 ++++++++++-
+ 1 file changed, 10 insertions(+), 1 deletion(-)
+
+-- 
+1.9.1
+
