@@ -1,49 +1,23 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/17] lpfc: NVME Initiator: Base modifications Part F
-Date: Wed, 18 Jan 2017 08:35:52 +0100
-Message-ID: <96a2c350-8c20-491f-40a8-ec3dee77f597@suse.de>
-References: <587ec2f2.fmE2wQTjIBsi69sa%jsmart2021@gmail.com>
+From: tester@aldems.lv
+Subject: =?utf-8?q?Gesch=C3=A4ftsvorschlag?=
+Date: Sun, 15 Jan 2017 04:52:50 +0530
+Message-ID: <1484436417102132344__29299.986936576$1484734597$gmane$org@mail>
+Reply-To: arnoldkristoferson101@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42624 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752689AbdARKN5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Jan 2017 05:13:57 -0500
-In-Reply-To: <587ec2f2.fmE2wQTjIBsi69sa%jsmart2021@gmail.com>
+Received: from mail.aldems.lv ([93.177.192.35]:50955 "EHLO aldems.lv"
+        rhost-flags-OK-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752387AbdARKNy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Jan 2017 05:13:54 -0500
+Content-Description: Mail message body
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
+To: Recipients <tester@aldems.lv>
 
-On 01/18/2017 02:20 AM, James Smart wrote:
-> 
-> NVME Initiator: Base modifications
-> 
-> This is part F of parts A..F.
-> 
-> Part F is limited to lpfc_debugfs.[ch]. It contains the modifications in
-> the existing debugfs snippets to work with the base modifications.
-> 
-> *********
-> 
-> Refer to Part A for a description of base modifications
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_debugfs.c | 535 +++++++++++++++++++++------------------
->  drivers/scsi/lpfc/lpfc_debugfs.h |  69 ++---
->  2 files changed, 324 insertions(+), 280 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Lieber Freund.
 
-Cheers,
+Erlauben Sie mir, auf diese Weise auf Sie zuzugehen. Ich bin Dr. Arnold Kristofferson, ein US-Auftragnehmer, der mit Nichtkämpfer US Marine in Ba'qubah, Irak arbeitet. Ich habe die Summe von 10,6 Millionen Dollar, die ich aus einem Rohöl-Deal gemacht habe, und ich möchte, dass Sie mir helfen, es zu erhalten. Da ich hier auf offizieller Kapazität arbeite, kann ich diesen Fonds nicht bei mir behalten und dies ist mein einziger Grund für die Kontaktaufnahme mit Ihnen. Wenn Sie interessiert sind und Sie diesen Fonds in Ihrer Kapazität erhalten können, melden Sie sich bitte bei mir, damit ich Ihnen weitere Details geben kann, wie Sie dieses Geld für mich erhalten können. Bitte erreichen Sie mich per E-Mail: arnoldkristoferson101@gmail.com
+Mit freundlichen Grüßen.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
