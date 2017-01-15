@@ -1,123 +1,96 @@
-From: Eric Farman <farman@linux.vnet.ibm.com>
-Subject: [PATCH v2] virtio_scsi: Reject commands when virtqueue is broken
-Date: Fri, 13 Jan 2017 12:48:06 -0500
-Message-ID: <1484329686-21553-2-git-send-email-farman@linux.vnet.ibm.com>
-References: <1484329686-21553-1-git-send-email-farman@linux.vnet.ibm.com>
+From: Bhumika Goyal <bhumirks@gmail.com>
+Subject: [PATCH] scsi: ibmvscsi: constify dev_pm_ops structures
+Date: Sun, 15 Jan 2017 10:23:17 +0530
+Message-ID: <1484455997-24400-1-git-send-email-bhumirks@gmail.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0b-001b2d01.pphosted.com ([148.163.158.5]:46450 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1750795AbdANA1x (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 13 Jan 2017 19:27:53 -0500
-Received: from pps.filterd (m0098413.ppops.net [127.0.0.1])
-        by mx0b-001b2d01.pphosted.com (8.16.0.17/8.16.0.17) with SMTP id v0DHhtdi069429
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 12:48:14 -0500
-Received: from e18.ny.us.ibm.com (e18.ny.us.ibm.com [129.33.205.208])
-        by mx0b-001b2d01.pphosted.com with ESMTP id 27y318hb19-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 13 Jan 2017 12:48:13 -0500
-Received: from localhost
-        by e18.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <farman@linux.vnet.ibm.com>;
-        Fri, 13 Jan 2017 12:48:13 -0500
-In-Reply-To: <1484329686-21553-1-git-send-email-farman@linux.vnet.ibm.com>
+Received: from mail-pf0-f196.google.com ([209.85.192.196]:35105 "EHLO
+        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750792AbdAOExk (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sat, 14 Jan 2017 23:53:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, famz@redhat.com, Eric Farman <farman@linux.vnet.ibm.com>
+To: julia.lawall@lip6.fr, tyreld@linux.vnet.ibm.com, benh@kernel.crashing.org, paulus@samba.org, mpe@ellerman.id.au, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, linux-kernel@vger.kernel.org
+Cc: Bhumika Goyal <bhumirks@gmail.com>
 
-In the case of a graceful set of detaches, where the virtio-scsi-ccw
-disk is removed from the guest prior to the controller, the guest
-behaves quite normally.  Specifically, the detach gets us into
-sd_sync_cache to issue a Synchronize Cache(10) command, which
-immediately fails (and is retried a couple of times) because the
-device has been removed.  Later, the removal of the controller
-sees two CRWs presented, but there's no further indication of the
-removal from the guest viewpoint.
+Declare dev_pm_ops structures as const as they are only stored in the pm
+field of a vio_driver structure. This field is of type const, so
+dev_pm_ops structures having similar properties can be declared const.
+Done using Coccinelle:
 
- [   17.217458] sd 0:0:0:0: [sda] Synchronizing SCSI cache
- [   17.219257] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
- [   21.449400] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
- [   21.449406] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
+@r1 disable optional_qualifier@
+identifier i;
+position p;
+@@
+static struct dev_pm_ops i@p={...};
 
-However, on s390, the SCSI disks can be removed "by surprise" when
-an entire controller (host) is removed and all associated disks
-are removed via the loop in scsi_forget_host.  The same call to
-sd_sync_cache is made, but because the controller has already
-been removed, the Synchronize Cache(10) command is neither issued
-(and then failed) nor rejected.
+@ok@
+identifier r1.i;
+position p;
+struct vio_driver x;
+@@
+x.pm=&i@p;
 
-That the I/O isn't returned means the guest cannot have other devices
-added nor removed, and other tasks (such as shutdown or reboot) issued
-by the guest will not complete either.  The virtio ring has already
-been marked as broken (via virtio_break_device in virtio_ccw_remove),
-but we still attempt to queue the command only to have it remain there.
-The calling sequence provides a bit of distinction for us:
+@bad@
+position p!={r1.p,ok.p};
+identifier r1.i;
+@@
+i@p
 
-  virtscsi_queuecommand()
-   -> virtscsi_kick_cmd()
-    -> virtscsi_add_cmd()
-     -> virtqueue_add_sgs()
-      -> virtqueue_add()
-         if success
-           return 0
-         elseif vq->broken or vring_mapping_error()
-           return -EIO
-         else
-           return -ENOSPC
+@depends on !bad disable optional_qualifier@
+identifier r1.i;
+@@
++const
+struct dev_pm_ops i;
 
-A return of ENOSPC is generally a temporary condition, so returning
-"host busy" from virtscsi_queuecommand makes sense here, to have it
-redriven in a moment or two.  But the EIO return code is more of a
-permanent error and so it would be wise to return the I/O itself and
-allow the calling thread to finish gracefully.  The result is these
-four kernel messages in the guest (the fourth one does not occur
-prior to this patch):
+File sizes after cross compiling the .o files for powerpc architecture.
 
- [   22.921562] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
- [   22.921580] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
- [   22.921978] sd 0:0:0:0: [sda] Synchronizing SCSI cache
- [   22.921993] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
+File size before:
+  text	   data	    bss	    dec	    hex	filename
+  57893	   5665	     20	  63578	   f85a	drivers/scsi/ibmvscsi/ibmvfc.o
 
-I opted to fill in the same response data that is returned from the
-more graceful device detach, where the disk device is removed prior
-to the controller device.
+File size after:
+  text	   data	    bss	    dec	    hex	filename
+  58077	   5481	     20	  63578	   f85a	drivers/scsi/ibmvscsi/ibmvfc.o
 
-Signed-off-by: Eric Farman <farman@linux.vnet.ibm.com>
+File size before:
+   text	   data	    bss	    dec	    hex	filenam
+  20990	   2816	     80	  23886	   5d4e	drivers/scsi/ibmvscsi/ibmvscsi.o
+
+File size after:
+  text	   data	    bss	    dec	    hex	filename
+  21174	   2632	     80	  23886	   5d4e	drivers/scsi/ibmvscsi/ibmvscsi.o
+
+Signed-off-by: Bhumika Goyal <bhumirks@gmail.com>
 ---
- drivers/scsi/virtio_scsi.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi/ibmvfc.c   | 2 +-
+ drivers/scsi/ibmvscsi/ibmvscsi.c | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index ec91bd0..c680d76 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -534,7 +534,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- {
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
- 	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
-+	unsigned long flags;
- 	int req_size;
-+	int ret;
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 78b72c2..1e1b343 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -4940,7 +4940,7 @@ static unsigned long ibmvfc_get_desired_dma(struct vio_dev *vdev)
+ };
+ MODULE_DEVICE_TABLE(vio, ibmvfc_device_table);
  
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
+-static struct dev_pm_ops ibmvfc_pm_ops = {
++static const struct dev_pm_ops ibmvfc_pm_ops = {
+ 	.resume = ibmvfc_resume
+ };
  
-@@ -562,8 +564,15 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 		req_size = sizeof(cmd->req.cmd);
- 	}
+diff --git a/drivers/scsi/ibmvscsi/ibmvscsi.c b/drivers/scsi/ibmvscsi/ibmvscsi.c
+index 50cd011..b94e7b1 100644
+--- a/drivers/scsi/ibmvscsi/ibmvscsi.c
++++ b/drivers/scsi/ibmvscsi/ibmvscsi.c
+@@ -2335,7 +2335,7 @@ static int ibmvscsi_resume(struct device *dev)
+ };
+ MODULE_DEVICE_TABLE(vio, ibmvscsi_device_table);
  
--	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
-+	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
-+	if (ret == -EIO) {
-+		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
-+		spin_lock_irqsave(&req_vq->vq_lock, flags);
-+		virtscsi_complete_cmd(vscsi, cmd);
-+		spin_unlock_irqrestore(&req_vq->vq_lock, flags);
-+	} else if (ret != 0) {
- 		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
- 	return 0;
- }
+-static struct dev_pm_ops ibmvscsi_pm_ops = {
++static const struct dev_pm_ops ibmvscsi_pm_ops = {
+ 	.resume = ibmvscsi_resume
+ };
  
 -- 
 1.9.1
