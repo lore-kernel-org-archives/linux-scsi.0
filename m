@@ -1,7 +1,7 @@
 From: Finn Thain <fthain@telegraphics.com.au>
-Subject: [PATCH 2/6] ncr5380: Clean up dead code and redundant macro usage
+Subject: [PATCH 4/6] ncr5380: Resolve various static checker warnings
 Date: Sun, 15 Jan 2017 18:50:57 -0500 (EST)
-Message-ID: <14c65a94ea13beec917ba81100d6167af41cbbd9.1484523085.git.fthain@telegraphics.com.au>
+Message-ID: <090327a93080f332949dd5535f3c80519e349a2a.1484523085.git.fthain@telegraphics.com.au>
 References: <cover.1484523085.git.fthain@telegraphics.com.au>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <cover.1484523085.git.fthain@telegraphics.com.au>
@@ -10,107 +10,128 @@ To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <mart
 Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Remove dead code inside #if 0 conditionals.
+Avoid various warnings from "make C=1" by annotating a couple of
+unlock-then-lock sequences, replacing a zero with NULL and
+correcting some type casts.
 
-Remove the #ifdef __KERNEL__ test, since NCR5380.h has no definitions
-that relate to userspace code.
-
-Remove two redundant macro definitions which were overlooked in
-commit e9db3198e08b ("sun3_scsi: Adopt NCR5380.c core driver").
+Also avoid a warning from "make W=1" by adding braces.
 
 Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
 ---
- drivers/scsi/NCR5380.h    |  7 -------
- drivers/scsi/atari_scsi.c | 31 -------------------------------
- drivers/scsi/sun3_scsi.c  |  3 ---
- 3 files changed, 41 deletions(-)
+These are the warning messages referred to above:
 
-diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
-index e61d9f9..d78f0957 100644
---- a/drivers/scsi/NCR5380.h
-+++ b/drivers/scsi/NCR5380.h
-@@ -166,11 +166,7 @@
- #define CSR_SCSI_BUF_RDY       0x02	/* ro  SCSI buffer read */
- #define CSR_GATED_53C80_IRQ    0x01	/* ro  Last block xferred */
- 
--#if 0
--#define CSR_BASE CSR_SCSI_BUFF_INTR | CSR_53C80_INTR
--#else
- #define CSR_BASE CSR_53C80_INTR
--#endif
- 
- /* Note : PHASE_* macros are based on the values of the STATUS register */
- #define PHASE_MASK 	(SR_MSG | SR_CD | SR_IO)
-@@ -229,8 +225,6 @@ struct NCR5380_hostdata {
- 	char info[168];				/* Host banner message */
- };
- 
--#ifdef __KERNEL__
--
- struct NCR5380_cmd {
- 	struct list_head list;
- };
-@@ -323,5 +317,4 @@ static inline int NCR5380_dma_residual_none(struct NCR5380_hostdata *hostdata)
- 	return 0;
+drivers/scsi/NCR5380.c:
+warning: context imbalance in 'NCR5380_select' - unexpected unlock
+warning: context imbalance in 'NCR5380_information_transfer' - unexpected unlock
+
+drivers/scsi/atari_scsi.c:816:39: warning: Using plain integer as NULL pointer
+
+drivers/scsi/mac_scsi.c:157:46: warning: incorrect type in initializer (different address spaces)
+drivers/scsi/mac_scsi.c:157:46: expected unsigned char *s
+drivers/scsi/mac_scsi.c:157:46:    got unsigned char [noderef] [usertype] <asn:2>*
+
+drivers/scsi/mac_scsi.c:260:46: warning: incorrect type in initializer (different address spaces)
+drivers/scsi/mac_scsi.c:260:46: expected unsigned char *d
+drivers/scsi/mac_scsi.c:260:46:    got unsigned char [noderef] [usertype] <asn:2>*
+
+drivers/scsi/mac_scsi.c:384:22: warning: incorrect type in assignment (different address spaces)
+drivers/scsi/mac_scsi.c:384:22: expected unsigned char [noderef] [usertype] <asn:2>*io
+drivers/scsi/mac_scsi.c:384:22:    got void *<noident>
+
+drivers/scsi/mac_scsi.c:387:35: warning: incorrect type in assignment (different address spaces)
+drivers/scsi/mac_scsi.c:387:35: expected unsigned char [noderef] [usertype] <asn:2>*pdma_io
+drivers/scsi/mac_scsi.c:387:35:    got void *<noident>
+
+drivers/scsi/NCR5380.c: In function 'maybe_release_dma_irq':
+drivers/scsi/NCR5380.c:626:36: warning: suggest braces around empty body in an 'if' statement [-Wempty-body]
+   NCR5380_release_dma_irq(instance);
+
+Avoiding these messages doesn't fix any bugs but may improve the
+signal/noise ratio of static checker output.
+---
+ drivers/scsi/NCR5380.c    | 5 ++++-
+ drivers/scsi/atari_scsi.c | 2 +-
+ drivers/scsi/mac_scsi.c   | 8 ++++----
+ 3 files changed, 9 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index f29b407..518d101 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -591,8 +591,9 @@ static inline void maybe_release_dma_irq(struct Scsi_Host *instance)
+ 	    list_empty(&hostdata->unissued) &&
+ 	    list_empty(&hostdata->autosense) &&
+ 	    !hostdata->connected &&
+-	    !hostdata->selecting)
++	    !hostdata->selecting) {
+ 		NCR5380_release_dma_irq(instance);
++	}
  }
  
--#endif				/* __KERNEL__ */
- #endif				/* NCR5380_H */
+ /**
+@@ -931,6 +932,7 @@ static irqreturn_t __maybe_unused NCR5380_intr(int irq, void *dev_id)
+ 
+ static struct scsi_cmnd *NCR5380_select(struct Scsi_Host *instance,
+                                         struct scsi_cmnd *cmd)
++	__releases(&hostdata->lock) __acquires(&hostdata->lock)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char tmp[3], phase;
+@@ -1623,6 +1625,7 @@ static int NCR5380_transfer_dma(struct Scsi_Host *instance,
+  */
+ 
+ static void NCR5380_information_transfer(struct Scsi_Host *instance)
++	__releases(&hostdata->lock) __acquires(&hostdata->lock)
+ {
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char msgout = NOP;
 diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
-index 105b353..2b6eb7c 100644
+index 2b6eb7c..b2ffab65 100644
 --- a/drivers/scsi/atari_scsi.c
 +++ b/drivers/scsi/atari_scsi.c
-@@ -178,37 +178,6 @@ static int scsi_dma_is_ignored_buserr(unsigned char dma_stat)
- }
+@@ -782,7 +782,7 @@ static int __init atari_scsi_probe(struct platform_device *pdev)
+ 			return -ENOMEM;
+ 		}
+ 		atari_dma_phys_buffer = atari_stram_to_phys(atari_dma_buffer);
+-		atari_dma_orig_addr = 0;
++		atari_dma_orig_addr = NULL;
+ 	}
  
- 
--#if 0
--/* Dead code... wasn't called anyway :-) and causes some trouble, because at
-- * end-of-DMA, both SCSI ints are triggered simultaneously, so the NCR int has
-- * to clear the DMA int pending bit before it allows other level 6 interrupts.
-- */
--static void scsi_dma_buserr(int irq, void *dummy)
--{
--	unsigned char dma_stat = tt_scsi_dma.dma_ctrl;
--
--	/* Don't do anything if a NCR interrupt is pending. Probably it's just
--	 * masked... */
--	if (atari_irq_pending(IRQ_TT_MFP_SCSI))
--		return;
--
--	printk("Bad SCSI DMA interrupt! dma_addr=0x%08lx dma_stat=%02x dma_cnt=%08lx\n",
--	       SCSI_DMA_READ_P(dma_addr), dma_stat, SCSI_DMA_READ_P(dma_cnt));
--	if (dma_stat & 0x80) {
--		if (!scsi_dma_is_ignored_buserr(dma_stat))
--			printk("SCSI DMA bus error -- bad DMA programming!\n");
--	} else {
--		/* Under normal circumstances we never should get to this point,
--		 * since both interrupts are triggered simultaneously and the 5380
--		 * int has higher priority. When this irq is handled, that DMA
--		 * interrupt is cleared. So a warning message is printed here.
--		 */
--		printk("SCSI DMA intr ?? -- this shouldn't happen!\n");
--	}
--}
--#endif
--
--
- static irqreturn_t scsi_tt_intr(int irq, void *dev)
+ 	instance = scsi_host_alloc(&atari_scsi_template,
+diff --git a/drivers/scsi/mac_scsi.c b/drivers/scsi/mac_scsi.c
+index ccb68d1..196acc7 100644
+--- a/drivers/scsi/mac_scsi.c
++++ b/drivers/scsi/mac_scsi.c
+@@ -154,7 +154,7 @@ __asm__ __volatile__					\
+ static inline int macscsi_pread(struct NCR5380_hostdata *hostdata,
+                                 unsigned char *dst, int len)
  {
- 	struct Scsi_Host *instance = dev;
-diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
-index 88db699..166f466 100644
---- a/drivers/scsi/sun3_scsi.c
-+++ b/drivers/scsi/sun3_scsi.c
-@@ -56,9 +56,6 @@
- #define NCR5380_dma_send_setup          sun3scsi_dma_count
- #define NCR5380_dma_residual            sun3scsi_dma_residual
+-	unsigned char *s = hostdata->pdma_io + (INPUT_DATA_REG << 4);
++	u8 __iomem *s = hostdata->pdma_io + (INPUT_DATA_REG << 4);
+ 	unsigned char *d = dst;
+ 	int n = len;
+ 	int transferred;
+@@ -257,7 +257,7 @@ static inline int macscsi_pwrite(struct NCR5380_hostdata *hostdata,
+                                  unsigned char *src, int len)
+ {
+ 	unsigned char *s = src;
+-	unsigned char *d = hostdata->pdma_io + (OUTPUT_DATA_REG << 4);
++	u8 __iomem *d = hostdata->pdma_io + (OUTPUT_DATA_REG << 4);
+ 	int n = len;
+ 	int transferred;
  
--#define NCR5380_acquire_dma_irq(instance)    (1)
--#define NCR5380_release_dma_irq(instance)
--
- #include "NCR5380.h"
+@@ -381,10 +381,10 @@ static int __init mac_scsi_probe(struct platform_device *pdev)
  
+ 	hostdata = shost_priv(instance);
+ 	hostdata->base = pio_mem->start;
+-	hostdata->io = (void *)pio_mem->start;
++	hostdata->io = (u8 __iomem *)pio_mem->start;
+ 
+ 	if (pdma_mem && setup_use_pdma)
+-		hostdata->pdma_io = (void *)pdma_mem->start;
++		hostdata->pdma_io = (u8 __iomem *)pdma_mem->start;
+ 	else
+ 		host_flags |= FLAG_NO_PSEUDO_DMA;
  
 -- 
 2.10.2
