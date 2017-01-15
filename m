@@ -1,66 +1,116 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] Revert "scsi: mpt3sas: Fix secure erase premature
- termination"
-Date: Sun, 15 Jan 2017 22:02:51 +0000
-Message-ID: <1484517756.11850.1.camel@sandisk.com>
-References: <1484319727.2527.8.camel@HansenPartnership.com>
-         <20170115091925.GA26656@gmail.com>
-         <1484496665.2405.2.camel@HansenPartnership.com>
-         <CA+55aFweyFstUaKGdg6A9p65URrzZAJNBCF8ou0MfKb4EPL=Rw@mail.gmail.com>
-         <1484507599.2405.16.camel@HansenPartnership.com>
-         <CA+55aFyyBf9SLSNDRqMcFbmUBBkbamZYXGOgfXU8k5KYaFD2mw@mail.gmail.com>
-         <1484509776.2405.21.camel@HansenPartnership.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0070.outbound.protection.outlook.com ([104.47.38.70]:54006
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751068AbdAOWC7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 15 Jan 2017 17:02:59 -0500
-In-Reply-To: <1484509776.2405.21.camel@HansenPartnership.com>
-Content-Language: en-US
-Content-ID: <9DCAB195A2D3124E8D46AD9418E36985@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: [PATCH 2/6] ncr5380: Clean up dead code and redundant macro usage
+Date: Sun, 15 Jan 2017 18:50:57 -0500 (EST)
+Message-ID: <14c65a94ea13beec917ba81100d6167af41cbbd9.1484523085.git.fthain@telegraphics.com.au>
+References: <cover.1484523085.git.fthain@telegraphics.com.au>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <cover.1484523085.git.fthain@telegraphics.com.au>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, Ondrej Zary <linux@rainbow-software.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>
-Cc: "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "hare@suse.de" <hare@suse.de>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sreekanth.Reddy@broadcom.com" <Sreekanth.Reddy@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>
 
-T24gU3VuLCAyMDE3LTAxLTE1IGF0IDExOjQ5IC0wODAwLCBKYW1lcyBCb3R0b21sZXkgd3JvdGU6
-DQo+IE9uIFN1biwgMjAxNy0wMS0xNSBhdCAxMTo0MSAtMDgwMCwgTGludXMgVG9ydmFsZHMgd3Jv
-dGU6DQo+ID4gT24gU3VuLCBKYW4gMTUsIDIwMTcgYXQgMTE6MTMgQU0sIEphbWVzIEJvdHRvbWxl
-eQ0KPiA+IDxKYW1lcy5Cb3R0b21sZXlAaGFuc2VucGFydG5lcnNoaXAuY29tPiB3cm90ZToNCj4g
-PiA+IA0KPiA+ID4gQ2FuIHdlIGNvbXByb21pc2Ugb24gInRyeSBub3QgdG8gcmV2ZXJ0IGEgZml4
-IC4uLiIuDQo+ID4gDQo+ID4gTm8uDQo+ID4gDQo+ID4gSXQncyBhYm91dCB0aW1pbmcsIGFuZCBh
-Ym91dCBob3cgc2VyaW91cyB0aGUgcmVncmVzc2lvbiBpcy4NCj4gPiANCj4gPiBGb3IgZXhhbXBs
-ZSwgaWYgdGhpcyBoYXBwZW5lZCBpbiByYzcsIEkgd291bGQgaGF2ZSByZXZlcnRlZA0KPiA+IGlt
-bWVkaWF0ZWx5LiBObyBxdWVzdGlvbnMgYXNrZWQuDQo+ID4gDQo+ID4gSW4gdGhpcyBjYXNlLCB0
-aGUgImZpeCIgd2FzIHdhcyBhbHNvIG11Y2ggbGVzcyBpbXBvcnRhbnQgdGhlbiB0aGUNCj4gPiBw
-cm9ibGVtIGl0IGNhdXNlZC4gU29tZSBzcGVjaWFsaXplZCBwYXNzLXRocm91Z2ggY29tbWFuZCBu
-b3QNCj4gPiB3b3JraW5nDQo+ID4gcmlnaHQsIHZzIGEgbWFjaGluZSBub3QgZXZlbiBib290aW5n
-PyBUaGVyZSdzIGp1c3Qgbm8gcXVlc3Rpb24NCj4gPiB3aGF0LXNvLWV2ZXIuDQo+ID4gDQo+ID4g
-U28gdGhlICJmaXgiIHlvdSBjbGFpbSBqdXN0IHdhc24ndCBuZWFybHkgaW1wb3J0YW50IGVub3Vn
-aC4gSXQgd2FzDQo+ID4gYWxzbyBwcmV0dHkgcmVjZW50IGFuZCBjbGVhcmx5IHRoaW5ncyBoYWQg
-d29ya2VkIGZvciBfeWVhcnNfDQo+ID4gd2l0aG91dA0KPiA+IGl0Lg0KPiA+IA0KPiA+IEluIGZh
-Y3QsIEknbSBzdGlsbCBzb21ld2hhdCBpbmNsaW5lZCB0byByZXZlcnQgaXQsIGp1c3QgdG8gaGF2
-ZSBhDQo+ID4gd29ya2luZyByYzQgcmVsZWFzZSBsYXRlciB0b2RheS4gQnV0IEknbSBob3Bpbmcg
-bWF5YmUgSW5nbyBoYXMNCj4gPiB0aW1lwqANCj4gPiB0byB0ZXN0IHRoaW5ncyAoYWx0aG91Z2gg
-SSBzdXNwZWN0IGhlJ3MgYWxyZWFkeSBhc2xlZXApLg0KPiANCj4gT0ssIHNvIHRoZSBwYXRjaCB0
-byByZXZlcnQgd291bGQgYWN0dWFsbHkgYmUNCj4gDQo+IGNvbW1pdCA2NjlmMDQ0MTcwZDg5MzNj
-M2Q2NmQyMzFiNjllYTk3Y2I4NDQ3MzM4DQo+IEF1dGhvcjogQmFydCBWYW4gQXNzY2hlIDxiYXJ0
-LnZhbmFzc2NoZUBzYW5kaXNrLmNvbT4NCj4gRGF0ZTrCoMKgwqBUdWUgTm92IDIyIDE2OjE3OjEz
-IDIwMTYgLTA4MDANCj4gDQo+IMKgwqDCoMKgc2NzaTogc3JwX3RyYW5zcG9ydDogTW92ZSBxdWV1
-ZWNvbW1hbmQoKSB3YWl0IGNvZGUgdG8gU0NTSSBjb3JlDQo+IA0KPiBCZWNhdXNlIHRoYXQgY2hh
-bmdlIGluIHRoZSB3YWl0IGNvZGUgYnJva2UgdGhlICJmaXgiIGluIG1wdDNzYXMuwqANCj4gQmVm
-b3JlIHRoYXQgd2FzIGFwcGxpZWQsIGl0IGFjdHVhbGx5IHdvcmtlZCBldmVuIHRob3VnaCBJIHRo
-aW5rIGl0J3MNCj4gYSB3cm9uZyBmaXguDQoNCkhlbGxvIEphbWVzLA0KDQpJIGRpc2FncmVlLsKg
-RXZlbiBpZiBteSBwYXRjaCB3b3VsZCBiZSByZXZlcnRlZCB0aGF0IHN0aWxsIHdvdWxkbid0IGZp
-eA0KdGhlIHNldmVyZSByYWNlIGNvbmRpdGlvbiB0aGF0IHdhcyBpbnRyb2R1Y2VkIGluIHRoZSBt
-cHQzc2FzIGRyaXZlciBieQ0KdGhlIHBhdGNoIHRoYXQgdHJpZ2dlcnMgdGhlIGxvY2t1cCBkdXJp
-bmcgYm9vdC4gQXMgSSBleHBsYWluZWQgdHdvDQp3ZWVrcyBhZ28gKHNlZSBhbHNvIGh0dHBzOi8v
-d3d3LnNwaW5pY3MubmV0L2xpc3RzL2tlcm5lbC9tc2cyNDExNDEzLmh0bQ0KbCksIGNvbW1pdCAx
-OGY2MDg0YTk4OWIgKCJzY3NpOiBtcHQzc2FzOiBGaXggc2VjdXJlIGVyYXNlIHByZW1hdHVyZQ0K
-dGVybWluYXRpb24iKSBpcyB0aGUgb25lIHRoYXQgc2hvdWxkIGJlIHJldmVydGVkIGluc3RlYWQg
-b2YgbXkgcGF0Y2guIEkNCmFncmVlIHdpdGggTGludXMgdGhhdCB0aGUgb2ZmZW5kaW5nIG1wdDNz
-YXMgcGF0Y2ggYWxyZWFkeSBzaG91bGQgaGF2ZQ0KYmVlbiByZXZlcnRlZC4NCg0KQmFydC4=
+Remove dead code inside #if 0 conditionals.
+
+Remove the #ifdef __KERNEL__ test, since NCR5380.h has no definitions
+that relate to userspace code.
+
+Remove two redundant macro definitions which were overlooked in
+commit e9db3198e08b ("sun3_scsi: Adopt NCR5380.c core driver").
+
+Signed-off-by: Finn Thain <fthain@telegraphics.com.au>
+---
+ drivers/scsi/NCR5380.h    |  7 -------
+ drivers/scsi/atari_scsi.c | 31 -------------------------------
+ drivers/scsi/sun3_scsi.c  |  3 ---
+ 3 files changed, 41 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.h b/drivers/scsi/NCR5380.h
+index e61d9f9..d78f0957 100644
+--- a/drivers/scsi/NCR5380.h
++++ b/drivers/scsi/NCR5380.h
+@@ -166,11 +166,7 @@
+ #define CSR_SCSI_BUF_RDY       0x02	/* ro  SCSI buffer read */
+ #define CSR_GATED_53C80_IRQ    0x01	/* ro  Last block xferred */
+ 
+-#if 0
+-#define CSR_BASE CSR_SCSI_BUFF_INTR | CSR_53C80_INTR
+-#else
+ #define CSR_BASE CSR_53C80_INTR
+-#endif
+ 
+ /* Note : PHASE_* macros are based on the values of the STATUS register */
+ #define PHASE_MASK 	(SR_MSG | SR_CD | SR_IO)
+@@ -229,8 +225,6 @@ struct NCR5380_hostdata {
+ 	char info[168];				/* Host banner message */
+ };
+ 
+-#ifdef __KERNEL__
+-
+ struct NCR5380_cmd {
+ 	struct list_head list;
+ };
+@@ -323,5 +317,4 @@ static inline int NCR5380_dma_residual_none(struct NCR5380_hostdata *hostdata)
+ 	return 0;
+ }
+ 
+-#endif				/* __KERNEL__ */
+ #endif				/* NCR5380_H */
+diff --git a/drivers/scsi/atari_scsi.c b/drivers/scsi/atari_scsi.c
+index 105b353..2b6eb7c 100644
+--- a/drivers/scsi/atari_scsi.c
++++ b/drivers/scsi/atari_scsi.c
+@@ -178,37 +178,6 @@ static int scsi_dma_is_ignored_buserr(unsigned char dma_stat)
+ }
+ 
+ 
+-#if 0
+-/* Dead code... wasn't called anyway :-) and causes some trouble, because at
+- * end-of-DMA, both SCSI ints are triggered simultaneously, so the NCR int has
+- * to clear the DMA int pending bit before it allows other level 6 interrupts.
+- */
+-static void scsi_dma_buserr(int irq, void *dummy)
+-{
+-	unsigned char dma_stat = tt_scsi_dma.dma_ctrl;
+-
+-	/* Don't do anything if a NCR interrupt is pending. Probably it's just
+-	 * masked... */
+-	if (atari_irq_pending(IRQ_TT_MFP_SCSI))
+-		return;
+-
+-	printk("Bad SCSI DMA interrupt! dma_addr=0x%08lx dma_stat=%02x dma_cnt=%08lx\n",
+-	       SCSI_DMA_READ_P(dma_addr), dma_stat, SCSI_DMA_READ_P(dma_cnt));
+-	if (dma_stat & 0x80) {
+-		if (!scsi_dma_is_ignored_buserr(dma_stat))
+-			printk("SCSI DMA bus error -- bad DMA programming!\n");
+-	} else {
+-		/* Under normal circumstances we never should get to this point,
+-		 * since both interrupts are triggered simultaneously and the 5380
+-		 * int has higher priority. When this irq is handled, that DMA
+-		 * interrupt is cleared. So a warning message is printed here.
+-		 */
+-		printk("SCSI DMA intr ?? -- this shouldn't happen!\n");
+-	}
+-}
+-#endif
+-
+-
+ static irqreturn_t scsi_tt_intr(int irq, void *dev)
+ {
+ 	struct Scsi_Host *instance = dev;
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 88db699..166f466 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -56,9 +56,6 @@
+ #define NCR5380_dma_send_setup          sun3scsi_dma_count
+ #define NCR5380_dma_residual            sun3scsi_dma_residual
+ 
+-#define NCR5380_acquire_dma_irq(instance)    (1)
+-#define NCR5380_release_dma_irq(instance)
+-
+ #include "NCR5380.h"
+ 
+ 
+-- 
+2.10.2
