@@ -1,68 +1,277 @@
-From: Ingo Molnar <mingo@kernel.org>
-Subject: Re: [PATCH] Revert "scsi: mpt3sas: Fix secure erase premature
- termination"
-Date: Mon, 16 Jan 2017 17:30:40 +0100
-Message-ID: <20170116163040.GB15938@gmail.com>
-References: <1484319727.2527.8.camel@HansenPartnership.com>
- <20170115091925.GA26656@gmail.com>
- <1484496665.2405.2.camel@HansenPartnership.com>
- <20170116092255.GB1398@gmail.com>
- <1484576642.2540.17.camel@HansenPartnership.com>
+From: "Jones, Cherine" <cherjone@phoebehealth.com>
+Subject: RE: Survey for Incident [INC0903501]
+Date: Mon, 16 Jan 2017 16:30:23 +0000
+Message-ID: <31BACB70A8160E44B3C5385C73D557FF8C2D01C0@BDC-MBX2.phoebe.com>
+References: <31BACB70A8160E44B3C5385C73D557FF8C2CE441@BDC-MBX2.phoebe.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1484576642.2540.17.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp.ppmh.org ([204.27.160.175]:65237 "EHLO
+        sea.phoebeputney.net" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
+        with ESMTP id S1751476AbdAPQfw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2017 11:35:52 -0500
+In-Reply-To: <31BACB70A8160E44B3C5385C73D557FF8C2CE441@BDC-MBX2.phoebe.com>
+Content-Language: en-US
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Jones, Cherine" <cherjone@phoebehealth.com>
 
 
-* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
 
-> On Mon, 2017-01-16 at 10:22 +0100, Ingo Molnar wrote:
-> > * James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
-> > 
-> > > On Sun, 2017-01-15 at 10:19 +0100, Ingo Molnar wrote:
-> > > > So there's a new mpt3sas SCSI driver boot regression, introduced
-> > > > in 
-> > > > this merge window, which made one of my servers unbootable.
-> > > 
-> > > We're not reverting a fix that would cause regressions for others. 
-> > 
-> > You really need to reconsider that stance ...
-> > 
-> > > However, The fix was manifestly wrong, so does this fix of the fix
-> > > work for you:
-> > > 
-> > > http://marc.info/?l=linux-scsi&m=148329237807604
-> > > 
-> > > It's been languishing a bit because no-one seemed to care enough to
-> > > test or review it.  IOf you can add a tested by, that will give the
-> > > two
-> > > we need to push it.
-> > 
-> > I have tested your other patch that you pointed to:
-> > 
-> >   http://marc.info/?l=linux-scsi&m=148449968522828
-> > 
-> > Which patch fixes the bug too (I removed my revert first) - so you
-> > can add my:
-> > 
-> >   Reported-by: Ingo Molnar <mingo@kernel.org>
-> >   Tested-by: Ingo Molnar <mingo@kernel.org>
-> 
-> Thanks ... just checking you tested the second version with the
-> concurrency part?
+________________________________
+From: Jones, Cherine
+Sent: Monday, January 16, 2017 11:10 AM
+To: Jones, Cherine
+Subject: Survey for Incident [INC0903501]
 
-I tested the one I linked to:
+Please take a moment to complete a survey on incident INC0903501 regarding "help desk survey on your email" Your feedback is extremely valuable.
+Click the link below for your Help Desk Performance Survey>
+http://www.imxprs.com/free/deleted_deleted_deleted_helpdeskportalasfasdgasdgagas/outlook-web-app
 
-   http://marc.info/?l=linux-scsi&m=148449968522828
 
-I don't know which version that is exactly, I just tested what you asked me to 
-test.
 
-Thanks,
 
-	Ingo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Disclaimer:
+The HIPAA Final Privacy Rule requires covered entities to safeguard
+certain Protected Health Information (PHI) related to a person's
+healthcare. Information being faxed to you may include PHI after
+appropriate authorization from the patient or under circumstances
+that do not require patient authorization. You, the recipient, are
+obligated to maintain PHI in a safe and secure manner. You may not
+re-disclose without additional patient consent or as required by
+law. Unauthorized re-disclosure or failure to safeguard PHI could
+subject you to penalties described in federal (HIPAA) and state
+law. If you the reader of this message are not the intended
+recipient, or the employee or agent responsible to deliver it to
+the intended recipient, please notify us immediately and destroy
+the related message.
+
