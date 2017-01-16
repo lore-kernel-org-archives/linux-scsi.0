@@ -1,42 +1,56 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Mon, 16 Jan 2017 16:01:30 -0500
-Message-ID: <yq14m0ylnx1.fsf@oracle.com>
-References: <20161229080250.GA11605@infradead.org>
-        <1483226343.2518.32.camel@linux.vnet.ibm.com>
-        <1483280506.5512.1.camel@sandisk.com>
-        <20170101.113311.417107391370623850.davem@davemloft.net>
-        <1483292364.2345.5.camel@linux.vnet.ibm.com>
-        <yq1y3ypgd7m.fsf@oracle.com>
-        <1484596878.2540.58.camel@HansenPartnership.com>
+Subject: Re: [PATCH] ses: Fix SAS device detection in enclosure
+Date: Mon, 16 Jan 2017 16:02:24 -0500
+Message-ID: <yq1ziiqk9b3.fsf@oracle.com>
+References: <1483997616-18900-1-git-send-email-emilne@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1484596878.2540.58.camel@HansenPartnership.com> (James
-        Bottomley's message of "Mon, 16 Jan 2017 12:01:18 -0800")
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Ingo Molnar <mingo@kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1050.oracle.com ([141.146.126.70]:41022 "EHLO
+        aserp1050.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750898AbdAPVDv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2017 16:03:51 -0500
+Received: from aserp1040.oracle.com (aserp1040.oracle.com [141.146.126.69])
+        by aserp1050.oracle.com (Sentrion-MTA-4.3.2/Sentrion-MTA-4.3.2) with ESMTP id v0GL3Yqq032659
+        (version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK)
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Jan 2017 21:03:34 GMT
+In-Reply-To: <1483997616-18900-1-git-send-email-emilne@redhat.com> (Ewan
+        D. Milne's message of "Mon, 9 Jan 2017 16:33:36 -0500")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Ewan D. Milne" <emilne@redhat.com>
+Cc: linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
->>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+>>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
 
-James> Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough
-James> commands
+Ewan> The call to scsi_is_sas_rphy() needs to be made on the SAS
+Ewan> end_device, not on the SCSI device.
 
-James> mpt3sas has a firmware failure where it can only handle one pass
-James> through ATA command at a time.  If another comes in, contrary to
-James> the SAT standard, it will hang until the first one completes
-James> (causing long commands like secure erase to timeout).  The
-James> original fix was to block the device when an ATA command came in,
-James> but this caused a regression with
+Ewan> Fixes: 835831c57e9b ("ses: use scsi_is_sas_rphy instead of
+Ewan> is_sas_attached") Reviewed-by: Johannes Thumshirn
+Ewan> <jthumshirn@suse.de> Signed-off-by: Ewan D. Milne
+Ewan> <emilne@redhat.com> ---
+Ewan>  drivers/scsi/ses.c | 2 +- 1 file changed, 1 insertion(+), 1
+Ewan>  deletion(-)
 
-Broadcom folks: Please test and ack as soon as possible so we can get
-this fix queued up.
+Ewan> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c index
+Ewan> 8c9a35c..50adabb 100644
+Ewan> --- a/drivers/scsi/ses.c
+Ewan> +++ b/drivers/scsi/ses.c
+Ewan> @@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct
+Ewan> enclosure_device *edev,
+ 
+Ewan>  	ses_enclosure_data_process(edev,
+Ewan>  	to_scsi_device(edev->edev.parent), 0);
+ 
+Ewan> - if (scsi_is_sas_rphy(&sdev->sdev_gendev))
+Ewan> + if (scsi_is_sas_rphy(sdev->sdev_target->dev.parent))
+Ewan>  		efd.addr = sas_get_address(sdev);
+ 
+Ewan>  	if (efd.addr) {
+Ewan> -- 1.8.3.1
 
-Ingo: Since you appear to have hardware, it would be great if you could
-test James' v3 (https://patchwork.kernel.org/patch/9519383/). Sorry for
-the inconvenience.
+James?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
