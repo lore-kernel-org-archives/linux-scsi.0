@@ -1,166 +1,108 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Mon, 16 Jan 2017 12:01:18 -0800
-Message-ID: <1484596878.2540.58.camel@HansenPartnership.com>
-References: <20161229080250.GA11605@infradead.org>
-         <1483226343.2518.32.camel@linux.vnet.ibm.com>
-         <1483280506.5512.1.camel@sandisk.com>
-         <20170101.113311.417107391370623850.davem@davemloft.net>
-         <1483292364.2345.5.camel@linux.vnet.ibm.com> <yq1y3ypgd7m.fsf@oracle.com>
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Subject: [PATCH 0/2] Add QLogic FastLinQ FCoE (qedf) driver
+Date: Mon, 16 Jan 2017 11:53:55 -0800
+Message-ID: <1484596437-27637-1-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <yq1y3ypgd7m.fsf@oracle.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
 List-Id: linux-scsi@vger.kernel.org
 
->From 91d249409546569444897a1ffde65c421e064899 Mon Sep 17 00:00:00 2001
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Date: Sun, 1 Jan 2017 09:39:24 -0800
-Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
 
-mpt3sas has a firmware failure where it can only handle one pass
-through ATA command at a time.  If another comes in, contrary to the
-SAT standard, it will hang until the first one completes (causing long
-commands like secure erase to timeout).  The original fix was to block
-the device when an ATA command came in, but this caused a regression
-with
+This series introduces the hardware offload FCoE initiator driver for the
+41000 Series Converged Network Adapters (579xx chip) by Cavium. The overall
+driver design includes a common module ('qed') and protocol specific
+dependent modules ('qedf' for FCoE).
 
-commit 669f044170d8933c3d66d231b69ea97cb8447338
-Author: Bart Van Assche <bart.vanassche@sandisk.com>
-Date:   Tue Nov 22 16:17:13 2016 -0800
+This driver uses the kernel components of libfc and libfcoe as is and does not
+make use of the open-fcoe user space components.  Therefore, no changes will need to be
+made to any open-fcoe components.
 
-    scsi: srp_transport: Move queuecommand() wait code to SCSI core
+The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
+enhanced with functionality required for FCoE support.
 
-So fix the original fix of the secure erase timeout by properly
-returning SAM_STAT_BUSY like the SAT recommends.  The original patch
-also had a concurrency problem since scsih_qcmd is lockless at that
-point (this is fixed by using atomic bitops to set and test the flag).
+Changes from RFC -> V1
 
-Fixes: 18f6084a989ba1b (mpt3sas: Fix secure erase premature termination)
-Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
+- Squash qedf patches to one patch now that the initial review has taken place
+- Convert qedf to use hotplug state machine
+- Return via va_end to match corresponding va_start in logging functions
+- Convert qedf_ctx offloaded port list to a RCU list so searches do not need
+  to make use of spinlocks.  Also eliminates the need to fcport conn_id's.
+- Use IS_ERR(fp) in qedf_flogi_resp() instead of checking individual FC_EX_* errors.
+- Remove scsi_block_target when executing TMF request.
+- Checkpatch fixes in the qed and qedf patches
 
----
+At the current time I couldn't make use of Christoph's IRQ allocation changes
+as changes are needed to the core module (qed) which would affect other drivers
+that are already in tree (qede, qedr, qedi).
 
-v2 - use bitops for lockless atomicity
-v3 - update description, change function name
----
- drivers/scsi/mpt3sas/mpt3sas_base.h  | 12 +++++++++++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 40 +++++++++++++++++++++++-------------
- 2 files changed, 38 insertions(+), 14 deletions(-)
+Arun Easi (1):
+  qed: Add support for hardware offloaded FCoE.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 394fe13..dcb33f4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -393,6 +393,7 @@ struct MPT3SAS_TARGET {
-  * @eedp_enable: eedp support enable bit
-  * @eedp_type: 0(type_1), 1(type_2), 2(type_3)
-  * @eedp_block_length: block size
-+ * @ata_command_pending: SATL passthrough outstanding for device
-  */
- struct MPT3SAS_DEVICE {
- 	struct MPT3SAS_TARGET *sas_target;
-@@ -404,6 +405,17 @@ struct MPT3SAS_DEVICE {
- 	u8	ignore_delay_remove;
- 	/* Iopriority Command Handling */
- 	u8	ncq_prio_enable;
-+	/*
-+	 * Bug workaround for SATL handling: the mpt2/3sas firmware
-+	 * doesn't return BUSY or TASK_SET_FULL for subsequent
-+	 * commands while a SATL pass through is in operation as the
-+	 * spec requires, it simply does nothing with them until the
-+	 * pass through completes, causing them possibly to timeout if
-+	 * the passthrough is a long executing command (like format or
-+	 * secure erase).  This variable allows us to do the right
-+	 * thing while a SATL command is pending.
-+	 */
-+	unsigned long ata_command_pending;
- 
- };
- 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index b5c966e..830e2c1 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3899,9 +3899,18 @@ _scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
- 	}
- }
- 
--static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
- {
--	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+	struct MPT3SAS_DEVICE *priv = scmd->device->hostdata;
-+
-+	if  (scmd->cmnd[0] != ATA_12 && scmd->cmnd[0] != ATA_16)
-+		return 0;
-+
-+	if (pending)
-+		return test_and_set_bit(0, &priv->ata_command_pending);
-+
-+	clear_bit(0, &priv->ata_command_pending);
-+	return 0;
- }
- 
- /**
-@@ -3925,9 +3934,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
- 		if (!scmd)
- 			continue;
- 		count++;
--		if (ata_12_16_cmd(scmd))
--			scsi_internal_device_unblock(scmd->device,
--							SDEV_RUNNING);
-+		_scsih_set_satl_pending(scmd, false);
- 		mpt3sas_base_free_smid(ioc, smid);
- 		scsi_dma_unmap(scmd);
- 		if (ioc->pci_error_recovery)
-@@ -4063,13 +4070,6 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 	if (ioc->logging_level & MPT_DEBUG_SCSI)
- 		scsi_print_command(scmd);
- 
--	/*
--	 * Lock the device for any subsequent command until command is
--	 * done.
--	 */
--	if (ata_12_16_cmd(scmd))
--		scsi_internal_device_block(scmd->device);
--
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4083,6 +4083,19 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
- 		return 0;
- 	}
- 
-+	/*
-+	 * Bug work around for firmware SATL handling.  The loop
-+	 * is based on atomic operations and ensures consistency
-+	 * since we're lockless at this point
-+	 */
-+	do {
-+		if (sas_device_priv_data->ata_command_pending) {
-+			scmd->result = SAM_STAT_BUSY;
-+			scmd->scsi_done(scmd);
-+			return 0;
-+		}
-+	} while (_scsih_set_satl_pending(scmd, true));
-+
- 	sas_target_priv_data = sas_device_priv_data->sas_target;
- 
- 	/* invalid device handle */
-@@ -4650,8 +4663,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
- 
--	if (ata_12_16_cmd(scmd))
--		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+	_scsih_set_satl_pending(scmd, false);
- 
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
+Dupuis, Chad (1):
+  qedf: Add QLogic FastLinQ offload FCoE driver framework.
+
+ MAINTAINERS                                       |    6 +
+ drivers/net/ethernet/qlogic/Kconfig               |    3 +
+ drivers/net/ethernet/qlogic/qed/Makefile          |    1 +
+ drivers/net/ethernet/qlogic/qed/qed.h             |   11 +
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c         |   98 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |   11 +
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_dev.c         |  205 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |   42 +
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c        |  990 ++++++
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |   52 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h         |  781 ++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c          |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c         |   25 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_main.c        |    7 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h         |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |    8 +
+ drivers/net/ethernet/qlogic/qed/qed_sp.h          |    4 +
+ drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |    3 +
+ drivers/scsi/Kconfig                              |    1 +
+ drivers/scsi/qedf/Kconfig                         |   11 +
+ drivers/scsi/qedf/Makefile                        |    5 +
+ drivers/scsi/qedf/qedf.h                          |  555 ++++
+ drivers/scsi/qedf/qedf_attr.c                     |  165 +
+ drivers/scsi/qedf/qedf_dbg.c                      |  195 ++
+ drivers/scsi/qedf/qedf_dbg.h                      |  154 +
+ drivers/scsi/qedf/qedf_debugfs.c                  |  471 +++
+ drivers/scsi/qedf/qedf_els.c                      |  984 ++++++
+ drivers/scsi/qedf/qedf_fip.c                      |  267 ++
+ drivers/scsi/qedf/qedf_hsi.h                      |  427 +++
+ drivers/scsi/qedf/qedf_io.c                       | 2301 ++++++++++++++
+ drivers/scsi/qedf/qedf_main.c                     | 3483 +++++++++++++++++++++
+ drivers/scsi/qedf/qedf_version.h                  |   15 +
+ include/linux/qed/common_hsi.h                    |   10 +-
+ include/linux/qed/fcoe_common.h                   |  715 +++++
+ include/linux/qed/qed_fcoe_if.h                   |  145 +
+ include/linux/qed/qed_if.h                        |   39 +
+ 40 files changed, 12192 insertions(+), 11 deletions(-)
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
+ create mode 100644 drivers/scsi/qedf/Kconfig
+ create mode 100644 drivers/scsi/qedf/Makefile
+ create mode 100644 drivers/scsi/qedf/qedf.h
+ create mode 100644 drivers/scsi/qedf/qedf_attr.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.h
+ create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
+ create mode 100644 drivers/scsi/qedf/qedf_els.c
+ create mode 100644 drivers/scsi/qedf/qedf_fip.c
+ create mode 100644 drivers/scsi/qedf/qedf_hsi.h
+ create mode 100644 drivers/scsi/qedf/qedf_io.c
+ create mode 100644 drivers/scsi/qedf/qedf_main.c
+ create mode 100644 drivers/scsi/qedf/qedf_version.h
+ create mode 100644 include/linux/qed/fcoe_common.h
+ create mode 100644 include/linux/qed/qed_fcoe_if.h
+
 -- 
-2.6.6
+1.8.5.6
