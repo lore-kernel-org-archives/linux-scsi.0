@@ -1,483 +1,1182 @@
-From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 2/2] virtio_scsi: Implement fc_host
-Date: Tue, 17 Jan 2017 04:24:45 +0800
-Message-ID: <201701170451.2mCrVlRx%fengguang.wu@intel.com>
-References: <20170116160430.11815-3-famz@redhat.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH v2 11/12] qla2xxx: Improve RSCN handling in driver
+Date: Mon, 16 Jan 2017 12:35:23 -0800
+Message-ID: <1484598924-29066-12-git-send-email-himanshu.madhani@cavium.com>
+References: <1484598924-29066-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="82I3+IH0IqGh5yIs"
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-Content-Disposition: inline
-In-Reply-To: <20170116160430.11815-3-famz@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Fam Zheng <famz@redhat.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kbuild-all@01.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0055.outbound.protection.outlook.com ([104.47.42.55]:32160
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750841AbdAPUfx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 16 Jan 2017 15:35:53 -0500
+In-Reply-To: <1484598924-29066-1-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
+From: Quinn Tran <quinn.tran@cavium.com>
 
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Current code blindly does State Change Registration when
+the link is up. Move SCR behind fabric scan, so that arbitrated
+loop scan would not get erroneous error message.
 
-Hi Fam,
+Some of the other improvements are as follows
 
-[auto build test ERROR on linus/master]
-[also build test ERROR on v4.10-rc4 next-20170116]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+- Add session deletion for TPRLO and send acknowledgment for TPRLO.
+- Enable FW option to move ABTS, RIDA & PUREX from RSPQ to ATIOQ.
+- Save NPort ID early in link init.
+- Move ABTS & RIDA to ATIOQ helps in keeping command ordering and
+  link up sequence ordering.
+- Save Nport ID and update VP map so that SCSI CMD/ATIO won't be dropped.
+- fcport alloc does the initializes memory to zero. Remove memset to
+  zero since It might corrupt link list.
+- Turn off Registration for State Change MB in loop mode.
 
-url:    https://github.com/0day-ci/linux/commits/Fam-Zheng/virtio-scsi-Implement-FC_HOST-feature/20170117-011950
-config: arm-vexpress_defconfig (attached as .config)
-compiler: arm-linux-gnueabi-gcc (Debian 6.1.1-9) 6.1.1 20160705
-reproduce:
-        wget https://git.kernel.org/cgit/linux/kernel/git/wfg/lkp-tests.git/plain/sbin/make.cross -O ~/bin/make.cross
-        chmod +x ~/bin/make.cross
-        # save the attached .config to linux build tree
-        make.cross ARCH=arm 
-
-All errors (new ones prefixed by >>):
-
-   drivers/built-in.o: In function `init':
->> drivers/scsi/virtio_scsi.c:1178: undefined reference to `fc_attach_transport'
-   drivers/built-in.o: In function `fini':
->> drivers/scsi/virtio_scsi.c:1231: undefined reference to `fc_release_transport'
-
-vim +1178 drivers/scsi/virtio_scsi.c
-
-  1172	};
-  1173	
-  1174	static int __init init(void)
-  1175	{
-  1176		int ret = -ENOMEM;
-  1177	
-> 1178		virtscsi_fc_transport_template = fc_attach_transport(&virtscsi_fc_template);
-  1179		if (!virtscsi_fc_transport_template) {
-  1180			pr_err("fc_attach_transport() failed\n");
-  1181			goto error;
-  1182		}
-  1183	
-  1184		virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
-  1185		if (!virtscsi_cmd_cache) {
-  1186			pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
-  1187			goto error;
-  1188		}
-  1189	
-  1190	
-  1191		virtscsi_cmd_pool =
-  1192			mempool_create_slab_pool(VIRTIO_SCSI_MEMPOOL_SZ,
-  1193						 virtscsi_cmd_cache);
-  1194		if (!virtscsi_cmd_pool) {
-  1195			pr_err("mempool_create() for virtscsi_cmd_pool failed\n");
-  1196			goto error;
-  1197		}
-  1198		ret = cpuhp_setup_state_multi(CPUHP_AP_ONLINE_DYN,
-  1199					      "scsi/virtio:online",
-  1200					      virtscsi_cpu_online, NULL);
-  1201		if (ret < 0)
-  1202			goto error;
-  1203		virtioscsi_online = ret;
-  1204		ret = cpuhp_setup_state_multi(CPUHP_VIRT_SCSI_DEAD, "scsi/virtio:dead",
-  1205					      NULL, virtscsi_cpu_online);
-  1206		if (ret)
-  1207			goto error;
-  1208		ret = register_virtio_driver(&virtio_scsi_driver);
-  1209		if (ret < 0)
-  1210			goto error;
-  1211	
-  1212		return 0;
-  1213	
-  1214	error:
-  1215		if (virtscsi_cmd_pool) {
-  1216			mempool_destroy(virtscsi_cmd_pool);
-  1217			virtscsi_cmd_pool = NULL;
-  1218		}
-  1219		if (virtscsi_cmd_cache) {
-  1220			kmem_cache_destroy(virtscsi_cmd_cache);
-  1221			virtscsi_cmd_cache = NULL;
-  1222		}
-  1223		if (virtioscsi_online)
-  1224			cpuhp_remove_multi_state(virtioscsi_online);
-  1225		cpuhp_remove_multi_state(CPUHP_VIRT_SCSI_DEAD);
-  1226		return ret;
-  1227	}
-  1228	
-  1229	static void __exit fini(void)
-  1230	{
-> 1231		fc_release_transport(virtscsi_fc_transport_template);
-  1232		unregister_virtio_driver(&virtio_scsi_driver);
-  1233		cpuhp_remove_multi_state(virtioscsi_online);
-  1234		cpuhp_remove_multi_state(CPUHP_VIRT_SCSI_DEAD);
-
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+ drivers/scsi/qla2xxx/qla_def.h    |  11 +-
+ drivers/scsi/qla2xxx/qla_fw.h     |  75 +++++++++---
+ drivers/scsi/qla2xxx/qla_gbl.h    |   2 +
+ drivers/scsi/qla2xxx/qla_gs.c     |   4 +-
+ drivers/scsi/qla2xxx/qla_init.c   | 151 ++++++++++++++++++++----
+ drivers/scsi/qla2xxx/qla_isr.c    |   6 +-
+ drivers/scsi/qla2xxx/qla_mbx.c    | 147 +++++++++++++++--------
+ drivers/scsi/qla2xxx/qla_os.c     |  48 ++++----
+ drivers/scsi/qla2xxx/qla_target.c | 238 ++++++++++++++++++++++++++++++++++----
+ 9 files changed, 537 insertions(+), 145 deletions(-)
 
---82I3+IH0IqGh5yIs
-Content-Type: application/gzip
-Content-Disposition: attachment; filename=".config.gz"
-Content-Transfer-Encoding: base64
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index b447b01..329aebf 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2226,6 +2226,13 @@ enum fcport_mgt_event {
+ 	FCME_DELETE_DONE,
+ };
+ 
++enum rscn_addr_format {
++	RSCN_PORT_ADDR,
++	RSCN_AREA_ADDR,
++	RSCN_DOM_ADDR,
++	RSCN_FAB_ADDR,
++};
++
+ /*
+  * Fibre channel port structure.
+  */
+@@ -3957,7 +3964,7 @@ struct qla_tgt_counters {
+ #define FCOE_CTX_RESET_NEEDED	18	/* Initiate FCoE context reset */
+ #define MPI_RESET_NEEDED	19	/* Initiate MPI FW reset */
+ #define ISP_QUIESCE_NEEDED	20	/* Driver need some quiescence */
+-#define SCR_PENDING		21	/* SCR in target mode */
++#define FREE_BIT 21
+ #define PORT_UPDATE_NEEDED	22
+ #define FX00_RESET_RECOVERY	23
+ #define FX00_TARGET_SCAN	24
+@@ -4011,7 +4018,9 @@ struct qla_tgt_counters {
+ 	/* list of commands waiting on workqueue */
+ 	struct list_head	qla_cmd_list;
+ 	struct list_head	qla_sess_op_cmd_list;
++	struct list_head	unknown_atio_list;
+ 	spinlock_t		cmd_list_lock;
++	struct delayed_work	unknown_atio_work;
+ 
+ 	/* Counter to detect races between ELS and RSCN events */
+ 	atomic_t		generation_tick;
+diff --git a/drivers/scsi/qla2xxx/qla_fw.h b/drivers/scsi/qla2xxx/qla_fw.h
+index ee135cf..1f80892 100644
+--- a/drivers/scsi/qla2xxx/qla_fw.h
++++ b/drivers/scsi/qla2xxx/qla_fw.h
+@@ -1301,27 +1301,76 @@ struct vp_config_entry_24xx {
+ };
+ 
+ #define VP_RPT_ID_IOCB_TYPE	0x32	/* Report ID Acquisition entry. */
++enum VP_STATUS {
++	VP_STAT_COMPL,
++	VP_STAT_FAIL,
++	VP_STAT_ID_CHG,
++	VP_STAT_SNS_TO,				/* timeout */
++	VP_STAT_SNS_RJT,
++	VP_STAT_SCR_TO,				/* timeout */
++	VP_STAT_SCR_RJT,
++};
++
++enum VP_FLAGS {
++	VP_FLAGS_CON_FLOOP = 1,
++	VP_FLAGS_CON_P2P = 2,
++	VP_FLAGS_CON_FABRIC = 3,
++	VP_FLAGS_NAME_VALID = BIT_5,
++};
++
+ struct vp_rpt_id_entry_24xx {
+ 	uint8_t entry_type;		/* Entry type. */
+ 	uint8_t entry_count;		/* Entry count. */
+ 	uint8_t sys_define;		/* System defined. */
+ 	uint8_t entry_status;		/* Entry Status. */
+-
+-	uint32_t handle;		/* System handle. */
+-
+-	uint16_t vp_count;		/* Format 0 -- | VP setup | VP acq |. */
+-					/* Format 1 -- | VP count |. */
+-	uint16_t vp_idx;		/* Format 0 -- Reserved. */
+-					/* Format 1 -- VP status and index. */
++	uint32_t resv1;
++	uint8_t vp_acquired;
++	uint8_t vp_setup;
++	uint8_t vp_idx;		/* Format 0=reserved */
++	uint8_t vp_status;	/* Format 0=reserved */
+ 
+ 	uint8_t port_id[3];
+ 	uint8_t format;
+-
+-	uint8_t vp_idx_map[16];
+-
+-	uint8_t reserved_4[24];
+-	uint16_t bbcr;
+-	uint8_t reserved_5[6];
++	union {
++		struct {
++			/* format 0 loop */
++			uint8_t vp_idx_map[16];
++			uint8_t reserved_4[32];
++		} f0;
++		struct {
++			/* format 1 fabric */
++			uint8_t vpstat1_subcode; /* vp_status=1 subcode */
++			uint8_t flags;
++			uint16_t fip_flags;
++			uint8_t rsv2[12];
++
++			uint8_t ls_rjt_vendor;
++			uint8_t ls_rjt_explanation;
++			uint8_t ls_rjt_reason;
++			uint8_t rsv3[5];
++
++			uint8_t port_name[8];
++			uint8_t node_name[8];
++			uint16_t bbcr;
++			uint8_t reserved_5[6];
++		} f1;
++		struct { /* format 2: N2N direct connect */
++		    uint8_t vpstat1_subcode;
++		    uint8_t flags;
++		    uint16_t rsv6;
++		    uint8_t rsv2[12];
++
++		    uint8_t ls_rjt_vendor;
++		    uint8_t ls_rjt_explanation;
++		    uint8_t ls_rjt_reason;
++		    uint8_t rsv3[5];
++
++		    uint8_t port_name[8];
++		    uint8_t node_name[8];
++		    uint32_t remote_nport_id;
++		    uint32_t reserved_5;
++		} f2;
++	} u;
+ };
+ 
+ #define VF_EVFP_IOCB_TYPE       0x26    /* Exchange Virtual Fabric Parameters entry. */
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index dd95ff6..e091457 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -138,6 +138,7 @@ int qla24xx_post_newsess_work(struct scsi_qla_host *, port_id_t *, u8 *,
+ extern int ql2xexlogins;
+ extern int ql2xexchoffld;
+ extern int ql2xfwholdabts;
++extern int ql2xmvasynctoatio;
+ 
+ extern int qla2x00_loop_reset(scsi_qla_host_t *);
+ extern void qla2x00_abort_all_cmds(scsi_qla_host_t *, int);
+@@ -844,5 +845,6 @@ void qlt_plogi_ack_link(struct scsi_qla_host *, struct qlt_plogi_ack_t *,
+ extern struct fc_port *qlt_find_sess_invalidate_other(scsi_qla_host_t *,
+ 	uint64_t wwn, port_id_t port_id, uint16_t loop_id, struct fc_port **);
+ void qla24xx_delete_sess_fn(struct work_struct *);
++void qlt_unknown_atio_work_fn(struct work_struct *);
+ 
+ #endif /* _QLA_GBL_H */
+diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
+index 8f7054d..d1074fb 100644
+--- a/drivers/scsi/qla2xxx/qla_gs.c
++++ b/drivers/scsi/qla2xxx/qla_gs.c
+@@ -2914,8 +2914,10 @@ int qla24xx_async_gidpn(scsi_qla_host_t *vha, fc_port_t *fcport)
+ int qla24xx_post_gidpn_work(struct scsi_qla_host *vha, fc_port_t *fcport)
+ {
+ 	struct qla_work_evt *e;
++	int ls;
+ 
+-	if ((atomic_read(&vha->loop_state) != LOOP_READY) ||
++	ls = atomic_read(&vha->loop_state);
++	if (((ls != LOOP_READY) && (ls != LOOP_UP)) ||
+ 		test_bit(UNLOADING, &vha->dpc_flags))
+ 		return 0;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index a4e92c7..a233467 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1074,10 +1074,10 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ 	qla24xx_fcport_handle_login(vha, fcport);
+ }
+ 
+-void qla2x00_fcport_event_handler(scsi_qla_host_t *vha,
+-	struct event_arg *ea)
++void qla2x00_fcport_event_handler(scsi_qla_host_t *vha, struct event_arg *ea)
+ {
+-	fc_port_t *fcport;
++	fc_port_t *fcport, *f, *tf;
++	uint32_t id = 0, mask, rid;
+ 	int rc;
+ 
+ 	switch (ea->event) {
+@@ -1090,20 +1090,55 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha,
+ 	case FCME_RSCN:
+ 		if (test_bit(UNLOADING, &vha->dpc_flags))
+ 			return;
++		switch (ea->id.b.rsvd_1) {
++		case RSCN_PORT_ADDR:
++			fcport = qla2x00_find_fcport_by_nportid(vha, &ea->id, 1);
++			if (!fcport) {
++				/* cable moved */
++				rc = qla24xx_post_gpnid_work(vha, &ea->id);
++				if (rc) {
++					ql_log(ql_log_warn, vha, 0xffff,
++						"RSCN GPNID work failed %02x%02x%02x\n",
++						ea->id.b.domain, ea->id.b.area,
++						ea->id.b.al_pa);
++				}
++			} else {
++				ea->fcport = fcport;
++				qla24xx_handle_rscn_event(fcport, ea);
++			}
++			break;
++		case RSCN_AREA_ADDR:
++		case RSCN_DOM_ADDR:
++			if (ea->id.b.rsvd_1 == RSCN_AREA_ADDR) {
++				mask = 0xffff00;
++				ql_log(ql_dbg_async, vha, 0xffff,
++					   "RSCN: Area 0x%06x was affected\n",
++					   ea->id.b24);
++			} else {
++				mask = 0xff0000;
++				ql_log(ql_dbg_async, vha, 0xffff,
++					   "RSCN: Domain 0x%06x was affected\n",
++					   ea->id.b24);
++			}
+ 
+-		fcport = qla2x00_find_fcport_by_nportid(vha, &ea->id, 1);
+-		if (!fcport) {
+-			/* cable moved */
+-			rc = qla24xx_post_gpnid_work(vha, &ea->id);
+-			if (rc) {
+-				ql_log(ql_log_warn, vha, 0xffff,
+-					"RSCN GPNID work failed %02x%02x%02x\n",
+-					ea->id.b.domain, ea->id.b.area,
+-					ea->id.b.al_pa);
++			rid = ea->id.b24 & mask;
++			list_for_each_entry_safe(f, tf, &vha->vp_fcports,
++			    list) {
++				id = f->d_id.b24 & mask;
++				if (rid == id) {
++					ea->fcport = f;
++					qla24xx_handle_rscn_event(f, ea);
++				}
+ 			}
+-		} else {
+-			ea->fcport = fcport;
+-			qla24xx_handle_rscn_event(fcport, ea);
++			break;
++		case RSCN_FAB_ADDR:
++		default:
++			ql_log(ql_log_warn, vha, 0xffff,
++				"RSCN: Fabric was affected. Addr format %d\n",
++				ea->id.b.rsvd_1);
++			qla2x00_mark_all_devices_lost(vha, 1);
++			set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
++			set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+ 		}
+ 		break;
+ 	case FCME_GIDPN_DONE:
+@@ -2950,6 +2985,21 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha,
+ 			__func__, ha->fw_options[2]);
+ 	}
+ 
++	/* Move PUREX, ABTS RX & RIDA to ATIOQ */
++	if (ql2xmvasynctoatio) {
++		if (qla_tgt_mode_enabled(vha) ||
++		    qla_dual_mode_enabled(vha))
++			ha->fw_options[2] |= BIT_11;
++		else
++			ha->fw_options[2] &= ~BIT_11;
++	}
++
++	ql_dbg(ql_dbg_init, vha, 0xffff,
++		"%s, add FW options 1-3 = 0x%04x 0x%04x 0x%04x mode %x\n",
++		__func__, ha->fw_options[1], ha->fw_options[2],
++		ha->fw_options[3], vha->host->active_mode);
++	qla2x00_set_fw_options(vha, ha->fw_options);
++
+ 	/* Update Serial Link options. */
+ 	if ((le16_to_cpu(ha->fw_seriallink_options24[0]) & BIT_0) == 0)
+ 		return;
+@@ -3956,10 +4006,11 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 
+ 	} else if (ha->current_topology == ISP_CFG_N) {
+ 		clear_bit(RSCN_UPDATE, &flags);
+-
++	} else if (ha->current_topology == ISP_CFG_NL) {
++		clear_bit(RSCN_UPDATE, &flags);
++		set_bit(LOCAL_LOOP_UPDATE, &flags);
+ 	} else if (!vha->flags.online ||
+ 	    (test_bit(ABORT_ISP_ACTIVE, &flags))) {
+-
+ 		set_bit(RSCN_UPDATE, &flags);
+ 		set_bit(LOCAL_LOOP_UPDATE, &flags);
+ 	}
+@@ -4061,6 +4112,7 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 	uint16_t	loop_id;
+ 	uint8_t		domain, area, al_pa;
+ 	struct qla_hw_data *ha = vha->hw;
++	unsigned long flags;
+ 
+ 	found_devs = 0;
+ 	new_fcport = NULL;
+@@ -4101,7 +4153,7 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 			    "Marking port lost loop_id=0x%04x.\n",
+ 			    fcport->loop_id);
+ 
+-			qla2x00_set_fcport_state(fcport, FCS_DEVICE_LOST);
++			qla2x00_mark_device_lost(vha, fcport, 0, 0);
+ 		}
+ 	}
+ 
+@@ -4132,13 +4184,14 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 		if (loop_id > LAST_LOCAL_LOOP_ID)
+ 			continue;
+ 
+-		memset(new_fcport, 0, sizeof(fc_port_t));
++		memset(new_fcport->port_name, 0, WWN_SIZE);
+ 
+ 		/* Fill in member data. */
+ 		new_fcport->d_id.b.domain = domain;
+ 		new_fcport->d_id.b.area = area;
+ 		new_fcport->d_id.b.al_pa = al_pa;
+ 		new_fcport->loop_id = loop_id;
++
+ 		rval2 = qla2x00_get_port_database(vha, new_fcport, 0);
+ 		if (rval2 != QLA_SUCCESS) {
+ 			ql_dbg(ql_dbg_disc, vha, 0x201a,
+@@ -4151,6 +4204,7 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 			continue;
+ 		}
+ 
++		spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 		/* Check for matching device in port list. */
+ 		found = 0;
+ 		fcport = NULL;
+@@ -4166,6 +4220,12 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 			memcpy(fcport->node_name, new_fcport->node_name,
+ 			    WWN_SIZE);
+ 
++			if (!fcport->login_succ) {
++				vha->fcport_count++;
++				fcport->login_succ = 1;
++				fcport->disc_state = DSC_LOGIN_COMPLETE;
++			}
++
+ 			found++;
+ 			break;
+ 		}
+@@ -4176,16 +4236,28 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 
+ 			/* Allocate a new replacement fcport. */
+ 			fcport = new_fcport;
++			if (!fcport->login_succ) {
++				vha->fcport_count++;
++				fcport->login_succ = 1;
++				fcport->disc_state = DSC_LOGIN_COMPLETE;
++			}
++
++			spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++
+ 			new_fcport = qla2x00_alloc_fcport(vha, GFP_KERNEL);
++
+ 			if (new_fcport == NULL) {
+ 				ql_log(ql_log_warn, vha, 0x201c,
+ 				    "Failed to allocate memory for fcport.\n");
+ 				rval = QLA_MEMORY_ALLOC_FAILED;
+ 				goto cleanup_allocation;
+ 			}
++			spin_lock_irqsave(&vha->hw->tgt.sess_lock, flags);
+ 			new_fcport->flags &= ~FCF_FABRIC_DEVICE;
+ 		}
+ 
++		spin_unlock_irqrestore(&vha->hw->tgt.sess_lock, flags);
++
+ 		/* Base iIDMA settings on HBA port speed. */
+ 		fcport->fp_speed = ha->link_data_rate;
+ 
+@@ -4374,6 +4446,16 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 	}
+ 	vha->device_flags |= SWITCH_FOUND;
+ 
++
++	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)) {
++		rval = qla2x00_send_change_request(vha, 0x3, 0);
++		if (rval != QLA_SUCCESS)
++			ql_log(ql_log_warn, vha, 0x121,
++				"Failed to enable receiving of RSCN requests: 0x%x.\n",
++				rval);
++	}
++
++
+ 	do {
+ 		qla2x00_mgmt_svr_login(vha);
+ 
+@@ -6119,6 +6201,7 @@ uint8_t qla27xx_find_valid_image(struct scsi_qla_host *vha)
+ 
+ 	for (chksum = 0; cnt--; wptr++)
+ 		chksum += le32_to_cpu(*wptr);
++
+ 	if (chksum) {
+ 		ql_dbg(ql_dbg_init, vha, 0x018c,
+ 		    "Checksum validation failed for primary image (0x%x)\n",
+@@ -7131,10 +7214,15 @@ uint8_t qla27xx_find_valid_image(struct scsi_qla_host *vha)
+ 		vha->flags.process_response_queue = 1;
+ 	}
+ 
++	 /* enable RIDA Format2 */
++	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha))
++		icb->firmware_options_3 |= BIT_0;
++
+ 	if (rval) {
+ 		ql_log(ql_log_warn, vha, 0x0076,
+ 		    "NVRAM configuration failed.\n");
+ 	}
++
+ 	return (rval);
+ }
+ 
+@@ -7255,13 +7343,26 @@ uint8_t qla27xx_find_valid_image(struct scsi_qla_host *vha)
+ 			__func__, ha->fw_options[2]);
+ 	}
+ 
+-	if (!ql2xetsenable)
+-		goto out;
++	/* Move PUREX, ABTS RX & RIDA to ATIOQ */
++	if (ql2xmvasynctoatio) {
++		if (qla_tgt_mode_enabled(vha) ||
++		    qla_dual_mode_enabled(vha))
++			ha->fw_options[2] |= BIT_11;
++		else
++			ha->fw_options[2] &= ~BIT_11;
++	}
++
++	if (ql2xetsenable) {
++		/* Enable ETS Burst. */
++		memset(ha->fw_options, 0, sizeof(ha->fw_options));
++		ha->fw_options[2] |= BIT_9;
++	}
++
++	ql_dbg(ql_dbg_init, vha, 0xffff,
++		"%s, add FW options 1-3 = 0x%04x 0x%04x 0x%04x mode %x\n",
++		__func__, ha->fw_options[1], ha->fw_options[2],
++		ha->fw_options[3], vha->host->active_mode);
+ 
+-	/* Enable ETS Burst. */
+-	memset(ha->fw_options, 0, sizeof(ha->fw_options));
+-	ha->fw_options[2] |= BIT_9;
+-out:
+ 	qla2x00_set_fw_options(vha, ha->fw_options);
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 62066af..6959b44 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1029,10 +1029,6 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+ 
+ 		qla2x00_mark_all_devices_lost(vha, 1);
+ 
+-		if (vha->vp_idx == 0 &&
+-		    (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)))
+-			set_bit(SCR_PENDING, &vha->dpc_flags);
+-
+ 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+ 		set_bit(LOCAL_LOOP_UPDATE, &vha->dpc_flags);
+ 		set_bit(VP_CONFIG_OK, &vha->vp_flags);
+@@ -1077,7 +1073,9 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+ 			memset(&ea, 0, sizeof(ea));
+ 			ea.event = FCME_RSCN;
+ 			ea.id.b24 = rscn_entry;
++			ea.id.b.rsvd_1 = rscn_entry >> 24;
+ 			qla2x00_fcport_event_handler(vha, &ea);
++			qla2x00_post_aen_work(vha, FCH_EVT_RSCN, rscn_entry);
+ 		}
+ 		break;
+ 	/* case MBA_RIO_RESPONSE: */
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index e8be16a..56d44ea 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -465,6 +465,9 @@ static int is_rom_cmd(uint16_t cmd)
+ 
+ mbx_done:
+ 	if (rval) {
++		if (command == MBC_MID_INITIALIZE_FIRMWARE)
++			ha->isp_ops->fw_dump(vha, 0);
++
+ 		ql_dbg(ql_dbg_disc, base_vha, 0x1020,
+ 		    "**** Failed mbx[0]=%x, mb[1]=%x, mb[2]=%x, mb[3]=%x, cmd=%x ****.\n",
+ 		    mcp->mb[0], mcp->mb[1], mcp->mb[2], mcp->mb[3], command);
+@@ -3601,10 +3604,8 @@ struct tsk_mgmt_cmd {
+ qla24xx_report_id_acquisition(scsi_qla_host_t *vha,
+ 	struct vp_rpt_id_entry_24xx *rptid_entry)
+ {
+-	uint8_t vp_idx;
+-	uint16_t stat = le16_to_cpu(rptid_entry->vp_idx);
+ 	struct qla_hw_data *ha = vha->hw;
+-	scsi_qla_host_t *vp;
++	scsi_qla_host_t *vp = NULL;
+ 	unsigned long   flags;
+ 	int found;
+ 
+@@ -3615,80 +3616,124 @@ struct tsk_mgmt_cmd {
+ 		return;
+ 
+ 	if (rptid_entry->format == 0) {
++		/* loop */
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10b7,
+ 		    "Format 0 : Number of VPs setup %d, number of "
+-		    "VPs acquired %d.\n",
+-		    MSB(le16_to_cpu(rptid_entry->vp_count)),
+-		    LSB(le16_to_cpu(rptid_entry->vp_count)));
++		    "VPs acquired %d.\n", rptid_entry->vp_setup,
++		    rptid_entry->vp_acquired);
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10b8,
+ 		    "Primary port id %02x%02x%02x.\n",
+ 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
+ 		    rptid_entry->port_id[0]);
++
++		vha->d_id.b.domain = rptid_entry->port_id[2];
++		vha->d_id.b.area = rptid_entry->port_id[1];
++		vha->d_id.b.al_pa = rptid_entry->port_id[0];
++
++		spin_lock_irqsave(&ha->vport_slock, flags);
++		qlt_update_vp_map(vha, SET_AL_PA);
++		spin_unlock_irqrestore(&ha->vport_slock, flags);
++
+ 	} else if (rptid_entry->format == 1) {
+-		vp_idx = LSB(stat);
++		/* fabric */
+ 		ql_dbg(ql_dbg_mbx + ql_dbg_verbose, vha, 0x10b9,
+ 		    "Format 1: VP[%d] enabled - status %d - with "
+-		    "port id %02x%02x%02x.\n", vp_idx, MSB(stat),
++		    "port id %02x%02x%02x.\n", rptid_entry->vp_idx,
++			rptid_entry->vp_status,
+ 		    rptid_entry->port_id[2], rptid_entry->port_id[1],
+ 		    rptid_entry->port_id[0]);
+ 
+ 		/* buffer to buffer credit flag */
+-		vha->flags.bbcr_enable = (rptid_entry->bbcr & 0xf) != 0;
+-
+-		/* FA-WWN is only for physical port */
+-		if (!vp_idx) {
+-			void *wwpn = ha->init_cb->port_name;
++		vha->flags.bbcr_enable = (rptid_entry->u.f1.bbcr & 0xf) != 0;
++
++		if (rptid_entry->vp_idx == 0) {
++			if (rptid_entry->vp_status == VP_STAT_COMPL) {
++				/* FA-WWN is only for physical port */
++				if (qla_ini_mode_enabled(vha) &&
++				    ha->flags.fawwpn_enabled &&
++				    (rptid_entry->u.f1.flags &
++				     VP_FLAGS_NAME_VALID)) {
++					memcpy(vha->port_name,
++					    rptid_entry->u.f1.port_name,
++					    WWN_SIZE);
++				}
+ 
+-			if (!MSB(stat)) {
+-				if (rptid_entry->vp_idx_map[1] & BIT_6)
+-					wwpn = rptid_entry->reserved_4 + 8;
++				vha->d_id.b.domain = rptid_entry->port_id[2];
++				vha->d_id.b.area = rptid_entry->port_id[1];
++				vha->d_id.b.al_pa = rptid_entry->port_id[0];
++				spin_lock_irqsave(&ha->vport_slock, flags);
++				qlt_update_vp_map(vha, SET_AL_PA);
++				spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 			}
+-			memcpy(vha->port_name, wwpn, WWN_SIZE);
++
+ 			fc_host_port_name(vha->host) =
+ 			    wwn_to_u64(vha->port_name);
+-			ql_dbg(ql_dbg_mbx, vha, 0x1018,
+-			    "FA-WWN portname %016llx (%x)\n",
+-			    fc_host_port_name(vha->host), MSB(stat));
+-		}
+ 
+-		vp = vha;
+-		if (vp_idx == 0)
+-			goto reg_needed;
+-
+-		if (MSB(stat) != 0 && MSB(stat) != 2) {
+-			ql_dbg(ql_dbg_mbx, vha, 0x10ba,
+-			    "Could not acquire ID for VP[%d].\n", vp_idx);
+-			return;
+-		}
++			if (qla_ini_mode_enabled(vha))
++				ql_dbg(ql_dbg_mbx, vha, 0x1018,
++				    "FA-WWN portname %016llx (%x)\n",
++				    fc_host_port_name(vha->host),
++				    rptid_entry->vp_status);
+ 
+-		found = 0;
+-		spin_lock_irqsave(&ha->vport_slock, flags);
+-		list_for_each_entry(vp, &ha->vp_list, list) {
+-			if (vp_idx == vp->vp_idx) {
+-				found = 1;
+-				break;
++			set_bit(REGISTER_FC4_NEEDED, &vha->dpc_flags);
++			set_bit(REGISTER_FDMI_NEEDED, &vha->dpc_flags);
++		} else {
++			if (rptid_entry->vp_status != VP_STAT_COMPL &&
++				rptid_entry->vp_status != VP_STAT_ID_CHG) {
++				ql_dbg(ql_dbg_mbx, vha, 0x10ba,
++				    "Could not acquire ID for VP[%d].\n",
++				    rptid_entry->vp_idx);
++				return;
+ 			}
+-		}
+-		spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 
+-		if (!found)
+-			return;
++			found = 0;
++			spin_lock_irqsave(&ha->vport_slock, flags);
++			list_for_each_entry(vp, &ha->vp_list, list) {
++				if (rptid_entry->vp_idx == vp->vp_idx) {
++					found = 1;
++					break;
++				}
++			}
++			spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 
+-		vp->d_id.b.domain = rptid_entry->port_id[2];
+-		vp->d_id.b.area =  rptid_entry->port_id[1];
+-		vp->d_id.b.al_pa = rptid_entry->port_id[0];
++			if (!found)
++				return;
+ 
+-		/*
+-		 * Cannot configure here as we are still sitting on the
+-		 * response queue. Handle it in dpc context.
+-		 */
+-		set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
++			vp->d_id.b.domain = rptid_entry->port_id[2];
++			vp->d_id.b.area =  rptid_entry->port_id[1];
++			vp->d_id.b.al_pa = rptid_entry->port_id[0];
++			spin_lock_irqsave(&ha->vport_slock, flags);
++			qlt_update_vp_map(vp, SET_AL_PA);
++			spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 
+-reg_needed:
+-		set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
+-		set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
++			/*
++			 * Cannot configure here as we are still sitting on the
++			 * response queue. Handle it in dpc context.
++			 */
++			set_bit(VP_IDX_ACQUIRED, &vp->vp_flags);
++			set_bit(REGISTER_FC4_NEEDED, &vp->dpc_flags);
++			set_bit(REGISTER_FDMI_NEEDED, &vp->dpc_flags);
++		}
+ 		set_bit(VP_DPC_NEEDED, &vha->dpc_flags);
+ 		qla2xxx_wake_dpc(vha);
++	} else if (rptid_entry->format == 2) {
++		ql_dbg(ql_dbg_async, vha, 0xffff,
++		    "RIDA: format 2/N2N Primary port id %02x%02x%02x.\n",
++		    rptid_entry->port_id[2], rptid_entry->port_id[1],
++		    rptid_entry->port_id[0]);
++
++		ql_dbg(ql_dbg_async, vha, 0xffff,
++		    "N2N: Remote WWPN %8phC.\n",
++		    rptid_entry->u.f2.port_name);
++
++		/* N2N.  direct connect */
++		vha->d_id.b.domain = rptid_entry->port_id[2];
++		vha->d_id.b.area = rptid_entry->port_id[1];
++		vha->d_id.b.al_pa = rptid_entry->port_id[0];
++
++		spin_lock_irqsave(&ha->vport_slock, flags);
++		qlt_update_vp_map(vha, SET_AL_PA);
++		spin_unlock_irqrestore(&ha->vport_slock, flags);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 1656cff..008ac9a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -237,6 +237,13 @@
+ 		"0 (Default) Do not set fw option. "
+ 		"1 - Set fw option to hold ABTS.");
+ 
++int ql2xmvasynctoatio = 1;
++module_param(ql2xmvasynctoatio, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(ql2xmvasynctoatio,
++		"Move PUREX, ABTS RX and RIDA IOCBs to ATIOQ"
++		"0 (Default). Do not move IOCBs"
++		"1 - Move IOCBs.");
++
+ /*
+  * SCSI host template entry points
+  */
+@@ -2932,18 +2939,6 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 	if (ret)
+ 		goto probe_init_failed;
+ 
+-	base_vha->gnl.size = (ha->max_loop_id + 1) *
+-		sizeof(struct get_name_list_extended);
+-	base_vha->gnl.l = dma_alloc_coherent(&ha->pdev->dev,
+-		base_vha->gnl.size, &base_vha->gnl.ldma, GFP_KERNEL);
+-	INIT_LIST_HEAD(&base_vha->gnl.fcports);
+-
+-	if (base_vha->gnl.l == NULL) {
+-		ql_log(ql_log_fatal, base_vha, 0xffff,
+-			"Alloc failed for name list.\n");
+-		goto probe_init_failed;
+-	}
+-
+ 	/* Alloc arrays of request and response ring ptrs */
+ 	if (!qla2x00_alloc_queues(ha, req, rsp)) {
+ 		ql_log(ql_log_fatal, base_vha, 0x003d,
+@@ -4250,10 +4245,10 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	struct scsi_qla_host *vha = NULL;
+ 
+ 	host = scsi_host_alloc(sht, sizeof(scsi_qla_host_t));
+-	if (host == NULL) {
++	if (!host) {
+ 		ql_log_pci(ql_log_fatal, ha->pdev, 0x0107,
+ 		    "Failed to allocate host from the scsi layer, aborting.\n");
+-		goto fail;
++		return NULL;
+ 	}
+ 
+ 	/* Clear our data area */
+@@ -4272,11 +4267,23 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	INIT_LIST_HEAD(&vha->logo_list);
+ 	INIT_LIST_HEAD(&vha->plogi_ack_list);
+ 	INIT_LIST_HEAD(&vha->qp_list);
++	INIT_LIST_HEAD(&vha->gnl.fcports);
+ 
+ 	spin_lock_init(&vha->work_lock);
+ 	spin_lock_init(&vha->cmd_list_lock);
+ 	init_waitqueue_head(&vha->fcport_waitQ);
+ 
++	vha->gnl.size =
++	    sizeof(struct get_name_list_extended[ha->max_loop_id+1]);
++	vha->gnl.l = dma_alloc_coherent(&ha->pdev->dev,
++	    vha->gnl.size, &vha->gnl.ldma, GFP_KERNEL);
++	if (!vha->gnl.l) {
++		ql_log(ql_log_fatal, vha, 0xffff,
++		    "Alloc failed for name list.\n");
++		scsi_remove_host(vha->host);
++		return NULL;
++	}
++
+ 	sprintf(vha->host_str, "%s_%ld", QLA2XXX_DRIVER_NAME, vha->host_no);
+ 	ql_dbg(ql_dbg_init, vha, 0x0041,
+ 	    "Allocated the host=%p hw=%p vha=%p dev_name=%s",
+@@ -4284,9 +4291,6 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
+ 	    dev_name(&(ha->pdev->dev)));
+ 
+ 	return vha;
+-
+-fail:
+-	return vha;
+ }
+ 
+ struct qla_work_evt *
+@@ -5512,16 +5516,6 @@ void qla2x00_relogin(struct scsi_qla_host *vha)
+ 			qla2x00_update_fcports(base_vha);
+ 		}
+ 
+-		if (test_bit(SCR_PENDING, &base_vha->dpc_flags)) {
+-			int ret;
+-			ret = qla2x00_send_change_request(base_vha, 0x3, 0);
+-			if (ret != QLA_SUCCESS)
+-				ql_log(ql_log_warn, base_vha, 0x121,
+-				    "Failed to enable receiving of RSCN "
+-				    "requests: 0x%x.\n", ret);
+-			clear_bit(SCR_PENDING, &base_vha->dpc_flags);
+-		}
+-
+ 		if (IS_QLAFX00(ha))
+ 			goto loop_resync_check;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 2dd986a..8c16756 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -224,6 +224,105 @@ static inline void qlt_decr_num_pend_cmds(struct scsi_qla_host *vha)
+ 	spin_unlock_irqrestore(&vha->hw->tgt.q_full_lock, flags);
+ }
+ 
++
++static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
++	struct atio_from_isp *atio,	uint8_t ha_locked)
++{
++	struct qla_tgt_sess_op *u;
++	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
++	unsigned long flags;
++
++	if (tgt->tgt_stop) {
++		ql_dbg(ql_dbg_async, vha, 0xffff,
++			   "qla_target(%d): dropping unknown ATIO_TYPE7, "
++			   "because tgt is being stopped", vha->vp_idx);
++		goto out_term;
++	}
++
++	u = kzalloc(sizeof(*u), GFP_ATOMIC);
++	if (u == NULL) {
++		ql_dbg(ql_dbg_async, vha, 0xffff,
++		    "Alloc of struct unknown_atio (size %zd) failed", sizeof(*u));
++		/* It should be harmless and on the next retry should work well */
++		goto out_term;
++	}
++
++	u->vha = vha;
++	memcpy(&u->atio, atio, sizeof(*atio));
++	INIT_LIST_HEAD(&u->cmd_list);
++
++	spin_lock_irqsave(&vha->cmd_list_lock, flags);
++	list_add_tail(&u->cmd_list, &vha->unknown_atio_list);
++	spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
++
++	schedule_delayed_work(&vha->unknown_atio_work, 1);
++
++out:
++	return;
++
++out_term:
++	qlt_send_term_exchange(vha, NULL, atio, ha_locked, 0);
++	goto out;
++}
++
++static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
++	uint8_t ha_locked)
++{
++	struct qla_tgt_sess_op *u, *t;
++	scsi_qla_host_t *host;
++	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
++	unsigned long flags;
++	uint8_t queued = 0;
++
++	list_for_each_entry_safe(u, t, &vha->unknown_atio_list, cmd_list) {
++		if (u->aborted) {
++			ql_dbg(ql_dbg_async, vha, 0xffff,
++			    "Freeing unknown %s %p, because of Abort",
++			    "ATIO_TYPE7", u);
++			qlt_send_term_exchange(vha, NULL, &u->atio,
++			    ha_locked, 0);
++			goto abort;
++		}
++
++		host = qlt_find_host_by_d_id(vha, u->atio.u.isp24.fcp_hdr.d_id);
++		if (host != NULL) {
++			ql_dbg(ql_dbg_async, vha, 0xffff,
++				"Requeuing unknown ATIO_TYPE7 %p", u);
++			qlt_24xx_atio_pkt(host, &u->atio, ha_locked);
++		} else if (tgt->tgt_stop) {
++			ql_dbg(ql_dbg_async, vha, 0xffff,
++				"Freeing unknown %s %p, because tgt is being stopped",
++				"ATIO_TYPE7", u);
++			qlt_send_term_exchange(vha, NULL, &u->atio,
++			    ha_locked, 0);
++		} else {
++			ql_dbg(ql_dbg_async, vha, 0xffff,
++				"u %p, vha %p, host %p, sched again..", u,
++				vha, host);
++			if (!queued) {
++				queued = 1;
++				schedule_delayed_work(&vha->unknown_atio_work,
++				    1);
++			}
++			continue;
++		}
++
++abort:
++    		spin_lock_irqsave(&vha->cmd_list_lock, flags);
++		list_del(&u->cmd_list);
++		spin_unlock_irqrestore(&vha->cmd_list_lock, flags);
++		kfree(u);
++	}
++}
++
++void qlt_unknown_atio_work_fn(struct work_struct *work)
++{
++	struct scsi_qla_host *vha = container_of(to_delayed_work(work),
++	    struct scsi_qla_host, unknown_atio_work);
++
++	qlt_try_to_dequeue_unknown_atios(vha, 0);
++}
++
+ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio, uint8_t ha_locked)
+ {
+@@ -244,8 +343,14 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			    atio->u.isp24.fcp_hdr.d_id[0],
+ 			    atio->u.isp24.fcp_hdr.d_id[1],
+ 			    atio->u.isp24.fcp_hdr.d_id[2]);
++
++
++			qlt_queue_unknown_atio(vha, atio, ha_locked);
+ 			break;
+ 		}
++		if (unlikely(!list_empty(&vha->unknown_atio_list)))
++			qlt_try_to_dequeue_unknown_atios(vha, ha_locked);
++
+ 		qlt_24xx_atio_pkt(host, atio, ha_locked);
+ 		break;
+ 	}
+@@ -273,6 +378,31 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 		break;
+ 	}
+ 
++	case VP_RPT_ID_IOCB_TYPE:
++		qla24xx_report_id_acquisition(vha,
++			(struct vp_rpt_id_entry_24xx *)atio);
++		break;
++
++	case ABTS_RECV_24XX:
++	{
++		struct abts_recv_from_24xx *entry =
++			(struct abts_recv_from_24xx *)atio;
++		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
++			entry->vp_index);
++		if (unlikely(!host)) {
++			ql_dbg(ql_dbg_tgt, vha, 0xffff,
++			    "qla_target(%d): Response pkt (ABTS_RECV_24XX) "
++			    "received, with unknown vp_index %d\n",
++			    vha->vp_idx, entry->vp_index);
++			break;
++		}
++		qlt_response_pkt(host, (response_t *)atio);
++		break;
++
++	}
++
++	/* case PUREX_IOCB_TYPE: ql2xmvasynctoatio */
++
+ 	default:
+ 		ql_dbg(ql_dbg_tgt, vha, 0xe040,
+ 		    "qla_target(%d): Received unknown ATIO atio "
+@@ -791,6 +921,7 @@ static void qlt_free_session_done(struct work_struct *work)
+ 	unsigned long flags;
+ 	bool logout_started = false;
+ 	struct event_arg ea;
++	scsi_qla_host_t *base_vha;
+ 
+ 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf084,
+ 		"%s: se_sess %p / sess %p from port %8phC loop_id %#04x"
+@@ -802,23 +933,25 @@ static void qlt_free_session_done(struct work_struct *work)
+ 
+ 
+ 	if (!IS_SW_RESV_ADDR(sess->d_id)) {
+-	if (sess->send_els_logo) {
+-		qlt_port_logo_t logo;
+-		logo.id = sess->d_id;
+-		logo.cmd_count = 0;
+-		qlt_send_first_logo(vha, &logo);
+-	}
++		if (sess->send_els_logo) {
++			qlt_port_logo_t logo;
+ 
+-	if (sess->logout_on_delete) {
+-		int rc;
+-		rc = qla2x00_post_async_logout_work(vha, sess, NULL);
+-		if (rc != QLA_SUCCESS)
+-			ql_log(ql_log_warn, vha, 0xf085,
+-			       "Schedule logo failed sess %p rc %d\n",
+-			       sess, rc);
+-		else
+-			logout_started = true;
+-	}
++			logo.id = sess->d_id;
++			logo.cmd_count = 0;
++			qlt_send_first_logo(vha, &logo);
++		}
++
++		if (sess->logout_on_delete) {
++			int rc;
++
++			rc = qla2x00_post_async_logout_work(vha, sess, NULL);
++			if (rc != QLA_SUCCESS)
++				ql_log(ql_log_warn, vha, 0xf085,
++				    "Schedule logo failed sess %p rc %d\n",
++				    sess, rc);
++			else
++				logout_started = true;
++		}
+ 	}
+ 
+ 	/*
+@@ -841,8 +974,13 @@ static void qlt_free_session_done(struct work_struct *work)
+ 		}
+ 
+ 		ql_dbg(ql_dbg_disc, vha, 0xf087,
+-			"%s: sess %p logout completed\n",
+-			__func__, sess);
++		    "%s: sess %p logout completed\n",__func__, sess);
++	}
++
++	if (sess->logo_ack_needed) {
++		sess->logo_ack_needed = 0;
++		qla24xx_async_notify_ack(vha, sess,
++			(struct imm_ntfy_from_isp *)sess->iocb, SRB_NACK_LOGO);
+ 	}
+ 
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+@@ -917,6 +1055,10 @@ static void qlt_free_session_done(struct work_struct *work)
+ 	if (vha->fcport_count == 0)
+ 		wake_up_all(&vha->fcport_waitQ);
+ 
++	base_vha = pci_get_drvdata(ha->pdev);
++	if (test_bit(PFLG_DRIVER_REMOVING, &base_vha->pci_flags))
++		return;
++
+ 	if (!tgt || !tgt->tgt_stop) {
+ 		memset(&ea, 0, sizeof(ea));
+ 		ea.event = FCME_DELETE_DONE;
+@@ -1602,6 +1744,14 @@ static int abort_cmd_for_tag(struct scsi_qla_host *vha, uint32_t tag)
+ 		}
+ 	}
+ 
++	list_for_each_entry(op, &vha->unknown_atio_list, cmd_list) {
++		if (tag == op->atio.u.isp24.exchange_addr) {
++			op->aborted = true;
++			spin_unlock(&vha->cmd_list_lock);
++			return 1;
++		}
++	}
++
+ 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
+ 		if (tag == cmd->atio.u.isp24.exchange_addr) {
+ 			cmd->aborted = 1;
+@@ -1638,6 +1788,18 @@ static void abort_cmds_for_lun(struct scsi_qla_host *vha,
+ 		if (op_key == key && op_lun == lun)
+ 			op->aborted = true;
+ 	}
++
++	list_for_each_entry(op, &vha->unknown_atio_list, cmd_list) {
++		uint32_t op_key;
++		u64 op_lun;
++
++		op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
++		op_lun = scsilun_to_int(
++			(struct scsi_lun *)&op->atio.u.isp24.fcp_cmnd.lun);
++		if (op_key == key && op_lun == lun)
++			op->aborted = true;
++	}
++
+ 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
+ 		uint32_t cmd_key;
+ 		uint32_t cmd_lun;
+@@ -1880,7 +2042,11 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 
+ 	if (mcmd->flags == QLA24XX_MGMT_SEND_NACK) {
+ 		if (mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode ==
+-		    ELS_LOGO) {
++		    ELS_LOGO ||
++		    mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode ==
++		    ELS_PRLO ||
++		    mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode ==
++		    ELS_TPRLO) {
+ 			ql_dbg(ql_dbg_disc, vha, 0xffff,
+ 			    "TM response logo %phC status %#x state %#x",
+ 			    mcmd->sess->port_name, mcmd->fc_tm_rsp,
+@@ -4250,11 +4416,21 @@ static int abort_cmds_for_s_id(struct scsi_qla_host *vha, port_id_t *s_id)
+ 	spin_lock(&vha->cmd_list_lock);
+ 	list_for_each_entry(op, &vha->qla_sess_op_cmd_list, cmd_list) {
+ 		uint32_t op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
++
+ 		if (op_key == key) {
+ 			op->aborted = true;
+ 			count++;
+ 		}
+ 	}
++
++	list_for_each_entry(op, &vha->unknown_atio_list, cmd_list) {
++		uint32_t op_key = sid_to_key(op->atio.u.isp24.fcp_hdr.s_id);
++		if (op_key == key) {
++			op->aborted = true;
++			count++;
++		}
++	}
++
+ 	list_for_each_entry(cmd, &vha->qla_cmd_list, cmd_list) {
+ 		uint32_t cmd_key = sid_to_key(cmd->atio.u.isp24.fcp_hdr.s_id);
+ 		if (cmd_key == key) {
+@@ -4461,6 +4637,16 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		}
+ 		break;
+ 
++
++	case ELS_TPRLO:
++		if (le16_to_cpu(iocb->u.isp24.flags) &
++			NOTIFY24XX_FLAGS_GLOBAL_TPRLO) {
++			loop_id = 0xFFFF;
++			qlt_reset(vha, iocb, QLA_TGT_NEXUS_LOSS);
++			res = 1;
++			break;
++		}
++		/* drop through */
+ 	case ELS_LOGO:
+ 	case ELS_PRLO:
+ 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+@@ -4470,7 +4656,6 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		if (sess) {
+ 			sess->login_gen++;
+ 			sess->fw_login_state = DSC_LS_LOGO_PEND;
+-			sess->logout_on_delete = 0;
+ 			sess->logo_ack_needed = 1;
+ 			memcpy(sess->iocb, iocb, IOCB_SIZE);
+ 		}
+@@ -4481,12 +4666,14 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
+ 		    "%s: logo %llx res %d sess %p ",
+ 		    __func__, wwn, res, sess);
+ 		if (res == 0) {
+-			/* cmd went up to ULP. look for qlt_xmit_tm_rsp()
+-			   for LOGO_ACK */
++			/*
++			 * cmd went upper layer, look for qlt_xmit_tm_rsp()
++			 * for LOGO_ACK & sess delete
++			 */
+ 			BUG_ON(!sess);
+ 			res = 0;
+ 		} else {
+-			/* cmd did not go upstair. */
++			/* cmd did not go to upper layer. */
+ 			if (sess) {
+ 				qlt_schedule_sess_for_deletion_lock(sess);
+ 				res = 0;
+@@ -6405,6 +6592,11 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 
+ 	mutex_init(&base_vha->vha_tgt.tgt_mutex);
+ 	mutex_init(&base_vha->vha_tgt.tgt_host_action_mutex);
++
++	INIT_LIST_HEAD(&base_vha->unknown_atio_list);
++	INIT_DELAYED_WORK(&base_vha->unknown_atio_work,
++	    qlt_unknown_atio_work_fn);
++
+ 	qlt_clear_mode(base_vha);
+ }
+ 
+-- 
+1.8.3.1
 
-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
-AQA=
-
---82I3+IH0IqGh5yIs
-Content-Type: text/plain; charset="us-ascii"
-MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-Content-Disposition: inline
-
-_______________________________________________
-Virtualization mailing list
-Virtualization@lists.linux-foundation.org
-https://lists.linuxfoundation.org/mailman/listinfo/virtualization
---82I3+IH0IqGh5yIs--
