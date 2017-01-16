@@ -1,34 +1,42 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 3/4] hpsa: remove coalescing settings for ioaccel2
-Date: Mon, 16 Jan 2017 15:50:27 -0500
-Message-ID: <yq18tqalofg.fsf@oracle.com>
-References: <147752001094.813.10247306839794156732.stgit@brunhilda>
-        <147752051865.813.13621083415298379753.stgit@brunhilda>
-        <38a10a15-a441-cfcb-bc06-0cbe27863c24@suse.de>
-        <4993A297653ECB4581FA5C3C31323D194181F0AC@avsrvexchmbx2.microsemi.net>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
+Date: Mon, 16 Jan 2017 16:01:30 -0500
+Message-ID: <yq14m0ylnx1.fsf@oracle.com>
+References: <20161229080250.GA11605@infradead.org>
+        <1483226343.2518.32.camel@linux.vnet.ibm.com>
+        <1483280506.5512.1.camel@sandisk.com>
+        <20170101.113311.417107391370623850.davem@davemloft.net>
+        <1483292364.2345.5.camel@linux.vnet.ibm.com>
+        <yq1y3ypgd7m.fsf@oracle.com>
+        <1484596878.2540.58.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:19188 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750858AbdAPUvX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2017 15:51:23 -0500
-In-Reply-To: <4993A297653ECB4581FA5C3C31323D194181F0AC@avsrvexchmbx2.microsemi.net>
-        (Don Brace's message of "Fri, 13 Jan 2017 14:58:24 +0000")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1484596878.2540.58.camel@HansenPartnership.com> (James
+        Bottomley's message of "Mon, 16 Jan 2017 12:01:18 -0800")
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Ingo Molnar <mingo@kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: Hannes Reinecke <hare@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, John Hall <John.Hall@microsemi.com>, Kevin Barnett <kevin.barnett@microsemi.com>, Mahesh Rajashekhara <mahesh.rajashekhara@microsemi.com>, "hch@infradead.org" <hch@infradead.org>, Scott Teel <scott.teel@microsemi.com>, Viswas G <viswas.g@microsemi.com>, Justin Lindley <justin.lindley@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "elliott@hpe.com" <elliott@hpe.com>, "POSWALD@suse.com" <POSWALD@suse.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
 
-Don,
+James> Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough
+James> commands
 
-Don> Wondering what has happened to this patch?
+James> mpt3sas has a firmware failure where it can only handle one pass
+James> through ATA command at a time.  If another comes in, contrary to
+James> the SAT standard, it will hang until the first one completes
+James> (causing long commands like secure erase to timeout).  The
+James> original fix was to block the device when an ATA command came in,
+James> but this caused a regression with
 
-According to my notes, there were some concerns with the series that did
-not get addressed. And only patch 3 actually got a reviewed-by tag. I
-suggest you repost the series.
+Broadcom folks: Please test and ack as soon as possible so we can get
+this fix queued up.
+
+Ingo: Since you appear to have hardware, it would be great if you could
+test James' v3 (https://patchwork.kernel.org/patch/9519383/). Sorry for
+the inconvenience.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
