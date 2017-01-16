@@ -1,119 +1,61 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH v2] virtio_scsi: Reject commands when virtqueue is broken
-Date: Mon, 16 Jan 2017 13:39:55 +0800
-Message-ID: <20170116053955.GC16076@lemon>
-References: <1484329686-21553-1-git-send-email-farman@linux.vnet.ibm.com>
- <1484329686-21553-2-git-send-email-farman@linux.vnet.ibm.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH] Revert "scsi: mpt3sas: Fix secure erase premature
+ termination"
+Date: Mon, 16 Jan 2017 10:22:55 +0100
+Message-ID: <20170116092255.GB1398@gmail.com>
+References: <1484319727.2527.8.camel@HansenPartnership.com>
+ <20170115091925.GA26656@gmail.com>
+ <1484496665.2405.2.camel@HansenPartnership.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51844 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750764AbdAPFkA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Jan 2017 00:40:00 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1484329686-21553-2-git-send-email-farman@linux.vnet.ibm.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1484496665.2405.2.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>, Thomas Gleixner <tglx@linutronix.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Eric Farman <farman@linux.vnet.ibm.com>
-Cc: linux-scsi@vger.kernel.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 
-On Fri, 01/13 12:48, Eric Farman wrote:
-> In the case of a graceful set of detaches, where the virtio-scsi-ccw
-> disk is removed from the guest prior to the controller, the guest
-> behaves quite normally.  Specifically, the detach gets us into
-> sd_sync_cache to issue a Synchronize Cache(10) command, which
-> immediately fails (and is retried a couple of times) because the
-> device has been removed.  Later, the removal of the controller
-> sees two CRWs presented, but there's no further indication of the
-> removal from the guest viewpoint.
-> 
->  [   17.217458] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->  [   17.219257] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
->  [   21.449400] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
->  [   21.449406] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
-> 
-> However, on s390, the SCSI disks can be removed "by surprise" when
-> an entire controller (host) is removed and all associated disks
-> are removed via the loop in scsi_forget_host.  The same call to
-> sd_sync_cache is made, but because the controller has already
-> been removed, the Synchronize Cache(10) command is neither issued
-> (and then failed) nor rejected.
-> 
-> That the I/O isn't returned means the guest cannot have other devices
-> added nor removed, and other tasks (such as shutdown or reboot) issued
-> by the guest will not complete either.  The virtio ring has already
-> been marked as broken (via virtio_break_device in virtio_ccw_remove),
-> but we still attempt to queue the command only to have it remain there.
-> The calling sequence provides a bit of distinction for us:
-> 
->   virtscsi_queuecommand()
->    -> virtscsi_kick_cmd()
->     -> virtscsi_add_cmd()
->      -> virtqueue_add_sgs()
->       -> virtqueue_add()
->          if success
->            return 0
->          elseif vq->broken or vring_mapping_error()
->            return -EIO
->          else
->            return -ENOSPC
-> 
-> A return of ENOSPC is generally a temporary condition, so returning
-> "host busy" from virtscsi_queuecommand makes sense here, to have it
-> redriven in a moment or two.  But the EIO return code is more of a
-> permanent error and so it would be wise to return the I/O itself and
-> allow the calling thread to finish gracefully.  The result is these
-> four kernel messages in the guest (the fourth one does not occur
-> prior to this patch):
-> 
->  [   22.921562] crw_info : CRW reports slct=0, oflw=0, chn=1, rsc=3, anc=0, erc=4, rsid=2
->  [   22.921580] crw_info : CRW reports slct=0, oflw=0, chn=0, rsc=3, anc=0, erc=4, rsid=0
->  [   22.921978] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->  [   22.921993] sd 0:0:0:0: [sda] Synchronize Cache(10) failed: Result: hostbyte=DID_BAD_TARGET driverbyte=DRIVER_OK
-> 
-> I opted to fill in the same response data that is returned from the
-> more graceful device detach, where the disk device is removed prior
-> to the controller device.
-> 
-> Signed-off-by: Eric Farman <farman@linux.vnet.ibm.com>
-> ---
->  drivers/scsi/virtio_scsi.c | 11 ++++++++++-
->  1 file changed, 10 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-> index ec91bd0..c680d76 100644
-> --- a/drivers/scsi/virtio_scsi.c
-> +++ b/drivers/scsi/virtio_scsi.c
-> @@ -534,7 +534,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  {
->  	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
->  	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
-> +	unsigned long flags;
->  	int req_size;
-> +	int ret;
->  
->  	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
->  
-> @@ -562,8 +564,15 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
->  		req_size = sizeof(cmd->req.cmd);
->  	}
->  
-> -	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
-> +	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
-> +	if (ret == -EIO) {
-> +		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
-> +		spin_lock_irqsave(&req_vq->vq_lock, flags);
-> +		virtscsi_complete_cmd(vscsi, cmd);
-> +		spin_unlock_irqrestore(&req_vq->vq_lock, flags);
-> +	} else if (ret != 0) {
->  		return SCSI_MLQUEUE_HOST_BUSY;
-> +	}
->  	return 0;
->  }
->  
-> -- 
-> 1.9.1
-> 
 
-Reviewed-by: Fam Zheng <famz@redhat.com>
+* James Bottomley <James.Bottomley@HansenPartnership.com> wrote:
+
+> On Sun, 2017-01-15 at 10:19 +0100, Ingo Molnar wrote:
+> > So there's a new mpt3sas SCSI driver boot regression, introduced in 
+> > this merge window, which made one of my servers unbootable.
+> 
+> We're not reverting a fix that would cause regressions for others. 
+
+You really need to reconsider that stance ...
+
+> However, The fix was manifestly wrong, so does this fix of the fix work for you:
+> 
+> http://marc.info/?l=linux-scsi&m=148329237807604
+> 
+> It's been languishing a bit because no-one seemed to care enough to
+> test or review it.  IOf you can add a tested by, that will give the two
+> we need to push it.
+
+I have tested your other patch that you pointed to:
+
+  http://marc.info/?l=linux-scsi&m=148449968522828
+
+Which patch fixes the bug too (I removed my revert first) - so you can add my:
+
+  Reported-by: Ingo Molnar <mingo@kernel.org>
+  Tested-by: Ingo Molnar <mingo@kernel.org>
+
+BTW., is it wise to work around the out of spec firmware in the mpt3sas code and 
+leave the overly optimistic assumptions in the SCSI code intact? The problem is 
+that other SCSI hardware could be affected as well - and especially enterprise 
+class server hardware has long testing and thus regression latencies (as my 
+example proves).
+
+Wouldn't it be more robust to only submit one pass-through command at a time from 
+the SCSI layer, and maybe opt-in hardware that is known to implement the SAT 
+standard fully?
+
+(But I'm just kibitzing here really.)
+
+Thanks,
+
+	Ingo
