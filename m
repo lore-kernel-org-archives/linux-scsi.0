@@ -1,75 +1,32 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 0/2] virtio-scsi: Implement FC_HOST feature
-Date: Mon, 16 Jan 2017 18:44:27 +0100
-Message-ID: <0009b36c-29a9-9486-3fad-197733d905bc@suse.de>
-References: <20170116160430.11815-1-famz@redhat.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH] Revert "scsi: mpt3sas: Fix secure erase premature
+ termination"
+Date: Mon, 16 Jan 2017 10:04:46 -0800
+Message-ID: <20170116180446.GA28023@infradead.org>
+References: <1484319727.2527.8.camel@HansenPartnership.com>
+ <20170115091925.GA26656@gmail.com>
+ <1484496665.2405.2.camel@HansenPartnership.com>
+ <CA+55aFweyFstUaKGdg6A9p65URrzZAJNBCF8ou0MfKb4EPL=Rw@mail.gmail.com>
+ <1484507599.2405.16.camel@HansenPartnership.com>
+ <CA+55aFyyBf9SLSNDRqMcFbmUBBkbamZYXGOgfXU8k5KYaFD2mw@mail.gmail.com>
+ <1484509776.2405.21.camel@HansenPartnership.com>
+ <1484517756.11850.1.camel@sandisk.com>
+ <20170116152721.GA6677@infradead.org>
+ <1484583279.2540.37.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <20170116160430.11815-1-famz@redhat.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: Fam Zheng <famz@redhat.com>, linux-kernel@vger.kernel.org
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, virtualization@lists.linux-foundation.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1484583279.2540.37.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Christoph Hellwig <hch@infradead.org>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "torvalds@linux-foundation.org" <torvalds@linux-foundation.org>, "mingo@kernel.org" <mingo@kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "tglx@linutronix.de" <tglx@linutronix.de>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "hare@suse.de" <hare@suse.de>, "akpm@linux-foundation.org" <akpm@linux-foundation.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Sreekanth.Reddy@broadcom.com" <Sreekanth.Reddy@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/16/2017 05:04 PM, Fam Zheng wrote:
-> This series implements the proposed fc_host feature of virtio-scsi.
-> =
+On Mon, Jan 16, 2017 at 08:14:39AM -0800, James Bottomley wrote:
+> So how about, instead of arguing about reversion, one or other of you
+> reviews the proposed fix of the fix which would avoid having to revert
+> anything?
 
-> The first patch updates the data structure changes according to the spec
-> proposal; the second patch actually implements the operations.
-> =
-
-> Fam Zheng (2):
->   virtio_scsi: Add fc_host definitions
->   virtio_scsi: Implement fc_host
-> =
-
->  drivers/scsi/virtio_scsi.c       | 55 ++++++++++++++++++++++++++++++++++=
-+++++-
->  include/uapi/linux/virtio_scsi.h |  6 +++++
->  2 files changed, 60 insertions(+), 1 deletion(-)
-> =
-
-Hmm.
-
-How it this supposed to work?
-You do export the WWPN/WWNN of the associated host to the guest (nb:
-will get interesting for non NPIV setups ...), but virtio scsi will
-still do a LUN remapping.
-IE the LUNs you see on the host will be different from the LUNs
-presented to the guest.
-
-This makes reliable operations very tricky.
-Plus you don't _actually_ expose the FC host, but rather the WWPN of the
-host presenting the LUN.
-So how do you handle LUNs from different FC hosts on the guest?
->From what I've seen virtio will either presenting you with with one host
-per LUN (so you'll end up with different SCSI hosts on the guest each
-having the _same_ WWPN/WWNN), or a single host presenting all LUNs,
-making the WWPN setting ... interesting.
-
-Overall, I'm not overly happy with this approach.
-You already added WWPN ids to the virtio transport, so why didn't you
-update the LUN field, too, to avoid this ominous LUN remapping?
-And we really should make sure to have a single FC host in the guest
-presenting all LUNs.
-
-Cheers,
-
-Hannes
--- =
-
-Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
+As far as I can tell everyone is waiting for you to resend it with the
+review comment from the Broadcom maintainers adddressed.
