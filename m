@@ -1,35 +1,29 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 00/12] qla2xxx: Feature updates for target.
-Date: Tue, 17 Jan 2017 17:28:08 +0000
-Message-ID: <5B804A56-A23B-467B-B99D-383E3A17EE3B@cavium.com>
-References: <1484598924-29066-1-git-send-email-himanshu.madhani@cavium.com>
- <1484672181.2729.1.camel@sandisk.com>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v3 00/10] qla2xxx: Bug fixes for driver.
+Date: Tue, 17 Jan 2017 10:06:03 -0800
+Message-ID: <c9fca4ec-1837-3fc7-d7bb-c2e00460a698@sandisk.com>
+References: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0047.outbound.protection.outlook.com ([104.47.42.47]:56256
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750826AbdAQR3M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Jan 2017 12:29:12 -0500
-In-Reply-To: <1484672181.2729.1.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <FB40408A2D52624094419AAC54855DA0@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Himanshu Madhani <himanshu.madhani@cavium.com>, target-devel@vger.kernel.org, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 
-SGkgQmFydCwgDQoNCg0KDQoNCk9uIDEvMTcvMTcsIDg6NTYgQU0sICJCYXJ0IFZhbiBBc3NjaGUi
-IDxCYXJ0LlZhbkFzc2NoZUBzYW5kaXNrLmNvbT4gd3JvdGU6DQoNCj5PbiBNb24sIDIwMTctMDEt
-MTYgYXQgMTI6MzUgLTA4MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+PiBQbGVhc2UgY29u
-c2lkZXIgdGhpcyB1cGRhdGVkIHNlcmllcyBmb3IgaW5jbHVzaW9uIGluIHRhcmdldC1wZW5kaW5n
-Lg0KPg0KPkhlbGxvIEhpbWFuc2h1LA0KPg0KPldoYXQga2VybmVsIGhhdmUgdGhlc2UgcGF0Y2hl
-cyBiZWVuIGdlbmVyYXRlZCBhZ2FpbnN0PyBUaGVzZSBwYXRjaGVzDQo+bmVpdGhlciBhcHBseSBj
-bGVhbmx5IG9uIHRvcCBvZiBrZXJuZWwgdjQuMTAtcmMxIG5vciBvbiB0b3Agb2Yga2VybmVsDQo+
-djQuMTAtcmM0Lg0KDQpUaGVzZSB3ZXJlIHRlc3RlZCBvbiB0b3Agb2YgNC4xMC1yYzMgKyB0YXJn
-ZXQgQnVnIGZpeGVzIHNlcmllcyB0aGF0IGlzIHBlbmRpbmcgdG8gYmUgaW5jbHVkZWQuDQogDQoN
-Cg0KSGVyZeKAmXMgbGluayBmb3IgdGhlIHRhcmdldCBidWcgZml4ZXMgc2VyaWVzLiANCg0KaHR0
-cDovL3d3dy5zcGluaWNzLm5ldC9saXN0cy90YXJnZXQtZGV2ZWwvbXNnMTM4MDEuaHRtbA0KDQo+
-DQo+QmFydC4NCg==
+On 12/23/2016 06:06 PM, Himanshu Madhani wrote:
+> Hi Bart,
+> 
+> Here's updated series of bug fixes for target code in the driver.
+> Please consider this for target-pending.
+
+Hello Himanshu,
+
+Thanks for the patches. I have queued these patches for v4.10-rc5. But
+since the qla2xxx driver code triggers several static checker warnings,
+I would appreciate if you could have a look at the four patches I just
+posted to address these warnings.
+
+Bart.
