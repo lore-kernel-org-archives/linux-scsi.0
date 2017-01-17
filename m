@@ -1,35 +1,32 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/2] sd fixes for zoned block devices
-Date: Tue, 17 Jan 2017 14:07:17 -0500
-Message-ID: <yq14m0xo68q.fsf@oracle.com>
-References: <20170112062511.20261-1-damien.lemoal@wdc.com>
+Subject: Re: [bug report] scsi: lpfc: Reinstate lpfc_soft_wwn parameter
+Date: Tue, 17 Jan 2017 14:09:00 -0500
+Message-ID: <yq1wpdtmrlf.fsf@oracle.com>
+References: <20170112210804.GA19275@mwanda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:28793 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750922AbdAQTHg (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 14:07:36 -0500
-In-Reply-To: <20170112062511.20261-1-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Thu, 12 Jan 2017 15:25:09 +0900")
+Received: from aserp1040.oracle.com ([141.146.126.69]:24817 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750992AbdAQTJM (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 14:09:12 -0500
+In-Reply-To: <20170112210804.GA19275@mwanda> (Dan Carpenter's message of "Fri,
+        13 Jan 2017 00:08:04 +0300")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, Hannes Reinecke <hare@suse.de>
+To: James Smart <james.smart@broadcom.com>
+Cc: jsmart2021@gmail.com, linux-scsi@vger.kernel.org, Dan Carpenter <dan.carpenter@oracle.com>
 
->>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
+>>>>> "Dan" == Dan Carpenter <dan.carpenter@oracle.com> writes:
 
-Damien> 2 small fixes in this series: (1) Fix sd_read_cache_type so that
-Damien> DPOFUA is not disabled for zoned block devices supporting it.
-Damien> (2) Ignore the zoned field of the block device characteristics
-Damien> page for host-managed zoned block devices as there is no good
-Damien> match defined explicitely for HM by the standard.
+Dan> The patch 352e5fd10598: "scsi: lpfc: Reinstate lpfc_soft_wwn
+Dan> parameter" from Dec 30, 2016, leads to the following static checker
+Dan> warning:
 
-Damien> Damien Le Moal (2): sd: Fix wrong DPOFUA disable in
-Damien> sd_read_cache_type sd: Ignore zoned field for host-managed
-Damien> devices
+Dan> 	drivers/scsi/lpfc/lpfc_attr.c:2156 lpfc_soft_wwpn_store() info:
+Dan> return a literal instead of 'rc'
 
-Applied to 4.10/scsi-fixes.
+James?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
