@@ -1,28 +1,25 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] ses: Fix SAS device detection in enclosure
-Date: Tue, 17 Jan 2017 14:02:24 -0500
-Message-ID: <yq1h94xo6gv.fsf@oracle.com>
-References: <1483997616-18900-1-git-send-email-emilne@redhat.com>
+Subject: Re: [PATCH] Set elsiocb contexts to NULL after freeing it
+Date: Tue, 17 Jan 2017 14:02:53 -0500
+Message-ID: <yq1d1flo6g2.fsf@oracle.com>
+References: <20170110110554.13770-1-jthumshirn@suse.de>
+        <20170113152138.GC3409@linux-x5ow.site>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:25360 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750863AbdAQTCb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 14:02:31 -0500
-In-Reply-To: <1483997616-18900-1-git-send-email-emilne@redhat.com> (Ewan
-        D. Milne's message of "Mon, 9 Jan 2017 16:33:36 -0500")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170113152138.GC3409@linux-x5ow.site> (Johannes Thumshirn's
+        message of "Fri, 13 Jan 2017 16:21:38 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dick Kennedy <dick.kennedy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "Ewan D. Milne" <emilne@redhat.com>
-Cc: linux-scsi@vger.kernel.org
 
->>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Ewan> The call to scsi_is_sas_rphy() needs to be made on the SAS
-Ewan> end_device, not on the SCSI device.
+Johannes> Dick, James, any comments? I'd really like to get this in soon
+Johannes> as it solves customer issues.
 
-Applied to 4.10/scsi-fixes.
+Ping?
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
