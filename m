@@ -1,73 +1,86 @@
-From: "Dr. Greg Wettstein" <greg@wind.enjellic.com>
-Subject: Re: [PATCH 08/22] qla2xxx: Refactore target code to remove symbol dependency
-Date: Tue, 17 Jan 2017 11:44:44 -0600
-Message-ID: <201701171744.v0HHiiSB029119@wind.enjellic.com>
-References: <hch@infradead.org>
-Reply-To: greg@enjellic.com
+From: Dave Carroll <david.carroll@microsemi.com>
+Subject: RE: aacraid:  kernel: AAC: Host adapter dead -1 (bisected)
+Date: Tue, 17 Jan 2017 18:23:49 +0000
+Message-ID: <423FD6710FB8FB4F8728F93591889F9A4143D2BB@avsrvexchmbx2.microsemi.net>
+References: <201701151205.37563.a.miskiewicz@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from wind.enjellic.com ([76.10.64.91]:55446 "EHLO wind.enjellic.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750997AbdAQSpl (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Jan 2017 13:45:41 -0500
-In-Reply-To: Christoph Hellwig <hch@infradead.org>
-       "Re: [PATCH 08/22] qla2xxx: Refactore target code to remove symbol dependency" (Dec 16, 12:17am)
+Received: from mail-by2nam01on0057.outbound.protection.outlook.com ([104.47.34.57]:51584
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751023AbdAQS6O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Jan 2017 13:58:14 -0500
+In-Reply-To: <201701151205.37563.a.miskiewicz@gmail.com>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>, "Tran, Quinn" <Quinn.Tran@cavium.com>
-Cc: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "arekm@maven.pl" <arekm@maven.pl>, "linux-kernel@vger.kerne.org" <linux-kernel@vger.kerne.org>
+Cc: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Dec 16, 12:17am, Christoph Hellwig wrote:
-} Subject: Re: [PATCH 08/22] qla2xxx: Refactore target code to remove symbol
-
-Good morning, I hope the week is going well for everyone.
-
-Really late to this thread but am just getting caught d up after the
-holidays and putting out fires.
-
-> On Thu, Dec 15, 2016 at 08:50:39PM +0000, Tran, Quinn wrote:
->
-> > Christoph, Qlogic was asked to support other Target Stack (SC ST)
-> > using the same qla2xxx.ko upstream driver.  I had mentioned this
-> > during the last 2015 LSF get together.  Hopefully, that gives a
-> > better context.  The understanding that came away was Qlogic do
-> > what is needed to provide this support without creating any dead
-> > code.
-
-> Right.  And what you're doing here is to create tons of pointless
-> and dead code.  If you can support something else without clearly
-> making the in-kernel version worse it's all fine.  This patch on the
-> other hand is complete crap and totally unacceptable in this form.
-
-It would be helpful to get an architectural overview of how Qlogic is
-proposing to interface SCST to the in-kernel Qlogic target driver
-code.  Are you going to follow a model of having an analogue of
-tcm_qla2xxx for SCST?
-
-We've been running for 3-4 years on the SCST target interface driver
-we wrote to allow us to use the in-kernel Qlogic target driver code
-with SCST.  We used the model of implementing the interface in
-something we referred to as the scst_qla2xxx module and the model
-seems solid.  There was a bit of an impedance mismatch but the changes
-to the core kernel code were negligible.
-
-Our code is being scheduled for an upgrade to 4.4 and to chase down
-what have been reports about issues on 4 GBPS Qlogic cards.  Any
-notion of a timeframe on the Cavium/Qlogic based solution?
-
-Have a good day.
-
-Dr. Greg
-
-}-- End of excerpt from Christoph Hellwig
-
-As always,
-Dr. G.W. Wettstein, Ph.D.   Enjellic Systems Development, LLC.
-4206 N. 19th Ave.           Specializing in information infra-structure
-Fargo, ND  58102            development.
-PH: 701-281-1686
-FAX: 701-281-3949           EMAIL: greg@enjellic.com
-------------------------------------------------------------------------------
-"Try to remove the color-problem by restarting your computer several
- times."
-                                -- Microsoft-Internet Explorer
-                                   README.TXT
+PiANCj4gDQo+IEhpLg0KPiANCj4gVGhlcmUgaXMgYSBidWcgd2l0aCBoYW5kbGluZyBvZiBhZGFw
+dGVjIHJhaWQgY2FyZHMgKGluIG15IGNhc2UgaXQgaXMgQWRhcHRlYw0KPiAzNDA1KSB3aGVyZSBr
+ZXJuZWwgbG9ncyBodW5kcmVkcyBvZiAiQUFDOiBIb3N0IGFkYXB0ZXIgZGVhZCAtMSINCj4gbWVz
+c2FnZXMuDQo+IA0KPiBCdWcgd2FzIHJlcG9ydGVkIHByZXZpb3VzbHkgb24gbGttbCBidXQgdGhl
+cmUgd2FzIG5vIHByb2dyZXMgaW4gc29sdmluZyBpdC4NCj4gDQo+IFRoZXJlIGlzIGFsc28gYnVn
+emlsbGEgZW50cnk6DQo+IGh0dHBzOi8vYnVnemlsbGEua2VybmVsLm9yZy9zaG93X2J1Zy5jZ2k/
+aWQ9MTUxNjYxDQo+IA0KPiBJJ3ZlIGJpc2VjdGVkIHRoYXQgdG8gY29tbWl0IGJlbGxvdyBhbmQg
+aW5kZWVkLCByZXZlcnRpbmcgaXQgZnJvbSBrZXJuZWwNCj4gNC45LjMgbWFrZXMgbWVzc2FnZXMg
+Z28gYXdheS4NCj4gDQo+IENvdWxkIGFueW9uZSBhdCBtaWNyb3NlbWkgbG9vayBhdCB0aGlzIHJl
+Z3Jlc3Npb24/DQo+IA0KPiBUaGFua3MNCg0KSGkgQXJrYWRpdXN6LA0KDQpUaGFua3MgZm9yIHlv
+dXIgZWZmb3J0IGluIGRldGVybWluaW5nIHRoZSBjYXVzZSBvZiB0aGUgaXNzdWUuIEl0IG1ha2Vz
+IHNlbnNlIG5vdyB0aGF0IHRoZSBwYXRjaCBzaG91bGQgaGF2ZSBiZWVuIGluY2x1ZGVkIGluIGNv
+bnRyb2xsZXIgc3BlY2lmaWMgY29kZSwgcmF0aGVyIHRoYW4gY29tbW9uIGNvZGUuDQoNCkkgd2ls
+bCBwcmVwYXJlIGEgcGF0Y2ggZm9yIHRoaXMsIGFuZCBpZiB5b3UgYXJlIHdpbGxpbmcgdG8gdGVz
+dCBpdCwgdGhhdCB3b3VsZCBiZSBncmVhdCENCg0KVGhhbmtzLCAtRGF2ZQ0KDQo+IA0KPiBjb21t
+aXQgNzhjYmNjZDNiZDY4M2MyOTVhNDRhZjgwNTA3OTdkYzRhNDEzNzZmZg0KPiBBdXRob3I6IFJh
+Z2hhdmEgQWRpdHlhIFJlbnVrdW50YQ0KPiA8UmFnaGF2YUFkaXR5YS5SZW51a3VudGFAbWljcm9z
+ZW1pLmNvbT4NCj4gRGF0ZTogICBNb24gQXByIDI1IDIzOjMyOjM3IDIwMTYgLTA3MDANCj4gDQo+
+ICAgICBhYWNyYWlkOiBGaXggZm9yIEtEVU1QIGRyaXZlciBoYW5nDQo+IA0KPiAgICAgV2hlbiBL
+RFVNUCBpcyB0cmlnZ2VyZWQgdGhlIGRyaXZlciBmaXJzdCB0YWxrcyB0byB0aGUgZmlybXdhcmUg
+aW4gSU5UWA0KPiAgICAgbW9kZSwgYnV0IHRoZSBhZGFwdGVyIGZpcm13YXJlIGlzIHN0aWxsIGlu
+IE1TSVggbW9kZS4gVGhlcmVmb3JlIHRoZQ0KPiBmaXJzdA0KPiAgICAgZHJpdmVyIGNvbW1hbmQg
+aGFuZ3Mgc2luY2UgdGhlIGRyaXZlciBpcyB3YWl0aW5nIGZvciBhbiBJTlRYIHJlc3BvbnNlDQo+
+IGFuZA0KPiAgICAgZmlybXdhcmUgZ2l2ZXMgYSBNU0lYIHJlc3BvbnNlLiBJZiB3aGVuIHRoZSBP
+UyBpcyBpbnN0YWxsZWQgb24gYSBSQUlEDQo+ICAgICBkcml2ZSBjcmVhdGVkIGJ5IHRoZSBhZGFw
+dGVyIEtEVU1QIHdpbGwgaGFuZyBzaW5jZSB0aGUgZHJpdmVyIGRvZXMgbm90DQo+ICAgICByZWNl
+aXZlIGEgcmVzcG9uc2UgaW4gc3luYyBtb2RlLg0KPiANCj4gICAgIEZpeGVkIGJ5OiBDaGFuZ2Ug
+dGhlIGZpcm13YXJlIHRvIElOVFggbW9kZSBpZiBpdCBpcyBpbiBNU0lYIG1vZGUgYmVmb3JlDQo+
+ICAgICBzZW5kaW5nIHRoZSBmaXJzdCBzeW5jIGNvbW1hbmQuDQo+IA0KPiAgICAgQ2M6IHN0YWJs
+ZUB2Z2VyLmtlcm5lbC5vcmcNCj4gICAgIFNpZ25lZC1vZmYtYnk6IFJhZ2hhdmEgQWRpdHlhIFJl
+bnVrdW50YQ0KPiA8UmFnaGF2YUFkaXR5YS5SZW51a3VudGFAbWljcm9zZW1pLmNvbT4NCj4gICAg
+IFJldmlld2VkLWJ5OiBKb2hhbm5lcyBUaHVtc2hpcm4gPGp0aHVtc2hpcm5Ac3VzZS5kZT4NCj4g
+ICAgIFNpZ25lZC1vZmYtYnk6IE1hcnRpbiBLLiBQZXRlcnNlbiA8bWFydGluLnBldGVyc2VuQG9y
+YWNsZS5jb20+DQo+IA0KPiBteSBoYXJkd2FyZToNCj4gMDI6MGUuMCBSQUlEIGJ1cyBjb250cm9s
+bGVyIFswMTA0XTogQWRhcHRlYyBBQUMtUkFJRCBbOTAwNTowMjg1XQ0KPiAgICAgICAgIFN1YnN5
+c3RlbTogQWRhcHRlYyAzNDA1IFs5MDA1OjAyYmJdDQo+ICAgICAgICAgQ29udHJvbDogSS9PLSBN
+ZW0rIEJ1c01hc3RlcisgU3BlY0N5Y2xlLSBNZW1XSU5WLSBWR0FTbm9vcC0NCj4gUGFyRXJyLQ0K
+PiBTdGVwcGluZysgU0VSUisgRmFzdEIyQi0gRGlzSU5UeC0NCj4gICAgICAgICBTdGF0dXM6IENh
+cCsgNjZNSHorIFVERi0gRmFzdEIyQi0gUGFyRXJyLSBERVZTRUw9bWVkaXVtID5UQWJvcnQtDQo+
+IDxUQWJvcnQtIDxNQWJvcnQtID5TRVJSLSA8UEVSUi0gSU5UeC0NCj4gICAgICAgICBMYXRlbmN5
+OiAzMiAoMjUwbnMgbWluLCAyNTBucyBtYXgpLCBDYWNoZSBMaW5lIFNpemU6IDQgYnl0ZXMNCj4g
+ICAgICAgICBJbnRlcnJ1cHQ6IHBpbiBBIHJvdXRlZCB0byBJUlEgMTgNCj4gICAgICAgICBSZWdp
+b24gMDogTWVtb3J5IGF0IGZiYTAwMDAwICg2NC1iaXQsIG5vbi1wcmVmZXRjaGFibGUpIFtzaXpl
+PTJNXQ0KPiAgICAgICAgIFt2aXJ0dWFsXSBFeHBhbnNpb24gUk9NIGF0IGZiYzAwMDAwIFtkaXNh
+YmxlZF0gW3NpemU9MjU2S10NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFtjMF0gUG93ZXIgTWFu
+YWdlbWVudCB2ZXJzaW9uIDINCj4gICAgICAgICAgICAgICAgIEZsYWdzOiBQTUVDbGstIERTSS0g
+RDErIEQyLSBBdXhDdXJyZW50PTBtQQ0KPiBQTUUoRDAtLEQxLSxEMi0sRDNob3QtLEQzY29sZC0p
+DQo+ICAgICAgICAgICAgICAgICBTdGF0dXM6IEQwIE5vU29mdFJzdC0gUE1FLUVuYWJsZS0gRFNl
+bD0wIERTY2FsZT0wIFBNRS0NCj4gICAgICAgICBDYXBhYmlsaXRpZXM6IFtkMF0gTVNJOiBFbmFi
+bGUtIENvdW50PTEvMiBNYXNrYWJsZS0gNjRiaXQrDQo+ICAgICAgICAgICAgICAgICBBZGRyZXNz
+OiAwMDAwMDAwMDAwMDAwMDAwICBEYXRhOiAwMDAwDQo+ICAgICAgICAgQ2FwYWJpbGl0aWVzOiBb
+ZTBdIFBDSS1YIG5vbi1icmlkZ2UgZGV2aWNlDQo+ICAgICAgICAgICAgICAgICBDb21tYW5kOiBE
+UEVSRS0gRVJPLSBSQkM9NTEyIE9TVD00DQo+ICAgICAgICAgICAgICAgICBTdGF0dXM6IERldj0w
+MjowZS4wIDY0Yml0KyAxMzNNSHorIFNDRC0gVVNDLSBEQz1icmlkZ2UNCj4gRE1NUkJDPTEwMjQg
+RE1PU1Q9NCBETUNSUz0xNiBSU0NFTS0gMjY2TUh6LSA1MzNNSHotDQo+ICAgICAgICAgS2VybmVs
+IGRyaXZlciBpbiB1c2U6IGFhY3JhaWQNCj4gICAgICAgICBLZXJuZWwgbW9kdWxlczogYWFjcmFp
+ZA0KPiANCj4gWyAgICAxLjk1NjAwOV0gQWRhcHRlYyBhYWNyYWlkIGRyaXZlciAxLjItMVs0MTA2
+Nl0tbXMNCj4gWyAgICAyLjE2NDU4NF0gQUFDMDoga2VybmVsIDUuMi0wWzE3MzQyXSBBdWcgIDQg
+MjAxMA0KPiBbICAgIDIuMTY0NjMzXSBBQUMwOiBtb25pdG9yIDUuMi0wWzE3MzQyXQ0KPiBbICAg
+IDIuMTY0Njc2XSBBQUMwOiBiaW9zIDUuMi0wWzE3MzQyXQ0KPiBbICAgIDIuMTY0NzE5XSBBQUMw
+OiBzZXJpYWwgN0M0NjExNDEwM0ENCj4gWyAgICAyLjE2NDc2MV0gQUFDMDogTm9uLURBU0Qgc3Vw
+cG9ydCBlbmFibGVkLg0KPiBbICAgIDIuMTY0ODA0XSBBQUMwOiA2NGJpdCBzdXBwb3J0IGVuYWJs
+ZWQuDQo+IFsgICAgMi4xNjQ4NDZdIEFBQzA6IDY0IEJpdCBEQUMgZW5hYmxlZA0KPiBbICAgIDIu
+MTc3OTI5XSBzY3NpIGhvc3Q2OiBhYWNyYWlkDQo+IA0KPiANCj4gLS0NCj4gQXJrYWRpdXN6IE1p
+xZtraWV3aWN6LCBhcmVrbSAvICggbWF2ZW4ucGwgfCBwbGQtbGludXgub3JnICkNCg==
