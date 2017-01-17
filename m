@@ -1,144 +1,28 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
-Date: Tue, 17 Jan 2017 19:45:58 +0530
-Message-ID: <CAK=zhgpLK+CutmBVtu_aEjP0CJO3GdNQ4xVXfkhp_zZFtiVQyA@mail.gmail.com>
-References: <20161228110524.7516-1-ojab@ojab.ru> <yq17f69hs1l.fsf@oracle.com>
- <CAK=zhgoocwB_01KT8UjtNXwTwcBQ86zWwMB3R4pjW3STy-7iyg@mail.gmail.com>
- <188a6990-6f10-839f-2846-cc8ae0b2e740@ojab.ru> <CAK=zhgo=ZB==pCLYjfM_7V55080Wp86ufgOeL0D0DK+6osN2ow@mail.gmail.com>
- <ee6c5a9c-6875-52e7-cce9-069bad30c732@ojab.ru> <CAK=zhgqM_b7=wG3zgBb=wxOwLknYyimZiX+TfsrX3=T1EuOnsw@mail.gmail.com>
- <16f1d8a1-12c1-25b9-6b33-85ef203ab4e3@ojab.ru> <44e649a7-850a-e083-eed8-7b40e8f6b300@ojab.ru>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
+Date: Tue, 17 Jan 2017 15:15:25 +0100
+Message-ID: <20170117141525.GA32219@lst.de>
+References: <20161229080250.GA11605@infradead.org> <1483226343.2518.32.camel@linux.vnet.ibm.com> <1483280506.5512.1.camel@sandisk.com> <20170101.113311.417107391370623850.davem@davemloft.net> <1483292364.2345.5.camel@linux.vnet.ibm.com> <yq1y3ypgd7m.fsf@oracle.com> <1484596878.2540.58.camel@HansenPartnership.com> <CAK=zhgpFKLWUpQMp8VOfmHsUCQiF6E54FBP2juaHYNVvR+TOmw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f171.google.com ([209.85.216.171]:33030 "EHLO
-        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750888AbdAQORC (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 09:17:02 -0500
-Received: by mail-qt0-f171.google.com with SMTP id v23so159133848qtb.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 06:15:59 -0800 (PST)
-In-Reply-To: <44e649a7-850a-e083-eed8-7b40e8f6b300@ojab.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <CAK=zhgpFKLWUpQMp8VOfmHsUCQiF6E54FBP2juaHYNVvR+TOmw@mail.gmail.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: James Bottomley <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: ojab <ojab@ojab.ru>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 4:13 AM, ojab <ojab@ojab.ru> wrote:
-> On 2017/01/16 14:03, ojab wrote:
->>
->> On 2017/01/16 13:31, Sreekanth Reddy wrote:
->>>
->>> On Mon, Jan 16, 2017 at 6:15 PM, ojab <ojab@ojab.ru> wrote:
->>>>
->>>> On 2017/01/16 12:36, Sreekanth Reddy wrote:
->>>>>
->>>>>
->>>>> Ojab,
->>>>>
->>>>> I am checking internally with our FW team and Architect to known
->>>>> whether they aware/observed any issues similar to this (since this
->>>>> issue is nothing to do with driver).
->>>>>
->>>>> Meanwhile is it possible to provide us the PCI config space and FW
->>>>> logs when issue occurs?
->>>>
->>>>
->>>>
->>>> AFAIU FW log is enabled when `logging_level=3D0x3f8` is passed to the
->>>> module,
->>>> right?
->>>
->>>
->>> This is a driver logging_level. Firmware logs can be collected using
->>> UART logs.
->>
->>
->> According to the user guide (from
->>
->> https://www.broadcom.com/products/storage/host-bus-adapters/sas-9217-8i#=
-documentation)
->> my 9217-8i requires 1.8V UART which I don't have at hand, I'll try to do
->> something on the weekend.
->> Is anything needed except connecting UART to gather required info?
->
-> =E2=80=A6actually I have compatible USB UART here. What should be done to=
- get FW
-> log? I've tried to reboot with UART connected (9600N1) but got no output.
+On Tue, Jan 17, 2017 at 07:43:51PM +0530, Sreekanth Reddy wrote:
+> [Sreekanth] Just for readability purpose, can use use "if (test_bit(0,
+> &sas_device_priv_data->ata_command_pending)"
+>  instead of "if (sas_device_priv_data->ata_command_pending)".
+> Since while setting & clearing the bit we are using atomic bit
+> operations. I don't see any issue functionality wise.
 
-You have to use, 115200 instead of 9600 baud rate.
+I agree.  Also while we're into nitpicking - it would be good to
+give bit 0 of the bitmap a name instead of hardcoding the 0.
 
-Thanks,
-Sreekanth
+Except for these patch looks fine:
 
->
-> //wbr ojab
->
->
->>
->> Anyway, right now various MPI2 HBAs doesn't work with ASPM enabled, so
->> can this patch be applied in the meantime while we're debugging the
->> issue further? Even if this issue can be properly fixed by FW update,
->> this workaround will be needed for HBAs with affected FW versions.
->>
->> //wbr ojab
->>
->>
->>>
->>>> Where can I find info about PCI config space?
->>>
->>>
->>> You can get PCI config space info from lspci command.
->>>
->>>>
->>>> //wbr ojab
->>>>>
->>>>>
->>>>>
->>>>> Thanks,
->>>>> Sreekanth
->>>>>
->>>>> On Mon, Jan 16, 2017 at 5:37 PM, ojab <ojab@ojab.ru> wrote:
->>>>>>
->>>>>>
->>>>>> On 2017/01/06 15:48, Sreekanth Reddy wrote:
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> On Fri, Jan 6, 2017 at 7:24 AM, Martin K. Petersen
->>>>>>> <martin.petersen@oracle.com> wrote:
->>>>>>>
->>>>>>> Matin, We need some time to review this patch. I will provide my
->>>>>>> review comments by end of next week.
->>>>>>>
->>>>>> ping?
->>>>>>
->>>>>> //wbr ojab
->>>>>>>
->>>>>>>
->>>>>>>
->>>>>>> Thanks,
->>>>>>> Sreekanth
->>>>>>
->>>>>>
->>>>>>
->>>>>>
->>>>> --
->>>>> To unsubscribe from this list: send the line "unsubscribe
->>>>> linux-scsi" in
->>>>> the body of a message to majordomo@vger.kernel.org
->>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>>
->>>>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>
->>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
+Reviewed-by: Christoph Hellwig <hch@lst.de>
