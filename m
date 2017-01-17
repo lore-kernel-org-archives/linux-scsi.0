@@ -1,35 +1,52 @@
 From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH 0/2] virtio-scsi: Implement FC_HOST feature
-Date: Tue, 17 Jan 2017 11:37:14 +0800
-Message-ID: <20170117033714.GA21563@lemon.Home>
-References: <20170116160430.11815-1-famz@redhat.com>
- <20170116173429.GA3852@infradead.org>
+Subject: Re: [PATCH 2/2] virtio_scsi: Implement fc_host
+Date: Tue, 17 Jan 2017 11:40:21 +0800
+Message-ID: <20170117034021.GB21563@lemon.Home>
+References: <20170116160430.11815-3-famz@redhat.com>
+	<201701170223.3QJ4sR4f%fengguang.wu@intel.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:39352 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751099AbdAQDhT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 16 Jan 2017 22:37:19 -0500
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
 Content-Disposition: inline
-In-Reply-To: <20170116173429.GA3852@infradead.org>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <201701170223.3QJ4sR4f%fengguang.wu@intel.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: kbuild test robot <lkp@intel.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kbuild-all@01.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, stefanha@redhat.com, virtualization@lists.linux-foundation.org
 
-On Mon, 01/16 09:34, Christoph Hellwig wrote:
-> On Tue, Jan 17, 2017 at 12:04:28AM +0800, Fam Zheng wrote:
-> > This series implements the proposed fc_host feature of virtio-scsi.
+On Tue, 01/17 03:02, kbuild test robot wrote:
+> Hi Fam,
 > 
-> Yikes.  Why?
+> [auto build test ERROR on linus/master]
+> [also build test ERROR on v4.10-rc4 next-20170116]
+> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> 
+> url:    https://github.com/0day-ci/linux/commits/Fam-Zheng/virtio-scsi-Implement-FC_HOST-feature/20170117-011950
+> config: i386-randconfig-r0-201703 (attached as .config)
+> compiler: gcc-5 (Debian 5.4.1-2) 5.4.1 20160904
+> reproduce:
+>         # save the attached .config to linux build tree
+>         make ARCH=i386 
+> 
+> All errors (new ones prefixed by >>):
+> 
+>    drivers/built-in.o: In function `init':
+> >> virtio_scsi.c:(.init.text+0x10d52): undefined reference to `fc_attach_transport'
+>    drivers/built-in.o: In function `fini':
+> >> virtio_scsi.c:(.exit.text+0x14a4): undefined reference to `fc_release_transport'
 
-Hi Christoph, this is mostly to "passthrough" a host NPIV vport (leaving libvirt
-doing the heavy lifting to watch and attach all visible LUNs to guest).
+This is good catch.
+
+Looks like virtio-scsi will now have to depend on fc, or we wrap the fc code
+with #ifdef's.
 
 Fam
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
