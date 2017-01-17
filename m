@@ -1,51 +1,65 @@
-From: Fam Zheng <famz@redhat.com>
-Subject: Re: [Qemu-devel] [RFC PATCH 0/3] scsi-generic and
- BLKSECTGET
-Date: Tue, 17 Jan 2017 15:08:18 +0800
-Message-ID: <20170117070818.GE21563@lemon.Home>
-References: <20170116211201.46601-1-farman@linux.vnet.ibm.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH] ses: Fix SAS device detection in enclosure
+Date: Tue, 17 Jan 2017 08:56:34 +0100
+Message-ID: <20170117075634.GA6067@linux-x5ow.site>
+References: <1483997616-18900-1-git-send-email-emilne@redhat.com>
+ <yq1ziiqk9b3.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org>
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:50027 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751140AbdAQH4l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Jan 2017 02:56:41 -0500
 Content-Disposition: inline
-In-Reply-To: <20170116211201.46601-1-farman@linux.vnet.ibm.com>
-List-Unsubscribe: <https://lists.nongnu.org/mailman/options/qemu-block>,
-	<mailto:qemu-block-request@nongnu.org?subject=unsubscribe>
-List-Archive: <http://lists.nongnu.org/archive/html/qemu-block/>
-List-Post: <mailto:qemu-block@nongnu.org>
-List-Help: <mailto:qemu-block-request@nongnu.org?subject=help>
-List-Subscribe: <https://lists.nongnu.org/mailman/listinfo/qemu-block>,
-	<mailto:qemu-block-request@nongnu.org?subject=subscribe>
-Errors-To: qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org
-Sender: "Qemu-block"
-	<qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org>
-To: Eric Farman <farman@linux.vnet.ibm.com>
-Cc: kwolf@redhat.com, linux-scsi@vger.kernel.org, qemu-block@nongnu.org, qemu-devel@nongnu.org, mreitz@redhat.com, pbonzini@redhat.com
+In-Reply-To: <yq1ziiqk9b3.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
 
-On Mon, 01/16 22:11, Eric Farman wrote:
-> (cc'ing linux-scsi for the cover-letter; patches only to QEMU lists.)
+On Mon, Jan 16, 2017 at 04:02:24PM -0500, Martin K . Petersen wrote:
+> >>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
 > 
-> In the Linux kernel, I see two (three) places where the BLKSECTGET ioctl is
-> handled:
+> Ewan> The call to scsi_is_sas_rphy() needs to be made on the SAS
+> Ewan> end_device, not on the SCSI device.
 > 
-> (1) block/(compat_)ioctl.c -- (compat_)blkdev_ioctl
-> (2) drivers/scsi/sg.c -- sg_ioctl
+> Ewan> Fixes: 835831c57e9b ("ses: use scsi_is_sas_rphy instead of
+> Ewan> is_sas_attached") Reviewed-by: Johannes Thumshirn
+> Ewan> <jthumshirn@suse.de> Signed-off-by: Ewan D. Milne
+> Ewan> <emilne@redhat.com> ---
+> Ewan>  drivers/scsi/ses.c | 2 +- 1 file changed, 1 insertion(+), 1
+> Ewan>  deletion(-)
 > 
-> The former has been around forever[1], and returns a short value measured in
-> sectors.  A sector is generally assumed to be 512 bytes.
+> Ewan> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c index
+> Ewan> 8c9a35c..50adabb 100644
+> Ewan> --- a/drivers/scsi/ses.c
+> Ewan> +++ b/drivers/scsi/ses.c
+> Ewan> @@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct
+> Ewan> enclosure_device *edev,
+>  
+> Ewan>  	ses_enclosure_data_process(edev,
+> Ewan>  	to_scsi_device(edev->edev.parent), 0);
+>  
+> Ewan> - if (scsi_is_sas_rphy(&sdev->sdev_gendev))
+> Ewan> + if (scsi_is_sas_rphy(sdev->sdev_target->dev.parent))
+> Ewan>  		efd.addr = sas_get_address(sdev);
+>  
+> Ewan>  	if (efd.addr) {
+> Ewan> -- 1.8.3.1
 > 
-> The latter has been around for slightly less than forever[2], and returns an
-> int that measures the value in bytes.  A change to return the block count
-> was brought up a few years ago[3] and nacked.
-> 
-> As a convenient example, if I use the blockdev tool to drive the ioctl to a
-> SCSI disk and its scsi-generic equivalent, I get different results:
+> James?
 
-Fun! :-/
+FWIW I have positive test results from a customer of ours with this as well.
 
-The patch looks correct but I don't like how it is written a lot, but still
-thanks for bringing it up so we won't be bitten in the future, and your detailed
-explanation is much appreciated!
+Thanks,
+	Johannes
 
-Fam
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
