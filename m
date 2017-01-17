@@ -1,64 +1,42 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] lpfc: fix lpfc_wwn_set return code check
-Date: Tue, 17 Jan 2017 12:31:56 -0800
-Message-ID: <587e7f3c.EKLGPnLKIhbcA+IJ%jsmart2021@gmail.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Tue, 17 Jan 2017 20:56:20 +0000
+Message-ID: <bug-151631-11613-z9spxBle5V@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f194.google.com ([209.85.216.194]:33864 "EHLO
-        mail-qt0-f194.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750893AbdAQUcv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 15:32:51 -0500
-Received: by mail-qt0-f194.google.com with SMTP id a29so24168481qtb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 12:31:59 -0800 (PST)
-Received: from flash ([192.19.245.250])
-        by smtp.gmail.com with ESMTPSA id d15sm19700010qkb.10.2017.01.17.12.31.57
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 17 Jan 2017 12:31:58 -0800 (PST)
+Received: from mail.kernel.org ([198.145.29.136]:38018 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750929AbdAQU5P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Jan 2017 15:57:15 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 53DA620462
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 20:56:22 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 6025A2043C
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 20:56:20 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-When I reversed the patch to re-add the lpfc_soft_wwn parameter feature,
-it re-added code that had a long-standing bug. (that's what I
-get I guess :)
+--- Comment #10 from Vyacheslav Dikonov <sdiconov@mail.ru> ---
+One further observation. The drive was attached to an USB2 controller 
 
-As Dan Carpenter pointed out - error checks looked at wrong polarity.
-0 is success, -errno is failure. Updated checks.
+00:1d.0 USB controller: Intel Corporation 82801DB/DBL/DBM (ICH4/ICH4-L/ICH4-M)
+USB UHCI Controller
 
--- james
+through an USB hub, which has  both USB2 and USB3 ports. The bug occurs when I
+try to reattach the hdd to the same type of ports. The HDD works when I change
+the type of ports (USB2 > USB3 or USB3 > USB2). It happens again if I do not
+change the type of connection. It might be a different USB-related problem, but
+the error message is the same "Synchronize Cache(10) failed"
 
-Signed-off-by: James Smart <james.smart@broadcom.com>
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
----
- drivers/scsi/lpfc/lpfc_attr.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_attr.c b/drivers/scsi/lpfc/lpfc_attr.c
-index 6c104d7..50cf402 100644
---- a/drivers/scsi/lpfc/lpfc_attr.c
-+++ b/drivers/scsi/lpfc/lpfc_attr.c
-@@ -2150,7 +2150,7 @@ lpfc_soft_wwpn_store(struct device *dev, struct device_attribute *attr,
- 	phba->soft_wwn_enable = 0;
- 
- 	rc = lpfc_wwn_set(buf, cnt, wwpn);
--	if (!rc) {
-+	if (rc) {
- 		/* not able to set wwpn, unlock it */
- 		phba->soft_wwn_enable = 1;
- 		return rc;
-@@ -2231,7 +2231,7 @@ lpfc_soft_wwnn_store(struct device *dev, struct device_attribute *attr,
- 		return -EINVAL;
- 
- 	rc = lpfc_wwn_set(buf, cnt, wwnn);
--	if (!rc) {
-+	if (rc) {
- 		/* Allow wwnn to be set many times, as long as the enable
- 		 * is set. However, once the wwpn is set, everything locks.
- 		 */
 -- 
-2.5.0
-
+You are receiving this mail because:
+You are the assignee for the bug.
