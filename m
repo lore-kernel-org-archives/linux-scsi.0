@@ -1,52 +1,51 @@
 From: Fam Zheng <famz@redhat.com>
-Subject: Re: [PATCH 2/2] virtio_scsi: Implement fc_host
-Date: Tue, 17 Jan 2017 11:40:21 +0800
-Message-ID: <20170117034021.GB21563@lemon.Home>
-References: <20170116160430.11815-3-famz@redhat.com>
-	<201701170223.3QJ4sR4f%fengguang.wu@intel.com>
+Subject: Re: [Qemu-devel] [RFC PATCH 0/3] scsi-generic and
+ BLKSECTGET
+Date: Tue, 17 Jan 2017 15:08:18 +0800
+Message-ID: <20170117070818.GE21563@lemon.Home>
+References: <20170116211201.46601-1-farman@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org>
 Content-Disposition: inline
-In-Reply-To: <201701170223.3QJ4sR4f%fengguang.wu@intel.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: kbuild test robot <lkp@intel.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, kbuild-all@01.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
+In-Reply-To: <20170116211201.46601-1-farman@linux.vnet.ibm.com>
+List-Unsubscribe: <https://lists.nongnu.org/mailman/options/qemu-block>,
+	<mailto:qemu-block-request@nongnu.org?subject=unsubscribe>
+List-Archive: <http://lists.nongnu.org/archive/html/qemu-block/>
+List-Post: <mailto:qemu-block@nongnu.org>
+List-Help: <mailto:qemu-block-request@nongnu.org?subject=help>
+List-Subscribe: <https://lists.nongnu.org/mailman/listinfo/qemu-block>,
+	<mailto:qemu-block-request@nongnu.org?subject=subscribe>
+Errors-To: qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org
+Sender: "Qemu-block"
+	<qemu-block-bounces+gceqb-qemu-block=m.gmane.org@nongnu.org>
+To: Eric Farman <farman@linux.vnet.ibm.com>
+Cc: kwolf@redhat.com, linux-scsi@vger.kernel.org, qemu-block@nongnu.org, qemu-devel@nongnu.org, mreitz@redhat.com, pbonzini@redhat.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 01/17 03:02, kbuild test robot wrote:
-> Hi Fam,
+On Mon, 01/16 22:11, Eric Farman wrote:
+> (cc'ing linux-scsi for the cover-letter; patches only to QEMU lists.)
 > 
-> [auto build test ERROR on linus/master]
-> [also build test ERROR on v4.10-rc4 next-20170116]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
+> In the Linux kernel, I see two (three) places where the BLKSECTGET ioctl is
+> handled:
 > 
-> url:    https://github.com/0day-ci/linux/commits/Fam-Zheng/virtio-scsi-Implement-FC_HOST-feature/20170117-011950
-> config: i386-randconfig-r0-201703 (attached as .config)
-> compiler: gcc-5 (Debian 5.4.1-2) 5.4.1 20160904
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386 
+> (1) block/(compat_)ioctl.c -- (compat_)blkdev_ioctl
+> (2) drivers/scsi/sg.c -- sg_ioctl
 > 
-> All errors (new ones prefixed by >>):
+> The former has been around forever[1], and returns a short value measured in
+> sectors.  A sector is generally assumed to be 512 bytes.
 > 
->    drivers/built-in.o: In function `init':
-> >> virtio_scsi.c:(.init.text+0x10d52): undefined reference to `fc_attach_transport'
->    drivers/built-in.o: In function `fini':
-> >> virtio_scsi.c:(.exit.text+0x14a4): undefined reference to `fc_release_transport'
+> The latter has been around for slightly less than forever[2], and returns an
+> int that measures the value in bytes.  A change to return the block count
+> was brought up a few years ago[3] and nacked.
+> 
+> As a convenient example, if I use the blockdev tool to drive the ioctl to a
+> SCSI disk and its scsi-generic equivalent, I get different results:
 
-This is good catch.
+Fun! :-/
 
-Looks like virtio-scsi will now have to depend on fc, or we wrap the fc code
-with #ifdef's.
+The patch looks correct but I don't like how it is written a lot, but still
+thanks for bringing it up so we won't be bitten in the future, and your detailed
+explanation is much appreciated!
 
 Fam
