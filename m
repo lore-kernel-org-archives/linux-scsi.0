@@ -1,34 +1,50 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH 3/4] nvme: use blk_rq_payload_bytes
-Date: Tue, 17 Jan 2017 22:06:51 +0200
-Message-ID: <7532e18a-6cd3-294f-085d-e1ecdc48af6e@grimberg.me>
-References: <1484306953-3194-1-git-send-email-hch@lst.de>
- <1484306953-3194-4-git-send-email-hch@lst.de>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151631] "Synchronizing SCSI cache" fails during(and delays)
+ reboot/shutdown
+Date: Tue, 17 Jan 2017 20:29:24 +0000
+Message-ID: <bug-151631-11613-NO7D7t1KQ9@https.bugzilla.kernel.org/>
+References: <bug-151631-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1484306953-3194-4-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
-Cc: linux-block@vger.kernel.org, Dexuan Cui <decui@microsoft.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:33580 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751051AbdAQU32 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Jan 2017 15:29:28 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 3BFD0203EC
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 20:29:27 +0000 (UTC)
+Received: from bugzilla2.web.kernel.org (bugzilla2.web.kernel.org [172.20.200.52])
+        by mail.kernel.org (Postfix) with ESMTP id 4499F2043C
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 20:29:24 +0000 (UTC)
+In-Reply-To: <bug-151631-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
+https://bugzilla.kernel.org/show_bug.cgi?id=151631
 
-> @@ -1014,9 +1013,9 @@ static int nvme_rdma_map_data(struct nvme_rdma_queue *queue,
->  	}
->
+Vyacheslav Dikonov <sdiconov@mail.ru> changed:
 
-Christoph, a little above here we still look at blk_rq_bytes(),
-shouldn't that look at blk_rq_payload_bytes() too?
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |sdiconov@mail.ru
 
->  	if (count == 1) {
-> -		if (rq_data_dir(rq) == WRITE &&
-> -		    map_len <= nvme_rdma_inline_data_size(queue) &&
-> -		    nvme_rdma_queue_idx(queue))
-> +		if (rq_data_dir(rq) == WRITE && nvme_rdma_queue_idx(queue) &&
-> +		    blk_rq_payload_bytes(rq) <=
-> +				nvme_rdma_inline_data_size(queue))
->  			return nvme_rdma_map_sg_inline(queue, req, c);
->
->  		if (dev->pd->flags & IB_PD_UNSAFE_GLOBAL_RKEY)
+--- Comment #9 from Vyacheslav Dikonov <sdiconov@mail.ru> ---
+I am experiencing the Synchronize Cache problem with both 4.4.43 and 4.8.17.
+My dmesg yields:
+
+[  428.593067] sd 5:0:0:0: [sdd] Synchronizing SCSI cache
+[  428.716643] sd 5:0:0:0: [sdd] Synchronize Cache(10) failed: Result:
+hostbyte=DID_ERROR driverbyte=DRIVER_OK
+
+When I try to attach an external USB3 drive (over an USB2 interface). It work
+well for the first time, but later, after I unmount and disconnect it, any
+subsequent attempt to attacj the same hdd results in this bug. The disk cannot
+be mounted for the second time. Fs is reiserfs. It happens with kernel 4.4.43
+too,
+
+-- 
+You are receiving this mail because:
+You are the assignee for the bug.
