@@ -1,29 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] bfa: fix wrongly initialized variable in bfad_im_bsg_els_ct_request()
-Date: Tue, 17 Jan 2017 14:04:01 -0500
-Message-ID: <yq18tq9o6e6.fsf@oracle.com>
-References: <20170110115436.15123-1-jthumshirn@suse.de>
+Subject: Re: [PATCH 0/2] sd fixes for zoned block devices
+Date: Tue, 17 Jan 2017 14:07:17 -0500
+Message-ID: <yq14m0xo68q.fsf@oracle.com>
+References: <20170112062511.20261-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:26649 "EHLO
+Received: from userp1040.oracle.com ([156.151.31.81]:28793 "EHLO
         userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750849AbdAQTEP (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 14:04:15 -0500
-In-Reply-To: <20170110115436.15123-1-jthumshirn@suse.de> (Johannes Thumshirn's
-        message of "Tue, 10 Jan 2017 12:54:36 +0100")
+        with ESMTP id S1750922AbdAQTHg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 14:07:36 -0500
+In-Reply-To: <20170112062511.20261-1-damien.lemoal@wdc.com> (Damien Le Moal's
+        message of "Thu, 12 Jan 2017 15:25:09 +0900")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Nicolas Iooss <nicolas.iooss_linux@m4x.org>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>, Shaun Tancheff <shaun@tancheff.com>, Hannes Reinecke <hare@suse.de>
 
->>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
+>>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
 
-Johannes> Commit 01e0e15c8b3b ("scsi: don't use fc_bsg_job::request and
-Johannes> fc_bsg_job::reply directly") introduced a typo, which causes
-Johannes> that the bsg_request variable in bfad_im_bsg_els_ct_request()
-Johannes> is initialized to itself instead of pointing to the bsg job's
-Johannes> request.
+Damien> 2 small fixes in this series: (1) Fix sd_read_cache_type so that
+Damien> DPOFUA is not disabled for zoned block devices supporting it.
+Damien> (2) Ignore the zoned field of the block device characteristics
+Damien> page for host-managed zoned block devices as there is no good
+Damien> match defined explicitely for HM by the standard.
+
+Damien> Damien Le Moal (2): sd: Fix wrong DPOFUA disable in
+Damien> sd_read_cache_type sd: Ignore zoned field for host-managed
+Damien> devices
 
 Applied to 4.10/scsi-fixes.
 
