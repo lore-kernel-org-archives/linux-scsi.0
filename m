@@ -1,121 +1,210 @@
-From: ojab <ojab@ojab.ru>
-Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
-Date: Mon, 16 Jan 2017 22:43:56 +0000
-Message-ID: <44e649a7-850a-e083-eed8-7b40e8f6b300@ojab.ru>
-References: <20161228110524.7516-1-ojab@ojab.ru> <yq17f69hs1l.fsf@oracle.com>
- <CAK=zhgoocwB_01KT8UjtNXwTwcBQ86zWwMB3R4pjW3STy-7iyg@mail.gmail.com>
- <188a6990-6f10-839f-2846-cc8ae0b2e740@ojab.ru>
- <CAK=zhgo=ZB==pCLYjfM_7V55080Wp86ufgOeL0D0DK+6osN2ow@mail.gmail.com>
- <ee6c5a9c-6875-52e7-cce9-069bad30c732@ojab.ru>
- <CAK=zhgqM_b7=wG3zgBb=wxOwLknYyimZiX+TfsrX3=T1EuOnsw@mail.gmail.com>
- <16f1d8a1-12c1-25b9-6b33-85ef203ab4e3@ojab.ru>
+From: tang.junhui@zte.com.cn
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] multipath redesign
+Date: Tue, 17 Jan 2017 09:36:28 +0800
+Message-ID: <OF6841F8CE.5D9322F6-ON482580AB.00079056-482580AB.0008D27E@zte.com.cn>
+References: <00700606-3005-c82b-ee37-127417fbd201@suse.de>	<20170111222339.GC19051@redhat.com>
+	<19415684-1ec7-1926-b420-3b53ea247e1b@suse.de>	<20170112172959.GT2732@octiron.msp.redhat.com>
+	<def3ef1e-1a81-aab1-7fa8-ade1ebeaa0d5@suse.de>	<20170113160733.GA30128@redhat.com>
+	<fb08f4f6-5bb0-9014-c799-6c39c20d0219@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:34686 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750990AbdAPWoB (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 16 Jan 2017 17:44:01 -0500
-Received: by mail-lf0-f67.google.com with SMTP id q89so14258956lfi.1
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jan 2017 14:43:59 -0800 (PST)
-In-Reply-To: <16f1d8a1-12c1-25b9-6b33-85ef203ab4e3@ojab.ru>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/mixed; boundary="===============1002487171160083337=="
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <fb08f4f6-5bb0-9014-c799-6c39c20d0219@suse.de>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Hannes Reinecke <hare@suse.de>
+Cc: "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Mike Snitzer <snitzer@redhat.com>, dm-devel-bounces@redhat.com, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, device-mapper development <dm-devel@redhat.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 2017/01/16 14:03, ojab wrote:
-> On 2017/01/16 13:31, Sreekanth Reddy wrote:
->> On Mon, Jan 16, 2017 at 6:15 PM, ojab <ojab@ojab.ru> wrote:
->>> On 2017/01/16 12:36, Sreekanth Reddy wrote:
->>>>
->>>> Ojab,
->>>>
->>>> I am checking internally with our FW team and Architect to known
->>>> whether they aware/observed any issues similar to this (since this
->>>> issue is nothing to do with driver).
->>>>
->>>> Meanwhile is it possible to provide us the PCI config space and FW
->>>> logs when issue occurs?
->>>
->>>
->>> AFAIU FW log is enabled when `logging_level=0x3f8` is passed to the
->>> module,
->>> right?
->>
->> This is a driver logging_level. Firmware logs can be collected using
->> UART logs.
->
-> According to the user guide (from
-> https://www.broadcom.com/products/storage/host-bus-adapters/sas-9217-8i#documentation)
-> my 9217-8i requires 1.8V UART which I don't have at hand, I'll try to do
-> something on the weekend.
-> Is anything needed except connecting UART to gather required info?
-…actually I have compatible USB UART here. What should be done to get FW 
-log? I've tried to reboot with UART connected (9600N1) but got no output.
+This is a multipart message in MIME format.
+--===============1002487171160083337==
+Content-Type: multipart/alternative;
+	boundary="=_alternative 0008D27B482580AB_="
 
-//wbr ojab
+This is a multipart message in MIME format.
+--=_alternative 0008D27B482580AB_=
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+SGVsbG8gSGFubmVzOg0KDQpBcyBhIG11bGl0cGF0aCBkZXZlbG9wZXIsIEkgZmluZCB0aGF0IG11
+bHRpcGF0aCBpcyBnZXR0aW5nIGJpZ2dlcg0KYW5kIGhhcmRlciB0byBtYWludGFpbiBub3csIGFu
+ZCBJJ20gcmVhbGx5IGxvb2tpbmcgZm9yd2FyZCB0byB0aGlzDQpjaGFuZ2UsIGFuZCBJIGhvcGUg
+dG8gYmUgYWJsZSB0byBkZXZvdGUgbXlzZWxmIHRvIHRoaXMgY2hhbmdlIHRvby4NCkkgYW0gdmVy
+eSBpbnRlcmVzdGVkIGluIGFueSBuZXdzIG9mIHRoZSBtdWx0aXBhdGggcmVkZXNpZ24gYW5kDQpo
+b3BlIHRvIHNlZSByZXN1bHRzIHNvb24uDQoNCkkgY2FuJ3QgaW1hZ2luZSB3aGF0IHRoZSBuZXcg
+bXVsdGlwYXRoIGxvb2tzIGxpa2UsIGJ1dCBJIHN1Z2dlc3QNCnNvbWUgYmFkIHBsYWNlcyBmb3Ig
+dGhlIGN1cnJlbnQgbXVsdGlwYXRoIHdlIHNob3VsZCBhdm9pZDoNCjEpIGNvYXJzZSBncmFpbmVk
+IGxvY2s7DQoyKSB2ZWN0b3JzOw0KMykgd2FpdGVyIHRocmVhZDsNCjQpIGhpZ2ggY291cGxpbmc7
+DQo1KSB0b28gbWFueSBjb25maWd1cmF0aW9uczsNCkkgcmVhbGx5IGhvcGUgd2UgY2FuIG1ha2Ug
+YSBjbGVhbiwgZWZmaWNpZW50IGFuZCBlYXN5IHRvIHVzZQ0KbXVsdGlwYXRoLg0KDQpUaGFuayB5
+b3UNClRhbmcgSnVuaHVpDQoNCg0KDQrlj5Hku7bkuro6ICAgICAgICAgSGFubmVzIFJlaW5lY2tl
+IDxoYXJlQHN1c2UuZGU+DQrmlLbku7bkuro6ICAgICAgICAgTWlrZSBTbml0emVyIDxzbml0emVy
+QHJlZGhhdC5jb20+LCANCuaKhOmAgTogICAibGludXgtYmxvY2tAdmdlci5rZXJuZWwub3JnIiA8
+bGludXgtYmxvY2tAdmdlci5rZXJuZWwub3JnPiwgDQoibHNmLXBjQGxpc3RzLmxpbnV4LWZvdW5k
+YXRpb24ub3JnIiA8bHNmLXBjQGxpc3RzLmxpbnV4LWZvdW5kYXRpb24ub3JnPiwgDQpkZXZpY2Ut
+bWFwcGVyIGRldmVsb3BtZW50IDxkbS1kZXZlbEByZWRoYXQuY29tPiwgDQoibGludXgtc2NzaUB2
+Z2VyLmtlcm5lbC5vcmciIDxMaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZz4NCuaXpeacnzogICAy
+MDE3LzAxLzE0IDAxOjUyDQrkuLvpopg6ICAgUmU6IFtkbS1kZXZlbF0gW0xTRi9NTSBUT1BJQ11b
+TFNGL01NIEFUVEVORF0gbXVsdGlwYXRoIHJlZGVzaWduDQrlj5Hku7bkuro6IGRtLWRldmVsLWJv
+dW5jZXNAcmVkaGF0LmNvbQ0KDQoNCg0KT24gMDEvMTMvMjAxNyAwNTowNyBQTSwgTWlrZSBTbml0
+emVyIHdyb3RlOg0KPiBPbiBGcmksIEphbiAxMyAyMDE3IGF0IDEwOjU2YW0gLTA1MDAsDQo+IEhh
+bm5lcyBSZWluZWNrZSA8aGFyZUBzdXNlLmRlPiB3cm90ZToNCj4gDQo+PiBPbiAwMS8xMi8yMDE3
+IDA2OjI5IFBNLCBCZW5qYW1pbiBNYXJ6aW5za2kgd3JvdGU6DQpbIC4uIF0NCj4+PiBXaGlsZSBJ
+J3ZlIGRheWRyZWFtZWQgb2YgcmV3cml0aW5nIHRoZSBtdWx0aXBhdGggdG9vbHMgbXVsdGlwbGUg
+dGltZXMsDQo+Pj4gYW5kIGhhdmluZyBub3RoaW5nIGFnaW5zdCB5b3UgZG9pbmcgaXQgaW4gY29u
+Y2VwdCwgSSB3b3VsZCBiZSBoYXBwaWVyDQo+Pj4ga25vd2luZyB0aGF0IGl0IHdvbid0IHNpbXBs
+eSBtZWFuIHRoYXQgdGhlcmUgYXJlIHR3byBzZXRzIG9mIHRvb2xzLCANCnRoYXQNCj4+PiBib3Ro
+IG5lZWQgdG8gYmUgc3VwcG9ydGVkIHRvIGRlYWwgd2l0aCBhbGwgY3VzdG9tZXIgY29uZmlndXJh
+dGlvbnMuDQo+Pj4NCj4+IFN1cmUuIEkgZmVlbCB0aGUgcGFpbiBvZiBzdXBwb3J0aW5nIG11bHRp
+cGF0aC10b29scyBhbGwgdG9vIHN0cm9uZ2x5Lg0KPj4gSGF2aW5nIHR3byB0b29scyBmb3IgdGhl
+IHNhbWUgdGhpbmcgaXMgYWx3YXlzIGEgcGFpbiwgYW5kIEkgd291bGQgbGlrZQ0KPj4gdG8gYXZv
+aWQgdGhpcyBpZiBhdCBhbGwgcG9zc2libGUuDQo+IA0KPiBJIHdlbGNvbWUgeW91ciB3b3JrLiAg
+U2hvdWxkIGhlbHAgdXMgZm9jdXMgb24gd2hhdCBmYXQgbmVlZHMgdG8gYmUNCj4gdHJpbW1lZCBm
+cm9tIGJvdGggbXVsdGlwYXRoLXRvb2xzIGFuZCBrZXJuZWwuDQo+IA0KPiBNaWdodCBiZSBhIGdv
+b2QgdGltZSB0byBicmFuY2ggbXVsdGlwYXRoLXRvb2xzIGFuZCBnZXQgdmVyeSBhZ2dyZXNzaXZl
+DQo+IHdpdGggdHJpbW1pbmcgc3R1ZmYgdGhhdCBpcyBvdXRkYXRlZC4NCj4gDQo+IFRoaW5ncyBs
+aWtlIHRoZSBldmVudCBzdHVmZiwgdXNpbmcgc2VsZWN0IGludGVyZmFjZSwgdGhhdCBBbmR5IEdy
+b3ZlciBpcw0KPiB3b3JraW5nIG9uIChhbmQgTWlrdWxhcyBpcyB0YWtpbmcgYSBzdGFiIGF0IGZp
+bmlzaGluZy9vcHRpbWl6aW5nKSBpcw0KPiBzb21ldGhpbmcgdGhhdCBtaWdodCBoZWxwLi4uIGJ1
+dCB5b3VyIGFwcHJvYWNoIGRlc2NyaWJlZCBpbiB0aGlzIHRocmVhZA0KPiBtYXkgcHJvdmUgYmV0
+dGVyLg0KPiANCj4gUG9pbnQgaXMsIGV2ZXJ5dGhpbmcgc2hvdWxkIGJlIG9uIHRoZSB0YWJsZSBm
+b3IgcmV2aXRhbGl6aW5nIG11bHRpcGF0aA0KPiB1c2Vyc3BhY2UgKGFuZCBrZXJuZWwpIHRvIG1l
+ZXQgbmV3IHJlcXVpcmVtZW50cyAoZS5nLiBOVk1Fb0YsIGV0YykuDQo+IA0KPiBBbmQgeWVzLCBJ
+J2QgcHJlZmVyIHRvIHVsdGltYXRlbHkgc2VlIHRoZXNlIGFkdmFuY2VzIGxhbmQgaW4gdGVybXMg
+b2YgRE0NCj4gbXVsdGlwYXRoIGFkdmFuY2VzIGJ1dCB3ZSdsbCB0YWtlIGl0IGFzIGl0IGNvbWVz
+Lg0KDQpJJ20gZnVsbHkgb24gYm9hcmQgd2l0aCB0aGF0Lg0KQW5kIGl0IHdvdWxkIGJlIGdvb2Qg
+aWYgQmVuIE1hcnppbnNraSB3b3VsZCBiZSBwcmVzZW50LCB0b287DQpoZSBtaWdodCBoYXZlIHNv
+bWUgaW5zaWdodHMgd2hpY2ggYm90aCBvZiB1cyBtaWdodCBsYWNrDQoobGlrZSB0aGUgb21pbm91
+cyBkbS1ldmVudCBpbnRlcmZhY2UgaW50byBtdWx0aXBhdGhkIHdoZXJlIHdlIGJvdGgNCnN0cnVn
+Z2xlIHRvIGZpZ3VyZSBvdXQgd2hhdCBpdCdzIGZvciAuLi4pDQoNCkxvb2tpbmcgZm9yd2FyZCB0
+byB0aGF0IGRpc2N1c3Npb24uDQpBbmQgcHJvbWlzaW5nIHRvIGhhdmUgc29tZSByZXN1bHRzIGJ5
+IHRoZW4uDQoNCkNoZWVycywNCg0KSGFubmVzDQotLSANCkRyLiBIYW5uZXMgUmVpbmVja2UgICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICB6U2VyaWVzICYgU3RvcmFnZQ0KaGFyZUBz
+dXNlLmRlICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
+KzQ5IDkxMSANCjc0MDUzIDY4OA0KU1VTRSBMSU5VWCBQcm9kdWN0cyBHbWJILCBNYXhmZWxkc3Ry
+LiA1LCA5MDQwOSBOw7xybmJlcmcNCkdGOiBKLiBIYXduLCBKLiBHdWlsZCwgRi4gSW1lbmTDtnJm
+ZmVyLCBIUkIgMTY3NDYgKEFHIE7DvHJuYmVyZykNCg0KLS0NCmRtLWRldmVsIG1haWxpbmcgbGlz
+dA0KZG0tZGV2ZWxAcmVkaGF0LmNvbQ0KaHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xp
+c3RpbmZvL2RtLWRldmVsDQoNCg0K
+--=_alternative 0008D27B482580AB_=
+Content-Type: text/html; charset="UTF-8"
+Content-Transfer-Encoding: base64
+
+PHR0Pjxmb250IHNpemU9Mj5IZWxsbyBIYW5uZXM6PC9mb250PjwvdHQ+DQo8YnI+DQo8YnI+PGZv
+bnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPkFzIGEgbXVsaXRwYXRoIGRldmVsb3BlciwgSSBm
+aW5kIHRoYXQNCm11bHRpcGF0aCBpcyBnZXR0aW5nIGJpZ2dlcjwvZm9udD4NCjxicj48Zm9udCBz
+aXplPTIgZmFjZT0ic2Fucy1zZXJpZiI+YW5kIGhhcmRlciB0byBtYWludGFpbiBub3csIGFuZCBJ
+J20NCnJlYWxseSBsb29raW5nIGZvcndhcmQgdG8gdGhpczwvZm9udD4NCjxicj48Zm9udCBzaXpl
+PTIgZmFjZT0ic2Fucy1zZXJpZiI+Y2hhbmdlLCBhbmQgSSBob3BlIHRvIGJlIGFibGUgdG8gZGV2
+b3RlDQpteXNlbGYgdG8gdGhpcyBjaGFuZ2UgdG9vLjwvZm9udD4NCjxicj48Zm9udCBzaXplPTIg
+ZmFjZT0ic2Fucy1zZXJpZiI+SSBhbSB2ZXJ5IGludGVyZXN0ZWQgaW4gYW55IG5ld3Mgb2YNCnRo
+ZSBtdWx0aXBhdGggcmVkZXNpZ24gYW5kPC9mb250Pg0KPGJyPjxmb250IHNpemU9MiBmYWNlPSJz
+YW5zLXNlcmlmIj5ob3BlIHRvIHNlZSByZXN1bHRzIHNvb24uPC9mb250Pg0KPGJyPg0KPGJyPjxm
+b250IHNpemU9MiBmYWNlPSJzYW5zLXNlcmlmIj5JIGNhbid0IGltYWdpbmUgd2hhdCB0aGUgbmV3
+IG11bHRpcGF0aA0KbG9va3MgbGlrZSwgYnV0IEkgc3VnZ2VzdDwvZm9udD4NCjxicj48Zm9udCBz
+aXplPTIgZmFjZT0ic2Fucy1zZXJpZiI+c29tZSBiYWQgcGxhY2VzIGZvciB0aGUgY3VycmVudCBt
+dWx0aXBhdGgNCndlIHNob3VsZCBhdm9pZDo8L2ZvbnQ+DQo8YnI+PGZvbnQgc2l6ZT0yIGZhY2U9
+InNhbnMtc2VyaWYiPjEpIGNvYXJzZSBncmFpbmVkIGxvY2s7PC9mb250Pg0KPGJyPjxmb250IHNp
+emU9MiBmYWNlPSJzYW5zLXNlcmlmIj4yKSB2ZWN0b3JzOzwvZm9udD4NCjxicj48Zm9udCBzaXpl
+PTIgZmFjZT0ic2Fucy1zZXJpZiI+Mykgd2FpdGVyIHRocmVhZDs8L2ZvbnQ+DQo8YnI+PGZvbnQg
+c2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPjQpIGhpZ2ggY291cGxpbmc7PC9mb250Pg0KPGJyPjxm
+b250IHNpemU9MiBmYWNlPSJzYW5zLXNlcmlmIj41KSB0b28gbWFueSBjb25maWd1cmF0aW9uczs8
+L2ZvbnQ+DQo8YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPkkgcmVhbGx5IGhvcGUg
+d2UgY2FuIG1ha2UgYSBjbGVhbiwgZWZmaWNpZW50DQphbmQgZWFzeSB0byB1c2U8L2ZvbnQ+DQo8
+YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPm11bHRpcGF0aC48L2ZvbnQ+DQo8YnI+
+DQo8YnI+PGZvbnQgc2l6ZT0yIGZhY2U9InNhbnMtc2VyaWYiPlRoYW5rIHlvdTwvZm9udD4NCjxi
+cj48Zm9udCBzaXplPTIgZmFjZT0ic2Fucy1zZXJpZiI+VGFuZyBKdW5odWk8L2ZvbnQ+DQo8YnI+
+DQo8YnI+DQo8YnI+DQo8YnI+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1ZjVmNWYgZmFjZT0ic2Fucy1z
+ZXJpZiI+5Y+R5Lu25Lq6OiAmbmJzcDsgJm5ic3A7DQombmJzcDsgJm5ic3A7IDwvZm9udD48Zm9u
+dCBzaXplPTEgZmFjZT0ic2Fucy1zZXJpZiI+SGFubmVzIFJlaW5lY2tlDQombHQ7aGFyZUBzdXNl
+LmRlJmd0OzwvZm9udD4NCjxicj48Zm9udCBzaXplPTEgY29sb3I9IzVmNWY1ZiBmYWNlPSJzYW5z
+LXNlcmlmIj7mlLbku7bkuro6ICZuYnNwOyAmbmJzcDsNCiZuYnNwOyAmbmJzcDsgPC9mb250Pjxm
+b250IHNpemU9MSBmYWNlPSJzYW5zLXNlcmlmIj5NaWtlIFNuaXR6ZXINCiZsdDtzbml0emVyQHJl
+ZGhhdC5jb20mZ3Q7LCA8L2ZvbnQ+DQo8YnI+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1ZjVmNWYgZmFj
+ZT0ic2Fucy1zZXJpZiI+5oqE6YCBOiAmbmJzcDsgJm5ic3A7DQombmJzcDsgJm5ic3A7PC9mb250
+Pjxmb250IHNpemU9MSBmYWNlPSJzYW5zLXNlcmlmIj4mcXVvdDtsaW51eC1ibG9ja0B2Z2VyLmtl
+cm5lbC5vcmcmcXVvdDsNCiZsdDtsaW51eC1ibG9ja0B2Z2VyLmtlcm5lbC5vcmcmZ3Q7LCAmcXVv
+dDtsc2YtcGNAbGlzdHMubGludXgtZm91bmRhdGlvbi5vcmcmcXVvdDsNCiZsdDtsc2YtcGNAbGlz
+dHMubGludXgtZm91bmRhdGlvbi5vcmcmZ3Q7LCBkZXZpY2UtbWFwcGVyIGRldmVsb3BtZW50ICZs
+dDtkbS1kZXZlbEByZWRoYXQuY29tJmd0OywNCiZxdW90O2xpbnV4LXNjc2lAdmdlci5rZXJuZWwu
+b3JnJnF1b3Q7ICZsdDtMaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZyZndDs8L2ZvbnQ+DQo8YnI+
+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1ZjVmNWYgZmFjZT0ic2Fucy1zZXJpZiI+5pel5pyfOiAmbmJz
+cDsgJm5ic3A7DQombmJzcDsgJm5ic3A7IDwvZm9udD48Zm9udCBzaXplPTEgZmFjZT0ic2Fucy1z
+ZXJpZiI+MjAxNy8wMS8xNA0KMDE6NTI8L2ZvbnQ+DQo8YnI+PGZvbnQgc2l6ZT0xIGNvbG9yPSM1
+ZjVmNWYgZmFjZT0ic2Fucy1zZXJpZiI+5Li76aKYOiAmbmJzcDsgJm5ic3A7DQombmJzcDsgJm5i
+c3A7PC9mb250Pjxmb250IHNpemU9MSBmYWNlPSJzYW5zLXNlcmlmIj5SZTogW2RtLWRldmVsXQ0K
+W0xTRi9NTSBUT1BJQ11bTFNGL01NIEFUVEVORF0gbXVsdGlwYXRoIHJlZGVzaWduPC9mb250Pg0K
+PGJyPjxmb250IHNpemU9MSBjb2xvcj0jNWY1ZjVmIGZhY2U9InNhbnMtc2VyaWYiPuWPkeS7tuS6
+ujogJm5ic3A7ICZuYnNwOw0KJm5ic3A7ICZuYnNwOzwvZm9udD48Zm9udCBzaXplPTEgZmFjZT0i
+c2Fucy1zZXJpZiI+ZG0tZGV2ZWwtYm91bmNlc0ByZWRoYXQuY29tPC9mb250Pg0KPGJyPg0KPGhy
+IG5vc2hhZGU+DQo8YnI+DQo8YnI+DQo8YnI+PHR0Pjxmb250IHNpemU9Mj5PbiAwMS8xMy8yMDE3
+IDA1OjA3IFBNLCBNaWtlIFNuaXR6ZXIgd3JvdGU6PGJyPg0KJmd0OyBPbiBGcmksIEphbiAxMyAy
+MDE3IGF0IDEwOjU2YW0gLTA1MDAsPGJyPg0KJmd0OyBIYW5uZXMgUmVpbmVja2UgJmx0O2hhcmVA
+c3VzZS5kZSZndDsgd3JvdGU6PGJyPg0KJmd0OyA8YnI+DQomZ3Q7Jmd0OyBPbiAwMS8xMi8yMDE3
+IDA2OjI5IFBNLCBCZW5qYW1pbiBNYXJ6aW5za2kgd3JvdGU6PGJyPg0KWyAuLiBdPGJyPg0KJmd0
+OyZndDsmZ3Q7IFdoaWxlIEkndmUgZGF5ZHJlYW1lZCBvZiByZXdyaXRpbmcgdGhlIG11bHRpcGF0
+aCB0b29scyBtdWx0aXBsZQ0KdGltZXMsPGJyPg0KJmd0OyZndDsmZ3Q7IGFuZCBoYXZpbmcgbm90
+aGluZyBhZ2luc3QgeW91IGRvaW5nIGl0IGluIGNvbmNlcHQsIEkgd291bGQNCmJlIGhhcHBpZXI8
+YnI+DQomZ3Q7Jmd0OyZndDsga25vd2luZyB0aGF0IGl0IHdvbid0IHNpbXBseSBtZWFuIHRoYXQg
+dGhlcmUgYXJlIHR3byBzZXRzDQpvZiB0b29scywgdGhhdDxicj4NCiZndDsmZ3Q7Jmd0OyBib3Ro
+IG5lZWQgdG8gYmUgc3VwcG9ydGVkIHRvIGRlYWwgd2l0aCBhbGwgY3VzdG9tZXIgY29uZmlndXJh
+dGlvbnMuPGJyPg0KJmd0OyZndDsmZ3Q7PGJyPg0KJmd0OyZndDsgU3VyZS4gSSBmZWVsIHRoZSBw
+YWluIG9mIHN1cHBvcnRpbmcgbXVsdGlwYXRoLXRvb2xzIGFsbCB0b28gc3Ryb25nbHkuPGJyPg0K
+Jmd0OyZndDsgSGF2aW5nIHR3byB0b29scyBmb3IgdGhlIHNhbWUgdGhpbmcgaXMgYWx3YXlzIGEg
+cGFpbiwgYW5kIEkgd291bGQNCmxpa2U8YnI+DQomZ3Q7Jmd0OyB0byBhdm9pZCB0aGlzIGlmIGF0
+IGFsbCBwb3NzaWJsZS48YnI+DQomZ3Q7IDxicj4NCiZndDsgSSB3ZWxjb21lIHlvdXIgd29yay4g
+Jm5ic3A7U2hvdWxkIGhlbHAgdXMgZm9jdXMgb24gd2hhdCBmYXQgbmVlZHMNCnRvIGJlPGJyPg0K
+Jmd0OyB0cmltbWVkIGZyb20gYm90aCBtdWx0aXBhdGgtdG9vbHMgYW5kIGtlcm5lbC48YnI+DQom
+Z3Q7IDxicj4NCiZndDsgTWlnaHQgYmUgYSBnb29kIHRpbWUgdG8gYnJhbmNoIG11bHRpcGF0aC10
+b29scyBhbmQgZ2V0IHZlcnkgYWdncmVzc2l2ZTxicj4NCiZndDsgd2l0aCB0cmltbWluZyBzdHVm
+ZiB0aGF0IGlzIG91dGRhdGVkLjxicj4NCiZndDsgPGJyPg0KJmd0OyBUaGluZ3MgbGlrZSB0aGUg
+ZXZlbnQgc3R1ZmYsIHVzaW5nIHNlbGVjdCBpbnRlcmZhY2UsIHRoYXQgQW5keSBHcm92ZXINCmlz
+PGJyPg0KJmd0OyB3b3JraW5nIG9uIChhbmQgTWlrdWxhcyBpcyB0YWtpbmcgYSBzdGFiIGF0IGZp
+bmlzaGluZy9vcHRpbWl6aW5nKQ0KaXM8YnI+DQomZ3Q7IHNvbWV0aGluZyB0aGF0IG1pZ2h0IGhl
+bHAuLi4gYnV0IHlvdXIgYXBwcm9hY2ggZGVzY3JpYmVkIGluIHRoaXMgdGhyZWFkPGJyPg0KJmd0
+OyBtYXkgcHJvdmUgYmV0dGVyLjxicj4NCiZndDsgPGJyPg0KJmd0OyBQb2ludCBpcywgZXZlcnl0
+aGluZyBzaG91bGQgYmUgb24gdGhlIHRhYmxlIGZvciByZXZpdGFsaXppbmcgbXVsdGlwYXRoPGJy
+Pg0KJmd0OyB1c2Vyc3BhY2UgKGFuZCBrZXJuZWwpIHRvIG1lZXQgbmV3IHJlcXVpcmVtZW50cyAo
+ZS5nLiBOVk1Fb0YsIGV0YykuPGJyPg0KJmd0OyA8YnI+DQomZ3Q7IEFuZCB5ZXMsIEknZCBwcmVm
+ZXIgdG8gdWx0aW1hdGVseSBzZWUgdGhlc2UgYWR2YW5jZXMgbGFuZCBpbiB0ZXJtcw0Kb2YgRE08
+YnI+DQomZ3Q7IG11bHRpcGF0aCBhZHZhbmNlcyBidXQgd2UnbGwgdGFrZSBpdCBhcyBpdCBjb21l
+cy48YnI+DQo8YnI+DQpJJ20gZnVsbHkgb24gYm9hcmQgd2l0aCB0aGF0Ljxicj4NCkFuZCBpdCB3
+b3VsZCBiZSBnb29kIGlmIEJlbiBNYXJ6aW5za2kgd291bGQgYmUgcHJlc2VudCwgdG9vOzxicj4N
+CmhlIG1pZ2h0IGhhdmUgc29tZSBpbnNpZ2h0cyB3aGljaCBib3RoIG9mIHVzIG1pZ2h0IGxhY2s8
+YnI+DQoobGlrZSB0aGUgb21pbm91cyBkbS1ldmVudCBpbnRlcmZhY2UgaW50byBtdWx0aXBhdGhk
+IHdoZXJlIHdlIGJvdGg8YnI+DQpzdHJ1Z2dsZSB0byBmaWd1cmUgb3V0IHdoYXQgaXQncyBmb3Ig
+Li4uKTxicj4NCjxicj4NCkxvb2tpbmcgZm9yd2FyZCB0byB0aGF0IGRpc2N1c3Npb24uPGJyPg0K
+QW5kIHByb21pc2luZyB0byBoYXZlIHNvbWUgcmVzdWx0cyBieSB0aGVuLjxicj4NCjxicj4NCkNo
+ZWVycyw8YnI+DQo8YnI+DQpIYW5uZXM8YnI+DQotLSA8YnI+DQpEci4gSGFubmVzIFJlaW5lY2tl
+ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOw0KJm5ic3A7
+ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOw0KJm5ic3A7
+ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwO3pTZXJpZXMgJmFtcDsgU3RvcmFnZTxicj4NCmhh
+cmVAc3VzZS5kZSAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJz
+cDsgJm5ic3A7DQombmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJz
+cDsgJm5ic3A7ICZuYnNwOw0KJm5ic3A7ICZuYnNwOyAmbmJzcDsgJm5ic3A7ICZuYnNwOyAmbmJz
+cDsgJm5ic3A7ICZuYnNwOw0KJm5ic3A7ICZuYnNwOyAmbmJzcDsgKzQ5IDkxMSA3NDA1MyA2ODg8
+YnI+DQpTVVNFIExJTlVYIFByb2R1Y3RzIEdtYkgsIE1heGZlbGRzdHIuIDUsIDkwNDA5IE7DvHJu
+YmVyZzxicj4NCkdGOiBKLiBIYXduLCBKLiBHdWlsZCwgRi4gSW1lbmTDtnJmZmVyLCBIUkIgMTY3
+NDYgKEFHIE7DvHJuYmVyZyk8YnI+DQo8YnI+DQotLTxicj4NCmRtLWRldmVsIG1haWxpbmcgbGlz
+dDxicj4NCmRtLWRldmVsQHJlZGhhdC5jb208YnI+DQo8L2ZvbnQ+PC90dD48YSBocmVmPSJodHRw
+czovL3d3dy5yZWRoYXQuY29tL21haWxtYW4vbGlzdGluZm8vZG0tZGV2ZWwiPjx0dD48Zm9udCBz
+aXplPTI+aHR0cHM6Ly93d3cucmVkaGF0LmNvbS9tYWlsbWFuL2xpc3RpbmZvL2RtLWRldmVsPC9m
+b250PjwvdHQ+PC9hPjx0dD48Zm9udCBzaXplPTI+PGJyPg0KPC9mb250PjwvdHQ+DQo8YnI+DQo=
+--=_alternative 0008D27B482580AB_=--
 
 
->
-> Anyway, right now various MPI2 HBAs doesn't work with ASPM enabled, so
-> can this patch be applied in the meantime while we're debugging the
-> issue further? Even if this issue can be properly fixed by FW update,
-> this workaround will be needed for HBAs with affected FW versions.
->
-> //wbr ojab
->
->
->>
->>> Where can I find info about PCI config space?
->>
->> You can get PCI config space info from lspci command.
->>
->>>
->>> //wbr ojab
->>>>
->>>>
->>>> Thanks,
->>>> Sreekanth
->>>>
->>>> On Mon, Jan 16, 2017 at 5:37 PM, ojab <ojab@ojab.ru> wrote:
->>>>>
->>>>> On 2017/01/06 15:48, Sreekanth Reddy wrote:
->>>>>>
->>>>>>
->>>>>> On Fri, Jan 6, 2017 at 7:24 AM, Martin K. Petersen
->>>>>> <martin.petersen@oracle.com> wrote:
->>>>>>
->>>>>> Matin, We need some time to review this patch. I will provide my
->>>>>> review comments by end of next week.
->>>>>>
->>>>> ping?
->>>>>
->>>>> //wbr ojab
->>>>>>
->>>>>>
->>>>>> Thanks,
->>>>>> Sreekanth
->>>>>
->>>>>
->>>>>
->>>> --
->>>> To unsubscribe from this list: send the line "unsubscribe
->>>> linux-scsi" in
->>>> the body of a message to majordomo@vger.kernel.org
->>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>>>
->>>
->> --
->> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->> the body of a message to majordomo@vger.kernel.org
->> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->>
->
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
->
+--===============1002487171160083337==
+Content-Type: text/plain; charset="us-ascii"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+Content-Disposition: inline
 
+
+--===============1002487171160083337==--
