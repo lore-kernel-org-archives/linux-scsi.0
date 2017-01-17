@@ -1,29 +1,52 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v3 00/10] qla2xxx: Bug fixes for driver.
-Date: Tue, 17 Jan 2017 10:06:03 -0800
-Message-ID: <c9fca4ec-1837-3fc7-d7bb-c2e00460a698@sandisk.com>
-References: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
+From: Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>
+Subject: Re: aacraid:  kernel: AAC: Host adapter dead -1 (bisected)
+Date: Tue, 17 Jan 2017 19:31:23 +0100
+Message-ID: <201701171931.23227.a.miskiewicz@gmail.com>
+References: <201701151205.37563.a.miskiewicz@gmail.com> <423FD6710FB8FB4F8728F93591889F9A4143D2BB@avsrvexchmbx2.microsemi.net>
+Reply-To: arekm@maven.pl
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1482545174-811-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, target-devel@vger.kernel.org, hch@infradead.org, nab@linux-iscsi.org
-Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org
+Content-Type: Text/Plain;
+  charset="utf-8"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <423FD6710FB8FB4F8728F93591889F9A4143D2BB@avsrvexchmbx2.microsemi.net>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Dave Carroll <david.carroll@microsemi.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On 12/23/2016 06:06 PM, Himanshu Madhani wrote:
-> Hi Bart,
-> 
-> Here's updated series of bug fixes for target code in the driver.
-> Please consider this for target-pending.
+On Tuesday 17 of January 2017, Dave Carroll wrote:
+> > Hi.
+> >=20
+> > There is a bug with handling of adaptec raid cards (in my case it is
+> > Adaptec 3405) where kernel logs hundreds of "AAC: Host adapter dead -1"
+> > messages.
+> >=20
+> > Bug was reported previously on lkml but there was no progres in solving
+> > it.
+> >=20
+> > There is also bugzilla entry:
+> > https://bugzilla.kernel.org/show_bug.cgi?id=3D151661
+> >=20
+> > I've bisected that to commit bellow and indeed, reverting it from kernel
+> > 4.9.3 makes messages go away.
+> >=20
+> > Could anyone at microsemi look at this regression?
+> >=20
+> > Thanks
+>=20
+> Hi Arkadiusz,
+>=20
+> Thanks for your effort in determining the cause of the issue. It makes
+> sense now that the patch should have been included in controller specific
+> code, rather than common code.
+>=20
+> I will prepare a patch for this, and if you are willing to test it, that
+> would be great!
 
-Hello Himanshu,
+Great!
 
-Thanks for the patches. I have queued these patches for v4.10-rc5. But
-since the qla2xxx driver code triggers several static checker warnings,
-I would appreciate if you could have a look at the four patches I just
-posted to address these warnings.
+I have dedicated machine for testing this, so yes - I'll test.
 
-Bart.
+=2D-=20
+Arkadiusz Mi=C5=9Bkiewicz, arekm / ( maven.pl | pld-linux.org )
