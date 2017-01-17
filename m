@@ -1,59 +1,43 @@
-From: Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>
-Subject: [ANOUNCE] New open-fcoe release v1.0.32
-Date: Tue, 17 Jan 2017 13:29:08 +0100
-Message-ID: <20170117122908.GC6067@linux-x5ow.site>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: Implement fc_host
+Date: Tue, 17 Jan 2017 14:17:33 +0100
+Message-ID: <4049e6cf-b398-4ebd-3248-77c333e65331@redhat.com>
+References: <20170116160430.11815-1-famz@redhat.com>
+ <20170116160430.11815-3-famz@redhat.com>
+ <95f96b48-aa75-0094-a634-db9c13035336@redhat.com>
+ <20170116172656.GB11780@lemon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-Content-Disposition: inline
-List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
-List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
-List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
-List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
- <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
-Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-To: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org
-Cc: Linux SCSI Mailinglist <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170116172656.GB11780@lemon>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, stefanha@redhat.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hi,
 
-I've tagged a new release v1.0.32 of fcoe-utils at
-https://github.com/morbidrsa/fcoe-utils/
 
-There's not much news here's the git log:
-Chad Dupuis (1):
-      fcoemon: Add retry mechanism during fip vlan discovery if socket fail=
-s to open.
+On 16/01/2017 18:26, Fam Zheng wrote:
+>> Is the endianness correct for big-endian host here?
+>
+> I think so. The fc_host sysfs uses u64 to represent port_name and node_name,
+> this patch does the same, so using virtio_* helpers for these fields should
+> handle the endianness correctly.
 
-Chris Leech (2):
-      fcoeadm: --target segfault with other FC storage present
-      sanmac isn't required
+I was suspicious about it because they are defined as "u8 x[8]" in the
+virtio_scsi_config struct.  So you would need to read with
+virtio_cread_bytes and pass the result to wwn_to_u64.
 
-Hannes Reinecke (3):
-      fcoemon: fixup log_nlmsg_error()
-      fcoemon: Add debugging message for 'recv'
-      Fallback to default MAC address for FIP
+For example, if you have 0x500123456789abcd this would be
 
-Johannes Thumshirn (2):
-      fcoeadm: Fix possible buffer overflows
-      fcoe-utils: increment fcoe-utils version to 1.0.32
+	0x50 0x01 0x23 0x45 0x67 0x89 0xab 0cd
 
-Milan P. Gandhi (3):
-      fcoemon.c: Add a check to verify if dcbd is to be initialized, else d=
-o not try to connect to dcbd/lldpad
-      fix a minor typo in fcoeadm_display.c, fcoemon.h and fcping.c
-      Print an error upon failure in memory allocation for struct pollfd
+in virtio_scsi_config, and then virtio_cread64 would read it as a
+little-endian u64, 0xcdab896745230150.  Maybe your QEMU patch is also
+writing things as little-endian 64-bit integers, rather than 8-element
+arrays of bytes?
 
--- =
+Paolo
 
-Johannes Thumshirn                                          Storage
-jthumshirn-l3A5Bk7waGM@public.gmane.org                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-HRB 21284 (AG N=FCrnberg)
-Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+> Maybe we should use u64 in struct virtio_scsi_config as well?
