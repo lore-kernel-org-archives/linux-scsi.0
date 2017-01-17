@@ -1,180 +1,144 @@
 From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
-Date: Tue, 17 Jan 2017 19:43:51 +0530
-Message-ID: <CAK=zhgpFKLWUpQMp8VOfmHsUCQiF6E54FBP2juaHYNVvR+TOmw@mail.gmail.com>
-References: <20161229080250.GA11605@infradead.org> <1483226343.2518.32.camel@linux.vnet.ibm.com>
- <1483280506.5512.1.camel@sandisk.com> <20170101.113311.417107391370623850.davem@davemloft.net>
- <1483292364.2345.5.camel@linux.vnet.ibm.com> <yq1y3ypgd7m.fsf@oracle.com> <1484596878.2540.58.camel@HansenPartnership.com>
+Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
+Date: Tue, 17 Jan 2017 19:45:58 +0530
+Message-ID: <CAK=zhgpLK+CutmBVtu_aEjP0CJO3GdNQ4xVXfkhp_zZFtiVQyA@mail.gmail.com>
+References: <20161228110524.7516-1-ojab@ojab.ru> <yq17f69hs1l.fsf@oracle.com>
+ <CAK=zhgoocwB_01KT8UjtNXwTwcBQ86zWwMB3R4pjW3STy-7iyg@mail.gmail.com>
+ <188a6990-6f10-839f-2846-cc8ae0b2e740@ojab.ru> <CAK=zhgo=ZB==pCLYjfM_7V55080Wp86ufgOeL0D0DK+6osN2ow@mail.gmail.com>
+ <ee6c5a9c-6875-52e7-cce9-069bad30c732@ojab.ru> <CAK=zhgqM_b7=wG3zgBb=wxOwLknYyimZiX+TfsrX3=T1EuOnsw@mail.gmail.com>
+ <16f1d8a1-12c1-25b9-6b33-85ef203ab4e3@ojab.ru> <44e649a7-850a-e083-eed8-7b40e8f6b300@ojab.ru>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1484596878.2540.58.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f171.google.com ([209.85.216.171]:33030 "EHLO
+        mail-qt0-f171.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750888AbdAQORC (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 17 Jan 2017 09:17:02 -0500
+Received: by mail-qt0-f171.google.com with SMTP id v23so159133848qtb.0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jan 2017 06:15:59 -0800 (PST)
+In-Reply-To: <44e649a7-850a-e083-eed8-7b40e8f6b300@ojab.ru>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: ojab <ojab@ojab.ru>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On Tue, Jan 17, 2017 at 1:31 AM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> From 91d249409546569444897a1ffde65c421e064899 Mon Sep 17 00:00:00 2001
-> From: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Date: Sun, 1 Jan 2017 09:39:24 -0800
-> Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough commands
+On Tue, Jan 17, 2017 at 4:13 AM, ojab <ojab@ojab.ru> wrote:
+> On 2017/01/16 14:03, ojab wrote:
+>>
+>> On 2017/01/16 13:31, Sreekanth Reddy wrote:
+>>>
+>>> On Mon, Jan 16, 2017 at 6:15 PM, ojab <ojab@ojab.ru> wrote:
+>>>>
+>>>> On 2017/01/16 12:36, Sreekanth Reddy wrote:
+>>>>>
+>>>>>
+>>>>> Ojab,
+>>>>>
+>>>>> I am checking internally with our FW team and Architect to known
+>>>>> whether they aware/observed any issues similar to this (since this
+>>>>> issue is nothing to do with driver).
+>>>>>
+>>>>> Meanwhile is it possible to provide us the PCI config space and FW
+>>>>> logs when issue occurs?
+>>>>
+>>>>
+>>>>
+>>>> AFAIU FW log is enabled when `logging_level=3D0x3f8` is passed to the
+>>>> module,
+>>>> right?
+>>>
+>>>
+>>> This is a driver logging_level. Firmware logs can be collected using
+>>> UART logs.
+>>
+>>
+>> According to the user guide (from
+>>
+>> https://www.broadcom.com/products/storage/host-bus-adapters/sas-9217-8i#=
+documentation)
+>> my 9217-8i requires 1.8V UART which I don't have at hand, I'll try to do
+>> something on the weekend.
+>> Is anything needed except connecting UART to gather required info?
 >
-> mpt3sas has a firmware failure where it can only handle one pass
-> through ATA command at a time.  If another comes in, contrary to the
-> SAT standard, it will hang until the first one completes (causing long
-> commands like secure erase to timeout).  The original fix was to block
-> the device when an ATA command came in, but this caused a regression
-> with
->
-> commit 669f044170d8933c3d66d231b69ea97cb8447338
-> Author: Bart Van Assche <bart.vanassche@sandisk.com>
-> Date:   Tue Nov 22 16:17:13 2016 -0800
->
->     scsi: srp_transport: Move queuecommand() wait code to SCSI core
->
-> So fix the original fix of the secure erase timeout by properly
-> returning SAM_STAT_BUSY like the SAT recommends.  The original patch
-> also had a concurrency problem since scsih_qcmd is lockless at that
-> point (this is fixed by using atomic bitops to set and test the flag).
->
-> Fixes: 18f6084a989ba1b (mpt3sas: Fix secure erase premature termination)
-> Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
->
-> ---
->
-> v2 - use bitops for lockless atomicity
-> v3 - update description, change function name
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.h  | 12 +++++++++++
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 40 +++++++++++++++++++++++-------------
->  2 files changed, 38 insertions(+), 14 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> index 394fe13..dcb33f4 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-> @@ -393,6 +393,7 @@ struct MPT3SAS_TARGET {
->   * @eedp_enable: eedp support enable bit
->   * @eedp_type: 0(type_1), 1(type_2), 2(type_3)
->   * @eedp_block_length: block size
-> + * @ata_command_pending: SATL passthrough outstanding for device
->   */
->  struct MPT3SAS_DEVICE {
->         struct MPT3SAS_TARGET *sas_target;
-> @@ -404,6 +405,17 @@ struct MPT3SAS_DEVICE {
->         u8      ignore_delay_remove;
->         /* Iopriority Command Handling */
->         u8      ncq_prio_enable;
-> +       /*
-> +        * Bug workaround for SATL handling: the mpt2/3sas firmware
-> +        * doesn't return BUSY or TASK_SET_FULL for subsequent
-> +        * commands while a SATL pass through is in operation as the
-> +        * spec requires, it simply does nothing with them until the
-> +        * pass through completes, causing them possibly to timeout if
-> +        * the passthrough is a long executing command (like format or
-> +        * secure erase).  This variable allows us to do the right
-> +        * thing while a SATL command is pending.
-> +        */
-> +       unsigned long ata_command_pending;
->
->  };
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index b5c966e..830e2c1 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -3899,9 +3899,18 @@ _scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
->         }
->  }
->
-> -static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-> +static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
->  {
-> -       return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-> +       struct MPT3SAS_DEVICE *priv = scmd->device->hostdata;
-> +
-> +       if  (scmd->cmnd[0] != ATA_12 && scmd->cmnd[0] != ATA_16)
-> +               return 0;
-> +
-> +       if (pending)
-> +               return test_and_set_bit(0, &priv->ata_command_pending);
-> +
-> +       clear_bit(0, &priv->ata_command_pending);
-> +       return 0;
->  }
->
->  /**
-> @@ -3925,9 +3934,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
->                 if (!scmd)
->                         continue;
->                 count++;
-> -               if (ata_12_16_cmd(scmd))
-> -                       scsi_internal_device_unblock(scmd->device,
-> -                                                       SDEV_RUNNING);
-> +               _scsih_set_satl_pending(scmd, false);
->                 mpt3sas_base_free_smid(ioc, smid);
->                 scsi_dma_unmap(scmd);
->                 if (ioc->pci_error_recovery)
-> @@ -4063,13 +4070,6 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
->         if (ioc->logging_level & MPT_DEBUG_SCSI)
->                 scsi_print_command(scmd);
->
-> -       /*
-> -        * Lock the device for any subsequent command until command is
-> -        * done.
-> -        */
-> -       if (ata_12_16_cmd(scmd))
-> -               scsi_internal_device_block(scmd->device);
-> -
->         sas_device_priv_data = scmd->device->hostdata;
->         if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
->                 scmd->result = DID_NO_CONNECT << 16;
-> @@ -4083,6 +4083,19 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
->                 return 0;
->         }
->
-> +       /*
-> +        * Bug work around for firmware SATL handling.  The loop
-> +        * is based on atomic operations and ensures consistency
-> +        * since we're lockless at this point
-> +        */
-> +       do {
-> +               if (sas_device_priv_data->ata_command_pending) {
-> +                       scmd->result = SAM_STAT_BUSY;
-> +                       scmd->scsi_done(scmd);
-> +                       return 0;
-> +               }
-> +       } while (_scsih_set_satl_pending(scmd, true));
-> +
+> =E2=80=A6actually I have compatible USB UART here. What should be done to=
+ get FW
+> log? I've tried to reboot with UART connected (9600N1) but got no output.
 
-[Sreekanth] Just for readability purpose, can use use "if (test_bit(0,
-&sas_device_priv_data->ata_command_pending)"
- instead of "if (sas_device_priv_data->ata_command_pending)".
-Since while setting & clearing the bit we are using atomic bit
-operations. I don't see any issue functionality wise.
-
->         sas_target_priv_data = sas_device_priv_data->sas_target;
->
->         /* invalid device handle */
-> @@ -4650,8 +4663,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->         if (scmd == NULL)
->                 return 1;
->
-> -       if (ata_12_16_cmd(scmd))
-> -               scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-> +       _scsih_set_satl_pending(scmd, false);
->
->         mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
->
-> --
-> 2.6.6
->
-
-Tested this patch. It is working fine. Please consider this patch as
-
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+You have to use, 115200 instead of 9600 baud rate.
 
 Thanks,
 Sreekanth
+
+>
+> //wbr ojab
+>
+>
+>>
+>> Anyway, right now various MPI2 HBAs doesn't work with ASPM enabled, so
+>> can this patch be applied in the meantime while we're debugging the
+>> issue further? Even if this issue can be properly fixed by FW update,
+>> this workaround will be needed for HBAs with affected FW versions.
+>>
+>> //wbr ojab
+>>
+>>
+>>>
+>>>> Where can I find info about PCI config space?
+>>>
+>>>
+>>> You can get PCI config space info from lspci command.
+>>>
+>>>>
+>>>> //wbr ojab
+>>>>>
+>>>>>
+>>>>>
+>>>>> Thanks,
+>>>>> Sreekanth
+>>>>>
+>>>>> On Mon, Jan 16, 2017 at 5:37 PM, ojab <ojab@ojab.ru> wrote:
+>>>>>>
+>>>>>>
+>>>>>> On 2017/01/06 15:48, Sreekanth Reddy wrote:
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> On Fri, Jan 6, 2017 at 7:24 AM, Martin K. Petersen
+>>>>>>> <martin.petersen@oracle.com> wrote:
+>>>>>>>
+>>>>>>> Matin, We need some time to review this patch. I will provide my
+>>>>>>> review comments by end of next week.
+>>>>>>>
+>>>>>> ping?
+>>>>>>
+>>>>>> //wbr ojab
+>>>>>>>
+>>>>>>>
+>>>>>>>
+>>>>>>> Thanks,
+>>>>>>> Sreekanth
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>>>
+>>>>> --
+>>>>> To unsubscribe from this list: send the line "unsubscribe
+>>>>> linux-scsi" in
+>>>>> the body of a message to majordomo@vger.kernel.org
+>>>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>>>
+>>>>
+>>> --
+>>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+>>> the body of a message to majordomo@vger.kernel.org
+>>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>>
+>>
+>> --
+>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+>> the body of a message to majordomo@vger.kernel.org
+>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+>>
+>
