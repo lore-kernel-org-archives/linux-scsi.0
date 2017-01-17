@@ -1,65 +1,105 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] ses: Fix SAS device detection in enclosure
-Date: Tue, 17 Jan 2017 08:56:34 +0100
-Message-ID: <20170117075634.GA6067@linux-x5ow.site>
-References: <1483997616-18900-1-git-send-email-emilne@redhat.com>
- <yq1ziiqk9b3.fsf@oracle.com>
+From: Ingo Molnar <mingo@kernel.org>
+Subject: Re: [PATCH] scsi: mpt3sas: fix hang on ata passthru commands
+Date: Tue, 17 Jan 2017 10:20:25 +0100
+Message-ID: <20170117092025.GA9337@gmail.com>
+References: <20161229080250.GA11605@infradead.org>
+ <1483226343.2518.32.camel@linux.vnet.ibm.com>
+ <1483280506.5512.1.camel@sandisk.com>
+ <20170101.113311.417107391370623850.davem@davemloft.net>
+ <1483292364.2345.5.camel@linux.vnet.ibm.com>
+ <yq1y3ypgd7m.fsf@oracle.com>
+ <1484596878.2540.58.camel@HansenPartnership.com>
+ <yq14m0ylnx1.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50027 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751140AbdAQH4l (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 17 Jan 2017 02:56:41 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <yq1ziiqk9b3.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+In-Reply-To: <yq14m0ylnx1.fsf@oracle.com>
+Sender: linux-kernel-owner@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, David Miller <davem@davemloft.net>, Bart Van Assche <Bart.VanAssche@sandisk.com>, Christoph Hellwig <hch@infradead.org>, jbaron@akamai.com, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, sagi@grimberg.me, Sathya Prakash <sathya.prakash@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Hannes Reinecke <hare@suse.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, Chaitra Basappa <chaitra.basappa@broadcom.com>, dledford@redhat.com, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 16, 2017 at 04:02:24PM -0500, Martin K . Petersen wrote:
-> >>>>> "Ewan" == Ewan D Milne <emilne@redhat.com> writes:
-> 
-> Ewan> The call to scsi_is_sas_rphy() needs to be made on the SAS
-> Ewan> end_device, not on the SCSI device.
-> 
-> Ewan> Fixes: 835831c57e9b ("ses: use scsi_is_sas_rphy instead of
-> Ewan> is_sas_attached") Reviewed-by: Johannes Thumshirn
-> Ewan> <jthumshirn@suse.de> Signed-off-by: Ewan D. Milne
-> Ewan> <emilne@redhat.com> ---
-> Ewan>  drivers/scsi/ses.c | 2 +- 1 file changed, 1 insertion(+), 1
-> Ewan>  deletion(-)
-> 
-> Ewan> diff --git a/drivers/scsi/ses.c b/drivers/scsi/ses.c index
-> Ewan> 8c9a35c..50adabb 100644
-> Ewan> --- a/drivers/scsi/ses.c
-> Ewan> +++ b/drivers/scsi/ses.c
-> Ewan> @@ -587,7 +587,7 @@ static void ses_match_to_enclosure(struct
-> Ewan> enclosure_device *edev,
->  
-> Ewan>  	ses_enclosure_data_process(edev,
-> Ewan>  	to_scsi_device(edev->edev.parent), 0);
->  
-> Ewan> - if (scsi_is_sas_rphy(&sdev->sdev_gendev))
-> Ewan> + if (scsi_is_sas_rphy(sdev->sdev_target->dev.parent))
-> Ewan>  		efd.addr = sas_get_address(sdev);
->  
-> Ewan>  	if (efd.addr) {
-> Ewan> -- 1.8.3.1
-> 
-> James?
 
-FWIW I have positive test results from a customer of ours with this as well.
+* Martin K. Petersen <martin.petersen@oracle.com> wrote:
+
+> >>>>> "James" == James Bottomley <James.Bottomley@HansenPartnership.com> writes:
+> 
+> James> Subject: [PATCH] scsi: mpt3sas: fix hang on ata passthrough
+> James> commands
+> 
+> James> mpt3sas has a firmware failure where it can only handle one pass
+> James> through ATA command at a time.  If another comes in, contrary to
+> James> the SAT standard, it will hang until the first one completes
+> James> (causing long commands like secure erase to timeout).  The
+> James> original fix was to block the device when an ATA command came in,
+> James> but this caused a regression with
+> 
+> Broadcom folks: Please test and ack as soon as possible so we can get
+> this fix queued up.
+> 
+> Ingo: Since you appear to have hardware, it would be great if you could
+> test James' v3 (https://patchwork.kernel.org/patch/9519383/). Sorry for
+> the inconvenience.
+
+As per the interdiff below v2->v3 did not change the code in any way, only the 
+name of the function and a comment, so you can add this to v3 as well:
+
+  Reported-by: Ingo Molnar <mingo@kernel.org>
+  Tested-by: Ingo Molnar <mingo@kernel.org>
 
 Thanks,
-	Johannes
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+	Ingo
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 6f9b4c051e4d..830e2c10ba02 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3899,7 +3899,7 @@ _scsih_temp_threshold_events(struct MPT3SAS_ADAPTER *ioc,
+ 	}
+ }
+ 
+-static int set_satl_pending(struct scsi_cmnd *scmd, bool pending)
++static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
+ {
+ 	struct MPT3SAS_DEVICE *priv = scmd->device->hostdata;
+ 
+@@ -3934,7 +3934,7 @@ _scsih_flush_running_cmds(struct MPT3SAS_ADAPTER *ioc)
+ 		if (!scmd)
+ 			continue;
+ 		count++;
+-		set_satl_pending(scmd, false);
++		_scsih_set_satl_pending(scmd, false);
+ 		mpt3sas_base_free_smid(ioc, smid);
+ 		scsi_dma_unmap(scmd);
+ 		if (ioc->pci_error_recovery)
+@@ -4084,7 +4084,9 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	}
+ 
+ 	/*
+-	 * Bug work around for firmware SATL handling
++	 * Bug work around for firmware SATL handling.  The loop
++	 * is based on atomic operations and ensures consistency
++	 * since we're lockless at this point
+ 	 */
+ 	do {
+ 		if (sas_device_priv_data->ata_command_pending) {
+@@ -4092,7 +4094,7 @@ scsih_qcmd(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 			scmd->scsi_done(scmd);
+ 			return 0;
+ 		}
+-	} while (set_satl_pending(scmd, true));
++	} while (_scsih_set_satl_pending(scmd, true));
+ 
+ 	sas_target_priv_data = sas_device_priv_data->sas_target;
+ 
+@@ -4661,7 +4663,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	if (scmd == NULL)
+ 		return 1;
+ 
+-	set_satl_pending(scmd, false);
++	_scsih_set_satl_pending(scmd, false);
+ 
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+ 
