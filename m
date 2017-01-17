@@ -1,39 +1,29 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH v2 08/12] qla2xxx: Add framework for Async fabric
  discovery.
-Date: Tue, 17 Jan 2017 22:14:31 +0000
-Message-ID: <1484691258.2729.15.camel@sandisk.com>
+Date: Tue, 17 Jan 2017 22:31:04 +0000
+Message-ID: <AD8AC4DE-FB0C-4298-BA75-2A6F63155FA0@cavium.com>
 References: <1484598924-29066-1-git-send-email-himanshu.madhani@cavium.com>
-         <1484598924-29066-9-git-send-email-himanshu.madhani@cavium.com>
+ <1484598924-29066-9-git-send-email-himanshu.madhani@cavium.com>
+ <1484692014.2729.21.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1484598924-29066-9-git-send-email-himanshu.madhani@cavium.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0080.outbound.protection.outlook.com ([104.47.33.80]:6976
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750947AbdAQWbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 17 Jan 2017 17:31:07 -0500
+In-Reply-To: <1484692014.2729.21.camel@sandisk.com>
 Content-Language: en-US
-Content-ID: <40C7483EC9CABE4482F7D9053E08C0E3@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "bart.vanassche@gmail.com" <bart.vanassche@gmail.com>, "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
+Content-ID: <94D50560F312F342902CE38CAA7C7531@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "bart.vanassche@gmail.com" <bart.vanassche@gmail.com>, "hch@infradead.org" <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 
-On Mon, 2017-01-16 at 12:35 -0800, Himanshu Madhani wrote:
-> +	     /*
-> +	      * return FC_CTELS_STATUS_OK and leave the decoding of the ELS/CT
-> +	      * fc payload  to the caller
-> +	      */
-> +
-> +	     bsg_reply->reply_data.ctels_reply.status =3D FC_CTELS_STATUS_OK;
-> +	     bsg_job->reply_len =3D sizeof(struct fc_bsg_reply);
-
-smatch reports the following for the above code:
-
-drivers/scsi/qla2xxx/qla_isr.c:1456: qla2x00_ct_entry() warn: inconsistent =
-indenting
-
-Please use tabs instead of spaces for indentation. That is sufficient to
-suppress that warning.
-
-Thanks,
-
-Bart.=
+DQoNCk9uIDEvMTcvMTcsIDI6MjcgUE0sICJCYXJ0IFZhbiBBc3NjaGUiIDxCYXJ0LlZhbkFzc2No
+ZUBzYW5kaXNrLmNvbT4gd3JvdGU6DQoNCj4lcGhDDQoNClllcy4gSXQgbG9va3MgbGlrZSB0eXBv
+IGluIHRoZSBtZXNzYWdlLiANCg0KV2lsbCB1cGRhdGUgdGhpcyBwYXRjaCB3aXRoIG90aGVyIHNw
+YXJzZSB3YXJuaW5ncyBmaXhlcy4NCg0KVGhhbmtzLA0KSGltYW5zaHUNCj4gDQo=
