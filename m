@@ -1,50 +1,53 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Tue, 17 Jan 2017 17:45:53 +0200
-Message-ID: <f10b8508-22a2-2959-c369-2dd29f271d2c@grimberg.me>
-References: <20170111134312.GH6286@linux-x5ow.site>
- <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
- <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
- <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
- <499af528-7810-f82d-1f11-cbf8f3a5b21c@grimberg.me>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH 2/2] virtio_scsi: Implement fc_host
+Date: Tue, 17 Jan 2017 17:47:13 +0200
+Message-ID: <20170117174705-mutt-send-email-mst@kernel.org>
+References: <20170116160430.11815-1-famz@redhat.com>
+ <20170116160430.11815-3-famz@redhat.com>
+ <95f96b48-aa75-0094-a634-db9c13035336@redhat.com>
+ <20170116172656.GB11780@lemon>
+ <4049e6cf-b398-4ebd-3248-77c333e65331@redhat.com>
+ <20170117140500.GA19638@lemon>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <499af528-7810-f82d-1f11-cbf8f3a5b21c@grimberg.me>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
-Cc: linux-block@vger.kernel.org, Linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170117140500.GA19638@lemon>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>
+Cc: Paolo Bonzini <pbonzini@redhat.com>, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Jason Wang <jasowang@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, stefanha@redhat.com, virtualization@lists.linux-foundation.org
 List-Id: linux-scsi@vger.kernel.org
 
+On Tue, Jan 17, 2017 at 10:05:00PM +0800, Fam Zheng wrote:
+> On Tue, 01/17 14:17, Paolo Bonzini wrote:
+> > 
+> > 
+> > On 16/01/2017 18:26, Fam Zheng wrote:
+> > >> Is the endianness correct for big-endian host here?
+> > >
+> > > I think so. The fc_host sysfs uses u64 to represent port_name and node_name,
+> > > this patch does the same, so using virtio_* helpers for these fields should
+> > > handle the endianness correctly.
+> > 
+> > I was suspicious about it because they are defined as "u8 x[8]" in the
+> > virtio_scsi_config struct.  So you would need to read with
+> > virtio_cread_bytes and pass the result to wwn_to_u64.
+> > 
+> > For example, if you have 0x500123456789abcd this would be
+> > 
+> > 	0x50 0x01 0x23 0x45 0x67 0x89 0xab 0cd
+> > 
+> > in virtio_scsi_config, and then virtio_cread64 would read it as a
+> > little-endian u64, 0xcdab896745230150.  Maybe your QEMU patch is also
+> > writing things as little-endian 64-bit integers, rather than 8-element
+> > arrays of bytes?
+> 
+> Yes, they all used 64-bit integers in a "less surprising" endian. I think there
+> is an endianness conecpt to WWN, as in 0x500123456789abcd; and there is an
+> native endianness to virtio, which is little-endian. If we use a "u8 x[8]" type
+> in the spec and want the WWN's MSB, namely the 0x50 stuff, to be the first byte,
+> is it worth to explicitly document that to avoid confusion?
+> 
+> Fam
 
-> --
-> [1]
-> queue = b'nvme0q1'
->      usecs               : count     distribution
->          0 -> 1          : 7310 |****************************************|
->          2 -> 3          : 11       |      |
->          4 -> 7          : 10       |      |
->          8 -> 15         : 20       |      |
->         16 -> 31         : 0        |      |
->         32 -> 63         : 0        |      |
->         64 -> 127        : 1        |      |
->
-> [2]
-> queue = b'nvme0q1'
->      usecs               : count     distribution
->          0 -> 1          : 7309 |****************************************|
->          2 -> 3          : 14       |      |
->          4 -> 7          : 7        |      |
->          8 -> 15         : 17       |      |
->
-
-Rrr, email made the histograms look funky (tabs vs. spaces...)
-The count is what's important anyways...
-
-Just adding that I used an Intel P3500 nvme device.
-
-> We can see that most of the time our latency is pretty good (<1ns) but with
-> huge tail latencies (some 8-15 ns and even one in 32-63 ns).
-
-Obviously is micro-seconds and not nano-seconds (I wish...)
+Can't hurt, for sure.
