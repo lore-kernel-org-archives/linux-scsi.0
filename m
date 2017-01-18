@@ -1,43 +1,34 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 5/7] scsi: hisi_sas: downgrade internal abort exit print
-Date: Thu, 19 Jan 2017 00:32:51 +0800
-Message-ID: <1484757173-235951-6-git-send-email-john.garry@huawei.com>
-References: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 0/7] hisi_sas: SATA IO workaround and other misc patches
+Date: Thu, 19 Jan 2017 00:32:46 +0800
+Message-ID: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga02-in.huawei.com ([119.145.14.65]:1882 "EHLO
-        szxga02-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753355AbdARQHi (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2017 11:07:38 -0500
-In-Reply-To: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
-Downgrade the exit print in hisi_sas_internal_task_abort()
-to dbg level, as info is not required.
+This patchset introduces some misc fixes and improvements.
 
-Signed-off-by: John Garry <john.garry@huawei.com>
-Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
----
- drivers/scsi/hisi_sas/hisi_sas_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Most signifigantly this patchset includes a workaround
+for a SATA IO issue on v2 hw (hip06/7).
 
-diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index eee7ae2..b2782ce 100644
---- a/drivers/scsi/hisi_sas/hisi_sas_main.c
-+++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1121,7 +1121,7 @@ static int hisi_sas_query_task(struct sas_task *task)
- 	}
- 
- exit:
--	dev_info(dev, "internal task abort: task to dev %016llx task=%p "
-+	dev_dbg(dev, "internal task abort: task to dev %016llx task=%p "
- 		"resp: 0x%x sts 0x%x\n",
- 		SAS_ADDR(device->sas_addr),
- 		task,
+John Garry (2):
+  scsi: hisi_sas: downgrade refclk message
+  scsi: hisi_sas: downgrade internal abort exit print
+
+Xiang Chen (5):
+  scsi: hisi_sas: workaround v2 hw SATA IO timeout issue
+  scsi: hisi_sas: modify some values of ITCT table
+  scsi: hisi_sas: modify hard reset for directed-attached disk
+  scsi: hisi_sas: fix probe ordering problem
+  scsi: hisi_sas: decrease running_req in hisi_sas_slot_task_free()
+
+ drivers/scsi/hisi_sas/hisi_sas_main.c  |  20 +++----
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 106 +++++++++++++++++++++++++++++----
+ 2 files changed, 103 insertions(+), 23 deletions(-)
+
 -- 
 1.9.1
-
