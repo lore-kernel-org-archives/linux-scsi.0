@@ -1,43 +1,33 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 15/17] lpfc: NVME Target: Add debugfs support
-Date: Wed, 18 Jan 2017 09:06:49 +0100
-Message-ID: <4a226c80-fb83-0559-c6c3-031ad78403e2@suse.de>
-References: <587ec2fa.4XfVnWpJuiX/2Gal%jsmart2021@gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/4] nvme: use blk_rq_payload_bytes
+Date: Wed, 18 Jan 2017 10:09:21 +0100
+Message-ID: <20170118090921.GA24058@lst.de>
+References: <1484306953-3194-1-git-send-email-hch@lst.de> <1484306953-3194-4-git-send-email-hch@lst.de> <7532e18a-6cd3-294f-085d-e1ecdc48af6e@grimberg.me>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50438 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:42615 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751304AbdARIG7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Jan 2017 03:06:59 -0500
-In-Reply-To: <587ec2fa.4XfVnWpJuiX/2Gal%jsmart2021@gmail.com>
+        id S1751354AbdARJJX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Jan 2017 04:09:23 -0500
+Content-Disposition: inline
+In-Reply-To: <7532e18a-6cd3-294f-085d-e1ecdc48af6e@grimberg.me>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
+To: Sagi Grimberg <sagi@grimberg.me>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Dexuan Cui <decui@microsoft.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-On 01/18/2017 02:20 AM, James Smart wrote:
-> 
-> NVME Target: Add debugfs support
-> 
-> Adds debugfs snippets to cover the new NVME target functionality
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> ---
->  drivers/scsi/lpfc/lpfc_debugfs.c | 387 ++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/lpfc/lpfc_nvmet.c   | 279 +++++++++++++++++++++++++++-
->  drivers/scsi/lpfc/lpfc_nvmet.h   |  13 ++
->  3 files changed, 674 insertions(+), 5 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Tue, Jan 17, 2017 at 10:06:51PM +0200, Sagi Grimberg wrote:
+>
+>> @@ -1014,9 +1013,9 @@ static int nvme_rdma_map_data(struct nvme_rdma_queue *queue,
+>>  	}
+>>
+>
+> Christoph, a little above here we still look at blk_rq_bytes(),
+> shouldn't that look at blk_rq_payload_bytes() too?
 
-Cheers,
+The check is ok for now as it's just zero vs non-zero.  It's somewhat
+broken for Write Zeroes, though.  I've fixed it in this series
+which I need to submit:
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+	http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/write-zeroes-take-2
