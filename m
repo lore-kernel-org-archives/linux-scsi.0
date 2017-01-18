@@ -1,7 +1,7 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH 6/7] scsi: hisi_sas: fix probe ordering problem
-Date: Thu, 19 Jan 2017 00:32:52 +0800
-Message-ID: <1484757173-235951-7-git-send-email-john.garry@huawei.com>
+Subject: [PATCH 7/7] scsi: hisi_sas: decrease running_req in hisi_sas_slot_task_free()
+Date: Thu, 19 Jan 2017 00:32:53 +0800
+Message-ID: <1484757173-235951-8-git-send-email-john.garry@huawei.com>
 References: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,73 +14,70 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-There is a potential probe issue in how we trigger the hw initialisation.
-Although we use 1s timer to delay hw initialisation, there is still a
-potential that sas_register_ha() is not be finished before we start
-the PHY init from hw->hw_init().
-To avoid this issue, initialise the hw after sas_register_ha() in the
-same probe context.
-Note: it is not necessary to use 1s timer now (modified v2 hw only).
+There is an issue that hisi_sas_dev.running_req is not
+decremented properly for internal abort and TMF.
+
+To resolve, only decrease running_req in hisi_sas_slot_task_free()
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 ---
  drivers/scsi/hisi_sas/hisi_sas_main.c  | 8 ++++----
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 8 ++------
- 2 files changed, 6 insertions(+), 10 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 --
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
-index b2782ce..8601cec 100644
+index 8601cec..53637a9 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_main.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
-@@ -1552,10 +1552,6 @@ int hisi_sas_probe(struct platform_device *pdev,
+@@ -71,6 +71,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 			     struct hisi_sas_slot *slot)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
++	struct domain_device *device = task->dev;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
  
- 	hisi_sas_init_add(hisi_hba);
+ 	if (!slot->task)
+ 		return;
+@@ -97,6 +99,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	slot->task = NULL;
+ 	slot->port = NULL;
+ 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
++	if (sas_dev)
++		atomic64_dec(&sas_dev->running_req);
+ 	/* slot memory is fully zeroed when it is reused */
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
+@@ -141,8 +145,6 @@ static void hisi_sas_slot_abort(struct work_struct *work)
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
+ 	struct scsi_cmnd *cmnd = task->uldd_task;
+ 	struct hisi_sas_tmf_task tmf_task;
+-	struct domain_device *device = task->dev;
+-	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct scsi_lun lun;
+ 	struct device *dev = &hisi_hba->pdev->dev;
+ 	int tag = abort_slot->idx;
+@@ -165,8 +167,6 @@ static void hisi_sas_slot_abort(struct work_struct *work)
+ 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 	if (task->task_done)
+ 		task->task_done(task);
+-	if (sas_dev)
+-		atomic64_dec(&sas_dev->running_req);
+ }
  
--	rc = hisi_hba->hw->hw_init(hisi_hba);
--	if (rc)
--		goto err_out_ha;
--
- 	rc = scsi_add_host(shost, &pdev->dev);
- 	if (rc)
- 		goto err_out_ha;
-@@ -1564,6 +1560,10 @@ int hisi_sas_probe(struct platform_device *pdev,
- 	if (rc)
- 		goto err_out_register_ha;
- 
-+	rc = hisi_hba->hw->hw_init(hisi_hba);
-+	if (rc)
-+		goto err_out_register_ha;
-+
- 	scsi_scan_host(shost);
- 
- 	return 0;
+ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 7519772..62655c7 100644
+index 62655c7..de240d2 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -1090,9 +1090,8 @@ static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- 	start_phy_v2_hw(hisi_hba, phy_no);
- }
+@@ -1827,8 +1827,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
+ 	}
  
--static void start_phys_v2_hw(unsigned long data)
-+static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
- {
--	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
- 	int i;
+ out:
+-	if (sas_dev)
+-		atomic64_dec(&sas_dev->running_req);
  
- 	for (i = 0; i < hisi_hba->n_phy; i++)
-@@ -1101,10 +1100,7 @@ static void start_phys_v2_hw(unsigned long data)
- 
- static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
- {
--	struct timer_list *timer = &hisi_hba->timer;
--
--	setup_timer(timer, start_phys_v2_hw, (unsigned long)hisi_hba);
--	mod_timer(timer, jiffies + HZ);
-+	start_phys_v2_hw(hisi_hba);
- }
- 
- static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
+ 	hisi_sas_slot_task_free(hisi_hba, task, slot);
+ 	sts = ts->stat;
 -- 
 1.9.1
