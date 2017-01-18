@@ -1,49 +1,251 @@
-From: Tejun Heo <tj@kernel.org>
-Subject: Re: [PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Wed, 18 Jan 2017 11:23:08 -0800
-Message-ID: <20170118192308.GC9171@mtj.duckdns.org>
-References: <1479462345-13942-1-git-send-email-rsahu@apm.com>
- <CAFd313wajZzZWGQy20obf4k_7RO43Q10NiBa-8TVYxo3J93inA@mail.gmail.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH 1/2] scsi: scsi_transport_fc: Provide a lightweight option for
+ Virtual FC Hosts.
+Date: Wed, 18 Jan 2017 15:28:57 -0500
+Message-ID: <1484771338-8903-2-git-send-email-cavery@redhat.com>
+References: <1484771338-8903-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-Content-Disposition: inline
-In-Reply-To: <CAFd313wajZzZWGQy20obf4k_7RO43Q10NiBa-8TVYxo3J93inA@mail.gmail.com>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: Rameshwar Sahu <rsahu@apm.com>
-Cc: Devicetree List <devicetree@vger.kernel.org>, mlangsdo@redhat.com, Arnd Bergmann <arnd@arndb.de>, linux-scsi@vger.kernel.org, Jon Masters <jcm@redhat.com>, patches <patches@apm.com>, linux-ide@vger.kernel.org, Olof Johansson <olof@lixom.net>, linux-arm <linux-arm-kernel@lists.infradead.org>
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1484771338-8903-1-git-send-email-cavery@redhat.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
+The patch provides a means to offer a lightweight option to the
+current FC transport class. The new option is selected by a
+driver when it indicates it wants the lightweight
+transport via fc_function_template.
 
-On Tue, Jan 17, 2017 at 08:25:21PM +0530, Rameshwar Sahu wrote:
-> Hi Tejun,
-> 
-> On Fri, Nov 18, 2016 at 3:15 PM, Rameshwar Prasad Sahu <rsahu@apm.com> wrote:
-> > This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
-> > that was broken with hardware v1.0. Second thing, here we should not assume
-> > XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
-> > remove this assumption because V1_1 also has a valid _CID for backward
-> > compatibly with v1.
-> >
-> > v2 changes:
-> >         1. Changed patch description
-> >
-> > Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+---
+ drivers/scsi/scsi_transport_fc.c | 125 +++++++++++++++++++++++++++++++++++++--
+ include/scsi/scsi_transport_fc.h |   1 +
+ 2 files changed, 122 insertions(+), 4 deletions(-)
 
-Hmm... I don't have the patch in my queue.  Can you please resend it?
-
-Thanks.
-
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 03577bd..4adc669 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -50,6 +50,15 @@ static int fc_bsg_hostadd(struct Scsi_Host *, struct fc_host_attrs *);
+ static int fc_bsg_rportadd(struct Scsi_Host *, struct fc_rport *);
+ static void fc_bsg_remove(struct request_queue *);
+ static void fc_bsg_goose_queue(struct fc_rport *);
++static int fc_host_lw_setup(struct Scsi_Host *, struct fc_host_attrs *);
++static int fc_host_hw_setup(struct Scsi_Host *, struct fc_host_attrs *);
++static int fc_host_hw_remove(struct fc_host_attrs *);
++static struct scsi_transport_template *
++	fc_attach_lw_transport(struct fc_function_template *);
++static struct scsi_transport_template *
++	fc_attach_hw_transport(struct fc_function_template *);
++static void fc_remove_lw_host(struct Scsi_Host *);
++static void fc_remove_hw_host(struct Scsi_Host *, struct fc_host_attrs *);
+ 
+ /*
+  * Module Parameters
+@@ -352,6 +361,10 @@ struct fc_internal {
+ 
+ #define to_fc_internal(tmpl)	container_of(tmpl, struct fc_internal, t)
+ 
++
++static void fc_release_lw_transport(struct fc_internal *);
++static void fc_release_hw_transport(struct fc_internal *);
++
+ static int fc_target_setup(struct transport_container *tc, struct device *dev,
+ 			   struct device *cdev)
+ {
+@@ -387,7 +400,26 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	if (i->f->lightweight_transport)
++		return fc_host_lw_setup(shost, fc_host);
++
++	return fc_host_hw_setup(shost, fc_host);
++}
++
++static int fc_host_lw_setup(struct Scsi_Host *shost,
++			    struct fc_host_attrs *fc_host)
++{
++	fc_host->node_name = -1;
++	fc_host->port_name = -1;
++
++	return 0;
++}
+ 
++static int fc_host_hw_setup(struct Scsi_Host *shost,
++			    struct fc_host_attrs *fc_host)
++{
+ 	/*
+ 	 * Set default values easily detected by the midlayer as
+ 	 * failure cases.  The scsi lldd is responsible for initializing
+@@ -468,7 +500,16 @@ static int fc_host_remove(struct transport_container *tc, struct device *dev,
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	if (i->f->lightweight_transport)
++		return 0;
+ 
++	return fc_host_hw_remove(fc_host);
++}
++
++static int fc_host_hw_remove(struct fc_host_attrs *fc_host)
++{
+ 	fc_bsg_remove(fc_host->rqst_q);
+ 	return 0;
+ }
+@@ -2175,6 +2216,49 @@ static int fc_it_nexus_response(struct Scsi_Host *shost, u64 nexus, int result)
+ struct scsi_transport_template *
+ fc_attach_transport(struct fc_function_template *ft)
+ {
++	if (ft->lightweight_transport)
++		return fc_attach_lw_transport(ft);
++
++	return fc_attach_hw_transport(ft);
++}
++EXPORT_SYMBOL(fc_attach_transport);
++
++
++struct scsi_transport_template *
++fc_attach_lw_transport(struct fc_function_template *ft)
++{
++	int count;
++	struct fc_internal *i;
++
++	i = kzalloc(sizeof(struct fc_internal),
++			GFP_KERNEL);
++
++	if (unlikely(!i))
++		return NULL;
++
++	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
++	i->t.host_attrs.ac.class = &fc_host_class.class;
++	i->t.host_attrs.ac.match = fc_host_match;
++	i->t.host_size = sizeof(struct fc_host_attrs);
++	transport_container_register(&i->t.host_attrs);
++
++	i->f = ft;
++
++	count = 0;
++	SETUP_HOST_ATTRIBUTE_RD(node_name);
++	SETUP_HOST_ATTRIBUTE_RD(port_name);
++
++	BUG_ON(count > FC_HOST_NUM_ATTRS);
++
++	i->host_attrs[count] = NULL;
++
++	return &i->t;
++}
++
++
++struct scsi_transport_template *
++fc_attach_hw_transport(struct fc_function_template *ft)
++{
+ 	int count;
+ 	struct fc_internal *i = kzalloc(sizeof(struct fc_internal),
+ 					GFP_KERNEL);
+@@ -2318,12 +2402,27 @@ fc_attach_transport(struct fc_function_template *ft)
+ 
+ 	return &i->t;
+ }
+-EXPORT_SYMBOL(fc_attach_transport);
+ 
+ void fc_release_transport(struct scsi_transport_template *t)
+ {
+ 	struct fc_internal *i = to_fc_internal(t);
+ 
++	if (i->f->lightweight_transport)
++		fc_release_lw_transport(i);
++	else
++		fc_release_hw_transport(i);
++}
++EXPORT_SYMBOL(fc_release_transport);
++
++void fc_release_lw_transport(struct fc_internal *i)
++{
++	transport_container_unregister(&i->t.host_attrs);
++
++	kfree(i);
++}
++
++void fc_release_hw_transport(struct fc_internal *i)
++{
+ 	transport_container_unregister(&i->t.target_attrs);
+ 	transport_container_unregister(&i->t.host_attrs);
+ 	transport_container_unregister(&i->rport_attr_cont);
+@@ -2331,7 +2430,6 @@ void fc_release_transport(struct scsi_transport_template *t)
+ 
+ 	kfree(i);
+ }
+-EXPORT_SYMBOL(fc_release_transport);
+ 
+ /**
+  * fc_queue_work - Queue work to the fc_host workqueue.
+@@ -2438,10 +2536,30 @@ fc_flush_devloss(struct Scsi_Host *shost)
+ void
+ fc_remove_host(struct Scsi_Host *shost)
+ {
++	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	if (i->f->lightweight_transport)
++		fc_remove_lw_host(shost);
++
++	else
++		fc_remove_hw_host(shost, fc_host);
++}
++EXPORT_SYMBOL(fc_remove_host);
++
++void
++fc_remove_lw_host(struct Scsi_Host *shost)
++{
++	/* flush all scan work items */
++	scsi_flush_work(shost);
++}
++
++void
++fc_remove_hw_host(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
++{
+ 	struct fc_vport *vport = NULL, *next_vport = NULL;
+ 	struct fc_rport *rport = NULL, *next_rport = NULL;
+ 	struct workqueue_struct *work_q;
+-	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+@@ -2484,7 +2602,6 @@ fc_remove_host(struct Scsi_Host *shost)
+ 		destroy_workqueue(work_q);
+ 	}
+ }
+-EXPORT_SYMBOL(fc_remove_host);
+ 
+ static void fc_terminate_rport_io(struct fc_rport *rport)
+ {
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 924c8e6..b1c03cc 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -718,6 +718,7 @@ struct fc_function_template {
+ 	unsigned long	show_host_system_hostname:1;
+ 
+ 	unsigned long	disable_target_scan:1;
++	unsigned long	lightweight_transport:1;
+ };
+ 
+ 
 -- 
-tejun
+2.5.0
