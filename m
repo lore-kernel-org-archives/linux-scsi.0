@@ -1,35 +1,46 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 13/17] lpfc: NVME Target: Merge into FC discovery
-Date: Wed, 18 Jan 2017 09:03:25 +0100
-Message-ID: <629d1db3-0e2a-c730-87dd-520275ea1132@suse.de>
-References: <587ec2f8.5mEXNd/HV7Rc1N2O%jsmart2021@gmail.com>
+Subject: Re: [PATCH 14/17] lpfc: NVME Target: bind to nvmet_fc api
+Date: Wed, 18 Jan 2017 09:04:49 +0100
+Message-ID: <6ccefbdc-e08f-5dbc-36dc-b63154a96264@suse.de>
+References: <587ec2f9.rOjtCa/pEziRaN+m%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50298 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:50381 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751304AbdARID1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Jan 2017 03:03:27 -0500
-In-Reply-To: <587ec2f8.5mEXNd/HV7Rc1N2O%jsmart2021@gmail.com>
+        id S1750703AbdARIEv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Jan 2017 03:04:51 -0500
+In-Reply-To: <587ec2f9.rOjtCa/pEziRaN+m%jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
 On 01/18/2017 02:20 AM, James Smart wrote:
 > 
-> NVME Target: Merge into FC discovery
+> NVME Target: Tie in to NVME Fabrics nvmet_fc LLDD target api
 > 
-> Adds NVME PRLI handling and Nameserver registrations for NVME
+> Adds the routines to:
+> - register and deregister the FC port as a nvmet-fc targetport
+> - binding of nvme queues to adapter WQs
+> - receipt and passing of NVME LS's to transport, sending transport response
+> - receipt of NVME FCP CMD IUs, processing FCP target io data transmission
+>   commands; transmission of FCP io response.
+> - Abort operations for tgt io exchanges.
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/lpfc_ct.c        |  8 +++++++-
->  drivers/scsi/lpfc/lpfc_els.c       | 34 ++++++++++++++++++++++++++++++----
->  drivers/scsi/lpfc/lpfc_hbadisc.c   | 27 +++++++++++++++++++++++----
->  drivers/scsi/lpfc/lpfc_nportdisc.c | 35 ++++++++++++++++++++++++++++++++---
->  4 files changed, 92 insertions(+), 12 deletions(-)
+>  drivers/scsi/lpfc/Makefile       |    2 +-
+>  drivers/scsi/lpfc/lpfc_crtn.h    |    8 +
+>  drivers/scsi/lpfc/lpfc_ct.c      |    2 +-
+>  drivers/scsi/lpfc/lpfc_els.c     |    5 +-
+>  drivers/scsi/lpfc/lpfc_hbadisc.c |   10 +-
+>  drivers/scsi/lpfc/lpfc_init.c    |    2 +-
+>  drivers/scsi/lpfc/lpfc_nvmet.c   | 1365 ++++++++++++++++++++++++++++++++++++++
+>  drivers/scsi/lpfc/lpfc_sli.c     |    8 +-
+>  8 files changed, 1390 insertions(+), 12 deletions(-)
+>  create mode 100644 drivers/scsi/lpfc/lpfc_nvmet.c
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
