@@ -1,50 +1,38 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 09/17] lpfc: NVME Initiator: bind to nvme_fc api
-Date: Wed, 18 Jan 2017 08:48:55 +0100
-Message-ID: <5a3636d5-8147-3918-5978-d751e148f33f@suse.de>
-References: <587ec2f4.E7OXGdKOLaTx6anb%jsmart2021@gmail.com>
+Subject: Re: [PATCH 10/17] lpfc: NVME Initiator: Add debugfs support
+Date: Wed, 18 Jan 2017 08:51:43 +0100
+Message-ID: <9b0fc106-e073-bc9f-bbbc-93cfc4510c0f@suse.de>
+References: <587ec2f5.kNRcfOkEsCi6Fjot%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49228 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:49492 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751226AbdARHuZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 18 Jan 2017 02:50:25 -0500
-In-Reply-To: <587ec2f4.E7OXGdKOLaTx6anb%jsmart2021@gmail.com>
+        id S1751226AbdARHwB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Jan 2017 02:52:01 -0500
+In-Reply-To: <587ec2f5.kNRcfOkEsCi6Fjot%jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
 On 01/18/2017 02:20 AM, James Smart wrote:
 > 
-> NVME Initiator: Tie in to NVME Fabrics nvme_fc LLDD initiator api
+> NVME Initiator: Add debugfs support
 > 
-> Adds the routines to:
-> - register and deregister the FC port as a nvme-fc initiator localport
-> - register and deregister remote FC ports as a nvme-fc remoteport.
-> - binding of nvme queues to adapter WQs
-> - send/perform NVME LS's
-> - send/perform NVME FCP initiator io operations
+> Adds debugfs snippets to cover the new NVME initiator functionality
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
 > ---
->  drivers/scsi/lpfc/Makefile         |    7 +-
->  drivers/scsi/lpfc/lpfc.h           |    5 +
->  drivers/scsi/lpfc/lpfc_crtn.h      |    9 +
->  drivers/scsi/lpfc/lpfc_ct.c        |    2 +-
->  drivers/scsi/lpfc/lpfc_els.c       |    4 +-
->  drivers/scsi/lpfc/lpfc_hbadisc.c   |   15 +-
->  drivers/scsi/lpfc/lpfc_init.c      |   20 +-
->  drivers/scsi/lpfc/lpfc_nportdisc.c |    4 +-
->  drivers/scsi/lpfc/lpfc_nvme.c      | 2249 ++++++++++++++++++++++++++++++++++++
->  drivers/scsi/lpfc/lpfc_nvme.h      |    6 +
->  drivers/scsi/lpfc/lpfc_sli.c       |   21 +-
->  drivers/scsi/lpfc/lpfc_sli4.h      |    1 +
->  drivers/scsi/lpfc/lpfc_vport.c     |   16 +-
->  13 files changed, 2339 insertions(+), 20 deletions(-)
->  create mode 100644 drivers/scsi/lpfc/lpfc_nvme.c
+>  drivers/scsi/lpfc/lpfc.h         |  48 +++
+>  drivers/scsi/lpfc/lpfc_ct.c      |  27 +-
+>  drivers/scsi/lpfc/lpfc_debugfs.c | 775 ++++++++++++++++++++++++++++++++++++++-
+>  drivers/scsi/lpfc/lpfc_debugfs.h | 150 +++++++-
+>  drivers/scsi/lpfc/lpfc_nvme.c    | 125 +++++++
+>  drivers/scsi/lpfc/lpfc_nvme.h    |   7 +
+>  drivers/scsi/lpfc/lpfc_sli.c     |   5 +
+>  7 files changed, 1128 insertions(+), 9 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
