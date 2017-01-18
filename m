@@ -1,24 +1,41 @@
-From: "Ashish Sood" <sood_303@rhemacao.com.br>
-Subject: Hello linux
-Date: Wed, 18 Jan 2017 05:14:51 +0000
-Message-ID: <F46E0C4A-EA0C-41A8-E5AA-183CA610B72D@sood_303>
-Mime-Version: 1.0 (1.0)
-Content-Type: text/plain;
-        charset=us-ascii
-Content-Transfer-Encoding: 8BIT
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 01/17] lpfc: Use new pci_alloc_irq_vectors() interface
+Date: Wed, 18 Jan 2017 07:57:10 +0100
+Message-ID: <9773daca-af73-0575-c2b8-a5e44777e1b5@suse.de>
+References: <587ec2ec.lHOM16QZ9nmppg4/%jsmart2021@gmail.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from plesksa03.admincontrolpanel.com ([187.45.216.246]:41864 "EHLO
-        admincontrolpanel.com" rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org
-        with ESMTP id S1750712AbdARFjy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2017 00:39:54 -0500
-Received: from plesk67.hospedagemdesites.ws (plesk67.hospedagemdesites.ws [187.45.210.99])
-        by admincontrolpanel.com (Postfix) with ESMTP id CAFF43402D7
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2017 03:16:23 -0200 (BRST)
+Received: from mx2.suse.de ([195.135.220.15]:46102 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751553AbdARG5W (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 18 Jan 2017 01:57:22 -0500
+In-Reply-To: <587ec2ec.lHOM16QZ9nmppg4/%jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux scsi <linux-scsi@vger.kernel.org>
+To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-Hello linux  http://eurofiduciaire.fr/checkcookie.php?doesnt=2s2d4h2ww4vyfwe
+On 01/18/2017 02:20 AM, James Smart wrote:
+> 
+> Move to new pci_alloc_irq_vectors() interface for intx/msi/msix
+> 
+> Note: io channel paradigm remains, for now.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 227 ++++++++++++++++++++++++++++--------------
+>  1 file changed, 154 insertions(+), 73 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
+Cheers,
 
-Ashish Sood
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
