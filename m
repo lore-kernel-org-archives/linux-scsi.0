@@ -1,12 +1,13 @@
 From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH 0/2] scsi: Create a lightweight FC Transport option for
- Virtual FC Hosts.
-Date: Wed, 18 Jan 2017 15:28:56 -0500
-Message-ID: <1484771338-8903-1-git-send-email-cavery@redhat.com>
+Subject: [PATCH 2/2] scsi: storvsc: Add support for FC lightweight host.
+Date: Wed, 18 Jan 2017 15:28:58 -0500
+Message-ID: <1484771338-8903-3-git-send-email-cavery@redhat.com>
+References: <1484771338-8903-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+In-Reply-To: <1484771338-8903-1-git-send-email-cavery@redhat.com>
 List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
  <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
 List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
@@ -20,27 +21,37 @@ To: kys@microsoft.com, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.p
 Cc: devel@linuxdriverproject.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Currently virtual FC hosts or lightweight hosts are not able to be
-manually scanned  via sysfs due to the fact that they do not
-contain the complete characteristic set associated with a normal FC host
-( missing rports, vports, etc ) and are not consistent with the current FC
-transport model.
+Enable FC lightweight host option so that the luns exposed by
+the driver may be manually scanned.
 
-Patch 1: The patch provides a lightweight option to the current FC 
-transport class. The new option is selected by a driver when it 
-indicates it wants the lightweight transport in fc_function_template.
+Signed-off-by: Cathy Avery <cavery@redhat.com>
+---
+ drivers/scsi/storvsc_drv.c | 6 +-----
+ 1 file changed, 1 insertion(+), 5 deletions(-)
 
-Patch 2: storvsc elects using the new lightweight FC host option.
-
-Cathy Avery (2):
-  scsi: scsi_transport_fc: Provide a lightweight option for Virtual FC
-    Hosts.
-  scsi: storvsc: Add support for FC lightweight host.
-
- drivers/scsi/scsi_transport_fc.c | 125 +++++++++++++++++++++++++++++++++++++--
- drivers/scsi/storvsc_drv.c       |   6 +-
- include/scsi/scsi_transport_fc.h |   1 +
- 3 files changed, 123 insertions(+), 9 deletions(-)
-
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 888e16e..fc1d6ba 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1882,6 +1882,7 @@ static struct hv_driver storvsc_drv = {
+ static struct fc_function_template fc_transport_functions = {
+ 	.show_host_node_name = 1,
+ 	.show_host_port_name = 1,
++	.lightweight_transport = 1,
+ };
+ #endif
+ 
+@@ -1906,11 +1907,6 @@ static int __init storvsc_drv_init(void)
+ 	fc_transport_template = fc_attach_transport(&fc_transport_functions);
+ 	if (!fc_transport_template)
+ 		return -ENODEV;
+-
+-	/*
+-	 * Install Hyper-V specific timeout handler.
+-	 */
+-	fc_transport_template->eh_timed_out = storvsc_eh_timed_out;
+ #endif
+ 
+ 	ret = vmbus_driver_register(&storvsc_drv);
 -- 
 2.5.0
