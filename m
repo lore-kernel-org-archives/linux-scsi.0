@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 02/12] qla2xxx: Cleanup TMF code translation from qla_target.
-Date: Wed, 18 Jan 2017 15:19:35 -0800
-Message-ID: <1484781585-27252-3-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 01/12] qla2xxx: Remove direct access of scsi_status field in se_cmd
+Date: Wed, 18 Jan 2017 15:19:34 -0800
+Message-ID: <1484781585-27252-2-git-send-email-himanshu.madhani@cavium.com>
 References: <1484781585-27252-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,217 +14,38 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Move code code which converts Task Mgmt Command flags for
-ATIO to TCM #defines, from qla2xxx driver to tcm_qla2xxx
-driver.
-
 Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c  | 75 ++++----------------------------------
- drivers/scsi/qla2xxx/qla_target.h  |  6 ++-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 40 +++++++++++++++++++-
- 3 files changed, 49 insertions(+), 72 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1f7c6d2..1196150 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1794,6 +1794,7 @@ struct crc_context {
+ #define SS_RESIDUAL_OVER		BIT_10
+ #define SS_SENSE_LEN_VALID		BIT_9
+ #define SS_RESPONSE_INFO_LEN_VALID	BIT_8
++#define SS_SCSI_STATUS_BYTE	0xff
+ 
+ #define SS_RESERVE_CONFLICT		(BIT_4 | BIT_3)
+ #define SS_BUSY_CONDITION		BIT_3
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 47acc26..39e6a02 100644
+index 9c6cb75..47acc26 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -1592,8 +1592,9 @@ static int __qlt_24xx_handle_abts(struct scsi_qla_host *vha,
- 	mcmd->sess = sess;
- 	memcpy(&mcmd->orig_iocb.abts, abts, sizeof(mcmd->orig_iocb.abts));
- 	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->tmr_func = QLA_TGT_ABTS;
+@@ -2288,7 +2288,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
+ 		int i;
  
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, TMR_ABORT_TASK,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func,
- 	    abts->exchange_addr_to_abort);
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf052,
-@@ -4048,7 +4049,6 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
- 	struct qla_tgt_mgmt_cmd *mcmd;
- 	struct atio_from_isp *a = (struct atio_from_isp *)iocb;
- 	int res;
--	uint8_t tmr_func;
- 
- 	mcmd = mempool_alloc(qla_tgt_mgmt_cmd_mempool, GFP_ATOMIC);
- 	if (!mcmd) {
-@@ -4070,74 +4070,12 @@ static int qlt_issue_task_mgmt(struct qla_tgt_sess *sess, uint32_t lun,
- 	mcmd->reset_count = vha->hw->chip_reset;
- 
- 	switch (fn) {
--	case QLA_TGT_CLEAR_ACA:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10000,
--		    "qla_target(%d): CLEAR_ACA received\n", sess->vha->vp_idx);
--		tmr_func = TMR_CLEAR_ACA;
--		break;
--
--	case QLA_TGT_TARGET_RESET:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10001,
--		    "qla_target(%d): TARGET_RESET received\n",
--		    sess->vha->vp_idx);
--		tmr_func = TMR_TARGET_WARM_RESET;
--		break;
--
- 	case QLA_TGT_LUN_RESET:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10002,
--		    "qla_target(%d): LUN_RESET received\n", sess->vha->vp_idx);
--		tmr_func = TMR_LUN_RESET;
--		abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
--		break;
--
--	case QLA_TGT_CLEAR_TS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10003,
--		    "qla_target(%d): CLEAR_TS received\n", sess->vha->vp_idx);
--		tmr_func = TMR_CLEAR_TASK_SET;
--		break;
--
--	case QLA_TGT_ABORT_TS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10004,
--		    "qla_target(%d): ABORT_TS received\n", sess->vha->vp_idx);
--		tmr_func = TMR_ABORT_TASK_SET;
--		break;
--#if 0
--	case QLA_TGT_ABORT_ALL:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10005,
--		    "qla_target(%d): Doing ABORT_ALL_TASKS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_ABORT_ALL_SESS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10006,
--		    "qla_target(%d): Doing ABORT_ALL_TASKS_SESS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_NEXUS_LOSS_SESS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10007,
--		    "qla_target(%d): Doing NEXUS_LOSS_SESS\n",
--		    sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--
--	case QLA_TGT_NEXUS_LOSS:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x10008,
--		    "qla_target(%d): Doing NEXUS_LOSS\n", sess->vha->vp_idx);
--		tmr_func = 0;
--		break;
--#endif
--	default:
--		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000a,
--		    "qla_target(%d): Unknown task mgmt fn 0x%x\n",
--		    sess->vha->vp_idx, fn);
--		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
--		return -ENOSYS;
-+	    abort_cmds_for_lun(vha, lun, a->u.isp24.fcp_hdr.s_id);
-+	    break;
- 	}
- 
--	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, tmr_func, 0);
-+	res = ha->tgt.tgt_ops->handle_tmr(mcmd, lun, mcmd->tmr_func, 0);
- 	if (res != 0) {
- 		ql_dbg(ql_dbg_tgt_tmr, vha, 0x1000b,
- 		    "qla_target(%d): tgt.tgt_ops->handle_tmr() failed: %d\n",
-@@ -4212,8 +4150,9 @@ static int __qlt_abort_task(struct scsi_qla_host *vha,
- 	lun = a->u.isp24.fcp_cmnd.lun;
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
- 	mcmd->reset_count = vha->hw->chip_reset;
-+	mcmd->tmr_func = QLA_TGT_2G_ABORT_TASK;
- 
--	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, TMR_ABORT_TASK,
-+	rc = ha->tgt.tgt_ops->handle_tmr(mcmd, unpacked_lun, mcmd->tmr_func,
- 	    le16_to_cpu(iocb->u.isp2x.seq_id));
- 	if (rc != 0) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf060,
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 0824a81..14f2e24 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -744,7 +744,7 @@ struct qla_tgt_func_tmpl {
- 			unsigned char *, uint32_t, int, int, int);
- 	void (*handle_data)(struct qla_tgt_cmd *);
- 	void (*handle_dif_err)(struct qla_tgt_cmd *);
--	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint8_t,
-+	int (*handle_tmr)(struct qla_tgt_mgmt_cmd *, uint32_t, uint16_t,
- 			uint32_t);
- 	void (*free_cmd)(struct qla_tgt_cmd *);
- 	void (*free_mcmd)(struct qla_tgt_mgmt_cmd *);
-@@ -795,6 +795,8 @@ struct qla_tgt_func_tmpl {
- #define QLA_TGT_ABORT_ALL               0xFFFE
- #define QLA_TGT_NEXUS_LOSS_SESS         0xFFFD
- #define QLA_TGT_NEXUS_LOSS              0xFFFC
-+#define QLA_TGT_ABTS					0xFFFB
-+#define QLA_TGT_2G_ABORT_TASK			0xFFFA
- 
- /* Notify Acknowledge flags */
- #define NOTIFY_ACK_RES_COUNT        BIT_8
-@@ -1056,7 +1058,7 @@ struct qla_tgt_sess_work_param {
- };
- 
- struct qla_tgt_mgmt_cmd {
--	uint8_t tmr_func;
-+	uint16_t tmr_func;
- 	uint8_t fc_tm_rsp;
- 	struct qla_tgt_sess *sess;
- 	struct se_cmd se_cmd;
-diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index d925910..1bec6ab 100644
---- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-+++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -563,13 +563,49 @@ static void tcm_qla2xxx_handle_dif_err(struct qla_tgt_cmd *cmd)
-  * Called from qla_target.c:qlt_issue_task_mgmt()
-  */
- static int tcm_qla2xxx_handle_tmr(struct qla_tgt_mgmt_cmd *mcmd, uint32_t lun,
--	uint8_t tmr_func, uint32_t tag)
-+	uint16_t tmr_func, uint32_t tag)
- {
- 	struct qla_tgt_sess *sess = mcmd->sess;
- 	struct se_cmd *se_cmd = &mcmd->se_cmd;
-+	int transl_tmr_func = 0;
-+
-+	switch (tmr_func) {
-+	case QLA_TGT_ABTS:
-+		pr_debug("%ld: ABTS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK;
-+		break;
-+	case QLA_TGT_2G_ABORT_TASK:
-+		pr_debug("%ld: 2G Abort Task received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK;
-+		break;
-+	case QLA_TGT_CLEAR_ACA:
-+		pr_debug("%ld: CLEAR_ACA received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_CLEAR_ACA;
-+		break;
-+	case QLA_TGT_TARGET_RESET:
-+		pr_debug("%ld: TARGET_RESET received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_TARGET_WARM_RESET;
-+		break;
-+	case QLA_TGT_LUN_RESET:
-+		pr_debug("%ld: LUN_RESET received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_LUN_RESET;
-+		break;
-+	case QLA_TGT_CLEAR_TS:
-+		pr_debug("%ld: CLEAR_TS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_CLEAR_TASK_SET;
-+		break;
-+	case QLA_TGT_ABORT_TS:
-+		pr_debug("%ld: ABORT_TS received\n", sess->vha->host_no);
-+		transl_tmr_func = TMR_ABORT_TASK_SET;
-+		break;
-+	default:
-+		pr_debug("%ld: Unknown task mgmt fn 0x%x\n",
-+		    sess->vha->host_no, tmr_func);
-+		return -ENOSYS;
-+	}
- 
- 	return target_submit_tmr(se_cmd, sess->se_sess, NULL, lun, mcmd,
--			tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
-+	    transl_tmr_func, GFP_ATOMIC, tag, TARGET_SCF_ACK_KREF);
- }
- 
- static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
+ 		if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 1)) {
+-			if (prm->cmd->se_cmd.scsi_status != 0) {
++			if ((prm->rq_result & SS_SCSI_STATUS_BYTE) != 0) {
+ 				ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe017,
+ 				    "Skipping EXPLICIT_CONFORM and "
+ 				    "CTIO7_FLAGS_CONFORM_REQ for FCP READ w/ "
 -- 
 1.8.3.1
