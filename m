@@ -1,7 +1,7 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v3 03/12] qla2xxx: Make trace flags more readable.
-Date: Wed, 18 Jan 2017 15:19:36 -0800
-Message-ID: <1484781585-27252-4-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v3 09/12] qla2xxx: Add Dual mode support in the driver
+Date: Wed, 18 Jan 2017 15:19:42 -0800
+Message-ID: <1484781585-27252-10-git-send-email-himanshu.madhani@cavium.com>
 References: <1484781585-27252-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -14,347 +14,367 @@ List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Trace flags are useful during debugging crash dumps
-using crash utility. These trace flags makes it easier
-to understand various states a command has successfully
-completed.
+Add switch to allow both Initiator Mode & Target
+mode to operate at the same time.
 
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c  | 28 +++++++++----------
- drivers/scsi/qla2xxx/qla_target.h  | 55 +++++++++++++++++---------------------
- drivers/scsi/qla2xxx/tcm_qla2xxx.c | 43 ++++++++++++++---------------
- 3 files changed, 59 insertions(+), 67 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h     |   1 +
+ drivers/scsi/qla2xxx/qla_init.c    |   6 +-
+ drivers/scsi/qla2xxx/qla_isr.c     |  19 ++++++-
+ drivers/scsi/qla2xxx/qla_target.c  | 110 +++++++++++++++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.h  |   3 +
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   2 +-
+ 6 files changed, 119 insertions(+), 22 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 253f991..fd179df 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3390,6 +3390,7 @@ struct qla_hw_data {
+ #define FLOGI_SP_SUPPORT        BIT_13
+ 
+ 	uint8_t		port_no;		/* Physical port of adapter */
++	uint8_t		exch_starvation;
+ 
+ 	/* Timeout timers. */
+ 	uint8_t 	loop_down_abort_time;    /* port down timer */
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index e628107..2e9142d 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -1568,8 +1568,7 @@ void qla2x00_fcport_event_handler(scsi_qla_host_t *vha,
+ 		}
+ 	}
+ 
+-	if (qla_ini_mode_enabled(vha) ||
+-		qla_dual_mode_enabled(vha))
++	if (qla_ini_mode_enabled(vha) || qla_dual_mode_enabled(vha))
+ 		rval = qla2x00_init_rings(vha);
+ 
+ 	ha->flags.chip_reset_done = 1;
+@@ -3994,7 +3993,8 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 			 * Process any ATIO queue entries that came in
+ 			 * while we weren't online.
+ 			 */
+-			if (qla_tgt_mode_enabled(vha)) {
++			if (qla_tgt_mode_enabled(vha) ||
++			    qla_dual_mode_enabled(vha)) {
+ 				if (IS_QLA27XX(ha) || IS_QLA83XX(ha)) {
+ 					spin_lock_irqsave(&ha->tgt.atio_lock,
+ 					    flags);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 99088ff..62066af 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1029,7 +1029,8 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+ 
+ 		qla2x00_mark_all_devices_lost(vha, 1);
+ 
+-		if (vha->vp_idx == 0 && !qla_ini_mode_enabled(vha))
++		if (vha->vp_idx == 0 &&
++		    (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)))
+ 			set_bit(SCR_PENDING, &vha->dpc_flags);
+ 
+ 		set_bit(LOOP_RESYNC_NEEDED, &vha->dpc_flags);
+@@ -1642,6 +1643,7 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+ 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+ 		    le32_to_cpu(logio->io_parameter[0]));
+ 
++		vha->hw->exch_starvation = 0;
+ 		data[0] = MBS_COMMAND_COMPLETE;
+ 		if (sp->type != SRB_LOGIN_CMD)
+ 			goto logio_done;
+@@ -1677,6 +1679,21 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+ 	case LSC_SCODE_NPORT_USED:
+ 		data[0] = MBS_LOOP_ID_USED;
+ 		break;
++	case LSC_SCODE_NOXCB:
++		vha->hw->exch_starvation++;
++		if (vha->hw->exch_starvation > 5) {
++			ql_log(ql_log_warn, vha, 0xffff,
++			    "Exchange starvation. Resetting RISC\n");
++
++			vha->hw->exch_starvation = 0;
++
++			if (IS_P3P_TYPE(vha->hw))
++				set_bit(FCOE_CTX_RESET_NEEDED, &vha->dpc_flags);
++			else
++				set_bit(ISP_ABORT_NEEDED, &vha->dpc_flags);
++			qla2xxx_wake_dpc(vha);
++		}
++		/* drop through */
+ 	default:
+ 		data[0] = MBS_COMMAND_ERROR;
+ 		break;
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 39e6a02..1bd9cac 100644
+index b5cfab0..225d2bf 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3294,7 +3294,7 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
- 		return EIO;
- 	}
- 	cmd->aborted = 1;
--	cmd->cmd_flags |= BIT_6;
-+	cmd->trc_flags |= TRC_ABORT;
- 	spin_unlock_irqrestore(&cmd->cmd_lock, flags);
+@@ -55,8 +55,17 @@
+ 	"disabled on enabling target mode and then on disabling target mode "
+ 	"enabled back; "
+ 	"\"disabled\" - initiator mode will never be enabled; "
++	"\"dual\" - Initiator Modes will be enabled. Target Mode can be activated "
++	"when ready "
+ 	"\"enabled\" (default) - initiator mode will always stay enabled.");
  
- 	qlt_send_term_exchange(vha, cmd, &cmd->atio, 0, 1);
-@@ -3342,7 +3342,7 @@ static int qlt_prepare_srr_ctio(struct scsi_qla_host *vha,
- 	struct qla_tgt_srr_imm *imm;
++static int ql_dm_tgt_ex_pct = 50;
++module_param(ql_dm_tgt_ex_pct, int, S_IRUGO|S_IWUSR);
++MODULE_PARM_DESC(ql_dm_tgt_ex_pct,
++	"For Dual Mode (qlini_mode=dual), this parameter determines "
++	"the percentage of exchanges/cmds FW will allocate resources "
++	"for Target mode.");
++
+ int ql2x_ini_mode = QLA2XXX_INI_MODE_EXCLUSIVE;
  
- 	tgt->ctio_srr_id++;
--	cmd->cmd_flags |= BIT_15;
-+	cmd->trc_flags |= TRC_SRR_CTIO;
+ static int temp_sam_status = SAM_STAT_BUSY;
+@@ -1295,7 +1304,8 @@ int qlt_stop_phase1(struct qla_tgt *tgt)
+ 	wait_event(tgt->waitQ, test_tgt_sess_count(tgt));
  
- 	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf019,
- 	    "qla_target(%d): CTIO with SRR status received\n", vha->vp_idx);
-@@ -3525,7 +3525,7 @@ static struct qla_tgt_cmd *qlt_ctio_to_cmd(struct scsi_qla_host *vha,
- 		dump_stack();
- 	}
+ 	/* Big hammer */
+-	if (!ha->flags.host_shutting_down && qla_tgt_mode_enabled(vha))
++	if (!ha->flags.host_shutting_down &&
++	    (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)))
+ 		qlt_disable_vha(vha);
  
--	cmd->cmd_flags |= BIT_17;
-+	cmd->trc_flags |= TRC_FLUSH;
- 	ha->tgt.tgt_ops->free_cmd(cmd);
+ 	/* Wait for sessions to clear out (just in case) */
+@@ -5263,6 +5273,32 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+ 		break;
+ 
++	case MBA_REJECTED_FCP_CMD:
++		ql_dbg(ql_dbg_tgt_mgt, vha, 0xffff,
++			"qla_target(%d): Async event LS_REJECT occurred "
++			"(m[0]=%x, m[1]=%x, m[2]=%x, m[3]=%x)", vha->vp_idx,
++			le16_to_cpu(mailbox[0]), le16_to_cpu(mailbox[1]),
++			le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
++
++		if (le16_to_cpu(mailbox[3]) == 1) {
++			/* exchange starvation. */
++			vha->hw->exch_starvation++;
++			if (vha->hw->exch_starvation > 5) {
++				ql_log(ql_log_warn, vha, 0xffff,
++				    "Exchange starvation-. Resetting RISC\n");
++
++				vha->hw->exch_starvation = 0;
++				if (IS_P3P_TYPE(vha->hw))
++					set_bit(FCOE_CTX_RESET_NEEDED,
++					    &vha->dpc_flags);
++				else
++					set_bit(ISP_ABORT_NEEDED,
++					    &vha->dpc_flags);
++				qla2xxx_wake_dpc(vha);
++			}
++		}
++		break;
++
+ 	case MBA_PORT_UPDATE:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03d,
+ 		    "qla_target(%d): Port update async event %#x "
+@@ -5272,10 +5308,11 @@ void qlt_async_event(uint16_t code, struct scsi_qla_host *vha,
+ 		    le16_to_cpu(mailbox[2]), le16_to_cpu(mailbox[3]));
+ 
+ 		login_code = le16_to_cpu(mailbox[2]);
+-		if (login_code == 0x4)
++		if (login_code == 0x4) {
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03e,
+ 			    "Async MB 2: Got PLOGI Complete\n");
+-		else if (login_code == 0x7)
++			vha->hw->exch_starvation = 0;
++		} else if (login_code == 0x7)
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf03f,
+ 			    "Async MB 2: Port Logged Out\n");
+ 		break;
+@@ -5826,7 +5863,10 @@ static void qlt_set_mode(struct scsi_qla_host *vha)
+ 		vha->host->active_mode = MODE_TARGET;
+ 		break;
+ 	case QLA2XXX_INI_MODE_ENABLED:
+-		vha->host->active_mode |= MODE_TARGET;
++		vha->host->active_mode = MODE_UNKNOWN;
++		break;
++	case QLA2XXX_INI_MODE_DUAL:
++		vha->host->active_mode = MODE_DUAL;
+ 		break;
+ 	default:
+ 		break;
+@@ -5849,8 +5889,8 @@ static void qlt_clear_mode(struct scsi_qla_host *vha)
+ 		vha->host->active_mode = MODE_INITIATOR;
+ 		break;
+ 	case QLA2XXX_INI_MODE_ENABLED:
+-		vha->host->active_mode &= ~MODE_TARGET;
+-		vha->host->active_mode |= MODE_INITIATOR;
++	case QLA2XXX_INI_MODE_DUAL:
++		vha->host->active_mode = MODE_INITIATOR;
+ 		break;
+ 	default:
+ 		break;
+@@ -5945,9 +5985,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ void
+ qlt_vport_create(struct scsi_qla_host *vha, struct qla_hw_data *ha)
+ {
+-	if (!qla_tgt_mode_enabled(vha))
+-		return;
+-
+ 	vha->vha_tgt.qla_tgt = NULL;
+ 
+ 	mutex_init(&vha->vha_tgt.tgt_mutex);
+@@ -5978,7 +6015,6 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 		ct_req->req.rff_id.fc4_feature = BIT_1;
+ 	} else if (qla_dual_mode_enabled(vha))
+ 		ct_req->req.rff_id.fc4_feature = BIT_0 | BIT_1;
+-
  }
  
-@@ -3691,7 +3691,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
- 		 */
- 		if ((cmd->state != QLA_TGT_STATE_NEED_DATA) &&
- 		    (!cmd->aborted)) {
--			cmd->cmd_flags |= BIT_13;
-+			cmd->trc_flags |= TRC_CTIO_ERR;
- 			if (qlt_term_ctio_exchange(vha, ctio, cmd, status))
- 				return;
- 		}
-@@ -3699,7 +3699,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
- skip_term:
+ /*
+@@ -5997,7 +6033,7 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 	uint16_t cnt;
+ 	struct atio_from_isp *pkt = (struct atio_from_isp *)ha->tgt.atio_ring;
  
- 	if (cmd->state == QLA_TGT_STATE_PROCESSED) {
--		cmd->cmd_flags |= BIT_12;
-+		cmd->trc_flags |= TRC_CTIO_DONE;
- 	} else if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
- 		cmd->state = QLA_TGT_STATE_DATA_IN;
- 
-@@ -3709,11 +3709,11 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha, uint32_t handle,
- 		ha->tgt.tgt_ops->handle_data(cmd);
+-	if (!qla_tgt_mode_enabled(vha))
++	if (qla_ini_mode_enabled(vha))
  		return;
- 	} else if (cmd->aborted) {
--		cmd->cmd_flags |= BIT_18;
-+		cmd->trc_flags |= TRC_CTIO_ABORTED;
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf01e,
- 		  "Aborted command %p (tag %lld) finished\n", cmd, se_cmd->tag);
- 	} else {
--		cmd->cmd_flags |= BIT_19;
-+		cmd->trc_flags |= TRC_CTIO_STRANGE;
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf05c,
- 		    "qla_target(%d): A command in state (%d) should "
- 		    "not return a CTIO complete\n", vha->vp_idx, cmd->state);
-@@ -3778,7 +3778,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	int ret, fcp_task_attr, data_dir, bidi = 0;
  
- 	cmd->cmd_in_wq = 0;
--	cmd->cmd_flags |= BIT_1;
-+	cmd->trc_flags |= TRC_DO_WORK;
- 	if (tgt->tgt_stop)
- 		goto out_term;
+ 	for (cnt = 0; cnt < ha->tgt.atio_q_length; cnt++) {
+@@ -6090,8 +6126,10 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ qlt_24xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_24xx *nv)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++	u32 tmp;
++	u16 t;
  
-@@ -3830,7 +3830,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
- 	 * cmd has not sent to target yet, so pass NULL as the second
- 	 * argument to qlt_send_term_exchange() and free the memory here.
- 	 */
--	cmd->cmd_flags |= BIT_2;
-+	cmd->trc_flags |= TRC_DO_WORK_ERR;
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qlt_send_term_exchange(vha, NULL, &cmd->atio, 1, 0);
+-	if (qla_tgt_mode_enabled(vha)) {
++	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)) {
+ 		if (!ha->tgt.saved_set) {
+ 			/* We save only once */
+ 			ha->tgt.saved_exchange_count = nv->exchange_count;
+@@ -6104,7 +6142,24 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 			ha->tgt.saved_set = 1;
+ 		}
  
-@@ -3881,7 +3881,7 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
- 	cmd->loop_id = sess->loop_id;
- 	cmd->conf_compl_supported = sess->conf_compl_supported;
+-		nv->exchange_count = cpu_to_le16(0xFFFF);
++		if (qla_tgt_mode_enabled(vha)) {
++			nv->exchange_count = cpu_to_le16(0xFFFF);
++		} else {			/* dual */
++			if (ql_dm_tgt_ex_pct > 100) {
++				ql_dm_tgt_ex_pct = 50;
++			} else if (ql_dm_tgt_ex_pct == 100) {
++				/* leave some for FW */
++				ql_dm_tgt_ex_pct = 95;
++			}
++
++			tmp = ha->orig_fw_xcb_count * ql_dm_tgt_ex_pct;
++			tmp = tmp/100;
++			if (tmp > 0xffff)
++				tmp = 0xffff;
++
++			t = tmp & 0xffff;
++			nv->exchange_count = cpu_to_le16(t);
++		}
  
--	cmd->cmd_flags = 0;
-+	cmd->trc_flags = 0;
- 	cmd->jiffies_at_alloc = get_jiffies_64();
+ 		/* Enable target mode */
+ 		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
+@@ -6189,11 +6244,13 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ qlt_81xx_config_nvram_stage1(struct scsi_qla_host *vha, struct nvram_81xx *nv)
+ {
+ 	struct qla_hw_data *ha = vha->hw;
++	u32 tmp;
++	u16 t;
  
- 	cmd->reset_count = vha->hw->chip_reset;
-@@ -4017,7 +4017,7 @@ static int qlt_handle_cmd_for_atio(struct scsi_qla_host *vha,
- 	}
+ 	if (!QLA_TGT_MODE_ENABLED())
+ 		return;
  
- 	cmd->cmd_in_wq = 1;
--	cmd->cmd_flags |= BIT_0;
-+	cmd->trc_flags |= TRC_NEW_CMD;
- 	cmd->se_cmd.cpuid = ha->msix_count ?
- 		ha->tgt.rspq_vector_cpuid : WORK_CPU_UNBOUND;
+-	if (qla_tgt_mode_enabled(vha)) {
++	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha)) {
+ 		if (!ha->tgt.saved_set) {
+ 			/* We save only once */
+ 			ha->tgt.saved_exchange_count = nv->exchange_count;
+@@ -6206,7 +6263,23 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ 			ha->tgt.saved_set = 1;
+ 		}
  
-@@ -4709,7 +4709,7 @@ static void qlt_handle_srr(struct scsi_qla_host *vha,
- 			    0, 0, 0, NOTIFY_ACK_SRR_FLAGS_ACCEPT, 0, 0);
- 			spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 			if (xmit_type & QLA_TGT_XMIT_DATA) {
--				cmd->cmd_flags |= BIT_8;
-+				cmd->trc_flags |= TRC_SRR_XRDY;
- 				qlt_rdy_to_xfer(cmd);
- 			}
- 		} else {
-@@ -4728,7 +4728,7 @@ static void qlt_handle_srr(struct scsi_qla_host *vha,
+-		nv->exchange_count = cpu_to_le16(0xFFFF);
++		if (qla_tgt_mode_enabled(vha)) {
++			nv->exchange_count = cpu_to_le16(0xFFFF);
++		} else {			/* dual */
++			if (ql_dm_tgt_ex_pct > 100) {
++				ql_dm_tgt_ex_pct = 50;
++			} else if (ql_dm_tgt_ex_pct == 100) {
++				/* leave some for FW */
++				ql_dm_tgt_ex_pct = 95;
++			}
++
++			tmp = ha->orig_fw_xcb_count * ql_dm_tgt_ex_pct;
++			tmp = tmp/100;
++			if (tmp > 0xffff)
++				tmp = 0xffff;
++			t = tmp & 0xffff;
++			nv->exchange_count = cpu_to_le16(t);
++		}
  
- 	/* Transmit response in case of status and data-in cases */
- 	if (resp) {
--		cmd->cmd_flags |= BIT_7;
-+		cmd->trc_flags |= TRC_SRR_RSP;
- 		qlt_xmit_response(cmd, xmit_type, se_cmd->scsi_status);
- 	}
+ 		/* Enable target mode */
+ 		nv->firmware_options_1 |= cpu_to_le32(BIT_4);
+@@ -6316,10 +6389,11 @@ static void qlt_disable_vha(struct scsi_qla_host *vha)
+ qlt_modify_vp_config(struct scsi_qla_host *vha,
+ 	struct vp_config_entry_24xx *vpmod)
+ {
+-	if (qla_tgt_mode_enabled(vha))
++	/* enable target mode.  Bit5 = 1 => disable */
++	if (qla_tgt_mode_enabled(vha) || qla_dual_mode_enabled(vha))
+ 		vpmod->options_idx1 &= ~BIT_5;
  
-@@ -4744,7 +4744,7 @@ static void qlt_handle_srr(struct scsi_qla_host *vha,
- 		cmd->state = QLA_TGT_STATE_DATA_IN;
- 		dump_stack();
- 	} else {
--		cmd->cmd_flags |= BIT_9;
-+		cmd->trc_flags |= TRC_SRR_TERM;
- 		qlt_send_term_exchange(vha, cmd, &cmd->atio, 1, 0);
- 	}
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-	/* Disable ini mode, if requested. */
++	/* Disable ini mode, if requested.  bit4 = 1 => disable */
+ 	if (qla_tgt_mode_enabled(vha))
+ 		vpmod->options_idx1 &= ~BIT_4;
+ }
+@@ -6474,6 +6548,8 @@ static int __init qlt_parse_ini_mode(void)
+ 		ql2x_ini_mode = QLA2XXX_INI_MODE_DISABLED;
+ 	else if (strcasecmp(qlini_mode, QLA2XXX_INI_MODE_STR_ENABLED) == 0)
+ 		ql2x_ini_mode = QLA2XXX_INI_MODE_ENABLED;
++	else if (strcasecmp(qlini_mode, QLA2XXX_INI_MODE_STR_DUAL) == 0)
++		ql2x_ini_mode = QLA2XXX_INI_MODE_DUAL;
+ 	else
+ 		return false;
+ 
 diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 14f2e24..5d00529 100644
+index 5e56192..ac86b37 100644
 --- a/drivers/scsi/qla2xxx/qla_target.h
 +++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -965,35 +965,28 @@ struct qla_tgt_sess {
- 	qlt_plogi_ack_t *plogi_link[QLT_PLOGI_LINK_MAX];
- };
+@@ -45,10 +45,12 @@
+ #define QLA2XXX_INI_MODE_STR_EXCLUSIVE	"exclusive"
+ #define QLA2XXX_INI_MODE_STR_DISABLED	"disabled"
+ #define QLA2XXX_INI_MODE_STR_ENABLED	"enabled"
++#define QLA2XXX_INI_MODE_STR_DUAL		"dual"
  
--typedef enum {
--	/*
--	 * BIT_0 - Atio Arrival / schedule to work
--	 * BIT_1 - qlt_do_work
--	 * BIT_2 - qlt_do work failed
--	 * BIT_3 - xfer rdy/tcm_qla2xxx_write_pending
--	 * BIT_4 - read respond/tcm_qla2xx_queue_data_in
--	 * BIT_5 - status respond / tcm_qla2xx_queue_status
--	 * BIT_6 - tcm request to abort/Term exchange.
--	 *	pre_xmit_response->qlt_send_term_exchange
--	 * BIT_7 - SRR received (qlt_handle_srr->qlt_xmit_response)
--	 * BIT_8 - SRR received (qlt_handle_srr->qlt_rdy_to_xfer)
--	 * BIT_9 - SRR received (qla_handle_srr->qlt_send_term_exchange)
--	 * BIT_10 - Data in - hanlde_data->tcm_qla2xxx_handle_data
--
--	 * BIT_12 - good completion - qlt_ctio_do_completion -->free_cmd
--	 * BIT_13 - Bad completion -
--	 *	qlt_ctio_do_completion --> qlt_term_ctio_exchange
--	 * BIT_14 - Back end data received/sent.
--	 * BIT_15 - SRR prepare ctio
--	 * BIT_16 - complete free
--	 * BIT_17 - flush - qlt_abort_cmd_on_host_reset
--	 * BIT_18 - completion w/abort status
--	 * BIT_19 - completion w/unknown status
--	 * BIT_20 - tcm_qla2xxx_free_cmd
--	 */
--	CMD_FLAG_DATA_WORK = BIT_11,
--	CMD_FLAG_DATA_WORK_FREE = BIT_21,
--} cmd_flags_t;
-+enum trace_flags {
-+	TRC_NEW_CMD = BIT_0,
-+	TRC_DO_WORK = BIT_1,
-+	TRC_DO_WORK_ERR = BIT_2,
-+	TRC_XFR_RDY = BIT_3,
-+	TRC_XMIT_DATA = BIT_4,
-+	TRC_XMIT_STATUS = BIT_5,
-+	TRC_SRR_RSP =  BIT_6,
-+	TRC_SRR_XRDY = BIT_7,
-+	TRC_SRR_TERM = BIT_8,
-+	TRC_SRR_CTIO = BIT_9,
-+	TRC_FLUSH = BIT_10,
-+	TRC_CTIO_ERR = BIT_11,
-+	TRC_CTIO_DONE = BIT_12,
-+	TRC_CTIO_ABORTED =  BIT_13,
-+	TRC_CTIO_STRANGE= BIT_14,
-+	TRC_CMD_DONE = BIT_15,
-+	TRC_CMD_CHK_STOP = BIT_16,
-+	TRC_CMD_FREE = BIT_17,
-+	TRC_DATA_IN = BIT_18,
-+	TRC_ABORT = BIT_19,
-+};
+ #define QLA2XXX_INI_MODE_EXCLUSIVE	0
+ #define QLA2XXX_INI_MODE_DISABLED	1
+ #define QLA2XXX_INI_MODE_ENABLED	2
++#define QLA2XXX_INI_MODE_DUAL	3
  
- struct qla_tgt_cmd {
- 	struct se_cmd se_cmd;
-@@ -1016,6 +1009,8 @@ struct qla_tgt_cmd {
- 	unsigned int cmd_sent_to_fw:1;
- 	unsigned int cmd_in_wq:1;
- 	unsigned int aborted:1;
-+	unsigned int data_work:1;
-+	unsigned int data_work_free:1;
+ #define QLA2XXX_COMMAND_COUNT_INIT	250
+ #define QLA2XXX_IMMED_NOTIFY_COUNT_INIT 250
+@@ -975,6 +977,7 @@ extern int qlt_lport_register(void *, u64, u64, u64,
+  * is not set. Right now, ha value is ignored.
+  */
+ #define QLA_TGT_MODE_ENABLED() (ql2x_ini_mode != QLA2XXX_INI_MODE_ENABLED)
++
+ extern int ql2x_ini_mode;
  
- 	struct scatterlist *sg;	/* cmd data buffer SG vector */
- 	int sg_cnt;		/* SG segments count */
-@@ -1040,7 +1035,7 @@ struct qla_tgt_cmd {
- 	uint64_t jiffies_at_alloc;
- 	uint64_t jiffies_at_free;
- 
--	cmd_flags_t cmd_flags;
-+	enum trace_flags trc_flags;
- };
- 
- struct qla_tgt_sess_work_param {
+ static inline bool qla_tgt_mode_enabled(struct scsi_qla_host *ha)
 diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-index 1bec6ab..af4a198 100644
+index e37d7ee..8b878a2 100644
 --- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
 +++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
-@@ -282,10 +282,10 @@ static void tcm_qla2xxx_complete_free(struct work_struct *work)
+@@ -1744,7 +1744,7 @@ static int tcm_qla2xxx_lport_register_npiv_cb(struct scsi_qla_host *base_vha,
+ 			(struct tcm_qla2xxx_lport *)base_vha->vha_tgt.target_lport_ptr;
+ 	struct fc_vport_identifiers vport_id;
  
- 	cmd->cmd_in_wq = 0;
- 
--	WARN_ON(cmd->cmd_flags &  BIT_16);
-+	WARN_ON(cmd->trc_flags & TRC_CMD_FREE);
- 
- 	cmd->vha->tgt_counters.qla_core_ret_sta_ctio++;
--	cmd->cmd_flags |= BIT_16;
-+	cmd->trc_flags |= TRC_CMD_FREE;
- 	transport_generic_free_cmd(&cmd->se_cmd, 0);
- }
- 
-@@ -299,8 +299,8 @@ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
- 	cmd->vha->tgt_counters.core_qla_free_cmd++;
- 	cmd->cmd_in_wq = 1;
- 
--	BUG_ON(cmd->cmd_flags & BIT_20);
--	cmd->cmd_flags |= BIT_20;
-+	WARN_ON(cmd->trc_flags & TRC_CMD_DONE);
-+	cmd->trc_flags |= TRC_CMD_DONE;
- 
- 	INIT_WORK(&cmd->work, tcm_qla2xxx_complete_free);
- 	queue_work_on(smp_processor_id(), tcm_qla2xxx_free_wq, &cmd->work);
-@@ -315,7 +315,7 @@ static int tcm_qla2xxx_check_stop_free(struct se_cmd *se_cmd)
- 
- 	if ((se_cmd->se_cmd_flags & SCF_SCSI_TMR_CDB) == 0) {
- 		cmd = container_of(se_cmd, struct qla_tgt_cmd, se_cmd);
--		cmd->cmd_flags |= BIT_14;
-+		cmd->trc_flags |= TRC_CMD_CHK_STOP;
- 	}
- 
- 	return target_put_sess_cmd(se_cmd);
-@@ -377,7 +377,7 @@ static int tcm_qla2xxx_write_pending(struct se_cmd *se_cmd)
- 			cmd->se_cmd.se_cmd_flags);
- 		return 0;
- 	}
--	cmd->cmd_flags |= BIT_3;
-+	cmd->trc_flags |= TRC_XFR_RDY;
- 	cmd->bufflen = se_cmd->data_length;
- 	cmd->dma_data_direction = target_reverse_dma_direction(se_cmd);
- 
-@@ -493,9 +493,9 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
- 	cmd->cmd_in_wq = 0;
- 
- 	spin_lock_irqsave(&cmd->cmd_lock, flags);
--	cmd->cmd_flags |= CMD_FLAG_DATA_WORK;
-+	cmd->data_work = 1;
- 	if (cmd->aborted) {
--		cmd->cmd_flags |= CMD_FLAG_DATA_WORK_FREE;
-+		cmd->data_work_free = 1;
- 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
- 
- 		tcm_qla2xxx_free_cmd(cmd);
-@@ -532,7 +532,7 @@ static void tcm_qla2xxx_handle_data_work(struct work_struct *work)
-  */
- static void tcm_qla2xxx_handle_data(struct qla_tgt_cmd *cmd)
- {
--	cmd->cmd_flags |= BIT_10;
-+	cmd->trc_flags |= TRC_DATA_IN;
- 	cmd->cmd_in_wq = 1;
- 	INIT_WORK(&cmd->work, tcm_qla2xxx_handle_data_work);
- 	queue_work_on(smp_processor_id(), tcm_qla2xxx_free_wq, &cmd->work);
-@@ -627,7 +627,7 @@ static int tcm_qla2xxx_queue_data_in(struct se_cmd *se_cmd)
- 		return 0;
- 	}
- 
--	cmd->cmd_flags |= BIT_4;
-+	cmd->trc_flags |= TRC_XMIT_DATA;
- 	cmd->bufflen = se_cmd->data_length;
- 	cmd->dma_data_direction = target_reverse_dma_direction(se_cmd);
- 
-@@ -658,11 +658,11 @@ static int tcm_qla2xxx_queue_status(struct se_cmd *se_cmd)
- 	cmd->sg_cnt = 0;
- 	cmd->offset = 0;
- 	cmd->dma_data_direction = target_reverse_dma_direction(se_cmd);
--	if (cmd->cmd_flags &  BIT_5) {
--		pr_crit("Bit_5 already set for cmd = %p.\n", cmd);
-+	if (cmd->trc_flags & TRC_XMIT_STATUS) {
-+		pr_crit("Multiple calls for status = %p.\n", cmd);
- 		dump_stack();
- 	}
--	cmd->cmd_flags |= BIT_5;
-+	cmd->trc_flags |= TRC_XMIT_STATUS;
- 
- 	if (se_cmd->data_direction == DMA_FROM_DEVICE) {
- 		/*
-@@ -718,10 +718,7 @@ static void tcm_qla2xxx_queue_tm_rsp(struct se_cmd *se_cmd)
- 	qlt_xmit_tm_rsp(mcmd);
- }
- 
--
--#define DATA_WORK_NOT_FREE(_flags) \
--	(( _flags & (CMD_FLAG_DATA_WORK|CMD_FLAG_DATA_WORK_FREE)) == \
--	 CMD_FLAG_DATA_WORK)
-+#define DATA_WORK_NOT_FREE(_cmd) (_cmd->data_work && !_cmd->data_work_free)
- static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
- {
- 	struct qla_tgt_cmd *cmd = container_of(se_cmd,
-@@ -733,13 +730,13 @@ static void tcm_qla2xxx_aborted_task(struct se_cmd *se_cmd)
- 
- 	spin_lock_irqsave(&cmd->cmd_lock, flags);
- 	if ((cmd->state == QLA_TGT_STATE_NEW)||
--		((cmd->state == QLA_TGT_STATE_DATA_IN) &&
--		 DATA_WORK_NOT_FREE(cmd->cmd_flags)) ) {
--
--		cmd->cmd_flags |= CMD_FLAG_DATA_WORK_FREE;
-+	    ((cmd->state == QLA_TGT_STATE_DATA_IN) &&
-+		DATA_WORK_NOT_FREE(cmd))) {
-+		cmd->data_work_free = 1;
- 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
--		/* Cmd have not reached firmware.
--		 * Use this trigger to free it. */
-+		/*
-+		 * cmd has not reached fw, Use this trigger to free it.
-+		 */
- 		tcm_qla2xxx_free_cmd(cmd);
- 		return;
+-	if (!qla_tgt_mode_enabled(base_vha)) {
++	if (qla_ini_mode_enabled(base_vha)) {
+ 		pr_err("qla2xxx base_vha not enabled for target mode\n");
+ 		return -EPERM;
  	}
 -- 
 1.8.3.1
