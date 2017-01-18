@@ -1,15 +1,15 @@
 From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
-Subject: Re: [PATCH 1/2] qed: Add support for hardware offloaded
- FCoE.
-Date: Wed, 18 Jan 2017 17:21:26 +0100
-Message-ID: <b09401be-3103-6a37-f203-4c696b9cac9a@suse.de>
+Subject: Re: [PATCH 2/2] qedf: Add QLogic FastLinQ offload FCoE
+ driver framework.
+Date: Wed, 18 Jan 2017 17:24:46 +0100
+Message-ID: <dfc1c653-7ef5-215d-2192-3c341992356d@suse.de>
 References: <1484596437-27637-1-git-send-email-chad.dupuis@cavium.com>
- <1484596437-27637-2-git-send-email-chad.dupuis@cavium.com>
+ <1484596437-27637-3-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
-In-Reply-To: <1484596437-27637-2-git-send-email-chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+In-Reply-To: <1484596437-27637-3-git-send-email-chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
  <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
 List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
@@ -24,19 +24,73 @@ Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, netdev-u79uwXL29TY76Z2rM
 List-Id: linux-scsi@vger.kernel.org
 
 On 01/16/2017 08:53 PM, Dupuis, Chad wrote:
-> From: Arun Easi <arun.easi-h88ZbnxC6KDQT0dZR+AlfA@public.gmane.org>
+> From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 > =
 
-> This adds the backbone required for the various HW initalizations
-> which are necessary for the FCoE driver (qedf) for QLogic FastLinQ
-> 4xxxx line of adapters - FW notification, resource initializations, etc.
+> The QLogic FastLinQ Driver for FCoE (qedf) is the FCoE specific module fo=
+r 41000
+> Series Converged Network Adapters by QLogic. This patch consists of follo=
+wing
+> changes:
 > =
 
+> - MAINTAINERS Makefile and Kconfig changes for qedf
+> - PCI driver registration
+> - libfc/fcoe host level initialization
+> - SCSI host template initialization and callbacks
+> - Debugfs and log level infrastructure
+> - Link handling
+> - Firmware interface structures
+> - QED core module initialization
+> - Light L2 interface callbacks
+> - I/O request initialization
+> - Firmware I/O completion handling
+> - Firmware ELS request/response handling
+> - FIP request/response handled by the driver itself
+> =
+
+> Signed-off-by: Nilesh Javali <nilesh.javali-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Manish Rangankar <manish.rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Saurav Kashyap <saurav.kashyap-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 > Signed-off-by: Arun Easi <arun.easi-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> Signed-off-by: Yuval Mintz <yuval.mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
-> ---
+> Signed-off-by: Chad Dupuis <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 
-Reviewed-by: Hannes Reinecke <hare-IBi9RG/b67k@public.gmane.org>
+[ .. ]
+
+> +/* Main thread to process skb's from light-L2 interface */
+> +static int qedf_ll2_recv_thread(void *arg)
+> +{
+> +	struct qedf_ctx *qedf =3D (struct qedf_ctx *)arg;
+> +	struct qedf_skb_work *work, *work_tmp;
+> +	unsigned long flags;
+> +
+> +	set_user_nice(current, -20);
+> +	set_current_state(TASK_INTERRUPTIBLE);
+> +
+> +	while (!kthread_should_stop()) {
+> +		schedule();
+> +		if (!list_empty(&qedf->ll2_skb_list)) {
+> +			list_for_each_entry_safe(work, work_tmp,
+> +			    &qedf->ll2_skb_list, list) {
+> +			spin_lock_irqsave(&qedf->ll2_lock, flags);
+> +				list_del(&work->list);
+> +				spin_unlock_irqrestore(&qedf->ll2_lock, flags);
+> +				qedf_ll2_process_skb(qedf, work->skb);
+> +				kfree(work);
+> +			}
+> +		}
+> +		__set_current_state(TASK_INTERRUPTIBLE);
+> +	}
+> +
+> +	__set_current_state(TASK_RUNNING);
+> +	return 0;
+> +}
+> +
+Please: don't.
+
+The RT folks are trying to get rid of kthreads altogether as it's a
+nightmare to get it to work with cpu hotplugging.
+Please convert to workqueues.
 
 Cheers,
 
