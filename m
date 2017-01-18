@@ -1,7 +1,7 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
+From: Sagi Grimberg <sagi@grimberg.me>
 Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Wed, 18 Jan 2017 15:58:16 +0100
-Message-ID: <20170118145816.GI3514@linux-x5ow.site>
+Date: Wed, 18 Jan 2017 17:14:36 +0200
+Message-ID: <c7eabe1c-5dcd-9859-2b41-9683f68a0534@grimberg.me>
 References: <20170111134312.GH6286@linux-x5ow.site>
  <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
  <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
@@ -12,54 +12,41 @@ References: <20170111134312.GH6286@linux-x5ow.site>
  <6df6bf6a-7cd3-1700-2b0a-e140325ebf47@grimberg.me>
  <20170118135156.GG3514@linux-x5ow.site>
  <e3438024-e0f2-db96-5122-4508863be603@grimberg.me>
+ <20170118145816.GI3514@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <e3438024-e0f2-db96-5122-4508863be603@grimberg.me>
-Sender: linux-block-owner@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f66.google.com ([74.125.82.66]:34271 "EHLO
+        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751646AbdARPOq (ORCPT
+        <rfc822;Linux-scsi@vger.kernel.org>); Wed, 18 Jan 2017 10:14:46 -0500
+In-Reply-To: <20170118145816.GI3514@linux-x5ow.site>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 
-On Wed, Jan 18, 2017 at 04:27:24PM +0200, Sagi Grimberg wrote:
-> 
-> >So what you say is you saw a consomed == 1 [1] most of the time?
-> >
-> >[1] from http://git.infradead.org/nvme.git/commitdiff/eed5a9d925c59e43980047059fde29e3aa0b7836
-> 
-> Exactly. By processing 1 completion per interrupt it makes perfect sense
-> why this performs poorly, it's not worth paying the soft-irq schedule
-> for only a single completion.
-> 
-> What I'm curious is how consistent is this with different devices (wish
-> I had some...)
 
-Hannes just spotted this:
-static int nvme_queue_rq(struct blk_mq_hw_ctx *hctx,
-                         const struct blk_mq_queue_data *bd)
-{
-[...]
-        __nvme_submit_cmd(nvmeq, &cmnd);
-        nvme_process_cq(nvmeq);
-        spin_unlock_irq(&nvmeq->q_lock);
-        return BLK_MQ_RQ_QUEUE_OK;
-out_cleanup_iod:
-        nvme_free_iod(dev, req);
-out_free_cmd:
-        nvme_cleanup_cmd(req);
-        return ret;
-}
+> Hannes just spotted this:
+> static int nvme_queue_rq(struct blk_mq_hw_ctx *hctx,
+>                          const struct blk_mq_queue_data *bd)
+> {
+> [...]
+>         __nvme_submit_cmd(nvmeq, &cmnd);
+>         nvme_process_cq(nvmeq);
+>         spin_unlock_irq(&nvmeq->q_lock);
+>         return BLK_MQ_RQ_QUEUE_OK;
+> out_cleanup_iod:
+>         nvme_free_iod(dev, req);
+> out_free_cmd:
+>         nvme_cleanup_cmd(req);
+>         return ret;
+> }
+>
+> So we're draining the CQ on submit. This of cause makes polling for
+> completions in the IRQ handler rather pointless as we already did in the
+> submission path.
 
-So we're draining the CQ on submit. This of cause makes polling for
-completions in the IRQ handler rather pointless as we already did in the
-submission path. 
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+I think you missed:
+http://git.infradead.org/nvme.git/commit/49c91e3e09dc3c9dd1718df85112a8cce3ab7007
