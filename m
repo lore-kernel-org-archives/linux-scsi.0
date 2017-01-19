@@ -1,39 +1,45 @@
-From: Ming Lei <tom.leiming@gmail.com>
-Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Thu, 19 Jan 2017 18:57:46 +0800
-Message-ID: <CACVXFVP=mdetwMds9W-YL22ghW3ra4R9=RAnWrKdb6G-jjuqFA@mail.gmail.com>
-References: <20170111134312.GH6286@linux-x5ow.site> <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
+From: Hannes Reinecke <hare@suse.de>
+Subject: requeue failure with blk-mq-sched
+Date: Thu, 19 Jan 2017 13:27:04 +0100
+Message-ID: <fb509d83-c895-ba78-e181-145c77542eac@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
 Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@kernel.dk>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <Linux-scsi@vger.kernel.org>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme <linux-nvme@lists.infradead.org>, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <Linux-scsi@vger.kernel.org>, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Jan 11, 2017 at 11:07 PM, Jens Axboe <axboe@kernel.dk> wrote:
-> On 01/11/2017 06:43 AM, Johannes Thumshirn wrote:
->> Hi all,
->>
->> I'd like to attend LSF/MM and would like to discuss polling for block drivers.
->>
->> Currently there is blk-iopoll but it is neither as widely used as NAPI in the
->> networking field and accoring to Sagi's findings in [1] performance with
->> polling is not on par with IRQ usage.
->>
->> On LSF/MM I'd like to whether it is desirable to have NAPI like polling in
->> more block drivers and how to overcome the currently seen performance issues.
->
-> It would be an interesting topic to discuss, as it is a shame that blk-iopoll
-> isn't used more widely.
+Hi Jens,
 
-I remembered that Keith and I discussed some issues of blk-iopoll:
+upon further testing with your blk-mq-sched branch I hit a queue stall
+during requeing:
 
-    http://marc.info/?l=linux-block&m=147576999016407&w=2
+[  202.340959] sd 3:0:4:1: tag#473 Send: scmd 0xffff880422e7a440
+[  202.340962] sd 3:0:4:1: tag#473 CDB: Test Unit Ready 00 00 00 00 00 00
+[  202.341161] sd 3:0:4:1: tag#473 Done: ADD_TO_MLQUEUE Result:
+hostbyte=DID_OK driverbyte=DRIVER_OK
+[  202.341164] sd 3:0:4:1: tag#473 CDB: Test Unit Ready 00 00 00 00 00 00
+[  202.341167] sd 3:0:4:1: tag#473 Sense Key : Unit Attention [current]
+[  202.341171] sd 3:0:4:1: tag#473 Add. Sense: Power on, reset, or bus
+device reset occurred
+[  202.341173] sd 3:0:4:1: tag#473 scsi host busy 1 failed 0
+[  202.341176] sd 3:0:4:1: tag#473 Inserting command ffff880422e7a440
+into mlqueue
 
-seems which isn't addressed yet.
+... and that is the last ever heard of that device.
+The 'device_busy' count remains at '1' and no further commands will be
+sent to the device.
 
+Debugging continues.
 
-Thanks,
-Ming Lei
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
