@@ -1,38 +1,64 @@
-From: Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH 3/4] nvme: use blk_rq_payload_bytes
-Date: Thu, 19 Jan 2017 09:54:55 +0200
-Message-ID: <ab9f4a10-857d-096c-8aec-6b0357b91fe5@grimberg.me>
-References: <1484306953-3194-1-git-send-email-hch@lst.de>
- <1484306953-3194-4-git-send-email-hch@lst.de>
- <7532e18a-6cd3-294f-085d-e1ecdc48af6e@grimberg.me>
- <20170118090921.GA24058@lst.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 02/17] lpfc: NVME Initiator: Base modifications Part A
+Date: Thu, 19 Jan 2017 09:04:36 +0100
+Message-ID: <20170119080436.GB5054@linux-x5ow.site>
+References: <587ec2ed.BwM2pzG0hT3uy4dN%jsmart2021@gmail.com>
+ <20170118094921.GB3514@linux-x5ow.site>
+ <af9d3d56-2239-232c-7317-7ae0ec25be90@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-wm0-f66.google.com ([74.125.82.66]:36464 "EHLO
-        mail-wm0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750870AbdASHzZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2017 02:55:25 -0500
-In-Reply-To: <20170118090921.GA24058@lst.de>
+Received: from mx2.suse.de ([195.135.220.15]:46290 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751166AbdASIFG (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Jan 2017 03:05:06 -0500
+Content-Disposition: inline
+In-Reply-To: <af9d3d56-2239-232c-7317-7ae0ec25be90@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, Dexuan Cui <decui@microsoft.com>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>
+Cc: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
+On Wed, Jan 18, 2017 at 06:34:02PM -0800, James Smart wrote:
+> 
+> 
+> On 1/18/2017 1:50 AM, Johannes Thumshirn wrote:
+> 
+> >>@@ -4959,11 +4968,11 @@ lpfc_send_taskmgmt(struct lpfc_vport *vport, struct scsi_cmnd *cmnd,
+> >>  	int status;
+> >>  	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+> >>-	if (!rdata || !rdata->pnode || !NLP_CHK_NODE_ACT(rdata->pnode))
+> >>-		return FAILED;
+> >OK, I don't get this hunk. lpfc_rport_data_from_scsi_device() cannot return
+> >NULL anymore?
+> >
+> >I at least expected something like:
+> >
+> >   	rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+> >	if (!rdata || !rdata->pnode)
+> >		return FAILED;
+> >	
+> >	pnode = rdata->pnode;
+> >	if (!NLP_CHK_NODE_ACT(pnode)
+> >		return FAILED;
+> 
+> it can and the order of precedence for the if check allows for it. I don't
+> see any difference in what you wrote vs what's there, other than pnode gets
+> an assignment.
 
->>> @@ -1014,9 +1013,9 @@ static int nvme_rdma_map_data(struct nvme_rdma_queue *queue,
->>>  	}
->>>
->>
->> Christoph, a little above here we still look at blk_rq_bytes(),
->> shouldn't that look at blk_rq_payload_bytes() too?
->
-> The check is ok for now as it's just zero vs non-zero.  It's somewhat
-> broken for Write Zeroes, though.  I've fixed it in this series
-> which I need to submit:
->
-> 	http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/write-zeroes-take-2
->
+You're doing:
+rdata = lpfc_rport_data_from_scsi_device(cmnd->device);
+pnode = rdata->pnode;
+if (!pnode || !NLP_CHK_NODE_ACT(pnode)) 
+	return FAILED;
 
-I see, thanks for the clarification.
+So if rdata is already NULL, the pnode = rdata->pnode line will blow up.
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
