@@ -1,56 +1,28 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] scsi: mq queue stall during command requeue
-Date: Thu, 19 Jan 2017 16:11:56 +0000
-Message-ID: <1484842302.2634.3.camel@sandisk.com>
-References: <1484835465-66514-1-git-send-email-hare@suse.de>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH 02/17] lpfc: NVME Initiator: Base modifications Part A
+Date: Thu, 19 Jan 2017 07:13:23 -0800
+Message-ID: <622a3272-816f-f1da-3fbb-873037c3ebfe@broadcom.com>
+References: <587ec2ed.BwM2pzG0hT3uy4dN%jsmart2021@gmail.com>
+ <20170118094921.GB3514@linux-x5ow.site>
+ <af9d3d56-2239-232c-7317-7ae0ec25be90@gmail.com>
+ <20170119080436.GB5054@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0045.outbound.protection.outlook.com ([104.47.32.45]:61056
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753163AbdASQME (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Jan 2017 11:12:04 -0500
-In-Reply-To: <1484835465-66514-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <602EBAAA74C1DB46AE130870A57ED452@sandisk.com>
+Received: from mail-ot0-f170.google.com ([74.125.82.170]:33850 "EHLO
+        mail-ot0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752811AbdASQUt (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 19 Jan 2017 11:20:49 -0500
+Received: by mail-ot0-f170.google.com with SMTP id f9so35535140otd.1
+        for <linux-scsi@vger.kernel.org>; Thu, 19 Jan 2017 08:19:53 -0800 (PST)
+In-Reply-To: <20170119080436.GB5054@linux-x5ow.site>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "james.bottomley@hansenpartnership.com" <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jth@kernel.org" <jth@kernel.org>, "hare@suse.com" <hare@suse.com>
+To: Johannes Thumshirn <jthumshirn@suse.de>, James Smart <jsmart2021@gmail.com>
+Cc: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-On Thu, 2017-01-19 at 15:17 +0100, Hannes Reinecke wrote:
-> When we're hitting a busy condition in queuecommand() we need to
-> stop the hardware queue before calling blk_mq_delay_queue(); if
-> we don't blk_mq_delay_queue() will not do anything and requeue
-> will never triggered.
->=20
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/scsi_lib.c | 4 +++-
->  1 file changed, 3 insertions(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index e9e1e14..4b1cbc6 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -1951,8 +1951,10 @@ static int scsi_queue_rq(struct blk_mq_hw_ctx *hct=
-x,
->  	switch (ret) {
->  	case BLK_MQ_RQ_QUEUE_BUSY:
->  		if (atomic_read(&sdev->device_busy) =3D=3D 0 &&
-> -		    !scsi_device_blocked(sdev))
-> +		    !scsi_device_blocked(sdev)) {
-> +			blk_mq_stop_hw_queue(hctx);
->  			blk_mq_delay_queue(hctx, SCSI_QUEUE_DELAY);
-> +		}
->  		break;
->  	case BLK_MQ_RQ_QUEUE_ERROR:
->  		/*
+Nevermind - I misread the "-" for "+". will fix
 
-You may want to add Fixes:=A052d7f1b5c2f3 (blk-mq: Avoid that requeueing
-starts stopped queues). See also
-https://www.spinics.net/lists/linux-block/msg06144.html.
+-- james
 
-Bart.=
