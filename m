@@ -1,74 +1,70 @@
-From: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH v3 08/12] qla2xxx: Add framework for Async fabric
- discovery.
-Date: Thu, 19 Jan 2017 09:11:25 +0100 (CET)
-Message-ID: <alpine.DEB.2.20.1701190909480.3148@hadrien>
+From: Sagi Grimberg <sagi@grimberg.me>
+Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
+Date: Thu, 19 Jan 2017 10:12:17 +0200
+Message-ID: <97a3f3d3-3619-871d-55f3-75449b0c34cf@grimberg.me>
+References: <d60d4499-6ed8-0a69-edbf-db205a6dba6a@kernel.dk>
+ <8b47ca34-d2ff-26dc-721e-2cb1e18f1efc@grimberg.me>
+ <499af528-7810-f82d-1f11-cbf8f3a5b21c@grimberg.me>
+ <53a3fb6c-c75a-519a-f669-2bcab404e01d@grimberg.me>
+ <20170117162752.GE6067@linux-x5ow.site>
+ <6df6bf6a-7cd3-1700-2b0a-e140325ebf47@grimberg.me>
+ <20170118135156.GG3514@linux-x5ow.site>
+ <e3438024-e0f2-db96-5122-4508863be603@grimberg.me>
+ <20170118145816.GI3514@linux-x5ow.site>
+ <c7eabe1c-5dcd-9859-2b41-9683f68a0534@grimberg.me>
+ <20170118151643.GJ3514@linux-x5ow.site>
+ <aaf5c35f-7e81-fa44-d467-53b574debdd4@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
-Cc: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org, giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com, kbuild-all@01.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <aaf5c35f-7e81-fa44-d467-53b574debdd4@suse.de>
+Sender: linux-block-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
 
-I don't have the compete context, but I have the impression that there
-should be a goto done at which sp can be NULL.
+>>> I think you missed:
+>>> http://git.infradead.org/nvme.git/commit/49c91e3e09dc3c9dd1718df85112a8cce3ab7007
+>>
+>> I indeed did, thanks.
+>>
+> But it doesn't help.
+>
+> We're still having to wait for the first interrupt, and if we're really
+> fast that's the only completion we have to process.
+>
+> Try this:
+>
+>
+> diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+> index b4b32e6..e2dd9e2 100644
+> --- a/drivers/nvme/host/pci.c
+> +++ b/drivers/nvme/host/pci.c
+> @@ -623,6 +623,8 @@ static int nvme_queue_rq(struct blk_mq_hw_ctx *hctx,
+>         }
+>         __nvme_submit_cmd(nvmeq, &cmnd);
+>         spin_unlock(&nvmeq->sq_lock);
+> +       disable_irq_nosync(nvmeq_irq(irq));
+> +       irq_poll_sched(&nvmeq->iop);
 
-julia
+a. This would trigger a condition that we disable irq twice which
+is wrong at least because it will generate a warning.
 
----------- Forwarded message ----------
-Date: Thu, 19 Jan 2017 12:38:31 +0800
-From: kbuild test robot <fengguang.wu@intel.com>
-To: kbuild@01.org
-Cc: Julia Lawall <julia.lawall@lip6.fr>
-Subject: Re: [PATCH v3 08/12] qla2xxx: Add framework for Async fabric discovery.
+b. This would cause a way-too-much triggers of ksoftirqd. In order for
+it to be effective we need to to run only when it should and optimally
+when the completion queue has a batch of completions waiting.
 
-In-Reply-To: <1484781585-27252-9-git-send-email-himanshu.madhani@cavium.com>
+After a deeper analysis, I agree with Bart that interrupt coalescing is
+needed for it to work. The problem with nvme coalescing as Jens said, is
+a death penalty of 100us granularity. Hannes, Johannes, how does it look
+like with the devices you are testing with?
 
-Hi Quinn,
+Also, I think that adaptive moderation is needed in order for it to
+work well. I know that some networking drivers implemented adaptive
+moderation in SW before having HW support for it. It can be done by
+maintaining stats and having a periodic work that looks at it and
+changes the moderation parameters.
 
-[auto build test WARNING on next-20170118]
-[cannot apply to scsi/for-next v4.9-rc8 v4.9-rc7 v4.9-rc6 v4.10-rc4]
-[if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-
-url:    https://github.com/0day-ci/linux/commits/Himanshu-Madhani/qla2xxx-Feature-updates-for-target/20170119-105115
-:::::: branch date: 2 hours ago
-:::::: commit date: 2 hours ago
-
->> drivers/scsi/qla2xxx/qla_init.c:269:5-11: ERROR: sp is NULL but dereferenced.
-
-git remote add linux-review https://github.com/0day-ci/linux
-git remote update linux-review
-git checkout 8cf2e24938dd5d941b2edc9786f8e1ad8c80d9af
-vim +269 drivers/scsi/qla2xxx/qla_init.c
-
-3822263eb Madhuranath Iyengar 2010-05-04  253  	lio->timeout = qla2x00_async_iocb_timeout;
-9ba56b95a Giridhar Malavali   2012-02-09  254  	sp->done = qla2x00_async_logout_sp_done;
-ac280b670 Andrew Vasquez      2009-08-20  255  	rval = qla2x00_start_sp(sp);
-ac280b670 Andrew Vasquez      2009-08-20  256  	if (rval != QLA_SUCCESS)
-ac280b670 Andrew Vasquez      2009-08-20  257  		goto done_free_sp;
-ac280b670 Andrew Vasquez      2009-08-20  258
-7c3df1320 Saurav Kashyap      2011-07-14  259  	ql_dbg(ql_dbg_disc, vha, 0x2070,
-8cf2e2493 Quinn Tran          2017-01-18  260  	    "Async-logout - hdl=%x loop-id=%x portid=%02x%02x%02x %8phC.\n",
-cfb0919c1 Chad Dupuis         2011-11-18  261  	    sp->handle, fcport->loop_id, fcport->d_id.b.domain,
-8cf2e2493 Quinn Tran          2017-01-18  262  		fcport->d_id.b.area, fcport->d_id.b.al_pa,
-8cf2e2493 Quinn Tran          2017-01-18  263  		fcport->port_name);
-ac280b670 Andrew Vasquez      2009-08-20  264  	return rval;
-ac280b670 Andrew Vasquez      2009-08-20  265
-ac280b670 Andrew Vasquez      2009-08-20  266  done_free_sp:
-9ba56b95a Giridhar Malavali   2012-02-09  267  	sp->free(fcport->vha, sp);
-ac280b670 Andrew Vasquez      2009-08-20  268  done:
-8cf2e2493 Quinn Tran          2017-01-18 @269  	sp->fcport->flags &= ~FCF_ASYNC_SENT;
-ac280b670 Andrew Vasquez      2009-08-20  270  	return rval;
-ac280b670 Andrew Vasquez      2009-08-20  271  }
-ac280b670 Andrew Vasquez      2009-08-20  272
-5ff1d5841 Andrew Vasquez      2010-05-04  273  static void
-9ba56b95a Giridhar Malavali   2012-02-09  274  qla2x00_async_adisc_sp_done(void *data, void *ptr, int res)
-5ff1d5841 Andrew Vasquez      2010-05-04  275  {
-9ba56b95a Giridhar Malavali   2012-02-09  276  	srb_t *sp = (srb_t *)ptr;
-9ba56b95a Giridhar Malavali   2012-02-09  277  	struct srb_iocb *lio = &sp->u.iocb_cmd;
-
----
-0-DAY kernel test infrastructure                Open Source Technology Center
-https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
+Does anyone think that this is something we should consider?
