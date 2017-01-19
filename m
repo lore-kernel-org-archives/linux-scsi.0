@@ -1,50 +1,39 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 04/17] lpfc: NVME Initiator: Base modifications Part C
-Date: Thu, 19 Jan 2017 09:14:06 +0100
-Message-ID: <20170119081406.GD5054@linux-x5ow.site>
-References: <587ec2ef.Y/y2qvlPHm64sAst%jsmart2021@gmail.com>
- <20170118110304.GD3514@linux-x5ow.site>
- <784acc16-b284-6159-4399-dfd39ae1a8bd@gmail.com>
+Subject: Re: [PATCH 1/7] scsi: hisi_sas: workaround v2 hw SATA IO timeout
+ issue
+Date: Thu, 19 Jan 2017 09:41:49 +0100
+Message-ID: <20170119084149.GE5054@linux-x5ow.site>
+References: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
+ <1484757173-235951-2-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48823 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750886AbdASIem (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Jan 2017 03:34:42 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <784acc16-b284-6159-4399-dfd39ae1a8bd@gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1484757173-235951-2-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: John Garry <john.garry@huawei.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-On Wed, Jan 18, 2017 at 06:54:37PM -0800, James Smart wrote:
+On Thu, Jan 19, 2017 at 12:32:47AM +0800, John Garry wrote:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
 > 
+> The v2 SAS controller needs more time to detect channel idle
+> and send setup link request than SATA disk does, so it is
+> difficult for SAS controller to setup an STP link. Therefore it
+> may cause some IO timeouts.
 > 
-> On 1/18/2017 3:03 AM, Johannes Thumshirn wrote:
-> >
-> >>+	/* maximum number of xris available for nvme buffers */
-> >>+	els_xri_cnt = lpfc_sli4_get_els_iocb_cnt(phba);
-> >>+	phba->sli4_hba.nvme_xri_max = phba->sli4_hba.max_cfg_param.max_xri -
-> >>+				      els_xri_cnt;
-> >>+	phba->sli4_hba.nvme_xri_max -= phba->sli4_hba.scsi_xri_max;
-> >	nvme_xri_max = phba->sli4_hba.max_cfg_param.max_xri - els_xri_cnt;
-> >	nvme_xri_max -= phba->sli4_hba.scsi_xri_max;
-> >	phba->sli4_hba.nvme_xri_max = nvme_xri_max;
-> >
-> >Low hanging anti line-break fruit.
+> We need to periodically configure the SAS controller so it
+> doesn't receive STP setup requests from SATA disks for a while,
+> so IO can be sent during this period.
 > 
-> ok - but I didn't think that a style change like this is a mandate.   As I'm
-> addressing your other comments, I'll do so.
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+> Signed-off-by: John Garry <john.garry@huawei.com>
+> ---
 
-I don't think it's a mandate, but line wrappings are always bad to read. Code
-is written once but read a lot of times. I know I'm nitpicking a lot here but
-hard to read code makes errors hard to spot.
-
-Thanks for your patience,
-	Johannes
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
 Johannes Thumshirn                                          Storage
