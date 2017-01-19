@@ -1,95 +1,46 @@
-From: Arun Easi <arun.easi@cavium.com>
-Subject: Re: [PATCH 1/2] qed: Add support for hardware offloaded FCoE.
-Date: Wed, 18 Jan 2017 15:26:20 -0800
-Message-ID: <alpine.LRH.2.00.1701181524090.2548@mvluser05.qlc.com>
-References: <201701172240.wF4OEtiC%fengguang.wu@intel.com>
+From: James Smart <jsmart2021@gmail.com>
+Subject: Re: [PATCH 02/17] lpfc: NVME Initiator: Base modifications Part A
+Date: Wed, 18 Jan 2017 18:07:31 -0800
+Message-ID: <0602b020-2837-1f73-a29c-f44ba5d20722@gmail.com>
+References: <587ec2ed.BwM2pzG0hT3uy4dN%jsmart2021@gmail.com>
+ <4686b4f0-06ab-d0cc-6630-524f839d6842@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <201701172240.wF4OEtiC%fengguang.wu@intel.com>
-Sender: netdev-owner@vger.kernel.org
-To: kbuild test robot <lkp@intel.com>
-Cc: "Dupuis, Chad" <chad.dupuis@cavium.com>, kbuild-all@01.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f68.google.com ([209.85.218.68]:34269 "EHLO
+        mail-oi0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751397AbdASCHe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 18 Jan 2017 21:07:34 -0500
+Received: by mail-oi0-f68.google.com with SMTP id w144so2209067oiw.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jan 2017 18:07:34 -0800 (PST)
+In-Reply-To: <4686b4f0-06ab-d0cc-6630-524f839d6842@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-This will be addressed in v2 of the series. The warning pops up when 
-CONFIG_DCB is not set. Thanks.
 
-Regards,
--Arun
 
-On Tue, 17 Jan 2017, 6:35am, kbuild test robot wrote:
+On 1/17/2017 11:07 PM, Hannes Reinecke wrote:
+>
+>> - * lpfc_sli4_post_scsi_sgl_list - Post blocks of scsi buffer sgls from a list
+>> + * lpfc_sli4_post_scsi_sgl_list - Psot blocks of scsi buffer sgls from a list
+>>    * @phba: pointer to lpfc hba data structure.
+>>    * @post_sblist: pointer to the scsi buffer list.
+>>    *
+> Psot?
 
-> Hi Arun,
-> 
-> [auto build test WARNING on net-next/master]
-> [also build test WARNING on v4.10-rc4 next-20170117]
-> [if your patch is applied to the wrong git tree, please drop us a note to help improve the system]
-> 
-> url:    https://github.com/0day-ci/linux/commits/Dupuis-Chad/Add-QLogic-FastLinQ-FCoE-qedf-driver/20170117-052438
-> config: i386-randconfig-c0-01172134 (attached as .config)
-> compiler: gcc-4.9 (Debian 4.9.4-2) 4.9.4
-> reproduce:
->         # save the attached .config to linux build tree
->         make ARCH=i386 
-> 
-> All warnings (new ones prefixed by >>):
-> 
->    In file included from drivers/net/ethernet/qlogic/qed/qed.h:49:0,
->                     from drivers/net/ethernet/qlogic/qed/qed_cxt.c:44:
-> >> include/linux/qed/qed_if.h:428:37: warning: 'struct qed_dcbx_get' declared inside parameter list
->      void (*dcbx_aen)(void *dev, struct qed_dcbx_get *get, u32 mib_type);
->                                         ^
-> >> include/linux/qed/qed_if.h:428:37: warning: its scope is only this definition or declaration, which is probably not what you want
-> --
->    In file included from drivers/net/ethernet/qlogic/qed/qed.h:49:0,
->                     from drivers/net/ethernet/qlogic/qed/qed_dcbx.c:41:
-> >> include/linux/qed/qed_if.h:428:37: warning: 'struct qed_dcbx_get' declared inside parameter list
->      void (*dcbx_aen)(void *dev, struct qed_dcbx_get *get, u32 mib_type);
->                                         ^
-> >> include/linux/qed/qed_if.h:428:37: warning: its scope is only this definition or declaration, which is probably not what you want
->    drivers/net/ethernet/qlogic/qed/qed_dcbx.c: In function 'qed_dcbx_aen':
->    drivers/net/ethernet/qlogic/qed/qed_dcbx.c:873:42: error: 'struct qed_dcbx_info' has no member named 'get'
->       op->dcbx_aen(cookie, &hwfn->p_dcbx_info->get, mib_type);
->                                              ^
->    drivers/net/ethernet/qlogic/qed/qed_dcbx.c: In function 'qed_dcbx_mib_update_event':
->    drivers/net/ethernet/qlogic/qed/qed_dcbx.c:902:2: error: implicit declaration of function 'qed_dcbx_get_params' [-Werror=implicit-function-declaration]
->      qed_dcbx_get_params(p_hwfn, p_ptt, &p_hwfn->p_dcbx_info->get, type);
->      ^
->    drivers/net/ethernet/qlogic/qed/qed_dcbx.c:902:57: error: 'struct qed_dcbx_info' has no member named 'get'
->      qed_dcbx_get_params(p_hwfn, p_ptt, &p_hwfn->p_dcbx_info->get, type);
->                                                             ^
->    cc1: some warnings being treated as errors
-> 
-> vim +428 include/linux/qed/qed_if.h
-> 
->    412		u8	name[QED_DRV_VER_STR_SIZE];
->    413	};
->    414	
->    415	#define ILT_PAGE_SIZE_TCFC 0x8000 /* 32KB */
->    416	
->    417	struct qed_int_info {
->    418		struct msix_entry	*msix;
->    419		u8			msix_cnt;
->    420	
->    421		/* This should be updated by the protocol driver */
->    422		u8			used_cnt;
->    423	};
->    424	
->    425	struct qed_common_cb_ops {
->    426		void	(*link_update)(void			*dev,
->    427				       struct qed_link_output	*link);
->  > 428		void	(*dcbx_aen)(void *dev, struct qed_dcbx_get *get, u32 mib_type);
->    429	};
->    430	
->    431	struct qed_selftest_ops {
->    432	/**
->    433	 * @brief selftest_interrupt - Perform interrupt test
->    434	 *
->    435	 * @param cdev
->    436	 *
-> 
-> ---
-> 0-DAY kernel test infrastructure                Open Source Technology Center
-> https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
-> 
+> Repsot? The reverse of 'Psot'?
+
+lol...
+
+>
+> bdea?
+
+Crud - caught a bunch of those but looks like a couple got through. 
+Surprised checkpatch let them through. oh well.
+
+anyway - will fix and repost (repsot?) what you mentioned.
+
+-- james
+
