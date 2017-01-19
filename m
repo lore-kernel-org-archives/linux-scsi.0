@@ -1,53 +1,39 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
+From: Ming Lei <tom.leiming@gmail.com>
 Subject: Re: [LSF/MM TOPIC][LSF/MM ATTEND] NAPI polling for block drivers
-Date: Thu, 19 Jan 2017 10:18:33 +0100
-Message-ID: <20170119091833.GM5054@linux-x5ow.site>
-References: <20170117162752.GE6067@linux-x5ow.site>
- <6df6bf6a-7cd3-1700-2b0a-e140325ebf47@grimberg.me>
- <20170118135156.GG3514@linux-x5ow.site>
- <e3438024-e0f2-db96-5122-4508863be603@grimberg.me>
- <20170118145816.GI3514@linux-x5ow.site>
- <c7eabe1c-5dcd-9859-2b41-9683f68a0534@grimberg.me>
- <20170118151643.GJ3514@linux-x5ow.site>
- <aaf5c35f-7e81-fa44-d467-53b574debdd4@suse.de>
- <97a3f3d3-3619-871d-55f3-75449b0c34cf@grimberg.me>
- <dfb4890a-57c0-c070-1d38-ee72bfd85506@grimberg.me>
+Date: Thu, 19 Jan 2017 18:57:46 +0800
+Message-ID: <CACVXFVP=mdetwMds9W-YL22ghW3ra4R9=RAnWrKdb6G-jjuqFA@mail.gmail.com>
+References: <20170111134312.GH6286@linux-x5ow.site> <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <dfb4890a-57c0-c070-1d38-ee72bfd85506@grimberg.me>
+In-Reply-To: <cc00cc1f-17d7-105e-ef2c-61791b7cc676@kernel.dk>
 Sender: linux-block-owner@vger.kernel.org
-To: Sagi Grimberg <sagi@grimberg.me>
-Cc: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>, Linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org, linux-block@vger.kernel.org, Keith Busch <keith.busch@intel.com>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Johannes Thumshirn <jthumshirn@suse.de>, "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>, linux-block <linux-block@vger.kernel.org>, Linux SCSI List <Linux-scsi@vger.kernel.org>, Sagi Grimberg <sagi@grimberg.me>, linux-nvme <linux-nvme@lists.infradead.org>, Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 19, 2017 at 10:23:28AM +0200, Sagi Grimberg wrote:
-> Christoph suggest to me once that we can take a hybrid
-> approach where we consume a small amount of completions (say 4)
-> right away from the interrupt handler and if we have more
-> we schedule irq-poll to reap the rest. But back then it
-> didn't work better which is not aligned with my observations
-> that we consume only 1 completion per interrupt...
-> 
-> I can give it another go... What do people think about it?
+On Wed, Jan 11, 2017 at 11:07 PM, Jens Axboe <axboe@kernel.dk> wrote:
+> On 01/11/2017 06:43 AM, Johannes Thumshirn wrote:
+>> Hi all,
+>>
+>> I'd like to attend LSF/MM and would like to discuss polling for block drivers.
+>>
+>> Currently there is blk-iopoll but it is neither as widely used as NAPI in the
+>> networking field and accoring to Sagi's findings in [1] performance with
+>> polling is not on par with IRQ usage.
+>>
+>> On LSF/MM I'd like to whether it is desirable to have NAPI like polling in
+>> more block drivers and how to overcome the currently seen performance issues.
+>
+> It would be an interesting topic to discuss, as it is a shame that blk-iopoll
+> isn't used more widely.
 
-This could be good.
+I remembered that Keith and I discussed some issues of blk-iopoll:
 
-What's also possible (see answer to my previous mail) is measuring the time it
-takes for a completion to arrive and if the average time is lower than the
-context switch time just busy loop insted of waiting for the IRQ to arrive. If
-it is higher we can always schedule a timer to hit _before_ the IRQ will
-likely arrive and start polling. Is this something that sounds reasonable to
-you guys as well?
+    http://marc.info/?l=linux-block&m=147576999016407&w=2
 
-	Johannes
+seems which isn't addressed yet.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+
+Thanks,
+Ming Lei
