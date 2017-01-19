@@ -1,26 +1,29 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 5/7] scsi: hisi_sas: downgrade internal abort exit print
-Date: Thu, 19 Jan 2017 09:47:31 +0100
-Message-ID: <20170119084731.GI5054@linux-x5ow.site>
+Subject: Re: [PATCH 4/7] scsi: hisi_sas: modify hard reset for
+ directed-attached disk
+Date: Thu, 19 Jan 2017 09:46:37 +0100
+Message-ID: <20170119084637.GH5054@linux-x5ow.site>
 References: <1484757173-235951-1-git-send-email-john.garry@huawei.com>
- <1484757173-235951-6-git-send-email-john.garry@huawei.com>
+ <1484757173-235951-5-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1484757173-235951-6-git-send-email-john.garry@huawei.com>
+In-Reply-To: <1484757173-235951-5-git-send-email-john.garry@huawei.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: John Garry <john.garry@huawei.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Xiang Chen <chenxiang66@hisilicon.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 19, 2017 at 12:32:51AM +0800, John Garry wrote:
-> Downgrade the exit print in hisi_sas_internal_task_abort()
-> to dbg level, as info is not required.
+On Thu, Jan 19, 2017 at 12:32:50AM +0800, John Garry wrote:
+> From: Xiang Chen <chenxiang66@hisilicon.com>
 > 
+> Correctly set registers in v2 for root PHY hardreset for directly
+> attached disk.
+> 
+> Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 > Signed-off-by: John Garry <john.garry@huawei.com>
-> Reviewed-by: Xiang Chen <chenxiang66@hisilicon.com>
 > ---
 
 Looks good,
