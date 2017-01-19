@@ -1,39 +1,45 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: command emulation fix
-Date: Thu, 19 Jan 2017 21:40:16 +0100
-Message-ID: <20170119204016.GA6610@lst.de>
-References: <1484412602-11801-1-git-send-email-hch@lst.de> <20170115230723.GB14446@mtj.duckdns.org> <20170116152120.GA16072@lst.de> <20170118191750.GA9171@mtj.duckdns.org> <20170119143551.GA31203@lst.de> <20170119202316.GA25390@mtj.duckdns.org> <20170119202725.GB6403@lst.de> <20170119203458.GC25390@mtj.duckdns.org>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v3 00/12] qla2xxx: Feature updates for target.
+Date: Thu, 19 Jan 2017 23:03:09 +0000
+Message-ID: <1484866972.2634.10.camel@sandisk.com>
+References: <1484781585-27252-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:58758 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754251AbdASUkR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 19 Jan 2017 15:40:17 -0500
-Content-Disposition: inline
-In-Reply-To: <20170119203458.GC25390@mtj.duckdns.org>
+Received: from mail-dm3nam03on0069.outbound.protection.outlook.com ([104.47.41.69]:5341
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751220AbdASXU1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 19 Jan 2017 18:20:27 -0500
+In-Reply-To: <1484781585-27252-1-git-send-email-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <D04766C34AD4CF4BBE9C72DD16A4650C@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Tejun Heo <tj@kernel.org>
-Cc: linux-ide@vger.kernel.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-On Thu, Jan 19, 2017 at 03:34:58PM -0500, Tejun Heo wrote:
-> So, unless we allocate one mempool per port, we're gonna have to
-> synchronize around its use anyway.  mempool can't guarantee allocation
-> to multiple users at the same time.  If this is something which
-> affects scalability, I'm completley fine with making it per-port (or
-> device).  Each ata_port carries 512 byte buffer anyway.  Maybe we can
-> reuse that?
+On Wed, 2017-01-18 at 15:19 -0800, Himanshu Madhani wrote:
+> Changes from v2 --> v3
+>=20
+> o Cleaned up sparse warnings reported by you.
 
-I'll play around with these things a bit more.  For the slow
-path ops I think I can get away without any dynamic allocation
-at all - just use small on-stack buffers.
+Not all warnings have been addressed. I still see the following smatch
+warnings:
 
-For DSM / Write Same we rewrite into the buffer the SCSI layer
-provided us.  This is a bit of an issue anyway as this might
-modify user data that is not expected to be rewritten or even
-mapped read-only.  Maybe we need to kill off that emulation
-entirely and just have ATA DSM using the ATA_16 CDB as another
-provisioning option in sd.c.  While that is a bit of a layering
-violation it would solve a lot of problems with the way TRIM
-is currently implemented.
+  CHECK   drivers/scsi/qla2xxx/qla_init.c
+drivers/scsi/qla2xxx/qla_init.c:265: qla2x00_async_logout() error: we previ=
+ously assumed 'sp' could be null (see line 241)
+
+  CHECK   drivers/scsi/qla2xxx/qla_isr.c
+drivers/scsi/qla2xxx/qla_isr.c:1456: qla2x00_ct_entry() warn: inconsistent =
+indenting
+
+The second warning is minor but is easy to address. The first one is
+serious and applies to the following code: if (!sp) ... sp->....
+Please address these smatch warnings.
+
+Thanks,
+
+Bart.=
