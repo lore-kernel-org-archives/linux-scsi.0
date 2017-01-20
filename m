@@ -1,25 +1,22 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: Replace BUG() with BUG_ON()
-Date: Fri, 20 Jan 2017 16:49:12 -0500
-Message-ID: <yq1mvelieqv.fsf@oracle.com>
-References: <1482576667-8042-1-git-send-email-mayhs11saini@gmail.com>
+Subject: Re: [PATCH] Set elsiocb contexts to NULL after freeing it
+Date: Fri, 20 Jan 2017 16:51:35 -0500
+Message-ID: <yq1inp9iemw.fsf@oracle.com>
+References: <20170110110554.13770-1-jthumshirn@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:26312 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751201AbdATVtV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2017 16:49:21 -0500
-In-Reply-To: <1482576667-8042-1-git-send-email-mayhs11saini@gmail.com> (Shyam
-        Saini's message of "Sat, 24 Dec 2016 16:21:07 +0530")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170110110554.13770-1-jthumshirn@suse.de> (Johannes Thumshirn's
+        message of "Tue, 10 Jan 2017 12:05:54 +0100")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Linux SCSI Mailinglist <linux-scsi@vger.kernel.org>, Linux Kernel Mailinglist <linux-kernel@vger.kernel.org>, Dick Kennedy <dick.kennedy@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Shyam Saini <mayhs11saini@gmail.com>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
->>>>> "Shyam" == Shyam Saini <mayhs11saini@gmail.com> writes:
+>>>>> "Johannes" == Johannes Thumshirn <jthumshirn@suse.de> writes:
 
-Shyam> Replace BUG() with BUG_ON() using coccinelle
+Johannes> Set the elsiocb contexts to NULL after freeing as others
+Johannes> depend on it.
 
 Applied to 4.11/scsi-queue.
 
