@@ -1,108 +1,84 @@
-From: Rameshwar Prasad Sahu <rsahu@apm.com>
-Subject: [PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Fri, 20 Jan 2017 17:41:58 +0530
-Message-ID: <1484914318-5406-1-git-send-email-rsahu@apm.com>
+From: John Garry <john.garry@huawei.com>
+Subject: [PATCH v2 7/7] scsi: hisi_sas: decrease running_req in hisi_sas_slot_task_free()
+Date: Fri, 20 Jan 2017 20:45:24 +0800
+Message-ID: <1484916324-211630-8-git-send-email-john.garry@huawei.com>
+References: <1484916324-211630-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: devicetree@vger.kernel.org, mlangsdo@redhat.com, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1484916324-211630-1-git-send-email-john.garry@huawei.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
 List-Id: linux-scsi@vger.kernel.org
 
-This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
-that was broken with hardware v1.0. Second thing, here we should not assume
-XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
-remove this assumption because V1_1 also has a valid _CID for backward
-compatibly with v1.
+From: Xiang Chen <chenxiang66@hisilicon.com>
 
-v2 changes:
-	1. Changed patch description
+There is an issue that hisi_sas_dev.running_req is not
+decremented properly for internal abort and TMF.
 
-Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+To resolve, only decrease running_req in hisi_sas_slot_task_free()
+
+Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
+Signed-off-by: John Garry <john.garry@huawei.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/ata/ahci_xgene.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 8 ++++----
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 2 --
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 73b19b2..8b88be9 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -87,6 +87,7 @@
-
- enum xgene_ahci_version {
- 	XGENE_AHCI_V1 = 1,
-+	XGENE_AHCI_V1_1,
- 	XGENE_AHCI_V2,
- };
-
-@@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
- #ifdef CONFIG_ACPI
- static const struct acpi_device_id xgene_ahci_acpi_match[] = {
- 	{ "APMC0D0D", XGENE_AHCI_V1},
-+	{ "APMC0D67", XGENE_AHCI_V1_1},
- 	{ "APMC0D32", XGENE_AHCI_V2},
- 	{},
- };
-@@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-
- static const struct of_device_id xgene_ahci_of_match[] = {
- 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
-+	{.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
- 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
- 	{},
- };
-@@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	struct resource *res;
- 	const struct of_device_id *of_devid;
- 	enum xgene_ahci_version version = XGENE_AHCI_V1;
--	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
--					      &xgene_ahci_v2_port_info };
-+	const struct ata_port_info *ppi;
- 	int rc;
-
- 	hpriv = ahci_platform_get_resources(pdev);
-@@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
- 					__func__);
- 				version = XGENE_AHCI_V1;
--			} else if (info->valid & ACPI_VALID_CID) {
--				version = XGENE_AHCI_V2;
- 			}
- 		}
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index 8601cec..53637a9 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -71,6 +71,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 			     struct hisi_sas_slot *slot)
+ {
+ 	struct device *dev = &hisi_hba->pdev->dev;
++	struct domain_device *device = task->dev;
++	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 
+ 	if (!slot->task)
+ 		return;
+@@ -97,6 +99,8 @@ void hisi_sas_slot_task_free(struct hisi_hba *hisi_hba, struct sas_task *task,
+ 	slot->task = NULL;
+ 	slot->port = NULL;
+ 	hisi_sas_slot_index_free(hisi_hba, slot->idx);
++	if (sas_dev)
++		atomic64_dec(&sas_dev->running_req);
+ 	/* slot memory is fully zeroed when it is reused */
+ }
+ EXPORT_SYMBOL_GPL(hisi_sas_slot_task_free);
+@@ -141,8 +145,6 @@ static void hisi_sas_slot_abort(struct work_struct *work)
+ 	struct hisi_hba *hisi_hba = dev_to_hisi_hba(task->dev);
+ 	struct scsi_cmnd *cmnd = task->uldd_task;
+ 	struct hisi_sas_tmf_task tmf_task;
+-	struct domain_device *device = task->dev;
+-	struct hisi_sas_device *sas_dev = device->lldd_dev;
+ 	struct scsi_lun lun;
+ 	struct device *dev = &hisi_hba->pdev->dev;
+ 	int tag = abort_slot->idx;
+@@ -165,8 +167,6 @@ static void hisi_sas_slot_abort(struct work_struct *work)
+ 	spin_unlock_irqrestore(&hisi_hba->lock, flags);
+ 	if (task->task_done)
+ 		task->task_done(task);
+-	if (sas_dev)
+-		atomic64_dec(&sas_dev->running_req);
+ }
+ 
+ static int hisi_sas_task_prep(struct sas_task *task, struct hisi_hba *hisi_hba,
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+index 9e16f42..1b21445 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
+@@ -1830,8 +1830,6 @@ static void slot_err_v2_hw(struct hisi_hba *hisi_hba,
  	}
-@@ -858,18 +858,20 @@ skip_clk_phy:
-
- 	switch (version) {
- 	case XGENE_AHCI_V1:
-+		ppi = &xgene_ahci_v1_port_info;
- 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
- 		break;
- 	case XGENE_AHCI_V2:
-+		ppi = &xgene_ahci_v2_port_info;
- 		hpriv->flags |= AHCI_HFLAG_YES_FBS;
- 		hpriv->irq_handler = xgene_ahci_irq_intr;
- 		break;
- 	default:
-+		ppi = &xgene_ahci_v1_port_info;
- 		break;
- 	}
-
--	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
--				     &ahci_platform_sht);
-+	rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
- 	if (rc)
- 		goto disable_resources;
-
---
-1.7.1
+ 
+ out:
+-	if (sas_dev)
+-		atomic64_dec(&sas_dev->running_req);
+ 
+ 	hisi_sas_slot_task_free(hisi_hba, task, slot);
+ 	sts = ts->stat;
+-- 
+1.9.1
