@@ -1,57 +1,106 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [lkp-robot] [rcu] b332151a29: kernel_BUG_at_mm/slab.c
-Date: Fri, 20 Jan 2017 08:09:36 -0800
-Message-ID: <32585b54-c2fd-66ea-e636-bdbd387133c1@kernel.dk>
-References: <20170119010216.GA8287@yexl-desktop>
- <20170120160123.z4llgm4qaaemkp52@linutronix.de>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH v2 3/4] mpt3sas: Fix Firmware fault state 0x2100 during
+ heavy 4K RR FIO stress test.
+Date: Fri, 20 Jan 2017 21:44:04 +0530
+Message-ID: <CAK=zhgrDrLy3qBG_ZWJ_pGh9rJwJa2QM14C73hDMyuR1O3e05A@mail.gmail.com>
+References: <1484923333-8509-1-git-send-email-chaitra.basappa@broadcom.com>
+ <1484923333-8509-4-git-send-email-chaitra.basappa@broadcom.com> <20170120151036.GD9315@linux-x5ow.site>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170120160123.z4llgm4qaaemkp52@linutronix.de>
+In-Reply-To: <20170120151036.GD9315@linux-x5ow.site>
 Sender: linux-kernel-owner@vger.kernel.org
-To: Sebastian Andrzej Siewior <bigeasy@linutronix.de>, kernel test robot <xiaolong.ye@intel.com>
-Cc: "Paul E. McKenney" <paulmck@linux.vnet.ibm.com>, LKML <linux-kernel@vger.kernel.org>, lkp@01.org, linux-scsi@vger.kernel.org, tglx@linutronix.de, linux-block@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>, "James E.J. Bottomley" <JBottomley@parallels.com>, "jejb@kernel.org" <jejb@kernel.org>, Christoph Hellwig <hch@infradead.org>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <Sathya.Prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Krishnaraddi Mankani <krishnaraddi.mankani@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/20/2017 08:01 AM, Sebastian Andrzej Siewior wrote:
-> On 2017-01-19 09:02:16 [+0800], kernel test robot wrote:
->> test-description: Trinity is a linux system call fuzz tester.
-> 
-> you don't even get to fire up trinity. With and without the patch you
-> crash very early.
-> 
->> +-----------------------------------------------------+------------+------------+
->> |                                                     | d5f6ab9c11 | b332151a29 |
->> +-----------------------------------------------------+------------+------------+
->> | boot_successes                                      | 0          | 0          |
->> | boot_failures                                       | 6          | 8          |
->> | WARNING:at_include/linux/kref.h:#kobject_get        | 6          | 8          |
->> | WARNING:at_arch/x86/mm/dump_pagetables.c:#note_page | 2          | 2          |
->> | kernel_BUG_at_mm/slab.c                             | 0          | 4          |
->> | invalid_opcode:#[##]PREEMPT_SMP                     | 0          | 4          |
->> | Kernel_panic-not_syncing:Fatal_exception            | 0          | 6          |
->> | BUG:unable_to_handle_kernel                         | 0          | 2          |
->> | Oops                                                | 0          | 2          |
->> +-----------------------------------------------------+------------+------------+
-> 
-> There is no successful boot. The pattern changes with patch in question
-> applied.
-> 
->> [    8.044624] sd 0:0:0:0: [sda] Synchronizing SCSI cache
->> [    8.055721] slab: double free detected in cache 'kmalloc-32', objp 8af558c0
->> [    8.057138] ------------[ cut here ]------------
->> [    8.058085] kernel BUG at mm/slab.c:2624!
->> [    8.059255] invalid opcode: 0000 [#1] PREEMPT SMP
+On Fri, Jan 20, 2017 at 8:40 PM, Johannes Thumshirn <jthumshirn@suse.de> wr=
+ote:
+> On Fri, Jan 20, 2017 at 08:12:12PM +0530, Chaitra P B wrote:
+>> Due existence of loop in the IO path our HBA will receive heavy IOs and
+>> also as driver is not updating the Reply Post Host Index frequently, So
+>> there will be a high chance that our Firmware unable to find any free en=
+try
+>> in the Reply Post Descriptor Queue (i.e. Queue overflow occurs) and can
+>> observe 0x2100 firmware fault.
+>> So to fix this, we have defined a thresh hold value. After continuously
+>> processing this thresh hold number of reply descriptors driver will upda=
+te
+>> the Reply Descriptor Host Index so that this thresh hold number of reply
+>> descriptors entries will be freed and these entries will be available fo=
+r
+>> firmware and we won't observe this Firmware fault. We have defined this
+>> threshold value as 1/3rd of the hba queue depth.
+>>
+>> Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
+>> Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+>> ---
+>>  drivers/scsi/mpt3sas/mpt3sas_base.c |   19 +++++++++++++++++++
+>>  1 files changed, 19 insertions(+), 0 deletions(-)
+>>
+>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/=
+mpt3sas_base.c
+>> index 722fab9..a3fe1fb 100644
+>> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+>> @@ -1040,6 +1040,25 @@ _base_interrupt(int irq, void *bus_id)
+>>                   reply_q->reply_post_free[reply_q->reply_post_host_inde=
+x].
+>>                   Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK=
+;
+>>               completed_cmds++;
+>> +             /* Update the reply post host index after continuously
+>> +              * processing the threshold number of Reply Descriptors.
+>> +              * So that FW can find enough entries to post the Reply
+>> +              * Descriptors in the reply descriptor post queue.
+>> +              */
+>> +             if (completed_cmds > ioc->hba_queue_depth/3) {
+>> +                     if (ioc->combined_reply_queue) {
+>> +                             writel(reply_q->reply_post_host_index |
+>> +                                             ((msix_index  & 7) <<
+>> +                                              MPI2_RPHI_MSIX_INDEX_SHIF=
+T),
+>> +                                 ioc->replyPostRegisterIndex[msix_index=
+/8]);
+>> +                     } else {
+>> +                             writel(reply_q->reply_post_host_index |
+>> +                                             (msix_index <<
+>> +                                              MPI2_RPHI_MSIX_INDEX_SHIF=
+T),
+>> +                                             &ioc->chip->ReplyPostHostI=
+ndex);
+>> +                     }
+>> +                     completed_cmds =3D 1;
+>> +             }
+>>               if (request_desript_type =3D=3D MPI2_RPY_DESCRIPT_FLAGS_UN=
+USED)
+>>                       goto out;
+>>               if (!reply_q->reply_post_host_index)
+>
+> Do I understand it correctly that you fill the HBA's internal queue up to=
+ a
+> 3rd and then kick it to start processing?
 
-Is there a full trace of this?
+No, driver will continuously process the reply descriptors from Reply
+Descriptor Post Queue (RDPQ) but will update it's Host Index (tail
+index) with the firmware after continuously processing 1/3rd of the
+HBA queue depth number of descriptors instead of updating it's host
+index only at after it see unused descriptor entry. So that firmware
+can always get enough free descriptors entries to post reply
+descriptors and won't see any 0x2100 fault which will occur if
+firmware doesn't find any free descriptor entry in the  RDPQ queue.
 
-> yes. With and without the patch there is a lot of wrong stuff like
-> complains about a kobject initialized again. This leads to a double free
-> at some point.
+Thanks,
+Sreekanth
 
-And what patch are we talking about? I don't mind being CC'ed into a thread,
-but some context and background would be immensely helpful here...
-
--- 
-Jens Axboe
+>
+> Thanks,
+>         Johannes
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: Felix Imend=C3=B6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=C3=BCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
