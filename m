@@ -1,119 +1,51 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v4 05/12] qla2xxx: Fix wrong argument in sp done callback.
-Date: Thu, 19 Jan 2017 22:27:57 -0800
-Message-ID: <1484893684-1255-6-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v4 01/12] qla2xxx: Remove direct access of scsi_status field in se_cmd
+Date: Thu, 19 Jan 2017 22:27:53 -0800
+Message-ID: <1484893684-1255-2-git-send-email-himanshu.madhani@cavium.com>
 References: <1484893684-1255-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0086.outbound.protection.outlook.com ([104.47.38.86]:42658
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751320AbdATG2s (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 20 Jan 2017 01:28:48 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1484893684-1255-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, bart.vanassche@gmail.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-Callback for sp->done expects scsi_qla_host is passed in as argument,
-Instead qla_hw_data is passed in.
-
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 8 ++++----
- drivers/scsi/qla2xxx/qla_mr.c  | 6 +++---
- drivers/scsi/qla2xxx/qla_os.c  | 2 +-
- 3 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    | 1 +
+ drivers/scsi/qla2xxx/qla_target.c | 2 +-
+ 2 files changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 0c6bd93..87b57bf 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1216,7 +1216,7 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
- 		req->outstanding_cmds[index] = NULL;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index 1f7c6d2..1196150 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -1794,6 +1794,7 @@ struct crc_context {
+ #define SS_RESIDUAL_OVER		BIT_10
+ #define SS_SENSE_LEN_VALID		BIT_9
+ #define SS_RESPONSE_INFO_LEN_VALID	BIT_8
++#define SS_SCSI_STATUS_BYTE	0xff
  
- 		/* Save ISP completion status */
--		sp->done(ha, sp, DID_OK << 16);
-+		sp->done(vha, sp, DID_OK << 16);
- 	} else {
- 		ql_log(ql_log_warn, vha, 0x3016, "Invalid SCSI SRB.\n");
+ #define SS_RESERVE_CONFLICT		(BIT_4 | BIT_3)
+ #define SS_BUSY_CONDITION		BIT_3
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 9c6cb75..47acc26 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2288,7 +2288,7 @@ static void qlt_24xx_init_ctio_to_isp(struct ctio7_to_24xx *ctio,
+ 		int i;
  
-@@ -2409,7 +2409,7 @@ struct scsi_dif_tuple {
- 		    resid_len, fw_resid_len, sp, cp);
- 
- 	if (rsp->status_srb == NULL)
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- }
- 
- /**
-@@ -2466,7 +2466,7 @@ struct scsi_dif_tuple {
- 	/* Place command on done queue. */
- 	if (sense_len == 0) {
- 		rsp->status_srb = NULL;
--		sp->done(ha, sp, cp->result);
-+		sp->done(vha, sp, cp->result);
- 	}
- }
- 
-@@ -2502,7 +2502,7 @@ struct scsi_dif_tuple {
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- 		return;
- 	}
- fatal:
-diff --git a/drivers/scsi/qla2xxx/qla_mr.c b/drivers/scsi/qla2xxx/qla_mr.c
-index 02f1de1..d38bc64 100644
---- a/drivers/scsi/qla2xxx/qla_mr.c
-+++ b/drivers/scsi/qla2xxx/qla_mr.c
-@@ -2537,7 +2537,7 @@
- 		    par_sense_len, rsp_info_len);
- 
- 	if (rsp->status_srb == NULL)
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- }
- 
- /**
-@@ -2614,7 +2614,7 @@
- 	/* Place command on done queue. */
- 	if (sense_len == 0) {
- 		rsp->status_srb = NULL;
--		sp->done(ha, sp, cp->result);
-+		sp->done(vha, sp, cp->result);
- 	}
- }
- 
-@@ -2695,7 +2695,7 @@
- 
- 	sp = qla2x00_get_sp_from_handle(vha, func, req, pkt);
- 	if (sp) {
--		sp->done(ha, sp, res);
-+		sp->done(vha, sp, res);
- 		return;
- 	}
- 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 074dcca..65eca89 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1203,7 +1203,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
- 	}
- 
- 	spin_lock_irqsave(&ha->hardware_lock, flags);
--	sp->done(ha, sp, 0);
-+	sp->done(vha, sp, 0);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
- 
- 	/* Did the command return during mailbox execution? */
+ 		if (qlt_need_explicit_conf(prm->tgt->ha, prm->cmd, 1)) {
+-			if (prm->cmd->se_cmd.scsi_status != 0) {
++			if ((prm->rq_result & SS_SCSI_STATUS_BYTE) != 0) {
+ 				ql_dbg(ql_dbg_tgt, prm->cmd->vha, 0xe017,
+ 				    "Skipping EXPLICIT_CONFORM and "
+ 				    "CTIO7_FLAGS_CONFORM_REQ for FCP READ w/ "
 -- 
 1.8.3.1
-
