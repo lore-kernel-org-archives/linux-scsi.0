@@ -1,78 +1,108 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: Re: [PATCH 2/2] scsi: storvsc: Add support for FC lightweight host.
-Date: Fri, 20 Jan 2017 12:31:16 +0300
-Message-ID: <20170120093116.GH4398@mwanda>
-References: <1484771338-8903-1-git-send-email-cavery@redhat.com>
- <1484771338-8903-3-git-send-email-cavery@redhat.com>
- <20170118231555.GC4454@mwanda> <5880FD8F.8020608@redhat.com>
+From: Rameshwar Prasad Sahu <rsahu@apm.com>
+Subject: [PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
+ controller hardware v1.1
+Date: Fri, 20 Jan 2017 17:41:58 +0530
+Message-ID: <1484914318-5406-1-git-send-email-rsahu@apm.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-Content-Disposition: inline
-In-Reply-To: <5880FD8F.8020608@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Cathy Avery <cavery@redhat.com>
-Cc: jejb@linux.vnet.ibm.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, haiyangz@microsoft.com, linux-kernel@vger.kernel.org, devel@linuxdriverproject.org
+Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
+List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
+List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
+List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
+List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
+List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
+ <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
+Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
+Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
+To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
+Cc: devicetree@vger.kernel.org, mlangsdo@redhat.com, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
 List-Id: linux-scsi@vger.kernel.org
 
-On Thu, Jan 19, 2017 at 12:55:27PM -0500, Cathy Avery wrote:
-> 
-> 
-> On 01/18/2017 06:15 PM, Dan Carpenter wrote:
-> >On Wed, Jan 18, 2017 at 03:28:58PM -0500, Cathy Avery wrote:
-> >>Enable FC lightweight host option so that the luns exposed by
-> >>the driver may be manually scanned.
-> >>
-> >>Signed-off-by: Cathy Avery <cavery@redhat.com>
-> >>---
-> >>  drivers/scsi/storvsc_drv.c | 6 +-----
-> >>  1 file changed, 1 insertion(+), 5 deletions(-)
-> >>
-> >>diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-> >>index 888e16e..fc1d6ba 100644
-> >>--- a/drivers/scsi/storvsc_drv.c
-> >>+++ b/drivers/scsi/storvsc_drv.c
-> >>@@ -1882,6 +1882,7 @@ static struct hv_driver storvsc_drv = {
-> >>  static struct fc_function_template fc_transport_functions = {
-> >>  	.show_host_node_name = 1,
-> >>  	.show_host_port_name = 1,
-> >>+	.lightweight_transport = 1,
-> >>  };
-> >>  #endif
-> >>@@ -1906,11 +1907,6 @@ static int __init storvsc_drv_init(void)
-> >>  	fc_transport_template = fc_attach_transport(&fc_transport_functions);
-> >>  	if (!fc_transport_template)
-> >>  		return -ENODEV;
-> >>-
-> >>-	/*
-> >>-	 * Install Hyper-V specific timeout handler.
-> >>-	 */
-> >>-	fc_transport_template->eh_timed_out = storvsc_eh_timed_out;
-> >I don't undestand how removing this is related.
-> 
-> Its not related but it is also not necessary so I took it out. The
-> default scsi timeout handler will be used.
-> 
-> I can certainly put it back.
+This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
+that was broken with hardware v1.0. Second thing, here we should not assume
+XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
+remove this assumption because V1_1 also has a valid _CID for backward
+compatibly with v1.
 
-I'm not sure that we understand each other properly.
+v2 changes:
+	1. Changed patch description
 
-Has this patch already been committed?  If so, then there is no need to
-put it back.
+Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+---
+ drivers/ata/ahci_xgene.c |   14 ++++++++------
+ 1 files changed, 8 insertions(+), 6 deletions(-)
 
-But it if hasn't been committed, can you resend the patches with that
-bit broken out into a separate patch with its own changelog?  Patches
-should only do one thing but you're  saying that it's doing two
-unrelated things.
+diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+index 73b19b2..8b88be9 100644
+--- a/drivers/ata/ahci_xgene.c
++++ b/drivers/ata/ahci_xgene.c
+@@ -87,6 +87,7 @@
 
-regards,
-dan carpenter
+ enum xgene_ahci_version {
+ 	XGENE_AHCI_V1 = 1,
++	XGENE_AHCI_V1_1,
+ 	XGENE_AHCI_V2,
+ };
+
+@@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
+ #ifdef CONFIG_ACPI
+ static const struct acpi_device_id xgene_ahci_acpi_match[] = {
+ 	{ "APMC0D0D", XGENE_AHCI_V1},
++	{ "APMC0D67", XGENE_AHCI_V1_1},
+ 	{ "APMC0D32", XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
+
+ static const struct of_device_id xgene_ahci_of_match[] = {
+ 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
++	{.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
+ 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
+ 	{},
+ };
+@@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 	struct resource *res;
+ 	const struct of_device_id *of_devid;
+ 	enum xgene_ahci_version version = XGENE_AHCI_V1;
+-	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
+-					      &xgene_ahci_v2_port_info };
++	const struct ata_port_info *ppi;
+ 	int rc;
+
+ 	hpriv = ahci_platform_get_resources(pdev);
+@@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
+ 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
+ 					__func__);
+ 				version = XGENE_AHCI_V1;
+-			} else if (info->valid & ACPI_VALID_CID) {
+-				version = XGENE_AHCI_V2;
+ 			}
+ 		}
+ 	}
+@@ -858,18 +858,20 @@ skip_clk_phy:
+
+ 	switch (version) {
+ 	case XGENE_AHCI_V1:
++		ppi = &xgene_ahci_v1_port_info;
+ 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
+ 		break;
+ 	case XGENE_AHCI_V2:
++		ppi = &xgene_ahci_v2_port_info;
+ 		hpriv->flags |= AHCI_HFLAG_YES_FBS;
+ 		hpriv->irq_handler = xgene_ahci_irq_intr;
+ 		break;
+ 	default:
++		ppi = &xgene_ahci_v1_port_info;
+ 		break;
+ 	}
+
+-	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
+-				     &ahci_platform_sht);
++	rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
+ 	if (rc)
+ 		goto disable_resources;
+
+--
+1.7.1
