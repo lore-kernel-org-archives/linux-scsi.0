@@ -1,26 +1,27 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH v2 1/4] mpt3sas: Added print to notify cable running at
- a degraded speed.
-Date: Fri, 20 Jan 2017 10:11:37 -0800
-Message-ID: <1484935897.12563.6.camel@perches.com>
-References: <1484923333-8509-1-git-send-email-chaitra.basappa@broadcom.com>
-         <1484923333-8509-2-git-send-email-chaitra.basappa@broadcom.com>
-         <1484934914.12563.4.camel@perches.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: lpfc: Replace BUG() with BUG_ON()
+Date: Fri, 20 Jan 2017 16:49:12 -0500
+Message-ID: <yq1mvelieqv.fsf@oracle.com>
+References: <1482576667-8042-1-git-send-email-mayhs11saini@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <1484934914.12563.4.camel@perches.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Chaitra P B <chaitra.basappa@broadcom.com>, jejb@kernel.org, hch@infradead.org, James.Bottomley@HansenPartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:26312 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751201AbdATVtV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2017 16:49:21 -0500
+In-Reply-To: <1482576667-8042-1-git-send-email-mayhs11saini@gmail.com> (Shyam
+        Saini's message of "Sat, 24 Dec 2016 16:21:07 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Shyam Saini <mayhs11saini@gmail.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 
-On Fri, 2017-01-20 at 09:55 -0800, Joe Perches wrote:
-> I believe MPT3SAS_FMT is unnecessary obfuscation and
-> it should just be replaced by "%s: " everywhere.
+>>>>> "Shyam" == Shyam Saini <mayhs11saini@gmail.com> writes:
 
-Here's a trivial command that could be used one day:
+Shyam> Replace BUG() with BUG_ON() using coccinelle
 
-$ git grep --name-only MPT3SAS_FMT -- "*.c" | \
-  xargs perl -p -i -e 'local $/; while (<>) { s/\bMPT3SAS_FMT\s*"/"%s: /g; print; }'
+Applied to 4.11/scsi-queue.
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
