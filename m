@@ -1,62 +1,87 @@
 From: John Garry <john.garry@huawei.com>
-Subject: [PATCH v2 4/7] scsi: hisi_sas: modify hard reset for directed-attached disk
-Date: Fri, 20 Jan 2017 20:45:21 +0800
-Message-ID: <1484916324-211630-5-git-send-email-john.garry@huawei.com>
+Subject: [PATCH v2 6/7] scsi: hisi_sas: fix probe ordering problem
+Date: Fri, 20 Jan 2017 20:45:23 +0800
+Message-ID: <1484916324-211630-7-git-send-email-john.garry@huawei.com>
 References: <1484916324-211630-1-git-send-email-john.garry@huawei.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from szxga01-in.huawei.com ([58.251.152.64]:10650 "EHLO
-        szxga01-in.huawei.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751834AbdATMOf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 20 Jan 2017 07:14:35 -0500
+Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1484916324-211630-1-git-send-email-john.garry@huawei.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-kernel-owner@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
 Cc: linuxarm@huawei.com, zhangfei.gao@linaro.org, xuwei5@hisilicon.com, john.garry2@mail.dcu.ie, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, jthumshirn@suse.de, Xiang Chen <chenxiang66@hisilicon.com>, John Garry <john.garry@huawei.com>
+List-Id: linux-scsi@vger.kernel.org
 
 From: Xiang Chen <chenxiang66@hisilicon.com>
 
-Correctly set registers in v2 for root PHY hardreset for directly
-attached disk.
+There is a potential probe issue in how we trigger the hw initialisation.
+Although we use 1s timer to delay hw initialisation, there is still a
+potential that sas_register_ha() is not be finished before we start
+the PHY init from hw->hw_init().
+To avoid this issue, initialise the hw after sas_register_ha() in the
+same probe context.
+Note: it is not necessary to use 1s timer now (modified v2 hw only).
 
 Signed-off-by: Xiang Chen <chenxiang66@hisilicon.com>
 Signed-off-by: John Garry <john.garry@huawei.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
+ drivers/scsi/hisi_sas/hisi_sas_main.c  | 8 ++++----
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c | 8 ++------
+ 2 files changed, 6 insertions(+), 10 deletions(-)
 
+diff --git a/drivers/scsi/hisi_sas/hisi_sas_main.c b/drivers/scsi/hisi_sas/hisi_sas_main.c
+index b2782ce..8601cec 100644
+--- a/drivers/scsi/hisi_sas/hisi_sas_main.c
++++ b/drivers/scsi/hisi_sas/hisi_sas_main.c
+@@ -1552,10 +1552,6 @@ int hisi_sas_probe(struct platform_device *pdev,
+ 
+ 	hisi_sas_init_add(hisi_hba);
+ 
+-	rc = hisi_hba->hw->hw_init(hisi_hba);
+-	if (rc)
+-		goto err_out_ha;
+-
+ 	rc = scsi_add_host(shost, &pdev->dev);
+ 	if (rc)
+ 		goto err_out_ha;
+@@ -1564,6 +1560,10 @@ int hisi_sas_probe(struct platform_device *pdev,
+ 	if (rc)
+ 		goto err_out_register_ha;
+ 
++	rc = hisi_hba->hw->hw_init(hisi_hba);
++	if (rc)
++		goto err_out_register_ha;
++
+ 	scsi_scan_host(shost);
+ 
+ 	return 0;
 diff --git a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-index 93fceda..2e776b7 100644
+index 2e776b7..9e16f42 100644
 --- a/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
 +++ b/drivers/scsi/hisi_sas/hisi_sas_v2_hw.c
-@@ -207,6 +207,8 @@
- #define TXID_AUTO			(PORT_BASE + 0xb8)
- #define TXID_AUTO_CT3_OFF		1
- #define TXID_AUTO_CT3_MSK		(0x1 << TXID_AUTO_CT3_OFF)
-+#define TX_HARDRST_OFF          2
-+#define TX_HARDRST_MSK          (0x1 << TX_HARDRST_OFF)
- #define RX_IDAF_DWORD0			(PORT_BASE + 0xc4)
- #define RX_IDAF_DWORD1			(PORT_BASE + 0xc8)
- #define RX_IDAF_DWORD2			(PORT_BASE + 0xcc)
-@@ -1078,7 +1080,15 @@ static void stop_phy_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- 
- static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
- {
-+	struct hisi_sas_phy *phy = &hisi_hba->phy[phy_no];
-+	u32 txid_auto;
-+
- 	stop_phy_v2_hw(hisi_hba, phy_no);
-+	if (phy->identify.device_type == SAS_END_DEVICE) {
-+		txid_auto = hisi_sas_phy_read32(hisi_hba, phy_no, TXID_AUTO);
-+		hisi_sas_phy_write32(hisi_hba, phy_no, TXID_AUTO,
-+					txid_auto | TX_HARDRST_MSK);
-+	}
- 	msleep(100);
+@@ -1093,9 +1093,8 @@ static void phy_hard_reset_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
  	start_phy_v2_hw(hisi_hba, phy_no);
  }
+ 
+-static void start_phys_v2_hw(unsigned long data)
++static void start_phys_v2_hw(struct hisi_hba *hisi_hba)
+ {
+-	struct hisi_hba *hisi_hba = (struct hisi_hba *)data;
+ 	int i;
+ 
+ 	for (i = 0; i < hisi_hba->n_phy; i++)
+@@ -1104,10 +1103,7 @@ static void start_phys_v2_hw(unsigned long data)
+ 
+ static void phys_init_v2_hw(struct hisi_hba *hisi_hba)
+ {
+-	struct timer_list *timer = &hisi_hba->timer;
+-
+-	setup_timer(timer, start_phys_v2_hw, (unsigned long)hisi_hba);
+-	mod_timer(timer, jiffies + HZ);
++	start_phys_v2_hw(hisi_hba);
+ }
+ 
+ static void sl_notify_v2_hw(struct hisi_hba *hisi_hba, int phy_no)
 -- 
 1.9.1
-
