@@ -1,7 +1,7 @@
 From: Chaitra P B <chaitra.basappa@broadcom.com>
-Subject: [PATCH v3 1/4] mpt3sas: Added print to notify cable running at a degraded speed.
-Date: Mon, 23 Jan 2017 15:26:07 +0530
-Message-ID: <1485165370-43401-2-git-send-email-chaitra.basappa@broadcom.com>
+Subject: [PATCH v3 2/4] mpt3sas: Fix for Crusader to achieve product targets with SAS devices.
+Date: Mon, 23 Jan 2017 15:26:08 +0530
+Message-ID: <1485165370-43401-3-git-send-email-chaitra.basappa@broadcom.com>
 References: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
@@ -10,68 +10,122 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-Driver processes the event MPI26_EVENT_ACTIVE_CABLE_DEGRADED
-when a cable is present and is running at a degraded speed
-(below the SAS3 12 Gb/s rate). Prints added
-to inform the user that the cable is not running at
-optimal speed.
+Small glitch/degraded performance in Crusader is improved with SAS
+drives by removing unnecessary spinlocks while clearing scsi command
+in drivers internal lookup table.
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpi/mpi2_ioc.h  |    2 ++
- drivers/scsi/mpt3sas/mpt3sas_scsih.c |   25 +++++++++++++++++--------
- 2 files changed, 19 insertions(+), 8 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |    1 +
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c   |    4 +++-
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c |   31 ++++++++++++++++++++++++++++---
+ 4 files changed, 33 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-index 8bae305..af4be40 100644
---- a/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-+++ b/drivers/scsi/mpt3sas/mpi/mpi2_ioc.h
-@@ -624,6 +624,8 @@ typedef struct _MPI26_EVENT_DATA_ACTIVE_CABLE_EXCEPT {
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index f00ef88..722fab9 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -5522,6 +5522,7 @@ mpt3sas_base_attach(struct MPT3SAS_ADAPTER *ioc)
+ 		goto out_free_resources;
  
- /* defines for ReasonCode field */
- #define MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER     (0x00)
-+#define MPI26_EVENT_ACTIVE_CABLE_PRESENT                (0x01)
-+#define MPI26_EVENT_ACTIVE_CABLE_DEGRADED               (0x02)
+ 	ioc->non_operational_loop = 0;
++	ioc->got_task_abort_from_ioctl = 0;
+ 	return 0;
  
- /*Hard Reset Received Event data */
+  out_free_resources:
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index dcb33f4..83cfa16 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1000,6 +1000,7 @@ struct MPT3SAS_ADAPTER {
+ 	u8		broadcast_aen_busy;
+ 	u16		broadcast_aen_pending;
+ 	u8		shost_recovery;
++	u8		got_task_abort_from_ioctl;
  
+ 	struct mutex	reset_in_progress_mutex;
+ 	spinlock_t	ioc_reset_in_progress_lock;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 95f0f24..02fe1c4 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -826,16 +826,18 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			"TASK_MGMT: handle(0x%04x), task_type(0x%02x)\n",
+ 			ioc->name,
+ 		    le16_to_cpu(tm_request->DevHandle), tm_request->TaskType));
+-
++		ioc->got_task_abort_from_ioctl = 1;
+ 		if (tm_request->TaskType ==
+ 		    MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK ||
+ 		    tm_request->TaskType ==
+ 		    MPI2_SCSITASKMGMT_TASKTYPE_QUERY_TASK) {
+ 			if (_ctl_set_task_mid(ioc, &karg, tm_request)) {
+ 				mpt3sas_base_free_smid(ioc, smid);
++				ioc->got_task_abort_from_ioctl = 0;
+ 				goto out;
+ 			}
+ 		}
++		ioc->got_task_abort_from_ioctl = 0;
+ 
+ 		if (test_bit(device_handle, ioc->device_remove_in_progress)) {
+ 			dtmprintk(ioc, pr_info(MPT3SAS_FMT
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 75f3fce..2c6a689 100644
+index 2c6a689..cc05e4f 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -8028,15 +8028,24 @@ mpt3sas_scsih_event_callback(struct MPT3SAS_ADAPTER *ioc, u8 msix_index,
- 	case MPI2_EVENT_ACTIVE_CABLE_EXCEPTION:
- 		ActiveCableEventData =
- 		    (Mpi26EventDataActiveCableExcept_t *) mpi_reply->EventData;
--		if (ActiveCableEventData->ReasonCode ==
--				MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER) {
--			pr_info(MPT3SAS_FMT "Currently an active cable with ReceptacleID %d",
--			    ioc->name, ActiveCableEventData->ReceptacleID);
--			pr_info("cannot be powered and devices connected to this active cable");
--			pr_info("will not be seen. This active cable");
--			pr_info("requires %d mW of power",
--			    ActiveCableEventData->ActiveCablePowerRequirement);
-+		switch (ActiveCableEventData->ReasonCode) {
-+		case MPI26_EVENT_ACTIVE_CABLE_INSUFFICIENT_POWER:
-+			pr_notice(MPT3SAS_FMT "Receptacle ID %d: This active cable"
-+				  " requires %d mW of power\n", ioc->name,
-+			     ActiveCableEventData->ReceptacleID,
-+			     ActiveCableEventData->ActiveCablePowerRequirement);
-+			pr_notice(MPT3SAS_FMT "Receptacle ID %d: Devices connected"
-+				  " to this active cable will not be seen\n",
-+			     ioc->name, ActiveCableEventData->ReceptacleID);
-+			break;
-+
-+		case MPI26_EVENT_ACTIVE_CABLE_DEGRADED:
-+			pr_notice(MPT3SAS_FMT "ReceptacleID %d: This cable",
-+				ioc->name, ActiveCableEventData->ReceptacleID);
-+			pr_notice(" is not running at an optimal speed(12 Gb/s)\n");
-+			break;
- 		}
-+
- 		break;
+@@ -1074,6 +1074,26 @@ _scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ }
  
- 	default: /* ignore the rest */
+ /**
++ * __scsih_scsi_lookup_get_clear - returns scmd entry without
++ *						holding any lock.
++ * @ioc: per adapter object
++ * @smid: system request message index
++ *
++ * Returns the smid stored scmd pointer.
++ * Then will dereference the stored scmd pointer.
++ */
++static inline struct scsi_cmnd *
++__scsih_scsi_lookup_get_clear(struct MPT3SAS_ADAPTER *ioc,
++		u16 smid)
++{
++	struct scsi_cmnd *scmd = NULL;
++
++	swap(scmd, ioc->scsi_lookup[smid - 1].scmd);
++
++	return scmd;
++}
++
++/**
+  * _scsih_scsi_lookup_get_clear - returns scmd entry
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -1088,8 +1108,7 @@ _scsih_scsi_lookup_get_clear(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ 	struct scsi_cmnd *scmd;
+ 
+ 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+-	scmd = ioc->scsi_lookup[smid - 1].scmd;
+-	ioc->scsi_lookup[smid - 1].scmd = NULL;
++	scmd = __scsih_scsi_lookup_get_clear(ioc, smid);
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 
+ 	return scmd;
+@@ -4659,7 +4678,13 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	unsigned long flags;
+ 
+ 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+-	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
++
++	if (ioc->broadcast_aen_busy || ioc->pci_error_recovery ||
++			ioc->got_task_abort_from_ioctl)
++		scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
++	else
++		scmd = __scsih_scsi_lookup_get_clear(ioc, smid);
++
+ 	if (scmd == NULL)
+ 		return 1;
+ 
 -- 
 1.7.1
