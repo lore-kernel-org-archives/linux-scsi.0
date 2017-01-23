@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 01/24] aacraid: Remove duplicate irq management code
-Date: Mon, 23 Jan 2017 10:08:45 -0800
-Message-ID: <20170123180908.3465-2-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 21/24] aacraid: Retrieve HBA host information ioctl
+Date: Mon, 23 Jan 2017 10:09:05 -0800
+Message-ID: <20170123180908.3465-22-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0073.outbound.protection.outlook.com ([104.47.36.73]:2657
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0064.outbound.protection.outlook.com ([104.47.42.64]:17664
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750873AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751886AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 23 Jan 2017 19:47:01 -0500
 In-Reply-To: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,95 +17,129 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Banesh@microsemi.com
 
-Removed duplicate code that for acquiring and releasing irqs
+Added a new ioctl interface to retrieve the host device information.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c | 58 +++-----------------------------------------
- 1 file changed, 3 insertions(+), 55 deletions(-)
+ drivers/scsi/aacraid/aacraid.h  | 52 +++++++++++++++++++++++++++++++++++++++++
+ drivers/scsi/aacraid/commctrl.c | 26 +++++++++++++++++++++
+ 2 files changed, 78 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 3ecbf20..fd26a2d 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -1327,35 +1327,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index a94a07d..52a2264 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2338,6 +2338,7 @@ struct revision
+ #define FSACTL_GET_CONTAINERS			2131
+ #define FSACTL_SEND_LARGE_FIB			CTL_CODE(2138, METHOD_BUFFERED)
+ #define FSACTL_RESET_IOP			CTL_CODE(2140, METHOD_BUFFERED)
++#define FSACTL_GET_HBA_INFO			CTL_CODE(2150, METHOD_BUFFERED)
+ /* flags defined for IOP & HW SOFT RESET */
+ #define HW_IOP_RESET				0x01
+ #define HW_SOFT_RESET				0x02
+@@ -2377,6 +2378,57 @@ struct aac_common
+ extern struct aac_common aac_config;
  
- static void aac_release_resources(struct aac_dev *aac)
- {
--	int i;
--
- 	aac_adapter_disable_int(aac);
--	if (aac->pdev->device == PMC_DEVICE_S6 ||
--	    aac->pdev->device == PMC_DEVICE_S7 ||
--	    aac->pdev->device == PMC_DEVICE_S8 ||
--	    aac->pdev->device == PMC_DEVICE_S9) {
--		if (aac->max_msix > 1) {
--			for (i = 0; i < aac->max_msix; i++)
--				free_irq(pci_irq_vector(aac->pdev, i),
--					&(aac->aac_msix[i]));
--		} else {
--			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
--		}
--	} else {
--		free_irq(aac->pdev->irq, aac);
--	}
--	if (aac->msi)
--		pci_disable_msi(aac->pdev);
--	else if (aac->max_msix > 1)
--		pci_disable_msix(aac->pdev);
--
-+	aac_free_irq(aac);
+ /*
++ * This is for management ioctl purpose only.
++ */
++struct aac_hba_info {
++
++	u8	DriverName[50];
++	u8	AdapterNumber;
++	u8	SystemIoBusNumber;
++	u8	DeviceNumber;
++	u32	FunctionNumber;
++	u32	VendorID;
++	u32	DeviceID;
++	u32	SubVendorID;
++	u32	SubSystemID;
++	u32	MappedBaseAddressSize;
++	u32	BasePhysicalAddress_HighPart;
++	u32	BasePhysicalAddress_LowPart;
++
++	u32	MaxCommandSize;
++	u32	MaxFibSize;
++	u32	MaxScatterGatherFromOs;
++	u32	MaxScatterGatherToFw;
++	u32	MaxOutstandingFibs;
++
++	u32	QueueStartThreshold;
++	u32	QueueDumpThreshold;
++	u32	MaxIoSizeQueued;
++	u32	OutstandingIO;
++
++	u32	FirmwareBuildNumber;
++	u32	BIOSBuildNumber;
++	u32	DriverBuildNumber;
++	u32	SerialNumber_HighPart;
++	u32	SerialNumber_LowPart;
++	u32	SupportedOptions;
++	u32	FeatureBits;
++	u32	currentnumberPorts;
++
++	u8	NewCommInterface:1;
++	u8	NewCommandsSupported:1;
++	u8	DisablePassthrough:1;
++	u8	ExposeNonDasd:1;
++	u8	QueueAllowed:1;
++	u8	BLEDCheckEnabled:1;
++	u8	reserved1:1;
++	u8	reserted2:1;
++
++	u32	reserved3[10];
++
++};
++
++/*
+  *	The following macro is used when sending and receiving FIBs. It is
+  *	only used for debugging.
+  */
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 4b65b91..9ade2b4 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1011,6 +1011,29 @@ static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
+ 	}
+ 	return 0;
  }
- 
- static int aac_acquire_resources(struct aac_dev *dev)
- {
--	int i, j;
--	int instance = dev->id;
--	const char *name = dev->name;
- 	unsigned long status;
- 	/*
- 	 *	First clear out all interrupts.  Then enable the one's that we
-@@ -1377,37 +1354,8 @@ static int aac_acquire_resources(struct aac_dev *dev)
- 	if (dev->msi_enabled)
- 		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
- 
--	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
--		for (i = 0; i < dev->max_msix; i++) {
--			dev->aac_msix[i].vector_no = i;
--			dev->aac_msix[i].dev = dev;
--
--			if (request_irq(pci_irq_vector(dev->pdev, i),
--					dev->a_ops.adapter_intr,
--					0, "aacraid", &(dev->aac_msix[i]))) {
--				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
--						name, instance, i);
--				for (j = 0 ; j < i ; j++)
--					free_irq(pci_irq_vector(dev->pdev, j),
--						 &(dev->aac_msix[j]));
--				pci_disable_msix(dev->pdev);
--				goto error_iounmap;
--			}
--		}
--	} else {
--		dev->aac_msix[0].vector_no = 0;
--		dev->aac_msix[0].dev = dev;
--
--		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
--			IRQF_SHARED, "aacraid",
--			&(dev->aac_msix[0])) < 0) {
--			if (dev->msi)
--				pci_disable_msi(dev->pdev);
--			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
--					name, instance);
--			goto error_iounmap;
--		}
--	}
-+	if (aac_acquire_irq(dev))
-+		goto error_iounmap;
- 
- 	aac_adapter_enable_int(dev);
- 
++
++static int aac_get_hba_info(struct aac_dev *dev, void __user *arg)
++{
++	struct aac_hba_info hbainfo;
++
++	hbainfo.AdapterNumber		= (u8) dev->id;
++	hbainfo.SystemIoBusNumber	= dev->pdev->bus->number;
++	hbainfo.DeviceNumber		= (dev->pdev->devfn >> 3);
++	hbainfo.FunctionNumber		= (dev->pdev->devfn & 0x0007);
++
++	hbainfo.VendorID		= dev->pdev->vendor;
++	hbainfo.DeviceID		= dev->pdev->device;
++	hbainfo.SubVendorID		= dev->pdev->subsystem_vendor;
++	hbainfo.SubSystemID		= dev->pdev->subsystem_device;
++
++	if (copy_to_user(arg, &hbainfo, sizeof(struct aac_hba_info))) {
++		dprintk((KERN_DEBUG "aacraid: Could not copy hba info\n"));
++		return -EFAULT;
++	}
++
++	return 0;
++}
++
+ struct aac_reset_iop {
+ 	u8	reset_type;
+ };
+@@ -1070,6 +1093,9 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+ 	case FSACTL_GET_PCI_INFO:
+ 		status = aac_get_pci_info(dev,arg);
+ 		break;
++	case FSACTL_GET_HBA_INFO:
++		status = aac_get_hba_info(dev, arg);
++		break;
+ 	case FSACTL_RESET_IOP:
+ 		status = aac_send_reset_adapter(dev, arg);
+ 		break;
 -- 
 2.7.4
 
