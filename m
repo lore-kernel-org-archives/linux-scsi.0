@@ -1,89 +1,211 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/16] scsi: remove gfp_flags member in scsi_host_cmd_pool
-Date: Mon, 23 Jan 2017 16:29:14 +0100
-Message-ID: <1485185361-29786-10-git-send-email-hch@lst.de>
+Subject: [PATCH 14/16] block/bsg: move queue creation into bsg_setup_queue
+Date: Mon, 23 Jan 2017 16:29:19 +0100
+Message-ID: <1485185361-29786-15-git-send-email-hch@lst.de>
 References: <1485185361-29786-1-git-send-email-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56594 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751290AbdAWPaG (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2017 10:30:06 -0500
 In-Reply-To: <1485185361-29786-1-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
 Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
-List-Id: linux-scsi@vger.kernel.org
 
-When using the slab allocator we already decide at cache creation time if
-an allocation comes from a GFP_DMA pool using the SLAB_CACHE_DMA flag,
-and there is no point passing the kmalloc-family only GFP_DMA flag to
-kmem_cache_alloc.  Drop all the infrastructure for doing so.
+Simply the boilerplate code needed for bsg nodes a bit.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/scsi.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+ block/bsg-lib.c                     | 21 +++++++++++----------
+ drivers/scsi/scsi_transport_fc.c    | 36 ++++++++----------------------------
+ drivers/scsi/scsi_transport_iscsi.c | 15 ++++-----------
+ include/linux/bsg-lib.h             |  5 ++---
+ 4 files changed, 25 insertions(+), 52 deletions(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 75455d4..0f93892 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -105,7 +105,6 @@ struct scsi_host_cmd_pool {
- 	char			*cmd_name;
- 	char			*sense_name;
- 	unsigned int		slab_flags;
--	gfp_t			gfp_mask;
- };
+diff --git a/block/bsg-lib.c b/block/bsg-lib.c
+index 9d652a9..c74acf4 100644
+--- a/block/bsg-lib.c
++++ b/block/bsg-lib.c
+@@ -177,7 +177,7 @@ static int bsg_create_job(struct device *dev, struct request *req)
+  *
+  * Drivers/subsys should pass this to the queue init function.
+  */
+-void bsg_request_fn(struct request_queue *q)
++static void bsg_request_fn(struct request_queue *q)
+ 	__releases(q->queue_lock)
+ 	__acquires(q->queue_lock)
+ {
+@@ -214,24 +214,24 @@ void bsg_request_fn(struct request_queue *q)
+ 	put_device(dev);
+ 	spin_lock_irq(q->queue_lock);
+ }
+-EXPORT_SYMBOL_GPL(bsg_request_fn);
  
- static struct scsi_host_cmd_pool scsi_cmd_pool = {
-@@ -118,7 +117,6 @@ static struct scsi_host_cmd_pool scsi_cmd_dma_pool = {
- 	.cmd_name	= "scsi_cmd_cache(DMA)",
- 	.sense_name	= "scsi_sense_cache(DMA)",
- 	.slab_flags	= SLAB_HWCACHE_ALIGN|SLAB_CACHE_DMA,
--	.gfp_mask	= __GFP_DMA,
- };
+ /**
+  * bsg_setup_queue - Create and add the bsg hooks so we can receive requests
+  * @dev: device to attach bsg device to
+- * @q: request queue setup by caller
+  * @name: device to give bsg device
+  * @job_fn: bsg job handler
+  * @dd_job_size: size of LLD data needed for each job
+- *
+- * The caller should have setup the reuqest queue with bsg_request_fn
+- * as the request_fn.
+  */
+-int bsg_setup_queue(struct device *dev, struct request_queue *q,
+-		    char *name, bsg_job_fn *job_fn, int dd_job_size)
++struct request_queue *bsg_setup_queue(struct device *dev, char *name,
++		bsg_job_fn *job_fn, int dd_job_size)
+ {
++	struct request_queue *q;
+ 	int ret;
  
- static DEFINE_MUTEX(host_cmd_pool_mutex);
-@@ -156,12 +154,11 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- 	struct scsi_host_cmd_pool *pool = shost->cmd_pool;
- 	struct scsi_cmnd *cmd;
- 
--	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask);
- 	if (!cmd)
- 		goto fail;
- 
--	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
--					     gfp_mask | pool->gfp_mask);
-+	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab, gfp_mask);
- 	if (!cmd->sense_buffer)
- 		goto fail_free_cmd;
- 
-@@ -327,10 +324,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
++	q = blk_init_queue(bsg_request_fn, NULL);
++	if (!q)
++		return ERR_PTR(-ENOMEM);
++
+ 	q->queuedata = dev;
+ 	q->bsg_job_size = dd_job_size;
+ 	q->bsg_job_fn = job_fn;
+@@ -243,9 +243,10 @@ int bsg_setup_queue(struct device *dev, struct request_queue *q,
+ 	if (ret) {
+ 		printk(KERN_ERR "%s: bsg interface failed to "
+ 		       "initialize - register queue\n", dev->kobj.name);
+-		return ret;
++		blk_cleanup_queue(q);
++		return ERR_PTR(ret);
  	}
  
- 	pool->slab_flags = SLAB_HWCACHE_ALIGN;
--	if (shost->unchecked_isa_dma) {
-+	if (shost->unchecked_isa_dma)
- 		pool->slab_flags |= SLAB_CACHE_DMA;
--		pool->gfp_mask = __GFP_DMA;
+-	return 0;
++	return q;
+ }
+ EXPORT_SYMBOL_GPL(bsg_setup_queue);
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index afcedec..13dcb9b 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -3765,7 +3765,6 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	struct device *dev = &shost->shost_gendev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
+ 	char bsg_name[20];
+ 
+ 	fc_host->rqst_q = NULL;
+@@ -3776,24 +3775,14 @@ fc_bsg_hostadd(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
+ 	snprintf(bsg_name, sizeof(bsg_name),
+ 		 "fc_host%d", shost->host_no);
+ 
+-	q = blk_init_queue(bsg_request_fn, NULL);
+-	if (!q) {
+-		dev_err(dev,
+-			"fc_host%d: bsg interface failed to initialize - no request queue\n",
+-			shost->host_no);
+-		return -ENOMEM;
 -	}
+-
+-	__scsi_init_queue(shost, q);
+-	err = bsg_setup_queue(dev, q, bsg_name, fc_bsg_dispatch,
+-				 i->f->dd_bsg_size);
+-	if (err) {
++	q = bsg_setup_queue(dev, bsg_name, fc_bsg_dispatch, i->f->dd_bsg_size);
++	if (IS_ERR(q)) {
+ 		dev_err(dev,
+ 			"fc_host%d: bsg interface failed to initialize - setup queue\n",
+ 			shost->host_no);
+-		blk_cleanup_queue(q);
+-		return err;
++		return PTR_ERR(q);
+ 	}
++	__scsi_init_queue(shost, q);
+ 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+ 	blk_queue_rq_timeout(q, FC_DEFAULT_BSG_TIMEOUT);
+ 	fc_host->rqst_q = q;
+@@ -3825,27 +3814,18 @@ fc_bsg_rportadd(struct Scsi_Host *shost, struct fc_rport *rport)
+ 	struct device *dev = &rport->dev;
+ 	struct fc_internal *i = to_fc_internal(shost->transportt);
+ 	struct request_queue *q;
+-	int err;
  
- 	if (hostt->cmd_size)
- 		hostt->cmd_pool = pool;
-@@ -424,7 +419,6 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
-  */
- int scsi_setup_command_freelist(struct Scsi_Host *shost)
- {
--	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
- 	struct scsi_cmnd *cmd;
+ 	rport->rqst_q = NULL;
  
- 	spin_lock_init(&shost->free_list_lock);
-@@ -437,7 +431,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
- 	/*
- 	 * Get one backup command for this host.
- 	 */
--	cmd = scsi_host_alloc_command(shost, gfp_mask);
-+	cmd = scsi_host_alloc_command(shost, GFP_KERNEL);
- 	if (!cmd) {
- 		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
+ 	if (!i->f->bsg_request)
+ 		return -ENOTSUPP;
+ 
+-	q = blk_init_queue(bsg_request_fn, NULL);
+-	if (!q) {
+-		dev_err(dev, "bsg interface failed to initialize - no request queue\n");
+-		return -ENOMEM;
+-	}
+-
+-	__scsi_init_queue(shost, q);
+-	err = bsg_setup_queue(dev, q, NULL, fc_bsg_dispatch, i->f->dd_bsg_size);
+-	if (err) {
++	q = bsg_setup_queue(dev, NULL, fc_bsg_dispatch, i->f->dd_bsg_size);
++	if (IS_ERR(q)) {
+ 		dev_err(dev, "failed to setup bsg queue\n");
+-		blk_cleanup_queue(q);
+-		return err;
++		return PTR_ERR(q);
+ 	}
+-
++	__scsi_init_queue(shost, q);
+ 	blk_queue_prep_rq(q, fc_bsg_rport_prep);
+ 	blk_queue_rq_timed_out(q, fc_bsg_job_timeout);
+ 	blk_queue_rq_timeout(q, BLK_DEFAULT_SG_TIMEOUT);
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index 04ebe6e..568c9f2 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -1537,25 +1537,18 @@ iscsi_bsg_host_add(struct Scsi_Host *shost, struct iscsi_cls_host *ihost)
+ 	struct iscsi_internal *i = to_iscsi_internal(shost->transportt);
+ 	struct request_queue *q;
+ 	char bsg_name[20];
+-	int ret;
+ 
+ 	if (!i->iscsi_transport->bsg_request)
+ 		return -ENOTSUPP;
+ 
+ 	snprintf(bsg_name, sizeof(bsg_name), "iscsi_host%d", shost->host_no);
+-
+-	q = blk_init_queue(bsg_request_fn, NULL);
+-	if (!q)
+-		return -ENOMEM;
+-
+-	__scsi_init_queue(shost, q);
+-	ret = bsg_setup_queue(dev, q, bsg_name, iscsi_bsg_host_dispatch, 0);
+-	if (ret) {
++	q = bsg_setup_queue(dev, bsg_name, iscsi_bsg_host_dispatch, 0);
++	if (IS_ERR(q)) {
+ 		shost_printk(KERN_ERR, shost, "bsg interface failed to "
+ 			     "initialize - no request queue\n");
+-		blk_cleanup_queue(q);
+-		return ret;
++		return PTR_ERR(q);
+ 	}
++	__scsi_init_queue(shost, q);
+ 
+ 	ihost->bsg_q = q;
+ 	return 0;
+diff --git a/include/linux/bsg-lib.h b/include/linux/bsg-lib.h
+index 657a718..e34dde2 100644
+--- a/include/linux/bsg-lib.h
++++ b/include/linux/bsg-lib.h
+@@ -66,9 +66,8 @@ struct bsg_job {
+ 
+ void bsg_job_done(struct bsg_job *job, int result,
+ 		  unsigned int reply_payload_rcv_len);
+-int bsg_setup_queue(struct device *dev, struct request_queue *q, char *name,
+-		    bsg_job_fn *job_fn, int dd_job_size);
+-void bsg_request_fn(struct request_queue *q);
++struct request_queue *bsg_setup_queue(struct device *dev, char *name,
++		bsg_job_fn *job_fn, int dd_job_size);
+ void bsg_job_put(struct bsg_job *job);
+ int __must_check bsg_job_get(struct bsg_job *job);
+ 
 -- 
 2.1.4
 
