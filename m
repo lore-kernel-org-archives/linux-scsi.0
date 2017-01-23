@@ -1,7 +1,7 @@
 From: Chaitra P B <chaitra.basappa@broadcom.com>
-Subject: [PATCH v3 3/4] mpt3sas: Fix Firmware fault state 0x2100 during heavy 4K RR FIO stress test.
-Date: Mon, 23 Jan 2017 15:26:09 +0530
-Message-ID: <1485165370-43401-4-git-send-email-chaitra.basappa@broadcom.com>
+Subject: [PATCH v3 4/4] mpt3sas: Updating driver version to v15.100.00.00
+Date: Mon, 23 Jan 2017 15:26:10 +0530
+Message-ID: <1485165370-43401-5-git-send-email-chaitra.basappa@broadcom.com>
 References: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
 Return-path: <linux-kernel-owner@vger.kernel.org>
 In-Reply-To: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
@@ -10,53 +10,31 @@ To: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org
 Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, chaitra.basappa@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-Due existence of loop in the IO path our HBA will receive heavy IOs and
-also as driver is not updating the Reply Post Host Index frequently, So
-there will be a high chance that our Firmware unable to find any free entry
-in the Reply Post Descriptor Queue (i.e. Queue overflow occurs) and can
-observe 0x2100 firmware fault.
-So to fix this, we have defined a thresh hold value. After continuously
-processing this thresh hold number of reply descriptors driver will update
-the Reply Descriptor Host Index so that this thresh hold number of reply
-descriptors entries will be freed and these entries will be available for
-firmware and we won't observe this Firmware fault. We have defined this
-threshold value as 1/3rd of the hba queue depth.
+Updated driver version to "15.100.00.00"
 
 Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c |   19 +++++++++++++++++++
- 1 files changed, 19 insertions(+), 0 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.h |    6 +++---
+ 1 files changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 722fab9..a3fe1fb 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -1040,6 +1040,25 @@ _base_interrupt(int irq, void *bus_id)
- 		    reply_q->reply_post_free[reply_q->reply_post_host_index].
- 		    Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
- 		completed_cmds++;
-+		/* Update the reply post host index after continuously
-+		 * processing the threshold number of Reply Descriptors.
-+		 * So that FW can find enough entries to post the Reply
-+		 * Descriptors in the reply descriptor post queue.
-+		 */
-+		if (completed_cmds > ioc->hba_queue_depth/3) {
-+			if (ioc->combined_reply_queue) {
-+				writel(reply_q->reply_post_host_index |
-+						((msix_index  & 7) <<
-+						 MPI2_RPHI_MSIX_INDEX_SHIFT),
-+				    ioc->replyPostRegisterIndex[msix_index/8]);
-+			} else {
-+				writel(reply_q->reply_post_host_index |
-+						(msix_index <<
-+						 MPI2_RPHI_MSIX_INDEX_SHIFT),
-+						&ioc->chip->ReplyPostHostIndex);
-+			}
-+			completed_cmds = 1;
-+		}
- 		if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
- 			goto out;
- 		if (!reply_q->reply_post_host_index)
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 83cfa16..4ab634f 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -73,9 +73,9 @@
+ #define MPT3SAS_DRIVER_NAME		"mpt3sas"
+ #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
+ #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
+-#define MPT3SAS_DRIVER_VERSION		"14.101.00.00"
+-#define MPT3SAS_MAJOR_VERSION		14
+-#define MPT3SAS_MINOR_VERSION		101
++#define MPT3SAS_DRIVER_VERSION		"15.100.00.00"
++#define MPT3SAS_MAJOR_VERSION		15
++#define MPT3SAS_MINOR_VERSION		100
+ #define MPT3SAS_BUILD_VERSION		0
+ #define MPT3SAS_RELEASE_VERSION	00
+ 
 -- 
 1.7.1
