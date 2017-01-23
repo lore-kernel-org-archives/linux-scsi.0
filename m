@@ -1,308 +1,531 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 05/24] aacraid: Retrieve and update the device types
-Date: Mon, 23 Jan 2017 10:08:49 -0800
-Message-ID: <20170123180908.3465-6-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 17/24] aacraid: Added support to abort cmd and reset lun
+Date: Mon, 23 Jan 2017 10:09:01 -0800
+Message-ID: <20170123180908.3465-18-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0055.outbound.protection.outlook.com ([104.47.40.55]:4896
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0053.outbound.protection.outlook.com ([104.47.32.53]:30400
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751880AbdAXArE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Jan 2017 19:47:04 -0500
+        id S1751885AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Jan 2017 19:47:01 -0500
 In-Reply-To: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Banesh@microsemi.com
 
-This patch adds support to retrieve the type of each adapter connected
-device. Applicable to HBA1000 and SmartIOC2000 products
+Added task management command support to abort any timed out commands
+in case of a eh_abort call and to reset lun's in case of eh_reset call.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c  | 141 ++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/aacraid/aacraid.h |  60 +++++++++++++++++-
- 2 files changed, 199 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |  48 ++++++
+ drivers/scsi/aacraid/linit.c   | 349 +++++++++++++++++++++++++++++++----------
+ drivers/scsi/aacraid/src.c     |  33 +++-
+ 3 files changed, 343 insertions(+), 87 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 8a58b96..87789580 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1509,11 +1509,138 @@ static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
- 	return aac_scsi_32(fib, cmd);
- }
- 
-+/**
-+ *	aac_update hba_map()-	update current hba map with data from FW
-+ *	@dev:	aac_dev structure
-+ *	@phys_luns: FW information from report phys luns
-+ *
-+ *	Update our hba map with the information gathered from the FW
-+ */
-+void aac_update_hba_map(struct aac_dev *dev,
-+		struct aac_ciss_phys_luns_resp *phys_luns)
-+{
-+	/* ok and extended reporting */
-+	u32 lun_count, nexus;
-+	u32 i, bus, target;
-+	u8 expose_flag, attribs;
-+	u8 devtype;
-+
-+	lun_count = ((phys_luns->list_length[0] << 24)
-+			+ (phys_luns->list_length[1] << 16)
-+			+ (phys_luns->list_length[2] << 8)
-+			+ (phys_luns->list_length[3])) / 24;
-+
-+	for (i = 0; i < lun_count; ++i) {
-+
-+		bus = phys_luns->lun[i].level2[1] & 0x3f;
-+		target = phys_luns->lun[i].level2[0];
-+		expose_flag = phys_luns->lun[i].bus >> 6;
-+		attribs = phys_luns->lun[i].node_ident[9];
-+		nexus = *((u32 *) &phys_luns->lun[i].node_ident[12]);
-+
-+		if (bus >= AAC_MAX_BUSES || target >= AAC_MAX_TARGETS)
-+			continue;
-+
-+		dev->hba_map[bus][target].expose = expose_flag;
-+
-+		if (expose_flag != 0) {
-+			devtype = AAC_DEVTYPE_RAID_MEMBER;
-+			goto update_devtype;
-+		}
-+
-+		if (nexus != 0 && (attribs & 8)) {
-+			devtype = AAC_DEVTYPE_NATIVE_RAW;
-+			dev->hba_map[bus][target].rmw_nexus =
-+					nexus;
-+		} else
-+			devtype = AAC_DEVTYPE_ARC_RAW;
-+
-+		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
-+			goto update_devtype;
-+
-+update_devtype:
-+		dev->hba_map[bus][target].devtype = devtype;
-+	}
-+}
-+
-+/**
-+ *	aac_report_phys_luns()	Process topology change
-+ *	@dev:		aac_dev structure
-+ *	@fibptr:	fib pointer
-+ *
-+ *	Execute a CISS REPORT PHYS LUNS and process the results into
-+ *	the current hba_map.
-+ */
-+int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr)
-+{
-+	int fibsize, datasize;
-+	struct aac_ciss_phys_luns_resp *phys_luns;
-+	struct aac_srb *srbcmd;
-+	struct sgmap64 *sg64;
-+	dma_addr_t addr;
-+	u32 rcode;
-+
-+	/* Thor SA Firmware -> CISS_REPORT_PHYSICAL_LUNS */
-+	fibsize = sizeof(struct aac_srb) - sizeof(struct sgentry)
-+			+ sizeof(struct sgentry64);
-+	datasize = sizeof(struct aac_ciss_phys_luns_resp)
-+			+ (AAC_MAX_TARGETS - 1) * sizeof(struct _ciss_lun);
-+
-+	phys_luns = (struct aac_ciss_phys_luns_resp *) pci_alloc_consistent(
-+			dev->pdev, datasize, &addr);
-+
-+	if (phys_luns != NULL) {
-+		u32 vbus, vid;
-+
-+		vbus = (u32) le16_to_cpu(
-+				dev->supplement_adapter_info.VirtDeviceBus);
-+		vid = (u32) le16_to_cpu(
-+				dev->supplement_adapter_info.VirtDeviceTarget);
-+
-+		aac_fib_init(fibptr);
-+
-+		srbcmd = (struct aac_srb *) fib_data(fibptr);
-+		srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
-+		srbcmd->channel = cpu_to_le32(vbus);
-+		srbcmd->id = cpu_to_le32(vid);
-+		srbcmd->lun = 0;
-+		srbcmd->flags = cpu_to_le32(SRB_DataIn);
-+		srbcmd->timeout = cpu_to_le32(10);
-+		srbcmd->retry_limit = 0;
-+		srbcmd->cdb_size = cpu_to_le32(12);
-+		srbcmd->count = cpu_to_le32(datasize);
-+
-+		memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
-+		srbcmd->cdb[0] = CISS_REPORT_PHYSICAL_LUNS;
-+		srbcmd->cdb[1] = 2; /* extended reporting */
-+		srbcmd->cdb[8] = (u8)(datasize >> 8);
-+		srbcmd->cdb[9] = (u8)(datasize);
-+
-+		sg64 = (struct sgmap64 *) &srbcmd->sg;
-+		sg64->count = cpu_to_le32(1);
-+		sg64->sg[0].addr[1] = cpu_to_le32(upper_32_bits(addr));
-+		sg64->sg[0].addr[0] = cpu_to_le32(lower_32_bits(addr));
-+		sg64->sg[0].count = cpu_to_le32(datasize);
-+
-+		rcode = aac_fib_send(ScsiPortCommand64, fibptr, fibsize,
-+				FsaNormal, 1, 1, NULL, NULL);
-+
-+		/* analyse data */
-+		if (rcode >= 0 && phys_luns->resp_flag == 2) {
-+			/* ok and extended reporting */
-+			aac_update_hba_map(dev, phys_luns);
-+		}
-+	}
-+
-+	pci_free_consistent(dev->pdev, datasize, (void *) phys_luns, addr);
-+	return rcode;
-+}
-+
- int aac_get_adapter_info(struct aac_dev* dev)
- {
- 	struct fib* fibptr;
- 	int rcode;
--	u32 tmp;
-+	u32 tmp, bus, target;
- 	struct aac_adapter_info *info;
- 	struct aac_bus_info *command;
- 	struct aac_bus_info_response *bus_info;
-@@ -1544,6 +1671,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 	}
- 	memcpy(&dev->adapter_info, info, sizeof(*info));
- 
-+	dev->supplement_adapter_info.VirtDeviceBus = 0xffff;
- 	if (dev->adapter_info.options & AAC_OPT_SUPPLEMENT_ADAPTER_INFO) {
- 		struct aac_supplement_adapter_info * sinfo;
- 
-@@ -1571,6 +1699,11 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 
- 	}
- 
-+	/* reset all previous mapped devices (i.e. for init. after IOP_RESET) */
-+	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
-+		for (target = 0; target < AAC_MAX_TARGETS; target++)
-+			dev->hba_map[bus][target].devtype = 0;
-+	}
- 
- 	/*
- 	 * GetBusInfo
-@@ -1603,6 +1736,12 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 		dev->maximum_num_channels = le32_to_cpu(bus_info->BusCount);
- 	}
- 
-+	if (!dev->sync_mode && dev->sa_firmware &&
-+			dev->supplement_adapter_info.VirtDeviceBus != 0xffff) {
-+		/* Thor SA Firmware -> CISS_REPORT_PHYSICAL_LUNS */
-+		rcode = aac_report_phys_luns(dev, fibptr);
-+	}
-+
- 	if (!dev->in_reset) {
- 		char buffer[16];
- 		tmp = le32_to_cpu(dev->adapter_info.kernelrev);
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 057ff78..8c6c4ac 100644
+index 6ca77ff..814310a 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -81,6 +81,27 @@ enum {
+@@ -206,6 +206,53 @@ struct aac_hba_cmd_req {
+ 	 */
+ };
  
- #define AAC_DEBUG_INSTRUMENT_AIF_DELETE
- 
-+#define AAC_MAX_NATIVE_TARGETS		1024
-+/* Thor: 5 phys. buses: #0: empty, 1-4: 256 targets each */
-+#define AAC_MAX_BUSES			5
-+#define AAC_MAX_TARGETS		256
-+#define AAC_MAX_NATIVE_SIZE		2048
++/* Task Management Functions (TMF) */
++#define HBA_TMF_ABORT_TASK	0x01
++#define HBA_TMF_LUN_RESET	0x08
 +
-+#define CISS_REPORT_PHYSICAL_LUNS	0xc3
++struct aac_hba_tm_req {
++	u8	iu_type;	/* HBA information unit type */
++	u8	reply_qid;	/* Host reply queue to post response to */
++	u8	tmf;		/* Task management function */
++	u8	reserved1;
 +
-+struct aac_ciss_phys_luns_resp {
-+	u8	list_length[4];		/* LUN list length (N-7, big endian) */
-+	u8	resp_flag;		/* extended response_flag */
-+	u8	reserved[3];
-+	struct _ciss_lun {
-+		u8	tid[3];		/* Target ID */
-+		u8	bus;		/* Bus, flag (bits 6,7) */
-+		u8	level3[2];
-+		u8	level2[2];
-+		u8	node_ident[16];	/* phys. node identifier */
-+	} lun[1];			/* List of phys. devices */
++	__le32	it_nexus;	/* Device handle for the command */
++
++	u8	lun[8];		/* SCSI LUN */
++
++	/* Used to hold sender context. */
++	__le32	request_id;	/* Sender context */
++	__le32	reserved2;
++
++	/* Request identifier of managed task */
++	__le32	managed_request_id;	/* Sender context being managed */
++	__le32	reserved3;
++
++	/* Lower 32-bits of reserved error data target location on the host */
++	__le32	error_ptr_lo;
++	/* Upper 32-bits of reserved error data target location on the host */
++	__le32	error_ptr_hi;
++	/* Length of reserved error data area on the host in bytes */
++	__le32	error_length;
 +};
 +
- /*
-  * Interrupts
-  */
-@@ -993,6 +1014,20 @@ struct fib {
- 	dma_addr_t		hw_fib_pa;		/* physical address of hw_fib*/
- };
- 
-+#define AAC_DEVTYPE_RAID_MEMBER	1
-+#define AAC_DEVTYPE_ARC_RAW		2
-+#define AAC_DEVTYPE_NATIVE_RAW		3
-+#define AAC_EXPOSE_DISK		0
-+#define AAC_HIDE_DISK			3
++struct aac_hba_reset_req {
++	u8	iu_type;	/* HBA information unit type */
++	/* 0 - reset specified device, 1 - reset all devices */
++	u8	reset_type;
++	u8	reply_qid;	/* Host reply queue to post response to */
++	u8	reserved1;
 +
-+struct aac_hba_map_info {
-+	__le32	rmw_nexus;		/* nexus for native HBA devices */
-+	u8		devtype;	/* device type */
-+	u8		reset_state;	/* 0 - no reset, 1..x - */
-+					/* after xth TM LUN reset */
-+	u8		expose;		/*checks if to expose or not*/
++	__le32	it_nexus;	/* Device handle for the command */
++	__le32	request_id;	/* Sender context */
++	/* Lower 32-bits of reserved error data target location on the host */
++	__le32	error_ptr_lo;
++	/* Upper 32-bits of reserved error data target location on the host */
++	__le32	error_ptr_hi;
++	/* Length of reserved error data area on the host in bytes */
++	__le32	error_length;
 +};
 +
- /*
-  *	Adapter Information Block
-  *
-@@ -1056,7 +1091,28 @@ struct aac_supplement_adapter_info
- 	/* StructExpansion == 1 */
- 	__le32	FeatureBits3;
- 	__le32	SupportedPerformanceModes;
--	__le32	ReservedForFutureGrowth[80];
-+	u8	HostBusType;		/* uses HOST_BUS_TYPE_xxx defines */
-+	u8	HostBusWidth;		/* actual width in bits or links */
-+	u16	HostBusSpeed;		/* actual bus speed/link rate in MHz */
-+	u8	MaxRRCDrives;		/* max. number of ITP-RRC drives/pool */
-+	u8	MaxDiskXtasks;		/* max. possible num of DiskX Tasks */
-+
-+	u8	CpldVerLoaded;
-+	u8	CpldVerInFlash;
-+
-+	__le64	MaxRRCCapacity;
-+	__le32	CompiledMaxHistLogLevel;
-+	u8	CustomBoardName[12];
-+	u16	SupportedCntlrMode;	/* identify supported controller mode */
-+	u16	ReservedForFuture16;
-+	__le32	SupportedOptions3;	/* reserved for future options */
-+
-+	__le16	VirtDeviceBus;		/* virt. SCSI device for Thor */
-+	__le16	VirtDeviceTarget;
-+	__le16	VirtDeviceLUN;
-+	__le16	Unused;
-+	__le32	ReservedForFutureGrowth[68];
-+
- };
- #define AAC_FEATURE_FALCON	cpu_to_le32(0x00000010)
- #define AAC_FEATURE_JBOD	cpu_to_le32(0x08000000)
-@@ -1287,6 +1343,7 @@ struct aac_dev
- 	u32			vector_cap;	/* MSI-X vector capab.*/
- 	int			msi_enabled;	/* MSI/MSI-X enabled */
- 	struct aac_msix_ctx	aac_msix[AAC_MAX_MSIX]; /* context */
-+	struct aac_hba_map_info	hba_map[AAC_MAX_BUSES][AAC_MAX_TARGETS];
- 	u8			adapter_shutdown;
- 	u32			handle_pci_error;
- };
-@@ -2171,6 +2228,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
+ struct aac_hba_resp {
+ 	u8	iu_type;		/* HBA information unit type */
+ 	u8	reserved1[3];
+@@ -223,6 +270,7 @@ struct aac_hba_resp {
+ struct aac_native_hba {
+ 	union {
+ 		struct aac_hba_cmd_req cmd;
++		struct aac_hba_tm_req tmr;
+ 		u8 cmd_bytes[AAC_MAX_NATIVE_SIZE-FW_ERROR_BUFFER_SIZE];
+ 	} cmd;
+ 	union {
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index e95f1e5..0b06d1d 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -566,46 +566,134 @@ static int aac_eh_abort(struct scsi_cmnd* cmd)
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+-	int count;
++	int count, found;
++	u32 bus, cid;
+ 	int ret = FAILED;
  
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
-+int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
- struct fib *aac_fib_alloc(struct aac_dev *dev);
+-	printk(KERN_ERR "%s: Host adapter abort request (%d,%d,%d,%llu)\n",
+-		AAC_DRIVERNAME,
+-		host->host_no, sdev_channel(dev), sdev_id(dev), dev->lun);
+-	switch (cmd->cmnd[0]) {
+-	case SERVICE_ACTION_IN_16:
+-		if (!(aac->raw_io_interface) ||
+-		    !(aac->raw_io_64) ||
+-		    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
+-			break;
+-	case INQUIRY:
+-	case READ_CAPACITY:
+-		/* Mark associated FIB to not complete, eh handler does this */
++	bus = aac_logical_to_phys(scmd_channel(cmd));
++	cid = scmd_id(cmd);
++	if (aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
++		struct fib *fib;
++		struct aac_hba_tm_req *tmf;
++		int status;
++		u64 address;
++		__le32 managed_request_id;
++
++		pr_err("%s: Host adapter abort request (%d,%d,%d,%d)\n",
++		 AAC_DRIVERNAME,
++		 host->host_no, sdev_channel(dev), sdev_id(dev), (int)dev->lun);
++
++		found = 0;
+ 		for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+-			struct fib * fib = &aac->fibs[count];
+-			if (fib->hw_fib_va->header.XferState &&
+-			  (fib->flags & FIB_CONTEXT_FLAG) &&
+-			  (fib->callback_data == cmd)) {
+-				fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
+-				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
++			fib = &aac->fibs[count];
++			if (*(u8 *)fib->hw_fib_va != 0 &&
++				(fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA) &&
++				(fib->callback_data == cmd)) {
++				found = 1;
++				managed_request_id = ((struct aac_hba_cmd_req *)
++					fib->hw_fib_va)->request_id;
++				break;
++			}
++		}
++		if (!found)
++			return ret;
++
++		/* start a HBA_TMF_ABORT_TASK TMF request */
++		fib = aac_fib_alloc(aac);
++		if (!fib)
++			return ret;
++
++		tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
++		memset(tmf, 0, sizeof(*tmf));
++		tmf->tmf = HBA_TMF_ABORT_TASK;
++		tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
++		tmf->lun[1] = cmd->device->lun;
++
++		address = (u64)fib->hw_error_pa;
++		tmf->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
++		tmf->error_ptr_lo = cpu_to_le32((u32)(address & 0xffffffff));
++		tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
++
++		fib->hbacmd_size = sizeof(*tmf);
++		cmd->SCp.sent_command = 0;
++
++		status = aac_hba_send(HBA_IU_TYPE_SCSI_TM_REQ, fib,
++				  (fib_callback) aac_hba_callback,
++				  (void *) cmd);
++
++		/* Wait up to 2 minutes for completion */
++		for (count = 0; count < 120; ++count) {
++			if (cmd->SCp.sent_command) {
+ 				ret = SUCCESS;
++				break;
+ 			}
++			msleep(1000);
+ 		}
+-		break;
+-	case TEST_UNIT_READY:
+-		/* Mark associated FIB to not complete, eh handler does this */
+-		for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+-			struct scsi_cmnd * command;
+-			struct fib * fib = &aac->fibs[count];
+-			if ((fib->hw_fib_va->header.XferState & cpu_to_le32(Async | NoResponseExpected)) &&
+-			  (fib->flags & FIB_CONTEXT_FLAG) &&
+-			  ((command = fib->callback_data)) &&
+-			  (command->device == cmd->device)) {
+-				fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
+-				command->SCp.phase = AAC_OWNER_ERROR_HANDLER;
+-				if (command == cmd)
++
++		if (ret != SUCCESS)
++			pr_err("%s: Host adapter abort request timed out\n",
++			AAC_DRIVERNAME);
++	} else {
++		pr_err(
++			"%s: Host adapter abort request.\n"
++			"%s: Outstanding commands on (%d,%d,%d,%d):\n",
++			AAC_DRIVERNAME, AAC_DRIVERNAME,
++			host->host_no, sdev_channel(dev), sdev_id(dev),
++			(int)dev->lun);
++		switch (cmd->cmnd[0]) {
++		case SERVICE_ACTION_IN_16:
++			if (!(aac->raw_io_interface) ||
++			    !(aac->raw_io_64) ||
++			    ((cmd->cmnd[1] & 0x1f) != SAI_READ_CAPACITY_16))
++				break;
++		case INQUIRY:
++		case READ_CAPACITY:
++			/*
++			 * Mark associated FIB to not complete,
++			 * eh handler does this
++			 */
++			for (count = 0;
++				count < (host->can_queue + AAC_NUM_MGT_FIB);
++				++count) {
++				struct fib *fib = &aac->fibs[count];
++
++				if (fib->hw_fib_va->header.XferState &&
++				(fib->flags & FIB_CONTEXT_FLAG) &&
++				(fib->callback_data == cmd)) {
++					fib->flags |=
++						FIB_CONTEXT_FLAG_TIMED_OUT;
++					cmd->SCp.phase =
++						AAC_OWNER_ERROR_HANDLER;
+ 					ret = SUCCESS;
++				}
+ 			}
++			break;
++		case TEST_UNIT_READY:
++			/*
++			 * Mark associated FIB to not complete,
++			 * eh handler does this
++			 */
++			for (count = 0;
++				count < (host->can_queue + AAC_NUM_MGT_FIB);
++				++count) {
++				struct scsi_cmnd *command;
++				struct fib *fib = &aac->fibs[count];
++
++				if ((fib->hw_fib_va->header.XferState &
++					cpu_to_le32
++					(Async | NoResponseExpected)) &&
++					(fib->flags & FIB_CONTEXT_FLAG) &&
++					((command == fib->callback_data)) &&
++					(command->device == cmd->device)) {
++					fib->flags |=
++						FIB_CONTEXT_FLAG_TIMED_OUT;
++					command->SCp.phase =
++						AAC_OWNER_ERROR_HANDLER;
++					if (command == cmd)
++						ret = SUCCESS;
++				}
++			}
++			break;
+ 		}
+ 	}
+ 	return ret;
+@@ -620,70 +708,165 @@ static int aac_eh_reset(struct scsi_cmnd* cmd)
+ {
+ 	struct scsi_device * dev = cmd->device;
+ 	struct Scsi_Host * host = dev->host;
+-	struct scsi_cmnd * command;
+-	int count;
+ 	struct aac_dev * aac = (struct aac_dev *)host->hostdata;
+-	unsigned long flags;
+-
+-	/* Mark the associated FIB to not complete, eh handler does this */
+-	for (count = 0; count < (host->can_queue + AAC_NUM_MGT_FIB); ++count) {
+-		struct fib * fib = &aac->fibs[count];
+-		if (fib->hw_fib_va->header.XferState &&
+-		  (fib->flags & FIB_CONTEXT_FLAG) &&
+-		  (fib->callback_data == cmd)) {
+-			fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
+-			cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
++	int count;
++	u32 bus, cid;
++	int ret = FAILED;
++
++	bus = aac_logical_to_phys(scmd_channel(cmd));
++	cid = scmd_id(cmd);
++	if (bus < AAC_MAX_BUSES && cid < AAC_MAX_TARGETS &&
++		aac->hba_map[bus][cid].devtype == AAC_DEVTYPE_NATIVE_RAW) {
++		struct fib *fib;
++		int status;
++		u64 address;
++		u8 command;
++
++		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
++			AAC_DRIVERNAME);
++
++		fib = aac_fib_alloc(aac);
++		if (!fib)
++			return ret;
++
++
++		if (aac->hba_map[bus][cid].reset_state == 0) {
++			struct aac_hba_tm_req *tmf;
++
++			/* start a HBA_TMF_LUN_RESET TMF request */
++			tmf = (struct aac_hba_tm_req *)fib->hw_fib_va;
++			memset(tmf, 0, sizeof(*tmf));
++			tmf->tmf = HBA_TMF_LUN_RESET;
++			tmf->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
++			tmf->lun[1] = cmd->device->lun;
++
++			address = (u64)fib->hw_error_pa;
++			tmf->error_ptr_hi = cpu_to_le32
++					((u32)(address >> 32));
++			tmf->error_ptr_lo = cpu_to_le32
++					((u32)(address & 0xffffffff));
++			tmf->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
++			fib->hbacmd_size = sizeof(*tmf);
++
++			command = HBA_IU_TYPE_SCSI_TM_REQ;
++			aac->hba_map[bus][cid].reset_state++;
++		} else if (aac->hba_map[bus][cid].reset_state >= 1) {
++			struct aac_hba_reset_req *rst;
++
++			/* already tried, start a hard reset now */
++			rst = (struct aac_hba_reset_req *)fib->hw_fib_va;
++			memset(rst, 0, sizeof(*rst));
++			/* reset_type is already zero... */
++			rst->it_nexus = aac->hba_map[bus][cid].rmw_nexus;
++
++			address = (u64)fib->hw_error_pa;
++			rst->error_ptr_hi = cpu_to_le32((u32)(address >> 32));
++			rst->error_ptr_lo = cpu_to_le32
++				((u32)(address & 0xffffffff));
++			rst->error_length = cpu_to_le32(FW_ERROR_BUFFER_SIZE);
++			fib->hbacmd_size = sizeof(*rst);
++
++			command = HBA_IU_TYPE_SATA_REQ;
++			aac->hba_map[bus][cid].reset_state = 0;
+ 		}
+-	}
+-	printk(KERN_ERR "%s: Host adapter reset request. SCSI hang ?\n",
++		cmd->SCp.sent_command = 0;
++
++		status = aac_hba_send(command, fib,
++				  (fib_callback) aac_hba_callback,
++				  (void *) cmd);
++
++		/* Wait up to 2 minutes for completion */
++		for (count = 0; count < 120; ++count) {
++			if (cmd->SCp.sent_command) {
++				ret = SUCCESS;
++				break;
++			}
++			msleep(1000);
++		}
++
++		if (ret != SUCCESS)
++			pr_err("%s: Host adapter reset request timed out\n",
++			AAC_DRIVERNAME);
++	} else {
++		struct scsi_cmnd *command;
++		unsigned long flags;
++
++		/* Mark the assoc. FIB to not complete, eh handler does this */
++		for (count = 0;
++			count < (host->can_queue + AAC_NUM_MGT_FIB);
++			++count) {
++			struct fib *fib = &aac->fibs[count];
++
++			if (fib->hw_fib_va->header.XferState &&
++				(fib->flags & FIB_CONTEXT_FLAG) &&
++				(fib->callback_data == cmd)) {
++				fib->flags |= FIB_CONTEXT_FLAG_TIMED_OUT;
++				cmd->SCp.phase = AAC_OWNER_ERROR_HANDLER;
++			}
++		}
++
++		pr_err("%s: Host adapter reset request. SCSI hang ?\n",
+ 					AAC_DRIVERNAME);
+ 
+-	if ((count = aac_check_health(aac)))
+-		return count;
+-	/*
+-	 * Wait for all commands to complete to this specific
+-	 * target (block maximum 60 seconds).
+-	 */
+-	for (count = 60; count; --count) {
+-		int active = aac->in_reset;
++		count = aac_check_health(aac);
++		if (count)
++			return count;
++		/*
++		 * Wait for all commands to complete to this specific
++		 * target (block maximum 60 seconds).
++		 */
++		for (count = 60; count; --count) {
++			int active = aac->in_reset;
+ 
+-		if (active == 0)
+-		__shost_for_each_device(dev, host) {
+-			spin_lock_irqsave(&dev->list_lock, flags);
+-			list_for_each_entry(command, &dev->cmd_list, list) {
+-				if ((command != cmd) &&
+-				    (command->SCp.phase == AAC_OWNER_FIRMWARE)) {
+-					active++;
+-					break;
++			if (active == 0)
++			__shost_for_each_device(dev, host) {
++				spin_lock_irqsave(&dev->list_lock, flags);
++				list_for_each_entry(command, &dev->cmd_list,
++					list) {
++					if ((command != cmd) &&
++					(command->SCp.phase ==
++					AAC_OWNER_FIRMWARE)) {
++						active++;
++						break;
++					}
+ 				}
+-			}
+-			spin_unlock_irqrestore(&dev->list_lock, flags);
+-			if (active)
+-				break;
++				spin_unlock_irqrestore(&dev->list_lock, flags);
++				if (active)
++					break;
+ 
++			}
++			/*
++			 * We can exit If all the commands are complete
++			 */
++			if (active == 0)
++				return SUCCESS;
++			ssleep(1);
+ 		}
++		pr_err("%s: SCSI bus appears hung\n", AAC_DRIVERNAME);
++
+ 		/*
+-		 * We can exit If all the commands are complete
++		 * This adapter needs a blind reset, only do so for
++		 * Adapters that support a register, instead of a commanded,
++		 * reset.
+ 		 */
+-		if (active == 0)
+-			return SUCCESS;
+-		ssleep(1);
++		if (((aac->supplement_adapter_info.SupportedOptions2 &
++			  AAC_OPTION_MU_RESET) ||
++			  (aac->supplement_adapter_info.SupportedOptions2 &
++			  AAC_OPTION_DOORBELL_RESET)) &&
++			  aac_check_reset &&
++			  ((aac_check_reset != 1) ||
++			   !(aac->supplement_adapter_info.SupportedOptions2 &
++			    AAC_OPTION_IGNORE_RESET))) {
++			/* Bypass wait for command quiesce */
++			aac_reset_adapter(aac, 2);
++		}
++		ret = SUCCESS;
+ 	}
+-	printk(KERN_ERR "%s: SCSI bus appears hung\n", AAC_DRIVERNAME);
+ 	/*
+-	 * This adapter needs a blind reset, only do so for Adapters that
+-	 * support a register, instead of a commanded, reset.
++	 * Cause an immediate retry of the command with a ten second delay
++	 * after successful tur
+ 	 */
+-	if (((aac->supplement_adapter_info.SupportedOptions2 &
+-	  AAC_OPTION_MU_RESET) ||
+-	  (aac->supplement_adapter_info.SupportedOptions2 &
+-	  AAC_OPTION_DOORBELL_RESET)) &&
+-	  aac_check_reset &&
+-	  ((aac_check_reset != 1) ||
+-	   !(aac->supplement_adapter_info.SupportedOptions2 &
+-	    AAC_OPTION_IGNORE_RESET)))
+-		aac_reset_adapter(aac, 2); /* Bypass wait for command quiesce */
+-	return SUCCESS; /* Cause an immediate retry of the command with a ten second delay after successful tur */
++	return ret;
+ }
+ 
+ /**
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 124efe6..40a486f 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -497,10 +497,35 @@ static int aac_src_deliver_message(struct fib *fib)
+ 			vector_no = fib->vector_no;
+ 
+ 		if (native_hba) {
+-			((struct aac_hba_cmd_req *)fib->hw_fib_va)->reply_qid
+-				= vector_no;
+-			((struct aac_hba_cmd_req *)fib->hw_fib_va)->request_id
+-				+= (vector_no << 16);
++			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
++				struct aac_hba_tm_req *tm_req;
++
++				tm_req = (struct aac_hba_tm_req *)
++						fib->hw_fib_va;
++				if (tm_req->iu_type ==
++					HBA_IU_TYPE_SCSI_TM_REQ) {
++					((struct aac_hba_tm_req *)
++						fib->hw_fib_va)->reply_qid
++							= vector_no;
++					((struct aac_hba_tm_req *)
++						fib->hw_fib_va)->request_id
++							+= (vector_no << 16);
++				} else {
++					((struct aac_hba_reset_req *)
++						fib->hw_fib_va)->reply_qid
++							= vector_no;
++					((struct aac_hba_reset_req *)
++						fib->hw_fib_va)->request_id
++							+= (vector_no << 16);
++				}
++			} else {
++				((struct aac_hba_cmd_req *)
++					fib->hw_fib_va)->reply_qid
++						= vector_no;
++				((struct aac_hba_cmd_req *)
++					fib->hw_fib_va)->request_id
++						+= (vector_no << 16);
++			}
+ 		} else {
+ 			fib->hw_fib_va->header.Handle += (vector_no << 16);
+ 		}
 -- 
 2.7.4
 
