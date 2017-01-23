@@ -1,24 +1,44 @@
-From: Christoph Hellwig <hch@lst.de>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
-Date: Mon, 23 Jan 2017 17:45:25 +0100
-Message-ID: <20170123164525.GA21485@lst.de>
-References: <20170123163446.9227-1-bart.vanassche@sandisk.com> <20170123163446.9227-2-bart.vanassche@sandisk.com>
+Date: Mon, 23 Jan 2017 17:04:35 +0000
+Message-ID: <0C106365-66E8-4C4F-9AE7-FA681BE17629@cavium.com>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
+ <20170123163446.9227-2-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43684 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750756AbdAWQpv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Jan 2017 11:45:51 -0500
-Content-Disposition: inline
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20170123163446.9227-2-bart.vanassche@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Language: en-US
+Content-ID: <BD4CD7436E2CAB438B78A4123B52DCA3@namprd07.prod.outlook.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Hernandez, Michael" <Michael.Hernandez@cavium.com>, Christoph Hellwig <hch@lst.de>, "stable@vger.kernel.org" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Michael Hernandez <michael.hernandez@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 
-Thanks Bart,
-
-this looks good to me.
-
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+DQpPbiAxLzIzLzE3LCA4OjM0IEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVA
+c2FuZGlzay5jb20+IHdyb3RlOg0KDQo+cWxhMngwMF9wcm9iZV9vbmUoKSBhbGxvY2F0ZXMgSVJR
+cyBiZWZvcmUgaXQgaW5pdGlhbGl6ZXMgcnNwX3FfbWFwDQo+c28gSVJRcyBtdXN0IGJlIGZyZWVk
+IGV2ZW4gaWYgcnNwX3FfbWFwIGFsbG9jYXRpb24gZGlkIG5vdCBvY2N1ci4NCj5UaGlzIHdhcyBk
+ZXRlY3RlZCBieSBrbWVtbGVhay4NCj4NCj5GaXhlczogNGZhMTgzNDU1OTg4ICgic2NzaTogcWxh
+Mnh4eDogVXRpbGl6ZSBwY2lfYWxsb2NfaXJxX3ZlY3RvcnMvcGNpX2ZyZWVfaXJxX3ZlY3RvcnMg
+Y2FsbHMiKQ0KPlNpZ25lZC1vZmYtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YmFydC52YW5hc3NjaGVA
+c2FuZGlzay5jb20+DQo+Q2M6IE1pY2hhZWwgSGVybmFuZGV6IDxtaWNoYWVsLmhlcm5hbmRlekBj
+YXZpdW0uY29tPg0KPkNjOiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1
+bS5jb20+DQo+Q2M6IENocmlzdG9waCBIZWxsd2lnIDxoY2hAbHN0LmRlPg0KPkNjOiA8c3RhYmxl
+QHZnZXIua2VybmVsLm9yZz4NCj4tLS0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2lzci5j
+IHwgMyArKy0NCj4gMSBmaWxlIGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMSBkZWxldGlvbigt
+KQ0KPg0KPmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMgYi9kcml2
+ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj5pbmRleCBkYzg4YTA5ZjkwNDMuLmE5NGIwYjZi
+ZDAzMCAxMDA2NDQNCj4tLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj4rKysg
+Yi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaXNyLmMNCj5AQCAtMzI0Miw3ICszMjQyLDcgQEAg
+cWxhMngwMF9mcmVlX2lycXMoc2NzaV9xbGFfaG9zdF90ICp2aGEpDQo+IAkgKiBmcm9tIGEgcHJv
+YmUgZmFpbHVyZSBjb250ZXh0Lg0KPiAJICovDQo+IAlpZiAoIWhhLT5yc3BfcV9tYXAgfHwgIWhh
+LT5yc3BfcV9tYXBbMF0pDQo+LQkJcmV0dXJuOw0KPisJCWdvdG8gZnJlZV9pcnFzOw0KPiAJcnNw
+ID0gaGEtPnJzcF9xX21hcFswXTsNCj4gDQo+IAlpZiAoaGEtPmZsYWdzLm1zaXhfZW5hYmxlZCkg
+ew0KPkBAIC0zMjYyLDYgKzMyNjIsNyBAQCBxbGEyeDAwX2ZyZWVfaXJxcyhzY3NpX3FsYV9ob3N0
+X3QgKnZoYSkNCj4gCQlmcmVlX2lycShwY2lfaXJxX3ZlY3RvcihoYS0+cGRldiwgMCksIHJzcCk7
+DQo+IAl9DQo+IA0KPitmcmVlX2lycXM6DQo+IAlwY2lfZnJlZV9pcnFfdmVjdG9ycyhoYS0+cGRl
+dik7DQo+IH0NCj4gDQo+LS0gDQo+Mi4xMS4wDQoNClRoYW5rcyBCYXJ0LiBMb29rcyBnb29kLiAN
+Cg0KQWNrZWQtQnk6IEhpbWFuc2h1IE1hZGhhbmkgPGhpbWFuc2h1Lm1hZGhhbmlAY2F2aXVtLmNv
+bT4NCg0K
