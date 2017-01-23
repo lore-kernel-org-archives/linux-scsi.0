@@ -1,348 +1,264 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/16] scsi_dh_emc: switch to scsi_execute_req_flags()
-Date: Mon, 23 Jan 2017 16:29:12 +0100
-Message-ID: <1485185361-29786-8-git-send-email-hch@lst.de>
+Subject: [PATCH 10/16] scsi: respect unchecked_isa_dma for blk-mq
+Date: Mon, 23 Jan 2017 16:29:15 +0100
+Message-ID: <1485185361-29786-11-git-send-email-hch@lst.de>
 References: <1485185361-29786-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:56508 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751035AbdAWP3r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2017 10:29:47 -0500
+Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1485185361-29786-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: linux-block-owner@vger.kernel.org
 To: Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Hannes Reinecke <hare@suse.de>
+Currently blk-mq always allocates the sense buffer using normal GFP_KERNEL
+allocation.  Refactor the cmd pool code to split the cmd and sense allocation
+and share the code to allocate the sense buffers as well as the sense buffer
+slab caches between the legacy and blk-mq path.
 
-Switch to scsi_execute_req_flags() and scsi_get_vpd_page() instead of
-open-coding it.  Using scsi_execute_req_flags() will set REQ_QUIET and
-REQ_PREEMPT, but this is okay as we're evaluating the errors anyway and
-should be able to send the command even if the device is quiesced.
+Note that this switches to lazy allocation of the sense slab caches - the
+slab caches (not the actual allocations) won't be destroy until the scsi
+module is unloaded instead of keeping track of hosts using them.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/scsi/device_handler/scsi_dh_emc.c | 247 +++++++-----------------------
- 1 file changed, 56 insertions(+), 191 deletions(-)
+ drivers/scsi/hosts.c     |  4 ++++
+ drivers/scsi/scsi.c      | 24 ++++---------------
+ drivers/scsi/scsi_lib.c  | 62 +++++++++++++++++++++++++++++++++++++++++++++---
+ drivers/scsi/scsi_priv.h |  5 ++++
+ 4 files changed, 73 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
-index 5b80746..4a7679f 100644
---- a/drivers/scsi/device_handler/scsi_dh_emc.c
-+++ b/drivers/scsi/device_handler/scsi_dh_emc.c
-@@ -88,12 +88,6 @@ struct clariion_dh_data {
- 	 */
- 	unsigned char buffer[CLARIION_BUFFER_SIZE];
- 	/*
--	 * SCSI sense buffer for commands -- assumes serial issuance
--	 * and completion sequence of all commands for same multipath.
--	 */
--	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
--	unsigned int senselen;
--	/*
- 	 * LUN state
- 	 */
- 	int lun_state;
-@@ -116,44 +110,38 @@ struct clariion_dh_data {
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index 258a3f9..6d29c4a 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -213,6 +213,10 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+ 		goto fail;
+ 	}
+ 
++	error = scsi_init_sense_cache(shost);
++	if (error)
++		goto fail;
++
+ 	if (shost_use_blk_mq(shost)) {
+ 		error = scsi_mq_setup_tags(shost);
+ 		if (error)
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 0f93892..469aa0f 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -100,22 +100,18 @@ EXPORT_SYMBOL(scsi_sd_pm_domain);
+ 
+ struct scsi_host_cmd_pool {
+ 	struct kmem_cache	*cmd_slab;
+-	struct kmem_cache	*sense_slab;
+ 	unsigned int		users;
+ 	char			*cmd_name;
+-	char			*sense_name;
+ 	unsigned int		slab_flags;
+ };
+ 
+ static struct scsi_host_cmd_pool scsi_cmd_pool = {
+ 	.cmd_name	= "scsi_cmd_cache",
+-	.sense_name	= "scsi_sense_cache",
+ 	.slab_flags	= SLAB_HWCACHE_ALIGN,
+ };
+ 
+ static struct scsi_host_cmd_pool scsi_cmd_dma_pool = {
+ 	.cmd_name	= "scsi_cmd_cache(DMA)",
+-	.sense_name	= "scsi_sense_cache(DMA)",
+ 	.slab_flags	= SLAB_HWCACHE_ALIGN|SLAB_CACHE_DMA,
+ };
+ 
+@@ -136,7 +132,7 @@ scsi_host_free_command(struct Scsi_Host *shost, struct scsi_cmnd *cmd)
+ 
+ 	if (cmd->prot_sdb)
+ 		kmem_cache_free(scsi_sdb_cache, cmd->prot_sdb);
+-	kmem_cache_free(pool->sense_slab, cmd->sense_buffer);
++	scsi_free_sense_buffer(shost, cmd->sense_buffer);
+ 	kmem_cache_free(pool->cmd_slab, cmd);
+ }
+ 
+@@ -158,7 +154,8 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ 	if (!cmd)
+ 		goto fail;
+ 
+-	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab, gfp_mask);
++	cmd->sense_buffer = scsi_alloc_sense_buffer(shost, gfp_mask,
++			NUMA_NO_NODE);
+ 	if (!cmd->sense_buffer)
+ 		goto fail_free_cmd;
+ 
+@@ -171,7 +168,7 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
+ 	return cmd;
+ 
+ fail_free_sense:
+-	kmem_cache_free(pool->sense_slab, cmd->sense_buffer);
++	scsi_free_sense_buffer(shost, cmd->sense_buffer);
+ fail_free_cmd:
+ 	kmem_cache_free(pool->cmd_slab, cmd);
+ fail:
+@@ -301,7 +298,6 @@ scsi_find_host_cmd_pool(struct Scsi_Host *shost)
+ static void
+ scsi_free_host_cmd_pool(struct scsi_host_cmd_pool *pool)
+ {
+-	kfree(pool->sense_name);
+ 	kfree(pool->cmd_name);
+ 	kfree(pool);
+ }
+@@ -317,8 +313,7 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
+ 		return NULL;
+ 
+ 	pool->cmd_name = kasprintf(GFP_KERNEL, "%s_cmd", hostt->proc_name);
+-	pool->sense_name = kasprintf(GFP_KERNEL, "%s_sense", hostt->proc_name);
+-	if (!pool->cmd_name || !pool->sense_name) {
++	if (!pool->cmd_name) {
+ 		scsi_free_host_cmd_pool(pool);
+ 		return NULL;
+ 	}
+@@ -357,12 +352,6 @@ scsi_get_host_cmd_pool(struct Scsi_Host *shost)
+ 						   pool->slab_flags, NULL);
+ 		if (!pool->cmd_slab)
+ 			goto out_free_pool;
+-
+-		pool->sense_slab = kmem_cache_create(pool->sense_name,
+-						     SCSI_SENSE_BUFFERSIZE, 0,
+-						     pool->slab_flags, NULL);
+-		if (!pool->sense_slab)
+-			goto out_free_slab;
+ 	}
+ 
+ 	pool->users++;
+@@ -371,8 +360,6 @@ scsi_get_host_cmd_pool(struct Scsi_Host *shost)
+ 	mutex_unlock(&host_cmd_pool_mutex);
+ 	return retval;
+ 
+-out_free_slab:
+-	kmem_cache_destroy(pool->cmd_slab);
+ out_free_pool:
+ 	if (hostt->cmd_size) {
+ 		scsi_free_host_cmd_pool(pool);
+@@ -398,7 +385,6 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
+ 
+ 	if (!--pool->users) {
+ 		kmem_cache_destroy(pool->cmd_slab);
+-		kmem_cache_destroy(pool->sense_slab);
+ 		if (hostt->cmd_size) {
+ 			scsi_free_host_cmd_pool(pool);
+ 			hostt->cmd_pool = NULL;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e9e1e14..3d6b364 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -39,6 +39,58 @@
+ 
+ 
+ struct kmem_cache *scsi_sdb_cache;
++static struct kmem_cache *scsi_sense_cache;
++static struct kmem_cache *scsi_sense_isadma_cache;
++static DEFINE_MUTEX(scsi_sense_cache_mutex);
++
++static inline struct kmem_cache *
++scsi_select_sense_cache(struct Scsi_Host *shost)
++{
++	return shost->unchecked_isa_dma ?
++		scsi_sense_isadma_cache : scsi_sense_cache;
++}
++
++void scsi_free_sense_buffer(struct Scsi_Host *shost,
++		unsigned char *sense_buffer)
++{
++	kmem_cache_free(scsi_select_sense_cache(shost), sense_buffer);
++}
++
++unsigned char *scsi_alloc_sense_buffer(struct Scsi_Host *shost, gfp_t gfp_mask,
++		int numa_node)
++{
++	return kmem_cache_alloc_node(scsi_select_sense_cache(shost), gfp_mask,
++			numa_node);
++}
++
++int scsi_init_sense_cache(struct Scsi_Host *shost)
++{
++	struct kmem_cache *cache;
++	int ret = 0;
++
++	cache = scsi_select_sense_cache(shost);
++	if (cache)
++		return 0;
++
++	mutex_lock(&scsi_sense_cache_mutex);
++	if (shost->unchecked_isa_dma) {
++		scsi_sense_isadma_cache =
++			kmem_cache_create("scsi_sense_cache(DMA)",
++			SCSI_SENSE_BUFFERSIZE, 0,
++			SLAB_HWCACHE_ALIGN | SLAB_CACHE_DMA, NULL);
++		if (!scsi_sense_isadma_cache)
++			ret = -ENOMEM;
++	} else {
++		scsi_sense_cache =
++			kmem_cache_create("scsi_sense_cache",
++			SCSI_SENSE_BUFFERSIZE, 0, SLAB_HWCACHE_ALIGN, NULL);
++		if (!scsi_sense_cache)
++			ret = -ENOMEM;
++	}
++
++	mutex_unlock(&scsi_sense_cache_mutex);
++	return ret;
++}
+ 
  /*
-  * Parse MODE_SELECT cmd reply.
-  */
--static int trespass_endio(struct scsi_device *sdev, char *sense)
-+static int trespass_endio(struct scsi_device *sdev,
-+			  struct scsi_sense_hdr *sshdr)
+  * When to reinvoke queueing after a resource shortage. It's 3 msecs to
+@@ -1981,10 +2033,11 @@ static int scsi_init_request(void *data, struct request *rq,
+ 		unsigned int hctx_idx, unsigned int request_idx,
+ 		unsigned int numa_node)
  {
- 	int err = SCSI_DH_IO;
--	struct scsi_sense_hdr sshdr;
--
--	if (!scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE, &sshdr)) {
--		sdev_printk(KERN_ERR, sdev, "%s: Found valid sense data 0x%2x, "
--			    "0x%2x, 0x%2x while sending CLARiiON trespass "
--			    "command.\n", CLARIION_NAME, sshdr.sense_key,
--			    sshdr.asc, sshdr.ascq);
++	struct Scsi_Host *shost = data;
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
  
--		if ((sshdr.sense_key == 0x05) && (sshdr.asc == 0x04) &&
--		     (sshdr.ascq == 0x00)) {
--			/*
--			 * Array based copy in progress -- do not send
--			 * mode_select or copy will be aborted mid-stream.
--			 */
--			sdev_printk(KERN_INFO, sdev, "%s: Array Based Copy in "
--				    "progress while sending CLARiiON trespass "
--				    "command.\n", CLARIION_NAME);
--			err = SCSI_DH_DEV_TEMP_BUSY;
--		} else if ((sshdr.sense_key == 0x02) && (sshdr.asc == 0x04) &&
--			    (sshdr.ascq == 0x03)) {
--			/*
--			 * LUN Not Ready - Manual Intervention Required
--			 * indicates in-progress ucode upgrade (NDU).
--			 */
--			sdev_printk(KERN_INFO, sdev, "%s: Detected in-progress "
--				    "ucode upgrade NDU operation while sending "
--				    "CLARiiON trespass command.\n", CLARIION_NAME);
--			err = SCSI_DH_DEV_TEMP_BUSY;
--		} else
--			err = SCSI_DH_DEV_FAILED;
--	} else {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: failed to send MODE SELECT, no sense available\n",
--			    CLARIION_NAME);
--	}
-+	sdev_printk(KERN_ERR, sdev, "%s: Found valid sense data 0x%2x, "
-+		    "0x%2x, 0x%2x while sending CLARiiON trespass "
-+		    "command.\n", CLARIION_NAME, sshdr->sense_key,
-+		    sshdr->asc, sshdr->ascq);
-+
-+	if (sshdr->sense_key == 0x05 && sshdr->asc == 0x04 &&
-+	    sshdr->ascq == 0x00) {
-+		/*
-+		 * Array based copy in progress -- do not send
-+		 * mode_select or copy will be aborted mid-stream.
-+		 */
-+		sdev_printk(KERN_INFO, sdev, "%s: Array Based Copy in "
-+			    "progress while sending CLARiiON trespass "
-+			    "command.\n", CLARIION_NAME);
-+		err = SCSI_DH_DEV_TEMP_BUSY;
-+	} else if (sshdr->sense_key == 0x02 && sshdr->asc == 0x04 &&
-+		   sshdr->ascq == 0x03) {
-+		/*
-+		 * LUN Not Ready - Manual Intervention Required
-+		 * indicates in-progress ucode upgrade (NDU).
-+		 */
-+		sdev_printk(KERN_INFO, sdev, "%s: Detected in-progress "
-+			    "ucode upgrade NDU operation while sending "
-+			    "CLARiiON trespass command.\n", CLARIION_NAME);
-+		err = SCSI_DH_DEV_TEMP_BUSY;
-+	} else
-+		err = SCSI_DH_DEV_FAILED;
- 	return err;
- }
- 
-@@ -257,103 +245,15 @@ static char * parse_sp_model(struct scsi_device *sdev, unsigned char *buffer)
- 	return sp_model;
- }
- 
--/*
-- * Get block request for REQ_BLOCK_PC command issued to path.  Currently
-- * limited to MODE_SELECT (trespass) and INQUIRY (VPD page 0xC0) commands.
-- *
-- * Uses data and sense buffers in hardware handler context structure and
-- * assumes serial servicing of commands, both issuance and completion.
-- */
--static struct request *get_req(struct scsi_device *sdev, int cmd,
--				unsigned char *buffer)
--{
--	struct request *rq;
--	int len = 0;
--
--	rq = blk_get_request(sdev->request_queue,
--			(cmd != INQUIRY) ? WRITE : READ, GFP_NOIO);
--	if (IS_ERR(rq)) {
--		sdev_printk(KERN_INFO, sdev, "get_req: blk_get_request failed");
--		return NULL;
--	}
--
--	blk_rq_set_block_pc(rq);
--	rq->cmd_len = COMMAND_SIZE(cmd);
--	rq->cmd[0] = cmd;
--
--	switch (cmd) {
--	case MODE_SELECT:
--		len = sizeof(short_trespass);
--		rq->cmd[1] = 0x10;
--		rq->cmd[4] = len;
--		break;
--	case MODE_SELECT_10:
--		len = sizeof(long_trespass);
--		rq->cmd[1] = 0x10;
--		rq->cmd[8] = len;
--		break;
--	case INQUIRY:
--		len = CLARIION_BUFFER_SIZE;
--		rq->cmd[4] = len;
--		memset(buffer, 0, len);
--		break;
--	default:
--		BUG_ON(1);
--		break;
--	}
--
--	rq->cmd_flags |= REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
--			 REQ_FAILFAST_DRIVER;
--	rq->timeout = CLARIION_TIMEOUT;
--	rq->retries = CLARIION_RETRIES;
--
--	if (blk_rq_map_kern(rq->q, rq, buffer, len, GFP_NOIO)) {
--		blk_put_request(rq);
--		return NULL;
--	}
--
--	return rq;
--}
--
--static int send_inquiry_cmd(struct scsi_device *sdev, int page,
--			    struct clariion_dh_data *csdev)
--{
--	struct request *rq = get_req(sdev, INQUIRY, csdev->buffer);
--	int err;
--
--	if (!rq)
--		return SCSI_DH_RES_TEMP_UNAVAIL;
--
--	rq->sense = csdev->sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = csdev->senselen = 0;
--
--	rq->cmd[0] = INQUIRY;
--	if (page != 0) {
--		rq->cmd[1] = 1;
--		rq->cmd[2] = page;
--	}
--	err = blk_execute_rq(sdev->request_queue, NULL, rq, 1);
--	if (err == -EIO) {
--		sdev_printk(KERN_INFO, sdev,
--			    "%s: failed to send %s INQUIRY: %x\n",
--			    CLARIION_NAME, page?"EVPD":"standard",
--			    rq->errors);
--		csdev->senselen = rq->sense_len;
--		err = SCSI_DH_IO;
--	}
--
--	blk_put_request(rq);
--
--	return err;
--}
--
- static int send_trespass_cmd(struct scsi_device *sdev,
- 			    struct clariion_dh_data *csdev)
+-	cmd->sense_buffer = kzalloc_node(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL,
+-			numa_node);
++	cmd->sense_buffer =
++		scsi_alloc_sense_buffer(shost, GFP_KERNEL, numa_node);
+ 	if (!cmd->sense_buffer)
+ 		return -ENOMEM;
+ 	return 0;
+@@ -1993,9 +2046,10 @@ static int scsi_init_request(void *data, struct request *rq,
+ static void scsi_exit_request(void *data, struct request *rq,
+ 		unsigned int hctx_idx, unsigned int request_idx)
  {
--	struct request *rq;
- 	unsigned char *page22;
--	int err, len, cmd;
-+	unsigned char cdb[COMMAND_SIZE(MODE_SELECT)];
-+	int err, res = SCSI_DH_OK, len;
-+	struct scsi_sense_hdr sshdr;
-+	u64 req_flags = REQ_FAILFAST_DEV | REQ_FAILFAST_TRANSPORT |
-+		REQ_FAILFAST_DRIVER;
++	struct Scsi_Host *shost = data;
+ 	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
  
- 	if (csdev->flags & CLARIION_SHORT_TRESPASS) {
- 		page22 = short_trespass;
-@@ -361,40 +261,37 @@ static int send_trespass_cmd(struct scsi_device *sdev,
- 			/* Set Honor Reservations bit */
- 			page22[6] |= 0x80;
- 		len = sizeof(short_trespass);
--		cmd = MODE_SELECT;
-+		cdb[0] = MODE_SELECT;
-+		cdb[1] = 0x10;
-+		cdb[4] = len;
- 	} else {
- 		page22 = long_trespass;
- 		if (!(csdev->flags & CLARIION_HONOR_RESERVATIONS))
- 			/* Set Honor Reservations bit */
- 			page22[10] |= 0x80;
- 		len = sizeof(long_trespass);
--		cmd = MODE_SELECT_10;
-+		cdb[0] = MODE_SELECT_10;
-+		cdb[8] = len;
- 	}
- 	BUG_ON((len > CLARIION_BUFFER_SIZE));
- 	memcpy(csdev->buffer, page22, len);
- 
--	rq = get_req(sdev, cmd, csdev->buffer);
--	if (!rq)
--		return SCSI_DH_RES_TEMP_UNAVAIL;
--
--	rq->sense = csdev->sense;
--	memset(rq->sense, 0, SCSI_SENSE_BUFFERSIZE);
--	rq->sense_len = csdev->senselen = 0;
--
--	err = blk_execute_rq(sdev->request_queue, NULL, rq, 1);
--	if (err == -EIO) {
--		if (rq->sense_len) {
--			err = trespass_endio(sdev, csdev->sense);
--		} else {
-+	err = scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
-+				     csdev->buffer, len, &sshdr,
-+				     CLARIION_TIMEOUT * HZ, CLARIION_RETRIES,
-+				     NULL, req_flags, 0);
-+	if (err) {
-+		if (scsi_sense_valid(&sshdr))
-+			res = trespass_endio(sdev, &sshdr);
-+		else {
- 			sdev_printk(KERN_INFO, sdev,
- 				    "%s: failed to send MODE SELECT: %x\n",
--				    CLARIION_NAME, rq->errors);
-+				    CLARIION_NAME, err);
-+			res = SCSI_DH_IO;
- 		}
- 	}
- 
--	blk_put_request(rq);
--
--	return err;
-+	return res;
+-	kfree(cmd->sense_buffer);
++	scsi_free_sense_buffer(shost, cmd->sense_buffer);
  }
  
- static int clariion_check_sense(struct scsi_device *sdev,
-@@ -464,21 +361,7 @@ static int clariion_std_inquiry(struct scsi_device *sdev,
- 	int err;
- 	char *sp_model;
+ static int scsi_map_queues(struct blk_mq_tag_set *set)
+@@ -2208,6 +2262,8 @@ int __init scsi_init_queue(void)
  
--	err = send_inquiry_cmd(sdev, 0, csdev);
--	if (err != SCSI_DH_OK && csdev->senselen) {
--		struct scsi_sense_hdr sshdr;
--
--		if (scsi_normalize_sense(csdev->sense, SCSI_SENSE_BUFFERSIZE,
--					 &sshdr)) {
--			sdev_printk(KERN_ERR, sdev, "%s: INQUIRY sense code "
--				    "%02x/%02x/%02x\n", CLARIION_NAME,
--				    sshdr.sense_key, sshdr.asc, sshdr.ascq);
--		}
--		err = SCSI_DH_IO;
--		goto out;
--	}
--
--	sp_model = parse_sp_model(sdev, csdev->buffer);
-+	sp_model = parse_sp_model(sdev, sdev->inquiry);
- 	if (!sp_model) {
- 		err = SCSI_DH_DEV_UNSUPP;
- 		goto out;
-@@ -500,30 +383,12 @@ static int clariion_std_inquiry(struct scsi_device *sdev,
- static int clariion_send_inquiry(struct scsi_device *sdev,
- 				 struct clariion_dh_data *csdev)
+ void scsi_exit_queue(void)
  {
--	int err, retry = CLARIION_RETRIES;
--
--retry:
--	err = send_inquiry_cmd(sdev, 0xC0, csdev);
--	if (err != SCSI_DH_OK && csdev->senselen) {
--		struct scsi_sense_hdr sshdr;
--
--		err = scsi_normalize_sense(csdev->sense, SCSI_SENSE_BUFFERSIZE,
--					   &sshdr);
--		if (!err)
--			return SCSI_DH_IO;
--
--		err = clariion_check_sense(sdev, &sshdr);
--		if (retry > 0 && err == ADD_TO_MLQUEUE) {
--			retry--;
--			goto retry;
--		}
--		sdev_printk(KERN_ERR, sdev, "%s: INQUIRY sense code "
--			    "%02x/%02x/%02x\n", CLARIION_NAME,
--			      sshdr.sense_key, sshdr.asc, sshdr.ascq);
--		err = SCSI_DH_IO;
--	} else {
-+	int err = SCSI_DH_IO;
-+
-+	if (!scsi_get_vpd_page(sdev, 0xC0, csdev->buffer,
-+			       CLARIION_BUFFER_SIZE))
- 		err = parse_sp_info_reply(sdev, csdev);
--	}
-+
- 	return err;
++	kmem_cache_destroy(scsi_sense_cache);
++	kmem_cache_destroy(scsi_sense_isadma_cache);
+ 	kmem_cache_destroy(scsi_sdb_cache);
  }
  
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 193636a..1a712c6 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -30,6 +30,11 @@ extern void scsi_exit_hosts(void);
+ 
+ /* scsi.c */
+ extern bool scsi_use_blk_mq;
++void scsi_free_sense_buffer(struct Scsi_Host *shost,
++		unsigned char *sense_buffer);
++unsigned char *scsi_alloc_sense_buffer(struct Scsi_Host *shost, gfp_t gfp_mask,
++		int numa_node);
++int scsi_init_sense_cache(struct Scsi_Host *shost);
+ extern int scsi_setup_command_freelist(struct Scsi_Host *shost);
+ extern void scsi_destroy_command_freelist(struct Scsi_Host *shost);
+ #ifdef CONFIG_SCSI_LOGGING
 -- 
 2.1.4
 
