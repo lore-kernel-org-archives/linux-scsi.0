@@ -1,174 +1,71 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 13/24] aacraid: Added support to set QD of attached drives
-Date: Mon, 23 Jan 2017 10:08:57 -0800
-Message-ID: <20170123180908.3465-14-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 09/24] aacraid: Added support for read medium error
+Date: Mon, 23 Jan 2017 10:08:53 -0800
+Message-ID: <20170123180908.3465-10-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0074.outbound.protection.outlook.com ([104.47.41.74]:2665
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0077.outbound.protection.outlook.com ([104.47.34.77]:55013
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751916AbdAXArC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Jan 2017 19:47:02 -0500
+        id S1751293AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Jan 2017 19:47:01 -0500
 In-Reply-To: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Banesh@microsemi.com
 
-Added support to set qd of drives in slave_configure.This only works for
-HBA1000 attached drives.
+This patch processes Raw IO read medium errors.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 ---
- drivers/scsi/aacraid/linit.c | 100 ++++++++++++++++++++++++++++---------------
- 1 file changed, 66 insertions(+), 34 deletions(-)
+ drivers/scsi/aacraid/aachba.c  | 10 ++++++++++
+ drivers/scsi/aacraid/aacraid.h |  1 +
+ 2 files changed, 11 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index e2d063d..698d522 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -401,20 +401,33 @@ static int aac_biosparm(struct scsi_device *sdev, struct block_device *bdev,
- static int aac_slave_configure(struct scsi_device *sdev)
- {
- 	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
--	if (aac->jbod && (sdev->type == TYPE_DISK))
--		sdev->removable = 1;
--	if ((sdev->type == TYPE_DISK) &&
-+	int chn, tid, is_native_device = 0;
-+
-+	chn = aac_logical_to_phys(sdev_channel(sdev));
-+	tid = sdev_id(sdev);
-+	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
-+		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW)
-+		is_native_device = 1;
-+
-+
-+	if (!is_native_device) {
-+		if (aac->jbod && (sdev->type == TYPE_DISK))
-+			sdev->removable = 1;
-+		if ((sdev->type == TYPE_DISK) &&
- 			(sdev_channel(sdev) != CONTAINER_CHANNEL) &&
- 			(!aac->jbod || sdev->inq_periph_qual) &&
- 			(!aac->raid_scsi_mode || (sdev_channel(sdev) != 2))) {
--		if (expose_physicals == 0)
--			return -ENXIO;
--		if (expose_physicals < 0)
--			sdev->no_uld_attach = 1;
-+			if (expose_physicals == 0)
-+				return -ENXIO;
-+			if (expose_physicals < 0)
-+				sdev->no_uld_attach = 1;
-+		}
- 	}
--	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
-+
-+	if (is_native_device ||
-+		(sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
- 			(!aac->raid_scsi_mode || (sdev_channel(sdev) != 2)) &&
--			!sdev->no_uld_attach) {
-+			!sdev->no_uld_attach)) {
- 		struct scsi_device * dev;
- 		struct Scsi_Host *host = sdev->host;
- 		unsigned num_lsu = 0;
-@@ -428,34 +441,41 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 		 */
- 		if (sdev->request_queue->rq_timeout < (45 * HZ))
- 			blk_queue_rq_timeout(sdev->request_queue, 45*HZ);
--		for (cid = 0; cid < aac->maximum_num_containers; ++cid)
--			if (aac->fsa_dev[cid].valid)
--				++num_lsu;
--		__shost_for_each_device(dev, host) {
--			if (dev->tagged_supported && (dev->type == TYPE_DISK) &&
-+		if (!is_native_device) {
-+			for (cid = 0; cid < aac->maximum_num_containers; ++cid)
-+				if (aac->fsa_dev[cid].valid)
-+					++num_lsu;
-+			__shost_for_each_device(dev, host) {
-+				if (dev->tagged_supported &&
-+					(dev->type == TYPE_DISK) &&
- 					(!aac->raid_scsi_mode ||
--						(sdev_channel(sdev) != 2)) &&
-+					(sdev_channel(sdev) != 2)) &&
- 					!dev->no_uld_attach) {
--				if ((sdev_channel(dev) != CONTAINER_CHANNEL)
--				 || !aac->fsa_dev[sdev_id(dev)].valid)
--					++num_lsu;
--			} else
--				++num_one;
-+					if ((sdev_channel(dev)
-+						!= CONTAINER_CHANNEL)
-+					 || !aac->fsa_dev[sdev_id(dev)].valid) {
-+						++num_lsu;
-+					}
-+				} else {
-+					++num_one;
-+				}
-+			}
-+			if (num_lsu == 0)
-+				++num_lsu;
-+			depth = (host->can_queue - num_one) / num_lsu;
-+			if (depth > 256)
-+				depth = 256;
-+			else if (depth < 2)
-+				depth = 2;
-+			scsi_change_queue_depth(sdev, depth);
-+		} else {
-+			scsi_change_queue_depth(sdev,
-+				aac->hba_map[chn][tid].qd_limit);
- 		}
--		if (num_lsu == 0)
--			++num_lsu;
--		depth = (host->can_queue - num_one) / num_lsu;
--		if (depth > 256)
--			depth = 256;
--		else if (depth < 2)
--			depth = 2;
--		scsi_change_queue_depth(sdev, depth);
--	} else {
--		scsi_change_queue_depth(sdev, 1);
--
--		sdev->tagged_supported = 1;
- 	}
- 
-+	sdev->tagged_supported = 1;
-+
- 	return 0;
- }
- 
-@@ -470,6 +490,15 @@ static int aac_slave_configure(struct scsi_device *sdev)
- 
- static int aac_change_queue_depth(struct scsi_device *sdev, int depth)
- {
-+	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
-+	int chn, tid, is_native_device = 0;
-+
-+	chn = aac_logical_to_phys(sdev_channel(sdev));
-+	tid = sdev_id(sdev);
-+	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
-+		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW)
-+		is_native_device = 1;
-+
- 	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
- 	    (sdev_channel(sdev) == CONTAINER_CHANNEL)) {
- 		struct scsi_device * dev;
-@@ -491,9 +520,12 @@ static int aac_change_queue_depth(struct scsi_device *sdev, int depth)
- 		else if (depth < 2)
- 			depth = 2;
- 		return scsi_change_queue_depth(sdev, depth);
-+	} else if (is_native_device) {
-+		scsi_change_queue_depth(sdev, aac->hba_map[chn][tid].qd_limit);
-+	} else {
-+		scsi_change_queue_depth(sdev, 1);
- 	}
--
--	return scsi_change_queue_depth(sdev, 1);
-+	return sdev->queue_depth;
- }
- 
- static ssize_t aac_show_raid_level(struct device *dev, struct device_attribute *attr, char *buf)
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 5465c8a..e762c7b 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -62,6 +62,7 @@
+ #define SENCODE_END_OF_DATA			0x00
+ #define SENCODE_BECOMING_READY			0x04
+ #define SENCODE_INIT_CMD_REQUIRED		0x04
++#define SENCODE_UNRECOVERED_READ_ERROR		0x11
+ #define SENCODE_PARAM_LIST_LENGTH_ERROR		0x1A
+ #define SENCODE_INVALID_COMMAND			0x20
+ #define SENCODE_LBA_OUT_OF_RANGE		0x21
+@@ -1994,6 +1995,15 @@ static void io_callback(void *context, struct fib * fibptr)
+ 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
+ 			     SCSI_SENSE_BUFFERSIZE));
+ 		break;
++	case ST_MEDERR:
++		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
++			SAM_STAT_CHECK_CONDITION;
++		set_sense(&dev->fsa_dev[cid].sense_data, MEDIUM_ERROR,
++		  SENCODE_UNRECOVERED_READ_ERROR, ASENCODE_NO_SENSE, 0, 0);
++		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
++		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
++			     SCSI_SENSE_BUFFERSIZE));
++		break;
+ 	default:
+ #ifdef AAC_DETAILED_STATUS_INFO
+ 		printk(KERN_WARNING "io_callback: io failed, status = %d\n",
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index f749215..fb46252 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1462,6 +1462,7 @@ struct aac_dev
+ #define		ST_IO		5
+ #define		ST_NXIO		6
+ #define		ST_E2BIG	7
++#define		ST_MEDERR	8
+ #define		ST_ACCES	13
+ #define		ST_EXIST	17
+ #define		ST_XDEV		18
 -- 
 2.7.4
 
