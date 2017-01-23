@@ -1,15 +1,15 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 22/24] aacraid: Update copyrights
-Date: Mon, 23 Jan 2017 10:09:06 -0800
-Message-ID: <20170123180908.3465-23-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 01/24] aacraid: Remove duplicate irq management code
+Date: Mon, 23 Jan 2017 10:08:45 -0800
+Message-ID: <20170123180908.3465-2-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0084.outbound.protection.outlook.com ([104.47.36.84]:59982
+Received: from mail-sn1nam02on0073.outbound.protection.outlook.com ([104.47.36.73]:2657
         "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751890AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1750873AbdAXArB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 23 Jan 2017 19:47:01 -0500
 In-Reply-To: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,231 +17,95 @@ List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Banesh@microsemi.com
 
-Added new copyright messages
+Removed duplicate code that for acquiring and releasing irqs
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 ---
- drivers/scsi/aacraid/aachba.c   |  8 +++++++-
- drivers/scsi/aacraid/aacraid.h  | 32 ++++++++++++++++++++++++++++++++
- drivers/scsi/aacraid/commctrl.c |  3 ++-
- drivers/scsi/aacraid/comminit.c |  3 ++-
- drivers/scsi/aacraid/commsup.c  |  3 ++-
- drivers/scsi/aacraid/dpcsup.c   |  3 ++-
- drivers/scsi/aacraid/linit.c    |  3 ++-
- drivers/scsi/aacraid/nark.c     |  3 ++-
- drivers/scsi/aacraid/rkt.c      |  3 ++-
- drivers/scsi/aacraid/rx.c       |  3 ++-
- drivers/scsi/aacraid/sa.c       |  3 ++-
- drivers/scsi/aacraid/src.c      |  3 ++-
- 12 files changed, 59 insertions(+), 11 deletions(-)
+ drivers/scsi/aacraid/linit.c | 58 +++-----------------------------------------
+ 1 file changed, 3 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index a89e2a5..d2677cd 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -22,6 +23,11 @@
-  * along with this program; see the file COPYING.  If not, write to
-  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-  *
-+ * Module Name:
-+ *  aachba.c
-+ *
-+ * Abstract: Contains Interfaces to manage IOs.
-+ *
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 52a2264..58ee1b3 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1,3 +1,35 @@
-+/*
-+ *	Adaptec AAC series RAID controller driver
-+ *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
-+ *
-+ * based on the old aacraid driver that is..
-+ * Adaptec aacraid device driver for Linux.
-+ *
-+ * Copyright (c) 2000-2010 Adaptec, Inc.
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ *
-+ * Module Name:
-+ *  aacraid.h
-+ *
-+ * Abstract: Contains all routines for control of the aacraid driver
-+ *
-+ */
-+
- #ifndef _AACRAID_H_
- #define _AACRAID_H_
- #ifndef dprintk
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 9ade2b4..a704e8d 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 407ccf0..ca8f8bd 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d6e3fa0..0a8a56d 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
-index c426ea2..417ba34 100644
---- a/drivers/scsi/aacraid/dpcsup.c
-+++ b/drivers/scsi/aacraid/dpcsup.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
 diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 99430aa..7465175 100644
+index 3ecbf20..fd26a2d 100644
 --- a/drivers/scsi/aacraid/linit.c
 +++ b/drivers/scsi/aacraid/linit.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/nark.c b/drivers/scsi/aacraid/nark.c
-index 6c53b1d..c59074e 100644
---- a/drivers/scsi/aacraid/nark.c
-+++ b/drivers/scsi/aacraid/nark.c
-@@ -5,7 +5,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/rkt.c b/drivers/scsi/aacraid/rkt.c
-index d57ac43..0348982 100644
---- a/drivers/scsi/aacraid/rkt.c
-+++ b/drivers/scsi/aacraid/rkt.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index a29e0f3..8e79482 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
-index a03516e..3c2fd28 100644
---- a/drivers/scsi/aacraid/sa.c
-+++ b/drivers/scsi/aacraid/sa.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index a9ad39d..c3852f4 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
+@@ -1327,35 +1327,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ static void aac_release_resources(struct aac_dev *aac)
+ {
+-	int i;
+-
+ 	aac_adapter_disable_int(aac);
+-	if (aac->pdev->device == PMC_DEVICE_S6 ||
+-	    aac->pdev->device == PMC_DEVICE_S7 ||
+-	    aac->pdev->device == PMC_DEVICE_S8 ||
+-	    aac->pdev->device == PMC_DEVICE_S9) {
+-		if (aac->max_msix > 1) {
+-			for (i = 0; i < aac->max_msix; i++)
+-				free_irq(pci_irq_vector(aac->pdev, i),
+-					&(aac->aac_msix[i]));
+-		} else {
+-			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
+-		}
+-	} else {
+-		free_irq(aac->pdev->irq, aac);
+-	}
+-	if (aac->msi)
+-		pci_disable_msi(aac->pdev);
+-	else if (aac->max_msix > 1)
+-		pci_disable_msix(aac->pdev);
+-
++	aac_free_irq(aac);
+ }
+ 
+ static int aac_acquire_resources(struct aac_dev *dev)
+ {
+-	int i, j;
+-	int instance = dev->id;
+-	const char *name = dev->name;
+ 	unsigned long status;
+ 	/*
+ 	 *	First clear out all interrupts.  Then enable the one's that we
+@@ -1377,37 +1354,8 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 	if (dev->msi_enabled)
+ 		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
+ 
+-	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
+-		for (i = 0; i < dev->max_msix; i++) {
+-			dev->aac_msix[i].vector_no = i;
+-			dev->aac_msix[i].dev = dev;
+-
+-			if (request_irq(pci_irq_vector(dev->pdev, i),
+-					dev->a_ops.adapter_intr,
+-					0, "aacraid", &(dev->aac_msix[i]))) {
+-				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
+-						name, instance, i);
+-				for (j = 0 ; j < i ; j++)
+-					free_irq(pci_irq_vector(dev->pdev, j),
+-						 &(dev->aac_msix[j]));
+-				pci_disable_msix(dev->pdev);
+-				goto error_iounmap;
+-			}
+-		}
+-	} else {
+-		dev->aac_msix[0].vector_no = 0;
+-		dev->aac_msix[0].dev = dev;
+-
+-		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED, "aacraid",
+-			&(dev->aac_msix[0])) < 0) {
+-			if (dev->msi)
+-				pci_disable_msi(dev->pdev);
+-			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+-					name, instance);
+-			goto error_iounmap;
+-		}
+-	}
++	if (aac_acquire_irq(dev))
++		goto error_iounmap;
+ 
+ 	aac_adapter_enable_int(dev);
+ 
 -- 
 2.7.4
 
