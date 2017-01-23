@@ -1,32 +1,57 @@
-From: ojab <ojab@ojab.ru>
-Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
-Date: Mon, 23 Jan 2017 15:59:12 +0000
-Message-ID: <73a398a7-bde4-d337-0954-bc0f8d2f3752@ojab.ru>
-References: <20161228110524.7516-1-ojab@ojab.ru>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
+Date: Mon, 23 Jan 2017 08:34:45 -0800
+Message-ID: <20170123163446.9227-2-bart.vanassche@sandisk.com>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f67.google.com ([209.85.215.67]:36161 "EHLO
-        mail-lf0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750732AbdAWP7Q (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 23 Jan 2017 10:59:16 -0500
-Received: by mail-lf0-f67.google.com with SMTP id h65so14357137lfi.3
-        for <linux-scsi@vger.kernel.org>; Mon, 23 Jan 2017 07:59:15 -0800 (PST)
-In-Reply-To: <20161228110524.7516-1-ojab@ojab.ru>
+Received: from mail-dm3nam03on0059.outbound.protection.outlook.com ([104.47.41.59]:56096
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750732AbdAWQe5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Jan 2017 11:34:57 -0500
+In-Reply-To: <20170123163446.9227-1-bart.vanassche@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Bart Van Assche <bart.vanassche@sandisk.com>, Michael Hernandez <michael.hernandez@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 
-On 2016/12/28 11:05, ojab wrote:
-> MPI2 controllers sometimes got lost (i. e. disappears from
-> /sys/bus/pci/devices) if ASMP is enabled.
->
-> Signed-off-by: Slava Kardakov <ojab@ojab.ru>
-> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=60644
+qla2x00_probe_one() allocates IRQs before it initializes rsp_q_map
+so IRQs must be freed even if rsp_q_map allocation did not occur.
+This was detected by kmemleak.
 
-Can I haz Reviewed-by?
+Fixes: 4fa183455988 ("scsi: qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls")
+Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: Michael Hernandez <michael.hernandez@cavium.com>
+Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: <stable@vger.kernel.org>
+---
+ drivers/scsi/qla2xxx/qla_isr.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-//wbr ojab
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index dc88a09f9043..a94b0b6bd030 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -3242,7 +3242,7 @@ qla2x00_free_irqs(scsi_qla_host_t *vha)
+ 	 * from a probe failure context.
+ 	 */
+ 	if (!ha->rsp_q_map || !ha->rsp_q_map[0])
+-		return;
++		goto free_irqs;
+ 	rsp = ha->rsp_q_map[0];
+ 
+ 	if (ha->flags.msix_enabled) {
+@@ -3262,6 +3262,7 @@ qla2x00_free_irqs(scsi_qla_host_t *vha)
+ 		free_irq(pci_irq_vector(ha->pdev, 0), rsp);
+ 	}
+ 
++free_irqs:
+ 	pci_free_irq_vectors(ha->pdev);
+ }
+ 
+-- 
+2.11.0
 
