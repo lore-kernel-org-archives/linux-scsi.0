@@ -1,40 +1,38 @@
-From: Hannes Reinecke <hare@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
 Subject: Re: [PATCH 12/16] scsi: remove __scsi_alloc_queue
-Date: Tue, 24 Jan 2017 12:08:25 +0100
-Message-ID: <05d9c12c-6899-ea99-2781-6fc7ecf5528a@suse.de>
+Date: Tue, 24 Jan 2017 12:24:03 +0100
+Message-ID: <20170124112403.GA3609@linux-x5ow.site>
 References: <1485185361-29786-1-git-send-email-hch@lst.de>
  <1485185361-29786-13-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:54871 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750739AbdAXLYW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Jan 2017 06:24:22 -0500
+Content-Disposition: inline
 In-Reply-To: <1485185361-29786-13-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On 01/23/2017 04:29 PM, Christoph Hellwig wrote:
+On Mon, Jan 23, 2017 at 04:29:17PM +0100, Christoph Hellwig wrote:
 > Instead do an internal export of __scsi_init_queue for the transport
 > classes that export BSG nodes.
 > 
 > Signed-off-by: Christoph Hellwig <hch@lst.de>
 > ---
->  drivers/scsi/scsi_lib.c             | 19 ++++---------------
->  drivers/scsi/scsi_transport_fc.c    |  6 ++++--
->  drivers/scsi/scsi_transport_iscsi.c |  3 ++-
->  include/scsi/scsi_host.h            |  2 --
->  include/scsi/scsi_transport.h       |  2 ++
->  5 files changed, 12 insertions(+), 20 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+Looks good,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-Hannes
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
 HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
