@@ -1,81 +1,74 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v3 2/4] mpt3sas: Fix for Crusader to achieve product
- targets with SAS devices.
-Date: Tue, 24 Jan 2017 13:02:38 +0100
-Message-ID: <20170124120238.GB3609@linux-x5ow.site>
+Subject: Re: [PATCH v3 3/4] mpt3sas: Fix Firmware fault state 0x2100 during
+ heavy 4K RR FIO stress test.
+Date: Tue, 24 Jan 2017 13:06:40 +0100
+Message-ID: <20170124120640.GC3609@linux-x5ow.site>
 References: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
- <1485165370-43401-3-git-send-email-chaitra.basappa@broadcom.com>
+ <1485165370-43401-4-git-send-email-chaitra.basappa@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1485165370-43401-3-git-send-email-chaitra.basappa@broadcom.com>
+In-Reply-To: <1485165370-43401-4-git-send-email-chaitra.basappa@broadcom.com>
 Sender: linux-kernel-owner@vger.kernel.org
 To: Chaitra P B <chaitra.basappa@broadcom.com>
 Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
-On Mon, Jan 23, 2017 at 03:26:08PM +0530, Chaitra P B wrote:
-> Small glitch/degraded performance in Crusader is improved with SAS
-> drives by removing unnecessary spinlocks while clearing scsi command
-> in drivers internal lookup table.
+On Mon, Jan 23, 2017 at 03:26:09PM +0530, Chaitra P B wrote:
+> Due existence of loop in the IO path our HBA will receive heavy IOs and
+> also as driver is not updating the Reply Post Host Index frequently, So
+> there will be a high chance that our Firmware unable to find any free entry
+> in the Reply Post Descriptor Queue (i.e. Queue overflow occurs) and can
+> observe 0x2100 firmware fault.
+> So to fix this, we have defined a thresh hold value. After continuously
+> processing this thresh hold number of reply descriptors driver will update
+> the Reply Descriptor Host Index so that this thresh hold number of reply
+> descriptors entries will be freed and these entries will be available for
+> firmware and we won't observe this Firmware fault. We have defined this
+> threshold value as 1/3rd of the hba queue depth.
 > 
 > Signed-off-by: Chaitra P B <chaitra.basappa@broadcom.com>
 > Signed-off-by: Suganath Prabu S <suganath-prabu.subramani@broadcom.com>
 > ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c  |    1 +
->  drivers/scsi/mpt3sas/mpt3sas_base.h  |    1 +
->  drivers/scsi/mpt3sas/mpt3sas_ctl.c   |    4 +++-
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c |   31 ++++++++++++++++++++++++++++---
->  4 files changed, 33 insertions(+), 4 deletions(-)
+>  drivers/scsi/mpt3sas/mpt3sas_base.c |   19 +++++++++++++++++++
+>  1 files changed, 19 insertions(+), 0 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 722fab9..a3fe1fb 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -1040,6 +1040,25 @@ _base_interrupt(int irq, void *bus_id)
+>  		    reply_q->reply_post_free[reply_q->reply_post_host_index].
+>  		    Default.ReplyFlags & MPI2_RPY_DESCRIPT_FLAGS_TYPE_MASK;
+>  		completed_cmds++;
+> +		/* Update the reply post host index after continuously
+> +		 * processing the threshold number of Reply Descriptors.
+> +		 * So that FW can find enough entries to post the Reply
+> +		 * Descriptors in the reply descriptor post queue.
+> +		 */
+> +		if (completed_cmds > ioc->hba_queue_depth/3) {
+> +			if (ioc->combined_reply_queue) {
+> +				writel(reply_q->reply_post_host_index |
+> +						((msix_index  & 7) <<
+> +						 MPI2_RPHI_MSIX_INDEX_SHIFT),
+> +				    ioc->replyPostRegisterIndex[msix_index/8]);
+> +			} else {
+> +				writel(reply_q->reply_post_host_index |
+> +						(msix_index <<
+> +						 MPI2_RPHI_MSIX_INDEX_SHIFT),
+> +						&ioc->chip->ReplyPostHostIndex);
+> +			}
+> +			completed_cmds = 1;
+> +		}
+>  		if (request_desript_type == MPI2_RPY_DESCRIPT_FLAGS_UNUSED)
+>  			goto out;
+>  		if (!reply_q->reply_post_host_index)
 
-[...]
-
-> + * __scsih_scsi_lookup_get_clear - returns scmd entry without
-> + *						holding any lock.
-> + * @ioc: per adapter object
-> + * @smid: system request message index
-> + *
-> + * Returns the smid stored scmd pointer.
-> + * Then will dereference the stored scmd pointer.
-> + */
-> +static inline struct scsi_cmnd *
-> +__scsih_scsi_lookup_get_clear(struct MPT3SAS_ADAPTER *ioc,
-> +		u16 smid)
-> +{
-> +	struct scsi_cmnd *scmd = NULL;
-> +
-> +	swap(scmd, ioc->scsi_lookup[smid - 1].scmd);
-> +
-> +	return scmd;
-> +}
-> +
-> +/**
->   * _scsih_scsi_lookup_get_clear - returns scmd entry
-
-That's only 50% of what I've meant:
-
-static inline struct scsi_cmnd *
-_scsih_scsi_lookup_get_clear(struct MPT3SAS_ADAPTER *ioc, u16 smid)
-{
-	unsigned long flags;
-	struct scsi_cmnd *scmnd;
-
-	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
--	scmd = ioc->scsi_lookup[smid - 1].scmd;
--	ioc->scsi_lookup[smid - 1].scmd = NULL;
-+	scmnd = __scsih_scsi_lookup_get_clear(ioc, smid);
-	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
-
-	return scmnd;
-}
-
-
-[...]
-
-Byte,
-	Johannes
+Appart from the fact, that you're trying to get as far to the right of
+the screen as possible,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
 Johannes Thumshirn                                          Storage
