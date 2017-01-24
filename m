@@ -1,31 +1,96 @@
-From: Frans van Berckel <fberckel@xs4all.nl>
-Subject: Re: Booting qla2x00_mailbox_command+0x8ac/0xec0
-Date: Tue, 24 Jan 2017 16:35:40 +0100
-Message-ID: <1485272140.5284.3.camel@xs4all.nl>
-References: <1485045213.3904.4.camel@xs4all.nl>
-         <20170123153814.pp4oec3ynssvzlly@oracle.com>
-         <1485192462.8703.2.camel@xs4all.nl>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <sparclinux-owner@vger.kernel.org>
-In-Reply-To: <1485192462.8703.2.camel@xs4all.nl>
-Sender: sparclinux-owner@vger.kernel.org
-To: Sparc kernel list <sparclinux@vger.kernel.org>, Linux Scsi list <linux-scsi@vger.kernel.org>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: [PATCH v2] mpt3sas: Force request partial completion alignment
+Date: Tue, 24 Jan 2017 13:47:18 -0200
+Message-ID: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:40922 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750714AbdAXPrg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Jan 2017 10:47:36 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0OFOfDo013999
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 10:47:24 -0500
+Received: from e24smtp05.br.ibm.com (e24smtp05.br.ibm.com [32.104.18.26])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 285ee5ubh8-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 10:47:23 -0500
+Received: from localhost
+        by e24smtp05.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Tue, 24 Jan 2017 13:47:21 -0200
+Received: from d24relay01.br.ibm.com (d24relay01.br.ibm.com [9.8.31.16])
+        by d24dlp01.br.ibm.com (Postfix) with ESMTP id E14113520070
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 10:46:46 -0500 (EST)
+Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
+        by d24relay01.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0OFlJNw4722780
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 13:47:19 -0200
+Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
+        by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0OFlI1l030334
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 13:47:19 -0200
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com, brking@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com, gpiccoli@linux.vnet.ibm.com
 
-Dear Team,
+From: Ram Pai <linuxram@us.ibm.com>
 
-On Mon, 2017-01-23 at 18:27 +0100, Frans van Berckel wrote:
-> 
-> If someone could dig into trap_64 in cheetah_deferred_handler? I am
-> able to install the dbgsym of the linux-image package and set debug
-> on.
-> 
-> That will be in the next e-mail if it does what we are looking for.
+The firmware or device, possibly under a heavy I/O load, can return
+on a partial unaligned boundary. Scsi-ml expects these requests to be
+completed on an alignment boundary. Scsi-ml blindly requeues the I/O
+without checking the alignment boundary of the I/O request for the
+remaining bytes. This leads to errors, since devices cannot perform
+non-aligned read/write operations.
 
-It looks the Debug kernel by Debian is to big to load by Silo.
+This patch fixes the issue in the driver. It aligns unaligned
+completions of FS requests, by truncating them to the nearest
+alignment boundary.
 
-Thanks,
+Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+---
+v1->v2:
+  * Improved printk, by showing some variables too [suggested by Sreekanth].
 
-Frans van Berckel
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 75f3fce..e52c942 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	u32 response_code = 0;
+ 	unsigned long flags;
++	unsigned int sector_sz;
++	struct request *req;
+ 
+ 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+ 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+@@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	}
+ 
+ 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
++
++	/* In case of bogus fw or device, we could end up having
++	 * unaligned partial completion. We can force alignment here,
++	 * then scsi-ml does not need to handle this misbehavior.
++	 */
++	sector_sz = scmd->device->sector_size;
++	req = scmd->request;
++	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
++		    (xfer_cnt % sector_sz))) {
++		sdev_printk(KERN_INFO, scmd->device,
++			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
++			xfer_cnt, sector_sz);
++		xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
++	}
++
+ 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+ 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+ 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+-- 
+2.1.0
+
