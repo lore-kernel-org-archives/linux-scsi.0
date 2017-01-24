@@ -1,66 +1,22 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v4 00/12] qla2xxx: Feature updates for target.
-Date: Tue, 24 Jan 2017 18:32:12 +0000
-Message-ID: <23EE106F-6EEB-4DE0-A6ED-3E2939261D28@cavium.com>
-References: <1484893684-1255-1-git-send-email-himanshu.madhani@cavium.com>
- <490b1911-11be-5390-9776-ffbeec94254f@sandisk.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 05/16] dm: always defer request allocation to the owner
+        of the request_queue
+Date: Tue, 24 Jan 2017 20:52:26 +0100
+Message-ID: <20170124195226.GB1025@lst.de>
+References: <1485185361-29786-1-git-send-email-hch@lst.de> <1485185361-29786-6-git-send-email-hch@lst.de> <20170124100538.GA6991@redhat.com> <20170124142054.GA26473@lst.de> <20170124163951.GA9172@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0076.outbound.protection.outlook.com ([104.47.32.76]:44962
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750704AbdAXScP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Jan 2017 13:32:15 -0500
-In-Reply-To: <490b1911-11be-5390-9776-ffbeec94254f@sandisk.com>
-Content-Language: en-US
-Content-ID: <41A75CED4695DC4FA100DD736C720A5A@namprd07.prod.outlook.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170124163951.GA9172@redhat.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Mike Snitzer <snitzer@redhat.com>
+Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQpPbiAxLzI0LzE3LCA5OjI0IEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVA
-c2FuZGlzay5jb20+IHdyb3RlOg0KDQo+T24gMDEvMTkvMjAxNyAxMDoyOSBQTSwgSGltYW5zaHUg
-TWFkaGFuaSB3cm90ZToNCj4+IFBsZWFzZSBjb25zaWRlciB0aGlzIHVwZGF0ZWQgc2VyaWVzIGZv
-ciBpbmNsdXNpb24gaW4gdGFyZ2V0LXBlbmRpbmcuDQo+PiANCj4+IENoYW5nZXMgZnJvbSB2MyAt
-LT4gdjQNCj4+IA0KPj4gbyBGaXhlZCB3YXJuaW5ncyByZXBvcnRlZCBieSBzbWF0Y2ggdG9vbC4N
-Cj4+IG8gRml4ZWQgaW5kZW50YXRhdGlvbiB3YXJuaW5ncyByZXBvcnRlZCBieSBzbWF0Y2ggdG9v
-bC4NCj4+IA0KPj4gQ2hhbmdlcyBmcm9tIHYyIC0tPiB2Mw0KPj4gDQo+PiBvIENsZWFuZWQgdXAg
-c3BhcnNlIHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHlvdS4NCj4+IA0KPj4gQ2hhbmdlcyBmcm9tIHYx
-IC0tPiB2Mg0KPj4gDQo+PiBvIFVwZGF0ZWQgcmV2aWV3IGNvbW1lbnRzIGFuZCBhZGRlZCBSZXZp
-ZXdlZC1ieSB0YWdzIGZvciBuZWNlc3NhcnkgcGF0Y2hlcy4NCj4+IG8gV2UgbGVmdCB0aGUgb25l
-IHBhcnRpY3VsYXIgcmV2aWV3IGNvbW1lbnQgdG8gYWRkIGhlbHBlciByb3V0aW5lIHRvDQo+PiAg
-IGJlIGFkZHJlc3NlZCBhdCBsYXRlciB0aW1lIGluIHRoZSBmb2xsb3cgdXAgYnVnIGZpeGVzIHBh
-dGhlcyB3aGljaCB3ZQ0KPj4gICB3aWxsIGJlIHNlbmRpbmcgaW4gZmV3IHdlZWtzLg0KPj4gbyBB
-ZGRlZCBwYXRjaCB0byBzaW1wbGlmeSBTUkIgdXNhZ2UgaW4gZHJpdmVyLg0KPj4gbyBDbGVhbmVk
-IHVwIHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHNwYXJzZSBvcHRpb24gdz0xLg0KPg0KPkhlbGxvIEhp
-bWFuc2h1LA0KPg0KPk9uZSBuZXdseSBpbnRyb2R1Y2VkIHNwYXJzZSB3YXJuaW5nIGhhcyBub3Qg
-eWV0IGJlZW4gYWRkcmVzc2VkLiBUaGUNCj5wYXRjaCBiZWxvdyBhZGRyZXNzZXMgdGhhdCB3YXJu
-aW5nLiBJIHdvdWxkIGFwcHJlY2lhdGUgaXQgaWYgc29tZW9uZQ0KPmZyb20gdGhlIHFsYTJ4eHgg
-dGVhbSBjb3VsZCByZXZpZXcgdGhpcyBwYXRjaC4NCj4NCj5UaGFua3MsDQo+DQo+QmFydC4NCj4N
-Cj4NCj5Gcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPg0K
-PlN1YmplY3Q6IFtQQVRDSF0gcWxhMnh4eDogQXZvaWQgdXNpbmcgdmFyaWFibGUtbGVuZ3RoIGFy
-cmF5cw0KPg0KPlRoaXMgcGF0Y2ggZG9lcyBub3QgY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5IGJ1
-dCBhdm9pZHMgdGhhdCBzcGFyc2UNCj5jb21wbGFpbnMgYWJvdXQgdXNpbmcgdmFyaWFibGUtbGVu
-Z3RoIGFycmF5cy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFu
-YXNzY2hlQHNhbmRpc2suY29tPg0KPkNjOiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRo
-YW5pQGNhdml1bS5jb20+DQo+Q2M6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AY2F2aXVtLmNvbT4N
-Cj4tLS0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgfCA0ICsrLS0NCj4gMSBmaWxl
-IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4NCj5kaWZmIC0tZ2l0
-IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
-bGFfb3MuYw0KPmluZGV4IDgxN2M1OTQwZGY3Ni4uZWM3ZTM2YzMzZTI2IDEwMDY0NA0KPi0tLSBh
-L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+KysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4
-eHgvcWxhX29zLmMNCj5AQCAtNDI3Miw4ICs0MjcyLDggQEAgc3RydWN0IHNjc2lfcWxhX2hvc3Qg
-KnFsYTJ4MDBfY3JlYXRlX2hvc3Qoc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqc2h0LA0KPiAJ
-c3Bpbl9sb2NrX2luaXQoJnZoYS0+Y21kX2xpc3RfbG9jayk7DQo+IAlpbml0X3dhaXRxdWV1ZV9o
-ZWFkKCZ2aGEtPmZjcG9ydF93YWl0USk7DQo+IA0KPi0JdmhhLT5nbmwuc2l6ZSA9DQo+LQkgICAg
-c2l6ZW9mKHN0cnVjdCBnZXRfbmFtZV9saXN0X2V4dGVuZGVkW2hhLT5tYXhfbG9vcF9pZCsxXSk7
-DQo+Kwl2aGEtPmdubC5zaXplID0gc2l6ZW9mKHN0cnVjdCBnZXRfbmFtZV9saXN0X2V4dGVuZGVk
-KSAqDQo+KwkJCShoYS0+bWF4X2xvb3BfaWQgKyAxKTsNCj4gCXZoYS0+Z25sLmwgPSBkbWFfYWxs
-b2NfY29oZXJlbnQoJmhhLT5wZGV2LT5kZXYsDQo+IAkgICAgdmhhLT5nbmwuc2l6ZSwgJnZoYS0+
-Z25sLmxkbWEsIEdGUF9LRVJORUwpOw0KPiAJaWYgKCF2aGEtPmdubC5sKSB7DQo+LS0gDQo+Mi4x
-MS4wDQo+DQo+DQoNCkxvb2tzIEdvb2QuICBUaGFua3MgZm9yIGNvcnJlY3RpbmcgdGhpcy4gDQoN
-CkFja2VkLWJ5OiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+
-DQoNCg==
+On Tue, Jan 24, 2017 at 11:39:51AM -0500, Mike Snitzer wrote:
+> Fair enough.  Cc'ing Junichi just in case he sees anything we're
+> missing.
+
+Thanks, I'll wait for his repsonse before reposting with the few accumulated
+changes (including the dm cleanup).
