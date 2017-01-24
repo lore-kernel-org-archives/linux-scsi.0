@@ -1,23 +1,31 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 01/16] block: fix elevator init check
-Date: Tue, 24 Jan 2017 16:10:41 +0100
-Message-ID: <20170124151041.GB27705@lst.de>
-References: <1485185361-29786-1-git-send-email-hch@lst.de> <1485185361-29786-2-git-send-email-hch@lst.de> <20170124150639.GA22198@kernel.dk>
+From: Frans van Berckel <fberckel@xs4all.nl>
+Subject: Re: Booting qla2x00_mailbox_command+0x8ac/0xec0
+Date: Tue, 24 Jan 2017 16:35:40 +0100
+Message-ID: <1485272140.5284.3.camel@xs4all.nl>
+References: <1485045213.3904.4.camel@xs4all.nl>
+         <20170123153814.pp4oec3ynssvzlly@oracle.com>
+         <1485192462.8703.2.camel@xs4all.nl>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170124150639.GA22198@kernel.dk>
-Sender: linux-block-owner@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <sparclinux-owner@vger.kernel.org>
+In-Reply-To: <1485192462.8703.2.camel@xs4all.nl>
+Sender: sparclinux-owner@vger.kernel.org
+To: Sparc kernel list <sparclinux@vger.kernel.org>, Linux Scsi list <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Jan 24, 2017 at 08:06:39AM -0700, Jens Axboe wrote:
-> We check for REQ_PREFLUSH | REQ_FUA in so many places though, might not
-> be a bad idea to keep the helper but just make it take the opf and fix
-> up the other locations too. The fact that PREFLUSH|FUA is the magic to
-> check for is somewhat tribal knowledge.
+Dear Team,
 
-I'll see if I can come up with something sensible.  The current
-helper using the bio and the magic 0 value is not exactly helpful.
+On Mon, 2017-01-23 at 18:27 +0100, Frans van Berckel wrote:
+> 
+> If someone could dig into trap_64 in cheetah_deferred_handler? I am
+> able to install the dbgsym of the linux-image package and set debug
+> on.
+> 
+> That will be in the next e-mail if it does what we are looking for.
+
+It looks the Debug kernel by Debian is to big to load by Silo.
+
+Thanks,
+
+Frans van Berckel
