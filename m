@@ -1,41 +1,26 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 02/16] block: simplify blk_init_allocated_queue
-Date: Tue, 24 Jan 2017 08:37:16 +0100
-Message-ID: <cb49deea-e15f-aaca-60ef-7a642532c2e9@suse.de>
-References: <1485185361-29786-1-git-send-email-hch@lst.de>
- <1485185361-29786-3-git-send-email-hch@lst.de>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 15/16] block: split scsi_request out of struct request
+Date: Tue, 24 Jan 2017 09:09:06 +0100
+Message-ID: <20170124080906.GA17018@lst.de>
+References: <1485185361-29786-1-git-send-email-hch@lst.de> <1485185361-29786-16-git-send-email-hch@lst.de> <1485217979.2825.20.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485185361-29786-3-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:51371 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751052AbdAXIJN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Jan 2017 03:09:13 -0500
+Content-Disposition: inline
+In-Reply-To: <1485217979.2825.20.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>
 
-On 01/23/2017 04:29 PM, Christoph Hellwig wrote:
-> Return an errno value instead of the passed in queue so that the callers
-> don't have to keep track of two queues, and move the assignment of the
-> request_fn and lock to the caller as passing them as argument doesn't
-> simplify anything.  While we're at it also remove two pointless NULL
-> assignments, given that the request structure is zeroed on allocation.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->  block/blk-core.c       | 38 +++++++++++++++-----------------------
->  drivers/md/dm-rq.c     |  3 ++-
->  include/linux/blkdev.h |  3 +--
->  3 files changed, 18 insertions(+), 26 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+On Tue, Jan 24, 2017 at 12:33:13AM +0000, Bart Van Assche wrote:
+> Do we perhaps need a check before the above memcpy() call whether or not
+> sense == NULL?
 
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Yes, probably.  I didn't think of the case where the caller wouldn't
+pass a sense buffer.  Just curious, what's the callstack that caused
+this?
