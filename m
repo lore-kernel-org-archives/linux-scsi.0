@@ -1,33 +1,34 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 09/16] scsi: remove gfp_flags member in scsi_host_cmd_pool
-Date: Tue, 24 Jan 2017 13:08:22 +0100
-Message-ID: <20170124120822.GD3609@linux-x5ow.site>
-References: <1485185361-29786-1-git-send-email-hch@lst.de>
- <1485185361-29786-10-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
+Date: Tue, 24 Jan 2017 13:10:17 +0100
+Message-ID: <20170124121017.GE3609@linux-x5ow.site>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
+ <20170123163446.9227-2-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34473 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750767AbdAXMI0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Jan 2017 07:08:26 -0500
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1485185361-29786-10-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170123163446.9227-2-bart.vanassche@sandisk.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Michael Hernandez <michael.hernandez@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Mon, Jan 23, 2017 at 04:29:14PM +0100, Christoph Hellwig wrote:
-> When using the slab allocator we already decide at cache creation time if
-> an allocation comes from a GFP_DMA pool using the SLAB_CACHE_DMA flag,
-> and there is no point passing the kmalloc-family only GFP_DMA flag to
-> kmem_cache_alloc.  Drop all the infrastructure for doing so.
+On Mon, Jan 23, 2017 at 08:34:45AM -0800, Bart Van Assche wrote:
+> qla2x00_probe_one() allocates IRQs before it initializes rsp_q_map
+> so IRQs must be freed even if rsp_q_map allocation did not occur.
+> This was detected by kmemleak.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fixes: 4fa183455988 ("scsi: qla2xxx: Utilize pci_alloc_irq_vectors/pci_free_irq_vectors calls")
+> Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Cc: Michael Hernandez <michael.hernandez@cavium.com>
+> Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: <stable@vger.kernel.org>
 > ---
 
+Looks good,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 -- 
