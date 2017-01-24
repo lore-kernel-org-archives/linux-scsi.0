@@ -1,23 +1,23 @@
 From: kbuild test robot <lkp@intel.com>
-Subject: Re: [PATCH 05/24] aacraid: Retrieve and update the device types
-Date: Tue, 24 Jan 2017 09:53:24 +0800
-Message-ID: <201701240959.Rs0p2OcI%fengguang.wu@intel.com>
-References: <20170123180908.3465-6-RaghavaAditya.Renukunta@microsemi.com>
+Subject: Re: [PATCH 17/24] aacraid: Added support to abort cmd and reset lun
+Date: Tue, 24 Jan 2017 10:24:13 +0800
+Message-ID: <201701241050.ZoImTfSJ%fengguang.wu@intel.com>
+References: <20170123180908.3465-18-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary="wac7ysb48OaltWcw"
+Content-Type: multipart/mixed; boundary="SLDf9lqlvOQaIe6s"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga03.intel.com ([134.134.136.65]:43684 "EHLO mga03.intel.com"
+Received: from mga02.intel.com ([134.134.136.20]:25592 "EHLO mga02.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751113AbdAXByP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 23 Jan 2017 20:54:15 -0500
+        id S1750739AbdAXC0v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 23 Jan 2017 21:26:51 -0500
 Content-Disposition: inline
-In-Reply-To: <20170123180908.3465-6-RaghavaAditya.Renukunta@microsemi.com>
+In-Reply-To: <20170123180908.3465-18-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 Cc: kbuild-all@01.org, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Banesh@microsemi.com
 
 
---wac7ysb48OaltWcw
+--SLDf9lqlvOQaIe6s
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 
@@ -40,49 +40,63 @@ http://gcc.gnu.org/wiki/Better_Uninitialized_Warnings
 
 All warnings (new ones prefixed by >>):
 
-   drivers/scsi/aacraid/aachba.c: In function 'aac_report_phys_luns':
->> drivers/scsi/aacraid/aachba.c:1636:9: warning: 'rcode' may be used uninitialized in this function [-Wmaybe-uninitialized]
-     return rcode;
-            ^~~~~
+   drivers/scsi/aacraid/linit.c: In function 'aac_eh_abort':
+>> drivers/scsi/aacraid/linit.c:685:38: warning: 'command' may be used uninitialized in this function [-Wmaybe-uninitialized]
+        if ((fib->hw_fib_va->header.XferState &
+            ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+         cpu_to_le32
+         ~~~~~~~~~~~                      
+         (Async | NoResponseExpected)) &&
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+         (fib->flags & FIB_CONTEXT_FLAG) &&
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~
+         ((command == fib->callback_data)) &&
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-vim +/rcode +1636 drivers/scsi/aacraid/aachba.c
+vim +/command +685 drivers/scsi/aacraid/linit.c
 
-  1620			sg64->count = cpu_to_le32(1);
-  1621			sg64->sg[0].addr[1] = cpu_to_le32(upper_32_bits(addr));
-  1622			sg64->sg[0].addr[0] = cpu_to_le32(lower_32_bits(addr));
-  1623			sg64->sg[0].count = cpu_to_le32(datasize);
-  1624	
-  1625			rcode = aac_fib_send(ScsiPortCommand64, fibptr, fibsize,
-  1626					FsaNormal, 1, 1, NULL, NULL);
-  1627	
-  1628			/* analyse data */
-  1629			if (rcode >= 0 && phys_luns->resp_flag == 2) {
-  1630				/* ok and extended reporting */
-  1631				aac_update_hba_map(dev, phys_luns);
-  1632			}
-  1633		}
-  1634	
-  1635		pci_free_consistent(dev->pdev, datasize, (void *) phys_luns, addr);
-> 1636		return rcode;
-  1637	}
-  1638	
-  1639	int aac_get_adapter_info(struct aac_dev* dev)
-  1640	{
-  1641		struct fib* fibptr;
-  1642		int rcode;
-  1643		u32 tmp, bus, target;
-  1644		struct aac_adapter_info *info;
+03d44337 Mark Haverkamp           2007-03-15  669  			}
+b6ef70f3 Salyzyn, Mark            2008-01-08  670  			break;
+b6ef70f3 Salyzyn, Mark            2008-01-08  671  		case TEST_UNIT_READY:
+1281d604 Raghava Aditya Renukunta 2017-01-23  672  			/*
+1281d604 Raghava Aditya Renukunta 2017-01-23  673  			 * Mark associated FIB to not complete,
+1281d604 Raghava Aditya Renukunta 2017-01-23  674  			 * eh handler does this
+1281d604 Raghava Aditya Renukunta 2017-01-23  675  			 */
+1281d604 Raghava Aditya Renukunta 2017-01-23  676  			for (count = 0;
+1281d604 Raghava Aditya Renukunta 2017-01-23  677  				count < (host->can_queue + AAC_NUM_MGT_FIB);
+1281d604 Raghava Aditya Renukunta 2017-01-23  678  				++count) {
+b6ef70f3 Salyzyn, Mark            2008-01-08  679  				struct scsi_cmnd *command;
+b6ef70f3 Salyzyn, Mark            2008-01-08  680  				struct fib *fib = &aac->fibs[count];
+1281d604 Raghava Aditya Renukunta 2017-01-23  681  
+1281d604 Raghava Aditya Renukunta 2017-01-23  682  				if ((fib->hw_fib_va->header.XferState &
+1281d604 Raghava Aditya Renukunta 2017-01-23  683  					cpu_to_le32
+1281d604 Raghava Aditya Renukunta 2017-01-23  684  					(Async | NoResponseExpected)) &&
+b6ef70f3 Salyzyn, Mark            2008-01-08 @685  					(fib->flags & FIB_CONTEXT_FLAG) &&
+1281d604 Raghava Aditya Renukunta 2017-01-23  686  					((command == fib->callback_data)) &&
+b6ef70f3 Salyzyn, Mark            2008-01-08  687  					(command->device == cmd->device)) {
+1281d604 Raghava Aditya Renukunta 2017-01-23  688  					fib->flags |=
+1281d604 Raghava Aditya Renukunta 2017-01-23  689  						FIB_CONTEXT_FLAG_TIMED_OUT;
+1281d604 Raghava Aditya Renukunta 2017-01-23  690  					command->SCp.phase =
+1281d604 Raghava Aditya Renukunta 2017-01-23  691  						AAC_OWNER_ERROR_HANDLER;
+b6ef70f3 Salyzyn, Mark            2008-01-08  692  					if (command == cmd)
+b6ef70f3 Salyzyn, Mark            2008-01-08  693  						ret = SUCCESS;
+
+:::::: The code at line 685 was first introduced by commit
+:::::: b6ef70f33ca2a3084b4fea12414550724a9114dc [SCSI] aacraid: OS panic after Adapter panic (hardening).
+
+:::::: TO: Salyzyn, Mark <Mark_Salyzyn@adaptec.com>
+:::::: CC: James Bottomley <James.Bottomley@HansenPartnership.com>
 
 ---
 0-DAY kernel test infrastructure                Open Source Technology Center
 https://lists.01.org/pipermail/kbuild-all                   Intel Corporation
 
---wac7ysb48OaltWcw
+--SLDf9lqlvOQaIe6s
 Content-Type: application/gzip
 Content-Disposition: attachment; filename=".config.gz"
 Content-Transfer-Encoding: base64
 
-H4sICLOxhlgAAy5jb25maWcAlDzJcuQ2snd/RUX7HWYO7pbUarknXuiAIsEquAiCDYC16MKQ
+H4sICN22hlgAAy5jb25maWcAlDzJcuQ2snd/RUX7HWYO7pbUarknXuiAIsEquAiCDYC16MKQ
 pWpbMVp6pJKX9/UvEyCLAJiUPT7YLmQiseWeSX3/3fcz9np4erg+3N1c39//Oftl/7h/vj7s
 b2df7+73/zvL1axSdsZzYd8Dcnn3+PrHhz8+X7QX57Pz96cn709+eL45m632z4/7+1n29Pj1
 7pdXIHD39Pjd999lqirEAnDnwl7+2f/cuunR7+GHqIzVTWaFqtqcZyrnegCqxtaNbQulJbOX
@@ -540,4 +554,4 @@ QuDlj0iFSIn98GNGcReJa9C3T7yGwaxUGu62hhmYw/kPOl3I9IZ2HOtxVziGowSz+Y85pexL
 /Oz0x8zplsCQwCIn4yqxxFVNRU8IXGTMLms+ohoMq3CcFiNK3qIk3f3WVx/jhP4fjACIn0Bx
 AQA=
 
---wac7ysb48OaltWcw--
+--SLDf9lqlvOQaIe6s--
