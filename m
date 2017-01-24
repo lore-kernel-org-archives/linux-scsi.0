@@ -1,60 +1,102 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 05/16] dm: always defer request allocation to the owner
-        of the request_queue
-Date: Tue, 24 Jan 2017 15:20:54 +0100
-Message-ID: <20170124142054.GA26473@lst.de>
-References: <1485185361-29786-1-git-send-email-hch@lst.de> <1485185361-29786-6-git-send-email-hch@lst.de> <20170124100538.GA6991@redhat.com>
+From: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Subject: Re: [PATCH 2/2] qla2xxx: Avoid that issuing a LIP triggers a kernel
+ crash
+Date: Tue, 24 Jan 2017 12:59:57 -0200
+Message-ID: <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
+ <20170123163446.9227-3-bart.vanassche@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:54991 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750811AbdAXOU4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Jan 2017 09:20:56 -0500
-Content-Disposition: inline
-In-Reply-To: <20170124100538.GA6991@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170123163446.9227-3-bart.vanassche@sandisk.com>
+Sender: stable-owner@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Naresh Bannoth <nbannoth@in.ibm.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On Tue, Jan 24, 2017 at 05:05:39AM -0500, Mike Snitzer wrote:
-> possible and is welcomed cleanup.  The only concern I have is that using
-> get_request() for the old request_fn request_queue eliminates the
-> guaranteed availability of requests to allow for forward progress (on
-> path failure or for the purposes of swap over mpath, etc).  This isn't a
-> concern for blk-mq because as you know we have a fixed set of tags (and
-> associated preallocated requests).
-> 
-> So I'm left unconvinced old request_fn request-based DM multipath isn't
-> regressing in how request resubmission can be assured a request will be
-> available when needed on retry in the face of path failure.
+Hi Bart,
 
-Mempool only need a size where we can make guaranteed requests, so for
-get_request based drivers under dm the theoretical minimum size would be
-one as we never rely on a second request to finish the first one,
-and each request_queue has it's own mempool(s) to start with.
+First of all, sorry for the new bug; I didn't realize the pointer could
+be NULL at this scenario.
 
-> dm_mod's 'reserved_rq_based_ios' module_param governs the minimum number
-> of requests in the md->rq_pool (and defaults to 256 requests per
-> request-based DM request_queue).  Whereas blk_init_rl()'s
-> mempool_create_node() uses BLKDEV_MIN_RQ (4) yet q->nr_requests =
-> BLKDEV_MAX_RQ (128).  Also, this patch eliminates the utility of
-> 'reserved_rq_based_ios' module_param without actually removing it.
+On 01/23/2017 02:34 PM, Bart Van Assche wrote:
+> @@ -1624,7 +1627,8 @@ qla2x00_abort_all_cmds(scsi_qla_host_t *vha, int res)
+>  					 */
+>  					sp_get(sp);
+>  					spin_unlock_irqrestore(&ha->hardware_lock, flags);
+> -					qla2xxx_eh_abort(GET_CMD_SP(sp));
+> +					if (scmd)
+> +						qla2xxx_eh_abort(scmd);
+>  					spin_lock_irqsave(&ha->hardware_lock, flags);
+>  				}
 
-It's still used for the bio pool, so I couldn't simply remove it.
+Now, this chunk has a problem with reference counting (and unnecessary
+spin-locking), which we can avoid by simply moving up this NULL check.
 
-> Anyway, should blk-core evolve to allow drivers to specify a custom
-> min_nr of requests in the old request_fn request_queue's mempool?  Or is
-> my concern overblown?
+The call to sp_get() increments the sp->ref_count, but if you skip the
+call to qla2xxx_eh_abort() you don't get the decrement from the call to
+sp->done() at abort handling from ISR, e.g., qla24xx_abort_iocb_entry().
+[or if the command completed successfully between issue/complete abort,
+at the completion from ISR, e.g., qla2x00_process_completed_request().]
 
-Thanks to mempool_resize we could add that functionality.  I just don't
-see an actual need for it.
+The sp->done() call just below this chunk was supposed to drop the
+initial reference [set at qla2xxx_queuecommand()] at a time we did
+not call qla2xxx_eh_abort() yet... but now that we __may__ call it
+(and get that sp->done() call from the ISR abort handling), we need
+to only increment it if we're going to drop it.
 
-> p.s. dm.c:dm_alloc_md_mempools() could be cleaned up a bit more since
-> only bio-based DM will have a pools->io_pool moving forward; but I can
-> circle back to that cleanup after.
+That should be resolved with this slight change to your patch
+(which also helps w/ the spin-locking).  What do you/others think?
 
-If you're fine with doing more than the necessary changes in a patch
-that needs to got into the block tree I'd be happy to apply my usual
-cleanup magic to it.
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 0a000ecf0881..a17cb63b3fd5 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1600,6 +1600,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+         srb_t *sp;
+         struct qla_hw_data *ha = vha->hw;
+         struct req_que *req;
++       struct scsi_cmnd *scmd;
+
+         qlt_host_reset_handler(ha);
+
+@@ -1613,10 +1614,12 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data 
+*ha)
+                 for (cnt = 1; cnt < req->num_outstanding_cmds; cnt++) {
+                         sp = req->outstanding_cmds[cnt];
+                         if (sp) {
++                               scmd = GET_CMD_SP(sp);
++
+                                 /* Don't abort commands in adapter 
+during EEH
+                                  * recovery as it's not 
+accessible/responding.
+                                  */
+-                               if (!ha->flags.eeh_busy) {
++                               if (scmd && !ha->flags.eeh_busy) {
+                                         /* Get a reference to the sp 
+and drop the lock.
+                                          * The reference ensures this 
+sp->done() call
+                                          * - and not the call in 
+qla2xxx_eh_abort() -
+@@ -1624,7 +1627,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+                                          */
+                                         sp_get(sp);
+ 
+spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-                                       qla2xxx_eh_abort(GET_CMD_SP(sp));
++                                       qla2xxx_eh_abort(scmd);
+ 
+spin_lock_irqsave(&ha->hardware_lock, flags);
+                                 }
+                                 req->outstanding_cmds[cnt] = NULL;
+
+
+Signed-off-by: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+
+
+-- 
+Mauricio Faria de Oliveira
+IBM Linux Technology Center
