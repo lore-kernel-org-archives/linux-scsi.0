@@ -1,77 +1,66 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
+From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 Subject: Re: [PATCH v4 00/12] qla2xxx: Feature updates for target.
-Date: Tue, 24 Jan 2017 09:24:10 -0800
-Message-ID: <490b1911-11be-5390-9776-ffbeec94254f@sandisk.com>
+Date: Tue, 24 Jan 2017 18:32:12 +0000
+Message-ID: <23EE106F-6EEB-4DE0-A6ED-3E2939261D28@cavium.com>
 References: <1484893684-1255-1-git-send-email-himanshu.madhani@cavium.com>
+ <490b1911-11be-5390-9776-ffbeec94254f@sandisk.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1484893684-1255-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Himanshu Madhani <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0076.outbound.protection.outlook.com ([104.47.32.76]:44962
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750704AbdAXScP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 24 Jan 2017 13:32:15 -0500
+In-Reply-To: <490b1911-11be-5390-9776-ffbeec94254f@sandisk.com>
+Content-Language: en-US
+Content-ID: <41A75CED4695DC4FA100DD736C720A5A@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <bart.vanassche@sandisk.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-On 01/19/2017 10:29 PM, Himanshu Madhani wrote:
-> Please consider this updated series for inclusion in target-pending.
-> 
-> Changes from v3 --> v4
-> 
-> o Fixed warnings reported by smatch tool.
-> o Fixed indentatation warnings reported by smatch tool.
-> 
-> Changes from v2 --> v3
-> 
-> o Cleaned up sparse warnings reported by you.
-> 
-> Changes from v1 --> v2
-> 
-> o Updated review comments and added Reviewed-by tags for necessary patches.
-> o We left the one particular review comment to add helper routine to
->   be addressed at later time in the follow up bug fixes pathes which we
->   will be sending in few weeks.
-> o Added patch to simplify SRB usage in driver.
-> o Cleaned up warnings reported by sparse option w=1.
-
-Hello Himanshu,
-
-One newly introduced sparse warning has not yet been addressed. The
-patch below addresses that warning. I would appreciate it if someone
-from the qla2xxx team could review this patch.
-
-Thanks,
-
-Bart.
-
-
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] qla2xxx: Avoid using variable-length arrays
-
-This patch does not change any functionality but avoids that sparse
-complains about using variable-length arrays.
-
-Signed-off-by: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: Quinn Tran <quinn.tran@cavium.com>
----
- drivers/scsi/qla2xxx/qla_os.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 817c5940df76..ec7e36c33e26 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -4272,8 +4272,8 @@ struct scsi_qla_host *qla2x00_create_host(struct scsi_host_template *sht,
- 	spin_lock_init(&vha->cmd_list_lock);
- 	init_waitqueue_head(&vha->fcport_waitQ);
- 
--	vha->gnl.size =
--	    sizeof(struct get_name_list_extended[ha->max_loop_id+1]);
-+	vha->gnl.size = sizeof(struct get_name_list_extended) *
-+			(ha->max_loop_id + 1);
- 	vha->gnl.l = dma_alloc_coherent(&ha->pdev->dev,
- 	    vha->gnl.size, &vha->gnl.ldma, GFP_KERNEL);
- 	if (!vha->gnl.l) {
--- 
-2.11.0
+DQpPbiAxLzI0LzE3LCA5OjI0IEFNLCAiQmFydCBWYW4gQXNzY2hlIiA8YmFydC52YW5hc3NjaGVA
+c2FuZGlzay5jb20+IHdyb3RlOg0KDQo+T24gMDEvMTkvMjAxNyAxMDoyOSBQTSwgSGltYW5zaHUg
+TWFkaGFuaSB3cm90ZToNCj4+IFBsZWFzZSBjb25zaWRlciB0aGlzIHVwZGF0ZWQgc2VyaWVzIGZv
+ciBpbmNsdXNpb24gaW4gdGFyZ2V0LXBlbmRpbmcuDQo+PiANCj4+IENoYW5nZXMgZnJvbSB2MyAt
+LT4gdjQNCj4+IA0KPj4gbyBGaXhlZCB3YXJuaW5ncyByZXBvcnRlZCBieSBzbWF0Y2ggdG9vbC4N
+Cj4+IG8gRml4ZWQgaW5kZW50YXRhdGlvbiB3YXJuaW5ncyByZXBvcnRlZCBieSBzbWF0Y2ggdG9v
+bC4NCj4+IA0KPj4gQ2hhbmdlcyBmcm9tIHYyIC0tPiB2Mw0KPj4gDQo+PiBvIENsZWFuZWQgdXAg
+c3BhcnNlIHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHlvdS4NCj4+IA0KPj4gQ2hhbmdlcyBmcm9tIHYx
+IC0tPiB2Mg0KPj4gDQo+PiBvIFVwZGF0ZWQgcmV2aWV3IGNvbW1lbnRzIGFuZCBhZGRlZCBSZXZp
+ZXdlZC1ieSB0YWdzIGZvciBuZWNlc3NhcnkgcGF0Y2hlcy4NCj4+IG8gV2UgbGVmdCB0aGUgb25l
+IHBhcnRpY3VsYXIgcmV2aWV3IGNvbW1lbnQgdG8gYWRkIGhlbHBlciByb3V0aW5lIHRvDQo+PiAg
+IGJlIGFkZHJlc3NlZCBhdCBsYXRlciB0aW1lIGluIHRoZSBmb2xsb3cgdXAgYnVnIGZpeGVzIHBh
+dGhlcyB3aGljaCB3ZQ0KPj4gICB3aWxsIGJlIHNlbmRpbmcgaW4gZmV3IHdlZWtzLg0KPj4gbyBB
+ZGRlZCBwYXRjaCB0byBzaW1wbGlmeSBTUkIgdXNhZ2UgaW4gZHJpdmVyLg0KPj4gbyBDbGVhbmVk
+IHVwIHdhcm5pbmdzIHJlcG9ydGVkIGJ5IHNwYXJzZSBvcHRpb24gdz0xLg0KPg0KPkhlbGxvIEhp
+bWFuc2h1LA0KPg0KPk9uZSBuZXdseSBpbnRyb2R1Y2VkIHNwYXJzZSB3YXJuaW5nIGhhcyBub3Qg
+eWV0IGJlZW4gYWRkcmVzc2VkLiBUaGUNCj5wYXRjaCBiZWxvdyBhZGRyZXNzZXMgdGhhdCB3YXJu
+aW5nLiBJIHdvdWxkIGFwcHJlY2lhdGUgaXQgaWYgc29tZW9uZQ0KPmZyb20gdGhlIHFsYTJ4eHgg
+dGVhbSBjb3VsZCByZXZpZXcgdGhpcyBwYXRjaC4NCj4NCj5UaGFua3MsDQo+DQo+QmFydC4NCj4N
+Cj4NCj5Gcm9tOiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFuYXNzY2hlQHNhbmRpc2suY29tPg0K
+PlN1YmplY3Q6IFtQQVRDSF0gcWxhMnh4eDogQXZvaWQgdXNpbmcgdmFyaWFibGUtbGVuZ3RoIGFy
+cmF5cw0KPg0KPlRoaXMgcGF0Y2ggZG9lcyBub3QgY2hhbmdlIGFueSBmdW5jdGlvbmFsaXR5IGJ1
+dCBhdm9pZHMgdGhhdCBzcGFyc2UNCj5jb21wbGFpbnMgYWJvdXQgdXNpbmcgdmFyaWFibGUtbGVu
+Z3RoIGFycmF5cy4NCj4NCj5TaWduZWQtb2ZmLWJ5OiBCYXJ0IFZhbiBBc3NjaGUgPGJhcnQudmFu
+YXNzY2hlQHNhbmRpc2suY29tPg0KPkNjOiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRo
+YW5pQGNhdml1bS5jb20+DQo+Q2M6IFF1aW5uIFRyYW4gPHF1aW5uLnRyYW5AY2F2aXVtLmNvbT4N
+Cj4tLS0NCj4gZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgfCA0ICsrLS0NCj4gMSBmaWxl
+IGNoYW5nZWQsIDIgaW5zZXJ0aW9ucygrKSwgMiBkZWxldGlvbnMoLSkNCj4NCj5kaWZmIC0tZ2l0
+IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMgYi9kcml2ZXJzL3Njc2kvcWxhMnh4eC9x
+bGFfb3MuYw0KPmluZGV4IDgxN2M1OTQwZGY3Ni4uZWM3ZTM2YzMzZTI2IDEwMDY0NA0KPi0tLSBh
+L2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV9vcy5jDQo+KysrIGIvZHJpdmVycy9zY3NpL3FsYTJ4
+eHgvcWxhX29zLmMNCj5AQCAtNDI3Miw4ICs0MjcyLDggQEAgc3RydWN0IHNjc2lfcWxhX2hvc3Qg
+KnFsYTJ4MDBfY3JlYXRlX2hvc3Qoc3RydWN0IHNjc2lfaG9zdF90ZW1wbGF0ZSAqc2h0LA0KPiAJ
+c3Bpbl9sb2NrX2luaXQoJnZoYS0+Y21kX2xpc3RfbG9jayk7DQo+IAlpbml0X3dhaXRxdWV1ZV9o
+ZWFkKCZ2aGEtPmZjcG9ydF93YWl0USk7DQo+IA0KPi0JdmhhLT5nbmwuc2l6ZSA9DQo+LQkgICAg
+c2l6ZW9mKHN0cnVjdCBnZXRfbmFtZV9saXN0X2V4dGVuZGVkW2hhLT5tYXhfbG9vcF9pZCsxXSk7
+DQo+Kwl2aGEtPmdubC5zaXplID0gc2l6ZW9mKHN0cnVjdCBnZXRfbmFtZV9saXN0X2V4dGVuZGVk
+KSAqDQo+KwkJCShoYS0+bWF4X2xvb3BfaWQgKyAxKTsNCj4gCXZoYS0+Z25sLmwgPSBkbWFfYWxs
+b2NfY29oZXJlbnQoJmhhLT5wZGV2LT5kZXYsDQo+IAkgICAgdmhhLT5nbmwuc2l6ZSwgJnZoYS0+
+Z25sLmxkbWEsIEdGUF9LRVJORUwpOw0KPiAJaWYgKCF2aGEtPmdubC5sKSB7DQo+LS0gDQo+Mi4x
+MS4wDQo+DQo+DQoNCkxvb2tzIEdvb2QuICBUaGFua3MgZm9yIGNvcnJlY3RpbmcgdGhpcy4gDQoN
+CkFja2VkLWJ5OiBIaW1hbnNodSBNYWRoYW5pIDxoaW1hbnNodS5tYWRoYW5pQGNhdml1bS5jb20+
+DQoNCg==
