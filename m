@@ -1,94 +1,117 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 11/18] scsi: remove gfp_flags member in scsi_host_cmd_pool
-Date: Wed, 25 Jan 2017 18:25:19 +0100
-Message-ID: <1485365126-23210-12-git-send-email-hch@lst.de>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:54234 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752050AbdAYR0H (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 12:26:07 -0500
-In-Reply-To: <1485365126-23210-1-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Subject: [PATCH V2 0/2] Add QLogic FastLinQ FCoE (qedf) driver
+Date: Wed, 25 Jan 2017 12:33:41 -0800
+Message-ID: <1485376423-18737-1-git-send-email-chad.dupuis@cavium.com>
+Mime-Version: 1.0
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+Sender: netdev-owner@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 
-When using the slab allocator we already decide at cache creation time if
-an allocation comes from a GFP_DMA pool using the SLAB_CACHE_DMA flag,
-and there is no point passing the kmalloc-family only GFP_DMA flag to
-kmem_cache_alloc.  Drop all the infrastructure for doing so.
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
----
- drivers/scsi/scsi.c | 14 ++++----------
- 1 file changed, 4 insertions(+), 10 deletions(-)
+This series introduces the hardware offload FCoE initiator driver for the
+41000 Series Converged Network Adapters (579xx chip) by Cavium. The overall
+driver design includes a common module ('qed') and protocol specific
+dependent modules ('qedf' for FCoE).
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 75455d4..0f93892 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -105,7 +105,6 @@ struct scsi_host_cmd_pool {
- 	char			*cmd_name;
- 	char			*sense_name;
- 	unsigned int		slab_flags;
--	gfp_t			gfp_mask;
- };
- 
- static struct scsi_host_cmd_pool scsi_cmd_pool = {
-@@ -118,7 +117,6 @@ static struct scsi_host_cmd_pool scsi_cmd_dma_pool = {
- 	.cmd_name	= "scsi_cmd_cache(DMA)",
- 	.sense_name	= "scsi_sense_cache(DMA)",
- 	.slab_flags	= SLAB_HWCACHE_ALIGN|SLAB_CACHE_DMA,
--	.gfp_mask	= __GFP_DMA,
- };
- 
- static DEFINE_MUTEX(host_cmd_pool_mutex);
-@@ -156,12 +154,11 @@ scsi_host_alloc_command(struct Scsi_Host *shost, gfp_t gfp_mask)
- 	struct scsi_host_cmd_pool *pool = shost->cmd_pool;
- 	struct scsi_cmnd *cmd;
- 
--	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask | pool->gfp_mask);
-+	cmd = kmem_cache_zalloc(pool->cmd_slab, gfp_mask);
- 	if (!cmd)
- 		goto fail;
- 
--	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab,
--					     gfp_mask | pool->gfp_mask);
-+	cmd->sense_buffer = kmem_cache_alloc(pool->sense_slab, gfp_mask);
- 	if (!cmd->sense_buffer)
- 		goto fail_free_cmd;
- 
-@@ -327,10 +324,8 @@ scsi_alloc_host_cmd_pool(struct Scsi_Host *shost)
- 	}
- 
- 	pool->slab_flags = SLAB_HWCACHE_ALIGN;
--	if (shost->unchecked_isa_dma) {
-+	if (shost->unchecked_isa_dma)
- 		pool->slab_flags |= SLAB_CACHE_DMA;
--		pool->gfp_mask = __GFP_DMA;
--	}
- 
- 	if (hostt->cmd_size)
- 		hostt->cmd_pool = pool;
-@@ -424,7 +419,6 @@ static void scsi_put_host_cmd_pool(struct Scsi_Host *shost)
-  */
- int scsi_setup_command_freelist(struct Scsi_Host *shost)
- {
--	const gfp_t gfp_mask = shost->unchecked_isa_dma ? GFP_DMA : GFP_KERNEL;
- 	struct scsi_cmnd *cmd;
- 
- 	spin_lock_init(&shost->free_list_lock);
-@@ -437,7 +431,7 @@ int scsi_setup_command_freelist(struct Scsi_Host *shost)
- 	/*
- 	 * Get one backup command for this host.
- 	 */
--	cmd = scsi_host_alloc_command(shost, gfp_mask);
-+	cmd = scsi_host_alloc_command(shost, GFP_KERNEL);
- 	if (!cmd) {
- 		scsi_put_host_cmd_pool(shost);
- 		shost->cmd_pool = NULL;
+This driver uses the kernel components of libfc and libfcoe as is and does not
+make use of the open-fcoe user space components.  Therefore, no changes will need to be
+made to any open-fcoe components.
+
+The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
+enhanced with functionality required for FCoE support.
+
+Martin, This patch needs to be applied first as the qedf patch is dependent
+on the FCoE bits in the first qed driver patch.
+
+Changes from V1 -> V2
+
+Changes in qed:
+- Fix compiler warning when CONFIG_DCB is not set.
+
+Fixes in qedf:
+- Add qedf to scsi directory Makefile.
+- Updates to convert LightL2 and I/O processing kthreads to workqueues.
+
+Changes from RFC -> V1
+
+- Squash qedf patches to one patch now that the initial review has taken place
+- Convert qedf to use hotplug state machine
+- Return via va_end to match corresponding va_start in logging functions
+- Convert qedf_ctx offloaded port list to a RCU list so searches do not need
+  to make use of spinlocks.  Also eliminates the need to fcport conn_id's.
+- Use IS_ERR(fp) in qedf_flogi_resp() instead of checking individual FC_EX_* errors.
+- Remove scsi_block_target when executing TMF request.
+- Checkpatch fixes in the qed and qedf patches
+
+Arun Easi (1):
+  qed: Add support for hardware offloaded FCoE.
+
+Dupuis, Chad (1):
+  qedf: Add QLogic FastLinQ offload FCoE driver framework.
+
+ MAINTAINERS                                       |    6 +
+ drivers/net/ethernet/qlogic/Kconfig               |    3 +
+ drivers/net/ethernet/qlogic/qed/Makefile          |    1 +
+ drivers/net/ethernet/qlogic/qed/qed.h             |   11 +
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c         |   98 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |   13 +-
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |    5 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c         |  205 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |   42 +
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c        |  990 ++++++
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |   52 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h         |  781 ++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c          |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c         |   25 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_main.c        |    7 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h         |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |    8 +
+ drivers/net/ethernet/qlogic/qed/qed_sp.h          |    4 +
+ drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |    3 +
+ drivers/scsi/Kconfig                              |    1 +
+ drivers/scsi/Makefile                             |    1 +
+ drivers/scsi/qedf/Kconfig                         |   11 +
+ drivers/scsi/qedf/Makefile                        |    5 +
+ drivers/scsi/qedf/qedf.h                          |  548 ++++
+ drivers/scsi/qedf/qedf_attr.c                     |  165 +
+ drivers/scsi/qedf/qedf_dbg.c                      |  195 ++
+ drivers/scsi/qedf/qedf_dbg.h                      |  154 +
+ drivers/scsi/qedf/qedf_debugfs.c                  |  460 +++
+ drivers/scsi/qedf/qedf_els.c                      |  983 ++++++
+ drivers/scsi/qedf/qedf_fip.c                      |  269 ++
+ drivers/scsi/qedf/qedf_hsi.h                      |  427 +++
+ drivers/scsi/qedf/qedf_io.c                       | 2280 ++++++++++++++
+ drivers/scsi/qedf/qedf_main.c                     | 3335 +++++++++++++++++++++
+ drivers/scsi/qedf/qedf_version.h                  |   15 +
+ include/linux/qed/common_hsi.h                    |   10 +-
+ include/linux/qed/fcoe_common.h                   |  715 +++++
+ include/linux/qed/qed_fcoe_if.h                   |  145 +
+ include/linux/qed/qed_if.h                        |   41 +-
+ 41 files changed, 12007 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
+ create mode 100644 drivers/scsi/qedf/Kconfig
+ create mode 100644 drivers/scsi/qedf/Makefile
+ create mode 100644 drivers/scsi/qedf/qedf.h
+ create mode 100644 drivers/scsi/qedf/qedf_attr.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.h
+ create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
+ create mode 100644 drivers/scsi/qedf/qedf_els.c
+ create mode 100644 drivers/scsi/qedf/qedf_fip.c
+ create mode 100644 drivers/scsi/qedf/qedf_hsi.h
+ create mode 100644 drivers/scsi/qedf/qedf_io.c
+ create mode 100644 drivers/scsi/qedf/qedf_main.c
+ create mode 100644 drivers/scsi/qedf/qedf_version.h
+ create mode 100644 include/linux/qed/fcoe_common.h
+ create mode 100644 include/linux/qed/qed_fcoe_if.h
+
 -- 
-2.1.4
-
+1.8.5.6
