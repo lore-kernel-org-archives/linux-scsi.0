@@ -1,29 +1,33 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Avoid that issuing a LIP triggers a kernel crash
-Date: Wed, 25 Jan 2017 18:29:44 -0500
-Message-ID: <yq1pojabtw7.fsf@oracle.com>
-References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
-        <20170123163446.9227-3-bart.vanassche@sandisk.com>
-        <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
+Subject: Re: [PATCH 00/24] aacraid: Patchset for Smart Family card support
+Date: Wed, 25 Jan 2017 18:31:06 -0500
+Message-ID: <yq1lgtybttx.fsf@oracle.com>
+References: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
-        (Mauricio Faria de Oliveira's message of "Tue, 24 Jan 2017 12:59:57
-        -0200")
-Sender: stable-owner@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Naresh Bannoth <nbannoth@in.ibm.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, stable@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32959 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbdAYXbO (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 18:31:14 -0500
+In-Reply-To: <20170123180908.3465-1-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Mon, 23 Jan 2017 10:08:44
+        -0800")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Banesh@microsemi.com
 
->>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
+>>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
 
-Hi Mauricio,
+Hi Raghava,
 
-Mauricio> First of all, sorry for the new bug; I didn't realize the
-Mauricio> pointer could be NULL at this scenario.
+Raghava> This patchset adds support to the HBA1000 and SMARTIOC2000
+Raghava> family of cards. The driver version to now updated to 50740
 
-Please do a proper patch submission for this fix.
+Please address the kbuild test robot issues and resubmit.
+
+Thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
