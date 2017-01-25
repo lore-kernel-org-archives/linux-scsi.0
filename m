@@ -1,23 +1,23 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 22/24] aacraid: Update copyrights
-Date: Wed, 25 Jan 2017 10:01:09 -0800
-Message-ID: <20170125180111.25401-23-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 10/24] aacraid: Reworked aac_command_thread
+Date: Wed, 25 Jan 2017 10:00:57 -0800
+Message-ID: <20170125180111.25401-11-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0051.outbound.protection.outlook.com ([104.47.37.51]:35584
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0079.outbound.protection.outlook.com ([104.47.32.79]:40672
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752218AbdAZAib (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Jan 2017 19:38:31 -0500
+        id S1752114AbdAZAi0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Jan 2017 19:38:26 -0500
 In-Reply-To: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Benesh@microsemi.com
 
-Added new copyright messages
+Reworked aac_command_thread into aac_process_events
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -26,226 +26,445 @@ Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
  Changes in  V2:
   None
 
- drivers/scsi/aacraid/aachba.c   |  8 +++++++-
- drivers/scsi/aacraid/aacraid.h  | 32 ++++++++++++++++++++++++++++++++
- drivers/scsi/aacraid/commctrl.c |  3 ++-
- drivers/scsi/aacraid/comminit.c |  3 ++-
- drivers/scsi/aacraid/commsup.c  |  3 ++-
- drivers/scsi/aacraid/dpcsup.c   |  3 ++-
- drivers/scsi/aacraid/linit.c    |  3 ++-
- drivers/scsi/aacraid/nark.c     |  3 ++-
- drivers/scsi/aacraid/rkt.c      |  3 ++-
- drivers/scsi/aacraid/rx.c       |  3 ++-
- drivers/scsi/aacraid/sa.c       |  3 ++-
- drivers/scsi/aacraid/src.c      |  3 ++-
- 12 files changed, 59 insertions(+), 11 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 410 ++++++++++++++++++++++-------------------
+ 1 file changed, 217 insertions(+), 193 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 1f43ab8..618c1e7 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-@@ -22,6 +23,11 @@
-  * along with this program; see the file COPYING.  If not, write to
-  * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-  *
-+ * Module Name:
-+ *  aachba.c
-+ *
-+ * Abstract: Contains Interfaces to manage IOs.
-+ *
-  */
- 
- #include <linux/kernel.h>
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 44dcf36..5651d75 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1,3 +1,35 @@
-+/*
-+ *	Adaptec AAC series RAID controller driver
-+ *	(c) Copyright 2001 Red Hat Inc.	<alan@redhat.com>
-+ *
-+ * based on the old aacraid driver that is..
-+ * Adaptec aacraid device driver for Linux.
-+ *
-+ * Copyright (c) 2000-2010 Adaptec, Inc.
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-+ *
-+ * This program is free software; you can redistribute it and/or modify
-+ * it under the terms of the GNU General Public License as published by
-+ * the Free Software Foundation; either version 2, or (at your option)
-+ * any later version.
-+ *
-+ * This program is distributed in the hope that it will be useful,
-+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
-+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-+ * GNU General Public License for more details.
-+ *
-+ * You should have received a copy of the GNU General Public License
-+ * along with this program; see the file COPYING.  If not, write to
-+ * the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.
-+ *
-+ * Module Name:
-+ *  aacraid.h
-+ *
-+ * Abstract: Contains all routines for control of the aacraid driver
-+ *
-+ */
-+
- #ifndef _AACRAID_H_
- #define _AACRAID_H_
- #ifndef dprintk
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 9ade2b4..a704e8d 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-index 407ccf0..ca8f8bd 100644
---- a/drivers/scsi/aacraid/comminit.c
-+++ b/drivers/scsi/aacraid/comminit.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
 diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index d6e3fa0..0a8a56d 100644
+index 31c65ca..dd5819c 100644
 --- a/drivers/scsi/aacraid/commsup.c
 +++ b/drivers/scsi/aacraid/commsup.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/dpcsup.c b/drivers/scsi/aacraid/dpcsup.c
-index c426ea2..417ba34 100644
---- a/drivers/scsi/aacraid/dpcsup.c
-+++ b/drivers/scsi/aacraid/dpcsup.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 97a6227..09b967b 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/nark.c b/drivers/scsi/aacraid/nark.c
-index 6c53b1d..c59074e 100644
---- a/drivers/scsi/aacraid/nark.c
-+++ b/drivers/scsi/aacraid/nark.c
-@@ -5,7 +5,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/rkt.c b/drivers/scsi/aacraid/rkt.c
-index d57ac43..0348982 100644
---- a/drivers/scsi/aacraid/rkt.c
-+++ b/drivers/scsi/aacraid/rkt.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/rx.c b/drivers/scsi/aacraid/rx.c
-index a29e0f3..8e79482 100644
---- a/drivers/scsi/aacraid/rx.c
-+++ b/drivers/scsi/aacraid/rx.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/sa.c b/drivers/scsi/aacraid/sa.c
-index a03516e..3c2fd28 100644
---- a/drivers/scsi/aacraid/sa.c
-+++ b/drivers/scsi/aacraid/sa.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index a9ad39d..c3852f4 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -6,7 +6,8 @@
-  * Adaptec aacraid device driver for Linux.
-  *
-  * Copyright (c) 2000-2010 Adaptec, Inc.
-- *               2010 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *               2010-2015 PMC-Sierra, Inc. (aacraid@pmc-sierra.com)
-+ *		 2016-2017 Microsemi Corp. (aacraid@microsemi.com)
-  *
-  * This program is free software; you can redistribute it and/or modify
-  * it under the terms of the GNU General Public License as published by
+@@ -1729,6 +1729,222 @@ int aac_check_health(struct aac_dev * aac)
+ 	return BlinkLED;
+ }
+ 
++static void aac_process_events(struct aac_dev *dev)
++{
++	struct hw_fib *hw_fib, *hw_newfib;
++	struct fib *fib, *newfib;
++	struct aac_fib_context *fibctx;
++	unsigned long flags;
++	spinlock_t *t_lock;
++
++	spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
++	while (!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
++		struct list_head *entry;
++		struct aac_aifcmd *aifcmd;
++		u32 time_now, time_last;
++		unsigned long flagv;
++		unsigned int  num;
++		struct hw_fib **hw_fib_pool, **hw_fib_p;
++		struct fib **fib_pool, **fib_p;
++
++		set_current_state(TASK_RUNNING);
++
++		entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
++		list_del(entry);
++
++
++		t_lock = dev->queues->queue[HostNormCmdQueue].lock;
++		spin_unlock_irqrestore(t_lock, flags);
++
++		fib = list_entry(entry, struct fib, fiblink);
++		hw_fib = fib->hw_fib_va;
++		/*
++		 *	We will process the FIB here or pass it to a
++		 *	worker thread that is TBD. We Really can't
++		 *	do anything at this point since we don't have
++		 *	anything defined for this thread to do.
++		 */
++		memset(fib, 0, sizeof(struct fib));
++		fib->type = FSAFS_NTC_FIB_CONTEXT;
++		fib->size = sizeof(struct fib);
++		fib->hw_fib_va = hw_fib;
++		fib->data = hw_fib->data;
++		fib->dev = dev;
++		/*
++		 *	We only handle AifRequest fibs from the adapter.
++		 */
++
++		aifcmd = (struct aac_aifcmd *) hw_fib->data;
++		if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
++			/* Handle Driver Notify Events */
++			aac_handle_aif(dev, fib);
++			*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
++			aac_fib_adapter_complete(fib, (u16)sizeof(u32));
++			continue;
++		}
++		/*
++		 * The u32 here is important and intended. We are using
++		 * 32bit wrapping time to fit the adapter field
++		 */
++
++
++		/* Sniff events */
++		if ((aifcmd->command ==	cpu_to_le32(AifCmdEventNotify)) ||
++				(aifcmd->command ==
++				cpu_to_le32(AifCmdJobProgress))) {
++			aac_handle_aif(dev, fib);
++		}
++
++		time_now = jiffies/HZ;
++
++		/*
++		 * Warning: no sleep allowed while
++		 * holding spinlock. We take the estimate
++		 * and pre-allocate a set of fibs outside the
++		 * lock.
++		 */
++		num = le32_to_cpu(dev->init->r7.AdapterFibsSize)
++				/ sizeof(struct hw_fib); /* some extra */
++		spin_lock_irqsave(&dev->fib_lock, flagv);
++		entry = dev->fib_list.next;
++		while (entry != &dev->fib_list) {
++			entry = entry->next;
++			++num;
++		}
++		spin_unlock_irqrestore(&dev->fib_lock, flagv);
++		hw_fib_pool = kmalloc_array(num, sizeof(struct hw_fib *),
++						GFP_KERNEL);
++		fib_pool = kmalloc_array(num, sizeof(struct fib *),
++						GFP_KERNEL);
++		if (num	&& fib_pool && hw_fib_pool) {
++			hw_fib_p = hw_fib_pool;
++			fib_p = fib_pool;
++			while (hw_fib_p < &hw_fib_pool[num]) {
++				*(hw_fib_p) = kmalloc(sizeof(struct hw_fib),
++						GFP_KERNEL);
++				if (!(*(hw_fib_p++))) {
++					--hw_fib_p;
++					break;
++				}
++				*(fib_p) = kmalloc(sizeof(struct fib),
++						GFP_KERNEL);
++				if (!(*(fib_p++))) {
++					kfree(*(--hw_fib_p));
++					break;
++				}
++			}
++			num = hw_fib_p - hw_fib_pool;
++			if (!num) {
++				kfree(fib_pool);
++				fib_pool = NULL;
++				kfree(hw_fib_pool);
++				hw_fib_pool = NULL;
++				continue;
++			}
++		} else {
++			kfree(hw_fib_pool);
++			hw_fib_pool = NULL;
++			kfree(fib_pool);
++			fib_pool = NULL;
++		}
++		spin_lock_irqsave(&dev->fib_lock, flagv);
++		entry = dev->fib_list.next;
++		/*
++		 * For each Context that is on the
++		 * fibctxList, make a copy of the
++		 * fib, and then set the event to wake up the
++		 * thread that is waiting for it.
++		 */
++		hw_fib_p = hw_fib_pool;
++		fib_p = fib_pool;
++		while (entry != &dev->fib_list) {
++			/*
++			 * Extract the fibctx
++			 */
++			fibctx = list_entry(entry, struct aac_fib_context,
++					next);
++			/*
++			 * Check if the queue is getting
++			 * backlogged
++			 */
++			if (fibctx->count > 20) {
++				/*
++				 * It's *not* jiffies folks,
++				 * but jiffies / HZ so do not
++				 * panic ...
++				 */
++				time_last = fibctx->jiffies;
++				/*
++				 * Has it been > 2 minutes
++				 * since the last read off
++				 * the queue?
++				 */
++				if ((time_now - time_last) > aif_timeout) {
++					entry = entry->next;
++					aac_close_fib_context(dev, fibctx);
++					continue;
++				}
++			}
++			/*
++			 * Warning: no sleep allowed while
++			 * holding spinlock
++			 */
++			if (hw_fib_p < &hw_fib_pool[num]) {
++				hw_newfib = *hw_fib_p;
++				*(hw_fib_p++) = NULL;
++				newfib = *fib_p;
++				*(fib_p++) = NULL;
++				/*
++				 * Make the copy of the FIB
++				 */
++				memcpy(hw_newfib, hw_fib,
++					sizeof(struct hw_fib));
++				memcpy(newfib, fib, sizeof(struct fib));
++				newfib->hw_fib_va = hw_newfib;
++				/*
++				 * Put the FIB onto the
++				 * fibctx's fibs
++				 */
++				list_add_tail(&newfib->fiblink,
++					&fibctx->fib_list);
++				fibctx->count++;
++				/*
++				 * Set the event to wake up the
++				 * thread that is waiting.
++				 */
++				up(&fibctx->wait_sem);
++			} else {
++				pr_warn("aifd: didn't allocate NewFib.\n");
++			}
++			entry = entry->next;
++		}
++		/*
++		 *	Set the status of this FIB
++		 */
++		*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
++		aac_fib_adapter_complete(fib, sizeof(u32));
++		spin_unlock_irqrestore(&dev->fib_lock, flagv);
++		/* Free up the remaining resources */
++		hw_fib_p = hw_fib_pool;
++		fib_p = fib_pool;
++		while (hw_fib_p < &hw_fib_pool[num]) {
++			kfree(*hw_fib_p);
++			kfree(*fib_p);
++			++fib_p;
++			++hw_fib_p;
++		}
++		kfree(hw_fib_pool);
++		kfree(fib_pool);
++		kfree(fib);
++		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock,
++				flags);
++	}
++	/*
++	 *	There are no more AIF's
++	 */
++	spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock,
++			flags);
++}
+ 
+ /**
+  *	aac_command_thread	-	command processing thread
+@@ -1743,10 +1959,6 @@ int aac_check_health(struct aac_dev * aac)
+ int aac_command_thread(void *data)
+ {
+ 	struct aac_dev *dev = data;
+-	struct hw_fib *hw_fib, *hw_newfib;
+-	struct fib *fib, *newfib;
+-	struct aac_fib_context *fibctx;
+-	unsigned long flags;
+ 	DECLARE_WAITQUEUE(wait, current);
+ 	unsigned long next_jiffies = jiffies + HZ;
+ 	unsigned long next_check_jiffies = next_jiffies;
+@@ -1766,196 +1978,8 @@ int aac_command_thread(void *data)
+ 	set_current_state(TASK_INTERRUPTIBLE);
+ 	dprintk ((KERN_INFO "aac_command_thread start\n"));
+ 	while (1) {
+-		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-		while(!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
+-			struct list_head *entry;
+-			struct aac_aifcmd * aifcmd;
+ 
+-			set_current_state(TASK_RUNNING);
+-
+-			entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
+-			list_del(entry);
+-
+-			spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-			fib = list_entry(entry, struct fib, fiblink);
+-			/*
+-			 *	We will process the FIB here or pass it to a
+-			 *	worker thread that is TBD. We Really can't
+-			 *	do anything at this point since we don't have
+-			 *	anything defined for this thread to do.
+-			 */
+-			hw_fib = fib->hw_fib_va;
+-			memset(fib, 0, sizeof(struct fib));
+-			fib->type = FSAFS_NTC_FIB_CONTEXT;
+-			fib->size = sizeof(struct fib);
+-			fib->hw_fib_va = hw_fib;
+-			fib->data = hw_fib->data;
+-			fib->dev = dev;
+-			/*
+-			 *	We only handle AifRequest fibs from the adapter.
+-			 */
+-			aifcmd = (struct aac_aifcmd *) hw_fib->data;
+-			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
+-				/* Handle Driver Notify Events */
+-				aac_handle_aif(dev, fib);
+-				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+-				aac_fib_adapter_complete(fib, (u16)sizeof(u32));
+-			} else {
+-				/* The u32 here is important and intended. We are using
+-				   32bit wrapping time to fit the adapter field */
+-
+-				u32 time_now, time_last;
+-				unsigned long flagv;
+-				unsigned num;
+-				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
+-				struct fib ** fib_pool, ** fib_p;
+-
+-				/* Sniff events */
+-				if ((aifcmd->command ==
+-				     cpu_to_le32(AifCmdEventNotify)) ||
+-				    (aifcmd->command ==
+-				     cpu_to_le32(AifCmdJobProgress))) {
+-					aac_handle_aif(dev, fib);
+-				}
+-
+-				time_now = jiffies/HZ;
+-
+-				/*
+-				 * Warning: no sleep allowed while
+-				 * holding spinlock. We take the estimate
+-				 * and pre-allocate a set of fibs outside the
+-				 * lock.
+-				 */
+-				num = le32_to_cpu(dev->init->r7.AdapterFibsSize)
+-				    / sizeof(struct hw_fib); /* some extra */
+-				spin_lock_irqsave(&dev->fib_lock, flagv);
+-				entry = dev->fib_list.next;
+-				while (entry != &dev->fib_list) {
+-					entry = entry->next;
+-					++num;
+-				}
+-				spin_unlock_irqrestore(&dev->fib_lock, flagv);
+-				hw_fib_pool = NULL;
+-				fib_pool = NULL;
+-				if (num
+-				 && ((hw_fib_pool = kmalloc(sizeof(struct hw_fib *) * num, GFP_KERNEL)))
+-				 && ((fib_pool = kmalloc(sizeof(struct fib *) * num, GFP_KERNEL)))) {
+-					hw_fib_p = hw_fib_pool;
+-					fib_p = fib_pool;
+-					while (hw_fib_p < &hw_fib_pool[num]) {
+-						if (!(*(hw_fib_p++) = kmalloc(sizeof(struct hw_fib), GFP_KERNEL))) {
+-							--hw_fib_p;
+-							break;
+-						}
+-						if (!(*(fib_p++) = kmalloc(sizeof(struct fib), GFP_KERNEL))) {
+-							kfree(*(--hw_fib_p));
+-							break;
+-						}
+-					}
+-					if ((num = hw_fib_p - hw_fib_pool) == 0) {
+-						kfree(fib_pool);
+-						fib_pool = NULL;
+-						kfree(hw_fib_pool);
+-						hw_fib_pool = NULL;
+-					}
+-				} else {
+-					kfree(hw_fib_pool);
+-					hw_fib_pool = NULL;
+-				}
+-				spin_lock_irqsave(&dev->fib_lock, flagv);
+-				entry = dev->fib_list.next;
+-				/*
+-				 * For each Context that is on the
+-				 * fibctxList, make a copy of the
+-				 * fib, and then set the event to wake up the
+-				 * thread that is waiting for it.
+-				 */
+-				hw_fib_p = hw_fib_pool;
+-				fib_p = fib_pool;
+-				while (entry != &dev->fib_list) {
+-					/*
+-					 * Extract the fibctx
+-					 */
+-					fibctx = list_entry(entry, struct aac_fib_context, next);
+-					/*
+-					 * Check if the queue is getting
+-					 * backlogged
+-					 */
+-					if (fibctx->count > 20)
+-					{
+-						/*
+-						 * It's *not* jiffies folks,
+-						 * but jiffies / HZ so do not
+-						 * panic ...
+-						 */
+-						time_last = fibctx->jiffies;
+-						/*
+-						 * Has it been > 2 minutes
+-						 * since the last read off
+-						 * the queue?
+-						 */
+-						if ((time_now - time_last) > aif_timeout) {
+-							entry = entry->next;
+-							aac_close_fib_context(dev, fibctx);
+-							continue;
+-						}
+-					}
+-					/*
+-					 * Warning: no sleep allowed while
+-					 * holding spinlock
+-					 */
+-					if (hw_fib_p < &hw_fib_pool[num]) {
+-						hw_newfib = *hw_fib_p;
+-						*(hw_fib_p++) = NULL;
+-						newfib = *fib_p;
+-						*(fib_p++) = NULL;
+-						/*
+-						 * Make the copy of the FIB
+-						 */
+-						memcpy(hw_newfib, hw_fib, sizeof(struct hw_fib));
+-						memcpy(newfib, fib, sizeof(struct fib));
+-						newfib->hw_fib_va = hw_newfib;
+-						/*
+-						 * Put the FIB onto the
+-						 * fibctx's fibs
+-						 */
+-						list_add_tail(&newfib->fiblink, &fibctx->fib_list);
+-						fibctx->count++;
+-						/*
+-						 * Set the event to wake up the
+-						 * thread that is waiting.
+-						 */
+-						up(&fibctx->wait_sem);
+-					} else {
+-						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+-					}
+-					entry = entry->next;
+-				}
+-				/*
+-				 *	Set the status of this FIB
+-				 */
+-				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+-				aac_fib_adapter_complete(fib, sizeof(u32));
+-				spin_unlock_irqrestore(&dev->fib_lock, flagv);
+-				/* Free up the remaining resources */
+-				hw_fib_p = hw_fib_pool;
+-				fib_p = fib_pool;
+-				while (hw_fib_p < &hw_fib_pool[num]) {
+-					kfree(*hw_fib_p);
+-					kfree(*fib_p);
+-					++fib_p;
+-					++hw_fib_p;
+-				}
+-				kfree(hw_fib_pool);
+-				kfree(fib_pool);
+-			}
+-			kfree(fib);
+-			spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-		}
+-		/*
+-		 *	There are no more AIF's
+-		 */
+-		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
++		aac_process_events(dev);
+ 
+ 		/*
+ 		 *	Background activity
 -- 
 2.7.4
 
