@@ -1,31 +1,29 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
-Date: Wed, 25 Jan 2017 18:28:20 -0500
-Message-ID: <yq1tw8mbtyj.fsf@oracle.com>
+Subject: Re: [PATCH 2/2] qla2xxx: Avoid that issuing a LIP triggers a kernel crash
+Date: Wed, 25 Jan 2017 18:29:44 -0500
+Message-ID: <yq1pojabtw7.fsf@oracle.com>
 References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
-        <20170123163446.9227-2-bart.vanassche@sandisk.com>
+        <20170123163446.9227-3-bart.vanassche@sandisk.com>
+        <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:31830 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752072AbdAYX2n (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 18:28:43 -0500
-In-Reply-To: <20170123163446.9227-2-bart.vanassche@sandisk.com> (Bart Van
-        Assche's message of "Mon, 23 Jan 2017 08:34:45 -0800")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
+        (Mauricio Faria de Oliveira's message of "Tue, 24 Jan 2017 12:59:57
+        -0200")
+Sender: stable-owner@vger.kernel.org
+To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>
+Cc: Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Naresh Bannoth <nbannoth@in.ibm.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, stable@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <bart.vanassche@sandisk.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Michael Hernandez <michael.hernandez@cavium.com>, Himanshu Madhani <himanshu.madhani@cavium.com>, Christoph Hellwig <hch@lst.de>, stable@vger.kernel.org
 
->>>>> "Bart" == Bart Van Assche <bart.vanassche@sandisk.com> writes:
+>>>>> "Mauricio" == Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com> writes:
 
-Bart> qla2x00_probe_one() allocates IRQs before it initializes rsp_q_map
-Bart> so IRQs must be freed even if rsp_q_map allocation did not occur.
-Bart> This was detected by kmemleak.
+Hi Mauricio,
 
-I queued this one yesterday but was waiting for a resolution on patch
-2...
+Mauricio> First of all, sorry for the new bug; I didn't realize the
+Mauricio> pointer could be NULL at this scenario.
+
+Please do a proper patch submission for this fix.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
