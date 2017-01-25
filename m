@@ -1,86 +1,88 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: [PATCH] SCSI core: Fix WRITE SAME handling
-Date: Tue, 24 Jan 2017 17:21:08 -0800
-Message-ID: <5bedd463-8f55-4506-0593-fd0040c47a17@sandisk.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH v2] mpt3sas: Force request partial completion alignment
+Date: Wed, 25 Jan 2017 10:16:28 +0530
+Message-ID: <CAK=zhgoCNWT+vGtU=BikqOJwFi-kc6Oxj=Q2_jP_OEeYr=XanQ@mail.gmail.com>
+References: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0069.outbound.protection.outlook.com ([104.47.38.69]:32845
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750966AbdAYBVS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 24 Jan 2017 20:21:18 -0500
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:33967 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751227AbdAYEqa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2017 23:46:30 -0500
+Received: by mail-qt0-f180.google.com with SMTP id l7so6884766qtd.1
+        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 20:46:30 -0800 (PST)
+In-Reply-To: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>, Mike Christie <mchristi@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Brian King <brking@linux.vnet.ibm.com>, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com
 
-This patch avoids that sending a WRITE SAME command to the iSCSI
-initiator triggers the following:
+On Tue, Jan 24, 2017 at 9:17 PM, Guilherme G. Piccoli
+<gpiccoli@linux.vnet.ibm.com> wrote:
+> From: Ram Pai <linuxram@us.ibm.com>
+>
+> The firmware or device, possibly under a heavy I/O load, can return
+> on a partial unaligned boundary. Scsi-ml expects these requests to be
+> completed on an alignment boundary. Scsi-ml blindly requeues the I/O
+> without checking the alignment boundary of the I/O request for the
+> remaining bytes. This leads to errors, since devices cannot perform
+> non-aligned read/write operations.
+>
+> This patch fixes the issue in the driver. It aligns unaligned
+> completions of FS requests, by truncating them to the nearest
+> alignment boundary.
+>
+> Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
+> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+> Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+> ---
+> v1->v2:
+>   * Improved printk, by showing some variables too [suggested by Sreekanth].
 
-BUG: unable to handle kernel NULL pointer dereference at 0000000000000014
-TARGET_CORE[iSCSI]: Expected Transfer Length: 260096 does not match SCSI CDB Length: 512 for SAM Opcode: 0x41
-IP: iscsi_tcp_segment_done+0x20b/0x310 [libiscsi_tcp]
+This patch looks good. Please consider this patch as
 
-Oops: 0000 [#1] SMP
-Modules linked in: target_core_user uio target_core_iblock target_core_file iscsi_target_mod target_core_mod netconsole configfs crct10dif_pclmul crc32_pclmul ghash_clmulni_intel aesni_intel aes_x86_64 crypto_simd cryptd glue_helper virtio_console virtio_rng virtio_balloon serio_raw i2c_piix4 acpi_cpufreq button iscsi_tcp libiscsi_tcp libiscsi scsi_transport_iscsi ext4 jbd2 mbcache virtio_blk virtio_net psmouse floppy drm_kms_helper syscopyarea
-sysfillrect sysimgblt fb_sys_fops ttm drm virtio_pci
-CPU: 2 PID: 5 Comm: kworker/u8:0 Not tainted 4.10.0-rc5-debug+ #3
-Workqueue: iscsi_q_0 iscsi_xmitworker [libiscsi]
-RIP: 0010:iscsi_tcp_segment_done+0x20b/0x310 [libiscsi_tcp]
-Call Trace:
- iscsi_sw_tcp_xmit_segment+0x84/0x120 [iscsi_tcp]
- iscsi_sw_tcp_pdu_xmit+0x51/0x180 [iscsi_tcp]
- iscsi_tcp_task_xmit+0xb3/0x290 [libiscsi_tcp]
- iscsi_xmit_task+0x4e/0xc0 [libiscsi]
- iscsi_xmitworker+0x243/0x330 [libiscsi]
- process_one_work+0x1d8/0x4b0
- worker_thread+0x49/0x4a0
- kthread+0x102/0x140
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-Fixes: f80de881d8df ("sd: remove __data_len hack for WRITE SAME")
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.com>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Jens Axboe <axboe@fb.com>
-Cc: Mike Christie <mchristi@redhat.com>
----
- drivers/scsi/scsi_lib.c | 14 +++++++++++++-
- 1 file changed, 13 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e9e1e141af9c..004f17042081 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1000,6 +1000,18 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
- 	}
- }
- 
-+static u64 sg_data_length(struct sg_table *sg_table)
-+{
-+	struct scatterlist *sg;
-+	int i;
-+	u64 len = 0;
-+
-+	for_each_sg(sg_table->sgl, sg, sg_table->nents, i)
-+		len += sg->length;
-+
-+	return len;
-+}
-+
- static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
- {
- 	int count;
-@@ -1018,7 +1030,7 @@ static int scsi_init_sgtable(struct request *req, struct scsi_data_buffer *sdb)
- 	count = blk_rq_map_sg(req->q, req, sdb->table.sgl);
- 	BUG_ON(count > sdb->table.nents);
- 	sdb->table.nents = count;
--	sdb->length = blk_rq_payload_bytes(req);
-+	sdb->length = sg_data_length(&sdb->table);
- 	return BLKPREP_OK;
- }
- 
--- 
-2.11.0
-
+>
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 17 +++++++++++++++++
+>  1 file changed, 17 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 75f3fce..e52c942 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>         struct MPT3SAS_DEVICE *sas_device_priv_data;
+>         u32 response_code = 0;
+>         unsigned long flags;
+> +       unsigned int sector_sz;
+> +       struct request *req;
+>
+>         mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+>         scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+> @@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>         }
+>
+>         xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+> +
+> +       /* In case of bogus fw or device, we could end up having
+> +        * unaligned partial completion. We can force alignment here,
+> +        * then scsi-ml does not need to handle this misbehavior.
+> +        */
+> +       sector_sz = scmd->device->sector_size;
+> +       req = scmd->request;
+> +       if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
+> +                   (xfer_cnt % sector_sz))) {
+> +               sdev_printk(KERN_INFO, scmd->device,
+> +                       "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+> +                       xfer_cnt, sector_sz);
+> +               xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
+> +       }
+> +
+>         scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+>         if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+>                 log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+> --
+> 2.1.0
+>
