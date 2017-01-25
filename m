@@ -1,23 +1,25 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 21/24] aacraid: Retrieve HBA host information ioctl
-Date: Wed, 25 Jan 2017 10:01:08 -0800
-Message-ID: <20170125180111.25401-22-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 11/24] aacraid: Added support for periodic wellness sync
+Date: Wed, 25 Jan 2017 10:00:58 -0800
+Message-ID: <20170125180111.25401-12-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0082.outbound.protection.outlook.com ([104.47.42.82]:39136
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0089.outbound.protection.outlook.com ([104.47.40.89]:29568
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752114AbdAZAiW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Jan 2017 19:38:22 -0500
+        id S1752063AbdAZAiL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Jan 2017 19:38:11 -0500
 In-Reply-To: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, RaghavaAditya.Renukunta@microsemi.com, Scott.Benesh@microsemi.com
 
-Added a new ioctl interface to retrieve the host device information.
+This patch adds a new functions that periodically sync the time of host
+to the adapter. In addition also informs the adapter that the driver is
+alive and kicking. Only applicable to the HBA1000 and SMARTIOC2000.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -26,124 +28,232 @@ Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
  Changes in  V2:
   None
 
- drivers/scsi/aacraid/aacraid.h  | 52 +++++++++++++++++++++++++++++++++++++++++
- drivers/scsi/aacraid/commctrl.c | 26 +++++++++++++++++++++
- 2 files changed, 78 insertions(+)
+ drivers/scsi/aacraid/aacraid.h |   3 +
+ drivers/scsi/aacraid/commsup.c | 176 +++++++++++++++++++++++++++++++++--------
+ 2 files changed, 148 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 5342a7a..44dcf36 100644
+index fb46252..03250b5 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2338,6 +2338,7 @@ struct revision
- #define FSACTL_GET_CONTAINERS			2131
- #define FSACTL_SEND_LARGE_FIB			CTL_CODE(2138, METHOD_BUFFERED)
- #define FSACTL_RESET_IOP			CTL_CODE(2140, METHOD_BUFFERED)
-+#define FSACTL_GET_HBA_INFO			CTL_CODE(2150, METHOD_BUFFERED)
- /* flags defined for IOP & HW SOFT RESET */
- #define HW_IOP_RESET				0x01
- #define HW_SOFT_RESET				0x02
-@@ -2377,6 +2378,57 @@ struct aac_common
- extern struct aac_common aac_config;
+@@ -88,6 +88,9 @@ enum {
+ #define AAC_MAX_NATIVE_SIZE		2048
  
- /*
-+ * This is for management ioctl purpose only.
-+ */
-+struct aac_hba_info {
-+
-+	u8	DriverName[50];
-+	u8	AdapterNumber;
-+	u8	SystemIoBusNumber;
-+	u8	DeviceNumber;
-+	u32	FunctionNumber;
-+	u32	VendorID;
-+	u32	DeviceID;
-+	u32	SubVendorID;
-+	u32	SubSystemID;
-+	u32	MappedBaseAddressSize;
-+	u32	BasePhysicalAddress_HighPart;
-+	u32	BasePhysicalAddress_LowPart;
-+
-+	u32	MaxCommandSize;
-+	u32	MaxFibSize;
-+	u32	MaxScatterGatherFromOs;
-+	u32	MaxScatterGatherToFw;
-+	u32	MaxOutstandingFibs;
-+
-+	u32	QueueStartThreshold;
-+	u32	QueueDumpThreshold;
-+	u32	MaxIoSizeQueued;
-+	u32	OutstandingIO;
-+
-+	u32	FirmwareBuildNumber;
-+	u32	BIOSBuildNumber;
-+	u32	DriverBuildNumber;
-+	u32	SerialNumber_HighPart;
-+	u32	SerialNumber_LowPart;
-+	u32	SupportedOptions;
-+	u32	FeatureBits;
-+	u32	currentnumberPorts;
-+
-+	u8	NewCommInterface:1;
-+	u8	NewCommandsSupported:1;
-+	u8	DisablePassthrough:1;
-+	u8	ExposeNonDasd:1;
-+	u8	QueueAllowed:1;
-+	u8	BLEDCheckEnabled:1;
-+	u8	reserved1:1;
-+	u8	reserted2:1;
-+
-+	u32	reserved3[10];
-+
-+};
-+
-+/*
-  *	The following macro is used when sending and receiving FIBs. It is
-  *	only used for debugging.
-  */
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 4b65b91..9ade2b4 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -1011,6 +1011,29 @@ static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
- 	}
- 	return 0;
+ #define CISS_REPORT_PHYSICAL_LUNS	0xc3
++#define WRITE_HOST_WELLNESS		0xa5
++#define BMIC_IN			0x26
++#define BMIC_OUT			0x27
+ 
+ struct aac_ciss_phys_luns_resp {
+ 	u8	list_length[4];		/* LUN list length (N-7, big endian) */
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index dd5819c..fa9b4f9 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -43,6 +43,7 @@
+ #include <linux/kthread.h>
+ #include <linux/interrupt.h>
+ #include <linux/semaphore.h>
++#include <linux/bcd.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+@@ -1946,6 +1947,143 @@ static void aac_process_events(struct aac_dev *dev)
+ 			flags);
  }
-+
-+static int aac_get_hba_info(struct aac_dev *dev, void __user *arg)
+ 
++static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
++							u32 datasize)
 +{
-+	struct aac_hba_info hbainfo;
++	struct aac_srb *srbcmd;
++	struct sgmap64 *sg64;
++	dma_addr_t addr;
++	char *dma_buf;
++	struct fib *fibptr;
++	int ret = -ENOMEM;
 +
-+	hbainfo.AdapterNumber		= (u8) dev->id;
-+	hbainfo.SystemIoBusNumber	= dev->pdev->bus->number;
-+	hbainfo.DeviceNumber		= (dev->pdev->devfn >> 3);
-+	hbainfo.FunctionNumber		= (dev->pdev->devfn & 0x0007);
++	fibptr = aac_fib_alloc(dev);
++	if (fibptr) {
++		aac_fib_init(fibptr);
 +
-+	hbainfo.VendorID		= dev->pdev->vendor;
-+	hbainfo.DeviceID		= dev->pdev->device;
-+	hbainfo.SubVendorID		= dev->pdev->subsystem_vendor;
-+	hbainfo.SubSystemID		= dev->pdev->subsystem_device;
++		dma_buf = pci_alloc_consistent(dev->pdev, datasize, &addr);
++		if (dma_buf != NULL) {
++			u32 vbus, vid;
 +
-+	if (copy_to_user(arg, &hbainfo, sizeof(struct aac_hba_info))) {
-+		dprintk((KERN_DEBUG "aacraid: Could not copy hba info\n"));
-+		return -EFAULT;
++			vbus = (u32)le16_to_cpu(
++				dev->supplement_adapter_info.VirtDeviceBus);
++			vid = (u32)le16_to_cpu(
++				dev->supplement_adapter_info.VirtDeviceTarget);
++
++			srbcmd = (struct aac_srb *)fib_data(fibptr);
++
++			srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
++			srbcmd->channel = cpu_to_le32(vbus);
++			srbcmd->id = cpu_to_le32(vid);
++			srbcmd->lun = 0;
++			srbcmd->flags = cpu_to_le32(SRB_DataOut);
++			srbcmd->timeout = cpu_to_le32(10);
++			srbcmd->retry_limit = 0;
++			srbcmd->cdb_size = cpu_to_le32(12);
++			srbcmd->count = cpu_to_le32(datasize);
++
++			memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
++			srbcmd->cdb[0] = BMIC_OUT;
++			srbcmd->cdb[6] = WRITE_HOST_WELLNESS;
++			memcpy(dma_buf, (char *)wellness_str, datasize);
++
++			sg64 = (struct sgmap64 *)&srbcmd->sg;
++			sg64->count = cpu_to_le32(1);
++			sg64->sg[0].addr[1] =
++				cpu_to_le32((u32)(((addr) >> 16) >> 16));
++			sg64->sg[0].addr[0] =
++				cpu_to_le32((u32)(addr & 0xffffffff));
++			sg64->sg[0].count = cpu_to_le32(datasize);
++
++			ret = aac_fib_send(ScsiPortCommand64, fibptr,
++				sizeof(struct aac_srb), FsaNormal,
++				1, 1, NULL, NULL);
++
++			pci_free_consistent(dev->pdev, datasize,
++						(void *)dma_buf, addr);
 +	}
 +
-+	return 0;
++		/*
++		 * Do not set XferState to zero unless
++		 * receives a response from F/W
++		 */
++		if (ret >= 0)
++			aac_fib_complete(fibptr);
++
++		/*
++		 * FIB should be freed only after
++		 * getting the response from the F/W
++		 */
++		if (ret != -ERESTARTSYS)
++			aac_fib_free(fibptr);
++	}
++
++	return ret;
 +}
 +
- struct aac_reset_iop {
- 	u8	reset_type;
- };
-@@ -1070,6 +1093,9 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
- 	case FSACTL_GET_PCI_INFO:
- 		status = aac_get_pci_info(dev,arg);
- 		break;
-+	case FSACTL_GET_HBA_INFO:
-+		status = aac_get_hba_info(dev, arg);
-+		break;
- 	case FSACTL_RESET_IOP:
- 		status = aac_send_reset_adapter(dev, arg);
- 		break;
++int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
++{
++	int ret = -ENOMEM;
++	struct fib *fibptr;
++
++	/*
++	 *  This whole block needs to be rewritten with helpers
++	 *  Changing tabs to a single space should not be allowed!!
++	 */
++
++	if (dev->sa_firmware) {
++		struct tm cur_tm;
++		char wellness_str[] = "<HW>TD\010\0\0\0\0\0\0\0\0\0DW\0\0ZZ";
++		u32 datasize = sizeof(wellness_str);
++		unsigned long local_time;
++
++		local_time = (u32)(now->tv_sec - (sys_tz.tz_minuteswest * 60));
++		time_to_tm(local_time, 0, &cur_tm);
++		cur_tm.tm_mon += 1;
++		cur_tm.tm_year += 1900;
++		wellness_str[8] = bin2bcd(cur_tm.tm_hour);
++		wellness_str[9] = bin2bcd(cur_tm.tm_min);
++		wellness_str[10] = bin2bcd(cur_tm.tm_sec);
++		wellness_str[12] = bin2bcd(cur_tm.tm_mon);
++		wellness_str[13] = bin2bcd(cur_tm.tm_mday);
++		wellness_str[14] = bin2bcd(cur_tm.tm_year / 100);
++		wellness_str[15] = bin2bcd(cur_tm.tm_year % 100);
++
++		ret = aac_send_wellness_command(dev, wellness_str, datasize);
++
++		return ret;
++	}
++
++	fibptr = aac_fib_alloc(dev);
++	if (fibptr) {
++		__le32 *info;
++
++		aac_fib_init(fibptr);
++		info = (__le32 *)fib_data(fibptr);
++		*info = cpu_to_le32(now->tv_sec);
++		ret = aac_fib_send(
++			SendHostTime, fibptr,
++			sizeof(*info), FsaNormal,
++			1, 1, NULL, NULL);
++
++		/*
++		 * Do not set XferState to zero unless
++		 * receives a response from F/W
++		 */
++		if (ret >= 0)
++			aac_fib_complete(fibptr);
++
++		/*
++		 * FIB should be freed only after
++		 * getting the response from the F/W
++		 */
++		if (ret != -ERESTARTSYS)
++			aac_fib_free(fibptr);
++	}
++
++	return ret;
++}
++
+ /**
+  *	aac_command_thread	-	command processing thread
+  *	@dev: Adapter to monitor
+@@ -2001,7 +2139,7 @@ int aac_command_thread(void *data)
+ 
+ 			/* Don't even try to talk to adapter if its sick */
+ 			ret = aac_check_health(dev);
+-			if (!ret && !dev->queues)
++			if (!dev->queues)
+ 				break;
+ 			next_check_jiffies = jiffies
+ 					   + ((long)(unsigned)check_interval)
+@@ -2014,36 +2152,12 @@ int aac_command_thread(void *data)
+ 				difference = (((1000000 - now.tv_usec) * HZ)
+ 				  + 500000) / 1000000;
+ 			else if (ret == 0) {
+-				struct fib *fibptr;
+-
+-				if ((fibptr = aac_fib_alloc(dev))) {
+-					int status;
+-					__le32 *info;
+-
+-					aac_fib_init(fibptr);
+-
+-					info = (__le32 *) fib_data(fibptr);
+-					if (now.tv_usec > 500000)
+-						++now.tv_sec;
+-
+-					*info = cpu_to_le32(now.tv_sec);
+-
+-					status = aac_fib_send(SendHostTime,
+-						fibptr,
+-						sizeof(*info),
+-						FsaNormal,
+-						1, 1,
+-						NULL,
+-						NULL);
+-					/* Do not set XferState to zero unless
+-					 * receives a response from F/W */
+-					if (status >= 0)
+-						aac_fib_complete(fibptr);
+-					/* FIB should be freed only after
+-					 * getting the response from the F/W */
+-					if (status != -ERESTARTSYS)
+-						aac_fib_free(fibptr);
+-				}
++
++				if (now.tv_usec > 500000)
++					++now.tv_sec;
++
++				ret = aac_send_hosttime(dev, &now);
++
+ 				difference = (long)(unsigned)update_interval*HZ;
+ 			} else {
+ 				/* retry shortly */
 -- 
 2.7.4
 
