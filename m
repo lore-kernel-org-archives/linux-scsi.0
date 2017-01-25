@@ -1,88 +1,51 @@
-From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH v2] mpt3sas: Force request partial completion alignment
-Date: Wed, 25 Jan 2017 10:16:28 +0530
-Message-ID: <CAK=zhgoCNWT+vGtU=BikqOJwFi-kc6Oxj=Q2_jP_OEeYr=XanQ@mail.gmail.com>
-References: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] sd: always scan VPD pages if thin provisioning is enabled
+Date: Wed, 25 Jan 2017 08:26:05 +0100
+Message-ID: <1485329165-64825-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:33967 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751227AbdAYEqa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 24 Jan 2017 23:46:30 -0500
-Received: by mail-qt0-f180.google.com with SMTP id l7so6884766qtd.1
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jan 2017 20:46:30 -0800 (PST)
-In-Reply-To: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Received: from mx2.suse.de ([195.135.220.15]:37734 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751287AbdAYH0b (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Jan 2017 02:26:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, PDL-MPT-FUSIONLINUX <MPT-FusionLinux.pdl@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Brian King <brking@linux.vnet.ibm.com>, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Tue, Jan 24, 2017 at 9:17 PM, Guilherme G. Piccoli
-<gpiccoli@linux.vnet.ibm.com> wrote:
-> From: Ram Pai <linuxram@us.ibm.com>
->
-> The firmware or device, possibly under a heavy I/O load, can return
-> on a partial unaligned boundary. Scsi-ml expects these requests to be
-> completed on an alignment boundary. Scsi-ml blindly requeues the I/O
-> without checking the alignment boundary of the I/O request for the
-> remaining bytes. This leads to errors, since devices cannot perform
-> non-aligned read/write operations.
->
-> This patch fixes the issue in the driver. It aligns unaligned
-> completions of FS requests, by truncating them to the nearest
-> alignment boundary.
->
-> Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
-> Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-> Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-> ---
-> v1->v2:
->   * Improved printk, by showing some variables too [suggested by Sreekanth].
+For any device with an older SCSI revision we might not
+be scanning VPD pages, which results in a wrongly configured
+discard mode if thin provisioned is enabled.
+According to sbc3 any thin provisioned device (ie devices which
+have the LBPME bit set in the output of READ CAPACITY(16)) need
+to support VPD pages. So this patch always enables VPD pages
+even for older SCSI revisions if thin provisioning is enabled.
 
-This patch looks good. Please consider this patch as
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/sd.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1fbb1ec..08963b0 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -2169,7 +2169,15 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		if (buffer[14] & 0x40) /* LBPRZ */
+ 			sdkp->lbprz = 1;
+ 
+-		sd_config_discard(sdkp, SD_LBP_WS16);
++		/*
++		 * sbc3r36 states:
++		 * The device server in a logical unit the supports
++		 * logical block provisioning management shall support
++		 * the Logical Block Provisioning VPD page.
++		 * So VPD pages should be supported if lbpme is set.
++		 */
++		if (!scsi_device_supports_vpd(sdp))
++			sdp->try_vpd_pages = 1;
+ 	}
+ 
+ 	sdkp->capacity = lba + 1;
+-- 
+1.8.5.6
 
->
->  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 17 +++++++++++++++++
->  1 file changed, 17 insertions(+)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 75f3fce..e52c942 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->         struct MPT3SAS_DEVICE *sas_device_priv_data;
->         u32 response_code = 0;
->         unsigned long flags;
-> +       unsigned int sector_sz;
-> +       struct request *req;
->
->         mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
->         scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
-> @@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->         }
->
->         xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
-> +
-> +       /* In case of bogus fw or device, we could end up having
-> +        * unaligned partial completion. We can force alignment here,
-> +        * then scsi-ml does not need to handle this misbehavior.
-> +        */
-> +       sector_sz = scmd->device->sector_size;
-> +       req = scmd->request;
-> +       if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
-> +                   (xfer_cnt % sector_sz))) {
-> +               sdev_printk(KERN_INFO, scmd->device,
-> +                       "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
-> +                       xfer_cnt, sector_sz);
-> +               xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
-> +       }
-> +
->         scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
->         if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
->                 log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
-> --
-> 2.1.0
->
