@@ -1,16 +1,16 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] sd: always scan VPD pages if thin provisioning is enabled
-Date: Wed, 25 Jan 2017 08:57:55 +0100
-Message-ID: <20170125075755.GA3568@linux-x5ow.site>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] sd: always scan VPD pages if thin provisioning is
+        enabled
+Date: Wed, 25 Jan 2017 11:23:29 +0100
+Message-ID: <20170125102329.GA17657@lst.de>
 References: <1485329165-64825-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39804 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:36612 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751309AbdAYH6C (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Jan 2017 02:58:02 -0500
+        id S1751532AbdAYKXb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Jan 2017 05:23:31 -0500
 Content-Disposition: inline
 In-Reply-To: <1485329165-64825-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -26,18 +26,22 @@ On Wed, Jan 25, 2017 at 08:26:05AM +0100, Hannes Reinecke wrote:
 > have the LBPME bit set in the output of READ CAPACITY(16)) need
 > to support VPD pages. So this patch always enables VPD pages
 > even for older SCSI revisions if thin provisioning is enabled.
-> 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
 
+Can you explain what you need this for?  A device with a per-SBC3
+revision that wants us to use UNMAP?
 
-Looks good,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+> +		/*
+> +		 * sbc3r36 states:
+> +		 * The device server in a logical unit the supports
+> +		 * logical block provisioning management shall support
+> +		 * the Logical Block Provisioning VPD page.
+> +		 * So VPD pages should be supported if lbpme is set.
+> +		 */
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+It's a bit odd to quote SBC3 when the device clearly is pre-SBC3
+to need this workaround..
+
+> +		if (!scsi_device_supports_vpd(sdp))
+> +			sdp->try_vpd_pages = 1;
+
+Do the assignment unconditionally?
