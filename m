@@ -1,91 +1,22 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH 2/2] qla2xxx: Avoid that issuing a LIP triggers a kernel
- crash
-Date: Wed, 25 Jan 2017 22:05:31 +0000
-Message-ID: <967E0D95-F1C2-4306-999A-6C5659A3DAF9@cavium.com>
-References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
- <20170123163446.9227-3-bart.vanassche@sandisk.com>
- <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH] Revert "sd: remove __data_len hack for WRITE SAME"
+Date: Wed, 25 Jan 2017 23:20:15 +0100
+Message-ID: <20170125222015.GA1422@lst.de>
+References: <48f53712-569e-d5c3-7269-d0eeb481f8ee@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0071.outbound.protection.outlook.com ([104.47.41.71]:47458
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752024AbdAYWFe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 25 Jan 2017 17:05:34 -0500
-In-Reply-To: <91a8f843-c969-72c4-1add-8e44ea2d9a8a@linux.vnet.ibm.com>
-Content-Language: en-US
-Content-ID: <6D043003EDBAB746AC00023DCE2F87E3@namprd07.prod.outlook.com>
+Received: from verein.lst.de ([213.95.11.211]:42642 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751562AbdAYWUR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 25 Jan 2017 17:20:17 -0500
+Content-Disposition: inline
+In-Reply-To: <48f53712-569e-d5c3-7269-d0eeb481f8ee@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mauricio Faria de Oliveira <mauricfo@linux.vnet.ibm.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Naresh Bannoth <nbannoth@in.ibm.com>, "stable@vger.kernel.org" <stable@vger.kernel.org>
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>, Sagi Grimberg <sagi@grimberg.me>, Jens Axboe <axboe@fb.com>, Lee Duncan <lduncan@suse.com>, Chris Leech <cleech@redhat.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-DQoNCk9uIDEvMjQvMTcsIDY6NTkgQU0sICJNYXVyaWNpbyBGYXJpYSBkZSBPbGl2ZWlyYSIgPG1h
-dXJpY2ZvQGxpbnV4LnZuZXQuaWJtLmNvbT4gd3JvdGU6DQoNCj5IaSBCYXJ0LA0KPg0KPkZpcnN0
-IG9mIGFsbCwgc29ycnkgZm9yIHRoZSBuZXcgYnVnOyBJIGRpZG4ndCByZWFsaXplIHRoZSBwb2lu
-dGVyIGNvdWxkDQo+YmUgTlVMTCBhdCB0aGlzIHNjZW5hcmlvLg0KPg0KPk9uIDAxLzIzLzIwMTcg
-MDI6MzQgUE0sIEJhcnQgVmFuIEFzc2NoZSB3cm90ZToNCj4+IEBAIC0xNjI0LDcgKzE2MjcsOCBA
-QCBxbGEyeDAwX2Fib3J0X2FsbF9jbWRzKHNjc2lfcWxhX2hvc3RfdCAqdmhhLCBpbnQgcmVzKQ0K
-Pj4gIAkJCQkJICovDQo+PiAgCQkJCQlzcF9nZXQoc3ApOw0KPj4gIAkJCQkJc3Bpbl91bmxvY2tf
-aXJxcmVzdG9yZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCj4+IC0JCQkJCXFsYTJ4eHhf
-ZWhfYWJvcnQoR0VUX0NNRF9TUChzcCkpOw0KPj4gKwkJCQkJaWYgKHNjbWQpDQo+PiArCQkJCQkJ
-cWxhMnh4eF9laF9hYm9ydChzY21kKTsNCj4+ICAJCQkJCXNwaW5fbG9ja19pcnFzYXZlKCZoYS0+
-aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KPj4gIAkJCQl9DQo+DQo+Tm93LCB0aGlzIGNodW5rIGhh
-cyBhIHByb2JsZW0gd2l0aCByZWZlcmVuY2UgY291bnRpbmcgKGFuZCB1bm5lY2Vzc2FyeQ0KPnNw
-aW4tbG9ja2luZyksIHdoaWNoIHdlIGNhbiBhdm9pZCBieSBzaW1wbHkgbW92aW5nIHVwIHRoaXMg
-TlVMTCBjaGVjay4NCj4NCj5UaGUgY2FsbCB0byBzcF9nZXQoKSBpbmNyZW1lbnRzIHRoZSBzcC0+
-cmVmX2NvdW50LCBidXQgaWYgeW91IHNraXAgdGhlDQo+Y2FsbCB0byBxbGEyeHh4X2VoX2Fib3J0
-KCkgeW91IGRvbid0IGdldCB0aGUgZGVjcmVtZW50IGZyb20gdGhlIGNhbGwgdG8NCj5zcC0+ZG9u
-ZSgpIGF0IGFib3J0IGhhbmRsaW5nIGZyb20gSVNSLCBlLmcuLCBxbGEyNHh4X2Fib3J0X2lvY2Jf
-ZW50cnkoKS4NCj5bb3IgaWYgdGhlIGNvbW1hbmQgY29tcGxldGVkIHN1Y2Nlc3NmdWxseSBiZXR3
-ZWVuIGlzc3VlL2NvbXBsZXRlIGFib3J0LA0KPmF0IHRoZSBjb21wbGV0aW9uIGZyb20gSVNSLCBl
-LmcuLCBxbGEyeDAwX3Byb2Nlc3NfY29tcGxldGVkX3JlcXVlc3QoKS5dDQo+DQo+VGhlIHNwLT5k
-b25lKCkgY2FsbCBqdXN0IGJlbG93IHRoaXMgY2h1bmsgd2FzIHN1cHBvc2VkIHRvIGRyb3AgdGhl
-DQo+aW5pdGlhbCByZWZlcmVuY2UgW3NldCBhdCBxbGEyeHh4X3F1ZXVlY29tbWFuZCgpXSBhdCBh
-IHRpbWUgd2UgZGlkDQo+bm90IGNhbGwgcWxhMnh4eF9laF9hYm9ydCgpIHlldC4uLiBidXQgbm93
-IHRoYXQgd2UgX19tYXlfXyBjYWxsIGl0DQo+KGFuZCBnZXQgdGhhdCBzcC0+ZG9uZSgpIGNhbGwg
-ZnJvbSB0aGUgSVNSIGFib3J0IGhhbmRsaW5nKSwgd2UgbmVlZA0KPnRvIG9ubHkgaW5jcmVtZW50
-IGl0IGlmIHdlJ3JlIGdvaW5nIHRvIGRyb3AgaXQuDQo+DQo+VGhhdCBzaG91bGQgYmUgcmVzb2x2
-ZWQgd2l0aCB0aGlzIHNsaWdodCBjaGFuZ2UgdG8geW91ciBwYXRjaA0KPih3aGljaCBhbHNvIGhl
-bHBzIHcvIHRoZSBzcGluLWxvY2tpbmcpLiAgV2hhdCBkbyB5b3Uvb3RoZXJzIHRoaW5rPw0KPg0K
-PmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfb3MuYyBiL2RyaXZlcnMvc2Nz
-aS9xbGEyeHh4L3FsYV9vcy5jDQo+aW5kZXggMGEwMDBlY2YwODgxLi5hMTdjYjYzYjNmZDUgMTAw
-NjQ0DQo+LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX29zLmMNCj4rKysgYi9kcml2ZXJz
-L3Njc2kvcWxhMnh4eC9xbGFfb3MuYw0KPkBAIC0xNjAwLDYgKzE2MDAsNyBAQCB1aW50MzJfdCBx
-bGEyeDAwX2lzcF9yZWdfc3RhdChzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhKQ0KPiAgICAgICAgIHNy
-Yl90ICpzcDsNCj4gICAgICAgICBzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhID0gdmhhLT5odzsNCj4g
-ICAgICAgICBzdHJ1Y3QgcmVxX3F1ZSAqcmVxOw0KPisgICAgICAgc3RydWN0IHNjc2lfY21uZCAq
-c2NtZDsNCj4NCj4gICAgICAgICBxbHRfaG9zdF9yZXNldF9oYW5kbGVyKGhhKTsNCj4NCj5AQCAt
-MTYxMywxMCArMTYxNCwxMiBAQCB1aW50MzJfdCBxbGEyeDAwX2lzcF9yZWdfc3RhdChzdHJ1Y3Qg
-cWxhX2h3X2RhdGEgDQo+KmhhKQ0KPiAgICAgICAgICAgICAgICAgZm9yIChjbnQgPSAxOyBjbnQg
-PCByZXEtPm51bV9vdXRzdGFuZGluZ19jbWRzOyBjbnQrKykgew0KPiAgICAgICAgICAgICAgICAg
-ICAgICAgICBzcCA9IHJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRdOw0KPiAgICAgICAgICAgICAg
-ICAgICAgICAgICBpZiAoc3ApIHsNCj4rICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNj
-bWQgPSBHRVRfQ01EX1NQKHNwKTsNCj4rDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgLyogRG9uJ3QgYWJvcnQgY29tbWFuZHMgaW4gYWRhcHRlciANCj5kdXJpbmcgRUVIDQo+ICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICogcmVjb3ZlcnkgYXMgaXQncyBub3QgDQo+
-YWNjZXNzaWJsZS9yZXNwb25kaW5nLg0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAqLw0KPi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgaWYgKCFoYS0+ZmxhZ3MuZWVo
-X2J1c3kpIHsNCj4rICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIGlmIChzY21kICYmICFo
-YS0+ZmxhZ3MuZWVoX2J1c3kpIHsNCj4gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgIC8qIEdldCBhIHJlZmVyZW5jZSB0byB0aGUgc3AgDQo+YW5kIGRyb3AgdGhlIGxvY2su
-DQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKiBUaGUgcmVmZXJl
-bmNlIGVuc3VyZXMgdGhpcyANCj5zcC0+ZG9uZSgpIGNhbGwNCj4gICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAqIC0gYW5kIG5vdCB0aGUgY2FsbCBpbiANCj5xbGEyeHh4
-X2VoX2Fib3J0KCkgLQ0KPkBAIC0xNjI0LDcgKzE2MjcsNyBAQCB1aW50MzJfdCBxbGEyeDAwX2lz
-cF9yZWdfc3RhdChzdHJ1Y3QgcWxhX2h3X2RhdGEgKmhhKQ0KPiAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICovDQo+ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICAgICBzcF9nZXQoc3ApOw0KPiANCj5zcGluX3VubG9ja19pcnFyZXN0b3JlKCZoYS0+
-aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KPi0gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgICAgICBxbGEyeHh4X2VoX2Fib3J0KEdFVF9DTURfU1Aoc3ApKTsNCj4rICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgcWxhMnh4eF9laF9hYm9ydChzY21kKTsNCj4gDQo+
-c3Bpbl9sb2NrX2lycXNhdmUoJmhhLT5oYXJkd2FyZV9sb2NrLCBmbGFncyk7DQo+ICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgfQ0KPiAgICAgICAgICAgICAgICAgICAgICAgICAgICAg
-ICAgIHJlcS0+b3V0c3RhbmRpbmdfY21kc1tjbnRdID0gTlVMTDsNCj4NCj4NCj5TaWduZWQtb2Zm
-LWJ5OiBNYXVyaWNpbyBGYXJpYSBkZSBPbGl2ZWlyYSA8bWF1cmljZm9AbGludXgudm5ldC5pYm0u
-Y29tPg0KPg0KPg0KPi0tIA0KPk1hdXJpY2lvIEZhcmlhIGRlIE9saXZlaXJhDQo+SUJNIExpbnV4
-IFRlY2hub2xvZ3kgQ2VudGVyDQoNClRoaXMgaXMgbW9yZSBhcHByb3ByaWF0ZSBmaXguIExvb2tz
-IGdvb2QuDQoNCg==
+Thanks Bart, and sorry for messing this up.
+
+Acked-by: Christoph Hellwig <hch@lst.de>
