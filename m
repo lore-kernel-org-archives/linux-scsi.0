@@ -1,75 +1,70 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 05/24] aacraid: Retrieve and update the device types
-Date: Thu, 26 Jan 2017 09:59:52 +0100
-Message-ID: <20170126085952.GG3591@linux-x5ow.site>
-References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170125180111.25401-6-RaghavaAditya.Renukunta@microsemi.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
+From: Lukas Herbolt <lherbolt@redhat.com>
+Subject: [PATCH] scsi_debug: Add OPTIMAL TRANSFER LENGTH GRANULARITY option.
+Date: Thu, 26 Jan 2017 10:00:37 +0100
+Message-ID: <1485421237-26708-1-git-send-email-lherbolt@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36619 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:59874 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752875AbdAZI7z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 03:59:55 -0500
-Content-Disposition: inline
-In-Reply-To: <20170125180111.25401-6-RaghavaAditya.Renukunta@microsemi.com>
+        id S1752875AbdAZJAn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Jan 2017 04:00:43 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
+To: dgilbert@interlog.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: Lukas Herbolt <lherbolt@redhat.com>
 
-On Wed, Jan 25, 2017 at 10:00:52AM -0800, Raghava Aditya Renukunta wrote:
-> This patch adds support to retrieve the type of each adapter connected
-> device. Applicable to HBA1000 and SmartIOC2000 products
-> 
-> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> 
-> ---
+Signed-off-by: Lukas Herbolt <lherbolt@redhat.com>
+---
+ drivers/scsi/scsi_debug.c | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
 
-[...]
-
->  /*
->   *	Adapter Information Block
->   *
-> @@ -1056,7 +1091,28 @@ struct aac_supplement_adapter_info
->  	/* StructExpansion == 1 */
->  	__le32	FeatureBits3;
->  	__le32	SupportedPerformanceModes;
-> -	__le32	ReservedForFutureGrowth[80];
-> +	u8	HostBusType;		/* uses HOST_BUS_TYPE_xxx defines */
-> +	u8	HostBusWidth;		/* actual width in bits or links */
-> +	u16	HostBusSpeed;		/* actual bus speed/link rate in MHz */
-> +	u8	MaxRRCDrives;		/* max. number of ITP-RRC drives/pool */
-> +	u8	MaxDiskXtasks;		/* max. possible num of DiskX Tasks */
-> +
-> +	u8	CpldVerLoaded;
-> +	u8	CpldVerInFlash;
-> +
-> +	__le64	MaxRRCCapacity;
-> +	__le32	CompiledMaxHistLogLevel;
-> +	u8	CustomBoardName[12];
-> +	u16	SupportedCntlrMode;	/* identify supported controller mode */
-> +	u16	ReservedForFuture16;
-> +	__le32	SupportedOptions3;	/* reserved for future options */
-> +
-> +	__le16	VirtDeviceBus;		/* virt. SCSI device for Thor */
-> +	__le16	VirtDeviceTarget;
-> +	__le16	VirtDeviceLUN;
-> +	__le16	Unused;
-> +	__le32	ReservedForFutureGrowth[68];
-> +
-
-:-(
-
-Appart from that,
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index cf04a36..6910ea1 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -125,6 +125,7 @@ static const char *sdebug_version_date = "20160430";
+ #define DEF_OPTS   0
+ #define DEF_OPT_BLKS 1024
+ #define DEF_PHYSBLK_EXP 0
++#define DEF_OPT_XFERLEN_EXP 0
+ #define DEF_PTYPE   TYPE_DISK
+ #define DEF_REMOVABLE false
+ #define DEF_SCSI_LEVEL   7    /* INQUIRY, byte2 [6->SPC-4; 7->SPC-5] */
+@@ -590,6 +591,7 @@ static int sdebug_num_tgts = DEF_NUM_TGTS; /* targets per host */
+ static int sdebug_opt_blks = DEF_OPT_BLKS;
+ static int sdebug_opts = DEF_OPTS;
+ static int sdebug_physblk_exp = DEF_PHYSBLK_EXP;
++static int sdebug_opt_xferlen_exp = DEF_OPT_XFERLEN_EXP;
+ static int sdebug_ptype = DEF_PTYPE; /* SCSI peripheral device type */
+ static int sdebug_scsi_level = DEF_SCSI_LEVEL;
+ static int sdebug_sector_size = DEF_SECTOR_SIZE;
+@@ -1205,7 +1207,10 @@ static int inquiry_vpd_b0(unsigned char *arr)
+ 	memcpy(arr, vpdb0_data, sizeof(vpdb0_data));
+ 
+ 	/* Optimal transfer length granularity */
+-	gran = 1 << sdebug_physblk_exp;
++	if (sdebug_opt_xferlen_exp != 0 && sdebug_physblk_exp < sdebug_opt_xferlen_exp)
++		gran = 1 <<  sdebug_opt_xferlen_exp;
++	else
++		gran = 1 << sdebug_physblk_exp;
+ 	put_unaligned_be16(gran, arr + 2);
+ 
+ 	/* Maximum Transfer Length */
+@@ -4161,6 +4166,7 @@ module_param_named(num_tgts, sdebug_num_tgts, int, S_IRUGO | S_IWUSR);
+ module_param_named(opt_blks, sdebug_opt_blks, int, S_IRUGO);
+ module_param_named(opts, sdebug_opts, int, S_IRUGO | S_IWUSR);
+ module_param_named(physblk_exp, sdebug_physblk_exp, int, S_IRUGO);
++module_param_named(opt_xferlen_exp, sdebug_opt_xferlen_exp, int, S_IRUGO);
+ module_param_named(ptype, sdebug_ptype, int, S_IRUGO | S_IWUSR);
+ module_param_named(removable, sdebug_removable, bool, S_IRUGO | S_IWUSR);
+ module_param_named(scsi_level, sdebug_scsi_level, int, S_IRUGO);
+@@ -4212,6 +4218,7 @@ MODULE_PARM_DESC(num_tgts, "number of targets per host to simulate(def=1)");
+ MODULE_PARM_DESC(opt_blks, "optimal transfer length in blocks (def=1024)");
+ MODULE_PARM_DESC(opts, "1->noise, 2->medium_err, 4->timeout, 8->recovered_err... (def=0)");
+ MODULE_PARM_DESC(physblk_exp, "physical block exponent (def=0)");
++MODULE_PARM_DESC(opt_xferlen_exp, "optimal transfer length granularity exponent (def=physblk_exp)");
+ MODULE_PARM_DESC(ptype, "SCSI peripheral type(def=0[disk])");
+ MODULE_PARM_DESC(removable, "claim to have removable media (def=0)");
+ MODULE_PARM_DESC(scsi_level, "SCSI level to simulate(def=7[SPC-5])");
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.7.4
+
