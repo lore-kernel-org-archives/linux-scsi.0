@@ -1,26 +1,36 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 02/18] md: cleanup bio op / flags handling in raid1_write_request
-Date: Wed, 25 Jan 2017 21:59:33 -0500
-Message-ID: <yq1inp2a5m2.fsf@oracle.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-        <1485365126-23210-3-git-send-email-hch@lst.de>
+From: Michael Schmitz <schmitzmic@gmail.com>
+Subject: Re: [PATCH 0/6] ncr5380: Miscellaneous minor patches
+Date: Thu, 26 Jan 2017 16:00:05 +1300
+Message-ID: <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com>
+References: <cover.1484523085.git.fthain@telegraphics.com.au>
+ <yq14m0md8nd.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485365126-23210-3-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Wed, 25 Jan 2017 18:25:10 +0100")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
+Content-Type: text/plain; charset=iso-8859-15
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pg0-f68.google.com ([74.125.83.68]:34235 "EHLO
+        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752478AbdAZDAN (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:00:13 -0500
+In-Reply-To: <yq14m0md8nd.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+Martin, Finn,
 
-Christoph> No need for the local variables, the bio is still live and we
-Christoph> can just assigned the bits we want directly.  Make me wonder
-Christoph> why we can't assign all the bio flags to start with.
+I'll get to that on the weekend - Auckland Anniversary Day coming up so
+plenty of time.
 
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Cheers,
 
--- 
-Martin K. Petersen	Oracle Linux Engineering
+	Michael
+
+Am 26.01.2017 um 12:25 schrieb Martin K. Petersen:
+>>>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
+> 
+> Finn> Michael, Ondrej, can I get you to review/test please?
+> 
+> Pretty please!
+> 
