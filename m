@@ -1,111 +1,107 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: mvsas escalated kernel crash and ata mapping mvsas driver question
-Date: Thu, 26 Jan 2017 14:30:43 +0100
-Message-ID: <CAD+HZHUTaW5eM4eVmjARBo8qUt5tb0yuBULDtZX0W4Qwzf_toA@mail.gmail.com>
-References: <362cdbe9-3633-499e-9ee4-b1a8afed2e40@powercraft.nl>
- <2d56a20b-628f-d621-6c9b-ba5cdf8bf6a0@powercraft.nl> <c9684a81-901d-03ea-e322-c27089c4b204@powercraft.nl>
- <d8615494-756f-0fe9-9969-8e850fc5984d@powercraft.nl> <CAD+HZHW-0keq5RUiqMGpO_EnOLa7Z6ZeAtwtkGXvThi=sf4siw@mail.gmail.com>
- <879d8f02-5bb6-fe8a-0fea-9ad8943a15cf@powercraft.nl>
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] mpt3sas: Force request partial completion alignment
+Date: Thu, 26 Jan 2017 11:31:53 -0200
+Message-ID: <5889FA49.4030802@linux.vnet.ibm.com>
+References: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <yq1a8aebt4q.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ot0-f173.google.com ([74.125.82.173]:35631 "EHLO
-        mail-ot0-f173.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752145AbdAZNao (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2017 08:30:44 -0500
-Received: by mail-ot0-f173.google.com with SMTP id 65so174690847otq.2
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 05:30:44 -0800 (PST)
-In-Reply-To: <879d8f02-5bb6-fe8a-0fea-9ad8943a15cf@powercraft.nl>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46364 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752049AbdAZNcF (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Jan 2017 08:32:05 -0500
+Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0QDT45D097461
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:32:04 -0500
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 286xt4ssue-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:32:04 -0500
+Received: from localhost
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Thu, 26 Jan 2017 11:32:01 -0200
+Received: from d24relay04.br.ibm.com (d24relay04.br.ibm.com [9.18.232.146])
+        by d24dlp01.br.ibm.com (Postfix) with ESMTP id B68733520068
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:31:26 -0500 (EST)
+Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
+        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0QDVx8j21626908
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 11:31:59 -0200
+Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
+        by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0QDVwx6007527
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 11:31:59 -0200
+In-Reply-To: <yq1a8aebt4q.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jelle de Jong <jelledejong@powercraft.nl>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com, brking@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com
 
-2017-01-26 12:53 GMT+01:00 Jelle de Jong <jelledejong@powercraft.nl>:
-> Beste Jack,
->
-> I set the queue_depth to 1 and timeout to 300 for all SATA disk connected to
-> the mvsas controller [ARC-1300ix-16].
->
-> Does this mean that ata21 is mapped to /dev/sdq!
->
-> root@sweeney:~# dmesg | grep ata21 | grep device
-> [    4.788568] sas: ata21: end_device-0:0:26: dev error handler
->
-> root@sweeney:~# lsscsi -v | grep end_device-0:0:26
->   dir: /sys/bus/scsi/devices/0:0:14:0
-> [/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:26/end_device-0:0:26/target0:0:14/0:0:14:0]
->
-> root@sweeney:~# lsscsi -v | grep 0:0:14:0
-> [0:0:14:0]   disk    ATA      WDC WD1003FBYX-0 1V01  /dev/sdq
->   dir: /sys/bus/scsi/devices/0:0:14:0
-> [/sys/devices/pci0000:00/0000:00:1c.0/0000:08:00.0/host0/port-0:0/expander-0:0/port-0:0:26/end_device-0:0:26/target0:0:14/0:0:14:0]
->
-> I added the following to my rc.local
->
-> vim /etc/rc.local
->
-> for disk in sd{c..r}; do
->     echo deadline > /sys/block/$disk/queue/scheduler
->     echo 0 > /sys/block/$disk/queue/iosched/front_merges
->     echo 150 > /sys/block/$disk/queue/iosched/read_expire
->     echo 1500 > /sys/block/$disk/queue/iosched/write_expire
->     echo 1 > /sys/block/$disk/device/queue_depth;
->     echo 300 > /sys/block/$disk/device/timeout;
-> done
->
-> I hope the performance impact of queue_depth = 1 is not to much....
+On 01/25/2017 09:46 PM, Martin K. Petersen wrote:
+>>>>>> "Guilherme" == Guilherme G Piccoli <gpiccoli@linux.vnet.ibm.com> writes:
+> 
+> Hi Guilherme,
 
-Yes, sdq maps to ata21.
-
-Regards,
-Jack
+Hi Martin, thanks for the review!
 
 
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 75f3fce..e52c942 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>  	struct MPT3SAS_DEVICE *sas_device_priv_data;
+>  	u32 response_code = 0;
+>  	unsigned long flags;
+> +	unsigned int sector_sz;
+> +	struct request *req;
+> 
+>  	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+>  	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+> @@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>  	}
+> 
+>  	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+> +
+> +	/* In case of bogus fw or device, we could end up having
+> +	 * unaligned partial completion. We can force alignment here,
+> +	 * then scsi-ml does not need to handle this misbehavior.
+> +	 */
+> +	sector_sz = scmd->device->sector_size;
+> +	req = scmd->request;
+> +	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
+> +		    (xfer_cnt % sector_sz))) {
+> 
+> Maybe a bit zealous on the sanity checking...
+
+A bit...? heheh
+Too much I'd say. Since this is dealing with a bogus FW scenario, I
+found more safe to check everything...of course we can remove checks if
+it's sure req isn't NULL ever. The sector_sz check is avoiding
+degenerate cases, since our division below.
+
+
+> 
+> +		sdev_printk(KERN_INFO, scmd->device,
+> +			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+> +			xfer_cnt, sector_sz);
+> +		xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
+> 
+> Not so keen on divisions. xfer_cnt = round_down(xfer_cnt, sector_sz), maybe?
 >
-> Kind regards,
->
-> Jelle de Jong
->
-> On 26/01/17 11:17, Jack Wang wrote:
->>
->> 2017-01-26 10:51 GMT+01:00 Jelle de Jong <jelledejong@powercraft.nl>:
->>>
->>> Hello everybody,
->>>
->>> I got a server that seemingly random gets kernel crashes, due to an
->>> escalation of events from most likely the mvsas based disk controller.
->>>
->>> The harddisk should be okay, I replaced a whole bunch to be sure, but the
->>> server does not get stable. I can not seem to figure out how to map for
->>> example ata21.00 to an disk so I can do a deep badblock check.
->>>
->>> I have to complete boot with kernel crash log saved with additional
->>> information.
->>>
->>> http://paste.debian.net/plainh/96325d89
->>>
->>> Can somebody take a look and maybe help?
->>>
->>>
->>> 08:00.0 SCSI storage controller: Areca Technology Corp. ARC-1300ix-16
->>> 16-Port PCI-Express to SAS Non-RAID Host Adapter (rev 02)
->>>
->>> Kind regards,
->>>
->>> Jelle de Jong
->>
->>
->> Your IO error seems related to NCQ, have you tried to disable NCQ?
->>
->> echo 1 > /sys/block/sdX/device/queue_depth
->>
->> Maybe try 4.10-rc5 is also a option?
->>
->> Regards,
->> Jack
->>
->>> --
->>> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
->>> the body of a message to majordomo@vger.kernel.org
->>> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+
+Martin, I might be completely wrong here (please correct me if this is
+the case), but isn't C standard integer division a truncation that acts
+like a round down? I checked (what I think is) the specification of C
+language (ISO/IEC 9899:1999), and it seems the division proposed by Ram
+Pai is accurate in this case. Also, both variables are unsigned.
+
+Let me know your thoughts.
+Thanks,
+
+
+Guilherme
+
