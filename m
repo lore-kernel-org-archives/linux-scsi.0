@@ -1,35 +1,41 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH] SCSI core: Fix WRITE SAME handling
-Date: Thu, 26 Jan 2017 09:24:53 +0100
-Message-ID: <20170126082453.GA11768@lst.de>
-References: <5bedd463-8f55-4506-0593-fd0040c47a17@sandisk.com> <20170125103725.GA18026@lst.de> <1485384261.2646.8.camel@sandisk.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH V2 01/24] aacraid: Remove duplicate irq management code
+Date: Thu, 26 Jan 2017 09:26:50 +0100
+Message-ID: <20170126082650.GC3591@linux-x5ow.site>
+References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170125180111.25401-2-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:46673 "EHLO newverein.lst.de"
+Received: from mx2.suse.de ([195.135.220.15]:34260 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752830AbdAZIY4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 03:24:56 -0500
+        id S1752830AbdAZI0x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Jan 2017 03:26:53 -0500
 Content-Disposition: inline
-In-Reply-To: <1485384261.2646.8.camel@sandisk.com>
+In-Reply-To: <20170125180111.25401-2-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "mchristi@redhat.com" <mchristi@redhat.com>, "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "sagi@grimberg.me" <sagi@grimberg.me>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-On Wed, Jan 25, 2017 at 10:44:41PM +0000, Bart Van Assche wrote:
-> On Wed, 2017-01-25 at 11:37 +0100, Christoph Hellwig wrote:
-> > > Fixes: f80de881d8df ("sd: remove __data_len hack for WRITE SAME")
-> > 
-> > I think the better fix is to simply revert this commit.
+On Wed, Jan 25, 2017 at 10:00:48AM -0800, Raghava Aditya Renukunta wrote:
+> Removed duplicate code that for acquiring and releasing irqs
 > 
-> Hello Christoph,
+> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 > 
-> Do you mean reverting commit f80de881d8df only for kernel release v4.10
-> or also for future releases? How about resubmitting a reworked version of
-> commit f80de881d8df for kernel v4.11?
+> ---
 
-Let's revert it for good for now.  This was a braino for me as the
-real write same requests are very different from discards implemented
-as write same.  I have a WIP series that would change a lot in this
-area, so additional churn before that would not be productive.
+One could argue 'acquiring and releasing irqs' is two different things so it
+should be split into two different patches ;-). But if noone else objects:
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
