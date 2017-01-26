@@ -1,290 +1,268 @@
-From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH v2 1/2] scsi: scsi_transport_fc: Provide a lightweight option
- for Virtual FC Hosts.
-Date: Thu, 26 Jan 2017 08:38:59 -0500
-Message-ID: <1485437940-18706-2-git-send-email-cavery@redhat.com>
-References: <1485437940-18706-1-git-send-email-cavery@redhat.com>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
+Date: Thu, 26 Jan 2017 15:36:14 +0100
+Message-ID: <20170126143614.GA19849@lst.de>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com> <20170123163446.9227-2-bart.vanassche@sandisk.com> <1485359225.3093.3.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1485437940-18706-1-git-send-email-cavery@redhat.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: devel@linuxdriverproject.org, famz@redhat.com, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1485359225.3093.3.camel@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: linux-scsi@vger.kernel.org, linux-acpi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch provides a means to offer a lightweight option to the
-current FC transport class. This new transport option is more
-suitable for FC transports running on a VM that virtualizes their
-FCs and that do not possess rports or vports whereas the heavyweight
-option maintains the standard physical FC hba attuibute set.
+On Wed, Jan 25, 2017 at 03:47:20PM +0000, Bart Van Assche wrote:
+> =============================================================================
+> BUG kmalloc-16 (Not tainted): Redzone overwritten
+> -----------------------------------------------------------------------------
+> 
+> Disabling lock debugging due to kernel taint
+> INFO: 0xffff880030bacc78-0xffff880030bacc7f. First byte 0xf instead of 0xcc
+> INFO: Allocated in irq_create_affinity_masks+0x5f/0x260 age=0 cpu=3 pid=812
+> 	___slab_alloc.constprop.79+0x482/0x4f0
+> 	__slab_alloc.isra.75.constprop.78+0x55/0xa0
+> 	__kmalloc+0x27c/0x310
+> 	irq_create_affinity_masks+0x5f/0x260
 
-The patch performs the following:
+This is the normal affinity mask allocation.
 
-1) Adds the lightweight_transport option to fc_function_template. Based
-on this selection the transport will either be lightweight or default
-to heavyweight.
+> 	__pci_enable_msix+0x314/0x4c0
+> 	pci_alloc_irq_vectors_affinity+0xb7/0x140
+> 	qla2x00_request_irqs+0xa6/0x6d0 [qla2xxx]
+> 	qla2x00_probe_one+0xc2e/0x25f0 [qla2xxx]
+> 	pci_device_probe+0x8a/0xf0
+> 	driver_probe_device+0x1f5/0x450
+> 	__driver_attach+0xe3/0xf0
+> 	bus_for_each_dev+0x66/0xa0
+> 	driver_attach+0x1e/0x20
+> 	bus_add_driver+0x200/0x270
+> 	driver_register+0x60/0xe0
+> 	__pci_register_driver+0x5d/0x60
+> INFO: Freed in acpi_ns_get_node_unlocked+0x90/0xa4 age=0 cpu=3 pid=812
+> 	__slab_free+0x176/0x310
+> 	kfree+0x25e/0x2d0
+> 	acpi_ns_get_node_unlocked+0x90/0xa4
+> 	acpi_ns_get_node+0x3d/0x52
+> 	acpi_get_handle+0x82/0x96
 
-2) Divides the applicable export functions into two sets. The lightweight
-functions involve FC attributes port_name and node name. The functions
-that deal with targets, rports, etc are not used. The heavyweight default
-contains the original standard physical FC hba attribute set.
+This on the other hand I don't understand acpi_ns_get_node_unlocked
+only frees the object it allocated in the ACPI code using
+acpi_ns_internalize_name.  I can't really see any relation to the
+affinity mask allocation.
 
-3) All top level FC class directories such fc_remote_ports, fc_transport,
-and fc_vports are still created when the transport driver loads.
-They are just not populated when running in lightweight mode. Conceptually
-both lightweight and heavyweight clients could coexist.
-
-4) fc_transport_template->user_scan is now null and the bus can be scanned.
-
-Signed-off-by: Cathy Avery <cavery@redhat.com>
----
- drivers/scsi/scsi_transport_fc.c | 144 +++++++++++++++++++++++++++++++++++++--
- include/scsi/scsi_transport_fc.h |   2 +
- 2 files changed, 142 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 03577bd..615057c 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -52,6 +52,25 @@ static void fc_bsg_remove(struct request_queue *);
- static void fc_bsg_goose_queue(struct fc_rport *);
- 
- /*
-+ * These functions define the actions taken on behalf of either
-+ * a virtualized client which is considered to be lightweigth
-+ * having only port name and node name as attributes in sysfs and
-+ * which does not possess rports or vports vs the heavyweigth
-+ * mode which is intended for fully functional clients such as
-+ * physical HBAs.
-+ */
-+
-+static int fc_host_lw_setup(struct Scsi_Host *, struct fc_host_attrs *);
-+static int fc_host_hw_setup(struct Scsi_Host *, struct fc_host_attrs *);
-+static int fc_host_hw_remove(struct fc_host_attrs *);
-+static struct scsi_transport_template *
-+	fc_attach_lw_transport(struct fc_function_template *);
-+static struct scsi_transport_template *
-+	fc_attach_hw_transport(struct fc_function_template *);
-+static void fc_remove_lw_host(struct Scsi_Host *);
-+static void fc_remove_hw_host(struct Scsi_Host *, struct fc_host_attrs *);
-+
-+/*
-  * Module Parameters
-  */
- 
-@@ -352,6 +371,10 @@ struct fc_internal {
- 
- #define to_fc_internal(tmpl)	container_of(tmpl, struct fc_internal, t)
- 
-+
-+static void fc_release_lw_transport(struct fc_internal *);
-+static void fc_release_hw_transport(struct fc_internal *);
-+
- static int fc_target_setup(struct transport_container *tc, struct device *dev,
- 			   struct device *cdev)
- {
-@@ -387,7 +410,33 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+
-+	/*
-+	 * Check if the client driver has selected a minimum set
-+	 * of fc transport attributes to initialize. Otherwise
-+	 * initialize all currently available attributes.
-+	 */
-+
-+	if (i->f->lightweight_transport)
-+		return fc_host_lw_setup(shost, fc_host);
-+
-+	return fc_host_hw_setup(shost, fc_host);
-+}
-+
-+static int fc_host_lw_setup(struct Scsi_Host *shost,
-+			    struct fc_host_attrs *fc_host)
-+{
-+	/* Only node_name and port_name are used */
-+	fc_host->node_name = -1;
-+	fc_host->port_name = -1;
-+
-+	return 0;
-+}
- 
-+static int fc_host_hw_setup(struct Scsi_Host *shost,
-+			    struct fc_host_attrs *fc_host)
-+{
- 	/*
- 	 * Set default values easily detected by the midlayer as
- 	 * failure cases.  The scsi lldd is responsible for initializing
-@@ -468,7 +517,16 @@ static int fc_host_remove(struct transport_container *tc, struct device *dev,
- {
- 	struct Scsi_Host *shost = dev_to_shost(dev);
- 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+
-+	if (i->f->lightweight_transport)
-+		return 0;
- 
-+	return fc_host_hw_remove(fc_host);
-+}
-+
-+static int fc_host_hw_remove(struct fc_host_attrs *fc_host)
-+{
- 	fc_bsg_remove(fc_host->rqst_q);
- 	return 0;
- }
-@@ -2175,6 +2233,51 @@ static int fc_it_nexus_response(struct Scsi_Host *shost, u64 nexus, int result)
- struct scsi_transport_template *
- fc_attach_transport(struct fc_function_template *ft)
- {
-+	if (ft->lightweight_transport)
-+		return fc_attach_lw_transport(ft);
-+
-+	return fc_attach_hw_transport(ft);
-+}
-+EXPORT_SYMBOL(fc_attach_transport);
-+
-+
-+struct scsi_transport_template *
-+fc_attach_lw_transport(struct fc_function_template *ft)
-+{
-+	int count;
-+	struct fc_internal *i;
-+
-+	i = kzalloc(sizeof(struct fc_internal),
-+			GFP_KERNEL);
-+
-+	if (unlikely(!i))
-+		return NULL;
-+
-+	/* Only port_name and node_name attributes are of interest */
-+
-+	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
-+	i->t.host_attrs.ac.class = &fc_host_class.class;
-+	i->t.host_attrs.ac.match = fc_host_match;
-+	i->t.host_size = sizeof(struct fc_host_attrs);
-+	transport_container_register(&i->t.host_attrs);
-+
-+	i->f = ft;
-+
-+	count = 0;
-+	SETUP_HOST_ATTRIBUTE_RD(node_name);
-+	SETUP_HOST_ATTRIBUTE_RD(port_name);
-+
-+	BUG_ON(count > FC_HOST_NUM_ATTRS);
-+
-+	i->host_attrs[count] = NULL;
-+
-+	return &i->t;
-+}
-+
-+
-+struct scsi_transport_template *
-+fc_attach_hw_transport(struct fc_function_template *ft)
-+{
- 	int count;
- 	struct fc_internal *i = kzalloc(sizeof(struct fc_internal),
- 					GFP_KERNEL);
-@@ -2318,12 +2421,27 @@ fc_attach_transport(struct fc_function_template *ft)
- 
- 	return &i->t;
- }
--EXPORT_SYMBOL(fc_attach_transport);
- 
- void fc_release_transport(struct scsi_transport_template *t)
- {
- 	struct fc_internal *i = to_fc_internal(t);
- 
-+	if (i->f->lightweight_transport)
-+		fc_release_lw_transport(i);
-+	else
-+		fc_release_hw_transport(i);
-+}
-+EXPORT_SYMBOL(fc_release_transport);
-+
-+void fc_release_lw_transport(struct fc_internal *i)
-+{
-+	transport_container_unregister(&i->t.host_attrs);
-+
-+	kfree(i);
-+}
-+
-+void fc_release_hw_transport(struct fc_internal *i)
-+{
- 	transport_container_unregister(&i->t.target_attrs);
- 	transport_container_unregister(&i->t.host_attrs);
- 	transport_container_unregister(&i->rport_attr_cont);
-@@ -2331,7 +2449,6 @@ void fc_release_transport(struct scsi_transport_template *t)
- 
- 	kfree(i);
- }
--EXPORT_SYMBOL(fc_release_transport);
- 
- /**
-  * fc_queue_work - Queue work to the fc_host workqueue.
-@@ -2438,10 +2555,30 @@ fc_flush_devloss(struct Scsi_Host *shost)
- void
- fc_remove_host(struct Scsi_Host *shost)
- {
-+	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-+	struct fc_internal *i = to_fc_internal(shost->transportt);
-+
-+	if (i->f->lightweight_transport)
-+		fc_remove_lw_host(shost);
-+
-+	else
-+		fc_remove_hw_host(shost, fc_host);
-+}
-+EXPORT_SYMBOL(fc_remove_host);
-+
-+void
-+fc_remove_lw_host(struct Scsi_Host *shost)
-+{
-+	/* flush all scan work items */
-+	scsi_flush_work(shost);
-+}
-+
-+void
-+fc_remove_hw_host(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
-+{
- 	struct fc_vport *vport = NULL, *next_vport = NULL;
- 	struct fc_rport *rport = NULL, *next_rport = NULL;
- 	struct workqueue_struct *work_q;
--	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
- 	unsigned long flags;
- 
- 	spin_lock_irqsave(shost->host_lock, flags);
-@@ -2484,7 +2621,6 @@ fc_remove_host(struct Scsi_Host *shost)
- 		destroy_workqueue(work_q);
- 	}
- }
--EXPORT_SYMBOL(fc_remove_host);
- 
- static void fc_terminate_rport_io(struct fc_rport *rport)
- {
-diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
-index 924c8e6..b9d1ff7 100644
---- a/include/scsi/scsi_transport_fc.h
-+++ b/include/scsi/scsi_transport_fc.h
-@@ -718,6 +718,8 @@ struct fc_function_template {
- 	unsigned long	show_host_system_hostname:1;
- 
- 	unsigned long	disable_target_scan:1;
-+	/* Limited attributes of port_name and host_name */
-+	unsigned long	lightweight_transport:1;
- };
- 
- 
--- 
-2.5.0
+> 	acpi_pci_irq_find_prt_entry+0x26e/0x2ae
+> 	acpi_pci_irq_lookup+0x28/0x135
+> 	acpi_pci_irq_enable+0x60/0x1f8
+> 	pcibios_enable_device+0x2d/0x30
+> 	do_pci_enable_device+0x64/0xf0
+> 	pci_enable_device_flags+0xc5/0x110
+> 	pci_enable_device_mem+0x13/0x20
+> 	qla2x00_probe_one+0x14b/0x25f0 [qla2xxx]
+> 	pci_device_probe+0x8a/0xf0
+> 	driver_probe_device+0x1f5/0x450
+> 	__driver_attach+0xe3/0xf0
+> INFO: Slab 0xffffea0000c2eb00 objects=23 used=21 fp=0xffff880030bacdc8 flags=0x4000000000008101
+> INFO: Object 0xffff880030bacc68 @offset=3176 fp=0xffff880030bacf28
+> 
+> Redzone ffff880030bacc60: cc cc cc cc cc cc cc cc                          ........
+> Object ffff880030bacc68: ff 00 00 00 00 00 00 00 ff 00 00 00 00 00 00 00  ................
+> Redzone ffff880030bacc78: 0f 00 00 00 00 00 00 00                          ........
+> Padding ffff880030bacdb8: 5a 5a 5a 5a 5a 5a 5a 5a                          ZZZZZZZZ
+> CPU: 3 PID: 812 Comm: modprobe Tainted: G    B           4.10.0-rc5-dbg+ #9
+> Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> Call Trace:
+>  dump_stack+0x85/0xc2
+>  print_trailer+0x162/0x260
+>  check_bytes_and_report+0xc5/0x110
+>  check_object+0x1da/0x2a0
+>  free_debug_processing+0x161/0x3d0
+>  ? debug_lockdep_rcu_enabled+0x1d/0x20
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  __slab_free+0x176/0x310
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  ? call_rcu+0x17/0x20
+>  ? kfree+0xe7/0x2d0
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  kfree+0x25e/0x2d0
+>  __pci_enable_msix+0x41c/0x4c0
+>  pci_alloc_irq_vectors_affinity+0xb7/0x140
+>  qla2x00_request_irqs+0xa6/0x6d0 [qla2xxx]
+>  qla2x00_probe_one+0xc2e/0x25f0 [qla2xxx]
+>  ? __pm_runtime_resume+0x40/0x80
+>  ? trace_hardirqs_on_caller+0x128/0x1b0
+>  ? trace_hardirqs_on+0xd/0x10
+>  ? _raw_spin_unlock_irqrestore+0x4a/0x80
+>  pci_device_probe+0x8a/0xf0
+>  driver_probe_device+0x1f5/0x450
+>  __driver_attach+0xe3/0xf0
+>  ? driver_probe_device+0x450/0x450
+>  bus_for_each_dev+0x66/0xa0
+>  driver_attach+0x1e/0x20
+>  bus_add_driver+0x200/0x270
+>  ? 0xffffffffa04eb000
+>  driver_register+0x60/0xe0
+>  ? 0xffffffffa04eb000
+>  __pci_register_driver+0x5d/0x60
+>  qla2x00_module_init+0x1c9/0x217 [qla2xxx]
+>  do_one_initcall+0x44/0x180
+>  ? rcu_read_lock_sched_held+0x72/0x80
+>  ? kmem_cache_alloc_trace+0x25b/0x2c0
+>  ? do_init_module+0x27/0x1f9
+>  do_init_module+0x5f/0x1f9
+>  load_module+0x2582/0x2a00
+>  ? __symbol_put+0x70/0x70
+>  ? kernel_read_file+0x10a/0x1a0
+>  ? kernel_read_file_from_fd+0x49/0x80
+>  SYSC_finit_module+0xbc/0xf0
+>  SyS_finit_module+0xe/0x10
+>  entry_SYSCALL_64_fastpath+0x23/0xc6
+> RIP: 0033:0x7f05711388e9
+> RSP: 002b:00007fff51d4a0f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+> RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f05711388e9
+> RDX: 0000000000000000 RSI: 000055c17ab4f720 RDI: 0000000000000004
+> RBP: 00007fff51d49100 R08: 0000000000000000 R09: 0000000000000019
+> R10: 0000000000000004 R11: 0000000000000246 R12: 000055c17ab4f570
+> R13: 00007fff51d490e0 R14: 0000000000000005 R15: 0000000000040000
+> FIX kmalloc-16: Restoring 0xffff880030bacc78-0xffff880030bacc7f=0xcc
+> 
+> FIX kmalloc-16: Object at 0xffff880030bacc68 not freed
+> scsi host2: qla2xxx
+> qla2xxx [0000:00:09.0]-00fb:2: QLogic QLE2460 - QLogic 4GB FC Single-Port PCI-E HBA for IBM System x.
+> qla2xxx [0000:00:09.0]-00fc:2: ISP2432: PCIe (2.5GT/s x4) @ 0000:00:09.0 hdma- host#=2 fw=8.03.00 (9496).
+> qla2xxx [0000:00:0a.0]-001d: : Found an ISP2432 irq 10 iobase 0xffffc900000ad000.
+> =============================================================================
+> BUG kmalloc-16 (Tainted: G    B          ): Redzone overwritten
+> -----------------------------------------------------------------------------
+> 
+> INFO: 0xffff88006ff18dd8-0xffff88006ff18ddf. First byte 0xf instead of 0xcc
+> INFO: Allocated in irq_create_affinity_masks+0x5f/0x260 age=0 cpu=2 pid=812
+> 	___slab_alloc.constprop.79+0x482/0x4f0
+> 	__slab_alloc.isra.75.constprop.78+0x55/0xa0
+> 	__kmalloc+0x27c/0x310
+> 	irq_create_affinity_masks+0x5f/0x260
+> 	__pci_enable_msix+0x314/0x4c0
+> 	pci_alloc_irq_vectors_affinity+0xb7/0x140
+> 	qla2x00_request_irqs+0xa6/0x6d0 [qla2xxx]
+> 	qla2x00_probe_one+0xc2e/0x25f0 [qla2xxx]
+> 	pci_device_probe+0x8a/0xf0
+> 	driver_probe_device+0x1f5/0x450
+> 	__driver_attach+0xe3/0xf0
+> 	bus_for_each_dev+0x66/0xa0
+> 	driver_attach+0x1e/0x20
+> 	bus_add_driver+0x200/0x270
+> 	driver_register+0x60/0xe0
+> 	__pci_register_driver+0x5d/0x60
+> INFO: Freed in acpi_ns_get_node_unlocked+0x90/0xa4 age=1 cpu=2 pid=812
+> 	__slab_free+0x176/0x310
+> 	kfree+0x25e/0x2d0
+> 	acpi_ns_get_node_unlocked+0x90/0xa4
+> 	acpi_ns_get_node+0x3d/0x52
+> 	acpi_get_handle+0x82/0x96
+> 	acpi_pci_irq_find_prt_entry+0x26e/0x2ae
+> 	acpi_pci_irq_lookup+0x28/0x135
+> 	acpi_pci_irq_enable+0x60/0x1f8
+> 	pcibios_enable_device+0x2d/0x30
+> 	do_pci_enable_device+0x64/0xf0
+> 	pci_enable_device_flags+0xc5/0x110
+> 	pci_enable_device_mem+0x13/0x20
+> 	qla2x00_probe_one+0x14b/0x25f0 [qla2xxx]
+> 	pci_device_probe+0x8a/0xf0
+> 	driver_probe_device+0x1f5/0x450
+> 	__driver_attach+0xe3/0xf0
+> INFO: Slab 0xffffea0001bfc600 objects=23 used=22 fp=0xffff88006ff18f28 flags=0x4000000000008101
+> INFO: Object 0xffff88006ff18dc8 @offset=3528 fp=0xffff88006ff18f28
+> 
+> Redzone ffff88006ff18dc0: cc cc cc cc cc cc cc cc                          ........
+> Object ffff88006ff18dc8: ff 00 00 00 00 00 00 00 ff 00 00 00 00 00 00 00  ................
+> Redzone ffff88006ff18dd8: 0f 00 00 00 00 00 00 00                          ........
+> Padding ffff88006ff18f18: 5a 5a 5a 5a 5a 5a 5a 5a                          ZZZZZZZZ
+> CPU: 2 PID: 812 Comm: modprobe Tainted: G    B           4.10.0-rc5-dbg+ #9
+> Hardware name: Bochs Bochs, BIOS Bochs 01/01/2011
+> Call Trace:
+>  dump_stack+0x85/0xc2
+>  print_trailer+0x162/0x260
+>  check_bytes_and_report+0xc5/0x110
+>  check_object+0x1da/0x2a0
+>  free_debug_processing+0x161/0x3d0
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  __slab_free+0x176/0x310
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  ? call_rcu+0x17/0x20
+>  ? put_object+0x2d/0x50
+>  ? __delete_object+0x3d/0x70
+>  ? __pci_enable_msix+0x41c/0x4c0
+>  kfree+0x25e/0x2d0
+>  __pci_enable_msix+0x41c/0x4c0
+>  pci_alloc_irq_vectors_affinity+0xb7/0x140
+>  qla2x00_request_irqs+0xa6/0x6d0 [qla2xxx]
+>  qla2x00_probe_one+0xc2e/0x25f0 [qla2xxx]
+>  ? __pm_runtime_resume+0x40/0x80
+>  ? trace_hardirqs_on+0xd/0x10
+>  ? _raw_spin_unlock_irqrestore+0x4a/0x80
+>  pci_device_probe+0x8a/0xf0
+>  driver_probe_device+0x1f5/0x450
+>  __driver_attach+0xe3/0xf0
+>  ? driver_probe_device+0x450/0x450
+>  bus_for_each_dev+0x66/0xa0
+>  driver_attach+0x1e/0x20
+>  bus_add_driver+0x200/0x270
+>  ? 0xffffffffa04eb000
+>  driver_register+0x60/0xe0
+>  ? 0xffffffffa04eb000
+>  __pci_register_driver+0x5d/0x60
+>  qla2x00_module_init+0x1c9/0x217 [qla2xxx]
+>  do_one_initcall+0x44/0x180
+>  ? rcu_read_lock_sched_held+0x72/0x80
+>  ? kmem_cache_alloc_trace+0x25b/0x2c0
+>  ? do_init_module+0x27/0x1f9
+>  do_init_module+0x5f/0x1f9
+>  load_module+0x2582/0x2a00
+>  ? __symbol_put+0x70/0x70
+>  ? kernel_read_file+0x10a/0x1a0
+>  ? kernel_read_file_from_fd+0x49/0x80
+>  SYSC_finit_module+0xbc/0xf0
+>  SyS_finit_module+0xe/0x10
+>  entry_SYSCALL_64_fastpath+0x23/0xc6
+> RIP: 0033:0x7f05711388e9
+> RSP: 002b:00007fff51d4a0f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000139
+> RAX: ffffffffffffffda RBX: 0000000000000003 RCX: 00007f05711388e9
+> RDX: 0000000000000000 RSI: 000055c17ab4f720 RDI: 0000000000000004
+> RBP: 00007fff51d49100 R08: 0000000000000000 R09: 0000000000000019
+> R10: 0000000000000004 R11: 0000000000000246 R12: 000055c17ab4f570
+> R13: 00007fff51d490e0 R14: 0000000000000005 R15: 0000000000040000
+> FIX kmalloc-16: Restoring 0xffff88006ff18dd8-0xffff88006ff18ddf=0xcc
+> 
+> FIX kmalloc-16: Object at 0xffff88006ff18dc8 not freed
+> scsi host3: qla2xxx
+> qla2xxx [0000:00:09.0]-500a:2: LOOP UP detected (4 Gbps).
+> qla2xxx [0000:00:0a.0]-500a:3: LOOP UP detected (4 Gbps).
+> 
+> 
+> (gdb) list *(__pci_enable_msix+0x314)
+> 0xffffffff8131aa74 is in __pci_enable_msix (drivers/pci/msi.c:702).
+> 697             struct msi_desc *entry;
+> 698             int ret, i;
+> 699
+> 700             if (affd) {
+> 701                     masks = irq_create_affinity_masks(nvec, affd);
+> 702                     if (!masks)
+> 703                             pr_err("Unable to allocate affinity masks, ignoring\n");
+> 704             }
+> 705
+> 706             for (i = 0, curmsk = masks; i < nvec; i++) {
+> (gdb) list *(__pci_enable_msix+0x41c)
+> 0xffffffff8131ab7c is in __pci_enable_msix (drivers/pci/msi.c:783).
+> 778
+> 779             ret = msix_setup_entries(dev, base, entries, nvec, affd);
+> 780             if (ret)
+> 781                     return ret;
+> 782
+> 783             ret = pci_msi_setup_msi_irqs(dev, nvec, PCI_CAP_ID_MSIX);
+> 784             if (ret)
+> 785                     goto out_avail;
+> 786
+> 787             /* Check if all MSI entries honor device restrictions */
+> (gdb) quit---end quoted text---
