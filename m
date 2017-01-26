@@ -1,29 +1,26 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 18/18] block: don't assign cmd_flags in __blk_rq_prep_clone
-Date: Wed, 25 Jan 2017 22:31:09 -0500
-Message-ID: <yq137g68pky.fsf@oracle.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-        <1485365126-23210-19-git-send-email-hch@lst.de>
+Subject: Re: [PATCH 0/6] ncr5380: Miscellaneous minor patches
+Date: Wed, 25 Jan 2017 22:31:39 -0500
+Message-ID: <yq1y3xy7azo.fsf@oracle.com>
+References: <cover.1484523085.git.fthain@telegraphics.com.au>
+        <yq14m0md8nd.fsf@oracle.com>
+        <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:24439 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752576AbdAZDb3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:31:29 -0500
-In-Reply-To: <1485365126-23210-19-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Wed, 25 Jan 2017 18:25:26 +0100")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com> (Michael
+        Schmitz's message of "Thu, 26 Jan 2017 16:00:05 +1300")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Michael Schmitz <schmitzmic@gmail.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Michael" == Michael Schmitz <schmitzmic@gmail.com> writes:
 
-Christoph> These days we have the proper flags set since request
-Christoph> allocation time.
+Michael> Martin, Finn, I'll get to that on the weekend - Auckland
+Michael> Anniversary Day coming up so plenty of time.
 
-Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
+Great, thanks!
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
