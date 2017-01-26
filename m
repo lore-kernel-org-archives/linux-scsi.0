@@ -1,97 +1,118 @@
 From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: [PATCH v3] mpt3sas: Force request partial completion alignment
-Date: Thu, 26 Jan 2017 16:37:01 -0200
-Message-ID: <1485455821-9176-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+Subject: Re: [PATCH v2] mpt3sas: Force request partial completion alignment
+Date: Thu, 26 Jan 2017 16:37:46 -0200
+Message-ID: <588A41FA.5030302@linux.vnet.ibm.com>
+References: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
+ <yq1a8aebt4q.fsf@oracle.com> <5889FA49.4030802@linux.vnet.ibm.com>
+ <20170126170234.GD5657@ram.oc3035372033.ibm.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44905 "EHLO
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:35049 "EHLO
         mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751957AbdAZShZ (ORCPT
+        by vger.kernel.org with ESMTP id S1752335AbdAZSjZ (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 13:37:25 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0QIY98r105733
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:16 -0500
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 287jhkbe2r-1
+        Thu, 26 Jan 2017 13:39:25 -0500
+Received: from pps.filterd (m0098399.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0QIYAHr044312
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:38:03 -0500
+Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 287f7akkf7-1
         (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:16 -0500
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:38:02 -0500
 Received: from localhost
-        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
         for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Thu, 26 Jan 2017 16:37:13 -0200
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.18.232.225])
-        by d24dlp02.br.ibm.com (Postfix) with ESMTP id 97B8F1DC006E
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:10 -0500 (EST)
-Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0QIb9JH40763590
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:09 -0200
-Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
-        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0QIb9WR006875
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:10 -0200
+        Thu, 26 Jan 2017 16:38:00 -0200
+Received: from d24relay02.br.ibm.com (d24relay02.br.ibm.com [9.18.232.42])
+        by d24dlp01.br.ibm.com (Postfix) with ESMTP id 53A5D3520072
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:25 -0500 (EST)
+Received: from d24av02.br.ibm.com (d24av02.br.ibm.com [9.8.31.93])
+        by d24relay02.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0QIbvak35258384
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:57 -0200
+Received: from d24av02.br.ibm.com (localhost [127.0.0.1])
+        by d24av02.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0QIbvNh018690
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:57 -0200
+In-Reply-To: <20170126170234.GD5657@ram.oc3035372033.ibm.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
-Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, brking@linux.vnet.ibm.com, gpiccoli@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com, martin.petersen@oracle.com
+To: Ram Pai <linuxram@us.ibm.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com, brking@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com
 
-From: Ram Pai <linuxram@us.ibm.com>
+On 01/26/2017 03:02 PM, Ram Pai wrote:
+> On Thu, Jan 26, 2017 at 11:31:53AM -0200, Guilherme G. Piccoli wrote:
+>> On 01/25/2017 09:46 PM, Martin K. Petersen wrote:
+>>>>>>>> "Guilherme" == Guilherme G Piccoli <gpiccoli@linux.vnet.ibm.com> writes:
+>>>
+>>> Hi Guilherme,
+>>
+>> Hi Martin, thanks for the review!
+>>
+>>
+>>>
+>>> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>>> index 75f3fce..e52c942 100644
+>>> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>>> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+>>> @@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>>>  	struct MPT3SAS_DEVICE *sas_device_priv_data;
+>>>  	u32 response_code = 0;
+>>>  	unsigned long flags;
+>>> +	unsigned int sector_sz;
+>>> +	struct request *req;
+>>>
+>>>  	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+>>>  	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+>>> @@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>>>  	}
+>>>
+>>>  	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+>>> +
+>>> +	/* In case of bogus fw or device, we could end up having
+>>> +	 * unaligned partial completion. We can force alignment here,
+>>> +	 * then scsi-ml does not need to handle this misbehavior.
+>>> +	 */
+>>> +	sector_sz = scmd->device->sector_size;
+>>> +	req = scmd->request;
+>>> +	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
+>>> +		    (xfer_cnt % sector_sz))) {
+>>>
+>>> Maybe a bit zealous on the sanity checking...
+>>
+>> A bit...? heheh
+>> Too much I'd say. Since this is dealing with a bogus FW scenario, I
+>> found more safe to check everything...of course we can remove checks if
+>> it's sure req isn't NULL ever. The sector_sz check is avoiding
+>> degenerate cases, since our division below.
+>>
+>>
+>>>
+>>> +		sdev_printk(KERN_INFO, scmd->device,
+>>> +			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+>>> +			xfer_cnt, sector_sz);
+>>> +		xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
+>>>
+>>> Not so keen on divisions. xfer_cnt = round_down(xfer_cnt, sector_sz), maybe?
+>>>
+>>
+>> Martin, I might be completely wrong here (please correct me if this is
+>> the case), but isn't C standard integer division a truncation that acts
+>> like a round down? I checked (what I think is) the specification of C
+>> language (ISO/IEC 9899:1999), and it seems the division proposed by Ram
+>> Pai is accurate in this case. Also, both variables are unsigned.
+> 
+> Guilherme,  Its better to use round_down() instead of division. Among
+> other things it saves a few nanoseconds.
 
-The firmware or device, possibly under a heavy I/O load, can return
-on a partial unaligned boundary. Scsi-ml expects these requests to be
-completed on an alignment boundary. Scsi-ml blindly requeues the I/O
-without checking the alignment boundary of the I/O request for the
-remaining bytes. This leads to errors, since devices cannot perform
-non-aligned read/write operations.
+Thanks Ram and Martin for the suggestion and explanation. I just sent a V3.
 
-This patch fixes the issue in the driver. It aligns unaligned
-completions of FS requests, by truncating them to the nearest
-alignment boundary.
+Cheers,
 
-Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
-Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
-Signed-off-by: Ram Pai <linuxram@us.ibm.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
----
-v2->v3:
-  * Changed division to round_down() [suggestion by Martin].
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 17 +++++++++++++++++
- 1 file changed, 17 insertions(+)
+Guilherme
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 75f3fce..a6b6f58 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	struct MPT3SAS_DEVICE *sas_device_priv_data;
- 	u32 response_code = 0;
- 	unsigned long flags;
-+	unsigned int sector_sz;
-+	struct request *req;
- 
- 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
-@@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	}
- 
- 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
-+
-+	/* In case of bogus fw or device, we could end up having
-+	 * unaligned partial completion. We can force alignment here,
-+	 * then scsi-ml does not need to handle this misbehavior.
-+	 */
-+	sector_sz = scmd->device->sector_size;
-+	req = scmd->request;
-+	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
-+		    (xfer_cnt % sector_sz))) {
-+		sdev_printk(KERN_INFO, scmd->device,
-+			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
-+			xfer_cnt, sector_sz);
-+		xfer_cnt = round_down(xfer_cnt, sector_sz);
-+	}
-+
- 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
- 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
- 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
--- 
-2.1.0
+> 
+> RP
+> 
 
