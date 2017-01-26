@@ -1,7 +1,8 @@
 From: Cathy Avery <cavery@redhat.com>
-Subject: [PATCH v2 2/2] scsi: storvsc: Add support for FC lightweight host.
-Date: Thu, 26 Jan 2017 08:39:00 -0500
-Message-ID: <1485437940-18706-3-git-send-email-cavery@redhat.com>
+Subject: [PATCH v2 1/2] scsi: scsi_transport_fc: Provide a lightweight option
+ for Virtual FC Hosts.
+Date: Thu, 26 Jan 2017 08:38:59 -0500
+Message-ID: <1485437940-18706-2-git-send-email-cavery@redhat.com>
 References: <1485437940-18706-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,70 +22,269 @@ To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vne
 Cc: devel@linuxdriverproject.org, famz@redhat.com, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Included in the current storvsc driver for Hyper-V is the ability
-to access luns on an FC fabric via a virtualized fiber channel
-adapter exposed by the Hyper-V host. This was done to provide an
-interface for existing customer tools that was more consistent
-with a conventional FC device. The driver attaches to the FC
-transport to allow host and port names to be published
-under /sys/class/fc_host/hostX.
+This patch provides a means to offer a lightweight option to the
+current FC transport class. This new transport option is more
+suitable for FC transports running on a VM that virtualizes their
+FCs and that do not possess rports or vports whereas the heavyweight
+option maintains the standard physical FC hba attuibute set.
 
-A problem arose when attaching to the FC transport. The scsi_scan
-code attempts to call fc_user_scan which has basically become a no-op
-due to the virtualized nature of the FC host ( missing rports,
-vports, etc ).  At this point you cannot refresh the scsi bus after
-mapping or unmapping luns on the SAN without a reboot.
+The patch performs the following:
 
-This patch consists of:
+1) Adds the lightweight_transport option to fc_function_template. Based
+on this selection the transport will either be lightweight or default
+to heavyweight.
 
-1) storvsc elects to use the new lightweight FC host option by enabling it
-in fc_function_template facilitating a fuctional scsi_scan.
+2) Divides the applicable export functions into two sets. The lightweight
+functions involve FC attributes port_name and node name. The functions
+that deal with targets, rports, etc are not used. The heavyweight default
+contains the original standard physical FC hba attribute set.
 
-2) Removes an original workaround dealing with replacing the eh_timed_out
-function.  Patch 1 will not set the scsi_transport_template.eh_timed_out
-function directly during lightweight fc_attach_transport(). It instead
-relies on whatever was indicated as the scsi_host_template timeout handler
-during scsi_times_out() scsi_error.c. So the workaround is no longer
-necessary.
+3) All top level FC class directories such fc_remote_ports, fc_transport,
+and fc_vports are still created when the transport driver loads.
+They are just not populated when running in lightweight mode. Conceptually
+both lightweight and heavyweight clients could coexist.
+
+4) fc_transport_template->user_scan is now null and the bus can be scanned.
 
 Signed-off-by: Cathy Avery <cavery@redhat.com>
 ---
- drivers/scsi/storvsc_drv.c | 12 +++++++-----
- 1 file changed, 7 insertions(+), 5 deletions(-)
+ drivers/scsi/scsi_transport_fc.c | 144 +++++++++++++++++++++++++++++++++++++--
+ include/scsi/scsi_transport_fc.h |   2 +
+ 2 files changed, 142 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 888e16e..d487e00 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1878,10 +1878,17 @@ static struct hv_driver storvsc_drv = {
- 	.remove = storvsc_remove,
- };
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 03577bd..615057c 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -52,6 +52,25 @@ static void fc_bsg_remove(struct request_queue *);
+ static void fc_bsg_goose_queue(struct fc_rport *);
  
-+/*
-+ * The driver cannot functionally back all transport
-+ * attributes so select only those pertinent including
-+ * the lightweight model.
+ /*
++ * These functions define the actions taken on behalf of either
++ * a virtualized client which is considered to be lightweigth
++ * having only port name and node name as attributes in sysfs and
++ * which does not possess rports or vports vs the heavyweigth
++ * mode which is intended for fully functional clients such as
++ * physical HBAs.
 + */
 +
- #if IS_ENABLED(CONFIG_SCSI_FC_ATTRS)
- static struct fc_function_template fc_transport_functions = {
- 	.show_host_node_name = 1,
- 	.show_host_port_name = 1,
-+	.lightweight_transport = 1,
++static int fc_host_lw_setup(struct Scsi_Host *, struct fc_host_attrs *);
++static int fc_host_hw_setup(struct Scsi_Host *, struct fc_host_attrs *);
++static int fc_host_hw_remove(struct fc_host_attrs *);
++static struct scsi_transport_template *
++	fc_attach_lw_transport(struct fc_function_template *);
++static struct scsi_transport_template *
++	fc_attach_hw_transport(struct fc_function_template *);
++static void fc_remove_lw_host(struct Scsi_Host *);
++static void fc_remove_hw_host(struct Scsi_Host *, struct fc_host_attrs *);
++
++/*
+  * Module Parameters
+  */
+ 
+@@ -352,6 +371,10 @@ struct fc_internal {
+ 
+ #define to_fc_internal(tmpl)	container_of(tmpl, struct fc_internal, t)
+ 
++
++static void fc_release_lw_transport(struct fc_internal *);
++static void fc_release_hw_transport(struct fc_internal *);
++
+ static int fc_target_setup(struct transport_container *tc, struct device *dev,
+ 			   struct device *cdev)
+ {
+@@ -387,7 +410,33 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	/*
++	 * Check if the client driver has selected a minimum set
++	 * of fc transport attributes to initialize. Otherwise
++	 * initialize all currently available attributes.
++	 */
++
++	if (i->f->lightweight_transport)
++		return fc_host_lw_setup(shost, fc_host);
++
++	return fc_host_hw_setup(shost, fc_host);
++}
++
++static int fc_host_lw_setup(struct Scsi_Host *shost,
++			    struct fc_host_attrs *fc_host)
++{
++	/* Only node_name and port_name are used */
++	fc_host->node_name = -1;
++	fc_host->port_name = -1;
++
++	return 0;
++}
+ 
++static int fc_host_hw_setup(struct Scsi_Host *shost,
++			    struct fc_host_attrs *fc_host)
++{
+ 	/*
+ 	 * Set default values easily detected by the midlayer as
+ 	 * failure cases.  The scsi lldd is responsible for initializing
+@@ -468,7 +517,16 @@ static int fc_host_remove(struct transport_container *tc, struct device *dev,
+ {
+ 	struct Scsi_Host *shost = dev_to_shost(dev);
+ 	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	if (i->f->lightweight_transport)
++		return 0;
+ 
++	return fc_host_hw_remove(fc_host);
++}
++
++static int fc_host_hw_remove(struct fc_host_attrs *fc_host)
++{
+ 	fc_bsg_remove(fc_host->rqst_q);
+ 	return 0;
+ }
+@@ -2175,6 +2233,51 @@ static int fc_it_nexus_response(struct Scsi_Host *shost, u64 nexus, int result)
+ struct scsi_transport_template *
+ fc_attach_transport(struct fc_function_template *ft)
+ {
++	if (ft->lightweight_transport)
++		return fc_attach_lw_transport(ft);
++
++	return fc_attach_hw_transport(ft);
++}
++EXPORT_SYMBOL(fc_attach_transport);
++
++
++struct scsi_transport_template *
++fc_attach_lw_transport(struct fc_function_template *ft)
++{
++	int count;
++	struct fc_internal *i;
++
++	i = kzalloc(sizeof(struct fc_internal),
++			GFP_KERNEL);
++
++	if (unlikely(!i))
++		return NULL;
++
++	/* Only port_name and node_name attributes are of interest */
++
++	i->t.host_attrs.ac.attrs = &i->host_attrs[0];
++	i->t.host_attrs.ac.class = &fc_host_class.class;
++	i->t.host_attrs.ac.match = fc_host_match;
++	i->t.host_size = sizeof(struct fc_host_attrs);
++	transport_container_register(&i->t.host_attrs);
++
++	i->f = ft;
++
++	count = 0;
++	SETUP_HOST_ATTRIBUTE_RD(node_name);
++	SETUP_HOST_ATTRIBUTE_RD(port_name);
++
++	BUG_ON(count > FC_HOST_NUM_ATTRS);
++
++	i->host_attrs[count] = NULL;
++
++	return &i->t;
++}
++
++
++struct scsi_transport_template *
++fc_attach_hw_transport(struct fc_function_template *ft)
++{
+ 	int count;
+ 	struct fc_internal *i = kzalloc(sizeof(struct fc_internal),
+ 					GFP_KERNEL);
+@@ -2318,12 +2421,27 @@ fc_attach_transport(struct fc_function_template *ft)
+ 
+ 	return &i->t;
+ }
+-EXPORT_SYMBOL(fc_attach_transport);
+ 
+ void fc_release_transport(struct scsi_transport_template *t)
+ {
+ 	struct fc_internal *i = to_fc_internal(t);
+ 
++	if (i->f->lightweight_transport)
++		fc_release_lw_transport(i);
++	else
++		fc_release_hw_transport(i);
++}
++EXPORT_SYMBOL(fc_release_transport);
++
++void fc_release_lw_transport(struct fc_internal *i)
++{
++	transport_container_unregister(&i->t.host_attrs);
++
++	kfree(i);
++}
++
++void fc_release_hw_transport(struct fc_internal *i)
++{
+ 	transport_container_unregister(&i->t.target_attrs);
+ 	transport_container_unregister(&i->t.host_attrs);
+ 	transport_container_unregister(&i->rport_attr_cont);
+@@ -2331,7 +2449,6 @@ void fc_release_transport(struct scsi_transport_template *t)
+ 
+ 	kfree(i);
+ }
+-EXPORT_SYMBOL(fc_release_transport);
+ 
+ /**
+  * fc_queue_work - Queue work to the fc_host workqueue.
+@@ -2438,10 +2555,30 @@ fc_flush_devloss(struct Scsi_Host *shost)
+ void
+ fc_remove_host(struct Scsi_Host *shost)
+ {
++	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
++	struct fc_internal *i = to_fc_internal(shost->transportt);
++
++	if (i->f->lightweight_transport)
++		fc_remove_lw_host(shost);
++
++	else
++		fc_remove_hw_host(shost, fc_host);
++}
++EXPORT_SYMBOL(fc_remove_host);
++
++void
++fc_remove_lw_host(struct Scsi_Host *shost)
++{
++	/* flush all scan work items */
++	scsi_flush_work(shost);
++}
++
++void
++fc_remove_hw_host(struct Scsi_Host *shost, struct fc_host_attrs *fc_host)
++{
+ 	struct fc_vport *vport = NULL, *next_vport = NULL;
+ 	struct fc_rport *rport = NULL, *next_rport = NULL;
+ 	struct workqueue_struct *work_q;
+-	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(shost->host_lock, flags);
+@@ -2484,7 +2621,6 @@ fc_remove_host(struct Scsi_Host *shost)
+ 		destroy_workqueue(work_q);
+ 	}
+ }
+-EXPORT_SYMBOL(fc_remove_host);
+ 
+ static void fc_terminate_rport_io(struct fc_rport *rport)
+ {
+diff --git a/include/scsi/scsi_transport_fc.h b/include/scsi/scsi_transport_fc.h
+index 924c8e6..b9d1ff7 100644
+--- a/include/scsi/scsi_transport_fc.h
++++ b/include/scsi/scsi_transport_fc.h
+@@ -718,6 +718,8 @@ struct fc_function_template {
+ 	unsigned long	show_host_system_hostname:1;
+ 
+ 	unsigned long	disable_target_scan:1;
++	/* Limited attributes of port_name and host_name */
++	unsigned long	lightweight_transport:1;
  };
- #endif
  
-@@ -1906,11 +1913,6 @@ static int __init storvsc_drv_init(void)
- 	fc_transport_template = fc_attach_transport(&fc_transport_functions);
- 	if (!fc_transport_template)
- 		return -ENODEV;
--
--	/*
--	 * Install Hyper-V specific timeout handler.
--	 */
--	fc_transport_template->eh_timed_out = storvsc_eh_timed_out;
- #endif
  
- 	ret = vmbus_driver_register(&storvsc_drv);
 -- 
 2.5.0
