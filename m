@@ -1,85 +1,197 @@
-From: Jens Axboe <axboe@fb.com>
-Subject: Re: split scsi passthrough fields out of struct request
-	V2
-Date: Thu, 26 Jan 2017 14:51:52 -0700
-Message-ID: <e1d5f4e6-c63f-545d-710f-d4d10fa8d2e0@fb.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-	<1485455329.2540.7.camel@sandisk.com>
-	<e8f4b084-be66-d5b3-5785-13b80642040f@fb.com>
-	<1485456745.2540.9.camel@sandisk.com>
-	<db7f9165-19db-d1f2-a2fa-7546da57741b@fb.com>
-	<20170126185924.GA25289@lst.de>
-	<ee95c6dd-cdb4-7da5-2d4a-ec14034eac7a@fb.com>
-	<71e22257-0592-fdd3-25e5-a78ceced2ab9@sandisk.com>
-	<4054e944-b28d-1cd6-574f-6cd90e28c301@fb.com>
-	<1485464486.2540.12.camel@sandisk.com>
-	<6995c991-65a4-8dca-c36e-fb2eff277ca9@fb.com>
-	<1485467235.2540.14.camel@sandisk.com>
+From: "Michael S. Tsirkin" <mst@redhat.com>
+Subject: Re: [PATCH v2 2/2] virtio_scsi: Implement fc_host
+Date: Fri, 27 Jan 2017 00:06:27 +0200
+Message-ID: <20170126234257-mutt-send-email-mst@kernel.org>
+References: <20170126034109.16144-1-famz@redhat.com>
+	<20170126034109.16144-3-famz@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1485467235.2540.14.camel@sandisk.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@lst.de" <hch@lst.de>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+Content-Disposition: inline
+In-Reply-To: <20170126034109.16144-3-famz@redhat.com>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: Fam Zheng <famz@redhat.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On 01/26/2017 02:47 PM, Bart Van Assche wrote:
-> (gdb) list *(blk_mq_sched_get_request+0x310)
-> 0xffffffff8132dcf0 is in blk_mq_sched_get_request (block/blk-mq-sched.c:136).
-> 131                                     rq->rq_flags |= RQF_QUEUED;
-> 132                     } else
-> 133                             rq = __blk_mq_alloc_request(data, op);
-> 134             } else {
-> 135                     rq = __blk_mq_alloc_request(data, op);
-> 136                     data->hctx->tags->rqs[rq->tag] = rq;
-> 137             }
-> 138
-> 139             if (rq) {
-> 140                     if (!op_is_flush(op)) {
+On Thu, Jan 26, 2017 at 11:41:09AM +0800, Fam Zheng wrote:
+> This implements the VIRTIO_SCSI_F_FC_HOST feature by reading the config
+> fields and presenting them as sysfs fc_host attributes. The config
+> change handler is added here because primary_active will toggle during
+> migration.
+
+Looks like there's active discussion on virtio tc mailing list.
+It's ok to post patches meanwhile but best as RFC,
+and repost after controversy is resolved.
+
 > 
-> (gdb) disas blk_mq_sched_get_request
-> [ ... ]
->    0xffffffff8132dce3 <+771>:   callq  0xffffffff81324ab0 <__blk_mq_alloc_request>
->    0xffffffff8132dce8 <+776>:   mov    %rax,%rcx
->    0xffffffff8132dceb <+779>:   mov    0x18(%r12),%rax
->    0xffffffff8132dcf0 <+784>:   movslq 0x5c(%rcx),%rdx
-> [ ... ]
-> (gdb) print &((struct request *)0)->tag
-> $1 = (int *) 0x5c <irq_stack_union+92>
+> Signed-off-by: Fam Zheng <famz@redhat.com>
+> ---
+>  drivers/scsi/virtio_scsi.c | 60 +++++++++++++++++++++++++++++++++++++++++++++-
+>  1 file changed, 59 insertions(+), 1 deletion(-)
 > 
-> I think this means that rq == NULL and that a test for rq is missing after the
-> __blk_mq_alloc_request() call?
+> diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> index ec91bd0..1bb330c 100644
+> --- a/drivers/scsi/virtio_scsi.c
+> +++ b/drivers/scsi/virtio_scsi.c
+> @@ -28,6 +28,7 @@
+>  #include <scsi/scsi_device.h>
+>  #include <scsi/scsi_cmnd.h>
+>  #include <scsi/scsi_tcq.h>
+> +#include <scsi/scsi_transport_fc.h>
+>  #include <linux/seqlock.h>
+>  
+>  #define VIRTIO_SCSI_MEMPOOL_SZ 64
+> @@ -795,6 +796,15 @@ static struct scsi_host_template virtscsi_host_template_multi = {
+>  	.track_queue_depth = 1,
+>  };
+>  
+> +static struct fc_function_template virtscsi_fc_template = {
+> +	.show_host_node_name = 1,
+> +	.show_host_port_name = 1,
+> +	.show_host_port_type = 1,
+> +	.show_host_port_state = 1,
+> +};
+> +
+> +static struct scsi_transport_template *virtscsi_fc_transport_template;
+> +
+>  #define virtscsi_config_get(vdev, fld) \
+>  	({ \
+>  		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
+> @@ -956,15 +966,42 @@ static int virtscsi_init(struct virtio_device *vdev,
+>  	return err;
+>  }
+>  
+> +static void virtscsi_update_fc_host_attrs(struct virtio_device *vdev)
+> +{
+> +	struct Scsi_Host *shost = vdev->priv;
+> +	u8 node_name[8], port_name[8];
+> +
+> +	if (virtscsi_config_get(vdev, primary_active)) {
+> +		virtio_cread_bytes(vdev,
+> +			offsetof(struct virtio_scsi_config, primary_wwnn),
+> +			&node_name, 8);
+> +		virtio_cread_bytes(vdev,
+> +			offsetof(struct virtio_scsi_config, primary_wwpn),
+> +			&port_name, 8);
+> +	} else {
+> +		virtio_cread_bytes(vdev,
+> +			offsetof(struct virtio_scsi_config, secondary_wwnn),
+> +			&node_name, 8);
+> +		virtio_cread_bytes(vdev,
+> +			offsetof(struct virtio_scsi_config, secondary_wwpn),
+> +			&port_name, 8);
+> +	}
 
-That is exactly what it means, looks like that one path doesn't handle
-that.  You'd have to exhaust the pool with atomic allocs for this to
-trigger, we don't do that at all in the normal IO path. So good catch,
-must be the dm part that enables this since it does NOWAIT allocations.
+This is racy, isn't it? You need to wrap this in a generation check
+otherwise read can race with primary_active changing.
+And you might want a wrapper to virtio_cread_bytes that does not
+include generation check.
 
+> +	fc_host_node_name(shost) = wwn_to_u64(node_name);
+> +	fc_host_port_name(shost) = wwn_to_u64(port_name);
+> +	fc_host_port_type(shost) = FC_PORTTYPE_NPORT;
+> +	fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
+> +}
+> +
+>  static int virtscsi_probe(struct virtio_device *vdev)
+>  {
+> -	struct Scsi_Host *shost;
+> +	struct Scsi_Host *shost = NULL;
+>  	struct virtio_scsi *vscsi;
+>  	int err;
+>  	u32 sg_elems, num_targets;
+>  	u32 cmd_per_lun;
+>  	u32 num_queues;
+>  	struct scsi_host_template *hostt;
+> +	bool fc_host_enabled;
+>  
+>  	if (!vdev->config->get) {
+>  		dev_err(&vdev->dev, "%s failure: config access disabled\n",
+> @@ -987,6 +1024,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  	if (!shost)
+>  		return -ENOMEM;
+>  
+> +	fc_host_enabled = virtio_has_feature(vdev, VIRTIO_SCSI_F_FC_HOST);
+> +	if (fc_host_enabled)
+> +		shost->transportt = virtscsi_fc_transport_template;
+>  	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+>  	shost->sg_tablesize = sg_elems;
+>  	vscsi = shost_priv(shost);
+> @@ -1032,6 +1072,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+>  	if (err)
+>  		goto scsi_add_host_failed;
+>  
+> +	if (fc_host_enabled)
+> +		virtscsi_update_fc_host_attrs(vdev);
+> +
+>  	virtio_device_ready(vdev);
+>  
+>  	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
+> @@ -1098,6 +1141,11 @@ static int virtscsi_restore(struct virtio_device *vdev)
+>  }
+>  #endif
+>  
+> +static void virtscsi_config_changed(struct virtio_device *vdev)
+> +{
 
-diff --git a/block/blk-mq-sched.c b/block/blk-mq-sched.c
-index 3136696f4991..c27613de80c5 100644
---- a/block/blk-mq-sched.c
-+++ b/block/blk-mq-sched.c
-@@ -134,7 +134,8 @@ struct request *blk_mq_sched_get_request(struct request_queue *q,
- 			rq = __blk_mq_alloc_request(data, op);
- 	} else {
- 		rq = __blk_mq_alloc_request(data, op);
--		data->hctx->tags->rqs[rq->tag] = rq;
-+		if (rq)
-+			data->hctx->tags->rqs[rq->tag] = rq;
- 	}
- 
- 	if (rq) {
+This is called unconditionally here, will access
+invalid config fields if feature is off.
+In fact this is wasting an MSIX vector when feature is not
+negotiated. No easy way not to, but best document this
+in a code comment.
 
--- 
-Jens Axboe
+> +	virtscsi_update_fc_host_attrs(vdev);
+> +}
+> +
+>  static struct virtio_device_id id_table[] = {
+>  	{ VIRTIO_ID_SCSI, VIRTIO_DEV_ANY_ID },
+>  	{ 0 },
+> @@ -1109,6 +1157,7 @@ static unsigned int features[] = {
+>  #ifdef CONFIG_BLK_DEV_INTEGRITY
+>  	VIRTIO_SCSI_F_T10_PI,
+>  #endif
+> +	VIRTIO_SCSI_F_FC_HOST,
+>  };
+>  
+>  static struct virtio_driver virtio_scsi_driver = {
+> @@ -1123,12 +1172,20 @@ static struct virtio_driver virtio_scsi_driver = {
+>  	.restore = virtscsi_restore,
+>  #endif
+>  	.remove = virtscsi_remove,
+> +	.config_changed = virtscsi_config_changed,
+>  };
+>  
+>  static int __init init(void)
+>  {
+>  	int ret = -ENOMEM;
+>  
+> +	virtscsi_fc_transport_template =
+> +		fc_attach_transport(&virtscsi_fc_template);
+> +	if (!virtscsi_fc_transport_template) {
+> +		pr_err("fc_attach_transport() failed\n");
+> +		goto error;
+> +	}
+> +
+>  	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
+>  	if (!virtscsi_cmd_cache) {
+>  		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
+> @@ -1176,6 +1233,7 @@ static int __init init(void)
+>  
+>  static void __exit fini(void)
+>  {
+> +	fc_release_transport(virtscsi_fc_transport_template);
+>  	unregister_virtio_driver(&virtio_scsi_driver);
+>  	cpuhp_remove_multi_state(virtioscsi_online);
+>  	cpuhp_remove_multi_state(CPUHP_VIRT_SCSI_DEAD);
+> -- 
+> 2.9.3
