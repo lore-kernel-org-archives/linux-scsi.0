@@ -1,42 +1,40 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH 15/16] block: split scsi_request out of struct request
-Date: Thu, 26 Jan 2017 11:12:51 -0800
-Message-ID: <455a58ef-905c-abf9-ae59-ca98f003f31e@sandisk.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 15/16] block: split scsi_request out of
+	struct request
+Date: Thu, 26 Jan 2017 20:37:34 +0100
+Message-ID: <20170126193734.GA26037@lst.de>
 References: <1485185361-29786-1-git-send-email-hch@lst.de>
- <1485185361-29786-16-git-send-email-hch@lst.de>
+	<1485185361-29786-16-git-send-email-hch@lst.de>
+	<455a58ef-905c-abf9-ae59-ca98f003f31e@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0051.outbound.protection.outlook.com ([104.47.32.51]:9280
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752674AbdAZTNM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 14:13:12 -0500
-In-Reply-To: <1485185361-29786-16-git-send-email-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <dm-devel-bounces@redhat.com>
+Content-Disposition: inline
+In-Reply-To: <455a58ef-905c-abf9-ae59-ca98f003f31e@sandisk.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: Bart Van Assche <bart.vanassche@sandisk.com>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Christoph Hellwig <hch@lst.de>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@fb.com>
-Cc: Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, dm-devel@redhat.com
 
-On 01/23/2017 07:29 AM, Christoph Hellwig wrote:
-> +int scsi_cmd_buf_len(struct request *rq)
-> +{
-> +	return scsi_req(rq)->cmd_len * 3;
-> +}
-> +EXPORT_SYMBOL(scsi_cmd_buf_len);
+On Thu, Jan 26, 2017 at 11:12:51AM -0800, Bart Van Assche wrote:
+> Where does the '* 3' come from? I think that deserves a comment.
+> Additionally, this patch introduces a new warning when building with W=1:
 
-Hello Christoph,
+It's a magic factor copied from the old code :(
 
-Where does the '* 3' come from? I think that deserves a comment.
-Additionally, this patch introduces a new warning when building with W=1:
+That beeing said I really wonder if we should keep the tracing for
+the scsi_requests fields at all.  We have tracing in SCSI, and poking
+into these SCSI fields from block code is painful and just screams
+layering violations.
 
-block/scsi_ioctl.c:761:5: warning: no previous prototype for
-‘scsi_cmd_buf_len’ [-Wmissing-prototypes]
-
-Please consider adding #include <linux/blktrace_api.h> to the source
-file in which scsi_cmd_buf_len() is added.
-
-Thanks,
-
-Bart.
+Jens, any opinion on just removing the printout of the SCSI CDB
+for blktrace?
