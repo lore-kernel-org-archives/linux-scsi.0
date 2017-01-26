@@ -1,18 +1,18 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 08/18] scsi_dh_rdac: switch to scsi_execute_req_flags()
-Date: Wed, 25 Jan 2017 22:18:39 -0500
-Message-ID: <yq11svqa4q8.fsf@oracle.com>
+Subject: Re: [PATCH 09/18] scsi_dh_emc: switch to scsi_execute_req_flags()
+Date: Wed, 25 Jan 2017 22:19:33 -0500
+Message-ID: <yq1wpdi8q4a.fsf@oracle.com>
 References: <1485365126-23210-1-git-send-email-hch@lst.de>
-        <1485365126-23210-9-git-send-email-hch@lst.de>
+        <1485365126-23210-10-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:16976 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:17102 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752453AbdAZDS6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:18:58 -0500
-In-Reply-To: <1485365126-23210-9-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Wed, 25 Jan 2017 18:25:16 +0100")
+        with ESMTP id S1752453AbdAZDTw (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:19:52 -0500
+In-Reply-To: <1485365126-23210-10-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Wed, 25 Jan 2017 18:25:17 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
