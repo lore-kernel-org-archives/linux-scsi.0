@@ -1,36 +1,39 @@
-From: Michael Schmitz <schmitzmic@gmail.com>
-Subject: Re: [PATCH 0/6] ncr5380: Miscellaneous minor patches
-Date: Thu, 26 Jan 2017 16:00:05 +1300
-Message-ID: <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com>
-References: <cover.1484523085.git.fthain@telegraphics.com.au>
- <yq14m0md8nd.fsf@oracle.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 03/18] block: fix elevator init check
+Date: Wed, 25 Jan 2017 22:01:08 -0500
+Message-ID: <yq1efzqa5jf.fsf@oracle.com>
+References: <1485365126-23210-1-git-send-email-hch@lst.de>
+        <1485365126-23210-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-15
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f68.google.com ([74.125.83.68]:34235 "EHLO
-        mail-pg0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752478AbdAZDAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:00:13 -0500
-In-Reply-To: <yq14m0md8nd.fsf@oracle.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:18045 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752701AbdAZDB2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:01:28 -0500
+In-Reply-To: <1485365126-23210-4-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Wed, 25 Jan 2017 18:25:11 +0100")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 
-Martin, Finn,
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-I'll get to that on the weekend - Auckland Anniversary Day coming up so
-plenty of time.
+Christoph> We can't initalize the elevator fields for flushes as flush
+Christoph> share space in struct request with the elevator data.  But
+Christoph> currently we can't commnicate that a request is a flush
 
-Cheers,
+communicate
 
-	Michael
+Christoph> through blk_get_request as we can only pass READ or WRITE,
+Christoph> and the low-level code looks at the possible NULL bio to
+Christoph> check for a flush.
 
-Am 26.01.2017 um 12:25 schrieb Martin K. Petersen:
->>>>>> "Finn" == Finn Thain <fthain@telegraphics.com.au> writes:
-> 
-> Finn> Michael, Ondrej, can I get you to review/test please?
-> 
-> Pretty please!
-> 
+Christoph> Fix this by allowing to pass any block op and flags, and by
+Christoph> checking for the flush flags in __get_request.
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
