@@ -1,60 +1,45 @@
-From: Jack Wang <xjtuwjp@gmail.com>
-Subject: Re: mvsas escalated kernel crash and ata mapping mvsas driver question
-Date: Thu, 26 Jan 2017 11:17:31 +0100
-Message-ID: <CAD+HZHW-0keq5RUiqMGpO_EnOLa7Z6ZeAtwtkGXvThi=sf4siw@mail.gmail.com>
-References: <362cdbe9-3633-499e-9ee4-b1a8afed2e40@powercraft.nl>
- <2d56a20b-628f-d621-6c9b-ba5cdf8bf6a0@powercraft.nl> <c9684a81-901d-03ea-e322-c27089c4b204@powercraft.nl>
- <d8615494-756f-0fe9-9969-8e850fc5984d@powercraft.nl>
+From: Augusto Mecking Caringi <augustocaringi@gmail.com>
+Subject: [PATCH] scsi: srp_transport: Fix 'always false comparison' in srp_tmo_valid()
+Date: Thu, 26 Jan 2017 11:17:16 +0000
+Message-ID: <1485429447-19103-1-git-send-email-augustocaringi@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f51.google.com ([209.85.218.51]:34407 "EHLO
-        mail-oi0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752956AbdAZKRc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 26 Jan 2017 05:17:32 -0500
-Received: by mail-oi0-f51.google.com with SMTP id s203so1189291oie.1
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 02:17:32 -0800 (PST)
-In-Reply-To: <d8615494-756f-0fe9-9969-8e850fc5984d@powercraft.nl>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>
+Cc: Augusto Mecking Caringi <augustocaringi@gmail.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Ewan D. Milne" <emilne@redhat.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Sagi Grimberg <sagi@grimberg.me>, Andy Shevchenko <andriy.shevchenko@linux.intel.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jelle de Jong <jelledejong@powercraft.nl>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-2017-01-26 10:51 GMT+01:00 Jelle de Jong <jelledejong@powercraft.nl>:
-> Hello everybody,
->
-> I got a server that seemingly random gets kernel crashes, due to an
-> escalation of events from most likely the mvsas based disk controller.
->
-> The harddisk should be okay, I replaced a whole bunch to be sure, but the
-> server does not get stable. I can not seem to figure out how to map for
-> example ata21.00 to an disk so I can do a deep badblock check.
->
-> I have to complete boot with kernel crash log saved with additional
-> information.
->
-> http://paste.debian.net/plainh/96325d89
->
-> Can somebody take a look and maybe help?
->
->
-> 08:00.0 SCSI storage controller: Areca Technology Corp. ARC-1300ix-16
-> 16-Port PCI-Express to SAS Non-RAID Host Adapter (rev 02)
->
-> Kind regards,
->
-> Jelle de Jong
+In a 64bit system (where long is 64bit wide), even dividing LONG_MAX by
+HZ will always be bigger than the max value that an int variable can
+hold.
 
-Your IO error seems related to NCQ, have you tried to disable NCQ?
+This has been detected by building the driver with W=1:
 
-echo 1 > /sys/block/sdX/device/queue_depth
+drivers/scsi/scsi_transport_srp.c: In function ‘srp_tmo_valid’:
+drivers/scsi/scsi_transport_srp.c:92:19: warning: comparison is always
+false due to limited range of data type [-Wtype-limits]
+if (dev_loss_tmo >= LONG_MAX / HZ)
+                   ^
 
-Maybe try 4.10-rc5 is also a option?
+Signed-off-by: Augusto Mecking Caringi <augustocaringi@gmail.com>
+---
+ drivers/scsi/scsi_transport_srp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-Jack
-
-> --
-> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+diff --git a/drivers/scsi/scsi_transport_srp.c b/drivers/scsi/scsi_transport_srp.c
+index b87a786..d8c83f4 100644
+--- a/drivers/scsi/scsi_transport_srp.c
++++ b/drivers/scsi/scsi_transport_srp.c
+@@ -89,7 +89,7 @@ int srp_tmo_valid(int reconnect_delay, int fast_io_fail_tmo, int dev_loss_tmo)
+ 	if (fast_io_fail_tmo < 0 &&
+ 	    dev_loss_tmo > SCSI_DEVICE_BLOCK_MAX_TIMEOUT)
+ 		return -EINVAL;
+-	if (dev_loss_tmo >= LONG_MAX / HZ)
++	if (dev_loss_tmo >= INT_MAX / HZ)
+ 		return -EINVAL;
+ 	if (fast_io_fail_tmo >= 0 && dev_loss_tmo >= 0 &&
+ 	    fast_io_fail_tmo >= dev_loss_tmo)
+-- 
+2.7.4
