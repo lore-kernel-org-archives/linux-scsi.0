@@ -1,65 +1,39 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH V2 06/24] aacraid: Reworked scsi command submission path
-Date: Thu, 26 Jan 2017 18:52:53 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A63C58932@avsrvexchmbx2.microsemi.net>
-References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170125180111.25401-7-RaghavaAditya.Renukunta@microsemi.com>
- <20170126090530.GH3591@linux-x5ow.site>
+From: Jens Axboe <axboe@fb.com>
+Subject: Re: split scsi passthrough fields out of struct request V2
+Date: Thu, 26 Jan 2017 11:57:36 -0700
+Message-ID: <db7f9165-19db-d1f2-a2fa-7546da57741b@fb.com>
+References: <1485365126-23210-1-git-send-email-hch@lst.de>
+ <1485455329.2540.7.camel@sandisk.com>
+ <e8f4b084-be66-d5b3-5785-13b80642040f@fb.com>
+ <1485456745.2540.9.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0082.outbound.protection.outlook.com ([104.47.34.82]:33821
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752559AbdAZSyv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 13:54:51 -0500
-In-Reply-To: <20170126090530.GH3591@linux-x5ow.site>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-raid-owner@vger.kernel.org>
+In-Reply-To: <1485456745.2540.9.camel@sandisk.com>
+Sender: linux-raid-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@lst.de" <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>
 
-Hi Johannes,
+On 01/26/2017 11:52 AM, Bart Van Assche wrote:
+> On Thu, 2017-01-26 at 11:44 -0700, Jens Axboe wrote:
+>> I think this may be my bug - does the below help?
+> 
+> Hello Jens,
+> 
+> What tree has that patch been generated against? It does not apply
+> cleanly on top of Christoph's tree:
+> 
+> $ git checkout hch-block-pc-refactor
+> $ patch -p1 --dry-run -f -s < ~/Re\:_split_scsi_passthrough_fields_out_of_struct_request_V2.mbox
+> 1 out of 3 hunks FAILED
 
-> -----Original Message-----
-> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Thursday, January 26, 2017 1:06 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
-> Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
-> <scott.benesh@microsemi.com>
-> Subject: Re: [PATCH V2 06/24] aacraid: Reworked scsi command submission
-> path
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> On Wed, Jan 25, 2017 at 10:00:53AM -0800, Raghava Aditya Renukunta wrote:
-> > Moved the READ and WRITE switch cases to the top. Added a  default
-> > case to the switch case and replaced duplicate scsi result value with a
-> > macro.
->=20
-> Can you please explain why you did the changes as well?
+It's against my for-4.11/block, which you were running under Christoph's
+patches. Maybe he's using an older version? In any case, should be
+pretty trivial for you to hand apply. Just ensure that .flags is set to
+0 for the common cases, and inherit 'flags' when it is passed in.
 
-The idea is that since most of commands that we care performance wise, are
-read and writes, we wanted to process them first and then the others later.
+-- 
+Jens Axboe
 
-Internally as I understood it , a switch case is either converted into a ju=
-mp
-Table or a bunch of if else conditions, so placing the often used read,  wr=
-ite=20
-cases at top was an effort in optimization. =20
-
-Regards,
-Raghava Aditya
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
