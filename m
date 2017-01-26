@@ -1,100 +1,97 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: split scsi passthrough fields out of struct request V2
-Date: Thu, 26 Jan 2017 18:29:08 +0000
-Message-ID: <1485455329.2540.7.camel@sandisk.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+Subject: [PATCH v3] mpt3sas: Force request partial completion alignment
+Date: Thu, 26 Jan 2017 16:37:01 -0200
+Message-ID: <1485455821-9176-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0058.outbound.protection.outlook.com ([104.47.33.58]:53856
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752817AbdAZSaD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 13:30:03 -0500
-In-Reply-To: <1485365126-23210-1-git-send-email-hch@lst.de>
-Content-Language: en-US
-Content-ID: <B8CC5D7EE2221B4EAB5B30C4A4938669@sandisk.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44905 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751957AbdAZShZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 26 Jan 2017 13:37:25 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0QIY98r105733
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:16 -0500
+Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 287jhkbe2r-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:16 -0500
+Received: from localhost
+        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
+        Thu, 26 Jan 2017 16:37:13 -0200
+Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.18.232.225])
+        by d24dlp02.br.ibm.com (Postfix) with ESMTP id 97B8F1DC006E
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 13:37:10 -0500 (EST)
+Received: from d24av03.br.ibm.com (d24av03.br.ibm.com [9.8.31.95])
+        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0QIb9JH40763590
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:09 -0200
+Received: from d24av03.br.ibm.com (localhost [127.0.0.1])
+        by d24av03.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0QIb9WR006875
+        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 16:37:10 -0200
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
+To: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com
+Cc: sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, brking@linux.vnet.ibm.com, gpiccoli@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com, martin.petersen@oracle.com
 
-On Wed, 2017-01-25 at 18:25 +0100, Christoph Hellwig wrote:
-> Hi all,
->=20
-> this series splits the support for SCSI passthrough commands from the
-> main struct request used all over the block layer into a separate
-> scsi_request structure that drivers that want to support SCSI passthough
-> need to embedded as the first thing into their request-private data,
-> similar to how we handle NVMe passthrough commands.
->=20
-> To support this I've added support for that the private data after
-> request structure to the legacy request path instead, so that it can
-> be treated the same way as the blk-mq path.  Compare to the current
-> scsi_cmnd allocator that actually is a major simplification.
->=20
-> Changes since V1:
->  - fix handling of a NULL sense pointer in __scsi_execute
->  - clean up handling of the flush flags in the block layer and MD
->  - additional small cleanup in dm-rq
+From: Ram Pai <linuxram@us.ibm.com>
 
-Hello Christoph,
+The firmware or device, possibly under a heavy I/O load, can return
+on a partial unaligned boundary. Scsi-ml expects these requests to be
+completed on an alignment boundary. Scsi-ml blindly requeues the I/O
+without checking the alignment boundary of the I/O request for the
+remaining bytes. This leads to errors, since devices cannot perform
+non-aligned read/write operations.
 
-Thanks for having fixed the NULL pointer issue I had reported for v1.
-However, if I try to run my srp-test testsuite on top of your
-hch-block/block-pc-refactor=A0branch (commit ID a07dc3521034) merged
-with v4.10-rc5 the following appears on the console:
+This patch fixes the issue in the driver. It aligns unaligned
+completions of FS requests, by truncating them to the nearest
+alignment boundary.
 
-[  707.317403] BUG: scheduling while atomic: fio/9073/0x00000003
-[  707.317404] 1 lock held by fio/9073:
-[  707.317404]  #0:  (rcu_read_lock){......}, at: [<ffffffff8132618e>] __bl=
-k_mq_run_hw_queue+0xde/0x1c0
-[  707.317409] Modules linked in: dm_service_time ib_srp scsi_transport_srp=
- target_core_user uio target_core_pscsi target_core_file ib_srpt target_cor=
-e_iblock target_core_mod brd netconsole xt_CHECKSUM iptable_mangle ipt_MASQ=
-UERADE nf_nat_masquerade_ipv4 iptable_nat nf_nat_ipv4 nf_nat libcrc32c nf_c=
-onntrack_ipv4 nf_defrag_ipv4 xt_conntrack nf_conntrack ipt_REJECT nf_reject=
-_ipv4 xt_tcpudp tun bridge stp llc ebtable_filter ebtables ip6table_filter =
-ip6_tables iptable_filter ip_tables x_tables af_packet ib_ipoib rdma_ucm ib=
-_ucm ib_uverbs ib_umad rdma_cm configfs ib_cm iw_cm msr mlx4_ib ib_core sb_=
-edac edac_core x86_pkg_temp_thermal intel_powerclamp coretemp ipmi_ssif kvm=
-_intel kvm irqbypass crct10dif_pclmul crc32_pclmul mlx4_core crc32c_intel g=
-hash_clmulni_intel hid_generic pcbc usbhid iTCO_wdt tg3 aesni_intel
-[  707.317445]  ptp iTCO_vendor_support aes_x86_64 crypto_simd pps_core glu=
-e_helper dcdbas ipmi_si ipmi_devintf libphy devlink lpc_ich cryptd pcspkr i=
-pmi_msghandler mfd_core fjes mei_me tpm_tis button tpm_tis_core shpchp mei =
-tpm wmi mgag200 i2c_algo_bit drm_kms_helper syscopyarea sysfillrect sysimgb=
-lt fb_sys_fops ttm sr_mod cdrom drm ehci_pci ehci_hcd usbcore usb_common sg=
- dm_multipath dm_mod scsi_dh_rdac scsi_dh_emc scsi_dh_alua autofs4
-[  707.317469] CPU: 6 PID: 9073 Comm: fio Tainted: G        W       4.10.0-=
-rc5-dbg+ #1
-[  707.317470] Hardware name: Dell Inc. PowerEdge R430/03XKDV, BIOS 1.0.2 1=
-1/17/2014
-[  707.317470] Call Trace:
-[  707.317473]  dump_stack+0x68/0x93
-[  707.317475]  __schedule_bug+0x5b/0x80
-[  707.317477]  __schedule+0x762/0xb00
-[  707.317479]  schedule+0x38/0x90
-[  707.317481]  schedule_timeout+0x2fe/0x640
-[  707.317491]  io_schedule_timeout+0x9f/0x110
-[  707.317493]  blk_mq_get_tag+0x158/0x260
-[  707.317496]  __blk_mq_alloc_request+0x16/0xe0
-[  707.317498]  blk_mq_sched_get_request+0x30d/0x360
-[  707.317502]  blk_mq_alloc_request+0x3b/0x90
-[  707.317505]  blk_get_request+0x2f/0x110
-[  707.317507]  multipath_clone_and_map+0xcd/0x140 [dm_multipath]
-[  707.317512]  map_request+0x3c/0x290 [dm_mod]
-[  707.317517]  dm_mq_queue_rq+0x77/0x100 [dm_mod]
-[  707.317519]  blk_mq_dispatch_rq_list+0x1ff/0x320
-[  707.317521]  blk_mq_sched_dispatch_requests+0xa9/0xe0
-[  707.317523]  __blk_mq_run_hw_queue+0x122/0x1c0
-[  707.317528]  blk_mq_run_hw_queue+0x84/0x90
-[  707.317530]  blk_mq_flush_plug_list+0x39f/0x480
-[  707.317531]  blk_flush_plug_list+0xee/0x270
-[  707.317533]  blk_finish_plug+0x27/0x40
-[  707.317534]  do_io_submit+0x475/0x900
-[  707.317537]  SyS_io_submit+0xb/0x10
-[  707.317539]  entry_SYSCALL_64_fastpath+0x18/0xad
+Reported-by: Mauricio Faria De Oliveira <mauricfo@linux.vnet.ibm.com>
+Signed-off-by: Guilherme G. Piccoli <gpiccoli@linux.vnet.ibm.com>
+Signed-off-by: Ram Pai <linuxram@us.ibm.com>
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+---
+v2->v3:
+  * Changed division to round_down() [suggestion by Martin].
 
-Bart.=
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 75f3fce..a6b6f58 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	u32 response_code = 0;
+ 	unsigned long flags;
++	unsigned int sector_sz;
++	struct request *req;
+ 
+ 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+ 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+@@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	}
+ 
+ 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
++
++	/* In case of bogus fw or device, we could end up having
++	 * unaligned partial completion. We can force alignment here,
++	 * then scsi-ml does not need to handle this misbehavior.
++	 */
++	sector_sz = scmd->device->sector_size;
++	req = scmd->request;
++	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
++		    (xfer_cnt % sector_sz))) {
++		sdev_printk(KERN_INFO, scmd->device,
++			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
++			xfer_cnt, sector_sz);
++		xfer_cnt = round_down(xfer_cnt, sector_sz);
++	}
++
+ 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+ 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+ 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+-- 
+2.1.0
+
