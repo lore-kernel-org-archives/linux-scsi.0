@@ -1,38 +1,27 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 02/24] aacraid: Added aacraid.h include guard
-Date: Thu, 26 Jan 2017 09:27:42 +0100
-Message-ID: <20170126082742.GD3591@linux-x5ow.site>
-References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170125180111.25401-3-RaghavaAditya.Renukunta@microsemi.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 2/2] virtio_scsi: Implement fc_host
+Date: Thu, 26 Jan 2017 00:34:54 -0800
+Message-ID: <20170126083454.GA21942@infradead.org>
+References: <20170126034109.16144-1-famz@redhat.com>
+ <20170126034109.16144-3-famz@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34316 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752959AbdAZI1p (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 03:27:45 -0500
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <20170125180111.25401-3-RaghavaAditya.Renukunta@microsemi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <20170126034109.16144-3-famz@redhat.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Fam Zheng <famz@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Paolo Bonzini <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Michael S. Tsirkin" <mst@redhat.com>, Jason Wang <jasowang@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, stefanha@redhat.com, virtualization@lists.linux-foundation.org, Cathy Avery <cavery@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-On Wed, Jan 25, 2017 at 10:00:49AM -0800, Raghava Aditya Renukunta wrote:
-> Added aacraid.h include guard
-> 
-> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> 
-> ---
+On Thu, Jan 26, 2017 at 11:41:09AM +0800, Fam Zheng wrote:
+> This implements the VIRTIO_SCSI_F_FC_HOST feature by reading the config
+> fields and presenting them as sysfs fc_host attributes. The config
+> change handler is added here because primary_active will toggle during
+> migration.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This needs a way, way better description on why the heck we would
+even bother with something odd like this.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Also please coordinate with Cathy's "lightweight" FC attrs for storsvcs
+as the code seems to be clearly following the "lead" set by Hyper-V.
