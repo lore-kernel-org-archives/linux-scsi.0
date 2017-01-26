@@ -1,25 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 15/18] scsi: allocate scsi_cmnd structures as part of struct request
-Date: Wed, 25 Jan 2017 22:30:18 -0500
-Message-ID: <yq17f5i8pmd.fsf@oracle.com>
+Subject: Re: [PATCH 18/18] block: don't assign cmd_flags in __blk_rq_prep_clone
+Date: Wed, 25 Jan 2017 22:31:09 -0500
+Message-ID: <yq137g68pky.fsf@oracle.com>
 References: <1485365126-23210-1-git-send-email-hch@lst.de>
-        <1485365126-23210-16-git-send-email-hch@lst.de>
+        <1485365126-23210-19-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485365126-23210-16-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Wed, 25 Jan 2017 18:25:23 +0100")
-Sender: linux-block-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:24439 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752576AbdAZDb3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 25 Jan 2017 22:31:29 -0500
+In-Reply-To: <1485365126-23210-19-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Wed, 25 Jan 2017 18:25:26 +0100")
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
 Cc: Jens Axboe <axboe@fb.com>, Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
-List-Id: linux-scsi@vger.kernel.org
 
 >>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Christoph> Rely on the new block layer functionality to allocate
-Christoph> additional driver specific data behind struct request instead
-Christoph> of implementing it in SCSI itѕelf.
+Christoph> These days we have the proper flags set since request
+Christoph> allocation time.
 
 Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 
