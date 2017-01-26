@@ -1,107 +1,120 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH v2] mpt3sas: Force request partial completion alignment
-Date: Thu, 26 Jan 2017 11:31:53 -0200
-Message-ID: <5889FA49.4030802@linux.vnet.ibm.com>
-References: <1485272838-23180-1-git-send-email-gpiccoli@linux.vnet.ibm.com>
- <yq1a8aebt4q.fsf@oracle.com>
+From: Cathy Avery <cavery@redhat.com>
+Subject: [PATCH v2 0/2] scsi: storvsc: Add support for FC lightweight host.
+Date: Thu, 26 Jan 2017 08:38:58 -0500
+Message-ID: <1485437940-18706-1-git-send-email-cavery@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:46364 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1752049AbdAZNcF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 26 Jan 2017 08:32:05 -0500
-Received: from pps.filterd (m0098409.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0QDT45D097461
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:32:04 -0500
-Received: from e24smtp01.br.ibm.com (e24smtp01.br.ibm.com [32.104.18.85])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 286xt4ssue-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:32:04 -0500
-Received: from localhost
-        by e24smtp01.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Thu, 26 Jan 2017 11:32:01 -0200
-Received: from d24relay04.br.ibm.com (d24relay04.br.ibm.com [9.18.232.146])
-        by d24dlp01.br.ibm.com (Postfix) with ESMTP id B68733520068
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 08:31:26 -0500 (EST)
-Received: from d24av05.br.ibm.com (d24av05.br.ibm.com [9.18.232.44])
-        by d24relay04.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v0QDVx8j21626908
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 11:31:59 -0200
-Received: from d24av05.br.ibm.com (localhost [127.0.0.1])
-        by d24av05.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v0QDVwx6007527
-        for <linux-scsi@vger.kernel.org>; Thu, 26 Jan 2017 11:31:59 -0200
-In-Reply-To: <yq1a8aebt4q.fsf@oracle.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: kys@microsoft.com, hch@infradead.org, haiyangz@microsoft.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: devel@linuxdriverproject.org, famz@redhat.com, linux-kernel@vger.kernel.org, dan.carpenter@oracle.com, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, MPT-FusionLinux.pdl@broadcom.com, sathya.prakash@broadcom.com, chaitra.basappa@broadcom.com, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com, brking@linux.vnet.ibm.com, mauricfo@linux.vnet.ibm.com, linuxram@us.ibm.com
 
-On 01/25/2017 09:46 PM, Martin K. Petersen wrote:
->>>>>> "Guilherme" == Guilherme G Piccoli <gpiccoli@linux.vnet.ibm.com> writes:
-> 
-> Hi Guilherme,
+This patch set is based on the following patch submission
+and email exchange:
 
-Hi Martin, thanks for the review!
+[PATCH 1/1] scsi: storvsc: Support manual scan of FC hosts on Hyper-V
+K. Y. Srinivasan kys at microsoft.com
+Sat Mar 12 21:52:48 UTC 2016
+
+http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/2016-March/087116.html
+
+Included in the current storvsc driver for Hyper-V is the ability
+to access luns on an FC fabric via a virtualized fiber channel
+adapter exposed by the Hyper-V host. This was done to provide an
+interface for existing customer tools that was more consistent with
+a conventional FC device. The driver attaches to the FC transport 
+to allow host and port names to be published under 
+/sys/class/fc_host/hostX.
+
+A problem arose when attaching to the FC transport. The scsi_scan code
+attempts to call fc_user_scan which has basically become a no-op 
+due to the virtualized nature of the FC host 
+( missing rports, vports, etc ). At this point you cannot refresh
+the scsi bus after mapping or unmapping luns on the SAN without
+a reboot.
+
+The patch above attempted to address the problem of not being
+able to scan FC hosts on a Hyper-V guest by setting
+fc_transport_template->user_scan = NULL but it was rejected
+in favor of a new "lightweight" version of the FC transport that
+only provides the bare minimum functionality of the standard FC model.
+This new transport option would be more suitable for FC transports
+running on a VM and provide some flexibility in the future.
+
+The patches below offer a method to incorporate the new 
+lightweight FC option into the existing transport
+and storvsc drivers.
+
+Patch 1: scsi_transport_fc.h, scsi_transport_fc.c
+
+1) Adds the lightweight_transport option to fc_function_template.
+Based on this selection the transport will either be lightweight
+or default to heavyweight.
+
+2) Divides the applicable export functions into two sets.
+The lightweight functions involve FC attributes port_name and 
+node name. The functions that deal with targets, rports, etc
+are not used. The heavyweight default contains the original
+standard physical FC hba attribute set. 
+
+3) All top level FC class directories such fc_remote_ports,
+fc_transport, and fc_vports are still created when the transport
+driver is loaded. They are just not populated when running in
+lightweight mode. Conceptually both lightweight and heavyweight
+clients could coexist.
+
+4) fc_transport_template->user_scan is now null and the bus 
+can be scanned.
+
+Patch 2: storvsc.c
+
+1) storvsc elects to use the new lightweight FC host option 
+by enabling it in fc_function_template. 
+
+2) Removes an original workaround dealing with replacing
+the eh_timed_out function. Patch 1 will not set the 
+scsi_transport_template.eh_timed_out function directly during
+lightweight fc_attach_transport(). It instead relies on
+whatever was indicated as the scsi_host_template timeout handler
+during scsi_times_out() scsi_error.c. So the workaround is 
+no longer necessary.
 
 
-> 
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> index 75f3fce..e52c942 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-> @@ -4657,6 +4657,8 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  	struct MPT3SAS_DEVICE *sas_device_priv_data;
->  	u32 response_code = 0;
->  	unsigned long flags;
-> +	unsigned int sector_sz;
-> +	struct request *req;
-> 
->  	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
->  	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
-> @@ -4715,6 +4717,21 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
->  	}
-> 
->  	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
-> +
-> +	/* In case of bogus fw or device, we could end up having
-> +	 * unaligned partial completion. We can force alignment here,
-> +	 * then scsi-ml does not need to handle this misbehavior.
-> +	 */
-> +	sector_sz = scmd->device->sector_size;
-> +	req = scmd->request;
-> +	if (unlikely(sector_sz && req && (req->cmd_type == REQ_TYPE_FS) &&
-> +		    (xfer_cnt % sector_sz))) {
-> 
-> Maybe a bit zealous on the sanity checking...
+It has been suggested that the word lightweight may not be
+the best choice of terms when describing the new FC transport
+option.  I can offer a few new ones but I am not particularly
+imaginative. 
 
-A bit...? heheh
-Too much I'd say. Since this is dealing with a bogus FW scenario, I
-found more safe to check everything...of course we can remove checks if
-it's sure req isn't NULL ever. The sector_sz check is avoiding
-degenerate cases, since our division below.
+Virtual FC
+Mini FC
+Host only FC 
 
 
-> 
-> +		sdev_printk(KERN_INFO, scmd->device,
-> +			"unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
-> +			xfer_cnt, sector_sz);
-> +		xfer_cnt = (xfer_cnt / sector_sz) * sector_sz;
-> 
-> Not so keen on divisions. xfer_cnt = round_down(xfer_cnt, sector_sz), maybe?
->
+Changes from V1:
 
-Martin, I might be completely wrong here (please correct me if this is
-the case), but isn't C standard integer division a truncation that acts
-like a round down? I checked (what I think is) the specification of C
-language (ISO/IEC 9899:1999), and it seems the division proposed by Ram
-Pai is accurate in this case. Also, both variables are unsigned.
-
-Let me know your thoughts.
-Thanks,
+Added more comments and documentation in the code regarding 
+the lightweight feature.
 
 
-Guilherme
+Cathy Avery (2):
+  scsi: scsi_transport_fc: Provide a lightweight option for Virtual FC
+    Hosts.
+  scsi: storvsc: Add support for FC lightweight host.
 
+ drivers/scsi/scsi_transport_fc.c | 144 +++++++++++++++++++++++++++++++++++++--
+ drivers/scsi/storvsc_drv.c       |  12 ++--
+ include/scsi/scsi_transport_fc.h |   2 +
+ 3 files changed, 149 insertions(+), 9 deletions(-)
+
+-- 
+2.5.0
