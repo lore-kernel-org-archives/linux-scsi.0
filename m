@@ -1,26 +1,38 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH 0/6] ncr5380: Miscellaneous minor patches
-Date: Wed, 25 Jan 2017 22:31:39 -0500
-Message-ID: <yq1y3xy7azo.fsf@oracle.com>
-References: <cover.1484523085.git.fthain@telegraphics.com.au>
-        <yq14m0md8nd.fsf@oracle.com>
-        <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com>
+From: Fam Zheng <famz@redhat.com>
+Subject: [PATCH v2 0/2] virtio-scsi: Implement FC_HOST feature
+Date: Thu, 26 Jan 2017 11:41:07 +0800
+Message-ID: <20170126034109.16144-1-famz@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <c0f62685-e19f-9516-2845-8fb24404706c@gmail.com> (Michael
-        Schmitz's message of "Thu, 26 Jan 2017 16:00:05 +1300")
-Sender: linux-kernel-owner@vger.kernel.org
-To: Michael Schmitz <schmitzmic@gmail.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Finn Thain <fthain@telegraphics.com.au>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, Ondrej Zary <linux@rainbow-software.org>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: linux-kernel@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, "Michael S. Tsirkin" <mst@redhat.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, virtualization@lists.linux-foundation.org, stefanha@redhat.com, Paolo Bonzini <pbonzini@redhat.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Michael" == Michael Schmitz <schmitzmic@gmail.com> writes:
+v2: Fix endianness of WWNN/WWPN. [Paolo]
 
-Michael> Martin, Finn, I'll get to that on the weekend - Auckland
-Michael> Anniversary Day coming up so plenty of time.
+This series implements the proposed fc_host feature of virtio-scsi.
 
-Great, thanks!
+The first patch updates the data structure changes according to the spec
+proposal; the second patch actually implements the operations.
+
+Fam Zheng (2):
+  virtio_scsi: Add fc_host definitions
+  virtio_scsi: Implement fc_host
+
+ drivers/scsi/virtio_scsi.c       | 60 +++++++++++++++++++++++++++++++++++++++-
+ include/uapi/linux/virtio_scsi.h |  6 ++++
+ 2 files changed, 65 insertions(+), 1 deletion(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.9.3
