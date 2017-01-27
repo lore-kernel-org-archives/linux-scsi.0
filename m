@@ -1,121 +1,218 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 05/24] aacraid: Retrieve and update the device types
-Date: Fri, 27 Jan 2017 09:08:01 +0100
-Message-ID: <20170127080801.GA5746@linux-x5ow.site>
-References: <20170125180111.25401-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170125180111.25401-6-RaghavaAditya.Renukunta@microsemi.com>
- <20170126085952.GG3591@linux-x5ow.site>
- <4D8E82A446BF54499747901DBDEB737A63C58906@avsrvexchmbx2.microsemi.net>
- <4D8E82A446BF54499747901DBDEB737A7B88A658@avsrvexchmbx1.microsemi.net>
+From: Paolo Bonzini <pbonzini@redhat.com>
+Subject: Re: [PATCH v2 2/2] virtio_scsi: Implement fc_host
+Date: Fri, 27 Jan 2017 03:43:57 -0500 (EST)
+Message-ID: <395840854.13088421.1485506637639.JavaMail.zimbra@redhat.com>
+References: <20170126034109.16144-1-famz@redhat.com>
+	<20170126034109.16144-3-famz@redhat.com>
+	<20170126234257-mutt-send-email-mst@kernel.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:43894 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754290AbdA0IIZ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 03:08:25 -0500
-Content-Disposition: inline
-In-Reply-To: <4D8E82A446BF54499747901DBDEB737A7B88A658@avsrvexchmbx1.microsemi.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <virtualization-bounces@lists.linux-foundation.org>
+In-Reply-To: <20170126234257-mutt-send-email-mst@kernel.org>
+List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
+List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
+List-Post: <mailto:virtualization@lists.linux-foundation.org>
+List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
+List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
+	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
+Sender: virtualization-bounces@lists.linux-foundation.org
+Errors-To: virtualization-bounces@lists.linux-foundation.org
+To: "Michael S. Tsirkin" <mst@redhat.com>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, virtualization@lists.linux-foundation.org, stefanha@redhat.com
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>
 
-On Thu, Jan 26, 2017 at 09:00:42PM +0000, Raghava Aditya Renukunta wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: linux-scsi-owner@vger.kernel.org [mailto:linux-scsi-
-> > owner@vger.kernel.org] On Behalf Of Raghava Aditya Renukunta
-> > Sent: Thursday, January 26, 2017 10:44 AM
-> > To: Johannes Thumshirn <jthumshirn@suse.de>
-> > Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> > scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
-> > Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
-> > <scott.benesh@microsemi.com>
-> > Subject: RE: [PATCH V2 05/24] aacraid: Retrieve and update the device types
-> > 
-> > EXTERNAL EMAIL
-> > 
-> > 
-> > > -----Original Message-----
-> > > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> > > Sent: Thursday, January 26, 2017 1:00 AM
-> > > To: Raghava Aditya Renukunta
-> > > <RaghavaAditya.Renukunta@microsemi.com>
-> > > Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> > > scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
-> > > Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
-> > > <scott.benesh@microsemi.com>
-> > > Subject: Re: [PATCH V2 05/24] aacraid: Retrieve and update the device
-> > types
-> > >
-> > > EXTERNAL EMAIL
-> > >
-> > >
-> > > On Wed, Jan 25, 2017 at 10:00:52AM -0800, Raghava Aditya Renukunta
-> > wrote:
-> > > > This patch adds support to retrieve the type of each adapter connected
-> > > > device. Applicable to HBA1000 and SmartIOC2000 products
-> > > >
-> > > > Signed-off-by: Raghava Aditya Renukunta
-> > > <RaghavaAditya.Renukunta@microsemi.com>
-> > > > Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> > > >
-> > > > ---
-> > >
-> > > [...]
-> > >
-> > > >  /*
-> > > >   *   Adapter Information Block
-> > > >   *
-> > > > @@ -1056,7 +1091,28 @@ struct aac_supplement_adapter_info
-> > > >       /* StructExpansion == 1 */
-> > > >       __le32  FeatureBits3;
-> > > >       __le32  SupportedPerformanceModes;
-> > > > -     __le32  ReservedForFutureGrowth[80];
-> > > > +     u8      HostBusType;            /* uses HOST_BUS_TYPE_xxx defines */
-> > > > +     u8      HostBusWidth;           /* actual width in bits or links */
-> > > > +     u16     HostBusSpeed;           /* actual bus speed/link rate in MHz */
-> > > > +     u8      MaxRRCDrives;           /* max. number of ITP-RRC drives/pool */
-> > > > +     u8      MaxDiskXtasks;          /* max. possible num of DiskX Tasks */
-> > > > +
-> > > > +     u8      CpldVerLoaded;
-> > > > +     u8      CpldVerInFlash;
-> > > > +
-> > > > +     __le64  MaxRRCCapacity;
-> > > > +     __le32  CompiledMaxHistLogLevel;
-> > > > +     u8      CustomBoardName[12];
-> > > > +     u16     SupportedCntlrMode;     /* identify supported controller mode
-> > */
-> > > > +     u16     ReservedForFuture16;
-> > > > +     __le32  SupportedOptions3;      /* reserved for future options */
-> > > > +
-> > > > +     __le16  VirtDeviceBus;          /* virt. SCSI device for Thor */
-> > > > +     __le16  VirtDeviceTarget;
-> > > > +     __le16  VirtDeviceLUN;
-> > > > +     __le16  Unused;
-> > > > +     __le32  ReservedForFutureGrowth[68];
-> > > > +
-> > 
-> > Same here.
-> 
-> On second thought changing all of the variables here will open up 
-> Pandoras  box. I will leave them as it is for now  and change the whole
->  structure and anything attached it in one of my next patch submission series.
-> 
-> Will that be ok?
 
-Yes that's something I can live with, *iff* it really happens.
 
-Thanks,
-	Johannes
+----- Original Message -----
+> From: "Michael S. Tsirkin" <mst@redhat.com>
+> To: "Fam Zheng" <famz@redhat.com>
+> Cc: linux-kernel@vger.kernel.org, "Paolo Bonzini" <pbonzini@redhat.com>, linux-scsi@vger.kernel.org, "James E.J.
+> Bottomley" <jejb@linux.vnet.ibm.com>, "Jason Wang" <jasowang@redhat.com>, "Martin K. Petersen"
+> <martin.petersen@oracle.com>, stefanha@redhat.com, virtualization@lists.linux-foundation.org
+> Sent: Thursday, January 26, 2017 11:06:27 PM
+> Subject: Re: [PATCH v2 2/2] virtio_scsi: Implement fc_host
+> 
+> On Thu, Jan 26, 2017 at 11:41:09AM +0800, Fam Zheng wrote:
+> > This implements the VIRTIO_SCSI_F_FC_HOST feature by reading the config
+> > fields and presenting them as sysfs fc_host attributes. The config
+> > change handler is added here because primary_active will toggle during
+> > migration.
+> 
+> Looks like there's active discussion on virtio tc mailing list.
+> It's ok to post patches meanwhile but best as RFC,
+> and repost after controversy is resolved.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Discussion on the TC mailing list was not about the merit of the feature,
+only about the timing of the vote.
+
+Paolo
+
+> 
+> > 
+> > Signed-off-by: Fam Zheng <famz@redhat.com>
+> > ---
+> >  drivers/scsi/virtio_scsi.c | 60
+> >  +++++++++++++++++++++++++++++++++++++++++++++-
+> >  1 file changed, 59 insertions(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
+> > index ec91bd0..1bb330c 100644
+> > --- a/drivers/scsi/virtio_scsi.c
+> > +++ b/drivers/scsi/virtio_scsi.c
+> > @@ -28,6 +28,7 @@
+> >  #include <scsi/scsi_device.h>
+> >  #include <scsi/scsi_cmnd.h>
+> >  #include <scsi/scsi_tcq.h>
+> > +#include <scsi/scsi_transport_fc.h>
+> >  #include <linux/seqlock.h>
+> >  
+> >  #define VIRTIO_SCSI_MEMPOOL_SZ 64
+> > @@ -795,6 +796,15 @@ static struct scsi_host_template
+> > virtscsi_host_template_multi = {
+> >  	.track_queue_depth = 1,
+> >  };
+> >  
+> > +static struct fc_function_template virtscsi_fc_template = {
+> > +	.show_host_node_name = 1,
+> > +	.show_host_port_name = 1,
+> > +	.show_host_port_type = 1,
+> > +	.show_host_port_state = 1,
+> > +};
+> > +
+> > +static struct scsi_transport_template *virtscsi_fc_transport_template;
+> > +
+> >  #define virtscsi_config_get(vdev, fld) \
+> >  	({ \
+> >  		typeof(((struct virtio_scsi_config *)0)->fld) __val; \
+> > @@ -956,15 +966,42 @@ static int virtscsi_init(struct virtio_device *vdev,
+> >  	return err;
+> >  }
+> >  
+> > +static void virtscsi_update_fc_host_attrs(struct virtio_device *vdev)
+> > +{
+> > +	struct Scsi_Host *shost = vdev->priv;
+> > +	u8 node_name[8], port_name[8];
+> > +
+> > +	if (virtscsi_config_get(vdev, primary_active)) {
+> > +		virtio_cread_bytes(vdev,
+> > +			offsetof(struct virtio_scsi_config, primary_wwnn),
+> > +			&node_name, 8);
+> > +		virtio_cread_bytes(vdev,
+> > +			offsetof(struct virtio_scsi_config, primary_wwpn),
+> > +			&port_name, 8);
+> > +	} else {
+> > +		virtio_cread_bytes(vdev,
+> > +			offsetof(struct virtio_scsi_config, secondary_wwnn),
+> > +			&node_name, 8);
+> > +		virtio_cread_bytes(vdev,
+> > +			offsetof(struct virtio_scsi_config, secondary_wwpn),
+> > +			&port_name, 8);
+> > +	}
+> 
+> This is racy, isn't it? You need to wrap this in a generation check
+> otherwise read can race with primary_active changing.
+> And you might want a wrapper to virtio_cread_bytes that does not
+> include generation check.
+> 
+> > +	fc_host_node_name(shost) = wwn_to_u64(node_name);
+> > +	fc_host_port_name(shost) = wwn_to_u64(port_name);
+> > +	fc_host_port_type(shost) = FC_PORTTYPE_NPORT;
+> > +	fc_host_port_state(shost) = FC_PORTSTATE_ONLINE;
+> > +}
+> > +
+> >  static int virtscsi_probe(struct virtio_device *vdev)
+> >  {
+> > -	struct Scsi_Host *shost;
+> > +	struct Scsi_Host *shost = NULL;
+> >  	struct virtio_scsi *vscsi;
+> >  	int err;
+> >  	u32 sg_elems, num_targets;
+> >  	u32 cmd_per_lun;
+> >  	u32 num_queues;
+> >  	struct scsi_host_template *hostt;
+> > +	bool fc_host_enabled;
+> >  
+> >  	if (!vdev->config->get) {
+> >  		dev_err(&vdev->dev, "%s failure: config access disabled\n",
+> > @@ -987,6 +1024,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+> >  	if (!shost)
+> >  		return -ENOMEM;
+> >  
+> > +	fc_host_enabled = virtio_has_feature(vdev, VIRTIO_SCSI_F_FC_HOST);
+> > +	if (fc_host_enabled)
+> > +		shost->transportt = virtscsi_fc_transport_template;
+> >  	sg_elems = virtscsi_config_get(vdev, seg_max) ?: 1;
+> >  	shost->sg_tablesize = sg_elems;
+> >  	vscsi = shost_priv(shost);
+> > @@ -1032,6 +1072,9 @@ static int virtscsi_probe(struct virtio_device *vdev)
+> >  	if (err)
+> >  		goto scsi_add_host_failed;
+> >  
+> > +	if (fc_host_enabled)
+> > +		virtscsi_update_fc_host_attrs(vdev);
+> > +
+> >  	virtio_device_ready(vdev);
+> >  
+> >  	if (virtio_has_feature(vdev, VIRTIO_SCSI_F_HOTPLUG))
+> > @@ -1098,6 +1141,11 @@ static int virtscsi_restore(struct virtio_device
+> > *vdev)
+> >  }
+> >  #endif
+> >  
+> > +static void virtscsi_config_changed(struct virtio_device *vdev)
+> > +{
+> 
+> This is called unconditionally here, will access
+> invalid config fields if feature is off.
+> In fact this is wasting an MSIX vector when feature is not
+> negotiated. No easy way not to, but best document this
+> in a code comment.
+> 
+> > +	virtscsi_update_fc_host_attrs(vdev);
+> > +}
+> > +
+> >  static struct virtio_device_id id_table[] = {
+> >  	{ VIRTIO_ID_SCSI, VIRTIO_DEV_ANY_ID },
+> >  	{ 0 },
+> > @@ -1109,6 +1157,7 @@ static unsigned int features[] = {
+> >  #ifdef CONFIG_BLK_DEV_INTEGRITY
+> >  	VIRTIO_SCSI_F_T10_PI,
+> >  #endif
+> > +	VIRTIO_SCSI_F_FC_HOST,
+> >  };
+> >  
+> >  static struct virtio_driver virtio_scsi_driver = {
+> > @@ -1123,12 +1172,20 @@ static struct virtio_driver virtio_scsi_driver = {
+> >  	.restore = virtscsi_restore,
+> >  #endif
+> >  	.remove = virtscsi_remove,
+> > +	.config_changed = virtscsi_config_changed,
+> >  };
+> >  
+> >  static int __init init(void)
+> >  {
+> >  	int ret = -ENOMEM;
+> >  
+> > +	virtscsi_fc_transport_template =
+> > +		fc_attach_transport(&virtscsi_fc_template);
+> > +	if (!virtscsi_fc_transport_template) {
+> > +		pr_err("fc_attach_transport() failed\n");
+> > +		goto error;
+> > +	}
+> > +
+> >  	virtscsi_cmd_cache = KMEM_CACHE(virtio_scsi_cmd, 0);
+> >  	if (!virtscsi_cmd_cache) {
+> >  		pr_err("kmem_cache_create() for virtscsi_cmd_cache failed\n");
+> > @@ -1176,6 +1233,7 @@ static int __init init(void)
+> >  
+> >  static void __exit fini(void)
+> >  {
+> > +	fc_release_transport(virtscsi_fc_transport_template);
+> >  	unregister_virtio_driver(&virtio_scsi_driver);
+> >  	cpuhp_remove_multi_state(virtioscsi_online);
+> >  	cpuhp_remove_multi_state(CPUHP_VIRT_SCSI_DEAD);
+> > --
+> > 2.9.3
+> 
