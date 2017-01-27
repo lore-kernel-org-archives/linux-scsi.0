@@ -1,24 +1,24 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter FW
-Date: Fri, 27 Jan 2017 11:28:41 -0800
-Message-ID: <20170127192853.10082-13-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 13/24] aacraid: Added support to set QD of attached drives
+Date: Fri, 27 Jan 2017 11:28:42 -0800
+Message-ID: <20170127192853.10082-14-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0058.outbound.protection.outlook.com ([104.47.34.58]:25872
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0087.outbound.protection.outlook.com ([104.47.32.87]:23616
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750718AbdA1DlH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 22:41:07 -0500
+        id S1750718AbdA1DnO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 22:43:14 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Retrieved queue depth from fw and saved it for future use.
-Only applicable for HBA1000 drives.
+Added support to set qd of drives in slave_configure.This only works for
+HBA1000 attached drives.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -30,244 +30,152 @@ None
 Changes in  V3:
 None
 
- drivers/scsi/aacraid/aachba.c  | 84 ++++++++++++++++++++++++++++++++++++++++-
- drivers/scsi/aacraid/aacraid.h | 85 +++++++++++++++++++++++++++++++++++++++++-
- 2 files changed, 167 insertions(+), 2 deletions(-)
+ drivers/scsi/aacraid/linit.c | 100 ++++++++++++++++++++++++++++---------------
+ 1 file changed, 66 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index e441a54..c34686f 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1516,6 +1516,83 @@ static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
- 	return aac_scsi_32(fib, cmd);
- }
- 
-+int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
-+{
-+	struct fib *fibptr;
-+	int rcode = -1;
-+	u16 fibsize, datasize;
-+	struct aac_srb *srbcmd;
-+	struct sgmap64 *sg64;
-+	struct aac_ciss_identify_pd *identify_resp;
-+	dma_addr_t addr;
-+	u32 vbus, vid;
-+	u16 temp;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 1912e7b..77d07b7 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -401,20 +401,33 @@ static int aac_biosparm(struct scsi_device *sdev, struct block_device *bdev,
+ static int aac_slave_configure(struct scsi_device *sdev)
+ {
+ 	struct aac_dev *aac = (struct aac_dev *)sdev->host->hostdata;
+-	if (aac->jbod && (sdev->type == TYPE_DISK))
+-		sdev->removable = 1;
+-	if ((sdev->type == TYPE_DISK) &&
++	int chn, tid, is_native_device = 0;
 +
-+	fibptr = aac_fib_alloc(dev);
-+	if (!fibptr)
-+		return -ENOMEM;
++	chn = aac_logical_to_phys(sdev_channel(sdev));
++	tid = sdev_id(sdev);
++	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
++		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW)
++		is_native_device = 1;
 +
-+	temp = AAC_MAX_LUN + target;
 +
-+	fibsize = sizeof(struct aac_srb) -
-+		sizeof(struct sgentry) + sizeof(struct sgentry64);
-+	datasize = sizeof(struct aac_ciss_identify_pd);
-+
-+	identify_resp = (struct aac_ciss_identify_pd *)
-+		pci_alloc_consistent(dev->pdev, datasize, &addr);
-+
-+	if (identify_resp != NULL) {
-+		vbus = (u32)le16_to_cpu(
-+			dev->supplement_adapter_info.VirtDeviceBus);
-+		vid = (u32)le16_to_cpu(
-+			dev->supplement_adapter_info.VirtDeviceTarget);
-+
-+		aac_fib_init(fibptr);
-+		srbcmd = (struct aac_srb *) fib_data(fibptr);
-+
-+		srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
-+		srbcmd->channel  = cpu_to_le32(vbus);
-+		srbcmd->id       = cpu_to_le32(vid);
-+		srbcmd->lun      = 0;
-+		srbcmd->flags    = cpu_to_le32(SRB_DataIn);
-+		srbcmd->timeout  = cpu_to_le32(10);
-+		srbcmd->retry_limit = 0;
-+		srbcmd->cdb_size = cpu_to_le32(12);
-+		srbcmd->count = cpu_to_le32(datasize);
-+
-+		memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
-+		srbcmd->cdb[0] = 0x26;
-+		srbcmd->cdb[2] = (u8)(temp & 0x00FF);
-+
-+		srbcmd->cdb[6] = CISS_IDENTIFY_PHYSICAL_DEVICE;
-+
-+		sg64 = (struct sgmap64 *)&srbcmd->sg;
-+		sg64->count = cpu_to_le32(1);
-+		sg64->sg[0].addr[1] = cpu_to_le32((u32)(((addr) >> 16) >> 16));
-+		sg64->sg[0].addr[0] = cpu_to_le32((u32)(addr & 0xffffffff));
-+		sg64->sg[0].count = cpu_to_le32(datasize);
-+
-+		rcode = aac_fib_send(ScsiPortCommand64,
-+			fibptr, fibsize, FsaNormal, 1, 1, NULL, NULL);
-+
-+		if (identify_resp->current_queue_depth_limit <= 0 ||
-+			identify_resp->current_queue_depth_limit > 32)
-+			dev->hba_map[bus][target].qd_limit = 32;
-+		else
-+			dev->hba_map[bus][target].qd_limit =
-+				identify_resp->current_queue_depth_limit;
-+
-+		pci_free_consistent(dev->pdev, datasize,
-+					(void *)identify_resp, addr);
-+
-+		aac_fib_complete(fibptr);
-+	}
-+
-+	aac_fib_free(fibptr);
-+
-+	return rcode;
-+}
-+
- /**
-  *	aac_update hba_map()-	update current hba map with data from FW
-  *	@dev:	aac_dev structure
-@@ -1565,6 +1642,9 @@ void aac_update_hba_map(struct aac_dev *dev,
- 		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
- 			goto update_devtype;
- 
-+		if (aac_issue_bmic_identify(dev, bus, target) < 0)
-+			dev->hba_map[bus][target].qd_limit = 32;
-+
- update_devtype:
- 		dev->hba_map[bus][target].devtype = devtype;
- 	}
-@@ -1711,8 +1791,10 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 
- 	/* reset all previous mapped devices (i.e. for init. after IOP_RESET) */
- 	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
--		for (target = 0; target < AAC_MAX_TARGETS; target++)
-+		for (target = 0; target < AAC_MAX_TARGETS; target++) {
- 			dev->hba_map[bus][target].devtype = 0;
-+			dev->hba_map[bus][target].qd_limit = 0;
++	if (!is_native_device) {
++		if (aac->jbod && (sdev->type == TYPE_DISK))
++			sdev->removable = 1;
++		if ((sdev->type == TYPE_DISK) &&
+ 			(sdev_channel(sdev) != CONTAINER_CHANNEL) &&
+ 			(!aac->jbod || sdev->inq_periph_qual) &&
+ 			(!aac->raid_scsi_mode || (sdev_channel(sdev) != 2))) {
+-		if (expose_physicals == 0)
+-			return -ENXIO;
+-		if (expose_physicals < 0)
+-			sdev->no_uld_attach = 1;
++			if (expose_physicals == 0)
++				return -ENXIO;
++			if (expose_physicals < 0)
++				sdev->no_uld_attach = 1;
 +		}
  	}
- 
- 	/*
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 05884e6..e541394 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -74,7 +74,7 @@ enum {
- #define AAC_NUM_IO_FIB		(1024 - AAC_NUM_MGT_FIB)
- #define AAC_NUM_FIB		(AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
- 
--#define AAC_MAX_LUN		(8)
-+#define AAC_MAX_LUN		(256)
- 
- #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
- #define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)256)
-@@ -89,6 +89,7 @@ enum {
- 
- #define CISS_REPORT_PHYSICAL_LUNS	0xc3
- #define WRITE_HOST_WELLNESS		0xa5
-+#define CISS_IDENTIFY_PHYSICAL_DEVICE	0x15
- #define BMIC_IN			0x26
- #define BMIC_OUT			0x27
- 
-@@ -110,6 +111,86 @@ struct aac_ciss_phys_luns_resp {
-  */
- #define AAC_MAX_HRRQ		64
- 
-+#pragma pack(1)
+-	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
 +
-+struct aac_ciss_identify_pd {
-+	u8 scsi_bus;			/* SCSI Bus number on controller */
-+	u8 scsi_id;			/* SCSI ID on this bus */
-+	u16 block_size;			/* sector size in bytes */
-+	u32 total_blocks;		/* number for sectors on drive */
-+	u32 reserved_blocks;		/* controller reserved (RIS) */
-+	u8 model[40];			/* Physical Drive Model */
-+	u8 serial_number[40];		/* Drive Serial Number */
-+	u8 firmware_revision[8];	/* drive firmware revision */
-+	u8 scsi_inquiry_bits;		/* inquiry byte 7 bits */
-+	u8 compaq_drive_stamp;		/* 0 means drive not stamped */
-+	u8 last_failure_reason;
-+
-+	u8  flags;
-+	u8  more_flags;
-+	u8  scsi_lun;			/* SCSI LUN for phys drive */
-+	u8  yet_more_flags;
-+	u8  even_more_flags;
-+	u32 spi_speed_rules;		/* SPI Speed :Ultra disable diagnose */
-+	u8  phys_connector[2];		/* connector number on controller */
-+	u8  phys_box_on_bus;		/* phys enclosure this drive resides */
-+	u8  phys_bay_in_box;		/* phys drv bay this drive resides */
-+	u32 rpm;			/* Drive rotational speed in rpm */
-+	u8  device_type;		/* type of drive */
-+	u8  sata_version;		/* only valid when drive_type is SATA */
-+	u64 big_total_block_count;
-+	u64 ris_starting_lba;
-+	u32 ris_size;
-+	u8  wwid[20];
-+	u8  controller_phy_map[32];
-+	u16 phy_count;
-+	u8  phy_connected_dev_type[256];
-+	u8  phy_to_drive_bay_num[256];
-+	u16 phy_to_attached_dev_index[256];
-+	u8  box_index;
-+	u8  spitfire_support;
-+	u16 extra_physical_drive_flags;
-+	u8  negotiated_link_rate[256];
-+	u8  phy_to_phy_map[256];
-+	u8  redundant_path_present_map;
-+	u8  redundant_path_failure_map;
-+	u8  active_path_number;
-+	u16 alternate_paths_phys_connector[8];
-+	u8  alternate_paths_phys_box_on_port[8];
-+	u8  multi_lun_device_lun_count;
-+	u8  minimum_good_fw_revision[8];
-+	u8  unique_inquiry_bytes[20];
-+	u8  current_temperature_degreesC;
-+	u8  temperature_threshold_degreesC;
-+	u8  max_temperature_degreesC;
-+	u8  logical_blocks_per_phys_block_exp;	/* phyblocksize = 512 * 2^exp */
-+	u16 current_queue_depth_limit;
-+	u8  switch_name[10];
-+	u16 switch_port;
-+	u8  alternate_paths_switch_name[40];
-+	u8  alternate_paths_switch_port[8];
-+	u16 power_on_hours;		/* valid only if gas gauge supported */
-+	u16 percent_endurance_used;	/* valid only if gas gauge supported. */
-+	u8  drive_authentication;
-+	u8  smart_carrier_authentication;
-+	u8  smart_carrier_app_fw_version;
-+	u8  smart_carrier_bootloader_fw_version;
-+	u8  SanitizeSecureEraseSupport;
-+	u8  DriveKeyFlags;
-+	u8  encryption_key_name[64];
-+	u32 misc_drive_flags;
-+	u16 dek_index;
-+	u16 drive_encryption_flags;
-+	u8  sanitize_maximum_time[6];
-+	u8  connector_info_mode;
-+	u8  connector_info_number[4];
-+	u8  long_connector_name[64];
-+	u8  device_unique_identifier[16];
-+	u8  padto_2K[17];
-+};
-+
-+#pragma pack()
-+
- /*
-  * These macros convert from physical channels to virtual channels
-  */
-@@ -1032,6 +1113,7 @@ struct aac_hba_map_info {
- 	u8		devtype;	/* device type */
- 	u8		reset_state;	/* 0 - no reset, 1..x - */
- 					/* after xth TM LUN reset */
-+	u16		qd_limit;
- 	u8		expose;		/*checks if to expose or not*/
- };
++	if (is_native_device ||
++		(sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
+ 			(!aac->raid_scsi_mode || (sdev_channel(sdev) != 2)) &&
+-			!sdev->no_uld_attach) {
++			!sdev->no_uld_attach)) {
+ 		struct scsi_device * dev;
+ 		struct Scsi_Host *host = sdev->host;
+ 		unsigned num_lsu = 0;
+@@ -428,34 +441,41 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 		 */
+ 		if (sdev->request_queue->rq_timeout < (45 * HZ))
+ 			blk_queue_rq_timeout(sdev->request_queue, 45*HZ);
+-		for (cid = 0; cid < aac->maximum_num_containers; ++cid)
+-			if (aac->fsa_dev[cid].valid)
+-				++num_lsu;
+-		__shost_for_each_device(dev, host) {
+-			if (dev->tagged_supported && (dev->type == TYPE_DISK) &&
++		if (!is_native_device) {
++			for (cid = 0; cid < aac->maximum_num_containers; ++cid)
++				if (aac->fsa_dev[cid].valid)
++					++num_lsu;
++			__shost_for_each_device(dev, host) {
++				if (dev->tagged_supported &&
++					(dev->type == TYPE_DISK) &&
+ 					(!aac->raid_scsi_mode ||
+-						(sdev_channel(sdev) != 2)) &&
++					(sdev_channel(sdev) != 2)) &&
+ 					!dev->no_uld_attach) {
+-				if ((sdev_channel(dev) != CONTAINER_CHANNEL)
+-				 || !aac->fsa_dev[sdev_id(dev)].valid)
+-					++num_lsu;
+-			} else
+-				++num_one;
++					if ((sdev_channel(dev)
++						!= CONTAINER_CHANNEL)
++					 || !aac->fsa_dev[sdev_id(dev)].valid) {
++						++num_lsu;
++					}
++				} else {
++					++num_one;
++				}
++			}
++			if (num_lsu == 0)
++				++num_lsu;
++			depth = (host->can_queue - num_one) / num_lsu;
++			if (depth > 256)
++				depth = 256;
++			else if (depth < 2)
++				depth = 2;
++			scsi_change_queue_depth(sdev, depth);
++		} else {
++			scsi_change_queue_depth(sdev,
++				aac->hba_map[chn][tid].qd_limit);
+ 		}
+-		if (num_lsu == 0)
+-			++num_lsu;
+-		depth = (host->can_queue - num_one) / num_lsu;
+-		if (depth > 256)
+-			depth = 256;
+-		else if (depth < 2)
+-			depth = 2;
+-		scsi_change_queue_depth(sdev, depth);
+-	} else {
+-		scsi_change_queue_depth(sdev, 1);
+-
+-		sdev->tagged_supported = 1;
+ 	}
  
-@@ -2240,6 +2322,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
- int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr);
-+int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
- struct fib *aac_fib_alloc(struct aac_dev *dev);
++	sdev->tagged_supported = 1;
++
+ 	return 0;
+ }
+ 
+@@ -470,6 +490,15 @@ static int aac_slave_configure(struct scsi_device *sdev)
+ 
+ static int aac_change_queue_depth(struct scsi_device *sdev, int depth)
+ {
++	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
++	int chn, tid, is_native_device = 0;
++
++	chn = aac_logical_to_phys(sdev_channel(sdev));
++	tid = sdev_id(sdev);
++	if (chn < AAC_MAX_BUSES && tid < AAC_MAX_TARGETS &&
++		aac->hba_map[chn][tid].devtype == AAC_DEVTYPE_NATIVE_RAW)
++		is_native_device = 1;
++
+ 	if (sdev->tagged_supported && (sdev->type == TYPE_DISK) &&
+ 	    (sdev_channel(sdev) == CONTAINER_CHANNEL)) {
+ 		struct scsi_device * dev;
+@@ -491,9 +520,12 @@ static int aac_change_queue_depth(struct scsi_device *sdev, int depth)
+ 		else if (depth < 2)
+ 			depth = 2;
+ 		return scsi_change_queue_depth(sdev, depth);
++	} else if (is_native_device) {
++		scsi_change_queue_depth(sdev, aac->hba_map[chn][tid].qd_limit);
++	} else {
++		scsi_change_queue_depth(sdev, 1);
+ 	}
+-
+-	return scsi_change_queue_depth(sdev, 1);
++	return sdev->queue_depth;
+ }
+ 
+ static ssize_t aac_show_raid_level(struct device *dev, struct device_attribute *attr, char *buf)
 -- 
 2.7.4
 
