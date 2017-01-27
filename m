@@ -1,21 +1,17 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: split scsi passthrough fields out of struct request
-	V2
-Date: Fri, 27 Jan 2017 17:42:33 +0100
-Message-ID: <20170127164233.GA17438@lst.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 07/18] dm: always defer request allocation to
+ the owner of the request_queue
+Date: Fri, 27 Jan 2017 11:44:53 -0500
+Message-ID: <20170127164453.GB30221@redhat.com>
 References: <1485365126-23210-1-git-send-email-hch@lst.de>
-	<20170127161114.GA501@kernel.dk> <20170127161718.GA16911@lst.de>
-	<775aff8d-6bcc-9cc5-cfa3-dd1c157c95c5@fb.com>
-	<20170127162316.GA17059@lst.de>
-	<195e1638-7d85-0618-0101-5cfff34b91e9@fb.com>
-	<20170127163450.GA17311@lst.de>
-	<f0305c67-4aca-e2cf-d729-3ceb93d2cc50@fb.com>
+	<1485365126-23210-8-git-send-email-hch@lst.de>
+	<20170127163434.GA30221@redhat.com> <20170127163604.GA17337@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <f0305c67-4aca-e2cf-d729-3ceb93d2cc50@fb.com>
+In-Reply-To: <20170127163604.GA17337@lst.de>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -25,29 +21,23 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 27, 2017 at 09:38:40AM -0700, Jens Axboe wrote:
-> > Ok, I'll repost what I have right now, which is on top of a merge
-> > of your block/for-4.11/next and your for-next from this morning
-> > my time.
+On Fri, Jan 27 2017 at 11:36am -0500,
+Christoph Hellwig <hch@lst.de> wrote:
+
+> On Fri, Jan 27, 2017 at 11:34:34AM -0500, Mike Snitzer wrote:
+> > Noticed after further review that it seems a bit weird to have the non
+> > blk-mq support in drivers calling blk_mq_rq_to_pdu().  But I'm not sure
+> > a blk_rq_to_pdu() macro to blk_mq_rq_to_pdu() is the right thing.  What
+> > do you guys think?
 > 
-> Perfect.
+> My first version had an additional name for it, but it caused more
+> confusion than help.
 
-At least I tried, looks like the mail server is overloaded and crapped
-out three mails into it.  For now there is a git tree here:
+And renaming blk_mq_rq_to_pdu() to blk_rq_to_pdu() tree-wide would be
+too much churn?
 
-http://git.infradead.org/users/hch/block.git/shortlog/refs/heads/block-pc-refactor
-
-> 
-> > Btw, I disagred with your patch to use op_is_flush in
-> > generic_make_request_checks - given that we clear these flags just
-> > below I think using the helper obsfucates what's really going on.
-> 
-> Why? It's the exact same check. The ugly part is the fact that
-> we strip the flags later on, imho.
-
-But before it was pretty obvious that it clears exactly the flags checked
-two lines earlier.  Now it's not as obvious.
+I can live with blk_mq_rq_to_pdu(); just figured I'd ask.
