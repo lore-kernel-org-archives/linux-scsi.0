@@ -1,53 +1,70 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 02/24] aacraid: Added aacraid.h include guard
-Date: Fri, 27 Jan 2017 11:28:31 -0800
-Message-ID: <20170127192853.10082-3-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 00/24] aacraid: Patchset for Smart Family Support
+Date: Fri, 27 Jan 2017 11:28:29 -0800
+Message-ID: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0050.outbound.protection.outlook.com ([104.47.32.50]:46048
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0047.outbound.protection.outlook.com ([104.47.41.47]:28570
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751357AbdA1CVz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 21:21:55 -0500
-In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
+        id S1751229AbdA1CVk (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 21:21:40 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Added aacraid.h include guard
+This patchset adds support to the HBA1000 and SMARTIOC2000
+family of cards. The driver version is now updated to 50740
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Changes in V2:
+Fixed kbuild test robot warnings
 
----
-Changes in  V2:
-None
+Changes in V3:
+Removed Camel case definitions
+Misc fixes
 
-Changes in  V3:
-None
+Raghava Aditya Renukunta (24):
+ [SCSI] aacraid: Remove duplicate irq management code
+ [SCSI] aacraid: Added aacraid.h include guard
+ [SCSI] aacraid: added support for init_struct_8
+ [SCSI] aacraid: Added sa firmware support
+ [SCSI] aacraid: Retrieve and update the device types
+ [SCSI] aacraid: Reworked scsi command submission path
+ [SCSI] aacraid: Process Error for response I/O
+ [SCSI] aacraid: Added support for response path
+ [SCSI] aacraid: Added support for read medium error
+ [SCSI] aacraid: Reworked aac_command_thread
+ [SCSI] aacraid: Added support for periodic wellness sync
+ [SCSI] aacraid: Retrieve Queue Depth from Adapter FW
+ [SCSI] aacraid: Added support to set QD of attached drives
+ [SCSI] aacraid: Added support for hotplug
+ [SCSI] aacraid: Include HBA direct interface
+ [SCSI] aacraid: Add task management functionality
+ [SCSI] aacraid: Added support to abort cmd and reset lun
+ [SCSI] aacraid: VPD 83 type3 support
+ [SCSI] aacraid: Added new IWBR reset
+ [SCSI] aacraid: Added ioctl to trigger IOP/IWBR reset
+ [SCSI] aacraid: Retrieve HBA host information ioctl
+ [SCSI] aacraid: Update copyrights
+ [SCSI] aacraid: Change Driver Version Prefix
+ [SCSI] aacraid: update version
 
- drivers/scsi/aacraid/aacraid.h | 3 +++
- 1 file changed, 3 insertions(+)
+ drivers/scsi/aacraid/aachba.c   | 1294 +++++++++++++++++++++++++++++----------
+ drivers/scsi/aacraid/aacraid.h  |  648 +++++++++++++++++---
+ drivers/scsi/aacraid/commctrl.c |  342 ++++++++---
+ drivers/scsi/aacraid/comminit.c |  330 +++++-----
+ drivers/scsi/aacraid/commsup.c  |  901 +++++++++++++++++++--------
+ drivers/scsi/aacraid/dpcsup.c   |  159 +++--
+ drivers/scsi/aacraid/linit.c    |  556 +++++++++++------
+ drivers/scsi/aacraid/nark.c     |    3 +-
+ drivers/scsi/aacraid/rkt.c      |    5 +-
+ drivers/scsi/aacraid/rx.c       |   17 +-
+ drivers/scsi/aacraid/sa.c       |    9 +-
+ drivers/scsi/aacraid/src.c      |  336 +++++++---
+ 12 files changed, 3390 insertions(+), 1210 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index f059c14..01b457b 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1,3 +1,5 @@
-+#ifndef _AACRAID_H_
-+#define _AACRAID_H_
- #ifndef dprintk
- # define dprintk(x)
- #endif
-@@ -2194,3 +2196,4 @@ extern int aac_commit;
- extern int update_interval;
- extern int check_interval;
- extern int aac_check_reset;
-+#endif
 -- 
 2.7.4
 
