@@ -1,65 +1,44 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: split scsi passthrough fields out of struct request
-	V2
-Date: Fri, 27 Jan 2017 21:27:53 +0000
-Message-ID: <1485552454.4267.29.camel@sandisk.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-In-Reply-To: <1485365126-23210-1-git-send-email-hch@lst.de>
-Content-Language: en-US
-Content-ID: <5144945CD29A954580DDD3E65EC16223@sandisk.com>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
+From: Alexey Khoroshilov <khoroshilov@ispras.ru>
+Subject: [PATCH] wd719x: add check for dma mapping errors
+Date: Sat, 28 Jan 2017 01:30:52 +0300
+Message-ID: <1485556252-10888-1-git-send-email-khoroshilov@ispras.ru>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.ispras.ru ([83.149.199.45]:36378 "EHLO mail.ispras.ru"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750715AbdA0WlD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 17:41:03 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Alexey Khoroshilov <khoroshilov@ispras.ru>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, ldv-project@linuxtesting.org
 
-On Wed, 2017-01-25 at 18:25 +0100, Christoph Hellwig wrote:
-> this series splits the support for SCSI passthrough commands from the
-> main struct request used all over the block layer into a separate
-> scsi_request structure that drivers that want to support SCSI passthough
-> need to embedded as the first thing into their request-private data,
-> similar to how we handle NVMe passthrough commands.
-> 
-> To support this I've added support for that the private data after
-> request structure to the legacy request path instead, so that it can
-> be treated the same way as the blk-mq path.  Compare to the current
-> scsi_cmnd allocator that actually is a major simplification.
-> 
-> Changes since V1:
->  - fix handling of a NULL sense pointer in __scsi_execute
->  - clean up handling of the flush flags in the block layer and MD
->  - additional small cleanup in dm-rq
+wd719x_queuecommand() doesn't check if mapping dma memory succeed.
+The patch adds the check and failure handling.
 
-Hello Christoph,
+Found by Linux Driver Verification project (linuxtesting.org).
 
-A general comment: patch "block: allow specifying size for extra
-command data" is a very welcome improvement but unfortunately also
-introduces an inconsistency among block drivers. This patch series
-namely creates two kinds of block drivers:
-- Block drivers that use the block layer core to allocate
-  request-private data. These block drivers set request.cmd_size
-  to a non-zero value and do not need request.special.
-- Block drivers that allocate request-private data themselves.
-  These block drivers set request.cmd_size to zero and use
-  request.special to translate a request pointer into the private
-  data pointer.
+Signed-off-by: Alexey Khoroshilov <khoroshilov@ispras.ru>
+---
+ drivers/scsi/wd719x.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
 
-Have you considered to convert all block drivers to the new
-approach and to get rid of request.special? If so, do you already
-have plans to start working on this? I'm namely wondering wheter I
-should start working on this myself.
+diff --git a/drivers/scsi/wd719x.c b/drivers/scsi/wd719x.c
+index 2a9da2e0ea6b..41ddbdcf02e0 100644
+--- a/drivers/scsi/wd719x.c
++++ b/drivers/scsi/wd719x.c
+@@ -244,6 +244,12 @@ static int wd719x_queuecommand(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	scb->sense_buf_length = SCSI_SENSE_BUFFERSIZE;
+ 	cmd->SCp.dma_handle = dma_map_single(&wd->pdev->dev, cmd->sense_buffer,
+ 			SCSI_SENSE_BUFFERSIZE, DMA_FROM_DEVICE);
++	if (dma_mapping_error(&wd->pdev->dev, cmd->SCp.dma_handle)) {
++		dev_err(&wd->pdev->dev, "unable to map dma\n");
++		wd719x_finish_cmd(cmd, DID_ERROR);
++		spin_unlock_irqrestore(wd->sh->host_lock, flags);
++		return 0;
++	}
+ 	scb->sense_buf = cpu_to_le32(cmd->SCp.dma_handle);
+ 
+ 	/* request autosense */
+-- 
+2.7.4
 
-Thanks,
-
-Bart.
