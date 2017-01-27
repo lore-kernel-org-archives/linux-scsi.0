@@ -1,49 +1,65 @@
-From: "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>
-Subject: Re: [PATCH] target: Add WRITE_VERIFY_16 Support
-Date: Fri, 27 Jan 2017 14:57:11 -0600
-Message-ID: <1db8d95d-d586-c4bf-59ce-4dc8ada510c2@linux.vnet.ibm.com>
-References: <1485550152-18623-1-git-send-email-bryantly@linux.vnet.ibm.com>
- <1485550543.4267.27.camel@sandisk.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: split scsi passthrough fields out of struct request
+	V2
+Date: Fri, 27 Jan 2017 21:27:53 +0000
+Message-ID: <1485552454.4267.29.camel@sandisk.com>
+References: <1485365126-23210-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:39666 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751144AbdA0U5R (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 15:57:17 -0500
-Received: from pps.filterd (m0098394.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0RKmfux020909
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2017 15:57:16 -0500
-Received: from e19.ny.us.ibm.com (e19.ny.us.ibm.com [129.33.205.209])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 288855vnh6-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jan 2017 15:57:16 -0500
-Received: from localhost
-        by e19.ny.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <bryantly@linux.vnet.ibm.com>;
-        Fri, 27 Jan 2017 15:57:15 -0500
-In-Reply-To: <1485550543.4267.27.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <dm-devel-bounces@redhat.com>
+In-Reply-To: <1485365126-23210-1-git-send-email-hch@lst.de>
+Content-Language: en-US
+Content-ID: <5144945CD29A954580DDD3E65EC16223@sandisk.com>
+List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
+List-Archive: <https://www.redhat.com/archives/dm-devel>
+List-Post: <mailto:dm-devel@redhat.com>
+List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
+List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
+	<mailto:dm-devel-request@redhat.com?subject=subscribe>
+Sender: dm-devel-bounces@redhat.com
+Errors-To: dm-devel-bounces@redhat.com
+To: "hch@lst.de" <hch@lst.de>, "axboe@fb.com" <axboe@fb.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "snitzer@redhat.com" <snitzer@redhat.com>, "linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "j-nomura@ce.jp.nec.com" <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>, "mikecyr@linux.vnet.ibm.com" <mikecyr@linux.vnet.ibm.com>
 
+On Wed, 2017-01-25 at 18:25 +0100, Christoph Hellwig wrote:
+> this series splits the support for SCSI passthrough commands from the
+> main struct request used all over the block layer into a separate
+> scsi_request structure that drivers that want to support SCSI passthough
+> need to embedded as the first thing into their request-private data,
+> similar to how we handle NVMe passthrough commands.
+> 
+> To support this I've added support for that the private data after
+> request structure to the legacy request path instead, so that it can
+> be treated the same way as the blk-mq path.  Compare to the current
+> scsi_cmnd allocator that actually is a major simplification.
+> 
+> Changes since V1:
+>  - fix handling of a NULL sense pointer in __scsi_execute
+>  - clean up handling of the flush flags in the block layer and MD
+>  - additional small cleanup in dm-rq
 
-> On Fri, 2017-01-27 at 14:49 -0600, Bryant G. Ly wrote:
->> For clients who want to utilize more than 2GB you need
->> WRITE AND VERIFY 16 support.
-> Hello Bryant,
->
-> This patch introduces a bug for WRITE AND VERIFY(16) parsing that already
-> exists for WRITE AND VERIFY(10) parsing, namely that the value of the BYTCHK
-> field is ignored. Is it OK for you to wait a few weeks with adding WRITE AND
-> VERIFY(16) support and to come back to this after I have posted my WRITE AND
-> VERIFY(10) fix?
->
-> Bart.
+Hello Christoph,
 
-Sounds good, thanks. I'll have to look at your patch sets that fixes that bug.
+A general comment: patch "block: allow specifying size for extra
+command data" is a very welcome improvement but unfortunately also
+introduces an inconsistency among block drivers. This patch series
+namely creates two kinds of block drivers:
+- Block drivers that use the block layer core to allocate
+  request-private data. These block drivers set request.cmd_size
+  to a non-zero value and do not need request.special.
+- Block drivers that allocate request-private data themselves.
+  These block drivers set request.cmd_size to zero and use
+  request.special to translate a request pointer into the private
+  data pointer.
 
+Have you considered to convert all block drivers to the new
+approach and to get rid of request.special? If so, do you already
+have plans to start working on this? I'm namely wondering wheter I
+should start working on this myself.
 
+Thanks,
+
+Bart.
