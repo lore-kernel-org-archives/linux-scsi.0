@@ -1,25 +1,23 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 06/24] aacraid: Reworked scsi command submission path
-Date: Fri, 27 Jan 2017 11:28:35 -0800
-Message-ID: <20170127192853.10082-7-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 10/24] aacraid: Reworked aac_command_thread
+Date: Fri, 27 Jan 2017 11:28:39 -0800
+Message-ID: <20170127192853.10082-11-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0057.outbound.protection.outlook.com ([104.47.36.57]:25738
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:11136
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750902AbdA1CVe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 21:21:34 -0500
+        id S1750829AbdA1CV5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 21:21:57 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Moved the READ and WRITE switch cases to the top. Added a  default
-case to the switch case and replaced duplicate scsi result value with a
-macro.
+Reworked aac_command_thread into aac_process_events
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -31,312 +29,446 @@ None
 Changes in  V3:
 None
 
- drivers/scsi/aacraid/aachba.c | 172 +++++++++++++++++-------------------------
- 1 file changed, 70 insertions(+), 102 deletions(-)
+ drivers/scsi/aacraid/commsup.c | 411 ++++++++++++++++++++++-------------------
+ 1 file changed, 217 insertions(+), 194 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index f2ec795..e7456a0 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -106,6 +106,8 @@
- #define ASENCODE_LUN_FAILED_SELF_CONFIG		0x00
- #define ASENCODE_OVERLAPPED_COMMAND		0x00
- 
-+#define AAC_STAT_GOOD (DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD)
-+
- #define BYTE0(x) (unsigned char)(x)
- #define BYTE1(x) (unsigned char)((x) >> 8)
- #define BYTE2(x) (unsigned char)((x) >> 16)
-@@ -2476,8 +2478,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 			if((cid >= dev->maximum_num_containers) ||
- 					(scsicmd->device->lun != 0)) {
- 				scsicmd->result = DID_NO_CONNECT << 16;
--				scsicmd->scsi_done(scsicmd);
--				return 0;
-+				goto scsi_done_ret;
- 			}
- 
- 			/*
-@@ -2512,8 +2513,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 				return aac_send_srb_fib(scsicmd);
- 			} else {
- 				scsicmd->result = DID_NO_CONNECT << 16;
--				scsicmd->scsi_done(scsicmd);
--				return 0;
-+				goto scsi_done_ret;
- 			}
- 		}
- 	}
-@@ -2531,13 +2531,34 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 		       min_t(size_t, sizeof(dev->fsa_dev[cid].sense_data),
- 			     SCSI_SENSE_BUFFERSIZE));
--		scsicmd->scsi_done(scsicmd);
--		return 0;
-+		goto scsi_done_ret;
- 	}
- 
--
--	/* Handle commands here that don't really require going out to the adapter */
- 	switch (scsicmd->cmnd[0]) {
-+	case READ_6:
-+	case READ_10:
-+	case READ_12:
-+	case READ_16:
-+		if (dev->in_reset)
-+			return -1;
-+		return aac_read(scsicmd);
-+
-+	case WRITE_6:
-+	case WRITE_10:
-+	case WRITE_12:
-+	case WRITE_16:
-+		if (dev->in_reset)
-+			return -1;
-+		return aac_write(scsicmd);
-+
-+	case SYNCHRONIZE_CACHE:
-+		if (((aac_cache & 6) == 6) && dev->cache_protected) {
-+			scsicmd->result = AAC_STAT_GOOD;
-+			break;
-+		}
-+		/* Issue FIB to tell Firmware to flush it's cache */
-+		if ((aac_cache & 6) != 2)
-+			return aac_synchronize(scsicmd);
- 	case INQUIRY:
- 	{
- 		struct inquiry_data inq_data;
-@@ -2560,8 +2581,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 				arr[1] = scsicmd->cmnd[2];
- 				scsi_sg_copy_from_buffer(scsicmd, &inq_data,
- 							 sizeof(inq_data));
--				scsicmd->result = DID_OK << 16 |
--				  COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
-+				scsicmd->result = AAC_STAT_GOOD;
- 			} else if (scsicmd->cmnd[2] == 0x80) {
- 				/* unit serial number page */
- 				arr[3] = setinqserial(dev, &arr[4],
-@@ -2572,8 +2592,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 				if (aac_wwn != 2)
- 					return aac_get_container_serial(
- 						scsicmd);
--				scsicmd->result = DID_OK << 16 |
--				  COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
-+				scsicmd->result = AAC_STAT_GOOD;
- 			} else if (scsicmd->cmnd[2] == 0x83) {
- 				/* vpd page 0x83 - Device Identification Page */
- 				char *sno = (char *)&inq_data;
-@@ -2582,8 +2601,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 				if (aac_wwn != 2)
- 					return aac_get_container_serial(
- 						scsicmd);
--				scsicmd->result = DID_OK << 16 |
--				  COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
-+				scsicmd->result = AAC_STAT_GOOD;
- 			} else {
- 				/* vpd page not implemented */
- 				scsicmd->result = DID_OK << 16 |
-@@ -2598,8 +2616,7 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 					sizeof(dev->fsa_dev[cid].sense_data),
- 					SCSI_SENSE_BUFFERSIZE));
- 			}
--			scsicmd->scsi_done(scsicmd);
--			return 0;
-+			break;
- 		}
- 		inq_data.inqd_ver = 2;	/* claim compliance to SCSI-2 */
- 		inq_data.inqd_rdf = 2;	/* A response data format value of two indicates that the data shall be in the format specified in SCSI-2 */
-@@ -2615,9 +2632,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 			inq_data.inqd_pdt = INQD_PDT_PROC;	/* Processor device */
- 			scsi_sg_copy_from_buffer(scsicmd, &inq_data,
- 						 sizeof(inq_data));
--			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--			scsicmd->scsi_done(scsicmd);
--			return 0;
-+			scsicmd->result = AAC_STAT_GOOD;
-+			break;
- 		}
- 		if (dev->in_reset)
- 			return -1;
-@@ -2665,10 +2681,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		/* Do not cache partition table for arrays */
- 		scsicmd->device->removable = 1;
- 
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 	}
- 
- 	case READ_CAPACITY:
-@@ -2693,11 +2707,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		scsi_sg_copy_from_buffer(scsicmd, cp, sizeof(cp));
- 		/* Do not cache partition table for arrays */
- 		scsicmd->device->removable = 1;
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
--		  SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 	}
- 
- 	case MODE_SENSE:
-@@ -2775,10 +2786,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		scsi_sg_copy_from_buffer(scsicmd,
- 					 (char *)&mpd,
- 					 mode_buf_length);
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 	}
- 	case MODE_SENSE_10:
- 	{
-@@ -2854,18 +2863,17 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 					 (char *)&mpd10,
- 					 mode_buf_length);
- 
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 	}
- 	case REQUEST_SENSE:
- 		dprintk((KERN_DEBUG "REQUEST SENSE command.\n"));
--		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data, sizeof (struct sense_data));
--		memset(&dev->fsa_dev[cid].sense_data, 0, sizeof (struct sense_data));
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--		return 0;
-+		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
-+				sizeof(struct sense_data));
-+		memset(&dev->fsa_dev[cid].sense_data, 0,
-+				sizeof(struct sense_data));
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 
- 	case ALLOW_MEDIUM_REMOVAL:
- 		dprintk((KERN_DEBUG "LOCK command.\n"));
-@@ -2874,9 +2882,8 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 		else
- 			fsa_dev_ptr[cid].locked = 0;
- 
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 	/*
- 	 *	These commands are all No-Ops
- 	 */
-@@ -2892,80 +2899,41 @@ int aac_scsi_cmd(struct scsi_cmnd * scsicmd)
- 			       min_t(size_t,
- 				     sizeof(dev->fsa_dev[cid].sense_data),
- 				     SCSI_SENSE_BUFFERSIZE));
--			scsicmd->scsi_done(scsicmd);
--			return 0;
-+		break;
- 		}
--		/* FALLTHRU */
- 	case RESERVE:
- 	case RELEASE:
- 	case REZERO_UNIT:
- 	case REASSIGN_BLOCKS:
- 	case SEEK_10:
--		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--		scsicmd->scsi_done(scsicmd);
--		return 0;
-+		scsicmd->result = AAC_STAT_GOOD;
-+		break;
- 
- 	case START_STOP:
- 		return aac_start_stop(scsicmd);
--	}
- 
--	switch (scsicmd->cmnd[0])
--	{
--		case READ_6:
--		case READ_10:
--		case READ_12:
--		case READ_16:
--			if (dev->in_reset)
--				return -1;
--			/*
--			 *	Hack to keep track of ordinal number of the device that
--			 *	corresponds to a container. Needed to convert
--			 *	containers to /dev/sd device names
--			 */
--
--			if (scsicmd->request->rq_disk)
--				strlcpy(fsa_dev_ptr[cid].devname,
--				scsicmd->request->rq_disk->disk_name,
--				min(sizeof(fsa_dev_ptr[cid].devname),
--				sizeof(scsicmd->request->rq_disk->disk_name) + 1));
--
--			return aac_read(scsicmd);
--
--		case WRITE_6:
--		case WRITE_10:
--		case WRITE_12:
--		case WRITE_16:
--			if (dev->in_reset)
--				return -1;
--			return aac_write(scsicmd);
--
--		case SYNCHRONIZE_CACHE:
--			if (((aac_cache & 6) == 6) && dev->cache_protected) {
--				scsicmd->result = DID_OK << 16 |
--					COMMAND_COMPLETE << 8 | SAM_STAT_GOOD;
--				scsicmd->scsi_done(scsicmd);
--				return 0;
--			}
--			/* Issue FIB to tell Firmware to flush it's cache */
--			if ((aac_cache & 6) != 2)
--				return aac_synchronize(scsicmd);
--			/* FALLTHRU */
--		default:
--			/*
--			 *	Unhandled commands
--			 */
--			dprintk((KERN_WARNING "Unhandled SCSI Command: 0x%x.\n", scsicmd->cmnd[0]));
--			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 | SAM_STAT_CHECK_CONDITION;
--			set_sense(&dev->fsa_dev[cid].sense_data,
-+	/* FALLTHRU */
-+	default:
-+	/*
-+	 *	Unhandled commands
-+	 */
-+		dprintk((KERN_WARNING "Unhandled SCSI Command: 0x%x.\n",
-+				scsicmd->cmnd[0]));
-+		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8 |
-+				SAM_STAT_CHECK_CONDITION;
-+		set_sense(&dev->fsa_dev[cid].sense_data,
- 			  ILLEGAL_REQUEST, SENCODE_INVALID_COMMAND,
- 			  ASENCODE_INVALID_COMMAND, 0, 0);
--			memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
-+		memcpy(scsicmd->sense_buffer, &dev->fsa_dev[cid].sense_data,
- 				min_t(size_t,
- 				      sizeof(dev->fsa_dev[cid].sense_data),
- 				      SCSI_SENSE_BUFFERSIZE));
--			scsicmd->scsi_done(scsicmd);
--			return 0;
- 	}
-+
-+scsi_done_ret:
-+
-+	scsicmd->scsi_done(scsicmd);
-+	return 0;
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 4b1177a..346c1c0 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1729,6 +1729,222 @@ int aac_check_health(struct aac_dev * aac)
+ 	return BlinkLED;
  }
  
- static int query_disk(struct aac_dev *dev, void __user *arg)
++static void aac_process_events(struct aac_dev *dev)
++{
++	struct hw_fib *hw_fib, *hw_newfib;
++	struct fib *fib, *newfib;
++	struct aac_fib_context *fibctx;
++	unsigned long flags;
++	spinlock_t *t_lock;
++
++	spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
++	while (!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
++		struct list_head *entry;
++		struct aac_aifcmd *aifcmd;
++		u32 time_now, time_last;
++		unsigned long flagv;
++		unsigned int  num;
++		struct hw_fib **hw_fib_pool, **hw_fib_p;
++		struct fib **fib_pool, **fib_p;
++
++		set_current_state(TASK_RUNNING);
++
++		entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
++		list_del(entry);
++
++
++		t_lock = dev->queues->queue[HostNormCmdQueue].lock;
++		spin_unlock_irqrestore(t_lock, flags);
++
++		fib = list_entry(entry, struct fib, fiblink);
++		hw_fib = fib->hw_fib_va;
++		/*
++		 *	We will process the FIB here or pass it to a
++		 *	worker thread that is TBD. We Really can't
++		 *	do anything at this point since we don't have
++		 *	anything defined for this thread to do.
++		 */
++		memset(fib, 0, sizeof(struct fib));
++		fib->type = FSAFS_NTC_FIB_CONTEXT;
++		fib->size = sizeof(struct fib);
++		fib->hw_fib_va = hw_fib;
++		fib->data = hw_fib->data;
++		fib->dev = dev;
++		/*
++		 *	We only handle AifRequest fibs from the adapter.
++		 */
++
++		aifcmd = (struct aac_aifcmd *) hw_fib->data;
++		if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
++			/* Handle Driver Notify Events */
++			aac_handle_aif(dev, fib);
++			*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
++			aac_fib_adapter_complete(fib, (u16)sizeof(u32));
++			continue;
++		}
++		/*
++		 * The u32 here is important and intended. We are using
++		 * 32bit wrapping time to fit the adapter field
++		 */
++
++
++		/* Sniff events */
++		if ((aifcmd->command ==	cpu_to_le32(AifCmdEventNotify)) ||
++				(aifcmd->command ==
++				cpu_to_le32(AifCmdJobProgress))) {
++			aac_handle_aif(dev, fib);
++		}
++
++		time_now = jiffies/HZ;
++
++		/*
++		 * Warning: no sleep allowed while
++		 * holding spinlock. We take the estimate
++		 * and pre-allocate a set of fibs outside the
++		 * lock.
++		 */
++		num = le32_to_cpu(dev->init->r7.adapter_fibs_size)
++				/ sizeof(struct hw_fib); /* some extra */
++		spin_lock_irqsave(&dev->fib_lock, flagv);
++		entry = dev->fib_list.next;
++		while (entry != &dev->fib_list) {
++			entry = entry->next;
++			++num;
++		}
++		spin_unlock_irqrestore(&dev->fib_lock, flagv);
++		hw_fib_pool = kmalloc_array(num, sizeof(struct hw_fib *),
++						GFP_KERNEL);
++		fib_pool = kmalloc_array(num, sizeof(struct fib *),
++						GFP_KERNEL);
++		if (num	&& fib_pool && hw_fib_pool) {
++			hw_fib_p = hw_fib_pool;
++			fib_p = fib_pool;
++			while (hw_fib_p < &hw_fib_pool[num]) {
++				*(hw_fib_p) = kmalloc(sizeof(struct hw_fib),
++						GFP_KERNEL);
++				if (!(*(hw_fib_p++))) {
++					--hw_fib_p;
++					break;
++				}
++				*(fib_p) = kmalloc(sizeof(struct fib),
++						GFP_KERNEL);
++				if (!(*(fib_p++))) {
++					kfree(*(--hw_fib_p));
++					break;
++				}
++			}
++			num = hw_fib_p - hw_fib_pool;
++			if (!num) {
++				kfree(fib_pool);
++				fib_pool = NULL;
++				kfree(hw_fib_pool);
++				hw_fib_pool = NULL;
++				continue;
++			}
++		} else {
++			kfree(hw_fib_pool);
++			hw_fib_pool = NULL;
++			kfree(fib_pool);
++			fib_pool = NULL;
++		}
++		spin_lock_irqsave(&dev->fib_lock, flagv);
++		entry = dev->fib_list.next;
++		/*
++		 * For each Context that is on the
++		 * fibctxList, make a copy of the
++		 * fib, and then set the event to wake up the
++		 * thread that is waiting for it.
++		 */
++		hw_fib_p = hw_fib_pool;
++		fib_p = fib_pool;
++		while (entry != &dev->fib_list) {
++			/*
++			 * Extract the fibctx
++			 */
++			fibctx = list_entry(entry, struct aac_fib_context,
++					next);
++			/*
++			 * Check if the queue is getting
++			 * backlogged
++			 */
++			if (fibctx->count > 20) {
++				/*
++				 * It's *not* jiffies folks,
++				 * but jiffies / HZ so do not
++				 * panic ...
++				 */
++				time_last = fibctx->jiffies;
++				/*
++				 * Has it been > 2 minutes
++				 * since the last read off
++				 * the queue?
++				 */
++				if ((time_now - time_last) > aif_timeout) {
++					entry = entry->next;
++					aac_close_fib_context(dev, fibctx);
++					continue;
++				}
++			}
++			/*
++			 * Warning: no sleep allowed while
++			 * holding spinlock
++			 */
++			if (hw_fib_p < &hw_fib_pool[num]) {
++				hw_newfib = *hw_fib_p;
++				*(hw_fib_p++) = NULL;
++				newfib = *fib_p;
++				*(fib_p++) = NULL;
++				/*
++				 * Make the copy of the FIB
++				 */
++				memcpy(hw_newfib, hw_fib,
++					sizeof(struct hw_fib));
++				memcpy(newfib, fib, sizeof(struct fib));
++				newfib->hw_fib_va = hw_newfib;
++				/*
++				 * Put the FIB onto the
++				 * fibctx's fibs
++				 */
++				list_add_tail(&newfib->fiblink,
++					&fibctx->fib_list);
++				fibctx->count++;
++				/*
++				 * Set the event to wake up the
++				 * thread that is waiting.
++				 */
++				up(&fibctx->wait_sem);
++			} else {
++				pr_warn("aifd: didn't allocate NewFib.\n");
++			}
++			entry = entry->next;
++		}
++		/*
++		 *	Set the status of this FIB
++		 */
++		*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
++		aac_fib_adapter_complete(fib, sizeof(u32));
++		spin_unlock_irqrestore(&dev->fib_lock, flagv);
++		/* Free up the remaining resources */
++		hw_fib_p = hw_fib_pool;
++		fib_p = fib_pool;
++		while (hw_fib_p < &hw_fib_pool[num]) {
++			kfree(*hw_fib_p);
++			kfree(*fib_p);
++			++fib_p;
++			++hw_fib_p;
++		}
++		kfree(hw_fib_pool);
++		kfree(fib_pool);
++		kfree(fib);
++		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock,
++				flags);
++	}
++	/*
++	 *	There are no more AIF's
++	 */
++	spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock,
++			flags);
++}
+ 
+ /**
+  *	aac_command_thread	-	command processing thread
+@@ -1743,10 +1959,6 @@ int aac_check_health(struct aac_dev * aac)
+ int aac_command_thread(void *data)
+ {
+ 	struct aac_dev *dev = data;
+-	struct hw_fib *hw_fib, *hw_newfib;
+-	struct fib *fib, *newfib;
+-	struct aac_fib_context *fibctx;
+-	unsigned long flags;
+ 	DECLARE_WAITQUEUE(wait, current);
+ 	unsigned long next_jiffies = jiffies + HZ;
+ 	unsigned long next_check_jiffies = next_jiffies;
+@@ -1766,197 +1978,8 @@ int aac_command_thread(void *data)
+ 	set_current_state(TASK_INTERRUPTIBLE);
+ 	dprintk ((KERN_INFO "aac_command_thread start\n"));
+ 	while (1) {
+-		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-		while(!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
+-			struct list_head *entry;
+-			struct aac_aifcmd * aifcmd;
+ 
+-			set_current_state(TASK_RUNNING);
+-
+-			entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
+-			list_del(entry);
+-
+-			spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-			fib = list_entry(entry, struct fib, fiblink);
+-			/*
+-			 *	We will process the FIB here or pass it to a
+-			 *	worker thread that is TBD. We Really can't
+-			 *	do anything at this point since we don't have
+-			 *	anything defined for this thread to do.
+-			 */
+-			hw_fib = fib->hw_fib_va;
+-			memset(fib, 0, sizeof(struct fib));
+-			fib->type = FSAFS_NTC_FIB_CONTEXT;
+-			fib->size = sizeof(struct fib);
+-			fib->hw_fib_va = hw_fib;
+-			fib->data = hw_fib->data;
+-			fib->dev = dev;
+-			/*
+-			 *	We only handle AifRequest fibs from the adapter.
+-			 */
+-			aifcmd = (struct aac_aifcmd *) hw_fib->data;
+-			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
+-				/* Handle Driver Notify Events */
+-				aac_handle_aif(dev, fib);
+-				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+-				aac_fib_adapter_complete(fib, (u16)sizeof(u32));
+-			} else {
+-				/* The u32 here is important and intended. We are using
+-				   32bit wrapping time to fit the adapter field */
+-
+-				u32 time_now, time_last;
+-				unsigned long flagv;
+-				unsigned num;
+-				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
+-				struct fib ** fib_pool, ** fib_p;
+-
+-				/* Sniff events */
+-				if ((aifcmd->command ==
+-				     cpu_to_le32(AifCmdEventNotify)) ||
+-				    (aifcmd->command ==
+-				     cpu_to_le32(AifCmdJobProgress))) {
+-					aac_handle_aif(dev, fib);
+-				}
+-
+-				time_now = jiffies/HZ;
+-
+-				/*
+-				 * Warning: no sleep allowed while
+-				 * holding spinlock. We take the estimate
+-				 * and pre-allocate a set of fibs outside the
+-				 * lock.
+-				 */
+-				num = le32_to_cpu(dev->init->
+-							r7.adapter_fibs_size)
+-				    / sizeof(struct hw_fib); /* some extra */
+-				spin_lock_irqsave(&dev->fib_lock, flagv);
+-				entry = dev->fib_list.next;
+-				while (entry != &dev->fib_list) {
+-					entry = entry->next;
+-					++num;
+-				}
+-				spin_unlock_irqrestore(&dev->fib_lock, flagv);
+-				hw_fib_pool = NULL;
+-				fib_pool = NULL;
+-				if (num
+-				 && ((hw_fib_pool = kmalloc(sizeof(struct hw_fib *) * num, GFP_KERNEL)))
+-				 && ((fib_pool = kmalloc(sizeof(struct fib *) * num, GFP_KERNEL)))) {
+-					hw_fib_p = hw_fib_pool;
+-					fib_p = fib_pool;
+-					while (hw_fib_p < &hw_fib_pool[num]) {
+-						if (!(*(hw_fib_p++) = kmalloc(sizeof(struct hw_fib), GFP_KERNEL))) {
+-							--hw_fib_p;
+-							break;
+-						}
+-						if (!(*(fib_p++) = kmalloc(sizeof(struct fib), GFP_KERNEL))) {
+-							kfree(*(--hw_fib_p));
+-							break;
+-						}
+-					}
+-					if ((num = hw_fib_p - hw_fib_pool) == 0) {
+-						kfree(fib_pool);
+-						fib_pool = NULL;
+-						kfree(hw_fib_pool);
+-						hw_fib_pool = NULL;
+-					}
+-				} else {
+-					kfree(hw_fib_pool);
+-					hw_fib_pool = NULL;
+-				}
+-				spin_lock_irqsave(&dev->fib_lock, flagv);
+-				entry = dev->fib_list.next;
+-				/*
+-				 * For each Context that is on the
+-				 * fibctxList, make a copy of the
+-				 * fib, and then set the event to wake up the
+-				 * thread that is waiting for it.
+-				 */
+-				hw_fib_p = hw_fib_pool;
+-				fib_p = fib_pool;
+-				while (entry != &dev->fib_list) {
+-					/*
+-					 * Extract the fibctx
+-					 */
+-					fibctx = list_entry(entry, struct aac_fib_context, next);
+-					/*
+-					 * Check if the queue is getting
+-					 * backlogged
+-					 */
+-					if (fibctx->count > 20)
+-					{
+-						/*
+-						 * It's *not* jiffies folks,
+-						 * but jiffies / HZ so do not
+-						 * panic ...
+-						 */
+-						time_last = fibctx->jiffies;
+-						/*
+-						 * Has it been > 2 minutes
+-						 * since the last read off
+-						 * the queue?
+-						 */
+-						if ((time_now - time_last) > aif_timeout) {
+-							entry = entry->next;
+-							aac_close_fib_context(dev, fibctx);
+-							continue;
+-						}
+-					}
+-					/*
+-					 * Warning: no sleep allowed while
+-					 * holding spinlock
+-					 */
+-					if (hw_fib_p < &hw_fib_pool[num]) {
+-						hw_newfib = *hw_fib_p;
+-						*(hw_fib_p++) = NULL;
+-						newfib = *fib_p;
+-						*(fib_p++) = NULL;
+-						/*
+-						 * Make the copy of the FIB
+-						 */
+-						memcpy(hw_newfib, hw_fib, sizeof(struct hw_fib));
+-						memcpy(newfib, fib, sizeof(struct fib));
+-						newfib->hw_fib_va = hw_newfib;
+-						/*
+-						 * Put the FIB onto the
+-						 * fibctx's fibs
+-						 */
+-						list_add_tail(&newfib->fiblink, &fibctx->fib_list);
+-						fibctx->count++;
+-						/*
+-						 * Set the event to wake up the
+-						 * thread that is waiting.
+-						 */
+-						up(&fibctx->wait_sem);
+-					} else {
+-						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
+-					}
+-					entry = entry->next;
+-				}
+-				/*
+-				 *	Set the status of this FIB
+-				 */
+-				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
+-				aac_fib_adapter_complete(fib, sizeof(u32));
+-				spin_unlock_irqrestore(&dev->fib_lock, flagv);
+-				/* Free up the remaining resources */
+-				hw_fib_p = hw_fib_pool;
+-				fib_p = fib_pool;
+-				while (hw_fib_p < &hw_fib_pool[num]) {
+-					kfree(*hw_fib_p);
+-					kfree(*fib_p);
+-					++fib_p;
+-					++hw_fib_p;
+-				}
+-				kfree(hw_fib_pool);
+-				kfree(fib_pool);
+-			}
+-			kfree(fib);
+-			spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
+-		}
+-		/*
+-		 *	There are no more AIF's
+-		 */
+-		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
++		aac_process_events(dev);
+ 
+ 		/*
+ 		 *	Background activity
 -- 
 2.7.4
 
