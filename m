@@ -1,57 +1,55 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCH 07/18] dm: always defer request allocation to
- the owner of the request_queue
-Date: Fri, 27 Jan 2017 11:34:34 -0500
-Message-ID: <20170127163434.GA30221@redhat.com>
-References: <1485365126-23210-1-git-send-email-hch@lst.de>
-	<1485365126-23210-8-git-send-email-hch@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <1485365126-23210-8-git-send-email-hch@lst.de>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH 02/19] md: cleanup bio op / flags handling in raid1_write_request
+Date: Fri, 27 Jan 2017 17:35:01 +0100
+Message-ID: <1485534918-18239-3-git-send-email-hch@lst.de>
+References: <1485534918-18239-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:32770 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933449AbdA0Qfg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 27 Jan 2017 11:35:36 -0500
+In-Reply-To: <1485534918-18239-1-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@fb.com>
+Cc: Mike Snitzer <snitzer@redhat.com>, Junichi Nomura <j-nomura@ce.jp.nec.com>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-raid@vger.kernel.org, dm-devel@redhat.com
 
-On Wed, Jan 25 2017 at 12:25pm -0500,
-Christoph Hellwig <hch@lst.de> wrote:
+No need for the local variables, the bio is still live and we can just
+assign the bits we want directly.  Make me wonder why we can't assign
+all the bio flags to start with.
 
-> DM already calls blk_mq_alloc_request on the request_queue of the
-> underlying device if it is a blk-mq device.  But now that we allow drivers
-> to allocate additional data and initialize it ahead of time we need to do
-> the same for all drivers.   Doing so and using the new cmd_size
-> infrastructure in the block layer greatly simplifies the dm-rq and mpath
-> code, and should also make arbitrary combinations of SQ and MQ devices
-> with SQ or MQ device mapper tables easily possible as a further step.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reviewed-by: Hannes Reinecke <hare@suse.com>
-> Reviewed-by: Mike Snitzer <snitzer@redhat.com>
-...
-> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
-> index 3f12916..8d06834 100644
-> --- a/drivers/md/dm-rq.c
-> +++ b/drivers/md/dm-rq.c
-> @@ -185,7 +163,7 @@ static void end_clone_bio(struct bio *clone)
->  
->  static struct dm_rq_target_io *tio_from_request(struct request *rq)
->  {
-> -	return (rq->q->mq_ops ? blk_mq_rq_to_pdu(rq) : rq->special);
-> +	return blk_mq_rq_to_pdu(rq);
->  }
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+---
+ drivers/md/raid1.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-Noticed after further review that it seems a bit weird to have the non
-blk-mq support in drivers calling blk_mq_rq_to_pdu().  But I'm not sure
-a blk_rq_to_pdu() macro to blk_mq_rq_to_pdu() is the right thing.  What
-do you guys think?
+diff --git a/drivers/md/raid1.c b/drivers/md/raid1.c
+index 7b0f647..67b0365 100644
+--- a/drivers/md/raid1.c
++++ b/drivers/md/raid1.c
+@@ -1170,10 +1170,6 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 	int i, disks;
+ 	struct bitmap *bitmap = mddev->bitmap;
+ 	unsigned long flags;
+-	const int op = bio_op(bio);
+-	const unsigned long do_sync = (bio->bi_opf & REQ_SYNC);
+-	const unsigned long do_flush_fua = (bio->bi_opf &
+-						(REQ_PREFLUSH | REQ_FUA));
+ 	struct md_rdev *blocked_rdev;
+ 	struct blk_plug_cb *cb;
+ 	struct raid1_plug_cb *plug = NULL;
+@@ -1389,7 +1385,8 @@ static void raid1_write_request(struct mddev *mddev, struct bio *bio,
+ 				   conf->mirrors[i].rdev->data_offset);
+ 		mbio->bi_bdev = conf->mirrors[i].rdev->bdev;
+ 		mbio->bi_end_io	= raid1_end_write_request;
+-		bio_set_op_attrs(mbio, op, do_flush_fua | do_sync);
++		mbio->bi_opf = bio_op(bio) |
++			(bio->bi_opf & (REQ_SYNC | REQ_PREFLUSH | REQ_FUA));
+ 		if (test_bit(FailFast, &conf->mirrors[i].rdev->flags) &&
+ 		    !test_bit(WriteMostly, &conf->mirrors[i].rdev->flags) &&
+ 		    conf->raid_disks - mddev->degraded > 1)
+-- 
+2.1.4
+
