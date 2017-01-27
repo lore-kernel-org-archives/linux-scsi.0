@@ -1,26 +1,28 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 10/24] aacraid: Reworked aac_command_thread
-Date: Fri, 27 Jan 2017 11:28:39 -0800
-Message-ID: <20170127192853.10082-11-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 07/24] aacraid: Process Error for response I/O
+Date: Fri, 27 Jan 2017 11:28:36 -0800
+Message-ID: <20170127192853.10082-8-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0055.outbound.protection.outlook.com ([104.47.37.55]:11136
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam03on0058.outbound.protection.outlook.com ([104.47.42.58]:22639
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750829AbdA1CV5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 21:21:57 -0500
+        id S1750973AbdA1CVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 21:21:35 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Reworked aac_command_thread into aac_process_events
+Make sure that the driver processes error conditions even in the fast
+response path for response from the adapter.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 ---
 Changes in  V2:
@@ -29,446 +31,340 @@ None
 Changes in  V3:
 None
 
- drivers/scsi/aacraid/commsup.c | 411 ++++++++++++++++++++++-------------------
- 1 file changed, 217 insertions(+), 194 deletions(-)
+ drivers/scsi/aacraid/aachba.c | 289 ++++++++++++++++++++++--------------------
+ 1 file changed, 151 insertions(+), 138 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 4b1177a..346c1c0 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1729,6 +1729,222 @@ int aac_check_health(struct aac_dev * aac)
- 	return BlinkLED;
- }
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index e7456a0..d848335 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -3068,16 +3068,11 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+ 		return;
  
-+static void aac_process_events(struct aac_dev *dev)
-+{
-+	struct hw_fib *hw_fib, *hw_newfib;
-+	struct fib *fib, *newfib;
-+	struct aac_fib_context *fibctx;
-+	unsigned long flags;
-+	spinlock_t *t_lock;
-+
-+	spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
-+	while (!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
-+		struct list_head *entry;
-+		struct aac_aifcmd *aifcmd;
-+		u32 time_now, time_last;
-+		unsigned long flagv;
-+		unsigned int  num;
-+		struct hw_fib **hw_fib_pool, **hw_fib_p;
-+		struct fib **fib_pool, **fib_p;
-+
-+		set_current_state(TASK_RUNNING);
-+
-+		entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
-+		list_del(entry);
-+
-+
-+		t_lock = dev->queues->queue[HostNormCmdQueue].lock;
-+		spin_unlock_irqrestore(t_lock, flags);
-+
-+		fib = list_entry(entry, struct fib, fiblink);
-+		hw_fib = fib->hw_fib_va;
-+		/*
-+		 *	We will process the FIB here or pass it to a
-+		 *	worker thread that is TBD. We Really can't
-+		 *	do anything at this point since we don't have
-+		 *	anything defined for this thread to do.
-+		 */
-+		memset(fib, 0, sizeof(struct fib));
-+		fib->type = FSAFS_NTC_FIB_CONTEXT;
-+		fib->size = sizeof(struct fib);
-+		fib->hw_fib_va = hw_fib;
-+		fib->data = hw_fib->data;
-+		fib->dev = dev;
-+		/*
-+		 *	We only handle AifRequest fibs from the adapter.
-+		 */
-+
-+		aifcmd = (struct aac_aifcmd *) hw_fib->data;
-+		if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
-+			/* Handle Driver Notify Events */
-+			aac_handle_aif(dev, fib);
-+			*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
-+			aac_fib_adapter_complete(fib, (u16)sizeof(u32));
-+			continue;
-+		}
-+		/*
-+		 * The u32 here is important and intended. We are using
-+		 * 32bit wrapping time to fit the adapter field
-+		 */
-+
-+
-+		/* Sniff events */
-+		if ((aifcmd->command ==	cpu_to_le32(AifCmdEventNotify)) ||
-+				(aifcmd->command ==
-+				cpu_to_le32(AifCmdJobProgress))) {
-+			aac_handle_aif(dev, fib);
-+		}
-+
-+		time_now = jiffies/HZ;
-+
-+		/*
-+		 * Warning: no sleep allowed while
-+		 * holding spinlock. We take the estimate
-+		 * and pre-allocate a set of fibs outside the
-+		 * lock.
-+		 */
-+		num = le32_to_cpu(dev->init->r7.adapter_fibs_size)
-+				/ sizeof(struct hw_fib); /* some extra */
-+		spin_lock_irqsave(&dev->fib_lock, flagv);
-+		entry = dev->fib_list.next;
-+		while (entry != &dev->fib_list) {
-+			entry = entry->next;
-+			++num;
-+		}
-+		spin_unlock_irqrestore(&dev->fib_lock, flagv);
-+		hw_fib_pool = kmalloc_array(num, sizeof(struct hw_fib *),
-+						GFP_KERNEL);
-+		fib_pool = kmalloc_array(num, sizeof(struct fib *),
-+						GFP_KERNEL);
-+		if (num	&& fib_pool && hw_fib_pool) {
-+			hw_fib_p = hw_fib_pool;
-+			fib_p = fib_pool;
-+			while (hw_fib_p < &hw_fib_pool[num]) {
-+				*(hw_fib_p) = kmalloc(sizeof(struct hw_fib),
-+						GFP_KERNEL);
-+				if (!(*(hw_fib_p++))) {
-+					--hw_fib_p;
-+					break;
-+				}
-+				*(fib_p) = kmalloc(sizeof(struct fib),
-+						GFP_KERNEL);
-+				if (!(*(fib_p++))) {
-+					kfree(*(--hw_fib_p));
-+					break;
-+				}
-+			}
-+			num = hw_fib_p - hw_fib_pool;
-+			if (!num) {
-+				kfree(fib_pool);
-+				fib_pool = NULL;
-+				kfree(hw_fib_pool);
-+				hw_fib_pool = NULL;
-+				continue;
-+			}
-+		} else {
-+			kfree(hw_fib_pool);
-+			hw_fib_pool = NULL;
-+			kfree(fib_pool);
-+			fib_pool = NULL;
-+		}
-+		spin_lock_irqsave(&dev->fib_lock, flagv);
-+		entry = dev->fib_list.next;
-+		/*
-+		 * For each Context that is on the
-+		 * fibctxList, make a copy of the
-+		 * fib, and then set the event to wake up the
-+		 * thread that is waiting for it.
-+		 */
-+		hw_fib_p = hw_fib_pool;
-+		fib_p = fib_pool;
-+		while (entry != &dev->fib_list) {
-+			/*
-+			 * Extract the fibctx
-+			 */
-+			fibctx = list_entry(entry, struct aac_fib_context,
-+					next);
-+			/*
-+			 * Check if the queue is getting
-+			 * backlogged
-+			 */
-+			if (fibctx->count > 20) {
-+				/*
-+				 * It's *not* jiffies folks,
-+				 * but jiffies / HZ so do not
-+				 * panic ...
-+				 */
-+				time_last = fibctx->jiffies;
-+				/*
-+				 * Has it been > 2 minutes
-+				 * since the last read off
-+				 * the queue?
-+				 */
-+				if ((time_now - time_last) > aif_timeout) {
-+					entry = entry->next;
-+					aac_close_fib_context(dev, fibctx);
-+					continue;
-+				}
-+			}
-+			/*
-+			 * Warning: no sleep allowed while
-+			 * holding spinlock
-+			 */
-+			if (hw_fib_p < &hw_fib_pool[num]) {
-+				hw_newfib = *hw_fib_p;
-+				*(hw_fib_p++) = NULL;
-+				newfib = *fib_p;
-+				*(fib_p++) = NULL;
-+				/*
-+				 * Make the copy of the FIB
-+				 */
-+				memcpy(hw_newfib, hw_fib,
-+					sizeof(struct hw_fib));
-+				memcpy(newfib, fib, sizeof(struct fib));
-+				newfib->hw_fib_va = hw_newfib;
-+				/*
-+				 * Put the FIB onto the
-+				 * fibctx's fibs
-+				 */
-+				list_add_tail(&newfib->fiblink,
-+					&fibctx->fib_list);
-+				fibctx->count++;
-+				/*
-+				 * Set the event to wake up the
-+				 * thread that is waiting.
-+				 */
-+				up(&fibctx->wait_sem);
-+			} else {
-+				pr_warn("aifd: didn't allocate NewFib.\n");
-+			}
-+			entry = entry->next;
-+		}
-+		/*
-+		 *	Set the status of this FIB
-+		 */
-+		*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
-+		aac_fib_adapter_complete(fib, sizeof(u32));
-+		spin_unlock_irqrestore(&dev->fib_lock, flagv);
-+		/* Free up the remaining resources */
-+		hw_fib_p = hw_fib_pool;
-+		fib_p = fib_pool;
-+		while (hw_fib_p < &hw_fib_pool[num]) {
-+			kfree(*hw_fib_p);
-+			kfree(*fib_p);
-+			++fib_p;
-+			++hw_fib_p;
-+		}
-+		kfree(hw_fib_pool);
-+		kfree(fib_pool);
-+		kfree(fib);
-+		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock,
-+				flags);
-+	}
-+	/*
-+	 *	There are no more AIF's
-+	 */
-+	spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock,
-+			flags);
-+}
+ 	BUG_ON(fibptr == NULL);
+-	dev = fibptr->dev;
+-
+-	scsi_dma_unmap(scsicmd);
  
- /**
-  *	aac_command_thread	-	command processing thread
-@@ -1743,10 +1959,6 @@ int aac_check_health(struct aac_dev * aac)
- int aac_command_thread(void *data)
- {
- 	struct aac_dev *dev = data;
--	struct hw_fib *hw_fib, *hw_newfib;
--	struct fib *fib, *newfib;
--	struct aac_fib_context *fibctx;
--	unsigned long flags;
- 	DECLARE_WAITQUEUE(wait, current);
- 	unsigned long next_jiffies = jiffies + HZ;
- 	unsigned long next_check_jiffies = next_jiffies;
-@@ -1766,197 +1978,8 @@ int aac_command_thread(void *data)
- 	set_current_state(TASK_INTERRUPTIBLE);
- 	dprintk ((KERN_INFO "aac_command_thread start\n"));
- 	while (1) {
--		spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
--		while(!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
--			struct list_head *entry;
--			struct aac_aifcmd * aifcmd;
+-	/* expose physical device if expose_physicald flag is on */
+-	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
+-	  && expose_physicals > 0)
+-		aac_expose_phy_device(scsicmd);
++	dev = fibptr->dev;
  
--			set_current_state(TASK_RUNNING);
--
--			entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
--			list_del(entry);
--
--			spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
--			fib = list_entry(entry, struct fib, fiblink);
--			/*
--			 *	We will process the FIB here or pass it to a
--			 *	worker thread that is TBD. We Really can't
--			 *	do anything at this point since we don't have
--			 *	anything defined for this thread to do.
--			 */
--			hw_fib = fib->hw_fib_va;
--			memset(fib, 0, sizeof(struct fib));
--			fib->type = FSAFS_NTC_FIB_CONTEXT;
--			fib->size = sizeof(struct fib);
--			fib->hw_fib_va = hw_fib;
--			fib->data = hw_fib->data;
--			fib->dev = dev;
--			/*
--			 *	We only handle AifRequest fibs from the adapter.
--			 */
--			aifcmd = (struct aac_aifcmd *) hw_fib->data;
--			if (aifcmd->command == cpu_to_le32(AifCmdDriverNotify)) {
--				/* Handle Driver Notify Events */
--				aac_handle_aif(dev, fib);
--				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
--				aac_fib_adapter_complete(fib, (u16)sizeof(u32));
--			} else {
--				/* The u32 here is important and intended. We are using
--				   32bit wrapping time to fit the adapter field */
--
--				u32 time_now, time_last;
--				unsigned long flagv;
--				unsigned num;
--				struct hw_fib ** hw_fib_pool, ** hw_fib_p;
--				struct fib ** fib_pool, ** fib_p;
--
--				/* Sniff events */
--				if ((aifcmd->command ==
--				     cpu_to_le32(AifCmdEventNotify)) ||
--				    (aifcmd->command ==
--				     cpu_to_le32(AifCmdJobProgress))) {
--					aac_handle_aif(dev, fib);
--				}
--
--				time_now = jiffies/HZ;
--
--				/*
--				 * Warning: no sleep allowed while
--				 * holding spinlock. We take the estimate
--				 * and pre-allocate a set of fibs outside the
--				 * lock.
--				 */
--				num = le32_to_cpu(dev->init->
--							r7.adapter_fibs_size)
--				    / sizeof(struct hw_fib); /* some extra */
--				spin_lock_irqsave(&dev->fib_lock, flagv);
--				entry = dev->fib_list.next;
--				while (entry != &dev->fib_list) {
--					entry = entry->next;
--					++num;
--				}
--				spin_unlock_irqrestore(&dev->fib_lock, flagv);
--				hw_fib_pool = NULL;
--				fib_pool = NULL;
--				if (num
--				 && ((hw_fib_pool = kmalloc(sizeof(struct hw_fib *) * num, GFP_KERNEL)))
--				 && ((fib_pool = kmalloc(sizeof(struct fib *) * num, GFP_KERNEL)))) {
--					hw_fib_p = hw_fib_pool;
--					fib_p = fib_pool;
--					while (hw_fib_p < &hw_fib_pool[num]) {
--						if (!(*(hw_fib_p++) = kmalloc(sizeof(struct hw_fib), GFP_KERNEL))) {
--							--hw_fib_p;
--							break;
--						}
--						if (!(*(fib_p++) = kmalloc(sizeof(struct fib), GFP_KERNEL))) {
--							kfree(*(--hw_fib_p));
--							break;
--						}
--					}
--					if ((num = hw_fib_p - hw_fib_pool) == 0) {
--						kfree(fib_pool);
--						fib_pool = NULL;
--						kfree(hw_fib_pool);
--						hw_fib_pool = NULL;
--					}
--				} else {
--					kfree(hw_fib_pool);
--					hw_fib_pool = NULL;
--				}
--				spin_lock_irqsave(&dev->fib_lock, flagv);
--				entry = dev->fib_list.next;
--				/*
--				 * For each Context that is on the
--				 * fibctxList, make a copy of the
--				 * fib, and then set the event to wake up the
--				 * thread that is waiting for it.
--				 */
--				hw_fib_p = hw_fib_pool;
--				fib_p = fib_pool;
--				while (entry != &dev->fib_list) {
--					/*
--					 * Extract the fibctx
--					 */
--					fibctx = list_entry(entry, struct aac_fib_context, next);
--					/*
--					 * Check if the queue is getting
--					 * backlogged
--					 */
--					if (fibctx->count > 20)
--					{
--						/*
--						 * It's *not* jiffies folks,
--						 * but jiffies / HZ so do not
--						 * panic ...
--						 */
--						time_last = fibctx->jiffies;
--						/*
--						 * Has it been > 2 minutes
--						 * since the last read off
--						 * the queue?
--						 */
--						if ((time_now - time_last) > aif_timeout) {
--							entry = entry->next;
--							aac_close_fib_context(dev, fibctx);
--							continue;
--						}
--					}
--					/*
--					 * Warning: no sleep allowed while
--					 * holding spinlock
--					 */
--					if (hw_fib_p < &hw_fib_pool[num]) {
--						hw_newfib = *hw_fib_p;
--						*(hw_fib_p++) = NULL;
--						newfib = *fib_p;
--						*(fib_p++) = NULL;
--						/*
--						 * Make the copy of the FIB
--						 */
--						memcpy(hw_newfib, hw_fib, sizeof(struct hw_fib));
--						memcpy(newfib, fib, sizeof(struct fib));
--						newfib->hw_fib_va = hw_newfib;
--						/*
--						 * Put the FIB onto the
--						 * fibctx's fibs
--						 */
--						list_add_tail(&newfib->fiblink, &fibctx->fib_list);
--						fibctx->count++;
--						/*
--						 * Set the event to wake up the
--						 * thread that is waiting.
--						 */
--						up(&fibctx->wait_sem);
--					} else {
--						printk(KERN_WARNING "aifd: didn't allocate NewFib.\n");
--					}
--					entry = entry->next;
--				}
--				/*
--				 *	Set the status of this FIB
--				 */
--				*(__le32 *)hw_fib->data = cpu_to_le32(ST_OK);
--				aac_fib_adapter_complete(fib, sizeof(u32));
--				spin_unlock_irqrestore(&dev->fib_lock, flagv);
--				/* Free up the remaining resources */
--				hw_fib_p = hw_fib_pool;
--				fib_p = fib_pool;
--				while (hw_fib_p < &hw_fib_pool[num]) {
--					kfree(*hw_fib_p);
--					kfree(*fib_p);
--					++fib_p;
--					++hw_fib_p;
--				}
--				kfree(hw_fib_pool);
--				kfree(fib_pool);
--			}
--			kfree(fib);
--			spin_lock_irqsave(dev->queues->queue[HostNormCmdQueue].lock, flags);
--		}
+ 	srbreply = (struct aac_srb_reply *) fib_data(fibptr);
++
+ 	scsicmd->sense_buffer[0] = '\0';  /* Initialize sense valid flag to false */
+ 
+ 	if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) {
+@@ -3090,158 +3085,176 @@ static void aac_srb_callback(void *context, struct fib * fibptr)
+ 		 */
+ 		scsi_set_resid(scsicmd, scsi_bufflen(scsicmd)
+ 				   - le32_to_cpu(srbreply->data_xfer_length));
 -		/*
--		 *	There are no more AIF's
+-		 * First check the fib status
 -		 */
--		spin_unlock_irqrestore(dev->queues->queue[HostNormCmdQueue].lock, flags);
-+		aac_process_events(dev);
++	}
  
- 		/*
- 		 *	Background activity
+-		if (le32_to_cpu(srbreply->status) != ST_OK) {
+-			int len;
+ 
+-			printk(KERN_WARNING "aac_srb_callback: srb failed, status = %d\n", le32_to_cpu(srbreply->status));
+-			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+-				    SCSI_SENSE_BUFFERSIZE);
+-			scsicmd->result = DID_ERROR << 16
+-						| COMMAND_COMPLETE << 8
+-						| SAM_STAT_CHECK_CONDITION;
+-			memcpy(scsicmd->sense_buffer,
+-					srbreply->sense_data, len);
+-		}
++	scsi_dma_unmap(scsicmd);
+ 
+-		/*
+-		 * Next check the srb status
+-		 */
+-		switch ((le32_to_cpu(srbreply->srb_status))&0x3f) {
+-		case SRB_STATUS_ERROR_RECOVERY:
+-		case SRB_STATUS_PENDING:
+-		case SRB_STATUS_SUCCESS:
+-			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+-			break;
+-		case SRB_STATUS_DATA_OVERRUN:
+-			switch (scsicmd->cmnd[0]) {
+-			case  READ_6:
+-			case  WRITE_6:
+-			case  READ_10:
+-			case  WRITE_10:
+-			case  READ_12:
+-			case  WRITE_12:
+-			case  READ_16:
+-			case  WRITE_16:
+-				if (le32_to_cpu(srbreply->data_xfer_length)
+-							< scsicmd->underflow)
+-					printk(KERN_WARNING"aacraid: SCSI CMD underflow\n");
+-				else
+-					printk(KERN_WARNING"aacraid: SCSI CMD Data Overrun\n");
+-				scsicmd->result = DID_ERROR << 16
+-							| COMMAND_COMPLETE << 8;
+-				break;
+-			case INQUIRY: {
+-				scsicmd->result = DID_OK << 16
+-							| COMMAND_COMPLETE << 8;
+-				break;
+-			}
+-			default:
+-				scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
+-				break;
+-			}
+-			break;
+-		case SRB_STATUS_ABORTED:
+-			scsicmd->result = DID_ABORT << 16 | ABORT << 8;
+-			break;
+-		case SRB_STATUS_ABORT_FAILED:
+-			/*
+-			 * Not sure about this one - but assuming the
+-			 * hba was trying to abort for some reason
+-			 */
+-			scsicmd->result = DID_ERROR << 16 | ABORT << 8;
+-			break;
+-		case SRB_STATUS_PARITY_ERROR:
+-			scsicmd->result = DID_PARITY << 16
+-						| MSG_PARITY_ERROR << 8;
+-			break;
+-		case SRB_STATUS_NO_DEVICE:
+-		case SRB_STATUS_INVALID_PATH_ID:
+-		case SRB_STATUS_INVALID_TARGET_ID:
+-		case SRB_STATUS_INVALID_LUN:
+-		case SRB_STATUS_SELECTION_TIMEOUT:
+-			scsicmd->result = DID_NO_CONNECT << 16
+-						| COMMAND_COMPLETE << 8;
+-			break;
++	/* expose physical device if expose_physicald flag is on */
++	if (scsicmd->cmnd[0] == INQUIRY && !(scsicmd->cmnd[1] & 0x01)
++	  && expose_physicals > 0)
++		aac_expose_phy_device(scsicmd);
+ 
+-		case SRB_STATUS_COMMAND_TIMEOUT:
+-		case SRB_STATUS_TIMEOUT:
+-			scsicmd->result = DID_TIME_OUT << 16
+-						| COMMAND_COMPLETE << 8;
+-			break;
++	/*
++	 * First check the fib status
++	 */
+ 
+-		case SRB_STATUS_BUSY:
+-			scsicmd->result = DID_BUS_BUSY << 16
+-						| COMMAND_COMPLETE << 8;
+-			break;
++	if (le32_to_cpu(srbreply->status) != ST_OK) {
++		int len;
+ 
+-		case SRB_STATUS_BUS_RESET:
+-			scsicmd->result = DID_RESET << 16
+-						| COMMAND_COMPLETE << 8;
+-			break;
++		pr_warn("aac_srb_callback: srb failed, status = %d\n",
++				le32_to_cpu(srbreply->status));
++		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
++			    SCSI_SENSE_BUFFERSIZE);
++		scsicmd->result = DID_ERROR << 16
++				| COMMAND_COMPLETE << 8
++				| SAM_STAT_CHECK_CONDITION;
++		memcpy(scsicmd->sense_buffer,
++				srbreply->sense_data, len);
++	}
+ 
+-		case SRB_STATUS_MESSAGE_REJECTED:
++	/*
++	 * Next check the srb status
++	 */
++	switch ((le32_to_cpu(srbreply->srb_status))&0x3f) {
++	case SRB_STATUS_ERROR_RECOVERY:
++	case SRB_STATUS_PENDING:
++	case SRB_STATUS_SUCCESS:
++		scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
++		break;
++	case SRB_STATUS_DATA_OVERRUN:
++		switch (scsicmd->cmnd[0]) {
++		case  READ_6:
++		case  WRITE_6:
++		case  READ_10:
++		case  WRITE_10:
++		case  READ_12:
++		case  WRITE_12:
++		case  READ_16:
++		case  WRITE_16:
++			if (le32_to_cpu(srbreply->data_xfer_length)
++						< scsicmd->underflow)
++				pr_warn("aacraid: SCSI CMD underflow\n");
++			else
++				pr_warn("aacraid: SCSI CMD Data Overrun\n");
+ 			scsicmd->result = DID_ERROR << 16
+-						| MESSAGE_REJECT << 8;
++					| COMMAND_COMPLETE << 8;
++			break;
++		case INQUIRY:
++			scsicmd->result = DID_OK << 16
++					| COMMAND_COMPLETE << 8;
+ 			break;
+-		case SRB_STATUS_REQUEST_FLUSHED:
+-		case SRB_STATUS_ERROR:
+-		case SRB_STATUS_INVALID_REQUEST:
+-		case SRB_STATUS_REQUEST_SENSE_FAILED:
+-		case SRB_STATUS_NO_HBA:
+-		case SRB_STATUS_UNEXPECTED_BUS_FREE:
+-		case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
+-		case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
+-		case SRB_STATUS_DELAYED_RETRY:
+-		case SRB_STATUS_BAD_FUNCTION:
+-		case SRB_STATUS_NOT_STARTED:
+-		case SRB_STATUS_NOT_IN_USE:
+-		case SRB_STATUS_FORCE_ABORT:
+-		case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
+ 		default:
++			scsicmd->result = DID_OK << 16 | COMMAND_COMPLETE << 8;
++			break;
++		}
++		break;
++	case SRB_STATUS_ABORTED:
++		scsicmd->result = DID_ABORT << 16 | ABORT << 8;
++		break;
++	case SRB_STATUS_ABORT_FAILED:
++		/*
++		 * Not sure about this one - but assuming the
++		 * hba was trying to abort for some reason
++		 */
++		scsicmd->result = DID_ERROR << 16 | ABORT << 8;
++		break;
++	case SRB_STATUS_PARITY_ERROR:
++		scsicmd->result = DID_PARITY << 16
++				| MSG_PARITY_ERROR << 8;
++		break;
++	case SRB_STATUS_NO_DEVICE:
++	case SRB_STATUS_INVALID_PATH_ID:
++	case SRB_STATUS_INVALID_TARGET_ID:
++	case SRB_STATUS_INVALID_LUN:
++	case SRB_STATUS_SELECTION_TIMEOUT:
++		scsicmd->result = DID_NO_CONNECT << 16
++				| COMMAND_COMPLETE << 8;
++		break;
++
++	case SRB_STATUS_COMMAND_TIMEOUT:
++	case SRB_STATUS_TIMEOUT:
++		scsicmd->result = DID_TIME_OUT << 16
++				| COMMAND_COMPLETE << 8;
++		break;
++
++	case SRB_STATUS_BUSY:
++		scsicmd->result = DID_BUS_BUSY << 16
++				| COMMAND_COMPLETE << 8;
++		break;
++
++	case SRB_STATUS_BUS_RESET:
++		scsicmd->result = DID_RESET << 16
++				| COMMAND_COMPLETE << 8;
++		break;
++
++	case SRB_STATUS_MESSAGE_REJECTED:
++		scsicmd->result = DID_ERROR << 16
++				| MESSAGE_REJECT << 8;
++		break;
++	case SRB_STATUS_REQUEST_FLUSHED:
++	case SRB_STATUS_ERROR:
++	case SRB_STATUS_INVALID_REQUEST:
++	case SRB_STATUS_REQUEST_SENSE_FAILED:
++	case SRB_STATUS_NO_HBA:
++	case SRB_STATUS_UNEXPECTED_BUS_FREE:
++	case SRB_STATUS_PHASE_SEQUENCE_FAILURE:
++	case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
++	case SRB_STATUS_DELAYED_RETRY:
++	case SRB_STATUS_BAD_FUNCTION:
++	case SRB_STATUS_NOT_STARTED:
++	case SRB_STATUS_NOT_IN_USE:
++	case SRB_STATUS_FORCE_ABORT:
++	case SRB_STATUS_DOMAIN_VALIDATION_FAIL:
++	default:
+ #ifdef AAC_DETAILED_STATUS_INFO
+-			printk(KERN_INFO "aacraid: SRB ERROR(%u) %s scsi cmd 0x%x - scsi status 0x%x\n",
+-				le32_to_cpu(srbreply->srb_status) & 0x3F,
+-				aac_get_status_string(
+-					le32_to_cpu(srbreply->srb_status) & 0x3F),
+-				scsicmd->cmnd[0],
+-				le32_to_cpu(srbreply->scsi_status));
++		pr_info("aacraid: SRB ERROR(%u) %s scsi cmd 0x%x -scsi status 0x%x\n",
++			le32_to_cpu(srbreply->srb_status) & 0x3F,
++			aac_get_status_string(
++				le32_to_cpu(srbreply->srb_status) & 0x3F),
++			scsicmd->cmnd[0],
++			le32_to_cpu(srbreply->scsi_status));
+ #endif
+-			if ((scsicmd->cmnd[0] == ATA_12)
+-				|| (scsicmd->cmnd[0] == ATA_16)) {
+-					if (scsicmd->cmnd[2] & (0x01 << 5)) {
+-						scsicmd->result = DID_OK << 16
+-							| COMMAND_COMPLETE << 8;
+-				break;
+-				} else {
+-					scsicmd->result = DID_ERROR << 16
+-						| COMMAND_COMPLETE << 8;
+-					break;
+-				}
++		/*
++		 * When the CC bit is SET by the host in ATA pass thru CDB,
++		 *  driver is supposed to return DID_OK
++		 *
++		 * When the CC bit is RESET by the host, driver should
++		 *  return DID_ERROR
++		 */
++		if ((scsicmd->cmnd[0] == ATA_12)
++			|| (scsicmd->cmnd[0] == ATA_16)) {
++
++			if (scsicmd->cmnd[2] & (0x01 << 5)) {
++				scsicmd->result = DID_OK << 16
++					| COMMAND_COMPLETE << 8;
++			break;
+ 			} else {
+ 				scsicmd->result = DID_ERROR << 16
+ 					| COMMAND_COMPLETE << 8;
+-				break;
++			break;
+ 			}
++		} else {
++			scsicmd->result = DID_ERROR << 16
++				| COMMAND_COMPLETE << 8;
++			break;
+ 		}
+-		if (le32_to_cpu(srbreply->scsi_status)
+-				== SAM_STAT_CHECK_CONDITION) {
+-			int len;
++	}
++	if (le32_to_cpu(srbreply->scsi_status)
++			== SAM_STAT_CHECK_CONDITION) {
++		int len;
+ 
+-			scsicmd->result |= SAM_STAT_CHECK_CONDITION;
+-			len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
+-				    SCSI_SENSE_BUFFERSIZE);
++		scsicmd->result |= SAM_STAT_CHECK_CONDITION;
++		len = min_t(u32, le32_to_cpu(srbreply->sense_data_size),
++			    SCSI_SENSE_BUFFERSIZE);
+ #ifdef AAC_DETAILED_STATUS_INFO
+-			printk(KERN_WARNING "aac_srb_callback: check condition, status = %d len=%d\n",
+-						le32_to_cpu(srbreply->status), len);
++		pr_warn("aac_srb_callback: check condition, status = %d len=%d\n",
++					le32_to_cpu(srbreply->status), len);
+ #endif
+-			memcpy(scsicmd->sense_buffer,
+-					srbreply->sense_data, len);
+-		}
++		memcpy(scsicmd->sense_buffer,
++				srbreply->sense_data, len);
+ 	}
++
+ 	/*
+ 	 * OR in the scsi status (already shifted up a bit)
+ 	 */
 -- 
 2.7.4
 
