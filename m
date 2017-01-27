@@ -1,7 +1,7 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 20/24] aacraid: Added ioctl to trigger IOP/IWBR reset
-Date: Fri, 27 Jan 2017 11:28:49 -0800
-Message-ID: <20170127192853.10082-21-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 01/24] aacraid: Remove duplicate irq management code
+Date: Fri, 27 Jan 2017 11:28:30 -0800
+Message-ID: <20170127192853.10082-2-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
@@ -9,81 +9,111 @@ Return-path: <linux-scsi-owner@vger.kernel.org>
 Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:43712
         "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750964AbdA1Cf4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 21:35:56 -0500
+        id S1750873AbdA1Cfx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 21:35:53 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Added a new ioctl interface to trigger an IOP or IWBR reset from ioctl.
-Primary used by management utility to trigger resets.
+Removed duplicate code that for acquiring and releasing irqs
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 ---
-Changes in  V2:
+Changes in V2:
 None
 
-Changes in  V3:
+Changes in V3:
 None
 
- drivers/scsi/aacraid/aacraid.h  |  1 +
- drivers/scsi/aacraid/commctrl.c | 19 +++++++++++++++++++
- 2 files changed, 20 insertions(+)
+ drivers/scsi/aacraid/linit.c | 58 +++-----------------------------------------
+ 1 file changed, 3 insertions(+), 55 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index e2df7a5..6b80a63 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2337,6 +2337,7 @@ struct revision
- #define FSACTL_FORCE_DELETE_DISK		CTL_CODE(2120, METHOD_NEITHER)
- #define FSACTL_GET_CONTAINERS			2131
- #define FSACTL_SEND_LARGE_FIB			CTL_CODE(2138, METHOD_BUFFERED)
-+#define FSACTL_RESET_IOP			CTL_CODE(2140, METHOD_BUFFERED)
- /* flags defined for IOP & HW SOFT RESET */
- #define HW_IOP_RESET				0x01
- #define HW_SOFT_RESET				0x02
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index b2af77f..4b65b91 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -1011,7 +1011,22 @@ static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
- 	}
- 	return 0;
- }
-+struct aac_reset_iop {
-+	u8	reset_type;
-+};
-+
-+static int aac_send_reset_adapter(struct aac_dev *dev, void __user *arg)
-+{
-+	struct aac_reset_iop reset;
-+	int retval;
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3ecbf20..fd26a2d 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1327,35 +1327,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
  
-+	if (copy_from_user((void *)&reset, arg, sizeof(struct aac_reset_iop)))
-+		return -EFAULT;
-+
-+	retval = aac_reset_adapter(dev, 0, reset.reset_type);
-+	return retval;
-+
-+}
- 
- int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
+ static void aac_release_resources(struct aac_dev *aac)
  {
-@@ -1055,6 +1070,10 @@ int aac_do_ioctl(struct aac_dev * dev, int cmd, void __user *arg)
- 	case FSACTL_GET_PCI_INFO:
- 		status = aac_get_pci_info(dev,arg);
- 		break;
-+	case FSACTL_RESET_IOP:
-+		status = aac_send_reset_adapter(dev, arg);
-+		break;
-+
- 	default:
- 		status = -ENOTTY;
- 		break;
+-	int i;
+-
+ 	aac_adapter_disable_int(aac);
+-	if (aac->pdev->device == PMC_DEVICE_S6 ||
+-	    aac->pdev->device == PMC_DEVICE_S7 ||
+-	    aac->pdev->device == PMC_DEVICE_S8 ||
+-	    aac->pdev->device == PMC_DEVICE_S9) {
+-		if (aac->max_msix > 1) {
+-			for (i = 0; i < aac->max_msix; i++)
+-				free_irq(pci_irq_vector(aac->pdev, i),
+-					&(aac->aac_msix[i]));
+-		} else {
+-			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
+-		}
+-	} else {
+-		free_irq(aac->pdev->irq, aac);
+-	}
+-	if (aac->msi)
+-		pci_disable_msi(aac->pdev);
+-	else if (aac->max_msix > 1)
+-		pci_disable_msix(aac->pdev);
+-
++	aac_free_irq(aac);
+ }
+ 
+ static int aac_acquire_resources(struct aac_dev *dev)
+ {
+-	int i, j;
+-	int instance = dev->id;
+-	const char *name = dev->name;
+ 	unsigned long status;
+ 	/*
+ 	 *	First clear out all interrupts.  Then enable the one's that we
+@@ -1377,37 +1354,8 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 	if (dev->msi_enabled)
+ 		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
+ 
+-	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
+-		for (i = 0; i < dev->max_msix; i++) {
+-			dev->aac_msix[i].vector_no = i;
+-			dev->aac_msix[i].dev = dev;
+-
+-			if (request_irq(pci_irq_vector(dev->pdev, i),
+-					dev->a_ops.adapter_intr,
+-					0, "aacraid", &(dev->aac_msix[i]))) {
+-				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
+-						name, instance, i);
+-				for (j = 0 ; j < i ; j++)
+-					free_irq(pci_irq_vector(dev->pdev, j),
+-						 &(dev->aac_msix[j]));
+-				pci_disable_msix(dev->pdev);
+-				goto error_iounmap;
+-			}
+-		}
+-	} else {
+-		dev->aac_msix[0].vector_no = 0;
+-		dev->aac_msix[0].dev = dev;
+-
+-		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED, "aacraid",
+-			&(dev->aac_msix[0])) < 0) {
+-			if (dev->msi)
+-				pci_disable_msi(dev->pdev);
+-			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+-					name, instance);
+-			goto error_iounmap;
+-		}
+-	}
++	if (aac_acquire_irq(dev))
++		goto error_iounmap;
+ 
+ 	aac_adapter_enable_int(dev);
+ 
 -- 
 2.7.4
 
