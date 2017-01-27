@@ -1,19 +1,16 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: split scsi passthrough fields out of struct request
-	V2
-Date: Fri, 27 Jan 2017 17:34:50 +0100
-Message-ID: <20170127163450.GA17311@lst.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCH 07/18] dm: always defer request allocation to
+ the owner of the request_queue
+Date: Fri, 27 Jan 2017 11:34:34 -0500
+Message-ID: <20170127163434.GA30221@redhat.com>
 References: <1485365126-23210-1-git-send-email-hch@lst.de>
-	<20170127161114.GA501@kernel.dk> <20170127161718.GA16911@lst.de>
-	<775aff8d-6bcc-9cc5-cfa3-dd1c157c95c5@fb.com>
-	<20170127162316.GA17059@lst.de>
-	<195e1638-7d85-0618-0101-5cfff34b91e9@fb.com>
+	<1485365126-23210-8-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
 Return-path: <dm-devel-bounces@redhat.com>
 Content-Disposition: inline
-In-Reply-To: <195e1638-7d85-0618-0101-5cfff34b91e9@fb.com>
+In-Reply-To: <1485365126-23210-8-git-send-email-hch@lst.de>
 List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
 List-Archive: <https://www.redhat.com/archives/dm-devel>
@@ -23,18 +20,38 @@ List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
 	<mailto:dm-devel-request@redhat.com?subject=subscribe>
 Sender: dm-devel-bounces@redhat.com
 Errors-To: dm-devel-bounces@redhat.com
-To: Jens Axboe <axboe@fb.com>
-Cc: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Mike Snitzer <snitzer@redhat.com>, linux-block@vger.kernel.org, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>, Christoph Hellwig <hch@lst.de>
+To: Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org, linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, Jens Axboe <axboe@fb.com>, dm-devel@redhat.com, Junichi Nomura <j-nomura@ce.jp.nec.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Fri, Jan 27, 2017 at 09:27:02AM -0700, Jens Axboe wrote:
-> Feel free to repost it, I have no problem rebasing that branch as it's
-> standalone for now.
+On Wed, Jan 25 2017 at 12:25pm -0500,
+Christoph Hellwig <hch@lst.de> wrote:
 
-Ok, I'll repost what I have right now, which is on top of a merge
-of your block/for-4.11/next and your for-next from this morning
-my time.
+> DM already calls blk_mq_alloc_request on the request_queue of the
+> underlying device if it is a blk-mq device.  But now that we allow drivers
+> to allocate additional data and initialize it ahead of time we need to do
+> the same for all drivers.   Doing so and using the new cmd_size
+> infrastructure in the block layer greatly simplifies the dm-rq and mpath
+> code, and should also make arbitrary combinations of SQ and MQ devices
+> with SQ or MQ device mapper tables easily possible as a further step.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
+> Reviewed-by: Mike Snitzer <snitzer@redhat.com>
+...
+> diff --git a/drivers/md/dm-rq.c b/drivers/md/dm-rq.c
+> index 3f12916..8d06834 100644
+> --- a/drivers/md/dm-rq.c
+> +++ b/drivers/md/dm-rq.c
+> @@ -185,7 +163,7 @@ static void end_clone_bio(struct bio *clone)
+>  
+>  static struct dm_rq_target_io *tio_from_request(struct request *rq)
+>  {
+> -	return (rq->q->mq_ops ? blk_mq_rq_to_pdu(rq) : rq->special);
+> +	return blk_mq_rq_to_pdu(rq);
+>  }
 
-Btw, I disagred with your patch to use op_is_flush in
-generic_make_request_checks - given that we clear these flags just
-below I think using the helper obsfucates what's really going on.
+Noticed after further review that it seems a bit weird to have the non
+blk-mq support in drivers calling blk_mq_rq_to_pdu().  But I'm not sure
+a blk_rq_to_pdu() macro to blk_mq_rq_to_pdu() is the right thing.  What
+do you guys think?
