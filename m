@@ -1,25 +1,25 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 18/24] aacraid: VPD 83 type3 support
-Date: Fri, 27 Jan 2017 11:28:47 -0800
-Message-ID: <20170127192853.10082-19-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 11/24] aacraid: Added support for periodic wellness sync
+Date: Fri, 27 Jan 2017 11:28:40 -0800
+Message-ID: <20170127192853.10082-12-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0080.outbound.protection.outlook.com ([104.47.37.80]:55818
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-dm3nam03on0041.outbound.protection.outlook.com ([104.47.41.41]:38240
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750806AbdA1CV0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 21:21:26 -0500
+        id S1750806AbdA1CV2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 21:21:28 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-This patch adds support to retrieve the unique identifier data (VPD page
-83 type3) for Logical drives created on SmartIOC 2000 products. In
-addition  added a sysfs device structure to expose the id information.
+This patch adds a new functions that periodically sync the time of host
+to the adapter. In addition also informs the adapter that the driver is
+alive and kicking. Only applicable to the HBA1000 and SMARTIOC2000.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -31,330 +31,232 @@ None
 Changes in  V3:
 None
 
- drivers/scsi/aacraid/aachba.c  | 180 ++++++++++++++++++++++++++---------------
- drivers/scsi/aacraid/aacraid.h |   2 +
- drivers/scsi/aacraid/linit.c   |  31 +++++++
- 3 files changed, 150 insertions(+), 63 deletions(-)
+ drivers/scsi/aacraid/aacraid.h |   3 +
+ drivers/scsi/aacraid/commsup.c | 176 +++++++++++++++++++++++++++++++++--------
+ 2 files changed, 148 insertions(+), 31 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index c76db95..74b9bb1 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -167,46 +167,56 @@ struct inquiry_data {
- };
- 
- /* Added for VPD 0x83 */
--typedef struct {
--	u8 CodeSet:4;	/* VPD_CODE_SET */
--	u8 Reserved:4;
--	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
--	u8 Reserved2:4;
--	u8 Reserved3;
--	u8 IdentifierLength;
--	u8 VendId[8];
--	u8 ProductId[16];
--	u8 SerialNumber[8];	/* SN in ASCII */
--
--} TVPD_ID_Descriptor_Type_1;
-+struct  tvpd_id_descriptor_type_1 {
-+	u8 codeset:4;		/* VPD_CODE_SET */
-+	u8 reserved:4;
-+	u8 identifiertype:4;	/* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2:4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	u8 venid[8];
-+	u8 productid[16];
-+	u8 serialnumber[8];	/* SN in ASCII */
- 
--typedef struct {
--	u8 CodeSet:4;	/* VPD_CODE_SET */
--	u8 Reserved:4;
--	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
--	u8 Reserved2:4;
--	u8 Reserved3;
--	u8 IdentifierLength;
--	struct TEU64Id {
-+};
-+
-+struct tvpd_id_descriptor_type_2 {
-+	u8 codeset:4;		/* VPD_CODE_SET */
-+	u8 reserved:4;
-+	u8 identifiertype:4;	/* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2:4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	struct teu64id {
- 		u32 Serial;
- 		 /* The serial number supposed to be 40 bits,
- 		  * bit we only support 32, so make the last byte zero. */
--		u8 Reserved;
--		u8 VendId[3];
--	} EU64Id;
-+		u8 reserved;
-+		u8 venid[3];
-+	} eu64id;
- 
--} TVPD_ID_Descriptor_Type_2;
-+};
- 
--typedef struct {
-+struct tvpd_id_descriptor_type_3 {
-+	u8 codeset : 4;          /* VPD_CODE_SET */
-+	u8 reserved : 4;
-+	u8 identifiertype : 4;   /* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2 : 4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	u8 Identifier[16];
-+};
-+
-+struct tvpd_page83 {
- 	u8 DeviceType:5;
- 	u8 DeviceTypeQualifier:3;
- 	u8 PageCode;
--	u8 Reserved;
-+	u8 reserved;
- 	u8 PageLength;
--	TVPD_ID_Descriptor_Type_1 IdDescriptorType1;
--	TVPD_ID_Descriptor_Type_2 IdDescriptorType2;
--
--} TVPD_Page83;
-+	struct tvpd_id_descriptor_type_1 type1;
-+	struct tvpd_id_descriptor_type_2 type2;
-+	struct tvpd_id_descriptor_type_3 type3;
-+};
- 
- /*
-  *              M O D U L E   G L O B A L S
-@@ -613,6 +623,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 	struct fsa_dev_info *fsa_dev_ptr;
- 	int (*callback)(struct scsi_cmnd *);
- 	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
-+	int i;
- 
- 
- 	if (!aac_valid_context(scsicmd, fibptr))
-@@ -635,6 +646,10 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 				fsa_dev_ptr->block_size =
- 					le32_to_cpu(dresp->mnt[0].fileinfo.bdevinfo.block_size);
- 			}
-+			for (i = 0; i < 16; i++)
-+				fsa_dev_ptr->identifier[i] =
-+					dresp->mnt[0].fileinfo.bdevinfo
-+								.identifier[i];
- 			fsa_dev_ptr->valid = 1;
- 			/* sense_key holds the current state of the spin-up */
- 			if (dresp->mnt[0].state & cpu_to_le32(FSCS_NOT_READY))
-@@ -929,6 +944,28 @@ static void setinqstr(struct aac_dev *dev, void *data, int tindex)
- 	inqstrcpy ("V1.0", str->prl);
- }
- 
-+static void build_vpd83_type3(struct tvpd_page83 *vpdpage83data,
-+		struct aac_dev *dev, struct scsi_cmnd *scsicmd)
-+{
-+	int container;
-+
-+	vpdpage83data->type3.codeset = 1;
-+	vpdpage83data->type3.identifiertype = 3;
-+	vpdpage83data->type3.identifierlength = sizeof(vpdpage83data->type3)
-+			- 4;
-+
-+	for (container = 0; container < dev->maximum_num_containers;
-+			container++) {
-+
-+		if (scmd_id(scsicmd) == container) {
-+			memcpy(vpdpage83data->type3.Identifier,
-+					dev->fsa_dev[container].identifier,
-+					16);
-+			break;
-+		}
-+	}
-+}
-+
- static void get_container_serial_callback(void *context, struct fib * fibptr)
- {
- 	struct aac_get_serial_resp * get_serial_reply;
-@@ -946,39 +983,47 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 		/*Check to see if it's for VPD 0x83 or 0x80 */
- 		if (scsicmd->cmnd[2] == 0x83) {
- 			/* vpd page 0x83 - Device Identification Page */
-+			struct aac_dev *dev;
- 			int i;
--			TVPD_Page83 VPDPage83Data;
-+			struct tvpd_page83 vpdpage83data;
- 
--			memset(((u8 *)&VPDPage83Data), 0,
--			       sizeof(VPDPage83Data));
-+			dev = (struct aac_dev *)scsicmd->device->host->hostdata;
-+
-+			memset(((u8 *)&vpdpage83data), 0,
-+			       sizeof(vpdpage83data));
- 
- 			/* DIRECT_ACCESS_DEVIC */
--			VPDPage83Data.DeviceType = 0;
-+			vpdpage83data.DeviceType = 0;
- 			/* DEVICE_CONNECTED */
--			VPDPage83Data.DeviceTypeQualifier = 0;
-+			vpdpage83data.DeviceTypeQualifier = 0;
- 			/* VPD_DEVICE_IDENTIFIERS */
--			VPDPage83Data.PageCode = 0x83;
--			VPDPage83Data.Reserved = 0;
--			VPDPage83Data.PageLength =
--				sizeof(VPDPage83Data.IdDescriptorType1) +
--				sizeof(VPDPage83Data.IdDescriptorType2);
-+			vpdpage83data.PageCode = 0x83;
-+			vpdpage83data.reserved = 0;
-+			vpdpage83data.PageLength =
-+				sizeof(vpdpage83data.type1) +
-+				sizeof(vpdpage83data.type2);
-+
-+			/* VPD 83 Type 3 is not supported for ARC */
-+			if (dev->sa_firmware)
-+				vpdpage83data.PageLength +=
-+				sizeof(vpdpage83data.type3);
- 
- 			/* T10 Vendor Identifier Field Format */
--			/* VpdCodeSetAscii */
--			VPDPage83Data.IdDescriptorType1.CodeSet = 2;
-+			/* VpdcodesetAscii */
-+			vpdpage83data.type1.codeset = 2;
- 			/* VpdIdentifierTypeVendorId */
--			VPDPage83Data.IdDescriptorType1.IdentifierType = 1;
--			VPDPage83Data.IdDescriptorType1.IdentifierLength =
--				sizeof(VPDPage83Data.IdDescriptorType1) - 4;
-+			vpdpage83data.type1.identifiertype = 1;
-+			vpdpage83data.type1.identifierlength =
-+				sizeof(vpdpage83data.type1) - 4;
- 
- 			/* "ADAPTEC " for adaptec */
--			memcpy(VPDPage83Data.IdDescriptorType1.VendId,
-+			memcpy(vpdpage83data.type1.venid,
- 				"ADAPTEC ",
--				sizeof(VPDPage83Data.IdDescriptorType1.VendId));
--			memcpy(VPDPage83Data.IdDescriptorType1.ProductId,
-+				sizeof(vpdpage83data.type1.venid));
-+			memcpy(vpdpage83data.type1.productid,
- 				"ARRAY           ",
- 				sizeof(
--				VPDPage83Data.IdDescriptorType1.ProductId));
-+				vpdpage83data.type1.productid));
- 
- 			/* Convert to ascii based serial number.
- 			 * The LSB is the the end.
-@@ -987,32 +1032,41 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 				u8 temp =
- 					(u8)((get_serial_reply->uid >> ((7 - i) * 4)) & 0xF);
- 				if (temp  > 0x9) {
--					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =
-+					vpdpage83data.type1.serialnumber[i] =
- 							'A' + (temp - 0xA);
- 				} else {
--					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =
-+					vpdpage83data.type1.serialnumber[i] =
- 							'0' + temp;
- 				}
- 			}
- 
- 			/* VpdCodeSetBinary */
--			VPDPage83Data.IdDescriptorType2.CodeSet = 1;
--			/* VpdIdentifierTypeEUI64 */
--			VPDPage83Data.IdDescriptorType2.IdentifierType = 2;
--			VPDPage83Data.IdDescriptorType2.IdentifierLength =
--				sizeof(VPDPage83Data.IdDescriptorType2) - 4;
-+			vpdpage83data.type2.codeset = 1;
-+			/* VpdidentifiertypeEUI64 */
-+			vpdpage83data.type2.identifiertype = 2;
-+			vpdpage83data.type2.identifierlength =
-+				sizeof(vpdpage83data.type2) - 4;
- 
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[0] = 0xD0;
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[1] = 0;
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[2] = 0;
-+			vpdpage83data.type2.eu64id.venid[0] = 0xD0;
-+			vpdpage83data.type2.eu64id.venid[1] = 0;
-+			vpdpage83data.type2.eu64id.venid[2] = 0;
- 
--			VPDPage83Data.IdDescriptorType2.EU64Id.Serial =
-+			vpdpage83data.type2.eu64id.Serial =
- 							get_serial_reply->uid;
--			VPDPage83Data.IdDescriptorType2.EU64Id.Reserved = 0;
-+			vpdpage83data.type2.eu64id.reserved = 0;
-+
-+			/*
-+			 * VpdIdentifierTypeFCPHName
-+			 * VPD 0x83 Type 3 not supported for ARC
-+			 */
-+			if (dev->sa_firmware) {
-+				build_vpd83_type3(&vpdpage83data,
-+						dev, scsicmd);
-+			}
- 
- 			/* Move the inquiry data to the response buffer. */
--			scsi_sg_copy_from_buffer(scsicmd, &VPDPage83Data,
--						 sizeof(VPDPage83Data));
-+			scsi_sg_copy_from_buffer(scsicmd, &vpdpage83data,
-+						 sizeof(vpdpage83data));
- 		} else {
- 			/* It must be for VPD 0x80 */
- 			char sp[13];
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 4b32ff1..07a60a3 100644
+index b54c1bf..05884e6 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2110,6 +2110,8 @@ struct aac_fsinfo {
+@@ -88,6 +88,9 @@ enum {
+ #define AAC_MAX_NATIVE_SIZE		2048
  
- struct  aac_blockdevinfo {
- 	__le32	block_size;
-+	__le32  logical_phys_map;
-+	u8	identifier[16];
- };
+ #define CISS_REPORT_PHYSICAL_LUNS	0xc3
++#define WRITE_HOST_WELLNESS		0xa5
++#define BMIC_IN			0x26
++#define BMIC_OUT			0x27
  
- union aac_contentinfo {
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index 9740a05..2ead5c7 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -548,8 +548,39 @@ static struct device_attribute aac_raid_level_attr = {
- 	.show = aac_show_raid_level
- };
+ struct aac_ciss_phys_luns_resp {
+ 	u8	list_length[4];		/* LUN list length (N-7, big endian) */
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index 346c1c0..0c009f1 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -43,6 +43,7 @@
+ #include <linux/kthread.h>
+ #include <linux/interrupt.h>
+ #include <linux/semaphore.h>
++#include <linux/bcd.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_device.h>
+@@ -1946,6 +1947,143 @@ static void aac_process_events(struct aac_dev *dev)
+ 			flags);
+ }
  
-+static ssize_t aac_show_unique_id(struct device *dev,
-+	     struct device_attribute *attr, char *buf)
++static int aac_send_wellness_command(struct aac_dev *dev, char *wellness_str,
++							u32 datasize)
 +{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
-+	unsigned char sn[16];
++	struct aac_srb *srbcmd;
++	struct sgmap64 *sg64;
++	dma_addr_t addr;
++	char *dma_buf;
++	struct fib *fibptr;
++	int ret = -ENOMEM;
 +
-+	memset(sn, 0, sizeof(sn));
++	fibptr = aac_fib_alloc(dev);
++	if (fibptr) {
++		aac_fib_init(fibptr);
 +
-+	if (sdev_channel(sdev) == CONTAINER_CHANNEL)
-+		memcpy(sn, aac->fsa_dev[sdev_id(sdev)].identifier, sizeof(sn));
++		dma_buf = pci_alloc_consistent(dev->pdev, datasize, &addr);
++		if (dma_buf != NULL) {
++			u32 vbus, vid;
 +
-+	return snprintf(buf, 16 * 2 + 2,
-+		"%02X%02X%02X%02X%02X%02X%02X%02X %02X%02X%02X%02X%02X%02X%02X%02X\n",
-+		sn[0], sn[1], sn[2], sn[3],
-+		sn[4], sn[5], sn[6], sn[7],
-+		sn[8], sn[9], sn[10], sn[11],
-+		sn[12], sn[13], sn[14], sn[15]);
++			vbus = (u32)le16_to_cpu(
++				dev->supplement_adapter_info.VirtDeviceBus);
++			vid = (u32)le16_to_cpu(
++				dev->supplement_adapter_info.VirtDeviceTarget);
++
++			srbcmd = (struct aac_srb *)fib_data(fibptr);
++
++			srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
++			srbcmd->channel = cpu_to_le32(vbus);
++			srbcmd->id = cpu_to_le32(vid);
++			srbcmd->lun = 0;
++			srbcmd->flags = cpu_to_le32(SRB_DataOut);
++			srbcmd->timeout = cpu_to_le32(10);
++			srbcmd->retry_limit = 0;
++			srbcmd->cdb_size = cpu_to_le32(12);
++			srbcmd->count = cpu_to_le32(datasize);
++
++			memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
++			srbcmd->cdb[0] = BMIC_OUT;
++			srbcmd->cdb[6] = WRITE_HOST_WELLNESS;
++			memcpy(dma_buf, (char *)wellness_str, datasize);
++
++			sg64 = (struct sgmap64 *)&srbcmd->sg;
++			sg64->count = cpu_to_le32(1);
++			sg64->sg[0].addr[1] =
++				cpu_to_le32((u32)(((addr) >> 16) >> 16));
++			sg64->sg[0].addr[0] =
++				cpu_to_le32((u32)(addr & 0xffffffff));
++			sg64->sg[0].count = cpu_to_le32(datasize);
++
++			ret = aac_fib_send(ScsiPortCommand64, fibptr,
++				sizeof(struct aac_srb), FsaNormal,
++				1, 1, NULL, NULL);
++
++			pci_free_consistent(dev->pdev, datasize,
++						(void *)dma_buf, addr);
++	}
++
++		/*
++		 * Do not set XferState to zero unless
++		 * receives a response from F/W
++		 */
++		if (ret >= 0)
++			aac_fib_complete(fibptr);
++
++		/*
++		 * FIB should be freed only after
++		 * getting the response from the F/W
++		 */
++		if (ret != -ERESTARTSYS)
++			aac_fib_free(fibptr);
++	}
++
++	return ret;
 +}
 +
-+static struct device_attribute aac_unique_id_attr = {
-+	.attr = {
-+		.name = "unique_id",
-+		.mode = 0444,
-+	},
-+	.show = aac_show_unique_id
-+};
++int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
++{
++	int ret = -ENOMEM;
++	struct fib *fibptr;
 +
++	/*
++	 *  This whole block needs to be rewritten with helpers
++	 *  Changing tabs to a single space should not be allowed!!
++	 */
 +
++	if (dev->sa_firmware) {
++		struct tm cur_tm;
++		char wellness_str[] = "<HW>TD\010\0\0\0\0\0\0\0\0\0DW\0\0ZZ";
++		u32 datasize = sizeof(wellness_str);
++		unsigned long local_time;
 +
- static struct device_attribute *aac_dev_attrs[] = {
- 	&aac_raid_level_attr,
-+	&aac_unique_id_attr,
- 	NULL,
- };
++		local_time = (u32)(now->tv_sec - (sys_tz.tz_minuteswest * 60));
++		time_to_tm(local_time, 0, &cur_tm);
++		cur_tm.tm_mon += 1;
++		cur_tm.tm_year += 1900;
++		wellness_str[8] = bin2bcd(cur_tm.tm_hour);
++		wellness_str[9] = bin2bcd(cur_tm.tm_min);
++		wellness_str[10] = bin2bcd(cur_tm.tm_sec);
++		wellness_str[12] = bin2bcd(cur_tm.tm_mon);
++		wellness_str[13] = bin2bcd(cur_tm.tm_mday);
++		wellness_str[14] = bin2bcd(cur_tm.tm_year / 100);
++		wellness_str[15] = bin2bcd(cur_tm.tm_year % 100);
++
++		ret = aac_send_wellness_command(dev, wellness_str, datasize);
++
++		return ret;
++	}
++
++	fibptr = aac_fib_alloc(dev);
++	if (fibptr) {
++		__le32 *info;
++
++		aac_fib_init(fibptr);
++		info = (__le32 *)fib_data(fibptr);
++		*info = cpu_to_le32(now->tv_sec);
++		ret = aac_fib_send(
++			SendHostTime, fibptr,
++			sizeof(*info), FsaNormal,
++			1, 1, NULL, NULL);
++
++		/*
++		 * Do not set XferState to zero unless
++		 * receives a response from F/W
++		 */
++		if (ret >= 0)
++			aac_fib_complete(fibptr);
++
++		/*
++		 * FIB should be freed only after
++		 * getting the response from the F/W
++		 */
++		if (ret != -ERESTARTSYS)
++			aac_fib_free(fibptr);
++	}
++
++	return ret;
++}
++
+ /**
+  *	aac_command_thread	-	command processing thread
+  *	@dev: Adapter to monitor
+@@ -2001,7 +2139,7 @@ int aac_command_thread(void *data)
  
+ 			/* Don't even try to talk to adapter if its sick */
+ 			ret = aac_check_health(dev);
+-			if (!ret && !dev->queues)
++			if (!dev->queues)
+ 				break;
+ 			next_check_jiffies = jiffies
+ 					   + ((long)(unsigned)check_interval)
+@@ -2014,36 +2152,12 @@ int aac_command_thread(void *data)
+ 				difference = (((1000000 - now.tv_usec) * HZ)
+ 				  + 500000) / 1000000;
+ 			else if (ret == 0) {
+-				struct fib *fibptr;
+-
+-				if ((fibptr = aac_fib_alloc(dev))) {
+-					int status;
+-					__le32 *info;
+-
+-					aac_fib_init(fibptr);
+-
+-					info = (__le32 *) fib_data(fibptr);
+-					if (now.tv_usec > 500000)
+-						++now.tv_sec;
+-
+-					*info = cpu_to_le32(now.tv_sec);
+-
+-					status = aac_fib_send(SendHostTime,
+-						fibptr,
+-						sizeof(*info),
+-						FsaNormal,
+-						1, 1,
+-						NULL,
+-						NULL);
+-					/* Do not set XferState to zero unless
+-					 * receives a response from F/W */
+-					if (status >= 0)
+-						aac_fib_complete(fibptr);
+-					/* FIB should be freed only after
+-					 * getting the response from the F/W */
+-					if (status != -ERESTARTSYS)
+-						aac_fib_free(fibptr);
+-				}
++
++				if (now.tv_usec > 500000)
++					++now.tv_sec;
++
++				ret = aac_send_hosttime(dev, &now);
++
+ 				difference = (long)(unsigned)update_interval*HZ;
+ 			} else {
+ 				/* retry shortly */
 -- 
 2.7.4
 
