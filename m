@@ -1,23 +1,24 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V3 14/24] aacraid: Added support for hotplug
-Date: Fri, 27 Jan 2017 11:28:43 -0800
-Message-ID: <20170127192853.10082-15-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V3 04/24] aacraid: Added sa firmware support
+Date: Fri, 27 Jan 2017 11:28:33 -0800
+Message-ID: <20170127192853.10082-5-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0041.outbound.protection.outlook.com ([104.47.42.41]:17504
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0063.outbound.protection.outlook.com ([104.47.32.63]:47721
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750718AbdA1DnW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 27 Jan 2017 22:43:22 -0500
+        id S1750755AbdA1Dnt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 27 Jan 2017 22:43:49 -0500
 In-Reply-To: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-Added support for drive hotplug add and removal
+sa_firmware adds the capability to differentiate the new SmartIOC family
+of adapters from the series 8 and below.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -26,283 +27,194 @@ Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 Changes in  V2:
 None
 
-Changes in  V2:
-None
+Changes in V3:
+Removed unnecessary brackets
 
- drivers/scsi/aacraid/aachba.c  |  13 ++--
- drivers/scsi/aacraid/aacraid.h |  17 +++++-
- drivers/scsi/aacraid/commsup.c | 136 +++++++++++++++++++++++++++++++++++++++++
- 3 files changed, 159 insertions(+), 7 deletions(-)
+ drivers/scsi/aacraid/aacraid.h  |  4 ++
+ drivers/scsi/aacraid/comminit.c | 98 +++++++++++++++++------------------------
+ drivers/scsi/aacraid/linit.c    |  2 +-
+ 3 files changed, 45 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index c34686f..cc003d1 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -1601,7 +1601,7 @@ int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
-  *	Update our hba map with the information gathered from the FW
-  */
- void aac_update_hba_map(struct aac_dev *dev,
--		struct aac_ciss_phys_luns_resp *phys_luns)
-+		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
- {
- 	/* ok and extended reporting */
- 	u32 lun_count, nexus;
-@@ -1646,7 +1646,10 @@ void aac_update_hba_map(struct aac_dev *dev,
- 			dev->hba_map[bus][target].qd_limit = 32;
- 
- update_devtype:
--		dev->hba_map[bus][target].devtype = devtype;
-+		if (rescan == AAC_INIT)
-+			dev->hba_map[bus][target].devtype = devtype;
-+		else
-+			dev->hba_map[bus][target].new_devtype = devtype;
- 	}
- }
- 
-@@ -1658,7 +1661,7 @@ void aac_update_hba_map(struct aac_dev *dev,
-  *	Execute a CISS REPORT PHYS LUNS and process the results into
-  *	the current hba_map.
-  */
--int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr)
-+int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr, int rescan)
- {
- 	int fibsize, datasize;
- 	struct aac_ciss_phys_luns_resp *phys_luns;
-@@ -1718,7 +1721,7 @@ int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr)
- 	/* analyse data */
- 	if (rcode >= 0 && phys_luns->resp_flag == 2) {
- 		/* ok and extended reporting */
--		aac_update_hba_map(dev, phys_luns);
-+		aac_update_hba_map(dev, phys_luns, rescan);
- 	}
- 
- 	pci_free_consistent(dev->pdev, datasize, (void *) phys_luns, addr);
-@@ -1831,7 +1834,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
- 	if (!dev->sync_mode && dev->sa_firmware &&
- 			dev->supplement_adapter_info.VirtDeviceBus != 0xffff) {
- 		/* Thor SA Firmware -> CISS_REPORT_PHYSICAL_LUNS */
--		rcode = aac_report_phys_luns(dev, fibptr);
-+		rcode = aac_report_phys_luns(dev, fibptr, AAC_INIT);
- 	}
- 
- 	if (!dev->in_reset) {
 diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index e541394..d7d1585 100644
+index f712d8d..1069c01 100644
 --- a/drivers/scsi/aacraid/aacraid.h
 +++ b/drivers/scsi/aacraid/aacraid.h
-@@ -74,7 +74,7 @@ enum {
- #define AAC_NUM_IO_FIB		(1024 - AAC_NUM_MGT_FIB)
- #define AAC_NUM_FIB		(AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
+@@ -1130,6 +1130,7 @@ struct aac_bus_info_response {
+ #define AAC_OPT_SUPPLEMENT_ADAPTER_INFO	cpu_to_le32(1<<16)
+ #define AAC_OPT_NEW_COMM		cpu_to_le32(1<<17)
+ #define AAC_OPT_NEW_COMM_64		cpu_to_le32(1<<18)
++#define AAC_OPT_EXTENDED		cpu_to_le32(1<<23)
+ #define AAC_OPT_NEW_COMM_TYPE1		cpu_to_le32(1<<28)
+ #define AAC_OPT_NEW_COMM_TYPE2		cpu_to_le32(1<<29)
+ #define AAC_OPT_NEW_COMM_TYPE3		cpu_to_le32(1<<30)
+@@ -1141,6 +1142,8 @@ struct aac_bus_info_response {
+ #define AAC_COMM_MESSAGE_TYPE2		4
+ #define AAC_COMM_MESSAGE_TYPE3		5
  
--#define AAC_MAX_LUN		(256)
-+#define AAC_MAX_LUN		256
- 
- #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
- #define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)256)
-@@ -87,6 +87,14 @@ enum {
- #define AAC_MAX_TARGETS		256
- #define AAC_MAX_NATIVE_SIZE		2048
- 
-+/* Thor AIF events */
-+#define SA_AIF_HOTPLUG			(1<<1)
-+#define SA_AIF_HARDWARE		(1<<2)
-+#define SA_AIF_PDEV_CHANGE		(1<<4)
-+#define SA_AIF_LDEV_CHANGE		(1<<5)
-+#define SA_AIF_BPSTAT_CHANGE		(1<<30)
-+#define SA_AIF_BPCFG_CHANGE		(1<<31)
++#define AAC_EXTOPT_SA_FIRMWARE		cpu_to_le32(1<<1)
 +
- #define CISS_REPORT_PHYSICAL_LUNS	0xc3
- #define WRITE_HOST_WELLNESS		0xa5
- #define CISS_IDENTIFY_PHYSICAL_DEVICE	0x15
-@@ -198,6 +206,7 @@ struct aac_ciss_identify_pd {
- #define CONTAINER_TO_CHANNEL(cont)	(CONTAINER_CHANNEL)
- #define CONTAINER_TO_ID(cont)		(cont)
- #define CONTAINER_TO_LUN(cont)		(0)
-+#define ENCLOSURE_CHANNEL		(3)
+ /* MSIX context */
+ struct aac_msix_ctx {
+ 	int		vector_no;
+@@ -1272,6 +1275,7 @@ struct aac_dev
+ 	u8			printf_enabled;
+ 	u8			in_reset;
+ 	u8			msi;
++	u8			sa_firmware;
+ 	int			management_fib_count;
+ 	spinlock_t		manage_lock;
+ 	spinlock_t		sync_lock;
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 480ff01..5aad018 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -75,14 +75,22 @@ static int aac_alloc_comm(struct aac_dev *dev, void **commaddr, unsigned long co
  
- #define PMC_DEVICE_S6	0x28b
- #define PMC_DEVICE_S7	0x28c
-@@ -1102,6 +1111,9 @@ struct fib {
- 	u32			hbacmd_size;	/* cmd size for native */
- };
+ 	if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE1) ||
+ 		(dev->comm_interface == AAC_COMM_MESSAGE_TYPE2) ||
+-		(dev->comm_interface == AAC_COMM_MESSAGE_TYPE3))
++		(dev->comm_interface == AAC_COMM_MESSAGE_TYPE3 &&
++		!dev->sa_firmware)) {
+ 		host_rrq_size =
+ 			(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)
+ 				* sizeof(u32);
+-	else
++		aac_init_size = sizeof(union aac_init);
++	} else if (dev->comm_interface == AAC_COMM_MESSAGE_TYPE3 &&
++		dev->sa_firmware) {
++		host_rrq_size = (dev->scsi_host_ptr->can_queue
++			+ AAC_NUM_MGT_FIB) * sizeof(u32)  * AAC_MAX_MSIX;
++		aac_init_size = sizeof(union aac_init) +
++			(AAC_MAX_HRRQ - 1) * sizeof(struct _rrq);
++	} else {
+ 		host_rrq_size = 0;
+-
+-	aac_init_size = sizeof(union aac_init);
++		aac_init_size = sizeof(union aac_init);
++	}
+ 	size = fibsize + aac_init_size + commsize + commalign +
+ 			printfbufsiz + host_rrq_size;
  
-+#define AAC_INIT			0
-+#define AAC_RESCAN			1
+@@ -466,9 +474,13 @@ void aac_define_int_mode(struct aac_dev *dev)
+ 		if (dev->max_msix > msi_count)
+ 			dev->max_msix = msi_count;
+ 	}
+-	dev->vector_cap =
+-		(dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) /
+-		msi_count;
++	if (dev->comm_interface == AAC_COMM_MESSAGE_TYPE3 && dev->sa_firmware)
++		dev->vector_cap = dev->scsi_host_ptr->can_queue +
++				AAC_NUM_MGT_FIB;
++	else
++		dev->vector_cap = (dev->scsi_host_ptr->can_queue +
++				AAC_NUM_MGT_FIB) / msi_count;
 +
- #define AAC_DEVTYPE_RAID_MEMBER	1
- #define AAC_DEVTYPE_ARC_RAW		2
- #define AAC_DEVTYPE_NATIVE_RAW		3
-@@ -1111,6 +1123,7 @@ struct fib {
- struct aac_hba_map_info {
- 	__le32	rmw_nexus;		/* nexus for native HBA devices */
- 	u8		devtype;	/* device type */
-+	u8		new_devtype;
- 	u8		reset_state;	/* 0 - no reset, 1..x - */
- 					/* after xth TM LUN reset */
- 	u16		qd_limit;
-@@ -2321,7 +2334,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
- 
- int aac_acquire_irq(struct aac_dev *dev);
- void aac_free_irq(struct aac_dev *dev);
--int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr);
-+int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr, int rescan);
- int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target);
- const char *aac_driverinfo(struct Scsi_Host *);
- void aac_fib_vector_assign(struct aac_dev *dev);
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index 0c009f1..9e51508 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -1730,6 +1730,136 @@ int aac_check_health(struct aac_dev * aac)
- 	return BlinkLED;
  }
- 
-+static void aac_resolve_luns(struct aac_dev *dev)
-+{
-+	int bus, target, channel;
-+	struct scsi_device *sdev;
-+	u8 devtype;
-+	u8 new_devtype;
-+
-+	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
-+		for (target = 0; target < AAC_MAX_TARGETS; target++) {
-+
-+			if (aac_phys_to_logical(bus) == ENCLOSURE_CHANNEL)
-+				continue;
-+
-+			if (bus == CONTAINER_CHANNEL)
-+				channel = CONTAINER_CHANNEL;
-+			else
-+				channel = aac_phys_to_logical(bus);
-+
-+			devtype = dev->hba_map[bus][target].devtype;
-+			new_devtype = dev->hba_map[bus][target].new_devtype;
-+
-+			sdev = scsi_device_lookup(dev->scsi_host_ptr, channel,
-+					target, 0);
-+
-+			if (!sdev && devtype)
-+				scsi_add_device(dev->scsi_host_ptr, channel,
-+						target, 0);
-+			else if (sdev && new_devtype != devtype)
-+				scsi_remove_device(sdev);
-+			else if (sdev && new_devtype == devtype)
-+				scsi_rescan_device(&sdev->sdev_gendev);
-+
-+			if (sdev)
-+				scsi_device_put(sdev);
-+
-+			dev->hba_map[bus][target].devtype = new_devtype;
-+		}
-+	}
-+}
-+
-+/**
-+ *	aac_handle_sa_aif	Handle a message from the firmware
-+ *	@dev: Which adapter this fib is from
-+ *	@fibptr: Pointer to fibptr from adapter
-+ *
-+ *	This routine handles a driver notify fib from the adapter and
-+ *	dispatches it to the appropriate routine for handling.
-+ */
-+static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
-+{
-+	int i, bus, target, container, rcode = 0;
-+	u32 events = 0;
-+	struct fib *fib;
-+	struct scsi_device *sdev;
-+
-+	if (fibptr->hbacmd_size & SA_AIF_HOTPLUG)
-+		events = SA_AIF_HOTPLUG;
-+	else if (fibptr->hbacmd_size & SA_AIF_HARDWARE)
-+		events = SA_AIF_HARDWARE;
-+	else if (fibptr->hbacmd_size & SA_AIF_PDEV_CHANGE)
-+		events = SA_AIF_PDEV_CHANGE;
-+	else if (fibptr->hbacmd_size & SA_AIF_LDEV_CHANGE)
-+		events = SA_AIF_LDEV_CHANGE;
-+	else if (fibptr->hbacmd_size & SA_AIF_BPSTAT_CHANGE)
-+		events = SA_AIF_BPSTAT_CHANGE;
-+	else if (fibptr->hbacmd_size & SA_AIF_BPCFG_CHANGE)
-+		events = SA_AIF_BPCFG_CHANGE;
-+
-+	switch (events) {
-+	case SA_AIF_HOTPLUG:
-+	case SA_AIF_HARDWARE:
-+	case SA_AIF_PDEV_CHANGE:
-+	case SA_AIF_LDEV_CHANGE:
-+	case SA_AIF_BPCFG_CHANGE:
-+
-+		fib = aac_fib_alloc(dev);
-+		if (!fib) {
-+			pr_err("aac_handle_sa_aif: out of memory\n");
-+			return;
-+		}
-+		for (bus = 0; bus < AAC_MAX_BUSES; bus++)
-+			for (target = 0; target < AAC_MAX_TARGETS; target++)
-+				dev->hba_map[bus][target].new_devtype = 0;
-+
-+		rcode = aac_report_phys_luns(dev, fib, AAC_RESCAN);
-+
-+		if (rcode != -ERESTARTSYS)
-+			aac_fib_free(fib);
-+
-+		aac_resolve_luns(dev);
-+
-+		if (events == SA_AIF_LDEV_CHANGE ||
-+		    events == SA_AIF_BPCFG_CHANGE) {
-+			aac_get_containers(dev);
-+			for (container = 0; container <
-+			dev->maximum_num_containers; ++container) {
-+				sdev = scsi_device_lookup(dev->scsi_host_ptr,
-+						CONTAINER_CHANNEL,
-+						container, 0);
-+				if (dev->fsa_dev[container].valid && !sdev) {
-+					scsi_add_device(dev->scsi_host_ptr,
-+						CONTAINER_CHANNEL,
-+						container, 0);
-+				} else if (!dev->fsa_dev[container].valid &&
-+					sdev) {
-+					scsi_remove_device(sdev);
-+					scsi_device_put(sdev);
-+				} else if (sdev) {
-+					scsi_rescan_device(&sdev->sdev_gendev);
-+					scsi_device_put(sdev);
-+				}
-+			}
-+		}
-+		break;
-+
-+	case SA_AIF_BPSTAT_CHANGE:
-+		/* currently do nothing */
-+		break;
-+	}
-+
-+	for (i = 1; i <= 10; ++i) {
-+		events = src_readl(dev, MUnit.IDR);
-+		if (events & (1<<23)) {
-+			pr_warn(" AIF not cleared by firmware - %d/%d)\n",
-+				i, 10);
-+			ssleep(1);
-+		}
-+	}
-+}
-+
- static void aac_process_events(struct aac_dev *dev)
+ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
  {
- 	struct hw_fib *hw_fib, *hw_newfib;
-@@ -1759,6 +1889,12 @@ static void aac_process_events(struct aac_dev *dev)
+@@ -527,6 +539,12 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 				dev->sync_mode = 1;
+ 			}
+ 		}
++		if ((status[1] & le32_to_cpu(AAC_OPT_EXTENDED)) &&
++			(status[4] & le32_to_cpu(AAC_EXTOPT_SA_FIRMWARE)))
++			dev->sa_firmware = 1;
++		else
++			dev->sa_firmware = 0;
++
+ 		if ((dev->comm_interface == AAC_COMM_MESSAGE) &&
+ 		    (status[2] > dev->base_size)) {
+ 			aac_adapter_ioremap(dev, 0);
+@@ -563,61 +581,25 @@ struct aac_dev *aac_init_adapter(struct aac_dev *dev)
+ 		dev->sg_tablesize = status[2] & 0xFFFF;
+ 		if (dev->pdev->device == PMC_DEVICE_S7 ||
+ 		    dev->pdev->device == PMC_DEVICE_S8 ||
+-		    dev->pdev->device == PMC_DEVICE_S9)
+-			host->can_queue = ((status[3] >> 16) ? (status[3] >> 16) :
+-				(status[3] & 0xFFFF)) - AAC_NUM_MGT_FIB;
+-		else
+-			host->can_queue = (status[3] & 0xFFFF) - AAC_NUM_MGT_FIB;
++		    dev->pdev->device == PMC_DEVICE_S9) {
++			if (host->can_queue > (status[3] >> 16) -
++					AAC_NUM_MGT_FIB)
++				host->can_queue = (status[3] >> 16) -
++					AAC_NUM_MGT_FIB;
++		} else if (host->can_queue > (status[3] & 0xFFFF) -
++				AAC_NUM_MGT_FIB)
++			host->can_queue = (status[3] & 0xFFFF) -
++				AAC_NUM_MGT_FIB;
++
+ 		dev->max_num_aif = status[4] & 0xFFFF;
+-		/*
+-		 *	NOTE:
+-		 *	All these overrides are based on a fixed internal
+-		 *	knowledge and understanding of existing adapters,
+-		 *	acbsize should be set with caution.
+-		 */
+-		if (acbsize == 512) {
+-			host->max_sectors = AAC_MAX_32BIT_SGBCOUNT;
+-			dev->max_fib_size = 512;
+-			dev->sg_tablesize = host->sg_tablesize
+-			  = (512 - sizeof(struct aac_fibhdr)
+-			    - sizeof(struct aac_write) + sizeof(struct sgentry))
+-			     / sizeof(struct sgentry);
+-			host->can_queue = AAC_NUM_IO_FIB;
+-		} else if (acbsize == 2048) {
+-			host->max_sectors = 512;
+-			dev->max_fib_size = 2048;
+-			host->sg_tablesize = 65;
+-			dev->sg_tablesize = 81;
+-			host->can_queue = 512 - AAC_NUM_MGT_FIB;
+-		} else if (acbsize == 4096) {
+-			host->max_sectors = 1024;
+-			dev->max_fib_size = 4096;
+-			host->sg_tablesize = 129;
+-			dev->sg_tablesize = 166;
+-			host->can_queue = 256 - AAC_NUM_MGT_FIB;
+-		} else if (acbsize == 8192) {
+-			host->max_sectors = 2048;
+-			dev->max_fib_size = 8192;
+-			host->sg_tablesize = 257;
+-			dev->sg_tablesize = 337;
+-			host->can_queue = 128 - AAC_NUM_MGT_FIB;
+-		} else if (acbsize > 0) {
+-			printk("Illegal acbsize=%d ignored\n", acbsize);
+-		}
+ 	}
+-	{
+-
+-		if (numacb > 0) {
+-			if (numacb < host->can_queue)
+-				host->can_queue = numacb;
+-			else
+-				printk("numacb=%d ignored\n", numacb);
+-		}
++	if (numacb > 0) {
++		if (numacb < host->can_queue)
++			host->can_queue = numacb;
++		else
++			pr_warn("numacb=%d ignored\n", numacb);
+ 	}
  
- 		fib = list_entry(entry, struct fib, fiblink);
- 		hw_fib = fib->hw_fib_va;
-+		if (dev->sa_firmware) {
-+			/* Thor AIF */
-+			aac_handle_sa_aif(dev, fib);
-+			aac_fib_adapter_complete(fib, (u16)sizeof(u32));
-+			continue;
-+		}
- 		/*
- 		 *	We will process the FIB here or pass it to a
- 		 *	worker thread that is TBD. We Really can't
+-	if (host->can_queue > AAC_NUM_IO_FIB)
+-		host->can_queue = AAC_NUM_IO_FIB;
+-
+ 	if (dev->pdev->device == PMC_DEVICE_S6 ||
+ 	    dev->pdev->device == PMC_DEVICE_S7 ||
+ 	    dev->pdev->device == PMC_DEVICE_S8 ||
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 0f3de1e..1912e7b 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1285,7 +1285,7 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	else
+ 		shost->this_id = shost->max_id;
+ 
+-	if (aac_drivers[index].quirks & AAC_QUIRK_SRC)
++	if (!aac->sa_firmware && aac_drivers[index].quirks & AAC_QUIRK_SRC)
+ 		aac_intr_normal(aac, 0, 2, 0, NULL);
+ 
+ 	/*
 -- 
 2.7.4
 
