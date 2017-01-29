@@ -1,45 +1,43 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] storvsc: remove bogus code to transfer struct scatterlist
-Date: Sun, 29 Jan 2017 10:12:18 +0100
-Message-ID: <1485681138-21236-1-git-send-email-hch@lst.de>
+From: "hch@lst.de" <hch@lst.de>
+Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
+Date: Sun, 29 Jan 2017 10:07:36 +0100
+Message-ID: <20170129090736.GA10369@lst.de>
+References: <20170123163446.9227-1-bart.vanassche@sandisk.com> <20170123163446.9227-2-bart.vanassche@sandisk.com> <1485359225.3093.3.camel@sandisk.com> <20170126143614.GA19849@lst.de> <1485667034.15853.1.camel@sandisk.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:40112 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750799AbdA2KPl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 29 Jan 2017 05:15:41 -0500
+Received: from verein.lst.de ([213.95.11.211]:43483 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751057AbdA2NXe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Jan 2017 08:23:34 -0500
+Content-Disposition: inline
+In-Reply-To: <1485667034.15853.1.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com
-Cc: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Remove a piece of code in storvsc_queuecommand that tries to pass the
-physical address of the kernel struct scatterlist pointer to the host.
+Hi Bart,
 
-Fortunately the code can't ever be reached anyway.
+thanks for the analysis.  I think the main issue here is that we shouldn't
+try to assign affinity masks if there are not affinity vectors left to
+assign.
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/storvsc_drv.c | 7 -------
- 1 file changed, 7 deletions(-)
+Does the patch below fix the issue for you?
 
-diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
-index 05526b7..62f4545 100644
---- a/drivers/scsi/storvsc_drv.c
-+++ b/drivers/scsi/storvsc_drv.c
-@@ -1511,13 +1511,6 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
- 				page_to_pfn(sg_page((cur_sgl)));
- 			cur_sgl = sg_next(cur_sgl);
- 		}
--
--	} else if (scsi_sglist(scmnd)) {
--		payload->range.len = length;
--		payload->range.offset =
--			virt_to_phys(scsi_sglist(scmnd)) & (PAGE_SIZE-1);
--		payload->range.pfn_array[0] =
--			virt_to_phys(scsi_sglist(scmnd)) >> PAGE_SHIFT;
- 	}
- 
- 	cmd_request->payload = payload;
--- 
-2.1.4
-
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50c5003..96c0713 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1206,6 +1206,11 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 	if (flags & PCI_IRQ_AFFINITY) {
+ 		if (!affd)
+ 			affd = &msi_default_affd;
++
++		if (affd->pre_vectors + affd->post_vectors > min_vecs)
++			return -EINVAL;
++		if (affd->pre_vectors + affd->post_vectors == min_vecs)
++			flags &=~ PCI_IRQ_AFFINITY;
+ 	} else {
+ 		if (WARN_ON(affd))
+ 			affd = NULL;
