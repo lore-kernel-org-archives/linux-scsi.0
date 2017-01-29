@@ -1,43 +1,35 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
-Date: Sun, 29 Jan 2017 10:07:36 +0100
-Message-ID: <20170129090736.GA10369@lst.de>
-References: <20170123163446.9227-1-bart.vanassche@sandisk.com> <20170123163446.9227-2-bart.vanassche@sandisk.com> <1485359225.3093.3.camel@sandisk.com> <20170126143614.GA19849@lst.de> <1485667034.15853.1.camel@sandisk.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Sun, 29 Jan 2017 16:19:12 +0000
+Message-ID: <bug-176951-11613-Cq9bMZqHiw@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:43483 "EHLO newverein.lst.de"
+Received: from mail.kernel.org ([198.145.29.136]:39312 "EHLO mail.kernel.org"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751057AbdA2NXe (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Jan 2017 08:23:34 -0500
-Content-Disposition: inline
-In-Reply-To: <1485667034.15853.1.camel@sandisk.com>
+        id S1751369AbdA2QaV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 29 Jan 2017 11:30:21 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id 25AC520377
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Jan 2017 16:19:15 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id C244020340
+        for <linux-scsi@vger.kernel.org>; Sun, 29 Jan 2017 16:19:12 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
 
-Hi Bart,
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-thanks for the analysis.  I think the main issue here is that we shouldn't
-try to assign affinity masks if there are not affinity vectors left to
-assign.
+--- Comment #20 from Martin Goyot <martin@piwany.com> ---
+A new Bios update is available on Acer's website:
+https://www.acer.com/ac/en/GB/content/support-product/6917?b=1
 
-Does the patch below fix the issue for you?
+v1.08 apparently. If anyone has tried it, does it solve the remaining problems?
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 50c5003..96c0713 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1206,6 +1206,11 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 	if (flags & PCI_IRQ_AFFINITY) {
- 		if (!affd)
- 			affd = &msi_default_affd;
-+
-+		if (affd->pre_vectors + affd->post_vectors > min_vecs)
-+			return -EINVAL;
-+		if (affd->pre_vectors + affd->post_vectors == min_vecs)
-+			flags &=~ PCI_IRQ_AFFINITY;
- 	} else {
- 		if (WARN_ON(affd))
- 			affd = NULL;
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
