@@ -1,68 +1,49 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH 1/2] qla2xxx: Fix a recently introduced memory leak
-Date: Sun, 29 Jan 2017 05:17:38 +0000
-Message-ID: <1485667034.15853.1.camel@sandisk.com>
-References: <20170123163446.9227-1-bart.vanassche@sandisk.com>
-         <20170123163446.9227-2-bart.vanassche@sandisk.com>
-         <1485359225.3093.3.camel@sandisk.com> <20170126143614.GA19849@lst.de>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH v2 0/2] scsi: storvsc: Add support for FC lightweight host.
+Date: Sun, 29 Jan 2017 00:56:10 -0800
+Message-ID: <20170129085610.GA10258@infradead.org>
+References: <1485437940-18706-1-git-send-email-cavery@redhat.com>
+ <20170126145159.GA29683@infradead.org>
+ <DM5PR03MB24902D4813941D2722030DA1A0480@DM5PR03MB2490.namprd03.prod.outlook.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0049.outbound.protection.outlook.com ([104.47.41.49]:38085
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751819AbdA2FRy (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 29 Jan 2017 00:17:54 -0500
-In-Reply-To: <20170126143614.GA19849@lst.de>
-Content-Language: en-US
-Content-ID: <59695CB41E7BE048B44406BDD76FC03A@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
+Content-Disposition: inline
+In-Reply-To: <DM5PR03MB24902D4813941D2722030DA1A0480@DM5PR03MB2490.namprd03.prod.outlook.com>
+List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
+List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
+List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
+List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
+List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
+ <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
+Errors-To: driverdev-devel-bounces@linuxdriverproject.org
+Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
+To: KY Srinivasan <kys@microsoft.com>
+Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, Haiyang Zhang <haiyangz@microsoft.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@infradead.org>, "famz@redhat.com" <famz@redhat.com>, "devel@linuxdriverproject.org" <devel@linuxdriverproject.org>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-T24gVGh1LCAyMDE3LTAxLTI2IGF0IDE1OjM2ICswMTAwLCBoY2hAbHN0LmRlIHdyb3RlOg0KPiBP
-biBXZWQsIEphbiAyNSwgMjAxNyBhdCAwMzo0NzoyMFBNICswMDAwLCBCYXJ0IFZhbiBBc3NjaGUg
-d3JvdGU6DQo+ID4gPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0NCj4gPiBCVUcga21hbGxvYy0xNiAoTm90
-IHRhaW50ZWQpOiBSZWR6b25lIG92ZXJ3cml0dGVuDQo+ID4gLS0tLS0tLS0tLS0tLS0tLS0tLS0t
-LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0N
-Cj4gPiANCj4gPiBEaXNhYmxpbmcgbG9jayBkZWJ1Z2dpbmcgZHVlIHRvIGtlcm5lbCB0YWludA0K
-PiA+IElORk86IDB4ZmZmZjg4MDAzMGJhY2M3OC0weGZmZmY4ODAwMzBiYWNjN2YuIEZpcnN0IGJ5
-dGUgMHhmIGluc3RlYWQgb2YgMHhjYw0KPiA+IElORk86IEFsbG9jYXRlZCBpbiBpcnFfY3JlYXRl
-X2FmZmluaXR5X21hc2tzKzB4NWYvMHgyNjAgYWdlPTAgY3B1PTMgcGlkPTgxMg0KPiA+IAlfX19z
-bGFiX2FsbG9jLmNvbnN0cHJvcC43OSsweDQ4Mi8weDRmMA0KPiA+IAlfX3NsYWJfYWxsb2MuaXNy
-YS43NS5jb25zdHByb3AuNzgrMHg1NS8weGEwDQo+ID4gCV9fa21hbGxvYysweDI3Yy8weDMxMA0K
-PiA+IAlpcnFfY3JlYXRlX2FmZmluaXR5X21hc2tzKzB4NWYvMHgyNjANCj4gDQo+IFRoaXMgaXMg
-dGhlIG5vcm1hbCBhZmZpbml0eSBtYXNrIGFsbG9jYXRpb24uDQoNCihyZWR1Y2VkIENDLWxpc3Qg
-YWdhaW4pDQoNCkhlbGxvIENocmlzdG9waCwNCg0KSXQgc2VlbXMgbGlrZSBpcnFfY3JlYXRlX2Fm
-ZmluaXR5X21hc2tzKCkgd3JvdGUgcGFzdCB0aGUgYm91bmRzIG9mIHRoZSBtYXNrcyBhcnJheQ0K
-aXQgYWxsb2NhdGVkLiBBZnRlciBJIGhhZCBhZGRlZCB0aGUgZm9sbG93aW5nIGRlYnVnIGNvZGUg
-aW7CoGlycV9jcmVhdGVfYWZmaW5pdHlfbWFza3MoKToNCg0KIMKgwqDCoMKgwqDCoCBXQVJOX09O
-X09OQ0UoYWZmdiA8PSAwKTsNCsKgwqDCoMKgwqDCoMKgwqBwcl9lcnIoIiVzOiBhZmZkID0geyAu
-cHJlID0gJWQsIC5wb3N0ID0gJWQgfSwgbnZlY3MgPSAlZFxuIiwNCsKgwqDCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgX19mdW5jX18sIGFmZmQtPnByZV92ZWN0b3JzLCBhZmZkLT5wb3N0X3Zl
-Y3RvcnMsIG52ZWNzKTsNCg0KVGhlIGZvbGxvd2luZyBvdXRwdXQgYXBwZWFyZWQ6DQoNCldBUk5J
-Tkc6IENQVTogMCBQSUQ6IDgxNCBhdCBrZXJuZWwvaXJxL2FmZmluaXR5LmM6NjkgaXJxX2NyZWF0
-ZV9hZmZpbml0eV9tYXNrcysweDJjZC8weDJmMA0KQ2FsbCBUcmFjZToNCiBkdW1wX3N0YWNrKzB4
-ODUvMHhjMg0KIF9fd2FybisweGNiLzB4ZjANCiB3YXJuX3Nsb3dwYXRoX251bGwrMHgxZC8weDIw
-DQogaXJxX2NyZWF0ZV9hZmZpbml0eV9tYXNrcysweDJjZC8weDJmMA0KIF9fcGNpX2VuYWJsZV9t
-c2l4KzB4MzE0LzB4NGMwDQogcGNpX2FsbG9jX2lycV92ZWN0b3JzX2FmZmluaXR5KzB4YjcvMHgx
-NDANCiBxbGEyeDAwX3JlcXVlc3RfaXJxcysweGE2LzB4NmQwIFtxbGEyeHh4XQ0KIHFsYTJ4MDBf
-cHJvYmVfb25lKzB4YzJlLzB4MjVmMCBbcWxhMnh4eF0NCiBwY2lfZGV2aWNlX3Byb2JlKzB4OGEv
-MHhmMA0KIGRyaXZlcl9wcm9iZV9kZXZpY2UrMHgxZjUvMHg0NTANCiBfX2RyaXZlcl9hdHRhY2gr
-MHhlMy8weGYwDQogYnVzX2Zvcl9lYWNoX2RldisweDY2LzB4YTANCiBkcml2ZXJfYXR0YWNoKzB4
-MWUvMHgyMA0KIGJ1c19hZGRfZHJpdmVyKzB4MjAwLzB4MjcwDQogZHJpdmVyX3JlZ2lzdGVyKzB4
-NjAvMHhlMA0KIF9fcGNpX3JlZ2lzdGVyX2RyaXZlcisweDVkLzB4NjANCiBxbGEyeDAwX21vZHVs
-ZV9pbml0KzB4MWM5LzB4MjE3IFtxbGEyeHh4XQ0KIGRvX29uZV9pbml0Y2FsbCsweDQ0LzB4MTgw
-DQogZG9faW5pdF9tb2R1bGUrMHg1Zi8weDFmOQ0KIGxvYWRfbW9kdWxlKzB4MjU4Mi8weDJhMDAN
-CiBTWVNDX2Zpbml0X21vZHVsZSsweGJjLzB4ZjANCiBTeVNfZmluaXRfbW9kdWxlKzB4ZS8weDEw
-DQogZW50cnlfU1lTQ0FMTF82NF9mYXN0cGF0aCsweDIzLzB4YzYNCg0KaXJxX2NyZWF0ZV9hZmZp
-bml0eV9tYXNrczogYWZmZCA9IHsgLnByZSA9IDIsIC5wb3N0ID0gMCB9LCBudmVjcyA9IDINCg0K
-YWZmZCBjb21lcyBmcm9tIHRoZSBxbGEyeHh4IGRyaXZlcjogc3RydWN0IGlycV9hZmZpbml0eSBk
-ZXNjID0geyAucHJlX3ZlY3RvcnMgPQ0KUUxBX0JBU0VfVkVDVE9SUyB9LiBTaG91bGRuJ3QgaXJx
-X2NhbGNfYWZmaW5pdHlfdmVjdG9ycygpIGd1YXJhbnRlZSB0aGF0IGl0DQpyZXR1cm5zIGEgdmFs
-dWUgdGhhdCBpcyBzdHJpY3RseSBncmVhdGVyIHRoYW4gYWZmZC0+cHJlX3ZlY3RvcnMgKyBhZmZk
-LT5wb3N0X3ZlY3RvcnMNCmluc3RlYWQgb2YgZ3JlYXRlciB0aGFuIG9yIGVxdWFsIHRvIGFmZmQt
-PnByZV92ZWN0b3JzICsgYWZmZC0+cG9zdF92ZWN0b3JzPw0KDQpUaGFua3MsDQoNCkJhcnQu
+On Sun, Jan 29, 2017 at 12:35:32AM +0000, KY Srinivasan wrote:
+> Windows has chosen this model for virtualizing FC devices to the guest -
+> without rports (or vports). As I noted in my earlier email, James came
+> up with this notion of a lightweight template almost a year ago. We can
+> certainly pick a  more appropriate name and include better documentation. 
+
+Can we take a step back and figure out what you're trying to
+archive here.
+
+storsvc is a paravirtualized device interface, and whatever underlies
+it should be of no relevance for the guest.
+
+Despite that fact Microsoft apparently wants to expose a FC-like
+port_name and node_name to guests for some virtual disks.  Can you
+please explain what the guest is supposed to use them for?
+
+And second I'd like to understand what the fascination with the FC
+transport class is to expose these two attributes.  Given that
+your sysfs layout will be entirely different from real FC devices
+I simply don't see any need for that.
+
+Why can't this whole thing simply be solved by adding sdev_attrs
+for the port_name and node_name to storsvc directly?
