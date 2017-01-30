@@ -1,54 +1,47 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: Device or HBA level QD throttling creates randomness in sequetial
- workload
-Date: Mon, 30 Jan 2017 09:32:33 -0700
-Message-ID: <22a9792c-098d-eb8d-b7d4-87a79cf1d31f@kernel.dk>
-References: <2d656e9c9fbde7206e40a635c61a6084@mail.gmail.com>
- <298b6ff6-9feb-4b70-ec4c-d1295a0e1f41@kernel.dk>
- <e1e827ba633f780b00d070e087204d5c@mail.gmail.com>
- <1485793840.2712.1.camel@sandisk.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: sort out the ->eh_timed_out mess
+Date: Mon, 30 Jan 2017 16:46:00 +0000
+Message-ID: <1485794746.2712.5.camel@sandisk.com>
+References: <1485778739-29036-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f46.google.com ([209.85.214.46]:37179 "EHLO
-        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752277AbdA3Qky (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2017 11:40:54 -0500
-Received: by mail-it0-f46.google.com with SMTP id r185so105390834ita.0
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 08:40:53 -0800 (PST)
-In-Reply-To: <1485793840.2712.1.camel@sandisk.com>
+Received: from mail-sn1nam02on0043.outbound.protection.outlook.com ([104.47.36.43]:62270
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753794AbdA3Qq0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 11:46:26 -0500
+In-Reply-To: <1485778739-29036-1-git-send-email-hch@lst.de>
+Content-Language: en-US
+Content-ID: <B58E87B5545EC041956AA32BDA80BD86@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "osandov@osandov.com" <osandov@osandov.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>
+To: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "hare@suse.de" <hare@suse.de>
 
-On 01/30/2017 09:30 AM, Bart Van Assche wrote:
-> On Mon, 2017-01-30 at 19:22 +0530, Kashyap Desai wrote:
->> -   if (atomic_inc_return(&instance->fw_outstanding) >
->> -           instance->host->can_queue) {
->> -       atomic_dec(&instance->fw_outstanding);
->> -       return SCSI_MLQUEUE_HOST_BUSY;
->> -   }
->> +   if (atomic_inc_return(&instance->fw_outstanding) > safe_can_queue) {
->> +       is_nonrot = blk_queue_nonrot(scmd->device->request_queue);
->> +       /* For rotational device wait for sometime to get fusion command
->> from pool.
->> +        * This is just to reduce proactive re-queue at mid layer which is
->> not
->> +        * sending sorted IO in SCSI.MQ mode.
->> +        */
->> +       if (!is_nonrot)
->> +           udelay(100);
->> +   }
-> 
-> The SCSI core does not allow to sleep inside the queuecommand() callback
-> function.
+On Mon, 2017-01-30 at 13:18 +0100, Christoph Hellwig wrote:
+> We originally only supported the methods in the transport_template,
+> which led to problems with drivers needing it and having to fake
+> up a template.  Then we added it to the host to avoid that issue,
+> but because the transport template takes precedence we still have
+> various placed that need to hack around it.
+>=20
+> This series removes the transport_template instance and switches
+> everyone to use the host method, similar to how we supply generic
+> helpers elsewhere.
+>=20
+> In addition it removes a bit of cruft in the same area.
 
-udelay() is a busy loop, so it's not sleeping. That said, it's obviously
-NOT a great idea. We want to fix the reordering due to requeues, not
-introduce random busy delays to work around it.
+Hello Christoph,
 
--- 
-Jens Axboe
+Patches 1, 2 and 4 of this series are a real improvement in my opinion.
+However, I'm not sure whether patch 3 is the best way to avoid that drivers
+have to re-override the transport template timeout handler. Have you
+considered to modify the SCSI EH such that the host timeout handler has
+priority over the transport timeout handler? I think that would result in
+a much smaller patch 3/4.
 
+Thanks,
+
+Bart.=
