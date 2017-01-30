@@ -1,45 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCH] scsi, block: fix duplicate bdi name registration
-        crashes
-Date: Mon, 30 Jan 2017 13:24:52 +0100
-Message-ID: <20170130122452.GA9043@lst.de>
-References: <148566590827.1627.3631056985359212959.stgit@dwillia2-desk3.amr.corp.intel.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 176951] boot fails unless acpi=off Acer Travelmate X-349
+Date: Mon, 30 Jan 2017 13:25:17 +0000
+Message-ID: <bug-176951-11613-lEaNHK2Uf9@https.bugzilla.kernel.org/>
+References: <bug-176951-11613@https.bugzilla.kernel.org/>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <148566590827.1627.3631056985359212959.stgit@dwillia2-desk3.amr.corp.intel.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: martin.petersen@oracle.com, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, James Bottomley <James.Bottomley@hansenpartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@osandov.com>, Christoph Hellwig <hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail.kernel.org ([198.145.29.136]:56824 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752272AbdA3NZ0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 08:25:26 -0500
+Received: from mail.kernel.org (localhost [127.0.0.1])
+        by mail.kernel.org (Postfix) with ESMTP id E13F62026C
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 13:25:18 +0000 (UTC)
+Received: from bugzilla1.web.kernel.org (bugzilla1.web.kernel.org [172.20.200.51])
+        by mail.kernel.org (Postfix) with ESMTP id CD04020212
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 13:25:17 +0000 (UTC)
+In-Reply-To: <bug-176951-11613@https.bugzilla.kernel.org/>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-Hi Dan,
+https://bugzilla.kernel.org/show_bug.cgi?id=176951
 
-this looks mostly fine to me.  A few code comments below, but except
-for this there is another issue with it:  We still have drivers
-that share a single request_queue for multiple gendisks, so I wonder
+--- Comment #21 from Dmitry Sysoletin <dmitry.sysoletin@gmail.com> ---
+(In reply to Martin Goyot from comment #20)
+> A new Bios update is available on Acer's website:
+> https://www.acer.com/ac/en/GB/content/support-product/6917?b=1
+> 
+> v1.08 apparently. If anyone has tried it, does it solve the remaining
+> problems?
 
-Also I think you probably want one patch for the block framework,
-and one to switch SCSI over to it.
+I tried it - and it not helps. Still have crashes at boot.
 
-> +struct disk_devt {
-> +	struct kref kref;
-> +	void (*release)(struct kref *);
-> +};
-> +
-> +static inline void put_disk_devt(struct disk_devt *disk_devt)
-> +{
-> +	if (disk_devt)
-> +		kref_put(&disk_devt->kref, disk_devt->release);
-> +}
-> +
-> +static inline void get_disk_devt(struct disk_devt *disk_devt)
-> +{
-> +	if (disk_devt)
-> +		kref_get(&disk_devt->kref);
-> +}
-
-Given that we have a user-supplied release callack I'd much rather get
-rid of the kref here, use a normal atomic_t and pass the disk_devt
-structure to the release callback then a kref.
+-- 
+You are receiving this mail because:
+You are watching the assignee of the bug.
