@@ -1,20 +1,21 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter FW
-Date: Mon, 30 Jan 2017 20:05:32 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8A6D30@avsrvexchmbx2.microsemi.net>
+Subject: RE: [PATCH V3 11/24] aacraid: Added support for periodic wellness
+ sync
+Date: Mon, 30 Jan 2017 20:07:46 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8A6D59@avsrvexchmbx2.microsemi.net>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-13-RaghavaAditya.Renukunta@microsemi.com>
- <20170130103114.GI3603@linux-x5ow.site>
+ <20170127192853.10082-12-RaghavaAditya.Renukunta@microsemi.com>
+ <20170130102701.GH3603@linux-x5ow.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0054.outbound.protection.outlook.com ([104.47.36.54]:17218
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0086.outbound.protection.outlook.com ([104.47.40.86]:14019
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751909AbdA3UGf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 15:06:35 -0500
-In-Reply-To: <20170130103114.GI3603@linux-x5ow.site>
+        id S1754348AbdA3UH5 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 15:07:57 -0500
+In-Reply-To: <20170130102701.GH3603@linux-x5ow.site>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,22 +26,24 @@ Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle
 
 > -----Original Message-----
 > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Monday, January 30, 2017 2:31 AM
+> Sent: Monday, January 30, 2017 2:27 AM
 > To: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>
 > Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
 > scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
 > Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
 > <scott.benesh@microsemi.com>
-> Subject: Re: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter
-> FW
+> Subject: Re: [PATCH V3 11/24] aacraid: Added support for periodic wellnes=
+s
+> sync
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> On Fri, Jan 27, 2017 at 11:28:41AM -0800, Raghava Aditya Renukunta wrote:
-> > Retrieved queue depth from fw and saved it for future use.
-> > Only applicable for HBA1000 drives.
+> On Fri, Jan 27, 2017 at 11:28:40AM -0800, Raghava Aditya Renukunta wrote:
+> > This patch adds a new functions that periodically sync the time of host
+> > to the adapter. In addition also informs the adapter that the driver is
+> > alive and kicking. Only applicable to the HBA1000 and SMARTIOC2000.
 > >
 > > Signed-off-by: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>
@@ -53,185 +56,281 @@ Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle
 > > Changes in  V3:
 > > None
 > >
-> >  drivers/scsi/aacraid/aachba.c  | 84
-> ++++++++++++++++++++++++++++++++++++++++-
-> >  drivers/scsi/aacraid/aacraid.h | 85
-> +++++++++++++++++++++++++++++++++++++++++-
-> >  2 files changed, 167 insertions(+), 2 deletions(-)
+> >  drivers/scsi/aacraid/aacraid.h |   3 +
+> >  drivers/scsi/aacraid/commsup.c | 176
+> +++++++++++++++++++++++++++++++++--------
+> >  2 files changed, 148 insertions(+), 31 deletions(-)
 > >
-> > diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachb=
-a.c
-> > index e441a54..c34686f 100644
-> > --- a/drivers/scsi/aacraid/aachba.c
-> > +++ b/drivers/scsi/aacraid/aachba.c
-> > @@ -1516,6 +1516,83 @@ static int aac_scsi_32_64(struct fib * fib, stru=
-ct
-> scsi_cmnd * cmd)
-> >       return aac_scsi_32(fib, cmd);
+> > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacr=
+aid.h
+> > index b54c1bf..05884e6 100644
+> > --- a/drivers/scsi/aacraid/aacraid.h
+> > +++ b/drivers/scsi/aacraid/aacraid.h
+> > @@ -88,6 +88,9 @@ enum {
+> >  #define AAC_MAX_NATIVE_SIZE          2048
+> >
+> >  #define CISS_REPORT_PHYSICAL_LUNS    0xc3
+> > +#define WRITE_HOST_WELLNESS          0xa5
+> > +#define BMIC_IN                      0x26
+> > +#define BMIC_OUT                     0x27
+> >
+> >  struct aac_ciss_phys_luns_resp {
+> >       u8      list_length[4];         /* LUN list length (N-7, big endi=
+an) */
+> > diff --git a/drivers/scsi/aacraid/commsup.c
+> b/drivers/scsi/aacraid/commsup.c
+> > index 346c1c0..0c009f1 100644
+> > --- a/drivers/scsi/aacraid/commsup.c
+> > +++ b/drivers/scsi/aacraid/commsup.c
+> > @@ -43,6 +43,7 @@
+> >  #include <linux/kthread.h>
+> >  #include <linux/interrupt.h>
+> >  #include <linux/semaphore.h>
+> > +#include <linux/bcd.h>
+> >  #include <scsi/scsi.h>
+> >  #include <scsi/scsi_host.h>
+> >  #include <scsi/scsi_device.h>
+> > @@ -1946,6 +1947,143 @@ static void aac_process_events(struct aac_dev
+> *dev)
+> >                       flags);
 > >  }
 > >
-> > +int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
+> > +static int aac_send_wellness_command(struct aac_dev *dev, char
+> *wellness_str,
+> > +                                                     u32 datasize)
 > > +{
-> > +     struct fib *fibptr;
-> > +     int rcode =3D -1;
-> > +     u16 fibsize, datasize;
 > > +     struct aac_srb *srbcmd;
 > > +     struct sgmap64 *sg64;
-> > +     struct aac_ciss_identify_pd *identify_resp;
 > > +     dma_addr_t addr;
-> > +     u32 vbus, vid;
-> > +     u16 temp;
+> > +     char *dma_buf;
+> > +     struct fib *fibptr;
+> > +     int ret =3D -ENOMEM;
 > > +
 > > +     fibptr =3D aac_fib_alloc(dev);
-> > +     if (!fibptr)
-> > +             return -ENOMEM;
-> > +
-> > +     temp =3D AAC_MAX_LUN + target;
-> > +
-> > +     fibsize =3D sizeof(struct aac_srb) -
-> > +             sizeof(struct sgentry) + sizeof(struct sgentry64);
-> > +     datasize =3D sizeof(struct aac_ciss_identify_pd);
-> > +
-> > +     identify_resp =3D (struct aac_ciss_identify_pd *)
-> > +             pci_alloc_consistent(dev->pdev, datasize, &addr);
->=20
-> Please don't cast void pointers.
-I apologize, yes I will remove this.
->=20
-> > +
-> > +     if (identify_resp !=3D NULL) {
->=20
-> if (!identify_resp)
->         goto free_fib_ptr;
->=20
-> > +             vbus =3D (u32)le16_to_cpu(
-> > +                     dev->supplement_adapter_info.VirtDeviceBus);
-> > +             vid =3D (u32)le16_to_cpu(
-> > +                     dev->supplement_adapter_info.VirtDeviceTarget);
-> > +
+> > +     if (fibptr) {
 > > +             aac_fib_init(fibptr);
-> > +             srbcmd =3D (struct aac_srb *) fib_data(fibptr);
 > > +
-> > +             srbcmd->function =3D cpu_to_le32(SRBF_ExecuteScsi);
-> > +             srbcmd->channel  =3D cpu_to_le32(vbus);
-> > +             srbcmd->id       =3D cpu_to_le32(vid);
-> > +             srbcmd->lun      =3D 0;
-> > +             srbcmd->flags    =3D cpu_to_le32(SRB_DataIn);
-> > +             srbcmd->timeout  =3D cpu_to_le32(10);
-> > +             srbcmd->retry_limit =3D 0;
-> > +             srbcmd->cdb_size =3D cpu_to_le32(12);
-> > +             srbcmd->count =3D cpu_to_le32(datasize);
+> > +             dma_buf =3D pci_alloc_consistent(dev->pdev, datasize, &ad=
+dr);
+> > +             if (dma_buf !=3D NULL) {
+>=20
+> if (!dma_buf)
+>         return -ENOMEM;
+Yes , let me make the changes.
+>=20
+> It makes the code flow more obvious and saves you a level of indent.
+>=20
+> > +                     u32 vbus, vid;
 > > +
-> > +             memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
-> > +             srbcmd->cdb[0] =3D 0x26;
-> > +             srbcmd->cdb[2] =3D (u8)(temp & 0x00FF);
+> > +                     vbus =3D (u32)le16_to_cpu(
+> > +                             dev->supplement_adapter_info.VirtDeviceBu=
+s);
+> > +                     vid =3D (u32)le16_to_cpu(
+> > +                             dev->supplement_adapter_info.VirtDeviceTa=
+rget);
 > > +
-> > +             srbcmd->cdb[6] =3D CISS_IDENTIFY_PHYSICAL_DEVICE;
+> > +                     srbcmd =3D (struct aac_srb *)fib_data(fibptr);
 > > +
-> > +             sg64 =3D (struct sgmap64 *)&srbcmd->sg;
-> > +             sg64->count =3D cpu_to_le32(1);
-> > +             sg64->sg[0].addr[1] =3D cpu_to_le32((u32)(((addr) >> 16) =
->> 16));
-> > +             sg64->sg[0].addr[0] =3D cpu_to_le32((u32)(addr & 0xffffff=
-ff));
-> > +             sg64->sg[0].count =3D cpu_to_le32(datasize);
+> > +                     srbcmd->function =3D cpu_to_le32(SRBF_ExecuteScsi=
+);
+> > +                     srbcmd->channel =3D cpu_to_le32(vbus);
+> > +                     srbcmd->id =3D cpu_to_le32(vid);
+> > +                     srbcmd->lun =3D 0;
+> > +                     srbcmd->flags =3D cpu_to_le32(SRB_DataOut);
+> > +                     srbcmd->timeout =3D cpu_to_le32(10);
+> > +                     srbcmd->retry_limit =3D 0;
+> > +                     srbcmd->cdb_size =3D cpu_to_le32(12);
+> > +                     srbcmd->count =3D cpu_to_le32(datasize);
 > > +
-> > +             rcode =3D aac_fib_send(ScsiPortCommand64,
-> > +                     fibptr, fibsize, FsaNormal, 1, 1, NULL, NULL);
+> > +                     memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
+> > +                     srbcmd->cdb[0] =3D BMIC_OUT;
+> > +                     srbcmd->cdb[6] =3D WRITE_HOST_WELLNESS;
+> > +                     memcpy(dma_buf, (char *)wellness_str, datasize);
 > > +
-> > +             if (identify_resp->current_queue_depth_limit <=3D 0 ||
-> > +                     identify_resp->current_queue_depth_limit > 32)
-> > +                     dev->hba_map[bus][target].qd_limit =3D 32;
-> > +             else
-> > +                     dev->hba_map[bus][target].qd_limit =3D
-> > +                             identify_resp->current_queue_depth_limit;
+> > +                     sg64 =3D (struct sgmap64 *)&srbcmd->sg;
+> > +                     sg64->count =3D cpu_to_le32(1);
+> > +                     sg64->sg[0].addr[1] =3D
+> > +                             cpu_to_le32((u32)(((addr) >> 16) >> 16));
+> > +                     sg64->sg[0].addr[0] =3D
+> > +                             cpu_to_le32((u32)(addr & 0xffffffff));
+> > +                     sg64->sg[0].count =3D cpu_to_le32(datasize);
 > > +
-> > +             pci_free_consistent(dev->pdev, datasize,
-> > +                                     (void *)identify_resp, addr);
+> > +                     ret =3D aac_fib_send(ScsiPortCommand64, fibptr,
+> > +                             sizeof(struct aac_srb), FsaNormal,
+> > +                             1, 1, NULL, NULL);
 > > +
-> > +             aac_fib_complete(fibptr);
+> > +                     pci_free_consistent(dev->pdev, datasize,
+> > +                                             (void *)dma_buf, addr);
+> > +     }
+> > +
+> > +             /*
+> > +              * Do not set XferState to zero unless
+> > +              * receives a response from F/W
+> > +              */
+> > +             if (ret >=3D 0)
+> > +                     aac_fib_complete(fibptr);
+> > +
+> > +             /*
+> > +              * FIB should be freed only after
+> > +              * getting the response from the F/W
+> > +              */
+> > +             if (ret !=3D -ERESTARTSYS)
+> > +                     aac_fib_free(fibptr);
 > > +     }
 >=20
-> free_fib_ptr:
-Yes let me do that.
+> Not sure if it's my mailclient, but indentation looks a bit odd here.
+I agree  I will check out  what's going on here.
+> > +
+> > +     return ret;
+> > +}
+> > +
+> > +int aac_send_hosttime(struct aac_dev *dev, struct timeval *now)
+> > +{
+> > +     int ret =3D -ENOMEM;
+> > +     struct fib *fibptr;
+> > +
+> > +     /*
+> > +      *  This whole block needs to be rewritten with helpers
+> > +      *  Changing tabs to a single space should not be allowed!!
+> > +      */
+> > +
+> > +     if (dev->sa_firmware) {
+> > +             struct tm cur_tm;
+> > +             char wellness_str[] =3D "<HW>TD\010\0\0\0\0\0\0\0\0\0DW\0=
+\0ZZ";
+> > +             u32 datasize =3D sizeof(wellness_str);
+> > +             unsigned long local_time;
+> > +
+> > +             local_time =3D (u32)(now->tv_sec - (sys_tz.tz_minuteswest=
+ * 60));
+> > +             time_to_tm(local_time, 0, &cur_tm);
+> > +             cur_tm.tm_mon +=3D 1;
+> > +             cur_tm.tm_year +=3D 1900;
+> > +             wellness_str[8] =3D bin2bcd(cur_tm.tm_hour);
+> > +             wellness_str[9] =3D bin2bcd(cur_tm.tm_min);
+> > +             wellness_str[10] =3D bin2bcd(cur_tm.tm_sec);
+> > +             wellness_str[12] =3D bin2bcd(cur_tm.tm_mon);
+> > +             wellness_str[13] =3D bin2bcd(cur_tm.tm_mday);
+> > +             wellness_str[14] =3D bin2bcd(cur_tm.tm_year / 100);
+> > +             wellness_str[15] =3D bin2bcd(cur_tm.tm_year % 100);
+> > +
+> > +             ret =3D aac_send_wellness_command(dev, wellness_str, data=
+size);
+> > +
+> > +             return ret;
+> > +     }
+> > +
+> > +     fibptr =3D aac_fib_alloc(dev);
+> > +     if (fibptr) {
+>=20
+> Same here.
+Here as well.=20
 
+> > +             __le32 *info;
 > > +
-> > +     aac_fib_free(fibptr);
+> > +             aac_fib_init(fibptr);
+> > +             info =3D (__le32 *)fib_data(fibptr);
+> > +             *info =3D cpu_to_le32(now->tv_sec);
+> > +             ret =3D aac_fib_send(
+> > +                     SendHostTime, fibptr,
+> > +                     sizeof(*info), FsaNormal,
+> > +                     1, 1, NULL, NULL);
 > > +
-> > +     return rcode;
+> > +             /*
+> > +              * Do not set XferState to zero unless
+> > +              * receives a response from F/W
+> > +              */
+> > +             if (ret >=3D 0)
+> > +                     aac_fib_complete(fibptr);
+> > +
+> > +             /*
+> > +              * FIB should be freed only after
+> > +              * getting the response from the F/W
+> > +              */
+> > +             if (ret !=3D -ERESTARTSYS)
+> > +                     aac_fib_free(fibptr);
+> > +     }
+> > +
+> > +     return ret;
 > > +}
 > > +
 > >  /**
-> >   *   aac_update hba_map()-   update current hba map with data from FW
-> >   *   @dev:   aac_dev structure
-> > @@ -1565,6 +1642,9 @@ void aac_update_hba_map(struct aac_dev *dev,
-> >               if (devtype !=3D AAC_DEVTYPE_NATIVE_RAW)
-> >                       goto update_devtype;
+> >   *   aac_command_thread      -       command processing thread
+> >   *   @dev: Adapter to monitor
+> > @@ -2001,7 +2139,7 @@ int aac_command_thread(void *data)
 > >
-> > +             if (aac_issue_bmic_identify(dev, bus, target) < 0)
-> > +                     dev->hba_map[bus][target].qd_limit =3D 32;
+> >                       /* Don't even try to talk to adapter if its sick =
+*/
+> >                       ret =3D aac_check_health(dev);
+> > -                     if (!ret && !dev->queues)
+> > +                     if (!dev->queues)
+> >                               break;
+> >                       next_check_jiffies =3D jiffies
+> >                                          + ((long)(unsigned)check_inter=
+val)
+> > @@ -2014,36 +2152,12 @@ int aac_command_thread(void *data)
+> >                               difference =3D (((1000000 - now.tv_usec) =
+* HZ)
+> >                                 + 500000) / 1000000;
+> >                       else if (ret =3D=3D 0) {
+> > -                             struct fib *fibptr;
+> > -
+> > -                             if ((fibptr =3D aac_fib_alloc(dev))) {
+> > -                                     int status;
+> > -                                     __le32 *info;
+> > -
+> > -                                     aac_fib_init(fibptr);
+> > -
+> > -                                     info =3D (__le32 *) fib_data(fibp=
+tr);
+> > -                                     if (now.tv_usec > 500000)
+> > -                                             ++now.tv_sec;
+> > -
+> > -                                     *info =3D cpu_to_le32(now.tv_sec)=
+;
+> > -
+> > -                                     status =3D aac_fib_send(SendHostT=
+ime,
+> > -                                             fibptr,
+> > -                                             sizeof(*info),
+> > -                                             FsaNormal,
+> > -                                             1, 1,
+> > -                                             NULL,
+> > -                                             NULL);
+> > -                                     /* Do not set XferState to zero u=
+nless
+> > -                                      * receives a response from F/W *=
+/
+> > -                                     if (status >=3D 0)
+> > -                                             aac_fib_complete(fibptr);
+> > -                                     /* FIB should be freed only after
+> > -                                      * getting the response from the =
+F/W */
+> > -                                     if (status !=3D -ERESTARTSYS)
+> > -                                             aac_fib_free(fibptr);
+> > -                             }
 > > +
-> >  update_devtype:
-> >               dev->hba_map[bus][target].devtype =3D devtype;
-> >       }
-> > @@ -1711,8 +1791,10 @@ int aac_get_adapter_info(struct aac_dev* dev)
-> >
-> >       /* reset all previous mapped devices (i.e. for init. after IOP_RE=
-SET) */
-> >       for (bus =3D 0; bus < AAC_MAX_BUSES; bus++) {
-> > -             for (target =3D 0; target < AAC_MAX_TARGETS; target++)
-> > +             for (target =3D 0; target < AAC_MAX_TARGETS; target++) {
-> >                       dev->hba_map[bus][target].devtype =3D 0;
-> > +                     dev->hba_map[bus][target].qd_limit =3D 0;
-> > +             }
-> >       }
-> >
-> >       /*
-> > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacr=
-aid.h
-> > index 05884e6..e541394 100644
-> > --- a/drivers/scsi/aacraid/aacraid.h
-> > +++ b/drivers/scsi/aacraid/aacraid.h
-> > @@ -74,7 +74,7 @@ enum {
-> >  #define AAC_NUM_IO_FIB               (1024 - AAC_NUM_MGT_FIB)
-> >  #define AAC_NUM_FIB          (AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
-> >
-> > -#define AAC_MAX_LUN          (8)
-> > +#define AAC_MAX_LUN          (256)
-> >
-> >  #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
-> >  #define AAC_MAX_32BIT_SGBCOUNT       ((unsigned short)256)
-> > @@ -89,6 +89,7 @@ enum {
-> >
-> >  #define CISS_REPORT_PHYSICAL_LUNS    0xc3
-> >  #define WRITE_HOST_WELLNESS          0xa5
-> > +#define CISS_IDENTIFY_PHYSICAL_DEVICE        0x15
-> >  #define BMIC_IN                      0x26
-> >  #define BMIC_OUT                     0x27
-> >
-> > @@ -110,6 +111,86 @@ struct aac_ciss_phys_luns_resp {
-> >   */
-> >  #define AAC_MAX_HRRQ         64
-> >
-> > +#pragma pack(1)
+> > +                             if (now.tv_usec > 500000)
+> > +                                     ++now.tv_sec;
 > > +
-> > +struct aac_ciss_identify_pd {
->=20
-> [...]
->=20
-> > +};
+> > +                             ret =3D aac_send_hosttime(dev, &now);
 > > +
-> > +#pragma pack()
->=20
-> I'd prefer '}; __packed' over #pragma pack(1) .. #pragma pack()
+> >                               difference =3D (long)(unsigned)update_int=
+erval*HZ;
+> >                       } else {
+> >                               /* retry shortly */
 
-Yes, let me make that change.=20
-
-Regards,
+Thank you,
 Raghava Aditya
 
-> [...]
->=20
+> > --
+> > 2.7.4
+> >
+> > --
+> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
+n
+> > the body of a message to majordomo@vger.kernel.org
+> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
 >=20
 > --
 > Johannes Thumshirn                                          Storage
