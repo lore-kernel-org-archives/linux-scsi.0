@@ -1,24 +1,52 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [RFC PATCH] scsi, block: fix duplicate bdi name registration crashes
-Date: Mon, 30 Jan 2017 13:53:36 -0800
-Message-ID: <CAPcyv4jJ5VMNueBTkYhTS=DmAQVDT6qJV0Do86ZNVGLGoTJ=gQ@mail.gmail.com>
-References: <148566590827.1627.3631056985359212959.stgit@dwillia2-desk3.amr.corp.intel.com>
- <20170130122452.GA9043@lst.de>
+From: Don Brace <don.brace@microsemi.com>
+Subject: [PATCH V2] hpsa: remove coalescing settings for ioaccel2
+Date: Mon, 30 Jan 2017 16:05:17 -0600
+Message-ID: <148581391749.10289.15802474685670424837.stgit@brunhilda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170130122452.GA9043@lst.de>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@osandov.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:37280
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752618AbdA3WVW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 17:21:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com
+Cc: linux-scsi@vger.kernel.org
 
-On Mon, Jan 30, 2017 at 4:24 AM, Christoph Hellwig <hch@lst.de> wrote:
-> Hi Dan,
->
-> this looks mostly fine to me.  A few code comments below, but except
-> for this there is another issue with it:  We still have drivers
-> that share a single request_queue for multiple gendisks, so I wonder
+- Setting coalescing has a significant negative
+  impact on low queue-depth performance.
+- Does not help high queue-depth performance.
 
-scsi drivers or others? If those drivers can switch to dynamically
-allocated devt (GENHD_FL_EXT_DEVT), then they don't need this fix.
+Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
+Reviewed-by: Scott Teel <scott.teel@microsemi.com>
+Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Signed-off-by: Don Brace <don.brace@microsemi.com>
+---
+ drivers/scsi/hpsa.c |    8 ++------
+ 1 file changed, 2 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index cbc0c5f..4323ddc 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -9263,13 +9263,9 @@ static int hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
+ 		access = SA5_ioaccel_mode1_access;
+ 		writel(10, &h->cfgtable->HostWrite.CoalIntDelay);
+ 		writel(4, &h->cfgtable->HostWrite.CoalIntCount);
+-	} else {
+-		if (trans_support & CFGTBL_Trans_io_accel2) {
++	} else
++		if (trans_support & CFGTBL_Trans_io_accel2)
+ 			access = SA5_ioaccel_mode2_access;
+-			writel(10, &h->cfgtable->HostWrite.CoalIntDelay);
+-			writel(4, &h->cfgtable->HostWrite.CoalIntCount);
+-		}
+-	}
+ 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
+ 	if (hpsa_wait_for_mode_change_ack(h)) {
+ 		dev_err(&h->pdev->dev,
+
