@@ -1,206 +1,299 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter FW
-Date: Mon, 30 Jan 2017 11:31:14 +0100
-Message-ID: <20170130103114.GI3603@linux-x5ow.site>
-References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-13-RaghavaAditya.Renukunta@microsemi.com>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH V2 2/2] qedf: Add QLogic FastLinQ offload
+ FCoE driver framework.
+Date: Mon, 30 Jan 2017 11:34:07 +0100
+Message-ID: <28df9087-4eaf-d72c-ccee-89408d3a1b32@suse.de>
+References: <1485376423-18737-1-git-send-email-chad.dupuis@cavium.com>
+ <1485376423-18737-3-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48406 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752990AbdA3KbX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 05:31:23 -0500
-Content-Disposition: inline
-In-Reply-To: <20170127192853.10082-13-RaghavaAditya.Renukunta@microsemi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <1485376423-18737-3-git-send-email-chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>, martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, QLogic-Storage-Upstream-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yuval.mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-On Fri, Jan 27, 2017 at 11:28:41AM -0800, Raghava Aditya Renukunta wrote:
-> Retrieved queue depth from fw and saved it for future use.
-> Only applicable for HBA1000 drives.
-> 
-> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> 
+On 01/25/2017 09:33 PM, Dupuis, Chad wrote:
+> From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> =
+
+> The QLogic FastLinQ Driver for FCoE (qedf) is the FCoE specific module fo=
+r 41000
+> Series Converged Network Adapters by QLogic. This patch consists of follo=
+wing
+> changes:
+> =
+
+> - MAINTAINERS Makefile and Kconfig changes for qedf
+> - PCI driver registration
+> - libfc/fcoe host level initialization
+> - SCSI host template initialization and callbacks
+> - Debugfs and log level infrastructure
+> - Link handling
+> - Firmware interface structures
+> - QED core module initialization
+> - Light L2 interface callbacks
+> - I/O request initialization
+> - Firmware I/O completion handling
+> - Firmware ELS request/response handling
+> - FIP request/response handled by the driver itself
+> =
+
+> Signed-off-by: Nilesh Javali <nilesh.javali-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Manish Rangankar <manish.rangankar-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Saurav Kashyap <saurav.kashyap-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Arun Easi <arun.easi-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+> Signed-off-by: Chad Dupuis <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 > ---
-> Changes in  V2:
-> None
-> 
-> Changes in  V3:
-> None
-> 
->  drivers/scsi/aacraid/aachba.c  | 84 ++++++++++++++++++++++++++++++++++++++++-
->  drivers/scsi/aacraid/aacraid.h | 85 +++++++++++++++++++++++++++++++++++++++++-
->  2 files changed, 167 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> index e441a54..c34686f 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -1516,6 +1516,83 @@ static int aac_scsi_32_64(struct fib * fib, struct scsi_cmnd * cmd)
->  	return aac_scsi_32(fib, cmd);
->  }
->  
-> +int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
-> +{
-> +	struct fib *fibptr;
-> +	int rcode = -1;
-> +	u16 fibsize, datasize;
-> +	struct aac_srb *srbcmd;
-> +	struct sgmap64 *sg64;
-> +	struct aac_ciss_identify_pd *identify_resp;
-> +	dma_addr_t addr;
-> +	u32 vbus, vid;
-> +	u16 temp;
+[ .. ]
+> +#define QEDF_IO_WORK_MIN		64
+> +	mempool_t *io_mempool;
+> +	struct workqueue_struct *dpc_wq;
 > +
-> +	fibptr = aac_fib_alloc(dev);
-> +	if (!fibptr)
-> +		return -ENOMEM;
+> +	u32 slow_sge_ios;
+> +	u32 fast_sge_ios;
+> +	u32 single_sge_ios;
 > +
-> +	temp = AAC_MAX_LUN + target;
+> +	uint8_t	*grcdump;
+> +	uint32_t grcdump_size;
 > +
-> +	fibsize = sizeof(struct aac_srb) -
-> +		sizeof(struct sgentry) + sizeof(struct sgentry64);
-> +	datasize = sizeof(struct aac_ciss_identify_pd);
+> +	struct qedf_io_log io_trace_buf[QEDF_IO_TRACE_SIZE];
+> +	spinlock_t io_trace_lock;
+> +	uint16_t io_trace_idx;
 > +
-> +	identify_resp = (struct aac_ciss_identify_pd *)
-> +		pci_alloc_consistent(dev->pdev, datasize, &addr);
-
-Please don't cast void pointers.
-
+> +	bool stop_io_on_error;
 > +
-> +	if (identify_resp != NULL) {
-
-if (!identify_resp)
-	goto free_fib_ptr;
-
-> +		vbus = (u32)le16_to_cpu(
-> +			dev->supplement_adapter_info.VirtDeviceBus);
-> +		vid = (u32)le16_to_cpu(
-> +			dev->supplement_adapter_info.VirtDeviceTarget);
+> +	u32 flogi_cnt;
+> +	u32 flogi_failed;
 > +
-> +		aac_fib_init(fibptr);
-> +		srbcmd = (struct aac_srb *) fib_data(fibptr);
-> +
-> +		srbcmd->function = cpu_to_le32(SRBF_ExecuteScsi);
-> +		srbcmd->channel  = cpu_to_le32(vbus);
-> +		srbcmd->id       = cpu_to_le32(vid);
-> +		srbcmd->lun      = 0;
-> +		srbcmd->flags    = cpu_to_le32(SRB_DataIn);
-> +		srbcmd->timeout  = cpu_to_le32(10);
-> +		srbcmd->retry_limit = 0;
-> +		srbcmd->cdb_size = cpu_to_le32(12);
-> +		srbcmd->count = cpu_to_le32(datasize);
-> +
-> +		memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
-> +		srbcmd->cdb[0] = 0x26;
-> +		srbcmd->cdb[2] = (u8)(temp & 0x00FF);
-> +
-> +		srbcmd->cdb[6] = CISS_IDENTIFY_PHYSICAL_DEVICE;
-> +
-> +		sg64 = (struct sgmap64 *)&srbcmd->sg;
-> +		sg64->count = cpu_to_le32(1);
-> +		sg64->sg[0].addr[1] = cpu_to_le32((u32)(((addr) >> 16) >> 16));
-> +		sg64->sg[0].addr[0] = cpu_to_le32((u32)(addr & 0xffffffff));
-> +		sg64->sg[0].count = cpu_to_le32(datasize);
-> +
-> +		rcode = aac_fib_send(ScsiPortCommand64,
-> +			fibptr, fibsize, FsaNormal, 1, 1, NULL, NULL);
-> +
-> +		if (identify_resp->current_queue_depth_limit <= 0 ||
-> +			identify_resp->current_queue_depth_limit > 32)
-> +			dev->hba_map[bus][target].qd_limit = 32;
-> +		else
-> +			dev->hba_map[bus][target].qd_limit =
-> +				identify_resp->current_queue_depth_limit;
-> +
-> +		pci_free_consistent(dev->pdev, datasize,
-> +					(void *)identify_resp, addr);
-> +
-> +		aac_fib_complete(fibptr);
-> +	}
-
-free_fib_ptr:
-
-> +
-> +	aac_fib_free(fibptr);
-> +
-> +	return rcode;
-> +}
-> +
->  /**
->   *	aac_update hba_map()-	update current hba map with data from FW
->   *	@dev:	aac_dev structure
-> @@ -1565,6 +1642,9 @@ void aac_update_hba_map(struct aac_dev *dev,
->  		if (devtype != AAC_DEVTYPE_NATIVE_RAW)
->  			goto update_devtype;
->  
-> +		if (aac_issue_bmic_identify(dev, bus, target) < 0)
-> +			dev->hba_map[bus][target].qd_limit = 32;
-> +
->  update_devtype:
->  		dev->hba_map[bus][target].devtype = devtype;
->  	}
-> @@ -1711,8 +1791,10 @@ int aac_get_adapter_info(struct aac_dev* dev)
->  
->  	/* reset all previous mapped devices (i.e. for init. after IOP_RESET) */
->  	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
-> -		for (target = 0; target < AAC_MAX_TARGETS; target++)
-> +		for (target = 0; target < AAC_MAX_TARGETS; target++) {
->  			dev->hba_map[bus][target].devtype = 0;
-> +			dev->hba_map[bus][target].qd_limit = 0;
-> +		}
->  	}
->  
->  	/*
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 05884e6..e541394 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -74,7 +74,7 @@ enum {
->  #define AAC_NUM_IO_FIB		(1024 - AAC_NUM_MGT_FIB)
->  #define AAC_NUM_FIB		(AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
->  
-> -#define AAC_MAX_LUN		(8)
-> +#define AAC_MAX_LUN		(256)
->  
->  #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
->  #define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)256)
-> @@ -89,6 +89,7 @@ enum {
->  
->  #define CISS_REPORT_PHYSICAL_LUNS	0xc3
->  #define WRITE_HOST_WELLNESS		0xa5
-> +#define CISS_IDENTIFY_PHYSICAL_DEVICE	0x15
->  #define BMIC_IN			0x26
->  #define BMIC_OUT			0x27
->  
-> @@ -110,6 +111,86 @@ struct aac_ciss_phys_luns_resp {
->   */
->  #define AAC_MAX_HRRQ		64
->  
-> +#pragma pack(1)
-> +
-> +struct aac_ciss_identify_pd {
-
-[...]
-
+> +	/* Used for fc statistics */
+> +	u64 input_requests;
+> +	u64 output_requests;
+> +	u64 control_requests;
+> +	u64 packet_aborts;
+> +	u64 alloc_failures;
 > +};
 > +
-> +#pragma pack()
+> +/*
+> + * 4 regs size $$KEEP_ENDIANNESS$$
+> + */
+> +
+What is this supposed to mean?
+Does it refer to the next structure?
 
-I'd prefer '}; __packed' over #pragma pack(1) .. #pragma pack()
+> +struct io_bdt {
+> +	struct qedf_ioreq *io_req;
+> +	struct fcoe_sge *bd_tbl;
+> +	dma_addr_t bd_tbl_dma;
+> +	u16 bd_valid;
+> +};
+> +
+[ .. ]
 
-[...]
+> +
+> +static inline void qedf_stop_all_io(struct qedf_ctx *qedf)
+> +{
+> +	set_bit(QEDF_UNLOADING, &qedf->flags);
+> +}
+> +
+This looks like a misnomer.
+Why is 'UNLOADING' equivalent to stopping all I/O?
+I could imagine quite some situations where I would want to stop I/O
+without unloading the driver.
+
+Please use better naming here; either name the bit 'QEDF_STOP_IO' or
+something or call the function 'qedf_is_unloading'.
 
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+[ .. ]
+> +/*
+> + * In instances where an ELS command times out we may need to restart the
+> + * rport by logging out and then logging back in.
+> + */
+> +void qedf_restart_rport(struct qedf_rport *fcport)
+> +{
+> +	struct fc_lport *lport;
+> +	struct fc_rport_priv *rdata;
+> +	u32 port_id;
+> +
+> +	if (!fcport)
+> +		return;
+> +
+> +	rdata =3D fcport->rdata;
+> +	if (rdata) {
+> +		lport =3D fcport->qedf->lport;
+> +		port_id =3D rdata->ids.port_id;
+> +		QEDF_ERR(&(fcport->qedf->dbg_ctx),
+> +		    "LOGO port_id=3D%x.\n", port_id);
+> +		mutex_lock(&lport->disc.disc_mutex);
+> +		fc_rport_logoff(rdata);
+> +		/* Recreate the rport and log back in */
+> +		rdata =3D fc_rport_create(lport, port_id);
+> +		if (rdata)
+> +			fc_rport_login(rdata);
+> +		mutex_unlock(&lport->disc.disc_mutex);
+> +	}
+> +}
+> +
+Please don't hold the discovery mutex when calling fc_rport_logoff().
+Calling rport_logoff might call into exch_mgr_reset() which in turn
+might need to take the discover mutex.
+
+[ .. ]
+> +	if (opcode =3D=3D ELS_LS_RJT) {
+> +		rjt =3D fc_frame_payload_get(fp, sizeof(*rjt));
+> +		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS,
+> +		    "Received LS_RJT for REC: er_reason=3D0x%x, "
+> +		    "er_explan=3D0x%x.\n", rjt->er_reason, rjt->er_explan);
+> +		/*
+> +		 * The following response(s) mean that we need to reissue the
+> +		 * request on another exchange.  We need to do this without
+> +		 * informing the upper layers lest it cause an application
+> +		 * error.
+> +		 */
+> +		if ((rjt->er_reason =3D=3D ELS_RJT_LOGIC ||
+> +		    rjt->er_reason =3D=3D ELS_RJT_UNAB) &&
+> +		    rjt->er_explan =3D=3D ELS_EXPL_OXID_RXID) {
+> +			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS,
+> +			    "Handle CMD LOST case.\n");
+> +			qedf_requeue_io_req(orig_io_req);
+> +		}
+
+Care to explain this?
+I found requeing within the driver without notifying the upper layers
+deeply troubling.
+I've came across this (or a similar issue) during implementing
+FCoE over virtio; there it turned out to be an issue with the target not
+handling frames in the correct order.
+So it looks you are attempting to solve the problem of a REC being sent
+for a command which is not know at the target.
+Meaning it's either lost in the fabric, hasn't been seen by the target
+(yet), or having already been processed by the target.
+
+The above code would only solve the second problem; however, that would
+indicate a command ordering issue as the REC would have arrived at the
+target _before_ the originating command.
+So doing a resend would only help for _that_ specific case, not for the
+others.
+And it's not quite clear why resending with a different OXID would help
+here; typically it's the _RXID_ which isn't found ...
+
+[ .. ]
+> +static void qedf_fcoe_process_vlan_resp(struct qedf_ctx *qedf,
+> +	struct sk_buff *skb)
+> +{
+> +	struct fip_header *fiph;
+> +	struct fip_desc *desc;
+> +	u16 vid =3D 0;
+> +	ssize_t rlen;
+> +	size_t dlen;
+> +
+> +	fiph =3D (struct fip_header *)(((void *)skb->data) + 2 * ETH_ALEN + 2);
+> +
+> +	rlen =3D ntohs(fiph->fip_dl_len) * 4;
+> +	desc =3D (struct fip_desc *)(fiph + 1);
+> +	while (rlen > 0) {
+> +		dlen =3D desc->fip_dlen * FIP_BPW;
+> +		switch (desc->fip_dtype) {
+> +		case FIP_DT_VLAN:
+> +			vid =3D ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
+> +			break;
+> +		}
+> +		desc =3D (struct fip_desc *)((char *)desc + dlen);
+> +		rlen -=3D dlen;
+> +	}
+> +
+> +	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "VLAN response, "
+> +		   "vid=3D0x%x.\n", vid);
+> +
+> +	if (vid > 0 && qedf->vlan_id !=3D vid) {
+> +		qedf_set_vlan_id(qedf, vid);
+> +
+> +		/* Inform waiter that it's ok to call fcoe_ctlr_link up() */
+> +		complete(&qedf->fipvlan_compl);
+> +	}
+> +}
+> +
+As mentioned, this will fail for HP VirtualConnect, which return a vid
+of '0', indicating that the FCoE link should run on the interface itself.
+And this is actually a valid response, I would think that you should be
+calling complete() for any response ...
+
+[ .. ]
+> +/*
+> + * FCoE CQ element
+> + */
+> +struct fcoe_cqe {
+> +	__le32 cqe_data;
+> +	/* The task identifier (OX_ID) to be completed */
+> +#define FCOE_CQE_TASK_ID_MASK    0xFFFF
+> +#define FCOE_CQE_TASK_ID_SHIFT   0
+> +	/*
+> +	 * The CQE type: 0x0 Indicating on a pending work request completion.
+> +	 * 0x1 - Indicating on an unsolicited event notification. use enum
+> +	 * fcoe_cqe_type  (use enum fcoe_cqe_type)
+> +	 */
+> +#define FCOE_CQE_CQE_TYPE_MASK   0xF
+> +#define FCOE_CQE_CQE_TYPE_SHIFT  16
+> +#define FCOE_CQE_RESERVED0_MASK  0xFFF
+> +#define FCOE_CQE_RESERVED0_SHIFT 20
+> +	__le16 reserved1;
+> +	__le16 fw_cq_prod;
+> +	union fcoe_cqe_info cqe_info;
+> +};
+> +
+> +
+> +
+> +
+> +
+> +
+These lines intentionally left blank?
+
+[ .. ]
+> +static int qedf_request_msix_irq(struct qedf_ctx *qedf)
+> +{
+> +	int i, rc, cpu;
+> +
+> +	cpu =3D cpumask_first(cpu_online_mask);
+> +	for (i =3D 0; i < qedf->num_queues; i++) {
+> +		rc =3D request_irq(qedf->int_info.msix[i].vector,
+> +		    qedf_msix_handler, 0, "qedf", &qedf->fp_array[i]);
+> +
+> +		if (rc) {
+> +			QEDF_WARN(&(qedf->dbg_ctx), "request_irq failed.\n");
+> +			qedf_sync_free_irqs(qedf);
+> +			return rc;
+> +		}
+> +
+> +		qedf->int_info.used_cnt++;
+> +		rc =3D irq_set_affinity_hint(qedf->int_info.msix[i].vector,
+> +		    get_cpu_mask(cpu));
+> +		cpu =3D cpumask_next(cpu, cpu_online_mask);
+> +	}
+> +
+> +	return 0;
+> +}
+> +
+Please use pci_alloc_irq_vectors() here; that avoid you having to do SMP
+affinity setting yourself.
+
+Cheers,
+
+Hannes
+-- =
+
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare-l3A5Bk7waGM@public.gmane.org			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: F. Imend=F6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG N=FCrnberg)
