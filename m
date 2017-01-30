@@ -1,26 +1,26 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 24/24] aacraid: update version
-Date: Mon, 30 Jan 2017 12:44:18 +0100
-Message-ID: <20170130114418.GS3603@linux-x5ow.site>
+Subject: Re: [PATCH V3 23/24] aacraid: Change Driver Version Prefix
+Date: Mon, 30 Jan 2017 12:44:01 +0100
+Message-ID: <20170130114401.GR3603@linux-x5ow.site>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-25-RaghavaAditya.Renukunta@microsemi.com>
+ <20170127192853.10082-24-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=iso-8859-1
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55245 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55244 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753006AbdA3MEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1753007AbdA3MEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Mon, 30 Jan 2017 07:04:47 -0500
 Content-Disposition: inline
-In-Reply-To: <20170127192853.10082-25-RaghavaAditya.Renukunta@microsemi.com>
+In-Reply-To: <20170127192853.10082-24-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
-On Fri, Jan 27, 2017 at 11:28:53AM -0800, Raghava Aditya Renukunta wrote:
-> Update the driver version to 50740
+On Fri, Jan 27, 2017 at 11:28:52AM -0800, Raghava Aditya Renukunta wrote:
+> Change the aacraid driver prefix from 1.2-1 to 1.2.1
 > 
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 > Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
