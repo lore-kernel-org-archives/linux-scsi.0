@@ -1,73 +1,47 @@
-From: "J. R. Okajima" <hooanon05g@gmail.com>
-Subject: Re: [PATCH v4] add u64 number parser
-Date: Tue, 31 Jan 2017 00:08:00 +0900
-Message-ID: <26045.1485788880@jrobl>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: james.smart@broadcom.com
-Cc: sagi@grimberg.me, james_p_freyensee@linux.intel.com, linux-kernel@vger.kernel.org, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 4/4] scsi: remove tsk_mgmt_response and it_nexus_response
+ transport methods
+Date: Mon, 30 Jan 2017 16:31:06 +0100
+Message-ID: <dc34b7fc-eb5a-bdb6-5d90-a1189cb5667c@suse.de>
+References: <1485778739-29036-1-git-send-email-hch@lst.de>
+ <1485778739-29036-5-git-send-email-hch@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:41789 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753659AbdA3PbJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 10:31:09 -0500
+In-Reply-To: <1485778739-29036-5-git-send-email-hch@lst.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-Hello James,
+On 01/30/2017 01:18 PM, Christoph Hellwig wrote:
+> They are never called and just dispatch to methods of the same names in
+> the FC and SRP transport classes that are never implemented.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/scsi_transport_fc.c  | 17 -----------------
+>  drivers/scsi/scsi_transport_srp.c | 16 ----------------
+>  include/scsi/scsi_transport.h     | 12 ------------
+>  include/scsi/scsi_transport_srp.h |  7 -------
+>  4 files changed, 52 deletions(-)
+> 
+These are actually left-overs from the original target mode
+implementation from Tomo.
+So yes, they can go now.
 
-Your commit
-	a317178 2016-12-06 parser: add u64 number parser
-was merged into v4.10-rc1. Good.
-I have a very similar function and used for a long time. Here I'd
-suggest you a tiny optimization based on my version.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-If you think another value is more apropriate as the size of an internal
-array, you can change it freely.
+Cheers,
 
-
-J. R. Okajima
-
-commit 030361e78d327d9d89254dc3b320c092221c7cd0
-Author: J. R. Okajima <hooanon05g@gmail.com>
-Date:   Tue Jan 31 00:01:16 2017 +0900
-
-    parser: match_u64, short string optimization
- =
-
-    When the given string is short enough, we can skip kmalloc/kfree.
-
-    Signed-off-by: J. R. Okajima <hooanon05g@gmail.com>
-
-diff --git a/lib/parser.c b/lib/parser.c
-index 3278958..cfbc6ec 100644
---- a/lib/parser.c
-+++ b/lib/parser.c
-@@ -163,21 +163,25 @@ static int match_number(substring_t *s, int *result,=
- int base)
-  */
- static int match_u64int(substring_t *s, u64 *result, int base)
- {
--	char *buf;
-+	char *buf, a[32];
- 	int ret;
- 	u64 val;
- 	size_t len =3D s->to - s->from;
- =
-
--	buf =3D kmalloc(len + 1, GFP_KERNEL);
--	if (!buf)
--		return -ENOMEM;
-+	buf =3D a;
-+	if (len + 1 > sizeof(a)) {
-+		buf =3D kmalloc(len + 1, GFP_KERNEL);
-+		if (unlikely(!buf))
-+			return -ENOMEM;
-+	}
- 	memcpy(buf, s->from, len);
- 	buf[len] =3D '\0';
- =
-
- 	ret =3D kstrtoull(buf, base, &val);
- 	if (!ret)
- 		*result =3D val;
--	kfree(buf);
-+	if (buf !=3D a)
-+		kfree(buf);
- 	return ret;
- }
- =
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
