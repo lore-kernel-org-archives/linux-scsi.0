@@ -1,52 +1,44 @@
-From: Don Brace <don.brace@microsemi.com>
-Subject: [PATCH V2] hpsa: remove coalescing settings for ioaccel2
-Date: Mon, 30 Jan 2017 16:05:17 -0600
-Message-ID: <148581391749.10289.15802474685670424837.stgit@brunhilda>
+From: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
+Subject: Re: [PATCH 3/4] scsi: remove eh_timed_out methods in the transport
+ template
+Date: Mon, 30 Jan 2017 14:26:41 -0800
+Message-ID: <d1f074ed-7cca-b1b6-667e-f8dd738a5ce8@linux.vnet.ibm.com>
+References: <1485778739-29036-1-git-send-email-hch@lst.de>
+ <1485778739-29036-4-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam01on0082.outbound.protection.outlook.com ([104.47.32.82]:37280
-        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752618AbdA3WVW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 17:21:22 -0500
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:44528 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753046AbdA3W0q (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 17:26:46 -0500
+Received: from pps.filterd (m0098410.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v0UMInIe133229
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 17:26:46 -0500
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 289sqxyafm-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 17:26:46 -0500
+Received: from localhost
+        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <tyreld@linux.vnet.ibm.com>;
+        Mon, 30 Jan 2017 15:26:45 -0700
+In-Reply-To: <1485778739-29036-4-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org
 
-- Setting coalescing has a significant negative
-  impact on low queue-depth performance.
-- Does not help high queue-depth performance.
+On 01/30/2017 04:18 AM, Christoph Hellwig wrote:
+> Instead define the timeout behavior purely based on the host_template
+> eh_timed_out method and wire up the existing transport implementations
+> in the host templates.  This also clears up the confusion that the
+> transport template method overrides the host template one, so some
+> drivers have to re-override the transport template one.
+> 
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
 
-Reviewed-by: Scott Benesh <scott.benesh@microsemi.com>
-Reviewed-by: Scott Teel <scott.teel@microsemi.com>
-Reviewed-by: Kevin Barnett <kevin.barnett@microsemi.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Signed-off-by: Don Brace <don.brace@microsemi.com>
----
- drivers/scsi/hpsa.c |    8 ++------
- 1 file changed, 2 insertions(+), 6 deletions(-)
+Reviewed-by: Tyrel Datwyler <tyreld@linux.vnet.ibm.com>
 
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index cbc0c5f..4323ddc 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -9263,13 +9263,9 @@ static int hpsa_enter_performant_mode(struct ctlr_info *h, u32 trans_support)
- 		access = SA5_ioaccel_mode1_access;
- 		writel(10, &h->cfgtable->HostWrite.CoalIntDelay);
- 		writel(4, &h->cfgtable->HostWrite.CoalIntCount);
--	} else {
--		if (trans_support & CFGTBL_Trans_io_accel2) {
-+	} else
-+		if (trans_support & CFGTBL_Trans_io_accel2)
- 			access = SA5_ioaccel_mode2_access;
--			writel(10, &h->cfgtable->HostWrite.CoalIntDelay);
--			writel(4, &h->cfgtable->HostWrite.CoalIntCount);
--		}
--	}
- 	writel(CFGTBL_ChangeReq, h->vaddr + SA5_DOORBELL);
- 	if (hpsa_wait_for_mode_change_ack(h)) {
- 		dev_err(&h->pdev->dev,
 
