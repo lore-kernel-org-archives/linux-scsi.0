@@ -1,67 +1,111 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: Device or HBA level QD throttling creates randomness in sequetial workload
-Date: Mon, 30 Jan 2017 23:58:28 +0530
-Message-ID: <6325b0024b3cb401fcd1aed782b7b14d@mail.gmail.com>
-References: <2d656e9c9fbde7206e40a635c61a6084@mail.gmail.com>
- <298b6ff6-9feb-4b70-ec4c-d1295a0e1f41@kernel.dk> <e1e827ba633f780b00d070e087204d5c@mail.gmail.com>
- <1485793840.2712.1.camel@sandisk.com> <22a9792c-098d-eb8d-b7d4-87a79cf1d31f@kernel.dk>
+From: Arun Easi <arun.easi@cavium.com>
+Subject: Re: [PATCH V2 net-next 1/2] qed: Add support for hardware offloaded
+ FCoE.
+Date: Mon, 30 Jan 2017 10:53:16 -0800
+Message-ID: <alpine.LRH.2.00.1701301035450.7335@mvluser05.qlc.com>
+References: <1485376423-18737-1-git-send-email-chad.dupuis@cavium.com> <1485376423-18737-2-git-send-email-chad.dupuis@cavium.com> <bdcd89cf-85cc-5eb9-d3b1-d42bbb34c973@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="US-ASCII"
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:36191 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751056AbdA3SfZ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2017 13:35:25 -0500
-Received: by mail-qk0-f178.google.com with SMTP id 11so138667009qkl.3
-        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 10:35:20 -0800 (PST)
-In-Reply-To: <22a9792c-098d-eb8d-b7d4-87a79cf1d31f@kernel.dk>
+Received: from mail-by2nam01on0056.outbound.protection.outlook.com ([104.47.34.56]:47264
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753848AbdA3Sxc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 13:53:32 -0500
+In-Reply-To: <bdcd89cf-85cc-5eb9-d3b1-d42bbb34c973@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>, Bart Van Assche <Bart.VanAssche@sandisk.com>, osandov@osandov.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, hch@infradead.org, linux-block@vger.kernel.org, paolo.valente@linaro.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Dupuis, Chad" <chad.dupuis@cavium.com>, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
 
-> -----Original Message-----
-> From: Jens Axboe [mailto:axboe@kernel.dk]
-> Sent: Monday, January 30, 2017 10:03 PM
-> To: Bart Van Assche; osandov@osandov.com; kashyap.desai@broadcom.com
-> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
-> hch@infradead.org; linux-block@vger.kernel.org; paolo.valente@linaro.org
-> Subject: Re: Device or HBA level QD throttling creates randomness in
-> sequetial workload
->
-> On 01/30/2017 09:30 AM, Bart Van Assche wrote:
-> > On Mon, 2017-01-30 at 19:22 +0530, Kashyap Desai wrote:
-> >> -   if (atomic_inc_return(&instance->fw_outstanding) >
-> >> -           instance->host->can_queue) {
-> >> -       atomic_dec(&instance->fw_outstanding);
-> >> -       return SCSI_MLQUEUE_HOST_BUSY;
-> >> -   }
-> >> +   if (atomic_inc_return(&instance->fw_outstanding) >
-safe_can_queue) {
-> >> +       is_nonrot = blk_queue_nonrot(scmd->device->request_queue);
-> >> +       /* For rotational device wait for sometime to get fusion
-> >> + command
-> >> from pool.
-> >> +        * This is just to reduce proactive re-queue at mid layer
-> >> + which is
-> >> not
-> >> +        * sending sorted IO in SCSI.MQ mode.
-> >> +        */
-> >> +       if (!is_nonrot)
-> >> +           udelay(100);
-> >> +   }
-> >
-> > The SCSI core does not allow to sleep inside the queuecommand()
-> > callback function.
->
-> udelay() is a busy loop, so it's not sleeping. That said, it's obviously
-NOT a
-> great idea. We want to fix the reordering due to requeues, not introduce
-> random busy delays to work around it.
+On Mon, 30 Jan 2017, 1:44am, Hannes Reinecke wrote:
 
-Thanks for feedback. I do realize that udelay() is going to be very odd
-in queue_command call back.   I will keep this note. Preferred solution is
-blk mq scheduler patches.
->
-> --
-> Jens Axboe
+> On 01/25/2017 09:33 PM, Dupuis, Chad wrote:
+> > From: Arun Easi <arun.easi@qlogic.com>
+> > 
+> > This adds the backbone required for the various HW initalizations
+> > which are necessary for the FCoE driver (qedf) for QLogic FastLinQ
+> > 4xxxx line of adapters - FW notification, resource initializations, etc.
+> > 
+> > Signed-off-by: Arun Easi <arun.easi@cavium.com>
+> > Signed-off-by: Yuval Mintz <yuval.mintz@cavium.com>
+> > ---
+> >  drivers/net/ethernet/qlogic/Kconfig               |   3 +
+> >  drivers/net/ethernet/qlogic/qed/Makefile          |   1 +
+> >  drivers/net/ethernet/qlogic/qed/qed.h             |  11 +
+> >  drivers/net/ethernet/qlogic/qed/qed_cxt.c         |  98 ++-
+> >  drivers/net/ethernet/qlogic/qed/qed_cxt.h         |   3 +
+> >  drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |  13 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |   5 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_dev.c         | 205 ++++-
+> >  drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |  42 +
+> >  drivers/net/ethernet/qlogic/qed/qed_fcoe.c        | 990 ++++++++++++++++++++++
+> >  drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |  52 ++
+> >  drivers/net/ethernet/qlogic/qed/qed_hsi.h         | 781 ++++++++++++++++-
+> >  drivers/net/ethernet/qlogic/qed/qed_hw.c          |   3 +
+> >  drivers/net/ethernet/qlogic/qed/qed_ll2.c         |  25 +
+> >  drivers/net/ethernet/qlogic/qed/qed_ll2.h         |   2 +-
+> >  drivers/net/ethernet/qlogic/qed/qed_main.c        |   7 +
+> >  drivers/net/ethernet/qlogic/qed/qed_mcp.c         |   3 +
+> >  drivers/net/ethernet/qlogic/qed/qed_mcp.h         |   1 +
+> >  drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |   8 +
+> >  drivers/net/ethernet/qlogic/qed/qed_sp.h          |   4 +
+> >  drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |   3 +
+> >  include/linux/qed/common_hsi.h                    |  10 +-
+> >  include/linux/qed/fcoe_common.h                   | 715 ++++++++++++++++
+> >  include/linux/qed/qed_fcoe_if.h                   | 145 ++++
+> >  include/linux/qed/qed_if.h                        |  41 +-
+> >  25 files changed, 3152 insertions(+), 19 deletions(-)
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
+> >  create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
+> >  create mode 100644 include/linux/qed/fcoe_common.h
+> >  create mode 100644 include/linux/qed/qed_fcoe_if.h
+> > 
+> [ .. ]
+> > diff --git a/drivers/net/ethernet/qlogic/qed/qed_dcbx.h b/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
+> > index d70300f..0fabe97 100644
+> > --- a/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
+> > +++ b/drivers/net/ethernet/qlogic/qed/qed_dcbx.h
+> > @@ -57,7 +57,6 @@ struct qed_dcbx_app_data {
+> >  	u8 tc;			/* Traffic Class */
+> >  };
+> >  
+> > -#ifdef CONFIG_DCB
+> >  #define QED_DCBX_VERSION_DISABLED       0
+> >  #define QED_DCBX_VERSION_IEEE           1
+> >  #define QED_DCBX_VERSION_CEE            2
+> > @@ -73,7 +72,6 @@ struct qed_dcbx_set {
+> >  	struct qed_dcbx_admin_params config;
+> >  	u32 ver_num;
+> >  };
+> > -#endif
+> >  
+> >  struct qed_dcbx_results {
+> >  	bool dcbx_enabled;
+> > @@ -97,9 +95,8 @@ struct qed_dcbx_info {
+> >  	struct qed_dcbx_results results;
+> >  	struct dcbx_mib operational;
+> >  	struct dcbx_mib remote;
+> > -#ifdef CONFIG_DCB
+> >  	struct qed_dcbx_set set;
+> > -#endif
+> > +	struct qed_dcbx_get get;
+> >  	u8 dcbx_cap;
+> >  };
+> >  
+> Why did you remove the dependency on 'CONFIG_DCB'?
+
+Thanks Hannes for the review.
+
+The offloaded functions are not dependent on CONFIG_DCB; the DCB
+functionality is handled by the firmware for them. The above '#ifdef'-ed 
+part is shared by offloaded functions, and should be present regardless of 
+the CONFIG_DCB setting.
+
+Regards,
+-Arun
+
+> 
+> Other than that:
+> 
+> Reviewed-by: Hannes Reinecke <hare@suse.com>
