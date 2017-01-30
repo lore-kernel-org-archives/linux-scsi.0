@@ -1,20 +1,20 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH V3 16/24] aacraid: Add task management functionality
-Date: Mon, 30 Jan 2017 19:59:15 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8A6CE9@avsrvexchmbx2.microsemi.net>
+Subject: RE: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter FW
+Date: Mon, 30 Jan 2017 20:05:32 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8A6D30@avsrvexchmbx2.microsemi.net>
 References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-17-RaghavaAditya.Renukunta@microsemi.com>
- <20170130111947.GL3603@linux-x5ow.site>
+ <20170127192853.10082-13-RaghavaAditya.Renukunta@microsemi.com>
+ <20170130103114.GI3603@linux-x5ow.site>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0081.outbound.protection.outlook.com ([104.47.42.81]:61568
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0054.outbound.protection.outlook.com ([104.47.36.54]:17218
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754193AbdA3T7R (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 14:59:17 -0500
-In-Reply-To: <20170130111947.GL3603@linux-x5ow.site>
+        id S1751909AbdA3UGf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 15:06:35 -0500
+In-Reply-To: <20170130103114.GI3603@linux-x5ow.site>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,328 +25,213 @@ Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle
 
 > -----Original Message-----
 > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Monday, January 30, 2017 3:20 AM
+> Sent: Monday, January 30, 2017 2:31 AM
 > To: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>
 > Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
 > scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
 > Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
 > <scott.benesh@microsemi.com>
-> Subject: Re: [PATCH V3 16/24] aacraid: Add task management functionality
+> Subject: Re: [PATCH V3 12/24] aacraid: Retrieve Queue Depth from Adapter
+> FW
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
-> On Fri, Jan 27, 2017 at 11:28:45AM -0800, Raghava Aditya Renukunta wrote:
-> > Added support to send out task management commands.
+> On Fri, Jan 27, 2017 at 11:28:41AM -0800, Raghava Aditya Renukunta wrote:
+> > Retrieved queue depth from fw and saved it for future use.
+> > Only applicable for HBA1000 drives.
 > >
 > > Signed-off-by: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>
 > > Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
 > >
 > > ---
->=20
-> [...]
->=20
-> > @@ -3365,7 +3462,151 @@ static void aac_srb_callback(void *context,
-> struct fib * fibptr)
+> > Changes in  V2:
+> > None
 > >
-> >  /**
-> >   *
-> > - * aac_send_scb_fib
-> > + * aac_hba_callback
-> > + * @context: the context set in the fib - here it is scsi cmd
-> > + * @fibptr: pointer to the fib
-> > + *
-> > + * Handles the completion of a native HBA scsi command
-> > + *
-> > + */
-> > +void aac_hba_callback(void *context, struct fib *fibptr)
-> > +{
-> > +     struct aac_dev *dev;
-> > +     struct scsi_cmnd *scsicmd;
-> > +
-> > +     scsicmd =3D (struct scsi_cmnd *) context;
-> > +
-> > +     if (!aac_valid_context(scsicmd, fibptr))
-> > +             return;
-> > +
-> > +     WARN_ON(fibptr =3D=3D NULL);
-> > +     dev =3D fibptr->dev;
-> > +
-> > +     if (!(fibptr->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF))
-> > +             scsi_dma_unmap(scsicmd);
-> > +
-> > +     if (fibptr->flags & FIB_CONTEXT_FLAG_FASTRESP) {
-> > +             /* fast response */
-> > +             scsicmd->result =3D DID_OK << 16 | COMMAND_COMPLETE << 8;
-> > +     } else {
-> > +             struct aac_hba_resp *err =3D
-> > +                     &((struct aac_native_hba *)fibptr->hw_fib_va)->re=
-sp.err;
-> > +
-> > +             // BUG_ON(err->iu_type !=3D HBA_IU_TYPE_RESP);
->=20
-> Please zap that C++ comment and see if you can tidy up the remaining code=
- a
-> bit (e.g a new function for the else block, switch statement iterating ov=
-er
-> err->serivce_response, etc...)
-
-Yes Johannes,
-I have some ideas to rewrite this bit of code, let me go ahead and do it th=
-en.
-
-
-> > +             if (err->service_response =3D=3D
-> HBA_RESP_SVCRES_TASK_COMPLETE) {
-> > +                     scsicmd->result =3D err->status;
-> > +                     /* set residual count */
-> > +                     scsi_set_resid(scsicmd,
-> > +                             le32_to_cpu(err->residual_count));
-> > +
-> > +                     switch (err->status) {
-> > +                     case SAM_STAT_GOOD:
-> > +                             scsicmd->result |=3D DID_OK << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     case SAM_STAT_CHECK_CONDITION:
-> > +                     {
-> > +                             int len;
-> > +
-> > +                             len =3D min_t(u8, err->sense_response_dat=
-a_len,
-> > +                                     SCSI_SENSE_BUFFERSIZE);
-> > +                             if (len)
-> > +                                     memcpy(scsicmd->sense_buffer,
-> > +                                             err->sense_response_buf, =
-len);
-> > +                             scsicmd->result |=3D DID_OK << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     }
-> > +                     case SAM_STAT_BUSY:
-> > +                             scsicmd->result |=3D DID_BUS_BUSY << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     case SAM_STAT_TASK_ABORTED:
-> > +                             scsicmd->result |=3D DID_ABORT << 16 |
-> > +                                     ABORT << 8;
-> > +                             break;
-> > +                     case SAM_STAT_RESERVATION_CONFLICT:
-> > +                     case SAM_STAT_TASK_SET_FULL:
-> > +                     default:
-> > +                             scsicmd->result |=3D DID_ERROR << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     }
-> > +             } else if (err->service_response =3D=3D HBA_RESP_SVCRES_F=
-AILURE) {
-> > +                     switch (err->status) {
-> > +                     case HBA_RESP_STAT_HBAMODE_DISABLED:
-> > +                     {
-> > +                             u32 bus, cid;
-> > +
-> > +                             bus =3D aac_logical_to_phys(
-> > +                                             scmd_channel(scsicmd));
-> > +                             cid =3D scmd_id(scsicmd);
-> > +                             if (dev->hba_map[bus][cid].devtype =3D=3D
-> > +                                     AAC_DEVTYPE_NATIVE_RAW) {
-> > +                                     dev->hba_map[bus][cid].devtype =
-=3D
-> > +                                             AAC_DEVTYPE_ARC_RAW;
-> > +                                     dev->hba_map[bus][cid].rmw_nexus =
-=3D
-> > +                                             0xffffffff;
-> > +                             }
-> > +                             scsicmd->result =3D DID_NO_CONNECT << 16 =
-|
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     }
-> > +                     case HBA_RESP_STAT_IO_ERROR:
-> > +                     case HBA_RESP_STAT_NO_PATH_TO_DEVICE:
-> > +                             scsicmd->result =3D DID_OK << 16 |
-> > +                                     COMMAND_COMPLETE << 8 | SAM_STAT_=
-BUSY;
-> > +                             break;
-> > +                     case HBA_RESP_STAT_IO_ABORTED:
-> > +                             scsicmd->result =3D DID_ABORT << 16 |
-> > +                                     ABORT << 8;
-> > +                             break;
-> > +                     case HBA_RESP_STAT_INVALID_DEVICE:
-> > +                             scsicmd->result =3D DID_NO_CONNECT << 16 =
-|
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     case HBA_RESP_STAT_UNDERRUN:
-> > +                             /* UNDERRUN is OK */
-> > +                             scsicmd->result =3D DID_OK << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     case HBA_RESP_STAT_OVERRUN:
-> > +                     default:
-> > +                             scsicmd->result =3D DID_ERROR << 16 |
-> > +                                     COMMAND_COMPLETE << 8;
-> > +                             break;
-> > +                     }
-> > +             } else if (err->service_response =3D=3D
-> > +                     HBA_RESP_SVCRES_TMF_REJECTED) {
-> > +                     scsicmd->result =3D
-> > +                             DID_ERROR << 16 | MESSAGE_REJECT << 8;
-> > +             } else if (err->service_response =3D=3D
-> > +                     HBA_RESP_SVCRES_TMF_LUN_INVALID) {
-> > +                     scsicmd->result =3D
-> > +                             DID_NO_CONNECT << 16 | COMMAND_COMPLETE <=
-< 8;
-> > +             } else if ((err->service_response =3D=3D
-> > +                     HBA_RESP_SVCRES_TMF_COMPLETE) ||
-> > +                     (err->service_response =3D=3D
-> > +                     HBA_RESP_SVCRES_TMF_SUCCEEDED)) {
-> > +                     scsicmd->result =3D
-> > +                             DID_OK << 16 | COMMAND_COMPLETE << 8;
-> > +             } else {
-> > +                     scsicmd->result =3D
-> > +                             DID_ERROR << 16 | COMMAND_COMPLETE << 8;
-> > +             }
-> > +     }
-> > +
-> > +     aac_fib_complete(fibptr);
-> > +
-> > +     if (fibptr->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF)
-> > +             scsicmd->SCp.sent_command =3D 1;
-> > +     else
-> > +             scsicmd->scsi_done(scsicmd);
-> > +}
->=20
-> [...]
->=20
-> > @@ -3408,6 +3649,54 @@ static int aac_send_srb_fib(struct scsi_cmnd*
-> scsicmd)
-> >       return -1;
+> > Changes in  V3:
+> > None
+> >
+> >  drivers/scsi/aacraid/aachba.c  | 84
+> ++++++++++++++++++++++++++++++++++++++++-
+> >  drivers/scsi/aacraid/aacraid.h | 85
+> +++++++++++++++++++++++++++++++++++++++++-
+> >  2 files changed, 167 insertions(+), 2 deletions(-)
+> >
+> > diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachb=
+a.c
+> > index e441a54..c34686f 100644
+> > --- a/drivers/scsi/aacraid/aachba.c
+> > +++ b/drivers/scsi/aacraid/aachba.c
+> > @@ -1516,6 +1516,83 @@ static int aac_scsi_32_64(struct fib * fib, stru=
+ct
+> scsi_cmnd * cmd)
+> >       return aac_scsi_32(fib, cmd);
 > >  }
 > >
-> > +/**
-> > + *
-> > + * aac_send_hba_fib
-> > + * @scsicmd: the scsi command block
-> > + *
-> > + * This routine will form a FIB and fill in the aac_hba_cmd_req from t=
-he
-> > + * scsicmd passed in.
-> > + */
-> > +static int aac_send_hba_fib(struct scsi_cmnd *scsicmd)
+> > +int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
 > > +{
-> > +     struct fib *cmd_fibcontext;
-> > +     struct aac_dev *dev;
-> > +     int status;
+> > +     struct fib *fibptr;
+> > +     int rcode =3D -1;
+> > +     u16 fibsize, datasize;
+> > +     struct aac_srb *srbcmd;
+> > +     struct sgmap64 *sg64;
+> > +     struct aac_ciss_identify_pd *identify_resp;
+> > +     dma_addr_t addr;
+> > +     u32 vbus, vid;
+> > +     u16 temp;
 > > +
-> > +     dev =3D (struct aac_dev *)scsicmd->device->host->hostdata;
->=20
-> dev =3D shost_priv(scsicmd->device->host);
-
-Yes,=20
-
-> [...]
->=20
-> > @@ -3660,6 +3949,73 @@ static int aac_convert_sgraw2(struct
-> aac_raw_io2 *rio2, int pages, int nseg, int
-> >       return 0;
-> >  }
-> >
-> > +static long aac_build_sghba(struct scsi_cmnd *scsicmd,
-> > +                     struct aac_hba_cmd_req *hbacmd,
-> > +                     int sg_max,
-> > +                     u64 sg_address)
-> > +{
-> > +     unsigned long byte_count =3D 0;
-> > +     int nseg;
+> > +     fibptr =3D aac_fib_alloc(dev);
+> > +     if (!fibptr)
+> > +             return -ENOMEM;
 > > +
-> > +     nseg =3D scsi_dma_map(scsicmd);
-> > +     if (nseg < 0)
-> > +             return nseg;
->=20
-> if (nseg <=3D 0)
->         return nseg;
-
-Yes
-=20
-> > +     if (nseg) {
-> > +             struct scatterlist *sg;
-> > +             int i;
-> > +             u32 cur_size;
-> > +             struct aac_hba_sgl *sge;
+> > +     temp =3D AAC_MAX_LUN + target;
 > > +
-> > +             if (nseg > HBA_MAX_SG_EMBEDDED)
-> > +                     sge =3D &hbacmd->sge[2];
+> > +     fibsize =3D sizeof(struct aac_srb) -
+> > +             sizeof(struct sgentry) + sizeof(struct sgentry64);
+> > +     datasize =3D sizeof(struct aac_ciss_identify_pd);
+> > +
+> > +     identify_resp =3D (struct aac_ciss_identify_pd *)
+> > +             pci_alloc_consistent(dev->pdev, datasize, &addr);
+>=20
+> Please don't cast void pointers.
+I apologize, yes I will remove this.
+>=20
+> > +
+> > +     if (identify_resp !=3D NULL) {
+>=20
+> if (!identify_resp)
+>         goto free_fib_ptr;
+>=20
+> > +             vbus =3D (u32)le16_to_cpu(
+> > +                     dev->supplement_adapter_info.VirtDeviceBus);
+> > +             vid =3D (u32)le16_to_cpu(
+> > +                     dev->supplement_adapter_info.VirtDeviceTarget);
+> > +
+> > +             aac_fib_init(fibptr);
+> > +             srbcmd =3D (struct aac_srb *) fib_data(fibptr);
+> > +
+> > +             srbcmd->function =3D cpu_to_le32(SRBF_ExecuteScsi);
+> > +             srbcmd->channel  =3D cpu_to_le32(vbus);
+> > +             srbcmd->id       =3D cpu_to_le32(vid);
+> > +             srbcmd->lun      =3D 0;
+> > +             srbcmd->flags    =3D cpu_to_le32(SRB_DataIn);
+> > +             srbcmd->timeout  =3D cpu_to_le32(10);
+> > +             srbcmd->retry_limit =3D 0;
+> > +             srbcmd->cdb_size =3D cpu_to_le32(12);
+> > +             srbcmd->count =3D cpu_to_le32(datasize);
+> > +
+> > +             memset(srbcmd->cdb, 0, sizeof(srbcmd->cdb));
+> > +             srbcmd->cdb[0] =3D 0x26;
+> > +             srbcmd->cdb[2] =3D (u8)(temp & 0x00FF);
+> > +
+> > +             srbcmd->cdb[6] =3D CISS_IDENTIFY_PHYSICAL_DEVICE;
+> > +
+> > +             sg64 =3D (struct sgmap64 *)&srbcmd->sg;
+> > +             sg64->count =3D cpu_to_le32(1);
+> > +             sg64->sg[0].addr[1] =3D cpu_to_le32((u32)(((addr) >> 16) =
+>> 16));
+> > +             sg64->sg[0].addr[0] =3D cpu_to_le32((u32)(addr & 0xffffff=
+ff));
+> > +             sg64->sg[0].count =3D cpu_to_le32(datasize);
+> > +
+> > +             rcode =3D aac_fib_send(ScsiPortCommand64,
+> > +                     fibptr, fibsize, FsaNormal, 1, 1, NULL, NULL);
+> > +
+> > +             if (identify_resp->current_queue_depth_limit <=3D 0 ||
+> > +                     identify_resp->current_queue_depth_limit > 32)
+> > +                     dev->hba_map[bus][target].qd_limit =3D 32;
 > > +             else
-> > +                     sge =3D &hbacmd->sge[0];
+> > +                     dev->hba_map[bus][target].qd_limit =3D
+> > +                             identify_resp->current_queue_depth_limit;
 > > +
-> > +             scsi_for_each_sg(scsicmd, sg, nseg, i) {
-> > +                     int count =3D sg_dma_len(sg);
-> > +                     u64 addr =3D sg_dma_address(sg);
+> > +             pci_free_consistent(dev->pdev, datasize,
+> > +                                     (void *)identify_resp, addr);
 > > +
-> > +                     WARN_ON(i >=3D sg_max);
-> > +                     sge->addr_hi =3D cpu_to_le32((u32)(addr>>32));
-> > +                     sge->addr_lo =3D cpu_to_le32((u32)(addr & 0xfffff=
-fff));
-> > +                     cur_size =3D cpu_to_le32(count);
-> > +                     sge->len =3D cur_size;
-> > +                     sge->flags =3D 0;
-> > +                     byte_count +=3D count;
-> > +                     sge++;
-> > +             }
-> > +
-> > +             sge--;
-> > +             /* hba wants the size to be exact */
-> > +             if (byte_count > scsi_bufflen(scsicmd)) {
-> > +                     u32 temp =3D le32_to_cpu(sge->len) -
-> > +                             (byte_count - scsi_bufflen(scsicmd));
-> > +                     sge->len =3D cpu_to_le32(temp);
-> > +                     byte_count =3D scsi_bufflen(scsicmd);
-> > +             }
-> > +
-> > +             if (nseg <=3D HBA_MAX_SG_EMBEDDED) {
-> > +                     hbacmd->emb_data_desc_count =3D cpu_to_le32(nseg)=
-;
-> > +                     sge->flags =3D cpu_to_le32(0x40000000);
-> > +             } else {
-> > +                     /* not embedded */
-> > +                     hbacmd->sge[0].flags =3D cpu_to_le32(0x80000000);
-> > +                     hbacmd->emb_data_desc_count =3D (u8)cpu_to_le32(1=
-);
-> > +                     hbacmd->sge[0].addr_hi =3D
-> > +                             (u32)cpu_to_le32(sg_address >> 32);
-> > +                     hbacmd->sge[0].addr_lo =3D
-> > +                             cpu_to_le32((u32)(sg_address & 0xffffffff=
-));
-> > +             }
-> > +
-> > +             /* Check for command underflow */
-> > +             if (scsicmd->underflow && (byte_count < scsicmd->underflo=
-w)) {
-> > +                     pr_warn("aacraid: cmd len %08lX cmd underflow %08=
-X\n",
-> > +                                     byte_count, scsicmd->underflow);
-> > +             }
+> > +             aac_fib_complete(fibptr);
 > > +     }
-> > +     return byte_count;
+>=20
+> free_fib_ptr:
+Yes let me do that.
+
+> > +
+> > +     aac_fib_free(fibptr);
+> > +
+> > +     return rcode;
 > > +}
 > > +
-> >  #ifdef AAC_DETAILED_STATUS_INFO
+> >  /**
+> >   *   aac_update hba_map()-   update current hba map with data from FW
+> >   *   @dev:   aac_dev structure
+> > @@ -1565,6 +1642,9 @@ void aac_update_hba_map(struct aac_dev *dev,
+> >               if (devtype !=3D AAC_DEVTYPE_NATIVE_RAW)
+> >                       goto update_devtype;
+> >
+> > +             if (aac_issue_bmic_identify(dev, bus, target) < 0)
+> > +                     dev->hba_map[bus][target].qd_limit =3D 32;
+> > +
+> >  update_devtype:
+> >               dev->hba_map[bus][target].devtype =3D devtype;
+> >       }
+> > @@ -1711,8 +1791,10 @@ int aac_get_adapter_info(struct aac_dev* dev)
+> >
+> >       /* reset all previous mapped devices (i.e. for init. after IOP_RE=
+SET) */
+> >       for (bus =3D 0; bus < AAC_MAX_BUSES; bus++) {
+> > -             for (target =3D 0; target < AAC_MAX_TARGETS; target++)
+> > +             for (target =3D 0; target < AAC_MAX_TARGETS; target++) {
+> >                       dev->hba_map[bus][target].devtype =3D 0;
+> > +                     dev->hba_map[bus][target].qd_limit =3D 0;
+> > +             }
+> >       }
+> >
+> >       /*
+> > diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacr=
+aid.h
+> > index 05884e6..e541394 100644
+> > --- a/drivers/scsi/aacraid/aacraid.h
+> > +++ b/drivers/scsi/aacraid/aacraid.h
+> > @@ -74,7 +74,7 @@ enum {
+> >  #define AAC_NUM_IO_FIB               (1024 - AAC_NUM_MGT_FIB)
+> >  #define AAC_NUM_FIB          (AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
+> >
+> > -#define AAC_MAX_LUN          (8)
+> > +#define AAC_MAX_LUN          (256)
+> >
+> >  #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+> >  #define AAC_MAX_32BIT_SGBCOUNT       ((unsigned short)256)
+> > @@ -89,6 +89,7 @@ enum {
+> >
+> >  #define CISS_REPORT_PHYSICAL_LUNS    0xc3
+> >  #define WRITE_HOST_WELLNESS          0xa5
+> > +#define CISS_IDENTIFY_PHYSICAL_DEVICE        0x15
+> >  #define BMIC_IN                      0x26
+> >  #define BMIC_OUT                     0x27
+> >
+> > @@ -110,6 +111,86 @@ struct aac_ciss_phys_luns_resp {
+> >   */
+> >  #define AAC_MAX_HRRQ         64
+> >
+> > +#pragma pack(1)
+> > +
+> > +struct aac_ciss_identify_pd {
+>=20
+> [...]
+>=20
+> > +};
+> > +
+> > +#pragma pack()
+>=20
+> I'd prefer '}; __packed' over #pragma pack(1) .. #pragma pack()
+
+Yes, let me make that change.=20
 
 Regards,
 Raghava Aditya
 
-> >  struct aac_srb_status_info {
-> > --
-> > 2.7.4
-> >
-> > --
-> > To unsubscribe from this list: send the line "unsubscribe linux-scsi" i=
-n
-> > the body of a message to majordomo@vger.kernel.org
-> > More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> [...]
+>=20
 >=20
 > --
 > Johannes Thumshirn                                          Storage
