@@ -1,109 +1,49 @@
-From: Alan Stern <stern-nwvwT67g6+6dFdvTe/nMLpVzexx5G7lz@public.gmane.org>
-Subject: Re: Advanced Format SAT devices show incorrect physical block size
-Date: Mon, 30 Jan 2017 11:17:03 -0500 (EST)
-Message-ID: <Pine.LNX.4.44L0.1701301055100.2025-100000@iolanthe.rowland.org>
-References: <201701291818.37460@pali>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: Device or HBA level QD throttling creates randomness in
+ sequetial workload
+Date: Mon, 30 Jan 2017 16:30:59 +0000
+Message-ID: <1485793840.2712.1.camel@sandisk.com>
+References: <2d656e9c9fbde7206e40a635c61a6084@mail.gmail.com>
+         <298b6ff6-9feb-4b70-ec4c-d1295a0e1f41@kernel.dk>
+         7a9b012d8c7c456e9ec87d1ba5866a9d@mail.gmail.com
+ <e1e827ba633f780b00d070e087204d5c@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: TEXT/PLAIN; charset=UTF-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <201701291818.37460@pali>
-Sender: linux-usb-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Pali =?utf-8?q?Roh=C3=A1r?= <pali.rohar-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
-Cc: James Bottomley <James.Bottomley-JuX6DAaQMKPCXq6kfMZ53/egYHeGw8Jk@public.gmane.org>, Dainius =?utf-8?q?Masili=C5=ABnas?= <pastas4-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, SCSI development list <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, USB list <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, Tom Yan <tom.ty89-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam01on0078.outbound.protection.outlook.com ([104.47.34.78]:65504
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750745AbdA3QbJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 30 Jan 2017 11:31:09 -0500
+In-Reply-To: <e1e827ba633f780b00d070e087204d5c@mail.gmail.com>
+Content-Language: en-US
+Content-ID: <B78AB2BE5B33054CAB1178E8BEE596F9@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "osandov@osandov.com" <osandov@osandov.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>
 
-On Sun, 29 Jan 2017, Pali Rohár wrote:
+On Mon, 2017-01-30 at 19:22 +0530, Kashyap Desai wrote:
+> -   if (atomic_inc_return(&instance->fw_outstanding) >
+> -           instance->host->can_queue) {
+> -       atomic_dec(&instance->fw_outstanding);
+> -       return SCSI_MLQUEUE_HOST_BUSY;
+> -   }
+> +   if (atomic_inc_return(&instance->fw_outstanding) > safe_can_queue) {
+> +       is_nonrot =3D blk_queue_nonrot(scmd->device->request_queue);
+> +       /* For rotational device wait for sometime to get fusion command
+> from pool.
+> +        * This is just to reduce proactive re-queue at mid layer which i=
+s
+> not
+> +        * sending sorted IO in SCSI.MQ mode.
+> +        */
+> +       if (!is_nonrot)
+> +           udelay(100);
+> +   }
 
-> On Wednesday 11 January 2017 16:23:29 Alan Stern wrote:
-> > On Tue, 10 Jan 2017, James Bottomley wrote:
-> > > On Tue, 2017-01-10 at 16:00 -0500, Alan Stern wrote:
-> > > > In theory, I suppose we could change the kernel so that it would
-> > > > default to READ CAPACITY(16) for devices that report a SCSI level
-> > > > >= 3, or something along those lines.  In general we hesitate to
-> > > > make changes of this sort, because they almost always end up
-> > > > breaking _some_ devices -- and if that happens then the change
-> > > > is reverted, with no exceptions.  Linus has a very strict rule
-> > > > about not breaking working systems.
-> > > 
-> > > You shouldn't have to change anything: it already does (otherwise
-> > > how else would we detect physical exponent for proper SCSI
-> > > devices) see sd.c:sd_try_rc16_first().  It always returns false
-> > > for USB because you set sdev->try_rc_10_first
-> > 
-> > In fact, this approach probably won't work.  See Bugzilla entries
-> > #43265 and #43391.  The devices in those reports claimed to be ANSI
-> > level 4, but they failed anyway.
-> 
-> Seems those devices return capacity 0x7F000000000001 or 0xFF000000000001
-> Maybe there is some error pattern?
+The SCSI core does not allow to sleep inside the queuecommand() callback
+function.
 
-As far as I can tell, they both reported 0xFF000000000001.  That's a 
-pattern -- unless somebody really does have a storage device that 
-large (18 exabytes).  For the time being, perhaps we can ignore this 
-possibility.
-
-> > If you guys want to try the quirk flag, you can apply the patch
-> > below. Then set the usb-storage module parameter quirks=vvvv:pppp:k
-> > where vvvv and pppp are the Vendor and Product ID codes for your
-> > device (as 4 hex digits).
-> > 
-> > In the long run, however, this is not a viable approach.  We'd be
-> > better off with an explicit blacklist.
-> 
-> Ok, so what are next steps? I think that explicit blacklist would be 
-> needed if "bad" devices is less.
-> 
-> How many bug reports were there?
-
-I don't know.
-
-Anyway, please try out the patch below.  I don't know if it will be 
-acceptable to the SCSI maintainers, but we should at least make sure it 
-fixes your problem before submitting it.
-
-Alan Stern
-
-
-
-
-Index: usb-4.x/drivers/scsi/sd.c
-===================================================================
---- usb-4.x.orig/drivers/scsi/sd.c
-+++ usb-4.x/drivers/scsi/sd.c
-@@ -2157,6 +2157,13 @@ static int read_capacity_16(struct scsi_
- 		return -ENODEV;
- 	}
- 
-+	/* Some buggy devices report an impossibly large size */
-+	if (lba >= (1ULL << 54)) {
-+		sd_printk(KERN_WARNING, sdkp, "Read Capacity(16) returned excessively large value: %llu", lba);
-+		sdkp->capacity = 0;
-+		return -EINVAL;
-+	}
-+
- 	if ((sizeof(sdkp->capacity) == 4) && (lba >= 0xffffffffULL)) {
- 		sd_printk(KERN_ERR, sdkp, "Too big for this kernel. Use a "
- 			"kernel compiled with support for large block "
-Index: usb-4.x/drivers/usb/storage/scsiglue.c
-===================================================================
---- usb-4.x.orig/drivers/usb/storage/scsiglue.c
-+++ usb-4.x/drivers/usb/storage/scsiglue.c
-@@ -247,8 +247,11 @@ static int slave_configure(struct scsi_d
- 		 * Tell the SCSI layer to try READ_CAPACITY_10 first.
- 		 * However some USB 3.0 drive enclosures return capacity
- 		 * modulo 2TB. Those must use READ_CAPACITY_16
-+		 *
-+		 * Assume SPC3 or later devices can handle READ_CAPACITY_16.
- 		 */
--		if (!(us->fflags & US_FL_NEEDS_CAP16))
-+		if (sdev->scsi_level <= SCSI_SPC_2 &&
-+				!(us->fflags & US_FL_NEEDS_CAP16))
- 			sdev->try_rc_10_first = 1;
- 
- 		/* assume SPC3 or latter devices support sense size > 18 */
-
---
-To unsubscribe from this list: send the line "unsubscribe linux-usb" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bart.=
