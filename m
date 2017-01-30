@@ -1,47 +1,29 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: sort out the ->eh_timed_out mess
-Date: Mon, 30 Jan 2017 16:46:00 +0000
-Message-ID: <1485794746.2712.5.camel@sandisk.com>
-References: <1485778739-29036-1-git-send-email-hch@lst.de>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: Re: scsi: use-after-free in sg_start_req
+Date: Mon, 30 Jan 2017 17:48:56 +0100
+Message-ID: <CACT4Y+a3HSJ0vMR3jOyhBFZ0MwcQpTZCHgsoj5PYBZPtGYJ+QQ@mail.gmail.com>
+References: <CACT4Y+bwWs4cndXQfCXyaM8Z-YOvxvj0+8rW4GhzfwESDAtGaA@mail.gmail.com>
+ <1485794148.2712.2.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0043.outbound.protection.outlook.com ([104.47.36.43]:62270
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753794AbdA3Qq0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 11:46:26 -0500
-In-Reply-To: <1485778739-29036-1-git-send-email-hch@lst.de>
-Content-Language: en-US
-Content-ID: <B58E87B5545EC041956AA32BDA80BD86@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1485794148.2712.2.camel@sandisk.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "hare@suse.de" <hare@suse.de>
 
-On Mon, 2017-01-30 at 13:18 +0100, Christoph Hellwig wrote:
-> We originally only supported the methods in the transport_template,
-> which led to problems with drivers needing it and having to fake
-> up a template.  Then we added it to the host to avoid that issue,
-> but because the transport template takes precedence we still have
-> various placed that need to hack around it.
->=20
-> This series removes the transport_template instance and switches
-> everyone to use the host method, similar to how we supply generic
-> helpers elsewhere.
->=20
-> In addition it removes a bit of cruft in the same area.
+On Mon, Jan 30, 2017 at 5:36 PM, Bart Van Assche
+<Bart.VanAssche@sandisk.com> wrote:
+> On Mon, 2017-01-30 at 08:25 +0100, Dmitry Vyukov wrote:
+>> On commit ca63ff9b11f958efafd8c8fa60fda14baec6149c
+>
+> What kernel have you been testing? That commit is not in any upstream kernel.
 
-Hello Christoph,
+This is mmotm
+git://git.kernel.org/pub/scm/linux/kernel/git/mhocko/mm.git
+auto-latest ca63ff9b11f958efafd8c8fa60fda14baec6149c
 
-Patches 1, 2 and 4 of this series are a real improvement in my opinion.
-However, I'm not sure whether patch 3 is the best way to avoid that drivers
-have to re-override the transport template timeout handler. Have you
-considered to modify the SCSI EH such that the host timeout handler has
-priority over the transport timeout handler? I think that would result in
-a much smaller patch 3/4.
-
-Thanks,
-
-Bart.=
+commit ca63ff9b11f958efafd8c8fa60fda14baec6149c
+Date:   Wed Jan 25 18:36:03 2017 +0800
+    mm/migration: make isolate_movable_page always defined
