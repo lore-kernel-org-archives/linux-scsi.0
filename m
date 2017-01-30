@@ -1,29 +1,54 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: scsi: use-after-free in sg_start_req
-Date: Mon, 30 Jan 2017 16:36:02 +0000
-Message-ID: <1485794148.2712.2.camel@sandisk.com>
-References: <CACT4Y+bwWs4cndXQfCXyaM8Z-YOvxvj0+8rW4GhzfwESDAtGaA@mail.gmail.com>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: Device or HBA level QD throttling creates randomness in sequetial
+ workload
+Date: Mon, 30 Jan 2017 09:32:33 -0700
+Message-ID: <22a9792c-098d-eb8d-b7d4-87a79cf1d31f@kernel.dk>
+References: <2d656e9c9fbde7206e40a635c61a6084@mail.gmail.com>
+ <298b6ff6-9feb-4b70-ec4c-d1295a0e1f41@kernel.dk>
+ <e1e827ba633f780b00d070e087204d5c@mail.gmail.com>
+ <1485793840.2712.1.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0049.outbound.protection.outlook.com ([104.47.34.49]:14368
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750834AbdA3QgJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 11:36:09 -0500
-In-Reply-To: <CACT4Y+bwWs4cndXQfCXyaM8Z-YOvxvj0+8rW4GhzfwESDAtGaA@mail.gmail.com>
-Content-Language: en-US
-Content-ID: <A2D3EACB12969E44A4CBAB7AC9A20239@sandisk.com>
+Received: from mail-it0-f46.google.com ([209.85.214.46]:37179 "EHLO
+        mail-it0-f46.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752277AbdA3Qky (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2017 11:40:54 -0500
+Received: by mail-it0-f46.google.com with SMTP id r185so105390834ita.0
+        for <linux-scsi@vger.kernel.org>; Mon, 30 Jan 2017 08:40:53 -0800 (PST)
+In-Reply-To: <1485793840.2712.1.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "jthumshirn@suse.de" <jthumshirn@suse.de>, "dgilbert@interlog.com" <dgilbert@interlog.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>, "dvyukov@google.com" <dvyukov@google.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>
-Cc: "syzkaller@googlegroups.com" <syzkaller@googlegroups.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "osandov@osandov.com" <osandov@osandov.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "hch@infradead.org" <hch@infradead.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "paolo.valente@linaro.org" <paolo.valente@linaro.org>
 
-On Mon, 2017-01-30 at 08:25 +0100, Dmitry Vyukov wrote:
-> On commit ca63ff9b11f958efafd8c8fa60fda14baec6149c
+On 01/30/2017 09:30 AM, Bart Van Assche wrote:
+> On Mon, 2017-01-30 at 19:22 +0530, Kashyap Desai wrote:
+>> -   if (atomic_inc_return(&instance->fw_outstanding) >
+>> -           instance->host->can_queue) {
+>> -       atomic_dec(&instance->fw_outstanding);
+>> -       return SCSI_MLQUEUE_HOST_BUSY;
+>> -   }
+>> +   if (atomic_inc_return(&instance->fw_outstanding) > safe_can_queue) {
+>> +       is_nonrot = blk_queue_nonrot(scmd->device->request_queue);
+>> +       /* For rotational device wait for sometime to get fusion command
+>> from pool.
+>> +        * This is just to reduce proactive re-queue at mid layer which is
+>> not
+>> +        * sending sorted IO in SCSI.MQ mode.
+>> +        */
+>> +       if (!is_nonrot)
+>> +           udelay(100);
+>> +   }
+> 
+> The SCSI core does not allow to sleep inside the queuecommand() callback
+> function.
 
-What kernel have you been testing? That commit is not in any upstream kerne=
-l.
+udelay() is a busy loop, so it's not sleeping. That said, it's obviously
+NOT a great idea. We want to fix the reordering due to requeues, not
+introduce random busy delays to work around it.
 
-Bart.=
+-- 
+Jens Axboe
+
