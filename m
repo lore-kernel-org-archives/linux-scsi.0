@@ -1,38 +1,57 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 22/24] aacraid: Update copyrights
-Date: Mon, 30 Jan 2017 12:43:40 +0100
-Message-ID: <20170130114340.GQ3603@linux-x5ow.site>
-References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-23-RaghavaAditya.Renukunta@microsemi.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] PCI/MSI: don't apply affinity if there aren't enough vectors left
+Date: Mon, 30 Jan 2017 13:15:41 +0100
+Message-ID: <1485778541-28994-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:55243 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753002AbdA3MEr (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 30 Jan 2017 07:04:47 -0500
-Content-Disposition: inline
-In-Reply-To: <20170127192853.10082-23-RaghavaAditya.Renukunta@microsemi.com>
+Received: from bombadil.infradead.org ([65.50.211.133]:53828 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751621AbdA3MPy (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 30 Jan 2017 07:15:54 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
+To: bhelgaas@google.com
+Cc: bart.vanassche@sandisk.com, tglx@linutronix.de, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Fri, Jan 27, 2017 at 11:28:51AM -0800, Raghava Aditya Renukunta wrote:
-> Added new copyright messages
-> 
-> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> 
-> ---
+Bart reported a problem wÑ–th an out of bounds access in the low-level
+IRQ affinity code, which we root caused to the qla2xxx driver assigning
+all it's MSI-X vectors to the pre and post vectors, and not having any
+left for the actually spread IRQs.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+This fixes this issue by not asking for affinity assignment when there
+are not vectors to assign left.
 
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+Fixes: 402723ad ("PCI/MSI: Provide pci_alloc_irq_vectors_affinity()")
+Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
+Tested-by: Bart Van Assche <bart.vanassche@sandisk.com>
+---
+ drivers/pci/msi.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+index 50c5003..7f73bac 100644
+--- a/drivers/pci/msi.c
++++ b/drivers/pci/msi.c
+@@ -1206,6 +1206,16 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+ 	if (flags & PCI_IRQ_AFFINITY) {
+ 		if (!affd)
+ 			affd = &msi_default_affd;
++
++		if (affd->pre_vectors + affd->post_vectors > min_vecs)
++			return -EINVAL;
++
++		/*
++		 * If there aren't any vectors left after applying the pre/post
++		 * vectors don't bother with assigning affinity.
++		 */
++		if (affd->pre_vectors + affd->post_vectors == min_vecs)
++			affd = NULL;
+ 	} else {
+ 		if (WARN_ON(affd))
+ 			affd = NULL;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+2.1.4
+
