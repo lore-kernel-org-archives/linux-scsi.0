@@ -1,62 +1,60 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: scsi: BUG in scsi_init_io
-Date: Tue, 31 Jan 2017 10:20:48 +0100
-Message-ID: <20170131092048.GB3687@linux-x5ow.site>
-References: <CACT4Y+YAX_SmwzsHenzkswM0kp=om5NivmLW8d9Js6EN3zKmGQ@mail.gmail.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CACT4Y+YAX_SmwzsHenzkswM0kp=om5NivmLW8d9Js6EN3zKmGQ@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>, syzkaller <syzkaller@googlegroups.com>, Hannes Reinecke <hare@suse.de>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 05/10] mpt3sas: open-code _scsih_scsi_lookup_get()
+Date: Tue, 31 Jan 2017 10:25:55 +0100
+Message-ID: <1485854760-122683-6-git-send-email-hare@suse.de>
+References: <1485854760-122683-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46418 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751709AbdAaJ0V (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 31 Jan 2017 04:26:21 -0500
+In-Reply-To: <1485854760-122683-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, mpt-fusionlinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Tue, Jan 31, 2017 at 09:55:52AM +0100, Dmitry Vyukov wrote:
-> Hello,
-> 
-> The following program triggers BUG in scsi_init_io:
+Just a wrapper around the scsi lookup array and only used
+in one place, so open-code it.
 
-Well crashing a machine just because of an empty dma transfer is a bit harsh,
-isn't it?
-
->From 86e6fa5f618fe588b98e923e032f33e075fcd4f4 Mon Sep 17 00:00:00 2001
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Date: Tue, 31 Jan 2017 10:16:00 +0100
-Subject: [PATCH] scsi: don't BUG_ON() empty DMA transfers
-
-Don't crash the machine just because of an empty transfer. Use WARN_ON()
-combined with returning an error.
-
-Signed-off-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/scsi_lib.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index e9e1e14..414588a 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1040,7 +1040,8 @@ int scsi_init_io(struct scsi_cmnd *cmd)
- 	bool is_mq = (rq->mq_ctx != NULL);
- 	int error;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index b5c966e..979f95a 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1061,19 +1061,6 @@ struct _sas_node *
+ }
  
--	BUG_ON(!blk_rq_nr_phys_segments(rq));
-+	if (WARN_ON(!blk_rq_nr_phys_segments(rq)))
-+		return -EINVAL;
- 
- 	error = scsi_init_sgtable(rq, &cmd->sdb);
- 	if (error)
+ /**
+- * _scsih_scsi_lookup_get - returns scmd entry
+- * @ioc: per adapter object
+- * @smid: system request message index
+- *
+- * Returns the smid stored scmd pointer.
+- */
+-static struct scsi_cmnd *
+-_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+-{
+-	return ioc->scsi_lookup[smid - 1].scmd;
+-}
+-
+-/**
+  * _scsih_scsi_lookup_get_clear - returns scmd entry
+  * @ioc: per adapter object
+  * @smid: system request message index
+@@ -6101,7 +6088,7 @@ static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
+ 	for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
+ 		if (ioc->shost_recovery)
+ 			goto out;
+-		scmd = _scsih_scsi_lookup_get(ioc, smid);
++		scmd = ioc->scsi_lookup[smid - 1].scmd;
+ 		if (!scmd)
+ 			continue;
+ 		sdev = scmd->device;
 -- 
-2.10.2
+1.8.5.6
 
-
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
