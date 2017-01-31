@@ -1,50 +1,53 @@
-From: Bart Van Assche <Bart.VanAssche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Subject: Re: [PATCH 4.10-rc3 09/13] iscsi: fix build errors when
+From: Anna Schumaker <Anna.Schumaker-ZwjVKphTwtPQT0dZR+AlfA@public.gmane.org>
+Subject: Re: [PATCH 4.10-rc3 01/13] net: sunrpc: fix build errors when
  linux/phy*.h is removed from net/dsa.h
-Date: Tue, 31 Jan 2017 19:32:10 +0000
-Message-ID: <1485891116.3113.2.camel@sandisk.com>
+Date: Tue, 31 Jan 2017 14:48:02 -0500
+Message-ID: <52ceb082-1e0a-7210-833a-f4ac22df4b8c@Netapp.com>
 References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-         <E1cYdxN-0000Wr-AS@rmk-PC.armlinux.org.uk>
+ <E1cYdwi-0000Vs-97@rmk-PC.armlinux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <E1cYdxN-0000Wr-AS-eh5Bv4kxaXIk46pC+1QYvQNdhmdF6hFW@public.gmane.org>
-Content-Language: en-US
-Content-ID: <C15BF99F1975BB4F8A878C6D0FDBB237-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: "linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org" <linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org>, "linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org" <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, "linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>, "linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org" <linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-Cc: "davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, "f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org" <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org" <nab-IzHhD5pYlfBP7FQvKIMDCQ@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <E1cYdwi-0000Vs-97-eh5Bv4kxaXIk46pC+1QYvQNdhmdF6hFW@public.gmane.org>
+Sender: linux-wireless-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, "J. Bruce Fields" <bfields-uC3wQj2KruNg9hUCZPvPmw@public.gmane.org>, Jeff Layton <jlayton-vpEMnDpepFuMZCB2o+C8xQ@public.gmane.org>, Trond Myklebust <trond.myklebust-7I+n7zu2hftEKMMhf/gKZA@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, 2017-01-31 at 19:19 +0000, Russell King wrote:
-> drivers/target/iscsi/iscsi_target_login.c:1135:7: error: implicit declara=
-tion of function 'try_module_get' [-Werror=3Dimplicit-function-declaration]
->=20
-> Add linux/module.h to iscsi_target_login.c.
->=20
-> Signed-off-by: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
-> ---
->  drivers/target/iscsi/iscsi_target_login.c | 1 +
->  1 file changed, 1 insertion(+)
->=20
-> diff --git a/drivers/target/iscsi/iscsi_target_login.c b/drivers/target/i=
-scsi/iscsi_target_login.c
-> index 450f51deb2a2..eab274d17b5c 100644
-> --- a/drivers/target/iscsi/iscsi_target_login.c
-> +++ b/drivers/target/iscsi/iscsi_target_login.c
-> @@ -17,6 +17,7 @@
->   ***********************************************************************=
-*******/
-> =20
->  #include <crypto/hash.h>
-> +#include <linux/module.h>
->  #include <linux/string.h>
->  #include <linux/kthread.h>
->  #include <linux/idr.h>
+Hi Russell,
 
-Reviewed-by: Bart Van Assche <bart.vanassche-XdAiOPVOjttBDgjK7y7TUQ@public.gmane.org>=
---
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+On 01/31/2017 02:18 PM, Russell King wrote:
+> Removing linux/phy.h from net/dsa.h reveals a build error in the sunrpc
+> code:
+> 
+> net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_rdma_bc_put':
+> net/sunrpc/xprtrdma/svc_rdma_backchannel.c:277:2: error: implicit declaration of function 'module_put' [-Werror=implicit-function-declaration]
+> net/sunrpc/xprtrdma/svc_rdma_backchannel.c: In function 'xprt_setup_rdma_bc':
+> net/sunrpc/xprtrdma/svc_rdma_backchannel.c:348:7: error: implicit declaration of function 'try_module_get' [-Werror=implicit-function-declaration]
+> 
+> Fix this by adding linux/module.h to svc_rdma_backchannel.c
+> 
+> Signed-off-by: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
+
+This patch looks okay to me:
+
+Acked-by: Anna Schumaker <Anna.Schumaker-ZwjVKphTwtPQT0dZR+AlfA@public.gmane.org>
+
+> ---
+>  net/sunrpc/xprtrdma/svc_rdma_backchannel.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
+> index 288e35c2d8f4..cb1e48e54eb1 100644
+> --- a/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
+> +++ b/net/sunrpc/xprtrdma/svc_rdma_backchannel.c
+> @@ -4,6 +4,7 @@
+>   * Support for backward direction RPCs on RPC/RDMA (server-side).
+>   */
+>  
+> +#include <linux/module.h>
+>  #include <linux/sunrpc/svc_rdma.h>
+>  #include "xprt_rdma.h"
+>  
+> 
