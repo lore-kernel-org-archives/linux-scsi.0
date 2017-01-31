@@ -1,103 +1,172 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V3 08/24] aacraid: Added support for response path
-Date: Tue, 31 Jan 2017 09:02:52 +0100
-Message-ID: <20170131080252.GA3687@linux-x5ow.site>
-References: <20170127192853.10082-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170127192853.10082-9-RaghavaAditya.Renukunta@microsemi.com>
- <20170130095006.GE3603@linux-x5ow.site>
- <4D8E82A446BF54499747901DBDEB737A7B8A6DA3@avsrvexchmbx2.microsemi.net>
+From: Dmitry Vyukov <dvyukov@google.com>
+Subject: scsi: BUG in scsi_init_io
+Date: Tue, 31 Jan 2017 09:55:52 +0100
+Message-ID: <CACT4Y+YAX_SmwzsHenzkswM0kp=om5NivmLW8d9Js6EN3zKmGQ@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36253 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750927AbdAaIDM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Jan 2017 03:03:12 -0500
-Content-Disposition: inline
-In-Reply-To: <4D8E82A446BF54499747901DBDEB737A7B8A6DA3@avsrvexchmbx2.microsemi.net>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Al Viro <viro@zeniv.linux.org.uk>
+Cc: syzkaller <syzkaller@googlegroups.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Cc: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>
 
-On Mon, Jan 30, 2017 at 08:16:48PM +0000, Raghava Aditya Renukunta wrote:
-> 
-> 
-> > -----Original Message-----
-> > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> > Sent: Monday, January 30, 2017 1:50 AM
-> > To: Raghava Aditya Renukunta
-> > <RaghavaAditya.Renukunta@microsemi.com>
-> > Cc: jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; linux-
-> > scsi@vger.kernel.org; Dave Carroll <david.carroll@microsemi.com>; Gana
-> > Sridaran <gana.sridaran@microsemi.com>; Scott Benesh
-> > <scott.benesh@microsemi.com>
-> > Subject: Re: [PATCH V3 08/24] aacraid: Added support for response path
-> > 
-> > EXTERNAL EMAIL
-> > 
-> > 
-> > On Fri, Jan 27, 2017 at 11:28:37AM -0800, Raghava Aditya Renukunta wrote:
-> > > This patch enables the driver to actually process the I/O, or srb replies
-> > > from adapter. In addition to any HBA1000 or SmartIOC2000 adapter events.
-> > >
-> > > Signed-off-by: Raghava Aditya Renukunta
-> > <raghavaaditya.renukunta@microsemi.com>
-> > > Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
-> > >
-> > > ---
-> > 
-> > Sorry for not completely reviewing the patchset before you reposted.
-> > 
-> > > @@ -475,16 +475,26 @@ int aac_get_containers(struct aac_dev *dev)
-> > >
-> > >       if (maximum_num_containers < MAXIMUM_NUM_CONTAINERS)
-> > >               maximum_num_containers = MAXIMUM_NUM_CONTAINERS;
-> > > -     fsa_dev_ptr = kzalloc(sizeof(*fsa_dev_ptr) *
-> > maximum_num_containers,
-> > > -                     GFP_KERNEL);
-> > > -     if (!fsa_dev_ptr)
-> > > -             return -ENOMEM;
-> > > +     if ((dev->fsa_dev == NULL) ||
-> > > +             (dev->maximum_num_containers != maximum_num_containers))
-> > {
-> > > +
-> > > +             fsa_dev_ptr = dev->fsa_dev;
-> > 
-> > Comparison has precedence over logical OR. See
-> > http://en.cppreference.com/w/c/language/operator_precedence
-> 
-> Acknowledged.  , I will remove the parentheses.
-> The idea was to make it easier to read the code , if there were enclosed in 
-> Parenthesis  (I dabbled a bit in lisp , and for me brackets makes it easier to read).
+Hello,
 
-I think it makes it a bit less obvious and yes it kinda looks like LISP,
-you're right.
+The following program triggers BUG in scsi_init_io:
 
-> 
-> > 
-> > >
-> > > -     dev->fsa_dev = fsa_dev_ptr;
-> > > -     dev->maximum_num_containers = maximum_num_containers;
-> > > +             dev->fsa_dev = kzalloc(sizeof(*fsa_dev_ptr) *
-> > > +                             maximum_num_containers, GFP_KERNEL);
-> > 
-> > kcalloc()?
-> 
-> Yes kcalloc makes sense, but then an additional mem set would be required.
-> Unless there is a kzcalloc or kczalloc?
+kernel BUG at drivers/scsi/scsi_lib.c:1043!
+invalid opcode: 0000 [#1] SMP KASAN
+Modules linked in:
+CPU: 0 PID: 2899 Comm: a.out Not tainted 4.10.0-rc5+ #201
+Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS Bochs 01/01/2011
+task: ffff88006baa4500 task.stack: ffff880069788000
+RIP: 0010:scsi_init_io+0x2a3/0x3d0 drivers/scsi/scsi_lib.c:1043
+RSP: 0018:ffff88006978e500 EFLAGS: 00010097
+RAX: ffff88006baa4500 RBX: ffff8800683f2c00 RCX: 0000000000000000
+RDX: 0000000000000000 RSI: ffff88006afc79c0 RDI: ffff88006afc7aa0
+RBP: ffff88006978e548 R08: 0000000000000001 R09: 0000000000000001
+R10: 0000000000000000 R11: 0000000000000001 R12: ffff8800683f2c00
+R13: ffff8800683f2d40 R14: ffff880068b335d8 R15: ffff88006afc79c0
+FS:  0000000002572880(0000) GS:ffff88006d000000(0000) knlGS:0000000000000000
+CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+CR2: 0000000020c03000 CR3: 000000006b04f000 CR4: 00000000001406f0
+Call Trace:
+ scsi_setup_blk_pc_cmnd drivers/scsi/scsi_lib.c:1153 [inline]
+ scsi_setup_cmnd+0x13b/0x5d0 drivers/scsi/scsi_lib.c:1201
+ scsi_prep_fn+0x375/0x610 drivers/scsi/scsi_lib.c:1313
+ blk_peek_request+0x686/0xcc0 block/blk-core.c:2382
+ scsi_request_fn+0x19e/0x1d70 drivers/scsi/scsi_lib.c:1709
+ __blk_run_queue_uncond block/blk-core.c:325 [inline]
+ __blk_run_queue+0xc5/0x130 block/blk-core.c:343
+ blk_execute_rq_nowait+0x304/0x480 block/blk-exec.c:83
+ sg_common_write.isra.22+0x10b8/0x1b00 drivers/scsi/sg.c:804
+ sg_new_write.isra.25+0x5e7/0x990 drivers/scsi/sg.c:747
+ sg_ioctl+0x244b/0x39a0 drivers/scsi/sg.c:855
+ vfs_ioctl fs/ioctl.c:43 [inline]
+ do_vfs_ioctl+0x1bf/0x1790 fs/ioctl.c:683
+ SYSC_ioctl fs/ioctl.c:698 [inline]
+ SyS_ioctl+0x8f/0xc0 fs/ioctl.c:689
+ entry_SYSCALL_64_fastpath+0x1f/0xc2
+RIP: 0033:0x434da9
+RSP: 002b:00007ffd20ad81a8 EFLAGS: 00000246 ORIG_RAX: 0000000000000010
+RAX: ffffffffffffffda RBX: 0000000000401b00 RCX: 0000000000434da9
+RDX: 0000000020007000 RSI: 0000000000002285 RDI: 0000000000000003
+RBP: 0000000000000000 R08: 0000000000000000 R09: 0000000000000000
+R10: 0000000000000000 R11: 0000000000000246 R12: 0000000100000004
+R13: 0000000000401b00 R14: 0000000000401b90 R15: 0000000000000000
+Code: df 49 c7 85 e8 00 00 00 00 00 00 00 e8 37 f9 fd ff 48 8b 7d c8
+48 81 c7 38 02 00 00 e8 f7 8a f0 ff e9 70 ff ff ff e8 fd f1 a5 fe <0f>
+0b e8 f6 f1 a5 fe 48 8b 3d 8f a8 f1 03 be 20 80 08 01 e8 05
+RIP: scsi_init_io+0x2a3/0x3d0 drivers/scsi/scsi_lib.c:1043 RSP: ffff88006978e500
+---[ end trace 08eb8aec64134983 ]---
 
-No kcalloc() (and it's user-space counterpart calloc() give you zeroed out
-memory). If you don't want a zero-fill kmalloc_array() would be the way to go.
 
-Thanks for taking care of that,
-	Johannes
+// autogenerated by syzkaller (http://github.com/google/syzkaller)
+#define _GNU_SOURCE
+#include <sys/ioctl.h>
+#include <sys/mman.h>
+#include <sys/mount.h>
+#include <sys/syscall.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+int main()
+{
+  syscall(__NR_mmap, 0x20000000ul, 0xfc0000ul, 0x3ul,
+                         0x32ul, 0xfffffffffffffffful, 0x8000000ul, 0,
+                         0, 0);
+  int fd = syscall(__NR_open, "/dev/sg0", 0x0ul, 0, 0, 0, 0, 0, 0);
+  (*(uint64_t*)0x2000f000 = (uint64_t)0x20003fc0);
+  (*(uint64_t*)0x2000f008 = (uint64_t)0x20003fc0);
+  (*(uint64_t*)0x2000f010 = (uint64_t)0x2000f000);
+  (*(uint64_t*)0x20003fc0 = (uint64_t)0x7);
+  (*(uint32_t*)0x20003fc8 = (uint32_t)0x0);
+  (*(uint32_t*)0x20003fcc = (uint32_t)0x0);
+  (*(uint16_t*)0x20003fd0 = (uint16_t)0x0);
+  (*(uint16_t*)0x20003fd2 = (uint16_t)0x0);
+  (*(uint32_t*)0x20003fd4 = fd);
+  (*(uint64_t*)0x20003fd8 = (uint64_t)0x2000f000);
+  (*(uint64_t*)0x20003fe0 = (uint64_t)0x0);
+  (*(uint64_t*)0x20003fe8 = (uint64_t)0x0);
+  (*(uint64_t*)0x20003ff0 = (uint64_t)0x20007000);
+  (*(uint32_t*)0x20003ff8 = (uint32_t)0x1);
+  (*(uint32_t*)0x20003ffc = fd);
+  (*(uint64_t*)0x20007000 = (uint64_t)0x0);
+  (*(uint32_t*)0x20007008 = (uint32_t)0x4000009);
+  (*(uint32_t*)0x2000700c = (uint32_t)0x1);
+  (*(uint64_t*)0x20007010 = (uint64_t)0x20c03000);
+  (*(uint64_t*)0x20007018 = (uint64_t)0x2000f000);
+  (memcpy((void*)0x2000f000,
+                    "\x83\x3c\x35\x2f\xff\x00\x00\x00\x00\x00\x00\x7f"
+                    "\xff\x00\x00\x00\x00\x82\x7a\x7f\xa3\xcc\x90\xbe"
+                    "\x3d\xf8\x43\x81\xc5\x02",
+                    30));
+  (*(uint64_t*)0x20003fc0 = (uint64_t)0x649e);
+  (*(uint32_t*)0x20003fc8 = (uint32_t)0x0);
+  (*(uint32_t*)0x20003fcc = (uint32_t)0x0);
+  (*(uint16_t*)0x20003fd0 = (uint16_t)0x0);
+  (*(uint16_t*)0x20003fd2 = (uint16_t)0x1);
+  (*(uint32_t*)0x20003fd4 = fd);
+  (*(uint64_t*)0x20003fd8 = (uint64_t)0x2000f000);
+  (*(uint64_t*)0x20003fe0 = (uint64_t)0xaf);
+  (*(uint64_t*)0x20003fe8 = (uint64_t)0xffff);
+  (*(uint64_t*)0x20003ff0 = (uint64_t)0x20378fb0);
+  (*(uint32_t*)0x20003ff8 = (uint32_t)0x1);
+  (*(uint32_t*)0x20003ffc = fd);
+  (memcpy(
+      (void*)0x2000f000,
+      "\x05\x60\x1e\xc6\x2e\x5d\xdf\xc8\xcd\xd1\xd8\x2c\x37\x5f\xa2\x63"
+      "\xec\x39\x1d\x03\xf8\xfd\x1d\xe8\xf6\xfd\x84\x33\xfb\x7a\xd4\xfb"
+      "\xaf\x30\x6a\x0a\x2a\x43\xd8\xbb\x41\xcc\x7a\x74\x17\xe8\x66\x62"
+      "\x40\x17\x4d\x14\x34\x9e\x1b\x3b\x43\x50\x22\x95\x54\x05\x1e\xfd"
+      "\x8f\x9e\xb6\xe8\x93\x5c\xee\x48\x5f\xf8\x41\xac\x62\x5c\x0e\x80"
+      "\x2e\x3c\x55\x3f\xb1\xe1\x06\x10\xda\xce\xfd\x0b\x55\x79\x1b\x7c"
+      "\x10\x21\xfc\x0b\xb7\xee\x49\x1e\x07\x49\xdc\xe1\xb4\x77\xcb\xb3"
+      "\xbc\x85\xbc\x91\x1d\x1c\x22\xa3\x97\x43\x1a\x85\x0a\x7e\xf9\xc3"
+      "\x90\x06\x40\xbe\x4e\x9c\x9a\x8d\xe7\x14\xa7\xfc\xbc\x4c\x51\x95"
+      "\x54\xfb\x84\xd3\x20\x96\x33\xd1\x5e\x12\x65\x63\xb5\x5f\xd7\xc7"
+      "\x07\x46\x1a\x0e\xa3\x89\x00\x0f\xda\xd4\x3d\x9c\xff\x24\x4f",
+      175));
+  (*(uint64_t*)0x20378fb0 = (uint64_t)0x20);
+  (*(uint32_t*)0x20378fb8 = (uint32_t)0xffffffffffffffff);
+  (*(uint32_t*)0x20378fbc = (uint32_t)0x0);
+  (*(uint64_t*)0x20378fc0 = (uint64_t)0x81);
+  (*(uint64_t*)0x20378fc8 = (uint64_t)0x3ff);
+  (*(uint64_t*)0x20378fd0 = (uint64_t)0x6);
+  (*(uint64_t*)0x20378fd8 = (uint64_t)0x4);
+  (*(uint64_t*)0x20378fe0 = (uint64_t)0x2);
+  (*(uint64_t*)0x20378fe8 = (uint64_t)0x4);
+  (*(uint64_t*)0x20378ff0 = (uint64_t)0x100000004);
+  (*(uint64_t*)0x20378ff8 = (uint64_t)0x3);
+  (*(uint64_t*)0x2000f000 = (uint64_t)0xffff);
+  (*(uint32_t*)0x2000f008 = (uint32_t)0x0);
+  (*(uint32_t*)0x2000f00c = (uint32_t)0x0);
+  (*(uint16_t*)0x2000f010 = (uint16_t)0x7);
+  (*(uint16_t*)0x2000f012 = (uint16_t)0x401);
+  (*(uint32_t*)0x2000f014 = (uint32_t)0xffffffffffffffff);
+  (*(uint64_t*)0x2000f018 = (uint64_t)0x2000ffed);
+  (*(uint64_t*)0x2000f020 = (uint64_t)0x13);
+  (*(uint64_t*)0x2000f028 = (uint64_t)0x0);
+  (*(uint64_t*)0x2000f030 = (uint64_t)0x2000f000);
+  (*(uint32_t*)0x2000f038 = (uint32_t)0x1);
+  (*(uint32_t*)0x2000f03c = fd);
+  (memcpy((void*)0x2000ffed, "\x4e\x80\xd3\x97\x1f\x50\xaa"
+                                       "\xe2\x09\xbc\x10\x45\x72\x24"
+                                       "\xc0\xc2\x60\x5c\xa8",
+                    19));
+  (*(uint64_t*)0x2000f000 = (uint64_t)0x101);
+  (*(uint32_t*)0x2000f008 = (uint32_t)0x9);
+  (*(uint32_t*)0x2000f00c = (uint32_t)0x6);
+  (*(uint32_t*)0x2000f010 = (uint32_t)0x0);
+  syscall(__NR_io_submit, 0x0ul, 0x3ul, 0x2000f000ul, 0, 0, 0, 0, 0, 0);
+  (memcpy((void*)0x20007000, "\x53", 1));
+  syscall(__NR_ioctl, fd, 0x2285ul, 0x20007000ul, 0, 0, 0, 0, 0, 0);
+  return 0;
+}
+
+
+On commit fd694aaa46c7ed811b72eb47d5eb11ce7ab3f7f1
