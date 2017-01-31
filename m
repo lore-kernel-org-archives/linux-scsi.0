@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 09/10] ide: don't abuse cmd_type
-Date: Tue, 31 Jan 2017 16:57:30 +0100
-Message-ID: <1485878251-6107-10-git-send-email-hch@lst.de>
+Subject: [PATCH 08/10] block: introduce blk_rq_is_passthrough
+Date: Tue, 31 Jan 2017 16:57:29 +0100
+Message-ID: <1485878251-6107-9-git-send-email-hch@lst.de>
 References: <1485878251-6107-1-git-send-email-hch@lst.de>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de>
@@ -10,532 +10,570 @@ To: axboe@kernel.dk
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Currently the legacy ide driver defines several request types of it's own,
-which is in the way of removing that field entirely.
-
-Instead add a type field to struct ide_request and use that to distinguish
-the different types of IDE-internal requests.
-
-It's a bit of a mess, but so is the surrounding code..
+This can be used to check for fs vs non-fs requests and basically
+removes all knowledge of BLOCK_PC specific from the block layer,
+as well as preparing for removing the cmd_type field in struct request.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ide/ide-atapi.c    | 18 ++++++++++-----
- drivers/ide/ide-cd.c       | 25 ++++++++++++---------
- drivers/ide/ide-cd_ioctl.c |  1 +
- drivers/ide/ide-devsets.c  |  1 +
- drivers/ide/ide-disk.c     |  6 +++--
- drivers/ide/ide-eh.c       |  4 ++--
- drivers/ide/ide-floppy.c   | 18 ++++++++++-----
- drivers/ide/ide-io.c       |  8 +++----
- drivers/ide/ide-ioctls.c   |  4 +++-
- drivers/ide/ide-park.c     |  2 ++
- drivers/ide/ide-pm.c       | 16 ++++++++-----
- drivers/ide/ide-tape.c     |  6 +++--
- drivers/ide/ide-taskfile.c |  3 ++-
- include/linux/ide.h        | 56 +++++++++++++++++++++++++++++++++++++---------
- 14 files changed, 117 insertions(+), 51 deletions(-)
+ block/blk-core.c                      |  8 ++++----
+ block/blk-exec.c                      |  2 +-
+ block/blk.h                           |  2 +-
+ block/elevator.c                      |  4 ++--
+ block/mq-deadline.c                   |  2 +-
+ drivers/ata/libata-scsi.c             |  2 +-
+ drivers/block/cciss.c                 | 36 +++++++++++++++++------------------
+ drivers/nvme/host/fc.c                |  2 +-
+ drivers/nvme/host/pci.c               |  4 ++--
+ drivers/nvme/host/rdma.c              |  4 ++--
+ drivers/nvme/target/loop.c            |  2 +-
+ drivers/scsi/hpsa.c                   |  4 ++--
+ drivers/scsi/scsi.c                   |  2 +-
+ drivers/scsi/scsi_error.c             |  4 ++--
+ drivers/scsi/scsi_lib.c               |  6 +++---
+ drivers/scsi/smartpqi/smartpqi_init.c |  2 +-
+ drivers/scsi/sun3_scsi.c              |  2 +-
+ include/linux/blkdev.h                | 16 +++++++++++-----
+ include/linux/blktrace_api.h          |  4 ++--
+ include/scsi/scsi_cmnd.h              |  2 +-
+ kernel/trace/blktrace.c               |  2 +-
+ 21 files changed, 59 insertions(+), 53 deletions(-)
 
-diff --git a/drivers/ide/ide-atapi.c b/drivers/ide/ide-atapi.c
-index 7c826ec..a8c650e 100644
---- a/drivers/ide/ide-atapi.c
-+++ b/drivers/ide/ide-atapi.c
-@@ -95,6 +95,7 @@ int ide_queue_pc_tail(ide_drive_t *drive, struct gendisk *disk,
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	rq->special = (char *)pc;
+diff --git a/block/blk-core.c b/block/blk-core.c
+index d0c50fc..f5c9f40 100644
+--- a/block/blk-core.c
++++ b/block/blk-core.c
+@@ -2506,10 +2506,10 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 	 * TODO: tj: This is too subtle.  It would be better to let
+ 	 * low level drivers do what they see fit.
+ 	 */
+-	if (req->cmd_type == REQ_TYPE_FS)
++	if (!blk_rq_is_passthrough(req))
+ 		req->errors = 0;
  
- 	if (buf && bufflen) {
-@@ -193,7 +194,7 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
+-	if (error && req->cmd_type == REQ_TYPE_FS &&
++	if (error && !blk_rq_is_passthrough(req) &&
+ 	    !(req->rq_flags & RQF_QUIET)) {
+ 		char *error_type;
  
- 	BUG_ON(sense_len > sizeof(*sense));
+@@ -2581,7 +2581,7 @@ bool blk_update_request(struct request *req, int error, unsigned int nr_bytes)
+ 	req->__data_len -= total_bytes;
  
--	if (rq->cmd_type == REQ_TYPE_ATA_SENSE || drive->sense_rq_armed)
-+	if (ata_sense_request(rq) || drive->sense_rq_armed)
+ 	/* update sector only for requests with clear definition of sector */
+-	if (req->cmd_type == REQ_TYPE_FS)
++	if (!blk_rq_is_passthrough(req))
+ 		req->__sector += total_bytes >> 9;
+ 
+ 	/* mixed attributes always follow the first bio */
+@@ -2659,7 +2659,7 @@ void blk_finish_request(struct request *req, int error)
+ 
+ 	BUG_ON(blk_queued_rq(req));
+ 
+-	if (unlikely(laptop_mode) && req->cmd_type == REQ_TYPE_FS)
++	if (unlikely(laptop_mode) && !blk_rq_is_passthrough(req))
+ 		laptop_io_completion(&req->q->backing_dev_info);
+ 
+ 	blk_delete_timer(req);
+diff --git a/block/blk-exec.c b/block/blk-exec.c
+index ed51800..8cd0e9b 100644
+--- a/block/blk-exec.c
++++ b/block/blk-exec.c
+@@ -51,7 +51,7 @@ void blk_execute_rq_nowait(struct request_queue *q, struct gendisk *bd_disk,
+ 	int where = at_head ? ELEVATOR_INSERT_FRONT : ELEVATOR_INSERT_BACK;
+ 
+ 	WARN_ON(irqs_disabled());
+-	WARN_ON(rq->cmd_type == REQ_TYPE_FS);
++	WARN_ON(!blk_rq_is_passthrough(rq));
+ 
+ 	rq->rq_disk = bd_disk;
+ 	rq->end_io = done;
+diff --git a/block/blk.h b/block/blk.h
+index 9a716b5..c1bd4bf 100644
+--- a/block/blk.h
++++ b/block/blk.h
+@@ -249,7 +249,7 @@ static inline int blk_do_io_stat(struct request *rq)
+ {
+ 	return rq->rq_disk &&
+ 	       (rq->rq_flags & RQF_IO_STAT) &&
+-		(rq->cmd_type == REQ_TYPE_FS);
++		!blk_rq_is_passthrough(rq);
+ }
+ 
+ /*
+diff --git a/block/elevator.c b/block/elevator.c
+index ef7f594..dba9be8 100644
+--- a/block/elevator.c
++++ b/block/elevator.c
+@@ -634,7 +634,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ 
+ 	if (rq->rq_flags & RQF_SOFTBARRIER) {
+ 		/* barriers are scheduling boundary, update end_sector */
+-		if (rq->cmd_type == REQ_TYPE_FS) {
++		if (!blk_rq_is_passthrough(rq)) {
+ 			q->end_sector = rq_end_sector(rq);
+ 			q->boundary_rq = rq;
+ 		}
+@@ -676,7 +676,7 @@ void __elv_add_request(struct request_queue *q, struct request *rq, int where)
+ 		if (elv_attempt_insert_merge(q, rq))
+ 			break;
+ 	case ELEVATOR_INSERT_SORT:
+-		BUG_ON(rq->cmd_type != REQ_TYPE_FS);
++		BUG_ON(blk_rq_is_passthrough(rq));
+ 		rq->rq_flags |= RQF_SORTED;
+ 		q->nr_sorted++;
+ 		if (rq_mergeable(rq)) {
+diff --git a/block/mq-deadline.c b/block/mq-deadline.c
+index d93ec71..4958353 100644
+--- a/block/mq-deadline.c
++++ b/block/mq-deadline.c
+@@ -398,7 +398,7 @@ static void dd_insert_request(struct blk_mq_hw_ctx *hctx, struct request *rq,
+ 	if (blk_mq_sched_bypass_insert(hctx, rq))
  		return;
  
- 	memset(sense, 0, sizeof(*sense));
-@@ -211,7 +212,8 @@ void ide_prep_sense(ide_drive_t *drive, struct request *rq)
- 	}
+-	if (at_head || rq->cmd_type != REQ_TYPE_FS) {
++	if (at_head || blk_rq_is_passthrough(rq)) {
+ 		if (at_head)
+ 			list_add(&rq->queuelist, &dd->dispatch);
+ 		else
+diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+index 6abd739..c771d4c 100644
+--- a/drivers/ata/libata-scsi.c
++++ b/drivers/ata/libata-scsi.c
+@@ -1265,7 +1265,7 @@ static void ata_scsi_sdev_config(struct scsi_device *sdev)
+  */
+ static int atapi_drain_needed(struct request *rq)
+ {
+-	if (likely(rq->cmd_type != REQ_TYPE_BLOCK_PC))
++	if (likely(!blk_rq_is_passthrough(rq)))
+ 		return 0;
  
- 	sense_rq->rq_disk = rq->rq_disk;
--	sense_rq->cmd_type = REQ_TYPE_ATA_SENSE;
-+	sense_rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(sense_rq)->type = ATA_PRIV_SENSE;
- 	sense_rq->rq_flags |= RQF_PREEMPT;
+ 	if (!blk_rq_bytes(rq) || op_is_write(req_op(rq)))
+diff --git a/drivers/block/cciss.c b/drivers/block/cciss.c
+index b93bb73..53dc297 100644
+--- a/drivers/block/cciss.c
++++ b/drivers/block/cciss.c
+@@ -1854,7 +1854,7 @@ static void cciss_softirq_done(struct request *rq)
+ 	dev_dbg(&h->pdev->dev, "Done with %p\n", rq);
  
- 	req->cmd[0] = GPCMD_REQUEST_SENSE;
-@@ -313,10 +315,14 @@ int ide_cd_get_xferlen(struct request *rq)
- 	switch (rq->cmd_type) {
- 	case REQ_TYPE_FS:
- 		return 32768;
--	case REQ_TYPE_ATA_SENSE:
- 	case REQ_TYPE_BLOCK_PC:
--	case REQ_TYPE_ATA_PC:
- 		return blk_rq_bytes(rq);
-+	case REQ_TYPE_DRV_PRIV:
-+		switch (ide_req(rq)->type) {
-+		case ATA_PRIV_PC:
-+		case ATA_PRIV_SENSE:
-+			return blk_rq_bytes(rq);
-+		}
- 	default:
+ 	/* set the residual count for pc requests */
+-	if (rq->cmd_type == REQ_TYPE_BLOCK_PC)
++	if (blk_rq_is_passthrough(rq))
+ 		scsi_req(rq)->resid_len = c->err_info->ResidualCnt;
+ 
+ 	blk_end_request_all(rq, (rq->errors == 0) ? 0 : -EIO);
+@@ -3083,7 +3083,7 @@ static inline int evaluate_target_status(ctlr_info_t *h,
+ 	driver_byte = DRIVER_OK;
+ 	msg_byte = cmd->err_info->CommandStatus; /* correct?  seems too device specific */
+ 
+-	if (cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC)
++	if (blk_rq_is_passthrough(cmd->rq))
+ 		host_byte = DID_PASSTHROUGH;
+ 	else
+ 		host_byte = DID_OK;
+@@ -3092,7 +3092,7 @@ static inline int evaluate_target_status(ctlr_info_t *h,
+ 		host_byte, driver_byte);
+ 
+ 	if (cmd->err_info->ScsiStatus != SAM_STAT_CHECK_CONDITION) {
+-		if (cmd->rq->cmd_type != REQ_TYPE_BLOCK_PC)
++		if (!blk_rq_is_passthrough(cmd->rq))
+ 			dev_warn(&h->pdev->dev, "cmd %p "
+ 			       "has SCSI Status 0x%x\n",
+ 			       cmd, cmd->err_info->ScsiStatus);
+@@ -3103,16 +3103,16 @@ static inline int evaluate_target_status(ctlr_info_t *h,
+ 	sense_key = 0xf & cmd->err_info->SenseInfo[2];
+ 	/* no status or recovered error */
+ 	if (((sense_key == 0x0) || (sense_key == 0x1)) &&
+-	    (cmd->rq->cmd_type != REQ_TYPE_BLOCK_PC))
++	    !blk_rq_is_passthrough(cmd->rq))
+ 		error_value = 0;
+ 
+ 	if (check_for_unit_attention(h, cmd)) {
+-		*retry_cmd = !(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC);
++		*retry_cmd = !blk_rq_is_passthrough(cmd->rq);
  		return 0;
  	}
-@@ -377,7 +383,7 @@ int ide_check_ireason(ide_drive_t *drive, struct request *rq, int len,
- 				drive->name, __func__, ireason);
- 	}
  
--	if (dev_is_idecd(drive) && rq->cmd_type == REQ_TYPE_ATA_PC)
-+	if (dev_is_idecd(drive) && ata_pc_request(rq))
- 		rq->rq_flags |= RQF_FAILED;
- 
- 	return 1;
-@@ -480,7 +486,7 @@ static ide_startstop_t ide_pc_intr(ide_drive_t *drive)
- 		if (uptodate == 0)
- 			drive->failed_pc = NULL;
- 
--		if (rq->cmd_type == REQ_TYPE_DRV_PRIV) {
-+		if (ata_misc_request(rq)) {
- 			rq->errors = 0;
- 			error = 0;
- 		} else {
-diff --git a/drivers/ide/ide-cd.c b/drivers/ide/ide-cd.c
-index 6eb9872..207af78 100644
---- a/drivers/ide/ide-cd.c
-+++ b/drivers/ide/ide-cd.c
-@@ -210,7 +210,7 @@ static void cdrom_analyze_sense_data(ide_drive_t *drive,
- static void ide_cd_complete_failed_rq(ide_drive_t *drive, struct request *rq)
- {
- 	/*
--	 * For REQ_TYPE_ATA_SENSE, "rq->special" points to the original
-+	 * For ATA_PRIV_SENSE, "rq->special" points to the original
- 	 * failed request.  Also, the sense data should be read
- 	 * directly from rq which might be different from the original
- 	 * sense buffer if it got copied during mapping.
-@@ -282,7 +282,7 @@ static int cdrom_decode_status(ide_drive_t *drive, u8 stat)
- 				  "stat 0x%x",
- 				  rq->cmd[0], rq->cmd_type, err, stat);
- 
--	if (rq->cmd_type == REQ_TYPE_ATA_SENSE) {
-+	if (ata_sense_request(rq)) {
- 		/*
- 		 * We got an error trying to get sense info from the drive
- 		 * (probably while trying to recover from a former error).
-@@ -438,7 +438,8 @@ int ide_cd_queue_pc(ide_drive_t *drive, const unsigned char *cmd,
- 		rq = blk_get_request(drive->queue, write, __GFP_RECLAIM);
- 		scsi_req_init(rq);
- 		memcpy(scsi_req(rq)->cmd, cmd, BLK_MAX_CDB);
--		rq->cmd_type = REQ_TYPE_ATA_PC;
-+		rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+		ide_req(rq)->type = ATA_PRIV_PC;
- 		rq->rq_flags |= rq_flags;
- 		rq->timeout = timeout;
- 		if (buffer) {
-@@ -520,7 +521,7 @@ static ide_startstop_t cdrom_newpc_intr(ide_drive_t *drive)
- 	ide_expiry_t *expiry = NULL;
- 	int dma_error = 0, dma, thislen, uptodate = 0;
- 	int write = (rq_data_dir(rq) == WRITE) ? 1 : 0, rc = 0;
--	int sense = (rq->cmd_type == REQ_TYPE_ATA_SENSE);
-+	int sense = ata_sense_request(rq);
- 	unsigned int timeout;
- 	u16 len;
- 	u8 ireason, stat;
-@@ -785,18 +786,22 @@ static ide_startstop_t ide_cd_do_request(ide_drive_t *drive, struct request *rq,
- 		if (cdrom_start_rw(drive, rq) == ide_stopped)
- 			goto out_end;
+ 	/* Not SG_IO or similar? */
+-	if (cmd->rq->cmd_type != REQ_TYPE_BLOCK_PC) {
++	if (!blk_rq_is_passthrough(cmd->rq)) {
+ 		if (error_value != 0)
+ 			dev_warn(&h->pdev->dev, "cmd %p has CHECK CONDITION"
+ 			       " sense key = 0x%x\n", cmd, sense_key);
+@@ -3146,14 +3146,14 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		rq->errors = evaluate_target_status(h, cmd, &retry_cmd);
  		break;
--	case REQ_TYPE_ATA_SENSE:
- 	case REQ_TYPE_BLOCK_PC:
--	case REQ_TYPE_ATA_PC:
-+	handle_pc:
- 		if (!rq->timeout)
- 			rq->timeout = ATAPI_WAIT_PC;
--
- 		cdrom_do_block_pc(drive, rq);
+ 	case CMD_DATA_UNDERRUN:
+-		if (cmd->rq->cmd_type == REQ_TYPE_FS) {
++		if (!blk_rq_is_passthrough(cmd->rq)) {
+ 			dev_warn(&h->pdev->dev, "cmd %p has"
+ 			       " completed with data underrun "
+ 			       "reported\n", cmd);
+ 		}
  		break;
- 	case REQ_TYPE_DRV_PRIV:
--		/* right now this can only be a reset... */
--		uptodate = 1;
--		goto out_end;
-+		switch (ide_req(rq)->type) {
-+		case ATA_PRIV_MISC:
-+			/* right now this can only be a reset... */
-+			uptodate = 1;
-+			goto out_end;
-+		case ATA_PRIV_SENSE:
-+		case ATA_PRIV_PC:
-+			goto handle_pc;
-+		}
+ 	case CMD_DATA_OVERRUN:
+-		if (cmd->rq->cmd_type == REQ_TYPE_FS)
++		if (!blk_rq_is_passthrough(cmd->rq))
+ 			dev_warn(&h->pdev->dev, "cciss: cmd %p has"
+ 			       " completed with data overrun "
+ 			       "reported\n", cmd);
+@@ -3163,7 +3163,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       "reported invalid\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_PROTOCOL_ERR:
+@@ -3171,7 +3171,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       "protocol error\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_HARDWARE_ERR:
+@@ -3179,7 +3179,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       " hardware error\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_CONNECTION_LOST:
+@@ -3187,7 +3187,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       "connection lost\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_ABORTED:
+@@ -3195,7 +3195,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       "aborted\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ABORT);
+ 		break;
+ 	case CMD_ABORT_FAILED:
+@@ -3203,7 +3203,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       "abort failed\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_UNSOLICITED_ABORT:
+@@ -3218,21 +3218,21 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 				"%p retried too many times\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ABORT);
+ 		break;
+ 	case CMD_TIMEOUT:
+ 		dev_warn(&h->pdev->dev, "cmd %p timedout\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
+ 	case CMD_UNABORTABLE:
+ 		dev_warn(&h->pdev->dev, "cmd %p unabortable\n", cmd);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
+ 		break;
  	default:
- 		BUG();
+@@ -3241,7 +3241,7 @@ static inline void complete_command(ctlr_info_t *h, CommandList_struct *cmd,
+ 		       cmd->err_info->CommandStatus);
+ 		rq->errors = make_status_bytes(SAM_STAT_GOOD,
+ 			cmd->err_info->CommandStatus, DRIVER_OK,
+-			(cmd->rq->cmd_type == REQ_TYPE_BLOCK_PC) ?
++			blk_rq_is_passthrough(cmd->rq) ?
+ 				DID_PASSTHROUGH : DID_ERROR);
  	}
-diff --git a/drivers/ide/ide-cd_ioctl.c b/drivers/ide/ide-cd_ioctl.c
-index da0aa01..3f03eed 100644
---- a/drivers/ide/ide-cd_ioctl.c
-+++ b/drivers/ide/ide-cd_ioctl.c
-@@ -306,6 +306,7 @@ int ide_cdrom_reset(struct cdrom_device_info *cdi)
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	rq->rq_flags = RQF_QUIET;
- 	ret = blk_execute_rq(drive->queue, cd->disk, rq, 0);
- 	blk_put_request(rq);
-diff --git a/drivers/ide/ide-devsets.c b/drivers/ide/ide-devsets.c
-index fd56c9d..c040b9d 100644
---- a/drivers/ide/ide-devsets.c
-+++ b/drivers/ide/ide-devsets.c
-@@ -168,6 +168,7 @@ int ide_devset_execute(ide_drive_t *drive, const struct ide_devset *setting,
- 	rq = blk_get_request(q, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	scsi_req(rq)->cmd_len = 5;
- 	scsi_req(rq)->cmd[0] = REQ_DEVSET_EXEC;
- 	*(int *)&scsi_req(rq)->cmd[1] = arg;
-diff --git a/drivers/ide/ide-disk.c b/drivers/ide/ide-disk.c
-index 3437c5b..69cf717 100644
---- a/drivers/ide/ide-disk.c
-+++ b/drivers/ide/ide-disk.c
-@@ -453,7 +453,8 @@ static int idedisk_prep_fn(struct request_queue *q, struct request *rq)
- 	cmd->tf_flags = IDE_TFLAG_DYN;
- 	cmd->protocol = ATA_PROT_NODATA;
  
--	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_TASKFILE;
- 	rq->special = cmd;
- 	cmd->rq = rq;
+diff --git a/drivers/nvme/host/fc.c b/drivers/nvme/host/fc.c
+index fcc9dcf..40c979b 100644
+--- a/drivers/nvme/host/fc.c
++++ b/drivers/nvme/host/fc.c
+@@ -1937,7 +1937,7 @@ nvme_fc_complete_rq(struct request *rq)
+ 			return;
+ 		}
  
-@@ -479,7 +480,8 @@ static int set_multcount(ide_drive_t *drive, int arg)
+-		if (rq->cmd_type == REQ_TYPE_DRV_PRIV)
++		if (blk_rq_is_passthrough(rq))
+ 			error = rq->errors;
+ 		else
+ 			error = nvme_error_status(rq->errors);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index 7103bce..f29365b 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -588,7 +588,7 @@ static int nvme_queue_rq(struct blk_mq_hw_ctx *hctx,
+ 	 */
+ 	if (ns && ns->ms && !blk_integrity_rq(req)) {
+ 		if (!(ns->pi_type && ns->ms == 8) &&
+-					req->cmd_type != REQ_TYPE_DRV_PRIV) {
++		    !blk_rq_is_passthrough(req)) {
+ 			blk_mq_end_request(req, -EFAULT);
+ 			return BLK_MQ_RQ_QUEUE_OK;
+ 		}
+@@ -645,7 +645,7 @@ static void nvme_complete_rq(struct request *req)
+ 			return;
+ 		}
  
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
--	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_TASKFILE;
+-		if (req->cmd_type == REQ_TYPE_DRV_PRIV)
++		if (blk_rq_is_passthrough(req))
+ 			error = req->errors;
+ 		else
+ 			error = nvme_error_status(req->errors);
+diff --git a/drivers/nvme/host/rdma.c b/drivers/nvme/host/rdma.c
+index 557f29b..ecc79b2 100644
+--- a/drivers/nvme/host/rdma.c
++++ b/drivers/nvme/host/rdma.c
+@@ -1423,7 +1423,7 @@ static inline bool nvme_rdma_queue_is_ready(struct nvme_rdma_queue *queue,
+ 	if (unlikely(!test_bit(NVME_RDMA_Q_LIVE, &queue->flags))) {
+ 		struct nvme_command *cmd = nvme_req(rq)->cmd;
  
- 	drive->mult_req = arg;
- 	drive->special_flags |= IDE_SFLAG_SET_MULTMODE;
-diff --git a/drivers/ide/ide-eh.c b/drivers/ide/ide-eh.c
-index 35e5b89..1e4b147 100644
---- a/drivers/ide/ide-eh.c
-+++ b/drivers/ide/ide-eh.c
-@@ -124,7 +124,7 @@ ide_startstop_t ide_error(ide_drive_t *drive, const char *msg, u8 stat)
+-		if (rq->cmd_type != REQ_TYPE_DRV_PRIV ||
++		if (!blk_rq_is_passthrough(rq) ||
+ 		    cmd->common.opcode != nvme_fabrics_command ||
+ 		    cmd->fabrics.fctype != nvme_fabrics_type_connect)
+ 			return false;
+@@ -1522,7 +1522,7 @@ static void nvme_rdma_complete_rq(struct request *rq)
+ 			return;
+ 		}
  
- 	/* retry only "normal" I/O: */
- 	if (rq->cmd_type != REQ_TYPE_FS) {
--		if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
-+		if (ata_taskfile_request(rq)) {
- 			struct ide_cmd *cmd = rq->special;
+-		if (rq->cmd_type == REQ_TYPE_DRV_PRIV)
++		if (blk_rq_is_passthrough(rq))
+ 			error = rq->errors;
+ 		else
+ 			error = nvme_error_status(rq->errors);
+diff --git a/drivers/nvme/target/loop.c b/drivers/nvme/target/loop.c
+index 9aaa700..f3862e3 100644
+--- a/drivers/nvme/target/loop.c
++++ b/drivers/nvme/target/loop.c
+@@ -104,7 +104,7 @@ static void nvme_loop_complete_rq(struct request *req)
+ 			return;
+ 		}
  
- 			if (cmd)
-@@ -147,7 +147,7 @@ static inline void ide_complete_drive_reset(ide_drive_t *drive, int err)
+-		if (req->cmd_type == REQ_TYPE_DRV_PRIV)
++		if (blk_rq_is_passthrough(req))
+ 			error = req->errors;
+ 		else
+ 			error = nvme_error_status(req->errors);
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index cbc0c5f..c611412 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -5539,8 +5539,8 @@ static int hpsa_scsi_queue_command(struct Scsi_Host *sh, struct scsi_cmnd *cmd)
+ 	 * Retries always go down the normal I/O path.
+ 	 */
+ 	if (likely(cmd->retries == 0 &&
+-		cmd->request->cmd_type == REQ_TYPE_FS &&
+-		h->acciopath_status)) {
++			!blk_rq_is_passthrough(cmd->request) &&
++			h->acciopath_status)) {
+ 		rc = hpsa_ioaccel_submit(h, c, cmd, scsi3addr);
+ 		if (rc == 0)
+ 			return 0;
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 3d8d215..7bfbcfa 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -238,7 +238,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
+ 				"(result %x)\n", cmd->result));
+ 
+ 	good_bytes = scsi_bufflen(cmd);
+-        if (cmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++        if (!blk_rq_is_passthrough(cmd->request)) {
+ 		int old_good_bytes = good_bytes;
+ 		drv = scsi_cmd_to_driver(cmd);
+ 		if (drv->done)
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 4b40f74..b4ce7bb 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -1106,7 +1106,7 @@ static int scsi_request_sense(struct scsi_cmnd *scmd)
+ 
+ static int scsi_eh_action(struct scsi_cmnd *scmd, int rtn)
  {
- 	struct request *rq = drive->hwif->rq;
- 
--	if (rq && rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+	if (rq && ata_misc_request(rq) &&
- 	    scsi_req(rq)->cmd[0] == REQ_DRIVE_RESET) {
- 		if (err <= 0 && rq->errors == 0)
- 			rq->errors = -EIO;
-diff --git a/drivers/ide/ide-floppy.c b/drivers/ide/ide-floppy.c
-index 3bd678a..24c6d36 100644
---- a/drivers/ide/ide-floppy.c
-+++ b/drivers/ide/ide-floppy.c
-@@ -97,7 +97,7 @@ static int ide_floppy_callback(ide_drive_t *drive, int dsc)
- 			       "Aborting request!\n");
- 	}
- 
--	if (rq->cmd_type == REQ_TYPE_DRV_PRIV)
-+	if (ata_misc_request(rq))
- 		rq->errors = uptodate ? 0 : IDE_DRV_ERROR_GENERAL;
- 
- 	return uptodate;
-@@ -246,7 +246,7 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
- 		} else
- 			printk(KERN_ERR PFX "%s: I/O error\n", drive->name);
- 
--		if (rq->cmd_type == REQ_TYPE_DRV_PRIV) {
-+		if (ata_misc_request(rq)) {
- 			rq->errors = 0;
- 			ide_complete_rq(drive, 0, blk_rq_bytes(rq));
- 			return ide_stopped;
-@@ -265,14 +265,20 @@ static ide_startstop_t ide_floppy_do_request(ide_drive_t *drive,
- 		pc = &floppy->queued_pc;
- 		idefloppy_create_rw_cmd(drive, pc, rq, (unsigned long)block);
- 		break;
--	case REQ_TYPE_DRV_PRIV:
--	case REQ_TYPE_ATA_SENSE:
--		pc = (struct ide_atapi_pc *)rq->special;
--		break;
- 	case REQ_TYPE_BLOCK_PC:
- 		pc = &floppy->queued_pc;
- 		idefloppy_blockpc_cmd(floppy, pc, rq);
- 		break;
-+	case REQ_TYPE_DRV_PRIV:
-+		switch (ide_req(rq)->type) {
-+		case ATA_PRIV_MISC:
-+		case ATA_PRIV_SENSE:
-+			pc = (struct ide_atapi_pc *)rq->special;
-+			break;
-+		default:
-+			BUG();
-+		}
-+		break;
- 	default:
- 		BUG();
- 	}
-diff --git a/drivers/ide/ide-io.c b/drivers/ide/ide-io.c
-index 3378503..6735c92 100644
---- a/drivers/ide/ide-io.c
-+++ b/drivers/ide/ide-io.c
-@@ -102,7 +102,7 @@ void ide_complete_cmd(ide_drive_t *drive, struct ide_cmd *cmd, u8 stat, u8 err)
- 			drive->dev_flags |= IDE_DFLAG_PARKED;
- 	}
- 
--	if (rq && rq->cmd_type == REQ_TYPE_ATA_TASKFILE) {
-+	if (rq && ata_taskfile_request(rq)) {
- 		struct ide_cmd *orig_cmd = rq->special;
- 
- 		if (cmd->tf_flags & IDE_TFLAG_DYN)
-@@ -135,7 +135,7 @@ EXPORT_SYMBOL(ide_complete_rq);
- 
- void ide_kill_rq(ide_drive_t *drive, struct request *rq)
- {
--	u8 drv_req = (rq->cmd_type == REQ_TYPE_DRV_PRIV) && rq->rq_disk;
-+	u8 drv_req = ata_misc_request(rq) && rq->rq_disk;
- 	u8 media = drive->media;
- 
- 	drive->failed_pc = NULL;
-@@ -340,7 +340,7 @@ static ide_startstop_t start_request (ide_drive_t *drive, struct request *rq)
- 		if (drive->current_speed == 0xff)
- 			ide_config_drive_speed(drive, drive->desired_speed);
- 
--		if (rq->cmd_type == REQ_TYPE_ATA_TASKFILE)
-+		if (ata_taskfile_request(rq))
- 			return execute_drive_cmd(drive, rq);
- 		else if (ata_pm_request(rq)) {
- 			struct ide_pm_state *pm = rq->special;
-@@ -353,7 +353,7 @@ static ide_startstop_t start_request (ide_drive_t *drive, struct request *rq)
- 			    pm->pm_step == IDE_PM_COMPLETED)
- 				ide_complete_pm_rq(drive, rq);
- 			return startstop;
--		} else if (!rq->rq_disk && rq->cmd_type == REQ_TYPE_DRV_PRIV)
-+		} else if (!rq->rq_disk && ata_misc_request(rq))
- 			/*
- 			 * TODO: Once all ULDs have been modified to
- 			 * check for specific op codes rather than
-diff --git a/drivers/ide/ide-ioctls.c b/drivers/ide/ide-ioctls.c
-index a5d22c6..fc19e84 100644
---- a/drivers/ide/ide-ioctls.c
-+++ b/drivers/ide/ide-ioctls.c
-@@ -127,7 +127,8 @@ static int ide_cmd_ioctl(ide_drive_t *drive, unsigned long arg)
- 
- 		rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 		scsi_req_init(rq);
--		rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+		rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+		ide_req(rq)->type = ATA_PRIV_TASKFILE;
- 		err = blk_execute_rq(drive->queue, NULL, rq, 0);
- 		blk_put_request(rq);
- 
-@@ -225,6 +226,7 @@ static int generic_drive_reset(ide_drive_t *drive)
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	scsi_req(rq)->cmd_len = 1;
- 	scsi_req(rq)->cmd[0] = REQ_DRIVE_RESET;
- 	if (blk_execute_rq(drive->queue, NULL, rq, 1))
-diff --git a/drivers/ide/ide-park.c b/drivers/ide/ide-park.c
-index c37604a..fc3c944 100644
---- a/drivers/ide/ide-park.c
-+++ b/drivers/ide/ide-park.c
-@@ -36,6 +36,7 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	scsi_req(rq)->cmd[0] = REQ_PARK_HEADS;
- 	scsi_req(rq)->cmd_len = 1;
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	rq->special = &timeout;
- 	rc = blk_execute_rq(q, NULL, rq, 1);
- 	blk_put_request(rq);
-@@ -54,6 +55,7 @@ static void issue_park_cmd(ide_drive_t *drive, unsigned long timeout)
- 	scsi_req(rq)->cmd[0] = REQ_UNPARK_HEADS;
- 	scsi_req(rq)->cmd_len = 1;
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	elv_add_request(q, rq, ELEVATOR_INSERT_FRONT);
- 
- out:
-diff --git a/drivers/ide/ide-pm.c b/drivers/ide/ide-pm.c
-index f6767ab..0c12968 100644
---- a/drivers/ide/ide-pm.c
-+++ b/drivers/ide/ide-pm.c
-@@ -20,7 +20,8 @@ int generic_ide_suspend(struct device *dev, pm_message_t mesg)
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
--	rq->cmd_type = REQ_TYPE_ATA_PM_SUSPEND;
-+	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_PM_SUSPEND;
- 	rq->special = &rqpm;
- 	rqpm.pm_step = IDE_PM_START_SUSPEND;
- 	if (mesg.event == PM_EVENT_PRETHAW)
-@@ -91,7 +92,8 @@ int generic_ide_resume(struct device *dev)
- 	memset(&rqpm, 0, sizeof(rqpm));
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
--	rq->cmd_type = REQ_TYPE_ATA_PM_RESUME;
-+	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_PM_RESUME;
- 	rq->rq_flags |= RQF_PREEMPT;
- 	rq->special = &rqpm;
- 	rqpm.pm_step = IDE_PM_START_RESUME;
-@@ -223,10 +225,10 @@ void ide_complete_pm_rq(ide_drive_t *drive, struct request *rq)
- 
- #ifdef DEBUG_PM
- 	printk("%s: completing PM request, %s\n", drive->name,
--	       (rq->cmd_type == REQ_TYPE_ATA_PM_SUSPEND) ? "suspend" : "resume");
-+	       (ide_req(rq)->type == ATA_PRIV_PM_SUSPEND) ? "suspend" : "resume");
- #endif
- 	spin_lock_irqsave(q->queue_lock, flags);
--	if (rq->cmd_type == REQ_TYPE_ATA_PM_SUSPEND)
-+	if (ide_req(rq)->type == ATA_PRIV_PM_SUSPEND)
- 		blk_stop_queue(q);
+-	if (scmd->request->cmd_type != REQ_TYPE_BLOCK_PC) {
++	if (!blk_rq_is_passthrough(scmd->request)) {
+ 		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
+ 		if (sdrv->eh_action)
+ 			rtn = sdrv->eh_action(scmd, rtn);
+@@ -1746,7 +1746,7 @@ int scsi_noretry_cmd(struct scsi_cmnd *scmd)
+ 	 * the check condition was retryable.
+ 	 */
+ 	if (scmd->request->cmd_flags & REQ_FAILFAST_DEV ||
+-	    scmd->request->cmd_type == REQ_TYPE_BLOCK_PC)
++	    blk_rq_is_passthrough(scmd->request))
+ 		return 1;
  	else
- 		drive->dev_flags &= ~IDE_DFLAG_BLOCKED;
-@@ -242,11 +244,13 @@ void ide_check_pm_state(ide_drive_t *drive, struct request *rq)
+ 		return 0;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 8188e5c..31629a7 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -582,7 +582,7 @@ void scsi_run_host_queues(struct Scsi_Host *shost)
+ 
+ static void scsi_uninit_cmd(struct scsi_cmnd *cmd)
  {
- 	struct ide_pm_state *pm = rq->special;
+-	if (cmd->request->cmd_type == REQ_TYPE_FS) {
++	if (!blk_rq_is_passthrough(cmd->request)) {
+ 		struct scsi_driver *drv = scsi_cmd_to_driver(cmd);
  
--	if (rq->cmd_type == REQ_TYPE_ATA_PM_SUSPEND &&
-+	if (rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+	    ide_req(rq)->type == ATA_PRIV_PM_SUSPEND &&
- 	    pm->pm_step == IDE_PM_START_SUSPEND)
- 		/* Mark drive blocked when starting the suspend sequence. */
- 		drive->dev_flags |= IDE_DFLAG_BLOCKED;
--	else if (rq->cmd_type == REQ_TYPE_ATA_PM_RESUME &&
-+	else if (rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+	         ide_req(rq)->type == ATA_PRIV_PM_RESUME &&
- 		 pm->pm_step == IDE_PM_START_RESUME) {
- 		/*
- 		 * The first thing we do on wakeup is to wait for BSY bit to
-diff --git a/drivers/ide/ide-tape.c b/drivers/ide/ide-tape.c
-index f6bc1e2..37c7bea 100644
---- a/drivers/ide/ide-tape.c
-+++ b/drivers/ide/ide-tape.c
-@@ -577,8 +577,9 @@ static ide_startstop_t idetape_do_request(ide_drive_t *drive,
- 		      req->cmd[0], (unsigned long long)blk_rq_pos(rq),
- 		      blk_rq_sectors(rq));
+ 		if (drv->uninit_command)
+@@ -806,7 +806,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 			sense_deferred = scsi_sense_is_deferred(&sshdr);
+ 	}
  
--	BUG_ON(!(rq->cmd_type == REQ_TYPE_DRV_PRIV ||
--		 rq->cmd_type == REQ_TYPE_ATA_SENSE));
-+	BUG_ON(rq->cmd_type != REQ_TYPE_DRV_PRIV);
-+	BUG_ON(ide_req(rq)->type != ATA_PRIV_MISC &&
-+	       ide_req(rq)->type != ATA_PRIV_SENSE);
+-	if (req->cmd_type == REQ_TYPE_BLOCK_PC) { /* SG_IO ioctl from block level */
++	if (blk_rq_is_passthrough(req)) {
+ 		if (result) {
+ 			if (sense_valid) {
+ 				/*
+@@ -847,7 +847,7 @@ void scsi_io_completion(struct scsi_cmnd *cmd, unsigned int good_bytes)
+ 		error = __scsi_error_from_host_byte(cmd, result);
+ 	}
  
- 	/* Retry a failed packet command */
- 	if (drive->failed_pc && drive->pc->c[0] == REQUEST_SENSE) {
-@@ -856,6 +857,7 @@ static int idetape_queue_rw_tail(ide_drive_t *drive, int cmd, int size)
- 	rq = blk_get_request(drive->queue, READ, __GFP_RECLAIM);
- 	scsi_req_init(rq);
- 	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_MISC;
- 	scsi_req(rq)->cmd[13] = cmd;
- 	rq->rq_disk = tape->disk;
- 	rq->__sector = tape->first_frame;
-diff --git a/drivers/ide/ide-taskfile.c b/drivers/ide/ide-taskfile.c
-index a393e13..9ccc1d5 100644
---- a/drivers/ide/ide-taskfile.c
-+++ b/drivers/ide/ide-taskfile.c
-@@ -432,7 +432,8 @@ int ide_raw_taskfile(ide_drive_t *drive, struct ide_cmd *cmd, u8 *buf,
- 
- 	rq = blk_get_request(drive->queue, rw, __GFP_RECLAIM);
- 	scsi_req_init(rq);
--	rq->cmd_type = REQ_TYPE_ATA_TASKFILE;
-+	rq->cmd_type = REQ_TYPE_DRV_PRIV;
-+	ide_req(rq)->type = ATA_PRIV_TASKFILE;
+-	/* no bidi support for !REQ_TYPE_BLOCK_PC yet */
++	/* no bidi support for !blk_rq_is_passthrough yet */
+ 	BUG_ON(blk_bidi_rq(req));
  
  	/*
- 	 * (ks) We transfer currently only whole sectors.
-diff --git a/include/linux/ide.h b/include/linux/ide.h
-index 086fbe1..5cc6caa 100644
---- a/include/linux/ide.h
-+++ b/include/linux/ide.h
-@@ -40,24 +40,58 @@
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 8702d9c..11c0dfb 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -4499,7 +4499,7 @@ static int pqi_scsi_queue_command(struct Scsi_Host *shost,
+ 	if (pqi_is_logical_device(device)) {
+ 		raid_bypassed = false;
+ 		if (device->offload_enabled &&
+-			scmd->request->cmd_type == REQ_TYPE_FS) {
++				!blk_rq_is_passthrough(scmd->request)) {
+ 			rc = pqi_raid_bypass_submit_scsi_cmd(ctrl_info, device,
+ 				scmd, queue_group);
+ 			if (rc == 0 ||
+diff --git a/drivers/scsi/sun3_scsi.c b/drivers/scsi/sun3_scsi.c
+index 88db699..bcf7d05 100644
+--- a/drivers/scsi/sun3_scsi.c
++++ b/drivers/scsi/sun3_scsi.c
+@@ -260,7 +260,7 @@ static int sun3scsi_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+ {
+ 	int wanted_len = cmd->SCp.this_residual;
  
- struct device;
+-	if (wanted_len < DMA_MIN_SIZE || cmd->request->cmd_type != REQ_TYPE_FS)
++	if (wanted_len < DMA_MIN_SIZE || blk_rq_is_passthrough(cmd->request))
+ 		return 0;
  
--/* IDE-specific values for req->cmd_type */
--enum ata_cmd_type_bits {
--	REQ_TYPE_ATA_TASKFILE = REQ_TYPE_DRV_PRIV + 1,
--	REQ_TYPE_ATA_PC,
--	REQ_TYPE_ATA_SENSE,	/* sense request */
--	REQ_TYPE_ATA_PM_SUSPEND,/* suspend request */
--	REQ_TYPE_ATA_PM_RESUME,	/* resume request */
-+/* values for ide_request.type */
-+enum ata_priv_type {
-+	ATA_PRIV_MISC,
-+	ATA_PRIV_TASKFILE,
-+	ATA_PRIV_PC,
-+	ATA_PRIV_SENSE,		/* sense request */
-+	ATA_PRIV_PM_SUSPEND,	/* suspend request */
-+	ATA_PRIV_PM_RESUME,	/* resume request */
+ 	return wanted_len;
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index e4c5f28..7121be0 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -242,6 +242,11 @@ struct request {
+ 	struct request *next_rq;
  };
  
--#define ata_pm_request(rq)	\
--	((rq)->cmd_type == REQ_TYPE_ATA_PM_SUSPEND || \
--	 (rq)->cmd_type == REQ_TYPE_ATA_PM_RESUME)
--
- struct ide_request {
- 	struct scsi_request sreq;
- 	u8 sense[SCSI_SENSE_BUFFERSIZE];
-+	u8 type;
- };
++static inline bool blk_rq_is_passthrough(struct request *rq)
++{
++	return rq->cmd_type != REQ_TYPE_FS;
++}
++
+ static inline unsigned short req_get_ioprio(struct request *req)
+ {
+ 	return req->ioprio;
+@@ -698,9 +703,10 @@ static inline void queue_flag_clear(unsigned int flag, struct request_queue *q)
+ 	((rq)->cmd_flags & (REQ_FAILFAST_DEV|REQ_FAILFAST_TRANSPORT| \
+ 			     REQ_FAILFAST_DRIVER))
  
-+static inline struct ide_request *ide_req(struct request *rq)
+-#define blk_account_rq(rq) \
+-	(((rq)->rq_flags & RQF_STARTED) && \
+-	 ((rq)->cmd_type == REQ_TYPE_FS))
++static inline bool blk_account_rq(struct request *rq)
 +{
-+	return blk_mq_rq_to_pdu(rq);
++	return (rq->rq_flags & RQF_STARTED) && !blk_rq_is_passthrough(rq);
 +}
-+
-+static inline bool ata_misc_request(struct request *rq)
-+{
-+	return rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+               ide_req(rq)->type == ATA_PRIV_MISC;
-+}
-+
-+static inline bool ata_taskfile_request(struct request *rq)
-+{
-+	return rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+               ide_req(rq)->type == ATA_PRIV_TASKFILE;
-+}
-+
-+static inline bool ata_pc_request(struct request *rq)
-+{
-+	return rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+               ide_req(rq)->type == ATA_PRIV_PC;
-+}
-+
-+static inline bool ata_sense_request(struct request *rq)
-+{
-+	return rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+               ide_req(rq)->type == ATA_PRIV_SENSE;
-+}
-+
-+static inline bool ata_pm_request(struct request *rq)
-+{
-+	return rq->cmd_type == REQ_TYPE_DRV_PRIV &&
-+		(ide_req(rq)->type == ATA_PRIV_PM_SUSPEND ||
-+		 ide_req(rq)->type == ATA_PRIV_PM_RESUME);
-+}
-+
- /* Error codes returned in rq->errors to the higher part of the driver. */
- enum {
- 	IDE_DRV_ERROR_GENERAL	= 101,
+ 
+ #define blk_rq_cpu_valid(rq)	((rq)->cpu != -1)
+ #define blk_bidi_rq(rq)		((rq)->next_rq != NULL)
+@@ -775,7 +781,7 @@ static inline void blk_clear_rl_full(struct request_list *rl, bool sync)
+ 
+ static inline bool rq_mergeable(struct request *rq)
+ {
+-	if (rq->cmd_type != REQ_TYPE_FS)
++	if (blk_rq_is_passthrough(rq))
+ 		return false;
+ 
+ 	if (req_op(rq) == REQ_OP_FLUSH)
+@@ -1049,7 +1055,7 @@ static inline unsigned int blk_rq_get_max_sectors(struct request *rq,
+ {
+ 	struct request_queue *q = rq->q;
+ 
+-	if (unlikely(rq->cmd_type != REQ_TYPE_FS))
++	if (blk_rq_is_passthrough(rq))
+ 		return q->limits.max_hw_sectors;
+ 
+ 	if (!q->limits.chunk_sectors ||
+diff --git a/include/linux/blktrace_api.h b/include/linux/blktrace_api.h
+index a143a67..341f941 100644
+--- a/include/linux/blktrace_api.h
++++ b/include/linux/blktrace_api.h
+@@ -114,12 +114,12 @@ extern void blk_fill_rwbs(char *rwbs, unsigned int op, int bytes);
+ 
+ static inline sector_t blk_rq_trace_sector(struct request *rq)
+ {
+-	return (rq->cmd_type != REQ_TYPE_FS) ? 0 : blk_rq_pos(rq);
++	return blk_rq_is_passthrough(rq) ? 0 : blk_rq_pos(rq);
+ }
+ 
+ static inline unsigned int blk_rq_trace_nr_sectors(struct request *rq)
+ {
+-	return (rq->cmd_type != REQ_TYPE_FS) ? 0 : blk_rq_sectors(rq);
++	return blk_rq_is_passthrough(rq) ? 0 : blk_rq_sectors(rq);
+ }
+ 
+ #endif
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index f708f1a..b379f93 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -151,7 +151,7 @@ static inline void *scsi_cmd_priv(struct scsi_cmnd *cmd)
+ 	return cmd + 1;
+ }
+ 
+-/* make sure not to use it with REQ_TYPE_BLOCK_PC commands */
++/* make sure not to use it with passthrough commands */
+ static inline struct scsi_driver *scsi_cmd_to_driver(struct scsi_cmnd *cmd)
+ {
+ 	return *(struct scsi_driver **)cmd->request->rq_disk->private_data;
+diff --git a/kernel/trace/blktrace.c b/kernel/trace/blktrace.c
+index 512b347..e33050e 100644
+--- a/kernel/trace/blktrace.c
++++ b/kernel/trace/blktrace.c
+@@ -712,7 +712,7 @@ static void blk_add_trace_rq(struct request_queue *q, struct request *rq,
+ 	if (likely(!bt))
+ 		return;
+ 
+-	if (rq->cmd_type != REQ_TYPE_FS)
++	if (blk_rq_is_passthrough(rq))
+ 		what |= BLK_TC_ACT(BLK_TC_PC);
+ 	else
+ 		what |= BLK_TC_ACT(BLK_TC_FS);
 -- 
 2.1.4
 
