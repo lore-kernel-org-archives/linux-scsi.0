@@ -1,105 +1,123 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 10/10] mpt3sas: scsi-mq interrupt steering
-Date: Tue, 31 Jan 2017 10:26:00 +0100
-Message-ID: <1485854760-122683-11-git-send-email-hare@suse.de>
+Subject: [PATCH 06/10] mpt3sas: Introduce mpt3sas_get_st_from_smid()
+Date: Tue, 31 Jan 2017 10:25:56 +0100
+Message-ID: <1485854760-122683-7-git-send-email-hare@suse.de>
 References: <1485854760-122683-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:46427 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:46359 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751696AbdAaJ01 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 31 Jan 2017 04:26:27 -0500
+        id S1751381AbdAaJ0a (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 31 Jan 2017 04:26:30 -0500
 In-Reply-To: <1485854760-122683-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, mpt-fusionlinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Enable all queues and implement correct I/O steering for scsi-mq.
+Abstract accesses to the scsi_lookup array by introducing
+mpt3sas_get_st_from_smid().
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c  |  8 ++++++--
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 19 +++++++++++++++++++
- 2 files changed, 25 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c      | 20 ++++++++++++++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.h      |  2 ++
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c     |  2 +-
+ drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  4 +++-
+ 4 files changed, 22 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index f6564a3..84f808d 100644
+index dd14596..942fb7e 100644
 --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
 +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -3560,9 +3560,13 @@ void mpt3sas_base_clear_st(struct MPT3SAS_ADAPTER *ioc,
- 	 * with some internal commands that could be outstanding
- 	 */
- 	ioc->shost->can_queue = ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT;
-+	if (ioc->shost->nr_hw_queues > 1) {
-+		ioc->shost->nr_hw_queues = ioc->msix_vector_count;
-+		ioc->shost->can_queue /= ioc->msix_vector_count;
-+	}
- 	dinitprintk(ioc, pr_info(MPT3SAS_FMT
--		"scsi host: can_queue depth (%d)\n",
--		ioc->name, ioc->shost->can_queue));
-+		"scsi host: can_queue depth (%d), nr_hw_queues (%d)\n",
-+		ioc->name, ioc->shost->can_queue, ioc->shost->nr_hw_queues));
- 
- 
- 	/* contiguous pool for request and chains, 16 byte align, one extra "
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 8c451aa..e43f928 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -54,6 +54,7 @@
- #include <linux/interrupt.h>
- #include <linux/aer.h>
- #include <linux/raid_class.h>
-+#include <linux/blk-mq-pci.h>
- #include <asm/unaligned.h>
- 
- #include "mpt3sas_base.h"
-@@ -4255,6 +4256,11 @@ void _flush_running(struct request *req, void *data, bool reserved)
- 		mpt3sas_setup_direct_io(ioc, scmd, raid_device, mpi_request,
- 		    smid);
- 
-+	if (shost_use_blk_mq(ioc->shost) && (ioc->shost->nr_hw_queues > 1)) {
-+		u32 unique_tag = blk_mq_unique_tag(scmd->request);
-+
-+		msix_task = blk_mq_unique_tag_to_hwq(unique_tag);
-+	}
- 	if (likely(mpi_request->Function == MPI2_FUNCTION_SCSI_IO_REQUEST)) {
- 		if (sas_target_priv_data->flags & MPT_TARGET_FASTPATH_IO) {
- 			mpi_request->IoFlags = cpu_to_le16(scmd->cmd_len |
-@@ -8775,6 +8781,16 @@ static void sas_device_make_active(struct MPT3SAS_ADAPTER *ioc,
+@@ -862,6 +862,14 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
  	return 1;
  }
  
-+static int scsih_map_queues(struct Scsi_Host *shost)
++struct scsiio_tracker *
++mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
 +{
-+	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
-+
-+	if (shost->nr_hw_queues > 1)
-+		return blk_mq_pci_map_queues(&shost->tag_set, ioc->pdev);
-+
-+	return -EINVAL;
++	WARN_ON(!smid);
++	WARN_ON(smid >= ioc->hi_priority_smid);
++	return &ioc->scsi_lookup[smid - 1];
 +}
 +
- /* shost template for SAS 2.0 HBA devices */
- static struct scsi_host_template mpt2sas_driver_template = {
- 	.module				= THIS_MODULE,
-@@ -8788,6 +8804,7 @@ static void sas_device_make_active(struct MPT3SAS_ADAPTER *ioc,
- 	.slave_destroy			= scsih_slave_destroy,
- 	.scan_finished			= scsih_scan_finished,
- 	.scan_start			= scsih_scan_start,
-+	.map_queues			= scsih_map_queues,
- 	.change_queue_depth		= scsih_change_queue_depth,
- 	.eh_abort_handler		= scsih_abort,
- 	.eh_device_reset_handler	= scsih_dev_reset,
-@@ -9054,6 +9071,8 @@ static void sas_device_make_active(struct MPT3SAS_ADAPTER *ioc,
- 	shost->max_lun = max_lun;
- 	shost->transportt = mpt3sas_transport_template;
- 	shost->unique_id = ioc->id;
-+	if (shost->use_blk_mq)
-+		shost->nr_hw_queues = num_online_cpus();
+ /**
+  * _base_get_cb_idx - obtain the callback index
+  * @ioc: per adapter object
+@@ -876,8 +884,11 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 	u8 cb_idx = 0xFF;
  
- 	if (max_sectors != 0xFFFF) {
- 		if (max_sectors < 64) {
+ 	if (smid < ioc->hi_priority_smid) {
+-		i = smid - 1;
+-		cb_idx = ioc->scsi_lookup[i].cb_idx;
++		struct scsiio_tracker *st;
++
++		st = mpt3sas_get_st_from_smid(ioc, smid);
++		if (st)
++			cb_idx = st->cb_idx;
+ 	} else if (smid < ioc->internal_smid) {
+ 		i = smid - ioc->hi_priority_smid;
+ 		cb_idx = ioc->hpr_lookup[i].cb_idx;
+@@ -1249,6 +1260,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ _base_get_chain_buffer_tracker(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+ 	struct chain_tracker *chain_req;
++	struct scsiio_tracker *st;
+ 	unsigned long flags;
+ 
+ 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+@@ -1261,8 +1273,8 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+ 	chain_req = list_entry(ioc->free_chain_list.next,
+ 	    struct chain_tracker, tracker_list);
+ 	list_del_init(&chain_req->tracker_list);
+-	list_add_tail(&chain_req->tracker_list,
+-	    &ioc->scsi_lookup[smid - 1].chain_list);
++	st = mpt3sas_get_st_from_smid(ioc, smid);
++	list_add_tail(&chain_req->tracker_list, &st->chain_list);
+ 	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+ 	return chain_req;
+ }
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
+index 505574e..876e7b4 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.h
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
+@@ -1246,6 +1246,8 @@ __le32 mpt3sas_base_get_sense_buffer_dma(struct MPT3SAS_ADAPTER *ioc,
+ u16 mpt3sas_base_get_smid_hpr(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ u16 mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+ 	struct scsi_cmnd *scmd);
++struct scsiio_tracker * mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc,
++	u16 smid);
+ 
+ u16 mpt3sas_base_get_smid(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx);
+ void mpt3sas_base_free_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid);
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 979f95a..ca925ef 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -2250,7 +2250,7 @@ struct _sas_node *
+ 	}
+ 
+ 	if (type == MPI2_SCSITASKMGMT_TASKTYPE_ABORT_TASK)
+-		scsi_lookup = &ioc->scsi_lookup[smid_task - 1];
++		scsi_lookup = mpt3sas_get_st_from_smid(ioc, smid_task);
+ 
+ 	dtmprintk(ioc, pr_info(MPT3SAS_FMT
+ 		"sending tm: handle(0x%04x), task_type(0x%02x), smid(%d)\n",
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+index 540bd50..06e3f7d 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_warpdrive.c
+@@ -270,7 +270,9 @@
+ inline u8
+ mpt3sas_scsi_direct_io_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+ {
+-	return ioc->scsi_lookup[smid - 1].direct_io;
++	struct scsiio_tracker *st = mpt3sas_get_st_from_smid(ioc, smid);
++
++	return st ? st->direct_io : 0;
+ }
+ 
+ /**
 -- 
 1.8.5.6
 
