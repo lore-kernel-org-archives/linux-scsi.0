@@ -1,69 +1,51 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 07/10] nbd: move request validity checking into nbd_send_cmd
-Date: Tue, 31 Jan 2017 16:57:28 +0100
-Message-ID: <1485878251-6107-8-git-send-email-hch@lst.de>
+Subject: [PATCH 06/10] nbd: remove REQ_TYPE_DRV_PRIV leftovers
+Date: Tue, 31 Jan 2017 16:57:27 +0100
+Message-ID: <1485878251-6107-7-git-send-email-hch@lst.de>
 References: <1485878251-6107-1-git-send-email-hch@lst.de>
-Return-path: <linux-block-owner@vger.kernel.org>
+Return-path: <linux-ide-owner@vger.kernel.org>
 In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
+Sender: linux-ide-owner@vger.kernel.org
 To: axboe@kernel.dk
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-This is where we do the rest of the request handling, which will
-become much simpler soon, too.
+Disconnects don't use block layer requests these days, so all handling
+of private requests is dead code.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/block/nbd.c | 21 ++++++++++-----------
- 1 file changed, 10 insertions(+), 11 deletions(-)
+ drivers/block/nbd.c | 10 +---------
+ 1 file changed, 1 insertion(+), 9 deletions(-)
 
 diff --git a/drivers/block/nbd.c b/drivers/block/nbd.c
-index d4c6281..8bce1c7c 100644
+index 9fd06ee..d4c6281 100644
 --- a/drivers/block/nbd.c
 +++ b/drivers/block/nbd.c
-@@ -271,6 +271,9 @@ static int nbd_send_cmd(struct nbd_device *nbd, struct nbd_cmd *cmd, int index)
- 	u32 type;
- 	u32 tag = blk_mq_unique_tag(req);
+@@ -193,13 +193,6 @@ static enum blk_eh_timer_return nbd_xmit_timeout(struct request *req,
+ 	set_bit(NBD_TIMEDOUT, &nbd->runtime_flags);
+ 	req->errors++;
  
-+	if (req->cmd_type != REQ_TYPE_FS)
-+		return -EIO;
-+
- 	if (req_op(req) == REQ_OP_DISCARD)
- 		type = NBD_CMD_TRIM;
- 	else if (req_op(req) == REQ_OP_FLUSH)
-@@ -280,6 +283,13 @@ static int nbd_send_cmd(struct nbd_device *nbd, struct nbd_cmd *cmd, int index)
- 	else
- 		type = NBD_CMD_READ;
- 
-+	if (rq_data_dir(req) == WRITE &&
-+	    (nbd->flags & NBD_FLAG_READ_ONLY)) {
-+		dev_err_ratelimited(disk_to_dev(nbd->disk),
-+				    "Write on read-only\n");
-+		return -EIO;
-+	}
-+
- 	memset(&request, 0, sizeof(request));
- 	request.magic = htonl(NBD_REQUEST_MAGIC);
- 	request.type = htonl(type);
-@@ -503,17 +513,6 @@ static void nbd_handle_cmd(struct nbd_cmd *cmd, int index)
+-	/*
+-	 * If our disconnect packet times out then we're already holding the
+-	 * config_lock and could deadlock here, so just set an error and return,
+-	 * we'll handle shutting everything down later.
+-	 */
+-	if (req->cmd_type == REQ_TYPE_DRV_PRIV)
+-		return BLK_EH_HANDLED;
+ 	mutex_lock(&nbd->config_lock);
+ 	sock_shutdown(nbd);
+ 	mutex_unlock(&nbd->config_lock);
+@@ -510,8 +503,7 @@ static void nbd_handle_cmd(struct nbd_cmd *cmd, int index)
  		goto error_out;
  	}
  
--	if (req->cmd_type != REQ_TYPE_FS)
--		goto error_out;
--
--	if (req->cmd_type == REQ_TYPE_FS &&
--	    rq_data_dir(req) == WRITE &&
--	    (nbd->flags & NBD_FLAG_READ_ONLY)) {
--		dev_err_ratelimited(disk_to_dev(nbd->disk),
--				    "Write on read-only\n");
--		goto error_out;
--	}
--
- 	req->errors = 0;
+-	if (req->cmd_type != REQ_TYPE_FS &&
+-	    req->cmd_type != REQ_TYPE_DRV_PRIV)
++	if (req->cmd_type != REQ_TYPE_FS)
+ 		goto error_out;
  
- 	nsock = nbd->socks[index];
+ 	if (req->cmd_type == REQ_TYPE_FS &&
 -- 
 2.1.4
 
