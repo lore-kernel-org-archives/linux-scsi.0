@@ -1,32 +1,94 @@
-From: Barr Su <info@bonett.sk>
-Subject: pri hiadani partnera!
-Date: Wed, 01 Feb 2017 05:03:34 +0700
-Message-ID: <9f0ab14dc28e675d34427bad330a4aeb__36607.7403807596$1485926457$gmane$org@localhost>
-Reply-To: xiasun55@gmail.com
+From: Kalle Valo <kvalo@codeaurora.org>
+Subject: Re: [PATCH 4.10-rc3 12/13] net: ath5k: fix build errors when linux/phy*.h is removed from net/dsa.h
+Date: Wed, 01 Feb 2017 07:34:19 +0200
+Message-ID: <87r33ibhk4.fsf@codeaurora.org>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+        <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8;
- format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from [13.70.184.22] ([13.70.184.22]:4676 "EHLO mail.vps.com"
-        rhost-flags-FAIL-FAIL-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750946AbdBAFUT (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Feb 2017 00:20:19 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <E1cYdxc-0000XC-N6@rmk-PC.armlinux.org.uk> (Russell King's
+        message of "Tue, 31 Jan 2017 19:19:24 +0000")
+Sender: netdev-owner@vger.kernel.org
+To: Russell King <rmk+kernel@armlinux.org.uk>
+Cc: linux-mips@linux-mips.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, netdev@vger.kernel.org, target-devel@vger.kernel.org, "David S. Miller" <davem@davemloft.net>, Florian Fainelli <f.fainelli@gmail.com>, Jiri Slaby <jirislaby@gmail.com>, Nick Kossifidis <mickflemm@gmail.com>, "Luis R. Rodriguez" <mcgrof@do-not-panic.com>
 List-Id: linux-scsi@vger.kernel.org
 
+Russell King <rmk+kernel@armlinux.org.uk> writes:
 
+> Fix these errors reported by the 0-day builder by replacing the
+> linux/export.h include with linux/module.h.
+>
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> include/linux/device.h:1463:1: warning: data definition has no type or storage class
+>  module_init(__driver##_init); \
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> include/linux/device.h:1463:1: error: type defaults to 'int' in declaration of 'module_init' [-Werror=implicit-int]
+>  module_init(__driver##_init); \
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> include/linux/device.h:1468:1: warning: data definition has no type or storage class
+>  module_exit(__driver##_exit);
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> include/linux/device.h:1468:1: error: type defaults to 'int' in declaration of 'module_exit' [-Werror=implicit-int]
+>  module_exit(__driver##_exit);
+>  ^
+> include/linux/platform_device.h:228:2: note: in expansion of macro 'module_driver'
+>   module_driver(__platform_driver, platform_driver_register, \
+>   ^~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: warning: parameter names (without types) in function declaration
+> In file included from include/linux/platform_device.h:14:0,
+>                  from drivers/net/wireless/ath/ath5k/ahb.c:20:
+> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_exit' defined but not used [-Wunused-function]
+>  module_platform_driver(ath_ahb_driver);
+>                         ^
+> include/linux/device.h:1464:20: note: in definition of macro 'module_driver'
+>  static void __exit __driver##_exit(void) \
+>                     ^~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:24: warning: 'ath_ahb_driver_init' defined but not used [-Wunused-function]
+>  module_platform_driver(ath_ahb_driver);
+>                         ^
+> include/linux/device.h:1459:19: note: in definition of macro 'module_driver'
+>  static int __init __driver##_init(void) \
+>                    ^~~~~~~~
+> drivers/net/wireless/ath/ath5k/ahb.c:233:1: note: in expansion of macro 'module_platform_driver'
+>  module_platform_driver(ath_ahb_driver);
+>  ^~~~~~~~~~~~~~~~~~~~~~
+>
+> Signed-off-by: Russell King <rmk+kernel@armlinux.org.uk>
 
-Ahoj,
+Looks good to me:
 
-Som zastupca investicneho zaujmu o zaujem zahranicnych investícii 
-zahrnajuce velky objem financnych prostriedkov, u ktorych sa snazime 
-svoju ucast ako v zamori zastupcu. Moj klient, ktory je rodak z Thajska, 
-ma nejake peniaze zo svojich obchodnych uspor chce investovať na základe 
-kvalifikovanych zahranicnych partnerstva legitimne transakcie. uvedte, o 
-rychlu odpoved, ak mate zaujem, takze ja vam moze poskytnut dalsie 
-podrobnosti spoluprace.
+Acked-by: Kalle Valo <kvalo@codeaurora.org>
 
-S pozdravom,
-E-mail: xiasun55@gmail.com
-Barr. Su
+I assume Dave will take this so I'll drop the patch from my queue.
+
+-- 
+Kalle Valo
