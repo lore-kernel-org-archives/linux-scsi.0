@@ -1,32 +1,60 @@
-From: "hch@lst.de" <hch@lst.de>
-Subject: Re: sort out the ->eh_timed_out mess
-Date: Wed, 1 Feb 2017 10:39:01 +0100
-Message-ID: <20170201093901.GA1336@lst.de>
-References: <1485778739-29036-1-git-send-email-hch@lst.de> <1485794746.2712.5.camel@sandisk.com>
+From: Nicolas Ferre <nicolas.ferre-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
+Subject: Re: [PATCH 4.10-rc3 03/13] net: macb: fix build errors when
+ linux/phy*.h is removed from net/dsa.h
+Date: Wed, 1 Feb 2017 10:40:53 +0100
+Message-ID: <0a75edf8-df17-fb7f-294f-8c1e04479a3b@atmel.com>
+References: <20170131191704.GA8281@n2100.armlinux.org.uk>
+ <E1cYdws-0000W9-GV@rmk-PC.armlinux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:34068 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751519AbdBAJjC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Feb 2017 04:39:02 -0500
-Content-Disposition: inline
-In-Reply-To: <1485794746.2712.5.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
+In-Reply-To: <E1cYdws-0000W9-GV-eh5Bv4kxaXIk46pC+1QYvQNdhmdF6hFW@public.gmane.org>
+Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+To: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>, linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+Cc: "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "hare@suse.de" <hare@suse.de>
 
-On Mon, Jan 30, 2017 at 04:46:00PM +0000, Bart Van Assche wrote:
-> Patches 1, 2 and 4 of this series are a real improvement in my opinion.
-> However, I'm not sure whether patch 3 is the best way to avoid that drivers
-> have to re-override the transport template timeout handler. Have you
-> considered to modify the SCSI EH such that the host timeout handler has
-> priority over the transport timeout handler? I think that would result in
-> a much smaller patch 3/4.
+Le 31/01/2017 à 20:18, Russell King a écrit :
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: expected ; at end of declaration
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: Expected } at end of struct-union-enum-specifier
+> drivers/net/ethernet/cadence/macb.h:862:33: sparse: got phy_interface
+> drivers/net/ethernet/cadence/macb.h:877:1: sparse: Expected ; at the end of type declaration
+> drivers/net/ethernet/cadence/macb.h:877:1: sparse: got }
+> In file included from drivers/net/ethernet/cadence/macb_pci.c:29:0:
+> drivers/net/ethernet/cadence/macb.h:862:2: error: unknown type name 'phy_interface_t'
+>      phy_interface_t  phy_interface;
+>      ^~~~~~~~~~~~~~~
+> 
+> Add linux/phy.h to macb.h
+> 
+> Signed-off-by: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
 
-It's not too much of a difference in patch size, and I think it's
-the cleaner model to only have the method once.
+Acked-by: Nicolas Ferre <nicolas.ferre-AIFe0yeh4nAAvxtiuMwx3w@public.gmane.org>
 
-However if there is a consensus against this version I can respin
-a patch that just changes the precendence.
+> ---
+>  drivers/net/ethernet/cadence/macb.h | 2 ++
+>  1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/net/ethernet/cadence/macb.h b/drivers/net/ethernet/cadence/macb.h
+> index d67adad67be1..383da8cf5f6d 100644
+> --- a/drivers/net/ethernet/cadence/macb.h
+> +++ b/drivers/net/ethernet/cadence/macb.h
+> @@ -10,6 +10,8 @@
+>  #ifndef _MACB_H
+>  #define _MACB_H
+>  
+> +#include <linux/phy.h>
+> +
+>  #define MACB_GREGS_NBR 16
+>  #define MACB_GREGS_VERSION 2
+>  #define MACB_MAX_QUEUES 8
+> 
+
+
+-- 
+Nicolas Ferre
+--
+To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
+the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+More majordomo info at  http://vger.kernel.org/majordomo-info.html
