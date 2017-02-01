@@ -1,39 +1,106 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
+From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH] sg: protect access to to 'reserved' page array
-Date: Wed, 1 Feb 2017 14:18:52 +0100
-Message-ID: <20170201131852.GC3661@linux-x5ow.site>
+Date: Wed, 1 Feb 2017 14:21:44 +0100
+Message-ID: <4c9af917-79db-67e4-d28c-c30009756a0c@suse.de>
 References: <1485948135-83249-1-git-send-email-hare@suse.de>
  <20170201131247.GA5384@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:42367 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750847AbdBANSz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Feb 2017 08:18:55 -0500
-Content-Disposition: inline
+Return-path: <stable-owner@vger.kernel.org>
 In-Reply-To: <20170201131247.GA5384@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: stable-owner@vger.kernel.org
 To: Christoph Hellwig <hch@lst.de>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+List-Id: linux-scsi@vger.kernel.org
 
-On Wed, Feb 01, 2017 at 02:12:48PM +0100, Christoph Hellwig wrote:
+On 02/01/2017 02:12 PM, Christoph Hellwig wrote:
+> On Wed, Feb 01, 2017 at 12:22:15PM +0100, Hannes Reinecke wrote:
+>> The 'reserved' page array is used as a short-cut for mapping
+>> data, saving us to allocate pages per request.
+>> However, the 'reserved' array is only capable of holding one
+>> request, so we need to protect it against concurrent accesses.
+>>
+>> Cc: stable@vger.kernel.org
+>> Reported-by: Dmitry Vyukov <dvyukov@google.com>
+>> Link: http://www.spinics.net/lists/linux-scsi/msg104326.html
+>> Signed-off-by: Hannes Reinecke <hare@suse.com>
+>> Tested-by: Johannes Thumshirn <jth@kernel.org>
+>> ---
+>>  drivers/scsi/sg.c | 30 ++++++++++++------------------
+>>  1 file changed, 12 insertions(+), 18 deletions(-)
+>>
+>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+>> index 652b934..6a8601c 100644
+>> --- a/drivers/scsi/sg.c
+>> +++ b/drivers/scsi/sg.c
+>> @@ -155,6 +155,8 @@
+>>  	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
+>>  	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
+>>  	char mmap_called;	/* 0 -> mmap() never called on this fd */
+>> +	unsigned long flags;
+>> +#define SG_RESERVED_IN_USE 1
+>>  	struct kref f_ref;
+>>  	struct execute_work ew;
+>>  } Sg_fd;
+>> @@ -198,7 +200,6 @@ static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
+>>  static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
+>>  static Sg_request *sg_add_request(Sg_fd * sfp);
+>>  static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
+>> -static int sg_res_in_use(Sg_fd * sfp);
+>>  static Sg_device *sg_get_dev(int dev);
+>>  static void sg_device_destroy(struct kref *kref);
+>>  
+>> @@ -721,7 +722,7 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
+>>  			sg_remove_request(sfp, srp);
+>>  			return -EINVAL;	/* either MMAP_IO or DIRECT_IO (not both) */
+>>  		}
+>> -		if (sg_res_in_use(sfp)) {
+>> +		if (test_bit(SG_RESERVED_IN_USE, &sfp->flags)) {
+>>  			sg_remove_request(sfp, srp);
+>>  			return -EBUSY;	/* reserve buffer already being used */
+>>  		}
+>> @@ -963,10 +964,14 @@ static int max_sectors_bytes(struct request_queue *q)
+>>  		val = min_t(int, val,
+>>  			    max_sectors_bytes(sdp->device->request_queue));
+>>  		if (val != sfp->reserve.bufflen) {
+>> -			if (sg_res_in_use(sfp) || sfp->mmap_called)
+>> +			if (sfp->mmap_called)
+>> +				return -EBUSY;
+>> +			if (test_and_set_bit(SG_RESERVED_IN_USE, &sfp->flags))
+>>  				return -EBUSY;
+>> +
+>>  			sg_remove_scat(sfp, &sfp->reserve);
+>>  			sg_build_reserve(sfp, val);
+>> +			clear_bit(SG_RESERVED_IN_USE, &sfp->flags);
 > 
-> This seems to be abusing an atomic bitflag as a lock.  And I think
+> 
+> This seems to be abusing an atomic bitflag as a lock.
+
+Hmm. I wouldn't call it 'abusing'; the driver can proceed quite happily
+without the 'reserved' buffer, so taking a lock would be overkill.
+I could modify it to use a mutex if you insist ...
+
+>  And I think
 > in general we have two different things here that this patch conflates:
 > 
 >  a) a lock to protect building and using the reserve lists
 >  b) a flag is a reservations is in use
+> 
+No. This is not about reservations, this is about the internal
+'reserved' page buffer array.
+(Just in case to avoid any misunderstandings).
+We need to have an atomic / protected check in the 'sfp' structure if
+the 'reserved' page buffer array is in use; there's an additional check
+in the 'sg_request' structure (res_in_use) telling us which of the
+requests is using it.
 
-I did have a patch doing exactly that but (appart from lockdep complaints) we
-decided to drop it, as it made the code even more confusing.
+Cheers,
 
+Hannes
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
 HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
