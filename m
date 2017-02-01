@@ -1,106 +1,148 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sg: protect access to to 'reserved' page array
-Date: Wed, 1 Feb 2017 14:21:44 +0100
-Message-ID: <4c9af917-79db-67e4-d28c-c30009756a0c@suse.de>
-References: <1485948135-83249-1-git-send-email-hare@suse.de>
- <20170201131247.GA5384@lst.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <20170201131247.GA5384@lst.de>
-Sender: stable-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] fnic: switch to pci_alloc_irq_vectors
+Date: Wed,  1 Feb 2017 15:02:53 +0100
+Message-ID: <1485957773-12133-1-git-send-email-hch@lst.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from bombadil.infradead.org ([65.50.211.133]:56057 "EHLO
+        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751060AbdBAOC4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2017 09:02:56 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: satishkh@cisco.com, sebaddel@cisco.com, kartilak@cisco.com
+Cc: linux-scsi@vger.kernel.org
 
-On 02/01/2017 02:12 PM, Christoph Hellwig wrote:
-> On Wed, Feb 01, 2017 at 12:22:15PM +0100, Hannes Reinecke wrote:
->> The 'reserved' page array is used as a short-cut for mapping
->> data, saving us to allocate pages per request.
->> However, the 'reserved' array is only capable of holding one
->> request, so we need to protect it against concurrent accesses.
->>
->> Cc: stable@vger.kernel.org
->> Reported-by: Dmitry Vyukov <dvyukov@google.com>
->> Link: http://www.spinics.net/lists/linux-scsi/msg104326.html
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> Tested-by: Johannes Thumshirn <jth@kernel.org>
->> ---
->>  drivers/scsi/sg.c | 30 ++++++++++++------------------
->>  1 file changed, 12 insertions(+), 18 deletions(-)
->>
->> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->> index 652b934..6a8601c 100644
->> --- a/drivers/scsi/sg.c
->> +++ b/drivers/scsi/sg.c
->> @@ -155,6 +155,8 @@
->>  	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
->>  	char keep_orphan;	/* 0 -> drop orphan (def), 1 -> keep for read() */
->>  	char mmap_called;	/* 0 -> mmap() never called on this fd */
->> +	unsigned long flags;
->> +#define SG_RESERVED_IN_USE 1
->>  	struct kref f_ref;
->>  	struct execute_work ew;
->>  } Sg_fd;
->> @@ -198,7 +200,6 @@ static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
->>  static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
->>  static Sg_request *sg_add_request(Sg_fd * sfp);
->>  static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
->> -static int sg_res_in_use(Sg_fd * sfp);
->>  static Sg_device *sg_get_dev(int dev);
->>  static void sg_device_destroy(struct kref *kref);
->>  
->> @@ -721,7 +722,7 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
->>  			sg_remove_request(sfp, srp);
->>  			return -EINVAL;	/* either MMAP_IO or DIRECT_IO (not both) */
->>  		}
->> -		if (sg_res_in_use(sfp)) {
->> +		if (test_bit(SG_RESERVED_IN_USE, &sfp->flags)) {
->>  			sg_remove_request(sfp, srp);
->>  			return -EBUSY;	/* reserve buffer already being used */
->>  		}
->> @@ -963,10 +964,14 @@ static int max_sectors_bytes(struct request_queue *q)
->>  		val = min_t(int, val,
->>  			    max_sectors_bytes(sdp->device->request_queue));
->>  		if (val != sfp->reserve.bufflen) {
->> -			if (sg_res_in_use(sfp) || sfp->mmap_called)
->> +			if (sfp->mmap_called)
->> +				return -EBUSY;
->> +			if (test_and_set_bit(SG_RESERVED_IN_USE, &sfp->flags))
->>  				return -EBUSY;
->> +
->>  			sg_remove_scat(sfp, &sfp->reserve);
->>  			sg_build_reserve(sfp, val);
->> +			clear_bit(SG_RESERVED_IN_USE, &sfp->flags);
-> 
-> 
-> This seems to be abusing an atomic bitflag as a lock.
+Not a full cleanup for the IRQ code, for that we'd need to know if the
+max number of the various CQ types is going to stay 1 forever.
 
-Hmm. I wouldn't call it 'abusing'; the driver can proceed quite happily
-without the 'reserved' buffer, so taking a lock would be overkill.
-I could modify it to use a mutex if you insist ...
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/scsi/fnic/fnic.h     |  1 -
+ drivers/scsi/fnic/fnic_isr.c | 41 +++++++++++++----------------------------
+ 2 files changed, 13 insertions(+), 29 deletions(-)
 
->  And I think
-> in general we have two different things here that this patch conflates:
-> 
->  a) a lock to protect building and using the reserve lists
->  b) a flag is a reservations is in use
-> 
-No. This is not about reservations, this is about the internal
-'reserved' page buffer array.
-(Just in case to avoid any misunderstandings).
-We need to have an atomic / protected check in the 'sfp' structure if
-the 'reserved' page buffer array is in use; there's an additional check
-in the 'sg_request' structure (res_in_use) telling us which of the
-requests is using it.
-
-Cheers,
-
-Hannes
+diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
+index 9ddc920..cb59d82 100644
+--- a/drivers/scsi/fnic/fnic.h
++++ b/drivers/scsi/fnic/fnic.h
+@@ -217,7 +217,6 @@ struct fnic {
+ 	struct fcoe_ctlr ctlr;		/* FIP FCoE controller structure */
+ 	struct vnic_dev_bar bar0;
+ 
+-	struct msix_entry msix_entry[FNIC_MSIX_INTR_MAX];
+ 	struct fnic_msix_entry msix[FNIC_MSIX_INTR_MAX];
+ 
+ 	struct vnic_stats *stats;
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index a0dd1b6..4e3a502 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -154,13 +154,13 @@ void fnic_free_intr(struct fnic *fnic)
+ 	switch (vnic_dev_get_intr_mode(fnic->vdev)) {
+ 	case VNIC_DEV_INTR_MODE_INTX:
+ 	case VNIC_DEV_INTR_MODE_MSI:
+-		free_irq(fnic->pdev->irq, fnic);
++		free_irq(pci_irq_vector(fnic->pdev, 0), fnic);
+ 		break;
+ 
+ 	case VNIC_DEV_INTR_MODE_MSIX:
+ 		for (i = 0; i < ARRAY_SIZE(fnic->msix); i++)
+ 			if (fnic->msix[i].requested)
+-				free_irq(fnic->msix_entry[i].vector,
++				free_irq(pci_irq_vector(fnic->pdev, i),
+ 					 fnic->msix[i].devid);
+ 		break;
+ 
+@@ -177,12 +177,12 @@ int fnic_request_intr(struct fnic *fnic)
+ 	switch (vnic_dev_get_intr_mode(fnic->vdev)) {
+ 
+ 	case VNIC_DEV_INTR_MODE_INTX:
+-		err = request_irq(fnic->pdev->irq, &fnic_isr_legacy,
+-				  IRQF_SHARED, DRV_NAME, fnic);
++		err = request_irq(pci_irq_vector(fnic->pdev, 0),
++				&fnic_isr_legacy, IRQF_SHARED, DRV_NAME, fnic);
+ 		break;
+ 
+ 	case VNIC_DEV_INTR_MODE_MSI:
+-		err = request_irq(fnic->pdev->irq, &fnic_isr_msi,
++		err = request_irq(pci_irq_vector(fnic->pdev, 0), &fnic_isr_msi,
+ 				  0, fnic->name, fnic);
+ 		break;
+ 
+@@ -210,7 +210,7 @@ int fnic_request_intr(struct fnic *fnic)
+ 		fnic->msix[FNIC_MSIX_ERR_NOTIFY].devid = fnic;
+ 
+ 		for (i = 0; i < ARRAY_SIZE(fnic->msix); i++) {
+-			err = request_irq(fnic->msix_entry[i].vector,
++			err = request_irq(pci_irq_vector(fnic->pdev, i),
+ 					  fnic->msix[i].isr, 0,
+ 					  fnic->msix[i].devname,
+ 					  fnic->msix[i].devid);
+@@ -237,7 +237,6 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	unsigned int n = ARRAY_SIZE(fnic->rq);
+ 	unsigned int m = ARRAY_SIZE(fnic->wq);
+ 	unsigned int o = ARRAY_SIZE(fnic->wq_copy);
+-	unsigned int i;
+ 
+ 	/*
+ 	 * Set interrupt mode (INTx, MSI, MSI-X) depending
+@@ -248,23 +247,20 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	 * We need n RQs, m WQs, o Copy WQs, n+m+o CQs, and n+m+o+1 INTRs
+ 	 * (last INTR is used for WQ/RQ errors and notification area)
+ 	 */
+-
+-	BUG_ON(ARRAY_SIZE(fnic->msix_entry) < n + m + o + 1);
+-	for (i = 0; i < n + m + o + 1; i++)
+-		fnic->msix_entry[i].entry = i;
+-
+ 	if (fnic->rq_count >= n &&
+ 	    fnic->raw_wq_count >= m &&
+ 	    fnic->wq_copy_count >= o &&
+ 	    fnic->cq_count >= n + m + o) {
+-		if (!pci_enable_msix_exact(fnic->pdev, fnic->msix_entry,
+-					   n + m + o + 1)) {
++		int vecs = n + m + o + 1;
++
++		if (pci_alloc_irq_vectors(fnic->pdev, vecs, vecs,
++				PCI_IRQ_MSIX) < 0) {
+ 			fnic->rq_count = n;
+ 			fnic->raw_wq_count = m;
+ 			fnic->wq_copy_count = o;
+ 			fnic->wq_count = m + o;
+ 			fnic->cq_count = n + m + o;
+-			fnic->intr_count = n + m + o + 1;
++			fnic->intr_count = vecs;
+ 			fnic->err_intr_offset = FNIC_MSIX_ERR_NOTIFY;
+ 
+ 			FNIC_ISR_DBG(KERN_DEBUG, fnic->lport->host,
+@@ -284,8 +280,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 	    fnic->wq_copy_count >= 1 &&
+ 	    fnic->cq_count >= 3 &&
+ 	    fnic->intr_count >= 1 &&
+-	    !pci_enable_msi(fnic->pdev)) {
+-
++	    pci_alloc_irq_vectors(fnic->pdev, 1, 1, PCI_IRQ_MSI) < 0) {
+ 		fnic->rq_count = 1;
+ 		fnic->raw_wq_count = 1;
+ 		fnic->wq_copy_count = 1;
+@@ -334,17 +329,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 
+ void fnic_clear_intr_mode(struct fnic *fnic)
+ {
+-	switch (vnic_dev_get_intr_mode(fnic->vdev)) {
+-	case VNIC_DEV_INTR_MODE_MSIX:
+-		pci_disable_msix(fnic->pdev);
+-		break;
+-	case VNIC_DEV_INTR_MODE_MSI:
+-		pci_disable_msi(fnic->pdev);
+-		break;
+-	default:
+-		break;
+-	}
+-
++	pci_free_irq_vectors(fnic->pdev);
+ 	vnic_dev_set_intr_mode(fnic->vdev, VNIC_DEV_INTR_MODE_INTX);
+ }
+ 
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+2.1.4
