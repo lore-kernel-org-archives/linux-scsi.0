@@ -1,29 +1,28 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH V2] hpsa: remove coalescing settings for ioaccel2
-Date: Tue, 31 Jan 2017 21:51:52 -0500
-Message-ID: <yq1wpdazkqf.fsf@oracle.com>
-References: <148581391749.10289.15802474685670424837.stgit@brunhilda>
+Subject: Re: remove the cmd_type field from struct request
+Date: Tue, 31 Jan 2017 21:58:09 -0500
+Message-ID: <yq1shnyzkfy.fsf@oracle.com>
+References: <1485878251-6107-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:39079 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751064AbdBACwv (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2017 21:52:51 -0500
-In-Reply-To: <148581391749.10289.15802474685670424837.stgit@brunhilda> (Don
-        Brace's message of "Mon, 30 Jan 2017 16:05:17 -0600")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de> (Christoph
+        Hellwig's message of "Tue, 31 Jan 2017 16:57:21 +0100")
+Sender: linux-block-owner@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>
-Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
+>>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
 
-Don> - Setting coalescing has a significant negative impact on low
-Don> queue-depth performance.  - Does not help high queue-depth
-Don> performance.
+Christoph> this series gets rid of the cmd_type field in struct
+Christoph> request and instead folds it into the REQ_OP* space.  This
+Christoph> reduces the size of struct request, and leads to a single op
+Christoph> namespace that drivers can easily switch on.
 
-Applied to 4.11/scsi-queue.
+Very nice cleanup!
+
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
