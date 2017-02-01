@@ -1,25 +1,64 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [RFC PATCH] scsi, block: fix duplicate bdi name registration
-        crashes
-Date: Wed, 1 Feb 2017 09:08:01 +0100
-Message-ID: <20170201080801.GB29170@lst.de>
-References: <148566590827.1627.3631056985359212959.stgit@dwillia2-desk3.amr.corp.intel.com> <20170130122452.GA9043@lst.de> <CAPcyv4j2zm93jp6j7__xhSTXWKnh2MdEr5BxJ_ycku77xdtrTQ@mail.gmail.com>
+From: Timofey Titovets <nefelim4ag@gmail.com>
+Subject: LIO: FILEIO vs IBLOCK read performance
+Date: Wed, 1 Feb 2017 11:18:13 +0300
+Message-ID: <CAGqmi770AJ1v5188DijUB6oNZvsrRAMca4yeo=mqe1AW_x-Zjw@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <CAPcyv4j2zm93jp6j7__xhSTXWKnh2MdEr5BxJ_ycku77xdtrTQ@mail.gmail.com>
-Sender: linux-block-owner@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@kernel.dk>, linux-block@vger.kernel.org, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, James Bottomley <James.Bottomley@hansenpartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@osandov.com>
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f53.google.com ([209.85.215.53]:34809 "EHLO
+        mail-lf0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751716AbdBAISz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2017 03:18:55 -0500
+Received: by mail-lf0-f53.google.com with SMTP id v186so224454863lfa.1
+        for <linux-scsi@vger.kernel.org>; Wed, 01 Feb 2017 00:18:55 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org
 
-On Mon, Jan 30, 2017 at 12:57:05PM -0800, Dan Williams wrote:
-> 
-> struct kref {
->         atomic_t refcount;
-> };
-> 
-> ...so what do we gain by open coding kref_get() and kref_put()?
+Hi, we want move to iSCSI from NFS storage.
+So our data servers have a big ram cache, for utilize it we want use
+fileio backend (use file on fs for LUN).
 
-A much less ugly calling convention.
+So, question, we did some tests, and have and get strange results with
+random read performance.
+
+What we have:
+Old dell server in lab 4 cpu, 16GB RAM, 6x2TB SATA HDD (RAID10)
+3 backends on storage server:
+/dev/sdb
+/storage/LUN/1 (reside on fs, on /dev/sdb)
+/dev/loop0 -> /storage/LUN/1
+
+For testing on the client side, we use fio:
+directio=1, libaio, iodepth=32, bs=4k
+Before and after every test we do vm.drop_caches (with results are
+more interesting) on both servers.
+1 fronend on test server
+/dev/sdb
+
+We try do fio with NFS and get ~ 500 iops
+
+so, short results (random read on /dev/sdb on client):
+block + /dev/sdb ~ 500 iops (emulate_write_cache=0)
+fileio + /dev/sdb ~ 90 iops (emulate_write_cache=0)
+fileio + /dev/sdb ~ 90 iops (emulate_write_cache=1)
+fileio + /storage/LUN/1 ~90 iops (emulate_write_cache=0)
+fileio + /storage/LUN/1 ~90 iops (emulate_write_cache=1)
+block + /dev/loop0 ~ 90 iops loop directio=0
+block + /dev/loop0 ~ 500 iops loop directio=0
+
+So, if i understand correctly, it's a some problem with buffering
+mode, can you give some explain for that?
+
+Thank you for any help.
+
+P.S.
+By iostat i see what with target_mod_iblock i have a ~32 queue size to
+disk, with target_mod_file, i see ~ 1 queue size to disk.
+
+P.S.S.
+
+Kernel 4.9.6
+-- 
+Have a nice day,
+Timofey.
