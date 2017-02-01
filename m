@@ -1,28 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: remove the cmd_type field from struct request
-Date: Tue, 31 Jan 2017 21:58:09 -0500
-Message-ID: <yq1shnyzkfy.fsf@oracle.com>
-References: <1485878251-6107-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH v3 0/4] mpt3sas driver Enhancements and defect fixes:
+Date: Tue, 31 Jan 2017 22:04:01 -0500
+Message-ID: <yq1o9ymzk66.fsf@oracle.com>
+References: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1485878251-6107-1-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Tue, 31 Jan 2017 16:57:21 +0100")
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: axboe@kernel.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1485165370-43401-1-git-send-email-chaitra.basappa@broadcom.com>
+        (Chaitra P. B.'s message of "Mon, 23 Jan 2017 15:26:06 +0530")
+Sender: linux-kernel-owner@vger.kernel.org
+To: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: JBottomley@Parallels.com, jejb@kernel.org, hch@infradead.org, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, Sathya.Prakash@broadcom.com, kashyap.desai@broadcom.com, krishnaraddi.mankani@broadcom.com, linux-kernel@vger.kernel.org, suganath-prabu.subramani@broadcom.com, sreekanth.reddy@broadcom.com
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Chaitra" == Chaitra P B <chaitra.basappa@broadcom.com> writes:
 
-Christoph> this series gets rid of the cmd_type field in struct
-Christoph> request and instead folds it into the REQ_OP* space.  This
-Christoph> reduces the size of struct request, and leads to a single op
-Christoph> namespace that drivers can easily switch on.
+Chaitra> Here is the change list: Posting 4 patches for mpt3sas driver
+Chaitra> enhancement and defect fixes.  * Handle cable event for
+Chaitra> notifying degraded speed.  * Performance improvement for
+Chaitra> Crusader.  * Fix Firmware fault state 0x2100 during heavy 4K RR
+Chaitra> FIO stress test.  * Updated driver version to 15.100.00.00
 
-Very nice cleanup!
-
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Applied to 4.11/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
