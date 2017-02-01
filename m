@@ -1,38 +1,48 @@
-From: Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
-Subject: Re: [PATCH 4.10-rc3 07/13] net: mvneta: fix build errors when
- linux/phy*.h is removed from net/dsa.h
-Date: Wed, 1 Feb 2017 11:27:14 +0100
-Message-ID: <20170201112714.03fc236e@free-electrons.com>
-References: <20170131191704.GA8281@n2100.armlinux.org.uk>
-        <E1cYdxD-0000Wd-1D@rmk-PC.armlinux.org.uk>
+From: Bartlomiej Zolnierkiewicz <b.zolnierkie@samsung.com>
+Subject: Re: remove the cmd_type field from struct request
+Date: Wed, 01 Feb 2017 11:37:26 +0100
+Message-ID: <2642348.4a930XfY9Y@amdc3058>
+References: <1485878251-6107-1-git-send-email-hch@lst.de>
+ <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
+ <CGME20170201103729epcas1p12708473d0e5257bef65e1d92712af885@epcas1p1.samsung.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org>
-In-Reply-To: <E1cYdxD-0000Wd-1D-eh5Bv4kxaXIk46pC+1QYvQNdhmdF6hFW@public.gmane.org>
-Sender: linux-nfs-owner-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-To: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
-Cc: linux-mips-6z/3iImG2C8G8FEW9MqTrA@public.gmane.org, linux-nfs-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-usb-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-wireless-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, target-devel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, "David S. Miller" <davem-fT/PcQaiUtIeIZ0/mPfg9Q@public.gmane.org>, Florian Fainelli <f.fainelli-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 7Bit
+Return-path: <linux-ide-owner@vger.kernel.org>
+In-reply-to: <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
+Sender: linux-ide-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Hello,
 
-On Tue, 31 Jan 2017 19:18:59 +0000, Russell King wrote:
-> drivers/net/ethernet/marvell/mvneta.c:2694:26: error: storage size of 'status' isn't known
-> drivers/net/ethernet/marvell/mvneta.c:2695:26: error: storage size of 'changed' isn't known
-> drivers/net/ethernet/marvell/mvneta.c:2695:9: error: variable 'changed' has initializer but incomplete type
-> drivers/net/ethernet/marvell/mvneta.c:2709:2: error: implicit declaration of function 'fixed_phy_update_state' [-Werror=implicit-function-declaration]
-> 
-> Add linux/phy_fixed.h to mvneta.c
-> 
-> Signed-off-by: Russell King <rmk+kernel-I+IVW8TIWO2tmTQ+vhA3Yw@public.gmane.org>
+Hi,
 
-Acked-by: Thomas Petazzoni <thomas.petazzoni-wi1+55ScJUtKEb57/3fJTNBPR1lH4CV8@public.gmane.org>
--- 
-Thomas Petazzoni, CTO, Free Electrons
-Embedded Linux and Kernel engineering
-http://free-electrons.com
+On Tuesday, January 31, 2017 10:02:50 AM Jens Axboe wrote:
+> On 01/31/2017 07:57 AM, Christoph Hellwig wrote:
+> > [1] which were a pain in the ass to untangle and debug during development,
+> > it's really time for it to die..
+> 
+> Outside of the patch series in question, how to we expedite the
+> euthanasia of IDE? What explicit features/support are we missing through
+
+When it comes to missing features/support there is still
+number of non-x86 host drivers not ported to libata (I'm
+slowly working on this as a side-task, any help would be
+much appreciated).
+
+> libata that would need to be added, before we can git rm drivers/ide/ ?
+
+I was trying to start the removal with [1] last year but
+it has been NAK-ed by DaveM who seems to want to keep
+drivers/ide/ forever [2].
+
+[1] https://lkml.org/lkml/2016/2/4/409
+[2] https://lkml.org/lkml/2016/12/8/423
+
+Best regards,
 --
-To unsubscribe from this list: send the line "unsubscribe linux-nfs" in
-the body of a message to majordomo-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
-More majordomo info at  http://vger.kernel.org/majordomo-info.html
+Bartlomiej Zolnierkiewicz
+Samsung R&D Institute Poland
+Samsung Electronics
+
