@@ -1,168 +1,163 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/10] mpt3sas: full mq support
-Date: Wed, 1 Feb 2017 08:43:31 +0100
-Message-ID: <3e50cfdc-c330-4241-5ac3-a8f2ef5f77b4@suse.de>
-References: <1485854760-122683-1-git-send-email-hare@suse.de>
- <20170131100243.GA1811@lst.de> <9a9d5acd-5f51-ad5b-7364-1d7549c040fd@suse.de>
- <e8d8dbf8dc2fa11b85a90211f2298b20@mail.gmail.com>
- <255dbb75-9ebd-0c7b-486e-e6fec772b8ca@suse.de>
- <41a4fdd78121e86e13dc874127b0b956@mail.gmail.com>
+From: Hannes Reinecke <hare-l3A5Bk7waGM@public.gmane.org>
+Subject: Re: [PATCH V2 2/2] qedf: Add QLogic FastLinQ offload
+ FCoE driver framework.
+Date: Wed, 1 Feb 2017 08:59:36 +0100
+Message-ID: <2203e514-5ca8-28e2-af22-537899407cf9@suse.de>
+References: <1485376423-18737-1-git-send-email-chad.dupuis@cavium.com>
+ <1485376423-18737-3-git-send-email-chad.dupuis@cavium.com>
+ <28df9087-4eaf-d72c-ccee-89408d3a1b32@suse.de>
+ <alpine.OSX.2.00.1701311156290.1169@administrators-macbook-pro.local>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:57222 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751080AbdBAHnh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 1 Feb 2017 02:43:37 -0500
-In-Reply-To: <41a4fdd78121e86e13dc874127b0b956@mail.gmail.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="windows-1252"; Format="flowed"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+In-Reply-To: <alpine.OSX.2.00.1701311156290.1169-nVgGmETfwnIFUnR/tdpssI0aTaFgKE92ACYyPGjX6YU@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: Chad Dupuis <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Cc: martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yuval.mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, QLogic-Storage-Upstream-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
 
-On 02/01/2017 08:07 AM, Kashyap Desai wrote:
->> -----Original Message-----
->> From: Hannes Reinecke [mailto:hare@suse.de]
->> Sent: Wednesday, February 01, 2017 12:21 PM
->> To: Kashyap Desai; Christoph Hellwig
->> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
->> Sathya
->> Prakash Veerichetty; PDL-MPT-FUSIONLINUX; Sreekanth Reddy
->> Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+On 01/31/2017 06:08 PM, Chad Dupuis wrote:
+>
+> On Mon, 30 Jan 2017, 10:34am -0000, Hannes Reinecke wrote:
+>
+>> On 01/25/2017 09:33 PM, Dupuis, Chad wrote:
+>>> From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+>>>
+[ .. ]
+>>> +	if (opcode =3D=3D ELS_LS_RJT) {
+>>> +		rjt =3D fc_frame_payload_get(fp, sizeof(*rjt));
+>>> +		QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS,
+>>> +		    "Received LS_RJT for REC: er_reason=3D0x%x, "
+>>> +		    "er_explan=3D0x%x.\n", rjt->er_reason, rjt->er_explan);
+>>> +		/*
+>>> +		 * The following response(s) mean that we need to reissue the
+>>> +		 * request on another exchange.  We need to do this without
+>>> +		 * informing the upper layers lest it cause an application
+>>> +		 * error.
+>>> +		 */
+>>> +		if ((rjt->er_reason =3D=3D ELS_RJT_LOGIC ||
+>>> +		    rjt->er_reason =3D=3D ELS_RJT_UNAB) &&
+>>> +		    rjt->er_explan =3D=3D ELS_EXPL_OXID_RXID) {
+>>> +			QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_ELS,
+>>> +			    "Handle CMD LOST case.\n");
+>>> +			qedf_requeue_io_req(orig_io_req);
+>>> +		}
 >>
->> On 01/31/2017 06:54 PM, Kashyap Desai wrote:
->>>> -----Original Message-----
->>>> From: Hannes Reinecke [mailto:hare@suse.de]
->>>> Sent: Tuesday, January 31, 2017 4:47 PM
->>>> To: Christoph Hellwig
->>>> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
->>> Sathya
->>>> Prakash; Kashyap Desai; mpt-fusionlinux.pdl@broadcom.com
->>>> Subject: Re: [PATCH 00/10] mpt3sas: full mq support
->>>>
->>>> On 01/31/2017 11:02 AM, Christoph Hellwig wrote:
->>>>> On Tue, Jan 31, 2017 at 10:25:50AM +0100, Hannes Reinecke wrote:
->>>>>> Hi all,
->>>>>>
->>>>>> this is a patchset to enable full multiqueue support for the
->>>>>> mpt3sas
->>>> driver.
->>>>>> While the HBA only has a single mailbox register for submitting
->>>>>> commands, it does have individual receive queues per MSI-X
->>>>>> interrupt and as such does benefit from converting it to full
->>>>>> multiqueue
->>> support.
->>>>>
->>>>> Explanation and numbers on why this would be beneficial, please.
->>>>> We should not need multiple submissions queues for a single register
->>>>> to benefit from multiple completion queues.
->>>>>
->>>> Well, the actual throughput very strongly depends on the blk-mq-sched
->>>> patches from Jens.
->>>> As this is barely finished I didn't post any numbers yet.
->>>>
->>>> However:
->>>> With multiqueue support:
->>>> 4k seq read : io=60573MB, bw=1009.2MB/s, iops=258353, runt=
->> 60021msec
->>>> With scsi-mq on 1 queue:
->>>> 4k seq read : io=17369MB, bw=296291KB/s, iops=74072, runt= 60028msec
->>>> So yes, there _is_ a benefit.
->>>>
->>>> (Which is actually quite cool, as these tests were done on a SAS3
->>>> HBA,
->>> so
->>>> we're getting close to the theoretical maximum of 1.2GB/s).
->>>> (Unlike the single-queue case :-)
->>>
->>> Hannes -
->>>
->>> Can you share detail about setup ? How many drives do you have and how
->>> is connection (enclosure -> drives. ??) ?
->>> To me it looks like current mpt3sas driver might be taking more hit in
->>> spinlock operation (penalty on NUMA arch is more compare to single
->>> core
->>> server) unlike we have in megaraid_sas driver use of shared blk tag.
->>>
->> The tests were done with a single LSI SAS3008 connected to a NetApp E-
->> series (2660), using 4 LUNs under MD-RAID0.
+>> Care to explain this?
+>> I found requeing within the driver without notifying the upper layers
+>> deeply troubling.
+>> I've came across this (or a similar issue) during implementing
+>> FCoE over virtio; there it turned out to be an issue with the target not
+>> handling frames in the correct order.
+>> So it looks you are attempting to solve the problem of a REC being sent
+>> for a command which is not know at the target.
+>> Meaning it's either lost in the fabric, hasn't been seen by the target
+>> (yet), or having already been processed by the target.
 >>
->> Megaraid_sas is even worse here; due to the odd nature of the 'fusion'
->> implementation we're ending up having _two_ sets of tags, making it really
->> hard to use scsi-mq here.
+>> The above code would only solve the second problem; however, that would
+>> indicate a command ordering issue as the REC would have arrived at the
+>> target _before_ the originating command.
+>> So doing a resend would only help for _that_ specific case, not for the
+>> others.
+>> And it's not quite clear why resending with a different OXID would help
+>> here; typically it's the _RXID_ which isn't found ...
 >
-> Current megaraid_sas as single submission queue exposed to the blk-mq will
-> not encounter similar performance issue.
-> We may not see significant improvement of performance if we attempt the same
-> for megaraid_sas driver.
-> We had similar discussion for megaraid_sas and hpsa.
-> http://www.spinics.net/lists/linux-scsi/msg101838.html
+> The problem I've observed is that If I return an error to the SCSI layer
+> it propogates up to the st driver and the test application would fail
+> since st would fail the I/O.  As the comment explains we do this on
+> another exchange internally in the driver so as not to cause the tape
+> backup application/test to fail.
 >
-> I am seeing this patch series is similar attempt for mpt3sas..Am I missing
-> anything ?
+> bnx2fc behaves like this IIRC.
 >
-No, you don't. That is precisely the case.
+Ah, yes.
+I've had this discussion with James Smart, too.
+When a command abort fails with 'Invalid OXID/RXID' we should be =
 
-The different here is that mpt3sas is actually exposing hardware 
-capabilities, whereas with megaraid_sas (and hpsa) we're limited by the 
-hardware implementation to a single completion queue shared between HBA 
-and OS.
-With mpt3sas we're having per-interrupt completion queues (well, for 
-newer firmware :-) so we can take advantage of scsi-mq.
+retrying the command with a different set of IDs, as the original
+need to quarantined.
+(Which, incidentaily, you don't do, right? You cannot re-use that =
 
-(And if someone had done a _proper_ design of the megaraid_sas_fusion 
-thing by exposing several submission and completion queues for 
-megaraid_sas itself instead of bolting the existing megaraid_sas single 
-queue approach ontop of the mpt3sas multiqueue design we could have done 
-the same thing there ... sigh)
+particular exchange until you either got a response for it or you reset =
 
-> Megaraid_sas driver just do indexing from blk_tag and fire IO quick enough
-> unlike mpt3sas where we have  lock contention @driver level as bottleneck.
->
->> (Not that I didn't try; but lacking a proper backend it's really hard to
->> evaluate
->> the benefit of those ... spinning HDDs simply don't cut it here)
+the exchange manager. If you don't you run into the risk of getting an =
+
+invalid completion if for some reason the command _does_ return =
+
+eventually...)
+
+Even though I'd rather like to have it resolved in libfc or even the =
+
+SCSI midlayer itself, it's not something which should hold off the =
+
+entire submission.
+
 >>
->>> I mean " [PATCH 08/10] mpt3sas: lockless command submission for scsi-
->> mq"
->>> patch is improving performance removing spinlock overhead and
->>> attempting to get request using blk_tags.
->>> Are you seeing performance improvement  if you hard code nr_hw_queues
->>> = 1 in below code changes part of "[PATCH 10/10] mpt3sas: scsi-mq
->>> interrupt steering"
->>>
->> No. The numbers posted above are generated with exactly that patch; the
->> first line is running with nr_hw_queues=32 and the second line with
->> nr_hw_queues=1.
+>> [ .. ]
+>>> +static void qedf_fcoe_process_vlan_resp(struct qedf_ctx *qedf,
+>>> +	struct sk_buff *skb)
+>>> +{
+>>> +	struct fip_header *fiph;
+>>> +	struct fip_desc *desc;
+>>> +	u16 vid =3D 0;
+>>> +	ssize_t rlen;
+>>> +	size_t dlen;
+>>> +
+>>> +	fiph =3D (struct fip_header *)(((void *)skb->data) + 2 * ETH_ALEN + 2=
+);
+>>> +
+>>> +	rlen =3D ntohs(fiph->fip_dl_len) * 4;
+>>> +	desc =3D (struct fip_desc *)(fiph + 1);
+>>> +	while (rlen > 0) {
+>>> +		dlen =3D desc->fip_dlen * FIP_BPW;
+>>> +		switch (desc->fip_dtype) {
+>>> +		case FIP_DT_VLAN:
+>>> +			vid =3D ntohs(((struct fip_vlan_desc *)desc)->fd_vlan);
+>>> +			break;
+>>> +		}
+>>> +		desc =3D (struct fip_desc *)((char *)desc + dlen);
+>>> +		rlen -=3D dlen;
+>>> +	}
+>>> +
+>>> +	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_DISC, "VLAN response, "
+>>> +		   "vid=3D0x%x.\n", vid);
+>>> +
+>>> +	if (vid > 0 && qedf->vlan_id !=3D vid) {
+>>> +		qedf_set_vlan_id(qedf, vid);
+>>> +
+>>> +		/* Inform waiter that it's ok to call fcoe_ctlr_link up() */
+>>> +		complete(&qedf->fipvlan_compl);
+>>> +	}
+>>> +}
+>>> +
+>> As mentioned, this will fail for HP VirtualConnect, which return a vid
+>> of '0', indicating that the FCoE link should run on the interface itself.
+>> And this is actually a valid response, I would think that you should be
+>> calling complete() for any response ...
 >
-> Thanks Hannes. That clarifies.  Can you share <fio> script you have used ?
+> In testing I would get responses that would seem to contain VID 0 but then
+> subsequent responses contain the valid VID.  If I try to go with a VID of
+> 0 FIP discovery would fail.  It could be possible that there's a bug in
+> the code that parses the FIP VLAN response but I'll like to leave this in
+> for now and it can be removed once I figure where the issue may be.
 >
-> If my  understanding correct, you will see theoretical maximum of 1.2GBp/s
-> if you restrict your work load to single numa node. This is just for
-> understanding if <mpt3sas> driver spinlocks are adding overhead. We have
-> seen such overhead on multi-socket server and it is reasonable to reduce
-> lock in mpt3sas driver, but only concern is exposing HBA for multiple
-> submission queue to blk-mq is really not required and trying to figure out
-> if we have any side effect of doing that.
->
-Well, the HBA has per-MSIx completion queues, so I don't see any issues 
-with exposing them.
-blk-mq is designed to handle per-CPU queues, so exposing all hardware 
-queues will be beneficial especially in a low-latency context; and as 
-the experiments show, even when connected to an external storage there 
-is a benefit to be had.
-
-But exposing all queues might even reduce or even resolve your FW Fault 
-status 0x2100 state; with that patch you now have each queue pulling 
-request off the completion queue and updating the reply post host index 
-in parallel, making the situation far more unlikely.
+Okay.
 
 Cheers,
 
 Hannes
--- 
+-- =
+
 Dr. Hannes Reinecke		      zSeries & Storage
-hare@suse.de			      +49 911 74053 688
-SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: J. Hawn, J. Guild, F. Imendörffer, HRB 16746 (AG Nürnberg)
+hare-l3A5Bk7waGM@public.gmane.org			      +49 911 74053 688
+SUSE LINUX Products GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+GF: J. Hawn, J. Guild, F. Imend=F6rffer, HRB 16746 (AG N=FCrnberg)
