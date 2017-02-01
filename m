@@ -1,29 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] storvsc: remove bogus code to transfer struct scatterlist
-Date: Tue, 31 Jan 2017 21:49:43 -0500
-Message-ID: <yq11svi1v7c.fsf@oracle.com>
-References: <1485681138-21236-1-git-send-email-hch@lst.de>
+Subject: Re: [PATCH V2] hpsa: remove coalescing settings for ioaccel2
+Date: Tue, 31 Jan 2017 21:51:52 -0500
+Message-ID: <yq1wpdazkqf.fsf@oracle.com>
+References: <148581391749.10289.15802474685670424837.stgit@brunhilda>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38435 "EHLO
+Received: from aserp1040.oracle.com ([141.146.126.69]:39079 "EHLO
         aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750914AbdBACt5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2017 21:49:57 -0500
-In-Reply-To: <1485681138-21236-1-git-send-email-hch@lst.de> (Christoph
-        Hellwig's message of "Sun, 29 Jan 2017 10:12:18 +0100")
+        with ESMTP id S1751064AbdBACwv (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 31 Jan 2017 21:52:51 -0500
+In-Reply-To: <148581391749.10289.15802474685670424837.stgit@brunhilda> (Don
+        Brace's message of "Mon, 30 Jan 2017 16:05:17 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, john.hall@microsemi.com, Kevin.Barnett@microsemi.com, Mahesh.Rajashekhara@microsemi.com, bader.alisaleh@microsemi.com, hch@infradead.org, scott.teel@microsemi.com, Viswas.G@microsemi.com, Justin.Lindley@microsemi.com, scott.benesh@microsemi.com, elliott@hpe.com, POSWALD@suse.com, linux-scsi@vger.kernel.org
 
->>>>> "Christoph" == Christoph Hellwig <hch@lst.de> writes:
+>>>>> "Don" == Don Brace <don.brace@microsemi.com> writes:
 
-Christoph> Remove a piece of code in storvsc_queuecommand that tries to
-Christoph> pass the physical address of the kernel struct scatterlist
-Christoph> pointer to the host.
-
-Christoph> Fortunately the code can't ever be reached anyway.
+Don> - Setting coalescing has a significant negative impact on low
+Don> queue-depth performance.  - Does not help high queue-depth
+Don> performance.
 
 Applied to 4.11/scsi-queue.
 
