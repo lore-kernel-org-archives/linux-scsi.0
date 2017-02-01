@@ -1,27 +1,45 @@
-From: Miss Marbell <spdr3re9@friend.ocn.ne.jp>
-Subject: =?utf-8?Q?Bitte_kontaktieren_Sie_mich_f=C3=BCr_weitere_Details!?=
-Date: Wed, 1 Feb 2017 19:40:19 +0900 (JST)
-Message-ID: <1712551087.132267998.1485945619369.JavaMail.root@friend.ocn.ne.jp>
-Reply-To: Miss Marbell <brownson.m221@gmail.com>
+From: Sergei Shtylyov <sergei.shtylyov@cogentembedded.com>
+Subject: Re: remove the cmd_type field from struct request
+Date: Wed, 1 Feb 2017 13:55:34 +0300
+Message-ID: <f7db63ea-7bae-8faf-b22e-42678018e04b@cogentembedded.com>
+References: <1485878251-6107-1-git-send-email-hch@lst.de>
+ <bbe16fc1-5652-bbc2-03a5-0298c3f16645@kernel.dk>
+ <c61b9b98-8e4a-ac23-bf0c-002d112d5468@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mbkd0336.ocn.ad.jp ([153.149.236.37]:47277 "EHLO
-        mbkd0336.ocn.ad.jp" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751925AbdBAKyQ (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 1 Feb 2017 05:54:16 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <c61b9b98-8e4a-ac23-bf0c-002d112d5468@suse.de>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-Sehr geehrte Damen und Herren,
+On 2/1/2017 9:53 AM, Hannes Reinecke wrote:
 
-Ich brauche Ihre Unterstützung in Ihrem Land zu verlagern und zu investieren.Ich bitte Sie um Hilfe, weil ich nicht das Wissen über
-Geschäft und die Regeln, die Ihr Land für eine sichere Investition führen.
+>>> [1] which were a pain in the ass to untangle and debug during development,
+>>> it's really time for it to die..
+>>
+>> Outside of the patch series in question, how to we expedite the
+>> euthanasia of IDE? What explicit features/support are we missing through
+>> libata that would need to be added, before we can git rm drivers/ide/ ?
+>>
+> There is only a single driver (sgi_ide) which hasn't been moved over to
+> libata.
 
-Werden Sie versprechen, mit mir aufrichtig zu sein?
+    Huh? What about Toshiba TC86C001 and TX4938/9, TI DaVinci? That's off the 
+top of my head only...
 
-Bitte kontaktieren Sie mich für weitere Details!
+> But this is for an old Itanium-based server only, and even SGI didn't
+> press us to have this ported.
+> (And we have disabled the IDE drivers since SLES11, where we still support
+> Itanium.)
 
-Mit freundlichen Grüßen,
-Fräulein Marbell.
+    Or do you mean only the drivers SuSe is interested in?
+
+[...]
+> Cheers,
+>
+> Hannes
+
+MBR, Sergei
