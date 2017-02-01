@@ -1,38 +1,45 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH] sg: protect access to to 'reserved' page array
-Date: Wed, 1 Feb 2017 12:23:36 +0100
-Message-ID: <20170201112335.GB3661@linux-x5ow.site>
-References: <1485948135-83249-1-git-send-email-hare@suse.de>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Transfer-Encoding: 8bit
-Return-path: <stable-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1485948135-83249-1-git-send-email-hare@suse.de>
-Sender: stable-owner@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Johannes Thumshirn <jth@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] sg: remove unreachable code in SET_FORCE_LOW_DMA
+Date: Wed,  1 Feb 2017 12:26:39 +0100
+Message-ID: <1485948399-83339-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:52234 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751266AbdBAL0n (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 1 Feb 2017 06:26:43 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On Wed, Feb 01, 2017 at 12:22:15PM +0100, Hannes Reinecke wrote:
-> The 'reserved' page array is used as a short-cut for mapping
-> data, saving us to allocate pages per request.
-> However, the 'reserved' array is only capable of holding one
-> request, so we need to protect it against concurrent accesses.
-> 
-> Cc: stable@vger.kernel.org
-> Reported-by: Dmitry Vyukov <dvyukov@google.com>
-> Link: http://www.spinics.net/lists/linux-scsi/msg104326.html
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> Tested-by: Johannes Thumshirn <jth@kernel.org>
-> ---
+The low_dma value is always '1' in that branch, so the remaining
+'if' statement can never be reached.
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/sg.c | 9 ++-------
+ 1 file changed, 2 insertions(+), 7 deletions(-)
 
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index dbe5b4b..652b934 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -890,14 +890,9 @@ static int max_sectors_bytes(struct request_queue *q)
+ 		result = get_user(val, ip);
+ 		if (result)
+ 			return result;
+-		if (val) {
++		if (val)
+ 			sfp->low_dma = 1;
+-			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
+-				val = (int) sfp->reserve.bufflen;
+-				sg_remove_scat(sfp, &sfp->reserve);
+-				sg_build_reserve(sfp, val);
+-			}
+-		} else {
++		else {
+ 			if (atomic_read(&sdp->detaching))
+ 				return -ENODEV;
+ 			sfp->low_dma = sdp->device->host->unchecked_isa_dma;
 -- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+1.8.5.6
