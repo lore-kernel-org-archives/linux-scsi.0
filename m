@@ -1,35 +1,76 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
-        vectors left
-Date: Thu, 2 Feb 2017 19:32:16 +0100
-Message-ID: <20170202183216.GA8385@lst.de>
-References: <1485778541-28994-1-git-send-email-hch@lst.de> <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 00/15] qla2xxx: Bug Fixes and updates for target.
+Date: Thu, 2 Feb 2017 11:42:23 -0800
+Message-ID: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-pci-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
-Sender: linux-pci-owner@vger.kernel.org
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Christoph Hellwig <hch@lst.de>, bhelgaas@google.com, bart.vanassche@sandisk.com, tglx@linutronix.de, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam01on0056.outbound.protection.outlook.com ([104.47.32.56]:56768
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750940AbdBBTnM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Feb 2017 14:43:12 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-On Thu, Feb 02, 2017 at 11:36:59AM -0600, Bjorn Helgaas wrote:
-> You didn't say exactly where the out of bounds access was, but I assume
-> it's probably in irq_create_affinity_masks() in this path:
+Hi Bart,
 
-Yes.  See the original report from Bart here:
+Please consider this series for inclusion in target-pending.
 
-http://www.spinics.net/lists/linux-scsi/msg104082.html
+This series contains following changes.
 
-> The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
-> were closer to the actual problem.
+o Fix for the deadlock because of inconsistent lock usage reported by you. 
+o Added patch to submit non-critical MBX command via IOCB path.
+o Improved T10-DIF/PI handling with target stack.
+o Changed scsi host lookup method for AL-PA.
+o Some minor bug fixes.
 
-I plan to also fix the low-level issue, but:
+Please apply to target-pending.
 
- a) I have other patches pending in that are for 4.11 and I'd like
-    to batch them up with those to avoid conflicts
- b) we really need a high-level check like the one added in this
-    patch so that we do the right thing (drop affinity) in this
-    case instead of returning an error to the caller and failing
-    the probe.
+Thanks,
+Himanshu 
+
+Anil Gurumurthy (1):
+  qla2xxx: Export DIF stats via debugfs
+
+Himanshu Madhani (3):
+  qla2xxx: Add DebugFS node to display Port Database
+  qla2xxx: Fix warnings about inconsistent indenting
+  qla2xxx: Update driver version to 9.00.00.00-k
+
+Joe Carnuccio (1):
+  qla2xxx: Allow vref count to timeout on vport delete.
+
+Quinn Tran (10):
+  qla2xxx: Fix delayed response to command for loop mode/direct connect.
+  qla2xxx: Allow relogin to proceed if remote login did not finish
+  qla2xxx: Use IOCB interface to submit non-critical MBX.
+  qla2xxx: Improve T10-DIF/PI handling in driver.
+  qla2xxx: Change scsi host lookup method
+  qla2xxx: Fix memory leak for abts processing
+  qla2xxx: Fix request queue corruption.
+  qla2xxx: Fix inadequate lock protection for ABTS.
+  qla2xxx: Add async new target notification
+  qla2xxx: Fix sess_lock & hardware_lock lock order problem.
+
+ drivers/scsi/qla2xxx/Kconfig       |   1 +
+ drivers/scsi/qla2xxx/qla_attr.c    |   4 +-
+ drivers/scsi/qla2xxx/qla_dbg.h     |   1 +
+ drivers/scsi/qla2xxx/qla_def.h     |  56 ++-
+ drivers/scsi/qla2xxx/qla_dfs.c     | 107 ++++-
+ drivers/scsi/qla2xxx/qla_gbl.h     |  13 +-
+ drivers/scsi/qla2xxx/qla_init.c    |  88 ++--
+ drivers/scsi/qla2xxx/qla_isr.c     |  41 +-
+ drivers/scsi/qla2xxx/qla_mbx.c     | 316 +++++++++++++--
+ drivers/scsi/qla2xxx/qla_mid.c     |  12 +-
+ drivers/scsi/qla2xxx/qla_os.c      |  46 ++-
+ drivers/scsi/qla2xxx/qla_target.c  | 804 +++++++++++++++++++++++--------------
+ drivers/scsi/qla2xxx/qla_target.h  |  38 +-
+ drivers/scsi/qla2xxx/qla_version.h |   6 +-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |  84 +++-
+ 15 files changed, 1162 insertions(+), 455 deletions(-)
+
+-- 
+1.8.3.1
