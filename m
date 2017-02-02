@@ -1,158 +1,53 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 02/15] qla2xxx: Allow relogin to proceed if remote login did not finish
-Date: Thu, 2 Feb 2017 11:42:25 -0800
-Message-ID: <1486064558-365-3-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 12/15] qla2xxx: Fix warnings about inconsistent indenting
+Date: Thu, 2 Feb 2017 11:42:35 -0800
+Message-ID: <1486064558-365-13-git-send-email-himanshu.madhani@cavium.com>
 References: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-dm3nam03on0083.outbound.protection.outlook.com ([104.47.41.83]:37376
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751681AbdBBUAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Feb 2017 15:00:00 -0500
 In-Reply-To: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
+Fix following warning reported by smatch tool.
 
-If the remote port have started the login process, then the
-PLOGI and PRLI should be back to back. Driver will allow
-the remote port to complete the process. For the case where
-the remote port decide to back off from sending PRLI, this
-local port sets an expiration timer for the PRLI. Once the
-expiration time passes, the relogin retry logic is allowed
-to go through and perform login with the remote port.
+drivers/scsi/qla2xxx/qla_mbx.c:128 qla2x00_mailbox_command() warn: inconsistent
+indenting
 
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h    |  2 ++
- drivers/scsi/qla2xxx/qla_init.c   | 16 ++++++++++++++--
- drivers/scsi/qla2xxx/qla_isr.c    | 25 +++++++++++++++++++------
- drivers/scsi/qla2xxx/qla_target.c |  1 +
- 4 files changed, 36 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_mbx.c | 9 ++++-----
+ 1 file changed, 4 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 2d7d478..b180d51 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -2300,6 +2300,8 @@ enum rscn_addr_format {
- 	struct ct_sns_desc ct_desc;
- 	enum discovery_state disc_state;
- 	enum login_state fw_login_state;
-+	unsigned long plogi_nack_done_jiff;
-+
- 	u32 login_gen, last_login_gen;
- 	u32 rscn_gen, last_rscn_gen;
- 	u32 chip_reset;
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 9f3db52..e84ab37 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -876,10 +876,16 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
- 	fcport->login_retry--;
- 
- 	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
--	    (fcport->fw_login_state == DSC_LS_PLOGI_COMP) ||
- 	    (fcport->fw_login_state == DSC_LS_PRLI_PEND))
- 		return 0;
- 
-+	if (fcport->fw_login_state == DSC_LS_PLOGI_COMP) {
-+		unsigned long t = fcport->plogi_nack_done_jiff + HZ;
-+
-+		if (time_before_eq(jiffies, t))
-+			return 0;
-+	}
-+
- 	/* for pure Target Mode. Login will not be initiated */
- 	if (vha->host->active_mode == MODE_TARGET)
- 		return 0;
-@@ -1041,10 +1047,16 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
- 		fcport->flags);
- 
- 	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
--	    (fcport->fw_login_state == DSC_LS_PLOGI_COMP) ||
- 	    (fcport->fw_login_state == DSC_LS_PRLI_PEND))
- 		return;
- 
-+	if (fcport->fw_login_state == DSC_LS_PLOGI_COMP) {
-+		unsigned long t = fcport->plogi_nack_done_jiff + HZ;
-+
-+		if (time_before_eq(jiffies, t))
-+			return;
-+	}
-+
- 	if (fcport->flags & FCF_ASYNC_SENT) {
- 		fcport->login_retry++;
- 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index fb1c39c..bd998bf 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1634,9 +1634,9 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
- 		QLA_LOGIO_LOGIN_RETRIED : 0;
- 	if (logio->entry_status) {
- 		ql_log(ql_log_warn, fcport->vha, 0x5034,
--		    "Async-%s error entry - hdl=%x"
-+		    "Async-%s error entry - %8phC hdl=%x"
- 		    "portid=%02x%02x%02x entry-status=%x.\n",
--		    type, sp->handle, fcport->d_id.b.domain,
-+		    type, fcport->port_name, sp->handle, fcport->d_id.b.domain,
- 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
- 		    logio->entry_status);
- 		ql_dump_buffer(ql_dbg_async + ql_dbg_buffer, vha, 0x504d,
-@@ -1647,8 +1647,9 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
- 
- 	if (le16_to_cpu(logio->comp_status) == CS_COMPLETE) {
- 		ql_dbg(ql_dbg_async, fcport->vha, 0x5036,
--		    "Async-%s complete - hdl=%x portid=%02x%02x%02x "
--		    "iop0=%x.\n", type, sp->handle, fcport->d_id.b.domain,
-+		    "Async-%s complete - %8phC hdl=%x portid=%02x%02x%02x "
-+		    "iop0=%x.\n", type, fcport->port_name, sp->handle,
-+		    fcport->d_id.b.domain,
- 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
- 		    le32_to_cpu(logio->io_parameter[0]));
- 
-@@ -1688,6 +1689,17 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
- 	case LSC_SCODE_NPORT_USED:
- 		data[0] = MBS_LOOP_ID_USED;
- 		break;
-+	case LSC_SCODE_CMD_FAILED:
-+		if (iop[1] == 0x0606) {
-+			/*
-+			 * PLOGI/PRLI Completed. We must have Recv PLOGI/PRLI,
-+			 * Target side acked.
-+			 */
-+			data[0] = MBS_COMMAND_COMPLETE;
-+			goto logio_done;
-+		}
-+		data[0] = MBS_COMMAND_ERROR;
-+		break;
- 	case LSC_SCODE_NOXCB:
- 		vha->hw->exch_starvation++;
- 		if (vha->hw->exch_starvation > 5) {
-@@ -1709,8 +1721,9 @@ static void qla_irq_affinity_notify(struct irq_affinity_notify *,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index dcd190a..e07c960 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -124,12 +124,11 @@ static int is_rom_cmd(uint16_t cmd)
+ 		return QLA_FUNCTION_TIMEOUT;
  	}
  
- 	ql_dbg(ql_dbg_async, fcport->vha, 0x5037,
--	    "Async-%s failed - hdl=%x portid=%02x%02x%02x comp=%x "
--	    "iop0=%x iop1=%x.\n", type, sp->handle, fcport->d_id.b.domain,
-+	    "Async-%s failed - %8phC hdl=%x portid=%02x%02x%02x comp=%x "
-+	    "iop0=%x iop1=%x.\n", type, fcport->port_name,
-+		sp->handle, fcport->d_id.b.domain,
- 	    fcport->d_id.b.area, fcport->d_id.b.al_pa,
- 	    le16_to_cpu(logio->comp_status),
- 	    le32_to_cpu(logio->io_parameter[0]),
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 270e01c..821e63f 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -554,6 +554,7 @@ void qla2x00_async_nack_sp_done(void *s, int res)
- 		sp->fcport->login_gen++;
- 		sp->fcport->fw_login_state = DSC_LS_PLOGI_COMP;
- 		sp->fcport->logout_on_delete = 1;
-+		sp->fcport->plogi_nack_done_jiff = jiffies;
- 		break;
+-	 /* if PCI error, then avoid mbx processing.*/
+-	 if (test_bit(PCI_ERR, &base_vha->dpc_flags)) {
+-		ql_log(ql_log_warn, vha, 0x1191,
+-		    "PCI error, exiting.\n");
++	/* if PCI error, then avoid mbx processing.*/
++	if (test_bit(PCI_ERR, &base_vha->dpc_flags)) {
++		ql_log(ql_log_warn, vha, 0x1191, "PCI error, exiting.\n");
+ 		return QLA_FUNCTION_TIMEOUT;
+-	 }
++	}
  
- 	case SRB_NACK_PRLI:
+ 	reg = ha->iobase;
+ 	io_lock_on = base_vha->flags.init_done;
 -- 
 1.8.3.1
