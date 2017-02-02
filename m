@@ -1,25 +1,23 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V4 18/24] aacraid: VPD 83 type3 support
-Date: Thu, 2 Feb 2017 15:53:32 -0800
-Message-ID: <20170202235338.14724-19-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V4 14/24] aacraid: Added support for hotplug
+Date: Thu, 2 Feb 2017 15:53:28 -0800
+Message-ID: <20170202235338.14724-15-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0048.outbound.protection.outlook.com ([104.47.37.48]:37664
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0075.outbound.protection.outlook.com ([104.47.34.75]:36146
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752579AbdBCGbF (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 01:31:05 -0500
+        id S1752556AbdBCGbE (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 01:31:04 -0500
 In-Reply-To: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de
 
-This patch adds support to retrieve the unique identifier data (VPD page
-83 type3) for Logical drives created on SmartIOC 2000 products. In
-addition  added a sysfs device structure to expose the id information.
+Added support for drive hotplug add and removal
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
@@ -34,329 +32,280 @@ None
 Changes in  V4:
 None
 
- drivers/scsi/aacraid/aachba.c  | 180 ++++++++++++++++++++++++++---------------
- drivers/scsi/aacraid/aacraid.h |   2 +
- drivers/scsi/aacraid/linit.c   |  31 +++++++
- 3 files changed, 150 insertions(+), 63 deletions(-)
+ drivers/scsi/aacraid/aachba.c  |  13 ++--
+ drivers/scsi/aacraid/aacraid.h |  17 ++++-
+ drivers/scsi/aacraid/commsup.c | 137 +++++++++++++++++++++++++++++++++++++++++
+ 3 files changed, 160 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index f9c0e19..3382b0f 100644
+index fc1495f..02e5d4e 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -167,46 +167,56 @@ struct inquiry_data {
- };
+@@ -1595,7 +1595,7 @@ int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target)
+  *	Update our hba map with the information gathered from the FW
+  */
+ void aac_update_hba_map(struct aac_dev *dev,
+-		struct aac_ciss_phys_luns_resp *phys_luns)
++		struct aac_ciss_phys_luns_resp *phys_luns, int rescan)
+ {
+ 	/* ok and extended reporting */
+ 	u32 lun_count, nexus;
+@@ -1640,7 +1640,10 @@ void aac_update_hba_map(struct aac_dev *dev,
+ 			dev->hba_map[bus][target].qd_limit = 32;
  
- /* Added for VPD 0x83 */
--typedef struct {
--	u8 CodeSet:4;	/* VPD_CODE_SET */
--	u8 Reserved:4;
--	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
--	u8 Reserved2:4;
--	u8 Reserved3;
--	u8 IdentifierLength;
--	u8 VendId[8];
--	u8 ProductId[16];
--	u8 SerialNumber[8];	/* SN in ASCII */
--
--} TVPD_ID_Descriptor_Type_1;
-+struct  tvpd_id_descriptor_type_1 {
-+	u8 codeset:4;		/* VPD_CODE_SET */
-+	u8 reserved:4;
-+	u8 identifiertype:4;	/* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2:4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	u8 venid[8];
-+	u8 productid[16];
-+	u8 serialnumber[8];	/* SN in ASCII */
- 
--typedef struct {
--	u8 CodeSet:4;	/* VPD_CODE_SET */
--	u8 Reserved:4;
--	u8 IdentifierType:4;	/* VPD_IDENTIFIER_TYPE */
--	u8 Reserved2:4;
--	u8 Reserved3;
--	u8 IdentifierLength;
--	struct TEU64Id {
-+};
-+
-+struct tvpd_id_descriptor_type_2 {
-+	u8 codeset:4;		/* VPD_CODE_SET */
-+	u8 reserved:4;
-+	u8 identifiertype:4;	/* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2:4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	struct teu64id {
- 		u32 Serial;
- 		 /* The serial number supposed to be 40 bits,
- 		  * bit we only support 32, so make the last byte zero. */
--		u8 Reserved;
--		u8 VendId[3];
--	} EU64Id;
-+		u8 reserved;
-+		u8 venid[3];
-+	} eu64id;
- 
--} TVPD_ID_Descriptor_Type_2;
-+};
- 
--typedef struct {
-+struct tvpd_id_descriptor_type_3 {
-+	u8 codeset : 4;          /* VPD_CODE_SET */
-+	u8 reserved : 4;
-+	u8 identifiertype : 4;   /* VPD_IDENTIFIER_TYPE */
-+	u8 reserved2 : 4;
-+	u8 reserved3;
-+	u8 identifierlength;
-+	u8 Identifier[16];
-+};
-+
-+struct tvpd_page83 {
- 	u8 DeviceType:5;
- 	u8 DeviceTypeQualifier:3;
- 	u8 PageCode;
--	u8 Reserved;
-+	u8 reserved;
- 	u8 PageLength;
--	TVPD_ID_Descriptor_Type_1 IdDescriptorType1;
--	TVPD_ID_Descriptor_Type_2 IdDescriptorType2;
--
--} TVPD_Page83;
-+	struct tvpd_id_descriptor_type_1 type1;
-+	struct tvpd_id_descriptor_type_2 type2;
-+	struct tvpd_id_descriptor_type_3 type3;
-+};
- 
- /*
-  *              M O D U L E   G L O B A L S
-@@ -613,6 +623,7 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 	struct fsa_dev_info *fsa_dev_ptr;
- 	int (*callback)(struct scsi_cmnd *);
- 	struct scsi_cmnd * scsicmd = (struct scsi_cmnd *)context;
-+	int i;
- 
- 
- 	if (!aac_valid_context(scsicmd, fibptr))
-@@ -635,6 +646,10 @@ static void _aac_probe_container2(void * context, struct fib * fibptr)
- 				fsa_dev_ptr->block_size =
- 					le32_to_cpu(dresp->mnt[0].fileinfo.bdevinfo.block_size);
- 			}
-+			for (i = 0; i < 16; i++)
-+				fsa_dev_ptr->identifier[i] =
-+					dresp->mnt[0].fileinfo.bdevinfo
-+								.identifier[i];
- 			fsa_dev_ptr->valid = 1;
- 			/* sense_key holds the current state of the spin-up */
- 			if (dresp->mnt[0].state & cpu_to_le32(FSCS_NOT_READY))
-@@ -929,6 +944,28 @@ static void setinqstr(struct aac_dev *dev, void *data, int tindex)
- 	inqstrcpy ("V1.0", str->prl);
+ update_devtype:
+-		dev->hba_map[bus][target].devtype = devtype;
++		if (rescan == AAC_INIT)
++			dev->hba_map[bus][target].devtype = devtype;
++		else
++			dev->hba_map[bus][target].new_devtype = devtype;
+ 	}
  }
  
-+static void build_vpd83_type3(struct tvpd_page83 *vpdpage83data,
-+		struct aac_dev *dev, struct scsi_cmnd *scsicmd)
+@@ -1652,7 +1655,7 @@ void aac_update_hba_map(struct aac_dev *dev,
+  *	Execute a CISS REPORT PHYS LUNS and process the results into
+  *	the current hba_map.
+  */
+-int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr)
++int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr, int rescan)
+ {
+ 	int fibsize, datasize;
+ 	struct aac_ciss_phys_luns_resp *phys_luns;
+@@ -1712,7 +1715,7 @@ int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr)
+ 	/* analyse data */
+ 	if (rcode >= 0 && phys_luns->resp_flag == 2) {
+ 		/* ok and extended reporting */
+-		aac_update_hba_map(dev, phys_luns);
++		aac_update_hba_map(dev, phys_luns, rescan);
+ 	}
+ 
+ 	pci_free_consistent(dev->pdev, datasize, (void *) phys_luns, addr);
+@@ -1825,7 +1828,7 @@ int aac_get_adapter_info(struct aac_dev* dev)
+ 	if (!dev->sync_mode && dev->sa_firmware &&
+ 			dev->supplement_adapter_info.VirtDeviceBus != 0xffff) {
+ 		/* Thor SA Firmware -> CISS_REPORT_PHYSICAL_LUNS */
+-		rcode = aac_report_phys_luns(dev, fibptr);
++		rcode = aac_report_phys_luns(dev, fibptr, AAC_INIT);
+ 	}
+ 
+ 	if (!dev->in_reset) {
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 02b0279..a8b418e 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -74,7 +74,7 @@ enum {
+ #define AAC_NUM_IO_FIB		(1024 - AAC_NUM_MGT_FIB)
+ #define AAC_NUM_FIB		(AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
+ 
+-#define AAC_MAX_LUN		(256)
++#define AAC_MAX_LUN		256
+ 
+ #define AAC_MAX_HOSTPHYSMEMPAGES (0xfffff)
+ #define AAC_MAX_32BIT_SGBCOUNT	((unsigned short)256)
+@@ -87,6 +87,14 @@ enum {
+ #define AAC_MAX_TARGETS		256
+ #define AAC_MAX_NATIVE_SIZE		2048
+ 
++/* Thor AIF events */
++#define SA_AIF_HOTPLUG			(1<<1)
++#define SA_AIF_HARDWARE		(1<<2)
++#define SA_AIF_PDEV_CHANGE		(1<<4)
++#define SA_AIF_LDEV_CHANGE		(1<<5)
++#define SA_AIF_BPSTAT_CHANGE		(1<<30)
++#define SA_AIF_BPCFG_CHANGE		(1<<31)
++
+ #define CISS_REPORT_PHYSICAL_LUNS	0xc3
+ #define WRITE_HOST_WELLNESS		0xa5
+ #define CISS_IDENTIFY_PHYSICAL_DEVICE	0x15
+@@ -194,6 +202,7 @@ struct aac_ciss_identify_pd {
+ #define CONTAINER_TO_CHANNEL(cont)	(CONTAINER_CHANNEL)
+ #define CONTAINER_TO_ID(cont)		(cont)
+ #define CONTAINER_TO_LUN(cont)		(0)
++#define ENCLOSURE_CHANNEL		(3)
+ 
+ #define PMC_DEVICE_S6	0x28b
+ #define PMC_DEVICE_S7	0x28c
+@@ -1098,6 +1107,9 @@ struct fib {
+ 	u32			hbacmd_size;	/* cmd size for native */
+ };
+ 
++#define AAC_INIT			0
++#define AAC_RESCAN			1
++
+ #define AAC_DEVTYPE_RAID_MEMBER	1
+ #define AAC_DEVTYPE_ARC_RAW		2
+ #define AAC_DEVTYPE_NATIVE_RAW		3
+@@ -1107,6 +1119,7 @@ struct fib {
+ struct aac_hba_map_info {
+ 	__le32	rmw_nexus;		/* nexus for native HBA devices */
+ 	u8		devtype;	/* device type */
++	u8		new_devtype;
+ 	u8		reset_state;	/* 0 - no reset, 1..x - */
+ 					/* after xth TM LUN reset */
+ 	u16		qd_limit;
+@@ -2317,7 +2330,7 @@ static inline unsigned int cap_to_cyls(sector_t capacity, unsigned divisor)
+ 
+ int aac_acquire_irq(struct aac_dev *dev);
+ void aac_free_irq(struct aac_dev *dev);
+-int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr);
++int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr, int rescan);
+ int aac_issue_bmic_identify(struct aac_dev *dev, u32 bus, u32 target);
+ const char *aac_driverinfo(struct Scsi_Host *);
+ void aac_fib_vector_assign(struct aac_dev *dev);
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index a56aa2e..e906ae1 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -1730,6 +1730,137 @@ int aac_check_health(struct aac_dev * aac)
+ 	return BlinkLED;
+ }
+ 
++
++static void aac_resolve_luns(struct aac_dev *dev)
 +{
-+	int container;
++	int bus, target, channel;
++	struct scsi_device *sdev;
++	u8 devtype;
++	u8 new_devtype;
 +
-+	vpdpage83data->type3.codeset = 1;
-+	vpdpage83data->type3.identifiertype = 3;
-+	vpdpage83data->type3.identifierlength = sizeof(vpdpage83data->type3)
-+			- 4;
++	for (bus = 0; bus < AAC_MAX_BUSES; bus++) {
++		for (target = 0; target < AAC_MAX_TARGETS; target++) {
 +
-+	for (container = 0; container < dev->maximum_num_containers;
-+			container++) {
++			if (aac_phys_to_logical(bus) == ENCLOSURE_CHANNEL)
++				continue;
 +
-+		if (scmd_id(scsicmd) == container) {
-+			memcpy(vpdpage83data->type3.Identifier,
-+					dev->fsa_dev[container].identifier,
-+					16);
-+			break;
++			if (bus == CONTAINER_CHANNEL)
++				channel = CONTAINER_CHANNEL;
++			else
++				channel = aac_phys_to_logical(bus);
++
++			devtype = dev->hba_map[bus][target].devtype;
++			new_devtype = dev->hba_map[bus][target].new_devtype;
++
++			sdev = scsi_device_lookup(dev->scsi_host_ptr, channel,
++					target, 0);
++
++			if (!sdev && devtype)
++				scsi_add_device(dev->scsi_host_ptr, channel,
++						target, 0);
++			else if (sdev && new_devtype != devtype)
++				scsi_remove_device(sdev);
++			else if (sdev && new_devtype == devtype)
++				scsi_rescan_device(&sdev->sdev_gendev);
++
++			if (sdev)
++				scsi_device_put(sdev);
++
++			dev->hba_map[bus][target].devtype = new_devtype;
 +		}
 +	}
 +}
 +
- static void get_container_serial_callback(void *context, struct fib * fibptr)
- {
- 	struct aac_get_serial_resp * get_serial_reply;
-@@ -946,39 +983,47 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 		/*Check to see if it's for VPD 0x83 or 0x80 */
- 		if (scsicmd->cmnd[2] == 0x83) {
- 			/* vpd page 0x83 - Device Identification Page */
-+			struct aac_dev *dev;
- 			int i;
--			TVPD_Page83 VPDPage83Data;
-+			struct tvpd_page83 vpdpage83data;
- 
--			memset(((u8 *)&VPDPage83Data), 0,
--			       sizeof(VPDPage83Data));
-+			dev = (struct aac_dev *)scsicmd->device->host->hostdata;
-+
-+			memset(((u8 *)&vpdpage83data), 0,
-+			       sizeof(vpdpage83data));
- 
- 			/* DIRECT_ACCESS_DEVIC */
--			VPDPage83Data.DeviceType = 0;
-+			vpdpage83data.DeviceType = 0;
- 			/* DEVICE_CONNECTED */
--			VPDPage83Data.DeviceTypeQualifier = 0;
-+			vpdpage83data.DeviceTypeQualifier = 0;
- 			/* VPD_DEVICE_IDENTIFIERS */
--			VPDPage83Data.PageCode = 0x83;
--			VPDPage83Data.Reserved = 0;
--			VPDPage83Data.PageLength =
--				sizeof(VPDPage83Data.IdDescriptorType1) +
--				sizeof(VPDPage83Data.IdDescriptorType2);
-+			vpdpage83data.PageCode = 0x83;
-+			vpdpage83data.reserved = 0;
-+			vpdpage83data.PageLength =
-+				sizeof(vpdpage83data.type1) +
-+				sizeof(vpdpage83data.type2);
-+
-+			/* VPD 83 Type 3 is not supported for ARC */
-+			if (dev->sa_firmware)
-+				vpdpage83data.PageLength +=
-+				sizeof(vpdpage83data.type3);
- 
- 			/* T10 Vendor Identifier Field Format */
--			/* VpdCodeSetAscii */
--			VPDPage83Data.IdDescriptorType1.CodeSet = 2;
-+			/* VpdcodesetAscii */
-+			vpdpage83data.type1.codeset = 2;
- 			/* VpdIdentifierTypeVendorId */
--			VPDPage83Data.IdDescriptorType1.IdentifierType = 1;
--			VPDPage83Data.IdDescriptorType1.IdentifierLength =
--				sizeof(VPDPage83Data.IdDescriptorType1) - 4;
-+			vpdpage83data.type1.identifiertype = 1;
-+			vpdpage83data.type1.identifierlength =
-+				sizeof(vpdpage83data.type1) - 4;
- 
- 			/* "ADAPTEC " for adaptec */
--			memcpy(VPDPage83Data.IdDescriptorType1.VendId,
-+			memcpy(vpdpage83data.type1.venid,
- 				"ADAPTEC ",
--				sizeof(VPDPage83Data.IdDescriptorType1.VendId));
--			memcpy(VPDPage83Data.IdDescriptorType1.ProductId,
-+				sizeof(vpdpage83data.type1.venid));
-+			memcpy(vpdpage83data.type1.productid,
- 				"ARRAY           ",
- 				sizeof(
--				VPDPage83Data.IdDescriptorType1.ProductId));
-+				vpdpage83data.type1.productid));
- 
- 			/* Convert to ascii based serial number.
- 			 * The LSB is the the end.
-@@ -987,32 +1032,41 @@ static void get_container_serial_callback(void *context, struct fib * fibptr)
- 				u8 temp =
- 					(u8)((get_serial_reply->uid >> ((7 - i) * 4)) & 0xF);
- 				if (temp  > 0x9) {
--					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =
-+					vpdpage83data.type1.serialnumber[i] =
- 							'A' + (temp - 0xA);
- 				} else {
--					VPDPage83Data.IdDescriptorType1.SerialNumber[i] =
-+					vpdpage83data.type1.serialnumber[i] =
- 							'0' + temp;
- 				}
- 			}
- 
- 			/* VpdCodeSetBinary */
--			VPDPage83Data.IdDescriptorType2.CodeSet = 1;
--			/* VpdIdentifierTypeEUI64 */
--			VPDPage83Data.IdDescriptorType2.IdentifierType = 2;
--			VPDPage83Data.IdDescriptorType2.IdentifierLength =
--				sizeof(VPDPage83Data.IdDescriptorType2) - 4;
-+			vpdpage83data.type2.codeset = 1;
-+			/* VpdidentifiertypeEUI64 */
-+			vpdpage83data.type2.identifiertype = 2;
-+			vpdpage83data.type2.identifierlength =
-+				sizeof(vpdpage83data.type2) - 4;
- 
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[0] = 0xD0;
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[1] = 0;
--			VPDPage83Data.IdDescriptorType2.EU64Id.VendId[2] = 0;
-+			vpdpage83data.type2.eu64id.venid[0] = 0xD0;
-+			vpdpage83data.type2.eu64id.venid[1] = 0;
-+			vpdpage83data.type2.eu64id.venid[2] = 0;
- 
--			VPDPage83Data.IdDescriptorType2.EU64Id.Serial =
-+			vpdpage83data.type2.eu64id.Serial =
- 							get_serial_reply->uid;
--			VPDPage83Data.IdDescriptorType2.EU64Id.Reserved = 0;
-+			vpdpage83data.type2.eu64id.reserved = 0;
-+
-+			/*
-+			 * VpdIdentifierTypeFCPHName
-+			 * VPD 0x83 Type 3 not supported for ARC
-+			 */
-+			if (dev->sa_firmware) {
-+				build_vpd83_type3(&vpdpage83data,
-+						dev, scsicmd);
-+			}
- 
- 			/* Move the inquiry data to the response buffer. */
--			scsi_sg_copy_from_buffer(scsicmd, &VPDPage83Data,
--						 sizeof(VPDPage83Data));
-+			scsi_sg_copy_from_buffer(scsicmd, &vpdpage83data,
-+						 sizeof(vpdpage83data));
- 		} else {
- 			/* It must be for VPD 0x80 */
- 			char sp[13];
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 055ab19..10984a4 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -2106,6 +2106,8 @@ struct aac_fsinfo {
- 
- struct  aac_blockdevinfo {
- 	__le32	block_size;
-+	__le32  logical_phys_map;
-+	u8	identifier[16];
- };
- 
- union aac_contentinfo {
-diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-index c09b71c..58bed5d 100644
---- a/drivers/scsi/aacraid/linit.c
-+++ b/drivers/scsi/aacraid/linit.c
-@@ -556,8 +556,39 @@ static struct device_attribute aac_raid_level_attr = {
- 	.show = aac_show_raid_level
- };
- 
-+static ssize_t aac_show_unique_id(struct device *dev,
-+	     struct device_attribute *attr, char *buf)
++/**
++ *	aac_handle_sa_aif	Handle a message from the firmware
++ *	@dev: Which adapter this fib is from
++ *	@fibptr: Pointer to fibptr from adapter
++ *
++ *	This routine handles a driver notify fib from the adapter and
++ *	dispatches it to the appropriate routine for handling.
++ */
++static void aac_handle_sa_aif(struct aac_dev *dev, struct fib *fibptr)
 +{
-+	struct scsi_device *sdev = to_scsi_device(dev);
-+	struct aac_dev *aac = (struct aac_dev *)(sdev->host->hostdata);
-+	unsigned char sn[16];
++	int i, bus, target, container, rcode = 0;
++	u32 events = 0;
++	struct fib *fib;
++	struct scsi_device *sdev;
 +
-+	memset(sn, 0, sizeof(sn));
++	if (fibptr->hbacmd_size & SA_AIF_HOTPLUG)
++		events = SA_AIF_HOTPLUG;
++	else if (fibptr->hbacmd_size & SA_AIF_HARDWARE)
++		events = SA_AIF_HARDWARE;
++	else if (fibptr->hbacmd_size & SA_AIF_PDEV_CHANGE)
++		events = SA_AIF_PDEV_CHANGE;
++	else if (fibptr->hbacmd_size & SA_AIF_LDEV_CHANGE)
++		events = SA_AIF_LDEV_CHANGE;
++	else if (fibptr->hbacmd_size & SA_AIF_BPSTAT_CHANGE)
++		events = SA_AIF_BPSTAT_CHANGE;
++	else if (fibptr->hbacmd_size & SA_AIF_BPCFG_CHANGE)
++		events = SA_AIF_BPCFG_CHANGE;
 +
-+	if (sdev_channel(sdev) == CONTAINER_CHANNEL)
-+		memcpy(sn, aac->fsa_dev[sdev_id(sdev)].identifier, sizeof(sn));
++	switch (events) {
++	case SA_AIF_HOTPLUG:
++	case SA_AIF_HARDWARE:
++	case SA_AIF_PDEV_CHANGE:
++	case SA_AIF_LDEV_CHANGE:
++	case SA_AIF_BPCFG_CHANGE:
 +
-+	return snprintf(buf, 16 * 2 + 2,
-+		"%02X%02X%02X%02X%02X%02X%02X%02X %02X%02X%02X%02X%02X%02X%02X%02X\n",
-+		sn[0], sn[1], sn[2], sn[3],
-+		sn[4], sn[5], sn[6], sn[7],
-+		sn[8], sn[9], sn[10], sn[11],
-+		sn[12], sn[13], sn[14], sn[15]);
++		fib = aac_fib_alloc(dev);
++		if (!fib) {
++			pr_err("aac_handle_sa_aif: out of memory\n");
++			return;
++		}
++		for (bus = 0; bus < AAC_MAX_BUSES; bus++)
++			for (target = 0; target < AAC_MAX_TARGETS; target++)
++				dev->hba_map[bus][target].new_devtype = 0;
++
++		rcode = aac_report_phys_luns(dev, fib, AAC_RESCAN);
++
++		if (rcode != -ERESTARTSYS)
++			aac_fib_free(fib);
++
++		aac_resolve_luns(dev);
++
++		if (events == SA_AIF_LDEV_CHANGE ||
++		    events == SA_AIF_BPCFG_CHANGE) {
++			aac_get_containers(dev);
++			for (container = 0; container <
++			dev->maximum_num_containers; ++container) {
++				sdev = scsi_device_lookup(dev->scsi_host_ptr,
++						CONTAINER_CHANNEL,
++						container, 0);
++				if (dev->fsa_dev[container].valid && !sdev) {
++					scsi_add_device(dev->scsi_host_ptr,
++						CONTAINER_CHANNEL,
++						container, 0);
++				} else if (!dev->fsa_dev[container].valid &&
++					sdev) {
++					scsi_remove_device(sdev);
++					scsi_device_put(sdev);
++				} else if (sdev) {
++					scsi_rescan_device(&sdev->sdev_gendev);
++					scsi_device_put(sdev);
++				}
++			}
++		}
++		break;
++
++	case SA_AIF_BPSTAT_CHANGE:
++		/* currently do nothing */
++		break;
++	}
++
++	for (i = 1; i <= 10; ++i) {
++		events = src_readl(dev, MUnit.IDR);
++		if (events & (1<<23)) {
++			pr_warn(" AIF not cleared by firmware - %d/%d)\n",
++				i, 10);
++			ssleep(1);
++		}
++	}
 +}
 +
-+static struct device_attribute aac_unique_id_attr = {
-+	.attr = {
-+		.name = "unique_id",
-+		.mode = 0444,
-+	},
-+	.show = aac_show_unique_id
-+};
-+
-+
-+
- static struct device_attribute *aac_dev_attrs[] = {
- 	&aac_raid_level_attr,
-+	&aac_unique_id_attr,
- 	NULL,
- };
+ static int get_fib_count(struct aac_dev *dev)
+ {
+ 	unsigned int num = 0;
+@@ -1913,6 +2044,12 @@ static void aac_process_events(struct aac_dev *dev)
  
+ 		fib = list_entry(entry, struct fib, fiblink);
+ 		hw_fib = fib->hw_fib_va;
++		if (dev->sa_firmware) {
++			/* Thor AIF */
++			aac_handle_sa_aif(dev, fib);
++			aac_fib_adapter_complete(fib, (u16)sizeof(u32));
++			continue;
++		}
+ 		/*
+ 		 *	We will process the FIB here or pass it to a
+ 		 *	worker thread that is TBD. We Really can't
 -- 
 2.7.4
