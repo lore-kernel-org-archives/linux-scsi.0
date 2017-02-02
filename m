@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 07/15] qla2xxx: Export DIF stats via debugfs
-Date: Thu, 2 Feb 2017 11:42:30 -0800
-Message-ID: <1486064558-365-8-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 11/15] qla2xxx: Fix inadequate lock protection for ABTS.
+Date: Thu, 2 Feb 2017 11:42:34 -0800
+Message-ID: <1486064558-365-12-git-send-email-himanshu.madhani@cavium.com>
 References: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0078.outbound.protection.outlook.com ([104.47.34.78]:52939
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam02on0056.outbound.protection.outlook.com ([104.47.36.56]:17424
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750940AbdBBTot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1751209AbdBBTot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 2 Feb 2017 14:44:49 -0500
 In-Reply-To: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,70 +17,55 @@ List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
+Normally, ABTS is sent to Target Core as Task MGMT command.
+In the case of error, qla2xxx needs to send response, hardware_lock
+is required to prevent request queue corruption.
+
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_def.h | 12 ++++++++++++
- drivers/scsi/qla2xxx/qla_dfs.c | 15 +++++++++++++++
- 2 files changed, 27 insertions(+)
+ drivers/scsi/qla2xxx/qla_target.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index e98bce4..f16ee3e 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -3130,6 +3130,16 @@ struct qla_chip_state_84xx {
- 	uint32_t gold_fw_version;
- };
- 
-+struct qla_dif_statistics {
-+	uint64_t dif_input_bytes;
-+	uint64_t dif_output_bytes;
-+	uint64_t dif_input_requests;
-+	uint64_t dif_output_requests;
-+	uint32_t dif_guard_err;
-+	uint32_t dif_ref_tag_err;
-+	uint32_t dif_app_tag_err;
-+};
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 1bd4eff..6351132 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -128,6 +128,9 @@ static void qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+ static struct fc_port *qlt_create_sess(struct scsi_qla_host *vha,
+ 	fc_port_t *fcport, bool local);
+ void qlt_unreg_sess(struct fc_port *sess);
++static void qlt_24xx_handle_abts(struct scsi_qla_host *,
++	struct abts_recv_from_24xx *);
 +
- struct qla_statistics {
- 	uint32_t total_isp_aborts;
- 	uint64_t input_bytes;
-@@ -3142,6 +3152,8 @@ struct qla_statistics {
- 	uint32_t stat_max_pend_cmds;
- 	uint32_t stat_max_qfull_cmds_alloc;
- 	uint32_t stat_max_qfull_cmds_dropped;
+ /*
+  * Global Variables
+  */
+@@ -403,6 +406,8 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			(struct abts_recv_from_24xx *)atio;
+ 		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
+ 			entry->vp_index);
++		unsigned long flags;
 +
-+	struct qla_dif_statistics qla_dif_stats;
- };
+ 		if (unlikely(!host)) {
+ 			ql_dbg(ql_dbg_tgt, vha, 0xffff,
+ 			    "qla_target(%d): Response pkt (ABTS_RECV_24XX) "
+@@ -410,9 +415,12 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			    vha->vp_idx, entry->vp_index);
+ 			break;
+ 		}
+-		qlt_response_pkt(host, (response_t *)atio);
++		if (!ha_locked)
++			spin_lock_irqsave(&host->hw->hardware_lock, flags);
++		qlt_24xx_handle_abts(host, (struct abts_recv_from_24xx *)atio);
++		if (!ha_locked)
++			spin_unlock_irqrestore(&host->hw->hardware_lock, flags);
+ 		break;
+-
+ 	}
  
- struct bidi_statistics {
-diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-index 0fb33e6..989e17b 100644
---- a/drivers/scsi/qla2xxx/qla_dfs.c
-+++ b/drivers/scsi/qla2xxx/qla_dfs.c
-@@ -185,6 +185,21 @@
- 	seq_printf(s, "num Q full sent = %lld\n",
- 		vha->tgt_counters.num_q_full_sent);
- 
-+	/* DIF stats */
-+	seq_printf(s, "DIF Inp Bytes = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_input_bytes);
-+	seq_printf(s, "DIF Outp Bytes = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_output_bytes);
-+	seq_printf(s, "DIF Inp Req = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_input_requests);
-+	seq_printf(s, "DIF Outp Req = %lld\n",
-+		vha->qla_stats.qla_dif_stats.dif_output_requests);
-+	seq_printf(s, "DIF Guard err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_guard_err);
-+	seq_printf(s, "DIF Ref tag err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_ref_tag_err);
-+	seq_printf(s, "DIF App tag err = %d\n",
-+		vha->qla_stats.qla_dif_stats.dif_app_tag_err);
- 	return 0;
- }
- 
+ 	/* case PUREX_IOCB_TYPE: ql2xmvasynctoatio */
 -- 
 1.8.3.1
