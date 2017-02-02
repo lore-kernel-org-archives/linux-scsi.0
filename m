@@ -1,79 +1,98 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v3] scsi, block: fix duplicate bdi name registration
- crashes
-Date: Thu, 2 Feb 2017 08:23:55 -0700
-Message-ID: <07c52003-cd32-ee02-1d73-64586de7e9eb@kernel.dk>
-References: <148598661794.11527.10024529085859239448.stgit@dwillia2-desk3.amr.corp.intel.com>
- <e331cf91-37a2-d886-1136-4f33279e65ad@kernel.dk>
- <CAPcyv4jC5mVednFh8crsa0-GGFyPPEBKHUz5itCQ_4Tc1tX6Ew@mail.gmail.com>
- <f3671618-eab3-7597-eebb-f46fefbac12a@kernel.dk>
+From: Bjorn Helgaas <helgaas@kernel.org>
+Subject: Re: [PATCH] PCI/MSI: don't apply affinity if there aren't enough
+ vectors left
+Date: Thu, 2 Feb 2017 11:36:59 -0600
+Message-ID: <20170202173659.GD21267@bhelgaas-glaptop.roam.corp.google.com>
+References: <1485778541-28994-1-git-send-email-hch@lst.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f43.google.com ([209.85.214.43]:36756 "EHLO
-        mail-it0-f43.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751143AbdBBPX6 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 2 Feb 2017 10:23:58 -0500
-Received: by mail-it0-f43.google.com with SMTP id c7so41513620itd.1
-        for <linux-scsi@vger.kernel.org>; Thu, 02 Feb 2017 07:23:57 -0800 (PST)
-In-Reply-To: <f3671618-eab3-7597-eebb-f46fefbac12a@kernel.dk>
+Received: from mail.kernel.org ([198.145.29.136]:54690 "EHLO mail.kernel.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752214AbdBBRhJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 2 Feb 2017 12:37:09 -0500
+Content-Disposition: inline
+In-Reply-To: <1485778541-28994-1-git-send-email-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Williams <dan.j.williams@intel.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, linux-block@vger.kernel.org, Jan Kara <jack@suse.cz>, linux-scsi <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Christoph Hellwig <hch@lst.de>, James Bottomley <James.Bottomley@hansenpartnership.com>, Bart Van Assche <bart.vanassche@sandisk.com>, Omar Sandoval <osandov@osandov.com>, Omar Sandoval <osandov@fb.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: bhelgaas@google.com, bart.vanassche@sandisk.com, tglx@linutronix.de, linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 02/01/2017 03:43 PM, Jens Axboe wrote:
-> On 02/01/2017 02:40 PM, Dan Williams wrote:
->> On Wed, Feb 1, 2017 at 2:35 PM, Jens Axboe <axboe@kernel.dk> wrote:
->>> On 02/01/2017 02:05 PM, Dan Williams wrote:
->>>> Warnings of the following form occur because scsi reuses a devt number
->>>> while the block layer still has it referenced as the name of the bdi
->>>> [1]:
->>>>
->>>>  WARNING: CPU: 1 PID: 93 at fs/sysfs/dir.c:31 sysfs_warn_dup+0x62/0x80
->>>>  sysfs: cannot create duplicate filename '/devices/virtual/bdi/8:192'
->>>>  [..]
->>>>  Call Trace:
->>>>   dump_stack+0x86/0xc3
->>>>   __warn+0xcb/0xf0
->>>>   warn_slowpath_fmt+0x5f/0x80
->>>>   ? kernfs_path_from_node+0x4f/0x60
->>>>   sysfs_warn_dup+0x62/0x80
->>>>   sysfs_create_dir_ns+0x77/0x90
->>>>   kobject_add_internal+0xb2/0x350
->>>>   kobject_add+0x75/0xd0
->>>>   device_add+0x15a/0x650
->>>>   device_create_groups_vargs+0xe0/0xf0
->>>>   device_create_vargs+0x1c/0x20
->>>>   bdi_register+0x90/0x240
->>>>   ? lockdep_init_map+0x57/0x200
->>>>   bdi_register_owner+0x36/0x60
->>>>   device_add_disk+0x1bb/0x4e0
->>>>   ? __pm_runtime_use_autosuspend+0x5c/0x70
->>>>   sd_probe_async+0x10d/0x1c0
->>>>   async_run_entry_fn+0x39/0x170
->>>>
->>>> This is a brute-force fix to pass the devt release information from
->>>> sd_probe() to the locations where we register the bdi,
->>>> device_add_disk(), and unregister the bdi, blk_cleanup_queue().
->>>>
->>>> Thanks to Omar for the quick reproducer script [2]. This patch survives
->>>> where an unmodified kernel fails in a few seconds.
->>>
->>> What is the patch against? Doesn't seem to apply cleanly for me on
->>> master, nor the 4.11 block tree.
->>>
->>
->> I built it on top of Jan's bdi fixes series [1]. I can rebase to
->> block/for-next, just let me know which patches you want to take first.
->>
->> [1]: http://marc.info/?l=linux-block&m=148586843819160&w=2
+On Mon, Jan 30, 2017 at 01:15:41PM +0100, Christoph Hellwig wrote:
+> Bart reported a problem wіth an out of bounds access in the low-level
+> IRQ affinity code, which we root caused to the qla2xxx driver assigning
+> all it's MSI-X vectors to the pre and post vectors, and not having any
+> left for the actually spread IRQs.
+
+s/it's/its/
+
+> This fixes this issue by not asking for affinity assignment when there
+> are not vectors to assign left.
+
+s/not/no/
+
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Fixes: 402723ad ("PCI/MSI: Provide pci_alloc_irq_vectors_affinity()")
+> Reported-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> Tested-by: Bart Van Assche <bart.vanassche@sandisk.com>
+> ---
+>  drivers/pci/msi.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
 > 
-> Ah, no that's fine, we'll just pull Jan's stuff in first. Makes sense.
+> diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
+> index 50c5003..7f73bac 100644
+> --- a/drivers/pci/msi.c
+> +++ b/drivers/pci/msi.c
+> @@ -1206,6 +1206,16 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
+>  	if (flags & PCI_IRQ_AFFINITY) {
+>  		if (!affd)
+>  			affd = &msi_default_affd;
+> +
+> +		if (affd->pre_vectors + affd->post_vectors > min_vecs)
+> +			return -EINVAL;
+> +
+> +		/*
+> +		 * If there aren't any vectors left after applying the pre/post
+> +		 * vectors don't bother with assigning affinity.
+> +		 */
+> +		if (affd->pre_vectors + affd->post_vectors == min_vecs)
+> +			affd = NULL;
+>  	} else {
+>  		if (WARN_ON(affd))
+>  			affd = NULL;
 
-Both are now applied, thanks Dan.
+You didn't say exactly where the out of bounds access was, but I assume
+it's probably in irq_create_affinity_masks() in this path:
 
+  pci_alloc_irq_vectors_affinity(..., affd)
+    __pci_enable_msix_range(..., minvec, maxvec, affd)
+      # decide on nvec
+      irq_calc_affinity_vectors(nvec, affd)
+      __pci_enable_msix(..., nvec, affd)
+        msix_capability_init(..., nvec, affd)
+          msix_setup_entries(..., nvec, affd)
+            irq_create_affinity_masks(nvec, affd)
+              affv = nvecs - affd->pre_vectors - affd->post_vectors
 
--- 
-Jens Axboe
+              masks = kcalloc(nvecs, ...)
+              for (curvec = 0; curvec < affd->pre_vectors; ...)
+                cpumask_copy(masks + curvec, irq_default_affinity)
+
+The fix in pci_alloc_irq_vectors_affinity() looks fine, but I wish it
+were closer to the actual problem.
+
+I think irq_create_affinity_masks() should be a little more careful
+with the assumptions it makes about the relationships between nvecs,
+affd->pre_vectors, and affd->post_vectors.
+
+For example, it allocates with size "nvec" and iterates with a limit
+of "affd->pre_vectors", which assumes "affd->pre_vectors < nvec".  And
+of course, "affv" may end up being negative, which can't be good.
+
+If we made irq_create_affinity_masks() more robust, I don't think
+you'd need to set affd to NULL in pci_alloc_irq_vectors_affinity().
+But maybe you would still want at least the -EINVAL change so the
+caller gets an indication that it is doing something wrong?
+
+Bjorn
