@@ -1,15 +1,15 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 14/15] qla2xxx: Fix sess_lock & hardware_lock lock order problem.
-Date: Thu, 2 Feb 2017 11:42:37 -0800
-Message-ID: <1486064558-365-15-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH 07/15] qla2xxx: Export DIF stats via debugfs
+Date: Thu, 2 Feb 2017 11:42:30 -0800
+Message-ID: <1486064558-365-8-git-send-email-himanshu.madhani@cavium.com>
 References: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0086.outbound.protection.outlook.com ([104.47.33.86]:36266
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-by2nam01on0078.outbound.protection.outlook.com ([104.47.34.78]:52939
+        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751090AbdBBTot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1750940AbdBBTot (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Thu, 2 Feb 2017 14:44:49 -0500
 In-Reply-To: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -17,142 +17,70 @@ List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-From: Quinn Tran <quinn.tran@cavium.com>
+From: Anil Gurumurthy <anil.gurumurthy@cavium.com>
 
-The main lock that needs to be held for CMD or TMR submission
-to upper layer is the sess_lock. The sess_lock is used to
-serialize cmd submission and session deletion. The addition
-of hardware_lock being held is not necessary. This patch removes
-hardware_lock dependency from CMD/TMR submission.
-
-Use hardware_lock only for error response in this case.
-
-Path1
-       CPU0                    CPU1
-       ----                    ----
-  lock(&(&ha->tgt.sess_lock)->rlock);
-                               lock(&(&ha->hardware_lock)->rlock);
-                               lock(&(&ha->tgt.sess_lock)->rlock);
-  lock(&(&ha->hardware_lock)->rlock);
-
-Path2/deadlock
-*** DEADLOCK ***
-Call Trace:
-dump_stack+0x85/0xc2
-print_circular_bug+0x1e3/0x250
-__lock_acquire+0x1425/0x1620
-lock_acquire+0xbf/0x210
-_raw_spin_lock_irqsave+0x53/0x70
-qlt_sess_work_fn+0x21d/0x480 [qla2xxx]
-process_one_work+0x1f4/0x6e0
-
-Cc: <stable@vger.kernel.org>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Reported-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Anil Gurumurthy <anil.gurumurthy@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 41 +++++++++++++++++----------------------
- 1 file changed, 18 insertions(+), 23 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h | 12 ++++++++++++
+ drivers/scsi/qla2xxx/qla_dfs.c | 15 +++++++++++++++
+ 2 files changed, 27 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 7c4adcf..ed63fa7 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5835,30 +5835,23 @@ static void qlt_abort_work(struct qla_tgt *tgt,
- 		}
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index e98bce4..f16ee3e 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3130,6 +3130,16 @@ struct qla_chip_state_84xx {
+ 	uint32_t gold_fw_version;
+ };
  
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--
--	if (tgt->tgt_stop)
--		goto out_term;
--
- 	rc = __qlt_24xx_handle_abts(vha, &prm->abts, sess);
-+	ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
++struct qla_dif_statistics {
++	uint64_t dif_input_bytes;
++	uint64_t dif_output_bytes;
++	uint64_t dif_input_requests;
++	uint64_t dif_output_requests;
++	uint32_t dif_guard_err;
++	uint32_t dif_ref_tag_err;
++	uint32_t dif_app_tag_err;
++};
 +
- 	if (rc != 0)
- 		goto out_term;
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--	if (sess)
--		ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- 	return;
+ struct qla_statistics {
+ 	uint32_t total_isp_aborts;
+ 	uint64_t input_bytes;
+@@ -3142,6 +3152,8 @@ struct qla_statistics {
+ 	uint32_t stat_max_pend_cmds;
+ 	uint32_t stat_max_qfull_cmds_alloc;
+ 	uint32_t stat_max_qfull_cmds_dropped;
++
++	struct qla_dif_statistics qla_dif_stats;
+ };
  
- out_term2:
--	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	if (sess)
-+		ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
+ struct bidi_statistics {
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 0fb33e6..989e17b 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -185,6 +185,21 @@
+ 	seq_printf(s, "num Q full sent = %lld\n",
+ 		vha->tgt_counters.num_q_full_sent);
  
- out_term:
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qlt_24xx_send_abts_resp(vha, &prm->abts, FCP_TMF_REJECTED, false);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--
--	if (sess)
--		ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
++	/* DIF stats */
++	seq_printf(s, "DIF Inp Bytes = %lld\n",
++		vha->qla_stats.qla_dif_stats.dif_input_bytes);
++	seq_printf(s, "DIF Outp Bytes = %lld\n",
++		vha->qla_stats.qla_dif_stats.dif_output_bytes);
++	seq_printf(s, "DIF Inp Req = %lld\n",
++		vha->qla_stats.qla_dif_stats.dif_input_requests);
++	seq_printf(s, "DIF Outp Req = %lld\n",
++		vha->qla_stats.qla_dif_stats.dif_output_requests);
++	seq_printf(s, "DIF Guard err = %d\n",
++		vha->qla_stats.qla_dif_stats.dif_guard_err);
++	seq_printf(s, "DIF Ref tag err = %d\n",
++		vha->qla_stats.qla_dif_stats.dif_ref_tag_err);
++	seq_printf(s, "DIF App tag err = %d\n",
++		vha->qla_stats.qla_dif_stats.dif_app_tag_err);
+ 	return 0;
  }
  
- static void qlt_tmr_work(struct qla_tgt *tgt,
-@@ -5878,7 +5871,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 
- 	if (tgt->tgt_stop)
--		goto out_term;
-+		goto out_term2;
- 
- 	s_id = prm->tm_iocb2.u.isp24.fcp_hdr.s_id;
- 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha, s_id);
-@@ -5890,11 +5883,11 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 
- 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 		if (!sess)
--			goto out_term;
-+			goto out_term2;
- 	} else {
- 		if (sess->deleted) {
- 			sess = NULL;
--			goto out_term;
-+			goto out_term2;
- 		}
- 
- 		if (!kref_get_unless_zero(&sess->sess_kref)) {
-@@ -5902,7 +5895,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 			    "%s: kref_get fail %8phC\n",
- 			     __func__, sess->port_name);
- 			sess = NULL;
--			goto out_term;
-+			goto out_term2;
- 		}
- 	}
- 
-@@ -5912,17 +5905,19 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
- 
- 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
--	if (rc != 0)
--		goto out_term;
--
- 	ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
-+
-+	if (rc != 0)
-+		goto out_term;
- 	return;
- 
-+out_term2:
-+	if (sess)
-+		ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- out_term:
- 	qlt_send_term_exchange(vha, NULL, &prm->tm_iocb2, 1, 0);
--	ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- }
- 
- static void qlt_sess_work_fn(struct work_struct *work)
 -- 
 1.8.3.1
