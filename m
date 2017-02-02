@@ -1,75 +1,121 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V4 00/24] aacraid: Patchset for Smart Family Support
-Date: Thu, 2 Feb 2017 15:53:14 -0800
-Message-ID: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V4 01/24] aacraid: Remove duplicate irq management code
+Date: Thu, 2 Feb 2017 15:53:15 -0800
+Message-ID: <20170202235338.14724-2-RaghavaAditya.Renukunta@microsemi.com>
+References: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0059.outbound.protection.outlook.com ([104.47.34.59]:58080
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0057.outbound.protection.outlook.com ([104.47.40.57]:6144
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751512AbdBCGao (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 01:30:44 -0500
+        id S1752174AbdBCGap (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 01:30:45 -0500
+In-Reply-To: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de
 
-This patchset adds support to the HBA1000 and SMARTIOC2000
-family of cards. The driver version is now updated to 50740
+Removed duplicate code that for acquiring and releasing irqs
 
-Changes in V2:
-Fixed kbuild test robot warnings
+Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+---
+
+Changes in  V2:
+None
 
 Changes in V3:
-Removed Camel case definitions
-Misc fixes
+None
 
 Changes in V4:
-Removed Camel case defintions
-Misc fixes
-Reworked functions to make them understandable
-Removed unecessary indendation levels
+None
 
-Raghava Aditya Renukunta (24):
-  [SCSI] aacraid: Remove duplicate irq management code
-  [SCSI] aacraid: Added aacraid.h include guard
-  [SCSI] aacraid: Added support for init_struct_8
-  [SCSI] aacraid: Added sa firmware support
-  [SCSI] aacraid: Retrieve and update the device types
-  [SCSI] aacraid: Reworked scsi command submission path
-  [SCSI] aacraid: Process Error for response I/O
-  [SCSI] aacraid: Added support for response path
-  [SCSI] aacraid: Added support for read medium error
-  [SCSI] aacraid: Reworked aac_command_thread
-  [SCSI] aacraid: Added support for periodic wellness sync
-  [SCSI] aacraid: Retrieve Queue Depth from Adapter FW
-  [SCSI] aacraid: Added support to set QD of attached drives
-  [SCSI] aacraid: Added support for hotplug
-  [SCSI] aacraid: Include HBA direct interface
-  [SCSI] aacraid: Add task management functionality
-  [SCSI] aacraid: Added support to abort cmd and reset lun
-  [SCSI] aacraid: VPD 83 type3 support
-  [SCSI] aacraid: Added new IWBR reset
-  [SCSI] aacraid: Added ioctl to trigger IOP/IWBR reset
-  [SCSI] aacraid: Retrieve HBA host information ioctl
-  [SCSI] aacraid: Update copyrights
-  [SCSI] aacraid: Change Driver Version Prefix
-  [SCSI] aacraid: Update version
+ drivers/scsi/aacraid/linit.c | 58 +++-----------------------------------------
+ 1 file changed, 3 insertions(+), 55 deletions(-)
 
- drivers/scsi/aacraid/aachba.c   | 1289 +++++++++++++++++++++++++++++----------
- drivers/scsi/aacraid/aacraid.h  |  644 ++++++++++++++++---
- drivers/scsi/aacraid/commctrl.c |  342 ++++++++---
- drivers/scsi/aacraid/comminit.c |  330 +++++-----
- drivers/scsi/aacraid/commsup.c  |  964 +++++++++++++++++++++--------
- drivers/scsi/aacraid/dpcsup.c   |  159 +++--
- drivers/scsi/aacraid/linit.c    |  562 +++++++++++------
- drivers/scsi/aacraid/nark.c     |    3 +-
- drivers/scsi/aacraid/rkt.c      |    5 +-
- drivers/scsi/aacraid/rx.c       |   17 +-
- drivers/scsi/aacraid/sa.c       |    9 +-
- drivers/scsi/aacraid/src.c      |  336 +++++++---
- 12 files changed, 3453 insertions(+), 1207 deletions(-)
-
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index 3ecbf20..fd26a2d 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1327,35 +1327,12 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ static void aac_release_resources(struct aac_dev *aac)
+ {
+-	int i;
+-
+ 	aac_adapter_disable_int(aac);
+-	if (aac->pdev->device == PMC_DEVICE_S6 ||
+-	    aac->pdev->device == PMC_DEVICE_S7 ||
+-	    aac->pdev->device == PMC_DEVICE_S8 ||
+-	    aac->pdev->device == PMC_DEVICE_S9) {
+-		if (aac->max_msix > 1) {
+-			for (i = 0; i < aac->max_msix; i++)
+-				free_irq(pci_irq_vector(aac->pdev, i),
+-					&(aac->aac_msix[i]));
+-		} else {
+-			free_irq(aac->pdev->irq, &(aac->aac_msix[0]));
+-		}
+-	} else {
+-		free_irq(aac->pdev->irq, aac);
+-	}
+-	if (aac->msi)
+-		pci_disable_msi(aac->pdev);
+-	else if (aac->max_msix > 1)
+-		pci_disable_msix(aac->pdev);
+-
++	aac_free_irq(aac);
+ }
+ 
+ static int aac_acquire_resources(struct aac_dev *dev)
+ {
+-	int i, j;
+-	int instance = dev->id;
+-	const char *name = dev->name;
+ 	unsigned long status;
+ 	/*
+ 	 *	First clear out all interrupts.  Then enable the one's that we
+@@ -1377,37 +1354,8 @@ static int aac_acquire_resources(struct aac_dev *dev)
+ 	if (dev->msi_enabled)
+ 		aac_src_access_devreg(dev, AAC_ENABLE_MSIX);
+ 
+-	if (!dev->sync_mode && dev->msi_enabled && dev->max_msix > 1) {
+-		for (i = 0; i < dev->max_msix; i++) {
+-			dev->aac_msix[i].vector_no = i;
+-			dev->aac_msix[i].dev = dev;
+-
+-			if (request_irq(pci_irq_vector(dev->pdev, i),
+-					dev->a_ops.adapter_intr,
+-					0, "aacraid", &(dev->aac_msix[i]))) {
+-				printk(KERN_ERR "%s%d: Failed to register IRQ for vector %d.\n",
+-						name, instance, i);
+-				for (j = 0 ; j < i ; j++)
+-					free_irq(pci_irq_vector(dev->pdev, j),
+-						 &(dev->aac_msix[j]));
+-				pci_disable_msix(dev->pdev);
+-				goto error_iounmap;
+-			}
+-		}
+-	} else {
+-		dev->aac_msix[0].vector_no = 0;
+-		dev->aac_msix[0].dev = dev;
+-
+-		if (request_irq(dev->pdev->irq, dev->a_ops.adapter_intr,
+-			IRQF_SHARED, "aacraid",
+-			&(dev->aac_msix[0])) < 0) {
+-			if (dev->msi)
+-				pci_disable_msi(dev->pdev);
+-			printk(KERN_ERR "%s%d: Interrupt unavailable.\n",
+-					name, instance);
+-			goto error_iounmap;
+-		}
+-	}
++	if (aac_acquire_irq(dev))
++		goto error_iounmap;
+ 
+ 	aac_adapter_enable_int(dev);
+ 
 -- 
 2.7.4
