@@ -1,67 +1,135 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCHv3 3/6] sg: protect accesses to 'reserved' page array
-Date: Fri, 03 Feb 2017 10:21:24 -0800
-Message-ID: <1486146084.2431.36.camel@HansenPartnership.com>
-References: <1486127531-13716-1-git-send-email-hare@suse.de>
-         <1486127531-13716-4-git-send-email-hare@suse.de>
-         <20170203133140.GC646@lst.de>
-         <b75d63b6-ae38-6c69-ec16-430e2bd351f7@suse.de>
-         <20170203161910.GA4339@lst.de>
-         <1d212ffc-d1c2-f743-151d-b8f48ea94f30@kernel.org>
+From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
+Subject: [PATCH V3 0/2] Add QLogic FastLinQ FCoE (qedf) driver
+Date: Fri, 3 Feb 2017 11:17:07 -0800
+Message-ID: <1486149429-30095-1-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bedivere.hansenpartnership.com ([66.63.167.143]:59370 "EHLO
-        bedivere.hansenpartnership.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751141AbdBCSVc (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2017 13:21:32 -0500
-In-Reply-To: <1d212ffc-d1c2-f743-151d-b8f48ea94f30@kernel.org>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Unsubscribe: <http://lists.open-fcoe.org/mailman/options/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=unsubscribe>
+List-Archive: <http://lists.open-fcoe.org/pipermail/fcoe-devel/>
+List-Post: <mailto:fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+List-Help: <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=help>
+List-Subscribe: <http://lists.open-fcoe.org/mailman/listinfo/fcoe-devel>,
+ <mailto:fcoe-devel-request-s9riP+hp16TNLxjTenLetw@public.gmane.org?subject=subscribe>
+Errors-To: fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org
+Sender: "fcoe-devel" <fcoe-devel-bounces-s9riP+hp16TNLxjTenLetw@public.gmane.org>
+To: martin.petersen-QHcLZuEGTsvQT0dZR+AlfA@public.gmane.org
+Cc: fcoe-devel-s9riP+hp16TNLxjTenLetw@public.gmane.org, netdev-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, QLogic-Storage-Upstream-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, yuval.mintz-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jth@kernel.org>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Fri, 2017-02-03 at 19:06 +0100, Johannes Thumshirn wrote:
-> 
-> On 02/03/2017 05:19 PM, Christoph Hellwig wrote:
-> > On Fri, Feb 03, 2017 at 02:38:35PM +0100, Hannes Reinecke wrote:
-> > > On 02/03/2017 02:31 PM, Christoph Hellwig wrote:
-> > > > > -		if (sg_res_in_use(sfp)) {
-> > > > > +		mutex_lock(&sfp->f_mutex);
-> > > > > +		if (sfp->res_in_use) {
-> > > > > +			mutex_unlock(&sfp->f_mutex);
-> > > > >   			sg_remove_request(sfp, srp);
-> > > > >   			return -EBUSY;	/* reserve
-> > > > > buffer already being used */
-> > > > >   		}
-> > > > > +		mutex_unlock(&sfp->f_mutex);
-> > > > Holding a mutex over a the check of a single scalar doesn't
-> > > > make sense.
-> > > > 
-> > > It's adds a synchronisation point, doesn't it?
-> > It does, but it doesn't actually protect anything..
-> 
-> But all the other mutex_{un,}locks() do (for instance guarding 
-> sg_build_indirect()) and this one provides a synchronization point.
-> 
-> Sorry but I really don't get your point here.
-> 
-> The sole purpose is to guard the reserved list from being altered 
-> while blk_rq_map_* or similar functions are in progess (that's what 
-> the syzcaller reproducer was doing).
+From: "Dupuis, Chad" <chad.dupuis-YGCgFSpz5w/QT0dZR+AlfA@public.gmane.org>
 
-What he means is that naturally aligned reads are always atomic, so
-adding further synchronisation gains nothing (you already atomically
-get either the prior or next value) and only causes an unnecessary
-pipeline stall.  From a reviewer's perspective, the sequence
+Dave, please apply the qed patch to net-next at your earliest convenience.
+Martin, the qed patch needs to be applied first as the qedf patch is dependent
+on the FCoE bits in the first qed driver patch.
 
-lock
-read
-unlock
+This series introduces the hardware offload FCoE initiator driver for the
+41000 Series Converged Network Adapters (579xx chip) by Cavium. The overall
+driver design includes a common module ('qed') and protocol specific
+dependent modules ('qedf' for FCoE).
 
-is always a red flag because it means the writer may not understand how
-locking works.  Usually because the writer thinks there's some other
-synchronization they need that this sequence doesn't give.
+This driver uses the kernel components of libfc and libfcoe as is and does not
+make use of the open-fcoe user space components.  Therefore, no changes will need to be
+made to any open-fcoe components.
 
-James
+The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
+enhanced with functionality required for FCoE support.
+
+Changes from V2 -> V3
+
+- Fix uninitialized variables reported by kbuild robot in qedf
+- Remove superfluous comments from qedf.h
+- Introduce new qedf_ctx flag to different stopping I/O for debug purposes.
+- Don't take lport->disc.disc_mutex when restarting an rport.
+- Remove extra whitespace in qedf_hsi.h
+
+Changes from V1 -> V2
+
+Changes in qed:
+- Fix compiler warning when CONFIG_DCB is not set.
+
+Fixes in qedf:
+- Add qedf to scsi directory Makefile.
+- Updates to convert LightL2 and I/O processing kthreads to workqueues.
+
+Changes from RFC -> V1
+
+- Squash qedf patches to one patch now that the initial review has taken place
+- Convert qedf to use hotplug state machine
+- Return via va_end to match corresponding va_start in logging functions
+- Convert qedf_ctx offloaded port list to a RCU list so searches do not need
+  to make use of spinlocks.  Also eliminates the need to fcport conn_id's.
+- Use IS_ERR(fp) in qedf_flogi_resp() instead of checking individual FC_EX_* errors.
+- Remove scsi_block_target when executing TMF request.
+- Checkpatch fixes in the qed and qedf patches
+
+Arun Easi (1):
+  qed: Add support for hardware offloaded FCoE.
+
+Dupuis, Chad (1):
+  qedf: Add QLogic FastLinQ offload FCoE driver framework.
+
+ MAINTAINERS                                       |    6 +
+ drivers/net/ethernet/qlogic/Kconfig               |    3 +
+ drivers/net/ethernet/qlogic/qed/Makefile          |    1 +
+ drivers/net/ethernet/qlogic/qed/qed.h             |   11 +
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c         |   98 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |   13 +-
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |    5 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c         |  205 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |   42 +
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c        |  990 ++++++
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |   52 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h         |  781 ++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c          |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c         |   25 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_main.c        |    7 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h         |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |    8 +
+ drivers/net/ethernet/qlogic/qed/qed_sp.h          |    4 +
+ drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |    3 +
+ drivers/scsi/Kconfig                              |    1 +
+ drivers/scsi/Makefile                             |    1 +
+ drivers/scsi/qedf/Kconfig                         |   11 +
+ drivers/scsi/qedf/Makefile                        |    5 +
+ drivers/scsi/qedf/qedf.h                          |  545 ++++
+ drivers/scsi/qedf/qedf_attr.c                     |  165 +
+ drivers/scsi/qedf/qedf_dbg.c                      |  195 ++
+ drivers/scsi/qedf/qedf_dbg.h                      |  154 +
+ drivers/scsi/qedf/qedf_debugfs.c                  |  460 +++
+ drivers/scsi/qedf/qedf_els.c                      |  981 ++++++
+ drivers/scsi/qedf/qedf_fip.c                      |  269 ++
+ drivers/scsi/qedf/qedf_hsi.h                      |  422 +++
+ drivers/scsi/qedf/qedf_io.c                       | 2282 ++++++++++++++
+ drivers/scsi/qedf/qedf_main.c                     | 3336 +++++++++++++++++++++
+ drivers/scsi/qedf/qedf_version.h                  |   15 +
+ include/linux/qed/common_hsi.h                    |   10 +-
+ include/linux/qed/fcoe_common.h                   |  715 +++++
+ include/linux/qed/qed_fcoe_if.h                   |  145 +
+ include/linux/qed/qed_if.h                        |   41 +-
+ 41 files changed, 12000 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
+ create mode 100644 drivers/scsi/qedf/Kconfig
+ create mode 100644 drivers/scsi/qedf/Makefile
+ create mode 100644 drivers/scsi/qedf/qedf.h
+ create mode 100644 drivers/scsi/qedf/qedf_attr.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.h
+ create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
+ create mode 100644 drivers/scsi/qedf/qedf_els.c
+ create mode 100644 drivers/scsi/qedf/qedf_fip.c
+ create mode 100644 drivers/scsi/qedf/qedf_hsi.h
+ create mode 100644 drivers/scsi/qedf/qedf_io.c
+ create mode 100644 drivers/scsi/qedf/qedf_main.c
+ create mode 100644 drivers/scsi/qedf/qedf_version.h
+ create mode 100644 include/linux/qed/fcoe_common.h
+ create mode 100644 include/linux/qed/qed_fcoe_if.h
+
+-- 
+1.8.5.6
