@@ -1,158 +1,39 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 13/14] qla2xxx: Fix sess_lock & hardware_lock lock order problem.
-Date: Fri, 3 Feb 2017 14:40:54 -0800
-Message-ID: <1486161655-2307-14-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 14/14] qla2xxx: Update driver version to 9.00.00.00-k
+Date: Fri, 3 Feb 2017 14:40:55 -0800
+Message-ID: <1486161655-2307-15-git-send-email-himanshu.madhani@cavium.com>
 References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0070.outbound.protection.outlook.com ([104.47.33.70]:58147
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753048AbdBCWmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 17:42:03 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Quinn Tran <quinn.tran@cavium.com>
-
-The main lock that needs to be held for CMD or TMR submission
-to upper layer is the sess_lock. The sess_lock is used to
-serialize cmd submission and session deletion. The addition
-of hardware_lock being held is not necessary. This patch removes
-hardware_lock dependency from CMD/TMR submission.
-
-Use hardware_lock only for error response in this case.
-
-Path1
-       CPU0                    CPU1
-       ----                    ----
-  lock(&(&ha->tgt.sess_lock)->rlock);
-                               lock(&(&ha->hardware_lock)->rlock);
-                               lock(&(&ha->tgt.sess_lock)->rlock);
-  lock(&(&ha->hardware_lock)->rlock);
-
-Path2/deadlock
-*** DEADLOCK ***
-Call Trace:
-dump_stack+0x85/0xc2
-print_circular_bug+0x1e3/0x250
-__lock_acquire+0x1425/0x1620
-lock_acquire+0xbf/0x210
-_raw_spin_lock_irqsave+0x53/0x70
-qlt_sess_work_fn+0x21d/0x480 [qla2xxx]
-process_one_work+0x1f4/0x6e0
-
-Cc: <stable@vger.kernel.org>
-Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Reported-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+signed-off-by: Giridhar Malavali <giridhar.malavali@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 41 +++++++++++++++++----------------------
- 1 file changed, 18 insertions(+), 23 deletions(-)
+ drivers/scsi/qla2xxx/qla_version.h | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 2909b7b..fb7156c 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5818,30 +5818,23 @@ static void qlt_abort_work(struct qla_tgt *tgt,
- 		}
- 	}
+diff --git a/drivers/scsi/qla2xxx/qla_version.h b/drivers/scsi/qla2xxx/qla_version.h
+index 3cb1964..45bc84e 100644
+--- a/drivers/scsi/qla2xxx/qla_version.h
++++ b/drivers/scsi/qla2xxx/qla_version.h
+@@ -7,9 +7,9 @@
+ /*
+  * Driver version
+  */
+-#define QLA2XXX_VERSION      "8.07.00.38-k"
++#define QLA2XXX_VERSION      "9.00.00.00-k"
  
--	spin_lock_irqsave(&ha->hardware_lock, flags);
--
--	if (tgt->tgt_stop)
--		goto out_term;
--
- 	rc = __qlt_24xx_handle_abts(vha, &prm->abts, sess);
-+	ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
-+
- 	if (rc != 0)
- 		goto out_term;
--	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--	if (sess)
--		ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- 	return;
- 
- out_term2:
--	spin_lock_irqsave(&ha->hardware_lock, flags);
-+	if (sess)
-+		ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- 
- out_term:
-+	spin_lock_irqsave(&ha->hardware_lock, flags);
- 	qlt_24xx_send_abts_resp(vha, &prm->abts, FCP_TMF_REJECTED, false);
- 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
--
--	if (sess)
--		ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
- }
- 
- static void qlt_tmr_work(struct qla_tgt *tgt,
-@@ -5861,7 +5854,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 
- 	if (tgt->tgt_stop)
--		goto out_term;
-+		goto out_term2;
- 
- 	s_id = prm->tm_iocb2.u.isp24.fcp_hdr.s_id;
- 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha, s_id);
-@@ -5873,11 +5866,11 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 
- 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
- 		if (!sess)
--			goto out_term;
-+			goto out_term2;
- 	} else {
- 		if (sess->deleted) {
- 			sess = NULL;
--			goto out_term;
-+			goto out_term2;
- 		}
- 
- 		if (!kref_get_unless_zero(&sess->sess_kref)) {
-@@ -5885,7 +5878,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 			    "%s: kref_get fail %8phC\n",
- 			     __func__, sess->port_name);
- 			sess = NULL;
--			goto out_term;
-+			goto out_term2;
- 		}
- 	}
- 
-@@ -5895,17 +5888,19 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
- 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
- 
- 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
--	if (rc != 0)
--		goto out_term;
--
- 	ha->tgt.tgt_ops->put_sess(sess);
- 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
-+
-+	if (rc != 0)
-+		goto out_term;
- 	return;
- 
-+out_term2:
-+	if (sess)
-+		ha->tgt.tgt_ops->put_sess(sess);
-+	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- out_term:
- 	qlt_send_term_exchange(vha, NULL, &prm->tm_iocb2, 1, 0);
--	ha->tgt.tgt_ops->put_sess(sess);
--	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
- }
- 
- static void qlt_sess_work_fn(struct work_struct *work)
+-#define QLA_DRIVER_MAJOR_VER	8
+-#define QLA_DRIVER_MINOR_VER	7
++#define QLA_DRIVER_MAJOR_VER	9
++#define QLA_DRIVER_MINOR_VER	0
+ #define QLA_DRIVER_PATCH_VER	0
+ #define QLA_DRIVER_BETA_VER	0
 -- 
 1.8.3.1
