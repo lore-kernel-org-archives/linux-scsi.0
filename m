@@ -1,16 +1,16 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 10/14] qla2xxx: Fix request queue corruption.
-Date: Fri, 3 Feb 2017 14:40:51 -0800
-Message-ID: <1486161655-2307-11-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 11/14] qla2xxx: Fix inadequate lock protection for ABTS.
+Date: Fri, 3 Feb 2017 14:40:52 -0800
+Message-ID: <1486161655-2307-12-git-send-email-himanshu.madhani@cavium.com>
 References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0046.outbound.protection.outlook.com ([104.47.40.46]:29856
+Received: from mail-co1nam03on0074.outbound.protection.outlook.com ([104.47.40.74]:44176
         "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752994AbdBCWlq (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 17:41:46 -0500
+        id S1752995AbdBCWlo (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 17:41:44 -0500
 In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -19,61 +19,53 @@ Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@c
 
 From: Quinn Tran <quinn.tran@cavium.com>
 
-When FW notify driver or driver detects low FW resource,
-driver tries to send out Busy SCSI Status to tell Initiator
-side to back off. During the send process, the lock was not held.
+Normally, ABTS is sent to Target Core as Task MGMT command.
+In the case of error, qla2xxx needs to send response, hardware_lock
+is required to prevent request queue corruption.
 
-Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_target.c | 12 +++++++++---
- 1 file changed, 9 insertions(+), 3 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b61cbb8..b5fb9c55 100644
+index b5fb9c55..8b372b2 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5170,16 +5170,22 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
- 
- static int
- qlt_chk_qfull_thresh_hold(struct scsi_qla_host *vha,
--	struct atio_from_isp *atio)
-+	struct atio_from_isp *atio, uint8_t ha_locked)
- {
- 	struct qla_hw_data *ha = vha->hw;
- 	uint16_t status;
-+	unsigned long flags;
- 
- 	if (ha->tgt.num_pend_cmds < Q_FULL_THRESH_HOLD(ha))
- 		return 0;
- 
-+	if (!ha_locked)
-+		spin_lock_irqsave(&ha->hardware_lock, flags);
- 	status = temp_sam_status;
- 	qlt_send_busy(vha, atio, status);
-+	if (!ha_locked)
-+		spin_unlock_irqrestore(&ha->hardware_lock, flags);
+@@ -128,6 +128,9 @@ static void qlt_send_term_imm_notif(struct scsi_qla_host *vha,
+ static struct fc_port *qlt_create_sess(struct scsi_qla_host *vha,
+ 	fc_port_t *fcport, bool local);
+ void qlt_unreg_sess(struct fc_port *sess);
++static void qlt_24xx_handle_abts(struct scsi_qla_host *,
++	struct abts_recv_from_24xx *);
 +
- 	return 1;
- }
- 
-@@ -5224,7 +5230,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
- 
- 
- 		if (likely(atio->u.isp24.fcp_cmnd.task_mgmt_flags == 0)) {
--			rc = qlt_chk_qfull_thresh_hold(vha, atio);
-+			rc = qlt_chk_qfull_thresh_hold(vha, atio, ha_locked);
- 			if (rc != 0) {
- 				tgt->atio_irq_cmd_count--;
- 				return;
-@@ -5347,7 +5353,7 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
+ /*
+  * Global Variables
+  */
+@@ -403,6 +406,8 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			(struct abts_recv_from_24xx *)atio;
+ 		struct scsi_qla_host *host = qlt_find_host_by_vp_idx(vha,
+ 			entry->vp_index);
++		unsigned long flags;
++
+ 		if (unlikely(!host)) {
+ 			ql_dbg(ql_dbg_tgt, vha, 0xffff,
+ 			    "qla_target(%d): Response pkt (ABTS_RECV_24XX) "
+@@ -410,9 +415,12 @@ static bool qlt_24xx_atio_pkt_all_vps(struct scsi_qla_host *vha,
+ 			    vha->vp_idx, entry->vp_index);
  			break;
  		}
+-		qlt_response_pkt(host, (response_t *)atio);
++		if (!ha_locked)
++			spin_lock_irqsave(&host->hw->hardware_lock, flags);
++		qlt_24xx_handle_abts(host, (struct abts_recv_from_24xx *)atio);
++		if (!ha_locked)
++			spin_unlock_irqrestore(&host->hw->hardware_lock, flags);
+ 		break;
+-
+ 	}
  
--		rc = qlt_chk_qfull_thresh_hold(vha, atio);
-+		rc = qlt_chk_qfull_thresh_hold(vha, atio, 1);
- 		if (rc != 0) {
- 			tgt->irq_cmd_count--;
- 			return;
+ 	/* case PUREX_IOCB_TYPE: ql2xmvasynctoatio */
 -- 
 1.8.3.1
