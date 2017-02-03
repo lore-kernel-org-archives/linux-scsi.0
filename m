@@ -1,25 +1,24 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH 1/4] sg: disable SET_FORCE_LOW_DMA
-Date: Fri, 3 Feb 2017 11:23:10 +0100
-Message-ID: <20170203102310.GA29163@lst.de>
-References: <1486112091-68470-1-git-send-email-hare@suse.de> <1486112091-68470-2-git-send-email-hare@suse.de> <56d69348-13e0-8daa-9fac-942033ab564a@suse.de>
+Subject: Re: [PATCH 2/4] sg: protect access to to 'reserved' page array
+Date: Fri, 3 Feb 2017 11:24:32 +0100
+Message-ID: <20170203102432.GB29163@lst.de>
+References: <1486112091-68470-1-git-send-email-hare@suse.de> <1486112091-68470-3-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:47190 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753094AbdBCKXM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 05:23:12 -0500
+Return-path: <stable-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <56d69348-13e0-8daa-9fac-942033ab564a@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <1486112091-68470-3-git-send-email-hare@suse.de>
+Sender: stable-owner@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, stable@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>
-Cc: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Fri, Feb 03, 2017 at 10:32:28AM +0100, Johannes Thumshirn wrote:
-> I'm not sure if returning a bogus '0' is better here to not break any 
-> existing application, which assumed it always worked.
+On Fri, Feb 03, 2017 at 09:54:49AM +0100, Hannes Reinecke wrote:
+> The 'reserved' page array is used as a short-cut for mapping
+> data, saving us to allocate pages per request.
+> However, the 'reserved' array is only capable of holding one
+> request, so we need to protect it against concurrent accesses.
 
-Agreed, this should return 0, and maybe also print a (ratelimited)
-warning.
+Can you please explain how you protect the access here a bit more,
+as mentioned before the set_bit for exclusion trick is always
+suspicious, so the changelog needs to have a justification for it.
