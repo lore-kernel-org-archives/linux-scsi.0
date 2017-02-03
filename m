@@ -1,75 +1,158 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 00/14] qla2xxx: Bug Fixes and updates for target.
-Date: Fri, 3 Feb 2017 14:40:41 -0800
-Message-ID: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 13/14] qla2xxx: Fix sess_lock & hardware_lock lock order problem.
+Date: Fri, 3 Feb 2017 14:40:54 -0800
+Message-ID: <1486161655-2307-14-git-send-email-himanshu.madhani@cavium.com>
+References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-Sender: target-devel-owner@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-bn3nam01on0070.outbound.protection.outlook.com ([104.47.33.70]:58147
+        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1753048AbdBCWmD (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 17:42:03 -0500
+In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
-List-Id: linux-scsi@vger.kernel.org
 
-Hi Bart,
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Please consider this series for inclusion in target-pending.
+The main lock that needs to be held for CMD or TMR submission
+to upper layer is the sess_lock. The sess_lock is used to
+serialize cmd submission and session deletion. The addition
+of hardware_lock being held is not necessary. This patch removes
+hardware_lock dependency from CMD/TMR submission.
 
-This series contains following changes.
+Use hardware_lock only for error response in this case.
 
-o Fix for the deadlock because of inconsistent lock usage reported by you. 
-o Added patch to submit non-critical MBX command via IOCB path.
-o Improved T10-DIF/PI handling with target stack.
-o Changed scsi host lookup method.
-o Some minor bug fixes.
+Path1
+       CPU0                    CPU1
+       ----                    ----
+  lock(&(&ha->tgt.sess_lock)->rlock);
+                               lock(&(&ha->hardware_lock)->rlock);
+                               lock(&(&ha->tgt.sess_lock)->rlock);
+  lock(&(&ha->hardware_lock)->rlock);
 
-Changes from v1 -> v2
+Path2/deadlock
+*** DEADLOCK ***
+Call Trace:
+dump_stack+0x85/0xc2
+print_circular_bug+0x1e3/0x250
+__lock_acquire+0x1425/0x1620
+lock_acquire+0xbf/0x210
+_raw_spin_lock_irqsave+0x53/0x70
+qlt_sess_work_fn+0x21d/0x480 [qla2xxx]
+process_one_work+0x1f4/0x6e0
 
-o Dropped patch for indentation as its already part of scsi-target-for-v4.11 branch.
-o Rebased series based on scsi-target-for-v4.11 branch.
+Cc: <stable@vger.kernel.org>
+Cc: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Reported-by: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_target.c | 41 +++++++++++++++++----------------------
+ 1 file changed, 18 insertions(+), 23 deletions(-)
 
-Please apply to target-pending.
-
-Thanks,
-Himanshu  
-
-Anil Gurumurthy (1):
-  qla2xxx: Export DIF stats via debugfs
-
-Himanshu Madhani (2):
-  qla2xxx: Add DebugFS node to display Port Database
-  qla2xxx: Update driver version to 9.00.00.00-k
-
-Joe Carnuccio (1):
-  qla2xxx: Allow vref count to timeout on vport delete.
-
-Quinn Tran (10):
-  qla2xxx: Fix delayed response to command for loop mode/direct connect.
-  qla2xxx: Allow relogin to proceed if remote login did not finish
-  qla2xxx: Use IOCB interface to submit non-critical MBX.
-  qla2xxx: Improve T10-DIF/PI handling in driver.
-  qla2xxx: Change scsi host lookup method
-  qla2xxx: Fix memory leak for abts processing
-  qla2xxx: Fix request queue corruption.
-  qla2xxx: Fix inadequate lock protection for ABTS.
-  qla2xxx: Add async new target notification
-  qla2xxx: Fix sess_lock & hardware_lock lock order problem.
-
- drivers/scsi/qla2xxx/Kconfig       |   1 +
- drivers/scsi/qla2xxx/qla_attr.c    |   4 +-
- drivers/scsi/qla2xxx/qla_dbg.h     |   1 +
- drivers/scsi/qla2xxx/qla_def.h     |  56 ++-
- drivers/scsi/qla2xxx/qla_dfs.c     | 107 ++++-
- drivers/scsi/qla2xxx/qla_gbl.h     |  13 +-
- drivers/scsi/qla2xxx/qla_init.c    |  88 ++--
- drivers/scsi/qla2xxx/qla_isr.c     |  41 +-
- drivers/scsi/qla2xxx/qla_mbx.c     | 307 ++++++++++++--
- drivers/scsi/qla2xxx/qla_mid.c     |  12 +-
- drivers/scsi/qla2xxx/qla_os.c      |  46 ++-
- drivers/scsi/qla2xxx/qla_target.c  | 804 +++++++++++++++++++++++--------------
- drivers/scsi/qla2xxx/qla_target.h  |  38 +-
- drivers/scsi/qla2xxx/qla_version.h |   6 +-
- drivers/scsi/qla2xxx/tcm_qla2xxx.c |  84 +++-
- 15 files changed, 1158 insertions(+), 450 deletions(-)
-
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 2909b7b..fb7156c 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -5818,30 +5818,23 @@ static void qlt_abort_work(struct qla_tgt *tgt,
+ 		}
+ 	}
+ 
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-
+-	if (tgt->tgt_stop)
+-		goto out_term;
+-
+ 	rc = __qlt_24xx_handle_abts(vha, &prm->abts, sess);
++	ha->tgt.tgt_ops->put_sess(sess);
++	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
++
+ 	if (rc != 0)
+ 		goto out_term;
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-	if (sess)
+-		ha->tgt.tgt_ops->put_sess(sess);
+-	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
+ 	return;
+ 
+ out_term2:
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
++	if (sess)
++		ha->tgt.tgt_ops->put_sess(sess);
++	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
+ 
+ out_term:
++	spin_lock_irqsave(&ha->hardware_lock, flags);
+ 	qlt_24xx_send_abts_resp(vha, &prm->abts, FCP_TMF_REJECTED, false);
+ 	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-
+-	if (sess)
+-		ha->tgt.tgt_ops->put_sess(sess);
+-	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags2);
+ }
+ 
+ static void qlt_tmr_work(struct qla_tgt *tgt,
+@@ -5861,7 +5854,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 	spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+ 
+ 	if (tgt->tgt_stop)
+-		goto out_term;
++		goto out_term2;
+ 
+ 	s_id = prm->tm_iocb2.u.isp24.fcp_hdr.s_id;
+ 	sess = ha->tgt.tgt_ops->find_sess_by_s_id(vha, s_id);
+@@ -5873,11 +5866,11 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 
+ 		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
+ 		if (!sess)
+-			goto out_term;
++			goto out_term2;
+ 	} else {
+ 		if (sess->deleted) {
+ 			sess = NULL;
+-			goto out_term;
++			goto out_term2;
+ 		}
+ 
+ 		if (!kref_get_unless_zero(&sess->sess_kref)) {
+@@ -5885,7 +5878,7 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 			    "%s: kref_get fail %8phC\n",
+ 			     __func__, sess->port_name);
+ 			sess = NULL;
+-			goto out_term;
++			goto out_term2;
+ 		}
+ 	}
+ 
+@@ -5895,17 +5888,19 @@ static void qlt_tmr_work(struct qla_tgt *tgt,
+ 	unpacked_lun = scsilun_to_int((struct scsi_lun *)&lun);
+ 
+ 	rc = qlt_issue_task_mgmt(sess, unpacked_lun, fn, iocb, 0);
+-	if (rc != 0)
+-		goto out_term;
+-
+ 	ha->tgt.tgt_ops->put_sess(sess);
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
++
++	if (rc != 0)
++		goto out_term;
+ 	return;
+ 
++out_term2:
++	if (sess)
++		ha->tgt.tgt_ops->put_sess(sess);
++	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ out_term:
+ 	qlt_send_term_exchange(vha, NULL, &prm->tm_iocb2, 1, 0);
+-	ha->tgt.tgt_ops->put_sess(sess);
+-	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ }
+ 
+ static void qlt_sess_work_fn(struct work_struct *work)
 -- 
 1.8.3.1
