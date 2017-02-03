@@ -1,85 +1,115 @@
-From: Junichi Nomura <j-nomura@ce.jp.nec.com>
-Subject: [REGRESSION v4.10-rc1] blkdev_issue_zeroout() returns -EREMOTEIO on
- the first call for SCSI device that doesn't support WRITE SAME
-Date: Fri, 3 Feb 2017 07:55:38 +0000
-Message-ID: <cc14c28a-0f0a-640a-b576-cdfbaee75dc5@ce.jp.nec.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-2022-jp"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-block-owner@vger.kernel.org>
-Content-Language: ja-JP
-Content-ID: <C4F9F08CC46E0741B394DB52BF94359F@gisp.nec.co.jp>
-Sender: linux-block-owner@vger.kernel.org
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH 1/4] sg: disable SET_FORCE_LOW_DMA
+Date: Fri,  3 Feb 2017 09:54:48 +0100
+Message-ID: <1486112091-68470-2-git-send-email-hare@suse.de>
+References: <1486112091-68470-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:38437 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752475AbdBCIyz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 03:54:55 -0500
+In-Reply-To: <1486112091-68470-1-git-send-email-hare@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-I found following ext4 error occurs on a certain storage since v4.10-rc1:
-  EXT4-fs (sdc1): Delayed block allocation failed for inode 12 at logical offset 100 with max blocks 2 with error 121
-  EXT4-fs (sdc1): This should not happen!! Data will be lost
+The ioctl SET_FORCE_LOW_DMA has never worked since the initial
+git check-in, and the respective setting is nowadays handled
+correctly.
+So disable it entirely.
 
-Error 121 (EREMOTEIO) was returned from blkdev_issue_zeroout().
-That came from sd driver because WRITE SAME was sent to the device
-which didn't support it.
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/sg.c | 27 +++++----------------------
+ include/scsi/sg.h |  1 -
+ 2 files changed, 5 insertions(+), 23 deletions(-)
 
-The problem was introduced by commit e73c23ff736e ("block: add async
-variant of blkdev_issue_zeroout"). Before the commit, blkdev_issue_zeroout
-fell back to normal zero writing when WRITE SAME failed and it seems
-sd driver's heuristics depends on that behaviour.
-
-Below is a band-aid fix to restore the fallback behaviour for sd. Although
-there should be better fix as retrying blindly is not a good idea...
-
-v4.10-rc6:
-  # cat /sys/block/sdc/queue/write_same_max_bytes
-  33553920
-  # fallocate -v -z -l 512 /dev/sdc1
-  fallocate: fallocate failed: Remote I/O error
-  # cat /sys/block/sdc/queue/write_same_max_bytes
-  0
-  # fallocate -v -z -l 512 /dev/sdc1
-  # echo $?
-  0
-
-v4.9 or v4.10-rc6 + this patch:
-  # grep . /sys/block/sdc/queue/write_same_max_bytes
-  33553920
-  # fallocate -v -z -l 512 /dev/sdc1
-  # echo $?
-  0
-  # grep . /sys/block/sdc/queue/write_same_max_bytes
-  0
-
-diff --git a/block/blk-lib.c b/block/blk-lib.c
-index f8c82a9..8e53474 100644
---- a/block/blk-lib.c
-+++ b/block/blk-lib.c
-@@ -360,6 +360,7 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			 sector_t nr_sects, gfp_t gfp_mask, bool discard)
- {
- 	int ret;
-+	int pass = 0;
- 	struct bio *bio = NULL;
- 	struct blk_plug plug;
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index dbe5b4b..8a959b2 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -149,7 +149,6 @@
+ 	Sg_request *headrp;	/* head of request slist, NULL->empty */
+ 	struct fasync_struct *async_qp;	/* used by asynchronous notification */
+ 	Sg_request req_arr[SG_MAX_QUEUE];	/* used as singly-linked list */
+-	char low_dma;		/* as in parent but possibly overridden to 1 */
+ 	char force_packid;	/* 1 -> pack_id input to read(), 0 -> ignored */
+ 	char cmd_q;		/* 1 -> allow command queuing, 0 -> don't */
+ 	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
+@@ -887,24 +886,9 @@ static int max_sectors_bytes(struct request_queue *q)
+ 				/* strange ..., for backward compatibility */
+ 		return sfp->timeout_user;
+ 	case SG_SET_FORCE_LOW_DMA:
+-		result = get_user(val, ip);
+-		if (result)
+-			return result;
+-		if (val) {
+-			sfp->low_dma = 1;
+-			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
+-				val = (int) sfp->reserve.bufflen;
+-				sg_remove_scat(sfp, &sfp->reserve);
+-				sg_build_reserve(sfp, val);
+-			}
+-		} else {
+-			if (atomic_read(&sdp->detaching))
+-				return -ENODEV;
+-			sfp->low_dma = sdp->device->host->unchecked_isa_dma;
+-		}
+-		return 0;
++		return -EINVAL;
+ 	case SG_GET_LOW_DMA:
+-		return put_user((int) sfp->low_dma, ip);
++		return put_user((int) sdp->device->host->unchecked_isa_dma, ip);
+ 	case SG_GET_SCSI_ID:
+ 		if (!access_ok(VERIFY_WRITE, p, sizeof (sg_scsi_id_t)))
+ 			return -EFAULT;
+@@ -1821,6 +1805,7 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
+ 	int sg_tablesize = sfp->parentdp->sg_tablesize;
+ 	int blk_size = buff_size, order;
+ 	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN;
++	struct sg_device *sdp = sfp->parentdp;
  
-@@ -369,6 +370,7 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 			return 0;
+ 	if (blk_size < 0)
+ 		return -EFAULT;
+@@ -1846,7 +1831,7 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
+ 			scatter_elem_sz_prev = num;
  	}
  
-+  retry_other_method:
- 	blk_start_plug(&plug);
- 	ret = __blkdev_issue_zeroout(bdev, sector, nr_sects, gfp_mask,
- 			&bio, discard);
-@@ -378,6 +380,11 @@ int blkdev_issue_zeroout(struct block_device *bdev, sector_t sector,
- 	}
- 	blk_finish_plug(&plug);
+-	if (sfp->low_dma)
++	if (sdp->device->host->unchecked_isa_dma)
+ 		gfp_mask |= GFP_DMA;
  
-+	if (ret && pass++ == 0) {
-+		bio = NULL;
-+		goto retry_other_method;
-+	}
-+
- 	return ret;
- }
- EXPORT_SYMBOL(blkdev_issue_zeroout);
+ 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+@@ -2132,8 +2117,6 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
+ 	sfp->timeout = SG_DEFAULT_TIMEOUT;
+ 	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
+ 	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
+-	sfp->low_dma = (SG_DEF_FORCE_LOW_DMA == 0) ?
+-	    sdp->device->host->unchecked_isa_dma : 1;
+ 	sfp->cmd_q = SG_DEF_COMMAND_Q;
+ 	sfp->keep_orphan = SG_DEF_KEEP_ORPHAN;
+ 	sfp->parentdp = sdp;
+@@ -2603,7 +2586,7 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
+ 			   jiffies_to_msecs(fp->timeout),
+ 			   fp->reserve.bufflen,
+ 			   (int) fp->reserve.k_use_sg,
+-			   (int) fp->low_dma);
++			   (int) sdp->device->host->unchecked_isa_dma);
+ 		seq_printf(s, "   cmd_q=%d f_packid=%d k_orphan=%d closed=0\n",
+ 			   (int) fp->cmd_q, (int) fp->force_packid,
+ 			   (int) fp->keep_orphan);
+diff --git a/include/scsi/sg.h b/include/scsi/sg.h
+index 3afec70..20bc71c 100644
+--- a/include/scsi/sg.h
++++ b/include/scsi/sg.h
+@@ -197,7 +197,6 @@
+ #define SG_DEFAULT_RETRIES 0
+ 
+ /* Defaults, commented if they differ from original sg driver */
+-#define SG_DEF_FORCE_LOW_DMA 0  /* was 1 -> memory below 16MB on i386 */
+ #define SG_DEF_FORCE_PACK_ID 0
+ #define SG_DEF_KEEP_ORPHAN 0
+ #define SG_DEF_RESERVED_SIZE SG_SCATTER_SZ /* load time option */
 -- 
-Jun'ichi Nomura, NEC Corporation / NEC Solution Innovators, Ltd.
+1.8.5.6
