@@ -1,27 +1,25 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V4 13/24] aacraid: Added support to set QD of attached
- drives
-Date: Fri, 3 Feb 2017 10:16:09 +0100
-Message-ID: <3170bd8e-5c12-b529-7ab4-20c8ddabdb7f@suse.de>
+Subject: Re: [PATCH V4 14/24] aacraid: Added support for hotplug
+Date: Fri, 3 Feb 2017 10:17:35 +0100
+Message-ID: <70655906-d378-fb0c-d084-8737cac7da53@suse.de>
 References: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170202235338.14724-14-RaghavaAditya.Renukunta@microsemi.com>
+ <20170202235338.14724-15-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:39881 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:39951 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752232AbdBCJQN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 04:16:13 -0500
-In-Reply-To: <20170202235338.14724-14-RaghavaAditya.Renukunta@microsemi.com>
+        id S1752510AbdBCJRm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 04:17:42 -0500
+In-Reply-To: <20170202235338.14724-15-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
 
 On 02/03/2017 12:53 AM, Raghava Aditya Renukunta wrote:
-> Added support to set qd of drives in slave_configure.This only works for
-> HBA1000 attached drives.
+> Added support for drive hotplug add and removal
 >
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 > Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
