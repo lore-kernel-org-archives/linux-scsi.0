@@ -1,58 +1,48 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 12/14] qla2xxx: Add async new target notification
-Date: Fri, 3 Feb 2017 14:40:53 -0800
-Message-ID: <1486161655-2307-13-git-send-email-himanshu.madhani@cavium.com>
-References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [REGRESSION v4.10-rc1] blkdev_issue_zeroout() returns -EREMOTEIO on the first call for SCSI device that doesn't support WRITE SAME
+Date: Fri, 03 Feb 2017 17:45:25 -0500
+Message-ID: <yq1wpd6vqpm.fsf@oracle.com>
+References: <cc14c28a-0f0a-640a-b576-cdfbaee75dc5@ce.jp.nec.com>
+        <d360a634-2c95-2de5-8647-4e740e92e10a@kernel.dk>
+        <20170203161239.GA3880@lst.de>
+        <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
-Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from userp1040.oracle.com ([156.151.31.81]:32303 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752527AbdBCWpj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2017 17:45:39 -0500
+In-Reply-To: <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk> (Jens Axboe's
+        message of "Fri, 3 Feb 2017 09:14:11 -0700")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Junichi Nomura <j-nomura@ce.jp.nec.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-From: Quinn Tran <quinn.tran@cavium.com>
+>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
 
-Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
----
- drivers/scsi/qla2xxx/qla_target.c | 6 +++---
- drivers/scsi/qla2xxx/qla_target.h | 1 +
- 2 files changed, 4 insertions(+), 3 deletions(-)
+>> I think we should fix sd.c to only send WRITE SAME if either of the
+>> variants are explicitly listed as supported through REPORT SUPPORTED
+>> OPERATION CODES, or maybe through a whitelist if there are important
+>> enough devices.
 
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 8b372b2..2909b7b 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -5998,13 +5998,13 @@ int qlt_add_target(struct qla_hw_data *ha, struct scsi_qla_host *base_vha)
- 	tgt->datasegs_per_cmd = QLA_TGT_DATASEGS_PER_CMD_24XX;
- 	tgt->datasegs_per_cont = QLA_TGT_DATASEGS_PER_CONT_24XX;
- 
--	if (base_vha->fc_vport)
--		return 0;
--
- 	mutex_lock(&qla_tgt_mutex);
- 	list_add_tail(&tgt->tgt_list_entry, &qla_tgt_glist);
- 	mutex_unlock(&qla_tgt_mutex);
- 
-+	if (ha->tgt.tgt_ops && ha->tgt.tgt_ops->add_target)
-+		ha->tgt.tgt_ops->add_target(base_vha);
-+
- 	return 0;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 82d53f3..20e25e5 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -693,6 +693,7 @@ struct qla_tgt_func_tmpl {
- 	void (*shutdown_sess)(struct fc_port *);
- 	int (*get_dif_tags)(struct qla_tgt_cmd *cmd, uint16_t *pfw_prot_opts);
- 	int (*chk_dif_tags)(uint32_t tag);
-+	void (*add_target)(struct scsi_qla_host *);
- };
- 
- int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
+Jens> Yep
+
+I hate it too. But the reason it's assumed on is that there is
+essentially no heuristic that works. Just like we assume that READ
+always works.
+
+Out of the ~200 devices I have access to in the lab:
+
+ - 100% of the SAS/FC disk drives and SSDs support WRITE SAME
+ - Only 2 out of about 50 different drive models support RSOC
+ - About half of the arrays support WRITE SAME(10/16)
+ - None of the arrays I have support RSOC
+
+So even if we were to entertain using RSOC for "enterprise" transport
+classes (which I concur would be nice for other reasons), it wouldn't
+solve the WRITE SAME problem...
+
 -- 
-1.8.3.1
+Martin K. Petersen	Oracle Linux Engineering
