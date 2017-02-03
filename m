@@ -1,30 +1,53 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V4 19/24] aacraid: Added new IWBR reset
-Date: Fri, 3 Feb 2017 10:26:11 +0100
-Message-ID: <29ea5848-c59c-5f48-70c3-0a7e06db2136@suse.de>
-References: <20170202235338.14724-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170202235338.14724-20-RaghavaAditya.Renukunta@microsemi.com>
+Subject: Re: [PATCH 1/4] sg: disable SET_FORCE_LOW_DMA
+Date: Fri, 3 Feb 2017 10:32:28 +0100
+Message-ID: <56d69348-13e0-8daa-9fac-942033ab564a@suse.de>
+References: <1486112091-68470-1-git-send-email-hare@suse.de>
+ <1486112091-68470-2-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:40993 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41935 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752310AbdBCJ0O (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 04:26:14 -0500
-In-Reply-To: <20170202235338.14724-20-RaghavaAditya.Renukunta@microsemi.com>
+        id S1751958AbdBCJcc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 04:32:32 -0500
+In-Reply-To: <1486112091-68470-2-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 02/03/2017 12:53 AM, Raghava Aditya Renukunta wrote:
-> Added a new IWBR soft reset type, reworked the IOP reset interface for
-> a bit.
+
+On 02/03/2017 09:54 AM, Hannes Reinecke wrote:
+> The ioctl SET_FORCE_LOW_DMA has never worked since the initial
+> git check-in, and the respective setting is nowadays handled
+> correctly.
+> So disable it entirely.
 >
-> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-> Signed-off-by: Dave Carroll <David.Carroll@microsemi.com>
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 > ---
->
 
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+[...]
+
+>   	case SG_SET_FORCE_LOW_DMA:
+> -		result = get_user(val, ip);
+> -		if (result)
+> -			return result;
+> -		if (val) {
+> -			sfp->low_dma = 1;
+> -			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
+> -				val = (int) sfp->reserve.bufflen;
+> -				sg_remove_scat(sfp, &sfp->reserve);
+> -				sg_build_reserve(sfp, val);
+> -			}
+> -		} else {
+> -			if (atomic_read(&sdp->detaching))
+> -				return -ENODEV;
+> -			sfp->low_dma = sdp->device->host->unchecked_isa_dma;
+> -		}
+> -		return 0;
+> +		return -EINVAL;
+
+I'm not sure if returning a bogus '0' is better here to not break any 
+existing application, which assumed it always worked.
