@@ -1,84 +1,158 @@
 From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH v2 03/14] qla2xxx: Allow vref count to timeout on vport delete.
-Date: Fri, 3 Feb 2017 14:40:44 -0800
-Message-ID: <1486161655-2307-4-git-send-email-himanshu.madhani@cavium.com>
+Subject: [PATCH v2 02/14] qla2xxx: Allow relogin to proceed if remote login did not finish
+Date: Fri, 3 Feb 2017 14:40:43 -0800
+Message-ID: <1486161655-2307-3-git-send-email-himanshu.madhani@cavium.com>
 References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:18263
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752963AbdBCWlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 17:41:32 -0500
+Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
+Sender: target-devel-owner@vger.kernel.org
 To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
 Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
+List-Id: linux-scsi@vger.kernel.org
 
-From: Joe Carnuccio <joe.carnuccio@cavium.com>
+From: Quinn Tran <quinn.tran@cavium.com>
 
-Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
+If the remote port have started the login process, then the
+PLOGI and PRLI should be back to back. Driver will allow
+the remote port to complete the process. For the case where
+the remote port decide to back off from sending PRLI, this
+local port sets an expiration timer for the PRLI. Once the
+expiration time passes, the relogin retry logic is allowed
+to go through and perform login with the remote port.
+
+Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
 Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
- drivers/scsi/qla2xxx/qla_attr.c |  4 +---
- drivers/scsi/qla2xxx/qla_mid.c  | 12 +++++++-----
- 2 files changed, 8 insertions(+), 8 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h    |  2 ++
+ drivers/scsi/qla2xxx/qla_init.c   | 16 ++++++++++++++--
+ drivers/scsi/qla2xxx/qla_isr.c    | 25 +++++++++++++++++++------
+ drivers/scsi/qla2xxx/qla_target.c |  1 +
+ 4 files changed, 36 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index f610103..435ff7f 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -2154,8 +2154,6 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 		    "Timer for the VP[%d] has stopped\n", vha->vp_idx);
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index fbaa39b..bf2ae8d3 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -2300,6 +2300,8 @@ enum rscn_addr_format {
+ 	struct ct_sns_desc ct_desc;
+ 	enum discovery_state disc_state;
+ 	enum login_state fw_login_state;
++	unsigned long plogi_nack_done_jiff;
++
+ 	u32 login_gen, last_login_gen;
+ 	u32 rscn_gen, last_rscn_gen;
+ 	u32 chip_reset;
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index 9f3db52..e84ab37 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -876,10 +876,16 @@ int qla24xx_fcport_handle_login(struct scsi_qla_host *vha, fc_port_t *fcport)
+ 	fcport->login_retry--;
+ 
+ 	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
+-	    (fcport->fw_login_state == DSC_LS_PLOGI_COMP) ||
+ 	    (fcport->fw_login_state == DSC_LS_PRLI_PEND))
+ 		return 0;
+ 
++	if (fcport->fw_login_state == DSC_LS_PLOGI_COMP) {
++		unsigned long t = fcport->plogi_nack_done_jiff + HZ;
++
++		if (time_before_eq(jiffies, t))
++			return 0;
++	}
++
+ 	/* for pure Target Mode. Login will not be initiated */
+ 	if (vha->host->active_mode == MODE_TARGET)
+ 		return 0;
+@@ -1041,10 +1047,16 @@ void qla24xx_handle_relogin_event(scsi_qla_host_t *vha,
+ 		fcport->flags);
+ 
+ 	if ((fcport->fw_login_state == DSC_LS_PLOGI_PEND) ||
+-	    (fcport->fw_login_state == DSC_LS_PLOGI_COMP) ||
+ 	    (fcport->fw_login_state == DSC_LS_PRLI_PEND))
+ 		return;
+ 
++	if (fcport->fw_login_state == DSC_LS_PLOGI_COMP) {
++		unsigned long t = fcport->plogi_nack_done_jiff + HZ;
++
++		if (time_before_eq(jiffies, t))
++			return;
++	}
++
+ 	if (fcport->flags & FCF_ASYNC_SENT) {
+ 		fcport->login_retry++;
+ 		set_bit(RELOGIN_NEEDED, &vha->dpc_flags);
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index 0fd3258..f1da53d 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -1630,9 +1630,9 @@ static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
+ 		QLA_LOGIO_LOGIN_RETRIED : 0;
+ 	if (logio->entry_status) {
+ 		ql_log(ql_log_warn, fcport->vha, 0x5034,
+-		    "Async-%s error entry - hdl=%x"
++		    "Async-%s error entry - %8phC hdl=%x"
+ 		    "portid=%02x%02x%02x entry-status=%x.\n",
+-		    type, sp->handle, fcport->d_id.b.domain,
++		    type, fcport->port_name, sp->handle, fcport->d_id.b.domain,
+ 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+ 		    logio->entry_status);
+ 		ql_dump_buffer(ql_dbg_async + ql_dbg_buffer, vha, 0x504d,
+@@ -1643,8 +1643,9 @@ static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
+ 
+ 	if (le16_to_cpu(logio->comp_status) == CS_COMPLETE) {
+ 		ql_dbg(ql_dbg_async, fcport->vha, 0x5036,
+-		    "Async-%s complete - hdl=%x portid=%02x%02x%02x "
+-		    "iop0=%x.\n", type, sp->handle, fcport->d_id.b.domain,
++		    "Async-%s complete - %8phC hdl=%x portid=%02x%02x%02x "
++		    "iop0=%x.\n", type, fcport->port_name, sp->handle,
++		    fcport->d_id.b.domain,
+ 		    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+ 		    le32_to_cpu(logio->io_parameter[0]));
+ 
+@@ -1684,6 +1685,17 @@ static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
+ 	case LSC_SCODE_NPORT_USED:
+ 		data[0] = MBS_LOOP_ID_USED;
+ 		break;
++	case LSC_SCODE_CMD_FAILED:
++		if (iop[1] == 0x0606) {
++			/*
++			 * PLOGI/PRLI Completed. We must have Recv PLOGI/PRLI,
++			 * Target side acked.
++			 */
++			data[0] = MBS_COMMAND_COMPLETE;
++			goto logio_done;
++		}
++		data[0] = MBS_COMMAND_ERROR;
++		break;
+ 	case LSC_SCODE_NOXCB:
+ 		vha->hw->exch_starvation++;
+ 		if (vha->hw->exch_starvation > 5) {
+@@ -1705,8 +1717,9 @@ static void qla2x00_error_entry(scsi_qla_host_t *, struct rsp_que *,
  	}
  
--	BUG_ON(atomic_read(&vha->vref_count));
--
- 	qla2x00_free_fcports(vha);
+ 	ql_dbg(ql_dbg_async, fcport->vha, 0x5037,
+-	    "Async-%s failed - hdl=%x portid=%02x%02x%02x comp=%x "
+-	    "iop0=%x iop1=%x.\n", type, sp->handle, fcport->d_id.b.domain,
++	    "Async-%s failed - %8phC hdl=%x portid=%02x%02x%02x comp=%x "
++	    "iop0=%x iop1=%x.\n", type, fcport->port_name,
++		sp->handle, fcport->d_id.b.domain,
+ 	    fcport->d_id.b.area, fcport->d_id.b.al_pa,
+ 	    le16_to_cpu(logio->comp_status),
+ 	    le32_to_cpu(logio->io_parameter[0]),
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 19ac2b5..8d21c04 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -554,6 +554,7 @@ void qla2x00_async_nack_sp_done(void *s, int res)
+ 		sp->fcport->login_gen++;
+ 		sp->fcport->fw_login_state = DSC_LS_PLOGI_COMP;
+ 		sp->fcport->logout_on_delete = 1;
++		sp->fcport->plogi_nack_done_jiff = jiffies;
+ 		break;
  
- 	mutex_lock(&ha->vport_lock);
-@@ -2166,7 +2164,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
- 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
- 	    vha->gnl.ldma);
- 
--	if (vha->qpair->vp_idx == vha->vp_idx) {
-+	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
- 		if (qla2xxx_delete_qpair(vha, vha->qpair) != QLA_SUCCESS)
- 			ql_log(ql_log_warn, vha, 0x7087,
- 			    "Queue Pair delete failed.\n");
-diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
-index c6d6f0d..bf8e1e2 100644
---- a/drivers/scsi/qla2xxx/qla_mid.c
-+++ b/drivers/scsi/qla2xxx/qla_mid.c
-@@ -65,6 +65,7 @@
- 	uint16_t vp_id;
- 	struct qla_hw_data *ha = vha->hw;
- 	unsigned long flags = 0;
-+	unsigned int count = 10;
- 
- 	mutex_lock(&ha->vport_lock);
- 	/*
-@@ -74,13 +75,14 @@
- 	 * ensures no active vp_list traversal while the vport is removed
- 	 * from the queue)
- 	 */
--	spin_lock_irqsave(&ha->vport_slock, flags);
--	while (atomic_read(&vha->vref_count)) {
--		spin_unlock_irqrestore(&ha->vport_slock, flags);
--
-+	while (count-- && atomic_read(&vha->vref_count))
- 		msleep(500);
- 
--		spin_lock_irqsave(&ha->vport_slock, flags);
-+	spin_lock_irqsave(&ha->vport_slock, flags);
-+	if (atomic_read(&vha->vref_count)) {
-+		ql_dbg(ql_dbg_vport, vha, 0xfffa,
-+		    "vha->vref_count=%u timeout\n", vha->vref_count.counter);
-+		vha->vref_count = (atomic_t)ATOMIC_INIT(0);
- 	}
- 	list_del(&vha->list);
- 	qlt_update_vp_map(vha, RESET_VP_IDX);
+ 	case SRB_NACK_PRLI:
 -- 
 1.8.3.1
