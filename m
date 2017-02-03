@@ -1,8 +1,8 @@
 From: Hannes Reinecke <hare@suse.de>
 Subject: Re: [PATCH 3/4] sg: check for valid direction before starting the
  request
-Date: Fri, 3 Feb 2017 11:50:26 +0100
-Message-ID: <f1999454-fa70-71f3-0258-2aed30b4cbbc@suse.de>
+Date: Fri, 3 Feb 2017 12:46:48 +0100
+Message-ID: <a3c87f04-dfa2-3bfe-9df2-e8812b572978@suse.de>
 References: <1486112091-68470-1-git-send-email-hare@suse.de>
  <1486112091-68470-4-git-send-email-hare@suse.de>
  <20170203102813.GC29163@lst.de>
@@ -10,10 +10,10 @@ Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:50022 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:55560 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752002AbdBCKu2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 05:50:28 -0500
+        id S1752296AbdBCLqv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 06:46:51 -0500
 In-Reply-To: <20170203102813.GC29163@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -44,6 +44,11 @@ On 02/03/2017 11:28 AM, Christoph Hellwig wrote:
 > to here and use printk_ratelimited instead of the hand-rolled
 > per-thread warning there.
 > 
+Well, that warning is only applicable to sg_write(); sg_new_write() is
+supposed to have the correct header, so that warning doesn't apply.
+We could drop the per-thread-thingie, though.
+
+
 >> +	case SG_DXFER_UNKNOWN:
 >> +		return true;
 > 
@@ -51,7 +56,8 @@ On 02/03/2017 11:28 AM, Christoph Hellwig wrote:
 > transfer we should be fine, but otherwise it should probably be
 > rejected.
 > 
-yes, we should be checking for dxferp and dxfer_len here, too.
+Yes, true.
+Will be fixing it up.
 
 Cheers,
 
