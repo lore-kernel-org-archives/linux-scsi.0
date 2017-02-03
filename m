@@ -1,35 +1,33 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCHv3 3/6] sg: protect accesses to 'reserved' page array
-Date: Fri, 3 Feb 2017 17:19:10 +0100
-Message-ID: <20170203161910.GA4339@lst.de>
-References: <1486127531-13716-1-git-send-email-hare@suse.de> <1486127531-13716-4-git-send-email-hare@suse.de> <20170203133140.GC646@lst.de> <b75d63b6-ae38-6c69-ec16-430e2bd351f7@suse.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 00/15] qla2xxx: Bug Fixes and updates for target.
+Date: Fri, 3 Feb 2017 16:26:47 +0000
+Message-ID: <1486139193.2553.1.camel@sandisk.com>
+References: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:49068 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750940AbdBCQTM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 11:19:12 -0500
-Content-Disposition: inline
-In-Reply-To: <b75d63b6-ae38-6c69-ec16-430e2bd351f7@suse.de>
+Received: from mail-co1nam03on0082.outbound.protection.outlook.com ([104.47.40.82]:28112
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751023AbdBCQ04 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 11:26:56 -0500
+In-Reply-To: <1486064558-365-1-git-send-email-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <4FD9B93BE87EF048B8F4D2723E892E6D@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-On Fri, Feb 03, 2017 at 02:38:35PM +0100, Hannes Reinecke wrote:
-> On 02/03/2017 02:31 PM, Christoph Hellwig wrote:
-> >> -		if (sg_res_in_use(sfp)) {
-> >> +		mutex_lock(&sfp->f_mutex);
-> >> +		if (sfp->res_in_use) {
-> >> +			mutex_unlock(&sfp->f_mutex);
-> >>  			sg_remove_request(sfp, srp);
-> >>  			return -EBUSY;	/* reserve buffer already being used */
-> >>  		}
-> >> +		mutex_unlock(&sfp->f_mutex);
-> > 
-> > Holding a mutex over a the check of a single scalar doesn't make sense.
-> > 
-> It's adds a synchronisation point, doesn't it?
+On Thu, 2017-02-02 at 11:42 -0800, Himanshu Madhani wrote:
+> Please consider this series for inclusion in target-pending.
 
-It does, but it doesn't actually protect anything..
+Hello Himanshu,
+
+What tree have these patches been generated against? Not all patches can be
+applied on top of the scsi-target-for-v4.11 branch.
+
+Thanks,
+
+Bart.=
