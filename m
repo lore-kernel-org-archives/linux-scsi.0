@@ -1,115 +1,39 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH 1/4] sg: disable SET_FORCE_LOW_DMA
-Date: Fri,  3 Feb 2017 09:54:48 +0100
-Message-ID: <1486112091-68470-2-git-send-email-hare@suse.de>
-References: <1486112091-68470-1-git-send-email-hare@suse.de>
+Subject: [PATCH 0/4] sanitize sg
+Date: Fri,  3 Feb 2017 09:54:47 +0100
+Message-ID: <1486112091-68470-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38437 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38425 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752475AbdBCIyz (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 3 Feb 2017 03:54:55 -0500
-In-Reply-To: <1486112091-68470-1-git-send-email-hare@suse.de>
+        id S1752641AbdBCIzA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 03:55:00 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Johannes Thumshirn <jth@kernel.org>, Doug Gilberg <dgilbert@interlog.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>
 
-The ioctl SET_FORCE_LOW_DMA has never worked since the initial
-git check-in, and the respective setting is nowadays handled
-correctly.
-So disable it entirely.
+Hi all,
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/sg.c | 27 +++++----------------------
- include/scsi/sg.h |  1 -
- 2 files changed, 5 insertions(+), 23 deletions(-)
+the infamous syzkaller incovered some more issues in the sg driver.
+This patchset fixes those two issues (and adds a fix for yet another
+potential issue; checking for a NULL dxferp when dxfer_len is not 0).
+It also removes handling of the SET_FORCE_LOW_DMA ioctl, which never
+worked since the initial git checkin. And does some code cleanup by
+removing the private list implementation, using standard lists instead.
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index dbe5b4b..8a959b2 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -149,7 +149,6 @@
- 	Sg_request *headrp;	/* head of request slist, NULL->empty */
- 	struct fasync_struct *async_qp;	/* used by asynchronous notification */
- 	Sg_request req_arr[SG_MAX_QUEUE];	/* used as singly-linked list */
--	char low_dma;		/* as in parent but possibly overridden to 1 */
- 	char force_packid;	/* 1 -> pack_id input to read(), 0 -> ignored */
- 	char cmd_q;		/* 1 -> allow command queuing, 0 -> don't */
- 	unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
-@@ -887,24 +886,9 @@ static int max_sectors_bytes(struct request_queue *q)
- 				/* strange ..., for backward compatibility */
- 		return sfp->timeout_user;
- 	case SG_SET_FORCE_LOW_DMA:
--		result = get_user(val, ip);
--		if (result)
--			return result;
--		if (val) {
--			sfp->low_dma = 1;
--			if ((0 == sfp->low_dma) && (0 == sg_res_in_use(sfp))) {
--				val = (int) sfp->reserve.bufflen;
--				sg_remove_scat(sfp, &sfp->reserve);
--				sg_build_reserve(sfp, val);
--			}
--		} else {
--			if (atomic_read(&sdp->detaching))
--				return -ENODEV;
--			sfp->low_dma = sdp->device->host->unchecked_isa_dma;
--		}
--		return 0;
-+		return -EINVAL;
- 	case SG_GET_LOW_DMA:
--		return put_user((int) sfp->low_dma, ip);
-+		return put_user((int) sdp->device->host->unchecked_isa_dma, ip);
- 	case SG_GET_SCSI_ID:
- 		if (!access_ok(VERIFY_WRITE, p, sizeof (sg_scsi_id_t)))
- 			return -EFAULT;
-@@ -1821,6 +1805,7 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
- 	int sg_tablesize = sfp->parentdp->sg_tablesize;
- 	int blk_size = buff_size, order;
- 	gfp_t gfp_mask = GFP_ATOMIC | __GFP_COMP | __GFP_NOWARN;
-+	struct sg_device *sdp = sfp->parentdp;
- 
- 	if (blk_size < 0)
- 		return -EFAULT;
-@@ -1846,7 +1831,7 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
- 			scatter_elem_sz_prev = num;
- 	}
- 
--	if (sfp->low_dma)
-+	if (sdp->device->host->unchecked_isa_dma)
- 		gfp_mask |= GFP_DMA;
- 
- 	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-@@ -2132,8 +2117,6 @@ static long sg_compat_ioctl(struct file *filp, unsigned int cmd_in, unsigned lon
- 	sfp->timeout = SG_DEFAULT_TIMEOUT;
- 	sfp->timeout_user = SG_DEFAULT_TIMEOUT_USER;
- 	sfp->force_packid = SG_DEF_FORCE_PACK_ID;
--	sfp->low_dma = (SG_DEF_FORCE_LOW_DMA == 0) ?
--	    sdp->device->host->unchecked_isa_dma : 1;
- 	sfp->cmd_q = SG_DEF_COMMAND_Q;
- 	sfp->keep_orphan = SG_DEF_KEEP_ORPHAN;
- 	sfp->parentdp = sdp;
-@@ -2603,7 +2586,7 @@ static void sg_proc_debug_helper(struct seq_file *s, Sg_device * sdp)
- 			   jiffies_to_msecs(fp->timeout),
- 			   fp->reserve.bufflen,
- 			   (int) fp->reserve.k_use_sg,
--			   (int) fp->low_dma);
-+			   (int) sdp->device->host->unchecked_isa_dma);
- 		seq_printf(s, "   cmd_q=%d f_packid=%d k_orphan=%d closed=0\n",
- 			   (int) fp->cmd_q, (int) fp->force_packid,
- 			   (int) fp->keep_orphan);
-diff --git a/include/scsi/sg.h b/include/scsi/sg.h
-index 3afec70..20bc71c 100644
---- a/include/scsi/sg.h
-+++ b/include/scsi/sg.h
-@@ -197,7 +197,6 @@
- #define SG_DEFAULT_RETRIES 0
- 
- /* Defaults, commented if they differ from original sg driver */
--#define SG_DEF_FORCE_LOW_DMA 0  /* was 1 -> memory below 16MB on i386 */
- #define SG_DEF_FORCE_PACK_ID 0
- #define SG_DEF_KEEP_ORPHAN 0
- #define SG_DEF_RESERVED_SIZE SG_SCATTER_SZ /* load time option */
+As usual, comments and reviews are welcome.
+
+Hannes Reinecke (3):
+  sg: disable SET_FORCE_LOW_DMA
+  sg: protect access to to 'reserved' page array
+  sg: use standard lists for sg_requests
+
+Johannes Thumshirn (1):
+  sg: check for valid direction before starting the request
+
+ drivers/scsi/sg.c | 183 ++++++++++++++++++++++++------------------------------
+ include/scsi/sg.h |   1 -
+ 2 files changed, 80 insertions(+), 104 deletions(-)
+
 -- 
 1.8.5.6
