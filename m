@@ -1,68 +1,84 @@
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 4.10-rc6
-Date: Fri, 03 Feb 2017 13:17:13 -0800
-Message-ID: <1486156633.2431.45.camel@HansenPartnership.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH v2 03/14] qla2xxx: Allow vref count to timeout on vport delete.
+Date: Fri, 3 Feb 2017 14:40:44 -0800
+Message-ID: <1486161655-2307-4-git-send-email-himanshu.madhani@cavium.com>
+References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0042.outbound.protection.outlook.com ([104.47.40.42]:18263
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752963AbdBCWlc (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 3 Feb 2017 17:41:32 -0500
+In-Reply-To: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, hch@infradead.org, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-A single fix this time: a fix for a virtqueue removal bug which only
-appears to affect S390, but which results in the queue hanging forever
-thus causing the machine to fail shutdown.
+From: Joe Carnuccio <joe.carnuccio@cavium.com>
 
-The patch is available here:
-
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-
-The short changelog is:
-
-Eric Farman (1):
-      scsi: virtio_scsi: Reject commands when virtqueue is broken
-
-And the diffstat:
-
- drivers/scsi/virtio_scsi.c | 11 ++++++++++-
- 1 file changed, 10 insertions(+), 1 deletion(-)
-
-With full diff below.
-
-James
-
+Signed-off-by: Joe Carnuccio <joe.carnuccio@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
 ---
+ drivers/scsi/qla2xxx/qla_attr.c |  4 +---
+ drivers/scsi/qla2xxx/qla_mid.c  | 12 +++++++-----
+ 2 files changed, 8 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index ec91bd0..c680d76 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -534,7 +534,9 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- {
- 	struct Scsi_Host *shost = virtio_scsi_host(vscsi->vdev);
- 	struct virtio_scsi_cmd *cmd = scsi_cmd_priv(sc);
-+	unsigned long flags;
- 	int req_size;
-+	int ret;
- 
- 	BUG_ON(scsi_sg_count(sc) > shost->sg_tablesize);
- 
-@@ -562,8 +564,15 @@ static int virtscsi_queuecommand(struct virtio_scsi *vscsi,
- 		req_size = sizeof(cmd->req.cmd);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index f610103..435ff7f 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -2154,8 +2154,6 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 		    "Timer for the VP[%d] has stopped\n", vha->vp_idx);
  	}
  
--	if (virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd)) != 0)
-+	ret = virtscsi_kick_cmd(req_vq, cmd, req_size, sizeof(cmd->resp.cmd));
-+	if (ret == -EIO) {
-+		cmd->resp.cmd.response = VIRTIO_SCSI_S_BAD_TARGET;
-+		spin_lock_irqsave(&req_vq->vq_lock, flags);
-+		virtscsi_complete_cmd(vscsi, cmd);
-+		spin_unlock_irqrestore(&req_vq->vq_lock, flags);
-+	} else if (ret != 0) {
- 		return SCSI_MLQUEUE_HOST_BUSY;
-+	}
- 	return 0;
- }
+-	BUG_ON(atomic_read(&vha->vref_count));
+-
+ 	qla2x00_free_fcports(vha);
  
+ 	mutex_lock(&ha->vport_lock);
+@@ -2166,7 +2164,7 @@ struct device_attribute *qla2x00_host_attrs[] = {
+ 	dma_free_coherent(&ha->pdev->dev, vha->gnl.size, vha->gnl.l,
+ 	    vha->gnl.ldma);
+ 
+-	if (vha->qpair->vp_idx == vha->vp_idx) {
++	if (vha->qpair && vha->qpair->vp_idx == vha->vp_idx) {
+ 		if (qla2xxx_delete_qpair(vha, vha->qpair) != QLA_SUCCESS)
+ 			ql_log(ql_log_warn, vha, 0x7087,
+ 			    "Queue Pair delete failed.\n");
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index c6d6f0d..bf8e1e2 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -65,6 +65,7 @@
+ 	uint16_t vp_id;
+ 	struct qla_hw_data *ha = vha->hw;
+ 	unsigned long flags = 0;
++	unsigned int count = 10;
+ 
+ 	mutex_lock(&ha->vport_lock);
+ 	/*
+@@ -74,13 +75,14 @@
+ 	 * ensures no active vp_list traversal while the vport is removed
+ 	 * from the queue)
+ 	 */
+-	spin_lock_irqsave(&ha->vport_slock, flags);
+-	while (atomic_read(&vha->vref_count)) {
+-		spin_unlock_irqrestore(&ha->vport_slock, flags);
+-
++	while (count-- && atomic_read(&vha->vref_count))
+ 		msleep(500);
+ 
+-		spin_lock_irqsave(&ha->vport_slock, flags);
++	spin_lock_irqsave(&ha->vport_slock, flags);
++	if (atomic_read(&vha->vref_count)) {
++		ql_dbg(ql_dbg_vport, vha, 0xfffa,
++		    "vha->vref_count=%u timeout\n", vha->vref_count.counter);
++		vha->vref_count = (atomic_t)ATOMIC_INIT(0);
+ 	}
+ 	list_del(&vha->list);
+ 	qlt_update_vp_map(vha, RESET_VP_IDX);
+-- 
+1.8.3.1
