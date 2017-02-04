@@ -1,28 +1,23 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [PATCH] net-next: treewide use is_vlan_dev() helper function.
-Date: Fri, 03 Feb 2017 21:10:45 -0800
-Message-ID: <1486185045.22276.79.camel@perches.com>
-References: <1486182386-50797-1-git-send-email-parav@mellanox.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [REGRESSION v4.10-rc1] blkdev_issue_zeroout() returns
+        -EREMOTEIO on the first call for SCSI device that doesn't support
+        WRITE SAME
+Date: Sat, 4 Feb 2017 09:48:07 +0100
+Message-ID: <20170204084807.GA17559@lst.de>
+References: <cc14c28a-0f0a-640a-b576-cdfbaee75dc5@ce.jp.nec.com> <d360a634-2c95-2de5-8647-4e740e92e10a@kernel.dk> <20170203161239.GA3880@lst.de> <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk> <yq1wpd6vqpm.fsf@oracle.com> <34e7f917-8fff-d8f9-c498-3431a27113ca@kernel.dk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtprelay0069.hostedemail.com ([216.40.44.69]:53867 "EHLO
-        smtprelay.hostedemail.com" rhost-flags-OK-OK-OK-FAIL)
-        by vger.kernel.org with ESMTP id S1753685AbdBDFKy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sat, 4 Feb 2017 00:10:54 -0500
-In-Reply-To: <1486182386-50797-1-git-send-email-parav@mellanox.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <34e7f917-8fff-d8f9-c498-3431a27113ca@kernel.dk>
+Sender: linux-block-owner@vger.kernel.org
+To: Jens Axboe <axboe@kernel.dk>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Junichi Nomura <j-nomura@ce.jp.nec.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>
 List-Id: linux-scsi@vger.kernel.org
-To: Parav Pandit <parav@mellanox.com>, dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, monis@mellanox.com, santosh@chelsio.com, ganeshgr@chelsio.com, manish.chopra@cavium.com, rahul.verma@cavium.com, Dept-GELinuxNICDev@cavium.com, harish.patil@cavium.com, kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jth@kernel.org, arvid.brodin@alten.se, davem@davemloft.net, leon@kernel.org, sagi@grimberg.me, swise@opengridcomputing.com, bart.vanassche@sandisk.com, valex@mellanox.com, arnd@arndb.de, weiyj.lk@gmail.com, jmaxwell37@gmail.com, varun@chelsio.com, jbenc@redhat.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org, linux-scsi@vger
 
-On Fri, 2017-02-03 at 22:26 -0600, Parav Pandit wrote:
-> This patch makes use of is_vlan_dev() function instead of flag
-> comparison which is exactly done by is_vlan_dev() helper function.
+On Fri, Feb 03, 2017 at 08:17:10PM -0700, Jens Axboe wrote:
+> We're at (almost) -rc7 time, we have to do more than hand wave about
+> this. What's the plan for 4.10 final?
 
-Thanks.
-
-btw:  after applying this patch, there is one left
-
-$ git grep -E -n "&\s*IFF_802_1Q_VLAN\b" -- "*.c"
-drivers/net/ethernet/chelsio/cxgb4/l2t.c:435:   if (neigh->dev->priv_flags & IFF_802_1Q_VLAN)
+I'll send your a fix to revert the async write same changes for now,
+as suggested in the last mail from me.
