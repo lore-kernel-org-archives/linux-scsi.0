@@ -1,48 +1,44 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [REGRESSION v4.10-rc1] blkdev_issue_zeroout() returns -EREMOTEIO on the first call for SCSI device that doesn't support WRITE SAME
-Date: Fri, 03 Feb 2017 17:45:25 -0500
-Message-ID: <yq1wpd6vqpm.fsf@oracle.com>
-References: <cc14c28a-0f0a-640a-b576-cdfbaee75dc5@ce.jp.nec.com>
-        <d360a634-2c95-2de5-8647-4e740e92e10a@kernel.dk>
-        <20170203161239.GA3880@lst.de>
-        <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Subhash Jadavani <subhashj@codeaurora.org>
+Subject: [PATCH v1 0/8] scsi: ufs: enhancements, bug fixes and debug support
+Date: Fri,  3 Feb 2017 16:56:30 -0800
+Message-ID: <1486169790-22655-1-git-send-email-subhashj@codeaurora.org>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:32303 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752527AbdBCWpj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2017 17:45:39 -0500
-In-Reply-To: <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk> (Jens Axboe's
-        message of "Fri, 3 Feb 2017 09:14:11 -0700")
+Received: from smtp.codeaurora.org ([198.145.29.96]:43760 "EHLO
+        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753138AbdBDA4h (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2017 19:56:37 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@lst.de>, Junichi Nomura <j-nomura@ce.jp.nec.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>
 
->>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
+This patch series adds following things:
+ - Gear scaling during clock scaling to save additional power
+ - Make clock scaling independent clock gating so that we can set lower
+   clock gating timeout than clock scaling window
+ - one bug fix to clock scaling
+ - additional debug support
 
->> I think we should fix sd.c to only send WRITE SAME if either of the
->> variants are explicitly listed as supported through REPORT SUPPORTED
->> OPERATION CODES, or maybe through a whitelist if there are important
->> enough devices.
+Gilad Broner (3):
+  scsi: ufs: skip request abort task when previous aborts failed
+  scsi: ufs: reduce printout for aborted requests
+  scsi: ufs: add host state prints in failure cases
 
-Jens> Yep
+Subhash Jadavani (3):
+  scsi: ufs: add load based scaling of UFS gear
+  scsi: ufs: don't suspend clock scaling during clock gating
+  scsi: ufs: kick start clock scaling only after device detection
 
-I hate it too. But the reason it's assumed on is that there is
-essentially no heuristic that works. Just like we assume that READ
-always works.
+Venkat Gopalakrishnan (2):
+  scsi: ufs-qcom: dump additional testbus registers
+  scsi: ufs: dump hw regs on link failures
 
-Out of the ~200 devices I have access to in the lab:
-
- - 100% of the SAS/FC disk drives and SSDs support WRITE SAME
- - Only 2 out of about 50 different drive models support RSOC
- - About half of the arrays support WRITE SAME(10/16)
- - None of the arrays I have support RSOC
-
-So even if we were to entertain using RSOC for "enterprise" transport
-classes (which I concur would be nice for other reasons), it wouldn't
-solve the WRITE SAME problem...
+ drivers/scsi/ufs/ufs-qcom.c |  48 ++-
+ drivers/scsi/ufs/ufs-qcom.h |   1 +
+ drivers/scsi/ufs/ufshcd.c   | 863 ++++++++++++++++++++++++++++++++------------
+ drivers/scsi/ufs/ufshcd.h   |  44 ++-
+ 4 files changed, 726 insertions(+), 230 deletions(-)
 
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
+a Linux Foundation Collaborative Project
