@@ -1,55 +1,56 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 8/8] scsi: ufs: dump hw regs on link failures
-Date: Fri,  3 Feb 2017 16:58:24 -0800
-Message-ID: <1486169904-22972-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Venkat Gopalakrishnan <venkatg@codeaurora.org>, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
+From: Jens Axboe <axboe@kernel.dk>
+Subject: Re: [REGRESSION v4.10-rc1] blkdev_issue_zeroout() returns -EREMOTEIO
+ on the first call for SCSI device that doesn't support WRITE SAME
+Date: Fri, 3 Feb 2017 20:17:10 -0700
+Message-ID: <34e7f917-8fff-d8f9-c498-3431a27113ca@kernel.dk>
+References: <cc14c28a-0f0a-640a-b576-cdfbaee75dc5@ce.jp.nec.com>
+ <d360a634-2c95-2de5-8647-4e740e92e10a@kernel.dk>
+ <20170203161239.GA3880@lst.de>
+ <1e819f0d-ecdc-e54a-bd3d-17de2f71c8a7@kernel.dk> <yq1wpd6vqpm.fsf@oracle.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:33181 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753393AbdBDDRr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 3 Feb 2017 22:17:47 -0500
+Received: by mail-pf0-f177.google.com with SMTP id y143so10089438pfb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Feb 2017 19:17:14 -0800 (PST)
+In-Reply-To: <yq1wpd6vqpm.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, Junichi Nomura <j-nomura@ce.jp.nec.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, Chaitanya Kulkarni <chaitanya.kulkarni@hgst.com>
 
-From: Venkat Gopalakrishnan <venkatg@codeaurora.org>
+On 02/03/2017 03:45 PM, Martin K. Petersen wrote:
+>>>>>> "Jens" == Jens Axboe <axboe@kernel.dk> writes:
+> 
+>>> I think we should fix sd.c to only send WRITE SAME if either of the
+>>> variants are explicitly listed as supported through REPORT SUPPORTED
+>>> OPERATION CODES, or maybe through a whitelist if there are important
+>>> enough devices.
+> 
+> Jens> Yep
+> 
+> I hate it too. But the reason it's assumed on is that there is
+> essentially no heuristic that works. Just like we assume that READ
+> always works.
+> 
+> Out of the ~200 devices I have access to in the lab:
+> 
+>  - 100% of the SAS/FC disk drives and SSDs support WRITE SAME
+>  - Only 2 out of about 50 different drive models support RSOC
+>  - About half of the arrays support WRITE SAME(10/16)
+>  - None of the arrays I have support RSOC
+> 
+> So even if we were to entertain using RSOC for "enterprise" transport
+> classes (which I concur would be nice for other reasons), it wouldn't
+> solve the WRITE SAME problem...
 
-Dump host state, power info and host/vendor specific registers
-on link failures. This provides useful info to debug the failures.
+We're at (almost) -rc7 time, we have to do more than hand wave about
+this. What's the plan for 4.10 final?
 
-Signed-off-by: Venkat Gopalakrishnan <venkatg@codeaurora.org>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufshcd.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
-index a99a673..8b721f4 100644
---- a/drivers/scsi/ufs/ufshcd.c
-+++ b/drivers/scsi/ufs/ufshcd.c
-@@ -3554,6 +3554,12 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 		ret = (status != PWR_OK) ? status : -1;
- 	}
- out:
-+	if (ret) {
-+		ufshcd_print_host_state(hba);
-+		ufshcd_print_pwr_info(hba);
-+		ufshcd_print_host_regs(hba);
-+	}
-+
- 	spin_lock_irqsave(hba->host->host_lock, flags);
- 	hba->active_uic_cmd = NULL;
- 	hba->uic_async_done = NULL;
-@@ -4146,8 +4152,12 @@ static int ufshcd_link_startup(struct ufs_hba *hba)
- 
- 	ret = ufshcd_make_hba_operational(hba);
- out:
--	if (ret)
-+	if (ret) {
- 		dev_err(hba->dev, "link startup failed %d\n", ret);
-+		ufshcd_print_host_state(hba);
-+		ufshcd_print_pwr_info(hba);
-+		ufshcd_print_host_regs(hba);
-+	}
- 	return ret;
- }
- 
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
+Jens Axboe
