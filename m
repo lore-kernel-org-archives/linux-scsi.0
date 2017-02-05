@@ -1,51 +1,51 @@
-From: Stephen Hemminger <stephen@networkplumber.org>
-Subject: Re: [PATCHv1] net-next: treewide use is_vlan_dev() helper function.
-Date: Sat, 4 Feb 2017 13:54:29 -0800
-Message-ID: <20170204135429.394be376@xeon-e3>
-References: <1486227649-12648-1-git-send-email-parav@mellanox.com>
+From: "Mrs.Forkosh.Esti" <mrs.forkosh.esti7@mrsmarie.net>
+Subject: Dear Beloved,
+Date: Sun, 05 Feb 2017 12:13:25 +0100
+Message-ID: <732128.98991.qm@smtp104.biz.mail.gq1.yahoo.com>
+Reply-To: mrs.forkosh.esti@gmail.com
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <driverdev-devel-bounces@linuxdriverproject.org>
-In-Reply-To: <1486227649-12648-1-git-send-email-parav@mellanox.com>
-List-Unsubscribe: <http://driverdev.linuxdriverproject.org/mailman/options/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=unsubscribe>
-List-Archive: <http://driverdev.linuxdriverproject.org/pipermail/driverdev-devel/>
-List-Post: <mailto:driverdev-devel@linuxdriverproject.org>
-List-Help: <mailto:driverdev-devel-request@linuxdriverproject.org?subject=help>
-List-Subscribe: <http://driverdev.linuxdriverproject.org/mailman/listinfo/driverdev-devel>,
- <mailto:driverdev-devel-request@linuxdriverproject.org?subject=subscribe>
-Errors-To: driverdev-devel-bounces@linuxdriverproject.org
-Sender: "devel" <driverdev-devel-bounces@linuxdriverproject.org>
-To: Parav Pandit <parav@mellanox.com>
-Cc: arvid.brodin@alten.se, swise@opengridcomputing.com, jbenc@redhat.com, jmaxwell37@gmail.com, sean.hefty@intel.com, sthemmin@microsoft.com, sagi@grimberg.me, leon@kernel.org, Dept-GELinuxNICDev@cavium.com, dledford@redhat.com, ganeshgr@chelsio.com, harish.patil@cavium.com, hal.rosenstock@gmail.com, manish.chopra@cavium.com, santosh@chelsio.com, arnd@arndb.de, haiyangz@microsoft.com, fcoe-devel@open-fcoe.org, bart.vanassche@sandisk.com, jejb@linux.vnet.ibm.com, rahul.verma@cavium.com, linux-scsi@vger.kernel.org, martin.petersen@oracle.com, netdev@vger.kernel.org, devel@linuxdriverproject.org, varun@chelsio.com, linux-rdma@vger.kernel.org, monis@mellanox.com, valex@mellanox.com, QLogic-Storage-Upstream@qlogic.com, jth@kernel.org, davem@davemloft.net
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from smtp104.biz.mail.gq1.yahoo.com ([98.137.12.179]:42613 "EHLO
+        smtp104.biz.mail.gq1.yahoo.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751735AbdBEMNm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 5 Feb 2017 07:13:42 -0500
+Content-Description: Mail message body
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Recipients <mrs.forkosh.esti7@mrsmarie.net>
 
-On Sat,  4 Feb 2017 11:00:49 -0600
-Parav Pandit <parav@mellanox.com> wrote:
+Dear Beloved,
 
-> This patch makes use of is_vlan_dev() function instead of flag
-> comparison which is exactly done by is_vlan_dev() helper function.
-> 
-> Signed-off-by: Parav Pandit <parav@mellanox.com>
-> Reviewed-by: Daniel Jurgens <danielj@mellanox.com>
-> ---
->  drivers/infiniband/core/cma.c                        |  6 ++----
->  drivers/infiniband/sw/rxe/rxe_net.c                  |  2 +-
->  drivers/net/ethernet/broadcom/cnic.c                 |  2 +-
->  drivers/net/ethernet/chelsio/cxgb3/l2t.c             |  2 +-
->  drivers/net/ethernet/chelsio/cxgb4/cxgb4_main.c      |  4 ++--
->  drivers/net/ethernet/chelsio/cxgb4/l2t.c             |  2 +-
->  drivers/net/ethernet/qlogic/netxen/netxen_nic_main.c |  8 ++++----
->  drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c     |  4 ++--
->  drivers/net/hyperv/netvsc_drv.c                      |  2 +-
->  drivers/scsi/bnx2fc/bnx2fc_fcoe.c                    |  6 +++---
->  drivers/scsi/cxgbi/libcxgbi.c                        |  6 +++---
->  drivers/scsi/fcoe/fcoe.c                             | 13 ++++++-------
->  include/rdma/ib_addr.h                               |  6 ++----
->  net/hsr/hsr_slave.c                                  |  3 ++-
->  14 files changed, 31 insertions(+), 35 deletions(-)
+Please kindly pardon me for any inconvenience this letter might have caused=
+ you, because I know it may come to you as a surprise as we have no previou=
+s correspondence. =
 
-Looks good thanks.
 
-Acked-by: Stephen Hemminger <stephen@networkplumber.org>
+I am Mrs.Forkosh.Esti. and i have been suffering from ovarian cancer diseas=
+e and the doctor says that i have just few days to leave. I am from (Paris)=
+ France, but based in West Africa Burkina Faso since eight years ago as a b=
+usiness woman dealing with gold exportation and Sales.
+
+Now that I am about to end the race like this, without any family members a=
+nd no child. I have $1.1 Million US DOLLARS in  African Development-Bank (A=
+.D.B) Burkina Faso which i instructed the bank to give St Andrews Missionar=
+y Home in Burkina Faso. But my mind is not at rest because I am writing thi=
+s letter now through the help of my computer beside my sick bed.
+
+I also have $4.5 Million US Dollars at UNITED BANK FOR AFRICA (UBA) here in=
+ Burkina Faso and i instructed the bank to release my money to any one who =
+apply for the release and as a foreigner.
+
+Please i want you to be specific on this issue, because this is my WILL and=
+ have promise that if you can execute this project, i will offer you 50% of=
+ the fund and you will give 50% to the orphanages home in your country for =
+my heart to rest in peace.
+
+Respond to me immediately for further details since I have just few days to=
+ end my life due to the ovarian cancer disease, hoping you will understand =
+my pains
+
+Yours fairly friend,
+Mrs.Forkosh.Esti.
