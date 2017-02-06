@@ -1,54 +1,25 @@
-From: Haiyang Zhang <haiyangz@microsoft.com>
-Subject: RE: [PATCHv1] net-next: treewide use is_vlan_dev() helper function.
-Date: Mon, 6 Feb 2017 21:21:00 +0000
-Message-ID: <BLUPR03MB1412D00046029D435FA40365CA400__48097.2710800872$1486416097$gmane$org@BLUPR03MB1412.namprd03.prod.outlook.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCHv1] net-next: treewide use is_vlan_dev() helper function.
+Date: Mon, 06 Feb 2017 16:35:43 -0500 (EST)
+Message-ID: <20170206.163543.1507099447218540784.davem@davemloft.net>
 References: <1486227649-12648-1-git-send-email-parav@mellanox.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam03on0112.outbound.protection.outlook.com ([104.47.42.112]:16860
-        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751784AbdBFVVY (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Feb 2017 16:21:24 -0500
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <netdev-owner@vger.kernel.org>
 In-Reply-To: <1486227649-12648-1-git-send-email-parav@mellanox.com>
-Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: netdev-owner@vger.kernel.org
+To: parav@mellanox.com
+Cc: dledford@redhat.com, sean.hefty@intel.com, hal.rosenstock@gmail.com, monis@mellanox.com, santosh@chelsio.com, ganeshgr@chelsio.com, manish.chopra@cavium.com, rahul.verma@cavium.com, Dept-GELinuxNICDev@cavium.com, harish.patil@cavium.com, kys@microsoft.com, haiyangz@microsoft.com, sthemmin@microsoft.com, QLogic-Storage-Upstream@qlogic.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jth@kernel.org, arvid.brodin@alten.se, leon@kernel.org, sagi@grimberg.me, swise@opengridcomputing.com, bart.vanassche@sandisk.com, valex@mellanox.com, arnd@arndb.de, weiyj.lk@gmail.com, jmaxwell37@gmail.com, varun@chelsio.com, jbenc@redhat.com, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, devel@linuxdriverproject.org, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org
 List-Id: linux-scsi@vger.kernel.org
-To: Parav Pandit <parav@mellanox.com>, "dledford@redhat.com" <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, "hal.rosenstock@gmail.com" <hal.rosenstock@gmail.com>, "monis@mellanox.com" <monis@mellanox.com>, "santosh@chelsio.com" <santosh@chelsio.com>, "ganeshgr@chelsio.com" <ganeshgr@chelsio.com>, "manish.chopra@cavium.com" <manish.chopra@cavium.com>, "rahul.verma@cavium.com" <rahul.verma@cavium.com>, "Dept-GELinuxNICDev@cavium.com" <Dept-GELinuxNICDev@cavium.com>, "harish.patil@cavium.com" <harish.patil@cavium.com>, KY Srinivasan <kys@microsoft.com>, Stephen Hemminger <sthemmin@microsoft.com>, "QLogic-Storage-Upstream@qlogic.com" <QLogic-Storage-Upstream@qlogic.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, martin.petersen@oracle.com
 
+From: Parav Pandit <parav@mellanox.com>
+Date: Sat,  4 Feb 2017 11:00:49 -0600
 
-
-> -----Original Message-----
-> From: Parav Pandit [mailto:parav@mellanox.com]
-> Sent: Saturday, February 4, 2017 12:01 PM
-> To: dledford@redhat.com; Sean Hefty <sean.hefty@intel.com>;
-> hal.rosenstock@gmail.com; monis@mellanox.com; santosh@chelsio.com;
-> ganeshgr@chelsio.com; manish.chopra@cavium.com; rahul.verma@cavium.com;
-> Dept-GELinuxNICDev@cavium.com; harish.patil@cavium.com; KY Srinivasan
-> <kys@microsoft.com>; Haiyang Zhang <haiyangz@microsoft.com>; Stephen
-> Hemminger <sthemmin@microsoft.com>; QLogic-Storage-Upstream@qlogic.com;
-> jejb@linux.vnet.ibm.com; martin.petersen@oracle.com; jth@kernel.org;
-> arvid.brodin@alten.se; davem@davemloft.net; leon@kernel.org;
-> sagi@grimberg.me; swise@opengridcomputing.com;
-> bart.vanassche@sandisk.com; valex@mellanox.com; arnd@arndb.de;
-> weiyj.lk@gmail.com; jmaxwell37@gmail.com; varun@chelsio.com;
-> jbenc@redhat.com; linux-rdma@vger.kernel.org; netdev@vger.kernel.org;
-> devel@linuxdriverproject.org; linux-scsi@vger.kernel.org; fcoe-
-> devel@open-fcoe.org
-> Cc: Parav Pandit <parav@mellanox.com>
-> Subject: [PATCHv1] net-next: treewide use is_vlan_dev() helper function.
->=20
 > This patch makes use of is_vlan_dev() function instead of flag
 > comparison which is exactly done by is_vlan_dev() helper function.
->=20
+> 
 > Signed-off-by: Parav Pandit <parav@mellanox.com>
 > Reviewed-by: Daniel Jurgens <danielj@mellanox.com>
 
-
-For drivers/net/hyperv/netvsc_drv.c
-Acked-by: Haiyang Zhang <haiyangz@microsoft.com>
-
-
-Thanks.
+Applied.
