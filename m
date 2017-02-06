@@ -1,147 +1,155 @@
-From: Shivasharan Srikanteshwara
-        <shivasharan.srikanteshwara@broadcom.com>
-Subject: RE: [PATCH 09/39] megaraid_sas: NVME Interface detection and prop settings
-Date: Mon, 6 Feb 2017 19:25:33 +0530
-Message-ID: <a62a837f17711d34a68af62a904a4a6a@mail.gmail.com>
+From: Tomas Henzl <thenzl@redhat.com>
+Subject: Re: [PATCH 08/39] megaraid_sas: megasas_get_request_descriptor always
+ return valid desc
+Date: Mon, 6 Feb 2017 15:06:19 +0100
+Message-ID: <e17f9c02-4301-ddfe-aa64-17baf3d31110@redhat.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-10-git-send-email-shivasharan.srikanteshwara@broadcom.com> <996c107a-9a15-3e9e-c510-eb94913d21c7@suse.com>
+ <1486375212-17329-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f170.google.com ([209.85.216.170]:34090 "EHLO
-        mail-qt0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751654AbdBFNzf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 08:55:35 -0500
-Received: by mail-qt0-f170.google.com with SMTP id w20so100270320qtb.1
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 05:55:35 -0800 (PST)
-In-Reply-To: <996c107a-9a15-3e9e-c510-eb94913d21c7@suse.com>
+Received: from mx1.redhat.com ([209.132.183.28]:41090 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752757AbdBFOG1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Feb 2017 09:06:27 -0500
+In-Reply-To: <1486375212-17329-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com
 
-> -----Original Message-----
-> From: Hannes Reinecke [mailto:hare@suse.com]
-> Sent: Monday, February 06, 2017 4:17 PM
-> To: Shivasharan S; linux-scsi@vger.kernel.org
-> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
-> jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
-> sumit.saxena@broadcom.com
-> Subject: Re: [PATCH 09/39] megaraid_sas: NVME Interface detection and
-prop
-> settings
+On 6.2.2017 10:59, Shivasharan S wrote:
+> No functional change. Code clean up. Removing error code which is not
+> valid scenario.
 >
-> On 02/06/2017 10:59 AM, Shivasharan S wrote:
-> > New functionality
-> > Adding detection logic for NVME device attached behind Ventura
-controller.
-> > Driver set HostPageSize in IOC_INIT frame to inform about page size
-for NVME
-> devices.
-> > Firmware reports NVME page size to the driver.
-> > PD INFO DCMD provide new interface type NVME_PD. Driver set property
-of
-> NVME device.
-> >
-> > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> > ---
-> >  drivers/scsi/megaraid/megaraid_sas.h        |  23 ++--
-> >  drivers/scsi/megaraid/megaraid_sas_base.c   | 170
-++++++++++++++++++++--
-> ------
-> >  drivers/scsi/megaraid/megaraid_sas_fusion.c |   6 +-
-> >  drivers/scsi/megaraid/megaraid_sas_fusion.h |   2 +-
-> >  4 files changed, 142 insertions(+), 59 deletions(-)
-> >
-> [ .. ]
-> > @@ -3983,18 +4037,22 @@ dcmd_timeout_ocr_possible(struct
-> megasas_instance *instance) {
-> >  		return INITIATE_OCR;
-> >  }
-> >
-> > -static int
-> > -megasas_get_pd_info(struct megasas_instance *instance, u16 device_id)
-> > +static void
-> > +megasas_get_pd_info(struct megasas_instance *instance, struct
-> > +scsi_device *sdev)
-> >  {
-> >  	int ret;
-> >  	struct megasas_cmd *cmd;
-> >  	struct megasas_dcmd_frame *dcmd;
-> >
-> > +	struct MR_PRIV_DEVICE *mr_device_priv_data;
-> > +	u16 device_id =3D 0;
-> > +
-> > +	device_id =3D (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
-> > +sdev->id;
-> >  	cmd =3D megasas_get_cmd(instance);
-> >
-> >  	if (!cmd) {
-> >  		dev_err(&instance->pdev->dev, "Failed to get cmd %s\n",
-> __func__);
-> > -		return -ENOMEM;
-> > +		return;
-> >  	}
-> >
-> >  	dcmd =3D &cmd->frame->dcmd;
-> > @@ -4021,7 +4079,9 @@ megasas_get_pd_info(struct megasas_instance
-> > *instance, u16 device_id)
-> >
-> >  	switch (ret) {
-> >  	case DCMD_SUCCESS:
-> > -		instance->pd_list[device_id].interface =3D
-> > +		mr_device_priv_data =3D sdev->hostdata;
-> > +		le16_to_cpus((u16 *)&instance->pd_info->state.ddf.pdType);
-> > +		mr_device_priv_data->interface_type =3D
-> >  				instance->pd_info->state.ddf.pdType.intf;
-> >  		break;
-> >
-> > @@ -4048,7 +4108,7 @@ megasas_get_pd_info(struct megasas_instance
-> *instance, u16 device_id)
-> >  	if (ret !=3D DCMD_TIMEOUT)
-> >  		megasas_return_cmd(instance, cmd);
-> >
-> > -	return ret;
-> > +	return;
-> >  }
-> >  /*
-> >   * megasas_get_pd_list_info -	Returns FW's pd_list structure
-> Please don't do this.
-> There's a valid reason why there is return value in the first place (hot
-removal of
-> devices IIRC), and it's always good manners to provide for an error path
-instead
-> of assuming that everything will be fine.
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 
-megasas_get_pd_info is called to get "interface type" (SAS, SATA or NVME)
-of non-RAID disks. The interface type is used in IO path (applicable only
-for
-NVME based non-RAID disks) and also used for setting the device queue
-depth.
-Even if this function returns some error, driver is not going to do
-anything but
-continue in low performance mode (for NVME based non-RAID disks driver
-will
-not form native PRPs and device QD will be set to default value).
->
-> And, incidentally, this has nothing to do with the NVMe backend changes,
-right?
+I'm not sure if the part which replaces "return 0;"
+with "return ->issue_dcmd" is an improvement - is there
+any instance of issue_dcmd which returns anything else but a '0' ?
+If not, make it a return void and have a tiny perf improvement.
 
-The "interface type" tells the driver whether a drive is NVME based or
-not. And
-if NVME, then we form PRPs.
+Other than that I agree with Hannes, please divide this into two patches.
 
-Thanks,
-Shivasharan
+Tomas
+
+> ---
+>  drivers/scsi/megaraid/megaraid_sas_base.c   |  4 +---
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 33 +++++------------------------
+>  2 files changed, 6 insertions(+), 31 deletions(-)
 >
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke		               zSeries & Storage
-> hare@suse.com			               +49 911 74053 688
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
-> GF: F. Imend=C3=B6rffer, J. Smithard, D. Upmanyu, G. Norton HRB 21284 (AG
-> N=C3=BCrnberg)
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+> index 80fcdf5..138d028 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> @@ -5602,9 +5602,7 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+>  	/*
+>  	 * Issue the aen registration frame
+>  	 */
+> -	instance->instancet->issue_dcmd(instance, cmd);
+> -
+> -	return 0;
+> +	return instance->instancet->issue_dcmd(instance, cmd);
+>  }
+>  
+>  /**
+> diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> index d25268a..1ec482e 100644
+> --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> @@ -974,8 +974,7 @@ megasas_sync_pd_seq_num(struct megasas_instance *instance, bool pend) {
+>  		dcmd->mbox.b[0] = MEGASAS_DCMD_MBOX_PEND_FLAG;
+>  		dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_WRITE);
+>  		instance->jbod_seq_cmd = cmd;
+> -		instance->instancet->issue_dcmd(instance, cmd);
+> -		return 0;
+> +		return instance->instancet->issue_dcmd(instance, cmd);
+>  	}
+>  
+>  	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_READ);
+> @@ -1115,7 +1114,7 @@ megasas_get_map_info(struct megasas_instance *instance)
+>  int
+>  megasas_sync_map_info(struct megasas_instance *instance)
+>  {
+> -	int ret = 0, i;
+> +	int i;
+>  	struct megasas_cmd *cmd;
+>  	struct megasas_dcmd_frame *dcmd;
+>  	u32 size_sync_info, num_lds;
+> @@ -1182,9 +1181,7 @@ megasas_sync_map_info(struct megasas_instance *instance)
+>  
+>  	instance->map_update_cmd = cmd;
+>  
+> -	instance->instancet->issue_dcmd(instance, cmd);
+> -
+> -	return ret;
+> +	return instance->instancet->issue_dcmd(instance, cmd);
+>  }
+>  
+>  /*
+> @@ -2438,18 +2435,12 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+>  	return 0;
+>  }
+>  
+> -union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+> +static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+>  megasas_get_request_descriptor(struct megasas_instance *instance, u16 index)
+>  {
+>  	u8 *p;
+>  	struct fusion_context *fusion;
+>  
+> -	if (index >= instance->max_mpt_cmds) {
+> -		dev_err(&instance->pdev->dev, "Invalid SMID (0x%x)request for "
+> -		       "descriptor for scsi%d\n", index,
+> -			instance->host->host_no);
+> -		return NULL;
+> -	}
+>  	fusion = instance->ctrl_context;
+>  	p = fusion->req_frames_desc +
+>  		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) * index;
+> @@ -2959,7 +2950,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+>  union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+>  build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+>  {
+> -	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+> +	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc = NULL;
+>  	u16 index;
+>  
+>  	if (build_mpt_mfi_pass_thru(instance, cmd)) {
+> @@ -2971,9 +2962,6 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
+>  
+>  	req_desc = megasas_get_request_descriptor(instance, index - 1);
+>  
+> -	if (!req_desc)
+> -		return NULL;
+> -
+>  	req_desc->Words = 0;
+>  	req_desc->SCSIIO.RequestFlags = (MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
+>  					 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+> @@ -2996,11 +2984,6 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
+>  	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+>  
+>  	req_desc = build_mpt_cmd(instance, cmd);
+> -	if (!req_desc) {
+> -		dev_info(&instance->pdev->dev, "Failed from %s %d\n",
+> -					__func__, __LINE__);
+> -		return DCMD_NOT_FIRED;
+> -	}
+>  
+>  	megasas_fire_cmd_fusion(instance, req_desc);
+>  	return DCMD_SUCCESS;
+> @@ -3437,12 +3420,6 @@ megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
+>  
+>  	req_desc = megasas_get_request_descriptor(instance,
+>  			(cmd_fusion->index - 1));
+> -	if (!req_desc) {
+> -		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+> -			__func__, __LINE__);
+> -		megasas_return_cmd(instance, cmd_mfi);
+> -		return -ENOMEM;
+> -	}
+>  
+>  	cmd_fusion->request_desc = req_desc;
+>  	req_desc->Words = 0;
