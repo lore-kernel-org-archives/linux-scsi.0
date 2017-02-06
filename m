@@ -1,28 +1,234 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 05/39] megaraid_sas: Refactor MEGASAS_IS_LOGICAL macro
- using sdev
-Date: Mon, 6 Feb 2017 14:44:18 +0100
-Message-ID: <6e935862-1617-6a0b-3329-1db26ce133b3@redhat.com>
+From: Shivasharan Srikanteshwara
+        <shivasharan.srikanteshwara@broadcom.com>
+Subject: RE: [PATCH 08/39] megaraid_sas: megasas_get_request_descriptor always
+ return valid desc
+Date: Mon, 6 Feb 2017 19:14:23 +0530
+Message-ID: <b3af1748b00ac22a5cba585a80462b53@mail.gmail.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1486375212-17329-9-git-send-email-shivasharan.srikanteshwara@broadcom.com> <9c5b079b-b73b-ae09-60ae-47c04e708537@suse.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:54640 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752688AbdBFNo0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Feb 2017 08:44:26 -0500
-In-Reply-To: <1486375212-17329-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Received: from mail-qt0-f180.google.com ([209.85.216.180]:36643 "EHLO
+        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752516AbdBFNo0 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 08:44:26 -0500
+Received: by mail-qt0-f180.google.com with SMTP id k15so104954175qtg.3
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 05:44:25 -0800 (PST)
+In-Reply-To: <9c5b079b-b73b-ae09-60ae-47c04e708537@suse.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com
+To: Hannes Reinecke <hare@suse.com>, linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+Cc: thenzl@redhat.com, jejb@linux.vnet.ibm.com, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>
 
-On 6.2.2017 10:59, Shivasharan S wrote:
-> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> -----Original Message-----
+> From: Hannes Reinecke [mailto:hare@suse.com]
+> Sent: Monday, February 06, 2017 4:14 PM
+> To: Shivasharan S; linux-scsi@vger.kernel.org
+> Cc: martin.petersen@oracle.com; thenzl@redhat.com;
+> jejb@linux.vnet.ibm.com; kashyap.desai@broadcom.com;
+> sumit.saxena@broadcom.com
+> Subject: Re: [PATCH 08/39] megaraid_sas: megasas_get_request_descriptor
+> always return valid desc
+>
+> On 02/06/2017 10:59 AM, Shivasharan S wrote:
+> > No functional change. Code clean up. Removing error code which is not
+> > valid scenario.
+> >
+> > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas_base.c   |  4 +---
+> >  drivers/scsi/megaraid/megaraid_sas_fusion.c | 33
+> > +++++------------------------
+> >  2 files changed, 6 insertions(+), 31 deletions(-)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > index 80fcdf5..138d028 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > @@ -5602,9 +5602,7 @@ megasas_register_aen(struct megasas_instance
+> *instance, u32 seq_num,
+> >  	/*
+> >  	 * Issue the aen registration frame
+> >  	 */
+> > -	instance->instancet->issue_dcmd(instance, cmd);
+> > -
+> > -	return 0;
+> > +	return instance->instancet->issue_dcmd(instance, cmd);
+> >  }
+> >
+> >  /**
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > index d25268a..1ec482e 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+> > @@ -974,8 +974,7 @@ megasas_sync_pd_seq_num(struct megasas_instance
+> *instance, bool pend) {
+> >  		dcmd->mbox.b[0] =3D MEGASAS_DCMD_MBOX_PEND_FLAG;
+> >  		dcmd->flags =3D cpu_to_le16(MFI_FRAME_DIR_WRITE);
+> >  		instance->jbod_seq_cmd =3D cmd;
+> > -		instance->instancet->issue_dcmd(instance, cmd);
+> > -		return 0;
+> > +		return instance->instancet->issue_dcmd(instance, cmd);
+> >  	}
+> >
+> >  	dcmd->flags =3D cpu_to_le16(MFI_FRAME_DIR_READ); @@ -1115,7
+> +1114,7 @@
+> > megasas_get_map_info(struct megasas_instance *instance)  int
+> > megasas_sync_map_info(struct megasas_instance *instance)  {
+> > -	int ret =3D 0, i;
+> > +	int i;
+> >  	struct megasas_cmd *cmd;
+> >  	struct megasas_dcmd_frame *dcmd;
+> >  	u32 size_sync_info, num_lds;
+> > @@ -1182,9 +1181,7 @@ megasas_sync_map_info(struct megasas_instance
+> > *instance)
+> >
+> >  	instance->map_update_cmd =3D cmd;
+> >
+> > -	instance->instancet->issue_dcmd(instance, cmd);
+> > -
+> > -	return ret;
+> > +	return instance->instancet->issue_dcmd(instance, cmd);
+> >  }
+> >
+> >  /*
+> > @@ -2438,18 +2435,12 @@ megasas_build_io_fusion(struct
+> megasas_instance *instance,
+> >  	return 0;
+> >  }
+> >
+> > -union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+> > +static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
+> >  megasas_get_request_descriptor(struct megasas_instance *instance, u16
+> > index)  {
+> >  	u8 *p;
+> >  	struct fusion_context *fusion;
+> >
+> > -	if (index >=3D instance->max_mpt_cmds) {
+> > -		dev_err(&instance->pdev->dev, "Invalid SMID (0x%x)request
+for
+> "
+> > -		       "descriptor for scsi%d\n", index,
+> > -			instance->host->host_no);
+> > -		return NULL;
+> > -	}
+> >  	fusion =3D instance->ctrl_context;
+> >  	p =3D fusion->req_frames_desc +
+> >  		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) *
+> index; @@ -2959,7
+> > +2950,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
+> > union MEGASAS_REQUEST_DESCRIPTOR_UNION *  build_mpt_cmd(struct
+> > megasas_instance *instance, struct megasas_cmd *cmd)  {
+> > -	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+> > +	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc =3D NULL;
+> >  	u16 index;
+> >
+> >  	if (build_mpt_mfi_pass_thru(instance, cmd)) { @@ -2971,9 +2962,6
+@@
+> > build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd
+> > *cmd)
+> >
+> >  	req_desc =3D megasas_get_request_descriptor(instance, index - 1);
+> >
+> > -	if (!req_desc)
+> > -		return NULL;
+> > -
+> >  	req_desc->Words =3D 0;
+> >  	req_desc->SCSIIO.RequestFlags =3D
+> (MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
+> >
+> MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
+> > @@ -2996,11 +2984,6 @@ megasas_issue_dcmd_fusion(struct
+> megasas_instance *instance,
+> >  	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+> >
+> >  	req_desc =3D build_mpt_cmd(instance, cmd);
+> > -	if (!req_desc) {
+> > -		dev_info(&instance->pdev->dev, "Failed from %s %d\n",
+> > -					__func__, __LINE__);
+> > -		return DCMD_NOT_FIRED;
+> > -	}
+> >
+> >  	megasas_fire_cmd_fusion(instance, req_desc);
+> >  	return DCMD_SUCCESS;
+> > @@ -3437,12 +3420,6 @@ megasas_issue_tm(struct megasas_instance
+> > *instance, u16 device_handle,
+> >
+> >  	req_desc =3D megasas_get_request_descriptor(instance,
+> >  			(cmd_fusion->index - 1));
+> > -	if (!req_desc) {
+> > -		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
+> > -			__func__, __LINE__);
+> > -		megasas_return_cmd(instance, cmd_mfi);
+> > -		return -ENOMEM;
+> > -	}
+> >
+> >  	cmd_fusion->request_desc =3D req_desc;
+> >  	req_desc->Words =3D 0;
+> >
+> Here are two things merged into one; the one is the removal of the
+'return 0'
+> line when calling issue_dcmd(), and the other is the check for an empty
+> req_desc.
+>
+> Personally I would leave the latter in; it's always good to have a
+sanity check,
+> just in case.
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Hi Hannes,
+In past, megaraid_sas driver was link list based for MPT and MFI frame and
+very unrealistic error handling was added to prevent or delay some bug.
+Ideally req_desc is tied with the message frame, so if message frame is
+available there must be a corresponding req_desc available as well.
+Now megaraid_sas driver gets tags from block layer and also it has already
+reserved certain tags for internal use.
+We are not allowing any failure to receive fusion command for internal
+processing (termed as DCMD in megaraid).
 
-Tomas
+Driver reserve few commands as below and expect command for internal
+operation should be always available.
+        instance->max_scsi_cmds =3D instance->max_fw_cmds -
+                (MEGASAS_FUSION_INTERNAL_CMDS +
+                MEGASAS_FUSION_IOCTL_CMDS);
+
+In case of error handling,  since there is a check for return of
+megasas_get_cmd() we don't really need req_desc level of check.
+
+    cmd =3D megasas_get_cmd(instance);
+
+    if (!cmd) {
+        printk(KERN_DEBUG "megasas (%s): Failed to get cmd\n",
+               __FUNCTION__);
+        return -ENOMEM;
+    }
+
+>
+> But in either case, please make this two patches.
+
+Sure, I will resend two separate patches for this.
+But I am not sure if sending only affected patch is good enough or
+complete series.
+I will figure out if sending an update on this single patch works.
+
+Martin -
+Are you OK if I re-send only above impacted patch or like to see complete
+series with v2 tag and updated patch numbers?
+
+Thanks,
+Shivasharan
+
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke		               zSeries & Storage
+> hare@suse.com			               +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, D. Upmanyu, G. Norton HRB 21284 (AG
+> N=C3=BCrnberg)
