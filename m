@@ -1,83 +1,72 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 23/39] megaraid_sas: set pd_after_lb from MR_BuildRaidContext and initialize pDevHandle to MR_DEVHANDLE_INVALID
-Date: Mon,  6 Feb 2017 01:59:56 -0800
-Message-ID: <1486375212-17329-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 29/39] megaraid_sas: Do not set fp_possible if TM capable for non-RW syspdIO, change fp_possible to bool
+Date: Mon,  6 Feb 2017 02:00:02 -0800
+Message-ID: <1486375212-17329-30-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f49.google.com ([74.125.83.49]:35303 "EHLO
-        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750997AbdBFKCe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:02:34 -0500
-Received: by mail-pg0-f49.google.com with SMTP id 194so27434746pgd.2
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:02:34 -0800 (PST)
+Received: from mail-pf0-f172.google.com ([209.85.192.172]:33779 "EHLO
+        mail-pf0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751593AbdBFKCq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:02:46 -0500
+Received: by mail-pf0-f172.google.com with SMTP id y143so23104333pfb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:02:46 -0800 (PST)
 In-Reply-To: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Issue is limited for Syncro firmware where pd_after_lb is not set but is accidentally used.
-Not a functional issue, but results in low performance due to improper load balancing between two LUNs.
+FIX - firmware wants non-RW SYS PD IOs to avoid FastPath for
+better tracking and other functionalities if the device
+is task management capable.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 15 ++++++++++-----
+ 1 file changed, 10 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 68582d9..a5517e7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -948,6 +948,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	struct fusion_context *fusion;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 7f53505..d49f6bd 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2563,7 +2563,8 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+  */
+ static void
+ megasas_build_syspd_fusion(struct megasas_instance *instance,
+-	struct scsi_cmnd *scmd, struct megasas_cmd_fusion *cmd, u8 fp_possible)
++	struct scsi_cmnd *scmd, struct megasas_cmd_fusion *cmd,
++	bool fp_possible)
+ {
+ 	u32 device_id;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
+@@ -2684,6 +2685,8 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 	int sge_count;
+ 	u8  cmd_type;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request = cmd->io_request;
++	struct MR_PRIV_DEVICE *mr_device_priv_data;
++	mr_device_priv_data = scp->device->hostdata;
  
- 	fusion = instance->ctrl_context;
-+	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 
- 	/*Get row and span from io_info for Uneven Span IO.*/
- 	row	    = io_info->start_row;
-@@ -986,7 +987,6 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 				MR_PdDevHandleGet(r1_alt_pd, map);
- 		}
- 	} else {
--		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 		if ((raid->level >= 5) &&
- 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
- 			((fusion->adapter_type == INVADER_SERIES) &&
-@@ -1013,6 +1013,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm = pRAID_Context->span_arm;
- 	}
-+	io_info->pd_after_lb = pd;
- 	return retval;
- }
- 
-@@ -1049,7 +1050,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	struct fusion_context *fusion;
- 
- 	fusion = instance->ctrl_context;
--
-+	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 
- 	row =  mega_div64_32(stripRow, raid->rowDataSize);
- 
-@@ -1102,8 +1103,6 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 					MR_PdDevHandleGet(r1_alt_pd, map);
- 		}
- 	} else {
--		/* set dev handle as invalid. */
--		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 		if ((raid->level >= 5) &&
- 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
- 			((fusion->adapter_type == INVADER_SERIES) &&
-@@ -1132,6 +1131,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm = pRAID_Context->span_arm;
- 	}
-+	io_info->pd_after_lb = pd;
- 	return retval;
- }
- 
+ 	/* Zero out some fields so they don't get reused */
+ 	memset(io_request->LUN, 0x0, 8);
+@@ -2712,12 +2715,14 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 		megasas_build_ld_nonrw_fusion(instance, scp, cmd);
+ 		break;
+ 	case READ_WRITE_SYSPDIO:
++		megasas_build_syspd_fusion(instance, scp, cmd, true);
++		break;
+ 	case NON_READ_WRITE_SYSPDIO:
+-		if (instance->secure_jbod_support &&
+-			(cmd_type == NON_READ_WRITE_SYSPDIO))
+-			megasas_build_syspd_fusion(instance, scp, cmd, 0);
++		if (instance->secure_jbod_support ||
++		    mr_device_priv_data->is_tm_capable)
++			megasas_build_syspd_fusion(instance, scp, cmd, false);
+ 		else
+-			megasas_build_syspd_fusion(instance, scp, cmd, 1);
++			megasas_build_syspd_fusion(instance, scp, cmd, true);
+ 		break;
+ 	default:
+ 		break;
 -- 
 2.8.3
