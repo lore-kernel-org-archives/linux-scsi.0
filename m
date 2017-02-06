@@ -1,238 +1,71 @@
-From: Chris Leech <cleech-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>
-Subject: Re: [PATCH 1/1] iscsi: fix regression caused by session lock patch
-Date: Mon, 6 Feb 2017 12:27:49 -0500 (EST)
-Message-ID: <1976057129.23970152.1486402069647.JavaMail.zimbra@redhat.com>
-References: <1447304741-6594-1-git-send-email-mchristi@redhat.com> <CAJ3xEMjiuCQ_ep1uF-8veM1C8TBvt2HWqgZMLsVmrApGHapT4Q@mail.gmail.com> <56461502.70306@cs.wisc.edu> <CAJ3xEMhQiywXo0=kRO7f=fW--1kc6mbNs_X7wLoYtXmRWeqBkg@mail.gmail.com> <20161107181556.cnhwst4nu63xtrqk@straylight.hirudinean.org> <5820C68E.6050206@linux.vnet.ibm.com> <20161109052142.j4psips7yvx7uohx@straylight.hirudinean.org> <631008bd-1e05-2c88-b153-695c76128eb4@linux.vnet.ibm.com>
-Reply-To: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
+From: "Tran, Quinn" <Quinn.Tran@cavium.com>
+Subject: Re: [bug report] qla2xxx: Add framework for async fabric discovery
+Date: Mon, 6 Feb 2017 17:41:12 +0000
+Message-ID: <0318B21B-3922-46B2-9518-B5F750999CC2@cavium.com>
+References: <20170206113755.GA22938@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <open-iscsi+bncBCYMVIPVXQMBBG7E4LCAKGQESOORWFY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <631008bd-1e05-2c88-b153-695c76128eb4-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-List-Post: <https://groups.google.com/group/open-iscsi/post>, <mailto:open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:open-iscsi+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/open-iscsi
-List-Subscribe: <https://groups.google.com/group/open-iscsi/subscribe>, <mailto:open-iscsi+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+856124926423+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/open-iscsi/subscribe>
-To: "Guilherme G. Piccoli" <gpiccoli-23VcF4HTsmIX0ybBhKVfKdBPR1lH4CV8@public.gmane.org>
-Cc: Or Gerlitz <gerlitz.or-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, lduncan-IBi9RG/b67k@public.gmane.org, Mike Christie <michaelc-hcNo3dDEHLuVc3sceRu5cw@public.gmane.org>, open-iscsi-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, Sagi Grimberg <sagig-LDSdmyG8hGV8YrgS2mwiifqBs+8SCbDb@public.gmane.org>, linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, Or Gerlitz <ogerlitz-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Shlomo Pongratz <shlomop-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-by2nam03on0054.outbound.protection.outlook.com ([104.47.42.54]:30272
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751094AbdBFRmd (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Feb 2017 12:42:33 -0500
+In-Reply-To: <20170206113755.GA22938@mwanda>
+Content-Language: en-US
+Content-ID: <C3620DA21497AA44ADF591913EAE17B0@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
 
------ Original Message -----
-> On 09/11/2016 03:21, Chris Leech wrote:
-> > On Mon, Nov 07, 2016 at 04:23:10PM -0200, Guilherme G. Piccoli wrote:
-> >>
-> >> Sure! Count on us to test any patches. I guess the first step is to
-> >> reproduce on upstream right? We haven't tested specifically this
-> >> scenario for long time. Will try to reproduce on 4.9-rc4 and update here.
-> > 
-> > Great, I'm looking forward to hearing the result.
-> > 
-> > Assuming it reproduces, I don't think this level of fine grained locking
-> > is necessarily the best solution, but it may help confirm the problem.
-> > Especially if the WARN_ONCE I slipped in here triggers.
-> 
-> Chris, sorry for my huge delay.
-> Finally I was able to perform tests and I have good news - seems your
-> patch below fixed the issue.
-
-Thanks for the testing, looks like you have the magic target to reproduce this.
-
-I think this verifies what Mike's idea of what was going wrong, and we're way overdue to get this fixed upstream.  Thanks to IBM for pushing this, I don't think any major distro is shipping this patch and we don't want to keep having to back it out.
-
-The options look like
-1) back out the session lock changes that split it into two locks
-2) add in the additional locking from this test patch
-3) some other fix for the issue of targets that complete tasks oddly
-
-I'm leaning to #1, as I don't want to keep adding more locks for this.
-
-Sagi, Or, Shlomo?  You pushed to keep this from being backed out before.  Here's your cause, any better ideas on fixing it?  I also tried to go back in the mailing list archives, but I don't see any real numbers for the performance gains.
-
-- Chris
-
-> Firstly, I was able to reproduce with kernel 4.10-rc6. See the file
-> repro.out - it's a dump from xmon, the kernel debugger from PowerPC.
-> With this tool we can dump the exception details, registers, PACA
-> (Processor Address Communication Area, ppc specific structure) and
-> dmesg. It took me less than 15 minutes to reproduce.
-> 
-> Then, I applied your patch on the top of this kernel and the benchmark
-> was able to successfully complete, in about 3 hours. We can see the
-> WARN() you added was reached, the attached file dmesg-cleech_patch shows
-> the kernel log with your patch.
-> 
-> The workload was FIO benchmark doing both reads and writes to the remote
-> storage via iSCSI, connected over ethernet direct cabling (10Gb speed).
-> Distro was Ubuntu 16.04.1 .
-> 
-> Any more tests or info you need, please let me know!
-> Cheers,
-> 
-> 
-> Guilherme
-> 
-> 
-> > - Chris
-> > 
-> > ---
-> > 
-> > diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-> > index f9b6fba..fbd18ab 100644
-> > --- a/drivers/scsi/libiscsi.c
-> > +++ b/drivers/scsi/libiscsi.c
-> > @@ -560,8 +560,12 @@ static void iscsi_complete_task(struct iscsi_task
-> > *task, int state)
-> >  	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
-> >  	task->state = state;
-> > 
-> > -	if (!list_empty(&task->running))
-> > +	spin_lock_bh(&conn->taskqueuelock);
-> > +	if (!list_empty(&task->running)) {
-> > +		WARN_ONCE(1, "iscsi_complete_task while task on list");
-> >  		list_del_init(&task->running);
-> > +	}
-> > +	spin_unlock_bh(&conn->taskqueuelock);
-> > 
-> >  	if (conn->task == task)
-> >  		conn->task = NULL;
-> > @@ -783,7 +787,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct
-> > iscsi_hdr *hdr,
-> >  		if (session->tt->xmit_task(task))
-> >  			goto free_task;
-> >  	} else {
-> > +		spin_lock_bh(&conn->taskqueuelock);
-> >  		list_add_tail(&task->running, &conn->mgmtqueue);
-> > +		spin_unlock_bh(&conn->taskqueuelock);
-> >  		iscsi_conn_queue_work(conn);
-> >  	}
-> > 
-> > @@ -1474,8 +1480,10 @@ void iscsi_requeue_task(struct iscsi_task *task)
-> >  	 * this may be on the requeue list already if the xmit_task callout
-> >  	 * is handling the r2ts while we are adding new ones
-> >  	 */
-> > +	spin_lock_bh(&conn->taskqueuelock);
-> >  	if (list_empty(&task->running))
-> >  		list_add_tail(&task->running, &conn->requeue);
-> > +	spin_unlock_bh(&conn->taskqueuelock);
-> >  	iscsi_conn_queue_work(conn);
-> >  }
-> >  EXPORT_SYMBOL_GPL(iscsi_requeue_task);
-> > @@ -1512,22 +1520,26 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
-> >  	 * only have one nop-out as a ping from us and targets should not
-> >  	 * overflow us with nop-ins
-> >  	 */
-> > +	spin_lock_bh(&conn->taskqueuelock);
-> >  check_mgmt:
-> >  	while (!list_empty(&conn->mgmtqueue)) {
-> >  		conn->task = list_entry(conn->mgmtqueue.next,
-> >  					 struct iscsi_task, running);
-> >  		list_del_init(&conn->task->running);
-> > +		spin_unlock_bh(&conn->taskqueuelock);
-> >  		if (iscsi_prep_mgmt_task(conn, conn->task)) {
-> >  			/* regular RX path uses back_lock */
-> >  			spin_lock_bh(&conn->session->back_lock);
-> >  			__iscsi_put_task(conn->task);
-> >  			spin_unlock_bh(&conn->session->back_lock);
-> >  			conn->task = NULL;
-> > +			spin_lock_bh(&conn->taskqueuelock);
-> >  			continue;
-> >  		}
-> >  		rc = iscsi_xmit_task(conn);
-> >  		if (rc)
-> >  			goto done;
-> > +		spin_lock_bh(&conn->taskqueuelock);
-> >  	}
-> > 
-> >  	/* process pending command queue */
-> > @@ -1535,19 +1547,24 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
-> >  		conn->task = list_entry(conn->cmdqueue.next, struct iscsi_task,
-> >  					running);
-> >  		list_del_init(&conn->task->running);
-> > +		spin_unlock_bh(&conn->taskqueuelock);
-> >  		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
-> >  			fail_scsi_task(conn->task, DID_IMM_RETRY);
-> > +			spin_lock_bh(&conn->taskqueuelock);
-> >  			continue;
-> >  		}
-> >  		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
-> >  		if (rc) {
-> >  			if (rc == -ENOMEM || rc == -EACCES) {
-> > +				spin_lock_bh(&conn->taskqueuelock);
-> >  				list_add_tail(&conn->task->running,
-> >  					      &conn->cmdqueue);
-> >  				conn->task = NULL;
-> > +				spin_unlock_bh(&conn->taskqueuelock);
-> >  				goto done;
-> >  			} else
-> >  				fail_scsi_task(conn->task, DID_ABORT);
-> > +			spin_lock_bh(&conn->taskqueuelock);
-> >  			continue;
-> >  		}
-> >  		rc = iscsi_xmit_task(conn);
-> > @@ -1558,6 +1575,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
-> >  		 * we need to check the mgmt queue for nops that need to
-> >  		 * be sent to aviod starvation
-> >  		 */
-> > +		spin_lock_bh(&conn->taskqueuelock);
-> >  		if (!list_empty(&conn->mgmtqueue))
-> >  			goto check_mgmt;
-> >  	}
-> > @@ -1577,12 +1595,15 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
-> >  		conn->task = task;
-> >  		list_del_init(&conn->task->running);
-> >  		conn->task->state = ISCSI_TASK_RUNNING;
-> > +		spin_unlock_bh(&conn->taskqueuelock);
-> >  		rc = iscsi_xmit_task(conn);
-> >  		if (rc)
-> >  			goto done;
-> > +		spin_lock_bh(&conn->taskqueuelock);
-> >  		if (!list_empty(&conn->mgmtqueue))
-> >  			goto check_mgmt;
-> >  	}
-> > +	spin_unlock_bh(&conn->taskqueuelock);
-> >  	spin_unlock_bh(&conn->session->frwd_lock);
-> >  	return -ENODATA;
-> > 
-> > @@ -1738,7 +1759,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct
-> > scsi_cmnd *sc)
-> >  			goto prepd_reject;
-> >  		}
-> >  	} else {
-> > +		spin_lock_bh(&conn->taskqueuelock);
-> >  		list_add_tail(&task->running, &conn->cmdqueue);
-> > +		spin_unlock_bh(&conn->taskqueuelock);
-> >  		iscsi_conn_queue_work(conn);
-> >  	}
-> > 
-> > @@ -2897,6 +2920,7 @@ iscsi_conn_setup(struct iscsi_cls_session
-> > *cls_session, int dd_size,
-> >  	INIT_LIST_HEAD(&conn->mgmtqueue);
-> >  	INIT_LIST_HEAD(&conn->cmdqueue);
-> >  	INIT_LIST_HEAD(&conn->requeue);
-> > +	spin_lock_init(&conn->taskqueuelock);
-> >  	INIT_WORK(&conn->xmitwork, iscsi_xmitworker);
-> > 
-> >  	/* allocate login_task used for the login/text sequences */
-> > diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
-> > index 4d1c46a..c7b1dc7 100644
-> > --- a/include/scsi/libiscsi.h
-> > +++ b/include/scsi/libiscsi.h
-> > @@ -196,6 +196,7 @@ struct iscsi_conn {
-> >  	struct iscsi_task	*task;		/* xmit task in progress */
-> > 
-> >  	/* xmit */
-> > +	spinlock_t		taskqueuelock;  /* protects the next three lists */
-> >  	struct list_head	mgmtqueue;	/* mgmt (control) xmit queue */
-> >  	struct list_head	cmdqueue;	/* data-path cmd queue */
-> >  	struct list_head	requeue;	/* tasks needing another run */
-> > 
-> 
-
--- 
-You received this message because you are subscribed to the Google Groups "open-iscsi" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to open-iscsi+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-To post to this group, send email to open-iscsi-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-Visit this group at https://groups.google.com/group/open-iscsi.
-For more options, visit https://groups.google.com/d/optout.
+RGFuLA0KDQpXaWxsIHRha2UgYSBsb29rIGFuZCBzdWJtaXQgcGF0Y2ggdG8gcmVtb3ZlIHdhcm5p
+bmcuIFRoYW5rcy4NCg0KUmVnYXJkcywNClF1aW5uIFRyYW4NCg0KLS0tLS1PcmlnaW5hbCBNZXNz
+YWdlLS0tLS0NCkZyb206IERhbiBDYXJwZW50ZXIgPGRhbi5jYXJwZW50ZXJAb3JhY2xlLmNvbT4N
+CkRhdGU6IE1vbmRheSwgRmVicnVhcnkgNiwgMjAxNyBhdCAzOjM3IEFNDQpUbzogIlRyYW4sIFF1
+aW5uIiA8UXVpbm4uVHJhbkBjYXZpdW0uY29tPg0KQ2M6ICJsaW51eC1zY3NpQHZnZXIua2VybmVs
+Lm9yZyIgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPg0KU3ViamVjdDogW2J1ZyByZXBvcnRd
+IHFsYTJ4eHg6IEFkZCBmcmFtZXdvcmsgZm9yIGFzeW5jIGZhYnJpYyBkaXNjb3ZlcnkNCg0KICAg
+IEhlbGxvIFF1aW5uIFRyYW4sDQogICAgDQogICAgVGhlIHBhdGNoIGI3OTQxNGVlNDk4ODogInFs
+YTJ4eHg6IEFkZCBmcmFtZXdvcmsgZm9yIGFzeW5jIGZhYnJpYw0KICAgIGRpc2NvdmVyeSIgZnJv
+bSBKYW4gMTksIDIwMTcsIGxlYWRzIHRvIHRoZSBmb2xsb3dpbmcgc3RhdGljIGNoZWNrZXINCiAg
+ICB3YXJuaW5nOg0KICAgIA0KICAgIAlkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5pdC5jOjM5
+MTAgcWxhMngwMF9hbGxvY19mY3BvcnQoKQ0KICAgIAl3YXJuOiB1c2UgJ2ZsYWdzJyBoZXJlIGlu
+c3RlYWQgb2YgR0ZQX1hYWD8NCiAgICANCiAgICBkcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfaW5p
+dC5jDQogICAgICAzODk0ICBmY19wb3J0X3QgKg0KICAgICAgMzg5NSAgcWxhMngwMF9hbGxvY19m
+Y3BvcnQoc2NzaV9xbGFfaG9zdF90ICp2aGEsIGdmcF90IGZsYWdzKQ0KICAgICAgMzg5NiAgew0K
+ICAgICAgMzg5NyAgICAgICAgICBmY19wb3J0X3QgKmZjcG9ydDsNCiAgICAgIDM4OTggIA0KICAg
+ICAgMzg5OSAgICAgICAgICBmY3BvcnQgPSBremFsbG9jKHNpemVvZihmY19wb3J0X3QpLCBmbGFn
+cyk7DQogICAgDQogICAgSW4gcHJhdGljZSAiZmxhZ3MiIGlzIGFsd2F5cyBHRlBfS0VSTkVMLg0K
+ICAgIA0KICAgICAgMzkwMCAgICAgICAgICBpZiAoIWZjcG9ydCkNCiAgICAgIDM5MDEgICAgICAg
+ICAgICAgICAgICByZXR1cm4gTlVMTDsNCiAgICAgIDM5MDIgIA0KICAgICAgMzkwMyAgICAgICAg
+ICAvKiBTZXR1cCBmY3BvcnQgdGVtcGxhdGUgc3RydWN0dXJlLiAqLw0KICAgICAgMzkwNCAgICAg
+ICAgICBmY3BvcnQtPnZoYSA9IHZoYTsNCiAgICAgIDM5MDUgICAgICAgICAgZmNwb3J0LT5wb3J0
+X3R5cGUgPSBGQ1RfVU5LTk9XTjsNCiAgICAgIDM5MDYgICAgICAgICAgZmNwb3J0LT5sb29wX2lk
+ID0gRkNfTk9fTE9PUF9JRDsNCiAgICAgIDM5MDcgICAgICAgICAgcWxhMngwMF9zZXRfZmNwb3J0
+X3N0YXRlKGZjcG9ydCwgRkNTX1VOQ09ORklHVVJFRCk7DQogICAgICAzOTA4ICAgICAgICAgIGZj
+cG9ydC0+c3VwcG9ydGVkX2NsYXNzZXMgPSBGQ19DT1NfVU5TUEVDSUZJRUQ7DQogICAgICAzOTA5
+ICANCiAgICAgIDM5MTAgICAgICAgICAgZmNwb3J0LT5jdF9kZXNjLmN0X3NucyA9IGRtYV9hbGxv
+Y19jb2hlcmVudCgmdmhhLT5ody0+cGRldi0+ZGV2LA0KICAgICAgMzkxMSAgICAgICAgICAgICAg
+ICAgIHNpemVvZihzdHJ1Y3QgY3Rfc25zX3BrdCksICZmY3BvcnQtPmN0X2Rlc2MuY3Rfc25zX2Rt
+YSwNCiAgICAgIDM5MTIgICAgICAgICAgICAgICAgICAgICAgICAgIEdGUF9BVE9NSUMpOw0KICAg
+IA0KICAgIFRoZXJlIGlzbid0IGFuIG9idmlvdXMgcmVhc29uIHdoeSBHRlBfQVRPTUlDIGlzIHJl
+cXVpcmVkIGhlcmUuDQogICAgDQogICAgICAzOTEzICAgICAgICAgIGZjcG9ydC0+ZGlzY19zdGF0
+ZSA9IERTQ19ERUxFVEVEOw0KICAgICAgMzkxNCAgICAgICAgICBmY3BvcnQtPmZ3X2xvZ2luX3N0
+YXRlID0gRFNDX0xTX1BPUlRfVU5BVkFJTDsNCiAgICAgIDM5MTUgICAgICAgICAgZmNwb3J0LT5k
+ZWxldGVkID0gUUxBX1NFU1NfREVMRVRFRDsNCiAgICAgIDM5MTYgICAgICAgICAgZmNwb3J0LT5s
+b2dpbl9yZXRyeSA9IHZoYS0+aHctPmxvZ2luX3JldHJ5X2NvdW50Ow0KICAgICAgMzkxNyAgICAg
+ICAgICBmY3BvcnQtPmxvZ2luX3JldHJ5ID0gNTsNCiAgICAgIDM5MTggICAgICAgICAgZmNwb3J0
+LT5sb2dvdXRfb25fZGVsZXRlID0gMTsNCiAgICAgIDM5MTkgIA0KICAgICAgMzkyMCAgICAgICAg
+ICBpZiAoIWZjcG9ydC0+Y3RfZGVzYy5jdF9zbnMpIHsNCiAgICAgIDM5MjEgICAgICAgICAgICAg
+ICAgICBxbF9sb2cocWxfbG9nX3dhcm4sIHZoYSwgMHhmZmZmLA0KICAgICAgMzkyMiAgICAgICAg
+ICAgICAgICAgICAgICAiRmFpbGVkIHRvIGFsbG9jYXRlIGN0X3NucyByZXF1ZXN0LlxuIik7DQog
+ICAgICAzOTIzICAgICAgICAgICAgICAgICAga2ZyZWUoZmNwb3J0KTsNCiAgICAgIDM5MjQgICAg
+ICAgICAgICAgICAgICBmY3BvcnQgPSBOVUxMOw0KICAgICAgMzkyNSAgICAgICAgICB9DQogICAg
+ICAzOTI2ICAgICAgICAgIElOSVRfV09SSygmZmNwb3J0LT5kZWxfd29yaywgcWxhMjR4eF9kZWxl
+dGVfc2Vzc19mbik7DQogICAgICAzOTI3ICAgICAgICAgIElOSVRfTElTVF9IRUFEKCZmY3BvcnQt
+PmdubF9lbnRyeSk7DQogICAgICAzOTI4ICAgICAgICAgIElOSVRfTElTVF9IRUFEKCZmY3BvcnQt
+Pmxpc3QpOw0KICAgICAgMzkyOSAgDQogICAgICAzOTMwICAgICAgICAgIHJldHVybiBmY3BvcnQ7
+DQogICAgICAzOTMxICB9DQogICAgDQogICAgcmVnYXJkcywNCiAgICBkYW4gY2FycGVudGVyDQog
+ICAgDQoNCg==
