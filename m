@@ -1,65 +1,83 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 17/39] megaraid_sas: In validate raid map, raid capability is not converted to cpu format for all lds
-Date: Mon,  6 Feb 2017 01:59:50 -0800
-Message-ID: <1486375212-17329-18-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 23/39] megaraid_sas: set pd_after_lb from MR_BuildRaidContext and initialize pDevHandle to MR_DEVHANDLE_INVALID
+Date: Mon,  6 Feb 2017 01:59:56 -0800
+Message-ID: <1486375212-17329-24-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f178.google.com ([209.85.192.178]:33704 "EHLO
-        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751734AbdBFKCR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:02:17 -0500
-Received: by mail-pf0-f178.google.com with SMTP id y143so23099920pfb.0
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:02:12 -0800 (PST)
+Received: from mail-pg0-f49.google.com ([74.125.83.49]:35303 "EHLO
+        mail-pg0-f49.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750997AbdBFKCe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:02:34 -0500
+Received: by mail-pg0-f49.google.com with SMTP id 194so27434746pgd.2
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:02:34 -0800 (PST)
 In-Reply-To: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-On a host, if an ld is deleted there is a hole in the ld array returned
-by the FW. But in MR_ValidateMapInfo we are not accounting for holes in
-the ld array and traverse only upto index num_lds.
-This patch takes care of converting the capability field of all the
-valid lds in the ld raid map.
+Issue is limited for Syncro firmware where pd_after_lb is not set but is accidentally used.
+Not a functional issue, but results in low performance due to improper load balancing between two LUNs.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fp.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index d9b0f28..a0b0e68 100644
+index 68582d9..a5517e7 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fp.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -452,7 +452,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	struct LD_LOAD_BALANCE_INFO *lbInfo;
- 	PLD_SPAN_INFO ldSpanInfo;
- 	struct MR_LD_RAID         *raid;
--	u16 ldCount, num_lds;
-+	u16 num_lds, i;
- 	u16 ld;
- 	u32 expected_size;
+@@ -948,6 +948,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ 	struct fusion_context *fusion;
  
-@@ -495,10 +495,17 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	num_lds = le16_to_cpu(drv_map->raidMap.ldCount);
+ 	fusion = instance->ctrl_context;
++	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
  
- 	/*Convert Raid capability values to CPU arch */
--	for (ldCount = 0; ldCount < num_lds; ldCount++) {
--		ld = MR_TargetIdToLdGet(ldCount, drv_map);
-+	for (i = 0; (num_lds > 0) && (i < MAX_LOGICAL_DRIVES_EXT); i++) {
-+		ld = MR_TargetIdToLdGet(i, drv_map);
-+
-+		/* For non existing VDs, iterate to next VD*/
-+		if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-+			continue;
-+
- 		raid = MR_LdRaidGet(ld, drv_map);
- 		le32_to_cpus((u32 *)&raid->capability);
-+
-+		num_lds--;
+ 	/*Get row and span from io_info for Uneven Span IO.*/
+ 	row	    = io_info->start_row;
+@@ -986,7 +987,6 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ 				MR_PdDevHandleGet(r1_alt_pd, map);
+ 		}
+ 	} else {
+-		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
+ 		if ((raid->level >= 5) &&
+ 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
+ 			((fusion->adapter_type == INVADER_SERIES) &&
+@@ -1013,6 +1013,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
+ 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
+ 		io_info->span_arm = pRAID_Context->span_arm;
  	}
++	io_info->pd_after_lb = pd;
+ 	return retval;
+ }
  
- 	return 1;
+@@ -1049,7 +1050,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 	struct fusion_context *fusion;
+ 
+ 	fusion = instance->ctrl_context;
+-
++	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
+ 
+ 	row =  mega_div64_32(stripRow, raid->rowDataSize);
+ 
+@@ -1102,8 +1103,6 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 					MR_PdDevHandleGet(r1_alt_pd, map);
+ 		}
+ 	} else {
+-		/* set dev handle as invalid. */
+-		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
+ 		if ((raid->level >= 5) &&
+ 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
+ 			((fusion->adapter_type == INVADER_SERIES) &&
+@@ -1132,6 +1131,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
+ 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
+ 		io_info->span_arm = pRAID_Context->span_arm;
+ 	}
++	io_info->pd_after_lb = pd;
+ 	return retval;
+ }
+ 
 -- 
 2.8.3
