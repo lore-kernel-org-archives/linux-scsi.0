@@ -1,83 +1,32 @@
 From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH 03/39] megaraid_sas: raid 1 fast path code optimize
-Date: Mon, 6 Feb 2017 14:38:18 +0100
-Message-ID: <16d3cacb-17f8-78a0-80ee-815a4ddb6825@redhat.com>
+Subject: Re: [PATCH 04/39] megaraid_sas: 32 bit descriptor fire cmd
+ optimization
+Date: Mon, 6 Feb 2017 14:40:52 +0100
+Message-ID: <ff6217c1-2306-eb5e-fc08-8353341ea7b6@redhat.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-4-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <79d89239-30cc-0161-24fa-57800f12460c@redhat.com>
- <47ae74d6db3626e7839b3c3b0acb8738@mail.gmail.com>
+ <1486375212-17329-5-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:51290 "EHLO mx1.redhat.com"
+Received: from mx1.redhat.com ([209.132.183.28]:51672 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752836AbdBFNiV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 6 Feb 2017 08:38:21 -0500
-In-Reply-To: <47ae74d6db3626e7839b3c3b0acb8738@mail.gmail.com>
+        id S1751852AbdBFNky (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 6 Feb 2017 08:40:54 -0500
+In-Reply-To: <1486375212-17329-5-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
+To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com
 
-On 6.2.2017 14:27, Kashyap Desai wrote:
->>>  /**
->>> + * megasas_complete_r1_command -
->>> + * completes R1 FP write commands which has valid peer smid
->>> + * @instance:			Adapter soft state
->>> + * @cmd_fusion:			MPT command frame
->>> + *
->>> + */
->>> +static inline void
->>> +megasas_complete_r1_command(struct megasas_instance *instance,
->>> +			    struct megasas_cmd_fusion *cmd) {
->>> +	u8 *sense, status, ex_status;
->>> +	u32 data_length;
->>> +	u16 peer_smid;
->>> +	struct fusion_context *fusion;
->>> +	struct megasas_cmd_fusion *r1_cmd = NULL;
->>> +	struct scsi_cmnd *scmd_local = NULL;
->>> +	struct RAID_CONTEXT_G35 *rctx_g35;
->>> +
->>> +	rctx_g35 = &cmd->io_request->RaidContext.raid_context_g35;
->>> +	fusion = instance->ctrl_context;
->>> +	peer_smid = le16_to_cpu(rctx_g35->smid.peer_smid);
->>> +
->>> +	r1_cmd = fusion->cmd_list[peer_smid - 1];
->>> +	scmd_local = cmd->scmd;
->>> +	status = rctx_g35->status;
->>> +	ex_status = rctx_g35->ex_status;
->>> +	data_length = cmd->io_request->DataLength;
->>> +	sense = cmd->sense;
->>> +
->>> +	cmd->cmd_completed = true;
->>> +
->>> +	/* Check if peer command is completed or not*/
->>> +	if (r1_cmd->cmd_completed) {
->>> +		if (rctx_g35->status != MFI_STAT_OK) {
->>> +			status = rctx_g35->status;
->>> +			ex_status = rctx_g35->ex_status;
->> Both status + ex_status were already set to the same value, why is it
->> repeated here ?
-> Tomas, This need a fix. Raid context should be switch to r1_cmd, but it
-> that is not done here.
-> We want if r1 cmd is completed with failure, check status and extended
-> status from r1_cmd to send final status to mid layer.
+On 6.2.2017 10:59, Shivasharan S wrote:
+> No functional change. Code refactor.
+> megasas_fire_cmd_fusion can always use 32 bit descriptor write for ventura. No need to pass extra flag.
+> Only IOC INIT required 64 bit Descriptor write.
 >
-> We will fix this and resend patch. It will be like this -
->
-> 	if (r1_cmd->cmd_completed) {
-> 		rctx_g35 =
-> &r1_cmd->io_request->RaidContext.raid_context_g35;        << -This line
-> should be added.
-> 		if (rctx_g35->status != MFI_STAT_OK) {
-> 			status = rctx_g35->status;
-> 			ex_status = rctx_g35->ex_status;
+> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 
-That makes sense, thanks.
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 
->
-> Thanks, Kashyap
->
->> Tomas
->>
+Tomas
