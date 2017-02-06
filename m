@@ -1,103 +1,86 @@
-From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Subject: RE: [PATCH 3.10 141/319] scsi: mpt3sas: Fix secure erase premature termination
-Date: Mon, 6 Feb 2017 09:21:44 -0700
-Message-ID: <ae8ffc4f86c5af1caf97dfa9a6493443@mail.gmail.com>
-References: <1486322541-8206-1-git-send-email-w@1wt.eu> <1486322541-8206-42-git-send-email-w@1wt.eu>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 33/39] megaraid_sas: call flush_scheduled_work during
+ controller shutdown/detach
+Date: Mon, 6 Feb 2017 22:48:07 +0530
+Message-ID: <f1536f3d66ba6e93f018f760c57910a3@mail.gmail.com>
+References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1486375212-17329-34-git-send-email-shivasharan.srikanteshwara@broadcom.com> <5624644f-c747-6b7a-3d0d-001c4bc46cd1@redhat.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-Return-path: <stable-owner@vger.kernel.org>
-In-Reply-To: <1486322541-8206-42-git-send-email-w@1wt.eu>
-Sender: stable-owner@vger.kernel.org
-To: Willy Tarreau <w@1wt.eu>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux@roeck-us.net
-Cc: Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qt0-f174.google.com ([209.85.216.174]:33255 "EHLO
+        mail-qt0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750953AbdBFRSK (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 12:18:10 -0500
+Received: by mail-qt0-f174.google.com with SMTP id v23so111256077qtb.0
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 09:18:10 -0800 (PST)
+In-Reply-To: <5624644f-c747-6b7a-3d0d-001c4bc46cd1@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Tomas Henzl <thenzl@redhat.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
+Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
 
-Willy,
-I think this patch had a problem and later modified to a different
-blocking mechanism.  Could you please pull in the latest change for this?
+> -----Original Message-----
+> From: Tomas Henzl [mailto:thenzl@redhat.com]
+> Sent: Monday, February 06, 2017 9:35 PM
+> To: Shivasharan S; linux-scsi@vger.kernel.org
+> Cc: martin.petersen@oracle.com; jejb@linux.vnet.ibm.com;
+> kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
+> hare@suse.com
+> Subject: Re: [PATCH 33/39] megaraid_sas: call flush_scheduled_work
+during
+> controller shutdown/detach
+>
+> On 6.2.2017 11:00, Shivasharan S wrote:
+> > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> > Signed-off-by: Shivasharan S
+> <shivasharan.srikanteshwara@broadcom.com>
+> > ---
+> >  drivers/scsi/megaraid/megaraid_sas_base.c | 2 ++
+> >  1 file changed, 2 insertions(+)
+> >
+> > diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
+> b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > index 04ef0a0..b29cfd3 100644
+> > --- a/drivers/scsi/megaraid/megaraid_sas_base.c
+> > +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+> > @@ -6393,6 +6393,7 @@ megasas_suspend(struct pci_dev *pdev,
+> pm_message_t state)
+> >  	if (instance->ev != NULL) {
+> >  		struct megasas_aen_event *ev = instance->ev;
+> >  		cancel_delayed_work_sync(&ev->hotplug_work);
+> > +		flush_scheduled_work();
+> >  		instance->ev = NULL;
+> >  	}
+> >
+> > @@ -6619,6 +6620,7 @@ static void megasas_detach_one(struct pci_dev
+> *pdev)
+> >  	if (instance->ev != NULL) {
+> >  		struct megasas_aen_event *ev = instance->ev;
+> >  		cancel_delayed_work_sync(&ev->hotplug_work);
+> > +		flush_scheduled_work();
+> >  		instance->ev = NULL;
+> >  	}
+> >
+>
+> Why is cancel_delayed_work_sync not good enough?
 
-Thanks
-Sathya
+Megaraid_sas driver use certain work on global work queue.
 
------Original Message-----
-From: Willy Tarreau [mailto:w@1wt.eu]
-Sent: Sunday, February 05, 2017 12:19 PM
-To: linux-kernel@vger.kernel.org; stable@vger.kernel.org;
-linux@roeck-us.net
-Cc: Andrey Grodzovsky; linux-scsi@vger.kernel.org; Sathya Prakash; Chaitra
-P B; Suganath Prabu Subramani; Sreekanth Reddy; Hannes Reinecke; Martin K
-. Petersen; Willy Tarreau
-Subject: [PATCH 3.10 141/319] scsi: mpt3sas: Fix secure erase premature
-termination
+Below are the listed one -
 
-From: Andrey Grodzovsky <andrey2805@gmail.com>
+	if (instance->ctrl_context) {
+		INIT_WORK(&instance->work_init, megasas_fusion_ocr_wq);
+		INIT_WORK(&instance->crash_init,
+megasas_fusion_crash_dump_wq);
+	}
+	else
+		INIT_WORK(&instance->work_init,
+process_fw_state_change_wq)
 
-commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
+Cancel_delayed_work_sync() was mainly targeted for only hotplug AEN work.
+Calling flush_scheduled_work() we want above listed work to be completed
+as well.
 
-This is a work around for a bug with LSI Fusion MPT SAS2 when perfoming
-secure erase. Due to the very long time the operation takes, commands
-issued during the erase will time out and will trigger execution of the
-abort hook. Even though the abort hook is called for the specific command
-which timed out, this leads to entire device halt (scsi_state terminated)
-and premature termination of the secure erase.
-
-Set device state to busy while ATA passthrough commands are in progress.
-
-[mkp: hand applied to 4.9/scsi-fixes, tweaked patch description]
-
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Willy Tarreau <w@1wt.eu>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 14 ++++++++++++++
- 1 file changed, 14 insertions(+)
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index f8c4b85..e414b71 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3515,6 +3515,10 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd,
-u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
-
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd) {
-+	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16); }
-
- /**
-  * _scsih_qcmd_lck - main scsi request entry point @@ -3543,6 +3547,13 @@
-_scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 		scsi_print_command(scmd);
- #endif
-
-+	/*
-+	 * Lock the device for any subsequent command until command is
-+	 * done.
-+	 */
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
- 	scmd->scsi_done = done;
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
-@@ -4046,6 +4057,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16
-smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
-
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
-
- 	if (mpi_reply == NULL) {
---
-2.8.0.rc2.1.gbe9624a
+>
+> tomash
