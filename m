@@ -1,283 +1,142 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH 02/39] megaraid_sas: cpu select rework.
-Date: Mon,  6 Feb 2017 01:59:35 -0800
-Message-ID: <1486375212-17329-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH 05/39] megaraid_sas: Refactor MEGASAS_IS_LOGICAL macro using sdev
+Date: Mon,  6 Feb 2017 01:59:38 -0800
+Message-ID: <1486375212-17329-6-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f44.google.com ([74.125.83.44]:34031 "EHLO
-        mail-pg0-f44.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751163AbdBFKB3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:01:29 -0500
-Received: by mail-pg0-f44.google.com with SMTP id 14so27429458pgg.1
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:01:29 -0800 (PST)
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:34782 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751314AbdBFKBi (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 05:01:38 -0500
+Received: by mail-pf0-f170.google.com with SMTP id e4so23027879pfg.1
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 02:01:37 -0800 (PST)
 In-Reply-To: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-No functional change. Code refactor.
-
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 175 ++++++++++++++++------------
- 1 file changed, 100 insertions(+), 75 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas.h        |  4 ++--
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 20 ++++++++++----------
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 12 ++++++------
+ 3 files changed, 18 insertions(+), 18 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 54728b3..514c306 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1819,6 +1819,73 @@ static void megasas_stream_detect(struct megasas_instance *instance,
- }
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index f5c4742..dff877f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -2301,8 +2301,8 @@ struct megasas_instance_template {
+ 			    struct megasas_cmd *cmd);
+ };
  
- /**
-+ * megasas_set_raidflag_cpu_affinity - This function sets the cpu
-+ * affinity (cpu of the controller) and raid_flags in the raid context
-+ * based on IO type.
-+ *
-+ * @praid_context:	IO RAID context
-+ * @raid:		LD raid map
-+ * @fp_possible:	Is fast path possible?
-+ * @is_read:		Is read IO?
-+ *
-+ */
-+static void
-+megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
-+				  struct MR_LD_RAID *raid, bool fp_possible,
-+				  u8 is_read)
-+{
-+	u8 cpu_sel = MR_RAID_CTX_CPUSEL_0;
-+	struct RAID_CONTEXT_G35 *rctx_g35;
-+
-+	rctx_g35 = &praid_context->raid_context_g35;
-+	if (fp_possible) {
-+		if (is_read) {
-+			if ((raid->cpuAffinity.pdRead.cpu0) &&
-+			    (raid->cpuAffinity.pdRead.cpu1))
-+				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
-+			else if (raid->cpuAffinity.pdRead.cpu1)
-+				cpu_sel = MR_RAID_CTX_CPUSEL_1;
-+		} else {
-+			if ((raid->cpuAffinity.pdWrite.cpu0) &&
-+			    (raid->cpuAffinity.pdWrite.cpu1))
-+				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
-+			else if (raid->cpuAffinity.pdWrite.cpu1)
-+				cpu_sel = MR_RAID_CTX_CPUSEL_1;
-+			/* Fast path cache by pass capable R0/R1 VD */
-+			if ((raid->level <= 1) &&
-+			    (raid->capability.fp_cache_bypass_capable)) {
-+				rctx_g35->routing_flags.bits.sld = 1;
-+				rctx_g35->raid_flags =
-+					(MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
-+					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
-+			}
-+		}
-+	} else {
-+		if (is_read) {
-+			if ((raid->cpuAffinity.ldRead.cpu0) &&
-+			    (raid->cpuAffinity.ldRead.cpu1))
-+				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
-+			else if (raid->cpuAffinity.ldRead.cpu1)
-+				cpu_sel = MR_RAID_CTX_CPUSEL_1;
-+		} else {
-+			if ((raid->cpuAffinity.ldWrite.cpu0) &&
-+			    (raid->cpuAffinity.ldWrite.cpu1))
-+				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
-+			else if (raid->cpuAffinity.ldWrite.cpu1)
-+				cpu_sel = MR_RAID_CTX_CPUSEL_1;
-+
-+			if (rctx_g35->stream_detected &&
-+			    (raid->level == 5) &&
-+			    (raid->writeMode == MR_RL_WRITE_THROUGH_MODE) &&
-+			    (cpu_sel == MR_RAID_CTX_CPUSEL_FCFS))
-+				cpu_sel = MR_RAID_CTX_CPUSEL_0;
-+		}
-+	}
-+
-+	rctx_g35->routing_flags.bits.cpu_sel = cpu_sel;
-+}
-+
-+/**
-  * megasas_build_ldio_fusion -	Prepares IOs to devices
-  * @instance:		Adapter soft state
-  * @scp:		SCSI command
-@@ -1832,8 +1899,10 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 			  struct scsi_cmnd *scp,
- 			  struct megasas_cmd_fusion *cmd)
- {
--	u8 fp_possible;
--	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0, ld;
-+	bool fp_possible;
-+	u16 ld;
-+	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0;
-+	u32 scsi_buff_len;
- 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 	struct IO_REQUEST_INFO io_info;
-@@ -1842,7 +1911,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	u8 *raidLUN;
- 	unsigned long spinlock_flags;
- 	union RAID_CONTEXT_UNION *praid_context;
--	struct MR_LD_RAID *raid;
-+	struct MR_LD_RAID *raid = NULL;
-+	struct MR_PRIV_DEVICE *mrdev_priv;
+-#define MEGASAS_IS_LOGICAL(scp)						\
+-	((scp->device->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1)
++#define MEGASAS_IS_LOGICAL(sdev)					\
++	((sdev->channel < MEGASAS_MAX_PD_CHANNELS) ? 0 : 1)
  
+ #define MEGASAS_DEV_INDEX(scp)						\
+ 	(((scp->device->channel % 2) * MEGASAS_MAX_DEV_PER_CHANNEL) +	\
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 3ed876a..6ca49ef 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1279,7 +1279,7 @@ megasas_build_dcdb(struct megasas_instance *instance, struct scsi_cmnd *scp,
+ 	u16 flags = 0;
+ 	struct megasas_pthru_frame *pthru;
+ 
+-	is_logical = MEGASAS_IS_LOGICAL(scp);
++	is_logical = MEGASAS_IS_LOGICAL(scp->device);
  	device_id = MEGASAS_DEV_INDEX(scp);
+ 	pthru = (struct megasas_pthru_frame *)cmd->frame;
  
-@@ -1858,7 +1928,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+@@ -1519,11 +1519,11 @@ inline int megasas_cmd_type(struct scsi_cmnd *cmd)
+ 	case WRITE_6:
+ 	case READ_16:
+ 	case WRITE_16:
+-		ret = (MEGASAS_IS_LOGICAL(cmd)) ?
++		ret = (MEGASAS_IS_LOGICAL(cmd->device)) ?
+ 			READ_WRITE_LDIO : READ_WRITE_SYSPDIO;
+ 		break;
+ 	default:
+-		ret = (MEGASAS_IS_LOGICAL(cmd)) ?
++		ret = (MEGASAS_IS_LOGICAL(cmd->device)) ?
+ 			NON_READ_WRITE_LDIO : NON_READ_WRITE_SYSPDIO;
+ 	}
+ 	return ret;
+@@ -1699,15 +1699,16 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
  
- 	start_lba_lo = 0;
- 	start_lba_hi = 0;
--	fp_possible = 0;
-+	fp_possible = false;
+ 	scmd->result = 0;
  
- 	/*
- 	 * 6-byte READ(0x08) or WRITE(0x0A) cdb
-@@ -1915,7 +1985,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	io_info.numBlocks = datalength;
- 	io_info.ldTgtId = device_id;
- 	io_info.r1_alt_dev_handle = MR_PD_INVALID;
--	io_request->DataLength = cpu_to_le32(scsi_bufflen(scp));
-+	scsi_buff_len = scsi_bufflen(scp);
-+	io_request->DataLength = cpu_to_le32(scsi_buff_len);
- 
- 	if (scp->sc_data_direction == PCI_DMA_FROMDEVICE)
- 		io_info.isRead = 1;
-@@ -1927,12 +1998,12 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	if ((MR_TargetIdToLdGet(device_id, local_map_ptr) >=
- 		instance->fw_supported_vd_count) || (!fusion->fast_path_io)) {
- 		io_request->RaidContext.raid_context.reg_lock_flags  = 0;
--		fp_possible = 0;
-+		fp_possible = false;
- 	} else {
- 		if (MR_BuildRaidContext(instance, &io_info,
- 					&io_request->RaidContext.raid_context,
- 					local_map_ptr, &raidLUN))
--			fp_possible = io_info.fpOkForIo;
-+			fp_possible = (io_info.fpOkForIo > 0) ? true : false;
+-	if (MEGASAS_IS_LOGICAL(scmd) &&
++	if (MEGASAS_IS_LOGICAL(scmd->device) &&
+ 	    (scmd->device->id >= instance->fw_supported_vd_count ||
+ 		scmd->device->lun)) {
+ 		scmd->result = DID_BAD_TARGET << 16;
+ 		goto out_done;
  	}
  
- 	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
-@@ -1941,6 +2012,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
- 		raw_smp_processor_id() % instance->msix_vectors : 0;
+-	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) && MEGASAS_IS_LOGICAL(scmd) &&
+-		(!instance->fw_sync_cache_support)) {
++	if ((scmd->cmnd[0] == SYNCHRONIZE_CACHE) &&
++	    MEGASAS_IS_LOGICAL(scmd->device) &&
++	    (!instance->fw_sync_cache_support)) {
+ 		scmd->result = DID_OK << 16;
+ 		goto out_done;
+ 	}
+@@ -1758,7 +1759,7 @@ void megasas_update_sdev_properties(struct scsi_device *sdev)
+ 	if (!fusion)
+ 		return;
  
-+	praid_context = &io_request->RaidContext;
-+
- 	if (instance->is_ventura) {
- 		spin_lock_irqsave(&instance->stream_lock, spinlock_flags);
- 		megasas_stream_detect(instance, cmd, &io_info);
-@@ -1948,12 +2021,28 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		/* In ventura if stream detected for a read and it is read ahead
- 		 *  capable make this IO as LDIO
+-	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
++	if (!MEGASAS_IS_LOGICAL(sdev) &&
+ 		instance->use_seqnum_jbod_fp) {
+ 		pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+ 			sdev->id;
+@@ -1826,8 +1827,7 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	if (instance->pd_list_not_supported) {
+-		if (sdev->channel < MEGASAS_MAX_PD_CHANNELS &&
+-			sdev->type == TYPE_DISK) {
++		if (!MEGASAS_IS_LOGICAL(sdev) && sdev->type == TYPE_DISK) {
+ 			pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+ 				sdev->id;
+ 			if (instance->pd_list[pd_index].driveState !=
+@@ -1854,7 +1854,7 @@ static int megasas_slave_alloc(struct scsi_device *sdev)
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+-	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
++	if (!MEGASAS_IS_LOGICAL(sdev)) {
+ 		/*
+ 		 * Open the OS scan to the SYSTEM PD
  		 */
--		if (io_request->RaidContext.raid_context_g35.stream_detected &&
--				io_info.isRead && io_info.ra_capable)
-+		if (praid_context->raid_context_g35.stream_detected &&
-+		    io_info.isRead && io_info.ra_capable)
- 			fp_possible = false;
--	}
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 09dcc9b..cdbfe50 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3580,13 +3580,13 @@ static u16 megasas_get_tm_devhandle(struct scsi_device *sdev)
+ 	instance = (struct megasas_instance *)sdev->host->hostdata;
+ 	fusion = instance->ctrl_context;
  
--	praid_context = &io_request->RaidContext;
-+		if (io_info.r1_alt_dev_handle != MR_PD_INVALID) {
-+			mrdev_priv = scp->device->hostdata;
-+
-+			if (atomic_inc_return(&instance->fw_outstanding) >
-+				(instance->host->can_queue)) {
-+				fp_possible = false;
-+				atomic_dec(&instance->fw_outstanding);
-+			}
-+		}
-+
-+		/* If raid is NULL, set CPU affinity to default CPU0 */
-+		if (raid)
-+			megasas_set_raidflag_cpu_affinity(praid_context,
-+				raid, fp_possible, io_info.isRead);
-+		else
-+			praid_context->raid_context_g35.routing_flags.bits.cpu_sel =
-+				MR_RAID_CTX_CPUSEL_0;
-+	}
- 
- 	if (fp_possible) {
- 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
-@@ -2016,36 +2105,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		io_request->DevHandle = io_info.devHandle;
- 		/* populate the LUN field */
- 		memcpy(io_request->LUN, raidLUN, 8);
--		if (instance->is_ventura) {
--			if (io_info.isRead) {
--				if ((raid->cpuAffinity.pdRead.cpu0) &&
--					(raid->cpuAffinity.pdRead.cpu1))
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_FCFS;
--				else if (raid->cpuAffinity.pdRead.cpu1)
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_1;
--				else
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_0;
--			} else {
--			if ((raid->cpuAffinity.pdWrite.cpu0)
--			&& (raid->cpuAffinity.pdWrite.cpu1))
--				praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_FCFS;
--				else if (raid->cpuAffinity.pdWrite.cpu1)
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_1;
--				else
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_0;
--				if (praid_context->raid_context_g35.routing_flags.bits.sld) {
--					praid_context->raid_context_g35.raid_flags
--					= (MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
--					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
--				}
--			}
--		}
- 	} else {
- 		io_request->RaidContext.raid_context.timeout_value =
- 			cpu_to_le16(local_map_ptr->raidMap.fpPdIoTimeoutSec);
-@@ -2074,40 +2133,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
- 		io_request->DevHandle = cpu_to_le16(device_id);
- 
--		if (instance->is_ventura) {
--			if (io_info.isRead) {
--				if ((raid->cpuAffinity.ldRead.cpu0)
--				&& (raid->cpuAffinity.ldRead.cpu1))
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_FCFS;
--				else if (raid->cpuAffinity.ldRead.cpu1)
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--						= MR_RAID_CTX_CPUSEL_1;
--				else
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--						= MR_RAID_CTX_CPUSEL_0;
--			} else {
--				if ((raid->cpuAffinity.ldWrite.cpu0) &&
--					(raid->cpuAffinity.ldWrite.cpu1))
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--						= MR_RAID_CTX_CPUSEL_FCFS;
--				else if (raid->cpuAffinity.ldWrite.cpu1)
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--						= MR_RAID_CTX_CPUSEL_1;
--				else
--					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--					= MR_RAID_CTX_CPUSEL_0;
--
--				if (io_request->RaidContext.raid_context_g35.stream_detected
--					&& (raid->level == 5) &&
--					(raid->writeMode == MR_RL_WRITE_THROUGH_MODE)) {
--					if (praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--						== MR_RAID_CTX_CPUSEL_FCFS)
--						praid_context->raid_context_g35.routing_flags.bits.cpu_sel
--							= MR_RAID_CTX_CPUSEL_0;
--				}
--			}
--		}
- 	} /* Not FP */
- }
- 
+-	if (sdev->channel < MEGASAS_MAX_PD_CHANNELS) {
++	if (!MEGASAS_IS_LOGICAL(sdev)) {
+ 		if (instance->use_seqnum_jbod_fp) {
+-				pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL) +
+-						sdev->id;
+-				pd_sync = (void *)fusion->pd_seq_sync
+-						[(instance->pd_seq_map_id - 1) & 1];
+-				devhandle = pd_sync->seq[pd_index].devHandle;
++			pd_index = (sdev->channel * MEGASAS_MAX_DEV_PER_CHANNEL)
++				    + sdev->id;
++			pd_sync = (void *)fusion->pd_seq_sync
++					[(instance->pd_seq_map_id - 1) & 1];
++			devhandle = pd_sync->seq[pd_index].devHandle;
+ 		} else
+ 			sdev_printk(KERN_ERR, sdev, "Firmware expose tmCapable"
+ 				" without JBOD MAP support from %s %d\n", __func__, __LINE__);
 -- 
 2.8.3
