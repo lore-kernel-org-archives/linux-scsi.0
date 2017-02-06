@@ -1,68 +1,107 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 3.10 141/319] scsi: mpt3sas: Fix secure erase premature
- termination
-Date: Mon, 6 Feb 2017 23:26:23 +0100
-Message-ID: <20170206222623.GA4769@1wt.eu>
-References: <1486322541-8206-1-git-send-email-w@1wt.eu>
- <1486322541-8206-42-git-send-email-w@1wt.eu>
- <ae8ffc4f86c5af1caf97dfa9a6493443@mail.gmail.com>
+From: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH v2 00/18] lpfc: Add NVME Fabrics support (11.2.0.7)
+Date: Mon, 06 Feb 2017 15:08:49 -0800
+Message-ID: <58990201.sRvo7csmw7wowCeB%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <ae8ffc4f86c5af1caf97dfa9a6493443@mail.gmail.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Cc: linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux@roeck-us.net, Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-wm0-f68.google.com ([74.125.82.68]:33908 "EHLO
+        mail-wm0-f68.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751395AbdBFXIz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 18:08:55 -0500
+Received: by mail-wm0-f68.google.com with SMTP id c85so24972115wmi.1
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Feb 2017 15:08:54 -0800 (PST)
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-Hi Sathya,
 
-On Mon, Feb 06, 2017 at 09:21:44AM -0700, Sathya Prakash Veerichetty wrote:
-> Willy,
-> I think this patch had a problem and later modified to a different
-> blocking mechanism.  Could you please pull in the latest change for this?
+This patch set add support for NVME over Fabrics FC transport.
 
-Much appreciated, thanks. I've checked and found the patch you're
-talking about :
+The internals of the driver are reworked to support being either:
+a SCSI initiator; a NVME intiator; both a SCSI initiator and a
+NVME initiator; or a NVME target. More background on the internals
+is given in patch 3 - for the nvme initiator base modifications.
 
-  commit ffb58456589443ca572221fabbdef3db8483a779
-  Author: James Bottomley <James.Bottomley@HansenPartnership.com>
-  Date:   Sun Jan 1 09:39:24 2017 -0800
+The driver effectively has parallel NVME and SCSI stacks that
+utilize their own set of resources. They intersect only at the 
+hardware level, mainly in the interrupt handling.
 
-    scsi: mpt3sas: fix hang on ata passthrough commands
-    
-    mpt3sas has a firmware failure where it can only handle one pass through
-    ATA command at a time.  If another comes in, contrary to the SAT
-    standard, it will hang until the first one completes (causing long
-    commands like secure erase to timeout).  The original fix was to block
-    the device when an ATA command came in, but this caused a regression
-    with
-    
-    commit 669f044170d8933c3d66d231b69ea97cb8447338
-    Author: Bart Van Assche <bart.vanassche@sandisk.com>
-    Date:   Tue Nov 22 16:17:13 2016 -0800
-    
-        scsi: srp_transport: Move queuecommand() wait code to SCSI core
-    
-    So fix the original fix of the secure erase timeout by properly
-    returning SAM_STAT_BUSY like the SAT recommends.  The original patch
-    also had a concurrency problem since scsih_qcmd is lockless at that
-    point (this is fixed by using atomic bitops to set and test the flag).
-    
-    [mkp: addressed feedback wrt. test_bit and fixed whitespace]
-    
-    Fixes: 18f6084a989ba1b (mpt3sas: Fix secure erase premature termination)
-    Signed-off-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-    Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-    Reviewed-by: Christoph Hellwig <hch@lst.de>
-    Reported-by: Ingo Molnar <mingo@kernel.org>
-    Tested-by: Ingo Molnar <mingo@kernel.org>
-    Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+A few new files are added to support the interfaces of the
+FC transport LLDD api for NVME fabrics.
 
-We don't have the referenced commit above in 3.10 so we should be safe.
-Additionally I checked that neither 4.4 nor 3.12 have them either, so
-that makes me feel confident that we can skip it in 3.10 as well.
+The patches were cut against 2/3 scsi.git tree, misc branch.
+** THEY ARE INTENDED FOR THE SCSI.GIT TREE, MISC BRANCH **
 
-Thanks!
-Willy
+Note: The lpfc version in the linux-block.git tree is rather old.
+I have a recipe for how to get it to a version that syncs with the
+scsi.git/misc tree so that these patches can apply there as well.
+Contact me if you would like it.
+
+-- james
+
+
+James Smart (18):
+  lpfc: Correct WQ creation for pagesize
+  Christophs patch 2
+  lpfc: NVME Initiator: Base modifications Part A
+  lpfc: NVME Initiator: Base modifications Part B
+  lpfc: NVME Initiator: Base modifications Part C
+  lpfc: NVME Initiator: Base modifications Part D
+  lpfc: NVME Initiator: Base modifications Part E
+  lpfc: NVME Initiator: Base modifications Part F
+  lpfc: NVME Initiator: Merge into FC discovery
+  lpfc: NVME Initiator: bind to nvme_fc api
+  lpfc: NVME Initiator: Add debugfs support
+  lpfc: NVME Target: Base modifications
+  lpfc: NVME Target: Receive buffer updates
+  lpfc: NVME Target: Merge into FC discovery
+  lpfc: NVME Target: bind to nvmet_fc api
+  lpfc: NVME Target: Add debugfs support
+  lpfc: Update copyrights
+  lpfc: Update lpfc version to 11.2.0.7
+
+ drivers/scsi/lpfc/Makefile         |   11 +-
+ drivers/scsi/lpfc/lpfc.h           |  155 +-
+ drivers/scsi/lpfc/lpfc_attr.c      |  567 ++++++-
+ drivers/scsi/lpfc/lpfc_attr.h      |    4 +-
+ drivers/scsi/lpfc/lpfc_bsg.c       |   33 +-
+ drivers/scsi/lpfc/lpfc_bsg.h       |    6 +-
+ drivers/scsi/lpfc/lpfc_compat.h    |    4 +-
+ drivers/scsi/lpfc/lpfc_crtn.h      |   74 +-
+ drivers/scsi/lpfc/lpfc_ct.c        |  388 +++--
+ drivers/scsi/lpfc/lpfc_debugfs.c   | 1919 +++++++++++++++++-------
+ drivers/scsi/lpfc/lpfc_debugfs.h   |  275 ++--
+ drivers/scsi/lpfc/lpfc_disc.h      |   24 +-
+ drivers/scsi/lpfc/lpfc_els.c       |  334 ++++-
+ drivers/scsi/lpfc/lpfc_hbadisc.c   |  363 +++--
+ drivers/scsi/lpfc/lpfc_hw.h        |   84 +-
+ drivers/scsi/lpfc/lpfc_hw4.h       |  506 ++++++-
+ drivers/scsi/lpfc/lpfc_ids.h       |    4 +-
+ drivers/scsi/lpfc/lpfc_init.c      | 2919 +++++++++++++++++++++---------------
+ drivers/scsi/lpfc/lpfc_logmsg.h    |    8 +-
+ drivers/scsi/lpfc/lpfc_mbox.c      |  116 +-
+ drivers/scsi/lpfc/lpfc_mem.c       |  278 +++-
+ drivers/scsi/lpfc/lpfc_nl.h        |    4 +-
+ drivers/scsi/lpfc/lpfc_nportdisc.c |  238 ++-
+ drivers/scsi/lpfc/lpfc_nvme.c      | 2384 +++++++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvme.h      |  103 ++
+ drivers/scsi/lpfc/lpfc_nvmet.c     | 1948 ++++++++++++++++++++++++
+ drivers/scsi/lpfc/lpfc_nvmet.h     |  117 ++
+ drivers/scsi/lpfc/lpfc_scsi.c      |  114 +-
+ drivers/scsi/lpfc/lpfc_scsi.h      |   22 +-
+ drivers/scsi/lpfc/lpfc_sli.c       | 2210 +++++++++++++++++++++------
+ drivers/scsi/lpfc/lpfc_sli.h       |   42 +-
+ drivers/scsi/lpfc/lpfc_sli4.h      |   98 +-
+ drivers/scsi/lpfc/lpfc_version.h   |   10 +-
+ drivers/scsi/lpfc/lpfc_vport.c     |   21 +-
+ drivers/scsi/lpfc/lpfc_vport.h     |    4 +-
+ 35 files changed, 12588 insertions(+), 2799 deletions(-)
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvme.c
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvme.h
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvmet.c
+ create mode 100644 drivers/scsi/lpfc/lpfc_nvmet.h
+
+-- 
+2.5.0
