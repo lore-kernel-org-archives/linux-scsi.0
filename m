@@ -1,19 +1,19 @@
 From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 10/39] megaraid_sas: NVME interface target prop added
-Date: Mon, 6 Feb 2017 11:48:22 +0100
-Message-ID: <959ee124-9c3f-5e51-a466-dd8c5277b9f7@suse.com>
+Subject: Re: [PATCH 11/39] megaraid_sas: NVME interface target prop added
+Date: Mon, 6 Feb 2017 11:51:54 +0100
+Message-ID: <d0eace68-215a-0c91-cdb8-6d0764b4e737@suse.com>
 References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1486375212-17329-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:56601 "EHLO
+Received: from smtp.nue.novell.com ([195.135.221.5]:59928 "EHLO
         smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750953AbdBFKsZ (ORCPT
+        with ESMTP id S1751001AbdBFKv5 (ORCPT
         <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 6 Feb 2017 05:48:25 -0500
-In-Reply-To: <1486375212-17329-11-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+        Mon, 6 Feb 2017 05:51:57 -0500
+In-Reply-To: <1486375212-17329-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
@@ -21,15 +21,17 @@ Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kash
 
 On 02/06/2017 10:59 AM, Shivasharan S wrote:
 > This patch depends on patch 0008.
-> This patch fetch true values of NVME property from FW using New DCMD interface MR_DCMD_DEV_GET_TARGET_PROP
+> This patch fetch true values of NVME property
+> from FW using New DCMD interface MR_DCMD_DEV_GET_TARGET_PROP
 > 
 > Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 > Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 > ---
->  drivers/scsi/megaraid/megaraid_sas.h        |  14 +++
->  drivers/scsi/megaraid/megaraid_sas_base.c   | 144 +++++++++++++++++++++++++++-
->  drivers/scsi/megaraid/megaraid_sas_fusion.h |   1 +
->  3 files changed, 155 insertions(+), 4 deletions(-)
+>  drivers/scsi/megaraid/megaraid_sas.h        |  10 +-
+>  drivers/scsi/megaraid/megaraid_sas_fp.c     |  55 +++--
+>  drivers/scsi/megaraid/megaraid_sas_fusion.c | 316 ++++++++++++++++++++++++++--
+>  drivers/scsi/megaraid/megaraid_sas_fusion.h |  14 +-
+>  4 files changed, 350 insertions(+), 45 deletions(-)
 > 
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
