@@ -1,55 +1,74 @@
-From: Hannes Reinecke <hare@suse.com>
-Subject: Re: [PATCH 39/39] megaraid_sas: driver version upgrade
-Date: Mon, 6 Feb 2017 12:31:18 +0100
-Message-ID: <1415b872-f70b-aa6f-ca66-0c5f224340ce@suse.com>
-References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-40-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] qla2xxx: Add framework for async fabric discovery
+Date: Mon, 6 Feb 2017 14:37:56 +0300
+Message-ID: <20170206113755.GA22938@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.nue.novell.com ([195.135.221.5]:48604 "EHLO
-        smtp.nue.novell.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751545AbdBFLbV (ORCPT
-        <rfc822;groupwise-linux-scsi@vger.kernel.org:0:0>);
-        Mon, 6 Feb 2017 06:31:21 -0500
-In-Reply-To: <1486375212-17329-40-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Received: from userp1040.oracle.com ([156.151.31.81]:51097 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750994AbdBFLiI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 6 Feb 2017 06:38:08 -0500
+Content-Disposition: inline
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com
+To: quinn.tran@cavium.com
+Cc: linux-scsi@vger.kernel.org
 
-On 02/06/2017 11:00 AM, Shivasharan S wrote:
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> ---
->  drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-> index e810057..f8718ea 100644
-> --- a/drivers/scsi/megaraid/megaraid_sas.h
-> +++ b/drivers/scsi/megaraid/megaraid_sas.h
-> @@ -35,8 +35,8 @@
->  /*
->   * MegaRAID SAS Driver meta data
->   */
-> -#define MEGASAS_VERSION				"07.700.00.00-rc1"
-> -#define MEGASAS_RELDATE				"November 29, 2016"
-> +#define MEGASAS_VERSION				"07.701.16.00-rc1"
-> +#define MEGASAS_RELDATE				"February 2, 2017"
->  
->  /*
->   * Device IDs
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
+Hello Quinn Tran,
 
-Cheers,
+The patch b79414ee4988: "qla2xxx: Add framework for async fabric
+discovery" from Jan 19, 2017, leads to the following static checker
+warning:
 
-Hannes
--- 
-Dr. Hannes Reinecke		               zSeries & Storage
-hare@suse.com			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+	drivers/scsi/qla2xxx/qla_init.c:3910 qla2x00_alloc_fcport()
+	warn: use 'flags' here instead of GFP_XXX?
+
+drivers/scsi/qla2xxx/qla_init.c
+  3894  fc_port_t *
+  3895  qla2x00_alloc_fcport(scsi_qla_host_t *vha, gfp_t flags)
+  3896  {
+  3897          fc_port_t *fcport;
+  3898  
+  3899          fcport = kzalloc(sizeof(fc_port_t), flags);
+
+In pratice "flags" is always GFP_KERNEL.
+
+  3900          if (!fcport)
+  3901                  return NULL;
+  3902  
+  3903          /* Setup fcport template structure. */
+  3904          fcport->vha = vha;
+  3905          fcport->port_type = FCT_UNKNOWN;
+  3906          fcport->loop_id = FC_NO_LOOP_ID;
+  3907          qla2x00_set_fcport_state(fcport, FCS_UNCONFIGURED);
+  3908          fcport->supported_classes = FC_COS_UNSPECIFIED;
+  3909  
+  3910          fcport->ct_desc.ct_sns = dma_alloc_coherent(&vha->hw->pdev->dev,
+  3911                  sizeof(struct ct_sns_pkt), &fcport->ct_desc.ct_sns_dma,
+  3912                          GFP_ATOMIC);
+
+There isn't an obvious reason why GFP_ATOMIC is required here.
+
+  3913          fcport->disc_state = DSC_DELETED;
+  3914          fcport->fw_login_state = DSC_LS_PORT_UNAVAIL;
+  3915          fcport->deleted = QLA_SESS_DELETED;
+  3916          fcport->login_retry = vha->hw->login_retry_count;
+  3917          fcport->login_retry = 5;
+  3918          fcport->logout_on_delete = 1;
+  3919  
+  3920          if (!fcport->ct_desc.ct_sns) {
+  3921                  ql_log(ql_log_warn, vha, 0xffff,
+  3922                      "Failed to allocate ct_sns request.\n");
+  3923                  kfree(fcport);
+  3924                  fcport = NULL;
+  3925          }
+  3926          INIT_WORK(&fcport->del_work, qla24xx_delete_sess_fn);
+  3927          INIT_LIST_HEAD(&fcport->gnl_entry);
+  3928          INIT_LIST_HEAD(&fcport->list);
+  3929  
+  3930          return fcport;
+  3931  }
+
+regards,
+dan carpenter
