@@ -1,70 +1,34 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 3.10 141/319] scsi: mpt3sas: Fix secure erase premature
- termination
-Date: Tue, 7 Feb 2017 18:12:34 +0100
-Message-ID: <20170207171234.GB4041@1wt.eu>
-References: <1486322541-8206-1-git-send-email-w@1wt.eu>
- <1486322541-8206-42-git-send-email-w@1wt.eu>
- <ae8ffc4f86c5af1caf97dfa9a6493443@mail.gmail.com>
- <20170206222623.GA4769@1wt.eu>
- <1486449528.2474.125.camel@HansenPartnership.com>
- <20170207065946.GC4850@1wt.eu>
- <1486486971.2488.19.camel@HansenPartnership.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH][V2] scsi: aacraid: rcode is unsigned and should be
+ signed int
+Date: Tue, 7 Feb 2017 19:35:54 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8B7200@avsrvexchmbx2.microsemi.net>
+References: <20170207115129.18948-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1486486971.2488.19.camel@HansenPartnership.com>
+In-Reply-To: <20170207115129.18948-1-colin.king@canonical.com>
+Content-Language: en-US
 Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux@roeck-us.net, Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+To: Colin King <colin.king@canonical.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 07, 2017 at 09:02:51AM -0800, James Bottomley wrote:
-> On Tue, 2017-02-07 at 07:59 +0100, Willy Tarreau wrote:
-> > Hi James,
-> > 
-> > On Mon, Feb 06, 2017 at 10:38:48PM -0800, James Bottomley wrote:
-> > > On Mon, 2017-02-06 at 23:26 +0100, Willy Tarreau wrote:
-> > (...)
-> > > > We don't have the referenced commit above in 3.10 so we should be
-> > > > safe. Additionally I checked that neither 4.4 nor 3.12 have them 
-> > > > either, so that makes me feel confident that we can skip it in 
-> > > > 3.10 as well.
-> > > 
-> > > The original was also racy with respect to multiple commands, so 
-> > > the above fixed the race as well.
-> > 
-> > OK so I tried to backport it to 3.10. I dropped a few parts which 
-> > were addressing this one marked for stable 4.4+ :
-> >     7ff723a ("scsi: mpt3sas: Unblock device after controller reset")
-> > 
-> > And I got the attached patch. All I know is that it builds. I'd 
-> > appreciate it if someone could confirm its validity, in which case
-> > I'll add it.
-> 
-> The two patches apply without fuzz to your tree and the combination is
-> a far better bug fix than the original regardless of whether 7ff723a
-> exists in your tree or not.  By messing with the patches all you do is
-> add the potential for introducing new bugs for no benefit, so why take
-> risk for no upside?
-
-Just because I'm suggested to apply this fix which is supposed to fix
-a regression brought by 7ff723a which itself is marked to fix 4.4+ only
-and which doesn't apply to 3.10. So now I'm getting confused because
-you say that these patches apply without fuzz but one part definitely
-is rejected and the other one has to be applied by hand. I want not
-to take a risk but I'm faced with these options :
-  - drop all these patches and stay as 3.10.104 is
-  - merge the "secure erase premature" + the the part of the patch
-    that supposedly fixes the regression it introduced
-  - merge this fix + 7ff723a + whatever it depends on (not fond of
-    it)
-
-In all cases I don't even have the hardware to validate anything. I'd
-be more tempted with the first two options. If you think I'm taking
-risks by backporting the relevant part of the fix, I'll simply drop
-them all and leave the code as it is now.
-
-Thanks,
-Willy
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogQ29saW4gS2luZyBbbWFp
+bHRvOmNvbGluLmtpbmdAY2Fub25pY2FsLmNvbV0NCj4gU2VudDogVHVlc2RheSwgRmVicnVhcnkg
+NywgMjAxNyAzOjUxIEFNDQo+IFRvOiBkbC1lc2MtQWFjcmFpZCBMaW51eCBEcml2ZXIgPGFhY3Jh
+aWRAbWljcm9zZW1pLmNvbT47IEphbWVzIEUgLiBKIC4NCj4gQm90dG9tbGV5IDxqZWpiQGxpbnV4
+LnZuZXQuaWJtLmNvbT47IE1hcnRpbiBLIC4gUGV0ZXJzZW4NCj4gPG1hcnRpbi5wZXRlcnNlbkBv
+cmFjbGUuY29tPjsgbGludXgtc2NzaUB2Z2VyLmtlcm5lbC5vcmcNCj4gQ2M6IGtlcm5lbC1qYW5p
+dG9yc0B2Z2VyLmtlcm5lbC5vcmc7IGxpbnV4LWtlcm5lbEB2Z2VyLmtlcm5lbC5vcmcNCj4gU3Vi
+amVjdDogW1BBVENIXVtWMl0gc2NzaTogYWFjcmFpZDogcmNvZGUgaXMgdW5zaWduZWQgYW5kIHNo
+b3VsZCBiZSBzaWduZWQgaW50DQo+IA0KPiBFWFRFUk5BTCBFTUFJTA0KPiANCj4gDQo+IEZyb206
+IENvbGluIElhbiBLaW5nIDxjb2xpbi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IA0KPiBhYWNfZmli
+X3NlbmQgY2FuIHJldHVybiAtdmUgZXJyb3IgcmV0dXJucyBhbmQgaGVuY2UgcmNvZGUgc2hvdWxk
+DQo+IGJlIHNpZ25lZC4gQ3VycmVudGx5IHRoZSByY29kZSA+PSAwIGNoZWNrIGlzIGFsd2F5cyB0
+cnVlIGFuZCAtdmUNCj4gZXJyb3JzIGFyZSBub3QgYmVpbmcgY2hlY2tlZC4NCj4gDQo+IFRoYW5r
+cyB0byBEYW4gQ2FycGVudGVyIGZvciBzcG90dGluZyBteSBvcmlnaW5hbCBicm9rZW4gZml4IHRv
+IHRoaXMNCj4gaXNzdWUuDQo+IA0KPiBTaWduZWQtb2ZmLWJ5OiBDb2xpbiBJYW4gS2luZyA8Y29s
+aW4ua2luZ0BjYW5vbmljYWwuY29tPg0KPiAtLS0NCg0KUmV2aWV3ZWQtYnk6IFJhZ2hhdmEgQWRp
+dHlhIFJlbnVrdW50YSA8UmFnaGF2YUFkaXR5YS5SZW51a3VudGFAbWljcm9zZW1pLmNvbT4NCg0K
