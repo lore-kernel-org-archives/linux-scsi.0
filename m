@@ -1,68 +1,66 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 1/5] target: Don't BUG_ON during NodeACL dynamic -> explicit conversion
-Date: Tue,  7 Feb 2017 13:17:46 +0000
-Message-ID: <1486473470-15837-2-git-send-email-nab@linux-iscsi.org>
-References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
-Sender: target-devel-owner@vger.kernel.org
-To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
+From: walter harms <wharms@bfs.de>
+Subject: Re: [patch] scsi: qedi: silence sprintf() overflow warning
+Date: Tue, 07 Feb 2017 14:27:09 +0100
+Message-ID: <5899CB2D.4050809@bfs.de>
+References: <20170207130103.GA31552@mwanda>
+Reply-To: wharms@bfs.de
+Mime-Version: 1.0
+Content-Type: text/plain; charset=ISO-8859-1
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx02-sz.bfs.de ([194.94.69.103]:47317 "EHLO mx02-sz.bfs.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754285AbdBGN1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Feb 2017 08:27:13 -0500
+In-Reply-To: <20170207130103.GA31552@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>
+Cc: QLogic-Storage-Upstream@cavium.com, Thomas Gleixner <tglx@linutronix.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
-From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-After the v4.2+ RCU conversion to se_node_acl->lun_entry_hlist,
-a BUG_ON() was added in core_enable_device_list_for_node() to
-detect when the passed *lun does not match the existing
-orig->se_lun pointer reference.
 
-However, this scenario can occur happen when a dynamically
-generated NodeACL is being converted to an explicit NodeACL,
-when the explicit NodeACL contains a different LUN mapping
-than the default provided by the WWN endpoint.
+Am 07.02.2017 14:01, schrieb Dan Carpenter:
+> The problem here is this:
+> 
+> 	sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
+> 
+> host_buf is 16 character so we only have 6 characters left for
+> ->host_no.  But ->host_no is set in scsi_host_alloc():
+> 
+> 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+> 
+> It could theoretically go up to 0x8000000 so we need space for 10
+> digits.
+> 
+> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> 
+> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+> index 5eda21d903e9..0dcf3b08230c 100644
+> --- a/drivers/scsi/qedi/qedi_main.c
+> +++ b/drivers/scsi/qedi/qedi_main.c
+> @@ -1735,7 +1735,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
+>  	u32 dp_module = 0;
+>  	u8 dp_level = 0;
+>  	bool is_vf = false;
+> -	char host_buf[16];
+> +	char host_buf[20];
+>  	struct qed_link_params link_params;
+>  	struct qed_slowpath_params sp_params;
+>  	struct qed_probe_params qed_params;
+> --
+> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
+> 
 
-So instead of triggering BUG_ON(), go ahead and fail instead
-following the original pre RCU conversion logic.
+any chance to use snprintf here ?
+ sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
 
-Reported-by: Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
-Cc: Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
-Cc: stable@vger.kernel.org # 4.2+
-Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
----
- drivers/target/target_core_device.c | 16 ++++++++++++----
- 1 file changed, 12 insertions(+), 4 deletions(-)
+or something like asprint() :)
 
-diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
-index 1ebd13e..23e89af 100644
---- a/drivers/target/target_core_device.c
-+++ b/drivers/target/target_core_device.c
-@@ -345,14 +345,22 @@ int core_enable_device_list_for_node(
- 					lockdep_is_held(&nacl->lun_entry_mutex));
- 
- 		if (orig_lun != lun) {
--			pr_err("Existing orig->se_lun doesn't match new lun"
--			       " for dynamic -> explicit NodeACL conversion:"
--				" %s\n", nacl->initiatorname);
-+			pr_warn_ratelimited("Existing orig->se_lun doesn't match"
-+				" new lun for dynamic -> explicit NodeACL"
-+				" conversion: %s\n", nacl->initiatorname);
-+			mutex_unlock(&nacl->lun_entry_mutex);
-+			kfree(new);
-+			return -EINVAL;
-+		}
-+		if (orig->se_lun_acl != NULL) {
-+			pr_warn_ratelimited("Detected existing explicit"
-+				" se_lun_acl->se_lun_group reference for %s"
-+				" mapped_lun: %llu, ignoring\n",
-+				 nacl->initiatorname, mapped_lun);
- 			mutex_unlock(&nacl->lun_entry_mutex);
- 			kfree(new);
- 			return -EINVAL;
- 		}
--		BUG_ON(orig->se_lun_acl != NULL);
- 
- 		rcu_assign_pointer(new->se_lun, lun);
- 		rcu_assign_pointer(new->se_lun_acl, lun_acl);
--- 
-1.9.1
+if ever anyone change the type to very_long_type in the future it would simply break
+but not hurt.
+
+re,
+ wh
