@@ -1,33 +1,22 @@
 From: Christoph Hellwig <hch@infradead.org>
 Subject: Re: [PATCH 4/5] target: Fix multi-session dynamic se_node_acl double
  free OOPs
-Date: Tue, 7 Feb 2017 15:07:01 -0800
-Message-ID: <20170207230701.GA28123@infradead.org>
+Date: Tue, 7 Feb 2017 15:12:24 -0800
+Message-ID: <20170207231224.GA29711@infradead.org>
 References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
  <1486473470-15837-5-git-send-email-nab@linux-iscsi.org>
+ <20170207230701.GA28123@infradead.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1486473470-15837-5-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <20170207230701.GA28123@infradead.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
 Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Rob Millner <rlm@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 07, 2017 at 01:17:49PM +0000, Nicholas A. Bellinger wrote:
-> -	list_del(&acl->acl_list);
-> +	list_del_init(&acl->acl_list);
-
-All these list_del_init changes don't make sense to me - the whole target
-code never does a list_empty check on ->acl_list.
-
-
-Looking further I think all nacls should be switched to the direct
-free from the kref release callback scheme - there is no real need
-to wait for freeing the nacl I think.
-
-Untested patch below:
+And the real patch after compile fixing it is here of course:
 
 diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
 index 9ab7090f7c83..96c38f30069d 100644
@@ -76,7 +65,7 @@ index d99752c6cd60..08738c87e5b0 100644
  
  /*	core_tpg_set_initiator_node_queue_depth():
 diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 1cadc9eefa21..72718283e553 100644
+index 1cadc9eefa21..9ebd86a8ef41 100644
 --- a/drivers/target/target_core_transport.c
 +++ b/drivers/target/target_core_transport.c
 @@ -453,19 +453,25 @@ ssize_t target_show_dynamic_sessions(struct se_portal_group *se_tpg, char *page)
@@ -109,7 +98,7 @@ index 1cadc9eefa21..72718283e553 100644
  
  void transport_deregister_session_configfs(struct se_session *se_sess)
  {
-@@ -499,12 +505,39 @@ EXPORT_SYMBOL(transport_deregister_session_configfs);
+@@ -499,12 +505,40 @@ EXPORT_SYMBOL(transport_deregister_session_configfs);
  void transport_free_session(struct se_session *se_sess)
  {
  	struct se_node_acl *se_nacl = se_sess->se_node_acl;
@@ -122,6 +111,7 @@ index 1cadc9eefa21..72718283e553 100644
 +		struct se_portal_group *se_tpg = se_nacl->se_tpg;
 +		const struct target_core_fabric_ops *se_tfo = se_tpg->se_tpg_tfo;
 +		unsigned long flags;
++		bool stop = false;
 +
  		se_sess->se_node_acl = NULL;
 +
@@ -149,7 +139,7 @@ index 1cadc9eefa21..72718283e553 100644
  		target_put_nacl(se_nacl);
  	}
  	if (se_sess->sess_cmd_map) {
-@@ -518,16 +551,12 @@ EXPORT_SYMBOL(transport_free_session);
+@@ -518,16 +552,12 @@ EXPORT_SYMBOL(transport_free_session);
  void transport_deregister_session(struct se_session *se_sess)
  {
  	struct se_portal_group *se_tpg = se_sess->se_tpg;
@@ -166,7 +156,7 @@ index 1cadc9eefa21..72718283e553 100644
  
  	spin_lock_irqsave(&se_tpg->session_lock, flags);
  	list_del(&se_sess->sess_list);
-@@ -535,35 +564,8 @@ void transport_deregister_session(struct se_session *se_sess)
+@@ -535,35 +565,8 @@ void transport_deregister_session(struct se_session *se_sess)
  	se_sess->fabric_sess_ptr = NULL;
  	spin_unlock_irqrestore(&se_tpg->session_lock, flags);
  
