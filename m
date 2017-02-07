@@ -1,51 +1,206 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 0/5] target: Miscellaneous bug-fixes for >= v4.10
-Date: Tue,  7 Feb 2017 13:17:45 +0000
-Message-ID: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 4/5] target: Fix multi-session dynamic se_node_acl double free OOPs
+Date: Tue,  7 Feb 2017 13:17:49 +0000
+Message-ID: <1486473470-15837-5-git-send-email-nab@linux-iscsi.org>
+References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Rob Millner <rlm@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-Hi all,
+This patch addresses a long-standing bug with multi-session
+(eg: iscsi-target + iser-target) se_node_acl dynamic free
+withini transport_deregister_session().
 
-This series contains a handful of bug-fixes that I've been validating
-on v4.1.y code for production usage over the past couple of months.
+This bug is caused when a storage endpoint is configured with
+demo-mode (generate_node_acls = 1 + cache_dynamic_acls = 1)
+initiators, and initiator login creates a new dynamic node acl
+and attaches two sessions to it.
 
-All of these are long-standing issues that I don't think other
-folks have been able to hit (or at least not reported), but have
-been reproduced by Datera's QA team and/or have been reported by
-customers.
+After that, demo-mode for the storage instance is disabled via
+configfs (generate_node_acls = 0 + cache_dynamic_acls = 0) and
+the existing dynamic acl is never converted to an explicit ACL.
 
-Most of the patches are straight-forward fixes have been running
-in Datera's nightly automation for weeks to months.
+The end result is dynamic acl resources are released twice when
+the sessions are shutdown in transport_deregister_session().
 
-The one exception in patch #1 is a >= v4.2 RCU regression bug-fix
-reported by Benjamin Estrabaud a while back, that re-instates
-pre RCU conversion logic that kills a bogus BUG_ON() during
-dynamic -> explicit se_node_acl conversion.
+If the storage instance is not changed to disable demo-mode,
+or the dynamic acl is converted to an explict ACL, or there
+is only a single session associated with the dynamic ACL,
+the bug is not triggered.
 
-Please review.
+To address this big, move the release of dynamic se_node_acl
+memory into target_complete_nacl() so it's only freed once
+when se_node_acl->acl_kref reaches zero.
 
---nab
-
-Nicholas Bellinger (5):
-  target: Don't BUG_ON during NodeACL dynamic -> explicit conversion
-  target: Use correct SCSI status during EXTENDED_COPY exception
-  target: Fix early transport_generic_handle_tmr abort scenario
-  target: Fix multi-session dynamic se_node_acl double free OOPs
-  target: Fix COMPARE_AND_WRITE ref leak for non GOOD status
-
- drivers/target/target_core_device.c    | 16 +++++--
- drivers/target/target_core_sbc.c       |  8 +++-
+Reported-by: Rob Millner <rlm@daterainc.com>
+Tested-by: Rob Millner <rlm@daterainc.com>
+Cc: Rob Millner <rlm@daterainc.com>
+Cc: stable@vger.kernel.org # 3.10+
+Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+---
  drivers/target/target_core_tpg.c       |  4 +-
- drivers/target/target_core_transport.c | 86 +++++++++++++++++++++++-----------
- drivers/target/target_core_xcopy.c     |  2 +-
+ drivers/target/target_core_transport.c | 69 +++++++++++++++++++++-------------
  include/target/target_core_base.h      |  1 +
- 6 files changed, 80 insertions(+), 37 deletions(-)
+ 3 files changed, 46 insertions(+), 28 deletions(-)
 
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index d99752c..4f32c49 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -364,7 +364,7 @@ void core_tpg_del_initiator_node_acl(struct se_node_acl *acl)
+ 	mutex_lock(&tpg->acl_node_mutex);
+ 	if (acl->dynamic_node_acl)
+ 		acl->dynamic_node_acl = 0;
+-	list_del(&acl->acl_list);
++	list_del_init(&acl->acl_list);
+ 	mutex_unlock(&tpg->acl_node_mutex);
+ 
+ 	target_shutdown_sessions(acl);
+@@ -540,7 +540,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 	 * in transport_deregister_session().
+ 	 */
+ 	list_for_each_entry_safe(nacl, nacl_tmp, &node_list, acl_list) {
+-		list_del(&nacl->acl_list);
++		list_del_init(&nacl->acl_list);
+ 
+ 		core_tpg_wait_for_nacl_pr_ref(nacl);
+ 		core_free_device_list_for_node(nacl, se_tpg);
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 8b69843..bd62dd4 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -457,8 +457,20 @@ static void target_complete_nacl(struct kref *kref)
+ {
+ 	struct se_node_acl *nacl = container_of(kref,
+ 				struct se_node_acl, acl_kref);
++	struct se_portal_group *se_tpg = nacl->se_tpg;
+ 
+-	complete(&nacl->acl_free_comp);
++	if (!nacl->dynamic_stop) {
++		complete(&nacl->acl_free_comp);
++		return;
++	}
++
++	mutex_lock(&se_tpg->acl_node_mutex);
++	list_del_init(&nacl->acl_list);
++	mutex_unlock(&se_tpg->acl_node_mutex);
++
++	core_tpg_wait_for_nacl_pr_ref(nacl);
++	core_free_device_list_for_node(nacl, se_tpg);
++	kfree(nacl);
+ }
+ 
+ void target_put_nacl(struct se_node_acl *nacl)
+@@ -499,12 +511,39 @@ void transport_deregister_session_configfs(struct se_session *se_sess)
+ void transport_free_session(struct se_session *se_sess)
+ {
+ 	struct se_node_acl *se_nacl = se_sess->se_node_acl;
++
+ 	/*
+ 	 * Drop the se_node_acl->nacl_kref obtained from within
+ 	 * core_tpg_get_initiator_node_acl().
+ 	 */
+ 	if (se_nacl) {
++		struct se_portal_group *se_tpg = se_nacl->se_tpg;
++		const struct target_core_fabric_ops *se_tfo = se_tpg->se_tpg_tfo;
++		unsigned long flags;
++
+ 		se_sess->se_node_acl = NULL;
++
++		/*
++		 * Also determine if we need to drop the extra ->cmd_kref if
++		 * it had been previously dynamically generated, and
++		 * the endpoint is not caching dynamic ACLs.
++		 */
++		mutex_lock(&se_tpg->acl_node_mutex);
++		if (se_nacl->dynamic_node_acl &&
++		    !se_tfo->tpg_check_demo_mode_cache(se_tpg)) {
++			spin_lock_irqsave(&se_nacl->nacl_sess_lock, flags);
++			if (list_empty(&se_nacl->acl_sess_list))
++				se_nacl->dynamic_stop = true;
++			spin_unlock_irqrestore(&se_nacl->nacl_sess_lock, flags);
++
++			if (se_nacl->dynamic_stop)
++				list_del_init(&se_nacl->acl_list);
++		}
++		mutex_unlock(&se_tpg->acl_node_mutex);
++
++		if (se_nacl->dynamic_stop)
++			target_put_nacl(se_nacl);
++
+ 		target_put_nacl(se_nacl);
+ 	}
+ 	if (se_sess->sess_cmd_map) {
+@@ -518,16 +557,12 @@ void transport_free_session(struct se_session *se_sess)
+ void transport_deregister_session(struct se_session *se_sess)
+ {
+ 	struct se_portal_group *se_tpg = se_sess->se_tpg;
+-	const struct target_core_fabric_ops *se_tfo;
+-	struct se_node_acl *se_nacl;
+ 	unsigned long flags;
+-	bool drop_nacl = false;
+ 
+ 	if (!se_tpg) {
+ 		transport_free_session(se_sess);
+ 		return;
+ 	}
+-	se_tfo = se_tpg->se_tpg_tfo;
+ 
+ 	spin_lock_irqsave(&se_tpg->session_lock, flags);
+ 	list_del(&se_sess->sess_list);
+@@ -535,33 +570,15 @@ void transport_deregister_session(struct se_session *se_sess)
+ 	se_sess->fabric_sess_ptr = NULL;
+ 	spin_unlock_irqrestore(&se_tpg->session_lock, flags);
+ 
+-	/*
+-	 * Determine if we need to do extra work for this initiator node's
+-	 * struct se_node_acl if it had been previously dynamically generated.
+-	 */
+-	se_nacl = se_sess->se_node_acl;
+-
+-	mutex_lock(&se_tpg->acl_node_mutex);
+-	if (se_nacl && se_nacl->dynamic_node_acl) {
+-		if (!se_tfo->tpg_check_demo_mode_cache(se_tpg)) {
+-			list_del(&se_nacl->acl_list);
+-			drop_nacl = true;
+-		}
+-	}
+-	mutex_unlock(&se_tpg->acl_node_mutex);
+-
+-	if (drop_nacl) {
+-		core_tpg_wait_for_nacl_pr_ref(se_nacl);
+-		core_free_device_list_for_node(se_nacl, se_tpg);
+-		se_sess->se_node_acl = NULL;
+-		kfree(se_nacl);
+-	}
+ 	pr_debug("TARGET_CORE[%s]: Deregistered fabric_sess\n",
+ 		se_tpg->se_tpg_tfo->get_fabric_name());
+ 	/*
+ 	 * If last kref is dropping now for an explicit NodeACL, awake sleeping
+ 	 * ->acl_free_comp caller to wakeup configfs se_node_acl->acl_group
+ 	 * removal context from within transport_free_session() code.
++	 *
++	 * For dynamic ACL, target_put_nacl() uses target_complete_nacl()
++	 * to release all remaining generate_node_acl=1 created ACL resources.
+ 	 */
+ 
+ 	transport_free_session(se_sess);
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 43edf82..da854fb 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -538,6 +538,7 @@ struct se_node_acl {
+ 	char			initiatorname[TRANSPORT_IQN_LEN];
+ 	/* Used to signal demo mode created ACL, disabled by default */
+ 	bool			dynamic_node_acl;
++	bool			dynamic_stop;
+ 	u32			queue_depth;
+ 	u32			acl_index;
+ 	enum target_prot_type	saved_prot_type;
 -- 
 1.9.1
