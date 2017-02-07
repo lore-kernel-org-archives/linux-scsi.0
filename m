@@ -1,30 +1,86 @@
 From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [PATCH 1/5] target: Don't BUG_ON during NodeACL dynamic ->
- explicit conversion
-Date: Tue, 7 Feb 2017 14:44:53 -0800
-Message-ID: <20170207224453.GB5274@infradead.org>
+Subject: Re: [PATCH 3/5] target: Fix early transport_generic_handle_tmr abort
+ scenario
+Date: Tue, 7 Feb 2017 14:45:59 -0800
+Message-ID: <20170207224559.GC5274@infradead.org>
 References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
- <1486473470-15837-2-git-send-email-nab@linux-iscsi.org>
+ <1486473470-15837-4-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-kernel-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1486473470-15837-2-git-send-email-nab@linux-iscsi.org>
+In-Reply-To: <1486473470-15837-4-git-send-email-nab@linux-iscsi.org>
 Sender: linux-kernel-owner@vger.kernel.org
 To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Rob Millner <rlm@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-On Tue, Feb 07, 2017 at 01:17:46PM +0000, Nicholas A. Bellinger wrote:
-> +		if (orig->se_lun_acl != NULL) {
-> +			pr_warn_ratelimited("Detected existing explicit"
-> +				" se_lun_acl->se_lun_group reference for %s"
-> +				" mapped_lun: %llu, ignoring\n",
-> +				 nacl->initiatorname, mapped_lun);
+On Tue, Feb 07, 2017 at 01:17:48PM +0000, Nicholas A. Bellinger wrote:
+> From: Nicholas Bellinger <nab@linux-iscsi.org>
+> 
+> This patch fixes a bug where incoming task management requests
+> can be explicitly aborted during an active LUN_RESET, but who's
+> struct work_struct are canceled in-flight before execution.
+> 
+> This occurs when core_tmr_drain_tmr_list() invokes cancel_work_sync()
+> for the incoming se_tmr_req->task_cmd->work, resulting in cmd->work
+> for target_tmr_work() never getting invoked and the aborted TMR
+> waiting indefinately within transport_wait_for_tasks().
+> 
+> To address this case, perform a CMD_T_ABORTED check early in
+> transport_generic_handle_tmr(), and invoke the normal path via
+> transport_cmd_check_stop_to_fabric() to complete any TMR kthreads
+> blocked waiting for CMD_T_STOP in transport_wait_for_tasks().
+> 
+> Also, move the TRANSPORT_ISTATE_PROCESSING assignment earlier
+> into transport_generic_handle_tmr() so the existing check in
+> core_tmr_drain_tmr_list() avoids attempting abort the incoming
+> se_tmr_req->task_cmd->work if it has already been queued into
+> se_device->tmr_wq.
+> 
+> Reported-by: Rob Millner <rlm@daterainc.com>
+> Tested-by: Rob Millner <rlm@daterainc.com>
+> Cc: Rob Millner <rlm@daterainc.com>
+> Cc: stable@vger.kernel.org # 3.14+
+> Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
+> ---
+>  drivers/target/target_core_transport.c | 17 +++++++++++++++--
+>  1 file changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+> index 1cadc9e..8b69843 100644
+> --- a/drivers/target/target_core_transport.c
+> +++ b/drivers/target/target_core_transport.c
+> @@ -3110,7 +3110,6 @@ static void target_tmr_work(struct work_struct *work)
+>  		spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  		goto check_stop;
+>  	}
+> -	cmd->t_state = TRANSPORT_ISTATE_PROCESSING;
+>  	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  
+>  	cmd->se_tfo->queue_tm_rsp(cmd);
+> @@ -3123,11 +3122,25 @@ int transport_generic_handle_tmr(
+>  	struct se_cmd *cmd)
+>  {
+>  	unsigned long flags;
+> +	bool aborted = false;
+>  
+>  	spin_lock_irqsave(&cmd->t_state_lock, flags);
+> -	cmd->transport_state |= CMD_T_ACTIVE;
+> +	if (cmd->transport_state & CMD_T_ABORTED) {
+> +		aborted = true;
+> +	} else {
+> +		cmd->t_state = TRANSPORT_ISTATE_PROCESSING;
+> +		cmd->transport_state |= CMD_T_ACTIVE;
+> +	}
+>  	spin_unlock_irqrestore(&cmd->t_state_lock, flags);
+>  
+> +	if (aborted) {
+> +		pr_warn_ratelimited("handle_tmr caught CMD_T_ABORTED TMR %d"
+> +			"ref_tag: %llu tag: %llu\n", cmd->se_tmr_req->function,
+> +			cmd->se_tmr_req->ref_task_tag, cmd->tag);
 
-The ignoring in the message confused the heck out of me first.  But it 
-seems that's just an incorrect leftover from the original message, as the
-changelog also says fail instead.  With that fixed up (and maybe the
-whole message in a single string literal on a single line):
+This seems pretty noisy for something that could happen during normal
+operation.  Otherwise:
 
 Reviewed-by: Christoph Hellwig <hch@lst.de>
