@@ -1,44 +1,49 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] scsi: qedi: silence sprintf() overflow warning
-Date: Tue, 7 Feb 2017 16:01:04 +0300
-Message-ID: <20170207130103.GA31552@mwanda>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 03/10] mpt3sas: implement _dechain_st()
+Date: Tue, 7 Feb 2017 14:15:51 +0100
+Message-ID: <20170207131551.GC19247@lst.de>
+References: <1485854760-122683-1-git-send-email-hare@suse.de> <1485854760-122683-4-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:36596 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754941AbdBGNBe (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2017 08:01:34 -0500
+Received: from verein.lst.de ([213.95.11.211]:40560 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754870AbdBGNQO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Feb 2017 08:16:14 -0500
 Content-Disposition: inline
+In-Reply-To: <1485854760-122683-4-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: QLogic-Storage-Upstream@cavium.com, Thomas Gleixner <tglx@linutronix.de>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, mpt-fusionlinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.com>
 
-The problem here is this:
+On Tue, Jan 31, 2017 at 10:25:53AM +0100, Hannes Reinecke wrote:
+> Split off _dechain_st() as separate function.
+> No functional change.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c | 23 ++++++++++++++---------
+>  1 file changed, 14 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index 09d0008..120b317 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -2365,6 +2365,19 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>  	return smid;
+>  }
+>  
+> +static void
+> +_dechain_st(struct MPT3SAS_ADAPTER *ioc, struct scsiio_tracker *st)
+> +{
+> +	struct chain_tracker *chain_req;
+> +
+> +	while (!list_empty(&st->chain_list)) {
+> +		chain_req = list_first_entry(&st->chain_list,
+> +					     struct chain_tracker,
+> +					     tracker_list);
+> +		list_move(&chain_req->tracker_list, &ioc->free_chain_list);
+> +	}
 
-	sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
-
-host_buf is 16 character so we only have 6 characters left for
-->host_no.  But ->host_no is set in scsi_host_alloc():
-
-	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
-
-It could theoretically go up to 0x8000000 so we need space for 10
-digits.
-
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index 5eda21d903e9..0dcf3b08230c 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -1735,7 +1735,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 	u32 dp_module = 0;
- 	u8 dp_level = 0;
- 	bool is_vf = false;
--	char host_buf[16];
-+	char host_buf[20];
- 	struct qed_link_params link_params;
- 	struct qed_slowpath_params sp_params;
- 	struct qed_probe_params qed_params;
+Why not just use list_splice_init?
