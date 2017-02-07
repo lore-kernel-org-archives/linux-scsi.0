@@ -1,59 +1,68 @@
-From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH v2 07/18] lpfc: NVME Initiator: Base modifications Part E
-Date: Tue, 7 Feb 2017 10:03:12 +0100
-Message-ID: <5881e84b-c932-f812-7f41-a16152d12106@suse.de>
-References: <58990208.nZVFaqC7RkseErlq%jsmart2021@gmail.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: RE: [PATCH 13/39] megaraid_sas : set residual bytes count during IO compeltion
+Date: Tue, 7 Feb 2017 16:37:48 +0530
+Message-ID: <c0f612adc620c800ec8be8d478134cfc@mail.gmail.com>
+References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+ <1486375212-17329-14-git-send-email-shivasharan.srikanteshwara@broadcom.com> <yq1poiuubbz.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:48776 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752011AbdBGJDU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Feb 2017 04:03:20 -0500
-In-Reply-To: <58990208.nZVFaqC7RkseErlq%jsmart2021@gmail.com>
+Received: from mail-qk0-f178.google.com ([209.85.220.178]:34367 "EHLO
+        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753497AbdBGLHu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2017 06:07:50 -0500
+Received: by mail-qk0-f178.google.com with SMTP id s186so84101716qkb.1
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Feb 2017 03:07:50 -0800 (PST)
+In-Reply-To: <yq1poiuubbz.fsf@oracle.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
+Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
 
-On 02/07/2017 12:08 AM, James Smart wrote:
-> 
-> NVME Initiator: Base modifications
-> 
-> This is part E of parts A..F.
-> 
-> Part E is limited to lpfc_sli.c. This is the location of most of changes
-> for the following:
-> - sli3 ring vs sli4 wq splits
-> - io abort interfaces
-> - actual queuing routines and use of dma and sgl pools
-> - service routines to create/delete queues
-> 
-> This patch by itself will not result in a compilable driver. All parts
-> A..F must be applied to create a compilable driver.
-> 
-> *********
-> 
-> Refer to Part A for a description of base modifications
-> 
-> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-> Signed-off-by: James Smart <james.smart@broadcom.com>
-> 
-> ---
-> Modifications in V2:
-> Note: this was patch 6 in the V1 patches
->  Address review items:
->   Reverted lpfc_sli_hbq_count() spurious change. Thus more files than
->      just lpfc_sli.c
+> -----Original Message-----
+> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
+> Sent: Tuesday, February 07, 2017 5:22 AM
+> To: Shivasharan S
+> Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
+> thenzl@redhat.com; jejb@linux.vnet.ibm.com;
+> kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
+> hare@suse.com
+> Subject: Re: [PATCH 13/39] megaraid_sas : set residual bytes count
+during IO
+> compeltion
+>
+> >>>>> "Shivasharan" == Shivasharan S
+> <shivasharan.srikanteshwara@broadcom.com> writes:
+>
+> Shivasharan> Fixing issue of not setting residual bytes correctly.
+>
+> @@ -1464,6 +1465,15 @@ map_cmd_status(struct fusion_context *fusion,
+>  			       SCSI_SENSE_BUFFERSIZE);
+>  			scmd->result |= DRIVER_SENSE << 24;
+>  		}
+> +
+> +		/*
+> +		 * If the  IO request is partially completed, then MR FW
+will
+> +		 * update "io_request->DataLength" field with actual
+number
+> of
+> +		 * bytes transferred.Driver will set residual bytes count
+in
+> +		 * SCSI command structure.
+> +		 */
+> +		resid = (scsi_bufflen(scmd) - data_length);
+> +		scsi_set_resid(scmd, resid);
+>
+> Is data_length guaranteed to be a multiple of the logical block size?
+> Otherwise you need to tweak the residual like we just did for mpt3sas.
 
-Yes but patch  03/18 'lpfc: NVME Initiator: Base modifications Part A'
-still has calls to lpfc_sli_hbq_count(phba) (and in fact introduces this
-change).
+Martin, Data length will be always guaranteed to be a multiple of the
+logical block size until and unless we have some firmware defect.
+In past, We have seen  some partial/complete DMA data length return from
+firmware was not aligned with logical block size. Eventually, root caused
++ fixed in firmware.
 
--- 
-Johannes Thumshirn                                          Storage
-jthumshirn@suse.de                                +49 911 74053 689
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: Felix Imendörffer, Jane Smithard, Graham Norton
-HRB 21284 (AG Nürnberg)
-Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+>
+> --
+> Martin K. Petersen	Oracle Linux Engineering
