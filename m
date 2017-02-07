@@ -1,53 +1,37 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH] scsi: aacraid: avoid open-coded upper_32_bits
-Date: Tue, 7 Feb 2017 19:37:54 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8B7234@avsrvexchmbx2.microsemi.net>
-References: <20170207125948.490095-1-arnd@arndb.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH 13/39] megaraid_sas : set residual bytes count during IO compeltion
+Date: Tue, 07 Feb 2017 17:19:07 -0500
+Message-ID: <yq1inolprtw.fsf@oracle.com>
+References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+        <1486375212-17329-14-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+        <yq1poiuubbz.fsf@oracle.com>
+        <c0f612adc620c800ec8be8d478134cfc@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <20170207125948.490095-1-arnd@arndb.de>
-Content-Language: en-US
-Sender: linux-kernel-owner@vger.kernel.org
-To: Arnd Bergmann <arnd@arndb.de>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Johannes Thumshirn <jthumshirn@suse.de>, Dave Carroll <david.carroll@microsemi.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:41345 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932313AbdBGWTZ (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2017 17:19:25 -0500
+In-Reply-To: <c0f612adc620c800ec8be8d478134cfc@mail.gmail.com> (Kashyap
+        Desai's message of "Tue, 7 Feb 2017 16:37:48 +0530")
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Kashyap Desai <kashyap.desai@broadcom.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
 
+>>>>> "Kashyap" == Kashyap Desai <kashyap.desai@broadcom.com> writes:
 
+Kashyap,
 
-> -----Original Message-----
-> From: Arnd Bergmann [mailto:arnd@arndb.de]
-> Sent: Tuesday, February 7, 2017 5:00 AM
-> To: dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>; James E.J.
-> Bottomley <jejb@linux.vnet.ibm.com>; Martin K. Petersen
-> <martin.petersen@oracle.com>
-> Cc: Arnd Bergmann <arnd@arndb.de>; Johannes Thumshirn
-> <jthumshirn@suse.de>; Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>; Dave Carroll
-> <david.carroll@microsemi.com>; linux-scsi@vger.kernel.org; linux-
-> kernel@vger.kernel.org
-> Subject: [PATCH] scsi: aacraid: avoid open-coded upper_32_bits
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> Shifting a dma_addr_t right by 32 bits causes a compile-time warning when
-> that type is only 32 bit wide:
->=20
-> drivers/scsi/aacraid/src.c: In function 'aac_src_start_adapter':
-> drivers/scsi/aacraid/src.c:414:29: error: right shift count >=3D width of=
- type [-
-> Werror=3Dshift-count-overflow]
->=20
-> This changes the driver to use the predefined macros consistently, includ=
-ing
-> one correct but open-coded upper_32_bits() instance.
->=20
-> Fixes: d1ef4da8487f ("scsi: aacraid: added support for init_struct_8")
-> Fixes: 423400e64d37 ("scsi: aacraid: Include HBA direct interface")
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
+Kashyap> Data length will be always guaranteed to be a multiple
+Kashyap> of the logical block size until and unless we have some
+Kashyap> firmware defect.  In past, We have seen some partial/complete
+Kashyap> DMA data length return from firmware was not aligned with
+Kashyap> logical block size. Eventually, root caused + fixed in
+Kashyap> firmware.
 
-Reviewed-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.co=
-m>
+Great. Thanks for confirming!
+
+-- 
+Martin K. Petersen	Oracle Linux Engineering
