@@ -1,51 +1,68 @@
 From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [PATCH 2/5] target: Use correct SCSI status during EXTENDED_COPY exception
-Date: Tue,  7 Feb 2017 13:17:47 +0000
-Message-ID: <1486473470-15837-3-git-send-email-nab@linux-iscsi.org>
+Subject: [PATCH 1/5] target: Don't BUG_ON during NodeACL dynamic -> explicit conversion
+Date: Tue,  7 Feb 2017 13:17:46 +0000
+Message-ID: <1486473470-15837-2-git-send-email-nab@linux-iscsi.org>
 References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
 Return-path: <target-devel-owner@vger.kernel.org>
 In-Reply-To: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
 Sender: target-devel-owner@vger.kernel.org
 To: target-devel <target-devel@vger.kernel.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Nixon Vincent <nixon.vincent@calsoftinc.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nicholas Bellinger <nab@linux-iscsi.org>, Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
 List-Id: linux-scsi@vger.kernel.org
 
 From: Nicholas Bellinger <nab@linux-iscsi.org>
 
-This patch adds the missing target_complete_cmd() SCSI status
-parameter change in target_xcopy_do_work(), that was originally
-missing in commit 926317de33.
+After the v4.2+ RCU conversion to se_node_acl->lun_entry_hlist,
+a BUG_ON() was added in core_enable_device_list_for_node() to
+detect when the passed *lun does not match the existing
+orig->se_lun pointer reference.
 
-It correctly propigates up the correct SCSI status during
-EXTENDED_COPY exception cases, instead of always using the
-hardcoded SAM_STAT_CHECK_CONDITION from original code.
+However, this scenario can occur happen when a dynamically
+generated NodeACL is being converted to an explicit NodeACL,
+when the explicit NodeACL contains a different LUN mapping
+than the default provided by the WWN endpoint.
 
-This is required for ESX host environments that expect to
-hit SAM_STAT_RESERVATION_CONFLICT for certain scenarios,
-and SAM_STAT_CHECK_CONDITION results in non-retriable
-status for these cases.
+So instead of triggering BUG_ON(), go ahead and fail instead
+following the original pre RCU conversion logic.
 
-Reported-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Tested-by: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Cc: Nixon Vincent <nixon.vincent@calsoftinc.com>
-Cc: stable@vger.kernel.org # 3.14+
+Reported-by: Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
+Cc: Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
+Cc: stable@vger.kernel.org # 4.2+
 Signed-off-by: Nicholas Bellinger <nab@linux-iscsi.org>
 ---
- drivers/target/target_core_xcopy.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/target/target_core_device.c | 16 ++++++++++++----
+ 1 file changed, 12 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
-index d828b3b..cac5a20 100644
---- a/drivers/target/target_core_xcopy.c
-+++ b/drivers/target/target_core_xcopy.c
-@@ -864,7 +864,7 @@ static void target_xcopy_do_work(struct work_struct *work)
- 			" CHECK_CONDITION -> sending response\n", rc);
- 		ec_cmd->scsi_status = SAM_STAT_CHECK_CONDITION;
- 	}
--	target_complete_cmd(ec_cmd, SAM_STAT_CHECK_CONDITION);
-+	target_complete_cmd(ec_cmd, ec_cmd->scsi_status);
- }
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 1ebd13e..23e89af 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -345,14 +345,22 @@ int core_enable_device_list_for_node(
+ 					lockdep_is_held(&nacl->lun_entry_mutex));
  
- sense_reason_t target_do_xcopy(struct se_cmd *se_cmd)
+ 		if (orig_lun != lun) {
+-			pr_err("Existing orig->se_lun doesn't match new lun"
+-			       " for dynamic -> explicit NodeACL conversion:"
+-				" %s\n", nacl->initiatorname);
++			pr_warn_ratelimited("Existing orig->se_lun doesn't match"
++				" new lun for dynamic -> explicit NodeACL"
++				" conversion: %s\n", nacl->initiatorname);
++			mutex_unlock(&nacl->lun_entry_mutex);
++			kfree(new);
++			return -EINVAL;
++		}
++		if (orig->se_lun_acl != NULL) {
++			pr_warn_ratelimited("Detected existing explicit"
++				" se_lun_acl->se_lun_group reference for %s"
++				" mapped_lun: %llu, ignoring\n",
++				 nacl->initiatorname, mapped_lun);
+ 			mutex_unlock(&nacl->lun_entry_mutex);
+ 			kfree(new);
+ 			return -EINVAL;
+ 		}
+-		BUG_ON(orig->se_lun_acl != NULL);
+ 
+ 		rcu_assign_pointer(new->se_lun, lun);
+ 		rcu_assign_pointer(new->se_lun_acl, lun_acl);
 -- 
 1.9.1
