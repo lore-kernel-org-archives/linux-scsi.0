@@ -1,52 +1,54 @@
-From: Maurizio Lombardi <mlombard@redhat.com>
-Subject: [PATCH RFC] enclosure: fix symlinks creation
-Date: Tue,  7 Feb 2017 15:08:47 +0100
-Message-ID: <1486476528-27580-1-git-send-email-mlombard@redhat.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+Date: Tue, 7 Feb 2017 15:38:51 +0100
+Message-ID: <eb606203-9adf-4200-ae1c-7f518342f863@suse.de>
+References: <1485854760-122683-1-git-send-email-hare@suse.de>
+ <20170207131909.GH19247@lst.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:48588 "EHLO mx1.redhat.com"
+Received: from mx2.suse.de ([195.135.220.15]:47707 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754088AbdBGOIt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Feb 2017 09:08:49 -0500
+        id S1753378AbdBGOj1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Feb 2017 09:39:27 -0500
+In-Reply-To: <20170207131909.GH19247@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com
-Cc: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, mpt-fusionlinux.pdl@broadcom.com
 
-James,
+On 02/07/2017 02:19 PM, Christoph Hellwig wrote:
+> Patch 1-7 look fine to me with minor fixups, and I'd love to see
+> them go into 4.11.  The last one looks really questionable,
+> and 8 and 9 will need some work so that the MPT passthrough ioctls
+> either go away or make use of struct request and the block layer
+> and SCSI infrastructure.
+> 
+Hmm. Which is quite a bit of effort for very little gain.
 
-one of our customers complains that in some cases, when using multipath,
-the enclosure driver fails to create the symlinks in sysfs.
+The SCSI passthrough commands pass in pre-formatted SGLs, so the driver
+just has to map them.
+If we were converting that we first have to re-format the
+(driver-specific) SGLs into linux sg lists, only to have them converted
+back into driver-specific ones once queuecommand is called.
+You sure it's worth the effort?
 
-This is an example of what happens:
+The driver already reserves some tags for precisely this use-case, so it
+won't conflict with normal I/O operation.
+So where's the problem with that?
 
-[   19.251902] scsi 0:0:27:0: Direct-Access     SEAGATE  ST8000NM0075     E002 PQ: 0 ANSI: 6
-[   19.261874] scsi 0:0:27:0: SSP: handle(0x0027), sas_addr(0x5000c50085826dd6), phy(34), device_name(0x5000c50085826dd4)
-[   19.274656] scsi 0:0:27:0: SSP: enclosure_logical_id(0x500093d001be4000), slot(57)
-[   19.283944] scsi 0:0:27:0: SSP: enclosure level(0x0000), connector name(     )
-[   19.292933] scsi 0:0:27:0: qdepth(254), tagged(1), simple(0), ordered(0), scsi_l
-[...]
-[   60.066524] enclosure_add_device(0:0:27:0) called, enclosure_add_links() failed with error -2
-[...]
-[   75.119146] sd 0:0:27:0: Attached scsi generic sg27 type 0
-[   75.126722] sd 0:0:27:0: [sdaa] 15628053168 512-byte logical blocks: (8.00 TB/7.27 TiB)
-[   75.126723] sd 0:0:27:0: [sdaa] 4096-byte physical blocks
-[   75.129059] sd 0:0:27:0: [sdaa] Write Protect is off
-[   75.129061] sd 0:0:27:0: [sdaa] Mode Sense: db 00 10 08
-[   75.130417] sd 0:0:27:0: [sdaa] Write cache: enabled, read cache: enabled, supports DPO and FUA
-[   75.158088] sd 0:0:27:0: [sdaa] Attached SCSI disk
-[...]
-[   75.192722] enclosure_add_device(0:0:27:0) called, device already exists
+I know the SCSI passthrough operations are decidedly ugly, but if I were
+to change them I'd rather move them over to bsg once we converted bsg to
+operate without a request queue.
+But for now ... not sure.
 
-The first time enclosure_add_device() is called, the symlinks creation failed.
-The second time it would have succeeded, but the enclosure_add_device() function returned immediately
-without retrying to create the symlinks.
+Cheers,
 
-Maurizio Lombardi (1):
-  enclosure: fix sysfs symlinks creation when using multipath
-
- drivers/misc/enclosure.c  | 16 ++++++++++++++--
- include/linux/enclosure.h |  1 +
- 2 files changed, 15 insertions(+), 2 deletions(-)
-
+Hannes
 -- 
-Maurizio Lombardi
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
