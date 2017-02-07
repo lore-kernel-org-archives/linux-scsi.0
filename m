@@ -1,28 +1,20 @@
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH][V2] scsi: aacraid: rcode is unsigned and should be signed int
-Date: Tue, 07 Feb 2017 17:23:24 -0500
-Message-ID: <yq1efz9prmr.fsf@oracle.com>
-References: <20170207115129.18948-1-colin.king@canonical.com>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: [PATCH 2/5] target: Use correct SCSI status during EXTENDED_COPY
+ exception
+Date: Tue, 7 Feb 2017 14:39:10 -0800
+Message-ID: <20170207223910.GA5274@infradead.org>
+References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
+ <1486473470-15837-3-git-send-email-nab@linux-iscsi.org>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170207115129.18948-1-colin.king@canonical.com> (Colin King's
-        message of "Tue, 7 Feb 2017 11:51:29 +0000")
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>
-Cc: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1486473470-15837-3-git-send-email-nab@linux-iscsi.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Nixon Vincent <nixon.vincent@calsoftinc.com>
 List-Id: linux-scsi@vger.kernel.org
 
->>>>> "Colin" == Colin King <colin.king@canonical.com> writes:
+Looks fine:
 
-Colin> aac_fib_send can return -ve error returns and hence rcode should
-Colin> be signed. Currently the rcode >= 0 check is always true and -ve
-Colin> errors are not being checked.
-
-Colin> Thanks to Dan Carpenter for spotting my original broken fix to
-Colin> this issue.
-
-Applied to 4.11/scsi-queue.
-
--- 
-Martin K. Petersen	Oracle Linux Engineering
+Reviewed-by: Christoph Hellwig <hch@lst.de>
