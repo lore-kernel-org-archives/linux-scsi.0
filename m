@@ -1,39 +1,86 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: aacraid: fix information leak on hbainfo.driver_name
-Date: Tue,  7 Feb 2017 13:55:13 +0000
-Message-ID: <20170207135513.21392-1-colin.king@canonical.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: [PATCH RFC] enclosure: fix sysfs symlinks creation when using multipath
+Date: Tue,  7 Feb 2017 15:08:48 +0100
+Message-ID: <1486476528-27580-2-git-send-email-mlombard@redhat.com>
+References: <1486476528-27580-1-git-send-email-mlombard@redhat.com>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:48596 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754199AbdBGOIu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Feb 2017 09:08:50 -0500
+In-Reply-To: <1486476528-27580-1-git-send-email-mlombard@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org
 
-From: Colin Ian King <colin.king@canonical.com>
+With multipath, it may happen that the same device is passed
+to enclosure_add_device() multiple times and that the enclosure_add_links()
+function fails to create the symlinks because the device's sysfs
+directory entry is still NULL.
+In this case, the links will never be created because all the subsequent
+calls to enclosure_add_device() will immediately fail with EEXIST.
 
-The driver_name field is not initialized and hence information
-on the stack is being leaked to userspace on the copy_to_user.
-Fix this.
+This patch modifies the code so the driver will detect this condition
+and will retry to create the symlinks when enclosure_add_device() is called.
 
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 ---
- drivers/scsi/aacraid/commctrl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/misc/enclosure.c  | 16 ++++++++++++++--
+ include/linux/enclosure.h |  1 +
+ 2 files changed, 15 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 614842a..eb48d0a 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -1015,7 +1015,7 @@ static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
- 
- static int aac_get_hba_info(struct aac_dev *dev, void __user *arg)
+diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+index 65fed71..a856c98 100644
+--- a/drivers/misc/enclosure.c
++++ b/drivers/misc/enclosure.c
+@@ -375,21 +375,33 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
+ 			 struct device *dev)
  {
--	struct aac_hba_info hbainfo;
-+	struct aac_hba_info hbainfo = { 0 };
+ 	struct enclosure_component *cdev;
++	int error;
  
- 	hbainfo.adapter_number		= (u8) dev->id;
- 	hbainfo.system_io_bus_number	= dev->pdev->bus->number;
+ 	if (!edev || component >= edev->components)
+ 		return -EINVAL;
+ 
+ 	cdev = &edev->component[component];
+ 
+-	if (cdev->dev == dev)
++	if (cdev->dev == dev) {
++		if (!cdev->links_created) {
++			error = enclosure_add_links(cdev);
++			if (!error)
++				cdev->links_created = 1;
++		}
+ 		return -EEXIST;
++	}
+ 
+ 	if (cdev->dev)
+ 		enclosure_remove_links(cdev);
+ 
+ 	put_device(cdev->dev);
+ 	cdev->dev = get_device(dev);
+-	return enclosure_add_links(cdev);
++	error = enclosure_add_links(cdev);
++	if (!error)
++		cdev->links_created = 1;
++	else
++		cdev->links_created = 0;
++	return error;
+ }
+ EXPORT_SYMBOL_GPL(enclosure_add_device);
+ 
+diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+index a4cf57c..c3bdc4c 100644
+--- a/include/linux/enclosure.h
++++ b/include/linux/enclosure.h
+@@ -97,6 +97,7 @@ struct enclosure_component {
+ 	struct device cdev;
+ 	struct device *dev;
+ 	enum enclosure_component_type type;
++	int links_created;
+ 	int number;
+ 	int fault;
+ 	int active;
 -- 
-2.10.2
+Maurizio Lombardi
