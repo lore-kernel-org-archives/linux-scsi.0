@@ -1,66 +1,39 @@
-From: walter harms <wharms@bfs.de>
-Subject: Re: [patch] scsi: qedi: silence sprintf() overflow warning
-Date: Tue, 07 Feb 2017 14:27:09 +0100
-Message-ID: <5899CB2D.4050809@bfs.de>
-References: <20170207130103.GA31552@mwanda>
-Reply-To: wharms@bfs.de
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aacraid: fix information leak on hbainfo.driver_name
+Date: Tue,  7 Feb 2017 13:55:13 +0000
+Message-ID: <20170207135513.21392-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx02-sz.bfs.de ([194.94.69.103]:47317 "EHLO mx02-sz.bfs.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754285AbdBGN1N (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Feb 2017 08:27:13 -0500
-In-Reply-To: <20170207130103.GA31552@mwanda>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: QLogic-Storage-Upstream@cavium.com, Thomas Gleixner <tglx@linutronix.de>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
 
+From: Colin Ian King <colin.king@canonical.com>
 
+The driver_name field is not initialized and hence information
+on the stack is being leaked to userspace on the copy_to_user.
+Fix this.
 
-Am 07.02.2017 14:01, schrieb Dan Carpenter:
-> The problem here is this:
-> 
-> 	sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
-> 
-> host_buf is 16 character so we only have 6 characters left for
-> ->host_no.  But ->host_no is set in scsi_host_alloc():
-> 
-> 	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
-> 
-> It could theoretically go up to 0x8000000 so we need space for 10
-> digits.
-> 
-> Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
-> 
-> diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-> index 5eda21d903e9..0dcf3b08230c 100644
-> --- a/drivers/scsi/qedi/qedi_main.c
-> +++ b/drivers/scsi/qedi/qedi_main.c
-> @@ -1735,7 +1735,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
->  	u32 dp_module = 0;
->  	u8 dp_level = 0;
->  	bool is_vf = false;
-> -	char host_buf[16];
-> +	char host_buf[20];
->  	struct qed_link_params link_params;
->  	struct qed_slowpath_params sp_params;
->  	struct qed_probe_params qed_params;
-> --
-> To unsubscribe from this list: send the line "unsubscribe kernel-janitors" in
-> the body of a message to majordomo@vger.kernel.org
-> More majordomo info at  http://vger.kernel.org/majordomo-info.html
-> 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/aacraid/commctrl.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-any chance to use snprintf here ?
- sprintf(host_buf, "qedi_ofld%d", qedi->shost->host_no);
-
-or something like asprint() :)
-
-if ever anyone change the type to very_long_type in the future it would simply break
-but not hurt.
-
-re,
- wh
+diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
+index 614842a..eb48d0a 100644
+--- a/drivers/scsi/aacraid/commctrl.c
++++ b/drivers/scsi/aacraid/commctrl.c
+@@ -1015,7 +1015,7 @@ static int aac_get_pci_info(struct aac_dev* dev, void __user *arg)
+ 
+ static int aac_get_hba_info(struct aac_dev *dev, void __user *arg)
+ {
+-	struct aac_hba_info hbainfo;
++	struct aac_hba_info hbainfo = { 0 };
+ 
+ 	hbainfo.adapter_number		= (u8) dev->id;
+ 	hbainfo.system_io_bus_number	= dev->pdev->bus->number;
+-- 
+2.10.2
