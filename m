@@ -1,144 +1,69 @@
-From: Willy Tarreau <w@1wt.eu>
-Subject: Re: [PATCH 3.10 141/319] scsi: mpt3sas: Fix secure erase premature
- termination
-Date: Tue, 7 Feb 2017 07:59:46 +0100
-Message-ID: <20170207065946.GC4850@1wt.eu>
-References: <1486322541-8206-1-git-send-email-w@1wt.eu>
- <1486322541-8206-42-git-send-email-w@1wt.eu>
- <ae8ffc4f86c5af1caf97dfa9a6493443@mail.gmail.com>
- <20170206222623.GA4769@1wt.eu>
- <1486449528.2474.125.camel@HansenPartnership.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH v2 01/18] lpfc: Correct WQ creation for pagesize
+Date: Tue, 7 Feb 2017 09:30:25 +0100
+Message-ID: <72365ed8-6b4c-2dcf-5a37-ecd5885e1e4f@suse.de>
+References: <58990202.ppD+DnSRmfoY41ZK%jsmart2021@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <1486449528.2474.125.camel@HansenPartnership.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, linux-kernel@vger.kernel.org, stable@vger.kernel.org, linux@roeck-us.net, Andrey Grodzovsky <andrey2805@gmail.com>, linux-scsi@vger.kernel.org, Chaitra Basappa <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:46128 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752323AbdBGIa1 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 7 Feb 2017 03:30:27 -0500
+In-Reply-To: <58990202.ppD+DnSRmfoY41ZK%jsmart2021@gmail.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
-Hi James,
-
-On Mon, Feb 06, 2017 at 10:38:48PM -0800, James Bottomley wrote:
-> On Mon, 2017-02-06 at 23:26 +0100, Willy Tarreau wrote:
-(...)
-> > We don't have the referenced commit above in 3.10 so we should be 
-> > safe. Additionally I checked that neither 4.4 nor 3.12 have them 
-> > either, so that makes me feel confident that we can skip it in 3.10
-> > as well.
+On 02/07/2017 12:08 AM, James Smart wrote:
 > 
-> The original was also racy with respect to multiple commands, so the
-> above fixed the race as well.
+> Correct WQ creation for pagesize
+> 
+> The driver was calculating the adapter command pagesize indicator from
+> the system pagesize. However, the buffers the driver allocates are only
+> one size (SLI4_PAGE_SIZE), so no calculation was necessary.
+> 
+> Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
+> Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+> Note: this patch was not in v1
+> 
+>  drivers/scsi/lpfc/lpfc_hw4.h | 2 ++
+>  drivers/scsi/lpfc/lpfc_sli.c | 9 +++++----
+>  2 files changed, 7 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_hw4.h b/drivers/scsi/lpfc/lpfc_hw4.h
+> index 5646699..964a1fd 100644
+> --- a/drivers/scsi/lpfc/lpfc_hw4.h
+> +++ b/drivers/scsi/lpfc/lpfc_hw4.h
+> @@ -1186,6 +1186,7 @@ struct lpfc_mbx_wq_create {
+>  #define lpfc_mbx_wq_create_page_size_SHIFT	0
+>  #define lpfc_mbx_wq_create_page_size_MASK	0x000000FF
+>  #define lpfc_mbx_wq_create_page_size_WORD	word1
+> +#define LPFC_WQ_PAGE_SIZE_4096	0x1
+>  #define lpfc_mbx_wq_create_wqe_size_SHIFT	8
+>  #define lpfc_mbx_wq_create_wqe_size_MASK	0x0000000F
+>  #define lpfc_mbx_wq_create_wqe_size_WORD	word1
+> @@ -1257,6 +1258,7 @@ struct rq_context {
+>  #define lpfc_rq_context_page_size_SHIFT	0		/* Version 1 Only */
+>  #define lpfc_rq_context_page_size_MASK	0x000000FF
+>  #define lpfc_rq_context_page_size_WORD	word0
+> +#define	LPFC_RQ_PAGE_SIZE_4096	0x1
 
-OK so I tried to backport it to 3.10. I dropped a few parts which were
-addressing this one marked for stable 4.4+ :
-    7ff723a ("scsi: mpt3sas: Unblock device after controller reset")
+I wonder why do we need the two LPFC_RQ_PAGE_SIZE_4096 and
+LPFC_WQ_PAGE_SIZE_4096 both being 1? Wouldn't a more global
+LPFC_PAGE_SIZE_4096 or LPFC_Q_PAGE_SIZE_4096 be sufficient?
 
-And I got the attached patch. All I know is that it builds. I'd appreciate
-it if someone could confirm its validity, in which case I'll add it.
+But I don't have a strong opinion on this either.
 
-Thanks,
-Willy
+Otherwise,
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
----
-
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 994656c..997e13f 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -219,6 +219,7 @@ struct MPT3SAS_TARGET {
-  * @eedp_enable: eedp support enable bit
-  * @eedp_type: 0(type_1), 1(type_2), 2(type_3)
-  * @eedp_block_length: block size
-+ * @ata_command_pending: SATL passthrough outstanding for device
-  */
- struct MPT3SAS_DEVICE {
- 	struct MPT3SAS_TARGET *sas_target;
-@@ -227,6 +228,17 @@ struct MPT3SAS_DEVICE {
- 	u8	configured_lun;
- 	u8	block;
- 	u8	tlr_snoop_check;
-+	/*
-+	 * Bug workaround for SATL handling: the mpt2/3sas firmware
-+	 * doesn't return BUSY or TASK_SET_FULL for subsequent
-+	 * commands while a SATL pass through is in operation as the
-+	 * spec requires, it simply does nothing with them until the
-+	 * pass through completes, causing them possibly to timeout if
-+	 * the passthrough is a long executing command (like format or
-+	 * secure erase).  This variable allows us to do the right
-+	 * thing while a SATL command is pending.
-+	 */
-+	unsigned long ata_command_pending;
- };
- 
- #define MPT3_CMD_NOT_USED	0x8000	/* free */
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index e414b71..db38f70 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -3515,9 +3515,18 @@ _scsih_eedp_error_handling(struct scsi_cmnd *scmd, u16 ioc_status)
- 	    SAM_STAT_CHECK_CONDITION;
- }
- 
--static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+static int _scsih_set_satl_pending(struct scsi_cmnd *scmd, bool pending)
- {
--	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+	struct MPT3SAS_DEVICE *priv = scmd->device->hostdata;
-+
-+	if (scmd->cmnd[0] != ATA_12 && scmd->cmnd[0] != ATA_16)
-+		return 0;
-+
-+	if (pending)
-+		return test_and_set_bit(0, &priv->ata_command_pending);
-+
-+	clear_bit(0, &priv->ata_command_pending);
-+	return 0;
- }
- 
- /**
-@@ -3547,13 +3556,6 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 		scsi_print_command(scmd);
- #endif
- 
--	/*
--	 * Lock the device for any subsequent command until command is
--	 * done.
--	 */
--	if (ata_12_16_cmd(scmd))
--		scsi_internal_device_block(scmd->device);
--
- 	scmd->scsi_done = done;
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
-@@ -3568,6 +3570,19 @@ _scsih_qcmd_lck(struct scsi_cmnd *scmd, void (*done)(struct scsi_cmnd *))
- 		return 0;
- 	}
- 
-+	/*
-+	 * Bug work around for firmware SATL handling.  The loop
-+	 * is based on atomic operations and ensures consistency
-+	 * since we're lockless at this point
-+	 */
-+	do {
-+		if (test_bit(0, &sas_device_priv_data->ata_command_pending)) {
-+			scmd->result = SAM_STAT_BUSY;
-+			scmd->scsi_done(scmd);
-+			return 0;
-+		}
-+	} while (_scsih_set_satl_pending(scmd, true));
-+
- 	sas_target_priv_data = sas_device_priv_data->sas_target;
- 
- 	/* invalid device handle */
-@@ -4057,8 +4072,7 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	if (scmd == NULL)
- 		return 1;
- 
--	if (ata_12_16_cmd(scmd))
--		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+	_scsih_set_satl_pending(scmd, false);
- 
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
