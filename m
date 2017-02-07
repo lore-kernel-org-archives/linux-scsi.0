@@ -1,68 +1,42 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH 13/39] megaraid_sas : set residual bytes count during IO compeltion
-Date: Tue, 7 Feb 2017 16:37:48 +0530
-Message-ID: <c0f612adc620c800ec8be8d478134cfc@mail.gmail.com>
-References: <1486375212-17329-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486375212-17329-14-git-send-email-shivasharan.srikanteshwara@broadcom.com> <yq1poiuubbz.fsf@oracle.com>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: aacraid: rcode is unsigned, so can never be less than zero
+Date: Tue,  7 Feb 2017 11:27:38 +0000
+Message-ID: <20170207112738.18486-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f178.google.com ([209.85.220.178]:34367 "EHLO
-        mail-qk0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753497AbdBGLHu (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2017 06:07:50 -0500
-Received: by mail-qk0-f178.google.com with SMTP id s186so84101716qkb.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Feb 2017 03:07:50 -0800 (PST)
-In-Reply-To: <yq1poiuubbz.fsf@oracle.com>
+Received: from youngberry.canonical.com ([91.189.89.112]:46228 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751532AbdBGL3O (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 7 Feb 2017 06:29:14 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
-Cc: linux-scsi@vger.kernel.org, thenzl@redhat.com, jejb@linux.vnet.ibm.com, Sumit Saxena <sumit.saxena@broadcom.com>, hare@suse.com
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
 
-> -----Original Message-----
-> From: Martin K. Petersen [mailto:martin.petersen@oracle.com]
-> Sent: Tuesday, February 07, 2017 5:22 AM
-> To: Shivasharan S
-> Cc: linux-scsi@vger.kernel.org; martin.petersen@oracle.com;
-> thenzl@redhat.com; jejb@linux.vnet.ibm.com;
-> kashyap.desai@broadcom.com; sumit.saxena@broadcom.com;
-> hare@suse.com
-> Subject: Re: [PATCH 13/39] megaraid_sas : set residual bytes count
-during IO
-> compeltion
->
-> >>>>> "Shivasharan" == Shivasharan S
-> <shivasharan.srikanteshwara@broadcom.com> writes:
->
-> Shivasharan> Fixing issue of not setting residual bytes correctly.
->
-> @@ -1464,6 +1465,15 @@ map_cmd_status(struct fusion_context *fusion,
->  			       SCSI_SENSE_BUFFERSIZE);
->  			scmd->result |= DRIVER_SENSE << 24;
->  		}
-> +
-> +		/*
-> +		 * If the  IO request is partially completed, then MR FW
-will
-> +		 * update "io_request->DataLength" field with actual
-number
-> of
-> +		 * bytes transferred.Driver will set residual bytes count
-in
-> +		 * SCSI command structure.
-> +		 */
-> +		resid = (scsi_bufflen(scmd) - data_length);
-> +		scsi_set_resid(scmd, resid);
->
-> Is data_length guaranteed to be a multiple of the logical block size?
-> Otherwise you need to tweak the residual like we just did for mpt3sas.
+From: Colin Ian King <colin.king@canonical.com>
 
-Martin, Data length will be always guaranteed to be a multiple of the
-logical block size until and unless we have some firmware defect.
-In past, We have seen  some partial/complete DMA data length return from
-firmware was not aligned with logical block size. Eventually, root caused
-+ fixed in firmware.
+The check on rcode >= 0 is always true because rcode is unsigned
+and can never be less than zero.  Remove the redundant check.
 
->
-> --
-> Martin K. Petersen	Oracle Linux Engineering
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/aacraid/aachba.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
+index 3b5ddf4..ddfd726 100644
+--- a/drivers/scsi/aacraid/aachba.c
++++ b/drivers/scsi/aacraid/aachba.c
+@@ -1848,7 +1848,7 @@ int aac_report_phys_luns(struct aac_dev *dev, struct fib *fibptr, int rescan)
+ 			FsaNormal, 1, 1, NULL, NULL);
+ 
+ 	/* analyse data */
+-	if (rcode >= 0 && phys_luns->resp_flag == 2) {
++	if (phys_luns->resp_flag == 2) {
+ 		/* ok and extended reporting */
+ 		aac_update_hba_map(dev, phys_luns, rescan);
+ 	}
+-- 
+2.10.2
