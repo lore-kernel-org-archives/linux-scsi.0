@@ -1,48 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 00/10] mpt3sas: full mq support
-Date: Tue, 7 Feb 2017 16:49:08 +0100
-Message-ID: <55ceab84-5327-80a8-b2c2-638c7d2affed@suse.de>
-References: <1485854760-122683-1-git-send-email-hare@suse.de>
- <20170207131909.GH19247@lst.de>
- <eb606203-9adf-4200-ae1c-7f518342f863@suse.de>
- <20170207153446.GA22228@lst.de>
- <6e7b8750-a355-0607-875f-751a0f9fdae8@suse.de>
- <20170207154052.GA22384@lst.de>
+From: Jim Mostek <jimmostek@yahoo.com>
+Subject: LSF/MM Question
+Date: Tue, 7 Feb 2017 16:09:07 +0000 (UTC)
+Message-ID: <843987263.3966583.1486483747633@mail.yahoo.com>
+References: <843987263.3966583.1486483747633.ref@mail.yahoo.com>
+Reply-To: Jim Mostek <jimmostek@yahoo.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:54035 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754199AbdBGPtL (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 7 Feb 2017 10:49:11 -0500
-In-Reply-To: <20170207154052.GA22384@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: multipart/alternative;
+	boundary="----=_Part_3966582_1386458366.1486483747632"
+Return-path: <owner-linux-mm@kvack.org>
+Sender: owner-linux-mm@kvack.org
+To: "lsf-pc@lists.linux-foundation.org" <lsf-pc@lists.linux-foundation.org>
+Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, "linux-mm@kvack.org" <linux-mm@kvack.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, mpt-fusionlinux.pdl@broadcom.com
 
-On 02/07/2017 04:40 PM, Christoph Hellwig wrote:
-> On Tue, Feb 07, 2017 at 04:39:01PM +0100, Hannes Reinecke wrote:
->> But we do; we're getting the index/tag/smid from the high-priority list,
->> which is separated from the normal SCSI I/O tag space.
->> (which reminds me; there's another cleanup patch to be had in
->> _ctl_do_mpt_command(), but that's beside the point).
-> 
-> The calls to blk_mq_tagset_busy_iter added in patch 8 indicate the
-> contrary.
-> 
-Right. Now I see what you mean.
-We should have used reserved_tags here.
-Sadly we still don't have an interface on actually _allocate_ reserved
-tags, have we?
+------=_Part_3966582_1386458366.1486483747632
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Cheers,
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+wondering about the upcoming Linux Storage Filesystem & MM summint in March. LSF/MM Question
+
+What presentations are there so far?
+
+Thanks,
+
+Jim Mostekjimmostek@yahoo.comjim.mostek@quantum.com
+
+------=_Part_3966582_1386458366.1486483747632
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+<html><head></head><body><div style="color:#000; background-color:#fff; font-family:HelveticaNeue, Helvetica Neue, Helvetica, Arial, Lucida Grande, sans-serif;font-size:16px"><div id="yui_3_16_0_ym19_1_1486483689512_3550" dir="ltr"><br id="yui_3_16_0_ym19_1_1486483689512_3606">wondering about the upcoming Linux Storage Filesystem &amp; MM summint in March. LSF/MM Question<br id="yui_3_16_0_ym19_1_1486483689512_3607"><br id="yui_3_16_0_ym19_1_1486483689512_3608">What presentations are there so far?<br id="yui_3_16_0_ym19_1_1486483689512_3609"><br id="yui_3_16_0_ym19_1_1486483689512_3610">Thanks,<br id="yui_3_16_0_ym19_1_1486483689512_3611"><br id="yui_3_16_0_ym19_1_1486483689512_3612">Jim Mostek</div><div dir="ltr" id="yui_3_16_0_ym19_1_1486483689512_3613">jimmostek@yahoo.com</div><div dir=
+ "ltr">jim.mostek@quantum.com<br></div></div></body></html>
+------=_Part_3966582_1386458366.1486483747632--
+
+--
+To unsubscribe, send a message with 'unsubscribe linux-mm' in
+the body to majordomo@kvack.org.  For more info on Linux MM,
+see: http://www.linux-mm.org/ .
+Don't email: <a href=mailto:"dont@kvack.org"> email@kvack.org </a>
