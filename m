@@ -1,56 +1,49 @@
-From: Kalle Valo <kvalo@codeaurora.org>
-Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h include
-Date: Wed, 08 Feb 2017 18:11:59 +0200
-Message-ID: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
-References: <20170207230305.18222-1-f.fainelli@gmail.com>
-        <20170208.110626.346978547122180233.davem@davemloft.net>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 4/5] target: Fix multi-session dynamic se_node_acl
+ double free OOPs
+Date: Wed, 08 Feb 2017 08:14:57 -0800
+Message-ID: <1486570497.7066.6.camel@haakon3.risingtidesystems.com>
+References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
+         <1486473470-15837-5-git-send-email-nab@linux-iscsi.org>
+         <20170207230701.GA28123@infradead.org>
+         <20170207231224.GA29711@infradead.org>
+         <1486525612.13263.18.camel@haakon3.risingtidesystems.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <20170208.110626.346978547122180233.davem@davemloft.net> (David
-        Miller's message of "Wed, 08 Feb 2017 11:06:26 -0500 (EST)")
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: David Miller <davem@davemloft.net>
-Cc: f.fainelli@gmail.com, netdev@vger.kernel.org, linux-mips@linux-mips.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, target-devel@vger.kernel.org, andrew@lunn.ch, anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com, felix.manlunas@caviumnetworks.com, bfields@fieldses.org, jlayton@poochiereds.net, jirislaby@gmail.com, mcgrof@do-not-panic.com, madalin.bucur@nxp.com, UNGLinuxDriver@microchip.com, nab@linux-iscsi.org, mickflemm@gmail.com, nicolas.ferre@atmel.com, raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org, satananda.burla@caviumnetworks.com, thomas.petazzoni@free-electrons.com, timur@codeaurora.org, trond.myklebust@primarydata.com, vivien.didelot@savoirfairelinux.com, woojung.huh
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <1486525612.13263.18.camel@haakon3.risingtidesystems.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Rob Millner <rlm@daterainc.com>
 List-Id: linux-scsi@vger.kernel.org
 
-David Miller <davem@davemloft.net> writes:
+On Tue, 2017-02-07 at 19:46 -0800, Nicholas A. Bellinger wrote:
+> On Tue, 2017-02-07 at 15:12 -0800, Christoph Hellwig wrote:
+> > And the real patch after compile fixing it is here of course:
+> > 
+> 
+> Getting rid of the extra se_node_acl->acl_free_comp seems to make sense
+> here..
+> 
+> The only potential issue is if returning from configfs syscall
+> rmdir /sys/kernel/config/target/$FABRIC/$WWN/$TPGT/acls/$INITIATOR/
+> before se_node_acl memory is released has implications when the
+> underlying ../$WWN/$TPGT/ is removed immediately after.
+> 
+> In any event, I'll verify this patch with the original test case and use
+> it instead if everything looks OK.
 
-> From: Florian Fainelli <f.fainelli@gmail.com>
-> Date: Tue,  7 Feb 2017 15:02:53 -0800
->
->> I'm hoping this doesn't conflict with what's already in net-next...
->> 
->> David, this should probably go via your tree considering the diffstat.
->
-> I think you need one more respin.  Are you doing an allmodconfig build?
-> If not, for something like this it's a must:
->
-> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected ‘)’ before ‘bool’
->  module_param(disable_ap_sme, bool, 0444);
->                               ^
-> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected ‘)’ before string constant
->  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
->                                   ^
-> Like like that file needs linux/module.h included.
+Ok, I remember why se_node_acl->acl_free_comp is needed now..
 
-Johannes already fixed a similar (or same) problem in my tree:
+The issue is when se_node_acl is being explicitly removed from configfs
+while se_sessions associated with se_node_acl are still active.
 
-wil6210: include moduleparam.h
+The se_node_acl->acl_group configfs_group_operations->drop_item()
+callback must block until all associated se_sessions have done their
+target_put_nacl() and completed se_node_acl->acl_free_comp, otherwise
+there is nothing preventing parent config_groups of se_node_acl from
+being removed while the se_sessions are still active.
 
-https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=949c2d0096753d518ef6e0bd8418c8086747196b
-
-I'm planning to send you a pull request tomorrow which contains that
-one.
-
--- 
-Kalle Valo
+That said, dropping the unnecessary list_del_init() usage, but otherwise
+keeping the patch as-is.
