@@ -1,67 +1,104 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 18/39] megaraid_sas: In validate raid map, raid capability is not converted to cpu format for all lds
-Date: Wed,  8 Feb 2017 01:29:12 -0800
-Message-ID: <1486546173-20713-19-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 25/39] megaraid_sas: Change max_cmd from u32 to u16 in all functions
+Date: Wed,  8 Feb 2017 01:29:19 -0800
+Message-ID: <1486546173-20713-26-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f54.google.com ([74.125.83.54]:33053 "EHLO
-        mail-pg0-f54.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754119AbdBHJas (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:30:48 -0500
-Received: by mail-pg0-f54.google.com with SMTP id 204so47591784pge.0
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:30:47 -0800 (PST)
+Received: from mail-pf0-f177.google.com ([209.85.192.177]:33634 "EHLO
+        mail-pf0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933178AbdBHJbI (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:08 -0500
+Received: by mail-pf0-f177.google.com with SMTP id y143so41088837pfb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:07 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-On a host, if an ld is deleted there is a hole in the ld array returned
-by the FW. But in MR_ValidateMapInfo we are not accounting for holes in
-the ld array and traverse only upto index num_lds.
-This patch takes care of converting the capability field of all the
-valid lds in the ld raid map.
+Since maximum supported FW commands are all defined as u16, change
+all local variables referring to max_cmd from u32 to u16.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 13 ++++++++++---
- 1 file changed, 10 insertions(+), 3 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 10 +++++-----
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  5 +++--
+ 2 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index d9b0f28..a0b0e68 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -452,7 +452,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	struct LD_LOAD_BALANCE_INFO *lbInfo;
- 	PLD_SPAN_INFO ldSpanInfo;
- 	struct MR_LD_RAID         *raid;
--	u16 ldCount, num_lds;
-+	u16 num_lds, i;
- 	u16 ld;
- 	u32 expected_size;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index cd9d223..06001b4 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1549,7 +1549,7 @@ megasas_dump_pending_frames(struct megasas_instance *instance)
+ 	struct megasas_io_frame *ldio;
+ 	struct megasas_pthru_frame *pthru;
+ 	u32 sgcount;
+-	u32 max_cmd = instance->max_fw_cmds;
++	u16 max_cmd = instance->max_fw_cmds;
  
-@@ -495,10 +495,17 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 	num_lds = le16_to_cpu(drv_map->raidMap.ldCount);
+ 	dev_err(&instance->pdev->dev, "[%d]: Dumping Frame Phys Address of all pending cmds in FW\n",instance->host->host_no);
+ 	dev_err(&instance->pdev->dev, "[%d]: Total OS Pending cmds : %d\n",instance->host->host_no,atomic_read(&instance->fw_outstanding));
+@@ -3467,7 +3467,7 @@ megasas_internal_reset_defer_cmds(struct megasas_instance *instance)
+ {
+ 	struct megasas_cmd *cmd;
+ 	int i;
+-	u32 max_cmd = instance->max_fw_cmds;
++	u16 max_cmd = instance->max_fw_cmds;
+ 	u32 defer_index;
+ 	unsigned long flags;
  
- 	/*Convert Raid capability values to CPU arch */
--	for (ldCount = 0; ldCount < num_lds; ldCount++) {
--		ld = MR_TargetIdToLdGet(ldCount, drv_map);
-+	for (i = 0; (num_lds > 0) && (i < MAX_LOGICAL_DRIVES_EXT); i++) {
-+		ld = MR_TargetIdToLdGet(i, drv_map);
-+
-+		/* For non existing VDs, iterate to next VD*/
-+		if (ld >= (MAX_LOGICAL_DRIVES_EXT - 1))
-+			continue;
-+
- 		raid = MR_LdRaidGet(ld, drv_map);
- 		le32_to_cpus((u32 *)&raid->capability);
-+
-+		num_lds--;
- 	}
+@@ -3843,7 +3843,7 @@ megasas_transition_to_ready(struct megasas_instance *instance, int ocr)
+ static void megasas_teardown_frame_pool(struct megasas_instance *instance)
+ {
+ 	int i;
+-	u32 max_cmd = instance->max_mfi_cmds;
++	u16 max_cmd = instance->max_mfi_cmds;
+ 	struct megasas_cmd *cmd;
  
- 	return 1;
+ 	if (!instance->frame_dma_pool)
+@@ -3887,7 +3887,7 @@ static void megasas_teardown_frame_pool(struct megasas_instance *instance)
+ static int megasas_create_frame_pool(struct megasas_instance *instance)
+ {
+ 	int i;
+-	u32 max_cmd;
++	u16 max_cmd;
+ 	u32 sge_sz;
+ 	u32 total_sz;
+ 	u32 frame_count;
+@@ -4021,7 +4021,7 @@ int megasas_alloc_cmds(struct megasas_instance *instance)
+ {
+ 	int i;
+ 	int j;
+-	u32 max_cmd;
++	u16 max_cmd;
+ 	struct megasas_cmd *cmd;
+ 	struct fusion_context *fusion;
+ 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index f8b4898..b8591de 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -367,7 +367,7 @@ megasas_free_cmds_fusion(struct megasas_instance *instance)
+ static int megasas_create_sg_sense_fusion(struct megasas_instance *instance)
+ {
+ 	int i;
+-	u32 max_cmd;
++	u16 max_cmd;
+ 	struct fusion_context *fusion;
+ 	struct megasas_cmd_fusion *cmd;
+ 
+@@ -1274,7 +1274,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ {
+ 	struct megasas_register_set __iomem *reg_set;
+ 	struct fusion_context *fusion;
+-	u32 max_cmd, scratch_pad_2;
++	u16 max_cmd;
++	u32 scratch_pad_2;
+ 	int i = 0, count;
+ 
+ 	fusion = instance->ctrl_context;
 -- 
 2.8.3
