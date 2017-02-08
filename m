@@ -1,64 +1,61 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 06/14] qla2xxx: Improve T10-DIF/PI handling in driver.
-Date: Wed, 8 Feb 2017 19:12:34 +0000
-Message-ID: <CC550DFD-54F5-4F24-A411-95645ED38BF3@cavium.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2 04/14] qla2xxx: Use IOCB interface to submit
+ non-critical MBX.
+Date: Wed, 8 Feb 2017 18:48:02 +0000
+Message-ID: <1486579669.16026.14.camel@sandisk.com>
 References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
- <1486161655-2307-7-git-send-email-himanshu.madhani@cavium.com>
- <1486527197.13263.20.camel@haakon3.risingtidesystems.com>
+         <1486161655-2307-5-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0082.outbound.protection.outlook.com ([104.47.34.82]:56960
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751566AbdBHTO4 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Feb 2017 14:14:56 -0500
-In-Reply-To: <1486527197.13263.20.camel@haakon3.risingtidesystems.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:8697 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751584AbdBHTO4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 14:14:56 -0500
+In-Reply-To: <1486161655-2307-5-git-send-email-himanshu.madhani@cavium.com>
 Content-Language: en-US
-Content-ID: <3042735457B7544B9D04691BB24A80B6@namprd07.prod.outlook.com>
+Content-ID: <EB75C37A1977B147B1092ED50C161B2B@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Cc: "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "Bart.VanAssche@sandisk.com" <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-SGkgTmljLA0KDQoNCg0KT24gMi83LzE3LCA4OjEzIFBNLCAiTmljaG9sYXMgQS4gQmVsbGluZ2Vy
-IiA8bmFiQGxpbnV4LWlzY3NpLm9yZz4gd3JvdGU6DQoNCj5PbiBGcmksIDIwMTctMDItMDMgYXQg
-MTQ6NDAgLTA4MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+PiBGcm9tOiBRdWlubiBUcmFu
-IDxxdWlubi50cmFuQGNhdml1bS5jb20+DQo+PiANCj4+IEFkZCByb3V0aW5lcyB0byBzdXBwb3J0
-IFQxMCBESUYgdGFnLg0KPj4gDQo+PiBTaWduZWQtb2ZmLWJ5OiBRdWlubiBUcmFuIDxxdWlubi50
-cmFuQGNhdml1bS5jb20+DQo+PiBTaWduZWQtb2ZmLWJ5OiBBbmlsIEd1cnVtdXJ0aHkgPGFuaWwu
-Z3VydW11cnRoeUBjYXZpdW0uY29tPg0KPj4gU2lnbmVkLW9mZi1ieTogSGltYW5zaHUgTWFkaGFu
-aSA8aGltYW5zaHUubWFkaGFuaUBjYXZpdW0uY29tPg0KPj4gLS0tDQo+PiAgZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX2RiZy5oICAgICB8ICAgMSArDQo+PiAgZHJpdmVycy9zY3NpL3FsYTJ4eHgv
-cWxhX2RlZi5oICAgICB8ICAxNyArKw0KPj4gIGRyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJn
-ZXQuYyAgfCA1OTggKysrKysrKysrKysrKysrKysrKysrLS0tLS0tLS0tLS0tLS0tLQ0KPj4gIGRy
-aXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuaCAgfCAgMzcgKystDQo+PiAgZHJpdmVycy9z
-Y3NpL3FsYTJ4eHgvdGNtX3FsYTJ4eHguYyB8ICA4NCArKysrKy0NCj4+ICA1IGZpbGVzIGNoYW5n
-ZWQsIDQ2NSBpbnNlcnRpb25zKCspLCAyNzIgZGVsZXRpb25zKC0pDQo+PiANCj4+IGRpZmYgLS1n
-aXQgYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGJnLmggYi9kcml2ZXJzL3Njc2kvcWxhMnh4
-eC9xbGFfZGJnLmgNCj4+IGluZGV4IGUxZmM0ZTYuLmM2YmZmZTkgMTAwNjQ0DQo+PiAtLS0gYS9k
-cml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfZGJnLmgNCj4+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEy
-eHh4L3FsYV9kYmcuaA0KPj4gQEAgLTM0OCw2ICszNDgsNyBAQCB2b2lkIF9fYXR0cmlidXRlX18o
-KGZvcm1hdCAocHJpbnRmLCA0LCA1KSkpDQo+PiAgI2RlZmluZSBxbF9kYmdfdGd0CTB4MDAwMDQw
-MDAgLyogVGFyZ2V0IG1vZGUgKi8NCj4+ICAjZGVmaW5lIHFsX2RiZ190Z3RfbWd0CTB4MDAwMDIw
-MDAgLyogVGFyZ2V0IG1vZGUgbWFuYWdlbWVudCAqLw0KPj4gICNkZWZpbmUgcWxfZGJnX3RndF90
-bXIJMHgwMDAwMTAwMCAvKiBUYXJnZXQgbW9kZSB0YXNrIG1hbmFnZW1lbnQgKi8NCj4+ICsjZGVm
-aW5lIHFsX2RiZ190Z3RfZGlmICAweDAwMDAwODAwIC8qIFRhcmdldCBtb2RlIGRpZiAqLw0KPj4g
-IA0KPj4gIGV4dGVybiBpbnQgcWxhMjd4eF9kdW1wX21waV9yYW0oc3RydWN0IHFsYV9od19kYXRh
-ICosIHVpbnQzMl90LCB1aW50MzJfdCAqLA0KPj4gIAl1aW50MzJfdCwgdm9pZCAqKik7DQo+PiBk
-aWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oIGIvZHJpdmVycy9zY3Np
-L3FsYTJ4eHgvcWxhX2RlZi5oDQo+PiBpbmRleCA4YmMxMTExLi5kNjQzNmZjIDEwMDY0NA0KPj4g
-LS0tIGEvZHJpdmVycy9zY3NpL3FsYTJ4eHgvcWxhX2RlZi5oDQo+PiArKysgYi9kcml2ZXJzL3Nj
-c2kvcWxhMnh4eC9xbGFfZGVmLmgNCj4+IEBAIC0yMTg5LDYgKzIxODksMjMgQEAgc3RydWN0IHFs
-dF9wbG9naV9hY2tfdCB7DQo+PiAgCXZvaWQJCSpmY3BvcnQ7DQo+PiAgfTsNCj4+ICANCj4+ICtl
-bnVtIHFsYV90Z3RfcHJvdF9vcCB7DQo+PiArCVFMQV9QUk9UX05PUk1BTCAgPSAwLA0KPj4gKwlR
-TEFfUFJPVF9ESU5fSU5TRVJULA0KPj4gKwlRTEFfUFJPVF9ET1VUX0lOU0VSVCwNCj4+ICsJUUxB
-X1BST1RfRElOX1NUUklQLA0KPj4gKwlRTEFfUFJPVF9ET1VUX1NUUklQLA0KPj4gKwlRTEFfUFJP
-VF9ESU5fUEFTUywNCj4+ICsJUUxBX1BST1RfRE9VVF9QQVNTLA0KPj4gK307DQo+PiArDQo+PiAr
-ZW51bSBxbGFfdGd0X3Byb3RfdHlwZSB7DQo+PiArCVFMQV9UR1RfUFJPVF9UWVBFMCwNCj4+ICsJ
-UUxBX1RHVF9QUk9UX1RZUEUxLA0KPj4gKwlRTEFfVEdUX1BST1RfVFlQRTIsDQo+PiArCVFMQV9U
-R1RfUFJPVF9UWVBFMywNCj4+ICt9Ow0KPj4gKw0KPg0KPkkgZG9uJ3QgZ2V0IGl0LCB3aHkgYXJl
-IHlvdSBkdXBsaWNhdGluZyB0YXJnZXRfcHJvdF9vcCBhbmQNCj50YXJnZXRfcHJvdF90eXBlLi4/
-DQoNCldlIHdpbGwgZml4IGl0IGFuZCByZXN1Ym1pdCB0aGlzLiANCg0KVGhhbmtzLA0KSGltYW5z
-aHUNCg==
+On Fri, 2017-02-03 at 14:40 -0800, Himanshu Madhani wrote:
+> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+> index db6bd92..4225256 100644
+> --- a/drivers/scsi/qla2xxx/qla_mbx.c
+> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
+> @@ -10,6 +10,29 @@
+>  #include <linux/delay.h>
+>  #include <linux/gfp.h>
+>  
+> +static struct mb_cmd_name {
+> +	uint16_t cmd;
+> +	char *str;
+> +} mb_str[] = {
+> +	{0xffff,		"unknown"},
+> +	{MBC_GET_PORT_DATABASE,	"GPDB"},
+> +	{MBC_GET_ID_LIST,	"GIDList"},
+> +	{MBC_GET_LINK_PRIV_STATS, "Stats"},
+> +};
+> +
+> +static char *mb_to_str(uint16_t cmd)
+> +{
+> +	int i;
+> +	struct mb_cmd_name *e;
+> +
+> +	for (i = 0; i < ARRAY_SIZE(mb_str); i++) {
+> +		e = mb_str + i;
+> +		if (cmd == e->cmd)
+> +			return e->str;
+> +	}
+> +	return mb_str[0].str; /* unknown */
+> +}
+
+Please use const char * instead of char * in the struct definition and for
+the mb_to_str() function return type. Please also leave out the element with
+index 0xffff from the mb_str[] array and make mb_to_str() return "unknown"
+instead of mb_str[0].str if lookup fails.
+
+Bart.
