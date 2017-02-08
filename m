@@ -1,74 +1,90 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Patch: lpfc: Modify Emulex lpfc LPFC_DEFAULT_SG_SEG_CNT to 128 for
- default larger sg_io capability
-Date: Wed, 8 Feb 2017 15:07:12 -0500 (EST)
-Message-ID: <30301867.28563578.1486584432250.JavaMail.zimbra@redhat.com>
-References: <356097050.28561599.1486583932322.JavaMail.zimbra@redhat.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH v2] scsi/sd: release scan_mutex during sync_cache and start_stop
+Date: Wed, 8 Feb 2017 12:42:40 -0800
+Message-ID: <20170208204240.4002411-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5-phx2.redhat.com ([209.132.183.37]:52468 "EHLO
-        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750962AbdBHUHb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 15:07:31 -0500
-Received: from zmail22.collab.prod.int.phx2.redhat.com (zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
-        by mx5-phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v18K7C8e058944
-        for <linux-scsi@vger.kernel.org>; Wed, 8 Feb 2017 15:07:12 -0500
-In-Reply-To: <356097050.28561599.1486583932322.JavaMail.zimbra@redhat.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:55331 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1751143AbdBHUmn (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 15:42:43 -0500
+Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v18KYZxV028052
+        for <linux-scsi@vger.kernel.org>; Wed, 8 Feb 2017 12:42:42 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 28g8avgk46-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 12:42:42 -0800
+Received: from facebook.com (2401:db00:11:d0be:face:0:17:0)     by
+ mx-out.facebook.com (10.102.107.97) with ESMTP id
+ 22e9e6d8ee3f11e6b7030002c99331b0-291f5a50 for <linux-scsi@vger.kernel.org>;
+        Wed, 08 Feb 2017 12:42:41 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI List <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Song Liu <songliubraving@fb.com>
 
-We have been seeing issues with qemu_kvm virtual guests where if they issue 
-I/O to direct attached SCSI passthrough LUNS with large I/O sizes such as 512K
-the sg_io will fail with -EINVAL.
+When a device is deleted through sysfs handle "delete", the code
+locks shost->scan_mutex. If multiple devices are deleted at the
+same time, these deletes will be handled in series.
 
-Simple reproducer is here.
+On the other hand, sd_shutdown() sometimes issues long latency
+commands: sync cache and start_stop. It is not necessary for these
+commands to run in series.
 
-strace -e ioctl sg_dd if=/dev/zero of=/dev/sdae bpt=0x400 count=0x400 blk_sgio=1
-Assume default 'bs' (block size) of 512 bytes
-ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00], mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0, data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-15        "...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=0, info=0}) = 0
-ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00, 04, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=524288, timeout=60000, flags=0, data[524288]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...]}) = -1 EINVAL (Invalid argument)
-writing (SG_IO) on sg device, error: Invalid argument
-sg_write failed, seek=0
-Some error occurred,  remaining block count=1024
-1024+0 records in
-0+0 records out
+To reduce latency of parallel "delete" requests, this patch unlock
+shost->scan_mutex before long latency commands and relock the mutex
+after the command.
 
-Qlogic defaults to 128 so has not been seeing this but lpfc does not.
-Would like to avoid having to set this in the module parameters to 128.
+Fixed bug from previous version.
 
-Tested-by:     Laurence Oberman <loberman@redhat.com>
-Signed-off-by: Laurence Oberman <loberman@redhat.com>
-
->From 23996dcbdd9b505d18d59ecde961c87f76fc9c2e Mon Sep 17 00:00:00 2001
-From: Laurence Oberman <loberman@redhat.com>
-Date: Wed, 8 Feb 2017 14:49:05 -0500
-Subject: [PATCH] Modified LPFC_DEFAULT_SG_SEG_CNT to 128 to match Qlogic. This
- will allow larger sg_io passthrough for qemu_kvm guests that expect the
- larger setting for I/O large rthen 512k.
-
+Reported-by: kernel test robot <fengguang.wu@intel.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
 ---
- drivers/scsi/lpfc/lpfc.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/sd.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 8a20b4e..8f86d41 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -42,7 +42,7 @@
- #define LPFC_MAX_NS_RETRY	3	/* Number of retry attempts to contact
- 					   the NameServer  before giving up. */
- #define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
--#define LPFC_DEFAULT_SG_SEG_CNT 64	/* sg element count per scsi cmnd */
-+#define LPFC_DEFAULT_SG_SEG_CNT 128	/* sg element count per scsi cmnd */
- #define LPFC_DEFAULT_MENLO_SG_SEG_CNT 128	/* sg element count per scsi
- 		cmnd for menlo needs nearly twice as for firmware
- 		downloads using bsg */
--- 
-1.8.3.1
-
-
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 9e0783b..22add77 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3304,6 +3304,9 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ static void sd_shutdown(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
++	struct scsi_device *sdev;
++	struct Scsi_Host *shost;
++	bool scan_mutex_locked;
  
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+@@ -3311,14 +3314,26 @@ static void sd_shutdown(struct device *dev)
+ 	if (pm_runtime_suspended(dev))
+ 		return;
+ 
++	sdev = sdkp->device;
++	shost = sdev->host;
++	scan_mutex_locked = mutex_is_locked(&shost->scan_mutex);
++
+ 	if (sdkp->WCE && sdkp->media_present) {
++		if (scan_mutex_locked)
++			mutex_unlock(&shost->scan_mutex);
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
++		if (scan_mutex_locked)
++			mutex_lock(&shost->scan_mutex);
+ 	}
+ 
+ 	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
++		if (scan_mutex_locked)
++			mutex_unlock(&shost->scan_mutex);
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
++		if (scan_mutex_locked)
++			mutex_lock(&shost->scan_mutex);
+ 	}
+ }
+ 
+-- 
+2.9.3
