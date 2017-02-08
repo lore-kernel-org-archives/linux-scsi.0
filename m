@@ -1,89 +1,76 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 28/39] megaraid_sas: megasas_return_cmd does not memset IO frame to zero
-Date: Wed,  8 Feb 2017 01:29:22 -0800
-Message-ID: <1486546173-20713-29-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 33/39] megaraid_sas: Bail out the driver load if ld_list_query fails
+Date: Wed,  8 Feb 2017 01:29:27 -0800
+Message-ID: <1486546173-20713-34-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f52.google.com ([74.125.83.52]:35625 "EHLO
-        mail-pg0-f52.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933119AbdBHJb0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:26 -0500
-Received: by mail-pg0-f52.google.com with SMTP id 194so47592997pgd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:21 -0800 (PST)
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:33161 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754081AbdBHJba (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:30 -0500
+Received: by mail-pg0-f50.google.com with SMTP id 204so47597802pge.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:30 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Memset the IO frame to zero after release.
+Error handling: Bail out the driver load if
+key FW cmds (LD_LIST) are not return successful.
+Clean up error handling in megasas_init_fw.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h      |  1 +
- drivers/scsi/megaraid/megaraid_sas_base.c | 10 ++++++----
- 2 files changed, 7 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 10 +++++-----
+ 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index efc01a3..508516d 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -2238,6 +2238,7 @@ struct megasas_instance {
- 	u8 is_rdpq;
- 	bool dev_handle;
- 	bool fw_sync_cache_support;
-+	u32 mfi_frame_size;
- 	bool is_ventura;
- 	bool msix_combined;
- 	u16 max_raid_mapsize;
 diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 06001b4..30e390c 100644
+index 30e390c..0e7121d 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_base.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -268,6 +268,8 @@ megasas_return_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- 	cmd->scmd = NULL;
- 	cmd->frame_count = 0;
- 	cmd->flags = 0;
-+	memset(cmd->frame, 0, instance->mfi_frame_size);
-+	cmd->frame->io.context = cpu_to_le32(cmd->index);
- 	if (!fusion && reset_devices)
- 		cmd->frame->hdr.cmd = MFI_CMD_INVALID;
- 	list_add(&cmd->list, (&instance->cmd_pool)->next);
-@@ -3889,7 +3891,6 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 	int i;
- 	u16 max_cmd;
- 	u32 sge_sz;
--	u32 total_sz;
- 	u32 frame_count;
- 	struct megasas_cmd *cmd;
+@@ -5352,7 +5352,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		(MEGASAS_MAX_PD * sizeof(struct megasas_pd_list)));
+ 	if (megasas_get_pd_list(instance) < 0) {
+ 		dev_err(&instance->pdev->dev, "failed to get PD list\n");
+-		goto fail_get_pd_list;
++		goto fail_get_ld_pd_list;
+ 	}
  
-@@ -3917,12 +3918,13 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 	 * Total 192 byte (3 MFI frame of 64 byte)
- 	 */
- 	frame_count = instance->ctrl_context ? (3 + 1) : (15 + 1);
--	total_sz = MEGAMFI_FRAME_SIZE * frame_count;
-+	instance->mfi_frame_size = MEGAMFI_FRAME_SIZE * frame_count;
+ 	memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
+@@ -5388,7 +5388,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 
+ 	if (megasas_ld_list_query(instance,
+ 				  MR_LD_QUERY_TYPE_EXPOSED_TO_HOST))
+-		megasas_get_ld_list(instance);
++		goto fail_get_ld_pd_list;
+ 
  	/*
- 	 * Use DMA pool facility provided by PCI layer
- 	 */
- 	instance->frame_dma_pool = pci_pool_create("megasas frame pool",
--					instance->pdev, total_sz, 256, 0);
-+					instance->pdev, instance->mfi_frame_size,
-+					256, 0);
+ 	 * Compute the max allowed sectors per IO: The controller info has two
+@@ -5507,8 +5507,6 @@ static int megasas_init_fw(struct megasas_instance *instance)
  
- 	if (!instance->frame_dma_pool) {
- 		dev_printk(KERN_DEBUG, &instance->pdev->dev, "failed to setup frame pool\n");
-@@ -3966,7 +3968,7 @@ static int megasas_create_frame_pool(struct megasas_instance *instance)
- 			return -ENOMEM;
- 		}
+ fail_get_ld_pd_list:
+ 	instance->instancet->disable_intr(instance);
+-fail_get_pd_list:
+-	instance->instancet->disable_intr(instance);
+ fail_init_adapter:
+ 	megasas_destroy_irqs(instance);
+ fail_setup_irqs:
+@@ -5520,9 +5518,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 	instance->ctrl_info = NULL;
+ 	iounmap(instance->reg_set);
  
--		memset(cmd->frame, 0, total_sz);
-+		memset(cmd->frame, 0, instance->mfi_frame_size);
- 		cmd->frame->io.context = cpu_to_le32(cmd->index);
- 		cmd->frame->io.pad_0 = 0;
- 		if (!instance->ctrl_context && reset_devices)
+-      fail_ioremap:
++fail_ioremap:
+ 	pci_release_selected_regions(instance->pdev, 1<<instance->bar);
+ 
++	dev_err(&instance->pdev->dev, "Failed from %s %d\n",
++		__func__, __LINE__);
+ 	return -EINVAL;
+ }
+ 
 -- 
 2.8.3
