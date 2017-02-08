@@ -1,62 +1,57 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 38/39] megaraid_sas: Change RAID_1_10_RMW_CMDS to RAID_1_PEER_CMDS and set value to 2
-Date: Wed,  8 Feb 2017 01:29:32 -0800
-Message-ID: <1486546173-20713-39-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 35/39] megaraid_sas: Increase internal command pool
+Date: Wed,  8 Feb 2017 01:29:29 -0800
+Message-ID: <1486546173-20713-36-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f48.google.com ([74.125.83.48]:35695 "EHLO
-        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933225AbdBHJbp (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:45 -0500
-Received: by mail-pg0-f48.google.com with SMTP id 194so47596862pgd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:44 -0800 (PST)
+Received: from mail-pg0-f41.google.com ([74.125.83.41]:34655 "EHLO
+        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933226AbdBHJbq (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:46 -0500
+Received: by mail-pg0-f41.google.com with SMTP id 14so47610000pgg.1
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:46 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-For RAID1 FastPath writes, driver needs to allocate extra commands
-internally to accommodate for the extra peer command being sent.
-Currently driver is allocating 2 extra commands for each but only
-one extra command is necessary.
-Set RAID_1_10_RMW_CMDS to 2 and also change macro name to
-RAID_1_PEER_CMDS.
+Fix - increase internal command pool to 8.
 
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
+ drivers/scsi/megaraid/megaraid_sas.h        | 2 +-
  drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
- drivers/scsi/megaraid/megaraid_sas_fusion.h | 2 +-
  2 files changed, 2 insertions(+), 2 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index 508516d..42c0e1f 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -1460,7 +1460,7 @@ enum FW_BOOT_CONTEXT {
+  */
+ #define MEGASAS_INT_CMDS			32
+ #define MEGASAS_SKINNY_INT_CMDS			5
+-#define MEGASAS_FUSION_INTERNAL_CMDS		5
++#define MEGASAS_FUSION_INTERNAL_CMDS		8
+ #define MEGASAS_FUSION_IOCTL_CMDS		3
+ #define MEGASAS_MFI_IOCTL_CMDS			27
+ 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index abd11c3..3f198b5 100644
+index a9a6e5d..d8877c0 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -293,7 +293,7 @@ megasas_fusion_update_can_queue(struct megasas_instance *instance, int fw_boot_c
+@@ -1350,7 +1350,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+ 		fusion->last_reply_idx[i] = 0;
  
- 	if (instance->is_ventura)
- 		instance->max_mpt_cmds =
--		instance->max_fw_cmds * RAID_1_10_RMW_CMDS;
-+		instance->max_fw_cmds * RAID_1_PEER_CMDS;
- 	else
- 		instance->max_mpt_cmds = instance->max_fw_cmds;
- }
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 60566e4..c36f9f7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -101,7 +101,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
- #define MEGASAS_FP_CMD_LEN	16
- #define MEGASAS_FUSION_IN_RESET 0
- #define THRESHOLD_REPLY_COUNT 50
--#define RAID_1_10_RMW_CMDS 3
-+#define RAID_1_PEER_CMDS 2
- #define JBOD_MAPS_COUNT	2
- 
- enum MR_FUSION_ADAPTER_TYPE {
+ 	/*
+-	 * For fusion adapters, 3 commands for IOCTL and 5 commands
++	 * For fusion adapters, 3 commands for IOCTL and 8 commands
+ 	 * for driver's internal DCMDs.
+ 	 */
+ 	instance->max_scsi_cmds = instance->max_fw_cmds -
 -- 
 2.8.3
