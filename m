@@ -1,44 +1,33 @@
-From: Wei Yongjun <weiyj.lk@gmail.com>
-Subject: [PATCH -next] scsi: sd: make sd_devt_release() static
-Date: Wed,  8 Feb 2017 16:24:24 +0000
-Message-ID: <20170208162424.6279-1-weiyj.lk@gmail.com>
+From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
+Subject: Re: [PATCH 1/5] target: Don't BUG_ON during NodeACL dynamic ->
+ explicit conversion
+Date: Wed, 08 Feb 2017 08:16:20 -0800
+Message-ID: <1486570580.7066.7.camel@haakon3.risingtidesystems.com>
+References: <1486473470-15837-1-git-send-email-nab@linux-iscsi.org>
+         <1486473470-15837-2-git-send-email-nab@linux-iscsi.org>
+         <20170207224453.GB5274@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=ISO-8859-1
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f196.google.com ([209.85.192.196]:34392 "EHLO
-        mail-pf0-f196.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752563AbdBHQYb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 11:24:31 -0500
-Received: by mail-pf0-f196.google.com with SMTP id y143so11993090pfb.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 08:24:30 -0800 (PST)
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <20170207224453.GB5274@infradead.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>
+Cc: target-devel <target-devel@vger.kernel.org>, linux-scsi <linux-scsi@vger.kernel.org>, lkml <linux-kernel@vger.kernel.org>, Benjamin ESTRABAUD <ben.estrabaud@mpstor.com>
 List-Id: linux-scsi@vger.kernel.org
-To: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Dan Williams <dan.j.williams@intel.com>, Jens Axboe <axboe@fb.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, linux-scsi@vger.kernel.org
 
-From: Wei Yongjun <weiyongjun1@huawei.com>
+On Tue, 2017-02-07 at 14:44 -0800, Christoph Hellwig wrote:
+> On Tue, Feb 07, 2017 at 01:17:46PM +0000, Nicholas A. Bellinger wrote:
+> > +		if (orig->se_lun_acl != NULL) {
+> > +			pr_warn_ratelimited("Detected existing explicit"
+> > +				" se_lun_acl->se_lun_group reference for %s"
+> > +				" mapped_lun: %llu, ignoring\n",
+> > +				 nacl->initiatorname, mapped_lun);
+> 
+> The ignoring in the message confused the heck out of me first.  But it 
+> seems that's just an incorrect leftover from the original message, as the
+> changelog also says fail instead.  With that fixed up (and maybe the
+> whole message in a single string literal on a single line):
+> 
 
-Fixes the following sparse warning:
-
-drivers/scsi/sd.c:3087:6: warning:
- symbol 'sd_devt_release' was not declared. Should it be static?
-
-Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
----
- drivers/scsi/sd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index cb6e68d..b9b32f58 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3084,7 +3084,7 @@ struct sd_devt {
- 	struct disk_devt disk_devt;
- };
- 
--void sd_devt_release(struct disk_devt *disk_devt)
-+static void sd_devt_release(struct disk_devt *disk_devt)
- {
- 	struct sd_devt *sd_devt = container_of(disk_devt, struct sd_devt,
- 			disk_devt);
+Fixed up the message to use 'failed'.
