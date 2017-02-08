@@ -1,79 +1,74 @@
-From: Joe Perches <joe@perches.com>
-Subject: Re: [RFC 19/19] checkpatch: warn for use of old PCI pool API
-Date: Wed, 08 Feb 2017 11:53:29 -0800
-Message-ID: <1486583609.27834.21.camel@perches.com>
-References: <20170208163457.28853-1-romain.perier@collabora.com>
-         <20170208163457.28853-20-romain.perier@collabora.com>
-         <20170208185550.GS16878@collabora.com>
+From: Laurence Oberman <loberman@redhat.com>
+Subject: Patch: lpfc: Modify Emulex lpfc LPFC_DEFAULT_SG_SEG_CNT to 128 for
+ default larger sg_io capability
+Date: Wed, 8 Feb 2017 15:07:12 -0500 (EST)
+Message-ID: <30301867.28563578.1486584432250.JavaMail.zimbra@redhat.com>
+References: <356097050.28561599.1486583932322.JavaMail.zimbra@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="ISO-8859-1"
-Content-Transfer-Encoding: 8bit
-Return-path: <netdev-owner@vger.kernel.org>
-In-Reply-To: <20170208185550.GS16878@collabora.com>
-Sender: netdev-owner@vger.kernel.org
-To: Peter Senna Tschudin <peter.senna@collabora.com>, Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx5-phx2.redhat.com ([209.132.183.37]:52468 "EHLO
+        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750962AbdBHUHb (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 15:07:31 -0500
+Received: from zmail22.collab.prod.int.phx2.redhat.com (zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
+        by mx5-phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v18K7C8e058944
+        for <linux-scsi@vger.kernel.org>; Wed, 8 Feb 2017 15:07:12 -0500
+In-Reply-To: <356097050.28561599.1486583932322.JavaMail.zimbra@redhat.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Linux SCSI List <linux-scsi@vger.kernel.org>
 
-On Wed, 2017-02-08 at 19:55 +0100, Peter Senna Tschudin wrote:
-> On Wed, Feb 08, 2017 at 05:34:57PM +0100, Romain Perier wrote:
-> > pci_pool_*() functions should be replaced by the corresponding functions
-> > in the DMA pool API. This adds support to check for use of these pci
-> > functions and display a warning when it is the case.
-> 
-> Don't know if relevant, but did not catch the struct. Other than that
-> works fine.
-> 
-> > 
-> > Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> > ---
-> >  scripts/checkpatch.pl | 5 +++++
-> >  1 file changed, 5 insertions(+)
-> > 
-> > diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-> > index 8e96af5..026920e 100755
-> > --- a/scripts/checkpatch.pl
-> > +++ b/scripts/checkpatch.pl
-> > @@ -6058,6 +6058,11 @@ sub process {
-> >  			WARN("USE_DEVICE_INITCALL",
-> >  			     "please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)\n" . $herecurr);
-> >  		}
-> > +# check for old PCI api pci_pool_*(), use dma_pool_*() instead
-> > +		if ($line =~ /\bpci_pool_.+\(/) {
-> > +			WARN("USE_PCI_POOL",
-> > +			     "please use the dma pool api or more appropriate function instead of the old pci pool api\n" . $herecurr);
-> > +		}
-> >  
-> >  # check for various structs that are normally const (ops, kgdb, device_tree)
-> >  		if ($line !~ /\bconst\b/ &&
-> > -- 
-> > 2.9.3
-> > 
+We have been seeing issues with qemu_kvm virtual guests where if they issue 
+I/O to direct attached SCSI passthrough LUNS with large I/O sizes such as 512K
+the sg_io will fail with -EINVAL.
 
-Did this patch get to lkml?
+Simple reproducer is here.
 
-Perhaps this would be more complete:
+strace -e ioctl sg_dd if=/dev/zero of=/dev/sdae bpt=0x400 count=0x400 blk_sgio=1
+Assume default 'bs' (block size) of 512 bytes
+ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00], mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0, data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-15        "...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=0, info=0}) = 0
+ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00, 04, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=524288, timeout=60000, flags=0, data[524288]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...]}) = -1 EINVAL (Invalid argument)
+writing (SG_IO) on sg device, error: Invalid argument
+sg_write failed, seek=0
+Some error occurred,  remaining block count=1024
+1024+0 records in
+0+0 records out
 
- scripts/checkpatch.pl | 9 +++++++++
- 1 file changed, 9 insertions(+)
+Qlogic defaults to 128 so has not been seeing this but lpfc does not.
+Would like to avoid having to set this in the module parameters to 128.
 
-diff --git a/scripts/checkpatch.pl b/scripts/checkpatch.pl
-index 8e96af53611c..600f81cc1ec1 100755
---- a/scripts/checkpatch.pl
-+++ b/scripts/checkpatch.pl
-@@ -6059,6 +6059,15 @@ sub process {
- 			     "please use device_initcall() or more appropriate function instead of __initcall() (see include/linux/init.h)\n" . $herecurr);
- 		}
- 
-+# check for old PCI api pci_pool_*(), use dma_pool_*() instead
-+		if ($line =~ /\bpci_pool(?:_(?:create|destroy|alloc|zalloc|free)|)\b/) {
-+			if (WARN("USE_DMA_POOL",
-+				 "please use the dma pool api or more appropriate function instead of the old pci pool api\n" . $herecurr) &&
-+			    $fix) {
-+				while ($fixed[$fixlinenr] =~ s/\bpci_pool(_(?:create|destroy|alloc|zalloc|free)|)\b/dma_pool$1/) {}
-+			}
-+		}
-+
- # check for various structs that are normally const (ops, kgdb, device_tree)
- 		if ($line !~ /\bconst\b/ &&
- 		    $line =~ /\bstruct\s+($const_structs)\b/) {
+Tested-by:     Laurence Oberman <loberman@redhat.com>
+Signed-off-by: Laurence Oberman <loberman@redhat.com>
+
+>From 23996dcbdd9b505d18d59ecde961c87f76fc9c2e Mon Sep 17 00:00:00 2001
+From: Laurence Oberman <loberman@redhat.com>
+Date: Wed, 8 Feb 2017 14:49:05 -0500
+Subject: [PATCH] Modified LPFC_DEFAULT_SG_SEG_CNT to 128 to match Qlogic. This
+ will allow larger sg_io passthrough for qemu_kvm guests that expect the
+ larger setting for I/O large rthen 512k.
+
+---
+ drivers/scsi/lpfc/lpfc.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+index 8a20b4e..8f86d41 100644
+--- a/drivers/scsi/lpfc/lpfc.h
++++ b/drivers/scsi/lpfc/lpfc.h
+@@ -42,7 +42,7 @@
+ #define LPFC_MAX_NS_RETRY	3	/* Number of retry attempts to contact
+ 					   the NameServer  before giving up. */
+ #define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
+-#define LPFC_DEFAULT_SG_SEG_CNT 64	/* sg element count per scsi cmnd */
++#define LPFC_DEFAULT_SG_SEG_CNT 128	/* sg element count per scsi cmnd */
+ #define LPFC_DEFAULT_MENLO_SG_SEG_CNT 128	/* sg element count per scsi
+ 		cmnd for menlo needs nearly twice as for firmware
+ 		downloads using bsg */
+-- 
+1.8.3.1
+
+
+
+ 
