@@ -1,81 +1,86 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v2 01/14] qla2xxx: Fix delayed response to command for
- loop mode/direct connect.
-Date: Wed, 8 Feb 2017 18:35:54 +0000
-Message-ID: <1486578941.16026.7.camel@sandisk.com>
-References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
-         <1486161655-2307-2-git-send-email-himanshu.madhani@cavium.com>
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+Subject: Re: [RFC 13/19] scsi: mvsas: Replace PCI pool old API
+Date: Wed, 8 Feb 2017 19:42:00 +0100
+Message-ID: <20170208184200.GM16878@collabora.com>
+References: <20170208163457.28853-1-romain.perier@collabora.com>
+ <20170208163457.28853-14-romain.perier@collabora.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:36059 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751114AbdBHSiU (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 13:38:20 -0500
-In-Reply-To: <1486161655-2307-2-git-send-email-himanshu.madhani@cavium.com>
-Content-Language: en-US
-Content-ID: <5A7E46C3E8BECD4AB6D99E25B6C91FD9@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170208163457.28853-14-romain.perier@collabora.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-On Fri, 2017-02-03 at 14:40 -0800, Himanshu Madhani wrote:
-> +static void qla2x00_iocb_work_fn(struct work_struct *work)
-> +{
-> +	struct scsi_qla_host *vha = container_of(work,
-> +		struct scsi_qla_host, iocb_work);
-> +	unsigned long flags;
-> +	int cnt = 0;
-> +
-> +	while (!list_empty(&vha->work_list)) {
-> +		qla2x00_do_work(vha);
-> +		cnt++;
-> +		if (cnt > 10)
-> +			break;
-> +	}
-> +
-> +	spin_lock_irqsave(&vha->work_lock, flags);
-> +	vha->flags.iocb_work_sheduled = 0;
-> +	spin_unlock_irqrestore(&vha->work_lock, flags);
-> +}
-> +
-> +void qla2x00_schedule_work(struct scsi_qla_host *vha)
-> +{
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(&vha->work_lock, flags);
-> +	if (vha->flags.iocb_work_sheduled) {
-> +		spin_unlock_irqrestore(&vha->work_lock, flags);
-> +		return;
-> +	}
-> +	vha->flags.iocb_work_sheduled = 1;
-> +	spin_unlock_irqrestore(&vha->work_lock, flags);
-> +
-> +	/*
-> +	 * We're in the middle of bringing up the adapter.
-> +	 * the scheduled work need to go out now.
-> +	 */
-> +	INIT_WORK(&vha->iocb_work, qla2x00_iocb_work_fn);
-> +	schedule_work(&vha->iocb_work);
-> +}
-
-Please move the INIT_WORK() call to an initialization function such that
-is executed once instead of during every qla2x00_schedule_work() call. Please
-also remove the iocb_work_sheduled variable and all code that tests and sets
-it. schedule_work() already checks whether or not a work item has been
-scheduled.
-
-> @@ -4564,7 +4568,8 @@ static int qlt_24xx_handle_els(struct scsi_qla_host *vha,
->  		}
+On Wed, Feb 08, 2017 at 05:34:51PM +0100, Romain Perier wrote:
+> The PCI pool API is deprecated. This commits replaces the PCI pool old
+> API by the appropriated function with the DMA pool API.
+> 
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> ---
+>  drivers/scsi/mvsas/mv_init.c | 4 ++--
+>  drivers/scsi/mvsas/mv_sas.c  | 6 +++---
+>  2 files changed, 5 insertions(+), 5 deletions(-)
+> 
+> diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+> index 8280046..451ba93 100644
+> --- a/drivers/scsi/mvsas/mv_init.c
+> +++ b/drivers/scsi/mvsas/mv_init.c
+> @@ -126,7 +126,7 @@ static void mvs_free(struct mvs_info *mvi)
+>  		slot_nr = MVS_CHIP_SLOT_SZ;
 >  
->  		if (sess != NULL) {
-> -			if (sess->fw_login_state == DSC_LS_PLOGI_PEND) {
-> +			if ((sess->fw_login_state != DSC_LS_PLOGI_PEND) &&
-> +			    (sess->fw_login_state != DSC_LS_PLOGI_COMP)) {
+>  	if (mvi->dma_pool)
+dma_pool_destroy(NULL) is safe and this check is probably not required
 
-The != operator has a higher precedence than the && operator so the parentheses
-around the inequality test are not needed.
+> -		pci_pool_destroy(mvi->dma_pool);
+> +		dma_pool_destroy(mvi->dma_pool);
+>  
+>  	if (mvi->tx)
+>  		dma_free_coherent(mvi->dev,
+> @@ -296,7 +296,7 @@ static int mvs_alloc(struct mvs_info *mvi, struct Scsi_Host *shost)
+>  		goto err_out;
+>  
+>  	sprintf(pool_name, "%s%d", "mvs_dma_pool", mvi->id);
+> -	mvi->dma_pool = pci_pool_create(pool_name, mvi->pdev, MVS_SLOT_BUF_SZ, 16, 0);
+> +	mvi->dma_pool = dma_pool_create(pool_name, &mvi->pdev->dev, MVS_SLOT_BUF_SZ, 16, 0);
+line over 80.
 
-Bart.
+>  	if (!mvi->dma_pool) {
+>  			printk(KERN_DEBUG "failed to create dma pool %s.\n", pool_name);
+>  			goto err_out;
+> diff --git a/drivers/scsi/mvsas/mv_sas.c b/drivers/scsi/mvsas/mv_sas.c
+> index c7cc803..ee81d10 100644
+> --- a/drivers/scsi/mvsas/mv_sas.c
+> +++ b/drivers/scsi/mvsas/mv_sas.c
+> @@ -790,7 +790,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+>  	slot->n_elem = n_elem;
+>  	slot->slot_tag = tag;
+>  
+> -	slot->buf = pci_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
+> +	slot->buf = dma_pool_alloc(mvi->dma_pool, GFP_ATOMIC, &slot->buf_dma);
+>  	if (!slot->buf) {
+>  		rc = -ENOMEM;
+>  		goto err_out_tag;
+> @@ -840,7 +840,7 @@ static int mvs_task_prep(struct sas_task *task, struct mvs_info *mvi, int is_tmf
+>  	return rc;
+>  
+>  err_out_slot_buf:
+> -	pci_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
+> +	dma_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
+>  err_out_tag:
+>  	mvs_tag_free(mvi, tag);
+>  err_out:
+> @@ -918,7 +918,7 @@ static void mvs_slot_task_free(struct mvs_info *mvi, struct sas_task *task,
+>  	}
+>  
+>  	if (slot->buf) {
+> -		pci_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
+> +		dma_pool_free(mvi->dma_pool, slot->buf, slot->buf_dma);
+>  		slot->buf = NULL;
+>  	}
+>  	list_del_init(&slot->entry);
+> -- 
+> 2.9.3
+> 
