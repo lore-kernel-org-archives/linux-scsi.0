@@ -1,72 +1,79 @@
-From: "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>
-Subject: Re: [PATCH v2 00/14] qla2xxx: Bug Fixes and updates for target.
-Date: Wed, 8 Feb 2017 17:11:11 +0000
-Message-ID: <F072D3FC-FFDA-4234-96A5-765347B5C4E3@cavium.com>
-References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
- <1486566153.2957.1.camel@sandisk.com>
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+Subject: Re: [RFC 07/19] wireless: ipw2200: Replace PCI pool old API
+Date: Wed, 8 Feb 2017 19:27:58 +0100
+Message-ID: <20170208182758.GG16878@collabora.com>
+References: <20170208163457.28853-1-romain.perier@collabora.com>
+ <20170208163457.28853-8-romain.perier@collabora.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1486566153.2957.1.camel@sandisk.com>
-Content-Language: en-US
-Content-ID: <B61B341514558C4486DEF62A999EDA09@namprd07.prod.outlook.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170208163457.28853-8-romain.perier@collabora.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-SGkgQmFydCwgDQoNCg0KDQpPbiAyLzgvMTcsIDc6MDIgQU0sICJCYXJ0IFZhbiBBc3NjaGUiIDxC
-YXJ0LlZhbkFzc2NoZUBzYW5kaXNrLmNvbT4gd3JvdGU6DQoNCj5PbiBGcmksIDIwMTctMDItMDMg
-YXQgMTQ6NDAgLTA4MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQo+PiBQbGVhc2UgY29uc2lk
-ZXIgdGhpcyBzZXJpZXMgZm9yIGluY2x1c2lvbiBpbiB0YXJnZXQtcGVuZGluZy4NCj4NCj5IZWxs
-byBIaW1hbnNodSwNCj4NCj5JIGdhdmUgdGhpcyBwYXRjaCBzZXJpZXMgYSB0cnkgb24gYSBzeXN0
-ZW0gZXF1aXBwZWQgd2l0aCB0d28gUUxvZ2ljIEZDIEhCQXMNCj53aGVyZSBhbiBGQyBjYWJsZSBj
-b25uZWN0cyBib3RoIEhCQXMgdG8gZWFjaCBvdGhlci4gcWxpbmlfbW9kZSBoYXMgYmVlbiBzZXQN
-Cj50byAiZHVhbCIgc3VjaCB0aGF0IGJvdGggcG9ydHMgc3VwcG9ydCBpbml0aWF0b3IgYW5kIHRh
-cmdldCBtb2RlLiBXaXRob3V0IHRoaXMNCj5wYXRjaCBzZXJpZXMgYm90aCBwb3J0cyBsb2cgaW4g
-dG8gZWFjaCBvdGhlciBhbmQgbHNzY3NpIHNob3dzIHNldmVyYWwgTFVOcy4NCj5XaXRoIHRoaXMg
-cGF0Y2ggc2VyaWVzIGFwcGxpZWQgdGhlIHR3byBwb3J0cyBkbyBub3QgbG9nIGluIHRvIGVhY2gg
-b3RoZXINCj5hbnltb3JlIGFuZCBzdHJhbmdlIG1lc3NhZ2VzIGFwcGVhciBpbiB0aGUga2VybmVs
-IGxvZzoNCj4NCj4tLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0NCj5XQVJOSU5H
-OiBDUFU6IDAgUElEOiA1IGF0IGxpYi9rb2JqZWN0LmM6MjQ0IGtvYmplY3RfYWRkX2ludGVybmFs
-KzB4MTE4LzB4MzUwDQo+a29iamVjdF9hZGRfaW50ZXJuYWwgZmFpbGVkIGZvciAzOjA6MDowIChl
-cnJvcjogLTIgcGFyZW50OiB0YXJnZXQzOjA6MCkNCj5Nb2R1bGVzIGxpbmtlZCBpbjogdGFyZ2V0
-X2NvcmVfcHNjc2kgdGFyZ2V0X2NvcmVfaWJsb2NrIHRhcmdldF9jb3JlX2ZpbGUgdGNtX3FsYTJ4
-eHggdGFyZ2V0X2NvcmVfbW9kIGZjb2UgbGliZmNvZSBsaWJmYyBxbGEyeHh4IHNjc2lfdHJhbnNw
-b3J0X2ZjIG5ldGNvbnNvbGUgYWZfcGFja2V0IGhpZF9nZW5lcmljIHVzYmhpZCBoaWQgc2cgdmly
-dGlvX2JhbGxvb24gaTJjX3BpaXg0IGFjcGlfY3B1ZnJlcSBidXR0b24gaWJfaXNlciByZG1hX2Nt
-IGl3X2NtIGliX2NtIGliX2NvcmUgY29uZmlnZnMgaXNjc2lfdGNwIGxpYmlzY3NpX3RjcCBsaWJp
-c2NzaSBzY3NpX3RyYW5zcG9ydF9pc2NzaSBhdXRvZnM0IGV4dDQgY3JjMTYgamJkMiBtYmNhY2hl
-IHNyX21vZCBjZHJvbSBhdGFfZ2VuZXJpYyBwYXRhX2FjcGkgdmlydGlvX25ldCB2aXJ0aW9fYmxr
-IHZpcnRpb19ncHUgZHJtX2ttc19oZWxwZXIgc3lzY29weWFyZWEgc3lzZmlsbHJlY3Qgc3lzaW1n
-Ymx0IGZiX3N5c19mb3BzIHR0bSBkcm0gaTJjX2NvcmUgYXRhX3BpaXggeGhjaV9wY2kgbGliYXRh
-IHhoY2lfaGNkIGludGVsX2FncCB1c2Jjb3JlIGludGVsX2d0dCB2aXJ0aW9fcGNpIHNjc2lfbW9k
-IHZpcnRpb19yaW5nIHVzYl9jb21tb24gYWdwZ2FydCB2aXJ0aW8NCj5DUFU6IDAgUElEOiA1IENv
-bW06IGt3b3JrZXIvdTE2OjAgTm90IHRhaW50ZWQgNC4xMC4wLXJjNi1kYmcrICMxDQo+SGFyZHdh
-cmUgbmFtZTogQm9jaHMgQm9jaHMsIEJJT1MgQm9jaHMgMDEvMDEvMjAxMQ0KPldvcmtxdWV1ZTog
-c2NzaV93cV8zIGZjX3Njc2lfc2Nhbl9ycG9ydCBbc2NzaV90cmFuc3BvcnRfZmNdDQo+Q2FsbCBU
-cmFjZToNCj4gZHVtcF9zdGFjaysweDg1LzB4YzINCj4gX193YXJuKzB4Y2IvMHhmMA0KPiB3YXJu
-X3Nsb3dwYXRoX2ZtdCsweDRmLzB4NjANCj4ga29iamVjdF9hZGRfaW50ZXJuYWwrMHgxMTgvMHgz
-NTANCj4ga29iamVjdF9hZGQrMHg2OC8weGIwDQo+IGRldmljZV9hZGQrMHhmYS8weDYwMA0KPiBz
-Y3NpX3N5c2ZzX2FkZF9zZGV2KzB4OGUvMHgyNzAgW3Njc2lfbW9kXQ0KPiBzY3NpX3Byb2JlX2Fu
-ZF9hZGRfbHVuKzB4Y2ExLzB4ZTMwIFtzY3NpX21vZF0NCj4gX19zY3NpX3NjYW5fdGFyZ2V0KzB4
-ZDMvMHg1ZjAgW3Njc2lfbW9kXQ0KPiBzY3NpX3NjYW5fdGFyZ2V0KzB4ZjEvMHgxMDAgW3Njc2lf
-bW9kXQ0KPiBmY19zY3NpX3NjYW5fcnBvcnQrMHhjMC8weGQwIFtzY3NpX3RyYW5zcG9ydF9mY10N
-Cj4gcHJvY2Vzc19vbmVfd29yaysweDFmNC8weDZlMA0KPiB3b3JrZXJfdGhyZWFkKzB4NGUvMHg0
-YTANCj4ga3RocmVhZCsweDEwYy8weDE0MA0KPiByZXRfZnJvbV9mb3JrKzB4MzEvMHg0MA0KPi0t
-LVsgZW5kIHRyYWNlIDg2ZjQwYjUyODczZjk1MjkgXS0tLQ0KPnNjc2kgMzowOjA6MDogZmFpbGVk
-IHRvIGFkZCBkZXZpY2U6IC0yDQoNCknigJlsbCB0cnkgdG8gcmVwcm9kdWNlIHRoaXMuIFdlIGhh
-dmUgbm90IHNlZSB0aGlzIGlzc3VlIGluIG91ciB0ZXN0aW5nIGFuZCBwb3N0IHVwZGF0ZS4gDQoN
-ClRoYW5rcywNCkhpbWFuc2h1DQoNCj4NCj5CYXJ0Lg0KPldlc3Rlcm4gRGlnaXRhbCBDb3Jwb3Jh
-dGlvbiAoYW5kIGl0cyBzdWJzaWRpYXJpZXMpIEUtbWFpbCBDb25maWRlbnRpYWxpdHkgTm90aWNl
-ICYgRGlzY2xhaW1lcjoNCj4NCj5UaGlzIGUtbWFpbCBhbmQgYW55IGZpbGVzIHRyYW5zbWl0dGVk
-IHdpdGggaXQgbWF5IGNvbnRhaW4gY29uZmlkZW50aWFsIG9yIGxlZ2FsbHkgcHJpdmlsZWdlZCBp
-bmZvcm1hdGlvbiBvZiBXREMgYW5kL29yIGl0cyBhZmZpbGlhdGVzLCBhbmQgYXJlIGludGVuZGVk
-IHNvbGVseSBmb3IgdGhlIHVzZSBvZiB0aGUgaW5kaXZpZHVhbCBvciBlbnRpdHkgdG8gd2hpY2gg
-dGhleSBhcmUgYWRkcmVzc2VkLiBJZiB5b3UgYXJlIG5vdCB0aGUgaW50ZW5kZWQgcmVjaXBpZW50
-LCBhbnkgZGlzY2xvc3VyZSwgY29weWluZywgZGlzdHJpYnV0aW9uIG9yIGFueSBhY3Rpb24gdGFr
-ZW4gb3Igb21pdHRlZCB0byBiZSB0YWtlbiBpbiByZWxpYW5jZSBvbiBpdCwgaXMgcHJvaGliaXRl
-ZC4gSWYgeW91IGhhdmUgcmVjZWl2ZWQgdGhpcyBlLW1haWwgaW4gZXJyb3IsIHBsZWFzZSBub3Rp
-ZnkgdGhlIHNlbmRlciBpbW1lZGlhdGVseSBhbmQgZGVsZXRlIHRoZSBlLW1haWwgaW4gaXRzIGVu
-dGlyZXR5IGZyb20geW91ciBzeXN0ZW0uDQo=
+On Wed, Feb 08, 2017 at 05:34:45PM +0100, Romain Perier wrote:
+> The PCI pool API is deprecated. This commits replaces the PCI pool old
+> API by the appropriated function with the DMA pool API.
+
+
+
+> 
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> ---
+>  drivers/net/wireless/intel/ipw2x00/ipw2200.c | 12 ++++++------
+>  1 file changed, 6 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/net/wireless/intel/ipw2x00/ipw2200.c b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+> index 5ef3c5c..6d77870 100644
+> --- a/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+> +++ b/drivers/net/wireless/intel/ipw2x00/ipw2200.c
+> @@ -3211,7 +3211,7 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+>  	struct fw_chunk *chunk;
+>  	int total_nr = 0;
+>  	int i;
+> -	struct pci_pool *pool;
+> +	struct dma_pool *pool;
+>  	void **virts;
+>  	dma_addr_t *phys;
+>  
+> @@ -3228,9 +3228,9 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+>  		kfree(virts);
+>  		return -ENOMEM;
+>  	}
+> -	pool = pci_pool_create("ipw2200", priv->pci_dev, CB_MAX_LENGTH, 0, 0);
+> +	pool = dma_pool_create("ipw2200", &priv->pci_dev->dev, CB_MAX_LENGTH, 0, 0);
+Introduces line over 80 characters warning. Please fix and resubmit.
+Other than that looks good. Tested by compiling it.
+>  	if (!pool) {
+> -		IPW_ERROR("pci_pool_create failed\n");
+> +		IPW_ERROR("dma_pool_create failed\n");
+>  		kfree(phys);
+>  		kfree(virts);
+>  		return -ENOMEM;
+> @@ -3255,7 +3255,7 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+>  
+>  		nr = (chunk_len + CB_MAX_LENGTH - 1) / CB_MAX_LENGTH;
+>  		for (i = 0; i < nr; i++) {
+> -			virts[total_nr] = pci_pool_alloc(pool, GFP_KERNEL,
+> +			virts[total_nr] = dma_pool_alloc(pool, GFP_KERNEL,
+>  							 &phys[total_nr]);
+>  			if (!virts[total_nr]) {
+>  				ret = -ENOMEM;
+> @@ -3299,9 +3299,9 @@ static int ipw_load_firmware(struct ipw_priv *priv, u8 * data, size_t len)
+>  	}
+>   out:
+>  	for (i = 0; i < total_nr; i++)
+> -		pci_pool_free(pool, virts[i], phys[i]);
+> +		dma_pool_free(pool, virts[i], phys[i]);
+>  
+> -	pci_pool_destroy(pool);
+> +	dma_pool_destroy(pool);
+>  	kfree(phys);
+>  	kfree(virts);
+>  
+> -- 
+> 2.9.3
+> 
