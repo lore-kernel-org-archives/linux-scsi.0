@@ -1,85 +1,49 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 24/39] megaraid_sas: set pd_after_lb from MR_BuildRaidContext and initialize pDevHandle to MR_DEVHANDLE_INVALID
-Date: Wed,  8 Feb 2017 01:29:18 -0800
-Message-ID: <1486546173-20713-25-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 29/39] megaraid_sas: Remove unused pd_index from megasas_build_ld_nonrw_fusion
+Date: Wed,  8 Feb 2017 01:29:23 -0800
+Message-ID: <1486546173-20713-30-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f53.google.com ([74.125.83.53]:35596 "EHLO
-        mail-pg0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933119AbdBHJbF (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:05 -0500
-Received: by mail-pg0-f53.google.com with SMTP id 194so47591431pgd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:05 -0800 (PST)
+Received: from mail-pg0-f48.google.com ([74.125.83.48]:33133 "EHLO
+        mail-pg0-f48.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933210AbdBHJb3 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:29 -0500
+Received: by mail-pg0-f48.google.com with SMTP id 204so47596219pge.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:24 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Issue is limited for Syncro firmware where pd_after_lb is not set but is accidentally used.
-Not a functional issue, but results in low performance due to improper load balancing between two LUNs.
-
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fp.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 68582d9..a5517e7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -948,6 +948,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 	struct fusion_context *fusion;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index 9e2a289..04a4c43 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -2480,7 +2480,7 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
+ {
+ 	u32 device_id;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
+-	u16 pd_index = 0, ld;
++	u16 ld;
+ 	struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+ 	struct fusion_context *fusion = instance->ctrl_context;
+ 	u8                          span, physArm;
+@@ -2492,7 +2492,6 @@ static void megasas_build_ld_nonrw_fusion(struct megasas_instance *instance,
  
- 	fusion = instance->ctrl_context;
-+	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 
- 	/*Get row and span from io_info for Uneven Span IO.*/
- 	row	    = io_info->start_row;
-@@ -986,7 +987,6 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 				MR_PdDevHandleGet(r1_alt_pd, map);
- 		}
- 	} else {
--		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 		if ((raid->level >= 5) &&
- 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
- 			((fusion->adapter_type == INVADER_SERIES) &&
-@@ -1013,6 +1013,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm = pRAID_Context->span_arm;
- 	}
-+	io_info->pd_after_lb = pd;
- 	return retval;
- }
- 
-@@ -1049,7 +1050,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 	struct fusion_context *fusion;
- 
- 	fusion = instance->ctrl_context;
--
-+	*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 
- 	row =  mega_div64_32(stripRow, raid->rowDataSize);
- 
-@@ -1102,8 +1103,6 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 					MR_PdDevHandleGet(r1_alt_pd, map);
- 		}
- 	} else {
--		/* set dev handle as invalid. */
--		*pDevHandle = cpu_to_le16(MR_DEVHANDLE_INVALID);
- 		if ((raid->level >= 5) &&
- 			((fusion->adapter_type == THUNDERBOLT_SERIES)  ||
- 			((fusion->adapter_type == INVADER_SERIES) &&
-@@ -1132,6 +1131,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm = pRAID_Context->span_arm;
- 	}
-+	io_info->pd_after_lb = pd;
- 	return retval;
- }
- 
+ 	io_request = cmd->io_request;
+ 	device_id = MEGASAS_DEV_INDEX(scmd);
+-	pd_index = MEGASAS_PD_INDEX(scmd);
+ 	local_map_ptr = fusion->ld_drv_map[(instance->map_id & 1)];
+ 	io_request->DataLength = cpu_to_le32(scsi_bufflen(scmd));
+ 	/* get RAID_Context pointer */
 -- 
 2.8.3
