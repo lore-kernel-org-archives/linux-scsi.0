@@ -1,61 +1,77 @@
-From: "Rangankar, Manish" <Manish.Rangankar@cavium.com>
-Subject: Re: [PATCH -next] scsi: qedi: Fix possible memory leak in
- qedi_iscsi_update_conn()
-Date: Wed, 8 Feb 2017 05:51:06 +0000
-Message-ID: <D4C0AF2B.36B98%manish.rangankar@cavium.com>
-References: <20170207145258.31429-1-weiyj.lk@gmail.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: [PATCH] scsi/sd: release scan_mutex during sync_cache and start_stop
+Date: Tue, 7 Feb 2017 21:41:06 -0800
+Message-ID: <20170208054106.2156053-1-songliubraving@fb.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0070.outbound.protection.outlook.com ([104.47.38.70]:57756
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751748AbdBHFvJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 8 Feb 2017 00:51:09 -0500
-In-Reply-To: <20170207145258.31429-1-weiyj.lk@gmail.com>
-Content-Language: en-US
-Content-ID: <274E7222CA0F7C43BA23126ACFF02DCA@namprd07.prod.outlook.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:37912 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S932093AbdBHGiH (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 01:38:07 -0500
+Received: from pps.filterd (m0044008.ppops.net [127.0.0.1])
+        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v185cw0K017361
+        for <linux-scsi@vger.kernel.org>; Tue, 7 Feb 2017 21:41:16 -0800
+Received: from mail.thefacebook.com ([199.201.64.23])
+        by mx0a-00082601.pphosted.com with ESMTP id 28fjcwj4te-1
+        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Feb 2017 21:41:16 -0800
+Received: from facebook.com (2401:db00:11:d0be:face:0:17:0)     by
+ mx-out.facebook.com (10.212.232.59) with ESMTP id
+ 348f28aeedc111e6999f0002c991e86a-b81f5a50 for <linux-scsi@vger.kernel.org>;
+        Tue, 07 Feb 2017 21:41:14 -0800
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Wei Yongjun <weiyj.lk@gmail.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Wei Yongjun <weiyongjun1@huawei.com>, Dept-Eng QLogic Storage Upstream <QLogic-Storage-Upstream@cavium.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+To: linux-scsi@vger.kernel.org
+Cc: Song Liu <songliubraving@fb.com>
 
+When a device is deleted through sysfs handle "delete", the code
+locks shost->scan_mutex. If multiple devices are deleted at the
+same time, these deletes will be handled in series.
 
-On 07/02/17 8:22 PM, "Wei Yongjun" <weiyj.lk@gmail.com> wrote:
+On the other hand, sd_shutdown() sometimes issues long latency
+commands: sync cache and start_stop. It is not necessary for these
+commands to run in series.
 
->From: Wei Yongjun <weiyongjun1@huawei.com>
->
->'conn_info' is malloced in qedi_iscsi_update_conn() and should be
->freed before leaving from the error handling cases, otherwise it
->will cause memory leak.
->
->Fixes: ace7f46ba5fd ("scsi: qedi: Add QLogic FastLinQ offload iSCSI
->driver framework.")
->Signed-off-by: Wei Yongjun <weiyongjun1@huawei.com>
->---
-> drivers/scsi/qedi/qedi_iscsi.c | 4 ----
-> 1 file changed, 4 deletions(-)
->
->diff --git a/drivers/scsi/qedi/qedi_iscsi.c
->b/drivers/scsi/qedi/qedi_iscsi.c
->index d6a2054..eb64469 100644
->--- a/drivers/scsi/qedi/qedi_iscsi.c
->+++ b/drivers/scsi/qedi/qedi_iscsi.c
->@@ -453,13 +453,9 @@ static int qedi_iscsi_update_conn(struct qedi_ctx
->*qedi,
-> 	if (rval) {
-> 		rval =3D -ENXIO;
-> 		QEDI_ERR(&qedi->dbg_ctx, "Could not update connection\n");
->-		goto update_conn_err;
-> 	}
->=20
-> 	kfree(conn_info);
->-	rval =3D 0;
->-
->-update_conn_err:
-> 	return rval;
-> }
->
+To reduce latency of parallel "delete" requests, this patch unlock
+shost->scan_mutex before long latency commands and relock the mutex
+after the command.
 
-Acked-by: Manish Rangankar <Manish.Rangankar@cavium.com>
+Signed-off-by: Song Liu <songliubraving@fb.com>
+---
+ drivers/scsi/sd.c | 6 ++++++
+ 1 file changed, 6 insertions(+)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 2ea3568..39aa209 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3241,6 +3241,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ static void sd_shutdown(struct device *dev)
+ {
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
++	struct scsi_device *sdev = sdkp->device;
++	struct Scsi_Host *shost = sdev->host;
+ 
+ 	if (!sdkp)
+ 		return;         /* this can happen */
+@@ -3249,13 +3251,17 @@ static void sd_shutdown(struct device *dev)
+ 		return;
+ 
+ 	if (sdkp->WCE && sdkp->media_present) {
++		mutex_unlock(&shost->scan_mutex);
+ 		sd_printk(KERN_NOTICE, sdkp, "Synchronizing SCSI cache\n");
+ 		sd_sync_cache(sdkp);
++		mutex_lock(&shost->scan_mutex);
+ 	}
+ 
+ 	if (system_state != SYSTEM_RESTART && sdkp->device->manage_start_stop) {
++		mutex_unlock(&shost->scan_mutex);
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
++		mutex_lock(&shost->scan_mutex);
+ 	}
+ }
+ 
+-- 
+2.9.3
