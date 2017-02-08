@@ -1,84 +1,50 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH v2 10/14] qla2xxx: Fix request queue corruption.
-Date: Wed, 8 Feb 2017 19:22:00 +0000
-Message-ID: <1486581707.16026.20.camel@sandisk.com>
-References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
-         <1486161655-2307-11-git-send-email-himanshu.madhani@cavium.com>
+From: James Smart <james.smart@broadcom.com>
+Subject: Re: [PATCH v2 07/18] lpfc: NVME Initiator: Base modifications Part E
+Date: Wed, 8 Feb 2017 11:13:27 -0800
+Message-ID: <5b0f8560-a1ca-1b9a-3951-96e251c7b1a9@broadcom.com>
+References: <58990208.nZVFaqC7RkseErlq%jsmart2021@gmail.com>
+ <5881e84b-c932-f812-7f41-a16152d12106@suse.de>
+ <52f4f81e-2353-4da2-7ce9-a7cd7796e1f7@gmail.com>
+ <20170208124754.GA23225@infradead.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1486161655-2307-11-git-send-email-himanshu.madhani@cavium.com>
-Content-Language: en-US
-Content-ID: <AA90EE6D0508D24BA507E1B613FD8408@sandisk.com>
-Sender: target-devel-owner@vger.kernel.org
-To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-yw0-f181.google.com ([209.85.161.181]:33737 "EHLO
+        mail-yw0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751037AbdBHTkf (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 14:40:35 -0500
+Received: by mail-yw0-f181.google.com with SMTP id u68so92531390ywg.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 11:40:10 -0800 (PST)
+In-Reply-To: <20170208124754.GA23225@infradead.org>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Christoph Hellwig <hch@infradead.org>, James Smart <jsmart2021@gmail.com>
+Cc: linux-scsi@vger.kernel.org, sagi@grimberg.me, linux-nvme@lists.infradead.org, Johannes Thumshirn <jthumshirn@suse.de>
 
-On Fri, 2017-02-03 at 14:40 -0800, Himanshu Madhani wrote:
-> From: Quinn Tran <quinn.tran@cavium.com>
-> 
-> When FW notify driver or driver detects low FW resource,
-> driver tries to send out Busy SCSI Status to tell Initiator
-> side to back off. During the send process, the lock was not held.
-> 
-> Signed-off-by: Quinn Tran <quinn.tran@qlogic.com>
-> Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-> ---
->  drivers/scsi/qla2xxx/qla_target.c | 12 +++++++++---
->  1 file changed, 9 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-> index b61cbb8..b5fb9c55 100644
-> --- a/drivers/scsi/qla2xxx/qla_target.c
-> +++ b/drivers/scsi/qla2xxx/qla_target.c
-> @@ -5170,16 +5170,22 @@ static int __qlt_send_busy(struct scsi_qla_host *vha,
->  
->  static int
->  qlt_chk_qfull_thresh_hold(struct scsi_qla_host *vha,
-> -	struct atio_from_isp *atio)
-> +	struct atio_from_isp *atio, uint8_t ha_locked)
->  {
->  	struct qla_hw_data *ha = vha->hw;
->  	uint16_t status;
-> +	unsigned long flags;
->  
->  	if (ha->tgt.num_pend_cmds < Q_FULL_THRESH_HOLD(ha))
->  		return 0;
->  
-> +	if (!ha_locked)
-> +		spin_lock_irqsave(&ha->hardware_lock, flags);
->  	status = temp_sam_status;
->  	qlt_send_busy(vha, atio, status);
-> +	if (!ha_locked)
-> +		spin_unlock_irqrestore(&ha->hardware_lock, flags);
-> +
->  	return 1;
->  }
->  
-> @@ -5224,7 +5230,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
->  
->  
->  		if (likely(atio->u.isp24.fcp_cmnd.task_mgmt_flags == 0)) {
-> -			rc = qlt_chk_qfull_thresh_hold(vha, atio);
-> +			rc = qlt_chk_qfull_thresh_hold(vha, atio, ha_locked);
->  			if (rc != 0) {
->  				tgt->atio_irq_cmd_count--;
->  				return;
-> @@ -5347,7 +5353,7 @@ static void qlt_response_pkt(struct scsi_qla_host *vha, response_t *pkt)
->  			break;
->  		}
->  
-> -		rc = qlt_chk_qfull_thresh_hold(vha, atio);
-> +		rc = qlt_chk_qfull_thresh_hold(vha, atio, 1);
->  		if (rc != 0) {
->  			tgt->irq_cmd_count--;
->  			return;
 
-Hello Quinn,
+On 2/8/2017 4:47 AM, Christoph Hellwig wrote:
+> On Tue, Feb 07, 2017 at 06:32:30PM -0800, James Smart wrote:
+>> I realize I cut these in a silly way.  In the v1 patches, I had a big patch
+>> that I then cut into 6 parts, by file.  In the v2 patches, I tried to keep
+>> the patches as is, and address the comments in the respective patch the
+>> comment came from. Which resulted in 3/8 with an old reference, but patch
+>> 8/8 being the one that reverted this reverence. Sorry..  I'll recut and
+>> repost.
+> This whole split doesn't make sense - either the patches are logically
+> split, in which case they can be posted separately, or they belong
+> together in which case they should be sent together.  But the size
+> of them suggest to me they probably need to be broken down to logically
+> separate patches.
+>
+> And can you please switch to using git-send-email to send the patches
+> straight from a git branch?  There are lot of patch formatting issues
+> with the lpfc patches, and that should fix most of them instantly.
+>
 
-Please consider to use bool instead of uint8_t for ha_locked and true /
-false instead of 1 / 0.
+Ok. I will see if they can be further split. I don't have a lot of hope 
+beyond a couple splits. So, the resulting patches will be large.
 
-Bart.
+git-send-email: I'll talk to you offline.
+
+-- james
