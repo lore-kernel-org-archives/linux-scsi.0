@@ -1,105 +1,69 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 08/39] megaraid_sas: megasas_get_request_descriptor always return valid desc
-Date: Wed,  8 Feb 2017 01:29:02 -0800
-Message-ID: <1486546173-20713-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 07/39] megaraid_sas: Use DID_REQUEUE
+Date: Wed,  8 Feb 2017 01:29:01 -0800
+Message-ID: <1486546173-20713-8-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:33880 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754098AbdBHJao (ORCPT
+Received: from mail-pf0-f175.google.com ([209.85.192.175]:33514 "EHLO
+        mail-pf0-f175.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754094AbdBHJao (ORCPT
         <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:30:44 -0500
-Received: by mail-pf0-f180.google.com with SMTP id e4so40970005pfg.1
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:30:19 -0800 (PST)
+Received: by mail-pf0-f175.google.com with SMTP id y143so41082097pfb.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:30:16 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-fix in v2 - split patches into two. 
-discussed below 
-http://marc.info/?l=linux-scsi&m=148638999110404&w=2
-
-No functional change. Code clean up. Removing error code which is not
-valid scenario.
-In megasas_get_request_descriptor we can remove the error handling
-which is not required.
-With fusion controllers, if there is a valid message frame available,
-we are guaranteed to get a corresponding request descriptor.
+Moving to use DID_REQUEUE return type for reliable unconditional retries.
+Driver wants unconditional re-queue, so replace DID_RESET with DID_REQUEUE
+Discussed below -
+https://www.spinics.net/lists/linux-scsi/msg102848.html
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 4 ++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 67a205a..80fcdf5 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -1668,7 +1668,7 @@ megasas_queue_command(struct Scsi_Host *shost, struct scsi_cmnd *scmd)
+ 	/* Check for an mpio path and adjust behavior */
+ 	if (atomic_read(&instance->adprecovery) == MEGASAS_ADPRESET_SM_INFAULT) {
+ 		if (megasas_check_mpio_paths(instance, scmd) ==
+-		    (DID_RESET << 16)) {
++		    (DID_REQUEUE << 16)) {
+ 			return SCSI_MLQUEUE_HOST_BUSY;
+ 		} else {
+ 			scmd->result = DID_NO_CONNECT << 16;
+@@ -2492,7 +2492,7 @@ static int megasas_wait_for_outstanding(struct megasas_instance *instance)
+ 						struct megasas_cmd, list);
+ 			list_del_init(&reset_cmd->list);
+ 			if (reset_cmd->scmd) {
+-				reset_cmd->scmd->result = DID_RESET << 16;
++				reset_cmd->scmd->result = DID_REQUEUE << 16;
+ 				dev_notice(&instance->pdev->dev, "%d:%p reset [%02x]\n",
+ 					reset_index, reset_cmd,
+ 					reset_cmd->scmd->cmnd[0]);
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 6ec7a18..b6c5dc5 100644
+index 675afc9..6ec7a18 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2438,18 +2438,12 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 	return 0;
- }
- 
--union MEGASAS_REQUEST_DESCRIPTOR_UNION *
-+static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
- megasas_get_request_descriptor(struct megasas_instance *instance, u16 index)
+@@ -3770,7 +3770,7 @@ int megasas_check_mpio_paths(struct megasas_instance *instance,
+ 	struct scsi_cmnd *scmd)
  {
- 	u8 *p;
- 	struct fusion_context *fusion;
+ 	struct megasas_instance *peer_instance = NULL;
+-	int retval = (DID_RESET << 16);
++	int retval = (DID_REQUEUE << 16);
  
--	if (index >= instance->max_mpt_cmds) {
--		dev_err(&instance->pdev->dev, "Invalid SMID (0x%x)request for "
--		       "descriptor for scsi%d\n", index,
--			instance->host->host_no);
--		return NULL;
--	}
- 	fusion = instance->ctrl_context;
- 	p = fusion->req_frames_desc +
- 		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) * index;
-@@ -2960,7 +2954,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
- union MEGASAS_REQUEST_DESCRIPTOR_UNION *
- build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- {
--	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
-+	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc = NULL;
- 	u16 index;
- 
- 	if (build_mpt_mfi_pass_thru(instance, cmd)) {
-@@ -2972,9 +2966,6 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- 
- 	req_desc = megasas_get_request_descriptor(instance, index - 1);
- 
--	if (!req_desc)
--		return NULL;
--
- 	req_desc->Words = 0;
- 	req_desc->SCSIIO.RequestFlags = (MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
- 					 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-@@ -2997,11 +2988,6 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 
- 	req_desc = build_mpt_cmd(instance, cmd);
--	if (!req_desc) {
--		dev_info(&instance->pdev->dev, "Failed from %s %d\n",
--					__func__, __LINE__);
--		return DCMD_NOT_FIRED;
--	}
- 
- 	megasas_fire_cmd_fusion(instance, req_desc);
- 	return DCMD_SUCCESS;
-@@ -3438,12 +3424,6 @@ megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
- 
- 	req_desc = megasas_get_request_descriptor(instance,
- 			(cmd_fusion->index - 1));
--	if (!req_desc) {
--		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
--			__func__, __LINE__);
--		megasas_return_cmd(instance, cmd_mfi);
--		return -ENOMEM;
--	}
- 
- 	cmd_fusion->request_desc = req_desc;
- 	req_desc->Words = 0;
+ 	if (instance->peerIsPresent) {
+ 		peer_instance = megasas_get_peer_instance(instance);
 -- 
 2.8.3
