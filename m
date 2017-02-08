@@ -1,88 +1,69 @@
-From: Peter Senna Tschudin <peter.senna@collabora.com>
-Subject: Re: [RFC 05/19] mlx4: Replace PCI pool old API
-Date: Wed, 8 Feb 2017 19:24:51 +0100
-Message-ID: <20170208182451.GE16878@collabora.com>
-References: <20170208163457.28853-1-romain.perier@collabora.com>
- <20170208163457.28853-6-romain.perier@collabora.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH v2 06/14] qla2xxx: Improve T10-DIF/PI handling in driver.
+Date: Wed, 8 Feb 2017 18:57:16 +0000
+Message-ID: <1486580223.16026.16.camel@sandisk.com>
+References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+         <1486161655-2307-7-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170208163457.28853-6-romain.perier@collabora.com>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:42852 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751014AbdBHTBL (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 14:01:11 -0500
+In-Reply-To: <1486161655-2307-7-git-send-email-himanshu.madhani@cavium.com>
+Content-Language: en-US
+Content-ID: <914A1B0E1EB3EC4DABF615433AA4F9F9@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "hch@infradead.org" <hch@infradead.org>, "himanshu.madhani@cavium.com" <himanshu.madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "giridhar.malavali@cavium.com" <giridhar.malavali@cavium.com>
 
-On Wed, Feb 08, 2017 at 05:34:43PM +0100, Romain Perier wrote:
-> The PCI pool API is deprecated. This commits replaces the PCI pool old
-> API by the appropriated function with the DMA pool API.
+On Fri, 2017-02-03 at 14:40 -0800, Himanshu Madhani wrote:
+> +	/* Response code and sense key */
+> +	((uint32_t *)ctio->u.status1.sense_data)[0] =
+> +	    cpu_to_le32((0x70 << 24) | (sense_key << 8));
+> +	/* Additional sense length */
+> +	((uint32_t *)ctio->u.status1.sense_data)[1] = cpu_to_le32(0x0a);
+> +	/* ASC and ASCQ */
+> +	((uint32_t *)ctio->u.status1.sense_data)[3] =
+> +	    cpu_to_le32((asc << 24) | (ascq << 16));
 
-Tested by compilation only.
+Please use put_unaligned_le32() instead of open-coding it.
 
-Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
-Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
-> Signed-off-by: Romain Perier <romain.perier@collabora.com>
-> ---
->  drivers/net/ethernet/mellanox/mlx4/cmd.c  | 10 +++++-----
->  drivers/net/ethernet/mellanox/mlx4/mlx4.h |  2 +-
->  2 files changed, 6 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/cmd.c b/drivers/net/ethernet/mellanox/mlx4/cmd.c
-> index a49072b4..d400cde 100644
-> --- a/drivers/net/ethernet/mellanox/mlx4/cmd.c
-> +++ b/drivers/net/ethernet/mellanox/mlx4/cmd.c
-> @@ -2515,8 +2515,8 @@ int mlx4_cmd_init(struct mlx4_dev *dev)
->  	}
+>  struct qla_tgt_cmd {
+> @@ -885,11 +895,25 @@ struct qla_tgt_cmd {
+>  	struct list_head cmd_list;
 >  
->  	if (!priv->cmd.pool) {
-> -		priv->cmd.pool = pci_pool_create("mlx4_cmd",
-> -						 dev->persist->pdev,
-> +		priv->cmd.pool = dma_pool_create("mlx4_cmd",
-> +						 &dev->persist->pdev->dev,
->  						 MLX4_MAILBOX_SIZE,
->  						 MLX4_MAILBOX_SIZE, 0);
->  		if (!priv->cmd.pool)
-> @@ -2587,7 +2587,7 @@ void mlx4_cmd_cleanup(struct mlx4_dev *dev, int cleanup_mask)
->  	struct mlx4_priv *priv = mlx4_priv(dev);
+>  	struct atio_from_isp atio;
+> -	/* t10dif */
+> +
+> +	/* T10-DIF */
+> +#define DIF_ERR_NONE 0
+> +#define DIF_ERR_GRD 1
+> +#define DIF_ERR_REF 2
+> +#define DIF_ERR_APP 3
+> +	int8_t dif_err_code;
+>  	struct scatterlist *prot_sg;
+>  	uint32_t prot_sg_cnt;
+> -	uint32_t blk_sz;
+> +	uint32_t blk_sz, num_blks;
+> +	uint8_t scsi_status, sense_key, asc, ascq;
+> +
+>  	struct crc_context *ctx;
+> +	uint32_t	prot_op;
+> +	uint32_t	prot_type;
+> +	uint8_t		*cdb;
+> +	uint64_t	lba;
+> +	uint16_t	a_guard, e_guard, a_app_tag, e_app_tag;
+> +	uint32_t	a_ref_tag, e_ref_tag;
 >  
->  	if (priv->cmd.pool && (cleanup_mask & MLX4_CMD_CLEANUP_POOL)) {
-> -		pci_pool_destroy(priv->cmd.pool);
-> +		dma_pool_destroy(priv->cmd.pool);
->  		priv->cmd.pool = NULL;
->  	}
->  
-> @@ -2679,7 +2679,7 @@ struct mlx4_cmd_mailbox *mlx4_alloc_cmd_mailbox(struct mlx4_dev *dev)
->  	if (!mailbox)
->  		return ERR_PTR(-ENOMEM);
->  
-> -	mailbox->buf = pci_pool_zalloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
-> +	mailbox->buf = dma_pool_zalloc(mlx4_priv(dev)->cmd.pool, GFP_KERNEL,
->  				       &mailbox->dma);
->  	if (!mailbox->buf) {
->  		kfree(mailbox);
-> @@ -2696,7 +2696,7 @@ void mlx4_free_cmd_mailbox(struct mlx4_dev *dev,
->  	if (!mailbox)
->  		return;
->  
-> -	pci_pool_free(mlx4_priv(dev)->cmd.pool, mailbox->buf, mailbox->dma);
-> +	dma_pool_free(mlx4_priv(dev)->cmd.pool, mailbox->buf, mailbox->dma);
->  	kfree(mailbox);
->  }
->  EXPORT_SYMBOL_GPL(mlx4_free_cmd_mailbox);
-> diff --git a/drivers/net/ethernet/mellanox/mlx4/mlx4.h b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-> index b4f1bc5..69c8764 100644
-> --- a/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-> +++ b/drivers/net/ethernet/mellanox/mlx4/mlx4.h
-> @@ -628,7 +628,7 @@ struct mlx4_mgm {
->  };
->  
->  struct mlx4_cmd {
-> -	struct pci_pool	       *pool;
-> +	struct dma_pool	       *pool;
->  	void __iomem	       *hcr;
->  	struct mutex		slave_cmd_mutex;
->  	struct semaphore	poll_sem;
-> -- 
-> 2.9.3
-> 
+>  	uint64_t jiffies_at_alloc;
+>  	uint64_t jiffies_at_free;
+
+There are already equivalents of prot_op, prot_type, cdb and lba in struct
+se_cmd. I think a few weeks ago Christoph had asked you not to duplicate
+se_cmd fields into struct qla_tgt_cmd?
+
+Bart.
