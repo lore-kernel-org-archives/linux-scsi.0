@@ -1,356 +1,285 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v2 37/39] megaraid_sas: Indentation and smatch warning fixes
-Date: Wed,  8 Feb 2017 01:29:31 -0800
-Message-ID: <1486546173-20713-38-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v2 02/39] megaraid_sas: cpu select rework.
+Date: Wed,  8 Feb 2017 01:28:56 -0800
+Message-ID: <1486546173-20713-3-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f41.google.com ([74.125.83.41]:35689 "EHLO
-        mail-pg0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S933224AbdBHJbm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:31:42 -0500
-Received: by mail-pg0-f41.google.com with SMTP id 194so47596504pgd.2
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:31:42 -0800 (PST)
+Received: from mail-pg0-f45.google.com ([74.125.83.45]:32934 "EHLO
+        mail-pg0-f45.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S933059AbdBHJaB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 04:30:01 -0500
+Received: by mail-pg0-f45.google.com with SMTP id 204so47585168pge.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 01:30:01 -0800 (PST)
 In-Reply-To: <1486546173-20713-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
+Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Fix indentation issues and smatch warning reported by Dan Carpenter
-for previous series as discussed below.
-http://www.spinics.net/lists/linux-scsi/msg103635.html
-http://www.spinics.net/lists/linux-scsi/msg103603.html
+No functional change. Code refactor.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  2 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   | 10 ++--
- drivers/scsi/megaraid/megaraid_sas_fp.c     | 57 +++++++++---------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 92 ++++++++++++++---------------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  2 +-
- 5 files changed, 80 insertions(+), 83 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 175 ++++++++++++++++------------
+ 1 file changed, 100 insertions(+), 75 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index dc331e8..8c06cbf 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1376,7 +1376,7 @@ struct megasas_ctrl_info {
- 		u16 reserved:8;
- 	#endif
- 		} adapter_operations4;
--	u8 pad[0x800-0x7FE]; /* 0x7FE pad to 2K for expansion */
-+	u8 pad[0x800 - 0x7FE]; /* 0x7FE pad to 2K for expansion */
- } __packed;
- 
- /*
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5e0dea1..dc9f42e 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5343,14 +5343,14 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 	memset(instance->ld_ids, 0xff, MEGASAS_MAX_LD_IDS);
- 
- 	/* stream detection initialization */
--	if (instance->is_ventura) {
-+	if (instance->is_ventura && fusion) {
- 		fusion->stream_detect_by_ld =
--		kzalloc(sizeof(struct LD_STREAM_DETECT *)
--		* MAX_LOGICAL_DRIVES_EXT,
--		GFP_KERNEL);
-+			kzalloc(sizeof(struct LD_STREAM_DETECT *)
-+			* MAX_LOGICAL_DRIVES_EXT,
-+			GFP_KERNEL);
- 		if (!fusion->stream_detect_by_ld) {
- 			dev_err(&instance->pdev->dev,
--					"unable to allocate stream detection for pool of LDs\n");
-+				"unable to allocate stream detection for pool of LDs\n");
- 			goto fail_get_ld_pd_list;
- 		}
- 		for (i = 0; i < MAX_LOGICAL_DRIVES_EXT; ++i) {
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 7dc7708..62affa7 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -197,7 +197,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 
- 	memset(drv_map, 0, fusion->drv_map_sz);
- 	memset(pDrvRaidMap->ldTgtIdToLd,
--		0xff, (sizeof(u16) * MAX_LOGICAL_DRIVES_DYN));
-+	       0xff, (sizeof(u16) * MAX_LOGICAL_DRIVES_DYN));
- 
- 	if (instance->max_raid_mapsize) {
- 		fw_map_dyn = fusion->ld_map[(instance->map_id & 1)];
-@@ -224,34 +224,37 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 				fw_map_dyn->dev_hndl_info =
- 				(struct MR_DEV_HANDLE_INFO *)(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
- 				memcpy(pDrvRaidMap->devHndlInfo,
--				fw_map_dyn->dev_hndl_info,
--				sizeof(struct MR_DEV_HANDLE_INFO) *
--				le32_to_cpu(desc_table->raid_map_desc_elements));
-+					fw_map_dyn->dev_hndl_info,
-+					sizeof(struct MR_DEV_HANDLE_INFO) *
-+					le32_to_cpu(desc_table->raid_map_desc_elements));
- 			break;
- 			case RAID_MAP_DESC_TYPE_TGTID_INFO:
- 				fw_map_dyn->ld_tgt_id_to_ld =
--				(u16 *) (raid_map_data +
--				le32_to_cpu(desc_table->raid_map_desc_offset));
--			for (j = 0; j < le32_to_cpu(desc_table->raid_map_desc_elements); j++) {
--				pDrvRaidMap->ldTgtIdToLd[j] =
--					le16_to_cpu(fw_map_dyn->ld_tgt_id_to_ld[j]);
--			}
-+					(u16 *)(raid_map_data +
-+					le32_to_cpu(desc_table->raid_map_desc_offset));
-+				for (j = 0; j < le32_to_cpu(desc_table->raid_map_desc_elements); j++) {
-+					pDrvRaidMap->ldTgtIdToLd[j] =
-+						le16_to_cpu(fw_map_dyn->ld_tgt_id_to_ld[j]);
-+				}
- 			break;
- 			case RAID_MAP_DESC_TYPE_ARRAY_INFO:
- 				fw_map_dyn->ar_map_info =
--				(struct MR_ARRAY_INFO *)
--				(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
-+					(struct MR_ARRAY_INFO *)
-+					(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
- 				memcpy(pDrvRaidMap->arMapInfo,
--				fw_map_dyn->ar_map_info,
--				sizeof(struct MR_ARRAY_INFO) * le32_to_cpu(desc_table->raid_map_desc_elements));
-+				       fw_map_dyn->ar_map_info,
-+				       sizeof(struct MR_ARRAY_INFO) *
-+				       le32_to_cpu(desc_table->raid_map_desc_elements));
- 			break;
- 			case RAID_MAP_DESC_TYPE_SPAN_INFO:
- 				fw_map_dyn->ld_span_map =
--				(struct MR_LD_SPAN_MAP *)
--				(raid_map_data + le32_to_cpu(desc_table->raid_map_desc_offset));
-+					(struct MR_LD_SPAN_MAP *)
-+					(raid_map_data +
-+					le32_to_cpu(desc_table->raid_map_desc_offset));
- 				memcpy(pDrvRaidMap->ldSpanMap,
--				fw_map_dyn->ld_span_map,
--				sizeof(struct MR_LD_SPAN_MAP) * le32_to_cpu(desc_table->raid_map_desc_elements));
-+				       fw_map_dyn->ld_span_map,
-+				       sizeof(struct MR_LD_SPAN_MAP) *
-+				       le32_to_cpu(desc_table->raid_map_desc_elements));
- 			break;
- 			default:
- 				dev_dbg(&instance->pdev->dev, "wrong number of desctableElements %d\n",
-@@ -262,7 +265,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 
- 	} else if (instance->supportmax256vd) {
- 		fw_map_ext =
--		(struct MR_FW_RAID_MAP_EXT *) fusion->ld_map[(instance->map_id & 1)];
-+			(struct MR_FW_RAID_MAP_EXT *)fusion->ld_map[(instance->map_id & 1)];
- 		ld_count = (u16)le16_to_cpu(fw_map_ext->ldCount);
- 		if (ld_count > MAX_LOGICAL_DRIVES_EXT) {
- 			dev_dbg(&instance->pdev->dev, "megaraid_sas: LD count exposed in RAID map in not valid\n");
-@@ -275,12 +278,12 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 			pDrvRaidMap->ldTgtIdToLd[i] =
- 				(u16)fw_map_ext->ldTgtIdToLd[i];
- 		memcpy(pDrvRaidMap->ldSpanMap, fw_map_ext->ldSpanMap,
--				sizeof(struct MR_LD_SPAN_MAP) * ld_count);
-+		       sizeof(struct MR_LD_SPAN_MAP) * ld_count);
- 		memcpy(pDrvRaidMap->arMapInfo, fw_map_ext->arMapInfo,
--			sizeof(struct MR_ARRAY_INFO) * MAX_API_ARRAYS_EXT);
-+		       sizeof(struct MR_ARRAY_INFO) * MAX_API_ARRAYS_EXT);
- 		memcpy(pDrvRaidMap->devHndlInfo, fw_map_ext->devHndlInfo,
--			sizeof(struct MR_DEV_HANDLE_INFO) *
--					MAX_RAIDMAP_PHYSICAL_DEVICES);
-+		       sizeof(struct MR_DEV_HANDLE_INFO) *
-+		       MAX_RAIDMAP_PHYSICAL_DEVICES);
- 
- 		/* New Raid map will not set totalSize, so keep expected value
- 		 * for legacy code in ValidateMapInfo
-@@ -347,7 +350,7 @@ u8 MR_ValidateMapInfo(struct megasas_instance *instance)
- 		dev_dbg(&instance->pdev->dev, "megasas: map info structure size 0x%x",
- 			le32_to_cpu(pDrvRaidMap->totalSize));
- 		dev_dbg(&instance->pdev->dev, "is not matching expected size 0x%x\n",
--			(unsigned int) expected_size);
-+			(unsigned int)expected_size);
- 		dev_err(&instance->pdev->dev, "megasas: span map %x, pDrvRaidMap->totalSize : %x\n",
- 			(unsigned int)sizeof(struct MR_LD_SPAN_MAP),
- 			le32_to_cpu(pDrvRaidMap->totalSize));
-@@ -770,7 +773,7 @@ static u8 mr_spanset_get_phy_params(struct megasas_instance *instance, u32 ld,
- 
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
- 	if (instance->is_ventura) {
--		((struct RAID_CONTEXT_G35 *) pRAID_Context)->span_arm =
-+		((struct RAID_CONTEXT_G35 *)pRAID_Context)->span_arm =
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm =
- 			(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
-@@ -888,7 +891,7 @@ u8 MR_GetPhyParams(struct megasas_instance *instance, u32 ld, u64 stripRow,
- 
- 	*pdBlock += stripRef + le64_to_cpu(MR_LdSpanPtrGet(ld, span, map)->startBlk);
- 	if (instance->is_ventura) {
--		((struct RAID_CONTEXT_G35 *) pRAID_Context)->span_arm =
-+		((struct RAID_CONTEXT_G35 *)pRAID_Context)->span_arm =
- 				(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
- 		io_info->span_arm =
- 				(span << RAID_CTX_SPANARM_SPAN_SHIFT) | physArm;
-@@ -1329,7 +1332,7 @@ u8 megasas_get_best_arm_pd(struct megasas_instance *instance,
- 		 *  keep driver in sync with Firmware
- 		 */
- 		if ((bestArm == arm && pend0 > pend1 + lb_pending_cmds)  ||
--			(bestArm != arm && pend1 > pend0 + lb_pending_cmds))
-+		    (bestArm != arm && pend1 > pend0 + lb_pending_cmds))
- 			bestArm ^= 1;
- 
- 		/* Update the last accessed block on the correct pd */
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 7d3b079..abd11c3 100644
+index 54728b3..514c306 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -446,8 +446,6 @@ megasas_alloc_cmdlist_fusion(struct megasas_instance *instance)
- 		return -ENOMEM;
- 	}
- 
--
--
- 	for (i = 0; i < max_mpt_cmd; i++) {
- 		fusion->cmd_list[i] = kzalloc(sizeof(struct megasas_cmd_fusion),
- 					      GFP_KERNEL);
-@@ -1433,8 +1431,8 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
- 
- void
- map_cmd_status(struct fusion_context *fusion,
--	struct scsi_cmnd *scmd, u8 status, u8 ext_status,
--			u32 data_length, u8 *sense)
-+		struct scsi_cmnd *scmd, u8 status, u8 ext_status,
-+		u32 data_length, u8 *sense)
- {
- 	u8 cmd_type;
- 	int resid;
-@@ -2033,8 +2031,8 @@ megasas_set_pd_lba(struct MPI2_RAID_SCSI_IO_REQUEST *io_request, u8 cdb_len,
- 
- /** stream detection on read and and write IOs */
- static void megasas_stream_detect(struct megasas_instance *instance,
--				struct megasas_cmd_fusion *cmd,
--				struct IO_REQUEST_INFO *io_info)
-+				  struct megasas_cmd_fusion *cmd,
-+				  struct IO_REQUEST_INFO *io_info)
- {
- 	struct fusion_context *fusion = instance->ctrl_context;
- 	u32 device_id = io_info->ldTgtId;
-@@ -2048,63 +2046,59 @@ static void megasas_stream_detect(struct megasas_instance *instance,
- 	struct STREAM_DETECT *current_sd;
- 	/* find possible stream */
- 	for (i = 0; i < MAX_STREAMS_TRACKED; ++i) {
--		stream_num =
--		(*track_stream >> (i * BITS_PER_INDEX_STREAM)) &
-+		stream_num = (*track_stream >>
-+			(i * BITS_PER_INDEX_STREAM)) &
- 			STREAM_MASK;
- 		current_sd = &current_ld_sd->stream_track[stream_num];
--	/* if we found a stream, update the raid
--	 *  context and also update the mruBitMap
--	 */
--	/*	boundary condition */
--	if ((current_sd->next_seq_lba) &&
--		(io_info->ldStartBlock >= current_sd->next_seq_lba) &&
--		(io_info->ldStartBlock <= (current_sd->next_seq_lba+32)) &&
--		(current_sd->is_read == io_info->isRead)) {
--
--		if ((io_info->ldStartBlock != current_sd->next_seq_lba)
--			&& ((!io_info->isRead) || (!is_read_ahead)))
--			/*
--			 * Once the API availible we need to change this.
--			 * At this point we are not allowing any gap
--			 */
--			continue;
--
--		SET_STREAM_DETECTED(cmd->io_request->RaidContext.raid_context_g35);
--		current_sd->next_seq_lba =
--		io_info->ldStartBlock + io_info->numBlocks;
--		/*
--		 *	update the mruBitMap LRU
-+		/* if we found a stream, update the raid
-+		 *  context and also update the mruBitMap
- 		 */
--		shifted_values_mask =
--			(1 <<  i * BITS_PER_INDEX_STREAM) - 1;
--		shifted_values = ((*track_stream & shifted_values_mask)
--					<< BITS_PER_INDEX_STREAM);
--		index_value_mask =
--			STREAM_MASK << i * BITS_PER_INDEX_STREAM;
--		unshifted_values =
--			*track_stream & ~(shifted_values_mask |
--			index_value_mask);
--		*track_stream =
--			unshifted_values | shifted_values | stream_num;
--		return;
-+		/*	boundary condition */
-+		if ((current_sd->next_seq_lba) &&
-+		    (io_info->ldStartBlock >= current_sd->next_seq_lba) &&
-+		    (io_info->ldStartBlock <= (current_sd->next_seq_lba + 32)) &&
-+		    (current_sd->is_read == io_info->isRead)) {
-+
-+			if ((io_info->ldStartBlock != current_sd->next_seq_lba)	&&
-+			    ((!io_info->isRead) || (!is_read_ahead)))
-+				/*
-+				 * Once the API availible we need to change this.
-+				 * At this point we are not allowing any gap
-+				 */
-+				continue;
- 
-+			SET_STREAM_DETECTED(cmd->io_request->RaidContext.raid_context_g35);
-+			current_sd->next_seq_lba =
-+			io_info->ldStartBlock + io_info->numBlocks;
-+			/*
-+			 *	update the mruBitMap LRU
-+			 */
-+			shifted_values_mask =
-+				(1 <<  i * BITS_PER_INDEX_STREAM) - 1;
-+			shifted_values = ((*track_stream & shifted_values_mask)
-+						<< BITS_PER_INDEX_STREAM);
-+			index_value_mask =
-+				STREAM_MASK << i * BITS_PER_INDEX_STREAM;
-+			unshifted_values =
-+				*track_stream & ~(shifted_values_mask |
-+				index_value_mask);
-+			*track_stream =
-+				unshifted_values | shifted_values | stream_num;
-+			return;
- 		}
--
- 	}
- 	/*
- 	 * if we did not find any stream, create a new one
- 	 * from the least recently used
- 	 */
--	stream_num =
--	(*track_stream >> ((MAX_STREAMS_TRACKED - 1) * BITS_PER_INDEX_STREAM)) &
--			STREAM_MASK;
-+	stream_num = (*track_stream >>
-+		((MAX_STREAMS_TRACKED - 1) * BITS_PER_INDEX_STREAM)) &
-+		STREAM_MASK;
- 	current_sd = &current_ld_sd->stream_track[stream_num];
- 	current_sd->is_read = io_info->isRead;
- 	current_sd->next_seq_lba = io_info->ldStartBlock + io_info->numBlocks;
--	*track_stream =
--	(((*track_stream & ZERO_LAST_STREAM) << 4) | stream_num);
-+	*track_stream = (((*track_stream & ZERO_LAST_STREAM) << 4) | stream_num);
- 	return;
--
+@@ -1819,6 +1819,73 @@ static void megasas_stream_detect(struct megasas_instance *instance,
  }
  
  /**
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index 6c22337..60566e4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -904,7 +904,7 @@ struct MR_LD_RAID {
- 	  */
- 	struct MR_IO_AFFINITY cpuAffinity;
-      /* Bit definiations are specified by MR_IO_AFFINITY */
--	u8 reserved3[0x80-0x40];    /* 0x40 - 0x7f */
-+	u8 reserved3[0x80 - 0x40];    /* 0x40 - 0x7f */
- };
++ * megasas_set_raidflag_cpu_affinity - This function sets the cpu
++ * affinity (cpu of the controller) and raid_flags in the raid context
++ * based on IO type.
++ *
++ * @praid_context:	IO RAID context
++ * @raid:		LD raid map
++ * @fp_possible:	Is fast path possible?
++ * @is_read:		Is read IO?
++ *
++ */
++static void
++megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
++				  struct MR_LD_RAID *raid, bool fp_possible,
++				  u8 is_read)
++{
++	u8 cpu_sel = MR_RAID_CTX_CPUSEL_0;
++	struct RAID_CONTEXT_G35 *rctx_g35;
++
++	rctx_g35 = &praid_context->raid_context_g35;
++	if (fp_possible) {
++		if (is_read) {
++			if ((raid->cpuAffinity.pdRead.cpu0) &&
++			    (raid->cpuAffinity.pdRead.cpu1))
++				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
++			else if (raid->cpuAffinity.pdRead.cpu1)
++				cpu_sel = MR_RAID_CTX_CPUSEL_1;
++		} else {
++			if ((raid->cpuAffinity.pdWrite.cpu0) &&
++			    (raid->cpuAffinity.pdWrite.cpu1))
++				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
++			else if (raid->cpuAffinity.pdWrite.cpu1)
++				cpu_sel = MR_RAID_CTX_CPUSEL_1;
++			/* Fast path cache by pass capable R0/R1 VD */
++			if ((raid->level <= 1) &&
++			    (raid->capability.fp_cache_bypass_capable)) {
++				rctx_g35->routing_flags.bits.sld = 1;
++				rctx_g35->raid_flags =
++					(MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
++					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
++			}
++		}
++	} else {
++		if (is_read) {
++			if ((raid->cpuAffinity.ldRead.cpu0) &&
++			    (raid->cpuAffinity.ldRead.cpu1))
++				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
++			else if (raid->cpuAffinity.ldRead.cpu1)
++				cpu_sel = MR_RAID_CTX_CPUSEL_1;
++		} else {
++			if ((raid->cpuAffinity.ldWrite.cpu0) &&
++			    (raid->cpuAffinity.ldWrite.cpu1))
++				cpu_sel = MR_RAID_CTX_CPUSEL_FCFS;
++			else if (raid->cpuAffinity.ldWrite.cpu1)
++				cpu_sel = MR_RAID_CTX_CPUSEL_1;
++
++			if (rctx_g35->stream_detected &&
++			    (raid->level == 5) &&
++			    (raid->writeMode == MR_RL_WRITE_THROUGH_MODE) &&
++			    (cpu_sel == MR_RAID_CTX_CPUSEL_FCFS))
++				cpu_sel = MR_RAID_CTX_CPUSEL_0;
++		}
++	}
++
++	rctx_g35->routing_flags.bits.cpu_sel = cpu_sel;
++}
++
++/**
+  * megasas_build_ldio_fusion -	Prepares IOs to devices
+  * @instance:		Adapter soft state
+  * @scp:		SCSI command
+@@ -1832,8 +1899,10 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			  struct scsi_cmnd *scp,
+ 			  struct megasas_cmd_fusion *cmd)
+ {
+-	u8 fp_possible;
+-	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0, ld;
++	bool fp_possible;
++	u16 ld;
++	u32 start_lba_lo, start_lba_hi, device_id, datalength = 0;
++	u32 scsi_buff_len;
+ 	struct MPI2_RAID_SCSI_IO_REQUEST *io_request;
+ 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
+ 	struct IO_REQUEST_INFO io_info;
+@@ -1842,7 +1911,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 	u8 *raidLUN;
+ 	unsigned long spinlock_flags;
+ 	union RAID_CONTEXT_UNION *praid_context;
+-	struct MR_LD_RAID *raid;
++	struct MR_LD_RAID *raid = NULL;
++	struct MR_PRIV_DEVICE *mrdev_priv;
  
- struct MR_LD_SPAN_MAP {
+ 	device_id = MEGASAS_DEV_INDEX(scp);
+ 
+@@ -1858,7 +1928,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 
+ 	start_lba_lo = 0;
+ 	start_lba_hi = 0;
+-	fp_possible = 0;
++	fp_possible = false;
+ 
+ 	/*
+ 	 * 6-byte READ(0x08) or WRITE(0x0A) cdb
+@@ -1915,7 +1985,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 	io_info.numBlocks = datalength;
+ 	io_info.ldTgtId = device_id;
+ 	io_info.r1_alt_dev_handle = MR_PD_INVALID;
+-	io_request->DataLength = cpu_to_le32(scsi_bufflen(scp));
++	scsi_buff_len = scsi_bufflen(scp);
++	io_request->DataLength = cpu_to_le32(scsi_buff_len);
+ 
+ 	if (scp->sc_data_direction == PCI_DMA_FROMDEVICE)
+ 		io_info.isRead = 1;
+@@ -1927,12 +1998,12 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 	if ((MR_TargetIdToLdGet(device_id, local_map_ptr) >=
+ 		instance->fw_supported_vd_count) || (!fusion->fast_path_io)) {
+ 		io_request->RaidContext.raid_context.reg_lock_flags  = 0;
+-		fp_possible = 0;
++		fp_possible = false;
+ 	} else {
+ 		if (MR_BuildRaidContext(instance, &io_info,
+ 					&io_request->RaidContext.raid_context,
+ 					local_map_ptr, &raidLUN))
+-			fp_possible = io_info.fpOkForIo;
++			fp_possible = (io_info.fpOkForIo > 0) ? true : false;
+ 	}
+ 
+ 	/* Use raw_smp_processor_id() for now until cmd->request->cpu is CPU
+@@ -1941,6 +2012,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 	cmd->request_desc->SCSIIO.MSIxIndex = instance->msix_vectors ?
+ 		raw_smp_processor_id() % instance->msix_vectors : 0;
+ 
++	praid_context = &io_request->RaidContext;
++
+ 	if (instance->is_ventura) {
+ 		spin_lock_irqsave(&instance->stream_lock, spinlock_flags);
+ 		megasas_stream_detect(instance, cmd, &io_info);
+@@ -1948,12 +2021,28 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 		/* In ventura if stream detected for a read and it is read ahead
+ 		 *  capable make this IO as LDIO
+ 		 */
+-		if (io_request->RaidContext.raid_context_g35.stream_detected &&
+-				io_info.isRead && io_info.ra_capable)
++		if (praid_context->raid_context_g35.stream_detected &&
++		    io_info.isRead && io_info.ra_capable)
+ 			fp_possible = false;
+-	}
+ 
+-	praid_context = &io_request->RaidContext;
++		if (io_info.r1_alt_dev_handle != MR_PD_INVALID) {
++			mrdev_priv = scp->device->hostdata;
++
++			if (atomic_inc_return(&instance->fw_outstanding) >
++				(instance->host->can_queue)) {
++				fp_possible = false;
++				atomic_dec(&instance->fw_outstanding);
++			}
++		}
++
++		/* If raid is NULL, set CPU affinity to default CPU0 */
++		if (raid)
++			megasas_set_raidflag_cpu_affinity(praid_context,
++				raid, fp_possible, io_info.isRead);
++		else
++			praid_context->raid_context_g35.routing_flags.bits.cpu_sel =
++				MR_RAID_CTX_CPUSEL_0;
++	}
+ 
+ 	if (fp_possible) {
+ 		megasas_set_pd_lba(io_request, scp->cmd_len, &io_info, scp,
+@@ -2016,36 +2105,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 		io_request->DevHandle = io_info.devHandle;
+ 		/* populate the LUN field */
+ 		memcpy(io_request->LUN, raidLUN, 8);
+-		if (instance->is_ventura) {
+-			if (io_info.isRead) {
+-				if ((raid->cpuAffinity.pdRead.cpu0) &&
+-					(raid->cpuAffinity.pdRead.cpu1))
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_FCFS;
+-				else if (raid->cpuAffinity.pdRead.cpu1)
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_1;
+-				else
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_0;
+-			} else {
+-			if ((raid->cpuAffinity.pdWrite.cpu0)
+-			&& (raid->cpuAffinity.pdWrite.cpu1))
+-				praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_FCFS;
+-				else if (raid->cpuAffinity.pdWrite.cpu1)
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_1;
+-				else
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_0;
+-				if (praid_context->raid_context_g35.routing_flags.bits.sld) {
+-					praid_context->raid_context_g35.raid_flags
+-					= (MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
+-					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
+-				}
+-			}
+-		}
+ 	} else {
+ 		io_request->RaidContext.raid_context.timeout_value =
+ 			cpu_to_le16(local_map_ptr->raidMap.fpPdIoTimeoutSec);
+@@ -2074,40 +2133,6 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
+ 		io_request->DevHandle = cpu_to_le16(device_id);
+ 
+-		if (instance->is_ventura) {
+-			if (io_info.isRead) {
+-				if ((raid->cpuAffinity.ldRead.cpu0)
+-				&& (raid->cpuAffinity.ldRead.cpu1))
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_FCFS;
+-				else if (raid->cpuAffinity.ldRead.cpu1)
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-						= MR_RAID_CTX_CPUSEL_1;
+-				else
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-						= MR_RAID_CTX_CPUSEL_0;
+-			} else {
+-				if ((raid->cpuAffinity.ldWrite.cpu0) &&
+-					(raid->cpuAffinity.ldWrite.cpu1))
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-						= MR_RAID_CTX_CPUSEL_FCFS;
+-				else if (raid->cpuAffinity.ldWrite.cpu1)
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-						= MR_RAID_CTX_CPUSEL_1;
+-				else
+-					praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-					= MR_RAID_CTX_CPUSEL_0;
+-
+-				if (io_request->RaidContext.raid_context_g35.stream_detected
+-					&& (raid->level == 5) &&
+-					(raid->writeMode == MR_RL_WRITE_THROUGH_MODE)) {
+-					if (praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-						== MR_RAID_CTX_CPUSEL_FCFS)
+-						praid_context->raid_context_g35.routing_flags.bits.cpu_sel
+-							= MR_RAID_CTX_CPUSEL_0;
+-				}
+-			}
+-		}
+ 	} /* Not FP */
+ }
+ 
 -- 
 2.8.3
