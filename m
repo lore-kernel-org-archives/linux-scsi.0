@@ -1,79 +1,74 @@
-From: Song Liu <songliubraving@fb.com>
-Subject: [PATCH v4] scsi/sd: release scan_mutex during sync_cache and start_stop
-Date: Wed, 8 Feb 2017 17:01:16 -0800
-Message-ID: <20170209010116.362206-1-songliubraving@fb.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH V2] mpt3sas: disable ASPM for MPI2 controllers
+Date: Thu, 9 Feb 2017 10:39:51 +0530
+Message-ID: <CAK=zhgoEep5afmFq05kn0bxhuykSQH_BJE3ZzJrhzr+Y3M23vw@mail.gmail.com>
+References: <20161228110524.7516-1-ojab@ojab.ru>
 Mime-Version: 1.0
-Content-Type: text/plain
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:60066 "EHLO
-        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751317AbdBIBBV (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 20:01:21 -0500
-Received: from pps.filterd (m0109333.ppops.net [127.0.0.1])
-        by mx0a-00082601.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v190xljp009657
-        for <linux-scsi@vger.kernel.org>; Wed, 8 Feb 2017 17:01:20 -0800
-Received: from mail.thefacebook.com ([199.201.64.23])
-        by mx0a-00082601.pphosted.com with ESMTP id 28g8avhdrj-1
-        (version=TLSv1 cipher=ECDHE-RSA-AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 17:01:20 -0800
-Received: from facebook.com (2401:db00:11:d0be:face:0:17:0)     by
- mx-out.facebook.com (10.212.232.63) with ESMTP id
- 43f026f2ee6311e6adea0002c992ebde-295eaa00 for <linux-scsi@vger.kernel.org>;
-        Wed, 08 Feb 2017 17:01:19 -0800
+Received: from mail-qk0-f182.google.com ([209.85.220.182]:32950 "EHLO
+        mail-qk0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751371AbdBIFJx (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2017 00:09:53 -0500
+Received: by mail-qk0-f182.google.com with SMTP id s140so146189145qke.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Feb 2017 21:09:53 -0800 (PST)
+In-Reply-To: <20161228110524.7516-1-ojab@ojab.ru>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: bart.vanassche@sandisk.com, hch@lst.de, hch@infradead.org, Song Liu <songliubraving@fb.com>
+To: ojab <ojab@ojab.ru>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-When a device is deleted through sysfs handle "delete", the code
-locks shost->scan_mutex. If multiple devices are deleted at the
-same time, these deletes will be handled in series.
+On Wed, Dec 28, 2016 at 4:35 PM, ojab <ojab@ojab.ru> wrote:
+> MPI2 controllers sometimes got lost (i. e. disappears from
+> /sys/bus/pci/devices) if ASMP is enabled.
+>
+> Signed-off-by: Slava Kardakov <ojab@ojab.ru>
+> Fixes: https://bugzilla.kernel.org/show_bug.cgi?id=60644
 
-On the other hand, sd_shutdown() sometimes issues long latency
-commands: sync cache and start_stop. It is not necessary for these
-commands to run in series.
+>From some of our system engineers team, I came to known that ASPM
+needs to be disabled.
+So this patch looks good. Please consider this patch as
 
-To reduce latency of parallel "delete" requests, this patch unlock
-shost->scan_mutex before calling sd_shutdown(), relock the mutex
-afterwards.
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
 
-Fixed bug from previous version.
+Thanks,
+Sreekanth
 
-Reported-by: kernel test robot <fengguang.wu@intel.com>
-Signed-off-by: Song Liu <songliubraving@fb.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Bart Van Assche <bart.vanassche@sandisk.com>
----
- drivers/scsi/sd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 9e0783b..61ea308 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3211,9 +3211,13 @@ static int sd_probe(struct device *dev)
- static int sd_remove(struct device *dev)
- {
- 	struct scsi_disk *sdkp;
-+	struct scsi_device *sdev;
-+	struct Scsi_Host *shost;
- 	dev_t devt;
- 
- 	sdkp = dev_get_drvdata(dev);
-+	sdev = sdkp->device;
-+	shost = sdev->host;
- 	devt = disk_devt(sdkp->disk);
- 	scsi_autopm_get_device(sdkp->device);
- 
-@@ -3221,7 +3225,9 @@ static int sd_remove(struct device *dev)
- 	async_synchronize_full_domain(&scsi_sd_probe_domain);
- 	device_del(&sdkp->dev);
- 	del_gendisk(sdkp->disk);
-+	mutex_unlock(&shost->scan_mutex);
- 	sd_shutdown(dev);
-+	mutex_lock(&shost->scan_mutex);
- 
- 	sd_zbc_remove(sdkp);
- 
--- 
-2.9.3
+> ---
+> V2: use name in Signed-off-by
+>
+> Not sure if it's a complete fix, but at least I can't reproduce the issue
+> locally with it applied.
+>
+> Also it's my first patch, so I've surely screwed up some formatting etc.
+>
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 3 +++
+>  1 file changed, 3 insertions(+)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index b5c966e..203651a 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -51,6 +51,7 @@
+>  #include <linux/workqueue.h>
+>  #include <linux/delay.h>
+>  #include <linux/pci.h>
+> +#include <linux/pci-aspm.h>
+>  #include <linux/interrupt.h>
+>  #include <linux/aer.h>
+>  #include <linux/raid_class.h>
+> @@ -8734,6 +8735,8 @@ _scsih_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+>
+>         switch (hba_mpi_version) {
+>         case MPI2_VERSION:
+> +               pci_disable_link_state(pdev, PCIE_LINK_STATE_L0S |
+> +                       PCIE_LINK_STATE_L1 | PCIE_LINK_STATE_CLKPM);
+>                 /* Use mpt2sas driver host template for SAS 2.0 HBA's */
+>                 shost = scsi_host_alloc(&mpt2sas_driver_template,
+>                   sizeof(struct MPT3SAS_ADAPTER));
+> --
+> 2.10.0
+> --
+> To unsubscribe from this list: send the line "unsubscribe linux-scsi" in
+> the body of a message to majordomo@vger.kernel.org
+> More majordomo info at  http://vger.kernel.org/majordomo-info.html
