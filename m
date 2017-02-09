@@ -1,79 +1,184 @@
-From: "Tran, Quinn" <Quinn.Tran@cavium.com>
-Subject: Re: [PATCH v2 10/14] qla2xxx: Fix request queue corruption.
-Date: Thu, 9 Feb 2017 21:34:24 +0000
-Message-ID: <039B75E2-F264-4B31-A10B-F26206B141A0@cavium.com>
-References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
- <1486161655-2307-11-git-send-email-himanshu.madhani@cavium.com>
- <1486581707.16026.20.camel@sandisk.com>
+From: Song Liu <songliubraving@fb.com>
+Subject: Re: [PATCH v4] scsi/sd: release scan_mutex during sync_cache and
+ start_stop
+Date: Thu, 9 Feb 2017 22:24:56 +0000
+Message-ID: <0424414C-BF11-41AA-B22C-C1235F1544F8@fb.com>
+References: <20170209010116.362206-1-songliubraving@fb.com>
+ <20170209085106.GA7313@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-co1nam03on0084.outbound.protection.outlook.com ([104.47.40.84]:59118
-        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754522AbdBIVex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 9 Feb 2017 16:34:53 -0500
-In-Reply-To: <1486581707.16026.20.camel@sandisk.com>
+Received: from mx0a-00082601.pphosted.com ([67.231.145.42]:49631 "EHLO
+        mx0a-00082601.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1753170AbdBIW1C (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2017 17:27:02 -0500
+In-Reply-To: <20170209085106.GA7313@lst.de>
 Content-Language: en-US
-Content-ID: <00D7D9AB44E34C4D9BA392B6ED33A470@namprd07.prod.outlook.com>
+Content-ID: <CEDE511B8CAB21438EE354EE751F64E8@namprd15.prod.outlook.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
+To: Christoph Hellwig <hch@lst.de>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bart.vanassche@sandisk.com" <bart.vanassche@sandisk.com>
 
-QmFydCwgdGhhbmtzIGZvciByZXZpZXdpbmcuICBXaWxsIGNsZWFuIGl0IHVwLg0KDQpSZWdhcmRz
-LA0KUXVpbm4gVHJhbg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogPGxpbnV4
-LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnPiBvbiBiZWhhbGYgb2YgQmFydCBWYW4gQXNzY2hl
-IDxCYXJ0LlZhbkFzc2NoZUBzYW5kaXNrLmNvbT4NCkRhdGU6IFdlZG5lc2RheSwgRmVicnVhcnkg
-OCwgMjAxNyBhdCAxMToyMiBBTQ0KVG86ICJoY2hAaW5mcmFkZWFkLm9yZyIgPGhjaEBpbmZyYWRl
-YWQub3JnPiwgIk1hZGhhbmksIEhpbWFuc2h1IiA8SGltYW5zaHUuTWFkaGFuaUBjYXZpdW0uY29t
-PiwgdGFyZ2V0LWRldmVsIDx0YXJnZXQtZGV2ZWxAdmdlci5rZXJuZWwub3JnPiwgTmljaG9sYXMg
-QmVsbGluZ2VyIDxuYWJAbGludXgtaXNjc2kub3JnPg0KQ2M6ICJsaW51eC1zY3NpQHZnZXIua2Vy
-bmVsLm9yZyIgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPiwgIk1hbGF2YWxpLCBHaXJpZGhh
-ciIgPEdpcmlkaGFyLk1hbGF2YWxpQGNhdml1bS5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIHYy
-IDEwLzE0XSBxbGEyeHh4OiBGaXggcmVxdWVzdCBxdWV1ZSBjb3JydXB0aW9uLg0KUmVzZW50LUZy
-b206IDxxdWlubi50cmFuQHFsb2dpYy5jb20+DQoNCiAgICBPbiBGcmksIDIwMTctMDItMDMgYXQg
-MTQ6NDAgLTA4MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQogICAgPiBGcm9tOiBRdWlubiBU
-cmFuIDxxdWlubi50cmFuQGNhdml1bS5jb20+DQogICAgPiANCiAgICA+IFdoZW4gRlcgbm90aWZ5
-IGRyaXZlciBvciBkcml2ZXIgZGV0ZWN0cyBsb3cgRlcgcmVzb3VyY2UsDQogICAgPiBkcml2ZXIg
-dHJpZXMgdG8gc2VuZCBvdXQgQnVzeSBTQ1NJIFN0YXR1cyB0byB0ZWxsIEluaXRpYXRvcg0KICAg
-ID4gc2lkZSB0byBiYWNrIG9mZi4gRHVyaW5nIHRoZSBzZW5kIHByb2Nlc3MsIHRoZSBsb2NrIHdh
-cyBub3QgaGVsZC4NCiAgICA+IA0KICAgID4gU2lnbmVkLW9mZi1ieTogUXVpbm4gVHJhbiA8cXVp
-bm4udHJhbkBxbG9naWMuY29tPg0KICAgID4gU2lnbmVkLW9mZi1ieTogSGltYW5zaHUgTWFkaGFu
-aSA8aGltYW5zaHUubWFkaGFuaUBjYXZpdW0uY29tPg0KICAgID4gLS0tDQogICAgPiAgZHJpdmVy
-cy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5jIHwgMTIgKysrKysrKysrLS0tDQogICAgPiAgMSBm
-aWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCiAgICA+IA0KICAg
-ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYyBiL2RyaXZl
-cnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KICAgID4gaW5kZXggYjYxY2JiOC4uYjVmYjlj
-NTUgMTAwNjQ0DQogICAgPiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMN
-CiAgICA+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KICAgID4gQEAg
-LTUxNzAsMTYgKzUxNzAsMjIgQEAgc3RhdGljIGludCBfX3FsdF9zZW5kX2J1c3koc3RydWN0IHNj
-c2lfcWxhX2hvc3QgKnZoYSwNCiAgICA+ICANCiAgICA+ICBzdGF0aWMgaW50DQogICAgPiAgcWx0
-X2Noa19xZnVsbF90aHJlc2hfaG9sZChzdHJ1Y3Qgc2NzaV9xbGFfaG9zdCAqdmhhLA0KICAgID4g
-LQlzdHJ1Y3QgYXRpb19mcm9tX2lzcCAqYXRpbykNCiAgICA+ICsJc3RydWN0IGF0aW9fZnJvbV9p
-c3AgKmF0aW8sIHVpbnQ4X3QgaGFfbG9ja2VkKQ0KICAgID4gIHsNCiAgICA+ICAJc3RydWN0IHFs
-YV9od19kYXRhICpoYSA9IHZoYS0+aHc7DQogICAgPiAgCXVpbnQxNl90IHN0YXR1czsNCiAgICA+
-ICsJdW5zaWduZWQgbG9uZyBmbGFnczsNCiAgICA+ICANCiAgICA+ICAJaWYgKGhhLT50Z3QubnVt
-X3BlbmRfY21kcyA8IFFfRlVMTF9USFJFU0hfSE9MRChoYSkpDQogICAgPiAgCQlyZXR1cm4gMDsN
-CiAgICA+ICANCiAgICA+ICsJaWYgKCFoYV9sb2NrZWQpDQogICAgPiArCQlzcGluX2xvY2tfaXJx
-c2F2ZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCiAgICA+ICAJc3RhdHVzID0gdGVtcF9z
-YW1fc3RhdHVzOw0KICAgID4gIAlxbHRfc2VuZF9idXN5KHZoYSwgYXRpbywgc3RhdHVzKTsNCiAg
-ICA+ICsJaWYgKCFoYV9sb2NrZWQpDQogICAgPiArCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZo
-YS0+aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KICAgID4gKw0KICAgID4gIAlyZXR1cm4gMTsNCiAg
-ICA+ICB9DQogICAgPiAgDQogICAgPiBAQCAtNTIyNCw3ICs1MjMwLDcgQEAgc3RhdGljIHZvaWQg
-cWx0XzI0eHhfYXRpb19wa3Qoc3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSwNCiAgICA+ICANCiAg
-ICA+ICANCiAgICA+ICAJCWlmIChsaWtlbHkoYXRpby0+dS5pc3AyNC5mY3BfY21uZC50YXNrX21n
-bXRfZmxhZ3MgPT0gMCkpIHsNCiAgICA+IC0JCQlyYyA9IHFsdF9jaGtfcWZ1bGxfdGhyZXNoX2hv
-bGQodmhhLCBhdGlvKTsNCiAgICA+ICsJCQlyYyA9IHFsdF9jaGtfcWZ1bGxfdGhyZXNoX2hvbGQo
-dmhhLCBhdGlvLCBoYV9sb2NrZWQpOw0KICAgID4gIAkJCWlmIChyYyAhPSAwKSB7DQogICAgPiAg
-CQkJCXRndC0+YXRpb19pcnFfY21kX2NvdW50LS07DQogICAgPiAgCQkJCXJldHVybjsNCiAgICA+
-IEBAIC01MzQ3LDcgKzUzNTMsNyBAQCBzdGF0aWMgdm9pZCBxbHRfcmVzcG9uc2VfcGt0KHN0cnVj
-dCBzY3NpX3FsYV9ob3N0ICp2aGEsIHJlc3BvbnNlX3QgKnBrdCkNCiAgICA+ICAJCQlicmVhazsN
-CiAgICA+ICAJCX0NCiAgICA+ICANCiAgICA+IC0JCXJjID0gcWx0X2Noa19xZnVsbF90aHJlc2hf
-aG9sZCh2aGEsIGF0aW8pOw0KICAgID4gKwkJcmMgPSBxbHRfY2hrX3FmdWxsX3RocmVzaF9ob2xk
-KHZoYSwgYXRpbywgMSk7DQogICAgPiAgCQlpZiAocmMgIT0gMCkgew0KICAgID4gIAkJCXRndC0+
-aXJxX2NtZF9jb3VudC0tOw0KICAgID4gIAkJCXJldHVybjsNCiAgICANCiAgICBIZWxsbyBRdWlu
-biwNCiAgICANCiAgICBQbGVhc2UgY29uc2lkZXIgdG8gdXNlIGJvb2wgaW5zdGVhZCBvZiB1aW50
-OF90IGZvciBoYV9sb2NrZWQgYW5kIHRydWUgLw0KICAgIGZhbHNlIGluc3RlYWQgb2YgMSAvIDAu
-DQogICAgDQogICAgQmFydC4NCiAgICANCg0K
+Hi Christoph,=20
+
+IMHO, scan_mutex maybe still needed for other part of scsi_remove_device().=
+=20
+
+For example, device=10_del() in sd_remove() and scsi_sysfs_add_devices() in=
+=20
+scsi_finish_async_scan() should not run in parallel?=20
+
+On the other hand, other parts of sd_remove(), including sd_shutdown(),=20
+does not touch shared resource.  So it is safe to run these sections withou=
+t
+holding scan_mutex.=20
+
+Another (and maybe better) solution is to move mutex_lock/unlock() of=20
+scan_mutex to each _remove function. So we only hold the lock when accessin=
+g
+scsi_host related data.=20
+
+Thanks,
+Song
+
+
+> On Feb 9, 2017, at 12:51 AM, Christoph Hellwig <hch@lst.de> wrote:
+>=20
+> And what is the lock protecting if we can just release and reacquire it
+> safely?  Probably nothing, but someone needs to do the audit carefully.
+>=20
+> Once that is done we can just apply a patch like the one below and
+> be done with it:
+>=20
+> ---
+> From 47572d7f0758cc0cbd979b1a2c3791f3b94c566e Mon Sep 17 00:00:00 2001
+> From: Christoph Hellwig <hch@lst.de>
+> Date: Thu, 9 Feb 2017 09:49:04 +0100
+> Subject: scsi: remove scan_mutex
+>=20
+> All our lookup structures are properly locked these days, there shouldn't
+> be any need to serialize the high-level scan process.
+>=20
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+> drivers/scsi/scsi_scan.c | 15 ---------------
+> 1 file changed, 15 deletions(-)
+>=20
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 6f7128f49c30..c92be1ad486c 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -1490,7 +1490,6 @@ struct scsi_device *__scsi_add_device(struct Scsi_H=
+ost *shost, uint channel,
+> 		return ERR_PTR(-ENOMEM);
+> 	scsi_autopm_get_target(starget);
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> 	if (!shost->async_scan)
+> 		scsi_complete_async_scans();
+>=20
+> @@ -1498,7 +1497,6 @@ struct scsi_device *__scsi_add_device(struct Scsi_H=
+ost *shost, uint channel,
+> 		scsi_probe_and_add_lun(starget, lun, NULL, &sdev, 1, hostdata);
+> 		scsi_autopm_put_host(shost);
+> 	}
+> -	mutex_unlock(&shost->scan_mutex);
+> 	scsi_autopm_put_target(starget);
+> 	/*
+> 	 * paired with scsi_alloc_target().  Target will be destroyed unless
+> @@ -1629,7 +1627,6 @@ void scsi_scan_target(struct device *parent, unsign=
+ed int channel,
+> 	    strncmp(scsi_scan_type, "manual", 6) =3D=3D 0)
+> 		return;
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> 	if (!shost->async_scan)
+> 		scsi_complete_async_scans();
+>=20
+> @@ -1637,7 +1634,6 @@ void scsi_scan_target(struct device *parent, unsign=
+ed int channel,
+> 		__scsi_scan_target(parent, channel, id, lun, rescan);
+> 		scsi_autopm_put_host(shost);
+> 	}
+> -	mutex_unlock(&shost->scan_mutex);
+> }
+> EXPORT_SYMBOL(scsi_scan_target);
+>=20
+> @@ -1686,7 +1682,6 @@ int scsi_scan_host_selected(struct Scsi_Host *shost=
+, unsigned int channel,
+> 	    ((lun !=3D SCAN_WILD_CARD) && (lun >=3D shost->max_lun)))
+> 		return -EINVAL;
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> 	if (!shost->async_scan)
+> 		scsi_complete_async_scans();
+>=20
+> @@ -1700,7 +1695,6 @@ int scsi_scan_host_selected(struct Scsi_Host *shost=
+, unsigned int channel,
+> 			scsi_scan_channel(shost, channel, id, lun, rescan);
+> 		scsi_autopm_put_host(shost);
+> 	}
+> -	mutex_unlock(&shost->scan_mutex);
+>=20
+> 	return 0;
+> }
+> @@ -1752,11 +1746,9 @@ static struct async_scan_data *scsi_prep_async_sca=
+n(struct Scsi_Host *shost)
+> 		goto err;
+> 	init_completion(&data->prev_finished);
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> 	spin_lock_irqsave(shost->host_lock, flags);
+> 	shost->async_scan =3D 1;
+> 	spin_unlock_irqrestore(shost->host_lock, flags);
+> -	mutex_unlock(&shost->scan_mutex);
+>=20
+> 	spin_lock(&async_scan_lock);
+> 	if (list_empty(&scanning_hosts))
+> @@ -1789,12 +1781,9 @@ static void scsi_finish_async_scan(struct async_sc=
+an_data *data)
+>=20
+> 	shost =3D data->shost;
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> -
+> 	if (!shost->async_scan) {
+> 		shost_printk(KERN_INFO, shost, "%s called twice\n", __func__);
+> 		dump_stack();
+> -		mutex_unlock(&shost->scan_mutex);
+> 		return;
+> 	}
+>=20
+> @@ -1806,8 +1795,6 @@ static void scsi_finish_async_scan(struct async_sca=
+n_data *data)
+> 	shost->async_scan =3D 0;
+> 	spin_unlock_irqrestore(shost->host_lock, flags);
+>=20
+> -	mutex_unlock(&shost->scan_mutex);
+> -
+> 	spin_lock(&async_scan_lock);
+> 	list_del(&data->list);
+> 	if (!list_empty(&scanning_hosts)) {
+> @@ -1915,7 +1902,6 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_H=
+ost *shost)
+> 	struct scsi_device *sdev =3D NULL;
+> 	struct scsi_target *starget;
+>=20
+> -	mutex_lock(&shost->scan_mutex);
+> 	if (!scsi_host_scan_allowed(shost))
+> 		goto out;
+> 	starget =3D scsi_alloc_target(&shost->shost_gendev, 0, shost->this_id);
+> @@ -1929,7 +1915,6 @@ struct scsi_device *scsi_get_host_dev(struct Scsi_H=
+ost *shost)
+> 		scsi_target_reap(starget);
+> 	put_device(&starget->dev);
+>  out:
+> -	mutex_unlock(&shost->scan_mutex);
+> 	return sdev;
+> }
+> EXPORT_SYMBOL(scsi_get_host_dev);
+> --=20
+> 2.11.0
+>=20
