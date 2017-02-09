@@ -1,82 +1,79 @@
-From: "Nicholas A. Bellinger" <nab@linux-iscsi.org>
-Subject: [GIT PULL] target fixes for v4.10
-Date: Thu, 09 Feb 2017 13:17:08 -0800
-Message-ID: <1486675028.12776.35.camel@haakon3.risingtidesystems.com>
+From: "Tran, Quinn" <Quinn.Tran@cavium.com>
+Subject: Re: [PATCH v2 10/14] qla2xxx: Fix request queue corruption.
+Date: Thu, 9 Feb 2017 21:34:24 +0000
+Message-ID: <039B75E2-F264-4B31-A10B-F26206B141A0@cavium.com>
+References: <1486161655-2307-1-git-send-email-himanshu.madhani@cavium.com>
+ <1486161655-2307-11-git-send-email-himanshu.madhani@cavium.com>
+ <1486581707.16026.20.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Linus Torvalds <torvalds@linux-foundation.org>
-Cc: target-devel <target-devel@vger.kernel.org>, Robert Millner <rlm@daterainc.com>, Gary Guo <ghg@datera.io>, Kevin Vajk <kmv@datera.io>, Vaibhov Tandon <vst@datera.io>, Nixon Vincent <nixon.vincent@calsoftinc.com>, Benjamin ESTRABAUD <be@mpstor.com>, "Bryant G. Ly" <bryantly@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, Donald White <dew@datera.io>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-co1nam03on0084.outbound.protection.outlook.com ([104.47.40.84]:59118
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754522AbdBIVex (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 9 Feb 2017 16:34:53 -0500
+In-Reply-To: <1486581707.16026.20.camel@sandisk.com>
+Content-Language: en-US
+Content-ID: <00D7D9AB44E34C4D9BA392B6ED33A470@namprd07.prod.outlook.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "hch@infradead.org" <hch@infradead.org>, "Madhani, Himanshu" <Himanshu.Madhani@cavium.com>, "target-devel@vger.kernel.org" <target-devel@vger.kernel.org>, "nab@linux-iscsi.org" <nab@linux-iscsi.org>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "Malavali, Giridhar" <Giridhar.Malavali@cavium.com>
 
-Hello Linus,
-
-The following target series for v4.10 contains fixes which address a few
-long-standing bugs that DATERA's QA + automation teams have uncovered
-while putting v4.1.y target code into production usage.
-
-We've been running the top three in our nightly automated regression
-runs for the last two months, and the COMPARE_AND_WRITE fix Mr. Gary Guo
-has been manually verifying against a four node ESX cluster this past
-week. 
-
-Note all of them have CC' stable tags.
-
-Please go ahead and pull from:
-
-  git://git.kernel.org/pub/scm/linux/kernel/git/nab/target-pending.git master
-
-This includes:
-
-  - Fix a bug with ESX EXTENDED_COPY + SAM_STAT_RESERVATION_CONFLICT 
-    status, where target_core_xcopy.c logic was incorrectly returning
-    SAM_STAT_CHECK_CONDITION for all non SAM_STAT_GOOD cases.
-    (Nixon Vincent)
-  - Fix a TMR LUN_RESET hung task bug while other in-flight TMRs are 
-    being aborted, before the new one had been dispatched into tmr_wq.
-    (Rob Millner)
-  - Fix a long standing double free OOPs, where a dynamically generated
-    'demo-mode' NodeACL has multiple sessions associated with it, and
-    the /sys/kernel/config/target/$FABRIC/$WWN/ subsequently disables
-    demo-mode, but never converts the dynamic ACL into a explicit ACL.
-    (Rob Millner)
-  - Fix a long standing reference leak with ESX VAAI COMPARE_AND_WRITE
-    when the second phase WRITE COMMIT command fails, resulting in
-    CHECK_CONDITION response never being sent and se_cmd->cmd_kref
-    never reaching zero.  (Gary Guo)
-
-Beyond these items on v4.1.y we've reproduced, fixed, and run through
-our regression test suite using iscsi-target exports, there are two
-additional outstanding list items:
-
-  - Remove a >= v4.2 RCU conversion BUG_ON that would trigger when 
-    dynamic node NodeACLs where being converted to explicit NodeACLs.  
-    The patch drops the BUG_ON to follow how pre RCU conversion
-    worked for this special case. (Benjamin Estrabaud)
-  - Add ibmvscsis target_core_fabric_ops->max_data_sg_nent
-    assignment to match what IBM's Virtual SCSI hypervisor is
-    already enforcing at transport layer.  (Bryant Ly + Steven Royer).
-
-Thank you,
-
---nab
-
-Bryant G. Ly (1):
-  ibmvscsis: Add SGL limit
-
-Nicholas Bellinger (5):
-  target: Don't BUG_ON during NodeACL dynamic -> explicit conversion
-  target: Use correct SCSI status during EXTENDED_COPY exception
-  target: Fix early transport_generic_handle_tmr abort scenario
-  target: Fix multi-session dynamic se_node_acl double free OOPs
-  target: Fix COMPARE_AND_WRITE ref leak for non GOOD status
-
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c |  1 +
- drivers/target/target_core_device.c      | 10 +++-
- drivers/target/target_core_sbc.c         |  8 ++-
- drivers/target/target_core_transport.c   | 86 +++++++++++++++++++++-----------
- drivers/target/target_core_xcopy.c       |  2 +-
- include/target/target_core_base.h        |  1 +
- 6 files changed, 76 insertions(+), 32 deletions(-)
+QmFydCwgdGhhbmtzIGZvciByZXZpZXdpbmcuICBXaWxsIGNsZWFuIGl0IHVwLg0KDQpSZWdhcmRz
+LA0KUXVpbm4gVHJhbg0KDQotLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KRnJvbTogPGxpbnV4
+LXNjc2ktb3duZXJAdmdlci5rZXJuZWwub3JnPiBvbiBiZWhhbGYgb2YgQmFydCBWYW4gQXNzY2hl
+IDxCYXJ0LlZhbkFzc2NoZUBzYW5kaXNrLmNvbT4NCkRhdGU6IFdlZG5lc2RheSwgRmVicnVhcnkg
+OCwgMjAxNyBhdCAxMToyMiBBTQ0KVG86ICJoY2hAaW5mcmFkZWFkLm9yZyIgPGhjaEBpbmZyYWRl
+YWQub3JnPiwgIk1hZGhhbmksIEhpbWFuc2h1IiA8SGltYW5zaHUuTWFkaGFuaUBjYXZpdW0uY29t
+PiwgdGFyZ2V0LWRldmVsIDx0YXJnZXQtZGV2ZWxAdmdlci5rZXJuZWwub3JnPiwgTmljaG9sYXMg
+QmVsbGluZ2VyIDxuYWJAbGludXgtaXNjc2kub3JnPg0KQ2M6ICJsaW51eC1zY3NpQHZnZXIua2Vy
+bmVsLm9yZyIgPGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnPiwgIk1hbGF2YWxpLCBHaXJpZGhh
+ciIgPEdpcmlkaGFyLk1hbGF2YWxpQGNhdml1bS5jb20+DQpTdWJqZWN0OiBSZTogW1BBVENIIHYy
+IDEwLzE0XSBxbGEyeHh4OiBGaXggcmVxdWVzdCBxdWV1ZSBjb3JydXB0aW9uLg0KUmVzZW50LUZy
+b206IDxxdWlubi50cmFuQHFsb2dpYy5jb20+DQoNCiAgICBPbiBGcmksIDIwMTctMDItMDMgYXQg
+MTQ6NDAgLTA4MDAsIEhpbWFuc2h1IE1hZGhhbmkgd3JvdGU6DQogICAgPiBGcm9tOiBRdWlubiBU
+cmFuIDxxdWlubi50cmFuQGNhdml1bS5jb20+DQogICAgPiANCiAgICA+IFdoZW4gRlcgbm90aWZ5
+IGRyaXZlciBvciBkcml2ZXIgZGV0ZWN0cyBsb3cgRlcgcmVzb3VyY2UsDQogICAgPiBkcml2ZXIg
+dHJpZXMgdG8gc2VuZCBvdXQgQnVzeSBTQ1NJIFN0YXR1cyB0byB0ZWxsIEluaXRpYXRvcg0KICAg
+ID4gc2lkZSB0byBiYWNrIG9mZi4gRHVyaW5nIHRoZSBzZW5kIHByb2Nlc3MsIHRoZSBsb2NrIHdh
+cyBub3QgaGVsZC4NCiAgICA+IA0KICAgID4gU2lnbmVkLW9mZi1ieTogUXVpbm4gVHJhbiA8cXVp
+bm4udHJhbkBxbG9naWMuY29tPg0KICAgID4gU2lnbmVkLW9mZi1ieTogSGltYW5zaHUgTWFkaGFu
+aSA8aGltYW5zaHUubWFkaGFuaUBjYXZpdW0uY29tPg0KICAgID4gLS0tDQogICAgPiAgZHJpdmVy
+cy9zY3NpL3FsYTJ4eHgvcWxhX3RhcmdldC5jIHwgMTIgKysrKysrKysrLS0tDQogICAgPiAgMSBm
+aWxlIGNoYW5nZWQsIDkgaW5zZXJ0aW9ucygrKSwgMyBkZWxldGlvbnMoLSkNCiAgICA+IA0KICAg
+ID4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYyBiL2RyaXZl
+cnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KICAgID4gaW5kZXggYjYxY2JiOC4uYjVmYjlj
+NTUgMTAwNjQ0DQogICAgPiAtLS0gYS9kcml2ZXJzL3Njc2kvcWxhMnh4eC9xbGFfdGFyZ2V0LmMN
+CiAgICA+ICsrKyBiL2RyaXZlcnMvc2NzaS9xbGEyeHh4L3FsYV90YXJnZXQuYw0KICAgID4gQEAg
+LTUxNzAsMTYgKzUxNzAsMjIgQEAgc3RhdGljIGludCBfX3FsdF9zZW5kX2J1c3koc3RydWN0IHNj
+c2lfcWxhX2hvc3QgKnZoYSwNCiAgICA+ICANCiAgICA+ICBzdGF0aWMgaW50DQogICAgPiAgcWx0
+X2Noa19xZnVsbF90aHJlc2hfaG9sZChzdHJ1Y3Qgc2NzaV9xbGFfaG9zdCAqdmhhLA0KICAgID4g
+LQlzdHJ1Y3QgYXRpb19mcm9tX2lzcCAqYXRpbykNCiAgICA+ICsJc3RydWN0IGF0aW9fZnJvbV9p
+c3AgKmF0aW8sIHVpbnQ4X3QgaGFfbG9ja2VkKQ0KICAgID4gIHsNCiAgICA+ICAJc3RydWN0IHFs
+YV9od19kYXRhICpoYSA9IHZoYS0+aHc7DQogICAgPiAgCXVpbnQxNl90IHN0YXR1czsNCiAgICA+
+ICsJdW5zaWduZWQgbG9uZyBmbGFnczsNCiAgICA+ICANCiAgICA+ICAJaWYgKGhhLT50Z3QubnVt
+X3BlbmRfY21kcyA8IFFfRlVMTF9USFJFU0hfSE9MRChoYSkpDQogICAgPiAgCQlyZXR1cm4gMDsN
+CiAgICA+ICANCiAgICA+ICsJaWYgKCFoYV9sb2NrZWQpDQogICAgPiArCQlzcGluX2xvY2tfaXJx
+c2F2ZSgmaGEtPmhhcmR3YXJlX2xvY2ssIGZsYWdzKTsNCiAgICA+ICAJc3RhdHVzID0gdGVtcF9z
+YW1fc3RhdHVzOw0KICAgID4gIAlxbHRfc2VuZF9idXN5KHZoYSwgYXRpbywgc3RhdHVzKTsNCiAg
+ICA+ICsJaWYgKCFoYV9sb2NrZWQpDQogICAgPiArCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZo
+YS0+aGFyZHdhcmVfbG9jaywgZmxhZ3MpOw0KICAgID4gKw0KICAgID4gIAlyZXR1cm4gMTsNCiAg
+ICA+ICB9DQogICAgPiAgDQogICAgPiBAQCAtNTIyNCw3ICs1MjMwLDcgQEAgc3RhdGljIHZvaWQg
+cWx0XzI0eHhfYXRpb19wa3Qoc3RydWN0IHNjc2lfcWxhX2hvc3QgKnZoYSwNCiAgICA+ICANCiAg
+ICA+ICANCiAgICA+ICAJCWlmIChsaWtlbHkoYXRpby0+dS5pc3AyNC5mY3BfY21uZC50YXNrX21n
+bXRfZmxhZ3MgPT0gMCkpIHsNCiAgICA+IC0JCQlyYyA9IHFsdF9jaGtfcWZ1bGxfdGhyZXNoX2hv
+bGQodmhhLCBhdGlvKTsNCiAgICA+ICsJCQlyYyA9IHFsdF9jaGtfcWZ1bGxfdGhyZXNoX2hvbGQo
+dmhhLCBhdGlvLCBoYV9sb2NrZWQpOw0KICAgID4gIAkJCWlmIChyYyAhPSAwKSB7DQogICAgPiAg
+CQkJCXRndC0+YXRpb19pcnFfY21kX2NvdW50LS07DQogICAgPiAgCQkJCXJldHVybjsNCiAgICA+
+IEBAIC01MzQ3LDcgKzUzNTMsNyBAQCBzdGF0aWMgdm9pZCBxbHRfcmVzcG9uc2VfcGt0KHN0cnVj
+dCBzY3NpX3FsYV9ob3N0ICp2aGEsIHJlc3BvbnNlX3QgKnBrdCkNCiAgICA+ICAJCQlicmVhazsN
+CiAgICA+ICAJCX0NCiAgICA+ICANCiAgICA+IC0JCXJjID0gcWx0X2Noa19xZnVsbF90aHJlc2hf
+aG9sZCh2aGEsIGF0aW8pOw0KICAgID4gKwkJcmMgPSBxbHRfY2hrX3FmdWxsX3RocmVzaF9ob2xk
+KHZoYSwgYXRpbywgMSk7DQogICAgPiAgCQlpZiAocmMgIT0gMCkgew0KICAgID4gIAkJCXRndC0+
+aXJxX2NtZF9jb3VudC0tOw0KICAgID4gIAkJCXJldHVybjsNCiAgICANCiAgICBIZWxsbyBRdWlu
+biwNCiAgICANCiAgICBQbGVhc2UgY29uc2lkZXIgdG8gdXNlIGJvb2wgaW5zdGVhZCBvZiB1aW50
+OF90IGZvciBoYV9sb2NrZWQgYW5kIHRydWUgLw0KICAgIGZhbHNlIGluc3RlYWQgb2YgMSAvIDAu
+DQogICAgDQogICAgQmFydC4NCiAgICANCg0K
