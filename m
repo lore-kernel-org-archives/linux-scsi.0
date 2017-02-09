@@ -1,126 +1,131 @@
-From: Laurence Oberman <loberman@redhat.com>
-Subject: Re: Patch: lpfc: Modify Emulex lpfc LPFC_DEFAULT_SG_SEG_CNT to 128
- for default larger sg_io capability
-Date: Wed, 8 Feb 2017 18:13:18 -0500 (EST)
-Message-ID: <354622625.28600073.1486595598269.JavaMail.zimbra@redhat.com>
-References: <30301867.28563578.1486584432250.JavaMail.zimbra@redhat.com>
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+Subject: Re: [lkp-robot] [scsi, block] 0dba1314d4:
+ WARNING:at_fs/sysfs/dir.c:#sysfs_warn_dup
+Date: Wed, 08 Feb 2017 16:08:18 -0800
+Message-ID: <1486598898.2484.46.camel@HansenPartnership.com>
+References: <20170204070936.GE12121@yexl-desktop>
+         <CAPcyv4j0syAsinM-KbeefKysJhM9zt6kvrX=0c2HrtPV_tRAHQ@mail.gmail.com>
+         <CAPcyv4gBQDuj65KRmFvP2q4Qt3d3xycM8L_TypAzYkvhmUSh6A@mail.gmail.com>
+         <20170205091314.GA3042@lst.de>
+         <CAPcyv4gE0+3pZQV=V75wxddFVhWeAz1abfJ=q8D1Zi+8Oi17rA@mail.gmail.com>
+         <1486426467.2474.122.camel@HansenPartnership.com>
+         <01c338e2-2a30-610d-b7fa-00cb3ce2cf86@fb.com>
+         <CAPcyv4jkak-gX3gQaBJiEk1G79skdN2F9WL-sK2DjPwFhA8rdg@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx5-phx2.redhat.com ([209.132.183.37]:56181 "EHLO
-        mx5-phx2.redhat.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751542AbdBHXNR (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 8 Feb 2017 18:13:17 -0500
-Received: from zmail22.collab.prod.int.phx2.redhat.com (zmail22.collab.prod.int.phx2.redhat.com [10.5.83.26])
-        by mx5-phx2.redhat.com (8.14.4/8.14.4) with ESMTP id v18NDI8v021866
-        for <linux-scsi@vger.kernel.org>; Wed, 8 Feb 2017 18:13:18 -0500
-In-Reply-To: <30301867.28563578.1486584432250.JavaMail.zimbra@redhat.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <linux-block-owner@vger.kernel.org>
+In-Reply-To: <CAPcyv4jkak-gX3gQaBJiEk1G79skdN2F9WL-sK2DjPwFhA8rdg@mail.gmail.com>
+Sender: linux-block-owner@vger.kernel.org
+To: Dan Williams <dan.j.williams@intel.com>, Jens Axboe <axboe@fb.com>
+Cc: Christoph Hellwig <hch@lst.de>, kernel test robot <xiaolong.ye@intel.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jan Kara <jack@suse.cz>, Omar Sandoval <osandov@osandov.com>, Omar Sandoval <osandov@fb.com>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, LKP <lkp@01.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Linux SCSI List <linux-scsi@vger.kernel.org>
 
+On Mon, 2017-02-06 at 21:42 -0800, Dan Williams wrote:
+> On Mon, Feb 6, 2017 at 8:09 PM, Jens Axboe <axboe@fb.com> wrote:
+> > On 02/06/2017 05:14 PM, James Bottomley wrote:
+> > > On Sun, 2017-02-05 at 21:13 -0800, Dan Williams wrote:
+> > > > On Sun, Feb 5, 2017 at 1:13 AM, Christoph Hellwig <hch@lst.de>
+> > > > wrote:
+> > > > > Dan,
+> > > > > 
+> > > > > can you please quote your emails?  I can't find any content
+> > > > > inbetween all these quotes.
+> > > > 
+> > > > Sorry, I'm using gmail, but I'll switch to attaching the logs.
+> > > > 
+> > > > So with help from Xiaolong I was able to reproduce this, and it
+> > > > does
+> > > > not appear to be a regression. We simply change the failure
+> > > > output of
+> > > > an existing bug. Attached is a log of the same test on v4.10
+> > > > -rc7
+> > > > (i.e. without the recent block/scsi fixes), and it shows sda
+> > > > being
+> > > > registered twice.
+> > > > 
+> > > > "[    6.647077] kobject (d5078ca4): tried to init an
+> > > > initialized
+> > > > object, something is seriously wrong."
+> > > > 
+> > > > The change that "scsi, block: fix duplicate bdi name
+> > > > registration
+> > > > crashes" makes is to properly try to register sdb since the sda
+> > > > devt
+> > > > is still alive. However that's not a fix because we've managed
+> > > > to
+> > > > call blk_register_queue() twice on the same queue.
+> > > 
+> > > OK, time to involve others: linux-scsi and linux-block cc'd and
+> > > I've
+> > > inserted the log below.
+> > > 
+> > > James
+> > > 
+> > > ---
+> > > 
+> > > [    5.969672] scsi host0: scsi_debug: version 1.86 [20160430]
+> > > [    5.969672]   dev_size_mb=8, opts=0x0, submit_queues=1,
+> > > statistics=0
+> > > [    5.971895] scsi 0:0:0:0: Direct-Access     Linux   
+> > >  scsi_debug       0186 PQ: 0 ANSI: 7
+> > > [    6.006983] sd 0:0:0:0: [sda] 16384 512-byte logical blocks:
+> > > (8.39 MB/8.00 MiB)
+> > > [    6.026965] sd 0:0:0:0: [sda] Write Protect is off
+> > > [    6.027870] sd 0:0:0:0: [sda] Mode Sense: 73 00 10 08
+> > > [    6.066962] sd 0:0:0:0: [sda] Write cache: enabled, read
+> > > cache: enabled, supports DPO and FUA
+> > > [    6.486962] sd 0:0:0:0: [sda] Attached SCSI disk
+> > > [    6.488377] sd 0:0:0:0: [sda] Synchronizing SCSI cache
+> > > [    6.489455] sd 0:0:0:0: Attached scsi generic sg0 type 0
+> > > [    6.526982] sd 0:0:0:0: [sda] 16384 512-byte logical blocks:
+> > > (8.39 MB/8.00 MiB)
+> > > [    6.546964] sd 0:0:0:0: [sda] Write Protect is off
+> > > [    6.547873] sd 0:0:0:0: [sda] Mode Sense: 73 00 10 08
+> > > [    6.586963] sd 0:0:0:0: [sda] Write cache: enabled, read
+> > > cache: enabled, supports DPO and FUA
+> > > [    6.647077] kobject (d5078ca4): tried to init an initialized
+> > > object, something is seriously wrong.
+> > 
+> > So sda is probed twice, and hilarity ensues when we try to register
+> > it
+> > twice.  I can't reproduce this, using scsi_debug and with
+> > scsi_async
+> > enabled.
+> > 
+> > This is running linux-next? What's your .config?
+> > 
+> 
+> The original failure report is here:
+> 
+> http://marc.info/?l=linux-kernel&m=148619222300774&w=2
+> 
+> ...but it reproduces on current mainline with the same config. I
+> haven't spotted what makes scsi_debug behave like this.
 
+Looking at the config, it's a static debug with report luns enabled. 
+ Is it as simple as the fact that we probe lun 0 manually to see if the
+target exists, but then we don't account for the fact that we already
+did this, so if it turns up again in the report lun scan, we'll probe
+it again leading to a double add.  If that theory is correct, this may
+be the fix (compile tested only).
 
------ Original Message -----
-> From: "Laurence Oberman" <loberman@redhat.com>
-> To: "Linux SCSI List" <linux-scsi@vger.kernel.org>
-> Sent: Wednesday, February 8, 2017 3:07:12 PM
-> Subject: Patch: lpfc: Modify Emulex lpfc LPFC_DEFAULT_SG_SEG_CNT to 128 for default larger sg_io capability
-> 
-> We have been seeing issues with qemu_kvm virtual guests where if they issue
-> I/O to direct attached SCSI passthrough LUNS with large I/O sizes such as
-> 512K
-> the sg_io will fail with -EINVAL.
-> 
-> Simple reproducer is here.
-> 
-> strace -e ioctl sg_dd if=/dev/zero of=/dev/sdae bpt=0x400 count=0x400
-> blk_sgio=1
-> Assume default 'bs' (block size) of 512 bytes
-> ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00],
-> mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0,
-> data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-15        "...], status=00,
-> masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0,
-> duration=0, info=0}) = 0
-> ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00,
-> 04, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=524288, timeout=60000,
-> flags=0,
-> data[524288]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...]})
-> = -1 EINVAL (Invalid argument)
-> writing (SG_IO) on sg device, error: Invalid argument
-> sg_write failed, seek=0
-> Some error occurred,  remaining block count=1024
-> 1024+0 records in
-> 0+0 records out
-> 
-> Qlogic defaults to 128 so has not been seeing this but lpfc does not.
-> Would like to avoid having to set this in the module parameters to 128.
-> 
-> Tested-by:     Laurence Oberman <loberman@redhat.com>
-> Signed-off-by: Laurence Oberman <loberman@redhat.com>
-> 
-> From 23996dcbdd9b505d18d59ecde961c87f76fc9c2e Mon Sep 17 00:00:00 2001
-> From: Laurence Oberman <loberman@redhat.com>
-> Date: Wed, 8 Feb 2017 14:49:05 -0500
-> Subject: [PATCH] Modified LPFC_DEFAULT_SG_SEG_CNT to 128 to match Qlogic.
-> This
->  will allow larger sg_io passthrough for qemu_kvm guests that expect the
->  larger setting for I/O large rthen 512k.
-> 
-> ---
->  drivers/scsi/lpfc/lpfc.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-> index 8a20b4e..8f86d41 100644
-> --- a/drivers/scsi/lpfc/lpfc.h
-> +++ b/drivers/scsi/lpfc/lpfc.h
-> @@ -42,7 +42,7 @@
->  #define LPFC_MAX_NS_RETRY	3	/* Number of retry attempts to contact
->  					   the NameServer  before giving up. */
->  #define LPFC_CMD_PER_LUN	3	/* max outstanding cmds per lun */
-> -#define LPFC_DEFAULT_SG_SEG_CNT 64	/* sg element count per scsi cmnd */
-> +#define LPFC_DEFAULT_SG_SEG_CNT 128	/* sg element count per scsi cmnd */
->  #define LPFC_DEFAULT_MENLO_SG_SEG_CNT 128	/* sg element count per scsi
->  		cmnd for menlo needs nearly twice as for firmware
->  		downloads using bsg */
-> --
-> 1.8.3.1
-> 
-> 
-> 
->  
-> 
+James
 
-Replying to my own email
+---
 
-I was wondering if we could set it to 256 as the default.
-This seems to pass sg_io all the way to 0x800
-
-bpt=0x200
-Assume default 'bs' (block size) of 512 bytes
-ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00], mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0, data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-21        "...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=0, info=0}) = 0
-ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00, 02, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=262144, timeout=60000, flags=0, data[262144]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=30, info=0}) = 0
-512+0 records in
-512+0 records out
-+++ exited with 0 +++
-
-bpt=0x400
-Assume default 'bs' (block size) of 512 bytes
-ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00], mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0, data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-21        "...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=0, info=0}) = 0
-ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00, 04, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=524288, timeout=60000, flags=0, data[524288]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=43, info=0}) = 0
-1024+0 records in
-1024+0 records out
-+++ exited with 0 +++
-
-bpt=0x800
-Assume default 'bs' (block size) of 512 bytes
-ioctl(4, SG_IO, {'S', SG_DXFER_FROM_DEV, cmd[6]=[12, 00, 00, 00, 24, 00], mx_sb_len=64, iovec_count=0, dxfer_len=36, timeout=60000, flags=0, data[36]=["\0\0\5\2\37\270\0\2LIO-ORG block-21        "...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=0, info=0}) = 0
-ioctl(4, SG_IO, {'S', SG_DXFER_TO_DEV, cmd[10]=[2a, 00, 00, 00, 00, 00, 00, 08, 00, 00], mx_sb_len=64, iovec_count=0, dxfer_len=1048576, timeout=60000, flags=0, data[1048576]=["\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0"...], status=00, masked_status=00, sb[0]=[], host_status=0, driver_status=0, resid=0, duration=34, info=0}) = 0
-2048+0 records in
-2048+0 records out
-+++ exited with 0 +++
-
-Thanks
-Laurence
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 6f7128f..ba4be08 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1441,6 +1441,10 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
+ 	for (lunp = &lun_data[1]; lunp <= &lun_data[num_luns]; lunp++) {
+ 		lun = scsilun_to_int(lunp);
+ 
++		if (lun == 0)
++			/* already scanned LUN 0 */
++			continue;
++
+ 		if (lun > sdev->host->max_lun) {
+ 			sdev_printk(KERN_WARNING, sdev,
+ 				    "lun%llu has a LUN larger than"
