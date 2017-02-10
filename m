@@ -1,43 +1,36 @@
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 39/39] megaraid_sas: driver version upgrade
-Date: Fri, 10 Feb 2017 00:59:39 -0800
-Message-ID: <1486717179-23320-40-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: bugzilla-daemon@bugzilla.kernel.org
+Subject: [Bug 151661] Adaptec 3405 3805 prints "AAC: Host adapter dead -1"
+ every 10 seconds but works fine anyway
+Date: Fri, 10 Feb 2017 09:23:36 +0000
+Message-ID: <bug-151661-11613-CKxsTChL8l@https.bugzilla.kernel.org/>
+References: <bug-151661-11613@https.bugzilla.kernel.org/>
+Mime-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f174.google.com ([209.85.192.174]:35536 "EHLO
-        mail-pf0-f174.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751289AbdBJJN4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:13:56 -0500
-Received: by mail-pf0-f174.google.com with SMTP id 202so4933813pfx.2
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:12:22 -0800 (PST)
-In-Reply-To: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49962 "EHLO
+        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1752109AbdBJJYh (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 10 Feb 2017 04:24:37 -0500
+Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 2DEE32856D
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 09:23:48 +0000 (UTC)
+Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
+        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 630C228559
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 09:23:47 +0000 (UTC)
+In-Reply-To: <bug-151661-11613@https.bugzilla.kernel.org/>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+To: linux-scsi@kernel.org
 
-Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Reviewed-by: Hannes Reinecke <hare@suse.com>
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/megaraid/megaraid_sas.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+https://bugzilla.kernel.org/show_bug.cgi?id=151661
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 8c06cbf..e7e5974 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -35,8 +35,8 @@
- /*
-  * MegaRAID SAS Driver meta data
-  */
--#define MEGASAS_VERSION				"07.700.00.00-rc1"
--#define MEGASAS_RELDATE				"November 29, 2016"
-+#define MEGASAS_VERSION				"07.701.16.00-rc1"
-+#define MEGASAS_RELDATE				"February 2, 2017"
- 
- /*
-  * Device IDs
+--- Comment #19 from Arkadiusz Miskiewicz (arekm@maven.pl) ---
+Fix:
+
+http://git.kernel.org/cgit/linux/kernel/git/jejb/scsi.git/patch/?id=8af8e1c22f9994bb1849c01d66c24fe23f9bc9a0
+
 -- 
-2.8.3
+You are receiving this mail because:
+You are watching the assignee of the bug.
