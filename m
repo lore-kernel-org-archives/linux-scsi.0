@@ -1,51 +1,61 @@
-From: David Miller <davem@davemloft.net>
+From: Florian Fainelli <f.fainelli@gmail.com>
 Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
  include
-Date: Fri, 10 Feb 2017 13:51:38 -0500 (EST)
-Message-ID: <20170210.135138.2084086346069765205.davem@davemloft.net>
+Date: Fri, 10 Feb 2017 11:44:49 -0800
+Message-ID: <68d8c792-5d09-7cdc-4a94-8437bfb0299e@gmail.com>
 References: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
-        <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
-        <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+ <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
+ <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+ <20170210.135138.2084086346069765205.davem@davemloft.net>
 Mime-Version: 1.0
-Content-Type: Text/Plain; charset=iso-8859-7
-Content-Transfer-Encoding: base64
-Return-path: <linux-mips-bounce@linux-mips.org>
-In-Reply-To: <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
-Sender: linux-mips-bounce@linux-mips.org
-Errors-to: linux-mips-bounce@linux-mips.org
-List-help: <mailto:ecartis@linux-mips.org?Subject=help>
-List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
-List-software: Ecartis version 1.0.0
-List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
-List-owner: <mailto:ralf@linux-mips.org>
-List-post: <mailto:linux-mips@linux-mips.org>
-List-archive: <http://www.linux-mips.org/archives/linux-mips/>
-To: kvalo@codeaurora.org
-Cc: f.fainelli@gmail.com, netdev@vger.kernel.org, linux-mips@linux-mips.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, target-devel@vger.kernel.org, andrew@lunn.ch, anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com, felix.manlunas@caviumnetworks.com, bfields@fieldses.org, jlayton@poochiereds.net, jirislaby@gmail.com, mcgrof@do-not-panic.com, madalin.bucur@nxp.com, UNGLinuxDriver@microchip.com, nab@linux-iscsi.org, mickflemm@gmail.com, nicolas.ferre@atmel.com, raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org, satananda.burla@caviumnetworks.com, thomas.petazzoni@free-electrons.com, timur@codeaurora.org, trond.myklebust@primarydata.com, vivien.didelot@savoirfairelinux.com, woojung.huh
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 8bit
+Return-path: <netdev-owner@vger.kernel.org>
+In-Reply-To: <20170210.135138.2084086346069765205.davem@davemloft.net>
+Sender: netdev-owner@vger.kernel.org
+To: David Miller <davem@davemloft.net>, kvalo@codeaurora.org
+Cc: netdev@vger.kernel.org, linux-mips@linux-mips.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, target-devel@vger.kernel.org, andrew@lunn.ch, anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com, felix.manlunas@caviumnetworks.com, bfields@fieldses.org, jlayton@poochiereds.net, jirislaby@gmail.com, mcgrof@do-not-panic.com, madalin.bucur@nxp.com, UNGLinuxDriver@microchip.com, nab@linux-iscsi.org, mickflemm@gmail.com, nicolas.ferre@atmel.com, raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org, satananda.burla@caviumnetworks.com, thomas.petazzoni@free-electrons.com, timur@codeaurora.org, trond.myklebust@primarydata.com, vivien.didelot@savoirfairelinux.com, woojung.huh@microchip.com
 List-Id: linux-scsi@vger.kernel.org
 
-RnJvbTogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+DQpEYXRlOiBUaHUsIDA5IEZl
-YiAyMDE3IDE2OjEwOjA2ICswMjAwDQoNCj4gRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBn
-bWFpbC5jb20+IHdyaXRlczoNCj4gDQo+Pj4+IElmIG5vdCwgZm9yIHNvbWV0aGluZyBsaWtlIHRo
-aXMgaXQncyBhIG11c3Q6DQo+Pj4+DQo+Pj4+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2
-MjEwL2NmZzgwMjExLmM6MjQ6MzA6IGVycm9yOiBleHBlY3RlZCChKaIgYmVmb3JlIKFib29sog0K
-Pj4+PiAgbW9kdWxlX3BhcmFtKGRpc2FibGVfYXBfc21lLCBib29sLCAwNDQ0KTsNCj4+Pj4gICAg
-ICAgICAgICAgICAgICAgICAgICAgICAgICAgXg0KPj4+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9h
-dGgvd2lsNjIxMC9jZmc4MDIxMS5jOjI1OjM0OiBlcnJvcjogZXhwZWN0ZWQgoSmiIGJlZm9yZSBz
-dHJpbmcgY29uc3RhbnQNCj4+Pj4gIE1PRFVMRV9QQVJNX0RFU0MoZGlzYWJsZV9hcF9zbWUsICIg
-bGV0IHVzZXIgc3BhY2UgaGFuZGxlIEFQIG1vZGUgU01FIik7DQo+Pj4+ICAgICAgICAgICAgICAg
-ICAgICAgICAgICAgICAgICAgICBeDQo+Pj4+IExpa2UgbGlrZSB0aGF0IGZpbGUgbmVlZHMgbGlu
-dXgvbW9kdWxlLmggaW5jbHVkZWQuDQo+Pj4gDQo+Pj4gSm9oYW5uZXMgYWxyZWFkeSBmaXhlZCBh
-IHNpbWlsYXIgKG9yIHNhbWUpIHByb2JsZW0gaW4gbXkgdHJlZToNCj4+PiANCj4+PiB3aWw2MjEw
-OiBpbmNsdWRlIG1vZHVsZXBhcmFtLmgNCj4+PiANCj4+PiBodHRwczovL2dpdC5rZXJuZWwub3Jn
-L2NnaXQvbGludXgva2VybmVsL2dpdC9rdmFsby93aXJlbGVzcy1kcml2ZXJzLW5leHQuZ2l0L2Nv
-bW1pdC8/aWQ9OTQ5YzJkMDA5Njc1M2Q1MThlZjZlMGJkODQxOGM4MDg2NzQ3MTk2Yg0KPj4+IA0K
-Pj4+IEknbSBwbGFubmluZyB0byBzZW5kIHlvdSBhIHB1bGwgcmVxdWVzdCB0b21vcnJvdyB3aGlj
-aCBjb250YWlucyB0aGF0DQo+Pj4gb25lLg0KPj4NCj4+IFRoYW5rcyBLYWxsZSENCj4+DQo+PiBE
-YXZpZCwgY2FuIHlvdSBob2xkIG9uIHRoaXMgc2VyaWVzIHVudGlsIEthbGxlJ3MgcHVsbCByZXF1
-ZXN0IGdldHMNCj4+IHN1Ym1pdHRlZD8gUGFzdCB0aGlzIGVycm9yLCBhbGxtb2Rjb25maWcgYnVp
-bGRzIGZpbmUgd2l0aCB0aGlzIHBhdGNoDQo+PiBzZXJpZXMgKGp1c3QgdGVzdGVkKS4gVGhhbmtz
-IQ0KPiANCj4gSnVzdCBzdWJtaXR0ZWQgdGhlIHB1bGwgcmVxdWVzdDoNCj4gDQo+IGh0dHBzOi8v
-cGF0Y2h3b3JrLm96bGFicy5vcmcvcGF0Y2gvNzI2MTMzLw0KDQpJJ3ZlIHJldHJpZWQgdGhpcyBw
-YXRjaCBzZXJpZXMsIGFuZCB3aWxsIHB1c2ggaXQgb3V0IGFzc3VtaW5nIHRoZSBidWlsZA0KY29t
-cGxldGVzIHByb3Blcmx5Lg0K
+On 02/10/2017 10:51 AM, David Miller wrote:
+> From: Kalle Valo <kvalo@codeaurora.org>
+> Date: Thu, 09 Feb 2017 16:10:06 +0200
+> 
+>> Florian Fainelli <f.fainelli@gmail.com> writes:
+>>
+>>>>> If not, for something like this it's a must:
+>>>>>
+>>>>> drivers/net/wireless/ath/wil6210/cfg80211.c:24:30: error: expected ‘)’ before ‘bool’
+>>>>>  module_param(disable_ap_sme, bool, 0444);
+>>>>>                               ^
+>>>>> drivers/net/wireless/ath/wil6210/cfg80211.c:25:34: error: expected ‘)’ before string constant
+>>>>>  MODULE_PARM_DESC(disable_ap_sme, " let user space handle AP mode SME");
+>>>>>                                   ^
+>>>>> Like like that file needs linux/module.h included.
+>>>>
+>>>> Johannes already fixed a similar (or same) problem in my tree:
+>>>>
+>>>> wil6210: include moduleparam.h
+>>>>
+>>>> https://git.kernel.org/cgit/linux/kernel/git/kvalo/wireless-drivers-next.git/commit/?id=949c2d0096753d518ef6e0bd8418c8086747196b
+>>>>
+>>>> I'm planning to send you a pull request tomorrow which contains that
+>>>> one.
+>>>
+>>> Thanks Kalle!
+>>>
+>>> David, can you hold on this series until Kalle's pull request gets
+>>> submitted? Past this error, allmodconfig builds fine with this patch
+>>> series (just tested). Thanks!
+>>
+>> Just submitted the pull request:
+>>
+>> https://patchwork.ozlabs.org/patch/726133/
+> 
+> I've retried this patch series, and will push it out assuming the build
+> completes properly.
+
+I see it merged in net-next/master, thanks a lot this is going to save a
+lot of cycles in the future, thanks David!
+-- 
+Florian
