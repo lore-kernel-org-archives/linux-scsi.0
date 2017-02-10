@@ -1,51 +1,51 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Fri, 10 Feb 2017 10:02:40 -0800
-Message-ID: <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH net-next v2 00/12] net: dsa: remove unnecessary phy.h
+ include
+Date: Fri, 10 Feb 2017 13:51:38 -0500 (EST)
+Message-ID: <20170210.135138.2084086346069765205.davem@davemloft.net>
+References: <87h944ll0w.fsf@kamboji.qca.qualcomm.com>
+        <5fe312c8-e59e-669c-cd29-f6773adcd8e5@gmail.com>
+        <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
-Sender: target-devel-owner@vger.kernel.org
-To: lixiubo@cmss.chinamobile.com, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Content-Type: Text/Plain; charset=iso-8859-7
+Content-Transfer-Encoding: base64
+Return-path: <linux-mips-bounce@linux-mips.org>
+In-Reply-To: <877f4zjw01.fsf@kamboji.qca.qualcomm.com>
+Sender: linux-mips-bounce@linux-mips.org
+Errors-to: linux-mips-bounce@linux-mips.org
+List-help: <mailto:ecartis@linux-mips.org?Subject=help>
+List-unsubscribe: <mailto:ecartis@linux-mips.org?subject=unsubscribe%20linux-mips>
+List-software: Ecartis version 1.0.0
+List-subscribe: <mailto:ecartis@linux-mips.org?subject=subscribe%20linux-mips>
+List-owner: <mailto:ralf@linux-mips.org>
+List-post: <mailto:linux-mips@linux-mips.org>
+List-archive: <http://www.linux-mips.org/archives/linux-mips/>
+To: kvalo@codeaurora.org
+Cc: f.fainelli@gmail.com, netdev@vger.kernel.org, linux-mips@linux-mips.org, linux-nfs@vger.kernel.org, linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org, linux-wireless@vger.kernel.org, target-devel@vger.kernel.org, andrew@lunn.ch, anna.schumaker@netapp.com, derek.chickles@caviumnetworks.com, felix.manlunas@caviumnetworks.com, bfields@fieldses.org, jlayton@poochiereds.net, jirislaby@gmail.com, mcgrof@do-not-panic.com, madalin.bucur@nxp.com, UNGLinuxDriver@microchip.com, nab@linux-iscsi.org, mickflemm@gmail.com, nicolas.ferre@atmel.com, raghu.vatsavayi@caviumnetworks.com, ralf@linux-mips.org, satananda.burla@caviumnetworks.com, thomas.petazzoni@free-electrons.com, timur@codeaurora.org, trond.myklebust@primarydata.com, vivien.didelot@savoirfairelinux.com, woojung.huh
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/09/2017 10:48 PM, lixiubo@cmss.chinamobile.com wrote:
-> For now the tcmu is based on UIO framework and only using the
-> map0 with fixed ring buffer size. This will work fine mostly,
-> but when we are using the 10GBASE NIC, the ring buffer is too
-> small to deal with the incoming iscsi cmds.
->
-> We can resolve the above issue by increasingt the ring buffer
-> size larger, but we don't know the exactly size to all cases.
->
-> This patch will add double ring buffers support by adding map1
-> support through UIO device.
-
-Hi Xiubo,
-
-Yes I think it's now clear we need more buffer space to avoid 
-bottlenecks for high iops. The initial design kept it simple with the 
-1MB vmalloc'd space but anticipated greater would be needed. It should 
-not be necessary to change userspace or the TCMU ABI to handle growing 
-the buffer for fast devices:
-
-1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB 
-to 1GB or larger
-2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring 
-portion, and dynamically alloc pages for the data area as needed and map 
-them into the data area.
-3. Upgrade the current fixed-size bitmap-based tracking of data area to 
-handle the new scheme
-4. Implement an algorithm to keep allocated pages mapped into the data 
-area for reuse, and maybe a heuristic to keep extreme burstiness from 
-over-allocating pages
-
-This should allow TCMU to allocate more data area as needed, not waste 
-memory for slower devices, and avoid userspace ABI changes. Could we 
-prototype this approach and see if it is workable?
-
-Thanks -- Regards -- Andy
+RnJvbTogS2FsbGUgVmFsbyA8a3ZhbG9AY29kZWF1cm9yYS5vcmc+DQpEYXRlOiBUaHUsIDA5IEZl
+YiAyMDE3IDE2OjEwOjA2ICswMjAwDQoNCj4gRmxvcmlhbiBGYWluZWxsaSA8Zi5mYWluZWxsaUBn
+bWFpbC5jb20+IHdyaXRlczoNCj4gDQo+Pj4+IElmIG5vdCwgZm9yIHNvbWV0aGluZyBsaWtlIHRo
+aXMgaXQncyBhIG11c3Q6DQo+Pj4+DQo+Pj4+IGRyaXZlcnMvbmV0L3dpcmVsZXNzL2F0aC93aWw2
+MjEwL2NmZzgwMjExLmM6MjQ6MzA6IGVycm9yOiBleHBlY3RlZCChKaIgYmVmb3JlIKFib29sog0K
+Pj4+PiAgbW9kdWxlX3BhcmFtKGRpc2FibGVfYXBfc21lLCBib29sLCAwNDQ0KTsNCj4+Pj4gICAg
+ICAgICAgICAgICAgICAgICAgICAgICAgICAgXg0KPj4+PiBkcml2ZXJzL25ldC93aXJlbGVzcy9h
+dGgvd2lsNjIxMC9jZmc4MDIxMS5jOjI1OjM0OiBlcnJvcjogZXhwZWN0ZWQgoSmiIGJlZm9yZSBz
+dHJpbmcgY29uc3RhbnQNCj4+Pj4gIE1PRFVMRV9QQVJNX0RFU0MoZGlzYWJsZV9hcF9zbWUsICIg
+bGV0IHVzZXIgc3BhY2UgaGFuZGxlIEFQIG1vZGUgU01FIik7DQo+Pj4+ICAgICAgICAgICAgICAg
+ICAgICAgICAgICAgICAgICAgICBeDQo+Pj4+IExpa2UgbGlrZSB0aGF0IGZpbGUgbmVlZHMgbGlu
+dXgvbW9kdWxlLmggaW5jbHVkZWQuDQo+Pj4gDQo+Pj4gSm9oYW5uZXMgYWxyZWFkeSBmaXhlZCBh
+IHNpbWlsYXIgKG9yIHNhbWUpIHByb2JsZW0gaW4gbXkgdHJlZToNCj4+PiANCj4+PiB3aWw2MjEw
+OiBpbmNsdWRlIG1vZHVsZXBhcmFtLmgNCj4+PiANCj4+PiBodHRwczovL2dpdC5rZXJuZWwub3Jn
+L2NnaXQvbGludXgva2VybmVsL2dpdC9rdmFsby93aXJlbGVzcy1kcml2ZXJzLW5leHQuZ2l0L2Nv
+bW1pdC8/aWQ9OTQ5YzJkMDA5Njc1M2Q1MThlZjZlMGJkODQxOGM4MDg2NzQ3MTk2Yg0KPj4+IA0K
+Pj4+IEknbSBwbGFubmluZyB0byBzZW5kIHlvdSBhIHB1bGwgcmVxdWVzdCB0b21vcnJvdyB3aGlj
+aCBjb250YWlucyB0aGF0DQo+Pj4gb25lLg0KPj4NCj4+IFRoYW5rcyBLYWxsZSENCj4+DQo+PiBE
+YXZpZCwgY2FuIHlvdSBob2xkIG9uIHRoaXMgc2VyaWVzIHVudGlsIEthbGxlJ3MgcHVsbCByZXF1
+ZXN0IGdldHMNCj4+IHN1Ym1pdHRlZD8gUGFzdCB0aGlzIGVycm9yLCBhbGxtb2Rjb25maWcgYnVp
+bGRzIGZpbmUgd2l0aCB0aGlzIHBhdGNoDQo+PiBzZXJpZXMgKGp1c3QgdGVzdGVkKS4gVGhhbmtz
+IQ0KPiANCj4gSnVzdCBzdWJtaXR0ZWQgdGhlIHB1bGwgcmVxdWVzdDoNCj4gDQo+IGh0dHBzOi8v
+cGF0Y2h3b3JrLm96bGFicy5vcmcvcGF0Y2gvNzI2MTMzLw0KDQpJJ3ZlIHJldHJpZWQgdGhpcyBw
+YXRjaCBzZXJpZXMsIGFuZCB3aWxsIHB1c2ggaXQgb3V0IGFzc3VtaW5nIHRoZSBidWlsZA0KY29t
+cGxldGVzIHByb3Blcmx5Lg0K
