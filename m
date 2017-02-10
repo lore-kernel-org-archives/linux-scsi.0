@@ -1,51 +1,51 @@
-From: Tomas Henzl <thenzl@redhat.com>
-Subject: Re: [PATCH v3 19/39] megaraid_sas: MR_TargetIdToLdGet u8 to u16 and
- avoid invalid raid-map access
-Date: Fri, 10 Feb 2017 14:46:11 +0100
-Message-ID: <acfca5a2-cd3a-9c16-b628-46c2232a7ed8@redhat.com>
-References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
- <1486717179-23320-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Fri, 10 Feb 2017 10:02:40 -0800
+Message-ID: <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:58246 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751599AbdBJNqS (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 10 Feb 2017 08:46:18 -0500
-In-Reply-To: <1486717179-23320-20-git-send-email-shivasharan.srikanteshwara@broadcom.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+Sender: target-devel-owner@vger.kernel.org
+To: lixiubo@cmss.chinamobile.com, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, linux-scsi@vger.kernel.org
-Cc: martin.petersen@oracle.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com
 
-On 10.2.2017 09:59, Shivasharan S wrote:
-> Change MR_TargetIdToLdGet return type from u8 to u16.
+On 02/09/2017 10:48 PM, lixiubo@cmss.chinamobile.com wrote:
+> For now the tcmu is based on UIO framework and only using the
+> map0 with fixed ring buffer size. This will work fine mostly,
+> but when we are using the 10GBASE NIC, the ring buffer is too
+> small to deal with the incoming iscsi cmds.
 >
-> ld id range check is added at two places in this patch -
-> @megasas_build_ldio_fusion and @megasas_build_ld_nonrw_fusion.
-> Previous driver code used different data type for lds TargetId returned from MR_TargetIdToLdGet.
-> Prior to this change, above two functions was safeguarded due to function always return u8
-> and maximum value of ld id returned was 255.
+> We can resolve the above issue by increasingt the ring buffer
+> size larger, but we don't know the exactly size to all cases.
 >
-> In below check, fw_supported_vd_count as of today is 64 or 256 and
-> valid range  to support is either 0-63 or 0-255. Ideally want to filter accessing
-> raid map for ld ids which are not valid. With the u16 change, invalid ld id value
-> is 0xFFFF and we will see kernel panic due to random memory access in MR_LdRaidGet.
-> The changes will ensure we do not call MR_LdRaidGet if ld id is beyond size of ldSpanMap array.
->
->                if (ld < instance->fw_supported_vd_count)
->
-> From firmware perspective,ld id 0xFF is invalid and even though current driver
-> code forward such command, firmware fails with target not available.
->
-> ld target id issue occurs mainly whenever driver loops to populate raid map (ea. MR_ValidateMapInfo).
-> These are the only two places where we may see out of range target ids and wants to
-> protect raid map access based on range provided by Firmware API.
->
-> Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-> Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+> This patch will add double ring buffers support by adding map1
+> support through UIO device.
 
-Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+Hi Xiubo,
 
-Tomas
+Yes I think it's now clear we need more buffer space to avoid 
+bottlenecks for high iops. The initial design kept it simple with the 
+1MB vmalloc'd space but anticipated greater would be needed. It should 
+not be necessary to change userspace or the TCMU ABI to handle growing 
+the buffer for fast devices:
+
+1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB 
+to 1GB or larger
+2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring 
+portion, and dynamically alloc pages for the data area as needed and map 
+them into the data area.
+3. Upgrade the current fixed-size bitmap-based tracking of data area to 
+handle the new scheme
+4. Implement an algorithm to keep allocated pages mapped into the data 
+area for reuse, and maybe a heuristic to keep extreme burstiness from 
+over-allocating pages
+
+This should allow TCMU to allocate more data area as needed, not waste 
+memory for slower devices, and avoid userspace ABI changes. Could we 
+prototype this approach and see if it is workable?
+
+Thanks -- Regards -- Andy
