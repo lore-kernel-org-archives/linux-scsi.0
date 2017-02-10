@@ -1,108 +1,62 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 08/39] megaraid_sas: megasas_get_request_descriptor always return valid desc
-Date: Fri, 10 Feb 2017 00:59:08 -0800
-Message-ID: <1486717179-23320-9-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 38/39] megaraid_sas: Change RAID_1_10_RMW_CMDS to RAID_1_PEER_CMDS and set value to 2
+Date: Fri, 10 Feb 2017 00:59:38 -0800
+Message-ID: <1486717179-23320-39-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f42.google.com ([74.125.83.42]:34261 "EHLO
-        mail-pg0-f42.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752052AbdBJLAN (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 06:00:13 -0500
-Received: by mail-pg0-f42.google.com with SMTP id 14so9849084pgg.1
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 02:59:48 -0800 (PST)
+Received: from mail-pf0-f178.google.com ([209.85.192.178]:35348 "EHLO
+        mail-pf0-f178.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752129AbdBJLCu (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 06:02:50 -0500
+Received: by mail-pf0-f178.google.com with SMTP id 202so5628190pfx.2
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 03:02:37 -0800 (PST)
 In-Reply-To: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-No functional change. Code clean up. Removing error code which is not
-valid scenario.
-In megasas_get_request_descriptor we can remove the error handling
-which is not required.
-With fusion controllers, if there is a valid message frame available,
-we are guaranteed to get a corresponding request descriptor.
+For RAID1 FastPath writes, driver needs to allocate extra commands
+internally to accommodate for the extra peer command being sent.
+Currently driver is allocating 2 extra commands for each but only
+one extra command is necessary.
+Set RAID_1_10_RMW_CMDS to 2 and also change macro name to
+RAID_1_PEER_CMDS.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
-
-Changes in v2 - split patches into two. 
-discussed below 
-http://marc.info/?l=linux-scsi&m=148638999110404&w=2
-
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 24 ++----------------------
- 1 file changed, 2 insertions(+), 22 deletions(-)
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 2 +-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 6ec7a18..b6c5dc5 100644
+index 9928766..7500901 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2438,18 +2438,12 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 	return 0;
+@@ -293,7 +293,7 @@ megasas_fusion_update_can_queue(struct megasas_instance *instance, int fw_boot_c
+ 
+ 	if (instance->is_ventura)
+ 		instance->max_mpt_cmds =
+-		instance->max_fw_cmds * RAID_1_10_RMW_CMDS;
++		instance->max_fw_cmds * RAID_1_PEER_CMDS;
+ 	else
+ 		instance->max_mpt_cmds = instance->max_fw_cmds;
  }
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index 8e8c35f..d78d7611 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -101,7 +101,7 @@ enum MR_RAID_FLAGS_IO_SUB_TYPE {
+ #define MEGASAS_FP_CMD_LEN	16
+ #define MEGASAS_FUSION_IN_RESET 0
+ #define THRESHOLD_REPLY_COUNT 50
+-#define RAID_1_10_RMW_CMDS 3
++#define RAID_1_PEER_CMDS 2
+ #define JBOD_MAPS_COUNT	2
  
--union MEGASAS_REQUEST_DESCRIPTOR_UNION *
-+static union MEGASAS_REQUEST_DESCRIPTOR_UNION *
- megasas_get_request_descriptor(struct megasas_instance *instance, u16 index)
- {
- 	u8 *p;
- 	struct fusion_context *fusion;
- 
--	if (index >= instance->max_mpt_cmds) {
--		dev_err(&instance->pdev->dev, "Invalid SMID (0x%x)request for "
--		       "descriptor for scsi%d\n", index,
--			instance->host->host_no);
--		return NULL;
--	}
- 	fusion = instance->ctrl_context;
- 	p = fusion->req_frames_desc +
- 		sizeof(union MEGASAS_REQUEST_DESCRIPTOR_UNION) * index;
-@@ -2960,7 +2954,7 @@ build_mpt_mfi_pass_thru(struct megasas_instance *instance,
- union MEGASAS_REQUEST_DESCRIPTOR_UNION *
- build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- {
--	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
-+	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc = NULL;
- 	u16 index;
- 
- 	if (build_mpt_mfi_pass_thru(instance, cmd)) {
-@@ -2972,9 +2966,6 @@ build_mpt_cmd(struct megasas_instance *instance, struct megasas_cmd *cmd)
- 
- 	req_desc = megasas_get_request_descriptor(instance, index - 1);
- 
--	if (!req_desc)
--		return NULL;
--
- 	req_desc->Words = 0;
- 	req_desc->SCSIIO.RequestFlags = (MPI2_REQ_DESCRIPT_FLAGS_SCSI_IO <<
- 					 MEGASAS_REQ_DESCRIPT_FLAGS_TYPE_SHIFT);
-@@ -2997,11 +2988,6 @@ megasas_issue_dcmd_fusion(struct megasas_instance *instance,
- 	union MEGASAS_REQUEST_DESCRIPTOR_UNION *req_desc;
- 
- 	req_desc = build_mpt_cmd(instance, cmd);
--	if (!req_desc) {
--		dev_info(&instance->pdev->dev, "Failed from %s %d\n",
--					__func__, __LINE__);
--		return DCMD_NOT_FIRED;
--	}
- 
- 	megasas_fire_cmd_fusion(instance, req_desc);
- 	return DCMD_SUCCESS;
-@@ -3438,12 +3424,6 @@ megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
- 
- 	req_desc = megasas_get_request_descriptor(instance,
- 			(cmd_fusion->index - 1));
--	if (!req_desc) {
--		dev_err(&instance->pdev->dev, "Failed from %s %d\n",
--			__func__, __LINE__);
--		megasas_return_cmd(instance, cmd_mfi);
--		return -ENOMEM;
--	}
- 
- 	cmd_fusion->request_desc = req_desc;
- 	req_desc->Words = 0;
+ enum MR_FUSION_ADAPTER_TYPE {
 -- 
 2.8.3
