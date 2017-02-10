@@ -1,94 +1,75 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 00/39] megaraid_sas: Updates for scsi-next
-Date: Fri, 10 Feb 2017 00:59:00 -0800
-Message-ID: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 34/39] megaraid_sas: Use synchronize_irq to wait for IRQs to complete
+Date: Fri, 10 Feb 2017 00:59:34 -0800
+Message-ID: <1486717179-23320-35-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f182.google.com ([209.85.192.182]:35688 "EHLO
-        mail-pf0-f182.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751477AbdBJJ5c (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:57:32 -0500
-Received: by mail-pf0-f182.google.com with SMTP id 202so5228819pfx.2
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:56:56 -0800 (PST)
+Received: from mail-pf0-f179.google.com ([209.85.192.179]:36123 "EHLO
+        mail-pf0-f179.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751726AbdBJKJg (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 05:09:36 -0500
+Received: by mail-pf0-f179.google.com with SMTP id 189so8416905pfu.3
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 02:08:31 -0800 (PST)
+In-Reply-To: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Changes in v3:
-Patch 21: Fix to pass rctx_g35 pointer to set/get_num_sge()
-Move all v2 changelog descriptions beyond actual commit message body
+FIX - Do not use random delay to synchronize with IRQ. Use kernel API.
 
-Changes in v2:
-Patch 3: Fix to update status and ex_status from failed r1_cmd
-Patch 8: Split into two separate patches,
- 1. megasas_get_request_descriptor will always return valid
-    request descriptor
- 2. With above changes, issue_dcmd always return DCMD_SUCCESS.
-    Change return type to void and update all callers.
-Patch 11: Update commit description, remove reference to dependent patch.
-Patch 12: Update with correct commit description
-Patch 14: Fix typo in commit description
-Patch 19: Correction to commit description
-Drop patch 33 of last patch series which added call for flush_scheduled_work
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Reviewed-by: Hannes Reinecke <hare@suse.com>
+Reviewed-by: Tomas Henzl <thenzl@redhat.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fusion.c | 20 ++++++++++++++++++--
+ 1 file changed, 18 insertions(+), 2 deletions(-)
 
-Shivasharan S (39):
-  Revert "scsi: megaraid_sas: Enable or Disable Fast path based on the
-    PCI Threshold Bandwidth"
-  megaraid_sas: cpu select rework.
-  megaraid_sas: raid 1 fast path code optimize
-  megaraid_sas: 32 bit descriptor fire cmd optimization
-  megaraid_sas: Refactor MEGASAS_IS_LOGICAL macro using sdev
-  megaraid_sas: RAID map is accessed for SYS PDs when use_seqnum_jbod_fp
-    is not set
-  megaraid_sas: Use DID_REQUEUE
-  megaraid_sas: megasas_get_request_descriptor always return valid desc
-  megaraid_sas: change issue_dcmd to return void from int
-  megaraid_sas: NVME Interface detection and prop settings
-  megaraid_sas: NVME interface target prop added
-  megaraid_sas: NVME fast path io support
-  megaraid_sas: raid 1 write performance for large io
-  megaraid_sas: set residual bytes count during IO completion
-  megaraid_sas: enhance debug logs in OCR context
-  megaraid_sas: add print in device removal path
-  megaraid_sas: reduce size of fusion_context and use vmalloc if kmalloc
-    fails
-  megaraid_sas: In validate raid map, raid capability is not converted
-    to cpu format for all lds
-  megaraid_sas: MR_TargetIdToLdGet u8 to u16 and avoid invalid raid-map
-    access
-  megaraid_sas: Big endian RDPQ mode fix
-  megaraid_sas: big endian support changes
-  megaraid_sas: avoid unaligned access in ioctl path
-  megaraid_sas: latest controller OCR capability from FW before sending
-    shutdown DCMD
-  megaraid_sas: set pd_after_lb from MR_BuildRaidContext and initialize
-    pDevHandle to MR_DEVHANDLE_INVALID
-  megaraid_sas: Change max_cmd from u32 to u16 in all functions
-  megaraid_sas: update can_queue only if the new value is less
-  megaraid_sas: max_fw_cmds are decremented twice, remove duplicate
-  megaraid_sas: megasas_return_cmd does not memset IO frame to zero
-  megaraid_sas: Remove unused pd_index from
-    megasas_build_ld_nonrw_fusion
-  megaraid_sas: Do not set fp_possible if TM capable for non-RW syspdIO,
-    change fp_possible to bool
-  megaraid_sas: During OCR, if get_ctrl_info fails do not continue with
-    OCR
-  megaraid_sas: Change build_mpt_mfi_pass_thru to return void
-  megaraid_sas: Bail out the driver load if ld_list_query fails
-  megaraid_sas: Use synchronize_irq to wait for IRQs to complete
-  megaraid_sas: Increase internal command pool
-  megaraid_sas: Cleanup VD_EXT_DEBUG and SPAN_DEBUG related debug prints
-  megaraid_sas: Indentation and smatch warning fixes
-  megaraid_sas: Change RAID_1_10_RMW_CMDS to RAID_1_PEER_CMDS and set
-    value to 2
-  megaraid_sas: driver version upgrade
-
- drivers/scsi/megaraid/megaraid_sas.h        |   82 +-
- drivers/scsi/megaraid/megaraid_sas_base.c   |  548 +++++++----
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  427 ++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 1352 ++++++++++++++++-----------
- drivers/scsi/megaraid/megaraid_sas_fusion.h |  144 ++-
- 5 files changed, 1434 insertions(+), 1119 deletions(-)
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+index bafaf03..d8bfb87 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
+@@ -3145,6 +3145,22 @@ complete_cmd_fusion(struct megasas_instance *instance, u32 MSIxIndex)
+ }
+ 
+ /**
++ * megasas_sync_irqs -	Synchronizes all IRQs owned by adapter
++ * @instance:			Adapter soft state
++ */
++void megasas_sync_irqs(unsigned long instance_addr)
++{
++	u32 count, i;
++	struct megasas_instance *instance =
++		(struct megasas_instance *)instance_addr;
++
++	count = instance->msix_vectors > 0 ? instance->msix_vectors : 1;
++
++	for (i = 0; i < count; i++)
++		synchronize_irq(pci_irq_vector(instance->pdev, i));
++}
++
++/**
+  * megasas_complete_cmd_dpc_fusion -	Completes command
+  * @instance:			Adapter soft state
+  *
+@@ -3820,7 +3836,7 @@ megasas_issue_tm(struct megasas_instance *instance, u16 device_handle,
+ 			break;
+ 		else {
+ 			instance->instancet->disable_intr(instance);
+-			msleep(1000);
++			megasas_sync_irqs((unsigned long)instance);
+ 			megasas_complete_cmd_dpc_fusion
+ 					((unsigned long)instance);
+ 			instance->instancet->enable_intr(instance);
+@@ -4174,7 +4190,7 @@ int megasas_reset_fusion(struct Scsi_Host *shost, int reason)
+ 	set_bit(MEGASAS_FUSION_IN_RESET, &instance->reset_flags);
+ 	atomic_set(&instance->adprecovery, MEGASAS_ADPRESET_SM_POLLING);
+ 	instance->instancet->disable_intr(instance);
+-	msleep(1000);
++	megasas_sync_irqs((unsigned long)instance);
+ 
+ 	/* First try waiting for commands to complete */
+ 	if (megasas_wait_for_outstanding_fusion(instance, reason,
 -- 
 2.8.3
