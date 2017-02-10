@@ -1,220 +1,217 @@
-From: Dan Williams <dan.j.williams@intel.com>
-Subject: Re: [lkp-robot] [scsi, block] 0dba1314d4: WARNING:at_fs/sysfs/dir.c:#sysfs_warn_dup
-Date: Thu, 9 Feb 2017 19:11:44 -0800
-Message-ID: <CAPcyv4hg0ix39GkRHkfyuGyWeFG4mCdWP23w7hJvh+Rxn5V-bg@mail.gmail.com>
-References: <20170204070936.GE12121@yexl-desktop> <CAPcyv4j0syAsinM-KbeefKysJhM9zt6kvrX=0c2HrtPV_tRAHQ@mail.gmail.com>
- <CAPcyv4gBQDuj65KRmFvP2q4Qt3d3xycM8L_TypAzYkvhmUSh6A@mail.gmail.com>
- <20170205091314.GA3042@lst.de> <CAPcyv4gE0+3pZQV=V75wxddFVhWeAz1abfJ=q8D1Zi+8Oi17rA@mail.gmail.com>
- <1486426467.2474.122.camel@HansenPartnership.com> <01c338e2-2a30-610d-b7fa-00cb3ce2cf86@fb.com>
- <CAPcyv4jkak-gX3gQaBJiEk1G79skdN2F9WL-sK2DjPwFhA8rdg@mail.gmail.com> <1486598898.2484.46.camel@HansenPartnership.com>
+From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+Date: Fri, 10 Feb 2017 10:13:09 +0530
+Message-ID: <CAK=zhgqBH3YJTo-PJF5nN9futQ-LWjVzAUji9xC_rWO5EA=_+g@mail.gmail.com>
+References: <1485854760-122683-1-git-send-email-hare@suse.de>
+ <20170131100243.GA1811@lst.de> <9a9d5acd-5f51-ad5b-7364-1d7549c040fd@suse.de>
+ <e8d8dbf8dc2fa11b85a90211f2298b20@mail.gmail.com> <255dbb75-9ebd-0c7b-486e-e6fec772b8ca@suse.de>
+ <41a4fdd78121e86e13dc874127b0b956@mail.gmail.com> <3e50cfdc-c330-4241-5ac3-a8f2ef5f77b4@suse.de>
+ <CAK=zhgqjmpOS7M3WOsC+yUMRiw+y6H0sP2Hca9tuCyM19sAR8Q@mail.gmail.com> <1d7e8757-4b25-3f09-77ec-a286e83d3d73@suse.de>
 Mime-Version: 1.0
-Content-Type: multipart/mixed; boundary=001a1141481a2400e1054824755c
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <1486598898.2484.46.camel@HansenPartnership.com>
-Sender: linux-block-owner@vger.kernel.org
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Jens Axboe <axboe@fb.com>, Christoph Hellwig <hch@lst.de>, kernel test robot <xiaolong.ye@intel.com>, Bart Van Assche <bart.vanassche@sandisk.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jan Kara <jack@suse.cz>, Omar Sandoval <osandov@osandov.com>, Omar Sandoval <osandov@fb.com>, LKML <linux-kernel@vger.kernel.org>, Jens Axboe <axboe@kernel.dk>, LKP <lkp@01.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-block@vger.kernel.org
-List-Id: linux-scsi@vger.kernel.org
-
---001a1141481a2400e1054824755c
 Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-qk0-f172.google.com ([209.85.220.172]:33593 "EHLO
+        mail-qk0-f172.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751131AbdBJEoB (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2017 23:44:01 -0500
+Received: by mail-qk0-f172.google.com with SMTP id s140so27923263qke.0
+        for <linux-scsi@vger.kernel.org>; Thu, 09 Feb 2017 20:43:11 -0800 (PST)
+In-Reply-To: <1d7e8757-4b25-3f09-77ec-a286e83d3d73@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
+List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Kashyap Desai <kashyap.desai@broadcom.com>, Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>
 
-On Wed, Feb 8, 2017 at 4:08 PM, James Bottomley
-<James.Bottomley@hansenpartnership.com> wrote:
-> On Mon, 2017-02-06 at 21:42 -0800, Dan Williams wrote:
-[..]
->> ...but it reproduces on current mainline with the same config. I
->> haven't spotted what makes scsi_debug behave like this.
->
-> Looking at the config, it's a static debug with report luns enabled.
->  Is it as simple as the fact that we probe lun 0 manually to see if the
-> target exists, but then we don't account for the fact that we already
-> did this, so if it turns up again in the report lun scan, we'll probe
-> it again leading to a double add.  If that theory is correct, this may
-> be the fix (compile tested only).
->
-> James
->
-> ---
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 6f7128f..ba4be08 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1441,6 +1441,10 @@ static int scsi_report_lun_scan(struct scsi_target *starget, int bflags,
->         for (lunp = &lun_data[1]; lunp <= &lun_data[num_luns]; lunp++) {
->                 lun = scsilun_to_int(lunp);
->
-> +               if (lun == 0)
-> +                       /* already scanned LUN 0 */
-> +                       continue;
-> +
->                 if (lun > sdev->host->max_lun) {
->                         sdev_printk(KERN_WARNING, sdev,
->                                     "lun%llu has a LUN larger than"
+On Thu, Feb 9, 2017 at 6:42 PM, Hannes Reinecke <hare@suse.de> wrote:
+> On 02/09/2017 02:03 PM, Sreekanth Reddy wrote:
+>> On Wed, Feb 1, 2017 at 1:13 PM, Hannes Reinecke <hare@suse.de> wrote:
+>>>
+>>> On 02/01/2017 08:07 AM, Kashyap Desai wrote:
+>>>>>
+>>>>> -----Original Message-----
+>>>>> From: Hannes Reinecke [mailto:hare@suse.de]
+>>>>> Sent: Wednesday, February 01, 2017 12:21 PM
+>>>>> To: Kashyap Desai; Christoph Hellwig
+>>>>> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org;
+>>>>> Sathya
+>>>>> Prakash Veerichetty; PDL-MPT-FUSIONLINUX; Sreekanth Reddy
+>>>>> Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+>>>>>
+>>>>> On 01/31/2017 06:54 PM, Kashyap Desai wrote:
+>>>>>>>
+>>>>>>> -----Original Message-----
+>>>>>>> From: Hannes Reinecke [mailto:hare@suse.de]
+>>>>>>> Sent: Tuesday, January 31, 2017 4:47 PM
+>>>>>>> To: Christoph Hellwig
+>>>>>>> Cc: Martin K. Petersen; James Bottomley; linux-scsi@vger.kernel.org=
+;
+>>>>>>
+>>>>>> Sathya
+>>>>>>>
+>>>>>>> Prakash; Kashyap Desai; mpt-fusionlinux.pdl@broadcom.com
+>>>>>>> Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+>>>>>>>
+>>>>>>> On 01/31/2017 11:02 AM, Christoph Hellwig wrote:
+>>>>>>>>
+>>>>>>>> On Tue, Jan 31, 2017 at 10:25:50AM +0100, Hannes Reinecke wrote:
+>>>>>>>>>
+>>>>>>>>> Hi all,
+>>>>>>>>>
+>>>>>>>>> this is a patchset to enable full multiqueue support for the
+>>>>>>>>> mpt3sas
+>>>>>>>
+>>>>>>> driver.
+>>>>>>>>>
+>>>>>>>>> While the HBA only has a single mailbox register for submitting
+>>>>>>>>> commands, it does have individual receive queues per MSI-X
+>>>>>>>>> interrupt and as such does benefit from converting it to full
+>>>>>>>>> multiqueue
+>>>>>>
+>>>>>> support.
+>>>>>>>>
+>>>>>>>>
+>>>>>>>> Explanation and numbers on why this would be beneficial, please.
+>>>>>>>> We should not need multiple submissions queues for a single regist=
+er
+>>>>>>>> to benefit from multiple completion queues.
+>>>>>>>>
+>>>>>>> Well, the actual throughput very strongly depends on the blk-mq-sch=
+ed
+>>>>>>> patches from Jens.
+>>>>>>> As this is barely finished I didn't post any numbers yet.
+>>>>>>>
+>>>>>>> However:
+>>>>>>> With multiqueue support:
+>>>>>>> 4k seq read : io=3D60573MB, bw=3D1009.2MB/s, iops=3D258353, runt=3D
+>>>>>
+>>>>> 60021msec
+>>>>>>>
+>>>>>>> With scsi-mq on 1 queue:
+>>>>>>> 4k seq read : io=3D17369MB, bw=3D296291KB/s, iops=3D74072, runt=3D =
+60028msec
+>>>>>>> So yes, there _is_ a benefit.
+>>
+>>
+>> Hannes,
+>>
+>> I have created a md raid0 with 4 SAS SSD drives using below command,
+>> #mdadm --create /dev/md0 --level=3D0 --raid-devices=3D4 /dev/sdg /dev/sd=
+h
+>> /dev/sdi /dev/sdj
+>>
+>> And here is 'mdadm --detail /dev/md0' command output,
+>> ------------------------------------------------------------------------=
+--------------------------------------------------
+>> /dev/md0:
+>>         Version : 1.2
+>>   Creation Time : Thu Feb  9 14:38:47 2017
+>>      Raid Level : raid0
+>>      Array Size : 780918784 (744.74 GiB 799.66 GB)
+>>    Raid Devices : 4
+>>   Total Devices : 4
+>>     Persistence : Superblock is persistent
+>>
+>>     Update Time : Thu Feb  9 14:38:47 2017
+>>           State : clean
+>>  Active Devices : 4
+>> Working Devices : 4
+>>  Failed Devices : 0
+>>   Spare Devices : 0
+>>
+>>      Chunk Size : 512K
+>>
+>>            Name : host_name
+>>            UUID : b63f9da7:b7de9a25:6a46ca00:42214e22
+>>          Events : 0
+>>
+>>     Number   Major   Minor   RaidDevice State
+>>        0       8       96        0      active sync   /dev/sdg
+>>        1       8      112        1      active sync   /dev/sdh
+>>        2       8      144        2      active sync   /dev/sdj
+>>        3       8      128        3      active sync   /dev/sdi
+>> ------------------------------------------------------------------------=
+------------------------------------------------------
+>>
+>> Then I have used below fio profile to run 4K sequence read operations
+>> with nr_hw_queues=3D1 driver and with nr_hw_queues=3D24 driver (as my
+>> system has two numa node and each with 12 cpus).
+>> -----------------------------------------------------
+>> global]
+>> ioengine=3Dlibaio
+>> group_reporting
+>> direct=3D1
+>> rw=3Dread
+>> bs=3D4k
+>> allow_mounted_write=3D0
+>> iodepth=3D128
+>> runtime=3D150s
+>>
+>> [job1]
+>> filename=3D/dev/md0
+>> -----------------------------------------------------
+>>
+>> Here are the fio results when nr_hw_queues=3D1 (i.e. single request
+>> queue) with various number of job counts
+>> 1JOB 4k read  : io=3D213268MB, bw=3D1421.8MB/s, iops=3D363975, runt=3D15=
+0001msec
+>> 2JOBs 4k read : io=3D309605MB, bw=3D2064.2MB/s, iops=3D528389, runt=3D15=
+0001msec
+>> 4JOBs 4k read : io=3D281001MB, bw=3D1873.4MB/s, iops=3D479569, runt=3D15=
+0002msec
+>> 8JOBs 4k read : io=3D236297MB, bw=3D1575.2MB/s, iops=3D403236, runt=3D15=
+0016msec
+>>
+>> Here are the fio results when nr_hw_queues=3D24 (i.e. multiple request
+>> queue) with various number of job counts
+>> 1JOB 4k read   : io=3D95194MB, bw=3D649852KB/s, iops=3D162463, runt=3D15=
+0001msec
+>> 2JOBs 4k read : io=3D189343MB, bw=3D1262.3MB/s, iops=3D323142, runt=3D15=
+0001msec
+>> 4JOBs 4k read : io=3D314832MB, bw=3D2098.9MB/s, iops=3D537309, runt=3D15=
+0001msec
+>> 8JOBs 4k read : io=3D277015MB, bw=3D1846.8MB/s, iops=3D472769, runt=3D15=
+0001msec
+>>
+>> Here we can see that on less number of jobs count, single request
+>> queue (nr_hw_queues=3D1) is giving more IOPs than multi request
+>> queues(nr_hw_queues=3D24).
+>>
+>> Can you please share your fio profile, so that I can try same thing on
+>> my system.
+>>
+> Have you tried with the latest git update from Jens for-4.11/block (or
+> for-4.11/next) branch?
 
-I gave this a shot on top of linux-next, but still hit the failure.
-Log attached.
+I am using below git repo,
 
---001a1141481a2400e1054824755c
-Content-Type: application/octet-stream; name=log
-Content-Disposition: attachment; filename=log
-Content-Transfer-Encoding: base64
-X-Attachment-Id: f_iyz8l57m0
+https://git.kernel.org/cgit/linux/kernel/git/mkp/scsi.git/log/?h=3D4.11/scs=
+i-queue
 
-WyAgICA1Ljk4MDk1OV0gc3Q6IFZlcnNpb24gMjAxNjAyMDksIGZpeGVkIGJ1ZnNpemUgMzI3Njgs
-IHMvZyBzZWdzIDI1NgpbICAgIDUuOTkxMTcwXSBvc3N0IDpJOiBUYXBlIGRyaXZlciB3aXRoIE9u
-U3RyZWFtIHN1cHBvcnQgdmVyc2lvbiAwLjk5LjQKWyAgICA1Ljk5MTE3MF0gb3NzdCA6STogJElk
-OiBvc3N0LmMsdiAxLjczIDIwMDUvMDEvMDEgMjE6MTM6MzQgd3JpZWRlIEV4cCAkClsgICAgNS45
-OTMzNzZdIFNDU0kgTWVkaWEgQ2hhbmdlciBkcml2ZXIgdjAuMjUgClsgICAgNS45OTUxNTddIHNj
-c2kgaG9zdDA6IHNjc2lfZGVidWc6IHZlcnNpb24gMS44NiBbMjAxNjA0MzBdClsgICAgNS45OTUx
-NTddICAgZGV2X3NpemVfbWI9OCwgb3B0cz0weDAsIHN1Ym1pdF9xdWV1ZXM9MSwgc3RhdGlzdGlj
-cz0wClsgICAgNS45OTc0NzldIHNjc2kgMDowOjA6MDogRGlyZWN0LUFjY2VzcyAgICAgTGludXgg
-ICAgc2NzaV9kZWJ1ZyAgICAgICAwMTg2IFBROiAwIEFOU0k6IDcKWyAgICA2LjAzMDA3M10gc2Qg
-MDowOjA6MDogW3NkYV0gMTYzODQgNTEyLWJ5dGUgbG9naWNhbCBibG9ja3M6ICg4LjM5IE1CLzgu
-MDAgTWlCKQpbICAgIDYuMDUwMDQ3XSBzZCAwOjA6MDowOiBbc2RhXSBXcml0ZSBQcm90ZWN0IGlz
-IG9mZgpbICAgIDYuMDUxMDA2XSBzZCAwOjA6MDowOiBbc2RhXSBNb2RlIFNlbnNlOiA3MyAwMCAx
-MCAwOApbICAgIDYuMDkwMDY3XSBzZCAwOjA6MDowOiBbc2RhXSBXcml0ZSBjYWNoZTogZW5hYmxl
-ZCwgcmVhZCBjYWNoZTogZW5hYmxlZCwgc3VwcG9ydHMgRFBPIGFuZCBGVUEKWyAgICA2LjUxMDA0
-NF0gc2QgMDowOjA6MDogW3NkYV0gQXR0YWNoZWQgU0NTSSBkaXNrClsgICAgNi41MTE2MTRdIHNk
-IDA6MDowOjA6IFtzZGFdIFN5bmNocm9uaXppbmcgU0NTSSBjYWNoZQpbICAgIDYuNTEyNzQwXSBz
-ZCAwOjA6MDowOiBBdHRhY2hlZCBzY3NpIGdlbmVyaWMgc2cwIHR5cGUgMApbICAgIDYuNTUwMDY1
-XSBzZCAwOjA6MDowOiBbc2RiXSAxNjM4NCA1MTItYnl0ZSBsb2dpY2FsIGJsb2NrczogKDguMzkg
-TUIvOC4wMCBNaUIpClsgICAgNi41NzAwNTBdIHNkIDA6MDowOjA6IFtzZGJdIFdyaXRlIFByb3Rl
-Y3QgaXMgb2ZmClsgICAgNi41NzA5OTZdIHNkIDA6MDowOjA6IFtzZGJdIE1vZGUgU2Vuc2U6IDcz
-IDAwIDEwIDA4ClsgICAgNi42MTAxMTNdIHNkIDA6MDowOjA6IFtzZGJdIFdyaXRlIGNhY2hlOiBl
-bmFibGVkLCByZWFkIGNhY2hlOiBlbmFibGVkLCBzdXBwb3J0cyBEUE8gYW5kIEZVQQpbICAgIDYu
-NjcwMzA5XSBrb2JqZWN0IChkNWNiMzZhNCk6IHRyaWVkIHRvIGluaXQgYW4gaW5pdGlhbGl6ZWQg
-b2JqZWN0LCBzb21ldGhpbmcgaXMgc2VyaW91c2x5IHdyb25nLgpbICAgIDYuNjczOTY5XSBDUFU6
-IDAgUElEOiAxMDAgQ29tbToga3dvcmtlci91MjoxIE5vdCB0YWludGVkIDQuMTAuMC1yYzctbmV4
-dC0yMDE3MDIwNy0wMDAwNS1nNDMyNTZlNzMwMWFhICM5NTAKWyAgICA2LjY3ODEzMl0gSGFyZHdh
-cmUgbmFtZTogUUVNVSBTdGFuZGFyZCBQQyAoaTQ0MEZYICsgUElJWCwgMTk5NiksIEJJT1MgMS45
-LjEtMS5mYzI0IDA0LzAxLzIwMTQKWyAgICA2LjY4MDA2M10gV29ya3F1ZXVlOiBldmVudHNfdW5i
-b3VuZCBhc3luY19ydW5fZW50cnlfZm4KWyAgICA2LjY4MDA2M10gQ2FsbCBUcmFjZToKWyAgICA2
-LjY4MDA2M10gIGR1bXBfc3RhY2srMHg3OS8weGE0ClsgICAgNi42ODAwNjNdICBrb2JqZWN0X2lu
-aXQrMHg3NS8weDkwClsgICAgNi42ODAwNjNdICA/IGJsa19tcV9kaXNhYmxlX2hvdHBsdWcrMHhm
-LzB4MjAKWyAgICA2LjY4MDA2M10gIGJsa19tcV9yZWdpc3Rlcl9kZXYrMHgyYS8weDEyMApbICAg
-IDYuNjgwMDYzXSAgYmxrX3JlZ2lzdGVyX3F1ZXVlKzB4N2YvMHgxNjAKWyAgICA2LjY4MDA2M10g
-IGRldmljZV9hZGRfZGlzaysweDFlMy8weDQ4MApbICAgIDYuNjgwMDYzXSAgc2RfcHJvYmVfYXN5
-bmMrMHhmMS8weDFjMApbICAgIDYuNjgwMDYzXSAgPyBfX2xvY2tfYWNxdWlyZS5pc3JhLjE0KzB4
-NDNiLzB4OTQwClsgICAgNi42ODAwNjNdICBhc3luY19ydW5fZW50cnlfZm4rMHgzMC8weDE5MApb
-ICAgIDYuNjgwMDYzXSAgPyBwcm9jZXNzX29uZV93b3JrKzB4MTJmLzB4NDMwClsgICAgNi42ODAw
-NjNdICBwcm9jZXNzX29uZV93b3JrKzB4MWFhLzB4NDMwClsgICAgNi42ODAwNjNdICA/IHByb2Nl
-c3Nfb25lX3dvcmsrMHgxMmYvMHg0MzAKWyAgICA2LjY4MDA2M10gIHdvcmtlcl90aHJlYWQrMHgx
-ZGQvMHg0NzAKWyAgICA2LjY4MDA2M10gIGt0aHJlYWQrMHhkNC8weDEwMApbICAgIDYuNjgwMDYz
-XSAgPyBwcm9jZXNzX29uZV93b3JrKzB4NDMwLzB4NDMwClsgICAgNi42ODAwNjNdICA/IF9fa3Ro
-cmVhZF9jcmVhdGVfb25fbm9kZSsweDE4MC8weDE4MApbICAgIDYuNjgwMDYzXSAgcmV0X2Zyb21f
-Zm9yaysweDIxLzB4MmMKWyAgICA2LjcwNjY5NF0ga29iamVjdCAoZmZhYjJkZWMpOiB0cmllZCB0
-byBpbml0IGFuIGluaXRpYWxpemVkIG9iamVjdCwgc29tZXRoaW5nIGlzIHNlcmlvdXNseSB3cm9u
-Zy4KWyAgICA2LjcwOTA2MV0gQ1BVOiAwIFBJRDogMTAwIENvbW06IGt3b3JrZXIvdTI6MSBOb3Qg
-dGFpbnRlZCA0LjEwLjAtcmM3LW5leHQtMjAxNzAyMDctMDAwMDUtZzQzMjU2ZTczMDFhYSAjOTUw
-ClsgICAgNi43MTE1NzddIEhhcmR3YXJlIG5hbWU6IFFFTVUgU3RhbmRhcmQgUEMgKGk0NDBGWCAr
-IFBJSVgsIDE5OTYpLCBCSU9TIDEuOS4xLTEuZmMyNCAwNC8wMS8yMDE0ClsgICAgNi43MTM4OTZd
-IFdvcmtxdWV1ZTogZXZlbnRzX3VuYm91bmQgYXN5bmNfcnVuX2VudHJ5X2ZuClsgICAgNi43MTUy
-NDBdIENhbGwgVHJhY2U6ClsgICAgNi43MTYxNjBdICBkdW1wX3N0YWNrKzB4NzkvMHhhNApbICAg
-IDYuNzE2Njc3XSAga29iamVjdF9pbml0KzB4NzUvMHg5MApbICAgIDYuNzE2Njc3XSAgYmxrX21x
-X3JlZ2lzdGVyX2RldisweDRjLzB4MTIwClsgICAgNi43MTY2NzddICBibGtfcmVnaXN0ZXJfcXVl
-dWUrMHg3Zi8weDE2MApbICAgIDYuNzE2Njc3XSAgZGV2aWNlX2FkZF9kaXNrKzB4MWUzLzB4NDgw
-ClsgICAgNi43MTY2NzddICBzZF9wcm9iZV9hc3luYysweGYxLzB4MWMwClsgICAgNi43MTY2Nzdd
-ICA/IF9fbG9ja19hY3F1aXJlLmlzcmEuMTQrMHg0M2IvMHg5NDAKWyAgICA2LjcxNjY3N10gIGFz
-eW5jX3J1bl9lbnRyeV9mbisweDMwLzB4MTkwClsgICAgNi43MTY2NzddICA/IHByb2Nlc3Nfb25l
-X3dvcmsrMHgxMmYvMHg0MzAKWyAgICA2LjcxNjY3N10gIHByb2Nlc3Nfb25lX3dvcmsrMHgxYWEv
-MHg0MzAKWyAgICA2LjcxNjY3N10gID8gcHJvY2Vzc19vbmVfd29yaysweDEyZi8weDQzMApbICAg
-IDYuNzE2Njc3XSAgd29ya2VyX3RocmVhZCsweDFkZC8weDQ3MApbICAgIDYuNzE2Njc3XSAga3Ro
-cmVhZCsweGQ0LzB4MTAwClsgICAgNi43MTY2NzddICA/IHByb2Nlc3Nfb25lX3dvcmsrMHg0MzAv
-MHg0MzAKWyAgICA2LjcxNjY3N10gID8gX19rdGhyZWFkX2NyZWF0ZV9vbl9ub2RlKzB4MTgwLzB4
-MTgwClsgICAgNi43MTY2NzddICByZXRfZnJvbV9mb3JrKzB4MjEvMHgyYwpbICAgIDYuNzM0MDM0
-XSAtLS0tLS0tLS0tLS1bIGN1dCBoZXJlIF0tLS0tLS0tLS0tLS0KWyAgICA2LjczNTIzM10gV0FS
-TklORzogQ1BVOiAwIFBJRDogMTAwIGF0IC4vaW5jbHVkZS9saW51eC9rcmVmLmg6NTQga29iamVj
-dF9nZXQrMHg3Zi8weDkwClsgICAgNi43MzcyODVdIENQVTogMCBQSUQ6IDEwMCBDb21tOiBrd29y
-a2VyL3UyOjEgTm90IHRhaW50ZWQgNC4xMC4wLXJjNy1uZXh0LTIwMTcwMjA3LTAwMDA1LWc0MzI1
-NmU3MzAxYWEgIzk1MApbICAgIDYuNzM5NTc5XSBIYXJkd2FyZSBuYW1lOiBRRU1VIFN0YW5kYXJk
-IFBDIChpNDQwRlggKyBQSUlYLCAxOTk2KSwgQklPUyAxLjkuMS0xLmZjMjQgMDQvMDEvMjAxNApb
-ICAgIDYuNzQxNzIyXSBXb3JrcXVldWU6IGV2ZW50c191bmJvdW5kIGFzeW5jX3J1bl9lbnRyeV9m
-bgpbICAgIDYuNzQyOTY2XSBDYWxsIFRyYWNlOgpbICAgIDYuNzQzODA5XSAgZHVtcF9zdGFjaysw
-eDc5LzB4YTQKWyAgICA2Ljc0Mzg5OV0gIF9fd2FybisweGQyLzB4ZjAKWyAgICA2Ljc0Mzg5OV0g
-ID8ga29iamVjdF9nZXQrMHg3Zi8weDkwClsgICAgNi43NDM4OTldICB3YXJuX3Nsb3dwYXRoX251
-bGwrMHgyNS8weDMwClsgICAgNi43NDM4OTldICBrb2JqZWN0X2dldCsweDdmLzB4OTAKWyAgICA2
-Ljc0Mzg5OV0gIGtvYmplY3RfYWRkX2ludGVybmFsKzB4MmUvMHgzNjAKWyAgICA2Ljc0Mzg5OV0g
-ID8ga2ZyZWVfY29uc3QrMHgxOC8weDIwClsgICAgNi43NDM4OTldICA/IGtvYmplY3Rfc2V0X25h
-bWVfdmFyZ3MrMHg2Mi8weDgwClsgICAgNi43NDM4OTldICBrb2JqZWN0X2FkZCsweDM1LzB4ODAK
-WyAgICA2Ljc0Mzg5OV0gID8gdXBfd3JpdGUrMHgxNi8weDQwClsgICAgNi43NDM4OTldICBibGtf
-bXFfcmVnaXN0ZXJfaGN0eCsweDk1LzB4YzAKWyAgICA2Ljc0Mzg5OV0gIGJsa19tcV9yZWdpc3Rl
-cl9kZXYrMHhkOS8weDEyMApbICAgIDYuNzQzODk5XSAgYmxrX3JlZ2lzdGVyX3F1ZXVlKzB4N2Yv
-MHgxNjAKWyAgICA2Ljc0Mzg5OV0gIGRldmljZV9hZGRfZGlzaysweDFlMy8weDQ4MApbICAgIDYu
-NzQzODk5XSAgc2RfcHJvYmVfYXN5bmMrMHhmMS8weDFjMApbICAgIDYuNzQzODk5XSAgPyBfX2xv
-Y2tfYWNxdWlyZS5pc3JhLjE0KzB4NDNiLzB4OTQwClsgICAgNi43NDM4OTldICBhc3luY19ydW5f
-ZW50cnlfZm4rMHgzMC8weDE5MApbICAgIDYuNzQzODk5XSAgPyBwcm9jZXNzX29uZV93b3JrKzB4
-MTJmLzB4NDMwClsgICAgNi43NDM4OTldICBwcm9jZXNzX29uZV93b3JrKzB4MWFhLzB4NDMwClsg
-ICAgNi43NDM4OTldICA/IHByb2Nlc3Nfb25lX3dvcmsrMHgxMmYvMHg0MzAKWyAgICA2Ljc0Mzg5
-OV0gIHdvcmtlcl90aHJlYWQrMHgxZGQvMHg0NzAKWyAgICA2Ljc0Mzg5OV0gIGt0aHJlYWQrMHhk
-NC8weDEwMApbICAgIDYuNzQzODk5XSAgPyBwcm9jZXNzX29uZV93b3JrKzB4NDMwLzB4NDMwClsg
-ICAgNi43NDM4OTldICA/IF9fa3RocmVhZF9jcmVhdGVfb25fbm9kZSsweDE4MC8weDE4MApbICAg
-IDYuNzQzODk5XSAgcmV0X2Zyb21fZm9yaysweDIxLzB4MmMKWyAgICA2Ljc2ODQwNV0gLS0tWyBl
-bmQgdHJhY2UgN2I3N2Y1ZDc3NjY4MDI2YiBdLS0tClsgICAgNi45MjAwNThdIHNkIDA6MDowOjA6
-IFtzZGJdIEF0dGFjaGVkIFNDU0kgZGlzawpbICAgIDYuOTIxNTM0XSBzZCAwOjA6MDowOiBbc2Ri
-XSBTeW5jaHJvbml6aW5nIFNDU0kgY2FjaGUKWyAgICA2Ljk1MDYxMV0gc2NzaSBob3N0MDogc2Nz
-aV9kZWJ1ZzogdmVyc2lvbiAxLjg2IFsyMDE2MDQzMF0KWyAgICA2Ljk1MDYxMV0gICBkZXZfc2l6
-ZV9tYj04LCBvcHRzPTB4MCwgc3VibWl0X3F1ZXVlcz0xLCBzdGF0aXN0aWNzPTAKWyAgICA2Ljk1
-MzA3OF0gc2NzaSAwOjA6MDowOiBEaXJlY3QtQWNjZXNzICAgICBMaW51eCAgICBzY3NpX2RlYnVn
-ICAgICAgIDAxODYgUFE6IDAgQU5TSTogNwpbICAgIDYuOTU1MDI4XSAtLS0tLS0tLS0tLS1bIGN1
-dCBoZXJlIF0tLS0tLS0tLS0tLS0KWyAgICA2Ljk1NjAyNl0gV0FSTklORzogQ1BVOiAwIFBJRDog
-MSBhdCBmcy9zeXNmcy9kaXIuYzozMSBzeXNmc193YXJuX2R1cCsweDU4LzB4NzAKWyAgICA2Ljk1
-NzczMV0gc3lzZnM6IGNhbm5vdCBjcmVhdGUgZHVwbGljYXRlIGZpbGVuYW1lICcvY2xhc3Mvc2Nz
-aV9kaXNrLzA6MDowOjAnClsgICAgNi45NTk0MDhdIENQVTogMCBQSUQ6IDEgQ29tbTogc3dhcHBl
-ci8wIFRhaW50ZWQ6IEcgICAgICAgIFcgICAgICAgNC4xMC4wLXJjNy1uZXh0LTIwMTcwMjA3LTAw
-MDA1LWc0MzI1NmU3MzAxYWEgIzk1MApbICAgIDYuOTYwMDI3XSBIYXJkd2FyZSBuYW1lOiBRRU1V
-IFN0YW5kYXJkIFBDIChpNDQwRlggKyBQSUlYLCAxOTk2KSwgQklPUyAxLjkuMS0xLmZjMjQgMDQv
-MDEvMjAxNApbICAgIDYuOTYwMDI3XSBDYWxsIFRyYWNlOgpbICAgIDYuOTYwMDI3XSAgZHVtcF9z
-dGFjaysweDc5LzB4YTQKWyAgICA2Ljk2MDAyN10gIF9fd2FybisweGQyLzB4ZjAKWyAgICA2Ljk2
-MDAyN10gID8gc3lzZnNfd2Fybl9kdXArMHg1OC8weDcwClsgICAgNi45NjAwMjddICB3YXJuX3Ns
-b3dwYXRoX2ZtdCsweDM2LzB4NDAKWyAgICA2Ljk2MDAyN10gIHN5c2ZzX3dhcm5fZHVwKzB4NTgv
-MHg3MApbICAgIDYuOTYwMDI3XSAgc3lzZnNfZG9fY3JlYXRlX2xpbmtfc2QuaXNyYS4wKzB4OWUv
-MHhiMApbICAgIDYuOTYwMDI3XSAgc3lzZnNfY3JlYXRlX2xpbmsrMHgyMC8weDQwClsgICAgNi45
-NjAwMjddICBkZXZpY2VfYWRkKzB4MjE4LzB4NjEwClsgICAgNi45NjAwMjddICA/IGt2YXNwcmlu
-dGZfY29uc3QrMHg0OS8weDYwClsgICAgNi45NjAwMjddICA/IGtvYmplY3Rfc2V0X25hbWVfdmFy
-Z3MrMHg2Mi8weDgwClsgICAgNi45NjAwMjddICBzZF9wcm9iZSsweDMxYS8weDM5MApbICAgIDYu
-OTYwMDI3XSAgPyBfcmF3X3NwaW5fdW5sb2NrKzB4MWQvMHgzMApbICAgIDYuOTYwMDI3XSAgZHJp
-dmVyX3Byb2JlX2RldmljZSsweDE5MC8weDRhMApbICAgIDYuOTYwMDI3XSAgX19kZXZpY2VfYXR0
-YWNoX2RyaXZlcisweDZmLzB4MTAwClsgICAgNi45NjAwMjddICA/IGtsaXN0X25leHQrMHg2ZS8w
-eDEwMApbICAgIDYuOTYwMDI3XSAgPyBfX2RyaXZlcl9hdHRhY2grMHhmMC8weGYwClsgICAgNi45
-NjAwMjddICBidXNfZm9yX2VhY2hfZHJ2KzB4NDcvMHg4MApbICAgIDYuOTYwMDI3XSAgX19kZXZp
-Y2VfYXR0YWNoKzB4YTgvMHgxMjAKWyAgICA2Ljk2MDAyN10gID8gX19kcml2ZXJfYXR0YWNoKzB4
-ZjAvMHhmMApbICAgIDYuOTYwMDI3XSAgZGV2aWNlX2luaXRpYWxfcHJvYmUrMHhkLzB4MTAKWyAg
-ICA2Ljk2MDAyN10gIGJ1c19wcm9iZV9kZXZpY2UrMHg3Ny8weDgwClsgICAgNi45NjAwMjddICBk
-ZXZpY2VfYWRkKzB4MzIwLzB4NjEwClsgICAgNi45NjAwMjddICBzY3NpX3N5c2ZzX2FkZF9zZGV2
-KzB4ODUvMHgyYjAKWyAgICA2Ljk2MDAyN10gID8gc2NzaV9hdHRhY2hfdnBkKzB4MWY5LzB4MjEw
-ClsgICAgNi45NjAwMjddICBzY3NpX3Byb2JlX2FuZF9hZGRfbHVuKzB4ZDQ0LzB4ZTcwClsgICAg
-Ni45NjAwMjddICBfX3Njc2lfc2Nhbl90YXJnZXQrMHhkOC8weDY5MApbICAgIDYuOTYwMDI3XSAg
-PyBfX3BtX3J1bnRpbWVfcmVzdW1lKzB4MzcvMHg5MApbICAgIDYuOTYwMDI3XSAgc2NzaV9zY2Fu
-X2NoYW5uZWwrMHg4Zi8weGIwClsgICAgNi45NjAwMjddICBzY3NpX3NjYW5faG9zdF9zZWxlY3Rl
-ZCsweDEwMC8weDE4MApbICAgIDYuOTYwMDI3XSAgZG9fc2NzaV9zY2FuX2hvc3QrMHg4YS8weDkw
-ClsgICAgNi45NjAwMjddICBzY3NpX3NjYW5faG9zdCsweDE1YS8weDFhMApbICAgIDYuOTYwMDI3
-XSAgc2RlYnVnX2RyaXZlcl9wcm9iZSsweDE0Zi8weDNkMApbICAgIDYuOTYwMDI3XSAgPyBfcmF3
-X3NwaW5fdW5sb2NrKzB4MWQvMHgzMApbICAgIDYuOTYwMDI3XSAgPyBkZXZpY2VzX2tzZXRfbW92
-ZV9sYXN0KzB4NzEvMHhjMApbICAgIDYuOTYwMDI3XSAgPyBzeXNmc19jcmVhdGVfbGluaysweDIw
-LzB4NDAKWyAgICA2Ljk2MDAyN10gIGRyaXZlcl9wcm9iZV9kZXZpY2UrMHhkNC8weDRhMApbICAg
-IDYuOTYwMDI3XSAgX19kZXZpY2VfYXR0YWNoX2RyaXZlcisweDZmLzB4MTAwClsgICAgNi45NjAw
-MjddICA/IGtsaXN0X25leHQrMHg2ZS8weDEwMApbICAgIDYuOTYwMDI3XSAgPyBfX2RyaXZlcl9h
-dHRhY2grMHhmMC8weGYwClsgICAgNi45NjAwMjddICBidXNfZm9yX2VhY2hfZHJ2KzB4NDcvMHg4
-MApbICAgIDYuOTYwMDI3XSAgX19kZXZpY2VfYXR0YWNoKzB4YTgvMHgxMjAKWyAgICA2Ljk2MDAy
-N10gID8gX19kcml2ZXJfYXR0YWNoKzB4ZjAvMHhmMApbICAgIDYuOTYwMDI3XSAgZGV2aWNlX2lu
-aXRpYWxfcHJvYmUrMHhkLzB4MTAKWyAgICA2Ljk2MDAyN10gIGJ1c19wcm9iZV9kZXZpY2UrMHg3
-Ny8weDgwClsgICAgNi45NjAwMjddICBkZXZpY2VfYWRkKzB4MzIwLzB4NjEwClsgICAgNi45NjAw
-MjddICA/IHBtX3J1bnRpbWVfaW5pdCsweGVhLzB4ZjAKWyAgICA2Ljk2MDAyN10gIGRldmljZV9y
-ZWdpc3RlcisweDEyLzB4MjAKWyAgICA2Ljk2MDAyN10gIHNkZWJ1Z19hZGRfYWRhcHRlcisweGRh
-LzB4MWUwClsgICAgNi45NjAwMjddICA/IGRyaXZlcl9yZWdpc3RlcisweDgzLzB4ZTAKWyAgICA2
-Ljk2MDAyN10gIHNjc2lfZGVidWdfaW5pdCsweDVhMC8weDZlYgpbICAgIDYuOTYwMDI3XSAgPyBr
-b2JqZWN0X3VldmVudCsweGEvMHgxMApbICAgIDYuOTYwMDI3XSAgPyBkcml2ZXJfcmVnaXN0ZXIr
-MHg4My8weGUwClsgICAgNi45NjAwMjddICA/IHNjc2lfcmVnaXN0ZXJfZHJpdmVyKzB4Zi8weDIw
-ClsgICAgNi45NjAwMjddICA/IGluaXRfY2hfbW9kdWxlKzB4OWQvMHg5ZApbICAgIDYuOTYwMDI3
-XSAgZG9fb25lX2luaXRjYWxsKzB4N2IvMHgxMzIKWyAgICA2Ljk2MDAyN10gID8ga2VybmVsX2lu
-aXRfZnJlZWFibGUrMHhlNy8weDE4MwpbICAgIDYuOTYwMDI3XSAga2VybmVsX2luaXRfZnJlZWFi
-bGUrMHgxMGEvMHgxODMKWyAgICA2Ljk2MDAyN10gID8gcmVzdF9pbml0KzB4YjAvMHhiMApbICAg
-IDYuOTYwMDI3XSAga2VybmVsX2luaXQrMHhiLzB4MTAwClsgICAgNi45NjAwMjddICA/IHNjaGVk
-dWxlX3RhaWwrMHhjLzB4NzAKWyAgICA2Ljk2MDAyN10gID8gcmVzdF9pbml0KzB4YjAvMHhiMApb
-ICAgIDYuOTYwMDI3XSAgcmV0X2Zyb21fZm9yaysweDIxLzB4MmMKWyAgICA3LjAzMDk4MF0gLS0t
-WyBlbmQgdHJhY2UgN2I3N2Y1ZDc3NjY4MDI2YyBdLS0tClsgICAgNy4wMzIwMjVdIHNkOiBwcm9i
-ZSBvZiAwOjA6MDowIGZhaWxlZCB3aXRoIGVycm9yIC0xNwpbICAgIDcuMDMzMTcyXSBzY3NpIDA6
-MDowOjA6IEF0dGFjaGVkIHNjc2kgZ2VuZXJpYyBzZzAgdHlwZSAwCgo=
---001a1141481a2400e1054824755c--
+Today I will try with Jens for-4.11/block.
+
+> I've found that using the mq-deadline scheduler has a noticeable
+> performance boost.
+>
+> The fio job I'm using is essentially the same; you just should make sure
+> to specify a 'numjob=3D' statement in there.
+> Otherwise fio will just use a single CPU, which of course leads to
+> averse effects in the multiqueue case.
+
+Yes I am providing 'numjob=3D' on fio command line as shown below,
+
+# fio md_fio_profile --numjobs=3D8 --output=3Dfio_results.txt
+
+Thanks,
+Sreekanth
+
+>
+> Cheers,
+>
+> Hannes
+> --
+> Dr. Hannes Reinecke                Teamlead Storage & Networking
+> hare@suse.de                                   +49 911 74053 688
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=C3=BCrnberg
+> GF: F. Imend=C3=B6rffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+> HRB 21284 (AG N=C3=BCrnberg)
