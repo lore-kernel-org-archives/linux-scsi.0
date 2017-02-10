@@ -1,28 +1,27 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] aacraid: Fix INTx/MSI-x issue with older controllers
-Date: Thu, 09 Feb 2017 18:59:20 -0500
-Message-ID: <yq1h942kjaf.fsf@oracle.com>
-References: <20170209180447.31404-1-david.carroll@microsemi.com>
+Subject: Re: [PATCH] zfcp: fix use-after-free by not tracing WKA port open/close on failed send
+Date: Thu, 09 Feb 2017 19:02:48 -0500
+Message-ID: <yq1d1eqkj4n.fsf@oracle.com>
+References: <20170208143422.64943-1-maier@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from userp1040.oracle.com ([156.151.31.81]:36386 "EHLO
-        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751924AbdBIX7b (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 9 Feb 2017 18:59:31 -0500
-In-Reply-To: <20170209180447.31404-1-david.carroll@microsemi.com> (Dave
-        Carroll's message of "Thu, 9 Feb 2017 11:04:47 -0700")
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <stable-owner@vger.kernel.org>
+In-Reply-To: <20170208143422.64943-1-maier@linux.vnet.ibm.com> (Steffen
+        Maier's message of "Wed, 8 Feb 2017 15:34:22 +0100")
+Sender: stable-owner@vger.kernel.org
+To: Steffen Maier <maier@linux.vnet.ibm.com>
+Cc: "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org, Martin Schwidefsky <schwidefsky@de.ibm.com>, Heiko Carstens <heiko.carstens@de.ibm.com>, "#2 . 6 . 38+" <stable@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dave Carroll <david.carroll@microsemi.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Arkadiusz Miskiewicz <a.miskiewicz@gmail.com>, James Bottomley <jejb@linux.vnet.ibm.com>, linux-scsi <linux-scsi@vger.kernel.org>, aacraid@microsemi.com, Scott Benesh <scott.benesh@microsemi.com>, stable@vger.kernel.org
 
->>>>> "Dave" == Dave Carroll <david.carroll@microsemi.com> writes:
+>>>>> "Steffen" == Steffen Maier <maier@linux.vnet.ibm.com> writes:
 
-Dave> commit 78cbccd3bd683 ("[PATCH] aacraid: Fix for KDUMP driver
-Dave> hang") caused a problem on older controllers which do not support
-Dave> MSI-x (namely ASR3405,ASR3805). This patch conditionalizes the
-Dave> previous patch to controllers which support MSI-x
+Steffen> Rather than relying on req being NULL (or ERR_PTR) for all
+Steffen> cases where we don't want to trace or should not trace, simply
+Steffen> check retval which is unconditionally initialized with -EIO !=
+Steffen> 0 and it can only become 0 on successful retval =
+Steffen> zfcp_fsf_req_send(req).  With that we can also remove the then
+Steffen> again unnecessary unconditional initialization of req which was
+Steffen> introduced with that earlier commit.
 
 Applied to 4.10/scsi-fixes.
 
