@@ -1,160 +1,370 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 13/39] megaraid_sas: raid 1 write performance for large io
-Date: Fri, 10 Feb 2017 00:59:13 -0800
-Message-ID: <1486717179-23320-14-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 21/39] megaraid_sas: big endian support changes
+Date: Fri, 10 Feb 2017 00:59:21 -0800
+Message-ID: <1486717179-23320-22-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f180.google.com ([209.85.192.180]:34900 "EHLO
-        mail-pf0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751611AbdBJJcr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:32:47 -0500
-Received: by mail-pf0-f180.google.com with SMTP id 202so5068751pfx.2
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:32:47 -0800 (PST)
+Received: from mail-pf0-f170.google.com ([209.85.192.170]:33343 "EHLO
+        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751324AbdBJJe4 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:34:56 -0500
+Received: by mail-pf0-f170.google.com with SMTP id c73so4799849pfb.0
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:34:01 -0800 (PST)
 In-Reply-To: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Avoid Host side PCI bandwidth bottleneck and hint FW to do Write buffering using
-RaidFlag MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT.
-Once IO is landed in FW with MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT,
-it will do single DMA from host and buffer the Write operation. On back end,
-FW will DMA same buffer to the Mirror and Data Arm.
-This will improve large block IO performance which bottleneck due to Host side PCI bandwidth limitation.
-
-Consistent ~4000MB T.P for 256K Block size is expected performance numbers.
-IOPS for small Block size should be on par with Disk performance.
-(E.g 42 SAS Disk in JBOD mode gives 3700MB T.P.
-Same Drive used in R1 WT mode, should give ~1800MB T.P)
-
-Using this patch 24 R1 VDs (HDD) gives below performance for Sequential Write.
-Without this patch, we cannot reach above 3200MB (Throughput is in MB. )
-
-Block Size   	50% 256K and 50% 4K          100% 256K
-4K                 3100                        2030
-8K                 3140                        2740
-16K                3140                        3140
-32K                3400                        3240
-64K                3500                        3700
-128K               3870                        3870
-256K               3920                        3920
+Fix endiannes fixes for Ventura specific.
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
- drivers/scsi/megaraid/megaraid_sas.h        |  5 +++++
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 32 +++++++++++++++++++++++++++--
- 2 files changed, 35 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
-index 075e2e9..bed8a37 100644
---- a/drivers/scsi/megaraid/megaraid_sas.h
-+++ b/drivers/scsi/megaraid/megaraid_sas.h
-@@ -1409,6 +1409,8 @@ struct megasas_ctrl_info {
- #define SCAN_VD_CHANNEL	0x2
- 
- #define MEGASAS_KDUMP_QUEUE_DEPTH               100
-+#define MR_LARGE_IO_MIN_SIZE			(32 * 1024)
-+#define MR_R1_LDIO_PIGGYBACK_DEFAULT		4
- 
- enum MR_SCSI_CMD_TYPE {
- 	READ_WRITE_LDIO = 0,
-@@ -1875,6 +1877,7 @@ union megasas_frame {
- struct MR_PRIV_DEVICE {
- 	bool is_tm_capable;
- 	bool tm_busy;
-+	atomic_t r1_ldio_hint;
- 	u8   interface_type;
- };
- struct megasas_cmd;
-@@ -2235,6 +2238,8 @@ struct megasas_instance {
- 	bool is_ventura;
- 	bool msix_combined;
- 	u16 max_raid_mapsize;
-+	/* preffered count to send as LDIO irrspective of FP capable.*/
-+	u8  r1_ldio_hint_default;
- 	u32 nvme_page_size;
- };
- struct MR_LD_VF_MAP {
+Fix in v3: Pass RAID_CONTEXT_G35 pointer to get/set_num_sge
+
+ drivers/scsi/megaraid/megaraid_sas_fp.c     |  15 ++--
+ drivers/scsi/megaraid/megaraid_sas_fusion.c |  70 ++++++++++-------
+ drivers/scsi/megaraid/megaraid_sas_fusion.h | 115 +++++++++++++++++-----------
+ 3 files changed, 122 insertions(+), 78 deletions(-)
+
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index 9d5d485..68582d9 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -210,7 +210,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 			le32_to_cpu(fw_map_dyn->desc_table_size),
+ 			le32_to_cpu(fw_map_dyn->desc_table_num_elements));
+ 		dev_dbg(&instance->pdev->dev, "drv map %p ldCount %d\n",
+-			drv_map, fw_map_dyn->ld_count);
++			drv_map, le16_to_cpu(fw_map_dyn->ld_count));
+ #endif
+ 		desc_table =
+ 		(struct MR_RAID_MAP_DESC_TABLE *)((void *)fw_map_dyn + le32_to_cpu(fw_map_dyn->desc_table_offset));
+@@ -222,7 +222,8 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
+ 		pDrvRaidMap->fpPdIoTimeoutSec =
+ 			fw_map_dyn->fp_pd_io_timeout_sec;
+-		pDrvRaidMap->totalSize = sizeof(struct MR_DRV_RAID_MAP_ALL);
++		pDrvRaidMap->totalSize =
++			cpu_to_le32(sizeof(struct MR_DRV_RAID_MAP_ALL));
+ 		/* point to actual data starting point*/
+ 		raid_map_data = (void *)fw_map_dyn +
+ 			le32_to_cpu(fw_map_dyn->desc_table_offset) +
+@@ -234,11 +235,11 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ 			dev_dbg(&instance->pdev->dev, "desc table %p\n",
+ 				desc_table);
+ 			dev_dbg(&instance->pdev->dev, "raidmap type %d, raidmapOffset 0x%x\n",
+-				desc_table->raid_map_desc_type,
+-				desc_table->raid_map_desc_offset);
++				le32_to_cpu(desc_table->raid_map_desc_type),
++				le32_to_cpu(desc_table->raid_map_desc_offset));
+ 			dev_dbg(&instance->pdev->dev, "raid map number of elements 0%x, raidmapsize 0x%x\n",
+-				desc_table->raid_map_desc_elements,
+-				desc_table->raid_map_desc_buffer_size);
++				le32_to_cpu(desc_table->raid_map_desc_elements),
++				le32_to_cpu(desc_table->raid_map_desc_buffer_size));
+ #endif
+ 			switch (le32_to_cpu(desc_table->raid_map_desc_type)) {
+ 			case RAID_MAP_DESC_TYPE_DEVHDL_INFO:
+@@ -263,7 +264,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
+ #endif
+ 			for (j = 0; j < le32_to_cpu(desc_table->raid_map_desc_elements); j++) {
+ 				pDrvRaidMap->ldTgtIdToLd[j] =
+-				fw_map_dyn->ld_tgt_id_to_ld[j];
++					le16_to_cpu(fw_map_dyn->ld_tgt_id_to_ld[j]);
+ #if VD_EXT_DEBUG
+ 				dev_dbg(&instance->pdev->dev, " %d drv ldTgtIdToLd %d\n",
+ 					j, pDrvRaidMap->ldTgtIdToLd[j]);
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 379c723..edbecc5 100644
+index b26ee85..baea4c2 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1383,6 +1383,7 @@ megasas_init_adapter_fusion(struct megasas_instance *instance)
+@@ -2080,7 +2080,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
+ 			 */
+ 			continue;
+ 
+-		cmd->io_request->RaidContext.raid_context_g35.stream_detected = true;
++		SET_STREAM_DETECTED(cmd->io_request->RaidContext.raid_context_g35);
+ 		current_sd->next_seq_lba =
+ 		io_info->ldStartBlock + io_info->numBlocks;
+ 		/*
+@@ -2154,7 +2154,8 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
+ 			/* Fast path cache by pass capable R0/R1 VD */
+ 			if ((raid->level <= 1) &&
+ 			    (raid->capability.fp_cache_bypass_capable)) {
+-				rctx_g35->routing_flags.bits.sld = 1;
++				rctx_g35->routing_flags |=
++					(1 << MR_RAID_CTX_ROUTINGFLAGS_SLD_SHIFT);
+ 				rctx_g35->raid_flags =
+ 					(MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
+ 					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
+@@ -2174,7 +2175,7 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
+ 			else if (raid->cpuAffinity.ldWrite.cpu1)
+ 				cpu_sel = MR_RAID_CTX_CPUSEL_1;
+ 
+-			if (rctx_g35->stream_detected &&
++			if (is_stream_detected(rctx_g35) &&
+ 			    (raid->level == 5) &&
+ 			    (raid->writeMode == MR_RL_WRITE_THROUGH_MODE) &&
+ 			    (cpu_sel == MR_RAID_CTX_CPUSEL_FCFS))
+@@ -2182,7 +2183,8 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
+ 		}
  	}
  
- 	instance->flag_ieee = 1;
-+	instance->r1_ldio_hint_default =  MR_R1_LDIO_PIGGYBACK_DEFAULT;
- 	fusion->fast_path_io = 0;
+-	rctx_g35->routing_flags.bits.cpu_sel = cpu_sel;
++	rctx_g35->routing_flags |=
++		(cpu_sel << MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT);
  
- 	fusion->drv_map_pages = get_order(fusion->drv_map_sz);
-@@ -2110,7 +2111,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
- static void
- megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
- 				  struct MR_LD_RAID *raid, bool fp_possible,
--				  u8 is_read)
-+				  u8 is_read, u32 scsi_buff_len)
- {
- 	u8 cpu_sel = MR_RAID_CTX_CPUSEL_0;
- 	struct RAID_CONTEXT_G35 *rctx_g35;
-@@ -2161,6 +2162,17 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
- 	}
- 
- 	rctx_g35->routing_flags.bits.cpu_sel = cpu_sel;
-+
-+	/* Always give priority to MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT
-+	 * vs MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS.
-+	 * IO Subtype is not bitmap.
-+	 */
-+	if ((raid->level == 1) && (!is_read)) {
-+		if (scsi_buff_len > MR_LARGE_IO_MIN_SIZE)
-+			praid_context->raid_context_g35.raid_flags =
-+				(MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT
-+				<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
-+	}
- }
- 
- /**
-@@ -2303,6 +2315,14 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 	/* Always give priority to MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT
+ 	 * vs MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS.
+@@ -2333,7 +2335,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 		/* In ventura if stream detected for a read and it is read ahead
+ 		 *  capable make this IO as LDIO
+ 		 */
+-		if (praid_context->raid_context_g35.stream_detected &&
++		if (is_stream_detected(&io_request->RaidContext.raid_context_g35) &&
  		    io_info.isRead && io_info.ra_capable)
  			fp_possible = false;
  
-+		/* FP for Optimal raid level 1.
-+		 * All large RAID-1 writes (> 32 KiB, both WT and WB modes)
-+		 * are built by the driver as LD I/Os.
-+		 * All small RAID-1 WT writes (<= 32 KiB) are built as FP I/Os
-+		 * (there is never a reason to process these as buffered writes)
-+		 * All small RAID-1 WB writes (<= 32 KiB) are built as FP I/Os
-+		 * with the SLD bit asserted.
-+		 */
- 		if (io_info.r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
- 			mrdev_priv = scp->device->hostdata;
- 
-@@ -2310,13 +2330,21 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				(instance->host->can_queue)) {
- 				fp_possible = false;
- 				atomic_dec(&instance->fw_outstanding);
-+			} else if ((scsi_buff_len > MR_LARGE_IO_MIN_SIZE) ||
-+				   atomic_dec_if_positive(&mrdev_priv->r1_ldio_hint)) {
-+				fp_possible = false;
-+				atomic_dec(&instance->fw_outstanding);
-+				if (scsi_buff_len > MR_LARGE_IO_MIN_SIZE)
-+					atomic_set(&mrdev_priv->r1_ldio_hint,
-+						   instance->r1_ldio_hint_default);
- 			}
- 		}
- 
- 		/* If raid is NULL, set CPU affinity to default CPU0 */
- 		if (raid)
- 			megasas_set_raidflag_cpu_affinity(praid_context,
--				raid, fp_possible, io_info.isRead);
-+				raid, fp_possible, io_info.isRead,
-+				scsi_buff_len);
+@@ -2368,8 +2370,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 				raid, fp_possible, io_info.isRead,
+ 				scsi_buff_len);
  		else
- 			praid_context->raid_context_g35.routing_flags.bits.cpu_sel =
- 				MR_RAID_CTX_CPUSEL_0;
+-			praid_context->raid_context_g35.routing_flags.bits.cpu_sel =
+-				MR_RAID_CTX_CPUSEL_0;
++			praid_context->raid_context_g35.routing_flags |=
++				(MR_RAID_CTX_CPUSEL_0 << MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT);
+ 	}
+ 
+ 	if (fp_possible) {
+@@ -2393,12 +2395,14 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 			  (MR_RL_FLAGS_GRANT_DESTINATION_CUDA |
+ 			   MR_RL_FLAGS_SEQ_NUM_ENABLE);
+ 		} else if (instance->is_ventura) {
+-			io_request->RaidContext.raid_context_g35.type
+-				= MPI2_TYPE_CUDA;
+-			io_request->RaidContext.raid_context_g35.nseg = 0x1;
+-			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++						(1 << RAID_CONTEXT_NSEG_SHIFT);
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++						(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
++			io_request->RaidContext.raid_context_g35.routing_flags |=
++						(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
+ 			io_request->IoFlags |=
+-			cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
++				cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
+ 		}
+ 		if (fusion->load_balance_info &&
+ 			(fusion->load_balance_info[device_id].loadBalanceFlag) &&
+@@ -2456,10 +2460,12 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
+ 				 MR_RL_FLAGS_SEQ_NUM_ENABLE);
+ 			io_request->RaidContext.raid_context.nseg = 0x1;
+ 		} else if (instance->is_ventura) {
+-			io_request->RaidContext.raid_context_g35.type
+-				= MPI2_TYPE_CUDA;
+-			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
+-			io_request->RaidContext.raid_context_g35.nseg = 0x1;
++			io_request->RaidContext.raid_context_g35.routing_flags |=
++					(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++					(1 << RAID_CONTEXT_NSEG_SHIFT);
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++					(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
+ 		}
+ 		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
+ 		io_request->DevHandle = cpu_to_le16(device_id);
+@@ -2609,17 +2615,23 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
+ 			pRAID_Context->virtual_disk_tgt_id =
+ 				pd_sync->seq[pd_index].pd_target_id;
+ 		else
+-		pRAID_Context->virtual_disk_tgt_id =
+-			cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
++			pRAID_Context->virtual_disk_tgt_id =
++				cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
+ 		pRAID_Context->config_seq_num = pd_sync->seq[pd_index].seqNum;
+ 		io_request->DevHandle = pd_sync->seq[pd_index].devHandle;
+-		if (instance->is_ventura)
+-			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
+-		else
+-		pRAID_Context->reg_lock_flags |=
+-			(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
+-		pRAID_Context->type = MPI2_TYPE_CUDA;
+-		pRAID_Context->nseg = 0x1;
++		if (instance->is_ventura) {
++			io_request->RaidContext.raid_context_g35.routing_flags |=
++				(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++							(1 << RAID_CONTEXT_NSEG_SHIFT);
++			io_request->RaidContext.raid_context_g35.nseg_type |=
++							(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
++		} else {
++			pRAID_Context->type = MPI2_TYPE_CUDA;
++			pRAID_Context->nseg = 0x1;
++			pRAID_Context->reg_lock_flags |=
++				(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
++		}
+ 	} else if (fusion->fast_path_io) {
+ 		pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
+ 		pRAID_Context->config_seq_num = 0;
+@@ -2734,9 +2746,11 @@ megasas_build_io_fusion(struct megasas_instance *instance,
+ 		return 1;
+ 	}
+ 
+-	if (instance->is_ventura)
+-		io_request->RaidContext.raid_context_g35.num_sge = sge_count;
+-	else {
++	if (instance->is_ventura) {
++		set_num_sge(&io_request->RaidContext.raid_context_g35, sge_count);
++		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.routing_flags);
++		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.nseg_type);
++	} else {
+ 		/* numSGE store lower 8 bit of sge_count.
+ 		 * numSGEExt store higher 8 bit of sge_count
+ 		 */
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+index f25a262..1441c35 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
++++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
+@@ -148,44 +148,13 @@ struct RAID_CONTEXT {
+  * starts in MPT IO Frames
+  */
+ struct RAID_CONTEXT_G35 {
+-#if   defined(__BIG_ENDIAN_BITFIELD)
+-	u16	resvd0:8;
+-	u16	nseg:4;
+-	u16	type:4;
+-#else
+-	u16	type:4;		    /* 0x00 */
+-	u16	nseg:4;		    /* 0x00 */
+-	u16 resvd0:8;
+-#endif
++	#define RAID_CONTEXT_NSEG_MASK	0x00F0
++	#define RAID_CONTEXT_NSEG_SHIFT	4
++	#define RAID_CONTEXT_TYPE_MASK	0x000F
++	#define RAID_CONTEXT_TYPE_SHIFT	0
++	u16		nseg_type;
+ 	u16 timeout_value; /* 0x02 -0x03 */
+-	union {
+-		struct {
+-#if	defined(__BIG_ENDIAN_BITFIELD)
+-		u16	set_divert:4;
+-		u16	cpu_sel:4;
+-		u16	log:1;
+-		u16	rw:1;
+-		u16	sbs:1;
+-		u16	sqn:1;
+-		u16	fwn:1;
+-		u16	c2f:1;
+-		u16	sld:1;
+-		u16	reserved:1;
+-#else
+-		u16	reserved:1;
+-		u16	sld:1;
+-		u16	c2f:1;
+-		u16	fwn:1;
+-		u16	sqn:1;
+-		u16	sbs:1;
+-		u16	rw:1;
+-		u16	log:1;
+-		u16	cpu_sel:4;
+-		u16	set_divert:4;
+-#endif
+-			} bits;
+-		u16 s;
+-	} routing_flags;	/* 0x04 -0x05 routing flags */
++	u16		routing_flags;	// 0x04 -0x05 routing flags
+ 	u16 virtual_disk_tgt_id;   /* 0x06 -0x07 */
+ 	u64 reg_lock_row_lba;      /* 0x08 - 0x0F */
+ 	u32 reg_lock_length;      /* 0x10 - 0x13 */
+@@ -200,18 +169,78 @@ struct RAID_CONTEXT_G35 {
+ 				 */
+ 	u8 span_arm;            /* 0x1C span[7:5], arm[4:0] */
+ 	u16	config_seq_num;           /* 0x1A -0x1B */
++	union {
++		/*
++		 * Bit format:
++		 *	 ---------------------------------
++		 *	 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
++		 *	 ---------------------------------
++		 * Byte0 |    numSGE[7]- numSGE[0]	 |
++		 *	 ---------------------------------
++		 * Byte1 |SD | resvd     | numSGE 8-11   |
++		 *        --------------------------------
++		 */
++		#define NUM_SGE_MASK_LOWER	0xFF
++		#define NUM_SGE_MASK_UPPER	0x0F
++		#define NUM_SGE_SHIFT_UPPER	8
++		#define STREAM_DETECT_SHIFT	7
++		#define STREAM_DETECT_MASK	0x80
++		struct {
+ #if   defined(__BIG_ENDIAN_BITFIELD) /* 0x1C - 0x1D */
+-	u16 stream_detected:1;
+-	u16 reserved:3;
+-	u16 num_sge:12;
++			u16 stream_detected:1;
++			u16 reserved:3;
++			u16 num_sge:12;
+ #else
+-	u16 num_sge:12;
+-	u16 reserved:3;
+-	u16 stream_detected:1;
++			u16 num_sge:12;
++			u16 reserved:3;
++			u16 stream_detected:1;
+ #endif
++		} bits;
++		u8 bytes[2];
++	} u;
+ 	u8 resvd2[2];          /* 0x1E-0x1F */
+ };
+ 
++#define MR_RAID_CTX_ROUTINGFLAGS_SLD_SHIFT	1
++#define MR_RAID_CTX_ROUTINGFLAGS_C2D_SHIFT	2
++#define MR_RAID_CTX_ROUTINGFLAGS_FWD_SHIFT	3
++#define MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT	4
++#define MR_RAID_CTX_ROUTINGFLAGS_SBS_SHIFT	5
++#define MR_RAID_CTX_ROUTINGFLAGS_RW_SHIFT	6
++#define MR_RAID_CTX_ROUTINGFLAGS_LOG_SHIFT	7
++#define MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT	8
++#define MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_MASK	0x0F00
++#define MR_RAID_CTX_ROUTINGFLAGS_SETDIVERT_SHIFT	12
++#define MR_RAID_CTX_ROUTINGFLAGS_SETDIVERT_MASK	0xF000
++
++static inline void set_num_sge(struct RAID_CONTEXT_G35 *rctx_g35,
++			       u16 sge_count)
++{
++	rctx_g35->u.bytes[0] = (u8)(sge_count & NUM_SGE_MASK_LOWER);
++	rctx_g35->u.bytes[1] |= (u8)((sge_count >> NUM_SGE_SHIFT_UPPER)
++							& NUM_SGE_MASK_UPPER);
++}
++
++static inline u16 get_num_sge(struct RAID_CONTEXT_G35 *rctx_g35)
++{
++	u16 sge_count;
++
++	sge_count = (u16)(((rctx_g35->u.bytes[1] & NUM_SGE_MASK_UPPER)
++			<< NUM_SGE_SHIFT_UPPER) | (rctx_g35->u.bytes[0]));
++	return sge_count;
++}
++
++#define SET_STREAM_DETECTED(rctx_g35) \
++	(rctx_g35.u.bytes[1] |= STREAM_DETECT_MASK)
++
++#define CLEAR_STREAM_DETECTED(rctx_g35) \
++	(rctx_g35.u.bytes[1] &= ~(STREAM_DETECT_MASK))
++
++static inline bool is_stream_detected(struct RAID_CONTEXT_G35 *rctx_g35)
++{
++	return ((rctx_g35->u.bytes[1] & STREAM_DETECT_MASK));
++}
++
+ union RAID_CONTEXT_UNION {
+ 	struct RAID_CONTEXT raid_context;
+ 	struct RAID_CONTEXT_G35 raid_context_g35;
 -- 
 2.8.3
