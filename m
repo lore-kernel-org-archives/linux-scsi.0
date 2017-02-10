@@ -1,370 +1,307 @@
 From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Subject: [PATCH v3 21/39] megaraid_sas: big endian support changes
-Date: Fri, 10 Feb 2017 00:59:21 -0800
-Message-ID: <1486717179-23320-22-git-send-email-shivasharan.srikanteshwara@broadcom.com>
+Subject: [PATCH v3 11/39] megaraid_sas: NVME interface target prop added
+Date: Fri, 10 Feb 2017 00:59:11 -0800
+Message-ID: <1486717179-23320-12-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 References: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pf0-f170.google.com ([209.85.192.170]:33343 "EHLO
-        mail-pf0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751324AbdBJJe4 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:34:56 -0500
-Received: by mail-pf0-f170.google.com with SMTP id c73so4799849pfb.0
-        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:34:01 -0800 (PST)
+Received: from mail-pg0-f50.google.com ([74.125.83.50]:33905 "EHLO
+        mail-pg0-f50.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751153AbdBJJzz (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 10 Feb 2017 04:55:55 -0500
+Received: by mail-pg0-f50.google.com with SMTP id 14so9408850pgg.1
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Feb 2017 01:54:23 -0800 (PST)
 In-Reply-To: <1486717179-23320-1-git-send-email-shivasharan.srikanteshwara@broadcom.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-scsi@vger.kernel.org
 Cc: martin.petersen@oracle.com, thenzl@redhat.com, jejb@linux.vnet.ibm.com, kashyap.desai@broadcom.com, sumit.saxena@broadcom.com, hare@suse.com, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-Fix endiannes fixes for Ventura specific.
+This patch fetch true values of NVME property from FW using New DCMD interface MR_DCMD_DEV_GET_TARGET_PROP
 
 Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 Reviewed-by: Tomas Henzl <thenzl@redhat.com>
 ---
+ drivers/scsi/megaraid/megaraid_sas.h        |  14 +++
+ drivers/scsi/megaraid/megaraid_sas_base.c   | 144 +++++++++++++++++++++++++++-
+ drivers/scsi/megaraid/megaraid_sas_fusion.h |   1 +
+ 3 files changed, 155 insertions(+), 4 deletions(-)
 
-Fix in v3: Pass RAID_CONTEXT_G35 pointer to get/set_num_sge
-
- drivers/scsi/megaraid/megaraid_sas_fp.c     |  15 ++--
- drivers/scsi/megaraid/megaraid_sas_fusion.c |  70 ++++++++++-------
- drivers/scsi/megaraid/megaraid_sas_fusion.h | 115 +++++++++++++++++-----------
- 3 files changed, 122 insertions(+), 78 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
-index 9d5d485..68582d9 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fp.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
-@@ -210,7 +210,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 			le32_to_cpu(fw_map_dyn->desc_table_size),
- 			le32_to_cpu(fw_map_dyn->desc_table_num_elements));
- 		dev_dbg(&instance->pdev->dev, "drv map %p ldCount %d\n",
--			drv_map, fw_map_dyn->ld_count);
-+			drv_map, le16_to_cpu(fw_map_dyn->ld_count));
- #endif
- 		desc_table =
- 		(struct MR_RAID_MAP_DESC_TABLE *)((void *)fw_map_dyn + le32_to_cpu(fw_map_dyn->desc_table_offset));
-@@ -222,7 +222,8 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 		pDrvRaidMap->ldCount = (__le16)cpu_to_le16(ld_count);
- 		pDrvRaidMap->fpPdIoTimeoutSec =
- 			fw_map_dyn->fp_pd_io_timeout_sec;
--		pDrvRaidMap->totalSize = sizeof(struct MR_DRV_RAID_MAP_ALL);
-+		pDrvRaidMap->totalSize =
-+			cpu_to_le32(sizeof(struct MR_DRV_RAID_MAP_ALL));
- 		/* point to actual data starting point*/
- 		raid_map_data = (void *)fw_map_dyn +
- 			le32_to_cpu(fw_map_dyn->desc_table_offset) +
-@@ -234,11 +235,11 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- 			dev_dbg(&instance->pdev->dev, "desc table %p\n",
- 				desc_table);
- 			dev_dbg(&instance->pdev->dev, "raidmap type %d, raidmapOffset 0x%x\n",
--				desc_table->raid_map_desc_type,
--				desc_table->raid_map_desc_offset);
-+				le32_to_cpu(desc_table->raid_map_desc_type),
-+				le32_to_cpu(desc_table->raid_map_desc_offset));
- 			dev_dbg(&instance->pdev->dev, "raid map number of elements 0%x, raidmapsize 0x%x\n",
--				desc_table->raid_map_desc_elements,
--				desc_table->raid_map_desc_buffer_size);
-+				le32_to_cpu(desc_table->raid_map_desc_elements),
-+				le32_to_cpu(desc_table->raid_map_desc_buffer_size));
- #endif
- 			switch (le32_to_cpu(desc_table->raid_map_desc_type)) {
- 			case RAID_MAP_DESC_TYPE_DEVHDL_INFO:
-@@ -263,7 +264,7 @@ void MR_PopulateDrvRaidMap(struct megasas_instance *instance)
- #endif
- 			for (j = 0; j < le32_to_cpu(desc_table->raid_map_desc_elements); j++) {
- 				pDrvRaidMap->ldTgtIdToLd[j] =
--				fw_map_dyn->ld_tgt_id_to_ld[j];
-+					le16_to_cpu(fw_map_dyn->ld_tgt_id_to_ld[j]);
- #if VD_EXT_DEBUG
- 				dev_dbg(&instance->pdev->dev, " %d drv ldTgtIdToLd %d\n",
- 					j, pDrvRaidMap->ldTgtIdToLd[j]);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index b26ee85..baea4c2 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -2080,7 +2080,7 @@ static void megasas_stream_detect(struct megasas_instance *instance,
- 			 */
- 			continue;
+diff --git a/drivers/scsi/megaraid/megaraid_sas.h b/drivers/scsi/megaraid/megaraid_sas.h
+index f9efddf..a45ff10 100644
+--- a/drivers/scsi/megaraid/megaraid_sas.h
++++ b/drivers/scsi/megaraid/megaraid_sas.h
+@@ -695,6 +695,18 @@ struct  MR_PD_INFO {
+ 	u8 reserved1[512-428];
+ } __packed;
  
--		cmd->io_request->RaidContext.raid_context_g35.stream_detected = true;
-+		SET_STREAM_DETECTED(cmd->io_request->RaidContext.raid_context_g35);
- 		current_sd->next_seq_lba =
- 		io_info->ldStartBlock + io_info->numBlocks;
- 		/*
-@@ -2154,7 +2154,8 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
- 			/* Fast path cache by pass capable R0/R1 VD */
- 			if ((raid->level <= 1) &&
- 			    (raid->capability.fp_cache_bypass_capable)) {
--				rctx_g35->routing_flags.bits.sld = 1;
-+				rctx_g35->routing_flags |=
-+					(1 << MR_RAID_CTX_ROUTINGFLAGS_SLD_SHIFT);
- 				rctx_g35->raid_flags =
- 					(MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS
- 					<< MR_RAID_CTX_RAID_FLAGS_IO_SUB_TYPE_SHIFT);
-@@ -2174,7 +2175,7 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
- 			else if (raid->cpuAffinity.ldWrite.cpu1)
- 				cpu_sel = MR_RAID_CTX_CPUSEL_1;
++/*
++ * Definition of structure used to expose attributes of VD or JBOD
++ * (this structure is to be filled by firmware when MR_DCMD_DRV_GET_TARGET_PROP
++ * is fired by driver)
++ */
++struct MR_TARGET_PROPERTIES {
++	u32    max_io_size_kb;
++	u32    device_qdepth;
++	u32    sector_size;
++	u8     reserved[500];
++} __packed;
++
+  /*
+  * defines the physical drive address structure
+  */
+@@ -2090,6 +2102,8 @@ struct megasas_instance {
+ 	dma_addr_t hb_host_mem_h;
+ 	struct MR_PD_INFO *pd_info;
+ 	dma_addr_t pd_info_h;
++	struct MR_TARGET_PROPERTIES *tgt_prop;
++	dma_addr_t tgt_prop_h;
  
--			if (rctx_g35->stream_detected &&
-+			if (is_stream_detected(rctx_g35) &&
- 			    (raid->level == 5) &&
- 			    (raid->writeMode == MR_RL_WRITE_THROUGH_MODE) &&
- 			    (cpu_sel == MR_RAID_CTX_CPUSEL_FCFS))
-@@ -2182,7 +2183,8 @@ megasas_set_raidflag_cpu_affinity(union RAID_CONTEXT_UNION *praid_context,
- 		}
+ 	__le32 *reply_queue;
+ 	dma_addr_t reply_queue_h;
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index f383bf2..51b35a6 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -118,6 +118,8 @@ static int megasas_register_aen(struct megasas_instance *instance,
+ 				u32 seq_num, u32 class_locale_word);
+ static void megasas_get_pd_info(struct megasas_instance *instance,
+ 				struct scsi_device *sdev);
++static int megasas_get_target_prop(struct megasas_instance *instance,
++				   struct scsi_device *sdev);
+ /*
+  * PCI ID table for all supported controllers
+  */
+@@ -1834,14 +1836,16 @@ megasas_set_nvme_device_properties(struct scsi_device *sdev, u32 max_io_size)
+  * set nvme device properties. see - megasas_set_nvme_device_properties
+  *
+  * @sdev:				scsi device
+- *
++ * @is_target_prop			true, if fw provided target properties.
+  */
+-static void megasas_set_static_target_properties(struct scsi_device *sdev)
++static void megasas_set_static_target_properties(struct scsi_device *sdev,
++						 bool is_target_prop)
+ {
+ 	u16	target_index = 0;
+ 	u8 interface_type;
+ 	u32 device_qd = MEGASAS_DEFAULT_CMD_PER_LUN;
+ 	u32 max_io_size_kb = MR_DEFAULT_NVME_MDTS_KB;
++	u32 tgt_device_qd;
+ 	struct megasas_instance *instance;
+ 	struct MR_PRIV_DEVICE *mr_device_priv_data;
+ 
+@@ -1868,6 +1872,18 @@ static void megasas_set_static_target_properties(struct scsi_device *sdev)
+ 		break;
  	}
  
--	rctx_g35->routing_flags.bits.cpu_sel = cpu_sel;
-+	rctx_g35->routing_flags |=
-+		(cpu_sel << MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT);
++	if (is_target_prop) {
++		tgt_device_qd = le32_to_cpu(instance->tgt_prop->device_qdepth);
++		if (tgt_device_qd &&
++		    (tgt_device_qd <= instance->host->can_queue))
++			device_qd = tgt_device_qd;
++
++		/* max_io_size_kb will be set to non zero for
++		 * nvme based vd and syspd.
++		 */
++		max_io_size_kb = le32_to_cpu(instance->tgt_prop->max_io_size_kb);
++	}
++
+ 	if (instance->nvme_page_size && max_io_size_kb)
+ 		megasas_set_nvme_device_properties(sdev, (max_io_size_kb << 10));
  
- 	/* Always give priority to MR_RAID_FLAGS_IO_SUB_TYPE_LDIO_BW_LIMIT
- 	 * vs MR_RAID_FLAGS_IO_SUB_TYPE_CACHE_BYPASS.
-@@ -2333,7 +2335,7 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 		/* In ventura if stream detected for a read and it is read ahead
- 		 *  capable make this IO as LDIO
- 		 */
--		if (praid_context->raid_context_g35.stream_detected &&
-+		if (is_stream_detected(&io_request->RaidContext.raid_context_g35) &&
- 		    io_info.isRead && io_info.ra_capable)
- 			fp_possible = false;
+@@ -1880,6 +1896,8 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ {
+ 	u16 pd_index = 0;
+ 	struct megasas_instance *instance;
++	int ret_target_prop = DCMD_FAILED;
++	bool is_target_prop = false;
  
-@@ -2368,8 +2370,8 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				raid, fp_possible, io_info.isRead,
- 				scsi_buff_len);
- 		else
--			praid_context->raid_context_g35.routing_flags.bits.cpu_sel =
--				MR_RAID_CTX_CPUSEL_0;
-+			praid_context->raid_context_g35.routing_flags |=
-+				(MR_RAID_CTX_CPUSEL_0 << MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT);
- 	}
+ 	instance = megasas_lookup_instance(sdev->host->host_no);
+ 	if (instance->pd_list_not_supported) {
+@@ -1897,7 +1915,14 @@ static int megasas_slave_configure(struct scsi_device *sdev)
+ 	if ((instance->pd_info) && !MEGASAS_IS_LOGICAL(sdev))
+ 		megasas_get_pd_info(instance, sdev);
  
- 	if (fp_possible) {
-@@ -2393,12 +2395,14 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 			  (MR_RL_FLAGS_GRANT_DESTINATION_CUDA |
- 			   MR_RL_FLAGS_SEQ_NUM_ENABLE);
- 		} else if (instance->is_ventura) {
--			io_request->RaidContext.raid_context_g35.type
--				= MPI2_TYPE_CUDA;
--			io_request->RaidContext.raid_context_g35.nseg = 0x1;
--			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+						(1 << RAID_CONTEXT_NSEG_SHIFT);
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+						(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
-+			io_request->RaidContext.raid_context_g35.routing_flags |=
-+						(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
- 			io_request->IoFlags |=
--			cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
-+				cpu_to_le16(MPI25_SAS_DEVICE0_FLAGS_ENABLED_FAST_PATH);
- 		}
- 		if (fusion->load_balance_info &&
- 			(fusion->load_balance_info[device_id].loadBalanceFlag) &&
-@@ -2456,10 +2460,12 @@ megasas_build_ldio_fusion(struct megasas_instance *instance,
- 				 MR_RL_FLAGS_SEQ_NUM_ENABLE);
- 			io_request->RaidContext.raid_context.nseg = 0x1;
- 		} else if (instance->is_ventura) {
--			io_request->RaidContext.raid_context_g35.type
--				= MPI2_TYPE_CUDA;
--			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
--			io_request->RaidContext.raid_context_g35.nseg = 0x1;
-+			io_request->RaidContext.raid_context_g35.routing_flags |=
-+					(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+					(1 << RAID_CONTEXT_NSEG_SHIFT);
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+					(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
- 		}
- 		io_request->Function = MEGASAS_MPI2_FUNCTION_LD_IO_REQUEST;
- 		io_request->DevHandle = cpu_to_le16(device_id);
-@@ -2609,17 +2615,23 @@ megasas_build_syspd_fusion(struct megasas_instance *instance,
- 			pRAID_Context->virtual_disk_tgt_id =
- 				pd_sync->seq[pd_index].pd_target_id;
- 		else
--		pRAID_Context->virtual_disk_tgt_id =
--			cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
-+			pRAID_Context->virtual_disk_tgt_id =
-+				cpu_to_le16(device_id + (MAX_PHYSICAL_DEVICES - 1));
- 		pRAID_Context->config_seq_num = pd_sync->seq[pd_index].seqNum;
- 		io_request->DevHandle = pd_sync->seq[pd_index].devHandle;
--		if (instance->is_ventura)
--			io_request->RaidContext.raid_context_g35.routing_flags.bits.sqn = 1;
--		else
--		pRAID_Context->reg_lock_flags |=
--			(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
--		pRAID_Context->type = MPI2_TYPE_CUDA;
--		pRAID_Context->nseg = 0x1;
-+		if (instance->is_ventura) {
-+			io_request->RaidContext.raid_context_g35.routing_flags |=
-+				(1 << MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT);
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+							(1 << RAID_CONTEXT_NSEG_SHIFT);
-+			io_request->RaidContext.raid_context_g35.nseg_type |=
-+							(MPI2_TYPE_CUDA << RAID_CONTEXT_TYPE_SHIFT);
-+		} else {
-+			pRAID_Context->type = MPI2_TYPE_CUDA;
-+			pRAID_Context->nseg = 0x1;
-+			pRAID_Context->reg_lock_flags |=
-+				(MR_RL_FLAGS_SEQ_NUM_ENABLE|MR_RL_FLAGS_GRANT_DESTINATION_CUDA);
+-	megasas_set_static_target_properties(sdev);
++	/* Some ventura firmware may not have instance->nvme_page_size set.
++	 * Do not send MR_DCMD_DRV_GET_TARGET_PROP
++	 */
++	if ((instance->tgt_prop) && (instance->nvme_page_size))
++		ret_target_prop = megasas_get_target_prop(instance, sdev);
++
++	is_target_prop = (ret_target_prop == DCMD_SUCCESS) ? true : false;
++	megasas_set_static_target_properties(sdev, is_target_prop);
+ 
+ 	mutex_unlock(&instance->hba_mutex);
+ 
+@@ -5682,6 +5707,98 @@ megasas_register_aen(struct megasas_instance *instance, u32 seq_num,
+ 	return 0;
+ }
+ 
++/* megasas_get_target_prop - Send DCMD with below details to firmware.
++ *
++ * This DCMD will fetch few properties of LD/system PD defined
++ * in MR_TARGET_DEV_PROPERTIES. eg. Queue Depth, MDTS value.
++ *
++ * DCMD send by drivers whenever new target is added to the OS.
++ *
++ * dcmd.opcode         - MR_DCMD_DEV_GET_TARGET_PROP
++ * dcmd.mbox.b[0]      - DCMD is to be fired for LD or system PD.
++ *                       0 = system PD, 1 = LD.
++ * dcmd.mbox.s[1]      - TargetID for LD/system PD.
++ * dcmd.sge IN         - Pointer to return MR_TARGET_DEV_PROPERTIES.
++ *
++ * @instance:		Adapter soft state
++ * @sdev:		OS provided scsi device
++ *
++ * Returns 0 on success non-zero on failure.
++ */
++static int
++megasas_get_target_prop(struct megasas_instance *instance,
++			struct scsi_device *sdev)
++{
++	int ret;
++	struct megasas_cmd *cmd;
++	struct megasas_dcmd_frame *dcmd;
++	u16 targetId = (sdev->channel % 2) + sdev->id;
++
++	cmd = megasas_get_cmd(instance);
++
++	if (!cmd) {
++		dev_err(&instance->pdev->dev,
++			"Failed to get cmd %s\n", __func__);
++		return -ENOMEM;
++	}
++
++	dcmd = &cmd->frame->dcmd;
++
++	memset(instance->tgt_prop, 0, sizeof(*instance->tgt_prop));
++	memset(dcmd->mbox.b, 0, MFI_MBOX_SIZE);
++	dcmd->mbox.b[0] = MEGASAS_IS_LOGICAL(sdev);
++
++	dcmd->mbox.s[1] = cpu_to_le16(targetId);
++	dcmd->cmd = MFI_CMD_DCMD;
++	dcmd->cmd_status = 0xFF;
++	dcmd->sge_count = 1;
++	dcmd->flags = cpu_to_le16(MFI_FRAME_DIR_READ);
++	dcmd->timeout = 0;
++	dcmd->pad_0 = 0;
++	dcmd->data_xfer_len =
++		cpu_to_le32(sizeof(struct MR_TARGET_PROPERTIES));
++	dcmd->opcode = cpu_to_le32(MR_DCMD_DRV_GET_TARGET_PROP);
++	dcmd->sgl.sge32[0].phys_addr =
++		cpu_to_le32(instance->tgt_prop_h);
++	dcmd->sgl.sge32[0].length =
++		cpu_to_le32(sizeof(struct MR_TARGET_PROPERTIES));
++
++	if (instance->ctrl_context && !instance->mask_interrupts)
++		ret = megasas_issue_blocked_cmd(instance,
++						cmd, MFI_IO_TIMEOUT_SECS);
++	else
++		ret = megasas_issue_polled(instance, cmd);
++
++	switch (ret) {
++	case DCMD_TIMEOUT:
++		switch (dcmd_timeout_ocr_possible(instance)) {
++		case INITIATE_OCR:
++			cmd->flags |= DRV_DCMD_SKIP_REFIRE;
++			megasas_reset_fusion(instance->host,
++					     MFI_IO_TIMEOUT_OCR);
++			break;
++		case KILL_ADAPTER:
++			megaraid_sas_kill_hba(instance);
++			break;
++		case IGNORE_TIMEOUT:
++			dev_info(&instance->pdev->dev,
++				 "Ignore DCMD timeout: %s %d\n",
++				 __func__, __LINE__);
++			break;
 +		}
- 	} else if (fusion->fast_path_io) {
- 		pRAID_Context->virtual_disk_tgt_id = cpu_to_le16(device_id);
- 		pRAID_Context->config_seq_num = 0;
-@@ -2734,9 +2746,11 @@ megasas_build_io_fusion(struct megasas_instance *instance,
- 		return 1;
- 	}
++		break;
++
++	default:
++		megasas_return_cmd(instance, cmd);
++	}
++	if (ret != DCMD_SUCCESS)
++		dev_err(&instance->pdev->dev,
++			"return from %s %d return value %d\n",
++			__func__, __LINE__, ret);
++
++	return ret;
++}
++
+ /**
+  * megasas_start_aen -	Subscribes to AEN during driver load time
+  * @instance:		Adapter soft state
+@@ -5958,9 +6075,17 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		instance->pd_info = pci_alloc_consistent(pdev,
+ 			sizeof(struct MR_PD_INFO), &instance->pd_info_h);
  
--	if (instance->is_ventura)
--		io_request->RaidContext.raid_context_g35.num_sge = sge_count;
--	else {
-+	if (instance->is_ventura) {
-+		set_num_sge(&io_request->RaidContext.raid_context_g35, sge_count);
-+		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.routing_flags);
-+		cpu_to_le16s(&io_request->RaidContext.raid_context_g35.nseg_type);
-+	} else {
- 		/* numSGE store lower 8 bit of sge_count.
- 		 * numSGEExt store higher 8 bit of sge_count
- 		 */
++		instance->pd_info = pci_alloc_consistent(pdev,
++			sizeof(struct MR_PD_INFO), &instance->pd_info_h);
++		instance->tgt_prop = pci_alloc_consistent(pdev,
++			sizeof(struct MR_TARGET_PROPERTIES), &instance->tgt_prop_h);
++
+ 		if (!instance->pd_info)
+ 			dev_err(&instance->pdev->dev, "Failed to alloc mem for pd_info\n");
+ 
++		if (!instance->tgt_prop)
++			dev_err(&instance->pdev->dev, "Failed to alloc mem for tgt_prop\n");
++
+ 		instance->crash_dump_buf = pci_alloc_consistent(pdev,
+ 						CRASH_DMA_BUF_SIZE,
+ 						&instance->crash_dump_h);
+@@ -6105,6 +6230,10 @@ static int megasas_probe_one(struct pci_dev *pdev,
+ 		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
+ 					instance->pd_info,
+ 					instance->pd_info_h);
++	if (instance->tgt_prop)
++		pci_free_consistent(pdev, sizeof(struct MR_TARGET_PROPERTIES),
++					instance->tgt_prop,
++					instance->tgt_prop_h);
+ 	if (instance->producer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+ 				    instance->producer_h);
+@@ -6377,6 +6506,10 @@ megasas_resume(struct pci_dev *pdev)
+ 		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
+ 					instance->pd_info,
+ 					instance->pd_info_h);
++	if (instance->tgt_prop)
++		pci_free_consistent(pdev, sizeof(struct MR_TARGET_PROPERTIES),
++					instance->tgt_prop,
++					instance->tgt_prop_h);
+ 	if (instance->producer)
+ 		pci_free_consistent(pdev, sizeof(u32), instance->producer,
+ 				instance->producer_h);
+@@ -6535,11 +6668,14 @@ static void megasas_detach_one(struct pci_dev *pdev)
+ 	if (instance->evt_detail)
+ 		pci_free_consistent(pdev, sizeof(struct megasas_evt_detail),
+ 				instance->evt_detail, instance->evt_detail_h);
+-
+ 	if (instance->pd_info)
+ 		pci_free_consistent(pdev, sizeof(struct MR_PD_INFO),
+ 					instance->pd_info,
+ 					instance->pd_info_h);
++	if (instance->tgt_prop)
++		pci_free_consistent(pdev, sizeof(struct MR_TARGET_PROPERTIES),
++					instance->tgt_prop,
++					instance->tgt_prop_h);
+ 	if (instance->vf_affiliation)
+ 		pci_free_consistent(pdev, (MAX_LOGICAL_DRIVES + 1) *
+ 				    sizeof(struct MR_LD_VF_AFFILIATION),
 diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.h b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-index f25a262..1441c35 100644
+index 9f19f00..9d02967 100644
 --- a/drivers/scsi/megaraid/megaraid_sas_fusion.h
 +++ b/drivers/scsi/megaraid/megaraid_sas_fusion.h
-@@ -148,44 +148,13 @@ struct RAID_CONTEXT {
-  * starts in MPT IO Frames
-  */
- struct RAID_CONTEXT_G35 {
--#if   defined(__BIG_ENDIAN_BITFIELD)
--	u16	resvd0:8;
--	u16	nseg:4;
--	u16	type:4;
--#else
--	u16	type:4;		    /* 0x00 */
--	u16	nseg:4;		    /* 0x00 */
--	u16 resvd0:8;
--#endif
-+	#define RAID_CONTEXT_NSEG_MASK	0x00F0
-+	#define RAID_CONTEXT_NSEG_SHIFT	4
-+	#define RAID_CONTEXT_TYPE_MASK	0x000F
-+	#define RAID_CONTEXT_TYPE_SHIFT	0
-+	u16		nseg_type;
- 	u16 timeout_value; /* 0x02 -0x03 */
--	union {
--		struct {
--#if	defined(__BIG_ENDIAN_BITFIELD)
--		u16	set_divert:4;
--		u16	cpu_sel:4;
--		u16	log:1;
--		u16	rw:1;
--		u16	sbs:1;
--		u16	sqn:1;
--		u16	fwn:1;
--		u16	c2f:1;
--		u16	sld:1;
--		u16	reserved:1;
--#else
--		u16	reserved:1;
--		u16	sld:1;
--		u16	c2f:1;
--		u16	fwn:1;
--		u16	sqn:1;
--		u16	sbs:1;
--		u16	rw:1;
--		u16	log:1;
--		u16	cpu_sel:4;
--		u16	set_divert:4;
--#endif
--			} bits;
--		u16 s;
--	} routing_flags;	/* 0x04 -0x05 routing flags */
-+	u16		routing_flags;	// 0x04 -0x05 routing flags
- 	u16 virtual_disk_tgt_id;   /* 0x06 -0x07 */
- 	u64 reg_lock_row_lba;      /* 0x08 - 0x0F */
- 	u32 reg_lock_length;      /* 0x10 - 0x13 */
-@@ -200,18 +169,78 @@ struct RAID_CONTEXT_G35 {
- 				 */
- 	u8 span_arm;            /* 0x1C span[7:5], arm[4:0] */
- 	u16	config_seq_num;           /* 0x1A -0x1B */
-+	union {
-+		/*
-+		 * Bit format:
-+		 *	 ---------------------------------
-+		 *	 | 7 | 6 | 5 | 4 | 3 | 2 | 1 | 0 |
-+		 *	 ---------------------------------
-+		 * Byte0 |    numSGE[7]- numSGE[0]	 |
-+		 *	 ---------------------------------
-+		 * Byte1 |SD | resvd     | numSGE 8-11   |
-+		 *        --------------------------------
-+		 */
-+		#define NUM_SGE_MASK_LOWER	0xFF
-+		#define NUM_SGE_MASK_UPPER	0x0F
-+		#define NUM_SGE_SHIFT_UPPER	8
-+		#define STREAM_DETECT_SHIFT	7
-+		#define STREAM_DETECT_MASK	0x80
-+		struct {
- #if   defined(__BIG_ENDIAN_BITFIELD) /* 0x1C - 0x1D */
--	u16 stream_detected:1;
--	u16 reserved:3;
--	u16 num_sge:12;
-+			u16 stream_detected:1;
-+			u16 reserved:3;
-+			u16 num_sge:12;
- #else
--	u16 num_sge:12;
--	u16 reserved:3;
--	u16 stream_detected:1;
-+			u16 num_sge:12;
-+			u16 reserved:3;
-+			u16 stream_detected:1;
- #endif
-+		} bits;
-+		u8 bytes[2];
-+	} u;
- 	u8 resvd2[2];          /* 0x1E-0x1F */
- };
- 
-+#define MR_RAID_CTX_ROUTINGFLAGS_SLD_SHIFT	1
-+#define MR_RAID_CTX_ROUTINGFLAGS_C2D_SHIFT	2
-+#define MR_RAID_CTX_ROUTINGFLAGS_FWD_SHIFT	3
-+#define MR_RAID_CTX_ROUTINGFLAGS_SQN_SHIFT	4
-+#define MR_RAID_CTX_ROUTINGFLAGS_SBS_SHIFT	5
-+#define MR_RAID_CTX_ROUTINGFLAGS_RW_SHIFT	6
-+#define MR_RAID_CTX_ROUTINGFLAGS_LOG_SHIFT	7
-+#define MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_SHIFT	8
-+#define MR_RAID_CTX_ROUTINGFLAGS_CPUSEL_MASK	0x0F00
-+#define MR_RAID_CTX_ROUTINGFLAGS_SETDIVERT_SHIFT	12
-+#define MR_RAID_CTX_ROUTINGFLAGS_SETDIVERT_MASK	0xF000
-+
-+static inline void set_num_sge(struct RAID_CONTEXT_G35 *rctx_g35,
-+			       u16 sge_count)
-+{
-+	rctx_g35->u.bytes[0] = (u8)(sge_count & NUM_SGE_MASK_LOWER);
-+	rctx_g35->u.bytes[1] |= (u8)((sge_count >> NUM_SGE_SHIFT_UPPER)
-+							& NUM_SGE_MASK_UPPER);
-+}
-+
-+static inline u16 get_num_sge(struct RAID_CONTEXT_G35 *rctx_g35)
-+{
-+	u16 sge_count;
-+
-+	sge_count = (u16)(((rctx_g35->u.bytes[1] & NUM_SGE_MASK_UPPER)
-+			<< NUM_SGE_SHIFT_UPPER) | (rctx_g35->u.bytes[0]));
-+	return sge_count;
-+}
-+
-+#define SET_STREAM_DETECTED(rctx_g35) \
-+	(rctx_g35.u.bytes[1] |= STREAM_DETECT_MASK)
-+
-+#define CLEAR_STREAM_DETECTED(rctx_g35) \
-+	(rctx_g35.u.bytes[1] &= ~(STREAM_DETECT_MASK))
-+
-+static inline bool is_stream_detected(struct RAID_CONTEXT_G35 *rctx_g35)
-+{
-+	return ((rctx_g35->u.bytes[1] & STREAM_DETECT_MASK));
-+}
-+
- union RAID_CONTEXT_UNION {
- 	struct RAID_CONTEXT raid_context;
- 	struct RAID_CONTEXT_G35 raid_context_g35;
+@@ -694,6 +694,7 @@ struct MPI2_IOC_INIT_REQUEST {
+ #define MAX_RAIDMAP_PHYSICAL_DEVICES_DYN 512
+ #define MR_DCMD_LD_MAP_GET_INFO             0x0300e101
+ #define MR_DCMD_SYSTEM_PD_MAP_GET_INFO      0x0200e102
++#define MR_DCMD_DRV_GET_TARGET_PROP         0x0200e103
+ #define MR_DCMD_CTRL_SHARED_HOST_MEM_ALLOC  0x010e8485   /* SR-IOV HB alloc*/
+ #define MR_DCMD_LD_VF_MAP_GET_ALL_LDS_111   0x03200200
+ #define MR_DCMD_LD_VF_MAP_GET_ALL_LDS       0x03150200
 -- 
 2.8.3
