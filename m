@@ -1,42 +1,49 @@
-From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 16/16] lpfc: Update lpfc version to 11.2.0.7
-Date: Sun, 12 Feb 2017 13:52:40 -0800
-Message-ID: <58a0d928.Zhz1nZh7kjbELlcG%jsmart2021@gmail.com>
+From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
+Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
+Date: Mon, 13 Feb 2017 10:14:54 +1100
+Message-ID: <1486941294.3401.67.camel@kernel.crashing.org>
+References: <20170212214920.28866-1-anton@ozlabs.org>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-oi0-f67.google.com ([209.85.218.67]:36149 "EHLO
-        mail-oi0-f67.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751448AbdBLVwn (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Feb 2017 16:52:43 -0500
-Received: by mail-oi0-f67.google.com with SMTP id u143so5855806oif.3
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2017 13:52:43 -0800 (PST)
+Received: from gate.crashing.org ([63.228.1.57]:47256 "EHLO gate.crashing.org"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751000AbdBLXPR (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Sun, 12 Feb 2017 18:15:17 -0500
+In-Reply-To: <20170212214920.28866-1-anton@ozlabs.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
+To: Anton Blanchard <anton@ozlabs.org>, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jk@ozlabs.org
+Cc: linux-scsi@vger.kernel.org
 
+On Mon, 2017-02-13 at 08:49 +1100, Anton Blanchard wrote:
+> From: Anton Blanchard <anton@samba.org>
+> 
+> We see lpfc devices regularly fail during kexec. Fix this by adding
+> a shutdown method which mirrors the remove method.
 
-Update lpfc version to 11.2.0.7
+Or instead finally do what I've been advocating for years (and even
+sent patches for) which is to have kexec call remove instead of
+shutdown.
 
-Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
-Signed-off-by: James Smart <james.smart@broadcom.com>
----
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+Shutdown is and has *always* been the wrong thing to do.
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index 0d93535..86c6c9b 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "11.2.0.4"
-+#define LPFC_DRIVER_VERSION "11.2.0.7"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
--- 
-2.5.0
+> Signed-off-by: Anton Blanchard <anton@samba.org>
+> ---
+>  drivers/scsi/lpfc/lpfc_init.c | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c
+> b/drivers/scsi/lpfc/lpfc_init.c
+> index 4776fd8..10f75ad 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -11447,6 +11447,7 @@ static struct pci_driver lpfc_driver = {
+>  	.id_table	= lpfc_id_table,
+>  	.probe		= lpfc_pci_probe_one,
+>  	.remove		= lpfc_pci_remove_one,
+> +	.shutdown	= lpfc_pci_remove_one,
+>  	.suspend        = lpfc_pci_suspend_one,
+>  	.resume		= lpfc_pci_resume_one,
+>  	.err_handler    = &lpfc_err_handler,
