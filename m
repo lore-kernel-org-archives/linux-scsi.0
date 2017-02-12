@@ -1,499 +1,382 @@
 From: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH v3 02/16] lpfc: use pci_irq_alloc_vectors and
- pci_irq_free_vectors
-Date: Sun, 12 Feb 2017 13:52:26 -0800
-Message-ID: <58a0d91a.9n5crfX+63xwYfdj%jsmart2021@gmail.com>
+Subject: [PATCH v3 05/16] lpfc: refactor debugfs queue dump routines
+Date: Sun, 12 Feb 2017 13:52:29 -0800
+Message-ID: <58a0d91d.rM8geDSrb5FPALB9%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-ot0-f195.google.com ([74.125.82.195]:33336 "EHLO
-        mail-ot0-f195.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751241AbdBLVwa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Feb 2017 16:52:30 -0500
-Received: by mail-ot0-f195.google.com with SMTP id f9so9225001otd.0
-        for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2017 13:52:29 -0800 (PST)
+Received: from mail-oi0-f65.google.com ([209.85.218.65]:35738 "EHLO
+        mail-oi0-f65.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751417AbdBLVwc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Sun, 12 Feb 2017 16:52:32 -0500
+Received: by mail-oi0-f65.google.com with SMTP id x84so5873568oix.2
+        for <linux-scsi@vger.kernel.org>; Sun, 12 Feb 2017 13:52:32 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
 
-From: Christoph Hellwig <hch@lst.de>
+Create common wq, cq, eq, rq dump functions
 
-This avoids having to store the msix_entries array and simpliefies the
-shutdown and cleanup path a lot.
-
-Signed-off-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 Signed-off-by: James Smart <james.smart@broadcom.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 ---
- drivers/scsi/lpfc/lpfc.h      |   2 -
- drivers/scsi/lpfc/lpfc_init.c | 240 ++++++++++--------------------------------
- drivers/scsi/lpfc/lpfc_sli4.h |   1 -
- 3 files changed, 54 insertions(+), 189 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c |  22 ++--
+ drivers/scsi/lpfc/lpfc_debugfs.h | 214 ++++++++++++++++-----------------------
+ 2 files changed, 101 insertions(+), 135 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 6593b07..64022d7 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -878,8 +878,6 @@ struct lpfc_hba {
- 	enum intr_type_t intr_type;
- 	uint32_t intr_mode;
- #define LPFC_INTR_ERROR	0xFFFFFFFF
--	struct msix_entry msix_entries[LPFC_MSIX_VECTORS];
--
- 	struct list_head port_list;
- 	struct lpfc_vport *pport;	/* physical lpfc_vport pointer */
- 	uint16_t max_vpi;		/* Maximum virtual nports */
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 4776fd8..c4e8fad 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -5510,17 +5510,6 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 		goto out_free_fcf_rr_bmask;
- 	}
- 
--	phba->sli4_hba.msix_entries = kzalloc((sizeof(struct msix_entry) *
--				  (fof_vectors +
--				   phba->cfg_fcp_io_channel)), GFP_KERNEL);
--	if (!phba->sli4_hba.msix_entries) {
--		lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
--				"2573 Failed allocate memory for msi-x "
--				"interrupt vector entries\n");
--		rc = -ENOMEM;
--		goto out_free_fcp_eq_hdl;
--	}
--
- 	phba->sli4_hba.cpu_map = kzalloc((sizeof(struct lpfc_vector_map_info) *
- 					 phba->sli4_hba.num_present_cpu),
- 					 GFP_KERNEL);
-@@ -5529,7 +5518,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 				"3327 Failed allocate memory for msi-x "
- 				"interrupt vector mapping\n");
- 		rc = -ENOMEM;
--		goto out_free_msix;
-+		goto out_free_fcp_eq_hdl;
- 	}
- 	if (lpfc_used_cpu == NULL) {
- 		lpfc_used_cpu = kzalloc((sizeof(uint16_t) * lpfc_present_cpu),
-@@ -5540,7 +5529,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 					"interrupt vector mapping\n");
- 			kfree(phba->sli4_hba.cpu_map);
- 			rc = -ENOMEM;
--			goto out_free_msix;
-+			goto out_free_fcp_eq_hdl;
- 		}
- 		for (i = 0; i < lpfc_present_cpu; i++)
- 			lpfc_used_cpu[i] = LPFC_VECTOR_MAP_EMPTY;
-@@ -5575,8 +5564,6 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 
- 	return 0;
- 
--out_free_msix:
--	kfree(phba->sli4_hba.msix_entries);
- out_free_fcp_eq_hdl:
- 	kfree(phba->sli4_hba.fcp_eq_hdl);
- out_free_fcf_rr_bmask:
-@@ -5612,9 +5599,6 @@ lpfc_sli4_driver_resource_unset(struct lpfc_hba *phba)
- 	phba->sli4_hba.num_online_cpu = 0;
- 	phba->sli4_hba.curr_disp_cpu = 0;
- 
--	/* Free memory allocated for msi-x interrupt vector entries */
--	kfree(phba->sli4_hba.msix_entries);
--
- 	/* Free memory allocated for fast-path work queue handles */
- 	kfree(phba->sli4_hba.fcp_eq_hdl);
- 
-@@ -8485,16 +8469,7 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
-  * @phba: pointer to lpfc hba data structure.
-  *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-3 interface specs. The kernel function pci_enable_msix_exact()
-- * is called to enable the MSI-X vectors. Note that pci_enable_msix_exact(),
-- * once invoked, enables either all or nothing, depending on the current
-- * availability of PCI vector resources. The device driver is responsible
-- * for calling the individual request_irq() to register each MSI-X vector
-- * with a interrupt handler, which is done in this function. Note that
-- * later when device is unloading, the driver should always call free_irq()
-- * on all MSI-X vectors it has done request_irq() on before calling
-- * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-- * will be left with MSI-X enabled and leaks its vectors.
-+ * with SLI-3 interface specs.
-  *
-  * Return codes
-  *   0 - successful
-@@ -8503,33 +8478,24 @@ lpfc_sli4_pci_mem_unset(struct lpfc_hba *phba)
- static int
- lpfc_sli_enable_msix(struct lpfc_hba *phba)
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 4b00809..f8f47af 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -4555,31 +4555,31 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
+ void
+ lpfc_debug_dump_all_queues(struct lpfc_hba *phba)
  {
--	int rc, i;
-+	int rc;
- 	LPFC_MBOXQ_t *pmb;
+-	int fcp_wqidx;
++	int idx;
  
- 	/* Set up MSI-X multi-message vectors */
--	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
--		phba->msix_entries[i].entry = i;
--
--	/* Configure MSI-X capability structure */
--	rc = pci_enable_msix_exact(phba->pcidev, phba->msix_entries,
--				   LPFC_MSIX_VECTORS);
--	if (rc) {
-+	rc = pci_alloc_irq_vectors(phba->pcidev,
-+			LPFC_MSIX_VECTORS, LPFC_MSIX_VECTORS, PCI_IRQ_MSIX);
-+	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0420 PCI enable MSI-X failed (%d)\n", rc);
- 		goto vec_fail_out;
- 	}
--	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
--		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--				"0477 MSI-X entry[%d]: vector=x%x "
--				"message=%d\n", i,
--				phba->msix_entries[i].vector,
--				phba->msix_entries[i].entry);
-+
  	/*
- 	 * Assign MSI-X vectors to interrupt handlers
+ 	 * Dump Work Queues (WQs)
  	 */
+-	lpfc_debug_dump_mbx_wq(phba);
+-	lpfc_debug_dump_els_wq(phba);
++	lpfc_debug_dump_wq(phba, DUMP_MBX, 0);
++	lpfc_debug_dump_wq(phba, DUMP_ELS, 0);
  
- 	/* vector-0 is associated to slow-path handler */
--	rc = request_irq(phba->msix_entries[0].vector,
-+	rc = request_irq(pci_irq_vector(phba->pcidev, 0),
- 			 &lpfc_sli_sp_intr_handler, 0,
- 			 LPFC_SP_DRIVER_HANDLER_NAME, phba);
- 	if (rc) {
-@@ -8540,7 +8506,7 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
- 	}
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+-		lpfc_debug_dump_fcp_wq(phba, fcp_wqidx);
++	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
++		lpfc_debug_dump_wq(phba, DUMP_FCP, idx);
  
- 	/* vector-1 is associated to fast-path handler */
--	rc = request_irq(phba->msix_entries[1].vector,
-+	rc = request_irq(pci_irq_vector(phba->pcidev, 1),
- 			 &lpfc_sli_fp_intr_handler, 0,
- 			 LPFC_FP_DRIVER_HANDLER_NAME, phba);
+ 	lpfc_debug_dump_hdr_rq(phba);
+ 	lpfc_debug_dump_dat_rq(phba);
+ 	/*
+ 	 * Dump Complete Queues (CQs)
+ 	 */
+-	lpfc_debug_dump_mbx_cq(phba);
+-	lpfc_debug_dump_els_cq(phba);
++	lpfc_debug_dump_cq(phba, DUMP_MBX, 0);
++	lpfc_debug_dump_cq(phba, DUMP_ELS, 0);
  
-@@ -8585,42 +8551,21 @@ lpfc_sli_enable_msix(struct lpfc_hba *phba)
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+-		lpfc_debug_dump_fcp_cq(phba, fcp_wqidx);
++	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
++		lpfc_debug_dump_cq(phba, DUMP_FCP, idx);
  
- mem_fail_out:
- 	/* free the irq already requested */
--	free_irq(phba->msix_entries[1].vector, phba);
-+	free_irq(pci_irq_vector(phba->pcidev, 1), phba);
- 
- irq_fail_out:
- 	/* free the irq already requested */
--	free_irq(phba->msix_entries[0].vector, phba);
-+	free_irq(pci_irq_vector(phba->pcidev, 0), phba);
- 
- msi_fail_out:
- 	/* Unconfigure MSI-X capability structure */
--	pci_disable_msix(phba->pcidev);
-+	pci_free_irq_vectors(phba->pcidev);
- 
- vec_fail_out:
- 	return rc;
+ 	/*
+ 	 * Dump Event Queues (EQs)
+ 	 */
+-	for (fcp_wqidx = 0; fcp_wqidx < phba->cfg_fcp_io_channel; fcp_wqidx++)
+-		lpfc_debug_dump_hba_eq(phba, fcp_wqidx);
++	for (idx = 0; idx < phba->cfg_fcp_io_channel; idx++)
++		lpfc_debug_dump_hba_eq(phba, idx);
  }
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.h b/drivers/scsi/lpfc/lpfc_debugfs.h
+index 8b2b6a3..9ae2c4b 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.h
++++ b/drivers/scsi/lpfc/lpfc_debugfs.h
+@@ -42,6 +42,12 @@
+ /* hbqinfo output buffer size */
+ #define LPFC_HBQINFO_SIZE 8192
  
- /**
-- * lpfc_sli_disable_msix - Disable MSI-X interrupt mode on SLI-3 device.
-- * @phba: pointer to lpfc hba data structure.
-- *
-- * This routine is invoked to release the MSI-X vectors and then disable the
-- * MSI-X interrupt mode to device with SLI-3 interface spec.
-- **/
--static void
--lpfc_sli_disable_msix(struct lpfc_hba *phba)
--{
--	int i;
--
--	/* Free up MSI-X multi-message vectors */
--	for (i = 0; i < LPFC_MSIX_VECTORS; i++)
--		free_irq(phba->msix_entries[i].vector, phba);
--	/* Disable MSI-X */
--	pci_disable_msix(phba->pcidev);
--
--	return;
--}
--
--/**
-  * lpfc_sli_enable_msi - Enable MSI interrupt mode on SLI-3 device.
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -8660,24 +8605,6 @@ lpfc_sli_enable_msi(struct lpfc_hba *phba)
- }
- 
- /**
-- * lpfc_sli_disable_msi - Disable MSI interrupt mode to SLI-3 device.
-- * @phba: pointer to lpfc hba data structure.
-- *
-- * This routine is invoked to disable the MSI interrupt mode to device with
-- * SLI-3 interface spec. The driver calls free_irq() on MSI vector it has
-- * done request_irq() on before calling pci_disable_msi(). Failure to do so
-- * results in a BUG_ON() and a device will be left with MSI enabled and leaks
-- * its vector.
-- */
--static void
--lpfc_sli_disable_msi(struct lpfc_hba *phba)
--{
--	free_irq(phba->pcidev->irq, phba);
--	pci_disable_msi(phba->pcidev);
--	return;
--}
--
--/**
-  * lpfc_sli_enable_intr - Enable device interrupt to SLI-3 device.
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -8748,19 +8675,20 @@ lpfc_sli_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
- static void
- lpfc_sli_disable_intr(struct lpfc_hba *phba)
- {
--	/* Disable the currently initialized interrupt mode */
-+	int nr_irqs, i;
++enum {
++	DUMP_FCP,
++	DUMP_MBX,
++	DUMP_ELS,
++};
 +
- 	if (phba->intr_type == MSIX)
--		lpfc_sli_disable_msix(phba);
--	else if (phba->intr_type == MSI)
--		lpfc_sli_disable_msi(phba);
--	else if (phba->intr_type == INTx)
--		free_irq(phba->pcidev->irq, phba);
-+		nr_irqs = LPFC_MSIX_VECTORS;
+ /*
+  * For SLI4 iDiag debugfs diagnostics tool
+  */
+@@ -358,58 +364,97 @@ lpfc_debug_dump_q(struct lpfc_queue *q)
+ }
+ 
+ /**
+- * lpfc_debug_dump_fcp_wq - dump all entries from a fcp work queue
++ * lpfc_debug_dump_wq - dump all entries from the fcp work queue
+  * @phba: Pointer to HBA context object.
+- * @fcp_wqidx: Index to a FCP work queue.
++ * @wqidx: Index to a FCP work queue.
+  *
+- * This function dumps all entries from a FCP work queue specified by the
+- * @fcp_wqidx.
++ * This function dumps all entries from a FCP work queue specified
++ * by the wqidx.
+  **/
+ static inline void
+-lpfc_debug_dump_fcp_wq(struct lpfc_hba *phba, int fcp_wqidx)
++lpfc_debug_dump_wq(struct lpfc_hba *phba, int qtype, int wqidx)
+ {
+-	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
++	struct lpfc_queue *wq;
++	char *qtypestr;
++
++	if (qtype == DUMP_FCP) {
++		wq = phba->sli4_hba.fcp_wq[wqidx];
++		qtypestr = "FCP";
++	} else if (qtype == DUMP_MBX) {
++		wq = phba->sli4_hba.mbx_wq;
++		qtypestr = "MBX";
++	} else if (qtype == DUMP_ELS) {
++		wq = phba->sli4_hba.els_wq;
++		qtypestr = "ELS";
++	} else
+ 		return;
+ 
+-	printk(KERN_ERR "FCP WQ: WQ[Idx:%d|Qid:%d]\n",
+-		fcp_wqidx, phba->sli4_hba.fcp_wq[fcp_wqidx]->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.fcp_wq[fcp_wqidx]);
++	if (qtype == DUMP_FCP)
++		pr_err("%s WQ: WQ[Idx:%d|Qid:%d]\n",
++			qtypestr, wqidx, wq->queue_id);
 +	else
-+		nr_irqs = 1;
++		pr_err("%s WQ: WQ[Qid:%d]\n",
++			qtypestr, wq->queue_id);
 +
-+	for (i = 0; i < nr_irqs; i++)
-+		free_irq(pci_irq_vector(phba->pcidev, i), phba);
-+	pci_free_irq_vectors(phba->pcidev);
- 
- 	/* Reset interrupt management states */
- 	phba->intr_type = NONE;
- 	phba->sli.slistat.sli_intr = 0;
--
--	return;
++	lpfc_debug_dump_q(wq);
  }
  
  /**
-@@ -8916,7 +8844,7 @@ lpfc_sli4_set_affinity(struct lpfc_hba *phba, int vectors)
- 			lpfc_used_cpu[cpu] = phys_id;
- 
- 		/* Associate vector with selected CPU */
--		cpup->irq = phba->sli4_hba.msix_entries[idx].vector;
-+		cpup->irq = pci_irq_vector(phba->pcidev, idx);
- 
- 		/* Associate IO channel with selected CPU */
- 		cpup->channel_id = idx;
-@@ -8926,14 +8854,14 @@ lpfc_sli4_set_affinity(struct lpfc_hba *phba, int vectors)
- 			first_cpu = cpu;
- 
- 		/* Now affinitize to the selected CPU */
--		i = irq_set_affinity_hint(phba->sli4_hba.msix_entries[idx].
--					  vector, get_cpu_mask(cpu));
-+		i = irq_set_affinity_hint(pci_irq_vector(phba->pcidev, idx),
-+					  get_cpu_mask(cpu));
- 
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"3330 Set Affinity: CPU %d channel %d "
- 				"irq %d (%x)\n",
- 				cpu, cpup->channel_id,
--				phba->sli4_hba.msix_entries[idx].vector, i);
-+				pci_irq_vector(phba->pcidev, idx), i);
- 
- 		/* Spread vector mapping across multple physical CPU nodes */
- 		phys_id++;
-@@ -9048,14 +8976,7 @@ lpfc_sli4_set_affinity(struct lpfc_hba *phba, int vectors)
-  * @phba: pointer to lpfc hba data structure.
+- * lpfc_debug_dump_fcp_cq - dump all entries from a fcp work queue's cmpl queue
++ * lpfc_debug_dump_cq - dump all entries from a fcp work queue's
++ * cmpl queue
+  * @phba: Pointer to HBA context object.
+- * @fcp_wqidx: Index to a FCP work queue.
++ * @wqidx: Index to a FCP work queue.
   *
-  * This routine is invoked to enable the MSI-X interrupt vectors to device
-- * with SLI-4 interface spec. The kernel function pci_enable_msix_range()
-- * is called to enable the MSI-X vectors. The device driver is responsible
-- * for calling the individual request_irq() to register each MSI-X vector
-- * with a interrupt handler, which is done in this function. Note that
-- * later when device is unloading, the driver should always call free_irq()
-- * on all MSI-X vectors it has done request_irq() on before calling
-- * pci_disable_msix(). Failure to do so results in a BUG_ON() and a device
-- * will be left with MSI-X enabled and leaks its vectors.
-+ * with SLI-4 interface spec.
-  *
-  * Return codes
-  * 0 - successful
-@@ -9067,17 +8988,11 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 	int vectors, rc, index;
- 
- 	/* Set up MSI-X multi-message vectors */
--	for (index = 0; index < phba->cfg_fcp_io_channel; index++)
--		phba->sli4_hba.msix_entries[index].entry = index;
--
--	/* Configure MSI-X capability structure */
- 	vectors = phba->cfg_fcp_io_channel;
--	if (phba->cfg_fof) {
--		phba->sli4_hba.msix_entries[index].entry = index;
-+	if (phba->cfg_fof)
- 		vectors++;
--	}
--	rc = pci_enable_msix_range(phba->pcidev, phba->sli4_hba.msix_entries,
--				   2, vectors);
-+
-+	rc = pci_alloc_irq_vectors(phba->pcidev, 2, vectors, PCI_IRQ_MSIX);
- 	if (rc < 0) {
- 		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
- 				"0484 PCI enable MSI-X failed (%d)\n", rc);
-@@ -9085,14 +9000,6 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 	}
- 	vectors = rc;
- 
--	/* Log MSI-X vector assignment */
--	for (index = 0; index < vectors; index++)
--		lpfc_printf_log(phba, KERN_INFO, LOG_INIT,
--				"0489 MSI-X entry[%d]: vector=x%x "
--				"message=%d\n", index,
--				phba->sli4_hba.msix_entries[index].vector,
--				phba->sli4_hba.msix_entries[index].entry);
--
- 	/* Assign MSI-X vectors to interrupt handlers */
- 	for (index = 0; index < vectors; index++) {
- 		memset(&phba->sli4_hba.handler_name[index], 0, 16);
-@@ -9104,14 +9011,12 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- 		phba->sli4_hba.fcp_eq_hdl[index].phba = phba;
- 		atomic_set(&phba->sli4_hba.fcp_eq_hdl[index].fcp_eq_in_use, 1);
- 		if (phba->cfg_fof && (index == (vectors - 1)))
--			rc = request_irq(
--				phba->sli4_hba.msix_entries[index].vector,
-+			rc = request_irq(pci_irq_vector(phba->pcidev, index),
- 				 &lpfc_sli4_fof_intr_handler, 0,
- 				 (char *)&phba->sli4_hba.handler_name[index],
- 				 &phba->sli4_hba.fcp_eq_hdl[index]);
- 		else
--			rc = request_irq(
--				phba->sli4_hba.msix_entries[index].vector,
-+			rc = request_irq(pci_irq_vector(phba->pcidev, index),
- 				 &lpfc_sli4_hba_intr_handler, 0,
- 				 (char *)&phba->sli4_hba.handler_name[index],
- 				 &phba->sli4_hba.fcp_eq_hdl[index]);
-@@ -9141,49 +9046,20 @@ lpfc_sli4_enable_msix(struct lpfc_hba *phba)
- cfg_fail_out:
- 	/* free the irq already requested */
- 	for (--index; index >= 0; index--) {
--		irq_set_affinity_hint(phba->sli4_hba.msix_entries[index].
--					  vector, NULL);
--		free_irq(phba->sli4_hba.msix_entries[index].vector,
--			 &phba->sli4_hba.fcp_eq_hdl[index]);
-+		int irq = pci_irq_vector(phba->pcidev, index);
-+
-+		irq_set_affinity_hint(irq, NULL);
-+		free_irq(irq, &phba->sli4_hba.fcp_eq_hdl[index]);
- 	}
- 
- 	/* Unconfigure MSI-X capability structure */
--	pci_disable_msix(phba->pcidev);
-+	pci_free_irq_vectors(phba->pcidev);
- 
- vec_fail_out:
- 	return rc;
- }
- 
- /**
-- * lpfc_sli4_disable_msix - Disable MSI-X interrupt mode to SLI-4 device
-- * @phba: pointer to lpfc hba data structure.
-- *
-- * This routine is invoked to release the MSI-X vectors and then disable the
-- * MSI-X interrupt mode to device with SLI-4 interface spec.
-- **/
--static void
--lpfc_sli4_disable_msix(struct lpfc_hba *phba)
--{
--	int index;
--
--	/* Free up MSI-X multi-message vectors */
--	for (index = 0; index < phba->cfg_fcp_io_channel; index++) {
--		irq_set_affinity_hint(phba->sli4_hba.msix_entries[index].
--					  vector, NULL);
--		free_irq(phba->sli4_hba.msix_entries[index].vector,
--			 &phba->sli4_hba.fcp_eq_hdl[index]);
--	}
--	if (phba->cfg_fof) {
--		free_irq(phba->sli4_hba.msix_entries[index].vector,
--			 &phba->sli4_hba.fcp_eq_hdl[index]);
--	}
--	/* Disable MSI-X */
--	pci_disable_msix(phba->pcidev);
--
--	return;
--}
--
--/**
-  * lpfc_sli4_enable_msi - Enable MSI interrupt mode to SLI-4 device
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -9234,24 +9110,6 @@ lpfc_sli4_enable_msi(struct lpfc_hba *phba)
- }
- 
- /**
-- * lpfc_sli4_disable_msi - Disable MSI interrupt mode to SLI-4 device
-- * @phba: pointer to lpfc hba data structure.
-- *
-- * This routine is invoked to disable the MSI interrupt mode to device with
-- * SLI-4 interface spec. The driver calls free_irq() on MSI vector it has
-- * done request_irq() on before calling pci_disable_msi(). Failure to do so
-- * results in a BUG_ON() and a device will be left with MSI enabled and leaks
-- * its vector.
-- **/
--static void
--lpfc_sli4_disable_msi(struct lpfc_hba *phba)
--{
--	free_irq(phba->pcidev->irq, phba);
--	pci_disable_msi(phba->pcidev);
--	return;
--}
--
--/**
-  * lpfc_sli4_enable_intr - Enable device interrupt to SLI-4 device
-  * @phba: pointer to lpfc hba data structure.
-  *
-@@ -9336,18 +9194,28 @@ static void
- lpfc_sli4_disable_intr(struct lpfc_hba *phba)
+- * This function dumps all entries from a FCP complete queue which is
+- * associated to the FCP work queue specified by the @fcp_wqidx.
++ * This function dumps all entries from a FCP completion queue
++ * which is associated to the work queue specified by the @wqidx.
+  **/
+ static inline void
+-lpfc_debug_dump_fcp_cq(struct lpfc_hba *phba, int fcp_wqidx)
++lpfc_debug_dump_cq(struct lpfc_hba *phba, int qtype, int wqidx)
  {
- 	/* Disable the currently initialized interrupt mode */
--	if (phba->intr_type == MSIX)
--		lpfc_sli4_disable_msix(phba);
--	else if (phba->intr_type == MSI)
--		lpfc_sli4_disable_msi(phba);
--	else if (phba->intr_type == INTx)
-+	if (phba->intr_type == MSIX) {
-+		int index;
-+
-+		/* Free up MSI-X multi-message vectors */
-+		for (index = 0; index < phba->cfg_fcp_io_channel; index++) {
-+			int irq = pci_irq_vector(phba->pcidev, index);
-+
-+			irq_set_affinity_hint(irq, NULL);
-+			free_irq(irq, &phba->sli4_hba.fcp_eq_hdl[index]);
-+		}
-+
-+		if (phba->cfg_fof)
-+			free_irq(pci_irq_vector(phba->pcidev, index), phba);
-+	} else {
- 		free_irq(phba->pcidev->irq, phba);
-+	}
-+
-+	pci_free_irq_vectors(phba->pcidev);
- 
- 	/* Reset interrupt management states */
- 	phba->intr_type = NONE;
- 	phba->sli.slistat.sli_intr = 0;
+-	int fcp_cqidx, fcp_cqid;
 -
--	return;
+-	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
++	struct lpfc_queue *wq, *cq, *eq;
++	char *qtypestr;
++	int eqidx;
++
++	/* fcp wq and cq are 1:1, thus same indexes */
++
++	if (qtype == DUMP_FCP) {
++		wq = phba->sli4_hba.fcp_wq[wqidx];
++		cq = phba->sli4_hba.fcp_cq[wqidx];
++		qtypestr = "FCP";
++	} else if (qtype == DUMP_MBX) {
++		wq = phba->sli4_hba.mbx_wq;
++		cq = phba->sli4_hba.mbx_cq;
++		qtypestr = "MBX";
++	} else if (qtype == DUMP_ELS) {
++		wq = phba->sli4_hba.els_wq;
++		cq = phba->sli4_hba.els_cq;
++		qtypestr = "ELS";
++	} else
+ 		return;
+ 
+-	fcp_cqid = phba->sli4_hba.fcp_wq[fcp_wqidx]->assoc_qid;
+-	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_io_channel; fcp_cqidx++)
+-		if (phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id == fcp_cqid)
++	for (eqidx = 0; eqidx < phba->cfg_fcp_io_channel; eqidx++) {
++		eq = phba->sli4_hba.hba_eq[eqidx];
++		if (cq->assoc_qid == eq->queue_id)
+ 			break;
+-	if (phba->intr_type == MSIX) {
+-		if (fcp_cqidx >= phba->cfg_fcp_io_channel)
+-			return;
+-	} else {
+-		if (fcp_cqidx > 0)
+-			return;
++	}
++	if (eqidx == phba->cfg_fcp_io_channel) {
++		pr_err("Couldn't find EQ for CQ. Using EQ[0]\n");
++		eqidx = 0;
++		eq = phba->sli4_hba.hba_eq[0];
+ 	}
+ 
+-	printk(KERN_ERR "FCP CQ: WQ[Idx:%d|Qid%d]->CQ[Idx%d|Qid%d]:\n",
+-		fcp_wqidx, phba->sli4_hba.fcp_wq[fcp_wqidx]->queue_id,
+-		fcp_cqidx, fcp_cqid);
+-	lpfc_debug_dump_q(phba->sli4_hba.fcp_cq[fcp_cqidx]);
++	if (qtype == DUMP_FCP)
++		pr_err("%s CQ: WQ[Idx:%d|Qid%d]->CQ[Idx%d|Qid%d]"
++			"->EQ[Idx:%d|Qid:%d]:\n",
++			qtypestr, wqidx, wq->queue_id, wqidx, cq->queue_id,
++			eqidx, eq->queue_id);
++	else
++		pr_err("%s CQ: WQ[Qid:%d]->CQ[Qid:%d]"
++			"->EQ[Idx:%d|Qid:%d]:\n",
++			qtypestr, wq->queue_id, cq->queue_id,
++			eqidx, eq->queue_id);
++
++	lpfc_debug_dump_q(cq);
  }
  
  /**
-diff --git a/drivers/scsi/lpfc/lpfc_sli4.h b/drivers/scsi/lpfc/lpfc_sli4.h
-index 0b88b570..dfbb25e 100644
---- a/drivers/scsi/lpfc/lpfc_sli4.h
-+++ b/drivers/scsi/lpfc/lpfc_sli4.h
-@@ -515,7 +515,6 @@ struct lpfc_sli4_hba {
- 	uint32_t ue_to_rp;
- 	struct lpfc_register sli_intf;
- 	struct lpfc_pc_sli4_params pc_sli4_params;
--	struct msix_entry *msix_entries;
- 	uint8_t handler_name[LPFC_SLI4_HANDLER_CNT][LPFC_SLI4_HANDLER_NAME_SZ];
- 	struct lpfc_fcp_eq_hdl *fcp_eq_hdl; /* FCP per-WQ handle */
+@@ -421,64 +466,15 @@ lpfc_debug_dump_fcp_cq(struct lpfc_hba *phba, int fcp_wqidx)
+  * associated to the FCP work queue specified by the @fcp_wqidx.
+  **/
+ static inline void
+-lpfc_debug_dump_hba_eq(struct lpfc_hba *phba, int fcp_wqidx)
++lpfc_debug_dump_hba_eq(struct lpfc_hba *phba, int qidx)
+ {
+-	struct lpfc_queue *qdesc;
+-	int fcp_eqidx, fcp_eqid;
+-	int fcp_cqidx, fcp_cqid;
+-
+-	/* sanity check */
+-	if (fcp_wqidx >= phba->cfg_fcp_io_channel)
+-		return;
+-	fcp_cqid = phba->sli4_hba.fcp_wq[fcp_wqidx]->assoc_qid;
+-	for (fcp_cqidx = 0; fcp_cqidx < phba->cfg_fcp_io_channel; fcp_cqidx++)
+-		if (phba->sli4_hba.fcp_cq[fcp_cqidx]->queue_id == fcp_cqid)
+-			break;
+-	if (phba->intr_type == MSIX) {
+-		if (fcp_cqidx >= phba->cfg_fcp_io_channel)
+-			return;
+-	} else {
+-		if (fcp_cqidx > 0)
+-			return;
+-	}
++	struct lpfc_queue *qp;
  
+-	fcp_eqidx = fcp_cqidx;
+-	fcp_eqid = phba->sli4_hba.hba_eq[fcp_eqidx]->queue_id;
+-	qdesc = phba->sli4_hba.hba_eq[fcp_eqidx];
++	qp = phba->sli4_hba.hba_eq[qidx];
+ 
+-	printk(KERN_ERR "FCP EQ: WQ[Idx:%d|Qid:%d]->CQ[Idx:%d|Qid:%d]->"
+-		"EQ[Idx:%d|Qid:%d]\n",
+-		fcp_wqidx, phba->sli4_hba.fcp_wq[fcp_wqidx]->queue_id,
+-		fcp_cqidx, fcp_cqid, fcp_eqidx, fcp_eqid);
+-	lpfc_debug_dump_q(qdesc);
+-}
++	pr_err("EQ[Idx:%d|Qid:%d]\n", qidx, qp->queue_id);
+ 
+-/**
+- * lpfc_debug_dump_els_wq - dump all entries from the els work queue
+- * @phba: Pointer to HBA context object.
+- *
+- * This function dumps all entries from the ELS work queue.
+- **/
+-static inline void
+-lpfc_debug_dump_els_wq(struct lpfc_hba *phba)
+-{
+-	printk(KERN_ERR "ELS WQ: WQ[Qid:%d]:\n",
+-		phba->sli4_hba.els_wq->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.els_wq);
+-}
+-
+-/**
+- * lpfc_debug_dump_mbx_wq - dump all entries from the mbox work queue
+- * @phba: Pointer to HBA context object.
+- *
+- * This function dumps all entries from the MBOX work queue.
+- **/
+-static inline void
+-lpfc_debug_dump_mbx_wq(struct lpfc_hba *phba)
+-{
+-	printk(KERN_ERR "MBX WQ: WQ[Qid:%d]\n",
+-		phba->sli4_hba.mbx_wq->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.mbx_wq);
++	lpfc_debug_dump_q(qp);
+ }
+ 
+ /**
+@@ -510,36 +506,6 @@ lpfc_debug_dump_hdr_rq(struct lpfc_hba *phba)
+ }
+ 
+ /**
+- * lpfc_debug_dump_els_cq - dump all entries from the els complete queue
+- * @phba: Pointer to HBA context object.
+- *
+- * This function dumps all entries from the els complete queue.
+- **/
+-static inline void
+-lpfc_debug_dump_els_cq(struct lpfc_hba *phba)
+-{
+-	printk(KERN_ERR "ELS CQ: WQ[Qid:%d]->CQ[Qid:%d]\n",
+-		phba->sli4_hba.els_wq->queue_id,
+-		phba->sli4_hba.els_cq->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.els_cq);
+-}
+-
+-/**
+- * lpfc_debug_dump_mbx_cq - dump all entries from the mbox complete queue
+- * @phba: Pointer to HBA context object.
+- *
+- * This function dumps all entries from the mbox complete queue.
+- **/
+-static inline void
+-lpfc_debug_dump_mbx_cq(struct lpfc_hba *phba)
+-{
+-	printk(KERN_ERR "MBX CQ: WQ[Qid:%d]->CQ[Qid:%d]\n",
+-		phba->sli4_hba.mbx_wq->queue_id,
+-		phba->sli4_hba.mbx_cq->queue_id);
+-	lpfc_debug_dump_q(phba->sli4_hba.mbx_cq);
+-}
+-
+-/**
+  * lpfc_debug_dump_wq_by_id - dump all entries from a work queue by queue id
+  * @phba: Pointer to HBA context object.
+  * @qid: Work queue identifier.
+@@ -556,14 +522,15 @@ lpfc_debug_dump_wq_by_id(struct lpfc_hba *phba, int qid)
+ 		if (phba->sli4_hba.fcp_wq[wq_idx]->queue_id == qid)
+ 			break;
+ 	if (wq_idx < phba->cfg_fcp_io_channel) {
+-		printk(KERN_ERR "FCP WQ[Idx:%d|Qid:%d]\n", wq_idx, qid);
++		pr_err("FCP WQ[Idx:%d|Qid:%d]\n", wq_idx, qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.fcp_wq[wq_idx]);
+ 		return;
+ 	}
+ 
+ 	if (phba->sli4_hba.els_wq->queue_id == qid) {
+-		printk(KERN_ERR "ELS WQ[Qid:%d]\n", qid);
++		pr_err("ELS WQ[Qid:%d]\n", qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.els_wq);
++		return;
+ 	}
+ }
+ 
+@@ -617,27 +584,26 @@ lpfc_debug_dump_rq_by_id(struct lpfc_hba *phba, int qid)
+ static inline void
+ lpfc_debug_dump_cq_by_id(struct lpfc_hba *phba, int qid)
+ {
+-	int cq_idx = 0;
++	int cq_idx;
+ 
+-	do {
++	for (cq_idx = 0; cq_idx < phba->cfg_fcp_io_channel; cq_idx++)
+ 		if (phba->sli4_hba.fcp_cq[cq_idx]->queue_id == qid)
+ 			break;
+-	} while (++cq_idx < phba->cfg_fcp_io_channel);
+ 
+ 	if (cq_idx < phba->cfg_fcp_io_channel) {
+-		printk(KERN_ERR "FCP CQ[Idx:%d|Qid:%d]\n", cq_idx, qid);
++		pr_err("FCP CQ[Idx:%d|Qid:%d]\n", cq_idx, qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.fcp_cq[cq_idx]);
+ 		return;
+ 	}
+ 
+ 	if (phba->sli4_hba.els_cq->queue_id == qid) {
+-		printk(KERN_ERR "ELS CQ[Qid:%d]\n", qid);
++		pr_err("ELS CQ[Qid:%d]\n", qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.els_cq);
+ 		return;
+ 	}
+ 
+ 	if (phba->sli4_hba.mbx_cq->queue_id == qid) {
+-		printk(KERN_ERR "MBX CQ[Qid:%d]\n", qid);
++		pr_err("MBX CQ[Qid:%d]\n", qid);
+ 		lpfc_debug_dump_q(phba->sli4_hba.mbx_cq);
+ 	}
+ }
 -- 
 2.5.0
