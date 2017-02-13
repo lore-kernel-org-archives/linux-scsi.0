@@ -1,50 +1,60 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Mon, 13 Feb 2017 09:58:01 -0800
-Message-ID: <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
- <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
+From: Dan Carpenter <dan.carpenter@oracle.com>
+Subject: [bug report] scsi: aacraid: Include HBA direct interface
+Date: Mon, 13 Feb 2017 21:41:02 +0300
+Message-ID: <20170213184101.GA4762@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Xiubo Li <lixiubo@cmss.chinamobile.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from aserp1040.oracle.com ([141.146.126.69]:18349 "EHLO
+        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752528AbdBMSlS (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 13:41:18 -0500
+Content-Disposition: inline
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: RaghavaAditya.Renukunta@microsemi.com
+Cc: linux-scsi@vger.kernel.org
 
-On 02/13/2017 01:50 AM, Xiubo Li wrote:
-> There is one new scheme in my mind:
+Hello Raghava Aditya Renukunta,
 
->> Yes I think it's now clear we need more buffer space to avoid
->> bottlenecks for high iops. The initial design kept it simple with the
->> 1MB vmalloc'd space but anticipated greater would be needed. It should
->> not be necessary to change userspace or the TCMU ABI to handle growing
->> the buffer for fast devices:
->>
->> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB
->> to 1GB or larger
-> For the cmd area, set the size to fixed 512M, and data area's size to
-> fixed 1G, is that okay ?
+The patch 423400e64d37: "scsi: aacraid: Include HBA direct interface"
+from Feb 2, 2017, leads to the following static checker warning:
 
-512M seems a little big for the cmd area... use of the cmd ring should 
-be much smaller than the data area. Each cmd has a minimum size, but 
-then to describe an additional page in the iovec[] should be just one 
-struct iovec (16 bytes?) for each 4K page.
+	drivers/scsi/aacraid/commsup.c:762 aac_hba_send()
+	error: double unlock 'sem:&fibptr->event_wait'
 
->> 3. Upgrade the current fixed-size bitmap-based tracking of data area
->> to handle the new scheme
-> The Radix tree will be used to keep the block's index(0 ~
-> 1G/DATA_BLOCK_SIZE) and physical page mapping relations. Each leaf is
-> one data block(the size is DATA_BLOCK_SIZE).
->
-> For non-leaf nodes, use the radix tags[0][SLOTs] to indicate wether
-> slot[SLOTs]'s branch has free(reused the old one or NULL leafs) block
-> leafs or not.
-> This could speed the search of the free blocks in data area.
+drivers/scsi/aacraid/commsup.c
+   757          if (wait) {
+   758                  spin_unlock_irqrestore(&fibptr->event_lock, flags);
+   759                  /* Only set for first known interruptable command */
 
-Yes I think radix tree is a good place to start.
+This comment just confuses me...  What is a "known interruptable command?"
 
-Regards -- Andy
+   760                  if (down_interruptible(&fibptr->event_wait)) {
+
+down_interruptible() return -EINTR on failure so this test looks
+reversed.  It should probably be:
+
+			if (!down_interruptible(&fibptr->event_wait)) {
+
+
+   761                          fibptr->done = 2;
+   762                          up(&fibptr->event_wait);
+   763                  }
+   764                  spin_lock_irqsave(&fibptr->event_lock, flags);
+   765                  if ((fibptr->done == 0) || (fibptr->done == 2)) {
+   766                          fibptr->done = 2; /* Tell interrupt we aborted */
+   767                          spin_unlock_irqrestore(&fibptr->event_lock, flags);
+   768                          return -ERESTARTSYS;
+   769                  }
+   770                  spin_unlock_irqrestore(&fibptr->event_lock, flags);
+   771                  WARN_ON(fibptr->done == 0);
+   772  
+   773                  if (unlikely(fibptr->flags & FIB_CONTEXT_FLAG_TIMED_OUT))
+   774                          return -ETIMEDOUT;
+   775  
+   776                  return 0;
+   777          }
+
+regards,
+dan carpenter
