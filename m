@@ -1,59 +1,69 @@
-From: Benjamin Herrenschmidt <benh@kernel.crashing.org>
-Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
-Date: Mon, 13 Feb 2017 12:01:09 +1100
-Message-ID: <1486947669.3401.69.camel@kernel.crashing.org>
-References: <20170212214920.28866-1-anton@ozlabs.org>
-         <1486941294.3401.67.camel@kernel.crashing.org>
-         <20170213104723.7741de0a@kryten> <87efz3hre6.fsf@xmission.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Mon, 13 Feb 2017 09:38:35 +0800
+Message-ID: <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from gate.crashing.org ([63.228.1.57]:50436 "EHLO gate.crashing.org"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751000AbdBMBBi (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 12 Feb 2017 20:01:38 -0500
-In-Reply-To: <87efz3hre6.fsf@xmission.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: "Eric W. Biederman" <ebiederm@xmission.com>, Anton Blanchard <anton@samba.org>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jk@ozlabs.org, linux-scsi@vger.kernel.org
 
-On Mon, 2017-02-13 at 13:21 +1300, Eric W. Biederman wrote:
-> > Good point, at the very least we should call remove if shutdown doesn't
-> > exist. Eric: could we make the changes Ben suggests?
-> 
-> Definitely.  That was the original design of the kexec interface
-> but people were worried about calling remove during reboot might
-> introduce regressions on the reboot functionality.  So shutdown was
-> added to be remove without the cleaning up the kernel data structures.
+Hi Andy,
 
-Right. Part of the problem was also that remove was dependent on CONFIG_HOTPLUG
-though that's no longer the case anymore.
+Thanks for your quick reply.
 
-The problem is that a bunch of drivers either don't have a shutdown or
-worse, have one that actually shuts the HW down rather than "idle" it
-which puts it in a state that the new kernel can't deal with.
+Yes, It looks much better than the current.
 
-> I am all for changing the core to call remove.  That seems to be a more
-> tested code path (because remove tends to be part of the development
-> path for modules) and thus much more likely to work in practice.
-> 
-> The challenge with changes in this area is that when the infrastructure
-> is changed for everyone someone needs to baby sit it until all of the
-> unexpected issues are resolved.  I was hoping a couple of years ago that
-> Ben could be that person.
 
-Correct. And I lack time. But since we are a platform that uses kexec
-daily as our main booting mechanism we should probably be the ones
-driving that.
+On 2017年02月11日 02:02, Andy Grover wrote:
+> On 02/09/2017 10:48 PM, lixiubo@cmss.chinamobile.com wrote:
+>> For now the tcmu is based on UIO framework and only using the
+>> map0 with fixed ring buffer size. This will work fine mostly,
+>> but when we are using the 10GBASE NIC, the ring buffer is too
+>> small to deal with the incoming iscsi cmds.
+>>
+>> We can resolve the above issue by increasingt the ring buffer
+>> size larger, but we don't know the exactly size to all cases.
+>>
+>> This patch will add double ring buffers support by adding map1
+>> support through UIO device.
+>
+> Hi Xiubo,
+>
+> Yes I think it's now clear we need more buffer space to avoid 
+> bottlenecks for high iops. The initial design kept it simple with the 
+> 1MB vmalloc'd space but anticipated greater would be needed. It should 
+> not be necessary to change userspace or the TCMU ABI to handle growing 
+> the buffer for fast devices:
+>
+> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB 
+> to 1GB or larger
+> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring 
+> portion, and dynamically alloc pages for the data area as needed and 
+> map them into the data area.
+Should the data area mapping is dynamical or add one new API to 
+userspace to trigger it ?
 
-I had a patch at least to fallback to remove in absence of shutdown
-which I can try to dig out.
+> 3. Upgrade the current fixed-size bitmap-based tracking of data area 
+> to handle the new scheme
+> 4. Implement an algorithm to keep allocated pages mapped into the data 
+> area for reuse, and maybe a heuristic to keep extreme burstiness from 
+> over-allocating pages
+>
+Does a little like slab ?
 
-We can add a config option to make it do the other way around that
-we should start testing internally. I'm sure we will find 1 or 2
-regressions as drivers do weird things.
+> This should allow TCMU to allocate more data area as needed, not waste 
+> memory for slower devices, and avoid userspace ABI changes. Could we 
+> prototype this approach and see if it is workable?
+>
+I will do more investigate about this.
 
-Cheers,
-Ben.
+
+> Thanks -- Regards -- Andy
+>
