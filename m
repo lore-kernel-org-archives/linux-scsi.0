@@ -1,97 +1,58 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [bug report] scsi: aacraid: Added support for hotplug
-Date: Mon, 13 Feb 2017 21:47:07 +0300
-Message-ID: <20170213184707.GA19576@mwanda>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for
+ ZBC_IN
+Date: Mon, 13 Feb 2017 18:57:17 +0000
+Message-ID: <1487012224.2719.3.camel@sandisk.com>
+References: <20170213051152.27741-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:21805 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752111AbdBMSr0 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 13:47:26 -0500
-Content-Disposition: inline
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:58270 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752338AbdBMS5U (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 13:57:20 -0500
+In-Reply-To: <20170213051152.27741-1-damien.lemoal@wdc.com>
+Content-Language: en-US
+Content-ID: <44A903E230F74742933E336EFB79397F@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: RaghavaAditya.Renukunta@microsemi.com
-Cc: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
+Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
 
-Hello Raghava Aditya Renukunta,
+On Mon, 2017-02-13 at 14:11 +0900, Damien Le Moal wrote:
+> The ZBC_IN command (REPORT ZONES) reply length is always a multiple of
+> 64B and thus may not be aligned on the device LBA size.
+> For this command, retry due to the unaligned completion length is
+> incorrect so do not check alignment of the reply length.
+> 
+> Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 +++--
+>  1 file changed, 3 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index 0b5b423..f04b872 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -4723,8 +4723,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+>  	 * then scsi-ml does not need to handle this misbehavior.
+>  	 */
+>  	sector_sz = scmd->device->sector_size;
+> -	if (unlikely(scmd->request->cmd_type == REQ_TYPE_FS && sector_sz &&
+> -		     xfer_cnt % sector_sz)) {
+> +	if (scmd->request->cmd_type == REQ_TYPE_FS &&
+> +	    scmd->cmnd[0] != ZBC_IN &&
+> +	    sector_sz && xfer_cnt % sector_sz) {
+>  		sdev_printk(KERN_INFO, scmd->device,
+>  		    "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+>  			    xfer_cnt, sector_sz);
 
-The patch 6223a39fe6fb: "scsi: aacraid: Added support for hotplug"
-from Feb 2, 2017, leads to the following static checker warning:
+Hello Damien,
 
-	drivers/scsi/aacraid/commsup.c:2243 aac_process_events()
-	error: double unlock 'spin_lock:t_lock'
+What software generated a ZBC_IN request with type REQ_TYPE_FS? Shouldn't
+all ZBC_IN requests be assigned type REQ_TYPE_BLOCK_PC?
 
-drivers/scsi/aacraid/commsup.c
-  2130          spin_lock_irqsave(t_lock, flags);
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  2131  
-  2132          while (!list_empty(&(dev->queues->queue[HostNormCmdQueue].cmdq))) {
-  2133                  struct list_head *entry;
-  2134                  struct aac_aifcmd *aifcmd;
-  2135                  unsigned int  num;
-  2136                  struct hw_fib **hw_fib_pool, **hw_fib_p;
-  2137                  struct fib **fib_pool, **fib_p;
-  2138  
-  2139                  set_current_state(TASK_RUNNING);
-  2140  
-  2141                  entry = dev->queues->queue[HostNormCmdQueue].cmdq.next;
-  2142                  list_del(entry);
-  2143  
-  2144                  t_lock = dev->queues->queue[HostNormCmdQueue].lock;
-  2145                  spin_unlock_irqrestore(t_lock, flags);
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  2146  
-  2147                  fib = list_entry(entry, struct fib, fiblink);
-  2148                  hw_fib = fib->hw_fib_va;
-  2149                  if (dev->sa_firmware) {
-  2150                          /* Thor AIF */
-  2151                          aac_handle_sa_aif(dev, fib);
-  2152                          aac_fib_adapter_complete(fib, (u16)sizeof(u32));
-  2153                          continue;
+Thanks,
 
-The locking isn't right here.  We should re-take the spinlock before
-continuing.
-
-  2154                  }
-  2155                  /*
-  2156                   *      We will process the FIB here or pass it to a
-  2157                   *      worker thread that is TBD. We Really can't
-  2158                   *      do anything at this point since we don't have
-  2159                   *      anything defined for this thread to do.
-  2160                   */
-
-	[ snip ]
-
-  2221  free_mem:
-  2222                  /* Free up the remaining resources */
-  2223                  hw_fib_p = hw_fib_pool;
-  2224                  fib_p = fib_pool;
-  2225                  while (hw_fib_p < &hw_fib_pool[num]) {
-  2226                          kfree(*hw_fib_p);
-  2227                          kfree(*fib_p);
-  2228                          ++fib_p;
-  2229                          ++hw_fib_p;
-  2230                  }
-  2231                  kfree(fib_pool);
-  2232  free_hw_fib_pool:
-  2233                  kfree(hw_fib_pool);
-  2234  free_fib:
-  2235                  kfree(fib);
-  2236                  t_lock = dev->queues->queue[HostNormCmdQueue].lock;
-  2237                  spin_lock_irqsave(t_lock, flags);
-  2238          }
-  2239          /*
-  2240           *      There are no more AIF's
-  2241           */
-  2242          t_lock = dev->queues->queue[HostNormCmdQueue].lock;
-  2243          spin_unlock_irqrestore(t_lock, flags);
-
-Otherwise it is a double unlock bug.
-
-  2244  }
-
-
-regards,
-dan carpenter
+Bart.
