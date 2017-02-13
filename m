@@ -1,89 +1,49 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Mon, 13 Feb 2017 17:50:13 +0800
-Message-ID: <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+From: Kashyap Desai <kashyap.desai@broadcom.com>
+Subject: [PATCH] return valid data buffer length in scsi_bufflen() API using RQF_SPECIAL_PAYLOAD
+Date: Mon, 13 Feb 2017 17:25:19 +0530
+Message-ID: <4c804c26dcaea4a30e89734bb351c523@mail.gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from cmccmta2.chinamobile.com ([221.176.66.80]:19750 "EHLO
-        cmccmta2.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751598AbdBMJuX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 04:50:23 -0500
-In-Reply-To: <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+Received: from mail-qk0-f181.google.com ([209.85.220.181]:33781 "EHLO
+        mail-qk0-f181.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752829AbdBMLzc (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 06:55:32 -0500
+Received: by mail-qk0-f181.google.com with SMTP id s140so91235383qke.0
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Feb 2017 03:55:31 -0800 (PST)
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+To: linux-scsi@vger.kernel.org, hch@infradead.org, Jens Axboe <axboe@kernel.dk>
 
-Hi Andy,
+Regression due to  commit f9d03f96b988002027d4b28ea1b7a24729a4c9b5
+block: improve handling of the magic discard payload
 
-There is one new scheme in my mind:
+<megaraid_sas> and <mpt3sas> HBA FW encounter FW fault in DMA operation
+while creating File system on SSDs.
+Below CDB cause FW fault.
+CDB: Write same(16) 93 08 00 00 00 00 00 00 00 00 00 00 80 00 00 00
 
->
-> Yes I think it's now clear we need more buffer space to avoid 
-> bottlenecks for high iops. The initial design kept it simple with the 
-> 1MB vmalloc'd space but anticipated greater would be needed. It should 
-> not be necessary to change userspace or the TCMU ABI to handle growing 
-> the buffer for fast devices:
->
-> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB 
-> to 1GB or larger
-For the cmd area, set the size to fixed 512M, and data area's size to 
-fixed 1G, is that okay ?
+Root cause is SCSI buffer length and DMA buffer length miss match for
+WRITE SAME command.
 
-> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring 
-> portion, and dynamically alloc pages for the data area as needed and 
-> map them into the data area.
-TCMU will just vmalloc() the 512M cmd area, and let the data area memory 
-allocate and map later when needed.
-The userspace runner will mmap() all the (512M + 1G) when initialising, 
-and will return 1.5G virtual address space. The cmd area will be mapped 
-to actual physical addresses here, while the data area will be mapped in 
-page fault hook when using....
+Fix - return valid data buffer length in scsi_bufflen() API using
+RQF_SPECIAL_PAYLOAD
 
+Signed-off-by: Kashyap Desai <kashyap.desai@broadcom.com>
+---
+diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
+index 9fc1aec..1f796fc 100644
+--- a/include/scsi/scsi_cmnd.h
++++ b/include/scsi/scsi_cmnd.h
+@@ -180,7 +180,8 @@ static inline struct scatterlist *scsi_sglist(struct
+scsi_cmnd *cmd)
 
-> 3. Upgrade the current fixed-size bitmap-based tracking of data area 
-> to handle the new scheme
-The Radix tree will be used to keep the block's index(0 ~ 
-1G/DATA_BLOCK_SIZE) and physical page mapping relations. Each leaf is 
-one data block(the size is DATA_BLOCK_SIZE).
+ static inline unsigned scsi_bufflen(struct scsi_cmnd *cmd)
+ {
+-	return cmd->sdb.length;
++	return (cmd->request->rq_flags & RQF_SPECIAL_PAYLOAD) ?
++			cmd->request->special_vec.bv_len :
+cmd->sdb.length;
+ }
 
-For non-leaf nodes, use the radix tags[0][SLOTs] to indicate wether 
-slot[SLOTs]'s branch has free(reused the old one or NULL leafs) block 
-leafs or not.
-This could speed the search of the free blocks in data area.
-
-
-> 4. Implement an algorithm to keep allocated pages mapped into the data 
-> area for reuse, and maybe a heuristic to keep extreme burstiness from 
-> over-allocating pages
->
-For leaf nodes:
-if one leaf node is exist and its tags[0][SLOTs] = 0 meaning that some 
-older cmds have already touched the block leafs and then "freed" it, if 
-so, we will reuse it.
-if the leaf node is exist and its tag[0][SLOTs] = 1 meaning that this is 
-still used.
-if the leaf node is non-exist, this is the first time to touch this 
-leaf, will allocate memory and then insert it here setting the 
-tag[0][SLOTs] to 1.
-
-> This should allow TCMU to allocate more data area as needed, not waste 
-> memory for slower devices, and avoid userspace ABI changes. Could we 
-> prototype this approach and see if it is workable?
->
-For slower devices, it will save memory.
-Could also avoid changing the userspace ABI.
-
-Thanks,
-
-BRs
-Xiubo
-
-
-
-> Thanks -- Regards -- Andy
->
+ static inline void scsi_set_resid(struct scsi_cmnd *cmd, int resid)
