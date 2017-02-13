@@ -1,129 +1,47 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [bug report] scsi: aacraid: Added support for hotplug
-Date: Mon, 13 Feb 2017 19:39:15 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8BD440@avsrvexchmbx2.microsemi.net>
-References: <20170213184707.GA19576@mwanda>
+Subject: RE: [PATCH] scsi: aacraid: fix information leak on
+ hbainfo.driver_name
+Date: Mon, 13 Feb 2017 20:18:49 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8BD4F7@avsrvexchmbx2.microsemi.net>
+References: <20170207135513.21392-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0041.outbound.protection.outlook.com ([104.47.36.41]:61056
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751313AbdBMTjW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Feb 2017 14:39:22 -0500
-In-Reply-To: <20170213184707.GA19576@mwanda>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <kernel-janitors-owner@vger.kernel.org>
+In-Reply-To: <20170207135513.21392-1-colin.king@canonical.com>
 Content-Language: en-US
-Sender: linux-scsi-owner@vger.kernel.org
+Sender: kernel-janitors-owner@vger.kernel.org
+To: Colin King <colin.king@canonical.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
 List-Id: linux-scsi@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 
-Hi Don,
-
-> -----Original Message-----
-> From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
-> Sent: Monday, February 13, 2017 10:47 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> Cc: linux-scsi@vger.kernel.org
-> Subject: [bug report] scsi: aacraid: Added support for hotplug
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> Hello Raghava Aditya Renukunta,
->=20
-> The patch 6223a39fe6fb: "scsi: aacraid: Added support for hotplug"
-> from Feb 2, 2017, leads to the following static checker warning:
->=20
->         drivers/scsi/aacraid/commsup.c:2243 aac_process_events()
->         error: double unlock 'spin_lock:t_lock'
->=20
-> drivers/scsi/aacraid/commsup.c
->   2130          spin_lock_irqsave(t_lock, flags);
->                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->   2131
->   2132          while (!list_empty(&(dev->queues-
-> >queue[HostNormCmdQueue].cmdq))) {
->   2133                  struct list_head *entry;
->   2134                  struct aac_aifcmd *aifcmd;
->   2135                  unsigned int  num;
->   2136                  struct hw_fib **hw_fib_pool, **hw_fib_p;
->   2137                  struct fib **fib_pool, **fib_p;
->   2138
->   2139                  set_current_state(TASK_RUNNING);
->   2140
->   2141                  entry =3D dev->queues-
-> >queue[HostNormCmdQueue].cmdq.next;
->   2142                  list_del(entry);
->   2143
->   2144                  t_lock =3D dev->queues->queue[HostNormCmdQueue].l=
-ock;
->   2145                  spin_unlock_irqrestore(t_lock, flags);
->                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
->   2146
->   2147                  fib =3D list_entry(entry, struct fib, fiblink);
->   2148                  hw_fib =3D fib->hw_fib_va;
->   2149                  if (dev->sa_firmware) {
->   2150                          /* Thor AIF */
->   2151                          aac_handle_sa_aif(dev, fib);
->   2152                          aac_fib_adapter_complete(fib, (u16)sizeof=
-(u32));
->   2153                          continue;
->=20
-> The locking isn't right here.  We should re-take the spinlock before
-> continuing.
-
-The intention here is to protect the retrieval of entry from the queues.
-Or do you mean that we should just protect the whole while loop with one sp=
-in_lock (t_lock)?
-
-Thank you,
-Raghava Aditya
-
->   2154                  }
->   2155                  /*
->   2156                   *      We will process the FIB here or pass it t=
-o a
->   2157                   *      worker thread that is TBD. We Really can'=
-t
->   2158                   *      do anything at this point since we don't =
-have
->   2159                   *      anything defined for this thread to do.
->   2160                   */
->=20
->         [ snip ]
->=20
->   2221  free_mem:
->   2222                  /* Free up the remaining resources */
->   2223                  hw_fib_p =3D hw_fib_pool;
->   2224                  fib_p =3D fib_pool;
->   2225                  while (hw_fib_p < &hw_fib_pool[num]) {
->   2226                          kfree(*hw_fib_p);
->   2227                          kfree(*fib_p);
->   2228                          ++fib_p;
->   2229                          ++hw_fib_p;
->   2230                  }
->   2231                  kfree(fib_pool);
->   2232  free_hw_fib_pool:
->   2233                  kfree(hw_fib_pool);
->   2234  free_fib:
->   2235                  kfree(fib);
->   2236                  t_lock =3D dev->queues->queue[HostNormCmdQueue].l=
-ock;
->   2237                  spin_lock_irqsave(t_lock, flags);
->   2238          }
->   2239          /*
->   2240           *      There are no more AIF's
->   2241           */
->   2242          t_lock =3D dev->queues->queue[HostNormCmdQueue].lock;
->   2243          spin_unlock_irqrestore(t_lock, flags);
->=20
-> Otherwise it is a double unlock bug.
->=20
->   2244  }
->=20
->=20
-> regards,
-> dan carpenter
+SGVsbG8gQ29saW4sDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBD
+b2xpbiBLaW5nIFttYWlsdG86Y29saW4ua2luZ0BjYW5vbmljYWwuY29tXQ0KPiBTZW50OiBUdWVz
+ZGF5LCBGZWJydWFyeSA3LCAyMDE3IDU6NTUgQU0NCj4gVG86IGRsLWVzYy1BYWNyYWlkIExpbnV4
+IERyaXZlciA8YWFjcmFpZEBtaWNyb3NlbWkuY29tPjsgSmFtZXMgRSAuIEogLg0KPiBCb3R0b21s
+ZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRlcnNlbg0KPiA8bWFy
+dGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBD
+Yzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
+bmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHNjc2k6IGFhY3JhaWQ6IGZpeCBpbmZvcm1hdGlv
+biBsZWFrIG9uIGhiYWluZm8uZHJpdmVyX25hbWUNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0K
+PiANCj4gRnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCj4g
+DQo+IFRoZSBkcml2ZXJfbmFtZSBmaWVsZCBpcyBub3QgaW5pdGlhbGl6ZWQgYW5kIGhlbmNlIGlu
+Zm9ybWF0aW9uDQo+IG9uIHRoZSBzdGFjayBpcyBiZWluZyBsZWFrZWQgdG8gdXNlcnNwYWNlIG9u
+IHRoZSBjb3B5X3RvX3VzZXIuDQo+IEZpeCB0aGlzLg0KDQpJIGFtIGN1cmlvdXMsIGRvIHlvdSBt
+ZWFuIHRoYXQgdGhlIHVzZXIgd2lsbCBiZSBhYmxlIHRvIHJldHJpZXZlIGdhcmJhZ2Ugc3RhY2sg
+IHZhbHVlcyBmcm9tIHRoZSB2YXJpYWJsZXMgdGhhdCB3ZXJlIG5vdCBzZXQgKGRyaXZlcl9uYW1l
+IGV0Yyk/IC4NCiBJZiBzbyBob3cgaXMgaXQgYSBzZWN1cml0eSB0aHJlYXQ/DQoNClJlZ2FyZHMs
+DQpSYWdoYXZhIEFkaXR5YQ0KDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xp
+bi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2FhY3JhaWQvY29t
+bWN0cmwuYyB8IDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxl
+dGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJs
+LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jDQo+IGluZGV4IDYxNDg0MmEuLmVi
+NDhkMGEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMNCj4g
+KysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWN0cmwuYw0KPiBAQCAtMTAxNSw3ICsxMDE1
+LDcgQEAgc3RhdGljIGludCBhYWNfZ2V0X3BjaV9pbmZvKHN0cnVjdCBhYWNfZGV2KiBkZXYsDQo+
+IHZvaWQgX191c2VyICphcmcpDQo+IA0KPiAgc3RhdGljIGludCBhYWNfZ2V0X2hiYV9pbmZvKHN0
+cnVjdCBhYWNfZGV2ICpkZXYsIHZvaWQgX191c2VyICphcmcpDQo+ICB7DQo+IC0gICAgICAgc3Ry
+dWN0IGFhY19oYmFfaW5mbyBoYmFpbmZvOw0KPiArICAgICAgIHN0cnVjdCBhYWNfaGJhX2luZm8g
+aGJhaW5mbyA9IHsgMCB9Ow0KPiANCj4gICAgICAgICBoYmFpbmZvLmFkYXB0ZXJfbnVtYmVyICAg
+ICAgICAgID0gKHU4KSBkZXYtPmlkOw0KPiAgICAgICAgIGhiYWluZm8uc3lzdGVtX2lvX2J1c19u
+dW1iZXIgICAgPSBkZXYtPnBkZXYtPmJ1cy0+bnVtYmVyOw0KPiAtLQ0KPiAyLjEwLjINCg0K
