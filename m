@@ -1,69 +1,44 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Mon, 13 Feb 2017 09:38:35 +0800
-Message-ID: <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for ZBC_IN
+Date: Mon, 13 Feb 2017 14:11:52 +0900
+Message-ID: <20170213051152.27741-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:40917 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750903AbdBMFMR (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 00:12:17 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
 
-Hi Andy,
+The ZBC_IN command (REPORT ZONES) reply length is always a multiple of
+64B and thus may not be aligned on the device LBA size.
+For this command, retry due to the unaligned completion length is
+incorrect so do not check alignment of the reply length.
 
-Thanks for your quick reply.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Yes, It looks much better than the current.
-
-
-On 2017年02月11日 02:02, Andy Grover wrote:
-> On 02/09/2017 10:48 PM, lixiubo@cmss.chinamobile.com wrote:
->> For now the tcmu is based on UIO framework and only using the
->> map0 with fixed ring buffer size. This will work fine mostly,
->> but when we are using the 10GBASE NIC, the ring buffer is too
->> small to deal with the incoming iscsi cmds.
->>
->> We can resolve the above issue by increasingt the ring buffer
->> size larger, but we don't know the exactly size to all cases.
->>
->> This patch will add double ring buffers support by adding map1
->> support through UIO device.
->
-> Hi Xiubo,
->
-> Yes I think it's now clear we need more buffer space to avoid 
-> bottlenecks for high iops. The initial design kept it simple with the 
-> 1MB vmalloc'd space but anticipated greater would be needed. It should 
-> not be necessary to change userspace or the TCMU ABI to handle growing 
-> the buffer for fast devices:
->
-> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB 
-> to 1GB or larger
-> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring 
-> portion, and dynamically alloc pages for the data area as needed and 
-> map them into the data area.
-Should the data area mapping is dynamical or add one new API to 
-userspace to trigger it ?
-
-> 3. Upgrade the current fixed-size bitmap-based tracking of data area 
-> to handle the new scheme
-> 4. Implement an algorithm to keep allocated pages mapped into the data 
-> area for reuse, and maybe a heuristic to keep extreme burstiness from 
-> over-allocating pages
->
-Does a little like slab ?
-
-> This should allow TCMU to allocate more data area as needed, not waste 
-> memory for slower devices, and avoid userspace ABI changes. Could we 
-> prototype this approach and see if it is workable?
->
-I will do more investigate about this.
-
-
-> Thanks -- Regards -- Andy
->
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0b5b423..f04b872 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4723,8 +4723,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	 * then scsi-ml does not need to handle this misbehavior.
+ 	 */
+ 	sector_sz = scmd->device->sector_size;
+-	if (unlikely(scmd->request->cmd_type == REQ_TYPE_FS && sector_sz &&
+-		     xfer_cnt % sector_sz)) {
++	if (scmd->request->cmd_type == REQ_TYPE_FS &&
++	    scmd->cmnd[0] != ZBC_IN &&
++	    sector_sz && xfer_cnt % sector_sz) {
+ 		sdev_printk(KERN_INFO, scmd->device,
+ 		    "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+ 			    xfer_cnt, sector_sz);
+-- 
+2.9.3
