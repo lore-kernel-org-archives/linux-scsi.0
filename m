@@ -1,31 +1,26 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 08/16] lpfc: NVME Initiator: bind to nvme_fc api
-Date: Mon, 13 Feb 2017 09:59:57 +0100
-Message-ID: <75bdcb47-789e-7cbe-7c12-b7427c9ee7a4@suse.de>
-References: <58a0d920.BHYSqh6Jz9Hoai1s%jsmart2021@gmail.com>
+Subject: Re: [PATCH v3 09/16] lpfc: NVME Initiator: Add debugfs support
+Date: Mon, 13 Feb 2017 10:00:51 +0100
+Message-ID: <b90a543d-eb95-23a2-5663-646919de0519@suse.de>
+References: <58a0d921.mH+KNbibgP5l6GvQ%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:38748 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38812 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751617AbdBMJAA (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Feb 2017 04:00:00 -0500
-In-Reply-To: <58a0d920.BHYSqh6Jz9Hoai1s%jsmart2021@gmail.com>
+        id S1750975AbdBMJAx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Feb 2017 04:00:53 -0500
+In-Reply-To: <58a0d921.mH+KNbibgP5l6GvQ%jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
 On 02/12/2017 10:52 PM, James Smart wrote:
 > 
-> NVME Initiator: Tie in to NVME Fabrics nvme_fc LLDD initiator api
+> NVME Initiator: Add debugfs support
 > 
-> Adds the routines to:
-> - register and deregister the FC port as a nvme-fc initiator localport
-> - register and deregister remote FC ports as a nvme-fc remoteport
-> - binding of nvme queues to adapter WQs
-> - send/perform NVME LS's
-> - send/perform NVME FCP initiator io operations
+> Adds debugfs snippets to cover the new NVME initiator functionality
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
