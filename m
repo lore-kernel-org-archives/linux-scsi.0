@@ -1,39 +1,36 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v3 03/16] lpfc: minor code cleanups
-Date: Mon, 13 Feb 2017 09:30:54 +0100
-Message-ID: <158bf3bb-4ae9-d834-e1dc-d40940a50c3e@suse.de>
-References: <58a0d91b.VLyGPk7S2XWliQJD%jsmart2021@gmail.com>
+Subject: Re: [PATCH v3 04/16] lpfc: refactor debugfs queue prints
+Date: Mon, 13 Feb 2017 09:32:57 +0100
+Message-ID: <c8f1e00a-974a-8e65-4a64-f5fcbe1af0dc@suse.de>
+References: <58a0d91c.FMlII2L+0d4RFlSj%jsmart2021@gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36689 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:37049 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752248AbdBMIbH (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Mon, 13 Feb 2017 03:31:07 -0500
-In-Reply-To: <58a0d91b.VLyGPk7S2XWliQJD%jsmart2021@gmail.com>
+        id S1752487AbdBMIc7 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Feb 2017 03:32:59 -0500
+In-Reply-To: <58a0d91c.FMlII2L+0d4RFlSj%jsmart2021@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: James Smart <jsmart2021@gmail.com>, linux-nvme@lists.infradead.org, sagi@grimberg.me, linux-scsi@vger.kernel.org
 
 On 02/12/2017 10:52 PM, James Smart wrote:
 > 
-> This contains code cleanups that were in the prior patch set.
-> This allows better review of real changes later.
-> 
-> minor code cleanups:
->  fix indentation, punctuation, line length
->  addition/reduction of whitespace
->  remove unneeded parens, braces
->  lpfc_debugfs_nodelist_data: print as u64 rather than byte by byte
->  covert printk(KERN_ERR to pr_err
->  small print string deltas
->  use num_present_cpus() rather than count them
->  comment updates
->  rctl/type names moved to module variable, not on stack
+> Create common wq, cq, eq, rq print functions
 > 
 > Signed-off-by: Dick Kennedy <dick.kennedy@broadcom.com>
 > Signed-off-by: James Smart <james.smart@broadcom.com>
+> ---
+>  drivers/scsi/lpfc/lpfc.h         |   1 +
+>  drivers/scsi/lpfc/lpfc_debugfs.c | 564 ++++++++++++++++-----------------------
+>  2 files changed, 228 insertions(+), 337 deletions(-)
+> 
+One should look at converting it to seq_file(), seeing that there are
+provisions for overflow already.
+But that can be done in a later patch.
+
 Reviewed-by: Hannes Reinecke <hare@suse.com>
 
 Cheers,
