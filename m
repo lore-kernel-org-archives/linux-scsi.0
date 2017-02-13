@@ -1,47 +1,48 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH] scsi: aacraid: fix information leak on
- hbainfo.driver_name
-Date: Mon, 13 Feb 2017 20:18:49 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8BD4F7@avsrvexchmbx2.microsemi.net>
-References: <20170207135513.21392-1-colin.king@canonical.com>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH] qla2xxx: Fix warnings reported by static checker.
+Date: Mon, 13 Feb 2017 12:18:29 -0800
+Message-ID: <1487017109-28811-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170207135513.21392-1-colin.king@canonical.com>
-Content-Language: en-US
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Colin King <colin.king@canonical.com>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0061.outbound.protection.outlook.com ([104.47.36.61]:5674
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752821AbdBMUTO (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Mon, 13 Feb 2017 15:19:14 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: target-devel@vger.kernel.org, Bart.VanAssche@sandisk.com, nab@linux-iscsi.org
+Cc: giridhar.malavali@cavium.com, linux-scsi@vger.kernel.org, himanshu.madhani@cavium.com
 
-SGVsbG8gQ29saW4sDQoNCg0KPiAtLS0tLU9yaWdpbmFsIE1lc3NhZ2UtLS0tLQ0KPiBGcm9tOiBD
-b2xpbiBLaW5nIFttYWlsdG86Y29saW4ua2luZ0BjYW5vbmljYWwuY29tXQ0KPiBTZW50OiBUdWVz
-ZGF5LCBGZWJydWFyeSA3LCAyMDE3IDU6NTUgQU0NCj4gVG86IGRsLWVzYy1BYWNyYWlkIExpbnV4
-IERyaXZlciA8YWFjcmFpZEBtaWNyb3NlbWkuY29tPjsgSmFtZXMgRSAuIEogLg0KPiBCb3R0b21s
-ZXkgPGplamJAbGludXgudm5ldC5pYm0uY29tPjsgTWFydGluIEsgLiBQZXRlcnNlbg0KPiA8bWFy
-dGluLnBldGVyc2VuQG9yYWNsZS5jb20+OyBsaW51eC1zY3NpQHZnZXIua2VybmVsLm9yZw0KPiBD
-Yzoga2VybmVsLWphbml0b3JzQHZnZXIua2VybmVsLm9yZzsgbGludXgta2VybmVsQHZnZXIua2Vy
-bmVsLm9yZw0KPiBTdWJqZWN0OiBbUEFUQ0hdIHNjc2k6IGFhY3JhaWQ6IGZpeCBpbmZvcm1hdGlv
-biBsZWFrIG9uIGhiYWluZm8uZHJpdmVyX25hbWUNCj4gDQo+IEVYVEVSTkFMIEVNQUlMDQo+IA0K
-PiANCj4gRnJvbTogQ29saW4gSWFuIEtpbmcgPGNvbGluLmtpbmdAY2Fub25pY2FsLmNvbT4NCj4g
-DQo+IFRoZSBkcml2ZXJfbmFtZSBmaWVsZCBpcyBub3QgaW5pdGlhbGl6ZWQgYW5kIGhlbmNlIGlu
-Zm9ybWF0aW9uDQo+IG9uIHRoZSBzdGFjayBpcyBiZWluZyBsZWFrZWQgdG8gdXNlcnNwYWNlIG9u
-IHRoZSBjb3B5X3RvX3VzZXIuDQo+IEZpeCB0aGlzLg0KDQpJIGFtIGN1cmlvdXMsIGRvIHlvdSBt
-ZWFuIHRoYXQgdGhlIHVzZXIgd2lsbCBiZSBhYmxlIHRvIHJldHJpZXZlIGdhcmJhZ2Ugc3RhY2sg
-IHZhbHVlcyBmcm9tIHRoZSB2YXJpYWJsZXMgdGhhdCB3ZXJlIG5vdCBzZXQgKGRyaXZlcl9uYW1l
-IGV0Yyk/IC4NCiBJZiBzbyBob3cgaXMgaXQgYSBzZWN1cml0eSB0aHJlYXQ/DQoNClJlZ2FyZHMs
-DQpSYWdoYXZhIEFkaXR5YQ0KDQo+IFNpZ25lZC1vZmYtYnk6IENvbGluIElhbiBLaW5nIDxjb2xp
-bi5raW5nQGNhbm9uaWNhbC5jb20+DQo+IC0tLQ0KPiAgZHJpdmVycy9zY3NpL2FhY3JhaWQvY29t
-bWN0cmwuYyB8IDIgKy0NCj4gIDEgZmlsZSBjaGFuZ2VkLCAxIGluc2VydGlvbigrKSwgMSBkZWxl
-dGlvbigtKQ0KPiANCj4gZGlmZiAtLWdpdCBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJs
-LmMgYi9kcml2ZXJzL3Njc2kvYWFjcmFpZC9jb21tY3RybC5jDQo+IGluZGV4IDYxNDg0MmEuLmVi
-NDhkMGEgMTAwNjQ0DQo+IC0tLSBhL2RyaXZlcnMvc2NzaS9hYWNyYWlkL2NvbW1jdHJsLmMNCj4g
-KysrIGIvZHJpdmVycy9zY3NpL2FhY3JhaWQvY29tbWN0cmwuYw0KPiBAQCAtMTAxNSw3ICsxMDE1
-LDcgQEAgc3RhdGljIGludCBhYWNfZ2V0X3BjaV9pbmZvKHN0cnVjdCBhYWNfZGV2KiBkZXYsDQo+
-IHZvaWQgX191c2VyICphcmcpDQo+IA0KPiAgc3RhdGljIGludCBhYWNfZ2V0X2hiYV9pbmZvKHN0
-cnVjdCBhYWNfZGV2ICpkZXYsIHZvaWQgX191c2VyICphcmcpDQo+ICB7DQo+IC0gICAgICAgc3Ry
-dWN0IGFhY19oYmFfaW5mbyBoYmFpbmZvOw0KPiArICAgICAgIHN0cnVjdCBhYWNfaGJhX2luZm8g
-aGJhaW5mbyA9IHsgMCB9Ow0KPiANCj4gICAgICAgICBoYmFpbmZvLmFkYXB0ZXJfbnVtYmVyICAg
-ICAgICAgID0gKHU4KSBkZXYtPmlkOw0KPiAgICAgICAgIGhiYWluZm8uc3lzdGVtX2lvX2J1c19u
-dW1iZXIgICAgPSBkZXYtPnBkZXYtPmJ1cy0+bnVtYmVyOw0KPiAtLQ0KPiAyLjEwLjINCg0K
+From: Quinn Tran <quinn.tran@cavium.com>
+
+Fix following warning reported by static checker
+
+drivers/scsi/qla2xxx/qla_init.c:3910 qla2x00_alloc_fcport()
+warn: use 'flags' here instead of GFP_XXX?
+
+Fixes: b79414e ("qla2xxx: Add framework for async fabric discovery")
+Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
+Signed-off-by: Quinn Tran <quinn.tran@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Cc: Dan Carpenter <dan.carpenter@oracle.com>
+---
+ drivers/scsi/qla2xxx/qla_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index ea6ddcf..1598e84 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -3878,7 +3878,7 @@ static void qla2xxx_nvram_wwn_from_ofw(scsi_qla_host_t *vha, nvram_t *nv)
+ 
+ 	fcport->ct_desc.ct_sns = dma_alloc_coherent(&vha->hw->pdev->dev,
+ 		sizeof(struct ct_sns_pkt), &fcport->ct_desc.ct_sns_dma,
+-			GFP_ATOMIC);
++		flags);
+ 	fcport->disc_state = DSC_DELETED;
+ 	fcport->fw_login_state = DSC_LS_PORT_UNAVAIL;
+ 	fcport->deleted = QLA_SESS_DELETED;
+-- 
+1.8.3.1
