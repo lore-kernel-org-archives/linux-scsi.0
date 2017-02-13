@@ -1,52 +1,50 @@
 From: Andy Grover <agrover@redhat.com>
 Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Mon, 13 Feb 2017 09:42:44 -0800
-Message-ID: <6a8ea198-2af0-32cf-1ba8-ad6ac125c254@redhat.com>
+Date: Mon, 13 Feb 2017 09:58:01 -0800
+Message-ID: <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
 References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
  <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
- <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
+ <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
 Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
+In-Reply-To: <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
 Sender: target-devel-owner@vger.kernel.org
 To: Xiubo Li <lixiubo@cmss.chinamobile.com>, mchristi@redhat.com
 Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 List-Id: linux-scsi@vger.kernel.org
 
-On 02/12/2017 05:38 PM, Xiubo Li wrote:
-> On 2017年02月11日 02:02, Andy Grover wrote:
+On 02/13/2017 01:50 AM, Xiubo Li wrote:
+> There is one new scheme in my mind:
+
+>> Yes I think it's now clear we need more buffer space to avoid
+>> bottlenecks for high iops. The initial design kept it simple with the
+>> 1MB vmalloc'd space but anticipated greater would be needed. It should
+>> not be necessary to change userspace or the TCMU ABI to handle growing
+>> the buffer for fast devices:
+>>
 >> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB
 >> to 1GB or larger
->> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring
->> portion, and dynamically alloc pages for the data area as needed and
->> map them into the data area.
-> Should the data area mapping is dynamical or add one new API to
-> userspace to trigger it ?
+> For the cmd area, set the size to fixed 512M, and data area's size to
+> fixed 1G, is that okay ?
 
-I would recommend having the kernel make the decision to allocate/map 
-more memory, or not (i.e. wait for existing I/O to complete and free 
-pages) because this avoids the need for a new API, and also the kernel 
-may better decide how to allocate total pages used across multiple TCMU 
-devices.
+512M seems a little big for the cmd area... use of the cmd ring should 
+be much smaller than the data area. Each cmd has a minimum size, but 
+then to describe an additional page in the iovec[] should be just one 
+struct iovec (16 bytes?) for each 4K page.
 
->> 4. Implement an algorithm to keep allocated pages mapped into the data
->> area for reuse, and maybe a heuristic to keep extreme burstiness from
->> over-allocating pages
->>
-> Does a little like slab ?
+>> 3. Upgrade the current fixed-size bitmap-based tracking of data area
+>> to handle the new scheme
+> The Radix tree will be used to keep the block's index(0 ~
+> 1G/DATA_BLOCK_SIZE) and physical page mapping relations. Each leaf is
+> one data block(the size is DATA_BLOCK_SIZE).
+>
+> For non-leaf nodes, use the radix tags[0][SLOTs] to indicate wether
+> slot[SLOTs]'s branch has free(reused the old one or NULL leafs) block
+> leafs or not.
+> This could speed the search of the free blocks in data area.
 
-It's definitely becoming less of a storage issue and more of a 
-page-management issue. It might make sense to look at mm code and ask mm 
-experts for their advice, yep.
-
->> This should allow TCMU to allocate more data area as needed, not waste
->> memory for slower devices, and avoid userspace ABI changes. Could we
->> prototype this approach and see if it is workable?
->>
-> I will do more investigate about this.
-
-Thank you for working to improve this area!
+Yes I think radix tree is a good place to start.
 
 Regards -- Andy
