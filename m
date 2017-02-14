@@ -1,108 +1,113 @@
-From: Rameshwar Prasad Sahu <rsahu@apm.com>
-Subject: [RESEND][PATCH v2] ata: xgene: Enable NCQ support for APM X-Gene SATA
- controller hardware v1.1
-Date: Tue, 14 Feb 2017 23:23:34 +0530
-Message-ID: <1487094814-9145-1-git-send-email-rsahu@apm.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH v3] sd: Check for unaligned partial completion
+Date: Tue, 14 Feb 2017 21:47:59 +0900
+Message-ID: <20170214124759.3439-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org>
-List-Unsubscribe: <http://lists.infradead.org/mailman/options/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=unsubscribe>
-List-Archive: <http://lists.infradead.org/pipermail/linux-arm-kernel/>
-List-Post: <mailto:linux-arm-kernel@lists.infradead.org>
-List-Help: <mailto:linux-arm-kernel-request@lists.infradead.org?subject=help>
-List-Subscribe: <http://lists.infradead.org/mailman/listinfo/linux-arm-kernel>,
- <mailto:linux-arm-kernel-request@lists.infradead.org?subject=subscribe>
-Sender: "linux-arm-kernel" <linux-arm-kernel-bounces@lists.infradead.org>
-Errors-To: linux-arm-kernel-bounces+linux-arm-kernel=m.gmane.org@lists.infradead.org
-To: olof@lixom.net, tj@kernel.org, arnd@arndb.de
-Cc: devicetree@vger.kernel.org, mlangsdo@redhat.com, linux-scsi@vger.kernel.org, jcm@redhat.com, Rameshwar Prasad Sahu <rsahu@apm.com>, patches@apm.com, linux-ide@vger.kernel.org, linux-arm-kernel@lists.infradead.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:15087 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752825AbdBNMsP (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 07:48:15 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
 
-This patch enables NCQ support for APM X-Gene SATA controller hardware v1.1
-that was broken with hardware v1.0. Second thing, here we should not assume
-XGENE_AHCI_V2 always in case of having valid _CID in ACPI table. I need to
-remove this assumption because V1_1 also has a valid _CID for backward
-compatibly with v1.
+Commit "mpt3sas: Force request partial completion alignment" was not
+considering the case of REQ_TYPE_FS commands not operating on sector
+size units (e.g. REQ_OP_ZONE_REPORT and its 64B aligned partial
+replies). This could result is incorrectly retrying (forever) those
+commands.
 
-v2 changes:
-	1. Changed patch description
+Move the partial completion alignement check of mpt3sas to sd_done so
+that the check comes after good_bytes & resid corrections of done in
+that function depending on the request command to avoid false positive.
 
-Signed-off-by: Rameshwar Prasad Sahu <rsahu@apm.com>
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
+
 ---
- drivers/ata/ahci_xgene.c |   14 ++++++++------
- 1 files changed, 8 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
-index 73b19b2..8b88be9 100644
---- a/drivers/ata/ahci_xgene.c
-+++ b/drivers/ata/ahci_xgene.c
-@@ -87,6 +87,7 @@
+Changes from v2:
+- Fixed good_bytes calculation after correction of unaligned resid
+It should be good_bytes=scsi_buflen() - resid, and not good_bytes-=resid
+- Fixed email addresses used with git send-email.
+My apologies about the noise...
 
- enum xgene_ahci_version {
- 	XGENE_AHCI_V1 = 1,
-+	XGENE_AHCI_V1_1,
- 	XGENE_AHCI_V2,
- };
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ---------------
+ drivers/scsi/sd.c                    | 20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+), 15 deletions(-)
 
-@@ -734,6 +735,7 @@ static struct scsi_host_template ahci_platform_sht = {
- #ifdef CONFIG_ACPI
- static const struct acpi_device_id xgene_ahci_acpi_match[] = {
- 	{ "APMC0D0D", XGENE_AHCI_V1},
-+	{ "APMC0D67", XGENE_AHCI_V1_1},
- 	{ "APMC0D32", XGENE_AHCI_V2},
- 	{},
- };
-@@ -742,6 +744,7 @@ MODULE_DEVICE_TABLE(acpi, xgene_ahci_acpi_match);
-
- static const struct of_device_id xgene_ahci_of_match[] = {
- 	{.compatible = "apm,xgene-ahci", .data = (void *) XGENE_AHCI_V1},
-+	{.compatible = "apm,xgene-ahci-v1-1", .data = (void *) XGENE_AHCI_V1_1},
- 	{.compatible = "apm,xgene-ahci-v2", .data = (void *) XGENE_AHCI_V2},
- 	{},
- };
-@@ -755,8 +758,7 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 	struct resource *res;
- 	const struct of_device_id *of_devid;
- 	enum xgene_ahci_version version = XGENE_AHCI_V1;
--	const struct ata_port_info *ppi[] = { &xgene_ahci_v1_port_info,
--					      &xgene_ahci_v2_port_info };
-+	const struct ata_port_info *ppi;
- 	int rc;
-
- 	hpriv = ahci_platform_get_resources(pdev);
-@@ -821,8 +823,6 @@ static int xgene_ahci_probe(struct platform_device *pdev)
- 				dev_warn(&pdev->dev, "%s: Error reading device info. Assume version1\n",
- 					__func__);
- 				version = XGENE_AHCI_V1;
--			} else if (info->valid & ACPI_VALID_CID) {
--				version = XGENE_AHCI_V2;
- 			}
- 		}
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0b5b423..1961535 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4658,7 +4658,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	u32 response_code = 0;
+ 	unsigned long flags;
+-	unsigned int sector_sz;
+ 
+ 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+ 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+@@ -4717,20 +4716,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
  	}
-@@ -858,18 +858,20 @@ skip_clk_phy:
-
- 	switch (version) {
- 	case XGENE_AHCI_V1:
-+		ppi = &xgene_ahci_v1_port_info;
- 		hpriv->flags = AHCI_HFLAG_NO_NCQ;
- 		break;
- 	case XGENE_AHCI_V2:
-+		ppi = &xgene_ahci_v2_port_info;
- 		hpriv->flags |= AHCI_HFLAG_YES_FBS;
- 		hpriv->irq_handler = xgene_ahci_irq_intr;
- 		break;
- 	default:
-+		ppi = &xgene_ahci_v1_port_info;
- 		break;
+ 
+ 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+-
+-	/* In case of bogus fw or device, we could end up having
+-	 * unaligned partial completion. We can force alignment here,
+-	 * then scsi-ml does not need to handle this misbehavior.
+-	 */
+-	sector_sz = scmd->device->sector_size;
+-	if (unlikely(scmd->request->cmd_type == REQ_TYPE_FS && sector_sz &&
+-		     xfer_cnt % sector_sz)) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-		    "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+-			    xfer_cnt, sector_sz);
+-		xfer_cnt = round_down(xfer_cnt, sector_sz);
+-	}
+-
+ 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+ 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+ 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1f5d92a..2f70b36 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1790,6 +1790,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ {
+ 	int result = SCpnt->result;
+ 	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
++	unsigned int sector_size = SCpnt->device->sector_size;
++	unsigned int resid;
+ 	struct scsi_sense_hdr sshdr;
+ 	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
+ 	struct request *req = SCpnt->request;
+@@ -1829,6 +1831,24 @@ static int sd_done(struct scsi_cmnd *SCpnt)
  	}
-
--	rc = ahci_platform_init_host(pdev, hpriv, ppi[version - 1],
--				     &ahci_platform_sht);
-+	rc = ahci_platform_init_host(pdev, hpriv, ppi, &ahci_platform_sht);
- 	if (rc)
- 		goto disable_resources;
-
---
-1.7.1
+ 	sdkp->medium_access_timed_out = 0;
+ 
++	/*
++	 * In case of bogus fw or device, we could end up having
++	 * unaligned partial completion. Check this here and force
++	 * alignment.
++	 */
++	resid = scsi_get_resid(SCpnt);
++	if (resid & (sector_size - 1)) {
++		SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
++			"Unaligned partial completion (resid=%u, sector_sz=%u)\n",
++			resid, sector_size));
++		resid = round_up(resid, sector_size);
++		if (resid < scsi_bufflen(SCpnt))
++			good_bytes = scsi_bufflen(SCpnt) - resid;
++		else
++			good_bytes = 0;
++		scsi_set_resid(SCpnt, resid);
++	}
++
+ 	if (driver_byte(result) != DRIVER_SENSE &&
+ 	    (!sense_valid || sense_deferred))
+ 		goto out;
+-- 
+2.9.3
