@@ -1,69 +1,65 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
 Subject: Re: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for
  ZBC_IN
-Date: Tue, 14 Feb 2017 03:59:43 +0000
-Message-ID: <1487044768.6475.1.camel@sandisk.com>
+Date: Tue, 14 Feb 2017 13:42:31 +0900
+Message-ID: <bb2092fe-4368-2a7f-3e67-6e8369fb4d56@wdc.com>
 References: <20170213051152.27741-1-damien.lemoal@wdc.com>
-         <1487012224.2719.3.camel@sandisk.com>
-         <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
+ <1487012224.2719.3.camel@sandisk.com>
+ <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
+ <1487044768.6475.1.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:11122 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbdBND7r (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 22:59:47 -0500
-In-Reply-To: <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
-Content-Language: en-US
-Content-ID: <21EDC82FB474A040BF59354BB28E4DA7@sandisk.com>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:13740 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751390AbdBNEmo (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 23:42:44 -0500
+In-Reply-To: <1487044768.6475.1.camel@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
 Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
 
-T24gVHVlLCAyMDE3LTAyLTE0IGF0IDEyOjQ1ICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
-Cj4gT24gMi8xNC8xNyAwMzo1NywgQmFydCBWYW4gQXNzY2hlIHdyb3RlOg0KPiA+IE9uIE1vbiwg
-MjAxNy0wMi0xMyBhdCAxNDoxMSArMDkwMCwgRGFtaWVuIExlIE1vYWwgd3JvdGU6DQo+ID4gPiBU
-aGUgWkJDX0lOIGNvbW1hbmQgKFJFUE9SVCBaT05FUykgcmVwbHkgbGVuZ3RoIGlzIGFsd2F5cyBh
-IG11bHRpcGxlIG9mDQo+ID4gPiA2NEIgYW5kIHRodXMgbWF5IG5vdCBiZSBhbGlnbmVkIG9uIHRo
-ZSBkZXZpY2UgTEJBIHNpemUuDQo+ID4gPiBGb3IgdGhpcyBjb21tYW5kLCByZXRyeSBkdWUgdG8g
-dGhlIHVuYWxpZ25lZCBjb21wbGV0aW9uIGxlbmd0aCBpcw0KPiA+ID4gaW5jb3JyZWN0IHNvIGRv
-IG5vdCBjaGVjayBhbGlnbm1lbnQgb2YgdGhlIHJlcGx5IGxlbmd0aC4NCj4gPiA+IA0KPiA+ID4g
-U2lnbmVkLW9mZi1ieTogRGFtaWVuIExlIE1vYWwgPGRhbWllbi5sZW1vYWxAd2RjLmNvbT4NCj4g
-PiA+IC0tLQ0KPiA+ID4gIGRyaXZlcnMvc2NzaS9tcHQzc2FzL21wdDNzYXNfc2NzaWguYyB8IDUg
-KysrLS0NCj4gPiA+ICAxIGZpbGUgY2hhbmdlZCwgMyBpbnNlcnRpb25zKCspLCAyIGRlbGV0aW9u
-cygtKQ0KPiA+ID4gDQo+ID4gPiBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0
-M3Nhc19zY3NpaC5jIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jDQo+ID4g
-PiBpbmRleCAwYjViNDIzLi5mMDRiODcyIDEwMDY0NA0KPiA+ID4gLS0tIGEvZHJpdmVycy9zY3Np
-L21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jDQo+ID4gPiArKysgYi9kcml2ZXJzL3Njc2kvbXB0M3Nh
-cy9tcHQzc2FzX3Njc2loLmMNCj4gPiA+IEBAIC00NzIzLDggKzQ3MjMsOSBAQCBfc2NzaWhfaW9f
-ZG9uZShzdHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MsIHUxNiBzbWlkLCB1OCBtc2l4X2luZGV4
-LCB1MzIgcmVwbHkpDQo+ID4gPiAgCSAqIHRoZW4gc2NzaS1tbCBkb2VzIG5vdCBuZWVkIHRvIGhh
-bmRsZSB0aGlzIG1pc2JlaGF2aW9yLg0KPiA+ID4gIAkgKi8NCj4gPiA+ICAJc2VjdG9yX3N6ID0g
-c2NtZC0+ZGV2aWNlLT5zZWN0b3Jfc2l6ZTsNCj4gPiA+IC0JaWYgKHVubGlrZWx5KHNjbWQtPnJl
-cXVlc3QtPmNtZF90eXBlID09IFJFUV9UWVBFX0ZTICYmIHNlY3Rvcl9zeiAmJg0KPiA+ID4gLQkJ
-ICAgICB4ZmVyX2NudCAlIHNlY3Rvcl9zeikpIHsNCj4gPiA+ICsJaWYgKHNjbWQtPnJlcXVlc3Qt
-PmNtZF90eXBlID09IFJFUV9UWVBFX0ZTICYmDQo+ID4gPiArCSAgICBzY21kLT5jbW5kWzBdICE9
-IFpCQ19JTiAmJg0KPiA+ID4gKwkgICAgc2VjdG9yX3N6ICYmIHhmZXJfY250ICUgc2VjdG9yX3N6
-KSB7DQo+ID4gPiAgCQlzZGV2X3ByaW50ayhLRVJOX0lORk8sIHNjbWQtPmRldmljZSwNCj4gPiA+
-ICAJCSAgICAidW5hbGlnbmVkIHBhcnRpYWwgY29tcGxldGlvbiBhdm9pZGVkICh4ZmVyX2NudD0l
-dSwgc2VjdG9yX3N6PSV1KVxuIiwNCj4gPiA+ICAJCQkgICAgeGZlcl9jbnQsIHNlY3Rvcl9zeik7
-DQo+ID4gDQo+ID4gV2hhdCBzb2Z0d2FyZSBnZW5lcmF0ZWQgYSBaQkNfSU4gcmVxdWVzdCB3aXRo
-IHR5cGUgUkVRX1RZUEVfRlM/IFNob3VsZG4ndA0KPiA+IGFsbCBaQkNfSU4gcmVxdWVzdHMgYmUg
-YXNzaWduZWQgdHlwZSBSRVFfVFlQRV9CTE9DS19QQz8NCj4gDQo+IEFueSBhcHBsaWNhdGlvbiB0
-aGF0IGlzc3VlcyBhIEJMS1JFUE9SVFpPTkUgaW9jdGwgKGUuZy4gbWtmcy5mMmZzIG9yDQo+IGxp
-YnpiYyB0b29scykgb3Iga2VybmVsIGNvbXBvbmVudCBjYWxsaW5nIGJsa2Rldl9yZXBvcnRfem9u
-ZXMgKGUuZy4NCj4gZjJmcykgd2lsbCBnZW5lcmF0ZSBvbmUgb3IgbW9yZSBSRVFfT1BfWk9ORV9S
-RVBPUlQgQklPIHdoaWNoIHRyYW5zbGF0ZQ0KPiBpbnRvIGEgUkVRX1RZUEVfRlMgcmVxdWVzdHMg
-Zm9yIHRoZSBjb21tYW5kIFpCQ19JTi4gVGhhdCBjb21tYW5kIGRvZXMNCj4gbm90IG9wZXJhdGUg
-b24gTEJBcy4gVGhlIHRyYW5zZmVyIGxlbmd0aCBvZiB0aGUgcmVxdWVzdCBjYW4gYmUgYW55DQo+
-IGxlbmd0aCBsYXJnZXIgdGhhbiA2NEIgYW5kIHRoZSByZXBseSBsZW5ndGggd2lsbCBiZSBhdCBs
-ZWFzdCA2NEIgYW5kDQo+IGFsaWduZWQgb24gYSBtdWx0aXBsZSBvZiA2NC4NCj4gDQo+IFRoZSBw
-YXRjaCAibXB0M3NhczogRm9yY2UgcmVxdWVzdCBwYXJ0aWFsIGNvbXBsZXRpb24gYWxpZ25tZW50
-IiBhcHBsaWVkDQo+IGxhc3Qgd2VlayBmb3Jnb3QgdGhpcyBjYXNlLCBhbmQgZnJhbmtseSwgSSBk
-aWQgdG9vIGRlc3BpdGUgaGF2aW5nIGxvb2tlZA0KPiBhdCBpdC4NCg0KSGVsbG8gRGFtaWVuLA0K
-DQpIb3cgYWJvdXQgbW9kaWZ5aW5nIHRoZSBibG9jayBsYXllciBjb3JlIHN1Y2ggdGhhdCBpdCBz
-ZXRzIFJFUV9UWVBFX0JMT0NLX1BDDQpmb3IgUkVRX09QX1pPTkVfUkVQT1JUIHJlcXVlc3RzPyBX
-b3VsZCB0aGF0IGJlIGEgdmFsaWQgYWx0ZXJuYXRpdmUgdG8gdGhlDQphYm92ZSBwYXRjaD8NCg0K
-VGhhbmtzLA0KDQpCYXJ0Lg==
+Bart,
+
+On 2/14/17 12:59, Bart Van Assche wrote:
+>>> What software generated a ZBC_IN request with type REQ_TYPE_FS? Shouldn't
+>>> all ZBC_IN requests be assigned type REQ_TYPE_BLOCK_PC?
+>>
+>> Any application that issues a BLKREPORTZONE ioctl (e.g. mkfs.f2fs or
+>> libzbc tools) or kernel component calling blkdev_report_zones (e.g.
+>> f2fs) will generate one or more REQ_OP_ZONE_REPORT BIO which translate
+>> into a REQ_TYPE_FS requests for the command ZBC_IN. That command does
+>> not operate on LBAs. The transfer length of the request can be any
+>> length larger than 64B and the reply length will be at least 64B and
+>> aligned on a multiple of 64.
+>>
+>> The patch "mpt3sas: Force request partial completion alignment" applied
+>> last week forgot this case, and frankly, I did too despite having looked
+>> at it.
+> 
+> Hello Damien,
+> 
+> How about modifying the block layer core such that it sets REQ_TYPE_BLOCK_PC
+> for REQ_OP_ZONE_REPORT requests? Would that be a valid alternative to the
+> above patch?
+
+I think so. But my understanding of REQ_TYPE_BLOCK_PC is that it is the
+type for requests issued internally (scsi_execute) of from things like
+the SG driver, so in essence, all requests not derived from a BIO... Is
+this correct ? If yes, then setting the BLOCK_TYPE_PC for
+REQ_OP_ZONE_REPORT (and REQ_OP_ZONE_RESET while at it) would break this
+model, wouldn't it ?
+
+Best regards.
+
+-- 
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
