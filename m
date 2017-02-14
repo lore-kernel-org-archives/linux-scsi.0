@@ -1,70 +1,55 @@
-From: ebiederm@xmission.com (Eric W. Biederman)
-Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
-Date: Wed, 15 Feb 2017 15:44:48 +1300
-Message-ID: <87y3x8895r.fsf@xmission.com>
-References: <20170212214920.28866-1-anton@ozlabs.org>
-        <1486941294.3401.67.camel@kernel.crashing.org>
-        <20170213104723.7741de0a@kryten> <87efz3hre6.fsf@xmission.com>
-        <1486947669.3401.69.camel@kernel.crashing.org>
-        <2fa7fc70-44d4-f536-befb-8a7849741fb7@linux.vnet.ibm.com>
-        <1487037886.23576.16.camel@kernel.crashing.org>
-        <39054c0e-c0f3-a62d-2c71-469798727bfd@linux.vnet.ibm.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH 00/16] aacraid: Fixes and enhancements for arc family
+Date: Tue, 14 Feb 2017 12:44:30 -0800
+Message-ID: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from out01.mta.xmission.com ([166.70.13.231]:57797 "EHLO
-        out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750943AbdBOCtX (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 21:49:23 -0500
-In-Reply-To: <39054c0e-c0f3-a62d-2c71-469798727bfd@linux.vnet.ibm.com> (Brian
-        King's message of "Tue, 14 Feb 2017 08:56:15 -0600")
+Received: from mail-sn1nam02on0059.outbound.protection.outlook.com ([104.47.36.59]:5696
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751417AbdBODWb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Feb 2017 22:22:31 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Brian King <brking@linux.vnet.ibm.com>
-Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Anton Blanchard <anton@samba.org>, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jk@ozlabs.org, linux-scsi@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-Brian King <brking@linux.vnet.ibm.com> writes:
+This patch set contains issue fixes, enhancements and other misc changes.
 
-> On 02/13/2017 08:04 PM, Benjamin Herrenschmidt wrote:
->> On Mon, 2017-02-13 at 15:57 -0600, Brian King wrote:
->>> If we do transition to use remove rather than shutdown, I think we
->>> want
->>> some way for a device driver to know whether we are doing kexec or
->>> not.
->>> A RAID adapter with a write cache is going to want to flush its write
->>> cache on a PCI hotplug remove, but for a kexec, its going to want to
->>> skip
->>> that so the kexec is faster. Today, since kexec looks like a reboot,
->>> rather than a shutdown, we can skip the flush on a reboot, since its
->>> technically not needed there either.
->> 
->> What happens if a non-flushed adapter gets a PERST ?
->
-> It depends on the adapter, so it really needs to be a policy in the device
-> driver. For any adapter that has a non volatile write cache, data must preserved,
-> otherwise the write cache is not truly non volatile. For adapters with a volatile
-> write cache, then its subject to the adapter hardware. For ipr adapters
-> that have a volatile cache, they do guarantee the data is preserved across
-> a PERST.
->
->> I wouldn't trust that 'don't have to flush' magic ...
->
-> I really don't think we want to force RAID adapters that have gigabytes of
-> *non volatile* write cache to flush their cache when we are merely performing
-> a kexec. This can take several minutes in the worst case scenarios.
+The majority of the fixes are a direct outcome of testing and work done on the
+adapter reset mechanism. Initially it just had IOP reset and then was augmented
+with IWBR soft hardware resets in the previous patch set. The reset mechanism
+is triggered in 2 paths, one is from the eh handler from the kernel and the
+other is from the driver's internal periodic health checkup.
 
+Raghava Aditya Renukunta (16):
+ [SCSI] aacraid: Fix camel case
+ [SCSI] aacraid: Use correct channel number for raw srb
+ [SCSI] aacraid: Fix for excessive prints on EEH
+ [SCSI] aacraid: Prevent E3 lockup when deleting units
+ [SCSI] aacraid: Fix memory leak in fib init path
+ [SCSI] aacraid: Added sysfs for driver version
+ [SCSI] aacraid: Fix sync fibs time out on controller reset
+ [SCSI] aacraid: Skip wellness sync on controller failure
+ [SCSI] aacraid: Reload offlined drives after controller reset
+ [SCSI] aacraid: Terminate kthread on controller fw assert
+ [SCSI] aacraid: Decrease adapter health check  interval
+ [SCSI] aacraid: Skip IOP reset on controller panic(SMART Family)
+ [SCSI] aacraid: Reorder Adapter status check
+ [SCSI] aacraid: Save adapter fib log before an IOP reset
+ [SCSI] aacraid: Fix a potential spinlock double unlock bug
+ [SCSI] aacraid: Update driver version
 
-It is very very simple.  kexec does not guarantee what comes after it.
+ drivers/scsi/aacraid/aachba.c   |  59 ++++++++++++----------
+ drivers/scsi/aacraid/aacraid.h  | 107 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/commctrl.c |   2 +-
+ drivers/scsi/aacraid/comminit.c |   2 +-
+ drivers/scsi/aacraid/commsup.c  |  97 +++++++++++++++++++++++++++++-------
+ drivers/scsi/aacraid/linit.c    |  47 ++++++++++++------
+ drivers/scsi/aacraid/rx.c       |   2 +-
+ drivers/scsi/aacraid/src.c      |  48 +++++++++++++++---
+ 8 files changed, 248 insertions(+), 116 deletions(-)
 
-An optimization that skips flushing because the hardware write cache can
-be trusted is fine.  An optimization that skips flushing because some
-later kernel will take care of it is not.
-
-I really don't see any room in there for distinguishing between which
-kind of shutdown and/or kexec we are doing.  Either the hardware handles
-it or it doesn't.
-
-If the hardware doesn't handle everything than we need to handle it in
-software.
-
-Eric
+-- 
+2.7.4
