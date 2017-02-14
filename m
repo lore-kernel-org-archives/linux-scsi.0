@@ -1,32 +1,67 @@
-From: Dan Carpenter <dan.carpenter@oracle.com>
-Subject: [patch] scsi: megaraid_sas: array overflow in megasas_dump_frame()
-Date: Tue, 14 Feb 2017 19:38:55 +0300
-Message-ID: <20170214163855.GA1687@mwanda>
+From: David Miller <davem@davemloft.net>
+Subject: Re: [PATCH V4 net-next 1/2] qed: Add support for hardware
+ offloaded FCoE.
+Date: Tue, 14 Feb 2017 13:14:19 -0500 (EST)
+Message-ID: <20170214.131419.1326744868549008726.davem@davemloft.net>
+References: <1487013421-27006-1-git-send-email-chad.dupuis@cavium.com>
+        <1487013421-27006-2-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-Content-Disposition: inline
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Sumit Saxena <sumit.saxena@broadcom.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: Text/Plain; charset=us-ascii
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from shards.monkeyblade.net ([184.105.139.130]:39054 "EHLO
+        shards.monkeyblade.net" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932380AbdBNSOV (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 13:14:21 -0500
+In-Reply-To: <1487013421-27006-2-git-send-email-chad.dupuis@cavium.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: chad.dupuis@cavium.com
+Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
 
-The "sz" variable is in terms of bytes, but we're treating the buffer as
-an array of __le32 so we have to divide by 4.
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Date: Mon, 13 Feb 2017 11:17:00 -0800
 
-Fixes: def0eab3af86 ("scsi: megaraid_sas: enhance debug logs in OCR context")
-Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
+> @@ -255,6 +259,10 @@ struct qed_hw_info {
+>  	u32				part_num[4];
+>  
+>  	unsigned char			hw_mac_addr[ETH_ALEN];
+> +	u64				node_wwn;
+> +	u64				port_wwn;
+> +
+> +	u16 num_fcoe_conns;
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index dc9f42e135bb..7ac9a9ee9bd4 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -2754,7 +2754,7 @@ megasas_dump_frame(void *mpi_request, int sz)
- 	__le32 *mfp = (__le32 *)mpi_request;
- 
- 	printk(KERN_INFO "IO request frame:\n\t");
--	for (i = 0; i < sz; i++) {
-+	for (i = 0; i < sz / sizeof(__le32); i++) {
- 		if (i && ((i % 8) == 0))
- 			printk("\n\t");
- 		printk("%08x ", le32_to_cpu(mfp[i]));
+This new num_fcoe_conns member should be indented just like the rest of them.
+
+> +static int
+> +qed_sp_fcoe_func_start(struct qed_hwfn *p_hwfn,
+> +		       enum spq_mode comp_mode,
+> +		       struct qed_spq_comp_cb *p_comp_addr)
+> +{
+> +	struct qed_fcoe_pf_params *fcoe_pf_params = NULL;
+> +	struct fcoe_init_ramrod_params *p_ramrod = NULL;
+> +	struct fcoe_conn_context *p_cxt = NULL;
+> +	struct qed_spq_entry *p_ent = NULL;
+> +	struct fcoe_init_func_ramrod_data *p_data;
+> +	int rc = 0;
+> +	struct qed_sp_init_data init_data;
+> +	struct qed_cxt_info cxt_info;
+> +	u32 dummy_cid;
+> +	u16 tmp;
+> +	u8 i;
+
+Please order local variable declarations from larget the smallest line.
+
+> +#else /* CONFIG_QED_FCOE */
+> +static inline struct qed_fcoe_info *
+> +qed_fcoe_alloc(struct qed_hwfn *p_hwfn) { return NULL; }
+> +static inline void
+> +qed_fcoe_setup(struct qed_hwfn *p_hwfn, struct qed_fcoe_info *p_fcoe_info) {}
+> +static inline void
+> +qed_fcoe_free(struct qed_hwfn *p_hwfn, struct qed_fcoe_info *p_fcoe_info) {}
+> +static inline void
+> +qed_get_protocol_stats_fcoe(struct qed_dev *cdev,
+> +			    struct qed_mcp_fcoe_stats *stats) {}
+
+Please do not format these functions so compactly, they are very difficult to
+read.  Format them just like normal functions.
