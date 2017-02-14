@@ -1,65 +1,68 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for
- ZBC_IN
-Date: Tue, 14 Feb 2017 13:42:31 +0900
-Message-ID: <bb2092fe-4368-2a7f-3e67-6e8369fb4d56@wdc.com>
-References: <20170213051152.27741-1-damien.lemoal@wdc.com>
- <1487012224.2719.3.camel@sandisk.com>
- <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
- <1487044768.6475.1.camel@sandisk.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Tue, 14 Feb 2017 13:03:40 +0800
+Message-ID: <5a82256f-aa97-53d6-4752-6787bd44500b@cmss.chinamobile.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+ <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
+ <6a8ea198-2af0-32cf-1ba8-ad6ac125c254@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:13740 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751390AbdBNEmo (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 13 Feb 2017 23:42:44 -0500
-In-Reply-To: <1487044768.6475.1.camel@sandisk.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <6a8ea198-2af0-32cf-1ba8-ad6ac125c254@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
-Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
 
-Bart,
 
-On 2/14/17 12:59, Bart Van Assche wrote:
->>> What software generated a ZBC_IN request with type REQ_TYPE_FS? Shouldn't
->>> all ZBC_IN requests be assigned type REQ_TYPE_BLOCK_PC?
->>
->> Any application that issues a BLKREPORTZONE ioctl (e.g. mkfs.f2fs or
->> libzbc tools) or kernel component calling blkdev_report_zones (e.g.
->> f2fs) will generate one or more REQ_OP_ZONE_REPORT BIO which translate
->> into a REQ_TYPE_FS requests for the command ZBC_IN. That command does
->> not operate on LBAs. The transfer length of the request can be any
->> length larger than 64B and the reply length will be at least 64B and
->> aligned on a multiple of 64.
->>
->> The patch "mpt3sas: Force request partial completion alignment" applied
->> last week forgot this case, and frankly, I did too despite having looked
->> at it.
-> 
-> Hello Damien,
-> 
-> How about modifying the block layer core such that it sets REQ_TYPE_BLOCK_PC
-> for REQ_OP_ZONE_REPORT requests? Would that be a valid alternative to the
-> above patch?
 
-I think so. But my understanding of REQ_TYPE_BLOCK_PC is that it is the
-type for requests issued internally (scsi_execute) of from things like
-the SG driver, so in essence, all requests not derived from a BIO... Is
-this correct ? If yes, then setting the BLOCK_TYPE_PC for
-REQ_OP_ZONE_REPORT (and REQ_OP_ZONE_RESET while at it) would break this
-model, wouldn't it ?
+On 2017年02月14日 01:42, Andy Grover wrote:
+> On 02/12/2017 05:38 PM, Xiubo Li wrote:
+>> On 2017年02月11日 02:02, Andy Grover wrote:
+>>> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB
+>>> to 1GB or larger
+>>> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring
+>>> portion, and dynamically alloc pages for the data area as needed and
+>>> map them into the data area.
+>> Should the data area mapping is dynamical or add one new API to
+>> userspace to trigger it ?
+>
+> I would recommend having the kernel make the decision to allocate/map 
+> more memory, or not (i.e. wait for existing I/O to complete and free 
+> pages) because this avoids the need for a new API, and also the kernel 
+> may better decide how to allocate total pages used across multiple 
+> TCMU devices.
+>
+Yes, agreed.
 
-Best regards.
 
--- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+>>> 4. Implement an algorithm to keep allocated pages mapped into the data
+>>> area for reuse, and maybe a heuristic to keep extreme burstiness from
+>>> over-allocating pages
+>>>
+>> Does a little like slab ?
+>
+> It's definitely becoming less of a storage issue and more of a 
+> page-management issue. It might make sense to look at mm code and ask 
+> mm experts for their advice, yep.
+>
+Sure, i will have a deep investigate about this.
+
+Thanks very much.
+
+BRs
+Xiubo
+
+
+>>> This should allow TCMU to allocate more data area as needed, not waste
+>>> memory for slower devices, and avoid userspace ABI changes. Could we
+>>> prototype this approach and see if it is workable?
+>>>
+>> I will do more investigate about this.
+>
+> Thank you for working to improve this area!
+>
+> Regards -- Andy
+>
