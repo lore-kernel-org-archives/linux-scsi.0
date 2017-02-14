@@ -1,68 +1,79 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for
- ZBC_IN
-Date: Tue, 14 Feb 2017 14:21:37 +0900
-Message-ID: <6cabab36-3865-1465-fae8-69c437602b80@wdc.com>
-References: <20170213051152.27741-1-damien.lemoal@wdc.com>
- <1487012224.2719.3.camel@sandisk.com>
- <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
- <1487044768.6475.1.camel@sandisk.com>
- <bb2092fe-4368-2a7f-3e67-6e8369fb4d56@wdc.com>
- <1487049066.6475.3.camel@sandisk.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Tue, 14 Feb 2017 13:50:46 +0800
+Message-ID: <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+ <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
+ <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=windows-1252; format=flowed
 Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:48372 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751609AbdBNFVs (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 00:21:48 -0500
-In-Reply-To: <1487049066.6475.3.camel@sandisk.com>
+Received: from cmccmta1.chinamobile.com ([221.176.66.79]:35528 "EHLO
+        cmccmta1.chinamobile.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750716AbdBNFus (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 00:50:48 -0500
+In-Reply-To: <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
-Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
-
-Bart,
-
-On 2/14/17 14:11, Bart Van Assche wrote:
-> On Tue, 2017-02-14 at 13:42 +0900, Damien Le Moal wrote:
->> I think so. But my understanding of REQ_TYPE_BLOCK_PC is that it is the
->> type for requests issued internally (scsi_execute) of from things like
->> the SG driver, so in essence, all requests not derived from a BIO... Is
->> this correct ? If yes, then setting the BLOCK_TYPE_PC for
->> REQ_OP_ZONE_REPORT (and REQ_OP_ZONE_RESET while at it) would break this
->> model, wouldn't it ?
-> 
-> Hello Damien,
-> 
-> I think we want to keep the knowledge of which requests have a request size
-> that should be a multiple of the logical block size in the block layer core
-> or in the SCSI core but not in the mpt3sas driver. But I'm not sure what the
-> best approach is to do that. Should we use the request type, should we add a
-> new request attribute or should we add a new function?
-
-I agree. But the mpt3sas patch that introduced the problem is to solve
-problems with a buggy hardware in the first place... A quirck of some
-sort. So do we really need such a big change just the report zones
-exception ? (all other REQ_TYPE_FS commands either have no payload or
-the payload size is LBA aligned)
-
-Martin, James, Hannes,
-
-Please advise ! 4.10 is introducing zoned block device support, and from
-the first release that will be broken with mpt3sas HBAs if we do not
-patch this. Any preferred approach ?
-
-Best regards.
+To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 
 
--- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+>>> Yes I think it's now clear we need more buffer space to avoid
+>>> bottlenecks for high iops. The initial design kept it simple with the
+>>> 1MB vmalloc'd space but anticipated greater would be needed. It should
+>>> not be necessary to change userspace or the TCMU ABI to handle growing
+>>> the buffer for fast devices:
+>>>
+>>> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB
+>>> to 1GB or larger
+>> For the cmd area, set the size to fixed 512M, and data area's size to
+>> fixed 1G, is that okay ?
+>
+> 512M seems a little big for the cmd area... use of the cmd ring should 
+> be much smaller than the data area. Each cmd has a minimum size, but 
+> then to describe an additional page in the iovec[] should be just one 
+> struct iovec (16 bytes?) for each 4K page.
+>
+
+The struct tcmu_cmd_entry {} size is fixed 44 bytes without iovec[], and 
+the size of struct iovec[N] is about 16 bytes * N.
+
+The cmd entry size will be [44B, N *16 + 44B], and the data size will be 
+[0, N * 4096], so the ratio of sizeof(cmd entry): sizeof(entry datas) == 
+(N * 16 + 44)Bytes : (N * 4096)Bytes == (N * 16)/(N * 4096) + 
+44/(N*4096) == 1/256 + 11/(N * 1024).
+When N is bigger, the ratio will be smaller. If N >= 1, the ratio will 
+be [15/1024, 4/1024).
+
+So, that's right, 512M is a little bigger than actually needed, for the 
+safe ratio i think 16/1024 is enough, if the data area is fixed 1G, so 
+the cmd area could be 16M+.
+Or cmd area(64M) + data area(960M) == 1G ?
+
+
+>>> 3. Upgrade the current fixed-size bitmap-based tracking of data area
+>>> to handle the new scheme
+>> The Radix tree will be used to keep the block's index(0 ~
+>> 1G/DATA_BLOCK_SIZE) and physical page mapping relations. Each leaf is
+>> one data block(the size is DATA_BLOCK_SIZE).
+>>
+>> For non-leaf nodes, use the radix tags[0][SLOTs] to indicate wether
+>> slot[SLOTs]'s branch has free(reused the old one or NULL leafs) block
+>> leafs or not.
+>> This could speed the search of the free blocks in data area.
+>
+> Yes I think radix tree is a good place to start.
+>
+Okay.
+
+Thanks,
+
+BRs
+Xiubo
+
+
+> Regards -- Andy
+>
