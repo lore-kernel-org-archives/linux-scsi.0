@@ -1,7 +1,7 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH 5/6] scsi: merge __scsi_execute into scsi_execute
-Date: Tue, 14 Feb 2017 20:15:59 +0100
-Message-ID: <20170214191600.17480-6-hch@lst.de>
+Subject: [PATCH 6/6] scsi: remove scsi_execute_req_flags
+Date: Tue, 14 Feb 2017 20:16:00 +0100
+Message-ID: <20170214191600.17480-7-hch@lst.de>
 References: <20170214191600.17480-1-hch@lst.de>
 Return-path: <linux-block-owner@vger.kernel.org>
 In-Reply-To: <20170214191600.17480-1-hch@lst.de>
@@ -10,302 +10,218 @@ To: axboe@kernek.dk
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 
-All but one caller want the decoded sense header, so offer the existing
-__scsi_execute helper as the public scsi_execute API to simply the
-callers.
+And switch all callers to use scsi_execute instead.
 
 Signed-off-by: Christoph Hellwig <hch@lst.de>
 ---
- drivers/ata/libata-scsi.c         | 12 ++++------
- drivers/scsi/cxlflash/superpipe.c |  8 +++----
- drivers/scsi/cxlflash/vlun.c      |  4 ++--
- drivers/scsi/scsi_lib.c           | 48 +++++++++++++++++----------------------
- drivers/scsi/scsi_transport_spi.c | 24 ++++++++------------
- drivers/scsi/sr_ioctl.c           | 19 +++-------------
- include/scsi/scsi_device.h        |  5 ++--
- 7 files changed, 46 insertions(+), 74 deletions(-)
+ drivers/scsi/device_handler/scsi_dh_alua.c  | 16 ++++++----------
+ drivers/scsi/device_handler/scsi_dh_emc.c   |  7 +++----
+ drivers/scsi/device_handler/scsi_dh_hp_sw.c | 10 ++++------
+ drivers/scsi/device_handler/scsi_dh_rdac.c  |  7 +++----
+ drivers/scsi/scsi_lib.c                     | 11 -----------
+ drivers/scsi/sd.c                           |  9 ++++-----
+ drivers/scsi/ufs/ufshcd.c                   | 10 +++++-----
+ include/scsi/scsi_device.h                  |  8 ++------
+ 8 files changed, 27 insertions(+), 51 deletions(-)
 
-diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
-index c771d4c341ea..0b1e6762c6f9 100644
---- a/drivers/ata/libata-scsi.c
-+++ b/drivers/ata/libata-scsi.c
-@@ -607,6 +607,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
- 	u8 args[4], *argbuf = NULL, *sensebuf = NULL;
- 	int argsize = 0;
- 	enum dma_data_direction data_dir;
-+	struct scsi_sense_hdr sshdr;
- 	int cmd_result;
+diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
+index d704752b6332..48e200102221 100644
+--- a/drivers/scsi/device_handler/scsi_dh_alua.c
++++ b/drivers/scsi/device_handler/scsi_dh_alua.c
+@@ -151,11 +151,9 @@ static int submit_rtpg(struct scsi_device *sdev, unsigned char *buff,
+ 		cdb[1] = MI_REPORT_TARGET_PGS;
+ 	put_unaligned_be32(bufflen, &cdb[6]);
  
- 	if (arg == NULL)
-@@ -655,7 +656,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
- 	/* Good values for timeout and retries?  Values below
- 	   from scsi_ioctl_send_command() for default case... */
- 	cmd_result = scsi_execute(scsidev, scsi_cmd, data_dir, argbuf, argsize,
--				  sensebuf, (10*HZ), 5, 0, NULL);
-+				  sensebuf, &sshdr, (10*HZ), 5, 0, 0, NULL);
+-	return scsi_execute_req_flags(sdev, cdb, DMA_FROM_DEVICE,
+-				      buff, bufflen, sshdr,
+-				      ALUA_FAILOVER_TIMEOUT * HZ,
+-				      ALUA_FAILOVER_RETRIES, NULL,
+-				      req_flags, 0);
++	return scsi_execute(sdev, cdb, DMA_FROM_DEVICE, buff, bufflen, NULL,
++			sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
++			ALUA_FAILOVER_RETRIES, req_flags, 0, NULL);
+ }
  
- 	if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
- 		u8 *desc = sensebuf + 8;
-@@ -664,9 +665,6 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
- 		/* If we set cc then ATA pass-through will cause a
- 		 * check condition even if no error. Filter that. */
- 		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
--			struct scsi_sense_hdr sshdr;
--			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
--					     &sshdr);
- 			if (sshdr.sense_key == RECOVERED_ERROR &&
- 			    sshdr.asc == 0 && sshdr.ascq == 0x1d)
- 				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
-@@ -714,6 +712,7 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
- 	int rc = 0;
- 	u8 scsi_cmd[MAX_COMMAND_SIZE];
- 	u8 args[7], *sensebuf = NULL;
-+	struct scsi_sense_hdr sshdr;
- 	int cmd_result;
+ /*
+@@ -185,11 +183,9 @@ static int submit_stpg(struct scsi_device *sdev, int group_id,
+ 	cdb[1] = MO_SET_TARGET_PGS;
+ 	put_unaligned_be32(stpg_len, &cdb[6]);
  
- 	if (arg == NULL)
-@@ -741,7 +740,7 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
- 	/* Good values for timeout and retries?  Values below
- 	   from scsi_ioctl_send_command() for default case... */
- 	cmd_result = scsi_execute(scsidev, scsi_cmd, DMA_NONE, NULL, 0,
--				sensebuf, (10*HZ), 5, 0, NULL);
-+				sensebuf, &sshdr, (10*HZ), 5, 0, 0, NULL);
+-	return scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
+-				      stpg_data, stpg_len,
+-				      sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
+-				      ALUA_FAILOVER_RETRIES, NULL,
+-				      req_flags, 0);
++	return scsi_execute(sdev, cdb, DMA_TO_DEVICE, stpg_data, stpg_len, NULL,
++			sshdr, ALUA_FAILOVER_TIMEOUT * HZ,
++			ALUA_FAILOVER_RETRIES, req_flags, 0, NULL);
+ }
  
- 	if (driver_byte(cmd_result) == DRIVER_SENSE) {/* sense data available */
- 		u8 *desc = sensebuf + 8;
-@@ -750,9 +749,6 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
- 		/* If we set cc then ATA pass-through will cause a
- 		 * check condition even if no error. Filter that. */
- 		if (cmd_result & SAM_STAT_CHECK_CONDITION) {
--			struct scsi_sense_hdr sshdr;
--			scsi_normalize_sense(sensebuf, SCSI_SENSE_BUFFERSIZE,
--						&sshdr);
- 			if (sshdr.sense_key == RECOVERED_ERROR &&
- 			    sshdr.asc == 0 && sshdr.ascq == 0x1d)
- 				cmd_result &= ~SAM_STAT_CHECK_CONDITION;
-diff --git a/drivers/scsi/cxlflash/superpipe.c b/drivers/scsi/cxlflash/superpipe.c
-index 9636970d9611..005a377a427f 100644
---- a/drivers/scsi/cxlflash/superpipe.c
-+++ b/drivers/scsi/cxlflash/superpipe.c
-@@ -305,6 +305,7 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 	struct cxlflash_cfg *cfg = (struct cxlflash_cfg *)sdev->host->hostdata;
- 	struct device *dev = &cfg->dev->dev;
- 	struct glun_info *gli = lli->parent;
-+	struct scsi_sense_hdr sshdr;
- 	u8 *cmd_buf = NULL;
- 	u8 *scsi_cmd = NULL;
- 	u8 *sense_buf = NULL;
-@@ -332,7 +333,8 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 	/* Drop the ioctl read semahpore across lengthy call */
- 	up_read(&cfg->ioctl_rwsem);
- 	result = scsi_execute(sdev, scsi_cmd, DMA_FROM_DEVICE, cmd_buf,
--			      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES, 0, NULL);
-+			      CMD_BUFSIZE, sense_buf, &sshdr, to, CMD_RETRIES,
-+			      0, 0, NULL);
- 	down_read(&cfg->ioctl_rwsem);
- 	rc = check_state(cfg);
- 	if (rc) {
-@@ -345,10 +347,6 @@ static int read_cap16(struct scsi_device *sdev, struct llun_info *lli)
- 	if (driver_byte(result) == DRIVER_SENSE) {
- 		result &= ~(0xFF<<24); /* DRIVER_SENSE is not an error */
- 		if (result & SAM_STAT_CHECK_CONDITION) {
--			struct scsi_sense_hdr sshdr;
--
--			scsi_normalize_sense(sense_buf, SCSI_SENSE_BUFFERSIZE,
--					    &sshdr);
- 			switch (sshdr.sense_key) {
- 			case NO_SENSE:
- 			case RECOVERED_ERROR:
-diff --git a/drivers/scsi/cxlflash/vlun.c b/drivers/scsi/cxlflash/vlun.c
-index 90c5d7f5278e..6d191db1d874 100644
---- a/drivers/scsi/cxlflash/vlun.c
-+++ b/drivers/scsi/cxlflash/vlun.c
-@@ -454,8 +454,8 @@ static int write_same16(struct scsi_device *sdev,
- 		/* Drop the ioctl read semahpore across lengthy call */
- 		up_read(&cfg->ioctl_rwsem);
- 		result = scsi_execute(sdev, scsi_cmd, DMA_TO_DEVICE, cmd_buf,
--				      CMD_BUFSIZE, sense_buf, to, CMD_RETRIES,
--				      0, NULL);
-+				      CMD_BUFSIZE, sense_buf, NULL, to,
-+				      CMD_RETRIES, 0, 0, NULL);
- 		down_read(&cfg->ioctl_rwsem);
- 		rc = check_state(cfg);
- 		if (rc) {
+ static struct alua_port_group *alua_find_get_pg(char *id_str, size_t id_size,
+diff --git a/drivers/scsi/device_handler/scsi_dh_emc.c b/drivers/scsi/device_handler/scsi_dh_emc.c
+index 4a7679f6c73d..3997f21794df 100644
+--- a/drivers/scsi/device_handler/scsi_dh_emc.c
++++ b/drivers/scsi/device_handler/scsi_dh_emc.c
+@@ -276,10 +276,9 @@ static int send_trespass_cmd(struct scsi_device *sdev,
+ 	BUG_ON((len > CLARIION_BUFFER_SIZE));
+ 	memcpy(csdev->buffer, page22, len);
+ 
+-	err = scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
+-				     csdev->buffer, len, &sshdr,
+-				     CLARIION_TIMEOUT * HZ, CLARIION_RETRIES,
+-				     NULL, req_flags, 0);
++	err = scsi_execute(sdev, cdb, DMA_TO_DEVICE, csdev->buffer, len, NULL,
++			&sshdr, CLARIION_TIMEOUT * HZ, CLARIION_RETRIES,
++			req_flags, 0, NULL);
+ 	if (err) {
+ 		if (scsi_sense_valid(&sshdr))
+ 			res = trespass_endio(sdev, &sshdr);
+diff --git a/drivers/scsi/device_handler/scsi_dh_hp_sw.c b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+index be43c940636d..62d314e07d11 100644
+--- a/drivers/scsi/device_handler/scsi_dh_hp_sw.c
++++ b/drivers/scsi/device_handler/scsi_dh_hp_sw.c
+@@ -100,9 +100,8 @@ static int hp_sw_tur(struct scsi_device *sdev, struct hp_sw_dh_data *h)
+ 		REQ_FAILFAST_DRIVER;
+ 
+ retry:
+-	res = scsi_execute_req_flags(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
+-				     HP_SW_TIMEOUT, HP_SW_RETRIES,
+-				     NULL, req_flags, 0);
++	res = scsi_execute(sdev, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
++			HP_SW_TIMEOUT, HP_SW_RETRIES, req_flags, 0, NULL);
+ 	if (res) {
+ 		if (scsi_sense_valid(&sshdr))
+ 			ret = tur_done(sdev, h, &sshdr);
+@@ -139,9 +138,8 @@ static int hp_sw_start_stop(struct hp_sw_dh_data *h)
+ 		REQ_FAILFAST_DRIVER;
+ 
+ retry:
+-	res = scsi_execute_req_flags(sdev, cmd, DMA_NONE, NULL, 0, &sshdr,
+-				     HP_SW_TIMEOUT, HP_SW_RETRIES,
+-				     NULL, req_flags, 0);
++	res = scsi_execute(sdev, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
++			HP_SW_TIMEOUT, HP_SW_RETRIES, req_flags, 0, NULL);
+ 	if (res) {
+ 		if (!scsi_sense_valid(&sshdr)) {
+ 			sdev_printk(KERN_WARNING, sdev,
+diff --git a/drivers/scsi/device_handler/scsi_dh_rdac.c b/drivers/scsi/device_handler/scsi_dh_rdac.c
+index b64eaae8533d..3cbab8710e58 100644
+--- a/drivers/scsi/device_handler/scsi_dh_rdac.c
++++ b/drivers/scsi/device_handler/scsi_dh_rdac.c
+@@ -555,10 +555,9 @@ static void send_mode_select(struct work_struct *work)
+ 		(char *) h->ctlr->array_name, h->ctlr->index,
+ 		(retry_cnt == RDAC_RETRY_COUNT) ? "queueing" : "retrying");
+ 
+-	if (scsi_execute_req_flags(sdev, cdb, DMA_TO_DEVICE,
+-				   &h->ctlr->mode_select, data_size, &sshdr,
+-				   RDAC_TIMEOUT * HZ,
+-				   RDAC_RETRIES, NULL, req_flags, 0)) {
++	if (scsi_execute(sdev, cdb, DMA_TO_DEVICE, &h->ctlr->mode_select,
++			data_size, NULL, &sshdr, RDAC_TIMEOUT * HZ,
++			RDAC_RETRIES, req_flags, 0, NULL)) {
+ 		err = mode_select_handle_sense(sdev, &sshdr);
+ 		if (err == SCSI_DH_RETRY && retry_cnt--)
+ 			goto retry;
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 35b43a8f1bfa..a15c188c2a7f 100644
+index a15c188c2a7f..e689a358cd05 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -213,7 +213,26 @@ void scsi_queue_insert(struct scsi_cmnd *cmd, int reason)
- 	__scsi_queue_insert(cmd, reason, 1);
+@@ -289,17 +289,6 @@ int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
  }
- 
--static int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
-+
-+/**
-+ * scsi_execute - insert request and wait for the result
-+ * @sdev:	scsi device
-+ * @cmd:	scsi command
-+ * @data_direction: data direction
-+ * @buffer:	data buffer
-+ * @bufflen:	len of buffer
-+ * @sense:	optional sense buffer
-+ * @sshdr:	optional decoded sense header
-+ * @timeout:	request timeout in seconds
-+ * @retries:	number of times to retry request
-+ * @flags:	flags for ->cmd_flags
-+ * @rq_flags:	flags for ->rq_flags
-+ * @resid:	optional residual length
-+ *
-+ * returns the req->errors value which is the scsi_cmnd result
-+ * field.
-+ */
-+int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 		 int data_direction, void *buffer, unsigned bufflen,
- 		 unsigned char *sense, struct scsi_sense_hdr *sshdr,
- 		 int timeout, int retries, u64 flags, req_flags_t rq_flags,
-@@ -268,31 +287,6 @@ static int __scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 
- 	return ret;
- }
--
--/**
-- * scsi_execute - insert request and wait for the result
-- * @sdev:	scsi device
-- * @cmd:	scsi command
-- * @data_direction: data direction
-- * @buffer:	data buffer
-- * @bufflen:	len of buffer
-- * @sense:	optional sense buffer
-- * @timeout:	request timeout in seconds
-- * @retries:	number of times to retry request
-- * @flags:	or into request flags;
-- * @resid:	optional residual length
-- *
-- * returns the req->errors value which is the scsi_cmnd result
-- * field.
-- */
--int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
--		 int data_direction, void *buffer, unsigned bufflen,
--		 unsigned char *sense, int timeout, int retries, u64 flags,
--		 int *resid)
--{
--	return __scsi_execute(sdev, cmd, data_direction, buffer, bufflen, sense,
--			NULL, timeout, retries, flags, 0, resid);
--}
  EXPORT_SYMBOL(scsi_execute);
  
- int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
-@@ -300,7 +294,7 @@ int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
- 		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
- 		     int *resid, u64 flags, req_flags_t rq_flags)
- {
--	return __scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
-+	return scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
- 			      NULL, sshdr, timeout, retries, flags, rq_flags,
- 			      resid);
- }
-diff --git a/drivers/scsi/scsi_transport_spi.c b/drivers/scsi/scsi_transport_spi.c
-index 319868f3f674..d0219e36080c 100644
---- a/drivers/scsi/scsi_transport_spi.c
-+++ b/drivers/scsi/scsi_transport_spi.c
-@@ -123,25 +123,21 @@ static int spi_execute(struct scsi_device *sdev, const void *cmd,
- {
- 	int i, result;
- 	unsigned char sense[SCSI_SENSE_BUFFERSIZE];
-+	struct scsi_sense_hdr sshdr_tmp;
-+
-+	if (!sshdr)
-+		sshdr = &sshdr_tmp;
- 
- 	for(i = 0; i < DV_RETRIES; i++) {
--		result = scsi_execute(sdev, cmd, dir, buffer, bufflen,
--				      sense, DV_TIMEOUT, /* retries */ 1,
-+		result = scsi_execute(sdev, cmd, dir, buffer, bufflen, sense,
-+				      sshdr, DV_TIMEOUT, /* retries */ 1,
- 				      REQ_FAILFAST_DEV |
- 				      REQ_FAILFAST_TRANSPORT |
- 				      REQ_FAILFAST_DRIVER,
--				      NULL);
--		if (driver_byte(result) & DRIVER_SENSE) {
--			struct scsi_sense_hdr sshdr_tmp;
--			if (!sshdr)
--				sshdr = &sshdr_tmp;
+-int scsi_execute_req_flags(struct scsi_device *sdev, const unsigned char *cmd,
+-		     int data_direction, void *buffer, unsigned bufflen,
+-		     struct scsi_sense_hdr *sshdr, int timeout, int retries,
+-		     int *resid, u64 flags, req_flags_t rq_flags)
+-{
+-	return scsi_execute(sdev, cmd, data_direction, buffer, bufflen,
+-			      NULL, sshdr, timeout, retries, flags, rq_flags,
+-			      resid);
+-}
+-EXPORT_SYMBOL(scsi_execute_req_flags);
 -
--			if (scsi_normalize_sense(sense, SCSI_SENSE_BUFFERSIZE,
--						 sshdr)
--			    && sshdr->sense_key == UNIT_ATTENTION)
--				continue;
--		}
--		break;
-+				      0, NULL);
-+		if (!(driver_byte(result) & DRIVER_SENSE) ||
-+		    sshdr->sense_key != UNIT_ATTENTION)
-+			break;
+ /*
+  * Function:    scsi_init_cmd_errh()
+  *
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 11e290d1dbff..817e0aa78f68 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1508,9 +1508,8 @@ static int sd_sync_cache(struct scsi_disk *sdkp)
+ 		 * Leave the rest of the command zero to indicate
+ 		 * flush everything.
+ 		 */
+-		res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0,
+-					     &sshdr, timeout, SD_MAX_RETRIES,
+-					     NULL, 0, RQF_PM);
++		res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
++				timeout, SD_MAX_RETRIES, 0, RQF_PM, NULL);
+ 		if (res == 0)
+ 			break;
  	}
- 	return result;
- }
-diff --git a/drivers/scsi/sr_ioctl.c b/drivers/scsi/sr_ioctl.c
-index dfffdf63e44c..4610c8c5693f 100644
---- a/drivers/scsi/sr_ioctl.c
-+++ b/drivers/scsi/sr_ioctl.c
-@@ -187,30 +187,19 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 	struct scsi_device *SDev;
- 	struct scsi_sense_hdr sshdr;
- 	int result, err = 0, retries = 0;
--	struct request_sense *sense = cgc->sense;
+@@ -3296,8 +3295,8 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+ 	if (!scsi_device_online(sdp))
+ 		return -ENODEV;
  
- 	SDev = cd->device;
- 
--	if (!sense) {
--		sense = kmalloc(SCSI_SENSE_BUFFERSIZE, GFP_KERNEL);
--		if (!sense) {
--			err = -ENOMEM;
--			goto out;
--		}
--	}
--
-       retry:
- 	if (!scsi_block_when_processing_errors(SDev)) {
- 		err = -ENODEV;
+-	res = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-			       SD_TIMEOUT, SD_MAX_RETRIES, NULL, 0, RQF_PM);
++	res = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
++			SD_TIMEOUT, SD_MAX_RETRIES, 0, RQF_PM, NULL);
+ 	if (res) {
+ 		sd_print_result(sdkp, "Start/Stop Unit failed", res);
+ 		if (driver_byte(res) & DRIVER_SENSE)
+diff --git a/drivers/scsi/ufs/ufshcd.c b/drivers/scsi/ufs/ufshcd.c
+index 20e5e5fb048c..9b6956662980 100644
+--- a/drivers/scsi/ufs/ufshcd.c
++++ b/drivers/scsi/ufs/ufshcd.c
+@@ -5859,9 +5859,9 @@ ufshcd_send_request_sense(struct ufs_hba *hba, struct scsi_device *sdp)
  		goto out;
  	}
  
--	memset(sense, 0, sizeof(*sense));
- 	result = scsi_execute(SDev, cgc->cmd, cgc->data_direction,
--			      cgc->buffer, cgc->buflen, (char *)sense,
--			      cgc->timeout, IOCTL_RETRIES, 0, NULL);
--
--	scsi_normalize_sense((char *)sense, sizeof(*sense), &sshdr);
-+			      cgc->buffer, cgc->buflen,
-+			      (unsigned char *)cgc->sense, &sshdr,
-+			      cgc->timeout, IOCTL_RETRIES, 0, 0, NULL);
+-	ret = scsi_execute_req_flags(sdp, cmd, DMA_FROM_DEVICE, buffer,
+-				UFSHCD_REQ_SENSE_SIZE, NULL,
+-				msecs_to_jiffies(1000), 3, NULL, 0, RQF_PM);
++	ret = scsi_execute(sdp, cmd, DMA_FROM_DEVICE, buffer,
++			UFSHCD_REQ_SENSE_SIZE, NULL, NULL,
++			msecs_to_jiffies(1000), 3, 0, RQF_PM, NULL);
+ 	if (ret)
+ 		pr_err("%s: failed with err %d\n", __func__, ret);
  
- 	/* Minimal error checking.  Ignore cases we know about, and report the rest. */
- 	if (driver_byte(result) != 0) {
-@@ -261,8 +250,6 @@ int sr_do_ioctl(Scsi_CD *cd, struct packet_command *cgc)
- 
- 	/* Wake up a process waiting for device */
-       out:
--	if (!cgc->sense)
--		kfree(sense);
- 	cgc->stat = err;
- 	return err;
- }
+@@ -5926,8 +5926,8 @@ static int ufshcd_set_dev_pwr_mode(struct ufs_hba *hba,
+ 	 * callbacks hence set the RQF_PM flag so that it doesn't resume the
+ 	 * already suspended childs.
+ 	 */
+-	ret = scsi_execute_req_flags(sdp, cmd, DMA_NONE, NULL, 0, &sshdr,
+-				     START_STOP_TIMEOUT, 0, NULL, 0, RQF_PM);
++	ret = scsi_execute(sdp, cmd, DMA_NONE, NULL, 0, NULL, &sshdr,
++			START_STOP_TIMEOUT, 0, 0, RQF_PM, NULL);
+ 	if (ret) {
+ 		sdev_printk(KERN_WARNING, sdp,
+ 			    "START_STOP failed for power mode: %d, result %x\n",
 diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 8990e580b278..8c8d243db32b 100644
+index 8c8d243db32b..c741a20f49e6 100644
 --- a/include/scsi/scsi_device.h
 +++ b/include/scsi/scsi_device.h
-@@ -409,8 +409,9 @@ extern int scsi_is_target_device(const struct device *);
- extern void scsi_sanitize_inquiry_string(unsigned char *s, int len);
- extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
- 			int data_direction, void *buffer, unsigned bufflen,
--			unsigned char *sense, int timeout, int retries,
--			u64 flags, int *resid);
-+			unsigned char *sense, struct scsi_sense_hdr *sshdr,
-+			int timeout, int retries, u64 flags,
-+			req_flags_t rq_flags, int *resid);
- extern int scsi_execute_req_flags(struct scsi_device *sdev,
+@@ -412,17 +412,13 @@ extern int scsi_execute(struct scsi_device *sdev, const unsigned char *cmd,
+ 			unsigned char *sense, struct scsi_sense_hdr *sshdr,
+ 			int timeout, int retries, u64 flags,
+ 			req_flags_t rq_flags, int *resid);
+-extern int scsi_execute_req_flags(struct scsi_device *sdev,
+-	const unsigned char *cmd, int data_direction, void *buffer,
+-	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
+-	int retries, int *resid, u64 flags, req_flags_t rq_flags);
+ static inline int scsi_execute_req(struct scsi_device *sdev,
  	const unsigned char *cmd, int data_direction, void *buffer,
  	unsigned bufflen, struct scsi_sense_hdr *sshdr, int timeout,
+ 	int retries, int *resid)
+ {
+-	return scsi_execute_req_flags(sdev, cmd, data_direction, buffer,
+-		bufflen, sshdr, timeout, retries, resid, 0, 0);
++	return scsi_execute(sdev, cmd, data_direction, buffer,
++		bufflen, NULL, sshdr, timeout, retries,  0, 0, resid);
+ }
+ extern void sdev_disable_disk_events(struct scsi_device *sdev);
+ extern void sdev_enable_disk_events(struct scsi_device *sdev);
 -- 
 2.11.0
