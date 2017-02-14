@@ -1,68 +1,41 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Tue, 14 Feb 2017 13:03:40 +0800
-Message-ID: <5a82256f-aa97-53d6-4752-6787bd44500b@cmss.chinamobile.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
- <8f0aad0d-9c55-c004-6882-5a31f0241aef@cmss.chinamobile.com>
- <6a8ea198-2af0-32cf-1ba8-ad6ac125c254@redhat.com>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH 1/1] mpt3sas: Ignore unaligned completion length for
+ ZBC_IN
+Date: Tue, 14 Feb 2017 05:11:30 +0000
+Message-ID: <1487049066.6475.3.camel@sandisk.com>
+References: <20170213051152.27741-1-damien.lemoal@wdc.com>
+         <1487012224.2719.3.camel@sandisk.com>
+         <1f98b2ef-89d6-65e4-6424-c3b4b4cf1b82@wdc.com>
+         <1487044768.6475.1.camel@sandisk.com>
+         <bb2092fe-4368-2a7f-3e67-6e8369fb4d56@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <6a8ea198-2af0-32cf-1ba8-ad6ac125c254@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:8086 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751936AbdBNFLs (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 00:11:48 -0500
+In-Reply-To: <bb2092fe-4368-2a7f-3e67-6e8369fb4d56@wdc.com>
+Content-Language: en-US
+Content-ID: <DC6A790B2023D34897D4B24E1123F09D@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, Damien Le Moal <Damien.LeMoal@wdc.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>
+Cc: "hch@lst.de" <hch@lst.de>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>
 
-
-
-On 2017年02月14日 01:42, Andy Grover wrote:
-> On 02/12/2017 05:38 PM, Xiubo Li wrote:
->> On 2017年02月11日 02:02, Andy Grover wrote:
->>> 1. increase the region mmap()ed by userspace, TCMU_RING_SIZE, from 1MB
->>> to 1GB or larger
->>> 2. Don't vmalloc() the whole thing, instead vmalloc for the cmd ring
->>> portion, and dynamically alloc pages for the data area as needed and
->>> map them into the data area.
->> Should the data area mapping is dynamical or add one new API to
->> userspace to trigger it ?
->
-> I would recommend having the kernel make the decision to allocate/map 
-> more memory, or not (i.e. wait for existing I/O to complete and free 
-> pages) because this avoids the need for a new API, and also the kernel 
-> may better decide how to allocate total pages used across multiple 
-> TCMU devices.
->
-Yes, agreed.
-
-
->>> 4. Implement an algorithm to keep allocated pages mapped into the data
->>> area for reuse, and maybe a heuristic to keep extreme burstiness from
->>> over-allocating pages
->>>
->> Does a little like slab ?
->
-> It's definitely becoming less of a storage issue and more of a 
-> page-management issue. It might make sense to look at mm code and ask 
-> mm experts for their advice, yep.
->
-Sure, i will have a deep investigate about this.
-
-Thanks very much.
-
-BRs
-Xiubo
-
-
->>> This should allow TCMU to allocate more data area as needed, not waste
->>> memory for slower devices, and avoid userspace ABI changes. Could we
->>> prototype this approach and see if it is workable?
->>>
->> I will do more investigate about this.
->
-> Thank you for working to improve this area!
->
-> Regards -- Andy
->
+T24gVHVlLCAyMDE3LTAyLTE0IGF0IDEzOjQyICswOTAwLCBEYW1pZW4gTGUgTW9hbCB3cm90ZToN
+Cj4gSSB0aGluayBzby4gQnV0IG15IHVuZGVyc3RhbmRpbmcgb2YgUkVRX1RZUEVfQkxPQ0tfUEMg
+aXMgdGhhdCBpdCBpcyB0aGUNCj4gdHlwZSBmb3IgcmVxdWVzdHMgaXNzdWVkIGludGVybmFsbHkg
+KHNjc2lfZXhlY3V0ZSkgb2YgZnJvbSB0aGluZ3MgbGlrZQ0KPiB0aGUgU0cgZHJpdmVyLCBzbyBp
+biBlc3NlbmNlLCBhbGwgcmVxdWVzdHMgbm90IGRlcml2ZWQgZnJvbSBhIEJJTy4uLiBJcw0KPiB0
+aGlzIGNvcnJlY3QgPyBJZiB5ZXMsIHRoZW4gc2V0dGluZyB0aGUgQkxPQ0tfVFlQRV9QQyBmb3IN
+Cj4gUkVRX09QX1pPTkVfUkVQT1JUIChhbmQgUkVRX09QX1pPTkVfUkVTRVQgd2hpbGUgYXQgaXQp
+IHdvdWxkIGJyZWFrIHRoaXMNCj4gbW9kZWwsIHdvdWxkbid0IGl0ID8NCg0KSGVsbG8gRGFtaWVu
+LA0KDQpJIHRoaW5rIHdlIHdhbnQgdG8ga2VlcCB0aGUga25vd2xlZGdlIG9mIHdoaWNoIHJlcXVl
+c3RzIGhhdmUgYSByZXF1ZXN0IHNpemUNCnRoYXQgc2hvdWxkIGJlIGEgbXVsdGlwbGUgb2YgdGhl
+IGxvZ2ljYWwgYmxvY2sgc2l6ZSBpbiB0aGUgYmxvY2sgbGF5ZXIgY29yZQ0Kb3IgaW4gdGhlIFND
+U0kgY29yZSBidXQgbm90IGluIHRoZSBtcHQzc2FzIGRyaXZlci4gQnV0IEknbSBub3Qgc3VyZSB3
+aGF0IHRoZQ0KYmVzdCBhcHByb2FjaCBpcyB0byBkbyB0aGF0LiBTaG91bGQgd2UgdXNlIHRoZSBy
+ZXF1ZXN0IHR5cGUsIHNob3VsZCB3ZSBhZGQgYQ0KbmV3IHJlcXVlc3QgYXR0cmlidXRlIG9yIHNo
+b3VsZCB3ZSBhZGQgYSBuZXcgZnVuY3Rpb24/DQoNCkJhcnQu
