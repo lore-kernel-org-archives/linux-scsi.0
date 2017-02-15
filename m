@@ -1,83 +1,58 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH 13/16] aacraid: Reorder Adapter status check
-Date: Tue, 14 Feb 2017 12:44:43 -0800
-Message-ID: <20170214204446.14808-14-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+From: Xiubo Li <lixiubo@cmss.chinamobile.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Wed, 15 Feb 2017 13:46:26 +0800
+Message-ID: <d51bb3d2-a4fe-ba99-8a5a-7d619d3ea5ad@cmss.chinamobile.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+ <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
+ <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
+ <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+ <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-sn1nam02on0045.outbound.protection.outlook.com ([104.47.36.45]:47062
-        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751734AbdBODWn (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Feb 2017 22:22:43 -0500
-In-Reply-To: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=windows-1252; format=flowed
+Content-Transfer-Encoding: 7bit
+Return-path: <target-devel-owner@vger.kernel.org>
+In-Reply-To: <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
+Sender: target-devel-owner@vger.kernel.org
+To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-The driver currently checks the SELF_TEST_FAILED first and then
-KERNEL_PANIC next. Under error conditions(boot code failure) both
-SELF_TEST_FAILED and KERNEL_PANIC can be set at the same time.
+>> The struct tcmu_cmd_entry {} size is fixed 44 bytes without iovec[], and
+>> the size of struct iovec[N] is about 16 bytes * N.
+>>
+>> The cmd entry size will be [44B, N *16 + 44B], and the data size will be
+>> [0, N * 4096], so the ratio of sizeof(cmd entry): sizeof(entry datas) ==
+>> (N * 16 + 44)Bytes : (N * 4096)Bytes == (N * 16)/(N * 4096) +
+>> 44/(N*4096) == 1/256 + 11/(N * 1024).
+>> When N is bigger, the ratio will be smaller. If N >= 1, the ratio will
+>> be [15/1024, 4/1024).
+>>
+>> So, that's right, 512M is a little bigger than actually needed, for the
+>> safe ratio i think 16/1024 is enough, if the data area is fixed 1G, so
+>> the cmd area could be 16M+.
+>> Or cmd area(64M) + data area(960M) == 1G ?
+> Seems like a good ratio. You could look at growing the cmd ring when
+> deciding to allocate more pages for the data area. But, growing the cmd
+> ring is a little trickier (see below) so maybe have a different policy
+> for deciding when & how much to grow.
+>
+> Changing the cmd ring size: Unlike the data area where you can just
+> allocate & map more pages, I think the cmd ring you probably want to
+> complete all I/O, get cmd_head and cmd_tail back to the top with a PAD
+> op, and *then* reallocate/remap the cmd ring and update
+> tcmu_mailbox.cmdr_size.
+Yes, that sounds nice. Growing the cmd area will be much more
+complex, and this could be implemented in the future.
 
-The driver has the capability to reset the controller on an KERNEL_PANIC
-, but not on SELF_TEST_FAILED.
+I will try to implement the following simple new scheme firstly:
+- Fixed cmd area using the vmalloc(), total size will be 64M or 128M(?)
+- Growing data area using kmalloc(DATA_BLOCK_SIZE, GFP_ATOMIC),
+   the maximum total size will be 1G.
 
-Fixed by first checking KERNEL_PANIC and then the others.
+Thanks,
 
-Cc: stable@vger.kernel.org
-Fixes: e8b12f0fb835223752 ([SCSI] aacraid: Add new code for PMC-Sierra's SRC base controller family)
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Reviewed-by: David Carroll <David.Carroll@microsemi.com>
----
- drivers/scsi/aacraid/src.c | 21 +++++++++++++++++----
- 1 file changed, 17 insertions(+), 4 deletions(-)
+BRs
+Xiubo
 
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 5bb9865..0990117 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -437,16 +437,23 @@ static int aac_src_check_health(struct aac_dev *dev)
- 	u32 status = src_readl(dev, MUnit.OMR);
- 
- 	/*
-+	 *	Check to see if the board panic'd.
-+	 */
-+	if (unlikely(status & KERNEL_PANIC))
-+		goto err_blink;
-+
-+	/*
- 	 *	Check to see if the board failed any self tests.
- 	 */
- 	if (unlikely(status & SELF_TEST_FAILED))
--		return -1;
-+		goto err_out;
- 
- 	/*
--	 *	Check to see if the board panic'd.
-+	 *	Check to see if the board failed any self tests.
- 	 */
--	if (unlikely(status & KERNEL_PANIC))
--		return (status >> 16) & 0xFF;
-+	if (unlikely(status & MONITOR_PANIC))
-+		goto err_out;
-+
- 	/*
- 	 *	Wait for the adapter to be up and running.
- 	 */
-@@ -456,6 +463,12 @@ static int aac_src_check_health(struct aac_dev *dev)
- 	 *	Everything is OK
- 	 */
- 	return 0;
-+
-+err_out:
-+	return -1;
-+
-+err_blink:
-+	return (status > 16) & 0xFF;
- }
- 
- static inline u32 aac_get_vector(struct aac_dev *dev)
--- 
-2.7.4
+> Regards -- Andy
