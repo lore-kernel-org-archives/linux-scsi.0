@@ -1,7 +1,7 @@
 From: Sumit Saxena <sumit.saxena@broadcom.com>
 Subject: RE: [PATCH] scsi: megaraid_sas: handle dma_addr_t right on 32-bit
-Date: Wed, 15 Feb 2017 18:40:34 +0530
-Message-ID: <6a7cbc7c266017bbc2f213606f818ae2@mail.gmail.com>
+Date: Wed, 15 Feb 2017 19:45:36 +0530
+Message-ID: <7c7ab3a3b584f363f546baa0d63ae830@mail.gmail.com>
 References: <20170214212238.2696334-1-arnd@arndb.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
@@ -99,8 +99,9 @@ cpu_to_le64((uintptr_t)ptr_sgl_phys);
 >
 > 		sge_addr += mr_nvme_pg_size;
 
-Looks good. Tested and it works as expected.
-Acked-by: Sumit Saxena<sumit.saxena@broadcom.com>
+Patch looks good. In last reply, Acked-by tag was not in proper format.
+Fixing it now. Sorry for inconvenience.
+Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
 
 >--
 >2.9.0
