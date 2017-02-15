@@ -1,57 +1,58 @@
-From: Ram Pai <linuxram@us.ibm.com>
-Subject: Re: [PATCH v4] sd: Check for unaligned partial completion
-Date: Tue, 14 Feb 2017 23:06:09 -0800
-Message-ID: <20170215070609.GB10603@ram.oc3035372033.ibm.com>
-References: <20170215021230.11181-1-damien.lemoal@wdc.com>
- <20170215063454.GA15020@lst.de>
- <9e2ca83a-d355-64f5-5d82-031761134c57@wdc.com>
-Reply-To: Ram Pai <linuxram@us.ibm.com>
+From: Hannes Reinecke <hare@suse.de>
+Subject: Re: [PATCH 1/6] scsi: always zero sshdr in scsi_normalize_sense
+Date: Wed, 15 Feb 2017 08:59:23 +0100
+Message-ID: <247fa6d0-ed72-e89b-ad36-8d004a2c9923@suse.de>
+References: <20170214191600.17480-1-hch@lst.de>
+ <20170214191600.17480-2-hch@lst.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36944 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1750810AbdBOHGY (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 02:06:24 -0500
-Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F74FIM138368
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2017 02:06:23 -0500
-Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28mcwhst15-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2017 02:06:23 -0500
-Received: from localhost
-        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <linuxram@us.ibm.com>;
-        Wed, 15 Feb 2017 00:06:21 -0700
-Content-Disposition: inline
-In-Reply-To: <9e2ca83a-d355-64f5-5d82-031761134c57@wdc.com>
+Received: from mx2.suse.de ([195.135.220.15]:51315 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751290AbdBOH7c (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 02:59:32 -0500
+In-Reply-To: <20170214191600.17480-2-hch@lst.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
+To: Christoph Hellwig <hch@lst.de>, axboe@kernek.dk
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On Wed, Feb 15, 2017 at 03:48:52PM +0900, Damien Le Moal wrote:
-> Christoph,
+On 02/14/2017 08:15 PM, Christoph Hellwig wrote:
+> This gives us a clear state even if a command didn't return sense data.
 > 
-> On 2/15/17 15:34, Christoph Hellwig wrote:
-> > this looks reasonable, but we should ask Guilherme and Ram to confirm
-> > it fixes their originally reported issue.  I've added them to Cc.
+> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  drivers/scsi/scsi_common.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
 > 
-> Thank you.
+> diff --git a/drivers/scsi/scsi_common.c b/drivers/scsi/scsi_common.c
+> index b1383a71400e..a75673bb82b3 100644
+> --- a/drivers/scsi/scsi_common.c
+> +++ b/drivers/scsi/scsi_common.c
+> @@ -137,11 +137,11 @@ EXPORT_SYMBOL(int_to_scsilun);
+>  bool scsi_normalize_sense(const u8 *sense_buffer, int sb_len,
+>  			  struct scsi_sense_hdr *sshdr)
+>  {
+> +	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
+> +
+>  	if (!sense_buffer || !sb_len)
+>  		return false;
+>  
+> -	memset(sshdr, 0, sizeof(struct scsi_sense_hdr));
+> -
+>  	sshdr->response_code = (sense_buffer[0] & 0x7f);
+>  
+>  	if (!scsi_sense_valid(sshdr))
 > 
-> Guilherme, Ram,
-> 
-> Please test ! The original fix breaks the zoned block device support
-> that was newly added to 4.10. So we need a fix for that and your issue
-> combined before Linus releases 4.10 stable this weekend.
+Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Yes logically it looks correct and should fix our issue. 
+Cheers,
 
-I doubt Guilherme has access to the same adapter firmware that exposed
-the original problem. We will probably have to induce the erroneous
-behavior in the driver to reproduce the issue and verify the fix.
-
-Will let you know,
-RP
+Hannes
+-- 
+Dr. Hannes Reinecke		   Teamlead Storage & Networking
+hare@suse.de			               +49 911 74053 688
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+HRB 21284 (AG Nürnberg)
