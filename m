@@ -1,51 +1,117 @@
-From: Andy Grover <agrover@redhat.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Tue, 14 Feb 2017 16:44:57 -0800
-Message-ID: <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
- <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
- <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
- <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: [PATCH v4] sd: Check for unaligned partial completion
+Date: Wed, 15 Feb 2017 11:12:30 +0900
+Message-ID: <20170215021230.11181-1-damien.lemoal@wdc.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:53906 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751238AbdBOAo6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 14 Feb 2017 19:44:58 -0500
-In-Reply-To: <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:54513 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750791AbdBOCOa (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 21:14:30 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Xiubo Li <lixiubo@cmss.chinamobile.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
 
-On 02/13/2017 09:50 PM, Xiubo Li wrote:
-> The struct tcmu_cmd_entry {} size is fixed 44 bytes without iovec[], and
-> the size of struct iovec[N] is about 16 bytes * N.
-> 
-> The cmd entry size will be [44B, N *16 + 44B], and the data size will be
-> [0, N * 4096], so the ratio of sizeof(cmd entry): sizeof(entry datas) ==
-> (N * 16 + 44)Bytes : (N * 4096)Bytes == (N * 16)/(N * 4096) +
-> 44/(N*4096) == 1/256 + 11/(N * 1024).
-> When N is bigger, the ratio will be smaller. If N >= 1, the ratio will
-> be [15/1024, 4/1024).
-> 
-> So, that's right, 512M is a little bigger than actually needed, for the
-> safe ratio i think 16/1024 is enough, if the data area is fixed 1G, so
-> the cmd area could be 16M+.
-> Or cmd area(64M) + data area(960M) == 1G ?
+Commit "mpt3sas: Force request partial completion alignment" was not
+considering the case of REQ_TYPE_FS commands not operating on sector
+size units (e.g. REQ_OP_ZONE_REPORT and its 64B aligned partial
+replies). This could result is incorrectly retrying (forever) those
+commands.
 
-Seems like a good ratio. You could look at growing the cmd ring when
-deciding to allocate more pages for the data area. But, growing the cmd
-ring is a little trickier (see below) so maybe have a different policy
-for deciding when & how much to grow.
+Move the partial completion alignement check of mpt3sas to a generic
+implementation in sd_done so that the check comes after good_bytes and
+resid corrections done in that function depending on the request
+command. The check is added to the initial command switch so that
+commands with special payload size handling are ignored.
 
-Changing the cmd ring size: Unlike the data area where you can just
-allocate & map more pages, I think the cmd ring you probably want to
-complete all I/O, get cmd_head and cmd_tail back to the top with a PAD
-op, and *then* reallocate/remap the cmd ring and update
-tcmu_mailbox.cmdr_size.
+Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
-Regards -- Andy
+---
+
+Changes from v3:
+- Moved check to initial switch-case so that commands with special payload
+  handling are ignored.
+
+Changes from v2:
+- Fixed good_bytes calculation after correction of unaligned resid
+  It should be good_bytes=scsi_buflen() - resid, and not good_bytes-=resid
+
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ---------------
+ drivers/scsi/sd.c                    | 20 ++++++++++++++++++++
+ 2 files changed, 20 insertions(+), 15 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 0b5b423..1961535 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -4658,7 +4658,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data;
+ 	u32 response_code = 0;
+ 	unsigned long flags;
+-	unsigned int sector_sz;
+ 
+ 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
+ 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
+@@ -4717,20 +4716,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
+ 	}
+ 
+ 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
+-
+-	/* In case of bogus fw or device, we could end up having
+-	 * unaligned partial completion. We can force alignment here,
+-	 * then scsi-ml does not need to handle this misbehavior.
+-	 */
+-	sector_sz = scmd->device->sector_size;
+-	if (unlikely(scmd->request->cmd_type == REQ_TYPE_FS && sector_sz &&
+-		     xfer_cnt % sector_sz)) {
+-		sdev_printk(KERN_INFO, scmd->device,
+-		    "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
+-			    xfer_cnt, sector_sz);
+-		xfer_cnt = round_down(xfer_cnt, sector_sz);
+-	}
+-
+ 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
+ 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
+ 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 1f5d92a..d05a328 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -1790,6 +1790,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ {
+ 	int result = SCpnt->result;
+ 	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
++	unsigned int sector_size = SCpnt->device->sector_size;
++	unsigned int resid;
+ 	struct scsi_sense_hdr sshdr;
+ 	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
+ 	struct request *req = SCpnt->request;
+@@ -1820,6 +1822,24 @@ static int sd_done(struct scsi_cmnd *SCpnt)
+ 			scsi_set_resid(SCpnt, blk_rq_bytes(req));
+ 		}
+ 		break;
++	default:
++		/*
++	 	 * In case of bogus fw or device, we could end up having
++	 	 * an unaligned partial completion. Check this here and force
++	 	 * alignment.
++	 	 */
++		resid = scsi_get_resid(SCpnt);
++		if (resid & (sector_size - 1)) {
++			SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
++				"Unaligned partial completion (resid=%u, sector_sz=%u)\n",
++				resid, sector_size));
++			resid = round_up(resid, sector_size);
++			if (resid < good_bytes)
++				good_bytes -= resid;
++			else
++				good_bytes = 0;
++			scsi_set_resid(SCpnt, resid);
++		}
+ 	}
+ 
+ 	if (result) {
+-- 
+2.9.3
