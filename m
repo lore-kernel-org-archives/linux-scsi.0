@@ -1,20 +1,21 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 06/16] aacraid: Added sysfs for driver version
-Date: Wed, 15 Feb 2017 18:12:56 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C180D@avsrvexchmbx2.microsemi.net>
+Subject: RE: [PATCH 12/16] aacraid: Skip IOP reset on controller panic(SMART
+ Family)
+Date: Wed, 15 Feb 2017 18:14:48 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C185A@avsrvexchmbx2.microsemi.net>
 References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
- <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
+ <20170214204446.14808-13-RaghavaAditya.Renukunta@microsemi.com>
+ <a94e11f2-1a59-0454-416b-8a1139cb2794@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="Windows-1252"
 Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0074.outbound.protection.outlook.com ([104.47.38.74]:14112
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:37472
+        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750800AbdBOSNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 13:13:09 -0500
-In-Reply-To: <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
+        id S1751383AbdBOSPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 13:15:12 -0500
+In-Reply-To: <a94e11f2-1a59-0454-416b-8a1139cb2794@suse.de>
 Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
@@ -25,38 +26,61 @@ Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@mic
 
 > -----Original Message-----
 > From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Wednesday, February 15, 2017 12:33 AM
+> Sent: Wednesday, February 15, 2017 12:49 AM
 > To: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
 > martin.petersen@oracle.com; linux-scsi@vger.kernel.org
 > Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
 > <gana.sridaran@microsemi.com>; Scott Benesh
 > <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
-> Subject: Re: [PATCH 06/16] aacraid: Added sysfs for driver version
+> Subject: Re: [PATCH 12/16] aacraid: Skip IOP reset on controller panic(SM=
+ART
+> Family)
 >=20
 > EXTERNAL EMAIL
 >=20
 >=20
 > On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
-> > Added support to retrieve driver version from a new sysfs variable call=
-ed
-> > driver_version. It makes it easier for the user to figure out the drive=
-r
-> > version that is currently running.
+> > When the SMART family of controller panic (KERNEL_PANIC) , they do not
+>                             ^ controllers?                ^ extra space
+> > honor IOP resets. So better to skip it and directly perform a IWBR rese=
+t.
 > >
 > > Signed-off-by: Raghava Aditya Renukunta
 > <RaghavaAditya.Renukunta@microsemi.com>
 > > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 > > ---
+> >  drivers/scsi/aacraid/src.c | 6 ++++++
+> >  1 file changed, 6 insertions(+)
+> >
+> > diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+> > index b23c818..5bb9865 100644
+> > --- a/drivers/scsi/aacraid/src.c
+> > +++ b/drivers/scsi/aacraid/src.c
+> > @@ -714,6 +714,12 @@ static int aac_src_restart_adapter(struct aac_dev
+> *dev, int bled, u8 reset_type)
+> >               pr_err("%s%d: adapter kernel panic'd %x.\n",
+> >                               dev->name, dev->id, bled);
+> >
+> > +     /*
+> > +      * WHen there is a BlinkLED, IOP_RESET has not effect
+>            ^ When
+> > +      */
+> > +     if (bled >=3D 2 && dev->sa_firmware && (reset_type & HW_IOP_RESET=
+))
+>                                              ^ No need for the
+>                                                parenthesis
+> > +             reset_type &=3D ~HW_IOP_RESET;
+> > +
+> >       dev->a_ops.adapter_enable_int =3D aac_src_disable_interrupt;
+> >
+> >       switch (reset_type) {
+> >
 >=20
-> Can't this be retrieved via modinfo?
+> Apart from that,
+> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
-I agree , but it makes it easier to get the driver version when I am develo=
-ping
-and I don't know which driver version is currently loaded
-
-In addition internally our test automation suites use this information as
-opposed to modinfo to get the driver version running.=20
+Yes I will fix this in the next patch set.
 
 Regards,
 Raghava Aditya
