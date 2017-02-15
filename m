@@ -1,37 +1,41 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 2/6] sd: improve TUR handling in sd_check_events
-Date: Wed, 15 Feb 2017 09:00:45 +0100
-Message-ID: <235244db-9821-b6b8-7926-e937a06d25d6@suse.de>
-References: <20170214191600.17480-1-hch@lst.de>
- <20170214191600.17480-3-hch@lst.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 01/16] aacraid: Fix camel case
+Date: Wed, 15 Feb 2017 09:02:14 +0100
+Message-ID: <c248be0f-ac5b-964b-e803-b9a4542a5151@suse.de>
+References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-2-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
-Return-path: <linux-block-owner@vger.kernel.org>
-In-Reply-To: <20170214191600.17480-3-hch@lst.de>
-Sender: linux-block-owner@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, axboe@kernek.dk
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:51405 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1750716AbdBOICQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 03:02:16 -0500
+In-Reply-To: <20170214204446.14808-2-RaghavaAditya.Renukunta@microsemi.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, dan.carpenter@oracle.com
 
-On 02/14/2017 08:15 PM, Christoph Hellwig wrote:
-> Remove bogus evaluations of retval and sshdr when the device is offline,
-> and fix a possible NULL pointer dereference by allocating the 8 byte
-> sized sense header on stack.
+On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
+> Replaced camel case with snake case for init supported options.
 > 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
+> Suggested-by: Johannes Thumshirn <jthumshirn@suse.de>
+> Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+> Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 > ---
->  drivers/scsi/sd.c | 25 +++++++++++--------------
->  1 file changed, 11 insertions(+), 14 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.com>
 
-Cheers,
+\o/
 
-Hannes
+Bonus-points-awarded-by: Johannes Thumshirn <jthumshirn@suse.de>
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
+
 -- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
 SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
 HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
