@@ -1,82 +1,82 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 10/16] aacraid: Terminate kthread on controller fw assert
-Date: Wed, 15 Feb 2017 22:22:46 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C1F6F@avsrvexchmbx2.microsemi.net>
-References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-11-RaghavaAditya.Renukunta@microsemi.com>
- <9d502c4a-a3ad-352e-c3d0-2d08042c5f1b@suse.de>
+From: Himanshu Madhani <himanshu.madhani@cavium.com>
+Subject: [PATCH 1/3] qla2xxx: Cleaned up queue configuration code.
+Date: Wed, 15 Feb 2017 15:37:19 -0800
+Message-ID: <1487201841-28846-2-git-send-email-himanshu.madhani@cavium.com>
+References: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0074.outbound.protection.outlook.com ([104.47.41.74]:10190
+Received: from mail-dm3nam03on0053.outbound.protection.outlook.com ([104.47.41.53]:53222
         "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1752061AbdBOWWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 17:22:49 -0500
-In-Reply-To: <9d502c4a-a3ad-352e-c3d0-2d08042c5f1b@suse.de>
-Content-Language: en-US
+        id S1755406AbdBOXiN (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 18:38:13 -0500
+In-Reply-To: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
+From: Michael Hernandez <michael.hernandez@cavium.com>
 
+This patch cleaned up queue configuration code, such that
+once initialized, we should not touch msix_count value.
+This will prevent incorrect numbers of MSI-X vectors requested
+while performing target mode configuration.
 
-> -----Original Message-----
-> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Wednesday, February 15, 2017 12:44 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
-> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
-> <gana.sridaran@microsemi.com>; Scott Benesh
-> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
-> Subject: Re: [PATCH 10/16] aacraid: Terminate kthread on controller fw
-> assert
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
-> > When the command thread performs a periodic time sync and the
-> firmware is
-> > going through an assert during that time, the command thread waits for
-> the
-> > response that would never arrive. The SCSI Mid layer's error handler wo=
-uld
-> > eventually reset the controller, but the eh_handler just issues a
-> > "thread stop" to the command thread which is stuck on a semaphore and
-> the
-> > eh_thread would in turn goes to sleep waiting for the command_thread to
-> > respond to the stop which never happens.
-> >
-> > Fixed by allowing SIGTERM for the command thread, and during the
-> eh_reset
-> > call, sends termination signal to the command thread. As a follow-up, t=
-he
-> > eh_reset handler would take care of the controller reset.
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
-> > ---
->=20
-> This look a bit scary. Can't the kthread be converted to a workqueue so
-> we could call cancel_work_sync()?
+Fixes: d745952 ("scsi: qla2xxx: Add multiple queue pair functionality.")
+Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
+Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+---
+ drivers/scsi/qla2xxx/qla_os.c | 13 ++++---------
+ 1 file changed, 4 insertions(+), 9 deletions(-)
 
-Could you please elaborate on the reasons why this fix is scary?
-I understand that killing a thread is not standard (for any reason),=20
-and if there are other nuanced issues I would like to understand them.
-
-Thank you,
-Raghava Aditya=20
-
->=20
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d01c90c..8174cee 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1815,6 +1815,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 
+ 	/* Determine queue resources */
+ 	ha->max_req_queues = ha->max_rsp_queues = 1;
++	ha->msix_count = QLA_BASE_VECTORS;
+ 	if (!ql2xmqsupport || (!IS_QLA25XX(ha) && !IS_QLA81XX(ha)))
+ 		goto mqiobase_exit;
+ 
+@@ -1842,9 +1843,8 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 		    "BAR 3 not enabled.\n");
+ 
+ mqiobase_exit:
+-	ha->msix_count = ha->max_rsp_queues + 1;
+ 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x001c,
+-	    "MSIX Count:%d.\n", ha->msix_count);
++	    "MSIX Count: %d.\n", ha->msix_count);
+ 	return (0);
+ 
+ iospace_error_exit:
+@@ -1892,6 +1892,7 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 	/* 83XX 26XX always use MQ type access for queues
+ 	 * - mbar 2, a.k.a region 4 */
+ 	ha->max_req_queues = ha->max_rsp_queues = 1;
++	ha->msix_count = QLA_BASE_VECTORS;
+ 	ha->mqiobase = ioremap(pci_resource_start(ha->pdev, 4),
+ 			pci_resource_len(ha->pdev, 4));
+ 
+@@ -1934,14 +1935,8 @@ uint32_t qla2x00_isp_reg_stat(struct qla_hw_data *ha)
+ 		    "BAR 1 not enabled.\n");
+ 
+ mqiobase_exit:
+-	ha->msix_count = ha->max_rsp_queues + 1;
+-	if (QLA_TGT_MODE_ENABLED())
+-		ha->msix_count++;
+-
+-	qlt_83xx_iospace_config(ha);
+-
+ 	ql_dbg_pci(ql_dbg_init, ha->pdev, 0x011f,
+-	    "MSIX Count:%d.\n", ha->msix_count);
++	    "MSIX Count: %d.\n", ha->msix_count);
+ 	return 0;
+ 
+ iospace_error_exit:
+-- 
+1.8.3.1
