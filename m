@@ -1,94 +1,41 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 12/16] aacraid: Skip IOP reset on controller panic(SMART
- Family)
-Date: Wed, 15 Feb 2017 18:14:48 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C185A@avsrvexchmbx2.microsemi.net>
-References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-13-RaghavaAditya.Renukunta@microsemi.com>
- <a94e11f2-1a59-0454-416b-8a1139cb2794@suse.de>
+From: Bart Van Assche <bart.vanassche@sandisk.com>
+Subject: Re: [PATCH v3 00/16] lpfc: Add NVME Fabrics support
+Date: Wed, 15 Feb 2017 11:52:51 -0800
+Message-ID: <abb0b870-4afd-b2ef-48aa-8184cb74c0e7@sandisk.com>
+References: <58a0d918.RXFImMqrhYsCnA/U%jsmart2021@gmail.com>
+ <3440afa9-9449-3378-6e8f-7cbe8dbb52cf@grimberg.me>
+ <bf3afee6-cd38-86fc-2e12-53df9c731987@gmail.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="windows-1252"
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0087.outbound.protection.outlook.com ([104.47.37.87]:37472
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1751383AbdBOSPM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 13:15:12 -0500
-In-Reply-To: <a94e11f2-1a59-0454-416b-8a1139cb2794@suse.de>
-Content-Language: en-US
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:60814 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750791AbdBOUB7 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 15:01:59 -0500
+In-Reply-To: <bf3afee6-cd38-86fc-2e12-53df9c731987@gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+To: jsmart2021@gmail.com, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
+On 02/15/2017 08:04 AM, James Smart wrote:
+> On 2/15/2017 2:12 AM, Sagi Grimberg wrote:
+>> Also, can you send your patchset threaded? It usually does so
+>> when generating the patches with git format-patch, not sure
+>> how this is not the case with your set... It would make my
+>> life a bit easier.
+> 
+> Well, I am using git format-patch to create them. But have to revert to
+> a manual mailing request as I haven't been able to get git-send-email
+> working past our firewalls.  Sorry.
 
+Hello James,
 
-> -----Original Message-----
-> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Wednesday, February 15, 2017 12:49 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
-> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
-> <gana.sridaran@microsemi.com>; Scott Benesh
-> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
-> Subject: Re: [PATCH 12/16] aacraid: Skip IOP reset on controller panic(SM=
-ART
-> Family)
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
-> > When the SMART family of controller panic (KERNEL_PANIC) , they do not
->                             ^ controllers?                ^ extra space
-> > honor IOP resets. So better to skip it and directly perform a IWBR rese=
-t.
-> >
-> > Signed-off-by: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
-> > ---
-> >  drivers/scsi/aacraid/src.c | 6 ++++++
-> >  1 file changed, 6 insertions(+)
-> >
-> > diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> > index b23c818..5bb9865 100644
-> > --- a/drivers/scsi/aacraid/src.c
-> > +++ b/drivers/scsi/aacraid/src.c
-> > @@ -714,6 +714,12 @@ static int aac_src_restart_adapter(struct aac_dev
-> *dev, int bled, u8 reset_type)
-> >               pr_err("%s%d: adapter kernel panic'd %x.\n",
-> >                               dev->name, dev->id, bled);
-> >
-> > +     /*
-> > +      * WHen there is a BlinkLED, IOP_RESET has not effect
->            ^ When
-> > +      */
-> > +     if (bled >=3D 2 && dev->sa_firmware && (reset_type & HW_IOP_RESET=
-))
->                                              ^ No need for the
->                                                parenthesis
-> > +             reset_type &=3D ~HW_IOP_RESET;
-> > +
-> >       dev->a_ops.adapter_enable_int =3D aac_src_disable_interrupt;
-> >
-> >       switch (reset_type) {
-> >
->=20
-> Apart from that,
-> Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+In the headers of your patch e-mails I found the following: "User-Agent:
+Heirloom mailx 12.5 6/20/10". As far as I know the transports supported
+by that e-mail client are IMAP, POP3 and SMTP. I think git supports both
+SMTP and IMAP for sending e-mails.
 
-Yes I will fix this in the next patch set.
+Thanks,
 
-Regards,
-Raghava Aditya
-
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Bart.
