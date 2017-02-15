@@ -1,102 +1,62 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: [PATCH 05/16] aacraid: Fix memory leak in fib init path
-Date: Wed, 15 Feb 2017 18:08:53 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C17D1@avsrvexchmbx2.microsemi.net>
-References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-6-RaghavaAditya.Renukunta@microsemi.com>
- <23eeae24-16d7-1671-2fde-edb17305574a@suse.de>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCH] scsi, block: fix memory leak of sdpk on when gd fails
+ to allocate
+Date: Wed, 15 Feb 2017 18:03:09 +0000
+Message-ID: <1487181776.2666.7.camel@sandisk.com>
+References: <20170203193854.6782-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="Windows-1252"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0086.outbound.protection.outlook.com ([104.47.34.86]:58080
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1750767AbdBOSJb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 13:09:31 -0500
-In-Reply-To: <23eeae24-16d7-1671-2fde-edb17305574a@suse.de>
+Received: from esa2.hgst.iphmx.com ([68.232.143.124]:21661 "EHLO
+        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750806AbdBOSLl (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 13:11:41 -0500
+In-Reply-To: <20170203193854.6782-1-colin.king@canonical.com>
 Content-Language: en-US
+Content-ID: <2DA25FC9E4D29546A76B8CA45B3A0C83@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
+To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "colin.king@canonical.com" <colin.king@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
 
+On Fri, 2017-02-03 at 19:38 +0000, Colin King wrote:
+> From: Colin Ian King <colin.king@canonical.com>
+> 
+> On an allocation failure of gd, the current exit path is via out_free_devt
+> which leaves sdpk still allocated and hence it gets leaked. Fix this by
+> correcting the order of resource free'ing with a change in the error exit
+> path labels.
+> 
+> Detected by CoverityScan, CID#1399519 ("Resource Leak")
+> 
+> Fixes: 0dba1314d4f81115dc ("scsi, block: fix duplicate bdi name registration crashes")
+> Signed-off-by: Colin Ian King <colin.king@canonical.com>
+> ---
+>  drivers/scsi/sd.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index cb6e68d..99e1206 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -3213,10 +3213,10 @@ static int sd_probe(struct device *dev)
+>  	sd_devt = NULL;
+>   out_put:
+>  	put_disk(gd);
+> - out_free:
+> -	kfree(sdkp);
+>   out_free_devt:
+>  	kfree(sd_devt);
+> + out_free:
+> +	kfree(sdkp);
+>   out:
+>  	scsi_autopm_put_device(sdp);
+>  	return error;
 
+Hello Colin,
 
-> -----Original Message-----
-> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
-> Sent: Wednesday, February 15, 2017 12:32 AM
-> To: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
-> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
-> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
-> <gana.sridaran@microsemi.com>; Scott Benesh
-> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
-> Subject: Re: [PATCH 05/16] aacraid: Fix memory leak in fib init path
->=20
-> EXTERNAL EMAIL
->=20
->=20
-> On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
-> > aac_fib_map_free frees misaligned fib dma memory, additionally it does
-> not
-> > free up the whole memory.
-> >
-> > Fixed by changing the  code to free up the correct and full memory
-> > allocation.
-> >
-> > Cc: stable@vger.kernel.org
-> > Fixes: e8b12f0fb835223 ([SCSI] aacraid: Add new code for PMC-Sierra's S=
-RC
-> based controller family)
-> > Signed-off-by: Raghava Aditya Renukunta
-> <RaghavaAditya.Renukunta@microsemi.com>
-> > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
-> > ---
-> >  drivers/scsi/aacraid/commsup.c | 20 +++++++++-----------
-> >  1 file changed, 9 insertions(+), 11 deletions(-)
-> >
-> > diff --git a/drivers/scsi/aacraid/commsup.c
-> b/drivers/scsi/aacraid/commsup.c
-> > index f7a3bcb..863c98d 100644
-> > --- a/drivers/scsi/aacraid/commsup.c
-> > +++ b/drivers/scsi/aacraid/commsup.c
-> > @@ -97,8 +97,8 @@ void aac_fib_map_free(struct aac_dev *dev)
-> >  {
-> >       if (dev->hw_fib_va && dev->max_cmd_size) {
-> >               pci_free_consistent(dev->pdev,
-> > -             (dev->max_cmd_size *
-> > -             (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB)),
-> > +             (dev->max_cmd_size + sizeof(struct aac_fib_xporthdr))
-> > +             * (dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB) + 31,
-> >               dev->hw_fib_va, dev->hw_fib_pa);
->=20
-> Can you please do something like:
->=20
-> size_t alloc_size;
-> int numtags;
->=20
-> numtags =3D dev->scsi_host_ptr->can_queue + AAC_NUM_MGT_FIB;
-> alloc_size =3D (dev->max_cmd_size + sizeof(struct aac_fib_xporthdr)) *
->                 numtags + 31;
-> pci_free_consistent(dev->pdev, alloc_size, dev->hw_fib_va,
->                     dev->hw_fib_pa);
->=20
-> And please indent correctly. If it indentation doesn't work correctly
-> because you hit the 80 chars limit, that's a sign something should be
-> reconsidered.
+This patch looks fine to me. But since it is a fix for a patch that exists
+in Jens' tree and that is not yet upstream, please resubmit it to Jens.
 
-Yes, I will rework this.=20
-
-Regards,
-Raghava Aditya
-
-> Thanks,
->         Johannes
-> --
-> Johannes Thumshirn                                          Storage
-> jthumshirn@suse.de                                +49 911 74053 689
-> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
-> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
-> HRB 21284 (AG N=FCrnberg)
-> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
+Bart.
