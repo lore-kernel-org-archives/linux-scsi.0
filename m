@@ -1,50 +1,142 @@
-From: Sumit Saxena <sumit.saxena@broadcom.com>
-Subject: RE: [patch] scsi: megaraid_sas: array overflow in megasas_dump_frame()
-Date: Wed, 15 Feb 2017 19:47:04 +0530
-Message-ID: <88e4e1cf9306d5f0db1b7e24e4c4a6f7@mail.gmail.com>
-References: <20170214163855.GA1687@mwanda>
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
+Subject: [PATCH V5 0/2] Add QLogic FastLinQ FCoE (qedf) driver
+Date: Wed, 15 Feb 2017 06:28:21 -0800
+Message-ID: <1487168903-16646-1-git-send-email-chad.dupuis@cavium.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <kernel-janitors-owner@vger.kernel.org>
-In-Reply-To: <20170214163855.GA1687@mwanda>
-Sender: kernel-janitors-owner@vger.kernel.org
-To: Dan Carpenter <dan.carpenter@oracle.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Shivasharan Srikanteshwara <shivasharan.srikanteshwara@broadcom.com>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org, kernel-janitors@vger.kernel.org
+Content-Type: text/plain
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-sn1nam02on0071.outbound.protection.outlook.com ([104.47.36.71]:58880
+        "EHLO NAM02-SN1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1751562AbdBOO22 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 09:28:28 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, fcoe-devel@open-fcoe.org, netdev@vger.kernel.org, yuval.mintz@cavium.com, QLogic-Storage-Upstream@cavium.com
 
->-----Original Message-----
->From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
->Sent: Tuesday, February 14, 2017 10:09 PM
->To: Kashyap Desai; Shivasharan S
->Cc: Sumit Saxena; James E.J. Bottomley; Martin K. Petersen;
->megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org; kernel-
->janitors@vger.kernel.org
->Subject: [patch] scsi: megaraid_sas: array overflow in
-megasas_dump_frame()
->
->The "sz" variable is in terms of bytes, but we're treating the buffer as
-an array of
->__le32 so we have to divide by 4.
->
->Fixes: def0eab3af86 ("scsi: megaraid_sas: enhance debug logs in OCR
-context")
->Signed-off-by: Dan Carpenter <dan.carpenter@oracle.com>
->
->diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c
->b/drivers/scsi/megaraid/megaraid_sas_base.c
->index dc9f42e135bb..7ac9a9ee9bd4 100644
->--- a/drivers/scsi/megaraid/megaraid_sas_base.c
->+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
->@@ -2754,7 +2754,7 @@ megasas_dump_frame(void *mpi_request, int sz)
-> 	__le32 *mfp = (__le32 *)mpi_request;
->
-> 	printk(KERN_INFO "IO request frame:\n\t");
->-	for (i = 0; i < sz; i++) {
->+	for (i = 0; i < sz / sizeof(__le32); i++) {
-> 		if (i && ((i % 8) == 0))
-> 			printk("\n\t");
-> 		printk("%08x ", le32_to_cpu(mfp[i]));
+From: "Dupuis, Chad" <chad.dupuis@cavium.com>
 
-Patch looks good. In last reply, Acked-by tag was not in proper format.
-Fixing it now. Sorry for inconvenience.
-Acked-by: Sumit Saxena <sumit.saxena@broadcom.com>
+Dave, please apply the qed patch to net-next at your earliest convenience.
+Martin, the qed patch needs to be applied first as the qedf patch is dependent
+on the FCoE bits in the first qed driver patch.
+
+This series introduces the hardware offload FCoE initiator driver for the
+41000 Series Converged Network Adapters (579xx chip) by Cavium. The overall
+driver design includes a common module ('qed') and protocol specific
+dependent modules ('qedf' for FCoE).
+
+This driver uses the kernel components of libfc and libfcoe as is and does not
+make use of the open-fcoe user space components.  Therefore, no changes will need to be
+made to any open-fcoe components.
+
+The 'qed' common module, under drivers/net/ethernet/qlogic/qed/, is
+enhanced with functionality required for FCoE support.
+
+Changes from V4 -> V5
+
+- Fix code alignment, function and variable formatting based on review comments
+  in qed patch
+
+Changes from V3 -> V4
+
+- Minor update to banner text in qed_fcoe.c|h files
+- Fix kbuild robot error on 32-bit systems in qedf
+- Remove unneeded double memcpy for offloaded ELS commands in qedf
+
+Changes from V2 -> V3
+
+- Fix uninitialized variables reported by kbuild robot in qedf
+- Remove superfluous comments from qedf.h
+- Introduce new qedf_ctx flag to different stopping I/O for debug purposes.
+- Don't take lport->disc.disc_mutex when restarting an rport.
+- Remove extra whitespace in qedf_hsi.h
+
+Changes from V1 -> V2
+
+Changes in qed:
+- Fix compiler warning when CONFIG_DCB is not set.
+
+Fixes in qedf:
+- Add qedf to scsi directory Makefile.
+- Updates to convert LightL2 and I/O processing kthreads to workqueues.
+
+Changes from RFC -> V1
+
+- Squash qedf patches to one patch now that the initial review has taken place
+- Convert qedf to use hotplug state machine
+- Return via va_end to match corresponding va_start in logging functions
+- Convert qedf_ctx offloaded port list to a RCU list so searches do not need
+  to make use of spinlocks.  Also eliminates the need to fcport conn_id's.
+- Use IS_ERR(fp) in qedf_flogi_resp() instead of checking individual FC_EX_* errors.
+- Remove scsi_block_target when executing TMF request.
+- Checkpatch fixes in the qed and qedf patches
+
+Arun Easi (1):
+  qed: Add support for hardware offloaded FCoE.
+
+Dupuis, Chad (1):
+  qedf: Add QLogic FastLinQ offload FCoE driver framework.
+
+ MAINTAINERS                                       |    6 +
+ drivers/net/ethernet/qlogic/Kconfig               |    3 +
+ drivers/net/ethernet/qlogic/qed/Makefile          |    1 +
+ drivers/net/ethernet/qlogic/qed/qed.h             |   11 +
+ drivers/net/ethernet/qlogic/qed/qed_cxt.c         |   98 +-
+ drivers/net/ethernet/qlogic/qed/qed_cxt.h         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.c        |   13 +-
+ drivers/net/ethernet/qlogic/qed/qed_dcbx.h        |    5 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev.c         |  205 +-
+ drivers/net/ethernet/qlogic/qed/qed_dev_api.h     |   42 +
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.c        | 1014 +++++++
+ drivers/net/ethernet/qlogic/qed/qed_fcoe.h        |   87 +
+ drivers/net/ethernet/qlogic/qed/qed_hsi.h         |  781 ++++-
+ drivers/net/ethernet/qlogic/qed/qed_hw.c          |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.c         |   25 +
+ drivers/net/ethernet/qlogic/qed/qed_ll2.h         |    2 +-
+ drivers/net/ethernet/qlogic/qed/qed_main.c        |    7 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.c         |    3 +
+ drivers/net/ethernet/qlogic/qed/qed_mcp.h         |    1 +
+ drivers/net/ethernet/qlogic/qed/qed_reg_addr.h    |    8 +
+ drivers/net/ethernet/qlogic/qed/qed_sp.h          |    4 +
+ drivers/net/ethernet/qlogic/qed/qed_sp_commands.c |    3 +
+ drivers/scsi/Kconfig                              |    1 +
+ drivers/scsi/Makefile                             |    1 +
+ drivers/scsi/qedf/Kconfig                         |   11 +
+ drivers/scsi/qedf/Makefile                        |    5 +
+ drivers/scsi/qedf/qedf.h                          |  545 ++++
+ drivers/scsi/qedf/qedf_attr.c                     |  165 +
+ drivers/scsi/qedf/qedf_dbg.c                      |  195 ++
+ drivers/scsi/qedf/qedf_dbg.h                      |  154 +
+ drivers/scsi/qedf/qedf_debugfs.c                  |  460 +++
+ drivers/scsi/qedf/qedf_els.c                      |  949 ++++++
+ drivers/scsi/qedf/qedf_fip.c                      |  269 ++
+ drivers/scsi/qedf/qedf_hsi.h                      |  422 +++
+ drivers/scsi/qedf/qedf_io.c                       | 2282 ++++++++++++++
+ drivers/scsi/qedf/qedf_main.c                     | 3336 +++++++++++++++++++++
+ drivers/scsi/qedf/qedf_version.h                  |   15 +
+ include/linux/qed/common_hsi.h                    |   10 +-
+ include/linux/qed/fcoe_common.h                   |  715 +++++
+ include/linux/qed/qed_fcoe_if.h                   |  145 +
+ include/linux/qed/qed_if.h                        |   41 +-
+ 41 files changed, 12027 insertions(+), 19 deletions(-)
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.c
+ create mode 100644 drivers/net/ethernet/qlogic/qed/qed_fcoe.h
+ create mode 100644 drivers/scsi/qedf/Kconfig
+ create mode 100644 drivers/scsi/qedf/Makefile
+ create mode 100644 drivers/scsi/qedf/qedf.h
+ create mode 100644 drivers/scsi/qedf/qedf_attr.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.c
+ create mode 100644 drivers/scsi/qedf/qedf_dbg.h
+ create mode 100644 drivers/scsi/qedf/qedf_debugfs.c
+ create mode 100644 drivers/scsi/qedf/qedf_els.c
+ create mode 100644 drivers/scsi/qedf/qedf_fip.c
+ create mode 100644 drivers/scsi/qedf/qedf_hsi.h
+ create mode 100644 drivers/scsi/qedf/qedf_io.c
+ create mode 100644 drivers/scsi/qedf/qedf_main.c
+ create mode 100644 drivers/scsi/qedf/qedf_version.h
+ create mode 100644 include/linux/qed/fcoe_common.h
+ create mode 100644 include/linux/qed/qed_fcoe_if.h
+
+-- 
+1.8.5.6
