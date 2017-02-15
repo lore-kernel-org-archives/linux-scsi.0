@@ -1,62 +1,70 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
-Subject: Re: [PATCH] scsi, block: fix memory leak of sdpk on when gd fails
- to allocate
-Date: Wed, 15 Feb 2017 18:03:09 +0000
-Message-ID: <1487181776.2666.7.camel@sandisk.com>
-References: <20170203193854.6782-1-colin.king@canonical.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 06/16] aacraid: Added sysfs for driver version
+Date: Wed, 15 Feb 2017 18:12:56 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C180D@avsrvexchmbx2.microsemi.net>
+References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
+ <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:21661 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750806AbdBOSLl (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 13:11:41 -0500
-In-Reply-To: <20170203193854.6782-1-colin.king@canonical.com>
+Received: from mail-bl2nam02on0074.outbound.protection.outlook.com ([104.47.38.74]:14112
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1750800AbdBOSNJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 13:13:09 -0500
+In-Reply-To: <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
 Content-Language: en-US
-Content-ID: <2DA25FC9E4D29546A76B8CA45B3A0C83@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "colin.king@canonical.com" <colin.king@canonical.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "axboe@fb.com" <axboe@fb.com>, "kernel-janitors@vger.kernel.org" <kernel-janitors@vger.kernel.org>
+To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 
-On Fri, 2017-02-03 at 19:38 +0000, Colin King wrote:
-> From: Colin Ian King <colin.king@canonical.com>
-> 
-> On an allocation failure of gd, the current exit path is via out_free_devt
-> which leaves sdpk still allocated and hence it gets leaked. Fix this by
-> correcting the order of resource free'ing with a change in the error exit
-> path labels.
-> 
-> Detected by CoverityScan, CID#1399519 ("Resource Leak")
-> 
-> Fixes: 0dba1314d4f81115dc ("scsi, block: fix duplicate bdi name registration crashes")
-> Signed-off-by: Colin Ian King <colin.king@canonical.com>
-> ---
->  drivers/scsi/sd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index cb6e68d..99e1206 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3213,10 +3213,10 @@ static int sd_probe(struct device *dev)
->  	sd_devt = NULL;
->   out_put:
->  	put_disk(gd);
-> - out_free:
-> -	kfree(sdkp);
->   out_free_devt:
->  	kfree(sd_devt);
-> + out_free:
-> +	kfree(sdkp);
->   out:
->  	scsi_autopm_put_device(sdp);
->  	return error;
 
-Hello Colin,
 
-This patch looks fine to me. But since it is a fix for a patch that exists
-in Jens' tree and that is not yet upstream, please resubmit it to Jens.
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Wednesday, February 15, 2017 12:33 AM
+> To: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
+> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
+> <gana.sridaran@microsemi.com>; Scott Benesh
+> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
+> Subject: Re: [PATCH 06/16] aacraid: Added sysfs for driver version
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
+> > Added support to retrieve driver version from a new sysfs variable call=
+ed
+> > driver_version. It makes it easier for the user to figure out the drive=
+r
+> > version that is currently running.
+> >
+> > Signed-off-by: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>
+> > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
+> > ---
+>=20
+> Can't this be retrieved via modinfo?
 
-Bart.
+I agree , but it makes it easier to get the driver version when I am develo=
+ping
+and I don't know which driver version is currently loaded
+
+In addition internally our test automation suites use this information as
+opposed to modinfo to get the driver version running.=20
+
+Regards,
+Raghava Aditya
+
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
