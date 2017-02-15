@@ -1,75 +1,88 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH 3/3] qla2xxx: Fix Regression introduced by pci_alloc_irq_vectors_affinity call.
-Date: Wed, 15 Feb 2017 15:37:21 -0800
-Message-ID: <1487201841-28846-4-git-send-email-himanshu.madhani@cavium.com>
-References: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
+From: Ben Hutchings <ben@decadent.org.uk>
+Subject: [PATCH 3.16 226/306] scsi: mpt3sas: Fix secure erase premature
+ termination
+Date: Wed, 15 Feb 2017 22:41:40 +0000
+Message-ID: <lsq.1487198500.941983510@decadent.org.uk>
+References: <lsq.1487198498.99718322@decadent.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0076.outbound.protection.outlook.com ([104.47.34.76]:21408
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755553AbdBOXi3 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 18:38:29 -0500
-In-Reply-To: <1487201841-28846-1-git-send-email-himanshu.madhani@cavium.com>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <lsq.1487198498.99718322@decadent.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
+Cc: akpm@linux-foundation.org, Andrey Grodzovsky <andrey2805@gmail.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, Chaitra P B <chaitra.basappa@broadcom.com>
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
+3.16.40-rc1 review patch.  If anyone has any objections, please let me know.
 
-For target mode, we need to increase minimum vectors value by one to
-account for ATIO queue.
+------------------
 
-Following stack trace will be seen
+From: Andrey Grodzovsky <andrey2805@gmail.com>
 
-Call Trace:
-qla24xx_config_rings+0x15a/0x230 [qla2xxx]
-qla2x00_init_rings+0x1a1/0x3a0 [qla2xxx]
-qla2x00_restart_isp+0x5c/0x120 [qla2xxx]
-qla2x00_abort_isp+0x138/0x430 [qla2xxx]
-? __schedule+0x260/0x580
-qla2x00_do_dpc+0x3bc/0x920 [qla2xxx]
-? qla2x00_relogin+0x290/0x290 [qla2xxx]
-? schedule+0x3a/0xa0
-? qla2x00_relogin+0x290/0x290 [qla2xxx]
-kthread+0x103/0x140
-? __kthread_init_worker+0x40/0x40
-ret_from_fork+0x29/0x40
+commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
 
-RIP: qlt_24xx_config_rings+0x6c/0x90
+This is a work around for a bug with LSI Fusion MPT SAS2 when perfoming
+secure erase. Due to the very long time the operation takes, commands
+issued during the erase will time out and will trigger execution of the
+abort hook. Even though the abort hook is called for the specific
+command which timed out, this leads to entire device halt
+(scsi_state terminated) and premature termination of the secure erase.
 
-Fixes: 17e5fc5 ("scsi: qla2xxx: fix MSI-X vector affinity")
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
+Set device state to busy while ATA passthrough commands are in progress.
+
+[mkp: hand applied to 4.9/scsi-fixes, tweaked patch description]
+
+Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
+Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Cc: <linux-scsi@vger.kernel.org>
+Cc: Sathya Prakash <sathya.prakash@broadcom.com>
+Cc: Chaitra P B <chaitra.basappa@broadcom.com>
+Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
+Cc: Hannes Reinecke <hare@suse.de>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
 ---
- drivers/scsi/qla2xxx/qla_isr.c | 7 +++++--
- 1 file changed, 5 insertions(+), 2 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 6e0a0f1..6b324ac 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -3013,14 +3013,17 @@ struct qla_init_msix_entry {
- 	int i, ret;
- 	struct qla_msix_entry *qentry;
- 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
-+	int min_vecs = QLA_BASE_VECTORS;
- 	struct irq_affinity desc = {
- 		.pre_vectors = QLA_BASE_VECTORS,
- 	};
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -1625,7 +1625,10 @@ _scsih_get_volume_capabilities(struct MP
+ 	return 0;
+ }
  
--	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha))
-+	if (QLA_TGT_MODE_ENABLED() && IS_ATIO_MSIX_CAPABLE(ha)) {
- 		desc.pre_vectors++;
-+		min_vecs++;
-+	}
+-
++static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
++{
++	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
++}
  
--	ret = pci_alloc_irq_vectors_affinity(ha->pdev, QLA_BASE_VECTORS,
-+	ret = pci_alloc_irq_vectors_affinity(ha->pdev, min_vecs,
- 			ha->msix_count, PCI_IRQ_MSIX | PCI_IRQ_AFFINITY,
- 			&desc);
+ /**
+  * _scsih_enable_tlr - setting TLR flags
+@@ -3541,6 +3544,13 @@ _scsih_qcmd(struct Scsi_Host *shost, str
+ 		scsi_print_command(scmd);
+ #endif
  
--- 
-1.8.3.1
++	/*
++	 * Lock the device for any subsequent command until command is
++	 * done.
++	 */
++	if (ata_12_16_cmd(scmd))
++		scsi_internal_device_block(scmd->device);
++
+ 	sas_device_priv_data = scmd->device->hostdata;
+ 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
+ 		scmd->result = DID_NO_CONNECT << 16;
+@@ -4041,6 +4051,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *i
+ 	if (scmd == NULL)
+ 		return 1;
+ 
++	if (ata_12_16_cmd(scmd))
++		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
++
+ 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
+ 
+ 	if (mpi_reply == NULL) {
