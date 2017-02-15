@@ -1,130 +1,57 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH] sg: protect access to to 'reserved' page array
-Date: Wed, 15 Feb 2017 07:54:57 +0100
-Message-ID: <f6ddac63-aa69-6210-fd6f-fed0d2e52441@suse.de>
-References: <1485948135-83249-1-git-send-email-hare@suse.de>
- <20170201131247.GA5384@lst.de> <4c9af917-79db-67e4-d28c-c30009756a0c@suse.de>
- <CACT4Y+Ywna_Bb6WWEC9kHEt=uCdiTaYtS5ZWaVkeVTN9Q0wzJg@mail.gmail.com>
+From: Ram Pai <linuxram@us.ibm.com>
+Subject: Re: [PATCH v4] sd: Check for unaligned partial completion
+Date: Tue, 14 Feb 2017 23:06:09 -0800
+Message-ID: <20170215070609.GB10603@ram.oc3035372033.ibm.com>
+References: <20170215021230.11181-1-damien.lemoal@wdc.com>
+ <20170215063454.GA15020@lst.de>
+ <9e2ca83a-d355-64f5-5d82-031761134c57@wdc.com>
+Reply-To: Ram Pai <linuxram@us.ibm.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:49053 "EHLO mx2.suse.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750810AbdBOGzB (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 01:55:01 -0500
-In-Reply-To: <CACT4Y+Ywna_Bb6WWEC9kHEt=uCdiTaYtS5ZWaVkeVTN9Q0wzJg@mail.gmail.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:36944 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1750810AbdBOHGY (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 02:06:24 -0500
+Received: from pps.filterd (m0098404.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1F74FIM138368
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2017 02:06:23 -0500
+Received: from e36.co.us.ibm.com (e36.co.us.ibm.com [32.97.110.154])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28mcwhst15-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Wed, 15 Feb 2017 02:06:23 -0500
+Received: from localhost
+        by e36.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <linuxram@us.ibm.com>;
+        Wed, 15 Feb 2017 00:06:21 -0700
+Content-Disposition: inline
+In-Reply-To: <9e2ca83a-d355-64f5-5d82-031761134c57@wdc.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Dmitry Vyukov <dvyukov@google.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi <linux-scsi@vger.kernel.org>, Johannes Thumshirn <jth@kernel.org>, stable <stable@vger.kernel.org>, Hannes Reinecke <hare@suse.com>
+To: Damien Le Moal <damien.lemoal@wdc.com>
+Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
 
-On 02/14/2017 09:48 PM, Dmitry Vyukov wrote:
-> On Wed, Feb 1, 2017 at 2:21 PM, Hannes Reinecke <hare@suse.de> wrote:
->> On 02/01/2017 02:12 PM, Christoph Hellwig wrote:
->>> On Wed, Feb 01, 2017 at 12:22:15PM +0100, Hannes Reinecke wrote:
->>>> The 'reserved' page array is used as a short-cut for mapping
->>>> data, saving us to allocate pages per request.
->>>> However, the 'reserved' array is only capable of holding one
->>>> request, so we need to protect it against concurrent accesses.
->>>>
->>>> Cc: stable@vger.kernel.org
->>>> Reported-by: Dmitry Vyukov <dvyukov@google.com>
->>>> Link: http://www.spinics.net/lists/linux-scsi/msg104326.html
->>>> Signed-off-by: Hannes Reinecke <hare@suse.com>
->>>> Tested-by: Johannes Thumshirn <jth@kernel.org>
->>>> ---
->>>>  drivers/scsi/sg.c | 30 ++++++++++++------------------
->>>>  1 file changed, 12 insertions(+), 18 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
->>>> index 652b934..6a8601c 100644
->>>> --- a/drivers/scsi/sg.c
->>>> +++ b/drivers/scsi/sg.c
->>>> @@ -155,6 +155,8 @@
->>>>      unsigned char next_cmd_len; /* 0: automatic, >0: use on next write() */
->>>>      char keep_orphan;       /* 0 -> drop orphan (def), 1 -> keep for read() */
->>>>      char mmap_called;       /* 0 -> mmap() never called on this fd */
->>>> +    unsigned long flags;
->>>> +#define SG_RESERVED_IN_USE 1
->>>>      struct kref f_ref;
->>>>      struct execute_work ew;
->>>>  } Sg_fd;
->>>> @@ -198,7 +200,6 @@ static int sg_common_write(Sg_fd * sfp, Sg_request * srp,
->>>>  static Sg_request *sg_get_rq_mark(Sg_fd * sfp, int pack_id);
->>>>  static Sg_request *sg_add_request(Sg_fd * sfp);
->>>>  static int sg_remove_request(Sg_fd * sfp, Sg_request * srp);
->>>> -static int sg_res_in_use(Sg_fd * sfp);
->>>>  static Sg_device *sg_get_dev(int dev);
->>>>  static void sg_device_destroy(struct kref *kref);
->>>>
->>>> @@ -721,7 +722,7 @@ static int sg_allow_access(struct file *filp, unsigned char *cmd)
->>>>                      sg_remove_request(sfp, srp);
->>>>                      return -EINVAL; /* either MMAP_IO or DIRECT_IO (not both) */
->>>>              }
->>>> -            if (sg_res_in_use(sfp)) {
->>>> +            if (test_bit(SG_RESERVED_IN_USE, &sfp->flags)) {
->>>>                      sg_remove_request(sfp, srp);
->>>>                      return -EBUSY;  /* reserve buffer already being used */
->>>>              }
->>>> @@ -963,10 +964,14 @@ static int max_sectors_bytes(struct request_queue *q)
->>>>              val = min_t(int, val,
->>>>                          max_sectors_bytes(sdp->device->request_queue));
->>>>              if (val != sfp->reserve.bufflen) {
->>>> -                    if (sg_res_in_use(sfp) || sfp->mmap_called)
->>>> +                    if (sfp->mmap_called)
->>>> +                            return -EBUSY;
->>>> +                    if (test_and_set_bit(SG_RESERVED_IN_USE, &sfp->flags))
->>>>                              return -EBUSY;
->>>> +
->>>>                      sg_remove_scat(sfp, &sfp->reserve);
->>>>                      sg_build_reserve(sfp, val);
->>>> +                    clear_bit(SG_RESERVED_IN_USE, &sfp->flags);
->>>
->>>
->>> This seems to be abusing an atomic bitflag as a lock.
->>
->> Hmm. I wouldn't call it 'abusing'; the driver can proceed quite happily
->> without the 'reserved' buffer, so taking a lock would be overkill.
->> I could modify it to use a mutex if you insist ...
->>
->>>  And I think
->>> in general we have two different things here that this patch conflates:
->>>
->>>  a) a lock to protect building and using the reserve lists
->>>  b) a flag is a reservations is in use
->>>
->> No. This is not about reservations, this is about the internal
->> 'reserved' page buffer array.
->> (Just in case to avoid any misunderstandings).
->> We need to have an atomic / protected check in the 'sfp' structure if
->> the 'reserved' page buffer array is in use; there's an additional check
->> in the 'sg_request' structure (res_in_use) telling us which of the
->> requests is using it.
+On Wed, Feb 15, 2017 at 03:48:52PM +0900, Damien Le Moal wrote:
+> Christoph,
 > 
+> On 2/15/17 15:34, Christoph Hellwig wrote:
+> > this looks reasonable, but we should ask Guilherme and Ram to confirm
+> > it fixes their originally reported issue.  I've added them to Cc.
 > 
-> So, how should we proceed here?
-> We could use a mutex with only trylock, but it would be effectively the same.
+> Thank you.
 > 
-> There is one missed user of sg_res_in_use in "case SG_SET_FORCE_LOW_DMA".
+> Guilherme, Ram,
 > 
-I've played around using a spinlock (can't use a mutex as one access in
-done from softirq context), but always ended up in lockdep hell.
+> Please test ! The original fix breaks the zoned block device support
+> that was newly added to 4.10. So we need a fix for that and your issue
+> combined before Linus releases 4.10 stable this weekend.
 
-And in the end, we really only need to have a marker whether the
-reserved array is in use or not. Which should be atomic, so we _could_
-be using an atomic variable here.
-Which would only ever have a value of '0' or '1', hence the use of a
-bitfield here.
-But if that fall foul of some style guide I could modify it to use an
-atomic counter.
+Yes logically it looks correct and should fix our issue. 
 
-Cheers,
+I doubt Guilherme has access to the same adapter firmware that exposed
+the original problem. We will probably have to induce the erroneous
+behavior in the driver to reproduce the issue and verify the fix.
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+Will let you know,
+RP
