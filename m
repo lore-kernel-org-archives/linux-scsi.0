@@ -1,78 +1,51 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] scsi: megaraid_sas: handle dma_addr_t right on 32-bit
-Date: Tue, 14 Feb 2017 22:21:51 +0100
-Message-ID: <20170214212238.2696334-1-arnd@arndb.de>
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit Saxena <sumit.saxena@broadcom.com>, Shivasharan S <shivasharan.srikanteshwara@broadcom.com>, Tomas Henzl <thenzl@redhat.com>, Hannes Reinecke <hare@suse.com>, Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+From: Andy Grover <agrover@redhat.com>
+Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
+Date: Tue, 14 Feb 2017 16:44:57 -0800
+Message-ID: <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
+References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
+ <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
+ <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
+ <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
+ <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx1.redhat.com ([209.132.183.28]:53906 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751238AbdBOAo6 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 14 Feb 2017 19:44:58 -0500
+In-Reply-To: <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Xiubo Li <lixiubo@cmss.chinamobile.com>, mchristi@redhat.com
+Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
 
-When building with a dma_addr_t that is different from pointer size, we get
-this warning:
+On 02/13/2017 09:50 PM, Xiubo Li wrote:
+> The struct tcmu_cmd_entry {} size is fixed 44 bytes without iovec[], and
+> the size of struct iovec[N] is about 16 bytes * N.
+> 
+> The cmd entry size will be [44B, N *16 + 44B], and the data size will be
+> [0, N * 4096], so the ratio of sizeof(cmd entry): sizeof(entry datas) ==
+> (N * 16 + 44)Bytes : (N * 4096)Bytes == (N * 16)/(N * 4096) +
+> 44/(N*4096) == 1/256 + 11/(N * 1024).
+> When N is bigger, the ratio will be smaller. If N >= 1, the ratio will
+> be [15/1024, 4/1024).
+> 
+> So, that's right, 512M is a little bigger than actually needed, for the
+> safe ratio i think 16/1024 is enough, if the data area is fixed 1G, so
+> the cmd area could be 16M+.
+> Or cmd area(64M) + data area(960M) == 1G ?
 
-drivers/scsi/megaraid/megaraid_sas_fusion.c: In function 'megasas_make_prp_nvme':
-drivers/scsi/megaraid/megaraid_sas_fusion.c:1654:17: error: cast to pointer from integer of different size [-Werror=int-to-pointer-cast]
+Seems like a good ratio. You could look at growing the cmd ring when
+deciding to allocate more pages for the data area. But, growing the cmd
+ring is a little trickier (see below) so maybe have a different policy
+for deciding when & how much to grow.
 
-It's better to not pretend that the dma address is a pointer and instead
-use a dma_addr_t consistently.
+Changing the cmd ring size: Unlike the data area where you can just
+allocate & map more pages, I think the cmd ring you probably want to
+complete all I/O, get cmd_head and cmd_tail back to the top with a PAD
+op, and *then* reallocate/remap the cmd ring and update
+tcmu_mailbox.cmdr_size.
 
-Fixes: 33203bc4d61b ("scsi: megaraid_sas: NVME fast path io support")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index 750090119f81..29650ba669da 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -1619,7 +1619,8 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
- {
- 	int sge_len, offset, num_prp_in_chain = 0;
- 	struct MPI25_IEEE_SGE_CHAIN64 *main_chain_element, *ptr_first_sgl;
--	u64 *ptr_sgl, *ptr_sgl_phys;
-+	u64 *ptr_sgl;
-+	dma_addr_t ptr_sgl_phys;
- 	u64 sge_addr;
- 	u32 page_mask, page_mask_result;
- 	struct scatterlist *sg_scmd;
-@@ -1651,14 +1652,14 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
- 	 */
- 	page_mask = mr_nvme_pg_size - 1;
- 	ptr_sgl = (u64 *)cmd->sg_frame;
--	ptr_sgl_phys = (u64 *)cmd->sg_frame_phys_addr;
-+	ptr_sgl_phys = cmd->sg_frame_phys_addr;
- 	memset(ptr_sgl, 0, instance->max_chain_frame_sz);
- 
- 	/* Build chain frame element which holds all prps except first*/
- 	main_chain_element = (struct MPI25_IEEE_SGE_CHAIN64 *)
- 	    ((u8 *)sgl_ptr + sizeof(struct MPI25_IEEE_SGE_CHAIN64));
- 
--	main_chain_element->Address = cpu_to_le64((uintptr_t)ptr_sgl_phys);
-+	main_chain_element->Address = cpu_to_le64(ptr_sgl_phys);
- 	main_chain_element->NextChainOffset = 0;
- 	main_chain_element->Flags = IEEE_SGE_FLAGS_CHAIN_ELEMENT |
- 					IEEE_SGE_FLAGS_SYSTEM_ADDR |
-@@ -1696,16 +1697,15 @@ megasas_make_prp_nvme(struct megasas_instance *instance, struct scsi_cmnd *scmd,
- 			scmd_printk(KERN_NOTICE,
- 				    scmd, "page boundary ptr_sgl: 0x%p\n",
- 				    ptr_sgl);
--			ptr_sgl_phys++;
--			*ptr_sgl =
--				cpu_to_le64((uintptr_t)ptr_sgl_phys);
-+			ptr_sgl_phys += 8;
-+			*ptr_sgl = cpu_to_le64(ptr_sgl_phys);
- 			ptr_sgl++;
- 			num_prp_in_chain++;
- 		}
- 
- 		*ptr_sgl = cpu_to_le64(sge_addr);
- 		ptr_sgl++;
--		ptr_sgl_phys++;
-+		ptr_sgl_phys += 8;
- 		num_prp_in_chain++;
- 
- 		sge_addr += mr_nvme_pg_size;
--- 
-2.9.0
+Regards -- Andy
