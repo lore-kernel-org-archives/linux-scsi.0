@@ -1,117 +1,70 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: [PATCH v4] sd: Check for unaligned partial completion
-Date: Wed, 15 Feb 2017 11:12:30 +0900
-Message-ID: <20170215021230.11181-1-damien.lemoal@wdc.com>
+From: ebiederm@xmission.com (Eric W. Biederman)
+Subject: Re: [PATCH] scsi: lpfc: Add shutdown method for kexec
+Date: Wed, 15 Feb 2017 15:44:48 +1300
+Message-ID: <87y3x8895r.fsf@xmission.com>
+References: <20170212214920.28866-1-anton@ozlabs.org>
+        <1486941294.3401.67.camel@kernel.crashing.org>
+        <20170213104723.7741de0a@kryten> <87efz3hre6.fsf@xmission.com>
+        <1486947669.3401.69.camel@kernel.crashing.org>
+        <2fa7fc70-44d4-f536-befb-8a7849741fb7@linux.vnet.ibm.com>
+        <1487037886.23576.16.camel@kernel.crashing.org>
+        <39054c0e-c0f3-a62d-2c71-469798727bfd@linux.vnet.ibm.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:54513 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750791AbdBOCOa (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 21:14:30 -0500
+Received: from out01.mta.xmission.com ([166.70.13.231]:57797 "EHLO
+        out01.mta.xmission.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750943AbdBOCtX (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 14 Feb 2017 21:49:23 -0500
+In-Reply-To: <39054c0e-c0f3-a62d-2c71-469798727bfd@linux.vnet.ibm.com> (Brian
+        King's message of "Tue, 14 Feb 2017 08:56:15 -0600")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Damien Le Moal <damien.lemoal@wdc.com>
+To: Brian King <brking@linux.vnet.ibm.com>
+Cc: Benjamin Herrenschmidt <benh@kernel.crashing.org>, Anton Blanchard <anton@samba.org>, james.smart@broadcom.com, dick.kennedy@broadcom.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, jk@ozlabs.org, linux-scsi@vger.kernel.org
 
-Commit "mpt3sas: Force request partial completion alignment" was not
-considering the case of REQ_TYPE_FS commands not operating on sector
-size units (e.g. REQ_OP_ZONE_REPORT and its 64B aligned partial
-replies). This could result is incorrectly retrying (forever) those
-commands.
+Brian King <brking@linux.vnet.ibm.com> writes:
 
-Move the partial completion alignement check of mpt3sas to a generic
-implementation in sd_done so that the check comes after good_bytes and
-resid corrections done in that function depending on the request
-command. The check is added to the initial command switch so that
-commands with special payload size handling are ignored.
+> On 02/13/2017 08:04 PM, Benjamin Herrenschmidt wrote:
+>> On Mon, 2017-02-13 at 15:57 -0600, Brian King wrote:
+>>> If we do transition to use remove rather than shutdown, I think we
+>>> want
+>>> some way for a device driver to know whether we are doing kexec or
+>>> not.
+>>> A RAID adapter with a write cache is going to want to flush its write
+>>> cache on a PCI hotplug remove, but for a kexec, its going to want to
+>>> skip
+>>> that so the kexec is faster. Today, since kexec looks like a reboot,
+>>> rather than a shutdown, we can skip the flush on a reboot, since its
+>>> technically not needed there either.
+>> 
+>> What happens if a non-flushed adapter gets a PERST ?
+>
+> It depends on the adapter, so it really needs to be a policy in the device
+> driver. For any adapter that has a non volatile write cache, data must preserved,
+> otherwise the write cache is not truly non volatile. For adapters with a volatile
+> write cache, then its subject to the adapter hardware. For ipr adapters
+> that have a volatile cache, they do guarantee the data is preserved across
+> a PERST.
+>
+>> I wouldn't trust that 'don't have to flush' magic ...
+>
+> I really don't think we want to force RAID adapters that have gigabytes of
+> *non volatile* write cache to flush their cache when we are merely performing
+> a kexec. This can take several minutes in the worst case scenarios.
 
-Signed-off-by: Damien Le Moal <damien.lemoal@wdc.com>
 
----
+It is very very simple.  kexec does not guarantee what comes after it.
 
-Changes from v3:
-- Moved check to initial switch-case so that commands with special payload
-  handling are ignored.
+An optimization that skips flushing because the hardware write cache can
+be trusted is fine.  An optimization that skips flushing because some
+later kernel will take care of it is not.
 
-Changes from v2:
-- Fixed good_bytes calculation after correction of unaligned resid
-  It should be good_bytes=scsi_buflen() - resid, and not good_bytes-=resid
+I really don't see any room in there for distinguishing between which
+kind of shutdown and/or kexec we are doing.  Either the hardware handles
+it or it doesn't.
 
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ---------------
- drivers/scsi/sd.c                    | 20 ++++++++++++++++++++
- 2 files changed, 20 insertions(+), 15 deletions(-)
+If the hardware doesn't handle everything than we need to handle it in
+software.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 0b5b423..1961535 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -4658,7 +4658,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	struct MPT3SAS_DEVICE *sas_device_priv_data;
- 	u32 response_code = 0;
- 	unsigned long flags;
--	unsigned int sector_sz;
- 
- 	mpi_reply = mpt3sas_base_get_reply_virt_addr(ioc, reply);
- 	scmd = _scsih_scsi_lookup_get_clear(ioc, smid);
-@@ -4717,20 +4716,6 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 	}
- 
- 	xfer_cnt = le32_to_cpu(mpi_reply->TransferCount);
--
--	/* In case of bogus fw or device, we could end up having
--	 * unaligned partial completion. We can force alignment here,
--	 * then scsi-ml does not need to handle this misbehavior.
--	 */
--	sector_sz = scmd->device->sector_size;
--	if (unlikely(scmd->request->cmd_type == REQ_TYPE_FS && sector_sz &&
--		     xfer_cnt % sector_sz)) {
--		sdev_printk(KERN_INFO, scmd->device,
--		    "unaligned partial completion avoided (xfer_cnt=%u, sector_sz=%u)\n",
--			    xfer_cnt, sector_sz);
--		xfer_cnt = round_down(xfer_cnt, sector_sz);
--	}
--
- 	scsi_set_resid(scmd, scsi_bufflen(scmd) - xfer_cnt);
- 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE)
- 		log_info =  le32_to_cpu(mpi_reply->IOCLogInfo);
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 1f5d92a..d05a328 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1790,6 +1790,8 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- {
- 	int result = SCpnt->result;
- 	unsigned int good_bytes = result ? 0 : scsi_bufflen(SCpnt);
-+	unsigned int sector_size = SCpnt->device->sector_size;
-+	unsigned int resid;
- 	struct scsi_sense_hdr sshdr;
- 	struct scsi_disk *sdkp = scsi_disk(SCpnt->request->rq_disk);
- 	struct request *req = SCpnt->request;
-@@ -1820,6 +1822,24 @@ static int sd_done(struct scsi_cmnd *SCpnt)
- 			scsi_set_resid(SCpnt, blk_rq_bytes(req));
- 		}
- 		break;
-+	default:
-+		/*
-+	 	 * In case of bogus fw or device, we could end up having
-+	 	 * an unaligned partial completion. Check this here and force
-+	 	 * alignment.
-+	 	 */
-+		resid = scsi_get_resid(SCpnt);
-+		if (resid & (sector_size - 1)) {
-+			SCSI_LOG_HLCOMPLETE(1, scmd_printk(KERN_INFO, SCpnt,
-+				"Unaligned partial completion (resid=%u, sector_sz=%u)\n",
-+				resid, sector_size));
-+			resid = round_up(resid, sector_size);
-+			if (resid < good_bytes)
-+				good_bytes -= resid;
-+			else
-+				good_bytes = 0;
-+			scsi_set_resid(SCpnt, resid);
-+		}
- 	}
- 
- 	if (result) {
--- 
-2.9.3
+Eric
