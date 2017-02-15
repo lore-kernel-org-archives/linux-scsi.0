@@ -1,41 +1,82 @@
-From: Bart Van Assche <bart.vanassche@sandisk.com>
-Subject: Re: [PATCH v3 00/16] lpfc: Add NVME Fabrics support
-Date: Wed, 15 Feb 2017 11:52:51 -0800
-Message-ID: <abb0b870-4afd-b2ef-48aa-8184cb74c0e7@sandisk.com>
-References: <58a0d918.RXFImMqrhYsCnA/U%jsmart2021@gmail.com>
- <3440afa9-9449-3378-6e8f-7cbe8dbb52cf@grimberg.me>
- <bf3afee6-cd38-86fc-2e12-53df9c731987@gmail.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 10/16] aacraid: Terminate kthread on controller fw assert
+Date: Wed, 15 Feb 2017 22:22:46 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C1F6F@avsrvexchmbx2.microsemi.net>
+References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-11-RaghavaAditya.Renukunta@microsemi.com>
+ <9d502c4a-a3ad-352e-c3d0-2d08042c5f1b@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="windows-1252"
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa2.hgst.iphmx.com ([68.232.143.124]:60814 "EHLO
-        esa2.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750791AbdBOUB7 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 15:01:59 -0500
-In-Reply-To: <bf3afee6-cd38-86fc-2e12-53df9c731987@gmail.com>
+Received: from mail-dm3nam03on0074.outbound.protection.outlook.com ([104.47.41.74]:10190
+        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1752061AbdBOWWt (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 17:22:49 -0500
+In-Reply-To: <9d502c4a-a3ad-352e-c3d0-2d08042c5f1b@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jsmart2021@gmail.com, Sagi Grimberg <sagi@grimberg.me>, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 
-On 02/15/2017 08:04 AM, James Smart wrote:
-> On 2/15/2017 2:12 AM, Sagi Grimberg wrote:
->> Also, can you send your patchset threaded? It usually does so
->> when generating the patches with git format-patch, not sure
->> how this is not the case with your set... It would make my
->> life a bit easier.
-> 
-> Well, I am using git format-patch to create them. But have to revert to
-> a manual mailing request as I haven't been able to get git-send-email
-> working past our firewalls.  Sorry.
 
-Hello James,
 
-In the headers of your patch e-mails I found the following: "User-Agent:
-Heirloom mailx 12.5 6/20/10". As far as I know the transports supported
-by that e-mail client are IMAP, POP3 and SMTP. I think git supports both
-SMTP and IMAP for sending e-mails.
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Wednesday, February 15, 2017 12:44 AM
+> To: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
+> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
+> <gana.sridaran@microsemi.com>; Scott Benesh
+> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
+> Subject: Re: [PATCH 10/16] aacraid: Terminate kthread on controller fw
+> assert
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
+> > When the command thread performs a periodic time sync and the
+> firmware is
+> > going through an assert during that time, the command thread waits for
+> the
+> > response that would never arrive. The SCSI Mid layer's error handler wo=
+uld
+> > eventually reset the controller, but the eh_handler just issues a
+> > "thread stop" to the command thread which is stuck on a semaphore and
+> the
+> > eh_thread would in turn goes to sleep waiting for the command_thread to
+> > respond to the stop which never happens.
+> >
+> > Fixed by allowing SIGTERM for the command thread, and during the
+> eh_reset
+> > call, sends termination signal to the command thread. As a follow-up, t=
+he
+> > eh_reset handler would take care of the controller reset.
+> >
+> > Signed-off-by: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>
+> > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
+> > ---
+>=20
+> This look a bit scary. Can't the kthread be converted to a workqueue so
+> we could call cancel_work_sync()?
 
-Thanks,
+Could you please elaborate on the reasons why this fix is scary?
+I understand that killing a thread is not standard (for any reason),=20
+and if there are other nuanced issues I would like to understand them.
 
-Bart.
+Thank you,
+Raghava Aditya=20
+
+>=20
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
