@@ -1,58 +1,97 @@
-From: Xiubo Li <lixiubo@cmss.chinamobile.com>
-Subject: Re: [PATCH RFC] target/user: Add double ring buffers support.
-Date: Wed, 15 Feb 2017 13:46:26 +0800
-Message-ID: <d51bb3d2-a4fe-ba99-8a5a-7d619d3ea5ad@cmss.chinamobile.com>
-References: <1486709283-15535-1-git-send-email-lixiubo@cmss.chinamobile.com>
- <240ae8db-1ede-2710-fb9c-1af3a020286e@redhat.com>
- <a968c308-8e1e-692f-ab0e-1cd9738a64ad@cmss.chinamobile.com>
- <f82b5412-e9e9-6d6f-882a-d26390a1784f@redhat.com>
- <801a726b-7f35-98b6-e150-dfa034539e32@cmss.chinamobile.com>
- <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
+From: Sumit Saxena <sumit.saxena@broadcom.com>
+Subject: RE: [bug report] megaraid_sas: Make PI enabled VD 8 byte DMA aligned
+Date: Wed, 15 Feb 2017 11:23:31 +0530
+Message-ID: <eb2f36aa3f8c4668337e5e46314b9d14@mail.gmail.com>
+References: <20170214162341.GA3729@mwanda>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252; format=flowed
-Content-Transfer-Encoding: 7bit
-Return-path: <target-devel-owner@vger.kernel.org>
-In-Reply-To: <c02847d6-4bd0-f901-2ba8-c58bc500865c@redhat.com>
-Sender: target-devel-owner@vger.kernel.org
-To: Andy Grover <agrover@redhat.com>, mchristi@redhat.com
-Cc: nab@linux-iscsi.org, sheng@yasker.org, linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, namei.unix@gmail.com
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-oi0-f53.google.com ([209.85.218.53]:35102 "EHLO
+        mail-oi0-f53.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751071AbdBOFxe (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 00:53:34 -0500
+Received: by mail-oi0-f53.google.com with SMTP id j15so82014344oih.2
+        for <linux-scsi@vger.kernel.org>; Tue, 14 Feb 2017 21:53:33 -0800 (PST)
+In-Reply-To: <20170214162341.GA3729@mwanda>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Dan Carpenter <dan.carpenter@oracle.com>, sumit.saxena@avagotech.com
+Cc: "PDL,MEGARAIDLINUX" <megaraidlinux.pdl@broadcom.com>, linux-scsi@vger.kernel.org
 
->> The struct tcmu_cmd_entry {} size is fixed 44 bytes without iovec[], and
->> the size of struct iovec[N] is about 16 bytes * N.
->>
->> The cmd entry size will be [44B, N *16 + 44B], and the data size will be
->> [0, N * 4096], so the ratio of sizeof(cmd entry): sizeof(entry datas) ==
->> (N * 16 + 44)Bytes : (N * 4096)Bytes == (N * 16)/(N * 4096) +
->> 44/(N*4096) == 1/256 + 11/(N * 1024).
->> When N is bigger, the ratio will be smaller. If N >= 1, the ratio will
->> be [15/1024, 4/1024).
->>
->> So, that's right, 512M is a little bigger than actually needed, for the
->> safe ratio i think 16/1024 is enough, if the data area is fixed 1G, so
->> the cmd area could be 16M+.
->> Or cmd area(64M) + data area(960M) == 1G ?
-> Seems like a good ratio. You could look at growing the cmd ring when
-> deciding to allocate more pages for the data area. But, growing the cmd
-> ring is a little trickier (see below) so maybe have a different policy
-> for deciding when & how much to grow.
+>-----Original Message-----
+>From: Dan Carpenter [mailto:dan.carpenter@oracle.com]
+>Sent: Tuesday, February 14, 2017 9:54 PM
+>To: sumit.saxena@avagotech.com
+>Cc: megaraidlinux.pdl@broadcom.com; linux-scsi@vger.kernel.org
+>Subject: [bug report] megaraid_sas: Make PI enabled VD 8 byte DMA aligned
 >
-> Changing the cmd ring size: Unlike the data area where you can just
-> allocate & map more pages, I think the cmd ring you probably want to
-> complete all I/O, get cmd_head and cmd_tail back to the top with a PAD
-> op, and *then* reallocate/remap the cmd ring and update
-> tcmu_mailbox.cmdr_size.
-Yes, that sounds nice. Growing the cmd area will be much more
-complex, and this could be implemented in the future.
+>Hello sumit.saxena@avagotech.com,
+>
+>The patch 0b48d12d0365: "megaraid_sas: Make PI enabled VD 8 byte DMA
+>aligned" from Oct 15, 2015, leads to the following static checker
+>warning:
+>
+>	drivers/scsi/megaraid/megaraid_sas_base.c:1784
+>megasas_set_dynamic_target_properties()
+>	warn: if statement not indented
 
-I will try to implement the following simple new scheme firstly:
-- Fixed cmd area using the vmalloc(), total size will be 64M or 128M(?)
-- Growing data area using kmalloc(DATA_BLOCK_SIZE, GFP_ATOMIC),
-   the maximum total size will be 1G.
-
-Thanks,
-
-BRs
-Xiubo
-
-> Regards -- Andy
+I will post patch to fix this indentation issue.
+>
+>drivers/scsi/megaraid/megaraid_sas_base.c
+>  1757  void megasas_set_dynamic_target_properties(struct scsi_device
+*sdev)
+>  1758  {
+>  1759          u16 pd_index = 0, ld;
+>  1760          u32 device_id;
+>  1761          struct megasas_instance *instance;
+>  1762          struct fusion_context *fusion;
+>  1763          struct MR_PRIV_DEVICE *mr_device_priv_data;
+>  1764          struct MR_PD_CFG_SEQ_NUM_SYNC *pd_sync;
+>  1765          struct MR_LD_RAID *raid;
+>  1766          struct MR_DRV_RAID_MAP_ALL *local_map_ptr;
+>  1767
+>  1768          instance = megasas_lookup_instance(sdev->host->host_no);
+>  1769          fusion = instance->ctrl_context;
+>  1770          mr_device_priv_data = sdev->hostdata;
+>  1771
+>  1772          if (!fusion || !mr_device_priv_data)
+>  1773                  return;
+>  1774
+>  1775          if (MEGASAS_IS_LOGICAL(sdev)) {
+>  1776                  device_id = ((sdev->channel % 2) *
+>MEGASAS_MAX_DEV_PER_CHANNEL)
+>  1777                                          + sdev->id;
+>  1778                  local_map_ptr =
+fusion->ld_drv_map[(instance->map_id & 1)];
+>  1779                  ld = MR_TargetIdToLdGet(device_id,
+local_map_ptr);
+>  1780                  if (ld >= instance->fw_supported_vd_count)
+>  1781                          return;
+>  1782                  raid = MR_LdRaidGet(ld, local_map_ptr);
+>  1783
+>  1784                  if (raid->capability.ldPiMode ==
+>MR_PROT_INFO_TYPE_CONTROLLER)
+>  1785
+blk_queue_update_dma_alignment(sdev->request_queue, 0x7);
+>
+>^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+>
+>  1786
+>  1787                  mr_device_priv_data->is_tm_capable =
+>  1788                          raid->capability.tmCapable;
+>  1789          } else if (instance->use_seqnum_jbod_fp) {
+>  1790                  pd_index = (sdev->channel *
+>MEGASAS_MAX_DEV_PER_CHANNEL) +
+>  1791                          sdev->id;
+>  1792                  pd_sync = (void *)fusion->pd_seq_sync
+>  1793                                  [(instance->pd_seq_map_id - 1) &
+1];
+>  1794                  mr_device_priv_data->is_tm_capable =
+>  1795
+pd_sync->seq[pd_index].capability.tmCapable;
+>  1796          }
+>  1797  }
+>
+>
+>regards,
+>dan carpenter
