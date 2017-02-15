@@ -1,33 +1,38 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 06/16] aacraid: Added sysfs for driver version
-Date: Wed, 15 Feb 2017 09:32:51 +0100
-Message-ID: <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
+Subject: Re: [PATCH 07/16] aacraid: Fix sync fibs time out on controller reset
+Date: Wed, 15 Feb 2017 09:34:15 +0100
+Message-ID: <b29d04ed-0041-ef6c-ed58-c78f7a799732@suse.de>
 References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-8-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:53686 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:53782 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1750782AbdBOIcx (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Wed, 15 Feb 2017 03:32:53 -0500
-In-Reply-To: <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
+        id S1750732AbdBOIeQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Wed, 15 Feb 2017 03:34:16 -0500
+In-Reply-To: <20170214204446.14808-8-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, dan.carpenter@oracle.com
 
 On 02/14/2017 09:44 PM, Raghava Aditya Renukunta wrote:
-> Added support to retrieve driver version from a new sysfs variable called
-> driver_version. It makes it easier for the user to figure out the driver
-> version that is currently running.
+> After controller shutdown, all sync fibs time out due to not knowing
+> about the switch to INT-x mode
 > 
+> Fixed by replacing aac_src_access_devreg() to aac_set_intx_mode() call.
+> 
+> Cc: stable@vger.kernel.org
+> Fixes: 495c021767bd78c998 (aacraid: MSI-x support)
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 > ---
 
-Can't this be retrieved via modinfo?
+
+Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 
 -- 
 Johannes Thumshirn                                          Storage
