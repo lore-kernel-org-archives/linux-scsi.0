@@ -1,32 +1,27 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 02/15] aacraid: Use correct channel number for raw srb
-Date: Thu, 16 Feb 2017 12:51:11 -0800
-Message-ID: <20170216205124.20271-3-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 04/15] aacraid: Prevent E3 lockup when deleting units
+Date: Thu, 16 Feb 2017 12:51:13 -0800
+Message-ID: <20170216205124.20271-5-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0047.outbound.protection.outlook.com ([104.47.34.47]:35822
+Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:17488
         "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754972AbdBQD2J (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 22:28:09 -0500
+        id S1755134AbdBQD2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:28:11 -0500
 In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-The channel being used for raw srb commands is retrieved from the utility
-sent fibs and is converted into physical channel id. The driver does not
-need to to do this since the management utility sends the correct channel
-id in the first place and in addition the driver sets inaccurate
-information in the cmd sent to the firmware and gets an invalid response.
+Arrconf management utility at times sends fibs with AdapterProcessed set
+in its fibs. This causes the controller to panic and lockup.
 
-Fixed by using channel id from srb command.
+Fixed by failing the commands that have AdapterProcessed set in its flag.
 
-Cc: stable@vger.kernel.org
-Fixes: 423400e64d377c0 ("scsi: aacraid: Include HBA direct interface")
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
@@ -35,21 +30,23 @@ Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/commctrl.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/commsup.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/commctrl.c b/drivers/scsi/aacraid/commctrl.c
-index 614842a..f6afd50 100644
---- a/drivers/scsi/aacraid/commctrl.c
-+++ b/drivers/scsi/aacraid/commctrl.c
-@@ -580,7 +580,7 @@ static int aac_send_raw_srb(struct aac_dev* dev, void __user * arg)
- 		goto cleanup;
- 	}
+diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
+index a8dd4b5..e221321 100644
+--- a/drivers/scsi/aacraid/commsup.c
++++ b/drivers/scsi/aacraid/commsup.c
+@@ -527,6 +527,10 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
  
--	chn = aac_logical_to_phys(user_srbcmd->channel);
-+	chn = user_srbcmd->channel;
- 	if (chn < AAC_MAX_BUSES && user_srbcmd->id < AAC_MAX_TARGETS &&
- 		dev->hba_map[chn][user_srbcmd->id].devtype ==
- 		AAC_DEVTYPE_NATIVE_RAW) {
+ 	if (!(hw_fib->header.XferState & cpu_to_le32(HostOwned)))
+ 		return -EBUSY;
++
++	if (hw_fib->header.XferState & cpu_to_le32(AdapterProcessed))
++		return -EINVAL;
++
+ 	/*
+ 	 *	There are 5 cases with the wait and response requested flags.
+ 	 *	The only invalid cases are if the caller requests to wait and
 -- 
 2.7.4
