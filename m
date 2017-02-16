@@ -1,98 +1,61 @@
-From: Charles Chiou <ch1102chiou@gmail.com>
-Subject: [PATCH 2/2] Add S6 support
-Date: Fri, 17 Feb 2017 10:52:38 +0800
-Message-ID: <1487299958-4792-1-git-send-email-ch1102chiou@gmail.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 00/15] aacraid: Fixes and enhancements for arc family
+Date: Thu, 16 Feb 2017 12:51:09 -0800
+Message-ID: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
+Mime-Version: 1.0
+Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-pg0-f66.google.com ([74.125.83.66]:33001 "EHLO
-        mail-pg0-f66.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1755265AbdBQCwr (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 21:52:47 -0500
+Received: from mail-co1nam03on0046.outbound.protection.outlook.com ([104.47.40.46]:64704
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1754684AbdBQD2H (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:28:07 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linus.chen@tw.promise.com, grace.chang@tw.promise.com, eva.cheng@tw.promise.com, charles.chiou@tw.promise.com, paul.lyu@tw.promise.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-From: Charles <charles.chiou@tw.promise.com>
+This patch set contains issue fixes, enhancements and other misc changes.
 
-1.Add reboot notifier and register it in stex_probe for all supported device.
-2.For all supported device in restart flow, we get a callback from notifier and set S6flag for stex_shutdown & stex_hba_stop to send restart command to FW.
+The majority of the fixes are a direct outcome of testing and work done on the
+adapter reset mechanism. Initially it just had IOP reset and then was augmented
+with IWBR soft hardware resets in the previous patch set. The reset mechanism
+is triggered in 2 paths, one is from the eh handler from the kernel and the
+other is from the driver's internal periodic health checkup.
 
-Signed-off-by: Charles.Chiou <charles.chiou@tw.promise.com>
-Signed-off-by: Paul.Lyu <paul.lyu@tw.promise.com>
----
- drivers/scsi/stex.c | 25 +++++++++++++++++++++++--
- 1 file changed, 23 insertions(+), 2 deletions(-)
+Changes in V2:
+Withdrew PATCH 10 (aacraid: Terminate kthread on controller fw assert) in lieu
+of reworking and submitting it in this patchset.
+Refactored memory leak fix patch
+Refactored EEH patch to remove macro
+Misc grammar fixes
 
-diff --git a/drivers/scsi/stex.c b/drivers/scsi/stex.c
-index e177dfe..0751561 100644
---- a/drivers/scsi/stex.c
-+++ b/drivers/scsi/stex.c
-@@ -26,6 +26,7 @@
- #include <linux/module.h>
- #include <linux/spinlock.h>
- #include <linux/ktime.h>
-+#include <linux/reboot.h>
- #include <asm/io.h>
- #include <asm/irq.h>
- #include <asm/byteorder.h>
-@@ -362,6 +363,12 @@ struct st_card_info {
- 	u16 sts_count;
- };
- 
-+int S6flag;
-+static int stex_halt(struct notifier_block *nb, ulong event, void *buf);
-+static struct notifier_block stex_notifier = {
-+	stex_halt, NULL, 0
-+};
-+
- static int msi;
- module_param(msi, int, 0);
- MODULE_PARM_DESC(msi, "Enable Message Signaled Interrupts(0=off, 1=on)");
-@@ -1673,6 +1680,9 @@ static int stex_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 
- 	pci_set_master(pdev);
- 
-+	S6flag = 0;
-+	register_reboot_notifier(&stex_notifier);
-+
- 	host = scsi_host_alloc(&driver_template, sizeof(struct st_hba));
- 
- 	if (!host) {
-@@ -1947,15 +1957,20 @@ static void stex_remove(struct pci_dev *pdev)
- 	scsi_host_put(hba->host);
- 
- 	pci_disable_device(pdev);
-+
-+	unregister_reboot_notifier(&stex_notifier);
- }
- 
- static void stex_shutdown(struct pci_dev *pdev)
- {
- 	struct st_hba *hba = pci_get_drvdata(pdev);
- 
--	if (hba->supports_pm == 0)
-+	if (hba->supports_pm == 0) {
- 		stex_hba_stop(hba, ST_IGNORED);
--	else
-+	} else if (hba->supports_pm == 1 && S6flag) {
-+		unregister_reboot_notifier(&stex_notifier);
-+		stex_hba_stop(hba, ST_S6);
-+	} else
- 		stex_hba_stop(hba, ST_S5);
- }
- 
-@@ -1992,6 +2007,12 @@ static int stex_resume(struct pci_dev *pdev)
- 	stex_handshake(hba);
- 	return 0;
- }
-+
-+static int stex_halt(struct notifier_block *nb, unsigned long event, void *buf)
-+{
-+	S6flag = 1;
-+	return NOTIFY_OK;
-+}
- MODULE_DEVICE_TABLE(pci, stex_pci_tbl);
- 
- static struct pci_driver stex_pci_driver = {
+Raghava Aditya Renukunta (15):
+ [SCSI] aacraid: Fix camel case
+ [SCSI] aacraid: Use correct channel number for raw srb
+ [SCSI] aacraid: Fix for excessive prints on EEH
+ [SCSI] aacraid: Prevent E3 lockup when deleting units
+ [SCSI] aacraid: Fix memory leak in fib init path
+ [SCSI] aacraid: Added sysfs for driver version
+ [SCSI] aacraid: Fix sync fibs time out on controller reset
+ [SCSI] aacraid: Skip wellness sync on controller failure
+ [SCSI] aacraid: Reload offlined drives after controller reset
+ [SCSI] aacraid: Decrease adapter health check  interval
+ [SCSI] aacraid: Skip IOP reset on controller panic(SMART Family)
+ [SCSI] aacraid: Reorder Adapter status check
+ [SCSI] aacraid: Save adapter fib log before an IOP reset
+ [SCSI] aacraid: Fix a potential spinlock double unlock bug
+ [SCSI] aacraid: Update driver version
+
+ drivers/scsi/aacraid/aachba.c   |  59 ++++++++++++----------
+ drivers/scsi/aacraid/aacraid.h  | 107 +++++++++++++++++++++-------------------
+ drivers/scsi/aacraid/commctrl.c |   2 +-
+ drivers/scsi/aacraid/comminit.c |   2 +-
+ drivers/scsi/aacraid/commsup.c  | 107 ++++++++++++++++++++++++++++++++--------
+ drivers/scsi/aacraid/linit.c    |  47 ++++++++++++------
+ drivers/scsi/aacraid/rx.c       |   2 +-
+ drivers/scsi/aacraid/src.c      |  48 +++++++++++++++---
+ 8 files changed, 254 insertions(+), 120 deletions(-)
+
 -- 
-1.9.1
+2.7.4
