@@ -1,99 +1,50 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: hch's native NVMe multipathing [was: Re: [PATCH 1/2] Don't
- blacklist nvme]
-Date: Thu, 16 Feb 2017 10:13:37 -0500
-Message-ID: <20170216151337.GA12678@redhat.com>
-References: <1487107154-24883-1-git-send-email-keith.busch@intel.com>
- <20170215145617.GA4241@infradead.org>
- <20170216025357.GA9241@redhat.com>
- <20170216142621.GA21972@infradead.org>
+From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+Subject: Re: [PATCHv2] scsi: use 'scsi_device_from_queue()' for scsi_dh
+Date: Thu, 16 Feb 2017 16:09:30 +0000
+Message-ID: <1487261355.2612.1.camel@sandisk.com>
+References: <1487257943-72264-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset="iso-8859-1"
+Content-Transfer-Encoding: 8BIT
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.redhat.com ([209.132.183.28]:46804 "EHLO mx1.redhat.com"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932082AbdBPPNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 10:13:37 -0500
-Content-Disposition: inline
-In-Reply-To: <20170216142621.GA21972@infradead.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:37516 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1754441AbdBPQM5 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 11:12:57 -0500
+In-Reply-To: <1487257943-72264-1-git-send-email-hare@suse.de>
+Content-Language: en-US
+Content-ID: <1AA5D6772F6BDC4CA46B3D43926E41E5@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
+To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "keith.busch@intel.com" <keith.busch@intel.com>, "hare@suse.com" <hare@suse.com>
 
-On Thu, Feb 16 2017 at  9:26am -0500,
-Christoph Hellwig <hch@infradead.org> wrote:
+On Thu, 2017-02-16 at 16:12 +0100, Hannes Reinecke wrote:
+> +struct scsi_device *scsi_device_from_queue(struct request_queue *q)
+> +{
+> +	struct scsi_device *sdev = NULL;
+> +	unsigned long flags;
+> +
+> +	spin_lock_irqsave(q->queue_lock, flags);
+> +	if (q->mq_ops) {
+> +		if (q->mq_ops == &scsi_mq_ops)
+> +			sdev = q->queuedata;
+> +	} else if (q->request_fn == scsi_request_fn)
+> +		sdev = q->queuedata;
+> +	if (!sdev || !get_device(&sdev->sdev_gendev))
+> +		sdev = NULL;
+> +	spin_unlock_irqrestore(q->queue_lock, flags);
+> +
+> +	return sdev;
+> +}
 
-> On Wed, Feb 15, 2017 at 09:53:57PM -0500, Mike Snitzer wrote:
-> > going to LSF/MM?).  Yet you're expecting to just drop it into the tree
-> > without a care in the world about the implications.
-> 
-> I am planning to post it for comments, and then plan to "drop it in the
-> tree" exactly because I think of the implications.
-> 
-> Keith did that
+Hello Hannes,
 
-Not following what you're saying Keith did.  Please feel free to
-clarify.
+Do we need to take the queue lock? Neither q->mq_ops nor q->request_fn are
+modified after a block device has been created. q->queuedata is not modified
+by any SCSI driver after it has been set. And since the caller of
+scsi_device_from_queue() has to guarantee that the queue does not disappear
+while this function is in progress, the queue lock does not have to be held
+around the get_device() call either. Otherwise this patch looks fine to me.
 
-But we definitely need to devise a way for NVMe to inform DM multipath
-(and vice-versa): hands off this device.  Awkward details to work
-through to be sure...
-
-> But once we already do the discovery of the path
-> relations in the transport (e.g scsi_dh) we can just move the path
-> selectors (for which I'm reusing the DM code anyway btw) and the
-> bouncing of I/O to the block layer and cut out the middle man.
-
-The middle man is useful if it can support all transports.  If it only
-supports some then yeah the utility is certainly reduced.
-
-> The main reason is that things will just work (TM) instead of having
-> to carry around additional userspace to configure a an unneded
-> additional device layer that just causes confusion.  Beyond the
-> scsi_dh equivalent there is basically no new code in nvme, 
-
-I'm going to look at removing any scsi_dh code from DM multipath
-(someone already proposed removing the 'retain_attached_hw_handler'
-feature).  Not much point having anything in DM multipath now that scsi
-discovery has the ability to auto-attach the right scsi_dh via scsi_dh's
-.match hook.  As a side-effect it will fix Keith's scsi_dh crash (when
-operating on NVMe request_queue).
-
-My hope is that your NVMe equivalent for scsi_dh will "just work" (TM)
-like scsi_dh auto-attach does.  There isn't a finished ALUA equivalent
-standard for NVMe so I'd imagine at this point you have a single device
-handler for NVMe to do error translation?
-
-Anyway, the scsi_dh equivalent for NVMe is welcomed news!
-
-> just a little new code in the block layer, and a move of the path
-> selectors from dm to the block layer.  I would not call this
-> fragmentation.
-
-I'm fine with the path selectors getting moved out; maybe it'll
-encourage new path selectors to be developed.
-
-But there will need to be some userspace interface stood up to support
-your native NVMe multipathing (you may not think it needed but think in
-time there will be a need to configure _something_).  That is the
-fragmentation I'm referring to.
-
-> Anyway, there is very little point in having an abstract discussion
-> here, I'll try to get the code ready ASAP, although until the end of
-> next week I'm really pressed with other deadlines.
-
-OK.
-
-FYI, I never wanted to have an abstract discussion.  We need a real nuts
-and bolts discussion.  Happy to have it play out on the lists. 
-
-I'm not violently opposed to your native NVMe multipathing -- especially
-from a reference implementation point of view.  I think that in practice
-it'll  keep DM multipath honest -- help drive scalability improvements, etc.
-If over time the native NVMe multipathing _is_ the preferred multipathing
-solution for NVme, then so be it.  It'll be on merits.. as it should be.
-
-But I'm sure you're well aware that I and Red Hat and our partners have
-a vested interest in providing a single multipath stack that "just
-works" for all appropriate storage.
+Bart.
