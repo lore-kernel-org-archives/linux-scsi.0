@@ -1,33 +1,29 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 08/15] aacraid: Skip wellness sync on controller failure
-Date: Thu, 16 Feb 2017 12:51:17 -0800
-Message-ID: <20170216205124.20271-9-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 07/15] aacraid: Fix sync fibs time out on controller reset
+Date: Thu, 16 Feb 2017 12:51:16 -0800
+Message-ID: <20170216205124.20271-8-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-cys01nam02on0070.outbound.protection.outlook.com ([104.47.37.70]:26880
-        "EHLO NAM02-CY1-obe.outbound.protection.outlook.com"
+Received: from mail-co1nam03on0058.outbound.protection.outlook.com ([104.47.40.58]:50176
+        "EHLO NAM03-CO1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755353AbdBQD2P (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 22:28:15 -0500
+        id S1755308AbdBQD2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:28:12 -0500
 In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-aac_command_thread checks on the health of controller periodically,
-using aac_check_health. If the status is an error state KERNEL_PANIC or
-anything else. The driver will attempt to restart the adapter, but the
-response is not checked in aac_command_thread. This allows the periodic
-sync to go thru and lead the driver to a hung state.
+After controller shutdown, all sync fibs time out due to not knowing
+about the switch to INT-x mode
 
-Fixed by terminating the periodic loop(intended per original design),
-if the controller is not restored to a healthy state.
+Fixed by replacing aac_src_access_devreg() to aac_set_intx_mode() call.
 
 Cc: stable@vger.kernel.org
-Fixes: 3d77d8404478353358 (scsi: aacraid: Added support for periodic wellness sync)
+Fixes: 495c021767bd78c998 (aacraid: MSI-x support)
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
@@ -36,21 +32,48 @@ Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/commsup.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/aacraid.h  | 1 +
+ drivers/scsi/aacraid/comminit.c | 2 +-
+ drivers/scsi/aacraid/src.c      | 2 +-
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index c10954b..eb4d8cf 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -2481,7 +2481,7 @@ int aac_command_thread(void *data)
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index b5a2c87..9281e72 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -2639,6 +2639,7 @@ void aac_hba_callback(void *context, struct fib *fibptr);
+ #define fib_data(fibctx) ((void *)(fibctx)->hw_fib_va->data)
+ struct aac_dev *aac_init_adapter(struct aac_dev *dev);
+ void aac_src_access_devreg(struct aac_dev *dev, int mode);
++void aac_set_intx_mode(struct aac_dev *dev);
+ int aac_get_config_status(struct aac_dev *dev, int commit_flag);
+ int aac_get_containers(struct aac_dev *dev);
+ int aac_scsi_cmd(struct scsi_cmnd *cmd);
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index d0c7724..cd3456e 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -326,7 +326,7 @@ int aac_send_shutdown(struct aac_dev * dev)
+ 	     dev->pdev->device == PMC_DEVICE_S8 ||
+ 	     dev->pdev->device == PMC_DEVICE_S9) &&
+ 	     dev->msi_enabled)
+-		aac_src_access_devreg(dev, AAC_ENABLE_INTX);
++		aac_set_intx_mode(dev);
+ 	return status;
+ }
  
- 			/* Don't even try to talk to adapter if its sick */
- 			ret = aac_check_health(dev);
--			if (!dev->queues)
-+			if (ret || !dev->queues)
- 				break;
- 			next_check_jiffies = jiffies
- 					   + ((long)(unsigned)check_interval)
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index c17b060..b23c818 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -657,7 +657,7 @@ static int aac_srcv_ioremap(struct aac_dev *dev, u32 size)
+ 	return 0;
+ }
+ 
+-static void aac_set_intx_mode(struct aac_dev *dev)
++void aac_set_intx_mode(struct aac_dev *dev)
+ {
+ 	if (dev->msi_enabled) {
+ 		aac_src_access_devreg(dev, AAC_ENABLE_INTX);
 -- 
 2.7.4
