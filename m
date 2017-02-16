@@ -1,36 +1,44 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH 06/16] aacraid: Added sysfs for driver version
-Date: Thu, 16 Feb 2017 08:43:19 +0100
-Message-ID: <d51bf566-59c3-1f7a-1998-01f17cb33e85@suse.de>
+Subject: Re: [PATCH 10/16] aacraid: Terminate kthread on controller fw assert
+Date: Thu, 16 Feb 2017 10:31:00 +0100
+Message-ID: <2b400849-db1a-4109-37f2-cd00fc1ccc85@suse.de>
 References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
- <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
- <4D8E82A446BF54499747901DBDEB737A7B8C180D@avsrvexchmbx2.microsemi.net>
+ <20170214204446.14808-11-RaghavaAditya.Renukunta@microsemi.com>
+ <9d502c4a-a3ad-352e-c3d0-2d08042c5f1b@suse.de>
+ <4D8E82A446BF54499747901DBDEB737A7B8C1F6F@avsrvexchmbx2.microsemi.net>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59738 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:38271 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752071AbdBPHnV (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 02:43:21 -0500
-In-Reply-To: <4D8E82A446BF54499747901DBDEB737A7B8C180D@avsrvexchmbx2.microsemi.net>
+        id S1751583AbdBPJbC (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 04:31:02 -0500
+In-Reply-To: <4D8E82A446BF54499747901DBDEB737A7B8C1F6F@avsrvexchmbx2.microsemi.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
 Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 
-On 02/15/2017 07:12 PM, Raghava Aditya Renukunta wrote:
+On 02/15/2017 11:22 PM, Raghava Aditya Renukunta wrote:
+>>
+>> This look a bit scary. Can't the kthread be converted to a workqueue so
+>> we could call cancel_work_sync()?
 > 
-> I agree , but it makes it easier to get the driver version when I am developing
-> and I don't know which driver version is currently loaded
-> 
-> In addition internally our test automation suites use this information as
-> opposed to modinfo to get the driver version running. 
+> Could you please elaborate on the reasons why this fix is scary?
+> I understand that killing a thread is not standard (for any reason), 
+> and if there are other nuanced issues I would like to understand them.
 
-OK then.
+I'm actually concerned that this could have all kinds of side effects.
+But this is just a gut feeling. I see some drm drivers are doing the
+same, so it might be possible, but IMHO this is not a good design.
 
-Speaking of test automation, is there something you may be able to share?
+And IIRC kthreads do have more downsides (i.e. CPU hotplugging and
+issues with kernel live patching).
+
+I think most kthreads (haven't looked too close to the aacraid kthread I
+must admit, but I'll be doing so) can be converted to either workqueues
+or timers (or a combination of both).
 
 Thanks,
 	Johannes
