@@ -1,50 +1,199 @@
-From: Bart Van Assche <Bart.VanAssche@sandisk.com>
+From: Keith Busch <keith.busch@intel.com>
 Subject: Re: [PATCHv2] scsi: use 'scsi_device_from_queue()' for scsi_dh
-Date: Thu, 16 Feb 2017 16:09:30 +0000
-Message-ID: <1487261355.2612.1.camel@sandisk.com>
+Date: Thu, 16 Feb 2017 12:05:20 -0500
+Message-ID: <20170216170519.GA9630@localhost.localdomain>
 References: <1487257943-72264-1-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: 8BIT
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:37516 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1754441AbdBPQM5 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 11:12:57 -0500
+Received: from mga06.intel.com ([134.134.136.31]:5080 "EHLO mga06.intel.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1754829AbdBPQ4x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 11:56:53 -0500
+Content-Disposition: inline
 In-Reply-To: <1487257943-72264-1-git-send-email-hare@suse.de>
-Content-Language: en-US
-Content-ID: <1AA5D6772F6BDC4CA46B3D43926E41E5@sandisk.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "hare@suse.de" <hare@suse.de>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "hch@lst.de" <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "keith.busch@intel.com" <keith.busch@intel.com>, "hare@suse.com" <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
-On Thu, 2017-02-16 at 16:12 +0100, Hannes Reinecke wrote:
-> +struct scsi_device *scsi_device_from_queue(struct request_queue *q)
-> +{
-> +	struct scsi_device *sdev = NULL;
-> +	unsigned long flags;
-> +
-> +	spin_lock_irqsave(q->queue_lock, flags);
-> +	if (q->mq_ops) {
-> +		if (q->mq_ops == &scsi_mq_ops)
-> +			sdev = q->queuedata;
-> +	} else if (q->request_fn == scsi_request_fn)
-> +		sdev = q->queuedata;
-> +	if (!sdev || !get_device(&sdev->sdev_gendev))
-> +		sdev = NULL;
-> +	spin_unlock_irqrestore(q->queue_lock, flags);
-> +
-> +	return sdev;
-> +}
+On Thu, Feb 16, 2017 at 04:12:23PM +0100, Hannes Reinecke wrote:
+> The device handler needs to check if a given queue belongs to
+> a scsi device; only then does it make sense to attach a device
+> handler.
+> 
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
 
-Hello Hannes,
+The thing I don't like is that this still has dm-mpath directly calling
+into scsi. I don't think dm-mpath has any business calling protocol
+specific APIs, and doesn't help other protocols with similar needs.
 
-Do we need to take the queue lock? Neither q->mq_ops nor q->request_fn are
-modified after a block device has been created. q->queuedata is not modified
-by any SCSI driver after it has been set. And since the caller of
-scsi_device_from_queue() has to guarantee that the queue does not disappear
-while this function is in progress, the queue lock does not have to be held
-around the get_device() call either. Otherwise this patch looks fine to me.
+Can we solve this with an indirection layer instead? 
 
-Bart.
+(untested; just checking if this direction is preferable)
+---
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index 3570bcb..28310a2 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -847,7 +847,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 
+ 	if (test_bit(MPATHF_RETAIN_ATTACHED_HW_HANDLER, &m->flags)) {
+ retain:
+-		attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
++		attached_handler_name = blk_dh_attached_handler_name(q, GFP_KERNEL);
+ 		if (attached_handler_name) {
+ 			/*
+ 			 * Clear any hw_handler_params associated with a
+@@ -870,7 +870,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 	}
+ 
+ 	if (m->hw_handler_name) {
+-		r = scsi_dh_attach(q, m->hw_handler_name);
++		r = blk_dh_attach(q, m->hw_handler_name);
+ 		if (r == -EBUSY) {
+ 			char b[BDEVNAME_SIZE];
+ 
+@@ -885,7 +885,7 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
+ 		}
+ 
+ 		if (m->hw_handler_params) {
+-			r = scsi_dh_set_params(q, m->hw_handler_params);
++			r = blk_dh_set_params(q, m->hw_handler_params);
+ 			if (r < 0) {
+ 				ti->error = "unable to set hardware "
+ 							"handler parameters";
+@@ -1526,7 +1526,7 @@ static void activate_path(struct work_struct *work)
+ 	struct request_queue *q = bdev_get_queue(pgpath->path.dev->bdev);
+ 
+ 	if (pgpath->is_active && !blk_queue_dying(q))
+-		scsi_dh_activate(q, pg_init_done, pgpath);
++		blk_dh_activate(q, pg_init_done, pgpath);
+ 	else
+ 		pg_init_done(pgpath, SCSI_DH_DEV_OFFLINED);
+ }
+diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
+index 06d2ed4..49a061a 100644
+--- a/drivers/pci/pcie/pcie-dpc.c
++++ b/drivers/pci/pcie/pcie-dpc.c
+@@ -107,7 +107,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	int status;
+ 	u16 ctl, cap;
+ 
+-	dpc = kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
++	dpc = kzalloc(sizeof(*dpc), GFP_KERNEL);
+ 	if (!dpc)
+ 		return -ENOMEM;
+ 
+@@ -116,7 +116,7 @@ static int dpc_probe(struct pcie_device *dev)
+ 	INIT_WORK(&dpc->work, interrupt_event_handler);
+ 	set_service_data(dev, dpc);
+ 
+-	status = request_irq(&dev->device, dev->irq, dpc_irq, IRQF_SHARED,
++	status = request_irq(dev->irq, dpc_irq, IRQF_SHARED,
+ 				  "pcie-dpc", dpc);
+ 	if (status) {
+ 		dev_warn(&dev->device, "request IRQ%d failed: %d\n", dev->irq,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index e9e1e14..e23c7d5 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2028,6 +2028,13 @@ static u64 scsi_calculate_bounce_limit(struct Scsi_Host *shost)
+ 	return bounce_limit;
+ }
+ 
++static struct dh_ops scsi_dh_ops = {
++	.dh_activate = scsi_dh_activate,
++	.dh_attach = scsi_dh_attach,
++	.dh_attached_handler_name = scsi_dh_attached_handler_name,
++	.dh_set_params = scsi_dh_set_params,
++};
++
+ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ {
+ 	struct device *dev = shost->dma_dev;
+@@ -2062,6 +2069,8 @@ static void __scsi_init_queue(struct Scsi_Host *shost, struct request_queue *q)
+ 	 * blk_queue_update_dma_alignment() later.
+ 	 */
+ 	blk_queue_dma_alignment(q, 0x03);
++
++	q->dh_ops = &scsi_dh_ops;
+ }
+ 
+ struct request_queue *__scsi_alloc_queue(struct Scsi_Host *shost,
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 1ca8e8f..5899768 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -378,6 +378,14 @@ static inline int blkdev_reset_zones_ioctl(struct block_device *bdev,
+ 
+ #endif /* CONFIG_BLK_DEV_ZONED */
+ 
++typedef void (*activate_complete)(void *, int);
++struct dh_ops {
++	int (*dh_activate)(struct request_queue *, activate_complete, void *);
++	int (*dh_attach)(struct request_queue *, const char *);
++	const char *(*dh_attached_handler_name)(struct request_queue *, gfp_t);
++	int (*dh_set_params)(struct request_queue *, const char *);
++};
++
+ struct request_queue {
+ 	/*
+ 	 * Together with queue_head for cacheline sharing
+@@ -408,6 +416,7 @@ struct request_queue {
+ 	lld_busy_fn		*lld_busy_fn;
+ 
+ 	struct blk_mq_ops	*mq_ops;
++	struct dh_ops 		*dh_ops;
+ 
+ 	unsigned int		*mq_map;
+ 
+@@ -572,6 +581,35 @@ struct request_queue {
+ 	bool			mq_sysfs_init_done;
+ };
+ 
++static inline int blk_dh_activate(struct request_queue *q, activate_complete fn, void *data)
++{
++	if (q->dh_ops && q->dh_ops->dh_activate)
++		return q->dh_ops->dh_activate(q, fn, data);
++	fn(data, 0);
++	return 0;
++}
++
++static inline int blk_dh_attach(struct request_queue *q, const char *name)
++{
++	if (q->dh_ops && q->dh_ops->dh_attach)
++		return q->dh_ops->dh_attach(q, name);
++	return 0;
++}
++
++static inline const char *blk_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
++{
++	if (q->dh_ops && q->dh_ops->dh_attached_handler_name)
++		return q->dh_ops->dh_attached_handler_name(q, gfp);
++	return NULL;
++}
++
++static inline int blk_dh_set_params(struct request_queue *q, const char *params)
++{
++	if (q->dh_ops && q->dh_ops->dh_set_params)
++		return q->dh_ops->dh_set_params(q, params);
++	return 0;
++}
++
+ #define QUEUE_FLAG_QUEUED	1	/* uses generic tag queueing */
+ #define QUEUE_FLAG_STOPPED	2	/* queue is stopped */
+ #define	QUEUE_FLAG_SYNCFULL	3	/* read queue has been filled */
+diff --git a/include/scsi/scsi_dh.h b/include/scsi/scsi_dh.h
+index c7bba2b..9169a66 100644
+--- a/include/scsi/scsi_dh.h
++++ b/include/scsi/scsi_dh.h
+@@ -57,7 +57,6 @@ enum {
+ 	SCSI_DH_DRIVER_MAX,
+ };
+ 
+-typedef void (*activate_complete)(void *, int);
+ struct scsi_device_handler {
+ 	/* Used by the infrastructure */
+ 	struct list_head list; /* list of scsi_device_handlers */
+--
