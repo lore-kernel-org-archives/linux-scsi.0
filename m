@@ -1,30 +1,28 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 10/15] aacraid: Decrease adapter health check  interval
-Date: Thu, 16 Feb 2017 12:51:19 -0800
-Message-ID: <20170216205124.20271-11-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 13/15] aacraid: Save adapter fib log before an IOP reset
+Date: Thu, 16 Feb 2017 12:51:22 -0800
+Message-ID: <20170216205124.20271-14-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bn3nam01on0069.outbound.protection.outlook.com ([104.47.33.69]:20637
-        "EHLO NAM01-BN3-obe.outbound.protection.outlook.com"
+Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:10560
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755354AbdBQD2Q (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 22:28:16 -0500
+        id S1754684AbdBQD2X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:28:23 -0500
 In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-Currently driver checks the health status of the adapter once every 24
-hours. When that happens the driver becomes dependent on the kernel to
-figure out if the  adapter is misbehaving. This might take some time
-(when the adapter is idle). The driver currently has support to
-restart/recover the controller when it fails, and decreasing the time
-interval will help.
+Currently  the adapter firmware does not save outstanding I/O's log
+information  when an IOP reset is triggered. This is problematic when
+trying to root cause and debug issues.
 
-Fixed by decreasing check interval from 24 hours to 1 minute
+Fixed by adding sync command to trigger I/O log file save in the adapter
+firmware before issuing an IOP reset.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <David.Carroll@microsemi.com>
@@ -34,21 +32,86 @@ Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 Changes in V2:
 None
 
- drivers/scsi/aacraid/aachba.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/aacraid/aachba.c  |  4 ++++
+ drivers/scsi/aacraid/aacraid.h |  6 ++++++
+ drivers/scsi/aacraid/src.c     | 17 +++++++++++++++++
+ 3 files changed, 27 insertions(+)
 
 diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 98d4ffd..3ede50f 100644
+index 3ede50f..e3e93de 100644
 --- a/drivers/scsi/aacraid/aachba.c
 +++ b/drivers/scsi/aacraid/aachba.c
-@@ -311,7 +311,7 @@ module_param(update_interval, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(update_interval, "Interval in seconds between time sync"
- 	" updates issued to adapter.");
+@@ -294,6 +294,10 @@ MODULE_PARM_DESC(aif_timeout, "The duration of time in seconds to wait for"
+ 	"deregistering them. This is typically adjusted for heavily burdened"
+ 	" systems.");
  
--int check_interval = 24 * 60 * 60;
-+int check_interval = 60;
- module_param(check_interval, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(check_interval, "Interval in seconds between adapter health"
- 	" checks.");
++int aac_fib_dump;
++module_param(aac_fib_dump, int, 0644);
++MODULE_PARM_DESC(aac_fib_dump, "Dump controller fibs prior to IOP_RESET 0=off, 1=on");
++
+ int numacb = -1;
+ module_param(numacb, int, S_IRUGO|S_IWUSR);
+ MODULE_PARM_DESC(numacb, "Request a limit to the number of adapter control"
+diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
+index 9281e72..622fd69 100644
+--- a/drivers/scsi/aacraid/aacraid.h
++++ b/drivers/scsi/aacraid/aacraid.h
+@@ -1444,6 +1444,10 @@ struct aac_supplement_adapter_info
+ #define AAC_OPTION_VARIABLE_BLOCK_SIZE	cpu_to_le32(0x00040000)
+ /* 240 simple volume support */
+ #define AAC_OPTION_SUPPORTED_240_VOLUMES cpu_to_le32(0x10000000)
++/*
++ * Supports FIB dump sync command send prior to IOP_RESET
++ */
++#define AAC_OPTION_SUPPORTED3_IOP_RESET_FIB_DUMP	cpu_to_le32(0x00004000)
+ #define AAC_SIS_VERSION_V3	3
+ #define AAC_SIS_SLOT_UNKNOWN	0xFF
+ 
+@@ -2483,6 +2487,7 @@ struct aac_hba_info {
+ #define GET_DRIVER_BUFFER_PROPERTIES	0x00000023
+ #define RCV_TEMP_READINGS		0x00000025
+ #define GET_COMM_PREFERRED_SETTINGS	0x00000026
++#define IOP_RESET_FW_FIB_DUMP		0x00000034
+ #define IOP_RESET			0x00001000
+ #define IOP_RESET_ALWAYS		0x00001001
+ #define RE_INIT_ADAPTER			0x000000ee
+@@ -2686,4 +2691,5 @@ extern int aac_commit;
+ extern int update_interval;
+ extern int check_interval;
+ extern int aac_check_reset;
++extern int aac_fib_dump;
+ #endif
+diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
+index 71aaabd..2e5338d 100644
+--- a/drivers/scsi/aacraid/src.c
++++ b/drivers/scsi/aacraid/src.c
+@@ -679,10 +679,27 @@ void aac_set_intx_mode(struct aac_dev *dev)
+ 	}
+ }
+ 
++static void aac_dump_fw_fib_iop_reset(struct aac_dev *dev)
++{
++	__le32 supported_options3;
++
++	if (!aac_fib_dump)
++		return;
++
++	supported_options3  = dev->supplement_adapter_info.supported_options3;
++	if (!(supported_options3 & AAC_OPTION_SUPPORTED3_IOP_RESET_FIB_DUMP))
++		return;
++
++	aac_adapter_sync_cmd(dev, IOP_RESET_FW_FIB_DUMP,
++			0, 0, 0,  0, 0, 0, NULL, NULL, NULL, NULL, NULL);
++}
++
+ static void aac_send_iop_reset(struct aac_dev *dev, int bled)
+ {
+ 	u32 var, reset_mask;
+ 
++	aac_dump_fw_fib_iop_reset(dev);
++
+ 	bled = aac_adapter_sync_cmd(dev, IOP_RESET_ALWAYS,
+ 				    0, 0, 0, 0, 0, 0, &var,
+ 				    &reset_mask, NULL, NULL, NULL);
 -- 
 2.7.4
