@@ -1,52 +1,75 @@
 From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 04/15] aacraid: Prevent E3 lockup when deleting units
-Date: Thu, 16 Feb 2017 12:51:13 -0800
-Message-ID: <20170216205124.20271-5-RaghavaAditya.Renukunta@microsemi.com>
+Subject: [PATCH V2 06/15] aacraid: Added sysfs for driver version
+Date: Thu, 16 Feb 2017 12:51:15 -0800
+Message-ID: <20170216205124.20271-7-RaghavaAditya.Renukunta@microsemi.com>
 References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-by2nam01on0042.outbound.protection.outlook.com ([104.47.34.42]:17488
-        "EHLO NAM01-BY2-obe.outbound.protection.outlook.com"
+Received: from mail-sn1nam01on0077.outbound.protection.outlook.com ([104.47.32.77]:63297
+        "EHLO NAM01-SN1-obe.outbound.protection.outlook.com"
         rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755134AbdBQD2L (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 22:28:11 -0500
+        id S1755305AbdBQD2M (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:28:12 -0500
 In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
-Arrconf management utility at times sends fibs with AdapterProcessed set
-in its fibs. This causes the controller to panic and lockup.
-
-Fixed by failing the commands that have AdapterProcessed set in its flag.
+Added support to retrieve driver version from a new sysfs variable called
+driver_version. It makes it easier for the user to figure out the driver
+version that is currently running.
 
 Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 Reviewed-by: David Carroll <David.Carroll@microsemi.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
 
 ---
 Changes in V2:
 None
 
- drivers/scsi/aacraid/commsup.c | 4 ++++
- 1 file changed, 4 insertions(+)
+ drivers/scsi/aacraid/linit.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index a8dd4b5..e221321 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -527,6 +527,10 @@ int aac_fib_send(u16 command, struct fib *fibptr, unsigned long size,
+diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
+index ab4f1e7..df02784 100644
+--- a/drivers/scsi/aacraid/linit.c
++++ b/drivers/scsi/aacraid/linit.c
+@@ -1131,6 +1131,13 @@ static ssize_t aac_show_bios_version(struct device *device,
+ 	return len;
+ }
  
- 	if (!(hw_fib->header.XferState & cpu_to_le32(HostOwned)))
- 		return -EBUSY;
++static ssize_t aac_show_driver_version(struct device *device,
++					struct device_attribute *attr,
++					char *buf)
++{
++	return snprintf(buf, PAGE_SIZE, "%s\n", aac_driver_version);
++}
 +
-+	if (hw_fib->header.XferState & cpu_to_le32(AdapterProcessed))
-+		return -EINVAL;
-+
- 	/*
- 	 *	There are 5 cases with the wait and response requested flags.
- 	 *	The only invalid cases are if the caller requests to wait and
+ static ssize_t aac_show_serial_number(struct device *device,
+ 			       struct device_attribute *attr, char *buf)
+ {
+@@ -1241,6 +1248,13 @@ static struct device_attribute aac_bios_version = {
+ 	},
+ 	.show = aac_show_bios_version,
+ };
++static struct device_attribute aac_lld_version = {
++	.attr = {
++		.name = "driver_version",
++		.mode = 0444,
++	},
++	.show = aac_show_driver_version,
++};
+ static struct device_attribute aac_serial_number = {
+ 	.attr = {
+ 		.name = "serial_number",
+@@ -1278,6 +1292,7 @@ static struct device_attribute *aac_attrs[] = {
+ 	&aac_kernel_version,
+ 	&aac_monitor_version,
+ 	&aac_bios_version,
++	&aac_lld_version,
+ 	&aac_serial_number,
+ 	&aac_max_channel,
+ 	&aac_max_id,
 -- 
 2.7.4
