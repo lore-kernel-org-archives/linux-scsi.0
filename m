@@ -1,36 +1,42 @@
 From: Keith Busch <keith.busch@intel.com>
 Subject: Re: [PATCHv2] scsi: use 'scsi_device_from_queue()' for scsi_dh
-Date: Thu, 16 Feb 2017 12:05:20 -0500
-Message-ID: <20170216170519.GA9630@localhost.localdomain>
+Date: Thu, 16 Feb 2017 12:13:53 -0500
+Message-ID: <20170216171353.GA17828@localhost.localdomain>
 References: <1487257943-72264-1-git-send-email-hare@suse.de>
+ <20170216170519.GA9630@localhost.localdomain>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mga06.intel.com ([134.134.136.31]:5080 "EHLO mga06.intel.com"
+Received: from mga09.intel.com ([134.134.136.24]:38552 "EHLO mga09.intel.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754829AbdBPQ4x (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 11:56:53 -0500
+        id S932193AbdBPRFa (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 12:05:30 -0500
 Content-Disposition: inline
-In-Reply-To: <1487257943-72264-1-git-send-email-hare@suse.de>
+In-Reply-To: <20170216170519.GA9630@localhost.localdomain>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
-On Thu, Feb 16, 2017 at 04:12:23PM +0100, Hannes Reinecke wrote:
-> The device handler needs to check if a given queue belongs to
-> a scsi device; only then does it make sense to attach a device
-> handler.
+On Thu, Feb 16, 2017 at 12:05:19PM -0500, Keith Busch wrote:
+> On Thu, Feb 16, 2017 at 04:12:23PM +0100, Hannes Reinecke wrote:
+> > The device handler needs to check if a given queue belongs to
+> > a scsi device; only then does it make sense to attach a device
+> > handler.
+> > 
+> > Signed-off-by: Hannes Reinecke <hare@suse.com>
 > 
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> The thing I don't like is that this still has dm-mpath directly calling
+> into scsi. I don't think dm-mpath has any business calling protocol
+> specific APIs, and doesn't help other protocols with similar needs.
+> 
+> Can we solve this with an indirection layer instead? 
+> 
+> (untested; just checking if this direction is preferable)
 
-The thing I don't like is that this still has dm-mpath directly calling
-into scsi. I don't think dm-mpath has any business calling protocol
-specific APIs, and doesn't help other protocols with similar needs.
+Eh osrry, I accidently included unrelated stuff in the previous. Here's
+what I meant to send:
 
-Can we solve this with an indirection layer instead? 
-
-(untested; just checking if this direction is preferable)
 ---
 diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
 index 3570bcb..28310a2 100644
@@ -72,28 +78,6 @@ index 3570bcb..28310a2 100644
  	else
  		pg_init_done(pgpath, SCSI_DH_DEV_OFFLINED);
  }
-diff --git a/drivers/pci/pcie/pcie-dpc.c b/drivers/pci/pcie/pcie-dpc.c
-index 06d2ed4..49a061a 100644
---- a/drivers/pci/pcie/pcie-dpc.c
-+++ b/drivers/pci/pcie/pcie-dpc.c
-@@ -107,7 +107,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	int status;
- 	u16 ctl, cap;
- 
--	dpc = kzalloc(&dev->device, sizeof(*dpc), GFP_KERNEL);
-+	dpc = kzalloc(sizeof(*dpc), GFP_KERNEL);
- 	if (!dpc)
- 		return -ENOMEM;
- 
-@@ -116,7 +116,7 @@ static int dpc_probe(struct pcie_device *dev)
- 	INIT_WORK(&dpc->work, interrupt_event_handler);
- 	set_service_data(dev, dpc);
- 
--	status = request_irq(&dev->device, dev->irq, dpc_irq, IRQF_SHARED,
-+	status = request_irq(dev->irq, dpc_irq, IRQF_SHARED,
- 				  "pcie-dpc", dpc);
- 	if (status) {
- 		dev_warn(&dev->device, "request IRQ%d failed: %d\n", dev->irq,
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
 index e9e1e14..e23c7d5 100644
 --- a/drivers/scsi/scsi_lib.c
