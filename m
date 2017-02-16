@@ -1,88 +1,59 @@
-From: Ben Hutchings <ben@decadent.org.uk>
-Subject: [PATCH 3.16 226/306] scsi: mpt3sas: Fix secure erase premature
- termination
-Date: Wed, 15 Feb 2017 22:41:40 +0000
-Message-ID: <lsq.1487198500.941983510@decadent.org.uk>
-References: <lsq.1487198498.99718322@decadent.org.uk>
+From: Damien Le Moal <damien.lemoal@wdc.com>
+Subject: Re: [PATCH v4] sd: Check for unaligned partial completion
+Date: Thu, 16 Feb 2017 09:50:51 +0900
+Message-ID: <3b0ea061-225b-92f6-ee81-01f015185fae@wdc.com>
+References: <20170215021230.11181-1-damien.lemoal@wdc.com>
+ <1487171439.2990.2.camel@sandisk.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <lsq.1487198498.99718322@decadent.org.uk>
-Sender: linux-kernel-owner@vger.kernel.org
-To: linux-kernel@vger.kernel.org, stable@vger.kernel.org
-Cc: akpm@linux-foundation.org, Andrey Grodzovsky <andrey2805@gmail.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>, Hannes Reinecke <hare@suse.de>, Chaitra P B <chaitra.basappa@broadcom.com>
+Content-Type: text/plain; charset=utf-8
+Content-Transfer-Encoding: 7bit
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from esa1.hgst.iphmx.com ([68.232.141.245]:39858 "EHLO
+        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1752021AbdBPAvE (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Wed, 15 Feb 2017 19:51:04 -0500
+In-Reply-To: <1487171439.2990.2.camel@sandisk.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Bart Van Assche <Bart.VanAssche@sandisk.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James.Bottomley@HansenPartnership.com" <James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "chaitra.basappa@broadcom.com" <chaitra.basappa@broadcom.com>, "sathya.prakash@broadcom.com" <sathya.prakash@broadcom.com>, "suganath-prabu.subramani@broadcom.com" <suganath-prabu.subramani@broadcom.com>, "hare@suse.de" <hare@suse.de>, "MPT-FusionLinux.pdl@broadcom.com" <MPT-FusionLinux.pdl@broadcom.com>, "hch@lst.de" <hch@lst.de>, "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>, Ram Pai <linuxram@us.ibm.com>
 
-3.16.40-rc1 review patch.  If anyone has any objections, please let me know.
+Bart,
 
-------------------
+On 2/16/17 00:10, Bart Van Assche wrote:
+> On Wed, 2017-02-15 at 11:12 +0900, Damien Le Moal wrote:
+>> +			resid = round_up(resid, sector_size);
+>> +			if (resid < good_bytes)
+>> +				good_bytes -= resid;
+>> +			else
+>> +				good_bytes = 0;
+>> +			scsi_set_resid(SCpnt, resid);
+> 
+> Hello Damien,
+> 
+> If the Data-Out buffer is smaller than a single logical block, can the above
+> code cause resid to exceed the Data-Out buffer size? I think we should avoid
+> to convert a residual overflow into a residual underflow. Additionally, will
+> round_up() work correctly if resid is negative (residual underflow)? How
+> about using the following (untested) code instead of the above?
+> 
+> if (resid > 0) {
+>         resid = min(good_bytes, round_up(resid, sector_size));
+>         good_bytes -= resid;
+>         scsi_set_resid(SCpnt, resid);
+> }
 
-From: Andrey Grodzovsky <andrey2805@gmail.com>
+Indeed, that would be more solid and cover all possible weird values of
+resid. I will resend a v5.
 
-commit 18f6084a989ba1b38702f9af37a2e4049a924be6 upstream.
+Thanks.
 
-This is a work around for a bug with LSI Fusion MPT SAS2 when perfoming
-secure erase. Due to the very long time the operation takes, commands
-issued during the erase will time out and will trigger execution of the
-abort hook. Even though the abort hook is called for the specific
-command which timed out, this leads to entire device halt
-(scsi_state terminated) and premature termination of the secure erase.
-
-Set device state to busy while ATA passthrough commands are in progress.
-
-[mkp: hand applied to 4.9/scsi-fixes, tweaked patch description]
-
-Signed-off-by: Andrey Grodzovsky <andrey2805@gmail.com>
-Acked-by: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: <linux-scsi@vger.kernel.org>
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>
-Cc: Chaitra P B <chaitra.basappa@broadcom.com>
-Cc: Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
-Cc: Sreekanth Reddy <Sreekanth.Reddy@broadcom.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Ben Hutchings <ben@decadent.org.uk>
----
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -1625,7 +1625,10 @@ _scsih_get_volume_capabilities(struct MP
- 	return 0;
- }
- 
--
-+static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
-+{
-+	return (scmd->cmnd[0] == ATA_12 || scmd->cmnd[0] == ATA_16);
-+}
- 
- /**
-  * _scsih_enable_tlr - setting TLR flags
-@@ -3541,6 +3544,13 @@ _scsih_qcmd(struct Scsi_Host *shost, str
- 		scsi_print_command(scmd);
- #endif
- 
-+	/*
-+	 * Lock the device for any subsequent command until command is
-+	 * done.
-+	 */
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_block(scmd->device);
-+
- 	sas_device_priv_data = scmd->device->hostdata;
- 	if (!sas_device_priv_data || !sas_device_priv_data->sas_target) {
- 		scmd->result = DID_NO_CONNECT << 16;
-@@ -4041,6 +4051,9 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *i
- 	if (scmd == NULL)
- 		return 1;
- 
-+	if (ata_12_16_cmd(scmd))
-+		scsi_internal_device_unblock(scmd->device, SDEV_RUNNING);
-+
- 	mpi_request = mpt3sas_base_get_msg_frame(ioc, smid);
- 
- 	if (mpi_reply == NULL) {
+-- 
+Damien Le Moal, Ph.D.
+Sr. Manager, System Software Research Group,
+Western Digital Corporation
+Damien.LeMoal@wdc.com
+(+81) 0466-98-3593 (ext. 513593)
+1 kirihara-cho, Fujisawa,
+Kanagawa, 252-0888 Japan
+www.wdc.com, www.hgst.com
