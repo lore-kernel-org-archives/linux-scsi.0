@@ -1,40 +1,36 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCH] scsi_dh: only attach to SCSI devices
-Date: Thu, 16 Feb 2017 08:33:14 +0100
-Message-ID: <1487230394-84552-1-git-send-email-hare@suse.de>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCH 04/16] aacraid: Prevent E3 lockup when deleting units
+Date: Thu, 16 Feb 2017 08:40:31 +0100
+Message-ID: <5cab20d1-15a8-861c-8cc3-47de3414c78c@suse.de>
+References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-5-RaghavaAditya.Renukunta@microsemi.com>
+ <20bffbde-6a46-96f3-f0ee-889d9a029721@suse.de>
+ <4D8E82A446BF54499747901DBDEB737A7B8C17BA@avsrvexchmbx2.microsemi.net>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:59330 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:59648 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1752712AbdBPHdW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 02:33:22 -0500
+        id S1752712AbdBPHke (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 02:40:34 -0500
+In-Reply-To: <4D8E82A446BF54499747901DBDEB737A7B8C17BA@avsrvexchmbx2.microsemi.net>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@inter.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 
-Any device might be setting a queuedata structure, so we need to
-check if the queuedata really belongs to a SCSI device before
-proceeding.
+On 02/15/2017 07:08 PM, Raghava Aditya Renukunta wrote:
+> 
+> I will put in the queue for the next set of patch submissions and chip away
+>  at it bit by bit.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_dh.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+Yay, thanks.
 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index b8d3b97..da104ed 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -226,7 +226,9 @@ static struct scsi_device *get_sdev_from_queue(struct request_queue *q)
- 
- 	spin_lock_irqsave(q->queue_lock, flags);
- 	sdev = q->queuedata;
--	if (!sdev || !get_device(&sdev->sdev_gendev))
-+	if (!sdev ||
-+	    !scsi_is_sdev_device(&sdev->sdev_gendev) ||
-+	    !get_device(&sdev->sdev_gendev))
- 		sdev = NULL;
- 	spin_unlock_irqrestore(q->queue_lock, flags);
- 
 -- 
-1.8.5.6
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
