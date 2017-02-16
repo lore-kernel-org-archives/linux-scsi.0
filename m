@@ -1,72 +1,168 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 07/10] mpt3sas: use hi-priority queue for TMFs
-Date: Thu, 16 Feb 2017 11:14:17 +0100
-Message-ID: <1a6f0c63-8987-8523-2a00-980a461bf79a@suse.de>
+Subject: Re: [PATCH 00/10] mpt3sas: full mq support
+Date: Thu, 16 Feb 2017 11:18:42 +0100
+Message-ID: <b456fe10-9553-4f0d-9f00-0f0e0fc6210f@suse.de>
 References: <1485854760-122683-1-git-send-email-hare@suse.de>
- <1485854760-122683-8-git-send-email-hare@suse.de>
- <CAK=zhgpVhm06-r_CYOmpLrU+uEf9QwM+WpS74OmmmHkJ0Up3Hg@mail.gmail.com>
+ <20170131100243.GA1811@lst.de> <9a9d5acd-5f51-ad5b-7364-1d7549c040fd@suse.de>
+ <e8d8dbf8dc2fa11b85a90211f2298b20@mail.gmail.com>
+ <255dbb75-9ebd-0c7b-486e-e6fec772b8ca@suse.de>
+ <41a4fdd78121e86e13dc874127b0b956@mail.gmail.com>
+ <3e50cfdc-c330-4241-5ac3-a8f2ef5f77b4@suse.de>
+ <CAK=zhgqjmpOS7M3WOsC+yUMRiw+y6H0sP2Hca9tuCyM19sAR8Q@mail.gmail.com>
+ <1d7e8757-4b25-3f09-77ec-a286e83d3d73@suse.de>
+ <CAK=zhgqBH3YJTo-PJF5nN9futQ-LWjVzAUji9xC_rWO5EA=_+g@mail.gmail.com>
+ <4747beb1-0c16-171d-ab39-2e1a4692ba19@suse.de>
+ <CAK=zhgqQ2x5d9Mzo89V95WS8SB0Xqyw4YtL4=cAr_PEv6GS1gQ@mail.gmail.com>
+ <2770c802-b8b2-9035-c760-c5b970a9bd99@suse.de>
+ <CAK=zhgqiCh+5tD+kHD15Xef5MnJM0SG=LaP=+cM-40VtMSH7Ew@mail.gmail.com>
+ <01e426acae471cf8e599a5100bc8d409@mail.gmail.com>
+ <e34535df-ab24-bf52-579f-faeca8c9c9d4@suse.de>
+ <3d257aa567a9a3e0081ca342aaf7c354@mail.gmail.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:41603 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:41841 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1753209AbdBPKOU (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 05:14:20 -0500
-In-Reply-To: <CAK=zhgpVhm06-r_CYOmpLrU+uEf9QwM+WpS74OmmmHkJ0Up3Hg@mail.gmail.com>
+        id S1752820AbdBPKSp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 05:18:45 -0500
+In-Reply-To: <3d257aa567a9a3e0081ca342aaf7c354@mail.gmail.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, Hannes Reinecke <hare@suse.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>
 
-On 02/16/2017 11:09 AM, Sreekanth Reddy wrote:
-> On Tue, Jan 31, 2017 at 2:55 PM, Hannes Reinecke <hare@suse.de> wrote:
->> When sending a TMF via the ioctl interface we should be using
->> the hi-priority queue instead of the scsi queue to be consistent
->> with overall TMF usage.
+On 02/16/2017 10:48 AM, Kashyap Desai wrote:
+>> -----Original Message-----
+>> From: Hannes Reinecke [mailto:hare@suse.de]
+>> Sent: Wednesday, February 15, 2017 3:35 PM
+>> To: Kashyap Desai; Sreekanth Reddy
+>> Cc: Christoph Hellwig; Martin K. Petersen; James Bottomley; linux-
+>> scsi@vger.kernel.org; Sathya Prakash Veerichetty; PDL-MPT-FUSIONLINUX
+>> Subject: Re: [PATCH 00/10] mpt3sas: full mq support
 >>
->> Signed-off-by: Hannes Reinecke <hare@suse.com>
->> ---
->>  drivers/scsi/mpt3sas/mpt3sas_ctl.c | 2 +-
->>  1 file changed, 1 insertion(+), 1 deletion(-)
+>> On 02/15/2017 10:18 AM, Kashyap Desai wrote:
+>>>>
+>>>>
+>>>> Hannes,
+>>>>
+>>>> Result I have posted last time is with merge operation enabled in
+>>>> block layer. If I disable merge operation then I don't see much
+>>>> improvement with multiple hw request queues. Here is the result,
+>>>>
+>>>> fio results when nr_hw_queues=1,
+>>>> 4k read when numjobs=24: io=248387MB, bw=1655.1MB/s, iops=423905,
+>>>> runt=150003msec
+>>>>
+>>>> fio results when nr_hw_queues=24,
+>>>> 4k read when numjobs=24: io=263904MB, bw=1759.4MB/s, iops=450393,
+>>>> runt=150001msec
+>>>
+>>> Hannes -
+>>>
+>>>  I worked with Sreekanth and also understand pros/cons of Patch #10.
+>>> " [PATCH 10/10] mpt3sas: scsi-mq interrupt steering"
+>>>
+>>> In above patch, can_queue of HBA is divided based on logic CPU, it
+>>> means we want to mimic as if mpt3sas HBA support multi queue
+>>> distributing actual resources which is single Submission H/W Queue.
+>>> This approach badly impact many performance areas.
+>>>
+>>> nr_hw_queues = 1 is what I observe as best performance approach since
+>>> it never throttle IO if sdev->queue_depth is set to HBA queue depth.
+>>> In case of nr_hw_queues = "CPUs" throttle IO at SCSI level since we
+>>> never allow more than "updated can_queue" in LLD.
+>>>
+>> True.
+>> And this was actually one of the things I wanted to demonstrate with this
+>> patchset :-) ATM blk-mq really works best when having a distinct tag space
+>> per port/device. As soon as the hardware provides a _shared_ tag space you
+>> end up with tag starvation issues as blk-mq only allows you to do a static
+>> split of the available tagspace.
+>> While this patchset demonstrates that the HBA itself _does_ benefit from
+>> using block-mq (especially on highly parallel loads), it also demonstrates
+>> that
+>> _block-mq_ has issues with singlethreaded loads on this HBA (or, rather,
+>> type of HBA, as I doubt this issue is affecting mpt3sas only).
 >>
->> diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> index 95f0f24..e952175 100644
->> --- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
->> @@ -720,7 +720,7 @@ enum block_state {
->>                 }
->>         } else {
+>>> Below code bring actual HBA can_queue very low ( Ea on 96 logical core
+>>> CPU new can_queue goes to 42, if HBA queue depth is 4K). It means we
+>>> will see lots of IO throttling in scsi mid layer due to
+>>> shost->can_queue reach the limit very soon if you have <fio> jobs with
+>> higher QD.
+>>>
+>>> 	if (ioc->shost->nr_hw_queues > 1) {
+>>> 		ioc->shost->nr_hw_queues = ioc->msix_vector_count;
+>>> 		ioc->shost->can_queue /= ioc->msix_vector_count;
+>>> 	}
+>>> I observe negative performance if I have 8 SSD drives attached to
+>>> Ventura (latest IT controller). 16 fio jobs at QD=128 gives ~1600K
+>>> IOPs and the moment I switch to nr_hw_queues = "CPUs", it gave hardly
+>>> ~850K IOPs. This is mainly because of host_busy stuck at very low ~169
+>>> on
+>> my setup.
+>>>
+>> Which actually might be an issue with the way scsi is hooked into blk-mq.
+>> The SCSI stack is using 'can_queue' as a check for 'host_busy', ie if the
+>> host is
+>> capable of accepting more commands.
+>> As we're limiting can_queue (to get the per-queue command depth
+>> correctly) we should be using the _overall_ command depth for the
+>> can_queue value itself to make the host_busy check work correctly.
 >>
->> -               smid = mpt3sas_base_get_smid_scsiio(ioc, ioc->ctl_cb_idx, NULL);
->> +               smid = mpt3sas_base_get_smid_hpr(ioc, ioc->ctl_cb_idx);
+>> I've attached a patch for that; can you test if it makes a difference?
+> Hannes -
+> Attached patch works fine for me. FYI -  We need to set device queue depth
+> to can_queue as we are currently not doing in mpt3sas driver.
 > 
-> This else part is not for TM path, It is for IO path. For the TM
-> request we are already using smid from hpr queue, as shown below
+> With attached patch when I tried, I see ~2-3% improvement running multiple
+> jobs. Single job profile no difference.
 > 
-> if (mpi_request->Function == MPI2_FUNCTION_SCSI_TASK_MGMT) {
->                 smid = mpt3sas_base_get_smid_hpr(ioc, ioc->ctl_cb_idx);
->                 if (!smid) {
->                         pr_err(MPT3SAS_FMT "%s: failed obtaining a smid\n",
->                             ioc->name, __func__);
->                         ret = -EAGAIN;
->                         goto out;
->                 }
->         } else {
+> So looks like we are good to reach performance with single nr_hw_queues.
 > 
->                 smid = mpt3sas_base_get_smid_scsiio(ioc, ioc->ctl_cb_idx, NULL);
-> 
-Yes, I know.
-But the current method of inserting a SCSI command completely goes
-against blk-mq request usage; with blk-mq the tags are managed with the
-block layer, so you need to integrate with that to get a correct tag.
+Whee, cool.
 
-Is this _really_ a crucial functionality? Can't we just drop it and use
-sg/bsg for this?
-It would make my life _so_ much easier; the alternative would be to
-either implement 'real' reserved command handling or rewriting the above
-code-path in terms of 'struct request', packing and unpacking as we go.
-Neither is very appealing.
+> We have some patches to be send so want to know how to rebase this patch
+> series as few patches coming from Broadcom. Can we consider below as plan ?
+> 
+Sure, can do.
+
+> - Patches from 1-7 will be reposted. Also Sreekanth will complete review on
+> existing patch 1-7.
+> - We need blk_tag support only for nr_hw_queue = 1.
+> 
+> With that say, we will have many code changes/function without "
+> shost_use_blk_mq" check and assume it is single nr_hw_queue supported
+> <mpt3sas> driver.
+> 
+> Ea - Below function can be simplify - just refer tag from scmd->request and
+> don't need check of shost_use_blk_mq + nr_hw_queue etc..
+> 
+> u16
+> mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+>         struct scsi_cmnd *scmd)
+> {
+>         struct scsiio_tracker *request;
+>         u16 smid = scmd->request->tag +  1;
+>          ...
+>          return request->smid;
+> }
+> 
+> - Later we can explore if nr_hw_queue more than one really add benefit.
+> From current limited testing, I don't see major performance boost if we have
+> nr_hw_queue more than one.
+> 
+Well, the _actual_ code to support mq is rather trivial, and really
+serves as a good testbed for scsi-mq.
+I would prefer to leave it in, and disable it via a module parameter.
+
+But in either case, I can rebase the patches to leave any notions of
+'nr_hw_queues' to patch 8 for implementing full mq support.
+
+And we need to discuss how to handle MPI2_FUNCTION_SCSI_IO_REQUEST; the
+current method doesn't work with blk-mq.
+I really would like to see that go, especially as sg/bsg supports the
+same functionality ...
 
 Cheers,
 
