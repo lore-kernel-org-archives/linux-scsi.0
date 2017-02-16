@@ -1,79 +1,75 @@
 From: Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Subject: Re: [PATCH 04/10] mpt3sas: separate out _base_recovery_check()
-Date: Thu, 16 Feb 2017 15:23:33 +0530
-Message-ID: <CAK=zhgpvR7KoReCHzN7uqd1KgBK0wHoeBc2yiZgniF5aQJwmwA@mail.gmail.com>
-References: <1485854760-122683-1-git-send-email-hare@suse.de> <1485854760-122683-5-git-send-email-hare@suse.de>
+Subject: Re: [PATCH 05/10] mpt3sas: open-code _scsih_scsi_lookup_get()
+Date: Thu, 16 Feb 2017 15:29:24 +0530
+Message-ID: <CAK=zhgqrBZPUSvDKHEMZwHLWv00DCrnRzKAsUE+AbyH0M4XoTQ@mail.gmail.com>
+References: <1485854760-122683-1-git-send-email-hare@suse.de> <1485854760-122683-6-git-send-email-hare@suse.de>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qk0-f177.google.com ([209.85.220.177]:32840 "EHLO
-        mail-qk0-f177.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752902AbdBPJxf (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 04:53:35 -0500
-Received: by mail-qk0-f177.google.com with SMTP id p22so10626045qka.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 01:53:34 -0800 (PST)
-In-Reply-To: <1485854760-122683-5-git-send-email-hare@suse.de>
+Received: from mail-qk0-f170.google.com ([209.85.220.170]:34156 "EHLO
+        mail-qk0-f170.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1751191AbdBPJ70 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 04:59:26 -0500
+Received: by mail-qk0-f170.google.com with SMTP id s186so10675327qkb.1
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 01:59:25 -0800 (PST)
+In-Reply-To: <1485854760-122683-6-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Hannes Reinecke <hare@suse.de>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Christoph Hellwig <hch@lst.de>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Sathya Prakash <sathya.prakash@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>, Hannes Reinecke <hare@suse.com>
 
 On Tue, Jan 31, 2017 at 2:55 PM, Hannes Reinecke <hare@suse.de> wrote:
-> No functional change.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.com>
-> ---
->  drivers/scsi/mpt3sas/mpt3sas_base.c | 23 ++++++++++++++---------
->  1 file changed, 14 insertions(+), 9 deletions(-)
->
-> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> index 120b317..dd14596 100644
-> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-> @@ -2366,6 +2366,19 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->  }
->
->  static void
-> +_base_recovery_check(struct MPT3SAS_ADAPTER *ioc)
-> +{
-> +       /*
-> +        * See _wait_for_commands_to_complete() call with regards to this code.
-> +        */
-> +       if (ioc->shost_recovery && ioc->pending_io_count) {
-> +               if (ioc->pending_io_count == 1)
-> +                       wake_up(&ioc->reset_wq);
-> +               ioc->pending_io_count = 0;
+> Just a wrapper around the scsi lookup array and only used
+> in one place, so open-code it.
 
-I think here we should reduce the pending_io_count by one instead of
-assigning it to zero in-order to have same behavior as before.
+I think this whole series of patches created over 14.101.00.00 version
+driver not on the latest 15.100.00.00 driver. So this patch will
+conflict with 15.100.00.00 version driver i.e. with commit
+459325c466d278d3c9f51ddc9bb544c014136fd1(mpt3sas: Fix for Crusader to
+achieve product targets with SAS devices).
 
 Thanks,
 Sreekanth
 
-> +       }
-> +}
-> +
-> +static void
->  _dechain_st(struct MPT3SAS_ADAPTER *ioc, struct scsiio_tracker *st)
->  {
->         struct chain_tracker *chain_req;
-> @@ -2402,15 +2415,7 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
->                 list_add(&ioc->scsi_lookup[i].tracker_list, &ioc->free_list);
->                 spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
 >
-> -               /*
-> -                * See _wait_for_commands_to_complete() call with regards
-> -                * to this code.
-> -                */
-> -               if (ioc->shost_recovery && ioc->pending_io_count) {
-> -                       if (ioc->pending_io_count == 1)
-> -                               wake_up(&ioc->reset_wq);
-> -                       ioc->pending_io_count--;
-> -               }
-> +               _base_recovery_check(ioc);
->                 return;
->         } else if (smid < ioc->internal_smid) {
->                 /* hi-priority */
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c | 15 +--------------
+>  1 file changed, 1 insertion(+), 14 deletions(-)
+>
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> index b5c966e..979f95a 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+> @@ -1061,19 +1061,6 @@ struct _sas_node *
+>  }
+>
+>  /**
+> - * _scsih_scsi_lookup_get - returns scmd entry
+> - * @ioc: per adapter object
+> - * @smid: system request message index
+> - *
+> - * Returns the smid stored scmd pointer.
+> - */
+> -static struct scsi_cmnd *
+> -_scsih_scsi_lookup_get(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+> -{
+> -       return ioc->scsi_lookup[smid - 1].scmd;
+> -}
+> -
+> -/**
+>   * _scsih_scsi_lookup_get_clear - returns scmd entry
+>   * @ioc: per adapter object
+>   * @smid: system request message index
+> @@ -6101,7 +6088,7 @@ static inline bool ata_12_16_cmd(struct scsi_cmnd *scmd)
+>         for (smid = 1; smid <= ioc->scsiio_depth; smid++) {
+>                 if (ioc->shost_recovery)
+>                         goto out;
+> -               scmd = _scsih_scsi_lookup_get(ioc, smid);
+> +               scmd = ioc->scsi_lookup[smid - 1].scmd;
+>                 if (!scmd)
+>                         continue;
+>                 sdev = scmd->device;
 > --
 > 1.8.5.6
 >
