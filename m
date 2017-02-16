@@ -1,80 +1,76 @@
-From: "Guilherme G. Piccoli" <gpiccoli@linux.vnet.ibm.com>
-Subject: Re: [PATCH v4] sd: Check for unaligned partial completion
-Date: Thu, 16 Feb 2017 17:34:23 -0200
-Message-ID: <f56d2b75-cd10-c1ca-0f2f-49c6786b2bd0@linux.vnet.ibm.com>
-References: <20170215021230.11181-1-damien.lemoal@wdc.com>
- <20170215063454.GA15020@lst.de>
- <9e2ca83a-d355-64f5-5d82-031761134c57@wdc.com>
- <20170215070609.GB10603@ram.oc3035372033.ibm.com>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: [PATCH 06/16] aacraid: Added sysfs for driver version
+Date: Thu, 16 Feb 2017 19:38:13 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C3009@avsrvexchmbx2.microsemi.net>
+References: <20170214204446.14808-1-RaghavaAditya.Renukunta@microsemi.com>
+ <20170214204446.14808-7-RaghavaAditya.Renukunta@microsemi.com>
+ <30a69431-f904-38f7-7aca-df2ff02cc5d0@suse.de>
+ <4D8E82A446BF54499747901DBDEB737A7B8C180D@avsrvexchmbx2.microsemi.net>
+ <d51bf566-59c3-1f7a-1998-01f17cb33e85@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: quoted-printable
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:38639 "EHLO
-        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S932694AbdBPTeb (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 14:34:31 -0500
-Received: from pps.filterd (m0098396.ppops.net [127.0.0.1])
-        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1GJXtlB061317
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 14:34:30 -0500
-Received: from e24smtp04.br.ibm.com (e24smtp04.br.ibm.com [32.104.18.25])
-        by mx0a-001b2d01.pphosted.com with ESMTP id 28ndphw688-1
-        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 14:34:30 -0500
-Received: from localhost
-        by e24smtp04.br.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
-        for <linux-scsi@vger.kernel.org> from <gpiccoli@linux.vnet.ibm.com>;
-        Thu, 16 Feb 2017 17:34:27 -0200
-Received: from d24relay03.br.ibm.com (d24relay03.br.ibm.com [9.18.232.225])
-        by d24dlp02.br.ibm.com (Postfix) with ESMTP id C3B161DC0072
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 14:34:26 -0500 (EST)
-Received: from d24av01.br.ibm.com (d24av01.br.ibm.com [9.8.31.91])
-        by d24relay03.br.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id v1GJYPDK37748816
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 17:34:25 -0200
-Received: from d24av01.br.ibm.com (localhost [127.0.0.1])
-        by d24av01.br.ibm.com (8.14.4/8.14.4/NCO v10.0 AVout) with ESMTP id v1GJYOoR023944
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 17:34:24 -0200
-In-Reply-To: <20170215070609.GB10603@ram.oc3035372033.ibm.com>
+Received: from mail-by2nam03on0051.outbound.protection.outlook.com ([104.47.42.51]:44285
+        "EHLO NAM03-BY2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S932694AbdBPTip (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 14:38:45 -0500
+In-Reply-To: <d51bf566-59c3-1f7a-1998-01f17cb33e85@suse.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Ram Pai <linuxram@us.ibm.com>, Damien Le Moal <damien.lemoal@wdc.com>
-Cc: Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>
-
-On 15/02/2017 05:06, Ram Pai wrote:
-> On Wed, Feb 15, 2017 at 03:48:52PM +0900, Damien Le Moal wrote:
->> Christoph,
->>
->> On 2/15/17 15:34, Christoph Hellwig wrote:
->>> this looks reasonable, but we should ask Guilherme and Ram to confirm
->>> it fixes their originally reported issue.  I've added them to Cc.
->>
->> Thank you.
->>
->> Guilherme, Ram,
->>
->> Please test ! The original fix breaks the zoned block device support
->> that was newly added to 4.10. So we need a fix for that and your issue
->> combined before Linus releases 4.10 stable this weekend.
-> 
-> Yes logically it looks correct and should fix our issue. 
-> 
-> I doubt Guilherme has access to the same adapter firmware that exposed
-> the original problem. We will probably have to induce the erroneous
-> behavior in the driver to reproduce the issue and verify the fix.
-
-Ram, I do have access but the environment changed a lot, including
-disks, setup of the distributed filesystem and tests...and so I wasn't
-able to reproduce the issue anymore.
-
-Since the logic of the new approach looks correct, I'm ok with the patch.
-
-Thanks,
+To: Johannes Thumshirn <jthumshirn@suse.de>, "jejb@linux.vnet.ibm.com" <jejb@linux.vnet.ibm.com>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Cc: Dave Carroll <david.carroll@microsemi.com>, Gana Sridaran <gana.sridaran@microsemi.com>, Scott Benesh <scott.benesh@microsemi.com>, "dan.carpenter@oracle.com" <dan.carpenter@oracle.com>
 
 
-Guilherme
 
-> 
-> Will let you know,
-> RP
-> 
+> -----Original Message-----
+> From: Johannes Thumshirn [mailto:jthumshirn@suse.de]
+> Sent: Wednesday, February 15, 2017 11:43 PM
+> To: Raghava Aditya Renukunta
+> <RaghavaAditya.Renukunta@microsemi.com>; jejb@linux.vnet.ibm.com;
+> martin.petersen@oracle.com; linux-scsi@vger.kernel.org
+> Cc: Dave Carroll <david.carroll@microsemi.com>; Gana Sridaran
+> <gana.sridaran@microsemi.com>; Scott Benesh
+> <scott.benesh@microsemi.com>; dan.carpenter@oracle.com
+> Subject: Re: [PATCH 06/16] aacraid: Added sysfs for driver version
+>=20
+> EXTERNAL EMAIL
+>=20
+>=20
+> On 02/15/2017 07:12 PM, Raghava Aditya Renukunta wrote:
+> >
+> > I agree , but it makes it easier to get the driver version when I am
+> developing
+> > and I don't know which driver version is currently loaded
+> >
+> > In addition internally our test automation suites use this information =
+as
+> > opposed to modinfo to get the driver version running.
+>=20
+> OK then.
+>=20
+> Speaking of test automation, is there something you may be able to share?
+>=20
+> Thanks,
+>         Johannes
+
+Well still in the very initial phases, so nothing concrete yet.
+
+The plan is to compile the source and install it on various kernels for tes=
+ting
+ and modinfo  will not be able to retrieve the version info. =20
+
+Additionally it seems to be a  cleaner method when compared to modinfo.
+
+Regards,
+Raghava Aditya
+
+> --
+> Johannes Thumshirn                                          Storage
+> jthumshirn@suse.de                                +49 911 74053 689
+> SUSE LINUX GmbH, Maxfeldstr. 5, 90409 N=FCrnberg
+> GF: Felix Imend=F6rffer, Jane Smithard, Graham Norton
+> HRB 21284 (AG N=FCrnberg)
+> Key fingerprint =3D EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
