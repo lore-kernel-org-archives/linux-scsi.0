@@ -1,27 +1,27 @@
 From: Christoph Hellwig <hch@lst.de>
-Subject: Re: [PATCH] scsi_dh: only attach to SCSI devices
-Date: Thu, 16 Feb 2017 15:32:13 +0100
-Message-ID: <20170216143212.GA32058@lst.de>
-References: <1487230394-84552-1-git-send-email-hare@suse.de>
+Subject: Re: sense handling improvements
+Date: Thu, 16 Feb 2017 15:33:25 +0100
+Message-ID: <20170216143325.GC32058@lst.de>
+References: <20170214191600.17480-1-hch@lst.de> <yq18tp6by2n.fsf@oracle.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from verein.lst.de ([213.95.11.211]:35779 "EHLO newverein.lst.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932067AbdBPOcP (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 09:32:15 -0500
+Return-path: <linux-block-owner@vger.kernel.org>
 Content-Disposition: inline
-In-Reply-To: <1487230394-84552-1-git-send-email-hare@suse.de>
-Sender: linux-scsi-owner@vger.kernel.org
+In-Reply-To: <yq18tp6by2n.fsf@oracle.com>
+Sender: linux-block-owner@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, axboe@kernek.dk, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@inter.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
-On Thu, Feb 16, 2017 at 08:33:14AM +0100, Hannes Reinecke wrote:
-> Any device might be setting a queuedata structure, so we need to
-> check if the queuedata really belongs to a SCSI device before
-> proceeding.
+On Wed, Feb 15, 2017 at 10:42:56PM -0500, Martin K. Petersen wrote:
+> Christoph> The first patch prevents any possibily of reusing stale sense
+> Christoph> codes in sense headers, and is a bug fix that we should
+> Christoph> probably get into the block tree ASAP.
+> 
+> Christoph> The rest cleans up handling of the parsed sense data and
+> Christoph> could go in either through the block tree, or a SCSI branch
+> Christoph> on top of the block tree.
+> 
+> I can bring them in after Linus' initial block pull.
 
-Can you add a comment next to the scsi_is_sdev_device call explaining
-it?  The thing is a bit of a hack, but probably the best we can do for
-now.
+That would be great.
