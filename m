@@ -1,60 +1,96 @@
-From: Kashyap Desai <kashyap.desai@broadcom.com>
-Subject: RE: [PATCH 00/10] mpt3sas: full mq support
-Date: Thu, 16 Feb 2017 16:15:05 +0530
-Message-ID: <0c659c1cd2e47ca8e0abf72f56b9d000@mail.gmail.com>
-References: <1485854760-122683-1-git-send-email-hare@suse.de>
- <20170131100243.GA1811@lst.de> <9a9d5acd-5f51-ad5b-7364-1d7549c040fd@suse.de>
- <e8d8dbf8dc2fa11b85a90211f2298b20@mail.gmail.com> <255dbb75-9ebd-0c7b-486e-e6fec772b8ca@suse.de>
- <41a4fdd78121e86e13dc874127b0b956@mail.gmail.com> <3e50cfdc-c330-4241-5ac3-a8f2ef5f77b4@suse.de>
- <CAK=zhgqjmpOS7M3WOsC+yUMRiw+y6H0sP2Hca9tuCyM19sAR8Q@mail.gmail.com>
- <1d7e8757-4b25-3f09-77ec-a286e83d3d73@suse.de> <CAK=zhgqBH3YJTo-PJF5nN9futQ-LWjVzAUji9xC_rWO5EA=_+g@mail.gmail.com>
- <4747beb1-0c16-171d-ab39-2e1a4692ba19@suse.de> <CAK=zhgqQ2x5d9Mzo89V95WS8SB0Xqyw4YtL4=cAr_PEv6GS1gQ@mail.gmail.com>
- <2770c802-b8b2-9035-c760-c5b970a9bd99@suse.de> <CAK=zhgqiCh+5tD+kHD15Xef5MnJM0SG=LaP=+cM-40VtMSH7Ew@mail.gmail.com>
- <01e426acae471cf8e599a5100bc8d409@mail.gmail.com> <e34535df-ab24-bf52-579f-faeca8c9c9d4@suse.de>
- <3d257aa567a9a3e0081ca342aaf7c354@mail.gmail.com> <b456fe10-9553-4f0d-9f00-0f0e0fc6210f@suse.de>
+From: Maurizio Lombardi <mlombard@redhat.com>
+Subject: Re: [PATCH RFC] enclosure: fix sysfs symlinks creation when using
+ multipath
+Date: Thu, 16 Feb 2017 14:13:23 +0100
+Message-ID: <d57f3221-ce38-7c12-d70c-28c1bd6db973@redhat.com>
+References: <1486476528-27580-1-git-send-email-mlombard@redhat.com>
+ <1486476528-27580-2-git-send-email-mlombard@redhat.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 7bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-qt0-f180.google.com ([209.85.216.180]:33722 "EHLO
-        mail-qt0-f180.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752688AbdBPKpH (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Thu, 16 Feb 2017 05:45:07 -0500
-Received: by mail-qt0-f180.google.com with SMTP id v23so10553968qtb.0
-        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 02:45:07 -0800 (PST)
-In-Reply-To: <b456fe10-9553-4f0d-9f00-0f0e0fc6210f@suse.de>
+Received: from mx1.redhat.com ([209.132.183.28]:44568 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753526AbdBPNN0 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 08:13:26 -0500
+In-Reply-To: <1486476528-27580-2-git-send-email-mlombard@redhat.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Hannes Reinecke <hare@suse.de>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>, PDL-MPT-FUSIONLINUX <mpt-fusionlinux.pdl@broadcom.com>
+To: jejb@linux.vnet.ibm.com
+Cc: linux-scsi@vger.kernel.org, "Martin K. Petersen" <martin.petersen@oracle.com>
 
-> > - Later we can explore if nr_hw_queue more than one really add benefit.
-> > From current limited testing, I don't see major performance boost if
-> > we have nr_hw_queue more than one.
-> >
-> Well, the _actual_ code to support mq is rather trivial, and really serves
-> as a
-> good testbed for scsi-mq.
-> I would prefer to leave it in, and disable it via a module parameter.
+Hi James,
 
-I am thinking as adding extra code for more than one nr_hw_queue will add
-maintenance overhead and support. Especially IO error handling code become
-complex with nr_hw_queues > 1 case.  If we really like to see performance
-boost, we should attempt and bare other side effect.
+have you noticed this patch?
 
-For time being we should drop this nr_hw_queue > 1 support is what I choose
-(not even module parameter base).
 
->
-> But in either case, I can rebase the patches to leave any notions of
-> 'nr_hw_queues' to patch 8 for implementing full mq support.
-
-Thanks Hannes. It was just heads up...We are not sure when we can submit
-upcoming patch set from Broadcom. May be we can syncup with you offline in
-case any rebase requires.
-
->
-> And we need to discuss how to handle MPI2_FUNCTION_SCSI_IO_REQUEST;
-> the current method doesn't work with blk-mq.
-> I really would like to see that go, especially as sg/bsg supports the same
-> functionality ...
->
+Dne 7.2.2017 v 15:08 Maurizio Lombardi napsal(a):
+> With multipath, it may happen that the same device is passed
+> to enclosure_add_device() multiple times and that the enclosure_add_links()
+> function fails to create the symlinks because the device's sysfs
+> directory entry is still NULL.
+> In this case, the links will never be created because all the subsequent
+> calls to enclosure_add_device() will immediately fail with EEXIST.
+> 
+> This patch modifies the code so the driver will detect this condition
+> and will retry to create the symlinks when enclosure_add_device() is called.
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+> ---
+>  drivers/misc/enclosure.c  | 16 ++++++++++++++--
+>  include/linux/enclosure.h |  1 +
+>  2 files changed, 15 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/misc/enclosure.c b/drivers/misc/enclosure.c
+> index 65fed71..a856c98 100644
+> --- a/drivers/misc/enclosure.c
+> +++ b/drivers/misc/enclosure.c
+> @@ -375,21 +375,33 @@ int enclosure_add_device(struct enclosure_device *edev, int component,
+>  			 struct device *dev)
+>  {
+>  	struct enclosure_component *cdev;
+> +	int error;
+>  
+>  	if (!edev || component >= edev->components)
+>  		return -EINVAL;
+>  
+>  	cdev = &edev->component[component];
+>  
+> -	if (cdev->dev == dev)
+> +	if (cdev->dev == dev) {
+> +		if (!cdev->links_created) {
+> +			error = enclosure_add_links(cdev);
+> +			if (!error)
+> +				cdev->links_created = 1;
+> +		}
+>  		return -EEXIST;
+> +	}
+>  
+>  	if (cdev->dev)
+>  		enclosure_remove_links(cdev);
+>  
+>  	put_device(cdev->dev);
+>  	cdev->dev = get_device(dev);
+> -	return enclosure_add_links(cdev);
+> +	error = enclosure_add_links(cdev);
+> +	if (!error)
+> +		cdev->links_created = 1;
+> +	else
+> +		cdev->links_created = 0;
+> +	return error;
+>  }
+>  EXPORT_SYMBOL_GPL(enclosure_add_device);
+>  
+> diff --git a/include/linux/enclosure.h b/include/linux/enclosure.h
+> index a4cf57c..c3bdc4c 100644
+> --- a/include/linux/enclosure.h
+> +++ b/include/linux/enclosure.h
+> @@ -97,6 +97,7 @@ struct enclosure_component {
+>  	struct device cdev;
+>  	struct device *dev;
+>  	enum enclosure_component_type type;
+> +	int links_created;
+>  	int number;
+>  	int fault;
+>  	int active;
+> 
