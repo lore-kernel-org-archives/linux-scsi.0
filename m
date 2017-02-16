@@ -1,137 +1,99 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2] scsi: use 'scsi_device_from_queue()' for scsi_dh
-Date: Thu, 16 Feb 2017 16:12:23 +0100
-Message-ID: <1487257943-72264-1-git-send-email-hare@suse.de>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: hch's native NVMe multipathing [was: Re: [PATCH 1/2] Don't
+ blacklist nvme]
+Date: Thu, 16 Feb 2017 10:13:37 -0500
+Message-ID: <20170216151337.GA12678@redhat.com>
+References: <1487107154-24883-1-git-send-email-keith.busch@intel.com>
+ <20170215145617.GA4241@infradead.org>
+ <20170216025357.GA9241@redhat.com>
+ <20170216142621.GA21972@infradead.org>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:37693 "EHLO mx2.suse.de"
+Received: from mx1.redhat.com ([209.132.183.28]:46804 "EHLO mx1.redhat.com"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932218AbdBPPM2 (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 10:12:28 -0500
+        id S932082AbdBPPNh (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 10:13:37 -0500
+Content-Disposition: inline
+In-Reply-To: <20170216142621.GA21972@infradead.org>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org
 
-The device handler needs to check if a given queue belongs to
-a scsi device; only then does it make sense to attach a device
-handler.
+On Thu, Feb 16 2017 at  9:26am -0500,
+Christoph Hellwig <hch@infradead.org> wrote:
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- drivers/scsi/scsi_dh.c     | 22 ++++------------------
- drivers/scsi/scsi_lib.c    | 26 ++++++++++++++++++++++++++
- include/scsi/scsi_device.h |  1 +
- 3 files changed, 31 insertions(+), 18 deletions(-)
+> On Wed, Feb 15, 2017 at 09:53:57PM -0500, Mike Snitzer wrote:
+> > going to LSF/MM?).  Yet you're expecting to just drop it into the tree
+> > without a care in the world about the implications.
+> 
+> I am planning to post it for comments, and then plan to "drop it in the
+> tree" exactly because I think of the implications.
+> 
+> Keith did that
 
-diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
-index b8d3b97..84addee 100644
---- a/drivers/scsi/scsi_dh.c
-+++ b/drivers/scsi/scsi_dh.c
-@@ -219,20 +219,6 @@ int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh)
- }
- EXPORT_SYMBOL_GPL(scsi_unregister_device_handler);
- 
--static struct scsi_device *get_sdev_from_queue(struct request_queue *q)
--{
--	struct scsi_device *sdev;
--	unsigned long flags;
--
--	spin_lock_irqsave(q->queue_lock, flags);
--	sdev = q->queuedata;
--	if (!sdev || !get_device(&sdev->sdev_gendev))
--		sdev = NULL;
--	spin_unlock_irqrestore(q->queue_lock, flags);
--
--	return sdev;
--}
--
- /*
-  * scsi_dh_activate - activate the path associated with the scsi_device
-  *      corresponding to the given request queue.
-@@ -251,7 +237,7 @@ int scsi_dh_activate(struct request_queue *q, activate_complete fn, void *data)
- 	struct scsi_device *sdev;
- 	int err = SCSI_DH_NOSYS;
- 
--	sdev = get_sdev_from_queue(q);
-+	sdev = scsi_device_from_queue(q);
- 	if (!sdev) {
- 		if (fn)
- 			fn(data, err);
-@@ -298,7 +284,7 @@ int scsi_dh_set_params(struct request_queue *q, const char *params)
- 	struct scsi_device *sdev;
- 	int err = -SCSI_DH_NOSYS;
- 
--	sdev = get_sdev_from_queue(q);
-+	sdev = scsi_device_from_queue(q);
- 	if (!sdev)
- 		return err;
- 
-@@ -321,7 +307,7 @@ int scsi_dh_attach(struct request_queue *q, const char *name)
- 	struct scsi_device_handler *scsi_dh;
- 	int err = 0;
- 
--	sdev = get_sdev_from_queue(q);
-+	sdev = scsi_device_from_queue(q);
- 	if (!sdev)
- 		return -ENODEV;
- 
-@@ -359,7 +345,7 @@ const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
- 	struct scsi_device *sdev;
- 	const char *handler_name = NULL;
- 
--	sdev = get_sdev_from_queue(q);
-+	sdev = scsi_device_from_queue(q);
- 	if (!sdev)
- 		return NULL;
- 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9d6aed5..1a81ef9 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2145,6 +2145,32 @@ void scsi_mq_destroy_tags(struct Scsi_Host *shost)
- 	blk_mq_free_tag_set(&shost->tag_set);
- }
- 
-+/**
-+ * scsi_device_from_queue - return sdev associated with a request_queue
-+ * @q: The request queue to return the sdev from
-+ *
-+ * Return the sdev associated with a request queue or NULL if the
-+ * request_queue does not reference a SCSI device.
-+ */
-+struct scsi_device *scsi_device_from_queue(struct request_queue *q)
-+{
-+	struct scsi_device *sdev = NULL;
-+	unsigned long flags;
-+
-+	spin_lock_irqsave(q->queue_lock, flags);
-+	if (q->mq_ops) {
-+		if (q->mq_ops == &scsi_mq_ops)
-+			sdev = q->queuedata;
-+	} else if (q->request_fn == scsi_request_fn)
-+		sdev = q->queuedata;
-+	if (!sdev || !get_device(&sdev->sdev_gendev))
-+		sdev = NULL;
-+	spin_unlock_irqrestore(q->queue_lock, flags);
-+
-+	return sdev;
-+}
-+EXPORT_SYMBOL_GPL(scsi_device_from_queue);
-+
- /*
-  * Function:    scsi_block_requests()
-  *
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 8990e58..be41c76 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -315,6 +315,7 @@ extern int scsi_add_device(struct Scsi_Host *host, uint channel,
- extern int scsi_unregister_device_handler(struct scsi_device_handler *scsi_dh);
- void scsi_attach_vpd(struct scsi_device *sdev);
- 
-+extern struct scsi_device *scsi_device_from_queue(struct request_queue *q);
- extern int scsi_device_get(struct scsi_device *);
- extern void scsi_device_put(struct scsi_device *);
- extern struct scsi_device *scsi_device_lookup(struct Scsi_Host *,
--- 
-1.8.5.6
+Not following what you're saying Keith did.  Please feel free to
+clarify.
+
+But we definitely need to devise a way for NVMe to inform DM multipath
+(and vice-versa): hands off this device.  Awkward details to work
+through to be sure...
+
+> But once we already do the discovery of the path
+> relations in the transport (e.g scsi_dh) we can just move the path
+> selectors (for which I'm reusing the DM code anyway btw) and the
+> bouncing of I/O to the block layer and cut out the middle man.
+
+The middle man is useful if it can support all transports.  If it only
+supports some then yeah the utility is certainly reduced.
+
+> The main reason is that things will just work (TM) instead of having
+> to carry around additional userspace to configure a an unneded
+> additional device layer that just causes confusion.  Beyond the
+> scsi_dh equivalent there is basically no new code in nvme, 
+
+I'm going to look at removing any scsi_dh code from DM multipath
+(someone already proposed removing the 'retain_attached_hw_handler'
+feature).  Not much point having anything in DM multipath now that scsi
+discovery has the ability to auto-attach the right scsi_dh via scsi_dh's
+.match hook.  As a side-effect it will fix Keith's scsi_dh crash (when
+operating on NVMe request_queue).
+
+My hope is that your NVMe equivalent for scsi_dh will "just work" (TM)
+like scsi_dh auto-attach does.  There isn't a finished ALUA equivalent
+standard for NVMe so I'd imagine at this point you have a single device
+handler for NVMe to do error translation?
+
+Anyway, the scsi_dh equivalent for NVMe is welcomed news!
+
+> just a little new code in the block layer, and a move of the path
+> selectors from dm to the block layer.  I would not call this
+> fragmentation.
+
+I'm fine with the path selectors getting moved out; maybe it'll
+encourage new path selectors to be developed.
+
+But there will need to be some userspace interface stood up to support
+your native NVMe multipathing (you may not think it needed but think in
+time there will be a need to configure _something_).  That is the
+fragmentation I'm referring to.
+
+> Anyway, there is very little point in having an abstract discussion
+> here, I'll try to get the code ready ASAP, although until the end of
+> next week I'm really pressed with other deadlines.
+
+OK.
+
+FYI, I never wanted to have an abstract discussion.  We need a real nuts
+and bolts discussion.  Happy to have it play out on the lists. 
+
+I'm not violently opposed to your native NVMe multipathing -- especially
+from a reference implementation point of view.  I think that in practice
+it'll  keep DM multipath honest -- help drive scalability improvements, etc.
+If over time the native NVMe multipathing _is_ the preferred multipathing
+solution for NVme, then so be it.  It'll be on merits.. as it should be.
+
+But I'm sure you're well aware that I and Red Hat and our partners have
+a vested interest in providing a single multipath stack that "just
+works" for all appropriate storage.
