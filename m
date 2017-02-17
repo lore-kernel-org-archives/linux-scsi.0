@@ -1,117 +1,74 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: [PATCH V2 13/15] aacraid: Save adapter fib log before an IOP reset
-Date: Thu, 16 Feb 2017 12:51:22 -0800
-Message-ID: <20170216205124.20271-14-RaghavaAditya.Renukunta@microsemi.com>
-References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
+Subject: [PATCH] cxlflash: Enable PCI device ID for future IBM CXL Flash AFU
+Date: Thu, 16 Feb 2017 21:39:32 -0600
+Message-ID: <1487302772-7683-1-git-send-email-ukrishn@linux.vnet.ibm.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0049.outbound.protection.outlook.com ([104.47.38.49]:10560
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1754684AbdBQD2X (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Thu, 16 Feb 2017 22:28:23 -0500
-In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
+Received: from mx0a-001b2d01.pphosted.com ([148.163.156.1]:60840 "EHLO
+        mx0a-001b2d01.pphosted.com" rhost-flags-OK-OK-OK-OK)
+        by vger.kernel.org with ESMTP id S1755134AbdBQDkr (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>);
+        Thu, 16 Feb 2017 22:40:47 -0500
+Received: from pps.filterd (m0098393.ppops.net [127.0.0.1])
+        by mx0a-001b2d01.pphosted.com (8.16.0.20/8.16.0.20) with SMTP id v1H3clR5127572
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 22:40:46 -0500
+Received: from e38.co.us.ibm.com (e38.co.us.ibm.com [32.97.110.159])
+        by mx0a-001b2d01.pphosted.com with ESMTP id 28nefjsg3r-1
+        (version=TLSv1.2 cipher=AES256-SHA bits=256 verify=NOT)
+        for <linux-scsi@vger.kernel.org>; Thu, 16 Feb 2017 22:40:46 -0500
+Received: from localhost
+        by e38.co.us.ibm.com with IBM ESMTP SMTP Gateway: Authorized Use Only! Violators will be prosecuted
+        for <linux-scsi@vger.kernel.org> from <ukrishn@linux.vnet.ibm.com>;
+        Thu, 16 Feb 2017 20:40:45 -0700
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
-Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
+To: linux-scsi@vger.kernel.org, James Bottomley <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>, "Manoj N. Kumar" <manoj@linux.vnet.ibm.com>
+Cc: linuxppc-dev@lists.ozlabs.org, Ian Munsie <imunsie@au1.ibm.com>, Andrew Donnellan <andrew.donnellan@au1.ibm.com>, Frederic Barrat <fbarrat@linux.vnet.ibm.com>, Christophe Lombard <clombard@linux.vnet.ibm.com>
 
-Currently  the adapter firmware does not save outstanding I/O's log
-information  when an IOP reset is triggered. This is problematic when
-trying to root cause and debug issues.
+From: "Matthew R. Ochs" <mrochs@linux.vnet.ibm.com>
 
-Fixed by adding sync command to trigger I/O log file save in the adapter
-firmware before issuing an IOP reset.
+Add support for a future IBM Coherent Accelerator (CXL) flash
+AFU with an ID of 0x0624.
 
-Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Reviewed-by: David Carroll <David.Carroll@microsemi.com>
-Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
-
+Signed-off-by: Matthew R. Ochs <mrochs@linux.vnet.ibm.com>
+Signed-off-by: Uma Krishnan <ukrishn@linux.vnet.ibm.com>
 ---
-Changes in V2:
-None
+ drivers/scsi/cxlflash/main.c | 4 ++++
+ drivers/scsi/cxlflash/main.h | 1 +
+ 2 files changed, 5 insertions(+)
 
- drivers/scsi/aacraid/aachba.c  |  4 ++++
- drivers/scsi/aacraid/aacraid.h |  6 ++++++
- drivers/scsi/aacraid/src.c     | 17 +++++++++++++++++
- 3 files changed, 27 insertions(+)
-
-diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-index 3ede50f..e3e93de 100644
---- a/drivers/scsi/aacraid/aachba.c
-+++ b/drivers/scsi/aacraid/aachba.c
-@@ -294,6 +294,10 @@ MODULE_PARM_DESC(aif_timeout, "The duration of time in seconds to wait for"
- 	"deregistering them. This is typically adjusted for heavily burdened"
- 	" systems.");
+diff --git a/drivers/scsi/cxlflash/main.c b/drivers/scsi/cxlflash/main.c
+index 7069639..3061d80 100644
+--- a/drivers/scsi/cxlflash/main.c
++++ b/drivers/scsi/cxlflash/main.c
+@@ -2259,6 +2259,8 @@ static struct dev_dependent_vals dev_corsa_vals = { CXLFLASH_MAX_SECTORS,
+ 					0ULL };
+ static struct dev_dependent_vals dev_flash_gt_vals = { CXLFLASH_MAX_SECTORS,
+ 					CXLFLASH_NOTIFY_SHUTDOWN };
++static struct dev_dependent_vals dev_briard_vals = { CXLFLASH_MAX_SECTORS,
++					CXLFLASH_NOTIFY_SHUTDOWN };
  
-+int aac_fib_dump;
-+module_param(aac_fib_dump, int, 0644);
-+MODULE_PARM_DESC(aac_fib_dump, "Dump controller fibs prior to IOP_RESET 0=off, 1=on");
-+
- int numacb = -1;
- module_param(numacb, int, S_IRUGO|S_IWUSR);
- MODULE_PARM_DESC(numacb, "Request a limit to the number of adapter control"
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 9281e72..622fd69 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -1444,6 +1444,10 @@ struct aac_supplement_adapter_info
- #define AAC_OPTION_VARIABLE_BLOCK_SIZE	cpu_to_le32(0x00040000)
- /* 240 simple volume support */
- #define AAC_OPTION_SUPPORTED_240_VOLUMES cpu_to_le32(0x10000000)
-+/*
-+ * Supports FIB dump sync command send prior to IOP_RESET
-+ */
-+#define AAC_OPTION_SUPPORTED3_IOP_RESET_FIB_DUMP	cpu_to_le32(0x00004000)
- #define AAC_SIS_VERSION_V3	3
- #define AAC_SIS_SLOT_UNKNOWN	0xFF
+ /*
+  * PCI device binding table
+@@ -2268,6 +2270,8 @@ static struct pci_device_id cxlflash_pci_table[] = {
+ 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_corsa_vals},
+ 	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_FLASH_GT,
+ 	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_flash_gt_vals},
++	{PCI_VENDOR_ID_IBM, PCI_DEVICE_ID_IBM_BRIARD,
++	 PCI_ANY_ID, PCI_ANY_ID, 0, 0, (kernel_ulong_t)&dev_briard_vals},
+ 	{}
+ };
  
-@@ -2483,6 +2487,7 @@ struct aac_hba_info {
- #define GET_DRIVER_BUFFER_PROPERTIES	0x00000023
- #define RCV_TEMP_READINGS		0x00000025
- #define GET_COMM_PREFERRED_SETTINGS	0x00000026
-+#define IOP_RESET_FW_FIB_DUMP		0x00000034
- #define IOP_RESET			0x00001000
- #define IOP_RESET_ALWAYS		0x00001001
- #define RE_INIT_ADAPTER			0x000000ee
-@@ -2686,4 +2691,5 @@ extern int aac_commit;
- extern int update_interval;
- extern int check_interval;
- extern int aac_check_reset;
-+extern int aac_fib_dump;
- #endif
-diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-index 71aaabd..2e5338d 100644
---- a/drivers/scsi/aacraid/src.c
-+++ b/drivers/scsi/aacraid/src.c
-@@ -679,10 +679,27 @@ void aac_set_intx_mode(struct aac_dev *dev)
- 	}
- }
+diff --git a/drivers/scsi/cxlflash/main.h b/drivers/scsi/cxlflash/main.h
+index e43545c..0be2261 100644
+--- a/drivers/scsi/cxlflash/main.h
++++ b/drivers/scsi/cxlflash/main.h
+@@ -25,6 +25,7 @@
  
-+static void aac_dump_fw_fib_iop_reset(struct aac_dev *dev)
-+{
-+	__le32 supported_options3;
-+
-+	if (!aac_fib_dump)
-+		return;
-+
-+	supported_options3  = dev->supplement_adapter_info.supported_options3;
-+	if (!(supported_options3 & AAC_OPTION_SUPPORTED3_IOP_RESET_FIB_DUMP))
-+		return;
-+
-+	aac_adapter_sync_cmd(dev, IOP_RESET_FW_FIB_DUMP,
-+			0, 0, 0,  0, 0, 0, NULL, NULL, NULL, NULL, NULL);
-+}
-+
- static void aac_send_iop_reset(struct aac_dev *dev, int bled)
- {
- 	u32 var, reset_mask;
+ #define PCI_DEVICE_ID_IBM_CORSA		0x04F0
+ #define PCI_DEVICE_ID_IBM_FLASH_GT	0x0600
++#define PCI_DEVICE_ID_IBM_BRIARD	0x0624
  
-+	aac_dump_fw_fib_iop_reset(dev);
-+
- 	bled = aac_adapter_sync_cmd(dev, IOP_RESET_ALWAYS,
- 				    0, 0, 0, 0, 0, 0, &var,
- 				    &reset_mask, NULL, NULL, NULL);
+ /* Since there is only one target, make it 0 */
+ #define CXLFLASH_TARGET		0
 -- 
-2.7.4
+2.1.0
