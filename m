@@ -1,68 +1,102 @@
-From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
-Subject: RE: Driver version for PMC Adaptec HBA in Linux and from vendor
-Date: Fri, 17 Feb 2017 19:29:48 +0000
-Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
-References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: fusion: fix spelling mistakes of "primitive"
+Date: Fri, 17 Feb 2017 20:16:26 +0000
+Message-ID: <20170217201626.21075-1-colin.king@canonical.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: base64
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-bl2nam02on0052.outbound.protection.outlook.com ([104.47.38.52]:19328
-        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1755721AbdBQT3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Feb 2017 14:29:51 -0500
-In-Reply-To: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
-Content-Language: en-US
+Received: from youngberry.canonical.com ([91.189.89.112]:49929 "EHLO
+        youngberry.canonical.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S932673AbdBQUQ2 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2017 15:16:28 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Paul Menzel <pmenzel@molgen.mpg.de>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Thomas Kreitler <kreitler+lkml@molgen.mpg.de>
+To: Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org
 
-SGVsbG8gUGF1bCwNCg0KPiBEZWFyIFJhZ2hhdmEsIGRlYXIgTGludXggZm9sa3MsDQo+IA0KPiAN
-Cj4gVXNpbmcgYSBQTUMgQWRhcHRlYyBIQkEgMTAwMC04ZSB3aXRoIGxhdGVzdCBMaW51eCwgaXQg
-b25seSBpbml0aWFsaXplcw0KPiBpbiBzeW5jIG1vZGUsIGluc3RlYWQgb2YgYXN5bmMgbW9kZS4N
-Cg0KVGhlIHBhdGNoZXMgdGhhdCBlbmFibGUgYXN5bmMgbW9kZSBpbiBIQkEgMTAwMC04ZSAsIGhh
-dmUgYmVlbiBpbmNsdWRlZCBpbiB0aGUgSmFtZXMgQm90dG9tbGV5J3MgIGxpbnV4LXNjc2kgQnJh
-bmNoICBhbmQgYXJlICBvbiB0cmFjayBiZQ0KSW5jbHVkZWQgaW50byBMaW51eCA0LjExLiANCg0K
-aHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvamVqYi9zY3NpLmdp
-dC8NCg0KPiBgYGANCj4gJCBnaXQgZGVzY3JpYmUgLS10YWcNCj4gdjQuMTAtcmM4LTQ3LWcwNzIy
-ZjU3YmYNCj4gJCBkbWVzZw0KPiBbICAgMjEuMzU5NjM1XSBBZGFwdGVjIGFhY3JhaWQgZHJpdmVy
-IDEuMi0xWzQxMDY2XS1tcw0KPiBbICAgMjEuMzYwMDE3XSBhYWNyYWlkIDAwMDA6MDQ6MDAuMDog
-Y2FuJ3QgZGlzYWJsZSBBU1BNOyBPUyBkb2Vzbid0IGhhdmUNCj4gQVNQTSBjb250cm9sDQo+IFsg
-ICAyMS4zNjM5ODddIEFBQzA6IEFzeW5jLiBtb2RlIG5vdCBzdXBwb3J0ZWQgYnkgY3VycmVudCBk
-cml2ZXIsIHN5bmMuDQo+IG1vZGUgZW5mb3JjZWQuDQo+IFsgICAyMS4zNjM5ODddIFBsZWFzZSB1
-cGRhdGUgZHJpdmVyIHRvIGdldCBmdWxsIHBlcmZvcm1hbmNlLg0KPiBbICAgMjEuMzY0OTQ5XSBB
-QUMwOiBrZXJuZWwgMS4yLTBbMF0gTm92ICA1IDIwMTUNCj4gWyAgIDIxLjM2NTI3NV0gQUFDMDog
-bW9uaXRvciAwLjAtMFswXQ0KPiBbICAgMjEuMzcxMzgyXSBBQUMwOiBiaW9zIDAuMTMtMjA5WzMy
-MDAwXQ0KPiBbICAgMjEuMzcxNzExXSBBQUMwOiBzZXJpYWwgMTBGNDQ3DQo+IFsgICAyMS4zNzIw
-MzVdIEFBQzA6IE5vbi1EQVNEIHN1cHBvcnQgZW5hYmxlZC4NCj4gWyAgIDIxLjM3MjM2MF0gQUFD
-MDogNjRiaXQgc3VwcG9ydCBlbmFibGVkLg0KPiBbICAgMjEuMzcyNjg4XSBBQUMwOiA2NCBCaXQg
-REFDIGVuYWJsZWQNCj4gW+KApl0NCj4gJCBnaXQgZ3JlcCAnQUFDX0RSSVZFUl9CVUlMRCA0MTA2
-NicNCj4gZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oOiMgZGVmaW5lIEFBQ19EUklWRVJf
-QlVJTEQgNDEwNjYNCj4gYGBgDQo+IA0KPiBTZWFyY2hpbmcgdGhlIHZlbmRvciBXZWIgc2l0ZSwg
-dGhlcmUgaXMgKkxpbnV4IERyaXZlciBTb3VyY2UNCj4gMS4yLjEtNTMwMDUqIGF2YWlsYWJsZSBm
-b3IgZG93bmxvYWQgWzFdLg0KDQpUaGUgbGF0ZXN0IHVwc3RyZWFtICBkcml2ZXIgdmVyc2lvbiBp
-cyA1MDc0MC4gV2Ugd2lsbCBiZSByZWFjaGluZyAgdmVyc2lvbiA1MzAwNSAgaW4gY291cGxlIG9m
-IHBhdGNoIHNldHMgICggfiAzKS4NCg0KaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgv
-a2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0L2NvbW1pdC8/aWQ9OTZmNmE2MTM0NzY2ZGUwZDQyYTk4
-Yzc3NTg3MzZkZGUxNmUwYWRkNQ0KDQoNCj4gSG93IGRvZXMgdGhlIHVwc3RyZWFtIHByb2Nlc3Mg
-d29yaz8gSXMgdGhlcmUgYSBnaXQgcmVwb3NpdG9yeSBzb21ld2hlcmUNCj4gZnJvbSBNaWNyb3Nl
-bWk/IEFyZSB0aGUgcGF0Y2hlcyBhbHJlYWR5IHVwIGZvciByZXZpZXc/IChJIGRpZG7igJl0IGZp
-bmQgdGhlbS4pDQoNCldlIHRyeSB0byBwdXNoIG91dCBwYXRjaCBzZXRzIHRvIGtlcm5lbC5vcmcg
-Zm9yIGV2ZXJ5IG1ham9yICBkcml2ZXIgcmVsZWFzZSB3ZSBtYWtlLiAgVXN1YWxseSB0aGV5IGdv
-IGludG8gdGhlDQpzdWIgY29tcG9uZW50IG1haW50YWluZXJzIGJyYW5jaCAobGludXgtc2NzaSAp
-ICwgd2hpY2ggaXMgdGhlbiBwdXNoZWQgb3V0IHRvIExpbnVzIHdoZW4gdGhlIG1lcmdlDQp3aW5k
-b3cgZm9yICBvcGVucyAoY3VycmVudGx5IHRoZSBtZXJnZSB3aW5kb3cgZm9yIDQuMTAgaXMgY2xv
-c2VkICwgYmFycmluZyBmaXhlcykuIFNvIExpbnV4IHZlcnNpb24gNC4xMSBzaG91bGQgaGF2ZQ0K
-ZnVsbCBhc3luYyBzdXBwb3J0IGFuZCBtb3JlIGZvciBIQkExMDAwLThlLiANCg0KV2UgZG8gbm90
-IG1haW50YWluIGEgZ2l0IHJlcG9zaXRvcnkgdW5mb3J0dW5hdGVseSAsIGJ1dCB3ZSBkbyByZWxl
-YXNlIHRoZSBzb3VyY2UgY29kZSBmb3IgZXZlcnkgcmVsZWFzZSBhcyB5b3UNCmluZGljYXRlZC4N
-Cg0KRm9yIGZ1cnRoZXIgcmVmZXJlbmNlIHRoZSBwYXRjaGVzIGFyZSBzZW50IG91dCBpbiB0aGUg
-c2NzaSBtYWlsaW5nIGxpc3QgIGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnICwNCnRoZSBhcmNo
-aXZlIGlzIGhlcmUgaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1zY3NpJnI9MSZ3PTIgLg0KDQpI
-b3BlIEkgY2xlYXJlZCB1cCB5b3VyIGRvdWJ0cy4gUGxlYXNlIGRvIHJlYWNoIG91dCBpZiB5b3Ug
-aGF2ZSBvdGhlciBjb25jZXJucyBvciBxdWVzdGlvbnMuDQoNClRoYW5rIHlvdSwNClJhZ2hhdmEg
-QWRpdHlhDQoNCj4gWzFdDQo+IGh0dHBzOi8vc3RvcmFnZS5taWNyb3NlbWkuY29tL2VuLXVzL3Nw
-ZWVkL3JhaWQvYWFjL2xpbnV4L2FhY3JhaWQtbGludXgtDQo+IHNyYy0xXzJfMS01MzAwNV90Z3ou
-cGhwDQo=
+From: Colin Ian King <colin.king@canonical.com>
+
+trivial fix to spelling mistakes of "primitive" and
+also re-join a literal string that spans 2 lines to
+squelch a checkpatch warning.
+
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/message/fusion/lsi/mpi_cnfg.h | 2 +-
+ drivers/message/fusion/mptbase.c      | 7 +++----
+ drivers/message/fusion/mptsas.c       | 8 ++++----
+ 3 files changed, 8 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/message/fusion/lsi/mpi_cnfg.h b/drivers/message/fusion/lsi/mpi_cnfg.h
+index d9bcfba..a6a7198 100644
+--- a/drivers/message/fusion/lsi/mpi_cnfg.h
++++ b/drivers/message/fusion/lsi/mpi_cnfg.h
+@@ -2003,7 +2003,7 @@ typedef struct _CONFIG_PAGE_FC_PORT_6
+     U64                     LinkFailureCount;           /* 50h */
+     U64                     LossOfSyncCount;            /* 58h */
+     U64                     LossOfSignalCount;          /* 60h */
+-    U64                     PrimativeSeqErrCount;       /* 68h */
++    U64                     PrimitiveSeqErrCount;       /* 68h */
+     U64                     InvalidTxWordCount;         /* 70h */
+     U64                     InvalidCrcCount;            /* 78h */
+     U64                     FcpInitiatorIoCount;        /* 80h */
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 1e73064..b804c47 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -7601,11 +7601,10 @@ mpt_display_event_info(MPT_ADAPTER *ioc, EventNotificationReply_t *pEventReply)
+ 		u8 phy_num = (u8)(evData0);
+ 		u8 port_num = (u8)(evData0 >> 8);
+ 		u8 port_width = (u8)(evData0 >> 16);
+-		u8 primative = (u8)(evData0 >> 24);
++		u8 primitive = (u8)(evData0 >> 24);
+ 		snprintf(evStr, EVENT_DESCR_STR_SZ,
+-		    "SAS Broadcase Primative: phy=%d port=%d "
+-		    "width=%d primative=0x%02x",
+-		    phy_num, port_num, port_width, primative);
++		    "SAS Broadcase Primitive: phy=%d port=%d width=%d primitive=0x%02x",
++		    phy_num, port_num, port_width, primitive);
+ 		break;
+ 	}
+ 
+diff --git a/drivers/message/fusion/mptsas.c b/drivers/message/fusion/mptsas.c
+index f6308ad..95133b1 100644
+--- a/drivers/message/fusion/mptsas.c
++++ b/drivers/message/fusion/mptsas.c
+@@ -129,7 +129,7 @@ static void mptsas_expander_delete(MPT_ADAPTER *ioc,
+ static void mptsas_send_expander_event(struct fw_event_work *fw_event);
+ static void mptsas_not_responding_devices(MPT_ADAPTER *ioc);
+ static void mptsas_scan_sas_topology(MPT_ADAPTER *ioc);
+-static void mptsas_broadcast_primative_work(struct fw_event_work *fw_event);
++static void mptsas_broadcast_primitive_work(struct fw_event_work *fw_event);
+ static void mptsas_handle_queue_full_event(struct fw_event_work *fw_event);
+ static void mptsas_volume_delete(MPT_ADAPTER *ioc, u8 id);
+ void	mptsas_schedule_target_reset(void *ioc);
+@@ -1666,7 +1666,7 @@ mptsas_firmware_event_work(struct work_struct *work)
+ 		mptsas_free_fw_event(ioc, fw_event);
+ 		break;
+ 	case MPI_EVENT_SAS_BROADCAST_PRIMITIVE:
+-		mptsas_broadcast_primative_work(fw_event);
++		mptsas_broadcast_primitive_work(fw_event);
+ 		break;
+ 	case MPI_EVENT_SAS_EXPANDER_STATUS_CHANGE:
+ 		mptsas_send_expander_event(fw_event);
+@@ -4831,13 +4831,13 @@ mptsas_issue_tm(MPT_ADAPTER *ioc, u8 type, u8 channel, u8 id, u64 lun,
+ }
+ 
+ /**
+- *	mptsas_broadcast_primative_work - Handle broadcast primitives
++ *	mptsas_broadcast_primitive_work - Handle broadcast primitives
+  *	@work: work queue payload containing info describing the event
+  *
+  *	this will be handled in workqueue context.
+  */
+ static void
+-mptsas_broadcast_primative_work(struct fw_event_work *fw_event)
++mptsas_broadcast_primitive_work(struct fw_event_work *fw_event)
+ {
+ 	MPT_ADAPTER *ioc = fw_event->ioc;
+ 	MPT_FRAME_HDR	*mf;
+-- 
+2.10.2
