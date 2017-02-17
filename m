@@ -1,12 +1,12 @@
 From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 03/11] mpt3sas: use 'list_splice_init()'
-Date: Fri, 17 Feb 2017 09:23:02 +0100
-Message-ID: <1487319790-97340-4-git-send-email-hare@suse.de>
+Subject: [PATCHv2 10/11] scsi: allocate reserved commands
+Date: Fri, 17 Feb 2017 09:23:09 +0100
+Message-ID: <1487319790-97340-11-git-send-email-hare@suse.de>
 References: <1487319790-97340-1-git-send-email-hare@suse.de>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34710 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34708 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1755428AbdBQIXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        id S1755389AbdBQIXX (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
         Fri, 17 Feb 2017 03:23:23 -0500
 In-Reply-To: <1487319790-97340-1-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
@@ -14,39 +14,38 @@ List-Id: linux-scsi@vger.kernel.org
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-Use 'list_splice_init()' instead of hand-crafted function.
-No functional change.
+The block layer already has the notion of 'reserved' commands, so
+we should be enabling hosts to allocate them.
 
 Signed-off-by: Hannes Reinecke <hare@suse.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 10 +---------
- 1 file changed, 1 insertion(+), 9 deletions(-)
+ drivers/scsi/scsi_lib.c  | 1 +
+ include/scsi/scsi_host.h | 1 +
+ 2 files changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index 3062171..f258d04 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2395,20 +2395,12 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
- {
- 	unsigned long flags;
- 	int i;
--	struct chain_tracker *chain_req, *next;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index c35b6de..9d6aed5 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2129,6 +2129,7 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
+ 	shost->tag_set.ops = &scsi_mq_ops;
+ 	shost->tag_set.nr_hw_queues = shost->nr_hw_queues ? : 1;
+ 	shost->tag_set.queue_depth = shost->can_queue;
++	shost->tag_set.reserved_tags = shost->reserved_cmds;
+ 	shost->tag_set.cmd_size = cmd_size;
+ 	shost->tag_set.numa_node = NUMA_NO_NODE;
+ 	shost->tag_set.flags = BLK_MQ_F_SHOULD_MERGE | BLK_MQ_F_SG_MERGE;
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 36680f1..cc83dd6 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -622,6 +622,7 @@ struct Scsi_Host {
  
- 	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
- 	if (smid < ioc->hi_priority_smid) {
- 		/* scsiio queue */
- 		i = smid - 1;
--		if (!list_empty(&ioc->scsi_lookup[i].chain_list)) {
--			list_for_each_entry_safe(chain_req, next,
--			    &ioc->scsi_lookup[i].chain_list, tracker_list) {
--				list_del_init(&chain_req->tracker_list);
--				list_add(&chain_req->tracker_list,
--				    &ioc->free_chain_list);
--			}
--		}
-+		list_splice_init(&st->chain_list, &ioc->free_chain_list);
- 		ioc->scsi_lookup[i].cb_idx = 0xFF;
- 		ioc->scsi_lookup[i].scmd = NULL;
- 		ioc->scsi_lookup[i].direct_io = 0;
+ 	int this_id;
+ 	int can_queue;
++	int reserved_cmds;
+ 	short cmd_per_lun;
+ 	short unsigned int sg_tablesize;
+ 	short unsigned int sg_prot_tablesize;
 -- 
 1.8.5.6
