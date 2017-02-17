@@ -1,68 +1,58 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: hch's native NVMe multipathing [was: Re: [PATCH 1/2]
- Don't blacklist nvme]
-Date: Fri, 17 Feb 2017 09:43:47 -0500
-Message-ID: <20170217144347.GC19043@redhat.com>
-References: <1487107154-24883-1-git-send-email-keith.busch@intel.com>
-	<20170215145617.GA4241@infradead.org>
-	<20170216025357.GA9241@redhat.com>
-	<20170216142621.GA21972@infradead.org>
-	<20170216151337.GA12678@redhat.com>
-	<20170216173856.GB17828@localhost.localdomain>
-	<1487266648.2612.3.camel@sandisk.com>
-	<20170216180742.GC17828@localhost.localdomain>
-	<20170216182129.GC12678@redhat.com>
-	<20170217090420.GA29629@infradead.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <dm-devel-bounces@redhat.com>
-Content-Disposition: inline
-In-Reply-To: <20170217090420.GA29629@infradead.org>
-List-Unsubscribe: <https://www.redhat.com/mailman/options/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=unsubscribe>
-List-Archive: <https://www.redhat.com/archives/dm-devel>
-List-Post: <mailto:dm-devel@redhat.com>
-List-Help: <mailto:dm-devel-request@redhat.com?subject=help>
-List-Subscribe: <https://www.redhat.com/mailman/listinfo/dm-devel>,
-	<mailto:dm-devel-request@redhat.com?subject=subscribe>
-Sender: dm-devel-bounces@redhat.com
-Errors-To: dm-devel-bounces@redhat.com
-To: "hch@infradead.org" <hch@infradead.org>
-Cc: Keith Busch <keith.busch@intel.com>, Bart Van Assche <Bart.VanAssche@sandisk.com>, "dm-devel@redhat.com" <dm-devel@redhat.com>, "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+From: Arnd Bergmann <arnd@arndb.de>
+Subject: [PATCH] smartpqi: fix time handling
+Date: Fri, 17 Feb 2017 16:03:52 +0100
+Message-ID: <20170217150417.2458237-1-arnd@arndb.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mout.kundenserver.de ([212.227.126.134]:59017 "EHLO
+        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S934072AbdBQPEj (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2017 10:04:39 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>, kevin Barnett <kevin.barnett@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Scott Benesh <scott.benesh@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 
-On Fri, Feb 17 2017 at  4:04am -0500,
-hch@infradead.org <hch@infradead.org> wrote:
+When we have turned off RTC support, the smartpqi driver fails to build:
 
-> On Thu, Feb 16, 2017 at 01:21:29PM -0500, Mike Snitzer wrote:
-> > multipath-tools has tables that specify all the defaults for a given
-> > target backend.  NVMe will just be yet another.
-> 
-> No, if we get things right it won't.  ALUA already got rid of most
-> of the parameter people would have to set under normal conditions,
-> and I plan to make sure the NVMe equivalent will do it for all
-> parameters.  I am active in the NVMe working group and will do my
-> best to get there.  There's a few others folks here that are more or
-> less active there as well (Keith, Martin, Jens for example), so I
-> think we have a chance.
-> 
-> That beeing said Keith is right that we'll always have odd setups
-> where we need to overrid things, and we will have to provide tunables
-> for that.  It's no different from any other kernel subsystem in that.
+ERROR: "rtc_time64_to_tm" [drivers/scsi/smartpqi/smartpqi.ko] undefined!
 
-Before ALUA fixed all that vendor specific fragmentation there was the
-even worse fragmentation where different vendors pushed multipathing
-into their FC drivers.  James correctly pushed them toward a generic
-solution (and DM multipath was born).  If every transport implements its
-own multipathing then it'll be a more generic, yet very similar,
-fragmentation problem.
+This is easily avoided by using the generic 'struct tm' based helper rather
+than the RTC specific one. While fixing this, I noticed that even though
+the driver uses time64_t for storing seconds, it gets them from the
+old 32-bit struct timeval. To address this, we can simplify the code
+by calling ktime_get_real_seconds() directly.
 
-But if your native NVMe multipathing really is factored such that the
-actual IO fast path is implemented in block core, and transport specific
-hooks are called out to as needed, then you've simply reimplement DM
-multipath in block core.
+Fixes: 6c223761eb54 ("smartpqi: initial commit of Microsemi smartpqi driver")
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-Pretty weird place to invest _so_ much energy before you've fully
-explored how unworkable DM multipath support for NVMe is.  But I
-digress.
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 11c0dfb3dfa3..657ad15682a3 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -534,8 +534,7 @@ static int pqi_write_current_time_to_host_wellness(
+ 	size_t buffer_length;
+ 	time64_t local_time;
+ 	unsigned int year;
+-	struct timeval time;
+-	struct rtc_time tm;
++	struct tm tm;
+ 
+ 	buffer_length = sizeof(*buffer);
+ 
+@@ -552,9 +551,8 @@ static int pqi_write_current_time_to_host_wellness(
+ 	put_unaligned_le16(sizeof(buffer->time),
+ 		&buffer->time_length);
+ 
+-	do_gettimeofday(&time);
+-	local_time = time.tv_sec - (sys_tz.tz_minuteswest * 60);
+-	rtc_time64_to_tm(local_time, &tm);
++	local_time = ktime_get_real_seconds();
++	time64_to_tm(local_time, -sys_tz.tz_minuteswest * 60, &tm);
+ 	year = tm.tm_year + 1900;
+ 
+ 	buffer->time[0] = bin2bcd(tm.tm_hour);
+-- 
+2.9.0
