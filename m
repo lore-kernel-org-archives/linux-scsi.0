@@ -1,90 +1,163 @@
-From: Subhash Jadavani <subhashj@codeaurora.org>
-Subject: [PATCH v1 1/1] scsi: ufs-qcom: remove redundant condition check
-Date: Fri, 17 Feb 2017 13:53:41 -0800
-Message-ID: <1487368421-22903-1-git-send-email-subhashj@codeaurora.org>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from smtp.codeaurora.org ([198.145.29.96]:57952 "EHLO
-        smtp.codeaurora.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934994AbdBQVzy (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2017 16:55:54 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Finn Thain <fthain@telegraphics.com.au>
+Subject: Re: g_NCR5380 PDMA, was Re: [PATCH 0/6] ncr5380: Miscellaneous minor
+ patches
+Date: Sat, 18 Feb 2017 09:38:12 +1100 (AEDT)
+Message-ID: <alpine.LNX.2.00.1702180934190.13115@nippy.intranet>
+References: <cover.1484523085.git.fthain@telegraphics.com.au> <201701302252.13124.linux@rainbow-software.org> <alpine.LNX.2.00.1701311203001.16154@nippy.intranet> <201702162318.52483.linux@rainbow-software.org>
+Mime-Version: 1.0
+Content-Type: TEXT/PLAIN; charset=US-ASCII
+Return-path: <linux-kernel-owner@vger.kernel.org>
+In-Reply-To: <201702162318.52483.linux@rainbow-software.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Ondrej Zary <linux@rainbow-software.org>
+Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: vinholikatti@gmail.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, Subhash Jadavani <subhashj@codeaurora.org>, open list <linux-kernel@vger.kernel.org>
 
-Dan Carpenter <dan.carpenter@oracle.com> reported this:
----
-The patch 9c46b8676271: "scsi: ufs-qcom: dump additional testbus
-registers" from Feb 3, 2017, leads to the following static checker
-warning:
 
-    drivers/scsi/ufs/ufs-qcom.c:1531 ufs_qcom_testbus_cfg_is_ok()
-    warn: impossible condition
-		'(host->testbus.select_minor > 255) => (0-255 > 255)'
+On Thu, 16 Feb 2017, Ondrej Zary wrote:
 
-drivers/scsi/ufs/ufs-qcom.c
-  1517  static bool ufs_qcom_testbus_cfg_is_ok(struct ufs_qcom_host *host)
-  1518  {
-  1519          if (host->testbus.select_major >= TSTBUS_MAX) {
-  1520               dev_err(host->hba->dev,
-  1521                 "%s: UFS_CFG1[TEST_BUS_SEL} may not equal 0x%05X\n",
-  1522                  __func__, host->testbus.select_major);
-  1523                  return false;
-  1524          }
-  1525
-  1526          /*
-  1527           * Not performing check for each individual select_major
-  1528           * mappings of select_minor, since there is no harm in
-  1529           * configuring a non-existent select_minor
-  1530           */
-  1531          if (host->testbus.select_minor > 0xFF) {
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> On Tuesday 31 January 2017 02:31:45 Finn Thain wrote:
+> [...]
+> > Are you trying to figure out which commands are going to disconnect 
+> > during a transfer? This is really a function of the firmware in the 
+> > target; there are no good heuristics AFAICT, so the PDMA algorithm has 
+> > to be robust. mac_scsi has to cope with this too.
+> >
+> > Does the problem go away when you assign no IRQ? When instance->irq == 
+> > NO_IRQ, the core driver will inhibit disconnect privileges.
+> 
+> Yes, it seems to run fine with IRQ/disconnect disabled. With IRQ 
+> enabled, "dd if=/dev/sr0 of=anything" stops after a while.
 
-It might make sense to keep this check.  I don't know.  But it's
-confusing that 0xFF is a magic number.  Better to make it a define.
+When you say "stops", do you mean an infinite loop in 
+generic_NCR5380_pread or does the loop complete (which would presumably 
+leave the target stuck in DATA IN phase, and a scsi command timeout would 
+probably follow after 30 seconds...)
 
-  1532                  dev_err(host->hba->dev,
-  1533                       "%s: 0x%05X is not a legal testbus option\n",
-  1534                        __func__, host->testbus.select_minor);
-  1535                  return false;
-  1536          }
-  1537
-  1538          return true;
-  1539  }
----
+> I get gated 53C80 IRQ, BASR=0x10, MODE=0x0e, STATUS=0x7c.
+> 
 
-As data type of "select_minor" is u8, above check is redundant. This change
-removes it.
+You can use NCR5380_print() to get a decoded register dump.
 
-Reported-by: Dan Carpenter <dan.carpenter@oracle.com>
-Signed-off-by: Subhash Jadavani <subhashj@codeaurora.org>
----
- drivers/scsi/ufs/ufs-qcom.c | 12 ------------
- 1 file changed, 12 deletions(-)
+When I decode the above values I get,
 
-diff --git a/drivers/scsi/ufs/ufs-qcom.c b/drivers/scsi/ufs/ufs-qcom.c
-index ce5d023..c87d770 100644
---- a/drivers/scsi/ufs/ufs-qcom.c
-+++ b/drivers/scsi/ufs/ufs-qcom.c
-@@ -1523,18 +1523,6 @@ static bool ufs_qcom_testbus_cfg_is_ok(struct ufs_qcom_host *host)
- 		return false;
+BASR   = 0x10 = BASR_IRQ
+MODE   = 0x0e = MR_ENABLE_EOP_INTR | MR_MONITOR_BSY | MR_DMA_MODE
+STATUS = 0x7c = SR_BSY | SR_REQ | SR_MSG | SR_CD | SR_IO
+
+Since BASR_PHASE_MATCH is not set, the interrupt is almost certainly a 
+phase mismatch. The new phase is SR_MSG | SR_CD | SR_IO = PHASE_MSGIN, 
+which shows that the target has given up on the DATA IN phase and is 
+presumably trying to send a DISCONNECT message.
+
+> When I enable interrupts during PDMA (like the removed UNSAFE macro 
+> did), the problems go away. I see an IRQ after each pread call.
+
+You shouldn't need an interrupt, because NCR5380_dma_complete() gets 
+called regardless. AFAICT, the only difference is the timing, which 
+becomes less predictable. Calling spinlock_irq_restore() before the 
+transfer seems to create a race condition between hostdata->dma_len store 
+and load.
+
+I think that the pread call has not yet returned when the interrupt fires 
+and NCR5380_dma_complete() is called. Hence hostdata->dma_len has not yet 
+been initialized. So when NCR5380_dma_complete() is called by the 
+interrupt handler, SCp.this_residual will not change at all because 
+hostdata->dma_len is still zero.
+
+> (had to disable "no 53C80 gated irq after transfer" and "no end dma 
+> signal" messages to reduce log spam)
+> 
+
+That may provide a quick way to detect the failed PDMA transfer, at least 
+for testing purposes. There may be a more conclusive test for a partial 
+transfer.
+
+We could to implement something like macscsi_dma_residual() to take care 
+of a failed PDMA transfer. That way, the failure can be taken into account 
+when NCR5380_dma_complete() is called at the end of the transfer.
+
+See patch below for example. It should confirm the theory above though it 
+really needs some timeouts added (NCR5380_poll_politely()). And perhaps we 
+could do something more clever than retry indefinitely, though we can 
+still rely on the command timeout.
+
+diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
+index 6f9665d..75cfaf3 100644
+--- a/drivers/scsi/g_NCR5380.c
++++ b/drivers/scsi/g_NCR5380.c
+@@ -497,15 +497,17 @@ static inline int generic_NCR5380_pread(struct NCR5380_hostdata *hostdata,
+ 		blocks--;
  	}
  
--	/*
--	 * Not performing check for each individual select_major
--	 * mappings of select_minor, since there is no harm in
--	 * configuring a non-existent select_minor
--	 */
--	if (host->testbus.select_minor > 0xFF) {
--		dev_err(host->hba->dev,
--			"%s: 0x%05X is not a legal testbus option\n",
--			__func__, host->testbus.select_minor);
--		return false;
++	hostdata->pdma_residual = 0;
++
+ 	if (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
+-		printk("53C400r: no 53C80 gated irq after transfer");
++		hostdata->pdma_residual = hostdata->dma_len;
+ 
+ 	/* wait for 53C80 registers to be available */
+ 	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG))
+ 		;
+ 
+ 	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
+-		printk(KERN_ERR "53C400r: no end dma signal\n");
++		hostdata->pdma_residual = hostdata->dma_len;
+ 		
+ 	return 0;
+ }
+@@ -576,12 +578,14 @@ static inline int generic_NCR5380_pwrite(struct NCR5380_hostdata *hostdata,
+ 		/* FIXME - no timeout */
+ 	}
+ 
+-	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER)) {
+-		printk(KERN_ERR "53C400w: no end dma signal\n");
 -	}
--
- 	return true;
++	hostdata->pdma_residual = 0;
++
++	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
++		hostdata->pdma_residual = hostdata->dma_len;
+ 
+ 	while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT))
+ 		; 	// TIMEOUT
++
+ 	return 0;
  }
  
+@@ -607,6 +611,11 @@ static int generic_NCR5380_dma_xfer_len(struct NCR5380_hostdata *hostdata,
+ 	return transfersize;
+ }
+ 
++static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
++{
++	return hostdata->pdma_residual;
++}
++
+ /*
+  *	Include the NCR5380 core code that we build our driver around	
+  */
+diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
+index 81b22d9..08c91b7 100644
+--- a/drivers/scsi/g_NCR5380.h
++++ b/drivers/scsi/g_NCR5380.h
+@@ -26,7 +26,8 @@
+ 	int c400_ctl_status; \
+ 	int c400_blk_cnt; \
+ 	int c400_host_buf; \
+-	int io_width;
++	int io_width; \
++	int pdma_residual;
+ 
+ #define NCR53C400_mem_base 0x3880
+ #define NCR53C400_host_buffer 0x3900
+@@ -35,7 +36,7 @@
+ #define NCR5380_dma_xfer_len		generic_NCR5380_dma_xfer_len
+ #define NCR5380_dma_recv_setup		generic_NCR5380_pread
+ #define NCR5380_dma_send_setup		generic_NCR5380_pwrite
+-#define NCR5380_dma_residual		NCR5380_dma_residual_none
++#define NCR5380_dma_residual		generic_NCR5380_dma_residual
+ 
+ #define NCR5380_intr generic_NCR5380_intr
+ #define NCR5380_queue_command generic_NCR5380_queue_command
+
 -- 
-The Qualcomm Innovation Center, Inc. is a member of the Code Aurora Forum,
-a Linux Foundation Collaborative Project
