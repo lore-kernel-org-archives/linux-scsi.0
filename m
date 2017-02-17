@@ -1,140 +1,118 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCHv2 08/11] mpt3sas: always use smid 1 for ioctl passthrough
-Date: Fri, 17 Feb 2017 09:52:39 +0100
-Message-ID: <10ad4384-46bc-17c5-a4b6-0989239162d0@suse.de>
-References: <1487319790-97340-1-git-send-email-hare@suse.de>
- <1487319790-97340-9-git-send-email-hare@suse.de>
- <20170217084559.GC18443@lst.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 09/11] mpt3sas: lockless command submission for
+        scsi-mq
+Date: Fri, 17 Feb 2017 09:54:10 +0100
+Message-ID: <20170217085410.GD18443@lst.de>
+References: <1487319790-97340-1-git-send-email-hare@suse.de> <1487319790-97340-10-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:36961 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:41206 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S932090AbdBQIwm (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Feb 2017 03:52:42 -0500
-In-Reply-To: <20170217084559.GC18443@lst.de>
+        id S1751646AbdBQIyM (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 03:54:12 -0500
+Content-Disposition: inline
+In-Reply-To: <1487319790-97340-10-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On 02/17/2017 09:45 AM, Christoph Hellwig wrote:
-> On Fri, Feb 17, 2017 at 09:23:07AM +0100, Hannes Reinecke wrote:
->> ioctl passthrough commands require a SCSIIO smid, but cannot
->> easily integrate with the block layer. But as we're only ever
->> allowing one ioctl command at a time we can reserve smid 1
->> for ioctl commands.
+On Fri, Feb 17, 2017 at 09:23:08AM +0100, Hannes Reinecke wrote:
+> Enable lockless command submission for scsi-mq by moving the
+> command structure into the payload for struct request.
 > 
-> I like the idea, but I don't think the implementation is correct.
-> More below.
+> Signed-off-by: Hannes Reinecke <hare@suse.com>
+> ---
+>  drivers/scsi/mpt3sas/mpt3sas_base.c      | 123 ++++-----
+>  drivers/scsi/mpt3sas/mpt3sas_base.h      |  13 +-
+>  drivers/scsi/mpt3sas/mpt3sas_ctl.c       |  85 ++++--
+>  drivers/scsi/mpt3sas/mpt3sas_scsih.c     | 460 ++++++++++++++-----------------
+>  drivers/scsi/mpt3sas/mpt3sas_warpdrive.c |  20 +-
+>  5 files changed, 330 insertions(+), 371 deletions(-)
 > 
->> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
->> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
->> @@ -2355,13 +2355,20 @@ struct scsiio_tracker *
->>  		return 0;
->>  	}
->>  
->> -	request = list_entry(ioc->free_list.next,
->> -	    struct scsiio_tracker, tracker_list);
->> -	request->scmd = scmd;
->> +	if (!scmd) {
->> +		/* ioctl command, always use the first slot */
->> +		request = ioc->lookup[0];
->> +		request->scmd = NULL;
->> +	} else {
->> +		request = list_entry(ioc->free_list.next,
->> +				     struct scsiio_tracker, tracker_list);
->> +		request->scmd = scmd;
->> +	}
->>  	request->cb_idx = cb_idx;
->>  	smid = request->smid;
->>  	request->msix_io = _base_get_msix_index(ioc);
->> -	list_del(&request->tracker_list);
->> +	if (scmd)
->> +		list_del(&request->tracker_list);
->>  	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
->>  	return smid;
-> 
-> The freelist check just before the patch context and the locking
-> don't make much sense here.  I'd say just use a separate helper for the
-> ioctl smid, ala:
-> 
-> u16
-> mpt3sas_base_init_smid_pt(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx)
-> {
-> 	struct scsiio_tracker *request = ioc->lookup[0];
-> 
-> 	request->cb_idx = cb_idx;
-> 	request->msix_io = _base_get_msix_index(ioc);
-> 	return request->smid;
-> }
-> 
-> or given how trivial this is just open-code it in the caller.
-> 
-> 
-In principle, yes.
-However, most of that is obsoleted when switching over to using reserved
-commands in patch 11/11; then we properly register 'reserved' commands
-with the block layer and this whole issue goes away.
+> diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> index dec86c4..e9470a3 100644
+> --- a/drivers/scsi/mpt3sas/mpt3sas_base.c
+> +++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+> @@ -865,9 +865,17 @@ static int mpt3sas_remove_dead_ioc_func(void *arg)
+>  struct scsiio_tracker *
+>  mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+>  {
+> +	u32 unique_tag;
+> +	struct scsi_cmnd *cmd;
+> +
+>  	WARN_ON(!smid);
+>  	WARN_ON(smid >= ioc->hi_priority_smid);
+> -	return &ioc->scsi_lookup[smid - 1];
+> +	unique_tag = smid - 1;
+> +	cmd = scsi_host_find_tag(ioc->shost, unique_tag);
+> +	if (cmd)
+> +		return scsi_cmd_priv(cmd);
+> +
+> +	return NULL;
+>  }
+>  
+>  /**
+> @@ -2343,34 +2351,23 @@ struct scsiio_tracker *
+>  mpt3sas_base_get_smid_scsiio(struct MPT3SAS_ADAPTER *ioc, u8 cb_idx,
+>  	struct scsi_cmnd *scmd)
+>  {
+> -	unsigned long flags;
+>  	struct scsiio_tracker *request;
+>  	u16 smid;
+>  
+> -	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+> -	if (list_empty(&ioc->free_list)) {
+> -		spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+> -		pr_err(MPT3SAS_FMT "%s: smid not available\n",
+> -		    ioc->name, __func__);
+> -		return 0;
+> -	}
+> -
+>  	if (!scmd) {
+> -		/* ioctl command, always use the first slot */
+> -		request = ioc->lookup[0];
+> -		request->scmd = NULL;
+> +		smid = 1;
+> +		request = mpt3sas_get_st_from_smid(ioc, smid);
 
->>  		ioc->scsi_lookup[i].cb_idx = 0xFF;
->>  		ioc->scsi_lookup[i].scmd = NULL;
->>  		ioc->scsi_lookup[i].direct_io = 0;
->> -		list_add(&ioc->scsi_lookup[i].tracker_list, &ioc->free_list);
->> +		if (i > 0)
->> +			list_add(&ioc->scsi_lookup[i].tracker_list,
->> +				 &ioc->free_list);
-> 
-> Here we special case only request 0 as not added to the list.
-> 
->> @@ -5165,14 +5174,17 @@ struct scsiio_tracker *
->>  	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
->>  	INIT_LIST_HEAD(&ioc->free_list);
->>  	smid = 1;
->> -	for (i = 0; i < ioc->scsiio_depth; i++, smid++) {
->> +	for (i = 1; i < ioc->scsiio_depth; i++, smid++) {
->>  		INIT_LIST_HEAD(&ioc->scsi_lookup[i].chain_list);
->>  		ioc->scsi_lookup[i].cb_idx = 0xFF;
->>  		ioc->scsi_lookup[i].smid = smid;
->>  		ioc->scsi_lookup[i].scmd = NULL;
->>  		ioc->scsi_lookup[i].direct_io = 0;
->> -		list_add_tail(&ioc->scsi_lookup[i].tracker_list,
->> -		    &ioc->free_list);
->> +		if (i == 1)
->> +			INIT_LIST_HEAD(&ioc->lookup[i].tracker_list);
->> +		else
->> +			list_add_tail(&ioc->scsi_lookup[i].tracker_list,
->> +				      &ioc->free_list);
-> 
-> And here we don't even iterate over smid 0, and then special case smid 1.
-> 
-> And note that the code in both loops is otherwise duplicated to start
-> with and could realy use a little helper to initialize the scsiio_tracker
-> structure.
-> 
-Again, most of that code will be obsoleted with patch 09/11, which
-switches over to scsi-mq.
-This whole code is just a band-aid until the driver is switched over to
-scsi-mq, where we have correct allocation for reserved commands.
-I just couldn't be bothered to implement reserved commands for legacy
-sq, seeing that it'll be obsoleted at some point in the future anyway.
+How is this going to work?  mpt3sas_get_st_from_smid fails if we
+don't find a block layer tag derived from smid?
 
-> Last but not least can_queue is initialized as:
-> 
->         ioc->shost->can_queue = ioc->scsiio_depth - INTERNAL_SCSIIO_CMDS_COUNT;
-> 
-> which doesn't take this new stolen smid into account.
-> 
-Thing is, the internal commands are _never_ used anywhere, so
-'can_queue' is actually still correct :-)
+>  /**
+>   * mpt3sas_base_free_smid - put smid back on free_list
+>   * @ioc: per adapter object
+> @@ -2428,22 +2441,21 @@ struct scsiio_tracker *
+>  	unsigned long flags;
+>  	int i;
+>  
+>  	if (smid < ioc->hi_priority_smid) {
+> +		struct scsiio_tracker *st;
+>  
+> +		st = mpt3sas_get_st_from_smid(ioc, smid);
+> +		if (WARN_ON(!st)) {
+> +			_base_recovery_check(ioc);
+> +			return;
+> +		}
+> +		mpt3sas_base_clear_st(ioc, st);
+>  		_base_recovery_check(ioc);
 
-Cheers,
+		st = mpt3sas_get_st_from_smid(ioc, smid);
+		if (!WARN_ON_ONCE(!st))
+			mpt3sas_base_clear_st(ioc, st);
+		_base_recovery_check(ioc);
+		return;
+		
+		
+>  	/* pending command count */
+> -	spin_lock_irqsave(&ioc->scsi_lookup_lock, flags);
+> -	for (i = 0; i < ioc->scsiio_depth; i++)
+> -		if (ioc->scsi_lookup[i].cb_idx != 0xFF)
+> -			ioc->pending_io_count++;
+> -	spin_unlock_irqrestore(&ioc->scsi_lookup_lock, flags);
+> +	blk_mq_tagset_busy_iter(&ioc->shost->tag_set,
+> +				_count_pending, ioc);
 
-Hannes
--- 
-Dr. Hannes Reinecke		   Teamlead Storage & Networking
-hare@suse.de			               +49 911 74053 688
-SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
-GF: F. Imendörffer, J. Smithard, J. Guild, D. Upmanyu, G. Norton
-HRB 21284 (AG Nürnberg)
+You can't rely on blk-mq being used, and we'd really want to avoid
+layering violations like this anyway.
