@@ -1,42 +1,43 @@
 From: Johannes Thumshirn <jthumshirn@suse.de>
-Subject: Re: [PATCH V2 03/15] aacraid: Fix for excessive prints on EEH
-Date: Fri, 17 Feb 2017 09:21:32 +0100
-Message-ID: <f9ec8851-b2e9-1bdb-2578-c9fb68208cd0@suse.de>
+Subject: Re: [PATCH V2 05/15] aacraid: Fix memory leak in fib init path
+Date: Fri, 17 Feb 2017 09:22:29 +0100
+Message-ID: <2470eadc-1808-f887-328e-55fb6067d22a@suse.de>
 References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
- <20170216205124.20271-4-RaghavaAditya.Renukunta@microsemi.com>
+ <20170216205124.20271-6-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset=windows-1252
 Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34563 "EHLO mx2.suse.de"
+Received: from mx2.suse.de ([195.135.220.15]:34605 "EHLO mx2.suse.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1751822AbdBQIVf (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Feb 2017 03:21:35 -0500
-In-Reply-To: <20170216205124.20271-4-RaghavaAditya.Renukunta@microsemi.com>
+        id S1751646AbdBQIWb (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 03:22:31 -0500
+In-Reply-To: <20170216205124.20271-6-RaghavaAditya.Renukunta@microsemi.com>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
 To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org
 Cc: David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, dan.carpenter@oracle.com
 
 On 02/16/2017 09:51 PM, Raghava Aditya Renukunta wrote:
-> This issue showed up on a kdump debug(single CPU on powerkvm), when EEH
-> errors rendered the adapter unusable. The driver correctly detected the
-> issue and attempted to restart the controller, in doing so the driver
-> attempted to read the status registers of the controller. This triggered
-> additional eeh errors which continued for a good 6 minutes.
+> aac_fib_map_free frees misaligned fib dma memory, additionally it does not
+> free up the whole memory.
 > 
-> Fixed by returning without waiting when EEH error is reported.
+> Fixed by changing the  code to free up the correct and full memory
+> allocation.
 > 
+> Cc: stable@vger.kernel.org
+> Fixes: e8b12f0fb835223 ([SCSI] aacraid: Add new code for PMC-Sierra's SRC based controller family)
 > Signed-off-by: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
 > Reviewed-by: David Carroll <David.Carroll@microsemi.com>
 > 
 > ---
-> Changes for V2:
-> Refactored code to remove CONFIG_EEH macros
+> Changes in V2:
+> Refactored memory free code to make it easier to understand
 
 
 Thanks,
 Reviewed-by: Johannes Thumshirn <jthumshirn@suse.de>
+
 
 -- 
 Johannes Thumshirn                                          Storage
