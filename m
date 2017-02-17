@@ -1,60 +1,32 @@
-From: Geert Uytterhoeven <geert@linux-m68k.org>
-Subject: Re: [PATCH 00/35] treewide trivial patches converting pr_warning to
-	pr_warn
-Date: Fri, 17 Feb 2017 13:37:33 +0100
-Message-ID: <CAMuHMdWsG0DboaLqXag53Vejwvc5PPY2k2gy9PSdHWbNEx6nRQ@mail.gmail.com>
-References: <cover.1487314666.git.joe@perches.com>
-	<CAJZ5v0gNcGtnXpE1n6LSq7ey+UDKx+oQfmTg0_PgFwzB0Dd_5A@mail.gmail.com>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2 10/11] scsi: allocate reserved commands
+Date: Fri, 17 Feb 2017 13:37:48 +0100
+Message-ID: <20170217123748.GA23739@lst.de>
+References: <1487319790-97340-1-git-send-email-hare@suse.de> <1487319790-97340-11-git-send-email-hare@suse.de> <20170217085505.GE18443@lst.de> <54057180-fcdf-848e-80ca-50519456f18c@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
-Return-path: <virtualization-bounces@lists.linux-foundation.org>
-In-Reply-To: <CAJZ5v0gNcGtnXpE1n6LSq7ey+UDKx+oQfmTg0_PgFwzB0Dd_5A@mail.gmail.com>
-List-Unsubscribe: <https://lists.linuxfoundation.org/mailman/options/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=unsubscribe>
-List-Archive: <http://lists.linuxfoundation.org/pipermail/virtualization/>
-List-Post: <mailto:virtualization@lists.linux-foundation.org>
-List-Help: <mailto:virtualization-request@lists.linux-foundation.org?subject=help>
-List-Subscribe: <https://lists.linuxfoundation.org/mailman/listinfo/virtualization>,
-	<mailto:virtualization-request@lists.linux-foundation.org?subject=subscribe>
-Sender: virtualization-bounces@lists.linux-foundation.org
-Errors-To: virtualization-bounces@lists.linux-foundation.org
-To: "Rafael J. Wysocki" <rafael@kernel.org>
-Cc: "open list:FRAMEBUFFER LAYER" <linux-fbdev@vger.kernel.org>, "linux-ia64@vger.kernel.org" <linux-ia64@vger.kernel.org>, Linux-sh list <linux-sh@vger.kernel.org>, Alexander Shishkin <alexander.shishkin@linux.intel.com>, nouveau@lists.freedesktop.org, "moderated list:SOUND - SOC LAYER / DYNAMIC AUDIO POWER MANAGEM..." <alsa-devel@alsa-project.org>, dri-devel <dri-devel@lists.freedesktop.org>, virtualization@lists.linux-foundation.org, "linux-ide@vger.kernel.org" <linux-ide@vger.kernel.org>, MTD Maling List <linux-mtd@lists.infradead.org>, sparclinux <sparclinux@vger.kernel.org>, Lars Ellenberg <drbd-dev@lists.linbit.com>, "open list:TARGET SUBSYSTEM" <linux-scsi@vger.kernel.org>, Richard Weinberger <richard@nod.at>, sfi-devel@simplefirmware.org, amd-gfx@lists.freedesktop.org, ACPI Devel Maling List <linux-acpi@vger.kernel.org>, tboot-devel@lists.sourceforge.net, oprofil
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from verein.lst.de ([213.95.11.211]:42423 "EHLO newverein.lst.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1755550AbdBQMhv (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 07:37:51 -0500
+Content-Disposition: inline
+In-Reply-To: <54057180-fcdf-848e-80ca-50519456f18c@suse.de>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: Hannes Reinecke <hare@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-Hi Rafael,
+On Fri, Feb 17, 2017 at 10:00:28AM +0100, Hannes Reinecke wrote:
+> So here's my question: how are 'reserved' commands are imagined to be used?
+> ATM they exist for blk-mq solely, and are not even implemented for
+> legacy sq.
 
-On Fri, Feb 17, 2017 at 1:27 PM, Rafael J. Wysocki <rafael@kernel.org> wrote:
-> On Fri, Feb 17, 2017 at 8:11 AM, Joe Perches <joe@perches.com> wrote:
->> There are ~4300 uses of pr_warn and ~250 uses of the older
->> pr_warning in the kernel source tree.
->>
->> Make the use of pr_warn consistent across all kernel files.
->>
->> This excludes all files in tools/ as there is a separate
->> define pr_warning for that directory tree and pr_warn is
->> not used in tools/.
->>
->> Done with 'sed s/\bpr_warning\b/pr_warn/' and some emacsing.
->
-> Sorry about asking if that has been asked already.
->
-> Wouldn't it be slightly less intrusive to simply redefined
-> pr_warning() as a synonym for pr_warn()?
+Yes.
 
-That's already the case.
+> At the same time quite some drivers (like mpt3sas) really could make use
+> of the notion of 'reserved' commands.
+> Does it make sense to implement 'reserved' commands for the legacy sq
+> code path, too?
 
-This series cleans up the cruft, so we can catch all users with
-"git grep -w pr_warn".
-
-Gr{oetje,eeting}s,
-
-                        Geert
-
---
-Geert Uytterhoeven -- There's lots of Linux beyond ia32 -- geert@linux-m68k.org
-
-In personal conversations with technical people, I call myself a hacker. But
-when I'm talking to journalists I just say "programmer" or something like that.
-                                -- Linus Torvalds
+Yes.
