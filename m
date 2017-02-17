@@ -1,57 +1,30 @@
-From: Hannes Reinecke <hare@suse.de>
-Subject: [PATCHv2 2/3] block: Add blk_mq_make_unique_tag()
-Date: Fri, 17 Feb 2017 09:26:00 +0100
-Message-ID: <1487319961-97476-3-git-send-email-hare@suse.de>
-References: <1487319961-97476-1-git-send-email-hare@suse.de>
+From: Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCHv2] scsi: use 'scsi_device_from_queue()' for scsi_dh
+Date: Fri, 17 Feb 2017 09:27:52 +0100
+Message-ID: <20170217082752.GA18258@lst.de>
+References: <1487257943-72264-1-git-send-email-hare@suse.de> <20170216170519.GA9630@localhost.localdomain> <c889eed7-6262-2e54-0b1e-1d833c033324@suse.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx2.suse.de ([195.135.220.15]:34901 "EHLO mx2.suse.de"
+Received: from verein.lst.de ([213.95.11.211]:41018 "EHLO newverein.lst.de"
         rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S1754264AbdBQI0E (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Feb 2017 03:26:04 -0500
-In-Reply-To: <1487319961-97476-1-git-send-email-hare@suse.de>
+        id S1751646AbdBQI1z (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 03:27:55 -0500
+Content-Disposition: inline
+In-Reply-To: <c889eed7-6262-2e54-0b1e-1d833c033324@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Keith Busch <keith.busch@intel.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, linux-scsi@vger.kernel.org, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
-Implement blk_mq_make_unique_tag() to generate a unique tag
-value from a given hardware queue and tag value.
+On Fri, Feb 17, 2017 at 09:06:14AM +0100, Hannes Reinecke wrote:
+> We could, but why?
+> ATM we're only having SCSI devices able to use device handler; adding
+> another layer of indirection doesn't solve anything here.
+> Moving the infrastructure one level up will only make sense if we're
+> getting non-SCSI device handler (ANA?), but until then I'd think it's
+> just overengineering.
 
-Signed-off-by: Hannes Reinecke <hare@suse.com>
----
- block/blk-mq-tag.c     | 3 +--
- include/linux/blk-mq.h | 5 +++++
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index dcf5ce3..2df6d35 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -450,8 +450,7 @@ u32 blk_mq_unique_tag(struct request *rq)
- 		hwq = hctx->queue_num;
- 	}
- 
--	return (hwq << BLK_MQ_UNIQUE_TAG_BITS) |
--		(rq->tag & BLK_MQ_UNIQUE_TAG_MASK);
-+	return blk_mq_make_unique_tag(hwq, rq->tag);
- }
- EXPORT_SYMBOL(blk_mq_unique_tag);
- 
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 4a2ab5d9..1442c34 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -212,6 +212,11 @@ static inline u16 blk_mq_unique_tag_to_tag(u32 unique_tag)
- 	return unique_tag & BLK_MQ_UNIQUE_TAG_MASK;
- }
- 
-+static inline u32 blk_mq_make_unique_tag(u16 hwq, u16 tag)
-+{
-+	return (hwq << BLK_MQ_UNIQUE_TAG_BITS) |
-+		(tag & BLK_MQ_UNIQUE_TAG_MASK);
-+}
- 
- int blk_mq_request_started(struct request *rq);
- void blk_mq_start_request(struct request *rq);
--- 
-1.8.5.6
+Agreed.  Independent of what does the balancing between queues hardware
+handler should be attached by the low-level driver for any future
+transport without any control from DM.
