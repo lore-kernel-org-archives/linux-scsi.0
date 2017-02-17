@@ -1,79 +1,48 @@
-From: Christoph Hellwig <hch@infradead.org>
-Subject: Re: [dm-devel] hch's native NVMe multipathing [was: Re: [PATCH 1/2]
- Don't blacklist nvme]
-Date: Fri, 17 Feb 2017 01:33:06 -0800
-Message-ID: <20170217093306.GA5389@infradead.org>
-References: <1487107154-24883-1-git-send-email-keith.busch@intel.com>
- <20170215145617.GA4241@infradead.org>
- <20170216025357.GA9241@redhat.com>
- <20170216142621.GA21972@infradead.org>
- <20170216151337.GA12678@redhat.com>
+From: Johannes Thumshirn <jthumshirn@suse.de>
+Subject: Re: [PATCHv2 06/11] mpt3sas: Introduce mpt3sas_get_st_from_smid()
+Date: Fri, 17 Feb 2017 10:35:08 +0100
+Message-ID: <937a6f1c-ebc7-c8a6-b379-658db805f51f@suse.de>
+References: <1487319790-97340-1-git-send-email-hare@suse.de>
+ <1487319790-97340-7-git-send-email-hare@suse.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=windows-1252
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:59172 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751838AbdBQJdL (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2017 04:33:11 -0500
-Content-Disposition: inline
-In-Reply-To: <20170216151337.GA12678@redhat.com>
+Received: from mx2.suse.de ([195.135.220.15]:39159 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1751095AbdBQJfQ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 04:35:16 -0500
+In-Reply-To: <1487319790-97340-7-git-send-email-hare@suse.de>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Mike Snitzer <snitzer@redhat.com>
-Cc: Christoph Hellwig <hch@infradead.org>, Keith Busch <keith.busch@intel.com>, dm-devel@redhat.com, linux-scsi@vger.kernel.org, linux-nvme@lists.infradead.org
+To: Hannes Reinecke <hare@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, Kashyap Desai <kashyap.desai@broadcom.com>, Sathya Prakash <sathya.prakash@broadcom.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.com>
 
-On Thu, Feb 16, 2017 at 10:13:37AM -0500, Mike Snitzer wrote:
-> Not following what you're saying Keith did.  Please feel free to
-> clarify.
+On 02/17/2017 09:23 AM, Hannes Reinecke wrote:
+> +struct scsiio_tracker *
+> +mpt3sas_get_st_from_smid(struct MPT3SAS_ADAPTER *ioc, u16 smid)
+> +{
+> +	WARN_ON(!smid);
+> +	WARN_ON(smid >= ioc->hi_priority_smid);
+> +	return &ioc->scsi_lookup[smid - 1];
+> +}
 
-Keith demonstrated what it takes to support NVMe with dm.  He also
-gave a couple presentations on it in addition to various ptches on
-the list.
+Hmm if smid == 0 we'd be accessing &ioc->scsi_lookup[-1] and that's an
+array out of bounds.
 
-> The middle man is useful if it can support all transports.  If it only
-> supports some then yeah the utility is certainly reduced.
+In patch 9/11 you'll get a unique tag of -2 (which is _not_ SCSI_NO_TAG)
+and will be an array out of bounds as well in  blk_map_queue_find_tag()
+or blk_mq_tag_to_rq().
 
-Again let's look at what multipathing involves:
+if (WARN_ON(!smid))
+	return NULL;
 
- - discovery of multiple paths for a device, and path preferences:
-   Storage protocol specific
+Should fix both.
 
- - handling of path state and grouping changes:
-   Storage protocol specific
-
- - handling of path up / down events:
-   Storage protocol / transport specific if provided
-
- - keep alive / path checking:
-   Storage protocol specific with possible generic fallback
-
- - path selection:
-   Generic, although building heavily on protocol / transport specific
-   information
-
-So most of the hard work is transport specific anyway.  And I fully
-agree that generic code should be, well generic.  And with generic
-I mean right in the block layer instead of involving a layer block
-driver that relies on lots of low-level driver information and setup
-from user space.
-	
-> I'm going to look at removing any scsi_dh code from DM multipath
-> (someone already proposed removing the 'retain_attached_hw_handler'
-> feature).  Not much point having anything in DM multipath now that scsi
-> discovery has the ability to auto-attach the right scsi_dh via scsi_dh's
-> .match hook.
-
-Great.
-
-> As a side-effect it will fix Keith's scsi_dh crash (when
-> operating on NVMe request_queue).
-
-I think we'll need to have a quick fix for that ASAP, though.
-
-> My hope is that your NVMe equivalent for scsi_dh will "just work" (TM)
-> like scsi_dh auto-attach does.  There isn't a finished ALUA equivalent
-> standard for NVMe so I'd imagine at this point you have a single device
-> handler for NVMe to do error translation?
-
-Yes, error translation for the block layer, but most importantly
-discovery of multiple paths to the same namespace.
+-- 
+Johannes Thumshirn                                          Storage
+jthumshirn@suse.de                                +49 911 74053 689
+SUSE LINUX GmbH, Maxfeldstr. 5, 90409 Nürnberg
+GF: Felix Imendörffer, Jane Smithard, Graham Norton
+HRB 21284 (AG Nürnberg)
+Key fingerprint = EC38 9CAB C2C4 F25D 8600 D0D0 0393 969D 2D76 0850
