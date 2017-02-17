@@ -1,58 +1,61 @@
-From: Arnd Bergmann <arnd@arndb.de>
-Subject: [PATCH] smartpqi: fix time handling
-Date: Fri, 17 Feb 2017 16:03:52 +0100
-Message-ID: <20170217150417.2458237-1-arnd@arndb.de>
+From: Paul Menzel <pmenzel@molgen.mpg.de>
+Subject: Driver version for PMC Adaptec HBA in Linux and from vendor
+Date: Fri, 17 Feb 2017 17:40:50 +0100
+Message-ID: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=utf-8; format=flowed
+Content-Transfer-Encoding: 8bit
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mout.kundenserver.de ([212.227.126.134]:59017 "EHLO
-        mout.kundenserver.de" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S934072AbdBQPEj (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Fri, 17 Feb 2017 10:04:39 -0500
+Received: from mx1.molgen.mpg.de ([141.14.17.9]:53523 "EHLO mx1.molgen.mpg.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S934084AbdBQQkw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 11:40:52 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Don Brace <don.brace@microsemi.com>, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, kevin Barnett <kevin.barnett@microsemi.com>, Johannes Thumshirn <jthumshirn@suse.de>, Scott Benesh <scott.benesh@microsemi.com>, esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
+Cc: linux-scsi@vger.kernel.org, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Thomas Kreitler <kreitler+lkml@molgen.mpg.de>
 
-When we have turned off RTC support, the smartpqi driver fails to build:
+Dear Raghava, dear Linux folks,
 
-ERROR: "rtc_time64_to_tm" [drivers/scsi/smartpqi/smartpqi.ko] undefined!
 
-This is easily avoided by using the generic 'struct tm' based helper rather
-than the RTC specific one. While fixing this, I noticed that even though
-the driver uses time64_t for storing seconds, it gets them from the
-old 32-bit struct timeval. To address this, we can simplify the code
-by calling ktime_get_real_seconds() directly.
+Using a PMC Adaptec HBA 1000-8e with latest Linux, it only initializes 
+in sync mode, instead of async mode.
 
-Fixes: 6c223761eb54 ("smartpqi: initial commit of Microsemi smartpqi driver")
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+```
+$ git describe --tag
+v4.10-rc8-47-g0722f57bf
+$ dmesg
+[   21.359635] Adaptec aacraid driver 1.2-1[41066]-ms
+[   21.360017] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have 
+ASPM control
+[   21.363987] AAC0: Async. mode not supported by current driver, sync. 
+mode enforced.
+[   21.363987] Please update driver to get full performance.
+[   21.364949] AAC0: kernel 1.2-0[0] Nov  5 2015
+[   21.365275] AAC0: monitor 0.0-0[0]
+[   21.371382] AAC0: bios 0.13-209[32000]
+[   21.371711] AAC0: serial 10F447
+[   21.372035] AAC0: Non-DASD support enabled.
+[   21.372360] AAC0: 64bit support enabled.
+[   21.372688] AAC0: 64 Bit DAC enabled
+[…]
+$ git grep 'AAC_DRIVER_BUILD 41066'
+drivers/scsi/aacraid/aacraid.h:# define AAC_DRIVER_BUILD 41066
+```
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 11c0dfb3dfa3..657ad15682a3 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -534,8 +534,7 @@ static int pqi_write_current_time_to_host_wellness(
- 	size_t buffer_length;
- 	time64_t local_time;
- 	unsigned int year;
--	struct timeval time;
--	struct rtc_time tm;
-+	struct tm tm;
- 
- 	buffer_length = sizeof(*buffer);
- 
-@@ -552,9 +551,8 @@ static int pqi_write_current_time_to_host_wellness(
- 	put_unaligned_le16(sizeof(buffer->time),
- 		&buffer->time_length);
- 
--	do_gettimeofday(&time);
--	local_time = time.tv_sec - (sys_tz.tz_minuteswest * 60);
--	rtc_time64_to_tm(local_time, &tm);
-+	local_time = ktime_get_real_seconds();
-+	time64_to_tm(local_time, -sys_tz.tz_minuteswest * 60, &tm);
- 	year = tm.tm_year + 1900;
- 
- 	buffer->time[0] = bin2bcd(tm.tm_hour);
--- 
-2.9.0
+Searching the vendor Web site, there is *Linux Driver Source 
+1.2.1-53005* available for download [1].
+
+How does the upstream process work? Is there a git repository somewhere 
+from Microsemi? Are the patches already up for review? (I didn’t find them.)
+
+The answers would be very helpful for our evaluation of the device.
+
+
+Kind regards,
+
+Paul
+
+
+[1] 
+https://storage.microsemi.com/en-us/speed/raid/aac/linux/aacraid-linux-src-1_2_1-53005_tgz.php
