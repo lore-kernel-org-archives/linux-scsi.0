@@ -1,61 +1,68 @@
-From: Paul Menzel <pmenzel@molgen.mpg.de>
-Subject: Driver version for PMC Adaptec HBA in Linux and from vendor
-Date: Fri, 17 Feb 2017 17:40:50 +0100
-Message-ID: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+From: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Subject: RE: Driver version for PMC Adaptec HBA in Linux and from vendor
+Date: Fri, 17 Feb 2017 19:29:48 +0000
+Message-ID: <4D8E82A446BF54499747901DBDEB737A7B8C48D8@avsrvexchmbx2.microsemi.net>
+References: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=utf-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mx1.molgen.mpg.de ([141.14.17.9]:53523 "EHLO mx1.molgen.mpg.de"
-        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
-        id S934084AbdBQQkw (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Fri, 17 Feb 2017 11:40:52 -0500
+Received: from mail-bl2nam02on0052.outbound.protection.outlook.com ([104.47.38.52]:19328
+        "EHLO NAM02-BL2-obe.outbound.protection.outlook.com"
+        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
+        id S1755721AbdBQT3v (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Fri, 17 Feb 2017 14:29:51 -0500
+In-Reply-To: <f09c20d4-dd38-d619-3b31-7782f9b5c0de@molgen.mpg.de>
+Content-Language: en-US
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Adaptec OEM Raid Solutions <aacraid@microsemi.com>
-Cc: linux-scsi@vger.kernel.org, Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>, Thomas Kreitler <kreitler+lkml@molgen.mpg.de>
+To: Paul Menzel <pmenzel@molgen.mpg.de>, dl-esc-Aacraid Linux Driver <aacraid@microsemi.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Thomas Kreitler <kreitler+lkml@molgen.mpg.de>
 
-Dear Raghava, dear Linux folks,
-
-
-Using a PMC Adaptec HBA 1000-8e with latest Linux, it only initializes 
-in sync mode, instead of async mode.
-
-```
-$ git describe --tag
-v4.10-rc8-47-g0722f57bf
-$ dmesg
-[   21.359635] Adaptec aacraid driver 1.2-1[41066]-ms
-[   21.360017] aacraid 0000:04:00.0: can't disable ASPM; OS doesn't have 
-ASPM control
-[   21.363987] AAC0: Async. mode not supported by current driver, sync. 
-mode enforced.
-[   21.363987] Please update driver to get full performance.
-[   21.364949] AAC0: kernel 1.2-0[0] Nov  5 2015
-[   21.365275] AAC0: monitor 0.0-0[0]
-[   21.371382] AAC0: bios 0.13-209[32000]
-[   21.371711] AAC0: serial 10F447
-[   21.372035] AAC0: Non-DASD support enabled.
-[   21.372360] AAC0: 64bit support enabled.
-[   21.372688] AAC0: 64 Bit DAC enabled
-[…]
-$ git grep 'AAC_DRIVER_BUILD 41066'
-drivers/scsi/aacraid/aacraid.h:# define AAC_DRIVER_BUILD 41066
-```
-
-Searching the vendor Web site, there is *Linux Driver Source 
-1.2.1-53005* available for download [1].
-
-How does the upstream process work? Is there a git repository somewhere 
-from Microsemi? Are the patches already up for review? (I didn’t find them.)
-
-The answers would be very helpful for our evaluation of the device.
-
-
-Kind regards,
-
-Paul
-
-
-[1] 
-https://storage.microsemi.com/en-us/speed/raid/aac/linux/aacraid-linux-src-1_2_1-53005_tgz.php
+SGVsbG8gUGF1bCwNCg0KPiBEZWFyIFJhZ2hhdmEsIGRlYXIgTGludXggZm9sa3MsDQo+IA0KPiAN
+Cj4gVXNpbmcgYSBQTUMgQWRhcHRlYyBIQkEgMTAwMC04ZSB3aXRoIGxhdGVzdCBMaW51eCwgaXQg
+b25seSBpbml0aWFsaXplcw0KPiBpbiBzeW5jIG1vZGUsIGluc3RlYWQgb2YgYXN5bmMgbW9kZS4N
+Cg0KVGhlIHBhdGNoZXMgdGhhdCBlbmFibGUgYXN5bmMgbW9kZSBpbiBIQkEgMTAwMC04ZSAsIGhh
+dmUgYmVlbiBpbmNsdWRlZCBpbiB0aGUgSmFtZXMgQm90dG9tbGV5J3MgIGxpbnV4LXNjc2kgQnJh
+bmNoICBhbmQgYXJlICBvbiB0cmFjayBiZQ0KSW5jbHVkZWQgaW50byBMaW51eCA0LjExLiANCg0K
+aHR0cHM6Ly9naXQua2VybmVsLm9yZy9jZ2l0L2xpbnV4L2tlcm5lbC9naXQvamVqYi9zY3NpLmdp
+dC8NCg0KPiBgYGANCj4gJCBnaXQgZGVzY3JpYmUgLS10YWcNCj4gdjQuMTAtcmM4LTQ3LWcwNzIy
+ZjU3YmYNCj4gJCBkbWVzZw0KPiBbICAgMjEuMzU5NjM1XSBBZGFwdGVjIGFhY3JhaWQgZHJpdmVy
+IDEuMi0xWzQxMDY2XS1tcw0KPiBbICAgMjEuMzYwMDE3XSBhYWNyYWlkIDAwMDA6MDQ6MDAuMDog
+Y2FuJ3QgZGlzYWJsZSBBU1BNOyBPUyBkb2Vzbid0IGhhdmUNCj4gQVNQTSBjb250cm9sDQo+IFsg
+ICAyMS4zNjM5ODddIEFBQzA6IEFzeW5jLiBtb2RlIG5vdCBzdXBwb3J0ZWQgYnkgY3VycmVudCBk
+cml2ZXIsIHN5bmMuDQo+IG1vZGUgZW5mb3JjZWQuDQo+IFsgICAyMS4zNjM5ODddIFBsZWFzZSB1
+cGRhdGUgZHJpdmVyIHRvIGdldCBmdWxsIHBlcmZvcm1hbmNlLg0KPiBbICAgMjEuMzY0OTQ5XSBB
+QUMwOiBrZXJuZWwgMS4yLTBbMF0gTm92ICA1IDIwMTUNCj4gWyAgIDIxLjM2NTI3NV0gQUFDMDog
+bW9uaXRvciAwLjAtMFswXQ0KPiBbICAgMjEuMzcxMzgyXSBBQUMwOiBiaW9zIDAuMTMtMjA5WzMy
+MDAwXQ0KPiBbICAgMjEuMzcxNzExXSBBQUMwOiBzZXJpYWwgMTBGNDQ3DQo+IFsgICAyMS4zNzIw
+MzVdIEFBQzA6IE5vbi1EQVNEIHN1cHBvcnQgZW5hYmxlZC4NCj4gWyAgIDIxLjM3MjM2MF0gQUFD
+MDogNjRiaXQgc3VwcG9ydCBlbmFibGVkLg0KPiBbICAgMjEuMzcyNjg4XSBBQUMwOiA2NCBCaXQg
+REFDIGVuYWJsZWQNCj4gW+KApl0NCj4gJCBnaXQgZ3JlcCAnQUFDX0RSSVZFUl9CVUlMRCA0MTA2
+NicNCj4gZHJpdmVycy9zY3NpL2FhY3JhaWQvYWFjcmFpZC5oOiMgZGVmaW5lIEFBQ19EUklWRVJf
+QlVJTEQgNDEwNjYNCj4gYGBgDQo+IA0KPiBTZWFyY2hpbmcgdGhlIHZlbmRvciBXZWIgc2l0ZSwg
+dGhlcmUgaXMgKkxpbnV4IERyaXZlciBTb3VyY2UNCj4gMS4yLjEtNTMwMDUqIGF2YWlsYWJsZSBm
+b3IgZG93bmxvYWQgWzFdLg0KDQpUaGUgbGF0ZXN0IHVwc3RyZWFtICBkcml2ZXIgdmVyc2lvbiBp
+cyA1MDc0MC4gV2Ugd2lsbCBiZSByZWFjaGluZyAgdmVyc2lvbiA1MzAwNSAgaW4gY291cGxlIG9m
+IHBhdGNoIHNldHMgICggfiAzKS4NCg0KaHR0cDovL2dpdC5rZXJuZWwub3JnL2NnaXQvbGludXgv
+a2VybmVsL2dpdC9qZWpiL3Njc2kuZ2l0L2NvbW1pdC8/aWQ9OTZmNmE2MTM0NzY2ZGUwZDQyYTk4
+Yzc3NTg3MzZkZGUxNmUwYWRkNQ0KDQoNCj4gSG93IGRvZXMgdGhlIHVwc3RyZWFtIHByb2Nlc3Mg
+d29yaz8gSXMgdGhlcmUgYSBnaXQgcmVwb3NpdG9yeSBzb21ld2hlcmUNCj4gZnJvbSBNaWNyb3Nl
+bWk/IEFyZSB0aGUgcGF0Y2hlcyBhbHJlYWR5IHVwIGZvciByZXZpZXc/IChJIGRpZG7igJl0IGZp
+bmQgdGhlbS4pDQoNCldlIHRyeSB0byBwdXNoIG91dCBwYXRjaCBzZXRzIHRvIGtlcm5lbC5vcmcg
+Zm9yIGV2ZXJ5IG1ham9yICBkcml2ZXIgcmVsZWFzZSB3ZSBtYWtlLiAgVXN1YWxseSB0aGV5IGdv
+IGludG8gdGhlDQpzdWIgY29tcG9uZW50IG1haW50YWluZXJzIGJyYW5jaCAobGludXgtc2NzaSAp
+ICwgd2hpY2ggaXMgdGhlbiBwdXNoZWQgb3V0IHRvIExpbnVzIHdoZW4gdGhlIG1lcmdlDQp3aW5k
+b3cgZm9yICBvcGVucyAoY3VycmVudGx5IHRoZSBtZXJnZSB3aW5kb3cgZm9yIDQuMTAgaXMgY2xv
+c2VkICwgYmFycmluZyBmaXhlcykuIFNvIExpbnV4IHZlcnNpb24gNC4xMSBzaG91bGQgaGF2ZQ0K
+ZnVsbCBhc3luYyBzdXBwb3J0IGFuZCBtb3JlIGZvciBIQkExMDAwLThlLiANCg0KV2UgZG8gbm90
+IG1haW50YWluIGEgZ2l0IHJlcG9zaXRvcnkgdW5mb3J0dW5hdGVseSAsIGJ1dCB3ZSBkbyByZWxl
+YXNlIHRoZSBzb3VyY2UgY29kZSBmb3IgZXZlcnkgcmVsZWFzZSBhcyB5b3UNCmluZGljYXRlZC4N
+Cg0KRm9yIGZ1cnRoZXIgcmVmZXJlbmNlIHRoZSBwYXRjaGVzIGFyZSBzZW50IG91dCBpbiB0aGUg
+c2NzaSBtYWlsaW5nIGxpc3QgIGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnICwNCnRoZSBhcmNo
+aXZlIGlzIGhlcmUgaHR0cDovL21hcmMuaW5mby8/bD1saW51eC1zY3NpJnI9MSZ3PTIgLg0KDQpI
+b3BlIEkgY2xlYXJlZCB1cCB5b3VyIGRvdWJ0cy4gUGxlYXNlIGRvIHJlYWNoIG91dCBpZiB5b3Ug
+aGF2ZSBvdGhlciBjb25jZXJucyBvciBxdWVzdGlvbnMuDQoNClRoYW5rIHlvdSwNClJhZ2hhdmEg
+QWRpdHlhDQoNCj4gWzFdDQo+IGh0dHBzOi8vc3RvcmFnZS5taWNyb3NlbWkuY29tL2VuLXVzL3Nw
+ZWVkL3JhaWQvYWFjL2xpbnV4L2FhY3JhaWQtbGludXgtDQo+IHNyYy0xXzJfMS01MzAwNV90Z3ou
+cGhwDQo=
