@@ -1,183 +1,164 @@
-From: Ondrej Zary <linux@rainbow-software.org>
-Subject: Re: g_NCR5380 PDMA, was Re: [PATCH 0/6] ncr5380: Miscellaneous minor patches
-Date: Sat, 18 Feb 2017 12:10:07 +0100
-Message-ID: <201702181210.08593.linux@rainbow-software.org>
-References: <cover.1484523085.git.fthain@telegraphics.com.au> <201702162318.52483.linux@rainbow-software.org> <alpine.LNX.2.00.1702180934190.13115@nippy.intranet>
+From: Peter Senna Tschudin <peter.senna@collabora.com>
+Subject: Re: [RFC v2 01/20] block: DAC960: Replace PCI pool old API
+Date: Sat, 18 Feb 2017 13:51:22 +0100
+Message-ID: <20170218125121.GA13698@collabora.com>
+References: <20170218083556.20215-1-romain.perier@collabora.com>
+ <20170218083556.20215-2-romain.perier@collabora.com>
 Mime-Version: 1.0
-Content-Type: Text/Plain;
-  charset="iso-8859-1"
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-In-Reply-To: <alpine.LNX.2.00.1702180934190.13115@nippy.intranet>
+Content-Type: text/plain; charset=us-ascii
+Return-path: <netdev-owner@vger.kernel.org>
 Content-Disposition: inline
-Sender: linux-kernel-owner@vger.kernel.org
-To: Finn Thain <fthain@telegraphics.com.au>
-Cc: "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Michael Schmitz <schmitzmic@gmail.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+In-Reply-To: <20170218083556.20215-2-romain.perier@collabora.com>
+Sender: netdev-owner@vger.kernel.org
+To: Romain Perier <romain.perier@collabora.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
 List-Id: linux-scsi@vger.kernel.org
 
-On Friday 17 February 2017 23:38:12 Finn Thain wrote:
-> On Thu, 16 Feb 2017, Ondrej Zary wrote:
-> > On Tuesday 31 January 2017 02:31:45 Finn Thain wrote:
-> > [...]
-> >
-> > > Are you trying to figure out which commands are going to disconnect
-> > > during a transfer? This is really a function of the firmware in the
-> > > target; there are no good heuristics AFAICT, so the PDMA algorithm has
-> > > to be robust. mac_scsi has to cope with this too.
-> > >
-> > > Does the problem go away when you assign no IRQ? When instance->irq ==
-> > > NO_IRQ, the core driver will inhibit disconnect privileges.
-> >
-> > Yes, it seems to run fine with IRQ/disconnect disabled. With IRQ
-> > enabled, "dd if=/dev/sr0 of=anything" stops after a while.
->
-> When you say "stops", do you mean an infinite loop in
-> generic_NCR5380_pread or does the loop complete (which would presumably
-> leave the target stuck in DATA IN phase, and a scsi command timeout would
-> probably follow after 30 seconds...)
+On Sat, Feb 18, 2017 at 09:35:37AM +0100, Romain Perier wrote:
+> The PCI pool API is deprecated. This commits replaces the PCI pool old
+> API by the appropriated function with the DMA pool API.
+> 
 
-I've added timeouts to the possibly-infinite loops. It times out waiting for 
-the host buffer to become ready. Then everything breaks.
-Now I found why: pread() returns without waiting for the 53C80 registers to be 
-ready. Adding the wait allows to continue in PIO mode with "tag#0 switching 
-to slow handshake".
+no new errors added, tested by compilation only.
 
-> > I get gated 53C80 IRQ, BASR=0x10, MODE=0x0e, STATUS=0x7c.
->
-> You can use NCR5380_print() to get a decoded register dump.
->
-> When I decode the above values I get,
->
-> BASR   = 0x10 = BASR_IRQ
-> MODE   = 0x0e = MR_ENABLE_EOP_INTR | MR_MONITOR_BSY | MR_DMA_MODE
-> STATUS = 0x7c = SR_BSY | SR_REQ | SR_MSG | SR_CD | SR_IO
->
-> Since BASR_PHASE_MATCH is not set, the interrupt is almost certainly a
-> phase mismatch. The new phase is SR_MSG | SR_CD | SR_IO = PHASE_MSGIN,
-> which shows that the target has given up on the DATA IN phase and is
-> presumably trying to send a DISCONNECT message.
-
-Looks you're right. The transfersize is 4096, i.e. 2 CD-ROM sectors. When the 
-2nd sector is not ready in the drive internal buffer, the drive probably 
-disconnects which breaks the fragile pdma transfer. When the transfersize is 
-limited to 2048 bytes, the problem goes away.
-
-The problem also went away with enabled interrupts because I had some debug 
-printks added which were slowing down the transfer enough for the drive (SONY 
-CDU-55S) to keep up and not disconnect. Got the same result by inserting 
-udelay(100) after each 128 byte block trasnferred in pread().
-
-> > When I enable interrupts during PDMA (like the removed UNSAFE macro
-> > did), the problems go away. I see an IRQ after each pread call.
->
-> You shouldn't need an interrupt, because NCR5380_dma_complete() gets
-> called regardless. AFAICT, the only difference is the timing, which
-> becomes less predictable. Calling spinlock_irq_restore() before the
-> transfer seems to create a race condition between hostdata->dma_len store
-> and load.
->
-> I think that the pread call has not yet returned when the interrupt fires
-> and NCR5380_dma_complete() is called. Hence hostdata->dma_len has not yet
-> been initialized. So when NCR5380_dma_complete() is called by the
-> interrupt handler, SCp.this_residual will not change at all because
-> hostdata->dma_len is still zero.
->
-> > (had to disable "no 53C80 gated irq after transfer" and "no end dma
-> > signal" messages to reduce log spam)
->
-> That may provide a quick way to detect the failed PDMA transfer, at least
-> for testing purposes. There may be a more conclusive test for a partial
-> transfer.
->
-> We could to implement something like macscsi_dma_residual() to take care
-> of a failed PDMA transfer. That way, the failure can be taken into account
-> when NCR5380_dma_complete() is called at the end of the transfer.
->
-> See patch below for example. It should confirm the theory above though it
-> really needs some timeouts added (NCR5380_poll_politely()). And perhaps we
-> could do something more clever than retry indefinitely, though we can
-> still rely on the command timeout.
-
-Thanks for idea
-
-> diff --git a/drivers/scsi/g_NCR5380.c b/drivers/scsi/g_NCR5380.c
-> index 6f9665d..75cfaf3 100644
-> --- a/drivers/scsi/g_NCR5380.c
-> +++ b/drivers/scsi/g_NCR5380.c
-> @@ -497,15 +497,17 @@ static inline int generic_NCR5380_pread(struct
-> NCR5380_hostdata *hostdata, blocks--;
->  	}
->
-> +	hostdata->pdma_residual = 0;
-> +
->  	if (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_GATED_53C80_IRQ))
-> -		printk("53C400r: no 53C80 gated irq after transfer");
-> +		hostdata->pdma_residual = hostdata->dma_len;
->
->  	/* wait for 53C80 registers to be available */
->  	while (!(NCR5380_read(hostdata->c400_ctl_status) & CSR_53C80_REG))
->  		;
->
->  	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
-> -		printk(KERN_ERR "53C400r: no end dma signal\n");
-> +		hostdata->pdma_residual = hostdata->dma_len;
->
->  	return 0;
->  }
-> @@ -576,12 +578,14 @@ static inline int generic_NCR5380_pwrite(struct
-> NCR5380_hostdata *hostdata, /* FIXME - no timeout */
->  	}
->
-> -	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER)) {
-> -		printk(KERN_ERR "53C400w: no end dma signal\n");
-> -	}
-> +	hostdata->pdma_residual = 0;
-> +
-> +	if (!(NCR5380_read(BUS_AND_STATUS_REG) & BASR_END_DMA_TRANSFER))
-> +		hostdata->pdma_residual = hostdata->dma_len;
->
->  	while (!(NCR5380_read(TARGET_COMMAND_REG) & TCR_LAST_BYTE_SENT))
->  		; 	// TIMEOUT
-> +
->  	return 0;
->  }
->
-> @@ -607,6 +611,11 @@ static int generic_NCR5380_dma_xfer_len(struct
-> NCR5380_hostdata *hostdata, return transfersize;
->  }
->
-> +static int generic_NCR5380_dma_residual(struct NCR5380_hostdata *hostdata)
-> +{
-> +	return hostdata->pdma_residual;
-> +}
-> +
->  /*
->   *	Include the NCR5380 core code that we build our driver around
->   */
-> diff --git a/drivers/scsi/g_NCR5380.h b/drivers/scsi/g_NCR5380.h
-> index 81b22d9..08c91b7 100644
-> --- a/drivers/scsi/g_NCR5380.h
-> +++ b/drivers/scsi/g_NCR5380.h
-> @@ -26,7 +26,8 @@
->  	int c400_ctl_status; \
->  	int c400_blk_cnt; \
->  	int c400_host_buf; \
-> -	int io_width;
-> +	int io_width; \
-> +	int pdma_residual;
->
->  #define NCR53C400_mem_base 0x3880
->  #define NCR53C400_host_buffer 0x3900
-> @@ -35,7 +36,7 @@
->  #define NCR5380_dma_xfer_len		generic_NCR5380_dma_xfer_len
->  #define NCR5380_dma_recv_setup		generic_NCR5380_pread
->  #define NCR5380_dma_send_setup		generic_NCR5380_pwrite
-> -#define NCR5380_dma_residual		NCR5380_dma_residual_none
-> +#define NCR5380_dma_residual		generic_NCR5380_dma_residual
->
->  #define NCR5380_intr generic_NCR5380_intr
->  #define NCR5380_queue_command generic_NCR5380_queue_command
-
-
--- 
-Ondrej Zary
+> Signed-off-by: Romain Perier <romain.perier@collabora.com>
+> Acked-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> Tested-by: Peter Senna Tschudin <peter.senna@collabora.com>
+> ---
+>  drivers/block/DAC960.c | 36 ++++++++++++++++++------------------
+>  drivers/block/DAC960.h |  4 ++--
+>  2 files changed, 20 insertions(+), 20 deletions(-)
+> 
+> diff --git a/drivers/block/DAC960.c b/drivers/block/DAC960.c
+> index 26a51be..2b221cc 100644
+> --- a/drivers/block/DAC960.c
+> +++ b/drivers/block/DAC960.c
+> @@ -268,17 +268,17 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+>    void *AllocationPointer = NULL;
+>    void *ScatterGatherCPU = NULL;
+>    dma_addr_t ScatterGatherDMA;
+> -  struct pci_pool *ScatterGatherPool;
+> +  struct dma_pool *ScatterGatherPool;
+>    void *RequestSenseCPU = NULL;
+>    dma_addr_t RequestSenseDMA;
+> -  struct pci_pool *RequestSensePool = NULL;
+> +  struct dma_pool *RequestSensePool = NULL;
+>  
+>    if (Controller->FirmwareType == DAC960_V1_Controller)
+>      {
+>        CommandAllocationLength = offsetof(DAC960_Command_T, V1.EndMarker);
+>        CommandAllocationGroupSize = DAC960_V1_CommandAllocationGroupSize;
+> -      ScatterGatherPool = pci_pool_create("DAC960_V1_ScatterGather",
+> -		Controller->PCIDevice,
+> +      ScatterGatherPool = dma_pool_create("DAC960_V1_ScatterGather",
+> +		&Controller->PCIDevice->dev,
+>  	DAC960_V1_ScatterGatherLimit * sizeof(DAC960_V1_ScatterGatherSegment_T),
+>  	sizeof(DAC960_V1_ScatterGatherSegment_T), 0);
+>        if (ScatterGatherPool == NULL)
+> @@ -290,18 +290,18 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+>      {
+>        CommandAllocationLength = offsetof(DAC960_Command_T, V2.EndMarker);
+>        CommandAllocationGroupSize = DAC960_V2_CommandAllocationGroupSize;
+> -      ScatterGatherPool = pci_pool_create("DAC960_V2_ScatterGather",
+> -		Controller->PCIDevice,
+> +      ScatterGatherPool = dma_pool_create("DAC960_V2_ScatterGather",
+> +		&Controller->PCIDevice->dev,
+>  	DAC960_V2_ScatterGatherLimit * sizeof(DAC960_V2_ScatterGatherSegment_T),
+>  	sizeof(DAC960_V2_ScatterGatherSegment_T), 0);
+>        if (ScatterGatherPool == NULL)
+>  	    return DAC960_Failure(Controller,
+>  			"AUXILIARY STRUCTURE CREATION (SG)");
+> -      RequestSensePool = pci_pool_create("DAC960_V2_RequestSense",
+> -		Controller->PCIDevice, sizeof(DAC960_SCSI_RequestSense_T),
+> +      RequestSensePool = dma_pool_create("DAC960_V2_RequestSense",
+> +		&Controller->PCIDevice->dev, sizeof(DAC960_SCSI_RequestSense_T),
+>  		sizeof(int), 0);
+>        if (RequestSensePool == NULL) {
+> -	    pci_pool_destroy(ScatterGatherPool);
+> +	    dma_pool_destroy(ScatterGatherPool);
+>  	    return DAC960_Failure(Controller,
+>  			"AUXILIARY STRUCTURE CREATION (SG)");
+>        }
+> @@ -335,16 +335,16 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+>        Command->Next = Controller->FreeCommands;
+>        Controller->FreeCommands = Command;
+>        Controller->Commands[CommandIdentifier-1] = Command;
+> -      ScatterGatherCPU = pci_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
+> +      ScatterGatherCPU = dma_pool_alloc(ScatterGatherPool, GFP_ATOMIC,
+>  							&ScatterGatherDMA);
+>        if (ScatterGatherCPU == NULL)
+>  	  return DAC960_Failure(Controller, "AUXILIARY STRUCTURE CREATION");
+>  
+>        if (RequestSensePool != NULL) {
+> -  	  RequestSenseCPU = pci_pool_alloc(RequestSensePool, GFP_ATOMIC,
+> +  	  RequestSenseCPU = dma_pool_alloc(RequestSensePool, GFP_ATOMIC,
+>  						&RequestSenseDMA);
+>    	  if (RequestSenseCPU == NULL) {
+> -                pci_pool_free(ScatterGatherPool, ScatterGatherCPU,
+> +                dma_pool_free(ScatterGatherPool, ScatterGatherCPU,
+>                                  ScatterGatherDMA);
+>      		return DAC960_Failure(Controller,
+>  					"AUXILIARY STRUCTURE CREATION");
+> @@ -379,8 +379,8 @@ static bool DAC960_CreateAuxiliaryStructures(DAC960_Controller_T *Controller)
+>  static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+>  {
+>    int i;
+> -  struct pci_pool *ScatterGatherPool = Controller->ScatterGatherPool;
+> -  struct pci_pool *RequestSensePool = NULL;
+> +  struct dma_pool *ScatterGatherPool = Controller->ScatterGatherPool;
+> +  struct dma_pool *RequestSensePool = NULL;
+>    void *ScatterGatherCPU;
+>    dma_addr_t ScatterGatherDMA;
+>    void *RequestSenseCPU;
+> @@ -411,9 +411,9 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+>  	  RequestSenseDMA = Command->V2.RequestSenseDMA;
+>        }
+>        if (ScatterGatherCPU != NULL)
+> -          pci_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
+> +          dma_pool_free(ScatterGatherPool, ScatterGatherCPU, ScatterGatherDMA);
+>        if (RequestSenseCPU != NULL)
+> -          pci_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
+> +          dma_pool_free(RequestSensePool, RequestSenseCPU, RequestSenseDMA);
+>  
+>        if ((Command->CommandIdentifier
+>  	   % Controller->CommandAllocationGroupSize) == 1) {
+> @@ -438,12 +438,12 @@ static void DAC960_DestroyAuxiliaryStructures(DAC960_Controller_T *Controller)
+>      }
+>  
+>    if (ScatterGatherPool != NULL)
+> -  	pci_pool_destroy(ScatterGatherPool);
+> +  	dma_pool_destroy(ScatterGatherPool);
+>    if (Controller->FirmwareType == DAC960_V1_Controller)
+>    	return;
+>  
+>    if (RequestSensePool != NULL)
+> -	pci_pool_destroy(RequestSensePool);
+> +	dma_pool_destroy(RequestSensePool);
+>  
+>    for (i = 0; i < DAC960_MaxLogicalDrives; i++) {
+>  	kfree(Controller->V2.LogicalDeviceInformation[i]);
+> diff --git a/drivers/block/DAC960.h b/drivers/block/DAC960.h
+> index 85fa9bb..47d7d69 100644
+> --- a/drivers/block/DAC960.h
+> +++ b/drivers/block/DAC960.h
+> @@ -2316,7 +2316,7 @@ typedef struct DAC960_Controller
+>    bool SuppressEnclosureMessages;
+>    struct timer_list MonitoringTimer;
+>    struct gendisk *disks[DAC960_MaxLogicalDrives];
+> -  struct pci_pool *ScatterGatherPool;
+> +  struct dma_pool *ScatterGatherPool;
+>    DAC960_Command_T *FreeCommands;
+>    unsigned char *CombinedStatusBuffer;
+>    unsigned char *CurrentStatusBuffer;
+> @@ -2429,7 +2429,7 @@ typedef struct DAC960_Controller
+>        bool NeedDeviceSerialNumberInformation;
+>        bool StartLogicalDeviceInformationScan;
+>        bool StartPhysicalDeviceInformationScan;
+> -      struct pci_pool *RequestSensePool;
+> +      struct dma_pool *RequestSensePool;
+>  
+>        dma_addr_t	FirstCommandMailboxDMA;
+>        DAC960_V2_CommandMailbox_T *FirstCommandMailbox;
+> -- 
+> 2.9.3
+> 
