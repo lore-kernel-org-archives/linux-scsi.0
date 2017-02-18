@@ -1,105 +1,74 @@
-From: Peter Senna Tschudin <peter.senna@collabora.com>
-Subject: Re: [RFC v2 00/20] Replace PCI pool by DMA pool API
-Date: Sat, 18 Feb 2017 19:46:59 +0100
-Message-ID: <20170218184659.GD13698@collabora.com>
-References: <20170218083556.20215-1-romain.perier@collabora.com>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Return-path: <netdev-owner@vger.kernel.org>
-Content-Disposition: inline
-In-Reply-To: <20170218083556.20215-1-romain.perier@collabora.com>
-Sender: netdev-owner@vger.kernel.org
-To: Romain Perier <romain.perier@collabora.com>
-Cc: Dan Williams <dan.j.williams@intel.com>, Doug Ledford <dledford@redhat.com>, Sean Hefty <sean.hefty@intel.com>, Hal Rosenstock <hal.rosenstock@gmail.com>, jeffrey.t.kirsher@intel.com, "David S. Miller" <davem@davemloft.net>, stas.yakovlev@gmail.com, "James E.J. Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, Felipe Balbi <balbi@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-rdma@vger.kernel.org, netdev@vger.kernel.org, linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Senna Tschudin <peter.senna@collabora.co.uk>
+From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+Subject: [PATCH] scsi: hpsa: Use 'pci_dma_mapping_error()' instead of 'dma_mapping_error()'
+Date: Sat, 18 Feb 2017 20:07:36 +0100
+Message-ID: <20170218190736.31555-1-christophe.jaillet@wanadoo.fr>
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: don.brace@microsemi.com, jejb@linux.vnet.ibm.com, martin.petersen@oracle.com
+Cc: esc.storagedev@microsemi.com, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org, Christophe JAILLET <christophe.jaillet@wanadoo.fr>
 List-Id: linux-scsi@vger.kernel.org
 
-On Sat, Feb 18, 2017 at 09:35:36AM +0100, Romain Perier wrote:
+Use 'pci_dma_mapping_error()' instead of 'dma_mapping_error()' because it
+is more consistent with the rest of the code. It is also a little less
+verbove.
 
-Tested all patches by compilation and checkpatch. All of them compile
-fine, but patches 11 and 12 need some fixes. You can resend as
-PATCH instead of RFC.
+While at it, remove some '(dma_addr_t)' casts in order to be consistent
+within the file.
 
-> The current PCI pool API are simple macro functions direct expanded to
-> the appropriated dma pool functions. The prototypes are almost the same
-> and semantically, they are very similar. I propose to use the DMA pool
-> API directly and get rid of the old API.
-> 
-> This set of patches, replaces the old API by the dma pool API, adds
-> support to warn about this old API in checkpath.pl and remove the
-> defines.
-> 
-> Changes in v2:
-> - Introduced patch 18/20
-> - Fixed cosmetic changes: spaces before brace, live over 80 characters
-> - Removed some of the check for NULL pointers before calling dma_pool_destroy
-> - Improved the regexp in checkpatch for pci_pool, thanks to Joe Perches
-> - Added Tested-by and Acked-by tags
-> 
-> Romain Perier (20):
->   block: DAC960: Replace PCI pool old API
->   dmaengine: pch_dma: Replace PCI pool old API
->   IB/mthca: Replace PCI pool old API
->   net: e100: Replace PCI pool old API
->   mlx4: Replace PCI pool old API
->   mlx5: Replace PCI pool old API
->   wireless: ipw2200: Replace PCI pool old API
->   scsi: be2iscsi: Replace PCI pool old API
->   scsi: csiostor: Replace PCI pool old API
->   scsi: lpfc: Replace PCI pool old API
->   scsi: megaraid: Replace PCI pool old API
->   scsi: mpt3sas: Replace PCI pool old API
->   scsi: mvsas: Replace PCI pool old API
->   scsi: pmcraid: Replace PCI pool old API
->   usb: gadget: amd5536udc: Replace PCI pool old API
->   usb: gadget: net2280: Replace PCI pool old API
->   usb: gadget: pch_udc: Replace PCI pool old API
->   usb: host: Remove remaining pci_pool in comments
->   PCI: Remove PCI pool macro functions
->   checkpatch: warn for use of old PCI pool API
-> 
->  drivers/block/DAC960.c                        | 36 ++++++-------
->  drivers/block/DAC960.h                        |  4 +-
->  drivers/dma/pch_dma.c                         | 12 ++---
->  drivers/infiniband/hw/mthca/mthca_av.c        | 10 ++--
->  drivers/infiniband/hw/mthca/mthca_cmd.c       |  8 +--
->  drivers/infiniband/hw/mthca/mthca_dev.h       |  4 +-
->  drivers/net/ethernet/intel/e100.c             | 12 ++---
->  drivers/net/ethernet/mellanox/mlx4/cmd.c      | 10 ++--
->  drivers/net/ethernet/mellanox/mlx4/mlx4.h     |  2 +-
->  drivers/net/ethernet/mellanox/mlx5/core/cmd.c | 11 ++--
->  drivers/net/wireless/intel/ipw2x00/ipw2200.c  | 13 ++---
->  drivers/scsi/be2iscsi/be_iscsi.c              |  6 +--
->  drivers/scsi/be2iscsi/be_main.c               |  6 +--
->  drivers/scsi/be2iscsi/be_main.h               |  2 +-
->  drivers/scsi/csiostor/csio_hw.h               |  2 +-
->  drivers/scsi/csiostor/csio_init.c             | 11 ++--
->  drivers/scsi/csiostor/csio_scsi.c             |  6 +--
->  drivers/scsi/lpfc/lpfc.h                      | 10 ++--
->  drivers/scsi/lpfc/lpfc_init.c                 |  6 +--
->  drivers/scsi/lpfc/lpfc_mem.c                  | 73 +++++++++++++--------------
->  drivers/scsi/lpfc/lpfc_scsi.c                 | 12 ++---
->  drivers/scsi/megaraid/megaraid_mbox.c         | 30 +++++------
->  drivers/scsi/megaraid/megaraid_mm.c           | 29 ++++++-----
->  drivers/scsi/megaraid/megaraid_sas_base.c     | 25 ++++-----
->  drivers/scsi/megaraid/megaraid_sas_fusion.c   | 51 ++++++++++---------
->  drivers/scsi/mpt3sas/mpt3sas_base.c           | 73 +++++++++++++--------------
->  drivers/scsi/mvsas/mv_init.c                  |  6 +--
->  drivers/scsi/mvsas/mv_sas.c                   |  6 +--
->  drivers/scsi/pmcraid.c                        | 10 ++--
->  drivers/scsi/pmcraid.h                        |  2 +-
->  drivers/usb/gadget/udc/amd5536udc.c           |  8 +--
->  drivers/usb/gadget/udc/amd5536udc.h           |  4 +-
->  drivers/usb/gadget/udc/net2280.c              | 12 ++---
->  drivers/usb/gadget/udc/net2280.h              |  2 +-
->  drivers/usb/gadget/udc/pch_udc.c              | 31 ++++++------
->  drivers/usb/host/ehci-hcd.c                   |  2 +-
->  drivers/usb/host/fotg210-hcd.c                |  2 +-
->  drivers/usb/host/oxu210hp-hcd.c               |  2 +-
->  include/linux/mlx5/driver.h                   |  2 +-
->  include/linux/pci.h                           |  9 ----
->  scripts/checkpatch.pl                         |  9 +++-
->  41 files changed, 284 insertions(+), 287 deletions(-)
-> 
-> -- 
-> 2.9.3
-> 
+Signed-off-by: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
+---
+ drivers/scsi/hpsa.c | 11 +++++------
+ 1 file changed, 5 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index 524a0c755ed7..bd9df28cc4f0 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -2169,7 +2169,7 @@ static int hpsa_map_ioaccel2_sg_chain_block(struct ctlr_info *h,
+ 	chain_size = le32_to_cpu(cp->sg[0].length);
+ 	temp64 = pci_map_single(h->pdev, chain_block, chain_size,
+ 				PCI_DMA_TODEVICE);
+-	if (dma_mapping_error(&h->pdev->dev, temp64)) {
++	if (pci_dma_mapping_error(h->pdev, temp64)) {
+ 		/* prevent subsequent unmapping */
+ 		cp->sg->address = 0;
+ 		return -1;
+@@ -2206,7 +2206,7 @@ static int hpsa_map_sg_chain_block(struct ctlr_info *h,
+ 	chain_sg->Len = cpu_to_le32(chain_len);
+ 	temp64 = pci_map_single(h->pdev, chain_block, chain_len,
+ 				PCI_DMA_TODEVICE);
+-	if (dma_mapping_error(&h->pdev->dev, temp64)) {
++	if (pci_dma_mapping_error(h->pdev, temp64)) {
+ 		/* prevent subsequent unmapping */
+ 		chain_sg->Addr = cpu_to_le64(0);
+ 		return -1;
+@@ -2743,7 +2743,7 @@ static int hpsa_map_one(struct pci_dev *pdev,
+ 	}
+ 
+ 	addr64 = pci_map_single(pdev, buf, buflen, data_direction);
+-	if (dma_mapping_error(&pdev->dev, addr64)) {
++	if (pci_dma_mapping_error(pdev, addr64)) {
+ 		/* Prevent subsequent unmap of something never mapped */
+ 		cp->Header.SGList = 0;
+ 		cp->Header.SGTotal = cpu_to_le16(0);
+@@ -6632,7 +6632,7 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 	if (iocommand.buf_size > 0) {
+ 		temp64 = pci_map_single(h->pdev, buff,
+ 			iocommand.buf_size, PCI_DMA_BIDIRECTIONAL);
+-		if (dma_mapping_error(&h->pdev->dev, (dma_addr_t) temp64)) {
++		if (pci_dma_mapping_error(h->pdev, temp64)) {
+ 			c->SG[0].Addr = cpu_to_le64(0);
+ 			c->SG[0].Len = cpu_to_le32(0);
+ 			rc = -ENOMEM;
+@@ -6759,8 +6759,7 @@ static int hpsa_big_passthru_ioctl(struct ctlr_info *h, void __user *argp)
+ 		for (i = 0; i < sg_used; i++) {
+ 			temp64 = pci_map_single(h->pdev, buff[i],
+ 				    buff_size[i], PCI_DMA_BIDIRECTIONAL);
+-			if (dma_mapping_error(&h->pdev->dev,
+-							(dma_addr_t) temp64)) {
++			if (pci_dma_mapping_error(h->pdev, temp64)) {
+ 				c->SG[i].Addr = cpu_to_le64(0);
+ 				c->SG[i].Len = cpu_to_le32(0);
+ 				hpsa_pci_unmap(h->pdev, c, i,
+-- 
+2.9.3
