@@ -1,35 +1,40 @@
-From: bugzilla-daemon@bugzilla.kernel.org
-Subject: [Bug 60644] MPT2SAS drops all HDDs when under high I/O
-Date: Sun, 19 Feb 2017 11:55:58 +0000
-Message-ID: <bug-60644-11613-AzpyRZJ6tt@https.bugzilla.kernel.org/>
-References: <bug-60644-11613@https.bugzilla.kernel.org/>
+From: Christoph Hellwig <hch@infradead.org>
+Subject: Re: scsi: BUG in scsi_init_io
+Date: Sun, 19 Feb 2017 09:25:41 -0800
+Message-ID: <20170219172541.GA29867@infradead.org>
+References: <CACT4Y+YAX_SmwzsHenzkswM0kp=om5NivmLW8d9Js6EN3zKmGQ@mail.gmail.com>
+ <20170131092048.GB3687@linux-x5ow.site>
+ <CACT4Y+Y0Yi43kN+sAOd=pu4FTnW4wPeGwiDHEU45s6DTXs_JmQ@mail.gmail.com>
+ <1485877311.3199.4.camel@linux.vnet.ibm.com>
+ <20170219071522.GI29622@ZenIV.linux.org.uk>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8BIT
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail.wl.linuxfoundation.org ([198.145.29.98]:49282 "EHLO
-        mail.wl.linuxfoundation.org" rhost-flags-OK-OK-OK-OK)
-        by vger.kernel.org with ESMTP id S1751327AbdBSL4A (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>);
-        Sun, 19 Feb 2017 06:56:00 -0500
-Received: from mail.wl.linuxfoundation.org (localhost [127.0.0.1])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 229B428797
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2017 11:56:00 +0000 (UTC)
-Received: from pdx-korg-bugzilla-1.web.codeaurora.org (unknown [172.30.200.120])
-        by mail.wl.linuxfoundation.org (Postfix) with ESMTP id 17151287AD
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Feb 2017 11:55:59 +0000 (UTC)
-In-Reply-To: <bug-60644-11613@https.bugzilla.kernel.org/>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <20170219071522.GI29622@ZenIV.linux.org.uk>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Al Viro <viro@ZenIV.linux.org.uk>
+Cc: James Bottomley <jejb@linux.vnet.ibm.com>, Dmitry Vyukov <dvyukov@google.com>, Johannes Thumshirn <jthumshirn@suse.de>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi <linux-scsi@vger.kernel.org>, LKML <linux-kernel@vger.kernel.org>, syzkaller <syzkaller@googlegroups.com>, Hannes Reinecke <hare@suse.de>, Linus Torvalds <torvalds@linux-foundation.org>
 List-Id: linux-scsi@vger.kernel.org
-To: linux-scsi@kernel.org
 
-https://bugzilla.kernel.org/show_bug.cgi?id=60644
+On Sun, Feb 19, 2017 at 07:15:27AM +0000, Al Viro wrote:
+> The root cause is unfixable without access to TARDIS and dose of
+> antipsychotics sufficient to prevent /dev/sg API creation.
+> 
+> What happens is that write to /dev/sg is given a request with non-zero
+> ->iovec_count combined with zero ->dxfer_len.  Or with ->dxferp pointing
+> to an array full of empty iovecs.
+> 
+> AFAICS, the minimal fix would be something like this:
+> 
+> YAMissingSanityCheck in /dev/sg
+> 
+> write permission to /dev/sg shouldn't be equivalent to the ability to trigger
+> BUG_ON() while holding spinlocks...
 
---- Comment #52 from ojab@ojab.ru ---
-https://git.kernel.org/cgit/linux/kernel/git/torvalds/linux.git/commit/?id=ffdadd68af5a397b8a52289ab39d62e1acb39e63
+Looks fine to me:
 
-Patch is merged, bug can be closed.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
--- 
-You are receiving this mail because:
-You are watching the assignee of the bug.
+The other thing we really need to consider is to finally merge the
+SG_IO implementations for /dev/sg with the common block layer one.
