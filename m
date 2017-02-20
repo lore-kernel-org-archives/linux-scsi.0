@@ -1,48 +1,37 @@
-From: Damien Le Moal <damien.lemoal@wdc.com>
-Subject: Re: [PATCH v5] sd: Check for unaligned partial completion
-Date: Mon, 20 Feb 2017 09:05:41 +0900
-Message-ID: <3df97ab8-944e-aa54-49ad-e4d622b08dee@wdc.com>
-References: <20170217000130.22471-1-damien.lemoal@wdc.com>
- <20170217082545.GC18090@lst.de>
+From: Omar Sandoval <osandov@osandov.com>
+Subject: Re: Manual driver binding and unbinding broken for SCSI
+Date: Sun, 19 Feb 2017 18:19:58 -0800
+Message-ID: <20170220021958.GA26238@vader>
+References: <20170218003015.GA19776@vader.DHCP.thefacebook.com>
+ <1487378636.4351.45.camel@HansenPartnership.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from esa1.hgst.iphmx.com ([68.232.141.245]:53979 "EHLO
-        esa1.hgst.iphmx.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1751042AbdBTAGA (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Sun, 19 Feb 2017 19:06:00 -0500
-In-Reply-To: <20170217082545.GC18090@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-block-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1487378636.4351.45.camel@HansenPartnership.com>
+Sender: linux-block-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>
 
-Christoph,
-
-On 2/17/17 17:25, Christoph Hellwig wrote:
-> Looks fine,
+On Fri, Feb 17, 2017 at 04:43:56PM -0800, James Bottomley wrote:
+> This seems to be related to a 0day test we got on the block tree,
+> details here:
 > 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> http://marc.info/?t=148624068800001
+> 
+> I root caused the above to something not being released when it should
+> be, so it looks like you have the same problem.  It seems to be a
+> recent commit in the block tree, so could you bisect it since you have
+> a nice reproducer?
 
-Thanks.
+These appear to actually be two separate issues.
 
-Martin, James,
+The unbind followed by bind crash only happens with scsi-mq. It reproes
+since at least 4.0.
 
-It looks like this patch did not make it into final 4.10.
-This is really bad. Now ZBC support is broken from the start on mpt3sas
-HBAs (so a huge chunk of the market).
+The unbind followed by a new device coming up crash happens both with
+and without scsi-mq. The earliest version I was able to check for that
+was 4.6, which did reproduce.
 
-Is there any possibility to get this added to 4.10.0 ?
-
-Best regards.
-
--- 
-Damien Le Moal, Ph.D.
-Sr. Manager, System Software Research Group,
-Western Digital Corporation
-Damien.LeMoal@wdc.com
-(+81) 0466-98-3593 (ext. 513593)
-1 kirihara-cho, Fujisawa,
-Kanagawa, 252-0888 Japan
-www.wdc.com, www.hgst.com
+I'll see if I can get some more info on these two issues separately.
