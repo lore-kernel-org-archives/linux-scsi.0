@@ -1,40 +1,39 @@
-From: Christoph Hellwig <hch@lst.de>
-Subject: [PATCH] scsi: zero per-cmd driver data before each I/O
-Date: Mon, 20 Feb 2017 17:52:39 +0100
-Message-ID: <20170220165239.25669-1-hch@lst.de>
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from bombadil.infradead.org ([65.50.211.133]:43965 "EHLO
-        bombadil.infradead.org" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752118AbdBTQwq (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2017 11:52:46 -0500
-Sender: linux-scsi-owner@vger.kernel.org
+From: Peter Zijlstra <peterz@infradead.org>
+Subject: Re: [PATCH 0/5] block subsystem refcounter conversions
+Date: Mon, 20 Feb 2017 17:56:39 +0100
+Message-ID: <20170220165639.GE6515@twins.programming.kicks-ass.net>
+References: <1487589368-17666-1-git-send-email-elena.reshetova@intel.com>
+ <5fd906c2-61ba-319c-1bc2-cb48b2b378b4@kernel.dk>
+ <1487605261.2337.4.camel@HansenPartnership.com>
+Mime-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Content-Disposition: inline
+In-Reply-To: <1487605261.2337.4.camel@HansenPartnership.com>
+Sender: linux-kernel-owner@vger.kernel.org
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Jens Axboe <axboe@kernel.dk>, Elena Reshetova <elena.reshetova@intel.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org, linux-btrfs@vger.kernel.org, gregkh@linuxfoundation.org, fujita.tomonori@lab.ntt.co.jp, mingo@redhat.com, clm@fb.com, jbacik@fb.com, dsterba@suse.com
 List-Id: linux-scsi@vger.kernel.org
-To: axboe@kernel.dk, martin.petersen@oracle.com
-Cc: decui@microsoft.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-Without this drivers that don't clear the state themselves can see off
-effects.  For example Hyper-V VMs using the storvsc driver will often
-hang during boot due to uncleared Test Unit Ready failures.
+On Mon, Feb 20, 2017 at 07:41:01AM -0800, James Bottomley wrote:
+> On Mon, 2017-02-20 at 08:15 -0700, Jens Axboe wrote:
+> > On 02/20/2017 04:16 AM, Elena Reshetova wrote:
+> > > Now when new refcount_t type and API are finally merged
+> > > (see include/linux/refcount.h), the following
+> > > patches convert various refcounters in the block susystem from 
+> > > atomic_t to refcount_t. By doing this we prevent intentional or 
+> > > accidental underflows or overflows that can led to use-after-free
+> > > vulnerabilities.
+> 
+> This description isn't right ... nothing is prevented; we get warnings
+> on saturation and use after free with this.
 
-Fixes: e9c787e6 ("scsi: allocate scsi_cmnd structures as part of struct request")
-Signed-off-by: Christoph Hellwig <hch@lst.de>
-Reported-by: Dexuan Cui <decui@microsoft.com>
-Tested-by: Dexuan Cui <decui@microsoft.com>
----
- drivers/scsi/scsi_lib.c | 1 +
- 1 file changed, 1 insertion(+)
+The thing that is prevented is overflow and then a use-after-free by
+making it a leak.
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 90f65c8f487a..daced9db8af8 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1167,6 +1167,7 @@ void scsi_init_command(struct scsi_device *dev, struct scsi_cmnd *cmd)
- 	/* zero out the cmd, except for the embedded scsi_request */
- 	memset((char *)cmd + sizeof(cmd->req), 0,
- 		sizeof(*cmd) - sizeof(cmd->req));
-+	memset((char *)(cmd + 1), 0, dev->host->hostt->cmd_size);
- 
- 	cmd->device = dev;
- 	cmd->sense_buffer = buf;
--- 
-2.11.0
+Modular stuff, you put and free at: (n+1) mod n, by saturating at n-1
+we'll never get there.
+
+So you loose use-after-free, you gain a resource leak. The general idea
+being that use-after-free is a nice trampoline for exploits, leaks are
+'only' a DoS.
