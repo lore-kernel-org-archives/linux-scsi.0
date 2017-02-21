@@ -1,50 +1,185 @@
-From: Himanshu Madhani <himanshu.madhani@cavium.com>
-Subject: [PATCH] PCI/MSI: Only disable affinity settings if pre and post vector count is equal to max_vecs and not min_vecs
-Date: Tue, 21 Feb 2017 09:34:33 -0800
-Message-ID: <1487698473-4171-1-git-send-email-himanshu.madhani@cavium.com>
-Mime-Version: 1.0
-Content-Type: text/plain
+From: Chris Leech <cleech@redhat.com>
+Subject: [PATCH] libiscsi: add lock around task lists to fix list corruption regression
+Date: Tue, 21 Feb 2017 09:35:36 -0800
+Message-ID: <20170221173536.32024-1-cleech@redhat.com>
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-dm3nam03on0088.outbound.protection.outlook.com ([104.47.41.88]:45520
-        "EHLO NAM03-DM3-obe.outbound.protection.outlook.com"
-        rhost-flags-OK-OK-OK-FAIL) by vger.kernel.org with ESMTP
-        id S1753036AbdBURfJ (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
-        Tue, 21 Feb 2017 12:35:09 -0500
+Received: from mx1.redhat.com ([209.132.183.28]:49424 "EHLO mx1.redhat.com"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753036AbdBURfu (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Feb 2017 12:35:50 -0500
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: himanshu.madhani@cavium.com, linux-scsi@vger.kernel.org
+To: linux-scsi@vger.kernel.org, open-iscsi@googlegroups.com, lduncan@suse.com, martin.petersen@oracle.com, jejb@linux.vnet.ibm.com
 
-From: Michael Hernandez <michael.hernandez@cavium.com>
+There's a rather long standing regression from commit
+659743b [SCSI] libiscsi: Reduce locking contention in fast path
 
-min_vecs is the minimum amount of vectors needed to operate in MSI-X mode
-which may just include the vectors that don't need affinity.
+Depending on iSCSI target behavior, it's possible to hit the case in
+iscsi_complete_task where the task is still on a pending list
+(!list_empty(&task->running)).  When that happens the task is removed
+from the list while holding the session back_lock, but other task list
+modification occur under the frwd_lock.  That leads to linked list
+corruption and eventually a panicked system.
 
-Disabling affinity settings causes the qla2xxx driver scsi_add_host
-to fail when blk_mq is enabled as the blk_mq_pci_map_queues expects
-affinity masks on each vector.
+Rather than back out the session lock split entirely, in order to try
+and keep some of the performance gains this patch adds another lock to
+maintain the task lists integrity.
 
-Fixes: dfef358 ("PCI/MSI: Don't apply affinity if there aren't enough vectors left")
-Signed-off-by: Michael Hernandez <michael.hernandez@cavium.com>
-Signed-off-by: Himanshu Madhani <himanshu.madhani@cavium.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: stable@vger.kernel.org
+Major enterprise supported kernels have been backing out the lock split
+for while now, thanks to the efforts at IBM where a lab setup has the
+most reliable reproducer I've seen on this issue.  This patch has been
+tested there successfully.
+
+Signed-off-by: Chris Leech <cleech@redhat.com>
 ---
- drivers/pci/msi.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/libiscsi.c | 26 +++++++++++++++++++++++++-
+ include/scsi/libiscsi.h |  1 +
+ 2 files changed, 26 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/pci/msi.c b/drivers/pci/msi.c
-index 7f73bac..5823348 100644
---- a/drivers/pci/msi.c
-+++ b/drivers/pci/msi.c
-@@ -1214,7 +1214,7 @@ int pci_alloc_irq_vectors_affinity(struct pci_dev *dev, unsigned int min_vecs,
- 		 * If there aren't any vectors left after applying the pre/post
- 		 * vectors don't bother with assigning affinity.
- 		 */
--		if (affd->pre_vectors + affd->post_vectors == min_vecs)
-+		if (affd->pre_vectors + affd->post_vectors == max_vecs)
- 			affd = NULL;
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index 834d121..acb5ef3 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -560,8 +560,12 @@ static void iscsi_complete_task(struct iscsi_task *task, int state)
+ 	WARN_ON_ONCE(task->state == ISCSI_TASK_FREE);
+ 	task->state = state;
+ 
+-	if (!list_empty(&task->running))
++	spin_lock_bh(&conn->taskqueuelock);
++	if (!list_empty(&task->running)) {
++		WARN_ONCE(1, "iscsi_complete_task while task on list");
+ 		list_del_init(&task->running);
++	}
++	spin_unlock_bh(&conn->taskqueuelock);
+ 
+ 	if (conn->task == task)
+ 		conn->task = NULL;
+@@ -783,7 +787,9 @@ __iscsi_conn_send_pdu(struct iscsi_conn *conn, struct iscsi_hdr *hdr,
+ 		if (session->tt->xmit_task(task))
+ 			goto free_task;
  	} else {
- 		if (WARN_ON(affd))
++		spin_lock_bh(&conn->taskqueuelock);
+ 		list_add_tail(&task->running, &conn->mgmtqueue);
++		spin_unlock_bh(&conn->taskqueuelock);
+ 		iscsi_conn_queue_work(conn);
+ 	}
+ 
+@@ -1474,8 +1480,10 @@ void iscsi_requeue_task(struct iscsi_task *task)
+ 	 * this may be on the requeue list already if the xmit_task callout
+ 	 * is handling the r2ts while we are adding new ones
+ 	 */
++	spin_lock_bh(&conn->taskqueuelock);
+ 	if (list_empty(&task->running))
+ 		list_add_tail(&task->running, &conn->requeue);
++	spin_unlock_bh(&conn->taskqueuelock);
+ 	iscsi_conn_queue_work(conn);
+ }
+ EXPORT_SYMBOL_GPL(iscsi_requeue_task);
+@@ -1512,22 +1520,26 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 	 * only have one nop-out as a ping from us and targets should not
+ 	 * overflow us with nop-ins
+ 	 */
++	spin_lock_bh(&conn->taskqueuelock);
+ check_mgmt:
+ 	while (!list_empty(&conn->mgmtqueue)) {
+ 		conn->task = list_entry(conn->mgmtqueue.next,
+ 					 struct iscsi_task, running);
+ 		list_del_init(&conn->task->running);
++		spin_unlock_bh(&conn->taskqueuelock);
+ 		if (iscsi_prep_mgmt_task(conn, conn->task)) {
+ 			/* regular RX path uses back_lock */
+ 			spin_lock_bh(&conn->session->back_lock);
+ 			__iscsi_put_task(conn->task);
+ 			spin_unlock_bh(&conn->session->back_lock);
+ 			conn->task = NULL;
++			spin_lock_bh(&conn->taskqueuelock);
+ 			continue;
+ 		}
+ 		rc = iscsi_xmit_task(conn);
+ 		if (rc)
+ 			goto done;
++		spin_lock_bh(&conn->taskqueuelock);
+ 	}
+ 
+ 	/* process pending command queue */
+@@ -1535,19 +1547,24 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 		conn->task = list_entry(conn->cmdqueue.next, struct iscsi_task,
+ 					running);
+ 		list_del_init(&conn->task->running);
++		spin_unlock_bh(&conn->taskqueuelock);
+ 		if (conn->session->state == ISCSI_STATE_LOGGING_OUT) {
+ 			fail_scsi_task(conn->task, DID_IMM_RETRY);
++			spin_lock_bh(&conn->taskqueuelock);
+ 			continue;
+ 		}
+ 		rc = iscsi_prep_scsi_cmd_pdu(conn->task);
+ 		if (rc) {
+ 			if (rc == -ENOMEM || rc == -EACCES) {
++				spin_lock_bh(&conn->taskqueuelock);
+ 				list_add_tail(&conn->task->running,
+ 					      &conn->cmdqueue);
+ 				conn->task = NULL;
++				spin_unlock_bh(&conn->taskqueuelock);
+ 				goto done;
+ 			} else
+ 				fail_scsi_task(conn->task, DID_ABORT);
++			spin_lock_bh(&conn->taskqueuelock);
+ 			continue;
+ 		}
+ 		rc = iscsi_xmit_task(conn);
+@@ -1558,6 +1575,7 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 		 * we need to check the mgmt queue for nops that need to
+ 		 * be sent to aviod starvation
+ 		 */
++		spin_lock_bh(&conn->taskqueuelock);
+ 		if (!list_empty(&conn->mgmtqueue))
+ 			goto check_mgmt;
+ 	}
+@@ -1577,12 +1595,15 @@ static int iscsi_data_xmit(struct iscsi_conn *conn)
+ 		conn->task = task;
+ 		list_del_init(&conn->task->running);
+ 		conn->task->state = ISCSI_TASK_RUNNING;
++		spin_unlock_bh(&conn->taskqueuelock);
+ 		rc = iscsi_xmit_task(conn);
+ 		if (rc)
+ 			goto done;
++		spin_lock_bh(&conn->taskqueuelock);
+ 		if (!list_empty(&conn->mgmtqueue))
+ 			goto check_mgmt;
+ 	}
++	spin_unlock_bh(&conn->taskqueuelock);
+ 	spin_unlock_bh(&conn->session->frwd_lock);
+ 	return -ENODATA;
+ 
+@@ -1738,7 +1759,9 @@ int iscsi_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *sc)
+ 			goto prepd_reject;
+ 		}
+ 	} else {
++		spin_lock_bh(&conn->taskqueuelock);
+ 		list_add_tail(&task->running, &conn->cmdqueue);
++		spin_unlock_bh(&conn->taskqueuelock);
+ 		iscsi_conn_queue_work(conn);
+ 	}
+ 
+@@ -2896,6 +2919,7 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+ 	INIT_LIST_HEAD(&conn->mgmtqueue);
+ 	INIT_LIST_HEAD(&conn->cmdqueue);
+ 	INIT_LIST_HEAD(&conn->requeue);
++	spin_lock_init(&conn->taskqueuelock);
+ 	INIT_WORK(&conn->xmitwork, iscsi_xmitworker);
+ 
+ 	/* allocate login_task used for the login/text sequences */
+diff --git a/include/scsi/libiscsi.h b/include/scsi/libiscsi.h
+index b0e275d..583875e 100644
+--- a/include/scsi/libiscsi.h
++++ b/include/scsi/libiscsi.h
+@@ -196,6 +196,7 @@ struct iscsi_conn {
+ 	struct iscsi_task	*task;		/* xmit task in progress */
+ 
+ 	/* xmit */
++	spinlock_t		taskqueuelock;  /* protects the next three lists */
+ 	struct list_head	mgmtqueue;	/* mgmt (control) xmit queue */
+ 	struct list_head	cmdqueue;	/* data-path cmd queue */
+ 	struct list_head	requeue;	/* tasks needing another run */
 -- 
-1.8.3.1
+2.9.3
