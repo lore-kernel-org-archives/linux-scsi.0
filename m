@@ -1,34 +1,53 @@
-From: Mike Snitzer <snitzer@redhat.com>
-Subject: Re: [PATCHv3] scsi: use 'scsi_device_from_queue()' for scsi_dh
-Date: Tue, 21 Feb 2017 11:36:10 -0500
-Message-ID: <CAMM=eLcYrcgyNd8gZPFx2T61+SSy_z_oa=AGt67PCYf=295ASQ@mail.gmail.com>
-References: <1487318565-96759-1-git-send-email-hare@suse.de> <yq18tp0449t.fsf@oracle.com>
+From: Jan Kara <jack@suse.cz>
+Subject: Re: Manual driver binding and unbinding broken for SCSI
+Date: Tue, 21 Feb 2017 18:14:41 +0100
+Message-ID: <20170221171441.GA15875@quack2.suse.cz>
+References: <20170218003015.GA19776@vader.DHCP.thefacebook.com>
+ <1487378636.4351.45.camel@HansenPartnership.com>
+ <20170220021958.GA26238@vader>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=us-ascii
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-lf0-f41.google.com ([209.85.215.41]:33608 "EHLO
-        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1753921AbdBUQgm (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2017 11:36:42 -0500
-Received: by mail-lf0-f41.google.com with SMTP id l12so29656916lfe.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2017 08:36:36 -0800 (PST)
-In-Reply-To: <yq18tp0449t.fsf@oracle.com>
+Received: from mx2.suse.de ([195.135.220.15]:56596 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1753514AbdBUROp (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Feb 2017 12:14:45 -0500
+Content-Disposition: inline
+In-Reply-To: <20170220021958.GA26238@vader>
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
+To: Omar Sandoval <osandov@osandov.com>
+Cc: James Bottomley <James.Bottomley@HansenPartnership.com>, Dan Williams <dan.j.williams@intel.com>, Jan Kara <jack@suse.cz>, "Martin K. Petersen" <martin.petersen@oracle.com>, Jens Axboe <axboe@fb.com>, linux-scsi@vger.kernel.org, linux-block@vger.kernel.org
 
-On Mon, Feb 20, 2017 at 10:22 PM, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
->
-> Hannes> The device handler needs to check if a given queue belongs to a
-> Hannes> scsi device; only then does it make sense to attach a device
-> Hannes> handler.
->
-> Fixed kbuild warning and applied to 4.11/scsi-queue.
+On Sun 19-02-17 18:19:58, Omar Sandoval wrote:
+> On Fri, Feb 17, 2017 at 04:43:56PM -0800, James Bottomley wrote:
+> > This seems to be related to a 0day test we got on the block tree,
+> > details here:
+> > 
+> > http://marc.info/?t=148624068800001
+> > 
+> > I root caused the above to something not being released when it should
+> > be, so it looks like you have the same problem.  It seems to be a
+> > recent commit in the block tree, so could you bisect it since you have
+> > a nice reproducer?
+> 
+> These appear to actually be two separate issues.
+> 
+> The unbind followed by bind crash only happens with scsi-mq. It reproes
+> since at least 4.0.
+> 
+> The unbind followed by a new device coming up crash happens both with
+> and without scsi-mq. The earliest version I was able to check for that
+> was 4.6, which did reproduce.
+> 
+> I'll see if I can get some more info on these two issues separately.
 
-Thanks for picking this up but Keith's approach is slightly more
-efficient and opens a way forward to expose support for both scsi_dh
-and whatever Christoph is calling his NVMe device handler.  But we can
-revisit once that latter lands.
+Actually, the second issue is only a warning right? And if I understand the
+issue correctly, it should be fixed by either Dan's patches in linux-block
+or my patch 4 in the series which matches your test results. So that is
+dealt with. I have no idea about the first issue though.
+
+								Honza
+-- 
+Jan Kara <jack@suse.com>
+SUSE Labs, CR
