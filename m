@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 04/14] gpiolib: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:43 -0700
-Message-ID: <1487653253-11497-5-git-send-email-logang@deltatee.com>
+Subject: [PATCH 14/14] switchtec: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:53 -0700
+Message-ID: <1487653253-11497-15-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,23 +23,23 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/gpio/gpiolib.c | 3 +--
+ drivers/pci/switch/switchtec.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/gpio/gpiolib.c b/drivers/gpio/gpiolib.c
-index a07ae9e..04dbc4a 100644
---- a/drivers/gpio/gpiolib.c
-+++ b/drivers/gpio/gpiolib.c
-@@ -1036,9 +1036,8 @@ static int gpiochip_setup_dev(struct gpio_device *gdev)
+diff --git a/drivers/pci/switch/switchtec.c b/drivers/pci/switch/switchtec.c
+index 82bfd18..95aabd0 100644
+--- a/drivers/pci/switch/switchtec.c
++++ b/drivers/pci/switch/switchtec.c
+@@ -1233,9 +1233,8 @@ static struct switchtec_dev *stdev_create(struct pci_dev *pdev)
+ 	cdev = &stdev->cdev;
+ 	cdev_init(cdev, &switchtec_fops);
+ 	cdev->owner = THIS_MODULE;
+-	cdev->kobj.parent = &dev->kobj;
  
- 	cdev_init(&gdev->chrdev, &gpio_fileops);
- 	gdev->chrdev.owner = THIS_MODULE;
--	gdev->chrdev.kobj.parent = &gdev->dev.kobj;
- 	gdev->dev.devt = MKDEV(MAJOR(gpio_devt), gdev->id);
--	status = cdev_add(&gdev->chrdev, gdev->dev.devt, 1);
-+	status = device_add_cdev(&gdev->dev, &gdev->chrdev);
- 	if (status < 0)
- 		chip_warn(gdev->chip, "failed to add char device %d:%d\n",
- 			  MAJOR(gpio_devt), gdev->id);
+-	rc = cdev_add(&stdev->cdev, dev->devt, 1);
++	rc = device_add_cdev(dev, cdev);
+ 	if (rc)
+ 		goto err_cdev;
+ 
 -- 
 2.1.4
