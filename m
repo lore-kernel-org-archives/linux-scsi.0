@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 07/14] infiniband: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:46 -0700
-Message-ID: <1487653253-11497-8-git-send-email-logang@deltatee.com>
+Subject: [PATCH 12/14] rtc: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:51 -0700
+Message-ID: <1487653253-11497-13-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,49 +21,28 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-This patch updates core/ucm.c which didn't originally use the
-cdev.kobj.parent with it's parent device. I did not look heavily into
-whether this was a bug or not, but it seems likely to me there would
-be a use before free.
-
-I also took a look at core/uverbs_main.c, core/user_mad.c and
-hw/hfi1/device.c which utilize cdev.kobj.parent but because the
-infiniband core seems to use kobjs internally instead of struct devices
-they could not be converted to use the new helper API and still
-directly manipulate the internals of the kobj.
-
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/infiniband/core/ucm.c | 8 +++++---
- 1 file changed, 5 insertions(+), 3 deletions(-)
+ drivers/rtc/rtc-dev.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/infiniband/core/ucm.c b/drivers/infiniband/core/ucm.c
-index e0a995b..38ea316 100644
---- a/drivers/infiniband/core/ucm.c
-+++ b/drivers/infiniband/core/ucm.c
-@@ -1283,18 +1283,20 @@ static void ib_ucm_add_one(struct ib_device *device)
- 		set_bit(devnum, dev_map);
- 	}
+diff --git a/drivers/rtc/rtc-dev.c b/drivers/rtc/rtc-dev.c
+index a6d9434..e4012bb 100644
+--- a/drivers/rtc/rtc-dev.c
++++ b/drivers/rtc/rtc-dev.c
+@@ -477,12 +477,11 @@ void rtc_dev_prepare(struct rtc_device *rtc)
  
-+	device_initialize(&ucm_dev->dev);
-+	ucm_dev->dev.devt = base;
-+
- 	cdev_init(&ucm_dev->cdev, &ucm_fops);
- 	ucm_dev->cdev.owner = THIS_MODULE;
- 	kobject_set_name(&ucm_dev->cdev.kobj, "ucm%d", ucm_dev->devnum);
--	if (cdev_add(&ucm_dev->cdev, base, 1))
-+	if (device_add_cdev(&ucm_dev->dev, &ucm_dev->cdev))
- 		goto err;
+ 	cdev_init(&rtc->char_dev, &rtc_dev_fops);
+ 	rtc->char_dev.owner = rtc->owner;
+-	rtc->char_dev.kobj.parent = &rtc->dev.kobj;
+ }
  
- 	ucm_dev->dev.class = &cm_class;
- 	ucm_dev->dev.parent = device->dma_device;
--	ucm_dev->dev.devt = ucm_dev->cdev.dev;
- 	ucm_dev->dev.release = ib_ucm_release_dev;
- 	dev_set_name(&ucm_dev->dev, "ucm%d", ucm_dev->devnum);
--	if (device_register(&ucm_dev->dev))
-+	if (device_add(&ucm_dev->dev))
- 		goto err_cdev;
- 
- 	if (device_create_file(&ucm_dev->dev, &dev_attr_ibdev))
+ void rtc_dev_add_device(struct rtc_device *rtc)
+ {
+-	if (cdev_add(&rtc->char_dev, rtc->dev.devt, 1))
++	if (device_add_cdev(&rtc->dev, &rtc->char_dev))
+ 		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
+ 			rtc->name, MAJOR(rtc_devt), rtc->id);
+ 	else
 -- 
 2.1.4
