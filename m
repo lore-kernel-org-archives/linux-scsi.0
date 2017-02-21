@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 09/14] media: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:48 -0700
-Message-ID: <1487653253-11497-10-git-send-email-logang@deltatee.com>
+Subject: [PATCH 05/14] tpm-chip: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:44 -0700
+Message-ID: <1487653253-11497-6-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,40 +23,29 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/media/cec/cec-core.c  | 3 +--
- drivers/media/media-devnode.c | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ drivers/char/tpm/tpm-chip.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/media/cec/cec-core.c b/drivers/media/cec/cec-core.c
-index aca3ab8..a475aa5 100644
---- a/drivers/media/cec/cec-core.c
-+++ b/drivers/media/cec/cec-core.c
-@@ -137,10 +137,9 @@ static int __must_check cec_devnode_register(struct cec_devnode *devnode,
+diff --git a/drivers/char/tpm/tpm-chip.c b/drivers/char/tpm/tpm-chip.c
+index a77262d..dc90b45 100644
+--- a/drivers/char/tpm/tpm-chip.c
++++ b/drivers/char/tpm/tpm-chip.c
+@@ -187,7 +187,6 @@ struct tpm_chip *tpm_chip_alloc(struct device *dev,
  
- 	/* Part 2: Initialize and register the character device */
- 	cdev_init(&devnode->cdev, &cec_devnode_fops);
--	devnode->cdev.kobj.parent = &devnode->dev.kobj;
- 	devnode->cdev.owner = owner;
+ 	cdev_init(&chip->cdev, &tpm_fops);
+ 	chip->cdev.owner = THIS_MODULE;
+-	chip->cdev.kobj.parent = &chip->dev.kobj;
  
--	ret = cdev_add(&devnode->cdev, devnode->dev.devt, 1);
-+	ret = device_add_cdev(&devnode->dev, &devnode->cdev);
- 	if (ret < 0) {
- 		pr_err("%s: cdev_add failed\n", __func__);
- 		goto clr_bit;
-diff --git a/drivers/media/media-devnode.c b/drivers/media/media-devnode.c
-index f2772ba..8d4718c 100644
---- a/drivers/media/media-devnode.c
-+++ b/drivers/media/media-devnode.c
-@@ -255,9 +255,8 @@ int __must_check media_devnode_register(struct media_device *mdev,
- 	/* Part 2: Initialize and register the character device */
- 	cdev_init(&devnode->cdev, &media_devnode_fops);
- 	devnode->cdev.owner = owner;
--	devnode->cdev.kobj.parent = &devnode->dev.kobj;
+ 	return chip;
  
--	ret = cdev_add(&devnode->cdev, MKDEV(MAJOR(media_dev_t), devnode->minor), 1);
-+	ret = device_add_cdev(&devnode->dev, &devnode->cdev);
- 	if (ret < 0) {
- 		pr_err("%s: cdev_add failed\n", __func__);
- 		goto cdev_add_error;
+@@ -230,7 +229,7 @@ static int tpm_add_char_device(struct tpm_chip *chip)
+ {
+ 	int rc;
+ 
+-	rc = cdev_add(&chip->cdev, chip->dev.devt, 1);
++	rc = device_add_cdev(&chip->dev, &chip->cdev);
+ 	if (rc) {
+ 		dev_err(&chip->dev,
+ 			"unable to cdev_add() %s, major %d, minor %d, err=%d\n",
 -- 
 2.1.4
