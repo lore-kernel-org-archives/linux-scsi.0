@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 03/14] input: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:42 -0700
-Message-ID: <1487653253-11497-4-git-send-email-logang@deltatee.com>
+Subject: [PATCH 11/14] rapidio: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:50 -0700
+Message-ID: <1487653253-11497-12-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -21,54 +21,49 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+Note: the chardev instance in rio_mport_cdev originally did not
+set the kobject parent. Thus, I'm reasonably confident that because
+of this, this code  would have suffered from a minor use after free
+bug if the cdev was open when the backing device was released.
+
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/input/evdev.c    | 3 +--
- drivers/input/joydev.c   | 3 +--
- drivers/input/mousedev.c | 3 +--
- 3 files changed, 3 insertions(+), 6 deletions(-)
+ drivers/rapidio/devices/rio_mport_cdev.c | 9 ++++++---
+ 1 file changed, 6 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/input/evdev.c b/drivers/input/evdev.c
-index e9ae3d5..a3407ea 100644
---- a/drivers/input/evdev.c
-+++ b/drivers/input/evdev.c
-@@ -1416,8 +1416,7 @@ static int evdev_connect(struct input_handler *handler, struct input_dev *dev,
- 		goto err_free_evdev;
- 
- 	cdev_init(&evdev->cdev, &evdev_fops);
--	evdev->cdev.kobj.parent = &evdev->dev.kobj;
--	error = cdev_add(&evdev->cdev, evdev->dev.devt, 1);
-+	error = device_add_cdev(&evdev->dev, &evdev->cdev);
- 	if (error)
- 		goto err_unregister_handle;
- 
-diff --git a/drivers/input/joydev.c b/drivers/input/joydev.c
-index abd18f3..012e06f 100644
---- a/drivers/input/joydev.c
-+++ b/drivers/input/joydev.c
-@@ -905,8 +905,7 @@ static int joydev_connect(struct input_handler *handler, struct input_dev *dev,
- 		goto err_free_joydev;
- 
- 	cdev_init(&joydev->cdev, &joydev_fops);
--	joydev->cdev.kobj.parent = &joydev->dev.kobj;
--	error = cdev_add(&joydev->cdev, joydev->dev.devt, 1);
-+	error = device_add_cdev(&joydev->dev, &joydev->cdev);
- 	if (error)
- 		goto err_unregister_handle;
- 
-diff --git a/drivers/input/mousedev.c b/drivers/input/mousedev.c
-index b604564..efd8666 100644
---- a/drivers/input/mousedev.c
-+++ b/drivers/input/mousedev.c
-@@ -901,8 +901,7 @@ static struct mousedev *mousedev_create(struct input_dev *dev,
+diff --git a/drivers/rapidio/devices/rio_mport_cdev.c b/drivers/rapidio/devices/rio_mport_cdev.c
+index 9013a58..10a6b54 100644
+--- a/drivers/rapidio/devices/rio_mport_cdev.c
++++ b/drivers/rapidio/devices/rio_mport_cdev.c
+@@ -2445,23 +2445,26 @@ static struct mport_dev *mport_cdev_add(struct rio_mport *mport)
+ 	mutex_init(&md->buf_mutex);
+ 	mutex_init(&md->file_mutex);
+ 	INIT_LIST_HEAD(&md->file_list);
++
++	device_initialize(&md->dev);
++	md->dev.devt = MKDEV(MAJOR(dev_number), mport->id);
++
+ 	cdev_init(&md->cdev, &mport_fops);
+ 	md->cdev.owner = THIS_MODULE;
+-	ret = cdev_add(&md->cdev, MKDEV(MAJOR(dev_number), mport->id), 1);
++	ret = device_add_cdev(&md->dev, &md->cdev);
+ 	if (ret < 0) {
+ 		kfree(md);
+ 		rmcd_error("Unable to register a device, err=%d", ret);
+ 		return NULL;
  	}
  
- 	cdev_init(&mousedev->cdev, &mousedev_fops);
--	mousedev->cdev.kobj.parent = &mousedev->dev.kobj;
--	error = cdev_add(&mousedev->cdev, mousedev->dev.devt, 1);
-+	error = device_add_cdev(&mousedev->dev, &mousedev->cdev);
- 	if (error)
- 		goto err_unregister_handle;
+-	md->dev.devt = md->cdev.dev;
+ 	md->dev.class = dev_class;
+ 	md->dev.parent = &mport->dev;
+ 	md->dev.release = mport_device_release;
+ 	dev_set_name(&md->dev, DEV_NAME "%d", mport->id);
+ 	atomic_set(&md->active, 1);
  
+-	ret = device_register(&md->dev);
++	ret = device_add(&md->dev);
+ 	if (ret) {
+ 		rmcd_error("Failed to register mport %d (err=%d)",
+ 		       mport->id, ret);
 -- 
 2.1.4
