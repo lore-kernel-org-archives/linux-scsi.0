@@ -1,85 +1,196 @@
-From: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
-Subject: Re: [PATCH 13/14] scsi: utilize new device_add_cdev
- helper function
-Date: Tue, 21 Feb 2017 14:52:00 +0200
-Message-ID: <eeedf346-32a8-d503-e6ba-649c7a0a17f1@electrozaur.com>
-References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
- <1487653253-11497-14-git-send-email-logang@deltatee.com>
-Reply-To: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-Mime-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Return-path: <rtc-linux+bncBDTP7QPTXAARB6HPWDCQKGQEYNQIATY-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-Sender: rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org
-In-Reply-To: <1487653253-11497-14-git-send-email-logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-List-Post: <https://groups.google.com/group/rtc-linux/post>, <mailto:rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Help: <https://groups.google.com/support/>, <mailto:rtc-linux+help-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Archive: <https://groups.google.com/group/rtc-linux
-List-Subscribe: <https://groups.google.com/group/rtc-linux/subscribe>, <mailto:rtc-linux+subscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>
-List-Unsubscribe: <mailto:googlegroups-manage+712029733259+unsubscribe-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org>,
- <https://groups.google.com/group/rtc-linux/subscribe>
-To: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>, Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org>, Dan Williams <dan.j.williams-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Alexander Viro <viro-RmSDqhL/yNMiFSDQTTA3OLVCufUGDwFn@public.gmane.org>, Johannes Thumshirn <jthumshirn-l3A5Bk7waGM@public.gmane.org>, Jan Kara <jack-AlSwsSmVLrQ@public.gmane.org>, Arnd Bergmann <arnd-r2nGTMty4D4@public.gmane.org>, Sajjan Vikas C <vikas.cha.sajjan-ZPxbGqLxI0U@public.gmane.org>, Dmitry Torokhov <dmitry.torokhov-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Linus Walleij <linus.walleij-QSEj5FYQhm4dnm+yROfE0A@public.gmane.org>, Alexandre Courbot <gnurou-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Peter Huewe <peterhuewe-Mmb7MZpHnFY@public.gmane.org>, Marcel Selhorst <tpmdd-yWjUBOtONefk1uMJSBkQmQ@public.gmane.org>, Jarkko Sakkinen <jarkko.sakkinen-VuQAYsv1563Yd54FQh9/CA@public.gmane.org>, Jason Gunthorpe <jgunthorpe-ePGOBjL8dl3ta4EC/59zMFaTQe2KTcn/@public.gmane.org>, Olof Johansson <olof-nZhT3qVonbNeoWH0uzbU5w@public.gmane.org>, Doug Ledford <dledford-H+wXaHxf7aLQT0dZR+AlfA@public.gmane.org>, Sean Hefty <sean.hefty-ral2JQCrhuEAvxtiuMwx3w@public.gmane.org>, Hal Rosenstock <hal.rosenstock-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Dmitry Vyukov <dvyukov-hpIqsD4AKlfQT0dZR+AlfA@public.gmane.org>, Haggai Eran <haggaie-VPRAkNaXOzVWk0Htik3J/w@public.gmane.org>, Parav Pandit <pandit.parav-Re5JQEeQqe8AvxtiuMwx3w@public.gmane.org>, Leon
-Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
+From: Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] lpfc: use bitflag for 'exch_busy'
+Date: Tue, 21 Feb 2017 13:55:17 +0100
+Message-ID: <1487681717-61116-1-git-send-email-hare@suse.de>
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mx2.suse.de ([195.135.220.15]:35355 "EHLO mx2.suse.de"
+        rhost-flags-OK-OK-OK-OK) by vger.kernel.org with ESMTP
+        id S1752100AbdBUMzW (ORCPT <rfc822;linux-scsi@vger.kernel.org>);
+        Tue, 21 Feb 2017 07:55:22 -0500
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, Christoph Hellwig <hch@lst.de>, James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>, Hannes Reinecke <hare@suse.com>
 
-On 02/21/2017 07:00 AM, Logan Gunthorpe wrote:
-> Note: the chardev instance in osd_uld.c originally did not
-> set the kobject parent. Thus, I'm reasonably confident that because
-> of this, this code  would have suffered from a minor use after free
-> bug if the cdev was open when the backing device was released.
-> 
-> Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
+Use a bitflag for 'exch_busy' and clear the TBD marker
+in the driver.
 
-Cool thanks. And even a bug fix
-ACK-by: Boaz Harrosh <ooo-rh7Tgz9RNieUD9Wbbkgo/g@public.gmane.org>
+Signed-off-by: Hannes Reinecke <hare@suse.com>
+---
+ drivers/scsi/lpfc/lpfc_nvme.c | 16 +++++++++-------
+ drivers/scsi/lpfc/lpfc_nvme.h |  3 +--
+ drivers/scsi/lpfc/lpfc_scsi.c | 19 +++++++++++--------
+ drivers/scsi/lpfc/lpfc_scsi.h |  3 +--
+ drivers/scsi/lpfc/lpfc_sli.c  |  5 ++++-
+ 5 files changed, 26 insertions(+), 20 deletions(-)
 
-> ---
->  drivers/scsi/osd/osd_uld.c | 9 +++++----
->  1 file changed, 5 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/scsi/osd/osd_uld.c b/drivers/scsi/osd/osd_uld.c
-> index 243eab3..519be56 100644
-> --- a/drivers/scsi/osd/osd_uld.c
-> +++ b/drivers/scsi/osd/osd_uld.c
-> @@ -473,18 +473,19 @@ static int osd_probe(struct device *dev)
->  		goto err_put_disk;
->  	}
->  
-> +	device_initialize(&oud->class_dev);
-> +	oud->class_dev.devt = MKDEV(SCSI_OSD_MAJOR, oud->minor);
-> +
->  	/* init the char-device for communication with user-mode */
->  	cdev_init(&oud->cdev, &osd_fops);
->  	oud->cdev.owner = THIS_MODULE;
-> -	error = cdev_add(&oud->cdev,
-> -			 MKDEV(SCSI_OSD_MAJOR, oud->minor), 1);
-> +	error = device_add_cdev(&oud->class_dev, &oud->cdev);
->  	if (error) {
->  		OSD_ERR("cdev_add failed\n");
->  		goto err_put_disk;
->  	}
->  
->  	/* class device member */
-> -	oud->class_dev.devt = oud->cdev.dev;
->  	oud->class_dev.class = &osd_uld_class;
->  	oud->class_dev.parent = dev;
->  	oud->class_dev.release = __remove;
-> @@ -494,7 +495,7 @@ static int osd_probe(struct device *dev)
->  		goto err_put_cdev;
->  	}
->  
-> -	error = device_register(&oud->class_dev);
-> +	error = device_add(&oud->class_dev);
->  	if (error) {
->  		OSD_ERR("device_register failed => %d\n", error);
->  		goto err_put_cdev;
-> 
-
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.c b/drivers/scsi/lpfc/lpfc_nvme.c
+index 625b658..da85850 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.c
++++ b/drivers/scsi/lpfc/lpfc_nvme.c
+@@ -872,9 +872,9 @@
+ 
+ 	/* pick up SLI4 exhange busy condition */
+ 	if (bf_get(lpfc_wcqe_c_xb, wcqe))
+-		lpfc_ncmd->flags |= LPFC_SBUF_XBUSY;
++		set_bit(LPFC_SBUF_XBUSY, &lpfc_ncmd->flags);
+ 	else
+-		lpfc_ncmd->flags &= ~LPFC_SBUF_XBUSY;
++		clear_bit(LPFC_SBUF_XBUSY, &lpfc_ncmd->flags);
+ 
+ 	if (ndlp && NLP_CHK_NODE_ACT(ndlp))
+ 		atomic_dec(&ndlp->cmd_pending);
+@@ -1821,10 +1821,12 @@
+ 						pdma_phys_sgl1, cur_xritag);
+ 				if (status) {
+ 					/* failure, put on abort nvme list */
+-					lpfc_ncmd->exch_busy = 1;
++					set_bit(LPFC_SBUF_XBUSY,
++						&lpfc_ncmd->flags);
+ 				} else {
+ 					/* success, put on NVME buffer list */
+-					lpfc_ncmd->exch_busy = 0;
++					clear_bit(LPFC_SBUF_XBUSY,
++						  &lpfc_ncmd->flags);
+ 					lpfc_ncmd->status = IOSTAT_SUCCESS;
+ 					num_posted++;
+ 				}
+@@ -1854,10 +1856,10 @@
+ 					 struct lpfc_nvme_buf, list);
+ 			if (status) {
+ 				/* failure, put on abort nvme list */
+-				lpfc_ncmd->exch_busy = 1;
++				set_bit(LPFC_SBUF_XBUSY, &lpfc_ncmd->flags);
+ 			} else {
+ 				/* success, put on NVME buffer list */
+-				lpfc_ncmd->exch_busy = 0;
++				clear_bit(LPFC_SBUF_XBUSY, &lpfc_ncmd->flags);
+ 				lpfc_ncmd->status = IOSTAT_SUCCESS;
+ 				num_posted++;
+ 			}
+@@ -2099,7 +2101,7 @@
+ 	unsigned long iflag = 0;
+ 
+ 	lpfc_ncmd->nonsg_phys = 0;
+-	if (lpfc_ncmd->exch_busy) {
++	if (test_bit(LPFC_SBUF_XBUSY, &lpfc_ncmd->flags)) {
+ 		spin_lock_irqsave(&phba->sli4_hba.abts_nvme_buf_list_lock,
+ 					iflag);
+ 		lpfc_ncmd->nvmeCmd = NULL;
+diff --git a/drivers/scsi/lpfc/lpfc_nvme.h b/drivers/scsi/lpfc/lpfc_nvme.h
+index b2fae5e..c230aaa 100644
+--- a/drivers/scsi/lpfc/lpfc_nvme.h
++++ b/drivers/scsi/lpfc/lpfc_nvme.h
+@@ -60,9 +60,8 @@ struct lpfc_nvme_buf {
+ 
+ 	uint32_t timeout;
+ 
+-	uint16_t flags;  /* TBD convert exch_busy to flags */
++	unsigned long flags;
+ #define LPFC_SBUF_XBUSY         0x1     /* SLI4 hba reported XB on WCQE cmpl */
+-	uint16_t exch_busy;     /* SLI4 hba reported XB on complete WCQE */
+ 	uint16_t status;	/* From IOCB Word 7- ulpStatus */
+ 	uint16_t cpu;
+ 	uint16_t qidx;
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 9d6384a..83462be 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -568,7 +568,7 @@ struct scsi_dif_tuple {
+ 		&phba->sli4_hba.lpfc_abts_scsi_buf_list, list) {
+ 		if (psb->cur_iocbq.sli4_xritag == xri) {
+ 			list_del(&psb->list);
+-			psb->exch_busy = 0;
++			clear_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 			psb->status = IOSTAT_SUCCESS;
+ 			spin_unlock(
+ 				&phba->sli4_hba.abts_scsi_buf_list_lock);
+@@ -600,7 +600,7 @@ struct scsi_dif_tuple {
+ 		if (iocbq->sli4_xritag != xri)
+ 			continue;
+ 		psb = container_of(iocbq, struct lpfc_scsi_buf, cur_iocbq);
+-		psb->exch_busy = 0;
++		clear_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 		spin_unlock_irqrestore(&phba->hbalock, iflag);
+ 		if (!list_empty(&pring->txq))
+ 			lpfc_worker_wake_up(phba);
+@@ -687,10 +687,10 @@ struct scsi_dif_tuple {
+ 						psb->cur_iocbq.sli4_xritag);
+ 				if (status) {
+ 					/* failure, put on abort scsi list */
+-					psb->exch_busy = 1;
++					set_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 				} else {
+ 					/* success, put on SCSI buffer list */
+-					psb->exch_busy = 0;
++					clear_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 					psb->status = IOSTAT_SUCCESS;
+ 					num_posted++;
+ 				}
+@@ -720,10 +720,10 @@ struct scsi_dif_tuple {
+ 					 struct lpfc_scsi_buf, list);
+ 			if (status) {
+ 				/* failure, put on abort scsi list */
+-				psb->exch_busy = 1;
++				set_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 			} else {
+ 				/* success, put on SCSI buffer list */
+-				psb->exch_busy = 0;
++				clear_bit(LPFC_SBUF_XBUSY, &psb->flags);
+ 				psb->status = IOSTAT_SUCCESS;
+ 				num_posted++;
+ 			}
+@@ -1100,7 +1100,7 @@ struct scsi_dif_tuple {
+ 	psb->nonsg_phys = 0;
+ 	psb->prot_seg_cnt = 0;
+ 
+-	if (psb->exch_busy) {
++	if (test_bit(LPFC_SBUF_XBUSY, &psb->flags)) {
+ 		spin_lock_irqsave(&phba->sli4_hba.abts_scsi_buf_list_lock,
+ 					iflag);
+ 		psb->pCmd = NULL;
+@@ -3942,7 +3942,10 @@ int lpfc_sli4_scmd_to_wqidx_distr(struct lpfc_hba *phba,
+ 	lpfc_cmd->result = (pIocbOut->iocb.un.ulpWord[4] & IOERR_PARAM_MASK);
+ 	lpfc_cmd->status = pIocbOut->iocb.ulpStatus;
+ 	/* pick up SLI4 exhange busy status from HBA */
+-	lpfc_cmd->exch_busy = pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY;
++	if (pIocbOut->iocb_flag & LPFC_EXCHANGE_BUSY)
++		set_bit(LPFC_SBUF_XBUSY, &lpfc_cmd->flags);
++	else
++		clear_bit(LPFC_SBUF_XBUSY, &lpfc_cmd->flags);
+ 
+ #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
+ 	if (lpfc_cmd->prot_data_type) {
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.h b/drivers/scsi/lpfc/lpfc_scsi.h
+index 5da7e15..6f56d16 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.h
++++ b/drivers/scsi/lpfc/lpfc_scsi.h
+@@ -137,9 +137,8 @@ struct lpfc_scsi_buf {
+ 
+ 	uint32_t timeout;
+ 
+-	uint16_t flags;  /* TBD convert exch_busy to flags */
++	unsigned long flags;
+ #define LPFC_SBUF_XBUSY         0x1     /* SLI4 hba reported XB on WCQE cmpl */
+-	uint16_t exch_busy;     /* SLI4 hba reported XB on complete WCQE */
+ 	uint16_t status;	/* From IOCB Word 7- ulpStatus */
+ 	uint32_t result;	/* From IOCB Word 4. */
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 3dbd027..29ad09f 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -11106,7 +11106,10 @@ struct lpfc_dmabuf *
+ 		!(cmdiocbq->iocb_flag & LPFC_IO_LIBDFC)) {
+ 		lpfc_cmd = container_of(cmdiocbq, struct lpfc_scsi_buf,
+ 			cur_iocbq);
+-		lpfc_cmd->exch_busy = rspiocbq->iocb_flag & LPFC_EXCHANGE_BUSY;
++		if (rspiocbq->iocb_flag & LPFC_EXCHANGE_BUSY)
++			set_bit(LPFC_SBUF_XBUSY, &lpfc_cmd->flags);
++		else
++			clear_bit(LPFC_SBUF_XBUSY, &lpfc_cmd->flags);
+ 	}
+ 
+ 	pdone_q = cmdiocbq->context_un.wait_queue;
 -- 
-You received this message because you are subscribed to "rtc-linux".
-Membership options at http://groups.google.com/group/rtc-linux .
-Please read http://groups.google.com/group/rtc-linux/web/checklist
-before submitting a driver.
---- 
-You received this message because you are subscribed to the Google Groups "rtc-linux" group.
-To unsubscribe from this group and stop receiving emails from it, send an email to rtc-linux+unsubscribe-/JYPxA39Uh5TLH3MbocFF+G/Ez6ZCGd0@public.gmane.org
-For more options, visit https://groups.google.com/d/optout.
+1.8.5.6
