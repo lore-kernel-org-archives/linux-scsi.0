@@ -1,7 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 12/14] rtc: utilize new device_add_cdev helper function
-Date: Mon, 20 Feb 2017 22:00:51 -0700
-Message-ID: <1487653253-11497-13-git-send-email-logang@deltatee.com>
+Subject: [PATCH 08/14] iio:core: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:47 -0700
+Message-ID: <1487653253-11497-9-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -23,26 +23,22 @@ List-Id: linux-scsi@vger.kernel.org
 
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/rtc/rtc-dev.c | 3 +--
+ drivers/iio/industrialio-core.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/rtc/rtc-dev.c b/drivers/rtc/rtc-dev.c
-index a6d9434..e4012bb 100644
---- a/drivers/rtc/rtc-dev.c
-+++ b/drivers/rtc/rtc-dev.c
-@@ -477,12 +477,11 @@ void rtc_dev_prepare(struct rtc_device *rtc)
+diff --git a/drivers/iio/industrialio-core.c b/drivers/iio/industrialio-core.c
+index aaca428..b0ef245 100644
+--- a/drivers/iio/industrialio-core.c
++++ b/drivers/iio/industrialio-core.c
+@@ -1718,8 +1718,7 @@ int iio_device_register(struct iio_dev *indio_dev)
  
- 	cdev_init(&rtc->char_dev, &rtc_dev_fops);
- 	rtc->char_dev.owner = rtc->owner;
--	rtc->char_dev.kobj.parent = &rtc->dev.kobj;
- }
+ 	cdev_init(&indio_dev->chrdev, &iio_buffer_fileops);
+ 	indio_dev->chrdev.owner = indio_dev->info->driver_module;
+-	indio_dev->chrdev.kobj.parent = &indio_dev->dev.kobj;
+-	ret = cdev_add(&indio_dev->chrdev, indio_dev->dev.devt, 1);
++	ret = device_add_cdev(&indio_dev->dev, &indio_dev->chrdev);
+ 	if (ret < 0)
+ 		goto error_unreg_eventset;
  
- void rtc_dev_add_device(struct rtc_device *rtc)
- {
--	if (cdev_add(&rtc->char_dev, rtc->dev.devt, 1))
-+	if (device_add_cdev(&rtc->dev, &rtc->char_dev))
- 		dev_warn(&rtc->dev, "%s: failed to add char device %d:%d\n",
- 			rtc->name, MAJOR(rtc_devt), rtc->id);
- 	else
 -- 
 2.1.4
