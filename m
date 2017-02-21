@@ -1,40 +1,72 @@
-From: Jens Axboe <axboe@kernel.dk>
-Subject: Re: [PATCH v2] scsi: zero per-cmd driver data before each I/O
-Date: Tue, 21 Feb 2017 09:19:05 -0700
-Message-ID: <d22be48c-51ca-ea12-6143-d1582eb6012f@kernel.dk>
-References: <20170221090455.4633-1-hch@lst.de>
+From: Colin King <colin.king@canonical.com>
+Subject: [PATCH] scsi: BusLogic: fix incorrect spelling of adatper_reset_req
+Date: Tue, 21 Feb 2017 16:27:11 +0000
+Message-ID: <20170221162711.24694-1-colin.king@canonical.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset=windows-1252
-Content-Transfer-Encoding: 7bit
-Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from mail-it0-f51.google.com ([209.85.214.51]:33397 "EHLO
-        mail-it0-f51.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1752591AbdBUQTI (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2017 11:19:08 -0500
-Received: by mail-it0-f51.google.com with SMTP id d9so34402420itc.0
-        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2017 08:19:07 -0800 (PST)
-In-Reply-To: <20170221090455.4633-1-hch@lst.de>
-Sender: linux-scsi-owner@vger.kernel.org
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Return-path: <linux-kernel-owner@vger.kernel.org>
+Sender: linux-kernel-owner@vger.kernel.org
+To: Khalid Aziz <khalid@gonehiking.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
-Cc: decui@microsoft.com, linux-block@vger.kernel.org, linux-scsi@vger.kernel.org
 
-On 02/21/2017 02:04 AM, Christoph Hellwig wrote:
-> Without this drivers that don't clear the state themselves can see off
-> effects.  For example Hyper-V VMs using the storvsc driver will often
-> hang during boot due to uncleared Test Unit Ready failures.
-> 
-> Fixes: e9c787e6 ("scsi: allocate scsi_cmnd structures as part of struct request")
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Reported-by: Dexuan Cui <decui@microsoft.com>
-> Tested-by: Dexuan Cui <decui@microsoft.com>
-> ---
-> 
-> Changes since V1:
->  - use a single memset as suggested by Bart
+From: Colin Ian King <colin.king@canonical.com>
 
-That's much better. I'll queue this up for the next pull in this merge
-window.
+trivial fix to spelling mistake, adatper_reset_req should
+be adapter_reset_req.  Also break up very long seq_printf statement
+into multiple lines.
 
+Signed-off-by: Colin Ian King <colin.king@canonical.com>
+---
+ drivers/scsi/BusLogic.c | 14 +++++++++++---
+ drivers/scsi/BusLogic.h |  2 +-
+ 2 files changed, 12 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
+index c7be7bb..35380a5 100644
+--- a/drivers/scsi/BusLogic.c
++++ b/drivers/scsi/BusLogic.c
+@@ -3009,7 +3009,7 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
+ 
+ 	spin_lock_irq(SCpnt->device->host->host_lock);
+ 
+-	blogic_inc_count(&stats->adatper_reset_req);
++	blogic_inc_count(&stats->adapter_reset_req);
+ 
+ 	rc = blogic_resetadapter(adapter, false);
+ 	spin_unlock_irq(SCpnt->device->host->host_lock);
+@@ -3560,8 +3560,16 @@ Target	Requested Completed  Requested Completed  Requested Completed\n\
+ 		struct blogic_tgt_flags *tgt_flags = &adapter->tgt_flags[tgt];
+ 		if (!tgt_flags->tgt_exists)
+ 			continue;
+-		seq_printf(m, "\
+-  %2d	 %5d %5d %5d    %5d %5d %5d	   %5d %5d %5d\n", tgt, tgt_stats[tgt].aborts_request, tgt_stats[tgt].aborts_tried, tgt_stats[tgt].aborts_done, tgt_stats[tgt].bdr_request, tgt_stats[tgt].bdr_tried, tgt_stats[tgt].bdr_done, tgt_stats[tgt].adatper_reset_req, tgt_stats[tgt].adapter_reset_attempt, tgt_stats[tgt].adapter_reset_done);
++		seq_printf(m, "  %2d	 %5d %5d %5d    %5d %5d %5d	   %5d %5d %5d\n",
++			   tgt, tgt_stats[tgt].aborts_request,
++			   tgt_stats[tgt].aborts_tried,
++			   tgt_stats[tgt].aborts_done,
++			   tgt_stats[tgt].bdr_request,
++			   tgt_stats[tgt].bdr_tried,
++			   tgt_stats[tgt].bdr_done,
++			   tgt_stats[tgt].adapter_reset_req,
++			   tgt_stats[tgt].adapter_reset_attempt,
++			   tgt_stats[tgt].adapter_reset_done);
+ 	}
+ 	seq_printf(m, "\nExternal Host Adapter Resets: %d\n", adapter->ext_resets);
+ 	seq_printf(m, "Host Adapter Internal Errors: %d\n", adapter->adapter_intern_errors);
+diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
+index b53ec2f..8d47e2c 100644
+--- a/drivers/scsi/BusLogic.h
++++ b/drivers/scsi/BusLogic.h
+@@ -935,7 +935,7 @@ struct blogic_tgt_stats {
+ 	unsigned short bdr_request;
+ 	unsigned short bdr_tried;
+ 	unsigned short bdr_done;
+-	unsigned short adatper_reset_req;
++	unsigned short adapter_reset_req;
+ 	unsigned short adapter_reset_attempt;
+ 	unsigned short adapter_reset_done;
+ };
 -- 
-Jens Axboe
+2.10.2
