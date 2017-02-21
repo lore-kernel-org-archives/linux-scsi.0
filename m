@@ -1,47 +1,35 @@
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH v5] sd: Check for unaligned partial completion
-Date: Mon, 20 Feb 2017 21:35:08 -0500
-Message-ID: <yq11sus5l0j.fsf@oracle.com>
-References: <20170217000130.22471-1-damien.lemoal@wdc.com>
+Subject: Re: [PATCH V2 00/15] aacraid: Fixes and enhancements for arc family
+Date: Mon, 20 Feb 2017 21:53:43 -0500
+Message-ID: <yq1poic45l4.fsf@oracle.com>
+References: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
 Mime-Version: 1.0
 Content-Type: text/plain
 Return-path: <linux-scsi-owner@vger.kernel.org>
-Received: from aserp1040.oracle.com ([141.146.126.69]:38401 "EHLO
-        aserp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
-        with ESMTP id S1750977AbdBUCf3 (ORCPT
-        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2017 21:35:29 -0500
-In-Reply-To: <20170217000130.22471-1-damien.lemoal@wdc.com> (Damien Le Moal's
-        message of "Fri, 17 Feb 2017 09:01:30 +0900")
+Received: from userp1040.oracle.com ([156.151.31.81]:32917 "EHLO
+        userp1040.oracle.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1750977AbdBUCx6 (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Mon, 20 Feb 2017 21:53:58 -0500
+In-Reply-To: <20170216205124.20271-1-RaghavaAditya.Renukunta@microsemi.com>
+        (Raghava Aditya Renukunta's message of "Thu, 16 Feb 2017 12:51:09
+        -0800")
 Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
-To: Damien Le Moal <damien.lemoal@wdc.com>
-Cc: linux-scsi@vger.kernel.org, "Martin K . Petersen" <martin.petersen@oracle.com>, "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, Sathya Prakash <sathya.prakash@broadcom.com>, Chaitra P B <chaitra.basappa@broadcom.com>, Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, MPT-FusionLinux.pdl@broadcom.com, Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>
+To: Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com>
+Cc: jejb@linux.vnet.ibm.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, David.Carroll@microsemi.com, Gana.Sridaran@microsemi.com, Scott.Benesh@microsemi.com, jthumshirn@suse.de, dan.carpenter@oracle.com
 
->>>>> "Damien" == Damien Le Moal <damien.lemoal@wdc.com> writes:
+>>>>> "Raghava" == Raghava Aditya Renukunta <RaghavaAditya.Renukunta@microsemi.com> writes:
 
-Hi Damien,
+Raghava> This patch set contains issue fixes, enhancements and other
+Raghava> misc changes.  The majority of the fixes are a direct outcome
+Raghava> of testing and work done on the adapter reset
+Raghava> mechanism. Initially it just had IOP reset and then was
+Raghava> augmented with IWBR soft hardware resets in the previous patch
+Raghava> set. The reset mechanism is triggered in 2 paths, one is from
+Raghava> the eh handler from the kernel and the other is from the
+Raghava> driver's internal periodic health checkup.
 
-Damien> Move the partial completion alignement check of mpt3sas to a
-Damien> generic implementation in sd_done so that the check ignores
-Damien> REQ_TYPE_FS requests with special payload size handling
-Damien> (REQ_OP_DISCARD, REQ_OP_WRITE_SAME, REQ_OP_ZONE_REPORT and
-Damien> REQ_OP_ZONE_RESET). For the remaining REQ_OP_FLUSH, REQ_OP_READ
-Damien> and REQ_OP_WRITE, we only need to check the resid alignment,
-Damien> correct it if necessary and then correct good_bytes. Note that
-Damien> in this case, good_bytes will always initially be 0 or aligned
-Damien> on the device logical block size, so correcting resid alignment
-Damien> will always result in good_bytes also being properly aligned.
-
-I'm still not keen on having two orthogonal sanity checks wrt. figuring
-out how much of a request has been completed.
-
-Also, I find your approach hard to follow in the case where
-sd_completed_bytes() is called after the resid has been adjusted. It
-works, but it's not immediately obvious that that's the case. Which to
-me is an indication that this entire thing needs a thorough cleanup.
-
-If you don't feel like mucking more with this, I understand. In that
-case might pick up your patch and attempt to clean things up later.
+Applied to 4.11/scsi-queue.
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
