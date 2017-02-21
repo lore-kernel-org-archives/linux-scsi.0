@@ -1,8 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 01/14] chardev: add helper function to register char devs with
- a struct device
-Date: Mon, 20 Feb 2017 22:00:40 -0700
-Message-ID: <1487653253-11497-2-git-send-email-logang@deltatee.com>
+Subject: [PATCH 02/14] device-dax: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:41 -0700
+Message-ID: <1487653253-11497-3-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,122 +21,37 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
-Credit for this patch goes entirely to Dan Williams [1]. I've just
-fleshed out the comments and created the patch, but the premise
-remains exactly the same.
-
-There's a common pattern in the kernel whereby a struct cdev is placed
-in a structure along side a struct device which manages the life-cycle
-of both. In the naive approach, the reference counting is broken and
-the struct device can free everything before the chardev code
-is entirely released.
-
-Many developers have solved this problem by linking the internal kobjs
-in this fashion:
-
-cdev.kobj.parent = &parent_dev.kobj;
-
-The cdev code explicitly gets and puts a reference to it's kobj parent.
-So this seems like it was intended to be used this way. Dmitrty Torokhov
-first put this in place in 2012 with this commit:
-
-2f0157f char_dev: pin parent kobject
-
-and the first instance of the fix was then done in the input subsystem
-in the following commit:
-
-4a215aa Input: fix use-after-free introduced with dynamic minor changes
-
-Subsequently over the years, however, this issue seems to have tripped
-up multiple developers independently. For example, see these commits:
-
-0d5b7da iio: Prevent race between IIO chardev opening and IIO device
-(by Lars-Peter Clausen in 2013)
-
-ba0ef85 tpm: Fix initialization of the cdev
-(by Jason Gunthorpe in 2015)
-
-5b28dde [media] media: fix use-after-free in cdev_put() when app exits
-after driver unbind
-(by Shauh Khan in 2016)
-
-This technique is similarly done in at least 15 places within the kernel
-and probably should have been done so in another, at least, 5 places.
-The kobj line also looks very suspect in that one would not expect
-drivers to have to mess with kobject internals in this way.
-Even highly experienced kernel developers can be surprised by this
-code, as seen in [2].
-
-To help alleviate this situation, and hopefully prevent future
-wasted effort on this problem, this patch introduces a helper function
-to register a char device with its parent struct device. This creates
-a more regular API for tying a char device to its parent without the
-developer having to set members in the underlying kobject.
-
-In [1], Dan notes he took inspiration for the form of the API
-device_add_disk.
-
-[1] https://lkml.org/lkml/2017/2/13/700
-[2] https://lkml.org/lkml/2017/2/10/370
-
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- fs/char_dev.c        | 24 ++++++++++++++++++++++++
- include/linux/cdev.h |  1 +
- 2 files changed, 25 insertions(+)
+ drivers/dax/dax.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/fs/char_dev.c b/fs/char_dev.c
-index 44a240c..1f9246c 100644
---- a/fs/char_dev.c
-+++ b/fs/char_dev.c
-@@ -471,6 +471,29 @@ int cdev_add(struct cdev *p, dev_t dev, unsigned count)
- 	return 0;
- }
+diff --git a/drivers/dax/dax.c b/drivers/dax/dax.c
+index ed758b7..0d24822 100644
+--- a/drivers/dax/dax.c
++++ b/drivers/dax/dax.c
+@@ -701,12 +701,12 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
  
-+/**
-+ * device_add_cdev() - add a char device to the system with a parent
-+ *	struct device
-+ * @parent: the device structure of the parent
-+ * @cdev: the cdev structure for the device
-+ * @count: the number of consecutive minor numbers corresponding to this
-+ *
-+ * device_add_cdev() adds the char device represented by @p to the system,
-+ * just as cdev_add does. The dev_t for the char device will be taken from
-+ * the struct device which needs to be initialized first. This helper
-+ * function correctly takes a reference to the parent device so the parent
-+ * will not get released until all references to the cdev are released.
-+ * (Thus, cdev_del should be called before device_unregister.) This
-+ * function should be used whenever the struct cdev and the struct device
-+ * are members of the same structure whose lifetime is managed by the
-+ * struct device.
-+ */
-+int device_add_cdev(struct device *parent, struct cdev *cdev)
-+{
-+	cdev->kobj.parent = &parent->kobj;
-+	return cdev_add(cdev, parent->devt, 1);
-+}
-+
- static void cdev_unmap(dev_t dev, unsigned count)
- {
- 	kobj_unmap(cdev_map, dev, count);
-@@ -570,5 +593,6 @@ EXPORT_SYMBOL(cdev_init);
- EXPORT_SYMBOL(cdev_alloc);
- EXPORT_SYMBOL(cdev_del);
- EXPORT_SYMBOL(cdev_add);
-+EXPORT_SYMBOL(device_add_cdev);
- EXPORT_SYMBOL(__register_chrdev);
- EXPORT_SYMBOL(__unregister_chrdev);
-diff --git a/include/linux/cdev.h b/include/linux/cdev.h
-index f876361..9edbc37 100644
---- a/include/linux/cdev.h
-+++ b/include/linux/cdev.h
-@@ -25,6 +25,7 @@ struct cdev *cdev_alloc(void);
- void cdev_put(struct cdev *p);
+ 	/* device_initialize() so cdev can reference kobj parent */
+ 	device_initialize(dev);
++	dev->devt = dev_t;
  
- int cdev_add(struct cdev *, dev_t, unsigned);
-+int device_add_cdev(struct device *parent, struct cdev *cdev);
+ 	cdev = &dax_dev->cdev;
+ 	cdev_init(cdev, &dax_fops);
+ 	cdev->owner = parent->driver->owner;
+-	cdev->kobj.parent = &dev->kobj;
+-	rc = cdev_add(&dax_dev->cdev, dev_t, 1);
++	rc = device_add_cdev(dev, cdev);
+ 	if (rc)
+ 		goto err_cdev;
  
- void cdev_del(struct cdev *);
+@@ -716,7 +716,6 @@ struct dax_dev *devm_create_dax_dev(struct dax_region *dax_region,
+ 	dax_dev->region = dax_region;
+ 	kref_get(&dax_region->kref);
  
+-	dev->devt = dev_t;
+ 	dev->class = dax_class;
+ 	dev->parent = parent;
+ 	dev->groups = dax_attribute_groups;
 -- 
 2.1.4
