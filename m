@@ -1,72 +1,34 @@
-From: Colin King <colin.king@canonical.com>
-Subject: [PATCH] scsi: BusLogic: fix incorrect spelling of adatper_reset_req
-Date: Tue, 21 Feb 2017 16:27:11 +0000
-Message-ID: <20170221162711.24694-1-colin.king@canonical.com>
+From: Mike Snitzer <snitzer@redhat.com>
+Subject: Re: [PATCHv3] scsi: use 'scsi_device_from_queue()' for scsi_dh
+Date: Tue, 21 Feb 2017 11:36:10 -0500
+Message-ID: <CAMM=eLcYrcgyNd8gZPFx2T61+SSy_z_oa=AGt67PCYf=295ASQ@mail.gmail.com>
+References: <1487318565-96759-1-git-send-email-hare@suse.de> <yq18tp0449t.fsf@oracle.com>
 Mime-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Return-path: <linux-kernel-owner@vger.kernel.org>
-Sender: linux-kernel-owner@vger.kernel.org
-To: Khalid Aziz <khalid@gonehiking.org>, "James E . J . Bottomley" <jejb@linux.vnet.ibm.com>, "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: kernel-janitors@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Return-path: <linux-scsi-owner@vger.kernel.org>
+Received: from mail-lf0-f41.google.com ([209.85.215.41]:33608 "EHLO
+        mail-lf0-f41.google.com" rhost-flags-OK-OK-OK-OK) by vger.kernel.org
+        with ESMTP id S1753921AbdBUQgm (ORCPT
+        <rfc822;linux-scsi@vger.kernel.org>); Tue, 21 Feb 2017 11:36:42 -0500
+Received: by mail-lf0-f41.google.com with SMTP id l12so29656916lfe.0
+        for <linux-scsi@vger.kernel.org>; Tue, 21 Feb 2017 08:36:36 -0800 (PST)
+In-Reply-To: <yq18tp0449t.fsf@oracle.com>
+Sender: linux-scsi-owner@vger.kernel.org
 List-Id: linux-scsi@vger.kernel.org
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Hannes Reinecke <hare@suse.de>, Christoph Hellwig <hch@lst.de>, Keith Busch <keith.busch@intel.com>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, Bart van Assche <bart.vanassche@sandisk.com>, Hannes Reinecke <hare@suse.com>
 
-From: Colin Ian King <colin.king@canonical.com>
+On Mon, Feb 20, 2017 at 10:22 PM, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>>>>>> "Hannes" == Hannes Reinecke <hare@suse.de> writes:
+>
+> Hannes> The device handler needs to check if a given queue belongs to a
+> Hannes> scsi device; only then does it make sense to attach a device
+> Hannes> handler.
+>
+> Fixed kbuild warning and applied to 4.11/scsi-queue.
 
-trivial fix to spelling mistake, adatper_reset_req should
-be adapter_reset_req.  Also break up very long seq_printf statement
-into multiple lines.
-
-Signed-off-by: Colin Ian King <colin.king@canonical.com>
----
- drivers/scsi/BusLogic.c | 14 +++++++++++---
- drivers/scsi/BusLogic.h |  2 +-
- 2 files changed, 12 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index c7be7bb..35380a5 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -3009,7 +3009,7 @@ static int blogic_hostreset(struct scsi_cmnd *SCpnt)
- 
- 	spin_lock_irq(SCpnt->device->host->host_lock);
- 
--	blogic_inc_count(&stats->adatper_reset_req);
-+	blogic_inc_count(&stats->adapter_reset_req);
- 
- 	rc = blogic_resetadapter(adapter, false);
- 	spin_unlock_irq(SCpnt->device->host->host_lock);
-@@ -3560,8 +3560,16 @@ Target	Requested Completed  Requested Completed  Requested Completed\n\
- 		struct blogic_tgt_flags *tgt_flags = &adapter->tgt_flags[tgt];
- 		if (!tgt_flags->tgt_exists)
- 			continue;
--		seq_printf(m, "\
--  %2d	 %5d %5d %5d    %5d %5d %5d	   %5d %5d %5d\n", tgt, tgt_stats[tgt].aborts_request, tgt_stats[tgt].aborts_tried, tgt_stats[tgt].aborts_done, tgt_stats[tgt].bdr_request, tgt_stats[tgt].bdr_tried, tgt_stats[tgt].bdr_done, tgt_stats[tgt].adatper_reset_req, tgt_stats[tgt].adapter_reset_attempt, tgt_stats[tgt].adapter_reset_done);
-+		seq_printf(m, "  %2d	 %5d %5d %5d    %5d %5d %5d	   %5d %5d %5d\n",
-+			   tgt, tgt_stats[tgt].aborts_request,
-+			   tgt_stats[tgt].aborts_tried,
-+			   tgt_stats[tgt].aborts_done,
-+			   tgt_stats[tgt].bdr_request,
-+			   tgt_stats[tgt].bdr_tried,
-+			   tgt_stats[tgt].bdr_done,
-+			   tgt_stats[tgt].adapter_reset_req,
-+			   tgt_stats[tgt].adapter_reset_attempt,
-+			   tgt_stats[tgt].adapter_reset_done);
- 	}
- 	seq_printf(m, "\nExternal Host Adapter Resets: %d\n", adapter->ext_resets);
- 	seq_printf(m, "Host Adapter Internal Errors: %d\n", adapter->adapter_intern_errors);
-diff --git a/drivers/scsi/BusLogic.h b/drivers/scsi/BusLogic.h
-index b53ec2f..8d47e2c 100644
---- a/drivers/scsi/BusLogic.h
-+++ b/drivers/scsi/BusLogic.h
-@@ -935,7 +935,7 @@ struct blogic_tgt_stats {
- 	unsigned short bdr_request;
- 	unsigned short bdr_tried;
- 	unsigned short bdr_done;
--	unsigned short adatper_reset_req;
-+	unsigned short adapter_reset_req;
- 	unsigned short adapter_reset_attempt;
- 	unsigned short adapter_reset_done;
- };
--- 
-2.10.2
+Thanks for picking this up but Keith's approach is slightly more
+efficient and opens a way forward to expose support for both scsi_dh
+and whatever Christoph is calling his NVMe device handler.  But we can
+revisit once that latter lands.
