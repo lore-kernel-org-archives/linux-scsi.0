@@ -1,8 +1,7 @@
 From: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
-Subject: [PATCH 06/14] platform/chrome: utilize new device_add_cdev helper
- function
-Date: Mon, 20 Feb 2017 22:00:45 -0700
-Message-ID: <1487653253-11497-7-git-send-email-logang@deltatee.com>
+Subject: [PATCH 10/14] mtd: utilize new device_add_cdev helper function
+Date: Mon, 20 Feb 2017 22:00:49 -0700
+Message-ID: <1487653253-11497-11-git-send-email-logang@deltatee.com>
 References: <1487653253-11497-1-git-send-email-logang@deltatee.com>
 Mime-Version: 1.0
 Content-Type: text/plain; charset="us-ascii"
@@ -22,48 +21,92 @@ To: Greg Kroah-Hartman <gregkh-hQyY1W1yCW8ekmWlsbkhG0B+6BGkLq7r@public.gmane.org
 Cc: linux-scsi-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, rtc-linux-/JYPxA39Uh5TLH3MbocFFw@public.gmane.org, linux-gpio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-iio-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-pci-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-nvdimm-hn68Rpc1hR1g9hUCZPvPmw@public.gmane.org, linux-kernel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-rdma-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, tpmdd-devel-5NWGOfrQmneRv+LV9MX5uipxlwaOVQ5f@public.gmane.org, linux-mtd-IAPFreCvJWM7uuMidbF8XUB+6BGkLq7r@public.gmane.org, osd-dev-yNzVSZO3znNg9hUCZPvPmw@public.gmane.org, linux-input-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-fsdevel-u79uwXL29TY76Z2rM5mHXA@public.gmane.org, linux-media-u79uwXL29TY76Z2rM5mHXA@public.gmane.org
 List-Id: linux-scsi@vger.kernel.org
 
+Note: neither of the cdev instances in the mtd tree originally
+set the kobject parent. Thus, I'm reasonably confident that
+both these instances would have suffered from a minor use after
+free bug if the cdevs were open when the backing device was released.
+
 Signed-off-by: Logan Gunthorpe <logang-OTvnGxWRz7hWk0Htik3J/w@public.gmane.org>
 ---
- drivers/platform/chrome/cros_ec_dev.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/mtd/ubi/build.c |  8 +++++---
+ drivers/mtd/ubi/vmt.c   | 10 +++++-----
+ 2 files changed, 10 insertions(+), 8 deletions(-)
 
-diff --git a/drivers/platform/chrome/cros_ec_dev.c b/drivers/platform/chrome/cros_ec_dev.c
-index 47268ec..658fb99 100644
---- a/drivers/platform/chrome/cros_ec_dev.c
-+++ b/drivers/platform/chrome/cros_ec_dev.c
-@@ -388,7 +388,6 @@ static int ec_device_probe(struct platform_device *pdev)
- 	int retval = -ENOMEM;
- 	struct device *dev = &pdev->dev;
- 	struct cros_ec_platform *ec_platform = dev_get_platdata(dev);
--	dev_t devno = MKDEV(ec_major, pdev->id);
- 	struct cros_ec_dev *ec = kzalloc(sizeof(*ec), GFP_KERNEL);
+diff --git a/drivers/mtd/ubi/build.c b/drivers/mtd/ubi/build.c
+index 85d54f3..a509f15 100644
+--- a/drivers/mtd/ubi/build.c
++++ b/drivers/mtd/ubi/build.c
+@@ -434,11 +434,10 @@ static int ubi_sysfs_init(struct ubi_device *ubi, int *ref)
+ 	int err;
  
- 	if (!ec)
-@@ -401,6 +400,7 @@ static int ec_device_probe(struct platform_device *pdev)
- 	ec->features[0] = -1U; /* Not cached yet */
- 	ec->features[1] = -1U; /* Not cached yet */
- 	device_initialize(&ec->class_dev);
-+	ec->class_dev.devt = MKDEV(ec_major, pdev->id);
- 	cdev_init(&ec->cdev, &fops);
+ 	ubi->dev.release = dev_release;
+-	ubi->dev.devt = ubi->cdev.dev;
+ 	ubi->dev.class = &ubi_class;
+ 	ubi->dev.groups = ubi_dev_groups;
+ 	dev_set_name(&ubi->dev, UBI_NAME_STR"%d", ubi->ubi_num);
+-	err = device_register(&ubi->dev);
++	err = device_add(&ubi->dev);
+ 	if (err)
+ 		return err;
  
- 	/*
-@@ -408,8 +408,7 @@ static int ec_device_probe(struct platform_device *pdev)
- 	 * Link cdev to the class device to be sure device is not used
- 	 * before unbinding it.
- 	 */
--	ec->cdev.kobj.parent = &ec->class_dev.kobj;
--	retval = cdev_add(&ec->cdev, devno, 1);
-+	retval = device_add_cdev(&ec->class_dev, &ec->cdev);
- 	if (retval) {
- 		dev_err(dev, ": failed to add character device\n");
- 		goto cdev_add_failed;
-@@ -420,7 +419,6 @@ static int ec_device_probe(struct platform_device *pdev)
- 	 * Link to the character device for creating the /dev entry
- 	 * in devtmpfs.
- 	 */
--	ec->class_dev.devt = ec->cdev.dev;
- 	ec->class_dev.class = &cros_class;
- 	ec->class_dev.parent = dev;
- 	ec->class_dev.release = __remove;
+@@ -508,12 +507,15 @@ static int uif_init(struct ubi_device *ubi, int *ref)
+ 		return err;
+ 	}
+ 
++	device_initialize(&ubi->dev);
++	ubi->dev.devt = dev;
++
+ 	ubi_assert(MINOR(dev) == 0);
+ 	cdev_init(&ubi->cdev, &ubi_cdev_operations);
+ 	dbg_gen("%s major is %u", ubi->ubi_name, MAJOR(dev));
+ 	ubi->cdev.owner = THIS_MODULE;
+ 
+-	err = cdev_add(&ubi->cdev, dev, 1);
++	err = device_add_cdev(&ubi->dev, &ubi->cdev);
+ 	if (err) {
+ 		ubi_err(ubi, "cannot add character device");
+ 		goto out_unreg;
+diff --git a/drivers/mtd/ubi/vmt.c b/drivers/mtd/ubi/vmt.c
+index 7ac78c1..df84ba7 100644
+--- a/drivers/mtd/ubi/vmt.c
++++ b/drivers/mtd/ubi/vmt.c
+@@ -159,7 +159,6 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
+ 	struct ubi_volume *vol;
+ 	struct ubi_vtbl_record vtbl_rec;
+ 	struct ubi_eba_table *eba_tbl = NULL;
+-	dev_t dev;
+ 
+ 	if (ubi->ro_mode)
+ 		return -EROFS;
+@@ -265,11 +264,13 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
+ 			vol->last_eb_bytes = vol->usable_leb_size;
+ 	}
+ 
++	device_initialize(&vol->dev);
++	vol->dev.devt = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
++
+ 	/* Register character device for the volume */
+ 	cdev_init(&vol->cdev, &ubi_vol_cdev_operations);
+ 	vol->cdev.owner = THIS_MODULE;
+-	dev = MKDEV(MAJOR(ubi->cdev.dev), vol_id + 1);
+-	err = cdev_add(&vol->cdev, dev, 1);
++	err = device_add_cdev(&vol->dev, &vol->cdev);
+ 	if (err) {
+ 		ubi_err(ubi, "cannot add character device");
+ 		goto out_mapping;
+@@ -277,12 +278,11 @@ int ubi_create_volume(struct ubi_device *ubi, struct ubi_mkvol_req *req)
+ 
+ 	vol->dev.release = vol_release;
+ 	vol->dev.parent = &ubi->dev;
+-	vol->dev.devt = dev;
+ 	vol->dev.class = &ubi_class;
+ 	vol->dev.groups = volume_dev_groups;
+ 
+ 	dev_set_name(&vol->dev, "%s_%d", ubi->ubi_name, vol->vol_id);
+-	err = device_register(&vol->dev);
++	err = device_add(&vol->dev);
+ 	if (err) {
+ 		ubi_err(ubi, "cannot register device");
+ 		goto out_cdev;
 -- 
 2.1.4
